@@ -74,44 +74,26 @@ class Lexer(object):
     ##
     ## Reserved keywords
     ##
-    keywords = (
-        '_BOOL', '_COMPLEX', 'AUTO', 'BREAK', 'CASE', 'CHAR', 'CONST',
-        'CONTINUE', 'DEFAULT', 'DO', 'DOUBLE', 'ELSE', 'ENUM', 'EXTERN',
-        'FLOAT', 'FOR', 'GOTO', 'IF', 'INLINE', 'INT', 'LONG', 'REGISTER',
-        'RESTRICT', 'RETURN', 'SHORT', 'SIGNED', 'SIZEOF', 'STATIC', 'STRUCT',
-        'SWITCH', 'TYPEDEF', 'UNION', 'UNSIGNED', 'VOID',
-        'VOLATILE', 'WHILE',
-    )
+    pykeywords = ('AND', 'AS', 'ASSERT', 'BREAK', 'CLASS', 'CONTINUE', 'DEF', 
+        'DEL', 'ELIF', 'ELSE', 'EXCEPT', 'FINALLY', 'FOR', 'FROM', 'GLOBAL', 
+        'IMPORT', 'IF', 'IN', 'IS', 'LAMBDA', 'NONLOCAL', 'NOT', 'OR', 'PASS', 
+        'RAISE', 'TRY', 'WHILE', 'WITH', 'YIELD',)
 
-    keyword_map = {}
-    for keyword in keywords:
-        if keyword == '_BOOL':
-            keyword_map['_Bool'] = keyword
-        elif keyword == '_COMPLEX':
-            keyword_map['_Complex'] = keyword
-        else:
-            keyword_map[keyword.lower()] = keyword
+    pykeyword_map = {k.lower(): k for k in pykeywords}
 
     ##
     ## All the tokens recognized by the lexer
     ##
-    tokens = keywords + (
+    tokens = pykeywords + (
         # Identifiers
         'ID',
-
-        # Type identifiers (identifiers previously defined as
-        # types with typedef)
-        'TYPEID',
 
         # constants
         'INT_CONST_DEC', 'INT_CONST_OCT', 'INT_CONST_HEX',
         'FLOAT_CONST', 'HEX_FLOAT_CONST',
-        'CHAR_CONST',
-        'WCHAR_CONST',
 
         # String literals
         'STRING_LITERAL',
-        'WSTRING_LITERAL',
 
         # Operators
         'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'MOD',
@@ -125,28 +107,21 @@ class Lexer(object):
         'LSHIFTEQUAL','RSHIFTEQUAL', 'ANDEQUAL', 'XOREQUAL',
         'OREQUAL',
 
-        # Increment/decrement
-        'PLUSPLUS', 'MINUSMINUS',
-
-        # Structure dereference (->)
-        'ARROW',
-
-        # Conditional operator (?)
-        'CONDOP',
+        # Command line
+        'OPTION', 
 
         # Delimeters
-        'LPAREN', 'RPAREN',         # ( )
-        'LBRACKET', 'RBRACKET',     # [ ]
-        'LBRACE', 'RBRACE',         # { }
-        'COMMA', 'PERIOD',          # . ,
-        'SEMI', 'COLON',            # ; :
+        'LPAREN', 'RPAREN',      # ( )
+        'LBRACKET', 'RBRACKET',  # [ ]
+        'LBRACE', 'RBRACE',      # { }
+        'COMMA', 'PERIOD',       # . ,
+        'SEMI', 'COLON',         # ; :
+        'AT', 'DOLLAR',          # @ $
+        'COMMENT',               # #
 
         # Ellipsis (...)
         'ELLIPSIS',
-
-        # pre-processor
-        'PPHASH',      # '#'
-    )
+        )
 
     ##
     ## Regexes for use in tokens
