@@ -144,7 +144,7 @@ class Parser(object):
             self._list_rule(rule)
 
         self.parser = yacc.yacc(module=self, debug=yacc_debug,
-            start='translation_unit_or_empty', optimize=yacc_optimize,
+            start='start_symbols', optimize=yacc_optimize,
             tabmodule=yacc_table)
 
         # Keeps track of the last token given to yacc (the lookahead token)
@@ -231,6 +231,13 @@ class Parser(object):
     #
     # Grammar as defined by BNF
     #
+
+    def p_start_symbols(self, p):
+        """start_symbols : single_input
+                         | file_input
+                         | eval_input
+                         | empty
+        """
 
     def p_single_input(self, p):
         """single_input : NEWLINE 
@@ -801,7 +808,7 @@ class Parser(object):
 
     def p_atom(self, p):
         """atom : LPAREN yield_expr_or_testlist_comp_opt RPAREN 
-                | LBRACKET testlist_comp_opt RBRAKET 
+                | LBRACKET testlist_comp_opt RBRACKET 
                 | LBRACE dictorsetmaker_opt RBRACE
                 | NAME 
                 | number 
@@ -822,7 +829,7 @@ class Parser(object):
         p[0] = p[1]
 
     def p_number(self, p):
-        """p_number : INT_LITERAL
+        """number : INT_LITERAL
                     | HEX_LITERAL
                     | OCT_LITERAL
                     | BIN_LITERAL
@@ -838,7 +845,7 @@ class Parser(object):
 
     def p_trailer(self, p):
         """trailer : LPAREN arglist_opt RPAREN 
-                   | LBRACKET subscriptlist RBRAKET 
+                   | LBRACKET subscriptlist RBRACKET 
                    | PERIOD NAME
         """
         p[0] = p[1:]
