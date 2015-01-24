@@ -364,185 +364,161 @@ class Parser(object):
         """
         p[0] = p[1:]
 
-    def p_(self, p):
-        """try_stmt: ('try' ':' suite
-           ((except_clause ':' suite)+
-            ['else' ':' suite]
-            ['finally' ':' suite] |
-           'finally' ':' suite))
+    def p_try_stmt(self, p):
+        """try_stmt : (TRY COLON suite
+                      ((except_clause COLON suite)+
+                      [ELSE COLON suite]
+                      [FINALLY COLON suite] |
+                       FINALLY COLON suite))
         """
         p[0] = p[1:]
 
-    def p_(self, p):
-        """with_stmt: 'with' with_item (',' with_item)*  ':' suite
+    def p_with_stmt(self, p):
+        """with_stmt : WITH with_item (COMMA with_item)* COLON suite"""
+        p[0] = p[1:]
+
+    def p_with_item(self, p):
+        """with_item : test [AS expr]"""
+        p[0] = p[1:]
+
+    def p_except_clause(self, p):
+        """except_clause : EXCEPT [test [AS NAME]]"""
+        p[0] = p[1:]
+
+    def p_suite(self, p):
+        """suite : simple_stmt | NEWLINE INDENT stmt+ DEDENT"""
+        p[0] = p[1:]
+
+    def p_test(self, p):
+        """test : or_test [IF or_test ELSE test] | lambdef"""
+        p[0] = p[1:]
+
+    def p_test_nocond(self, p):
+        """test_nocond : or_test | lambdef_nocond"""
+        p[0] = p[1:]
+
+    def p_lambdef(self, p):
+        """lambdef : LAMBDA [varargslist] COLON test"""
+        p[0] = p[1:]
+
+    def p_lambdef_nocond(self, p):
+        """lambdef_nocond : LAMBDA [varargslist] COLON test_nocond"""
+        p[0] = p[1:]
+
+    def p_or_test(self, p):
+        """or_test : and_test (OR and_test)*"""
+        p[0] = p[1:]
+
+    def p_and_test(self, p):
+        """and_test : not_test (AND not_test)*"""
+        p[0] = p[1:]
+
+    def p_not_test(self, p):
+        """not_test : NOT not_test | comparison"""
+        p[0] = p[1:]
+
+    def p_comparison(self, p):
+        """comparison : expr (comp_op expr)*"""
+        p[0] = p[1:]
+
+    def p_comp_op(self, p):
+        """comp_op : LT | GT | EQ | GE | LE | NE | IN | NOT IN | IS | IS NOT
         """
         p[0] = p[1:]
 
-    def p_(self, p):
-        """with_item: test ['as' expr]
+    def p_star_expr(self, p):
+        """star_expr : TIMES expr"""
+        p[0] = p[1:]
+
+    def p_expr(self, p):
+        """expr : xor_expr (PIPE xor_expr)*"""
+        p[0] = p[1:]
+
+    def p_xor_expr(self, p):
+        """xor_expr : and_expr (XOR and_expr)*"""
+        p[0] = p[1:]
+
+    def p_and_expr(self, p):
+        """and_expr : shift_expr (AMPERSAND shift_expr)*"""
+        p[0] = p[1:]
+
+    def p_shift_expr(self, p):
+        """shift_expr : arith_expr ((LSHIFT|RSHIFT) arith_expr)*"""
+        p[0] = p[1:]
+
+    def p_arith_expr(self, p):
+        """arith_expr : term ((PLUS|MINUS) term)*"""
+        p[0] = p[1:]
+
+    def p_term(self, p):
+        """term : factor ((TIMES|DIVIDE|MOD|DOUBLEDIV) factor)*"""
+        p[0] = p[1:]
+
+    def p_factor(self, p):
+        """factor : (PLUS|MINUS|TILDE) factor | power"""
+        p[0] = p[1:]
+
+    def p_power(self, p):
+        """power : atom trailer* [POW factor]"""
+        p[0] = p[1:]
+
+    def p_atom(self, p):
+        """atom : (LPAREN [yield_expr|testlist_comp] RPAREN 
+                | LBRACKET [testlist_comp] RBRAKET 
+                | LBRACE [dictorsetmaker] RBRACE
+                | NAME | NUMBER | STRING_LITERAL+ | ELLIPSIS | 'None' 
+                | 'True' | 'False')
         """
         p[0] = p[1:]
 
-    def p_(self, p):
-        """except_clause: 'except' [test ['as' NAME]]
+    def p_testlist_comp(self, p):
+        """testlist_comp : (test|star_expr) 
+                           (comp_for | (COMMA (test|star_expr))* [COMMA] )
         """
         p[0] = p[1:]
 
-    def p_(self, p):
-        """suite: simple_stmt | NEWLINE INDENT stmt+ DEDENT
+    def p_trailer(self, p):
+        """trailer : LPAREN [arglist] RPAREN 
+                   | LBRACKET subscriptlist RBRAKET 
+                   | PERIOD NAME
         """
         p[0] = p[1:]
 
-    def p_(self, p):
-        """test: or_test ['if' or_test 'else' test] | lambdef
+    def p_subscriptlist(self, p):
+        """subscriptlist : subscript (COMMA subscript)* [COMMA]"""
+        p[0] = p[1:]
+
+    def p_subscript(self, p):
+        """subscript : test | [test] COLON [test] [sliceop]"""
+        p[0] = p[1:]
+
+    def p_sliceop(self, p):
+        """sliceop : COLON [test]"""
+        p[0] = p[1:]
+
+    def p_exprlist(self, p):
+        """exprlist : (expr|star_expr) (COMMA (expr|star_expr))* [COMMA]"""
+        p[0] = p[1:]
+
+    def p_testlist(self, p):
+        """testlist : test (COMMA test)* [COMMA]"""
+        p[0] = p[1:]
+
+    def p_dictorsetmaker(self, p):
+        """dictorsetmaker : ( (test COLON test (comp_for 
+                          | (COMMA test COLON test)* [COMMA])) 
+                          | (test (comp_for | (COMMA test)* [COMMA])) )
         """
         p[0] = p[1:]
 
-    def p_(self, p):
-        """test_nocond: or_test | lambdef_nocond
-        """
+    def p_classdef(self, p):
+        """classdef : CLASS NAME [RPAREN [arglist] LPAREN] COLON suite"""
         p[0] = p[1:]
 
-    def p_(self, p):
-        """lambdef: 'lambda' [varargslist] ':' test
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """lambdef_nocond: 'lambda' [varargslist] ':' test_nocond
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """or_test: and_test ('or' and_test)*
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """and_test: not_test ('and' not_test)*
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """not_test: 'not' not_test | comparison
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """comparison: expr (comp_op expr)*
-        """
-        p[0] = p[1:]
-
-    # <> isn't actually a valid comparison operator in Python. It's here 
-    # for the sake of a __future__ import described in PEP 401
-    def p_(self, p):
-        """comp_op: '<'|'>'|'=='|'>='|'<='|'<>'|'!='|'in'|'not' 'in'|'is'|'is' 'not'
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """star_expr: '*' expr
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """expr: xor_expr ('|' xor_expr)*
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """xor_expr: and_expr ('^' and_expr)*
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """and_expr: shift_expr ('&' shift_expr)*
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """shift_expr: arith_expr (('<<'|'>>') arith_expr)*
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """arith_expr: term (('+'|'-') term)*
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """term: factor (('*'|'/'|'%'|'//') factor)*
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """factor: ('+'|'-'|'~') factor | power
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """power: atom trailer* ['**' factor]
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """atom: ('(' [yield_expr|testlist_comp] ')' |
-       '[' [testlist_comp] ']' |
-       '{' [dictorsetmaker] '}' |
-       NAME | NUMBER | STRING+ | '...' | 'None' | 'True' | 'False')
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """testlist_comp: (test|star_expr) ( comp_for | (',' (test|star_expr))* [','] )
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """subscriptlist: subscript (',' subscript)* [',']
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """subscript: test | [test] ':' [test] [sliceop]
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """sliceop: ':' [test]
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """exprlist: (expr|star_expr) (',' (expr|star_expr))* [',']
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """testlist: test (',' test)* [',']
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """dictorsetmaker: ( (test ':' test (comp_for | (',' test ':' test)* [','])) |
-                  (test (comp_for | (',' test)* [','])) )
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """classdef: 'class' NAME ['(' [arglist] ')'] ':' suite
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """arglist: (argument ',')* (argument [',']
-                         |'*' test (',' argument)* [',' '**' test] 
-                         |'**' test)
+    def p_arglist(self, p):
+        """arglist : (argument COMMA)* (argument [COMMA]
+                   | TIMES test (COMMA argument)* [COMMA POW test] 
+                   | POW test)
         """
         p[0] = p[1:]
 
