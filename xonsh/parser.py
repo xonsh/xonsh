@@ -48,19 +48,7 @@ class Parser(object):
         self.tokens = lexer.tokens
 
         opt_rules = (
-            #'abstract_declarator',
-            #'assignment_expression',
-            ##'declaration_list',
-            #'declaration_specifiers',
-            #'designation',
-            #'expression',
-            #'identifier_list',
-            #'init_declarator_list',
-            #'parameter_type_list',
-            #'specifier_qualifier_list',
-            #'block_item_list',
-            #'type_qualifier_list',
-            #'struct_declarator_list'
+            'newlines',
             )
         for rule in opt_rules:
             self._opt_rule(rule)
@@ -112,7 +100,7 @@ class Parser(object):
         optfunc.__doc__ = ('{0}_opt : empty\n'
                            '        | {0}').format(rulename)
         optfunc.__name__ = 'p_' + rulename + '_opt'
-        setattr(self.__class__, optrule.__name__, optfunc)
+        setattr(self.__class__, optfunc.__name__, optfunc)
 
     def currloc(self, lineno, column=None):
         """Returns the current location."""
@@ -167,8 +155,14 @@ class Parser(object):
         """
         p[0] = p[1]
 
+    def p_newlines(self, p):
+        """newlines : NEWLINE
+                    | newlines NEWLINE
+        """
+        p[0] = p[1] if len(p) == 2 else p[1] + p[2]
+
     def p_eval_input(self, p):
-        """eval_input : testlist NEWLINE* ENDMARKER"""
+        """eval_input : testlist newlines_opt ENDMARKER"""
         p[0] = p[1]
 
     def p_decorator(self, p):
