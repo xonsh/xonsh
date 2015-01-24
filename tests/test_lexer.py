@@ -4,7 +4,7 @@ import os
 import sys
 from collections import Sequence
 from pprint import pprint, pformat
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('..'))  # FIXME
 
 import nose
 from nose.tools import assert_equal
