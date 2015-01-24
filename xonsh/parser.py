@@ -66,6 +66,10 @@ class Parser(object):
             'semi_small_stmt_list',
             'comma_test_or_star_expr_list',
             'equals_yield_expr_or_testlist_list',
+            'testlist',
+            'as_name',
+            'period_or_ellipsis',
+            'period_or_ellipsis_list',
             )
         for rule in opt_rules:
             self._opt_rule(rule)
@@ -76,6 +80,7 @@ class Parser(object):
             'semi_small_stmt',
             'comma_test_or_star_expr',
             'equals_yield_expr_or_testlist',
+            'period_or_ellipsis',
             )
         for rule in list_rules:
             self._list_rule(rule)
@@ -388,7 +393,10 @@ class Parser(object):
         p[0] = p[1:]
 
     def p_flow_stmt(self, p):
-        """flow_stmt : break_stmt | continue_stmt | return_stmt | raise_stmt 
+        """flow_stmt : break_stmt 
+                     | continue_stmt 
+                     | return_stmt 
+                     | raise_stmt 
                      | yield_stmt
         """
         p[0] = p[1]
@@ -402,7 +410,7 @@ class Parser(object):
         p[0] = p[1:]
 
     def p_return_stmt(self, p):
-        """return_stmt : RETURN [testlist]"""
+        """return_stmt : RETURN testlist_opt"""
         p[0] = p[1:]
 
     def p_yield_stmt(self, p):
@@ -410,11 +418,16 @@ class Parser(object):
         p[0] = p[1:]
 
     def p_raise_stmt(self, p):
-        """raise_stmt : RAISE [test [FROM test]]"""
+        """raise_stmt : RAISE 
+                      | test 
+                      | test FROM test
+        """
         p[0] = p[1:]
 
     def p_import_stmt(self, p):
-        """import_stmt : import_name | import_from"""
+        """import_stmt : import_name 
+                       | import_from
+        """
         p[0] = p[1]
 
     def p_import_name(self, p):
@@ -422,20 +435,43 @@ class Parser(object):
         """
         p[0] = p[1:]
 
+    def p_import_from_pre(self, p):
+        """import_from_pre : FROM period_or_ellipsis_list_opt dotted_name 
+                           | FROM period_or_ellipsis_list
+        """
+        p[0] = p[1:]
+
+    def p_import_from_post(self, p):
+        """import_from_post : TIMES 
+                            | LPAREN import_as_names RPAREN 
+                            | import_as_names
+        """
+        p[0] = p[1:]
+
     def p_import_from(self, p):
-        """import_from : (FROM ((PERIOD | ELLIPSIS)* dotted_name | (PERIOD | ELLIPSIS)+) IMPORT (TIMES | LPAREN import_as_names RPAREN | import_as_names))
+        """import_from : import_from_pre IMPORT import_from_post
         """
         # note below: the ('.' | '...') is necessary because '...' is 
         # tokenized as ELLIPSIS
         p[0] = p[1:]
 
+    def p_period_or_ellipsis(self, p):
+        """period_or_ellipsis : PERIOD
+                              | ELLIPSIS
+        """
+        p[0] = p[1]
+
+    def p_as_name(self, p):
+        """as_name : AS NAME"""
+        p[0] = p[1:]
+
     def p_import_as_name(self, p):
-        """import_as_name : NAME [AS NAME]
+        """import_as_name : NAME as_name_opt
         """
         p[0] = p[1:]
 
     def p_dotted_as_name(self, p):
-        """dotted_as_name : dotted_name [AS NAME]"""
+        """dotted_as_name : dotted_name as_name_opt"""
         p[0] = p[1:]
 
     def p_import_as_names(self, p):
