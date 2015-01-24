@@ -102,7 +102,7 @@ class Parser(object):
         self.lexer.lineno = 0
         self._scope_stack = [dict()]
         self._last_yielded_token = None
-        tree = self.cparser.parse(input=s, lexer=self.lexer,
+        tree = self.parser.parse(input=s, lexer=self.lexer,
                                   debug=debug_level)
         return tree
 
@@ -148,7 +148,7 @@ class Parser(object):
         ('left', 'GT', 'GE', 'LT', 'LE'),
         ('left', 'RSHIFT', 'LSHIFT'),
         ('left', 'PLUS', 'MINUS'),
-        ('left', 'TIMES', 'DIVIDE', 'MOD'), 
+        ('left', 'TIMES', 'DIVIDE', 'DOUBLEDIV', 'MOD'), 
         ('left', 'POW'),
         )
 
@@ -164,8 +164,12 @@ class Parser(object):
         p[0] = p[1]
 
     def p_file_input(self, p):
-        """file_input : (NEWLINE | stmt)* ENDMARKER"""
+        """file_input : ( NEWLINE | stmt )* ENDMARKER"""
         p[0] = p[1]
+
+    #def p_newline_or_stmt(self, p):
+    #    """file_input : ( NEWLINE | stmt )* ENDMARKER"""
+        
 
     def p_eval_input(self, p):
         """eval_input : testlist NEWLINE* ENDMARKER"""
@@ -192,11 +196,9 @@ class Parser(object):
         p[0] = p[1:]
 
     def p_typedargslist(self, p):
-        """typedargslist : (tfpdef [EQUALS test] (COMMA tfpdef [EQUALS test])* 
-                            [COMMA [TIMES [tfpdef] (COMMA tfpdef [EQUALS test])* 
-                            [EQUALS POW tfpdef] | POW tfpdef]]
-                         | TIMES [tfpdef] (COMMA tfpdef [EQUALS test])* 
-                            [COMMA POW tfpdef] | POW tfpdef)
+        """typedargslist : (tfpdef [EQUALS test] (COMMA tfpdef [EQUALS test])* [COMMA [TIMES [tfpdef] (COMMA tfpdef [EQUALS test])* [EQUALS POW tfpdef] | POW tfpdef]] 
+                         | TIMES [tfpdef] (COMMA tfpdef [EQUALS test])* [COMMA POW tfpdef] 
+                         | POW tfpdef)
         """
         p[0] = p[1:]
 
@@ -205,11 +207,9 @@ class Parser(object):
         p[0] = p[1:]
 
     def p_varargslist(self, p):
-        """varargslist : (vfpdef [EQUALS test] (COMMA vfpdef [EQUALS test])* 
-                          [COMMA [TIMES [vfpdef] (COMMA vfpdef [EQUALS test])* 
-                          [COMMA POW vfpdef] | POW vfpdef]]
-                       | TIMES [vfpdef] (COMMA vfpdef [EQUALS test])* 
-                          [COMMA POW vfpdef] | POW vfpdef)
+        """varargslist : (vfpdef [EQUALS test] (COMMA vfpdef [EQUALS test])* [COMMA [TIMES [vfpdef] (COMMA vfpdef [EQUALS test])* [COMMA POW vfpdef] | POW vfpdef]]
+                       | TIMES [vfpdef] (COMMA vfpdef [EQUALS test])* [COMMA POW vfpdef] 
+                       | POW vfpdef)
         """
         p[0] = p[1:]
 
@@ -239,8 +239,7 @@ class Parser(object):
         p[0] = p[1:]
 
     def p_testlist_star_expr(self, p):
-        """testlist_star_expr : (test|star_expr) (COMMA (test|star_expr))* 
-                                [COMMA]
+        """testlist_star_expr : (test|star_expr) (COMMA (test|star_expr))* [COMMA]
         """
         p[0] = p[1:]
 
@@ -300,10 +299,7 @@ class Parser(object):
         p[0] = p[1:]
 
     def p_import_from(self, p):
-        """import_from : (FROM ((PERIOD | ELLIPSIS)* dotted_name 
-                                | (PERIOD | ELLIPSIS)+)
-                        IMPORT (TIMES | LPAREN import_as_names RPAREN 
-                               | import_as_names))
+        """import_from : (FROM ((PERIOD | ELLIPSIS)* dotted_name | (PERIOD | ELLIPSIS)+) IMPORT (TIMES | LPAREN import_as_names RPAREN | import_as_names))
         """
         # note below: the ('.' | '...') is necessary because '...' is 
         # tokenized as ELLIPSIS
@@ -350,8 +346,7 @@ class Parser(object):
         p[0] = p[1]
 
     def p_if_stmt(self, p):
-        """if_stmt : IF test COLON suite (ELIF test COLON suite)* 
-                     [ELSE COLON suite]
+        """if_stmt : IF test COLON suite (ELIF test COLON suite)* [ELSE COLON suite]
         """
         p[0] = p[1:]
 
@@ -365,11 +360,7 @@ class Parser(object):
         p[0] = p[1:]
 
     def p_try_stmt(self, p):
-        """try_stmt : (TRY COLON suite
-                      ((except_clause COLON suite)+
-                      [ELSE COLON suite]
-                      [FINALLY COLON suite] |
-                       FINALLY COLON suite))
+        """try_stmt : (TRY COLON suite ((except_clause COLON suite)+ [ELSE COLON suite] [FINALLY COLON suite] | FINALLY COLON suite))
         """
         p[0] = p[1:]
 
@@ -472,8 +463,7 @@ class Parser(object):
         p[0] = p[1:]
 
     def p_testlist_comp(self, p):
-        """testlist_comp : (test|star_expr) 
-                           (comp_for | (COMMA (test|star_expr))* [COMMA] )
+        """testlist_comp : (test|star_expr) (comp_for | (COMMA (test|star_expr))* [COMMA] )
         """
         p[0] = p[1:]
 
