@@ -47,7 +47,7 @@ class Parser(object):
         lexer.build(optimize=lexer_optimize, lextab=lexer_table)
         self.tokens = lexer.tokens
 
-        opt_rules = [
+        opt_rules = (
             #'abstract_declarator',
             #'assignment_expression',
             ##'declaration_list',
@@ -61,23 +61,13 @@ class Parser(object):
             #'block_item_list',
             #'type_qualifier_list',
             #'struct_declarator_list'
-            ]
+            )
         for rule in opt_rules:
-            self._create_opt_rule(rule)
+            self._opt_rule(rule)
 
         self.parser = yacc.yacc(module=self, debug=yacc_debug,
             start='translation_unit_or_empty', optimize=yacc_optimize,
             tabmodule=yacc_table)
-
-        # Stack of scopes for keeping track of symbols. _scope_stack[-1] is
-        # the current (topmost) scope. Each scope is a dictionary that
-        # specifies whether a name is a type. If _scope_stack[n][name] is
-        # True, 'name' is currently a type in the scope. If it's False,
-        # 'name' is used in the scope but not as a type (for instance, if we
-        # saw: int name;
-        # If 'name' is not a key in _scope_stack[n] then 'name' was not defined
-        # in this scope at all.
-        self._scope_stack = [dict()]
 
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None
@@ -113,19 +103,16 @@ class Parser(object):
         """Gets the last token seen by the lexer."""
         return self.lexer.last
 
-    #def _create_opt_rule(self, rulename):
-    #    """Given a rule name, creates an optional ply.yacc rule
-    #        for it. The name of the optional rule is
-    #        <rulename>_opt
-    #    """
-    #    optname = rulename + '_opt'
-    #
-    #    def optrule(self, p):
-    #        p[0] = p[1]
-    #
-    #    optrule.__doc__ = '%s : empty\n| %s' % (optname, rulename)
-    #    optrule.__name__ = 'p_%s' % optname
-    #    setattr(self.__class__, optrule.__name__, optrule)
+    def _opt_rule(self, rulename):
+        """For a rule name, creates an associated optional rule.
+        '_opt' is appended to the rule name.
+        """
+        def optfunc(self, p):
+            p[0] = p[1]
+        optfunc.__doc__ = ('{0}_opt : empty\n'
+                           '        | {0}').format(rulename)
+        optfunc.__name__ = 'p_' + rulename + '_opt'
+        setattr(self.__class__, optrule.__name__, optfunc)
 
     def currloc(self, lineno, column=None):
         """Returns the current location."""
@@ -164,12 +151,21 @@ class Parser(object):
         p[0] = p[1]
 
     def p_file_input(self, p):
-        """file_input : ( NEWLINE | stmt )* ENDMARKER"""
-        p[0] = p[1]
+        """file_input : newline_or_stmt ENDMARKER
+                      | file_input newline_or_stmt ENDMARKER
+        """
+        if len(p) == 3:
+            # newline_or_stmt ENDMARKER
+            p[0] = p[1]
+        else:
+            # file_input newline_or_stmt ENDMARKER
+            p[0] = p[1] + p[2]
 
-    #def p_newline_or_stmt(self, p):
-    #    """file_input : ( NEWLINE | stmt )* ENDMARKER"""
-        
+    def p_newline_or_stmt(self, p):
+        """newline_or_stmt : NEWLINE 
+                           | stmt
+        """
+        p[0] = p[1]
 
     def p_eval_input(self, p):
         """eval_input : testlist NEWLINE* ENDMARKER"""
@@ -244,10 +240,10 @@ class Parser(object):
         p[0] = p[1:]
 
     def p_augassign(self, p):
-        """augassign : (PLUSEQUAL | MINUSEQUAL | TIMESEQUAL | DIVEQUAL 
+        """augassign : PLUSEQUAL | MINUSEQUAL | TIMESEQUAL | DIVEQUAL 
                      | MODEQUAL | AMPERSANDEQUAL | PIPEEQUAL | XOREQUAL
                      | LSHIFTEQUAL | RSHIFTEQUAL | POWEQUAL 
-                     | DOUBLEDIVEQUAL)
+                     | DOUBLEDIVEQUAL
         """
         p[0] = p[1]
 
