@@ -213,7 +213,6 @@ class Lexer(object):
     #
 
     # strings, functions to ensure correct ordering
-    #t_STRING_LITERAL = string_literal
 
     @TOKEN(string_literal)
     def t_STRING_LITERAL(self, t):
@@ -230,6 +229,8 @@ class Lexer(object):
     @TOKEN(bytes_literal)
     def t_BYTES_LITERAL(self, t):
         return t
+
+    # float literal must come before int literals
 
     @TOKEN(float_literal)
     def t_FLOAT_LITERAL(self, t):
