@@ -95,14 +95,15 @@ class Lexer(object):
         'BYTES_LITERAL', 'UNICODE_LITERAL',
 
         # Basic Operators
-        'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'MOD', 'POW', 
+        'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'DOUBLEDIV', 'MOD', 'POW', 
         'PIPE', 'AMPERSAND', 'TILDE', 'XOR', 'LSHIFT', 'RSHIFT',
         'LOGIC_OR', 'LOGIC_AND', 'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',
+        'LARROW', 'RARROW',
 
         # Assignment Operators
         'EQUALS', 'PLUSEQUAL', 'MINUSEQUAL', 'TIMESEQUAL', 'DIVEQUAL', 
         'MODEQUAL', 'POWEQUAL', 'LSHIFTEQUAL','RSHIFTEQUAL', 'AMPERSANDEQUAL', 
-        'XOREQUAL', 'PIPEEQUAL',
+        'XOREQUAL', 'PIPEEQUAL', 'DOUBLEDIVEQUAL',
 
         # Command line
         'CLI_OPTION', 
@@ -162,6 +163,7 @@ class Lexer(object):
     t_MINUS = r'-'
     t_TIMES = r'\*'
     t_DIVIDE = r'/'
+    t_DOUBLEDIV = r'//'
     t_MOD = r'%'
     t_POW = r'\*\*'
     t_PIPE = r'\|'
@@ -178,6 +180,8 @@ class Lexer(object):
     t_GE = r'>='
     t_EQ = r'=='
     t_NE = r'!='
+    t_LARROW = r'<-'
+    t_RARROW = r'->'
 
     # Assignment Operators
     t_EQUALS = r'='
@@ -192,6 +196,7 @@ class Lexer(object):
     t_AMPERSANDEQUAL = r'&='
     t_PIPEEQUAL = r'\|='
     t_XOREQUAL = r'\^='
+    t_DOUBLEDIVEQUAL = r'//='
 
     # Delimeters
     t_LPAREN = r'\('

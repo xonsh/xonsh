@@ -172,8 +172,7 @@ class Parser(object):
         p[0] = p[1]
 
     def p_decorator(self, p):
-        """decorator : AT dotted_name [ '(' [arglist] ')' ] NEWLINE
-        """
+        """decorator : AT dotted_name [ LPAREN [arglist] RPAREN ] NEWLINE"""
         p[0] = p[1:]
 
     def p_decorators(self, p):
@@ -185,192 +184,183 @@ class Parser(object):
         p[0] = p[1:]
 
     def p_funcdef(self, p):
-        """funcdef : 'def' NAME parameters ['->' test] ':' suite
+        """funcdef : DEF NAME parameters [RARROW test] COLON suite"""
+        p[0] = p[1:]
+
+    def p_parameters(self, p):
+        """parameters : LPAREN [typedargslist] RPAREN"""
+        p[0] = p[1:]
+
+    def p_typedargslist(self, p):
+        """typedargslist : (tfpdef [EQUALS test] (COMMA tfpdef [EQUALS test])* 
+                            [COMMA [TIMES [tfpdef] (COMMA tfpdef [EQUALS test])* 
+                            [EQUALS POW tfpdef] | POW tfpdef]]
+                         | TIMES [tfpdef] (COMMA tfpdef [EQUALS test])* 
+                            [COMMA POW tfpdef] | POW tfpdef)
         """
         p[0] = p[1:]
 
-    def p_(self, p):
-        """parameters : '(' [typedargslist] ')'
+    def p_tfpdef(self, p):
+        """tfpdef : NAME [COLON test]"""
+        p[0] = p[1:]
+
+    def p_varargslist(self, p):
+        """varargslist : (vfpdef [EQUALS test] (COMMA vfpdef [EQUALS test])* 
+                          [COMMA [TIMES [vfpdef] (COMMA vfpdef [EQUALS test])* 
+                          [COMMA POW vfpdef] | POW vfpdef]]
+                       | TIMES [vfpdef] (COMMA vfpdef [EQUALS test])* 
+                          [COMMA POW vfpdef] | POW vfpdef)
         """
         p[0] = p[1:]
 
-    def p_(self, p):
-        """typedargslist: (tfpdef ['=' test] (',' tfpdef ['=' test])* [','
-       ['*' [tfpdef] (',' tfpdef ['=' test])* [',' '**' tfpdef] | '**' tfpdef]]
-     |  '*' [tfpdef] (',' tfpdef ['=' test])* [',' '**' tfpdef] | '**' tfpdef)
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """tfpdef: NAME [':' test]
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """varargslist: (vfpdef ['=' test] (',' vfpdef ['=' test])* [','
-       ['*' [vfpdef] (',' vfpdef ['=' test])* [',' '**' vfpdef] | '**' vfpdef]]
-     |  '*' [vfpdef] (',' vfpdef ['=' test])* [',' '**' vfpdef] | '**' vfpdef)
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
+    def p_vfpdef(self, p):
         """vfpdef : NAME"""
         p[0] = p[1:]
 
-    def p_(self, p):
-        """stmt : simple_stmt | compound_stmt
+    def p_stmt(self, p):
+        """stmt : simple_stmt | compound_stmt"""
+        p[0] = p[1:]
+
+    def p_simple_stmt(self, p):
+        """simple_stmt : small_stmt (SEMI small_stmt)* [SEMI] NEWLINE"""
+        p[0] = p[1:]
+
+    def p_small_stmt(self, p):
+        """small_stmt : (expr_stmt | del_stmt | pass_stmt | flow_stmt 
+                      | import_stmt | global_stmt | nonlocal_stmt 
+                      | assert_stmt)
         """
         p[0] = p[1:]
 
-    def p_(self, p):
-        """simple_stmt: small_stmt (';' small_stmt)* [';'] NEWLINE
+    def p_expr_stmt(self, p):
+        """expr_stmt : testlist_star_expr (augassign (yield_expr|testlist) 
+                     | (EQUALS (yield_expr|testlist_star_expr))*)
         """
         p[0] = p[1:]
 
-    def p_(self, p):
-        """small_stmt: (expr_stmt | del_stmt | pass_stmt | flow_stmt |
-             import_stmt | global_stmt | nonlocal_stmt | assert_stmt)
+    def p_testlist_star_expr(self, p):
+        """testlist_star_expr : (test|star_expr) (COMMA (test|star_expr))* 
+                                [COMMA]
         """
         p[0] = p[1:]
 
-    def p_(self, p):
-        """expr_stmt: testlist_star_expr (augassign (yield_expr|testlist) |
-                     ('=' (yield_expr|testlist_star_expr))*)
+    def p_augassign(self, p):
+        """augassign : (PLUSEQUAL | MINUSEQUAL | TIMESEQUAL | DIVEQUAL 
+                     | MODEQUAL | AMPERSANDEQUAL | PIPEEQUAL | XOREQUAL
+                     | LSHIFTEQUAL | RSHIFTEQUAL | POWEQUAL 
+                     | DOUBLEDIVEQUAL)
         """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """testlist_star_expr: (test|star_expr) (',' (test|star_expr))* [',']
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """augassign: ('+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' |
-            '<<=' | '>>=' | '**=' | '//=')
-        """
-        p[0] = p[1:]
+        p[0] = p[1]
 
     #
     # For normal assignments, additional restrictions enforced 
     # by the interpreter
     #
-    def p_(self, p):
-        """del_stmt: 'del' exprlist
+    def p_del_stmt(self, p):
+        """del_stmt : DEL exprlist"""
+        p[0] = p[1:]
+
+    def p_pass_stmt(self, p):
+        """pass_stmt : PASS"""
+        p[0] = p[1:]
+
+    def p_flow_stmt(self, p):
+        """flow_stmt : break_stmt | continue_stmt | return_stmt | raise_stmt 
+                     | yield_stmt
+        """
+        p[0] = p[1]
+
+    def p_break_stmt(self, p):
+        """break_stmt : BREAK"""
+        p[0] = p[1:]
+
+    def p_continue_stmt(self, p):
+        """continue_stmt : CONTINUE"""
+        p[0] = p[1:]
+
+    def p_return_stmt(self, p):
+        """return_stmt : RETURN [testlist]"""
+        p[0] = p[1:]
+
+    def p_yield_stmt(self, p):
+        """yield_stmt : yield_expr"""
+        p[0] = p[1:]
+
+    def p_raise_stmt(self, p):
+        """raise_stmt : RAISE [test [FROM test]]"""
+        p[0] = p[1:]
+
+    def p_import_stmt(self, p):
+        """import_stmt : import_name | import_from"""
+        p[0] = p[1]
+
+    def p_import_name(self, p):
+        """import_name : IMPORT dotted_as_names
         """
         p[0] = p[1:]
 
-    def p_(self, p):
-        """pass_stmt : 'pass'
+    def p_import_from(self, p):
+        """import_from : (FROM ((PERIOD | ELLIPSIS)* dotted_name 
+                                | (PERIOD | ELLIPSIS)+)
+                        IMPORT (TIMES | LPAREN import_as_names RPAREN 
+                               | import_as_names))
+        """
+        # note below: the ('.' | '...') is necessary because '...' is 
+        # tokenized as ELLIPSIS
+        p[0] = p[1:]
+
+    def p_import_as_name(self, p):
+        """import_as_name : NAME [AS NAME]
         """
         p[0] = p[1:]
 
-    def p_(self, p):
-        """flow_stmt: break_stmt | continue_stmt | return_stmt | raise_stmt | yield_stmt
+    def p_dotted_as_name(self, p):
+        """dotted_as_name : dotted_name [AS NAME]"""
+        p[0] = p[1:]
+
+    def p_import_as_names(self, p):
+        """import_as_names : import_as_name (COMMA import_as_name)* [COMMA]
         """
         p[0] = p[1:]
 
-    def p_(self, p):
-        """break_stmt: 'break'
+    def p_dotted_as_names(self, p):
+        """dotted_as_names : dotted_as_name (COMMA dotted_as_name)*"""
+        p[0] = p[1:]
+
+    def p_dotted_name(self, p):
+        """dotted_name : NAME (PERIOD NAME)*"""
+        p[0] = p[1:]
+
+    def p_global_stmt(self, p):
+        """global_stmt : GLOBAL NAME (COMMA NAME)*"""
+        p[0] = p[1:]
+
+    def p_nonlocal_stmt(self, p):
+        """nonlocal_stmt : NONLOCAL NAME (COMMA NAME)*"""
+        p[0] = p[1:]
+
+    def p_assert_stmt(self, p):
+        """assert_stmt : ASSERT test [COMMA test]"""
+        p[0] = p[1:]
+
+    def p_compound_stmt(self, p):
+        """compound_stmt : if_stmt | while_stmt | for_stmt | try_stmt 
+                         | with_stmt | funcdef | classdef | decorated
+        """
+        p[0] = p[1]
+
+    def p_if_stmt(self, p):
+        """if_stmt : IF test COLON suite (ELIF test COLON suite)* 
+                     [ELSE COLON suite]
         """
         p[0] = p[1:]
 
-    def p_(self, p):
-        """continue_stmt: 'continue'
-        """
+    def p_while_stmt(self, p):
+        """while_stmt : WHILE test COLON suite [ELSE COLON suite]"""
         p[0] = p[1:]
 
-    def p_(self, p):
-        """return_stmt: 'return' [testlist]
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """yield_stmt: yield_expr
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """raise_stmt: 'raise' [test ['from' test]]
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """import_stmt: import_name | import_from
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """import_name: 'import' dotted_as_names
-        """
-        p[0] = p[1:]
-
-    #
-    # note below: the ('.' | '...') is necessary because '...' is 
-    # tokenized as ELLIPSIS
-    #
-    def p_(self, p):
-        """import_from: ('from' (('.' | '...')* dotted_name | ('.' | '...')+)
-              'import' ('*' | '(' import_as_names ')' | import_as_names))
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """import_as_name: NAME ['as' NAME]
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """dotted_as_name: dotted_name ['as' NAME]
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """import_as_names: import_as_name (',' import_as_name)* [',']
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """dotted_as_names: dotted_as_name (',' dotted_as_name)*
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """dotted_name: NAME ('.' NAME)*
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """global_stmt: 'global' NAME (',' NAME)*
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """nonlocal_stmt: 'nonlocal' NAME (',' NAME)*
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """assert_stmt: 'assert' test [',' test]
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """if_stmt: 'if' test ':' suite ('elif' test ':' suite)* ['else' ':' suite]
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """while_stmt: 'while' test ':' suite ['else' ':' suite]
-        """
-        p[0] = p[1:]
-
-    def p_(self, p):
-        """for_stmt: 'for' exprlist 'in' testlist ':' suite ['else' ':' suite]
+    def p_for_stmt(self, p):
+        """for_stmt : FOR exprlist IN testlist COLON suite [ELSE COLON suite]
         """
         p[0] = p[1:]
 
