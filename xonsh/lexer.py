@@ -62,11 +62,11 @@ class Lexer(object):
 
     def _error(self, msg, token):
         location = self._make_tok_location(token)
-        self.error_func(msg, location[0], location[1])
+        self.errfunc(msg, location[0], location[1])
         self.lexer.skip(1)
 
     def _make_tok_location(self, token):
-        return (token.lineno, self.find_tok_column(token))
+        return (token.lineno, self.token_col(token))
 
     def __iter__(self):
         for t in self.lexer:
@@ -101,8 +101,8 @@ class Lexer(object):
 
         # Assignment Operators
         'EQUALS', 'PLUSEQUAL', 'MINUSEQUAL', 'TIMESEQUAL', 'DIVEQUAL', 
-        'MODEQUAL', 'POWEQUAL', 'LSHIFTEQUAL','RSHIFTEQUAL', 'ANDEQUAL', 
-        'XOREQUAL', 'OREQUAL',
+        'MODEQUAL', 'POWEQUAL', 'LSHIFTEQUAL','RSHIFTEQUAL', 'AMPERSANDEQUAL', 
+        'XOREQUAL', 'PIPEEQUAL',
 
         # Command line
         'CLI_OPTION', 
@@ -131,7 +131,8 @@ class Lexer(object):
     bin_literal = '0[bB]?[0-1]+'
 
     # string literals
-    string_literal = r'''(\"\"\"|\'\'\'|\"|\')((?<!\\)\\\1|.)*?\1'''
+    #string_literal = r'''(\"\"\"|\'\'\'|\"|\')((?<!\\)\\\1|.)*?\1'''
+    string_literal = r'(?:"(?:[^"\\n\\r\\\\]|(?:"")|(?:\\\\x[0-9a-fA-F]+)|(?:\\\\.))*")|(?:\'(?:[^\'\\n\\r\\\\]|(?:\'\')|(?:\\\\x[0-9a-fA-F]+)|(?:\\\\.))*\')'
     raw_string_literal = 'r'+string_literal
     unicode_literal = 'u'+string_literal
     bytes_literal = 'b'+string_literal
@@ -218,7 +219,7 @@ class Lexer(object):
     t_RSHIFTEQUAL = r'>>='
     t_AMPERSANDEQUAL = r'&='
     t_PIPEEQUAL = r'\|='
-    t_XOREQUAL1 = r'\^='
+    t_XOREQUAL = r'\^='
 
     # Delimeters
     t_LPAREN = r'\('
@@ -233,7 +234,7 @@ class Lexer(object):
     t_COLON = r':'
     t_AT = r'@'
     t_DOLLAR = r'\$'
-    t_COMMENT = r'#.*$'
+    t_COMMENT = r'\#.*$'
     t_ELLIPSIS = r'\.\.\.'
 
     #
@@ -259,7 +260,7 @@ class Lexer(object):
     t_FLOAT_LITERAL = float_literal
 
     # ints, functions to ensure correct ordering
-    b_INT_LITERAL = int_literal
+    t_INT_LITERAL = int_literal
 
     @TOKEN(hex_literal)
     def t_HEX_LITERAL(self, t):
