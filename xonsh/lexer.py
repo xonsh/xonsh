@@ -70,9 +70,9 @@ class Lexer(object):
     ## Reserved keywords
     ##
     pykeywords = ('AND', 'AS', 'ASSERT', 'BREAK', 'CLASS', 'CONTINUE', 'DEF', 
-        'DEL', 'ELIF', 'ELSE', 'EXCEPT', 'FINALLY', 'FOR', 'FROM', 'GLOBAL', 
-        'IMPORT', 'IF', 'IN', 'IS', 'LAMBDA', 'NONLOCAL', 'NOT', 'OR', 'PASS', 
-        'RAISE', 'TRY', 'WHILE', 'WITH', 'YIELD',)
+        'DEL', 'ELIF', 'ELSE', 'EXCEPT', 'EXEC', 'FINALLY', 'FOR', 'FROM', 
+        'GLOBAL', 'IMPORT', 'IF', 'IN', 'IS', 'LAMBDA', 'NONLOCAL', 'NOT', 
+        'OR', 'PASS', 'RAISE', 'TRY', 'WHILE', 'WITH', 'YIELD',)
 
     pykeyword_map = {k.lower(): k for k in pykeywords}
 
@@ -89,7 +89,8 @@ class Lexer(object):
 
         # literals
         'INT_LITERAL', 'HEX_LITERAL', 'OCT_LITERAL', 'BIN_LITERAL',
-        'FLOAT_LITERAL', 'STRING_LITERAL',
+        'FLOAT_LITERAL', 'STRING_LITERAL', 'RAW_STRING_LITERAL',
+        'BYTES_LITERAL', 'UNICODE_LITERAL',
 
         # Operators
         'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'MOD',
@@ -129,30 +130,10 @@ class Lexer(object):
     oct_literal = '0[oO]?[0-7]+'
     oct_literal = '0[bB]?[0-1]+'
 
-    # character constants (K&R2: A.2.5.2)
-    # Note: a-zA-Z and '.-~^_!=&;,' are allowed as escape chars to support #line
-    # directives with Windows paths as filenames (..\..\dir\file)
-    # For the same reason, decimal_escape allows all digit sequences. We want to
-    # parse all correct code, even if it means to sometimes parse incorrect
-    # code.
-    #
-    simple_escape = r"""([a-zA-Z._~!=&\^\-\\?'"])"""
-    decimal_escape = r"""(\d+)"""
-    hex_escape = r"""(x[0-9a-fA-F]+)"""
-    bad_escape = r"""([\\][^a-zA-Z._~^!=&\^\-\\?'"x0-7])"""
-
-    escape_sequence = r"""(\\("""+simple_escape+'|'+decimal_escape+'|'+hex_escape+'))'
-    cconst_char = r"""([^'\\\n]|"""+escape_sequence+')'
-    char_const = "'"+cconst_char+"'"
-    wchar_const = 'L'+char_const
-    unmatched_quote = "('"+cconst_char+"*\\n)|('"+cconst_char+"*$)"
-    bad_char_const = r"""('"""+cconst_char+"""[^'\n]+')|('')|('"""+bad_escape+r"""[^'\n]*')"""
-
-    # string literals (K&R2: A.2.6)
-    string_char = r"""([^"\\\n]|"""+escape_sequence+')'
-    string_literal = '"'+string_char+'*"'
-    wstring_literal = 'L'+string_literal
-    bad_string_literal = '"'+string_char+'*'+bad_escape+string_char+'*"'
+    # string literals
+    string_literal = r'''(\"\"\"|\'\'\'|\"|\')((?<!\\)\\\1|.)*?\1'''
+    raw_string_literal = 'r'+string_literal
+    unicode_literal = 'u'+string_literal
 
     # floating constants (K&R2: A.2.5.3)
     exponent_part = r"""([eE][-+]?[0-9]+)"""
