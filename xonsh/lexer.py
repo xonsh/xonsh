@@ -30,6 +30,7 @@ class Lexer(object):
         self.errfunc = errfunc
         self.fname = ''
         self.last = None
+        self.lexer = None
 
     def build(self, **kwargs):
         """Part of the PLY lexer API."""
@@ -37,11 +38,13 @@ class Lexer(object):
 
     @property
     def lineno(self):
-        return self.lexer.lineno
+        if self.lexer is not None:
+            return self.lexer.lineno
 
     @lineno.setter
-    def lineno(self, value)
-        self.lexer.lineno = 1
+    def lineno(self, value):
+        if self.lexer is not None:
+            self.lexer.lineno = value
 
     def input(self, s):
         """Calls the lexer on the string s."""
@@ -64,6 +67,10 @@ class Lexer(object):
 
     def _make_tok_location(self, token):
         return (token.lineno, self.find_tok_column(token))
+
+    def __iter__(self):
+        for t in self.lexer:
+            yield t
 
     #
     # Python keywords
@@ -116,7 +123,7 @@ class Lexer(object):
     #
     # Token Regexes
     #
-    id = r'[a-zA-Z_$][0-9a-zA-Z_$]*'
+    identifier = r'[a-zA-Z_$][0-9a-zA-Z_$]*'
 
     int_literal = '\d+'
     hex_literal = '0[xX][0-9a-fA-F]+'
@@ -167,7 +174,7 @@ class Lexer(object):
     t_IN = r'in'
     t_IS = r'is'
     t_LAMBDA = r'lambda'
-    t_NONLOCAL r'nonlocal'
+    t_NONLOCAL = r'nonlocal'
     t_NOT = r'not'
     t_OR = r'or'
     t_PASS = r'pass'
