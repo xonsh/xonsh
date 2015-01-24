@@ -48,7 +48,7 @@ def assert_tokens_equal(x, y):
     if len(diffs) > 0:
         msg = ['The token sequnces differ: ']
         for a, b in diffs:
-            msg += ['', '- ' + repr(x), '+ ' + repr(y)]
+            msg += ['', '- ' + repr(a), '+ ' + repr(b)]
         msg = '\n'.join(msg)
         raise AssertionError(msg)
 
@@ -78,6 +78,13 @@ def test_indent():
 def test_post_whitespace():
     input = '42  \t  '
     exp = [('INT_LITERAL', '42', 1, 0)]
+    yield check_tokens, input, exp
+
+def test_internal_whitespace():
+    input = '42  +\t65'
+    exp = [('INT_LITERAL', '42', 1, 0), 
+           ('PLUS', '+', 1, 4),
+           ('INT_LITERAL', '65', 1, 6),]
     yield check_tokens, input, exp
 
 

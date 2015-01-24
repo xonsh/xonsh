@@ -146,7 +146,7 @@ class Lexer(object):
     # Rules 
     #
     t_INDENT = r'^[ \t]+'
-    t_ignore_WHITESPACE = r' \t'
+    t_ignore_WHITESPACE = r'[ \t]+'
 
     # Newlines
     def t_NEWLINE(self, t):
