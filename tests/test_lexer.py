@@ -163,7 +163,7 @@ def test_single_bytes_literal():
 
 def test_float_literals():
     cases = ['0.0', '.0', '0.', '1e10', '1.e42', '0.1e42', '0.5e-42', 
-             '5E10']
+             '5E10', '5e+42']
     for s in cases:
         yield check_token, s, ['FLOAT_LITERAL', s, 1, 0]
 
