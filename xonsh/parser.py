@@ -49,9 +49,24 @@ class Parser(object):
 
         opt_rules = (
             'newlines',
+            'arglist',
+            'func_call',
+            'rarrow_test',
+            'typedargslist',
+            'equals_test',
+            'colon_test',
+            'comma_tfpdef_list',
+            'tfpdef',
+            'comma_pow_tfpdef',
             )
         for rule in opt_rules:
             self._opt_rule(rule)
+
+        list_rules = (
+            'comma_tfpdef',
+            )
+        for rule in list_rules:
+            self._list_rule(rule)
 
         self.parser = yacc.yacc(module=self, debug=yacc_debug,
             start='translation_unit_or_empty', optimize=yacc_optimize,
@@ -101,6 +116,17 @@ class Parser(object):
                            '        | {0}').format(rulename)
         optfunc.__name__ = 'p_' + rulename + '_opt'
         setattr(self.__class__, optfunc.__name__, optfunc)
+
+    def _list_rule(self, rulename):
+        """For a rule name, creates an associated list rule.
+        '_list' is appended to the rule name.
+        """
+        def listfunc(self, p):
+            p[0] = p[1] if len(p) == 2 else p[1] + p[2]
+        listfunc.__doc__ = ('{0}_list : {0}\n'
+                            '         | {0}_list {0}').format(rulename)
+        listfunc.__name__ = 'p_' + rulename + '_list'
+        setattr(self.__class__, listfunc.__name__, listfunc)
 
     def currloc(self, lineno, column=None):
         """Returns the current location."""
@@ -165,36 +191,72 @@ class Parser(object):
         """eval_input : testlist newlines_opt ENDMARKER"""
         p[0] = p[1]
 
+    def p_func_call(self, p):
+        """func_call : LPAREN arglist_opt RPAREN"""
+        p[0] = p[2]
+
     def p_decorator(self, p):
-        """decorator : AT dotted_name [ LPAREN [arglist] RPAREN ] NEWLINE"""
+        """decorator : AT dotted_name func_call_opt NEWLINE"""
         p[0] = p[1:]
 
     def p_decorators(self, p):
-        """decorators : decorator+"""
-        p[0] = p[1:]
+        """decorators : decorator
+                      | decorators decorator
+        """
+        p[0] = p[1] if len(p) == 2 else p[1] + p[2]
+
+    def p_classdef_or_funcdef(self, p):
+        """classdef_or_funcdef : classdef
+                               | funcdef
+        """
+        p[0] = p[1]
 
     def p_decorated(self, p):
-        """decorated : decorators (classdef | funcdef)"""
-        p[0] = p[1:]
+        """decorated : decorators classdef_or_funcdef"""
+        p[0] = p[1] + p[2]
+
+    def p_rarrow_test(self, p):
+        """rarrow_test : RARROW test"""
+        p[0] = p[1] + p[2]
 
     def p_funcdef(self, p):
-        """funcdef : DEF NAME parameters [RARROW test] COLON suite"""
+        """funcdef : DEF NAME parameters rarrow_test_opt COLON suite"""
         p[0] = p[1:]
 
     def p_parameters(self, p):
-        """parameters : LPAREN [typedargslist] RPAREN"""
+        """parameters : LPAREN typedargslist_opt RPAREN"""
         p[0] = p[1:]
 
+    def p_equals_test(self, p):
+        """equals_test : EQUALS test"""
+        p[0] = p[1] + p[2]
+
     def p_typedargslist(self, p):
-        """typedargslist : (tfpdef [EQUALS test] (COMMA tfpdef [EQUALS test])* [COMMA [TIMES [tfpdef] (COMMA tfpdef [EQUALS test])* [EQUALS POW tfpdef] | POW tfpdef]] 
-                         | TIMES [tfpdef] (COMMA tfpdef [EQUALS test])* [COMMA POW tfpdef] 
-                         | POW tfpdef)
+        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt 
+                         | tfpdef equals_test_opt comma_tfpdef_list_opt COMMA 
+                         | tfpdef equals_test_opt comma_tfpdef_list_opt COMMA TIMES tfpdef_opt comma_tfpdef_list_opt 
+                         | tfpdef equals_test_opt comma_tfpdef_list_opt COMMA TIMES tfpdef_opt comma_tfpdef_list_opt EQUALS POW tfpdef
+                         | tfpdef equals_test_opt comma_tfpdef_list_opt COMMA POW tfpdef
+                         | TIMES tfpdef_opt comma_tfpdef_list_opt comma_pow_tfpdef_opt
+                         | POW tfpdef
         """
         p[0] = p[1:]
 
+    def p_colon_test(self, p):
+        """colon_test : COLON test"""
+        p[0] = p[1] + p[2]
+
     def p_tfpdef(self, p):
-        """tfpdef : NAME [COLON test]"""
-        p[0] = p[1:]
+        """tfpdef : NAME colon_test_opt"""
+        p[0] = p[1] + p[1]
+
+    def p_comma_tfpdef(self, p):
+        """comma_tfpdef : COMMA tfpdef equals_test_opt"""
+        p[0] = p[1] + p[2] + p[3]
+
+    def p_comma_pow_tfpdef(self, p):
+        """comma_pow_tfpdef : COMMA POW tfpdef"""
+        p[0] = p[1] + p[2] + p[3]
 
     def p_varargslist(self, p):
         """varargslist : (vfpdef [EQUALS test] (COMMA vfpdef [EQUALS test])* [COMMA [TIMES [vfpdef] (COMMA vfpdef [EQUALS test])* [COMMA POW vfpdef] | POW vfpdef]]
