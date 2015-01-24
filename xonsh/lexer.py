@@ -87,7 +87,7 @@ class Lexer(object):
     #
     tokens = pykeywords + (
         # Misc
-        'ID', 'INDENT', 'NEWLINE',
+        'ID', 'INDENT', 'NEWLINE', 'WHITESPACE',
 
         # literals
         'INT_LITERAL', 'HEX_LITERAL', 'OCT_LITERAL', 'BIN_LITERAL',
@@ -145,8 +145,8 @@ class Lexer(object):
     #
     # Rules 
     #
-    t_INDENT = '^[ \t]+'
-    t_ignore = ' \t'
+    t_INDENT = r'^[ \t]+'
+    t_ignore_WHITESPACE = r' \t'
 
     # Newlines
     def t_NEWLINE(self, t):

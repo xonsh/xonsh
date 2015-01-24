@@ -70,6 +70,15 @@ def test_indent():
     assert_tokens_equal(exp, obs)
     
 
+def test_post_whitespace():
+    l = Lexer()
+    l.build()
+    l.input('42  \t  ')
+    obs = list(l)
+    exp = [('INT_LITERAL', '42', 1, 0)]
+    assert_tokens_equal(exp, obs)
+
+
 
 
 if __name__ == '__main__':
