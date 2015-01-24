@@ -404,66 +404,196 @@ class Parser(object):
         p[0] = p[1:]
 
     def p_(self, p):
-        """
+        """test: or_test ['if' or_test 'else' test] | lambdef
         """
         p[0] = p[1:]
 
+    def p_(self, p):
+        """test_nocond: or_test | lambdef_nocond
+        """
+        p[0] = p[1:]
 
+    def p_(self, p):
+        """lambdef: 'lambda' [varargslist] ':' test
+        """
+        p[0] = p[1:]
 
-    """
+    def p_(self, p):
+        """lambdef_nocond: 'lambda' [varargslist] ':' test_nocond
+        """
+        p[0] = p[1:]
 
-test: or_test ['if' or_test 'else' test] | lambdef
-test_nocond: or_test | lambdef_nocond
-lambdef: 'lambda' [varargslist] ':' test
-lambdef_nocond: 'lambda' [varargslist] ':' test_nocond
-or_test: and_test ('or' and_test)*
-and_test: not_test ('and' not_test)*
-not_test: 'not' not_test | comparison
-comparison: expr (comp_op expr)*
-# <> isn't actually a valid comparison operator in Python. It's here for the
-# sake of a __future__ import described in PEP 401
-comp_op: '<'|'>'|'=='|'>='|'<='|'<>'|'!='|'in'|'not' 'in'|'is'|'is' 'not'
-star_expr: '*' expr
-expr: xor_expr ('|' xor_expr)*
-xor_expr: and_expr ('^' and_expr)*
-and_expr: shift_expr ('&' shift_expr)*
-shift_expr: arith_expr (('<<'|'>>') arith_expr)*
-arith_expr: term (('+'|'-') term)*
-term: factor (('*'|'/'|'%'|'//') factor)*
-factor: ('+'|'-'|'~') factor | power
-power: atom trailer* ['**' factor]
-atom: ('(' [yield_expr|testlist_comp] ')' |
+    def p_(self, p):
+        """or_test: and_test ('or' and_test)*
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """and_test: not_test ('and' not_test)*
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """not_test: 'not' not_test | comparison
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """comparison: expr (comp_op expr)*
+        """
+        p[0] = p[1:]
+
+    # <> isn't actually a valid comparison operator in Python. It's here 
+    # for the sake of a __future__ import described in PEP 401
+    def p_(self, p):
+        """comp_op: '<'|'>'|'=='|'>='|'<='|'<>'|'!='|'in'|'not' 'in'|'is'|'is' 'not'
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """star_expr: '*' expr
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """expr: xor_expr ('|' xor_expr)*
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """xor_expr: and_expr ('^' and_expr)*
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """and_expr: shift_expr ('&' shift_expr)*
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """shift_expr: arith_expr (('<<'|'>>') arith_expr)*
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """arith_expr: term (('+'|'-') term)*
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """term: factor (('*'|'/'|'%'|'//') factor)*
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """factor: ('+'|'-'|'~') factor | power
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """power: atom trailer* ['**' factor]
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """atom: ('(' [yield_expr|testlist_comp] ')' |
        '[' [testlist_comp] ']' |
        '{' [dictorsetmaker] '}' |
        NAME | NUMBER | STRING+ | '...' | 'None' | 'True' | 'False')
-testlist_comp: (test|star_expr) ( comp_for | (',' (test|star_expr))* [','] )
-trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
-subscriptlist: subscript (',' subscript)* [',']
-subscript: test | [test] ':' [test] [sliceop]
-sliceop: ':' [test]
-exprlist: (expr|star_expr) (',' (expr|star_expr))* [',']
-testlist: test (',' test)* [',']
-dictorsetmaker: ( (test ':' test (comp_for | (',' test ':' test)* [','])) |
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """testlist_comp: (test|star_expr) ( comp_for | (',' (test|star_expr))* [','] )
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """subscriptlist: subscript (',' subscript)* [',']
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """subscript: test | [test] ':' [test] [sliceop]
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """sliceop: ':' [test]
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """exprlist: (expr|star_expr) (',' (expr|star_expr))* [',']
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """testlist: test (',' test)* [',']
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """dictorsetmaker: ( (test ':' test (comp_for | (',' test ':' test)* [','])) |
                   (test (comp_for | (',' test)* [','])) )
+        """
+        p[0] = p[1:]
 
-classdef: 'class' NAME ['(' [arglist] ')'] ':' suite
+    def p_(self, p):
+        """classdef: 'class' NAME ['(' [arglist] ')'] ':' suite
+        """
+        p[0] = p[1:]
 
-arglist: (argument ',')* (argument [',']
+    def p_(self, p):
+        """arglist: (argument ',')* (argument [',']
                          |'*' test (',' argument)* [',' '**' test] 
                          |'**' test)
-# The reason that keywords are test nodes instead of NAME is that using NAME
-# results in an ambiguity. ast.c makes sure it's a NAME.
-argument: test [comp_for] | test '=' test  # Really [keyword '='] test
-comp_iter: comp_for | comp_if
-comp_for: 'for' exprlist 'in' or_test [comp_iter]
-comp_if: 'if' test_nocond [comp_iter]
+        """
+        p[0] = p[1:]
 
-# not used in grammar, but may appear in "node" passed from Parser to Compiler
-encoding_decl: NAME
+    # The reason that keywords are test nodes instead of NAME is that using 
+    # NAME results in an ambiguity. ast.c makes sure it's a NAME.
+    def p_(self, p):
+        """argument: test [comp_for] | test '=' test  # Really [keyword '='] test
+        """
+        p[0] = p[1:]
 
-yield_expr: 'yield' [yield_arg]
-yield_arg: 'from' test | testlist
-"""
+    def p_(self, p):
+        """comp_iter: comp_for | comp_if
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """comp_for: 'for' exprlist 'in' or_test [comp_iter]
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """comp_if: 'if' test_nocond [comp_iter]
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """encoding_decl: NAME
+        """
+        # not used in grammar, but may appear in "node" passed from 
+        # Parser to Compiler
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """yield_expr: 'yield' [yield_arg]
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """yield_arg: 'from' test | testlist
+        """
+        p[0] = p[1:]
 
     def p_empty(self, p):
         'empty : '
