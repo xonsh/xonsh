@@ -52,32 +52,33 @@ def assert_tokens_equal(x, y):
         msg = '\n'.join(msg)
         raise AssertionError(msg)
 
+def check_token(input, exp):
+    l = Lexer()
+    l.build()
+    l.input(input)
+    obs = list(l)
+    assert_equal(1, len(obs))
+    assert_token_equal(exp, obs[0])
+
+def check_tokens(input, exp):
+    l = Lexer()
+    l.build()
+    l.input(input)
+    obs = list(l)
+    assert_tokens_equal(exp, obs)
+
 
 def test_int_literal():
-    l = Lexer()
-    l.build()
-    l.input('42')
-    toks = list(l)
-    assert_token_equal(['INT_LITERAL', '42', 1, 0], toks[0])
-
+    yield check_token, '42', ['INT_LITERAL', '42', 1, 0]
 
 def test_indent():
-    l = Lexer()
-    l.build()
-    l.input('  \t  42')
-    obs = list(l)
     exp = [('INDENT', '  \t  ', 1, 0), ('INT_LITERAL', '42', 1, 5)]
-    assert_tokens_equal(exp, obs)
-    
+    yield check_tokens, '  \t  42', exp
 
 def test_post_whitespace():
-    l = Lexer()
-    l.build()
-    l.input('42  \t  ')
-    obs = list(l)
+    input = '42  \t  '
     exp = [('INT_LITERAL', '42', 1, 0)]
-    assert_tokens_equal(exp, obs)
-
+    yield check_tokens, input, exp
 
 
 
