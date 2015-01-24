@@ -123,7 +123,7 @@ class Lexer(object):
     #
     # Token Regexes
     #
-    identifier = r'[a-zA-Z_$][0-9a-zA-Z_$]*'
+    identifier = r'[a-zA-Z_][0-9a-zA-Z_]*'
 
     int_literal = '\d+'
     hex_literal = '0[xX][0-9a-fA-F]+'
@@ -132,10 +132,12 @@ class Lexer(object):
 
     # string literals
     #string_literal = r'''(\"\"\"|\'\'\'|\"|\')((?<!\\)\\\1|.)*?\1'''
-    string_literal = r'(?:"(?:[^"\\n\\r\\\\]|(?:"")|(?:\\\\x[0-9a-fA-F]+)|(?:\\\\.))*")|(?:\'(?:[^\'\\n\\r\\\\]|(?:\'\')|(?:\\\\x[0-9a-fA-F]+)|(?:\\\\.))*\')'
-    raw_string_literal = 'r'+string_literal
-    unicode_literal = 'u'+string_literal
-    bytes_literal = 'b'+string_literal
+    single_string_literal = r'(?:\'(?:[^\'\\n\\r\\\\]|(?:\'\')|(?:\\\\x[0-9a-fA-F]+)|(?:\\\\.))*\')'
+    double_string_literal = r'(?:"(?:[^"\\n\\r\\\\]|(?:"")|(?:\\\\x[0-9a-fA-F]+)|(?:\\\\.))*")'
+    string_literal = single_string_literal + '|' + double_string_literal
+    raw_string_literal = 'r' + single_string_literal + '|r' + double_string_literal
+    unicode_literal = 'u' + single_string_literal + '|u' + double_string_literal
+    bytes_literal = 'b' + single_string_literal + '|b' + double_string_literal
 
     # floating point
     float_exponent = r"""([eE][-+]?[0-9]+)"""
@@ -152,38 +154,6 @@ class Lexer(object):
     def t_NEWLINE(self, t):
         r'\n+'
         t.lexer.lineno += t.value.count("\n")
-
-    # Python Keywords
-    t_AND = r'and'
-    t_AS = r'as'
-    t_ASSERT = r'assert' 
-    t_BREAK = r'break'
-    t_CLASS = r'class'
-    t_CONTINUE = r'continue'
-    t_DEF = r'def' 
-    t_DEL = r'delete' 
-    t_ELIF = 'elif'
-    t_ELSE = r'else'
-    t_EXCEPT = r'except'
-    t_EXEC = r'exec'
-    t_FINALLY = 'finally'
-    t_FOR = r'for'
-    t_FROM = r'from'
-    t_GLOBAL = r'global'
-    t_IMPORT = r'import'
-    t_IF = r'if'
-    t_IN = r'in'
-    t_IS = r'is'
-    t_LAMBDA = r'lambda'
-    t_NONLOCAL = r'nonlocal'
-    t_NOT = r'not'
-    t_OR = r'or'
-    t_PASS = r'pass'
-    t_RAISE = r'raise'
-    t_TRY = r'try'
-    t_WHILE = r'while'
-    t_WITH = r'with'
-    t_YIELD = r'yield'
 
     # Basic Operators
     t_PLUS = r'\+'
@@ -234,7 +204,7 @@ class Lexer(object):
     t_COLON = r':'
     t_AT = r'@'
     t_DOLLAR = r'\$'
-    t_COMMENT = r'\#.*$'
+    t_ignore_COMMENT = r'\#.*$'
     t_ELLIPSIS = r'\.\.\.'
 
     #
@@ -242,7 +212,11 @@ class Lexer(object):
     #
 
     # strings, functions to ensure correct ordering
-    t_STRING_LITERAL = string_literal
+    #t_STRING_LITERAL = string_literal
+
+    @TOKEN(string_literal)
+    def t_STRING_LITERAL(self, t):
+        return t
 
     @TOKEN(raw_string_literal)
     def t_RAW_STRING_LITERAL(self, t):
@@ -256,7 +230,6 @@ class Lexer(object):
     def t_BYTES_LITERAL(self, t):
         return t
 
-    
     t_FLOAT_LITERAL = float_literal
 
     # ints, functions to ensure correct ordering
@@ -275,9 +248,10 @@ class Lexer(object):
         return t
 
     # Extra
-
     @TOKEN(identifier)
     def t_ID(self, t):
+        if t.value in self.pykeyword_map:
+            t.type = self.pykeyword_map[t.value]
         return t
 
     def t_error(self, t):
