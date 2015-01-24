@@ -148,12 +148,322 @@ class Parser(object):
         ('left', 'GT', 'GE', 'LT', 'LE'),
         ('left', 'RSHIFT', 'LSHIFT'),
         ('left', 'PLUS', 'MINUS'),
-        ('left', 'TIMES', 'DIVIDE', 'MOD', 'POW')
+        ('left', 'TIMES', 'DIVIDE', 'MOD'), 
+        ('left', 'POW'),
         )
 
     #
     # Grammar as defined by BNF
     #
+
+    def p_single_input(self, p):
+        """single_input : NEWLINE 
+                        | simple_stmt 
+                        | compound_stmt NEWLINE
+        """
+        p[0] = p[1]
+
+    def p_file_input(self, p):
+        """file_input : (NEWLINE | stmt)* ENDMARKER"""
+        p[0] = p[1]
+
+    def p_eval_input(self, p):
+        """eval_input : testlist NEWLINE* ENDMARKER"""
+        p[0] = p[1]
+
+    def p_decorator(self, p):
+        """decorator : AT dotted_name [ '(' [arglist] ')' ] NEWLINE
+        """
+        p[0] = p[1:]
+
+    def p_decorators(self, p):
+        """decorators : decorator+"""
+        p[0] = p[1:]
+
+    def p_decorated(self, p):
+        """decorated : decorators (classdef | funcdef)"""
+        p[0] = p[1:]
+
+    def p_funcdef(self, p):
+        """funcdef : 'def' NAME parameters ['->' test] ':' suite
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """parameters : '(' [typedargslist] ')'
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """typedargslist: (tfpdef ['=' test] (',' tfpdef ['=' test])* [','
+       ['*' [tfpdef] (',' tfpdef ['=' test])* [',' '**' tfpdef] | '**' tfpdef]]
+     |  '*' [tfpdef] (',' tfpdef ['=' test])* [',' '**' tfpdef] | '**' tfpdef)
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """tfpdef: NAME [':' test]
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """varargslist: (vfpdef ['=' test] (',' vfpdef ['=' test])* [','
+       ['*' [vfpdef] (',' vfpdef ['=' test])* [',' '**' vfpdef] | '**' vfpdef]]
+     |  '*' [vfpdef] (',' vfpdef ['=' test])* [',' '**' vfpdef] | '**' vfpdef)
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """vfpdef : NAME"""
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """stmt : simple_stmt | compound_stmt
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """simple_stmt: small_stmt (';' small_stmt)* [';'] NEWLINE
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """small_stmt: (expr_stmt | del_stmt | pass_stmt | flow_stmt |
+             import_stmt | global_stmt | nonlocal_stmt | assert_stmt)
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """expr_stmt: testlist_star_expr (augassign (yield_expr|testlist) |
+                     ('=' (yield_expr|testlist_star_expr))*)
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """testlist_star_expr: (test|star_expr) (',' (test|star_expr))* [',']
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """augassign: ('+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' |
+            '<<=' | '>>=' | '**=' | '//=')
+        """
+        p[0] = p[1:]
+
+    #
+    # For normal assignments, additional restrictions enforced 
+    # by the interpreter
+    #
+    def p_(self, p):
+        """del_stmt: 'del' exprlist
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """pass_stmt : 'pass'
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """flow_stmt: break_stmt | continue_stmt | return_stmt | raise_stmt | yield_stmt
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """break_stmt: 'break'
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """continue_stmt: 'continue'
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """return_stmt: 'return' [testlist]
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """yield_stmt: yield_expr
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """raise_stmt: 'raise' [test ['from' test]]
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """import_stmt: import_name | import_from
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """import_name: 'import' dotted_as_names
+        """
+        p[0] = p[1:]
+
+    #
+    # note below: the ('.' | '...') is necessary because '...' is 
+    # tokenized as ELLIPSIS
+    #
+    def p_(self, p):
+        """import_from: ('from' (('.' | '...')* dotted_name | ('.' | '...')+)
+              'import' ('*' | '(' import_as_names ')' | import_as_names))
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """import_as_name: NAME ['as' NAME]
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """dotted_as_name: dotted_name ['as' NAME]
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """import_as_names: import_as_name (',' import_as_name)* [',']
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """dotted_as_names: dotted_as_name (',' dotted_as_name)*
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """dotted_name: NAME ('.' NAME)*
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """global_stmt: 'global' NAME (',' NAME)*
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """nonlocal_stmt: 'nonlocal' NAME (',' NAME)*
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """assert_stmt: 'assert' test [',' test]
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """if_stmt: 'if' test ':' suite ('elif' test ':' suite)* ['else' ':' suite]
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """while_stmt: 'while' test ':' suite ['else' ':' suite]
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """for_stmt: 'for' exprlist 'in' testlist ':' suite ['else' ':' suite]
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """try_stmt: ('try' ':' suite
+           ((except_clause ':' suite)+
+            ['else' ':' suite]
+            ['finally' ':' suite] |
+           'finally' ':' suite))
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """with_stmt: 'with' with_item (',' with_item)*  ':' suite
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """with_item: test ['as' expr]
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """except_clause: 'except' [test ['as' NAME]]
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """suite: simple_stmt | NEWLINE INDENT stmt+ DEDENT
+        """
+        p[0] = p[1:]
+
+    def p_(self, p):
+        """
+        """
+        p[0] = p[1:]
+
+
+
+    """
+
+test: or_test ['if' or_test 'else' test] | lambdef
+test_nocond: or_test | lambdef_nocond
+lambdef: 'lambda' [varargslist] ':' test
+lambdef_nocond: 'lambda' [varargslist] ':' test_nocond
+or_test: and_test ('or' and_test)*
+and_test: not_test ('and' not_test)*
+not_test: 'not' not_test | comparison
+comparison: expr (comp_op expr)*
+# <> isn't actually a valid comparison operator in Python. It's here for the
+# sake of a __future__ import described in PEP 401
+comp_op: '<'|'>'|'=='|'>='|'<='|'<>'|'!='|'in'|'not' 'in'|'is'|'is' 'not'
+star_expr: '*' expr
+expr: xor_expr ('|' xor_expr)*
+xor_expr: and_expr ('^' and_expr)*
+and_expr: shift_expr ('&' shift_expr)*
+shift_expr: arith_expr (('<<'|'>>') arith_expr)*
+arith_expr: term (('+'|'-') term)*
+term: factor (('*'|'/'|'%'|'//') factor)*
+factor: ('+'|'-'|'~') factor | power
+power: atom trailer* ['**' factor]
+atom: ('(' [yield_expr|testlist_comp] ')' |
+       '[' [testlist_comp] ']' |
+       '{' [dictorsetmaker] '}' |
+       NAME | NUMBER | STRING+ | '...' | 'None' | 'True' | 'False')
+testlist_comp: (test|star_expr) ( comp_for | (',' (test|star_expr))* [','] )
+trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
+subscriptlist: subscript (',' subscript)* [',']
+subscript: test | [test] ':' [test] [sliceop]
+sliceop: ':' [test]
+exprlist: (expr|star_expr) (',' (expr|star_expr))* [',']
+testlist: test (',' test)* [',']
+dictorsetmaker: ( (test ':' test (comp_for | (',' test ':' test)* [','])) |
+                  (test (comp_for | (',' test)* [','])) )
+
+classdef: 'class' NAME ['(' [arglist] ')'] ':' suite
+
+arglist: (argument ',')* (argument [',']
+                         |'*' test (',' argument)* [',' '**' test] 
+                         |'**' test)
+# The reason that keywords are test nodes instead of NAME is that using NAME
+# results in an ambiguity. ast.c makes sure it's a NAME.
+argument: test [comp_for] | test '=' test  # Really [keyword '='] test
+comp_iter: comp_for | comp_if
+comp_for: 'for' exprlist 'in' or_test [comp_iter]
+comp_if: 'if' test_nocond [comp_iter]
+
+# not used in grammar, but may appear in "node" passed from Parser to Compiler
+encoding_decl: NAME
+
+yield_expr: 'yield' [yield_arg]
+yield_arg: 'from' test | testlist
+"""
 
     def p_empty(self, p):
         'empty : '
