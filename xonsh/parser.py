@@ -61,6 +61,11 @@ class Parser(object):
             'vfpdef',
             'comma_vfpdef_list',
             'comma_pow_vfpdef',
+            'semi',
+            'comma',
+            'semi_small_stmt_list',
+            'comma_test_or_star_expr_list',
+            'equals_yield_expr_or_testlist_list',
             )
         for rule in opt_rules:
             self._opt_rule(rule)
@@ -68,6 +73,9 @@ class Parser(object):
         list_rules = (
             'comma_tfpdef',
             'comma_vfpdef',
+            'semi_small_stmt',
+            'comma_test_or_star_expr',
+            'equals_yield_expr_or_testlist',
             )
         for rule in list_rules:
             self._list_rule(rule)
@@ -286,38 +294,86 @@ class Parser(object):
         p[0] = p[1] + p[2] + p[3]
 
     def p_stmt(self, p):
-        """stmt : simple_stmt | compound_stmt"""
-        p[0] = p[1:]
+        """stmt : simple_stmt 
+                | compound_stmt
+        """
+        p[0] = p[1]
+
+    def p_semi(self, p):
+        """semi : SEMI"""
+        p[0] = p[1]
+
+    def p_semi_small_stmt(self, p):
+        """semi_small_stmt : SEMI small_stmt"""
+        p[0] = p[1] + p[2]
 
     def p_simple_stmt(self, p):
-        """simple_stmt : small_stmt (SEMI small_stmt)* [SEMI] NEWLINE"""
+        """simple_stmt : small_stmt semi_small_stmt_list_opt semi_opt NEWLINE
+        """
         p[0] = p[1:]
 
     def p_small_stmt(self, p):
-        """small_stmt : (expr_stmt | del_stmt | pass_stmt | flow_stmt 
-                      | import_stmt | global_stmt | nonlocal_stmt 
-                      | assert_stmt)
+        """small_stmt : expr_stmt 
+                      | del_stmt 
+                      | pass_stmt 
+                      | flow_stmt 
+                      | import_stmt 
+                      | global_stmt 
+                      | nonlocal_stmt 
+                      | assert_stmt
         """
         p[0] = p[1:]
 
     def p_expr_stmt(self, p):
-        """expr_stmt : testlist_star_expr (augassign (yield_expr|testlist) 
-                     | (EQUALS (yield_expr|testlist_star_expr))*)
+        """expr_stmt : testlist_star_expr augassign yield_expr_or_testlist 
+                     | testlist_star_expr equals_yield_expr_or_testlist_list_opt
         """
         p[0] = p[1:]
 
+    def p_comma(self, p):
+        """comma : COMMA"""
+        p[0] = p[1]
+
+    def p_test_or_star_expr(self, p):
+        """test_or_star_expr : test
+                             | star_expr
+        """
+        p[0] = p[1]
+
+    def p_comma_test_or_star_expr(self, p):
+        """comma_test_or_star_expr : COMMA test_or_star_expr"""
+        p[0] = p[1]
+
     def p_testlist_star_expr(self, p):
-        """testlist_star_expr : (test|star_expr) (COMMA (test|star_expr))* [COMMA]
+        """testlist_star_expr : test_or_star_expr p_comma_test_or_star_expr_list_opt comma_opt
         """
         p[0] = p[1:]
 
     def p_augassign(self, p):
-        """augassign : PLUSEQUAL | MINUSEQUAL | TIMESEQUAL | DIVEQUAL 
-                     | MODEQUAL | AMPERSANDEQUAL | PIPEEQUAL | XOREQUAL
-                     | LSHIFTEQUAL | RSHIFTEQUAL | POWEQUAL 
+        """augassign : PLUSEQUAL 
+                     | MINUSEQUAL 
+                     | TIMESEQUAL 
+                     | DIVEQUAL 
+                     | MODEQUAL 
+                     | AMPERSANDEQUAL 
+                     | PIPEEQUAL 
+                     | XOREQUAL
+                     | LSHIFTEQUAL 
+                     | RSHIFTEQUAL
+                     | POWEQUAL 
                      | DOUBLEDIVEQUAL
         """
         p[0] = p[1]
+
+    def p_yield_expr_or_testlist(self, p):
+        """yield_expr_or_testlist : yield_expr
+                                  | testlist
+        """
+        p[0] = p[1]
+
+    def p_equals_yield_expr_or_testlist(self, p):
+        """equals_yield_expr_or_testlist : EQUALS yield_expr_or_testlist"""
+        p[0] = p[1] + p[2]
 
     #
     # For normal assignments, additional restrictions enforced 
