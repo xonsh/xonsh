@@ -84,6 +84,13 @@ class Parser(object):
             'or_and_test_list',
             'and_not_test_list',
             'comp_op_expr_list',
+            'pipe_xor_expr_list',
+            'xor_and_expr_list',
+            'ampersand_shift_expr_list',
+            'shift_arith_expr_list',
+            'pm_term_list',
+            'op_factor_list',
+            'trailer_list',
             )
         for rule in opt_rules:
             self._opt_rule(rule)
@@ -106,6 +113,13 @@ class Parser(object):
             'or_and_test',
             'and_not_test',
             'comp_op_expr',
+            'pipe_xor_expr',
+            'xor_and_expr',
+            'ampersand_shift_expr',
+            'shift_arith_expr',
+            'pm_term',
+            'op_factor',
+            'trailer',
             )
         for rule in list_rules:
             self._list_rule(rule)
@@ -692,43 +706,86 @@ class Parser(object):
         p[0] = p[1:]
 
     def p_expr(self, p):
-        """expr : xor_expr (PIPE xor_expr)*"""
+        """expr : xor_expr pipe_xor_expr_list_opt"""
+        p[0] = p[1:]
+
+    def p_pipe_xor_expr(self, p):
+        """pipe_xor_expr : PIPE xor_expr"""
         p[0] = p[1:]
 
     def p_xor_expr(self, p):
-        """xor_expr : and_expr (XOR and_expr)*"""
+        """xor_expr : and_expr xor_and_expr_list_opt"""
+        p[0] = p[1:]
+
+    def p_xor_and_expr(self, p):
+        """xor_and_expr : XOR and_expr"""
         p[0] = p[1:]
 
     def p_and_expr(self, p):
-        """and_expr : shift_expr (AMPERSAND shift_expr)*"""
+        """and_expr : shift_expr ampersand_shift_expr_list_opt"""
+        p[0] = p[1:]
+
+    def p_ampersand_shift_expr(self, p):
+        """ampersand_shift_expr : AMPERSAND shift_expr"""
         p[0] = p[1:]
 
     def p_shift_expr(self, p):
-        """shift_expr : arith_expr ((LSHIFT|RSHIFT) arith_expr)*"""
+        """shift_expr : arith_expr shift_arith_expr_list_opt"""
+        p[0] = p[1:]
+
+    def p_shift_arith_expr(self, p):
+        """shift_arith_expr : LSHIFT arith_expr
+                            | RSHIFT arith_expr
+        """
         p[0] = p[1:]
 
     def p_arith_expr(self, p):
-        """arith_expr : term ((PLUS|MINUS) term)*"""
+        """arith_expr : term pm_term_list_opt"""
+        p[0] = p[1:]
+
+    def p_pm_term(self, p):
+        """pm_term : PLUS term
+                   | MINUS term
+        """
         p[0] = p[1:]
 
     def p_term(self, p):
-        """term : factor ((TIMES|DIVIDE|MOD|DOUBLEDIV) factor)*"""
+        """term : factor op_factor_list_opt"""
+        p[0] = p[1:]
+
+    def p_op_factor(self, p):
+        """op_factor : TIMES factor
+                     | DIVIDE factor
+                     | MOD factor
+                     | DOUBLEDIV factor
+        """
         p[0] = p[1:]
 
     def p_factor(self, p):
-        """factor : (PLUS|MINUS|TILDE) factor | power"""
+        """factor : PLUS factor
+                  | MINUS factor
+                  | TILDE factor
+                  | power
+        """
         p[0] = p[1:]
 
     def p_power(self, p):
-        """power : atom trailer* [POW factor]"""
+        """power : atom trailer_list_opt 
+                 | atom trailer_list_opt POW factor
+        """
         p[0] = p[1:]
 
     def p_atom(self, p):
-        """atom : (LPAREN [yield_expr|testlist_comp] RPAREN 
+        """atom : LPAREN [yield_expr|testlist_comp] RPAREN 
                 | LBRACKET [testlist_comp] RBRAKET 
                 | LBRACE [dictorsetmaker] RBRACE
-                | NAME | NUMBER | STRING_LITERAL+ | ELLIPSIS | 'None' 
-                | 'True' | 'False')
+                | NAME 
+                | NUMBER 
+                | STRING_LITERAL+ 
+                | ELLIPSIS 
+                | 'None' 
+                | 'True' 
+                | 'False'
         """
         p[0] = p[1:]
 
