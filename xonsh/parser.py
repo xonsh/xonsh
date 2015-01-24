@@ -8,21 +8,20 @@ from xonsh import ast
 from xonsh.lexer import Lexer
 
 
-class Coord(object):
-    """ Coordinates of a syntactic element. Consists of:
-            - File name
-            - Line number
-            - (optional) column number, for the Lexer
-    """
-    def __init__(self, file, line, column=None):
-        self.file = file
-        self.line = line
+class Location(object):
+    """Location in a file."""
+
+    def __init__(self, fname, lineno, column=None):
+        """Takes a filename, line number, and optionally a column number."""
+        self.fname = fname
+        self.lineno = line
         self.column = column
 
     def __str__(self):
-        str = "%s:%s" % (self.file, self.line)
-        if self.column: str += ":%s" % self.column
-        return str
+        s = '{0}:{1}'.format(self.fname, self.lineno)
+        if self.column is not None: 
+            s += ':{0}'.format(self.column)
+        return s
 
 
 class Parser(object):
@@ -107,352 +106,38 @@ class Parser(object):
                                   debug=debug_level)
         return tree
 
-    def _push_scope(self):
-        self._scope_stack.append(dict())
+    def _lexer_errfunc(self, msg, line, column):
+        self._parse_error(msg, self.currloc(line, column))
 
-    def _pop_scope(self):
-        assert len(self._scope_stack) > 1
-        self._scope_stack.pop()
+    def _yacc_lookahead_token(self):
+        """Gets the last token seen by the lexer."""
+        return self.lexer.last
 
-    def _add_typedef_name(self, name, coord):
-        """ Add a new typedef name (ie a TYPEID) to the current scope
-        """
-        if not self._scope_stack[-1].get(name, True):
-            self._parse_error(
-                "Typedef %r previously declared as non-typedef "
-                "in this scope" % name, coord)
-        self._scope_stack[-1][name] = True
-
-    def _add_identifier(self, name, coord):
-        """ Add a new object, function, or enum member name (ie an ID) to the
-            current scope
-        """
-        if self._scope_stack[-1].get(name, False):
-            self._parse_error(
-                "Non-typedef %r previously declared as typedef "
-                "in this scope" % name, coord)
-        self._scope_stack[-1][name] = False
-
-    def _is_type_in_scope(self, name):
-        """ Is *name* a typedef-name in the current scope?
-        """
-        for scope in reversed(self._scope_stack):
-            # If name is an identifier in this scope it shadows typedefs in
-            # higher scopes.
-            in_scope = scope.get(name)
-            if in_scope is not None: return in_scope
-        return False
-
-    def _lex_error_func(self, msg, line, column):
-        self._parse_error(msg, self._coord(line, column))
-
-    def _lex_on_lbrace_func(self):
-        self._push_scope()
-
-    def _lex_on_rbrace_func(self):
-        self._pop_scope()
-
-    def _lex_type_lookup_func(self, name):
-        """ Looks up types that were previously defined with
-            typedef.
-            Passed to the lexer for recognizing identifiers that
-            are types.
-        """
-        is_type = self._is_type_in_scope(name)
-        return is_type
-
-    def _get_yacc_lookahead_token(self):
-        """ We need access to yacc's lookahead token in certain cases.
-            This is the last token yacc requested from the lexer, so we
-            ask the lexer.
-        """
-        return self.clex.last_token
-
-    def _create_opt_rule(self, rulename):
-        """ Given a rule name, creates an optional ply.yacc rule
-            for it. The name of the optional rule is
-            <rulename>_opt
-        """
-        optname = rulename + '_opt'
-
-        def optrule(self, p):
-            p[0] = p[1]
-
-        optrule.__doc__ = '%s : empty\n| %s' % (optname, rulename)
-        optrule.__name__ = 'p_%s' % optname
-        setattr(self.__class__, optrule.__name__, optrule)
-
-    def _coord(self, lineno, column=None):
-        return Coord(
-                file=self.clex.filename,
-                line=lineno,
-                column=column)
-
-    def _parse_error(self, msg, coord):
-        raise SyntaxError("%s: %s" % (coord, msg))
-
-    # To understand what's going on here, read sections A.8.5 and
-    # A.8.6 of K&R2 very carefully.
+    #def _create_opt_rule(self, rulename):
+    #    """Given a rule name, creates an optional ply.yacc rule
+    #        for it. The name of the optional rule is
+    #        <rulename>_opt
+    #    """
+    #    optname = rulename + '_opt'
     #
-    # A C type consists of a basic type declaration, with a list
-    # of modifiers. For example:
+    #    def optrule(self, p):
+    #        p[0] = p[1]
     #
-    # int *c[5];
+    #    optrule.__doc__ = '%s : empty\n| %s' % (optname, rulename)
+    #    optrule.__name__ = 'p_%s' % optname
+    #    setattr(self.__class__, optrule.__name__, optrule)
+
+    def currloc(self, lineno, column=None):
+        """Returns the current location."""
+        return Location(fname=self.lexer.fname, lineno=lineno,
+                        column=column)
+
+    def _parse_error(self, msg, loc):
+        raise SyntaxError('{0}: {1}'.format(loc, msg))
+
     #
-    # The basic declaration here is 'int c', and the pointer and
-    # the array are the modifiers.
+    # Precedence of operators
     #
-    # Basic declarations are represented by TypeDecl (from module
-    # c_ast) and the modifiers are FuncDecl, PtrDecl and
-    # ArrayDecl.
-    #
-    # The standard states that whenever a new modifier is parsed,
-    # it should be added to the end of the list of modifiers. For
-    # example:
-    #
-    # K&R2 A.8.6.2: Array Declarators
-    #
-    # In a declaration T D where D has the form
-    #   D1 [constant-expression-opt]
-    # and the type of the identifier in the declaration T D1 is
-    # "type-modifier T", the type of the
-    # identifier of D is "type-modifier array of T"
-    #
-    # This is what this method does. The declarator it receives
-    # can be a list of declarators ending with TypeDecl. It
-    # tacks the modifier to the end of this list, just before
-    # the TypeDecl.
-    #
-    # Additionally, the modifier may be a list itself. This is
-    # useful for pointers, that can come as a chain from the rule
-    # p_pointer. In this case, the whole modifier list is spliced
-    # into the new location.
-    #
-    def _type_modify_decl(self, decl, modifier):
-        """ Tacks a type modifier on a declarator, and returns
-            the modified declarator.
-
-            Note: the declarator and modifier may be modified
-        """
-        #~ print '****'
-        #~ decl.show(offset=3)
-        #~ modifier.show(offset=3)
-        #~ print '****'
-
-        modifier_head = modifier
-        modifier_tail = modifier
-
-        # The modifier may be a nested list. Reach its tail.
-        #
-        while modifier_tail.type:
-            modifier_tail = modifier_tail.type
-
-        # If the decl is a basic type, just tack the modifier onto
-        # it
-        #
-        if isinstance(decl, c_ast.TypeDecl):
-            modifier_tail.type = decl
-            return modifier
-        else:
-            # Otherwise, the decl is a list of modifiers. Reach
-            # its tail and splice the modifier onto the tail,
-            # pointing to the underlying basic type.
-            #
-            decl_tail = decl
-
-            while not isinstance(decl_tail.type, c_ast.TypeDecl):
-                decl_tail = decl_tail.type
-
-            modifier_tail.type = decl_tail.type
-            decl_tail.type = modifier_head
-            return decl
-
-    # Due to the order in which declarators are constructed,
-    # they have to be fixed in order to look like a normal AST.
-    #
-    # When a declaration arrives from syntax construction, it has
-    # these problems:
-    # * The innermost TypeDecl has no type (because the basic
-    #   type is only known at the uppermost declaration level)
-    # * The declaration has no variable name, since that is saved
-    #   in the innermost TypeDecl
-    # * The typename of the declaration is a list of type
-    #   specifiers, and not a node. Here, basic identifier types
-    #   should be separated from more complex types like enums
-    #   and structs.
-    #
-    # This method fixes these problems.
-    #
-    def _fix_decl_name_type(self, decl, typename):
-        """ Fixes a declaration. Modifies decl.
-        """
-        # Reach the underlying basic type
-        #
-        type = decl
-        while not isinstance(type, c_ast.TypeDecl):
-            type = type.type
-
-        decl.name = type.declname
-        type.quals = decl.quals
-
-        # The typename is a list of types. If any type in this
-        # list isn't an IdentifierType, it must be the only
-        # type in the list (it's illegal to declare "int enum ..")
-        # If all the types are basic, they're collected in the
-        # IdentifierType holder.
-        #
-        for tn in typename:
-            if not isinstance(tn, c_ast.IdentifierType):
-                if len(typename) > 1:
-                    self._parse_error(
-                        "Invalid multiple types specified", tn.coord)
-                else:
-                    type.type = tn
-                    return decl
-
-        if not typename:
-            # Functions default to returning int
-            #
-            if not isinstance(decl.type, c_ast.FuncDecl):
-                self._parse_error(
-                        "Missing type in declaration", decl.coord)
-            type.type = c_ast.IdentifierType(
-                    ['int'],
-                    coord=decl.coord)
-        else:
-            # At this point, we know that typename is a list of IdentifierType
-            # nodes. Concatenate all the names into a single list.
-            #
-            type.type = c_ast.IdentifierType(
-                [name for id in typename for name in id.names],
-                coord=typename[0].coord)
-        return decl
-
-    def _add_declaration_specifier(self, declspec, newspec, kind):
-        """ Declaration specifiers are represented by a dictionary
-            with the entries:
-            * qual: a list of type qualifiers
-            * storage: a list of storage type qualifiers
-            * type: a list of type specifiers
-            * function: a list of function specifiers
-
-            This method is given a declaration specifier, and a
-            new specifier of a given kind.
-            Returns the declaration specifier, with the new
-            specifier incorporated.
-        """
-        spec = declspec or dict(qual=[], storage=[], type=[], function=[])
-        spec[kind].insert(0, newspec)
-        return spec
-
-    def _build_declarations(self, spec, decls, typedef_namespace=False):
-        """ Builds a list of declarations all sharing the given specifiers.
-            If typedef_namespace is true, each declared name is added
-            to the "typedef namespace", which also includes objects,
-            functions, and enum constants.
-        """
-        is_typedef = 'typedef' in spec['storage']
-        declarations = []
-
-        # Bit-fields are allowed to be unnamed.
-        #
-        if decls[0].get('bitsize') is not None:
-            pass
-
-        # When redeclaring typedef names as identifiers in inner scopes, a
-        # problem can occur where the identifier gets grouped into
-        # spec['type'], leaving decl as None.  This can only occur for the
-        # first declarator.
-        #
-        elif decls[0]['decl'] is None:
-            if len(spec['type']) < 2 or len(spec['type'][-1].names) != 1 or \
-                    not self._is_type_in_scope(spec['type'][-1].names[0]):
-                coord = '?'
-                for t in spec['type']:
-                    if hasattr(t, 'coord'):
-                        coord = t.coord
-                        break
-                self._parse_error('Invalid declaration', coord)
-
-            # Make this look as if it came from "direct_declarator:ID"
-            decls[0]['decl'] = c_ast.TypeDecl(
-                declname=spec['type'][-1].names[0],
-                type=None,
-                quals=None,
-                coord=spec['type'][-1].coord)
-            # Remove the "new" type's name from the end of spec['type']
-            del spec['type'][-1]
-
-        # A similar problem can occur where the declaration ends up looking
-        # like an abstract declarator.  Give it a name if this is the case.
-        #
-        elif not isinstance(decls[0]['decl'],
-                (c_ast.Struct, c_ast.Union, c_ast.IdentifierType)):
-            decls_0_tail = decls[0]['decl']
-            while not isinstance(decls_0_tail, c_ast.TypeDecl):
-                decls_0_tail = decls_0_tail.type
-            if decls_0_tail.declname is None:
-                decls_0_tail.declname = spec['type'][-1].names[0]
-                del spec['type'][-1]
-
-        for decl in decls:
-            assert decl['decl'] is not None
-            if is_typedef:
-                declaration = c_ast.Typedef(
-                    name=None,
-                    quals=spec['qual'],
-                    storage=spec['storage'],
-                    type=decl['decl'],
-                    coord=decl['decl'].coord)
-            else:
-                declaration = c_ast.Decl(
-                    name=None,
-                    quals=spec['qual'],
-                    storage=spec['storage'],
-                    funcspec=spec['function'],
-                    type=decl['decl'],
-                    init=decl.get('init'),
-                    bitsize=decl.get('bitsize'),
-                    coord=decl['decl'].coord)
-
-            if isinstance(declaration.type,
-                    (c_ast.Struct, c_ast.Union, c_ast.IdentifierType)):
-                fixed_decl = declaration
-            else:
-                fixed_decl = self._fix_decl_name_type(declaration, spec['type'])
-
-            # Add the type name defined by typedef to a
-            # symbol table (for usage in the lexer)
-            #
-            if typedef_namespace:
-                if is_typedef:
-                    self._add_typedef_name(fixed_decl.name, fixed_decl.coord)
-                else:
-                    self._add_identifier(fixed_decl.name, fixed_decl.coord)
-
-            declarations.append(fixed_decl)
-
-        return declarations
-
-    def _build_function_definition(self, spec, decl, param_decls, body):
-        """ Builds a function definition.
-        """
-        assert 'typedef' not in spec['storage']
-
-        declaration = self._build_declarations(
-            spec=spec,
-            decls=[dict(decl=decl, init=None)],
-            typedef_namespace=True)[0]
-
-        return c_ast.FuncDef(
-            decl=declaration,
-            param_decls=param_decls,
-            body=body,
-            coord=decl.coord)
-
-    ##
-    ## Precedence and associativity of operators
-    ##
     precedence = (
         ('left', 'LOR'),
         ('left', 'LAND'),
