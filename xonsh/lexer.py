@@ -32,8 +32,7 @@ class Lexer(object):
         self.last = None
 
     def build(self, **kwargs):
-        """Part of the PLY lexer API.
-        """
+        """Part of the PLY lexer API."""
         self.lexer = lex.lex(object=self, **kwargs)
 
     @property
@@ -66,9 +65,9 @@ class Lexer(object):
     def _make_tok_location(self, token):
         return (token.lineno, self.find_tok_column(token))
 
-    ##
-    ## Reserved keywords
-    ##
+    #
+    # Python keywords
+    #
     pykeywords = ('AND', 'AS', 'ASSERT', 'BREAK', 'CLASS', 'CONTINUE', 'DEF', 
         'DEL', 'ELIF', 'ELSE', 'EXCEPT', 'EXEC', 'FINALLY', 'FOR', 'FROM', 
         'GLOBAL', 'IMPORT', 'IF', 'IN', 'IS', 'LAMBDA', 'NONLOCAL', 'NOT', 
@@ -76,16 +75,12 @@ class Lexer(object):
 
     pykeyword_map = {k.lower(): k for k in pykeywords}
 
-    ##
-    ## All the tokens recognized by the lexer
-    ##
+    #
+    # All the tokens recognized by the lexer
+    #
     tokens = pykeywords + (
-        # Identifiers
-        'ID',
-
-        # constants
-        #'INT_CONST_DEC', 'INT_CONST_OCT', 'INT_CONST_HEX',
-        #'FLOAT_CONST', 'HEX_FLOAT_CONST',
+        # Misc
+        'ID', 'INDENT', 'NEWLINE',
 
         # literals
         'INT_LITERAL', 'HEX_LITERAL', 'OCT_LITERAL', 'BIN_LITERAL',
@@ -93,10 +88,9 @@ class Lexer(object):
         'BYTES_LITERAL', 'UNICODE_LITERAL',
 
         # Operators
-        'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'MOD',
-        'PIPE', 'AMPERSAND', 'XOR', 'LSHIFT', 'RSHIFT',
-        'LOGIC_OR', 'LOGIC_AND', 'TILDE',
-        'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',
+        'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'MOD', 'POW', 
+        'PIPE', 'AMPERSAND', 'TILDE', 'XOR', 'LSHIFT', 'RSHIFT',
+        'LOGIC_OR', 'LOGIC_AND', 'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',
 
         # Assignment
         'EQUALS', 'TIMESEQUAL', 'DIVEQUAL', 'MODEQUAL',
@@ -141,38 +135,70 @@ class Lexer(object):
     float_matissa = r"""([0-9]*\.[0-9]+)|([0-9]+\.)"""
     float_literal = float_matissa + float_exponent + '?'
 
-
     #
     # Rules 
     #
     t_ignore = ' \t'
+    t_INDENT = '^\s+'
 
     # Newlines
     def t_NEWLINE(self, t):
         r'\n+'
         t.lexer.lineno += t.value.count("\n")
 
+    # Python Keywords
+    t_AND = r'and'
+    t_AS = r'as'
+    t_ASSERT = r'assert' 
+    t_BREAK = r'break'
+    t_CLASS = r'class'
+    t_CONTINUE = r'continue'
+    t_DEF = r'def' 
+    t_DEL = r'delete' 
+    t_ELIF = 'elif'
+    t_ELSE = r'else'
+    t_EXCEPT = r'except'
+    t_EXEC = r'exec'
+    t_FINALLY = 'finally'
+    t_FOR = r'for'
+    t_FROM = r'from'
+    t_GLOBAL = r'global'
+    t_IMPORT = r'import'
+    t_IF = r'if'
+    t_IN = r'in'
+    t_IS = r'is'
+    t_LAMBDA = r'lambda'
+    t_NONLOCAL r'nonlocal'
+    t_NOT = r'not'
+    t_OR = r'or'
+    t_PASS = r'pass'
+    t_RAISE = r'raise'
+    t_TRY = r'try'
+    t_WHILE = r'while'
+    t_WITH = r'with'
+    t_YIELD = r'yield'
+
     # Operators
-    t_PLUS              = r'\+'
-    t_MINUS             = r'-'
-    t_TIMES             = r'\*'
-    t_DIVIDE            = r'/'
-    t_MOD               = r'%'
-    t_OR                = r'\|'
-    t_AND               = r'&'
-    t_NOT               = r'~'
-    t_XOR               = r'\^'
-    t_LSHIFT            = r'<<'
-    t_RSHIFT            = r'>>'
-    t_LOR               = r'\|\|'
-    t_LAND              = r'&&'
-    t_LNOT              = r'!'
-    t_LT                = r'<'
-    t_GT                = r'>'
-    t_LE                = r'<='
-    t_GE                = r'>='
-    t_EQ                = r'=='
-    t_NE                = r'!='
+    t_PLUS = r'\+'
+    t_MINUS = r'-'
+    t_TIMES = r'\*'
+    t_DIVIDE = r'/'
+    t_MOD = r'%'
+    t_POW = r'\*\*'
+    t_PIPE = r'\|'
+    t_AMPERSAND = r'&'
+    t_TILDE = r'~'
+    t_XOR = r'\^'
+    t_LSHIFT = r'<<'
+    t_RSHIFT = r'>>'
+    t_LOGIC_OR = r'\|\|'
+    t_LOGIC_AND = r'&&'
+    t_LT = r'<'
+    t_GT = r'>'
+    t_LE = r'<='
+    t_GE = r'>='
+    t_EQ = r'=='
+    t_NE = r'!='
 
     # Assignment operators
     t_EQUALS            = r'='
