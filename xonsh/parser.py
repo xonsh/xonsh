@@ -94,6 +94,16 @@ class Parser(object):
             'testlist_comp',
             'yield_expr_or_testlist_comp',
             'dictorsetmaker',
+            'comma_subscript_list',
+            'test',
+            'sliceop',
+            'comma_expr_or_star_expr_list',
+            'comma_test_list',
+            'comp_for',
+            'comp_iter',
+            'yield_arg',
+            'argument_comma_list',
+            'comma_argument_list',
             )
         for rule in opt_rules:
             self._opt_rule(rule)
@@ -124,6 +134,11 @@ class Parser(object):
             'op_factor',
             'trailer',
             'string_literal',
+            'comma_subscript',
+            'comma_expr_or_star_expr',
+            'comma_test',
+            'argument_comma',
+            'comma_argument',
             )
         for rule in list_rules:
             self._list_rule(rule)
@@ -829,60 +844,90 @@ class Parser(object):
         p[0] = p[1:]
 
     def p_subscriptlist(self, p):
-        """subscriptlist : subscript (COMMA subscript)* [COMMA]"""
+        """subscriptlist : subscript comma_subscript_list_opt comma_opt"""
+        p[0] = p[1:]
+
+    def p_comma_subscript(self, p):
+        """comma_subscript : COMMA subscript"""
         p[0] = p[1:]
 
     def p_subscript(self, p):
-        """subscript : test | [test] COLON [test] [sliceop]"""
+        """subscript : test 
+                     | test_opt COLON test_opt sliceop_opt
+        """
         p[0] = p[1:]
 
     def p_sliceop(self, p):
-        """sliceop : COLON [test]"""
+        """sliceop : COLON test_opt"""
+        p[0] = p[1:]
+
+    def p_expr_or_star_expr(self, p):
+        """expr_or_star_expr : expr
+                             | star_expr
+        """
+        p[0] = p[1]
+
+    def p_comma_expr_or_star_expr(self, p):
+        """comma_expr_or_star_expr : COMMA expr_or_star_expr"""
         p[0] = p[1:]
 
     def p_exprlist(self, p):
-        """exprlist : (expr|star_expr) (COMMA (expr|star_expr))* [COMMA]"""
+        """exprlist : expr_or_star_expr comma_expr_or_star_expr_list_opt comma_opt"""
         p[0] = p[1:]
 
     def p_testlist(self, p):
-        """testlist : test (COMMA test)* [COMMA]"""
+        """testlist : test comma_test_list_opt comma_opt"""
         p[0] = p[1:]
 
     def p_dictorsetmaker(self, p):
-        """dictorsetmaker : ( (test COLON test (comp_for 
-                          | (COMMA test COLON test)* [COMMA])) 
-                          | (test (comp_for | (COMMA test)* [COMMA])) )
+        """dictorsetmaker : test COLON test comp_for
+                          | test COLON testlist 
+                          | test comp_for
+                          | testlist 
         """
         p[0] = p[1:]
 
     def p_classdef(self, p):
-        """classdef : CLASS NAME [RPAREN [arglist] LPAREN] COLON suite"""
+        """classdef : CLASS NAME func_call_opt COLON suite"""
         p[0] = p[1:]
 
     def p_arglist(self, p):
-        """arglist : (argument COMMA)* (argument [COMMA]
-                   | TIMES test (COMMA argument)* [COMMA POW test] 
-                   | POW test)
+        """arglist : argument_comma_list_opt argument comma_opt 
+                   | argument_comma_list_opt TIMES test comma_argument_list_opt 
+                   | argument_comma_list_opt TIMES test comma_argument_list_opt COMMA POW test
+                   | argument_comma_list_opt POW test
         """
         p[0] = p[1:]
 
+    def p_argument_comma(self, p):
+        """argument_comma : argument COMMA"""
+        p[0] = p[1]
+
+    def p_comma_argument(self, p):
+        """comma_argument : COMMA argument """
+        p[0] = p[1]
+
     def p_argument(self, p):
-        """argument : test [comp_for] | test EQUALS test  """
+        """argument : test comp_for_opt
+                    | test EQUALS test
+        """
         # Really [keyword '='] test
         # The reason that keywords are test nodes instead of NAME is that using 
         # NAME results in an ambiguity.
         p[0] = p[1:]
 
     def p_comp_iter(self, p):
-        """comp_iter : comp_for | comp_if"""
+        """comp_iter : comp_for 
+                     | comp_if
+        """
         p[0] = p[1:]
 
     def p_comp_for(self, p):
-        """comp_for : FOR exprlist IN or_test [comp_iter]"""
+        """comp_for : FOR exprlist IN or_test comp_iter_opt"""
         p[0] = p[1:]
 
     def p_comp_if(self, p):
-        """comp_if : IF test_nocond [comp_iter]"""
+        """comp_if : IF test_nocond comp_iter_opt"""
         p[0] = p[1:]
 
     def p_encoding_decl(self, p):
@@ -892,11 +937,13 @@ class Parser(object):
         p[0] = p[1:]
 
     def p_yield_expr(self, p):
-        """yield_expr : YIELD [yield_arg]"""
+        """yield_expr : YIELD yield_arg_opt"""
         p[0] = p[1:]
 
     def p_yield_arg(self, p):
-        """yield_arg : FROM test | testlist"""
+        """yield_arg : FROM test 
+                     | testlist
+        """
         p[0] = p[1:]
 
     def p_empty(self, p):
