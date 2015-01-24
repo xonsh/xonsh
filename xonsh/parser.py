@@ -522,43 +522,37 @@ class Parser(object):
         """
         p[0] = p[1:]
 
-    # The reason that keywords are test nodes instead of NAME is that using 
-    # NAME results in an ambiguity. ast.c makes sure it's a NAME.
-    def p_(self, p):
-        """argument: test [comp_for] | test '=' test  # Really [keyword '='] test
-        """
+    def p_argument(self, p):
+        """argument : test [comp_for] | test EQUALS test  """
+        # Really [keyword '='] test
+        # The reason that keywords are test nodes instead of NAME is that using 
+        # NAME results in an ambiguity.
         p[0] = p[1:]
 
-    def p_(self, p):
-        """comp_iter: comp_for | comp_if
-        """
+    def p_comp_iter(self, p):
+        """comp_iter : comp_for | comp_if"""
         p[0] = p[1:]
 
-    def p_(self, p):
-        """comp_for: 'for' exprlist 'in' or_test [comp_iter]
-        """
+    def p_comp_for(self, p):
+        """comp_for : FOR exprlist IN or_test [comp_iter]"""
         p[0] = p[1:]
 
-    def p_(self, p):
-        """comp_if: 'if' test_nocond [comp_iter]
-        """
+    def p_comp_if(self, p):
+        """comp_if : IF test_nocond [comp_iter]"""
         p[0] = p[1:]
 
-    def p_(self, p):
-        """encoding_decl: NAME
-        """
+    def p_encoding_decl(self, p):
+        """encoding_decl : NAME"""
         # not used in grammar, but may appear in "node" passed from 
         # Parser to Compiler
         p[0] = p[1:]
 
-    def p_(self, p):
-        """yield_expr: 'yield' [yield_arg]
-        """
+    def p_yield_expr(self, p):
+        """yield_expr : YIELD [yield_arg]"""
         p[0] = p[1:]
 
-    def p_(self, p):
-        """yield_arg: 'from' test | testlist
-        """
+    def p_yield_arg(self, p):
+        """yield_arg : FROM test | testlist"""
         p[0] = p[1:]
 
     def p_empty(self, p):
