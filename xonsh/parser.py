@@ -55,15 +55,19 @@ class Parser(object):
             'typedargslist',
             'equals_test',
             'colon_test',
-            'comma_tfpdef_list',
             'tfpdef',
+            'comma_tfpdef_list',
             'comma_pow_tfpdef',
+            'vfpdef',
+            'comma_vfpdef_list',
+            'comma_pow_vfpdef',
             )
         for rule in opt_rules:
             self._opt_rule(rule)
 
         list_rules = (
             'comma_tfpdef',
+            'comma_vfpdef',
             )
         for rule in list_rules:
             self._list_rule(rule)
@@ -259,15 +263,27 @@ class Parser(object):
         p[0] = p[1] + p[2] + p[3]
 
     def p_varargslist(self, p):
-        """varargslist : (vfpdef [EQUALS test] (COMMA vfpdef [EQUALS test])* [COMMA [TIMES [vfpdef] (COMMA vfpdef [EQUALS test])* [COMMA POW vfpdef] | POW vfpdef]]
-                       | TIMES [vfpdef] (COMMA vfpdef [EQUALS test])* [COMMA POW vfpdef] 
-                       | POW vfpdef)
+        """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt 
+                       | vfpdef equals_test_opt comma_vfpdef_list_opt COMMA 
+                       | vfpdef equals_test_opt comma_vfpdef_list_opt COMMA TIMES vfpdef_opt comma_vfpdef_list_opt 
+                       | vfpdef equals_test_opt comma_vfpdef_list_opt COMMA TIMES vfpdef_opt comma_vfpdef_list_opt COMMA POW vfpdef
+                       | vfpdef equals_test_opt comma_vfpdef_list_opt COMMA POW vfpdef
+                       | TIMES vfpdef_opt comma_vfpdef_list_opt comma_pow_vfpdef_opt
+                       | POW vfpdef
         """
         p[0] = p[1:]
 
     def p_vfpdef(self, p):
         """vfpdef : NAME"""
         p[0] = p[1:]
+
+    def p_comma_vfpdef(self, p):
+        """comma_vfpdef : COMMA vfpdef equals_test_opt"""
+        p[0] = p[1] + p[2] + p[3]
+
+    def p_comma_pow_vfpdef(self, p):
+        """comma_pow_vfpdef : COMMA POW vfpdef"""
+        p[0] = p[1] + p[2] + p[3]
 
     def p_stmt(self, p):
         """stmt : simple_stmt | compound_stmt"""
