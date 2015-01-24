@@ -91,6 +91,9 @@ class Parser(object):
             'pm_term_list',
             'op_factor_list',
             'trailer_list',
+            'testlist_comp',
+            'yield_expr_or_testlist_comp',
+            'dictorsetmaker',
             )
         for rule in opt_rules:
             self._opt_rule(rule)
@@ -120,6 +123,7 @@ class Parser(object):
             'pm_term',
             'op_factor',
             'trailer',
+            'string_literal',
             )
         for rule in list_rules:
             self._list_rule(rule)
@@ -389,7 +393,7 @@ class Parser(object):
         p[0] = p[1]
 
     def p_testlist_star_expr(self, p):
-        """testlist_star_expr : test_or_star_expr p_comma_test_or_star_expr_list_opt comma_opt
+        """testlist_star_expr : test_or_star_expr comma_test_or_star_expr_list_opt comma_opt
         """
         p[0] = p[1:]
 
@@ -775,27 +779,50 @@ class Parser(object):
         """
         p[0] = p[1:]
 
+    def p_yield_expr_or_testlist_comp(self, p):
+        """yield_expr_or_testlist_comp : yield_expr
+                                       | testlist_comp
+        """
+
     def p_atom(self, p):
-        """atom : LPAREN [yield_expr|testlist_comp] RPAREN 
-                | LBRACKET [testlist_comp] RBRAKET 
-                | LBRACE [dictorsetmaker] RBRACE
+        """atom : LPAREN yield_expr_or_testlist_comp_opt RPAREN 
+                | LBRACKET testlist_comp_opt RBRAKET 
+                | LBRACE dictorsetmaker_opt RBRACE
                 | NAME 
-                | NUMBER 
-                | STRING_LITERAL+ 
+                | number 
+                | string_literal_list
                 | ELLIPSIS 
-                | 'None' 
-                | 'True' 
-                | 'False'
+                | NONE
+                | TRUE 
+                | FALSE
         """
         p[0] = p[1:]
 
+    def p_string_literal(self, p):
+        """string_literal : STRING_LITERAL
+                          | RAW_STRING_LITERAL
+                          | UNICODE_LITERAL
+                          | BYTES_LITERAL
+        """
+        p[0] = p[1]
+
+    def p_number(self, p):
+        """p_number : INT_LITERAL
+                    | HEX_LITERAL
+                    | OCT_LITERAL
+                    | BIN_LITERAL
+                    | FLOAT_LITERAL
+        """
+        p[0] = p[1]
+
     def p_testlist_comp(self, p):
-        """testlist_comp : (test|star_expr) (comp_for | (COMMA (test|star_expr))* [COMMA] )
+        """testlist_comp : test_or_star_expr comp_for 
+                         | test_or_star_expr comma_test_or_star_expr_list_opt comma_opt
         """
         p[0] = p[1:]
 
     def p_trailer(self, p):
-        """trailer : LPAREN [arglist] RPAREN 
+        """trailer : LPAREN arglist_opt RPAREN 
                    | LBRACKET subscriptlist RBRAKET 
                    | PERIOD NAME
         """
