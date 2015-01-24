@@ -139,22 +139,21 @@ class Parser(object):
     # Precedence of operators
     #
     precedence = (
-        ('left', 'LOR'),
-        ('left', 'LAND'),
-        ('left', 'OR'),
+        ('left', 'LOGIC_OR'),
+        ('left', 'LOGIC_AND'),
+        ('left', 'PIPE'),
         ('left', 'XOR'),
-        ('left', 'AND'),
+        ('left', 'AMPERSAND'),
         ('left', 'EQ', 'NE'),
         ('left', 'GT', 'GE', 'LT', 'LE'),
         ('left', 'RSHIFT', 'LSHIFT'),
         ('left', 'PLUS', 'MINUS'),
-        ('left', 'TIMES', 'DIVIDE', 'MOD')
-    )
+        ('left', 'TIMES', 'DIVIDE', 'MOD', 'POW')
+        )
 
-    ##
-    ## Grammar productions
-    ## Implementation of the BNF defined in K&R2 A.13
-    ##
+    #
+    # Grammar as defined by BNF
+    #
 
     # In function definitions, the declarator can be followed by
     # a declaration list, for old "K&R style" function definitios.
