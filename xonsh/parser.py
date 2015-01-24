@@ -70,6 +70,11 @@ class Parser(object):
             'as_name',
             'period_or_ellipsis',
             'period_or_ellipsis_list',
+            'comma_import_as_name_list',
+            'comma_dotted_as_name_list',
+            'period_name_list',
+            'comma_name_list',
+            'comma_test',
             )
         for rule in opt_rules:
             self._opt_rule(rule)
@@ -81,6 +86,10 @@ class Parser(object):
             'comma_test_or_star_expr',
             'equals_yield_expr_or_testlist',
             'period_or_ellipsis',
+            'comma_import_as_name',
+            'comma_dotted_as_name',
+            'period_name',
+            'comma_name',
             )
         for rule in list_rules:
             self._list_rule(rule)
@@ -470,38 +479,66 @@ class Parser(object):
         """
         p[0] = p[1:]
 
+    def p_comma_import_as_name(self, p):
+        """comma_import_as_name : COMMA import_as_name
+        """
+        p[0] = p[1:]
+
     def p_dotted_as_name(self, p):
         """dotted_as_name : dotted_name as_name_opt"""
         p[0] = p[1:]
 
+    def p_comma_dotted_as_name(self, p):
+        """comma_dotted_as_name : COMMA dotted_as_name
+        """
+        p[0] = p[1:]
+
     def p_import_as_names(self, p):
-        """import_as_names : import_as_name (COMMA import_as_name)* [COMMA]
+        """import_as_names : import_as_name comm_import_as_name_list_opt comma_opt
         """
         p[0] = p[1:]
 
     def p_dotted_as_names(self, p):
-        """dotted_as_names : dotted_as_name (COMMA dotted_as_name)*"""
+        """dotted_as_names : dotted_as_name comma_dotted_as_name_list_opt"""
         p[0] = p[1:]
+
+    def p_period_name(self, p):
+        """period_name : PERIOD NAME"""
+        p[0] = p[1] + p[2]
 
     def p_dotted_name(self, p):
-        """dotted_name : NAME (PERIOD NAME)*"""
+        """dotted_name : NAME period_name_list_opt"""
         p[0] = p[1:]
 
+    def p_comma_name(self, p):
+        """comma_name : COMMA NAME"""
+        p[0] = p[1] + p[2]
+
     def p_global_stmt(self, p):
-        """global_stmt : GLOBAL NAME (COMMA NAME)*"""
+        """global_stmt : GLOBAL NAME comma_name_list_opt"""
         p[0] = p[1:]
 
     def p_nonlocal_stmt(self, p):
-        """nonlocal_stmt : NONLOCAL NAME (COMMA NAME)*"""
+        """nonlocal_stmt : NONLOCAL NAME comma_name_list_opt"""
         p[0] = p[1:]
 
+    def p_comma_test(self, p):
+        """comma_test : COMMA test"""
+        p[0] = p[1] + p[2]
+
     def p_assert_stmt(self, p):
-        """assert_stmt : ASSERT test [COMMA test]"""
+        """assert_stmt : ASSERT test comma_test_opt"""
         p[0] = p[1:]
 
     def p_compound_stmt(self, p):
-        """compound_stmt : if_stmt | while_stmt | for_stmt | try_stmt 
-                         | with_stmt | funcdef | classdef | decorated
+        """compound_stmt : if_stmt 
+                         | while_stmt 
+                         | for_stmt 
+                         | try_stmt 
+                         | with_stmt 
+                         | funcdef 
+                         | classdef 
+                         | decorated
         """
         p[0] = p[1]
 
