@@ -58,11 +58,6 @@ class Lexer(object):
         offset = self.lexer.lexdata.rfind('\n', 0, token.lexpos)
         return token.lexpos - offset
 
-    ######################--   PRIVATE   --######################
-
-    ##
-    ## Internal auxiliary methods
-    ##
     def _error(self, msg, token):
         location = self._make_tok_location(token)
         self.error_func(msg, location[0], location[1])
@@ -89,16 +84,17 @@ class Lexer(object):
         'ID',
 
         # constants
-        'INT_CONST_DEC', 'INT_CONST_OCT', 'INT_CONST_HEX',
-        'FLOAT_CONST', 'HEX_FLOAT_CONST',
+        #'INT_CONST_DEC', 'INT_CONST_OCT', 'INT_CONST_HEX',
+        #'FLOAT_CONST', 'HEX_FLOAT_CONST',
 
-        # String literals
-        'STRING_LITERAL',
+        # literals
+        'INT_LITERAL', 'HEX_LITERAL', 'OCT_LITERAL', 'BIN_LITERAL',
+        'FLOAT_LITERAL', 'STRING_LITERAL',
 
         # Operators
         'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'MOD',
-        'OR', 'AND', 'NOT', 'XOR', 'LSHIFT', 'RSHIFT',
-        'LOR', 'LAND', 'LNOT',
+        'PIPE', 'AMPERSAND', 'XOR', 'LSHIFT', 'RSHIFT',
+        'LOGIC_OR', 'LOGIC_AND', 'TILDE',
         'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',
 
         # Assignment
@@ -108,7 +104,7 @@ class Lexer(object):
         'OREQUAL',
 
         # Command line
-        'OPTION', 
+        'CLI_OPTION', 
 
         # Delimeters
         'LPAREN', 'RPAREN',      # ( )
@@ -123,24 +119,15 @@ class Lexer(object):
         'ELLIPSIS',
         )
 
-    ##
-    ## Regexes for use in tokens
-    ##
-    ##
+    #
+    # Token Regexes
+    #
+    id = r'[a-zA-Z_$][0-9a-zA-Z_$]*'
 
-    # valid C identifiers (K&R2: A.2.3), plus '$' (supported by some compilers)
-    identifier = r'[a-zA-Z_$][0-9a-zA-Z_$]*'
-
-    hex_prefix = '0[xX]'
-    hex_digits = '[0-9a-fA-F]+'
-
-    # integer constants (K&R2: A.2.5.1)
-    integer_suffix_opt = r'(([uU]ll)|([uU]LL)|(ll[uU]?)|(LL[uU]?)|([uU][lL])|([lL][uU]?)|[uU])?'
-    decimal_constant = '(0'+integer_suffix_opt+')|([1-9][0-9]*'+integer_suffix_opt+')'
-    octal_constant = '0[0-7]*'+integer_suffix_opt
-    hex_constant = hex_prefix+hex_digits+integer_suffix_opt
-
-    bad_octal_constant = '0[0-7]*[89]'
+    int_literal = '\d+'
+    hex_literal = '0[xX][0-9a-fA-F]+'
+    oct_literal = '0[oO]?[0-7]+'
+    oct_literal = '0[bB]?[0-1]+'
 
     # character constants (K&R2: A.2.5.2)
     # Note: a-zA-Z and '.-~^_!=&;,' are allowed as escape chars to support #line
@@ -175,29 +162,6 @@ class Lexer(object):
     hex_fractional_constant = '((('+hex_digits+r""")?\."""+hex_digits+')|('+hex_digits+r"""\.))"""
     hex_floating_constant = '('+hex_prefix+'('+hex_digits+'|'+hex_fractional_constant+')'+binary_exponent_part+'[FfLl]?)'
 
-    ##
-    ## Lexer states: used for preprocessor \n-terminated directives
-    ##
-    states = (
-        # ppline: preprocessor line directives
-        #
-        ('ppline', 'exclusive'),
-
-        # pppragma: pragma
-        #
-        ('pppragma', 'exclusive'),
-    )
-
-    def t_PPHASH(self, t):
-        r'[ \t]*\#'
-        if self.line_pattern.match(t.lexer.lexdata, pos=t.lexer.lexpos):
-            t.lexer.begin('ppline')
-            self.pp_line = self.pp_filename = None
-        elif self.pragma_pattern.match(t.lexer.lexdata, pos=t.lexer.lexpos):
-            t.lexer.begin('pppragma')
-        else:
-            t.type = 'PPHASH'
-            return t
 
     ##
     ## Rules for the ppline state
