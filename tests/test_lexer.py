@@ -74,6 +74,18 @@ def check_tokens(input, exp):
 def test_int_literal():
     yield check_token, '42', ['INT_LITERAL', '42', 1, 0]
 
+def test_hex_literal():
+    yield check_token, '0x42', ['HEX_LITERAL', '0x42', 1, 0]
+
+def test_oct_o_literal():
+    yield check_token, '0o42', ['OCT_LITERAL', '0o42', 1, 0]
+
+def test_oct_no_o_literal():
+    yield check_token, '042', ['OCT_LITERAL', '042', 1, 0]
+
+def test_bin_literal():
+    yield check_token, '0b101010', ['BIN_LITERAL', '0b101010', 1, 0]
+
 def test_indent():
     exp = [('INDENT', '  \t  ', 1, 0), ('INT_LITERAL', '42', 1, 5)]
     yield check_tokens, '  \t  42', exp
@@ -149,8 +161,12 @@ def test_double_unicode_literal():
 def test_single_bytes_literal():
     yield check_token, "b'yo'", ['BYTES_LITERAL', "b'yo'", 1, 0]
 
-def test_double_bytes_literal():
-    yield check_token, 'b"yo"', ['BYTES_LITERAL', 'b"yo"', 1, 0]
+def test_float_literals():
+    cases = ['0.0', '.0', '0.', '1e10', '1.e42', '0.1e42', '0.5e-42', 
+             '5E10']
+    for s in cases:
+        yield check_token, s, ['FLOAT_LITERAL', s, 1, 0]
+
 
 
 

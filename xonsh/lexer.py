@@ -140,9 +140,10 @@ class Lexer(object):
     bytes_literal = 'b' + single_string_literal + '|b' + double_string_literal
 
     # floating point
-    float_exponent = r"""([eE][-+]?[0-9]+)"""
-    float_matissa = r"""([0-9]*\.[0-9]+)|([0-9]+\.)"""
-    float_literal = float_matissa + float_exponent + '?'
+    float_exponent = r"(?:[eE][-+]?[0-9]+)"
+    float_mantissa = r"(?:[0-9]*\.[0-9]+)|(?:[0-9]+\.)"
+    float_literal = ('((((' + float_mantissa + ')' + float_exponent + 
+                     '?)|([0-9]+' + float_exponent + ')))')
 
     #
     # Rules 
@@ -230,10 +231,11 @@ class Lexer(object):
     def t_BYTES_LITERAL(self, t):
         return t
 
-    t_FLOAT_LITERAL = float_literal
+    @TOKEN(float_literal)
+    def t_FLOAT_LITERAL(self, t):
+        return t
 
     # ints, functions to ensure correct ordering
-    t_INT_LITERAL = int_literal
 
     @TOKEN(hex_literal)
     def t_HEX_LITERAL(self, t):
@@ -245,6 +247,10 @@ class Lexer(object):
 
     @TOKEN(bin_literal)
     def t_BIN_LITERAL(self, t):
+        return t
+
+    @TOKEN(int_literal)
+    def t_INT_LITERAL(self, t):
         return t
 
     # Extra
