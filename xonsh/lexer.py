@@ -134,83 +134,17 @@ class Lexer(object):
     string_literal = r'''(\"\"\"|\'\'\'|\"|\')((?<!\\)\\\1|.)*?\1'''
     raw_string_literal = 'r'+string_literal
     unicode_literal = 'u'+string_literal
+    bytes_literal = 'b'+string_literal
 
-    # floating constants (K&R2: A.2.5.3)
-    exponent_part = r"""([eE][-+]?[0-9]+)"""
-    fractional_constant = r"""([0-9]*\.[0-9]+)|([0-9]+\.)"""
-    floating_constant = '(((('+fractional_constant+')'+exponent_part+'?)|([0-9]+'+exponent_part+'))[FfLl]?)'
-    binary_exponent_part = r'''([pP][+-]?[0-9]+)'''
-    hex_fractional_constant = '((('+hex_digits+r""")?\."""+hex_digits+')|('+hex_digits+r"""\.))"""
-    hex_floating_constant = '('+hex_prefix+'('+hex_digits+'|'+hex_fractional_constant+')'+binary_exponent_part+'[FfLl]?)'
+    # floating point
+    float_exponent = r"""([eE][-+]?[0-9]+)"""
+    float_matissa = r"""([0-9]*\.[0-9]+)|([0-9]+\.)"""
+    float_literal = float_matissa + float_exponent + '?'
 
 
-    ##
-    ## Rules for the ppline state
-    ##
-    @TOKEN(string_literal)
-    def t_ppline_FILENAME(self, t):
-        if self.pp_line is None:
-            self._error('filename before line number in #line', t)
-        else:
-            self.pp_filename = t.value.lstrip('"').rstrip('"')
-
-    @TOKEN(decimal_constant)
-    def t_ppline_LINE_NUMBER(self, t):
-        if self.pp_line is None:
-            self.pp_line = t.value
-        else:
-            # Ignore: GCC's cpp sometimes inserts a numeric flag
-            # after the file name
-            pass
-
-    def t_ppline_NEWLINE(self, t):
-        r'\n'
-
-        if self.pp_line is None:
-            self._error('line number missing in #line', t)
-        else:
-            self.lexer.lineno = int(self.pp_line)
-
-            if self.pp_filename is not None:
-                self.filename = self.pp_filename
-
-        t.lexer.begin('INITIAL')
-
-    def t_ppline_PPLINE(self, t):
-        r'line'
-        pass
-
-    t_ppline_ignore = ' \t'
-
-    def t_ppline_error(self, t):
-        self._error('invalid #line directive', t)
-
-    ##
-    ## Rules for the pppragma state
-    ##
-    def t_pppragma_NEWLINE(self, t):
-        r'\n'
-        t.lexer.lineno += 1
-        t.lexer.begin('INITIAL')
-
-    def t_pppragma_PPPRAGMA(self, t):
-        r'pragma'
-        pass
-
-    t_pppragma_ignore = ' \t<>.-{}();+-*/$%@&^~!?:,0123456789'
-
-    @TOKEN(string_literal)
-    def t_pppragma_STR(self, t): pass
-
-    @TOKEN(identifier)
-    def t_pppragma_ID(self, t): pass
-
-    def t_pppragma_error(self, t):
-        self._error('invalid #pragma directive', t)
-
-    ##
-    ## Rules for the normal state
-    ##
+    #
+    # Rules 
+    #
     t_ignore = ' \t'
 
     # Newlines
