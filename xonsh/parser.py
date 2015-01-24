@@ -75,11 +75,21 @@ class Parser(object):
             'period_name_list',
             'comma_name_list',
             'comma_test',
+            'elif_part_list',
+            'else_part',
+            'finally_part',
+            'as_expr',
+            'comma_with_item_list',
+            'varargslist',
+            'or_and_test_list',
+            'and_not_test_list',
+            'comp_op_expr_list',
             )
         for rule in opt_rules:
             self._opt_rule(rule)
 
         list_rules = (
+            'stmt',
             'comma_tfpdef',
             'comma_vfpdef',
             'semi_small_stmt',
@@ -90,6 +100,12 @@ class Parser(object):
             'comma_dotted_as_name',
             'period_name',
             'comma_name',
+            'elif_part',
+            'except_part',
+            'comma_with_item',
+            'or_and_test',
+            'and_not_test',
+            'comp_op_expr',
             )
         for rule in list_rules:
             self._list_rule(rule)
@@ -542,75 +558,132 @@ class Parser(object):
         """
         p[0] = p[1]
 
+    def p_elif_part(self, p):
+        """elif_part : ELIF test COLON suite"""
+        p[0] = p[1:]
+
+    def p_else_part(self, p):
+        """else_part : ELSE COLON suite"""
+        p[0] = p[1:]
+
     def p_if_stmt(self, p):
-        """if_stmt : IF test COLON suite (ELIF test COLON suite)* [ELSE COLON suite]
+        """if_stmt : IF test COLON suite elif_part_list_opt else_part_opt
         """
         p[0] = p[1:]
 
     def p_while_stmt(self, p):
-        """while_stmt : WHILE test COLON suite [ELSE COLON suite]"""
+        """while_stmt : WHILE test COLON suite else_part_opt"""
         p[0] = p[1:]
 
     def p_for_stmt(self, p):
-        """for_stmt : FOR exprlist IN testlist COLON suite [ELSE COLON suite]
+        """for_stmt : FOR exprlist IN testlist COLON suite else_part_opt
         """
         p[0] = p[1:]
 
+    def p_except_part(self, p):
+        """except_part : except_clause COLON suite"""
+        p[0] = p[1:]
+
+    def p_finally_part(self, p):
+        """finally_part : FINALLY COLON suite"""
+        p[0] = p[1:]
+
     def p_try_stmt(self, p):
-        """try_stmt : (TRY COLON suite ((except_clause COLON suite)+ [ELSE COLON suite] [FINALLY COLON suite] | FINALLY COLON suite))
+        """try_stmt : TRY COLON suite except_part_list else_part_opt finally_part_opt
+                    | TRY COLON suite finally_part
         """
         p[0] = p[1:]
 
     def p_with_stmt(self, p):
-        """with_stmt : WITH with_item (COMMA with_item)* COLON suite"""
+        """with_stmt : WITH with_item comma_with_item_list_opt COLON suite"""
+        p[0] = p[1:]
+
+    def p_as_expr(self, p):
+        """as_expr : AS expr"""
         p[0] = p[1:]
 
     def p_with_item(self, p):
-        """with_item : test [AS expr]"""
+        """with_item : test as_expr_opt"""
+        p[0] = p[1:]
+
+    def p_comma_with_item(self, p):
+        """comma_with_item : COMMA with_item"""
         p[0] = p[1:]
 
     def p_except_clause(self, p):
-        """except_clause : EXCEPT [test [AS NAME]]"""
+        """except_clause : EXCEPT 
+                         | EXCEPT test as_name_opt
+        """
         p[0] = p[1:]
 
     def p_suite(self, p):
-        """suite : simple_stmt | NEWLINE INDENT stmt+ DEDENT"""
+        """suite : simple_stmt 
+                 | NEWLINE INDENT stmt_list DEDENT
+        """
         p[0] = p[1:]
 
     def p_test(self, p):
-        """test : or_test [IF or_test ELSE test] | lambdef"""
+        """test : or_test 
+                | or_test IF or_test ELSE test
+                | lambdef
+        """
         p[0] = p[1:]
 
     def p_test_nocond(self, p):
-        """test_nocond : or_test | lambdef_nocond"""
+        """test_nocond : or_test 
+                       | lambdef_nocond
+        """
         p[0] = p[1:]
 
     def p_lambdef(self, p):
-        """lambdef : LAMBDA [varargslist] COLON test"""
+        """lambdef : LAMBDA varargslist_opt COLON test"""
         p[0] = p[1:]
 
     def p_lambdef_nocond(self, p):
-        """lambdef_nocond : LAMBDA [varargslist] COLON test_nocond"""
+        """lambdef_nocond : LAMBDA varargslist_opt COLON test_nocond"""
         p[0] = p[1:]
 
     def p_or_test(self, p):
-        """or_test : and_test (OR and_test)*"""
+        """or_test : and_test or_and_test_list_opt"""
         p[0] = p[1:]
 
+    def p_or_and_test(self, p):
+        """or_and_test : OR and_test"""
+        p[0] = p[1] + p[2]
+
     def p_and_test(self, p):
-        """and_test : not_test (AND not_test)*"""
+        """and_test : not_test and_not_test_list_opt"""
+        p[0] = p[1:]
+
+    def p_and_not_test(self, p):
+        """and_not_test : AND not_test"""
         p[0] = p[1:]
 
     def p_not_test(self, p):
-        """not_test : NOT not_test | comparison"""
+        """not_test : NOT not_test 
+                    | comparison
+        """
         p[0] = p[1:]
 
     def p_comparison(self, p):
-        """comparison : expr (comp_op expr)*"""
+        """comparison : expr comp_op_expr_list_opt"""
+        p[0] = p[1:]
+
+    def p_comp_op_expr(self, p):
+        """comp_op_expr : comp_op expr"""
         p[0] = p[1:]
 
     def p_comp_op(self, p):
-        """comp_op : LT | GT | EQ | GE | LE | NE | IN | NOT IN | IS | IS NOT
+        """comp_op : LT 
+                   | GT 
+                   | EQ 
+                   | GE 
+                   | LE 
+                   | NE 
+                   | IN 
+                   | NOT IN 
+                   | IS 
+                   | IS NOT
         """
         p[0] = p[1:]
 
