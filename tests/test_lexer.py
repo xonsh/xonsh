@@ -120,15 +120,15 @@ def test_indent_internal_whitespace():
 
 def test_assignment():
     input = 'x = 42'
-    exp = [('ID', 'x', 1, 0),
+    exp = [('NAME', 'x', 1, 0),
            ('EQUALS', '=', 1, 2),
            ('INT_LITERAL', '42', 1, 4),] 
     yield check_tokens, input, exp
 
 def test_multiline():
     input = 'x\ny'
-    exp = [('ID', 'x', 1, 0),
-           ('ID', 'y', 2, 2),]
+    exp = [('NAME', 'x', 1, 0),
+           ('NAME', 'y', 2, 2),]
     yield check_tokens, input, exp
 
 def test_and():

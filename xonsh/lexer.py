@@ -87,7 +87,7 @@ class Lexer(object):
     #
     tokens = pykeywords + (
         # Misc
-        'ID', 'INDENT', 'NEWLINE', 'WHITESPACE',
+        'NAME', 'INDENT', 'NEWLINE', 'WHITESPACE',
 
         # literals
         'INT_LITERAL', 'HEX_LITERAL', 'OCT_LITERAL', 'BIN_LITERAL',
@@ -256,7 +256,7 @@ class Lexer(object):
 
     # Extra
     @TOKEN(identifier)
-    def t_ID(self, t):
+    def t_NAME(self, t):
         if t.value in self.pykeyword_map:
             t.type = self.pykeyword_map[t.value]
         return t
