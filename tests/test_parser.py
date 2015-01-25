@@ -136,6 +136,17 @@ def test_times_div_mod():
 def test_times_div_mod_floor():
     yield check_ast, '42 * 65 / 6 % 28 // 13'
 
+def test_str_str():
+    yield check_ast, '"hello" \'mom\''
+
+def test_str_plus_str():
+    yield check_ast, '"hello" + \'mom\''
+
+def test_str_times_int():
+    yield check_ast, '"hello" * 20'
+
+def test_int_times_str():
+    yield check_ast, '2*"hello"'
 
 
 

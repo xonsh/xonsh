@@ -133,7 +133,6 @@ class Parser(object):
             'pm_term',
             'op_factor',
             'trailer',
-            'string_literal',
             'comma_subscript',
             'comma_expr_or_star_expr',
             'comma_test',
@@ -897,6 +896,14 @@ class Parser(object):
         s = eval(p[1])
         cls = ast.Bytes if p[1].startswith('b') else ast.Str
         p[0] = cls(s=s, lineno=self.lineno, col_offset=self.col)
+
+    def p_string_literal_list(self, p):
+        """string_literal_list : string_literal
+                               | string_literal_list string_literal
+        """
+        if len(p) == 3:
+            p[1].s += p[2].s
+        p[0] = p[1]
 
     def p_number(self, p):
         """number : INT_LITERAL
