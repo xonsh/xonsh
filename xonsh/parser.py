@@ -936,18 +936,23 @@ class Parser(object):
         """
         p1 = p[1]
         if len(p) == 2:
-            p0 = p1
-        elif p1 == '(':
-            p2 = p[2]
-            if p2 is None:
-                p0 = ast.Tuple(elts=[], ctx=ast.Load(), lineno=self.lineno, 
-                               col_offset=self.col)
-            else:
-                p0 = p2[0] if len(p2) == 1 else p2
+            # plain-old atoms
+            p[0] = p1
+            return
+        # lists and such
+        p2 = p[2]
+        p2 = [] if p2 is None else p2
+        if p1 == '(' and len(p2) == 1:
+            # fix for grouping
+            p[0] = p2[0]
+            return
+        # clean p2
+        p2 = p2[:1] if (len(p2) == 2 and p2[1] is None) else p2 
+        if p1 == '(':
+            p0 = ast.Tuple(elts=p2, ctx=ast.Load(), lineno=self.lineno, 
+                           col_offset=self.col)
         elif p1 == '[':
-            p2 = p[2]
-            elts = [] if p2 is None else p2
-            p0 = ast.List(elts=elts, ctx=ast.Load(), lineno=self.lineno, 
+            p0 = ast.List(elts=p2, ctx=ast.Load(), lineno=self.lineno, 
                           col_offset=self.col)
         else:
             assert False
@@ -989,8 +994,10 @@ class Parser(object):
         p1, p2 = p[1], p[2]
         p0 = [p1]
         if len(p) == 3:
-            if p2 is None or p2 == ',':
+            if p2 is None:
                 pass
+            elif p2 == ',':
+                p0.append(None)
             else:
                 assert False
         elif len(p) == 4:
