@@ -1,6 +1,7 @@
 """Implements the xonsh parser"""
 from __future__ import print_function, unicode_literals
 import re
+from collections import Iterable
 
 from ply import yacc
 
@@ -932,8 +933,16 @@ class Parser(object):
         if len(p) == 2:
             p0 = p1
         elif p1 == '(':
-            if p[2] is not None:
-                p0 = p[2]
+            p2 = p[2]
+            if p2 is not None:
+                p0 = p2[0] if len(p2) == 1 else p2
+        elif p1 == '[':
+            p2 = p[2]
+            elts = [] if p2 is None else p2
+            p0 = ast.List(elts=elts, ctx=ast.Load(), lineno=self.lineno, 
+                          col_offset=self.col)
+        else:
+            assert False
         p[0] = p0
 
     def p_string_literal(self, p):
@@ -972,7 +981,7 @@ class Parser(object):
         else:
             p1, p2, p3 = p[1], p[2], p[3]
             if p2 is None and p3 is None:
-                p0 = p1
+                p0 = [p1]
             else:
                 p0 = p[1:]
         p[0] = p0
@@ -1032,11 +1041,16 @@ class Parser(object):
 
     def p_testlist(self, p):
         """testlist : test comma_test_list_opt comma_opt"""
-        p[0] = [self.expr(p[1])]
+        p1, p2, p3 = p[1], p[2], p[3]
+        if isinstance(p1, Iterable):
+            p0 = [self.expr(x) for x in p[1]]
+        else:
+            p0 = [self.expr(p[1])]
         if p[2] is not None:
-            p[0] += p[2]
+            p0 += p[2]
         if p[3] is not None:
-            p[0] += p[3]
+            p0 += p[3]
+        p[0] = p0
 
     def p_dictorsetmaker(self, p):
         """dictorsetmaker : test COLON test comp_for

@@ -253,6 +253,12 @@ def test_str_slice_lower_other():
 def test_str_slice_upper_other():
     yield check_ast, '"hello"[3::2]'
 
+def test_list_empty():
+    yield check_ast, '[]'
+
+def test_list_one():
+    yield check_ast, '[1]'
+
 
 
 
