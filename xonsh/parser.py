@@ -437,7 +437,7 @@ class Parser(object):
 
     def p_comma_test_or_star_expr(self, p):
         """comma_test_or_star_expr : COMMA test_or_star_expr"""
-        p[0] = p[2]
+        p[0] = [p[2]]
 
     def p_testlist_star_expr(self, p):
         """testlist_star_expr : test_or_star_expr comma_test_or_star_expr_list_opt comma_opt
@@ -985,8 +985,14 @@ class Parser(object):
                 assert False
         elif len(p) == 4:
             p3 = p[3]
+            p0 = [p1]
             if p2 is None and p3 is None:
-                p0 = [p1]
+                pass
+            elif p3 is None:
+                #if isinstance(p2, Iterable):
+                p0.extend(p2) 
+                #else:
+                #    p0.append(p2) 
             else:
                 assert False
         else:
