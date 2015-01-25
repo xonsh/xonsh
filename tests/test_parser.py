@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.abspath('..'))  # FIXME
 
 import nose
 from nose.tools import assert_equal
+assert_equal.__self__.maxDiff = None
 
 from ply.lex import LexToken
 
@@ -350,6 +351,17 @@ def test_not_implemented_name():
 def test_genexpr():
     yield check_ast, '(x for x in "mom")'
 
+def test_genexpr_if():
+    yield check_ast, '(x for x in "mom" if True)'
+
+def test_genexpr_if_and():
+    yield check_ast, '(x for x in "mom" if True and x == "m")'
+
+def test_dbl_genexpr():
+    yield check_ast, '(x+y for x in "mom" for y in "dad")'
+
+def test_genexpr_if_genexpr():
+    yield check_ast, '(x+y for x in "mom" if True for y in "dad")'
 
 
 

@@ -1,7 +1,7 @@
 """Implements the xonsh parser"""
 from __future__ import print_function, unicode_literals
 import re
-from collections import Iterable
+from collections import Iterable, Sequence
 
 from ply import yacc
 
@@ -718,7 +718,7 @@ class Parser(object):
         """test_nocond : or_test 
                        | lambdef_nocond
         """
-        p[0] = p[1:]
+        p[0] = p[1]
 
     def p_lambdef(self, p):
         """lambdef : LAMBDA varargslist_opt COLON test"""
@@ -1036,8 +1036,8 @@ class Parser(object):
                 p0 = p0.elts[0]
             elif p2 == ',':
                 pass
-            elif isinstance(p2, ast.comprehension):
-                p0 = ast.GeneratorExp(elt=p0.elts[0], generators=[p2], 
+            elif 'comps' in p2:
+                p0 = ast.GeneratorExp(elt=p0.elts[0], generators=p2['comps'], 
                                       lineno=self.lineno, col_offset=self.col)
             else:
                 assert False
@@ -1207,16 +1207,23 @@ class Parser(object):
 
     def p_comp_for(self, p):
         """comp_for : FOR exprlist IN or_test comp_iter_opt"""
-        targ, it = p[2], p[4]
+        targ, it, p5 = p[2], p[4], p[5]
         targ.ctx = ast.Store()
-        p0 = ast.comprehension(target=targ, iter=it, ifs=[])
-        if p[5] is not None:
-            assert False
+        comp = ast.comprehension(target=targ, iter=it, ifs=[])
+        comps = [comp]
+        p0 = {'comps': comps}
+        if p5 is not None:
+            comps += p5.get('comps', [])
+            comp.ifs += p5.get('if', [])
         p[0] = p0
 
     def p_comp_if(self, p):
         """comp_if : IF test_nocond comp_iter_opt"""
-        p[0] = p[1:]
+        p2, p3 = p[2], p[3]
+        p0 = {'if': [p2]}
+        if p3 is not None:
+            p0['comps'] = p3.get('comps', [])
+        p[0] = p0
 
     def p_encoding_decl(self, p):
         """encoding_decl : NAME"""
