@@ -1098,7 +1098,13 @@ class Parser(object):
                           | test comp_for
                           | testlist 
         """
-        p[0] = p[1:]
+        p1 = p[1]
+        if len(p) == 2:
+            p0 = ast.Set(elts=p1.elts, ctx=ast.Load(), lineno=self.lineno, 
+                         col_offset=self.col)
+        else:
+            assert False
+        p[0] = p0
 
     def p_classdef(self, p):
         """classdef : CLASS NAME func_call_opt COLON suite"""
