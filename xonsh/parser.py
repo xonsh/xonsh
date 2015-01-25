@@ -975,26 +975,19 @@ class Parser(object):
     def p_testlist_comp(self, p):
         """testlist_comp : test_or_star_expr comp_for 
                          | test_or_star_expr comma_opt
+                         | test_or_star_expr comma_test_or_star_expr_list comma_opt
                          | test_or_star_expr comma_test_or_star_expr_list_opt comma_opt
         """
         p1, p2 = p[1], p[2]
+        p0 = [p1]
         if len(p) == 3:
             if p2 is None or p2 == ',':
-                p0 = [p1]
+                pass
             else:
                 assert False
         elif len(p) == 4:
-            p3 = p[3]
-            p0 = [p1]
-            if p2 is None and p3 is None:
-                pass
-            elif p3 is None:
-                #if isinstance(p2, Iterable):
+            if p2 is not None:
                 p0.extend(p2) 
-                #else:
-                #    p0.append(p2) 
-            else:
-                assert False
         else:
             assert False
         p[0] = p0

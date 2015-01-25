@@ -275,6 +275,9 @@ def test_list_one_comma():
 def test_list_three():
     yield check_ast, '[1, 42, 65]'
 
+def test_list_three():
+    yield check_ast, '[1, 42, 65,]'
+
 #DEBUG_LEVEL = 100
 
 
