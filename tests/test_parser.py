@@ -384,7 +384,23 @@ def test_listcomp_if_listcomp():
 def test_listcomp_if_listcomp_if():
     yield check_ast, '[x+y for x in "mom" if True for y in "dad" if y == "d"]'
 
+def test_setcomp():
+    yield check_ast, '{x for x in "mom"}'
 
+def test_setcomp_if():
+    yield check_ast, '{x for x in "mom" if True}'
+
+def test_setcomp_if_and():
+    yield check_ast, '{x for x in "mom" if True and x == "m"}'
+
+def test_dbl_setcomp():
+    yield check_ast, '{x+y for x in "mom" for y in "dad"}'
+
+def test_setcomp_if_setcomp():
+    yield check_ast, '{x+y for x in "mom" if True for y in "dad"}'
+
+def test_setcomp_if_setcomp_if():
+    yield check_ast, '{x+y for x in "mom" if True for y in "dad" if y == "d"}'
 
 
 
