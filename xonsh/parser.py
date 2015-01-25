@@ -442,7 +442,12 @@ class Parser(object):
     def p_testlist_star_expr(self, p):
         """testlist_star_expr : test_or_star_expr comma_test_or_star_expr_list_opt comma_opt
         """
-        p[0] = p[1:]
+        #p1 = p[1]
+        #if len(p) <= 3:
+        #    p[0] = [p1]
+        #else:
+        assert False
+        #p[0] = p0
 
     def p_augassign(self, p):
         """augassign : PLUSEQUAL 
@@ -934,7 +939,10 @@ class Parser(object):
             p0 = p1
         elif p1 == '(':
             p2 = p[2]
-            if p2 is not None:
+            if p2 is None:
+                p0 = ast.Tuple(elts=[], ctx=ast.Load(), lineno=self.lineno, 
+                               col_offset=self.col)
+            else:
                 p0 = p2[0] if len(p2) == 1 else p2
         elif p1 == '[':
             p2 = p[2]
@@ -1046,14 +1054,28 @@ class Parser(object):
         p[0] = p[1:]
 
     def p_testlist(self, p):
-        """testlist : test comma_test_list_opt comma_opt"""
-        p1, p2, p3 = p[1], p[2], p[3]
-        if isinstance(p1, Iterable):
-            p0 = [self.expr(x) for x in p[1]]
+        """testlist : test comma_test_list_opt comma_opt
+                    | test COMMA
+        """
+        p1, p2 = p[1], p[2]
+        if len(p) == 3:
+            if p2 is None:
+                p0 = [p1]
+            elif p2 == ',':
+                p0 = ast.Tuple(elts=[p1], ctx=ast.Load(), lineno=self.lineno, 
+                               col_offset=self.col)
+                p0 = [self.expr(p0)]
+            else:
+                assert False
+        elif len(p) == 4:
+            if isinstance(p1, Iterable):
+                p0 = [self.expr(x) for x in p[1]]
+            else:
+                p0 = [self.expr(p[1])]
+            if p[2] is not None:
+                p0 += p[2]
         else:
-            p0 = [self.expr(p[1])]
-        if p[2] is not None:
-            p0 += p[2]
+            assert False
         p[0] = p0
 
     def p_dictorsetmaker(self, p):

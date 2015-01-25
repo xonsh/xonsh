@@ -263,14 +263,8 @@ def test_list_one():
 def test_list_one_comma():
     yield check_ast, '[1,]'
 
-def test_list_one_comma():
-    yield check_ast, '[1,]'
-
 def test_list_two():
     yield check_ast, '[1, 42]'
-
-def test_list_one_comma():
-    yield check_ast, '[1,]'
 
 def test_list_three():
     yield check_ast, '[1, 42, 65]'
@@ -278,7 +272,27 @@ def test_list_three():
 def test_list_three():
     yield check_ast, '[1, 42, 65,]'
 
-#DEBUG_LEVEL = 100
+def test_tuple_empty():
+    yield check_ast, '()'
+
+def test_tuple_one():
+    yield check_ast, '1,'
+
+def test_tuple_one_comma():
+    yield check_ast, '(1,)'
+
+"""
+def test_list_two():
+    yield check_ast, '[1, 42]'
+
+def test_list_three():
+    yield check_ast, '[1, 42, 65]'
+
+def test_list_three():
+    yield check_ast, '[1, 42, 65,]'
+"""
+
+DEBUG_LEVEL = 100
 
 
 
