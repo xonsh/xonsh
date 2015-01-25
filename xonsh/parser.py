@@ -975,6 +975,7 @@ class Parser(object):
             else:
                 assert False
         elif p1 == '[':
+            p2 = ensure_has_elts(p2)
             p0 = ast.List(elts=p2.elts, ctx=ast.Load(), lineno=self.lineno, 
                           col_offset=self.col)
         elif p1 == '{':
@@ -1041,7 +1042,7 @@ class Parser(object):
                 # split out grouping parentheses.
                 p0 = p0.elts[0]
             elif p2 == ',':
-                p0.elts.append(None)
+                pass
             else:
                 assert False
         elif len(p) == 4:
