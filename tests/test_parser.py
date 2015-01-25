@@ -220,6 +220,42 @@ def test_and_or():
 def test_or_and():
     yield check_ast, '1 or 0 and 2'
 
+def test_group_and_and():
+    yield check_ast, '(1 and 0) and 2'
+
+def test_group_and_or():
+    yield check_ast, '(1 and 0) or 2'
+
+def test_str_idx():
+    yield check_ast, '"hello"[0]'
+
+def test_str_slice():
+    yield check_ast, '"hello"[0:3]'
+
+def test_str_step():
+    yield check_ast, '"hello"[0:3:1]'
+
+def test_str_slice_all():
+    yield check_ast, '"hello"[:]'
+
+def test_str_slice_upper():
+    yield check_ast, '"hello"[5:]'
+
+def test_str_slice_lower():
+    yield check_ast, '"hello"[:3]'
+
+def test_str_slice_other():
+    yield check_ast, '"hello"[::2]'
+
+def test_str_slice_lower_other():
+    yield check_ast, '"hello"[:3:2]'
+
+def test_str_slice_upper_other():
+    yield check_ast, '"hello"[3::2]'
+
+
+
+
 
 
 

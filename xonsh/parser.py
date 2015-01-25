@@ -896,7 +896,15 @@ class Parser(object):
         """power : atom trailer_list_opt 
                  | atom trailer_list_opt POW factor
         """
-        p0 = p[1] if p[2] is None else p[1] + p[2]
+        p1, p2 = p[1], p[2]
+        if p2 is None:
+            p0 = p1
+        elif isinstance(p2, (ast.Index, ast.Slice)):
+            p0 = ast.Subscript(value=p1, slice=p2, ctx=ast.Load(),
+                               lineno=self.lineno, col_offset=self.col)
+        else:
+            assert False
+        # actual power rule
         if len(p) == 5:
             p0 = ast.BinOp(left=p0, op=ast.Pow(), right=p[4], 
                            lineno=self.lineno, col_offset=self.col)
@@ -974,11 +982,21 @@ class Parser(object):
                    | LBRACKET subscriptlist RBRACKET 
                    | PERIOD NAME
         """
-        p[0] = p[1:]
+        p1, p2 = p[1], p[2]
+        if p1 == '[':
+            p0 = p2
+        else:
+            assert False
+        p[0] = p0
 
     def p_subscriptlist(self, p):
         """subscriptlist : subscript comma_subscript_list_opt comma_opt"""
-        p[0] = p[1:]
+        p1, p2, p3 = p[1], p[2], p[3]
+        if p2 is None and p3 is None:
+            p0 = p1
+        else:
+            assert False
+        p[0] = p0
 
     def p_comma_subscript(self, p):
         """comma_subscript : COMMA subscript"""
@@ -988,11 +1006,15 @@ class Parser(object):
         """subscript : test 
                      | test_opt COLON test_opt sliceop_opt
         """
-        p[0] = p[1:]
+        if len(p) == 2:
+            p0 = ast.Index(value=p[1])
+        else:
+            p0 = ast.Slice(lower=p[1], upper=p[3], step=p[4])
+        p[0] = p0
 
     def p_sliceop(self, p):
         """sliceop : COLON test_opt"""
-        p[0] = p[1:]
+        p[0] = p[2]
 
     def p_expr_or_star_expr(self, p):
         """expr_or_star_expr : expr
