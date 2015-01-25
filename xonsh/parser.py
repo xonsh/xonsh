@@ -954,16 +954,20 @@ class Parser(object):
             else:
                 assert False
         elif p1 == '(':
-            # filled, possible group container atoms
+            # filled, possible group container tuple atoms
             if isinstance(p2, ast.AST):
                 p0 = p2
             elif len(p2) == 1 and isinstance(p2[0], ast.AST):
                 p0 = p2[0]
             else:
                 assert False
-        else:
-            # filled, non-group container atoms
+        elif p1 == '[':
+            p0 = ast.List(elts=p2.elts, ctx=ast.Load(), lineno=self.lineno, 
+                          col_offset=self.col)
+        elif p1 == '{':
             p0 = p2
+        else:
+            assert False
         p[0] = p0
        
         ## lists and such
@@ -1018,17 +1022,23 @@ class Parser(object):
                          | test_or_star_expr comma_test_or_star_expr_list_opt comma_opt
         """
         p1, p2 = p[1], p[2]
-        p0 = [p1]
+        if hasattr(p1, 'elts'):
+            p0 = p1
+        else:
+            if not isinstance(p1, Iterable):
+                p1 = [p1]
+            p0 = ast.Tuple(elts=p1, ctx=ast.Load(), lineno=self.lineno, 
+                           col_offset=self.col)
         if len(p) == 3:
             if p2 is None:
                 pass
             elif p2 == ',':
-                p0.append(None)
+                p0.elts.append(None)
             else:
                 assert False
         elif len(p) == 4:
             if p2 is not None:
-                p0.extend(p2) 
+                p0.elts.extend(p2) 
             else:
                 assert False
         else:
