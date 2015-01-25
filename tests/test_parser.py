@@ -314,6 +314,26 @@ def test_set_two_comma():
 def test_set_three():
     yield check_ast, '{42, 65, 45}'
 
+def test_dict_empty():
+    yield check_ast, '{}'
+
+def test_dict_one():
+    yield check_ast, '{42: 65}'
+
+def test_dict_one_comma():
+    yield check_ast, '{42: 65,}'
+
+def test_dict_two():
+    yield check_ast, '{42: 65, 6: 28}'
+
+def test_dict_two_comma():
+    yield check_ast, '{42: 65, 6: 28,}'
+
+def test_dict_three():
+    yield check_ast, '{42: 65, 6: 28, 1: 2}'
+
+
+
 
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100

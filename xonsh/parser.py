@@ -152,6 +152,7 @@ class Parser(object):
             'comma_test',
             'argument_comma',
             'comma_argument',
+            'comma_item', 
             )
         for rule in list_rules:
             self._list_rule(rule)
@@ -984,24 +985,6 @@ class Parser(object):
             assert False
         p[0] = p0
        
-        ## lists and such
-        #p2 = [] if p2 is None else p2
-        #if p1 == '(' and len(p2) == 1:
-        #    # fix for grouping
-        #    p[0] = p2[0]
-        #    return
-        ## clean p2
-        #p2 = p2[:1] if (len(p2) == 2 and p2[1] is None) else p2 
-        #if p1 == '(':
-        #    p0 = ast.Tuple(elts=p2, ctx=ast.Load(), lineno=self.lineno, 
-        #                   col_offset=self.col)
-        #elif p1 == '[':
-        #    p0 = ast.List(elts=p2, ctx=ast.Load(), lineno=self.lineno, 
-        #                  col_offset=self.col)
-        #else:
-        #    assert False
-        #p[0] = p0
-
     def p_string_literal(self, p):
         """string_literal : STRING_LITERAL
                           | RAW_STRING_LITERAL
@@ -1138,17 +1121,33 @@ class Parser(object):
             assert False
         p[0] = p0
 
+    def p_comma_item(self, p):
+        """comma_item : COMMA test COLON test"""
+        p[0] = [p[2], p[4]]
+
     def p_dictorsetmaker(self, p):
         """dictorsetmaker : test COLON test comp_for
-                          | test COLON testlist 
+                          | test COLON test comma_item_list comma_opt
+                          | test COLON testlist
                           | test comp_for
                           | testlist 
         """
         p1 = p[1]
-        if len(p) == 2:
+        lenp = len(p)
+        if lenp == 2:
             p1 = ensure_has_elts(p1)
             p0 = ast.Set(elts=p1.elts, ctx=ast.Load(), lineno=self.lineno, 
                          col_offset=self.col)
+        elif lenp == 4:
+            p3 = ensure_has_elts(p[3])
+            p0 = ast.Dict(keys=[p1], values=p3.elts, ctx=ast.Load(),
+                          lineno=self.lineno, col_offset=self.col)
+        elif lenp == 6:
+            p3, p4 = p[3], p[4]
+            keys = [p1] + p4[::2]
+            values = [p3] + p4[1::2]
+            p0 = ast.Dict(keys=keys, values=values, ctx=ast.Load(),
+                          lineno=self.lineno, col_offset=self.col)
         else:
             assert False
         p[0] = p0
