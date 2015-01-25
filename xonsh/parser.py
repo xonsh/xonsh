@@ -296,7 +296,7 @@ class Parser(object):
         """eval_input : testlist newlines_opt
                       | testlist newlines_opt ENDMARKER
         """
-        p[0] = ast.Module(body=p[1])
+        p[0] = ast.Module(body=[self.expr(p[1])])
 
     def p_func_call(self, p):
         """func_call : LPAREN arglist_opt RPAREN"""
@@ -939,24 +939,42 @@ class Parser(object):
             # plain-old atoms
             p[0] = p1
             return
-        # lists and such
         p2 = p[2]
-        p2 = [] if p2 is None else p2
-        if p1 == '(' and len(p2) == 1:
-            # fix for grouping
-            p[0] = p2[0]
-            return
-        # clean p2
-        p2 = p2[:1] if (len(p2) == 2 and p2[1] is None) else p2 
-        if p1 == '(':
-            p0 = ast.Tuple(elts=p2, ctx=ast.Load(), lineno=self.lineno, 
-                           col_offset=self.col)
-        elif p1 == '[':
-            p0 = ast.List(elts=p2, ctx=ast.Load(), lineno=self.lineno, 
-                          col_offset=self.col)
+        if p2 is None:
+            # empty container atoms
+            if p1 == '(':
+                p0 = ast.Tuple(elts=[], ctx=ast.Load(), lineno=self.lineno, 
+                               col_offset=self.col)
+            elif p1 == '[':
+                p0 = ast.List(elts=[], ctx=ast.Load(), lineno=self.lineno, 
+                              col_offset=self.col)
+            elif p1 == '{':
+                p0 = ast.Dict(keys=[], values=[], ctx=ast.Load(), 
+                              lineno=self.lineno, col_offset=self.col)
+            else:
+                assert False
         else:
-            assert False
+            # filled container atoms
+            p0 = p2
         p[0] = p0
+       
+        ## lists and such
+        #p2 = [] if p2 is None else p2
+        #if p1 == '(' and len(p2) == 1:
+        #    # fix for grouping
+        #    p[0] = p2[0]
+        #    return
+        ## clean p2
+        #p2 = p2[:1] if (len(p2) == 2 and p2[1] is None) else p2 
+        #if p1 == '(':
+        #    p0 = ast.Tuple(elts=p2, ctx=ast.Load(), lineno=self.lineno, 
+        #                   col_offset=self.col)
+        #elif p1 == '[':
+        #    p0 = ast.List(elts=p2, ctx=ast.Load(), lineno=self.lineno, 
+        #                  col_offset=self.col)
+        #else:
+        #    assert False
+        #p[0] = p0
 
     def p_string_literal(self, p):
         """string_literal : STRING_LITERAL
@@ -1074,20 +1092,20 @@ class Parser(object):
             elif p2 == ',':
                 p0 = ast.Tuple(elts=[p1], ctx=ast.Load(), lineno=self.lineno, 
                                col_offset=self.col)
-                p0 = [self.expr(p0)]
             else:
                 assert False
         elif len(p) == 4 and p2 is None:
-            if isinstance(p1, Iterable):
-                p0 = [self.expr(x) for x in p1]
+            if p[3] is None:
+                pass
+            elif not isinstance(p1, ast.AST) or not hasattr(p1, 'elts'):
+                p1 = ast.Tuple(elts=[p1], ctx=ast.Load(), lineno=self.lineno, 
+                               col_offset=self.col)
             else:
-                p0 = [self.expr(p1)]
+                assert False
+            p0 = p1
         elif len(p) == 4 and p2 is not None:
-            if not isinstance(p1, Iterable):
-                p1 = [p1]
-            p0 = ast.Tuple(elts=p1 + p2, ctx=ast.Load(), lineno=self.lineno, 
-                           col_offset=self.col)
-            p0 = [self.expr(p0)]
+            p1.elts += p2
+            p0 = p1
         else:
             assert False
         p[0] = p0
