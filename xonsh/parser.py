@@ -953,8 +953,16 @@ class Parser(object):
                               lineno=self.lineno, col_offset=self.col)
             else:
                 assert False
+        elif p1 == '(':
+            # filled, possible group container atoms
+            if isinstance(p2, ast.AST):
+                p0 = p2
+            elif len(p2) == 1 and isinstance(p2[0], ast.AST):
+                p0 = p2[0]
+            else:
+                assert False
         else:
-            # filled container atoms
+            # filled, non-group container atoms
             p0 = p2
         p[0] = p0
        
