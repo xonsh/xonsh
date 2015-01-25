@@ -148,6 +148,15 @@ def test_str_times_int():
 def test_int_times_str():
     yield check_ast, '2*"hello"'
 
+def test_group_plus_times():
+    yield check_ast, '(42 + 65) * 20'
+
+def test_plus_group_times():
+    yield check_ast, '42 + (65 * 20)'
+
+def test_group():
+    yield check_ast, '(42)'
+
 
 
 

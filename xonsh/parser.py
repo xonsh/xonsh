@@ -871,7 +871,7 @@ class Parser(object):
         """yield_expr_or_testlist_comp : yield_expr
                                        | testlist_comp
         """
-        p[0] = p[1:]
+        p[0] = p[1]
 
     def p_atom(self, p):
         """atom : LPAREN yield_expr_or_testlist_comp_opt RPAREN 
@@ -885,7 +885,13 @@ class Parser(object):
                 | TRUE 
                 | FALSE
         """
-        p[0] = p[1]
+        p1 = p[1]
+        if len(p) == 2:
+            p0 = p1
+        elif p1 == '(':
+            if p[2] is not None:
+                p0 = p[2]
+        p[0] = p0
 
     def p_string_literal(self, p):
         """string_literal : STRING_LITERAL
@@ -918,7 +924,15 @@ class Parser(object):
         """testlist_comp : test_or_star_expr comp_for 
                          | test_or_star_expr comma_test_or_star_expr_list_opt comma_opt
         """
-        p[0] = p[1:]
+        if len(p) == 3:
+            p0 = p[1] + p[2]
+        else:
+            p1, p2, p3 = p[1], p[2], p[3]
+            if p2 is None and p3 is None:
+                p0 = p1
+            else:
+                p0 = p[1:]
+        p[0] = p0
 
     def p_trailer(self, p):
         """trailer : LPAREN arglist_opt RPAREN 
