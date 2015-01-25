@@ -157,6 +157,49 @@ def test_plus_group_times():
 def test_group():
     yield check_ast, '(42)'
 
+def test_lt():
+    yield check_ast, '42 < 65'
+
+def test_lt():
+    yield check_ast, '42 < 65'
+
+def test_gt():
+    yield check_ast, '42 > 65'
+
+def test_eq():
+    yield check_ast, '42 == 65'
+
+def test_lt():
+    yield check_ast, '42 < 65'
+
+def test_le():
+    yield check_ast, '42 <= 65'
+
+def test_ge():
+    yield check_ast, '42 >= 65'
+
+def test_ne():
+    yield check_ast, '42 != 65'
+
+def test_in():
+    yield check_ast, '"4" in "65"'
+
+def test_is():
+    yield check_ast, '42 is 65'
+
+def test_not_in():
+    yield check_ast, '"4" not in "65"'
+
+def test_is_not():
+    yield check_ast, '42 is not 65'
+
+def test_lt_lt():
+    yield check_ast, '42 < 65 < 105'
+
+def test_lt_lt_lt():
+    yield check_ast, '42 < 65 < 105 < 77'
+
+
 
 
 

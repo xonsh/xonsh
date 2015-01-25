@@ -732,11 +732,22 @@ class Parser(object):
 
     def p_comparison(self, p):
         """comparison : expr comp_op_expr_list_opt"""
-        p[0] = p[1] if p[2] is None else p[1] + p[2]
+        p2 = p[2]
+        if p2 is None:
+            p0 = p[1]
+        else:
+            p0 = ast.Compare(left=p[1], ops=p2[::2], comparators=p2[1::2], 
+                             lineno=self.lineno, col_offset=self.col)
+        p[0] = p0
 
     def p_comp_op_expr(self, p):
         """comp_op_expr : comp_op expr"""
-        p[0] = p[1] + p[2]
+        p[0] = [p[1], p[2]]
+
+    _comp_ops = {'<': ast.Lt, '>': ast.Gt, '==': ast.Eq, '>=': ast.GtE, 
+                 '<=': ast.LtE, '!=': ast.NotEq, 'in': ast.In, 
+                 ('not', 'in'): ast.NotIn, 'is': ast.Is, 
+                 ('is', 'not'): ast.IsNot}
 
     def p_comp_op(self, p):
         """comp_op : LT 
@@ -750,7 +761,8 @@ class Parser(object):
                    | IS 
                    | IS NOT
         """
-        p[0] = p[1] if len(p) == 2 else p[1] + p[2]
+        key = p[1] if len(p) == 2 else (p[1], p[2])
+        p[0] = self._comp_ops[key]()
 
     def p_star_expr(self, p):
         """star_expr : TIMES expr"""
