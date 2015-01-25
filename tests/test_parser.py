@@ -332,6 +332,24 @@ def test_dict_two_comma():
 def test_dict_three():
     yield check_ast, '{42: 65, 6: 28, 1: 2}'
 
+def test_true():
+    yield check_ast, 'True'
+
+def test_false():
+    yield check_ast, 'False'
+
+def test_none():
+    yield check_ast, 'None'
+
+def test_elipssis():
+    yield check_ast, '...'
+
+def test_not_implemented_name():
+    yield check_ast, 'NotImplemented'
+
+
+
+
 
 
 

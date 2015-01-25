@@ -951,6 +951,16 @@ class Parser(object):
         p1 = p[1]
         if len(p) == 2:
             # plain-old atoms
+            if isinstance(p1, (ast.Num, ast.Str, ast.Bytes)):
+                pass
+            elif (p1 is True) or (p1 is False) or (p1 is None):
+                p1 = ast.NameConstant(value=p1, lineno=self.lineno, 
+                                      col_offset=self.col)
+            elif p1 == '...':
+                p1 = ast.Ellipsis(lineno=self.lineno, col_offset=self.col)
+            else:
+                p1 = ast.Name(id=p1, ctx=ast.Load(), lineno=self.lineno, 
+                              col_offset=self.col)
             p[0] = p1
             return
         p2 = p[2]

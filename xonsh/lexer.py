@@ -82,9 +82,9 @@ class Lexer(object):
         'OR', 'PASS', 'RAISE', 'RETURN', 'TRY', 'WHILE', 'WITH', 'YIELD',)
 
     pykeyword_map = {k.lower(): k for k in pykeywords}
-    pykeyword_map['None'] = 'NONE'
-    pykeyword_map['True'] = 'TRUE'
-    pykeyword_map['False'] = 'FALSE'
+    #pykeyword_map['None'] = 'NONE'
+    #pykeyword_map['True'] = 'TRUE'
+    #pykeyword_map['False'] = 'FALSE'
 
     #
     # All the tokens recognized by the lexer
@@ -269,6 +269,21 @@ class Lexer(object):
     @TOKEN(int_literal)
     def t_INT_LITERAL(self, t):
         t.value = int(t.value)
+        return t
+
+    def t_NONE(self, t):
+        r'None'
+        t.value = None
+        return t
+
+    def t_TRUE(self, t):
+        r'True'
+        t.value = True
+        return t
+
+    def t_FALSE(self, t):
+        r'False'
+        t.value = False
         return t
 
     # Extra
