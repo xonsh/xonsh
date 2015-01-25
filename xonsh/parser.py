@@ -986,9 +986,13 @@ class Parser(object):
             else:
                 assert False
         elif p1 == '[':
-            p2 = ensure_has_elts(p2)
-            p0 = ast.List(elts=p2.elts, ctx=ast.Load(), lineno=self.lineno, 
-                          col_offset=self.col)
+            if isinstance(p2, ast.GeneratorExp):
+                p0 = ast.ListComp(elt=p2.elt, generators=p2.generators, 
+                                  lineno=p2.lineno, col_offset=p2.col_offset)
+            else:
+                p2 = ensure_has_elts(p2)
+                p0 = ast.List(elts=p2.elts, ctx=ast.Load(), lineno=self.lineno, 
+                              col_offset=self.col)
         elif p1 == '{':
             p0 = p2
         else:

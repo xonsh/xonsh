@@ -363,6 +363,12 @@ def test_dbl_genexpr():
 def test_genexpr_if_genexpr():
     yield check_ast, '(x+y for x in "mom" if True for y in "dad")'
 
+def test_genexpr_if_genexpr_if():
+    yield check_ast, '(x+y for x in "mom" if True for y in "dad" if y == "d")'
+
+def test_listcomp():
+    yield check_ast, '[x for x in "mom"]'
+
 
 
 
