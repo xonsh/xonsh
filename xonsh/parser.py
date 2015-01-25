@@ -710,25 +710,48 @@ class Parser(object):
 
     def p_or_test(self, p):
         """or_test : and_test or_and_test_list_opt"""
-        p[0] = p[1] if p[2] is None else p[1] + p[2]
+        p2 = p[2]
+        if p2 is None:
+            p0 = p[1]
+        elif len(p2) == 2:
+            p0 = ast.BoolOp(op=p2[0], values=[p[1], p2[1]], 
+                            lineno=self.lineno, col_offset=self.col)
+        else:
+            p0 = ast.BoolOp(op=p2[0], values=[p[1]] + p2[1::2], 
+                            lineno=self.lineno, col_offset=self.col)
+        p[0] = p0
 
     def p_or_and_test(self, p):
         """or_and_test : OR and_test"""
-        p[0] = p[1] + p[2]
+        p[0] = [ast.Or(), p[2]]
 
     def p_and_test(self, p):
         """and_test : not_test and_not_test_list_opt"""
-        p[0] = p[1] if p[2] is None else p[1] + p[2]
+        p2 = p[2]
+        if p2 is None:
+            p0 = p[1]
+        elif len(p2) == 2:
+            p0 = ast.BoolOp(op=p2[0], values=[p[1], p2[1]], 
+                            lineno=self.lineno, col_offset=self.col)
+        else:
+            p0 = ast.BoolOp(op=p2[0], values=[p[1]] + p2[1::2], 
+                            lineno=self.lineno, col_offset=self.col)
+        p[0] = p0
 
     def p_and_not_test(self, p):
         """and_not_test : AND not_test"""
-        p[0] = p[1] + p[2]
+        p[0] = [ast.And(), p[2]]
 
     def p_not_test(self, p):
         """not_test : NOT not_test 
                     | comparison
         """
-        p[0] = p[1] if len(p) == 2 else p[1] + p[2]
+        if len(p) == 2:
+            p0 = p[1] 
+        else: 
+            p0 = ast.UnaryOp(op=ast.Not(), operand=p[2], lineno=self.lineno, 
+                             col_offset=self.col)
+        p[0] = p0
 
     def p_comparison(self, p):
         """comparison : expr comp_op_expr_list_opt"""

@@ -199,6 +199,27 @@ def test_lt_lt():
 def test_lt_lt_lt():
     yield check_ast, '42 < 65 < 105 < 77'
 
+def test_not():
+    yield check_ast, 'not 0'
+
+def test_or():
+    yield check_ast, '1 or 0'
+
+def test_or_or():
+    yield check_ast, '1 or 0 or 42'
+
+def test_and():
+    yield check_ast, '1 and 0'
+
+def test_and_and():
+    yield check_ast, '1 and 0 and 2'
+
+def test_and_or():
+    yield check_ast, '1 and 0 or 2'
+
+def test_or_and():
+    yield check_ast, '1 or 0 and 2'
+
 
 
 
