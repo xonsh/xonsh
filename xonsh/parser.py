@@ -1038,7 +1038,8 @@ class Parser(object):
         p0 = ensure_has_elts(p1, lineno=self.lineno, col_offset=self.col)
         if len(p) == 3:
             if p2 is None:
-                pass
+                # split out grouping parentheses.
+                p0 = p0.elts[0]
             elif p2 == ',':
                 p0.elts.append(None)
             else:
