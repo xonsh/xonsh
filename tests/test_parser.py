@@ -14,9 +14,22 @@ from ply.lex import LexToken
 
 from xonsh.parser import Parser
 
+PARSER = None
+DEBUG_LEVEL = 0
+
+def setup():
+    # only setup one parser
+    global PARSER
+    PARSER = Parser(lexer_optimize=False, yacc_optimize=False, yacc_debug=True)
+
 def nodes_equal(x, y):
     if type(x) != type(y):
         return False
+    if isinstance(x, ast.Expr):
+        if x.lineno != y.lineno:
+            return False
+        if x.col_offset != y.col_offset:
+            return False
     for (xname, xval), (yname, yval) in zip(ast.iter_fields(x), 
                                             ast.iter_fields(y)):
         if xname != yname:
@@ -35,14 +48,27 @@ def assert_nodes_equal(x, y):
     assert_equal(ast.dump(x), ast.dump(y))
 
 def check_ast(input):
+    # expect a Python AST
     exp = ast.parse(input)
-    p = Parser(lexer_optimize=False, yacc_optimize=False, yacc_debug=True)
-    obs = p.parse(input, debug_level=100)
+    # observe something from xonsh
+    obs = PARSER.parse(input, debug_level=DEBUG_LEVEL)
+    # Check that they are equal
     assert_nodes_equal(exp, obs)
+    # round trip by running xonsh AST via Python
+    exec(compile(obs, '<test>', 'exec'))
 
 
 def test_int_literal():
     yield check_ast, '42'
+
+def test_float_literal():
+    yield check_ast, '42.0'
+
+def test_str_literal():
+    yield check_ast, '"hello"'
+
+def test_bytes_literal():
+    yield check_ast, 'b"hello"'
 
 
 if __name__ == '__main__':

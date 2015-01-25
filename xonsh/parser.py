@@ -169,10 +169,9 @@ class Parser(object):
         """
         self.lexer.fname = filename
         self.lexer.lineno = 0
-        self._scope_stack = [dict()]
         self._last_yielded_token = None
         tree = self.parser.parse(input=s, lexer=self.lexer,
-                                  debug=debug_level)
+                                 debug=debug_level)
         return tree
 
     def _lexer_errfunc(self, msg, line, column):
@@ -208,6 +207,26 @@ class Parser(object):
         """Returns the current location."""
         return Location(fname=self.lexer.fname, lineno=lineno,
                         column=column)
+
+    def expr(self, p):
+        """Creates an expression for a token."""
+        return ast.Expr(value=p, lineno=p.lineno, 
+                        col_offset=p.col_offset)
+
+    def token_col(self, t):
+        """Gets ths token column"""
+        return self.lexer.token_col(t)
+
+    @property
+    def lineno(self):
+        return self.lexer.lineno
+
+    @property
+    def col(self):
+        t = self._yacc_lookahead_token()
+        if t is not None:
+            return self.token_col(t)
+        return 1
 
     def _parse_error(self, msg, loc):
         raise SyntaxError('{0}: {1}'.format(loc, msg))
@@ -834,7 +853,9 @@ class Parser(object):
                           | UNICODE_LITERAL
                           | BYTES_LITERAL
         """
-        p[0] = p[1]
+        s = eval(p[1])
+        cls = ast.Bytes if p[1].startswith('b') else ast.Str
+        p[0] = cls(s=s, lineno=self.lineno, col_offset=self.col)
 
     def p_number(self, p):
         """number : INT_LITERAL
@@ -843,7 +864,7 @@ class Parser(object):
                   | BIN_LITERAL
                   | FLOAT_LITERAL
         """
-        p[0] = p[1]
+        p[0] = ast.Num(n=p[1], lineno=self.lineno, col_offset=self.col)
 
     def p_testlist_comp(self, p):
         """testlist_comp : test_or_star_expr comp_for 
@@ -892,7 +913,7 @@ class Parser(object):
 
     def p_testlist(self, p):
         """testlist : test comma_test_list_opt comma_opt"""
-        p[0] = p[1]
+        p[0] = [self.expr(p[1])]
         if p[2] is not None:
             p[0] += p[2]
         if p[3] is not None:

@@ -35,6 +35,7 @@ class Lexer(object):
     def build(self, **kwargs):
         """Part of the PLY lexer API."""
         self.lexer = lex.lex(object=self, **kwargs)
+        self.lexer.lineno = 1
 
     @property
     def lineno(self):
