@@ -793,11 +793,18 @@ class Parser(object):
 
     def p_arith_expr(self, p):
         """arith_expr : term pm_term_list_opt"""
-        if p[2] is None:
-            p0 = p[1] 
-        else:
-            p0 = ast.BinOp(left=p[1], op=p[2][0], right=p[2][1], 
+        p2 = p[2]
+        if p2 is None:
+            p0 = p[1]
+        elif len(p2) == 2: 
+            p0 = ast.BinOp(left=p[1], op=p2[0], right=p2[1], 
                            lineno=self.lineno, col_offset=self.col)
+        else:
+            left = p[1]
+            for op, right in zip(p2[::2], p2[1::2]):
+                left = ast.BinOp(left=left, op=op, right=right, 
+                                 lineno=self.lineno, col_offset=self.col)
+            p0 = left
         p[0] = p0
 
     _term_binops = {'+': ast.Add, '-': ast.Sub, '*': ast.Mult, 
@@ -812,11 +819,18 @@ class Parser(object):
 
     def p_term(self, p):
         """term : factor op_factor_list_opt"""
-        if p[2] is None:
+        p2 = p[2]
+        if p2 is None:
             p0 = p[1] 
-        else:
-            p0 = ast.BinOp(left=p[1], op=p[2][0], right=p[2][1], 
+        elif len(p2) == 2:
+            p0 = ast.BinOp(left=p[1], op=p2[0], right=p2[1], 
                            lineno=self.lineno, col_offset=self.col)
+        else:
+            left = p[1]
+            for op, right in zip(p2[::2], p2[1::2]):
+                left = ast.BinOp(left=left, op=op, right=right, 
+                                 lineno=self.lineno, col_offset=self.col)
+            p0 = left
         p[0] = p0
 
     def p_op_factor(self, p):
@@ -858,6 +872,7 @@ class Parser(object):
         """yield_expr_or_testlist_comp : yield_expr
                                        | testlist_comp
         """
+        p[0] = p[1:]
 
     def p_atom(self, p):
         """atom : LPAREN yield_expr_or_testlist_comp_opt RPAREN 

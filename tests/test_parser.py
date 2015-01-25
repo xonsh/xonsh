@@ -100,10 +100,49 @@ def test_binop_floordiv():
 def test_binop_pow():
     yield check_ast, '2 ** 2'
 
+def test_plus_pow():
+    yield check_ast, '42 + 2 ** 2'
+
+def test_plus_plus():
+    yield check_ast, '42 + 65 + 6'
+
+def test_plus_minus():
+    yield check_ast, '42 + 65 - 6'
+
+def test_minus_plus():
+    yield check_ast, '42 - 65 + 6'
+
+def test_minus_minus():
+    yield check_ast, '42 - 65 - 6'
+
+def test_minus_plus_minus():
+    yield check_ast, '42 - 65 + 6 - 28'
+
+def test_times_plus():
+    yield check_ast, '42 * 65 + 6'
+
+def test_plus_times():
+    yield check_ast, '42 + 65 * 6'
+
+def test_times_times():
+    yield check_ast, '42 * 65 * 6'
+
+def test_times_div():
+    yield check_ast, '42 * 65 / 6'
+
+def test_times_div_mod():
+    yield check_ast, '42 * 65 / 6 % 28'
+
+def test_times_div_mod_floor():
+    yield check_ast, '42 * 65 / 6 % 28 // 13'
 
 
 
 
+
+
+
+ 
 
 if __name__ == '__main__':
     nose.runmodule()
