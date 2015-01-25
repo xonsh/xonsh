@@ -78,7 +78,7 @@ class Lexer(object):
     pykeywords = ('AND', 'AS', 'ASSERT', 'BREAK', 'CLASS', 'CONTINUE', 'DEF', 
         'DEL', 'ELIF', 'ELSE', 'EXCEPT', 'EXEC', 'FINALLY', 'FOR', 'FROM', 
         'GLOBAL', 'IMPORT', 'IF', 'IN', 'IS', 'LAMBDA', 'NONLOCAL', 'NOT', 
-        'OR', 'PASS', 'RAISE', 'TRY', 'WHILE', 'WITH', 'YIELD',)
+        'OR', 'PASS', 'RAISE', 'RETURN', 'TRY', 'WHILE', 'WITH', 'YIELD',)
 
     pykeyword_map = {k.lower(): k for k in pykeywords}
     pykeyword_map['None'] = 'NONE'
@@ -161,6 +161,7 @@ class Lexer(object):
     def t_NEWLINE(self, t):
         r'\n+'
         t.lexer.lineno += t.value.count("\n")
+        return t
 
     # Basic Operators
     t_PLUS = r'\+'

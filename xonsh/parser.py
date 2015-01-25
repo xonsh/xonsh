@@ -14,7 +14,7 @@ class Location(object):
     def __init__(self, fname, lineno, column=None):
         """Takes a filename, line number, and optionally a column number."""
         self.fname = fname
-        self.lineno = line
+        self.lineno = lineno
         self.column = column
 
     def __str__(self):
@@ -144,7 +144,8 @@ class Parser(object):
             self._list_rule(rule)
 
         self.parser = yacc.yacc(module=self, debug=yacc_debug,
-            start='start_symbols', optimize=yacc_optimize,
+            start='start_symbols', 
+            optimize=yacc_optimize,
             tabmodule=yacc_table)
 
         # Keeps track of the last token given to yacc (the lookahead token)
@@ -166,7 +167,7 @@ class Parser(object):
         -------
         tree : AST
         """
-        self.lexer.filename = filename
+        self.lexer.fname = filename
         self.lexer.lineno = 0
         self._scope_stack = [dict()]
         self._last_yielded_token = None
@@ -238,6 +239,7 @@ class Parser(object):
                          | eval_input
                          | empty
         """
+        p[0] = p[1]
 
     def p_single_input(self, p):
         """single_input : NEWLINE 
@@ -247,6 +249,8 @@ class Parser(object):
         p[0] = p[1]
 
     def p_file_input(self, p):
+        #"""file_input : newline_or_stmt 
+        #              | file_input newline_or_stmt
         """file_input : newline_or_stmt ENDMARKER
                       | file_input newline_or_stmt ENDMARKER
         """
@@ -270,7 +274,9 @@ class Parser(object):
         p[0] = p[1] if len(p) == 2 else p[1] + p[2]
 
     def p_eval_input(self, p):
-        """eval_input : testlist newlines_opt ENDMARKER"""
+        """eval_input : testlist newlines_opt
+                      | testlist newlines_opt ENDMARKER
+        """
         p[0] = p[1]
 
     def p_func_call(self, p):
@@ -550,7 +556,7 @@ class Parser(object):
         p[0] = p[1:]
 
     def p_import_as_names(self, p):
-        """import_as_names : import_as_name comm_import_as_name_list_opt comma_opt
+        """import_as_names : import_as_name comma_import_as_name_list_opt comma_opt
         """
         p[0] = p[1:]
 
@@ -658,8 +664,9 @@ class Parser(object):
 
     def p_suite(self, p):
         """suite : simple_stmt 
-                 | NEWLINE INDENT stmt_list DEDENT
+                 | NEWLINE INDENT stmt_list 
         """
+        #         | NEWLINE INDENT stmt_list DEDENT
         p[0] = p[1:]
 
     def p_test(self, p):
@@ -667,7 +674,7 @@ class Parser(object):
                 | or_test IF or_test ELSE test
                 | lambdef
         """
-        p[0] = p[1:]
+        p[0] = p[1] if len(p) == 2 else p[1] + p[2] + p[3] + p[4] + p[5]
 
     def p_test_nocond(self, p):
         """test_nocond : or_test 
@@ -685,7 +692,7 @@ class Parser(object):
 
     def p_or_test(self, p):
         """or_test : and_test or_and_test_list_opt"""
-        p[0] = p[1:]
+        p[0] = p[1] if p[2] is None else p[1] + p[2]
 
     def p_or_and_test(self, p):
         """or_and_test : OR and_test"""
@@ -693,25 +700,25 @@ class Parser(object):
 
     def p_and_test(self, p):
         """and_test : not_test and_not_test_list_opt"""
-        p[0] = p[1:]
+        p[0] = p[1] if p[2] is None else p[1] + p[2]
 
     def p_and_not_test(self, p):
         """and_not_test : AND not_test"""
-        p[0] = p[1:]
+        p[0] = p[1] + p[2]
 
     def p_not_test(self, p):
         """not_test : NOT not_test 
                     | comparison
         """
-        p[0] = p[1:]
+        p[0] = p[1] if len(p) == 2 else p[1] + p[2]
 
     def p_comparison(self, p):
         """comparison : expr comp_op_expr_list_opt"""
-        p[0] = p[1:]
+        p[0] = p[1] if p[2] is None else p[1] + p[2]
 
     def p_comp_op_expr(self, p):
         """comp_op_expr : comp_op expr"""
-        p[0] = p[1:]
+        p[0] = p[1] + p[2]
 
     def p_comp_op(self, p):
         """comp_op : LT 
@@ -725,7 +732,7 @@ class Parser(object):
                    | IS 
                    | IS NOT
         """
-        p[0] = p[1:]
+        p[0] = p[1] if len(p) == 2 else p[1] + p[2]
 
     def p_star_expr(self, p):
         """star_expr : TIMES expr"""
@@ -733,7 +740,7 @@ class Parser(object):
 
     def p_expr(self, p):
         """expr : xor_expr pipe_xor_expr_list_opt"""
-        p[0] = p[1:]
+        p[0] = p[1] if p[2] is None else p[1] + p[2]
 
     def p_pipe_xor_expr(self, p):
         """pipe_xor_expr : PIPE xor_expr"""
@@ -741,7 +748,7 @@ class Parser(object):
 
     def p_xor_expr(self, p):
         """xor_expr : and_expr xor_and_expr_list_opt"""
-        p[0] = p[1:]
+        p[0] = p[1] if p[2] is None else p[1] + p[2]
 
     def p_xor_and_expr(self, p):
         """xor_and_expr : XOR and_expr"""
@@ -749,7 +756,7 @@ class Parser(object):
 
     def p_and_expr(self, p):
         """and_expr : shift_expr ampersand_shift_expr_list_opt"""
-        p[0] = p[1:]
+        p[0] = p[1] if p[2] is None else p[1] + p[2]
 
     def p_ampersand_shift_expr(self, p):
         """ampersand_shift_expr : AMPERSAND shift_expr"""
@@ -757,7 +764,7 @@ class Parser(object):
 
     def p_shift_expr(self, p):
         """shift_expr : arith_expr shift_arith_expr_list_opt"""
-        p[0] = p[1:]
+        p[0] = p[1] if p[2] is None else p[1] + p[2]
 
     def p_shift_arith_expr(self, p):
         """shift_arith_expr : LSHIFT arith_expr
@@ -767,7 +774,7 @@ class Parser(object):
 
     def p_arith_expr(self, p):
         """arith_expr : term pm_term_list_opt"""
-        p[0] = p[1:]
+        p[0] = p[1] if p[2] is None else p[1] + p[2]
 
     def p_pm_term(self, p):
         """pm_term : PLUS term
@@ -776,8 +783,8 @@ class Parser(object):
         p[0] = p[1:]
 
     def p_term(self, p):
-        """term : factor op_factor_list_opt"""
-        p[0] = p[1:]
+        """term : factor op_factor_list_opt"""        
+        p[0] = p[1] if p[2] is None else p[1] + p[2]
 
     def p_op_factor(self, p):
         """op_factor : TIMES factor
@@ -793,13 +800,14 @@ class Parser(object):
                   | TILDE factor
                   | power
         """
-        p[0] = p[1:]
+        p[0] = p[1] if len(p) == 2 else p[1] + p[2]
 
     def p_power(self, p):
         """power : atom trailer_list_opt 
                  | atom trailer_list_opt POW factor
         """
-        p[0] = p[1:]
+        if len(p) == 3:
+            p[0] = p[1] if p[2] is None else p[1] + p[2]
 
     def p_yield_expr_or_testlist_comp(self, p):
         """yield_expr_or_testlist_comp : yield_expr
@@ -818,7 +826,7 @@ class Parser(object):
                 | TRUE 
                 | FALSE
         """
-        p[0] = p[1:]
+        p[0] = p[1]
 
     def p_string_literal(self, p):
         """string_literal : STRING_LITERAL
@@ -830,10 +838,10 @@ class Parser(object):
 
     def p_number(self, p):
         """number : INT_LITERAL
-                    | HEX_LITERAL
-                    | OCT_LITERAL
-                    | BIN_LITERAL
-                    | FLOAT_LITERAL
+                  | HEX_LITERAL
+                  | OCT_LITERAL
+                  | BIN_LITERAL
+                  | FLOAT_LITERAL
         """
         p[0] = p[1]
 
@@ -884,7 +892,11 @@ class Parser(object):
 
     def p_testlist(self, p):
         """testlist : test comma_test_list_opt comma_opt"""
-        p[0] = p[1:]
+        p[0] = p[1]
+        if p[2] is not None:
+            p[0] += p[2]
+        if p[3] is not None:
+            p[0] += p[3]
 
     def p_dictorsetmaker(self, p):
         """dictorsetmaker : test COLON test comp_for
@@ -958,10 +970,10 @@ class Parser(object):
         p[0] = None
 
     def p_error(self, p):
-        if p:
+        if p is None:
+            self._parse_error('no further code', '')
+        else:
             msg = 'code: {0}'.format(p.value),
             self._parse_error(msg, self.currloc(lineno=p.lineno,
                                    column=self.lexer.token_col(p)))
-        else:
-            self._parse_error('no further code', '')
 

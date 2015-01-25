@@ -16,13 +16,12 @@ from xonsh.parser import Parser
 
 def check_ast(input, exp):
     p = Parser(lexer_optimize=False, yacc_optimize=False, yacc_debug=True)
-    obs = p.parse(input)
+    obs = p.parse(input, debug_level=100)
     assert_equal(exp, obs)
 
 
 def test_int_literal():
     yield check_ast, '42', ['INT_LITERAL', '42', 1, 0]
-
 
 
 if __name__ == '__main__':
