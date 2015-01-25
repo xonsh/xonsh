@@ -813,13 +813,21 @@ class Parser(object):
         """
         p[0] = p[1:]
 
+    _factor_ops = {'+': ast.UAdd, '-': ast.USub, '~': ast.Invert}
+
     def p_factor(self, p):
         """factor : PLUS factor
                   | MINUS factor
                   | TILDE factor
                   | power
         """
-        p[0] = p[1] if len(p) == 2 else p[1] + p[2]
+        if len(p) == 2:
+            p0 = p[1]
+        else:
+            op = self._factor_ops[p[1]]()
+            p0 = ast.UnaryOp(op=op, operand=p[2], lineno=self.lineno, 
+                             col_offset=self.col)
+        p[0] = p0
 
     def p_power(self, p):
         """power : atom trailer_list_opt 

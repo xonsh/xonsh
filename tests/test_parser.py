@@ -70,6 +70,18 @@ def test_str_literal():
 def test_bytes_literal():
     yield check_ast, 'b"hello"'
 
+def test_unary_plus():
+    yield check_ast, '+1'
+
+def test_unary_minus():
+    yield check_ast, '-1'
+
+def test_unary_invert():
+    yield check_ast, '~1'
+
+
+
+
 
 if __name__ == '__main__':
     nose.runmodule()
