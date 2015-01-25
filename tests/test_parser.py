@@ -402,6 +402,24 @@ def test_setcomp_if_setcomp():
 def test_setcomp_if_setcomp_if():
     yield check_ast, '{x+y for x in "mom" if True for y in "dad" if y == "d"}'
 
+def test_dictcomp():
+    yield check_ast, '{x: x for x in "mom"}'
+
+def test_dictcomp_if():
+    yield check_ast, '{x:x for x in "mom" if True}'
+
+def test_dictcomp_if_and():
+    yield check_ast, '{x:x for x in "mom" if True and x == "m"}'
+
+def test_dbl_dictcomp():
+    yield check_ast, '{x:y for x in "mom" for y in "dad"}'
+
+def test_dictcomp_if_dictcomp():
+    yield check_ast, '{x:y for x in "mom" if True for y in "dad"}'
+
+def test_dictcomp_if_dictcomp_if():
+    yield check_ast, '{x:y for x in "mom" if True for y in "dad" if y == "d"}'
+
 
 
 

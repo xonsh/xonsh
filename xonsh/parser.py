@@ -1168,6 +1168,10 @@ class Parser(object):
             p3 = ensure_has_elts(p[3])
             p0 = ast.Dict(keys=[p1], values=p3.elts, ctx=ast.Load(),
                           lineno=self.lineno, col_offset=self.col)
+        elif lenp == 5:
+            comps = p[4].get('comps', [])
+            p0 = ast.DictComp(key=p1, value=p[3], generators=comps,
+                              lineno=self.lineno, col_offset=self.col)
         elif lenp == 6:
             p3, p4 = p[3], p[4]
             keys = [p1] + p4[::2]
