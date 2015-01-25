@@ -24,6 +24,17 @@ class Location(object):
             s += ':{0}'.format(self.column)
         return s
 
+def has_elts(x):
+    """Tests if x is an AST node with elements."""
+    return isinstance(x, ast.AST) and hasattr(x, 'elts')
+
+def ensure_has_elts(x, lineno=1, col_offset=1):
+    """Ensures that x is an AST node with elements."""
+    if not has_elts(x):
+        x = ast.Tuple(elts=[x], ctx=ast.Load(), lineno=lineno, 
+                      col_offset=col_offset)
+    return x
+    
 
 class Parser(object):
     """A class that parses the xonsh language."""
@@ -1115,13 +1126,14 @@ class Parser(object):
         elif len(p) == 4 and p2 is None:
             if p[3] is None:
                 pass
-            elif not isinstance(p1, ast.AST) or not hasattr(p1, 'elts'):
-                p1 = ast.Tuple(elts=[p1], ctx=ast.Load(), lineno=self.lineno, 
-                               col_offset=self.col)
+            elif not has_elts(p1):
+                p1 = ensure_has_elts(p1, lineno=self.lineno, 
+                                     col_offset=self.col)
             else:
                 assert False
             p0 = p1
         elif len(p) == 4 and p2 is not None:
+            p1 = ensure_has_elts(p1, lineno=self.lineno, col_offset=self.col)
             p1.elts += p2
             p0 = p1
         else:
@@ -1136,6 +1148,7 @@ class Parser(object):
         """
         p1 = p[1]
         if len(p) == 2:
+            p1 = ensure_has_elts(p1)
             p0 = ast.Set(elts=p1.elts, ctx=ast.Load(), lineno=self.lineno, 
                          col_offset=self.col)
         else:
