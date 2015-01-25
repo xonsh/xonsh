@@ -16,6 +16,7 @@ from xonsh.parser import Parser
 
 PARSER = None
 DEBUG_LEVEL = 0
+#DEBUG_LEVEL = 100
 
 def setup():
     # only setup one parser
@@ -259,6 +260,13 @@ def test_list_empty():
 def test_list_one():
     yield check_ast, '[1]'
 
+def test_list_one_comma():
+    yield check_ast, '[1,]'
+
+#def test_list_two():
+#    yield check_ast, '[1, 42]'
+
+#DEBUG_LEVEL = 100
 
 
 

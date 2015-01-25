@@ -437,7 +437,7 @@ class Parser(object):
 
     def p_comma_test_or_star_expr(self, p):
         """comma_test_or_star_expr : COMMA test_or_star_expr"""
-        p[0] = p[1]
+        p[0] = p[2]
 
     def p_testlist_star_expr(self, p):
         """testlist_star_expr : test_or_star_expr comma_test_or_star_expr_list_opt comma_opt
@@ -974,16 +974,23 @@ class Parser(object):
 
     def p_testlist_comp(self, p):
         """testlist_comp : test_or_star_expr comp_for 
+                         | test_or_star_expr comma_opt
                          | test_or_star_expr comma_test_or_star_expr_list_opt comma_opt
         """
+        p1, p2 = p[1], p[2]
         if len(p) == 3:
-            p0 = p[1] + p[2]
-        else:
-            p1, p2, p3 = p[1], p[2], p[3]
+            if p2 is None or p2 == ',':
+                p0 = [p1]
+            else:
+                assert False
+        elif len(p) == 4:
+            p3 = p[3]
             if p2 is None and p3 is None:
                 p0 = [p1]
             else:
-                p0 = p[1:]
+                assert False
+        else:
+            assert False
         p[0] = p0
 
     def p_trailer(self, p):
@@ -1048,8 +1055,6 @@ class Parser(object):
             p0 = [self.expr(p[1])]
         if p[2] is not None:
             p0 += p[2]
-        if p[3] is not None:
-            p0 += p[3]
         p[0] = p0
 
     def p_dictorsetmaker(self, p):
