@@ -369,6 +369,20 @@ def test_genexpr_if_genexpr_if():
 def test_listcomp():
     yield check_ast, '[x for x in "mom"]'
 
+def test_listcomp_if():
+    yield check_ast, '[x for x in "mom" if True]'
+
+def test_listcomp_if_and():
+    yield check_ast, '[x for x in "mom" if True and x == "m"]'
+
+def test_dbl_listcomp():
+    yield check_ast, '[x+y for x in "mom" for y in "dad"]'
+
+def test_listcomp_if_listcomp():
+    yield check_ast, '[x+y for x in "mom" if True for y in "dad"]'
+
+def test_listcomp_if_listcomp_if():
+    yield check_ast, '[x+y for x in "mom" if True for y in "dad" if y == "d"]'
 
 
 
