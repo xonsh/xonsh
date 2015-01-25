@@ -848,8 +848,11 @@ class Parser(object):
         """power : atom trailer_list_opt 
                  | atom trailer_list_opt POW factor
         """
-        if len(p) == 3:
-            p[0] = p[1] if p[2] is None else p[1] + p[2]
+        p0 = p[1] if p[2] is None else p[1] + p[2]
+        if len(p) == 5:
+            p0 = ast.BinOp(left=p0, op=ast.Pow(), right=p[4], 
+                           lineno=self.lineno, col_offset=self.col)
+        p[0] = p0
 
     def p_yield_expr_or_testlist_comp(self, p):
         """yield_expr_or_testlist_comp : yield_expr

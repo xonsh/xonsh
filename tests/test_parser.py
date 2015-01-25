@@ -97,6 +97,9 @@ def test_binop_mod():
 def test_binop_floordiv():
     yield check_ast, '42 // 65'
 
+def test_binop_pow():
+    yield check_ast, '2 ** 2'
+
 
 
 
