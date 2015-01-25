@@ -303,7 +303,7 @@ def test_set_one():
     yield check_ast, '{42}'
     
 
-#DEBUG_LEVEL = 1
+DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100
 
 

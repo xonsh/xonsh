@@ -31,7 +31,9 @@ def has_elts(x):
 def ensure_has_elts(x, lineno=1, col_offset=1):
     """Ensures that x is an AST node with elements."""
     if not has_elts(x):
-        x = ast.Tuple(elts=[x], ctx=ast.Load(), lineno=lineno, 
+        if not isinstance(x, Iterable):
+            x = [x]
+        x = ast.Tuple(elts=x, ctx=ast.Load(), lineno=lineno, 
                       col_offset=col_offset)
     return x
     
@@ -1033,13 +1035,7 @@ class Parser(object):
                          | test_or_star_expr comma_test_or_star_expr_list_opt comma_opt
         """
         p1, p2 = p[1], p[2]
-        if hasattr(p1, 'elts'):
-            p0 = p1
-        else:
-            if not isinstance(p1, Iterable):
-                p1 = [p1]
-            p0 = ast.Tuple(elts=p1, ctx=ast.Load(), lineno=self.lineno, 
-                           col_offset=self.col)
+        p0 = ensure_has_elts(p1, lineno=self.lineno, col_offset=self.col)
         if len(p) == 3:
             if p2 is None:
                 pass
