@@ -347,6 +347,10 @@ def test_elipssis():
 def test_not_implemented_name():
     yield check_ast, 'NotImplemented'
 
+def test_genexpr():
+    yield check_ast, '(x for x in "mom")'
+
+
 
 
 

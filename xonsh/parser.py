@@ -1036,6 +1036,9 @@ class Parser(object):
                 p0 = p0.elts[0]
             elif p2 == ',':
                 pass
+            elif isinstance(p2, ast.comprehension):
+                p0 = ast.GeneratorExp(elt=p0.elts[0], generators=[p2], 
+                                      lineno=self.lineno, col_offset=self.col)
             else:
                 assert False
         elif len(p) == 4:
@@ -1098,7 +1101,12 @@ class Parser(object):
 
     def p_exprlist(self, p):
         """exprlist : expr_or_star_expr comma_expr_or_star_expr_list_opt comma_opt"""
-        p[0] = p[1:]
+        p1, p2, p3 = p[1], p[2], p[3]
+        if p2 is None and p3 is None:
+            p0 = p1
+        else:
+            assert False
+        p[0] = p0
 
     def p_testlist(self, p):
         """testlist : test comma_test_list_opt comma_opt
@@ -1195,11 +1203,16 @@ class Parser(object):
         """comp_iter : comp_for 
                      | comp_if
         """
-        p[0] = p[1:]
+        p[0] = p[1]
 
     def p_comp_for(self, p):
         """comp_for : FOR exprlist IN or_test comp_iter_opt"""
-        p[0] = p[1:]
+        targ, it = p[2], p[4]
+        targ.ctx = ast.Store()
+        p0 = ast.comprehension(target=targ, iter=it, ifs=[])
+        if p[5] is not None:
+            assert False
+        p[0] = p0
 
     def p_comp_if(self, p):
         """comp_if : IF test_nocond comp_iter_opt"""
