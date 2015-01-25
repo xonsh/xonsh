@@ -275,22 +275,31 @@ def test_list_three():
 def test_tuple_empty():
     yield check_ast, '()'
 
-def test_tuple_one():
+def test_tuple_one_bare():
     yield check_ast, '1,'
+
+def test_tuple_two_bare():
+    yield check_ast, '1, 42'
+
+def test_tuple_three_bare():
+    yield check_ast, '1, 42, 65'
+
+def test_tuple_three_bare_comma():
+    yield check_ast, '1, 42, 65,'
 
 def test_tuple_one_comma():
     yield check_ast, '(1,)'
 
-"""
-def test_list_two():
-    yield check_ast, '[1, 42]'
+def test_tuple_two():
+    yield check_ast, '(1, 42)'
 
-def test_list_three():
-    yield check_ast, '[1, 42, 65]'
+def test_tuple_three():
+    yield check_ast, '(1, 42, 65)'
 
-def test_list_three():
-    yield check_ast, '[1, 42, 65,]'
-"""
+def test_tuple_three():
+    yield check_ast, '(1, 42, 65,)'
+
+
 
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100

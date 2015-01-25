@@ -610,7 +610,7 @@ class Parser(object):
 
     def p_comma_test(self, p):
         """comma_test : COMMA test"""
-        p[0] = p[1] + p[2]
+        p[0] = [p[2]]
 
     def p_assert_stmt(self, p):
         """assert_stmt : ASSERT test comma_test_opt"""
@@ -1003,6 +1003,8 @@ class Parser(object):
         elif len(p) == 4:
             if p2 is not None:
                 p0.extend(p2) 
+            else:
+                assert False
         else:
             assert False
         p[0] = p0
@@ -1062,6 +1064,7 @@ class Parser(object):
 
     def p_testlist(self, p):
         """testlist : test comma_test_list_opt comma_opt
+                    | test comma_test_list COMMA
                     | test COMMA
         """
         p1, p2 = p[1], p[2]
@@ -1074,13 +1077,17 @@ class Parser(object):
                 p0 = [self.expr(p0)]
             else:
                 assert False
-        elif len(p) == 4:
+        elif len(p) == 4 and p2 is None:
             if isinstance(p1, Iterable):
-                p0 = [self.expr(x) for x in p[1]]
+                p0 = [self.expr(x) for x in p1]
             else:
-                p0 = [self.expr(p[1])]
-            if p[2] is not None:
-                p0 += p[2]
+                p0 = [self.expr(p1)]
+        elif len(p) == 4 and p2 is not None:
+            if not isinstance(p1, Iterable):
+                p1 = [p1]
+            p0 = ast.Tuple(elts=p1 + p2, ctx=ast.Load(), lineno=self.lineno, 
+                           col_offset=self.col)
+            p0 = [self.expr(p0)]
         else:
             assert False
         p[0] = p0
