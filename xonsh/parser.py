@@ -793,17 +793,31 @@ class Parser(object):
 
     def p_arith_expr(self, p):
         """arith_expr : term pm_term_list_opt"""
-        p[0] = p[1] if p[2] is None else p[1] + p[2]
+        if p[2] is None:
+            p0 = p[1] 
+        else:
+            p0 = ast.BinOp(left=p[1], op=p[2][0], right=p[2][1], 
+                           lineno=self.lineno, col_offset=self.col)
+        p[0] = p0
+
+    _term_binops = {'+': ast.Add, '-': ast.Sub, '*': ast.Mult, 
+                    '/': ast.Div, '%': ast.Mod, '//': ast.FloorDiv}
 
     def p_pm_term(self, p):
         """pm_term : PLUS term
                    | MINUS term
         """
-        p[0] = p[1:]
+        op = self._term_binops[p[1]]()
+        p[0] = [op, p[2]]
 
     def p_term(self, p):
-        """term : factor op_factor_list_opt"""        
-        p[0] = p[1] if p[2] is None else p[1] + p[2]
+        """term : factor op_factor_list_opt"""
+        if p[2] is None:
+            p0 = p[1] 
+        else:
+            p0 = ast.BinOp(left=p[1], op=p[2][0], right=p[2][1], 
+                           lineno=self.lineno, col_offset=self.col)
+        p[0] = p0
 
     def p_op_factor(self, p):
         """op_factor : TIMES factor
@@ -811,7 +825,8 @@ class Parser(object):
                      | MOD factor
                      | DOUBLEDIV factor
         """
-        p[0] = p[1:]
+        op = self._term_binops[p[1]]()
+        p[0] = [op, p[2]]
 
     _factor_ops = {'+': ast.UAdd, '-': ast.USub, '~': ast.Invert}
 

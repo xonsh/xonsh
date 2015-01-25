@@ -79,6 +79,25 @@ def test_unary_minus():
 def test_unary_invert():
     yield check_ast, '~1'
 
+def test_binop_plus():
+    yield check_ast, '42 + 65'
+
+def test_binop_minus():
+    yield check_ast, '42 - 65'
+
+def test_binop_times():
+    yield check_ast, '42 * 65'
+
+def test_binop_div():
+    yield check_ast, '42 / 65'
+
+def test_binop_mod():
+    yield check_ast, '42 % 65'
+
+def test_binop_floordiv():
+    yield check_ast, '42 // 65'
+
+
 
 
 

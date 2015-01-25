@@ -1,3 +1,4 @@
 """The xonsh abstract syntax tree node."""
 from __future__ import unicode_literals, print_function
-from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert
+from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
+    BinOp, Add, Sub, Mult, Div, FloorDiv, Mod
