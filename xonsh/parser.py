@@ -277,7 +277,7 @@ class Parser(object):
         """eval_input : testlist newlines_opt
                       | testlist newlines_opt ENDMARKER
         """
-        p[0] = p[1]
+        p[0] = ast.Module(body=p[1])
 
     def p_func_call(self, p):
         """func_call : LPAREN arglist_opt RPAREN"""

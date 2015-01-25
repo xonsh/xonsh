@@ -245,24 +245,29 @@ class Lexer(object):
 
     @TOKEN(float_literal)
     def t_FLOAT_LITERAL(self, t):
+        t.value = float(t.value)
         return t
 
     # ints, functions to ensure correct ordering
 
     @TOKEN(hex_literal)
     def t_HEX_LITERAL(self, t):
+        t.value = int(t.value, 16)
         return t
 
     @TOKEN(oct_literal)
     def t_OCT_LITERAL(self, t):
+        t.value = int(t.value, 8)
         return t
 
     @TOKEN(bin_literal)
     def t_BIN_LITERAL(self, t):
+        t.value = int(t.value, 2)
         return t
 
     @TOKEN(int_literal)
     def t_INT_LITERAL(self, t):
+        t.value = int(t.value)
         return t
 
     # Extra
