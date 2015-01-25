@@ -301,7 +301,19 @@ def test_tuple_three():
 
 def test_set_one():
     yield check_ast, '{42}'
-    
+
+def test_set_one_comma():
+    yield check_ast, '{42,}'
+
+def test_set_two():
+    yield check_ast, '{42, 65}'
+
+def test_set_two_comma():
+    yield check_ast, '{42, 65,}'
+
+def test_set_three():
+    yield check_ast, '{42, 65, 45}'
+
 
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100
