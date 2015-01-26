@@ -49,7 +49,7 @@ def assert_nodes_equal(x, y):
         return True
     assert_equal(ast.dump(x), ast.dump(y))
 
-def check_ast(input):
+def check_ast(input, run=True):
     # expect a Python AST
     exp = ast.parse(input)
     # observe something from xonsh
@@ -57,12 +57,13 @@ def check_ast(input):
     # Check that they are equal
     assert_nodes_equal(exp, obs)
     # round trip by running xonsh AST via Python
-    exec(compile(obs, '<test>', 'exec'))
+    if run:
+        exec(compile(obs, '<test>', 'exec'))
 
-def check_stmts(input):
+def check_stmts(input, run=True):
     if not input.endswith('\n'):
         input += '\n'
-    check_ast(input)
+    check_ast(input, run=run)
 
 #
 # Tests
@@ -509,6 +510,9 @@ def test_del_two():
 def test_del_two_comma():
     yield check_stmts, 'x = 42; y = 65; del x, y,'
 
+def test_raise():
+    yield check_stmts, 'raise', False
+    
 
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100
