@@ -482,7 +482,11 @@ def test_lshift_eq():
 def test_rshift_eq():
     yield check_stmts, 'x = 42; x >>= 2'
 
+def test_assert():
+    yield check_stmts, 'assert True'
 
+def test_assert_msg():
+    yield check_stmts, 'assert True, "wow mom"'
 
 
 #DEBUG_LEVEL = 1

@@ -5,4 +5,4 @@ from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
     GtE, Eq, NotEq, In, NotIn, Is, IsNot, Not, BoolOp, Or, And, Subscript, \
     Index, Load, Slice, List, Tuple, Set, Dict, AST, NameConstant, Ellipsis, \
     Name, GeneratorExp, Store, comprehension, ListComp, SetComp, DictComp, \
-    Assign, AugAssign, BitXor, BitAnd, BitOr, LShift, RShift
+    Assign, AugAssign, BitXor, BitAnd, BitOr, LShift, RShift, Assert

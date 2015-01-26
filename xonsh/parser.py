@@ -655,7 +655,14 @@ class Parser(object):
 
     def p_assert_stmt(self, p):
         """assert_stmt : ASSERT test comma_test_opt"""
-        p[0] = p[1:]
+        p2, p3 = p[2], p[3]
+        if p3 is not None:
+            if len(p3) != 1:
+                assert False
+            p3 = p3[0]
+        p0 = ast.Assert(test=p2, msg=p3, lineno=self.lineno, 
+                        col_offset=self.col)
+        p[0] = p0
 
     def p_compound_stmt(self, p):
         """compound_stmt : if_stmt 
