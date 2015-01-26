@@ -518,7 +518,85 @@ def test_raise_x():
     
 def test_raise_x_from():
     yield check_stmts, 'raise TypeError from x', False
+
+def test_import_x():
+    yield check_stmts, 'import x', False
+
+def test_import_xy():
+    yield check_stmts, 'import x.y', False
+
+def test_import_xyz():
+    yield check_stmts, 'import x.y.z', False
+
+def test_from_x_import_y():
+    yield check_stmts, 'from x import y', False
     
+def test_from_dot_import_y():
+    yield check_stmts, 'from . import y', False
+    
+def test_from_dotx_import_y():
+    yield check_stmts, 'from .x import y', False
+    
+def test_from_dotdotx_import_y():
+    yield check_stmts, 'from ..x import y', False
+
+def test_from_dotdotdotx_import_y():
+    yield check_stmts, 'from ...x import y', False
+
+def test_from_dotdotdotdotx_import_y():
+    yield check_stmts, 'from ....x import y', False
+
+def test_from_import_x_y():
+    yield check_stmts, 'import x, y', False
+
+def test_from_import_x_y_z():
+    yield check_stmts, 'import x, y, z', False
+
+def test_from_dot_import_x_y():
+    yield check_stmts, 'from . import x, y', False
+    
+def test_from_dot_import_x_y():
+    yield check_stmts, 'from . import x, y', False
+    
+def test_from_dot_import_x_y_z():
+    yield check_stmts, 'from . import x, y, z', False
+
+def test_from_dot_import_x_y():
+    yield check_stmts, 'from . import x, y', False
+    
+def test_from_dot_import_group_x_y():
+    yield check_stmts, 'from . import (x, y)', False
+
+def test_import_x_as_y():
+    yield check_stmts, 'import x as y', False
+
+def test_import_xy_as_z():
+    yield check_stmts, 'import x.y as z', False
+
+def test_import_x_y_as_z():
+    yield check_stmts, 'import x, y as z', False
+
+def test_import_x_as_y_z():
+    yield check_stmts, 'import x as y, z', False
+
+def test_import_x_as_y_z_as_a():
+    yield check_stmts, 'import x as y, z as a', False
+
+def test_from_dot_import_x_as_y():
+    yield check_stmts, 'from . import x as y', False
+
+def test_from_x_import_y_as_z():
+    yield check_stmts, 'from x import y as z', False
+
+def test_from_x_import_y_as_z_a_as_b():
+    yield check_stmts, 'from x import y as z, a as b', False
+
+def test_from_dotx_import_y_as_z_a_as_b_c_as_d():
+    yield check_stmts, 'from .x import y as z, a as b, c as d', False
+
+
+
+
 
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100

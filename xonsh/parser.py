@@ -586,27 +586,45 @@ class Parser(object):
     def p_import_name(self, p):
         """import_name : IMPORT dotted_as_names
         """
-        p[0] = p[1:]
+        p[0] = ast.Import(names=p[2], lineno=self.lineno, col_offset=self.col)
 
     def p_import_from_pre(self, p):
         """import_from_pre : FROM period_or_ellipsis_list_opt dotted_name 
                            | FROM period_or_ellipsis_list
         """
-        p[0] = p[1:]
+        if len(p) == 3:
+            p0 = p[2]
+        elif len(p) == 4:
+            p2, p3 = p[2], p[3]
+            p0 = p3 if p2 is None else p2 + p3
+        else:
+            assert False
+        p[0] = p0
 
     def p_import_from_post(self, p):
         """import_from_post : TIMES 
                             | LPAREN import_as_names RPAREN 
                             | import_as_names
         """
-        p[0] = p[1:]
+        if len(p) == 2:
+            p0 = p[1]
+        elif len(p) == 4:
+            p0 = p[2]
+        else:
+            assert False
+        p[0] = p0
 
     def p_import_from(self, p):
         """import_from : import_from_pre IMPORT import_from_post
         """
         # note below: the ('.' | '...') is necessary because '...' is 
         # tokenized as ELLIPSIS
-        p[0] = p[1:]
+        p1 = p[1]
+        mod = p1.lstrip('.')
+        lvl = len(p1) - len(mod)
+        mod = mod or None
+        p[0] = ast.ImportFrom(module=mod, names=p[3], level=lvl, 
+                              lineno=self.lineno, col_offset=self.col)
 
     def p_period_or_ellipsis(self, p):
         """period_or_ellipsis : PERIOD
@@ -616,35 +634,42 @@ class Parser(object):
 
     def p_as_name(self, p):
         """as_name : AS NAME"""
-        p[0] = p[1:]
+        p[0] = p[2]
 
     def p_import_as_name(self, p):
-        """import_as_name : NAME as_name_opt
-        """
-        p[0] = p[1:]
+        """import_as_name : NAME as_name_opt"""
+        p[0] = ast.alias(name=p[1], asname=p[2])
 
     def p_comma_import_as_name(self, p):
         """comma_import_as_name : COMMA import_as_name
         """
-        p[0] = p[1:]
+        p[0] = [p[2]]
 
     def p_dotted_as_name(self, p):
         """dotted_as_name : dotted_name as_name_opt"""
-        p[0] = p[1:]
+        p0 = ast.alias(name=p[1], asname=p[2])
+        p[0] = p0
 
     def p_comma_dotted_as_name(self, p):
-        """comma_dotted_as_name : COMMA dotted_as_name
-        """
-        p[0] = p[1:]
+        """comma_dotted_as_name : COMMA dotted_as_name"""
+        p[0] = [p[2]]
 
     def p_import_as_names(self, p):
         """import_as_names : import_as_name comma_import_as_name_list_opt comma_opt
         """
-        p[0] = p[1:]
+        p1, p2 = p[1], p[2]
+        p0 = [p1]
+        if p2 is not None:
+            p0.extend(p2)
+        p[0] = p0
 
     def p_dotted_as_names(self, p):
         """dotted_as_names : dotted_as_name comma_dotted_as_name_list_opt"""
-        p[0] = p[1:]
+        p1, p2 = p[1], p[2]
+        p0 = [p1]
+        if p2 is not None:
+            p0.extend(p2)
+        p[0] = p0
 
     def p_period_name(self, p):
         """period_name : PERIOD NAME"""
@@ -652,7 +677,9 @@ class Parser(object):
 
     def p_dotted_name(self, p):
         """dotted_name : NAME period_name_list_opt"""
-        p[0] = p[1:]
+        p1, p2 = p[1], p[2]
+        p0 = p1 if p2 is None else p1 + p2
+        p[0] = p0
 
     def p_comma_name(self, p):
         """comma_name : COMMA NAME"""
