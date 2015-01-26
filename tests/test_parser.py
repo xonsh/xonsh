@@ -500,6 +500,15 @@ def test_pass():
 def test_del():
     yield check_stmts, 'x = 42; del x'
 
+def test_del_comma():
+    yield check_stmts, 'x = 42; del x,'
+
+def test_del_two():
+    yield check_stmts, 'x = 42; y = 65; del x, y'
+
+def test_del_two_comma():
+    yield check_stmts, 'x = 42; y = 65; del x, y,'
+
 
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100

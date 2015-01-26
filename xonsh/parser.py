@@ -1139,13 +1139,22 @@ class Parser(object):
 
     def p_comma_expr_or_star_expr(self, p):
         """comma_expr_or_star_expr : COMMA expr_or_star_expr"""
-        p[0] = p[1:]
+        p[0] = [p[2]]
 
     def p_exprlist(self, p):
-        """exprlist : expr_or_star_expr comma_expr_or_star_expr_list_opt comma_opt"""
-        p1, p2, p3 = p[1], p[2], p[3]
+        """exprlist : expr_or_star_expr comma_expr_or_star_expr_list_opt comma_opt
+                    | expr_or_star_expr comma_expr_or_star_expr_list comma_opt
+                    | expr_or_star_expr comma_opt
+        """
+        p1, p2 = p[1], p[2]
+        p3 = p[3] if len(p) == 4 else None
         if p2 is None and p3 is None:
             p0 = [p1]
+        elif p2 == ',' and p3 is None:
+            p0 = [p1]
+        elif p2 is not None:
+            p2.insert(0, p1)
+            p0 = p2
         else:
             assert False
         p[0] = p0
