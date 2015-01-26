@@ -522,11 +522,15 @@ class Parser(object):
     #
     def p_del_stmt(self, p):
         """del_stmt : DEL exprlist"""
-        p[0] = p[1:]
+        p2 = p[2]
+        for targ in p2:
+            targ.ctx = ast.Del()
+        p0 = ast.Delete(targets=p2, lineno=self.lineno, col_offset=self.col)
+        p[0] = p0
 
     def p_pass_stmt(self, p):
         """pass_stmt : PASS"""
-        p[0] = p[1:]
+        p[0] = ast.Pass(lineno=self.lineno, col_offset=self.col)
 
     def p_flow_stmt(self, p):
         """flow_stmt : break_stmt 
@@ -1141,7 +1145,7 @@ class Parser(object):
         """exprlist : expr_or_star_expr comma_expr_or_star_expr_list_opt comma_opt"""
         p1, p2, p3 = p[1], p[2], p[3]
         if p2 is None and p3 is None:
-            p0 = p1
+            p0 = [p1]
         else:
             assert False
         p[0] = p0
@@ -1253,7 +1257,10 @@ class Parser(object):
 
     def p_comp_for(self, p):
         """comp_for : FOR exprlist IN or_test comp_iter_opt"""
-        targ, it, p5 = p[2], p[4], p[5]
+        targs, it, p5 = p[2], p[4], p[5]
+        if len(targs) != 1:
+            assert False
+        targ = targs[0]
         targ.ctx = ast.Store()
         comp = ast.comprehension(target=targ, iter=it, ifs=[])
         comps = [comp]

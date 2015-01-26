@@ -485,8 +485,20 @@ def test_rshift_eq():
 def test_assert():
     yield check_stmts, 'assert True'
 
+def test_assert():
+    yield check_stmts, 'assert True'
+
 def test_assert_msg():
     yield check_stmts, 'assert True, "wow mom"'
+
+def test_assert():
+    yield check_stmts, 'assert True'
+
+def test_pass():
+    yield check_stmts, 'pass'
+
+def test_del():
+    yield check_stmts, 'x = 42; del x'
 
 
 #DEBUG_LEVEL = 1
