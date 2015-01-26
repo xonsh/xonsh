@@ -446,6 +446,42 @@ def test_equals_three():
 def test_equals_three_semi():
     yield check_stmts, 'x = 42; y = 65; z = 6;'
 
+def test_plus_eq():
+    yield check_stmts, 'x = 42; x += 65'
+
+def test_sub_eq():
+    yield check_stmts, 'x = 42; x -= 2'
+
+def test_times_eq():
+    yield check_stmts, 'x = 42; x *= 2'
+
+def test_div_eq():
+    yield check_stmts, 'x = 42; x /= 2'
+
+def test_floordiv_eq():
+    yield check_stmts, 'x = 42; x //= 2'
+
+def test_pow_eq():
+    yield check_stmts, 'x = 42; x **= 2'
+
+def test_mod_eq():
+    yield check_stmts, 'x = 42; x %= 2'
+
+def test_xor_eq():
+    yield check_stmts, 'x = 42; x ^= 2'
+
+def test_ampersand_eq():
+    yield check_stmts, 'x = 42; x &= 2'
+
+def test_bitor_eq():
+    yield check_stmts, 'x = 42; x |= 2'
+
+def test_lshift_eq():
+    yield check_stmts, 'x = 42; x <<= 2'
+
+def test_rshift_eq():
+    yield check_stmts, 'x = 42; x >>= 2'
+
 
 
 

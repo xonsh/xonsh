@@ -443,16 +443,25 @@ class Parser(object):
         """
         p[0] = p[1]
 
+    _augassign_op = {'+=': ast.Add, '-=': ast.Sub, '*=': ast.Mult, 
+                     '/=': ast.Div, '%=': ast.Mod, '//=': ast.FloorDiv, 
+                     '**=': ast.Pow, '^=': ast.BitXor, '&=': ast.BitAnd, 
+                     '|=': ast.BitOr, '<<=': ast.LShift, '>>=': ast.RShift}
+
     def p_expr_stmt(self, p):
         """expr_stmt : testlist_star_expr augassign yield_expr_or_testlist 
                      | testlist_star_expr equals_yield_expr_or_testlist_list_opt
         """
         p1, p2 = p[1], p[2]
+        for targ in p1:
+            targ.ctx = ast.Store()
         if len(p) == 3:
-            for targ in p1:
-                targ.ctx = ast.Store()
             p0 = ast.Assign(targets=p1, value=p2, lineno=self.lineno, 
                             col_offset=self.col)
+        elif len(p) == 4:
+            op = self._augassign_op[p2]()
+            p0 = ast.AugAssign(target=p1[0], op=op, value=p[3], 
+                               lineno=self.lineno, col_offset=self.col)
         else:
             assert False
         p[0] = p0
