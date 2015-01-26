@@ -418,14 +418,16 @@ class Parser(object):
 
     def p_semi_small_stmt(self, p):
         """semi_small_stmt : SEMI small_stmt"""
-        p[0] = p[1] + p[2]
+        p[0] = [p[2]]
 
     def p_simple_stmt(self, p):
         """simple_stmt : small_stmt semi_small_stmt_list_opt semi_opt NEWLINE
+                       | small_stmt semi_small_stmt_list semi_opt NEWLINE
+                       | small_stmt semi_opt NEWLINE
         """
         p1, p2 = p[1], p[2]
         p0 = [p1]
-        if p2 is not None:
+        if p2 is not None and p2 != ';':
             p0 += p2
         p[0] = p0
 

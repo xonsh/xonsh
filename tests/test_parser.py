@@ -431,6 +431,21 @@ def test_dictcomp_if_dictcomp_if():
 def test_equals():
     yield check_stmts, 'x = 42'
 
+def test_equals_semi():
+    yield check_stmts, 'x = 42;'
+
+def test_equals_two():
+    yield check_stmts, 'x = 42; y = 65'
+
+def test_equals_two_semi():
+    yield check_stmts, 'x = 42; y = 65;'
+
+def test_equals_three():
+    yield check_stmts, 'x = 42; y = 65; z = 6'
+
+def test_equals_three_semi():
+    yield check_stmts, 'x = 42; y = 65; z = 6;'
+
 
 
 
