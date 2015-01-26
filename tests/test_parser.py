@@ -59,6 +59,14 @@ def check_ast(input):
     # round trip by running xonsh AST via Python
     exec(compile(obs, '<test>', 'exec'))
 
+def check_stmts(input):
+    if not input.endswith('\n'):
+        input += '\n'
+    check_ast(input)
+
+#
+# Tests
+#
 
 def test_int_literal():
     yield check_ast, '42'
@@ -419,6 +427,9 @@ def test_dictcomp_if_dictcomp():
 
 def test_dictcomp_if_dictcomp_if():
     yield check_ast, '{x:y for x in "mom" if True for y in "dad" if y == "d"}'
+
+def test_equals():
+    yield check_stmts, 'x = 42'
 
 
 

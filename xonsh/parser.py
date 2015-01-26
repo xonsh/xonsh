@@ -152,7 +152,7 @@ class Parser(object):
             'comma_test',
             'argument_comma',
             'comma_argument',
-            'comma_item', 
+            'comma_item',
             )
         for rule in list_rules:
             self._list_rule(rule)
@@ -279,7 +279,11 @@ class Parser(object):
                         | simple_stmt 
                         | compound_stmt NEWLINE
         """
-        p[0] = p[1]
+        p1 = p[1]
+        if p1 == '\n':
+            p1 = []
+        p0 = ast.Module(body=p1)
+        p[0] = p0
 
     def p_file_input(self, p):
         #"""file_input : newline_or_stmt 
@@ -419,7 +423,11 @@ class Parser(object):
     def p_simple_stmt(self, p):
         """simple_stmt : small_stmt semi_small_stmt_list_opt semi_opt NEWLINE
         """
-        p[0] = p[1:]
+        p1, p2 = p[1], p[2]
+        p0 = [p1]
+        if p2 is not None:
+            p0 += p2
+        p[0] = p0
 
     def p_small_stmt(self, p):
         """small_stmt : expr_stmt 
@@ -431,13 +439,21 @@ class Parser(object):
                       | nonlocal_stmt 
                       | assert_stmt
         """
-        p[0] = p[1:]
+        p[0] = p[1]
 
     def p_expr_stmt(self, p):
         """expr_stmt : testlist_star_expr augassign yield_expr_or_testlist 
                      | testlist_star_expr equals_yield_expr_or_testlist_list_opt
         """
-        p[0] = p[1:]
+        p1, p2 = p[1], p[2]
+        if len(p) == 3:
+            for targ in p1:
+                targ.ctx = ast.Store()
+            p0 = ast.Assign(targets=p1, value=p2, lineno=self.lineno, 
+                            col_offset=self.col)
+        else:
+            assert False
+        p[0] = p0
 
     def p_comma(self, p):
         """comma : COMMA"""
@@ -456,12 +472,12 @@ class Parser(object):
     def p_testlist_star_expr(self, p):
         """testlist_star_expr : test_or_star_expr comma_test_or_star_expr_list_opt comma_opt
         """
-        #p1 = p[1]
-        #if len(p) <= 3:
-        #    p[0] = [p1]
-        #else:
-        assert False
-        #p[0] = p0
+        p1, p2, p3 = p[1], p[2], p[3]
+        if p2 is None and p3 is None:
+            p0 = [p1]
+        else:
+            assert False
+        p[0] = p0
 
     def p_augassign(self, p):
         """augassign : PLUSEQUAL 
@@ -487,7 +503,7 @@ class Parser(object):
 
     def p_equals_yield_expr_or_testlist(self, p):
         """equals_yield_expr_or_testlist : EQUALS yield_expr_or_testlist"""
-        p[0] = p[1] + p[2]
+        p[0] = p[2]
 
     #
     # For normal assignments, additional restrictions enforced 
