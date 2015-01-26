@@ -513,6 +513,12 @@ def test_del_two_comma():
 def test_raise():
     yield check_stmts, 'raise', False
     
+def test_raise_x():
+    yield check_stmts, 'raise TypeError', False
+    
+def test_raise_x_from():
+    yield check_stmts, 'raise TypeError from x', False
+    
 
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100

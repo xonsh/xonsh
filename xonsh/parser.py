@@ -559,10 +559,23 @@ class Parser(object):
 
     def p_raise_stmt(self, p):
         """raise_stmt : RAISE 
-                      | test 
-                      | test FROM test
+                      | RAISE test 
+                      | RAISE test FROM test
         """
-        p[0] = p[1:]
+        lenp = len(p)
+        cause = None
+        if lenp == 2:
+            exc = None
+        elif lenp == 3:
+            exc = p[2]
+        elif lenp == 5:
+            exc = p[2]
+            cause = p[4]
+        else:
+            assert False
+        p0 = ast.Raise(exc=exc, cause=cause, lineno=self.lineno, 
+                       col_offset=self.col)
+        p[0] = p0
 
     def p_import_stmt(self, p):
         """import_stmt : import_name 

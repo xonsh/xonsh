@@ -6,4 +6,4 @@ from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
     Index, Load, Slice, List, Tuple, Set, Dict, AST, NameConstant, Ellipsis, \
     Name, GeneratorExp, Store, comprehension, ListComp, SetComp, DictComp, \
     Assign, AugAssign, BitXor, BitAnd, BitOr, LShift, RShift, Assert, Delete, \
-    Del, Pass
+    Del, Pass, Raise
