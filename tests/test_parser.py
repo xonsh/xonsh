@@ -615,6 +615,18 @@ def test_yield_x_y():
 def test_yield_from_x():
     yield check_stmts, 'yield from x', False
 
+def test_return():
+    yield check_stmts, 'return', False
+
+def test_return_x():
+    yield check_stmts, 'return x', False
+
+def test_return_x_comma():
+    yield check_stmts, 'return x,', False
+
+def test_return_x_y():
+    yield check_stmts, 'return x, y', False
+
 
 
 

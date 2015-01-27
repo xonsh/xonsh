@@ -551,7 +551,7 @@ class Parser(object):
 
     def p_return_stmt(self, p):
         """return_stmt : RETURN testlist_opt"""
-        p[0] = p[1:]
+        p[0] = ast.Return(value=p[2], lineno=self.lineno, col_offset=self.col)
 
     def p_yield_stmt(self, p):
         """yield_stmt : yield_expr"""
@@ -1331,7 +1331,7 @@ class Parser(object):
         """encoding_decl : NAME"""
         # not used in grammar, but may appear in "node" passed from 
         # Parser to Compiler
-        p[0] = p[1:]
+        p[0] = p[1]
 
     def p_yield_expr(self, p):
         """yield_expr : YIELD yield_arg_opt"""
