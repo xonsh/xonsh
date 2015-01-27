@@ -594,6 +594,28 @@ def test_from_x_import_y_as_z_a_as_b():
 def test_from_dotx_import_y_as_z_a_as_b_c_as_d():
     yield check_stmts, 'from .x import y as z, a as b, c as d', False
 
+def test_continue():
+    yield check_stmts, 'continue', False
+
+def test_break():
+    yield check_stmts, 'break', False
+
+def test_yield():
+    yield check_stmts, 'yield', False
+
+def test_yield_x():
+    yield check_stmts, 'yield x', False
+
+def test_yield_x_comma():
+    yield check_stmts, 'yield x,', False
+
+def test_yield_x_y():
+    yield check_stmts, 'yield x, y', False
+
+def test_yield_from_x():
+    yield check_stmts, 'yield from x', False
+
+
 
 
 

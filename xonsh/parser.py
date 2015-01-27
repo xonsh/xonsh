@@ -543,11 +543,11 @@ class Parser(object):
 
     def p_break_stmt(self, p):
         """break_stmt : BREAK"""
-        p[0] = p[1:]
+        p[0] = ast.Break(lineno=self.lineno, col_offset=self.col)
 
     def p_continue_stmt(self, p):
         """continue_stmt : CONTINUE"""
-        p[0] = p[1:]
+        p[0] = ast.Continue(lineno=self.lineno, col_offset=self.col)
 
     def p_return_stmt(self, p):
         """return_stmt : RETURN testlist_opt"""
@@ -555,7 +555,7 @@ class Parser(object):
 
     def p_yield_stmt(self, p):
         """yield_stmt : yield_expr"""
-        p[0] = p[1:]
+        p[0] = self.expr(p[1])
 
     def p_raise_stmt(self, p):
         """raise_stmt : RAISE 
@@ -1335,13 +1335,26 @@ class Parser(object):
 
     def p_yield_expr(self, p):
         """yield_expr : YIELD yield_arg_opt"""
-        p[0] = p[1:]
+        p2 = p[2]
+        if p2 is None:
+            p0 = ast.Yield(value=p2, lineno=self.lineno, col_offset=self.col)
+        elif p2['from']:
+            p0 = ast.YieldFrom(value=p2['val'], lineno=self.lineno, 
+                               col_offset=self.col)
+        else:
+            p0 = ast.Yield(value=p2['val'], lineno=self.lineno, 
+                           col_offset=self.col)
+        p[0] = p0
 
     def p_yield_arg(self, p):
         """yield_arg : FROM test 
                      | testlist
         """
-        p[0] = p[1:]
+        if len(p) == 2:
+            p0 = {'from': False, 'val': p[1]}
+        else:
+            p0 = {'from': True, 'val': p[2]}
+        p[0] = p0
 
     def p_empty(self, p):
         'empty : '
