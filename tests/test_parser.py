@@ -619,6 +619,16 @@ def test_call_tuple_gen():
 def test_call_tuple_genifs():
     yield check_ast, 'tuple(x for x in [1, 2, 3] if x < 3)'
 
+def test_call_range_star():
+    yield check_ast, 'range(*[1, 2, 3])'
+
+def test_call_range_x_star():
+    yield check_ast, 'range(1, *[2, 3])'
+
+def test_call_int():
+    yield check_ast, 'int(*["42"], base=8)'
+
+
 
 
 
