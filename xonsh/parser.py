@@ -383,6 +383,15 @@ class Parser(object):
         """comma_pow_tfpdef : COMMA POW tfpdef"""
         p[0] = p[1] + p[2] + p[3]
 
+    def _set_args_def(self, argmts, vals, kwargs=False):
+        args, defs = (argmts.kwonlyargs, argmts.kw_defaults) if kwargs else \
+                     (argmts.args, argmts.defaults)
+        for v in vals:
+            args.append(v['arg'])
+            d = v['default']
+            if kwargs or (d is not None):
+                defs.append(d)
+
     def p_varargslist(self, p):
         """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt
                        | vfpdef equals_test_opt comma_vfpdef_list_opt COMMA TIMES vfpdef_opt comma_vfpdef_list_opt 
@@ -392,10 +401,10 @@ class Parser(object):
                        | POW vfpdef
         """
         lenp = len(p)
-        p1, p2, p3 = p[1], p[2], p[3]
+        p1, p2, p3, p4 = p[1], p[2], p[3], p[4]
         p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[], 
                        kwarg=None, defaults=[])
-        if lenp == 5:
+        if lenp == 5 and p1 != '*':
             if p2 is None and p3 is None:
                 # x
                 p0.args.append(ast.arg(arg=p1, annotation=None))
@@ -406,20 +415,22 @@ class Parser(object):
             elif p2 is None and p3 is not None:
                 # x, y and x, y=42
                 p0.args.append(ast.arg(arg=p1, annotation=None))
-                for arg in p3:
-                    p0.args.append(arg['arg'])
-                    d = arg['default']
-                    if d is not None:
-                        p0.defaults.append(d)
+                self._set_args_def(p0, p3)
             else:
                 # x=42, y=42
                 p0.args.append(ast.arg(arg=p1, annotation=None))
                 p0.defaults.append(p2)
-                for arg in p3:
-                    p0.args.append(arg['arg'])
-                    d = arg['default']
-                    if d is not None:
-                        p0.defaults.append(d)
+                self._set_args_def(p0, p3)
+        elif lenp == 5 and p1 == '*':
+            if p2 is None:
+                assert False
+            elif p2 is not None and p3 is None and p4 is None:
+                p0.vararg = ast.arg(arg=p2, annotation=None)
+            elif p2 is not None and p3 is not None and p4 is None:
+                p0.vararg = ast.arg(arg=p2, annotation=None)
+                self._set_args_def(p0, p3, kwargs=True)
+            else:
+                assert False
         else:
             assert False
         p[0] = p0

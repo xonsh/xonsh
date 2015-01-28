@@ -490,6 +490,25 @@ def test_lambda_kwx_kwy_comma():
 def test_lambda_kwx_kwy_kwz_comma():
     yield check_ast, 'lambda x=65, y=42, z=1,: x'
 
+def test_lambda_args():
+    yield check_ast, 'lambda *args: 42'
+
+def test_lambda_args_x():
+    yield check_ast, 'lambda *args, x: 42'
+
+def test_lambda_args_x_y():
+    yield check_ast, 'lambda *args, x, y: 42'
+
+def test_lambda_args_x_kwy():
+    yield check_ast, 'lambda *args, x, y=10: 42'
+
+def test_lambda_args_kwx_y():
+    yield check_ast, 'lambda *args, x=10, y: 42'
+
+def test_lambda_args_kwx_kwy():
+    yield check_ast, 'lambda *args, x=42, y=65: 42'
+
+
 
 #
 # statements
