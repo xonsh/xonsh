@@ -1,7 +1,7 @@
 """Implements the xonsh parser"""
 from __future__ import print_function, unicode_literals
 import re
-from collections import Iterable, Sequence
+from collections import Iterable, Sequence, Mapping
 
 from ply import yacc
 
@@ -1105,6 +1105,9 @@ class Parser(object):
         elif isinstance(p2, (ast.Index, ast.Slice)):
             p0 = ast.Subscript(value=p1, slice=p2, ctx=ast.Load(),
                                lineno=self.lineno, col_offset=self.col)
+        elif isinstance(p2, Mapping):
+            p0 = ast.Call(func=p1, lineno=self.lineno, col_offset=self.col, 
+                          **p2)
         else:
             assert False
         # actual power rule
@@ -1245,6 +1248,8 @@ class Parser(object):
         p1, p2 = p[1], p[2]
         if p1 == '[':
             p0 = p2
+        elif p1 == '(':
+            p0 = p2
         else:
             assert False
         p[0] = p0
@@ -1378,30 +1383,60 @@ class Parser(object):
         """classdef : CLASS NAME func_call_opt COLON suite"""
         p[0] = p[1:]
 
+    def _set_arg(self, args, arg):
+        if isinstance(arg, ast.keyword):
+            args['keywords'].append(arg)
+        else:
+            args['args'].append(arg)
+
     def p_arglist(self, p):
-        """arglist : argument_comma_list_opt argument comma_opt 
+        """arglist : argument comma_opt 
+                   | argument_comma_list argument comma_opt 
                    | argument_comma_list_opt TIMES test comma_argument_list_opt 
                    | argument_comma_list_opt TIMES test comma_argument_list_opt COMMA POW test
                    | argument_comma_list_opt POW test
         """
-        p[0] = p[1:]
+        p1, p2 = p[1], p[2]
+        lenp = len(p)
+        p0 = {'args': [], 'keywords': [], 'starargs': None, 'kwargs': None}
+        if lenp == 3:
+            self._set_arg(p0, p1)
+        elif lenp == 4 and p2 != '**':
+            for arg in p1:
+                self._set_arg(p0, arg)
+            self._set_arg(p0, p2)
+        else:
+            assert False
+        p[0] = p0
 
     def p_argument_comma(self, p):
         """argument_comma : argument COMMA"""
-        p[0] = p[1]
+        p[0] = [p[1]]
 
     def p_comma_argument(self, p):
         """comma_argument : COMMA argument """
-        p[0] = p[1]
+        p[0] = [p[1]]
 
     def p_argument(self, p):
-        """argument : test comp_for_opt
+        """argument : test
+                    | test comp_for
                     | test EQUALS test
         """
         # Really [keyword '='] test
         # The reason that keywords are test nodes instead of NAME is that using 
         # NAME results in an ambiguity.
-        p[0] = p[1:]
+        p1 = p[1]
+        lenp = len(p)
+        if lenp == 2:
+            p0 = p1
+        elif lenp == 3:
+            p0 = ast.GeneratorExp(elt=p1, generators=p[2]['comps'], 
+                                  lineno=self.lineno, col_offset=self.col)
+        elif lenp == 4:
+            p0 = ast.keyword(arg=p1.id, value=p[3])
+        else:
+            assert False
+        p[0] = p0
 
     def p_comp_iter(self, p):
         """comp_iter : comp_for 

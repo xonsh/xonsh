@@ -580,11 +580,44 @@ def test_lambda_x_kwy_star_kwy():
 def test_lambda_x_star_y_kwargs():
     yield check_ast, 'lambda x, *, y, **kwargs: 42'
 
+def test_call_range():
+    yield check_ast, 'range(6)'
 
+def test_call_range_comma():
+    yield check_ast, 'range(6,)'
 
+def test_call_range_x_y():
+    yield check_ast, 'range(6, 10)'
 
+def test_call_range_x_y():
+    yield check_ast, 'range(6, 10)'
 
+def test_call_range_x_y():
+    yield check_ast, 'range(6, 10)'
 
+def test_call_range_x_y_comma():
+    yield check_ast, 'range(6, 10,)'
+
+def test_call_range_x_y_z():
+    yield check_ast, 'range(6, 10, 2)'
+
+def test_call_range_x_y():
+    yield check_ast, 'range(6, 10)'
+
+def test_call_dict_kwx():
+    yield check_ast, 'dict(start=10)'
+
+def test_call_dict_kwx_comma():
+    yield check_ast, 'dict(start=10,)'
+
+def test_call_dict_kwx_kwy():
+    yield check_ast, 'dict(start=10, stop=42)'
+
+def test_call_tuple_gen():
+    yield check_ast, 'tuple(x for x in [1, 2, 3])'
+
+def test_call_tuple_genifs():
+    yield check_ast, 'tuple(x for x in [1, 2, 3] if x < 3)'
 
 
 
