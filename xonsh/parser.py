@@ -790,7 +790,12 @@ class Parser(object):
                 | or_test IF or_test ELSE test
                 | lambdef
         """
-        p[0] = p[1] if len(p) == 2 else p[1] + p[2] + p[3] + p[4] + p[5]
+        if len(p) == 2:
+            p0 = p[1]
+        else:
+            p0 = ast.IfExp(test=p[3], body=p[1], orelse=p[5],
+                           lineno=self.lineno, col_offset=self.col)
+        p[0] = p0 
 
     def p_test_nocond(self, p):
         """test_nocond : or_test 

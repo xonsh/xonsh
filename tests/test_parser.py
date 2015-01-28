@@ -237,6 +237,12 @@ def test_group_and_and():
 def test_group_and_or():
     yield check_ast, '(1 and 0) or 2'
 
+def test_if_else_expr():
+    yield check_ast, '42 if True else 65'
+
+def test_if_else_expr():
+    yield check_ast, '42+5 if 1 == 2 else 65-5'
+
 def test_str_idx():
     yield check_ast, '"hello"[0]'
 
