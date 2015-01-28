@@ -520,6 +520,46 @@ def test_lambda_x_args_y_z():
 def test_lambda_kwargs():
     yield check_ast, 'lambda **kwargs: 42'
 
+def test_lambda_x_kwargs():
+    yield check_ast, 'lambda x, **kwargs: 42'
+
+def test_lambda_x_y_kwargs():
+    yield check_ast, 'lambda x, y, **kwargs: 42'
+
+def test_lambda_x_kwy_kwargs():
+    yield check_ast, 'lambda x, y=42, **kwargs: 42'
+
+def test_lambda_args_kwargs():
+    yield check_ast, 'lambda *args, **kwargs: 42'
+
+def test_lambda_x_args_kwargs():
+    yield check_ast, 'lambda x, *args, **kwargs: 42'
+
+def test_lambda_x_y_args_kwargs():
+    yield check_ast, 'lambda x, y, *args, **kwargs: 42'
+
+def test_lambda_kwx_args_kwargs():
+    yield check_ast, 'lambda x=10, *args, **kwargs: 42'
+
+def test_lambda_x_kwy_args_kwargs():
+    yield check_ast, 'lambda x, y=42, *args, **kwargs: 42'
+
+def test_lambda_x_args_y_kwargs():
+    yield check_ast, 'lambda x, *args, y, **kwargs: 42'
+
+def test_lambda_x_args_kwy_kwargs():
+    yield check_ast, 'lambda x, *args, y=42, **kwargs: 42'
+
+def test_lambda_args_y_kwargs():
+    yield check_ast, 'lambda *args, y, **kwargs: 42'
+
+
+
+
+
+
+#DEBUG_LEVEL = 1
+
 
 
 

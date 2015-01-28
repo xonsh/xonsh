@@ -426,38 +426,57 @@ class Parser(object):
 
     def p_varargslist(self, p):
         """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt
+                       | vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt TIMES vfpdef_opt COMMA POW vfpdef
                        | vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt TIMES vfpdef_opt comma_vfpdef_list_opt 
-                       | vfpdef equals_test_opt comma_vfpdef_list_opt COMMA TIMES vfpdef_opt comma_vfpdef_list_opt COMMA POW vfpdef
-                       | vfpdef equals_test_opt comma_vfpdef_list_opt COMMA POW vfpdef
-                       | TIMES vfpdef_opt comma_vfpdef_list_opt comma_pow_vfpdef_opt
+                       | vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt TIMES vfpdef_opt comma_vfpdef_list COMMA POW vfpdef
+                       | vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt POW vfpdef
+                       | TIMES vfpdef_opt comma_vfpdef_list comma_pow_vfpdef_opt
+                       | TIMES vfpdef_opt comma_pow_vfpdef_opt
                        | POW vfpdef
         """
         lenp = len(p)
         p1, p2 = p[1], p[2]
-        if lenp > 3:
-            p3, p4 = p[3], p[4]
+        p3 = p[3] if lenp > 3 else None
+        p4 = p[4] if lenp > 4 else None
         p5 = p[5] if lenp > 5 else None
-        if lenp > 6:
-            p6, p7 = p[6], p[7]
-        if lenp > 8:
-            p8, p9, p10, p11 = p[8], p[9], p[10], p[11]
+        p6 = p[6] if lenp > 6 else None
+        p7 = p[7] if lenp > 7 else None
+        p8 = p[8] if lenp > 8 else None
+        p9 = p[9] if lenp > 9 else None
+        p10 = p[10] if lenp > 10 else None
         p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[], 
                        kwarg=None, defaults=[])
         if lenp == 3:
             p0.kwarg = ast.arg(arg=p2, annotation=None)
+        elif lenp == 4:
+            self._set_var_args(p0, p2, None)
+            p0.kwarg = p3
         elif lenp == 5 and p1 != '*':
             # x
             self._set_regular_args(p0, p1, p2, p3, p4)
         elif lenp == 5 and p1 == '*':
-            # *args
-            if p4 is None:
-                self._set_var_args(p0, p2, p3)
-            else:
-                assert False
+            self._set_var_args(p0, p2, p3)  # *args
+            if p4 is not None:
+                # *args, x, **kwargs
+                p0.kwarg = p4
+        elif lenp == 7:
+            # x, **kwargs
+            self._set_regular_args(p0, p1, p2, p3, p4)
+            p0.kwarg = ast.arg(arg=p6, annotation=None)
         elif lenp == 8:
             # x, *args
             self._set_regular_args(p0, p1, p2, p3, p4)
             self._set_var_args(p0, p6, p7)
+        elif lenp == 10:
+            # x, *args, **kwargs
+            self._set_regular_args(p0, p1, p2, p3, p4)
+            self._set_var_args(p0, p6, None)
+            p0.kwarg = ast.arg(arg=p9, annotation=None)
+        elif lenp == 11:
+            # x, *args, **kwargs
+            self._set_regular_args(p0, p1, p2, p3, p4)
+            self._set_var_args(p0, p6, p7)
+            p0.kwarg = ast.arg(arg=p10, annotation=None)
         else:
             assert False
         p[0] = p0
@@ -468,7 +487,7 @@ class Parser(object):
 
     def p_comma_vfpdef(self, p):
         """comma_vfpdef : COMMA 
-                        | COMMA vfpdef equals_test_opt
+                        | comma_opt vfpdef equals_test_opt
         """
         if len(p) == 2:
             p[0] = []
@@ -477,7 +496,7 @@ class Parser(object):
 
     def p_comma_pow_vfpdef(self, p):
         """comma_pow_vfpdef : COMMA POW vfpdef"""
-        p[0] = p[1] + p[2] + p[3]
+        p[0] = ast.arg(arg=p[3], annotation=None)
 
     def p_stmt(self, p):
         """stmt : simple_stmt 
