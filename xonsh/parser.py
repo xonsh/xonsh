@@ -412,7 +412,7 @@ class Parser(object):
 
     def _set_var_args(self, p0, vararg, kwargs):
         if vararg is None:
-            assert False
+            self._set_args_def(p0, kwargs, kwargs=True)
         elif vararg is not None and kwargs is None:
             # *args
             p0.vararg = ast.arg(arg=vararg, annotation=None)

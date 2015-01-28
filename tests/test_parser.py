@@ -553,6 +553,37 @@ def test_lambda_x_args_kwy_kwargs():
 def test_lambda_args_y_kwargs():
     yield check_ast, 'lambda *args, y, **kwargs: 42'
 
+def test_lambda_star_x():
+    yield check_ast, 'lambda *, x: 42'
+
+def test_lambda_star_x_y():
+    yield check_ast, 'lambda *, x, y: 42'
+
+def test_lambda_star_x_kwargs():
+    yield check_ast, 'lambda *, x, **kwargs: 42'
+
+def test_lambda_star_kwx_kwargs():
+    yield check_ast, 'lambda *, x=42, **kwargs: 42'
+
+def test_lambda_x_star_y():
+    yield check_ast, 'lambda x, *, y: 42'
+
+def test_lambda_x_y_star_z():
+    yield check_ast, 'lambda x, y, *, z: 42'
+
+def test_lambda_x_kwy_star_y():
+    yield check_ast, 'lambda x, y=42, *, z: 42'
+
+def test_lambda_x_kwy_star_kwy():
+    yield check_ast, 'lambda x, y=42, *, z=65: 42'
+
+def test_lambda_x_star_y_kwargs():
+    yield check_ast, 'lambda x, *, y, **kwargs: 42'
+
+
+
+
+
 
 
 
