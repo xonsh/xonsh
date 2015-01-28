@@ -392,9 +392,41 @@ class Parser(object):
             if kwargs or (d is not None):
                 defs.append(d)
 
+    def _set_regular_args(self, p0, p1, p2, p3, p4):
+        if p2 is None and p3 is None:
+            # x
+            p0.args.append(ast.arg(arg=p1, annotation=None))
+        elif p2 is not None and p3 is None:
+            # x=42
+            p0.args.append(ast.arg(arg=p1, annotation=None))
+            p0.defaults.append(p2)
+        elif p2 is None and p3 is not None:
+            # x, y and x, y=42
+            p0.args.append(ast.arg(arg=p1, annotation=None))
+            self._set_args_def(p0, p3)
+        else:
+            # x=42, y=42
+            p0.args.append(ast.arg(arg=p1, annotation=None))
+            p0.defaults.append(p2)
+            self._set_args_def(p0, p3)
+
+    def _set_var_args(self, p0, vararg, kwargs):
+        if vararg is None:
+            assert False
+        elif vararg is not None and kwargs is None:
+            # *args
+            p0.vararg = ast.arg(arg=vararg, annotation=None)
+        elif vararg is not None and kwargs is not None:
+            # *args, x and *args, x, y and *args, x=10 and *args, x=10, y
+            # and *args, x, y=10, and *args, x=42, y=65 
+            p0.vararg = ast.arg(arg=vararg, annotation=None)
+            self._set_args_def(p0, kwargs, kwargs=True)
+        else:
+            assert False
+
     def p_varargslist(self, p):
         """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt
-                       | vfpdef equals_test_opt comma_vfpdef_list_opt COMMA TIMES vfpdef_opt comma_vfpdef_list_opt 
+                       | vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt TIMES vfpdef_opt comma_vfpdef_list_opt 
                        | vfpdef equals_test_opt comma_vfpdef_list_opt COMMA TIMES vfpdef_opt comma_vfpdef_list_opt COMMA POW vfpdef
                        | vfpdef equals_test_opt comma_vfpdef_list_opt COMMA POW vfpdef
                        | TIMES vfpdef_opt comma_vfpdef_list_opt comma_pow_vfpdef_opt
@@ -402,35 +434,26 @@ class Parser(object):
         """
         lenp = len(p)
         p1, p2, p3, p4 = p[1], p[2], p[3], p[4]
+        p5 = p[5] if lenp > 5 else None
+        if lenp > 6:
+            p6, p7 = p[6], p[7]
+        if lenp > 8:
+            p8, p9, p10, p11 = p[8], p[9], p[10], p[11]
         p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[], 
                        kwarg=None, defaults=[])
         if lenp == 5 and p1 != '*':
-            if p2 is None and p3 is None:
-                # x
-                p0.args.append(ast.arg(arg=p1, annotation=None))
-            elif p2 is not None and p3 is None:
-                # x=42
-                p0.args.append(ast.arg(arg=p1, annotation=None))
-                p0.defaults.append(p2)
-            elif p2 is None and p3 is not None:
-                # x, y and x, y=42
-                p0.args.append(ast.arg(arg=p1, annotation=None))
-                self._set_args_def(p0, p3)
-            else:
-                # x=42, y=42
-                p0.args.append(ast.arg(arg=p1, annotation=None))
-                p0.defaults.append(p2)
-                self._set_args_def(p0, p3)
+            # x
+            self._set_regular_args(p0, p1, p2, p3, p4)
         elif lenp == 5 and p1 == '*':
-            if p2 is None:
-                assert False
-            elif p2 is not None and p3 is None and p4 is None:
-                p0.vararg = ast.arg(arg=p2, annotation=None)
-            elif p2 is not None and p3 is not None and p4 is None:
-                p0.vararg = ast.arg(arg=p2, annotation=None)
-                self._set_args_def(p0, p3, kwargs=True)
+            # *args
+            if p4 is None:
+                self._set_var_args(p0, p2, p3)
             else:
                 assert False
+        elif lenp == 8:
+            # x, *args
+            self._set_regular_args(p0, p1, p2, p3, p4)
+            self._set_var_args(p0, p6, p7)
         else:
             assert False
         p[0] = p0
