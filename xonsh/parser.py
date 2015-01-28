@@ -354,7 +354,7 @@ class Parser(object):
 
     def p_equals_test(self, p):
         """equals_test : EQUALS test"""
-        p[0] = p[1] + p[2]
+        p[0] = p[2]
 
     def p_typedargslist(self, p):
         """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt 
@@ -384,23 +384,58 @@ class Parser(object):
         p[0] = p[1] + p[2] + p[3]
 
     def p_varargslist(self, p):
-        """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt 
-                       | vfpdef equals_test_opt comma_vfpdef_list_opt COMMA 
+        """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt
                        | vfpdef equals_test_opt comma_vfpdef_list_opt COMMA TIMES vfpdef_opt comma_vfpdef_list_opt 
                        | vfpdef equals_test_opt comma_vfpdef_list_opt COMMA TIMES vfpdef_opt comma_vfpdef_list_opt COMMA POW vfpdef
                        | vfpdef equals_test_opt comma_vfpdef_list_opt COMMA POW vfpdef
                        | TIMES vfpdef_opt comma_vfpdef_list_opt comma_pow_vfpdef_opt
                        | POW vfpdef
         """
-        p[0] = p[1:]
+        lenp = len(p)
+        p1, p2, p3 = p[1], p[2], p[3]
+        p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[], 
+                       kwarg=None, defaults=[])
+        if lenp == 5:
+            if p2 is None and p3 is None:
+                # x
+                p0.args.append(ast.arg(arg=p1, annotation=None))
+            elif p2 is not None and p3 is None:
+                # x=42
+                p0.args.append(ast.arg(arg=p1, annotation=None))
+                p0.defaults.append(p2)
+            elif p2 is None and p3 is not None:
+                # x, y and x, y=42
+                p0.args.append(ast.arg(arg=p1, annotation=None))
+                for arg in p3:
+                    p0.args.append(arg['arg'])
+                    d = arg['default']
+                    if d is not None:
+                        p0.defaults.append(d)
+            else:
+                # x=42, y=42
+                p0.args.append(ast.arg(arg=p1, annotation=None))
+                p0.defaults.append(p2)
+                for arg in p3:
+                    p0.args.append(arg['arg'])
+                    d = arg['default']
+                    if d is not None:
+                        p0.defaults.append(d)
+        else:
+            assert False
+        p[0] = p0
 
     def p_vfpdef(self, p):
         """vfpdef : NAME"""
-        p[0] = p[1:]
+        p[0] = p[1]
 
     def p_comma_vfpdef(self, p):
-        """comma_vfpdef : COMMA vfpdef equals_test_opt"""
-        p[0] = p[1] + p[2] + p[3]
+        """comma_vfpdef : COMMA 
+                        | COMMA vfpdef equals_test_opt
+        """
+        if len(p) == 2:
+            p[0] = []
+        else:
+            p[0] = [{'arg': ast.arg(arg=p[2], annotation=None), 'default': p[3]}]
 
     def p_comma_pow_vfpdef(self, p):
         """comma_pow_vfpdef : COMMA POW vfpdef"""
@@ -795,7 +830,7 @@ class Parser(object):
         else:
             p0 = ast.IfExp(test=p[3], body=p[1], orelse=p[5],
                            lineno=self.lineno, col_offset=self.col)
-        p[0] = p0 
+        p[0] = p0
 
     def p_test_nocond(self, p):
         """test_nocond : or_test 
@@ -805,7 +840,15 @@ class Parser(object):
 
     def p_lambdef(self, p):
         """lambdef : LAMBDA varargslist_opt COLON test"""
-        p[0] = p[1:]
+        p2, p4 = p[2], p[4]
+        if p2 is None:
+            args = ast.arguments(args=[], vararg=None, kwonlyargs=[], 
+                                 kw_defaults=[], kwarg=None, defaults=[])
+        else:
+            args = p2
+        p0 = ast.Lambda(args=args, body=p4, lineno=self.lineno, 
+                        col_offset=self.col)
+        p[0] = p0
 
     def p_lambdef_nocond(self, p):
         """lambdef_nocond : LAMBDA varargslist_opt COLON test_nocond"""

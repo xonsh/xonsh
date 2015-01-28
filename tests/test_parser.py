@@ -69,6 +69,10 @@ def check_stmts(input, run=True):
 # Tests
 #
 
+#
+# expressions
+#
+
 def test_int_literal():
     yield check_ast, '42'
 
@@ -435,6 +439,62 @@ def test_dictcomp_if_dictcomp():
 def test_dictcomp_if_dictcomp_if():
     yield check_ast, '{x:y for x in "mom" if True for y in "dad" if y == "d"}'
 
+def test_lambda():
+    yield check_ast, 'lambda: 42'
+
+def test_lambda_x():
+    yield check_ast, 'lambda x: x'
+
+def test_lambda_kwx():
+    yield check_ast, 'lambda x=42: x'
+
+def test_lambda_x_y():
+    yield check_ast, 'lambda x, y: x'
+
+def test_lambda_x_y():
+    yield check_ast, 'lambda x, y: x'
+
+def test_lambda_x_y_z():
+    yield check_ast, 'lambda x, y, z: x'
+
+def test_lambda_x_y():
+    yield check_ast, 'lambda x, y: x'
+
+def test_lambda_x_kwy():
+    yield check_ast, 'lambda x, y=42: x'
+
+def test_lambda_kwx_kwy():
+    yield check_ast, 'lambda x=65, y=42: x'
+
+def test_lambda_kwx_kwy_kwz():
+    yield check_ast, 'lambda x=65, y=42, z=1: x'
+
+def test_lambda_x_comma():
+    yield check_ast, 'lambda x,: x'
+
+def test_lambda_x_y_comma():
+    yield check_ast, 'lambda x, y,: x'
+
+def test_lambda_x_y_z_comma():
+    yield check_ast, 'lambda x, y, z,: x'
+
+def test_lambda_x_y_comma():
+    yield check_ast, 'lambda x, y,: x'
+
+def test_lambda_x_kwy_comma():
+    yield check_ast, 'lambda x, y=42,: x'
+
+def test_lambda_kwx_kwy_comma():
+    yield check_ast, 'lambda x=65, y=42,: x'
+
+def test_lambda_kwx_kwy_kwz_comma():
+    yield check_ast, 'lambda x=65, y=42, z=1,: x'
+
+
+#
+# statements
+#
+
 def test_equals():
     yield check_stmts, 'x = 42'
 
@@ -632,7 +692,6 @@ def test_return_x_comma():
 
 def test_return_x_y():
     yield check_stmts, 'return x, y', False
-
 
 
 
