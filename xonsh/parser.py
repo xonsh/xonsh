@@ -433,7 +433,9 @@ class Parser(object):
                        | POW vfpdef
         """
         lenp = len(p)
-        p1, p2, p3, p4 = p[1], p[2], p[3], p[4]
+        p1, p2 = p[1], p[2]
+        if lenp > 3:
+            p3, p4 = p[3], p[4]
         p5 = p[5] if lenp > 5 else None
         if lenp > 6:
             p6, p7 = p[6], p[7]
@@ -441,7 +443,9 @@ class Parser(object):
             p8, p9, p10, p11 = p[8], p[9], p[10], p[11]
         p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[], 
                        kwarg=None, defaults=[])
-        if lenp == 5 and p1 != '*':
+        if lenp == 3:
+            p0.kwarg = ast.arg(arg=p2, annotation=None)
+        elif lenp == 5 and p1 != '*':
             # x
             self._set_regular_args(p0, p1, p2, p3, p4)
         elif lenp == 5 and p1 == '*':

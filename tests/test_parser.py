@@ -511,6 +511,16 @@ def test_lambda_args_kwx_kwy():
 def test_lambda_x_args():
     yield check_ast, 'lambda x, *args: 42'
 
+def test_lambda_x_args_y():
+    yield check_ast, 'lambda x, *args, y: 42'
+
+def test_lambda_x_args_y_z():
+    yield check_ast, 'lambda x, *args, y, z: 42'
+
+def test_lambda_kwargs():
+    yield check_ast, 'lambda **kwargs: 42'
+
+
 
 
 #
