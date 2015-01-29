@@ -1425,7 +1425,7 @@ class Parser(object):
 
     def p_comma_argument(self, p):
         """comma_argument : COMMA argument """
-        p[0] = [p[1]]
+        p[0] = [p[2]]
 
     def p_argument(self, p):
         """argument : test
