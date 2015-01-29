@@ -1395,7 +1395,8 @@ class Parser(object):
         """arglist : argument comma_opt 
                    | argument_comma_list argument comma_opt 
                    | argument_comma_list_opt TIMES test comma_argument_list_opt 
-                   | argument_comma_list_opt TIMES test comma_argument_list_opt COMMA POW test
+                   | argument_comma_list_opt TIMES test COMMA POW test
+                   | argument_comma_list_opt TIMES test comma_argument_list COMMA POW test
                    | argument_comma_list_opt POW test
         """
         lenp = len(p)
@@ -1407,6 +1408,11 @@ class Parser(object):
             for arg in p1:
                 self._set_arg(p0, arg)
             self._set_arg(p0, p2)
+        elif lenp == 4 and p2 == '**':
+            if p1 is not None:
+                for arg in p1:
+                    self._set_arg(p0, arg)
+            p0['kwargs'] = p[3]
         elif lenp == 5:
             p0['starargs'], p4 = p[3], p[4]
             if p1 is not None:
@@ -1415,6 +1421,18 @@ class Parser(object):
             if p4 is not None:
                 for arg in p4:
                     self._set_arg(p0, arg, ensure_kw=True)
+        elif lenp == 7:
+            p0['starargs'], p0['kwargs'] = p[3], p[6]
+            if p1 is not None:
+                for arg in p1:
+                    self._set_arg(p0, arg)
+        elif lenp == 8:
+            p0['starargs'], p4, p0['kwargs'] = p[3], p[4], p[7]
+            if p1 is not None:
+                for arg in p1:
+                    self._set_arg(p0, arg)
+            for arg in p4:
+                self._set_arg(p0, arg, ensure_kw=True)
         else:
             assert False
         p[0] = p0

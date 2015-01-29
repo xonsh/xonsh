@@ -628,6 +628,24 @@ def test_call_range_x_star():
 def test_call_int():
     yield check_ast, 'int(*["42"], base=8)'
 
+def test_call_int_base_dict():
+    yield check_ast, 'int(*["42"], **{"base": 8})'
+
+def test_call_int_base_dict():
+    yield check_ast, 'int(*["42"], **{"base": 8})'
+
+def test_call_dict_kwargs():
+    yield check_ast, 'dict(**{"base": 8})'
+
+def test_call_alot():
+    yield check_ast, 'x(1, *args, **kwargs)', False
+
+def test_call_alot_next():
+    yield check_ast, 'x(x=1, *args, **kwargs)', False
+
+def test_call_alot_next_next():
+    yield check_ast, 'x(x=1, *args, y=42, **kwargs)', False
+
 
 
 
