@@ -7,4 +7,5 @@ from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
     Name, GeneratorExp, Store, comprehension, ListComp, SetComp, DictComp, \
     Assign, AugAssign, BitXor, BitAnd, BitOr, LShift, RShift, Assert, Delete, \
     Del, Pass, Raise, Import, alias, ImportFrom, Continue, Break, Yield, \
-    YieldFrom, Return, IfExp, Lambda, arguments, arg, Call, keyword
+    YieldFrom, Return, IfExp, Lambda, arguments, arg, Call, keyword, \
+    Attribute

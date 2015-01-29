@@ -1108,6 +1108,12 @@ class Parser(object):
         elif isinstance(p2, Mapping):
             p0 = ast.Call(func=p1, lineno=self.lineno, col_offset=self.col, 
                           **p2)
+        elif isinstance(p2[0], str):
+            p0 = ast.Attribute(value=p1, attr=p2[0], ctx=ast.Load(), 
+                               lineno=self.lineno, col_offset=self.col)
+            for a in p2[1:]:
+                p0 = ast.Attribute(value=p0, attr=a, ctx=ast.Load(),
+                                   lineno=self.lineno, col_offset=self.col)
         else:
             assert False
         # actual power rule
@@ -1250,6 +1256,8 @@ class Parser(object):
             p0 = p2
         elif p1 == '(':
             p0 = p2
+        elif p1 == '.':
+            p0 = [p2]
         else:
             assert False
         p[0] = p0

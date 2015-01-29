@@ -646,6 +646,12 @@ def test_call_alot_next():
 def test_call_alot_next_next():
     yield check_ast, 'x(x=1, *args, y=42, **kwargs)', False
 
+def test_getattr():
+    yield check_ast, 'list.append'
+
+def test_getattr_getattr():
+    yield check_ast, 'list.append.__str__'
+
 
 
 
