@@ -775,15 +775,23 @@ class Parser(object):
 
     def p_comma_name(self, p):
         """comma_name : COMMA NAME"""
-        p[0] = p[1] + p[2]
+        p[0] = [p[2]]
 
     def p_global_stmt(self, p):
         """global_stmt : GLOBAL NAME comma_name_list_opt"""
-        p[0] = p[1:]
+        p2, p3 = p[2], p[3]
+        names = [p2]
+        if p3 is not None:
+            names += p3
+        p[0] = ast.Global(names=names, lineno=self.lineno, col_offset=self.col)
 
     def p_nonlocal_stmt(self, p):
         """nonlocal_stmt : NONLOCAL NAME comma_name_list_opt"""
-        p[0] = p[1:]
+        p2, p3 = p[2], p[3]
+        names = [p2]
+        if p3 is not None:
+            names += p3
+        p[0] = ast.Nonlocal(names=names, lineno=self.lineno, col_offset=self.col)
 
     def p_comma_test(self, p):
         """comma_test : COMMA test"""

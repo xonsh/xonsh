@@ -836,6 +836,18 @@ def test_continue():
 def test_break():
     yield check_stmts, 'break', False
 
+def test_global():
+    yield check_stmts, 'global x', False
+
+def test_global_xy():
+    yield check_stmts, 'global x, y', False
+
+def test_nonlocal_x():
+    yield check_stmts, 'nonlocal x', False
+
+def test_nonlocal_xy():
+    yield check_stmts, 'nonlocal x, y', False
+
 def test_yield():
     yield check_stmts, 'yield', False
 
