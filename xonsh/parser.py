@@ -296,10 +296,10 @@ class Parser(object):
         """
         if len(p) == 2:
             # newline_or_stmt ENDMARKER
-            p[0] = [p[1]]
+            p[0] = p[1]
         else:
             # file_input newline_or_stmt ENDMARKER
-            p[0] = p[1] + [p[2]]
+            p[0] = p[1] + p[2]
 
     def p_newline_or_stmt(self, p):
         """newline_or_stmt : NEWLINE 
@@ -836,8 +836,8 @@ class Parser(object):
         """
         if p[5] is not None:
             assert False
-        p[0] = ast.If(test=p[2], body=p[4], orelse=p[6] or [], 
-                      lineno=self.lineno, col_offset=self.col)
+        p[0] = [ast.If(test=p[2], body=p[4], orelse=p[6] or [], 
+                       lineno=self.lineno, col_offset=self.col)]
 
     def p_while_stmt(self, p):
         """while_stmt : WHILE test COLON suite else_part_opt"""

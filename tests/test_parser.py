@@ -881,6 +881,9 @@ def test_if_true():
 def test_if_true_twolines():
     yield check_stmts, 'if True:\n  pass\n  pass'
 
+def test_if_true_twolines_deindent():
+    yield check_stmts, 'if True:\n  pass\n  pass\npass'
+
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100
 
