@@ -910,6 +910,9 @@ def test_if_nested():
 def test_while():
     yield check_stmts, 'while False:\n  pass'
 
+def test_while_else():
+    yield check_stmts, 'while False:\n  pass\nelse:\n  pass'
+
 
 
 #DEBUG_LEVEL = 1
