@@ -878,6 +878,9 @@ def test_return_x_y():
 def test_if_true():
     yield check_stmts, 'if True:\n  pass'
 
+def test_if_true_twolines():
+    yield check_stmts, 'if True:\n  pass\n  pass'
+
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100
 

@@ -153,6 +153,7 @@ class Parser(object):
             'argument_comma',
             'comma_argument',
             'comma_item',
+            'indented_stmt',
             )
         for rule in list_rules:
             self._list_rule(rule)
@@ -883,17 +884,19 @@ class Parser(object):
         """
         p[0] = p[1:]
 
+    def p_indented_stmt(self, p):
+        """indented_stmt : INDENT stmt"""
+        p[0] = p[2]
+
     def p_suite(self, p):
         """suite : simple_stmt 
-                 | NEWLINE INDENT stmt 
-                 | NEWLINE INDENT stmt DEDENT
-                 | NEWLINE INDENT stmt_list DEDENT
+                 | NEWLINE indented_stmt 
+                 | NEWLINE indented_stmt DEDENT
+                 | NEWLINE indented_stmt_list 
+                 | NEWLINE indented_stmt_list DEDENT
         """
-        p3 = p[3]
-        if isinstance(p3, ast.AST):
-            p0 = [p3]
-        elif isinstance(p3, Sequence):
-            p0 = p3
+        if len(p) > 2:
+            p0 = p[2]
         else:
             assert False
         p[0] = p0
