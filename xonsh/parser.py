@@ -825,19 +825,28 @@ class Parser(object):
 
     def p_elif_part(self, p):
         """elif_part : ELIF test COLON suite"""
-        p[0] = p[1:]
+        p[0] = [ast.If(test=p[2], body=p[4], orelse=[], 
+                       lineno=self.lineno, col_offset=self.col)]
 
     def p_else_part(self, p):
         """else_part : ELSE COLON suite"""
-        p[0] = p[1:]
+        p[0] = p[3]
 
     def p_if_stmt(self, p):
         """if_stmt : IF test COLON suite elif_part_list_opt else_part_opt
         """
-        if p[5] is not None:
-            assert False
-        p[0] = [ast.If(test=p[2], body=p[4], orelse=p[6] or [], 
-                       lineno=self.lineno, col_offset=self.col)]
+        lastif = ast.If(test=p[2], body=p[4], orelse=[], 
+                       lineno=self.lineno, col_offset=self.col)
+        p0 = [lastif]
+        p6 = p[6] or []
+        p5, p6 = p[5], p[6]
+        if p5 is not None:
+            for elseif in p5:
+                lastif.orelse.append(elseif)
+                lastif = elseif
+        if p6 is not None:
+            lastif.orelse = p6
+        p[0] = p0
 
     def p_while_stmt(self, p):
         """while_stmt : WHILE test COLON suite else_part_opt"""

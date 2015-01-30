@@ -884,6 +884,30 @@ def test_if_true_twolines():
 def test_if_true_twolines_deindent():
     yield check_stmts, 'if True:\n  pass\n  pass\npass'
 
+def test_if_true_else():
+    yield check_stmts, 'if True:\n  pass\nelse: \n  pass'
+
+def test_if_true_x():
+    yield check_stmts, 'if True:\n  x = 42'
+
+def test_if_switch():
+    yield check_stmts, 'x = 42\nif x == 1:\n  pass'
+
+def test_if_switch_elif1_else():
+    yield check_stmts, ('x = 42\nif x == 1:\n  pass\n'
+                        'elif x == 2:\n  pass\nelse:\n  pass')
+
+def test_if_switch_elif2_else():
+    yield check_stmts, ('x = 42\nif x == 1:\n  pass\n'
+                        'elif x == 2:\n  pass\n'
+                        'elif x == 3:\n  pass\n'
+                        'elif x == 4:\n  pass\n'
+                        'else:\n  pass')
+
+
+
+
+
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100
 
