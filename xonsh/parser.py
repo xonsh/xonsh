@@ -184,10 +184,15 @@ class Parser(object):
         """
         self.lexer.fname = filename
         self.lexer.lineno = 0
+        self.lexer.indent = ''
         self._last_yielded_token = None
         tree = self.parser.parse(input=s, lexer=self.lexer,
                                  debug=debug_level)
         return tree
+
+    def restart(self):
+        if hasattr(self.parser, 'selfstack'):
+            self.parser.restart()
 
     def _lexer_errfunc(self, msg, line, column):
         self._parse_error(msg, self.currloc(line, column))
@@ -849,8 +854,10 @@ class Parser(object):
         p[0] = p0
 
     def p_while_stmt(self, p):
-        """while_stmt : WHILE test COLON suite else_part_opt"""
-        p[0] = p[1:]
+        """while_stmt : WHILE test COLON suite else_part_opt
+        """
+        p[0] = [ast.While(test=p[2], body=p[4], orelse=p[5] or [], 
+                          lineno=self.lineno, col_offset=self.col)]
 
     def p_for_stmt(self, p):
         """for_stmt : FOR exprlist IN testlist COLON suite else_part_opt

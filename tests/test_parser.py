@@ -904,7 +904,11 @@ def test_if_switch_elif2_else():
                         'elif x == 4:\n  pass\n'
                         'else:\n  pass')
 
+def test_if_nested():
+    yield check_stmts, 'x = 42\nif x == 1:\n  pass\n  if x == 4:\n     pass'
 
+def test_while():
+    yield check_stmts, 'while False:\n  pass'
 
 
 
