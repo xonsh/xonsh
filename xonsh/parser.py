@@ -286,17 +286,19 @@ class Parser(object):
         p[0] = p0
 
     def p_file_input(self, p):
-        """file_input : newline_or_stmt 
-                      | file_input newline_or_stmt
+        """file_input : file_stmts"""
+        p[0] = ast.Module(body=p[1])
+
+    def p_file_stmts(self, p):
+        """file_stmts : newline_or_stmt 
+                      | file_stmts newline_or_stmt
         """
-        #"""file_input : newline_or_stmt ENDMARKER
-        #              | file_input newline_or_stmt ENDMARKER
-        if len(p) == 3:
+        if len(p) == 2:
             # newline_or_stmt ENDMARKER
-            p[0] = p[1]
+            p[0] = [p[1]]
         else:
             # file_input newline_or_stmt ENDMARKER
-            p[0] = p[1] + p[2]
+            p[0] = p[1] + [p[2]]
 
     def p_newline_or_stmt(self, p):
         """newline_or_stmt : NEWLINE 
@@ -831,7 +833,10 @@ class Parser(object):
     def p_if_stmt(self, p):
         """if_stmt : IF test COLON suite elif_part_list_opt else_part_opt
         """
-        p[0] = p[1:]
+        if p[5] is not None:
+            assert False
+        p[0] = ast.If(test=p[2], body=p[4], orelse=p[6] or [], 
+                      lineno=self.lineno, col_offset=self.col)
 
     def p_while_stmt(self, p):
         """while_stmt : WHILE test COLON suite else_part_opt"""
@@ -880,10 +885,18 @@ class Parser(object):
 
     def p_suite(self, p):
         """suite : simple_stmt 
+                 | NEWLINE INDENT stmt 
                  | NEWLINE INDENT stmt DEDENT
                  | NEWLINE INDENT stmt_list DEDENT
         """
-        p[0] = p[1:]
+        p3 = p[3]
+        if isinstance(p3, ast.AST):
+            p0 = [p3]
+        elif isinstance(p3, Sequence):
+            p0 = p3
+        else:
+            assert False
+        p[0] = p0
 
     def p_test(self, p):
         """test : or_test 

@@ -161,8 +161,7 @@ class Lexer(object):
     def t_INDENT(self, t):
         r'[ \t]+'
         if self.last.type != 'NEWLINE':
-            t.lexer.skip(1)
-            return
+            return  # returns None to skip internal whitespace
         i = self.indent
         v = t.value
         if len(i) > len(v):
