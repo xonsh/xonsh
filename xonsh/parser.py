@@ -286,11 +286,11 @@ class Parser(object):
         p[0] = p0
 
     def p_file_input(self, p):
-        #"""file_input : newline_or_stmt 
-        #              | file_input newline_or_stmt
-        """file_input : newline_or_stmt ENDMARKER
-                      | file_input newline_or_stmt ENDMARKER
+        """file_input : newline_or_stmt 
+                      | file_input newline_or_stmt
         """
+        #"""file_input : newline_or_stmt ENDMARKER
+        #              | file_input newline_or_stmt ENDMARKER
         if len(p) == 3:
             # newline_or_stmt ENDMARKER
             p[0] = p[1]
@@ -880,9 +880,9 @@ class Parser(object):
 
     def p_suite(self, p):
         """suite : simple_stmt 
-                 | NEWLINE INDENT stmt_list 
+                 | NEWLINE INDENT stmt DEDENT
+                 | NEWLINE INDENT stmt_list DEDENT
         """
-        #         | NEWLINE INDENT stmt_list DEDENT
         p[0] = p[1:]
 
     def p_test(self, p):

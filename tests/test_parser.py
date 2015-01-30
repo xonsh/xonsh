@@ -720,7 +720,7 @@ def test_rshift_eq():
     yield check_stmts, 'x = 42; x >>= 2'
 
 def test_assert():
-    yield check_stmts, 'assert True'
+    yield check_stmts, '1assert True'
 
 def test_assert():
     yield check_stmts, 'assert True'
@@ -875,11 +875,10 @@ def test_return_x_comma():
 def test_return_x_y():
     yield check_stmts, 'return x, y', False
 
+def test_if_true():
+    yield check_stmts, 'if True:\n  pass'
 
-
-
-
-#DEBUG_LEVEL = 1
+DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100
 
 

@@ -31,11 +31,15 @@ class Lexer(object):
         self.fname = ''
         self.last = None
         self.lexer = None
+        #self.indent = '\n'
+        self.indent = ''
 
     def build(self, **kwargs):
         """Part of the PLY lexer API."""
         self.lexer = lex.lex(object=self, **kwargs)
         self.lexer.lineno = 1
+        #self.indent = '\n'
+        self.indent = ''
 
     @property
     def lineno(self):
@@ -91,7 +95,7 @@ class Lexer(object):
     #
     tokens = pykeywords + (
         # Misc
-        'NAME', 'INDENT', 'NEWLINE', 'ENDMARKER', 'WHITESPACE',
+        'NAME', 'INDENT', 'DEDENT', 'NEWLINE', 'ENDMARKER', 'WHITESPACE',
         'NONE', 'TRUE', 'FALSE',
 
         # literals
@@ -154,13 +158,33 @@ class Lexer(object):
     #
     # Rules 
     #
-    t_INDENT = r'^[ \t]+'
-    t_ignore_WHITESPACE = r'[ \t]+'
+    def t_INDENT(self, t):
+        r'[ \t]+'
+        if self.last.type != 'NEWLINE':
+            t.lexer.skip(1)
+            return
+        i = self.indent
+        v = t.value
+        if len(i) > len(v):
+            if not i.startswith(v):
+                self._error("indentation level does not match previous level", t)
+            t.type = 'DEDENT'
+        elif not v.startswith(i):
+            self._error("indentation level does not match previous level", t)
+        self.indent = v
+        t.lexer.lineno += 1
+        return t
+
+    #t_ignore_WHITESPACE = r'[ \t]+'
+    #t_ignore_WHITESPACE = r'[^\n][ \t]+'
     t_ENDMARKER = r'\x03'
 
     # Newlines
     def t_NEWLINE(self, t):
         r'\n+'
+        #if self.indent != '':
+        #    self.indent = ''
+        #    t.type = 'DEDENT'
         t.lexer.lineno += t.value.count("\n")
         return t
 
