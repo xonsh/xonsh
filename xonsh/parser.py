@@ -97,7 +97,7 @@ class Parser(object):
             'period_or_ellipsis_list',
             'comma_import_as_name_list',
             'comma_dotted_as_name_list',
-            'period_name_list',
+            #'period_name_list',
             'comma_name_list',
             'comma_test',
             'elif_part_list',
@@ -109,7 +109,7 @@ class Parser(object):
             'or_and_test_list',
             'and_not_test_list',
             'comp_op_expr_list',
-            'pipe_xor_expr_list',
+            #'pipe_xor_expr_list',
             'xor_and_expr_list',
             'ampersand_shift_expr_list',
             'shift_arith_expr_list',
@@ -128,7 +128,7 @@ class Parser(object):
             'yield_arg',
             'argument_comma_list',
             'comma_argument_list',
-            'attr_period_name_list',
+            #'attr_period_name_list',
             'test_comma_list',
             )
         for rule in opt_rules:
@@ -346,13 +346,16 @@ class Parser(object):
         p[0] = [p[2]]
 
     def p_attr_name(self, p):
-        """attr_name : NAME attr_period_name_list_opt"""
-        p1, p2 = p[1], p[2]
+        """attr_name : NAME 
+                     | NAME attr_period_name_list
+        """
+        p1 = p[1]
         name = ast.Name(id=p1, ctx=ast.Load(), lineno=self.lineno, 
                         col_offset=self.col)
-        if p2 is None:
+        if len(p) == 2:
             p0 = name
         else:
+            p2 = p[2]
             p0 = ast.Attribute(value=name, attr=p2[0], ctx=ast.Load(),
                                lineno=self.lineno, col_offset=self.col)
             for a in p2[1:]:
@@ -926,10 +929,10 @@ class Parser(object):
         p[0] = p[1] + p[2]
 
     def p_dotted_name(self, p):
-        """dotted_name : NAME period_name_list_opt"""
-        p1, p2 = p[1], p[2]
-        p0 = p1 if p2 is None else p1 + p2
-        p[0] = p0
+        """dotted_name : NAME 
+                       | NAME period_name_list
+        """
+        p[0] = p[1] if len(p) == 2 else p[1] + p[2]
 
     def p_comma_name(self, p):
         """comma_name : COMMA NAME"""
@@ -1253,8 +1256,10 @@ class Parser(object):
         return p0
 
     def p_expr(self, p):
-        """expr : xor_expr pipe_xor_expr_list_opt"""
-        p[0] = self._binop_combine(p[1], p[2])
+        """expr : xor_expr
+                | xor_expr pipe_xor_expr_list
+        """
+        p[0] = self._binop_combine(p[1], p[2] if len(p) > 2 else None)
 
     def p_pipe_xor_expr(self, p):
         """pipe_xor_expr : PIPE xor_expr"""
@@ -1582,35 +1587,19 @@ class Parser(object):
         p[0] = p0
 
     def p_testlist(self, p):
-        """testlist : test comma_test_list_opt comma_opt
-                    | test comma_test_list COMMA
+        """testlist : test comma_test_list COMMA
+                    | test comma_test_list
                     | test COMMA
+                    | test
         """
-        p1, p2 = p[1], p[2]
-        if len(p) == 3:
-            if p2 is None:
-                p0 = [p1]
-            elif p2 == ',':
-                p0 = ast.Tuple(elts=[p1], ctx=ast.Load(), lineno=self.lineno, 
-                               col_offset=self.col)
-            else:
-                assert False
-        elif len(p) == 4 and p2 is None:
-            if p[3] is None:
-                pass
-            elif not has_elts(p1):
-                p1 = ensure_has_elts(p1, lineno=self.lineno, 
-                                     col_offset=self.col)
-            else:
-                assert False
-            p0 = p1
-        elif len(p) == 4 and p2 is not None:
+        lenp = len(p)
+        p1 = p[1]
+        if lenp > 2:
             p1 = ensure_has_elts(p1, lineno=self.lineno, col_offset=self.col)
+            p2 = p[2] if lenp > 2 else []
+            p2 = [] if p2 == ',' else p2
             p1.elts += p2
-            p0 = p1
-        else:
-            assert False
-        p[0] = p0
+        p[0] = p1
 
     def p_comma_item(self, p):
         """comma_item : COMMA test COLON test"""
