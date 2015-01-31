@@ -1430,16 +1430,16 @@ class Parser(object):
 
     def p_subscriptlist(self, p):
         """subscriptlist : subscript comma_subscript_list_opt comma_opt"""
-        p1, p2, p3 = p[1], p[2], p[3]
-        if p2 is None and p3 is None:
-            p0 = p1
-        else:
-            assert False
-        p[0] = p0
+        p1, p2 = p[1], p[2]
+        if p2 is not None:
+            p1.value = ast.Tuple(elts=[p1.value] + [x.value for x in p2], 
+                                 ctx=ast.Load(), lineno=self.lineno, 
+                                 col_offset=self.col)
+        p[0] = p1
 
     def p_comma_subscript(self, p):
         """comma_subscript : COMMA subscript"""
-        p[0] = p[1:]
+        p[0] = [p[2]]
 
     def p_subscript(self, p):
         """subscript : test 

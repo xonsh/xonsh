@@ -652,6 +652,14 @@ def test_getattr():
 def test_getattr_getattr():
     yield check_ast, 'list.append.__str__'
 
+def test_dict_tuple_key():
+    yield check_ast, '{(42, 1): 65}'
+
+def test_dict_tuple_key_get():
+    yield check_ast, '{(42, 1): 65}[42, 1]'
+
+def test_dict_tuple_key_get_3():
+    yield check_ast, '{(42, 1, 3): 65}[42, 1, 3]'
 
 
 
