@@ -350,15 +350,24 @@ class Parser(object):
 
     def p_rarrow_test(self, p):
         """rarrow_test : RARROW test"""
-        p[0] = p[1] + p[2]
+        p[0] = p[2]
 
     def p_funcdef(self, p):
         """funcdef : DEF NAME parameters rarrow_test_opt COLON suite"""
-        p[0] = p[1:]
+        f = ast.FunctionDef(name=p[2], args=p[3], returns=p[4], body=p[6],
+                            decorator_list=[], lineno=self.lineno, 
+                            col_offset=self.col)
+        p[0] = [f]
 
     def p_parameters(self, p):
         """parameters : LPAREN typedargslist_opt RPAREN"""
-        p[0] = p[1:]
+        p2 = p[2]
+        if p2 is None:
+            p2 = ast.arguments(args=[], vararg=None, kwonlyargs=[], 
+                               kw_defaults=[], kwarg=None, defaults=[])
+        else:
+            assert False
+        p[0] = p2
 
     def p_equals_test(self, p):
         """equals_test : EQUALS test"""

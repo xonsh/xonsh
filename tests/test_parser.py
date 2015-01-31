@@ -982,6 +982,21 @@ def test_try_except_else_finally():
 def test_try_finally():
     yield check_stmts, 'try:\n  pass\nfinally:  pass', False
 
+def test_func():
+    yield check_stmts, 'def f():\n  pass'
+
+def test_func_ret():
+    yield check_stmts, 'def f():\n  return'
+
+def test_func_ret_42():
+    yield check_stmts, 'def f():\n  return 42'
+
+def test_func_ret_42_65():
+    yield check_stmts, 'def f():\n  return 42, 65'
+
+def test_func_rarrow():
+    yield check_stmts, 'def f() -> int:\n  pass'
+
 
 
 #DEBUG_LEVEL = 1
