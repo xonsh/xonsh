@@ -1157,6 +1157,24 @@ def test_class_obj():
     # technically valid syntax, though it will fail to compile
     yield check_stmts, 'class X(object=5):\n  pass', False
 
+def test_decorator():
+    yield check_stmts, '@g\ndef f():\n  pass', False
+
+def test_decorator_2():
+    yield check_stmts, '@h\n@g\ndef f():\n  pass', False
+
+def test_decorator_call():
+    yield check_stmts, '@g()\ndef f():\n  pass', False
+
+def test_decorator_call_args():
+    yield check_stmts, '@g(x, y=10)\ndef f():\n  pass', False
+
+def test_decorator_dot_call_args():
+    yield check_stmts, '@h.g(x, y=10)\ndef f():\n  pass', False
+
+def test_decorator_dot_dot_call_args():
+    yield check_stmts, '@i.h.g(x, y=10)\ndef f():\n  pass', False
+
 
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100

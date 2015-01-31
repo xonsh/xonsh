@@ -118,6 +118,7 @@ class Parser(object):
             'yield_arg',
             'argument_comma_list',
             'comma_argument_list',
+            'attr_period_name_list',
             )
         for rule in opt_rules:
             self._opt_rule(rule)
@@ -154,6 +155,7 @@ class Parser(object):
             'comma_argument',
             'comma_item',
             'indented_stmt',
+            'attr_period_name',
             )
         for rule in list_rules:
             self._list_rule(rule)
@@ -328,15 +330,49 @@ class Parser(object):
         """func_call : LPAREN arglist_opt RPAREN"""
         p[0] = p[2]
 
+    def p_attr_period_name(self, p):
+        """attr_period_name : PERIOD NAME"""
+        p[0] = [p[2]]
+
+    def p_attr_name(self, p):
+        """attr_name : NAME attr_period_name_list_opt"""
+        p1, p2 = p[1], p[2]
+        name = ast.Name(id=p1, ctx=ast.Load(), lineno=self.lineno, 
+                        col_offset=self.col)
+        if p2 is None:
+            p0 = name
+        else:
+            p0 = ast.Attribute(value=name, attr=p2[0], ctx=ast.Load(),
+                               lineno=self.lineno, col_offset=self.col)
+            for a in p2[1:]:
+                p0 = ast.Attribute(value=p0, attr=a, ctx=ast.Load(),
+                                   lineno=self.lineno, col_offset=self.col)
+                
+        p[0] = p0
+
+
     def p_decorator(self, p):
-        """decorator : AT dotted_name func_call_opt NEWLINE"""
-        p[0] = p[1:]
+        """decorator : AT attr_name NEWLINE
+                     | AT attr_name func_call NEWLINE
+        """
+        lenp = len(p)
+        name = p[2]
+        p3 = p[3] if lenp > 3 else None
+        if lenp == 4: 
+            p0 = name
+        elif p3 is None:
+            p0 = ast.Call(func=name, args=[], keywords=[], starargs=None, 
+                          kwargs=None, lineno=self.lineno, col_offset=self.col)
+        else:
+            p0 = ast.Call(func=name, lineno=self.lineno, col_offset=self.col, 
+                          **p3)
+        p[0] = p0
 
     def p_decorators(self, p):
         """decorators : decorator
                       | decorators decorator
         """
-        p[0] = p[1] if len(p) == 2 else p[1] + p[2]
+        p[0] = [p[1]] if len(p) == 2 else p[1] + [p[2]]
 
     def p_classdef_or_funcdef(self, p):
         """classdef_or_funcdef : classdef
@@ -346,7 +382,9 @@ class Parser(object):
 
     def p_decorated(self, p):
         """decorated : decorators classdef_or_funcdef"""
-        p[0] = p[1] + p[2]
+        p1, p2 = p[1], p[2]
+        p2[0].decorator_list = p1
+        p[0] = p2
 
     def p_rarrow_test(self, p):
         """rarrow_test : RARROW test"""
