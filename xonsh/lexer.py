@@ -86,9 +86,6 @@ class Lexer(object):
         'OR', 'PASS', 'RAISE', 'RETURN', 'TRY', 'WHILE', 'WITH', 'YIELD',)
 
     pykeyword_map = {k.lower(): k for k in pykeywords}
-    #pykeyword_map['None'] = 'NONE'
-    #pykeyword_map['True'] = 'TRUE'
-    #pykeyword_map['False'] = 'FALSE'
 
     #
     # All the tokens recognized by the lexer
@@ -141,7 +138,6 @@ class Lexer(object):
     bin_literal = '0[bB]?[0-1]+'
 
     # string literals
-    #string_literal = r'''(\"\"\"|\'\'\'|\"|\')((?<!\\)\\\1|.)*?\1'''
     single_string_literal = r'(?:\'(?:[^\'\\n\\r\\\\]|(?:\'\')|(?:\\\\x[0-9a-fA-F]+)|(?:\\\\.))*\')'
     double_string_literal = r'(?:"(?:[^"\\n\\r\\\\]|(?:"")|(?:\\\\x[0-9a-fA-F]+)|(?:\\\\.))*")'
     string_literal = single_string_literal + '|' + double_string_literal
@@ -172,7 +168,6 @@ class Lexer(object):
         elif not v.startswith(i):
             self._error("indentation level does not match previous level", t)
         self.indent = v
-        #t.lexer.lineno += 1
         return t
 
     t_ENDMARKER = r'\x03'

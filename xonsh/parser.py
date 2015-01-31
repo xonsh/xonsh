@@ -86,34 +86,23 @@ class Parser(object):
             'vfpdef',
             'comma_vfpdef_list',
             'comma_pow_vfpdef',
-            #'semi',
-            #'comma',
-            #'semi_small_stmt_list',
-            #'comma_test_or_star_expr_list',
             'equals_yield_expr_or_testlist',
-            #'equals_yield_expr_or_testlist_list',
             'testlist',
             'as_name',
             'period_or_ellipsis_list',
             'comma_import_as_name_list',
             'comma_dotted_as_name_list',
-            #'period_name_list',
             'comma_name_list',
             'comma_test',
             'elif_part_list',
-            #'else_part',
             'finally_part',
-            #'as_expr',
-            #'comma_with_item_list',
             'varargslist',
             'or_and_test_list',
             'and_not_test_list',
             'comp_op_expr_list',
-            #'pipe_xor_expr_list',
             'xor_and_expr_list',
             'ampersand_shift_expr_list',
             'shift_arith_expr_list',
-            #'pm_term_list',
             'op_factor_list',
             'trailer_list',
             'testlist_comp',
@@ -122,13 +111,10 @@ class Parser(object):
             'comma_subscript_list',
             'test',
             'sliceop',
-            #'comma_expr_or_star_expr_list',
-            #'comma_test_list',
             'comp_iter',
             'yield_arg',
             'argument_comma_list',
             'comma_argument_list',
-            #'attr_period_name_list',
             'test_comma_list',
             )
         for rule in opt_rules:
@@ -139,7 +125,6 @@ class Parser(object):
             'comma_vfpdef',
             'semi_small_stmt',
             'comma_test_or_star_expr',
-            #'equals_yield_expr_or_testlist',
             'period_or_ellipsis',
             'comma_import_as_name',
             'comma_dotted_as_name',
@@ -296,8 +281,6 @@ class Parser(object):
     def p_single_input(self, p):
         """single_input : compound_stmt NEWLINE
         """
-#                        | NEWLINE 
-#                        | simple_stmt 
         p1 = p[1]
         if p1 == '\n':
             p1 = []
@@ -607,7 +590,6 @@ class Parser(object):
         """comma_vfpdef : COMMA 
                         | COMMA vfpdef equals_test_opt
         """
-#                        | comma_opt vfpdef equals_test_opt
         if len(p) == 2:
             p[0] = []
         else:
@@ -623,13 +605,9 @@ class Parser(object):
         """
         p[0] = p[1]
 
-    #def p_semi(self, p):
-    #    """semi : SEMI"""
-    #    p[0] = p[1]
-
     def p_semi_opt(self, p):
         """semi_opt : SEMI
-                    | 
+                    | empty
         """
         if len(p) == 2:
             p[0] = p[1]
@@ -642,7 +620,6 @@ class Parser(object):
         """simple_stmt : small_stmt semi_small_stmt_list semi_opt NEWLINE
                        | small_stmt semi_opt NEWLINE
         """
-#small_stmt semi_small_stmt_list_opt semi_opt NEWLINE
         p1, p2 = p[1], p[2]
         p0 = [p1]
         if p2 is not None and p2 != ';':
@@ -672,9 +649,6 @@ class Parser(object):
                      | test_comma_list_opt star_expr comma_test_list equals_yield_expr_or_testlist
                      | test_comma_list_opt star_expr comma_opt test_comma_list_opt equals_yield_expr_or_testlist
         """
-#                     | testlist_star_expr equals_yield_expr_or_testlist_list_opt
-#                     | test_comma_list_opt star_expr comma_test_list equals_yield_expr_or_testlist_list
-#                     | test_comma_list_opt star_expr comma_opt test_comma_list_opt equals_yield_expr_or_testlist_list
         lenp = len(p)
         p1, p2 = p[1], p[2]
         p1 = [] if p1 is None else p1
@@ -730,8 +704,6 @@ class Parser(object):
         """testlist_star_expr : test_or_star_expr comma_test_or_star_expr_list comma_opt 
                               | test_or_star_expr comma_opt
         """
-#        : test_or_star_expr comma_test_or_star_expr_list_opt comma_opt 
-#                              | test_or_star_expr comma_test_or_star_expr_list_opt
         lenp = len(p)
         p1, p2 = p[1], p[2]
         if p2 is None:
@@ -1069,7 +1041,6 @@ class Parser(object):
         """with_stmt : WITH with_item COLON suite
                      | WITH with_item comma_with_item_list COLON suite
         """
-        #"""with_stmt : WITH with_item comma_with_item_list_opt COLON suite"""
         p2, p3 = [p[2]], p[3]
         if len(p) == 5:
             body = p[4]
@@ -1118,7 +1089,6 @@ class Parser(object):
                  | NEWLINE indented_stmt_list 
                  | NEWLINE indented_stmt_list DEDENT
         """
-#                 | NEWLINE indented_stmt 
         p[0] = p[1] if len(p) == 2 else p[2]
 
     def p_test(self, p):
@@ -1573,7 +1543,6 @@ class Parser(object):
         """exprlist : expr_or_star_expr comma_expr_or_star_expr_list comma_opt
                     | expr_or_star_expr comma_opt
         """
-#expr_or_star_expr comma_expr_or_star_expr_list_opt comma_opt
         p1, p2 = p[1], p[2]
         p3 = p[3] if len(p) == 4 else None
         if p2 is None and p3 is None:
