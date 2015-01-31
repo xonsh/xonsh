@@ -132,6 +132,7 @@ class Parser(object):
             'attr_period_name_list',
             'test_or_star_expr_comma_list',
             'test_comma_list',
+            'pipe_xor_exprlist',
             )
         for rule in opt_rules:
             self._opt_rule(rule)
@@ -1125,7 +1126,7 @@ class Parser(object):
 
     def p_lambdef_nocond(self, p):
         """lambdef_nocond : LAMBDA varargslist_opt COLON test_nocond"""
-        p[0] = p[1:]
+        assert False
 
     def p_or_test(self, p):
         """or_test : and_test or_and_test_list_opt"""
@@ -1213,11 +1214,39 @@ class Parser(object):
 
     def p_expr(self, p):
         """expr : xor_expr pipe_xor_expr_list_opt"""
-        p[0] = p[1] if p[2] is None else p[1] + p[2]
+        p1, p2 = p[1], p[2]
+        if p2 is None:
+            p0 = p1
+        elif isinstance(p2, ast.BinOp):
+            p2.left = p1
+            p0 = p2
+        elif isinstance(p2, Sequence) and isinstance(p2[0], ast.BinOp):
+            p0 = p2[0]
+            p0.left = p1
+            for bop in p2[1:]:
+                bop.left = p0
+                p0 = bop
+        else:
+            p0 = p1 + p2
+        p[0] = p0
+
+    def p_pipe_xor_exprlist(self, p):
+        """pipe_xor_exprlist : pipe_xor_expr
+                             | pipe_xor_expr pipe_xor_exprlist
+        """
+        if len(p) == 2:
+            p0 = p[1]
+        else:
+            p2 = p[2]
+            p2.left = p[1]
+            p0 = ast.BinOp(left=p2, op=ast.BitOr(), right=None,
+                           lineno=self.lineno, col_offset=self.col)
+        p[0] = p0
 
     def p_pipe_xor_expr(self, p):
         """pipe_xor_expr : PIPE xor_expr"""
-        p[0] = p[1:]
+        p[0] = [ast.BinOp(left=None, op=ast.BitOr(), right=p[2], 
+                          lineno=self.lineno, col_offset=self.col)]
 
     def p_xor_expr(self, p):
         """xor_expr : and_expr xor_and_expr_list_opt"""

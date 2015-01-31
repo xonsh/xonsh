@@ -661,6 +661,11 @@ def test_dict_tuple_key_get():
 def test_dict_tuple_key_get_3():
     yield check_ast, '{(42, 1, 3): 65}[42, 1, 3]'
 
+def test_pipe_op():
+    yield check_ast, '{42} | {65}'
+
+def test_pipe_op_two():
+    yield check_ast, '{42} | {65} | {1}'
 
 #DEBUG_LEVEL = 1
 
@@ -743,8 +748,6 @@ def test_bare_x_stary():
 def test_bare_x_stary_z():
     yield check_stmts, 'x, *y, z = [1, 2, 2, 3]'
 
-#DEBUG_LEVEL = 1
-   
 def test_assert():
     yield check_stmts, 'assert True'
 
