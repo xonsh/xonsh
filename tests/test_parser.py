@@ -913,6 +913,27 @@ def test_while():
 def test_while_else():
     yield check_stmts, 'while False:\n  pass\nelse:\n  pass'
 
+def test_for():
+    yield check_stmts, 'for x in range(6):\n  pass'
+
+def test_for_zip():
+    yield check_stmts, 'for x, y in zip(range(6), "123456"):\n  pass'
+
+def test_for_idx():
+    yield check_stmts, 'x = [42]\nfor x[0] in range(3):\n  pass'
+
+def test_for_zip_idx():
+    yield check_stmts, ('x = [42]\nfor x[0], y in zip(range(6), "123456"):\n'
+                        '  pass')
+
+def test_for_attr():
+    yield check_stmts, 'for x.a in range(3):\n  pass', False
+
+def test_for_zip_attr():
+    yield check_stmts, 'for x.a, y in zip(range(6), "123456"):\n  pass', False
+
+def test_for_else():
+    yield check_stmts, 'for x in range(6):\n  pass\nelse:  pass'
 
 
 #DEBUG_LEVEL = 1

@@ -862,7 +862,17 @@ class Parser(object):
     def p_for_stmt(self, p):
         """for_stmt : FOR exprlist IN testlist COLON suite else_part_opt
         """
-        p[0] = p[1:]
+        p2 = p[2]
+        if len(p2) == 1:
+            p2 = p2[0]
+            p2.ctx = ast.Store()
+        else:
+            for x in p2:
+                x.ctx = ast.Store()
+            p2 = ast.Tuple(elts=p2, ctx=ast.Store(), lineno=self.lineno, 
+                           col_offset=self.col)
+        p[0] = [ast.For(target=p2, iter=p[4], body=p[6], orelse=p[7] or [], 
+                        lineno=self.lineno, col_offset=self.col)]
 
     def p_except_part(self, p):
         """except_part : except_clause COLON suite"""
@@ -911,11 +921,12 @@ class Parser(object):
                  | NEWLINE indented_stmt_list 
                  | NEWLINE indented_stmt_list DEDENT
         """
-        if len(p) > 2:
-            p0 = p[2]
-        else:
-            assert False
-        p[0] = p0
+        p[0] = p[1] if len(p) == 2 else p[2]
+        #if len(p) > 2:
+        #    p0 = p[2]
+        #else:
+        #    assert False
+        #p[0] = p0
 
     def p_test(self, p):
         """test : or_test 
