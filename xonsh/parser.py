@@ -381,14 +381,6 @@ class Parser(object):
                          | TIMES tfpdef_opt comma_pow_tfpdef_opt
                          | POW tfpdef
         """
-#            varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt
-#                        | vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt TIMES vfpdef_opt COMMA POW vfpdef
-#                        | vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt TIMES vfpdef_opt comma_vfpdef_list_opt 
-#                        | vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt TIMES vfpdef_opt comma_vfpdef_list COMMA POW vfpdef
-#                        | vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt POW vfpdef
-#                        | TIMES vfpdef_opt comma_vfpdef_list comma_pow_vfpdef_opt
-#                        | TIMES vfpdef_opt comma_pow_vfpdef_opt
-#                        | POW vfpdef
         lenp = len(p)
         p1, p2 = p[1], p[2]
         p3 = p[3] if lenp > 3 else None

@@ -1135,6 +1135,12 @@ def test_func_x_kwy_star_kwy():
 def test_func_x_star_y_kwargs():
     yield check_stmts, 'def f(x, *, y, **kwargs):\n  return 42'
 
+def test_func_tx():
+    yield check_stmts, 'def f(x:int):\n  return x'
+
+def test_func_txy():
+    yield check_stmts, 'def f(x:int, y:float=10.0):\n  return x'
+
 
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100
