@@ -664,29 +664,34 @@ class Parser(object):
         """expr_stmt : testlist_star_expr augassign yield_expr_or_testlist
                      | testlist_star_expr equals_yield_expr_or_testlist
                      | testlist_star_expr equals_yield_expr_or_testlist_list_opt
+                     | test_comma_list_opt star_expr comma_test_list equals_yield_expr_or_testlist_list
                      | test_comma_list_opt star_expr comma_opt test_comma_list_opt equals_yield_expr_or_testlist_list
         """
+        lenp = len(p)
         p1, p2 = p[1], p[2]
         p1 = [] if p1 is None else p1
         for targ in p1:
             store_ctx(targ)
-        if len(p) == 3:
+        if lenp == 3:
             p0 = ast.Assign(targets=p1, value=p2, lineno=self.lineno, 
                             col_offset=self.col)
-        elif len(p) == 4:
+        elif lenp == 4:
             op = self._augassign_op[p2]()
             p0 = ast.AugAssign(target=p1[0], op=op, value=p[3], 
                                lineno=self.lineno, col_offset=self.col)
-        elif len(p) == 6:
-            p4, p5 = (p[4] or []), p[5]
+        elif lenp == 5 or lenp == 6:
+            if lenp == 5:
+                targs, rhs = p[3], p[4]
+            else:
+                targs, rhs = (p[4] or []), p[5]
             store_ctx(p2)
-            for targ in p4:
+            for targ in targs:
                 store_ctx(targ)
             p1.append(p2)
-            p1.extend(p4)
+            p1.extend(targs)
             p1 = [ast.Tuple(elts=p1, ctx=ast.Store(), lineno=self.lineno, 
                             col_offset=self.col)]
-            p0 = ast.Assign(targets=p1, value=p5, lineno=self.lineno, 
+            p0 = ast.Assign(targets=p1, value=rhs, lineno=self.lineno, 
                             col_offset=self.col)
         else:
             assert False

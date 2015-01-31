@@ -740,6 +740,9 @@ def test_list_x_stary():
 def test_bare_x_stary():
     yield check_stmts, 'x, *y = [1, 2, 3]'
 
+def test_bare_x_stary_z():
+    yield check_stmts, 'x, *y, z = [1, 2, 2, 3]'
+
 #DEBUG_LEVEL = 1
    
 def test_assert():
