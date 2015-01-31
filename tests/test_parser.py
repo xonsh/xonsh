@@ -791,6 +791,15 @@ def test_bare_x_stary():
 def test_bare_x_stary_z():
     yield check_stmts, 'x, *y, z = [1, 2, 2, 3]'
 
+def test_equals_list():
+    yield check_stmts, 'x = [42]; x[0] = 65'
+
+def test_equals_dict():
+    yield check_stmts, 'x = {42: 65}; x[42] = 3'
+
+def test_equals_attr():
+    yield check_stmts, 'class X(object):\n  pass\nx = X()\nx.a = 65'
+
 def test_assert():
     yield check_stmts, 'assert True'
 
