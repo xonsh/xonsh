@@ -882,7 +882,7 @@ class Parser(object):
 
     def p_finally_part(self, p):
         """finally_part : FINALLY COLON suite"""
-        p[0] = p[1:]
+        p[0] = p[3]
 
     def p_try_stmt(self, p):
         """try_stmt : TRY COLON suite except_part_list else_part_opt finally_part_opt
@@ -895,7 +895,9 @@ class Parser(object):
             t.orelse = [] if p5 is None else p5
             t.finalbody = [] if p6 is None else p6
         else:
-            assert False
+            t.handlers = []
+            t.orelse = [] 
+            t.finalbody = p[4]
         p[0] = [t]
 
     def p_with_stmt(self, p):
@@ -928,7 +930,8 @@ class Parser(object):
             p0 = ast.ExceptHandler(type=None, name=None, lineno=self.lineno, 
                                    col_offset=self.col)
         else:
-            assert False
+            p0 = ast.ExceptHandler(type=p[2], name=p[3], lineno=self.lineno, 
+                                   col_offset=self.col)
         p[0] = p0
 
     def p_indented_stmt(self, p):

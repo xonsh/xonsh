@@ -953,6 +953,36 @@ def test_with_x_as_y_a_as_b():
 def test_try():
     yield check_stmts, 'try:\n  pass\nexcept:\n  pass', False
 
+def test_try_except_t():
+    yield check_stmts, 'try:\n  pass\nexcept TypeError:\n  pass', False
+
+def test_try_except_t_as_e():
+    yield check_stmts, 'try:\n  pass\nexcept TypeError as e:\n  pass', False
+
+def test_try_except_t_u():
+    yield check_stmts, 'try:\n  pass\nexcept (TypeError, SyntaxError):\n  pass', False
+
+def test_try_except_t_u_as_e():
+    yield check_stmts, 'try:\n  pass\nexcept (TypeError, SyntaxError) as e:\n  pass', False
+
+def test_try_except_t_except_u():
+    yield check_stmts, ('try:\n  pass\nexcept TypeError:\n  pass\n'
+                                      'except SyntaxError as f:\n  pass'), False
+
+def test_try_except_else():
+    yield check_stmts, 'try:\n  pass\nexcept:\n  pass\nelse:  pass', False
+
+def test_try_except_finally():
+    yield check_stmts, 'try:\n  pass\nexcept:\n  pass\nfinally:  pass', False
+
+def test_try_except_else_finally():
+    yield check_stmts, ('try:\n  pass\nexcept:\n  pass\nelse:\n  pass'
+                        '\nfinally:  pass'), False
+
+def test_try_finally():
+    yield check_stmts, 'try:\n  pass\nfinally:  pass', False
+
+
 
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100
