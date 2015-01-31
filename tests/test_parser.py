@@ -1000,7 +1000,6 @@ def test_func_rarrow():
 def test_func_x():
     yield check_stmts, 'def f(x):\n  return x'
 
-"""
 def test_func_kwx():
     yield check_stmts, 'def f(x=42):\n  return x'
 
@@ -1135,7 +1134,7 @@ def test_func_x_kwy_star_kwy():
 
 def test_func_x_star_y_kwargs():
     yield check_stmts, 'def f(x, *, y, **kwargs):\n  return 42'
-"""
+
 
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100

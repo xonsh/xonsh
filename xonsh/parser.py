@@ -445,12 +445,17 @@ class Parser(object):
         p[0] = ast.arg(arg=p[1], annotation=p[2])
 
     def p_comma_tfpdef(self, p):
-        """comma_tfpdef : COMMA tfpdef equals_test_opt"""
-        p[0] = p[1] + p[2] + p[3]
+        """comma_tfpdef : COMMA 
+                        | COMMA tfpdef equals_test_opt
+        """
+        if len(p) == 2:
+            p[0] = []
+        else:
+            p[0] = [{'arg': p[2], 'default': p[3]}]
 
     def p_comma_pow_tfpdef(self, p):
         """comma_pow_tfpdef : COMMA POW tfpdef"""
-        p[0] = p[1] + p[2] + p[3]
+        p[0] = p[3]
 
     def _set_args_def(self, argmts, vals, kwargs=False):
         args, defs = (argmts.kwonlyargs, argmts.kw_defaults) if kwargs else \
