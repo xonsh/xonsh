@@ -365,8 +365,6 @@ class Parser(object):
         if p2 is None:
             p2 = ast.arguments(args=[], vararg=None, kwonlyargs=[], 
                                kw_defaults=[], kwarg=None, defaults=[])
-        else:
-            assert False
         p[0] = p2
 
     def p_equals_test(self, p):
@@ -374,23 +372,77 @@ class Parser(object):
         p[0] = p[2]
 
     def p_typedargslist(self, p):
-        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt 
-                         | tfpdef equals_test_opt comma_tfpdef_list_opt COMMA 
-                         | tfpdef equals_test_opt comma_tfpdef_list_opt COMMA TIMES tfpdef_opt comma_tfpdef_list_opt 
-                         | tfpdef equals_test_opt comma_tfpdef_list_opt COMMA TIMES tfpdef_opt comma_tfpdef_list_opt EQUALS POW tfpdef
-                         | tfpdef equals_test_opt comma_tfpdef_list_opt COMMA POW tfpdef
-                         | TIMES tfpdef_opt comma_tfpdef_list_opt comma_pow_tfpdef_opt
+        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt
+                         | tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt TIMES tfpdef_opt COMMA POW vfpdef
+                         | tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt TIMES tfpdef_opt comma_tfpdef_list_opt 
+                         | tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt TIMES tfpdef_opt comma_tfpdef_list COMMA POW tfpdef
+                         | tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt POW tfpdef
+                         | TIMES tfpdef_opt comma_tfpdef_list comma_pow_tfpdef_opt
+                         | TIMES tfpdef_opt comma_pow_tfpdef_opt
                          | POW tfpdef
         """
-        p[0] = p[1:]
+#            varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt
+#                        | vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt TIMES vfpdef_opt COMMA POW vfpdef
+#                        | vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt TIMES vfpdef_opt comma_vfpdef_list_opt 
+#                        | vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt TIMES vfpdef_opt comma_vfpdef_list COMMA POW vfpdef
+#                        | vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt POW vfpdef
+#                        | TIMES vfpdef_opt comma_vfpdef_list comma_pow_vfpdef_opt
+#                        | TIMES vfpdef_opt comma_pow_vfpdef_opt
+#                        | POW vfpdef
+        lenp = len(p)
+        p1, p2 = p[1], p[2]
+        p3 = p[3] if lenp > 3 else None
+        p4 = p[4] if lenp > 4 else None
+        p5 = p[5] if lenp > 5 else None
+        p6 = p[6] if lenp > 6 else None
+        p7 = p[7] if lenp > 7 else None
+        p8 = p[8] if lenp > 8 else None
+        p9 = p[9] if lenp > 9 else None
+        p10 = p[10] if lenp > 10 else None
+        p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[], 
+                       kwarg=None, defaults=[])
+        if lenp == 3:
+            p0.kwarg = p2
+        elif lenp == 4:
+            self._set_var_args(p0, p2, None)
+            p0.kwarg = p3
+        elif lenp == 5 and p1 != '*':
+            # x
+            self._set_regular_args(p0, p1, p2, p3, p4)
+        elif lenp == 5 and p1 == '*':
+            self._set_var_args(p0, p2, p3)  # *args
+            if p4 is not None:
+                # *args, x, **kwargs
+                p0.kwarg = p4
+        elif lenp == 7:
+            # x, **kwargs
+            self._set_regular_args(p0, p1, p2, p3, p4)
+            p0.kwarg = p[6]
+        elif lenp == 8:
+            # x, *args
+            self._set_regular_args(p0, p1, p2, p3, p4)
+            self._set_var_args(p0, p6, p7)
+        elif lenp == 10:
+            # x, *args, **kwargs
+            self._set_regular_args(p0, p1, p2, p3, p4)
+            self._set_var_args(p0, p6, None)
+            p0.kwarg = p9
+        elif lenp == 11:
+            # x, *args, **kwargs
+            self._set_regular_args(p0, p1, p2, p3, p4)
+            self._set_var_args(p0, p6, p7)
+            p0.kwarg = p10
+        else:
+            assert False
+        p[0] = p0
 
     def p_colon_test(self, p):
         """colon_test : COLON test"""
-        p[0] = p[1] + p[2]
+        p[0] = p[2]
 
     def p_tfpdef(self, p):
         """tfpdef : NAME colon_test_opt"""
-        p[0] = p[1] + p[1]
+        p[0] = ast.arg(arg=p[1], annotation=p[2])
 
     def p_comma_tfpdef(self, p):
         """comma_tfpdef : COMMA tfpdef equals_test_opt"""
@@ -412,18 +464,18 @@ class Parser(object):
     def _set_regular_args(self, p0, p1, p2, p3, p4):
         if p2 is None and p3 is None:
             # x
-            p0.args.append(ast.arg(arg=p1, annotation=None))
+            p0.args.append(p1)
         elif p2 is not None and p3 is None:
             # x=42
-            p0.args.append(ast.arg(arg=p1, annotation=None))
+            p0.args.append(p1)
             p0.defaults.append(p2)
         elif p2 is None and p3 is not None:
             # x, y and x, y=42
-            p0.args.append(ast.arg(arg=p1, annotation=None))
+            p0.args.append(p1)
             self._set_args_def(p0, p3)
         else:
             # x=42, y=42
-            p0.args.append(ast.arg(arg=p1, annotation=None))
+            p0.args.append(p1)
             p0.defaults.append(p2)
             self._set_args_def(p0, p3)
 
@@ -432,11 +484,11 @@ class Parser(object):
             self._set_args_def(p0, kwargs, kwargs=True)
         elif vararg is not None and kwargs is None:
             # *args
-            p0.vararg = ast.arg(arg=vararg, annotation=None)
+            p0.vararg = vararg
         elif vararg is not None and kwargs is not None:
             # *args, x and *args, x, y and *args, x=10 and *args, x=10, y
             # and *args, x, y=10, and *args, x=42, y=65 
-            p0.vararg = ast.arg(arg=vararg, annotation=None)
+            p0.vararg = vararg
             self._set_args_def(p0, kwargs, kwargs=True)
         else:
             assert False
@@ -464,7 +516,7 @@ class Parser(object):
         p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[], 
                        kwarg=None, defaults=[])
         if lenp == 3:
-            p0.kwarg = ast.arg(arg=p2, annotation=None)
+            p0.kwarg = p2
         elif lenp == 4:
             self._set_var_args(p0, p2, None)
             p0.kwarg = p3
@@ -479,7 +531,7 @@ class Parser(object):
         elif lenp == 7:
             # x, **kwargs
             self._set_regular_args(p0, p1, p2, p3, p4)
-            p0.kwarg = ast.arg(arg=p6, annotation=None)
+            p0.kwarg = p6
         elif lenp == 8:
             # x, *args
             self._set_regular_args(p0, p1, p2, p3, p4)
@@ -488,19 +540,19 @@ class Parser(object):
             # x, *args, **kwargs
             self._set_regular_args(p0, p1, p2, p3, p4)
             self._set_var_args(p0, p6, None)
-            p0.kwarg = ast.arg(arg=p9, annotation=None)
+            p0.kwarg = p9
         elif lenp == 11:
             # x, *args, **kwargs
             self._set_regular_args(p0, p1, p2, p3, p4)
             self._set_var_args(p0, p6, p7)
-            p0.kwarg = ast.arg(arg=p10, annotation=None)
+            p0.kwarg = p10
         else:
             assert False
         p[0] = p0
 
     def p_vfpdef(self, p):
         """vfpdef : NAME"""
-        p[0] = p[1]
+        p[0] = ast.arg(arg=p[1], annotation=None)
 
     def p_comma_vfpdef(self, p):
         """comma_vfpdef : COMMA 
@@ -509,11 +561,11 @@ class Parser(object):
         if len(p) == 2:
             p[0] = []
         else:
-            p[0] = [{'arg': ast.arg(arg=p[2], annotation=None), 'default': p[3]}]
+            p[0] = [{'arg': p[2], 'default': p[3]}]
 
     def p_comma_pow_vfpdef(self, p):
         """comma_pow_vfpdef : COMMA POW vfpdef"""
-        p[0] = ast.arg(arg=p[3], annotation=None)
+        p[0] = p[3]
 
     def p_stmt(self, p):
         """stmt : simple_stmt 

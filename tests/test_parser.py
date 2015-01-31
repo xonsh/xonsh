@@ -997,7 +997,145 @@ def test_func_ret_42_65():
 def test_func_rarrow():
     yield check_stmts, 'def f() -> int:\n  pass'
 
+def test_func_x():
+    yield check_stmts, 'def f(x):\n  return x'
 
+"""
+def test_func_kwx():
+    yield check_stmts, 'def f(x=42):\n  return x'
+
+def test_func_x_y():
+    yield check_stmts, 'def f(x, y):\n  return x'
+
+def test_func_x_y():
+    yield check_stmts, 'def f(x, y):\n  return x'
+
+def test_func_x_y_z():
+    yield check_stmts, 'def f(x, y, z):\n  return x'
+
+def test_func_x_y():
+    yield check_stmts, 'def f(x, y):\n  return x'
+
+def test_func_x_kwy():
+    yield check_stmts, 'def f(x, y=42):\n  return x'
+
+def test_func_kwx_kwy():
+    yield check_stmts, 'def f(x=65, y=42):\n  return x'
+
+def test_func_kwx_kwy_kwz():
+    yield check_stmts, 'def f(x=65, y=42, z=1):\n  return x'
+
+def test_func_x_comma():
+    yield check_stmts, 'def f(x,):\n  return x'
+
+def test_func_x_y_comma():
+    yield check_stmts, 'def f(x, y,):\n  return x'
+
+def test_func_x_y_z_comma():
+    yield check_stmts, 'def f(x, y, z,):\n  return x'
+
+def test_func_x_y_comma():
+    yield check_stmts, 'def f(x, y,):\n  return x'
+
+def test_func_x_kwy_comma():
+    yield check_stmts, 'def f(x, y=42,):\n  return x'
+
+def test_func_kwx_kwy_comma():
+    yield check_stmts, 'def f(x=65, y=42,):\n  return x'
+
+def test_func_kwx_kwy_kwz_comma():
+    yield check_stmts, 'def f(x=65, y=42, z=1,):\n  return x'
+
+def test_func_args():
+    yield check_stmts, 'def f(*args):\n  return 42'
+
+def test_func_args_x():
+    yield check_stmts, 'def f(*args, x):\n  return 42'
+
+def test_func_args_x_y():
+    yield check_stmts, 'def f(*args, x, y):\n  return 42'
+
+def test_func_args_x_kwy():
+    yield check_stmts, 'def f(*args, x, y=10):\n  return 42'
+
+def test_func_args_kwx_y():
+    yield check_stmts, 'def f(*args, x=10, y):\n  return 42'
+
+def test_func_args_kwx_kwy():
+    yield check_stmts, 'def f(*args, x=42, y=65):\n  return 42'
+
+def test_func_x_args():
+    yield check_stmts, 'def f(x, *args):\n  return 42'
+
+def test_func_x_args_y():
+    yield check_stmts, 'def f(x, *args, y):\n  return 42'
+
+def test_func_x_args_y_z():
+    yield check_stmts, 'def f(x, *args, y, z):\n  return 42'
+
+def test_func_kwargs():
+    yield check_stmts, 'def f(**kwargs):\n  return 42'
+
+def test_func_x_kwargs():
+    yield check_stmts, 'def f(x, **kwargs):\n  return 42'
+
+def test_func_x_y_kwargs():
+    yield check_stmts, 'def f(x, y, **kwargs):\n  return 42'
+
+def test_func_x_kwy_kwargs():
+    yield check_stmts, 'def f(x, y=42, **kwargs):\n  return 42'
+
+def test_func_args_kwargs():
+    yield check_stmts, 'def f(*args, **kwargs):\n  return 42'
+
+def test_func_x_args_kwargs():
+    yield check_stmts, 'def f(x, *args, **kwargs):\n  return 42'
+
+def test_func_x_y_args_kwargs():
+    yield check_stmts, 'def f(x, y, *args, **kwargs):\n  return 42'
+
+def test_func_kwx_args_kwargs():
+    yield check_stmts, 'def f(x=10, *args, **kwargs):\n  return 42'
+
+def test_func_x_kwy_args_kwargs():
+    yield check_stmts, 'def f(x, y=42, *args, **kwargs):\n  return 42'
+
+def test_func_x_args_y_kwargs():
+    yield check_stmts, 'def f(x, *args, y, **kwargs):\n  return 42'
+
+def test_func_x_args_kwy_kwargs():
+    yield check_stmts, 'def f(x, *args, y=42, **kwargs):\n  return 42'
+
+def test_func_args_y_kwargs():
+    yield check_stmts, 'def f(*args, y, **kwargs):\n  return 42'
+
+def test_func_star_x():
+    yield check_stmts, 'def f(*, x):\n  return 42'
+
+def test_func_star_x_y():
+    yield check_stmts, 'def f(*, x, y):\n  return 42'
+
+def test_func_star_x_kwargs():
+    yield check_stmts, 'def f(*, x, **kwargs):\n  return 42'
+
+def test_func_star_kwx_kwargs():
+    yield check_stmts, 'def f(*, x=42, **kwargs):\n  return 42'
+
+def test_func_x_star_y():
+    yield check_stmts, 'def f(x, *, y):\n  return 42'
+
+def test_func_x_y_star_z():
+    yield check_stmts, 'def f(x, y, *, z):\n  return 42'
+
+def test_func_x_kwy_star_y():
+    yield check_stmts, 'def f(x, y=42, *, z):\n  return 42'
+
+def test_func_x_kwy_star_kwy():
+    yield check_stmts, 'def f(x, y=42, *, z=65):\n  return 42'
+
+def test_func_x_star_y_kwargs():
+    yield check_stmts, 'def f(x, *, y, **kwargs):\n  return 42'
+"""
 
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100
