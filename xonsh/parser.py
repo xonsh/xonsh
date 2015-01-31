@@ -86,9 +86,9 @@ class Parser(object):
             'vfpdef',
             'comma_vfpdef_list',
             'comma_pow_vfpdef',
-            'semi',
-            'comma',
-            'semi_small_stmt_list',
+            #'semi',
+            #'comma',
+            #'semi_small_stmt_list',
             'comma_test_or_star_expr_list',
             'equals_yield_expr_or_testlist',
             #'equals_yield_expr_or_testlist_list',
@@ -103,7 +103,7 @@ class Parser(object):
             'elif_part_list',
             'else_part',
             'finally_part',
-            'as_expr',
+            #'as_expr',
             'comma_with_item_list',
             'varargslist',
             'or_and_test_list',
@@ -113,7 +113,7 @@ class Parser(object):
             'xor_and_expr_list',
             'ampersand_shift_expr_list',
             'shift_arith_expr_list',
-            'pm_term_list',
+            #'pm_term_list',
             'op_factor_list',
             'trailer_list',
             'testlist_comp',
@@ -122,7 +122,7 @@ class Parser(object):
             'comma_subscript_list',
             'test',
             'sliceop',
-            'comma_expr_or_star_expr_list',
+            #'comma_expr_or_star_expr_list',
             'comma_test_list',
             'comp_iter',
             'yield_arg',
@@ -602,8 +602,9 @@ class Parser(object):
 
     def p_comma_vfpdef(self, p):
         """comma_vfpdef : COMMA 
-                        | comma_opt vfpdef equals_test_opt
+                        | COMMA vfpdef equals_test_opt
         """
+#                        | comma_opt vfpdef equals_test_opt
         if len(p) == 2:
             p[0] = []
         else:
@@ -619,19 +620,26 @@ class Parser(object):
         """
         p[0] = p[1]
 
-    def p_semi(self, p):
-        """semi : SEMI"""
-        p[0] = p[1]
+    #def p_semi(self, p):
+    #    """semi : SEMI"""
+    #    p[0] = p[1]
+
+    def p_semi_opt(self, p):
+        """semi_opt : SEMI
+                    | 
+        """
+        if len(p) == 2:
+            p[0] = p[1]
 
     def p_semi_small_stmt(self, p):
         """semi_small_stmt : SEMI small_stmt"""
         p[0] = [p[2]]
 
     def p_simple_stmt(self, p):
-        """simple_stmt : small_stmt semi_small_stmt_list_opt semi_opt NEWLINE
-                       | small_stmt semi_small_stmt_list semi_opt NEWLINE
+        """simple_stmt : small_stmt semi_small_stmt_list semi_opt NEWLINE
                        | small_stmt semi_opt NEWLINE
         """
+#small_stmt semi_small_stmt_list_opt semi_opt NEWLINE
         p1, p2 = p[1], p[2]
         p0 = [p1]
         if p2 is not None and p2 != ';':
@@ -698,9 +706,12 @@ class Parser(object):
         """test_comma : test COMMA"""
         p[0] = [p[1]]
 
-    def p_comma(self, p):
-        """comma : COMMA"""
-        p[0] = p[1]
+    def p_comma_opt(self, p):
+        """comma_opt : COMMA
+                     | 
+        """
+        if len(p) == 2:
+            p[0] = p[1]
 
     def p_test_or_star_expr(self, p):
         """test_or_star_expr : test
@@ -1054,8 +1065,11 @@ class Parser(object):
         p[0] = p2
 
     def p_with_item(self, p):
-        """with_item : test as_expr_opt"""
-        p[0] = ast.withitem(context_expr=p[1], optional_vars=p[2])
+        """with_item : test
+                     | test as_expr
+        """
+        p2 = p[2] if len(p) > 2 else None
+        p[0] = ast.withitem(context_expr=p[1], optional_vars=p2)
 
     def p_comma_with_item(self, p):
         """comma_with_item : COMMA with_item"""
@@ -1261,8 +1275,10 @@ class Parser(object):
                           lineno=self.lineno, col_offset=self.col)]
 
     def p_arith_expr(self, p):
-        """arith_expr : term pm_term_list_opt"""
-        p2 = p[2]
+        """arith_expr : term 
+                      | term pm_term_list
+        """
+        p2 = p[2] if len(p) > 2 else None
         if p2 is None:
             p0 = p[1]
         elif len(p2) == 2: 
@@ -1531,10 +1547,10 @@ class Parser(object):
         p[0] = [p[2]]
 
     def p_exprlist(self, p):
-        """exprlist : expr_or_star_expr comma_expr_or_star_expr_list_opt comma_opt
-                    | expr_or_star_expr comma_expr_or_star_expr_list comma_opt
+        """exprlist : expr_or_star_expr comma_expr_or_star_expr_list comma_opt
                     | expr_or_star_expr comma_opt
         """
+#expr_or_star_expr comma_expr_or_star_expr_list_opt comma_opt
         p1, p2 = p[1], p[2]
         p3 = p[3] if len(p) == 4 else None
         if p2 is None and p3 is None:
