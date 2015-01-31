@@ -90,7 +90,8 @@ class Parser(object):
             'comma',
             'semi_small_stmt_list',
             'comma_test_or_star_expr_list',
-            'equals_yield_expr_or_testlist_list',
+            'equals_yield_expr_or_testlist',
+            #'equals_yield_expr_or_testlist_list',
             'testlist',
             'as_name',
             'period_or_ellipsis_list',
@@ -138,7 +139,7 @@ class Parser(object):
             'comma_vfpdef',
             'semi_small_stmt',
             'comma_test_or_star_expr',
-            'equals_yield_expr_or_testlist',
+            #'equals_yield_expr_or_testlist',
             'period_or_ellipsis',
             'comma_import_as_name',
             'comma_dotted_as_name',
@@ -656,11 +657,13 @@ class Parser(object):
 
     def p_expr_stmt(self, p):
         """expr_stmt : testlist_star_expr augassign yield_expr_or_testlist
-                     | testlist_star_expr equals_yield_expr_or_testlist
-                     | testlist_star_expr equals_yield_expr_or_testlist_list_opt
-                     | test_comma_list_opt star_expr comma_test_list equals_yield_expr_or_testlist_list
-                     | test_comma_list_opt star_expr comma_opt test_comma_list_opt equals_yield_expr_or_testlist_list
+                     | testlist_star_expr equals_yield_expr_or_testlist_opt
+                     | test_comma_list_opt star_expr comma_test_list equals_yield_expr_or_testlist
+                     | test_comma_list_opt star_expr comma_opt test_comma_list_opt equals_yield_expr_or_testlist
         """
+#                     | testlist_star_expr equals_yield_expr_or_testlist_list_opt
+#                     | test_comma_list_opt star_expr comma_test_list equals_yield_expr_or_testlist_list
+#                     | test_comma_list_opt star_expr comma_opt test_comma_list_opt equals_yield_expr_or_testlist_list
         lenp = len(p)
         p1, p2 = p[1], p[2]
         p1 = [] if p1 is None else p1
@@ -711,9 +714,9 @@ class Parser(object):
 
     def p_testlist_star_expr(self, p):
         """testlist_star_expr : test_or_star_expr comma_test_or_star_expr_list_opt comma_opt 
-                              | test_or_star_expr comma_test_or_star_expr_list_opt
                               | test_or_star_expr comma_opt
         """
+#                              | test_or_star_expr comma_test_or_star_expr_list_opt
         lenp = len(p)
         p1, p2 = p[1], p[2]
         if p2 is None:
@@ -1076,11 +1079,11 @@ class Parser(object):
 
     def p_suite(self, p):
         """suite : simple_stmt 
-                 | NEWLINE indented_stmt 
                  | NEWLINE indented_stmt DEDENT
                  | NEWLINE indented_stmt_list 
                  | NEWLINE indented_stmt_list DEDENT
         """
+#                 | NEWLINE indented_stmt 
         p[0] = p[1] if len(p) == 2 else p[2]
 
     def p_test(self, p):
