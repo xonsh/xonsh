@@ -293,10 +293,10 @@ class Parser(object):
         p[0] = p[1]
 
     def p_single_input(self, p):
-        """single_input : NEWLINE 
-                        | simple_stmt 
-                        | compound_stmt NEWLINE
+        """single_input : compound_stmt NEWLINE
         """
+#                        | NEWLINE 
+#                        | simple_stmt 
         p1 = p[1]
         if p1 == '\n':
             p1 = []
@@ -1451,7 +1451,6 @@ class Parser(object):
         """testlist_comp : test_or_star_expr comp_for 
                          | test_or_star_expr comma_opt
                          | test_or_star_expr comma_test_or_star_expr_list comma_opt
-                         | test_or_star_expr comma_test_or_star_expr_list_opt comma_opt
         """
         p1, p2 = p[1], p[2]
         p0 = ensure_has_elts(p1, lineno=self.lineno, col_offset=self.col)
