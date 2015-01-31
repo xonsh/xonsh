@@ -670,6 +670,46 @@ def test_pipe_op_two():
 def test_pipe_op_three():
     yield check_ast, '{42} | {65} | {1} | {7}'
 
+def test_xor_op():
+    yield check_ast, '{42} ^ {65}'
+
+def test_xor_op_two():
+    yield check_ast, '{42} ^ {65} ^ {1}'
+
+def test_xor_op_three():
+    yield check_ast, '{42} ^ {65} ^ {1} ^ {7}'
+
+def test_xor_pipe():
+    yield check_ast, '{42} ^ {65} | {1}'
+
+def test_amp_op():
+    yield check_ast, '{42} & {65}'
+
+def test_amp_op_two():
+    yield check_ast, '{42} & {65} & {1}'
+
+def test_amp_op_three():
+    yield check_ast, '{42} & {65} & {1} & {7}'
+
+def test_lshift_op():
+    yield check_ast, '42 << 65'
+
+def test_lshift_op_two():
+    yield check_ast, '42 << 65 << 1'
+
+def test_lshift_op_three():
+    yield check_ast, '42 << 65 << 1 << 7'
+
+def test_rshift_op():
+    yield check_ast, '42 >> 65'
+
+def test_rshift_op_two():
+    yield check_ast, '42 >> 65 >> 1'
+
+def test_rshift_op_three():
+    yield check_ast, '42 >> 65 >> 1 >> 7'
+
+
 #DEBUG_LEVEL = 1
 
 

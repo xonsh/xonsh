@@ -1211,9 +1211,8 @@ class Parser(object):
         p[0] = ast.Starred(value=p[2], ctx=ast.Load(), lineno=self.lineno, 
                            col_offset=self.col)
 
-    def p_expr(self, p):
-        """expr : xor_expr pipe_xor_expr_list_opt"""
-        p1, p2 = p[1], p[2]
+    def _binop_combine(self, p1, p2):
+        """Combines binary operations"""
         if p2 is None:
             p0 = p1
         elif isinstance(p2, ast.BinOp):
@@ -1227,7 +1226,11 @@ class Parser(object):
                 p0 = bop
         else:
             p0 = p1 + p2
-        p[0] = p0
+        return p0
+
+    def p_expr(self, p):
+        """expr : xor_expr pipe_xor_expr_list_opt"""
+        p[0] = self._binop_combine(p[1], p[2])
 
     def p_pipe_xor_expr(self, p):
         """pipe_xor_expr : PIPE xor_expr"""
@@ -1236,29 +1239,33 @@ class Parser(object):
 
     def p_xor_expr(self, p):
         """xor_expr : and_expr xor_and_expr_list_opt"""
-        p[0] = p[1] if p[2] is None else p[1] + p[2]
+        p[0] = self._binop_combine(p[1], p[2])
 
     def p_xor_and_expr(self, p):
         """xor_and_expr : XOR and_expr"""
-        p[0] = p[1:]
+        p[0] = [ast.BinOp(left=None, op=ast.BitXor(), right=p[2], 
+                          lineno=self.lineno, col_offset=self.col)]
 
     def p_and_expr(self, p):
         """and_expr : shift_expr ampersand_shift_expr_list_opt"""
-        p[0] = p[1] if p[2] is None else p[1] + p[2]
+        p[0] = self._binop_combine(p[1], p[2])
 
     def p_ampersand_shift_expr(self, p):
         """ampersand_shift_expr : AMPERSAND shift_expr"""
-        p[0] = p[1:]
+        p[0] = [ast.BinOp(left=None, op=ast.BitAnd(), right=p[2], 
+                          lineno=self.lineno, col_offset=self.col)]
 
     def p_shift_expr(self, p):
         """shift_expr : arith_expr shift_arith_expr_list_opt"""
-        p[0] = p[1] if p[2] is None else p[1] + p[2]
+        p[0] = self._binop_combine(p[1], p[2])
 
     def p_shift_arith_expr(self, p):
         """shift_arith_expr : LSHIFT arith_expr
                             | RSHIFT arith_expr
         """
-        p[0] = p[1:]
+        op = ast.LShift() if p[1] == '<<' else ast.RShift()
+        p[0] = [ast.BinOp(left=None, op=op, right=p[2], 
+                          lineno=self.lineno, col_offset=self.col)]
 
     def p_arith_expr(self, p):
         """arith_expr : term pm_term_list_opt"""
