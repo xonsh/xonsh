@@ -95,7 +95,7 @@ class Lexer(object):
     #
     tokens = pykeywords + (
         # Misc
-        'NAME', 'INDENT', 'DEDENT', 'NEWLINE', 'ENDMARKER', 'WHITESPACE',
+        'NAME', 'INDENT', 'DEDENT', 'NEWLINE', 'ENDMARKER', 
         'NONE', 'TRUE', 'FALSE',
 
         # literals
@@ -175,8 +175,6 @@ class Lexer(object):
         #t.lexer.lineno += 1
         return t
 
-    #t_ignore_WHITESPACE = r'[ \t]+'
-    #t_ignore_WHITESPACE = r'[^\n][ \t]+'
     t_ENDMARKER = r'\x03'
 
     # Newlines

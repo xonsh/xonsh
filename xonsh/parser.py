@@ -93,7 +93,6 @@ class Parser(object):
             'equals_yield_expr_or_testlist_list',
             'testlist',
             'as_name',
-            'period_or_ellipsis',
             'period_or_ellipsis_list',
             'comma_import_as_name_list',
             'comma_dotted_as_name_list',
@@ -124,20 +123,17 @@ class Parser(object):
             'sliceop',
             'comma_expr_or_star_expr_list',
             'comma_test_list',
-            'comp_for',
             'comp_iter',
             'yield_arg',
             'argument_comma_list',
             'comma_argument_list',
             'attr_period_name_list',
-            'test_or_star_expr_comma_list',
             'test_comma_list',
             )
         for rule in opt_rules:
             self._opt_rule(rule)
 
         list_rules = (
-            'stmt',
             'comma_tfpdef',
             'comma_vfpdef',
             'semi_small_stmt',
@@ -169,8 +165,6 @@ class Parser(object):
             'comma_item',
             'indented_stmt',
             'attr_period_name',
-            'test_or_star_expr_comma',
-            'test_or_star_expr',
             'test_comma',
             )
         for rule in list_rules:
@@ -714,10 +708,6 @@ class Parser(object):
     def p_comma_test_or_star_expr(self, p):
         """comma_test_or_star_expr : COMMA test_or_star_expr"""
         p[0] = [p[2]]
-
-    def p_test_or_star_expr_comma(self, p):
-        """test_or_star_expr_comma : test_or_star_expr COMMA"""
-        p[0] = [p[1]]
 
     def p_testlist_star_expr(self, p):
         """testlist_star_expr : test_or_star_expr comma_test_or_star_expr_list_opt comma_opt 
@@ -1747,11 +1737,11 @@ class Parser(object):
             p0['comps'] = p3.get('comps', [])
         p[0] = p0
 
-    def p_encoding_decl(self, p):
-        """encoding_decl : NAME"""
-        # not used in grammar, but may appear in "node" passed from 
-        # Parser to Compiler
-        p[0] = p[1]
+    #def p_encoding_decl(self, p):
+    #    """encoding_decl : NAME"""
+    #    # not used in grammar, but may appear in "node" passed from 
+    #    # Parser to Compiler
+    #    p[0] = p[1]
 
     def p_yield_expr(self, p):
         """yield_expr : YIELD yield_arg_opt"""
