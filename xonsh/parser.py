@@ -1042,11 +1042,6 @@ class Parser(object):
                  | NEWLINE indented_stmt_list DEDENT
         """
         p[0] = p[1] if len(p) == 2 else p[2]
-        #if len(p) > 2:
-        #    p0 = p[2]
-        #else:
-        #    assert False
-        #p[0] = p0
 
     def p_test(self, p):
         """test : or_test 
