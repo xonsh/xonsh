@@ -9,4 +9,4 @@ from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
     Del, Pass, Raise, Import, alias, ImportFrom, Continue, Break, Yield, \
     YieldFrom, Return, IfExp, Lambda, arguments, arg, Call, keyword, \
     Attribute, Global, Nonlocal, If, While, For, withitem, With, Try, \
-    ExceptHandler, FunctionDef
+    ExceptHandler, FunctionDef, ClassDef

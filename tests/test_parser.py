@@ -1141,6 +1141,22 @@ def test_func_tx():
 def test_func_txy():
     yield check_stmts, 'def f(x:int, y:float=10.0):\n  return x'
 
+def test_func_tx():
+    yield check_stmts, 'def f(x:int):\n  return x'
+
+def test_class():
+    yield check_stmts, 'class X:\n  pass'
+
+def test_class_obj():
+    yield check_stmts, 'class X(object):\n  pass'
+
+def test_class_int_flt():
+    yield check_stmts, 'class X(int, object):\n  pass'
+
+def test_class_obj():
+    # technically valid syntax, though it will fail to compile
+    yield check_stmts, 'class X(object=5):\n  pass', False
+
 
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100

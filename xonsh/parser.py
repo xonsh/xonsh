@@ -1522,7 +1522,12 @@ class Parser(object):
 
     def p_classdef(self, p):
         """classdef : CLASS NAME func_call_opt COLON suite"""
-        p[0] = p[1:]
+        p3 = p[3]
+        b, kw  = ([], []) if p3 is None else (p3['args'], p3['keywords'])
+        c = ast.ClassDef(name=p[2], bases=b, keywords=kw, starargs=None, 
+                         kwargs=None, body=p[5], decorator_list=[],
+                         lineno=self.lineno, col_offset=self.col)
+        p[0] = [c]
 
     def _set_arg(self, args, arg, ensure_kw=False):
         if isinstance(arg, ast.keyword):
