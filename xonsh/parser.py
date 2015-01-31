@@ -130,6 +130,8 @@ class Parser(object):
             'argument_comma_list',
             'comma_argument_list',
             'attr_period_name_list',
+            'test_or_star_expr_comma_list',
+            'test_comma_list',
             )
         for rule in opt_rules:
             self._opt_rule(rule)
@@ -167,6 +169,9 @@ class Parser(object):
             'comma_item',
             'indented_stmt',
             'attr_period_name',
+            'test_or_star_expr_comma',
+            'test_or_star_expr',
+            'test_comma',
             )
         for rule in list_rules:
             self._list_rule(rule)
@@ -656,10 +661,13 @@ class Parser(object):
                      '|=': ast.BitOr, '<<=': ast.LShift, '>>=': ast.RShift}
 
     def p_expr_stmt(self, p):
-        """expr_stmt : testlist_star_expr augassign yield_expr_or_testlist 
+        """expr_stmt : testlist_star_expr augassign yield_expr_or_testlist
+                     | testlist_star_expr equals_yield_expr_or_testlist
                      | testlist_star_expr equals_yield_expr_or_testlist_list_opt
+                     | test_comma_list_opt star_expr comma_opt test_comma_list_opt equals_yield_expr_or_testlist_list
         """
         p1, p2 = p[1], p[2]
+        p1 = [] if p1 is None else p1
         for targ in p1:
             store_ctx(targ)
         if len(p) == 3:
@@ -669,9 +677,24 @@ class Parser(object):
             op = self._augassign_op[p2]()
             p0 = ast.AugAssign(target=p1[0], op=op, value=p[3], 
                                lineno=self.lineno, col_offset=self.col)
+        elif len(p) == 6:
+            p4, p5 = (p[4] or []), p[5]
+            store_ctx(p2)
+            for targ in p4:
+                store_ctx(targ)
+            p1.append(p2)
+            p1.extend(p4)
+            p1 = [ast.Tuple(elts=p1, ctx=ast.Store(), lineno=self.lineno, 
+                            col_offset=self.col)]
+            p0 = ast.Assign(targets=p1, value=p5, lineno=self.lineno, 
+                            col_offset=self.col)
         else:
             assert False
         p[0] = p0
+
+    def p_test_comma(self, p):
+        """test_comma : test COMMA"""
+        p[0] = [p[1]]
 
     def p_comma(self, p):
         """comma : COMMA"""
@@ -687,10 +710,13 @@ class Parser(object):
         """comma_test_or_star_expr : COMMA test_or_star_expr"""
         p[0] = [p[2]]
 
+    def p_test_or_star_expr_comma(self, p):
+        """test_or_star_expr_comma : test_or_star_expr COMMA"""
+        p[0] = [p[1]]
+
     def p_testlist_star_expr(self, p):
         """testlist_star_expr : test_or_star_expr comma_test_or_star_expr_list_opt comma_opt 
                               | test_or_star_expr comma_test_or_star_expr_list_opt
-                              | test_or_star_expr comma_test_or_star_expr_list comma_opt
                               | test_or_star_expr comma_opt
         """
         lenp = len(p)
