@@ -89,7 +89,7 @@ class Parser(object):
             #'semi',
             #'comma',
             #'semi_small_stmt_list',
-            'comma_test_or_star_expr_list',
+            #'comma_test_or_star_expr_list',
             'equals_yield_expr_or_testlist',
             #'equals_yield_expr_or_testlist_list',
             'testlist',
@@ -123,7 +123,7 @@ class Parser(object):
             'test',
             'sliceop',
             #'comma_expr_or_star_expr_list',
-            'comma_test_list',
+            #'comma_test_list',
             'comp_iter',
             'yield_arg',
             'argument_comma_list',
@@ -711,7 +711,7 @@ class Parser(object):
 
     def p_comma_opt(self, p):
         """comma_opt : COMMA
-                     | 
+                     | empty
         """
         if len(p) == 2:
             p[0] = p[1]
@@ -727,9 +727,10 @@ class Parser(object):
         p[0] = [p[2]]
 
     def p_testlist_star_expr(self, p):
-        """testlist_star_expr : test_or_star_expr comma_test_or_star_expr_list_opt comma_opt 
+        """testlist_star_expr : test_or_star_expr comma_test_or_star_expr_list comma_opt 
                               | test_or_star_expr comma_opt
         """
+#        : test_or_star_expr comma_test_or_star_expr_list_opt comma_opt 
 #                              | test_or_star_expr comma_test_or_star_expr_list_opt
         lenp = len(p)
         p1, p2 = p[1], p[2]
