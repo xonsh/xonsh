@@ -31,14 +31,12 @@ class Lexer(object):
         self.fname = ''
         self.last = None
         self.lexer = None
-        #self.indent = '\n'
         self.indent = ''
 
     def build(self, **kwargs):
         """Part of the PLY lexer API."""
         self.lexer = lex.lex(object=self, **kwargs)
         self.lexer.lineno = 1
-        #self.indent = '\n'
         self.indent = ''
 
     @property
@@ -74,8 +72,10 @@ class Lexer(object):
         return (token.lineno, self.token_col(token))
 
     def __iter__(self):
-        for t in self.lexer:
+        t = self.token()
+        while t is not None:
             yield t
+            t = self.token()
 
     #
     # Python keywords
@@ -160,7 +160,8 @@ class Lexer(object):
     #
     def t_INDENT(self, t):
         r'[ \t]+'
-        if self.last.type != 'NEWLINE':
+        last = self.last
+        if last is not None and last.type != 'NEWLINE':
             return  # returns None to skip internal whitespace
         i = self.indent
         v = t.value
@@ -171,7 +172,7 @@ class Lexer(object):
         elif not v.startswith(i):
             self._error("indentation level does not match previous level", t)
         self.indent = v
-        t.lexer.lineno += 1
+        #t.lexer.lineno += 1
         return t
 
     #t_ignore_WHITESPACE = r'[ \t]+'
@@ -181,9 +182,6 @@ class Lexer(object):
     # Newlines
     def t_NEWLINE(self, t):
         r'\n+'
-        #if self.indent != '':
-        #    self.indent = ''
-        #    t.type = 'DEDENT'
         t.lexer.lineno += t.value.count("\n")
         return t
 

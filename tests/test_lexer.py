@@ -87,7 +87,8 @@ def test_bin_literal():
     yield check_token, '0b101010', ['BIN_LITERAL', int('0b101010', 2), 1, 0]
 
 def test_indent():
-    exp = [('INDENT', '  \t  ', 1, 0), ('INT_LITERAL', 42, 1, 5)]
+    exp = [('INDENT', '  \t  ', 1, 0), 
+           ('INT_LITERAL', 42, 1, 5)]
     yield check_tokens, '  \t  42', exp
 
 def test_post_whitespace():
@@ -100,14 +101,6 @@ def test_internal_whitespace():
     exp = [('INT_LITERAL', 42, 1, 0), 
            ('PLUS', '+', 1, 4),
            ('INT_LITERAL', 65, 1, 6),]
-    yield check_tokens, input, exp
-
-def test_indent_internal_whitespace():
-    input = ' 42  +\t65'
-    exp = [('INDENT', ' ', 1, 0),
-           ('INT_LITERAL', 42, 1, 1), 
-           ('PLUS', '+', 1, 5),
-           ('INT_LITERAL', 65, 1, 7),]
     yield check_tokens, input, exp
 
 def test_indent_internal_whitespace():
