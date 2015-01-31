@@ -667,6 +667,9 @@ def test_pipe_op():
 def test_pipe_op_two():
     yield check_ast, '{42} | {65} | {1}'
 
+def test_pipe_op_three():
+    yield check_ast, '{42} | {65} | {1} | {7}'
+
 #DEBUG_LEVEL = 1
 
 

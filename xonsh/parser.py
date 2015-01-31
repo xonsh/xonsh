@@ -132,7 +132,6 @@ class Parser(object):
             'attr_period_name_list',
             'test_or_star_expr_comma_list',
             'test_comma_list',
-            'pipe_xor_exprlist',
             )
         for rule in opt_rules:
             self._opt_rule(rule)
@@ -1228,19 +1227,6 @@ class Parser(object):
                 p0 = bop
         else:
             p0 = p1 + p2
-        p[0] = p0
-
-    def p_pipe_xor_exprlist(self, p):
-        """pipe_xor_exprlist : pipe_xor_expr
-                             | pipe_xor_expr pipe_xor_exprlist
-        """
-        if len(p) == 2:
-            p0 = p[1]
-        else:
-            p2 = p[2]
-            p2.left = p[1]
-            p0 = ast.BinOp(left=p2, op=ast.BitOr(), right=None,
-                           lineno=self.lineno, col_offset=self.col)
         p[0] = p0
 
     def p_pipe_xor_expr(self, p):
