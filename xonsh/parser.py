@@ -890,19 +890,25 @@ class Parser(object):
 
     def p_with_stmt(self, p):
         """with_stmt : WITH with_item comma_with_item_list_opt COLON suite"""
-        p[0] = p[1:]
+        p2, p3 = [p[2]], p[3]
+        if p3 is not None:
+            p2 += p3
+        p[0] = [ast.With(items=p2, body=p[5], lineno=self.lineno, 
+                         col_offset=self.col)]
 
     def p_as_expr(self, p):
         """as_expr : AS expr"""
-        p[0] = p[1:]
+        p2 = p[2]
+        p2.ctx = ast.Store()
+        p[0] = p2
 
     def p_with_item(self, p):
         """with_item : test as_expr_opt"""
-        p[0] = p[1:]
+        p[0] = ast.withitem(context_expr=p[1], optional_vars=p[2])
 
     def p_comma_with_item(self, p):
         """comma_with_item : COMMA with_item"""
-        p[0] = p[1:]
+        p[0] = [p[2]]
 
     def p_except_clause(self, p):
         """except_clause : EXCEPT 

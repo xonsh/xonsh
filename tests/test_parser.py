@@ -935,6 +935,21 @@ def test_for_zip_attr():
 def test_for_else():
     yield check_stmts, 'for x in range(6):\n  pass\nelse:  pass'
 
+def test_with():
+    yield check_stmts, 'with x:\n  pass', False
+
+def test_with_as():
+    yield check_stmts, 'with x as y:\n  pass', False
+
+def test_with_xy():
+    yield check_stmts, 'with x, y:\n  pass', False
+
+def test_with_x_as_y_z():
+    yield check_stmts, 'with x as y, z:\n  pass', False
+
+def test_with_x_as_y_a_as_b():
+    yield check_stmts, 'with x as y, a as b:\n  pass', False
+
 
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100
