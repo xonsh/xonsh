@@ -81,7 +81,9 @@ class Lexer(object):
     # Python keywords
     #
     pykeywords = ('AND', 'AS', 'ASSERT', 'BREAK', 'CLASS', 'CONTINUE', 'DEF', 
-        'DEL', 'ELIF', 'ELSE', 'EXCEPT', 'EXEC', 'FINALLY', 'FOR', 'FROM', 
+        'DEL', 'ELIF', 'ELSE', 'EXCEPT', 
+        #'EXEC', 
+        'FINALLY', 'FOR', 'FROM', 
         'GLOBAL', 'IMPORT', 'IF', 'IN', 'IS', 'LAMBDA', 'NONLOCAL', 'NOT', 
         'OR', 'PASS', 'RAISE', 'RETURN', 'TRY', 'WHILE', 'WITH', 'YIELD',)
 
@@ -103,8 +105,11 @@ class Lexer(object):
         # Basic Operators
         'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'DOUBLEDIV', 'MOD', 'POW', 
         'PIPE', 'AMPERSAND', 'TILDE', 'XOR', 'LSHIFT', 'RSHIFT',
-        'LOGIC_OR', 'LOGIC_AND', 'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',
-        'LARROW', 'RARROW',
+        #'LOGIC_OR', 
+        #'LOGIC_AND', 
+        'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',
+        #'LARROW', 
+        'RARROW',
 
         # Assignment Operators
         'EQUALS', 'PLUSEQUAL', 'MINUSEQUAL', 'TIMESEQUAL', 'DIVEQUAL', 
@@ -112,7 +117,7 @@ class Lexer(object):
         'XOREQUAL', 'PIPEEQUAL', 'DOUBLEDIVEQUAL',
 
         # Command line
-        'CLI_OPTION', 
+        #'CLI_OPTION', 
 
         # Delimeters
         'LPAREN', 'RPAREN',      # ( )
@@ -120,7 +125,8 @@ class Lexer(object):
         'LBRACE', 'RBRACE',      # { }
         'COMMA', 'PERIOD',       # . ,
         'SEMI', 'COLON',         # ; :
-        'AT', 'DOLLAR',          # @ $
+        'AT',                    # @
+        #'DOLLAR',                # $
         'COMMENT',               # #
 
         # Ellipsis (...)
@@ -192,15 +198,15 @@ class Lexer(object):
     t_XOR = r'\^'
     t_LSHIFT = r'<<'
     t_RSHIFT = r'>>'
-    t_LOGIC_OR = r'\|\|'
-    t_LOGIC_AND = r'&&'
+    #t_LOGIC_OR = r'\|\|'
+    #t_LOGIC_AND = r'&&'
     t_LT = r'<'
     t_GT = r'>'
     t_LE = r'<='
     t_GE = r'>='
     t_EQ = r'=='
     t_NE = r'!='
-    t_LARROW = r'<-'
+    #t_LARROW = r'<-'
     t_RARROW = r'->'
 
     # Assignment Operators
@@ -230,7 +236,7 @@ class Lexer(object):
     t_SEMI = r';'
     t_COLON = r':'
     t_AT = r'@'
-    t_DOLLAR = r'\$'
+    #t_DOLLAR = r'\$'
     t_ignore_COMMENT = r'\#.*$'
     t_ELLIPSIS = r'\.\.\.'
 

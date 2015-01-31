@@ -253,8 +253,8 @@ class Parser(object):
     # Precedence of operators
     #
     precedence = (
-        ('left', 'LOGIC_OR'),
-        ('left', 'LOGIC_AND'),
+        #('left', 'LOGIC_OR'),
+        #('left', 'LOGIC_AND'),
         ('left', 'PIPE'),
         ('left', 'XOR'),
         ('left', 'AMPERSAND'),
