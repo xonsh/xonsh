@@ -731,9 +731,12 @@ def test_stary_eq():
 def test_stary_x():
     yield check_stmts, '*y, x = [1, 2, 3]'
  
-def test_x_stary():
-    yield check_stmts, 'x, *y = [1, 2, 3]'
+def test_tuple_x_stary():
+    yield check_stmts, '(x, *y) = [1, 2, 3]'
  
+def test_list_x_stary():
+    yield check_stmts, '[x, *y] = [1, 2, 3]'
+
 #DEBUG_LEVEL = 1
    
 def test_assert():

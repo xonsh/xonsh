@@ -42,7 +42,7 @@ def store_ctx(x):
     if not hasattr(x, 'ctx'):
         return
     x.ctx = ast.Store()
-    if isinstance(x, ast.Tuple):
+    if isinstance(x, (ast.Tuple, ast.List)):
         for e in x.elts:
             store_ctx(e)
     elif isinstance(x, ast.Starred):
@@ -688,9 +688,9 @@ class Parser(object):
         p[0] = [p[2]]
 
     def p_testlist_star_expr(self, p):
-        """testlist_star_expr : test_or_star_expr comma_test_or_star_expr_list_opt comma_opt    
+        """testlist_star_expr : test_or_star_expr comma_test_or_star_expr_list_opt comma_opt 
+                              | test_or_star_expr comma_test_or_star_expr_list_opt
                               | test_or_star_expr comma_test_or_star_expr_list comma_opt
-                              | test_or_star_expr comma_test_or_star_expr_list
                               | test_or_star_expr comma_opt
         """
         lenp = len(p)
