@@ -876,7 +876,9 @@ class Parser(object):
 
     def p_except_part(self, p):
         """except_part : except_clause COLON suite"""
-        p[0] = p[1:]
+        p0 = p[1]
+        p0.body = p[3]
+        p[0] = [p0]
 
     def p_finally_part(self, p):
         """finally_part : FINALLY COLON suite"""
@@ -886,7 +888,15 @@ class Parser(object):
         """try_stmt : TRY COLON suite except_part_list else_part_opt finally_part_opt
                     | TRY COLON suite finally_part
         """
-        p[0] = p[1:]
+        t = ast.Try(body=p[3], lineno=self.lineno, col_offset=self.col) 
+        if len(p) == 7:
+            p5, p6 = p[5], p[6]
+            t.handlers = p[4]
+            t.orelse = [] if p5 is None else p5
+            t.finalbody = [] if p6 is None else p6
+        else:
+            assert False
+        p[0] = [t]
 
     def p_with_stmt(self, p):
         """with_stmt : WITH with_item comma_with_item_list_opt COLON suite"""
@@ -914,7 +924,12 @@ class Parser(object):
         """except_clause : EXCEPT 
                          | EXCEPT test as_name_opt
         """
-        p[0] = p[1:]
+        if len(p) == 2:
+            p0 = ast.ExceptHandler(type=None, name=None, lineno=self.lineno, 
+                                   col_offset=self.col)
+        else:
+            assert False
+        p[0] = p0
 
     def p_indented_stmt(self, p):
         """indented_stmt : INDENT stmt"""

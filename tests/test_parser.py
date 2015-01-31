@@ -950,6 +950,9 @@ def test_with_x_as_y_z():
 def test_with_x_as_y_a_as_b():
     yield check_stmts, 'with x as y, a as b:\n  pass', False
 
+def test_try():
+    yield check_stmts, 'try:\n  pass\nexcept:\n  pass', False
+
 
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100
