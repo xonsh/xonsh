@@ -36,7 +36,18 @@ def ensure_has_elts(x, lineno=1, col_offset=1):
         x = ast.Tuple(elts=x, ctx=ast.Load(), lineno=lineno, 
                       col_offset=col_offset)
     return x
-    
+
+def store_ctx(x):
+    """Recursively sets ctx to ast.Store()"""
+    if not hasattr(x, 'ctx'):
+        return
+    x.ctx = ast.Store()
+    if isinstance(x, ast.Tuple):
+        for e in x.elts:
+            store_ctx(e)
+    elif isinstance(x, ast.Starred):
+        store_ctx(x.value)
+
 
 class Parser(object):
     """A class that parses the xonsh language."""
@@ -650,7 +661,7 @@ class Parser(object):
         """
         p1, p2 = p[1], p[2]
         for targ in p1:
-            targ.ctx = ast.Store()
+            store_ctx(targ)
         if len(p) == 3:
             p0 = ast.Assign(targets=p1, value=p2, lineno=self.lineno, 
                             col_offset=self.col)
@@ -677,13 +688,21 @@ class Parser(object):
         p[0] = [p[2]]
 
     def p_testlist_star_expr(self, p):
-        """testlist_star_expr : test_or_star_expr comma_test_or_star_expr_list_opt comma_opt
+        """testlist_star_expr : test_or_star_expr comma_test_or_star_expr_list_opt comma_opt    
+                              | test_or_star_expr comma_test_or_star_expr_list comma_opt
+                              | test_or_star_expr comma_test_or_star_expr_list
+                              | test_or_star_expr comma_opt
         """
-        p1, p2, p3 = p[1], p[2], p[3]
-        if p2 is None and p3 is None:
+        lenp = len(p)
+        p1, p2 = p[1], p[2]
+        if p2 is None:
             p0 = [p1]
+        elif p2 == ',':
+            p0 = [ast.Tuple(elts=[p1], ctx=ast.Load(), lineno=self.lineno,
+                            col_offset=self.col)]
         else:
-            assert False
+            p0 = [ast.Tuple(elts=[p1] + p2, ctx=ast.Load(), lineno=self.lineno,
+                            col_offset=self.col)]
         p[0] = p0
 
     def p_augassign(self, p):
@@ -961,10 +980,10 @@ class Parser(object):
         p2 = p[2]
         if len(p2) == 1:
             p2 = p2[0]
-            p2.ctx = ast.Store()
+            store_ctx(p2)
         else:
             for x in p2:
-                x.ctx = ast.Store()
+                store_ctx(x)
             p2 = ast.Tuple(elts=p2, ctx=ast.Store(), lineno=self.lineno, 
                            col_offset=self.col)
         p[0] = [ast.For(target=p2, iter=p[4], body=p[6], orelse=p[7] or [], 
@@ -1007,7 +1026,7 @@ class Parser(object):
     def p_as_expr(self, p):
         """as_expr : AS expr"""
         p2 = p[2]
-        p2.ctx = ast.Store()
+        store_ctx(p2)
         p[0] = p2
 
     def p_with_item(self, p):
@@ -1158,7 +1177,8 @@ class Parser(object):
 
     def p_star_expr(self, p):
         """star_expr : TIMES expr"""
-        p[0] = p[1:]
+        p[0] = ast.Starred(value=p[2], ctx=ast.Load(), lineno=self.lineno, 
+                           col_offset=self.col)
 
     def p_expr(self, p):
         """expr : xor_expr pipe_xor_expr_list_opt"""
@@ -1657,7 +1677,7 @@ class Parser(object):
         if len(targs) != 1:
             assert False
         targ = targs[0]
-        targ.ctx = ast.Store()
+        store_ctx(targ)
         comp = ast.comprehension(target=targ, iter=it, ifs=[])
         comps = [comp]
         p0 = {'comps': comps}

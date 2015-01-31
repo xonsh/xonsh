@@ -662,8 +662,6 @@ def test_dict_tuple_key_get_3():
     yield check_ast, '{(42, 1, 3): 65}[42, 1, 3]'
 
 
-
-
 #DEBUG_LEVEL = 1
 
 
@@ -727,9 +725,17 @@ def test_lshift_eq():
 def test_rshift_eq():
     yield check_stmts, 'x = 42; x >>= 2'
 
-def test_assert():
-    yield check_stmts, '1assert True'
+def test_stary_eq():
+    yield check_stmts, '*y, = [1, 2, 3]'
 
+def test_stary_x():
+    yield check_stmts, '*y, x = [1, 2, 3]'
+ 
+def test_x_stary():
+    yield check_stmts, 'x, *y = [1, 2, 3]'
+ 
+#DEBUG_LEVEL = 1
+   
 def test_assert():
     yield check_stmts, 'assert True'
 
