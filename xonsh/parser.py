@@ -101,10 +101,10 @@ class Parser(object):
             'comma_name_list',
             'comma_test',
             'elif_part_list',
-            'else_part',
+            #'else_part',
             'finally_part',
             #'as_expr',
-            'comma_with_item_list',
+            #'comma_with_item_list',
             'varargslist',
             'or_and_test_list',
             'and_not_test_list',
@@ -988,31 +988,35 @@ class Parser(object):
         p[0] = p[3]
 
     def p_if_stmt(self, p):
-        """if_stmt : IF test COLON suite elif_part_list_opt else_part_opt
+        """if_stmt : IF test COLON suite elif_part_list_opt 
+                   | IF test COLON suite elif_part_list_opt else_part
         """
         lastif = ast.If(test=p[2], body=p[4], orelse=[], 
                        lineno=self.lineno, col_offset=self.col)
         p0 = [lastif]
-        p6 = p[6] or []
-        p5, p6 = p[5], p[6]
+        p5 = p[5]
+        p6 = p[6] if len(p) > 6 else []
         if p5 is not None:
             for elseif in p5:
                 lastif.orelse.append(elseif)
                 lastif = elseif
-        if p6 is not None:
-            lastif.orelse = p6
+        lastif.orelse = p6
         p[0] = p0
 
     def p_while_stmt(self, p):
-        """while_stmt : WHILE test COLON suite else_part_opt
+        """while_stmt : WHILE test COLON suite 
+                      | WHILE test COLON suite else_part
         """
-        p[0] = [ast.While(test=p[2], body=p[4], orelse=p[5] or [], 
+        p5 = p[5] if len(p) > 5 else []
+        p[0] = [ast.While(test=p[2], body=p[4], orelse=p5, 
                           lineno=self.lineno, col_offset=self.col)]
 
     def p_for_stmt(self, p):
-        """for_stmt : FOR exprlist IN testlist COLON suite else_part_opt
+        """for_stmt : FOR exprlist IN testlist COLON suite
+                    | FOR exprlist IN testlist COLON suite else_part
         """
         p2 = p[2]
+        p7 = p[7] if len(p) > 7 else []
         if len(p2) == 1:
             p2 = p2[0]
             store_ctx(p2)
@@ -1021,7 +1025,7 @@ class Parser(object):
                 store_ctx(x)
             p2 = ast.Tuple(elts=p2, ctx=ast.Store(), lineno=self.lineno, 
                            col_offset=self.col)
-        p[0] = [ast.For(target=p2, iter=p[4], body=p[6], orelse=p[7] or [], 
+        p[0] = [ast.For(target=p2, iter=p[4], body=p[6], orelse=p7, 
                         lineno=self.lineno, col_offset=self.col)]
 
     def p_except_part(self, p):
@@ -1035,15 +1039,22 @@ class Parser(object):
         p[0] = p[3]
 
     def p_try_stmt(self, p):
-        """try_stmt : TRY COLON suite except_part_list else_part_opt finally_part_opt
+        """try_stmt : TRY COLON suite except_part_list else_part finally_part_opt
+                    | TRY COLON suite except_part_list finally_part_opt
                     | TRY COLON suite finally_part
         """
+        lenp = len(p)
         t = ast.Try(body=p[3], lineno=self.lineno, col_offset=self.col) 
-        if len(p) == 7:
+        if lenp == 7:
             p5, p6 = p[5], p[6]
             t.handlers = p[4]
             t.orelse = [] if p5 is None else p5
             t.finalbody = [] if p6 is None else p6
+        elif lenp == 6:
+            p5 = p[5]
+            t.handlers = p[4]
+            t.orelse = [] 
+            t.finalbody = [] if p5 is None else p5
         else:
             t.handlers = []
             t.orelse = [] 
@@ -1051,11 +1062,17 @@ class Parser(object):
         p[0] = [t]
 
     def p_with_stmt(self, p):
-        """with_stmt : WITH with_item comma_with_item_list_opt COLON suite"""
+        """with_stmt : WITH with_item COLON suite
+                     | WITH with_item comma_with_item_list COLON suite
+        """
+        #"""with_stmt : WITH with_item comma_with_item_list_opt COLON suite"""
         p2, p3 = [p[2]], p[3]
-        if p3 is not None:
+        if len(p) == 5:
+            body = p[4]
+        else:
             p2 += p3
-        p[0] = [ast.With(items=p2, body=p[5], lineno=self.lineno, 
+            body = p[5]
+        p[0] = [ast.With(items=p2, body=body, lineno=self.lineno, 
                          col_offset=self.col)]
 
     def p_as_expr(self, p):
