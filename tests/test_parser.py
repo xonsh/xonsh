@@ -66,15 +66,17 @@ def check_stmts(input, run=True):
         input += '\n'
     check_ast(input, run=run)
 
-def check_xonsh(xenv, input, run=True):
-    if not input.endswith('\n') and '\n' in input:
-        input += '\n'
+def check_xonsh_ast(xenv, input, run=True):
     builtins.__xonsh_env__ = xenv
     obs = PARSER.parse(input, debug_level=DEBUG_LEVEL)
     if run:
         exec(compile(obs, '<test>', 'exec'))
     del builtins.__xonsh_env__
     
+def check_xonsh(xenv, input, run=True):
+    if not input.endswith('\n'):
+        input += '\n'
+    check_xonsh_ast(xenv, input, run=run)
 
 #
 # Tests
@@ -1270,7 +1272,25 @@ def test_decorator_dot_dot_call_args():
 #
 
 def test_dollar_name():
-    yield check_xonsh, {'WAKKA': 42}, '$WAKKA'
+    yield check_xonsh_ast, {'WAKKA': 42}, '$WAKKA'
+
+def test_dollar_py():
+    yield check_xonsh, {'WAKKA': 42}, 'x = "WAKKA"; y = ${x}'
+
+def test_dollar_py_test():
+    yield check_xonsh_ast, {'WAKKA': 42}, '${None or "WAKKA"}'
+
+def test_dollar_py_recursive_name():
+    yield check_xonsh_ast, {'WAKKA': 42, 'JAWAKA': 'WAKKA'}, \
+                           '${$JAWAKA}'
+
+def test_dollar_py_test_recursive_name():
+    yield check_xonsh_ast, {'WAKKA': 42, 'JAWAKA': 'WAKKA'}, \
+                           '${None or $JAWAKA}'
+
+def test_dollar_py_test_recursive_test():
+    yield check_xonsh_ast, {'WAKKA': 42, 'JAWAKA': 'WAKKA'}, \
+                           '${${"JAWA" + $JAWAKA[-2:]}}'
 
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100

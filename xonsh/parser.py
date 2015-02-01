@@ -1451,6 +1451,10 @@ class Parser(object):
             idx = ast.Index(value=ast.Str(s=p[2], lineno=lineno, col_offset=col))
             p0 = ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
                               lineno=lineno, col_offset=col)
+        elif p2 == '{':
+            idx = ast.Index(value=p[3])
+            p0 = ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
+                              lineno=lineno, col_offset=col)
         else:
             assert False
         return p0
