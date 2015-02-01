@@ -1382,8 +1382,8 @@ class Parser(object):
                 | TRUE 
                 | FALSE
                 | DOLLAR NAME
-                | DOLLAR LBRACE test RBRACE
-                | DOLLAR LPAREN subproc RPAREN
+                | DOLLAR_LBRACE test RBRACE
+                | DOLLAR_LPAREN subproc RPAREN
         """
         p1 = p[1]
         if len(p) == 2:
@@ -1432,7 +1432,7 @@ class Parser(object):
                               col_offset=self.col)
         elif p1 == '{':
             p0 = p2
-        elif p1 == '$':
+        elif p1.startswith('$'):
             p0 = self._dollar_rules(p)
         else:
             assert False
@@ -1774,26 +1774,34 @@ class Parser(object):
         """These handle the special xonsh $ shell atoms by looking up
         in a special __xonsh_env__ dictionary injected in the __builtin__.
         """
-        # p1 is always '$'
         lenp = len(p)
-        p2 = p[2]
+        p1, p2 = p[1], p[2]
         col = self.col
         lineno = self.lineno
         xenv = ast.Name(id='__xonsh_env__', ctx=ast.Load(), lineno=lineno,
                         col_offset=col)
         if lenp == 3:
-            idx = ast.Index(value=ast.Str(s=p[2], lineno=lineno, col_offset=col))
+            idx = ast.Index(value=ast.Str(s=p2, lineno=lineno, col_offset=col))
             p0 = ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
                               lineno=lineno, col_offset=col)
-        elif p2 == '{':
-            idx = ast.Index(value=p[3])
+        elif p1 == '${':
+            idx = ast.Index(value=p2)
             p0 = ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
                               lineno=lineno, col_offset=col)
-        elif p2 == '(':
-            p0 = p[3]
+        elif p1 == '$(':
+            p0 = p2
+            #p0 = p[4]
         else:
             assert False
         return p0
+
+    def p_subproc_start(self, p):
+        """subproc_start : empty"""
+        self.ignore_internal_whitespace = False
+
+    def p_subproc_stop(self, p):
+        """subproc_stop : empty"""
+        self.ignore_internal_whitespace = True
 
     def p_subproc(self, p):
         """subproc : subproc_atom_list"""
@@ -1805,17 +1813,23 @@ class Parser(object):
                              lineno=lineno, col_offset=col)
         cliargs = ast.List(elts=p[1], ctx=ast.Load(), lineno=lineno, 
                            col_offset=col)
-        p[0] = ast.Call(func=func, args=[cliargs], keywords=[], starargs=None, 
-                        kwargs=None, lineno=lineno, col_offset=col)
+        uninl = ast.keyword(arg='universal_newlines', 
+                            value=ast.NameConstant(value=True, lineno=lineno, 
+                                                   col_offset=col))
+        p[0] = ast.Call(func=func, args=[cliargs], keywords=[uninl], 
+                        starargs=None, kwargs=None, lineno=lineno, 
+                        col_offset=col)
 
     def p_subproc_atom(self, p):
         """subproc_atom : NAME
-                        | DOLLAR LBRACE test RBRACE
+                        | PERIOD
+                        | DOLLAR_LBRACE test RBRACE
                         | string_literal
         """
         lenp = len(p)
         p1 = p[1]
         if lenp == 2:
+            #assert False
             p0 = ast.Str(s=p1, lineno=self.lineno, col_offset=self.col)
         else:
             assert False

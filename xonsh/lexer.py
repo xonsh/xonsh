@@ -32,6 +32,7 @@ class Lexer(object):
         self.last = None
         self.lexer = None
         self.indent = ''
+        self.ignore_internal_whitespace = [True]
 
     def build(self, **kwargs):
         """Part of the PLY lexer API."""
@@ -119,6 +120,7 @@ class Lexer(object):
         # Command line
         #'CLI_OPTION', 
         'SUBPROCTOK',
+        'FILENAME',
 
         # Delimeters
         'LPAREN', 'RPAREN',      # ( )
@@ -129,6 +131,8 @@ class Lexer(object):
         'AT',                    # @
         'DOLLAR',                # $
         'COMMENT',               # #
+        'DOLLAR_LPAREN',         # $(
+        'DOLLAR_LBRACE',         # ${
 
         # Ellipsis (...)
         'ELLIPSIS',
@@ -138,6 +142,7 @@ class Lexer(object):
     # Token Regexes
     #
     identifier = r'[a-zA-Z_][0-9a-zA-Z_]*'
+    dollar = r'\$'
 
     int_literal = '\d+'
     hex_literal = '0[xX][0-9a-fA-F]+'
@@ -165,7 +170,9 @@ class Lexer(object):
     def t_INDENT(self, t):
         r'[ \t]+'
         last = self.last
-        if last is not None and last.type != 'NEWLINE':
+        if not self.ignore_internal_whitespace[-1]:
+            return t
+        elif last is not None and last.type != 'NEWLINE':
             return  # returns None to skip internal whitespace
         i = self.indent
         v = t.value
@@ -184,6 +191,40 @@ class Lexer(object):
     def t_NEWLINE(self, t):
         r'\n+'
         t.lexer.lineno += t.value.count("\n")
+        return t
+
+    #
+    # Ignore internal whitespace based on parentherical scope
+    #
+    
+    def t_DOLLAR_LPAREN(self, t):
+        r'\$\('
+        self.ignore_internal_whitespace.append(False)
+        return t
+
+    def t_LPAREN(self, t):
+        r'\('
+        self.ignore_internal_whitespace.append(True)
+        return t
+
+    def t_RPAREN(self, t):
+        r'\)'
+        self.ignore_internal_whitespace.pop()
+        return t
+
+    def t_DOLLAR_LBRACE(self, t):
+        r'\$\{'
+        self.ignore_internal_whitespace.append(True)
+        return t
+
+    def t_LBRACE(self, t):
+        r'\{'
+        self.ignore_internal_whitespace.append(True)
+        return t
+
+    def t_RBRACE(self, t):
+        r'\}'
+        self.ignore_internal_whitespace.pop()
         return t
 
     # Basic Operators
@@ -225,20 +266,20 @@ class Lexer(object):
     t_PIPEEQUAL = r'\|='
     t_XOREQUAL = r'\^='
     t_DOUBLEDIVEQUAL = r'//='
+    t_DOLLAR = dollar
 
     # Delimeters
-    t_LPAREN = r'\('
-    t_RPAREN = r'\)'
+    #t_LPAREN = r'\('
+    #t_RPAREN = r'\)'
     t_LBRACKET = r'\['
     t_RBRACKET = r'\]'
-    t_LBRACE = r'\{'
-    t_RBRACE = r'\}'
+    #t_LBRACE = r'\{'
+    #t_RBRACE = r'\}'
     t_COMMA = r','
     t_PERIOD = r'\.'
     t_SEMI = r';'
     t_COLON = r':'
     t_AT = r'@'
-    t_DOLLAR = r'\$'
     t_ignore_COMMENT = r'\#.*$'
     t_ELLIPSIS = r'\.\.\.'
 
@@ -308,6 +349,11 @@ class Lexer(object):
         t.value = False
         return t
 
+    #def t_FILENAME(self, t):
+    #    r'[~\w.-/][\w.-/]+'
+    #    return t
+
+
     # Extra
     @TOKEN(identifier)
     def t_NAME(self, t):
@@ -315,9 +361,6 @@ class Lexer(object):
             t.type = self.pykeyword_map[t.value]
         return t
 
-#    def t_SUBPROCTOK(self, t):
-#        r'[^`$ \'"()].' 
-#        return t
 
     def t_error(self, t):
         msg = 'Invalid token {0!r}'.format(t.value[0])
