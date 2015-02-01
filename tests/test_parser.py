@@ -7,6 +7,7 @@ from collections import Sequence
 from pprint import pprint, pformat
 sys.path.insert(0, os.path.abspath('..'))  # FIXME
 import builtins
+import subprocess
 
 import nose
 from nose.tools import assert_equal
@@ -68,10 +69,12 @@ def check_stmts(input, run=True):
 
 def check_xonsh_ast(xenv, input, run=True):
     builtins.__xonsh_env__ = xenv
+    builtins.__xonsh_subproc__ = subprocess
     obs = PARSER.parse(input, debug_level=DEBUG_LEVEL)
     if run:
         exec(compile(obs, '<test>', 'exec'))
     del builtins.__xonsh_env__
+    del builtins.__xonsh_subproc__ 
     
 def check_xonsh(xenv, input, run=True):
     if not input.endswith('\n'):
@@ -1299,7 +1302,7 @@ def test_dollar_py_set():
     yield check_xonsh, {'WAKKA': 42}, 'x = "WAKKA"; ${x} = 65'
 
 def test_dollar_sub():
-    yield check_xonsh_ast, {}, '$(ls file)'
+    yield check_xonsh_ast, {}, '$(ls)'
 
 
 #DEBUG_LEVEL = 1

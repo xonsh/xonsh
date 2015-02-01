@@ -118,6 +118,7 @@ class Lexer(object):
 
         # Command line
         #'CLI_OPTION', 
+        'SUBPROCTOK',
 
         # Delimeters
         'LPAREN', 'RPAREN',      # ( )
@@ -160,6 +161,7 @@ class Lexer(object):
     #
     # Rules 
     #
+    # Command line
     def t_INDENT(self, t):
         r'[ \t]+'
         last = self.last
@@ -312,6 +314,10 @@ class Lexer(object):
         if t.value in self.pykeyword_map:
             t.type = self.pykeyword_map[t.value]
         return t
+
+#    def t_SUBPROCTOK(self, t):
+#        r'[^`$ \'"()].' 
+#        return t
 
     def t_error(self, t):
         msg = 'Invalid token {0!r}'.format(t.value[0])

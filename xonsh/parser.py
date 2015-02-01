@@ -152,6 +152,7 @@ class Parser(object):
             'indented_stmt',
             'attr_period_name',
             'test_comma',
+            'subproc_atom', 
             )
         for rule in list_rules:
             self._list_rule(rule)
@@ -1382,7 +1383,7 @@ class Parser(object):
                 | FALSE
                 | DOLLAR NAME
                 | DOLLAR LBRACE test RBRACE
-                | DOLLAR LPAREN yield_expr_or_testlist_comp RPAREN
+                | DOLLAR LPAREN subproc RPAREN
         """
         p1 = p[1]
         if len(p) == 2:
@@ -1437,31 +1438,6 @@ class Parser(object):
             assert False
         p[0] = p0
 
-    def _dollar_rules(self, p):
-        """These handle the special xonsh $ shell atoms by looking up
-        in a special __xonsh_env__ dictionary injected in the __builtin__.
-        """
-        # p1 is always '$'
-        lenp = len(p)
-        p2 = p[2]
-        col = self.col
-        lineno = self.lineno
-        xenv = ast.Name(id='__xonsh_env__', ctx=ast.Load(), lineno=lineno,
-                        col_offset=col)
-        if lenp == 3:
-            idx = ast.Index(value=ast.Str(s=p[2], lineno=lineno, col_offset=col))
-            p0 = ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
-                              lineno=lineno, col_offset=col)
-        elif p2 == '{':
-            idx = ast.Index(value=p[3])
-            p0 = ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
-                              lineno=lineno, col_offset=col)
-        elif p2 == '(':
-            assert False
-        else:
-            assert False
-        return p0
-       
     def p_string_literal(self, p):
         """string_literal : STRING_LITERAL
                           | RAW_STRING_LITERAL
@@ -1789,6 +1765,66 @@ class Parser(object):
         else:
             p0 = {'from': True, 'val': p[2]}
         p[0] = p0
+
+    #
+    # subprocess
+    #
+
+    def _dollar_rules(self, p):
+        """These handle the special xonsh $ shell atoms by looking up
+        in a special __xonsh_env__ dictionary injected in the __builtin__.
+        """
+        # p1 is always '$'
+        lenp = len(p)
+        p2 = p[2]
+        col = self.col
+        lineno = self.lineno
+        xenv = ast.Name(id='__xonsh_env__', ctx=ast.Load(), lineno=lineno,
+                        col_offset=col)
+        if lenp == 3:
+            idx = ast.Index(value=ast.Str(s=p[2], lineno=lineno, col_offset=col))
+            p0 = ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
+                              lineno=lineno, col_offset=col)
+        elif p2 == '{':
+            idx = ast.Index(value=p[3])
+            p0 = ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
+                              lineno=lineno, col_offset=col)
+        elif p2 == '(':
+            p0 = p[3]
+        else:
+            assert False
+        return p0
+
+    def p_subproc(self, p):
+        """subproc : subproc_atom_list"""
+        col = self.col
+        lineno = self.lineno
+        spmod = value=ast.Name(id='__xonsh_subproc__', ctx=ast.Load(), 
+                               lineno=lineno, col_offset=col)
+        func = ast.Attribute(value=spmod, attr='check_output', ctx=ast.Load(), 
+                             lineno=lineno, col_offset=col)
+        cliargs = ast.List(elts=p[1], ctx=ast.Load(), lineno=lineno, 
+                           col_offset=col)
+        p[0] = ast.Call(func=func, args=[cliargs], keywords=[], starargs=None, 
+                        kwargs=None, lineno=lineno, col_offset=col)
+
+    def p_subproc_atom(self, p):
+        """subproc_atom : NAME
+                        | DOLLAR LBRACE test RBRACE
+                        | string_literal
+        """
+        lenp = len(p)
+        p1 = p[1]
+        if lenp == 2:
+            p0 = ast.Str(s=p1, lineno=self.lineno, col_offset=self.col)
+        else:
+            assert False
+        p[0] = [p0]
+        
+
+    #
+    # Helpers
+    #
 
     def p_empty(self, p):
         'empty : '
