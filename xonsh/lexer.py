@@ -126,7 +126,7 @@ class Lexer(object):
         'COMMA', 'PERIOD',       # . ,
         'SEMI', 'COLON',         # ; :
         'AT',                    # @
-        #'DOLLAR',                # $
+        'DOLLAR',                # $
         'COMMENT',               # #
 
         # Ellipsis (...)
@@ -236,7 +236,7 @@ class Lexer(object):
     t_SEMI = r';'
     t_COLON = r':'
     t_AT = r'@'
-    #t_DOLLAR = r'\$'
+    t_DOLLAR = r'\$'
     t_ignore_COMMENT = r'\#.*$'
     t_ELLIPSIS = r'\.\.\.'
 

@@ -6,6 +6,7 @@ import ast
 from collections import Sequence
 from pprint import pprint, pformat
 sys.path.insert(0, os.path.abspath('..'))  # FIXME
+import builtins
 
 import nose
 from nose.tools import assert_equal
@@ -64,6 +65,16 @@ def check_stmts(input, run=True):
     if not input.endswith('\n'):
         input += '\n'
     check_ast(input, run=run)
+
+def check_xonsh(xenv, input, run=True):
+    if not input.endswith('\n') and '\n' in input:
+        input += '\n'
+    builtins.__xonsh_env__ = xenv
+    obs = PARSER.parse(input, debug_level=DEBUG_LEVEL)
+    if run:
+        exec(compile(obs, '<test>', 'exec'))
+    del builtins.__xonsh_env__
+    
 
 #
 # Tests
@@ -1253,6 +1264,13 @@ def test_decorator_dot_call_args():
 def test_decorator_dot_dot_call_args():
     yield check_stmts, '@i.h.g(x, y=10)\ndef f():\n  pass', False
 
+
+#
+# Xonsh specific syntax
+#
+
+def test_dollar_name():
+    yield check_xonsh, {'WAKKA': 42}, '$WAKKA'
 
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100

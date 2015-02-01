@@ -1380,6 +1380,8 @@ class Parser(object):
                 | NONE
                 | TRUE 
                 | FALSE
+                | DOLLAR NAME
+                | DOLLAR LBRACE test RBRACE
         """
         p1 = p[1]
         if len(p) == 2:
@@ -1428,9 +1430,30 @@ class Parser(object):
                               col_offset=self.col)
         elif p1 == '{':
             p0 = p2
+        elif p1 == '$':
+            p0 = self._dollar_rules(p)
         else:
             assert False
         p[0] = p0
+
+    def _dollar_rules(self, p):
+        """These handle the special xonsh $ shell atoms by looking up
+        in a special __xonsh_env__ dictionary injected in the __builtin__.
+        """
+        # p1 is always '$'
+        lenp = len(p)
+        p2 = p[2]
+        col = self.col
+        lineno = self.lineno
+        xenv = ast.Name(id='__xonsh_env__', ctx=ast.Load(), lineno=lineno,
+                        col_offset=col)
+        if lenp == 3:
+            idx = ast.Index(value=ast.Str(s=p[2], lineno=lineno, col_offset=col))
+            p0 = ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
+                              lineno=lineno, col_offset=col)
+        else:
+            assert False
+        return p0
        
     def p_string_literal(self, p):
         """string_literal : STRING_LITERAL
