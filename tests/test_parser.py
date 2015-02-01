@@ -1298,6 +1298,8 @@ def test_dollar_name_set():
 def test_dollar_py_set():
     yield check_xonsh, {'WAKKA': 42}, 'x = "WAKKA"; ${x} = 65'
 
+def test_dollar_sub():
+    yield check_xonsh_ast, {}, '$(ls file)'
 
 
 #DEBUG_LEVEL = 1

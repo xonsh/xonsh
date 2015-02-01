@@ -1382,6 +1382,7 @@ class Parser(object):
                 | FALSE
                 | DOLLAR NAME
                 | DOLLAR LBRACE test RBRACE
+                | DOLLAR LPAREN yield_expr_or_testlist_comp RPAREN
         """
         p1 = p[1]
         if len(p) == 2:
@@ -1455,6 +1456,8 @@ class Parser(object):
             idx = ast.Index(value=p[3])
             p0 = ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
                               lineno=lineno, col_offset=col)
+        elif p2 == '(':
+            assert False
         else:
             assert False
         return p0
