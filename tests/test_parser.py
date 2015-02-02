@@ -1316,6 +1316,12 @@ def test_dollar_sub_space():
 def test_ls_dot():
     yield check_xonsh_ast, {}, '$(ls .)'
 
+def test_ls_dot_nesting():
+    yield check_xonsh_ast, {}, '$(ls ${None or "."})'
+
+def test_ls_dot_nesting_var():
+    yield check_xonsh, {}, 'x = "."; $(ls ${None or x})'
+
 
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100
