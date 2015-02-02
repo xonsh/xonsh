@@ -128,6 +128,8 @@ class Lexer(object):
         'SEMI', 'COLON',         # ; :
         'AT',                    # @
         'DOLLAR',                # $
+        'QUESTION',              # ?
+        'DOUBLE_QUESTION',       # ??
         'COMMENT',               # #
         'DOLLAR_LPAREN',         # $(
         'DOLLAR_LBRACE',         # ${
@@ -265,6 +267,12 @@ class Lexer(object):
     t_XOREQUAL = r'\^='
     t_DOUBLEDIVEQUAL = r'//='
     t_DOLLAR = dollar
+
+    def t_DOUBLE_QUESTION(self, t):
+        r'\?\?'
+        return t
+
+    t_QUESTION = r'\?'
 
     # Delimeters
     #t_LPAREN = r'\('

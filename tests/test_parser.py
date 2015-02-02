@@ -69,11 +69,15 @@ def check_stmts(input, run=True):
 
 def check_xonsh_ast(xenv, input, run=True):
     builtins.__xonsh_env__ = xenv
+    builtins.__xonsh_help__ = lambda x: x
+    builtins.__xonsh_superhelp__ = lambda x: x
     builtins.__xonsh_subproc__ = subprocess
     obs = PARSER.parse(input, debug_level=DEBUG_LEVEL)
     if run:
         exec(compile(obs, '<test>', 'exec'))
     del builtins.__xonsh_env__
+    del builtins.__xonsh_help__
+    del builtins.__xonsh_superhelp__
     del builtins.__xonsh_subproc__ 
     
 def check_xonsh(xenv, input, run=True):
@@ -1336,6 +1340,15 @@ def test_ls_envvar_strval():
 
 def test_ls_envvar_listval():
     yield check_xonsh_ast, {'WAKKA': ['.', '.']}, '$(ls $WAKKA)'
+
+def test_question():
+    yield check_xonsh_ast, {}, 'range?'
+
+def test_dobquestion():
+    yield check_xonsh_ast, {}, 'range??'
+
+def test_question_chain():
+    yield check_xonsh_ast, {}, 'range?.index?'
 
 
 #DEBUG_LEVEL = 1

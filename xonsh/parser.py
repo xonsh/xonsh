@@ -62,6 +62,20 @@ def ensure_list_from_str_or_list(x, lineno=None, col=None):
                                    col_offset=col), 
                      orelse=x, lineno=lineno, col_offset=col)
 
+def xonsh_help(x, lineno=None, col=None):
+    return ast.Call(
+        func=ast.Name(id='__xonsh_help__', ctx=ast.Load(), lineno=lineno, 
+                      col_offset=col),
+        args=[x], keywords=[], starargs=None, kwargs=None, lineno=lineno, 
+        col_offset=col)
+
+def xonsh_superhelp(x, lineno=None, col=None):
+    return ast.Call(
+        func=ast.Name(id='__xonsh_superhelp__', ctx=ast.Load(), lineno=lineno, 
+                      col_offset=col),
+        args=[x], keywords=[], starargs=None, kwargs=None, lineno=lineno, 
+        col_offset=col)
+
 def store_ctx(x):
     """Recursively sets ctx to ast.Store()"""
     if not hasattr(x, 'ctx'):
@@ -1381,11 +1395,21 @@ class Parser(object):
             p0 = ast.Call(func=p1, lineno=self.lineno, col_offset=self.col, 
                           **p2)
         elif isinstance(p2[0], str):
-            p0 = ast.Attribute(value=p1, attr=p2[0], ctx=ast.Load(), 
-                               lineno=self.lineno, col_offset=self.col)
-            for a in p2[1:]:
-                p0 = ast.Attribute(value=p0, attr=a, ctx=ast.Load(),
+            if p2[0] == '?':
+                p0 = xonsh_help(p1, lineno=self.lineno, col=self.col)
+            elif p2[0] == '??':
+                p0 = xonsh_superhelp(p1, lineno=self.lineno, col=self.col)
+            else:
+                p0 = ast.Attribute(value=p1, attr=p2[0], ctx=ast.Load(), 
                                    lineno=self.lineno, col_offset=self.col)
+            for a in p2[1:]:
+                if a == '?':
+                    p0 = xonsh_help(p0, lineno=self.lineno, col=self.col)
+                elif a == '??':
+                    p0 = xonsh_superhelp(p0, lineno=self.lineno, col=self.col)
+                else:
+                    p0 = ast.Attribute(value=p0, attr=a, ctx=ast.Load(),
+                                       lineno=self.lineno, col_offset=self.col)
         else:
             assert False
         # actual power rule
@@ -1526,14 +1550,19 @@ class Parser(object):
         """trailer : LPAREN arglist_opt RPAREN 
                    | LBRACKET subscriptlist RBRACKET 
                    | PERIOD NAME
+                   | DOUBLE_QUESTION
+                   | QUESTION
         """
-        p1, p2 = p[1], p[2]
+        p1 = p[1]
+        p2 = p[2] if len(p) > 2 else None
         if p1 == '[':
             p0 = p2
         elif p1 == '(':
             p0 = p2 or dict(args=[], keywords=[], starargs=None, kwargs=None)
         elif p1 == '.':
             p0 = [p2]
+        elif p1 == '?' or p1 == '??':
+            p0 = [p1]
         else:
             assert False
         p[0] = p0
