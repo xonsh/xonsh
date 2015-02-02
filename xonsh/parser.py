@@ -1838,8 +1838,13 @@ class Parser(object):
         """
         lenp = len(p)
         p1 = p[1]
-        if lenp == 2:
-            p0 = ast.Str(s=p1, lineno=self.lineno, col_offset=self.col)
+        if lenp == 2: 
+            if isinstance(p1, str):
+                p0 = ast.Str(s=p1, lineno=self.lineno, col_offset=self.col)
+            elif isinstance(p1, ast.AST):
+                p0 = p1
+            else:
+                assert False
         elif p1 == "${":
             print(p[2])
             p0 = p[2]
@@ -1852,7 +1857,14 @@ class Parser(object):
                        | subproc_arg subproc_arg_part
         """
         # This glues the string together after parsing
-        p[0] = p[1] if len(p) == 2 else p[1] + p[2]
+        p1 = p[1] 
+        if len(p) == 2:
+            if p1 == '~':
+                p1 = os.path.expanduser(p1)
+            p0 = p1
+        else:
+            p0 = p1 + p[2]
+        p[0] = p0
 
     def p_subproc_arg_part(self, p):
         """subproc_arg_part : NAME
@@ -1862,9 +1874,13 @@ class Parser(object):
                             | MINUS
                             | PLUS
                             | COLON
+                            | AT
+                            | SEMI
                             | EQUALS
                             | TIMES
                             | POW
+                            | MOD
+                            | XOR
                             | DOUBLEDIV
                             | ELLIPSIS 
                             | NONE
@@ -1878,10 +1894,7 @@ class Parser(object):
         """
         # Many tokens cannot be part of this list, such as $, ', ", ()
         # Use a string atom instead.
-        p1 = p[1]
-        if p1 == '~':
-            p1 = os.path.expanduser(p1)
-        p[0] = p1
+        p[0] = p[1]
         
 
     #

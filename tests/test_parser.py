@@ -1322,6 +1322,8 @@ def test_ls_dot_nesting():
 def test_ls_dot_nesting_var():
     yield check_xonsh, {}, 'x = "."; $(ls ${None or x})'
 
+def test_ls_dot_str():
+    yield check_xonsh_ast, {}, '$(ls ".")'
 
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100

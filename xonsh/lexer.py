@@ -119,8 +119,6 @@ class Lexer(object):
 
         # Command line
         #'CLI_OPTION', 
-        'SUBPROCTOK',
-        'FILENAME',
 
         # Delimeters
         'LPAREN', 'RPAREN',      # ( )
