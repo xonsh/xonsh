@@ -1304,6 +1304,15 @@ def test_dollar_py_set():
 def test_dollar_sub():
     yield check_xonsh_ast, {}, '$(ls)'
 
+def test_dollar_sub():
+    yield check_xonsh_ast, {}, '$(ls)'
+
+def test_dollar_sub():
+    yield check_xonsh_ast, {}, '$(ls)'
+
+def test_dollar_sub_space():
+    yield check_xonsh_ast, {}, '$(ls )'
+
 def test_ls_dot():
     yield check_xonsh_ast, {}, '$(ls .)'
 

@@ -1,6 +1,7 @@
 """Implements the xonsh parser"""
 from __future__ import print_function, unicode_literals
 import re
+import os
 from collections import Iterable, Sequence, Mapping
 
 from ply import yacc
@@ -1795,16 +1796,10 @@ class Parser(object):
             assert False
         return p0
 
-    def p_subproc_start(self, p):
-        """subproc_start : empty"""
-        self.ignore_internal_whitespace = False
-
-    def p_subproc_stop(self, p):
-        """subproc_stop : empty"""
-        self.ignore_internal_whitespace = True
-
     def p_subproc(self, p):
-        """subproc : subproc_atom_list"""
+        """subproc : subproc_atoms
+                   | subproc_atoms INDENT
+        """
         col = self.col
         lineno = self.lineno
         spmod = value=ast.Name(id='__xonsh_subproc__', ctx=ast.Load(), 
@@ -1820,20 +1815,63 @@ class Parser(object):
                         starargs=None, kwargs=None, lineno=lineno, 
                         col_offset=col)
 
+    def p_subproc_atoms(self, p):
+        """subproc_atoms : subproc_atom
+                         | subproc_atoms INDENT subproc_atom
+        """
+        p1 = p[1]
+        if len(p) < 4:
+            p1 = [p1]
+        else:
+            p1.append(p[3])
+        p[0] = p1
+
     def p_subproc_atom(self, p):
-        """subproc_atom : NAME
-                        | PERIOD
+        """subproc_atom : subproc_arg
                         | DOLLAR_LBRACE test RBRACE
                         | string_literal
         """
         lenp = len(p)
         p1 = p[1]
         if lenp == 2:
-            #assert False
             p0 = ast.Str(s=p1, lineno=self.lineno, col_offset=self.col)
         else:
             assert False
-        p[0] = [p0]
+        p[0] = p0
+
+    def p_subproc_arg(self, p):
+        """subproc_arg : subproc_arg_part
+                       | subproc_arg subproc_arg_part
+        """
+        # This glues the string together after parsing
+        p[0] = p[1] if len(p) == 2 else p[1] + p[2]
+
+    def p_subproc_arg_part(self, p):
+        """subproc_arg_part : NAME
+                            | TILDE
+                            | PERIOD
+                            | DIVIDE
+                            | MINUS
+                            | PLUS
+                            | COLON
+                            | EQUALS
+                            | TIMES
+                            | POW
+                            | DOUBLEDIV
+                            | ELLIPSIS 
+                            | NONE
+                            | TRUE 
+                            | FALSE
+                            | INT_LITERAL
+                            | HEX_LITERAL
+                            | OCT_LITERAL
+                            | BIN_LITERAL
+                            | FLOAT_LITERAL
+        """
+        p1 = p[1]
+        if p1 == '~':
+            p1 = os.path.expanduser(p1)
+        p[0] = p1
         
 
     #

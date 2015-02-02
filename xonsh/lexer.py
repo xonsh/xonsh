@@ -32,7 +32,7 @@ class Lexer(object):
         self.last = None
         self.lexer = None
         self.indent = ''
-        self.ignore_internal_whitespace = [True]
+        self.in_py_mode = [True]
 
     def build(self, **kwargs):
         """Part of the PLY lexer API."""
@@ -109,7 +109,7 @@ class Lexer(object):
         #'LOGIC_OR', 
         #'LOGIC_AND', 
         'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',
-        #'LARROW', 
+        #'LARROW',
         'RARROW',
 
         # Assignment Operators
@@ -170,7 +170,7 @@ class Lexer(object):
     def t_INDENT(self, t):
         r'[ \t]+'
         last = self.last
-        if not self.ignore_internal_whitespace[-1]:
+        if not self.in_py_mode[-1]:
             return t
         elif last is not None and last.type != 'NEWLINE':
             return  # returns None to skip internal whitespace
@@ -199,32 +199,32 @@ class Lexer(object):
     
     def t_DOLLAR_LPAREN(self, t):
         r'\$\('
-        self.ignore_internal_whitespace.append(False)
+        self.in_py_mode.append(False)
         return t
 
     def t_LPAREN(self, t):
         r'\('
-        self.ignore_internal_whitespace.append(True)
+        self.in_py_mode.append(True)
         return t
 
     def t_RPAREN(self, t):
         r'\)'
-        self.ignore_internal_whitespace.pop()
+        self.in_py_mode.pop()
         return t
 
     def t_DOLLAR_LBRACE(self, t):
         r'\$\{'
-        self.ignore_internal_whitespace.append(True)
+        self.in_py_mode.append(True)
         return t
 
     def t_LBRACE(self, t):
         r'\{'
-        self.ignore_internal_whitespace.append(True)
+        self.in_py_mode.append(True)
         return t
 
     def t_RBRACE(self, t):
         r'\}'
-        self.ignore_internal_whitespace.pop()
+        self.in_py_mode.pop()
         return t
 
     # Basic Operators
@@ -309,44 +309,52 @@ class Lexer(object):
 
     @TOKEN(float_literal)
     def t_FLOAT_LITERAL(self, t):
-        t.value = float(t.value)
+        if self.in_py_mode[-1]:
+            t.value = float(t.value)
         return t
 
     # ints, functions to ensure correct ordering
 
     @TOKEN(hex_literal)
     def t_HEX_LITERAL(self, t):
-        t.value = int(t.value, 16)
+        if self.in_py_mode[-1]:
+            t.value = int(t.value, 16)
         return t
 
     @TOKEN(oct_literal)
     def t_OCT_LITERAL(self, t):
-        t.value = int(t.value, 8)
+        if self.in_py_mode[-1]:
+            t.value = int(t.value, 8)
         return t
 
     @TOKEN(bin_literal)
     def t_BIN_LITERAL(self, t):
-        t.value = int(t.value, 2)
+        if self.in_py_mode[-1]:
+            t.value = int(t.value, 2)
         return t
 
     @TOKEN(int_literal)
     def t_INT_LITERAL(self, t):
-        t.value = int(t.value)
+        if self.in_py_mode[-1]:
+            t.value = int(t.value)
         return t
 
     def t_NONE(self, t):
         r'None'
-        t.value = None
+        if self.in_py_mode[-1]:
+            t.value = None
         return t
 
     def t_TRUE(self, t):
         r'True'
-        t.value = True
+        if self.in_py_mode[-1]:
+            t.value = True
         return t
 
     def t_FALSE(self, t):
         r'False'
-        t.value = False
+        if self.in_py_mode[-1]:
+            t.value = False
         return t
 
     #def t_FILENAME(self, t):
@@ -357,7 +365,7 @@ class Lexer(object):
     # Extra
     @TOKEN(identifier)
     def t_NAME(self, t):
-        if t.value in self.pykeyword_map:
+        if self.in_py_mode[-1] and t.value in self.pykeyword_map:
             t.type = self.pykeyword_map[t.value]
         return t
 
