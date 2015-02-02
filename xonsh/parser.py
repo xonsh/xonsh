@@ -50,6 +50,18 @@ def call_split_lines(x, lineno=None, col=None):
                     args=[], keywords=[], starargs=None, kwargs=None, 
                     lineno=lineno, col_offset=col)
 
+def ensure_list_from_str_or_list(x, lineno=None, col=None):
+    return ast.IfExp(test=ast.Call(func=ast.Name(id='isinstance', 
+                                                 ctx=ast.Load(), 
+                                                 lineno=lineno, col_offset=col), 
+                                   args=[x, ast.Name(id='str', ctx=ast.Load(), 
+                                                     lineno=lineno, col_offset=col)],
+                                   keywords=[], starargs=None, kwargs=None, 
+                                   lineno=lineno, col_offset=col), 
+                     body=ast.List(elts=[x], ctx=ast.Load(), lineno=lineno, 
+                                   col_offset=col), 
+                     orelse=x, lineno=lineno, col_offset=col)
+
 def store_ctx(x):
     """Recursively sets ctx to ast.Store()"""
     if not hasattr(x, 'ctx'):
@@ -1796,13 +1808,10 @@ class Parser(object):
         p1, p2 = p[1], p[2]
         col = self.col
         lineno = self.lineno
-        xenv = ast.Name(id='__xonsh_env__', ctx=ast.Load(), lineno=lineno,
-                        col_offset=col)
         if lenp == 3:
-            idx = ast.Index(value=ast.Str(s=p2, lineno=lineno, col_offset=col))
-            p0 = ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
-                              lineno=lineno, col_offset=col)
+            p0 = self._envvar_by_name(p2, lineno=lineno, col=col)
         elif p1 == '${':
+            xenv = self._xenv(lineno=lineno, col=col)
             idx = ast.Index(value=p2)
             p0 = ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
                               lineno=lineno, col_offset=col)
@@ -1812,6 +1821,18 @@ class Parser(object):
         else:
             assert False
         return p0
+
+    def _xenv(self, lineno=lineno, col=col):
+        """Creates a new xonsh env referece."""
+        return ast.Name(id='__xonsh_env__', ctx=ast.Load(), lineno=lineno,
+                        col_offset=col)
+
+    def _envvar_by_name(self, var, lineno=None, col=None):
+        """Looks up a xonsh variable by name."""
+        xenv = self._xenv(lineno=lineno, col=col)
+        idx = ast.Index(value=ast.Str(s=var, lineno=lineno, col_offset=col))
+        return ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
+                             lineno=lineno, col_offset=col)
 
     def _subproc_cliargs(self, args, lineno=None, col=None):
         """Creates an expression for subprocess CLI arguments."""
@@ -1827,6 +1848,10 @@ class Parser(object):
             elif action == 'splitlines':
                 sl = call_split_lines(arg, lineno=lineno, col=col)
                 cliargs = binop(cliargs, ast.Add(), sl, lineno=lineno, col=col)
+                currlist = None
+            elif action == 'ensure_list':
+                x = ensure_list_from_str_or_list(arg, lineno=lineno, col=col)
+                cliargs = binop(cliargs, ast.Add(), x, lineno=lineno, col=col)
                 currlist = None
             else:
                 raise ValueError("action not understood: " + action)
@@ -1865,6 +1890,7 @@ class Parser(object):
     def p_subproc_atom(self, p):
         """subproc_atom : subproc_arg
                         | string_literal
+                        | DOLLAR NAME
                         | DOLLAR_LBRACE test RBRACE
                         | DOLLAR_LPAREN subproc RPAREN
         """
@@ -1878,6 +1904,9 @@ class Parser(object):
             else:
                 assert False
             p0._cliarg_action = 'append'
+        elif lenp == 3:
+            p0 = self._envvar_by_name(p[2], lineno=self.lineno, col=self.col)
+            p0._cliarg_action = 'ensure_list'
         elif p1 == "${":
             p0 = p[2]
             p0._cliarg_action = 'append'

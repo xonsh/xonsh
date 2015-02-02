@@ -1331,6 +1331,11 @@ def test_ls_nest_ls():
 def test_ls_nest_ls_dashl():
     yield check_xonsh_ast, {}, '$(ls $(ls) -l)'
 
+def test_ls_envvar_strval():
+    yield check_xonsh_ast, {'WAKKA': '.'}, '$(ls $WAKKA)'
+
+def test_ls_envvar_listval():
+    yield check_xonsh_ast, {'WAKKA': ['.', '.']}, '$(ls $WAKKA)'
 
 
 #DEBUG_LEVEL = 1
