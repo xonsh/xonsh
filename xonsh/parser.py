@@ -38,6 +38,18 @@ def ensure_has_elts(x, lineno=1, col_offset=1):
                       col_offset=col_offset)
     return x
 
+def empty_list(lineno=None, col=None):
+    return ast.List(elts=[], ctx=ast.Load(), lineno=lineno, col_offset=col)
+
+def binop(x, op, y, lineno=None, col=None):
+    return ast.BinOp(left=x, op=op, right=y, lineno=lineno, col_offset=col)
+
+def call_split_lines(x, lineno=None, col=None):
+    return ast.Call(func=ast.Attribute(value=x, attr='splitlines', 
+                             ctx=ast.Load(), lineno=lineno, col_offset=col), 
+                    args=[], keywords=[], starargs=None, kwargs=None, 
+                    lineno=lineno, col_offset=col)
+
 def store_ctx(x):
     """Recursively sets ctx to ast.Store()"""
     if not hasattr(x, 'ctx'):
@@ -1801,6 +1813,26 @@ class Parser(object):
             assert False
         return p0
 
+    def _subproc_cliargs(self, args, lineno=None, col=None):
+        """Creates an expression for subprocess CLI arguments."""
+        cliargs = currlist = empty_list(lineno=lineno, col=col)
+        for arg in args:
+            action = arg._cliarg_action
+            if action == 'append':
+                if currlist is None:
+                    currlist = empty_list(lineno=lineno, col=col)
+                    cliargs = binop(cliargs, ast.Add(), currlist, 
+                                    lineno=lineno, col=col)
+                currlist.elts.append(arg)
+            elif action == 'splitlines':
+                sl = call_split_lines(arg, lineno=lineno, col=col)
+                cliargs = binop(cliargs, ast.Add(), sl, lineno=lineno, col=col)
+                currlist = None
+            else:
+                raise ValueError("action not understood: " + action)
+            del arg._cliarg_action
+        return cliargs
+
     def p_subproc(self, p):
         """subproc : subproc_atoms
                    | subproc_atoms INDENT
@@ -1811,8 +1843,7 @@ class Parser(object):
                                lineno=lineno, col_offset=col)
         func = ast.Attribute(value=spmod, attr='check_output', ctx=ast.Load(), 
                              lineno=lineno, col_offset=col)
-        cliargs = ast.List(elts=p[1], ctx=ast.Load(), lineno=lineno, 
-                           col_offset=col)
+        cliargs = self._subproc_cliargs(p[1], lineno=lineno, col=col)
         uninl = ast.keyword(arg='universal_newlines', 
                             value=ast.NameConstant(value=True, lineno=lineno, 
                                                    col_offset=col))
@@ -1833,8 +1864,9 @@ class Parser(object):
 
     def p_subproc_atom(self, p):
         """subproc_atom : subproc_arg
-                        | DOLLAR_LBRACE test RBRACE
                         | string_literal
+                        | DOLLAR_LBRACE test RBRACE
+                        | DOLLAR_LPAREN subproc RPAREN
         """
         lenp = len(p)
         p1 = p[1]
@@ -1845,9 +1877,13 @@ class Parser(object):
                 p0 = p1
             else:
                 assert False
+            p0._cliarg_action = 'append'
         elif p1 == "${":
-            print(p[2])
             p0 = p[2]
+            p0._cliarg_action = 'append'
+        elif p1 == "$(":
+            p0 = p[2]
+            p0._cliarg_action = 'splitlines'
         else:
             assert False
         p[0] = p0

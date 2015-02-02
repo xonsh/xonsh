@@ -1325,6 +1325,14 @@ def test_ls_dot_nesting_var():
 def test_ls_dot_str():
     yield check_xonsh_ast, {}, '$(ls ".")'
 
+def test_ls_nest_ls():
+    yield check_xonsh_ast, {}, '$(ls $(ls))'
+
+def test_ls_nest_ls_dashl():
+    yield check_xonsh_ast, {}, '$(ls $(ls) -l)'
+
+
+
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100
 
