@@ -119,6 +119,7 @@ class Lexer(object):
 
         # Command line
         #'CLI_OPTION', 
+        'REGEXPATH',
 
         # Delimeters
         'LPAREN', 'RPAREN',      # ( )
@@ -267,6 +268,7 @@ class Lexer(object):
     t_XOREQUAL = r'\^='
     t_DOUBLEDIVEQUAL = r'//='
     t_DOLLAR = dollar
+    t_REGEXPATH = r'`[^`]*`'
 
     def t_DOUBLE_QUESTION(self, t):
         r'\?\?'

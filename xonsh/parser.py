@@ -62,19 +62,21 @@ def ensure_list_from_str_or_list(x, lineno=None, col=None):
                                    col_offset=col), 
                      orelse=x, lineno=lineno, col_offset=col)
 
-def xonsh_help(x, lineno=None, col=None):
+def xonsh_call(name, x, lineno=None, col=None):
     return ast.Call(
-        func=ast.Name(id='__xonsh_help__', ctx=ast.Load(), lineno=lineno, 
+        func=ast.Name(id=name, ctx=ast.Load(), lineno=lineno, 
                       col_offset=col),
         args=[x], keywords=[], starargs=None, kwargs=None, lineno=lineno, 
         col_offset=col)
 
+def xonsh_help(x, lineno=None, col=None):
+    return xonsh_call('__xonsh_help__', x, lineno=lineno, col=col)
+
 def xonsh_superhelp(x, lineno=None, col=None):
-    return ast.Call(
-        func=ast.Name(id='__xonsh_superhelp__', ctx=ast.Load(), lineno=lineno, 
-                      col_offset=col),
-        args=[x], keywords=[], starargs=None, kwargs=None, lineno=lineno, 
-        col_offset=col)
+    return xonsh_call('__xonsh_superhelp__', x, lineno=lineno, col=col)
+
+def xonsh_regexpath(x, lineno=None, col=None):
+    return xonsh_call('__xonsh_regexpath__', x, lineno=lineno, col=col)
 
 def store_ctx(x):
     """Recursively sets ctx to ast.Store()"""
@@ -1874,6 +1876,9 @@ class Parser(object):
                     cliargs = binop(cliargs, ast.Add(), currlist, 
                                     lineno=lineno, col=col)
                 currlist.elts.append(arg)
+            elif action == 'extend':
+                cliargs = binop(cliargs, ast.Add(), arg, lineno=lineno, col=col)
+                currlist = None
             elif action == 'splitlines':
                 sl = call_split_lines(arg, lineno=lineno, col=col)
                 cliargs = binop(cliargs, ast.Add(), sl, lineno=lineno, col=col)
@@ -1919,6 +1924,7 @@ class Parser(object):
     def p_subproc_atom(self, p):
         """subproc_atom : subproc_arg
                         | string_literal
+                        | REGEXPATH
                         | DOLLAR NAME
                         | DOLLAR_LBRACE test RBRACE
                         | DOLLAR_LPAREN subproc RPAREN
@@ -1928,11 +1934,17 @@ class Parser(object):
         if lenp == 2: 
             if isinstance(p1, str):
                 p0 = ast.Str(s=p1, lineno=self.lineno, col_offset=self.col)
+                p0._cliarg_action = 'append'
+                bt = '`'
+                if p1.startswith(bt) and p1.endswith(bt):
+                    p0.s = p1.strip(bt)
+                    p0 = xonsh_regexpath(p0, lineno=self.lineno, col=self.col)
+                    p0._cliarg_action = 'extend'
             elif isinstance(p1, ast.AST):
                 p0 = p1
+                p0._cliarg_action = 'append'
             else:
                 assert False
-            p0._cliarg_action = 'append'
         elif lenp == 3:
             p0 = self._envvar_by_name(p[2], lineno=self.lineno, col=self.col)
             p0._cliarg_action = 'ensure_list'
