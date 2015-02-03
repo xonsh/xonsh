@@ -230,10 +230,6 @@ class Parser(object):
                                  debug=debug_level)
         return tree
 
-    def restart(self):
-        if hasattr(self.parser, 'selfstack'):
-            self.parser.restart()
-
     def _lexer_errfunc(self, msg, line, column):
         self._parse_error(msg, self.currloc(line, column))
 
@@ -289,7 +285,9 @@ class Parser(object):
         return 1
 
     def _parse_error(self, msg, loc):
-        raise SyntaxError('{0}: {1}'.format(loc, msg))
+        err = SyntaxError('{0}: {1}'.format(loc, msg))
+        err.loc = loc
+        raise err
 
     #
     # Precedence of operators
