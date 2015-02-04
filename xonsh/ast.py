@@ -21,7 +21,7 @@ def leftmostname(node):
         rtn = node.s
     elif isinstance(node, (BinOp, Compare)):
         rtn = leftmostname(node.left)
-    elif isinstance(node, (Attribute, Subscript)):
+    elif isinstance(node, (Attribute, Subscript, Starred)):
         rtn = leftmostname(node.value)
     else:
         rtn = None
@@ -63,11 +63,17 @@ class CtxAwareTransformer(NodeTransformer):
             The transformed node.
         """
         self.lines = input.splitlines()
-        self.contexts = [ctx]
+        self.contexts = [ctx, set()]
         node = self.visit(node)
         del self.lines, self.contexts
         return node
+
+    def ctxupdate(iterable):
+        self.contexts[-1].update(iterable)
     
+    def ctxadd(value):
+        self.contexts[-1].add(value)
+
     def visit_Expr(self, node):
         lname = leftmostname(node)
         inscope = False
@@ -84,4 +90,53 @@ class CtxAwareTransformer(NodeTransformer):
             pass
         return node
 
+    def visit_Assign(self, node):
+        for targ in node.targets:
+            if isinstance(targ, (Tuple, List)):
+                self.ctxupdate(map(leftmostname, targ.elts))
+            else:
+                self.ctxadd(leftmostname(targ))
+        return node
 
+    def visit_Import(self, node):
+        for name in node.names:
+            if name.asname is None:
+                self.ctxadd(name.name)
+            else:
+                self.ctxadd(name.asname)
+        return node
+
+    def visit_ImportFrom(self, node):
+        for name in node.names:
+            if name.asname is None:
+                self.ctxadd(name.name)
+            else:
+                self.ctxadd(name.asname)
+        return node
+
+    def visit_With(self, node):
+        for item in node.items:
+            if item.optional_vars is not None:
+                self.ctxadd(leftmostname(item.optional_vars))
+        self.generic_visit(node)
+        return node
+
+    def visit_For(self, node):
+        targ = node.target
+        if isinstance(targ, (Tuple, List)):
+            self.ctxupdate(map(leftmostname, targ.elts))
+        else:
+            self.ctxadd(leftmostname(targ))
+        return node
+
+    def visit_FunctionDef(self, node):
+        assert False
+
+    def visit_ClassDef(self, node):
+        assert False
+
+    def visit_Delete(self, node):
+        assert False
+
+    def visit_Try(self, node):
+        assert False
