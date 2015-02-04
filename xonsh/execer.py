@@ -6,7 +6,7 @@ from collections import Iterable, Sequence, Mapping
 
 from xonsh import ast
 from xonsh.parser import Parser
-
+from xonsh.tools import subproc_line
 
 class Execer(object):
     """Executes xonsh code in a context."""
@@ -26,6 +26,7 @@ class Execer(object):
         self.parser = Parser(**parser_args)
         self.filename = filename
         self.debug_level = debug_level
+        self.ctxtransformer = ast.CtxAwareTransformer(parser)
 
     def parse(self, input, ctx):
         """Parses xonsh code in a context-aware fashion. For context-free
@@ -47,9 +48,14 @@ class Execer(object):
         # the first time. This is a context-free phase.
         tree = self._parse_ctx_free(input)
 
-        #
+        # Now we need to perform context-aware AST transformation. This is 
+        # because the "ls -l" is valid Python. The only way that we know 
+        # it is not actually Python is by checking to see if the first token
+        # (ls) is part of the execution context. If it isn't, then we will 
+        # assume that this line is suppossed to be a subprocess line, assuming
+        # it also is valid as a subprocess line.
+        tree = self.ctxtransformer.ctxvisit(tree, input, ctx)
         return tree
-
 
     def exec(self, input, globals=None, locals=None):
         """Execute xonsh code."""
@@ -71,11 +77,7 @@ class Execer(object):
                 last_error_line = e.loc.lineno
                 idx = last_error_line - 1
                 lines = input.splitlines()
-                line = lines[idx]
-                tok = line.split(None, 1)[0]
-                line = line.replace(tok, '$(' + tok, 1) + ')'
-                lines[idx] = line
+                lines[idx] = subproc_line(lines[idx])
                 input = '\n'.join(lines)
-                assert False
         return tree
 
