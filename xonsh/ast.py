@@ -34,7 +34,7 @@ class CtxAwareTransformer(NodeTransformer):
     a subprocess.
     """
 
-    def __init__(self, pasrer):
+    def __init__(self, parser):
         """Parameters
         ----------
         parser : xonsh.Parser
@@ -73,6 +73,12 @@ class CtxAwareTransformer(NodeTransformer):
     
     def ctxadd(value):
         self.contexts[-1].add(value)
+
+    def ctxremove(value):
+        for ctx in self.contexts[::-1]:
+            if value in ctx:
+                ctx.remove(value)
+                break
 
     def visit_Expr(self, node):
         lname = leftmostname(node)
@@ -127,16 +133,29 @@ class CtxAwareTransformer(NodeTransformer):
             self.ctxupdate(map(leftmostname, targ.elts))
         else:
             self.ctxadd(leftmostname(targ))
+        self.generic_visit(node)
         return node
 
     def visit_FunctionDef(self, node):
-        assert False
+        self.ctxadd(node.name)
+        self.generic_visit(node)
+        return node
 
     def visit_ClassDef(self, node):
-        assert False
+        self.ctxadd(node.name)
+        self.generic_visit(node)
+        return node
 
     def visit_Delete(self, node):
-        assert False
+        for targ in node.targets:
+            if isinstance(targ, Name):
+                self.ctxremove(targ.id)
+        self.generic_visit(node)
+        return node
 
     def visit_Try(self, node):
-        assert False
+        for handler in node.handlers:
+            if handler.name is not None:
+                self.ctxadd(handler.name)
+        self.generic_visit(node)
+        return node

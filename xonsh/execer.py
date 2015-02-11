@@ -26,12 +26,16 @@ class Execer(object):
         self.parser = Parser(**parser_args)
         self.filename = filename
         self.debug_level = debug_level
-        self.ctxtransformer = ast.CtxAwareTransformer(parser)
+        self.ctxtransformer = ast.CtxAwareTransformer(self.parser)
 
     def parse(self, input, ctx):
         """Parses xonsh code in a context-aware fashion. For context-free
         parsing, please use the Parser class directly.
         """
+        if ctx is None:
+            ctx = set()
+        elif isinstance(ctx, Mapping):
+            ctx = set(ctx.keys())
         # Parsing actually happens in a couple of phases. The first is a
         # shortcut for a context-free parser. Nomrally, all subprocess
         # lines should be wrapped in $(), to indicate that they are a 
