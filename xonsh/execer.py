@@ -2,6 +2,8 @@
 from __future__ import print_function, unicode_literals
 import re
 import os
+import inspect
+import builtins
 from collections import Iterable, Sequence, Mapping
 
 from xonsh import ast
@@ -36,6 +38,7 @@ class Execer(object):
             ctx = set()
         elif isinstance(ctx, Mapping):
             ctx = set(ctx.keys())
+
         # Parsing actually happens in a couple of phases. The first is a
         # shortcut for a context-free parser. Nomrally, all subprocess
         # lines should be wrapped in $(), to indicate that they are a 
@@ -61,11 +64,16 @@ class Execer(object):
         tree = self.ctxtransformer.ctxvisit(tree, input, ctx)
         return tree
 
-    def exec(self, input, globals=None, locals=None):
+    def exec(self, input, glbs=None, locs=None, stacklevel=1):
         """Execute xonsh code."""
-        tree = self.parse(input, locals)
+        if glbs is None or locs is None:
+            frame = inspect.stack()[stacklevel][0]
+            glbs = frame.f_globals if glbs is None else glbs
+            locs = frame.f_locals if locs is None else locs
+        ctx = set(dir(builtins)) | set(glbs.keys()) | set(locs.keys())
+        tree = self.parse(input, ctx)
         code = compile(tree, self.filename, 'exec')
-        #exec(code, globals, locals)
+        exec(code, glbs, locs)
 
     def _parse_ctx_free(self, input):
         last_error_line = -1
@@ -84,4 +92,3 @@ class Execer(object):
                 lines[idx] = subproc_line(lines[idx])
                 input = '\n'.join(lines)
         return tree
-

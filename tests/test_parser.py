@@ -17,6 +17,8 @@ from ply.lex import LexToken
 
 from xonsh.parser import Parser
 
+from tools import mock_xonsh_env
+
 PARSER = None
 DEBUG_LEVEL = 0
 #DEBUG_LEVEL = 100
@@ -68,19 +70,10 @@ def check_stmts(input, run=True):
     check_ast(input, run=run)
 
 def check_xonsh_ast(xenv, input, run=True):
-    builtins.__xonsh_env__ = xenv
-    builtins.__xonsh_help__ = lambda x: x
-    builtins.__xonsh_superhelp__ = lambda x: x
-    builtins.__xonsh_regexpath__ = lambda x: []
-    builtins.__xonsh_subproc__ = subprocess
-    obs = PARSER.parse(input, debug_level=DEBUG_LEVEL)
-    if run:
-        exec(compile(obs, '<test>', 'exec'))
-    del builtins.__xonsh_env__
-    del builtins.__xonsh_help__
-    del builtins.__xonsh_superhelp__
-    del builtins.__xonsh_regexpath__
-    del builtins.__xonsh_subproc__ 
+    with mock_xonsh_env(xenv):
+        obs = PARSER.parse(input, debug_level=DEBUG_LEVEL)
+        if run:
+            exec(compile(obs, '<test>', 'exec'))
     
 def check_xonsh(xenv, input, run=True):
     if not input.endswith('\n'):

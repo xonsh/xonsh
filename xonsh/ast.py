@@ -9,7 +9,7 @@ from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
     Del, Pass, Raise, Import, alias, ImportFrom, Continue, Break, Yield, \
     YieldFrom, Return, IfExp, Lambda, arguments, arg, Call, keyword, \
     Attribute, Global, Nonlocal, If, While, For, withitem, With, Try, \
-    ExceptHandler, FunctionDef, ClassDef, Starred, NodeTransformer
+    ExceptHandler, FunctionDef, ClassDef, Starred, NodeTransformer, dump
 
 from xonsh.tools import subproc_line
 
@@ -17,12 +17,14 @@ def leftmostname(node):
     """Attempts to find the first name in the tree."""
     if isinstance(node, Name):
         rtn = node.id
-    elif isinstance(node, (Str, Bytes)):
-        rtn = node.s
+    #elif isinstance(node, (Str, Bytes)):
+    #    rtn = node.s
     elif isinstance(node, (BinOp, Compare)):
         rtn = leftmostname(node.left)
-    elif isinstance(node, (Attribute, Subscript, Starred)):
+    elif isinstance(node, (Attribute, Subscript, Starred, Expr)):
         rtn = leftmostname(node.value)
+    elif isinstance(node, Call):
+        rtn = leftmostname(node.func)
     else:
         rtn = None
     return rtn
@@ -89,12 +91,15 @@ class CtxAwareTransformer(NodeTransformer):
                 break
         if inscope:
             return node
-        newline = subproc_line(self.lines[node.lineno])
+        spline = subproc_line(self.lines[node.lineno - 1])
         try:
-            node = self.parser.parse(newline)
+            newnode = self.parser.parse(spline)
+            newnode = newnode.body[0]  # take the first (and only) Expr
+            newnode.lineno = node.lineno
+            newnode.col_offset = node.col_offset
         except SyntaxError as e:
-            pass
-        return node
+            newnode = node
+        return newnode
 
     def visit_Assign(self, node):
         for targ in node.targets:
@@ -138,12 +143,16 @@ class CtxAwareTransformer(NodeTransformer):
 
     def visit_FunctionDef(self, node):
         self.ctxadd(node.name)
+        self.contexts.append(set())
         self.generic_visit(node)
+        self.contexts.pop()
         return node
 
     def visit_ClassDef(self, node):
         self.ctxadd(node.name)
+        self.contexts.append(set())
         self.generic_visit(node)
+        self.contexts.pop()
         return node
 
     def visit_Delete(self, node):
@@ -157,5 +166,10 @@ class CtxAwareTransformer(NodeTransformer):
         for handler in node.handlers:
             if handler.name is not None:
                 self.ctxadd(handler.name)
+        self.generic_visit(node)
+        return node
+
+    def visit_Global(self, node):
+        self.contexts[1].update(node.names)  # contexts[1] is the global ctx
         self.generic_visit(node)
         return node
