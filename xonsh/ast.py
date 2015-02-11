@@ -17,8 +17,6 @@ def leftmostname(node):
     """Attempts to find the first name in the tree."""
     if isinstance(node, Name):
         rtn = node.id
-    #elif isinstance(node, (Str, Bytes)):
-    #    rtn = node.s
     elif isinstance(node, (BinOp, Compare)):
         rtn = leftmostname(node.left)
     elif isinstance(node, (Attribute, Subscript, Starred, Expr)):
