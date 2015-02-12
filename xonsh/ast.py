@@ -23,6 +23,11 @@ def leftmostname(node):
         rtn = leftmostname(node.value)
     elif isinstance(node, Call):
         rtn = leftmostname(node.func)
+    elif isinstance(node, (BinOp, Compare)):
+        rtn = leftmostname(node.left)
+    elif isinstance(node, (Str, Bytes)):
+        # handles case of "./my executable"
+        rtn = leftmostname(node.s)
     else:
         rtn = None
     return rtn
