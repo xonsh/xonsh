@@ -1,7 +1,25 @@
 """The main shell for xonsh."""
 import os
+import sys
+import time
+import copy
+import errno
+import select
+import struct
+import signal
+import atexit
+import traceback
+
+try:
+    import pty
+    import fcntl
+    import termios
+except ImportError:
+    pass  # windows  
 
 from urwid import Widget
+from urwid.vterm import TermModes, TermCanvas
+from urwid.display_common import AttrSpec, RealTerminal
 
 class ShellView(Widget):
     _selectable = True
