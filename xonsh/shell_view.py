@@ -9,6 +9,7 @@ import struct
 import signal
 import atexit
 import traceback
+import code
 
 try:
     import pty
@@ -18,7 +19,7 @@ except ImportError:
     pass  # windows  
 
 from urwid import Widget
-from urwid.vterm import TermModes, TermCanvas
+from urwid.vterm import TermModes, TermCanvas, Terminal
 from urwid.display_common import AttrSpec, RealTerminal
 
 class ShellView(Widget):
@@ -320,3 +321,15 @@ class ShellView(Widget):
 
         os.write(self.master, key)
 
+class ShellView(Terminal):
+    #pass
+
+    def __init__(self):
+        cons = code.InteractiveConsole()
+        super(ShellView, self).__init__(cons.interact)
+
+    #def spawn(self):
+    #    pass
+
+    #def terminate(self):
+    #    pass

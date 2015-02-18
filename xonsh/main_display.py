@@ -1,20 +1,23 @@
-"""The main xonsh displaye."""
+"""The main xonsh display."""
 import urwid
+from urwid.vterm import Terminal
 
-from xonsh.shell_view import ShellView
+from xonsh.shell import Shell
+#from xonsh.shell_view import ShellView
 
 class MainDisplay(object):
 
     def __init__(self):
-        self.shell = shell = ShellView()
+        self.shell = shell = Shell()
+        self.shellview = shellview = Terminal(shell.cmdloop)
         self.view = urwid.LineBox(
             urwid.Pile([
-                ('weight', 70, shell),
+                ('weight', 70, shellview),
                 ('fixed', 1, urwid.Filler(urwid.Edit('focus test edit: '))),
             ]),
             )
-        urwid.connect_signal(shell, 'title', self.set_title)
-        urwid.connect_signal(shell, 'closed', self.quit)
+        urwid.connect_signal(shellview, 'title', self.set_title)
+        urwid.connect_signal(shellview, 'closed', self.quit)
 
 
     def set_title(self, widget, title):
@@ -32,7 +35,7 @@ class MainDisplay(object):
             handle_mouse=False,
             unhandled_input=self.handle_key)
         loop.screen.set_terminal_properties(256)
-        self.loop = self.shell.main_loop = loop
+        self.loop = self.shellview.main_loop = loop
         while True:
             try:
                 self.loop.run()

@@ -73,13 +73,13 @@ class CtxAwareTransformer(NodeTransformer):
         del self.lines, self.contexts
         return node
 
-    def ctxupdate(iterable):
+    def ctxupdate(self, iterable):
         self.contexts[-1].update(iterable)
     
-    def ctxadd(value):
+    def ctxadd(self, value):
         self.contexts[-1].add(value)
 
-    def ctxremove(value):
+    def ctxremove(self, value):
         for ctx in self.contexts[::-1]:
             if value in ctx:
                 ctx.remove(value)

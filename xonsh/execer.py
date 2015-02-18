@@ -9,6 +9,7 @@ from collections import Iterable, Sequence, Mapping
 from xonsh import ast
 from xonsh.parser import Parser
 from xonsh.tools import subproc_line
+from xonsh.built_ins import load_builtins, unload_builtins
 
 class Execer(object):
     """Executes xonsh code in a context."""
@@ -29,6 +30,10 @@ class Execer(object):
         self.filename = filename
         self.debug_level = debug_level
         self.ctxtransformer = ast.CtxAwareTransformer(self.parser)
+        load_builtins()
+
+    def __del__(self):
+        unload_builtins()
 
     def parse(self, input, ctx):
         """Parses xonsh code in a context-aware fashion. For context-free
