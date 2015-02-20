@@ -71,6 +71,11 @@ class Env(MutableMapping):
         return '{0}.{1}({2})'.format(self.__class__.__module__, 
                                      self.__class__.__name__, self._d)
 
+def xonsh_help(x):
+    """A variable to print help about, and then return."""
+    
+    return x
+
 
 def load_builtins():
     """Loads the xonsh builtins into the Python builtins. Sets the
