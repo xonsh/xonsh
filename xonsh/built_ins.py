@@ -5,7 +5,9 @@ import os
 import builtins
 import subprocess
 from contextlib import contextmanager
-from collections import MutableMapping
+from collections import MutableMapping, Iterable
+
+from xonsh.tools import string_types
 
 BUILTINS_LOADED = False
 
@@ -22,12 +24,52 @@ class Env(MutableMapping):
 
     def __init__(self, *args, **kwargs):
         """If no initial environment is given, os.environ is used."""
+        self._d = {}
         if len(args) == 0 and len(kwargs) == 0:
             args = (os.environ,)
-        super(Env, self).__init__(*args, **kwargs)
+        for key, val in dict(*args, **kwargs).items():
+            self[key] = val
 
-    def detype():
-        pass
+    def detype(self):
+        ctx = {}
+        for key, val in self._d.items():
+            if not isinstance(key, string_types):
+                key = str(key)
+            if 'PATH' in key:
+                val = os.pathsep.join(val)
+            elif not isinstance(val, string_types):
+                val = str(val)
+            ctx[key] = val
+        return ctx
+
+    #
+    # Mutable mapping interface
+    #
+
+    def __getitem__(self, key):
+        return self._d[key]
+
+    def __setitem__(self, key, val):
+        if isinstance(key, string_types) and 'PATH' in key:
+            val = val.split(os.pathsep) if isinstance(val, string_types) \
+                  else val
+        self._d[key] = val
+        
+    def __delitem__(self, key):
+        del self._d[key]
+
+    def __iter__(self):
+        yield from self._d
+
+    def __len__(self):
+        return len(self._d)
+
+    def __str__(self):
+        return str(self._d)
+
+    def __repr__(self):
+        return '{0}.{1}({2})'.format(self.__class__.__module__, 
+                                     self.__class__.__name__, self._d)
 
 
 def load_builtins():
@@ -35,7 +77,7 @@ def load_builtins():
     BUILTINS_LOADED variable to True.
     """
     global BUILTINS_LOADED
-    builtins.__xonsh_env__ = {}
+    builtins.__xonsh_env__ = Env()
     builtins.__xonsh_help__ = lambda x: x
     builtins.__xonsh_superhelp__ = lambda x: x
     builtins.__xonsh_regexpath__ = lambda x: []

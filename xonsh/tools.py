@@ -1,4 +1,10 @@
 """Misc. xonsh tools."""
+import sys
+
+if sys.version_info[0] >= 3:
+    string_types = (str, bytes)
+else:
+    string_types = (str, unicode)
 
 def subproc_line(line):
     """Excapsulates a line in a subprocess $()."""
