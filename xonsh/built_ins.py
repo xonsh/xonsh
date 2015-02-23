@@ -2,6 +2,7 @@
 not to be confused with the special Python builtins module.
 """
 import os
+import re
 import builtins
 import subprocess
 from glob import glob, iglob
@@ -32,6 +33,7 @@ class Env(MutableMapping):
         for key, val in dict(*args, **kwargs).items():
             self[key] = val
         self._detyped = None
+        self._orig_env = None
 
     def detype(self):
         if self._detyped is not None:
@@ -52,8 +54,19 @@ class Env(MutableMapping):
         """Replaces the contents of os.environ with a detyped version 
         of the xonsh environement.
         """
+        if self._orig_env is None:
+            self._orig_env = dict(os.environ)
         os.environ.clear()
         os.environ.update(self.detype())
+
+    def undo_replace_env(self):
+        """Replaces the contents of os.environ with a detyped version 
+        of the xonsh environement.
+        """
+        if self._orig_env is not None:
+            os.environ.clear()
+            os.environ.update(self._orig_env)
+            self._orig_env = None
 
     #
     # Mutable mapping interface
@@ -92,13 +105,6 @@ def helper(x):
     return x
 
 
-def _partsjoin(parts):
-    s = os.path.join(parts)
-    if len(parts[0]) == 0:
-        s = os.sep + s  # fix for root dir
-    return s
-
-
 def reglob(path, parts=None, i=None):
     """Regular expression-based globbing."""
     if parts is None:
@@ -106,8 +112,11 @@ def reglob(path, parts=None, i=None):
         d = os.sep if path.startswith(os.sep) else '.'
         return reglob(d, parts=parts, i=0)
     base = subdir = path
-    if i == 0 and base == '.':
-        base = ''
+    if i == 0:
+        if base == '.':
+            base = ''
+        elif base == '/' and len(parts) > 1:
+            i += 1
     regex = re.compile(os.path.join(base, parts[i]))
     files = os.listdir(subdir)
     files.sort()
@@ -134,8 +143,8 @@ def regexpath(s):
     global ENV
     if ENV is not None:
         ENV.replace_env()
-    s = os.path.expanduser(s)
     s = os.path.expandvars(s)
+    s = os.path.expanduser(s)
     return reglob(s)
 
 
@@ -156,6 +165,7 @@ def unload_builtins():
     BUILTINS_LOADED is True, sets BUILTINS_LOADED to False, and returns.
     """
     global BUILTINS_LOADED, ENV
+    ENV.undo_replace_env()
     if ENV is not None:
         ENV = None
     if not BUILTINS_LOADED:
