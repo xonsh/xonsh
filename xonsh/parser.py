@@ -1435,6 +1435,7 @@ class Parser(object):
                 | NONE
                 | TRUE 
                 | FALSE
+                | REGEXPATH
                 | DOLLAR NAME
                 | DOLLAR_LBRACE test RBRACE
                 | DOLLAR_LPAREN subproc RPAREN
@@ -1442,6 +1443,7 @@ class Parser(object):
         p1 = p[1]
         if len(p) == 2:
             # plain-old atoms
+            bt = '`'
             if isinstance(p1, (ast.Num, ast.Str, ast.Bytes)):
                 pass
             elif (p1 is True) or (p1 is False) or (p1 is None):
@@ -1449,6 +1451,10 @@ class Parser(object):
                                       col_offset=self.col)
             elif p1 == '...':
                 p1 = ast.Ellipsis(lineno=self.lineno, col_offset=self.col)
+            elif p1.startswith(bt) and p1.endswith(bt):
+                p1 = ast.Str(s=p1.strip(bt), lineno=self.lineno, 
+                             col_offset=self.col)
+                p1 = xonsh_regexpath(p1, lineno=self.lineno, col=self.col)
             else:
                 p1 = ast.Name(id=p1, ctx=ast.Load(), lineno=self.lineno, 
                               col_offset=self.col)

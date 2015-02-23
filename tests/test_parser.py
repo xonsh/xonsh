@@ -1348,6 +1348,10 @@ def test_question_chain():
 def test_ls_regex():
     yield check_xonsh_ast, {}, '$(ls `[Ff]+i*LE` -l)'
 
+def test_backtick():
+    yield check_xonsh_ast, {}, 'print(`.*`)', False
+
+
 
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100
