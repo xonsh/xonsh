@@ -6,7 +6,7 @@ import sys
 from nose.tools import assert_equal, assert_true
 
 from xonsh import built_ins 
-from xonsh.built_ins import Env, reglob, regexpath
+from xonsh.built_ins import Env, reglob, regexpath, helper, superhelper
 
 def test_env_normal():
     env = Env(VAR='wakka')
@@ -59,6 +59,18 @@ def test_repath_home_var_brace():
     built_ins.ENV.undo_replace_env()
     assert_equal(1, len(obs))
     assert_equal(exp, obs[0])
+
+def test_helper_int():
+    helper(int, 'int')
+
+def test_helper_helper():
+    helper(helper, 'helper')
+
+def test_superhelper_int():
+    helper(int, 'int')
+
+def test_superhelper_helper():
+    helper(helper, 'helper')
 
 
 if __name__ == '__main__':

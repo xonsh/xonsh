@@ -10,9 +10,11 @@ from contextlib import contextmanager
 from collections import MutableMapping, Iterable
 
 from xonsh.tools import string_types
+from xonsh.inspectors import Inspector
 
 BUILTINS_LOADED = False
 ENV = None
+INSPECTOR = Inspector()
 
 class Env(MutableMapping):
     """A xonsh environment, whose variables have limited typing 
@@ -99,9 +101,16 @@ class Env(MutableMapping):
         return '{0}.{1}({2})'.format(self.__class__.__module__, 
                                      self.__class__.__name__, self._d)
 
-def helper(x):
+
+def helper(x, name=''):
     """Prints help about, and then returns that variable."""
-    
+    INSPECTOR.pinfo(x, oname=name, detail_level=0)
+    return x
+
+
+def superhelper(x, name=''):
+    """Prints help about, and then returns that variable."""
+    INSPECTOR.pinfo(x, oname=name, detail_level=1)
     return x
 
 
@@ -155,7 +164,7 @@ def load_builtins():
     global BUILTINS_LOADED, ENV
     builtins.__xonsh_env__ = ENV = Env()
     builtins.__xonsh_help__ = helper
-    builtins.__xonsh_superhelp__ = lambda x: x
+    builtins.__xonsh_superhelp__ = superhelper
     builtins.__xonsh_regexpath__ = regexpath
     builtins.__xonsh_subproc__ = subprocess
     BUILTINS_LOADED = True
