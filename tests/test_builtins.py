@@ -66,11 +66,17 @@ def test_helper_int():
 def test_helper_helper():
     helper(helper, 'helper')
 
+def test_helper_env():
+    helper(Env, 'Env')
+
 def test_superhelper_int():
-    helper(int, 'int')
+    superhelper(int, 'int')
 
 def test_superhelper_helper():
-    helper(helper, 'helper')
+    superhelper(helper, 'helper')
+
+def test_superhelper_env():
+    superhelper(Env, 'Env')
 
 
 if __name__ == '__main__':
