@@ -2,6 +2,7 @@
 from __future__ import unicode_literals, print_function
 import builtins
 import subprocess
+import glob
 from contextlib import contextmanager
 
 def sp(cmd):
@@ -11,6 +12,7 @@ def sp(cmd):
 def mock_xonsh_env(xenv):
     builtins.__xonsh_env__ = xenv
     builtins.__xonsh_help__ = lambda x: x
+    builtins.__xonsh_glob__ = glob.glob
     builtins.__xonsh_superhelp__ = lambda x: x
     builtins.__xonsh_regexpath__ = lambda x: []
     builtins.__xonsh_subproc_captured__ = sp
@@ -18,6 +20,7 @@ def mock_xonsh_env(xenv):
     yield
     del builtins.__xonsh_env__
     del builtins.__xonsh_help__
+    del builtins.__xonsh_glob__
     del builtins.__xonsh_superhelp__
     del builtins.__xonsh_regexpath__
     del builtins.__xonsh_subproc_captured__ 

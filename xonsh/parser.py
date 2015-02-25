@@ -1930,12 +1930,17 @@ class Parser(object):
         if lenp == 2: 
             if isinstance(p1, str):
                 p0 = ast.Str(s=p1, lineno=self.lineno, col_offset=self.col)
-                p0._cliarg_action = 'append'
                 bt = '`'
                 if p1.startswith(bt) and p1.endswith(bt):
                     p0.s = p1.strip(bt)
                     p0 = xonsh_regexpath(p0, lineno=self.lineno, col=self.col)
                     p0._cliarg_action = 'extend'
+                elif '*' in p1:
+                    p0 = xonsh_call('__xonsh_glob__', args=[p0],
+                                    lineno=self.lineno, col=self.col)
+                    p0._cliarg_action = 'extend'
+                else:
+                    p0._cliarg_action = 'append'
             elif isinstance(p1, ast.AST):
                 p0 = p1
                 p0._cliarg_action = 'append'

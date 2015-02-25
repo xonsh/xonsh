@@ -113,6 +113,16 @@ def superhelper(x, name=''):
     INSPECTOR.pinfo(x, oname=name, detail_level=1)
     return x
 
+def expand_path(s):
+    """Takes a string path and expands ~ to home and environment vars."""
+    
+    global ENV
+    if ENV is not None:
+        ENV.replace_env()
+    s = os.path.expandvars(s)
+    s = os.path.expanduser(s)
+    return s
+
 
 def reglob(path, parts=None, i=None):
     """Regular expression-based globbing."""
@@ -149,12 +159,14 @@ def regexpath(s):
     """Takes a regular expression string and returns a list of file
     paths that match the regex.
     """
-    global ENV
-    if ENV is not None:
-        ENV.replace_env()
-    s = os.path.expandvars(s)
-    s = os.path.expanduser(s)
+    s = expand_path(s)
     return reglob(s)
+
+
+def globpath(s):
+    """Simple wrapper around glob that also expands home and env vars."""
+    s = expand_path(s)
+    return glob(s)
 
 
 def subproc_captured(cmd):
@@ -195,6 +207,7 @@ def load_builtins():
     builtins.__xonsh_help__ = helper
     builtins.__xonsh_superhelp__ = superhelper
     builtins.__xonsh_regexpath__ = regexpath
+    builtins.__xonsh_glob__ = globpath
     builtins.__xonsh_subproc_captured__ = subproc_captured
     builtins.__xonsh_subproc_uncaptured__ = subproc_uncaptured
     BUILTINS_LOADED = True
@@ -210,8 +223,8 @@ def unload_builtins():
     if not BUILTINS_LOADED:
         return
     names = ['__xonsh_env__', '__xonsh_help__', '__xonsh_superhelp__',
-             '__xonsh_regexpath__', '__xonsh_subproc_captured__',
-             '__xonsh_subproc_uncaptured__',]
+             '__xonsh_regexpath__', '__xonsh_glob__', 
+             '__xonsh_subproc_captured__', '__xonsh_subproc_uncaptured__',]
     for name in names:
         if hasattr(builtins, name):
             delattr(builtins, name)
