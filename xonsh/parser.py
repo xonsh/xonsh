@@ -62,21 +62,20 @@ def ensure_list_from_str_or_list(x, lineno=None, col=None):
                                    col_offset=col), 
                      orelse=x, lineno=lineno, col_offset=col)
 
-def xonsh_call(name, x, lineno=None, col=None):
-    return ast.Call(
-        func=ast.Name(id=name, ctx=ast.Load(), lineno=lineno, 
-                      col_offset=col),
-        args=[x], keywords=[], starargs=None, kwargs=None, lineno=lineno, 
-        col_offset=col)
+def xonsh_call(name, args, lineno=None, col=None):
+    return ast.Call(func=ast.Name(id=name, ctx=ast.Load(), lineno=lineno, 
+                                  col_offset=col),
+                    args=args, keywords=[], starargs=None, kwargs=None, 
+                    lineno=lineno, col_offset=col)
 
 def xonsh_help(x, lineno=None, col=None):
-    return xonsh_call('__xonsh_help__', x, lineno=lineno, col=col)
+    return xonsh_call('__xonsh_help__', [x], lineno=lineno, col=col)
 
 def xonsh_superhelp(x, lineno=None, col=None):
-    return xonsh_call('__xonsh_superhelp__', x, lineno=lineno, col=col)
+    return xonsh_call('__xonsh_superhelp__', [x], lineno=lineno, col=col)
 
 def xonsh_regexpath(x, lineno=None, col=None):
-    return xonsh_call('__xonsh_regexpath__', x, lineno=lineno, col=col)
+    return xonsh_call('__xonsh_regexpath__', [x], lineno=lineno, col=col)
 
 def store_ctx(x):
     """Recursively sets ctx to ast.Store()"""
@@ -1851,9 +1850,12 @@ class Parser(object):
             idx = ast.Index(value=p2)
             p0 = ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
                               lineno=lineno, col_offset=col)
-        elif p1 == '$(' or p1 == '$[':
-            p0 = p2
-            #p0 = p[4]
+        elif p1 == '$(':
+            p0 = xonsh_call('__xonsh_subproc_captured__', p2,
+                            lineno=lineno, col=col)
+        elif p1 == '$[':
+            p0 = xonsh_call('__xonsh_subproc_uncaptured__', p2,
+                            lineno=lineno, col=col)
         else:
             assert False
         return p0
@@ -1901,19 +1903,7 @@ class Parser(object):
         """subproc : subproc_atoms
                    | subproc_atoms INDENT
         """
-        col = self.col
-        lineno = self.lineno
-        spmod = value=ast.Name(id='__xonsh_subproc__', ctx=ast.Load(), 
-                               lineno=lineno, col_offset=col)
-        func = ast.Attribute(value=spmod, attr='check_output', ctx=ast.Load(), 
-                             lineno=lineno, col_offset=col)
-        cliargs = self._subproc_cliargs(p[1], lineno=lineno, col=col)
-        uninl = ast.keyword(arg='universal_newlines', 
-                            value=ast.NameConstant(value=True, lineno=lineno, 
-                                                   col_offset=col))
-        p[0] = ast.Call(func=func, args=[cliargs], keywords=[uninl], 
-                        starargs=None, kwargs=None, lineno=lineno, 
-                        col_offset=col)
+        p[0] = [self._subproc_cliargs(p[1], lineno=self.lineno, col=self.col)]
 
     def p_subproc_atoms(self, p):
         """subproc_atoms : subproc_atom
@@ -1957,8 +1947,13 @@ class Parser(object):
         elif p1 == '${':
             p0 = p[2]
             p0._cliarg_action = 'append'
-        elif p1 == '$(' or p1 == '$[':
-            p0 = p[2]
+        elif p1 == '$(':
+            p0 = xonsh_call('__xonsh_subproc_captured__', args=p[2],
+                            lineno=self.lineno, col=self.col)
+            p0._cliarg_action = 'splitlines'
+        elif p1 == '$[':
+            p0 = xonsh_call('__xonsh_subproc_uncaptured__', args=p[2],
+                            lineno=self.lineno, col=self.col)
             p0._cliarg_action = 'splitlines'
         else:
             assert False

@@ -157,6 +157,35 @@ def regexpath(s):
     return reglob(s)
 
 
+def subproc_captured(cmd):
+    """Runs a subprocess, capturing the output. Returns the stdout
+    that was produced as a str.
+    """
+    global ENV
+    try:
+        out = subprocess.check_output(cmd, universal_newlines=True, 
+                                      stderr=subprocess.PIPE, 
+                                      env=ENV.detyped())
+    except subprocess.CalledProcessError as e:
+        out = ''
+    return out
+
+
+def subproc_uncaptured(cmd):
+    """Runs a subprocess, without capturing the output. Returns the stdout
+    that was produced as a str.
+    """
+    global ENV
+    try:
+        out = subprocess.check_output(cmd, universal_newlines=True, 
+                                      stdout=subprocess.PIPE, 
+                                      stderr=subprocess.PIPE, 
+                                      env=ENV.detyped())
+    except subprocess.CalledProcessError as e:
+        out = ''
+    return out
+
+
 def load_builtins():
     """Loads the xonsh builtins into the Python builtins. Sets the
     BUILTINS_LOADED variable to True.
@@ -166,7 +195,8 @@ def load_builtins():
     builtins.__xonsh_help__ = helper
     builtins.__xonsh_superhelp__ = superhelper
     builtins.__xonsh_regexpath__ = regexpath
-    builtins.__xonsh_subproc__ = subprocess
+    builtins.__xonsh_subproc_captured__ = subproc_captured
+    builtins.__xonsh_subproc_uncaptured__ = subproc_uncaptured
     BUILTINS_LOADED = True
 
 def unload_builtins():
@@ -180,7 +210,8 @@ def unload_builtins():
     if not BUILTINS_LOADED:
         return
     names = ['__xonsh_env__', '__xonsh_help__', '__xonsh_superhelp__',
-             '__xonsh_regexpath__', '__xonsh_subproc__',]
+             '__xonsh_regexpath__', '__xonsh_subproc_captured__',
+             '__xonsh_subproc_uncaptured__',]
     for name in names:
         if hasattr(builtins, name):
             delattr(builtins, name)
