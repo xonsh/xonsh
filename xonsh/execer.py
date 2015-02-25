@@ -67,6 +67,7 @@ class Execer(object):
         # assume that this line is suppossed to be a subprocess line, assuming
         # it also is valid as a subprocess line.
         tree = self.ctxtransformer.ctxvisit(tree, input, ctx)
+        print(ast.dump(tree))
         return tree
 
     def exec(self, input, glbs=None, locs=None, stacklevel=1):

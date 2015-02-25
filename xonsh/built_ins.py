@@ -165,7 +165,7 @@ def subproc_captured(cmd):
     try:
         out = subprocess.check_output(cmd, universal_newlines=True, 
                                       stderr=subprocess.PIPE, 
-                                      env=ENV.detyped())
+                                      env=ENV.detype())
     except subprocess.CalledProcessError as e:
         out = ''
     return out
@@ -177,10 +177,10 @@ def subproc_uncaptured(cmd):
     """
     global ENV
     try:
-        out = subprocess.check_output(cmd, universal_newlines=True, 
-                                      stdout=subprocess.PIPE, 
-                                      stderr=subprocess.PIPE, 
-                                      env=ENV.detyped())
+        out = subprocess.call(cmd, universal_newlines=True, 
+                              #stdout=subprocess.PIPE, 
+                              stderr=subprocess.PIPE, 
+                              env=ENV.detype())
     except subprocess.CalledProcessError as e:
         out = ''
     return out

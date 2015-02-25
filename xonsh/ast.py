@@ -25,6 +25,8 @@ def leftmostname(node):
         rtn = leftmostname(node.func)
     elif isinstance(node, (BinOp, Compare)):
         rtn = leftmostname(node.left)
+    elif isinstance(node, Assign):
+        rtn = leftmostname(node.targets[0])
     elif isinstance(node, (Str, Bytes)):
         # handles case of "./my executable"
         rtn = leftmostname(node.s)
@@ -85,15 +87,7 @@ class CtxAwareTransformer(NodeTransformer):
                 ctx.remove(value)
                 break
 
-    def visit_Expr(self, node):
-        lname = leftmostname(node)
-        inscope = False
-        for ctx in self.contexts[::-1]:
-            if lname in ctx:
-                inscope = True 
-                break
-        if inscope:
-            return node
+    def try_subproc_line(self, node):
         spline = subproc_line(self.lines[node.lineno - 1])
         try:
             newnode = self.parser.parse(spline)
@@ -104,12 +98,34 @@ class CtxAwareTransformer(NodeTransformer):
             newnode = node
         return newnode
 
+    def visit_Expr(self, node):
+        lname = leftmostname(node)
+        if lname is None:
+            return node
+        inscope = False
+        for ctx in self.contexts[::-1]:
+            if lname in ctx:
+                inscope = True 
+                break
+        if inscope:
+            return node
+        newnode = self.try_subproc_line(node)
+        return newnode
+
     def visit_Assign(self, node):
+        ups = set()
         for targ in node.targets:
             if isinstance(targ, (Tuple, List)):
-                self.ctxupdate(map(leftmostname, targ.elts))
+                ups.update(map(leftmostname, targ.elts))
+            elif isinstance(targ, BinOp):
+                newnode = self.try_subproc_line(node)
+                if newnode is node:
+                    ups.add(leftmostname(targ))
+                else:
+                    return newnode
             else:
-                self.ctxadd(leftmostname(targ))
+                ups.add(leftmostname(targ))
+        self.ctxupdate(ups)
         return node
 
     def visit_Import(self, node):
