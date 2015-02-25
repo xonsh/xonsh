@@ -179,12 +179,11 @@ def unload_builtins():
         ENV = None
     if not BUILTINS_LOADED:
         return
-    del (builtins.__xonsh_env__,
-         builtins.__xonsh_help__,
-         builtins.__xonsh_superhelp__,
-         builtins.__xonsh_regexpath__,
-         builtins.__xonsh_subproc__,
-         )
+    names = ['__xonsh_env__', '__xonsh_help__', '__xonsh_superhelp__',
+             '__xonsh_regexpath__', '__xonsh_subproc__',]
+    for name in names:
+        if hasattr(builtins, name):
+            delattr(builtins, name)
     BUILTINS_LOADED = False
 
 @contextmanager

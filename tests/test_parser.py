@@ -1351,6 +1351,8 @@ def test_ls_regex():
 def test_backtick():
     yield check_xonsh_ast, {}, 'print(`.*`)', False
 
+def test_uncaptured_sub():
+    yield check_xonsh_ast, {}, '$[ls]'
 
 
 #DEBUG_LEVEL = 1

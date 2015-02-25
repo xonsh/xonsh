@@ -134,6 +134,7 @@ class Lexer(object):
         'COMMENT',               # #
         'DOLLAR_LPAREN',         # $(
         'DOLLAR_LBRACE',         # ${
+        'DOLLAR_LBRACKET',       # $[
 
         # Ellipsis (...)
         'ELLIPSIS',
@@ -228,6 +229,21 @@ class Lexer(object):
         self.in_py_mode.pop()
         return t
 
+    def t_DOLLAR_LBRACKET(self, t):
+        r'\$\['
+        self.in_py_mode.append(False)
+        return t
+
+    def t_LBRACKET(self, t):
+        r'\['
+        self.in_py_mode.append(True)
+        return t
+
+    def t_RBRACKET(self, t):
+        r'\]'
+        self.in_py_mode.pop()
+        return t
+
     # Basic Operators
     t_PLUS = r'\+'
     t_MINUS = r'-'
@@ -279,8 +295,8 @@ class Lexer(object):
     # Delimeters
     #t_LPAREN = r'\('
     #t_RPAREN = r'\)'
-    t_LBRACKET = r'\['
-    t_RBRACKET = r'\]'
+    #t_LBRACKET = r'\['
+    #t_RBRACKET = r'\]'
     #t_LBRACE = r'\{'
     #t_RBRACE = r'\}'
     t_COMMA = r','

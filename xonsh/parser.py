@@ -1439,6 +1439,7 @@ class Parser(object):
                 | DOLLAR NAME
                 | DOLLAR_LBRACE test RBRACE
                 | DOLLAR_LPAREN subproc RPAREN
+                | DOLLAR_LBRACKET subproc RBRACKET
         """
         p1 = p[1]
         if len(p) == 2:
@@ -1850,7 +1851,7 @@ class Parser(object):
             idx = ast.Index(value=p2)
             p0 = ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
                               lineno=lineno, col_offset=col)
-        elif p1 == '$(':
+        elif p1 == '$(' or p1 == '$[':
             p0 = p2
             #p0 = p[4]
         else:
@@ -1932,6 +1933,7 @@ class Parser(object):
                         | DOLLAR NAME
                         | DOLLAR_LBRACE test RBRACE
                         | DOLLAR_LPAREN subproc RPAREN
+                        | DOLLAR_LBRACKET subproc RBRACKET
         """
         lenp = len(p)
         p1 = p[1]
@@ -1952,10 +1954,10 @@ class Parser(object):
         elif lenp == 3:
             p0 = self._envvar_by_name(p[2], lineno=self.lineno, col=self.col)
             p0._cliarg_action = 'ensure_list'
-        elif p1 == "${":
+        elif p1 == '${':
             p0 = p[2]
             p0._cliarg_action = 'append'
-        elif p1 == "$(":
+        elif p1 == '$(' or p1 == '$[':
             p0 = p[2]
             p0._cliarg_action = 'splitlines'
         else:
