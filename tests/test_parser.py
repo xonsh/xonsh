@@ -1354,6 +1354,12 @@ def test_backtick():
 def test_uncaptured_sub():
     yield check_xonsh_ast, {}, '$[ls]'
 
+def test_two_cmds_one_pipe():
+    yield check_xonsh_ast, {}, '$(ls | grep wakka)', False
+
+def test_two_cmds_two_pipes():
+    yield check_xonsh_ast, {}, '$(ls | grep wakka | grep jawaka)', False
+
 
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100
