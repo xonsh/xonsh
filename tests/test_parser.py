@@ -72,8 +72,9 @@ def check_stmts(input, run=True):
 def check_xonsh_ast(xenv, input, run=True):
     with mock_xonsh_env(xenv):
         obs = PARSER.parse(input, debug_level=DEBUG_LEVEL)
+        bytecode = compile(obs, '<test>', 'exec')
         if run:
-            exec(compile(obs, '<test>', 'exec'))
+            exec(bytecode)
     
 def check_xonsh(xenv, input, run=True):
     if not input.endswith('\n'):

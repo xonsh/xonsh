@@ -1912,7 +1912,10 @@ class Parser(object):
                            | subproc_special_atom INDENT 
                            | INDENT subproc_special_atom INDENT 
         """
-        p[0] = ast.Str(s='|', lineno=self.lineno, col_offset=self.col)
+        p1 = p[1]
+        if len(p) > 2 and len(p1.strip()) == 0:
+            p1 = p[2]
+        p[0] = ast.Str(s=p1, lineno=self.lineno, col_offset=self.col)
 
     def p_subproc(self, p):
         """subproc : subproc_atoms
@@ -1927,7 +1930,7 @@ class Parser(object):
         if lenp <= 3:
             p0 = [self._subproc_cliargs(p1, lineno=lineno, col=col)]
         else:
-            if len(p1) > 1 and p1[-2] != '|':
+            if len(p1) > 1 and hasattr(p1[-2], 's') and p1[-2].s != '|':
                 msg = 'additional redirect following non-pipe redirect'
                 self._parse_error(msg, self.currloc(lineno=lineno, column=col))
             p0 = p1 + [p[2], self._subproc_cliargs(p[3], lineno=lineno, col=col)]

@@ -169,6 +169,7 @@ def globpath(s):
     s = expand_path(s)
     return glob(s)
 
+WRITER_MODES = {'>': 'w', '>>': 'a'}
 
 def run_subproc(cmds, captured=True):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
@@ -185,6 +186,12 @@ def run_subproc(cmds, captured=True):
     """
     global ENV
     last_stdout = PIPE if captured else None
+    write_target = None
+    if len(cmds) >= 3 and cmds[-2] in WRITER_MODES:
+        write_target = cmds[-1][0]
+        write_mode = WRITER_MODES[cmds[-2]]
+        cmds = cmds[:-2]
+        last_stdout = PIPE
     last_cmd = cmds[-1]
     prev = None
     procs = []
@@ -204,6 +211,9 @@ def run_subproc(cmds, captured=True):
     for proc in procs[:-1]:
         proc.stdout.close()
     output = prev_proc.communicate()[0]
+    if write_target is not None:
+        with open(write_target, write_mode) as f:
+            f.write(output)
     return output
 
 def subproc_captured(*cmds):
