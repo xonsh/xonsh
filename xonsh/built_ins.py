@@ -5,6 +5,7 @@ import os
 import re
 import builtins
 import subprocess
+from subprocess import Popen, PIPE
 from glob import glob, iglob
 from contextlib import contextmanager
 from collections import MutableMapping, Iterable
@@ -169,33 +170,42 @@ def globpath(s):
     return glob(s)
 
 
-def subproc_captured(cmd):
+def run_subproc(cmds, captured=True):
+    """Runs a subprocess, in its many forms."""
+    global ENV
+    last_stdout = PIPE if captured else None
+    last_cmd = cmds[-1]
+    prev = None
+    procs = []
+    prev_proc = None
+    for cmd in cmds:
+        if isinstance(cmd, string_types):
+            prev = cmd
+            continue
+        stdin = None if prev_proc is None else prev_proc.stdout
+        stdout = last_stdout if cmd is last_cmd else PIPE
+        uninew = cmd is last_cmd
+        proc = Popen(cmd, universal_newlines=uninew, env=ENV.detype(),
+                     stdin=stdin, stdout=stdout)
+        procs.append(proc)
+        prev = None
+        prev_proc = proc
+    for proc in procs[:-1]:
+        proc.stdout.close()
+    output = prev_proc.communicate()[0]
+    return output
+
+def subproc_captured(*cmds):
     """Runs a subprocess, capturing the output. Returns the stdout
     that was produced as a str.
     """
-    global ENV
-    try:
-        out = subprocess.check_output(cmd, universal_newlines=True, 
-                                      stderr=subprocess.PIPE, 
-                                      env=ENV.detype())
-    except subprocess.CalledProcessError as e:
-        out = ''
-    return out
+    return run_subproc(cmds, captured=True)
 
-
-def subproc_uncaptured(cmd):
+def subproc_uncaptured(*cmds):
     """Runs a subprocess, without capturing the output. Returns the stdout
     that was produced as a str.
     """
-    global ENV
-    try:
-        out = subprocess.call(cmd, universal_newlines=True, 
-                              #stdout=subprocess.PIPE, 
-                              stderr=subprocess.PIPE, 
-                              env=ENV.detype())
-    except subprocess.CalledProcessError as e:
-        out = ''
-    return out
+    return run_subproc(cmds, captured=False)
 
 
 def load_builtins():

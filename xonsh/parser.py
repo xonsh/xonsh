@@ -1899,11 +1899,29 @@ class Parser(object):
             del arg._cliarg_action
         return cliargs
 
+    def p_single_pipe(self, p):
+        """single_pipe : PIPE
+                       | INDENT PIPE 
+                       | PIPE INDENT 
+                       | INDENT PIPE INDENT 
+        """
+        p[0] = ast.Str(s='|', lineno=self.lineno, col_offset=self.col)
+
     def p_subproc(self, p):
         """subproc : subproc_atoms
                    | subproc_atoms INDENT
+                   | subproc single_pipe subproc_atoms
+                   | subproc single_pipe subproc_atoms INDENT
         """
-        p[0] = [self._subproc_cliargs(p[1], lineno=self.lineno, col=self.col)]
+        lineno = self.lineno
+        col = self.col
+        lenp = len(p)
+        if lenp <= 3:
+            p0 = [self._subproc_cliargs(p[1], lineno=lineno, col=col)]
+        else:
+            p0 = p[1] + [p[2], self._subproc_cliargs(p[3], lineno=lineno, col=col)]
+        # return arguments list
+        p[0] = p0
 
     def p_subproc_atoms(self, p):
         """subproc_atoms : subproc_atom
