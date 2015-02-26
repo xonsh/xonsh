@@ -1920,6 +1920,7 @@ class Parser(object):
     def p_subproc(self, p):
         """subproc : subproc_atoms
                    | subproc_atoms INDENT
+                   | subproc AMPERSAND
                    | subproc subproc_special subproc_atoms
                    | subproc subproc_special subproc_atoms INDENT
         """
@@ -1927,7 +1928,12 @@ class Parser(object):
         col = self.col
         lenp = len(p)
         p1 = p[1]
-        if lenp <= 3:
+        if lenp == 2:
+            p0 = [self._subproc_cliargs(p1, lineno=lineno, col=col)]
+        elif p[2] == '&':
+            print("yo")
+            p0 = p1 + [ast.Str(s=p[2], lineno=lineno, col_offset=col)]
+        elif lenp == 3:
             p0 = [self._subproc_cliargs(p1, lineno=lineno, col=col)]
         else:
             if len(p1) > 1 and hasattr(p1[-2], 's') and p1[-2].s != '|':

@@ -186,6 +186,10 @@ def run_subproc(cmds, captured=True):
     """
     global ENV
     last_stdout = PIPE if captured else None
+    background = False
+    if cmds[-1] == '&':
+        background = True
+        cmds = cmds[:-1]
     write_target = None
     if len(cmds) >= 3 and cmds[-2] in WRITER_MODES:
         write_target = cmds[-1][0]
@@ -210,6 +214,8 @@ def run_subproc(cmds, captured=True):
         prev_proc = proc
     for proc in procs[:-1]:
         proc.stdout.close()
+    if background:
+        return
     output = prev_proc.communicate()[0]
     if write_target is not None:
         with open(write_target, write_mode) as f:

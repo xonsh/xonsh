@@ -1373,6 +1373,12 @@ def test_two_cmds_write():
 def test_two_cmds_append():
     yield check_xonsh_ast, {}, '$(ls | grep wakka >> x.py)', False
 
+def test_cmd_background():
+    yield check_xonsh_ast, {}, '$(emacs ugggh &)', False
+
+def test_cmd_background_nospace():
+    yield check_xonsh_ast, {}, '$(emacs ugggh&)', False
+
 
 
 #DEBUG_LEVEL = 1
