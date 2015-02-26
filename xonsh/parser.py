@@ -1899,27 +1899,38 @@ class Parser(object):
             del arg._cliarg_action
         return cliargs
 
-    def p_single_pipe(self, p):
-        """single_pipe : PIPE
-                       | INDENT PIPE 
-                       | PIPE INDENT 
-                       | INDENT PIPE INDENT 
+    def p_subproc_special_atom(self, p):
+        """subproc_special_atom : PIPE
+                                | GT
+                                | RSHIFT
+        """
+        p[0] = p[1]
+
+    def p_subproc_special(self, p):
+        """subproc_special : subproc_special_atom
+                           | INDENT subproc_special_atom
+                           | subproc_special_atom INDENT 
+                           | INDENT subproc_special_atom INDENT 
         """
         p[0] = ast.Str(s='|', lineno=self.lineno, col_offset=self.col)
 
     def p_subproc(self, p):
         """subproc : subproc_atoms
                    | subproc_atoms INDENT
-                   | subproc single_pipe subproc_atoms
-                   | subproc single_pipe subproc_atoms INDENT
+                   | subproc subproc_special subproc_atoms
+                   | subproc subproc_special subproc_atoms INDENT
         """
         lineno = self.lineno
         col = self.col
         lenp = len(p)
+        p1 = p[1]
         if lenp <= 3:
-            p0 = [self._subproc_cliargs(p[1], lineno=lineno, col=col)]
+            p0 = [self._subproc_cliargs(p1, lineno=lineno, col=col)]
         else:
-            p0 = p[1] + [p[2], self._subproc_cliargs(p[3], lineno=lineno, col=col)]
+            if len(p1) > 1 and p1[-2] != '|':
+                msg = 'additional redirect following non-pipe redirect'
+                self._parse_error(msg, self.currloc(lineno=lineno, column=col))
+            p0 = p1 + [p[2], self._subproc_cliargs(p[3], lineno=lineno, col=col)]
         # return arguments list
         p[0] = p0
 

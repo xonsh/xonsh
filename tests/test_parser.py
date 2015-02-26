@@ -1357,8 +1357,21 @@ def test_uncaptured_sub():
 def test_two_cmds_one_pipe():
     yield check_xonsh_ast, {}, '$(ls | grep wakka)', False
 
-def test_two_cmds_two_pipes():
+def test_three_cmds_two_pipes():
     yield check_xonsh_ast, {}, '$(ls | grep wakka | grep jawaka)', False
+
+def test_one_cmd_write():
+    yield check_xonsh_ast, {}, '$(ls > x.py)', False
+
+def test_one_cmd_append():
+    yield check_xonsh_ast, {}, '$(ls >> x.py)', False
+
+def test_two_cmds_write():
+    yield check_xonsh_ast, {}, '$(ls | grep wakka > x.py)', False
+
+def test_two_cmds_append():
+    yield check_xonsh_ast, {}, '$(ls | grep wakka >> x.py)', False
+
 
 
 #DEBUG_LEVEL = 1

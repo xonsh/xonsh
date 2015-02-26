@@ -171,7 +171,18 @@ def globpath(s):
 
 
 def run_subproc(cmds, captured=True):
-    """Runs a subprocess, in its many forms."""
+    """Runs a subprocess, in its many forms. This takes a list of 'commands,'
+    which may be a list of command line arguments or a string, represnting
+    a special connecting character.  For example::
+
+        $ ls | grep wakka
+
+    is represented by the following cmds::
+
+        [['ls'], '|', ['grep', 'wakka']]
+
+    Lastly, the captured argument affects only the last real command.
+    """
     global ENV
     last_stdout = PIPE if captured else None
     last_cmd = cmds[-1]
