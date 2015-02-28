@@ -8,7 +8,7 @@ import subprocess
 from subprocess import Popen, PIPE
 from glob import glob, iglob
 from contextlib import contextmanager
-from collections import MutableMapping, Iterable
+from collections import MutableMapping, Iterable, namedtuple
 
 from xonsh.tools import string_types
 from xonsh.inspectors import Inspector
@@ -103,6 +103,63 @@ class Env(MutableMapping):
                                      self.__class__.__name__, self._d)
 
 
+class Aliases(MutableMapping):
+    """Represents a location to hold and look up aliases."""
+
+    def __init__(self, *args, **kwargs):
+        self._raw = dict(*args, **kwargs)
+
+    def get(self, key, default=None):
+        """Returns the (possibly modified) key. If the key is not 
+        present, the default value is returned. If the key is a string, 
+        then it is parsed and evaluated in a built-ins only context and then 
+        return.  If the value is a non-string Iterable of strings, then it is 
+        returned directly. If the value is callable, it is also returned 
+        without modification. Otherwise, it fails.
+        """
+        if key not in self._raw:
+            return default
+        val = self._raw[key]
+        if isinstance(val, string_types):
+            ctx = {}
+            val = builtins.evalx(val, glbs=ctx, locs=ctx)
+        elif isinstance(val, Iterable) or callable(val):
+            pass
+        else:
+            msg = 'alias of {0!r} has an inappropriate type: {1!r}'
+            raise TypeError(msg.format(key, val))
+        return val
+
+    #
+    # Mutable mapping interface
+    #
+
+    def __getitem__(self, key):
+        return self._raw[key]
+
+    def __setitem__(self, key, val):
+        self._raw[key] = val
+        
+    def __delitem__(self, key):
+        del self._raw[key]
+
+    def update(*args, **kwargs):
+        self._raw.update(*args, **kwargs)
+
+    def __iter__(self):
+        yield from self._raw
+
+    def __len__(self):
+        return len(self._raw)
+
+    def __str__(self):
+        return str(self._raw)
+
+    def __repr__(self):
+        return '{0}.{1}({2})'.format(self.__class__.__module__, 
+                                     self.__class__.__name__, self._raw)
+
+
 def helper(x, name=''):
     """Prints help about, and then returns that variable."""
     INSPECTOR.pinfo(x, oname=name, detail_level=0)
@@ -171,6 +228,8 @@ def globpath(s):
 
 WRITER_MODES = {'>': 'w', '>>': 'a'}
 
+ProcProxy = namedtuple('ProcProxy', ['stdout', 'stderr'])
+
 def run_subproc(cmds, captured=True):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
     which may be a list of command line arguments or a string, represnting
@@ -207,7 +266,20 @@ def run_subproc(cmds, captured=True):
         stdin = None if prev_proc is None else prev_proc.stdout
         stdout = last_stdout if cmd is last_cmd else PIPE
         uninew = cmd is last_cmd
-        proc = Popen(cmd, universal_newlines=uninew, env=ENV.detype(),
+        alias = builtins.aliases.get(cmd[0], None)
+        if alias is None:
+            aliased_cmd = cmd
+        elif callable(alias):
+            prev_proc = ProcProxy(alias(cmd[1:], stdin=stdin))
+            if last_cmd:
+                sys.stdout.write(prev_proc.stdout)
+                sys.stdout.flush()
+                sys.stderr.write(prev_proc.stderr)
+                sys.stderr.flush()
+            continue
+        else:
+            aliased_cmd = alias + cmd[1:]
+        proc = Popen(aliased_cmd, universal_newlines=uninew, env=ENV.detype(),
                      stdin=stdin, stdout=stdout)
         procs.append(proc)
         prev = None
@@ -216,7 +288,8 @@ def run_subproc(cmds, captured=True):
         proc.stdout.close()
     if background:
         return
-    output = prev_proc.communicate()[0]
+    output = prev_proc.stdout if isinstance(prev_proc, ProcProxy) else \
+             prev_proc.communicate()[0]
     if write_target is not None:
         with open(write_target, write_mode) as f:
             f.write(output)
@@ -235,11 +308,12 @@ def subproc_uncaptured(*cmds):
     return run_subproc(cmds, captured=False)
 
 
-def load_builtins():
+def load_builtins(execer=None):
     """Loads the xonsh builtins into the Python builtins. Sets the
     BUILTINS_LOADED variable to True.
     """
     global BUILTINS_LOADED, ENV
+    # private built-ins
     builtins.__xonsh_env__ = ENV = Env()
     builtins.__xonsh_help__ = helper
     builtins.__xonsh_superhelp__ = superhelper
@@ -247,6 +321,11 @@ def load_builtins():
     builtins.__xonsh_glob__ = globpath
     builtins.__xonsh_subproc_captured__ = subproc_captured
     builtins.__xonsh_subproc_uncaptured__ = subproc_uncaptured
+    # public built-ins
+    builtins.evalx = None if execer is None else execer.eval
+    builtins.execx = None if execer is None else execer.exec
+    builtins.compilex = None if execer is None else execer.compile
+    builtins.aliases = Aliases()
     BUILTINS_LOADED = True
 
 def unload_builtins():
@@ -261,18 +340,20 @@ def unload_builtins():
         return
     names = ['__xonsh_env__', '__xonsh_help__', '__xonsh_superhelp__',
              '__xonsh_regexpath__', '__xonsh_glob__', 
-             '__xonsh_subproc_captured__', '__xonsh_subproc_uncaptured__',]
+             '__xonsh_subproc_captured__', '__xonsh_subproc_uncaptured__',
+             'evalx', 'execx', 'compilex',
+             ]
     for name in names:
         if hasattr(builtins, name):
             delattr(builtins, name)
     BUILTINS_LOADED = False
 
 @contextmanager
-def xonsh_builtins():
+def xonsh_builtins(execer=None):
     """A context manager for using the xonsh builtins only in a limited
     scope. Likely useful in testing.
     """
-    load_builtins()
+    load_builtins(execer=execer)
     yield
     unload_builtins()
 

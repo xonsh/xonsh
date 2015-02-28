@@ -30,7 +30,7 @@ class Execer(object):
         self.filename = filename
         self.debug_level = debug_level
         self.ctxtransformer = ast.CtxAwareTransformer(self.parser)
-        load_builtins()
+        load_builtins(execer=self)
 
     def __del__(self):
         unload_builtins()
@@ -67,11 +67,12 @@ class Execer(object):
         # assume that this line is suppossed to be a subprocess line, assuming
         # it also is valid as a subprocess line.
         tree = self.ctxtransformer.ctxvisit(tree, input, ctx)
-        print(ast.dump(tree))
         return tree
 
-    def exec(self, input, glbs=None, locs=None, stacklevel=1):
-        """Execute xonsh code."""
+    def compile(self, input, glbs=None, locs=None, stacklevel=2):
+        """Compiles xonsh code into a Python code object, which may then 
+        be execed or evaled.
+        """
         if glbs is None or locs is None:
             frame = inspect.stack()[stacklevel][0]
             glbs = frame.f_globals if glbs is None else glbs
@@ -79,6 +80,18 @@ class Execer(object):
         ctx = set(dir(builtins)) | set(glbs.keys()) | set(locs.keys())
         tree = self.parse(input, ctx)
         code = compile(tree, self.filename, 'exec')
+        return code
+
+    def eval(self, input, glbs=None, locs=None, stacklevel=2):
+        """Evaluates (and returns) xonsh code."""
+        code = self.compile(input=input, glbs=glbs, locs=locs, 
+                            stacklevel=stacklevel)
+        return eval(code, glbs, locs)
+
+    def exec(self, input, glbs=None, locs=None, stacklevel=2):
+        """Execute xonsh code."""
+        code = self.compile(input=input, glbs=glbs, locs=locs, 
+                            stacklevel=stacklevel)
         exec(code, glbs, locs)
 
     def _parse_ctx_free(self, input):
