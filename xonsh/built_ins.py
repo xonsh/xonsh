@@ -13,6 +13,7 @@ from collections import MutableMapping, Iterable, namedtuple
 
 from xonsh.tools import string_types
 from xonsh.inspectors import Inspector
+from xonsh.environ import default_env
 from xonsh.aliases import DEFAULT_ALIASES
 
 BUILTINS_LOADED = False
@@ -316,7 +317,7 @@ def load_builtins(execer=None):
     """
     global BUILTINS_LOADED, ENV
     # private built-ins
-    builtins.__xonsh_env__ = ENV = Env()
+    builtins.__xonsh_env__ = ENV = Env(default_env())
     builtins.__xonsh_help__ = helper
     builtins.__xonsh_superhelp__ = superhelper
     builtins.__xonsh_regexpath__ = regexpath
