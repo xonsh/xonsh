@@ -3,6 +3,7 @@ not to be confused with the special Python builtins module.
 """
 import os
 import re
+import sys
 import builtins
 import subprocess
 from subprocess import Popen, PIPE
@@ -12,6 +13,7 @@ from collections import MutableMapping, Iterable, namedtuple
 
 from xonsh.tools import string_types
 from xonsh.inspectors import Inspector
+from xonsh.aliases import DEFAULT_ALIASES
 
 BUILTINS_LOADED = False
 ENV = None
@@ -270,7 +272,7 @@ def run_subproc(cmds, captured=True):
         if alias is None:
             aliased_cmd = cmd
         elif callable(alias):
-            prev_proc = ProcProxy(alias(cmd[1:], stdin=stdin))
+            prev_proc = ProcProxy(*alias(cmd[1:], stdin=stdin))
             if last_cmd:
                 sys.stdout.write(prev_proc.stdout)
                 sys.stdout.flush()
@@ -325,7 +327,7 @@ def load_builtins(execer=None):
     builtins.evalx = None if execer is None else execer.eval
     builtins.execx = None if execer is None else execer.exec
     builtins.compilex = None if execer is None else execer.compile
-    builtins.aliases = Aliases()
+    builtins.aliases = Aliases(DEFAULT_ALIASES)
     BUILTINS_LOADED = True
 
 def unload_builtins():
