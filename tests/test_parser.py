@@ -53,33 +53,33 @@ def assert_nodes_equal(x, y):
         return True
     assert_equal(ast.dump(x), ast.dump(y))
 
-def check_ast(input, run=True):
+def check_ast(input, run=True, mode='eval'):
     # expect a Python AST
-    exp = ast.parse(input)
+    exp = ast.parse(input, mode=mode)
     # observe something from xonsh
     obs = PARSER.parse(input, debug_level=DEBUG_LEVEL)
     # Check that they are equal
     assert_nodes_equal(exp, obs)
     # round trip by running xonsh AST via Python
     if run:
-        exec(compile(obs, '<test>', 'exec'))
+        exec(compile(obs, '<test-ast>', mode))
 
-def check_stmts(input, run=True):
+def check_stmts(input, run=True, mode='exec'):
     if not input.endswith('\n'):
         input += '\n'
-    check_ast(input, run=run)
+    check_ast(input, run=run, mode=mode)
 
-def check_xonsh_ast(xenv, input, run=True):
+def check_xonsh_ast(xenv, input, run=True, mode='eval'):
     with mock_xonsh_env(xenv):
         obs = PARSER.parse(input, debug_level=DEBUG_LEVEL)
-        bytecode = compile(obs, '<test>', 'exec')
+        bytecode = compile(obs, '<test-xonsh-ast>', mode)
         if run:
             exec(bytecode)
     
-def check_xonsh(xenv, input, run=True):
+def check_xonsh(xenv, input, run=True, mode='exec'):
     if not input.endswith('\n'):
         input += '\n'
-    check_xonsh_ast(xenv, input, run=run)
+    check_xonsh_ast(xenv, input, run=run, mode=mode)
 
 #
 # Tests

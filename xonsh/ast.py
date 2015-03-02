@@ -92,14 +92,17 @@ class CtxAwareTransformer(NodeTransformer):
         spline = subproc_line(self.lines[node.lineno - 1])
         try:
             newnode = self.parser.parse(spline)
-            newnode = newnode.body[0]  # take the first (and only) Expr
+            newnode = newnode.body
+            if not isinstance(newnode, AST):
+                # take the first (and only) Expr
+                newnode = newnode[0]
             newnode.lineno = node.lineno
             newnode.col_offset = node.col_offset
         except SyntaxError as e:
             newnode = node
         return newnode
 
-    def visit_Expr(self, node):
+    def is_in_scope(self, node):
         lname = leftmostname(node)
         if lname is None:
             return node
@@ -108,6 +111,17 @@ class CtxAwareTransformer(NodeTransformer):
             if lname in ctx:
                 inscope = True 
                 break
+        return inscope
+
+    def visit_Expression(self, node):
+        body = node.body
+        inscope = self.is_in_scope(body)
+        if not inscope:
+            node.body = self.try_subproc_line(body)
+        return node
+
+    def visit_Expr(self, node):
+        inscope = self.is_in_scope(node)
         if inscope:
             return node
         newnode = self.try_subproc_line(node)
