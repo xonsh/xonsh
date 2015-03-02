@@ -4,6 +4,7 @@ from cmd import Cmd
 import builtins
 
 from xonsh.execer import Execer
+from xonsh.completer import Completer
 
 class Shell(Cmd):
     """The xonsh shell."""
@@ -13,10 +14,11 @@ class Shell(Cmd):
                                     stdout=stdout)
         self.execer = Execer()
         self.ctx = ctx or {}
+        self.completer = Completer()
 
     def parseline(self, line):
         """Overridden to no-op."""
-        return '', None, line
+        return '', line, line
 
     def default(self, line):
         """Implements parser."""
@@ -30,9 +32,22 @@ class Shell(Cmd):
 
     def completedefault(self, text, line, begidx, endidx):
         """Implements tab-completion for text."""
-        x = [s for s in self.ctx if s.startswith(text)]
-        x += [s for s in dir(builtins) if s.startswith(text)]
-        return x
+        if len(text) == 0:
+            return self.completer.complete(text, line, begidx, endidx, ctx=self.ctx)
+        s = ''
+        beg = 0
+        end = len(line)
+        for tok in line.split():
+            if text not in tok:
+                continue
+            loc = line.find(tok, beg)
+            if loc == -1 or loc > begidx:
+                break
+            s = tok
+            beg = loc
+            end = loc + len(s)
+        #print('\n', s)
+        return self.completer.complete(s, line, beg, end, ctx=self.ctx)
 
     # tab complete on first index too
     completenames = completedefault

@@ -114,7 +114,7 @@ class Lexer(object):
 
         # Assignment Operators
         'EQUALS', 'PLUSEQUAL', 'MINUSEQUAL', 'TIMESEQUAL', 'DIVEQUAL', 
-        'MODEQUAL', 'POWEQUAL', 'LSHIFTEQUAL','RSHIFTEQUAL', 'AMPERSANDEQUAL', 
+        'MODEQUAL', 'POWEQUAL', 'LSHIFTEQUAL', 'RSHIFTEQUAL', 'AMPERSANDEQUAL', 
         'XOREQUAL', 'PIPEEQUAL', 'DOUBLEDIVEQUAL',
 
         # Command line
