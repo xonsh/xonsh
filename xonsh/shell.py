@@ -6,6 +6,38 @@ import builtins
 from xonsh.execer import Execer
 from xonsh.completer import Completer
 
+def setup_readline():
+    try:
+        import readline
+    except ImportError:
+        return
+    import ctypes
+    import ctypes.util
+    readline.set_completer_delims(' \t\n')
+    lib = ctypes.cdll.LoadLibrary(readline.__file__)
+    rawlib = ctypes.cdll.LoadLibrary(ctypes.util.find_library('readline'))
+    append_char = ctypes.c_int.in_dll(lib, 'rl_completion_append_character')
+    #print(ctypes.addressof(append_char), ctypes.c_int.in_dll(lib, 'rl_completion_append_character'))
+    append_char.value = 0
+
+    """
+    rappend_char = ctypes.c_int.in_dll(rawlib, 'rl_completion_append_character')
+    print(ctypes.addressof(rappend_char), ctypes.c_int.in_dll(rawlib, 'rl_completion_append_character'))
+    rappend_char.value = 0
+
+    nappend_char = ctypes.c_int.in_dll(lib, 'rl_completion_append_character')
+    print(ctypes.addressof(nappend_char), ctypes.c_int.in_dll(lib, 'rl_completion_append_character'))
+    """
+
+    #int_size = ctypes.sizeof(ctypes.c_int)
+    #ctypes.memset(ctypes.addressof(append_char), 0, int_size)
+    #print(ctypes.addressof(append_char), ctypes.c_int.in_dll(lib, 'rl_completion_append_character'))
+    suppress = ctypes.c_int.in_dll(lib, 'rl_completion_suppress_append')
+    #ctypes.memset(ctypes.addressof(suppress), 1, int_size)
+    #readline.parse_and_bind('tab: delete-char-or-list')
+
+setup_readline()
+
 class Shell(Cmd):
     """The xonsh shell."""
 
@@ -15,6 +47,7 @@ class Shell(Cmd):
         self.execer = Execer()
         self.ctx = ctx or {}
         self.completer = Completer()
+        setup_readline()
 
     def parseline(self, line):
         """Overridden to no-op."""
@@ -32,22 +65,8 @@ class Shell(Cmd):
 
     def completedefault(self, text, line, begidx, endidx):
         """Implements tab-completion for text."""
-        if len(text) == 0:
-            return self.completer.complete(text, line, begidx, endidx, ctx=self.ctx)
-        s = ''
-        beg = 0
-        end = len(line)
-        for tok in line.split():
-            if text not in tok:
-                continue
-            loc = line.find(tok, beg)
-            if loc == -1 or loc > begidx:
-                break
-            s = tok
-            beg = loc
-            end = loc + len(s)
-        #print('\n', s)
-        return self.completer.complete(s, line, beg, end, ctx=self.ctx)
+        setup_readline()
+        return self.completer.complete(text, line, begidx, endidx, ctx=self.ctx)
 
     # tab complete on first index too
     completenames = completedefault
@@ -58,6 +77,12 @@ class Shell(Cmd):
         except KeyboardInterrupt:
             print()  # gimme a newline
             self.cmdloop(intro=None)
+
+    #def complete(self, text, state):
+    #    rtn = super(Shell, self).complete(text, state)
+        #if rtn is not None:
+        #    readline.insert_text('\b')
+    #    return rtn
 
     @property
     def prompt(self):

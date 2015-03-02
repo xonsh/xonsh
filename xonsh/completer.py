@@ -46,7 +46,7 @@ class Completer(object):
         rtn |= {s for s in builtins.aliases if s.startswith(prefix)}
         if prefix.startswith('$'):
             key = prefix[1:]
-            rtn |= {k for k in builtins.__xonsh_env__ if k.startswith(key)}
+            rtn |= {'$'+k for k in builtins.__xonsh_env__ if k.startswith(key)}
         rtn.update(iglob(prefix + '*'))
         #print(rtn)
         return sorted(rtn)
