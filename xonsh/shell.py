@@ -42,7 +42,7 @@ class Shell(Cmd):
             super(Shell, self).cmdloop(intro=intro)
         except KeyboardInterrupt:
             print()  # gimme a newline
-            super(Shell, self).cmdloop(intro=intro)
+            self.cmdloop(intro=None)
 
     @property
     def prompt(self):
