@@ -10,10 +10,18 @@ def cd(args, stdin=None):
         return '', 'directory does not exist: {0}\n'.format(d)
     os.chdir(d)
     builtins.__xonsh_env__['PWD'] = os.getcwd()
-    return '', ''
+    return None, None
+
+def exit(args, stdin=None):
+    """Sends signal to exit shell."""
+    builtins.__xonsh_exit__ = True
+    print()  # gimme a newline
+    return None, None
 
 DEFAULT_ALIASES = {
     'cd': cd,
+    'EOF': exit,
+    'exit': exit,
     'ls': ['ls', '--color=auto', '-v'],
     'grep': ['grep', '--color=auto'],
     'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],

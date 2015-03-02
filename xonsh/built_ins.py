@@ -275,10 +275,12 @@ def run_subproc(cmds, captured=True):
         elif callable(alias):
             prev_proc = ProcProxy(*alias(cmd[1:], stdin=stdin))
             if last_cmd:
-                sys.stdout.write(prev_proc.stdout)
-                sys.stdout.flush()
-                sys.stderr.write(prev_proc.stderr)
-                sys.stderr.flush()
+                if prev_proc.stdout is not None:
+                    sys.stdout.write(prev_proc.stdout)
+                    sys.stdout.flush()
+                if prev_proc.stderr is not None:
+                    sys.stderr.write(prev_proc.stderr)
+                    sys.stderr.flush()
             continue
         else:
             aliased_cmd = alias + cmd[1:]
@@ -322,8 +324,11 @@ def load_builtins(execer=None):
     builtins.__xonsh_superhelp__ = superhelper
     builtins.__xonsh_regexpath__ = regexpath
     builtins.__xonsh_glob__ = globpath
+    builtins.__xonsh_exit__ = False
     builtins.__xonsh_subproc_captured__ = subproc_captured
     builtins.__xonsh_subproc_uncaptured__ = subproc_uncaptured
+    builtins.__xonsh_exit_py__ = builtins.exit
+    del builtins.exit
     # public built-ins
     builtins.evalx = None if execer is None else execer.eval
     builtins.execx = None if execer is None else execer.exec
@@ -341,10 +346,12 @@ def unload_builtins():
         ENV = None
     if not BUILTINS_LOADED:
         return
+    if hasattr(builtins, '__xonsh_exit_py__'):
+        builtins.exit = builtins.__xonsh_exit_py__
     names = ['__xonsh_env__', '__xonsh_help__', '__xonsh_superhelp__',
-             '__xonsh_regexpath__', '__xonsh_glob__', 
+             '__xonsh_regexpath__', '__xonsh_glob__', '__xonsh_exit__',
              '__xonsh_subproc_captured__', '__xonsh_subproc_uncaptured__',
-             'evalx', 'execx', 'compilex',
+             '__xonsh_exit_py__', 'evalx', 'execx', 'compilex',
              ]
     for name in names:
         if hasattr(builtins, name):
@@ -359,5 +366,4 @@ def xonsh_builtins(execer=None):
     load_builtins(execer=execer)
     yield
     unload_builtins()
-
 

@@ -23,10 +23,10 @@ class Shell(Cmd):
         line = line if line.endswith('\n') else line + '\n'
         try:
             self.execer.exec(line, mode='single', glbs=None, locs=self.ctx)
-        except KeyboardInterrupt:
-            return True
         except:
             traceback.print_exc()
+        if builtins.__xonsh_exit__:
+            return True
 
     def completedefault(self, text, line, begidx, endidx):
         """Implements tab-completion for text."""
@@ -36,6 +36,13 @@ class Shell(Cmd):
 
     # tab complete on first index too
     completenames = completedefault
+
+    def cmdloop(self, intro=None):
+        try:
+            super(Shell, self).cmdloop(intro=intro)
+        except KeyboardInterrupt:
+            print()  # gimme a newline
+            super(Shell, self).cmdloop(intro=intro)
 
     @property
     def prompt(self):

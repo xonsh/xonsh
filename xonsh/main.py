@@ -5,11 +5,10 @@ import shlex
 import subprocess
 from argparse import ArgumentParser, Namespace
 
-import urwid
+#import urwid
 
 from xonsh.shell import Shell
 from xonsh.main_display import MainDisplay
-
 
 def main(argv=None):
     if argv is None:
