@@ -69,7 +69,7 @@ class Execer(object):
         tree = self.ctxtransformer.ctxvisit(tree, input, ctx)
         return tree
 
-    def compile(self, input, glbs=None, locs=None, stacklevel=2):
+    def compile(self, input, mode='exec', glbs=None, locs=None, stacklevel=2):
         """Compiles xonsh code into a Python code object, which may then 
         be execed or evaled.
         """
@@ -79,20 +79,20 @@ class Execer(object):
             locs = frame.f_locals if locs is None else locs
         ctx = set(dir(builtins)) | set(glbs.keys()) | set(locs.keys())
         tree = self.parse(input, ctx)
-        code = compile(tree, self.filename, 'exec')
+        code = compile(tree, self.filename, mode)
         return code
 
     def eval(self, input, glbs=None, locs=None, stacklevel=2):
         """Evaluates (and returns) xonsh code."""
-        code = self.compile(input=input, glbs=glbs, locs=locs, 
+        code = self.compile(input=input, glbs=glbs, locs=locs, mode='eval',
                             stacklevel=stacklevel)
         return eval(code, glbs, locs)
 
-    def exec(self, input, glbs=None, locs=None, stacklevel=2):
+    def exec(self, input, mode='exec', glbs=None, locs=None, stacklevel=2):
         """Execute xonsh code."""
-        code = self.compile(input=input, glbs=glbs, locs=locs, 
+        code = self.compile(input=input, glbs=glbs, locs=locs, mode=mode,
                             stacklevel=stacklevel)
-        exec(code, glbs, locs)
+        return exec(code, glbs, locs)
 
     def _parse_ctx_free(self, input):
         last_error_line = -1

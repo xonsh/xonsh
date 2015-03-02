@@ -192,7 +192,6 @@ class Parser(object):
             'indented_stmt',
             'attr_period_name',
             'test_comma',
-            'subproc_atom', 
             )
         for rule in list_rules:
             self._list_rule(rule)
@@ -323,7 +322,7 @@ class Parser(object):
         p1 = p[1]
         if p1 == '\n':
             p1 = []
-        p0 = ast.Module(body=p1)
+        p0 = ast.Interactive(body=p1)
         p[0] = p0
 
     def p_file_input(self, p):
@@ -357,7 +356,7 @@ class Parser(object):
         """eval_input : testlist newlines_opt
                       | testlist newlines_opt ENDMARKER
         """
-        p[0] = ast.Module(body=[self.expr(p[1])])
+        p[0] = ast.Expression(body=p[1])
 
     def p_func_call(self, p):
         """func_call : LPAREN arglist_opt RPAREN"""
