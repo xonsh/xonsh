@@ -77,6 +77,17 @@ def xonsh_superhelp(x, lineno=None, col=None):
 def xonsh_regexpath(x, lineno=None, col=None):
     return xonsh_call('__xonsh_regexpath__', [x], lineno=lineno, col=col)
 
+def load_ctx(x):
+    """Recursively sets ctx to ast.Load()"""
+    if not hasattr(x, 'ctx'):
+        return
+    x.ctx = ast.Load()
+    if isinstance(x, (ast.Tuple, ast.List)):
+        for e in x.elts:
+            load_ctx(e)
+    elif isinstance(x, ast.Starred):
+        load_ctx(x.value)
+
 def store_ctx(x):
     """Recursively sets ctx to ast.Store()"""
     if not hasattr(x, 'ctx'):
@@ -204,7 +215,7 @@ class Parser(object):
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None
 
-    def parse(self, s, filename='<code>', debug_level=0):
+    def parse(self, s, filename='<code>', mode='exec', debug_level=0):
         """Returns an abstract syntax tree of xonsh code.
 
         Parameters
@@ -213,6 +224,8 @@ class Parser(object):
             The xonsh code.
         filename : str, optional
             Name of the file.
+        mode : str, optional
+            Execution mode, one of: exec, eval, or single.
         debug_level : str, optional
             Debugging level passed down to yacc.
 
@@ -226,6 +239,15 @@ class Parser(object):
         self._last_yielded_token = None
         tree = self.parser.parse(input=s, lexer=self.lexer,
                                  debug=debug_level)
+        # hack for getting modes right
+        if mode == 'single':
+            if isinstance(tree, ast.Expression):
+                tree = ast.Interactive(body=[self.expr(tree.body)])
+            elif isinstance(tree, ast.Module):
+                #body = [n if isinstance(n, ast.STATEMENTS) else self.expr(n) \
+                #        for n in tree.body]
+                #tree = ast.Interactive(body=body)
+                tree = ast.Interactive(body=tree.body)
         return tree
 
     def _lexer_errfunc(self, msg, line, column):
@@ -694,6 +716,7 @@ class Parser(object):
             store_ctx(targ)
         if lenp == 3:
             if p2 is None and len(p1) == 1:
+                load_ctx(p1[0])
                 p0 = self.expr(p1[0])
             elif p2 is None:
                 assert False

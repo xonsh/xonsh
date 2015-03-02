@@ -20,16 +20,13 @@ class Shell(Cmd):
 
     def default(self, line):
         """Implements parser."""
-        #line = line if line.endswith('\n') else line + '\n'
+        line = line if line.endswith('\n') else line + '\n'
         try:
-            rtn = self.execer.eval(line, #mode='single', 
-                                   glbs=None, locs=self.ctx)
+            self.execer.exec(line, mode='single', glbs=None, locs=self.ctx)
         except KeyboardInterrupt:
             return True
         except:
             traceback.print_exc()
-        if rtn is not None:
-            print(rtn)
 
     def completedefault(self, text, line, begidx, endidx):
         """Implements tab-completion for text."""

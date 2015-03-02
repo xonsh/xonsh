@@ -14,6 +14,10 @@ from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
 
 from xonsh.tools import subproc_line
 
+STATEMENTS = (FunctionDef, ClassDef, Return, Delete, Assign, AugAssign, For,
+              While, If, With, Raise, Try, Assert, Import, ImportFrom, Global, 
+              Nonlocal, Expr, Pass, Break, Continue)
+
 def leftmostname(node):
     """Attempts to find the first name in the tree."""
     if isinstance(node, Name):
@@ -53,7 +57,7 @@ class CtxAwareTransformer(NodeTransformer):
         self.input = None
         self.contexts = []
 
-    def ctxvisit(self, node, input, ctx):
+    def ctxvisit(self, node, input, ctx, mode='exec'):
         """Transforms the node in a context-dependent way.
 
         Parameters
@@ -72,8 +76,9 @@ class CtxAwareTransformer(NodeTransformer):
         """
         self.lines = input.splitlines()
         self.contexts = [ctx, set()]
+        self.mode = mode
         node = self.visit(node)
-        del self.lines, self.contexts
+        del self.lines, self.contexts, self.mode
         return node
 
     def ctxupdate(self, iterable):
@@ -91,7 +96,7 @@ class CtxAwareTransformer(NodeTransformer):
     def try_subproc_line(self, node):
         spline = subproc_line(self.lines[node.lineno - 1])
         try:
-            newnode = self.parser.parse(spline)
+            newnode = self.parser.parse(spline, mode=self.mode)
             newnode = newnode.body
             if not isinstance(newnode, AST):
                 # take the first (and only) Expr
