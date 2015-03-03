@@ -6,7 +6,12 @@ import builtins
 from xonsh.execer import Execer
 from xonsh.completer import Completer
 
+RL_COMPLETION_SUPPRESS_APPEND = None
+
 def setup_readline():
+    global RL_COMPLETION_SUPPRESS_APPEND
+    if RL_COMPLETION_SUPPRESS_APPEND is not None:
+        return
     try:
         import readline
     except ImportError:
@@ -15,28 +20,16 @@ def setup_readline():
     import ctypes.util
     readline.set_completer_delims(' \t\n')
     lib = ctypes.cdll.LoadLibrary(readline.__file__)
-    rawlib = ctypes.cdll.LoadLibrary(ctypes.util.find_library('readline'))
-    append_char = ctypes.c_int.in_dll(lib, 'rl_completion_append_character')
-    #print(ctypes.addressof(append_char), ctypes.c_int.in_dll(lib, 'rl_completion_append_character'))
-    append_char.value = 0
+    RL_COMPLETION_SUPPRESS_APPEND = ctypes.c_int.in_dll(lib, 
+                                            'rl_completion_suppress_append')
 
+def rl_completion_suppress_append(val=1):
+    """Sets the rl_completion_suppress_append varaiable, if possible.
+    A value of 1 (default) means to suppress, a value of 0 means to enable.
     """
-    rappend_char = ctypes.c_int.in_dll(rawlib, 'rl_completion_append_character')
-    print(ctypes.addressof(rappend_char), ctypes.c_int.in_dll(rawlib, 'rl_completion_append_character'))
-    rappend_char.value = 0
-
-    nappend_char = ctypes.c_int.in_dll(lib, 'rl_completion_append_character')
-    print(ctypes.addressof(nappend_char), ctypes.c_int.in_dll(lib, 'rl_completion_append_character'))
-    """
-
-    #int_size = ctypes.sizeof(ctypes.c_int)
-    #ctypes.memset(ctypes.addressof(append_char), 0, int_size)
-    #print(ctypes.addressof(append_char), ctypes.c_int.in_dll(lib, 'rl_completion_append_character'))
-    suppress = ctypes.c_int.in_dll(lib, 'rl_completion_suppress_append')
-    #ctypes.memset(ctypes.addressof(suppress), 1, int_size)
-    #readline.parse_and_bind('tab: delete-char-or-list')
-
-setup_readline()
+    if RL_COMPLETION_SUPPRESS_APPEND is None:
+        return
+    RL_COMPLETION_SUPPRESS_APPEND.value = val
 
 class Shell(Cmd):
     """The xonsh shell."""
@@ -65,7 +58,7 @@ class Shell(Cmd):
 
     def completedefault(self, text, line, begidx, endidx):
         """Implements tab-completion for text."""
-        setup_readline()
+        rl_completion_suppress_append()  # this needs to be called each time
         return self.completer.complete(text, line, begidx, endidx, ctx=self.ctx)
 
     # tab complete on first index too
@@ -77,12 +70,6 @@ class Shell(Cmd):
         except KeyboardInterrupt:
             print()  # gimme a newline
             self.cmdloop(intro=None)
-
-    #def complete(self, text, state):
-    #    rtn = super(Shell, self).complete(text, state)
-        #if rtn is not None:
-        #    readline.insert_text('\b')
-    #    return rtn
 
     @property
     def prompt(self):
