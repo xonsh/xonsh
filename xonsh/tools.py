@@ -57,68 +57,68 @@ def safe_hasattr(obj, attr):
 
 TERM_COLORS = {
     # Reset
-    'NO_COLOR': '\033[0m',       # Text Reset
+    'NO_COLOR': '\001\033[0m\002',       # Text Reset
     # Regular Colors
-    'BLACK': '\033[0;30m',        # BLACK
-    'RED': '\033[0;31m',          # RED
-    'GREEN': '\033[0;32m',        # GREEN
-    'YELLOW': '\033[0;33m',       # YELLOW
-    'BLUE': '\033[0;34m',         # BLUE
-    'PURPLE': '\033[0;35m',       # PURPLE
-    'CYAN': '\033[0;36m',         # CYAN
-    'WHITE': '\033[0;37m',        # WHITE
+    'BLACK': '\033[0;30m\002',        # BLACK
+    'RED': '\001\033[0;31m\002',          # RED
+    'GREEN': '\001\033[0;32m\002',        # GREEN
+    'YELLOW': '\001\033[0;33m\002',       # YELLOW
+    'BLUE': '\001\033[0;34m\002',         # BLUE
+    'PURPLE': '\001\033[0;35m\002',       # PURPLE
+    'CYAN': '\001\033[0;36m\002',         # CYAN
+    'WHITE': '\001\033[0;37m\002',        # WHITE
     # Bold
-    'BOLD_BLACK': '\033[1;30m',       # BLACK
-    'BOLD_RED': '\033[1;31m',         # RED
-    'BOLD_GREEN': '\033[1;32m',       # GREEN
-    'BOLD_YELLOW': '\033[1;33m',      # YELLOW
-    'BOLD_BLUE': '\033[1;34m',        # BLUE
-    'BOLD_PURPLE': '\033[1;35m',      # PURPLE
-    'BOLD_CYAN': '\033[1;36m',        # CYAN
-    'BOLD_WHITE': '\033[1;37m',       # WHITE
+    'BOLD_BLACK': '\001\033[1;30m\002',       # BLACK
+    'BOLD_RED': '\001\033[1;31m\002',         # RED
+    'BOLD_GREEN': '\001\033[1;32m\002',       # GREEN
+    'BOLD_YELLOW': '\001\033[1;33m\002',      # YELLOW
+    'BOLD_BLUE': '\001\033[1;34m\002',        # BLUE
+    'BOLD_PURPLE': '\001\033[1;35m\002',      # PURPLE
+    'BOLD_CYAN': '\001\033[1;36m\002',        # CYAN
+    'BOLD_WHITE': '\001\033[1;37m\002',       # WHITE
     # Underline
-    'UNDERLINE_BLACK': '\033[4;30m',       # BLACK
-    'UNDERLINE_RED': '\033[4;31m',         # RED
-    'UNDERLINE_GREEN': '\033[4;32m',       # GREEN
-    'UNDERLINE_YELLOW': '\033[4;33m',      # YELLOW
-    'UNDERLINE_BLUE': '\033[4;34m',        # BLUE
-    'UNDERLINE_PURPLE': '\033[4;35m',      # PURPLE
-    'UNDERLINE_CYAN': '\033[4;36m',        # CYAN
-    'UNDERLINE_WHITE': '\033[4;37m',       # WHITE
+    'UNDERLINE_BLACK': '\001\033[4;30m\002',       # BLACK
+    'UNDERLINE_RED': '\001\033[4;31m\002',         # RED
+    'UNDERLINE_GREEN': '\001\033[4;32m\002',       # GREEN
+    'UNDERLINE_YELLOW': '\001\033[4;33m\002',      # YELLOW
+    'UNDERLINE_BLUE': '\001\033[4;34m\002',        # BLUE
+    'UNDERLINE_PURPLE': '\001\033[4;35m\002',      # PURPLE
+    'UNDERLINE_CYAN': '\001\033[4;36m\002',        # CYAN
+    'UNDERLINE_WHITE': '\001\033[4;37m\002',       # WHITE
     # Background
-    'BACKGROUND_BLACK': '\033[40m',       # BLACK
-    'BACKGROUND_RED': '\033[41m',         # RED
-    'BACKGROUND_GREEN': '\033[42m',       # GREEN
-    'BACKGROUND_YELLOW': '\033[43m',      # YELLOW
-    'BACKGROUND_BLUE': '\033[44m',        # BLUE
-    'BACKGROUND_PURPLE': '\033[45m',      # PURPLE
-    'BACKGROUND_CYAN': '\033[46m',        # CYAN
-    'BACKGROUND_WHITE': '\033[47m',       # WHITE
+    'BACKGROUND_BLACK': '\001\033[40m\002',       # BLACK
+    'BACKGROUND_RED': '\001\033[41m\002',         # RED
+    'BACKGROUND_GREEN': '\001\033[42m\002',       # GREEN
+    'BACKGROUND_YELLOW': '\001\033[43m\002',      # YELLOW
+    'BACKGROUND_BLUE': '\001\033[44m\002',        # BLUE
+    'BACKGROUND_PURPLE': '\001\033[45m\002',      # PURPLE
+    'BACKGROUND_CYAN': '\001\033[46m\002',        # CYAN
+    'BACKGROUND_WHITE': '\001\033[47m\002',       # WHITE
     # High Intensity
-    'INTENSE_BLACK': '\033[0;90m',       # BLACK
-    'INTENSE_RED': '\033[0;91m',         # RED
-    'INTENSE_GREEN': '\033[0;92m',       # GREEN
-    'INTENSE_YELLOW': '\033[0;93m',      # YELLOW
-    'INTENSE_BLUE': '\033[0;94m',        # BLUE
-    'INTENSE_PURPLE': '\033[0;95m',      # PURPLE
-    'INTENSE_CYAN': '\033[0;96m',        # CYAN
-    'INTENSE_WHITE': '\033[0;97m',       # WHITE
+    'INTENSE_BLACK': '\001\033[0;90m\002',       # BLACK
+    'INTENSE_RED': '\001\033[0;91m\002',         # RED
+    'INTENSE_GREEN': '\001\033[0;92m\002',       # GREEN
+    'INTENSE_YELLOW': '\001\033[0;93m\002',      # YELLOW
+    'INTENSE_BLUE': '\001\033[0;94m\002',        # BLUE
+    'INTENSE_PURPLE': '\001\033[0;95m\002',      # PURPLE
+    'INTENSE_CYAN': '\001\033[0;96m\002',        # CYAN
+    'INTENSE_WHITE': '\001\033[0;97m\002',       # WHITE
     # Bold High Intensity
-    'BOLD_INTENSE_BLACK': '\033[1;90m',      # BLACK
-    'BOLD_INTENSE_RED': '\033[1;91m',        # RED
-    'BOLD_INTENSE_GREEN': '\033[1;92m',      # GREEN
-    'BOLD_INTENSE_YELLOW': '\033[1;93m',     # YELLOW
-    'BOLD_INTENSE_BLUE': '\033[1;94m',       # BLUE
-    'BOLD_INTENSE_PURPLE': '\033[1;95m',     # PURPLE
-    'BOLD_INTENSE_CYAN': '\033[1;96m',       # CYAN
-    'BOLD_INTENSE_WHITE': '\033[1;97m',      # WHITE
+    'BOLD_INTENSE_BLACK': '\001\033[1;90m\002',      # BLACK
+    'BOLD_INTENSE_RED': '\001\033[1;91m\002',        # RED
+    'BOLD_INTENSE_GREEN': '\001\033[1;92m\002',      # GREEN
+    'BOLD_INTENSE_YELLOW': '\001\033[1;93m\002',     # YELLOW
+    'BOLD_INTENSE_BLUE': '\001\033[1;94m\002',       # BLUE
+    'BOLD_INTENSE_PURPLE': '\001\033[1;95m\002',     # PURPLE
+    'BOLD_INTENSE_CYAN': '\001\033[1;96m\002',       # CYAN
+    'BOLD_INTENSE_WHITE': '\001\033[1;97m\002',      # WHITE
     # High Intensity backgrounds
-    'BACKGROUND_INTENSE_BLACK': '\033[0;100m',   # BLACK
-    'BACKGROUND_INTENSE_RED': '\033[0;101m',     # RED
-    'BACKGROUND_INTENSE_GREEN': '\033[0;102m',   # GREEN
-    'BACKGROUND_INTENSE_YELLOW': '\033[0;103m',  # YELLOW
-    'BACKGROUND_INTENSE_BLUE': '\033[0;104m',    # BLUE
-    'BACKGROUND_INTENSE_PURPLE': '\033[0;105m',  # PURPLE
-    'BACKGROUND_INTENSE_CYAN': '\033[0;106m',    # CYAN
-    'BACKGROUND_INTENSE_WHITE': '\033[0;107m',   # WHITE
+    'BACKGROUND_INTENSE_BLACK': '\001\033[0;100m\002',   # BLACK
+    'BACKGROUND_INTENSE_RED': '\001\033[0;101m\002',     # RED
+    'BACKGROUND_INTENSE_GREEN': '\001\033[0;102m\002',   # GREEN
+    'BACKGROUND_INTENSE_YELLOW': '\001\033[0;103m\002',  # YELLOW
+    'BACKGROUND_INTENSE_BLUE': '\001\033[0;104m\002',    # BLUE
+    'BACKGROUND_INTENSE_PURPLE': '\001\033[0;105m\002',  # PURPLE
+    'BACKGROUND_INTENSE_CYAN': '\001\033[0;106m\002',    # CYAN
+    'BACKGROUND_INTENSE_WHITE': '\001\033[0;107m\002',   # WHITE
     }

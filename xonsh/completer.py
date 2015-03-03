@@ -7,7 +7,7 @@ import subprocess
 from glob import glob, iglob
 
 XONSH_TOKENS = {'and ', 'as ', 'assert ', 'break', 'class ', 'continue', 
-    'def ', 'del ', 'elif ', 'else:', 'except ', 'finally:', 'for ', 'from ', 
+    'def ', 'del ', 'elif ', 'else', 'except ', 'finally:', 'for ', 'from ', 
     'global ', 'import ', 'if ', 'in ', 'is ', 'lambda ', 'nonlocal ', 'not ',
     'or ', 'pass', 'raise ', 'return ', 'try:', 'while ', 'with ', 'yield ', 
     '+', '-', '/', '//', '%', '**', '|', '&', '~', '^', '>>', '<<', '<', '<=',
@@ -39,7 +39,7 @@ class Completer(object):
         rtn : list of str
             Possible completions of prefix, sorted alphabetically.
         """
-        space = ' '
+        space = ' '  # intern some strings for faster appending
         slash = '/'
         rtn = {s for s in XONSH_TOKENS if s.startswith(prefix)}
         if ctx is not None:
