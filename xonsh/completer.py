@@ -18,6 +18,16 @@ XONSH_TOKENS = {'and ', 'as ', 'assert ', 'break', 'class ', 'continue',
     '>>=', '<<=', '&=', '^=', '|=', '//=', ',', ';', ':', '?', '??', '$(', 
     '${', '$[', '..', '...'}
 
+BASH_COMPLETE_SCRIPT = """source {filename}
+COMP_WORDS=({line})
+COMP_LINE="{line}"
+COMP_POINT=${{#COMP_LINE}}
+COMP_COUNT={end}
+COMP_CWORD={n}
+{func} {cmd} {prefix} {prev}
+for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
+"""
+
 class Completer(object):
     """This provides a list of optional completions for the xonsh shell."""
 
@@ -54,7 +64,13 @@ class Completer(object):
         """
         space = ' '  # intern some strings for faster appending
         slash = '/'
-        rtn = {s for s in XONSH_TOKENS if s.startswith(prefix)}
+        if begidx == 0:
+            rtn = self.cmd_complete(prefix)
+        elif line.split(' ', 1)[0] in self.bash_complete_funcs:
+            return sorted(self.bash_complete(prefix, line, begidx, endidx))
+        else:
+            rtn = set()
+        rtn |= {s for s in XONSH_TOKENS if s.startswith(prefix)}
         if ctx is not None:
             rtn |= {s for s in ctx if s.startswith(prefix)}
         rtn |= {s for s in dir(builtins) if s.startswith(prefix)}
@@ -63,19 +79,46 @@ class Completer(object):
             key = prefix[1:]
             rtn |= {'$'+k for k in builtins.__xonsh_env__ if k.startswith(key)}
         rtn |= {s + (slash if os.path.isdir(s) else space) for s in iglob(prefix + '*')}
-        if begidx == 0:
-            rtn |= self.cmd_complete(prefix)
         return sorted(rtn)
 
     def cmd_complete(self, cmd):
+        """Completes a command name based on what is on the $PATH"""
         path = builtins.__xonsh_env__.get('PATH', None)
         if path is None:
             return set()
         cmds = set()
+        space = ' '
         for d in path:
             if os.path.isdir(d):
-                cmds |= {s for s in os.listdir(d) if s.startswith(cmd)}
+                cmds |= {s + space for s in os.listdir(d) if s.startswith(cmd)}
         return cmds
+
+    def bash_complete(self, prefix, line, begidx, endidx):
+        """Attempts BASH completion."""
+        splt = line.split()
+        cmd = splt[0]
+        func = self.bash_complete_funcs.get(cmd, None)
+        fnme = self.bash_complete_files.get(cmd, None)
+        if func is None or fnme is None:
+            return set()
+        idx = 0
+        for n, tok in enumerate(splt):
+            if tok == prefix:
+                idx = line.find(prefix, idx)
+                if idx >= begidx:
+                    break
+            prev = tok
+        if len(prefix) == 0:
+            prefix = '""'
+            n += 1
+        script = BASH_COMPLETE_SCRIPT.format(filename=fnme, line=line, n=n,
+                    func=func, cmd=cmd, end=endidx+1, prefix=prefix, prev=prev)
+        out = subprocess.check_output(['bash'], input=script, 
+                                      universal_newlines=True)
+        space = ' '
+        rtn = {s+space if s[-1:].isalnum() else s for s in out.splitlines()}
+        return rtn
+
 
     def _load_bash_complete_funcs(self):
         input = 'source /etc/bash_completion\n'
