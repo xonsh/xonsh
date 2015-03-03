@@ -9,6 +9,7 @@ from xonsh.completer import Completer
 RL_COMPLETION_SUPPRESS_APPEND = None
 
 def setup_readline():
+    """Sets up the readline module and completion supression, if available."""
     global RL_COMPLETION_SUPPRESS_APPEND
     if RL_COMPLETION_SUPPRESS_APPEND is not None:
         return
