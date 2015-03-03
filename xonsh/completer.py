@@ -73,8 +73,8 @@ class Completer(object):
             return set()
         cmds = set()
         for d in path:
-            print(d)
-            cmds |= {s for s in os.listdir(d) if s.startswith(cmd)}
+            if os.path.isdir(d):
+                cmds |= {s for s in os.listdir(d) if s.startswith(cmd)}
         return cmds
 
     def _load_bash_complete_funcs(self):
