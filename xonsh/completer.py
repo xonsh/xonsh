@@ -5,7 +5,7 @@ import re
 import sys
 import builtins
 import subprocess
-from glob import glob, iglob
+from glob import iglob
 
 RE_DASHF = re.compile('-F\s+(\w+)')
 
