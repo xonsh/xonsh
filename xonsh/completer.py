@@ -119,7 +119,6 @@ class Completer(object):
         rtn = {s+space if s[-1:].isalnum() else s for s in out.splitlines()}
         return rtn
 
-
     def _load_bash_complete_funcs(self):
         input = 'source /etc/bash_completion\n'
         if os.path.isfile('/usr/share/bash-completion/completions/git'):
