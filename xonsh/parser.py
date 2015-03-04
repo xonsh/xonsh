@@ -2070,7 +2070,6 @@ class Parser(object):
         # Many tokens cannot be part of this list, such as $, ', ", ()
         # Use a string atom instead.
         p[0] = p[1]
-        
 
     #
     # Helpers

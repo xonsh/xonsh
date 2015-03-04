@@ -29,7 +29,13 @@ DEFAULT_ENCODING = sys.getdefaultencoding()
 def subproc_line(line):
     """Excapsulates a line in a uncaptured subprocess $[]."""
     tok = line.split(None, 1)[0]
-    line = line.replace(tok, '$[' + tok, 1) + ']'
+    line = line.replace(tok, '$[' + tok, 1)
+    if line.endswith('\n'):
+        line += ']'
+    else:
+        len_nl = len(line)
+        no_nl = line.rstrip('\n')
+        line = no_nl + ']' + ('\n'*(len_nl-len(no_nl)))
     return line
 
 def decode(s, encoding=None):

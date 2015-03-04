@@ -1393,6 +1393,9 @@ def test_git_two_quotes_space_space():
     yield check_xonsh, {}, ('$[git commit -am "wakka jawaka" ]\n'
                             '$[git commit -am "flock jawaka milwaka" ]\n'), False
 
+def test_ls_quotes_3_space():
+    yield check_xonsh_ast, {}, '$[ls "wakka jawaka baraka"]', False
+
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100
 
