@@ -37,8 +37,13 @@ class Lexer(object):
     def build(self, **kwargs):
         """Part of the PLY lexer API."""
         self.lexer = lex.lex(object=self, **kwargs)
+        self.reset()
+
+    def reset(self):
         self.lexer.lineno = 1
         self.indent = ''
+        self.last = None
+        self.in_py_mode = [True]
 
     @property
     def lineno(self):
@@ -381,11 +386,6 @@ class Lexer(object):
         if self.in_py_mode[-1]:
             t.value = False
         return t
-
-    #def t_FILENAME(self, t):
-    #    r'[~\w.-/][\w.-/]+'
-    #    return t
-
 
     # Extra
     @TOKEN(identifier)

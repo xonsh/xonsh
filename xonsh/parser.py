@@ -208,11 +208,16 @@ class Parser(object):
             self._list_rule(rule)
 
         self.parser = yacc.yacc(module=self, debug=yacc_debug,
-            start='start_symbols', 
-            optimize=yacc_optimize,
+            start='start_symbols', optimize=yacc_optimize, 
             tabmodule=yacc_table)
 
         # Keeps track of the last token given to yacc (the lookahead token)
+        self._last_yielded_token = None
+
+    def reset(self):
+        """Resets for clean parsing."""
+        self.lexer.reset()
+        self.lexer.lineno = 0
         self._last_yielded_token = None
 
     def parse(self, s, filename='<code>', mode='exec', debug_level=0):
@@ -233,10 +238,8 @@ class Parser(object):
         -------
         tree : AST
         """
+        self.reset()
         self.lexer.fname = filename
-        self.lexer.lineno = 0
-        self.lexer.indent = ''
-        self._last_yielded_token = None
         tree = self.parser.parse(input=s, lexer=self.lexer,
                                  debug=debug_level)
         # hack for getting modes right

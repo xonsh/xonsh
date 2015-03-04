@@ -1385,20 +1385,16 @@ def test_git_quotes_no_space():
 def test_git_quotes_space():
     yield check_xonsh_ast, {}, '$[git commit -am "wakka jawaka"]', False
 
+def test_git_two_quotes_space():
+    yield check_xonsh, {}, ('$[git commit -am "wakka jawaka"]\n'
+                            '$[git commit -am "flock jawaka"]\n'), False
 
+def test_git_two_quotes_space_space():
+    yield check_xonsh, {}, ('$[git commit -am "wakka jawaka" ]\n'
+                            '$[git commit -am "flock jawaka milwaka" ]\n'), False
 
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100
-
-
-
-
-
-
-
-
-
- 
 
 if __name__ == '__main__':
     nose.runmodule()
