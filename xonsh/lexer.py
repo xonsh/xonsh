@@ -394,7 +394,6 @@ class Lexer(object):
             t.type = self.pykeyword_map[t.value]
         return t
 
-
     def t_error(self, t):
         msg = 'Invalid token {0!r}'.format(t.value[0])
         #import pdb; pdb.set_trace()
