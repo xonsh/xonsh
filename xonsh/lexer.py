@@ -157,8 +157,8 @@ class Lexer(object):
     bin_literal = '0[bB]?[0-1]+'
 
     # string literals
-    single_string_literal = r'(?:\'(?:[^\'\\n\\r\\\\]|(?:\'\')|(?:\\\\x[0-9a-fA-F]+)|(?:\\\\.))*\')'
-    double_string_literal = r'(?:"(?:[^"\\n\\r\\\\]|(?:"")|(?:\\\\x[0-9a-fA-F]+)|(?:\\\\.))*")'
+    single_string_literal = '(?:\'(?:[^\'\\n\\r\\\\]|(?:\'\')|(?:\\\\x[0-9a-fA-F]+)|(?:\\\\.))*\')'
+    double_string_literal = '(?:"(?:[^"\\n\\r\\\\]|(?:"")|(?:\\\\x[0-9a-fA-F]+)|(?:\\\\.))*")'
     string_literal = single_string_literal + '|' + double_string_literal
     raw_string_literal = 'r' + single_string_literal + '|r' + double_string_literal
     unicode_literal = 'u' + single_string_literal + '|u' + double_string_literal
