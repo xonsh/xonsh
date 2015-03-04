@@ -1379,6 +1379,12 @@ def test_cmd_background():
 def test_cmd_background_nospace():
     yield check_xonsh_ast, {}, '$(emacs ugggh&)', False
 
+def test_git_quotes_no_space():
+    yield check_xonsh_ast, {}, '$[git commit -am "wakka"]', False
+
+def test_git_quotes_space():
+    yield check_xonsh_ast, {}, '$[git commit -am "wakka jawaka"]', False
+
 
 
 #DEBUG_LEVEL = 1
