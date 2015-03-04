@@ -170,10 +170,10 @@ class Lexer(object):
     float_literal = ('((((' + float_mantissa + ')' + float_exponent + 
                      '?)|([0-9]+' + float_exponent + ')))')
 
-
     #
     # Rules 
     #
+
     # Command line
     def t_INDENT(self, t):
         r'[ \t]+'
