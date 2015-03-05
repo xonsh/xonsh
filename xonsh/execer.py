@@ -2,6 +2,7 @@
 from __future__ import print_function, unicode_literals
 import re
 import os
+import types
 import inspect
 import builtins
 from collections import Iterable, Sequence, Mapping
@@ -84,14 +85,20 @@ class Execer(object):
 
     def eval(self, input, glbs=None, locs=None, stacklevel=2):
         """Evaluates (and returns) xonsh code."""
-        code = self.compile(input=input, glbs=glbs, locs=locs, mode='eval',
-                            stacklevel=stacklevel)
+        if isinstance(input, types.CodeType):
+            code = input
+        else:
+            code = self.compile(input=input, glbs=glbs, locs=locs, mode='eval',
+                                stacklevel=stacklevel)
         return eval(code, glbs, locs)
 
     def exec(self, input, mode='exec', glbs=None, locs=None, stacklevel=2):
         """Execute xonsh code."""
-        code = self.compile(input=input, glbs=glbs, locs=locs, mode=mode,
-                            stacklevel=stacklevel)
+        if isinstance(input, types.CodeType):
+            code = input
+        else:
+            code = self.compile(input=input, glbs=glbs, locs=locs, mode=mode,
+                                stacklevel=stacklevel)
         return exec(code, glbs, locs)
 
     def _parse_ctx_free(self, input, mode='exec'):
