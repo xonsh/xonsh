@@ -1,4 +1,6 @@
+#!/usr/bin/env python
 """The xonsh installer."""
+from __future__ import print_function, unicode_literals
 import os
 import sys
 try:

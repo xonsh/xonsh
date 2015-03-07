@@ -122,7 +122,10 @@ class Parser(object):
             The directory to place generated tables within.
         """
         self.lexer = lexer = Lexer(errfunc=self._lexer_errfunc)
-        lexer.build(optimize=lexer_optimize, lextab=lexer_table)
+        lexer_kwargs = dict(optimize=lexer_optimize, lextab=lexer_table)
+        if outputdir is not None:
+            lexer_kwargs['outputdir'] = outputdir
+        lexer.build(**lexer_kwargs)
         self.tokens = lexer.tokens
 
         opt_rules = (
