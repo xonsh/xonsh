@@ -53,6 +53,8 @@ def default_prompt():
 
 BASE_ENV = {
     'PROMPT': default_prompt,
+    'XONSH_HISTORY_SIZE': 8128,
+    'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history'),
     }
 
 def bash_env():
@@ -75,4 +77,3 @@ def default_env(env=None):
     if env is not None:
         ctx.update(env)
     return ctx
-   
