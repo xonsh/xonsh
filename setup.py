@@ -1,7 +1,6 @@
 """The xonsh installer."""
 import os
 import sys
-import os, sys
 try:
     from setuptools import setup
     HAVE_SETUPTOOLS = True
@@ -11,7 +10,25 @@ except ImportError:
 
 VERSION = '0.1'
 
+TABLES = ['xonsh/lexer_table.py', 'xonsh/parser_table.py']
+
+def clean_tables():
+    for f in TABLES:
+        if os.path.isfile(f):
+            os.remove(f)
+            print('Remove ' + f)
+
+def build_tables():
+    print('Building lexer and parser tables.')
+    sys.path.insert(0, os.path.dirname(__file__))
+    from xonsh.parser import Parser
+    Parser(lexer_table='lexer_table', yacc_table='parser_table',
+           outputdir='xonsh')
+    sys.path.pop(0)
+
 def main():
+    clean_tables()
+    build_tables()
     with open('readme.rst', 'r') as f:
         readme = f.read()
     skw = dict(

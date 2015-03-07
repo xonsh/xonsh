@@ -105,7 +105,7 @@ class Parser(object):
 
     def __init__(self, lexer_optimize=True, lexer_table='xonsh.lexer_table',
                  yacc_optimize=True, yacc_table='xonsh.parser_table',
-                 yacc_debug=False):
+                 yacc_debug=False, outputdir=None):
         """Parameters
         ----------
         lexer_optimize : bool, optional
@@ -118,6 +118,8 @@ class Parser(object):
             Parser module used when optimized.
         yacc_debug : debug, optional
             Dumps extra debug info.
+        outputdir : str or None, optional
+            The directory to place generated tables within.
         """
         self.lexer = lexer = Lexer(errfunc=self._lexer_errfunc)
         lexer.build(optimize=lexer_optimize, lextab=lexer_table)
@@ -212,6 +214,8 @@ class Parser(object):
                            tabmodule=yacc_table)
         if not yacc_debug:
             yacc_kwargs['errorlog'] = yacc.NullLogger()
+        if outputdir is not None:
+            yacc_kwargs['outputdir'] = outputdir
         self.parser = yacc.yacc(**yacc_kwargs)
 
         # Keeps track of the last token given to yacc (the lookahead token)
