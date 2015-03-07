@@ -7,6 +7,7 @@ from argparse import Namespace
 
 from xonsh.execer import Execer
 from xonsh.completer import Completer
+from xonsh.environ import xonshrc_context
 
 RL_POINT = Namespace(value=0)  # mirrors ctypes
 RL_COMPLETION_SUPPRESS_APPEND = None
@@ -65,7 +66,9 @@ class Shell(Cmd):
         super(Shell, self).__init__(completekey='tab', stdin=stdin, 
                                     stdout=stdout)
         self.execer = Execer()
-        self.ctx = ctx or {}
+        env = builtins.__xonsh_env__
+        self.ctx = ctx or xonshrc_context(rcfile=env.get('XONSHRC', None), 
+                                          execer=self.execer)
         self.completer = Completer()
         self.buffer = []
         self.need_more_lines = False

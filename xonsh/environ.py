@@ -4,6 +4,7 @@ import os
 import socket
 import builtins
 import subprocess
+from warnings import warn
 
 from xonsh.tools import TERM_COLORS
 
@@ -53,6 +54,7 @@ def default_prompt():
 
 BASE_ENV = {
     'PROMPT': default_prompt,
+    'XONSHRC': os.path.expanduser('~/.xonshrc'),
     'XONSH_HISTORY_SIZE': 8128,
     'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history'),
     }
@@ -69,8 +71,27 @@ def bash_env():
     env = dict(items)
     return env
 
+def xonshrc_context(rcfile=None, execer=None):
+    """Attempts to read in xonshrc file, and return the contents."""
+    if rcfile is None or execer is None or not os.path.isfile(rcfile):
+        return {}
+    with open(rcfile, 'r') as f:
+        rc = f.read()
+    fname = execer.filename
+    env = {}
+    try:
+        execer.filename = rcfile
+        execer.exec(rc, glbs={}, locs=env)
+    except SyntaxError:
+        warn('syntax error in xonsh run control file {0!r}'.format(rcfile), 
+             RuntimeWarning)
+    finally:
+        execer.filename = fname
+    return env
+
 def default_env(env=None):
-    """Constructs a default xonsh environment context."""
+    """Constructs a default xonsh environment."""
+    # in order of increasing precedence
     ctx = dict(BASE_ENV)
     ctx.update(os.environ)
     ctx.update(bash_env())
