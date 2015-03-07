@@ -129,7 +129,7 @@ class Completer(object):
         self.bash_complete_funcs = bcf = {}
         for line in out.splitlines():
             head, cmd = line.rsplit(' ', 1)
-            if len(cmd) == 0:
+            if len(cmd) == 0 or cmd == 'cd':
                 continue
             m = RE_DASHF.search(head)
             if m is None:
