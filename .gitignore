@@ -1,2 +1,8 @@
 *.pyc
 *.out
+xonsh/lexer_table.py
+xonsh/parser_table.py 
+tests/lexer_table.py
+tests/parser_table.py 
+tests/lexer_test_table.py
+tests/parser_test_table.py
