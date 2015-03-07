@@ -27,12 +27,16 @@ def setup_readline():
     RL_POINT = ctypes.c_int.in_dll(lib, 'rl_point')
     RL_COMPLETION_SUPPRESS_APPEND = ctypes.c_int.in_dll(lib, 
                                             'rl_completion_suppress_append')
+    # reads in history
     env = builtins.__xonsh_env__
     hf = env.get('XONSH_HISTORY_FILE', os.path.expanduser('~/.xonsh_history'))
     if os.path.isfile(hf):
         readline.read_history_file(hf)
     hs = env.get('XONSH_HISTORY_SIZE', 8128)
     readline.set_history_length(hs)
+    # sets up IPython-like history matching with up and down
+    readline.parse_and_bind('"\e[B": history-search-forward')
+    readline.parse_and_bind('"\e[A": history-search-backward')
 
 def teardown_readline():
     """Tears down up the readline module, if available."""
