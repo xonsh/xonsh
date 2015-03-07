@@ -207,9 +207,12 @@ class Parser(object):
         for rule in list_rules:
             self._list_rule(rule)
 
-        self.parser = yacc.yacc(module=self, debug=yacc_debug,
-            start='start_symbols', optimize=yacc_optimize, 
-            tabmodule=yacc_table)
+        yacc_kwargs = dict(module=self, debug=yacc_debug,
+                           start='start_symbols', optimize=yacc_optimize, 
+                           tabmodule=yacc_table)
+        if not yacc_debug:
+            yacc_kwargs['errorlog'] = yacc.NullLogger()
+        self.parser = yacc.yacc(**yacc_kwargs)
 
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None
