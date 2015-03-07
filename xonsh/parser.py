@@ -104,7 +104,7 @@ class Parser(object):
     """A class that parses the xonsh language."""
 
     def __init__(self, lexer_optimize=True, lexer_table='xonsh.lexer_table',
-                 yacc_optimize=True, yacc_table='xonsh.yacc_table',
+                 yacc_optimize=True, yacc_table='xonsh.parser_table',
                  yacc_debug=False):
         """Parameters
         ----------

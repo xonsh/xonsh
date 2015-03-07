@@ -13,6 +13,7 @@ from ply.lex import LexToken
 
 from xonsh.lexer import Lexer
 
+LEXER_ARGS = {'lextab': 'lexer_test_table', 'debug': 0}
 
 def ensure_tuple(x):
     if isinstance(x, LexToken):
@@ -54,7 +55,7 @@ def assert_tokens_equal(x, y):
 
 def check_token(input, exp):
     l = Lexer()
-    l.build()
+    l.build(**LEXER_ARGS)
     l.input(input)
     obs = list(l)
     if len(obs) != 1:
@@ -65,7 +66,7 @@ def check_token(input, exp):
 
 def check_tokens(input, exp):
     l = Lexer()
-    l.build()
+    l.build(**LEXER_ARGS)
     l.input(input)
     obs = list(l)
     assert_tokens_equal(exp, obs)

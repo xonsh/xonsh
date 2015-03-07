@@ -26,7 +26,9 @@ DEBUG_LEVEL = 0
 def setup():
     # only setup one parser
     global PARSER
-    PARSER = Parser(lexer_optimize=False, yacc_optimize=False, yacc_debug=True)
+    PARSER = Parser(lexer_optimize=False, yacc_optimize=False, yacc_debug=True,
+                    lexer_table='lexer_test_table', 
+                    yacc_table='parser_test_table')
 
 def nodes_equal(x, y):
     if type(x) != type(y):
