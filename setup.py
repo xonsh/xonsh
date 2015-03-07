@@ -27,6 +27,7 @@ def main():
         platforms='Cross Platform',
         classifiers = ['Programming Language :: Python :: 3'],
         packages=['xonsh'],
+        scripts=['scripts/xonsh'],
         )
     setup(**skw)
 
