@@ -1420,32 +1420,30 @@ class Parser(object):
                  | atom trailer_list_opt POW factor
         """
         p1, p2 = p[1], p[2]
+        p0 = leader = p1
         if p2 is None:
-            p0 = p1
-        elif isinstance(p2, (ast.Index, ast.Slice)):
-            p0 = ast.Subscript(value=p1, slice=p2, ctx=ast.Load(),
-                               lineno=self.lineno, col_offset=self.col)
-        elif isinstance(p2, Mapping):
-            p0 = ast.Call(func=p1, lineno=self.lineno, col_offset=self.col, 
-                          **p2)
-        elif isinstance(p2[0], str):
-            if p2[0] == '?':
-                p0 = xonsh_help(p1, lineno=self.lineno, col=self.col)
-            elif p2[0] == '??':
-                p0 = xonsh_superhelp(p1, lineno=self.lineno, col=self.col)
-            else:
-                p0 = ast.Attribute(value=p1, attr=p2[0], ctx=ast.Load(), 
+            p2 = []
+        for trailer in p2:
+            if isinstance(trailer, (ast.Index, ast.Slice)):
+                p0 = ast.Subscript(value=leader, slice=trailer, ctx=ast.Load(),
                                    lineno=self.lineno, col_offset=self.col)
-            for a in p2[1:]:
-                if a == '?':
-                    p0 = xonsh_help(p0, lineno=self.lineno, col=self.col)
-                elif a == '??':
-                    p0 = xonsh_superhelp(p0, lineno=self.lineno, col=self.col)
+            elif isinstance(trailer, Mapping):
+                p0 = ast.Call(func=leader, lineno=self.lineno, 
+                              col_offset=self.col, **trailer)
+            elif isinstance(trailer, str):
+                if trailer == '?':
+                    p0 = xonsh_help(leader, lineno=self.lineno, col=self.col)
+                elif trailer == '??':
+                    p0 = xonsh_superhelp(leader, lineno=self.lineno,
+                                         col=self.col)
                 else:
-                    p0 = ast.Attribute(value=p0, attr=a, ctx=ast.Load(),
-                                       lineno=self.lineno, col_offset=self.col)
-        else:
-            assert False
+                    p0 = ast.Attribute(value=leader, attr=trailer, 
+                                       ctx=ast.Load(), lineno=self.lineno, 
+                                       col_offset=self.col)
+            else:
+                assert False
+            leader = p0
+
         # actual power rule
         if len(p) == 5:
             p0 = ast.BinOp(left=p0, op=ast.Pow(), right=p[4], 
@@ -1599,7 +1597,7 @@ class Parser(object):
         if p1 == '[':
             p0 = p2
         elif p1 == '(':
-            p0 = p2 or dict(args=[], keywords=[], starargs=None, kwargs=None)
+            p0 = [p2 or dict(args=[], keywords=[], starargs=None, kwargs=None)]
         elif p1 == '.':
             p0 = [p2]
         elif p1 == '?' or p1 == '??':
