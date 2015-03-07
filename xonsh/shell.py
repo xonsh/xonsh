@@ -2,15 +2,17 @@
 import traceback
 from cmd import Cmd
 import builtins
+from argparse import Namespace
 
 from xonsh.execer import Execer
 from xonsh.completer import Completer
 
+RL_POINT = Namespace(value=0)  # mirrors ctypes
 RL_COMPLETION_SUPPRESS_APPEND = None
 
 def setup_readline():
     """Sets up the readline module and completion supression, if available."""
-    global RL_COMPLETION_SUPPRESS_APPEND
+    global RL_COMPLETION_SUPPRESS_APPEND, RL_ERASE_EMPTY_LINE, RL_POINT
     if RL_COMPLETION_SUPPRESS_APPEND is not None:
         return
     try:
@@ -21,6 +23,7 @@ def setup_readline():
     import ctypes.util
     readline.set_completer_delims(' \t\n')
     lib = ctypes.cdll.LoadLibrary(readline.__file__)
+    RL_POINT = ctypes.c_int.in_dll(lib, 'rl_point')
     RL_COMPLETION_SUPPRESS_APPEND = ctypes.c_int.in_dll(lib, 
                                             'rl_completion_suppress_append')
 
@@ -41,6 +44,8 @@ class Shell(Cmd):
         self.execer = Execer()
         self.ctx = ctx or {}
         self.completer = Completer()
+        self.buffer = []
+        self.need_more_lines = False
         setup_readline()
 
     def parseline(self, line):
@@ -48,14 +53,51 @@ class Shell(Cmd):
         return '', line, line
 
     def default(self, line):
-        """Implements parser."""
+        """Implements code execution."""
         line = line if line.endswith('\n') else line + '\n'
+        code = self.push(line)
+        if self.need_more_lines:
+            return
         try:
-            self.execer.exec(line, mode='single', glbs=None, locs=self.ctx)
+            self.execer.exec(code, mode='single', glbs=None, locs=self.ctx)
         except:
             traceback.print_exc()
         if builtins.__xonsh_exit__:
             return True
+
+    def push(self, line):
+        """Pushes a line onto the buffer and compiles the code in a way that 
+        enables multiline input.
+        """
+        buf = self.buffer
+        buf.append(line)
+        col = RL_POINT.value  # current location in line
+        code = None
+        self.need_more_lines = True
+        if len(buf) > 1:
+            # col (RL_POINT.value) == 0 is a terrifying way to detect that 
+            # a newline has been pressed, but there doesn't seem to be a 
+            # way around it.
+            if col == 0:
+                # this has to be here a newline press does clear the readline
+                # buffer.  Thanks GNU, thanks Python.
+                buf.pop()
+            else:
+                return code
+        src = ''.join(buf)
+        try:
+            print(repr(src))
+            code = self.execer.compile(src, mode='single', glbs=None, 
+                                       locs=self.ctx)
+            self.reset_buffer()
+        except SyntaxError:
+            pass
+        return code
+
+    def reset_buffer(self):
+        """Resets the line buffer."""
+        self.buffer.clear()
+        self.need_more_lines = False
 
     def completedefault(self, text, line, begidx, endidx):
         """Implements tab-completion for text."""
@@ -70,11 +112,14 @@ class Shell(Cmd):
             super(Shell, self).cmdloop(intro=intro)
         except KeyboardInterrupt:
             print()  # gimme a newline
+            self.reset_buffer()
             self.cmdloop(intro=None)
 
     @property
     def prompt(self):
         """Obtains the current prompt string."""
+        if self.need_more_lines:
+            return ''
         env = builtins.__xonsh_env__
         if 'PROMPT' in env:
             p = env['PROMPT']

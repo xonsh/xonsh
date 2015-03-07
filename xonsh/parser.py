@@ -2081,7 +2081,7 @@ class Parser(object):
 
     def p_error(self, p):
         if p is None:
-            self._parse_error('no further code', '')
+            self._parse_error('no further code', None)
         else:
             msg = 'code: {0}'.format(p.value),
             self._parse_error(msg, self.currloc(lineno=p.lineno,

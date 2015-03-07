@@ -110,7 +110,7 @@ class Execer(object):
                             mode=mode, debug_level=self.debug_level)
                 parsed = True
             except SyntaxError as e:
-                if last_error_line == e.loc.lineno:
+                if (e.loc is None) or (last_error_line == e.loc.lineno):
                     raise
                 last_error_line = e.loc.lineno
                 idx = last_error_line - 1
