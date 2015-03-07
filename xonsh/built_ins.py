@@ -26,6 +26,7 @@ class Env(MutableMapping):
     However, the following rules also apply based on variable-name:
 
     * PATH: any variable whose name ends in PATH is a list of strings.
+    * XONSH_HISTORY_SIZE: this variable is an int.
 
     An Env instance may be converted to an untyped version suitable for 
     use in a subprocess.
@@ -85,6 +86,8 @@ class Env(MutableMapping):
         if isinstance(key, string_types) and 'PATH' in key:
             val = val.split(os.pathsep) if isinstance(val, string_types) \
                   else val
+        elif key == 'XONSH_HISTORY_SIZE' and not isinstance(val, int):
+            val = int(val)
         self._d[key] = val
         self._detyped = None
         
