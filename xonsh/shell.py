@@ -86,7 +86,6 @@ class Shell(Cmd):
                 return code
         src = ''.join(buf)
         try:
-            print(repr(src))
             code = self.execer.compile(src, mode='single', glbs=None, 
                                        locs=self.ctx)
             self.reset_buffer()
