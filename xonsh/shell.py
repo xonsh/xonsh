@@ -1,4 +1,5 @@
 """The xonsh shell"""
+import os
 import traceback
 from cmd import Cmd
 import builtins
@@ -26,6 +27,24 @@ def setup_readline():
     RL_POINT = ctypes.c_int.in_dll(lib, 'rl_point')
     RL_COMPLETION_SUPPRESS_APPEND = ctypes.c_int.in_dll(lib, 
                                             'rl_completion_suppress_append')
+    env = builtins.__xonsh_env__
+    hf = env.get('XONSH_HISTORY_FILE', os.path.expanduser('~/.xonsh_history'))
+    if os.path.isfile(hf):
+        readline.read_history_file(hf)
+    hs = env.get('XONSH_HISTORY_SIZE', 8128)
+    readline.set_history_length(hs)
+
+def teardown_readline():
+    """Tears down up the readline module, if available."""
+    try:
+        import readline
+    except ImportError:
+        return
+    env = builtins.__xonsh_env__
+    hs = env.get('XONSH_HISTORY_SIZE', 8128)
+    readline.set_history_length(hs)
+    hf = env.get('XONSH_HISTORY_FILE', os.path.expanduser('~/.xonsh_history'))
+    readline.write_history_file(hf)
 
 def rl_completion_suppress_append(val=1):
     """Sets the rl_completion_suppress_append varaiable, if possible.
@@ -47,6 +66,9 @@ class Shell(Cmd):
         self.buffer = []
         self.need_more_lines = False
         setup_readline()
+
+    def __del__(self):
+        teardown_readline()
 
     def parseline(self, line):
         """Overridden to no-op."""
