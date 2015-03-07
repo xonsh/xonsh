@@ -20,8 +20,8 @@ from xonsh.parser import Parser
 from tools import mock_xonsh_env
 
 PARSER = None
-#DEBUG_LEVEL = 0
-DEBUG_LEVEL = 100
+DEBUG_LEVEL = 0
+#DEBUG_LEVEL = 100
 
 def setup():
     # only setup one parser
@@ -820,9 +820,6 @@ def test_equals_attr():
 
 def test_dict_keys():
     yield check_stmts, 'x = {"x": 1}\nx.keys()'
-    #yield check_stmts, 'x.keys()', False
-
-DEBUG_LEVEL = 0
 
 def test_assert():
     yield check_stmts, 'assert True'

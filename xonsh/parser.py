@@ -1595,7 +1595,7 @@ class Parser(object):
         p1 = p[1]
         p2 = p[2] if len(p) > 2 else None
         if p1 == '[':
-            p0 = p2
+            p0 = [p2]
         elif p1 == '(':
             p0 = [p2 or dict(args=[], keywords=[], starargs=None, kwargs=None)]
         elif p1 == '.':
