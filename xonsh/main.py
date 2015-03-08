@@ -5,16 +5,12 @@ import shlex
 import subprocess
 from argparse import ArgumentParser, Namespace
 
-#import urwid
-
 from xonsh.shell import Shell
-from xonsh.main_display import MainDisplay
 
 def main(argv=None):
+    """Main entry point for xonsh cli."""
     if argv is None:
         argv = sys.argv[1:]
-    #disp = MainDisplay()
-    #disp.main()
     shell = Shell()
     shell.cmdloop()
 

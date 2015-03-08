@@ -7,12 +7,12 @@ The following implementations were forked from the IPython project:
 * Copyright (c) 2001, Janko Hauser <jhauser@zscout.de>
 * Copyright (c) 2001, Nathaniel Gray <n8gray@caltech.edu>
 
-Implemetations:
+Implementations:
 
 * decode()
 * encode()
 * cast_unicode()
-* asfe_hasattr()
+* safe_hasattr()
 
 """
 import sys
@@ -27,7 +27,7 @@ else:
 DEFAULT_ENCODING = sys.getdefaultencoding()
 
 def subproc_line(line):
-    """Excapsulates a line in a uncaptured subprocess $[]."""
+    """Excapsulates a source code line in a uncaptured subprocess $[]."""
     tok = line.split(None, 1)[0]
     line = line.replace(tok, '$[' + tok, 1)
     if line.endswith('\n'):
