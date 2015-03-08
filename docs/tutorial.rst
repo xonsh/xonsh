@@ -112,3 +112,96 @@ details, but this *is* pretty cool:
     'xonsh'
 
 And that about wraps it up for the basics section. It is just like Python.
+
+Environment Variables
+=======================
+Environment variables are written as ``$`` followed by a name.  For example, 
+``$HOME``, ``$PWD``, and ``$PATH``. 
+
+.. code-block:: python
+
+    >>> $HOME
+    '/home/snail'
+
+You can set (and export) environment variables like you would set any other 
+variable in Python.  The same is true for deleting them too.
+
+.. code-block:: python
+
+    >>> $GOAL = 'Become the Lord of the Files'
+    >>> print($GOAL)
+    Become the Lord of the Files
+    >>> del $GOAL
+
+Very nice. All environment variables live in the built-in 
+``__xonsh_env__`` mapping. You can access this mapping directly, but in most 
+situations, you shouldn't need to.
+
+Like other variables in Python, environment variables have a type. Sometimes
+this type is imposed based on the variable name. The current rules are pretty
+simple:
+
+* ``PATH``: any variable whose name contains PATH is a list of strings.
+* ``XONSH_HISTORY_SIZE``: this variable is an int.
+
+xonsh will automatically convert back and forth to untyped (string-only)
+representations of the environment as needed (mostly by subprocess commands).
+When in xonsh, you'll always have the typed version.  Here are a couple of 
+PATH examples:
+
+.. code-block:: python
+
+    >>> $PATH
+    ['/home/snail/.local/bin', '/home/snail/sandbox/bin', 
+    '/home/snail/miniconda3/bin', '/usr/local/bin', '/usr/local/sbin', 
+    '/usr/bin', '/usr/sbin', '/bin', '/sbin', '.']
+    >>> $LD_LIBRARY_PATH
+    ['/home/scopatz/.local/lib', '']
+
+Also note that *any* Python object can go into the environment. It is sometimes
+useful to have more sophisticated types, like functions, in the enviroment.
+There are handful of environment variables that xonsh considers special.
+They can be seen in the table below:
+
+================== =========================== ================================
+variable           default                     description
+================== =========================== ================================
+PROMPT             xosh.environ.default_prompt The prompt text, may be str or 
+                                               function which returns a str.
+MULTILINE_PROMPT   ``'.'``                     Prompt text for 2nd+ lines of
+                                               input, may be str or 
+                                               function which returns a str.
+XONSHRC            ``'~/.xonshrc'``            Location of run control file
+XONSH_HISTORY_SIZE 8128                        Number of items to store in the
+                                               history.
+XONSH_HISTORY_FILE ``'~/.xonsh_history'``      Location of history file
+================== =========================== ================================
+
+Customizing the prompt is probably the most common reason for altering an 
+environment variable.
+
+Environment Lookup with ``${}``
+================================
+The ``$NAME`` is great as long as you know the name of the environment 
+variable you want to look up.  But what if you want to construct the name
+programatically, or read it from another variable? Enter the ``${}`` 
+operator.
+
+.. warning:: In BASH, ``$NAME`` and ``${NAME}`` are syntactically equivalent.
+             In xonsh, they have separate meanings.
+
+While in Python-mode (not subprocess-mode, which we'll get to later), we can 
+place any valid Python expressin inside of the curly braces in ``${<expr>}``. 
+This result of this expression will then be used to look up a value in 
+the environment.  In fact, ``${<expr>}`` is the same as doing 
+``__xonsh_env__[<expr>]``, but much nicer to look at. Here are a couple of 
+examples in action:
+
+.. code-block:: python
+
+    >>> x = 'USER'
+    >>> ${x}
+    'snail'
+    >>> ${'HO' + 'ME'}
+    '/home/snail'
+
