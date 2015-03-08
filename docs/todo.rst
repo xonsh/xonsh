@@ -1,5 +1,5 @@
 ==========================
-Wish list & To-Dos
+Wishlist & To-Dos
 ==========================
 Here is what is targeted for future versions of xonsh. Any one wishing
 to tackle any of these or add their own is encouraged to do so!
