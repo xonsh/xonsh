@@ -380,7 +380,7 @@ that is on the wrong side of the border of the absurd is shown below:
 With great power, and so forth...
 
 
-Pipes
+Pipes with ``|``
 ====================================
 In subprocess-mode, xonsh allows you to use the ``|`` character to pipe
 together commands as you would in other shells.
@@ -396,7 +396,45 @@ together commands as you would in other shells.
     XDG_SEAT_PATH=/org/freedesktop/DisplayManager/Seat0
     XDG_SESSION_PATH=/org/freedesktop/DisplayManager/Session0
 
+This is only available in subprocess-mode because ``|`` is otherwise a 
+Python operator.
 If you are unsure of what pipes are, there are many great refernces out there.
 You should be able to find information on StackOverflow or Google.
 
 
+Writing Files with ``>``
+=====================================
+In subprocess-mode, if the second to last element is a greater-than sign
+``>`` and the last element evaluates to a string, the output of the 
+preceding command will be written to file. If the file already exists, the 
+current contents will be erased.  For example, let's write a simple file 
+called ``conch.txt`` using ``echo``:
+
+.. code-block:: bash
+
+    >>> echo Piggy > conch.txt
+    'Piggy\n'
+    >>> cat conch.txt 
+    Piggy
+    
+This can be pretty useful.  This does not work in Python-mode, since ``>``
+is a valid Python operator.
+
+
+Appending to Files with ``>>``
+=====================================
+Following the same syntax as with ``>`` in subprocess-mode, the ``>>``
+operator allows us to append to a file rather than overwriting it completely.
+If the file doesn't exist, it is created. Let's reuse the ``conch.txt`` 
+file from above and add a line.
+
+.. code-block:: bash
+
+    >>> echo Ralph >> conch.txt
+    'Ralph\n'
+    >>> cat conch.txt 
+    Piggy
+    Ralph
+
+Again, the ``>>`` does not work as shown here in Python-mode, where it takes
+on its usual meaning.
