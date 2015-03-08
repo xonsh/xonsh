@@ -24,6 +24,9 @@ For those of you who want the gritty details.
     built_ins
     environ
     aliases
+    inspectors
+    completer
+    shell
 
 
 **Helpers:**
