@@ -1,0 +1,5 @@
+@import url("cloud.css");
+
+table.docutils th.field-name {
+    white-space: nowrap;
+}
