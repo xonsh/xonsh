@@ -16,10 +16,21 @@ For those of you who want the gritty details.
     execer
 
 
+**Command Prompt:**
+
+.. toctree::
+    :maxdepth: 1
+
+    built_ins
+    environ
+    aliases
+
+
 **Helpers:**
 
 .. toctree::
     :maxdepth: 1
 
     tools
+    openpy
     main
