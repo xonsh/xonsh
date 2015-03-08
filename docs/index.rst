@@ -15,7 +15,7 @@ the xonsh shell
         "Break out of your shell",
         "The only shell that is also a shell",
         "All that is and all that shell be",
-        "It cannot be that hard...",
+        "It cannot be that hard",
         "Pass the xonsh, Piggy",
         "Piggy glanced nervously into hell and cradled the xonsh",
         "The xonsh is a symbol",
@@ -50,6 +50,7 @@ Contents
     api/index
     previous/index
     faq
+    todo
 
 ============
 Installation
