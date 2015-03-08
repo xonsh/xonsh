@@ -1,0 +1,15 @@
+=============================
+Xonsh 0.1 Release Notes
+=============================
+xonsh is a Python-ish, BASHwards-compatible shell language and command prompt.
+The language is a superset of Python 3.4 with additional shell primitives
+that you are used to from BASH and IPython. xonsh is 
+meant for the daily use of experts and novices alike.
+
+
+Authors
+=======
+This release contains code written by the following people (in alphabetical 
+order):
+
+* Anthony Scopatz

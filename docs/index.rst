@@ -16,11 +16,14 @@ the xonsh shell
         "The only shell that is also a shell",
         "All that is and all that shell be",
         "It cannot be that hard...",
-        "Pass the xonsh, Piggy", 
+        "Pass the xonsh, Piggy",
         "Piggy glanced nervously into hell and cradled the xonsh",
         "The xonsh is a symbol",
+        "It is pronounced <i>konk</i>",
+        "It is pronounced <i>conch</i>",
         "The shell, bourne again",
         "Starfish loves you",
+        "Come snail away",
         "Sally sells csh and keeps xonsh to herself",
         ];
     document.write(phrases[Math.floor(Math.random() * phrases.length)]);
@@ -33,7 +36,7 @@ the xonsh shell
 
 xonsh is a Python-ish, BASHwards-compatible shell language and command prompt.
 The language is a superset of Python 3.4 with additional shell primitives
-that you are used to from BASH and IPython. xonsh (pronounced *conch*) is 
+that you are used to from BASH and IPython. xonsh is 
 meant for the daily use of experts and novices alike.
 
 =========
