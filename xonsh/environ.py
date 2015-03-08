@@ -64,13 +64,19 @@ def multiline_prompt():
     line = RE_HIDDEN.sub('', line)  # gets rid of colors
     # most prompts end in whitespace, head is the part before that.
     head = line.rstrip()
+    headlen = len(head)
     # tail is the trailing whitespace
-    tail = line if len(head) == 0 else line.rsplit(head[-1], 1)[1]
-    return ('.'*len(head)) + tail
+    tail = line if headlen == 0 else line.rsplit(head[-1], 1)[1]
+    # now to constuct the actual string
+    dots = builtins.__xonsh_env__.get('MULTILINE_PROMPT', '.')
+    dots = dots() if callable(dots) else dots
+    dots = '.' if len(dots) == 0 else dots
+    return (dots*(headlen//len(dots))) + dots[:headlen%len(dots)] + tail
 
 
 BASE_ENV = {
     'PROMPT': default_prompt,
+    'MULTILINE_PROMPT': '.',
     'XONSHRC': os.path.expanduser('~/.xonshrc'),
     'XONSH_HISTORY_SIZE': 8128,
     'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history'),
