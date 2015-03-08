@@ -21,6 +21,7 @@ the xonsh shell
         "The xonsh is a symbol",
         "It is pronounced <i>konk</i>",
         "It is pronounced <i>conch</i>",
+        "It is pronounced <i>quanxh</i>",
         "The shell, bourne again",
         "Snailed it",
         "Starfish loves you",

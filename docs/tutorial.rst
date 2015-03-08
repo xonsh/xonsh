@@ -118,7 +118,7 @@ Environment Variables
 Environment variables are written as ``$`` followed by a name.  For example, 
 ``$HOME``, ``$PWD``, and ``$PATH``. 
 
-.. code-block:: python
+.. code-block:: bash
 
     >>> $HOME
     '/home/snail'
@@ -126,7 +126,7 @@ Environment variables are written as ``$`` followed by a name.  For example,
 You can set (and export) environment variables like you would set any other 
 variable in Python.  The same is true for deleting them too.
 
-.. code-block:: python
+.. code-block:: bash
 
     >>> $GOAL = 'Become the Lord of the Files'
     >>> print($GOAL)
@@ -149,7 +149,7 @@ representations of the environment as needed (mostly by subprocess commands).
 When in xonsh, you'll always have the typed version.  Here are a couple of 
 PATH examples:
 
-.. code-block:: python
+.. code-block:: bash
 
     >>> $PATH
     ['/home/snail/.local/bin', '/home/snail/sandbox/bin', 
@@ -197,11 +197,171 @@ the environment.  In fact, ``${<expr>}`` is the same as doing
 ``__xonsh_env__[<expr>]``, but much nicer to look at. Here are a couple of 
 examples in action:
 
-.. code-block:: python
+.. code-block:: bash
 
     >>> x = 'USER'
     >>> ${x}
     'snail'
     >>> ${'HO' + 'ME'}
     '/home/snail'
+
+Not bad, xonsh, not bad.
+
+
+Running Commands
+==============================
+As a shell, xonsh is meant to make running commands easy and fun. 
+Running subprocess commands should work like any other in any other shell.
+
+.. code-block:: bash
+
+    >>> echo "Yoo hoo"
+    Yoo hoo
+    >>> cd xonsh
+    >>> ls
+    build  docs     readme.rst  setup.py  xonsh           __pycache__
+    dist   license  scripts     tests     xonsh.egg-info
+    >>> git status
+    On branch master
+    Your branch is up-to-date with 'origin/master'.
+    Changes not staged for commit:
+      (use "git add <file>..." to update what will be committed)
+      (use "git checkout -- <file>..." to discard changes in working directory)
+
+        modified:   docs/tutorial.rst
+
+    no changes added to commit (use "git add" and/or "git commit -a")
+    >>> exit
+
+This should feel very natural.
+
+
+Python-mode vs Subprocess-mode
+================================
+It is sometimes helpful to make the distinction between lines that operate
+in pure-Python mode and lines that use shell-specific syntax, edit the 
+execution environment, and run commands. Unfortuantely, it is not always
+clear from the syntax alone what mode is desired. This ambiguity stems from
+most command line utilities looking a lot like Python operators.
+
+Take the case of ``ls -l``.  This is valid Python code, though it could 
+have also been written as ``ls - l`` or ``ls-l``.  So how does xonsh know 
+that ``ls -l`` is meant to be run in subprocess-mode?
+
+For any given line that only contains an expression statement (expr-stmt, 
+see the Python AST docs for more information), if the left-most name cannot 
+be found as a current variable name xonsh will try to parse the line as 
+subprocess command instead.  In the above, if ``ls`` is not a variable, 
+then subprocess mode will be attempted. If parsing in subprocess mode fails, 
+then the line is left in Python-mode.
+
+In the following example, we will list the conents of the directory 
+with ``ls -l``. Then we'll make new variable names ``ls`` and ``l`` and then
+subtract them. Finally, we will delete ``ls`` and ``l`` and be able to list 
+the directories again.
+
+.. code-block:: bash
+
+    >>> # this will be in subproc-mode, because ls doesn't exist
+    >>> ls -l
+    total 0
+    -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
+    >>> # set an ls variable to force python-mode
+    >>> ls = 44
+    >>> l = 2
+    >>> ls -l
+    42
+    >>> # deleting ls will return us to supbroc-mode
+    >>> del ls
+    >>> ls -l
+    total 0
+    -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
+
+The determination between Python- and subprocess-modes is always done in the
+safest possible way. If anything goes wrong, it will favor Python-mode.
+The determination between the two modes is done well ahead of any execution.
+You do not need to worry about partially executed commands - that is 
+impossible.
+
+If absolutely want to run a subprocess command, you can always force xonsh
+to do so with the syntax that we will see in the following sections.
+
+
+Captured Suprocess with ``$()``
+================================
+The ``$(<expr>)`` operator in xonsh executes a subprocess command and 
+*captures* the output. The expression in the parentheses will be run and 
+stdout will be returned as string. This is similar to how ``$()`` performs in 
+BASH.  For example,
+
+.. code-block:: bash
+
+    >>> $(ls -l)
+    'total 0\n-rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh\n'
+
+The ``$()`` operator is an expression itself. This means that we can 
+assign the results to a variable or perform any other manipluations we want.
+
+.. code-block:: bash
+
+    >>> x = $(ls -l)
+    >>> print(x.upper())
+    TOTAL 0
+    -RW-RW-R-- 1 SNAIL SNAIL 0 MAR  8 15:46 XONSH
+
+While in supbrocess-mode or inside of a captured subprocess, we can always 
+still query the environment with ``$NAME`` variables. 
+
+.. code-block:: bash
+
+    >>> $(echo $HOME)
+    '/home/snail\n'
+
+The ``${<expr>}`` operator from above will still execute arbitrary
+Python code in subprocess mode. So in that way it is the same as before.  
+However, it no longer looks up the results in the environment. Instead, 
+the result is appended to the subprocess command list. For this reason, 
+the expression should evaluate to a string.  For example, 
+
+.. code-block:: bash
+
+    >>> x = 'xonsh'
+    >>> y = 'party'
+    >>> $(echo ${x + ' ' + y})
+    'xonsh party\n'
+
+If we remove the caputuring subprocess, the result will be displayed 
+normally:
+
+.. code-block:: bash
+
+    >>> echo ${x + ' ' + y}
+    xonsh party
+
+Thus, ``${}`` allows us to create complex commands in Python-mode and then 
+feed them to a subprocess as needed.
+
+
+Uncaptured Suprocess with ``$[]``
+===================================
+Uncaptured subprocess are denoted with the ``$[<expr>]`` operator. They are 
+the same as ``$()`` captured subprocesses in almost every way. The only 
+difference is that the subprocess's stdout passes directly through xonsh and
+to the screen.  The return value of ``$[]`` is always ``None``.  
+
+In the following, we can see that the results of ``$[]`` are autimatically
+printed and the return value is not a string.
+
+.. code-block:: bash
+
+    >>> x = $[ls -l]
+    total 0
+    -rw-rw-r-- 1 scopatz scopatz 0 Mar  8 15:46 xonsh
+    >>> x is None
+    True
+
+Previously when we automatically entered subprocess-mode, uncaptured
+subprocesses were used.  Thus ``ls -l`` and ``$[ls -l]`` are usually 
+equivalent.
+
 
