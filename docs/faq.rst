@@ -50,3 +50,49 @@ would probably end up being annoying, though not nearly as jarring.
 
 The second reason is that tab completion of subprocess commands after an ``!``
 does not work. This is a deal breaker for day-to-day use. 
+
+
+4. So how does this all work?
+-----------------------------
+We use `PLY <http://www.dabeaz.com/ply/ply.html>`_ to tokenize and parse 
+xonsh code. This is heavily inspired by how `pycparser <https://github.com/eliben/pycparser>`_
+used this PLY. From our parser, we construct an abstract syntax tree (AST)
+only using nodes found in the Python ``ast`` standard library module. 
+This allows us to compile and execute the AST using the normal Python tools.
+
+Of course, xonsh has special builtins, so the proper context 
+(builtins, globals, and locals) must be set up prior to actually executing 
+any code. However, the AST can be constructed completely independently of 
+any context...mostly.  
+
+While the grammar of the xonsh language is context-free, it was convienent 
+to write the executer in a way that is slightly context sensitive. This is 
+because certain expressions are ambiguious as to whether they belong to 
+Python-mode or subprocess-mode. For example, most people will look at 
+``ls -l`` and see a listing command.  However, if ``ls`` and ``l`` were 
+Python variables, this could be transformed to the equivalent (Python) 
+expressions ``ls - l`` or ``ls-l``.  Neither of which are valid listing 
+commands.
+
+What xonsh does to overcome such ambiquity is to check if the left-most 
+name (``ls`` above) is in the present Python context. If it is, then it takes
+the line to be valid xonsh as written. If the left-most name cannot be found,
+then xonsh assumes that the left-most name is an external command. It thus 
+attempts to parse the line after wrapping it in an uncaptured subprocess 
+call ``$[]``.  If wrapped version successfully pasres, the ``$[]`` version 
+stays. Otherwise the original line is retained.
+
+All of the context sensitive parsing occurs as an AST transformation prior to 
+any code is executed.  This ensures that code will never be partially executed
+before failing.
+
+It is critical to note that the context sensitive parsing is a convienece
+meant for humans.  If ambiguity remains or exactness is required, simply 
+manually use the ``$[]`` or ``$()`` operators on your code.
+
+
+5. Context-sensitive parsing is gross
+--------------------------------------
+Yes, context-sensitive parsing is gross. But the point of xonsh is that it
+is ultimately a lot less gross than other shell languages, such as BASH.
+

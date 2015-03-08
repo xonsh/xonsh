@@ -22,8 +22,10 @@ the xonsh shell
         "It is pronounced <i>konk</i>",
         "It is pronounced <i>conch</i>",
         "The shell, bourne again",
+        "Snailed it",
         "Starfish loves you",
         "Come snail away",
+        "This is Major Tom to Ground Xonshtrol",
         "Sally sells csh and keeps xonsh to herself",
         ];
     document.write(phrases[Math.floor(Math.random() * phrases.length)]);
