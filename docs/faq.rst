@@ -8,7 +8,7 @@ Ok, so, maybe no one actually asked them.
 The idea for xonsh first struck while I was reviewing the BASH chapter 
 (written by my co-author `Katy Huff <http://katyhuff.github.io/>`_)
 of `Effective Computation in Physics <http://physics.codes/>`_. In the book
-we spend a bunch of time descibing important, but complex ideas, such 
+we spend a bunch of time describing important, but complex ideas, such 
 as piping. However, we don't even touch on more 'basic' aspects of the BASH
 language, such as if-statements or loops. Even though I have been using BASH
 for well over a decade, I am not even sure I *know how*
