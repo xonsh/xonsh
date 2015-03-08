@@ -7,8 +7,8 @@ from ply.lex import TOKEN
 
 
 class Lexer(object):
-    """Implements a lexer for the xonsh language.
-    """
+    """Implements a lexer for the xonsh language."""
+
     def __init__(self, errfunc=lambda e, l, c: print(e)):
         """
         Parameters
@@ -26,6 +26,7 @@ class Lexer(object):
             The last token seen.
         lineno : int
             The last line number seen.
+
         """
         self.errfunc = errfunc
         self.fname = ''

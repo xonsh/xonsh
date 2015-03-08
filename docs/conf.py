@@ -17,7 +17,8 @@ import cloud_sptheme as csp
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.pngmath',
               'sphinx.ext.inheritance_diagram', 'sphinx.ext.viewcode',
-              'numpydoc', #'sphinx.ext.autosummary',
+              #'sphinx.ext.autosummary',
+              'numpydoc', 
               ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -213,4 +214,8 @@ latex_documents = [
 #Autodocumentation Flags
 autodoc_member_order = "groupwise"
 autoclass_content = "both"
+autosummary_generate = []
+
+# Prevent numpy from making silly tables
+numpydoc_show_class_members = False
 
