@@ -74,6 +74,8 @@ def check_stmts(input, run=True, mode='exec'):
 def check_xonsh_ast(xenv, input, run=True, mode='eval'):
     with mock_xonsh_env(xenv):
         obs = PARSER.parse(input, debug_level=DEBUG_LEVEL)
+        if obs is None:
+            return  # comment only
         bytecode = compile(obs, '<test-xonsh-ast>', mode)
         if run:
             exec(bytecode)
@@ -1400,6 +1402,9 @@ def test_git_two_quotes_space_space():
 
 def test_ls_quotes_3_space():
     yield check_xonsh_ast, {}, '$[ls "wakka jawaka baraka"]', False
+
+def test_comment_only():
+    yield check_xonsh_ast, {}, '# hello'
 
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100

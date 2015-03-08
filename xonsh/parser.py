@@ -272,9 +272,6 @@ class Parser(object):
             if isinstance(tree, ast.Expression):
                 tree = ast.Interactive(body=[self.expr(tree.body)])
             elif isinstance(tree, ast.Module):
-                #body = [n if isinstance(n, ast.STATEMENTS) else self.expr(n) \
-                #        for n in tree.body]
-                #tree = ast.Interactive(body=body)
                 tree = ast.Interactive(body=tree.body)
         return tree
 
@@ -377,7 +374,10 @@ class Parser(object):
 
     def p_file_input(self, p):
         """file_input : file_stmts"""
-        p[0] = ast.Module(body=p[1])
+        p1 = p[1]
+        if p1 == '\n':
+            p1 = []
+        p[0] = ast.Module(body=p1)
 
     def p_file_stmts(self, p):
         """file_stmts : newline_or_stmt 

@@ -80,6 +80,8 @@ class Execer(object):
             locs = frame.f_locals if locs is None else locs
         ctx = set(dir(builtins)) | set(glbs.keys()) | set(locs.keys())
         tree = self.parse(input, ctx, mode=mode)
+        if tree is None:
+            return None  # handles comment only input
         code = compile(tree, self.filename, mode)
         return code
 
@@ -90,6 +92,8 @@ class Execer(object):
         else:
             code = self.compile(input=input, glbs=glbs, locs=locs, mode='eval',
                                 stacklevel=stacklevel)
+        if code is None:
+            return None  # handles comment only input
         return eval(code, glbs, locs)
 
     def exec(self, input, mode='exec', glbs=None, locs=None, stacklevel=2):
@@ -99,6 +103,8 @@ class Execer(object):
         else:
             code = self.compile(input=input, glbs=glbs, locs=locs, mode=mode,
                                 stacklevel=stacklevel)
+        if code is None:
+            return None  # handles comment only input
         return exec(code, glbs, locs)
 
     def _parse_ctx_free(self, input, mode='exec'):
