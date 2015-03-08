@@ -1,6 +1,7 @@
 """Environment for the xonsh shell.
 """
 import os
+import re
 import socket
 import builtins
 import subprocess
@@ -51,6 +52,22 @@ def default_prompt():
             NO_COLOR=TERM_COLORS['NO_COLOR'],
             )
     return p
+
+
+RE_HIDDEN = re.compile('\001.*?\002')
+
+def multiline_prompt():
+    """Returns the filler text for the prompt in multiline scenarios."""
+    curr = builtins.__xonsh_env__.get('PROMPT', "set '$PROMPT = ...' $ ")
+    curr = curr() if callable(curr) else curr
+    line = curr.rsplit('\n', 1)[1] if '\n' in curr else curr
+    line = RE_HIDDEN.sub('', line)  # gets rid of colors
+    # most prompts end in whitespace, head is the part before that.
+    head = line.rstrip()
+    # tail is the trailing whitespace
+    tail = line if len(head) == 0 else line.rsplit(head[-1], 1)[1]
+    return ('.'*len(head)) + tail
+
 
 BASE_ENV = {
     'PROMPT': default_prompt,

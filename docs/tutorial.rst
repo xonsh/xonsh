@@ -115,4 +115,4 @@ details, but this *is* pretty cool:
     >>> f()
     'xonsh'
 
-And that about wraps it up for the basics section.
+And that about wraps it up for the basics section. It is just like Python.

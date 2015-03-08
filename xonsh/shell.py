@@ -7,7 +7,7 @@ from argparse import Namespace
 
 from xonsh.execer import Execer
 from xonsh.completer import Completer
-from xonsh.environ import xonshrc_context
+from xonsh.environ import xonshrc_context, multiline_prompt
 
 RL_POINT = Namespace(value=0)  # mirrors ctypes
 RL_COMPLETION_SUPPRESS_APPEND = None
@@ -72,6 +72,7 @@ class Shell(Cmd):
         self.completer = Completer()
         self.buffer = []
         self.need_more_lines = False
+        self.mlprompt = None
         setup_readline()
 
     def __del__(self):
@@ -126,6 +127,7 @@ class Shell(Cmd):
         """Resets the line buffer."""
         self.buffer.clear()
         self.need_more_lines = False
+        self.mlprompt = None
 
     def completedefault(self, text, line, begidx, endidx):
         """Implements tab-completion for text."""
@@ -147,7 +149,9 @@ class Shell(Cmd):
     def prompt(self):
         """Obtains the current prompt string."""
         if self.need_more_lines:
-            return ''
+            if self.mlprompt is None:
+                self.mlprompt = multiline_prompt()
+            return self.mlprompt
         env = builtins.__xonsh_env__
         if 'PROMPT' in env:
             p = env['PROMPT']
