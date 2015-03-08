@@ -156,7 +156,7 @@ PATH examples:
     '/home/snail/miniconda3/bin', '/usr/local/bin', '/usr/local/sbin', 
     '/usr/bin', '/usr/sbin', '/bin', '/sbin', '.']
     >>> $LD_LIBRARY_PATH
-    ['/home/scopatz/.local/lib', '']
+    ['/home/snail/.local/lib', '']
 
 Also note that *any* Python object can go into the environment. It is sometimes
 useful to have more sophisticated types, like functions, in the enviroment.
@@ -356,7 +356,7 @@ printed and the return value is not a string.
 
     >>> x = $[ls -l]
     total 0
-    -rw-rw-r-- 1 scopatz scopatz 0 Mar  8 15:46 xonsh
+    -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
     >>> x is None
     True
 
@@ -375,7 +375,7 @@ that is on the wrong side of the border of the absurd is shown below:
 
     >>> $[$(echo ls) ${'-' + $(echo l).strip()}]
     total 0
-    -rw-rw-r-- 1 scopatz scopatz 0 Mar  8 15:46 xonsh
+    -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
 
 With great power, and so forth...
 
@@ -390,7 +390,7 @@ together commands as you would in other shells.
     >>> env | uniq | sort | grep PATH
     DATAPATH=/usr/share/MCNPX/v260/Data/
     DEFAULTS_PATH=/usr/share/gconf/awesome-gnome.default.path
-    LD_LIBRARY_PATH=/home/scopatz/.local/lib:
+    LD_LIBRARY_PATH=/home/snail/.local/lib:
     MANDATORY_PATH=/usr/share/gconf/awesome-gnome.mandatory.path
     PATH=/home/snail/.local/bin:/home/snail/sandbox/bin:/usr/local/bin
     XDG_SEAT_PATH=/org/freedesktop/DisplayManager/Seat0
@@ -438,3 +438,28 @@ file from above and add a line.
 
 Again, the ``>>`` does not work as shown here in Python-mode, where it takes
 on its usual meaning.
+
+
+String Literals in Subprocess-mode
+====================================
+Strings can be used to escape special character in subprocess-mode. The 
+contents of the string are passed directly to teh subprocess command as a 
+single argument.  So whenever you are in doubt, or if there is a xonsh syntax
+error because of a filename, just wrap the offending portion in a string. 
+
+A common use case for this is files with spaces in their names. This 
+detestable practice refuses to die. "No problem!" says xonsh, "I have
+strings."  Let's see it go!
+
+.. code-block:: bash
+
+    >>> touch "sp ace"
+    >>> ls -l
+    total 0
+    -rw-rw-r-- 1 snail snail 0 Mar  8 17:50 sp ace
+    -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
+
+Spaces in filenames, of course, are just the begining.
+
+
+
