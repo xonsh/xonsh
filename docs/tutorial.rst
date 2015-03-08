@@ -349,7 +349,7 @@ the same as ``$()`` captured subprocesses in almost every way. The only
 difference is that the subprocess's stdout passes directly through xonsh and
 to the screen.  The return value of ``$[]`` is always ``None``.  
 
-In the following, we can see that the results of ``$[]`` are autimatically
+In the following, we can see that the results of ``$[]`` are automatically
 printed and the return value is not a string.
 
 .. code-block:: bash
@@ -363,5 +363,40 @@ printed and the return value is not a string.
 Previously when we automatically entered subprocess-mode, uncaptured
 subprocesses were used.  Thus ``ls -l`` and ``$[ls -l]`` are usually 
 equivalent.
+
+
+Nesting Subprocesses
+=====================================
+Though I am begging you not to abuse this, it is possible to nest all of the
+dollar sign operators that we have seen so far.  An instance of ``ls -l``
+that is on the wrong side of the border of the absurd is shown below:
+
+.. code-block:: bash
+
+    >>> $[$(echo ls) ${'-' + $(echo l).strip()}]
+    total 0
+    -rw-rw-r-- 1 scopatz scopatz 0 Mar  8 15:46 xonsh
+
+With great power, and so forth...
+
+
+Pipes
+====================================
+In subprocess-mode, xonsh allows you to use the ``|`` character to pipe
+together commands as you would in other shells.
+
+.. code-block:: bash
+
+    >>> env | uniq | sort | grep PATH
+    DATAPATH=/usr/share/MCNPX/v260/Data/
+    DEFAULTS_PATH=/usr/share/gconf/awesome-gnome.default.path
+    LD_LIBRARY_PATH=/home/scopatz/.local/lib:
+    MANDATORY_PATH=/usr/share/gconf/awesome-gnome.mandatory.path
+    PATH=/home/snail/.local/bin:/home/snail/sandbox/bin:/usr/local/bin
+    XDG_SEAT_PATH=/org/freedesktop/DisplayManager/Seat0
+    XDG_SESSION_PATH=/org/freedesktop/DisplayManager/Session0
+
+If you are unsure of what pipes are, there are many great refernces out there.
+You should be able to find information on StackOverflow or Google.
 
 
