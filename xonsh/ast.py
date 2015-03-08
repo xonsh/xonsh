@@ -82,18 +82,22 @@ class CtxAwareTransformer(NodeTransformer):
         return node
 
     def ctxupdate(self, iterable):
+        """Updated the most recent context."""
         self.contexts[-1].update(iterable)
     
     def ctxadd(self, value):
+        """Adds a value the most recent context."""
         self.contexts[-1].add(value)
 
     def ctxremove(self, value):
+        """Removes a value the most recent context."""
         for ctx in self.contexts[::-1]:
             if value in ctx:
                 ctx.remove(value)
                 break
 
     def try_subproc_line(self, node):
+        """Tries to parse the line of the node as a subprocess."""
         spline = subproc_line(self.lines[node.lineno - 1])
         try:
             newnode = self.parser.parse(spline, mode=self.mode)
@@ -108,6 +112,7 @@ class CtxAwareTransformer(NodeTransformer):
         return newnode
 
     def is_in_scope(self, node):
+        """Determines whether or not the current node is in scope."""
         lname = leftmostname(node)
         if lname is None:
             return node

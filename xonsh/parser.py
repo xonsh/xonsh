@@ -39,18 +39,29 @@ def ensure_has_elts(x, lineno=1, col_offset=1):
     return x
 
 def empty_list(lineno=None, col=None):
+    """Creates the AST node for an empty list."""
     return ast.List(elts=[], ctx=ast.Load(), lineno=lineno, col_offset=col)
 
 def binop(x, op, y, lineno=None, col=None):
+    """Creates the AST node for a binary operation."""
     return ast.BinOp(left=x, op=op, right=y, lineno=lineno, col_offset=col)
 
 def call_split_lines(x, lineno=None, col=None):
+    """Creates the AST node for calling the 'splitlines' attribute of an
+    object, nominally a string.
+    """
     return ast.Call(func=ast.Attribute(value=x, attr='splitlines', 
                              ctx=ast.Load(), lineno=lineno, col_offset=col), 
                     args=[], keywords=[], starargs=None, kwargs=None, 
                     lineno=lineno, col_offset=col)
 
 def ensure_list_from_str_or_list(x, lineno=None, col=None):
+    """Creates the AST node for the following expression::
+
+        [x] if isinstance(x, str) else x
+
+    Somewhat useful.
+    """
     return ast.IfExp(test=ast.Call(func=ast.Name(id='isinstance', 
                                                  ctx=ast.Load(), 
                                                  lineno=lineno, col_offset=col), 
@@ -63,18 +74,22 @@ def ensure_list_from_str_or_list(x, lineno=None, col=None):
                      orelse=x, lineno=lineno, col_offset=col)
 
 def xonsh_call(name, args, lineno=None, col=None):
+    """Creates the AST node for calling a function of a given name."""
     return ast.Call(func=ast.Name(id=name, ctx=ast.Load(), lineno=lineno, 
                                   col_offset=col),
                     args=args, keywords=[], starargs=None, kwargs=None, 
                     lineno=lineno, col_offset=col)
 
 def xonsh_help(x, lineno=None, col=None):
+    """Creates the AST node for calling the __xonsh_help__() function."""
     return xonsh_call('__xonsh_help__', [x], lineno=lineno, col=col)
 
 def xonsh_superhelp(x, lineno=None, col=None):
+    """Creates the AST node for calling the __xonsh_superhelp__() function."""
     return xonsh_call('__xonsh_superhelp__', [x], lineno=lineno, col=col)
 
 def xonsh_regexpath(x, lineno=None, col=None):
+    """Creates the AST node for calling the __xonsh_regexpath__() function."""
     return xonsh_call('__xonsh_regexpath__', [x], lineno=lineno, col=col)
 
 def load_ctx(x):

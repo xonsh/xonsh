@@ -11,6 +11,9 @@ For those of you who want the gritty details.
     :maxdepth: 1
 
     lexer
+    parser
+    ast
+    execer
 
 
 **Helpers:**
