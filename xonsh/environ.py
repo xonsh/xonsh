@@ -70,7 +70,8 @@ def multiline_prompt():
     # now to constuct the actual string
     dots = builtins.__xonsh_env__.get('MULTILINE_PROMPT', '.')
     dots = dots() if callable(dots) else dots
-    dots = '.' if len(dots) == 0 else dots
+    if dots is None or len(dots) == 0:
+        return ''
     return (dots*(headlen//len(dots))) + dots[:headlen%len(dots)] + tail
 
 

@@ -87,10 +87,6 @@ enter (or return) is pressed when the cursor is in the first column.
     ...
     1
 
-.. note:: The multiline ``...`` continuation prompt is not present in xonsh.
-          It is provided here for clarity and because helps trick 
-          syntax highlighting again.
-
 Flow control, of course, includes loops.
 
 .. code-block:: python
