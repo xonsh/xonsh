@@ -42,6 +42,18 @@ The language is a superset of Python 3.4 with additional shell primitives
 that you are used to from BASH and IPython. xonsh is 
 meant for the daily use of experts and novices alike.
 
+**At a glance**
+
+.. raw:: html 
+
+    <p style="text-align:center;">
+
+.. image:: _static/xonsh-demo.gif
+
+.. raw:: html 
+
+    </p>
+
 =========
 Contents
 =========
