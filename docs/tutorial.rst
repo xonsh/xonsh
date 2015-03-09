@@ -35,12 +35,12 @@ you are in a lesser terminal:
 Now we are in a xonsh shell. Our username happens to be ``snail``, our
 hostname happens to be ``home``, and we are in our home directory (``~``).
 Alternatively, you can setup your terminal emulator (xterm, gnome-terminal, 
-etc) to run xonsh automatically when it starts up. This is recomended.
+etc) to run xonsh automatically when it starts up. This is recommended.
 
 Basics
 =======================
 The xonsh language is based on Python and the xonsh shell uses Python to 
-interpret any input it recieves. This makes simple things, like arithmetic, 
+interpret any input it receives. This makes simple things, like arithmetic, 
 simple:
 
 .. code-block:: python
@@ -73,9 +73,9 @@ Python is there:
     >>> d.get('bash', False)
     False
 
-The xonsh shell also supports multiline input, for more advanced flow control.
-The multiline mode is automatically entered whenever the first line of input
-is not syntactically valid on its own. Multiline mode is then exited when 
+The xonsh shell also supports multi-line input, for more advanced flow control.
+The multi-line mode is automatically entered whenever the first line of input
+is not syntactically valid on its own. Multi-line mode is then exited when 
 enter (or return) is pressed when the cursor is in the first column.
 
 .. code-block:: python
@@ -159,7 +159,7 @@ PATH examples:
     ['/home/snail/.local/lib', '']
 
 Also note that *any* Python object can go into the environment. It is sometimes
-useful to have more sophisticated types, like functions, in the enviroment.
+useful to have more sophisticated types, like functions, in the environment.
 There are handful of environment variables that xonsh considers special.
 They can be seen in the table below:
 
@@ -191,7 +191,7 @@ operator.
              In xonsh, they have separate meanings.
 
 While in Python-mode (not subprocess-mode, which we'll get to later), we can 
-place any valid Python expressin inside of the curly braces in ``${<expr>}``. 
+place any valid Python expression inside of the curly braces in ``${<expr>}``. 
 This result of this expression will then be used to look up a value in 
 the environment.  In fact, ``${<expr>}`` is the same as doing 
 ``__xonsh_env__[<expr>]``, but much nicer to look at. Here are a couple of 
@@ -240,7 +240,7 @@ Python-mode vs Subprocess-mode
 ================================
 It is sometimes helpful to make the distinction between lines that operate
 in pure Python mode and lines that use shell-specific syntax, edit the 
-execution environment, and run commands. Unfortuantely, it is not always
+execution environment, and run commands. Unfortunately, it is not always
 clear from the syntax alone what mode is desired. This ambiguity stems from
 most command line utilities looking a lot like Python operators.
 
@@ -255,7 +255,7 @@ subprocess command instead.  In the above, if ``ls`` is not a variable,
 then subprocess mode will be attempted. If parsing in subprocess mode fails, 
 then the line is left in Python-mode.
 
-In the following example, we will list the conents of the directory 
+In the following example, we will list the contents of the directory 
 with ``ls -l``. Then we'll make new variable names ``ls`` and ``l`` and then
 subtract them. Finally, we will delete ``ls`` and ``l`` and be able to list 
 the directories again.
@@ -287,7 +287,7 @@ If absolutely want to run a subprocess command, you can always force xonsh
 to do so with the syntax that we will see in the following sections.
 
 
-Captured Suprocess with ``$()``
+Captured Subprocess with ``$()``
 ================================
 The ``$(<expr>)`` operator in xonsh executes a subprocess command and 
 *captures* the output. The expression in the parentheses will be run and 
@@ -300,7 +300,7 @@ BASH.  For example,
     'total 0\n-rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh\n'
 
 The ``$()`` operator is an expression itself. This means that we can 
-assign the results to a variable or perform any other manipluations we want.
+assign the results to a variable or perform any other manipulations we want.
 
 .. code-block:: bash
 
@@ -309,7 +309,7 @@ assign the results to a variable or perform any other manipluations we want.
     TOTAL 0
     -RW-RW-R-- 1 SNAIL SNAIL 0 MAR  8 15:46 XONSH
 
-While in supbrocess-mode or inside of a captured subprocess, we can always 
+While in subprocess-mode or inside of a captured subprocess, we can always 
 still query the environment with ``$NAME`` variables. 
 
 .. code-block:: bash
@@ -330,7 +330,7 @@ the expression should evaluate to a string.  For example,
     >>> $(echo ${x + ' ' + y})
     'xonsh party\n'
 
-If we remove the caputuring subprocess, the result will be displayed 
+If we remove the capturing subprocess, the result will be displayed 
 normally:
 
 .. code-block:: bash
@@ -342,7 +342,7 @@ Thus, ``${}`` allows us to create complex commands in Python-mode and then
 feed them to a subprocess as needed.
 
 
-Uncaptured Suprocess with ``$[]``
+Uncaptured Subprocess with ``$[]``
 ===================================
 Uncaptured subprocess are denoted with the ``$[<expr>]`` operator. They are 
 the same as ``$()`` captured subprocesses in almost every way. The only 
@@ -398,7 +398,7 @@ together commands as you would in other shells.
 
 This is only available in subprocess-mode because ``|`` is otherwise a 
 Python operator.
-If you are unsure of what pipes are, there are many great refernces out there.
+If you are unsure of what pipes are, there are many great references out there.
 You should be able to find information on StackOverflow or Google.
 
 
@@ -455,7 +455,7 @@ Note that the prompt is returned to you afterwards.
 String Literals in Subprocess-mode
 ====================================
 Strings can be used to escape special character in subprocess-mode. The 
-contents of the string are passed directly to teh subprocess command as a 
+contents of the string are passed directly to the subprocess command as a 
 single argument.  So whenever you are in doubt, or if there is a xonsh syntax
 error because of a filename, just wrap the offending portion in a string. 
 
@@ -471,13 +471,13 @@ strings."  Let's see it go!
     -rw-rw-r-- 1 snail snail 0 Mar  8 17:50 sp ace
     -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
 
-Spaces in filenames, of course, are just the begining.
+Spaces in filenames, of course, are just the beginning.
 
 
 Filename Globbing with ``*``
 ===============================
 Filename globbing with the ``*`` character is also allowed in subprocess-mode.
-This simply uses Python's glob module under-the-coveres.  See there for more
+This simply uses Python's glob module under-the-covers.  See there for more
 details.  As an example, start with a lovely bunch of xonshs:
 
 .. code-block:: bash
@@ -498,11 +498,11 @@ Regular Expression Filename Globbing with Backticks
 =====================================================
 If you have ever felt that normal globbing could use some more octane, 
 then regex globbing is the tool for you! Any string that uses backticks
-(`````) instead of quotes (``'``, ``"``) is interpeted as a regular 
+(`````) instead of quotes (``'``, ``"``) is interpreted as a regular 
 expression to match filenames against.  Like with regular globbing, a 
 list of successful matches is returned.  In Python-mode, this is just a
-list of strings. In subprocess-mode, each filename becomes its own argumnent
-to the subproccess command.
+list of strings. In subprocess-mode, each filename becomes its own argument
+to the subprocess command.
 
 Let's see a demonstration with some simple filenames:
 
@@ -522,7 +522,7 @@ globbing.
 For more information, please see the documentation for the ``re`` module in
 the Python standard library.
 
-.. warning:: This backtick syntax has very differnt from that of BASH.  In
+.. warning:: This backtick syntax has very different from that of BASH.  In
              BASH, backticks means to run a captured subprocess ``$()``.
 
 
@@ -580,8 +580,8 @@ regex globbing:
 
 Note that both help and superhelp return the object that they are inspecting.
 This allows you to chain together help inside of other operations and 
-ask for help several times in an object heirarchy.  For instance, let's get
-help for both the dict type and its key() method simeltaneously:
+ask for help several times in an object hierarchy.  For instance, let's get
+help for both the dict type and its key() method simultaneously:
 
 .. code-block:: python
 
@@ -649,7 +649,7 @@ want to write your alias as a string, use the ``shlex.split()`` function in
 the Python standard library.
 
 Lastly, if an alias value is a function (or other callable), then this 
-function is called *instead* of going to a subprocess command. Such fucntions
+function is called *instead* of going to a subprocess command. Such functions
 must have the following signature:
 
 .. code-block:: python
