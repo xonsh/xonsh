@@ -58,7 +58,29 @@ Contents
 ============
 Installation
 ============
-coming soon...
+You can install xonsh using conda, pip, or from source.
+
+**conda:**
+
+.. code-block:: bash
+
+    $ conda install -c https://conda.binstar.org/scopatz xonsh
+
+**pip:**
+
+.. code-block:: bash
+
+    $ pip install xonsh
+
+**source:** Download the source `from github <https://github.com/scopatz/xonsh>`_
+(`zip file <https://github.com/scopatz/xonsh/archive/master.zip>`_), then run
+the following from the source directory,
+
+.. code-block:: bash
+
+    $ python setup.py install
+
+If you run into any problems, please let us know!
 
 ============
 Dependencies
