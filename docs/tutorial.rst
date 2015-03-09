@@ -596,4 +596,13 @@ help for both the dict type and its key() method simeltaneously:
 Of course, for subprocess commands, you still want to use the ``man`` command.
 
 
+Compile, Evaluate, & Execute
+================================
+Like Python and BASH, xonsh provides built-in hooks to compile, evaluate,
+and execute strings of xonsh code.  To prevent this functionality from having
+serious name collisions with the Python built-in ``compile()``, ``eval()``,
+and ``exec()`` functions, the xonsh equivalents all append an 'x'.  So for
+xonsh code you want to use the ``compilex()``, ``evalx()``, and ``execx()`` 
+functions. If you don't know what these do, you probably don't need them.
+
 
