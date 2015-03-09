@@ -219,7 +219,7 @@ Running subprocess commands should work like any other in any other shell.
     Yoo hoo
     >>> cd xonsh
     >>> ls
-    build  docs     readme.rst  setup.py  xonsh           __pycache__
+    build  docs     README.rst  setup.py  xonsh           __pycache__
     dist   license  scripts     tests     xonsh.egg-info
     >>> git status
     On branch master
