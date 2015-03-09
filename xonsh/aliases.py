@@ -1,6 +1,7 @@
 """Aliases for the xonsh shell.
 """
 import os
+import platform
 import builtins
 
 def cd(args, stdin=None):
@@ -22,8 +23,12 @@ DEFAULT_ALIASES = {
     'cd': cd,
     'EOF': exit,
     'exit': exit,
-    'ls': ['ls', '--color=auto', '-v'],
     'grep': ['grep', '--color=auto'],
     'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
     'ipynb': ['ipython', 'notebook', '--no-browser'],
     }
+
+if platform.system() == 'Darwin':
+    DEFAULT_ALIASES['ls'] = ['ls', '-G']
+else:
+    DEFAULT_ALIASES['ls'] = ['ls', '--color=auto', '-v']
