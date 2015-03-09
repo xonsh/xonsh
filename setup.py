@@ -32,7 +32,7 @@ def main():
     print(logo)
     clean_tables()
     build_tables()
-    with open('readme.rst', 'r') as f:
+    with open('README.rst', 'r') as f:
         readme = f.read()
     skw = dict(
         name='xonsh',
