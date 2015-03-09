@@ -321,6 +321,8 @@ def load_builtins(execer=None):
     builtins.__xonsh_regexpath__ = regexpath
     builtins.__xonsh_glob__ = globpath
     builtins.__xonsh_exit__ = False
+    builtins.__xonsh_pyexit__ = builtins.exit
+    del builtins.exit
     builtins.__xonsh_subproc_captured__ = subproc_captured
     builtins.__xonsh_subproc_uncaptured__ = subproc_uncaptured
     # public built-ins
@@ -338,12 +340,14 @@ def unload_builtins():
     ENV.undo_replace_env()
     if ENV is not None:
         ENV = None
+    if hasattr(builtins, '__xonsh_pyexit__'):
+        builtins.exit = builtins.__xonsh_pyexit__
     if not BUILTINS_LOADED:
         return
     names = ['__xonsh_env__', '__xonsh_help__', '__xonsh_superhelp__',
              '__xonsh_regexpath__', '__xonsh_glob__', '__xonsh_exit__',
              '__xonsh_subproc_captured__', '__xonsh_subproc_uncaptured__',
-             'evalx', 'execx', 'compilex',
+             'evalx', 'execx', 'compilex', '__xonsh_pyexit__',
              ]
     for name in names:
         if hasattr(builtins, name):
