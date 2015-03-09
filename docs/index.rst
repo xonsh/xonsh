@@ -8,7 +8,7 @@ the xonsh shell
     <br />
     ~ 
     <script>
-    var phrases = [
+    var taglines = [
         "Exofrills in the shell",
         "No frills in the shell",
         "Become the Lord of the Files",
@@ -29,7 +29,7 @@ the xonsh shell
         "This is Major Tom to Ground Xonshtrol",
         "Sally sells csh and keeps xonsh to herself",
         ];
-    document.write(phrases[Math.floor(Math.random() * phrases.length)]);
+    document.write(taglines[Math.floor(Math.random() * taglines.length)]);
     </script>
     ~
     <br />

@@ -1,0 +1,27 @@
+package:
+  name: xonsh
+  version: "0.1.0"
+
+source:
+  fn: xonsh.tar.gz
+  url: https://github.com/scopatz/xonsh/archive/master.tar.gz
+
+build:
+  script: python setup.py install
+
+requirements:
+  build:
+    - python >=3.4
+    - ply
+  run:
+    - python >=3.4
+    - ply
+
+about:
+  home: http://xonsh.org/
+  license: BSD
+  summary: xonsh is a Python-ish, BASHwards-compatible shell.
+
+app:
+  entry: xonsh
+  icon: ../docs/_static/ascii_conch_part_color.png
