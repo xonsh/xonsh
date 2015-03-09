@@ -550,7 +550,7 @@ Let's start by looking at the help for the int type:
 Now, let's look at the superhelp for the xonsh built-in that enables
 regex globbing:
 
-.. code-block:: bash
+.. code-block:: python
 
     >>> __xonsh_regexpath__??
     Type:        function
@@ -571,8 +571,7 @@ This allows you to chain together help inside of other operations and
 ask for help several times in an object heirarchy.  For instance, let's get
 help for both the dict type and its key() method simeltaneously:
 
-.. code-block:: bash
-
+.. code-block:: python
 
     >>> dict?.keys??
     Type:            type
@@ -606,3 +605,68 @@ xonsh code you want to use the ``compilex()``, ``evalx()``, and ``execx()``
 functions. If you don't know what these do, you probably don't need them.
 
 
+Aliases
+==============================
+Another important xonsh built-in is the ``aliases`` mapping.  This is 
+like a dictionary that effects how subprocess commands are run.  If you are 
+familiar with the BASH ``alias`` built-in, this is similar.  Alias command
+matching only occurs for the first element of a subprocess command.
+
+The keys of ``aliases`` are strings that act as commands in subprocess-mode.
+The meaning the values changes based on the type of the value. If the value
+of the alias dictionary is also a string, it is evaluated using ``evalx()``.
+This allow you to use arbitrary xonsh code as a command.  While this is
+powerful, it is not normally what you want.
+
+If an ``aliases`` value is a list of strings, it is used to replace the 
+key in the subprocess command.  For example, here are some of the default
+aliases that follow this pattern:
+
+.. code-block:: python
+
+    DEFAULT_ALIASES = {
+        'ls': ['ls', '--color=auto', '-v'],
+        'grep': ['grep', '--color=auto'],
+        'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
+        'ipynb': ['ipython', 'notebook', '--no-browser'],
+        }
+
+Note that this format forces the aliaser to tokenize the replacement 
+themselves. This makes the list-of-strings the safest pattern.  If you really
+want to write your alias as a string, use the ``shlex.split()`` function in
+the Python standard library.
+
+Lastly, if an alias value is a function (or other callable), then this 
+function is called *instead* of going to a subprocess command. Such fucntions
+must have the following signature:
+
+.. code-block:: python
+
+    def mycmd(args, stdin=None):
+        """args will be a list of strings representing the arguments to this 
+        command. stdin will be a sting, if present. This is used to pipe
+        the output of the previous command into this one.
+        """
+        # do whatever you want! Note: that you have access to the xonsh
+        # built-ins if you 'import builtins'.  For example, if you need the
+        # environment, you could do:
+        #    
+        #    import bulitins
+        #    env = builtins.__xonsh_env__
+        stdout = 'I commanded'
+        stderr = None
+        # need to return a (stdout, stderr) tuple. Both of these may be
+        # either a str or None.
+        return stdout, stderr
+
+We can dynamically alter the aliases present simply by modifying the 
+built-in mapping.  Here is an example using a function value:
+
+.. code-block:: python
+
+    >>> aliases['banana'] = lambda args, stdin=None: ('My spoon is tooo big!', None)
+    >>> banana 
+    'My spoon is tooo big!'
+
+Aliasing is a powerful way that xonsh allows you to seamless interact to
+with Python and subprocess. 

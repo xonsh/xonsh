@@ -277,13 +277,6 @@ def run_subproc(cmds, captured=True):
             aliased_cmd = cmd
         elif callable(alias):
             prev_proc = ProcProxy(*alias(cmd[1:], stdin=stdin))
-            if last_cmd:
-                if prev_proc.stdout is not None:
-                    sys.stdout.write(prev_proc.stdout)
-                    sys.stdout.flush()
-                if prev_proc.stderr is not None:
-                    sys.stderr.write(prev_proc.stderr)
-                    sys.stderr.flush()
             continue
         else:
             aliased_cmd = alias + cmd[1:]
