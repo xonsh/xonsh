@@ -440,19 +440,17 @@ Again, the ``>>`` does not work as shown here in Python-mode, where it takes
 on its usual meaning.
 
 
-Background with ``&``
+Non-blocking with ``&``
 ====================================
-In subprocess-mode, you can background a process if the last element on a line
-is an ``&``.  For example, 
+In subprocess-mode, you can make a process no-blocking if the last element on 
+a line is an ``&``.  The following shows an example with ``emacs``.
 
 .. code-block:: bash
 
     >>> emacs &
     >>>
 
-This truly detaches the spawned process from the current one. There is no 
-need for xonsh to remain open.
-
+Note that the prompt is returned to you afterwards.
 
 String Literals in Subprocess-mode
 ====================================
@@ -684,3 +682,27 @@ built-in mapping.  Here is an example using a function value:
 
 Aliasing is a powerful way that xonsh allows you to seamless interact to
 with Python and subprocess. 
+
+
+Up, Down, Tab
+==============
+The up and down keys search history matching from the start of the line, 
+much like they do in the IPython shell.
+
+Tab completion is present as well. In Python-mode you are able to complete
+based on the variable names in the current builtins, globals, and locals, 
+as well as xonsh languages keywords & operator, files & directories, and 
+environment variable names. In subprocess-mode, you additionally complete
+on any file names on your ``$PATH``, alias keys, and full BASH completion 
+for the commands themselves.
+
+
+That's All, Folks
+======================
+To leave xonsh, hit ``Crtl-D``, type ``EOF``, or type ``exit``.
+
+.. code-block:: bash
+
+    >>> exit
+
+Now it is your turn.
