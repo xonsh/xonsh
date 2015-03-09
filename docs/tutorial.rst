@@ -239,7 +239,7 @@ This should feel very natural.
 Python-mode vs Subprocess-mode
 ================================
 It is sometimes helpful to make the distinction between lines that operate
-in pure-Python mode and lines that use shell-specific syntax, edit the 
+in pure Python mode and lines that use shell-specific syntax, edit the 
 execution environment, and run commands. Unfortuantely, it is not always
 clear from the syntax alone what mode is desired. This ambiguity stems from
 most command line utilities looking a lot like Python operators.
@@ -460,6 +460,140 @@ strings."  Let's see it go!
     -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
 
 Spaces in filenames, of course, are just the begining.
+
+
+Filename Globbing with ``*``
+===============================
+Filename globbing with the ``*`` character is also allowed in subprocess-mode.
+This simply uses Python's glob module under-the-coveres.  See there for more
+details.  As an example, start with a lovely bunch of xonshs:
+
+.. code-block:: bash
+
+    >>> touch xonsh conch konk quanxh
+    >>> ls
+    conch  konk  quanxh  xonsh
+    >>> ls *h
+    conch  quanxh  xonsh
+    >>> ls *o*
+    conch  konk  xonsh
+
+This is not available in Python-mode, because multiplication is pretty 
+important.
+
+
+Regular Expression Filename Globbing with Backticks
+=====================================================
+If you have ever felt that normal globbing could use some more octane, 
+then regex globbing is the tool for you! Any string that uses backticks
+(`````) instead of quotes (``'``, ``"``) is interpeted as a regular 
+expression to match filenames against.  Like with regular globbing, a 
+list of successful matches is returned.  In Python-mode, this is just a
+list of strings. In subprocess-mode, each filename becomes its own argumnent
+to the subproccess command.
+
+Let's see a demonstration with some simple filenames:
+
+
+.. code-block:: bash
+
+    >>> touch a aa aaa aba abba aab aabb abcba
+    >>> ls `a(a+|b+)a`
+    aaa  aba  abba
+    >>> print(`a(a+|b+)a`)
+    ['aaa', 'aba', 'abba']
+    >>> len(`a(a+|b+)a`)
+    3
+
+Other than the regex matching, this functions in the same way as normal 
+globbing.
+For more information, please see the documentation for the ``re`` module in
+the Python standard library.
+
+.. warning:: This backtick syntax has very differnt from that of BASH.  In
+             BASH, backticks means to run a captured subprocess ``$()``.
+
+
+Help & Superhelp with ``?`` & ``??``
+=====================================================
+From IPython, xonsh allows you to inspect objects with question marks.
+A single question mark (``?``) is used to display normal level of help.
+Double question marks (``??``) are used to display higher level of help, 
+called superhelp. Superhelp usually includes source code if the object was
+written in pure Python.  
+
+Let's start by looking at the help for the int type:
+
+.. code-block:: bash
+
+    >>> int?
+    Type:            type
+    String form:     <class 'int'>
+    Init definition: (self, *args, **kwargs)
+    Docstring:
+    int(x=0) -> integer
+    int(x, base=10) -> integer
+
+    Convert a number or string to an integer, or return 0 if no arguments
+    are given.  If x is a number, return x.__int__().  For floating point
+    numbers, this truncates towards zero.
+
+    If x is not a number or if base is given, then x must be a string,
+    bytes, or bytearray instance representing an integer literal in the
+    given base.  The literal can be preceded by '+' or '-' and be surrounded
+    by whitespace.  The base defaults to 10.  Valid bases are 0 and 2-36.
+    Base 0 means to interpret the base from the string as an integer literal.
+    >>> int('0b100', base=0)
+    4
+    <class 'int'>
+
+Now, let's look at the superhelp for the xonsh built-in that enables
+regex globbing:
+
+.. code-block:: bash
+
+    >>> __xonsh_regexpath__??
+    Type:        function
+    String form: <function regexpath at 0x7fef91612950>
+    File:        /home/scopatz/.local/lib/python3.4/site-packages/xonsh-0.1-py3.4.egg/xonsh/built_ins.py
+    Definition:  (s)
+    Source:
+    def regexpath(s):
+        """Takes a regular expression string and returns a list of file
+        paths that match the regex.
+        """
+        s = expand_path(s)
+        return reglob(s)
+    <function regexpath at 0x7fef91612950>
+
+Note that both help and superhelp return the object that they are inspecting.
+This allows you to chain together help inside of other operations and 
+ask for help several times in an object heirarchy.  For instance, let's get
+help for both the dict type and its key() method simeltaneously:
+
+.. code-block:: bash
+
+
+    >>> dict?.keys??
+    Type:            type
+    String form:     <class 'dict'>
+    Init definition: (self, *args, **kwargs)
+    Docstring:
+    dict() -> new empty dictionary
+    dict(mapping) -> new dictionary initialized from a mapping object's
+        (key, value) pairs
+    dict(iterable) -> new dictionary initialized as if via:
+        d = {}
+        for k, v in iterable:
+            d[k] = v
+    dict(**kwargs) -> new dictionary initialized with the name=value pairs
+        in the keyword argument list.  For example:  dict(one=1, two=2)
+    Type:        method_descriptor
+    String form: <method 'keys' of 'dict' objects>
+    Docstring:   D.keys() -> a set-like object providing a view on D's keys
+    <method 'keys' of 'dict' objects>
+
+Of course, for subprocess commands, you still want to use the ``man`` command.
 
 
 
