@@ -67,7 +67,12 @@ class Completer(object):
         if begidx == 0:
             rtn = self.cmd_complete(prefix)
         elif line.split(' ', 1)[0] in self.bash_complete_funcs:
-            return sorted(self.bash_complete(prefix, line, begidx, endidx))
+            rtn = set()
+            for s in self.bash_complete(prefix, line, begidx, endidx):
+                if os.path.isdir(s.rstrip()):
+                    s = s.rstrip() + slash
+                rtn.add(s)
+            return sorted(rtn)
         else:
             rtn = set()
         rtn |= {s for s in XONSH_TOKENS if s.startswith(prefix)}
