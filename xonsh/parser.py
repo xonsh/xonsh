@@ -1979,7 +1979,6 @@ class Parser(object):
         if lenp == 2:
             p0 = [self._subproc_cliargs(p1, lineno=lineno, col=col)]
         elif p[2] == '&':
-            print("yo")
             p0 = p1 + [ast.Str(s=p[2], lineno=lineno, col_offset=col)]
         elif lenp == 3:
             p0 = [self._subproc_cliargs(p1, lineno=lineno, col=col)]

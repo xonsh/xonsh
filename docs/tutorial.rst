@@ -440,6 +440,20 @@ Again, the ``>>`` does not work as shown here in Python-mode, where it takes
 on its usual meaning.
 
 
+Background with ``&``
+====================================
+In subprocess-mode, you can background a process if the last element on a line
+is an ``&``.  For example, 
+
+.. code-block:: bash
+
+    >>> emacs &
+    >>>
+
+This truly detaches the spawned process from the current one. There is no 
+need for xonsh to remain open.
+
+
 String Literals in Subprocess-mode
 ====================================
 Strings can be used to escape special character in subprocess-mode. The 
