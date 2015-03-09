@@ -1,7 +1,7 @@
 .. _xonsh_completer:
 
 ******************************************************
-Tab Completer (``xonsh.comppleter``)
+Tab Completer (``xonsh.completer``)
 ******************************************************
 
 .. automodule:: xonsh.completer
