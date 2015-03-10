@@ -124,14 +124,21 @@ class Completer(object):
         rtn = {s+space if s[-1:].isalnum() else s for s in out.splitlines()}
         return rtn
 
+    def _source_completions(self):
+        srcs = []
+        for f in builtins.__xonsh_env__.get('BASH_COMPLETIONS', ()):
+            if os.path.isfile(f):
+                srcs.append('source ' + f)
+        return srcs
+
     def _load_bash_complete_funcs(self):
-        input = 'source /etc/bash_completion\n'
-        if os.path.isfile('/usr/share/bash-completion/completions/git'):
-            input += 'source /usr/share/bash-completion/completions/git\n'
-        input += 'complete -p\n'
-        out = subprocess.check_output(['bash'], input=input, 
-                                      universal_newlines=True)
         self.bash_complete_funcs = bcf = {}
+        input = self._source_completions()
+        if len(input) == 0:
+            return
+        input.append('complete -p\n')
+        out = subprocess.check_output(['bash'], input='\n'.join(input), 
+                                      universal_newlines=True)
         for line in out.splitlines():
             head, cmd = line.rsplit(' ', 1)
             if len(cmd) == 0 or cmd == 'cd':
@@ -142,15 +149,15 @@ class Completer(object):
             bcf[cmd] = m.group(1)
 
     def _load_bash_complete_files(self):
-        declare_f = 'declare -F '
-        input = ['source /etc/bash_completion']
-        if os.path.isfile('/usr/share/bash-completion/completions/git'):
-            input.append('source /usr/share/bash-completion/completions/git')
+        input = self._source_completions()
+        if len(input) == 0:
+            self.bash_complete_files = {}
+            return
         input.append('shopt -s extdebug')
+        declare_f = 'declare -F '
         input += [declare_f + f for f in self.bash_complete_funcs.values()]
         input.append('shopt -u extdebug\n')
-        input = '\n'.join(input)
-        out = subprocess.check_output(['bash'], input=input,
+        out = subprocess.check_output(['bash'], input='\n'.join(input),
                                       universal_newlines=True)
         func_files = {}
         for line in out.splitlines():

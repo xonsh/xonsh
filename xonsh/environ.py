@@ -4,6 +4,7 @@ import os
 import re
 import socket
 import builtins
+import platform
 import subprocess
 from warnings import warn
 
@@ -82,6 +83,12 @@ BASE_ENV = {
     'XONSH_HISTORY_SIZE': 8128,
     'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history'),
     }
+
+if platform.system() == 'Darwin':
+    BASE_ENV['BASH_COMPLETIONS'] = []
+else:
+    BASE_ENV['BASH_COMPLETIONS'] = ['/etc/bash_completion', 
+                                    '/usr/share/bash-completion/completions/git']
 
 def bash_env():
     """Attempts to compute the bash envinronment variables."""

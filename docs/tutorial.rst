@@ -175,6 +175,11 @@ XONSHRC            ``'~/.xonshrc'``            Location of run control file
 XONSH_HISTORY_SIZE 8128                        Number of items to store in the
                                                history.
 XONSH_HISTORY_FILE ``'~/.xonsh_history'``      Location of history file
+BASH_COMPLETIONS   ``[] or ['/etc/...']``      This is a list of strings that 
+                                               specifies where the BASH 
+                                               completion files may be found. 
+                                               The default values is platform
+                                               dependent, but sane.
 ================== =========================== ================================
 
 Customizing the prompt is probably the most common reason for altering an 
