@@ -5,6 +5,8 @@ import os
 import sys
 try:
     from setuptools import setup
+    from setuptools.command.install import install
+    from setuptools.command.sdist import sdist
     HAVE_SETUPTOOLS = True
 except ImportError:
     from distutils.core import setup
@@ -28,10 +30,20 @@ def build_tables():
            outputdir='xonsh')
     sys.path.pop(0)
 
+class xinstall(install):
+    def run(self):
+        clean_tables()
+        build_tables()
+        install.run(self)
+
+class xsdist(sdist):
+    def make_release_tree(self, basedir, files):
+        clean_tables()
+        build_tables()
+        sdist.make_release_tree(self, basedir, files)
+
 def main():
     print(logo)
-    clean_tables()
-    build_tables()
     with open('README.rst', 'r') as f:
         readme = f.read()
     skw = dict(
@@ -48,7 +60,11 @@ def main():
         classifiers = ['Programming Language :: Python :: 3'],
         packages=['xonsh'],
         scripts=['scripts/xonsh'],
+        cmdclass={'install': xinstall, 'sdist': xsdist},
         )
+    if HAVE_SETUPTOOLS:
+        skw['setup_requires'] = ['ply']
+        skw['install_requires'] = ['ply']
     setup(**skw)
 
 logo = """
