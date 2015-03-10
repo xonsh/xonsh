@@ -1,11 +1,17 @@
 """Aliases for the xonsh shell.
 """
 import os
+import os.path
 import platform
 import builtins
 
-def cd(args, stdin=None):
-    """Changes the directory."""
+def cd(args=None, stdin=None):
+    """Changes the directory.
+
+    If no directory is specified (i.e. if `args` is None) then this
+    changes to the current user's home directory.
+    """
+    args = args or [os.path.expanduser('~')]
     d = args[0]
     if not os.path.isdir(d):
         return '', 'directory does not exist: {0}\n'.format(d)
