@@ -6,8 +6,9 @@ import re
 import sys
 import builtins
 import subprocess
-from subprocess import Popen, PIPE
+from io import TextIOWrapper, StringIO
 from glob import glob, iglob
+from subprocess import Popen, PIPE
 from contextlib import contextmanager
 from collections import MutableMapping, Iterable, namedtuple
 
@@ -269,19 +270,37 @@ def run_subproc(cmds, captured=True):
         if isinstance(cmd, string_types):
             prev = cmd
             continue
-        stdin = None if prev_proc is None else prev_proc.stdout
+        prev_is_proxy = isinstance(prev_proc, ProcProxy)
         stdout = last_stdout if cmd is last_cmd else PIPE
         uninew = cmd is last_cmd
         alias = builtins.aliases.get(cmd[0], None)
         if alias is None:
             aliased_cmd = cmd
         elif callable(alias):
+            # compute stdin for callable
+            if prev_proc is None:
+                stdin = None
+            elif prev_is_proxy:
+                stdin = prev_proc.stdout
+            else:
+                stdin = StringIO(prev_proc.communicate()[0].decode(), None)
+                stdin.seek(0)
+                stdin, _ = stdin.read(), stdin.close()
             prev_proc = ProcProxy(*alias(cmd[1:], stdin=stdin))
-            continue
+            continue    
         else:
             aliased_cmd = alias + cmd[1:]
+        # compute stdin for subprocess
+        if prev_proc is None:
+            stdin = None
+        elif prev_is_proxy:
+            stdin = PIPE
+        else:
+            stdin = prev_proc.stdout
         proc = Popen(aliased_cmd, universal_newlines=uninew, env=ENV.detype(),
                      stdin=stdin, stdout=stdout)
+        if prev_is_proxy:
+            proc.communicate(input=prev_proc.stdout)
         procs.append(proc)
         prev = None
         prev_proc = proc
@@ -294,7 +313,10 @@ def run_subproc(cmds, captured=True):
     if write_target is not None:
         with open(write_target, write_mode) as f:
             f.write(output)
-    return output
+    if captured:
+        return output
+    elif output is not None:
+        print(output)
 
 def subproc_captured(*cmds):
     """Runs a subprocess, capturing the output. Returns the stdout

@@ -661,7 +661,7 @@ must have the following signature:
 
     def mycmd(args, stdin=None):
         """args will be a list of strings representing the arguments to this 
-        command. stdin will be a sting, if present. This is used to pipe
+        command. stdin will be a string, if present. This is used to pipe
         the output of the previous command into this one.
         """
         # do whatever you want! Note: that you have access to the xonsh
