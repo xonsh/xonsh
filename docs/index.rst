@@ -99,7 +99,7 @@ If you run into any problems, please let us know!
 ============
 Dependencies
 ============
-Polyphemus currently has the following external dependencies,
+xonsh currently has the following external dependencies,
 
 *Run Time:*
 
