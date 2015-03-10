@@ -105,6 +105,7 @@ html_theme = 'cloud'
 # documentation.
 html_theme_options = {
     'max_width': '1250px',
+    'minimal_width': '700px',
     'relbarbgcolor': '#000000',
     'footerbgcolor': '#FFFFE7',
     'sidebarwidth': '322px',
