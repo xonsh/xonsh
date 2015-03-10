@@ -98,7 +98,7 @@ def bash_env():
                                     universal_newlines=True)
     except subprocess.CalledProcessError:
         s = ''
-    items = [line.split('=', 1) for line in s.splitlines()]
+    items = [line.split('=', 1) for line in s.splitlines() if '=' in line]
     env = dict(items)
     return env
 
