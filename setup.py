@@ -12,7 +12,7 @@ except ImportError:
     from distutils.core import setup
     HAVE_SETUPTOOLS = False
 
-VERSION = '0.1.0'
+VERSION = '0.1.1'
 
 TABLES = ['xonsh/lexer_table.py', 'xonsh/parser_table.py']
 
