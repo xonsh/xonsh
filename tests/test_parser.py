@@ -1276,6 +1276,12 @@ def test_decorator_dot_call_args():
 def test_decorator_dot_dot_call_args():
     yield check_stmts, '@i.h.g(x, y=10)\ndef f():\n  pass', False
 
+def test_broken_prompt_func():
+    code = ('def prompt():\n'
+            "    return '{user}'.format(\n"
+            "       user='me')\n")
+    yield check_stmts, code, False
+
 
 #
 # Xonsh specific syntax
