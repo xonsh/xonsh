@@ -78,6 +78,11 @@ class Shell(Cmd):
     def __del__(self):
         teardown_readline()
 
+    def emptyline(self):
+        """Called when an empty line has been entered."""
+        self.need_more_lines = False
+        self.default('')
+
     def parseline(self, line):
         """Overridden to no-op."""
         return '', line, line
@@ -86,7 +91,7 @@ class Shell(Cmd):
         """Implements code execution."""
         line = line if line.endswith('\n') else line + '\n'
         code = self.push(line)
-        if self.need_more_lines:
+        if code is None:
             return
         try:
             self.execer.exec(code, mode='single', glbs=None, locs=self.ctx)
@@ -99,28 +104,18 @@ class Shell(Cmd):
         """Pushes a line onto the buffer and compiles the code in a way that 
         enables multiline input.
         """
-        buf = self.buffer
-        buf.append(line)
-        col = RL_POINT.value  # current location in line
         code = None
-        self.need_more_lines = True
-        if len(buf) > 1:
-            # col (RL_POINT.value) == 0 is a terrifying way to detect that 
-            # a newline has been pressed, but there doesn't seem to be a 
-            # way around it.
-            if col == 0:
-                # this has to be here a newline press does clear the readline
-                # buffer.  Thanks GNU, thanks Python.
-                buf.pop()
-            else:
-                return code
-        src = ''.join(buf)
+        self.buffer.append(line)
+        if self.need_more_lines:
+            return code
+        src = ''.join(self.buffer)
+
         try:
             code = self.execer.compile(src, mode='single', glbs=None, 
                                        locs=self.ctx)
             self.reset_buffer()
         except SyntaxError:
-            pass
+            self.need_more_lines = True
         return code
 
     def reset_buffer(self):
