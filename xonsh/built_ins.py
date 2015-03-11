@@ -289,16 +289,28 @@ def run_subproc(cmds, captured=True):
                 stdin, _ = stdin.read(), stdin.close()
             # Redirect the output streams temporarily. merge with possible
             # return values from function.
-            new_stdout, new_stderr = StringIO(), StringIO()
-            with redirect_stdout(new_stdout), redirect_stderr(new_stderr):
+            if stdout is PIPE:
+                new_stdout, new_stderr = StringIO(), StringIO()
+                with redirect_stdout(new_stdout), redirect_stderr(new_stderr):
+                    rtn = alias(cmd[1:], stdin=stdin)
+                proxy_stdout, proxy_stderr = new_stdout.getvalue(), new_stderr.getvalue()
+                if rtn:
+                    if len(rtn) >= 1 and rtn[0]:
+                        proxy_stdout += rtn[0]
+                    if len(rtn) >= 2 and rtn[1]:
+                        proxy_stderr += rtn[1]
+                prev_proc = ProcProxy(proxy_stdout, proxy_stderr)
+            else:
                 rtn = alias(cmd[1:], stdin=stdin)
-            newout, newerr = new_stdout.getvalue(),  new_stderr.getvalue()
-            rtnout, rtnerr = (None, None) if rtn is None else rtn
-            proxy_stdout = newout if rtnout is None else newout + rtnout
-            proxy_stderr = newerr if rtnerr is None else newerr + rtnerr
-            prev_proc = ProcProxy(proxy_stdout, proxy_stderr)
-            if len(proxy_stderr) > 0:
-                print(proxy_stderr, file=sys.stderr, end='')
+                rtnout, rtnerr = None, None
+                if rtn:
+                    if len(rtn) >= 1 and rtn[0]:
+                        rtnout = rtn[0]
+                        sys.stdout.write(rtn[0])
+                    if len(rtn) >= 2 and rtn[1]:
+                        rtnerr = rtn[1]
+                        sys.stderr.write(rtn[1])
+                prev_proc = ProcProxy(rtnout, rtnerr)
             continue
         else:
             aliased_cmd = alias + cmd[1:]
@@ -327,8 +339,6 @@ def run_subproc(cmds, captured=True):
             f.write(output)
     if captured:
         return output
-    elif output is not None:
-        print(output, end='')
 
 def subproc_captured(*cmds):
     """Runs a subprocess, capturing the output. Returns the stdout
