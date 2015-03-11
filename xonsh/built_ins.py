@@ -291,25 +291,31 @@ def run_subproc(cmds, captured=True):
             # return values from function.
             if stdout is PIPE:
                 new_stdout, new_stderr = StringIO(), StringIO()
+                rtn = None
                 with redirect_stdout(new_stdout), redirect_stderr(new_stderr):
                     rtn = alias(cmd[1:], stdin=stdin)
                 proxy_stdout, proxy_stderr = new_stdout.getvalue(), new_stderr.getvalue()
-                if rtn:
+                if isinstance(rtn, tuple):
                     if len(rtn) >= 1 and rtn[0]:
                         proxy_stdout += rtn[0]
                     if len(rtn) >= 2 and rtn[1]:
                         proxy_stderr += rtn[1]
+                elif isinstance(rtn, str):
+                    proxy_stdout += rtn
                 prev_proc = ProcProxy(proxy_stdout, proxy_stderr)
             else:
                 rtn = alias(cmd[1:], stdin=stdin)
                 rtnout, rtnerr = None, None
-                if rtn:
+                if isinstance(rtn, tuple):
                     if len(rtn) >= 1 and rtn[0]:
                         rtnout = rtn[0]
                         sys.stdout.write(rtn[0])
                     if len(rtn) >= 2 and rtn[1]:
                         rtnerr = rtn[1]
                         sys.stderr.write(rtn[1])
+                elif isinstance(rtn, str):
+                    rtnout = rtn
+                    sys.stdout.write(rtn)
                 prev_proc = ProcProxy(rtnout, rtnerr)
             continue
         else:
