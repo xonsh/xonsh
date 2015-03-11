@@ -12,7 +12,7 @@ from subprocess import Popen, PIPE
 from contextlib import contextmanager
 from collections import MutableMapping, Iterable, namedtuple
 
-from xonsh.tools import string_types
+from xonsh.tools import string_types, redirect_stdout, redirect_stderr
 from xonsh.inspectors import Inspector
 from xonsh.environ import default_env
 from xonsh.aliases import DEFAULT_ALIASES
@@ -237,6 +237,7 @@ WRITER_MODES = {'>': 'w', '>>': 'a'}
 
 ProcProxy = namedtuple('ProcProxy', ['stdout', 'stderr'])
 
+
 def run_subproc(cmds, captured=True):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
     which may be a list of command line arguments or a string, represnting
@@ -286,8 +287,17 @@ def run_subproc(cmds, captured=True):
                 stdin = StringIO(prev_proc.communicate()[0].decode(), None)
                 stdin.seek(0)
                 stdin, _ = stdin.read(), stdin.close()
-            prev_proc = ProcProxy(*alias(cmd[1:], stdin=stdin))
-            continue    
+
+            # Redirect the output streams temporarily if the output should be captured, otherwise let it print
+            if stdout is PIPE:
+                new_stdout, new_stderr = StringIO(), StringIO()
+                with redirect_stdout(new_stdout), redirect_stderr(new_stderr):
+                    alias(cmd[1:], stdin=stdin)
+                prev_proc = ProcProxy(new_stdout.getvalue(), new_stderr.getvalue())
+            else:
+                alias(cmd[1:], stdin=stdin)
+                prev_proc = ProcProxy("", "")
+            continue
         else:
             aliased_cmd = alias + cmd[1:]
         # compute stdin for subprocess
@@ -315,8 +325,8 @@ def run_subproc(cmds, captured=True):
             f.write(output)
     if captured:
         return output
-    elif output is not None:
-        print(output)
+    # elif output is not None:
+    #     print(output, end="")
 
 def subproc_captured(*cmds):
     """Runs a subprocess, capturing the output. Returns the stdout
