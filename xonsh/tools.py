@@ -129,7 +129,9 @@ TERM_COLORS = {
     'BACKGROUND_INTENSE_WHITE': '\001\033[0;107m\002',   # WHITE
     }
 
-# These were taken directly from Python 3.5's source code
+# These were taken directly from Python 3.5's source code (from the contextlib module)
+# This can be removed when 3.5 is released, although redirect_stdout exists in 3.4, redirect_stderr does not.
+# See the Python software license: https://docs.python.org/3/license.html
 class _RedirectStream:
 
     _stream = None
