@@ -678,6 +678,9 @@ must have the following signature:
         # The return value of the function can either be None,
         return
 
+        # a single string representing stdout
+        return  'I am out of here'
+
         # or you can build up strings for stdout and stderr and then   
         # return a (stdout, stderr) tuple. Both of these may be
         # either a str or None. Any results returned like this will be 
