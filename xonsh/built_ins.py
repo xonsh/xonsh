@@ -10,7 +10,7 @@ from io import TextIOWrapper, StringIO
 from glob import glob, iglob
 from subprocess import Popen, PIPE
 from contextlib import contextmanager
-from collections import MutableMapping, Iterable, namedtuple
+from collections import Sequence, MutableMapping, Iterable, namedtuple
 
 from xonsh.tools import string_types, redirect_stdout, redirect_stderr
 from xonsh.inspectors import Inspector
@@ -237,6 +237,51 @@ WRITER_MODES = {'>': 'w', '>>': 'a'}
 
 ProcProxy = namedtuple('ProcProxy', ['stdout', 'stderr'])
 
+def _run_callable_subproc(alias, cmd, captured=True, prev_proc=None, 
+                          stdout=None):
+    """Helper for running callables as a subprocess."""
+    # compute stdin for callable
+    if prev_proc is None:
+        stdin = None
+    elif isinstance(prev_proc, ProcProxy):
+        stdin = prev_proc.stdout
+    else:
+        stdin = StringIO(prev_proc.communicate()[0].decode(), None)
+        stdin.seek(0)
+        stdin, _ = stdin.read(), stdin.close()
+    # Redirect the output streams temporarily. merge with possible
+    # return values from alias function.
+    if stdout is PIPE:
+        # handles captured mode
+        new_stdout, new_stderr = StringIO(), StringIO()
+        with redirect_stdout(new_stdout), redirect_stderr(new_stderr):
+            rtn = alias(cmd[1:], stdin=stdin)
+        proxy_stdout = new_stdout.getvalue()
+        proxy_stderr = new_stderr.getvalue()
+        if isinstance(rtn, str):
+            proxy_stdout += rtn
+        elif isinstance(rtn, Sequence):
+            if rtn[0]:  # not None nor ''
+                proxy_stdout += rtn[0]
+            if rtn[1]:
+                proxy_stderr += rtn[1]
+        proc = ProcProxy(proxy_stdout, proxy_stderr)
+    else:
+        # handles uncaptured mode
+        rtn = alias(cmd[1:], stdin=stdin)
+        rtnout, rtnerr = None, None
+        if isinstance(rtn, str):
+            rtnout = rtn
+            sys.stdout.write(rtn)
+        elif isinstance(rtn, Sequence):
+            if rtn[0]:
+                rtnout = rtn[0]
+                sys.stdout.write(rtn[0])
+            if rtn[1]:
+                rtnerr = rtn[1]
+                sys.stderr.write(rtn[1])
+        proc = ProcProxy(rtnout, rtnerr)
+    return proc
 
 def run_subproc(cmds, captured=True):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
@@ -271,56 +316,19 @@ def run_subproc(cmds, captured=True):
         if isinstance(cmd, string_types):
             prev = cmd
             continue
-        prev_is_proxy = isinstance(prev_proc, ProcProxy)
         stdout = last_stdout if cmd is last_cmd else PIPE
         uninew = cmd is last_cmd
         alias = builtins.aliases.get(cmd[0], None)
         if alias is None:
             aliased_cmd = cmd
         elif callable(alias):
-            # compute stdin for callable
-            if prev_proc is None:
-                stdin = None
-            elif prev_is_proxy:
-                stdin = prev_proc.stdout
-            else:
-                stdin = StringIO(prev_proc.communicate()[0].decode(), None)
-                stdin.seek(0)
-                stdin, _ = stdin.read(), stdin.close()
-            # Redirect the output streams temporarily. merge with possible
-            # return values from function.
-            if stdout is PIPE:
-                new_stdout, new_stderr = StringIO(), StringIO()
-                rtn = None
-                with redirect_stdout(new_stdout), redirect_stderr(new_stderr):
-                    rtn = alias(cmd[1:], stdin=stdin)
-                proxy_stdout, proxy_stderr = new_stdout.getvalue(), new_stderr.getvalue()
-                if isinstance(rtn, tuple):
-                    if len(rtn) >= 1 and rtn[0]:
-                        proxy_stdout += rtn[0]
-                    if len(rtn) >= 2 and rtn[1]:
-                        proxy_stderr += rtn[1]
-                elif isinstance(rtn, str):
-                    proxy_stdout += rtn
-                prev_proc = ProcProxy(proxy_stdout, proxy_stderr)
-            else:
-                rtn = alias(cmd[1:], stdin=stdin)
-                rtnout, rtnerr = None, None
-                if isinstance(rtn, tuple):
-                    if len(rtn) >= 1 and rtn[0]:
-                        rtnout = rtn[0]
-                        sys.stdout.write(rtn[0])
-                    if len(rtn) >= 2 and rtn[1]:
-                        rtnerr = rtn[1]
-                        sys.stderr.write(rtn[1])
-                elif isinstance(rtn, str):
-                    rtnout = rtn
-                    sys.stdout.write(rtn)
-                prev_proc = ProcProxy(rtnout, rtnerr)
+            prev_proc = _run_callable_subproc(alias, cmd, captured=captured, 
+                            prev_proc=prev_proc, stdout=stdout)
             continue
         else:
             aliased_cmd = alias + cmd[1:]
         # compute stdin for subprocess
+        prev_is_proxy = isinstance(prev_proc, ProcProxy)
         if prev_proc is None:
             stdin = None
         elif prev_is_proxy:
