@@ -32,6 +32,11 @@ def check_eval(input):
         EXECER.debug_level = DEBUG_LEVEL
         EXECER.eval(input)
 
+def check_parse(input):
+    with mock_xonsh_env(None):
+        EXECER.debug_level = DEBUG_LEVEL
+        EXECER.parse(input, ctx=None)
+
 #
 # Tests
 #
@@ -44,6 +49,19 @@ def test_ls_dashl():
 
 def test_which_ls():
     yield check_eval, 'which ls'
+
+def test_simple_func():
+    code = ('def prompt():\n'
+            "    return '{user}'.format(user='me')\n")
+    yield check_parse, code
+
+def test_simple_func_broken():
+    code = ('def prompt():\n'
+            "    return '{user}'.format(\n"
+            "       user='me')\n")
+    yield check_parse, code
+
+
 
 
 if __name__ == '__main__':

@@ -45,6 +45,7 @@ class Lexer(object):
         self.indent = ''
         self.last = None
         self.in_py_mode = [True]
+        self.in_parens = [False]
 
     @property
     def lineno(self):
@@ -200,7 +201,7 @@ class Lexer(object):
     def t_NEWLINE(self, t):
         r'\n+'
         t.lexer.lineno += t.value.count("\n")
-        return t
+        return None if self.in_parens[-1] else t
 
     #
     # Ignore internal whitespace based on parentherical scope
@@ -208,46 +209,55 @@ class Lexer(object):
     
     def t_DOLLAR_LPAREN(self, t):
         r'\$\('
+        self.in_parens.append(True)
         self.in_py_mode.append(False)
         return t
 
     def t_LPAREN(self, t):
         r'\('
+        self.in_parens.append(True)
         self.in_py_mode.append(True)
         return t
 
     def t_RPAREN(self, t):
         r'\)'
+        self.in_parens.pop()
         self.in_py_mode.pop()
         return t
 
     def t_DOLLAR_LBRACE(self, t):
         r'\$\{'
+        self.in_parens.append(True)
         self.in_py_mode.append(True)
         return t
 
     def t_LBRACE(self, t):
         r'\{'
+        self.in_parens.append(True)
         self.in_py_mode.append(True)
         return t
 
     def t_RBRACE(self, t):
         r'\}'
+        self.in_parens.pop()
         self.in_py_mode.pop()
         return t
 
     def t_DOLLAR_LBRACKET(self, t):
         r'\$\['
+        self.in_parens.append(True)
         self.in_py_mode.append(False)
         return t
 
     def t_LBRACKET(self, t):
         r'\['
+        self.in_parens.append(True)
         self.in_py_mode.append(True)
         return t
 
     def t_RBRACKET(self, t):
         r'\]'
+        self.in_parens.pop()
         self.in_py_mode.pop()
         return t
 
