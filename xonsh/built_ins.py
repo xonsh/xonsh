@@ -287,16 +287,18 @@ def run_subproc(cmds, captured=True):
                 stdin = StringIO(prev_proc.communicate()[0].decode(), None)
                 stdin.seek(0)
                 stdin, _ = stdin.read(), stdin.close()
-
-            # Redirect the output streams temporarily if the output should be captured, otherwise let it print
-            if stdout is PIPE:
-                new_stdout, new_stderr = StringIO(), StringIO()
-                with redirect_stdout(new_stdout), redirect_stderr(new_stderr):
-                    alias(cmd[1:], stdin=stdin)
-                prev_proc = ProcProxy(new_stdout.getvalue(), new_stderr.getvalue())
-            else:
-                alias(cmd[1:], stdin=stdin)
-                prev_proc = ProcProxy("", "")
+            # Redirect the output streams temporarily. merge with possible
+            # return values from function.
+            new_stdout, new_stderr = StringIO(), StringIO()
+            with redirect_stdout(new_stdout), redirect_stderr(new_stderr):
+                rtn = alias(cmd[1:], stdin=stdin)
+            newout, newerr = new_stdout.getvalue(),  new_stderr.getvalue()
+            rtnout, rtnerr = (None, None) if rtn is None else rtn
+            proxy_stdout = newout if rtnout is None else newout + rtnout
+            proxy_stderr = newerr if rtnerr is None else newerr + rtnerr
+            prev_proc = ProcProxy(proxy_stdout, proxy_stderr)
+            if len(proxy_stderr) > 0:
+                print(proxy_stderr, file=sys.stderr, end='')
             continue
         else:
             aliased_cmd = alias + cmd[1:]
@@ -325,8 +327,8 @@ def run_subproc(cmds, captured=True):
             f.write(output)
     if captured:
         return output
-    # elif output is not None:
-    #     print(output, end="")
+    elif output is not None:
+        print(output, end='')
 
 def subproc_captured(*cmds):
     """Runs a subprocess, capturing the output. Returns the stdout

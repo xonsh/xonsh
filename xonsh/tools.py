@@ -129,9 +129,11 @@ TERM_COLORS = {
     'BACKGROUND_INTENSE_WHITE': '\001\033[0;107m\002',   # WHITE
     }
 
-# These were taken directly from Python 3.5's source code (from the contextlib module)
-# This can be removed when 3.5 is released, although redirect_stdout exists in 3.4, redirect_stderr does not.
+# The following redirect classes were taken directly from Python 3.5's source 
+# code (from the contextlib module). This can be removed when 3.5 is released, 
+# although redirect_stdout exists in 3.4, redirect_stderr does not.
 # See the Python software license: https://docs.python.org/3/license.html
+# Copyright (c) Python Software Foundation. All rights reserved.
 class _RedirectStream:
 
     _stream = None
@@ -162,11 +164,9 @@ class redirect_stdout(_RedirectStream):
             with redirect_stdout(f):
                 help(pow)
     """
-
     _stream = "stdout"
 
 
 class redirect_stderr(_RedirectStream):
     """Context manager for temporarily redirecting stderr to another file."""
-
     _stream = "stderr"
