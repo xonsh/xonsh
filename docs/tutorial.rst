@@ -661,19 +661,29 @@ must have the following signature:
 
     def mycmd(args, stdin=None):
         """args will be a list of strings representing the arguments to this 
-        command. stdin will be a sting, if present. This is used to pipe
+        command. stdin will be a string, if present. This is used to pipe
         the output of the previous command into this one.
         """
-        # do whatever you want! Note: that you have access to the xonsh
+        # do whatever you want! Anything you print to stdout or stderr 
+        # will be captured for you automatically. This allows callable 
+        # aliases to support piping.
+        print('I go to stdout and will be printed or piped')
+
+        # Note: that you have access to the xonsh
         # built-ins if you 'import builtins'.  For example, if you need the
-        # environment, you could do:
-        #    
-        #    import bulitins
-        #    env = builtins.__xonsh_env__
+        # environment, you could do to following:
+        import bulitins
+        env = builtins.__xonsh_env__
+
+        # The return value of the function can either be None,
+        return
+
+        # or you can build up strings for stdout and stderr and then   
+        # return a (stdout, stderr) tuple. Both of these may be
+        # either a str or None. Any results returned like this will be 
+        # concatenated with the strings printed elsewhere in the function.
         stdout = 'I commanded'
         stderr = None
-        # need to return a (stdout, stderr) tuple. Both of these may be
-        # either a str or None.
         return stdout, stderr
 
 We can dynamically alter the aliases present simply by modifying the 

@@ -6,12 +6,13 @@ import re
 import sys
 import builtins
 import subprocess
-from subprocess import Popen, PIPE
+from io import TextIOWrapper, StringIO
 from glob import glob, iglob
+from subprocess import Popen, PIPE
 from contextlib import contextmanager
 from collections import MutableMapping, Iterable, namedtuple
 
-from xonsh.tools import string_types
+from xonsh.tools import string_types, redirect_stdout, redirect_stderr
 from xonsh.inspectors import Inspector
 from xonsh.environ import default_env
 from xonsh.aliases import DEFAULT_ALIASES
@@ -236,6 +237,7 @@ WRITER_MODES = {'>': 'w', '>>': 'a'}
 
 ProcProxy = namedtuple('ProcProxy', ['stdout', 'stderr'])
 
+
 def run_subproc(cmds, captured=True):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
     which may be a list of command line arguments or a string, represnting
@@ -269,19 +271,48 @@ def run_subproc(cmds, captured=True):
         if isinstance(cmd, string_types):
             prev = cmd
             continue
-        stdin = None if prev_proc is None else prev_proc.stdout
+        prev_is_proxy = isinstance(prev_proc, ProcProxy)
         stdout = last_stdout if cmd is last_cmd else PIPE
         uninew = cmd is last_cmd
         alias = builtins.aliases.get(cmd[0], None)
         if alias is None:
             aliased_cmd = cmd
         elif callable(alias):
-            prev_proc = ProcProxy(*alias(cmd[1:], stdin=stdin))
+            # compute stdin for callable
+            if prev_proc is None:
+                stdin = None
+            elif prev_is_proxy:
+                stdin = prev_proc.stdout
+            else:
+                stdin = StringIO(prev_proc.communicate()[0].decode(), None)
+                stdin.seek(0)
+                stdin, _ = stdin.read(), stdin.close()
+            # Redirect the output streams temporarily. merge with possible
+            # return values from function.
+            new_stdout, new_stderr = StringIO(), StringIO()
+            with redirect_stdout(new_stdout), redirect_stderr(new_stderr):
+                rtn = alias(cmd[1:], stdin=stdin)
+            newout, newerr = new_stdout.getvalue(),  new_stderr.getvalue()
+            rtnout, rtnerr = (None, None) if rtn is None else rtn
+            proxy_stdout = newout if rtnout is None else newout + rtnout
+            proxy_stderr = newerr if rtnerr is None else newerr + rtnerr
+            prev_proc = ProcProxy(proxy_stdout, proxy_stderr)
+            if len(proxy_stderr) > 0:
+                print(proxy_stderr, file=sys.stderr, end='')
             continue
         else:
             aliased_cmd = alias + cmd[1:]
+        # compute stdin for subprocess
+        if prev_proc is None:
+            stdin = None
+        elif prev_is_proxy:
+            stdin = PIPE
+        else:
+            stdin = prev_proc.stdout
         proc = Popen(aliased_cmd, universal_newlines=uninew, env=ENV.detype(),
                      stdin=stdin, stdout=stdout)
+        if prev_is_proxy:
+            proc.communicate(input=prev_proc.stdout)
         procs.append(proc)
         prev = None
         prev_proc = proc
@@ -294,7 +325,10 @@ def run_subproc(cmds, captured=True):
     if write_target is not None:
         with open(write_target, write_mode) as f:
             f.write(output)
-    return output
+    if captured:
+        return output
+    elif output is not None:
+        print(output, end='')
 
 def subproc_captured(*cmds):
     """Runs a subprocess, capturing the output. Returns the stdout
