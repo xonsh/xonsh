@@ -65,7 +65,7 @@ class Shell(Cmd):
     """The xonsh shell."""
 
     def __init__(self, completekey='tab', stdin=None, stdout=None, ctx=None):
-        super(Shell, self).__init__(completekey='tab', stdin=stdin, 
+        super(Shell, self).__init__(completekey=completekey, stdin=stdin, 
                                     stdout=stdout)
         self.execer = Execer()
         env = builtins.__xonsh_env__
@@ -111,12 +111,15 @@ class Shell(Cmd):
         if self.need_more_lines:
             return code
         src = ''.join(self.buffer)
-
         try:
             code = self.execer.compile(src, mode='single', glbs=None, 
                                        locs=self.ctx)
             self.reset_buffer()
         except SyntaxError:
+            if line == '\n':
+                self.reset_buffer()
+                traceback.print_exc()
+                return None
             self.need_more_lines = True
         return code
 
