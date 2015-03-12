@@ -9,12 +9,11 @@ from xonsh.execer import Execer
 from xonsh.completer import Completer
 from xonsh.environ import xonshrc_context, multiline_prompt
 
-RL_POINT = Namespace(value=0)  # mirrors ctypes
 RL_COMPLETION_SUPPRESS_APPEND = None
 
 def setup_readline():
     """Sets up the readline module and completion supression, if available."""
-    global RL_COMPLETION_SUPPRESS_APPEND, RL_ERASE_EMPTY_LINE, RL_POINT
+    global RL_COMPLETION_SUPPRESS_APPEND
     if RL_COMPLETION_SUPPRESS_APPEND is not None:
         return
     try:
@@ -25,7 +24,6 @@ def setup_readline():
     import ctypes.util
     readline.set_completer_delims(' \t\n')
     lib = ctypes.cdll.LoadLibrary(readline.__file__)
-    RL_POINT = ctypes.c_int.in_dll(lib, 'rl_point')
     RL_COMPLETION_SUPPRESS_APPEND = ctypes.c_int.in_dll(lib, 
                                             'rl_completion_suppress_append')
     # reads in history
