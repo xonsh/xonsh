@@ -24,8 +24,12 @@ def setup_readline():
     import ctypes.util
     readline.set_completer_delims(' \t\n')
     lib = ctypes.cdll.LoadLibrary(readline.__file__)
-    RL_COMPLETION_SUPPRESS_APPEND = ctypes.c_int.in_dll(lib, 
+    try:
+        RL_COMPLETION_SUPPRESS_APPEND = ctypes.c_int.in_dll(lib, 
                                             'rl_completion_suppress_append')
+    except ValueError:
+        # not all versions of readline have this symbol, ie Macs sometimes
+        RL_COMPLETION_SUPPRESS_APPEND = None
     # reads in history
     env = builtins.__xonsh_env__
     hf = env.get('XONSH_HISTORY_FILE', os.path.expanduser('~/.xonsh_history'))
