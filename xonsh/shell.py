@@ -40,6 +40,8 @@ def setup_readline():
     # sets up IPython-like history matching with up and down
     readline.parse_and_bind('"\e[B": history-search-forward')
     readline.parse_and_bind('"\e[A": history-search-backward')
+    # Setup Shift-Tab to indent
+    readline.parse_and_bind('"\e[Z": "{0}"'.format(env.get('INDENT', '')))
 
 def teardown_readline():
     """Tears down up the readline module, if available."""
@@ -160,4 +162,3 @@ class Shell(Cmd):
         else:
             p = "set '$PROMPT = ...' $ "
         return p
-

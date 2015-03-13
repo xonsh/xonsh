@@ -89,6 +89,7 @@ def locale_env():
             }
 
 BASE_ENV = {
+    'INDENT': '    ',
     'PROMPT': default_prompt,
     'MULTILINE_PROMPT': '.',
     'XONSHRC': os.path.expanduser('~/.xonshrc'),
