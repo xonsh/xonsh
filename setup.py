@@ -43,6 +43,8 @@ class xsdist(sdist):
         sdist.make_release_tree(self, basedir, files)
 
 def main():
+    if sys.version_info[0] < 3:
+        sys.exit('xonsh currently requires Python 3.4+')
     print(logo)
     with open('README.rst', 'r') as f:
         readme = f.read()
