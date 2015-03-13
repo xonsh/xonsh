@@ -193,15 +193,19 @@ class Lexer(object):
         elif not v.startswith(i):
             self._error("indentation level does not match previous level", t)
         self.indent = v
+        t.lexer.lineno += 1
         return t
 
     t_ENDMARKER = r'\x03'
 
     # Newlines
     def t_NEWLINE(self, t):
-        r'\n+'
-        t.lexer.lineno += t.value.count("\n")
-        return None if self.in_parens[-1] else t
+        r'\n'
+        if self.in_parens[-1]:
+            t.lexer.lineno += 1
+            return None
+        else:
+            return t
 
     #
     # Ignore internal whitespace based on parentherical scope

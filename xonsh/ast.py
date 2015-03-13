@@ -98,7 +98,7 @@ class CtxAwareTransformer(NodeTransformer):
 
     def try_subproc_line(self, node):
         """Tries to parse the line of the node as a subprocess."""
-        spline = subproc_line(self.lines[node.lineno - 1])
+        spline = subproc_line(self.lines[node.lineno - 1]).lstrip()
         try:
             newnode = self.parser.parse(spline, mode=self.mode)
             newnode = newnode.body

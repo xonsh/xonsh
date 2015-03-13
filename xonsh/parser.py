@@ -242,7 +242,6 @@ class Parser(object):
     def reset(self):
         """Resets for clean parsing."""
         self.lexer.reset()
-        self.lexer.lineno = 0
         self._last_yielded_token = None
 
     def parse(self, s, filename='<code>', mode='exec', debug_level=0):
@@ -322,6 +321,10 @@ class Parser(object):
     def lineno(self):
         return self.lexer.lineno
 
+    @lineno.setter
+    def lineno(self, value):
+        self.lexer.lineno = value
+
     @property
     def col(self):
         t = self._yacc_lookahead_token()
@@ -394,12 +397,15 @@ class Parser(object):
         """newline_or_stmt : NEWLINE 
                            | stmt
         """
+        if p[1] == '\n':
+            self.lineno += 1
         p[0] = p[1]
 
     def p_newlines(self, p):
         """newlines : NEWLINE
                     | newlines NEWLINE
         """
+        self.lineno += 1
         p[0] = p[1] if len(p) == 2 else p[1] + p[2]
 
     def p_eval_input(self, p):
@@ -451,6 +457,7 @@ class Parser(object):
         else:
             p0 = ast.Call(func=name, lineno=self.lineno, col_offset=self.col, 
                           **p3)
+        self.lineno += 1  # needs to be at the end
         p[0] = p0
 
     def p_decorators(self, p):
@@ -712,6 +719,7 @@ class Parser(object):
         p0 = [p1]
         if p2 is not None and p2 != ';':
             p0 += p2
+        #self.lineno += 1  # needs to be at the end
         p[0] = p0
 
     def p_small_stmt(self, p):
@@ -1184,6 +1192,8 @@ class Parser(object):
                  | NEWLINE indented_stmt_list DEDENT
         """
         p[0] = p[1] if len(p) == 2 else p[2]
+        if len(p) < 4:
+            self.lineno += 1  # needs to be at the end
 
     def p_test(self, p):
         """test : or_test 
