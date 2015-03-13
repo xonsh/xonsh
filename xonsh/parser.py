@@ -114,6 +114,9 @@ def store_ctx(x):
     elif isinstance(x, ast.Starred):
         store_ctx(x.value)
 
+def empty_list_if_newline(x):
+    return [] if x == '\n' else x
+
 
 class Parser(object):
     """A class that parses the xonsh language."""
@@ -369,18 +372,13 @@ class Parser(object):
     def p_single_input(self, p):
         """single_input : compound_stmt NEWLINE
         """
-        p1 = p[1]
-        if p1 == '\n':
-            p1 = []
+        p1 = empty_list_if_newline(p[1])
         p0 = ast.Interactive(body=p1)
         p[0] = p0
 
     def p_file_input(self, p):
         """file_input : file_stmts"""
-        p1 = p[1]
-        if p1 == '\n':
-            p1 = []
-        p[0] = ast.Module(body=p1)
+        p[0] = ast.Module(body=p[1])
 
     def p_file_stmts(self, p):
         """file_stmts : newline_or_stmt 
@@ -388,10 +386,12 @@ class Parser(object):
         """
         if len(p) == 2:
             # newline_or_stmt ENDMARKER
-            p[0] = p[1]
+            p1 = empty_list_if_newline(p[1])
+            p[0] = p1
         else:
             # file_input newline_or_stmt ENDMARKER
-            p[0] = p[1] + p[2]
+            p2 = empty_list_if_newline(p[2])
+            p[0] = p[1] + p2
 
     def p_newline_or_stmt(self, p):
         """newline_or_stmt : NEWLINE 
