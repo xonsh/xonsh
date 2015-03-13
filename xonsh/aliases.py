@@ -3,8 +3,9 @@
 import os
 import platform
 import builtins
+import subprocess
 
-def cd(args=None, stdin=None):
+def cd(args, stdin=None):
     """Changes the directory.
 
     If no directory is specified (i.e. if `args` is None) then this
@@ -28,10 +29,35 @@ def exit(args, stdin=None):
     print()  # gimme a newline
     return None, None
 
+def source_bash(args, stdin=None):
+    """Implements bash's source builtin."""
+    import tempfile
+    env = builtins.__xonsh_env__
+    denv = env.detype()
+    with tempfile.NamedTemporaryFile(mode='w+t') as f:
+        args = ' '.join(args)
+        input = 'source {0}\nenv >> {1}\n'.format(args, f.name)
+        try:
+            subprocess.check_output(['bash'], input=input, env=denv, 
+                                    stderr=subprocess.PIPE,
+                                    universal_newlines=True)
+        except subprocess.CalledProcessError:
+            return None, 'could not source {0}\n'.format(args)
+        f.seek(0)
+        exported = f.read()
+    items = [l.split('=', 1) for l in exported.splitlines() if '=' in l]
+    newenv = dict(items)
+    for k, v in newenv.items():
+        if k in env and v == denv[k]:
+            continue  # no change from original
+        env[k] = v
+    return
+
 DEFAULT_ALIASES = {
     'cd': cd,
     'EOF': exit,
     'exit': exit,
+    'source-bash': source_bash,
     'grep': ['grep', '--color=auto'],
     'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
     'ipynb': ['ipython', 'notebook', '--no-browser'],
