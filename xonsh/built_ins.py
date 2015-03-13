@@ -23,8 +23,7 @@ BUILTINS_LOADED = False
 INSPECTOR = Inspector()
 LOCALE_CATS = {'LC_CTYPE': locale.LC_CTYPE, 'LC_COLLATE': locale.LC_COLLATE, 
     'LC_TIME': locale.LC_TIME, 'LC_MONETARY': locale.LC_MONETARY, 
-    'LC_MESSAGES': locale.LC_MESSAGES, 'LC_NUMERIC': locale.LC_NUMERIC, 
-    'LC_ALL': locale.LC_ALL}
+    'LC_MESSAGES': locale.LC_MESSAGES, 'LC_NUMERIC': locale.LC_NUMERIC,}
 
 class Env(MutableMapping):
     """A xonsh environment, whose variables have limited typing 
@@ -98,7 +97,6 @@ class Env(MutableMapping):
             val = int(val)
         elif key in LOCALE_CATS:
             locale.setlocale(LOCALE_CATS[key], val)
-            self._d.update(locale_env())
             return
         self._d[key] = val
         self._detyped = None
