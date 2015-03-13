@@ -3,6 +3,7 @@
 import os
 import re
 import socket
+import locale
 import builtins
 import platform
 import subprocess
@@ -75,6 +76,17 @@ def multiline_prompt():
         return ''
     return (dots*(headlen//len(dots))) + dots[:headlen%len(dots)] + tail
 
+
+def locale_env():
+    """Generates an environment of the locale."""
+    return {'LC_CTYPE': locale.getlocale(locale.LC_CTYPE),
+            'LC_COLLATE': locale.getlocale(locale.LC_COLLATE),
+            'LC_TIME': locale.getlocale(locale.LC_TIME),
+            'LC_MONETARY': locale.getlocale(locale.LC_MONETARY),
+            'LC_MESSAGES': locale.getlocale(locale.LC_MESSAGES),
+            'LC_NUMERIC': locale.getlocale(locale.LC_NUMERIC),
+            'LC_ALL': locale.setlocale(locale.LC_ALL),
+            }
 
 BASE_ENV = {
     'PROMPT': default_prompt,

@@ -4,6 +4,7 @@ not to be confused with the special Python builtins module.
 import os
 import re
 import sys
+import locale
 import builtins
 import subprocess
 from io import TextIOWrapper, StringIO
@@ -14,12 +15,16 @@ from collections import Sequence, MutableMapping, Iterable, namedtuple
 
 from xonsh.tools import string_types, redirect_stdout, redirect_stderr
 from xonsh.inspectors import Inspector
-from xonsh.environ import default_env
+from xonsh.environ import default_env, locale_env
 from xonsh.aliases import DEFAULT_ALIASES
 
-BUILTINS_LOADED = False
 ENV = None
+BUILTINS_LOADED = False
 INSPECTOR = Inspector()
+LOCALE_CATS = {'LC_CTYPE': locale.LC_CTYPE, 'LC_COLLATE': locale.LC_COLLATE, 
+    'LC_TIME': locale.LC_TIME, 'LC_MONETARY': locale.LC_MONETARY, 
+    'LC_MESSAGES': locale.LC_MESSAGES, 'LC_NUMERIC': locale.LC_NUMERIC, 
+    'LC_ALL': locale.LC_ALL}
 
 class Env(MutableMapping):
     """A xonsh environment, whose variables have limited typing 
@@ -28,6 +33,8 @@ class Env(MutableMapping):
 
     * PATH: any variable whose name ends in PATH is a list of strings.
     * XONSH_HISTORY_SIZE: this variable is an int.
+    * LC_* (locale categories): locale catergory names get/set the Python
+      locale via locale.getlocale() and locale.setlocale() functions.
 
     An Env instance may be converted to an untyped version suitable for 
     use in a subprocess.
@@ -35,7 +42,7 @@ class Env(MutableMapping):
 
     def __init__(self, *args, **kwargs):
         """If no initial environment is given, os.environ is used."""
-        self._d = {}
+        self._d = locale_env()
         if len(args) == 0 and len(kwargs) == 0:
             args = (os.environ,)
         for key, val in dict(*args, **kwargs).items():
@@ -89,6 +96,10 @@ class Env(MutableMapping):
                   else val
         elif key == 'XONSH_HISTORY_SIZE' and not isinstance(val, int):
             val = int(val)
+        elif key in LOCALE_CATS:
+            locale.setlocale(LOCALE_CATS[key], val)
+            self._d.update(locale_env())
+            return
         self._d[key] = val
         self._detyped = None
         
