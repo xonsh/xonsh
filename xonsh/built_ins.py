@@ -15,7 +15,7 @@ from collections import Sequence, MutableMapping, Iterable, namedtuple
 
 from xonsh.tools import string_types, redirect_stdout, redirect_stderr
 from xonsh.inspectors import Inspector
-from xonsh.environ import default_env, locale_env
+from xonsh.environ import default_env
 from xonsh.aliases import DEFAULT_ALIASES
 
 ENV = None
@@ -41,7 +41,7 @@ class Env(MutableMapping):
 
     def __init__(self, *args, **kwargs):
         """If no initial environment is given, os.environ is used."""
-        self._d = locale_env()
+        self._d = {}
         if len(args) == 0 and len(kwargs) == 0:
             args = (os.environ,)
         for key, val in dict(*args, **kwargs).items():
@@ -97,7 +97,7 @@ class Env(MutableMapping):
             val = int(val)
         elif key in LOCALE_CATS:
             locale.setlocale(LOCALE_CATS[key], val)
-            return
+            val = locale.setlocale(LOCALE_CATS[key])
         self._d[key] = val
         self._detyped = None
         

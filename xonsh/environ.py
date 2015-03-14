@@ -77,17 +77,6 @@ def multiline_prompt():
     return (dots*(headlen//len(dots))) + dots[:headlen%len(dots)] + tail
 
 
-def locale_env():
-    """Generates an environment of the locale."""
-    # it is much safer to use setlocale() to get the value than getlocale()
-    return {'LC_CTYPE': locale.setlocale(locale.LC_CTYPE),
-            'LC_COLLATE': locale.setlocale(locale.LC_COLLATE),
-            'LC_TIME': locale.setlocale(locale.LC_TIME),
-            'LC_MONETARY': locale.setlocale(locale.LC_MONETARY),
-            'LC_MESSAGES': locale.setlocale(locale.LC_MESSAGES),
-            'LC_NUMERIC': locale.setlocale(locale.LC_NUMERIC),
-            }
-
 BASE_ENV = {
     'INDENT': '    ',
     'PROMPT': default_prompt,
@@ -95,6 +84,12 @@ BASE_ENV = {
     'XONSHRC': os.path.expanduser('~/.xonshrc'),
     'XONSH_HISTORY_SIZE': 8128,
     'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history'),
+    'LC_CTYPE': locale.setlocale(locale.LC_CTYPE),
+    'LC_COLLATE': locale.setlocale(locale.LC_COLLATE),
+    'LC_TIME': locale.setlocale(locale.LC_TIME),
+    'LC_MONETARY': locale.setlocale(locale.LC_MONETARY),
+    'LC_MESSAGES': locale.setlocale(locale.LC_MESSAGES),
+    'LC_NUMERIC': locale.setlocale(locale.LC_NUMERIC),
     }
 
 if platform.system() == 'Darwin':
