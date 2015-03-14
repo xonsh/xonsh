@@ -13,9 +13,9 @@ from subprocess import Popen, PIPE
 from contextlib import contextmanager
 from collections import Sequence, MutableMapping, Iterable, namedtuple
 
-from xonsh.tools import string_types, redirect_stdout, redirect_stderr
+from xonsh.tools import string_types, redirect_stdout, redirect_stderr, is_function_string
 from xonsh.inspectors import Inspector
-from xonsh.environ import default_env, locale_env
+from xonsh.environ import BASE_ENV, default_env, locale_env
 from xonsh.aliases import DEFAULT_ALIASES
 
 ENV = None
@@ -45,7 +45,13 @@ class Env(MutableMapping):
         if len(args) == 0 and len(kwargs) == 0:
             args = (os.environ,)
         for key, val in dict(*args, **kwargs).items():
-            self[key] = val
+            if is_function_string(val):
+                if key in (ENV or {}):
+                    self[key] = ENV[key]
+                elif key in BASE_ENV:
+                    self[key] = BASE_ENV[key]
+            else:
+                self[key] = val
         self._detyped = None
         self._orig_env = None
 

@@ -9,7 +9,7 @@ import platform
 import subprocess
 from warnings import warn
 
-from xonsh.tools import TERM_COLORS
+from xonsh.tools import TERM_COLORS, is_function_string
 
 def current_branch(cwd=None):
     """Gets the branch for a current working directory. Returns None
@@ -112,8 +112,7 @@ def bash_env():
     except subprocess.CalledProcessError:
         s = ''
     items = [line.split('=', 1) for line in s.splitlines() if '=' in line]
-    env = dict(items)
-    return env
+    return {k:v for (k,v) in items if not is_function_string(v)}
 
 def xonshrc_context(rcfile=None, execer=None):
     """Attempts to read in xonshrc file, and return the contents."""
