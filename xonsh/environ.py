@@ -100,8 +100,11 @@ else:
 
 def bash_env():
     """Attempts to compute the bash envinronment variables."""
+    currenv = None
+    if hasattr(builtins, '__xonsh_env__'):
+        currenv = builtins.__xonsh_env__.detype()
     try:
-        s = subprocess.check_output(['bash', '-i'], input='env', env={}, 
+        s = subprocess.check_output(['bash', '-i'], input='env', env=currenv, 
                                     stderr=subprocess.PIPE,
                                     universal_newlines=True)
     except subprocess.CalledProcessError:
