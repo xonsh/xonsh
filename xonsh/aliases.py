@@ -16,9 +16,11 @@ def cd(args, stdin=None):
     elif len(args) == 1:
         d = args[0]
     else:
-        return '', 'cd takes 0 or 1 arguments, not {0}'.format(len(args))
+        return '', 'cd takes 0 or 1 arguments, not {0}\n'.format(len(args))
+    if not os.path.exists(d):
+        return '', 'cd: no such file or directory: {0}\n'.format(d)
     if not os.path.isdir(d):
-        return '', 'directory does not exist: {0}\n'.format(d)
+        return '', 'cd: {0} is not a directory\n'.format(d)
     os.chdir(d)
     builtins.__xonsh_env__['PWD'] = os.getcwd()
     return None, None
