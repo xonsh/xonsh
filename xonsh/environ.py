@@ -39,12 +39,27 @@ default_prompt = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
                   '{cwd}{BOLD_RED}{curr_branch} {BOLD_BLUE}${NO_COLOR} ')
 
 def format_prompt(template=default_prompt):
-    """Formats a xonsh prompt template string."""
+    """Formats a xonsh prompt template string.
+
+    The following keyword arguments are recognized in the template string:
+    user -- Name of current user
+    hostname -- Name of host computer
+    cwd -- Current working directory
+    curr_branch -- Name of current git branch (preceded by a space), if any
+    (QUALIFIER_)COLORNAME -- Inserts an ANSI color code
+        COLORNAME can be any of:
+            BLACK, RED, GREEN, YELLOW, BLUE, PURPLE, CYAN, WHITE
+        QUALIFIER is optional and can be any of:
+            BOLD, UNDERLINE, BACKGROUND, INTENSE,
+            BOLD_INTENSE, BACKGROUND_INTENSE
+    NO_COLOR -- Resets any previously used color codes
+    """
     env = builtins.__xonsh_env__
     cwd = env['PWD']
     branch = current_branch(cwd=cwd)
     branch = '' if branch is None else ' ' + branch
-    p = template.format(user=env.get('USER', '<user>'),
+    p = template.format(
+            user=env.get('USER', '<user>'),
             hostname=socket.gethostname(),
             cwd=cwd.replace(env['HOME'], '~'),
             curr_branch=branch,
