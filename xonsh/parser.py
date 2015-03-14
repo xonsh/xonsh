@@ -2082,7 +2082,6 @@ class Parser(object):
                             | PLUS
                             | COLON
                             | AT
-                            | SEMI
                             | EQUALS
                             | TIMES
                             | POW

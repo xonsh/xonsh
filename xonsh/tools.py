@@ -16,6 +16,7 @@ Implementations:
 
 """
 import sys
+import builtins
 
 if sys.version_info[0] >= 3:
     string_types = (str, bytes)
@@ -36,6 +37,18 @@ def subproc_line(line):
         len_nl = len(line)
         no_nl = line.rstrip('\n')
         line = no_nl + ']' + ('\n'*(len_nl-len(no_nl)))
+    return line
+
+def subproc_line_tok(line, mincol=0, lexer=None):
+    """Excapsulates a source code line in a uncaptured subprocess $[]."""
+    if lexer is None:
+        lexer = builtins.__xonsh_execer__.parser.lexer
+    lexer.reset()
+    lexer.input(s)
+    toks = []
+    for tok in lexer:
+        print(tok.lexpos)
+    #newline = 
     return line
 
 def decode(s, encoding=None):
