@@ -119,7 +119,8 @@ class Completer(object):
         script = BASH_COMPLETE_SCRIPT.format(filename=fnme, line=line, n=n,
                     func=func, cmd=cmd, end=endidx+1, prefix=prefix, prev=prev)
         out = subprocess.check_output(['bash'], input=script, 
-                                      universal_newlines=True)
+                                      universal_newlines=True, 
+                                      stderr=subprocess.PIPE)
         space = ' '
         rtn = {s+space if s[-1:].isalnum() else s for s in out.splitlines()}
         return rtn
