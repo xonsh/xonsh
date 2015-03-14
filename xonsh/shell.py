@@ -157,7 +157,8 @@ class Shell(Cmd):
 
     def settitle(self):
         env = builtins.__xonsh_env__
-        if env.get('TERM', None) is None:
+        term = env.get('TERM',None)
+        if term is None or term == 'linux':
             return
         if 'XONSH_TITLE' in env:
             t = env['XONSH_TITLE']
