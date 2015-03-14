@@ -1,8 +1,9 @@
 """The xonsh shell"""
 import os
+import builtins
 import traceback
 from cmd import Cmd
-import builtins
+from warnings import warn
 from argparse import Namespace
 
 from xonsh.execer import Execer
@@ -34,7 +35,10 @@ def setup_readline():
     env = builtins.__xonsh_env__
     hf = env.get('XONSH_HISTORY_FILE', os.path.expanduser('~/.xonsh_history'))
     if os.path.isfile(hf):
-        readline.read_history_file(hf)
+        try:
+            readline.read_history_file(hf)
+        except PermissionError:
+            warn('do not have read permissions for ' + hf, RuntimeWarning)
     hs = env.get('XONSH_HISTORY_SIZE', 8128)
     readline.set_history_length(hs)
     # sets up IPython-like history matching with up and down
@@ -53,7 +57,10 @@ def teardown_readline():
     hs = env.get('XONSH_HISTORY_SIZE', 8128)
     readline.set_history_length(hs)
     hf = env.get('XONSH_HISTORY_FILE', os.path.expanduser('~/.xonsh_history'))
-    readline.write_history_file(hf)
+    try:
+        readline.write_history_file(hf)
+    except PermissionError:
+        warn('do not have write permissions for ' + hf, RuntimeWarning)
 
 def rl_completion_suppress_append(val=1):
     """Sets the rl_completion_suppress_append varaiable, if possible.
