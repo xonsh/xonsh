@@ -1,5 +1,6 @@
 """The xonsh shell"""
 import os
+import sys
 import builtins
 import traceback
 from cmd import Cmd
@@ -154,6 +155,18 @@ class Shell(Cmd):
             self.reset_buffer()
             self.cmdloop(intro=None)
 
+    def settitle(self):
+        env = builtins.__xonsh_env__
+        if env.get('TERM', None) is None:
+            return
+        if 'XONSH_TITLE' in env:
+            t = env['XONSH_TITLE']
+            if callable(t):
+                t = t()
+        else:
+            t = '{0} | xonsh'.format(env['PWD'].replace(env['HOME'], '~'))
+        sys.stdout.write("\x1b]2;{0}\x07".format(t))
+
     @property
     def prompt(self):
         """Obtains the current prompt string."""
@@ -170,4 +183,5 @@ class Shell(Cmd):
                 p = format_prompt(p)
         else:
             p = "set '$PROMPT = ...' $ "
+        self.settitle()
         return p
