@@ -133,5 +133,4 @@ class Execer(object):
                                     returnline=True, lexer=self.parser.lexer)
                 last_error_col += 3
                 input = '\n'.join(lines)
-                print(input)
         return tree

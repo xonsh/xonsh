@@ -12,7 +12,7 @@ from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
     ExceptHandler, FunctionDef, ClassDef, Starred, NodeTransformer, \
     Interactive, Expression, dump
 
-from xonsh.tools import subproc_line, subproc_toks
+from xonsh.tools import subproc_toks
 
 STATEMENTS = (FunctionDef, ClassDef, Return, Delete, Assign, AugAssign, For,
               While, If, With, Raise, Try, Assert, Import, ImportFrom, Global, 
@@ -96,12 +96,12 @@ class CtxAwareTransformer(NodeTransformer):
                 ctx.remove(value)
                 break
 
-    def try_subproc_line(self, node):
+    def try_subproc_toks(self, node):
         """Tries to parse the line of the node as a subprocess."""
-        #spline = subproc_line(self.lines[node.lineno - 1]).lstrip()
         line = self.lines[node.lineno - 1]
+        maxcol = None if self.mode == 'eval' else node.col_offset
         spline = subproc_toks(line, 
-                    maxcol=node.col_offset, 
+                    maxcol=maxcol, 
                     returnline=False, 
                     lexer=self.parser.lexer).lstrip()
         try:
@@ -132,14 +132,14 @@ class CtxAwareTransformer(NodeTransformer):
         body = node.body
         inscope = self.is_in_scope(body)
         if not inscope:
-            node.body = self.try_subproc_line(body)
+            node.body = self.try_subproc_toks(body)
         return node
 
     def visit_Expr(self, node):
         inscope = self.is_in_scope(node)
         if inscope:
             return node
-        newnode = self.try_subproc_line(node)
+        newnode = self.try_subproc_toks(node)
         return newnode
 
     def visit_Assign(self, node):
@@ -148,7 +148,7 @@ class CtxAwareTransformer(NodeTransformer):
             if isinstance(targ, (Tuple, List)):
                 ups.update(map(leftmostname, targ.elts))
             elif isinstance(targ, BinOp):
-                newnode = self.try_subproc_line(node)
+                newnode = self.try_subproc_toks(node)
                 if newnode is node:
                     ups.add(leftmostname(targ))
                 else:
