@@ -4,6 +4,7 @@ import traceback
 from cmd import Cmd
 import builtins
 from argparse import Namespace
+import sys
 
 from xonsh.execer import Execer
 from xonsh.completer import Completer
@@ -147,6 +148,13 @@ class Shell(Cmd):
             self.reset_buffer()
             self.cmdloop(intro=None)
 
+    def settitle(self):
+        env = builtins.__xonsh_env__
+        t = env.get('XONSH_TITLE', env['PWD'].replace(env['HOME'], '~') + ' | xonsh')
+        if callable(t):
+            t = t()
+        sys.stdout.write("\x1b]2;%s\x07" % t)
+
     @property
     def prompt(self):
         """Obtains the current prompt string."""
@@ -161,4 +169,6 @@ class Shell(Cmd):
                 p = p()
         else:
             p = "set '$PROMPT = ...' $ "
+        if env.get('TERM','linux')!='linux':
+            self.settitle()
         return p
