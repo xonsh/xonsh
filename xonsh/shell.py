@@ -150,10 +150,13 @@ class Shell(Cmd):
 
     def settitle(self):
         env = builtins.__xonsh_env__
-        t = env.get('XONSH_TITLE', env['PWD'].replace(env['HOME'], '~') + ' | xonsh')
-        if callable(t):
-            t = t()
-        sys.stdout.write("\x1b]2;%s\x07" % t)
+        if 'XONSH_TITLE' in env:
+            t = env['XONSH_TITLE']
+            if callable(t):
+                t = t()
+        else:
+            t = '{0} | xonsh'.format(env['PWD'].replace(env['HOME'], '~'))
+        sys.stdout.write("\x1b]2;{0}\x07".format(t))
 
     @property
     def prompt(self):
@@ -169,6 +172,6 @@ class Shell(Cmd):
                 p = p()
         else:
             p = "set '$PROMPT = ...' $ "
-        if env.get('TERM','linux')!='linux':
+        if env.get('TERM', 'linux') != 'linux':
             self.settitle()
         return p
