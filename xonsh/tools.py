@@ -39,17 +39,33 @@ def subproc_line(line):
         line = no_nl + ']' + ('\n'*(len_nl-len(no_nl)))
     return line
 
-def subproc_line_tok(line, mincol=0, lexer=None):
-    """Excapsulates a source code line in a uncaptured subprocess $[]."""
+def subproc_toks(line, mincol=-1, lexer=None, returnline=False):
+    """Excapsulates tokens in a source code line in a uncaptured 
+    subprocess $[] starting at a minimum column.
+    """
     if lexer is None:
         lexer = builtins.__xonsh_execer__.parser.lexer
     lexer.reset()
-    lexer.input(s)
-    toks = []
+    lexer.input(line)
+    poses = []
     for tok in lexer:
-        print(tok.lexpos)
-    #newline = 
-    return line
+        pos = tok.lexpos
+        if pos < mincol:
+            continue
+        poses.append(pos)
+        if tok.type == 'SEMI' or tok.type == 'NEWLINE':
+            break
+    else:
+        if isinstance(tok.value, string_types):
+            poses.append(pos + len(tok.value))
+        else:
+            el = line[pos:].split('#')[0].rstrip()
+            poses.append(pos + len(el))
+    beg, end = poses[0], poses[-1]
+    rtn = '$[' + line[beg:end] + ']'
+    if returnline:
+        rtn = line[:beg] + rtn + line[end:]
+    return rtn
 
 def decode(s, encoding=None):
     encoding = encoding or DEFAULT_ENCODING
