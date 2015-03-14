@@ -117,16 +117,7 @@ class Execer(object):
                 tree = self.parser.parse(input, filename=self.filename,
                             mode=mode, debug_level=self.debug_level)
                 parsed = True
-            #except SyntaxError as e:
-            #    if (e.loc is None) or (last_error_line == e.loc.lineno):
-            #        raise
-            #    last_error_line = e.loc.lineno
-            #    idx = last_error_line - 1
-            #    lines = input.splitlines()
-            #    lines[idx] = subproc_line(lines[idx])
-            #    input = '\n'.join(lines)
             except SyntaxError as e:
-                print(last_error_col, e.loc.column)
                 if (e.loc is None) or (last_error_line == e.loc.lineno and 
                                        last_error_col == e.loc.column):
                     raise
@@ -134,9 +125,13 @@ class Execer(object):
                 last_error_line = e.loc.lineno
                 idx = last_error_line - 1
                 lines = input.splitlines()
-                lines[idx] = subproc_toks(lines[idx], maxcol=last_error_col+3,
+                if input.endswith('\n'):
+                    lines.append('')
+                maxcol = lines[idx].find(';', last_error_col)
+                maxcol = None if maxcol < 0 else maxcol + 1
+                lines[idx] = subproc_toks(lines[idx], maxcol=maxcol,
                                     returnline=True, lexer=self.parser.lexer)
                 last_error_col += 3
                 input = '\n'.join(lines)
-                print(repr(input))
+                print(input)
         return tree
