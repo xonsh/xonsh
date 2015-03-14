@@ -1,11 +1,11 @@
 """The xonsh shell"""
 import os
+import sys
 import builtins
 import traceback
 from cmd import Cmd
 from warnings import warn
 from argparse import Namespace
-import sys
 
 from xonsh.execer import Execer
 from xonsh.completer import Completer
@@ -157,6 +157,8 @@ class Shell(Cmd):
 
     def settitle(self):
         env = builtins.__xonsh_env__
+        if env.get('TERM', None) is None:
+            return
         if 'XONSH_TITLE' in env:
             t = env['XONSH_TITLE']
             if callable(t):
@@ -181,6 +183,5 @@ class Shell(Cmd):
                 p = format_prompt(p)
         else:
             p = "set '$PROMPT = ...' $ "
-        if env.get('TERM', 'linux') != 'linux':
-            self.settitle()
+        self.settitle()
         return p
