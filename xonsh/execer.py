@@ -60,6 +60,8 @@ class Execer(object):
         # is to parse a line a second time with a $() wrapper if it fails
         # the first time. This is a context-free phase.
         tree = self._parse_ctx_free(input, mode=mode)
+        if tree is None:
+            return None
 
         # Now we need to perform context-aware AST transformation. This is 
         # because the "ls -l" is valid Python. The only way that we know 

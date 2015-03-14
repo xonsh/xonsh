@@ -1,13 +1,15 @@
 """The xonsh shell"""
 import os
+import sys
+import builtins
 import traceback
 from cmd import Cmd
-import builtins
+from warnings import warn
 from argparse import Namespace
 
 from xonsh.execer import Execer
 from xonsh.completer import Completer
-from xonsh.environ import xonshrc_context, multiline_prompt
+from xonsh.environ import xonshrc_context, multiline_prompt, format_prompt
 
 RL_COMPLETION_SUPPRESS_APPEND = None
 
@@ -34,7 +36,10 @@ def setup_readline():
     env = builtins.__xonsh_env__
     hf = env.get('XONSH_HISTORY_FILE', os.path.expanduser('~/.xonsh_history'))
     if os.path.isfile(hf):
-        readline.read_history_file(hf)
+        try:
+            readline.read_history_file(hf)
+        except PermissionError:
+            warn('do not have read permissions for ' + hf, RuntimeWarning)
     hs = env.get('XONSH_HISTORY_SIZE', 8128)
     readline.set_history_length(hs)
     # sets up IPython-like history matching with up and down
@@ -53,7 +58,10 @@ def teardown_readline():
     hs = env.get('XONSH_HISTORY_SIZE', 8128)
     readline.set_history_length(hs)
     hf = env.get('XONSH_HISTORY_FILE', os.path.expanduser('~/.xonsh_history'))
-    readline.write_history_file(hf)
+    try:
+        readline.write_history_file(hf)
+    except PermissionError:
+        warn('do not have write permissions for ' + hf, RuntimeWarning)
 
 def rl_completion_suppress_append(val=1):
     """Sets the rl_completion_suppress_append varaiable, if possible.
@@ -147,6 +155,18 @@ class Shell(Cmd):
             self.reset_buffer()
             self.cmdloop(intro=None)
 
+    def settitle(self):
+        env = builtins.__xonsh_env__
+        if env.get('TERM', None) is None:
+            return
+        if 'XONSH_TITLE' in env:
+            t = env['XONSH_TITLE']
+            if callable(t):
+                t = t()
+        else:
+            t = '{0} | xonsh'.format(env['PWD'].replace(env['HOME'], '~'))
+        sys.stdout.write("\x1b]2;{0}\x07".format(t))
+
     @property
     def prompt(self):
         """Obtains the current prompt string."""
@@ -159,7 +179,9 @@ class Shell(Cmd):
             p = env['XONSH_PROMPT']
             if callable(p):
                 p = p()
+            p = format_prompt(p)
             env['PROMPT'] = p
         else:
             p = "set '$XONSH_PROMPT = ...' $ "
+        self.settitle()
         return p
