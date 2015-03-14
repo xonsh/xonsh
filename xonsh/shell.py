@@ -7,7 +7,7 @@ from argparse import Namespace
 
 from xonsh.execer import Execer
 from xonsh.completer import Completer
-from xonsh.environ import xonshrc_context, multiline_prompt
+from xonsh.environ import xonshrc_context, multiline_prompt, format_prompt
 
 RL_COMPLETION_SUPPRESS_APPEND = None
 
@@ -159,6 +159,8 @@ class Shell(Cmd):
             p = env['PROMPT']
             if callable(p):
                 p = p()
+            else:
+                p = format_prompt(p)
         else:
             p = "set '$PROMPT = ...' $ "
         return p

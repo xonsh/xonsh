@@ -35,23 +35,20 @@ def current_branch(cwd=None):
     return s
 
 
-default_prompt_template = ('{GREEN}{user}@{hostname}{BLUE} '
-                           '{cwd}{RED}{curr_branch} {BLUE}${NO_COLOR} ')
+default_prompt = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
+                  '{cwd}{BOLD_RED}{curr_branch} {BOLD_BLUE}${NO_COLOR} ')
 
-def default_prompt():
-    """Returns the default xonsh prompt string. This takes no arguments."""
+def format_prompt(template=default_prompt):
+    """Formats a xonsh prompt template string."""
     env = builtins.__xonsh_env__
     cwd = env['PWD']
     branch = current_branch(cwd=cwd)
     branch = '' if branch is None else ' ' + branch
-    p = default_prompt_template.format(user=env.get('USER', '<user>'), 
+    p = template.format(user=env.get('USER', '<user>'),
             hostname=socket.gethostname(),
             cwd=cwd.replace(env['HOME'], '~'),
             curr_branch=branch,
-            RED=TERM_COLORS['BOLD_RED'],
-            BLUE=TERM_COLORS['BOLD_BLUE'],
-            GREEN=TERM_COLORS['BOLD_GREEN'],
-            NO_COLOR=TERM_COLORS['NO_COLOR'],
+            **TERM_COLORS
             )
     return p
 
