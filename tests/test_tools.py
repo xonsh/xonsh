@@ -74,6 +74,14 @@ def test_subproc_toks_ls_l_semi_ls_first():
     ls = 'ls'
     s = '{0}; {1}'.format(lsdl, ls)
     exp = '$[{0}]; {1}'.format(lsdl, ls)
+    obs = subproc_toks(s, lexer=LEXER, returnline=True)
+    assert_equal(exp, obs)
+
+def test_subproc_toks_ls_l_semi_ls_first():
+    lsdl = 'ls -l'
+    ls = 'ls'
+    s = '{0}; {1}'.format(lsdl, ls)
+    exp = '$[{0}]; {1}'.format(lsdl, ls)
     obs = subproc_toks(s, lexer=LEXER, maxcol=6, returnline=True)
     assert_equal(exp, obs)
 
@@ -84,6 +92,23 @@ def test_subproc_toks_ls_l_semi_ls_second():
     exp = '{0}; $[{1}]'.format(lsdl, ls)
     obs = subproc_toks(s, lexer=LEXER, mincol=7, returnline=True)
     assert_equal(exp, obs)
+
+def test_subproc_hello_mom_first():
+    fst = "echo 'hello'"
+    sec = "echo 'mom'"
+    s = '{0}; {1}'.format(fst, sec)
+    exp = '$[{0}]; {1}'.format(fst, sec)
+    obs = subproc_toks(s, lexer=LEXER, maxcol=len(fst)+1, returnline=True)
+    assert_equal(exp, obs)
+
+def test_subproc_hello_mom_second():
+    fst = "echo 'hello'"
+    sec = "echo 'mom'"
+    s = '{0}; {1}'.format(fst, sec)
+    exp = '{0}; $[{1}]'.format(fst, sec)
+    obs = subproc_toks(s, lexer=LEXER, mincol=len(fst), returnline=True)
+    assert_equal(exp, obs)
+
 
 if __name__ == '__main__':
     nose.runmodule()

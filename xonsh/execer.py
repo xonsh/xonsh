@@ -126,6 +126,7 @@ class Execer(object):
             #    lines[idx] = subproc_line(lines[idx])
             #    input = '\n'.join(lines)
             except SyntaxError as e:
+                print(last_error_col, e.loc.column)
                 if (e.loc is None) or (last_error_line == e.loc.lineno and 
                                        last_error_col == e.loc.column):
                     raise
@@ -133,8 +134,9 @@ class Execer(object):
                 last_error_line = e.loc.lineno
                 idx = last_error_line - 1
                 lines = input.splitlines()
-                lines[idx] = subproc_toks(lines[idx], mincol=last_error_col+1, 
+                lines[idx] = subproc_toks(lines[idx], maxcol=last_error_col+3,
                                     returnline=True, lexer=self.parser.lexer)
+                last_error_col += 3
                 input = '\n'.join(lines)
                 print(repr(input))
         return tree

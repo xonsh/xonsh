@@ -100,11 +100,8 @@ class CtxAwareTransformer(NodeTransformer):
         """Tries to parse the line of the node as a subprocess."""
         #spline = subproc_line(self.lines[node.lineno - 1]).lstrip()
         line = self.lines[node.lineno - 1]
-        mincol = line.rfind(';', 0, node.col_offset-1)
-        line = line[mincol+1:].lstrip()
-        mincol = -1
         spline = subproc_toks(line, 
-                    mincol=mincol, 
+                    maxcol=node.col_offset, 
                     returnline=False, 
                     lexer=self.parser.lexer).lstrip()
         try:
