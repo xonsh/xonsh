@@ -74,7 +74,7 @@ def test_subproc_toks_ls_l_semi_ls_first():
     ls = 'ls'
     s = '{0}; {1}'.format(lsdl, ls)
     exp = '$[{0}]; {1}'.format(lsdl, ls)
-    obs = subproc_toks(s, lexer=LEXER, returnline=True)
+    obs = subproc_toks(s, lexer=LEXER, maxcol=6, returnline=True)
     assert_equal(exp, obs)
 
 def test_subproc_toks_ls_l_semi_ls_second():

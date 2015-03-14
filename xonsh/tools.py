@@ -39,67 +39,40 @@ def subproc_line(line):
         line = no_nl + ']' + ('\n'*(len_nl-len(no_nl)))
     return line
 
-def subproc_toks(line, mincol=-1, lexer=None, returnline=False):
+def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     """Excapsulates tokens in a source code line in a uncaptured 
     subprocess $[] starting at a minimum column.
     """
     if lexer is None:
         lexer = builtins.__xonsh_execer__.parser.lexer
+    if maxcol is None:
+        maxcol = len(line) + 1
     lexer.reset()
     lexer.input(line)
-    poses = []
+    toks = []
+    end_offset = 0
     for tok in lexer:
         pos = tok.lexpos
-        if pos < mincol:
-            continue
-        poses.append(pos)
-        if tok.type == 'SEMI' or tok.type == 'NEWLINE':
-            break
-    else:
-        if isinstance(tok.value, string_types):
-            poses.append(pos + len(tok.value))
-        else:
-            el = line[pos:].split('#')[0].rstrip()
-            poses.append(pos + len(el))
-    beg, end = poses[0], poses[-1]
-    rtn = '$[' + line[beg:end] + ']'
-    if returnline:
-        rtn = line[:beg] + rtn + line[end:]
-    return rtn
-
-def subproc_toks(line, mincol=-1, maxcol=9000, lexer=None, returnline=False):
-    """Excapsulates tokens in a source code line in a uncaptured 
-    subprocess $[] starting at a minimum column.
-    """
-    if lexer is None:
-        lexer = builtins.__xonsh_execer__.parser.lexer
-    lexer.reset()
-    lexer.input(line)
-    poses = []
-    last_was_semi = False
-    for tok in lexer:
-        if last_was_semi:
-            poses.clear()
-            last_was_semi = False
-        pos = tok.lexpos
-        if pos < mincol:
-            continue
         if pos >= maxcol:
             break
-        poses.append(pos)
-        if tok.type == 'SEMI':
-            poses.pop()
-            last_was_semi = True
-        elif tok.type == 'NEWLINE':
+        if len(toks) > 0 and toks[-1].type == 'SEMI':
+            toks.clear()
+        if pos < mincol:
+            continue
+        toks.append(tok)
+        if tok.type == 'NEWLINE':
             break
     else:
-        pos = poses[-1]
+        if toks[-1].type == 'SEMI':
+            toks.pop()
+        tok = toks[-1]
+        pos = tok.lexpos
         if isinstance(tok.value, string_types):
-            poses.append(pos + len(tok.value))
+            end_offset = len(tok.value)
         else:
             el = line[pos:].split('#')[0].rstrip()
-            poses.append(pos + len(el))
-    beg, end = poses[0], poses[-1]
+            end_offset = len(el)
+    beg, end = toks[0].lexpos, (toks[-1].lexpos + end_offset)
     rtn = '$[' + line[beg:end] + ']'
     if returnline:
         rtn = line[:beg] + rtn + line[end:]
