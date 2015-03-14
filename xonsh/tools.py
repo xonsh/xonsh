@@ -16,6 +16,7 @@ Implementations:
 
 """
 import sys
+import re
 
 if sys.version_info[0] >= 3:
     string_types = (str, bytes)
@@ -170,3 +171,10 @@ class redirect_stdout(_RedirectStream):
 class redirect_stderr(_RedirectStream):
     """Context manager for temporarily redirecting stderr to another file."""
     _stream = "stderr"
+
+def is_function_string(x):
+    try:
+        return re.match(r'<function .*? at 0x[0-9a-fA-F]+>', x) is not None
+    except:
+        return False
+
