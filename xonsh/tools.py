@@ -67,6 +67,44 @@ def subproc_toks(line, mincol=-1, lexer=None, returnline=False):
         rtn = line[:beg] + rtn + line[end:]
     return rtn
 
+def subproc_toks(line, mincol=-1, maxcol=9000, lexer=None, returnline=False):
+    """Excapsulates tokens in a source code line in a uncaptured 
+    subprocess $[] starting at a minimum column.
+    """
+    if lexer is None:
+        lexer = builtins.__xonsh_execer__.parser.lexer
+    lexer.reset()
+    lexer.input(line)
+    poses = []
+    last_was_semi = False
+    for tok in lexer:
+        if last_was_semi:
+            poses.clear()
+            last_was_semi = False
+        pos = tok.lexpos
+        if pos < mincol:
+            continue
+        if pos >= maxcol:
+            break
+        poses.append(pos)
+        if tok.type == 'SEMI':
+            poses.pop()
+            last_was_semi = True
+        elif tok.type == 'NEWLINE':
+            break
+    else:
+        pos = poses[-1]
+        if isinstance(tok.value, string_types):
+            poses.append(pos + len(tok.value))
+        else:
+            el = line[pos:].split('#')[0].rstrip()
+            poses.append(pos + len(el))
+    beg, end = poses[0], poses[-1]
+    rtn = '$[' + line[beg:end] + ']'
+    if returnline:
+        rtn = line[:beg] + rtn + line[end:]
+    return rtn
+
 def decode(s, encoding=None):
     encoding = encoding or DEFAULT_ENCODING
     return s.decode(encoding, "replace")

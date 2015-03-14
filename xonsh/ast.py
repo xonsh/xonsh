@@ -12,7 +12,7 @@ from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
     ExceptHandler, FunctionDef, ClassDef, Starred, NodeTransformer, \
     Interactive, Expression, dump
 
-from xonsh.tools import subproc_line
+from xonsh.tools import subproc_line, subproc_toks
 
 STATEMENTS = (FunctionDef, ClassDef, Return, Delete, Assign, AugAssign, For,
               While, If, With, Raise, Try, Assert, Import, ImportFrom, Global, 
@@ -98,7 +98,15 @@ class CtxAwareTransformer(NodeTransformer):
 
     def try_subproc_line(self, node):
         """Tries to parse the line of the node as a subprocess."""
-        spline = subproc_line(self.lines[node.lineno - 1]).lstrip()
+        #spline = subproc_line(self.lines[node.lineno - 1]).lstrip()
+        line = self.lines[node.lineno - 1]
+        mincol = line.rfind(';', 0, node.col_offset-1)
+        line = line[mincol+1:].lstrip()
+        mincol = -1
+        spline = subproc_toks(line, 
+                    mincol=mincol, 
+                    returnline=False, 
+                    lexer=self.parser.lexer).lstrip()
         try:
             newnode = self.parser.parse(spline, mode=self.mode)
             newnode = newnode.body
