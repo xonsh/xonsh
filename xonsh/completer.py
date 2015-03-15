@@ -85,7 +85,7 @@ class Completer(object):
         if prefix.startswith('$'):
             key = prefix[1:]
             rtn |= {'$'+k for k in builtins.__xonsh_env__ if k.startswith(key)}
-        rtn |= {s + (slash if os.path.isdir(s) else space) for s in iglobpath(prefix + '*')}
+        rtn |= self.path_complete(prefix)
         return sorted(rtn)
 
     def cmd_complete(self, cmd):
@@ -104,11 +104,12 @@ class Completer(object):
         """Completes based on a path name."""
         space = ' '  # intern some strings for faster appending
         slash = '/'
-        paths = {s + (slash if os.path.isdir(s) else space) for s in iglob(prefix + '*')}
-        
-        #if '~' in prefix
-        #else:
-        #    paths = {s + (slash if os.path.isdir(s) else space) for s in iglob(prefix + '*')}
+        tilde = '~'
+        paths = {s + (slash if os.path.isdir(s) else space) \
+                 for s in iglobpath(prefix + '*')}
+        if tilde in prefix:
+            home = os.path.expanduser(tilde)
+            paths = {s.replace(home, tilde) for s in paths}
         return paths
 
     def bash_complete(self, prefix, line, begidx, endidx):
