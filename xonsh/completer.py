@@ -7,6 +7,8 @@ import builtins
 import subprocess
 from glob import iglob
 
+from xonsh.built_ins import iglobpath
+
 RE_DASHF = re.compile('-F\s+(\w+)')
 
 XONSH_TOKENS = {'and ', 'as ', 'assert ', 'break', 'class ', 'continue', 
@@ -72,6 +74,8 @@ class Completer(object):
                 if os.path.isdir(s.rstrip()):
                     s = s.rstrip() + slash
                 rtn.add(s)
+            if len(rtn) == 0:
+                rtn = self.path_complete(prefix)
             return sorted(rtn)
         else:
             rtn = set()
@@ -83,7 +87,7 @@ class Completer(object):
         if prefix.startswith('$'):
             key = prefix[1:]
             rtn |= {'$'+k for k in builtins.__xonsh_env__ if k.startswith(key)}
-        rtn |= {s + (slash if os.path.isdir(s) else space) for s in iglob(prefix + '*')}
+        rtn |= self.path_complete(prefix)
         return sorted(rtn)
 
     def cmd_complete(self, cmd):
@@ -97,6 +101,18 @@ class Completer(object):
             if os.path.isdir(d):
                 cmds |= {s + space for s in os.listdir(d) if s.startswith(cmd)}
         return cmds
+
+    def path_complete(self, prefix):
+        """Completes based on a path name."""
+        space = ' '  # intern some strings for faster appending
+        slash = '/'
+        tilde = '~'
+        paths = {s + (slash if os.path.isdir(s) else space) \
+                 for s in iglobpath(prefix + '*')}
+        if tilde in prefix:
+            home = os.path.expanduser(tilde)
+            paths = {s.replace(home, tilde) for s in paths}
+        return paths
 
     def bash_complete(self, prefix, line, begidx, endidx):
         """Attempts BASH completion."""
@@ -118,7 +134,7 @@ class Completer(object):
             n += 1
         script = BASH_COMPLETE_SCRIPT.format(filename=fnme, line=line, n=n,
                     func=func, cmd=cmd, end=endidx+1, prefix=prefix, prev=prev)
-        out = subprocess.check_output(['bash'], input=script, 
+        out = subprocess.check_output(['bash'], input=script,
                                       universal_newlines=True, 
                                       stderr=subprocess.PIPE)
         space = ' '
