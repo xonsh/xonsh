@@ -11,8 +11,18 @@ def main(argv=None):
     """Main entry point for xonsh cli."""
     if argv is None:
         argv = sys.argv[1:]
+
+    mode = 'shell'
+
+    if '-c' in argv:
+        mode = 'command'
+        argv.remove('-c')
+
     shell = Shell()
-    shell.cmdloop()
+    if mode == 'shell':
+        shell.cmdloop()
+    else:
+        shell.default(' '.join(argv))
 
 if __name__ == '__main__':
     main()
