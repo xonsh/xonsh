@@ -185,5 +185,4 @@ class Shell(Cmd):
         else:
             p = "set '$XONSH_PROMPT = ...' $ "
         self.settitle()
-        env['PROMPT'] = p
         return p
