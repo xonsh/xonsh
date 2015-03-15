@@ -127,6 +127,15 @@ class Execer(object):
                 lines = input.splitlines()
                 if input.endswith('\n'):
                     lines.append('')
+                if len(lines[idx].strip()) == 0:
+                    # whitespace only lines are not valid syntax in Python's
+                    # interactive mode='single', who knew?! Just ignore them.
+                    # this might cause actual sytax errors to have bad line 
+                    # numbers reported, but should only effect interactive mode
+                    del lines[idx]
+                    last_error_line = last_error_col = -1
+                    input = '\n'.join(lines)
+                    continue
                 maxcol = lines[idx].find(';', last_error_col)
                 maxcol = None if maxcol < 0 else maxcol + 1
                 lines[idx] = subproc_toks(lines[idx], maxcol=maxcol,
