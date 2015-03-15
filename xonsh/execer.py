@@ -9,7 +9,7 @@ from collections import Iterable, Sequence, Mapping
 
 from xonsh import ast
 from xonsh.parser import Parser
-from xonsh.tools import subproc_line
+from xonsh.tools import subproc_line, subproc_toks
 from xonsh.built_ins import load_builtins, unload_builtins
 
 class Execer(object):
@@ -110,7 +110,7 @@ class Execer(object):
         return exec(code, glbs, locs)
 
     def _parse_ctx_free(self, input, mode='exec'):
-        last_error_line = -1
+        last_error_line = last_error_col = -1
         parsed = False
         while not parsed:
             try:
@@ -118,11 +118,19 @@ class Execer(object):
                             mode=mode, debug_level=self.debug_level)
                 parsed = True
             except SyntaxError as e:
-                if (e.loc is None) or (last_error_line == e.loc.lineno):
+                if (e.loc is None) or (last_error_line == e.loc.lineno and 
+                                       last_error_col == e.loc.column):
                     raise
+                last_error_col = e.loc.column
                 last_error_line = e.loc.lineno
                 idx = last_error_line - 1
                 lines = input.splitlines()
-                lines[idx] = subproc_line(lines[idx])
+                if input.endswith('\n'):
+                    lines.append('')
+                maxcol = lines[idx].find(';', last_error_col)
+                maxcol = None if maxcol < 0 else maxcol + 1
+                lines[idx] = subproc_toks(lines[idx], maxcol=maxcol,
+                                    returnline=True, lexer=self.parser.lexer)
+                last_error_col += 3
                 input = '\n'.join(lines)
         return tree

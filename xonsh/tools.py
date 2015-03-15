@@ -16,6 +16,7 @@ Implementations:
 
 """
 import sys
+import builtins
 
 if sys.version_info[0] >= 3:
     string_types = (str, bytes)
@@ -37,6 +38,45 @@ def subproc_line(line):
         no_nl = line.rstrip('\n')
         line = no_nl + ']' + ('\n'*(len_nl-len(no_nl)))
     return line
+
+def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
+    """Excapsulates tokens in a source code line in a uncaptured 
+    subprocess $[] starting at a minimum column.
+    """
+    if lexer is None:
+        lexer = builtins.__xonsh_execer__.parser.lexer
+    if maxcol is None:
+        maxcol = len(line) + 1
+    lexer.reset()
+    lexer.input(line)
+    toks = []
+    end_offset = 0
+    for tok in lexer:
+        pos = tok.lexpos
+        if pos >= maxcol:
+            break
+        if len(toks) > 0 and toks[-1].type == 'SEMI':
+            toks.clear()
+        if pos < mincol:
+            continue
+        toks.append(tok)
+        if tok.type == 'NEWLINE':
+            break
+    else:
+        if toks[-1].type == 'SEMI':
+            toks.pop()
+        tok = toks[-1]
+        pos = tok.lexpos
+        if isinstance(tok.value, string_types):
+            end_offset = len(tok.value)
+        else:
+            el = line[pos:].split('#')[0].rstrip()
+            end_offset = len(el)
+    beg, end = toks[0].lexpos, (toks[-1].lexpos + end_offset)
+    rtn = '$[' + line[beg:end] + ']'
+    if returnline:
+        rtn = line[:beg] + rtn + line[end:]
+    return rtn
 
 def decode(s, encoding=None):
     encoding = encoding or DEFAULT_ENCODING
