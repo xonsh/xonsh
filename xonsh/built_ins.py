@@ -191,7 +191,6 @@ def superhelper(x, name=''):
 
 def expand_path(s):
     """Takes a string path and expands ~ to home and environment vars."""
-    
     global ENV
     if ENV is not None:
         ENV.replace_env()
@@ -243,6 +242,12 @@ def globpath(s):
     """Simple wrapper around glob that also expands home and env vars."""
     s = expand_path(s)
     return glob(s)
+
+
+def iglobpath(s):
+    """Simple wrapper around iglob that also expands home and env vars."""
+    s = expand_path(s)
+    return iglob(s)
 
 WRITER_MODES = {'>': 'w', '>>': 'a'}
 
