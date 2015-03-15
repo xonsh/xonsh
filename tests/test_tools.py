@@ -43,6 +43,13 @@ def test_subproc_toks_git_nl():
 
 def test_subproc_toks_indent_ls():
     s = 'ls -l'
+    exp = INDENT + '$[{0}]'.format(s)
+    obs = subproc_toks(INDENT + s, mincol=len(INDENT), lexer=LEXER, 
+                       returnline=True)
+    assert_equal(exp, obs)
+
+def test_subproc_toks_indent_ls_nl():
+    s = 'ls -l'
     exp = INDENT + '$[{0}]\n'.format(s)
     obs = subproc_toks(INDENT + s + '\n', mincol=len(INDENT), lexer=LEXER, 
                        returnline=True)
