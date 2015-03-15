@@ -74,6 +74,7 @@ def multiline_prompt():
     """Returns the filler text for the prompt in multiline scenarios."""
     curr = builtins.__xonsh_env__.get('PROMPT', "set '$PROMPT = ...' $ ")
     curr = curr() if callable(curr) else curr
+    curr = format_prompt(curr)
     line = curr.rsplit('\n', 1)[1] if '\n' in curr else curr
     line = RE_HIDDEN.sub('', line)  # gets rid of colors
     # most prompts end in whitespace, head is the part before that.
