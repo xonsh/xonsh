@@ -54,6 +54,8 @@ class Env(MutableMapping):
             return self._detyped
         ctx = {}
         for key, val in self._d.items():
+            if callable(val):
+                continue
             if not isinstance(key, string_types):
                 key = str(key)
             if 'PATH' in key:

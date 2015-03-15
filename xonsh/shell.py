@@ -181,8 +181,7 @@ class Shell(Cmd):
             p = env['PROMPT']
             if callable(p):
                 p = p()
-            else:
-                p = format_prompt(p)
+            p = format_prompt(p)
         else:
             p = "set '$PROMPT = ...' $ "
         self.settitle()
