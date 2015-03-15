@@ -168,6 +168,9 @@ variable           default                     description
 ================== =========================== ================================
 PROMPT             xosh.environ.default_prompt The prompt text, may be str or 
                                                function which returns a str.
+                                               The str may contain keyword
+                                               arguments which are
+                                               auto-formatted (see below).
 MULTILINE_PROMPT   ``'.'``                     Prompt text for 2nd+ lines of
                                                input, may be str or 
                                                function which returns a str.
@@ -182,8 +185,19 @@ BASH_COMPLETIONS   ``[] or ['/etc/...']``      This is a list of strings that
                                                dependent, but sane.
 ================== =========================== ================================
 
-Customizing the prompt is probably the most common reason for altering an 
-environment variable.
+Customizing the prompt is probably the most common reason for altering an
+environment variable.  To make this easier, you can use keyword
+arguments in a prompt string that will get replaced automatically:
+
+.. code-block:: bash
+
+    >>> $PROMPT = '{user}@{hostname}:{cwd} > '
+    snail@home:~ > # it works!
+
+You can also color your prompt easily by inserting keywords such as ``{GREEN}``
+or ``{BOLD_BLUE}`` -- for the full list of keyword arguments, refer to the API
+documentation of :py:func:`xonsh.environ.format_prompt`.
+
 
 Environment Lookup with ``${}``
 ================================
