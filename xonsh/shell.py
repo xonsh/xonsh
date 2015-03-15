@@ -165,7 +165,8 @@ class Shell(Cmd):
             if callable(t):
                 t = t()
         else:
-            t = '{0} | xonsh'.format(env['PWD'].replace(env['HOME'], '~'))
+            t = '{user}@{hostname}: {cwd} | xonsh'
+        t = format_prompt(t)
         sys.stdout.write("\x1b]2;{0}\x07".format(t))
 
     @property
