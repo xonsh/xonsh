@@ -157,14 +157,16 @@ class Shell(Cmd):
 
     def settitle(self):
         env = builtins.__xonsh_env__
-        if env.get('TERM', None) is None:
+        term = env.get('TERM', None)
+        if term is None or term == 'linux':
             return
         if 'XONSH_TITLE' in env:
             t = env['XONSH_TITLE']
             if callable(t):
                 t = t()
         else:
-            t = '{0} | xonsh'.format(env['PWD'].replace(env['HOME'], '~'))
+            t = '{user}@{hostname}: {cwd} | xonsh'
+        t = format_prompt(t)
         sys.stdout.write("\x1b]2;{0}\x07".format(t))
 
     @property
