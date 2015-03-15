@@ -1,6 +1,6 @@
 package:
   name: xonsh
-  version: "0.1.1"
+  version: "0.1.2"
 
 source:
   fn: xonsh.tar.gz
