@@ -177,12 +177,12 @@ class Shell(Cmd):
                 self.mlprompt = multiline_prompt()
             return self.mlprompt
         env = builtins.__xonsh_env__
-        if 'XONSH_PROMPT' in env:
-            p = env['XONSH_PROMPT']
+        if 'PROMPT' in env:
+            p = env['PROMPT']
             if callable(p):
                 p = p()
             p = format_prompt(p)
         else:
-            p = "set '$XONSH_PROMPT = ...' $ "
+            p = "set '$PROMPT = ...' $ "
         self.settitle()
         return p
