@@ -45,6 +45,8 @@ def setup_readline():
     try:
         RL_CHANGE_ENVIRONMENT = ctypes.c_int.in_dll(lib, 'rl_change_environment')
         print('RL_CHANGE_ENVIRONMENT:', RL_CHANGE_ENVIRONMENT.value)
+        RL_CHANGE_ENVIRONMENT.value = 0
+        print('RL_CHANGE_ENVIRONMENT:', RL_CHANGE_ENVIRONMENT.value)
     except ValueError:
         pass
     # reads in history
