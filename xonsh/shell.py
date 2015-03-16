@@ -32,6 +32,21 @@ def setup_readline():
     except ValueError:
         # not all versions of readline have this symbol, ie Macs sometimes
         RL_COMPLETION_SUPPRESS_APPEND = None
+    try:
+        RL_CATCH_SIGNALS = ctypes.c_int.in_dll(lib, 'rl_catch_signals')
+        print('RL_CATCH_SIGNALS:', RL_CATCH_SIGNALS.value)
+    except ValueError:
+        pass
+    try:
+        RL_CATCH_SIGWINCH = ctypes.c_int.in_dll(lib, 'rl_catch_sigwinch')
+        print('RL_CATCH_SIGWINCH:', RL_CATCH_SIGWINCH.value)
+    except ValueError:
+        pass
+    try:
+        RL_CHANGE_ENVIRONMENT = ctypes.c_int.in_dll(lib, 'rl_change_environment')
+        print('RL_CHANGE_ENVIRONMENT:', RL_CHANGE_ENVIRONMENT.value)
+    except ValueError:
+        pass
     # reads in history
     env = builtins.__xonsh_env__
     hf = env.get('XONSH_HISTORY_FILE', os.path.expanduser('~/.xonsh_history'))
