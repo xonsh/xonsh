@@ -396,8 +396,11 @@ def run_subproc(cmds, captured=True):
     output = prev_proc.stdout if isinstance(prev_proc, ProcProxy) else \
              prev_proc.communicate()[0]
     if write_target is not None:
-        with open(write_target, write_mode) as f:
-            f.write(output)
+        try:
+            with open(write_target, write_mode) as f:
+                f.write(output)
+        except FileNotFoundError:
+            print('xonsh: {0}: no such file or directory'.format(write_target))
     if captured:
         return output
 
