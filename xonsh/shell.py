@@ -189,8 +189,8 @@ class Shell(Cmd):
     @property
     def prompt(self):
         """Obtains the current prompt string."""
-        lib.rl_resize_terminal()
         lib.rl_reset_screen_size()
+        #lib.rl_resize_terminal()
         if self.need_more_lines:
             if self.mlprompt is None:
                 self.mlprompt = multiline_prompt()
@@ -204,6 +204,6 @@ class Shell(Cmd):
         else:
             p = "set '$PROMPT = ...' $ "
         self.settitle()
-        lib.rl_resize_terminal()
-        lib.rl_reset_screen_size()
+        #lib.rl_resize_terminal()
+        #lib.rl_reset_screen_size()
         return p
