@@ -351,8 +351,12 @@ def run_subproc(cmds, captured=True):
             stdin = PIPE
         else:
             stdin = prev_proc.stdout
-        proc = Popen(aliased_cmd, universal_newlines=uninew, env=ENV.detype(),
-                     stdin=stdin, stdout=stdout)
+        try:
+            proc = Popen(aliased_cmd, universal_newlines=uninew, env=ENV.detype(),
+                         stdin=stdin, stdout=stdout)
+        except FileNotFoundError:
+            print('xonsh: subprocess mode: command not found: {0}'.format(aliased_cmd[0]))
+            return
         if prev_is_proxy:
             proc.communicate(input=prev_proc.stdout)
         procs.append(proc)
