@@ -4,6 +4,7 @@ import os
 import platform
 import builtins
 import subprocess
+from argparse import ArgumentParser
 
 def cd(args, stdin=None):
     """Changes the directory.
@@ -23,6 +24,18 @@ def cd(args, stdin=None):
         return '', 'cd: {0} is not a directory\n'.format(d)
     os.chdir(d)
     builtins.__xonsh_env__['PWD'] = os.getcwd()
+    return None, None
+
+pushd_parser = ArgumentParser(description="pushd: push onto the directory stack")
+def pushd(args, stdin=None):
+    return None, None
+
+popd_parser = ArgumentParser(description="popd: pop from the directory stack")
+def popd(args, stdin=None):
+    return None, None
+
+dirs_parser = ArgumentParser(description="dirs: view and manipulate the directory stack")
+def dirs(args, stdin=None):
     return None, None
 
 def exit(args, stdin=None):
@@ -57,6 +70,9 @@ def source_bash(args, stdin=None):
 
 DEFAULT_ALIASES = {
     'cd': cd,
+    'pushd':pushd,
+    'popd':popd,
+    'dirs':dirs,
     'EOF': exit,
     'exit': exit,
     'source-bash': source_bash,
