@@ -365,12 +365,12 @@ def run_subproc(cmds, captured=True):
                 suggested = {}
                 path = ENV.get('PATH',[])
                 for a in builtins.aliases:
-                    if a not in suggested and levenshtein(a, cmd) < threshold:
+                    if a not in suggested and levenshtein(a, cmd, threshold) < threshold:
                         suggested[a] = 'Alias'
                 for d in path:
                     if os.path.isdir(d):
                         for f in os.listdir(d):
-                            if f not in suggested and levenshtein(f, cmd) < threshold:
+                            if f not in suggested and levenshtein(f, cmd, threshold) < threshold:
                                 fname = os.path.join(d,f)
                                 suggested[f] = 'Command ({0})'.format(fname)
                 suggested = OrderedDict(sorted(suggested.items(), 

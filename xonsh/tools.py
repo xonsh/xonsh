@@ -212,11 +212,15 @@ class redirect_stderr(_RedirectStream):
     _stream = "stderr"
 
 
-# Public Domain code, by Magnus Lie Hetland
+# Modified from Public Domain code, by Magnus Lie Hetland
 # from http://hetland.org/coding/python/levenshtein.py 
-def levenshtein(a,b):
+def levenshtein(a,b,max_dist=float('inf')):
     "Calculates the Levenshtein distance between a and b."
     n, m = len(a), len(b)
+    
+    if abs(n-m) > max_dist:
+        return float('inf')
+
     if n > m:
         # Make sure n <= m, to use O(min(n,m)) space
         a,b = b,a
