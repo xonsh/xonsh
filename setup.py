@@ -6,11 +6,13 @@ import os
 import sys
 try:
     from setuptools import setup
-    from setuptools.command.install import install
     from setuptools.command.sdist import sdist
+    from setuptools.command.install import install
     HAVE_SETUPTOOLS = True
 except ImportError:
     from distutils.core import setup
+    from distutils.command.sdist import sdist as sdist
+    from distutils.command.install import install as install
     HAVE_SETUPTOOLS = False
 
 VERSION = '0.1.2'
