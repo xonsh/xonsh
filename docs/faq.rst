@@ -79,14 +79,14 @@ name (``ls`` above) is in the present Python context. If it is, then it takes
 the line to be valid xonsh as written. If the left-most name cannot be found,
 then xonsh assumes that the left-most name is an external command. It thus 
 attempts to parse the line after wrapping it in an uncaptured subprocess 
-call ``$[]``.  If wrapped version successfully pasres, the ``$[]`` version 
+call ``$[]``.  If wrapped version successfully parses, the ``$[]`` version 
 stays. Otherwise the original line is retained.
 
 All of the context sensitive parsing occurs as an AST transformation prior to 
 any code is executed.  This ensures that code will never be partially executed
 before failing.
 
-It is critical to note that the context sensitive parsing is a convienece
+It is critical to note that the context sensitive parsing is a convenience
 meant for humans.  If ambiguity remains or exactness is required, simply 
 manually use the ``$[]`` or ``$()`` operators on your code.
 
