@@ -11,11 +11,11 @@ from xonsh.execer import Execer
 from xonsh.completer import Completer
 from xonsh.environ import xonshrc_context, multiline_prompt, format_prompt
 
-RL_COMPLETION_SUPPRESS_APPEND = None
+RL_COMPLETION_SUPPRESS_APPEND = lib = None
 
 def setup_readline():
     """Sets up the readline module and completion supression, if available."""
-    global RL_COMPLETION_SUPPRESS_APPEND
+    global RL_COMPLETION_SUPPRESS_APPEND, lib
     if RL_COMPLETION_SUPPRESS_APPEND is not None:
         return
     try:
@@ -47,6 +47,7 @@ def setup_readline():
         print('RL_CHANGE_ENVIRONMENT:', RL_CHANGE_ENVIRONMENT.value)
     except ValueError:
         pass
+    lib.rl_resize_terminal()
     lib.rl_reset_screen_size()
     # reads in history
     env = builtins.__xonsh_env__
@@ -188,6 +189,8 @@ class Shell(Cmd):
     @property
     def prompt(self):
         """Obtains the current prompt string."""
+        lib.rl_resize_terminal()
+        lib.rl_reset_screen_size()
         if self.need_more_lines:
             if self.mlprompt is None:
                 self.mlprompt = multiline_prompt()
@@ -201,4 +204,6 @@ class Shell(Cmd):
         else:
             p = "set '$PROMPT = ...' $ "
         self.settitle()
+        lib.rl_resize_terminal()
+        lib.rl_reset_screen_size()
         return p
