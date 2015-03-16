@@ -1,0 +1,7 @@
+language: python
+python:
+  - 3.4
+install:
+  - pip install ply nose
+script:
+  - nosetests
