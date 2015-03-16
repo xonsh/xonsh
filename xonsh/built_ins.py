@@ -396,7 +396,8 @@ def load_builtins(execer=None):
     builtins.__xonsh_glob__ = globpath
     builtins.__xonsh_exit__ = False
     builtins.__xonsh_pyexit__ = builtins.exit
-    del builtins.exit
+    builtins.__xonsh_pyquit__ = builtins.quit
+    del builtins.exit, builtins.quit
     builtins.__xonsh_subproc_captured__ = subproc_captured
     builtins.__xonsh_subproc_uncaptured__ = subproc_uncaptured
     builtins.__xonsh_execer__ = execer
@@ -417,13 +418,15 @@ def unload_builtins():
         ENV = None
     if hasattr(builtins, '__xonsh_pyexit__'):
         builtins.exit = builtins.__xonsh_pyexit__
+    if hasattr(builtins, '__xonsh_pyquit__'):
+        builtins.quit = builtins.__xonsh_pyquit__
     if not BUILTINS_LOADED:
         return
     names = ['__xonsh_env__', '__xonsh_help__', '__xonsh_superhelp__',
              '__xonsh_regexpath__', '__xonsh_glob__', '__xonsh_exit__',
-             '__xonsh_subproc_captured__', '__xonsh_subproc_uncaptured__',
-             '__xonsh_pyexit__', '__xonsh_execer__', 
-             'evalx', 'execx', 'compilex', 
+             '__xonsh_pyexit__', '__xonsh_pyquit__', 
+             '__xonsh_subproc_captured__', '__xonsh_subproc_uncaptured__', 
+             '__xonsh_execer__', 'evalx', 'execx', 'compilex', 
              ]
     for name in names:
         if hasattr(builtins, name):
