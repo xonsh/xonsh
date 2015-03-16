@@ -1,6 +1,7 @@
 *.pyc
 *.out
 *.xcf
+*.egg
 xonsh/lexer_table.py
 xonsh/parser_table.py 
 tests/lexer_table.py
