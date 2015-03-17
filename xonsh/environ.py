@@ -138,8 +138,8 @@ def xonshrc_context(rcfile=None, execer=None):
     try:
         execer.filename = rcfile
         execer.exec(rc, glbs={}, locs=env)
-    except SyntaxError:
-        warn('syntax error in xonsh run control file {0!r}'.format(rcfile), 
+    except SyntaxError as err:
+        warn('syntax error in xonsh run control file {0!r}: {1!s}'.format(rcfile, err), 
              RuntimeWarning)
     finally:
         execer.filename = fname
