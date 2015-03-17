@@ -16,23 +16,35 @@ def current_branch(cwd=None):
     if the cwd is not a repository.  This currently only works for git, 
     bust should be extended in the future.
     """
+    branch = None
     cwd = os.getcwd() if cwd is None else cwd
+
+    # step out completely if git is not installed
     try:
-        # note that this is about 10x faster than bash -i "__git_ps1"
-        d = subprocess.check_output(['which', 'git'], cwd=cwd, 
+        binary_location = subprocess.check_output(['which', 'git'], cwd=cwd,
                                     stderr=subprocess.PIPE,
                                     universal_newlines=True)
-        d = os.path.dirname(os.path.dirname(d))
-        input = ('source ' + d + '/lib/git-core/git-sh-prompt; '
-                 '__git_ps1 "${1:-%s}"')
-        s = subprocess.check_output(['bash',], cwd=cwd, input=input,
-                                    stderr=subprocess.PIPE,
-                                    universal_newlines=True)
+        if not binary_location:
+            return branch
     except subprocess.CalledProcessError:
-        s = ''
-    if len(s) == 0:
-        s = None
-    return s
+        return branch
+
+    prompt_scripts = [
+        '/usr/lib/git-core/git-sh-prompt',
+        '/usr/local/etc/bash_completion.d/git-prompt.sh'
+    ]
+
+    for script in prompt_scripts:
+        # note that this is about 10x faster than bash -i "__git_ps1"
+        _input = ('source {}; __git_ps1 "${{1:-%s}}"'.format(script))
+        try:
+            branch = subprocess.check_output(['bash',], cwd=cwd, input=_input,
+                                        stderr=subprocess.PIPE,
+                                        universal_newlines=True) or None
+        except subprocess.CalledProcessError:
+            continue
+
+    return branch
 
 
 default_prompt = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
