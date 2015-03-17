@@ -16,7 +16,7 @@ from collections import Sequence, MutableMapping, Iterable, namedtuple
 from xonsh.tools import string_types, redirect_stdout, redirect_stderr, suggest_commands
 from xonsh.inspectors import Inspector
 from xonsh.environ import default_env
-from xonsh.aliases import DEFAULT_ALIASES
+from xonsh.aliases import DEFAULT_ALIASES, BASH_ALIASES
 
 ENV = None
 BUILTINS_LOADED = False
@@ -415,6 +415,7 @@ def load_builtins(execer=None):
     builtins.execx = None if execer is None else execer.exec
     builtins.compilex = None if execer is None else execer.compile
     builtins.aliases = Aliases(DEFAULT_ALIASES)
+    builtins.aliases._raw.update(BASH_ALIASES)
     BUILTINS_LOADED = True
 
 def unload_builtins():

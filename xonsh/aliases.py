@@ -4,6 +4,7 @@ import os
 import platform
 import builtins
 import subprocess
+import shlex
 
 def cd(args, stdin=None):
     """Changes the directory.
@@ -54,6 +55,20 @@ def source_bash(args, stdin=None):
             continue  # no change from original
         env[k] = v
     return
+
+def bash_aliases():
+    try:
+        s = subprocess.check_output(['bash', '-i'], input='alias',
+                                    stderr=subprocess.PIPE,
+                                    universal_newlines=True)
+    except subprocess.CalledProcessError:
+        s = ''
+    items = [line.split('=', 1) for line in s.splitlines() if '=' in line]
+    aliases = [(item[0][6:],shlex.split(item[1].strip('\''))) for item in items]
+    return dict(aliases)
+
+
+BASH_ALIASES = bash_aliases()
 
 DEFAULT_ALIASES = {
     'cd': cd,
