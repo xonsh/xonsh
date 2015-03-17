@@ -11,11 +11,12 @@ from xonsh.execer import Execer
 from xonsh.completer import Completer
 from xonsh.environ import xonshrc_context, multiline_prompt, format_prompt
 
-RL_COMPLETION_SUPPRESS_APPEND = lib = None
+RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = None
+RL_CAN_RESIZE = False
 
 def setup_readline():
     """Sets up the readline module and completion supression, if available."""
-    global RL_COMPLETION_SUPPRESS_APPEND, lib
+    global RL_COMPLETION_SUPPRESS_APPEND, RL_LIB, RL_CAN_RESIZE
     if RL_COMPLETION_SUPPRESS_APPEND is not None:
         return
     try:
@@ -25,13 +26,14 @@ def setup_readline():
     import ctypes
     import ctypes.util
     readline.set_completer_delims(' \t\n')
-    lib = ctypes.cdll.LoadLibrary(readline.__file__)
+    RL_LIB = lib = ctypes.cdll.LoadLibrary(readline.__file__)
     try:
         RL_COMPLETION_SUPPRESS_APPEND = ctypes.c_int.in_dll(lib, 
                                             'rl_completion_suppress_append')
     except ValueError:
         # not all versions of readline have this symbol, ie Macs sometimes
         RL_COMPLETION_SUPPRESS_APPEND = None
+    RL_CAN_RESIZE = hasattr(lib, 'rl_reset_screen_size')
     # reads in history
     env = builtins.__xonsh_env__
     hf = env.get('XONSH_HISTORY_FILE', os.path.expanduser('~/.xonsh_history'))
@@ -172,8 +174,11 @@ class Shell(Cmd):
     @property
     def prompt(self):
         """Obtains the current prompt string."""
-        global lib
-        lib.rl_reset_screen_size()
+        global RL_LIB, RL_CAN_RESIZE
+        if RL_CAN_RESIZE:
+            # This is needed to support some system where line-wrapping doesn't
+            # work. This is a bug in upstream Python, or possibly readline.
+            RL_LIB.rl_reset_screen_size()
         if self.need_more_lines:
             if self.mlprompt is None:
                 self.mlprompt = multiline_prompt()
