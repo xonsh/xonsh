@@ -50,7 +50,9 @@ meant for the daily use of experts and novices alike.
 
     <p style="text-align:center;">
 
-.. image:: _static/xonsh-demo.gif
+.. raw:: html
+
+    <video controls> <source src="_static/xonsh-demo.webm" type="video/webm"><img src="_static/xonsh-demo.gif"></video>
 
 .. raw:: html 
 
