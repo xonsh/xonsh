@@ -32,8 +32,6 @@ def setup_readline():
     except ValueError:
         # not all versions of readline have this symbol, ie Macs sometimes
         RL_COMPLETION_SUPPRESS_APPEND = None
-    #lib.rl_resize_terminal()
-    #lib.rl_reset_screen_size()
     # reads in history
     env = builtins.__xonsh_env__
     hf = env.get('XONSH_HISTORY_FILE', os.path.expanduser('~/.xonsh_history'))
@@ -175,10 +173,7 @@ class Shell(Cmd):
     def prompt(self):
         """Obtains the current prompt string."""
         global lib
-        if lib is not None:
-            lib.rl_reset_screen_size()
-            lib = None
-        #lib.rl_resize_terminal()
+        lib.rl_reset_screen_size()
         if self.need_more_lines:
             if self.mlprompt is None:
                 self.mlprompt = multiline_prompt()
@@ -192,6 +187,4 @@ class Shell(Cmd):
         else:
             p = "set '$PROMPT = ...' $ "
         self.settitle()
-        #lib.rl_resize_terminal()
-        #lib.rl_reset_screen_size()
         return p
