@@ -18,18 +18,12 @@ def current_branch(cwd=None):
     """
     cwd = os.getcwd() if cwd is None else cwd
     try:
-        # note that this is about 10x faster than bash -i "__git_ps1"
-        d = subprocess.check_output(['which', 'git'], cwd=cwd, 
-                                    stderr=subprocess.PIPE,
-                                    universal_newlines=True)
-        d = os.path.dirname(os.path.dirname(d))
-        input = ('source ' + d + '/lib/git-core/git-sh-prompt; '
-                 '__git_ps1 "${1:-%s}"')
-        s = subprocess.check_output(['bash',], cwd=cwd, input=input,
-                                    stderr=subprocess.PIPE,
+        s = subprocess.check_output(['git', 'rev-parse','--abbrev-ref', 'HEAD'],
+                                    stderr=subprocess.PIPE, cwd=cwd,
                                     universal_newlines=True)
     except subprocess.CalledProcessError:
         s = ''
+    s = s.strip()
     if len(s) == 0:
         s = None
     return s
