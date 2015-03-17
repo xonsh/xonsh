@@ -12,7 +12,6 @@ def cd(args, stdin=None):
     changes to the current user's home directory.
     """
     cur_oldpwd = builtins.__xonsh_env__['OLDPWD']
-    builtins.__xonsh_env__['OLDPWD'] = os.getcwd()
     if len(args) == 0:
         d = os.path.expanduser('~')
     elif len(args) == 1:
@@ -25,6 +24,7 @@ def cd(args, stdin=None):
         return '', 'cd: no such file or directory: {0}\n'.format(d)
     if not os.path.isdir(d):
         return '', 'cd: {0} is not a directory\n'.format(d)
+    builtins.__xonsh_env__['OLDPWD'] = os.getcwd()
     os.chdir(d)
     builtins.__xonsh_env__['PWD'] = os.getcwd()
     return None, None
