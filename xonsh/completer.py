@@ -107,8 +107,15 @@ class Completer(object):
         space = ' '  # intern some strings for faster appending
         slash = '/'
         tilde = '~'
-        paths = {s + (slash if os.path.isdir(s) else space) \
-                 for s in iglobpath(prefix + '*')}
+        paths = set()
+        if prefix.startswith("'") or prefix.startswith('"'):
+            prefix = prefix[1:]
+        for s in iglobpath(prefix + '*'):
+            if space in s:
+                s = repr(s + (slash if os.path.isdir(s) else ''))
+            else:
+                s = s + (slash if os.path.isdir(s) else space)
+            paths.add(s)
         if tilde in prefix:
             home = os.path.expanduser(tilde)
             paths = {s.replace(home, tilde) for s in paths}
