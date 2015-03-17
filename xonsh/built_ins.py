@@ -13,7 +13,7 @@ from subprocess import Popen, PIPE
 from contextlib import contextmanager
 from collections import Sequence, MutableMapping, Iterable, namedtuple
 
-from xonsh.tools import string_types, redirect_stdout, redirect_stderr
+from xonsh.tools import string_types, redirect_stdout, redirect_stderr, suggest_commands
 from xonsh.inspectors import Inspector
 from xonsh.environ import default_env
 from xonsh.aliases import DEFAULT_ALIASES
@@ -351,8 +351,14 @@ def run_subproc(cmds, captured=True):
             stdin = PIPE
         else:
             stdin = prev_proc.stdout
-        proc = Popen(aliased_cmd, universal_newlines=uninew, env=ENV.detype(),
-                     stdin=stdin, stdout=stdout)
+        try:
+            proc = Popen(aliased_cmd, universal_newlines=uninew, env=ENV.detype(),
+                         stdin=stdin, stdout=stdout)
+        except FileNotFoundError:
+            cmd = aliased_cmd[0]
+            print('xonsh: subprocess mode: command not found: {0}'.format(cmd))
+            print(suggest_commands(cmd, ENV, builtins.aliases))
+            return
         if prev_is_proxy:
             proc.communicate(input=prev_proc.stdout)
         procs.append(proc)
@@ -365,8 +371,11 @@ def run_subproc(cmds, captured=True):
     output = prev_proc.stdout if isinstance(prev_proc, ProcProxy) else \
              prev_proc.communicate()[0]
     if write_target is not None:
-        with open(write_target, write_mode) as f:
-            f.write(output)
+        try:
+            with open(write_target, write_mode) as f:
+                f.write(output)
+        except FileNotFoundError:
+            print('xonsh: {0}: no such file or directory'.format(write_target))
     if captured:
         return output
 
