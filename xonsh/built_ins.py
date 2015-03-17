@@ -11,9 +11,9 @@ from io import TextIOWrapper, StringIO
 from glob import glob, iglob
 from subprocess import Popen, PIPE
 from contextlib import contextmanager
-from collections import Sequence, MutableMapping, Iterable, namedtuple, OrderedDict
+from collections import Sequence, MutableMapping, Iterable, namedtuple
 
-from xonsh.tools import string_types, redirect_stdout, redirect_stderr, levenshtein, levenshtein_sort_helper
+from xonsh.tools import string_types, redirect_stdout, redirect_stderr, suggest_commands
 from xonsh.inspectors import Inspector
 from xonsh.environ import default_env
 from xonsh.aliases import DEFAULT_ALIASES
@@ -357,32 +357,7 @@ def run_subproc(cmds, captured=True):
         except FileNotFoundError:
             cmd = aliased_cmd[0]
             print('xonsh: subprocess mode: command not found: {0}'.format(cmd))
-            if(ENV.get('SUGGEST_COMMANDS', True)):
-                threshold = ENV.get('SUGGEST_ERROR_THRESHOLD', 3)
-                max_sugg = ENV.get('SUGGEST_MAX_NUM', 5)
-                if max_sugg < 0:
-                    max_sugg = float('inf')
-                suggested = {}
-                path = ENV.get('PATH',[])
-                for a in builtins.aliases:
-                    if a not in suggested and levenshtein(a, cmd, threshold) < threshold:
-                        suggested[a] = 'Alias'
-                for d in path:
-                    if os.path.isdir(d):
-                        for f in os.listdir(d):
-                            if f not in suggested and levenshtein(f, cmd, threshold) < threshold:
-                                fname = os.path.join(d,f)
-                                suggested[f] = 'Command ({0})'.format(fname)
-                suggested = OrderedDict(sorted(suggested.items(), 
-                                        key=lambda x: levenshtein_sort_helper(x[0], cmd)))
-                num = min(len(suggested), max_sugg)
-                if num>1:
-                    print('Did you mean one of the following?')
-                elif num>0:
-                    print('Did you mean the following?')
-                for i in range(num):
-                    k,v = suggested.popitem(False)
-                    print('    {0}: {1}'.format(k,v))
+            print(suggest_commands(cmd, ENV, builtins.aliases))
             return
         if prev_is_proxy:
             proc.communicate(input=prev_proc.stdout)
