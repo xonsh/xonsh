@@ -108,7 +108,7 @@ class Shell(Cmd):
         if code is None:
             return
         try:
-            self.execer.exec(code, mode='single', glbs=None, locs=self.ctx)
+            self.execer.exec(code, mode='single', glbs=self.ctx)  # no locals
         except:
             traceback.print_exc()
         if builtins.__xonsh_exit__:
