@@ -161,7 +161,7 @@ class Aliases(MutableMapping):
     def __delitem__(self, key):
         del self._raw[key]
 
-    def update(*args, **kwargs):
+    def update(self, *args, **kwargs):
         self._raw.update(*args, **kwargs)
 
     def __iter__(self):
