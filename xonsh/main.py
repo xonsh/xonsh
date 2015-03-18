@@ -30,6 +30,7 @@ def main(argv=None):
         # run a single command and exit
         shell.default(args.command)
     elif args.file is not None:
+        # run a script contained in a file
         if os.path.isfile(args.file):
             with open(args.file) as f:
                 for line in f:
