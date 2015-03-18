@@ -13,6 +13,11 @@ parser.add_argument('-c',
         dest='command', 
         required=False, 
         default=None)
+parser.add_argument('file',
+        metavar='script-file',
+        help='If present, execute the script contained in script-file and exit',
+        nargs='?',
+        default=None)
 
 def main(argv=None):
     """Main entry point for xonsh cli."""
@@ -21,10 +26,23 @@ def main(argv=None):
 
     shell = Shell()
 
-    if args.command is None:
-        shell.cmdloop()
-    else:
+    if args.command is not None:
+        # run a single command and exit
         shell.default(args.command)
+    elif args.file is not None:
+        if os.path.isfile(args.file):
+            with open(args.file) as f:
+                for line in f:
+                    shell.default(line)
+        else:
+            print('xonsh: {0}: No such file or directory.'.format(args.file))
+    elif not sys.stdin.isatty():
+        # run a script given on stdin
+        for line in sys.stdin:
+            shell.default(line)
+    else:
+        # otherwise, enter the shell
+        shell.cmdloop()
 
 if __name__ == '__main__':
     main()
