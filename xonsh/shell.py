@@ -150,12 +150,13 @@ class Shell(Cmd):
     completenames = completedefault
 
     def cmdloop(self, intro=None):
-        try:
-            super(Shell, self).cmdloop(intro=intro)
-        except KeyboardInterrupt:
-            print()  # gimme a newline
-            self.reset_buffer()
-            self.cmdloop(intro=None)
+        while not builtins.__xonsh_exit__:
+            try:
+                super(Shell, self).cmdloop(intro=intro)
+            except KeyboardInterrupt:
+                print()  # Gives a newline
+                self.reset_buffer()
+                intro = None
 
     def settitle(self):
         env = builtins.__xonsh_env__
