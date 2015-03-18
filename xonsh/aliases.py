@@ -69,8 +69,6 @@ def bash_aliases():
     return dict(aliases)
 
 
-BASH_ALIASES = bash_aliases()
-
 DEFAULT_ALIASES = {
     'cd': cd,
     'EOF': exit,
