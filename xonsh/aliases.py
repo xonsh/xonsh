@@ -58,6 +58,7 @@ def source_bash(args, stdin=None):
     return
 
 def bash_aliases():
+    """Computes a dictionary of aliases based on Bash's aliases."""
     try:
         s = subprocess.check_output(['bash', '-i'], input='alias',
                                     stderr=subprocess.PIPE,
@@ -65,16 +66,17 @@ def bash_aliases():
     except subprocess.CalledProcessError:
         s = ''
     items = [line.split('=', 1) for line in s.splitlines() if '=' in line]
-    aliases = dict()
-    for key,value in items:
+    aliases = {}
+    for key, value in items:
         try:
             key = key[6:]
             value = value.strip('\'')
             value = shlex.split(value)
-            aliases[key] = value
-        except Exception as exc:
-            warn('could not parse Bash alias "{0}": {1!r}'.format(key,exc),
-                    RuntimeWarning)
+        except ValueError as exc:
+            warn('could not parse Bash alias "{0}": {1!r}'.format(key, exc),
+                 RuntimeWarning)
+            continue
+        aliases[key] = value
     return aliases
 
 
