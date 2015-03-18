@@ -1,6 +1,10 @@
 *.pyc
 *.out
 *.xcf
+*.egg
+lexer_table.py
+parser_table.py
+parser_test_table.py
 xonsh/lexer_table.py
 xonsh/parser_table.py 
 tests/lexer_table.py

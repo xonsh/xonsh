@@ -75,6 +75,7 @@ DEFAULT_ALIASES = {
     'dirs':dirs,
     'EOF': exit,
     'exit': exit,
+    'quit': exit,
     'source-bash': source_bash,
     'grep': ['grep', '--color=auto'],
     'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],

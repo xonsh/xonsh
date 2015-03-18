@@ -6,11 +6,13 @@ import os
 import sys
 try:
     from setuptools import setup
-    from setuptools.command.install import install
     from setuptools.command.sdist import sdist
+    from setuptools.command.install import install
     HAVE_SETUPTOOLS = True
 except ImportError:
     from distutils.core import setup
+    from distutils.command.sdist import sdist as sdist
+    from distutils.command.install import install as install
     HAVE_SETUPTOOLS = False
 
 VERSION = '0.1.2'
@@ -47,7 +49,7 @@ def main():
     if sys.version_info[0] < 3:
         sys.exit('xonsh currently requires Python 3.4+')
     print(logo)
-    with open('README.rst', 'r') as f:
+    with open(os.path.join(os.path.dirname(__file__), 'README.rst'), 'r') as f:
         readme = f.read()
     skw = dict(
         name='xonsh',

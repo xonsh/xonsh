@@ -15,8 +15,11 @@ Implementations:
 * safe_hasattr()
 
 """
+import os
 import sys
 import builtins
+from collections import OrderedDict
+
 
 if sys.version_info[0] >= 3:
     string_types = (str, bytes)
@@ -210,3 +213,67 @@ class redirect_stdout(_RedirectStream):
 class redirect_stderr(_RedirectStream):
     """Context manager for temporarily redirecting stderr to another file."""
     _stream = "stderr"
+
+def suggest_commands(cmd, env, aliases):
+    if(env.get('SUGGEST_COMMANDS', True)):
+        threshold = env.get('SUGGEST_ERROR_THRESHOLD', 3)
+        max_sugg = env.get('SUGGEST_MAX_NUM', 5)
+        if max_sugg < 0:
+            max_sugg = float('inf')
+        suggested = {}
+        path = env.get('PATH',[])
+        for a in builtins.aliases:
+            if a not in suggested and levenshtein(a, cmd, threshold) < threshold:
+                suggested[a] = 'Alias'
+        for d in path:
+            if os.path.isdir(d):
+                for f in os.listdir(d):
+                    if f not in suggested and levenshtein(f, cmd, threshold) < threshold:
+                        fname = os.path.join(d,f)
+                        suggested[f] = 'Command ({0})'.format(fname)
+        suggested = OrderedDict(sorted(suggested.items(),
+                                key=lambda x: suggestion_sort_helper(x[0], cmd)))
+        num = min(len(suggested), max_sugg)
+        out = []
+        if num>1:
+            out.append('Did you mean one of the following?')
+        elif num>0:
+            out.append('Did you mean the following?')
+        for i in range(num):
+            k,v = suggested.popitem(False)
+            out.append('    {0}: {1}'.format(k,v))
+        return '\n'.join(out)
+
+# Modified from Public Domain code, by Magnus Lie Hetland
+# from http://hetland.org/coding/python/levenshtein.py 
+def levenshtein(a, b, max_dist=float('inf')):
+    "Calculates the Levenshtein distance between a and b."
+    n, m = len(a), len(b)
+    
+    if abs(n-m) > max_dist:
+        return float('inf')
+
+    if n > m:
+        # Make sure n <= m, to use O(min(n,m)) space
+        a,b = b,a
+        n,m = m,n
+        
+    current = range(n+1)
+    for i in range(1,m+1):
+        previous, current = current, [i]+[0]*n
+        for j in range(1,n+1):
+            add, delete = previous[j]+1, current[j-1]+1
+            change = previous[j-1]
+            if a[j-1] != b[i-1]:
+                change = change + 1
+            current[j] = min(add, delete, change)
+            
+    return current[n]
+
+def suggestion_sort_helper(x, y):
+    x = x.lower()
+    y = y.lower()
+    lendiff = len(x)+len(y)
+    inx = len([i for i in x if i not in y])
+    iny = len([i for i in y if i not in x])
+    return lendiff + inx + iny

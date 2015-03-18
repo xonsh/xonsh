@@ -13,7 +13,7 @@ from subprocess import Popen, PIPE
 from contextlib import contextmanager
 from collections import Sequence, MutableMapping, Iterable, namedtuple
 
-from xonsh.tools import string_types, redirect_stdout, redirect_stderr
+from xonsh.tools import string_types, redirect_stdout, redirect_stderr, suggest_commands
 from xonsh.inspectors import Inspector
 from xonsh.environ import default_env
 from xonsh.aliases import DEFAULT_ALIASES
@@ -161,7 +161,7 @@ class Aliases(MutableMapping):
     def __delitem__(self, key):
         del self._raw[key]
 
-    def update(*args, **kwargs):
+    def update(self, *args, **kwargs):
         self._raw.update(*args, **kwargs)
 
     def __iter__(self):
@@ -351,8 +351,14 @@ def run_subproc(cmds, captured=True):
             stdin = PIPE
         else:
             stdin = prev_proc.stdout
-        proc = Popen(aliased_cmd, universal_newlines=uninew, env=ENV.detype(),
-                     stdin=stdin, stdout=stdout)
+        try:
+            proc = Popen(aliased_cmd, universal_newlines=uninew, env=ENV.detype(),
+                         stdin=stdin, stdout=stdout)
+        except FileNotFoundError:
+            cmd = aliased_cmd[0]
+            print('xonsh: subprocess mode: command not found: {0}'.format(cmd))
+            print(suggest_commands(cmd, ENV, builtins.aliases))
+            return
         if prev_is_proxy:
             proc.communicate(input=prev_proc.stdout)
         procs.append(proc)
@@ -365,8 +371,11 @@ def run_subproc(cmds, captured=True):
     output = prev_proc.stdout if isinstance(prev_proc, ProcProxy) else \
              prev_proc.communicate()[0]
     if write_target is not None:
-        with open(write_target, write_mode) as f:
-            f.write(output)
+        try:
+            with open(write_target, write_mode) as f:
+                f.write(output)
+        except FileNotFoundError:
+            print('xonsh: {0}: no such file or directory'.format(write_target))
     if captured:
         return output
 
@@ -396,7 +405,8 @@ def load_builtins(execer=None):
     builtins.__xonsh_glob__ = globpath
     builtins.__xonsh_exit__ = False
     builtins.__xonsh_pyexit__ = builtins.exit
-    del builtins.exit
+    builtins.__xonsh_pyquit__ = builtins.quit
+    del builtins.exit, builtins.quit
     builtins.__xonsh_subproc_captured__ = subproc_captured
     builtins.__xonsh_subproc_uncaptured__ = subproc_uncaptured
     builtins.__xonsh_execer__ = execer
@@ -417,13 +427,15 @@ def unload_builtins():
         ENV = None
     if hasattr(builtins, '__xonsh_pyexit__'):
         builtins.exit = builtins.__xonsh_pyexit__
+    if hasattr(builtins, '__xonsh_pyquit__'):
+        builtins.quit = builtins.__xonsh_pyquit__
     if not BUILTINS_LOADED:
         return
     names = ['__xonsh_env__', '__xonsh_help__', '__xonsh_superhelp__',
              '__xonsh_regexpath__', '__xonsh_glob__', '__xonsh_exit__',
-             '__xonsh_subproc_captured__', '__xonsh_subproc_uncaptured__',
-             '__xonsh_pyexit__', '__xonsh_execer__', 
-             'evalx', 'execx', 'compilex', 
+             '__xonsh_pyexit__', '__xonsh_pyquit__', 
+             '__xonsh_subproc_captured__', '__xonsh_subproc_uncaptured__', 
+             '__xonsh_execer__', 'evalx', 'execx', 'compilex', 
              ]
     for name in names:
         if hasattr(builtins, name):
