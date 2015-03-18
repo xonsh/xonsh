@@ -14,6 +14,7 @@ from xonsh.environ import xonshrc_context, multiline_prompt, format_prompt
 RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = None
 RL_CAN_RESIZE = False
 
+
 def setup_readline():
     """Sets up the readline module and completion supression, if available."""
     global RL_COMPLETION_SUPPRESS_APPEND, RL_LIB, RL_CAN_RESIZE
@@ -49,6 +50,14 @@ def setup_readline():
     readline.parse_and_bind('"\e[A": history-search-backward')
     # Setup Shift-Tab to indent
     readline.parse_and_bind('"\e[Z": "{0}"'.format(env.get('INDENT', '')))
+
+    # handle tab completion differences found in libedit readline compatibility
+    # as discussed at http://stackoverflow.com/a/7116997
+    if 'libedit' in readline.__doc__:
+        readline.parse_and_bind("bind ^I rl_complete")
+    else:
+        readline.parse_and_bind("tab: complete")
+
 
 def teardown_readline():
     """Tears down up the readline module, if available."""
