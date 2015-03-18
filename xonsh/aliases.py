@@ -5,6 +5,7 @@ import platform
 import builtins
 import subprocess
 import shlex
+from warnings import warn
 
 def cd(args, stdin=None):
     """Changes the directory.
@@ -64,9 +65,17 @@ def bash_aliases():
     except subprocess.CalledProcessError:
         s = ''
     items = [line.split('=', 1) for line in s.splitlines() if '=' in line]
-    aliases = [(item[0][6:], shlex.split(item[1].strip('\''))) \
-                for item in items]
-    return dict(aliases)
+    aliases = dict()
+    for key,value in items:
+        try:
+            key = key[6:]
+            value = value.strip('\'')
+            value = shlex.split(value)
+            aliases[key] = value
+        except Exception as exc:
+            warn('could not parse Bash alias "{0}": {1!r}'.format(key,exc),
+                    RuntimeWarning)
+    return aliases
 
 
 DEFAULT_ALIASES = {
