@@ -64,7 +64,8 @@ def bash_aliases():
     except subprocess.CalledProcessError:
         s = ''
     items = [line.split('=', 1) for line in s.splitlines() if '=' in line]
-    aliases = [(item[0][6:],shlex.split(item[1].strip('\''))) for item in items]
+    aliases = [(item[0][6:], shlex.split(item[1].strip('\''))) \
+                for item in items]
     return dict(aliases)
 
 
