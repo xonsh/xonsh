@@ -174,6 +174,13 @@ PROMPT             xosh.environ.default_prompt The prompt text, may be str or
 MULTILINE_PROMPT   ``'.'``                     Prompt text for 2nd+ lines of
                                                input, may be str or 
                                                function which returns a str.
+TITLE              xonsh.environ.default_title The title text for the window
+                                               in which xonsh is running.  As
+                                               with PROMPT, may be a str or a
+                                               function that returns a str.
+                                               The str is formatted in the
+                                               same manner as PROMPT (see 
+                                               below).
 XONSHRC            ``'~/.xonshrc'``            Location of run control file
 XONSH_HISTORY_SIZE 8128                        Number of items to store in the
                                                history.
@@ -181,8 +188,23 @@ XONSH_HISTORY_FILE ``'~/.xonsh_history'``      Location of history file
 BASH_COMPLETIONS   ``[] or ['/etc/...']``      This is a list of strings that 
                                                specifies where the BASH 
                                                completion files may be found. 
-                                               The default values is platform
+                                               The default values are platform
                                                dependent, but sane.
+SUGGEST_COMMANDS   ``True``                    When a user types an invalid
+                                               command, xonsh will try to offer
+                                               suggestions of similar valid 
+                                               commands if this is ``True``.
+SUGGEST_THRESHOLD  ``3``                       An error threshold.  If the
+                                               Levenshtein distance between the
+                                               entered command and a valid
+                                               command is less than this value,
+                                               the valid command will be 
+                                               offered as a suggestion.
+SUGGEST_MAX_NUM    ``5``                       xonsh will show at most this
+                                               many suggestions in response to
+                                               an invalid command.  If 
+                                               negative, there is no limit to
+                                               how many suggestions are shown.
 ================== =========================== ================================
 
 Customizing the prompt is probably the most common reason for altering an
