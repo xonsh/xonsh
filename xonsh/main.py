@@ -33,14 +33,14 @@ def main(argv=None):
         # run a script contained in a file
         if os.path.isfile(args.file):
             with open(args.file) as f:
-                code = shell.execer.compile(f.read(), mode='exec')
-                shell.execer.exec(code, mode='exec')
+                code = shell.execer.compile(f.read(), mode='exec', glbs=shell.ctx)
+                shell.execer.exec(code, mode='exec', glbs=shell.ctx)
         else:
             print('xonsh: {0}: No such file or directory.'.format(args.file))
     elif not sys.stdin.isatty():
         # run a script given on stdin
-        code = shell.execer.compile(sys.stdin.read(), mode='exec')
-        shell.execer.exec(code, mode='exec')
+        code = shell.execer.compile(sys.stdin.read(), mode='exec', glbs=shell.ctx)
+        shell.execer.exec(code, mode='exec', glbs=shell.ctx)
     else:
         # otherwise, enter the shell
         shell.cmdloop()
