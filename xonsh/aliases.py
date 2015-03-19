@@ -13,18 +13,23 @@ def cd(args, stdin=None):
     If no directory is specified (i.e. if `args` is None) then this
     changes to the current user's home directory.
     """
+    env = builtins.__xonsh_env__
+    cur_oldpwd = env.get('OLDPWD') or os.getcwd()
     if len(args) == 0:
         d = os.path.expanduser('~')
     elif len(args) == 1:
         d = args[0]
+        if d == '-':
+            d = cur_oldpwd
     else:
         return '', 'cd takes 0 or 1 arguments, not {0}\n'.format(len(args))
     if not os.path.exists(d):
         return '', 'cd: no such file or directory: {0}\n'.format(d)
     if not os.path.isdir(d):
         return '', 'cd: {0} is not a directory\n'.format(d)
+    env['OLDPWD'] = os.getcwd()
     os.chdir(d)
-    builtins.__xonsh_env__['PWD'] = os.getcwd()
+    env['PWD'] = os.getcwd()
     return None, None
 
 def exit(args, stdin=None):
