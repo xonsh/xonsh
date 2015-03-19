@@ -309,8 +309,20 @@ def test_list_two():
 def test_list_three():
     yield check_ast, '[1, 42, 65]'
 
-def test_list_three():
+def test_list_three_comma():
     yield check_ast, '[1, 42, 65,]'
+
+def test_list_one_nested():
+    yield check_ast, '[[1]]'
+
+def test_list_tuple_one_nested():
+    yield check_ast, '[(1,)]'
+
+def test_tuple_tuple_one_nested():
+    yield check_ast, '((1,),)'
+
+def test_dict_list_one_nested():
+    yield check_ast, '{1: [2]}'
 
 def test_tuple_empty():
     yield check_ast, '()'
