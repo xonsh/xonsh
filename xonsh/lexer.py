@@ -138,7 +138,6 @@ class Lexer(object):
         'DOLLAR',                # $
         'QUESTION',              # ?
         'DOUBLE_QUESTION',       # ??
-        'COMMENT',               # #
         'DOLLAR_LPAREN',         # $(
         'DOLLAR_LBRACE',         # ${
         'DOLLAR_LBRACKET',       # $[
@@ -325,8 +324,11 @@ class Lexer(object):
     t_SEMI = r';'
     t_COLON = r':'
     t_AT = r'@'
-    t_ignore_COMMENT = r'\#.*$'
     t_ELLIPSIS = r'\.\.\.'
+
+    def t_COMMENT(self, t):
+        r'\#.*'
+        return
 
     #
     # Literals
