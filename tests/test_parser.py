@@ -333,6 +333,15 @@ def test_dict_tuple_one_nested():
 def test_dict_tuple_one_nested_comma():
     yield check_ast, '{1: (2,),}'
 
+def test_dict_list_two_nested():
+    yield check_ast, '{1: [2], 3: [4]}'
+
+def test_set_tuple_one_nested():
+    yield check_ast, '{(1,)}'
+
+def test_set_tuple_two_nested():
+    yield check_ast, '{(1,), (2,)}'
+
 def test_tuple_empty():
     yield check_ast, '()'
 
