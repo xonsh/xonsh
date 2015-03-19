@@ -33,8 +33,9 @@ def main(argv=None):
         # run a script contained in a file
         if os.path.isfile(args.file):
             with open(args.file) as f:
-                code = shell.execer.compile(f.read(), mode='exec', glbs=shell.ctx)
-                shell.execer.exec(code, mode='exec', glbs=shell.ctx)
+                code = f.read()
+            code = shell.execer.compile(code, mode='exec', glbs=shell.ctx)
+            shell.execer.exec(code, mode='exec', glbs=shell.ctx)
         else:
             print('xonsh: {0}: No such file or directory.'.format(args.file))
     elif not sys.stdin.isatty():
