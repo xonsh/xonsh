@@ -44,7 +44,8 @@ def subproc_line(line):
 
 def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     """Excapsulates tokens in a source code line in a uncaptured 
-    subprocess $[] starting at a minimum column.
+    subprocess $[] starting at a minimum column. If there are no tokens 
+    (ie in a comment line) this returns None.
     """
     if lexer is None:
         lexer = builtins.__xonsh_execer__.parser.lexer
@@ -66,6 +67,8 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
         if tok.type == 'NEWLINE':
             break
     else:
+        if len(toks) == 0:
+            return  # handle comment lines
         if toks[-1].type == 'SEMI':
             toks.pop()
         tok = toks[-1]
@@ -75,6 +78,8 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
         else:
             el = line[pos:].split('#')[0].rstrip()
             end_offset = len(el)
+    if len(toks) == 0:
+        return  # handle comment lines
     beg, end = toks[0].lexpos, (toks[-1].lexpos + end_offset)
     rtn = '$[' + line[beg:end] + ']'
     if returnline:
