@@ -1706,7 +1706,6 @@ class Parser(object):
             p2 = p[2] if lenp > 2 else []
             p2 = [] if p2 == ',' else p2
             p1.elts += p2
-        print(ast.dump(p1))
         p[0] = p1
 
     def p_comma_item(self, p):
@@ -1731,8 +1730,12 @@ class Parser(object):
             p0 = ast.SetComp(elt=p1, generators=comps, lineno=self.lineno, 
                              col_offset=self.col)
         elif lenp == 4:
-            p3 = ensure_has_elts(p[3])
-            p0 = ast.Dict(keys=[p1], values=p3.elts, ctx=ast.Load(),
+            p3 = p[3]
+            vals = [p3]
+            if isinstance(p3, ast.Tuple) and \
+                    not (hasattr(p3, '_real_tuple') and p3._real_tuple):
+                vals = p3.elts
+            p0 = ast.Dict(keys=[p1], values=vals, ctx=ast.Load(),
                           lineno=self.lineno, col_offset=self.col)
         elif lenp == 5:
             comps = p[4].get('comps', [])
