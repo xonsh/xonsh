@@ -49,6 +49,7 @@ def current_branch(cwd=None):
 
 default_prompt = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
                   '{cwd}{BOLD_RED}{curr_branch} {BOLD_BLUE}${NO_COLOR} ')
+default_title = '{user}@{hostname}: {cwd} | xonsh'
 
 def format_prompt(template=default_prompt):
     """Formats a xonsh prompt template string.
@@ -106,6 +107,7 @@ def multiline_prompt():
 BASE_ENV = {
     'INDENT': '    ',
     'PROMPT': default_prompt,
+    'TITLE': default_title,
     'MULTILINE_PROMPT': '.',
     'XONSHRC': os.path.expanduser('~/.xonshrc'),
     'XONSH_HISTORY_SIZE': 8128,
