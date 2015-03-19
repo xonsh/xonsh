@@ -138,8 +138,17 @@ class Execer(object):
                     continue
                 maxcol = lines[idx].find(';', last_error_col)
                 maxcol = None if maxcol < 0 else maxcol + 1
-                lines[idx] = subproc_toks(lines[idx], maxcol=maxcol,
-                                    returnline=True, lexer=self.parser.lexer)
+                sbpline = subproc_toks(lines[idx], returnline=True, 
+                                       maxcol=maxcol, lexer=self.parser.lexer)
+                if sbpline is None:
+                    # subporcess line had no valid tokens, likely because
+                    # it only contained a comment.
+                    del lines[idx]
+                    last_error_line = last_error_col = -1
+                    input = '\n'.join(lines)
+                    continue
+                else:
+                    lines[idx] = sbpline
                 last_error_col += 3
                 input = '\n'.join(lines)
         return tree
