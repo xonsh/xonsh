@@ -25,9 +25,9 @@ def cd(args, stdin=None):
         return '', 'cd: no such file or directory: {0}\n'.format(d)
     if not os.path.isdir(d):
         return '', 'cd: {0} is not a directory\n'.format(d)
-    env.update({'OLDPWD': os.getcwd()})
+    env['OLDPWD'] = os.getcwd()
     os.chdir(d)
-    env.update({'PWD': os.getcwd()})
+    env['PWD'] = os.getcwd()
     return None, None
 
 def exit(args, stdin=None):
