@@ -301,7 +301,7 @@ def _run_callable_subproc(alias, cmd, captured=True, prev_proc=None,
 
 def run_subproc(cmds, captured=True):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
-    which may be a list of command line arguments or a string, represnting
+    which may be a list of command line arguments or a string, representing
     a special connecting character.  For example::
 
         $ ls | grep wakka
@@ -419,7 +419,7 @@ def load_builtins(execer=None):
     BUILTINS_LOADED = True
 
 def unload_builtins():
-    """Removes the xonsh builtins from the Python builins, if the 
+    """Removes the xonsh builtins from the Python builtins, if the 
     BUILTINS_LOADED is True, sets BUILTINS_LOADED to False, and returns.
     """
     global BUILTINS_LOADED, ENV

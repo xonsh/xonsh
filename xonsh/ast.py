@@ -91,7 +91,7 @@ class CtxAwareTransformer(NodeTransformer):
 
     def ctxremove(self, value):
         """Removes a value the most recent context."""
-        for ctx in self.contexts[::-1]:
+        for ctx in reversed(self.contexts):
             if value in ctx:
                 ctx.remove(value)
                 break
@@ -121,7 +121,7 @@ class CtxAwareTransformer(NodeTransformer):
         if lname is None:
             return node
         inscope = False
-        for ctx in self.contexts[::-1]:
+        for ctx in reversed(self.contexts):
             if lname in ctx:
                 inscope = True 
                 break
@@ -135,11 +135,10 @@ class CtxAwareTransformer(NodeTransformer):
         return node
 
     def visit_Expr(self, node):
-        inscope = self.is_in_scope(node)
-        if inscope:
+        if self.is_in_scope(node):
             return node
-        newnode = self.try_subproc_toks(node)
-        return newnode
+        else:
+            return self.try_subproc_toks(node)
 
     def visit_Assign(self, node):
         ups = set()

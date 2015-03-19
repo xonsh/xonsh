@@ -30,18 +30,6 @@ else:
 
 DEFAULT_ENCODING = sys.getdefaultencoding()
 
-def subproc_line(line):
-    """Excapsulates a source code line in a uncaptured subprocess $[]."""
-    tok = line.split(None, 1)[0]
-    line = line.replace(tok, '$[' + tok, 1)
-    if line.endswith('\n'):
-        line += ']'
-    else:
-        len_nl = len(line)
-        no_nl = line.rstrip('\n')
-        line = no_nl + ']' + ('\n'*(len_nl-len(no_nl)))
-    return line
-
 def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     """Excapsulates tokens in a source code line in a uncaptured 
     subprocess $[] starting at a minimum column. If there are no tokens 
