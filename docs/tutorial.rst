@@ -111,6 +111,7 @@ details, but this *is* pretty cool:
     >>> f()
     'xonsh'
 
+For easier indentation, Shift+Tab will enter 4 spaces.
 And that about wraps it up for the basics section. It is just like Python.
 
 Environment Variables
