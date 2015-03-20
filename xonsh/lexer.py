@@ -138,6 +138,7 @@ class Lexer(object):
         'DOLLAR',                # $
         'QUESTION',              # ?
         'DOUBLE_QUESTION',       # ??
+        'AT_LPAREN',             # @(
         'DOLLAR_LPAREN',         # $(
         'DOLLAR_LBRACE',         # ${
         'DOLLAR_LBRACKET',       # $[
@@ -209,7 +210,13 @@ class Lexer(object):
     #
     # Ignore internal whitespace based on parentherical scope
     #
-    
+
+    def t_AT_LPAREN(self, t):
+        r'@\('
+        self.in_parens.append(True)
+        self.in_py_mode.append(True)
+        return t
+
     def t_DOLLAR_LPAREN(self, t):
         r'\$\('
         self.in_parens.append(True)

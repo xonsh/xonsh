@@ -2016,7 +2016,7 @@ class Parser(object):
                         | string_literal
                         | REGEXPATH
                         | DOLLAR NAME
-                        | DOLLAR_LBRACE test RBRACE
+                        | AT_LPAREN test RPAREN
                         | DOLLAR_LPAREN subproc RPAREN
                         | DOLLAR_LBRACKET subproc RBRACKET
         """
@@ -2044,7 +2044,7 @@ class Parser(object):
         elif lenp == 3:
             p0 = self._envvar_by_name(p[2], lineno=self.lineno, col=self.col)
             p0._cliarg_action = 'ensure_list'
-        elif p1 == '${':
+        elif p1 == '@(':
             l = self.lineno
             c = self.col
             n = ast.Name("str", ast.Load(), lineno=l, col_offset=c)
