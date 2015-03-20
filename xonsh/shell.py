@@ -172,12 +172,12 @@ class Shell(Cmd):
         term = env.get('TERM', None)
         if term is None or term == 'linux':
             return
-        if 'XONSH_TITLE' in env:
-            t = env['XONSH_TITLE']
+        if 'TITLE' in env:
+            t = env['TITLE']
             if callable(t):
                 t = t()
         else:
-            t = '{user}@{hostname}: {cwd} | xonsh'
+            return
         t = format_prompt(t)
         sys.stdout.write("\x1b]2;{0}\x07".format(t))
 
