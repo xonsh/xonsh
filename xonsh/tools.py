@@ -44,7 +44,8 @@ def subproc_line(line):
 
 def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     """Excapsulates tokens in a source code line in a uncaptured 
-    subprocess $[] starting at a minimum column.
+    subprocess $[] starting at a minimum column. If there are no tokens 
+    (ie in a comment line) this returns None.
     """
     if lexer is None:
         lexer = builtins.__xonsh_execer__.parser.lexer
@@ -66,6 +67,8 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
         if tok.type == 'NEWLINE':
             break
     else:
+        if len(toks) == 0:
+            return  # handle comment lines
         if toks[-1].type == 'SEMI':
             toks.pop()
         tok = toks[-1]
@@ -75,6 +78,8 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
         else:
             el = line[pos:].split('#')[0].rstrip()
             end_offset = len(el)
+    if len(toks) == 0:
+        return  # handle comment lines
     beg, end = toks[0].lexpos, (toks[-1].lexpos + end_offset)
     rtn = '$[' + line[beg:end] + ']'
     if returnline:
@@ -196,7 +201,7 @@ class _RedirectStream:
 
 
 class redirect_stdout(_RedirectStream):
-    """Context manager for temporarily redirecting stdout to another file.
+    """Context manager for temporarily redirecting stdout to another file::
 
         # How to send help() to stderr
         with redirect_stdout(sys.stderr):
@@ -206,6 +211,8 @@ class redirect_stdout(_RedirectStream):
         with open('help.txt', 'w') as f:
             with redirect_stdout(f):
                 help(pow)
+
+    Mostly for backwards compatibility. 
     """
     _stream = "stdout"
 
@@ -215,6 +222,7 @@ class redirect_stderr(_RedirectStream):
     _stream = "stderr"
 
 def suggest_commands(cmd, env, aliases):
+    """Suggests alternative commands given an environment and aliases."""
     if(env.get('SUGGEST_COMMANDS', True)):
         threshold = env.get('SUGGEST_ERROR_THRESHOLD', 3)
         max_sugg = env.get('SUGGEST_MAX_NUM', 5)
@@ -247,7 +255,7 @@ def suggest_commands(cmd, env, aliases):
 # Modified from Public Domain code, by Magnus Lie Hetland
 # from http://hetland.org/coding/python/levenshtein.py 
 def levenshtein(a, b, max_dist=float('inf')):
-    "Calculates the Levenshtein distance between a and b."
+    """Calculates the Levenshtein distance between a and b."""
     n, m = len(a), len(b)
     
     if abs(n-m) > max_dist:
@@ -271,9 +279,10 @@ def levenshtein(a, b, max_dist=float('inf')):
     return current[n]
 
 def suggestion_sort_helper(x, y):
+    """Sorts two suggestions."""
     x = x.lower()
     y = y.lower()
-    lendiff = len(x)+len(y)
+    lendiff = len(x) + len(y)
     inx = len([i for i in x if i not in y])
     iny = len([i for i in y if i not in x])
     return lendiff + inx + iny

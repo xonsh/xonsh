@@ -5,6 +5,8 @@ import platform
 import builtins
 import subprocess
 from argparse import ArgumentParser
+import shlex
+from warnings import warn
 
 def cd(args, stdin=None):
     """Changes the directory.
@@ -12,18 +14,24 @@ def cd(args, stdin=None):
     If no directory is specified (i.e. if `args` is None) then this
     changes to the current user's home directory.
     """
+    env = builtins.__xonsh_env__
+    cur_oldpwd = env.get('OLDPWD', os.getcwd())
     if len(args) == 0:
         d = os.path.expanduser('~')
     elif len(args) == 1:
         d = args[0]
+        if d == '-':
+            d = cur_oldpwd
     else:
         return '', 'cd takes 0 or 1 arguments, not {0}\n'.format(len(args))
     if not os.path.exists(d):
         return '', 'cd: no such file or directory: {0}\n'.format(d)
     if not os.path.isdir(d):
         return '', 'cd: {0} is not a directory\n'.format(d)
+
+    env['OLDPWD'] = os.getcwd()
     os.chdir(d)
-    builtins.__xonsh_env__['PWD'] = os.getcwd()
+    env['PWD'] = os.getcwd()
     return None, None
 
 pushd_parser = ArgumentParser(description="pushd: push onto the directory stack")
@@ -67,6 +75,29 @@ def source_bash(args, stdin=None):
             continue  # no change from original
         env[k] = v
     return
+
+def bash_aliases():
+    """Computes a dictionary of aliases based on Bash's aliases."""
+    try:
+        s = subprocess.check_output(['bash', '-i'], input='alias',
+                                    stderr=subprocess.PIPE,
+                                    universal_newlines=True)
+    except subprocess.CalledProcessError:
+        s = ''
+    items = [line.split('=', 1) for line in s.splitlines() if '=' in line]
+    aliases = {}
+    for key, value in items:
+        try:
+            key = key[6:]
+            value = value.strip('\'')
+            value = shlex.split(value)
+        except ValueError as exc:
+            warn('could not parse Bash alias "{0}": {1!r}'.format(key, exc),
+                 RuntimeWarning)
+            continue
+        aliases[key] = value
+    return aliases
+
 
 DEFAULT_ALIASES = {
     'cd': cd,

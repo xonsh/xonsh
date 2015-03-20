@@ -119,15 +119,17 @@ class Execer(object):
                 parsed = True
             except SyntaxError as e:
                 if (e.loc is None) or (last_error_line == e.loc.lineno and 
-                                       last_error_col == e.loc.column):
+                                      ((last_error_col == e.loc.column + 1) or
+                                       (last_error_col == e.loc.column))):
                     raise
                 last_error_col = e.loc.column
                 last_error_line = e.loc.lineno
                 idx = last_error_line - 1
                 lines = input.splitlines()
+                line = lines[idx]
                 if input.endswith('\n'):
                     lines.append('')
-                if len(lines[idx].strip()) == 0:
+                if len(line.strip()) == 0:
                     # whitespace only lines are not valid syntax in Python's
                     # interactive mode='single', who knew?! Just ignore them.
                     # this might cause actual sytax errors to have bad line 
@@ -136,10 +138,19 @@ class Execer(object):
                     last_error_line = last_error_col = -1
                     input = '\n'.join(lines)
                     continue
-                maxcol = lines[idx].find(';', last_error_col)
+                maxcol = line.find(';', last_error_col)
                 maxcol = None if maxcol < 0 else maxcol + 1
-                lines[idx] = subproc_toks(lines[idx], maxcol=maxcol,
-                                    returnline=True, lexer=self.parser.lexer)
+                sbpline = subproc_toks(line, returnline=True, 
+                                       maxcol=maxcol, lexer=self.parser.lexer)
+                if sbpline is None:
+                    # subporcess line had no valid tokens, likely because
+                    # it only contained a comment.
+                    del lines[idx]
+                    last_error_line = last_error_col = -1
+                    input = '\n'.join(lines)
+                    continue
+                else:
+                    lines[idx] = sbpline
                 last_error_col += 3
                 input = '\n'.join(lines)
         return tree

@@ -116,6 +116,11 @@ def test_subproc_hello_mom_second():
     obs = subproc_toks(s, lexer=LEXER, mincol=len(fst), returnline=True)
     assert_equal(exp, obs)
 
+def test_subproc_toks_comment():
+    exp = None
+    obs = subproc_toks('# I am a comment', lexer=LEXER, returnline=True)
+    assert_equal(exp, obs)
+
 
 if __name__ == '__main__':
     nose.runmodule()
