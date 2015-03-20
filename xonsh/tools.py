@@ -212,7 +212,7 @@ class redirect_stderr(_RedirectStream):
 def suggest_commands(cmd, env, aliases):
     """Suggests alternative commands given an environment and aliases."""
     if(env.get('SUGGEST_COMMANDS', True)):
-        threshold = env.get('SUGGEST_ERROR_THRESHOLD', 3)
+        threshold = env.get('SUGGEST_THRESHOLD', 3)
         max_sugg = env.get('SUGGEST_MAX_NUM', 5)
         if max_sugg < 0:
             max_sugg = float('inf')
