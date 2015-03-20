@@ -9,7 +9,7 @@ from collections import Iterable, Sequence, Mapping
 
 from xonsh import ast
 from xonsh.parser import Parser
-from xonsh.tools import subproc_line, subproc_toks
+from xonsh.tools import subproc_toks
 from xonsh.built_ins import load_builtins, unload_builtins
 
 class Execer(object):
@@ -46,11 +46,11 @@ class Execer(object):
             ctx = set(ctx.keys())
 
         # Parsing actually happens in a couple of phases. The first is a
-        # shortcut for a context-free parser. Nomrally, all subprocess
+        # shortcut for a context-free parser. Normally, all subprocess
         # lines should be wrapped in $(), to indicate that they are a 
         # subproc. But that would be super annoying. Unfortnately, Python
         # mode - after indentation - is whitespace agnostic while, using 
-        # the Python token, subproc mode is whitepsace aware. That is to say,
+        # the Python token, subproc mode is whitespace aware. That is to say,
         # in Python mode "ls -l", "ls-l", and "ls - l" all parse to the 
         # same AST because whitespace doesn't matter to the minus binary op. 
         # However, these phases all have very different meaning in subproc
@@ -67,7 +67,7 @@ class Execer(object):
         # because the "ls -l" is valid Python. The only way that we know 
         # it is not actually Python is by checking to see if the first token
         # (ls) is part of the execution context. If it isn't, then we will 
-        # assume that this line is suppossed to be a subprocess line, assuming
+        # assume that this line is supposed to be a subprocess line, assuming
         # it also is valid as a subprocess line.
         tree = self.ctxtransformer.ctxvisit(tree, input, ctx, mode=mode)
         return tree
@@ -118,9 +118,8 @@ class Execer(object):
                             mode=mode, debug_level=self.debug_level)
                 parsed = True
             except SyntaxError as e:
-                if (e.loc is None) or (last_error_line == e.loc.lineno and 
-                                      ((last_error_col == e.loc.column + 1) or
-                                       (last_error_col == e.loc.column))):
+                if (e.loc is None) or (last_error_line == e.loc.lineno and
+                                       last_error_col in (e.loc.column + 1, e.loc.column)):
                     raise
                 last_error_col = e.loc.column
                 last_error_line = e.loc.lineno
@@ -143,7 +142,7 @@ class Execer(object):
                 sbpline = subproc_toks(line, returnline=True, 
                                        maxcol=maxcol, lexer=self.parser.lexer)
                 if sbpline is None:
-                    # subporcess line had no valid tokens, likely because
+                    # subprocess line had no valid tokens, likely because
                     # it only contained a comment.
                     del lines[idx]
                     last_error_line = last_error_col = -1

@@ -1901,7 +1901,7 @@ class Parser(object):
         p1, p2 = p[1], p[2]
         col = self.col
         lineno = self.lineno
-        if lenp == 3:
+        if lenp == 3: # $NAME
             p0 = self._envvar_by_name(p2, lineno=lineno, col=col)
         elif p1 == '${':
             xenv = self._xenv(lineno=lineno, col=col)
@@ -1919,7 +1919,7 @@ class Parser(object):
         return p0
 
     def _xenv(self, lineno=lineno, col=col):
-        """Creates a new xonsh env referece."""
+        """Creates a new xonsh env reference."""
         return ast.Name(id='__xonsh_env__', ctx=ast.Load(), lineno=lineno,
                         col_offset=col)
 
