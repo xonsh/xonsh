@@ -211,34 +211,38 @@ class redirect_stderr(_RedirectStream):
 
 def suggest_commands(cmd, env, aliases):
     """Suggests alternative commands given an environment and aliases."""
-    if(env.get('SUGGEST_COMMANDS', True)):
+    if env.get('SUGGEST_COMMANDS', True):
         threshold = env.get('SUGGEST_THRESHOLD', 3)
         max_sugg = env.get('SUGGEST_MAX_NUM', 5)
         if max_sugg < 0:
             max_sugg = float('inf')
+
         suggested = {}
-        path = env.get('PATH',[])
         for a in builtins.aliases:
             if a not in suggested and levenshtein(a, cmd, threshold) < threshold:
                 suggested[a] = 'Alias'
-        for d in path:
-            if os.path.isdir(d):
-                for f in os.listdir(d):
-                    if f not in suggested and levenshtein(f, cmd, threshold) < threshold:
-                        fname = os.path.join(d,f)
-                        suggested[f] = 'Command ({0})'.format(fname)
+
+        for d in filter(os.path.isdir, env.get('PATH', [])):
+            for f in os.listdir(d):
+                if f not in suggested and levenshtein(f, cmd, threshold) < threshold:
+                    fname = os.path.join(d,f)
+                    suggested[f] = 'Command ({0})'.format(fname)
         suggested = OrderedDict(sorted(suggested.items(),
                                 key=lambda x: suggestion_sort_helper(x[0], cmd)))
         num = min(len(suggested), max_sugg)
-        out = []
-        if num>1:
-            out.append('Did you mean one of the following?')
-        elif num>0:
-            out.append('Did you mean the following?')
-        for i in range(num):
-            k,v = suggested.popitem(False)
-            out.append('    {0}: {1}'.format(k,v))
-        return '\n'.join(out)
+        
+        if num == 0:
+            return ''
+        else:
+            tips = 'Did you mean {}the following?'.format('' if num == 1 else 'one of ')
+            
+            items = list(suggested.popitem(False) for _ in range(num))
+            length = max(len(key) for key, _ in items) + 2
+            alternatives = '\n'.join('    {: <{}} {}'.format(key+":", length, val)
+                                     for key, val in items)
+            
+            return '{}\n{}\n'.format(tips, alternatives)
+
 
 # Modified from Public Domain code, by Magnus Lie Hetland
 # from http://hetland.org/coding/python/levenshtein.py 

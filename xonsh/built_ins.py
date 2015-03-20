@@ -140,13 +140,11 @@ class Aliases(MutableMapping):
         val = self._raw[key]
         if isinstance(val, string_types):
             ctx = {}
-            val = builtins.evalx(val, glbs=ctx, locs=ctx)
+            return builtins.evalx(val, glbs=ctx, locs=ctx)
         elif isinstance(val, Iterable) or callable(val):
-            pass
+            return val
         else:
-            msg = 'alias of {0!r} has an inappropriate type: {1!r}'
-            raise TypeError(msg.format(key, val))
-        return val
+            raise TypeError('alias of {!r} has an inappropriate type: {!r}'.format(key, val))
 
     #
     # Mutable mapping interface
@@ -194,9 +192,7 @@ def expand_path(s):
     global ENV
     if ENV is not None:
         ENV.replace_env()
-    s = os.path.expandvars(s)
-    s = os.path.expanduser(s)
-    return s
+    return os.path.expanduser(os.path.expandvars(s))
 
 
 def reglob(path, parts=None, i=None):
@@ -253,7 +249,7 @@ WRITER_MODES = {'>': 'w', '>>': 'a'}
 
 ProcProxy = namedtuple('ProcProxy', ['stdout', 'stderr'])
 
-def _run_callable_subproc(alias, cmd, captured=True, prev_proc=None, 
+def _run_callable_subproc(alias, args, captured=True, prev_proc=None, 
                           stdout=None):
     """Helper for running callables as a subprocess."""
     # compute stdin for callable
@@ -271,7 +267,7 @@ def _run_callable_subproc(alias, cmd, captured=True, prev_proc=None,
         # handles captured mode
         new_stdout, new_stderr = StringIO(), StringIO()
         with redirect_stdout(new_stdout), redirect_stderr(new_stderr):
-            rtn = alias(cmd[1:], stdin=stdin)
+            rtn = alias(args, stdin=stdin)
         proxy_stdout = new_stdout.getvalue()
         proxy_stderr = new_stderr.getvalue()
         if isinstance(rtn, str):
@@ -281,10 +277,10 @@ def _run_callable_subproc(alias, cmd, captured=True, prev_proc=None,
                 proxy_stdout += rtn[0]
             if rtn[1]:
                 proxy_stderr += rtn[1]
-        proc = ProcProxy(proxy_stdout, proxy_stderr)
+        return ProcProxy(proxy_stdout, proxy_stderr)
     else:
         # handles uncaptured mode
-        rtn = alias(cmd[1:], stdin=stdin)
+        rtn = alias(args, stdin=stdin)
         rtnout, rtnerr = None, None
         if isinstance(rtn, str):
             rtnout = rtn
@@ -296,8 +292,7 @@ def _run_callable_subproc(alias, cmd, captured=True, prev_proc=None,
             if rtn[1]:
                 rtnerr = rtn[1]
                 sys.stderr.write(rtn[1])
-        proc = ProcProxy(rtnout, rtnerr)
-    return proc
+        return ProcProxy(rtnout, rtnerr)
 
 def run_subproc(cmds, captured=True):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
@@ -338,7 +333,7 @@ def run_subproc(cmds, captured=True):
         if alias is None:
             aliased_cmd = cmd
         elif callable(alias):
-            prev_proc = _run_callable_subproc(alias, cmd, captured=captured, 
+            prev_proc = _run_callable_subproc(alias, cmd[1:], captured=captured, 
                             prev_proc=prev_proc, stdout=stdout)
             continue
         else:
@@ -357,7 +352,7 @@ def run_subproc(cmds, captured=True):
         except FileNotFoundError:
             cmd = aliased_cmd[0]
             print('xonsh: subprocess mode: command not found: {0}'.format(cmd))
-            print(suggest_commands(cmd, ENV, builtins.aliases))
+            print(suggest_commands(cmd, ENV, builtins.aliases), end='')
             return
         if prev_is_proxy:
             proc.communicate(input=prev_proc.stdout)
