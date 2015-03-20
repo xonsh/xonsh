@@ -337,31 +337,6 @@ still query the environment with ``$NAME`` variables.
     >>> $(echo $HOME)
     '/home/snail\n'
 
-The ``${<expr>}`` operator from above will still execute arbitrary
-Python code in subprocess mode. So in that way it is the same as before.  
-However, it no longer looks up the results in the environment. Instead, 
-the result is appended to the subprocess command list. For this reason, 
-the expression should evaluate to a string.  For example, 
-
-.. code-block:: bash
-
-    >>> x = 'xonsh'
-    >>> y = 'party'
-    >>> $(echo ${x + ' ' + y})
-    'xonsh party\n'
-
-If we remove the capturing subprocess, the result will be displayed 
-normally:
-
-.. code-block:: bash
-
-    >>> echo ${x + ' ' + y}
-    xonsh party
-
-Thus, ``${}`` allows us to create complex commands in Python-mode and then 
-feed them to a subprocess as needed.
-
-
 Uncaptured Subprocess with ``$[]``
 ===================================
 Uncaptured subprocess are denoted with the ``$[<expr>]`` operator. They are 
@@ -384,20 +359,63 @@ Previously when we automatically entered subprocess-mode, uncaptured
 subprocesses were used.  Thus ``ls -l`` and ``$[ls -l]`` are usually 
 equivalent.
 
-
-Nesting Subprocesses
-=====================================
-Though I am begging you not to abuse this, it is possible to nest all of the
-dollar sign operators that we have seen so far.  An instance of ``ls -l``
-that is on the wrong side of the border of the absurd is shown below:
+Python Evaluation with ``@()``
+===============================
+    
+The ``@(<expr>)`` operator from will evaluate arbitrary Python code in
+subprocess mode, and the result will be appended to the subprocess command
+list. The result is automatically converted to a string.  For example, 
 
 .. code-block:: bash
 
-    >>> $[$(echo ls) ${'-' + $(echo l).strip()}]
+    >>> x = 'xonsh'
+    >>> y = 'party'
+    >>> echo @(x + ' ' + y)
+    xonsh party
+    >>> echo @(2+2)
+    4
+
+This syntax can be used inside of a captured or uncaptured subprocess, and can
+be used to generate any of the tokens in the subprocess command list.
+
+.. code-block:: python
+
+    >>> out = $(echo @(x + ' ' + y))
+    >>> out
+    'xonsh party\n'
+    >>> @("ech" + "o") "hey"
+    hey
+
+Thus, ``@()`` allows us to create complex commands in Python-mode and then 
+feed them to a subprocess as needed.  For example:
+
+.. code-block:: python
+
+    for i in range(20):
+        $[touch @('file%02d' % i)]
+
+
+Nesting Subprocesses
+=====================================
+Though I am begging you not to abuse this, it is possible to nest the
+subprocess operators that we have seen so far (``$()``, ``$[]``, ``${}``,
+``@()``).  An instance of ``ls -l`` that is on the wrong side of the border of
+the absurd is shown below:
+
+.. code-block:: bash
+
+    >>> $[$(echo ls) @('-' + $(echo l).strip())]
     total 0
     -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
 
 With great power, and so forth...
+
+.. note:: Nesting these subprocess operators inside of ``$()`` and/or ``$[]``
+          works, because the contents of those operators are executed in
+          subprocess mode.  Since ``@()`` and ``${}`` run their contents in
+          Python mode, it is not possible to nest other subprocess operators
+          inside of them.
+
 
 
 Pipes with ``|``
