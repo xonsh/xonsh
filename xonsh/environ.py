@@ -53,7 +53,7 @@ def current_branch(cwd=None):
             s = s.strip()
             if s != '':
                 branch = s
-        except:
+        except subprocess.CalledProcessError:
             pass
 
     return branch
