@@ -51,7 +51,7 @@ def current_branch(cwd=None):
                     stderr=subprocess.PIPE, cwd=cwd,
                     universal_newlines=True) 
             s = s.strip()
-            if s != '':
+            if len(s) > 0:
                 branch = s
         except subprocess.CalledProcessError:
             pass
