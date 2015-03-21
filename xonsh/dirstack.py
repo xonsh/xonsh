@@ -13,7 +13,16 @@ def pushd(args, stdin=None):
     except SystemExit:
         return None, None
 
-    pwd = builtins.__xonsh_env__['PWD']
+    env = builtins.__xonsh_env__
+
+    pwd = env['PWD']
+
+    if env.get('PUSHD_MINUS', False):
+        BACKWARD = '-'
+        FORWARD = '+'
+    else:
+        BACKWARD = '+'
+        FORWARD = '-'
 
     if args.dir is None:
         try:
@@ -33,12 +42,12 @@ def pushd(args, stdin=None):
         if num > len(DIRSTACK):
             e = 'Too few elements in dirstack ({0} elements)\n'
             return None, e.format(len(DIRSTACK))
-        elif args.dir.startswith('+'):
+        elif args.dir.startswith(FORWARD):
             if num == len(DIRSTACK):
                 new_pwd = None
             else:
                 new_pwd = DIRSTACK.pop(len(DIRSTACK)-1-num)
-        elif args.dir.startswith('-'):
+        elif args.dir.startswith(BACKWARD):
             if num == 0:
                 new_pwd = None
             else:
@@ -57,7 +66,7 @@ def pushd(args, stdin=None):
         if e is not None:
             return None, e
 
-    if not builtins.__xonsh_env__.get('QUIET_PUSHD', False):
+    if not builtins.__xonsh_env__.get('PUSHD_SILENT', False):
         return dirs([], None)
 
     return None, None
@@ -70,6 +79,16 @@ def popd(args, stdin=None):
         args = pushd_parser.parse_args(args)
     except SystemExit:
         return None, None
+
+    env = builtins.__xonsh_env__
+
+    if env.get('PUSHD_MINUS', False):
+        BACKWARD = '-'
+        FORWARD = '+'
+    else:
+        BACKWARD = '-'
+        FORWARD = '+'
+
 
     if args.dir is None:
         try:
@@ -87,13 +106,13 @@ def popd(args, stdin=None):
         if num > len(DIRSTACK):
             e = 'Too few elements in dirstack ({0} elements)\n'
             return None, e.format(len(DIRSTACK))
-        elif args.dir.startswith('+'):
+        elif args.dir.startswith(FORWARD):
             if num == len(DIRSTACK):
                 new_pwd = DIRSTACK.pop(0)
             else:
                 new_pwd = None
                 DIRSTACK.pop(len(DIRSTACK)-1-num)
-        elif args.dir.startswith('-'):
+        elif args.dir.startswith(BACKWARD):
             if num == 0:
                 new_pwd = DIRSTACK.pop(0)
             else:
@@ -112,7 +131,7 @@ def popd(args, stdin=None):
         if e is not None:
             return None, e
 
-    if not builtins.__xonsh_env__.get('QUIET_PUSHD', False):
+    if not builtins.__xonsh_env__.get('PUSHD_SILENT', False):
         return dirs([], None)
 
     return None, None
@@ -126,6 +145,15 @@ def dirs(args, stdin=None):
         args = dirs_parser.parse_args(args)
     except SystemExit:
         return None, None
+
+    env = builtins.__xonsh_env__
+
+    if env.get('PUSHD_MINUS', False):
+        BACKWARD = '-'
+        FORWARD = '+'
+    else:
+        BACKWARD = '-'
+        FORWARD = '+'
 
     if args.clear:
         dirstack = []
@@ -160,9 +188,9 @@ def dirs(args, stdin=None):
         if num >= len(o):
             e = 'Too few elements in dirstack ({0} elements)\n'
             return None, e.format(len(o))
-        if N.startswith('-'):
+        if N.startswith(BACKWARD):
             idx = num
-        elif N.startswith('+'):
+        elif N.startswith(FORWARD):
             idx = len(o)-1-num
         else:
             e = 'Invalid argument to dirs: {0}\n'
