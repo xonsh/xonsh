@@ -44,6 +44,18 @@ def current_branch(cwd=None):
         except subprocess.CalledProcessError:
             continue
 
+    # fall back to using the git binary if the above failed
+    if branch is None:
+        try:
+            s = subprocess.check_output(['git', 'rev-parse','--abbrev-ref', 'HEAD'],
+                    stderr=subprocess.PIPE, cwd=cwd,
+                    universal_newlines=True) 
+            s = s.strip()
+            if len(s) > 0:
+                branch = s
+        except subprocess.CalledProcessError:
+            pass
+
     return branch
 
 
