@@ -105,7 +105,6 @@ def multiline_prompt():
 
 BASE_ENV = {
     'INDENT': '    ',
-    'XONSH_DIRSTACK': None,
     'PROMPT': default_prompt,
     'MULTILINE_PROMPT': '.',
     'XONSHRC': os.path.expanduser('~/.xonshrc'),
@@ -162,8 +161,6 @@ def default_env(env=None):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence
     ctx = dict(BASE_ENV)
-    if ctx.get('XONSH_DIRSTACK',None) is None:
-        ctx['XONSH_DIRSTACK'] = []
     ctx.update(os.environ)
     ctx.update(bash_env())
     if env is not None:
