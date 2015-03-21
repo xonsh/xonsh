@@ -5,6 +5,8 @@ import sys
 from ply import lex
 from ply.lex import TOKEN
 
+def anyof(*regexes):
+    return '(' + '|'.join(regexes) + ')'
 
 class Lexer(object):
     """Implements a lexer for the xonsh language."""
@@ -158,12 +160,16 @@ class Lexer(object):
     bin_literal = '0[bB]?[0-1]+'
 
     # string literals
-    single_string_literal = '(?:\'(?:[^\'\\n\\r\\\\]|(?:\'\')|(?:\\\\x[0-9a-fA-F]+)|(?:\\\\.))*\')'
-    double_string_literal = '(?:"(?:[^"\\n\\r\\\\]|(?:"")|(?:\\\\x[0-9a-fA-F]+)|(?:\\\\.))*")'
-    string_literal = single_string_literal + '|' + double_string_literal
-    raw_string_literal = 'r' + single_string_literal + '|r' + double_string_literal
-    unicode_literal = 'u' + single_string_literal + '|u' + double_string_literal
-    bytes_literal = 'b' + single_string_literal + '|b' + double_string_literal
+    triple_single_string = r"'''((\\(.|\n))|([^'\\])|('(?!''))|\n)*'''"
+    triple_double_string = r'"""((\\(.|\n))|([^"\\])|("(?!""))|\n)*"""'
+    single_single_string = r"'((\\(.|\n))|([^'\\]))*'"
+    single_double_string = r'"((\\(.|\n))|([^"\\]))*"'
+    triple_string = anyof(triple_single_string, triple_double_string) 
+    single_string = anyof(single_single_string, single_double_string)
+    string_literal = anyof(triple_string, single_string)
+    raw_string_literal = '[Rr]' + string_literal
+    unicode_literal = '[Uu]' + string_literal 
+    bytes_literal = '[Bb]' + string_literal
 
     # floating point
     float_exponent = r"(?:[eE][-+]?[0-9]+)"
