@@ -437,6 +437,7 @@ def unload_builtins():
              '__xonsh_pyexit__', '__xonsh_pyquit__', 
              '__xonsh_subproc_captured__', '__xonsh_subproc_uncaptured__', 
              '__xonsh_execer__', 'evalx', 'execx', 'compilex', 
+             'default_aliases'
              ]
     for name in names:
         if hasattr(builtins, name):
