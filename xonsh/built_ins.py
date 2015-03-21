@@ -414,7 +414,7 @@ def load_builtins(execer=None):
     builtins.evalx = None if execer is None else execer.eval
     builtins.execx = None if execer is None else execer.exec
     builtins.compilex = None if execer is None else execer.compile
-    builtins.aliases = Aliases(DEFAULT_ALIASES)
+    builtins.default_aliases = builtins.aliases = Aliases(DEFAULT_ALIASES)
     builtins.aliases.update(bash_aliases())
     BUILTINS_LOADED = True
 

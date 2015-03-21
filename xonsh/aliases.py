@@ -8,6 +8,8 @@ from argparse import ArgumentParser
 import shlex
 from warnings import warn
 
+from xonsh.dirstack import dirs, pushd, popd
+
 def cd(args, stdin=None):
     """Changes the directory.
 
@@ -32,18 +34,6 @@ def cd(args, stdin=None):
     env['OLDPWD'] = os.getcwd()
     os.chdir(d)
     env['PWD'] = os.getcwd()
-    return None, None
-
-pushd_parser = ArgumentParser(description="pushd: push onto the directory stack")
-def pushd(args, stdin=None):
-    return None, None
-
-popd_parser = ArgumentParser(description="popd: pop from the directory stack")
-def popd(args, stdin=None):
-    return None, None
-
-dirs_parser = ArgumentParser(description="dirs: view and manipulate the directory stack")
-def dirs(args, stdin=None):
     return None, None
 
 def exit(args, stdin=None):
