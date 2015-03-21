@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 
 DIRSTACK = []
 
+
 def pushd(args, stdin=None):
     global DIRSTACK
 
@@ -18,17 +19,20 @@ def pushd(args, stdin=None):
         try:
             new_pwd = DIRSTACK.pop(0)
         except:
-            return None, 'pushd: Directory stack is empty\n'
+            e = 'pushd: Directory stack is empty\n'
+            return None, e
     elif os.path.isdir(args.dir):
         new_pwd = args.dir
     else:
         try:
             num = int(args.dir[1:])
-            assert num >=0
+            assert num >= 0
         except:
-            return None, 'Invalid argument to pushd: {0}\n'.format(args.dir)
+            e = 'Invalid argument to pushd: {0}\n'
+            return None, e.format(args.dir)
         if num > len(DIRSTACK):
-            return None, 'Too few elements in dirstack ({0} elements)\n'.format(len(DIRSTACK))
+            e = 'Too few elements in dirstack ({0} elements)\n'
+            return None, e.format(len(DIRSTACK))
         elif args.dir.startswith('+'):
             if num == len(DIRSTACK):
                 new_pwd = None
@@ -40,7 +44,8 @@ def pushd(args, stdin=None):
             else:
                 new_pwd = DIRSTACK.pop(num-1)
         else:
-            return None, 'Invalid argument to pushd: {0}\n'.format(args.dir)
+            e = 'Invalid argument to pushd: {0}\n'
+            return None, e.format(args.dir)
     if new_pwd is not None:
         DIRSTACK.insert(0, os.path.expanduser(pwd))
 
@@ -57,6 +62,7 @@ def pushd(args, stdin=None):
 
     return None, None
 
+
 def popd(args, stdin=None):
     global DIRSTACK
 
@@ -69,15 +75,18 @@ def popd(args, stdin=None):
         try:
             new_pwd = DIRSTACK.pop(0)
         except:
-            return None, 'popd: Directory stack is empty\n'
+            e = 'popd: Directory stack is empty\n'
+            return None, e
     else:
         try:
             num = int(args.dir[1:])
-            assert num >=0
+            assert num >= 0
         except:
-            return None, 'Invalid argument to popd: {0}\n'.format(args.dir)
+            e = 'Invalid argument to popd: {0}\n'
+            return None, e.format(args.dir)
         if num > len(DIRSTACK):
-            return None, 'Too few elements in dirstack ({0} elements)\n'.format(len(DIRSTACK))
+            e = 'Too few elements in dirstack ({0} elements)\n'
+            return None, e.format(len(DIRSTACK))
         elif args.dir.startswith('+'):
             if num == len(DIRSTACK):
                 new_pwd = DIRSTACK.pop(0)
@@ -91,8 +100,9 @@ def popd(args, stdin=None):
                 new_pwd = None
                 DIRSTACK.pop(num-1)
         else:
-            return None, 'Invalid argument to popd: {0}\n'.format(args.dir)
-    
+            e = 'Invalid argument to popd: {0}\n'
+            return None, e.format(args.dir)
+
     if new_pwd is not None:
         o = None
         e = None
@@ -106,6 +116,7 @@ def popd(args, stdin=None):
         return dirs([], None)
 
     return None, None
+
 
 def dirs(args, stdin=None):
     global DIRSTACK
@@ -142,53 +153,64 @@ def dirs(args, stdin=None):
     if N is not None:
         try:
             num = int(N[1:])
-            assert num >=0
+            assert num >= 0
         except:
-            return None, 'Invalid argument to dirs: {0}\n'.format(N)
+            e = 'Invalid argument to dirs: {0}\n'
+            return None, e.format(N)
         if num >= len(o):
-            return None, 'Too few elements in dirstack ({0} elements)\n'.format(len(o))
+            e = 'Too few elements in dirstack ({0} elements)\n'
+            return None, e.format(len(o))
         if N.startswith('-'):
             idx = num
         elif N.startswith('+'):
-            idx  = len(o)-1-num
+            idx = len(o)-1-num
         else:
-            return None, 'Invalid argument to dirs: {0}\n'.format(N)
+            e = 'Invalid argument to dirs: {0}\n'
+            return None, e.format(N)
 
         out = o[idx]
 
     return out+'\n', None
 
 
-pushd_parser = ArgumentParser(description="pushd: push onto the directory stack")
-pushd_parser.add_argument('-n',
-        dest='cd',
-        help='Suppresses the normal change of directory when adding directories to the stack, so that only the stack is manipulated.',
-        action='store_false')
+pushd_parser = ArgumentParser(prog="pushd")
 pushd_parser.add_argument('dir', nargs='?')
+pushd_parser.add_argument('-n',
+                          dest='cd',
+                          help='Suppresses the normal change of directory when'
+                          ' adding directories to the stack, so that only the'
+                          ' stack is manipulated.',
+                          action='store_false')
 
-popd_parser = ArgumentParser(description="popd: pop from the directory stack")
-popd_parser.add_argument('-n',
-        dest='cd',
-        help='Suppresses the normal change of directory when adding directories to the stack, so that only the stack is manipulated.',
-        action='store_false')
+popd_parser = ArgumentParser(prog="popd")
 popd_parser.add_argument('dir', nargs='?')
+popd_parser.add_argument('-n',
+                         dest='cd',
+                         help='Suppresses the normal change of directory when'
+                         ' adding directories to the stack, so that only the'
+                         ' stack is manipulated.',
+                         action='store_false')
 
-
-dirs_parser = ArgumentParser(description="dirs: view and manipulate the directory stack", add_help=False)
-dirs_parser.add_argument('-c',
-        dest='clear',
-        help='Clears the directory stack by deleting all of the entries',
-        action='store_true')
-dirs_parser.add_argument('-p',
-        dest='print_long',
-        help='Print the directory stack with one entry per line.',
-        action='store_true')
-dirs_parser.add_argument('-v',
-        dest='verbose',
-        help='Print the directory stack with one entry per line, prefixing each entry with its index in the stack.',
-        action='store_true')
-dirs_parser.add_argument('-l',
-        dest='long',
-        help='Produces a longer listing; the default listing format uses a tilde to denote the home directory.',
-        action='store_true')
+dirs_parser = ArgumentParser(prog="dirs")
 dirs_parser.add_argument('N', nargs='?')
+dirs_parser.add_argument('-c',
+                         dest='clear',
+                         help='Clears the directory stack by deleting all of'
+                         ' the entries.',
+                         action='store_true')
+dirs_parser.add_argument('-p',
+                         dest='print_long',
+                         help='Print the directory stack with one entry per'
+                         ' line.',
+                         action='store_true')
+dirs_parser.add_argument('-v',
+                         dest='verbose',
+                         help='Print the directory stack with one entry per'
+                         ' line, prefixing each entry with its index in the'
+                         ' stack.',
+                         action='store_true')
+dirs_parser.add_argument('-l',
+                         dest='long',
+                         help='Produces a longer listing; the default listing'
+                         ' format uses a tilde to denote the home directory.',
+                         action='store_true')
