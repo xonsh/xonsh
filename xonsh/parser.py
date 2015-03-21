@@ -1721,18 +1721,26 @@ class Parser(object):
         p1 = p[1]
         lenp = len(p)
         if lenp == 2:
-            p1 = ensure_has_elts(p1)
-            p0 = ast.Set(elts=p1.elts, ctx=ast.Load(), lineno=self.lineno, 
+            elts = [p1]
+            if isinstance(p1, ast.Tuple) and \
+                    not (hasattr(p1, '_real_tuple') and p1._real_tuple):
+                elts = p1.elts
+            p0 = ast.Set(elts=elts, ctx=ast.Load(), lineno=self.lineno, 
                          col_offset=self.col)
         elif lenp == 3:
             comps = p[2].get('comps', [])
             p0 = ast.SetComp(elt=p1, generators=comps, lineno=self.lineno, 
                              col_offset=self.col)
         elif lenp == 4:
-            p3 = ensure_has_elts(p[3])
-            p0 = ast.Dict(keys=[p1], values=p3.elts, ctx=ast.Load(),
+            p3 = p[3]
+            vals = [p3]
+            if isinstance(p3, ast.Tuple) and \
+                   not (hasattr(p3, '_real_tuple') and p3._real_tuple):
+                vals = p3.elts
+            p0 = ast.Dict(keys=[p1], values=vals, ctx=ast.Load(),
                           lineno=self.lineno, col_offset=self.col)
         elif lenp == 5:
+            print(p[1],p[2],p[3],p[4])
             comps = p[4].get('comps', [])
             p0 = ast.DictComp(key=p1, value=p[3], generators=comps,
                               lineno=self.lineno, col_offset=self.col)
