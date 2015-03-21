@@ -147,14 +147,16 @@ def xonshrc_context(rcfile=None, execer=None):
         return {}
     with open(rcfile, 'r') as f:
         rc = f.read()
+    if not rc.endswith('\n'):
+        rc += '\n'
     fname = execer.filename
     env = {}
     try:
         execer.filename = rcfile
         execer.exec(rc, glbs={}, locs=env)
     except SyntaxError as err:
-        warn('syntax error in xonsh run control file {0!r}: {1!s}'.format(rcfile, err), 
-             RuntimeWarning)
+        msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
+        warn(msg.format(rcfile, err), RuntimeWarning)
     finally:
         execer.filename = fname
     return env
