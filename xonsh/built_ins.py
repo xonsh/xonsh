@@ -4,7 +4,6 @@ not to be confused with the special Python builtins module.
 import os
 import re
 import sys
-import stat
 import shlex
 import locale
 import builtins
@@ -342,7 +341,7 @@ def run_subproc(cmds, captured=True):
             aliased_cmd = cmd
             fname = cmd[0]
             # make sure file is executable
-            if not (stat.S_IXUSR & os.stat(fname)[stat.ST_MODE]):
+            if not (os.access(fname, os.X_OK)):
                 cmd = aliased_cmd[0]
                 print('xonsh: subprocess mode: permission denied: {0}'.format(cmd))
                 return
