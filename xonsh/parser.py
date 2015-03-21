@@ -1589,11 +1589,18 @@ class Parser(object):
                          | test_or_star_expr comma_test_or_star_expr_list comma_opt
         """
         p1, p2 = p[1], p[2]
-        p0 = ensure_has_elts(p1, lineno=self.lineno, col_offset=self.col)
+        p0 = ast.Tuple(elts=[p1], ctx=ast.Load(), lineno=self.lineno, 
+                      col_offset=self.col)
         if len(p) == 3:
             if p2 is None:
                 # split out grouping parentheses.
-                p0 = p0.elts[0]
+                p1 = p0.elts[0]
+                if isinstance(p1, ast.Tuple) and \
+                        (hasattr(p1, '_real_tuple') and p1._real_tuple):
+                    p1 = ast.Tuple(elts=[p1], ctx=ast.Load(), lineno=self.lineno,
+                                   col_offset=self.col)
+                    p0.elts[0] = p1
+                pass
             elif p2 == ',':
                 pass
             elif 'comps' in p2:
