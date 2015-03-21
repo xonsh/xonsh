@@ -15,7 +15,10 @@ def pushd(args, stdin=None):
     pwd = builtins.__xonsh_env__['PWD']
 
     if args.dir is None:
-        new_pwd = DIRSTACK.pop(0)
+        try:
+            new_pwd = DIRSTACK.pop(0)
+        except:
+            return None, 'pushd: Directory stack is empty\n'
     elif os.path.isdir(args.dir):
         new_pwd = args.dir
     else:
@@ -54,9 +57,54 @@ def pushd(args, stdin=None):
 
     return None, None
 
-popd_parser = ArgumentParser(description="popd: pop from the directory stack")
 def popd(args, stdin=None):
-    dirstack = get_dirstack()
+    global DIRSTACK
+
+    try:
+        args = pushd_parser.parse_args(args)
+    except SystemExit:
+        return None, None
+
+    if args.dir is None:
+        try:
+            new_pwd = DIRSTACK.pop(0)
+        except:
+            return None, 'popd: Directory stack is empty\n'
+    else:
+        try:
+            num = int(args.dir[1:])
+            assert num >=0
+        except:
+            return None, 'Invalid argument to popd: {0}\n'.format(args.dir)
+        if num > len(DIRSTACK):
+            return None, 'Too few elements in dirstack ({0} elements)\n'.format(len(DIRSTACK))
+        elif args.dir.startswith('+'):
+            if num == len(DIRSTACK):
+                new_pwd = DIRSTACK.pop(0)
+            else:
+                new_pwd = None
+                DIRSTACK.pop(len(DIRSTACK)-1-num)
+        elif args.dir.startswith('-'):
+            if num == 0:
+                new_pwd = DIRSTACK.pop(0)
+            else:
+                new_pwd = None
+                DIRSTACK.pop(num-1)
+        else:
+            return None, 'Invalid argument to popd: {0}\n'.format(args.dir)
+    
+    if new_pwd is not None:
+        o = None
+        e = None
+        if args.cd:
+            o, e = builtins.default_aliases['cd']([new_pwd], None)
+
+        if e is not None:
+            return None, e
+
+    if not builtins.__xonsh_env__.get('QUIET_PUSHD', False):
+        return dirs([], None)
+
     return None, None
 
 def dirs(args, stdin=None):
@@ -110,12 +158,21 @@ def dirs(args, stdin=None):
 
     return out+'\n', None
 
+
 pushd_parser = ArgumentParser(description="pushd: push onto the directory stack")
 pushd_parser.add_argument('-n',
         dest='cd',
         help='Suppresses the normal change of directory when adding directories to the stack, so that only the stack is manipulated.',
         action='store_false')
 pushd_parser.add_argument('dir', nargs='?')
+
+popd_parser = ArgumentParser(description="popd: pop from the directory stack")
+popd_parser.add_argument('-n',
+        dest='cd',
+        help='Suppresses the normal change of directory when adding directories to the stack, so that only the stack is manipulated.',
+        action='store_false')
+popd_parser.add_argument('dir', nargs='?')
+
 
 dirs_parser = ArgumentParser(description="dirs: view and manipulate the directory stack", add_help=False)
 dirs_parser.add_argument('-c',
