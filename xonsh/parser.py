@@ -1699,9 +1699,9 @@ class Parser(object):
                     | test
         """
         lenp = len(p)
-        p1 = p[1]
+        p1 = ast.Tuple(elts=[p[1]], ctx=ast.Load(), lineno=self.lineno, 
+                      col_offset=self.col)
         if lenp > 2:
-            p1 = ensure_has_elts(p1, lineno=self.lineno, col_offset=self.col)
             p2 = p[2] if lenp > 2 else []
             p2 = [] if p2 == ',' else p2
             p1.elts += p2
@@ -1721,11 +1721,7 @@ class Parser(object):
         p1 = p[1]
         lenp = len(p)
         if lenp == 2:
-            elts = [p1]
-            if isinstance(p1, ast.Tuple) and \
-                    not (hasattr(p1, '_real_tuple') and p1._real_tuple):
-                elts = p1.elts
-            p0 = ast.Set(elts=elts, ctx=ast.Load(), lineno=self.lineno, 
+            p0 = ast.Set(elts=p1.elts, ctx=ast.Load(), lineno=self.lineno, 
                          col_offset=self.col)
         elif lenp == 3:
             comps = p[2].get('comps', [])
