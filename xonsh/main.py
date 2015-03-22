@@ -8,20 +8,23 @@ from argparse import ArgumentParser, Namespace
 from xonsh.shell import Shell, builtins
 
 parser = ArgumentParser(description='xonsh')
-parser.add_argument('-c', 
-        help="Run a single command and exit", 
-        dest='command', 
-        required=False, 
-        default=None)
+parser.add_argument('-c',
+                    help="Run a single command and exit",
+                    dest='command',
+                    required=False,
+                    default=None)
 parser.add_argument('file',
-        metavar='script-file',
-        help='If present, execute the script contained in script-file and exit',
-        nargs='?',
-        default=None)
+                    metavar='script-file',
+                    help='If present, execute the script in script-file'
+                         ' and exit',
+                    nargs='?',
+                    default=None)
 parser.add_argument('args',
-        metavar='args',
-        nargs='*',
-        default=[])
+                    metavar='args',
+                    help='Additional arguments to the script specified'
+                         ' by script-file',
+                    nargs='*',
+                    default=[])
 
 
 def main(argv=None):
