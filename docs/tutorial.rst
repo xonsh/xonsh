@@ -667,29 +667,25 @@ familiar with the BASH ``alias`` built-in, this is similar.  Alias command
 matching only occurs for the first element of a subprocess command.
 
 The keys of ``aliases`` are strings that act as commands in subprocess-mode.
-The meaning the values changes based on the type of the value. If the value
-of the alias dictionary is also a string, it is evaluated using ``evalx()``.
-This allow you to use arbitrary xonsh code as a command.  While this is
-powerful, it is not normally what you want.
+The values are lists of strings, where the first element is the command and
+the rest are the arguments. You can also set the value to a string, in which
+case it will be converted to a list automatically with ``shlex.split``.
 
-If an ``aliases`` value is a list of strings, it is used to replace the 
-key in the subprocess command.  For example, here are some of the default
-aliases that follow this pattern:
+For example, here are some of the default aliases:
 
 .. code-block:: python
 
     DEFAULT_ALIASES = {
-        'ls': ['ls', '--color=auto', '-v'],
-        'grep': ['grep', '--color=auto'],
+        'ls': 'ls --color=auto -v',
+        'grep': 'grep --color=auto',
         'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
         'ipynb': ['ipython', 'notebook', '--no-browser'],
         }
 
-Note that this format forces the aliaser to tokenize the replacement 
-themselves. This makes the list-of-strings the safest pattern.  If you really
-want to write your alias as a string, use the ``shlex.split()`` function in
-the Python standard library.
-
+If you were to run ``ls dir/`` with the aliases above in effect (by running
+``aliases.update(DEFAULT_ALIASES)``), it would reduce to
+``["ls", "--color=auto", "-v", "dir/"]`` before being executed.
+        
 Lastly, if an alias value is a function (or other callable), then this 
 function is called *instead* of going to a subprocess command. Such functions
 must have the following signature:
