@@ -9,11 +9,12 @@ DIRSTACK = []
 A list containing the currently remembered directories.
 """
 
+
 def pushd(args, stdin=None):
     """
     xonsh command: pushd
-    
-    Adds a directory to the top of the directory stack, or rotates the stack, 
+
+    Adds a directory to the top of the directory stack, or rotates the stack,
     making the new top of the stack the current working directory.
     """
     global DIRSTACK
@@ -90,7 +91,7 @@ def pushd(args, stdin=None):
 def popd(args, stdin=None):
     """
     xonsh command: popd
-    
+
     Removes entries from the directory stack.
     """
     global DIRSTACK
@@ -108,7 +109,6 @@ def popd(args, stdin=None):
     else:
         BACKWARD = '-'
         FORWARD = '+'
-
 
     if args.dir is None:
         try:
@@ -160,7 +160,7 @@ def popd(args, stdin=None):
 def dirs(args, stdin=None):
     """
     xonsh command: dirs
-    
+
     Displays the list of currently remembered directories.  Can also be used
     to clear the directory stack.
     """
