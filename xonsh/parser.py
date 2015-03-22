@@ -2017,6 +2017,7 @@ class Parser(object):
                         | string_literal
                         | REGEXPATH
                         | DOLLAR NAME
+                        | DOLLAR INT_LITERAL
                         | DOLLAR_LBRACE test RBRACE
                         | DOLLAR_LPAREN subproc RPAREN
                         | DOLLAR_LBRACKET subproc RBRACKET

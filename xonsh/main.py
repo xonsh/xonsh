@@ -5,7 +5,7 @@ import shlex
 import subprocess
 from argparse import ArgumentParser, Namespace
 
-from xonsh.shell import Shell
+from xonsh.shell import Shell, builtins
 
 parser = ArgumentParser(description='xonsh')
 parser.add_argument('-c', 
@@ -18,6 +18,11 @@ parser.add_argument('file',
         help='If present, execute the script contained in script-file and exit',
         nargs='?',
         default=None)
+parser.add_argument('args',
+        metavar='args',
+        nargs='*',
+        default=[])
+
 
 def main(argv=None):
     """Main entry point for xonsh cli."""
@@ -25,6 +30,8 @@ def main(argv=None):
     args = parser.parse_args()
 
     shell = Shell()
+
+    env = builtins.__xonsh_env__
 
     if args.command is not None:
         # run a single command and exit
@@ -35,6 +42,9 @@ def main(argv=None):
             with open(args.file) as f:
                 code = f.read()
             code = code if code.endswith('\n') else code + '\n'
+            env['0'] = args.file
+            for ix, arg in enumerate(args.args):
+                env[str(ix+1)] = arg
             code = shell.execer.compile(code, mode='exec', glbs=shell.ctx)
             shell.execer.exec(code, mode='exec', glbs=shell.ctx)
         else:
