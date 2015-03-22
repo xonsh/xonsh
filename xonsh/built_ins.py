@@ -4,6 +4,7 @@ not to be confused with the special Python builtins module.
 import os
 import re
 import sys
+import shlex
 import locale
 import builtins
 import subprocess
@@ -299,6 +300,39 @@ def _run_callable_subproc(alias, cmd, captured=True, prev_proc=None,
         proc = ProcProxy(rtnout, rtnerr)
     return proc
 
+def is_script(fname):
+    """
+    Checks whether a file should be considered for running as a script
+    """
+    return os.path.isfile(fname) and fname != os.path.basename(fname)
+
+def get_script_subproc_command(fname, args):
+    """
+    Given the name of a script outside the path, returns a list representing
+    an appropriate subprocess command to execute the script.  Raises
+    PermissionError if the script is not executable.
+    """
+    # make sure file is executable
+    if not os.access(fname, os.X_OK):
+        raise PermissionError
+    
+    # find interpreter
+    with open(fname) as f:
+        first_line = f.readline().strip()
+    m = re.match(r'#![ \t]*(.+?)$', first_line)
+    
+    # xonsh is the default interpreter
+    if m is None:
+        interp = ['xonsh']
+    else:
+        interp = m.group(1).strip()
+        if len(interp) > 0:
+            interp = shlex.split(interp)
+        else:
+            interp = ['xonsh']
+
+    return interp + [fname] + args
+
 def run_subproc(cmds, captured=True):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
     which may be a list of command line arguments or a string, representing
@@ -335,7 +369,14 @@ def run_subproc(cmds, captured=True):
         stdout = last_stdout if cmd is last_cmd else PIPE
         uninew = cmd is last_cmd
         alias = builtins.aliases.get(cmd[0], None)
-        if alias is None:
+        if is_script(cmd[0]):
+            try:
+                aliased_cmd = get_script_subproc_command(cmd[0], cmd[1:]) 
+            except PermissionError:
+                e = 'xonsh: subprocess mode: permission denied: {0}'
+                print(e.format(cmd[0]))
+                return
+        elif alias is None:
             aliased_cmd = cmd
         elif callable(alias):
             prev_proc = _run_callable_subproc(alias, cmd, captured=captured, 
@@ -354,10 +395,16 @@ def run_subproc(cmds, captured=True):
         try:
             proc = Popen(aliased_cmd, universal_newlines=uninew, env=ENV.detype(),
                          stdin=stdin, stdout=stdout)
+        except PermissionError:
+            cmd = aliased_cmd[0]
+            print('xonsh: subprocess mode: permission denied: {0}'.format(cmd))
+            return
         except FileNotFoundError:
             cmd = aliased_cmd[0]
             print('xonsh: subprocess mode: command not found: {0}'.format(cmd))
-            print(suggest_commands(cmd, ENV, builtins.aliases))
+            s = suggest_commands(cmd, ENV, builtins.aliases)
+            if len(s.strip()) > 0:
+                print(suggest_commands(cmd, ENV, builtins.aliases))
             return
         if prev_is_proxy:
             proc.communicate(input=prev_proc.stdout)
