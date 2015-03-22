@@ -90,6 +90,14 @@ class Env(MutableMapping):
     #
 
     def __getitem__(self, key):
+        m = re.match(r'ARG(\d+)',key)
+        if m is not None and 'ARGS' in self._d.keys():
+            args = self._d['ARGS']
+            ix = int(m.group(1))
+            if ix >= len(args):
+                e = "Not enough arguments given to access argument {0}."
+                raise IndexError(e.format(ix))
+            return self._d['ARGS'][ix]
         return self._d[key]
 
     def __setitem__(self, key, val):
