@@ -234,7 +234,8 @@ def suggest_commands(cmd, env, aliases):
         if num == 0:
             return ''
         else:
-            tips = 'Did you mean {}the following?'.format('' if num == 1 else 'one of ')
+            tips = 'Did you mean {}the following?'.format(
+                '' if num == 1 else 'one of ')
             
             items = list(suggested.popitem(False) for _ in range(num))
             length = max(len(key) for key, _ in items) + 2

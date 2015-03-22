@@ -4,6 +4,7 @@ not to be confused with the special Python builtins module.
 import os
 import re
 import sys
+import shlex
 import locale
 import builtins
 import subprocess
@@ -125,27 +126,56 @@ class Aliases(MutableMapping):
     """Represents a location to hold and look up aliases."""
 
     def __init__(self, *args, **kwargs):
-        self._raw = dict(*args, **kwargs)
+        self._raw = {}
+        self.update(*args, **kwargs)
 
     def get(self, key, default=None):
-        """Returns the (possibly modified) key. If the key is not 
-        present, the default value is returned. If the key is a string, 
-        then it is parsed and evaluated in a built-ins only context and then 
-        return.  If the value is a non-string Iterable of strings, then it is 
-        returned directly. If the value is callable, it is also returned 
-        without modification. Otherwise, it fails.
+        """Returns the (possibly modified) value. If the key is not present,
+        then `default` is returned.
+        If the value is callable, it is returned without modification. If it
+        is an iterable of strings it will be evaluated recursively to expand
+        other aliases, resulting in a new list or a "partially applied"
+        callable.
         """
-        if key not in self._raw:
+        val = self._raw.get(key)
+        if val is None:
             return default
-        val = self._raw[key]
-        if isinstance(val, string_types):
-            ctx = {}
-            return builtins.evalx(val, glbs=ctx, locs=ctx)
         elif isinstance(val, Iterable) or callable(val):
-            return val
+            return self.eval_alias(val, seen_tokens={key})
         else:
-            raise TypeError('alias of {!r} has an inappropriate type: {!r}'.format(key, val))
+            msg = 'alias of {!r} has an inappropriate type: {!r}'.format(key, val)
+            raise TypeError(msg)
 
+    def eval_alias(self, value, seen_tokens, acc_args=[]):
+        """
+        "Evaluates" the alias `value`, by recursively looking up the leftmost
+        token and "expanding" if it's also an alias.
+
+        A value like ["cmd", "arg"] might transform like this:
+        > ["cmd", "arg"] -> ["ls", "-al", "arg"] -> callable()
+        where `cmd=ls -al` and `ls` is an alias with its value being a callable.
+        The resulting callable will be "partially applied" with ["-al", "arg"].
+        """
+        # Beware of mutability: default values for keyword args are evaluated
+        # only once.
+        if callable(value):
+            if acc_args: # Partial application
+                return lambda args, stdin=None: value(acc_args+args,
+                                                      stdin=stdin)
+            else:
+                return value
+        else:
+            token, *rest = value
+            if token in seen_tokens or token not in self._raw:
+                # ^ Making sure things like `egrep=egrep --color=auto` works,
+                # and that `l` evals to `ls --color=auto -CF` if `l=ls -CF`
+                # and `ls=ls --color=auto`
+                return value + acc_args
+            else:
+                return self.eval_alias(self._raw[token],
+                                       seen_tokens|{token},
+                                       rest+acc_args)
+            
     #
     # Mutable mapping interface
     #
@@ -154,13 +184,17 @@ class Aliases(MutableMapping):
         return self._raw[key]
 
     def __setitem__(self, key, val):
-        self._raw[key] = val
+        if isinstance(val, string_types):
+            self._raw[key] = shlex.split(val)
+        else:
+            self._raw[key] = val
         
     def __delitem__(self, key):
         del self._raw[key]
 
     def update(self, *args, **kwargs):
-        self._raw.update(*args, **kwargs)
+        for key, val in dict(*args, **kwargs).items():
+            self[key] = val
 
     def __iter__(self):
         yield from self._raw
