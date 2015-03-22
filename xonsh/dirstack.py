@@ -38,7 +38,7 @@ def pushd(args, stdin=None):
     if args.dir is None:
         try:
             new_pwd = DIRSTACK.pop(0)
-        except:
+        except IndexError:
             e = 'pushd: Directory stack is empty\n'
             return None, e
     elif os.path.isdir(args.dir):
@@ -46,10 +46,14 @@ def pushd(args, stdin=None):
     else:
         try:
             num = int(args.dir[1:])
-            assert num >= 0
-        except:
+        except ValueError:
             e = 'Invalid argument to pushd: {0}\n'
             return None, e.format(args.dir)
+
+        if num < 0:
+            e = 'Invalid argument to pushd: {0}\n'
+            return None, e.format(args.dir)
+
         if num > len(DIRSTACK):
             e = 'Too few elements in dirstack ({0} elements)\n'
             return None, e.format(len(DIRSTACK))
@@ -113,16 +117,20 @@ def popd(args, stdin=None):
     if args.dir is None:
         try:
             new_pwd = DIRSTACK.pop(0)
-        except:
+        except IndexError:
             e = 'popd: Directory stack is empty\n'
             return None, e
     else:
         try:
             num = int(args.dir[1:])
-            assert num >= 0
-        except:
+        except ValueError:
             e = 'Invalid argument to popd: {0}\n'
             return None, e.format(args.dir)
+
+        if num < 0:
+            e = 'Invalid argument to popd: {0}\n'
+            return None, e.format(args.dir)
+
         if num > len(DIRSTACK):
             e = 'Too few elements in dirstack ({0} elements)\n'
             return None, e.format(len(DIRSTACK))
@@ -207,13 +215,18 @@ def dirs(args, stdin=None):
     if N is not None:
         try:
             num = int(N[1:])
-            assert num >= 0
-        except:
+        except ValueError:
             e = 'Invalid argument to dirs: {0}\n'
             return None, e.format(N)
+
+        if num < 0:
+            e = 'Invalid argument to dirs: {0}\n'
+            return None, e.format(len(o))
+
         if num >= len(o):
             e = 'Too few elements in dirstack ({0} elements)\n'
             return None, e.format(len(o))
+
         if N.startswith(BACKWARD):
             idx = num
         elif N.startswith(FORWARD):
