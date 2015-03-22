@@ -765,6 +765,105 @@ environment variable names. In subprocess-mode, you additionally complete
 on any file names on your ``$PATH``, alias keys, and full BASH completion 
 for the commands themselves.
 
+Executing Commands and Scripts
+==============================
+
+When started with the ``-c`` flag and a command, xonsh will execute that command
+and exit, instead of entering the command loop.
+
+.. code-block:: bash
+
+    bash $ xonsh -c "echo @(7+3)"
+    10
+
+Longer scripts can be run either by specifying a filename containing the script,
+or by feeding them to xonsh via stdin.  For example, consider the following
+script, stored in ``test.sh``:
+
+.. code-block:: bash
+
+    bash $ cat test_script.sh 
+    #!/usr/bin/env xonsh
+    
+    $[ls]
+    
+    print('removing files')
+    $[rm `file\d+.txt`]
+    
+    $[ls]
+   
+    print('adding files') 
+    # This is a comment
+    for i, x in enumerate("xonsh"):
+        $[echo @(x) > @("file%d.txt" % i)]
+    
+    print($(ls).replace('\n', ' '))
+
+
+This script could be run by piping its contents to xonsh:
+
+.. code-block:: bash
+
+    bash $ cat test_script.sh | xonsh
+    file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  test_script.sh
+    removing files
+    test_script.sh
+    adding files
+    file0.txt file1.txt file2.txt file3.txt file4.txt test_script.sh 
+   
+or by invoking xonsh with its filename as an argument:
+
+.. code-block:: bash
+
+    bash $ xonsh test_script.sh 
+    file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  test_script.sh
+    removing files
+    test_script.sh
+    adding files
+    file0.txt file1.txt file2.txt file3.txt file4.txt test_script.sh
+
+xonsh scripts can also accept arguments.  These arguments are made available to
+the script in two different ways:
+    #. In either mode, as individual variables ``$ARG<n>`` (e.g., ``$ARG1``)
+    #. In Python mode only, as a list ``$ARGS``
+
+A slight variation of the above script operates on a given argument, rather than on
+the string ``'xonsh'`` (notice how ``$ARGS`` and ``$ARG1`` are used):
+
+.. code-block:: bash
+
+    bash $ cat test_script2.sh 
+    #!/usr/bin/env xonsh
+   
+    print($ARGS)
+
+    $[ls]
+    
+    print('removing files')
+    $[rm `file\d+.txt`]
+    
+    $[ls]
+    
+    print('adding files')
+    # This is a comment
+    for i, x in enumerate($ARG1):
+        $[echo @(x) > @("file%d.txt" % i)]
+    
+    print($(ls).replace('\n', ' '))
+    print()
+
+.. code-block:: bash
+
+    bash $ xonsh test_script2.sh snails
+    ['test_script.sh', 'snails']
+    file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  file5.txt  test_script.sh
+    removing files
+    test_script.sh
+    adding files
+    file0.txt file1.txt file2.txt file3.txt file4.txt file5.txt test_script.sh
+   
+    bash $ echo @(' '.join($(cat @('file%d.txt' % i)).strip() for i in range(6)))
+    s n a i l s
 
 That's All, Folks
 ======================
