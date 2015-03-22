@@ -1339,10 +1339,10 @@ def test_ls_dot():
     yield check_xonsh_ast, {}, '$(ls .)'
 
 def test_ls_dot_nesting():
-    yield check_xonsh_ast, {}, '$(ls ${None or "."})'
+    yield check_xonsh_ast, {}, '$(ls @(None or "."))'
 
 def test_ls_dot_nesting_var():
-    yield check_xonsh, {}, 'x = "."; $(ls ${None or x})'
+    yield check_xonsh, {}, 'x = "."; $(ls @(None or x))'
 
 def test_ls_dot_str():
     yield check_xonsh_ast, {}, '$(ls ".")'
