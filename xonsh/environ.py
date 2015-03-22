@@ -7,6 +7,7 @@ import locale
 import builtins
 import platform
 import subprocess
+from datetime import datetime
 from functools import partial
 from warnings import warn
 
@@ -21,7 +22,7 @@ class PromptFormatter(dict):
     Prompt Formatter.  However, you most likely want to inherit from
     DefaultPromptFormatter if you are writing a custom formatter.
 
-    Custom Prompt Formatters will invariably implement their own __init__()
+    Custom Prompt Formatters will need to implement their own __init__()
     method that adds entries to several dicts depending on the needs of the
     variables they add.  The Formatter may also implement methods to implement
     those variables (although very simple variables can be written with
@@ -37,35 +38,27 @@ class PromptFormatter(dict):
         self['bell'] = '\x07'
 
         # To add a variable that only needs to be computed once add
-        # self._ComputeSentinel to self and add the function that will compute
-        # the value to self._compute.  This can be used for any variable that
-        # won't change while this shell instance is run.  It is especially
-        # useful if the variable takes a long time to compute and is
-        # infrequently used by users:
-        self['login_time'] = self._ComputeSentinel
-        self._compute['login_time'] = self.get_login_time
+        # the function to be called to self.  This can be used for any
+        # variable that won't change while this shell instance is run.  It is
+        # especially useful if the variable takes a long time to compute and
+        # is infrequently used by users:
+        self['login_time'] = self.login_time
 
         # To add a variable that needs to be computed every time the prompt is
-        # printed simply add a function to self.  If you need to give the
-        # function arguments, you can use functools.partial:
+        # printed simply add a function to self and then add the variable name
+        # to the self._run_every set.
         self['time24'] = functools.partial(time.strftime, '%H:%M:%S')
+        self._run_every.add('time24')
 
     def login_time(self):
         who_out = subprocess.check_output(['who', '-m'])
         return ' '.join(who_out.decode().split()[2:4])
     '''
 
-    class _ComputeSentinel:
-        '''
-        This is used to mark prompt formatting variables that should be
-        computed only once.
-        '''
-        pass
-
     def __init__(self, *args, **kwargs):
 
         super(PromptFormatter, self).__init__(*args, **kwargs)
-        self._compute = dict()
+        self._run_every = set()
 
     def __getitem__(self, key):
         '''
@@ -76,16 +69,15 @@ class PromptFormatter(dict):
         '''
         value = super(PromptFormatter, self).__getitem__(key)
 
-        # Order matters: classes are callable so we have to check
-        # _ComputeSentinel first.
-        # We check for both setting the value to the class or an instance of
-        # the class
-        if (value is self._ComputeSentinel or
-                isinstance(value, self._ComputeSentinel)):
-            self[key] = value = self._compute[key]()
-        elif callable(value):
-            return value()
+        if callable(value):
+            if key in self._run_every:
+                # Variables that need to be computed every time
+                return value()
+            # Variables computed a single time
+            value = value()
+            self[key] = value
 
+        # If not callable then it was a static value
         return value
 
     def get(self, key, default=None):
@@ -110,18 +102,17 @@ class DefaultPromptFormatter(PromptFormatter):
         self._env = builtins.__xonsh_env__
 
         self.update(TERM_COLORS)
-        formatters = dict(user=self.user,
-                hostname=self._ComputeSentinel,
-                cwd=self.cwd,
-                short_host=self._ComputeSentinel,
+        formatters = dict(
                 base_cwd=partial(self.cwd, False),
+                cwd=self.cwd,
                 curr_branch=self.curr_branch,
-        )
-        compute = dict(hostname=socket.gethostname,
+                hostname=socket.gethostname,
                 short_host=lambda: socket.gethostname().split('.', 1)[0],
-                )
+                time=datetime.now,
+                user=self.user,
+        )
         self.update(formatters)
-        self._compute.update(compute)
+        self._run_every.update(frozenset(('base_cwd', 'cwd', 'curr_branch', 'time')))
 
         # Do this last so the defaults could be overridden
         self.update(dict(*args, **kwargs))
