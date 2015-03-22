@@ -76,7 +76,7 @@ def pushd(args, stdin=None):
         if e is not None:
             return None, e
 
-    if not builtins.__xonsh_env__.get('PUSHD_SILENT', False):
+    if not args.quiet and not env.get('PUSHD_SILENT', False):
         return dirs([], None)
 
     return None, None
@@ -146,7 +146,7 @@ def popd(args, stdin=None):
         if e is not None:
             return None, e
 
-    if not builtins.__xonsh_env__.get('PUSHD_SILENT', False):
+    if not args.quiet and not env.get('PUSHD_SILENT', False):
         return dirs([], None)
 
     return None, None
@@ -230,6 +230,10 @@ pushd_parser.add_argument('-n',
                           ' adding directories to the stack, so that only the'
                           ' stack is manipulated.',
                           action='store_false')
+pushd_parser.add_argument('-q',
+                          dest='quiet',
+                          help='Do not call dirs, regardless of $PUSHD_SILENT',
+                          action='store_true')
 
 popd_parser = ArgumentParser(prog="popd")
 popd_parser.add_argument('dir', nargs='?')
@@ -239,6 +243,10 @@ popd_parser.add_argument('-n',
                          ' adding directories to the stack, so that only the'
                          ' stack is manipulated.',
                          action='store_false')
+popd_parser.add_argument('-q',
+                         dest='quiet',
+                         help='Do not call dirs, regardless of $PUSHD_SILENT',
+                         action='store_true')
 
 dirs_parser = ArgumentParser(prog="dirs")
 dirs_parser.add_argument('N', nargs='?')
