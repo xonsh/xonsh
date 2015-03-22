@@ -13,10 +13,56 @@ from warnings import warn
 from xonsh.tools import TERM_COLORS
 
 class PromptFormatter(dict):
+    '''
+    Base class that implements utilities for PromptFormatters.
+
+    You should read the docs for this class to learn how to write your own
+    Prompt Formatter.  However, you most likely want to inherit from
+    DefaultPromptFormatter if you are writing a custom formatter.
+
+    Custom Prompt Formatters will invariably implement their own __init__()
+    method that adds entries to several dicts depending on the needs of the
+    variables they add.  The Formatter may also implement methods to implement
+    those variables (although very simple variables can be written with
+    pre-existing functions.)
+
+    Example:
+
+    def __init__(self, *args, **kwargs):
+        super(PromptFormatter, self).__init__(*args, **kwargs)
+
+        # Add a variable that's just a static string.  Useful for constants
+        # that you can't remember:
+        self['bell'] = '\x07'
+
+        # To add a variable that only needs to be computed once add
+        # self._ComputeSentinel to self and add the function that will compute
+        # the value to self._compute.  This can be used for any variable that
+        # won't change while this shell instance is run.  It is especially
+        # useful if the variable takes a long time to compute and is
+        # infrequently used by users:
+        self['login_time'] = self._ComputeSentinel
+        self._compute['login_time'] = self.get_login_time
+
+        # To add a variable that needs to be computed every time the prompt is
+        # printed simply add a function to self.  If you need to give the
+        # function arguments, you can use functools.partial:
+        self['time24'] = functools.partial(time.strftime, '%H:%M:%S')
+
+    def login_time(self):
+        who_out = subprocess.check_output(['who', '-m'])
+        return ' '.join(who_out.decode().split()[2:4])
+    '''
+
     class _ComputeSentinel:
+        '''
+        This is used to mark prompt formatting variables that should be
+        computed only once.
+        '''
         pass
 
     def __init__(self, *args, **kwargs):
+
         super(PromptFormatter, self).__init__(*args, **kwargs)
         self._compute = dict()
 
@@ -46,6 +92,9 @@ class PromptFormatter(dict):
 
         If the key is not present, return the value of the default param.
         If the value is a function, return the output of the function.
+
+        This is implemented for completeness but isn't currently used
+        internally to xonsh.
         '''
         try:
             value = self[key]
