@@ -3,21 +3,21 @@
 *******************
 Tutorial
 *******************
-xonsh is shell language and command prompt. Unlike other shells, xonsh is 
-based on Python with additional syntax added that makes calling subprocess
-commands, manipulating the environment, and dealing with the file system easy. 
-The xonsh command prompt give the users interactive access to the xonsh 
-language. 
+xonsh is a shell language and command prompt. Unlike other shells, xonsh is
+based on Python, with additional syntax added that makes calling subprocess
+commands, manipulating the environment, and dealing with the file system
+easily.  The xonsh command prompt gives users interactive access to the xonsh
+language.
 
 While all Python code is also xonsh, not all BASH code can be used in xonsh.
-That would defeat the purpose and Python is better anyway! Still, xonsh is
-BASH-wards compatible in the ways that matter, such as for running commands, 
+That would defeat the purpose, and Python is better anyway! Still, xonsh is
+BASH-wards compatible in the ways that matter, such as for running commands,
 reading in the BASH environment, and utilizing BASH tab completion.
 
 The purpose of this tutorial is to teach you xonsh. There are many excellent
-guides out there for learning Python and this will not join their ranks.
-Similarly, you'd probably get the most out of this tutorial if you have 
-already used a command prompt or interactive interpreter. 
+guides out there for learning Python, and this will not join their ranks.
+Similarly, you'd probably get the most out of this tutorial if you have already
+used a command prompt or interactive interpreter.
 
 Let's dive in!
 
@@ -34,13 +34,13 @@ you are in a lesser terminal:
 
 Now we are in a xonsh shell. Our username happens to be ``snail``, our
 hostname happens to be ``home``, and we are in our home directory (``~``).
-Alternatively, you can setup your terminal emulator (xterm, gnome-terminal, 
+Alternatively, you can setup your terminal emulator (xterm, gnome-terminal,
 etc) to run xonsh automatically when it starts up. This is recommended.
 
 Basics
 =======================
-The xonsh language is based on Python and the xonsh shell uses Python to 
-interpret any input it receives. This makes simple things, like arithmetic, 
+The xonsh language is based on Python, and the xonsh shell uses Python to
+interpret any input it receives. This makes simple things, like arithmetic,
 simple:
 
 .. code-block:: python
@@ -48,23 +48,23 @@ simple:
     >>> 1 + 1
     2
 
-.. note:: From here on we'll be using ``>>>`` to prefix (or prompt) any 
-          xonsh input. This follows the Python convention and helps trick 
+.. note:: From here on we'll be using ``>>>`` to prefix (or prompt) any
+          xonsh input. This follows the Python convention and helps trick
           syntax highlighting, though ``$`` is more traditional for shells.
 
-Since this is just Python, we are able import modules, print values, 
+Since this is just Python, we are able import modules, print values,
 and use other built-in Python functionality:
 
 .. code-block:: python
 
     >>> import sys
     >>> print(sys.version)
-    3.4.2 |Continuum Analytics, Inc.| (default, Oct 21 2014, 17:16:37) 
+    3.4.2 |Continuum Analytics, Inc.| (default, Oct 21 2014, 17:16:37)
     [GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]
 
 
 We can also create and use literal data types, such as ints, floats, lists,
-sets, and dictionaries. Everything that you are used to if you already know 
+sets, and dictionaries. Everything that you are used to if you already know
 Python is there:
 
 .. code-block:: python
@@ -73,9 +73,9 @@ Python is there:
     >>> d.get('bash', False)
     False
 
-The xonsh shell also supports multi-line input, for more advanced flow control.
+The xonsh shell also supports multi-line input for more advanced flow control.
 The multi-line mode is automatically entered whenever the first line of input
-is not syntactically valid on its own. Multi-line mode is then exited when 
+is not syntactically valid on its own.  Multi-line mode is then exited when
 enter (or return) is pressed when the cursor is in the first column.
 
 .. code-block:: python
@@ -100,7 +100,7 @@ Flow control, of course, includes loops.
     3 s
     4 h
 
-We can also define and call functions and classes. I'll mostly spare you the 
+We can also define and call functions and classes. I'll mostly spare you the
 details, but this *is* pretty cool:
 
 .. code-block:: python
@@ -112,19 +112,19 @@ details, but this *is* pretty cool:
     'xonsh'
 
 For easier indentation, Shift+Tab will enter 4 spaces.
-And that about wraps it up for the basics section. It is just like Python.
+And that about wraps it up for the basics section.  It is just like Python.
 
 Environment Variables
 =======================
-Environment variables are written as ``$`` followed by a name.  For example, 
-``$HOME``, ``$PWD``, and ``$PATH``. 
+Environment variables are written as ``$`` followed by a name.  For example,
+``$HOME``, ``$PWD``, and ``$PATH``.
 
 .. code-block:: bash
 
     >>> $HOME
     '/home/snail'
 
-You can set (and export) environment variables like you would set any other 
+You can set (and export) environment variables like you would set any other
 variable in Python.  The same is true for deleting them too.
 
 .. code-block:: bash
@@ -134,8 +134,8 @@ variable in Python.  The same is true for deleting them too.
     Become the Lord of the Files
     >>> del $GOAL
 
-Very nice. All environment variables live in the built-in 
-``__xonsh_env__`` mapping. You can access this mapping directly, but in most 
+Very nice. All environment variables live in the built-in
+``__xonsh_env__`` mapping. You can access this mapping directly, but in most
 situations, you shouldn't need to.
 
 Like other variables in Python, environment variables have a type. Sometimes
@@ -147,14 +147,14 @@ simple:
 
 xonsh will automatically convert back and forth to untyped (string-only)
 representations of the environment as needed (mostly by subprocess commands).
-When in xonsh, you'll always have the typed version.  Here are a couple of 
+When in xonsh, you'll always have the typed version.  Here are a couple of
 PATH examples:
 
 .. code-block:: bash
 
     >>> $PATH
-    ['/home/snail/.local/bin', '/home/snail/sandbox/bin', 
-    '/home/snail/miniconda3/bin', '/usr/local/bin', '/usr/local/sbin', 
+    ['/home/snail/.local/bin', '/home/snail/sandbox/bin',
+    '/home/snail/miniconda3/bin', '/usr/local/bin', '/usr/local/sbin',
     '/usr/bin', '/usr/sbin', '/bin', '/sbin', '.']
     >>> $LD_LIBRARY_PATH
     ['/home/snail/.local/lib', '']
@@ -167,43 +167,43 @@ They can be seen in the table below:
 ================== =========================== ================================
 variable           default                     description
 ================== =========================== ================================
-PROMPT             xosh.environ.default_prompt The prompt text, may be str or 
+PROMPT             xosh.environ.default_prompt The prompt text, may be str or
                                                function which returns a str.
                                                The str may contain keyword
                                                arguments which are
                                                auto-formatted (see below).
 MULTILINE_PROMPT   ``'.'``                     Prompt text for 2nd+ lines of
-                                               input, may be str or 
+                                               input, may be str or
                                                function which returns a str.
 TITLE              xonsh.environ.default_title The title text for the window
                                                in which xonsh is running.  As
                                                with PROMPT, may be a str or a
                                                function that returns a str.
                                                The str is formatted in the
-                                               same manner as PROMPT (see 
+                                               same manner as PROMPT (see
                                                below).
 XONSHRC            ``'~/.xonshrc'``            Location of run control file
 XONSH_HISTORY_SIZE 8128                        Number of items to store in the
                                                history.
 XONSH_HISTORY_FILE ``'~/.xonsh_history'``      Location of history file
-BASH_COMPLETIONS   ``[] or ['/etc/...']``      This is a list of strings that 
-                                               specifies where the BASH 
-                                               completion files may be found. 
+BASH_COMPLETIONS   ``[] or ['/etc/...']``      This is a list of strings that
+                                               specifies where the BASH
+                                               completion files may be found.
                                                The default values are platform
                                                dependent, but sane.
 SUGGEST_COMMANDS   ``True``                    When a user types an invalid
                                                command, xonsh will try to offer
-                                               suggestions of similar valid 
+                                               suggestions of similar valid
                                                commands if this is ``True``.
 SUGGEST_THRESHOLD  ``3``                       An error threshold.  If the
                                                Levenshtein distance between the
                                                entered command and a valid
                                                command is less than this value,
-                                               the valid command will be 
+                                               the valid command will be
                                                offered as a suggestion.
 SUGGEST_MAX_NUM    ``5``                       xonsh will show at most this
                                                many suggestions in response to
-                                               an invalid command.  If 
+                                               an invalid command.  If
                                                negative, there is no limit to
                                                how many suggestions are shown.
 ================== =========================== ================================
@@ -224,19 +224,19 @@ documentation of :py:func:`xonsh.environ.format_prompt`.
 
 Environment Lookup with ``${}``
 ================================
-The ``$NAME`` is great as long as you know the name of the environment 
+The ``$NAME`` is great as long as you know the name of the environment
 variable you want to look up.  But what if you want to construct the name
-programatically, or read it from another variable? Enter the ``${}`` 
+programatically, or read it from another variable?  Enter the ``${}``
 operator.
 
 .. warning:: In BASH, ``$NAME`` and ``${NAME}`` are syntactically equivalent.
              In xonsh, they have separate meanings.
 
-While in Python-mode (not subprocess-mode, which we'll get to later), we can 
-place any valid Python expression inside of the curly braces in ``${<expr>}``. 
-This result of this expression will then be used to look up a value in 
-the environment.  In fact, ``${<expr>}`` is the same as doing 
-``__xonsh_env__[<expr>]``, but much nicer to look at. Here are a couple of 
+While in Python-mode (not subprocess-mode, which we'll get to later), we can
+place any valid Python expression inside of the curly braces in ``${<expr>}``.
+This result of this expression will then be used to look up a value in
+the environment.  In fact, ``${<expr>}`` is the same as doing
+``__xonsh_env__[<expr>]``, but much nicer to look at. Here are a couple of
 examples in action:
 
 .. code-block:: bash
@@ -252,7 +252,7 @@ Not bad, xonsh, not bad.
 
 Running Commands
 ==============================
-As a shell, xonsh is meant to make running commands easy and fun. 
+As a shell, xonsh is meant to make running commands easy and fun.
 Running subprocess commands should work like any other in any other shell.
 
 .. code-block:: bash
@@ -281,25 +281,25 @@ This should feel very natural.
 Python-mode vs Subprocess-mode
 ================================
 It is sometimes helpful to make the distinction between lines that operate
-in pure Python mode and lines that use shell-specific syntax, edit the 
+in pure Python mode and lines that use shell-specific syntax, edit the
 execution environment, and run commands. Unfortunately, it is not always
 clear from the syntax alone what mode is desired. This ambiguity stems from
 most command line utilities looking a lot like Python operators.
 
-Take the case of ``ls -l``.  This is valid Python code, though it could 
-have also been written as ``ls - l`` or ``ls-l``.  So how does xonsh know 
+Take the case of ``ls -l``.  This is valid Python code, though it could
+have also been written as ``ls - l`` or ``ls-l``.  So how does xonsh know
 that ``ls -l`` is meant to be run in subprocess-mode?
 
-For any given line that only contains an expression statement (expr-stmt, 
-see the Python AST docs for more information), if the left-most name cannot 
-be found as a current variable name xonsh will try to parse the line as 
-subprocess command instead.  In the above, if ``ls`` is not a variable, 
-then subprocess mode will be attempted. If parsing in subprocess mode fails, 
+For any given line that only contains an expression statement (expr-stmt,
+see the Python AST docs for more information), if the left-most name cannot
+be found as a current variable name xonsh will try to parse the line as a
+subprocess command instead.  In the above, if ``ls`` is not a variable,
+then subprocess mode will be attempted. If parsing in subprocess mode fails,
 then the line is left in Python-mode.
 
-In the following example, we will list the contents of the directory 
+In the following example, we will list the contents of the directory
 with ``ls -l``. Then we'll make new variable names ``ls`` and ``l`` and then
-subtract them. Finally, we will delete ``ls`` and ``l`` and be able to list 
+subtract them. Finally, we will delete ``ls`` and ``l`` and be able to list
 the directories again.
 
 .. code-block:: bash
@@ -322,7 +322,7 @@ the directories again.
 The determination between Python- and subprocess-modes is always done in the
 safest possible way. If anything goes wrong, it will favor Python-mode.
 The determination between the two modes is done well ahead of any execution.
-You do not need to worry about partially executed commands - that is 
+You do not need to worry about partially executed commands - that is
 impossible.
 
 If absolutely want to run a subprocess command, you can always force xonsh
@@ -331,9 +331,9 @@ to do so with the syntax that we will see in the following sections.
 
 Captured Subprocess with ``$()``
 ================================
-The ``$(<expr>)`` operator in xonsh executes a subprocess command and 
-*captures* the output. The expression in the parentheses will be run and 
-stdout will be returned as string. This is similar to how ``$()`` performs in 
+The ``$(<expr>)`` operator in xonsh executes a subprocess command and
+*captures* the output. The expression in the parentheses will be run and
+stdout will be returned as string. This is similar to how ``$()`` performs in
 BASH.  For example,
 
 .. code-block:: bash
@@ -341,7 +341,7 @@ BASH.  For example,
     >>> $(ls -l)
     'total 0\n-rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh\n'
 
-The ``$()`` operator is an expression itself. This means that we can 
+The ``$()`` operator is an expression itself. This means that we can
 assign the results to a variable or perform any other manipulations we want.
 
 .. code-block:: bash
@@ -351,8 +351,8 @@ assign the results to a variable or perform any other manipulations we want.
     TOTAL 0
     -RW-RW-R-- 1 SNAIL SNAIL 0 MAR  8 15:46 XONSH
 
-While in subprocess-mode or inside of a captured subprocess, we can always 
-still query the environment with ``$NAME`` variables. 
+While in subprocess-mode or inside of a captured subprocess, we can always
+still query the environment with ``$NAME`` variables.
 
 .. code-block:: bash
 
@@ -361,10 +361,10 @@ still query the environment with ``$NAME`` variables.
 
 Uncaptured Subprocess with ``$[]``
 ===================================
-Uncaptured subprocess are denoted with the ``$[<expr>]`` operator. They are 
-the same as ``$()`` captured subprocesses in almost every way. The only 
+Uncaptured subprocess are denoted with the ``$[<expr>]`` operator. They are
+the same as ``$()`` captured subprocesses in almost every way. The only
 difference is that the subprocess's stdout passes directly through xonsh and
-to the screen.  The return value of ``$[]`` is always ``None``.  
+to the screen.  The return value of ``$[]`` is always ``None``.
 
 In the following, we can see that the results of ``$[]`` are automatically
 printed and the return value is not a string.
@@ -378,15 +378,15 @@ printed and the return value is not a string.
     True
 
 Previously when we automatically entered subprocess-mode, uncaptured
-subprocesses were used.  Thus ``ls -l`` and ``$[ls -l]`` are usually 
+subprocesses were used.  Thus ``ls -l`` and ``$[ls -l]`` are usually
 equivalent.
 
 Python Evaluation with ``@()``
 ===============================
-    
+
 The ``@(<expr>)`` operator from will evaluate arbitrary Python code in
 subprocess mode, and the result will be appended to the subprocess command
-list. The result is automatically converted to a string.  For example, 
+list. The result is automatically converted to a string.  For example,
 
 .. code-block:: bash
 
@@ -408,7 +408,7 @@ be used to generate any of the tokens in the subprocess command list.
     >>> @("ech" + "o") "hey"
     hey
 
-Thus, ``@()`` allows us to create complex commands in Python-mode and then 
+Thus, ``@()`` allows us to create complex commands in Python-mode and then
 feed them to a subprocess as needed.  For example:
 
 .. code-block:: python
@@ -456,7 +456,7 @@ together commands as you would in other shells.
     XDG_SEAT_PATH=/org/freedesktop/DisplayManager/Seat0
     XDG_SESSION_PATH=/org/freedesktop/DisplayManager/Session0
 
-This is only available in subprocess-mode because ``|`` is otherwise a 
+This is only available in subprocess-mode because ``|`` is otherwise a
 Python operator.
 If you are unsure of what pipes are, there are many great references out there.
 You should be able to find information on StackOverflow or Google.
@@ -465,18 +465,18 @@ You should be able to find information on StackOverflow or Google.
 Writing Files with ``>``
 =====================================
 In subprocess-mode, if the second to last element is a greater-than sign
-``>`` and the last element evaluates to a string, the output of the 
-preceding command will be written to file. If the file already exists, the 
-current contents will be erased.  For example, let's write a simple file 
+``>`` and the last element evaluates to a string, the output of the
+preceding command will be written to file. If the file already exists, the
+current contents will be erased.  For example, let's write a simple file
 called ``conch.txt`` using ``echo``:
 
 .. code-block:: bash
 
     >>> echo Piggy > conch.txt
     'Piggy\n'
-    >>> cat conch.txt 
+    >>> cat conch.txt
     Piggy
-    
+
 This can be pretty useful.  This does not work in Python-mode, since ``>``
 is a valid Python operator.
 
@@ -485,14 +485,14 @@ Appending to Files with ``>>``
 =====================================
 Following the same syntax as with ``>`` in subprocess-mode, the ``>>``
 operator allows us to append to a file rather than overwriting it completely.
-If the file doesn't exist, it is created. Let's reuse the ``conch.txt`` 
+If the file doesn't exist, it is created. Let's reuse the ``conch.txt``
 file from above and add a line.
 
 .. code-block:: bash
 
     >>> echo Ralph >> conch.txt
     'Ralph\n'
-    >>> cat conch.txt 
+    >>> cat conch.txt
     Piggy
     Ralph
 
@@ -502,7 +502,7 @@ on its usual meaning.
 
 Non-blocking with ``&``
 ====================================
-In subprocess-mode, you can make a process no-blocking if the last element on 
+In subprocess-mode, you can make a process no-blocking if the last element on
 a line is an ``&``.  The following shows an example with ``emacs``.
 
 .. code-block:: bash
@@ -514,12 +514,12 @@ Note that the prompt is returned to you afterwards.
 
 String Literals in Subprocess-mode
 ====================================
-Strings can be used to escape special character in subprocess-mode. The 
-contents of the string are passed directly to the subprocess command as a 
+Strings can be used to escape special characters in subprocess-mode. The
+contents of the string are passed directly to the subprocess command as a
 single argument.  So whenever you are in doubt, or if there is a xonsh syntax
-error because of a filename, just wrap the offending portion in a string. 
+error because of a filename, just wrap the offending portion in a string.
 
-A common use case for this is files with spaces in their names. This 
+A common use case for this is files with spaces in their names. This
 detestable practice refuses to die. "No problem!" says xonsh, "I have
 strings."  Let's see it go!
 
@@ -550,16 +550,16 @@ details.  As an example, start with a lovely bunch of xonshs:
     >>> ls *o*
     conch  konk  xonsh
 
-This is not available in Python-mode, because multiplication is pretty 
+This is not available in Python-mode, because multiplication is pretty
 important.
 
 
 Regular Expression Filename Globbing with Backticks
 =====================================================
-If you have ever felt that normal globbing could use some more octane, 
+If you have ever felt that normal globbing could use some more octane,
 then regex globbing is the tool for you! Any string that uses backticks
-(`````) instead of quotes (``'``, ``"``) is interpreted as a regular 
-expression to match filenames against.  Like with regular globbing, a 
+(`````) instead of quotes (``'``, ``"``) is interpreted as a regular
+expression to match filenames against.  Like with regular globbing, a
 list of successful matches is returned.  In Python-mode, this is just a
 list of strings. In subprocess-mode, each filename becomes its own argument
 to the subprocess command.
@@ -577,7 +577,7 @@ Let's see a demonstration with some simple filenames:
     >>> len(`a(a+|b+)a`)
     3
 
-Other than the regex matching, this functions in the same way as normal 
+Other than the regex matching, this functions in the same way as normal
 globbing.
 For more information, please see the documentation for the ``re`` module in
 the Python standard library.
@@ -590,9 +590,9 @@ Help & Superhelp with ``?`` & ``??``
 =====================================================
 From IPython, xonsh allows you to inspect objects with question marks.
 A single question mark (``?``) is used to display normal level of help.
-Double question marks (``??``) are used to display higher level of help, 
+Double question marks (``??``) are used to display higher level of help,
 called superhelp. Superhelp usually includes source code if the object was
-written in pure Python.  
+written in pure Python.
 
 Let's start by looking at the help for the int type:
 
@@ -639,7 +639,7 @@ regex globbing:
     <function regexpath at 0x7fef91612950>
 
 Note that both help and superhelp return the object that they are inspecting.
-This allows you to chain together help inside of other operations and 
+This allows you to chain together help inside of other operations and
 ask for help several times in an object hierarchy.  For instance, let's get
 help for both the dict type and its key() method simultaneously:
 
@@ -673,14 +673,14 @@ Like Python and BASH, xonsh provides built-in hooks to compile, evaluate,
 and execute strings of xonsh code.  To prevent this functionality from having
 serious name collisions with the Python built-in ``compile()``, ``eval()``,
 and ``exec()`` functions, the xonsh equivalents all append an 'x'.  So for
-xonsh code you want to use the ``compilex()``, ``evalx()``, and ``execx()`` 
+xonsh code you want to use the ``compilex()``, ``evalx()``, and ``execx()``
 functions. If you don't know what these do, you probably don't need them.
 
 
 Aliases
 ==============================
-Another important xonsh built-in is the ``aliases`` mapping.  This is 
-like a dictionary that effects how subprocess commands are run.  If you are 
+Another important xonsh built-in is the ``aliases`` mapping.  This is
+like a dictionary that effects how subprocess commands are run.  If you are
 familiar with the BASH ``alias`` built-in, this is similar.  Alias command
 matching only occurs for the first element of a subprocess command.
 
@@ -703,20 +703,20 @@ For example, here are some of the default aliases:
 If you were to run ``ls dir/`` with the aliases above in effect (by running
 ``aliases.update(DEFAULT_ALIASES)``), it would reduce to
 ``["ls", "--color=auto", "-v", "dir/"]`` before being executed.
-        
-Lastly, if an alias value is a function (or other callable), then this 
+
+Lastly, if an alias value is a function (or other callable), then this
 function is called *instead* of going to a subprocess command. Such functions
 must have the following signature:
 
 .. code-block:: python
 
     def mycmd(args, stdin=None):
-        """args will be a list of strings representing the arguments to this 
+        """args will be a list of strings representing the arguments to this
         command. stdin will be a string, if present. This is used to pipe
         the output of the previous command into this one.
         """
-        # do whatever you want! Anything you print to stdout or stderr 
-        # will be captured for you automatically. This allows callable 
+        # do whatever you want! Anything you print to stdout or stderr
+        # will be captured for you automatically. This allows callable
         # aliases to support piping.
         print('I go to stdout and will be printed or piped')
 
@@ -732,37 +732,36 @@ must have the following signature:
         # a single string representing stdout
         return  'I am out of here'
 
-        # or you can build up strings for stdout and stderr and then   
+        # or you can build up strings for stdout and stderr and then
         # return a (stdout, stderr) tuple. Both of these may be
-        # either a str or None. Any results returned like this will be 
+        # either a str or None. Any results returned like this will be
         # concatenated with the strings printed elsewhere in the function.
         stdout = 'I commanded'
         stderr = None
         return stdout, stderr
 
-We can dynamically alter the aliases present simply by modifying the 
+We can dynamically alter the aliases present simply by modifying the
 built-in mapping.  Here is an example using a function value:
 
 .. code-block:: python
 
     >>> aliases['banana'] = lambda args, stdin=None: ('My spoon is tooo big!', None)
-    >>> banana 
+    >>> banana
     'My spoon is tooo big!'
 
 Aliasing is a powerful way that xonsh allows you to seamless interact to
-with Python and subprocess. 
-
+with Python and subprocess.
 
 Up, Down, Tab
 ==============
-The up and down keys search history matching from the start of the line, 
+The up and down keys search history matching from the start of the line,
 much like they do in the IPython shell.
 
 Tab completion is present as well. In Python-mode you are able to complete
-based on the variable names in the current builtins, globals, and locals, 
-as well as xonsh languages keywords & operator, files & directories, and 
+based on the variable names in the current builtins, globals, and locals,
+as well as xonsh languages keywords & operator, files & directories, and
 environment variable names. In subprocess-mode, you additionally complete
-on any file names on your ``$PATH``, alias keys, and full BASH completion 
+on any file names on your ``$PATH``, alias keys, and full BASH completion
 for the commands themselves.
 
 Executing Commands and Scripts
@@ -782,21 +781,21 @@ script, stored in ``test.sh``:
 
 .. code-block:: bash
 
-    bash $ cat test_script.sh 
+    bash $ cat test_script.sh
     #!/usr/bin/env xonsh
-    
+
     $[ls]
-    
+
     print('removing files')
     $[rm `file\d+.txt`]
-    
+
     $[ls]
-   
-    print('adding files') 
+
+    print('adding files')
     # This is a comment
     for i, x in enumerate("xonsh"):
         $[echo @(x) > @("file%d.txt" % i)]
-    
+
     print($(ls).replace('\n', ' '))
 
 
@@ -809,13 +808,13 @@ This script could be run by piping its contents to xonsh:
     removing files
     test_script.sh
     adding files
-    file0.txt file1.txt file2.txt file3.txt file4.txt test_script.sh 
-   
+    file0.txt file1.txt file2.txt file3.txt file4.txt test_script.sh
+
 or by invoking xonsh with its filename as an argument:
 
 .. code-block:: bash
 
-    bash $ xonsh test_script.sh 
+    bash $ xonsh test_script.sh
     file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  test_script.sh
     removing files
     test_script.sh
@@ -827,28 +826,29 @@ the script in two different ways:
     #. In either mode, as individual variables ``$ARG<n>`` (e.g., ``$ARG1``)
     #. In Python mode only, as a list ``$ARGS``
 
-A slight variation of the above script operates on a given argument, rather than on
-the string ``'xonsh'`` (notice how ``$ARGS`` and ``$ARG1`` are used):
+For example, consider a slight variation of the example script from above that
+operates on a given argument, rather than on the string ``'xonsh'`` (notice how
+``$ARGS`` and ``$ARG1`` are used):
 
 .. code-block:: bash
 
-    bash $ cat test_script2.sh 
+    bash $ cat test_script2.sh
     #!/usr/bin/env xonsh
-   
+
     print($ARGS)
 
     $[ls]
-    
+
     print('removing files')
     $[rm `file\d+.txt`]
-    
+
     $[ls]
-    
+
     print('adding files')
     # This is a comment
     for i, x in enumerate($ARG1):
         $[echo @(x) > @("file%d.txt" % i)]
-    
+
     print($(ls).replace('\n', ' '))
     print()
 
@@ -861,7 +861,7 @@ the string ``'xonsh'`` (notice how ``$ARGS`` and ``$ARG1`` are used):
     test_script.sh
     adding files
     file0.txt file1.txt file2.txt file3.txt file4.txt file5.txt test_script.sh
-   
+
     bash $ echo @(' '.join($(cat @('file%d.txt' % i)).strip() for i in range(6)))
     s n a i l s
 
