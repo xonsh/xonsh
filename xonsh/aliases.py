@@ -9,6 +9,7 @@ from warnings import warn
 
 from xonsh.dirstack import dirs, pushd, popd
 
+
 def cd(args, stdin=None):
     """Changes the directory.
 
@@ -35,11 +36,13 @@ def cd(args, stdin=None):
     env['PWD'] = os.getcwd()
     return None, None
 
+
 def exit(args, stdin=None):
     """Sends signal to exit shell."""
     builtins.__xonsh_exit__ = True
     print()  # gimme a newline
     return None, None
+
 
 def source_bash(args, stdin=None):
     """Implements bash's source builtin."""
@@ -50,7 +53,7 @@ def source_bash(args, stdin=None):
         args = ' '.join(args)
         input = 'source {0}\nenv >> {1}\n'.format(args, f.name)
         try:
-            subprocess.check_output(['bash'], input=input, env=denv, 
+            subprocess.check_output(['bash'], input=input, env=denv,
                                     stderr=subprocess.PIPE,
                                     universal_newlines=True)
         except subprocess.CalledProcessError:
@@ -64,6 +67,7 @@ def source_bash(args, stdin=None):
             continue  # no change from original
         env[k] = v
     return
+
 
 def bash_aliases():
     """Computes a dictionary of aliases based on Bash's aliases."""
@@ -90,9 +94,9 @@ def bash_aliases():
 
 DEFAULT_ALIASES = {
     'cd': cd,
-    'pushd':pushd,
-    'popd':popd,
-    'dirs':dirs,
+    'pushd': pushd,
+    'popd': popd,
+    'dirs': dirs,
     'EOF': exit,
     'exit': exit,
     'quit': exit,
