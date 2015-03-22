@@ -5,7 +5,8 @@ import shlex
 import subprocess
 from argparse import ArgumentParser, Namespace
 
-from xonsh.shell import Shell, builtins
+import builtins
+from xonsh.shell import Shell
 
 parser = ArgumentParser(description='xonsh')
 parser.add_argument('-c',
