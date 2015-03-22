@@ -126,29 +126,56 @@ class Aliases(MutableMapping):
     """Represents a location to hold and look up aliases."""
 
     def __init__(self, *args, **kwargs):
-        self._raw = dict(*args, **kwargs)
+        self._raw = {}
+        self.update(*args, **kwargs)
 
     def get(self, key, default=None):
-        """Returns the (possibly modified) key. If the key is not 
-        present, the default value is returned. If the key is a string, 
-        then it is parsed and evaluated in a built-ins only context and then 
-        return.  If the value is a non-string Iterable of strings, then it is 
-        returned directly. If the value is callable, it is also returned 
-        without modification. Otherwise, it fails.
+        """Returns the (possibly modified) value. If the key is not present,
+        then `default` is returned.
+        If the value is callable, it is returned without modification. If it
+        is an iterable of strings it will be evaluated recursively to expand
+        other aliases, resulting in a new list or a "partially applied"
+        callable.
         """
-        if key not in self._raw:
+        val = self._raw.get(key)
+        if val is None:
             return default
-        val = self._raw[key]
-        if isinstance(val, string_types):
-            ctx = {}
-            val = builtins.evalx(val, glbs=ctx, locs=ctx)
         elif isinstance(val, Iterable) or callable(val):
-            pass
+            return self.eval_alias(val, seen_tokens={key})
         else:
-            msg = 'alias of {0!r} has an inappropriate type: {1!r}'
-            raise TypeError(msg.format(key, val))
-        return val
+            msg = 'alias of {!r} has an inappropriate type: {!r}'.format(key, val)
+            raise TypeError(msg)
 
+    def eval_alias(self, value, seen_tokens, acc_args=[]):
+        """
+        "Evaluates" the alias `value`, by recursively looking up the leftmost
+        token and "expanding" if it's also an alias.
+
+        A value like ["cmd", "arg"] might transform like this:
+        > ["cmd", "arg"] -> ["ls", "-al", "arg"] -> callable()
+        where `cmd=ls -al` and `ls` is an alias with its value being a callable.
+        The resulting callable will be "partially applied" with ["-al", "arg"].
+        """
+        # Beware of mutability: default values for keyword args are evaluated
+        # only once.
+        if callable(value):
+            if acc_args: # Partial application
+                return lambda args, stdin=None: value(acc_args+args,
+                                                      stdin=stdin)
+            else:
+                return value
+        else:
+            token, *rest = value
+            if token in seen_tokens or token not in self._raw:
+                # ^ Making sure things like `egrep=egrep --color=auto` works,
+                # and that `l` evals to `ls --color=auto -CF` if `l=ls -CF`
+                # and `ls=ls --color=auto`
+                return value + acc_args
+            else:
+                return self.eval_alias(self._raw[token],
+                                       seen_tokens|{token},
+                                       rest+acc_args)
+            
     #
     # Mutable mapping interface
     #
@@ -157,13 +184,17 @@ class Aliases(MutableMapping):
         return self._raw[key]
 
     def __setitem__(self, key, val):
-        self._raw[key] = val
+        if isinstance(val, string_types):
+            self._raw[key] = shlex.split(val)
+        else:
+            self._raw[key] = val
         
     def __delitem__(self, key):
         del self._raw[key]
 
     def update(self, *args, **kwargs):
-        self._raw.update(*args, **kwargs)
+        for key, val in dict(*args, **kwargs).items():
+            self[key] = val
 
     def __iter__(self):
         yield from self._raw
@@ -195,9 +226,7 @@ def expand_path(s):
     global ENV
     if ENV is not None:
         ENV.replace_env()
-    s = os.path.expandvars(s)
-    s = os.path.expanduser(s)
-    return s
+    return os.path.expanduser(os.path.expandvars(s))
 
 
 def reglob(path, parts=None, i=None):
@@ -254,7 +283,7 @@ WRITER_MODES = {'>': 'w', '>>': 'a'}
 
 ProcProxy = namedtuple('ProcProxy', ['stdout', 'stderr'])
 
-def _run_callable_subproc(alias, cmd, captured=True, prev_proc=None, 
+def _run_callable_subproc(alias, args, captured=True, prev_proc=None, 
                           stdout=None):
     """Helper for running callables as a subprocess."""
     # compute stdin for callable
@@ -272,7 +301,7 @@ def _run_callable_subproc(alias, cmd, captured=True, prev_proc=None,
         # handles captured mode
         new_stdout, new_stderr = StringIO(), StringIO()
         with redirect_stdout(new_stdout), redirect_stderr(new_stderr):
-            rtn = alias(cmd[1:], stdin=stdin)
+            rtn = alias(args, stdin=stdin)
         proxy_stdout = new_stdout.getvalue()
         proxy_stderr = new_stderr.getvalue()
         if isinstance(rtn, str):
@@ -282,10 +311,10 @@ def _run_callable_subproc(alias, cmd, captured=True, prev_proc=None,
                 proxy_stdout += rtn[0]
             if rtn[1]:
                 proxy_stderr += rtn[1]
-        proc = ProcProxy(proxy_stdout, proxy_stderr)
+        return ProcProxy(proxy_stdout, proxy_stderr)
     else:
         # handles uncaptured mode
-        rtn = alias(cmd[1:], stdin=stdin)
+        rtn = alias(args, stdin=stdin)
         rtnout, rtnerr = None, None
         if isinstance(rtn, str):
             rtnout = rtn
@@ -297,8 +326,7 @@ def _run_callable_subproc(alias, cmd, captured=True, prev_proc=None,
             if rtn[1]:
                 rtnerr = rtn[1]
                 sys.stderr.write(rtn[1])
-        proc = ProcProxy(rtnout, rtnerr)
-    return proc
+        return ProcProxy(rtnout, rtnerr)
 
 def is_script(fname):
     """
@@ -379,7 +407,7 @@ def run_subproc(cmds, captured=True):
         elif alias is None:
             aliased_cmd = cmd
         elif callable(alias):
-            prev_proc = _run_callable_subproc(alias, cmd, captured=captured, 
+            prev_proc = _run_callable_subproc(alias, cmd[1:], captured=captured, 
                             prev_proc=prev_proc, stdout=stdout)
             continue
         else:
@@ -402,9 +430,8 @@ def run_subproc(cmds, captured=True):
         except FileNotFoundError:
             cmd = aliased_cmd[0]
             print('xonsh: subprocess mode: command not found: {0}'.format(cmd))
-            s = suggest_commands(cmd, ENV, builtins.aliases)
-            if len(s.strip()) > 0:
-                print(suggest_commands(cmd, ENV, builtins.aliases))
+            print(suggest_commands(cmd, ENV, builtins.aliases), end='')
+
             return
         if prev_is_proxy:
             proc.communicate(input=prev_proc.stdout)
