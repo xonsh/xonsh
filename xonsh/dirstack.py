@@ -76,6 +76,10 @@ def pushd(args, stdin=None):
         if e is not None:
             return None, e
 
+    maxsize = env.get('DIRSTACK_SIZE', 20)
+    if len(DIRSTACK) > maxsize:
+        DIRSTACK = DIRSTACK[:maxsize]
+
     if not args.quiet and not env.get('PUSHD_SILENT', False):
         return dirs([], None)
 
