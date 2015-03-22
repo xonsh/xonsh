@@ -2028,7 +2028,7 @@ class Parser(object):
                 msg = 'additional redirect following non-pipe redirect'
                 self._parse_error(msg, self.currloc(lineno=lineno, column=col))
             cliargs = self._subproc_cliargs(p[3], lineno=lineno, col=col)
-            p0 = p1 + [p[2], aliargs]
+            p0 = p1 + [p[2], cliargs]
         # return arguments list
         p[0] = p0
 
