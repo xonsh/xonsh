@@ -2017,6 +2017,7 @@ class Parser(object):
                         | string_literal
                         | REGEXPATH
                         | DOLLAR NAME
+                        | AT_LPAREN test RPAREN
                         | DOLLAR_LBRACE test RBRACE
                         | DOLLAR_LPAREN subproc RPAREN
                         | DOLLAR_LBRACKET subproc RBRACKET
@@ -2045,11 +2046,17 @@ class Parser(object):
         elif lenp == 3:
             p0 = self._envvar_by_name(p[2], lineno=self.lineno, col=self.col)
             p0._cliarg_action = 'ensure_list'
-        elif p1 == '${':
+        elif p1 == '@(':
             l = self.lineno
             c = self.col
             n = ast.Name("str", ast.Load(), lineno=l, col_offset=c)
             p0 = ast.Call(n, [p[2]], [], None, None, lineno=l, col_offset=c)
+            p0._cliarg_action = 'append'
+        elif p1 == '${':
+            xenv = self._xenv(lineno=self.lineno, col=self.col)
+            idx = ast.Index(value=p[2])
+            p0 = ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
+                              lineno=self.lineno, col_offset=self.col)
             p0._cliarg_action = 'append'
         elif p1 == '$(':
             p0 = xonsh_call('__xonsh_subproc_captured__', args=p[2],
