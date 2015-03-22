@@ -1536,6 +1536,7 @@ class Parser(object):
             # filled, possible group container tuple atoms
             if isinstance(p2, ast.AST):
                 p0 = p2
+                p0._real_tuple = True
             elif len(p2) == 1 and isinstance(p2[0], ast.AST):
                 p0 = p2[0]
             else:
@@ -1545,8 +1546,14 @@ class Parser(object):
                 p0 = ast.ListComp(elt=p2.elt, generators=p2.generators, 
                                   lineno=p2.lineno, col_offset=p2.col_offset)
             else:
-                p2 = ensure_has_elts(p2)
-                p0 = ast.List(elts=p2.elts, ctx=ast.Load(), lineno=self.lineno, 
+                if isinstance(p2, ast.Tuple):
+                    if hasattr(p2, '_real_tuple') and p2._real_tuple:
+                        elts = [p2]
+                    else:
+                        elts = p2.elts
+                else:
+                    elts = [p2]
+                p0 = ast.List(elts=elts, ctx=ast.Load(), lineno=self.lineno,
                               col_offset=self.col)
         elif p1 == '{':
             p0 = p2
@@ -1580,6 +1587,7 @@ class Parser(object):
                   | OCT_LITERAL
                   | BIN_LITERAL
                   | FLOAT_LITERAL
+                  | IMAG_LITERAL
         """
         p[0] = ast.Num(n=p[1], lineno=self.lineno, col_offset=self.col)
 
@@ -1589,19 +1597,21 @@ class Parser(object):
                          | test_or_star_expr comma_test_or_star_expr_list comma_opt
         """
         p1, p2 = p[1], p[2]
-        p0 = ensure_has_elts(p1, lineno=self.lineno, col_offset=self.col)
         if len(p) == 3:
             if p2 is None:
                 # split out grouping parentheses.
-                p0 = p0.elts[0]
+                p0 = p1
             elif p2 == ',':
-                pass
+                p0 = ast.Tuple(elts=[p1], ctx=ast.Load(), lineno=self.lineno,
+                               col_offset=self.col)
             elif 'comps' in p2:
-                p0 = ast.GeneratorExp(elt=p0.elts[0], generators=p2['comps'], 
+                p0 = ast.GeneratorExp(elt=p1, generators=p2['comps'],
                                       lineno=self.lineno, col_offset=self.col)
             else:
                 assert False
         elif len(p) == 4:
+            p0 = ast.Tuple(elts=[p1], ctx=ast.Load(), lineno=self.lineno,
+                           col_offset=self.col)
             if p2 is not None:
                 p0.elts.extend(p2) 
             else:
@@ -1694,7 +1704,12 @@ class Parser(object):
         lenp = len(p)
         p1 = p[1]
         if lenp > 2:
-            p1 = ensure_has_elts(p1, lineno=self.lineno, col_offset=self.col)
+            if isinstance(p1, ast.Tuple) and \
+                    (hasattr(p1, '_real_tuple') and p1._real_tuple):
+                p1 = ast.Tuple(elts=[p1], ctx=ast.Load(), lineno=self.lineno,
+                               col_offset=self.col)
+            else:
+                p1 = ensure_has_elts(p1, lineno=self.lineno, col_offset=self.col)
             p2 = p[2] if lenp > 2 else []
             p2 = [] if p2 == ',' else p2
             p1.elts += p2
@@ -1714,16 +1729,23 @@ class Parser(object):
         p1 = p[1]
         lenp = len(p)
         if lenp == 2:
-            p1 = ensure_has_elts(p1)
-            p0 = ast.Set(elts=p1.elts, ctx=ast.Load(), lineno=self.lineno, 
+            elts = [p1]
+            if isinstance(p1, ast.Tuple) and \
+                    not (hasattr(p1, '_real_tuple') and p1._real_tuple):
+                elts = p1.elts
+            p0 = ast.Set(elts=elts, ctx=ast.Load(), lineno=self.lineno,
                          col_offset=self.col)
         elif lenp == 3:
             comps = p[2].get('comps', [])
             p0 = ast.SetComp(elt=p1, generators=comps, lineno=self.lineno, 
                              col_offset=self.col)
         elif lenp == 4:
-            p3 = ensure_has_elts(p[3])
-            p0 = ast.Dict(keys=[p1], values=p3.elts, ctx=ast.Load(),
+            p3 = p[3]
+            vals = [p3]
+            if isinstance(p3, ast.Tuple) and \
+                    not (hasattr(p3, '_real_tuple') and p3._real_tuple):
+                vals = p3.elts
+            p0 = ast.Dict(keys=[p1], values=vals, ctx=ast.Load(),
                           lineno=self.lineno, col_offset=self.col)
         elif lenp == 5:
             comps = p[4].get('comps', [])
@@ -2016,6 +2038,7 @@ class Parser(object):
                         | string_literal
                         | REGEXPATH
                         | DOLLAR NAME
+                        | AT_LPAREN test RPAREN
                         | DOLLAR_LBRACE test RBRACE
                         | DOLLAR_LPAREN subproc RPAREN
                         | DOLLAR_LBRACKET subproc RBRACKET
@@ -2044,11 +2067,17 @@ class Parser(object):
         elif lenp == 3:
             p0 = self._envvar_by_name(p[2], lineno=self.lineno, col=self.col)
             p0._cliarg_action = 'ensure_list'
-        elif p1 == '${':
+        elif p1 == '@(':
             l = self.lineno
             c = self.col
             n = ast.Name("str", ast.Load(), lineno=l, col_offset=c)
             p0 = ast.Call(n, [p[2]], [], None, None, lineno=l, col_offset=c)
+            p0._cliarg_action = 'append'
+        elif p1 == '${':
+            xenv = self._xenv(lineno=self.lineno, col=self.col)
+            idx = ast.Index(value=p[2])
+            p0 = ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
+                              lineno=self.lineno, col_offset=self.col)
             p0._cliarg_action = 'append'
         elif p1 == '$(':
             p0 = xonsh_call('__xonsh_subproc_captured__', args=p[2],

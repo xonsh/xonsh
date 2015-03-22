@@ -99,6 +99,15 @@ def test_int_literal():
 def test_float_literal():
     yield check_ast, '42.0'
 
+def test_imag_literal():
+    yield check_ast, '42j'
+
+def test_float_imag_literal():
+    yield check_ast, '42.0j'
+
+def test_complex():
+    yield check_ast, '42+84j'
+
 def test_str_literal():
     yield check_ast, '"hello"'
 
@@ -309,8 +318,47 @@ def test_list_two():
 def test_list_three():
     yield check_ast, '[1, 42, 65]'
 
-def test_list_three():
+def test_list_three_comma():
     yield check_ast, '[1, 42, 65,]'
+
+def test_list_one_nested():
+    yield check_ast, '[[1]]'
+
+def test_list_list_four_nested():
+    yield check_ast, '[[1], [2], [3], [4]]'
+
+def test_list_tuple_three_nested():
+    yield check_ast, '[(1,), (2,), (3,)]'
+
+def test_list_set_tuple_three_nested():
+    yield check_ast, '[{(1,)}, {(2,)}, {(3,)}]'
+
+def test_list_tuple_one_nested():
+    yield check_ast, '[(1,)]'
+
+def test_tuple_tuple_one_nested():
+    yield check_ast, '((1,),)'
+
+def test_dict_list_one_nested():
+    yield check_ast, '{1: [2]}'
+
+def test_dict_list_one_nested_comma():
+    yield check_ast, '{1: [2],}'
+
+def test_dict_tuple_one_nested():
+    yield check_ast, '{1: (2,)}'
+
+def test_dict_tuple_one_nested_comma():
+    yield check_ast, '{1: (2,),}'
+
+def test_dict_list_two_nested():
+    yield check_ast, '{1: [2], 3: [4]}'
+
+def test_set_tuple_one_nested():
+    yield check_ast, '{(1,)}'
+
+def test_set_tuple_two_nested():
+    yield check_ast, '{(1,), (2,)}'
 
 def test_tuple_empty():
     yield check_ast, '()'
@@ -1330,10 +1378,10 @@ def test_ls_dot():
     yield check_xonsh_ast, {}, '$(ls .)'
 
 def test_ls_dot_nesting():
-    yield check_xonsh_ast, {}, '$(ls ${None or "."})'
+    yield check_xonsh_ast, {}, '$(ls @(None or "."))'
 
 def test_ls_dot_nesting_var():
-    yield check_xonsh, {}, 'x = "."; $(ls ${None or x})'
+    yield check_xonsh, {}, 'x = "."; $(ls @(None or x))'
 
 def test_ls_dot_str():
     yield check_xonsh_ast, {}, '$(ls ".")'
