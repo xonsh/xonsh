@@ -1609,7 +1609,8 @@ class Parser(object):
             else:
                 assert False
         elif len(p) == 4:
-            p0 = ensure_has_elts(p1, lineno=self.lineno, col_offset=self.col)
+            p0 = ast.Tuple(elts=[p1], ctx=ast.Load(), lineno=self.lineno,
+                           col_offset=self.col)
             if p2 is not None:
                 p0.elts.extend(p2) 
             else:

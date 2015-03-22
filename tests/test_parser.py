@@ -315,6 +315,15 @@ def test_list_three_comma():
 def test_list_one_nested():
     yield check_ast, '[[1]]'
 
+def test_list_list_four_nested():
+    yield check_ast, '[[1], [2], [3], [4]]'
+
+def test_list_tuple_three_nested():
+    yield check_ast, '[(1,), (2,), (3,)]'
+
+def test_list_set_tuple_three_nested():
+    yield check_ast, '[{(1,)}, {(2,)}, {(3,)}]'
+
 def test_list_tuple_one_nested():
     yield check_ast, '[(1,)]'
 
