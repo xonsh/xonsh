@@ -749,7 +749,7 @@ built-in mapping.  Here is an example using a function value:
     >>> banana
     'My spoon is tooo big!'
 
-Aliasing is a powerful way that xonsh allows you to seamless interact to
+Aliasing is a powerful way that xonsh allows you to seamlessly interact to
 with Python and subprocess.
 
 Up, Down, Tab
