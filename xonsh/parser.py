@@ -2110,7 +2110,7 @@ class Parser(object):
         if len(p) == 2:
             p0 = p1
         else:
-            p0 = p1 + p[2]
+            p0 = os.path.expanduser(p1 + p[2])
         p[0] = p0
 
     def p_subproc_arg_part(self, p):
