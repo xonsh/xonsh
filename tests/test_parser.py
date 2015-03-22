@@ -99,6 +99,15 @@ def test_int_literal():
 def test_float_literal():
     yield check_ast, '42.0'
 
+def test_imag_literal():
+    yield check_ast, '42j'
+
+def test_float_imag_literal():
+    yield check_ast, '42.0j'
+
+def test_complex():
+    yield check_ast, '42+84j'
+
 def test_str_literal():
     yield check_ast, '"hello"'
 

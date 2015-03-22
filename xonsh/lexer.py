@@ -109,8 +109,8 @@ class Lexer(object):
 
         # literals
         'INT_LITERAL', 'HEX_LITERAL', 'OCT_LITERAL', 'BIN_LITERAL',
-        'FLOAT_LITERAL', 'STRING_LITERAL', 'RAW_STRING_LITERAL',
-        'BYTES_LITERAL', 'UNICODE_LITERAL',
+        'FLOAT_LITERAL', 'IMAG_LITERAL', 'STRING_LITERAL',
+        'RAW_STRING_LITERAL', 'BYTES_LITERAL', 'UNICODE_LITERAL',
 
         # Basic Operators
         'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'DOUBLEDIV', 'MOD', 'POW', 
@@ -176,6 +176,7 @@ class Lexer(object):
     float_mantissa = r"(?:[0-9]*\.[0-9]+)|(?:[0-9]+\.)"
     float_literal = ('((((' + float_mantissa + ')' + float_exponent + 
                      '?)|([0-9]+' + float_exponent + ')))')
+    imag_literal = '(' + r'[0-9]+[jJ]' + '|' + float_literal + r'[jJ]' + ')'
 
     #
     # Rules 
@@ -359,6 +360,12 @@ class Lexer(object):
         return t
 
     # float literal must come before int literals
+
+    @TOKEN(imag_literal)
+    def t_IMAG_LITERAL(self, t):
+        if self.in_py_mode[-1]:
+            t.value = eval(t.value)
+        return t
 
     @TOKEN(float_literal)
     def t_FLOAT_LITERAL(self, t):

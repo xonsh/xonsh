@@ -1580,6 +1580,7 @@ class Parser(object):
                   | OCT_LITERAL
                   | BIN_LITERAL
                   | FLOAT_LITERAL
+                  | IMAG_LITERAL
         """
         p[0] = ast.Num(n=p[1], lineno=self.lineno, col_offset=self.col)
 
