@@ -7,6 +7,8 @@ import subprocess
 import shlex
 from warnings import warn
 
+from xonsh.dirstack import dirs, pushd, popd
+
 def cd(args, stdin=None):
     """Changes the directory.
 
@@ -14,7 +16,7 @@ def cd(args, stdin=None):
     changes to the current user's home directory.
     """
     env = builtins.__xonsh_env__
-    cur_oldpwd = env.get('OLDPWD') or os.getcwd()
+    cur_oldpwd = env.get('OLDPWD', os.getcwd())
     if len(args) == 0:
         d = os.path.expanduser('~')
     elif len(args) == 1:
@@ -27,6 +29,7 @@ def cd(args, stdin=None):
         return '', 'cd: no such file or directory: {0}\n'.format(d)
     if not os.path.isdir(d):
         return '', 'cd: {0} is not a directory\n'.format(d)
+
     env['OLDPWD'] = os.getcwd()
     os.chdir(d)
     env['PWD'] = os.getcwd()
@@ -87,6 +90,9 @@ def bash_aliases():
 
 DEFAULT_ALIASES = {
     'cd': cd,
+    'pushd':pushd,
+    'popd':popd,
+    'dirs':dirs,
     'EOF': exit,
     'exit': exit,
     'quit': exit,
