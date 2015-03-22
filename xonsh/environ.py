@@ -14,7 +14,7 @@ from warnings import warn
 from xonsh.tools import TERM_COLORS
 
 class PromptFormatter(dict):
-    '''
+    """
     Base class that implements utilities for PromptFormatters.
 
     You should read the docs for this class to learn how to write your own
@@ -27,32 +27,32 @@ class PromptFormatter(dict):
     those variables (although very simple variables can be written with
     pre-existing functions.)
 
-    Example:
+    Example::
 
-    def __init__(self, *args, **kwargs):
-        super(PromptFormatter, self).__init__(*args, **kwargs)
+        def __init__(self, *args, **kwargs):
+            super(PromptFormatter, self).__init__(*args, **kwargs)
 
-        # Add a variable that's just a static string.  Useful for constants
-        # that you can't remember:
-        self['bell'] = '\x07'
+            # Add a variable that's just a static string.  Useful for constants
+            # that you can't remember:
+            self['bell'] = '\x07'
 
-        # To add a variable that only needs to be computed once add
-        # the function to be called to self.  This can be used for any
-        # variable that won't change while this shell instance is run.  It is
-        # especially useful if the variable takes a long time to compute and
-        # is infrequently used by users:
-        self['login_time'] = self.login_time
+            # To add a variable that only needs to be computed once add
+            # the function to be called to self.  This can be used for any
+            # variable that won't change while this shell instance is run.  It is
+            # especially useful if the variable takes a long time to compute and
+            # is infrequently used by users:
+            self['login_time'] = self.login_time
 
-        # To add a variable that needs to be computed every time the prompt is
-        # printed simply add a function to self and then add the variable name
-        # to the self._run_every set.
-        self['time24'] = functools.partial(time.strftime, '%H:%M:%S')
-        self._run_every.add('time24')
+            # To add a variable that needs to be computed every time the prompt is
+            # printed simply add a function to self and then add the variable name
+            # to the self._run_every set.
+            self['time24'] = functools.partial(time.strftime, '%H:%M:%S')
+            self._run_every.add('time24')
 
-    def login_time(self):
-        who_out = subprocess.check_output(['who', '-m'])
-        return ' '.join(who_out.decode().split()[2:4])
-    '''
+        def login_time(self):
+            who_out = subprocess.check_output(['who', '-m'])
+            return ' '.join(who_out.decode().split()[2:4])
+    """
 
     def __init__(self, *args, **kwargs):
 
@@ -60,12 +60,12 @@ class PromptFormatter(dict):
         self._run_every = set()
 
     def __getitem__(self, key):
-        '''
+        """
         If the item is a function, return the output of the function.
         This is so we can have static prompt values that only need to be
         determined once and dynamic values that have to be recomputed each
         time the prompt is displayed.
-        '''
+        """
         value = super(PromptFormatter, self).__getitem__(key)
 
         if callable(value):
@@ -80,14 +80,14 @@ class PromptFormatter(dict):
         return value
 
     def get(self, key, default=None):
-        '''Return the value for the key.
+        """Return the value for the key.
 
         If the key is not present, return the value of the default param.
         If the value is a function, return the output of the function.
 
         This is implemented for completeness but isn't currently used
         internally to xonsh.
-        '''
+        """
         try:
             value = self[key]
         except KeyError:
@@ -101,7 +101,7 @@ class DefaultPromptFormatter(PromptFormatter):
         self._env = builtins.__xonsh_env__
 
         self.update(TERM_COLORS)
-        formatters = dict(
+        self.update(dict(
                 base_cwd=partial(self.cwd, False),
                 cwd=self.cwd,
                 curr_branch=self.curr_branch,
@@ -109,8 +109,7 @@ class DefaultPromptFormatter(PromptFormatter):
                 short_host=lambda: socket.gethostname().split('.', 1)[0],
                 time=datetime.now,
                 user=self.user,
-        )
-        self.update(formatters)
+        ))
         self._run_every.update(frozenset(('base_cwd', 'cwd', 'curr_branch', 'time')))
 
         # Do this last so the defaults could be overridden
@@ -167,7 +166,7 @@ class DefaultPromptFormatter(PromptFormatter):
                 branch = branch.strip()
                 break
 
-        else: # http://bit.ly/for_else
+        else:  # http://bit.ly/for_else
             # fall back to using the git binary if the above failed
             if branch is None:
                 try:
@@ -207,7 +206,7 @@ def format_prompt(template=default_prompt):
     + NO_COLOR -- Resets any previously used color codes
     """
     global prompt_formatter
-    if not prompt_formatter:
+    if prompt_formatter is None:
         cls = DefaultPromptFormatter
         prompt_formatter = cls()
     p = template.format(**prompt_formatter)
