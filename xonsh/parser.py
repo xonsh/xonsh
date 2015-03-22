@@ -2098,8 +2098,6 @@ class Parser(object):
         # This glues the string together after parsing
         p1 = p[1] 
         if len(p) == 2:
-            if p1 == '~':
-                p1 = os.path.expanduser(p1)
             p0 = p1
         else:
             p0 = p1 + p[2]

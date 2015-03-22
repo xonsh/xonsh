@@ -20,7 +20,7 @@ def cd(args, stdin=None):
     if len(args) == 0:
         d = os.path.expanduser('~')
     elif len(args) == 1:
-        d = args[0]
+        d = os.path.expanduser(args[0])
         if d == '-':
             d = cur_oldpwd
     else:
