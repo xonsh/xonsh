@@ -7,14 +7,19 @@ import locale
 import builtins
 import platform
 import subprocess
+from functools import partial
 from warnings import warn
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.tools import TERM_COLORS
 
 class PromptFormatter(dict):
+    class _ComputeSentinel:
+        pass
+
     def __init__(self, *args, **kwargs):
         super(PromptFormatter, self).__init__(*args, **kwargs)
+        self._compute = dict()
 
     def __getitem__(self, key):
         '''
@@ -24,8 +29,17 @@ class PromptFormatter(dict):
         time the prompt is displayed.
         '''
         value = super(PromptFormatter, self).__getitem__(key)
-        if callable(value):
+
+        # Order matters: classes are callable so we have to check
+        # _ComputeSentinel first.
+        # We check for both setting the value to the class or an instance of
+        # the class
+        if (value is self._ComputeSentinel or
+                isinstance(value, self._ComputeSentinel)):
+            self[key] = value = self._compute[key]()
+        elif callable(value):
             return value()
+
         return value
 
     def get(self, key, default=None):
@@ -48,11 +62,17 @@ class DefaultPromptFormatter(PromptFormatter):
 
         self.update(TERM_COLORS)
         formatters = dict(user=self.user,
-                hostname=socket.gethostname(),
+                hostname=self._ComputeSentinel,
                 cwd=self.cwd,
+                short_host=self._ComputeSentinel,
+                base_cwd=partial(self.cwd, False),
                 curr_branch=self.curr_branch,
         )
+        compute = dict(hostname=socket.gethostname,
+                short_host=lambda: socket.gethostname().split('.', 1)[0],
+                )
         self.update(formatters)
+        self._compute.update(compute)
 
         # Do this last so the defaults could be overridden
         self.update(dict(*args, **kwargs))
@@ -60,8 +80,11 @@ class DefaultPromptFormatter(PromptFormatter):
     def user(self):
         return self._env.get('USER', '<user>')
 
-    def cwd(self):
-        return self._env['PWD'].replace(self._env['HOME'], '~')
+    def cwd(self, full_path=True):
+        cwd = self._env['PWD'].replace(self._env['HOME'], '~')
+        if full_path:
+            return cwd
+        return os.path.basename(cwd)
 
     def curr_branch(self, cwd=None):
         """Gets the branch for a current working directory. Returns None
@@ -122,7 +145,7 @@ class DefaultPromptFormatter(PromptFormatter):
 
 
 default_prompt = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
-                  '{cwd}{BOLD_RED}{curr_branch} {BOLD_BLUE}${NO_COLOR} ')
+                  '{base_cwd}{BOLD_RED}{curr_branch} {BOLD_BLUE}${NO_COLOR} ')
 default_title = '{user}@{hostname}: {cwd} | xonsh'
 
 prompt_formatter = None
