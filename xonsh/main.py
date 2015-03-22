@@ -45,6 +45,7 @@ def main(argv=None):
             with open(args.file) as f:
                 code = f.read()
             code = code if code.endswith('\n') else code + '\n'
+            env['ARGS'] = [args.file] + args.args
             env['0'] = args.file
             for ix, arg in enumerate(args.args):
                 env[str(ix+1)] = arg
