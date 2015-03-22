@@ -182,7 +182,7 @@ class DefaultPromptFormatter(PromptFormatter):
 
 
 default_prompt = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
-                  '{base_cwd}{BOLD_RED}{curr_branch} {BOLD_BLUE}${NO_COLOR} ')
+                  '{cwd}{BOLD_RED}{curr_branch} {BOLD_BLUE}${NO_COLOR} ')
 default_title = '{user}@{hostname}: {cwd} | xonsh'
 
 prompt_formatter = None
