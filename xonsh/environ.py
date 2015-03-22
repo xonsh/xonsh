@@ -10,11 +10,12 @@ import subprocess
 from datetime import datetime
 from functools import partial
 from warnings import warn
+from collections import MutableMapping
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.tools import TERM_COLORS
 
-class PromptFormatter(dict):
+class PromptFormatter(MutableMapping):
     """
     Base class that implements utilities for PromptFormatters.
 
@@ -59,6 +60,7 @@ class PromptFormatter(dict):
 
         super(PromptFormatter, self).__init__(*args, **kwargs)
         self._run_every = set()
+        self._storage = dict()
 
     def __getitem__(self, key):
         """
@@ -67,7 +69,7 @@ class PromptFormatter(dict):
         determined once and dynamic values that have to be recomputed each
         time the prompt is displayed.
         """
-        value = super(PromptFormatter, self).__getitem__(key)
+        value = self._storage[key]
 
         if callable(value):
             if key in self._run_every:
@@ -75,25 +77,22 @@ class PromptFormatter(dict):
                 return value()
             # Variables computed a single time
             value = value()
-            self[key] = value
+            self._storage[key] = value
 
         # If not callable then it was a static value
         return value
 
-    def get(self, key, default=None):
-        """Return the value for the key.
+    def __setitem__(self, key, value):
+        self._storage[key] = value
 
-        If the key is not present, return the value of the default param.
-        If the value is a function, return the output of the function.
+    def __iter__(self):
+        return iter(self._storage)
 
-        This is implemented for completeness but isn't currently used
-        internally to xonsh.
-        """
-        try:
-            value = self[key]
-        except KeyError:
-            return default
-        return value
+    def __delitem__(self, key):
+        del self._storage[key]
+
+    def __len__(self):
+        return len(self._storage)
 
 
 class DefaultPromptFormatter(PromptFormatter):
