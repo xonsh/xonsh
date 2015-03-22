@@ -12,57 +12,120 @@ from warnings import warn
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.tools import TERM_COLORS
 
-def current_branch(cwd=None):
-    """Gets the branch for a current working directory. Returns None
-    if the cwd is not a repository.  This currently only works for git, 
-    bust should be extended in the future.
-    """
-    branch = None
-    cwd = os.getcwd() if cwd is None else cwd
+class PromptFormatter(dict):
+    def __init__(self, *args, **kwargs):
+        super(PromptFormatter, self).__init__(*args, **kwargs)
 
-    # step out completely if git is not installed
-    try:
-        binary_location = subprocess.check_output(['which', 'git'], cwd=cwd,
-                                    stderr=subprocess.PIPE,
-                                    universal_newlines=True)
-        if not binary_location:
-            return branch
-    except subprocess.CalledProcessError:
-        return branch
+    def __getitem__(self, key):
+        '''
+        If the item is a function, return the output of the function.
+        This is so we can have static prompt values that only need to be
+        determined once and dynamic values that have to be recomputed each
+        time the prompt is displayed.
+        '''
+        value = super(PromptFormatter, self).__getitem__(key)
+        if callable(value):
+            return value()
+        return value
 
-    prompt_scripts = [
-        '/usr/lib/git-core/git-sh-prompt',
-        '/usr/local/etc/bash_completion.d/git-prompt.sh'
-    ]
+    def get(self, key, default=None):
+        '''Return the value for the key.
 
-    for script in prompt_scripts:
-        # note that this is about 10x faster than bash -i "__git_ps1"
-        _input = ('source {}; __git_ps1 "${{1:-%s}}"'.format(script))
+        If the key is not present, return the value of the default param.
+        If the value is a function, return the output of the function.
+        '''
         try:
-            branch = subprocess.check_output(['bash',], cwd=cwd, input=_input,
+            value = self[key]
+        except KeyError:
+            return default
+        return value
+
+
+class DefaultPromptFormatter(PromptFormatter):
+    def __init__(self, *args, **kwargs):
+        super(DefaultPromptFormatter, self).__init__(*args, **kwargs)
+        self._env = builtins.__xonsh_env__
+
+        self.update(TERM_COLORS)
+        formatters = dict(user=self.user,
+                hostname=socket.gethostname(),
+                cwd=self.cwd,
+                curr_branch=self.curr_branch,
+        )
+        self.update(formatters)
+
+        # Do this last so the defaults could be overridden
+        self.update(dict(*args, **kwargs))
+
+    def user(self):
+        return self._env.get('USER', '<user>')
+
+    def cwd(self):
+        return self._env['PWD'].replace(self._env['HOME'], '~')
+
+    def curr_branch(self, cwd=None):
+        """Gets the branch for a current working directory. Returns None
+        if the cwd is not a repository.  This currently only works for git,
+        bust should be extended in the future.
+        """
+        branch = None
+        cwd = os.getcwd() if cwd is None else cwd
+
+        # step out completely if git is not installed
+        try:
+            binary_location = subprocess.check_output(['which', 'git'], cwd=cwd,
                                         stderr=subprocess.PIPE,
-                                        universal_newlines=True) or None
+                                        universal_newlines=True)
         except subprocess.CalledProcessError:
-            continue
+            return ''
 
-    # fall back to using the git binary if the above failed
-    if branch is None:
-        try:
-            s = subprocess.check_output(['git', 'rev-parse','--abbrev-ref', 'HEAD'],
-                    stderr=subprocess.PIPE, cwd=cwd,
-                    universal_newlines=True) 
-            s = s.strip()
-            if len(s) > 0:
-                branch = s
-        except subprocess.CalledProcessError:
-            pass
+        if not binary_location:
+            return ''
 
-    return branch
+        prompt_scripts = (
+            '/usr/lib/git-core/git-sh-prompt',
+            '/usr/share/git-core/contrib/completion/git-prompt.sh',
+            '/usr/local/etc/bash_completion.d/git-prompt.sh',
+        )
+
+        for script in prompt_scripts:
+            if not os.path.exists(script):
+                continue
+            # note that this is about 10x faster than bash -i "__git_ps1"
+            _input = ('source {}; __git_ps1 "${{1:-%s}}"'.format(script))
+            try:
+                branch = subprocess.check_output(['bash',], cwd=cwd, input=_input,
+                                            stderr=subprocess.PIPE,
+                                            universal_newlines=True)
+            except subprocess.CalledProcessError:
+                continue
+            else:
+                # Trust the git-prompt script determined if we're in a git
+                # repo and if so, which branch we're in
+                branch = branch.strip()
+                break
+
+        else: # http://bit.ly/for_else
+            # fall back to using the git binary if the above failed
+            if branch is None:
+                try:
+                    branch = subprocess.check_output(['git', 'rev-parse','--abbrev-ref', 'HEAD'],
+                            stderr=subprocess.PIPE, cwd=cwd,
+                            universal_newlines=True)
+                    branch = branch.strip()
+                except subprocess.CalledProcessError:
+                    pass
+
+        if branch:
+            return ' {}'.format(branch)
+        return ''
 
 
 default_prompt = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
                   '{cwd}{BOLD_RED}{curr_branch} {BOLD_BLUE}${NO_COLOR} ')
 default_title = '{user}@{hostname}: {cwd} | xonsh'
+
+prompt_formatter = None
 
 def format_prompt(template=default_prompt):
     """Formats a xonsh prompt template string.
@@ -81,17 +144,11 @@ def format_prompt(template=default_prompt):
               BOLD_INTENSE, BACKGROUND_INTENSE
     + NO_COLOR -- Resets any previously used color codes
     """
-    env = builtins.__xonsh_env__
-    cwd = env['PWD']
-    branch = current_branch(cwd=cwd)
-    branch = '' if branch is None else ' ' + branch
-    p = template.format(
-            user=env.get('USER', '<user>'),
-            hostname=socket.gethostname(),
-            cwd=cwd.replace(env['HOME'], '~'),
-            curr_branch=branch,
-            **TERM_COLORS
-            )
+    global prompt_formatter
+    if not prompt_formatter:
+        cls = DefaultPromptFormatter
+        prompt_formatter = cls()
+    p = template.format(**prompt_formatter)
     return p
 
 
