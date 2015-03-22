@@ -66,12 +66,13 @@ def pushd(args, stdin=None):
             e = 'Invalid argument to pushd: {0}\n'
             return None, e.format(args.dir)
     if new_pwd is not None:
-        DIRSTACK.insert(0, os.path.expanduser(pwd))
-
         o = None
         e = None
         if args.cd:
+            DIRSTACK.insert(0, os.path.expanduser(pwd))
             o, e = builtins.default_aliases['cd']([new_pwd], None)
+        else:
+            DIRSTACK.insert(0, os.path.expanduser(os.path.abspath(new_pwd)))
 
         if e is not None:
             return None, e
