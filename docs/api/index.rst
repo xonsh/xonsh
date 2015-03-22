@@ -24,6 +24,7 @@ For those of you who want the gritty details.
     built_ins
     environ
     aliases
+    dirstack
     inspectors
     completer
     shell
