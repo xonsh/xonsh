@@ -110,6 +110,9 @@ class Shell(Cmd):
         """Overridden to no-op."""
         return '', line, line
 
+    def precmd(self, line):
+        return line if self.need_more_lines else line.lstrip()
+        
     def default(self, line):
         """Implements code execution."""
         line = line if line.endswith('\n') else line + '\n'
