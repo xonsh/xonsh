@@ -20,13 +20,13 @@ class PromptFormatter(MutableMapping):
 
     You should read the docs for this class to learn how to write your own
     Prompt Formatter.  However, you most likely want to inherit from
-    DefaultPromptFormatter if you are writing a custom formatter.
+    :class:`~DefaultPromptFormatter` if you are writing a custom formatter.
 
-    Custom Prompt Formatters will need to implement their own __init__()
-    method that adds entries to several dicts depending on the needs of the
-    variables they add.  The Formatter may also implement methods to implement
-    those variables (although very simple variables can be written with
-    pre-existing functions.)
+    Custom Prompt Formatters will need to implement their own :meth:`__init__`
+    that adds entries to several dicts depending on the needs of the variables
+    they add.  The Formatter may also implement methods to implement those
+    variables (although very simple variables can be written with pre-existing
+    functions.)
 
     Example::
 
@@ -95,6 +95,23 @@ class PromptFormatter(MutableMapping):
 
 
 class DefaultPromptFormatter(PromptFormatter):
+    """
+    This class implements the default prompt format variables.
+
+    The following variables are recognized:
+
+    + user -- Name of current user
+    + hostname -- Name of host computer
+    + cwd -- Current working directory
+    + curr_branch -- Name of current git branch (preceded by a space), if any
+    + (QUALIFIER\_)COLORNAME -- Inserts an ANSI color code
+        - COLORNAME can be any of:
+              BLACK, RED, GREEN, YELLOW, BLUE, PURPLE, CYAN, WHITE
+        - QUALIFIER is optional and can be any of:
+              BOLD, UNDERLINE, BACKGROUND, INTENSE,
+              BOLD_INTENSE, BACKGROUND_INTENSE
+    + NO_COLOR -- Resets any previously used color codes
+    """
     def __init__(self, *args, **kwargs):
         super(DefaultPromptFormatter, self).__init__(*args, **kwargs)
         self._env = builtins.__xonsh_env__
@@ -115,18 +132,25 @@ class DefaultPromptFormatter(PromptFormatter):
         self.update(dict(*args, **kwargs))
 
     def user(self):
+        """Return the current user's username"""
         return self._env.get('USER', '<user>')
 
     def cwd(self, full_path=True):
+        """Return the current working directory
+
+        :kwarg full_path: If True (the default), return the full path of the
+            directory.  If False, return only the directory's basename
+        """
         cwd = self._env['PWD'].replace(self._env['HOME'], '~')
         if full_path:
             return cwd
         return os.path.basename(cwd)
 
     def curr_branch(self, cwd=None):
-        """Gets the branch for a current working directory. Returns None
-        if the cwd is not a repository.  This currently only works for git,
-        bust should be extended in the future.
+        """Gets the branch for a current working directory.
+
+        Returns empty string if the cwd is not a repository.  This currently
+        only works for git but should be extended in the future.
         """
         branch = None
         cwd = os.getcwd() if cwd is None else cwd
@@ -190,19 +214,8 @@ prompt_formatter = None
 def format_prompt(template=default_prompt):
     """Formats a xonsh prompt template string.
 
-    The following keyword arguments are recognized in the template string:
-
-    + user -- Name of current user
-    + hostname -- Name of host computer
-    + cwd -- Current working directory
-    + curr_branch -- Name of current git branch (preceded by a space), if any
-    + (QUALIFIER\_)COLORNAME -- Inserts an ANSI color code
-        - COLORNAME can be any of:
-              BLACK, RED, GREEN, YELLOW, BLUE, PURPLE, CYAN, WHITE
-        - QUALIFIER is optional and can be any of:
-              BOLD, UNDERLINE, BACKGROUND, INTENSE,
-              BOLD_INTENSE, BACKGROUND_INTENSE
-    + NO_COLOR -- Resets any previously used color codes
+    See the :class:`~DefaultPromptFormatter` documentation for keyword
+    arguments recognized in the template string.[
     """
     global prompt_formatter
     if prompt_formatter is None:
