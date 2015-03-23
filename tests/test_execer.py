@@ -6,7 +6,7 @@ import ast
 
 from xonsh.execer import Execer
 
-from tools import mock_xonsh_env
+from .tools import mock_xonsh_env
 
 DEBUG_LEVEL = 0
 EXECER = None

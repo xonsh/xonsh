@@ -17,7 +17,7 @@ from ply.lex import LexToken
 
 from xonsh.parser import Parser
 
-from tools import mock_xonsh_env
+from .tools import mock_xonsh_env
 
 PARSER = None
 DEBUG_LEVEL = 0
