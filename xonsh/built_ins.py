@@ -414,6 +414,9 @@ def run_subproc(cmds, captured=True):
                 e = 'xonsh: subprocess mode: permission denied: {0}'
                 print(e.format(cmd[0]))
                 return
+            # fall back to trying to run directly with subproc
+            except:
+                aliased_cmd = cmd
         elif alias is None:
             aliased_cmd = cmd
         elif callable(alias):
