@@ -823,8 +823,9 @@ or by invoking xonsh with its filename as an argument:
 
 xonsh scripts can also accept arguments.  These arguments are made available to
 the script in two different ways:
-    #. In either mode, as individual variables ``$ARG<n>`` (e.g., ``$ARG1``)
-    #. In Python mode only, as a list ``$ARGS``
+    
+#. In either mode, as individual variables ``$ARG<n>`` (e.g., ``$ARG1``)    
+#. In Python mode only, as a list ``$ARGS``
 
 For example, consider a slight variation of the example script from above that
 operates on a given argument, rather than on the string ``'xonsh'`` (notice how
