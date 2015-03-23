@@ -105,7 +105,7 @@ class DefaultPromptFormatter(PromptFormatter):
                 base_cwd=partial(self.cwd, False),
                 cwd=self.cwd,
                 curr_branch=self.curr_branch,
-                hostname=socket.gethostname,
+                hostname=socket.getfqdn,
                 short_host=lambda: socket.gethostname().split('.', 1)[0],
                 time=datetime.now,
                 user=self.user,
