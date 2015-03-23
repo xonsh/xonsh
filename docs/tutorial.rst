@@ -232,10 +232,9 @@ operator.
 .. warning:: In BASH, ``$NAME`` and ``${NAME}`` are syntactically equivalent.
              In xonsh, they have separate meanings.
 
-While in Python-mode (not subprocess-mode, which we'll get to later), we can
-place any valid Python expression inside of the curly braces in ``${<expr>}``.
-This result of this expression will then be used to look up a value in
-the environment.  In fact, ``${<expr>}`` is the same as doing
+We can place any valid Python expression inside of the curly braces in 
+``${<expr>}``. This result of this expression will then be used to look up a 
+value in the environment.  In fact, ``${<expr>}`` is the same as doing
 ``__xonsh_env__[<expr>]``, but much nicer to look at. Here are a couple of
 examples in action:
 
@@ -868,7 +867,7 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
 
 That's All, Folks
 ======================
-To leave xonsh, hit ``Crtl-D``, type ``EOF``, or type ``exit``.
+To leave xonsh, hit ``Crtl-D``, type ``EOF``, type ``quit``, or type ``exit``.
 
 .. code-block:: bash
 
