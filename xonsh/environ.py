@@ -165,7 +165,7 @@ def xonshrc_context(rcfile=None, execer=None):
     env = {}
     try:
         execer.filename = rcfile
-        execer.exec(rc, glbs={}, locs=env)
+        execer.exec(rc, glbs=env)
     except SyntaxError as err:
         msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
         warn(msg.format(rcfile, err), RuntimeWarning)
