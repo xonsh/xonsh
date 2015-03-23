@@ -6,8 +6,8 @@ source:
   fn: xonsh.tar.gz
   url: https://github.com/scopatz/xonsh/archive/master.tar.gz
 
-build:
-  script: python setup.py install
+#build:
+#  script: python setup.py install
 
 requirements:
   build:
