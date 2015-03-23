@@ -90,8 +90,8 @@ class Shell(Cmd):
                                     stdout=stdout)
         self.execer = Execer()
         env = builtins.__xonsh_env__
-        self.ctx = ctx or xonshrc_context(rcfile=env.get('XONSHRC', None), 
-                                          execer=self.execer)
+        self.ctx = ctx if ctx is not None else \
+            xonshrc_context(rcfile=env.get('XONSHRC', None), execer=self.execer)
         self.completer = Completer()
         self.buffer = []
         self.need_more_lines = False

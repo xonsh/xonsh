@@ -14,6 +14,11 @@ parser.add_argument('-c',
                     dest='command',
                     required=False,
                     default=None)
+parser.add_argument('--no-rc',
+                    help="Do not load the .xonshrc file",
+                    dest='norc',
+                    action='store_true',
+                    default=False)
 parser.add_argument('file',
                     metavar='script-file',
                     help='If present, execute the script in script-file'
@@ -33,7 +38,7 @@ def main(argv=None):
 
     args = parser.parse_args()
 
-    shell = Shell()
+    shell = Shell() if not args.norc else Shell(ctx={})
 
     env = builtins.__xonsh_env__
 
