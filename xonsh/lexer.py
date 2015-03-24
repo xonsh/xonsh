@@ -21,9 +21,7 @@ for kw in kwlist:
 #operators
 op_map = {
         # punctuation
-        '(': 'LPAREN', ')': 'RPAREN', '[': 'LBRACKET', ']': 'RBRACKET',
-        '{': 'LBRACE', '}': 'RBRACE', ',': 'COMMA', '.': 'PERIOD', ';': 'SEMI',
-        ':': 'COLON',
+        ',': 'COMMA', '.': 'PERIOD', ';': 'SEMI', ':': 'COLON',
         #basic operators
         '+': 'PLUS', '-': 'MINUS', '*': 'TIMES', '/': 'DIVIDE', 
         '//': 'DOUBLEDIV', '%': 'MOD', '**': 'POW', '|': 'PIPE', 
@@ -47,13 +45,14 @@ token_map[tokenize.ENDMARKER] = 'ENDMARKER'
 
 def handle_indent(state, token, stream):
     level = len(token.string)
+    state['last'] = token
     if token.type == tokenize.DEDENT:
         state['indents'].pop()
-        yield _new_token(state, 'DEDENT', ' '*state['indents'][-1], token.start)
+        yield _new_token('DEDENT', ' '*state['indents'][-1], token.start)
     elif token.type == tokenize.INDENT:
         #moving forward
         state['indents'].append(level)
-        yield _new_token(state, 'INDENT', token.string, token.start)
+        yield _new_token('INDENT', token.string, token.start)
     
     try:
         n = next(stream)
@@ -74,13 +73,20 @@ def handle_dollar(state, token, stream):
         raise Exception("unexpected whitespace after $")
 
     if n.type == tokenize.NAME:
-        yield _new_token(state, 'DOLLAR_NAME', '$' + n.string, token.start)
+        yield _new_token('DOLLAR_NAME', '$' + n.string, token.start)
+        state['last'] = token
     elif n.type == tokenize.OP and n.string == '(':
-        yield _new_token(state, 'DOLLAR_LPAREN', '$(', token.start)
+        state['pymode'].append(False)
+        state['last'] = n
+        yield _new_token('DOLLAR_LPAREN', '$(', token.start)
     elif n.type == tokenize.OP and n.string == '[':
-        yield _new_token(state, 'DOLLAR_LBRACKET', '$[', token.start)
+        state['pymode'].append(False)
+        state['last'] = n
+        yield _new_token('DOLLAR_LBRACKET', '$[', token.start)
     elif n.type == tokenize.OP and n.string == '{':
-        yield _new_token(state, 'DOLLAR_LBRACE', '${', token.start)
+        state['pymode'].append(True)
+        state['last'] = n
+        yield _new_token('DOLLAR_LBRACE', '${', token.start)
     else:
         e = 'expected NAME, (, [, or {{ after $, but got {0}'
         raise Exception(e.format(n))
@@ -93,9 +99,12 @@ def handle_at(state, token, stream):
     
     if n.type == tokenize.OP and n.string == '(' and \
             n.start == token.end:
-        yield _new_token(state, 'AT_LPAREN', '@(', token.start)
+        state['pymode'].append(True)
+        yield _new_token('AT_LPAREN', '@(', token.start)
+        state['last'] = n
     else:
-        yield _new_token(state, 'AT', '@', token.start)
+        yield _new_token('AT', '@', token.start)
+        state['last'] = token
         for i in handle_token(state, n, stream):
             yield i
 
@@ -107,9 +116,11 @@ def handle_question(state, token, stream):
 
     if n.type == tokenize.ERRORTOKEN and n.string == '?' and \
             n.start == token.end:
-        yield _new_token(state, 'DOUBLE_QUESTION', '??', token.start)
+        yield _new_token('DOUBLE_QUESTION', '??', token.start)
+        state['last'] = n
     else:
-        yield _new_token(state, 'QUESTION', '?', token.start)
+        yield _new_token('QUESTION', '?', token.start)
+        state['last'] = token
         for i in handle_token(state, n, stream):
             yield i
 
@@ -120,19 +131,19 @@ def handle_backtick(state, token, stream):
         n = None
 
     found_match = False
-    sofar = ''
+    sofar = '`'
     while n is not None:
+        sofar += n.string
         if n.type == tokenize.ERRORTOKEN and n.string == '`':
             found_match = True
             break
-        else:
-            sofar += n.string
         try:
             n = next(stream)
         except:
             n = None
     if found_match:
-        yield _new_token(state, 'REGEXPATH', sofar, token.start)
+        yield _new_token('REGEXPATH', sofar, token.start)
+        state['last'] = n
     else:
         e = "Could not find matching backtick for regex on line {0}"
         raise Exception(e.format(token.start[0]))
@@ -143,17 +154,53 @@ def handle_newline(state, token, stream):
     except:
         n = None
 
-    yield _new_token(state, 'NEWLINE', '\n', token.start)
+    yield _new_token('NEWLINE', '\n', token.start)
+    state['last'] = token
 
     if n is not None:
         if n.type != tokenize.ENDMARKER:
             for i in handle_token(state, n, stream):
                 yield i
-        
+ 
+def handle_lparen(state, token, stream):
+    state['pymode'].append(True)
+    state['last'] = token
+    yield _new_token('LPAREN', '(', token.start)
+
+def handle_lbrace(state, token, stream):
+    state['pymode'].append(True)
+    state['last'] = token
+    yield _new_token('LBRACE', '{', token.start)
+
+def handle_lbracket(state, token, stream):
+    state['pymode'].append(True)
+    state['last'] = token
+    yield _new_token('LBRACKET', '[', token.start)
+
+def handle_rparen(state, token, stream):
+    state['pymode'].pop()
+    state['last'] = token
+    yield _new_token('RPAREN', ')', token.start)
+
+def handle_rbrace(state, token, stream):
+    state['pymode'].pop()
+    state['last'] = token
+    yield _new_token('RBRACE', '}', token.start)
+
+def handle_rbracket(state, token, stream):
+    state['pymode'].pop()
+    state['last'] = token
+    yield _new_token('RBRACKET', ']', token.start)
 
 special_handlers = {
     tokenize.ENCODING: lambda s,t,st: [],
     tokenize.NEWLINE: handle_newline,
+    (tokenize.OP, '('): handle_lparen,
+    (tokenize.OP, ')'): handle_rparen,
+    (tokenize.OP, '['): handle_lbracket,
+    (tokenize.OP, ']'): handle_rbracket,
+    (tokenize.OP, '{'): handle_lbrace,
+    (tokenize.OP, '}'): handle_rbrace,
     (tokenize.ERRORTOKEN, '$'): handle_dollar,
     (tokenize.ERRORTOKEN, '`'): handle_backtick,
     (tokenize.ERRORTOKEN, '?'): handle_question,
@@ -165,12 +212,21 @@ special_handlers = {
 def handle_token(state, token, stream):
     typ = token.type
     st = token.string
-    #print('state',state)
-    #print('handling', typ, st)
+    print('NEWTOKEN',state['pymode'])
+    print(state['last'])
+    print(token)
+    print()
+    if not state['pymode'][-1]:
+        if state['last'] is not None and state['last'].end != token.start:
+            cur = token.start
+            old = state['last'].end
+            yield _new_token('WS', ' '*(cur[1]-old[1]), old)
     if (typ, st) in token_map:
-        yield _new_token(state, token_map[(typ, st)], st, token.start)
+        state['last'] = token
+        yield _new_token(token_map[(typ, st)], st, token.start)
     elif typ in token_map:
-        yield _new_token(state, token_map[typ], st, token.start)
+        state['last'] = token
+        yield _new_token(token_map[typ], st, token.start)
     elif (typ, st) in special_handlers:
         for i in special_handlers[(typ, st)](state, token, stream):
             yield i
@@ -182,7 +238,7 @@ def handle_token(state, token, stream):
 
 def preprocess_tokens(tokstream):
     tokstream = clear_NL(tokstream)
-    state = {'indents': [0]}
+    state = {'indents': [0], 'pymode': [True], 'last': None}
     for token in tokstream:
         for i in handle_token(state, token, tokstream):
             yield i
@@ -198,7 +254,7 @@ def tok(s):
 
 
 #synthesize a new PLY token
-def _new_token(state, type, value, pos):
+def _new_token(type, value, pos):
     o = LexToken()
     o.type = type
     o.value = value
@@ -310,7 +366,7 @@ class Lexer(object):
     tokens = pykeywords + (
         # Misc
         'NAME', 'INDENT', 'DEDENT', 'NEWLINE', 'ENDMARKER', 
-        'NONE', 'TRUE', 'FALSE',
+        'NONE', 'TRUE', 'FALSE', 'WS',
 
         # literals
         'NUMBER', 'STRING',

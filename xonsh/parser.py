@@ -2052,7 +2052,7 @@ class Parser(object):
 
     def p_subproc_atoms(self, p):
         """subproc_atoms : subproc_atom
-                         | subproc_atoms INDENT subproc_atom
+                         | subproc_atoms WS subproc_atom
         """
         p1 = p[1]
         if len(p) < 4:
