@@ -2012,9 +2012,9 @@ class Parser(object):
 
     def p_subproc_special(self, p):
         """subproc_special : subproc_special_atom
-                           | INDENT subproc_special_atom
-                           | subproc_special_atom INDENT
-                           | INDENT subproc_special_atom INDENT
+                           | WS subproc_special_atom
+                           | subproc_special_atom WS
+                           | WS subproc_special_atom WS
         """
         p1 = p[1]
         if len(p) > 2 and len(p1.strip()) == 0:
@@ -2023,11 +2023,11 @@ class Parser(object):
 
     def p_subproc(self, p):
         """subproc : subproc_atoms
-                   | subproc_atoms INDENT
+                   | subproc_atoms WS
                    | subproc_atoms ENDMARKER
                    | subproc AMPERSAND
                    | subproc subproc_special subproc_atoms
-                   | subproc subproc_special subproc_atoms INDENT
+                   | subproc subproc_special subproc_atoms WS
                    | subproc subproc_special subproc_atoms ENDMARKER
         """
         lineno = self.lineno
