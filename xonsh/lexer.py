@@ -1,9 +1,203 @@
 from __future__ import print_function, unicode_literals
 import re
 import sys
+import tokenize
+
+from keyword import kwlist
 
 from ply import lex
-from ply.lex import TOKEN
+from ply.lex import TOKEN, LexToken
+
+# mapping from tokenize to PLY
+# some keys are (type, name) tuples (for specific, e.g., keywords)
+# some keys are just a type, for things like strings/names
+# values are always a PLY token type
+token_map = {}
+
+# keywords
+for kw in kwlist:
+    token_map[(tokenize.NAME, kw)] = kw.upper() 
+
+#operators
+op_map = {
+        # punctuation
+        '(': 'LPAREN', ')': 'RPAREN', '[': 'LBRACKET', ']': 'RBRACKET',
+        '{': 'LBRACE', '}': 'RBRACE', ',': 'COMMA', '.': 'PERIOD', ';': 'SEMI',
+        ':': 'COLON',
+        #basic operators
+        '+': 'PLUS', '-': 'MINUS', '*': 'TIMES', '/': 'DIVIDE', 
+        '//': 'DOUBLEDIV', '%': 'MOD', '**': 'POW', '|': 'PIPE', 
+        '&': 'AMPERSAND', '~': 'TILDE', '^': 'XOR', '<<': 'LSHIFT', 
+        '>>': 'RSHIFT', '<': 'LT', '<=': 'LE', '>': 'GT', '>=': 'GE', 
+        '==': 'EQ', '!=': 'NE','->': 'RARROW',
+        # assignment operators
+        '=': 'EQUALS', '+=': 'PLUSEQUAL', '-=': 'MINUSEQUAL', 
+        '*=': 'TIMESEQUAL', '/=': 'DIVEQUAL', '%=': 'MODEQUAL', 
+        '**=': 'POWEQUAL', '<<=': 'LSHIFTEQUAL', '>>=': 'RSHIFTEQUAL', 
+        '&=': 'AMPERSANDEQUAL', '^=': 'XOREQUAL', '|=': 'PIPEEQUAL', 
+        '//=': 'DOUBLEDIVEQUAL',
+}
+for (op, type) in op_map.items():
+    token_map[(tokenize.OP, op)] = type
+
+token_map[tokenize.NAME] = 'NAME'
+token_map[tokenize.NUMBER] = 'NUMBER'
+token_map[tokenize.STRING] = 'STRING'
+token_map[tokenize.ENDMARKER] = 'ENDMARKER'
+
+def handle_indent(state, token, stream):
+    level = len(token.string)
+    if token.type == tokenize.DEDENT:
+        state['indents'].pop()
+        yield _new_token(state, 'DEDENT', ' '*state['indents'][-1], token.start[0], token.start[1])
+    elif token.type == tokenize.INDENT:
+        #moving forward
+        state['indents'].append(level)
+        yield _new_token(state, 'INDENT', token.string, token.start[0], token.start[1])
+
+def handle_dollar(state, token, stream):
+    try:
+        n = next(stream)
+    except:
+        raise Exception("missing token after $")
+
+    if n.start != token.end:
+        raise Exception("unexpected whitespace after $")
+
+    if n.type == tokenize.NAME:
+        yield _new_token(state, 'DOLLAR_NAME', '$' + n.string, token.start[0], token.start[1])
+    elif n.type == tokenize.OP and n.string == '(':
+        yield _new_token(state, 'DOLLAR_LPAREN', '$(', token.start[0], token.start[1])
+    elif n.type == tokenize.OP and n.string == '[':
+        yield _new_token(state, 'DOLLAR_LBRACKET', '$[', token.start[0], token.start[1])
+    elif n.type == tokenize.OP and n.string == '{':
+        yield _new_token(state, 'DOLLAR_LBRACE', '${', token.start[0], token.start[1])
+    else:
+        e = 'expected NAME, (, [, or {{ after $, but got {0}'
+        raise Exception(e.format(n))
+
+def handle_at(state, token, stream):
+    try:
+        n = next(stream)
+    except:
+        raise Exception("missing token after @")
+    
+    if n.type == tokenize.OP and n.string == '(' and \
+            n.start == token.end:
+        yield _new_token(state, 'AT_LPAREN', '@(', token.start[0], token.start[1])
+    else:
+        yield _new_token(state, 'AT', '@', token.start[0], token.start[1])
+        for i in handle_token(state, n, stream):
+            yield i
+
+def handle_question(state, token, stream):
+    try:
+        n = next(stream)
+    except:
+        n = None
+
+    if n.type == tokenize.ERRORTOKEN and n.string == '?' and \
+            n.start == token.end:
+        yield _new_token(state, 'DOUBLE_QUESTION', '??', token.start[0], token.start[1])
+    else:
+        yield _new_token(state, 'QUESTION', '?', token.start[0], token.start[1])
+        for i in handle_token(state, n, stream):
+            yield i
+
+def handle_backtick(state, token, stream):
+    try:
+        n = next(stream)
+    except:
+        n = None
+
+    found_match = False
+    sofar = ''
+    while n is not None:
+        if n.type == tokenize.ERRORTOKEN and n.string == '`':
+            found_match = True
+            break
+        else:
+            sofar += n.string
+        try:
+            n = next(stream)
+        except:
+            n = None
+    if found_match:
+        yield _new_token(state, 'REGEXPATH', sofar, token.start[0], token.start[1])
+    else:
+        e = "Could not find matching backtick for regex on line {0}"
+        raise Exception(e.format(token.start[0]))
+
+def handle_newline(state, token, stream):
+    try:
+        n = next(stream)
+    except:
+        n = None
+
+    yield _new_token(state, 'NEWLINE', '\n', token.start[0], token.start[1])
+
+    if n is not None:
+        if n.type != tokenize.ENDMARKER:
+            for i in handle_token(state, n, stream):
+                yield i
+        
+
+special_handlers = {
+    tokenize.ENCODING: lambda s,t,st: [],
+    tokenize.NEWLINE: handle_newline,
+    (tokenize.ERRORTOKEN, '$'): handle_dollar,
+    (tokenize.ERRORTOKEN, '`'): handle_backtick,
+    (tokenize.ERRORTOKEN, '?'): handle_question,
+    (tokenize.OP, '@'): handle_at,
+    tokenize.INDENT: handle_indent,
+    tokenize.DEDENT: handle_indent
+}
+
+def handle_token(state, token, stream):
+    typ = token.type
+    st = token.string
+    print('trying', typ, st)
+    if (typ, st) in token_map:
+        yield _new_token(state, token_map[(typ, st)], st, token.start[0], token.start[1])
+    elif typ in token_map:
+        yield _new_token(state, token_map[typ], st, token.start[0], token.start[1])
+    elif (typ, st) in special_handlers:
+        for i in special_handlers[(typ, st)](state, token, stream):
+            yield i
+    elif typ in special_handlers:
+        for i in special_handlers[typ](state, token, stream):
+            yield i
+    else:
+        raise Exception('Unexpected token: {0}'.format(token))
+
+def preprocess_tokens(tokstream):
+    #tokstream = clear_NL(tokstream)
+    state = {'indents': [0], 'lexpos': 0}
+    for token in tokstream:
+        for i in handle_token(state, token, tokstream):
+            yield i
+
+def clear_NL(tokstream):
+    for i in tokstream:
+        if i.type != tokenize.NL:
+            yield i
+
+from io import BytesIO
+def tok(s):
+    return iter(tokenize.tokenize(BytesIO(s.encode('utf-8')).readline))
+
+
+#synthesize a new PLY token
+def _new_token(state, type, value, lineno, col):
+    o = LexToken()
+    o.type = type
+    o.value = value
+    o.lineno = lineno
+    o.lexpos = state['lexpos']
+    o.col = col
+    print('col',col)
+    state['lexpos'] += 1
+    return o
 
 def anyof(*regexes):
     return '(' + '|'.join(regexes) + ')'
@@ -61,12 +255,17 @@ class Lexer(object):
 
     def input(self, s):
         """Calls the lexer on the string s."""
-        self.lexer.input(s)
+        print('code:\n',repr(s))
+        self.token_stream = preprocess_tokens(tok(s))
 
     def token(self):
         """Retrieves the next token."""
-        self.last = self.lexer.token()
-        return self.last
+        try:
+            o = next(self.token_stream)
+            print(o)
+            return o
+        except:
+            return None
 
     def token_col(self, token):
         """Discovers the token column number."""
@@ -108,9 +307,7 @@ class Lexer(object):
         'NONE', 'TRUE', 'FALSE',
 
         # literals
-        'INT_LITERAL', 'HEX_LITERAL', 'OCT_LITERAL', 'BIN_LITERAL',
-        'FLOAT_LITERAL', 'IMAG_LITERAL', 'STRING_LITERAL',
-        'RAW_STRING_LITERAL', 'BYTES_LITERAL', 'UNICODE_LITERAL',
+        'NUMBER', 'STRING',
 
         # Basic Operators
         'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'DOUBLEDIV', 'MOD', 'POW', 
@@ -137,10 +334,10 @@ class Lexer(object):
         'COMMA', 'PERIOD',       # . ,
         'SEMI', 'COLON',         # ; :
         'AT',                    # @
-        'DOLLAR',                # $
         'QUESTION',              # ?
         'DOUBLE_QUESTION',       # ??
         'AT_LPAREN',             # @(
+        'DOLLAR_NAME',           # $NAME
         'DOLLAR_LPAREN',         # $(
         'DOLLAR_LBRACE',         # ${
         'DOLLAR_LBRACKET',       # $[
@@ -352,18 +549,6 @@ class Lexer(object):
 
     @TOKEN(string_literal)
     def t_STRING_LITERAL(self, t):
-        return t
-
-    @TOKEN(raw_string_literal)
-    def t_RAW_STRING_LITERAL(self, t):
-        return t
-
-    @TOKEN(unicode_literal)
-    def t_UNICODE_LITERAL(self, t):
-        return t
-
-    @TOKEN(bytes_literal)
-    def t_BYTES_LITERAL(self, t):
         return t
 
     # float literal must come before int literals

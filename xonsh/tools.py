@@ -35,24 +35,33 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     subprocess $[] starting at a minimum column. If there are no tokens 
     (ie in a comment line) this returns None.
     """
+    line = line if line.endswith('\n') else (line+'\n')
     if lexer is None:
         lexer = builtins.__xonsh_execer__.parser.lexer
     if maxcol is None:
+        print(len(line))
         maxcol = len(line) + 1
+        print(maxcol)
+    print(len(line), repr(line), maxcol)
     lexer.reset()
     lexer.input(line)
     toks = []
     end_offset = 0
     for tok in lexer:
-        pos = tok.lexpos
+        print('TOKEN',tok)
+        pos = tok.col
         if pos >= maxcol:
+            print(pos,maxcol)
+            print('too far')
             break
         if len(toks) > 0 and toks[-1].type == 'SEMI':
+            print('semi')
             toks.clear()
         if pos < mincol:
+            print('minicol')
             continue
         toks.append(tok)
-        if tok.type == 'NEWLINE':
+        if tok.type in ('NEWLINE', 'ENDMARKER'):
             break
     else:
         if len(toks) == 0:
@@ -60,7 +69,7 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
         if toks[-1].type == 'SEMI':
             toks.pop()
         tok = toks[-1]
-        pos = tok.lexpos
+        pos = tok.col
         if isinstance(tok.value, string_types):
             end_offset = len(tok.value)
         else:
@@ -68,7 +77,10 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
             end_offset = len(el)
     if len(toks) == 0:
         return  # handle comment lines
-    beg, end = toks[0].lexpos, (toks[-1].lexpos + end_offset)
+    print(toks)
+    beg, end = toks[0].col, (toks[-1].col + end_offset)
+    print('LINE,BEG,END', (line,beg,end))
+    print('LINE:',line[beg:end])
     rtn = '$[' + line[beg:end] + ']'
     if returnline:
         rtn = line[:beg] + rtn + line[end:]

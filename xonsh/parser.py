@@ -711,6 +711,14 @@ class Parser(object):
         """
         p[0] = p[1]
 
+    def p_stmt_list(self, p):
+        """stmt_list : stmt
+                     | stmt_list stmt"""
+        if len(p) == 2:
+            p[0] = p[1]
+        else:
+            p[0] = p[1] + p[2]
+
     def p_semi_opt(self, p):
         """semi_opt : SEMI
                     | empty
@@ -1199,11 +1207,9 @@ class Parser(object):
 
     def p_suite(self, p):
         """suite : simple_stmt
-                 | NEWLINE indented_stmt DEDENT
-                 | NEWLINE indented_stmt_list
-                 | NEWLINE indented_stmt_list DEDENT
+                 | NEWLINE INDENT stmt_list DEDENT
         """
-        p[0] = p[1] if len(p) == 2 else p[2]
+        p[0] = p[1] if len(p) == 2 else p[3]
         if len(p) < 4:
             self.lineno += 1  # needs to be at the end
 
@@ -1505,7 +1511,7 @@ class Parser(object):
                 | TRUE
                 | FALSE
                 | REGEXPATH
-                | DOLLAR NAME
+                | DOLLAR_NAME
                 | DOLLAR_LBRACE test RBRACE
                 | DOLLAR_LPAREN subproc RPAREN
                 | DOLLAR_LBRACKET subproc RBRACKET
@@ -1576,11 +1582,7 @@ class Parser(object):
         p[0] = p0
 
     def p_string_literal(self, p):
-        """string_literal : STRING_LITERAL
-                          | RAW_STRING_LITERAL
-                          | UNICODE_LITERAL
-                          | BYTES_LITERAL
-        """
+        """string_literal : STRING"""
         s = eval(p[1])
         cls = ast.Bytes if p[1].startswith('b') else ast.Str
         p[0] = cls(s=s, lineno=self.lineno, col_offset=self.col)
@@ -1594,14 +1596,8 @@ class Parser(object):
         p[0] = p[1]
 
     def p_number(self, p):
-        """number : INT_LITERAL
-                  | HEX_LITERAL
-                  | OCT_LITERAL
-                  | BIN_LITERAL
-                  | FLOAT_LITERAL
-                  | IMAG_LITERAL
-        """
-        p[0] = ast.Num(n=p[1], lineno=self.lineno, col_offset=self.col)
+        """number : NUMBER"""
+        p[0] = ast.Num(n=eval(p[1]), lineno=self.lineno, col_offset=self.col)
 
     def p_testlist_comp(self, p):
         """testlist_comp : test_or_star_expr comp_for
@@ -2009,9 +2005,11 @@ class Parser(object):
     def p_subproc(self, p):
         """subproc : subproc_atoms
                    | subproc_atoms INDENT
+                   | subproc_atoms ENDMARKER
                    | subproc AMPERSAND
                    | subproc subproc_special subproc_atoms
                    | subproc subproc_special subproc_atoms INDENT
+                   | subproc subproc_special subproc_atoms ENDMARKER
         """
         lineno = self.lineno
         col = self.col
@@ -2047,7 +2045,7 @@ class Parser(object):
         """subproc_atom : subproc_arg
                         | string_literal
                         | REGEXPATH
-                        | DOLLAR NAME
+                        | DOLLAR_NAME
                         | AT_LPAREN test RPAREN
                         | DOLLAR_LBRACE test RBRACE
                         | DOLLAR_LPAREN subproc RPAREN
@@ -2075,7 +2073,7 @@ class Parser(object):
             else:
                 assert False
         elif lenp == 3:
-            p0 = self._envvar_by_name(p[2], lineno=self.lineno, col=self.col)
+            p0 = self._envvar_by_name(p[2][1:], lineno=self.lineno, col=self.col)
             p0._cliarg_action = 'ensure_list'
         elif p1 == '@(':
             l = self.lineno
@@ -2132,11 +2130,7 @@ class Parser(object):
                             | NONE
                             | TRUE
                             | FALSE
-                            | INT_LITERAL
-                            | HEX_LITERAL
-                            | OCT_LITERAL
-                            | BIN_LITERAL
-                            | FLOAT_LITERAL
+                            | NUMBER
         """
         # Many tokens cannot be part of this list, such as $, ', ", ()
         # Use a string atom instead.
