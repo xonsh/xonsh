@@ -9,6 +9,7 @@ import platform
 import subprocess
 from warnings import warn
 
+from xonsh import VERSION
 from xonsh.tools import TERM_COLORS
 
 def current_branch(cwd=None):
@@ -117,6 +118,7 @@ def multiline_prompt():
 
 
 BASE_ENV = {
+    'XONSH_VERSION': VERSION,
     'INDENT': '    ',
     'PROMPT': default_prompt,
     'TITLE': default_title,

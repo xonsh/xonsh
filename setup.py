@@ -15,7 +15,7 @@ except ImportError:
     from distutils.command.install import install as install
     HAVE_SETUPTOOLS = False
 
-VERSION = '0.1.3'
+from xonsh import VERSION
 
 TABLES = ['xonsh/lexer_table.py', 'xonsh/parser_table.py']
 
