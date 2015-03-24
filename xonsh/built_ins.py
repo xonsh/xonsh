@@ -344,6 +344,8 @@ def is_script(fname):
     """
     return os.path.isfile(fname) and fname != os.path.basename(fname)
 
+RE_SHEBANG = re.compile(r'#![ \t]*(.+?)$')
+
 def get_script_subproc_command(fname, args):
     """
     Given the name of a script outside the path, returns a list representing
@@ -355,9 +357,12 @@ def get_script_subproc_command(fname, args):
         raise PermissionError
     
     # find interpreter
-    with open(fname) as f:
-        first_line = f.readline().strip()
-    m = re.match(r'#![ \t]*(.+?)$', first_line)
+    with open(fname, 'rb') as f:
+        if f.read(2) != b'#!':
+            return [fname] + args
+        f.seek(0)
+        first_line = f.readline().decode().strip()
+    m = RE_SHEBANG.match(first_line)
     
     # xonsh is the default interpreter
     if m is None:
