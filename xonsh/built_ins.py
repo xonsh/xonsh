@@ -5,6 +5,7 @@ import os
 import re
 import sys
 import shlex
+import signal
 import locale
 import builtins
 import subprocess
@@ -422,7 +423,7 @@ def run_subproc(cmds, captured=True):
         elif alias is None:
             aliased_cmd = cmd
         elif callable(alias):
-            prev_proc = _run_callable_subproc(alias, cmd[1:], captured=captured, 
+            prev_proc = _run_callable_subproc(alias, cmd[1:], captured=captured,
                             prev_proc=prev_proc, stdout=stdout)
             continue
         else:
@@ -446,7 +447,6 @@ def run_subproc(cmds, captured=True):
             cmd = aliased_cmd[0]
             print('xonsh: subprocess mode: command not found: {0}'.format(cmd))
             print(suggest_commands(cmd, ENV, builtins.aliases), end='')
-
             return
         if prev_is_proxy:
             proc.communicate(input=prev_proc.stdout)
@@ -457,8 +457,19 @@ def run_subproc(cmds, captured=True):
         proc.stdout.close()
     if background:
         return
-    output = prev_proc.stdout if isinstance(prev_proc, ProcProxy) else \
-             prev_proc.communicate()[0]
+    # get output
+    if isinstance(prev_proc, ProcProxy):
+        output = prev_proc.stdout
+    else:
+        # the following prevents Crtl-c from being interpreted by xonsh
+        # while running a subprocess
+        while True:
+            try:
+                output = prev_proc.communicate()[0]
+                break
+            except KeyboardInterrupt:
+                pass
+    # write the output if we should
     if write_target is not None:
         try:
             with open(write_target, write_mode) as f:
