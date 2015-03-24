@@ -98,7 +98,6 @@ class CtxAwareTransformer(NodeTransformer):
 
     def try_subproc_toks(self, node):
         """Tries to parse the line of the node as a subprocess."""
-        print('trying to run as subprocess')
         line = self.lines[node.lineno - 1]
         mincol = len(line) - len(line.lstrip())
         maxcol = None# if self.mode == 'eval' else node.col_offset

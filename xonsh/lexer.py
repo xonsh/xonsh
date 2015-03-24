@@ -49,11 +49,20 @@ def handle_indent(state, token, stream):
     level = len(token.string)
     if token.type == tokenize.DEDENT:
         state['indents'].pop()
-        yield _new_token(state, 'DEDENT', ' '*state['indents'][-1], token.start[0], token.start[1])
+        yield _new_token(state, 'DEDENT', ' '*state['indents'][-1], token.start)
     elif token.type == tokenize.INDENT:
         #moving forward
         state['indents'].append(level)
-        yield _new_token(state, 'INDENT', token.string, token.start[0], token.start[1])
+        yield _new_token(state, 'INDENT', token.string, token.start)
+    
+    try:
+        n = next(stream)
+    except:
+        n = None
+    if n is not None:
+        if n.type != tokenize.ENDMARKER:
+            for i in handle_token(state, n, stream):
+                yield i
 
 def handle_dollar(state, token, stream):
     try:
@@ -65,13 +74,13 @@ def handle_dollar(state, token, stream):
         raise Exception("unexpected whitespace after $")
 
     if n.type == tokenize.NAME:
-        yield _new_token(state, 'DOLLAR_NAME', '$' + n.string, token.start[0], token.start[1])
+        yield _new_token(state, 'DOLLAR_NAME', '$' + n.string, token.start)
     elif n.type == tokenize.OP and n.string == '(':
-        yield _new_token(state, 'DOLLAR_LPAREN', '$(', token.start[0], token.start[1])
+        yield _new_token(state, 'DOLLAR_LPAREN', '$(', token.start)
     elif n.type == tokenize.OP and n.string == '[':
-        yield _new_token(state, 'DOLLAR_LBRACKET', '$[', token.start[0], token.start[1])
+        yield _new_token(state, 'DOLLAR_LBRACKET', '$[', token.start)
     elif n.type == tokenize.OP and n.string == '{':
-        yield _new_token(state, 'DOLLAR_LBRACE', '${', token.start[0], token.start[1])
+        yield _new_token(state, 'DOLLAR_LBRACE', '${', token.start)
     else:
         e = 'expected NAME, (, [, or {{ after $, but got {0}'
         raise Exception(e.format(n))
@@ -84,9 +93,9 @@ def handle_at(state, token, stream):
     
     if n.type == tokenize.OP and n.string == '(' and \
             n.start == token.end:
-        yield _new_token(state, 'AT_LPAREN', '@(', token.start[0], token.start[1])
+        yield _new_token(state, 'AT_LPAREN', '@(', token.start)
     else:
-        yield _new_token(state, 'AT', '@', token.start[0], token.start[1])
+        yield _new_token(state, 'AT', '@', token.start)
         for i in handle_token(state, n, stream):
             yield i
 
@@ -98,9 +107,9 @@ def handle_question(state, token, stream):
 
     if n.type == tokenize.ERRORTOKEN and n.string == '?' and \
             n.start == token.end:
-        yield _new_token(state, 'DOUBLE_QUESTION', '??', token.start[0], token.start[1])
+        yield _new_token(state, 'DOUBLE_QUESTION', '??', token.start)
     else:
-        yield _new_token(state, 'QUESTION', '?', token.start[0], token.start[1])
+        yield _new_token(state, 'QUESTION', '?', token.start)
         for i in handle_token(state, n, stream):
             yield i
 
@@ -123,7 +132,7 @@ def handle_backtick(state, token, stream):
         except:
             n = None
     if found_match:
-        yield _new_token(state, 'REGEXPATH', sofar, token.start[0], token.start[1])
+        yield _new_token(state, 'REGEXPATH', sofar, token.start)
     else:
         e = "Could not find matching backtick for regex on line {0}"
         raise Exception(e.format(token.start[0]))
@@ -134,7 +143,7 @@ def handle_newline(state, token, stream):
     except:
         n = None
 
-    yield _new_token(state, 'NEWLINE', '\n', token.start[0], token.start[1])
+    yield _new_token(state, 'NEWLINE', '\n', token.start)
 
     if n is not None:
         if n.type != tokenize.ENDMARKER:
@@ -156,11 +165,12 @@ special_handlers = {
 def handle_token(state, token, stream):
     typ = token.type
     st = token.string
-    print('trying', typ, st)
+    #print('state',state)
+    #print('handling', typ, st)
     if (typ, st) in token_map:
-        yield _new_token(state, token_map[(typ, st)], st, token.start[0], token.start[1])
+        yield _new_token(state, token_map[(typ, st)], st, token.start)
     elif typ in token_map:
-        yield _new_token(state, token_map[typ], st, token.start[0], token.start[1])
+        yield _new_token(state, token_map[typ], st, token.start)
     elif (typ, st) in special_handlers:
         for i in special_handlers[(typ, st)](state, token, stream):
             yield i
@@ -171,8 +181,8 @@ def handle_token(state, token, stream):
         raise Exception('Unexpected token: {0}'.format(token))
 
 def preprocess_tokens(tokstream):
-    #tokstream = clear_NL(tokstream)
-    state = {'indents': [0], 'lexpos': 0}
+    tokstream = clear_NL(tokstream)
+    state = {'indents': [0]}
     for token in tokstream:
         for i in handle_token(state, token, tokstream):
             yield i
@@ -188,15 +198,11 @@ def tok(s):
 
 
 #synthesize a new PLY token
-def _new_token(state, type, value, lineno, col):
+def _new_token(state, type, value, pos):
     o = LexToken()
     o.type = type
     o.value = value
-    o.lineno = lineno
-    o.lexpos = state['lexpos']
-    o.col = col
-    print('col',col)
-    state['lexpos'] += 1
+    o.lineno, o.lexpos = pos
     return o
 
 def anyof(*regexes):
@@ -237,7 +243,7 @@ class Lexer(object):
         self.reset()
 
     def reset(self):
-        self.lexer.lineno = 1
+        #self.lexer.lineno = 1
         self.indent = ''
         self.last = None
         self.in_py_mode = [True]
@@ -255,15 +261,15 @@ class Lexer(object):
 
     def input(self, s):
         """Calls the lexer on the string s."""
-        print('code:\n',repr(s))
+        #print('code:\n',repr(s))
         self.token_stream = preprocess_tokens(tok(s))
 
     def token(self):
         """Retrieves the next token."""
         try:
-            o = next(self.token_stream)
-            print(o)
-            return o
+            self.last = next(self.token_stream)
+            #print(self.last)
+            return self.last
         except:
             return None
 

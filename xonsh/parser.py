@@ -158,7 +158,7 @@ class Parser(object):
         lexer_kwargs = dict(optimize=lexer_optimize, lextab=lexer_table)
         if outputdir is not None:
             lexer_kwargs['outputdir'] = outputdir
-        lexer.build(**lexer_kwargs)
+        #lexer.build(**lexer_kwargs)
         self.tokens = lexer.tokens
 
         opt_rules = (
@@ -333,15 +333,21 @@ class Parser(object):
 
     def token_col(self, t):
         """Gets ths token column"""
+        return t.lexpos
         return self.lexer.token_col(t)
 
     @property
     def lineno(self):
+        try:
+            return self.lexer.last.lineno
+        except:
+            return 0
         return self.lexer.lineno
 
     @lineno.setter
     def lineno(self, value):
-        self.lexer.lineno = value
+        pass
+        #self.lexer.lineno = value
 
     @property
     def col(self):
@@ -1531,6 +1537,8 @@ class Parser(object):
                 p1 = ast.Str(s=p1.strip(bt), lineno=self.lineno,
                              col_offset=self.col)
                 p1 = xonsh_regexpath(p1, lineno=self.lineno, col=self.col)
+            elif p1.startswith('$'):
+                p1 = self._envvar_by_name(p1[1:], lineno=self.lineno, col=self.col)
             else:
                 p1 = ast.Name(id=p1, ctx=ast.Load(), lineno=self.lineno,
                               col_offset=self.col)
@@ -1956,8 +1964,18 @@ class Parser(object):
         return ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
                              lineno=lineno, col_offset=col)
 
+    def _hz_printer(self, x):
+        if hasattr(x, 'elts'):
+            return [self._hz_printer(i) for i in x.elts]
+        elif hasattr(x, 's'):
+            return x.s
+        elif hasattr(x, 'n'):
+            return x.n
+
     def _subproc_cliargs(self, args, lineno=None, col=None):
         """Creates an expression for subprocess CLI arguments."""
+        print('cliargs enter',lineno,col)
+        print([self._hz_printer(i) for i in args])
         cliargs = currlist = empty_list(lineno=lineno, col=col)
         for arg in args:
             action = arg._cliarg_action
@@ -1982,6 +2000,7 @@ class Parser(object):
             else:
                 raise ValueError("action not understood: " + action)
             del arg._cliarg_action
+        print(self._hz_printer(cliargs))
         return cliargs
 
     def p_subproc_special_atom(self, p):
@@ -2028,6 +2047,7 @@ class Parser(object):
             cliargs = self._subproc_cliargs(p[3], lineno=lineno, col=col)
             p0 = p1 + [p[2], cliargs]
         # return arguments list
+        print('subproc_return',p0)
         p[0] = p0
 
     def p_subproc_atoms(self, p):
@@ -2150,4 +2170,4 @@ class Parser(object):
         else:
             msg = 'code: {0}'.format(p.value),
             self._parse_error(msg, self.currloc(lineno=p.lineno,
-                              column=self.lexer.token_col(p)))
+                              column=p.lexpos))

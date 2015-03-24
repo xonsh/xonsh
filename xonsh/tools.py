@@ -35,33 +35,27 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     subprocess $[] starting at a minimum column. If there are no tokens 
     (ie in a comment line) this returns None.
     """
-    line = line if line.endswith('\n') else (line+'\n')
+    if not line.endswith('\n'):
+        line = line + '\n'
     if lexer is None:
         lexer = builtins.__xonsh_execer__.parser.lexer
     if maxcol is None:
-        print(len(line))
         maxcol = len(line) + 1
-        print(maxcol)
-    print(len(line), repr(line), maxcol)
     lexer.reset()
     lexer.input(line)
     toks = []
     end_offset = 0
     for tok in lexer:
-        print('TOKEN',tok)
-        pos = tok.col
+        pos = tok.lexpos
         if pos >= maxcol:
-            print(pos,maxcol)
-            print('too far')
+            print('too big',pos,maxcol)
             break
         if len(toks) > 0 and toks[-1].type == 'SEMI':
-            print('semi')
             toks.clear()
         if pos < mincol:
-            print('minicol')
             continue
         toks.append(tok)
-        if tok.type in ('NEWLINE', 'ENDMARKER'):
+        if tok.type =='NEWLINE':
             break
     else:
         if len(toks) == 0:
@@ -69,7 +63,7 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
         if toks[-1].type == 'SEMI':
             toks.pop()
         tok = toks[-1]
-        pos = tok.col
+        pos = tok.lexpos
         if isinstance(tok.value, string_types):
             end_offset = len(tok.value)
         else:
@@ -77,10 +71,8 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
             end_offset = len(el)
     if len(toks) == 0:
         return  # handle comment lines
-    print(toks)
-    beg, end = toks[0].col, (toks[-1].col + end_offset)
-    print('LINE,BEG,END', (line,beg,end))
-    print('LINE:',line[beg:end])
+    beg, end = toks[0].lexpos, (toks[-1].lexpos + end_offset)
+    print(repr(line), toks, beg, end)
     rtn = '$[' + line[beg:end] + ']'
     if returnline:
         rtn = line[:beg] + rtn + line[end:]
