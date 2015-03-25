@@ -373,7 +373,6 @@ class Parser(object):
                          | file_input
                          | eval_input
                          | empty
-                         | ENDMARKER
         """
         p[0] = p[1]
 
@@ -415,7 +414,6 @@ class Parser(object):
 
     def p_eval_input(self, p):
         """eval_input : testlist newlines_opt
-                      | testlist newlines_opt ENDMARKER
         """
         p[0] = ast.Expression(body=p[1])
 
@@ -1998,11 +1996,9 @@ class Parser(object):
     def p_subproc(self, p):
         """subproc : subproc_atoms
                    | subproc_atoms WS
-                   | subproc_atoms ENDMARKER
                    | subproc AMPERSAND
                    | subproc subproc_special subproc_atoms
                    | subproc subproc_special subproc_atoms WS
-                   | subproc subproc_special subproc_atoms ENDMARKER
         """
         lineno = self.lineno
         col = self.col

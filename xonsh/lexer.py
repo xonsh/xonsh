@@ -363,46 +363,14 @@ class Lexer(object):
             t = self.token()
 
     #
-    # Python keywords
-    #
-    pykeywords = ('AND', 'AS', 'ASSERT', 'BREAK', 'CLASS', 'CONTINUE', 'DEF',
-                  'DEL', 'ELIF', 'ELSE', 'EXCEPT', 'FINALLY', 'FOR', 'FROM',
-                  'GLOBAL', 'IMPORT', 'IF', 'IN', 'IS', 'LAMBDA', 'NONLOCAL',
-                  'NOT', 'OR', 'PASS', 'RAISE', 'RETURN', 'TRY', 'WHILE',
-                  'WITH', 'YIELD',)
-
-    pykeyword_map = {k.lower(): k for k in pykeywords}
-
-    #
     # All the tokens recognized by the lexer
     #
-    tokens = pykeywords + (
-        # Misc
-        'NAME', 'INDENT', 'DEDENT', 'NEWLINE', 'ENDMARKER',
-        'NONE', 'TRUE', 'FALSE', 'WS',
-
-        # literals
-        'NUMBER', 'STRING',
-
-        # Basic Operators
-        'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'DOUBLEDIV', 'MOD', 'POW',
-        'PIPE', 'AMPERSAND', 'TILDE', 'XOR', 'LSHIFT', 'RSHIFT',
-        'LT', 'LE', 'GT', 'GE', 'EQ', 'NE', 'RARROW',
-
-        # Assignment Operators
-        'EQUALS', 'PLUSEQUAL', 'MINUSEQUAL', 'TIMESEQUAL', 'DIVEQUAL',
-        'MODEQUAL', 'POWEQUAL', 'LSHIFTEQUAL', 'RSHIFTEQUAL', 'AMPERSANDEQUAL',
-        'XOREQUAL', 'PIPEEQUAL', 'DOUBLEDIVEQUAL',
-
-        # Command line
-        'REGEXPATH',
-
-        # Delimeters
+    tokens = tuple(token_map.values()) + (
+        'WS',                    # whitespace in subprocess mode
+        'REGEXPATH',             # regex escaped with backticks
         'LPAREN', 'RPAREN',      # ( )
         'LBRACKET', 'RBRACKET',  # [ ]
         'LBRACE', 'RBRACE',      # { }
-        'COMMA', 'PERIOD',       # . ,
-        'SEMI', 'COLON',         # ; :
         'AT',                    # @
         'QUESTION',              # ?
         'DOUBLE_QUESTION',       # ??
@@ -411,7 +379,4 @@ class Lexer(object):
         'DOLLAR_LPAREN',         # $(
         'DOLLAR_LBRACE',         # ${
         'DOLLAR_LBRACKET',       # $[
-
-        # Ellipsis (...)
-        'ELLIPSIS',
         )
