@@ -158,7 +158,6 @@ class Parser(object):
         lexer_kwargs = dict(optimize=lexer_optimize, lextab=lexer_table)
         if outputdir is not None:
             lexer_kwargs['outputdir'] = outputdir
-        #lexer.build(**lexer_kwargs)
         self.tokens = lexer.tokens
 
         opt_rules = (
@@ -238,7 +237,6 @@ class Parser(object):
             'argument_comma',
             'comma_argument',
             'comma_item',
-            'indented_stmt',
             'attr_period_name',
             'test_comma',
             )
@@ -1204,10 +1202,6 @@ class Parser(object):
             p0 = ast.ExceptHandler(type=p[2], name=p[3], lineno=self.lineno,
                                    col_offset=self.col)
         p[0] = p0
-
-    def p_indented_stmt(self, p):
-        """indented_stmt : INDENT stmt"""
-        p[0] = p[2]
 
     def p_suite(self, p):
         """suite : simple_stmt
