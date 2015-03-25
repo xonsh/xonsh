@@ -2085,6 +2085,9 @@ class Parser(object):
                     p0 = xonsh_call('__xonsh_glob__', args=[p0],
                                     lineno=self.lineno, col=self.col)
                     p0._cliarg_action = 'extend'
+                elif p1.startswith('$'):
+                    p0 = self._envvar_by_name(p[1][1:], lineno=self.lineno, col=self.col)
+                    p0._cliarg_action = 'ensure_list'
                 else:
                     p0._cliarg_action = 'append'
             elif isinstance(p1, ast.AST):
@@ -2092,9 +2095,6 @@ class Parser(object):
                 p0._cliarg_action = 'append'
             else:
                 assert False
-        elif lenp == 3:
-            p0 = self._envvar_by_name(p[2][1:], lineno=self.lineno, col=self.col)
-            p0._cliarg_action = 'ensure_list'
         elif p1 == '@(':
             l = self.lineno
             c = self.col
