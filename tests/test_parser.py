@@ -1330,6 +1330,35 @@ def test_broken_prompt_func():
             "       user='me')\n")
     yield check_stmts, code, False
 
+def test_class():
+    code = ('class Test:\n'
+            '   def __init__(self):\n'
+            '       self.msg("hello world")\n'
+            '   def msg(self, m):\n'
+            '      print(m)\n')
+    yield check_stmts, code, False
+
+def test_nested_functions():
+    code = ('def test(x):\n'
+            '    def test2(y):\n'
+            '        return y+x\n'
+            '    return test2\n')
+    yield check_stmts, code, False
+
+def test_function_blank_line():
+    code = ('def foo():\n'
+            '    ascii_art = [\n'
+            '        "(╯°□°）╯︵ ┻━┻",\n'
+            '        "¯\_(ツ)_/¯",\n'
+            '        "┻━┻︵ \(°□°)/ ︵ ┻━┻",\n'
+            '    ]\n'
+            '\n'
+            '    import random\n'
+            '    i = random.randint(0,len(ascii_art)) - 1\n'
+            '    print("    Get to work!")\n'
+            '    print(ascii_art[i])\n')
+    yield check_stmts, code, False
+
 
 #
 # Xonsh specific syntax

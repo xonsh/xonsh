@@ -45,7 +45,7 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     end_offset = 0
     for tok in lexer:
         pos = tok.lexpos
-        if pos >= maxcol:
+        if tok.type != 'SEMI' and pos >= maxcol:
             break
         if len(toks) > 0 and toks[-1].type == 'SEMI':
             toks.clear()

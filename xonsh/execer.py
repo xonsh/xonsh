@@ -12,10 +12,11 @@ from xonsh.parser import Parser
 from xonsh.tools import subproc_toks
 from xonsh.built_ins import load_builtins, unload_builtins
 
+
 class Execer(object):
     """Executes xonsh code in a context."""
 
-    def __init__(self, filename='<xonsh-code>', debug_level=0, 
+    def __init__(self, filename='<xonsh-code>', debug_level=0,
                  parser_args=None):
         """Parameters
         ----------
@@ -47,14 +48,14 @@ class Execer(object):
 
         # Parsing actually happens in a couple of phases. The first is a
         # shortcut for a context-free parser. Normally, all subprocess
-        # lines should be wrapped in $(), to indicate that they are a 
+        # lines should be wrapped in $(), to indicate that they are a
         # subproc. But that would be super annoying. Unfortnately, Python
-        # mode - after indentation - is whitespace agnostic while, using 
+        # mode - after indentation - is whitespace agnostic while, using
         # the Python token, subproc mode is whitespace aware. That is to say,
-        # in Python mode "ls -l", "ls-l", and "ls - l" all parse to the 
-        # same AST because whitespace doesn't matter to the minus binary op. 
+        # in Python mode "ls -l", "ls-l", and "ls - l" all parse to the
+        # same AST because whitespace doesn't matter to the minus binary op.
         # However, these phases all have very different meaning in subproc
-        # mode. The 'right' way to deal with this is to make the entire 
+        # mode. The 'right' way to deal with this is to make the entire
         # grammar whitespace aware, and then ignore all of the whitespace
         # tokens for all of the Python rules. The lazy way implemented here
         # is to parse a line a second time with a $() wrapper if it fails
@@ -63,17 +64,17 @@ class Execer(object):
         if tree is None:
             return None
 
-        # Now we need to perform context-aware AST transformation. This is 
-        # because the "ls -l" is valid Python. The only way that we know 
+        # Now we need to perform context-aware AST transformation. This is
+        # because the "ls -l" is valid Python. The only way that we know
         # it is not actually Python is by checking to see if the first token
-        # (ls) is part of the execution context. If it isn't, then we will 
+        # (ls) is part of the execution context. If it isn't, then we will
         # assume that this line is supposed to be a subprocess line, assuming
         # it also is valid as a subprocess line.
         tree = self.ctxtransformer.ctxvisit(tree, input, ctx, mode=mode)
         return tree
 
     def compile(self, input, mode='exec', glbs=None, locs=None, stacklevel=2):
-        """Compiles xonsh code into a Python code object, which may then 
+        """Compiles xonsh code into a Python code object, which may then
         be execed or evaled.
         """
         if glbs is None or locs is None:
@@ -115,11 +116,15 @@ class Execer(object):
         while not parsed:
             try:
                 tree = self.parser.parse(input, filename=self.filename,
-                            mode=mode, debug_level=self.debug_level)
+                                         mode=mode,
+                                         debug_level=self.debug_level)
                 parsed = True
+            except IndentationError as e:
+                raise
             except SyntaxError as e:
                 if (e.loc is None) or (last_error_line == e.loc.lineno and
-                                       last_error_col in (e.loc.column + 1, e.loc.column)):
+                                       last_error_col in (e.loc.column + 1,
+                                                          e.loc.column)):
                     raise
                 last_error_col = e.loc.column
                 last_error_line = e.loc.lineno
@@ -131,7 +136,7 @@ class Execer(object):
                 if len(line.strip()) == 0:
                     # whitespace only lines are not valid syntax in Python's
                     # interactive mode='single', who knew?! Just ignore them.
-                    # this might cause actual sytax errors to have bad line 
+                    # this might cause actual sytax errors to have bad line
                     # numbers reported, but should only effect interactive mode
                     del lines[idx]
                     last_error_line = last_error_col = -1
@@ -139,7 +144,7 @@ class Execer(object):
                     continue
                 maxcol = line.find(';', last_error_col)
                 maxcol = None if maxcol < 0 else maxcol + 1
-                sbpline = subproc_toks(line, returnline=True, 
+                sbpline = subproc_toks(line, returnline=True,
                                        maxcol=maxcol, lexer=self.parser.lexer)
                 if sbpline is None:
                     # subprocess line had no valid tokens, likely because
