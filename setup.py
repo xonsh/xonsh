@@ -15,7 +15,7 @@ except ImportError:
     from distutils.command.install import install as install
     HAVE_SETUPTOOLS = False
 
-VERSION = '0.1.3'
+from xonsh import __version__ as XONSH_VERSION
 
 TABLES = ['xonsh/lexer_table.py', 'xonsh/parser_table.py']
 
@@ -59,7 +59,7 @@ def main():
         description='an exotic, usable shell',
         long_description=readme,
         license='BSD',
-        version=VERSION,
+        version=XONSH_VERSION,
         author='Anthony Scopatz',
         maintainer='Anthony Scopatz',
         author_email='scopatz@gmail.com',
