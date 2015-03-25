@@ -21,7 +21,8 @@ for kw in kwlist:
 #operators
 op_map = {
         # punctuation
-        ',': 'COMMA', '.': 'PERIOD', ';': 'SEMI', ':': 'COLON',
+        ',': 'COMMA', '.': 'PERIOD', ';': 'SEMI', ':': 'COLON', 
+        '...': 'ELLIPSIS',
         #basic operators
         '+': 'PLUS', '-': 'MINUS', '*': 'TIMES', '/': 'DIVIDE', 
         '//': 'DOUBLEDIV', '%': 'MOD', '**': 'POW', '|': 'PIPE', 
