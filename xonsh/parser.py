@@ -334,7 +334,6 @@ class Parser(object):
     def token_col(self, t):
         """Gets ths token column"""
         return t.lexpos
-        return self.lexer.token_col(t)
 
     @property
     def lineno(self):
@@ -342,12 +341,10 @@ class Parser(object):
             return self.lexer.last.lineno
         except:
             return 0
-        return self.lexer.lineno
 
     @lineno.setter
     def lineno(self, value):
         pass
-        #self.lexer.lineno = value
 
     @property
     def col(self):
@@ -2167,6 +2164,10 @@ class Parser(object):
     def p_error(self, p):
         if p is None:
             self._parse_error('no further code', None)
+        elif p.type == 'ERRORTOKEN':
+            self._parse_error(p.value, 
+                              self.currloc(lineno=p.lineno,
+                              column=p.lexpos))
         else:
             msg = 'code: {0}'.format(p.value),
             self._parse_error(msg, self.currloc(lineno=p.lineno,
