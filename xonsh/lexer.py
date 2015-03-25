@@ -3,6 +3,7 @@ import re
 import sys
 import tokenize
 
+from io import BytesIO
 from keyword import kwlist
 
 from ply import lex
@@ -16,24 +17,24 @@ token_map = {}
 
 # keywords
 for kw in kwlist:
-    token_map[(tokenize.NAME, kw)] = kw.upper() 
+    token_map[(tokenize.NAME, kw)] = kw.upper()
 
-#operators
+# operators
 op_map = {
         # punctuation
-        ',': 'COMMA', '.': 'PERIOD', ';': 'SEMI', ':': 'COLON', 
+        ',': 'COMMA', '.': 'PERIOD', ';': 'SEMI', ':': 'COLON',
         '...': 'ELLIPSIS',
-        #basic operators
-        '+': 'PLUS', '-': 'MINUS', '*': 'TIMES', '/': 'DIVIDE', 
-        '//': 'DOUBLEDIV', '%': 'MOD', '**': 'POW', '|': 'PIPE', 
-        '&': 'AMPERSAND', '~': 'TILDE', '^': 'XOR', '<<': 'LSHIFT', 
-        '>>': 'RSHIFT', '<': 'LT', '<=': 'LE', '>': 'GT', '>=': 'GE', 
-        '==': 'EQ', '!=': 'NE','->': 'RARROW',
+        # basic operators
+        '+': 'PLUS', '-': 'MINUS', '*': 'TIMES', '/': 'DIVIDE',
+        '//': 'DOUBLEDIV', '%': 'MOD', '**': 'POW', '|': 'PIPE',
+        '&': 'AMPERSAND', '~': 'TILDE', '^': 'XOR', '<<': 'LSHIFT',
+        '>>': 'RSHIFT', '<': 'LT', '<=': 'LE', '>': 'GT', '>=': 'GE',
+        '==': 'EQ', '!=': 'NE', '->': 'RARROW',
         # assignment operators
-        '=': 'EQUALS', '+=': 'PLUSEQUAL', '-=': 'MINUSEQUAL', 
-        '*=': 'TIMESEQUAL', '/=': 'DIVEQUAL', '%=': 'MODEQUAL', 
-        '**=': 'POWEQUAL', '<<=': 'LSHIFTEQUAL', '>>=': 'RSHIFTEQUAL', 
-        '&=': 'AMPERSANDEQUAL', '^=': 'XOREQUAL', '|=': 'PIPEEQUAL', 
+        '=': 'EQUALS', '+=': 'PLUSEQUAL', '-=': 'MINUSEQUAL',
+        '*=': 'TIMESEQUAL', '/=': 'DIVEQUAL', '%=': 'MODEQUAL',
+        '**=': 'POWEQUAL', '<<=': 'LSHIFTEQUAL', '>>=': 'RSHIFTEQUAL',
+        '&=': 'AMPERSANDEQUAL', '^=': 'XOREQUAL', '|=': 'PIPEEQUAL',
         '//=': 'DOUBLEDIVEQUAL',
 }
 for (op, type) in op_map.items():
@@ -42,7 +43,7 @@ for (op, type) in op_map.items():
 token_map[tokenize.NAME] = 'NAME'
 token_map[tokenize.NUMBER] = 'NUMBER'
 token_map[tokenize.STRING] = 'STRING'
-#token_map[tokenize.ENDMARKER] = 'ENDMARKER'
+
 
 def handle_indent(state, token, stream):
     level = len(token.string)
@@ -51,10 +52,9 @@ def handle_indent(state, token, stream):
         state['indents'].pop()
         yield _new_token('DEDENT', ' '*state['indents'][-1], token.start)
     elif token.type == tokenize.INDENT:
-        #moving forward
         state['indents'].append(level)
         yield _new_token('INDENT', token.string, token.start)
-    
+
     try:
         n = next(stream)
     except:
@@ -63,6 +63,7 @@ def handle_indent(state, token, stream):
         if n.type != tokenize.ENDMARKER:
             for i in handle_token(state, n, stream):
                 yield i
+
 
 def handle_dollar(state, token, stream):
     try:
@@ -95,13 +96,14 @@ def handle_dollar(state, token, stream):
         m = e.format(n)
         yield _new_token("ERRORTOKEN", m, token.start)
 
+
 def handle_at(state, token, stream):
     try:
         n = next(stream)
     except:
         m = "missing token after @"
         yield _new_token("ERRORTOKEN", m, token.start)
-    
+
     if n.type == tokenize.OP and n.string == '(' and \
             n.start == token.end:
         state['pymode'].append(True)
@@ -112,6 +114,7 @@ def handle_at(state, token, stream):
         state['last'] = token
         for i in handle_token(state, n, stream):
             yield i
+
 
 def handle_question(state, token, stream):
     try:
@@ -128,6 +131,7 @@ def handle_question(state, token, stream):
         state['last'] = token
         for i in handle_token(state, n, stream):
             yield i
+
 
 def handle_backtick(state, token, stream):
     try:
@@ -154,6 +158,7 @@ def handle_backtick(state, token, stream):
         m = e.format(token.start[0])
         yield _new_token("ERRORTOKEN", m, token.start)
 
+
 def handle_newline(state, token, stream):
     try:
         n = next(stream)
@@ -167,36 +172,43 @@ def handle_newline(state, token, stream):
         if n.type != tokenize.ENDMARKER:
             for i in handle_token(state, n, stream):
                 yield i
- 
+
+
 def handle_lparen(state, token, stream):
     state['pymode'].append(True)
     state['last'] = token
     yield _new_token('LPAREN', '(', token.start)
+
 
 def handle_lbrace(state, token, stream):
     state['pymode'].append(True)
     state['last'] = token
     yield _new_token('LBRACE', '{', token.start)
 
+
 def handle_lbracket(state, token, stream):
     state['pymode'].append(True)
     state['last'] = token
     yield _new_token('LBRACKET', '[', token.start)
+
 
 def handle_rparen(state, token, stream):
     state['pymode'].pop()
     state['last'] = token
     yield _new_token('RPAREN', ')', token.start)
 
+
 def handle_rbrace(state, token, stream):
     state['pymode'].pop()
     state['last'] = token
     yield _new_token('RBRACE', '}', token.start)
 
+
 def handle_rbracket(state, token, stream):
     state['pymode'].pop()
     state['last'] = token
     yield _new_token('RBRACKET', ']', token.start)
+
 
 def handle_error_space(state, token, stream):
     if not state['pymode'][-1]:
@@ -206,9 +218,9 @@ def handle_error_space(state, token, stream):
         yield from []
 
 special_handlers = {
-    tokenize.ENCODING: lambda s,t,st: [],
-    tokenize.COMMENT: lambda s,t,st: [],
-    tokenize.ENDMARKER: lambda s,t,st: [],
+    tokenize.ENCODING: lambda s, t, st: [],
+    tokenize.COMMENT: lambda s, t, st: [],
+    tokenize.ENDMARKER: lambda s, t, st: [],
     tokenize.NEWLINE: handle_newline,
     (tokenize.OP, '('): handle_lparen,
     (tokenize.OP, ')'): handle_rparen,
@@ -224,6 +236,7 @@ special_handlers = {
     tokenize.INDENT: handle_indent,
     tokenize.DEDENT: handle_indent,
 }
+
 
 def handle_token(state, token, stream):
     typ = token.type
@@ -249,6 +262,7 @@ def handle_token(state, token, stream):
         m = "Unexpected token: {0}".format(token)
         yield _new_token("ERRORTOKEN", m, token.start)
 
+
 def preprocess_tokens(tokstream):
     tokstream = clear_NL(tokstream)
     state = {'indents': [0], 'pymode': [True], 'last': None}
@@ -256,15 +270,18 @@ def preprocess_tokens(tokstream):
         for i in handle_token(state, token, tokstream):
             yield i
 
+
 def clear_NL(tokstream):
     for i in tokstream:
         if i.type != tokenize.NL:
             yield i
 
-def single_error(exc):
-    yield _new_token("ERRORTOKEN", "{} (line {}, column {})".format(exc.msg, exc.lineno, exc.offset), (0,0))
 
-from io import BytesIO
+def single_error(exc):
+    m = "{} (line {}, column {})".format(exc.msg, exc.lineno, exc.offset)
+    yield _new_token("ERRORTOKEN", m, (0, 0))
+
+
 def tok(s):
     try:
         return iter(tokenize.tokenize(BytesIO(s.encode('utf-8')).readline))
@@ -272,7 +289,7 @@ def tok(s):
         return iter(single_error(e))
 
 
-#synthesize a new PLY token
+# synthesize a new PLY token
 def _new_token(type, value, pos):
     o = LexToken()
     o.type = type
@@ -280,8 +297,10 @@ def _new_token(type, value, pos):
     o.lineno, o.lexpos = pos
     return o
 
+
 def anyof(*regexes):
     return '(' + '|'.join(regexes) + ')'
+
 
 class Lexer(object):
     """Implements a lexer for the xonsh language."""
@@ -338,12 +357,11 @@ class Lexer(object):
     #
     # Python keywords
     #
-    pykeywords = ('AND', 'AS', 'ASSERT', 'BREAK', 'CLASS', 'CONTINUE', 'DEF', 
-        'DEL', 'ELIF', 'ELSE', 'EXCEPT', 
-        #'EXEC', 
-        'FINALLY', 'FOR', 'FROM', 
-        'GLOBAL', 'IMPORT', 'IF', 'IN', 'IS', 'LAMBDA', 'NONLOCAL', 'NOT', 
-        'OR', 'PASS', 'RAISE', 'RETURN', 'TRY', 'WHILE', 'WITH', 'YIELD',)
+    pykeywords = ('AND', 'AS', 'ASSERT', 'BREAK', 'CLASS', 'CONTINUE', 'DEF',
+                  'DEL', 'ELIF', 'ELSE', 'EXCEPT', 'FINALLY', 'FOR', 'FROM',
+                  'GLOBAL', 'IMPORT', 'IF', 'IN', 'IS', 'LAMBDA', 'NONLOCAL',
+                  'NOT', 'OR', 'PASS', 'RAISE', 'RETURN', 'TRY', 'WHILE',
+                  'WITH', 'YIELD',)
 
     pykeyword_map = {k.lower(): k for k in pykeywords}
 
@@ -352,28 +370,23 @@ class Lexer(object):
     #
     tokens = pykeywords + (
         # Misc
-        'NAME', 'INDENT', 'DEDENT', 'NEWLINE', 'ENDMARKER', 
+        'NAME', 'INDENT', 'DEDENT', 'NEWLINE', 'ENDMARKER',
         'NONE', 'TRUE', 'FALSE', 'WS',
 
         # literals
         'NUMBER', 'STRING',
 
         # Basic Operators
-        'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'DOUBLEDIV', 'MOD', 'POW', 
+        'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'DOUBLEDIV', 'MOD', 'POW',
         'PIPE', 'AMPERSAND', 'TILDE', 'XOR', 'LSHIFT', 'RSHIFT',
-        #'LOGIC_OR', 
-        #'LOGIC_AND', 
-        'LT', 'LE', 'GT', 'GE', 'EQ', 'NE',
-        #'LARROW',
-        'RARROW',
+        'LT', 'LE', 'GT', 'GE', 'EQ', 'NE', 'RARROW',
 
         # Assignment Operators
-        'EQUALS', 'PLUSEQUAL', 'MINUSEQUAL', 'TIMESEQUAL', 'DIVEQUAL', 
-        'MODEQUAL', 'POWEQUAL', 'LSHIFTEQUAL', 'RSHIFTEQUAL', 'AMPERSANDEQUAL', 
+        'EQUALS', 'PLUSEQUAL', 'MINUSEQUAL', 'TIMESEQUAL', 'DIVEQUAL',
+        'MODEQUAL', 'POWEQUAL', 'LSHIFTEQUAL', 'RSHIFTEQUAL', 'AMPERSANDEQUAL',
         'XOREQUAL', 'PIPEEQUAL', 'DOUBLEDIVEQUAL',
 
         # Command line
-        #'CLI_OPTION', 
         'REGEXPATH',
 
         # Delimeters
