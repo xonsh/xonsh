@@ -154,10 +154,7 @@ class Parser(object):
         outputdir : str or None, optional
             The directory to place generated tables within.
         """
-        self.lexer = lexer = Lexer(errfunc=self._lexer_errfunc)
-        lexer_kwargs = dict(optimize=lexer_optimize, lextab=lexer_table)
-        if outputdir is not None:
-            lexer_kwargs['outputdir'] = outputdir
+        self.lexer = lexer = Lexer()
         self.tokens = lexer.tokens
 
         opt_rules = (
@@ -2144,9 +2141,13 @@ class Parser(object):
         if p is None:
             self._parse_error('no further code', None)
         elif p.type == 'ERRORTOKEN':
-            self._parse_error(p.value,
-                              self.currloc(lineno=p.lineno, column=p.lexpos))
+            if isinstance(p.value, BaseException):
+                raise p.value
+            else:
+                self._parse_error(p.value,
+                                  self.currloc(lineno=p.lineno,
+                                               column=p.lexpos))
         else:
             msg = 'code: {0}'.format(p.value),
             self._parse_error(msg, self.currloc(lineno=p.lineno,
-                              column=p.lexpos))
+                                                column=p.lexpos))

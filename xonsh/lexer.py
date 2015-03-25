@@ -1,3 +1,6 @@
+"""
+Lexer for xonsh code, written using a hybrid of ``tokenize`` and PLY
+"""
 from __future__ import print_function, unicode_literals
 import re
 import sys
@@ -9,18 +12,22 @@ from keyword import kwlist
 from ply import lex
 from ply.lex import TOKEN, LexToken
 
-# mapping from tokenize to PLY
-# some keys are (type, name) tuples (for specific, e.g., keywords)
-# some keys are just a type, for things like strings/names
-# values are always a PLY token type
+
 token_map = {}
+"""
+Mapping from ``tokenize`` tokens (or token types) to PLY token types.  If a
+simple one-to-one mapping from ``tokenize`` to PLY exists, the lexer will look
+it up here and generate a single PLY token of the given type.  Otherwise, it
+will fall back to handling that token using one of the handlers in
+``special_handlers``.
+"""
 
 # keywords
 for kw in kwlist:
     token_map[(tokenize.NAME, kw)] = kw.upper()
 
 # operators
-op_map = {
+_op_map = {
         # punctuation
         ',': 'COMMA', '.': 'PERIOD', ';': 'SEMI', ':': 'COLON',
         '...': 'ELLIPSIS',
@@ -37,27 +44,21 @@ op_map = {
         '&=': 'AMPERSANDEQUAL', '^=': 'XOREQUAL', '|=': 'PIPEEQUAL',
         '//=': 'DOUBLEDIVEQUAL',
 }
-for (op, type) in op_map.items():
+for (op, type) in _op_map.items():
     token_map[(tokenize.OP, op)] = type
 
 token_map[tokenize.NAME] = 'NAME'
 token_map[tokenize.NUMBER] = 'NUMBER'
 token_map[tokenize.STRING] = 'STRING'
 token_map[tokenize.NEWLINE] = 'NEWLINE'
-
-
-def handle_indent(state, token, stream):
-    level = len(token.string)
-    state['last'] = token
-    if token.type == tokenize.DEDENT:
-        state['indents'].pop()
-        yield _new_token('DEDENT', ' '*state['indents'][-1], token.start)
-    elif token.type == tokenize.INDENT:
-        state['indents'].append(level)
-        yield _new_token('INDENT', token.string, token.start)
+token_map[tokenize.INDENT] = 'INDENT'
+token_map[tokenize.DEDENT] = 'DEDENT'
 
 
 def handle_dollar(state, token, stream):
+    """
+    Function for generating PLY tokens associated with ``$``.
+    """
     n = next(stream, None)
 
     if n is None:
@@ -88,6 +89,9 @@ def handle_dollar(state, token, stream):
 
 
 def handle_at(state, token, stream):
+    """
+    Function for generating PLY tokens associated with ``@``.
+    """
     n = next(stream, None)
 
     if n is None:
@@ -106,6 +110,9 @@ def handle_at(state, token, stream):
 
 
 def handle_question(state, token, stream):
+    """
+    Function for generating PLY tokens for help and superhelp
+    """
     n = next(stream, None)
 
     if n is not None and n.type == tokenize.ERRORTOKEN and \
@@ -120,6 +127,9 @@ def handle_question(state, token, stream):
 
 
 def handle_backtick(state, token, stream):
+    """
+    Function for generating PLY tokens representing regex globs.
+    """
     n = next(stream, None)
 
     found_match = False
@@ -144,42 +154,63 @@ def handle_backtick(state, token, stream):
 
 
 def handle_lparen(state, token, stream):
+    """
+    Function for handling ``(``
+    """
     state['pymode'].append(True)
     state['last'] = token
     yield _new_token('LPAREN', '(', token.start)
 
 
 def handle_lbrace(state, token, stream):
+    """
+    Function for handling ``{``
+    """
     state['pymode'].append(True)
     state['last'] = token
     yield _new_token('LBRACE', '{', token.start)
 
 
 def handle_lbracket(state, token, stream):
+    """
+    Function for handling ``[``
+    """
     state['pymode'].append(True)
     state['last'] = token
     yield _new_token('LBRACKET', '[', token.start)
 
 
 def handle_rparen(state, token, stream):
+    """
+    Function for handling ``)``
+    """
     state['pymode'].pop()
     state['last'] = token
     yield _new_token('RPAREN', ')', token.start)
 
 
 def handle_rbrace(state, token, stream):
+    """
+    Function for handling ``}``
+    """
     state['pymode'].pop()
     state['last'] = token
     yield _new_token('RBRACE', '}', token.start)
 
 
 def handle_rbracket(state, token, stream):
+    """
+    Function for handling ``]``
+    """
     state['pymode'].pop()
     state['last'] = token
     yield _new_token('RBRACKET', ']', token.start)
 
 
 def handle_error_space(state, token, stream):
+    """
+    Function for handling special whitespace characters is subprocess mode
+    """
     if not state['pymode'][-1]:
         state['last'] = token
         yield _new_token('WS', token.string, token.start)
@@ -188,30 +219,53 @@ def handle_error_space(state, token, stream):
 
 
 def handle_ignore(state, token, stream):
+    """
+    Function for handling tokens that should be ignored
+    """
     yield from []
 
 
 special_handlers = {
+    tokenize.NL: handle_ignore,
     tokenize.COMMENT: handle_ignore,
     tokenize.ENCODING: handle_ignore,
     tokenize.ENDMARKER: handle_ignore,
+    (tokenize.OP, '@'): handle_at,
     (tokenize.OP, '('): handle_lparen,
     (tokenize.OP, ')'): handle_rparen,
-    (tokenize.OP, '['): handle_lbracket,
-    (tokenize.OP, ']'): handle_rbracket,
     (tokenize.OP, '{'): handle_lbrace,
     (tokenize.OP, '}'): handle_rbrace,
+    (tokenize.OP, '['): handle_lbracket,
+    (tokenize.OP, ']'): handle_rbracket,
     (tokenize.ERRORTOKEN, '$'): handle_dollar,
     (tokenize.ERRORTOKEN, '`'): handle_backtick,
     (tokenize.ERRORTOKEN, '?'): handle_question,
-    (tokenize.OP, '@'): handle_at,
     (tokenize.ERRORTOKEN, ' '): handle_error_space,
-    tokenize.INDENT: handle_indent,
-    tokenize.DEDENT: handle_indent,
 }
+"""
+Mapping from ``tokenize`` tokens (or token types) to the proper function for
+generating PLY tokens from them.  In addition to yielding PLY tokens, these
+functions may manipulate the Lexer's state.
+"""
 
 
 def handle_token(state, token, stream):
+    """
+    General-purpose token handler.  Makes use of ``token_map`` or
+    ``special_map`` to yield one or more PLY tokens from the given input.
+
+    Parameters
+    ----------
+
+    state :
+        The current state of the lexer, including information about whether
+        we are in Python mode or subprocess mode, which changes the lexer's
+        behavior
+    token :
+        The token (from ``tokenize``) currently under consideration
+    stream :
+        A generator from which more tokens can be grabbed if necessary
+    """
     typ = token.type
     st = token.string
     if not state['pymode'][-1]:
@@ -234,29 +288,28 @@ def handle_token(state, token, stream):
         yield _new_token("ERRORTOKEN", m, token.start)
 
 
-def preprocess_tokens(tokstream):
-    tokstream = clear_nl(tokstream)
+def get_tokens(s):
+    """
+    Given a string containing xonsh code, generates a stream of relevant PLY
+    tokens using ``handle_token``.
+    """
+    tokstream = tokenize.tokenize(BytesIO(s.encode('utf-8')).readline)
     state = {'indents': [0], 'pymode': [True], 'last': None}
-    for token in tokstream:
-        yield from handle_token(state, token, tokstream)
-
-
-def clear_nl(tokstream):
-    for i in tokstream:
-        if i.type != tokenize.NL:
-            yield i
-
-
-def single_error(exc):
-    m = "{} (line {}, column {})".format(exc.msg, exc.lineno, exc.offset)
-    yield _new_token("ERRORTOKEN", m, (0, 0))
-
-
-def tok(s):
-    try:
-        return tokenize.tokenize(BytesIO(s.encode('utf-8')).readline)
-    except Exception as e:
-        return single_error(e)
+    while True:
+        try:
+            token = next(tokstream)
+            yield from handle_token(state, token, tokstream)
+        except StopIteration:
+            return
+        except tokenize.TokenError as e:
+            # this is recoverable in single-line mode (from the shell)
+            # (e.g., EOF while scanning string literal)
+            yield _new_token('ERRORTOKEN', e.args[0], (0, 0))
+            return
+        except IndentationError as e:
+            # this is never recoverable
+            yield _new_token('ERRORTOKEN', e, (0, 0))
+            return
 
 
 # synthesize a new PLY token
@@ -274,17 +327,10 @@ COMMENT_REGEX = re.compile(r'#.*')
 class Lexer(object):
     """Implements a lexer for the xonsh language."""
 
-    def __init__(self, errfunc=lambda e, l, c: print(e)):
+    def __init__(self):
         """
-        Parameters
-        ----------
-        errfunc : function, optional
-            An error function callback. Accepts an error
-            message, line and column as arguments.
-
         Attributes
         ----------
-        lexer : a PLY lexer bound to self
         fname : str
             Filename
         last : token
@@ -293,7 +339,6 @@ class Lexer(object):
             The last line number seen.
 
         """
-        self.errfunc = errfunc
         self.fname = ''
         self.last = None
 
@@ -307,7 +352,7 @@ class Lexer(object):
     def input(self, s):
         """Calls the lexer on the string s."""
         s = re.sub(COMMENT_REGEX, '', s)
-        self.token_stream = preprocess_tokens(tok(s))
+        self.token_stream = get_tokens(s)
 
     def token(self):
         """Retrieves the next token."""
