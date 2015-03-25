@@ -1526,8 +1526,8 @@ class Parser(object):
             bt = '`'
             if isinstance(p1, (ast.Num, ast.Str, ast.Bytes)):
                 pass
-            elif (p1 is True) or (p1 is False) or (p1 is None):
-                p1 = ast.NameConstant(value=p1, lineno=self.lineno,
+            elif (p1 == 'True') or (p1 == 'False') or (p1 == 'None'):
+                p1 = ast.NameConstant(value=eval(p1), lineno=self.lineno,
                                       col_offset=self.col)
             elif p1 == '...':
                 p1 = ast.Ellipsis(lineno=self.lineno, col_offset=self.col)
