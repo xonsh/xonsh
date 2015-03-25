@@ -117,6 +117,8 @@ class Execer(object):
                 tree = self.parser.parse(input, filename=self.filename,
                             mode=mode, debug_level=self.debug_level)
                 parsed = True
+            except IndentationError as e:
+                raise
             except SyntaxError as e:
                 if (e.loc is None) or (last_error_line == e.loc.lineno and
                                        last_error_col in (e.loc.column + 1, e.loc.column)):
