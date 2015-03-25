@@ -139,10 +139,7 @@ def handle_backtick(state, token, stream):
         if n.type == tokenize.ERRORTOKEN and n.string == '`':
             found_match = True
             break
-        try:
-            n = next(stream)
-        except:
-            n = None
+        n = next(stream, None)
     if found_match:
         state['last'] = n
         yield _new_token('REGEXPATH', sofar, token.start)
