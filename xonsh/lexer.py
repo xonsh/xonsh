@@ -318,7 +318,7 @@ class Lexer(object):
 
     def input(self, s):
         """Calls the lexer on the string s."""
-        s = re.sub(r'#.*?\n', '', s)
+        s = re.sub(r'#.*', '', s)
         self.token_stream = preprocess_tokens(tok(s))
 
     def token(self):
