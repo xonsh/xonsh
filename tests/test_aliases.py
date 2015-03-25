@@ -1,6 +1,9 @@
 """Testing built_ins.Aliases"""
 from __future__ import unicode_literals, print_function
+
+import nose
 from nose.tools import assert_equal
+
 from xonsh.built_ins import Aliases
 
 
