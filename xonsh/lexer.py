@@ -198,9 +198,11 @@ def handle_rbracket(state, token, stream):
     yield _new_token('RBRACKET', ']', token.start)
 
 def handle_error_space(state, token, stream):
-    if state['pymode'][-1]:
+    if not state['pymode'][-1]:
         state['last'] = token
         yield _new_token('WS', ' ', token.start)
+    else:
+        yield from []
 
 special_handlers = {
     tokenize.ENCODING: lambda s,t,st: [],
