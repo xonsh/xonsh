@@ -315,16 +315,13 @@ class Lexer(object):
 
     def input(self, s):
         """Calls the lexer on the string s."""
-        print("input\n", repr(s))
         s = re.sub(r'#.*?\n', '', s)
-        print("mod\n",repr(s))
         self.token_stream = preprocess_tokens(tok(s))
 
     def token(self):
         """Retrieves the next token."""
         try:
             self.last = next(self.token_stream)
-            print(self.last)
             return self.last
         except StopIteration:
             return None

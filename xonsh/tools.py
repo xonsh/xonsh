@@ -48,7 +48,6 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     for tok in lexer:
         pos = tok.lexpos
         if pos >= maxcol:
-            print('too big',pos,maxcol)
             break
         if len(toks) > 0 and toks[-1].type == 'SEMI':
             toks.clear()
@@ -72,7 +71,6 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     if len(toks) == 0:
         return  # handle comment lines
     beg, end = toks[0].lexpos, (toks[-1].lexpos + end_offset)
-    print(repr(line), toks, beg, end)
     rtn = '$[' + line[beg:end] + ']'
     if returnline:
         rtn = line[:beg] + rtn + line[end:]

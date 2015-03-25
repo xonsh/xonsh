@@ -103,7 +103,6 @@ class CtxAwareTransformer(NodeTransformer):
         maxcol = None# if self.mode == 'eval' else node.col_offset
         spline = subproc_toks(line, mincol=mincol, maxcol=maxcol, 
                               returnline=False, lexer=self.parser.lexer)
-        print('spline',spline)
         try:
             newnode = self.parser.parse(spline, mode=self.mode)
             newnode = newnode.body
