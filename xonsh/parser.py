@@ -382,6 +382,7 @@ class Parser(object):
                          | file_input
                          | eval_input
                          | empty
+                         | ENDMARKER
         """
         p[0] = p[1]
 
@@ -1961,18 +1962,8 @@ class Parser(object):
         return ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
                              lineno=lineno, col_offset=col)
 
-    def _hz_printer(self, x):
-        if hasattr(x, 'elts'):
-            return [self._hz_printer(i) for i in x.elts]
-        elif hasattr(x, 's'):
-            return x.s
-        elif hasattr(x, 'n'):
-            return x.n
-
     def _subproc_cliargs(self, args, lineno=None, col=None):
         """Creates an expression for subprocess CLI arguments."""
-        print('cliargs enter',lineno,col)
-        print([self._hz_printer(i) for i in args])
         cliargs = currlist = empty_list(lineno=lineno, col=col)
         for arg in args:
             action = arg._cliarg_action
@@ -1997,7 +1988,6 @@ class Parser(object):
             else:
                 raise ValueError("action not understood: " + action)
             del arg._cliarg_action
-        print(self._hz_printer(cliargs))
         return cliargs
 
     def p_subproc_special_atom(self, p):
@@ -2044,7 +2034,6 @@ class Parser(object):
             cliargs = self._subproc_cliargs(p[3], lineno=lineno, col=col)
             p0 = p1 + [p[2], cliargs]
         # return arguments list
-        print('subproc_return',p0)
         p[0] = p0
 
     def p_subproc_atoms(self, p):

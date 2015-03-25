@@ -41,7 +41,7 @@ for (op, type) in op_map.items():
 token_map[tokenize.NAME] = 'NAME'
 token_map[tokenize.NUMBER] = 'NUMBER'
 token_map[tokenize.STRING] = 'STRING'
-token_map[tokenize.ENDMARKER] = 'ENDMARKER'
+#token_map[tokenize.ENDMARKER] = 'ENDMARKER'
 
 def handle_indent(state, token, stream):
     level = len(token.string)
@@ -204,6 +204,8 @@ def handle_error_space(state, token, stream):
 
 special_handlers = {
     tokenize.ENCODING: lambda s,t,st: [],
+    tokenize.COMMENT: lambda s,t,st: [],
+    tokenize.ENDMARKER: lambda s,t,st: [],
     tokenize.NEWLINE: handle_newline,
     (tokenize.OP, '('): handle_lparen,
     (tokenize.OP, ')'): handle_rparen,
@@ -223,10 +225,6 @@ special_handlers = {
 def handle_token(state, token, stream):
     typ = token.type
     st = token.string
-    print('NEWTOKEN',state['pymode'])
-    print(state['last'])
-    print(token)
-    print()
     if not state['pymode'][-1]:
         if state['last'] is not None and state['last'].end != token.start:
             cur = token.start
@@ -317,7 +315,9 @@ class Lexer(object):
 
     def input(self, s):
         """Calls the lexer on the string s."""
-        #print('code:\n',repr(s))
+        print("input\n", repr(s))
+        s = re.sub(r'#.*?\n', '', s)
+        print("mod\n",repr(s))
         self.token_stream = preprocess_tokens(tok(s))
 
     def token(self):
