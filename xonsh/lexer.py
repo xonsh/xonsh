@@ -297,16 +297,16 @@ def get_tokens(s):
             token = next(tokstream)
             yield from handle_token(state, token, tokstream)
         except StopIteration:
-            return
+            break
         except tokenize.TokenError as e:
             # this is recoverable in single-line mode (from the shell)
             # (e.g., EOF while scanning string literal)
             yield _new_token('ERRORTOKEN', e.args[0], (0, 0))
-            return
+            break
         except IndentationError as e:
             # this is never recoverable
             yield _new_token('ERRORTOKEN', e, (0, 0))
-            return
+            break
 
 
 # synthesize a new PLY token
