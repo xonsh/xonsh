@@ -154,11 +154,7 @@ class Parser(object):
         outputdir : str or None, optional
             The directory to place generated tables within.
         """
-        self.lexer = lexer = Lexer(errfunc=self._lexer_errfunc)
-        lexer_kwargs = dict(optimize=lexer_optimize, lextab=lexer_table)
-        if outputdir is not None:
-            lexer_kwargs['outputdir'] = outputdir
-        lexer.build(**lexer_kwargs)
+        self.lexer = lexer = Lexer()
         self.tokens = lexer.tokens
 
         opt_rules = (
@@ -238,7 +234,6 @@ class Parser(object):
             'argument_comma',
             'comma_argument',
             'comma_item',
-            'indented_stmt',
             'attr_period_name',
             'test_comma',
             )
@@ -333,15 +328,14 @@ class Parser(object):
 
     def token_col(self, t):
         """Gets ths token column"""
-        return self.lexer.token_col(t)
+        return t.lexpos
 
     @property
     def lineno(self):
-        return self.lexer.lineno
-
-    @lineno.setter
-    def lineno(self, value):
-        self.lexer.lineno = value
+        if self.lexer.last is None:
+            return 0
+        else:
+            return self.lexer.last.lineno
 
     @property
     def col(self):
@@ -410,20 +404,16 @@ class Parser(object):
         """newline_or_stmt : NEWLINE
                            | stmt
         """
-        if p[1] == '\n':
-            self.lineno += 1
         p[0] = p[1]
 
     def p_newlines(self, p):
         """newlines : NEWLINE
                     | newlines NEWLINE
         """
-        self.lineno += 1
         p[0] = p[1] if len(p) == 2 else p[1] + p[2]
 
     def p_eval_input(self, p):
         """eval_input : testlist newlines_opt
-                      | testlist newlines_opt ENDMARKER
         """
         p[0] = ast.Expression(body=p[1])
 
@@ -468,7 +458,6 @@ class Parser(object):
         else:
             p0 = ast.Call(func=name, lineno=self.lineno, col_offset=self.col,
                           **p3)
-        self.lineno += 1  # needs to be at the end
         p[0] = p0
 
     def p_decorators(self, p):
@@ -710,6 +699,14 @@ class Parser(object):
                 | compound_stmt
         """
         p[0] = p[1]
+
+    def p_stmt_list(self, p):
+        """stmt_list : stmt
+                     | stmt_list stmt"""
+        if len(p) == 2:
+            p[0] = p[1]
+        else:
+            p[0] = p[1] + p[2]
 
     def p_semi_opt(self, p):
         """semi_opt : SEMI
@@ -1193,19 +1190,11 @@ class Parser(object):
                                    col_offset=self.col)
         p[0] = p0
 
-    def p_indented_stmt(self, p):
-        """indented_stmt : INDENT stmt"""
-        p[0] = p[2]
-
     def p_suite(self, p):
         """suite : simple_stmt
-                 | NEWLINE indented_stmt DEDENT
-                 | NEWLINE indented_stmt_list
-                 | NEWLINE indented_stmt_list DEDENT
+                 | NEWLINE INDENT stmt_list DEDENT
         """
-        p[0] = p[1] if len(p) == 2 else p[2]
-        if len(p) < 4:
-            self.lineno += 1  # needs to be at the end
+        p[0] = p[1] if len(p) == 2 else p[3]
 
     def p_test(self, p):
         """test : or_test
@@ -1505,7 +1494,7 @@ class Parser(object):
                 | TRUE
                 | FALSE
                 | REGEXPATH
-                | DOLLAR NAME
+                | DOLLAR_NAME
                 | DOLLAR_LBRACE test RBRACE
                 | DOLLAR_LPAREN subproc RPAREN
                 | DOLLAR_LBRACKET subproc RBRACKET
@@ -1516,8 +1505,14 @@ class Parser(object):
             bt = '`'
             if isinstance(p1, (ast.Num, ast.Str, ast.Bytes)):
                 pass
-            elif (p1 is True) or (p1 is False) or (p1 is None):
-                p1 = ast.NameConstant(value=p1, lineno=self.lineno,
+            elif p1 == 'True':
+                p1 = ast.NameConstant(value=True, lineno=self.lineno,
+                                      col_offset=self.col)
+            elif p1 == 'False':
+                p1 = ast.NameConstant(value=False, lineno=self.lineno,
+                                      col_offset=self.col)
+            elif p1 == 'None':
+                p1 = ast.NameConstant(value=None, lineno=self.lineno,
                                       col_offset=self.col)
             elif p1 == '...':
                 p1 = ast.Ellipsis(lineno=self.lineno, col_offset=self.col)
@@ -1525,6 +1520,8 @@ class Parser(object):
                 p1 = ast.Str(s=p1.strip(bt), lineno=self.lineno,
                              col_offset=self.col)
                 p1 = xonsh_regexpath(p1, lineno=self.lineno, col=self.col)
+            elif p1.startswith('$'):
+                p1 = self._envvar_by_name(p1[1:], lineno=self.lineno, col=self.col)
             else:
                 p1 = ast.Name(id=p1, ctx=ast.Load(), lineno=self.lineno,
                               col_offset=self.col)
@@ -1576,11 +1573,7 @@ class Parser(object):
         p[0] = p0
 
     def p_string_literal(self, p):
-        """string_literal : STRING_LITERAL
-                          | RAW_STRING_LITERAL
-                          | UNICODE_LITERAL
-                          | BYTES_LITERAL
-        """
+        """string_literal : STRING"""
         s = eval(p[1])
         cls = ast.Bytes if p[1].startswith('b') else ast.Str
         p[0] = cls(s=s, lineno=self.lineno, col_offset=self.col)
@@ -1594,14 +1587,8 @@ class Parser(object):
         p[0] = p[1]
 
     def p_number(self, p):
-        """number : INT_LITERAL
-                  | HEX_LITERAL
-                  | OCT_LITERAL
-                  | BIN_LITERAL
-                  | FLOAT_LITERAL
-                  | IMAG_LITERAL
-        """
-        p[0] = ast.Num(n=p[1], lineno=self.lineno, col_offset=self.col)
+        """number : NUMBER"""
+        p[0] = ast.Num(n=eval(p[1]), lineno=self.lineno, col_offset=self.col)
 
     def p_testlist_comp(self, p):
         """testlist_comp : test_or_star_expr comp_for
@@ -1997,9 +1984,9 @@ class Parser(object):
 
     def p_subproc_special(self, p):
         """subproc_special : subproc_special_atom
-                           | INDENT subproc_special_atom
-                           | subproc_special_atom INDENT
-                           | INDENT subproc_special_atom INDENT
+                           | WS subproc_special_atom
+                           | subproc_special_atom WS
+                           | WS subproc_special_atom WS
         """
         p1 = p[1]
         if len(p) > 2 and len(p1.strip()) == 0:
@@ -2008,10 +1995,10 @@ class Parser(object):
 
     def p_subproc(self, p):
         """subproc : subproc_atoms
-                   | subproc_atoms INDENT
+                   | subproc_atoms WS
                    | subproc AMPERSAND
                    | subproc subproc_special subproc_atoms
-                   | subproc subproc_special subproc_atoms INDENT
+                   | subproc subproc_special subproc_atoms WS
         """
         lineno = self.lineno
         col = self.col
@@ -2034,7 +2021,7 @@ class Parser(object):
 
     def p_subproc_atoms(self, p):
         """subproc_atoms : subproc_atom
-                         | subproc_atoms INDENT subproc_atom
+                         | subproc_atoms WS subproc_atom
         """
         p1 = p[1]
         if len(p) < 4:
@@ -2047,7 +2034,7 @@ class Parser(object):
         """subproc_atom : subproc_arg
                         | string_literal
                         | REGEXPATH
-                        | DOLLAR NAME
+                        | DOLLAR_NAME
                         | AT_LPAREN test RPAREN
                         | DOLLAR_LBRACE test RBRACE
                         | DOLLAR_LPAREN subproc RPAREN
@@ -2067,6 +2054,9 @@ class Parser(object):
                     p0 = xonsh_call('__xonsh_glob__', args=[p0],
                                     lineno=self.lineno, col=self.col)
                     p0._cliarg_action = 'extend'
+                elif p1.startswith('$'):
+                    p0 = self._envvar_by_name(p1[1:], lineno=self.lineno, col=self.col)
+                    p0._cliarg_action = 'ensure_list'
                 else:
                     p0._cliarg_action = 'append'
             elif isinstance(p1, ast.AST):
@@ -2074,9 +2064,6 @@ class Parser(object):
                 p0._cliarg_action = 'append'
             else:
                 assert False
-        elif lenp == 3:
-            p0 = self._envvar_by_name(p[2], lineno=self.lineno, col=self.col)
-            p0._cliarg_action = 'ensure_list'
         elif p1 == '@(':
             l = self.lineno
             c = self.col
@@ -2132,11 +2119,7 @@ class Parser(object):
                             | NONE
                             | TRUE
                             | FALSE
-                            | INT_LITERAL
-                            | HEX_LITERAL
-                            | OCT_LITERAL
-                            | BIN_LITERAL
-                            | FLOAT_LITERAL
+                            | NUMBER
         """
         # Many tokens cannot be part of this list, such as $, ', ", ()
         # Use a string atom instead.
@@ -2153,7 +2136,14 @@ class Parser(object):
     def p_error(self, p):
         if p is None:
             self._parse_error('no further code', None)
+        elif p.type == 'ERRORTOKEN':
+            if isinstance(p.value, BaseException):
+                raise p.value
+            else:
+                self._parse_error(p.value,
+                                  self.currloc(lineno=p.lineno,
+                                               column=p.lexpos))
         else:
             msg = 'code: {0}'.format(p.value),
             self._parse_error(msg, self.currloc(lineno=p.lineno,
-                              column=self.lexer.token_col(p)))
+                                                column=p.lexpos))
