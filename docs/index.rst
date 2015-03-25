@@ -80,7 +80,7 @@ You can install xonsh using conda, pip, or from source.
 
 .. code-block:: bash
 
-    $ conda install -c https://conda.binstar.org/scopatz xonsh
+    $ conda install -c scopatz xonsh
 
 **pip:**
 
