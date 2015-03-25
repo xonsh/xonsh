@@ -335,14 +335,10 @@ class Parser(object):
 
     @property
     def lineno(self):
-        try:
-            return self.lexer.last.lineno
-        except:
+        if self.lexer.last is None:
             return 0
-
-    @lineno.setter
-    def lineno(self, value):
-        pass
+        else:
+            return self.lexer.last.lineno
 
     @property
     def col(self):
@@ -412,15 +408,12 @@ class Parser(object):
         """newline_or_stmt : NEWLINE
                            | stmt
         """
-        if p[1] == '\n':
-            self.lineno += 1
         p[0] = p[1]
 
     def p_newlines(self, p):
         """newlines : NEWLINE
                     | newlines NEWLINE
         """
-        self.lineno += 1
         p[0] = p[1] if len(p) == 2 else p[1] + p[2]
 
     def p_eval_input(self, p):
@@ -470,7 +463,6 @@ class Parser(object):
         else:
             p0 = ast.Call(func=name, lineno=self.lineno, col_offset=self.col,
                           **p3)
-        self.lineno += 1  # needs to be at the end
         p[0] = p0
 
     def p_decorators(self, p):
@@ -1208,8 +1200,6 @@ class Parser(object):
                  | NEWLINE INDENT stmt_list DEDENT
         """
         p[0] = p[1] if len(p) == 2 else p[3]
-        if len(p) < 4:
-            self.lineno += 1  # needs to be at the end
 
     def p_test(self, p):
         """test : or_test
@@ -1520,8 +1510,14 @@ class Parser(object):
             bt = '`'
             if isinstance(p1, (ast.Num, ast.Str, ast.Bytes)):
                 pass
-            elif (p1 == 'True') or (p1 == 'False') or (p1 == 'None'):
-                p1 = ast.NameConstant(value=eval(p1), lineno=self.lineno,
+            elif p1 == 'True':
+                p1 = ast.NameConstant(value=True, lineno=self.lineno,
+                                      col_offset=self.col)
+            elif p1 == 'False':
+                p1 = ast.NameConstant(value=False, lineno=self.lineno,
+                                      col_offset=self.col)
+            elif p1 == 'None':
+                p1 = ast.NameConstant(value=None, lineno=self.lineno,
                                       col_offset=self.col)
             elif p1 == '...':
                 p1 = ast.Ellipsis(lineno=self.lineno, col_offset=self.col)
@@ -2066,7 +2062,7 @@ class Parser(object):
                                     lineno=self.lineno, col=self.col)
                     p0._cliarg_action = 'extend'
                 elif p1.startswith('$'):
-                    p0 = self._envvar_by_name(p[1][1:], lineno=self.lineno, col=self.col)
+                    p0 = self._envvar_by_name(p1[1:], lineno=self.lineno, col=self.col)
                     p0._cliarg_action = 'ensure_list'
                 else:
                     p0._cliarg_action = 'append'
@@ -2148,9 +2144,8 @@ class Parser(object):
         if p is None:
             self._parse_error('no further code', None)
         elif p.type == 'ERRORTOKEN':
-            self._parse_error(p.value, 
-                              self.currloc(lineno=p.lineno,
-                              column=p.lexpos))
+            self._parse_error(p.value,
+                              self.currloc(lineno=p.lineno, column=p.lexpos))
         else:
             msg = 'code: {0}'.format(p.value),
             self._parse_error(msg, self.currloc(lineno=p.lineno,
