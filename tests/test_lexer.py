@@ -32,7 +32,6 @@ def tokens_equal(x, y):
     """Tests whether two token are equal."""
     xtup = ensure_tuple(x)
     ytup = ensure_tuple(y)
-    print(xtup, ytup)
     return xtup == ytup
 
 def assert_token_equal(x, y):
