@@ -35,8 +35,6 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     subprocess $[] starting at a minimum column. If there are no tokens 
     (ie in a comment line) this returns None.
     """
-    #if not line.endswith('\n'):
-    #    line = line + '\n'
     if lexer is None:
         lexer = builtins.__xonsh_execer__.parser.lexer
     if maxcol is None:
@@ -54,7 +52,7 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
         if pos < mincol:
             continue
         toks.append(tok)
-        if tok.type =='NEWLINE':
+        if tok.type == 'NEWLINE':
             break
     else:
         if len(toks) == 0:
