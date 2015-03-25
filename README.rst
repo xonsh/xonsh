@@ -4,8 +4,8 @@ xonsh
 .. image:: https://travis-ci.org/scopatz/xonsh.svg?branch=master
     :target: https://travis-ci.org/scopatz/xonsh
 
-.. image:: https://landscape.io/github/javValverde/xonsh/master/landscape.svg?style=flat
-    :target: https://landscape.io/github/javValverde/xonsh/master
+.. image:: https://landscape.io/github/scopatz/xonsh/master/landscape.svg?style=flat
+    :target: https://landscape.io/github/scopatz/xonsh/master
     :alt: Code Health
 
 xonsh is a Python-ish, BASHwards-compatible shell language and command prompt.
