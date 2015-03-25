@@ -269,7 +269,8 @@ def handle_token(state, token, stream):
         if state['last'] is not None and state['last'].end != token.start:
             cur = token.start
             old = state['last'].end
-            yield _new_token('WS', ' '*(cur[1]-old[1]), old)
+            if cur[0] == old[0] and cur[1] > old[1]:
+                yield _new_token('WS', token.line[old[1]:cur[1]], old)
     if (typ, st) in token_map:
         state['last'] = token
         yield _new_token(token_map[(typ, st)], st, token.start)
