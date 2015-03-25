@@ -32,6 +32,7 @@ def tokens_equal(x, y):
     """Tests whether two token are equal."""
     xtup = ensure_tuple(x)
     ytup = ensure_tuple(y)
+    print(xtup, ytup)
     return xtup == ytup
 
 def assert_token_equal(x, y):
@@ -49,7 +50,7 @@ def assert_tokens_equal(x, y):
     diffs = []
     diffs = [(a, b) for a, b in zip(x, y) if not tokens_equal(a, b)]
     if len(diffs) > 0:
-        msg = ['The token sequnces differ: ']
+        msg = ['The token sequences differ: ']
         for a, b in diffs:
             msg += ['', '- ' + repr(a), '+ ' + repr(b)]
         msg = '\n'.join(msg)
@@ -57,7 +58,6 @@ def assert_tokens_equal(x, y):
 
 def check_token(input, exp):
     l = Lexer()
-    l.build(**LEXER_ARGS)
     l.input(input)
     obs = list(l)
     if len(obs) != 1:
@@ -68,101 +68,99 @@ def check_token(input, exp):
 
 def check_tokens(input, exp):
     l = Lexer()
-    l.build(**LEXER_ARGS)
     l.input(input)
     obs = list(l)
     assert_tokens_equal(exp, obs)
 
 
 def test_int_literal():
-    yield check_token, '42', ['INT_LITERAL', 42, 0]
+    yield check_token, '42', ['NUMBER', '42', 0]
 
 def test_hex_literal():
-    yield check_token, '0x42', ['HEX_LITERAL', int('0x42', 16), 0]
+    yield check_token, '0x42', ['NUMBER', '0x42', 0]
 
 def test_oct_o_literal():
-    yield check_token, '0o42', ['OCT_LITERAL', int('0o42', 8), 0]
-
-def test_oct_no_o_literal():
-    yield check_token, '042', ['OCT_LITERAL', int('042', 8), 0]
+    yield check_token, '0o42', ['NUMBER', '0o42', 0]
 
 def test_bin_literal():
-    yield check_token, '0b101010', ['BIN_LITERAL', int('0b101010', 2), 0]
+    yield check_token, '0b101010', ['NUMBER', '0b101010', 0]
 
 def test_indent():
     exp = [('INDENT', '  \t  ', 0), 
-           ('INT_LITERAL', 42, 5)]
+           ('NUMBER', '42', 5),
+           ('DEDENT', '', 0)]
     yield check_tokens, '  \t  42', exp
 
 def test_post_whitespace():
     input = '42  \t  '
-    exp = [('INT_LITERAL', 42, 0)]
+    exp = [('NUMBER', '42', 0)]
     yield check_tokens, input, exp
 
 def test_internal_whitespace():
     input = '42  +\t65'
-    exp = [('INT_LITERAL', 42, 0), 
+    exp = [('NUMBER', '42', 0), 
            ('PLUS', '+', 4),
-           ('INT_LITERAL', 65, 6),]
+           ('NUMBER', '65', 6),]
     yield check_tokens, input, exp
 
 def test_indent_internal_whitespace():
     input = ' 42  +\t65'
     exp = [('INDENT', ' ', 0),
-           ('INT_LITERAL', 42, 1), 
+           ('NUMBER', '42', 1), 
            ('PLUS', '+', 5),
-           ('INT_LITERAL', 65, 7),]
+           ('NUMBER', '65', 7),
+           ('DEDENT', '', 0)]
     yield check_tokens, input, exp
 
 def test_assignment():
     input = 'x = 42'
     exp = [('NAME', 'x', 0),
            ('EQUALS', '=', 2),
-           ('INT_LITERAL', 42, 4),] 
+           ('NUMBER', '42', 4),] 
     yield check_tokens, input, exp
 
 def test_multiline():
     input = 'x\ny'
     exp = [('NAME', 'x', 0),
            ('NEWLINE', '\n', 1),
-           ('NAME', 'y', 2),]
+           ('NAME', 'y', 0),]
     yield check_tokens, input, exp
 
 def test_and():
     yield check_token, 'and', ['AND', 'and', 0]
 
 def test_single_quote_literal():
-    yield check_token, "'yo'", ['STRING_LITERAL', "'yo'", 0]
+    yield check_token, "'yo'", ['STRING', "'yo'", 0]
 
 def test_double_quote_literal():
-    yield check_token, '"yo"', ['STRING_LITERAL', '"yo"', 0]
+    yield check_token, '"yo"', ['STRING', '"yo"', 0]
 
 def test_triple_single_quote_literal():
-    yield check_token, "'''yo'''", ['STRING_LITERAL', "'''yo'''", 0]
+    yield check_token, "'''yo'''", ['STRING', "'''yo'''", 0]
 
 def test_triple_double_quote_literal():
-    yield check_token, '"""yo"""', ['STRING_LITERAL', '"""yo"""', 0]
+    yield check_token, '"""yo"""', ['STRING', '"""yo"""', 0]
 
 def test_single_raw_string_literal():
-    yield check_token, "r'yo'", ['RAW_STRING_LITERAL', "r'yo'", 0]
+    yield check_token, "r'yo'", ['STRING', "r'yo'", 0]
 
 def test_double_raw_string_literal():
-    yield check_token, 'r"yo"', ['RAW_STRING_LITERAL', 'r"yo"', 0]
+    yield check_token, 'r"yo"', ['STRING', 'r"yo"', 0]
 
 def test_single_unicode_literal():
-    yield check_token, "u'yo'", ['UNICODE_LITERAL', "u'yo'", 0]
+    yield check_token, "u'yo'", ['STRING', "u'yo'", 0]
 
 def test_double_unicode_literal():
-    yield check_token, 'u"yo"', ['UNICODE_LITERAL', 'u"yo"', 0]
+    yield check_token, 'u"yo"', ['STRING', 'u"yo"', 0]
 
 def test_single_bytes_literal():
-    yield check_token, "b'yo'", ['BYTES_LITERAL', "b'yo'", 0]
+    yield check_token, "b'yo'", ['STRING', "b'yo'", 0]
 
 def test_float_literals():
     cases = ['0.0', '.0', '0.', '1e10', '1.e42', '0.1e42', '0.5e-42', 
              '5E10', '5e+42']
     for s in cases:
-        yield check_token, s, ['FLOAT_LITERAL', float(s), 0]
+        yield check_token, s, ['NUMBER', s, 0]
 
 
 if __name__ == '__main__':
