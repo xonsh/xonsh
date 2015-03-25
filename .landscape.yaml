@@ -3,3 +3,5 @@ test-warnings: yes
 strictness: veryhigh
 max-line-length: 100
 autodetect: yes
+ignore-paths:
+    - docs/conf.py
