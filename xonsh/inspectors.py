@@ -23,7 +23,7 @@ else:
     from itertools import izip_longest as zip_longest
 
 from xonsh import openpy
-from xonsh.tools import cast_unicode, safe_hasattr
+from xonsh.tools import cast_unicode, safe_hasattr, string_types, indent
 
 # builtin docstrings to ignore
 _func_call_docstring = types.FunctionType.__call__.__doc__
@@ -336,7 +336,7 @@ class Inspector(object):
         if output is None:
             self.noinfo('definition header',oname)
         else:
-            print(header, output, end=' ', file=io.stdout)
+            print(header, output, end=' ', file=sys.stdout)
 
     def pdoc(self, obj, oname=''):
         """Print the docstring for any object.

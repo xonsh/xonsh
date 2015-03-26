@@ -9,6 +9,9 @@ ignore-paths:
 pylint:
   disable:
     - syntax-error  # have to do this since landscape doesn't support py3k
+    - super-on-old-class
+    - global-variable-not-assigned
+
 mccabe:
   disable:
     - MC0000  # again, not Py3k compatabile

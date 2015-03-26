@@ -9,7 +9,7 @@ from glob import iglob
 
 from xonsh.built_ins import iglobpath
 
-RE_DASHF = re.compile('-F\s+(\w+)')
+RE_DASHF = re.compile(r'-F\s+(\w+)')
 
 XONSH_TOKENS = {'and ', 'as ', 'assert ', 'break', 'class ', 'continue', 
     'def ', 'del ', 'elif ', 'else', 'except ', 'finally:', 'for ', 'from ', 
