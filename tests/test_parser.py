@@ -794,6 +794,9 @@ def test_equals():
 def test_equals_semi():
     yield check_stmts, 'x = 42;'
 
+def test_x_y_equals_semi():
+    yield check_stmts, 'x = y = 42'
+
 def test_equals_two():
     yield check_stmts, 'x = 42; y = 65'
 
@@ -841,6 +844,24 @@ def test_lshift_eq():
 
 def test_rshift_eq():
     yield check_stmts, 'x = 42; x >>= 2'
+
+def test_bare_unpack():
+    yield check_stmts, 'x, y = 42, 65'
+
+def test_lhand_group_unpack():
+    yield check_stmts, '(x, y) = 42, 65'
+
+def test_rhand_group_unpack():
+    yield check_stmts, 'x, y = (42, 65)'
+
+def test_grouped_unpack():
+    yield check_stmts, '(x, y) = (42, 65)'
+
+def test_double_grouped_unpack():
+    yield check_stmts, '(x, y) = (z, a) = (7, 8)'
+
+def test_double_ungrouped_unpack():
+    yield check_stmts, 'x, y = z, a = 7, 8'
 
 def test_stary_eq():
     yield check_stmts, '*y, = [1, 2, 3]'

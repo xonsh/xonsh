@@ -171,7 +171,7 @@ class Parser(object):
             'vfpdef',
             'comma_vfpdef_list',
             'comma_pow_vfpdef',
-            'equals_yield_expr_or_testlist',
+            'equals_yield_expr_or_testlist_list',
             'testlist',
             'as_name',
             'period_or_ellipsis_list',
@@ -236,6 +236,7 @@ class Parser(object):
             'comma_item',
             'attr_period_name',
             'test_comma',
+            'equals_yield_expr_or_testlist',
             )
         for rule in list_rules:
             self._list_rule(rule)
@@ -748,13 +749,16 @@ class Parser(object):
 
     def p_expr_stmt(self, p):
         """expr_stmt : testlist_star_expr augassign yield_expr_or_testlist
-                     | testlist_star_expr equals_yield_expr_or_testlist_opt
+                     | testlist_star_expr equals_yield_expr_or_testlist_list_opt
+                     | testlist equals_yield_expr_or_testlist_list_opt
                      | test_comma_list_opt star_expr comma_test_list equals_yield_expr_or_testlist
                      | test_comma_list_opt star_expr comma_opt test_comma_list_opt equals_yield_expr_or_testlist
         """
         lenp = len(p)
         p1, p2 = p[1], p[2]
         p1 = [] if p1 is None else p1
+        if isinstance(p1, ast.Tuple):
+            p1 = [p1]
         for targ in p1:
             store_ctx(targ)
         if lenp == 3:
@@ -764,17 +768,18 @@ class Parser(object):
             elif p2 is None:
                 assert False
             else:
-                p0 = ast.Assign(targets=p1, value=p2, lineno=self.lineno,
-                                col_offset=self.col)
+                list(map(store_ctx, p2[:-1]))
+                p0 = ast.Assign(targets=p1 + p2[:-1], value=p2[-1], 
+                                lineno=self.lineno, col_offset=self.col)
         elif lenp == 4:
             op = self._augassign_op[p2]()
             p0 = ast.AugAssign(target=p1[0], op=op, value=p[3],
                                lineno=self.lineno, col_offset=self.col)
         elif lenp == 5 or lenp == 6:
             if lenp == 5:
-                targs, rhs = p[3], p[4]
+                targs, rhs = p[3], p[4][0]
             else:
-                targs, rhs = (p[4] or []), p[5]
+                targs, rhs = (p[4] or []), p[5][0]
             store_ctx(p2)
             for targ in targs:
                 store_ctx(targ)
@@ -849,7 +854,7 @@ class Parser(object):
 
     def p_equals_yield_expr_or_testlist(self, p):
         """equals_yield_expr_or_testlist : EQUALS yield_expr_or_testlist"""
-        p[0] = p[2]
+        p[0] = [p[2]]
 
     #
     # For normal assignments, additional restrictions enforced
