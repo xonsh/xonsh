@@ -220,7 +220,8 @@ def format_prompt(template=default_prompt):
     """
     global prompt_formatter
     if prompt_formatter is None:
-        cls = DefaultPromptFormatter
+        env = builtins.__xonsh_env__
+        cls = env.get('PROMPT_FORMATTER', DefaultPromptFormatter)
         prompt_formatter = cls()
     p = template.format(**prompt_formatter)
     return p
