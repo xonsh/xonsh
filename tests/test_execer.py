@@ -1,5 +1,4 @@
 """Tests the xonsh lexer."""
-# pylint: disable=syntax-error
 from __future__ import unicode_literals, print_function
 import os
 import sys
@@ -26,6 +25,7 @@ def check_exec(input):
         if not input.endswith('\n'):
             input += '\n'
         EXECER.debug_level = DEBUG_LEVEL
+        # pylint: disable=syntax-error
         EXECER.exec(input)
 
 def check_eval(input):
