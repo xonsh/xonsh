@@ -139,7 +139,10 @@ class DefaultPromptFormatter(PromptFormatter):
     def cwd(self, full_path=True):
         """Return the current working directory
 
-        :kwarg full_path: If True (the default), return the full path of the
+        Parameters
+        ----------
+        full_path : bool
+            If True (the default), return the full path of the
             directory.  If False, return only the directory's basename
         """
         cwd = self._env['PWD'].replace(self._env['HOME'], '~')
@@ -216,7 +219,7 @@ def format_prompt(template=default_prompt):
     """Formats a xonsh prompt template string.
 
     See the :class:`~DefaultPromptFormatter` documentation for keyword
-    arguments recognized in the template string.[
+    arguments recognized in the template string.
     """
     global prompt_formatter
     if prompt_formatter is None:
