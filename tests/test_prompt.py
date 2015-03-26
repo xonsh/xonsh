@@ -6,12 +6,13 @@ import sys
 import time
 import socket
 from datetime import datetime, timedelta
-from unittest import TestCase, skip, mock
+from unittest import mock
 
 sys.path.insert(0, os.path.abspath('..'))  # FIXME
 
 import nose
-from nose.tools import eq_, ok_
+from nose.tools import eq_, ok_, assert_in, assert_is_instance
+from nose.plugins.skip import SkipTest
 
 from .tools import mock_xonsh_env
 from xonsh.tools import TERM_COLORS
@@ -19,7 +20,7 @@ from xonsh.tools import TERM_COLORS
 from xonsh.environ import PromptFormatter, DefaultPromptFormatter
 
 
-class TestPromptFormatter(TestCase):
+class TestPromptFormatter:
     """ Test that the basics of getting static, callonce, and callevery values works """
 
     def call_once_func(self):
@@ -53,12 +54,12 @@ class TestPromptFormatter(TestCase):
         eq_(self.base_formatter['callevery'], 2)
 
     def check_splat(self, **kwargs):
-        self.assertIsInstance(kwargs, dict)
+        assert_is_instance(kwargs, dict)
         eq_(len(kwargs), 3)
 
-        self.assertIn('var', kwargs)
-        self.assertIn('callonce', kwargs)
-        self.assertIn('callevery', kwargs)
+        assert_in('var', kwargs)
+        assert_in('callonce', kwargs)
+        assert_in('callevery', kwargs)
 
         eq_(kwargs['var'], 'value')
         eq_(kwargs['callonce'], 1)
@@ -69,7 +70,7 @@ class TestPromptFormatter(TestCase):
     def test_splat(self):
         self.check_splat(**self.base_formatter)
 
-class TestDefaultPromptFormatter(TestCase):
+class TestDefaultPromptFormatter:
     """Test each of the prompt variables that DefaultPromptFormatter adds"""
 
     def setUp(self):
@@ -91,8 +92,8 @@ class TestDefaultPromptFormatter(TestCase):
             format_vars = frozenset(self.default_formatter.keys())
             ok_(self.color_names.issubset(format_vars))
 
-            self.assertIn('YELLOW', TERM_COLORS)
-            self.assertIn('YELLOW', self.default_formatter)
+            assert_in('YELLOW', TERM_COLORS)
+            assert_in('YELLOW', self.default_formatter)
 
             eq_(TERM_COLORS['YELLOW'], self.default_formatter['YELLOW'])
 
@@ -114,8 +115,8 @@ class TestDefaultPromptFormatter(TestCase):
             builtins.__xonsh_env__['PWD'] = '/var/tmp'
             eq_('/var/tmp', self.default_formatter['cwd'])
 
-    @skip('Testing of git branch detection not implemented')
     def test_curr_branch(self):
+        raise SkipTest('Testing of git branch detection not implemented')
         with mock_xonsh_env(self.env):
             ### TODO: need to test that git branch detection works.
             # If not in a git repository, return ''
@@ -158,7 +159,7 @@ class TestDefaultPromptFormatter(TestCase):
             eq_('xonshuser', self.default_formatter['user'])
 
     def check_splat(self, **kwargs):
-        self.assertIsInstance(kwargs, dict)
+        assert_is_instance(kwargs, dict)
         eq_(len(TERM_COLORS) + 7, len(kwargs))
         kwarg_vars = frozenset(kwargs.keys())
         eq_(self.all_names, kwarg_vars)
