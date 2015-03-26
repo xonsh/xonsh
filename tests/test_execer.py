@@ -25,7 +25,6 @@ def check_exec(input):
         if not input.endswith('\n'):
             input += '\n'
         EXECER.debug_level = DEBUG_LEVEL
-        # pylint: disable=syntax-error
         EXECER.exec(input)
 
 def check_eval(input):

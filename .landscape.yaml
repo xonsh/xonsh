@@ -5,3 +5,6 @@ max-line-length: 100
 autodetect: yes
 ignore-paths:
     - docs/conf.py
+pylint:
+  disable:
+    - syntax-error  # have to do this since landscape doesn't support py3k
