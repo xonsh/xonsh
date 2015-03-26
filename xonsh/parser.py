@@ -749,12 +749,15 @@ class Parser(object):
     def p_expr_stmt(self, p):
         """expr_stmt : testlist_star_expr augassign yield_expr_or_testlist
                      | testlist_star_expr equals_yield_expr_or_testlist_opt
+                     | testlist equals_yield_expr_or_testlist_opt
                      | test_comma_list_opt star_expr comma_test_list equals_yield_expr_or_testlist
                      | test_comma_list_opt star_expr comma_opt test_comma_list_opt equals_yield_expr_or_testlist
         """
         lenp = len(p)
         p1, p2 = p[1], p[2]
         p1 = [] if p1 is None else p1
+        if isinstance(p1, ast.Tuple):
+            p1 = [p1]
         for targ in p1:
             store_ctx(targ)
         if lenp == 3:

@@ -842,6 +842,18 @@ def test_lshift_eq():
 def test_rshift_eq():
     yield check_stmts, 'x = 42; x >>= 2'
 
+def test_bare_unpack():
+    yield check_stmts, 'x, y = 42, 65'
+
+def test_lhand_group_unpack():
+    yield check_stmts, '(x, y) = 42, 65'
+
+def test_rhand_group_unpack():
+    yield check_stmts, 'x, y = (42, 65)'
+
+def test_grouped_unpack():
+    yield check_stmts, '(x, y) = (42, 65)'
+
 def test_stary_eq():
     yield check_stmts, '*y, = [1, 2, 3]'
 
