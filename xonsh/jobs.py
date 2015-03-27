@@ -7,7 +7,7 @@ from collections import namedtuple
 ProcProxy = namedtuple('ProcProxy', ['stdout', 'stderr'])
 
 
-def _get_pid(o):
+def get_pid_string(o):
     if isinstance(o, ProcProxy):
         return 'pyfunc_{}'.format(o.__name__)
     else:
@@ -34,7 +34,7 @@ def _reactivate_job():
     builtins.__xonsh_active_job__ = max(builtins.__xonsh_all_jobs__)
 
 
-def _print_one_job(num):
+def print_one_job(num):
     job = builtins.__xonsh_all_jobs__[num]
     act = '*' if num == builtins.__xonsh_active_job__ else ' '
     status = job['status']
@@ -45,7 +45,7 @@ def _print_one_job(num):
     print('{}[{}] {}: {}{} ({})'.format(act, num, status, cmd, bg, pids))
 
 
-def _get_job_number():
+def get_next_job_number():
     _clear_dead_jobs()
     i = 1
     while i in builtins.__xonsh_all_jobs__:
@@ -57,7 +57,7 @@ def _default_sigint_handler(num, frame):
     raise KeyboardInterrupt
 
 
-def _wait_for_active_job():
+def wait_for_active_job():
     _clear_dead_jobs()
     act = builtins.__xonsh_active_job__
     if act is None:
@@ -74,7 +74,7 @@ def _wait_for_active_job():
         builtins.__xonsh_all_jobs__[act]['status'] = 'stopped'
         builtins.__xonsh_all_jobs__[act]['bg'] = True
         print()
-        _print_one_job(act)
+        print_one_job(act)
         os.kill(obj.pid, signal.SIGSTOP)
 
     def handle_sigint(num, frame):
@@ -100,7 +100,7 @@ def kill_all_jobs():
 def jobs(args, stdin=None):
     _clear_dead_jobs()
     for j in sorted(builtins.__xonsh_all_jobs__.keys()):
-        _print_one_job(j)
+        print_one_job(j)
     return None, None
 
 
@@ -124,7 +124,7 @@ def fg(args, stdin=None):
     job = builtins.__xonsh_all_jobs__[act]
     job['bg'] = False
     job['status'] = 'running'
-    _print_one_job(act)
+    print_one_job(act)
     os.kill(job['obj'].pid, signal.SIGCONT)
 
 
@@ -148,5 +148,5 @@ def bg(args, stdin=None):
     job = builtins.__xonsh_all_jobs__[act]
     job['bg'] = True
     job['status'] = 'running'
-    _print_one_job(act)
+    print_one_job(act)
     os.kill(job['obj'].pid, signal.SIGCONT)

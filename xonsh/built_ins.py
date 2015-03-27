@@ -20,7 +20,7 @@ from xonsh.tools import string_types, redirect_stdout, redirect_stderr, suggest_
 from xonsh.inspectors import Inspector
 from xonsh.environ import default_env
 from xonsh.aliases import DEFAULT_ALIASES, bash_aliases
-from xonsh.jobs import _get_pid, _print_one_job, _get_job_number, _wait_for_active_job, ProcProxy 
+from xonsh.jobs import get_pid_string, print_one_job, get_next_job_number, wait_for_active_job, ProcProxy 
 
 ENV = None
 BUILTINS_LOADED = False
@@ -458,8 +458,8 @@ def run_subproc(cmds, captured=True):
         prev_proc = proc
     for proc in procs[:-1]:
         proc.stdout.close()
-    num = _get_job_number()
-    pids = [_get_pid(i) for i in procs]
+    num = get_next_job_number()
+    pids = [get_pid_string(i) for i in procs]
     builtins.__xonsh_all_jobs__[num] = {'cmds': cmds, 
                                         'pids': pids, 
                                         'obj': prev_proc,
@@ -468,13 +468,13 @@ def run_subproc(cmds, captured=True):
     if not isinstance(prev_proc, ProcProxy):
         builtins.__xonsh_active_job__ = num
     if background:
-        _print_one_job(num)
+        print_one_job(num)
         return
     # the following prevents Crtl-c from being interpreted by xonsh
     # while running a subprocess
     while True:
         try:
-            _wait_for_active_job()
+            wait_for_active_job()
             break
         except KeyboardInterrupt:
             pass
