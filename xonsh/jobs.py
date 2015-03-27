@@ -43,7 +43,7 @@ def _reactivate_job():
 
 
 _block_when_giving = [signal.SIGTTOU, signal.SIGTTIN,
-                      signal.SIGTSTP, signal.SIGCHLD]
+                      signal.SIGTSTP]
 
 
 def _give_terminal_to(pgid):
@@ -114,7 +114,7 @@ def wait_for_active_job():
         time.sleep(0.01)
     if obj.poll() is not None:
         builtins.__xonsh_active_job__ = None
-    signal.signal(signal.SIGCHLD, signal.SIG_IGN)
+    signal.signal(signal.SIGCHLD, signal.SIG_DFL)
     _give_terminal_to(_shell_pgrp)  # give terminal back to the shell
 
 
