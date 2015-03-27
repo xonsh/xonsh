@@ -381,6 +381,9 @@ def get_script_subproc_command(fname, args):
 
     return interp + [fname] + args
 
+def _subproc_pre():
+    os.setpgrp()
+    signal.signal(signal.SIGTSTP, lambda n,f: signal.pause())
 
 def run_subproc(cmds, captured=True):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
@@ -441,12 +444,9 @@ def run_subproc(cmds, captured=True):
             stdin = PIPE
         else:
             stdin = prev_proc.stdout
-        def subproc_pre():
-            os.setpgrp()
-            signal.signal(signal.SIGTSTP, lambda n,f: signal.pause())
         subproc_kwargs = {}
         if os.name == 'posix':
-            subproc_kwargs['preexec_fn'] = subproc_pre
+            subproc_kwargs['preexec_fn'] = _subproc_pre
         try:
             proc = Popen(aliased_cmd, universal_newlines=uninew, env=ENV.detype(),
                          stdin=stdin, stdout=stdout, **subproc_kwargs)
