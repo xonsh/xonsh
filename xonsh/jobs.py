@@ -80,6 +80,7 @@ def wait_for_active_job():
     def handle_sigint(num, frame):
         obj.done = True
         os.kill(obj.pid, signal.SIGINT)
+        raise KeyboardInterrupt
 
     signal.signal(signal.SIGTSTP, handle_sigstop)
     signal.signal(signal.SIGINT, handle_sigint)
