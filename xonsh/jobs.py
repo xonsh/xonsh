@@ -2,6 +2,7 @@
 Job control for the xonsh shell.
 """
 import os
+import sys
 import time
 import signal
 import builtins
@@ -11,6 +12,13 @@ ProcProxy = namedtuple('ProcProxy', ['stdout', 'stderr'])
 """
 A class representing a Python function to be run as a subprocess command.
 """
+
+try:
+    _shell_tty = sys.stderr.fileno()
+except OSError:
+    _shell_tty = None
+
+_shell_pgrp = os.getpgrp()
 
 
 def _clear_dead_jobs():
@@ -32,6 +40,20 @@ def _reactivate_job():
         return
     builtins.__xonsh_active_job__ = max(builtins.__xonsh_all_jobs__.items(),
                                         key=lambda x: x[1]['started'])[0]
+
+
+_block_when_giving = [signal.SIGTTOU, signal.SIGTTIN,
+                      signal.SIGTSTP, signal.SIGCHLD]
+
+
+def _give_terminal_to(pgid):
+    # over-simplified version of:
+    #    give_terminal_to from bash 4.3 source, jobs.c, line 4030
+    # this will give the terminal to the process group pgid
+    if _shell_tty is not None:
+        oldmask = signal.pthread_sigmask(signal.SIG_BLOCK, _block_when_giving)
+        os.tcsetpgrp(_shell_tty, pgid)
+        signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
 
 
 def print_one_job(num):
@@ -78,29 +100,22 @@ def wait_for_active_job():
         return
     if job['bg']:
         return
+    pgrp = job['pgrp']
     obj.done = False
 
-    def handle_sigstop(num, frame):
+    def handle_sigchld(num, frame):
         obj.done = True
-        job['status'] = 'stopped'
         job['bg'] = True
-        print()
-        print_one_job(act)
-        os.kill(obj.pid, signal.SIGSTOP)
+        job['status'] = 'stopped'
 
-    def handle_sigint(num, frame):
-        obj.done = True
-        os.kill(obj.pid, signal.SIGINT)
-        raise KeyboardInterrupt
-
-    signal.signal(signal.SIGTSTP, handle_sigstop)
-    signal.signal(signal.SIGINT, handle_sigint)
+    _give_terminal_to(pgrp)  # give the terminal over to the fg process
+    signal.signal(signal.SIGCHLD, handle_sigchld)
     while obj.poll() is None and not obj.done:
         time.sleep(0.01)
     if obj.poll() is not None:
         builtins.__xonsh_active_job__ = None
-    signal.signal(signal.SIGTSTP, signal.SIG_IGN)
-    signal.signal(signal.SIGINT, _default_sigint_handler)
+    signal.signal(signal.SIGCHLD, signal.SIG_IGN)
+    _give_terminal_to(_shell_pgrp)  # give terminal back to the shell
 
 
 def kill_all_jobs():
@@ -136,16 +151,16 @@ def fg(args, stdin=None):
         # start active job in foreground
         act = builtins.__xonsh_active_job__
         if act is None:
-            return '', 'Cannot bring nonexistent job to foreground.'
+            return '', 'Cannot bring nonexistent job to foreground.\n'
     elif len(args) == 1:
         try:
             act = int(args[0])
         except:
-            return '', 'Invalid job: {}'.format(args[0])
+            return '', 'Invalid job: {}\n'.format(args[0])
         if act not in builtins.__xonsh_all_jobs__:
-            return '', 'Invalid job: {}'.format(args[0])
+            return '', 'Invalid job: {}\n'.format(args[0])
     else:
-        return '', 'fg expects 0 or 1 arguments, not {}'.format(len(args))
+        return '', 'fg expects 0 or 1 arguments, not {}\n'.format(len(args))
     builtins.__xonsh_active_job__ = act
     job = builtins.__xonsh_all_jobs__[act]
     job['bg'] = False
@@ -166,16 +181,16 @@ def bg(args, stdin=None):
         # start active job in foreground
         act = builtins.__xonsh_active_job__
         if act is None:
-            return '', 'Cannot send nonexistent job to background.'
+            return '', 'Cannot send nonexistent job to background.\n'
     elif len(args) == 1:
         try:
             act = int(args[0])
         except:
-            return '', 'Invalid job: {}'.format(args[0])
+            return '', 'Invalid job: {}\n'.format(args[0])
         if act not in builtins.__xonsh_all_jobs__:
-            return '', 'Invalid job: {}'.format(args[0])
+            return '', 'Invalid job: {}\n'.format(args[0])
     else:
-        return '', 'bg expects 0 or 1 arguments, not {}'.format(len(args))
+        return '', 'bg expects 0 or 1 arguments, not {}\n'.format(len(args))
     builtins.__xonsh_active_job__ = act
     job = builtins.__xonsh_all_jobs__[act]
     job['bg'] = True

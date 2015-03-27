@@ -441,9 +441,15 @@ def run_subproc(cmds, captured=True):
             stdin = PIPE
         else:
             stdin = prev_proc.stdout
+        def subproc_pre():
+            os.setpgrp()
+            signal.signal(signal.SIGTSTP, lambda n,f: signal.pause())
+        subproc_kwargs = {}
+        if os.name == 'posix':
+            subproc_kwargs['preexec_fn'] = subproc_pre
         try:
             proc = Popen(aliased_cmd, universal_newlines=uninew, env=ENV.detype(),
-                         stdin=stdin, stdout=stdout, preexec_fn=os.setsid)
+                         stdin=stdin, stdout=stdout, **subproc_kwargs)
         except PermissionError:
             cmd = aliased_cmd[0]
             print('xonsh: subprocess mode: permission denied: {0}'.format(cmd))
@@ -462,14 +468,15 @@ def run_subproc(cmds, captured=True):
         proc.stdout.close()
     num = get_next_job_number()
     pids = [i.pid for i in procs]
-    builtins.__xonsh_all_jobs__[num] = {'cmds': cmds, 
-                                        'pids': pids, 
-                                        'obj': prev_proc,
-                                        'started': time.time(),
-                                        'status': 'running', 
-                                        'bg': background}
     if not isinstance(prev_proc, ProcProxy):
         builtins.__xonsh_active_job__ = num
+        builtins.__xonsh_all_jobs__[num] = {'cmds': cmds, 
+                                            'pids': pids, 
+                                            'obj': prev_proc,
+                                            'started': time.time(),
+                                            'pgrp': os.getpgid(prev_proc.pid),
+                                            'status': 'running',
+                                            'bg': background}
     if background:
         print_one_job(num)
         return
