@@ -16,11 +16,13 @@ from subprocess import Popen, PIPE
 from contextlib import contextmanager
 from collections import Sequence, MutableMapping, Iterable, namedtuple
 
-from xonsh.tools import string_types, redirect_stdout, redirect_stderr, suggest_commands
+from xonsh.tools import string_types, redirect_stdout, redirect_stderr
+from xonsh.tools import suggest_commands
 from xonsh.inspectors import Inspector
 from xonsh.environ import default_env
 from xonsh.aliases import DEFAULT_ALIASES, bash_aliases
-from xonsh.jobs import get_pid_string, print_one_job, get_next_job_number, wait_for_active_job, ProcProxy 
+from xonsh.jobs import print_one_job, get_next_job_number, wait_for_active_job
+from xonsh.jobs import ProcProxy
 
 ENV = None
 BUILTINS_LOADED = False
@@ -451,18 +453,19 @@ def run_subproc(cmds, captured=True):
             print('xonsh: subprocess mode: command not found: {0}'.format(cmd))
             print(suggest_commands(cmd, ENV, builtins.aliases), end='')
             return
-        if prev_is_proxy:
-            proc.communicate(input=prev_proc.stdout)
         procs.append(proc)
         prev = None
+        if prev_is_proxy:
+            proc.stdin.write(prev_proc.stdout)
         prev_proc = proc
     for proc in procs[:-1]:
         proc.stdout.close()
     num = get_next_job_number()
-    pids = [get_pid_string(i) for i in procs]
+    pids = [i.pid for i in procs]
     builtins.__xonsh_all_jobs__[num] = {'cmds': cmds, 
                                         'pids': pids, 
                                         'obj': prev_proc,
+                                        'started': time.time(),
                                         'status': 'running', 
                                         'bg': background}
     if not isinstance(prev_proc, ProcProxy):
