@@ -42,8 +42,7 @@ def _reactivate_job():
                                         key=lambda x: x[1]['started'])[0]
 
 
-_block_when_giving = [signal.SIGTTOU, signal.SIGTTIN,
-                      signal.SIGTSTP]
+_block_when_giving = (signal.SIGTTOU, signal.SIGTTIN, signal.SIGTSTP)
 
 
 def _give_terminal_to(pgid):
