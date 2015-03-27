@@ -110,7 +110,7 @@ def wait_for_active_job():
     _give_terminal_to(pgrp)  # give the terminal over to the fg process
     signal.signal(signal.SIGCHLD, handle_sigchld)
     while obj.poll() is None and not obj.done:
-        time.sleep(0.01)
+        time.sleep(0.1)
     if obj.poll() is not None:
         builtins.__xonsh_active_job__ = None
     signal.signal(signal.SIGCHLD, signal.SIG_DFL)
