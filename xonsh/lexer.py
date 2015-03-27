@@ -139,6 +139,8 @@ def handle_backtick(state, token, stream):
         if n.type == tokenize.ERRORTOKEN and n.string == '`':
             found_match = True
             break
+        elif n.type == tokenize.NEWLINE or n.type == tokenize.NL:
+            break
         n = next(stream, None)
     if found_match:
         state['last'] = n
