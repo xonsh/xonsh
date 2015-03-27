@@ -25,6 +25,7 @@ For those of you who want the gritty details.
     environ
     aliases
     dirstack
+    jobs
     inspectors
     completer
     shell

@@ -114,6 +114,8 @@ def kill_all_jobs():
 
 def jobs(args, stdin=None):
     """
+    xonsh command: jobs
+
     Display a list of all current jobs.
     """
     _clear_dead_jobs()
@@ -124,6 +126,8 @@ def jobs(args, stdin=None):
 
 def fg(args, stdin=None):
     """
+    xonsh command: fg
+
     Bring the currently active job to the foreground, or, if a single number is
     given as an argument, bring that job to the foreground.
     """
@@ -152,6 +156,8 @@ def fg(args, stdin=None):
 
 def bg(args, stdin=None):
     """
+    xonsh command: bg
+
     Resume execution of the currently active job in the background, or, if a
     single number is given as an argument, resume that job in the background.
     """
