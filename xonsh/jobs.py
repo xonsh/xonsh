@@ -110,8 +110,11 @@ def wait_for_active_job():
                 obj.done = True
                 job['bg'] = True
                 job['status'] = 'stopped'
+                print()  # get a newline because ^Z will have been printed
+                print_one_job(act)
                 break
             elif os.WIFSIGNALED(s) or os.WIFEXITED(s):
+                print()  # get a newline because ^C will have been printed
                 break
         time.sleep(0.1)
     if obj.poll() is not None:
