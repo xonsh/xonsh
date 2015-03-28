@@ -992,6 +992,9 @@ def test_import_x_as_y_z_as_a():
 def test_from_dot_import_x_as_y():
     yield check_stmts, 'from . import x as y', False
 
+def test_from_x_import_star():
+    yield check_stmts, 'from x import *', False
+
 def test_from_x_import_y_as_z():
     yield check_stmts, 'from x import y as z', False
 
