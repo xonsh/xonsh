@@ -463,6 +463,7 @@ def run_subproc(cmds, captured=True):
         prev = None
         if prev_is_proxy:
             proc.stdin.write(prev_proc.stdout)
+            proc.stdin.close()
         prev_proc = proc
     for proc in procs[:-1]:
         proc.stdout.close()
