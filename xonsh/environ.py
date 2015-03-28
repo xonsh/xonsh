@@ -54,6 +54,11 @@ class PromptFormatter(MutableMapping):
         def login_time(self):
             who_out = subprocess.check_output(['who', '-m'])
             return ' '.join(who_out.decode().split()[2:4])
+
+    If you add additional methods of looking up the data (beyond simple
+    values, cached functions, and functions called every time) then you may
+    additionally need to modify both __get_item__() and add_prompt_var() to
+    implement it.
     """
 
     def __init__(self, *args, **kwargs):
@@ -93,6 +98,11 @@ class PromptFormatter(MutableMapping):
 
     def __len__(self):
         return len(self._storage)
+
+    def add_prompt_var(self, var_name, value, call_every=False):
+        self[var_name] = value
+        if callable(value) and call_every:
+            self._run_every.add(var_name)
 
 
 class DefaultPromptFormatter(PromptFormatter):
@@ -209,25 +219,56 @@ class DefaultPromptFormatter(PromptFormatter):
         return ''
 
 
-default_prompt = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
+DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
                   '{cwd}{BOLD_RED}{curr_branch} {BOLD_BLUE}${NO_COLOR} ')
-default_title = '{user}@{hostname}: {cwd} | xonsh'
+DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
 
+# We should really have a way to store these on a xonsh context rather than
+# prolifirating globals.
 prompt_formatter = None
 
-def format_prompt(template=default_prompt):
+# This is only needed because of the way that we initialize prompt_formatters.
+# If we find a way to initialize prompt_formatters before
+# environ.add_prompt_var() can be called then we wouldn't need this.
+_prompt_vars_queue = {}
+
+def format_prompt(template=DEFAULT_PROMPT):
     """Formats a xonsh prompt template string.
 
     See the :class:`~DefaultPromptFormatter` documentation for keyword
     arguments recognized in the template string.
     """
     global prompt_formatter
+
     if prompt_formatter is None:
         env = builtins.__xonsh_env__
         cls = env.get('PROMPT_FORMATTER', DefaultPromptFormatter)
         prompt_formatter = cls()
+
+        global _prompt_vars_queue
+        for var_name, var_data in _prompt_vars_queue.items():
+            prompt_formatter.add_prompt_var(var_name, *(var_data[0]), **(var_data[1]))
+        _prompt_vars_queue = {}
+
     p = template.format(**prompt_formatter)
     return p
+
+def add_prompt_var(var_name, *args, **kwargs):
+    """
+    Add an additional prompt var to this formatter
+
+    The function signature is kept very generic so that this method can be
+    used with different user defined PromptFormatter implementations.  See
+    :meth:`PromptFormatter.add_prompt_var` for how to use this with a default
+    PromptFormatter.
+    """
+    global prompt_formatter
+
+    if prompt_formatter:
+        prompt_formatter.add_prompt_var(var_name, *args, **kwargs)
+    else:
+        global _prompt_vars_queue
+        _prompt_vars_queue[var_name] = (args, kwargs)
 
 
 RE_HIDDEN = re.compile('\001.*?\002')
@@ -255,8 +296,8 @@ def multiline_prompt():
 BASE_ENV = {
     'XONSH_VERSION': XONSH_VERSION,
     'INDENT': '    ',
-    'PROMPT': default_prompt,
-    'TITLE': default_title,
+    'PROMPT': DEFAULT_PROMPT,
+    'TITLE': DEFAULT_TITLE,
     'MULTILINE_PROMPT': '.',
     'XONSHRC': os.path.expanduser('~/.xonshrc'),
     'XONSH_HISTORY_SIZE': 8128,

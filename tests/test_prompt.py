@@ -3,6 +3,7 @@ from __future__ import unicode_literals, print_function
 
 import os
 import sys
+import copy
 import time
 import socket
 from datetime import datetime, timedelta
@@ -17,12 +18,11 @@ from nose.plugins.skip import SkipTest
 from .tools import mock_xonsh_env
 from xonsh.tools import TERM_COLORS
 
-from xonsh.environ import PromptFormatter, DefaultPromptFormatter
+from xonsh.environ import (PromptFormatter, DefaultPromptFormatter,
+        add_prompt_var, format_prompt, prompt_formatter)
 
 
-class TestPromptFormatter:
-    """ Test that the basics of getting static, callonce, and callevery values works """
-
+class Base_TestPromptFormatter:
     def call_once_func(self):
         self.call_once_counter += 1
         return self.call_once_counter
@@ -32,26 +32,58 @@ class TestPromptFormatter:
         return self.call_every_counter
 
     def setUp(self):
+        self.base_formatter = PromptFormatter()
         self.call_once_counter = 0
         self.call_every_counter = 0
 
-        self.base_formatter = PromptFormatter()
+    def check_get_var(self, var_name, expected):
+        eq_(self.base_formatter[var_name], expected)
+
+
+class TestAddPromptVar(Base_TestPromptFormatter):
+    def test_add_string_no_call(self):
+        self.base_formatter.add_prompt_var('var1', 'value1', call_every=True)
+        self.check_get_var('var1', 'value1')
+        self.check_get_var('var1', 'value1')
+
+    def test_add_string_with_call(self):
+        """ Test that we gracefully handle the case where var is a string and call_every is True"""
+        self.base_formatter.add_prompt_var('var2', 'value2', call_every=False)
+        self.check_get_var('var2', 'value2')
+        self.check_get_var('var2', 'value2')
+
+    def test_add_call_once_func(self):
+        self.base_formatter.add_prompt_var('callonce', self.call_once_func, call_every=False)
+        self.check_get_var('callonce', 1)
+        self.check_get_var('callonce', 1)
+
+    def test_add_call_every_func(self):
+        self.base_formatter.add_prompt_var('callevery', self.call_every_func, call_every=True)
+        self.check_get_var('callevery', 1)
+        self.check_get_var('callevery', 2)
+
+
+class TestPromptFormatter(Base_TestPromptFormatter):
+    """ Test that the basics of getting static, callonce, and callevery values works """
+
+    def setUp(self):
+        super(TestPromptFormatter, self).setUp()
         self.base_formatter['var'] = 'value'
         self.base_formatter['callonce'] = self.call_once_func
         self.base_formatter['callevery'] = self.call_every_func
         self.base_formatter._run_every.add('callevery')
 
     def test_get_items_static(self):
-        eq_(self.base_formatter['var'], 'value')
-        eq_(self.base_formatter['var'], 'value')
+        self.check_get_var('var', 'value')
+        self.check_get_var('var', 'value')
 
     def test_get_items_callonce(self):
-        eq_(self.base_formatter['callonce'], 1)
-        eq_(self.base_formatter['callonce'], 1)
+        self.check_get_var('callonce', 1)
+        self.check_get_var('callonce', 1)
 
     def test_get_items_callevery(self):
-        eq_(self.base_formatter['callevery'], 1)
-        eq_(self.base_formatter['callevery'], 2)
+        self.check_get_var('callevery', 1)
+        self.check_get_var('callevery', 2)
 
     def check_splat(self, **kwargs):
         assert_is_instance(kwargs, dict)
@@ -168,7 +200,31 @@ class TestDefaultPromptFormatter:
         with mock_xonsh_env(self.env):
             self.check_splat(**self.default_formatter)
 
-    def test_format(self):
+#
+# Behaviour Tests
+#
+
+class TestPromptFormatterBehaviour:
+    """Test each of the prompt variables that DefaultPromptFormatter adds"""
+
+    def setUp(self):
+        self.color_names = frozenset(TERM_COLORS.keys())
+        self.dynamic_names = frozenset(['base_cwd',
+                                        'cwd',
+                                        'curr_branch',
+                                        'hostname',
+                                        'short_host',
+                                        'time',
+                                        'user'])
+        self.all_names = self.color_names.union(self.dynamic_names)
+        self.env = dict(PWD='/home/xonsh', USER='xonshuser', HOME='/home/xonsh')
+        with mock_xonsh_env(self.env):
+            self.default_formatter = DefaultPromptFormatter()
+
+    def tearDown(self):
+        prompt_formatter = None
+
+    def test_individual_formats(self):
         with mock_xonsh_env(self.env):
             for name in (n for n in self.all_names if n != 'time'):
                 fstring = r'{%s}' % name
@@ -177,3 +233,42 @@ class TestDefaultPromptFormatter:
             now = datetime.now()
             fstring = r'{time:%Y-%m-%d %H:%M:%S}'.format(**self.default_formatter)
             ok_(datetime.strptime(fstring, '%Y-%m-%d %H:%M:%S') - now < timedelta(0, 2))
+
+    def test_default_prompt(self):
+        """Test that default prompt string expands
+
+        Mainly interested in this not throwing an exception because some
+        prompt vars in the default prompt do not have a corresponding
+        implementation in the DefaultPromptFormatter Will detect a few other
+        errors as well but it's not intended to be complete about those.
+        """
+        with mock_xonsh_env(self.env):
+            prompt_start = '{}xonshuser@{}{} ~{}'.format(
+                                                    TERM_COLORS['BOLD_GREEN'],
+                                                    socket.getfqdn(),
+                                                    TERM_COLORS['BOLD_BLUE'],
+                                                    TERM_COLORS['BOLD_RED'])
+            prompt_end = ' {}${} '.format(TERM_COLORS['BOLD_BLUE'],
+                                          TERM_COLORS['NO_COLOR'])
+
+            # Not sure how to test the git branch -- our test environment
+            # could be run in a git clone or outside of a git clone and inside
+            # or outside of an arbitrary branch.  So just check the beginning
+            # and end.
+            ok_(format_prompt().startswith(prompt_start))
+            ok_(format_prompt().endswith(prompt_end))
+
+    def test_custom_prompt_formatter(self):
+
+        class CustomFormatter(DefaultPromptFormatter):
+            def __init__(self):
+                super(CustomFormatter, self).__init__()
+                self['via_class'] = 'added by custom formatter'
+
+        new_env = copy.deepcopy(self.env)
+        add_prompt_var('via_func', 'added by add_prompt_var')
+        new_env['PROMPT_FORMATTER'] = CustomFormatter
+        new_env['PROMPT'] = '{user}:{via_class}:{via_func} $'
+        with mock_xonsh_env(new_env):
+            eq_(format_prompt(new_env['PROMPT']), 'xonshuser:added by custom formatter:added by add_prompt_var $')
+
