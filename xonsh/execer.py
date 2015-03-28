@@ -113,6 +113,7 @@ class Execer(object):
     def _parse_ctx_free(self, input, mode='exec'):
         last_error_line = last_error_col = -1
         parsed = False
+        original_error = None
         while not parsed:
             try:
                 tree = self.parser.parse(input, filename=self.filename,
@@ -120,12 +121,17 @@ class Execer(object):
                                          debug_level=self.debug_level)
                 parsed = True
             except IndentationError as e:
-                raise
+                if original_error is None:
+                    raise e
+                else:
+                    raise original_error
             except SyntaxError as e:
+                if original_error is None:
+                    original_error = e
                 if (e.loc is None) or (last_error_line == e.loc.lineno and
                                        last_error_col in (e.loc.column + 1,
                                                           e.loc.column)):
-                    raise
+                    raise original_error
                 last_error_col = e.loc.column
                 last_error_line = e.loc.lineno
                 idx = last_error_line - 1
@@ -142,6 +148,8 @@ class Execer(object):
                     last_error_line = last_error_col = -1
                     input = '\n'.join(lines)
                     continue
+                if line.startswith('$'):
+                    raise original_error
                 maxcol = line.find(';', last_error_col)
                 maxcol = None if maxcol < 0 else maxcol + 1
                 sbpline = subproc_toks(line, returnline=True,

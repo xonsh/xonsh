@@ -71,15 +71,15 @@ def handle_dollar(state, token, stream):
         state['last'] = n
         yield _new_token('DOLLAR_NAME', '$' + n.string, token.start)
     elif n.type == tokenize.OP and n.string == '(':
-        state['pymode'].append(False)
+        state['pymode'].append((False, '$(', ')', token.start))
         state['last'] = n
         yield _new_token('DOLLAR_LPAREN', '$(', token.start)
     elif n.type == tokenize.OP and n.string == '[':
-        state['pymode'].append(False)
+        state['pymode'].append((False, '$[', ']', token.start))
         state['last'] = n
         yield _new_token('DOLLAR_LBRACKET', '$[', token.start)
     elif n.type == tokenize.OP and n.string == '{':
-        state['pymode'].append(True)
+        state['pymode'].append((True, '${', '}', token.start))
         state['last'] = n
         yield _new_token('DOLLAR_LBRACE', '${', token.start)
     else:
@@ -100,7 +100,7 @@ def handle_at(state, token, stream):
         yield _new_token("ERRORTOKEN", m, token.start)
     elif n.type == tokenize.OP and n.string == '(' and \
             n.start == token.end:
-        state['pymode'].append(True)
+        state['pymode'].append((True, '@(', ')', token.start))
         state['last'] = n
         yield _new_token('AT_LPAREN', '@(', token.start)
     else:
@@ -156,7 +156,7 @@ def handle_lparen(state, token, stream):
     """
     Function for handling ``(``
     """
-    state['pymode'].append(True)
+    state['pymode'].append((True, '(', ')', token.start))
     state['last'] = token
     yield _new_token('LPAREN', '(', token.start)
 
@@ -165,7 +165,7 @@ def handle_lbrace(state, token, stream):
     """
     Function for handling ``{``
     """
-    state['pymode'].append(True)
+    state['pymode'].append((True, '{', '}', token.start))
     state['last'] = token
     yield _new_token('LBRACE', '{', token.start)
 
@@ -174,43 +174,65 @@ def handle_lbracket(state, token, stream):
     """
     Function for handling ``[``
     """
-    state['pymode'].append(True)
+    state['pymode'].append((True, '[', ']', token.start))
     state['last'] = token
     yield _new_token('LBRACKET', '[', token.start)
+
+
+def _end_delimiter(state, token):
+    py = state['pymode']
+    s = token.string
+    l, c = token.start
+    if len(py) > 1:
+        mode, orig, match, pos = py.pop()
+        if s != match:
+            e = '"{}" at {} ends "{}" at {} (expected "{}")'
+            return e.format(s, (l, c), orig, pos, match)
+    else:
+        return 'Unmatched "{}" at line {}, column {}'.format(s, l, c)
 
 
 def handle_rparen(state, token, stream):
     """
     Function for handling ``)``
     """
-    state['pymode'].pop()
-    state['last'] = token
-    yield _new_token('RPAREN', ')', token.start)
+    e = _end_delimiter(state, token)
+    if e is None:
+        state['last'] = token
+        yield _new_token('RPAREN', ')', token.start)
+    else:
+        yield _new_token('ERRORTOKEN', e, token.start)
 
 
 def handle_rbrace(state, token, stream):
     """
     Function for handling ``}``
     """
-    state['pymode'].pop()
-    state['last'] = token
-    yield _new_token('RBRACE', '}', token.start)
+    e = _end_delimiter(state, token)
+    if e is None:
+        state['last'] = token
+        yield _new_token('RBRACE', '}', token.start)
+    else:
+        yield _new_token('ERRORTOKEN', e, token.start)
 
 
 def handle_rbracket(state, token, stream):
     """
     Function for handling ``]``
     """
-    state['pymode'].pop()
-    state['last'] = token
-    yield _new_token('RBRACKET', ']', token.start)
+    e = _end_delimiter(state, token)
+    if e is None:
+        state['last'] = token
+        yield _new_token('RBRACKET', ']', token.start)
+    else:
+        yield _new_token('ERRORTOKEN', e, token.start)
 
 
 def handle_error_space(state, token, stream):
     """
     Function for handling special whitespace characters is subprocess mode
     """
-    if not state['pymode'][-1]:
+    if not state['pymode'][-1][0]:
         state['last'] = token
         yield _new_token('WS', token.string, token.start)
     else:
@@ -267,7 +289,7 @@ def handle_token(state, token, stream):
     """
     typ = token.type
     st = token.string
-    pymode = state['pymode'][-1]
+    pymode = state['pymode'][-1][0]
     if not pymode:
         if state['last'] is not None and state['last'].end != token.start:
             cur = token.start
@@ -298,12 +320,17 @@ def get_tokens(s):
     tokens using ``handle_token``.
     """
     tokstream = tokenize.tokenize(BytesIO(s.encode('utf-8')).readline)
-    state = {'indents': [0], 'pymode': [True], 'last': None}
+    state = {'indents': [0], 'pymode': [(True, '', '', (0, 0))], 'last': None}
     while True:
         try:
             token = next(tokstream)
             yield from handle_token(state, token, tokstream)
         except StopIteration:
+            if len(state['pymode']) > 1:
+                pm, o, m, p = state['pymode'][-1]
+                l, c = p
+                e = 'Unmatched "{}" at line {}, column {}'
+                yield _new_token('ERRORTOKEN', e.format(o, l, c), (0, 0))
             break
         except tokenize.TokenError as e:
             # this is recoverable in single-line mode (from the shell)
