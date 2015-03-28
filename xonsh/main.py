@@ -2,6 +2,7 @@
 import os
 import sys
 import shlex
+import signal
 import subprocess
 from argparse import ArgumentParser, Namespace
 
@@ -64,6 +65,7 @@ def main(argv=None):
         shell.execer.exec(code, mode='exec', glbs=shell.ctx)
     else:
         # otherwise, enter the shell
+        signal.signal(signal.SIGTSTP, signal.SIG_IGN)
         shell.cmdloop()
 
 if __name__ == '__main__':
