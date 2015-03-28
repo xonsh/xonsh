@@ -947,6 +947,8 @@ class Parser(object):
                             | import_as_names
         """
         if len(p) == 2:
+            if p[1] == '*':
+                p[1] = [ast.alias(name='*', asname=None)]
             p0 = p[1]
         elif len(p) == 4:
             p0 = p[2]
