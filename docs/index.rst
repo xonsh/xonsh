@@ -63,10 +63,12 @@ Contents
 =========
 
 .. toctree::
+    :titlesonly:
     :maxdepth: 1
 
     tutorial
     api/index
+    devguide/
     previous/index
     faq
     todo
