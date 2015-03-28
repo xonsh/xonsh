@@ -352,9 +352,6 @@ def _new_token(type, value, pos):
     return o
 
 
-COMMENT_REGEX = re.compile(r'#.*')
-
-
 class Lexer(object):
     """Implements a lexer for the xonsh language."""
 
@@ -382,7 +379,6 @@ class Lexer(object):
 
     def input(self, s):
         """Calls the lexer on the string s."""
-        s = re.sub(COMMENT_REGEX, '', s)
         self.token_stream = get_tokens(s)
 
     def token(self):
