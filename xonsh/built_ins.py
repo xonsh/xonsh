@@ -4,6 +4,7 @@ not to be confused with the special Python builtins module.
 import os
 import re
 import sys
+import time
 import shlex
 import signal
 import locale
@@ -15,10 +16,13 @@ from subprocess import Popen, PIPE
 from contextlib import contextmanager
 from collections import Sequence, MutableMapping, Iterable, namedtuple
 
-from xonsh.tools import string_types, redirect_stdout, redirect_stderr, suggest_commands
+from xonsh.tools import string_types, redirect_stdout, redirect_stderr
+from xonsh.tools import suggest_commands
 from xonsh.inspectors import Inspector
 from xonsh.environ import default_env
 from xonsh.aliases import DEFAULT_ALIASES, bash_aliases
+from xonsh.jobs import print_one_job, get_next_job_number, wait_for_active_job
+from xonsh.jobs import ProcProxy
 
 ENV = None
 BUILTINS_LOADED = False
@@ -292,7 +296,6 @@ def iglobpath(s):
 
 WRITER_MODES = {'>': 'w', '>>': 'a'}
 
-ProcProxy = namedtuple('ProcProxy', ['stdout', 'stderr'])
 
 def _run_callable_subproc(alias, args, captured=True, prev_proc=None, 
                           stdout=None):
@@ -347,6 +350,7 @@ def is_script(fname):
 
 RE_SHEBANG = re.compile(r'#![ \t]*(.+?)$')
 
+
 def get_script_subproc_command(fname, args):
     """
     Given the name of a script outside the path, returns a list representing
@@ -376,6 +380,10 @@ def get_script_subproc_command(fname, args):
             interp = ['xonsh']
 
     return interp + [fname] + args
+
+def _subproc_pre():
+    os.setpgrp()
+    signal.signal(signal.SIGTSTP, lambda n,f: signal.pause())
 
 def run_subproc(cmds, captured=True):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
@@ -436,9 +444,12 @@ def run_subproc(cmds, captured=True):
             stdin = PIPE
         else:
             stdin = prev_proc.stdout
+        subproc_kwargs = {}
+        if os.name == 'posix':
+            subproc_kwargs['preexec_fn'] = _subproc_pre
         try:
             proc = Popen(aliased_cmd, universal_newlines=uninew, env=ENV.detype(),
-                         stdin=stdin, stdout=stdout)
+                         stdin=stdin, stdout=stdout, **subproc_kwargs)
         except PermissionError:
             cmd = aliased_cmd[0]
             print('xonsh: subprocess mode: permission denied: {0}'.format(cmd))
@@ -448,27 +459,41 @@ def run_subproc(cmds, captured=True):
             print('xonsh: subprocess mode: command not found: {0}'.format(cmd))
             print(suggest_commands(cmd, ENV, builtins.aliases), end='')
             return
-        if prev_is_proxy:
-            proc.communicate(input=prev_proc.stdout)
         procs.append(proc)
         prev = None
+        if prev_is_proxy:
+            proc.stdin.write(prev_proc.stdout)
+            proc.stdin.close()
         prev_proc = proc
     for proc in procs[:-1]:
         proc.stdout.close()
+    num = get_next_job_number()
+    pids = [i.pid for i in procs]
+    if not isinstance(prev_proc, ProcProxy):
+        builtins.__xonsh_active_job__ = num
+        builtins.__xonsh_all_jobs__[num] = {'cmds': cmds, 
+                                            'pids': pids, 
+                                            'obj': prev_proc,
+                                            'started': time.time(),
+                                            'pgrp': os.getpgid(prev_proc.pid),
+                                            'status': 'running',
+                                            'bg': background}
     if background:
+        print_one_job(num)
         return
+    # the following prevents Crtl-c from being interpreted by xonsh
+    # while running a subprocess
+    while True:
+        try:
+            wait_for_active_job()
+            break
+        except KeyboardInterrupt:
+            pass
     # get output
     if isinstance(prev_proc, ProcProxy):
         output = prev_proc.stdout
-    else:
-        # the following prevents Crtl-c from being interpreted by xonsh
-        # while running a subprocess
-        while True:
-            try:
-                output = prev_proc.communicate()[0]
-                break
-            except KeyboardInterrupt:
-                pass
+    elif prev_proc.stdout is not None:
+        output = prev_proc.stdout.read()
     # write the output if we should
     if write_target is not None:
         try:
@@ -510,6 +535,8 @@ def load_builtins(execer=None):
     builtins.__xonsh_subproc_captured__ = subproc_captured
     builtins.__xonsh_subproc_uncaptured__ = subproc_uncaptured
     builtins.__xonsh_execer__ = execer
+    builtins.__xonsh_all_jobs__ = {}
+    builtins.__xonsh_active_job__ = None
     # public built-ins
     builtins.evalx = None if execer is None else execer.eval
     builtins.execx = None if execer is None else execer.exec
@@ -537,7 +564,7 @@ def unload_builtins():
              '__xonsh_pyexit__', '__xonsh_pyquit__', 
              '__xonsh_subproc_captured__', '__xonsh_subproc_uncaptured__', 
              '__xonsh_execer__', 'evalx', 'execx', 'compilex', 
-             'default_aliases'
+             'default_aliases', '__xonsh_all_jobs__', '__xonsh_active_job__'
              ]
     for name in names:
         if hasattr(builtins, name):

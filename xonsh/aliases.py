@@ -5,10 +5,11 @@ import platform
 import builtins
 import subprocess
 import shlex
+import signal
 from warnings import warn
 
 from xonsh.dirstack import dirs, pushd, popd
-
+from xonsh.jobs import jobs, fg, bg, kill_all_jobs
 
 def cd(args, stdin=None):
     """Changes the directory.
@@ -40,6 +41,7 @@ def cd(args, stdin=None):
 def exit(args, stdin=None):
     """Sends signal to exit shell."""
     builtins.__xonsh_exit__ = True
+    kill_all_jobs()
     print()  # gimme a newline
     return None, None
 
@@ -97,6 +99,9 @@ DEFAULT_ALIASES = {
     'pushd': pushd,
     'popd': popd,
     'dirs': dirs,
+    'jobs': jobs,
+    'fg': fg,
+    'bg': bg,
     'EOF': exit,
     'exit': exit,
     'quit': exit,
