@@ -223,32 +223,39 @@ DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
                   '{cwd}{BOLD_RED}{curr_branch} {BOLD_BLUE}${NO_COLOR} ')
 DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
 
-# We should really have a way to store these on a xonsh context rather than
-# prolifirating globals.
-prompt_formatter = None
-
 # This is only needed because of the way that we initialize prompt_formatters.
 # If we find a way to initialize prompt_formatters before
 # environ.add_prompt_var() can be called then we wouldn't need this.
 _prompt_vars_queue = {}
 
-def format_prompt(template=DEFAULT_PROMPT):
+def format_prompt(prompt_type):
     """Formats a xonsh prompt template string.
 
     See the :class:`~DefaultPromptFormatter` documentation for keyword
     arguments recognized in the template string.
     """
-    global prompt_formatter
+    env = builtins.__xonsh_env__
 
+    if prompt_type == 'prompt':
+        template = env.get('PROMPT', DEFAULT_PROMPT)
+    elif prompt_type == 'title':
+        template = env.get('TITLE', DEFAULT_TITLE)
+    else:
+        raise ValueError('Unknown prompt type')
+    if callable(template):
+        template = template()
+
+    prompt_formatter = env.get('PROMPT_FORMATTER')
     if prompt_formatter is None:
-        env = builtins.__xonsh_env__
-        cls = env.get('PROMPT_FORMATTER', DefaultPromptFormatter)
-        prompt_formatter = cls()
+        prompt_formatter = DefaultPromptFormatter()
 
-        global _prompt_vars_queue
-        for var_name, var_data in _prompt_vars_queue.items():
-            prompt_formatter.add_prompt_var(var_name, *(var_data[0]), **(var_data[1]))
-        _prompt_vars_queue = {}
+        env['PROMPT_FORMATTER'] = prompt_formatter
+
+    # Load any prompt vars added before the PromptFormatter was created
+    global _prompt_vars_queue
+    for var_name, var_data in _prompt_vars_queue.items():
+        prompt_formatter.add_prompt_var(var_name, *(var_data[0]), **(var_data[1]))
+    _prompt_vars_queue = {}
 
     p = template.format(**prompt_formatter)
     return p
@@ -262,7 +269,8 @@ def add_prompt_var(var_name, *args, **kwargs):
     :meth:`PromptFormatter.add_prompt_var` for how to use this with a default
     PromptFormatter.
     """
-    global prompt_formatter
+    env = builtins.__xonsh_env__
+    prompt_formatter = env.get('PROMPT_FORMATTER')
 
     if prompt_formatter:
         prompt_formatter.add_prompt_var(var_name, *args, **kwargs)

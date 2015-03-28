@@ -19,7 +19,7 @@ from .tools import mock_xonsh_env
 from xonsh.tools import TERM_COLORS
 
 from xonsh.environ import (PromptFormatter, DefaultPromptFormatter,
-        add_prompt_var, format_prompt, prompt_formatter)
+        add_prompt_var, format_prompt)
 
 
 class Base_TestPromptFormatter:
@@ -221,9 +221,6 @@ class TestPromptFormatterBehaviour:
         with mock_xonsh_env(self.env):
             self.default_formatter = DefaultPromptFormatter()
 
-    def tearDown(self):
-        prompt_formatter = None
-
     def test_individual_formats(self):
         with mock_xonsh_env(self.env):
             for name in (n for n in self.all_names if n != 'time'):
@@ -255,8 +252,8 @@ class TestPromptFormatterBehaviour:
             # could be run in a git clone or outside of a git clone and inside
             # or outside of an arbitrary branch.  So just check the beginning
             # and end.
-            ok_(format_prompt().startswith(prompt_start))
-            ok_(format_prompt().endswith(prompt_end))
+            ok_(format_prompt('prompt').startswith(prompt_start))
+            ok_(format_prompt('prompt').endswith(prompt_end))
 
     def test_custom_prompt_formatter(self):
 
@@ -266,9 +263,10 @@ class TestPromptFormatterBehaviour:
                 self['via_class'] = 'added by custom formatter'
 
         new_env = copy.deepcopy(self.env)
-        add_prompt_var('via_func', 'added by add_prompt_var')
-        new_env['PROMPT_FORMATTER'] = CustomFormatter
-        new_env['PROMPT'] = '{user}:{via_class}:{via_func} $'
         with mock_xonsh_env(new_env):
-            eq_(format_prompt(new_env['PROMPT']), 'xonshuser:added by custom formatter:added by add_prompt_var $')
+            add_prompt_var('via_func1', 'add_prompt_var before formatter')
+            new_env['PROMPT_FORMATTER'] = CustomFormatter()
+            add_prompt_var('via_func2', 'add_prompt_var after formatter')
+            new_env['PROMPT'] = '{user}:{via_class}:{via_func1}:{via_func2} $'
+            eq_(format_prompt('prompt'), 'xonshuser:added by custom formatter:add_prompt_var before formatter:add_prompt_var after formatter $')
 
