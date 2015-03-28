@@ -102,18 +102,25 @@ def wait_for_active_job():
     pgrp = job['pgrp']
     obj.done = False
 
-    def handle_sigchld(num, frame):
-        obj.done = True
-        job['bg'] = True
-        job['status'] = 'stopped'
-
     _give_terminal_to(pgrp)  # give the terminal over to the fg process
-    signal.signal(signal.SIGCHLD, handle_sigchld)
-    while obj.poll() is None and not obj.done:
+    while True:
+        p, s = os.waitpid(obj.pid, os.WNOHANG | os.WUNTRACED)
+        if p == obj.pid:
+            if os.WIFSTOPPED(s):
+                obj.done = True
+                job['bg'] = True
+                job['status'] = 'stopped'
+                print()  # get a newline because ^Z will have been printed
+                print_one_job(act)
+                break
+            elif os.WIFSIGNALED(s):
+                print()  # get a newline because ^C will have been printed
+                break
+            elif os.WIFEXITED(s):
+                break
         time.sleep(0.1)
     if obj.poll() is not None:
         builtins.__xonsh_active_job__ = None
-    signal.signal(signal.SIGCHLD, signal.SIG_DFL)
     _give_terminal_to(_shell_pgrp)  # give terminal back to the shell
 
 
