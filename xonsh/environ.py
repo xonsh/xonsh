@@ -15,6 +15,11 @@ from collections import MutableMapping
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.tools import TERM_COLORS
 
+# This is only needed because of the way that we initialize prompt_formatters.
+# If we find a way to initialize prompt_formatters before
+# environ.add_prompt_var() can be called then we wouldn't need this.
+_prompt_vars_queue = {}
+
 class PromptFormatter(MutableMapping):
     """
     Base class that implements utilities for PromptFormatters.
@@ -61,11 +66,18 @@ class PromptFormatter(MutableMapping):
     implement it.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, prompt_string, *args, **kwargs):
 
         super(PromptFormatter, self).__init__(*args, **kwargs)
+        self.prompt_string = prompt_string
         self._run_every = set()
         self._storage = dict()
+
+        # Load any prompt vars added before the PromptFormatter was created
+        global _prompt_vars_queue
+        for var_name, var_data in _prompt_vars_queue.items():
+            self.add_prompt_var(var_name, *(var_data[0]), **(var_data[1]))
+        _prompt_vars_queue = {}
 
     def __getitem__(self, key):
         """
@@ -99,6 +111,9 @@ class PromptFormatter(MutableMapping):
     def __len__(self):
         return len(self._storage)
 
+    def __call__(self):
+        return self.prompt_string.format(**self)
+
     def add_prompt_var(self, var_name, value, call_every=False):
         self[var_name] = value
         if callable(value) and call_every:
@@ -123,8 +138,8 @@ class DefaultPromptFormatter(PromptFormatter):
               BOLD_INTENSE, BACKGROUND_INTENSE
     + NO_COLOR -- Resets any previously used color codes
     """
-    def __init__(self, *args, **kwargs):
-        super(DefaultPromptFormatter, self).__init__(*args, **kwargs)
+    def __init__(self, prompt_string, *args, **kwargs):
+        super(DefaultPromptFormatter, self).__init__(prompt_string, *args, **kwargs)
         self._env = builtins.__xonsh_env__
 
         self.update(TERM_COLORS)
@@ -223,11 +238,6 @@ DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
                   '{cwd}{BOLD_RED}{curr_branch} {BOLD_BLUE}${NO_COLOR} ')
 DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
 
-# This is only needed because of the way that we initialize prompt_formatters.
-# If we find a way to initialize prompt_formatters before
-# environ.add_prompt_var() can be called then we wouldn't need this.
-_prompt_vars_queue = {}
-
 def format_prompt(prompt_type):
     """Formats a xonsh prompt template string.
 
@@ -270,9 +280,9 @@ def add_prompt_var(var_name, *args, **kwargs):
     PromptFormatter.
     """
     env = builtins.__xonsh_env__
-    prompt_formatter = env.get('PROMPT_FORMATTER')
+    prompt_formatter = env.get('PROMPT')
 
-    if prompt_formatter:
+    if hasattr(prompt_formatter, 'add_prompt_var'):
         prompt_formatter.add_prompt_var(var_name, *args, **kwargs)
     else:
         global _prompt_vars_queue

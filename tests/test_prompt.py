@@ -19,7 +19,7 @@ from .tools import mock_xonsh_env
 from xonsh.tools import TERM_COLORS
 
 from xonsh.environ import (PromptFormatter, DefaultPromptFormatter,
-        add_prompt_var, format_prompt)
+        DEFAULT_PROMPT, DEFAULT_TITLE, add_prompt_var)
 
 
 class Base_TestPromptFormatter:
@@ -32,7 +32,7 @@ class Base_TestPromptFormatter:
         return self.call_every_counter
 
     def setUp(self):
-        self.base_formatter = PromptFormatter()
+        self.base_formatter = PromptFormatter('No vars to substitute')
         self.call_once_counter = 0
         self.call_every_counter = 0
 
@@ -117,7 +117,7 @@ class TestDefaultPromptFormatter:
         self.all_names = self.color_names.union(self.dynamic_names)
         self.env = dict(PWD='/home/xonsh', USER='xonshuser', HOME='/home/xonsh')
         with mock_xonsh_env(self.env):
-            self.default_formatter = DefaultPromptFormatter()
+            self.default_formatter = DefaultPromptFormatter('No vars to substitute')
 
     def test_get_color(self):
         with mock_xonsh_env(self.env):
@@ -205,7 +205,6 @@ class TestDefaultPromptFormatter:
 #
 
 class TestPromptFormatterBehaviour:
-    """Test each of the prompt variables that DefaultPromptFormatter adds"""
 
     def setUp(self):
         self.color_names = frozenset(TERM_COLORS.keys())
@@ -219,17 +218,18 @@ class TestPromptFormatterBehaviour:
         self.all_names = self.color_names.union(self.dynamic_names)
         self.env = dict(PWD='/home/xonsh', USER='xonshuser', HOME='/home/xonsh')
         with mock_xonsh_env(self.env):
-            self.default_formatter = DefaultPromptFormatter()
+            self.default_formatter = DefaultPromptFormatter('No prompt vars to substitute')
 
     def test_individual_formats(self):
+        """Test each of the prompt variables that DefaultPromptFormatter adds"""
         with mock_xonsh_env(self.env):
             for name in (n for n in self.all_names if n != 'time'):
-                fstring = r'{%s}' % name
-                eq_(fstring.format(**self.default_formatter), self.default_formatter[name])
+                self.default_formatter.prompt_string = r'{%s}' % name
+                eq_(self.default_formatter(), self.default_formatter[name])
 
             now = datetime.now()
-            fstring = r'{time:%Y-%m-%d %H:%M:%S}'.format(**self.default_formatter)
-            ok_(datetime.strptime(fstring, '%Y-%m-%d %H:%M:%S') - now < timedelta(0, 2))
+            self.default_formatter.prompt_string = r'{time:%Y-%m-%d %H:%M:%S}'
+            ok_(datetime.strptime(self.default_formatter(), '%Y-%m-%d %H:%M:%S') - now < timedelta(0, 2))
 
     def test_default_prompt(self):
         """Test that default prompt string expands
@@ -252,21 +252,34 @@ class TestPromptFormatterBehaviour:
             # could be run in a git clone or outside of a git clone and inside
             # or outside of an arbitrary branch.  So just check the beginning
             # and end.
-            ok_(format_prompt('prompt').startswith(prompt_start))
-            ok_(format_prompt('prompt').endswith(prompt_end))
+            self.default_formatter.prompt_string = DEFAULT_PROMPT
+            ok_(self.default_formatter().startswith(prompt_start))
+            ok_(self.default_formatter().endswith(prompt_end))
+
+    def test_default_title(self):
+        """Test that default title string expands
+
+        Mainly interested in this not throwing an exception because some
+        prompt vars in the default title do not have a corresponding
+        implementation in the DefaultPromptFormatter Will detect a few other
+        errors as well but it's not intended to be complete about those.
+        """
+        with mock_xonsh_env(self.env):
+            prompt = 'xonshuser@{}: ~ | xonsh'.format(socket.getfqdn())
+            self.default_formatter.prompt_string = DEFAULT_TITLE
+            eq_(self.default_formatter(), prompt)
 
     def test_custom_prompt_formatter(self):
 
         class CustomFormatter(DefaultPromptFormatter):
-            def __init__(self):
-                super(CustomFormatter, self).__init__()
+            def __init__(self, prompt_string):
+                super(CustomFormatter, self).__init__(prompt_string)
                 self['via_class'] = 'added by custom formatter'
 
         new_env = copy.deepcopy(self.env)
         with mock_xonsh_env(new_env):
             add_prompt_var('via_func1', 'add_prompt_var before formatter')
-            new_env['PROMPT_FORMATTER'] = CustomFormatter()
+            new_env['PROMPT'] = CustomFormatter('{user}:{via_class}:{via_func1}:{via_func2} $')
             add_prompt_var('via_func2', 'add_prompt_var after formatter')
-            new_env['PROMPT'] = '{user}:{via_class}:{via_func1}:{via_func2} $'
-            eq_(format_prompt('prompt'), 'xonshuser:added by custom formatter:add_prompt_var before formatter:add_prompt_var after formatter $')
+            eq_(new_env['PROMPT'](), 'xonshuser:added by custom formatter:add_prompt_var before formatter:add_prompt_var after formatter $')
 
