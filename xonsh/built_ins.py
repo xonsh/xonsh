@@ -502,14 +502,7 @@ def run_subproc(cmds, captured=True):
     if background:
         print_one_job(num)
         return
-    # the following prevents Crtl-c from being interpreted by xonsh
-    # while running a subprocess
-    while True:
-        try:
-            wait_for_active_job()
-            break
-        except KeyboardInterrupt:
-            pass
+    wait_for_active_job()
     # get output
     if isinstance(prev_proc, ProcProxy):
         output = prev_proc.stdout
