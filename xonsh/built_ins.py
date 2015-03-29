@@ -556,9 +556,12 @@ def load_builtins(execer=None):
     builtins.__xonsh_regexpath__ = regexpath
     builtins.__xonsh_glob__ = globpath
     builtins.__xonsh_exit__ = False
-    builtins.__xonsh_pyexit__ = builtins.exit
-    builtins.__xonsh_pyquit__ = builtins.quit
-    del builtins.exit, builtins.quit
+    if hasattr(builtins, 'exit'):
+        builtins.__xonsh_pyexit__ = builtins.exit
+        del builtins.exit
+    if hasattr(builtins, 'quit'):
+        builtins.__xonsh_pyquit__ = builtins.quit
+        del builtins.quit
     builtins.__xonsh_subproc_captured__ = subproc_captured
     builtins.__xonsh_subproc_uncaptured__ = subproc_uncaptured
     builtins.__xonsh_execer__ = execer
@@ -579,8 +582,8 @@ def unload_builtins():
     BUILTINS_LOADED is True, sets BUILTINS_LOADED to False, and returns.
     """
     global BUILTINS_LOADED, ENV
-    ENV.undo_replace_env()
     if ENV is not None:
+        ENV.undo_replace_env()
         ENV = None
     if hasattr(builtins, '__xonsh_pyexit__'):
         builtins.exit = builtins.__xonsh_pyexit__
