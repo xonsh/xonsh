@@ -9,7 +9,7 @@ from argparse import Namespace
 
 from xonsh.execer import Execer
 from xonsh.completer import Completer
-from xonsh.environ import xonshrc_context, multiline_prompt, format_prompt
+from xonsh.environ import xonshrc_context, multiline_prompt, DefaultPrompt
 
 RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = None
 RL_CAN_RESIZE = False
@@ -180,7 +180,7 @@ class Shell(Cmd):
             if callable(t):
                 t = t()
             else:
-                env['TITLE'] = DefaultFormatter(t)
+                env['TITLE'] = DefaultPrompt(t)
                 t = env['TITLE']()
         else:
             return
@@ -204,7 +204,7 @@ class Shell(Cmd):
             if callable(p):
                 p = p()
             else:
-                env['PROMPT'] = DefaultFormatter(p)
+                env['PROMPT'] = DefaultPrompt(p)
                 p = env['PROMPT']()
         else:
             p = "set '$PROMPT = ...' $ "

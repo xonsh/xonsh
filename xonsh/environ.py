@@ -15,65 +15,67 @@ from collections import MutableMapping
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.tools import TERM_COLORS
 
-# This is only needed because of the way that we initialize prompt_formatters.
-# If we find a way to initialize prompt_formatters before
+# This is only needed because of the way that we create prompt objects in
+# shell.py.  If we find a way to create prompt objects before
 # environ.add_prompt_var() can be called then we wouldn't need this.
 _prompt_vars_queue = {}
 
-class PromptFormatter(MutableMapping):
+class BasePrompt(MutableMapping):
     """
-    Base class that implements utilities for PromptFormatters.
+    Base class that implements utilities for formatting Prompts.
 
     You should read the docs for this class to learn how to write your own
-    Prompt Formatter.  However, you most likely want to inherit from
-    :class:`~DefaultPromptFormatter` if you are writing a custom formatter.
+    Prompt class.  However, you most likely want to inherit from
+    :class:`~DefaultPrompt` if you are writing a custom Prompt as that will
+    give you the default prompt variables to start off with.
 
-    Custom Prompt Formatters will need to implement their own :meth:`__init__`
-    that adds entries to several dicts depending on the needs of the variables
-    they add.  The Formatter may also implement methods to implement those
-    variables (although very simple variables can be written with pre-existing
+    Custom Prompts will need to implement their own :meth:`__init__` that adds
+    entries to several dicts depending on the needs of the variables they add.
+    The Prompt may also implement methods to implement those variables
+    (although very simple variables can be written with pre-existing
     functions.)
 
     Example::
 
-        def __init__(self, *args, **kwargs):
-            super(PromptFormatter, self).__init__(*args, **kwargs)
+        class MyPrompt:
+            def __init__(self, *args, **kwargs):
+                super(MyPrompt, self).__init__(*args, **kwargs)
 
-            # Add a variable that's just a static string.  Useful for constants
-            # that you can't remember:
-            self['bell'] = '\x07'
+                # Add a variable that's just a static string.  Useful for constants
+                # that you can't remember:
+                self['bell'] = '\x07'
 
-            # To add a variable that only needs to be computed once add
-            # the function to be called to self.  This can be used for any
-            # variable that won't change while this shell instance is run.  It is
-            # especially useful if the variable takes a long time to compute and
-            # is infrequently used by users:
-            self['login_time'] = self.login_time
+                # To add a variable that only needs to be computed once add
+                # the function to be called to self.  This can be used for any
+                # variable that won't change while this shell instance is run.  It is
+                # especially useful if the variable takes a long time to compute and
+                # is infrequently used by users:
+                self['login_time'] = self.login_time
 
-            # To add a variable that needs to be computed every time the prompt is
-            # printed simply add a function to self and then add the variable name
-            # to the self._run_every set.
-            self['time24'] = functools.partial(time.strftime, '%H:%M:%S')
-            self._run_every.add('time24')
+                # To add a variable that needs to be computed every time the prompt is
+                # printed simply add a function to self and then add the variable name
+                # to the self._run_every set.
+                self['time24'] = functools.partial(time.strftime, '%H:%M:%S')
+                self._run_every.add('time24')
 
-        def login_time(self):
-            who_out = subprocess.check_output(['who', '-m'])
-            return ' '.join(who_out.decode().split()[2:4])
+            def login_time(self):
+                who_out = subprocess.check_output(['who', '-m'])
+                return ' '.join(who_out.decode().split()[2:4])
 
     If you add additional methods of looking up the data (beyond simple
     values, cached functions, and functions called every time) then you may
-    additionally need to modify both __get_item__() and add_prompt_var() to
-    implement it.
+    additionally need to modify both __getitem__() and add_prompt_var() to
+    implement them.
     """
 
-    def __init__(self, prompt_string, *args, **kwargs):
+    def __init__(self, prompt_template, *args, **kwargs):
 
-        super(PromptFormatter, self).__init__(*args, **kwargs)
-        self.prompt_string = prompt_string
+        super(BasePrompt, self).__init__(*args, **kwargs)
+        self.prompt_template = prompt_template
         self._run_every = set()
         self._storage = dict()
 
-        # Load any prompt vars added before the PromptFormatter was created
+        # Load any prompt vars added before the BasePrompt was created
         global _prompt_vars_queue
         for var_name, var_data in _prompt_vars_queue.items():
             self.add_prompt_var(var_name, *(var_data[0]), **(var_data[1]))
@@ -112,24 +114,46 @@ class PromptFormatter(MutableMapping):
         return len(self._storage)
 
     def __call__(self):
-        return self.prompt_string.format(**self)
+        return self.prompt_template.format(**self)
 
     def add_prompt_var(self, var_name, value, call_every=False):
+        """Add a variable that can then be used in a prompt template
+
+        Parameters
+        ----------
+        var_name : str
+            The name of the variable.  This is what will be used in prompt
+            templates
+        value : str or callable
+            This is what is substituted for the var_name in templates.  If
+            this is a callable, then the value returned by the callable is
+            what is substituted into the template.
+        call_every : bool
+            If True and the value is a callable, then value is called every
+            time a prompt containing the var_name is displayed.  This is
+            needed when a value will change over the lifetime of a shell.  If
+            False, the default, value is only called once and the value is
+            cached for use in later prompt strings.
+        """
         self[var_name] = value
         if callable(value) and call_every:
             self._run_every.add(var_name)
 
 
-class DefaultPromptFormatter(PromptFormatter):
+class DefaultPrompt(BasePrompt):
     """
-    This class implements the default prompt format variables.
+    This class implements the default prompt variables.
 
     The following variables are recognized:
 
-    + user -- Name of current user
-    + hostname -- Name of host computer
-    + cwd -- Current working directory
+    + base_cwd -- basename of the current working directory
+    + cwd -- Full path of the current working directory
     + curr_branch -- Name of current git branch (preceded by a space), if any
+    + hostname -- Name of host computer (If the system supports it, this will
+        be the fqdn)
+    + short_host -- Just the host portion of the hostname
+    + time -- A datetime object for the current time
+    + user -- Name of current user
     + (QUALIFIER\_)COLORNAME -- Inserts an ANSI color code
         - COLORNAME can be any of:
               BLACK, RED, GREEN, YELLOW, BLUE, PURPLE, CYAN, WHITE
@@ -138,8 +162,8 @@ class DefaultPromptFormatter(PromptFormatter):
               BOLD_INTENSE, BACKGROUND_INTENSE
     + NO_COLOR -- Resets any previously used color codes
     """
-    def __init__(self, prompt_string, *args, **kwargs):
-        super(DefaultPromptFormatter, self).__init__(prompt_string, *args, **kwargs)
+    def __init__(self, prompt_template, *args, **kwargs):
+        super(DefaultPrompt, self).__init__(prompt_template, *args, **kwargs)
         self._env = builtins.__xonsh_env__
 
         self.update(TERM_COLORS)
@@ -238,52 +262,24 @@ DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
                   '{cwd}{BOLD_RED}{curr_branch} {BOLD_BLUE}${NO_COLOR} ')
 DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
 
-def format_prompt(prompt_type):
-    """Formats a xonsh prompt template string.
-
-    See the :class:`~DefaultPromptFormatter` documentation for keyword
-    arguments recognized in the template string.
-    """
-    env = builtins.__xonsh_env__
-
-    if prompt_type == 'prompt':
-        template = env.get('PROMPT', DEFAULT_PROMPT)
-    elif prompt_type == 'title':
-        template = env.get('TITLE', DEFAULT_TITLE)
-    else:
-        raise ValueError('Unknown prompt type')
-    if callable(template):
-        template = template()
-
-    prompt_formatter = env.get('PROMPT_FORMATTER')
-    if prompt_formatter is None:
-        prompt_formatter = DefaultPromptFormatter()
-
-        env['PROMPT_FORMATTER'] = prompt_formatter
-
-    # Load any prompt vars added before the PromptFormatter was created
-    global _prompt_vars_queue
-    for var_name, var_data in _prompt_vars_queue.items():
-        prompt_formatter.add_prompt_var(var_name, *(var_data[0]), **(var_data[1]))
-    _prompt_vars_queue = {}
-
-    p = template.format(**prompt_formatter)
-    return p
-
 def add_prompt_var(var_name, *args, **kwargs):
     """
-    Add an additional prompt var to this formatter
+    Add an additional prompt var to the Prompt object
 
     The function signature is kept very generic so that this method can be
-    used with different user defined PromptFormatter implementations.  See
-    :meth:`PromptFormatter.add_prompt_var` for how to use this with a default
-    PromptFormatter.
+    used with different user defined Prompt implementations.  See
+    :meth:`BasePrompt.add_prompt_var` for how to use this with the standard
+    included Prompt objects.
     """
     env = builtins.__xonsh_env__
-    prompt_formatter = env.get('PROMPT')
+    prompt_obj = env.get('PROMPT')
 
-    if hasattr(prompt_formatter, 'add_prompt_var'):
-        prompt_formatter.add_prompt_var(var_name, *args, **kwargs)
+    # $PROMPT can contain a string at first.  When we first display a prompt
+    # a default Prompt object is created from that string.  We can directly
+    # add prompt vars to a Prompt object otherwise we have to queue up the
+    # prompt vars until later
+    if hasattr(prompt_obj, 'add_prompt_var'):
+        prompt_obj.add_prompt_var(var_name, *args, **kwargs)
     else:
         global _prompt_vars_queue
         _prompt_vars_queue[var_name] = (args, kwargs)
