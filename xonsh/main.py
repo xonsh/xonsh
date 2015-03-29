@@ -3,10 +3,10 @@ import os
 import sys
 import shlex
 import signal
+import builtins
 import subprocess
 from argparse import ArgumentParser, Namespace
 
-import builtins
 from xonsh.shell import Shell
 
 parser = ArgumentParser(description='xonsh')
@@ -36,13 +36,10 @@ parser.add_argument('args',
 
 def main(argv=None):
     """Main entry point for xonsh cli."""
-
     args = parser.parse_args()
-
     shell = Shell() if not args.norc else Shell(ctx={})
-
+    from xonsh import imphooks
     env = builtins.__xonsh_env__
-
     if args.command is not None:
         # run a single command and exit
         shell.default(args.command)
