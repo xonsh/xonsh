@@ -5,6 +5,8 @@ import subprocess
 import glob
 from contextlib import contextmanager
 
+from xonsh.built_ins import ensure_list_of_strs
+
 def sp(cmd):
     return subprocess.check_output(cmd, universal_newlines=True)
 
@@ -18,6 +20,7 @@ def mock_xonsh_env(xenv):
     builtins.__xonsh_regexpath__ = lambda x: []
     builtins.__xonsh_subproc_captured__ = sp
     builtins.__xonsh_subproc_uncaptured__ = sp
+    builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     builtins.evalx = None
     builtins.execx = None
     builtins.compilex = None
@@ -31,6 +34,7 @@ def mock_xonsh_env(xenv):
     del builtins.__xonsh_regexpath__
     del builtins.__xonsh_subproc_captured__ 
     del builtins.__xonsh_subproc_uncaptured__ 
+    del builtins.__xonsh_ensure_list_of_strs__
     del builtins.evalx
     del builtins.execx
     del builtins.compilex

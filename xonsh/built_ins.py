@@ -540,6 +540,17 @@ def subproc_uncaptured(*cmds):
     return run_subproc(cmds, captured=False)
 
 
+def ensure_list_of_strs(x):
+    """Ensures that x is a list of strings."""
+    if isinstance(x, string_types):
+        rtn = [x]
+    elif isinstance(x, Sequence):
+        rtn = [i if isinstance(i, string_types) else str(i) for i in x]
+    else:
+        rtn = [str(x)]
+    return rtn
+
+
 def load_builtins(execer=None):
     """Loads the xonsh builtins into the Python builtins. Sets the
     BUILTINS_LOADED variable to True.
@@ -560,6 +571,7 @@ def load_builtins(execer=None):
     builtins.__xonsh_execer__ = execer
     builtins.__xonsh_all_jobs__ = {}
     builtins.__xonsh_active_job__ = None
+    builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     # public built-ins
     builtins.evalx = None if execer is None else execer.eval
     builtins.execx = None if execer is None else execer.exec
@@ -588,7 +600,8 @@ def unload_builtins():
              '__xonsh_pyexit__', '__xonsh_pyquit__',
              '__xonsh_subproc_captured__', '__xonsh_subproc_uncaptured__',
              '__xonsh_execer__', 'evalx', 'execx', 'compilex',
-             'default_aliases', '__xonsh_all_jobs__', '__xonsh_active_job__'
+             'default_aliases', '__xonsh_all_jobs__', '__xonsh_active_job__',
+             '__xonsh_ensure_list_of_strs__',
              ]
     for name in names:
         if hasattr(builtins, name):

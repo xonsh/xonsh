@@ -385,7 +385,10 @@ Python Evaluation with ``@()``
 
 The ``@(<expr>)`` operator from will evaluate arbitrary Python code in
 subprocess mode, and the result will be appended to the subprocess command
-list. The result is automatically converted to a string.  For example,
+list. If the result is a string, it is appended to the argument list.
+If the result is a list or other non-string sequence, the contents are 
+converted to strings and appended to the argument list in order. Otherwise, the 
+result is automatically converted to a string.  For example,
 
 .. code-block:: bash
 
@@ -395,6 +398,8 @@ list. The result is automatically converted to a string.  For example,
     xonsh party
     >>> echo @(2+2)
     4
+    >>> echo @([42, 'yo'])
+    42 yo
 
 This syntax can be used inside of a captured or uncaptured subprocess, and can
 be used to generate any of the tokens in the subprocess command list.

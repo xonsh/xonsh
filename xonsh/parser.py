@@ -2072,11 +2072,9 @@ class Parser(object):
             else:
                 assert False
         elif p1 == '@(':
-            l = self.lineno
-            c = self.col
-            n = ast.Name("str", ast.Load(), lineno=l, col_offset=c)
-            p0 = ast.Call(n, [p[2]], [], None, None, lineno=l, col_offset=c)
-            p0._cliarg_action = 'append'
+            p0 = xonsh_call('__xonsh_ensure_list_of_strs__', [p[2]], 
+                            lineno=self.lineno, col=self.col)
+            p0._cliarg_action = 'extend'
         elif p1 == '${':
             xenv = self._xenv(lineno=self.lineno, col=self.col)
             idx = ast.Index(value=p[2])
