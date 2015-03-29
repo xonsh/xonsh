@@ -17,7 +17,7 @@ class Execer(object):
     """Executes xonsh code in a context."""
 
     def __init__(self, filename='<xonsh-code>', debug_level=0,
-                 parser_args=None):
+                 parser_args=None, unload=True):
         """Parameters
         ----------
         filename : str, optional
@@ -26,16 +26,20 @@ class Execer(object):
             Debugging level to use in lexing and parsing.
         parser_args : dict, optional
             Arguments to pass down to the parser.
+        unload : bool, optional
+            Whether or not to unload xonsh builtins upon deletion.
         """
         parser_args = parser_args or {}
         self.parser = Parser(**parser_args)
         self.filename = filename
         self.debug_level = debug_level
+        self.unload = unload
         self.ctxtransformer = ast.CtxAwareTransformer(self.parser)
         load_builtins(execer=self)
 
     def __del__(self):
-        unload_builtins()
+        if self.unload:
+            unload_builtins()
 
     def parse(self, input, ctx, mode='exec'):
         """Parses xonsh code in a context-aware fashion. For context-free
