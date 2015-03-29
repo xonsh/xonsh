@@ -23,13 +23,18 @@ def teardown():
     if LOADED_HERE:
         unload_builtins()
 
-def test_relative_import():
+def test_import():
     import sample
     assert_equal('hello mom jawaka\n', sample.x)
 
 def test_absolute_import():
     from xpack import sample
     assert_equal('hello mom jawaka\n', sample.x)
+
+def test_relative_import():
+    from xpack import relimp
+    assert_equal('hello mom jawaka\n', relimp.sample.x)
+    assert_equal('hello mom jawaka\ndark chest of wonders', relimp.y)
 
 
 if __name__ == '__main__':
