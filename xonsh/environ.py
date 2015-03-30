@@ -13,6 +13,7 @@ from warnings import warn
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.tools import TERM_COLORS
 
+
 def current_branch(cwd=None, pad=True):
     """Gets the branch for a current working directory. Returns None
     if the cwd is not a repository.  This currently only works for git,
@@ -70,17 +71,18 @@ DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
                   '{cwd}{BOLD_RED}{curr_branch} {BOLD_BLUE}${NO_COLOR} ')
 DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
 
+
 def _replace_home(x):
     return x.replace(builtins.__xonsh_env__['HOME'], '~')
 
 FORMAT_DICT = dict(user=os.environ.get('USER', '<user>'),
-                   hostname=socket.gethostname().split('.',1)[0],
-                   fqdn=socket.getfqdn(),
+                   hostname=socket.gethostname().split('.', 1)[0],
                    cwd=lambda: _replace_home(builtins.__xonsh_env__['PWD']),
                    curr_branch=lambda: current_branch() or '',
                    **TERM_COLORS)
 
-FORMATTER = string.Formatter()
+_formatter = string.Formatter()
+
 
 def format_prompt(template=DEFAULT_PROMPT):
     """Formats a xonsh prompt template string.
@@ -102,7 +104,7 @@ def format_prompt(template=DEFAULT_PROMPT):
     env = builtins.__xonsh_env__
     template = template() if callable(template) else template
     fmt = env.get('FORMAT_DICT', FORMAT_DICT)
-    included_names = set(i[1] for i in FORMATTER.parse(template))
+    included_names = set(i[1] for i in _formatter.parse(template))
     fmt = {k: (v() if callable(v) else v)
            for (k, v) in fmt.items()
            if k in included_names}
@@ -134,7 +136,7 @@ def multiline_prompt():
 BASE_ENV = {
     'XONSH_VERSION': XONSH_VERSION,
     'INDENT': '    ',
-    'FORMAT_DICT': FORMAT_DICT,
+    'FORMAT_DICT': dict(FORMAT_DICT),
     'PROMPT': DEFAULT_PROMPT,
     'TITLE': DEFAULT_TITLE,
     'MULTILINE_PROMPT': '.',
