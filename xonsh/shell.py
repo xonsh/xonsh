@@ -92,6 +92,7 @@ class Shell(Cmd):
         env = builtins.__xonsh_env__
         self.ctx = ctx if ctx is not None else \
             xonshrc_context(rcfile=env.get('XONSHRC', None), execer=self.execer)
+        self.ctx['__name__'] = '__main__'
         self.completer = Completer()
         self.buffer = []
         self.need_more_lines = False

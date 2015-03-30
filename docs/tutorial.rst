@@ -770,7 +770,6 @@ for the commands themselves.
 
 Executing Commands and Scripts
 ==============================
-
 When started with the ``-c`` flag and a command, xonsh will execute that command
 and exit, instead of entering the command loop.
 
@@ -869,6 +868,18 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
 
     bash $ echo @(' '.join($(cat @('file%d.txt' % i)).strip() for i in range(6)))
     s n a i l s
+
+Importing Xonsh (``*.xsh``)
+==============================
+You can import xonsh source files with the ``*.xsh`` file extension using 
+the normal Python syntax.  Say you had a file called ``mine.xsh``, you could
+therefore perform a Bash-like source into your current shell with the 
+following:
+
+.. code-block:: python
+
+    from mine import *
+
 
 That's All, Folks
 ======================
