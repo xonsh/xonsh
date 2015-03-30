@@ -2,8 +2,9 @@
 """
 import os
 import re
-import socket
 import locale
+import socket
+import string
 import builtins
 import platform
 import subprocess
@@ -69,13 +70,17 @@ DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
                   '{cwd}{BOLD_RED}{curr_branch} {BOLD_BLUE}${NO_COLOR} ')
 DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
 
+def _replace_home(x):
+    return x.replace(builtins.__xonsh_env__['HOME'], '~')
+
 FORMAT_DICT = dict(user=os.environ.get('USER', '<user>'),
                    hostname=socket.gethostname().split('.',1)[0],
                    fqdn=socket.getfqdn(),
-                   cwd=lambda: builtins.__xonsh_env__['PWD'].replace(builtins.__xonsh_env__['HOME'], '~'),
+                   cwd=lambda: _replace_home(builtins.__xonsh_env__['PWD']),
                    curr_branch=lambda: current_branch() or '',
                    **TERM_COLORS)
 
+FORMATTER = string.Formatter()
 
 def format_prompt(template=DEFAULT_PROMPT):
     """Formats a xonsh prompt template string.
@@ -95,9 +100,11 @@ def format_prompt(template=DEFAULT_PROMPT):
     + NO_COLOR -- Resets any previously used color codes
     """
     env = builtins.__xonsh_env__
+    template = template() if callable(template) else template
     fmt = env.get('FORMAT_DICT', FORMAT_DICT)
-    fmt = {k:v for (k,v) in fmt.items() if '{{{}}}'.format(k) in template}
-    fmt = {k:(v() if callable(v) else v) for (k,v) in fmt.items()}
+    included_names = set(i[1] for i in FORMATTER.parse(template))
+    fmt = {k: v for (k, v) in fmt.items() if k in included_names}
+    fmt = {k: (v() if callable(v) else v) for (k, v) in fmt.items()}
     return template.format(**fmt)
 
 
