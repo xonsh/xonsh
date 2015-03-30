@@ -12,8 +12,7 @@ from warnings import warn
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.tools import TERM_COLORS
 
-
-def current_branch(cwd=None):
+def current_branch(cwd=None, pad=True):
     """Gets the branch for a current working directory. Returns None
     if the cwd is not a repository.  This currently only works for git,
     bust should be extended in the future.
@@ -61,15 +60,24 @@ def current_branch(cwd=None):
         except subprocess.CalledProcessError:
             pass
 
+    if pad and branch is not None:
+        branch = ' ' + branch
     return branch
 
 
-default_prompt = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
+DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
                   '{cwd}{BOLD_RED}{curr_branch} {BOLD_BLUE}${NO_COLOR} ')
-default_title = '{user}@{hostname}: {cwd} | xonsh'
+DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
+
+FORMAT_DICT = dict(user=os.environ.get('USER', '<user>'),
+                   hostname=socket.gethostname().split('.',1)[0],
+                   fqdn=socket.getfqdn(),
+                   cwd=lambda: builtins.__xonsh_env__['PWD'].replace(builtins.__xonsh_env__['HOME'], '~'),
+                   curr_branch=lambda: current_branch() or '',
+                   **TERM_COLORS)
 
 
-def format_prompt(template=default_prompt):
+def format_prompt(template=DEFAULT_PROMPT):
     """Formats a xonsh prompt template string.
 
     The following keyword arguments are recognized in the template string:
@@ -87,14 +95,10 @@ def format_prompt(template=default_prompt):
     + NO_COLOR -- Resets any previously used color codes
     """
     env = builtins.__xonsh_env__
-    cwd = env['PWD']
-    branch = current_branch(cwd=cwd)
-    branch = '' if branch is None else ' ' + branch
-    p = template.format(user=env.get('USER', '<user>'),
-                        hostname=socket.gethostname(),
-                        cwd=cwd.replace(env['HOME'], '~'),
-                        curr_branch=branch, **TERM_COLORS)
-    return p
+    fmt = env.get('FORMAT_DICT', FORMAT_DICT)
+    fmt = {k:v for (k,v) in fmt.items() if '{{{}}}'.format(k) in template}
+    fmt = {k:(v() if callable(v) else v) for (k,v) in fmt.items()}
+    return template.format(**fmt)
 
 
 RE_HIDDEN = re.compile('\001.*?\002')
@@ -123,8 +127,9 @@ def multiline_prompt():
 BASE_ENV = {
     'XONSH_VERSION': XONSH_VERSION,
     'INDENT': '    ',
-    'PROMPT': default_prompt,
-    'TITLE': default_title,
+    'FORMAT_DICT': FORMAT_DICT,
+    'PROMPT': DEFAULT_PROMPT,
+    'TITLE': DEFAULT_TITLE,
     'MULTILINE_PROMPT': '.',
     'XONSHRC': os.path.expanduser('~/.xonshrc'),
     'XONSH_HISTORY_SIZE': 8128,
