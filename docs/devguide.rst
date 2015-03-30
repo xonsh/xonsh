@@ -249,6 +249,35 @@ Maintainence Tasks
 --------------------
 None currently.
 
+-----------------------
+Performing the Release
+-----------------------
+To perform the release, run these commands for the following tasks:
+
+**pip upload:**
+
+.. code-block:: bash
+
+    $ ./setup.py sdist upload
+
+
+**conda upload:**
+
+.. code-block:: bash
+
+    $ rm -f /path/to/conda/conda-bld/src_cache/xonsh.tar.gz
+    $ conda build --no-test recipe
+    $ conda convert -p all -o /path/to/conda/conda-bld /path/to/conda/conda-bld/linux-64/xonsh-X.X.X-0.tar.bz2
+    $ binstar upload /path/to/conda/conda-bld/*/xonsh-X.X.X*.tar.bz2
+
+**website:**
+
+.. code-block:: bash
+
+    $ cd docs
+    $ make clean html push-root
+
+
 Document History
 ===================
 Portions of this page have been forked from the PyNE documentation, 
