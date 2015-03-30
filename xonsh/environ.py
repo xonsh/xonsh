@@ -104,8 +104,7 @@ def format_prompt(template=DEFAULT_PROMPT):
     fmt = env.get('FORMAT_DICT', FORMAT_DICT)
     included_names = set(i[1] for i in FORMATTER.parse(template))
     fmt = {k: (v() if callable(v) else v)
-           for (k, v)
-           in fmt.items()
+           for (k, v) in fmt.items()
            if k in included_names}
     return template.format(**fmt)
 
