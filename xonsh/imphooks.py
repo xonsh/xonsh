@@ -42,6 +42,8 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
         for p in path:
             if not isinstance(p, string_types):
                 continue
+            if not os.path.isdir(p):
+                continue
             if fname not in os.listdir(p):
                 continue
             spec = ModuleSpec(fullname, self)
