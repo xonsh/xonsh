@@ -82,5 +82,5 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
         code = execer.compile(src, glbs=ctx, locs=ctx)
         return code
 
- 
+
 sys.meta_path.append(XonshImportHook())
