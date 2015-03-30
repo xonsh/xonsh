@@ -11,6 +11,7 @@ from importlib.abc import MetaPathFinder, SourceLoader
 from xonsh.tools import string_types
 from xonsh.execer import Execer
 
+
 class XonshImportHook(MetaPathFinder, SourceLoader):
     """Implements the import hook for xonsh source files."""
 
@@ -30,14 +31,18 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
         else:
             execer = self._execer
         return execer
+
     #
     # MetaPathFinder methods
     #
     def find_spec(self, fullname, path, target=None):
         """Finds the spec for a xonsh module if it exists."""
+        dot = '.'
         spec = None
         path = sys.path if path is None else path
-        name = fullname.rsplit('.', 1)[-1]
+        if dot not in fullname and dot not in path:
+            path = [dot] + path
+        name = fullname.rsplit(dot, 1)[-1]
         fname = name + '.xsh'
         for p in path:
             if not isinstance(p, string_types):
@@ -76,5 +81,6 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
         ctx = {}   # dummy for modules
         code = execer.compile(src, glbs=ctx, locs=ctx)
         return code
+
  
 sys.meta_path.append(XonshImportHook())
