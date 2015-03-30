@@ -219,7 +219,7 @@ arguments in a prompt string that will get replaced automatically:
 
 You can also color your prompt easily by inserting keywords such as ``{GREEN}``
 or ``{BOLD_BLUE}`` -- for the full list of keyword arguments, refer to the API
-documentation of :py:func:`xonsh.environ.format_prompt`.
+documentation of :py:class:`xonsh.environ.DefaultPromptFormatter`.
 
 
 Environment Lookup with ``${}``

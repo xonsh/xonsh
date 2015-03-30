@@ -176,13 +176,9 @@ class Shell(Cmd):
         term = env.get('TERM', None)
         if term is None or term == 'linux':
             return
-        if 'TITLE' in env:
-            t = env['TITLE']
-            if callable(t):
-                t = t()
-        else:
+        if 'TITLE' not in env:
             return
-        t = format_prompt(t)
+        t = format_prompt('title')
         sys.stdout.write("\x1b]2;{0}\x07".format(t))
 
     @property
@@ -198,12 +194,9 @@ class Shell(Cmd):
                 self.mlprompt = multiline_prompt()
             return self.mlprompt
         env = builtins.__xonsh_env__
-        if 'PROMPT' in env:
-            p = env['PROMPT']
-            if callable(p):
-                p = p()
-            p = format_prompt(p)
-        else:
+        if 'PROMPT' not in env:
             p = "set '$PROMPT = ...' $ "
+        else:
+            p = format_prompt('prompt')
         self.settitle()
         return p
