@@ -14,6 +14,7 @@ For those of you who want the gritty details.
     parser
     ast
     execer
+    imphooks
 
 
 **Command Prompt:**
