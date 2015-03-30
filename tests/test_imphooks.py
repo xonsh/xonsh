@@ -36,6 +36,10 @@ def test_relative_import():
     assert_equal('hello mom jawaka\n', relimp.sample.x)
     assert_equal('hello mom jawaka\ndark chest of wonders', relimp.y)
 
+def test_sub_import():
+    from xpack.sub import sample
+    assert_equal('hello mom jawaka\n', sample.x)
+
 
 if __name__ == '__main__':
     nose.runmodule()
