@@ -127,7 +127,7 @@ Environment variables are written as ``$`` followed by a name.  For example,
 You can set (and export) environment variables like you would set any other
 variable in Python.  The same is true for deleting them too.
 
-.. code-block:: bash
+.. code-block:: xonshcon
 
     >>> $GOAL = 'Become the Lord of the Files'
     >>> print($GOAL)
@@ -150,7 +150,7 @@ representations of the environment as needed (mostly by subprocess commands).
 When in xonsh, you'll always have the typed version.  Here are a couple of
 PATH examples:
 
-.. code-block:: bash
+.. code-block:: xonshcon
 
     >>> $PATH
     ['/home/snail/.local/bin', '/home/snail/sandbox/bin',
@@ -212,7 +212,7 @@ Customizing the prompt is probably the most common reason for altering an
 environment variable.  To make this easier, you can use keyword
 arguments in a prompt string that will get replaced automatically:
 
-.. code-block:: bash
+.. code-block:: xonshcon
 
     >>> $PROMPT = '{user}@{hostname}:{cwd} > '
     snail@home:~ > # it works!
@@ -238,7 +238,7 @@ value in the environment.  In fact, ``${<expr>}`` is the same as doing
 ``__xonsh_env__[<expr>]``, but much nicer to look at. Here are a couple of
 examples in action:
 
-.. code-block:: bash
+.. code-block:: xonshcon
 
     >>> x = 'USER'
     >>> ${x}
@@ -254,7 +254,7 @@ Running Commands
 As a shell, xonsh is meant to make running commands easy and fun.
 Running subprocess commands should work like any other in any other shell.
 
-.. code-block:: bash
+.. code-block:: xonshcon
 
     >>> echo "Yoo hoo"
     Yoo hoo
@@ -301,7 +301,7 @@ with ``ls -l``. Then we'll make new variable names ``ls`` and ``l`` and then
 subtract them. Finally, we will delete ``ls`` and ``l`` and be able to list
 the directories again.
 
-.. code-block:: bash
+.. code-block:: xonshcon
 
     >>> # this will be in subproc-mode, because ls doesn't exist
     >>> ls -l
@@ -353,7 +353,7 @@ assign the results to a variable or perform any other manipulations we want.
 While in subprocess-mode or inside of a captured subprocess, we can always
 still query the environment with ``$NAME`` variables.
 
-.. code-block:: bash
+.. code-block:: xonshcon
 
     >>> $(echo $HOME)
     '/home/snail\n'
@@ -368,7 +368,7 @@ to the screen.  The return value of ``$[]`` is always ``None``.
 In the following, we can see that the results of ``$[]`` are automatically
 printed and the return value is not a string.
 
-.. code-block:: bash
+.. code-block:: xonshcon
 
     >>> x = $[ls -l]
     total 0
@@ -390,7 +390,7 @@ If the result is a list or other non-string sequence, the contents are
 converted to strings and appended to the argument list in order. Otherwise, the 
 result is automatically converted to a string.  For example,
 
-.. code-block:: bash
+.. code-block:: xonshcon
 
     >>> x = 'xonsh'
     >>> y = 'party'
@@ -415,7 +415,7 @@ be used to generate any of the tokens in the subprocess command list.
 Thus, ``@()`` allows us to create complex commands in Python-mode and then
 feed them to a subprocess as needed.  For example:
 
-.. code-block:: xonshcon
+.. code-block:: xonsh
 
     for i in range(20):
         $[touch @('file%02d' % i)]
@@ -428,7 +428,7 @@ subprocess operators that we have seen so far (``$()``, ``$[]``, ``${}``,
 ``@()``).  An instance of ``ls -l`` that is on the wrong side of the border of
 the absurd is shown below:
 
-.. code-block:: bash
+.. code-block:: xonshcon
 
     >>> $[$(echo ls) @('-' + $(echo l).strip())]
     total 0
@@ -449,7 +449,7 @@ Pipes with ``|``
 In subprocess-mode, xonsh allows you to use the ``|`` character to pipe
 together commands as you would in other shells.
 
-.. code-block:: bash
+.. code-block:: xonshcon
 
     >>> env | uniq | sort | grep PATH
     DATAPATH=/usr/share/MCNPX/v260/Data/
@@ -474,7 +474,7 @@ preceding command will be written to file. If the file already exists, the
 current contents will be erased.  For example, let's write a simple file
 called ``conch.txt`` using ``echo``:
 
-.. code-block:: bash
+.. code-block:: xonshcon
 
     >>> echo Piggy > conch.txt
     'Piggy\n'
@@ -492,7 +492,7 @@ operator allows us to append to a file rather than overwriting it completely.
 If the file doesn't exist, it is created. Let's reuse the ``conch.txt``
 file from above and add a line.
 
-.. code-block:: bash
+.. code-block:: xonshcon
 
     >>> echo Ralph >> conch.txt
     'Ralph\n'
@@ -509,7 +509,7 @@ Non-blocking with ``&``
 In subprocess-mode, you can make a process no-blocking if the last element on
 a line is an ``&``.  The following shows an example with ``emacs``.
 
-.. code-block:: bash
+.. code-block:: xonshcon
 
     >>> emacs &
     >>>
@@ -527,7 +527,7 @@ A common use case for this is files with spaces in their names. This
 detestable practice refuses to die. "No problem!" says xonsh, "I have
 strings."  Let's see it go!
 
-.. code-block:: bash
+.. code-block:: xonshcon
 
     >>> touch "sp ace"
     >>> ls -l
@@ -544,7 +544,7 @@ Filename globbing with the ``*`` character is also allowed in subprocess-mode.
 This simply uses Python's glob module under-the-covers.  See there for more
 details.  As an example, start with a lovely bunch of xonshs:
 
-.. code-block:: bash
+.. code-block:: xonshcon
 
     >>> touch xonsh conch konk quanxh
     >>> ls
@@ -571,7 +571,7 @@ to the subprocess command.
 Let's see a demonstration with some simple filenames:
 
 
-.. code-block:: bash
+.. code-block:: xonshcon
 
     >>> touch a aa aaa aba abba aab aabb abcba
     >>> ls `a(a+|b+)a`
@@ -600,7 +600,7 @@ written in pure Python.
 
 Let's start by looking at the help for the int type:
 
-.. code-block:: bash
+.. code-block:: xonshcon
 
     >>> int?
     Type:            type
@@ -695,7 +695,7 @@ case it will be converted to a list automatically with ``shlex.split``.
 
 For example, here are some of the default aliases:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     DEFAULT_ALIASES = {
         'ls': 'ls --color=auto -v',
@@ -712,7 +712,7 @@ Lastly, if an alias value is a function (or other callable), then this
 function is called *instead* of going to a subprocess command. Such functions
 must have the following signature:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     def mycmd(args, stdin=None):
         """args will be a list of strings representing the arguments to this
@@ -780,11 +780,10 @@ and exit, instead of entering the command loop.
 
 Longer scripts can be run either by specifying a filename containing the script,
 or by feeding them to xonsh via stdin.  For example, consider the following
-script, stored in ``test.sh``:
+script, stored in ``test.xsh``:
 
-.. code-block:: bash
+.. code-block:: xonsh
 
-    bash $ cat test_script.sh
     #!/usr/bin/env xonsh
 
     $[ls]
@@ -806,7 +805,7 @@ This script could be run by piping its contents to xonsh:
 
 .. code-block:: bash
 
-    bash $ cat test_script.sh | xonsh
+    bash $ cat test_script.xsh | xonsh
     file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  test_script.sh
     removing files
     test_script.sh
@@ -817,7 +816,7 @@ or by invoking xonsh with its filename as an argument:
 
 .. code-block:: bash
 
-    bash $ xonsh test_script.sh
+    bash $ xonsh test_script.xsh
     file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  test_script.sh
     removing files
     test_script.sh
@@ -834,9 +833,8 @@ For example, consider a slight variation of the example script from above that
 operates on a given argument, rather than on the string ``'xonsh'`` (notice how
 ``$ARGS`` and ``$ARG1`` are used):
 
-.. code-block:: bash
+.. code-block:: xonsh
 
-    bash $ cat test_script2.sh
     #!/usr/bin/env xonsh
 
     print($ARGS)
@@ -858,7 +856,7 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
 
 .. code-block:: bash
 
-    bash $ xonsh test_script2.sh snails
+    bash $ xonsh test_script2.xsh snails
     ['test_script.sh', 'snails']
     file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  file5.txt  test_script.sh
     removing files
@@ -876,7 +874,7 @@ the normal Python syntax.  Say you had a file called ``mine.xsh``, you could
 therefore perform a Bash-like source into your current shell with the 
 following:
 
-.. code-block:: xonshcon
+.. code-block:: xonsh
 
     from mine import *
 
@@ -885,7 +883,7 @@ That's All, Folks
 ======================
 To leave xonsh, hit ``Crtl-D``, type ``EOF``, type ``quit``, or type ``exit``.
 
-.. code-block:: bash
+.. code-block:: xonshcon
 
     >>> exit
 
