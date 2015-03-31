@@ -335,7 +335,7 @@ The ``$(<expr>)`` operator in xonsh executes a subprocess command and
 stdout will be returned as string. This is similar to how ``$()`` performs in
 BASH.  For example,
 
-.. code-block:: bash
+.. code-block:: xonshcon
 
     >>> $(ls -l)
     'total 0\n-rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh\n'
@@ -343,7 +343,7 @@ BASH.  For example,
 The ``$()`` operator is an expression itself. This means that we can
 assign the results to a variable or perform any other manipulations we want.
 
-.. code-block:: bash
+.. code-block:: xonshcon
 
     >>> x = $(ls -l)
     >>> print(x.upper())
