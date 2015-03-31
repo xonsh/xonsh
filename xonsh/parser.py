@@ -2062,8 +2062,11 @@ class Parser(object):
                                     lineno=self.lineno, col=self.col)
                     p0._cliarg_action = 'extend'
                 elif p1.startswith('$'):
-                    p0 = self._envvar_by_name(p1[1:], lineno=self.lineno, col=self.col)
-                    p0._cliarg_action = 'ensure_list'
+                    p0 = self._envvar_by_name(p1[1:], lineno=self.lineno,
+                                              col=self.col)
+                    p0 = xonsh_call('__xonsh_ensure_list_of_strs__', [p0],
+                            lineno=self.lineno, col=self.col)
+                    p0._cliarg_action = 'extend'
                 else:
                     p0._cliarg_action = 'append'
             elif isinstance(p1, ast.AST):
