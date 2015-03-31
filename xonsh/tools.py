@@ -51,7 +51,8 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
             break
         if len(toks) == 0 and tok.type in ('WS', 'INDENT'):
             continue  # handle indentation
-        elif len(toks) > 0 and toks[-1].type == 'SEMI':
+        elif len(toks) > 0 and toks[-1].type == 'SEMI' and pos < maxcol and \
+                tok.type not in ('NEWLINE', 'DEDENT', 'WS'):
             toks.clear()
         if pos < mincol:
             continue
@@ -77,6 +78,8 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
         else:
             el = line[pos:].split('#')[0].rstrip()
             end_offset = len(el)
+    if toks[-1].type == 'SEMI':
+        toks.pop()
     if len(toks) == 0:
         return  # handle comment lines
     beg, end = toks[0].lexpos, (toks[-1].lexpos + end_offset)
