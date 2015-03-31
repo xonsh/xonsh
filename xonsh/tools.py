@@ -49,12 +49,21 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
         pos = tok.lexpos
         if tok.type != 'SEMI' and pos >= maxcol:
             break
-        if len(toks) > 0 and toks[-1].type == 'SEMI':
+        if len(toks) == 0 and tok.type in ('WS', 'INDENT'):
+            continue  # handle indentation
+        elif len(toks) > 0 and toks[-1].type == 'SEMI':
             toks.clear()
         if pos < mincol:
             continue
         toks.append(tok)
         if tok.type == 'NEWLINE':
+            break
+        elif tok.type == 'DEDENT':
+            # fake a newline when dedenting without a newline
+            tok.type = 'NEWLINE'
+            tok.value = '\n'
+            tok.lineno -= 1
+            tok.lexpos = len(line)
             break
     else:
         if len(toks) == 0:
