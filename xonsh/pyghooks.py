@@ -41,6 +41,7 @@ SUBPROC_TOKENS = [
     (r'(.+)(\])', bygroups(using(XonshSubprocLexer), Keyword), '#pop'),
     ]
 
+
 class XonshLexer(PythonLexer):
     """Xonsh console lexer for pygments."""
 
@@ -48,7 +49,7 @@ class XonshLexer(PythonLexer):
     aliases = ['xonsh', 'xsh']
     filenames = ['*.xsh', '*xonshrc']
 
-    tokens = {'root': list(ROOT_TOKENS), 
+    tokens = {'root': list(ROOT_TOKENS),
               'pymode': PYMODE_TOKENS,
               'subproc': SUBPROC_TOKENS,
               }
@@ -60,7 +61,6 @@ class XonshConsoleLexer(PythonLexer):
     name = 'Xonsh console lexer'
     aliases = ['xonshcon']
 
-    #flags = re.DOTALL
     tokens = {
         'root': [
             (r'^(>>>|\.\.\.) ', Generic.Prompt),
@@ -73,7 +73,7 @@ class XonshConsoleLexer(PythonLexer):
         }
 
 
-# XonshLexer & XonshSubprocLexer have to refernce each other 
+# XonshLexer & XonshSubprocLexer have to refernce each other
 XonshSubprocLexer.tokens['root'] = [
     (r'(\$\{)(.*)(\})', bygroups(Keyword, using(XonshLexer), Keyword)),
     (r'(@\()(.+)(\))', bygroups(Keyword, using(XonshLexer), Keyword)),
