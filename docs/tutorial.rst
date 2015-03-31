@@ -43,7 +43,7 @@ The xonsh language is based on Python, and the xonsh shell uses Python to
 interpret any input it receives. This makes simple things, like arithmetic,
 simple:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     >>> 1 + 1
     2
@@ -55,7 +55,7 @@ simple:
 Since this is just Python, we are able import modules, print values,
 and use other built-in Python functionality:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     >>> import sys
     >>> print(sys.version)
@@ -67,7 +67,7 @@ We can also create and use literal data types, such as ints, floats, lists,
 sets, and dictionaries. Everything that you are used to if you already know
 Python is there:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     >>> d = {'xonsh': True}
     >>> d.get('bash', False)
@@ -78,7 +78,7 @@ The multi-line mode is automatically entered whenever the first line of input
 is not syntactically valid on its own.  Multi-line mode is then exited when
 enter (or return) is pressed when the cursor is in the first column.
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     >>> if True:
     ...     print(1)
@@ -89,7 +89,7 @@ enter (or return) is pressed when the cursor is in the first column.
 
 Flow control, of course, includes loops.
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     >>> for i, x in enumerate('xonsh'):
     ...     print(i, x)
@@ -103,7 +103,7 @@ Flow control, of course, includes loops.
 We can also define and call functions and classes. I'll mostly spare you the
 details, but this *is* pretty cool:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     >>> def f():
     ...     return "xonsh"
@@ -119,7 +119,7 @@ Environment Variables
 Environment variables are written as ``$`` followed by a name.  For example,
 ``$HOME``, ``$PWD``, and ``$PATH``.
 
-.. code-block:: bash
+.. code-block:: xonshcon
 
     >>> $HOME
     '/home/snail'
@@ -404,7 +404,7 @@ result is automatically converted to a string.  For example,
 This syntax can be used inside of a captured or uncaptured subprocess, and can
 be used to generate any of the tokens in the subprocess command list.
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     >>> out = $(echo @(x + ' ' + y))
     >>> out
@@ -415,7 +415,7 @@ be used to generate any of the tokens in the subprocess command list.
 Thus, ``@()`` allows us to create complex commands in Python-mode and then
 feed them to a subprocess as needed.  For example:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     for i in range(20):
         $[touch @('file%02d' % i)]
@@ -626,7 +626,7 @@ Let's start by looking at the help for the int type:
 Now, let's look at the superhelp for the xonsh built-in that enables
 regex globbing:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     >>> __xonsh_regexpath__??
     Type:        function
@@ -647,7 +647,7 @@ This allows you to chain together help inside of other operations and
 ask for help several times in an object hierarchy.  For instance, let's get
 help for both the dict type and its key() method simultaneously:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     >>> dict?.keys??
     Type:            type
@@ -695,7 +695,7 @@ case it will be converted to a list automatically with ``shlex.split``.
 
 For example, here are some of the default aliases:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     DEFAULT_ALIASES = {
         'ls': 'ls --color=auto -v',
@@ -712,7 +712,7 @@ Lastly, if an alias value is a function (or other callable), then this
 function is called *instead* of going to a subprocess command. Such functions
 must have the following signature:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     def mycmd(args, stdin=None):
         """args will be a list of strings representing the arguments to this
@@ -747,7 +747,7 @@ must have the following signature:
 We can dynamically alter the aliases present simply by modifying the
 built-in mapping.  Here is an example using a function value:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     >>> aliases['banana'] = lambda args, stdin=None: ('My spoon is tooo big!', None)
     >>> banana
@@ -876,7 +876,7 @@ the normal Python syntax.  Say you had a file called ``mine.xsh``, you could
 therefore perform a Bash-like source into your current shell with the 
 following:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     from mine import *
 
