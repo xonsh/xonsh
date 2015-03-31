@@ -138,7 +138,11 @@ class CtxAwareTransformer(NodeTransformer):
         if self.is_in_scope(node):
             return node
         else:
-            return self.try_subproc_toks(node)
+            newnode = self.try_subproc_toks(node)
+            if not isinstance(newnode, Expr):
+                newnode = Expr(value=newnode, lineno=node.lineno, 
+                               col_offset=node.col_offset)
+            return newnode
 
     def visit_Assign(self, node):
         ups = set()
