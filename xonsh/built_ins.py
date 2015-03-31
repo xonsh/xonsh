@@ -427,7 +427,15 @@ def run_subproc(cmds, captured=True):
         write_target = cmds[-1][0]
         write_mode = WRITER_MODES[cmds[-2]]
         cmds = cmds[:-2]
-        last_stdout = PIPE
+        if write_target is not None:
+            try:
+                last_stdout = open(write_target, write_mode)
+            except FileNotFoundError:
+                e = 'xonsh: {0}: no such file or directory'
+                print(e.format(write_target))
+                return
+        else:
+            last_stdout = PIPE
     last_cmd = cmds[-1]
     prev = None
     procs = []
@@ -508,13 +516,6 @@ def run_subproc(cmds, captured=True):
         output = prev_proc.stdout
     elif prev_proc.stdout is not None:
         output = prev_proc.stdout.read()
-    # write the output if we should
-    if write_target is not None:
-        try:
-            with open(write_target, write_mode) as f:
-                f.write(output)
-        except FileNotFoundError:
-            print('xonsh: {0}: no such file or directory'.format(write_target))
     if captured:
         return output
 
