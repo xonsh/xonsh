@@ -511,13 +511,14 @@ def run_subproc(cmds, captured=True):
         print_one_job(num)
         return
     wait_for_active_job()
-    # get output
-    if isinstance(prev_proc, ProcProxy):
-        output = prev_proc.stdout
-    elif prev_proc.stdout is not None:
-        output = prev_proc.stdout.read()
-    if captured:
-        return output
+    if write_target is None:
+        # get output
+        if isinstance(prev_proc, ProcProxy):
+            output = prev_proc.stdout
+        elif prev_proc.stdout is not None:
+            output = prev_proc.stdout.read()
+        if captured:
+            return output
 
 
 def subproc_captured(*cmds):
