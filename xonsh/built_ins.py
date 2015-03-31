@@ -519,6 +519,8 @@ def run_subproc(cmds, captured=True):
             output = prev_proc.stdout.read()
         if captured:
             return output
+    elif last_stdout not in (PIPE, None):
+        last_stdout.close()
 
 
 def subproc_captured(*cmds):
