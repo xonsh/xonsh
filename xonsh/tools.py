@@ -32,9 +32,10 @@ else:
 
 DEFAULT_ENCODING = sys.getdefaultencoding()
 
+
 def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
-    """Excapsulates tokens in a source code line in a uncaptured 
-    subprocess $[] starting at a minimum column. If there are no tokens 
+    """Excapsulates tokens in a source code line in a uncaptured
+    subprocess $[] starting at a minimum column. If there are no tokens
     (ie in a comment line) this returns None.
     """
     if lexer is None:
@@ -88,18 +89,22 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
         rtn = line[:beg] + rtn + line[end:]
     return rtn
 
+
 def decode(s, encoding=None):
     encoding = encoding or DEFAULT_ENCODING
     return s.decode(encoding, "replace")
+
 
 def encode(u, encoding=None):
     encoding = encoding or DEFAULT_ENCODING
     return u.encode(encoding, "replace")
 
+
 def cast_unicode(s, encoding=None):
     if isinstance(s, bytes):
         return decode(s, encoding)
     return s
+
 
 def safe_hasattr(obj, attr):
     """In recent versions of Python, hasattr() only catches AttributeError.
@@ -110,6 +115,7 @@ def safe_hasattr(obj, attr):
         return True
     except:
         return False
+
 
 def indent(instr, nspaces=4, ntabs=0, flatten=False):
     """Indent a string a given number of spaces or tabstops.
@@ -216,8 +222,9 @@ TERM_COLORS = {
     'BACKGROUND_INTENSE_WHITE': '\001\033[0;107m\002',   # WHITE
     }
 
-# The following redirect classes were taken directly from Python 3.5's source 
-# code (from the contextlib module). This can be removed when 3.5 is released, 
+
+# The following redirect classes were taken directly from Python 3.5's source
+# code (from the contextlib module). This can be removed when 3.5 is released,
 # although redirect_stdout exists in 3.4, redirect_stderr does not.
 # See the Python software license: https://docs.python.org/3/license.html
 # Copyright (c) Python Software Foundation. All rights reserved.
@@ -251,7 +258,7 @@ class redirect_stdout(_RedirectStream):
             with redirect_stdout(f):
                 help(pow)
 
-    Mostly for backwards compatibility. 
+    Mostly for backwards compatibility.
     """
     _stream = "stdout"
 
@@ -260,70 +267,76 @@ class redirect_stderr(_RedirectStream):
     """Context manager for temporarily redirecting stderr to another file."""
     _stream = "stderr"
 
+
 def suggest_commands(cmd, env, aliases):
     """Suggests alternative commands given an environment and aliases."""
     if env.get('SUGGEST_COMMANDS', True):
-        threshold = env.get('SUGGEST_THRESHOLD', 3)
+        thresh = env.get('SUGGEST_THRESHOLD', 3)
         max_sugg = env.get('SUGGEST_MAX_NUM', 5)
         if max_sugg < 0:
             max_sugg = float('inf')
 
         suggested = {}
         for a in builtins.aliases:
-            if a not in suggested and levenshtein(a, cmd, threshold) < threshold:
+            if a not in suggested and levenshtein(a, cmd, thresh) < thresh:
                 suggested[a] = 'Alias'
 
         for d in filter(os.path.isdir, env.get('PATH', [])):
             for f in os.listdir(d):
-                if f not in suggested and levenshtein(f, cmd, threshold) < threshold:
-                    fname = os.path.join(d,f)
+                if f not in suggested and levenshtein(f, cmd, thresh) < thresh:
+                    fname = os.path.join(d, f)
                     suggested[f] = 'Command ({0})'.format(fname)
         suggested = OrderedDict(sorted(suggested.items(),
-                                key=lambda x: suggestion_sort_helper(x[0], cmd)))
+                                key=lambda x: suggestion_sort_helper(x[0],
+                                                                     cmd)))
         num = min(len(suggested), max_sugg)
-        
+
         if num == 0:
             return ''
         else:
             tips = 'Did you mean {}the following?'.format(
                 '' if num == 1 else 'one of ')
-            
+
             items = list(suggested.popitem(False) for _ in range(num))
             length = max(len(key) for key, _ in items) + 2
-            alternatives = '\n'.join('    {: <{}} {}'.format(key+":", length, val)
+            alternatives = '\n'.join('    {: <{}} {}'.format(key+":",
+                                                             length,
+                                                             val)
                                      for key, val in items)
-            
+
             return '{}\n{}\n'.format(tips, alternatives)
 
 
 # Modified from Public Domain code, by Magnus Lie Hetland
-# from http://hetland.org/coding/python/levenshtein.py 
+# from http://hetland.org/coding/python/levenshtein.py
 def levenshtein(a, b, max_dist=float('inf')):
     """Calculates the Levenshtein distance between a and b."""
     n, m = len(a), len(b)
-    
+
     if abs(n-m) > max_dist:
         return float('inf')
 
     if n > m:
         # Make sure n <= m, to use O(min(n,m)) space
-        a,b = b,a
-        n,m = m,n
-        
+        a, b = b, a
+        n, m = m, n
+
     current = range(n+1)
-    for i in range(1,m+1):
+    for i in range(1, m+1):
         previous, current = current, [i]+[0]*n
-        for j in range(1,n+1):
+        for j in range(1, n+1):
             add, delete = previous[j]+1, current[j-1]+1
             change = previous[j-1]
             if a[j-1] != b[i-1]:
                 change = change + 1
             current[j] = min(add, delete, change)
-            
+
     return current[n]
 
+
 def suggestion_sort_helper(x, y):
-    """Sorts two suggestions."""
+    """Returns a score (lower is better) for x based on how similar
+    it is to y.  Used to rank suggestions."""
     x = x.lower()
     y = y.lower()
     lendiff = len(x) + len(y)
