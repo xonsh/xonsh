@@ -26,6 +26,13 @@ def test_env_detype():
     env = Env(MYPATH=['wakka', 'jawaka'])
     assert_equal({'MYPATH': 'wakka' + os.pathsep + 'jawaka'}, env.detype())
 
+def test_env_detype_mutable_access_clear():
+    env = Env(MYPATH=['wakka', 'jawaka'])
+    assert_equal({'MYPATH': 'wakka' + os.pathsep + 'jawaka'}, env.detype())
+    env['MYPATH'][0] = 'woah'
+    assert_equal(None, env._detyped)
+    assert_equal({'MYPATH': 'woah' + os.pathsep + 'jawaka'}, env.detype())
+
 def test_reglob_tests():
     testfiles = reglob('test_.*')
     for f in testfiles:
