@@ -14,7 +14,8 @@ from io import TextIOWrapper, StringIO
 from glob import glob, iglob
 from subprocess import Popen, PIPE
 from contextlib import contextmanager
-from collections import Sequence, MutableMapping, Iterable, namedtuple
+from collections import Sequence, MutableMapping, Iterable, namedtuple, \
+    MutableSequence, MutableSet
 
 from xonsh.tools import string_types, redirect_stdout, redirect_stderr
 from xonsh.tools import suggest_commands
@@ -106,6 +107,9 @@ class Env(MutableMapping):
                 e = "Not enough arguments given to access ARG{0}."
                 raise IndexError(e.format(ix))
             return self._d['ARGS'][ix]
+        val = self._d[key]
+        if isinstance(val, (MutableSet, MutableSequence, MutableMapping)):
+            self._detyped = None
         return self._d[key]
 
     def __setitem__(self, key, val):
