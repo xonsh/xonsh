@@ -49,7 +49,7 @@ def _give_terminal_to(pgid):
     # over-simplified version of:
     #    give_terminal_to from bash 4.3 source, jobs.c, line 4030
     # this will give the terminal to the process group pgid
-    if _shell_tty is not None and builtins.__xonsh_env__['XONSH_INTERACTIVE']:
+    if _shell_tty is not None and os.isatty(_shell_tty):
         oldmask = signal.pthread_sigmask(signal.SIG_BLOCK, _block_when_giving)
         os.tcsetpgrp(_shell_tty, pgid)
         signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
