@@ -9,6 +9,7 @@
 # serve to show the default.
 
 import sys, os
+sys.path.append('../xonsh')
 from xonsh import __version__ as XONSH_VERSION
 
 # -- General configuration -----------------------------------------------------
