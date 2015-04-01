@@ -60,6 +60,7 @@ class XonshConsoleLexer(PythonLexer):
 
     name = 'Xonsh console lexer'
     aliases = ['xonshcon']
+    filenames = []
 
     tokens = {
         'root': [

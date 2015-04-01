@@ -74,6 +74,12 @@ def test_subproc_toks_indent_ls_no_min_semi():
     obs = subproc_toks(INDENT + s + ';', lexer=LEXER, returnline=True)
     assert_equal(exp, obs)
 
+def test_subproc_toks_indent_ls_no_min_semi_nl():
+    s = 'ls'
+    exp = INDENT + '$[{0}];\n'.format(s)
+    obs = subproc_toks(INDENT + s + ';\n', lexer=LEXER, returnline=True)
+    assert_equal(exp, obs)
+
 def test_subproc_toks_ls_comment():
     s = 'ls -l'
     com = '  # lets list'
