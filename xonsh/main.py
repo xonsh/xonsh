@@ -40,6 +40,7 @@ def main(argv=None):
     shell = Shell() if not args.norc else Shell(ctx={})
     from xonsh import imphooks
     env = builtins.__xonsh_env__
+    env['XONSH_INTERACTIVE'] = False
     if args.command is not None:
         # run a single command and exit
         shell.default(args.command)
@@ -62,6 +63,7 @@ def main(argv=None):
         shell.execer.exec(code, mode='exec', glbs=shell.ctx)
     else:
         # otherwise, enter the shell
+        env['XONSH_INTERACTIVE'] = True
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)
         shell.cmdloop()
 
