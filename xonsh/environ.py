@@ -14,7 +14,7 @@ from xonsh.tools import TERM_COLORS
 
 def current_branch(cwd=None):
     """Gets the branch for a current working directory. Returns None
-    if the cwd is not a repository.  This currently only works for git, 
+    if the cwd is not a repository.  This currently only works for git,
     bust should be extended in the future.
     """
     branch = None
@@ -50,7 +50,7 @@ def current_branch(cwd=None):
         try:
             s = subprocess.check_output(['git', 'rev-parse','--abbrev-ref', 'HEAD'],
                     stderr=subprocess.PIPE, cwd=cwd,
-                    universal_newlines=True) 
+                    universal_newlines=True)
             s = s.strip()
             if len(s) > 0:
                 branch = s
@@ -135,9 +135,10 @@ BASE_ENV = {
     }
 
 if platform.system() == 'Darwin':
-    BASE_ENV['BASH_COMPLETIONS'] = []
+    BASE_ENV['BASH_COMPLETIONS'] = ['/usr/local/etc/bash_completion',
+                                    '/opt/local/etc/profile.d/bash_completion.sh']
 else:
-    BASE_ENV['BASH_COMPLETIONS'] = ['/etc/bash_completion', 
+    BASE_ENV['BASH_COMPLETIONS'] = ['/etc/bash_completion',
                                     '/usr/share/bash-completion/completions/git']
 
 def bash_env():
@@ -146,7 +147,7 @@ def bash_env():
     if hasattr(builtins, '__xonsh_env__'):
         currenv = builtins.__xonsh_env__.detype()
     try:
-        s = subprocess.check_output(['bash', '-i'], input='env', env=currenv, 
+        s = subprocess.check_output(['bash', '-i'], input='env', env=currenv,
                                     stderr=subprocess.PIPE,
                                     universal_newlines=True)
     except subprocess.CalledProcessError:
