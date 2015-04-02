@@ -75,11 +75,11 @@ DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
 def _replace_home(x):
     return x.replace(builtins.__xonsh_env__['HOME'], '~')
 
-FORMAT_DICT = dict(user=os.environ.get('USER', '<user>'),
-                   hostname=socket.gethostname().split('.', 1)[0],
-                   cwd=lambda: _replace_home(builtins.__xonsh_env__['PWD']),
-                   curr_branch=lambda: current_branch() or '',
-                   **TERM_COLORS)
+FORMATTER_DICT = dict(user=os.environ.get('USER', '<user>'),
+                      hostname=socket.gethostname().split('.', 1)[0],
+                      cwd=lambda: _replace_home(builtins.__xonsh_env__['PWD']),
+                      curr_branch=lambda: current_branch() or '',
+                      **TERM_COLORS)
 
 _formatter = string.Formatter()
 
@@ -103,7 +103,7 @@ def format_prompt(template=DEFAULT_PROMPT):
     """
     env = builtins.__xonsh_env__
     template = template() if callable(template) else template
-    fmt = env.get('FORMAT_DICT', FORMAT_DICT)
+    fmt = env.get('FORMATTER_DICT', FORMATTER_DICT)
     included_names = set(i[1] for i in _formatter.parse(template))
     fmt = {k: (v() if callable(v) else v)
            for (k, v) in fmt.items()
@@ -136,7 +136,7 @@ def multiline_prompt():
 BASE_ENV = {
     'XONSH_VERSION': XONSH_VERSION,
     'INDENT': '    ',
-    'FORMAT_DICT': dict(FORMAT_DICT),
+    'FORMATTER_DICT': dict(FORMATTER_DICT),
     'PROMPT': DEFAULT_PROMPT,
     'TITLE': DEFAULT_TITLE,
     'MULTILINE_PROMPT': '.',
