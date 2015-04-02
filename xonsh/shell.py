@@ -29,8 +29,8 @@ def setup_readline():
     readline.set_completer_delims(' \t\n')
     RL_LIB = lib = ctypes.cdll.LoadLibrary(readline.__file__)
     try:
-        RL_COMPLETION_SUPPRESS_APPEND = ctypes.c_int.in_dll(lib, 
-                                            'rl_completion_suppress_append')
+        RL_COMPLETION_SUPPRESS_APPEND = ctypes.c_int.in_dll(
+            lib, 'rl_completion_suppress_append')
     except ValueError:
         # not all versions of readline have this symbol, ie Macs sometimes
         RL_COMPLETION_SUPPRESS_APPEND = None
@@ -74,6 +74,7 @@ def teardown_readline():
     except PermissionError:
         warn('do not have write permissions for ' + hf, RuntimeWarning)
 
+
 def rl_completion_suppress_append(val=1):
     """Sets the rl_completion_suppress_append varaiable, if possible.
     A value of 1 (default) means to suppress, a value of 0 means to enable.
@@ -82,11 +83,13 @@ def rl_completion_suppress_append(val=1):
         return
     RL_COMPLETION_SUPPRESS_APPEND.value = val
 
+
 class Shell(Cmd):
     """The xonsh shell."""
 
     def __init__(self, completekey='tab', stdin=None, stdout=None, ctx=None):
-        super(Shell, self).__init__(completekey=completekey, stdin=stdin, 
+        super(Shell, self).__init__(completekey=completekey,
+                                    stdin=stdin,
                                     stdout=stdout)
         self.execer = Execer()
         env = builtins.__xonsh_env__
@@ -113,7 +116,7 @@ class Shell(Cmd):
 
     def precmd(self, line):
         return line if self.need_more_lines else line.lstrip()
-        
+
     def default(self, line):
         """Implements code execution."""
         line = line if line.endswith('\n') else line + '\n'
@@ -137,7 +140,9 @@ class Shell(Cmd):
             return code
         src = ''.join(self.buffer)
         try:
-            code = self.execer.compile(src, mode='single', glbs=None, 
+            code = self.execer.compile(src,
+                                       mode='single',
+                                       glbs=None,
                                        locs=self.ctx)
             self.reset_buffer()
         except SyntaxError:
@@ -157,7 +162,9 @@ class Shell(Cmd):
     def completedefault(self, text, line, begidx, endidx):
         """Implements tab-completion for text."""
         rl_completion_suppress_append()  # this needs to be called each time
-        return self.completer.complete(text, line, begidx, endidx, ctx=self.ctx)
+        return self.completer.complete(text, line,
+                                       begidx, endidx,
+                                       ctx=self.ctx)
 
     # tab complete on first index too
     completenames = completedefault
