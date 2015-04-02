@@ -293,7 +293,8 @@ def regexpath(s):
 def globpath(s):
     """Simple wrapper around glob that also expands home and env vars."""
     s = expand_path(s)
-    return glob(s)
+    o = glob(s)
+    return o if len(o) != 0 else [s]
 
 
 def iglobpath(s):
