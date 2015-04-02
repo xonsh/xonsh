@@ -190,7 +190,8 @@ BASH_COMPLETIONS   ``[] or ['/etc/...']``      This is a list of strings that
                                                specifies where the BASH
                                                completion files may be found.
                                                The default values are platform
-                                               dependent, but sane.
+                                               dependent, but sane.  To specify an alternate list,
+                                               do so in the run control file.
 SUGGEST_COMMANDS   ``True``                    When a user types an invalid
                                                command, xonsh will try to offer
                                                suggestions of similar valid
@@ -232,8 +233,8 @@ operator.
 .. warning:: In BASH, ``$NAME`` and ``${NAME}`` are syntactically equivalent.
              In xonsh, they have separate meanings.
 
-We can place any valid Python expression inside of the curly braces in 
-``${<expr>}``. This result of this expression will then be used to look up a 
+We can place any valid Python expression inside of the curly braces in
+``${<expr>}``. This result of this expression will then be used to look up a
 value in the environment.  In fact, ``${<expr>}`` is the same as doing
 ``__xonsh_env__[<expr>]``, but much nicer to look at. Here are a couple of
 examples in action:
@@ -386,8 +387,8 @@ Python Evaluation with ``@()``
 The ``@(<expr>)`` operator from will evaluate arbitrary Python code in
 subprocess mode, and the result will be appended to the subprocess command
 list. If the result is a string, it is appended to the argument list.
-If the result is a list or other non-string sequence, the contents are 
-converted to strings and appended to the argument list in order. Otherwise, the 
+If the result is a list or other non-string sequence, the contents are
+converted to strings and appended to the argument list in order. Otherwise, the
 result is automatically converted to a string.  For example,
 
 .. code-block:: xonshcon
@@ -825,8 +826,8 @@ or by invoking xonsh with its filename as an argument:
 
 xonsh scripts can also accept arguments.  These arguments are made available to
 the script in two different ways:
-    
-#. In either mode, as individual variables ``$ARG<n>`` (e.g., ``$ARG1``)    
+
+#. In either mode, as individual variables ``$ARG<n>`` (e.g., ``$ARG1``)
 #. In Python mode only, as a list ``$ARGS``
 
 For example, consider a slight variation of the example script from above that
@@ -869,9 +870,9 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
 
 Importing Xonsh (``*.xsh``)
 ==============================
-You can import xonsh source files with the ``*.xsh`` file extension using 
+You can import xonsh source files with the ``*.xsh`` file extension using
 the normal Python syntax.  Say you had a file called ``mine.xsh``, you could
-therefore perform a Bash-like source into your current shell with the 
+therefore perform a Bash-like source into your current shell with the
 following:
 
 .. code-block:: xonsh
