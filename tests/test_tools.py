@@ -1,10 +1,8 @@
 """Tests the xonsh lexer."""
 from __future__ import unicode_literals, print_function
-import os
-import sys
 
 import nose
-from nose.tools import assert_equal, assert_true
+from nose.tools import assert_equal
 
 from xonsh.lexer import Lexer
 from xonsh.tools import subproc_toks
@@ -109,7 +107,7 @@ def test_subproc_toks_ls_l_semi_ls_first():
     obs = subproc_toks(s, lexer=LEXER, returnline=True)
     assert_equal(exp, obs)
 
-def test_subproc_toks_ls_l_semi_ls_first():
+def test_subproc_toks_ls_l_semi_ls_first_maxcol():
     lsdl = 'ls -l'
     ls = 'ls'
     s = '{0}; {1}'.format(lsdl, ls)

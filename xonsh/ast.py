@@ -10,7 +10,8 @@ from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
     YieldFrom, Return, IfExp, Lambda, arguments, arg, Call, keyword, \
     Attribute, Global, Nonlocal, If, While, For, withitem, With, Try, \
     ExceptHandler, FunctionDef, ClassDef, Starred, NodeTransformer, \
-    Interactive, Expression, dump
+    Interactive, Expression, dump \
+    # pylint:disable=unused-import,W0611,import-self,redefined-builtin
 
 from xonsh.tools import subproc_toks
 
@@ -56,6 +57,8 @@ class CtxAwareTransformer(NodeTransformer):
         self.parser = parser
         self.input = None
         self.contexts = []
+        self.lines = None
+        self.mode = None
 
     def ctxvisit(self, node, input, ctx, mode='exec'):
         """Transforms the node in a context-dependent way.
@@ -111,7 +114,7 @@ class CtxAwareTransformer(NodeTransformer):
                 newnode = newnode[0]
             newnode.lineno = node.lineno
             newnode.col_offset = node.col_offset
-        except SyntaxError as e:
+        except SyntaxError:
             newnode = node
         return newnode
 

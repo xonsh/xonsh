@@ -2,10 +2,8 @@
 from __future__ import print_function, unicode_literals
 import os
 import re
-import sys
 import builtins
 import subprocess
-from glob import iglob
 
 from xonsh.built_ins import iglobpath
 

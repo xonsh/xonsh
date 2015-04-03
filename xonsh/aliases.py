@@ -5,7 +5,6 @@ import platform
 import builtins
 import subprocess
 import shlex
-import signal
 from warnings import warn
 
 from xonsh.dirstack import dirs, pushd, popd
@@ -38,7 +37,7 @@ def cd(args, stdin=None):
     return None, None
 
 
-def exit(args, stdin=None):
+def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
     """Sends signal to exit shell."""
     builtins.__xonsh_exit__ = True
     kill_all_jobs()
@@ -53,9 +52,9 @@ def source_bash(args, stdin=None):
     denv = env.detype()
     with tempfile.NamedTemporaryFile(mode='w+t') as f:
         args = ' '.join(args)
-        input = 'source {0}\nenv >> {1}\n'.format(args, f.name)
+        inp = 'source {0}\nenv >> {1}\n'.format(args, f.name)
         try:
-            subprocess.check_output(['bash'], input=input, env=denv,
+            subprocess.check_output(['bash'], input=inp, env=denv,
                                     stderr=subprocess.PIPE,
                                     universal_newlines=True)
         except subprocess.CalledProcessError:
