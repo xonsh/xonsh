@@ -21,3 +21,4 @@ pylint:
 mccabe:
   disable:
     - MC0000  # again, not Py3k compatabile
+    - MC0001  # silly cyclomatic complexity

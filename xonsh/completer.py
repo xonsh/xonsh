@@ -127,7 +127,7 @@ class Completer(object):
         fnme = self.bash_complete_files.get(cmd, None)
         if func is None or fnme is None:
             return set()
-        idx = 0
+        idx = n = 0
         for n, tok in enumerate(splt):
             if tok == prefix:
                 idx = line.find(prefix, idx)
@@ -155,11 +155,11 @@ class Completer(object):
 
     def _load_bash_complete_funcs(self):
         self.bash_complete_funcs = bcf = {}
-        input = self._source_completions()
-        if len(input) == 0:
+        inp = self._source_completions()
+        if len(inp) == 0:
             return
-        input.append('complete -p\n')
-        out = subprocess.check_output(['bash'], input='\n'.join(input), 
+        inp.append('complete -p\n')
+        out = subprocess.check_output(['bash'], input='\n'.join(inp), 
                                       universal_newlines=True)
         for line in out.splitlines():
             head, cmd = line.rsplit(' ', 1)
@@ -171,15 +171,15 @@ class Completer(object):
             bcf[cmd] = m.group(1)
 
     def _load_bash_complete_files(self):
-        input = self._source_completions()
-        if len(input) == 0:
+        inp = self._source_completions()
+        if len(inp) == 0:
             self.bash_complete_files = {}
             return
-        input.append('shopt -s extdebug')
+        inp.append('shopt -s extdebug')
         declare_f = 'declare -F '
-        input += [declare_f + f for f in self.bash_complete_funcs.values()]
-        input.append('shopt -u extdebug\n')
-        out = subprocess.check_output(['bash'], input='\n'.join(input),
+        inp += [declare_f + f for f in self.bash_complete_funcs.values()]
+        inp.append('shopt -u extdebug\n')
+        out = subprocess.check_output(['bash'], input='\n'.join(inp),
                                       universal_newlines=True)
         func_files = {}
         for line in out.splitlines():
