@@ -1,6 +1,5 @@
 """Implements the xonsh parser"""
 from __future__ import print_function, unicode_literals
-import re
 import os
 from collections import Iterable, Sequence, Mapping
 
@@ -516,10 +515,10 @@ class Parser(object):
         p1, p2 = p[1], p[2]
         p3 = p[3] if lenp > 3 else None
         p4 = p[4] if lenp > 4 else None
-        p5 = p[5] if lenp > 5 else None
+        #p5 = p[5] if lenp > 5 else None
         p6 = p[6] if lenp > 6 else None
         p7 = p[7] if lenp > 7 else None
-        p8 = p[8] if lenp > 8 else None
+        #p8 = p[8] if lenp > 8 else None
         p9 = p[9] if lenp > 9 else None
         p10 = p[10] if lenp > 10 else None
         p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[],
@@ -635,10 +634,10 @@ class Parser(object):
         p1, p2 = p[1], p[2]
         p3 = p[3] if lenp > 3 else None
         p4 = p[4] if lenp > 4 else None
-        p5 = p[5] if lenp > 5 else None
+        #p5 = p[5] if lenp > 5 else None
         p6 = p[6] if lenp > 6 else None
         p7 = p[7] if lenp > 7 else None
-        p8 = p[8] if lenp > 8 else None
+        #p8 = p[8] if lenp > 8 else None
         p9 = p[9] if lenp > 9 else None
         p10 = p[10] if lenp > 10 else None
         p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[],
@@ -818,7 +817,6 @@ class Parser(object):
         """testlist_star_expr : test_or_star_expr comma_test_or_star_expr_list comma_opt
                               | test_or_star_expr comma_opt
         """
-        lenp = len(p)
         p1, p2 = p[1], p[2]
         if p2 is None:
             p0 = [p1]

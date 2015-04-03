@@ -10,11 +10,13 @@ pylint:
   disable:
     - syntax-error  # have to do this since landscape doesn't support py3k
     - super-on-old-class
+    - old-style-class
     - global-variable-not-assigned
     - pointless-except
     - unused-argument
     - protected-access
     - global-statement
+    - eval-used
     - exec-used
     - too-many-lines
     - import-self

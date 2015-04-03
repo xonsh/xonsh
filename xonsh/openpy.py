@@ -122,10 +122,10 @@ except ImportError:
         """Open a file in read only mode using the encoding detected by
         detect_encoding().
         """
-        buffer = io.open(filename, 'rb')   # Tweaked to use io.open for Python 2
-        encoding, lines = detect_encoding(buffer.readline)
-        buffer.seek(0)
-        text = TextIOWrapper(buffer, encoding, line_buffering=True)
+        buf = io.open(filename, 'rb')   # Tweaked to use io.open for Python 2
+        encoding, lines = detect_encoding(buf.readline)
+        buf.seek(0)
+        text = TextIOWrapper(buf, encoding, line_buffering=True)
         text.mode = 'r'
         return text   
 
@@ -140,15 +140,15 @@ def source_to_unicode(txt, errors='replace', skip_encoding_cookie=True):
     if isinstance(txt, unicode_type):
         return txt
     if isinstance(txt, bytes):
-        buffer = BytesIO(txt)
+        buf = BytesIO(txt)
     else:
-        buffer = txt
+        buf = txt
     try:
-        encoding, _ = detect_encoding(buffer.readline)
+        encoding, _ = detect_encoding(buf.readline)
     except SyntaxError:
         encoding = "ascii"
-    buffer.seek(0)
-    text = TextIOWrapper(buffer, encoding, errors=errors, line_buffering=True)
+    buf.seek(0)
+    text = TextIOWrapper(buf, encoding, errors=errors, line_buffering=True)
     text.mode = 'r'
     if skip_encoding_cookie:
         return u"".join(strip_encoding_cookie(text))
@@ -220,8 +220,8 @@ def read_py_url(url, errors='replace', skip_encoding_cookie=True):
     except ImportError:
         from urllib import urlopen
     response = urlopen(url)
-    buffer = io.BytesIO(response.read())
-    return source_to_unicode(buffer, errors, skip_encoding_cookie)
+    buf = io.BytesIO(response.read())
+    return source_to_unicode(buf, errors, skip_encoding_cookie)
 
 def _list_readline(x):
     """Given a list, returns a readline() function that returns the next element
@@ -235,7 +235,7 @@ def _list_readline(x):
 # Code for going between .py files and cached .pyc files ----------------------
 
 try:    # Python 3.2, see PEP 3147
-    from imp import source_from_cache, cache_from_source
+    from imp import source_from_cache, cache_from_source  # pylint:disable=unused-import
 except ImportError:
     # Python <= 3.1: .pyc files go next to .py
     def source_from_cache(path):

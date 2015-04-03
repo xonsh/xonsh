@@ -113,7 +113,7 @@ def safe_hasattr(obj, attr):
     try:
         getattr(obj, attr)
         return True
-    except:
+    except:  # pylint:disable=bare-except
         return False
 
 

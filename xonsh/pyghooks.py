@@ -1,11 +1,10 @@
 """Hooks for pygments syntax highlighting."""
 from __future__ import print_function, unicode_literals
-import re
 
-from pygments.lexer import RegexLexer, inherit, bygroups, using, this
-from pygments.token import Punctuation, Name, Generic, Keyword, Text, String
+from pygments.lexer import inherit, bygroups, using, this
+from pygments.token import Name, Generic, Keyword, Text, String
 from pygments.lexers.shell import BashLexer
-from pygments.lexers.agile import PythonLexer, PythonConsoleLexer
+from pygments.lexers.agile import PythonLexer
 
 
 class XonshSubprocLexer(BashLexer):
