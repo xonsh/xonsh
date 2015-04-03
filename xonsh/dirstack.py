@@ -71,7 +71,6 @@ def pushd(args, stdin=None):
             e = 'Invalid argument to pushd: {0}\n'
             return None, e.format(args.dir)
     if new_pwd is not None:
-        o = None
         e = None
         if args.cd:
             DIRSTACK.insert(0, os.path.expanduser(pwd))
@@ -151,7 +150,6 @@ def popd(args, stdin=None):
             return None, e.format(args.dir)
 
     if new_pwd is not None:
-        o = None
         e = None
         if args.cd:
             o, e = builtins.default_aliases['cd']([new_pwd], None)
