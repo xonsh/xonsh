@@ -93,8 +93,11 @@ class Shell(Cmd):
                                     stdout=stdout)
         self.execer = Execer()
         env = builtins.__xonsh_env__
-        self.ctx = ctx if ctx is not None else \
-            xonshrc_context(rcfile=env.get('XONSHRC', None), execer=self.execer)
+        if ctx is not None:
+            self.ctx = ctx
+        else:
+            rc = env.get('XONSHRC', None)
+            self.ctx = xonshrc_context(rcfile=rc, execer=self.execer)
         self.ctx['__name__'] = '__main__'
         self.completer = Completer()
         self.buffer = []
@@ -131,7 +134,7 @@ class Shell(Cmd):
             return True
 
     def push(self, line):
-        """Pushes a line onto the buffer and compiles the code in a way that 
+        """Pushes a line onto the buffer and compiles the code in a way that
         enables multiline input.
         """
         code = None

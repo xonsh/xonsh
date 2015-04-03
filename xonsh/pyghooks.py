@@ -58,7 +58,7 @@ class XonshConsoleLexer(PythonLexer):
         'root': [(r'^(>>>|\.\.\.) ', Generic.Prompt),
                  (r'\n(>>>|\.\.\.)', Generic.Prompt),
                  (r'\n(?![>.][>.][>.] )([^\n]*)', Generic.Output),
-                 (r'\n(?![>.][>.][>.] )(.*?)$', Generic.Output), ] + ROOT_TOKENS,
+                 (r'\n(?![>.][>.][>.] )(.*?)$', Generic.Output)] + ROOT_TOKENS,
         'pymode': PYMODE_TOKENS,
         'subproc': SUBPROC_TOKENS,
     }

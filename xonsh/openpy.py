@@ -1,6 +1,6 @@
 """
-Tools to open .py files as Unicode, using the encoding specified within the file,
-as per PEP 263.
+Tools to open .py files as Unicode, using the encoding specified within the
+file, as per PEP 263.
 
 Much of the code is taken from the tokenize module in Python 3.2.
 
@@ -44,20 +44,21 @@ except ImportError:
     # Copied from Python 3.2 tokenize
     def detect_encoding(readline):
         """
-        The detect_encoding() function is used to detect the encoding that should
-        be used to decode a Python source file.  It requires one argment, readline,
-        in the same way as the tokenize() generator.
+        The detect_encoding() function is used to detect the encoding that
+        should be used to decode a Python source file.  It requires one
+        argment, readline, in the same way as the tokenize() generator.
 
         It will call readline a maximum of twice, and return the encoding used
         (as a string) and a list of any lines (left as bytes) it has read in.
 
         It detects the encoding from the presence of a utf-8 bom or an encoding
-        cookie as specified in pep-0263.  If both a bom and a cookie are present,
-        but disagree, a SyntaxError will be raised.  If the encoding cookie is an
-        invalid charset, raise a SyntaxError.  Note that if a utf-8 bom is found,
-        'utf-8-sig' is returned.
+        cookie as specified in pep-0263.  If both a bom and a cookie are
+        present, but disagree, a SyntaxError will be raised.  If the encoding
+        cookie is an invalid charset, raise a SyntaxError.  Note that if a
+        utf-8 bom is found, 'utf-8-sig' is returned.
 
-        If no encoding is specified, then the default of 'utf-8' will be returned.
+        If no encoding is specified, then the default of 'utf-8' will be
+        returned.
         """
         bom_found = False
         encoding = None
@@ -180,7 +181,7 @@ def strip_encoding_cookie(filelike):
 
 def read_py_file(filename, skip_encoding_cookie=True):
     """Read a Python file, using the encoding declared inside the file.
-    
+
     Parameters
     ----------
     filename : str
@@ -189,7 +190,7 @@ def read_py_file(filename, skip_encoding_cookie=True):
       If True (the default), and the encoding declaration is found in the first
       two lines, that line will be excluded from the output - compiling a
       unicode string with an encoding declaration is a SyntaxError in Python 2.
-    
+
     Returns
     -------
     A unicode string containing the contents of the file.
@@ -203,7 +204,7 @@ def read_py_file(filename, skip_encoding_cookie=True):
 
 def read_py_url(url, errors='replace', skip_encoding_cookie=True):
     """Read a Python file from a URL, using the encoding declared inside the file.
-    
+
     Parameters
     ----------
     url : str
@@ -215,7 +216,7 @@ def read_py_url(url, errors='replace', skip_encoding_cookie=True):
       If True (the default), and the encoding declaration is found in the first
       two lines, that line will be excluded from the output - compiling a
       unicode string with an encoding declaration is a SyntaxError in Python 2.
-    
+
     Returns
     -------
     A unicode string containing the contents of the file.

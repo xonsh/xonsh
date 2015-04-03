@@ -42,7 +42,7 @@ def leftmostname(node):
 
 
 class CtxAwareTransformer(NodeTransformer):
-    """Transforms a xonsh AST based to use subprocess calls when 
+    """Transforms a xonsh AST based to use subprocess calls when
     the first name in an expression statement is not known in the context.
     This assumes that the expression statement is instead parseable as
     a subprocess.
