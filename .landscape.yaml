@@ -18,6 +18,7 @@ pylint:
     - exec-used
     - too-many-lines
     - import-self
+    - redefined-outer-name
 
 mccabe:
   disable:

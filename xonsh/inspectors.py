@@ -71,7 +71,7 @@ def get_encoding(obj):
         # getsourcelines returns lineno with 1-offset and page() uses
         # 0-offset, so we must adjust.
         with stdlib_io.open(ofile, 'rb') as buf:   # Tweaked to use io.open for Python 2
-            encoding, _lines = openpy.detect_encoding(buf.readline)
+            encoding, _ = openpy.detect_encoding(buf.readline)
         return encoding
 
 def getdoc(obj):
@@ -551,7 +551,7 @@ class Inspector(object):
         try:
             bclass = obj.__class__
             out['base_class'] = str(bclass)
-        except:  
+        except:  # pylint:disable=bare-except
             pass
 
         # String form, but snip if too long in ? form (full in ??)
@@ -651,7 +651,7 @@ class Inspector(object):
             if ds:
                 try:
                     cls = getattr(obj,'__class__')
-                except:  # pylint:disable=broad-except
+                except:  # pylint:disable=bare-except
                     class_ds = None
                 else:
                     class_ds = getdoc(cls)

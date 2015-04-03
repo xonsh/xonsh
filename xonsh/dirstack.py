@@ -74,7 +74,7 @@ def pushd(args, stdin=None):
         e = None
         if args.cd:
             DIRSTACK.insert(0, os.path.expanduser(pwd))
-            o, e = builtins.default_aliases['cd']([new_pwd], None)
+            _, e = builtins.default_aliases['cd']([new_pwd], None)
         else:
             DIRSTACK.insert(0, os.path.expanduser(os.path.abspath(new_pwd)))
 
@@ -152,7 +152,7 @@ def popd(args, stdin=None):
     if new_pwd is not None:
         e = None
         if args.cd:
-            o, e = builtins.default_aliases['cd']([new_pwd], None)
+            _, e = builtins.default_aliases['cd']([new_pwd], None)
 
         if e is not None:
             return None, e
