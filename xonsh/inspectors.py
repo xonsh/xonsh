@@ -85,7 +85,7 @@ def getdoc(obj):
     # Allow objects to offer customized documentation via a getdoc method:
     try:
         ds = obj.getdoc()
-    except Exception:  # pylint:disable=broad-exception
+    except Exception:  # pylint:disable=broad-except
         pass
     else:
         # if we get extra info, we add it to the normal docstring.
@@ -96,7 +96,7 @@ def getdoc(obj):
         docstr = inspect.getdoc(obj)
         encoding = get_encoding(obj)
         return cast_unicode(docstr, encoding=encoding)
-    except Exception:  # pylint:disable=broad-exception
+    except Exception:  # pylint:disable=broad-except
         # Harden against an inspect failure, which can occur with
         # SWIG-wrapped extensions.
         raise
@@ -609,7 +609,7 @@ class Inspector(object):
                         source = getsource(obj.__class__, binary_file)
                 if source is not None:
                     out['source'] = source.rstrip()
-            except Exception:  # pylint:disable=broad-exception
+            except Exception:  # pylint:disable=broad-except
                 pass
 
             if ds and source is None:
@@ -651,7 +651,7 @@ class Inspector(object):
             if ds:
                 try:
                     cls = getattr(obj,'__class__')
-                except:  # pylint:disable=broad-exception
+                except:  # pylint:disable=broad-except
                     class_ds = None
                 else:
                     class_ds = getdoc(cls)

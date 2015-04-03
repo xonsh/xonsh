@@ -10,8 +10,7 @@ from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
     YieldFrom, Return, IfExp, Lambda, arguments, arg, Call, keyword, \
     Attribute, Global, Nonlocal, If, While, For, withitem, With, Try, \
     ExceptHandler, FunctionDef, ClassDef, Starred, NodeTransformer, \
-    Interactive, Expression, dump \
-    # pylint:disable=unused-import,import-self,redefined-builtin
+    Interactive, Expression, dump  # pylint:disable=unused-import,redefined-builtin
 
 from xonsh.tools import subproc_toks
 

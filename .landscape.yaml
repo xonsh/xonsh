@@ -17,6 +17,7 @@ pylint:
     - global-statement
     - exec-used
     - too-many-lines
+    - import-self
 
 mccabe:
   disable:

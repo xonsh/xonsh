@@ -4,7 +4,6 @@ from __future__ import unicode_literals, print_function
 import os
 import sys
 import ast
-from pprint import pformat
 sys.path.insert(0, os.path.abspath('..'))  # FIXME
 
 import nose
@@ -205,9 +204,6 @@ def test_gt():
 
 def test_eq():
     yield check_ast, '42 == 65'
-
-def test_lt():
-    yield check_ast, '42 < 65'
 
 def test_le():
     yield check_ast, '42 <= 65'
@@ -646,9 +642,6 @@ def test_call_range_x_y_comma():
 
 def test_call_range_x_y_z():
     yield check_ast, 'range(6, 10, 2)'
-
-def test_call_range_x_y():
-    yield check_ast, 'range(6, 10)'
 
 def test_call_dict_kwx():
     yield check_ast, 'dict(start=10)'
