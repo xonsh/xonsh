@@ -85,7 +85,7 @@ def getdoc(obj):
     # Allow objects to offer customized documentation via a getdoc method:
     try:
         ds = obj.getdoc()
-    except Exception:  # pylint:disable=broad-exception,W0703
+    except Exception:  # pylint:disable=broad-exception
         pass
     else:
         # if we get extra info, we add it to the normal docstring.
@@ -96,7 +96,7 @@ def getdoc(obj):
         docstr = inspect.getdoc(obj)
         encoding = get_encoding(obj)
         return cast_unicode(docstr, encoding=encoding)
-    except Exception:  # pylint:disable=broad-exception,W0703
+    except Exception:  # pylint:disable=broad-exception
         # Harden against an inspect failure, which can occur with
         # SWIG-wrapped extensions.
         raise
@@ -247,7 +247,7 @@ def find_file(obj):
             except TypeError:
                 # Can happen for builtins
                 pass
-    except:  # pylint:disable=bare-except,W0702
+    except:  # pylint:disable=bare-except
         pass
     return cast_unicode(fname)
 
@@ -281,7 +281,7 @@ def find_source_lines(obj):
                 lineno = inspect.getsourcelines(obj.__class__)[1]
             else:
                 lineno = None
-    except:  # pylint:disable=bare-except,W0702
+    except:  # pylint:disable=bare-except
         return None
 
     return lineno
@@ -302,7 +302,7 @@ class Inspector(object):
         try:
             hdef = oname + inspect.formatargspec(*getargspec(obj))
             return cast_unicode(hdef)
-        except:  # pylint:disable=bare-except,W0702
+        except:  # pylint:disable=bare-except
             return None
 
     def noinfo(self, msg, oname):
@@ -374,7 +374,7 @@ class Inspector(object):
         linecache.checkcache()
         try:
             src = getsource(obj)
-        except:  # pylint:disable=bare-except,W0702
+        except:  # pylint:disable=bare-except
             self.noinfo('source',oname)
         else:
             print(src)
@@ -523,7 +523,7 @@ class Inspector(object):
             if not callable(obj):
                 if len(obj)  >= 2 and isinstance(obj[1], string_types):
                     ds = "Alias to the system command:\n  {0}".format(obj[1])
-                else:  # pylint:disable=bare-except,W0702
+                else:  # pylint:disable=bare-except
                     ds = "Alias: " + str(obj)
             else:
                 ds = "Alias to " + str(obj)
@@ -564,7 +564,7 @@ class Inspector(object):
                     ostr = ("\n" + " " * len(str_head.expandtabs())).\
                             join(q.strip() for q in ostr.split("\n"))
                 out[str_head] = ostr
-            except:  # pylint:disable=bare-except,W0702
+            except:  # pylint:disable=bare-except
                 pass
 
         if ospace:
@@ -573,7 +573,7 @@ class Inspector(object):
         # Length (for strings and lists)
         try:
             out['length'] = str(len(obj))
-        except:  # pylint:disable=bare-except,W0702
+        except:  # pylint:disable=bare-except
             pass
 
         # Filename where object was defined
@@ -609,7 +609,7 @@ class Inspector(object):
                         source = getsource(obj.__class__, binary_file)
                 if source is not None:
                     out['source'] = source.rstrip()
-            except Exception:  # pylint:disable=broad-exception,W0703
+            except Exception:  # pylint:disable=broad-exception
                 pass
 
             if ds and source is None:
@@ -651,7 +651,7 @@ class Inspector(object):
             if ds:
                 try:
                     cls = getattr(obj,'__class__')
-                except:  # pylint:disable=broad-exception,W0703
+                except:  # pylint:disable=broad-exception
                     class_ds = None
                 else:
                     class_ds = getdoc(cls)

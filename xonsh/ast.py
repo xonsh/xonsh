@@ -11,7 +11,7 @@ from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
     Attribute, Global, Nonlocal, If, While, For, withitem, With, Try, \
     ExceptHandler, FunctionDef, ClassDef, Starred, NodeTransformer, \
     Interactive, Expression, dump \
-    # pylint:disable=unused-import,W0611,import-self,redefined-builtin
+    # pylint:disable=unused-import,import-self,redefined-builtin
 
 from xonsh.tools import subproc_toks
 
