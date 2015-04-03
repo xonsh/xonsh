@@ -510,10 +510,10 @@ class Parser(object):
         p1, p2 = p[1], p[2]
         p3 = p[3] if lenp > 3 else None
         p4 = p[4] if lenp > 4 else None
-        #p5 = p[5] if lenp > 5 else None
+        # skip p5 
         p6 = p[6] if lenp > 6 else None
         p7 = p[7] if lenp > 7 else None
-        #p8 = p[8] if lenp > 8 else None
+        # skip p8
         p9 = p[9] if lenp > 9 else None
         p10 = p[10] if lenp > 10 else None
         p0 = ast.arguments(args=[],
@@ -633,10 +633,10 @@ class Parser(object):
         p1, p2 = p[1], p[2]
         p3 = p[3] if lenp > 3 else None
         p4 = p[4] if lenp > 4 else None
-        #p5 = p[5] if lenp > 5 else None
+        # skip p5
         p6 = p[6] if lenp > 6 else None
         p7 = p[7] if lenp > 7 else None
-        #p8 = p[8] if lenp > 8 else None
+        # skip p8
         p9 = p[9] if lenp > 9 else None
         p10 = p[10] if lenp > 10 else None
         p0 = ast.arguments(args=[],

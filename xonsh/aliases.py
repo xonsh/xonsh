@@ -56,7 +56,7 @@ def source_bash(args, stdin=None):
         inp = 'source {0}\nenv >> {1}\n'.format(args, f.name)
         try:
             subprocess.check_output(['bash'],
-                                    input=input,
+                                    input=inp,
                                     env=denv,
                                     stderr=subprocess.PIPE,
                                     universal_newlines=True)
