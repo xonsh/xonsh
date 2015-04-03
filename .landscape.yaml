@@ -21,6 +21,10 @@ pylint:
     - too-many-lines
     - import-self
     - redefined-outer-name
+    - invalid-name
+    - too-few-public-methods
+    - no-init
+    - star-args
 
 mccabe:
   disable:
