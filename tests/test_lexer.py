@@ -3,11 +3,9 @@ from __future__ import unicode_literals, print_function
 import os
 import sys
 from collections import Sequence
-from pprint import pprint, pformat
 sys.path.insert(0, os.path.abspath('..'))  # FIXME
 
 import nose
-from nose.tools import assert_equal
 
 from ply.lex import LexToken
 

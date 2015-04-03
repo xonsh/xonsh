@@ -1,7 +1,6 @@
 """Tests the xonsh lexer."""
 from __future__ import unicode_literals, print_function
 import os
-import sys
 
 import nose
 from nose.tools import assert_equal, assert_true
