@@ -15,8 +15,9 @@ from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
 from xonsh.tools import subproc_toks
 
 STATEMENTS = (FunctionDef, ClassDef, Return, Delete, Assign, AugAssign, For,
-              While, If, With, Raise, Try, Assert, Import, ImportFrom, Global, 
+              While, If, With, Raise, Try, Assert, Import, ImportFrom, Global,
               Nonlocal, Expr, Pass, Break, Continue)
+
 
 def leftmostname(node):
     """Attempts to find the first name in the tree."""
@@ -39,8 +40,9 @@ def leftmostname(node):
         rtn = None
     return rtn
 
+
 class CtxAwareTransformer(NodeTransformer):
-    """Transforms a xonsh AST based to use subprocess calls when 
+    """Transforms a xonsh AST based to use subprocess calls when
     the first name in an expression statement is not known in the context.
     This assumes that the expression statement is instead parseable as
     a subprocess.
@@ -84,7 +86,7 @@ class CtxAwareTransformer(NodeTransformer):
     def ctxupdate(self, iterable):
         """Updated the most recent context."""
         self.contexts[-1].update(iterable)
-    
+
     def ctxadd(self, value):
         """Adds a value the most recent context."""
         self.contexts[-1].add(value)
@@ -101,8 +103,11 @@ class CtxAwareTransformer(NodeTransformer):
         line = self.lines[node.lineno - 1]
         mincol = len(line) - len(line.lstrip())
         maxcol = None if self.mode == 'eval' else node.col_offset
-        spline = subproc_toks(line, mincol=mincol, maxcol=maxcol, 
-                              returnline=False, lexer=self.parser.lexer)
+        spline = subproc_toks(line,
+                              mincol=mincol,
+                              maxcol=maxcol,
+                              returnline=False,
+                              lexer=self.parser.lexer)
         try:
             newnode = self.parser.parse(spline, mode=self.mode)
             newnode = newnode.body
@@ -123,7 +128,7 @@ class CtxAwareTransformer(NodeTransformer):
         inscope = False
         for ctx in reversed(self.contexts):
             if lname in ctx:
-                inscope = True 
+                inscope = True
                 break
         return inscope
 
@@ -140,7 +145,8 @@ class CtxAwareTransformer(NodeTransformer):
         else:
             newnode = self.try_subproc_toks(node)
             if not isinstance(newnode, Expr):
-                newnode = Expr(value=newnode, lineno=node.lineno, 
+                newnode = Expr(value=newnode,
+                               lineno=node.lineno,
                                col_offset=node.col_offset)
             return newnode
 

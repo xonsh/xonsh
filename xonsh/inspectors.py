@@ -15,6 +15,10 @@ import types
 import inspect
 import linecache
 import io as stdlib_io
+
+from xonsh import openpy
+from xonsh.tools import cast_unicode, safe_hasattr, string_types, indent
+
 if sys.version_info[0] > 2:
     ISPY3K = True
     from itertools import zip_longest
@@ -22,26 +26,27 @@ else:
     ISPY3K = False
     from itertools import izip_longest as zip_longest
 
-from xonsh import openpy
-from xonsh.tools import cast_unicode, safe_hasattr, string_types, indent
 
 # builtin docstrings to ignore
 _func_call_docstring = types.FunctionType.__call__.__doc__
 _object_init_docstring = object.__init__.__doc__
-_builtin_type_docstrings = {t.__doc__ for t in (types.ModuleType, 
-                                types.MethodType, types.FunctionType)}
+_builtin_type_docstrings = {
+    t.__doc__
+    for t in (types.ModuleType, types.MethodType, types.FunctionType)
+}
 
 _builtin_func_type = type(all)
-_builtin_meth_type = type(str.upper)  # Bound methods have the same type as builtin functions
+_builtin_meth_type = type(
+    str.upper)  # Bound methods have the same type as builtin functions
 
-info_fields = ['type_name', 'base_class', 'string_form', 'namespace',
-               'length', 'file', 'definition', 'docstring', 'source',
-               'init_definition', 'class_docstring', 'init_docstring',
-               'call_def', 'call_docstring',
-               # These won't be printed but will be used to determine how to
-               # format the object
-               'ismagic', 'isalias', 'isclass', 'argspec', 'found', 'name'
-               ]
+info_fields = [
+    'type_name', 'base_class', 'string_form', 'namespace', 'length', 'file',
+    'definition', 'docstring', 'source', 'init_definition', 'class_docstring',
+    'init_docstring', 'call_def', 'call_docstring',
+    # These won't be printed but will be used to determine how to
+    # format the object
+    'ismagic', 'isalias', 'isclass', 'argspec', 'found', 'name'
+]
 
 
 def object_info(**kw):
@@ -70,9 +75,10 @@ def get_encoding(obj):
         # Print only text files, not extension binaries.  Note that
         # getsourcelines returns lineno with 1-offset and page() uses
         # 0-offset, so we must adjust.
-        with stdlib_io.open(ofile, 'rb') as buffer:   # Tweaked to use io.open for Python 2
+        with stdlib_io.open(ofile, 'rb') as buffer:
             encoding, lines = openpy.detect_encoding(buffer.readline)
         return encoding
+
 
 def getdoc(obj):
     """Stable wrapper around inspect.getdoc.
@@ -91,7 +97,7 @@ def getdoc(obj):
         # if we get extra info, we add it to the normal docstring.
         if isinstance(ds, string_types):
             return inspect.cleandoc(ds)
-    
+
     try:
         docstr = inspect.getdoc(obj)
         encoding = get_encoding(obj)
@@ -103,7 +109,7 @@ def getdoc(obj):
         return None
 
 
-def getsource(obj,is_binary=False):
+def getsource(obj, is_binary=False):
     """Wrapper around inspect.getsource.
 
     This can be modified by other projects to provide customized source
@@ -116,19 +122,19 @@ def getsource(obj,is_binary=False):
     Optional inputs:
 
     - is_binary: whether the object is known to come from a binary source.
-      This implementation will skip returning any output for binary objects, but
-      custom extractors may know how to meaningfully process them."""
+      This implementation will skip returning any output for binary objects,
+      but custom extractors may know how to meaningfully process them."""
 
     if is_binary:
         return None
     else:
         # get source if obj was decorated with @decorator
-        if hasattr(obj,"__wrapped__"):
+        if hasattr(obj, "__wrapped__"):
             obj = obj.__wrapped__
         try:
             src = inspect.getsource(obj)
         except TypeError:
-            if hasattr(obj,'__class__'):
+            if hasattr(obj, '__class__'):
                 src = inspect.getsource(obj.__class__)
         encoding = get_encoding(obj)
         return cast_unicode(src, encoding=encoding)
@@ -136,14 +142,16 @@ def getsource(obj,is_binary=False):
 
 def is_simple_callable(obj):
     """True if obj is a function ()"""
-    return (inspect.isfunction(obj) or inspect.ismethod(obj) or \
-            isinstance(obj, _builtin_func_type) or isinstance(obj, _builtin_meth_type))
+    return (inspect.isfunction(obj) or
+            inspect.ismethod(obj) or
+            isinstance(obj, _builtin_func_type) or
+            isinstance(obj, _builtin_meth_type))
 
 
 def getargspec(obj):
     """Wrapper around :func:`inspect.getfullargspec` on Python 3, and
     :func:inspect.getargspec` on Python 2.
-    
+
     In addition to functions and methods, this can also handle objects with a
     ``__call__`` attribute.
     """
@@ -203,7 +211,7 @@ def call_tip(oinfo, format_call=True):
             if has_self:
                 argspec['args'] = argspec['args'][1:]
 
-        call_line = oinfo['name']+format_argspec(argspec)
+        call_line = oinfo['name'] + format_argspec(argspec)
 
     # Now get docstring.
     # The priority is: call docstring, constructor docstring, main one.
@@ -211,7 +219,7 @@ def call_tip(oinfo, format_call=True):
     if doc is None:
         doc = oinfo.get('init_docstring')
     if doc is None:
-        doc = oinfo.get('docstring','')
+        doc = oinfo.get('docstring', '')
 
     return call_line, doc
 
@@ -272,7 +280,7 @@ def find_source_lines(obj):
     # get source if obj was decorated with @decorator
     if safe_hasattr(obj, '__wrapped__'):
         obj = obj.__wrapped__
-    
+
     try:
         try:
             lineno = inspect.getsourcelines(obj)[1]
@@ -294,7 +302,7 @@ class Inspector(object):
     def __init__(self, str_detail_level=0):
         self.str_detail_level = str_detail_level
 
-    def _getdef(self,obj,oname=''):
+    def _getdef(self, obj, oname=''):
         """Return the call signature for any callable object.
 
         If any exception is generated, None is returned instead and the
@@ -332,9 +340,9 @@ class Inspector(object):
         elif (not ISPY3K) and type(obj) is types.InstanceType:
             obj = obj.__call__
 
-        output = self._getdef(obj,oname)
+        output = self._getdef(obj, oname)
         if output is None:
-            self.noinfo('definition header',oname)
+            self.noinfo('definition header', oname)
         else:
             print(header, output, end=' ', file=sys.stdout)
 
@@ -342,7 +350,7 @@ class Inspector(object):
         """Print the docstring for any object.
 
         Optional
-        
+
         -formatter: a function to run the docstring through for specially
         formatted docstrings.
         """
@@ -358,14 +366,14 @@ class Inspector(object):
             if init_ds is not None:
                 lines.append(head("Init docstring:"))
                 lines.append(indent(init_ds))
-        elif hasattr(obj,'__call__'):
+        elif hasattr(obj, '__call__'):
             call_ds = getdoc(obj.__call__)
             if call_ds:
                 lines.append(head("Call docstring:"))
                 lines.append(indent(call_ds))
 
         if not lines:
-            self.noinfo('documentation',oname)
+            self.noinfo('documentation', oname)
         else:
             print('\n'.join(lines))
 
@@ -376,7 +384,7 @@ class Inspector(object):
         try:
             src = getsource(obj)
         except:
-            self.noinfo('source',oname)
+            self.noinfo('source', oname)
         else:
             print(src)
 
@@ -399,7 +407,8 @@ class Inspector(object):
             # Print only text files, not extension binaries.  Note that
             # getsourcelines returns lineno with 1-offset and page() uses
             # 0-offset, so we must adjust.
-            print(openpy.read_py_file(ofile, skip_encoding_cookie=False), lineno - 1)
+            o = openpy.read_py_file(ofile, skip_encoding_cookie=False)
+            print(o, lineno - 1)
 
     def _format_fields(self, fields, title_width=0):
         """Formats a list of fields for display.
@@ -418,25 +427,23 @@ class Inspector(object):
             if len(content.splitlines()) > 1:
                 title = title + ":\n"
             else:
-                title = (title+":").ljust(title_width)
+                title = (title + ":").ljust(title_width)
             out.append(cast_unicode(title) + cast_unicode(content))
         return "\n".join(out)
 
     # The fields to be displayed by pinfo: (fancy_name, key_in_info_dict)
     pinfo_fields1 = [("Type", "type_name")]
-                    
+
     pinfo_fields2 = [("String form", "string_form")]
 
     pinfo_fields3 = [("Length", "length"),
                      ("File", "file"),
-                     ("Definition", "definition"),
-                     ]
+                     ("Definition", "definition"), ]
 
     pinfo_fields_obj = [("Class docstring", "class_docstring"),
                         ("Init docstring", "init_docstring"),
                         ("Call def", "call_def"),
-                        ("Call docstring", "call_docstring"),
-                        ]
+                        ("Call docstring", "call_docstring"), ]
 
     def pinfo(self, obj, oname='', info=None, detail_level=0):
         """Show detailed information about an object.
@@ -452,31 +459,39 @@ class Inspector(object):
         detail_level : int, optional
             if set to 1, more information is given.
         """
-        info = self.info(obj, oname=oname, info=info, detail_level=detail_level)
+        info = self.info(obj,
+                         oname=oname,
+                         info=info,
+                         detail_level=detail_level)
         displayfields = []
+
         def add_fields(fields):
             for title, key in fields:
                 field = info[key]
                 if field is not None:
                     displayfields.append((title, field.rstrip()))
-        
+
         add_fields(self.pinfo_fields1)
-        
+
         # Base class for old-style instances
-        if (not ISPY3K) and isinstance(obj, types.InstanceType) and info['base_class']:
-            displayfields.append(("Base Class", info['base_class'].rstrip()))
-        
+        if ((not ISPY3K) and
+           isinstance(obj, types.InstanceType) and
+           info['base_class']):
+                o = ("Base Class", info['base_class'].rstrip())
+                displayfields.append(o)
+
         add_fields(self.pinfo_fields2)
-        
+
         # Namespace
-        if info['namespace'] is not None and info['namespace'] != 'Interactive':
-            displayfields.append(("Namespace", info['namespace'].rstrip()))
+        if (info['namespace'] is not None and
+           info['namespace'] != 'Interactive'):
+                displayfields.append(("Namespace", info['namespace'].rstrip()))
 
         add_fields(self.pinfo_fields3)
         if info['isclass'] and info['init_definition']:
             displayfields.append(("Init definition",
-                            info['init_definition'].rstrip()))
-        
+                                  info['init_definition'].rstrip()))
+
         # Source or docstring, depending on detail level and whether
         # source found.
         if detail_level > 0 and info['source'] is not None:
@@ -488,7 +503,7 @@ class Inspector(object):
         if info['isclass']:
             if info['init_docstring'] is not None:
                 displayfields.append(("Init docstring",
-                                    info['init_docstring']))
+                                      info['init_docstring']))
 
         # Info for objects:
         else:
@@ -541,8 +556,8 @@ class Inspector(object):
         # store output in a dict, we initialize it here and fill it as we go
         out = dict(name=oname, found=True, isalias=isalias, ismagic=ismagic)
 
-        string_max = 200 # max size of strings to show (snipped if longer)
-        shalf = int((string_max -5)/2)
+        string_max = 200  # max size of strings to show (snipped if longer)
+        shalf = int((string_max - 5) / 2)
 
         if ismagic:
             obj_type_name = 'Magic function'
@@ -555,17 +570,18 @@ class Inspector(object):
         try:
             bclass = obj.__class__
             out['base_class'] = str(bclass)
-        except: pass
+        except:
+            pass
 
         # String form, but snip if too long in ? form (full in ??)
         if detail_level >= self.str_detail_level:
             try:
                 ostr = str(obj)
                 str_head = 'string_form'
-                if not detail_level and len(ostr)>string_max:
+                if not detail_level and len(ostr) > string_max:
                     ostr = ostr[:shalf] + ' <...> ' + ostr[-shalf:]
                     ostr = ("\n" + " " * len(str_head.expandtabs())).\
-                            join(q.strip() for q in ostr.split("\n"))
+                           join(q.strip() for q in ostr.split("\n"))
                 out[str_head] = ostr
             except:
                 pass
@@ -576,7 +592,8 @@ class Inspector(object):
         # Length (for strings and lists)
         try:
             out['length'] = str(len(obj))
-        except: pass
+        except:
+            pass
 
         # Filename where object was defined
         binary_file = False
@@ -589,13 +606,14 @@ class Inspector(object):
             if fname.endswith(('.so', '.dll', '.pyd')):
                 binary_file = True
             elif fname.endswith('<string>'):
-                fname = 'Dynamically generated function. No source code available.'
+                fname = ('Dynamically generated function. '
+                         'No source code available.')
             out['file'] = fname
-        
+
         # Docstrings only in detail 0 mode, since source contains them (we
         # avoid repetitions).  If source fails, we add them back, see below.
         if ds and detail_level == 0:
-                out['docstring'] = ds
+            out['docstring'] = ds
 
         # Original source code for any callable
         if detail_level:
@@ -617,18 +635,17 @@ class Inspector(object):
             if ds and source is None:
                 out['docstring'] = ds
 
-
         # Constructor docstring for classes
         if inspect.isclass(obj):
             out['isclass'] = True
             # reconstruct the function definition and print it:
             try:
-                obj_init =  obj.__init__
+                obj_init = obj.__init__
             except AttributeError:
                 init_def = init_ds = None
             else:
-                init_def = self._getdef(obj_init,oname)
-                init_ds  = getdoc(obj_init)
+                init_def = self._getdef(obj_init, oname)
+                init_ds = getdoc(obj_init)
                 # Skip Python's auto-generated docstrings
                 if init_ds == _object_init_docstring:
                     init_ds = None
@@ -652,7 +669,7 @@ class Inspector(object):
             # objects which use instance-customized docstrings.
             if ds:
                 try:
-                    cls = getattr(obj,'__class__')
+                    cls = getattr(obj, '__class__')
                 except:
                     class_ds = None
                 else:
@@ -679,8 +696,8 @@ class Inspector(object):
                 call_def = self._getdef(obj.__call__, oname)
                 if call_def:
                     call_def = call_def
-                    # it may never be the case that call def and definition differ,
-                    # but don't include the same signature twice
+                    # it may never be the case that call def and definition
+                    # differ, but don't include the same signature twice
                     if call_def != out.get('definition'):
                         out['call_def'] = call_def
                 call_ds = getdoc(obj.__call__)
@@ -718,4 +735,3 @@ class Inspector(object):
                     argspec_dict['varkw'] = argspec_dict.pop('keywords')
 
         return object_info(**out)
-

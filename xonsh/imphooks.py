@@ -78,7 +78,7 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
         src = src if src.endswith('\n') else src + '\n'
         execer = self.execer
         execer.filename = filename
-        ctx = {}   # dummy for modules
+        ctx = {}  # dummy for modules
         code = execer.compile(src, glbs=ctx, locs=ctx)
         return code
 

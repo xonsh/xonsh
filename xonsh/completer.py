@@ -11,14 +11,16 @@ from xonsh.built_ins import iglobpath
 
 RE_DASHF = re.compile(r'-F\s+(\w+)')
 
-XONSH_TOKENS = {'and ', 'as ', 'assert ', 'break', 'class ', 'continue', 
-    'def ', 'del ', 'elif ', 'else', 'except ', 'finally:', 'for ', 'from ', 
-    'global ', 'import ', 'if ', 'in ', 'is ', 'lambda ', 'nonlocal ', 'not ',
-    'or ', 'pass', 'raise ', 'return ', 'try:', 'while ', 'with ', 'yield ', 
-    '+', '-', '/', '//', '%', '**', '|', '&', '~', '^', '>>', '<<', '<', '<=',
-    '>', '>=', '==', '!=', '->', '=', '+=', '-=', '*=', '/=', '%=', '**=', 
-    '>>=', '<<=', '&=', '^=', '|=', '//=', ',', ';', ':', '?', '??', '$(', 
-    '${', '$[', '..', '...'}
+XONSH_TOKENS = {
+    'and ', 'as ', 'assert ', 'break', 'class ', 'continue', 'def ', 'del ',
+    'elif ', 'else', 'except ', 'finally:', 'for ', 'from ', 'global ',
+    'import ', 'if ', 'in ', 'is ', 'lambda ', 'nonlocal ', 'not ', 'or ',
+    'pass', 'raise ', 'return ', 'try:', 'while ', 'with ', 'yield ', '+', '-',
+    '/', '//', '%', '**', '|', '&', '~', '^', '>>', '<<', '<', '<=', '>', '>=',
+    '==', '!=', '->', '=', '+=', '-=', '*=', '/=', '%=', '**=', '>>=', '<<=',
+    '&=', '^=', '|=', '//=', ',', ';', ':', '?', '??', '$(', '${', '$[', '..',
+    '...'
+}
 
 BASH_COMPLETE_SCRIPT = """source {filename}
 COMP_WORDS=({line})
@@ -29,6 +31,7 @@ COMP_CWORD={n}
 {func} {cmd} {prefix} {prev}
 for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 """
+
 
 class Completer(object):
     """This provides a list of optional completions for the xonsh shell."""
@@ -85,8 +88,9 @@ class Completer(object):
         rtn |= {s for s in dir(builtins) if s.startswith(prefix)}
         rtn |= {s + space for s in builtins.aliases if s.startswith(prefix)}
         if prefix.startswith('$'):
+            env = builtins.__xonsh_env__
             key = prefix[1:]
-            rtn |= {'$'+k for k in builtins.__xonsh_env__ if k.startswith(key)}
+            rtn |= {'$' + k for k in env if k.startswith(key)}
         rtn |= self.path_complete(prefix)
         return sorted(rtn)
 
@@ -139,13 +143,20 @@ class Completer(object):
         if len(prefix) == 0:
             prefix = '""'
             n += 1
-        script = BASH_COMPLETE_SCRIPT.format(filename=fnme, line=line, n=n,
-                    func=func, cmd=cmd, end=endidx+1, prefix=prefix, prev=prev)
-        out = subprocess.check_output(['bash'], input=script,
-                                      universal_newlines=True, 
+        script = BASH_COMPLETE_SCRIPT.format(filename=fnme,
+                                             line=line,
+                                             n=n,
+                                             func=func,
+                                             cmd=cmd,
+                                             end=endidx + 1,
+                                             prefix=prefix,
+                                             prev=prev)
+        out = subprocess.check_output(['bash'],
+                                      input=script,
+                                      universal_newlines=True,
                                       stderr=subprocess.PIPE)
         space = ' '
-        rtn = {s+space if s[-1:].isalnum() else s for s in out.splitlines()}
+        rtn = {s + space if s[-1:].isalnum() else s for s in out.splitlines()}
         return rtn
 
     def _source_completions(self):
@@ -161,7 +172,8 @@ class Completer(object):
         if len(input) == 0:
             return
         input.append('complete -p\n')
-        out = subprocess.check_output(['bash'], input='\n'.join(input), 
+        out = subprocess.check_output(['bash'],
+                                      input='\n'.join(input),
                                       universal_newlines=True)
         for line in out.splitlines():
             head, cmd = line.rsplit(' ', 1)
@@ -181,12 +193,15 @@ class Completer(object):
         declare_f = 'declare -F '
         input += [declare_f + f for f in self.bash_complete_funcs.values()]
         input.append('shopt -u extdebug\n')
-        out = subprocess.check_output(['bash'], input='\n'.join(input),
+        out = subprocess.check_output(['bash'],
+                                      input='\n'.join(input),
                                       universal_newlines=True)
         func_files = {}
         for line in out.splitlines():
             parts = line.split()
             func_files[parts[0]] = parts[-1]
-        self.bash_complete_files = {cmd: func_files[func] for cmd, func in 
-                                    self.bash_complete_funcs.items()
-                                    if func in func_files}
+        self.bash_complete_files = {
+            cmd: func_files[func]
+            for cmd, func in self.bash_complete_funcs.items()
+            if func in func_files
+        }
