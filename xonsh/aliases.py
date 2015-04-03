@@ -10,6 +10,7 @@ from warnings import warn
 from xonsh.dirstack import dirs, pushd, popd
 from xonsh.jobs import jobs, fg, bg, kill_all_jobs
 
+
 def cd(args, stdin=None):
     """Changes the directory.
 
@@ -54,7 +55,9 @@ def source_bash(args, stdin=None):
         args = ' '.join(args)
         inp = 'source {0}\nenv >> {1}\n'.format(args, f.name)
         try:
-            subprocess.check_output(['bash'], input=inp, env=denv,
+            subprocess.check_output(['bash'],
+                                    input=input,
+                                    env=denv,
                                     stderr=subprocess.PIPE,
                                     universal_newlines=True)
         except subprocess.CalledProcessError:
@@ -73,7 +76,8 @@ def source_bash(args, stdin=None):
 def bash_aliases():
     """Computes a dictionary of aliases based on Bash's aliases."""
     try:
-        s = subprocess.check_output(['bash', '-i'], input='alias',
+        s = subprocess.check_output(['bash', '-i'],
+                                    input='alias',
                                     stderr=subprocess.PIPE,
                                     universal_newlines=True)
     except subprocess.CalledProcessError:
@@ -108,7 +112,7 @@ DEFAULT_ALIASES = {
     'grep': ['grep', '--color=auto'],
     'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
     'ipynb': ['ipython', 'notebook', '--no-browser'],
-    }
+}
 
 if platform.system() == 'Darwin':
     DEFAULT_ALIASES['ls'] = ['ls', '-G']

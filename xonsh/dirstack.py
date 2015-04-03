@@ -61,12 +61,12 @@ def pushd(args, stdin=None):
             if num == len(DIRSTACK):
                 new_pwd = None
             else:
-                new_pwd = DIRSTACK.pop(len(DIRSTACK)-1-num)
+                new_pwd = DIRSTACK.pop(len(DIRSTACK) - 1 - num)
         elif args.dir.startswith(BACKWARD):
             if num == 0:
                 new_pwd = None
             else:
-                new_pwd = DIRSTACK.pop(num-1)
+                new_pwd = DIRSTACK.pop(num - 1)
         else:
             e = 'Invalid argument to pushd: {0}\n'
             return None, e.format(args.dir)
@@ -138,13 +138,13 @@ def popd(args, stdin=None):
                 new_pwd = DIRSTACK.pop(0)
             else:
                 new_pwd = None
-                DIRSTACK.pop(len(DIRSTACK)-1-num)
+                DIRSTACK.pop(len(DIRSTACK) - 1 - num)
         elif args.dir.startswith(BACKWARD):
             if num == 0:
                 new_pwd = DIRSTACK.pop(0)
             else:
                 new_pwd = None
-                DIRSTACK.pop(num-1)
+                DIRSTACK.pop(num - 1)
         else:
             e = 'Invalid argument to popd: {0}\n'
             return None, e.format(args.dir)
@@ -199,7 +199,7 @@ def dirs(args, stdin=None):
 
     if args.verbose:
         out = ''
-        pad = len(str(len(o)-1))
+        pad = len(str(len(o) - 1))
         for (ix, e) in enumerate(o):
             blanks = ' ' * (pad - len(str(ix)))
             out += '\n{0}{1} {2}'.format(blanks, ix, e)
@@ -228,14 +228,14 @@ def dirs(args, stdin=None):
         if N.startswith(BACKWARD):
             idx = num
         elif N.startswith(FORWARD):
-            idx = len(o)-1-num
+            idx = len(o) - 1 - num
         else:
             e = 'Invalid argument to dirs: {0}\n'
             return None, e.format(N)
 
         out = o[idx]
 
-    return out+'\n', None
+    return out + '\n', None
 
 
 pushd_parser = ArgumentParser(prog="pushd")
