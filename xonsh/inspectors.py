@@ -606,8 +606,8 @@ class Inspector(object):
             if fname.endswith(('.so', '.dll', '.pyd')):
                 binary_file = True
             elif fname.endswith('<string>'):
-                fname = 'Dynamically generated function. '
-                        'No source code available.'
+                fname = ('Dynamically generated function. '
+                         'No source code available.')
             out['file'] = fname
 
         # Docstrings only in detail 0 mode, since source contains them (we

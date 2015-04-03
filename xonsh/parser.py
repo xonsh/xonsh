@@ -197,8 +197,9 @@ class Parser(object):
             'ampersand_shift_expr_list', 'shift_arith_expr_list',
             'op_factor_list', 'trailer_list', 'testlist_comp',
             'yield_expr_or_testlist_comp', 'dictorsetmaker',
-            'comma_subscript_list', 'test', 'sliceop', 'comp_iter', 'yield_arg',
-            'argument_comma_list', 'comma_argument_list', 'test_comma_list', )
+            'comma_subscript_list', 'test', 'sliceop', 'comp_iter',
+            'yield_arg', 'argument_comma_list', 'comma_argument_list',
+            'test_comma_list', )
         for rule in opt_rules:
             self._opt_rule(rule)
 
