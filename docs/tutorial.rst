@@ -829,19 +829,19 @@ script, stored in ``test.xsh``:
 .. code-block:: xonsh
 
     #!/usr/bin/env xonsh
-
-    $[ls]
-
+    
+    ls
+    
     print('removing files')
-    $[rm `file\d+.txt`]
-
-    $[ls]
-
+    rm `file\d+.txt`
+    
+    ls
+    
     print('adding files')
     # This is a comment
     for i, x in enumerate("xonsh"):
-        $[echo @(x) > @("file%d.txt" % i)]
-
+        echo @(x) > @("file%d.txt" % i)
+    
     print($(ls).replace('\n', ' '))
 
 
@@ -849,7 +849,7 @@ This script could be run by piping its contents to xonsh:
 
 .. code-block:: bash
 
-    bash $ cat test_script.xsh | xonsh
+    bash $ cat test.xsh | xonsh
     file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  test_script.sh
     removing files
     test_script.sh
@@ -860,7 +860,7 @@ or by invoking xonsh with its filename as an argument:
 
 .. code-block:: bash
 
-    bash $ xonsh test_script.xsh
+    bash $ xonsh test.xsh
     file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  test_script.sh
     removing files
     test_script.sh
@@ -880,27 +880,27 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
 .. code-block:: xonsh
 
     #!/usr/bin/env xonsh
-
+    
     print($ARGS)
-
-    $[ls]
-
+    
+    ls
+    
     print('removing files')
-    $[rm `file\d+.txt`]
-
-    $[ls]
-
+    rm `file\d+.txt`
+    
+    ls
+    
     print('adding files')
     # This is a comment
     for i, x in enumerate($ARG1):
-        $[echo @(x) > @("file%d.txt" % i)]
-
+        echo @(x) > @("file%d.txt" % i)
+    
     print($(ls).replace('\n', ' '))
     print()
 
 .. code-block:: bash
 
-    bash $ xonsh test_script2.xsh snails
+    bash $ xonsh test2.xsh snails
     ['test_script.sh', 'snails']
     file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  file5.txt  test_script.sh
     removing files
