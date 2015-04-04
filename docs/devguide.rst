@@ -12,8 +12,8 @@ develop xonsh.
 
 Style Guide
 ===========
-xonsh is a pure Python project and so
-we use PEP8 with some additions to ensure consistency throughout the code base.
+xonsh is a pure Python project, and so we use PEP8 (with some additions) to
+ensure consistency throughout the code base.
 
 ----------------------------------
 Rules to Write By
@@ -73,8 +73,8 @@ To perform all unit tests::
 This will recursively look through the currently directory, open up every file
 named test_* and run every function (or method) named test_*.
 
-Nosetests can also take file(s) as an argument. For example, to just run the
-mcnp and material module tests::
+Nosetests can also take file(s) as an argument. For example, to run just the
+lexer and parser module tests::
 
     $ nosetests test_lexer.py test_parser.py
 
@@ -102,7 +102,7 @@ website, once the appropriate hooks have been setup.  At this stage, all
 documentation lives within xonsh's top-level ``docs`` directory. 
 We uses the sphinx tool to manage and generate the documentation, which 
 you can learn about from `the sphinx website <http://sphinx-doc.org/>`_.
-If you want to generate the documentaion, first pyne itself must be installed 
+If you want to generate the documentaion, first xonsh itself must be installed 
 and then you may run the following command from the ``docs`` dir:
 
 .. code-block:: bash
@@ -118,7 +118,7 @@ new module ``mymod``.  The following explains how to add hooks.
 Python Hooks
 ------------------------
 Python documentation lives in the ``docs/api`` directory.  
-First create a file in this directory that represents the new module called
+First, create a file in this directory that represents the new module called
 ``mymod.rst``.  
 The ``docs/api`` directory matches the structure of the ``xonsh/`` directory.
 So if your module is in a sub-package, you'll need to go into the sub-package's 
@@ -195,8 +195,8 @@ post-release to be merged into develop to prevent them from accidentally
 getting released early.    
 
 As such, the 'vX.X.X-release' branch should only exist while there are 
-release candidates out.  They are akin to a temporary second level of staging.
-As such, everything that is in this branch should also be part of master.  
+release candidates out.  They are akin to a temporary second level of staging,
+and so everything that is in this branch should also be part of master.  
 
 Every time a new release candidate comes out the vX.X.X-release should be 
 tagged with the name 'X.X.X-rcX'.  There should be a 2 - 5 day period of time 
