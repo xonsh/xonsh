@@ -2,8 +2,9 @@
 """
 import os
 import re
-import socket
 import locale
+import socket
+import string
 import builtins
 import platform
 import subprocess
@@ -13,7 +14,7 @@ from xonsh import __version__ as XONSH_VERSION
 from xonsh.tools import TERM_COLORS
 
 
-def current_branch(cwd=None):
+def current_branch(cwd=None, pad=True):
     """Gets the branch for a current working directory. Returns None
     if the cwd is not a repository.  This currently only works for git,
     bust should be extended in the future.
@@ -61,40 +62,39 @@ def current_branch(cwd=None):
         except subprocess.CalledProcessError:
             pass
 
+    if pad and branch is not None:
+        branch = ' ' + branch
     return branch
 
 
-default_prompt = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
+DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
                   '{cwd}{BOLD_RED}{curr_branch} {BOLD_BLUE}${NO_COLOR} ')
-default_title = '{user}@{hostname}: {cwd} | xonsh'
+DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
 
 
-def format_prompt(template=default_prompt):
+def _replace_home(x):
+    return x.replace(builtins.__xonsh_env__['HOME'], '~')
+
+FORMATTER_DICT = dict(user=os.environ.get('USER', '<user>'),
+                      hostname=socket.gethostname().split('.', 1)[0],
+                      cwd=lambda: _replace_home(builtins.__xonsh_env__['PWD']),
+                      curr_branch=lambda: current_branch() or '',
+                      **TERM_COLORS)
+
+_formatter = string.Formatter()
+
+
+def format_prompt(template=DEFAULT_PROMPT):
     """Formats a xonsh prompt template string.
-
-    The following keyword arguments are recognized in the template string:
-
-    + user -- Name of current user
-    + hostname -- Name of host computer
-    + cwd -- Current working directory
-    + curr_branch -- Name of current git branch (preceded by a space), if any
-    + (QUALIFIER\_)COLORNAME -- Inserts an ANSI color code
-        - COLORNAME can be any of:
-              BLACK, RED, GREEN, YELLOW, BLUE, PURPLE, CYAN, WHITE
-        - QUALIFIER is optional and can be any of:
-              BOLD, UNDERLINE, BACKGROUND, INTENSE,
-              BOLD_INTENSE, BACKGROUND_INTENSE
-    + NO_COLOR -- Resets any previously used color codes
     """
     env = builtins.__xonsh_env__
-    cwd = env['PWD']
-    branch = current_branch(cwd=cwd)
-    branch = '' if branch is None else ' ' + branch
-    p = template.format(user=env.get('USER', '<user>'),
-                        hostname=socket.gethostname(),
-                        cwd=cwd.replace(env['HOME'], '~'),
-                        curr_branch=branch, **TERM_COLORS)
-    return p
+    template = template() if callable(template) else template
+    fmt = env.get('FORMATTER_DICT', FORMATTER_DICT)
+    included_names = set(i[1] for i in _formatter.parse(template))
+    fmt = {k: (v() if callable(v) else v)
+           for (k, v) in fmt.items()
+           if k in included_names}
+    return template.format(**fmt)
 
 
 RE_HIDDEN = re.compile('\001.*?\002')
@@ -103,7 +103,6 @@ RE_HIDDEN = re.compile('\001.*?\002')
 def multiline_prompt():
     """Returns the filler text for the prompt in multiline scenarios."""
     curr = builtins.__xonsh_env__.get('PROMPT', "set '$PROMPT = ...' $ ")
-    curr = curr() if callable(curr) else curr
     curr = format_prompt(curr)
     line = curr.rsplit('\n', 1)[1] if '\n' in curr else curr
     line = RE_HIDDEN.sub('', line)  # gets rid of colors
@@ -123,8 +122,9 @@ def multiline_prompt():
 BASE_ENV = {
     'XONSH_VERSION': XONSH_VERSION,
     'INDENT': '    ',
-    'PROMPT': default_prompt,
-    'TITLE': default_title,
+    'FORMATTER_DICT': dict(FORMATTER_DICT),
+    'PROMPT': DEFAULT_PROMPT,
+    'TITLE': DEFAULT_TITLE,
     'MULTILINE_PROMPT': '.',
     'XONSHRC': os.path.expanduser('~/.xonshrc'),
     'XONSH_HISTORY_SIZE': 8128,

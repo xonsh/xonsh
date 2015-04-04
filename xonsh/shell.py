@@ -188,8 +188,6 @@ class Shell(Cmd):
             return
         if 'TITLE' in env:
             t = env['TITLE']
-            if callable(t):
-                t = t()
         else:
             return
         t = format_prompt(t)
@@ -210,8 +208,6 @@ class Shell(Cmd):
         env = builtins.__xonsh_env__
         if 'PROMPT' in env:
             p = env['PROMPT']
-            if callable(p):
-                p = p()
             p = format_prompt(p)
         else:
             p = "set '$PROMPT = ...' $ "
