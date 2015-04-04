@@ -86,20 +86,6 @@ _formatter = string.Formatter()
 
 def format_prompt(template=DEFAULT_PROMPT):
     """Formats a xonsh prompt template string.
-
-    The following keyword arguments are recognized in the template string:
-
-    + user -- Name of current user
-    + hostname -- Name of host computer
-    + cwd -- Current working directory
-    + curr_branch -- Name of current git branch (preceded by a space), if any
-    + (QUALIFIER\_)COLORNAME -- Inserts an ANSI color code
-        - COLORNAME can be any of:
-              BLACK, RED, GREEN, YELLOW, BLUE, PURPLE, CYAN, WHITE
-        - QUALIFIER is optional and can be any of:
-              BOLD, UNDERLINE, BACKGROUND, INTENSE,
-              BOLD_INTENSE, BACKGROUND_INTENSE
-    + NO_COLOR -- Resets any previously used color codes
     """
     env = builtins.__xonsh_env__
     template = template() if callable(template) else template
