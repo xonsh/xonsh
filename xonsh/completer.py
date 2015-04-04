@@ -95,7 +95,6 @@ class Completer(object):
             rtn |= {s for s in ctx if s.startswith(prefix)}
         rtn |= {s for s in dir(builtins) if s.startswith(prefix)}
         rtn |= {s + space for s in builtins.aliases if s.startswith(prefix)}
-        self._add_env(rtn, prefix)
         rtn |= self.path_complete(prefix)
         return sorted(rtn)
 
