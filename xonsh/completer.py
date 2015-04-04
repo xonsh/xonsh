@@ -67,9 +67,13 @@ class Completer(object):
         """
         space = ' '  # intern some strings for faster appending
         slash = '/'
+        ctx = ctx or {}
+        cmd = line.split(' ', 1)[0]
         if begidx == 0:
+            # the first thing we're typing; could be python or subprocess, so
+            # anything goes.
             rtn = self.cmd_complete(prefix)
-        elif line.split(' ', 1)[0] in self.bash_complete_funcs:
+        elif cmd in self.bash_complete_funcs:
             rtn = set()
             for s in self.bash_complete(prefix, line, begidx, endidx):
                 if os.path.isdir(s.rstrip()):
@@ -78,19 +82,31 @@ class Completer(object):
             if len(rtn) == 0:
                 rtn = self.path_complete(prefix)
             return sorted(rtn)
+        elif cmd not in ctx and cmd not in XONSH_TOKENS:
+            # subproc mode; do path completions
+            return sorted(self.path_complete(prefix))
         else:
+            # if we're here, we're definitely python?
             rtn = set()
         rtn |= {s for s in XONSH_TOKENS if s.startswith(prefix)}
         if ctx is not None:
             rtn |= {s for s in ctx if s.startswith(prefix)}
         rtn |= {s for s in dir(builtins) if s.startswith(prefix)}
         rtn |= {s + space for s in builtins.aliases if s.startswith(prefix)}
+        rtn |= self.path_complete(prefix)
+        return sorted(rtn)
+
+    def _add_env(self, paths, prefix):
         if prefix.startswith('$'):
             env = builtins.__xonsh_env__
             key = prefix[1:]
-            rtn |= {'$' + k for k in env if k.startswith(key)}
-        rtn |= self.path_complete(prefix)
-        return sorted(rtn)
+            paths.update({'$' + k for k in env if k.startswith(key)})
+
+    def _add_dots(self, paths, prefix):
+        if prefix in {'', '.'}:
+            paths.update({'./', '../'})
+        if prefix == '..':
+            paths.add('../')
 
     def cmd_complete(self, cmd):
         """Completes a command name based on what is on the $PATH"""
@@ -121,6 +137,8 @@ class Completer(object):
         if tilde in prefix:
             home = os.path.expanduser(tilde)
             paths = {s.replace(home, tilde) for s in paths}
+        self._add_env(paths, prefix)
+        self._add_dots(paths, prefix)
         return paths
 
     def bash_complete(self, prefix, line, begidx, endidx):
