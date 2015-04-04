@@ -81,7 +81,7 @@ class Completer(object):
                 if os.path.isdir(s.rstrip()):
                     s = s.rstrip() + slash
                 rtn.add(s)
-            if len(rtn) != 0:
+            if len(rtn) == 0:
                 rtn = self.path_complete(prefix)
             return sorted(rtn)
         elif cmd not in ctx and cmd not in XONSH_TOKENS:
