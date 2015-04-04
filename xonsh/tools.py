@@ -275,19 +275,22 @@ def suggest_commands(cmd, env, aliases):
         if max_sugg < 0:
             max_sugg = float('inf')
 
+        cmd = cmd.lower()
         suggested = {}
         for a in builtins.aliases:
-            if a not in suggested and levenshtein(a, cmd, thresh) < thresh:
-                suggested[a] = 'Alias'
+            if a not in suggested:
+                if levenshtein(a.lower(), cmd, thresh) < thresh:
+                    suggested[a] = 'Alias'
 
         for d in filter(os.path.isdir, env.get('PATH', [])):
             for f in os.listdir(d):
-                if f not in suggested and levenshtein(f, cmd, thresh) < thresh:
-                    fname = os.path.join(d, f)
-                    suggested[f] = 'Command ({0})'.format(fname)
+                if f not in suggested:
+                    if levenshtein(f.lower(), cmd, thresh) < thresh:
+                        fname = os.path.join(d, f)
+                        suggested[f] = 'Command ({0})'.format(fname)
         suggested = OrderedDict(
             sorted(suggested.items(),
-                   key=lambda x: suggestion_sort_helper(x[0], cmd)))
+                   key=lambda x: suggestion_sort_helper(x[0].lower(), cmd)))
         num = min(len(suggested), max_sugg)
 
         if num == 0:
