@@ -5,9 +5,11 @@ import re
 import builtins
 import subprocess
 
+from xonsh.tools import subexpr_from_unbalanced
 from xonsh.built_ins import iglobpath
 
 RE_DASHF = re.compile(r'-F\s+(\w+)')
+RE_ATTR = re.compile(r'(\S+(\..+)*)\.(\w*)$')
 
 XONSH_TOKENS = {
     'and ', 'as ', 'assert ', 'break', 'class ', 'continue', 'def ', 'del ',
@@ -223,3 +225,36 @@ class Completer(object):
             for cmd, func in self.bash_complete_funcs.items()
             if func in func_files
         }
+
+    def attr_complete(self, prefix, ctx):
+        """Complete attributes of an object."""
+        attrs = set()
+        m = RE_ATTR.match(prefix)
+        if m is None:
+            return attrs
+        expr, attr = m.group(1, 3)
+        expr = subexpr_from_unbalanced(expr, '(', ')')
+        expr = subexpr_from_unbalanced(expr, '[', ']')
+        expr = subexpr_from_unbalanced(expr, '{', '}')
+        try:
+            val = builtins.evalx(expr, glbs=ctx)
+        except:  # pylint:disable=bare-except
+            try:
+                val = builtins.evalx(expr, glbs=builtins.__dict__)
+            except:  # pylint:disable=bare-except
+                return attrs  # anything could have gone wrong!
+        opts = dir(val)
+        if len(attr) == 0:
+            opts = [o for o in opts if not o.startswith('_')]
+        else:
+            opts = [o for o in opts if o.startswith(attr)]
+        prelen = len(prefix)
+        for opt in opts:
+            a = getattr(val, opt)
+            rpl = opt + '(' if callable(a) else opt
+            # note that prefix[:prelen-len(attr)] != prefix[:-len(attr)]
+            # when len(attr) == 0.
+            comp = prefix[:prelen-len(attr)] + rpl
+            attrs.add(comp)
+        return attrs
+
