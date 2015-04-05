@@ -69,7 +69,7 @@ class Env(MutableMapping):
             return self._detyped
         ctx = {}
         for key, val in self._d.items():
-            if callable(val):
+            if callable(val) or isinstance(val, (MutableMapping)):
                 continue
             if not isinstance(key, string_types):
                 key = str(key)
