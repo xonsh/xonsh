@@ -162,9 +162,19 @@ class Execer(object):
                     last_error_line = last_error_col = -1
                     input = '\n'.join(lines)
                     continue
+                maxcol = None
+                self.parser.lexer.input(line)
+                for tok in self.parser.lexer:
+                    if tok.lexpos < last_error_col:
+                        continue
+                    if tok.type == 'SEMI':
+                        maxcol = tok.lexpos
+                        break
+                if maxcol is not None:
+                    maxcol += 1
                 sbpline = subproc_toks(line,
                                        returnline=True,
-                                       maxcol=None,
+                                       maxcol=maxcol,
                                        lexer=self.parser.lexer)
                 if sbpline is None:
                     # subprocess line had no valid tokens, likely because
