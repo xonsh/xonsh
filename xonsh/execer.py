@@ -162,11 +162,9 @@ class Execer(object):
                     last_error_line = last_error_col = -1
                     input = '\n'.join(lines)
                     continue
-                maxcol = line.find(';', last_error_col)
-                maxcol = None if maxcol < 0 else maxcol + 1
                 sbpline = subproc_toks(line,
                                        returnline=True,
-                                       maxcol=maxcol,
+                                       maxcol=None,
                                        lexer=self.parser.lexer)
                 if sbpline is None:
                     # subprocess line had no valid tokens, likely because
