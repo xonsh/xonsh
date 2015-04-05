@@ -572,7 +572,8 @@ def run_subproc(cmds, captured=True):
                                               captured=captured,
                                               prev_proc=prev_proc,
                                               default_stdin=stdin,
-                                              stdout=stdout)
+                                              stdout=stdout,
+                                              stderr=stderr)
             continue
         subproc_kwargs = {}
         if os.name == 'posix':
