@@ -312,7 +312,8 @@ def _run_callable_subproc(alias, args,
                           captured=True,
                           prev_proc=None,
                           default_stdin=None,
-                          stdout=None):
+                          stdout=None,
+                          stderr=None):
     """Helper for running callables as a subprocess."""
     # compute stdin for callable
     if prev_proc is None:
@@ -325,36 +326,31 @@ def _run_callable_subproc(alias, args,
         stdin, _ = stdin.read(), stdin.close()
     # Redirect the output streams temporarily. merge with possible
     # return values from alias function.
-    if stdout is PIPE:
-        # handles captured mode
-        new_stdout, new_stderr = StringIO(), StringIO()
-        with redirect_stdout(new_stdout), redirect_stderr(new_stderr):
-            rtn = alias(args, stdin=stdin)
-        proxy_stdout = new_stdout.getvalue()
-        proxy_stderr = new_stderr.getvalue()
-        if isinstance(rtn, str):
-            proxy_stdout += rtn
-        elif isinstance(rtn, Sequence):
-            if rtn[0]:  # not None nor ''
-                proxy_stdout += rtn[0]
-            if rtn[1]:
-                proxy_stderr += rtn[1]
-        return ProcProxy(proxy_stdout, proxy_stderr)
-    else:
-        # handles uncaptured mode
+    new_stdout, new_stderr = StringIO(), StringIO()
+    with redirect_stdout(new_stdout), redirect_stderr(new_stderr):
         rtn = alias(args, stdin=stdin)
-        rtnout, rtnerr = None, None
-        if isinstance(rtn, str):
-            rtnout = rtn
-            sys.stdout.write(rtn)
-        elif isinstance(rtn, Sequence):
-            if rtn[0]:
-                rtnout = rtn[0]
-                sys.stdout.write(rtn[0])
-            if rtn[1]:
-                rtnerr = rtn[1]
-                sys.stderr.write(rtn[1])
-        return ProcProxy(rtnout, rtnerr)
+    proxy_stdout = new_stdout.getvalue()
+    proxy_stderr = new_stderr.getvalue()
+    if isinstance(rtn, str):
+        proxy_stdout += rtn
+    elif isinstance(rtn, Sequence):
+        if rtn[0]:  # not None nor ''
+            proxy_stdout += rtn[0]
+        if rtn[1]:
+            proxy_stderr += rtn[1]
+    if stdout is None:
+        sys.stdout.write(proxy_stdout)
+    elif stdout == PIPE:
+        pass
+    else:
+        stdout.write(proxy_stdout)
+    if stderr is None:
+        sys.stderr.write(proxy_stderr)
+    elif stderr == PIPE:
+        pass
+    else:
+        stderr.write(proxy_stderr)
+    return ProcProxy(proxy_stdout, proxy_stderr)
 
 
 RE_SHEBANG = re.compile(r'#![ \t]*(.+?)$')
@@ -581,10 +577,11 @@ def run_subproc(cmds, captured=True):
     elif prev_proc.stdout is not None:
         output = prev_proc.stdout.read()
 
-    if prev_proc.stdout not in {PIPE, None}:
-        prev_proc.stdout.close()
-    if prev_proc.stderr not in {PIPE, None}:
-        prev_proc.stderr.close()
+    if not isinstance(prev_proc, ProcProxy):
+        if prev_proc.stdout not in {PIPE, None}:
+            prev_proc.stdout.close()
+        if prev_proc.stderr not in {PIPE, None}:
+            prev_proc.stderr.close()
 
     if captured:
         return output
