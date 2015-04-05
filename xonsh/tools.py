@@ -89,6 +89,24 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     return rtn
 
 
+def subexpr_from_unbalanced(expr, ltok, rtok):
+    """Attmpts to pull out a valid subexpression for unbalanced grouping, 
+    based on opening tokens, eg. '(', and closing tokens, eg. ')'.  This 
+    does not do full tokenization, but should be good enough for tab 
+    completeion.
+    """
+    lcnt = expr.count(ltok)
+    if lcnt == 0:
+        return expr
+    rcnt = expr.count(rtok)
+    if lcnt == rcnt:
+        return expr
+    subexpr = expr.rsplit(ltok, 1)[-1]
+    subexpr = subexpr.rsplit(',', 1)[-1]
+    subexpr = subexpr.rsplit(':', 1)[-1]
+    return subexpr
+
+
 def decode(s, encoding=None):
     encoding = encoding or DEFAULT_ENCODING
     return s.decode(encoding, "replace")

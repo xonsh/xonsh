@@ -97,5 +97,6 @@ def test_ensure_list_of_strs():
         obs = ensure_list_of_strs(inp)
         yield assert_equal, exp, obs
 
+
 if __name__ == '__main__':
     nose.runmodule()

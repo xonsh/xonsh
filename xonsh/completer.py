@@ -67,6 +67,7 @@ class Completer(object):
         """
         space = ' '  # intern some strings for faster appending
         slash = '/'
+        dot = '.'
         ctx = ctx or {}
         cmd = line.split(' ', 1)[0]
         if begidx == 0:
@@ -90,7 +91,10 @@ class Completer(object):
             rtn = set()
         rtn |= {s for s in XONSH_TOKENS if s.startswith(prefix)}
         if ctx is not None:
-            rtn |= {s for s in ctx if s.startswith(prefix)}
+            if dot in prefix:
+                rtn |= self.attr_complete(prefix, ctx)
+            else:
+                rtn |= {s for s in ctx if s.startswith(prefix)}
         rtn |= {s for s in dir(builtins) if s.startswith(prefix)}
         rtn |= {s + space for s in builtins.aliases if s.startswith(prefix)}
         rtn |= self.path_complete(prefix)

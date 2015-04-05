@@ -5,7 +5,7 @@ import nose
 from nose.tools import assert_equal
 
 from xonsh.lexer import Lexer
-from xonsh.tools import subproc_toks
+from xonsh.tools import subproc_toks, subexpr_from_unbalanced
 
 LEXER = Lexer()
 LEXER.build()
@@ -135,6 +135,16 @@ def test_subproc_toks_comment():
     exp = None
     obs = subproc_toks('# I am a comment', lexer=LEXER, returnline=True)
     assert_equal(exp, obs)
+
+def test_subexpr_from_unbalanced_parens():
+    cases = [
+        ('f(x.', 'x.'),
+        ('f(1,x.', 'x.'),
+        ('f((1,10),x.y', 'x.y'),
+        ]
+    for expr, exp in cases:
+        obs = subexpr_from_unbalanced(expr, '(', ')')
+        yield assert_equal, exp, obs
 
 
 if __name__ == '__main__':
