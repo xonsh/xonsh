@@ -123,6 +123,21 @@ class Execer(object):
             return None  # handles comment only input
         return exec(code, glbs, locs)
 
+    def _find_next_break(self, line, mincol):
+        if mincol >= 1:
+            line = line[mincol:]
+        if ';' not in line:
+            return None
+        maxcol = None
+        self.parser.lexer.input(line)
+        for tok in self.parser.lexer:
+            if tok.type == 'SEMI':
+                maxcol = tok.lexpos
+                break
+        if maxcol is not None:
+            maxcol += mincol + 1
+        return maxcol
+
     def _parse_ctx_free(self, input, mode='exec'):
         last_error_line = last_error_col = -1
         parsed = False
@@ -162,16 +177,7 @@ class Execer(object):
                     last_error_line = last_error_col = -1
                     input = '\n'.join(lines)
                     continue
-                maxcol = None
-                self.parser.lexer.input(line)
-                for tok in self.parser.lexer:
-                    if tok.lexpos < last_error_col:
-                        continue
-                    if tok.type == 'SEMI':
-                        maxcol = tok.lexpos
-                        break
-                if maxcol is not None:
-                    maxcol += 1
+                maxcol = self._find_next_break(line, last_error_col)
                 sbpline = subproc_toks(line,
                                        returnline=True,
                                        maxcol=maxcol,
