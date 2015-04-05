@@ -3,7 +3,7 @@ from __future__ import unicode_literals, print_function
 import os
 
 import nose
-from nose.tools import assert_equal, assert_true
+from nose.tools import assert_equal, assert_true, assert_not_in
 
 from xonsh import built_ins 
 from xonsh.built_ins import Env, reglob, regexpath, helper, superhelper, \
@@ -31,6 +31,11 @@ def test_env_detype_mutable_access_clear():
     env['MYPATH'][0] = 'woah'
     assert_equal(None, env._detyped)
     assert_equal({'MYPATH': 'woah' + os.pathsep + 'jawaka'}, env.detype())
+
+def test_env_detype_no_dict():
+    env = Env(YO={'hey': 42})
+    det = env.detype()
+    assert_not_in('YO', det)
 
 def test_reglob_tests():
     testfiles = reglob('test_.*')
