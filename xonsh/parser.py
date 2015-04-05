@@ -510,7 +510,7 @@ class Parser(object):
         p1, p2 = p[1], p[2]
         p3 = p[3] if lenp > 3 else None
         p4 = p[4] if lenp > 4 else None
-        # skip p5 
+        # skip p5
         p6 = p[6] if lenp > 6 else None
         p7 = p[7] if lenp > 7 else None
         # skip p8
@@ -2174,7 +2174,9 @@ class Parser(object):
     def p_subproc_special_atom(self, p):
         """subproc_special_atom : PIPE
                                 | GT
+                                | LT
                                 | RSHIFT
+                                | SPREDIR
         """
         p[0] = p[1]
 

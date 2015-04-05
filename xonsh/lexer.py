@@ -34,7 +34,7 @@ _op_map = {
         # basic operators
         '+': 'PLUS', '-': 'MINUS', '*': 'TIMES', '/': 'DIVIDE',
         '//': 'DOUBLEDIV', '%': 'MOD', '**': 'POW', '|': 'PIPE',
-        '&': 'AMPERSAND', '~': 'TILDE', '^': 'XOR', '<<': 'LSHIFT',
+        '~': 'TILDE', '^': 'XOR', '<<': 'LSHIFT',
         '>>': 'RSHIFT', '<': 'LT', '<=': 'LE', '>': 'GT', '>=': 'GE',
         '==': 'EQ', '!=': 'NE', '->': 'RARROW',
         # assignment operators
@@ -48,7 +48,6 @@ for (op, type) in _op_map.items():
     token_map[(tokenize.OP, op)] = type
 
 token_map[tokenize.NAME] = 'NAME'
-token_map[tokenize.NUMBER] = 'NUMBER'
 token_map[tokenize.STRING] = 'STRING'
 token_map[tokenize.NEWLINE] = 'NEWLINE'
 token_map[tokenize.INDENT] = 'INDENT'
@@ -239,6 +238,46 @@ def handle_error_space(state, token, stream):
         yield from []
 
 
+def handle_number(state, token, stream):
+    """
+    Function for handling number tokens
+    """
+    if state['pymode'][-1][0]:
+        state['last'] = token
+        yield _new_token('NUMBER', token.string, token.start)
+    else:
+        n = next(stream, None)
+        if n is not None and \
+                n.string in {'>>', '>'} and \
+                n.start[1] == token.end[1]:
+            state['last'] = n
+            yield _new_token('SPREDIR', token.string + n.string, token.start)
+        else:
+            state['last'] = token
+            yield _new_token('NUMBER', token.string, token.start)
+            yield from handle_token(state, n, stream)
+
+
+def handle_ampersand(state, token, stream):
+    """
+    Function for handling ampersands
+    """
+    if state['pymode'][-1][0]:
+        state['last'] = token
+        yield _new_token('AMPERSAND', token.string, token.start)
+    else:
+        n = next(stream, None)
+        if n is not None and \
+                n.string in {'>>', '>'} and \
+                n.start[1] == token.end[1]:
+            state['last'] = n
+            yield _new_token('SPREDIR', token.string + n.string, token.start)
+        else:
+            state['last'] = token
+            yield _new_token('AMPERSAND', token.string, token.start)
+            yield from handle_token(state, n, stream)
+
+
 def handle_ignore(state, token, stream):
     """
     Function for handling tokens that should be ignored
@@ -251,6 +290,7 @@ special_handlers = {
     tokenize.COMMENT: handle_ignore,
     tokenize.ENCODING: handle_ignore,
     tokenize.ENDMARKER: handle_ignore,
+    tokenize.NUMBER: handle_number,
     (tokenize.OP, '@'): handle_at,
     (tokenize.OP, '('): handle_lparen,
     (tokenize.OP, ')'): handle_rparen,
@@ -258,6 +298,7 @@ special_handlers = {
     (tokenize.OP, '}'): handle_rbrace,
     (tokenize.OP, '['): handle_lbracket,
     (tokenize.OP, ']'): handle_rbracket,
+    (tokenize.OP, '&'): handle_ampersand,
     (tokenize.ERRORTOKEN, '$'): handle_dollar,
     (tokenize.ERRORTOKEN, '`'): handle_backtick,
     (tokenize.ERRORTOKEN, '?'): handle_question,
@@ -396,6 +437,8 @@ class Lexer(object):
     # All the tokens recognized by the lexer
     #
     tokens = tuple(token_map.values()) + (
+        'NUMBER',
+        'AMPERSAND',
         'WS',                    # whitespace in subprocess mode
         'REGEXPATH',             # regex escaped with backticks
         'LPAREN', 'RPAREN',      # ( )
@@ -409,4 +452,5 @@ class Lexer(object):
         'DOLLAR_LPAREN',         # $(
         'DOLLAR_LBRACE',         # ${
         'DOLLAR_LBRACKET',       # $[
+        'SPREDIR'                # redirection token in subprocess mode
         )

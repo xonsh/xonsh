@@ -308,17 +308,15 @@ def iglobpath(s):
     return iglob(s)
 
 
-WRITER_MODES = {'>': 'w', '>>': 'a'}
-
-
 def _run_callable_subproc(alias, args,
                           captured=True,
                           prev_proc=None,
+                          default_stdin=None,
                           stdout=None):
     """Helper for running callables as a subprocess."""
     # compute stdin for callable
     if prev_proc is None:
-        stdin = None
+        stdin = default_stdin
     elif isinstance(prev_proc, ProcProxy):
         stdin = prev_proc.stdout
     else:
@@ -416,6 +414,18 @@ def _subproc_pre():
     signal.signal(signal.SIGTSTP, lambda n, f: signal.pause())
 
 
+def _is_write_mode(x):
+    return isinstance(x, str) and (x.endswith('>') or x.endswith('<'))
+
+
+def _open(fname, mode):
+    try:
+        return open(fname, mode)
+    except:
+        e = 'xonsh: {0}: no such file or directory'
+        print(e.format(fname), file=sys.stderr)
+
+
 def run_subproc(cmds, captured=True):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
     which may be a list of command line arguments or a string, representing
@@ -430,25 +440,54 @@ def run_subproc(cmds, captured=True):
     Lastly, the captured argument affects only the last real command.
     """
     global ENV
-    last_stdout = PIPE if captured else None
     background = False
     if cmds[-1] == '&':
         background = True
         cmds = cmds[:-1]
-    write_target = None
-    if len(cmds) >= 3 and cmds[-2] in WRITER_MODES:
-        write_target = cmds[-1][0]
-        write_mode = WRITER_MODES[cmds[-2]]
-        cmds = cmds[:-2]
-        if write_target is not None:
-            try:
-                last_stdout = open(write_target, write_mode)
-            except FileNotFoundError:
-                e = 'xonsh: {0}: no such file or directory'
-                print(e.format(write_target))
+    stdin_source = None
+    stdout_target = None
+    stderr_target = None
+    while len(cmds) >= 3 and _is_write_mode(cmds[-2]):
+        mode = cmds[-2]
+        target = cmds[-1][0]
+        if mode.endswith('>>'):
+            which = mode[:-2]
+            mode = 'a'
+        elif mode.endswith('>'):
+            which = mode[:-1]
+            mode = 'w'
+        elif mode.endswith('<'):
+            which = mode[:-1]
+            mode = 'r'
+
+        if mode == 'r' and len(which) > 0:
+            e = 'xonsh: unrecognized redirection command: {}'
+            print(e.format(cmds[-1]), file=sys.stderr)
+            return
+        elif mode == 'r':
+            stdin_source = open(target, mode)
+
+        if mode in {'w', 'a'}:
+            if which == '&':
+                f = _open(target, mode)
+                if f is None:
+                    return
+                stdout_target = stderr_target = f
+            elif which == '2':
+                stderr_target = _open(target, mode)
+                if stderr_target is None:
+                    return
+            elif which in {'1', ''}:
+                stdout_target = _open(target, mode)
+                if stdout_target is None:
+                    return
+            else:
+                e = 'xonsh: unrecognized redirection command: {}'
+                print(e.format(cmds[-1]), file=sys.stderr)
                 return
-        else:
-            last_stdout = PIPE
+        cmds = cmds[:-2]
+    last_stdout = PIPE if captured else stdout_target
+    last_stderr = stderr_target
     last_cmd = cmds[-1]
     prev = None
     procs = []
@@ -458,6 +497,7 @@ def run_subproc(cmds, captured=True):
             prev = cmd
             continue
         stdout = last_stdout if cmd is last_cmd else PIPE
+        stderr = last_stderr if cmd is last_cmd else None
         uninew = cmd is last_cmd
         alias = builtins.aliases.get(cmd[0], None)
         if _is_runnable_name(cmd[0]):
@@ -465,26 +505,29 @@ def run_subproc(cmds, captured=True):
                 aliased_cmd = get_script_subproc_command(cmd[0], cmd[1:])
             except PermissionError:
                 e = 'xonsh: subprocess mode: permission denied: {0}'
-                print(e.format(cmd[0]))
+                print(e.format(cmd[0]), file=sys.stderr)
                 return
         elif alias is None:
             aliased_cmd = cmd
         elif callable(alias):
-            prev_proc = _run_callable_subproc(alias, cmd[1:],
-                                              captured=captured,
-                                              prev_proc=prev_proc,
-                                              stdout=stdout)
-            continue
+            aliased_cmd = alias
         else:
             aliased_cmd = alias + cmd[1:]
         # compute stdin for subprocess
         prev_is_proxy = isinstance(prev_proc, ProcProxy)
         if prev_proc is None:
-            stdin = None
+            stdin = stdin_source
         elif prev_is_proxy:
             stdin = PIPE
         else:
             stdin = prev_proc.stdout
+        if callable(aliased_cmd):
+            prev_proc = _run_callable_subproc(alias, cmd[1:],
+                                              captured=captured,
+                                              prev_proc=prev_proc,
+                                              default_stdin=stdin,
+                                              stdout=stdout)
+            continue
         subproc_kwargs = {}
         if os.name == 'posix':
             subproc_kwargs['preexec_fn'] = _subproc_pre
@@ -493,15 +536,19 @@ def run_subproc(cmds, captured=True):
                          universal_newlines=uninew,
                          env=ENV.detype(),
                          stdin=stdin,
-                         stdout=stdout, **subproc_kwargs)
+                         stdout=stdout,
+                         stderr=stderr, **subproc_kwargs)
         except PermissionError:
             cmd = aliased_cmd[0]
-            print('xonsh: subprocess mode: permission denied: {0}'.format(cmd))
+            e = 'xonsh: subprocess mode: permission denied: {0}'.format(cmd)
+            print(e, file=sys.stderr)
             return
         except FileNotFoundError:
             cmd = aliased_cmd[0]
-            print('xonsh: subprocess mode: command not found: {0}'.format(cmd))
-            print(suggest_commands(cmd, ENV, builtins.aliases), end='')
+            e = 'xonsh: subprocess mode: command not found: {0}'.format(cmd)
+            sugg = suggest_commands(cmd, ENV, builtins.aliases)
+            print(e, file=sys.stderr)
+            print(sugg, file=sys.stderr, end='')
             return
         procs.append(proc)
         prev = None
@@ -528,16 +575,19 @@ def run_subproc(cmds, captured=True):
         print_one_job(num)
         return
     wait_for_active_job()
-    if write_target is None:
-        # get output
-        if isinstance(prev_proc, ProcProxy):
-            output = prev_proc.stdout
-        elif prev_proc.stdout is not None:
-            output = prev_proc.stdout.read()
-        if captured:
-            return output
-    elif last_stdout not in (PIPE, None):
-        last_stdout.close()
+    output = None
+    if isinstance(prev_proc, ProcProxy):
+        output = prev_proc.stdout
+    elif prev_proc.stdout is not None:
+        output = prev_proc.stdout.read()
+
+    if prev_proc.stdout not in {PIPE, None}:
+        prev_proc.stdout.close()
+    if prev_proc.stderr not in {PIPE, None}:
+        prev_proc.stderr.close()
+
+    if captured:
+        return output
 
 
 def subproc_captured(*cmds):
