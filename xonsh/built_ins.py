@@ -422,6 +422,29 @@ def _open(fname, mode):
         print(e.format(fname), file=sys.stderr)
 
 
+def _pipe_check(cmds):
+    error = None
+    hitpipe = False
+    inredir = False
+    outredir = False
+    for i in cmds:
+        if not isinstance(i, str):
+            continue
+        if i == '|':
+            hitpipe = True
+            if inredir or outredir:
+                error = "pipe cannot be used after another redirect"
+                break
+        if i.endswith('>'):
+            outredir = True
+        if i.endswith('<'):
+            inredir = True
+            if hitpipe:
+                error = "cannot receive input both from file and pipe"
+                break
+    return error
+
+
 def run_subproc(cmds, captured=True):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
     which may be a list of command line arguments or a string, representing
@@ -436,6 +459,12 @@ def run_subproc(cmds, captured=True):
     Lastly, the captured argument affects only the last real command.
     """
     global ENV
+    # check for misused pipes
+    err = _pipe_check(cmds)
+    if err is not None:
+        print('xonsh: error: {}'.format(err), file=sys.stderr)
+        return
+
     background = False
     if cmds[-1] == '&':
         background = True
@@ -456,30 +485,51 @@ def run_subproc(cmds, captured=True):
             which = mode[:-1]
             mode = 'r'
 
-        if mode == 'r' and len(which) > 0:
-            e = 'xonsh: unrecognized redirection command: {}'
-            print(e.format(cmds[-1]), file=sys.stderr)
-            return
-        elif mode == 'r':
-            stdin_source = open(target, mode)
+        if mode == 'r':
+            if len(which) > 0:
+                e = 'xonsh: error: unrecognized redirection command: {}'
+                print(e.format(cmds[-2]), file=sys.stderr)
+                return
+            elif stdin_source is not None:
+                e = 'xonsh: error: multiple inputs for stdin'
+                print(e, file=sys.stderr)
+                return
+            else:
+                stdin_source = open(target, mode)
 
         if mode in {'w', 'a'}:
             if which == '&':
+                if stderr_target is not None:
+                    e = 'xonsh: error: multiple redirects for stderr'
+                    print(e, file=sys.stderr)
+                    return
+                if stdout_target is not None:
+                    e = 'xonsh: error: multiple redirects for stdout'
+                    print(e, file=sys.stderr)
+                    return
                 f = _open(target, mode)
                 if f is None:
                     return
                 stdout_target = stderr_target = f
             elif which == '2':
+                if stderr_target is not None:
+                    e = 'xonsh: error: multiple redirects for stderr'
+                    print(e, file=sys.stderr)
+                    return
                 stderr_target = _open(target, mode)
                 if stderr_target is None:
                     return
             elif which in {'1', ''}:
+                if stdout_target is not None:
+                    e = 'xonsh: error: multiple redirects for stdout'
+                    print(e, file=sys.stderr)
+                    return
                 stdout_target = _open(target, mode)
                 if stdout_target is None:
                     return
             else:
-                e = 'xonsh: unrecognized redirection command: {}'
-                print(e.format(cmds[-1]), file=sys.stderr)
+                e = 'xonsh: error: unrecognized redirection command: {}'
+                print(e.format(cmds[-2]), file=sys.stderr)
                 return
         cmds = cmds[:-2]
     last_stdout = PIPE if captured else stdout_target

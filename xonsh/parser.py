@@ -2209,11 +2209,9 @@ class Parser(object):
         elif lenp == 3:
             p0 = [self._subproc_cliargs(p1, lineno=lineno, col=col)]
         else:
-            if len(p1) > 1 and hasattr(p1[-2], 's') and p1[-2].s != '|':
-                msg = 'additional redirect following non-pipe redirect'
-                self._parse_error(msg, self.currloc(lineno=lineno, column=col))
+            p2 = p[2]
             cliargs = self._subproc_cliargs(p[3], lineno=lineno, col=col)
-            p0 = p1 + [p[2], cliargs]
+            p0 = p1 + [p2, cliargs]
         # return arguments list
         p[0] = p0
 

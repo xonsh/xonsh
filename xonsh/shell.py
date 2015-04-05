@@ -154,6 +154,10 @@ class Shell(Cmd):
                 traceback.print_exc()
                 return None
             self.need_more_lines = True
+        except:
+            self.reset_buffer()
+            traceback.print_exc()
+            return None
         return code
 
     def reset_buffer(self):
