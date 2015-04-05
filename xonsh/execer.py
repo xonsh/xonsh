@@ -132,10 +132,8 @@ class Execer(object):
         self.parser.lexer.input(line)
         for tok in self.parser.lexer:
             if tok.type == 'SEMI':
-                maxcol = tok.lexpos
+                maxcol = tok.lexpos + mincol + 1
                 break
-        if maxcol is not None:
-            maxcol += mincol + 1
         return maxcol
 
     def _parse_ctx_free(self, input, mode='exec'):
