@@ -257,4 +257,3 @@ class Completer(object):
             comp = prefix[:prelen-len(attr)] + rpl
             attrs.add(comp)
         return attrs
-

@@ -90,10 +90,10 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
 
 
 def subexpr_from_unbalanced(expr, ltok, rtok):
-    """Attmpts to pull out a valid subexpression for unbalanced grouping, 
-    based on opening tokens, eg. '(', and closing tokens, eg. ')'.  This 
-    does not do full tokenization, but should be good enough for tab 
-    completeion.
+    """Attempts to pull out a valid subexpression for unbalanced grouping,
+    based on opening tokens, eg. '(', and closing tokens, eg. ')'.  This
+    does not do full tokenization, but should be good enough for tab
+    completion.
     """
     lcnt = expr.count(ltok)
     if lcnt == 0:
