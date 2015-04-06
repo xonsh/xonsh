@@ -76,7 +76,7 @@ class Completer(object):
         if begidx == 0:
             # the first thing we're typing; could be python or subprocess, so
             # anything goes.
-            rtn = self.cmd_complete(prefix)
+            rtn = self.cmd_complete(prefix, allcmds)
         elif cmd in self.bash_complete_funcs:
             rtn = set()
             for s in self.bash_complete(prefix, line, begidx, endidx):
@@ -115,17 +115,10 @@ class Completer(object):
         if prefix == '..':
             paths.add('../')
 
-    def cmd_complete(self, cmd):
+    def cmd_complete(self, cmd, valid):
         """Completes a command name based on what is on the $PATH"""
-        path = builtins.__xonsh_env__.get('PATH', None)
-        if path is None:
-            return set()
-        cmds = set()
         space = ' '
-        for d in path:
-            if os.path.isdir(d):
-                cmds |= {s + space for s in os.listdir(d) if s.startswith(cmd)}
-        return cmds
+        return {s + space for s in valid if s.startswith(cmd)}
 
     def path_complete(self, prefix):
         """Completes based on a path name."""
