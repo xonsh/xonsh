@@ -9,7 +9,6 @@
 # serve to show the default.
 
 import sys, os
-sys.path.append('../xonsh')
 from xonsh import __version__ as XONSH_VERSION
 
 # -- General configuration -----------------------------------------------------
@@ -104,21 +103,21 @@ pygments_style = 'sphinx'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-html_theme_options = {
-    'max_width': '1250px',
-    'minimal_width': '700px',
-    'relbarbgcolor': '#000000',
-    'footerbgcolor': '#FFFFE7',
-    'sidebarwidth': '322px',
-    'sidebarbgcolor': '#e7e7ff', 
+#html_theme_options = {
+#    'max_width': '1250px',
+#    'minimal_width': '700px',
+#    'relbarbgcolor': '#000000',
+#    'footerbgcolor': '#FFFFE7',
+#    'sidebarwidth': '322px',
+#    'sidebarbgcolor': '#e7e7ff', 
     #'googleanalytics_id': 'UA-41934829-1',
-    'stickysidebar': False,
-    'highlighttoc': False,
-    'externalrefs': False,
-    }
+#    'stickysidebar': False,
+#    'highlighttoc': False,
+#    'externalrefs': False,
+#    }
 
 # Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = ["_theme", csp.get_theme_dir()]
+#html_theme_path = ["_theme", csp.get_theme_dir()]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
