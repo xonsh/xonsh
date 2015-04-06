@@ -2,23 +2,25 @@
 from __future__ import print_function, unicode_literals
 import os
 import re
-import sys
 import builtins
 import subprocess
-from glob import iglob
 
+from xonsh.tools import subexpr_from_unbalanced
 from xonsh.built_ins import iglobpath
 
 RE_DASHF = re.compile(r'-F\s+(\w+)')
+RE_ATTR = re.compile(r'(\S+(\..+)*)\.(\w*)$')
 
-XONSH_TOKENS = {'and ', 'as ', 'assert ', 'break', 'class ', 'continue', 
-    'def ', 'del ', 'elif ', 'else', 'except ', 'finally:', 'for ', 'from ', 
-    'global ', 'import ', 'if ', 'in ', 'is ', 'lambda ', 'nonlocal ', 'not ',
-    'or ', 'pass', 'raise ', 'return ', 'try:', 'while ', 'with ', 'yield ', 
-    '+', '-', '/', '//', '%', '**', '|', '&', '~', '^', '>>', '<<', '<', '<=',
-    '>', '>=', '==', '!=', '->', '=', '+=', '-=', '*=', '/=', '%=', '**=', 
-    '>>=', '<<=', '&=', '^=', '|=', '//=', ',', ';', ':', '?', '??', '$(', 
-    '${', '$[', '..', '...'}
+XONSH_TOKENS = {
+    'and ', 'as ', 'assert ', 'break', 'class ', 'continue', 'def ', 'del ',
+    'elif ', 'else', 'except ', 'finally:', 'for ', 'from ', 'global ',
+    'import ', 'if ', 'in ', 'is ', 'lambda ', 'nonlocal ', 'not ', 'or ',
+    'pass', 'raise ', 'return ', 'try:', 'while ', 'with ', 'yield ', '+', '-',
+    '/', '//', '%', '**', '|', '&', '~', '^', '>>', '<<', '<', '<=', '>', '>=',
+    '==', '!=', '->', '=', '+=', '-=', '*=', '/=', '%=', '**=', '>>=', '<<=',
+    '&=', '^=', '|=', '//=', ',', ';', ':', '?', '??', '$(', '${', '$[', '..',
+    '...'
+}
 
 BASH_COMPLETE_SCRIPT = """source {filename}
 COMP_WORDS=({line})
@@ -29,6 +31,7 @@ COMP_CWORD={n}
 {func} {cmd} {prefix} {prev}
 for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 """
+
 
 class Completer(object):
     """This provides a list of optional completions for the xonsh shell."""
@@ -66,9 +69,14 @@ class Completer(object):
         """
         space = ' '  # intern some strings for faster appending
         slash = '/'
+        dot = '.'
+        ctx = ctx or {}
+        cmd = line.split(' ', 1)[0]
         if begidx == 0:
+            # the first thing we're typing; could be python or subprocess, so
+            # anything goes.
             rtn = self.cmd_complete(prefix)
-        elif line.split(' ', 1)[0] in self.bash_complete_funcs:
+        elif cmd in self.bash_complete_funcs:
             rtn = set()
             for s in self.bash_complete(prefix, line, begidx, endidx):
                 if os.path.isdir(s.rstrip()):
@@ -77,18 +85,34 @@ class Completer(object):
             if len(rtn) == 0:
                 rtn = self.path_complete(prefix)
             return sorted(rtn)
+        elif cmd not in ctx and cmd not in XONSH_TOKENS:
+            # subproc mode; do path completions
+            return sorted(self.path_complete(prefix))
         else:
+            # if we're here, we're definitely python?
             rtn = set()
         rtn |= {s for s in XONSH_TOKENS if s.startswith(prefix)}
         if ctx is not None:
-            rtn |= {s for s in ctx if s.startswith(prefix)}
+            if dot in prefix:
+                rtn |= self.attr_complete(prefix, ctx)
+            else:
+                rtn |= {s for s in ctx if s.startswith(prefix)}
         rtn |= {s for s in dir(builtins) if s.startswith(prefix)}
         rtn |= {s + space for s in builtins.aliases if s.startswith(prefix)}
-        if prefix.startswith('$'):
-            key = prefix[1:]
-            rtn |= {'$'+k for k in builtins.__xonsh_env__ if k.startswith(key)}
         rtn |= self.path_complete(prefix)
         return sorted(rtn)
+
+    def _add_env(self, paths, prefix):
+        if prefix.startswith('$'):
+            env = builtins.__xonsh_env__
+            key = prefix[1:]
+            paths.update({'$' + k for k in env if k.startswith(key)})
+
+    def _add_dots(self, paths, prefix):
+        if prefix in {'', '.'}:
+            paths.update({'./', '../'})
+        if prefix == '..':
+            paths.add('../')
 
     def cmd_complete(self, cmd):
         """Completes a command name based on what is on the $PATH"""
@@ -119,6 +143,8 @@ class Completer(object):
         if tilde in prefix:
             home = os.path.expanduser(tilde)
             paths = {s.replace(home, tilde) for s in paths}
+        self._add_env(paths, prefix)
+        self._add_dots(paths, prefix)
         return paths
 
     def bash_complete(self, prefix, line, begidx, endidx):
@@ -129,7 +155,7 @@ class Completer(object):
         fnme = self.bash_complete_files.get(cmd, None)
         if func is None or fnme is None:
             return set()
-        idx = 0
+        idx = n = 0
         for n, tok in enumerate(splt):
             if tok == prefix:
                 idx = line.find(prefix, idx)
@@ -139,13 +165,20 @@ class Completer(object):
         if len(prefix) == 0:
             prefix = '""'
             n += 1
-        script = BASH_COMPLETE_SCRIPT.format(filename=fnme, line=line, n=n,
-                    func=func, cmd=cmd, end=endidx+1, prefix=prefix, prev=prev)
-        out = subprocess.check_output(['bash'], input=script,
-                                      universal_newlines=True, 
+        script = BASH_COMPLETE_SCRIPT.format(filename=fnme,
+                                             line=line,
+                                             n=n,
+                                             func=func,
+                                             cmd=cmd,
+                                             end=endidx + 1,
+                                             prefix=prefix,
+                                             prev=prev)
+        out = subprocess.check_output(['bash'],
+                                      input=script,
+                                      universal_newlines=True,
                                       stderr=subprocess.PIPE)
         space = ' '
-        rtn = {s+space if s[-1:].isalnum() else s for s in out.splitlines()}
+        rtn = {s + space if s[-1:].isalnum() else s for s in out.splitlines()}
         return rtn
 
     def _source_completions(self):
@@ -157,11 +190,11 @@ class Completer(object):
 
     def _load_bash_complete_funcs(self):
         self.bash_complete_funcs = bcf = {}
-        input = self._source_completions()
-        if len(input) == 0:
+        inp = self._source_completions()
+        if len(inp) == 0:
             return
-        input.append('complete -p\n')
-        out = subprocess.check_output(['bash'], input='\n'.join(input), 
+        inp.append('complete -p\n')
+        out = subprocess.check_output(['bash'], input='\n'.join(inp),
                                       universal_newlines=True)
         for line in out.splitlines():
             head, cmd = line.rsplit(' ', 1)
@@ -173,20 +206,54 @@ class Completer(object):
             bcf[cmd] = m.group(1)
 
     def _load_bash_complete_files(self):
-        input = self._source_completions()
-        if len(input) == 0:
+        inp = self._source_completions()
+        if len(inp) == 0:
             self.bash_complete_files = {}
             return
-        input.append('shopt -s extdebug')
+        inp.append('shopt -s extdebug')
         declare_f = 'declare -F '
-        input += [declare_f + f for f in self.bash_complete_funcs.values()]
-        input.append('shopt -u extdebug\n')
-        out = subprocess.check_output(['bash'], input='\n'.join(input),
+        inp += [declare_f + f for f in self.bash_complete_funcs.values()]
+        inp.append('shopt -u extdebug\n')
+        out = subprocess.check_output(['bash'], input='\n'.join(inp),
                                       universal_newlines=True)
         func_files = {}
         for line in out.splitlines():
             parts = line.split()
             func_files[parts[0]] = parts[-1]
-        self.bash_complete_files = {cmd: func_files[func] for cmd, func in 
-                                    self.bash_complete_funcs.items()
-                                    if func in func_files}
+        self.bash_complete_files = {
+            cmd: func_files[func]
+            for cmd, func in self.bash_complete_funcs.items()
+            if func in func_files
+        }
+
+    def attr_complete(self, prefix, ctx):
+        """Complete attributes of an object."""
+        attrs = set()
+        m = RE_ATTR.match(prefix)
+        if m is None:
+            return attrs
+        expr, attr = m.group(1, 3)
+        expr = subexpr_from_unbalanced(expr, '(', ')')
+        expr = subexpr_from_unbalanced(expr, '[', ']')
+        expr = subexpr_from_unbalanced(expr, '{', '}')
+        try:
+            val = builtins.evalx(expr, glbs=ctx)
+        except:  # pylint:disable=bare-except
+            try:
+                val = builtins.evalx(expr, glbs=builtins.__dict__)
+            except:  # pylint:disable=bare-except
+                return attrs  # anything could have gone wrong!
+        opts = dir(val)
+        if len(attr) == 0:
+            opts = [o for o in opts if not o.startswith('_')]
+        else:
+            opts = [o for o in opts if o.startswith(attr)]
+        prelen = len(prefix)
+        for opt in opts:
+            a = getattr(val, opt)
+            rpl = opt + '(' if callable(a) else opt
+            # note that prefix[:prelen-len(attr)] != prefix[:-len(attr)]
+            # when len(attr) == 0.
+            comp = prefix[:prelen-len(attr)] + rpl
+            attrs.add(comp)
+        return attrs

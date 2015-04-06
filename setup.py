@@ -65,7 +65,7 @@ def main():
         author_email='scopatz@gmail.com',
         url='https://github.com/scopatz/xonsh',
         platforms='Cross Platform',
-        classifiers = ['Programming Language :: Python :: 3'],
+        classifiers=['Programming Language :: Python :: 3'],
         packages=['xonsh'],
         scripts=['scripts/xonsh'],
         cmdclass={'install': xinstall, 'sdist': xsdist},

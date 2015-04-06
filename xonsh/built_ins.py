@@ -18,7 +18,7 @@ from collections import Sequence, MutableMapping, Iterable, namedtuple, \
     MutableSequence, MutableSet
 
 from xonsh.tools import string_types, redirect_stdout, redirect_stderr
-from xonsh.tools import suggest_commands
+from xonsh.tools import suggest_commands, XonshError
 from xonsh.inspectors import Inspector
 from xonsh.environ import default_env
 from xonsh.aliases import DEFAULT_ALIASES, bash_aliases
@@ -28,9 +28,14 @@ from xonsh.jobs import ProcProxy
 ENV = None
 BUILTINS_LOADED = False
 INSPECTOR = Inspector()
-LOCALE_CAT = {'LC_CTYPE': locale.LC_CTYPE, 'LC_MESSAGES': locale.LC_MESSAGES,
-              'LC_COLLATE': locale.LC_COLLATE, 'LC_NUMERIC': locale.LC_NUMERIC,
-              'LC_MONETARY': locale.LC_MONETARY, 'LC_TIME': locale.LC_TIME}
+LOCALE_CATS = {
+    'LC_CTYPE': locale.LC_CTYPE,
+    'LC_MESSAGES': locale.LC_MESSAGES,
+    'LC_COLLATE': locale.LC_COLLATE,
+    'LC_NUMERIC': locale.LC_NUMERIC,
+    'LC_MONETARY': locale.LC_MONETARY,
+    'LC_TIME': locale.LC_TIME
+}
 
 
 class Env(MutableMapping):
@@ -53,7 +58,7 @@ class Env(MutableMapping):
         """If no initial environment is given, os.environ is used."""
         self._d = {}
         if len(args) == 0 and len(kwargs) == 0:
-            args = (os.environ,)
+            args = (os.environ, )
         for key, val in dict(*args, **kwargs).items():
             self[key] = val
         self._detyped = None
@@ -64,7 +69,7 @@ class Env(MutableMapping):
             return self._detyped
         ctx = {}
         for key, val in self._d.items():
-            if callable(val):
+            if callable(val) or isinstance(val, MutableMapping):
                 continue
             if not isinstance(key, string_types):
                 key = str(key)
@@ -118,9 +123,9 @@ class Env(MutableMapping):
                   else val
         elif key == 'XONSH_HISTORY_SIZE' and not isinstance(val, int):
             val = int(val)
-        elif key in LOCALE_CAT:
-            locale.setlocale(LOCALE_CAT[key], val)
-            val = locale.setlocale(LOCALE_CAT[key])
+        elif key in LOCALE_CATS:
+            locale.setlocale(LOCALE_CATS[key], val)
+            val = locale.setlocale(LOCALE_CATS[key])
         self._d[key] = val
         self._detyped = None
 
@@ -181,7 +186,7 @@ class Aliases(MutableMapping):
         # only once.
         if callable(value):
             if acc_args:  # Partial application
-                return lambda args, stdin=None: value(acc_args+args,
+                return lambda args, stdin=None: value(acc_args + args,
                                                       stdin=stdin)
             else:
                 return value
@@ -195,7 +200,7 @@ class Aliases(MutableMapping):
             else:
                 return self.eval_alias(self._raw[token],
                                        seen_tokens | {token},
-                                       rest+acc_args)
+                                       rest + acc_args)
 
     #
     # Mutable mapping interface
@@ -293,7 +298,8 @@ def regexpath(s):
 def globpath(s):
     """Simple wrapper around glob that also expands home and env vars."""
     s = expand_path(s)
-    return glob(s)
+    o = glob(s)
+    return o if len(o) != 0 else [s]
 
 
 def iglobpath(s):
@@ -301,10 +307,13 @@ def iglobpath(s):
     s = expand_path(s)
     return iglob(s)
 
+
 WRITER_MODES = {'>': 'w', '>>': 'a'}
 
 
-def _run_callable_subproc(alias, args, captured=True, prev_proc=None,
+def _run_callable_subproc(alias, args,
+                          captured=True,
+                          prev_proc=None,
                           stdout=None):
     """Helper for running callables as a subprocess."""
     # compute stdin for callable
@@ -436,8 +445,7 @@ def run_subproc(cmds, captured=True):
                 last_stdout = open(write_target, write_mode)
             except FileNotFoundError:
                 e = 'xonsh: {0}: no such file or directory'
-                print(e.format(write_target))
-                return
+                raise XonshError(e.format(write_target))
         else:
             last_stdout = PIPE
     last_cmd = cmds[-1]
@@ -456,8 +464,7 @@ def run_subproc(cmds, captured=True):
                 aliased_cmd = get_script_subproc_command(cmd[0], cmd[1:])
             except PermissionError:
                 e = 'xonsh: subprocess mode: permission denied: {0}'
-                print(e.format(cmd[0]))
-                return
+                raise XonshError(e.format(cmd[0]))
         elif alias is None:
             aliased_cmd = cmd
         elif callable(alias):
@@ -480,18 +487,19 @@ def run_subproc(cmds, captured=True):
         if os.name == 'posix':
             subproc_kwargs['preexec_fn'] = _subproc_pre
         try:
-            proc = Popen(aliased_cmd, universal_newlines=uninew,
-                         env=ENV.detype(), stdin=stdin,
+            proc = Popen(aliased_cmd,
+                         universal_newlines=uninew,
+                         env=ENV.detype(),
+                         stdin=stdin,
                          stdout=stdout, **subproc_kwargs)
         except PermissionError:
-            cmd = aliased_cmd[0]
-            print('xonsh: subprocess mode: permission denied: {0}'.format(cmd))
-            return
+            e = 'xonsh: subprocess mode: permission denied: {0}'
+            raise XonshError(e.format(aliased_cmd[0]))
         except FileNotFoundError:
             cmd = aliased_cmd[0]
-            print('xonsh: subprocess mode: command not found: {0}'.format(cmd))
-            print(suggest_commands(cmd, ENV, builtins.aliases), end='')
-            return
+            e = 'xonsh: subprocess mode: command not found: {0}'.format(cmd)
+            e += '\n' + suggest_commands(cmd, ENV, builtins.aliases)
+            raise XonshError(e)
         procs.append(proc)
         prev = None
         if prev_is_proxy:
@@ -504,13 +512,15 @@ def run_subproc(cmds, captured=True):
     pids = [i.pid for i in procs]
     if not isinstance(prev_proc, ProcProxy):
         builtins.__xonsh_active_job__ = num
-        builtins.__xonsh_all_jobs__[num] = {'cmds': cmds,
-                                            'pids': pids,
-                                            'obj': prev_proc,
-                                            'started': time.time(),
-                                            'pgrp': os.getpgid(prev_proc.pid),
-                                            'status': 'running',
-                                            'bg': background}
+        builtins.__xonsh_all_jobs__[num] = {
+            'cmds': cmds,
+            'pids': pids,
+            'obj': prev_proc,
+            'started': time.time(),
+            'pgrp': os.getpgid(prev_proc.pid),
+            'status': 'running',
+            'bg': background
+        }
     if background:
         print_one_job(num)
         return
@@ -599,14 +609,24 @@ def unload_builtins():
         builtins.quit = builtins.__xonsh_pyquit__
     if not BUILTINS_LOADED:
         return
-    names = ['__xonsh_env__', '__xonsh_help__', '__xonsh_superhelp__',
-             '__xonsh_regexpath__', '__xonsh_glob__', '__xonsh_exit__',
-             '__xonsh_pyexit__', '__xonsh_pyquit__',
-             '__xonsh_subproc_captured__', '__xonsh_subproc_uncaptured__',
-             '__xonsh_execer__', 'evalx', 'execx', 'compilex',
-             'default_aliases', '__xonsh_all_jobs__', '__xonsh_active_job__',
-             '__xonsh_ensure_list_of_strs__',
-             ]
+    names = ['__xonsh_env__',
+             '__xonsh_help__',
+             '__xonsh_superhelp__',
+             '__xonsh_regexpath__',
+             '__xonsh_glob__',
+             '__xonsh_exit__',
+             '__xonsh_pyexit__',
+             '__xonsh_pyquit__',
+             '__xonsh_subproc_captured__',
+             '__xonsh_subproc_uncaptured__',
+             '__xonsh_execer__',
+             'evalx',
+             'execx',
+             'compilex',
+             'default_aliases',
+             '__xonsh_all_jobs__',
+             '__xonsh_active_job__',
+             '__xonsh_ensure_list_of_strs__', ]
     for name in names:
         if hasattr(builtins, name):
             delattr(builtins, name)

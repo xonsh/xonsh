@@ -164,63 +164,55 @@ useful to have more sophisticated types, like functions, in the environment.
 There are handful of environment variables that xonsh considers special.
 They can be seen in the table below:
 
-================== =========================== ================================
-variable           default                     description
-================== =========================== ================================
-PROMPT             xosh.environ.default_prompt The prompt text, may be str or
-                                               function which returns a str.
-                                               The str may contain keyword
-                                               arguments which are
-                                               auto-formatted (see below).
-MULTILINE_PROMPT   ``'.'``                     Prompt text for 2nd+ lines of
-                                               input, may be str or
-                                               function which returns a str.
-TITLE              xonsh.environ.default_title The title text for the window
-                                               in which xonsh is running.  As
-                                               with PROMPT, may be a str or a
-                                               function that returns a str.
-                                               The str is formatted in the
-                                               same manner as PROMPT (see
-                                               below).
-XONSHRC            ``'~/.xonshrc'``            Location of run control file
-XONSH_HISTORY_SIZE 8128                        Number of items to store in the
-                                               history.
-XONSH_HISTORY_FILE ``'~/.xonsh_history'``      Location of history file
-BASH_COMPLETIONS   ``[] or ['/etc/...']``      This is a list of strings that
-                                               specifies where the BASH
-                                               completion files may be found.
-                                               The default values are platform
-                                               dependent, but sane.
-SUGGEST_COMMANDS   ``True``                    When a user types an invalid
-                                               command, xonsh will try to offer
-                                               suggestions of similar valid
-                                               commands if this is ``True``.
-SUGGEST_THRESHOLD  ``3``                       An error threshold.  If the
-                                               Levenshtein distance between the
-                                               entered command and a valid
-                                               command is less than this value,
-                                               the valid command will be
-                                               offered as a suggestion.
-SUGGEST_MAX_NUM    ``5``                       xonsh will show at most this
-                                               many suggestions in response to
-                                               an invalid command.  If
-                                               negative, there is no limit to
-                                               how many suggestions are shown.
-================== =========================== ================================
-
-Customizing the prompt is probably the most common reason for altering an
-environment variable.  To make this easier, you can use keyword
-arguments in a prompt string that will get replaced automatically:
-
-.. code-block:: xonshcon
-
-    >>> $PROMPT = '{user}@{hostname}:{cwd} > '
-    snail@home:~ > # it works!
-
-You can also color your prompt easily by inserting keywords such as ``{GREEN}``
-or ``{BOLD_BLUE}`` -- for the full list of keyword arguments, refer to the API
-documentation of :py:func:`xonsh.environ.format_prompt`.
-
+================== ============================= ================================
+variable           default                       description
+================== ============================= ================================
+PROMPT             xosh.environ.DEFAULT_PROMPT   The prompt text.  May contain
+                                                 keyword arguments which are
+                                                 auto-formatted (see `Customizing
+                                                 the Prompt`_ below).
+MULTILINE_PROMPT   ``'.'``                       Prompt text for 2nd+ lines of
+                                                 input, may be str or
+                                                 function which returns a str.
+TITLE              xonsh.environ.DEFAULT_TITLE   The title text for the window
+                                                 in which xonsh is running.
+                                                 Formatted in the same manner
+                                                 as PROMPT (see `Customizing the
+                                                 Prompt`_ below).
+FORMATTER_DICT     xonsh.environ.FORMATTER_DICT  Dictionary containing variables
+                                                 to be used when formatting PROMPT
+                                                 and TITLE (see `Customizing the
+                                                 Prompt`_ below).
+XONSHRC            ``'~/.xonshrc'``              Location of run control file
+XONSH_HISTORY_SIZE 8128                          Number of items to store in the
+                                                 history.
+XONSH_HISTORY_FILE ``'~/.xonsh_history'``        Location of history file
+XONSH_INTERACTIVE                                ``True`` if xonsh is running 
+                                                 interactively, and ``False`` 
+                                                 otherwise.
+BASH_COMPLETIONS   ``[] or ['/etc/...']``        This is a list of strings that
+                                                 specifies where the BASH
+                                                 completion files may be found.
+                                                 The default values are platform
+                                                 dependent, but sane.  To
+                                                 specify an alternate list,
+                                                 do so in the run control file.
+SUGGEST_COMMANDS   ``True``                      When a user types an invalid
+                                                 command, xonsh will try to offer
+                                                 suggestions of similar valid
+                                                 commands if this is ``True``.
+SUGGEST_THRESHOLD  ``3``                         An error threshold.  If the
+                                                 Levenshtein distance between the
+                                                 entered command and a valid
+                                                 command is less than this value,
+                                                 the valid command will be
+                                                 offered as a suggestion.
+SUGGEST_MAX_NUM    ``5``                         xonsh will show at most this
+                                                 many suggestions in response to
+                                                 an invalid command.  If
+                                                 negative, there is no limit to
+                                                 how many suggestions are shown.
+================== ============================= ================================
 
 Environment Lookup with ``${}``
 ================================
@@ -232,8 +224,8 @@ operator.
 .. warning:: In BASH, ``$NAME`` and ``${NAME}`` are syntactically equivalent.
              In xonsh, they have separate meanings.
 
-We can place any valid Python expression inside of the curly braces in 
-``${<expr>}``. This result of this expression will then be used to look up a 
+We can place any valid Python expression inside of the curly braces in
+``${<expr>}``. This result of this expression will then be used to look up a
 value in the environment.  In fact, ``${<expr>}`` is the same as doing
 ``__xonsh_env__[<expr>]``, but much nicer to look at. Here are a couple of
 examples in action:
@@ -386,8 +378,8 @@ Python Evaluation with ``@()``
 The ``@(<expr>)`` operator from will evaluate arbitrary Python code in
 subprocess mode, and the result will be appended to the subprocess command
 list. If the result is a string, it is appended to the argument list.
-If the result is a list or other non-string sequence, the contents are 
-converted to strings and appended to the argument list in order. Otherwise, the 
+If the result is a list or other non-string sequence, the contents are
+converted to strings and appended to the argument list in order. Otherwise, the
 result is automatically converted to a string.  For example,
 
 .. code-block:: xonshcon
@@ -768,6 +760,58 @@ environment variable names. In subprocess-mode, you additionally complete
 on any file names on your ``$PATH``, alias keys, and full BASH completion
 for the commands themselves.
 
+Customizing the Prompt
+======================
+
+Customizing the prompt is probably the most common reason for altering an
+environment variable.  The ``PROMPT`` variable can be a string, or it can be a
+function (of no arguments) that returns a string.  The result can contain
+keyword arguments, which will be replaced automatically:
+
+.. code-block:: xonshcon
+
+    >>> $PROMPT = '{user}@{hostname}:{cwd} > '
+    snail@home:~ > # it works!
+    snail@home:~ > $PROMPT = lambda : '{user}@{hostname}:{cwd} >> '
+    snail@home:~ >> # so does that!
+    
+By default, the following variables are available for use:
+  * ``user``: The username of the current user
+  * ``hostname``: The name of the host computer
+  * ``cwd``: The current working directory
+  * ``curr_branch``: The name of the current git branch (preceded by space),
+    if any.
+
+You can also color your prompt easily by inserting keywords such as ``{GREEN}``
+or ``{BOLD_BLUE}``.  Colors have the form shown below:
+    
+  * ``(QUALIFIER\_)COLORNAME``: Inserts an ANSI color code
+      * ``COLORNAME`` can be any of: ``BLACK``, ``RED``, ``GREEN``, ``YELLOW``,
+        ``BLUE``, ``PURPLE``, ``CYAN``, or ``WHITE``
+      * ``QUALIFIER`` is optional and can be any of: ``BOLD``, ``UNDERLINE``,
+        ``BACKGROUND``, ``INTENSE``, ``BOLD_INTENSE``, or 
+        ``BACKGROUND_INTENSE``
+  * ``NO_COLOR``: Resets any previously used color codes
+
+You can make use of additional variables beyond these by adding them to the
+``FORMATTER_PROMPT`` environment variable.  The values in this dictionary
+should be strings (which will be inserted into the prompt verbatim), or
+functions of no arguments (which will be called each time the prompt is
+generated, and the results of those calls will be inserted into the prompt).
+For example:
+
+.. code-block:: xonshcon
+
+    snail@home ~ $ $FORMATTER_DICT['test'] = "hey"
+    snail@home ~ $ $PROMPT = "{test} {cwd} $ "
+    hey ~ $ 
+    hey ~ $ import random
+    hey ~ $ $FORMATTER_DICT['test'] = lambda: random.randint(1,9)
+    3 ~ $ 
+    5 ~ $ 
+    2 ~ $ 
+    8 ~ $ 
+
 Executing Commands and Scripts
 ==============================
 When started with the ``-c`` flag and a command, xonsh will execute that command
@@ -785,19 +829,19 @@ script, stored in ``test.xsh``:
 .. code-block:: xonsh
 
     #!/usr/bin/env xonsh
-
-    $[ls]
-
+    
+    ls
+    
     print('removing files')
-    $[rm `file\d+.txt`]
-
-    $[ls]
-
+    rm `file\d+.txt`
+    
+    ls
+    
     print('adding files')
     # This is a comment
     for i, x in enumerate("xonsh"):
-        $[echo @(x) > @("file%d.txt" % i)]
-
+        echo @(x) > @("file%d.txt" % i)
+    
     print($(ls).replace('\n', ' '))
 
 
@@ -805,7 +849,7 @@ This script could be run by piping its contents to xonsh:
 
 .. code-block:: bash
 
-    bash $ cat test_script.xsh | xonsh
+    bash $ cat test.xsh | xonsh
     file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  test_script.sh
     removing files
     test_script.sh
@@ -816,7 +860,7 @@ or by invoking xonsh with its filename as an argument:
 
 .. code-block:: bash
 
-    bash $ xonsh test_script.xsh
+    bash $ xonsh test.xsh
     file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  test_script.sh
     removing files
     test_script.sh
@@ -825,8 +869,8 @@ or by invoking xonsh with its filename as an argument:
 
 xonsh scripts can also accept arguments.  These arguments are made available to
 the script in two different ways:
-    
-#. In either mode, as individual variables ``$ARG<n>`` (e.g., ``$ARG1``)    
+
+#. In either mode, as individual variables ``$ARG<n>`` (e.g., ``$ARG1``)
 #. In Python mode only, as a list ``$ARGS``
 
 For example, consider a slight variation of the example script from above that
@@ -836,27 +880,27 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
 .. code-block:: xonsh
 
     #!/usr/bin/env xonsh
-
+    
     print($ARGS)
-
-    $[ls]
-
+    
+    ls
+    
     print('removing files')
-    $[rm `file\d+.txt`]
-
-    $[ls]
-
+    rm `file\d+.txt`
+    
+    ls
+    
     print('adding files')
     # This is a comment
     for i, x in enumerate($ARG1):
-        $[echo @(x) > @("file%d.txt" % i)]
-
+        echo @(x) > @("file%d.txt" % i)
+    
     print($(ls).replace('\n', ' '))
     print()
 
 .. code-block:: bash
 
-    bash $ xonsh test_script2.xsh snails
+    bash $ xonsh test2.xsh snails
     ['test_script.sh', 'snails']
     file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  file5.txt  test_script.sh
     removing files
@@ -869,9 +913,9 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
 
 Importing Xonsh (``*.xsh``)
 ==============================
-You can import xonsh source files with the ``*.xsh`` file extension using 
+You can import xonsh source files with the ``*.xsh`` file extension using
 the normal Python syntax.  Say you had a file called ``mine.xsh``, you could
-therefore perform a Bash-like source into your current shell with the 
+therefore perform a Bash-like source into your current shell with the
 following:
 
 .. code-block:: xonsh
