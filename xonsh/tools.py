@@ -289,6 +289,17 @@ class redirect_stderr(_RedirectStream):
     _stream = "stderr"
 
 
+def all_command_names():
+    """Return a set containing all valid commands from PATH and aliases"""
+    path = builtins.__xonsh_env__.get('PATH', None) or []
+    allcmds = set()
+    for d in path:
+        if os.path.isdir(d):
+            allcmds |= set(os.listdir(d))
+    allcmds |= set(builtins.aliases.keys())
+    return allcmds
+
+
 def suggest_commands(cmd, env, aliases):
     """Suggests alternative commands given an environment and aliases."""
     if env.get('SUGGEST_COMMANDS', True):

@@ -5,8 +5,8 @@ import re
 import builtins
 import subprocess
 
-from xonsh.tools import subexpr_from_unbalanced
 from xonsh.built_ins import iglobpath
+from xonsh.tools import subexpr_from_unbalanced, all_command_names
 
 RE_DASHF = re.compile(r'-F\s+(\w+)')
 RE_ATTR = re.compile(r'(\S+(\..+)*)\.(\w*)$')
@@ -72,6 +72,7 @@ class Completer(object):
         dot = '.'
         ctx = ctx or {}
         cmd = line.split(' ', 1)[0]
+        allcmds = all_command_names()
         if begidx == 0:
             # the first thing we're typing; could be python or subprocess, so
             # anything goes.
@@ -85,11 +86,11 @@ class Completer(object):
             if len(rtn) == 0:
                 rtn = self.path_complete(prefix)
             return sorted(rtn)
-        elif cmd not in ctx and cmd not in XONSH_TOKENS:
+        elif cmd not in ctx and cmd in allcmds:
             # subproc mode; do path completions
             return sorted(self.path_complete(prefix))
         else:
-            # if we're here, we're definitely python?
+            # if we're here, we're not a command, but could be anything else
             rtn = set()
         rtn |= {s for s in XONSH_TOKENS if s.startswith(prefix)}
         if ctx is not None:
