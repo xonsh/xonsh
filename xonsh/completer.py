@@ -265,23 +265,21 @@ class Completer(object):
 
     def _all_commands(self):
         path = builtins.__xonsh_env__.get('PATH', None) or []
+        # did PATH change?
         path_hash = hash(tuple(path))
         cache_valid = path_hash == self._path_checksum
         self._path_checksum = path_hash
+        # did aliases change?
         al_hash = hash(tuple(builtins.aliases.keys()))
         self._alias_checksum = al_hash
         cache_valid = cache_valid and al_hash == self._alias_checksum
         pm = self._path_mtime
-        if cache_valid:
-            for d in filter(os.path.isdir, path):
-                m = os.stat(d).st_mtime
-                if m > pm:
-                    pm = m
-                    cache_valid = False
-                    # run through everything the first time to get the highest
-                    # mtime for the cache, to avoid rebuilding multiple times
-                    if self._path_mtime != -1:
-                        break
+        # did the contents of any directory in PATH change?
+        for d in filter(os.path.isdir, path):
+            m = os.stat(d).st_mtime
+            if m > pm:
+                pm = m
+                cache_valid = False
         self._path_mtime = pm
         if cache_valid:
             return self._cmds_cache
