@@ -18,7 +18,7 @@ from collections import Sequence, MutableMapping, Iterable, namedtuple, \
     MutableSequence, MutableSet
 
 from xonsh.tools import string_types, redirect_stdout, redirect_stderr
-from xonsh.tools import suggest_commands
+from xonsh.tools import suggest_commands, XonshError
 from xonsh.inspectors import Inspector
 from xonsh.environ import default_env
 from xonsh.aliases import DEFAULT_ALIASES, bash_aliases
@@ -445,8 +445,7 @@ def run_subproc(cmds, captured=True):
                 last_stdout = open(write_target, write_mode)
             except FileNotFoundError:
                 e = 'xonsh: {0}: no such file or directory'
-                print(e.format(write_target))
-                return
+                raise XonshError(e.format(write_target))
         else:
             last_stdout = PIPE
     last_cmd = cmds[-1]
@@ -465,8 +464,7 @@ def run_subproc(cmds, captured=True):
                 aliased_cmd = get_script_subproc_command(cmd[0], cmd[1:])
             except PermissionError:
                 e = 'xonsh: subprocess mode: permission denied: {0}'
-                print(e.format(cmd[0]))
-                return
+                raise XonshError(e.format(cmd[0]))
         elif alias is None:
             aliased_cmd = cmd
         elif callable(alias):
@@ -495,14 +493,13 @@ def run_subproc(cmds, captured=True):
                          stdin=stdin,
                          stdout=stdout, **subproc_kwargs)
         except PermissionError:
-            cmd = aliased_cmd[0]
-            print('xonsh: subprocess mode: permission denied: {0}'.format(cmd))
-            return
+            e = 'xonsh: subprocess mode: permission denied: {0}'
+            raise XonshError(e.format(aliased_cmd[0]))
         except FileNotFoundError:
             cmd = aliased_cmd[0]
-            print('xonsh: subprocess mode: command not found: {0}'.format(cmd))
-            print(suggest_commands(cmd, ENV, builtins.aliases), end='')
-            return
+            e = 'xonsh: subprocess mode: command not found: {0}'.format(cmd)
+            e += '\n' + suggest_commands(cmd, ENV, builtins.aliases)
+            raise XonshError(e)
         procs.append(proc)
         prev = None
         if prev_is_proxy:
