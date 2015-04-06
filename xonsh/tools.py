@@ -179,7 +179,7 @@ TERM_COLORS = {
     # Reset
     'NO_COLOR': '\001\033[0m\002',  # Text Reset
     # Regular Colors
-    'BLACK': '\033[0;30m\002',  # BLACK
+    'BLACK': '\001\033[0;30m\002',  # BLACK
     'RED': '\001\033[0;31m\002',  # RED
     'GREEN': '\001\033[0;32m\002',  # GREEN
     'YELLOW': '\001\033[0;33m\002',  # YELLOW
