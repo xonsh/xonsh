@@ -465,8 +465,7 @@ def run_subproc(cmds, captured=True):
                 aliased_cmd = get_script_subproc_command(cmd[0], cmd[1:])
             except PermissionError:
                 e = 'xonsh: subprocess mode: permission denied: {0}'
-                print(e.format(cmd[0]))
-                return
+                raise PermissionError(e.format(cmd[0]))
         elif alias is None:
             aliased_cmd = cmd
         elif callable(alias):
@@ -495,14 +494,13 @@ def run_subproc(cmds, captured=True):
                          stdin=stdin,
                          stdout=stdout, **subproc_kwargs)
         except PermissionError:
-            cmd = aliased_cmd[0]
-            print('xonsh: subprocess mode: permission denied: {0}'.format(cmd))
-            return
+            e = 'xonsh: subprocess mode: permission denied: {0}'
+            raise PermissionError(e.format(aliased_cmd[0]))
         except FileNotFoundError:
             cmd = aliased_cmd[0]
-            print('xonsh: subprocess mode: command not found: {0}'.format(cmd))
-            print(suggest_commands(cmd, ENV, builtins.aliases), end='')
-            return
+            e = 'xonsh: subprocess mode: command not found: {0}'.format(cmd)
+            e += '\n' + suggest_commands(cmd, ENV, builtins.aliases)
+            raise FileNotFoundError(e)
         procs.append(proc)
         prev = None
         if prev_is_proxy:
