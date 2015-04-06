@@ -167,7 +167,7 @@ They can be seen in the table below:
 ================== ============================= ================================
 variable           default                       description
 ================== ============================= ================================
-PROMPT             xosh.environ.DEFAULT_PROMPT   The prompt text.  May contain
+PROMPT             xonsh.environ.DEFAULT_PROMPT  The prompt text.  May contain
                                                  keyword arguments which are
                                                  auto-formatted (see `Customizing
                                                  the Prompt`_ below).
@@ -218,7 +218,7 @@ Environment Lookup with ``${}``
 ================================
 The ``$NAME`` is great as long as you know the name of the environment
 variable you want to look up.  But what if you want to construct the name
-programatically, or read it from another variable?  Enter the ``${}``
+programmatically, or read it from another variable?  Enter the ``${}``
 operator.
 
 .. warning:: In BASH, ``$NAME`` and ``${NAME}`` are syntactically equivalent.
@@ -496,17 +496,46 @@ Again, the ``>>`` does not work as shown here in Python-mode, where it takes
 on its usual meaning.
 
 
-Non-blocking with ``&``
-====================================
-In subprocess-mode, you can make a process no-blocking if the last element on
-a line is an ``&``.  The following shows an example with ``emacs``.
+Background Jobs
+===============
+
+Typically, when you start a program running in xonsh, xonsh itself will pause
+and wait for that program to terminate.  Sometimes, though, you may want to
+continue giving commands to xonsh while that program is running.  In subprocess
+mode, you can start a process "in the background" (i.e., in a way that allows
+continued use of the shell) by adding an ampersand (``&``) to the end of your
+command.  Background jobs are very useful when running programs with graphical
+user interfaces.
+
+The following shows an example with ``emacs``.
 
 .. code-block:: xonshcon
 
     >>> emacs &
     >>>
 
-Note that the prompt is returned to you afterwards.
+Note that the prompt is returned to you after emacs is started.
+
+Job Control
+===========
+
+If you start a program in the foreground (with no ampersand), you can suspend
+that program's execution and return to the xonsh prompt by pressing Control-Z.
+This will give control of the terminal back to xonsh, and will keep the program
+paused in the background.
+
+To unpause the program and bring it back to the foreground, you can use the
+``fg`` command.  To unpause the program have it continue in the background
+(giving you continued access to the xonsh prompt), you can use the ``bg``
+command.
+
+You can get a listing of all currently running jobs with the ``jobs`` command.
+
+Each job has a unique identifier (starting with 1 and counting upward).  By
+default, the ``fg`` and ``bg`` commands operate on the job that was started
+most recently.  You can bring older jobs to the foreground or background by
+specifying the appropriate ID; for example, ``fg 1`` brings the job with ID 1
+to the foreground.
 
 String Literals in Subprocess-mode
 ====================================
