@@ -41,7 +41,7 @@ class Completer(object):
         self._path_checksum = None
         self._alias_checksum = None
         self._path_mtime = -1
-        self._cmds_cache = None
+        self._cmds_cache = frozenset()
         try:
             # FIXME this could be threaded for faster startup times
             self._load_bash_complete_funcs()
