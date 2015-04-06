@@ -8,6 +8,7 @@ from warnings import warn
 from argparse import Namespace
 
 from xonsh.execer import Execer
+from xonsh.tools import XonshError
 from xonsh.completer import Completer
 from xonsh.environ import xonshrc_context, multiline_prompt, format_prompt
 
@@ -128,6 +129,8 @@ class Shell(Cmd):
             return
         try:
             self.execer.exec(code, mode='single', glbs=self.ctx)  # no locals
+        except XonshError as e:
+            print(e.args[0], file=sys.stderr, end='')
         except:
             traceback.print_exc()
         if builtins.__xonsh_exit__:

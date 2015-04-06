@@ -32,6 +32,10 @@ else:
 DEFAULT_ENCODING = sys.getdefaultencoding()
 
 
+class XonshError(Exception):
+    pass
+
+
 def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     """Excapsulates tokens in a source code line in a uncaptured
     subprocess $[] starting at a minimum column. If there are no tokens
