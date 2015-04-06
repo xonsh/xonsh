@@ -108,6 +108,10 @@ pygments_style = 'sphinx'
 # further.  For a list of options available for each theme, see the
 # documentation.
 if not on_rtd:
+    import cloud_sptheme as csp
+
+    html_theme = 'cloud'
+
     html_theme_options = {
         'max_width': '1250px',
         'minimal_width': '700px',
