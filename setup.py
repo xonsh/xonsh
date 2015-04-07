@@ -51,7 +51,7 @@ if HAVE_SETUPTOOLS:
         def run(self):
             clean_tables()
             build_tables()
-            install.run(self)
+            develop.run(self)
 
 
 def main():
