@@ -264,13 +264,13 @@ class Completer(object):
         return attrs
 
     def _all_commands(self):
-        path = builtins.__xonsh_env__.get('PATH', None) or []
+        path = builtins.__xonsh_env__.get('PATH', [])
         # did PATH change?
         path_hash = hash(tuple(path))
         cache_valid = path_hash == self._path_checksum
         self._path_checksum = path_hash
         # did aliases change?
-        al_hash = hash(tuple(builtins.aliases.keys()))
+        al_hash = hash(tuple(sorted(builtins.aliases.keys())))
         self._alias_checksum = al_hash
         cache_valid = cache_valid and al_hash == self._alias_checksum
         pm = self._path_mtime
@@ -284,9 +284,8 @@ class Completer(object):
         if cache_valid:
             return self._cmds_cache
         allcmds = set()
-        for d in path:
-            if os.path.isdir(d):
-                allcmds |= set(os.listdir(d))
+        for d in filter(os.path.isdir, path):
+            allcmds |= set(os.listdir(d))
         allcmds |= set(builtins.aliases.keys())
         self._cmds_cache = frozenset(allcmds)
         return self._cmds_cache
