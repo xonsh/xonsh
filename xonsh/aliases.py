@@ -73,6 +73,19 @@ def source_bash(args, stdin=None):
     return
 
 
+def exec(args, stdin=None):
+    """
+    Replaces current process with command specified and passes in the
+    current xonsh environment.
+    """
+    env = builtins.__xonsh_env__
+    denv = env.detype()
+    try:
+        os.execvpe(args[0], args[1:len(args)], denv)
+    except FileNotFoundError as e:
+        return "xonsh: " + e.args[1] + ": " + args[0] + "\n"
+
+
 def bash_aliases():
     """Computes a dictionary of aliases based on Bash's aliases."""
     try:
@@ -108,6 +121,7 @@ DEFAULT_ALIASES = {
     'EOF': exit,
     'exit': exit,
     'quit': exit,
+    'exec': exec,
     'source-bash': source_bash,
     'grep': ['grep', '--color=auto'],
     'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
