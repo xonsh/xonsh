@@ -5,8 +5,8 @@ import re
 import builtins
 import subprocess
 
-from xonsh.tools import subexpr_from_unbalanced
 from xonsh.built_ins import iglobpath
+from xonsh.tools import subexpr_from_unbalanced
 
 RE_DASHF = re.compile(r'-F\s+(\w+)')
 RE_ATTR = re.compile(r'(\S+(\..+)*)\.(\w*)$')
@@ -37,6 +37,11 @@ class Completer(object):
     """This provides a list of optional completions for the xonsh shell."""
 
     def __init__(self):
+        # initialize command cache
+        self._path_checksum = None
+        self._alias_checksum = None
+        self._path_mtime = -1
+        self._cmds_cache = frozenset()
         try:
             # FIXME this could be threaded for faster startup times
             self._load_bash_complete_funcs()
@@ -85,11 +90,18 @@ class Completer(object):
             if len(rtn) == 0:
                 rtn = self.path_complete(prefix)
             return sorted(rtn)
-        elif cmd not in ctx and cmd not in XONSH_TOKENS:
-            # subproc mode; do path completions
-            return sorted(self.path_complete(prefix))
+        elif prefix.startswith('${') or prefix.startswith('@('):
+            # python mode explicitly
+            rtn = set()
+        elif cmd not in ctx:
+            if cmd in self._all_commands():
+                # subproc mode; do path completions
+                return sorted(self.path_complete(prefix))
+            else:
+                # if we're here, could be anything
+                rtn = set()
         else:
-            # if we're here, we're definitely python?
+            # if we're here, we're not a command, but could be anything else
             rtn = set()
         rtn |= {s for s in XONSH_TOKENS if s.startswith(prefix)}
         if ctx is not None:
@@ -116,15 +128,8 @@ class Completer(object):
 
     def cmd_complete(self, cmd):
         """Completes a command name based on what is on the $PATH"""
-        path = builtins.__xonsh_env__.get('PATH', None)
-        if path is None:
-            return set()
-        cmds = set()
         space = ' '
-        for d in path:
-            if os.path.isdir(d):
-                cmds |= {s + space for s in os.listdir(d) if s.startswith(cmd)}
-        return cmds
+        return {s + space for s in self._all_commands() if s.startswith(cmd)}
 
     def path_complete(self, prefix):
         """Completes based on a path name."""
@@ -257,3 +262,30 @@ class Completer(object):
             comp = prefix[:prelen-len(attr)] + rpl
             attrs.add(comp)
         return attrs
+
+    def _all_commands(self):
+        path = builtins.__xonsh_env__.get('PATH', [])
+        # did PATH change?
+        path_hash = hash(tuple(path))
+        cache_valid = path_hash == self._path_checksum
+        self._path_checksum = path_hash
+        # did aliases change?
+        al_hash = hash(tuple(sorted(builtins.aliases.keys())))
+        self._alias_checksum = al_hash
+        cache_valid = cache_valid and al_hash == self._alias_checksum
+        pm = self._path_mtime
+        # did the contents of any directory in PATH change?
+        for d in filter(os.path.isdir, path):
+            m = os.stat(d).st_mtime
+            if m > pm:
+                pm = m
+                cache_valid = False
+        self._path_mtime = pm
+        if cache_valid:
+            return self._cmds_cache
+        allcmds = set()
+        for d in filter(os.path.isdir, path):
+            allcmds |= set(os.listdir(d))
+        allcmds |= set(builtins.aliases.keys())
+        self._cmds_cache = frozenset(allcmds)
+        return self._cmds_cache
