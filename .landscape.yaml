@@ -10,8 +10,23 @@ pylint:
   disable:
     - syntax-error  # have to do this since landscape doesn't support py3k
     - super-on-old-class
+    - old-style-class
     - global-variable-not-assigned
+    - pointless-except
+    - unused-argument
+    - protected-access
+    - global-statement
+    - eval-used
+    - exec-used
+    - too-many-lines
+    - import-self
+    - redefined-outer-name
+    - invalid-name
+    - too-few-public-methods
+    - no-init
+    - star-args
 
 mccabe:
   disable:
     - MC0000  # again, not Py3k compatabile
+    - MC0001  # silly cyclomatic complexity

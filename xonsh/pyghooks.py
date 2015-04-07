@@ -1,11 +1,10 @@
 """Hooks for pygments syntax highlighting."""
 from __future__ import print_function, unicode_literals
-import re
 
-from pygments.lexer import RegexLexer, inherit, bygroups, using, this
-from pygments.token import Punctuation, Name, Generic, Keyword, Text, String
+from pygments.lexer import inherit, bygroups, using, this
+from pygments.token import Name, Generic, Keyword, Text, String
 from pygments.lexers.shell import BashLexer
-from pygments.lexers.agile import PythonLexer, PythonConsoleLexer
+from pygments.lexers.agile import PythonLexer
 
 
 class XonshSubprocLexer(BashLexer):
@@ -13,33 +12,24 @@ class XonshSubprocLexer(BashLexer):
 
     name = 'Xonsh subprocess lexer'
 
-    tokens = {
-        'root': [
-            (r'`[^`]*?`', String.Backtick),
-            inherit,
-            ]
-        }
+    tokens = {'root': [(r'`[^`]*?`', String.Backtick), inherit, ]}
 
 
-ROOT_TOKENS = [
-    (r'\?', Keyword),
-    (r'\$\w+', Name.Variable),
-    (r'\$\{', Keyword, ('pymode',)),
-    (r'\$\(', Keyword, ('subproc',)),
-    (r'\$\[', Keyword, ('subproc',)),
-    (r'@\(', Keyword, ('pymode',)),
-    inherit,
-    ]
+ROOT_TOKENS = [(r'\?', Keyword),
+               (r'\$\w+', Name.Variable),
+               (r'\$\{', Keyword, ('pymode', )),
+               (r'\$\(', Keyword, ('subproc', )),
+               (r'\$\[', Keyword, ('subproc', )),
+               (r'@\(', Keyword, ('pymode', )),
+               inherit, ]
 
-PYMODE_TOKENS = [
-    (r'(.+)(\))', bygroups(using(this), Keyword), '#pop'),
-    (r'(.+)(\})', bygroups(using(this), Keyword), '#pop'),
-    ]
+PYMODE_TOKENS = [(r'(.+)(\))', bygroups(using(this), Keyword), '#pop'),
+                 (r'(.+)(\})', bygroups(using(this), Keyword), '#pop'), ]
 
 SUBPROC_TOKENS = [
     (r'(.+)(\))', bygroups(using(XonshSubprocLexer), Keyword), '#pop'),
     (r'(.+)(\])', bygroups(using(XonshSubprocLexer), Keyword), '#pop'),
-    ]
+]
 
 
 class XonshLexer(PythonLexer):
@@ -49,10 +39,11 @@ class XonshLexer(PythonLexer):
     aliases = ['xonsh', 'xsh']
     filenames = ['*.xsh', '*xonshrc']
 
-    tokens = {'root': list(ROOT_TOKENS),
-              'pymode': PYMODE_TOKENS,
-              'subproc': SUBPROC_TOKENS,
-              }
+    tokens = {
+        'root': list(ROOT_TOKENS),
+        'pymode': PYMODE_TOKENS,
+        'subproc': SUBPROC_TOKENS,
+    }
 
 
 class XonshConsoleLexer(PythonLexer):
@@ -63,19 +54,16 @@ class XonshConsoleLexer(PythonLexer):
     filenames = []
 
     tokens = {
-        'root': [
-            (r'^(>>>|\.\.\.) ', Generic.Prompt),
-            (r'\n(>>>|\.\.\.)', Generic.Prompt),
-            (r'\n(?![>.][>.][>.] )([^\n]*)', Generic.Output),
-            (r'\n(?![>.][>.][>.] )(.*?)$', Generic.Output),
-            ] + ROOT_TOKENS,
+        'root': [(r'^(>>>|\.\.\.) ', Generic.Prompt),
+                 (r'\n(>>>|\.\.\.)', Generic.Prompt),
+                 (r'\n(?![>.][>.][>.] )([^\n]*)', Generic.Output),
+                 (r'\n(?![>.][>.][>.] )(.*?)$', Generic.Output)] + ROOT_TOKENS,
         'pymode': PYMODE_TOKENS,
         'subproc': SUBPROC_TOKENS,
-        }
-
+    }
 
 # XonshLexer & XonshSubprocLexer have to refernce each other
 XonshSubprocLexer.tokens['root'] = [
     (r'(\$\{)(.*)(\})', bygroups(Keyword, using(XonshLexer), Keyword)),
     (r'(@\()(.+)(\))', bygroups(Keyword, using(XonshLexer), Keyword)),
-    ] + XonshSubprocLexer.tokens['root']
+] + XonshSubprocLexer.tokens['root']

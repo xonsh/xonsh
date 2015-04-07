@@ -3,7 +3,6 @@ Job control for the xonsh shell.
 """
 import os
 import sys
-import time
 import signal
 import builtins
 from collections import namedtuple
@@ -56,9 +55,7 @@ def _give_terminal_to(pgid):
 
 
 def print_one_job(num):
-    """
-    Print a line describing job number ``num``.
-    """
+    """Print a line describing job number ``num``."""
     job = builtins.__xonsh_all_jobs__[num]
     act = '*' if num == builtins.__xonsh_active_job__ else ' '
     status = job['status']
@@ -70,8 +67,7 @@ def print_one_job(num):
 
 
 def get_next_job_number():
-    """
-    Get the lowest available unique job number (for the next job created)
+    """Get the lowest available unique job number (for the next job created).
     """
     _clear_dead_jobs()
     i = 1
@@ -103,7 +99,7 @@ def wait_for_active_job():
     obj.done = False
 
     _give_terminal_to(pgrp)  # give the terminal over to the fg process
-    p, s = os.waitpid(obj.pid, os.WUNTRACED)
+    _, s = os.waitpid(obj.pid, os.WUNTRACED)
     if os.WIFSTOPPED(s):
         obj.done = True
         job['bg'] = True
@@ -154,7 +150,7 @@ def fg(args, stdin=None):
     elif len(args) == 1:
         try:
             act = int(args[0])
-        except:
+        except ValueError:
             return '', 'Invalid job: {}\n'.format(args[0])
         if act not in builtins.__xonsh_all_jobs__:
             return '', 'Invalid job: {}\n'.format(args[0])
@@ -184,7 +180,7 @@ def bg(args, stdin=None):
     elif len(args) == 1:
         try:
             act = int(args[0])
-        except:
+        except ValueError:
             return '', 'Invalid job: {}\n'.format(args[0])
         if act not in builtins.__xonsh_all_jobs__:
             return '', 'Invalid job: {}\n'.format(args[0])

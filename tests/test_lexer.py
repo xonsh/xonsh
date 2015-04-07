@@ -3,11 +3,10 @@ from __future__ import unicode_literals, print_function
 import os
 import sys
 from collections import Sequence
-from pprint import pprint, pformat
 sys.path.insert(0, os.path.abspath('..'))  # FIXME
+from pprint import pformat
 
 import nose
-from nose.tools import assert_equal
 
 from ply.lex import LexToken
 
@@ -55,9 +54,9 @@ def assert_tokens_equal(x, y):
         msg = '\n'.join(msg)
         raise AssertionError(msg)
 
-def check_token(input, exp):
+def check_token(inp, exp):
     l = Lexer()
-    l.input(input)
+    l.input(inp)
     obs = list(l)
     if len(obs) != 1:
         msg = 'The observed sequence does not have length-1: {0!r} != 1\n'
@@ -65,9 +64,9 @@ def check_token(input, exp):
         raise AssertionError(msg.format(len(obs), pformat(obs)))
     assert_token_equal(exp, obs[0])
 
-def check_tokens(input, exp):
+def check_tokens(inp, exp):
     l = Lexer()
-    l.input(input)
+    l.input(inp)
     obs = list(l)
     assert_tokens_equal(exp, obs)
 
@@ -91,39 +90,39 @@ def test_indent():
     yield check_tokens, '  \t  42', exp
 
 def test_post_whitespace():
-    input = '42  \t  '
+    inp = '42  \t  '
     exp = [('NUMBER', '42', 0)]
-    yield check_tokens, input, exp
+    yield check_tokens, inp, exp
 
 def test_internal_whitespace():
-    input = '42  +\t65'
+    inp = '42  +\t65'
     exp = [('NUMBER', '42', 0), 
            ('PLUS', '+', 4),
            ('NUMBER', '65', 6),]
-    yield check_tokens, input, exp
+    yield check_tokens, inp, exp
 
 def test_indent_internal_whitespace():
-    input = ' 42  +\t65'
+    inp = ' 42  +\t65'
     exp = [('INDENT', ' ', 0),
            ('NUMBER', '42', 1), 
            ('PLUS', '+', 5),
            ('NUMBER', '65', 7),
            ('DEDENT', '', 0)]
-    yield check_tokens, input, exp
+    yield check_tokens, inp, exp
 
 def test_assignment():
-    input = 'x = 42'
+    inp = 'x = 42'
     exp = [('NAME', 'x', 0),
            ('EQUALS', '=', 2),
            ('NUMBER', '42', 4),] 
-    yield check_tokens, input, exp
+    yield check_tokens, inp, exp
 
 def test_multiline():
-    input = 'x\ny'
+    inp = 'x\ny'
     exp = [('NAME', 'x', 0),
            ('NEWLINE', '\n', 1),
            ('NAME', 'y', 0),]
-    yield check_tokens, input, exp
+    yield check_tokens, inp, exp
 
 def test_and():
     yield check_token, 'and', ['AND', 'and', 0]

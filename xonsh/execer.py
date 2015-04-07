@@ -16,8 +16,11 @@ from xonsh.built_ins import load_builtins, unload_builtins
 class Execer(object):
     """Executes xonsh code in a context."""
 
-    def __init__(self, filename='<xonsh-code>', debug_level=0,
-                 parser_args=None, unload=True):
+    def __init__(self,
+                 filename='<xonsh-code>',
+                 debug_level=0,
+                 parser_args=None,
+                 unload=True):
         """Parameters
         ----------
         filename : str, optional
@@ -97,7 +100,10 @@ class Execer(object):
         if isinstance(input, types.CodeType):
             code = input
         else:
-            code = self.compile(input=input, glbs=glbs, locs=locs, mode='eval',
+            code = self.compile(input=input,
+                                glbs=glbs,
+                                locs=locs,
+                                mode='eval',
                                 stacklevel=stacklevel)
         if code is None:
             return None  # handles comment only input
@@ -108,11 +114,27 @@ class Execer(object):
         if isinstance(input, types.CodeType):
             code = input
         else:
-            code = self.compile(input=input, glbs=glbs, locs=locs, mode=mode,
+            code = self.compile(input=input,
+                                glbs=glbs,
+                                locs=locs,
+                                mode=mode,
                                 stacklevel=stacklevel)
         if code is None:
             return None  # handles comment only input
         return exec(code, glbs, locs)
+
+    def _find_next_break(self, line, mincol):
+        if mincol >= 1:
+            line = line[mincol:]
+        if ';' not in line:
+            return None
+        maxcol = None
+        self.parser.lexer.input(line)
+        for tok in self.parser.lexer:
+            if tok.type == 'SEMI':
+                maxcol = tok.lexpos + mincol + 1
+                break
+        return maxcol
 
     def _parse_ctx_free(self, input, mode='exec'):
         last_error_line = last_error_col = -1
@@ -120,7 +142,8 @@ class Execer(object):
         original_error = None
         while not parsed:
             try:
-                tree = self.parser.parse(input, filename=self.filename,
+                tree = self.parser.parse(input,
+                                         filename=self.filename,
                                          mode=mode,
                                          debug_level=self.debug_level)
                 parsed = True
@@ -152,10 +175,11 @@ class Execer(object):
                     last_error_line = last_error_col = -1
                     input = '\n'.join(lines)
                     continue
-                maxcol = line.find(';', last_error_col)
-                maxcol = None if maxcol < 0 else maxcol + 1
-                sbpline = subproc_toks(line, returnline=True,
-                                       maxcol=maxcol, lexer=self.parser.lexer)
+                maxcol = self._find_next_break(line, last_error_col)
+                sbpline = subproc_toks(line,
+                                       returnline=True,
+                                       maxcol=maxcol,
+                                       lexer=self.parser.lexer)
                 if sbpline is None:
                     # subprocess line had no valid tokens, likely because
                     # it only contained a comment.

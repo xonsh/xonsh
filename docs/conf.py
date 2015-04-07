@@ -14,6 +14,10 @@ from xonsh import __version__ as XONSH_VERSION
 
 # -- General configuration -----------------------------------------------------
 
+# Documentation is being built on readthedocs, this will be true.
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+
+
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.pngmath',
@@ -104,21 +108,26 @@ pygments_style = 'sphinx'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-html_theme_options = {
-    'max_width': '1250px',
-    'minimal_width': '700px',
-    'relbarbgcolor': '#000000',
-    'footerbgcolor': '#FFFFE7',
-    'sidebarwidth': '322px',
-    'sidebarbgcolor': '#e7e7ff', 
-    #'googleanalytics_id': 'UA-41934829-1',
-    'stickysidebar': False,
-    'highlighttoc': False,
-    'externalrefs': False,
-    }
+if not on_rtd:
+    import cloud_sptheme as csp
 
-# Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = ["_theme", csp.get_theme_dir()]
+    html_theme = 'cloud'
+
+    html_theme_options = {
+        'max_width': '1250px',
+        'minimal_width': '700px',
+        'relbarbgcolor': '#000000',
+        'footerbgcolor': '#FFFFE7',
+        'sidebarwidth': '322px',
+        'sidebarbgcolor': '#e7e7ff', 
+        #'googleanalytics_id': 'UA-41934829-1',
+        'stickysidebar': False,
+        'highlighttoc': False,
+        'externalrefs': False,
+        }
+
+    # Add any paths that contain custom themes here, relative to this directory.
+    html_theme_path = ["_theme", csp.get_theme_dir()]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
