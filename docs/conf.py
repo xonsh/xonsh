@@ -9,7 +9,6 @@
 # serve to show the default.
 
 import sys, os
-sys.path.append('../xonsh')
 from xonsh import __version__ as XONSH_VERSION
 
 # -- General configuration -----------------------------------------------------
@@ -102,7 +101,6 @@ pygments_style = 'sphinx'
 # Sphinx are currently 'default' and 'sphinxdoc'.
 #html_theme = 'default'
 #html_theme = 'altered_nature'
-#html_theme = 'cloud'
 #html_theme = 'sphinxdoc'
 
 # Theme options are theme-specific and customize the look and feel of a theme
