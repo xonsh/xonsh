@@ -15,3 +15,9 @@ build/
 dist/
 xonsh.egg-info/
 docs/_build/
+
+# Virtualenv
+pip-selfcheck.json
+bin/
+lib/
+include/
