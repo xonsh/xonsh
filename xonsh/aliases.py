@@ -10,7 +10,6 @@ from warnings import warn
 from xonsh.dirstack import dirs, pushd, popd
 from xonsh.jobs import jobs, fg, bg, kill_all_jobs
 
-
 def cd(args, stdin=None):
     """Changes the directory.
 
