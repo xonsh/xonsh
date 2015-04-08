@@ -1,0 +1,2 @@
+numpydoc==0.5
+ply==3.4
