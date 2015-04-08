@@ -73,7 +73,7 @@ def source_bash(args, stdin=None):
     return
 
 
-def exec(args, stdin=None):
+def xexec(args, stdin=None):
     """
     Replaces current process with command specified and passes in the
     current xonsh environment.
@@ -121,7 +121,7 @@ DEFAULT_ALIASES = {
     'EOF': exit,
     'exit': exit,
     'quit': exit,
-    'exec': exec,
+    'xexec': xexec,
     'source-bash': source_bash,
     'grep': ['grep', '--color=auto'],
     'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
