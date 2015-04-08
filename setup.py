@@ -8,6 +8,7 @@ try:
     from setuptools import setup
     from setuptools.command.sdist import sdist
     from setuptools.command.install import install
+    from setuptools.command.develop import develop
     HAVE_SETUPTOOLS = True
 except ImportError:
     from distutils.core import setup
@@ -45,6 +46,14 @@ class xsdist(sdist):
         build_tables()
         sdist.make_release_tree(self, basedir, files)
 
+if HAVE_SETUPTOOLS:
+    class xdevelop(develop):
+        def run(self):
+            clean_tables()
+            build_tables()
+            develop.run(self)
+
+
 def main():
     if sys.version_info[0] < 3:
         sys.exit('xonsh currently requires Python 3.4+')
@@ -78,6 +87,7 @@ def main():
                                 'xonshcon = xonsh.pyghooks:XonshConsoleLexer',
                                 ],
             }
+        skw['cmdclass']['develop'] = xdevelop
     setup(**skw)
 
 logo = """
