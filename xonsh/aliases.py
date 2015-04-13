@@ -1,7 +1,6 @@
 """Aliases for the xonsh shell.
 """
 import os
-import sys
 import platform
 import builtins
 import subprocess
@@ -86,6 +85,8 @@ def xexec(args, stdin=None):
             os.execvpe(args[0], args, denv)
         except FileNotFoundError as e:
             return "xonsh: " + e.args[1] + ": " + args[0] + "\n"
+    else:
+        return "xonsh: exec: no args specified\n"
 
 
 def bash_aliases():
