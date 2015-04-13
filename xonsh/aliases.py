@@ -1,6 +1,7 @@
 """Aliases for the xonsh shell.
 """
 import os
+import sys
 import platform
 import builtins
 import subprocess
@@ -81,7 +82,8 @@ def xexec(args, stdin=None):
     env = builtins.__xonsh_env__
     denv = env.detype()
     try:
-        os.execvpe(args[0], args[1:len(args)], denv)
+        if args[0]:
+            os.execvpe(args[0], args, denv)
     except FileNotFoundError as e:
         return "xonsh: " + e.args[1] + ": " + args[0] + "\n"
 
