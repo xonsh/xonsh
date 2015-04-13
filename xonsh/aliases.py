@@ -81,11 +81,11 @@ def xexec(args, stdin=None):
     """
     env = builtins.__xonsh_env__
     denv = env.detype()
-    try:
-        if args[0]:
+    if (len(args) > 0):
+        try:
             os.execvpe(args[0], args, denv)
-    except FileNotFoundError as e:
-        return "xonsh: " + e.args[1] + ": " + args[0] + "\n"
+        except FileNotFoundError as e:
+            return "xonsh: " + e.args[1] + ": " + args[0] + "\n"
 
 
 def bash_aliases():
