@@ -3,6 +3,7 @@ Job control for the xonsh shell.
 """
 import os
 import sys
+import time
 import signal
 import builtins
 from collections import namedtuple
@@ -56,7 +57,10 @@ def _give_terminal_to(pgid):
 
 def print_one_job(num):
     """Print a line describing job number ``num``."""
-    job = builtins.__xonsh_all_jobs__[num]
+    try:
+        job = builtins.__xonsh_all_jobs__[num]
+    except KeyError:
+        return
     act = '*' if num == builtins.__xonsh_active_job__ else ' '
     status = job['status']
     cmd = [' '.join(i) if isinstance(i, list) else i for i in job['cmds']]
@@ -74,6 +78,23 @@ def get_next_job_number():
     while i in builtins.__xonsh_all_jobs__:
         i += 1
     return i
+
+
+def add_job(info):
+    """
+    Add a new job to the jobs dictionary.
+    """
+    info['started'] = time.time()
+    info['status'] = 'running'
+    try:
+        info['pgrp'] = os.getpgid(info['obj'].pid)
+    except ProcessLookupError:
+        return
+    num = get_next_job_number()
+    builtins.__xonsh_all_jobs__[num] = info
+    builtins.__xonsh_active_job__ = num
+    if info['bg']:
+        print_one_job(num)
 
 
 def _default_sigint_handler(num, frame):
