@@ -13,9 +13,7 @@ A list containing the currently remembered directories.
 def _get_cwd():
     try:
         return os.getcwd()
-    except OSError:
-        return None
-    except FileNotFoundError:
+    except (OSError, FileNotFoundError):
         return None
 
 
@@ -24,7 +22,7 @@ def _change_working_directory(newdir):
     old = _get_cwd()
     try:
         os.chdir(newdir)
-    except:
+    except (OSError, FileNotFoundError):
         return
     new = _get_cwd()
     if old is not None:
