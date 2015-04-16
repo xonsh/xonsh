@@ -140,15 +140,11 @@ def pushd(args, stdin=None):
             e = 'Invalid argument to pushd: {0}\n'
             return None, e.format(args.dir)
     if new_pwd is not None:
-        e = None
         if args.cd:
             DIRSTACK.insert(0, os.path.expanduser(pwd))
-            _, e = builtins.default_aliases['cd']([new_pwd], None)
+            _change_working_directory(os.path.abspath(new_pwd))
         else:
             DIRSTACK.insert(0, os.path.expanduser(os.path.abspath(new_pwd)))
-
-        if e is not None:
-            return None, e
 
     maxsize = env.get('DIRSTACK_SIZE', 20)
     if len(DIRSTACK) > maxsize:
@@ -221,10 +217,7 @@ def popd(args, stdin=None):
     if new_pwd is not None:
         e = None
         if args.cd:
-            _, e = builtins.default_aliases['cd']([new_pwd], None)
-
-        if e is not None:
-            return None, e
+            _change_working_directory(os.path.abspath(new_pwd))
 
     if not args.quiet and not env.get('PUSHD_SILENT', False):
         return dirs([], None)
