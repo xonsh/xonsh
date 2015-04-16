@@ -46,24 +46,26 @@ def cd(args, stdin=None):
         d = os.path.expanduser('~')
     elif len(args) == 1:
         d = os.path.expanduser(args[0])
-        if d == '-':
-            if oldpwd is not None:
-                d = oldpwd
-            else:
-                return '', 'cd: no previous directory stored\n'
-        elif d.startswith('-'):
-            try:
-                num = int(d[1:])
-            except ValueError:
-                e = 'cd: Invalid destination: {0}\n'
-                return '', e.format(d)
-            if num == 0:
-                return
-            elif num > len(DIRSTACK):
-                e = 'cd: Too few elements in dirstack ({0} elements)\n'
-                return '', e.format(len(DIRSTACK))
-            else:
-                d = DIRSTACK[num - 1]
+        if not os.path.isdir(d):
+            if d == '-':
+                if oldpwd is not None:
+                    d = oldpwd
+                else:
+                    return '', 'cd: no previous directory stored\n'
+            elif d.startswith('-'):
+                try:
+                    num = int(d[1:])
+                except ValueError:
+                    return '', 'cd: Invalid destination: {0}\n'.format(d)
+                if num == 0:
+                    return
+                elif num < 0:
+                    return '', 'cd: Invalid destination: {0}\n'.format(d)
+                elif num > len(DIRSTACK):
+                    e = 'cd: Too few elements in dirstack ({0} elements)\n'
+                    return '', e.format(len(DIRSTACK))
+                else:
+                    d = DIRSTACK[num - 1]
     else:
         return '', 'cd takes 0 or 1 arguments, not {0}\n'.format(len(args))
     if not os.path.exists(d):
