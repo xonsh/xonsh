@@ -51,6 +51,19 @@ def cd(args, stdin=None):
                 d = oldpwd
             else:
                 return '', 'cd: no previous directory stored\n'
+        elif d.startswith('-'):
+            try:
+                num = int(d[1:])
+            except ValueError:
+                e = 'cd: Invalid destination: {0}\n'
+                return '', e.format(d)
+            if num == 0:
+                return
+            elif num > len(DIRSTACK):
+                e = 'cd: Too few elements in dirstack ({0} elements)\n'
+                return '', e.format(len(DIRSTACK))
+            else:
+                d = DIRSTACK[num - 1]
     else:
         return '', 'cd takes 0 or 1 arguments, not {0}\n'.format(len(args))
     if not os.path.exists(d):
@@ -59,7 +72,7 @@ def cd(args, stdin=None):
         return '', 'cd: {0} is not a directory\n'.format(d)
     # now, push the directory onto the dirstack if AUTO_PUSHD is set
     if cwd is not None and env.get('AUTO_PUSHD', False):
-        pushd(['-n', cwd])
+        pushd(['-n', '-q', cwd])
     _change_working_directory(os.path.abspath(d))
     return None, None
 
