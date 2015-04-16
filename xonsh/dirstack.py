@@ -10,6 +10,60 @@ A list containing the currently remembered directories.
 """
 
 
+def _get_cwd():
+    try:
+        return os.getcwd()
+    except OSError:
+        return None
+    except FileNotFoundError:
+        return None
+
+
+def _change_working_directory(newdir):
+    env = builtins.__xonsh_env__
+    old = _get_cwd()
+    try:
+        os.chdir(newdir)
+    except:
+        return
+    new = _get_cwd()
+    if old is not None:
+        env['OLDPWD'] = old
+    if new is not None:
+        env['PWD'] = new
+
+
+def cd(args, stdin=None):
+    """Changes the directory.
+
+    If no directory is specified (i.e. if `args` is None) then this
+    changes to the current user's home directory.
+    """
+    env = builtins.__xonsh_env__
+    oldpwd = env.get('OLDPWD', None)
+    cwd = _get_cwd()
+    if len(args) == 0:
+        d = os.path.expanduser('~')
+    elif len(args) == 1:
+        d = os.path.expanduser(args[0])
+        if d == '-':
+            if oldpwd is not None:
+                d = oldpwd
+            else:
+                return '', 'cd: no previous directory stored\n'
+    else:
+        return '', 'cd takes 0 or 1 arguments, not {0}\n'.format(len(args))
+    if not os.path.exists(d):
+        return '', 'cd: no such file or directory: {0}\n'.format(d)
+    if not os.path.isdir(d):
+        return '', 'cd: {0} is not a directory\n'.format(d)
+    # now, push the directory onto the dirstack if AUTO_PUSHD is set
+    if cwd is not None and env.get('AUTO_PUSHD', False):
+        pushd(['-n', cwd])
+    _change_working_directory(os.path.abspath(d))
+    return None, None
+
+
 def pushd(args, stdin=None):
     """
     xonsh command: pushd

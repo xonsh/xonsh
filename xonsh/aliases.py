@@ -7,35 +7,8 @@ import subprocess
 import shlex
 from warnings import warn
 
-from xonsh.dirstack import dirs, pushd, popd
+from xonsh.dirstack import cd, pushd, popd, dirs
 from xonsh.jobs import jobs, fg, bg, kill_all_jobs
-
-
-def cd(args, stdin=None):
-    """Changes the directory.
-
-    If no directory is specified (i.e. if `args` is None) then this
-    changes to the current user's home directory.
-    """
-    env = builtins.__xonsh_env__
-    cur_oldpwd = env.get('OLDPWD', os.getcwd())
-    if len(args) == 0:
-        d = os.path.expanduser('~')
-    elif len(args) == 1:
-        d = os.path.expanduser(args[0])
-        if d == '-':
-            d = cur_oldpwd
-    else:
-        return '', 'cd takes 0 or 1 arguments, not {0}\n'.format(len(args))
-    if not os.path.exists(d):
-        return '', 'cd: no such file or directory: {0}\n'.format(d)
-    if not os.path.isdir(d):
-        return '', 'cd: {0} is not a directory\n'.format(d)
-
-    env['OLDPWD'] = os.getcwd()
-    os.chdir(d)
-    env['PWD'] = os.getcwd()
-    return None, None
 
 
 def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
