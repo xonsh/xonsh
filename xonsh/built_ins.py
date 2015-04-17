@@ -4,7 +4,6 @@ not to be confused with the special Python builtins module.
 import os
 import re
 import sys
-import time
 import shlex
 import signal
 import locale
@@ -22,7 +21,7 @@ from xonsh.tools import suggest_commands, XonshError
 from xonsh.inspectors import Inspector
 from xonsh.environ import default_env
 from xonsh.aliases import DEFAULT_ALIASES, bash_aliases
-from xonsh.jobs import print_one_job, get_next_job_number, wait_for_active_job
+from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.jobs import ProcProxy
 
 ENV = None
@@ -508,21 +507,14 @@ def run_subproc(cmds, captured=True):
         prev_proc = proc
     for proc in procs[:-1]:
         proc.stdout.close()
-    num = get_next_job_number()
-    pids = [i.pid for i in procs]
     if not isinstance(prev_proc, ProcProxy):
-        builtins.__xonsh_active_job__ = num
-        builtins.__xonsh_all_jobs__[num] = {
+        add_job({
             'cmds': cmds,
-            'pids': pids,
+            'pids': [i.pid for i in procs],
             'obj': prev_proc,
-            'started': time.time(),
-            'pgrp': os.getpgid(prev_proc.pid),
-            'status': 'running',
             'bg': background
-        }
+        })
     if background:
-        print_one_job(num)
         return
     wait_for_active_job()
     if write_target is None:

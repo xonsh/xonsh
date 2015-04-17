@@ -481,20 +481,26 @@ def test_setcomp_if_setcomp_if():
 def test_dictcomp():
     yield check_ast, '{x: x for x in "mom"}'
 
+def test_dictcomp_unpack_parens():
+    yield check_ast, '{k: v for (k, v) in {"x": 42}.items()}'
+
+def test_dictcomp_unpack_no_parens():
+    yield check_ast, '{k: v for k, v in {"x": 42}.items()}'
+
 def test_dictcomp_if():
-    yield check_ast, '{x:x for x in "mom" if True}'
+    yield check_ast, '{x: x for x in "mom" if True}'
 
 def test_dictcomp_if_and():
-    yield check_ast, '{x:x for x in "mom" if True and x == "m"}'
+    yield check_ast, '{x: x for x in "mom" if True and x == "m"}'
 
 def test_dbl_dictcomp():
-    yield check_ast, '{x:y for x in "mom" for y in "dad"}'
+    yield check_ast, '{x: y for x in "mom" for y in "dad"}'
 
 def test_dictcomp_if_dictcomp():
-    yield check_ast, '{x:y for x in "mom" if True for y in "dad"}'
+    yield check_ast, '{x: y for x in "mom" if True for y in "dad"}'
 
 def test_dictcomp_if_dictcomp_if():
-    yield check_ast, '{x:y for x in "mom" if True for y in "dad" if y == "d"}'
+    yield check_ast, '{x: y for x in "mom" if True for y in "dad" if y == "d"}'
 
 def test_lambda():
     yield check_ast, 'lambda: 42'

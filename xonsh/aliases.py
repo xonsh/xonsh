@@ -9,35 +9,8 @@ import itertools
 import subprocess
 from warnings import warn
 
-from xonsh.dirstack import dirs, pushd, popd
+from xonsh.dirstack import cd, pushd, popd, dirs
 from xonsh.jobs import jobs, fg, bg, kill_all_jobs
-
-
-def cd(args, stdin=None):
-    """Changes the directory.
-
-    If no directory is specified (i.e. if `args` is None) then this
-    changes to the current user's home directory.
-    """
-    env = builtins.__xonsh_env__
-    cur_oldpwd = env.get('OLDPWD', os.getcwd())
-    if len(args) == 0:
-        d = os.path.expanduser('~')
-    elif len(args) == 1:
-        d = os.path.expanduser(args[0])
-        if d == '-':
-            d = cur_oldpwd
-    else:
-        return '', 'cd takes 0 or 1 arguments, not {0}\n'.format(len(args))
-    if not os.path.exists(d):
-        return '', 'cd: no such file or directory: {0}\n'.format(d)
-    if not os.path.isdir(d):
-        return '', 'cd: {0} is not a directory\n'.format(d)
-
-    env['OLDPWD'] = os.getcwd()
-    os.chdir(d)
-    env['PWD'] = os.getcwd()
-    return None, None
 
 
 def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
@@ -115,6 +88,22 @@ def source_bash(args, stdin=None):
     return
 
 
+def xexec(args, stdin=None):
+    """
+    Replaces current process with command specified and passes in the
+    current xonsh environment.
+    """
+    env = builtins.__xonsh_env__
+    denv = env.detype()
+    if (len(args) > 0):
+        try:
+            os.execvpe(args[0], args, denv)
+        except FileNotFoundError as e:
+            return "xonsh: " + e.args[1] + ": " + args[0] + "\n"
+    else:
+        return "xonsh: exec: no args specified\n"
+
+
 def bash_aliases():
     """Computes a dictionary of aliases based on Bash's aliases."""
     try:
@@ -150,6 +139,7 @@ DEFAULT_ALIASES = {
     'EOF': exit,
     'exit': exit,
     'quit': exit,
+    'xexec': xexec,
     'source-bash': source_bash,
     'grep': ['grep', '--color=auto'],
     'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],

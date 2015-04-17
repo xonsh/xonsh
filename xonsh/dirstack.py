@@ -10,6 +10,73 @@ A list containing the currently remembered directories.
 """
 
 
+def _get_cwd():
+    try:
+        return os.getcwd()
+    except (OSError, FileNotFoundError):
+        return None
+
+
+def _change_working_directory(newdir):
+    env = builtins.__xonsh_env__
+    old = _get_cwd()
+    try:
+        os.chdir(newdir)
+    except (OSError, FileNotFoundError):
+        return
+    new = _get_cwd()
+    if old is not None:
+        env['OLDPWD'] = old
+    if new is not None:
+        env['PWD'] = new
+
+
+def cd(args, stdin=None):
+    """Changes the directory.
+
+    If no directory is specified (i.e. if `args` is None) then this
+    changes to the current user's home directory.
+    """
+    env = builtins.__xonsh_env__
+    oldpwd = env.get('OLDPWD', None)
+    cwd = _get_cwd()
+    if len(args) == 0:
+        d = os.path.expanduser('~')
+    elif len(args) == 1:
+        d = os.path.expanduser(args[0])
+        if not os.path.isdir(d):
+            if d == '-':
+                if oldpwd is not None:
+                    d = oldpwd
+                else:
+                    return '', 'cd: no previous directory stored\n'
+            elif d.startswith('-'):
+                try:
+                    num = int(d[1:])
+                except ValueError:
+                    return '', 'cd: Invalid destination: {0}\n'.format(d)
+                if num == 0:
+                    return
+                elif num < 0:
+                    return '', 'cd: Invalid destination: {0}\n'.format(d)
+                elif num > len(DIRSTACK):
+                    e = 'cd: Too few elements in dirstack ({0} elements)\n'
+                    return '', e.format(len(DIRSTACK))
+                else:
+                    d = DIRSTACK[num - 1]
+    else:
+        return '', 'cd takes 0 or 1 arguments, not {0}\n'.format(len(args))
+    if not os.path.exists(d):
+        return '', 'cd: no such file or directory: {0}\n'.format(d)
+    if not os.path.isdir(d):
+        return '', 'cd: {0} is not a directory\n'.format(d)
+    # now, push the directory onto the dirstack if AUTO_PUSHD is set
+    if cwd is not None and env.get('AUTO_PUSHD', False):
+        pushd(['-n', '-q', cwd])
+    _change_working_directory(os.path.abspath(d))
+    return None, None
+
+
 def pushd(args, stdin=None):
     """
     xonsh command: pushd
@@ -71,15 +138,11 @@ def pushd(args, stdin=None):
             e = 'Invalid argument to pushd: {0}\n'
             return None, e.format(args.dir)
     if new_pwd is not None:
-        e = None
         if args.cd:
             DIRSTACK.insert(0, os.path.expanduser(pwd))
-            _, e = builtins.default_aliases['cd']([new_pwd], None)
+            _change_working_directory(os.path.abspath(new_pwd))
         else:
             DIRSTACK.insert(0, os.path.expanduser(os.path.abspath(new_pwd)))
-
-        if e is not None:
-            return None, e
 
     maxsize = env.get('DIRSTACK_SIZE', 20)
     if len(DIRSTACK) > maxsize:
@@ -152,10 +215,7 @@ def popd(args, stdin=None):
     if new_pwd is not None:
         e = None
         if args.cd:
-            _, e = builtins.default_aliases['cd']([new_pwd], None)
-
-        if e is not None:
-            return None, e
+            _change_working_directory(os.path.abspath(new_pwd))
 
     if not args.quiet and not env.get('PUSHD_SILENT', False):
         return dirs([], None)

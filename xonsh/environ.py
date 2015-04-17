@@ -12,6 +12,7 @@ from warnings import warn
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.tools import TERM_COLORS
+from xonsh.dirstack import _get_cwd
 
 
 def current_branch(cwd=None, pad=True):
@@ -20,7 +21,9 @@ def current_branch(cwd=None, pad=True):
     bust should be extended in the future.
     """
     branch = None
-    cwd = os.getcwd() if cwd is None else cwd
+    cwd = _get_cwd() if cwd is None else cwd
+    if cwd is None:
+        return ''
 
     # step out completely if git is not installed
     try:
@@ -64,7 +67,7 @@ def current_branch(cwd=None, pad=True):
 
     if pad and branch is not None:
         branch = ' ' + branch
-    return branch
+    return branch or ''
 
 
 DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
@@ -78,7 +81,7 @@ def _replace_home(x):
 FORMATTER_DICT = dict(user=os.environ.get('USER', '<user>'),
                       hostname=socket.gethostname().split('.', 1)[0],
                       cwd=lambda: _replace_home(builtins.__xonsh_env__['PWD']),
-                      curr_branch=lambda: current_branch() or '',
+                      curr_branch=lambda: current_branch(),
                       **TERM_COLORS)
 
 _formatter = string.Formatter()
