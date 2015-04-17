@@ -2,7 +2,9 @@
 """
 import os
 import gc
+import time
 import shlex
+import timeit
 import platform
 import builtins
 import itertools
@@ -28,7 +30,6 @@ def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
 # * Copyright (c) 2001, Nathaniel Gray <n8gray@caltech.edu>
 class Timer(timeit.Timer):
     """Timer class that explicitly uses self.inner
-    
     which is an undocumented implementation detail of CPython,
     not shared by PyPy.
     """
@@ -55,8 +56,6 @@ class Timer(timeit.Timer):
 
 def time_it(args, stdin=None):
     """Runs timing study on arguments."""
-    import time
-    import timeit
     timer = Timer(timer=timefunc)
     return
 
