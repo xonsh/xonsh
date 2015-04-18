@@ -245,6 +245,18 @@ def handle_error_space(state, token, stream):
         yield from []
 
 
+def handle_error_token(state, token, stream):
+    """
+    Function for handling error tokens
+    """
+    state['last'] = token
+    if not state['pymode'][-1][0]:
+        typ = 'NAME'
+    else:
+        typ = 'ERRORTOKEN'
+    yield _new_token(typ, token.string, token.start)
+
+
 def handle_ignore(state, token, stream):
     """
     Function for handling tokens that should be ignored
@@ -258,6 +270,7 @@ special_handlers = {
     tokenize.ENCODING: handle_ignore,
     tokenize.ENDMARKER: handle_ignore,
     tokenize.NAME: handle_name,
+    tokenize.ERRORTOKEN: handle_error_token,
     (tokenize.OP, '@'): handle_at,
     (tokenize.OP, '('): handle_lparen,
     (tokenize.OP, ')'): handle_rparen,
