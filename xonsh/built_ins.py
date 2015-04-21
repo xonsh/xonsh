@@ -6,7 +6,7 @@ import re
 import sys
 import shlex
 import signal
-import locale
+import locale 
 import builtins
 import subprocess
 from io import TextIOWrapper, StringIO
@@ -23,6 +23,7 @@ from xonsh.environ import default_env
 from xonsh.aliases import DEFAULT_ALIASES, bash_aliases
 from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.jobs import ProcProxy
+from xonsh.hist import History
 
 ENV = None
 BUILTINS_LOADED = False
@@ -578,12 +579,15 @@ def load_builtins(execer=None):
     builtins.__xonsh_all_jobs__ = {}
     builtins.__xonsh_active_job__ = None
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
+    builtins.__history__ = History()
+    builtins.__history__.load_history()
     # public built-ins
     builtins.evalx = None if execer is None else execer.eval
     builtins.execx = None if execer is None else execer.exec
     builtins.compilex = None if execer is None else execer.compile
     builtins.default_aliases = builtins.aliases = Aliases(DEFAULT_ALIASES)
     builtins.aliases.update(bash_aliases())
+    builtins.ordered_history = builtins.__history__.ordered_history
     BUILTINS_LOADED = True
 
 
