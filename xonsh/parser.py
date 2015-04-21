@@ -2045,9 +2045,11 @@ class Parser(object):
     def p_comp_for(self, p):
         """comp_for : FOR exprlist IN or_test comp_iter_opt"""
         targs, it, p5 = p[2], p[4], p[5]
-        if len(targs) != 1:
-            assert False
-        targ = targs[0]
+        if len(targs) == 1:
+            targ = targs[0]
+        else:
+            targ = ensure_has_elts(targs, lineno=self.lineno, 
+                                   col_offset=self.col)
         store_ctx(targ)
         comp = ast.comprehension(target=targ, iter=it, ifs=[])
         comps = [comp]

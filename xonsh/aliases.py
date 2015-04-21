@@ -1,42 +1,16 @@
 """Aliases for the xonsh shell.
 """
+
 import os
 import platform
 import builtins
 import subprocess
 import shlex
+import datetime
 from warnings import warn
 
-from xonsh.dirstack import dirs, pushd, popd
+from xonsh.dirstack import cd, pushd, popd, dirs
 from xonsh.jobs import jobs, fg, bg, kill_all_jobs
-
-
-def cd(args, stdin=None):
-    """Changes the directory.
-
-    If no directory is specified (i.e. if `args` is None) then this
-    changes to the current user's home directory.
-    """
-    env = builtins.__xonsh_env__
-    cur_oldpwd = env.get('OLDPWD', os.getcwd())
-    if len(args) == 0:
-        d = os.path.expanduser('~')
-    elif len(args) == 1:
-        d = os.path.expanduser(args[0])
-        if d == '-':
-            d = cur_oldpwd
-    else:
-        return '', 'cd takes 0 or 1 arguments, not {0}\n'.format(len(args))
-    if not os.path.exists(d):
-        return '', 'cd: no such file or directory: {0}\n'.format(d)
-    if not os.path.isdir(d):
-        return '', 'cd: {0} is not a directory\n'.format(d)
-
-    env['OLDPWD'] = os.getcwd()
-    os.chdir(d)
-    env['PWD'] = os.getcwd()
-    return None, None
-
 
 def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
     """Sends signal to exit shell."""
@@ -84,9 +58,27 @@ def xexec(args, stdin=None):
         try:
             os.execvpe(args[0], args, denv)
         except FileNotFoundError as e:
-            return "xonsh: " + e.args[1] + ": " + args[0] + "\n"
+            return 'xonsh: ' + e.args[1] + ': ' + args[0] + '\n'
     else:
-        return "xonsh: exec: no args specified\n"
+        return 'xonsh: exec: no args specified\n'
+
+
+def history(args, stdin=None):
+    """
+    Prints last 10 commands executed  in the format timestamp: command.
+    """
+    hist_str = ""
+    reversed_history = reversed(builtins.ordered_history)
+    for i in range(10):
+        try:
+            timestamp = next(reversed_history)
+        except StopIteration:
+            break 
+        entry = builtins.ordered_history[timestamp]
+        hist_str += datetime.datetime.fromtimestamp(int(timestamp)
+                    ).strftime('%Y-%m-%d %H:%M:%S') + ": " 
+        hist_str += '\033[1m' + entry['cmd'] + '\033[0m\n'
+    return hist_str
 
 
 def bash_aliases():
@@ -125,6 +117,7 @@ DEFAULT_ALIASES = {
     'exit': exit,
     'quit': exit,
     'xexec': xexec,
+    'history': history,
     'source-bash': source_bash,
     'grep': ['grep', '--color=auto'],
     'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
