@@ -128,6 +128,7 @@ class Shell(Cmd):
         if code is None:
             return
         try:
+            builtins.__history__.add(line)
             self.execer.exec(code, mode='single', glbs=self.ctx)  # no locals
         except XonshError as e:
             print(e.args[0], file=sys.stderr, end='')
