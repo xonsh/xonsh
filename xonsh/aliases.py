@@ -1,15 +1,16 @@
 """Aliases for the xonsh shell.
 """
+
 import os
 import platform
 import builtins
 import subprocess
 import shlex
+import datetime
 from warnings import warn
 
 from xonsh.dirstack import cd, pushd, popd, dirs
 from xonsh.jobs import jobs, fg, bg, kill_all_jobs
-
 
 def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
     """Sends signal to exit shell."""
@@ -57,9 +58,27 @@ def xexec(args, stdin=None):
         try:
             os.execvpe(args[0], args, denv)
         except FileNotFoundError as e:
-            return "xonsh: " + e.args[1] + ": " + args[0] + "\n"
+            return 'xonsh: ' + e.args[1] + ': ' + args[0] + '\n'
     else:
-        return "xonsh: exec: no args specified\n"
+        return 'xonsh: exec: no args specified\n'
+
+
+def history(args, stdin=None):
+    """
+    Prints last 10 commands executed  in the format timestamp: command.
+    """
+    hist_str = ""
+    reversed_history = reversed(builtins.ordered_history)
+    for i in range(10):
+        try:
+            timestamp = next(reversed_history)
+        except StopIteration:
+            break 
+        entry = builtins.ordered_history[timestamp]
+        hist_str += datetime.datetime.fromtimestamp(int(timestamp)
+                    ).strftime('%Y-%m-%d %H:%M:%S') + ": " 
+        hist_str += '\033[1m' + entry['cmd'] + '\033[0m\n'
+    return hist_str
 
 
 def bash_aliases():
@@ -98,6 +117,7 @@ DEFAULT_ALIASES = {
     'exit': exit,
     'quit': exit,
     'xexec': xexec,
+    'history': history,
     'source-bash': source_bash,
     'grep': ['grep', '--color=auto'],
     'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
