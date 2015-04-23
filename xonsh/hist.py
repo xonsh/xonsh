@@ -39,4 +39,4 @@ class History(object):
         -------
             None
         """
-        self.ordered_history[time.time()] = {'cmd': cmd.strip()}
+        self.ordered_history[time.time()] = {'cmd': cmd}
