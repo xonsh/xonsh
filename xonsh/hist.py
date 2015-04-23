@@ -14,7 +14,7 @@ class History(object):
                 json_history = json.load(data_file)
             print(str(json_history))
         except:
-            print("No previous history")
+            pass
 
 
     def add(self, cmd):
