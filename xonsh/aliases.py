@@ -67,7 +67,7 @@ def history(args, stdin=None):
     """
     Prints last 10 commands executed  in the format timestamp: command.
     """
-    hist_str = ""
+    hist_str = ''
     reversed_history = reversed(builtins.ordered_history)
     for i in range(10):
         try:
@@ -75,9 +75,11 @@ def history(args, stdin=None):
         except StopIteration:
             break 
         entry = builtins.ordered_history[timestamp]
-        hist_str += datetime.datetime.fromtimestamp(int(timestamp)
+        timestamp = datetime.datetime.fromtimestamp(int(timestamp)
                     ).strftime('%Y-%m-%d %H:%M:%S') + ": " 
-        hist_str += '\033[1m' + entry['cmd'] + '\033[0m\n'
+        cmd = '\033[1m' + entry['cmd'] + '\033[0m'
+        cmd = cmd.replace('\n', '\n' + ' '*len(timestamp) + ' ') + '\n'
+        hist_str += '{} {}'.format(timestamp, cmd)
     return hist_str
 
 

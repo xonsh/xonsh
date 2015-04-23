@@ -128,7 +128,6 @@ class Shell(Cmd):
         if code is None:
             return
         try:
-            builtins.__history__.add(line)
             self.execer.exec(code, mode='single', glbs=self.ctx)  # no locals
         except XonshError as e:
             print(e.args[0], file=sys.stderr, end='')
@@ -162,6 +161,8 @@ class Shell(Cmd):
 
     def reset_buffer(self):
         """Resets the line buffer."""
+        cmd = ''.join(list(filter(('\n').__ne__, self.buffer)))  
+        builtins.__history__.add(cmd)
         self.buffer.clear()
         self.need_more_lines = False
         self.mlprompt = None
