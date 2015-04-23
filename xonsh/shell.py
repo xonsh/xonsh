@@ -161,7 +161,7 @@ class Shell(Cmd):
 
     def reset_buffer(self):
         """Resets the line buffer."""
-        cmd = ''.join(list(filter(('\n').__ne__, self.buffer)))  
+        cmd = ''.join(filter(lambda x: x != '\n', self.buffer))  
         builtins.__history__.add(cmd)
         self.buffer.clear()
         self.need_more_lines = False
