@@ -3,6 +3,8 @@
 from collections import OrderedDict
 import json
 import time
+import os
+
 
 class History(object):
 
@@ -20,11 +22,9 @@ class History(object):
         -------
             None
         """
-        try: 
+        if os.path.isfile(hist_file):
             with open(hist_file) as data_file:
                 json_history = json.load(data_file)
-        except:
-            pass
 
 
     def add(self, cmd):
