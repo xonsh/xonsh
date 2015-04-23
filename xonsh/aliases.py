@@ -77,7 +77,7 @@ def history(args, stdin=None):
         entry = builtins.ordered_history[timestamp]
         timestamp = datetime.datetime.fromtimestamp(int(timestamp)
                     ).strftime('%Y-%m-%d %H:%M:%S') + ": " 
-        cmd = '\033[1m' + entry['cmd'] + '\033[0m'
+        cmd = '\033[1m' + entry['cmd'].strip() + '\033[0m'
         cmd = cmd.replace('\n', '\n' + ' '*len(timestamp) + ' ') + '\n'
         hist_str += '{} {}'.format(timestamp, cmd)
     return hist_str
