@@ -622,7 +622,9 @@ def unload_builtins():
              'default_aliases',
              '__xonsh_all_jobs__',
              '__xonsh_active_job__',
-             '__xonsh_ensure_list_of_strs__', ]
+             '__xonsh_ensure_list_of_strs__',
+             '__history__',
+             'ordered_history', ]
     for name in names:
         if hasattr(builtins, name):
             delattr(builtins, name)
