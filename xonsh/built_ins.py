@@ -6,7 +6,7 @@ import re
 import sys
 import shlex
 import signal
-import locale 
+import locale
 import builtins
 import subprocess
 from io import TextIOWrapper, StringIO
