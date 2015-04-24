@@ -8,7 +8,7 @@ import os
 
 class History(object):
 
-    ordered_history = OrderedDict()
+    ordered_history = []
 
     def load_history(self, hist_file="~/.xonsh_history.json"):
         """Loads previous history from ~/.xonsh_history.json if it exists.
@@ -31,4 +31,5 @@ class History(object):
         cmd: str
             Command that should be added to the ordered history.
         """
-        self.ordered_history[time.time()] = {'cmd': cmd}
+        #self.ordered_history[time.time()] = {'cmd': cmd}
+        self.ordered_history.append({'timestamp': time.time(), 'cmd': cmd})
