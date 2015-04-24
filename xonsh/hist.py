@@ -17,10 +17,6 @@ class History(object):
         ----------
         hist_file : str, optional
             Path of the history file.
-
-        Returns
-        -------
-            None
         """
         if os.path.isfile(hist_file):
             with open(hist_file) as data_file:
@@ -34,9 +30,5 @@ class History(object):
         ----------
         cmd: str
             Command that should be added to the ordered history.
-
-        Returns
-        -------
-            None
         """
         self.ordered_history[time.time()] = {'cmd': cmd}
