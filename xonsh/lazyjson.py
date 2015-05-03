@@ -41,7 +41,8 @@ def _to_json_with_size(obj, offset=0):
             s += s_k + ': '
             j += n_k + 2
             s_v, o_v, n_v, size_v = _to_json_with_size(val, offset=j)
-            o[key] = _update_offset(o_v, j)
+            #o[key] = _update_offset(o_v, j)
+            o[key] = j
             size[key] = size_v
             s += s_x + ', '
             j += n_x + 2
@@ -56,7 +57,8 @@ def _to_json_with_size(obj, offset=0):
         size = []
         for x in obj:
             s_x, o_x, n_x, size_x = _to_json_with_size(x, offset=j)
-            o.append(_update_offset(o_x, j))
+            #o.append(_update_offset(o_x, j))
+            o.append(j)
             size.append(size_x)
             s += s_x + ', '
             j += n_x + 2
