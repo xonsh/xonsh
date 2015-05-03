@@ -13,19 +13,6 @@ class LazyJSON(object):
     """Represents a lazy json file."""
 
 
-
-def _update_offset(o_x, j):
-    if isinstance(o_x, string_types):
-        offset = o_x + j
-    elif isinstance(o_x, Mapping):
-        offset = {k: _update_offset(v, j) for k, v in o_x.items()}
-    elif isinstance(o_x, Sequence):
-        offset = [_update_offset(o, j) for o in o_x]
-    else:
-        offset = o_x + j
-    return offset
-
-
 def _to_json_with_size(obj, offset=0):
     if isinstance(obj, string_types):
         s = json.dumps(obj)
@@ -41,7 +28,6 @@ def _to_json_with_size(obj, offset=0):
             s += s_k + ': '
             j += n_k + 2
             s_v, o_v, n_v, size_v = _to_json_with_size(val, offset=j)
-            #o[key] = _update_offset(o_v, j)
             o[key] = j
             size[key] = size_v
             s += s_x + ', '
@@ -57,7 +43,6 @@ def _to_json_with_size(obj, offset=0):
         size = []
         for x in obj:
             s_x, o_x, n_x, size_x = _to_json_with_size(x, offset=j)
-            #o.append(_update_offset(o_x, j))
             o.append(j)
             size.append(size_x)
             s += s_x + ', '
