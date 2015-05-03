@@ -3,39 +3,61 @@ from __future__ import unicode_literals, print_function
 
 import nose
 from nose.tools import assert_equal
+assert_equal.__self__.maxDiff = None
 
 from xonsh.lazyjson import index
 
 def test_index_int():
-    exp = {'offset': 0, 'size': 2}
+    exp = {'offsets': 0, 'sizes': 2}
     s, obs = index(42)
     assert_equal(exp, obs)
 
 def test_index_str():
-    exp = {'offset': 0, 'size': 7}
+    exp = {'offsets': 0, 'sizes': 7}
     s, obs = index('wakka')
     assert_equal(exp, obs)
 
 def test_index_list_ints():
-    exp = {'offset': [1, 4], 'size': [1, 2]}
+    exp = {'offsets': [1, 4, 0], 'sizes': [1, 2, 8]}
     s, obs = index([1, 42])
     assert_equal(exp, obs)
 
 def test_index_list_str():
-    exp = {'offset': [1, 10], 'size': [7, 8]}
+    exp = {'offsets': [1, 10, 0], 'sizes': [7, 8, 20]}
     s, obs = index(['wakka', 'jawaka'])
     assert_equal(exp, obs)
 
 def test_index_list_str_int():
-    exp = {'offset': [1, 10], 'size': [7, 2]}
+    exp = {'offsets': [1, 10, 0], 'sizes': [7, 2, 14]}
     s, obs = index(['wakka', 42])
     assert_equal(exp, obs)
 
 def test_index_list_int_str():
-    exp = {'offset': [1, 5, 14], 'size': [2, 7, 8]}
+    exp = {'offsets': [1, 5, 14, 0], 'sizes': [2, 7, 8, 24]}
     s, obs = index([42, 'wakka', 'jawaka'])
     assert_equal(exp, obs)
 
+def test_index_dict_int():
+    exp = {'offsets': {'wakka': 10, '__total__': 0}, 
+           'sizes': {'wakka': 2, '__total__': 14}}
+    s, obs = index({'wakka': 42})
+    assert_equal(exp, obs)
+
+def test_index_dict_str():
+    exp = {'offsets': {'wakka': 10, '__total__': 0}, 
+           'sizes': {'wakka': 8, '__total__': 20}}
+    s, obs = index({'wakka': 'jawaka'})
+    assert_equal(exp, obs)
+
+def test_index_dict_dict_int():
+    exp = {'offsets': {'wakka': {'jawaka': 21, '__total__': 10},
+                      '__total__': 0,
+                      },
+           'sizes': {'wakka': {'jawaka': 2, '__total__': 15}, 
+                    '__total__': 27}
+           }
+    s, obs = index({'wakka': {'jawaka': 42}})
+    assert_equal(exp, obs)
 
 
 if __name__ == '__main__':
