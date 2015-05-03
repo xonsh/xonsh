@@ -131,7 +131,7 @@ class LazyJSON(object):
 
     def _load_index(self):
         """Loads the index from the start of the file."""
-        with self._open as f:
+        with self._open() as f:
             # read in the location data
             f.seek(9)
             locs = f.read(48)

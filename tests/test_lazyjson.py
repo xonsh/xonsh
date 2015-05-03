@@ -1,11 +1,12 @@
 """Tests lazy json functionality."""
 from __future__ import unicode_literals, print_function
+from io import StringIO
 
 import nose
 from nose.tools import assert_equal
 assert_equal.__self__.maxDiff = None
 
-from xonsh.lazyjson import index
+from xonsh.lazyjson import index, dump, LazyJSON
 
 def test_index_int():
     exp = {'offsets': 0, 'sizes': 2}
@@ -59,6 +60,13 @@ def test_index_dict_dict_int():
     s, obs = index({'wakka': {'jawaka': 42}})
     assert_equal(exp, obs)
 
+def test_lazy_load_index():
+    f = StringIO()
+    dump({'wakka': 42}, f)
+    f.seek(0)
+    lj = LazyJSON(f)
+    assert_equal({'wakka': 10, '__total__': 0}, lj.offsets)
+    assert_equal({'wakka': 2, '__total__': 14}, lj.sizes)
 
 if __name__ == '__main__':
     nose.runmodule()
