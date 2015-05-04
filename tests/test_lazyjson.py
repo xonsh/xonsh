@@ -146,6 +146,18 @@ def test_lazy_dict():
     assert_equal(1, len(lj))
     assert_equal({'wakka': 42}, lj.load())
 
+def test_lazy_dict_dict_int():
+    x = {'wakka': {'jawaka': 42}}
+    f = StringIO()
+    dump(x, f)
+    f.seek(0)
+    lj = LazyJSON(f)
+    assert_equal(['wakka'], list(lj.keys()))
+    assert_is_instance(lj['wakka'], Node)
+    assert_equal(42, lj['wakka']['jawaka'])
+    assert_equal(1, len(lj))
+    assert_equal(x, lj.load())
+
 
 
 if __name__ == '__main__':

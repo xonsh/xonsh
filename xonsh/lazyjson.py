@@ -102,6 +102,15 @@ class Node(Mapping, Sequence):
     """A proxy node for JSON nodes. Acts as both sequence and mapping."""
 
     def __init__(self, offsets, sizes, root):
+        """Parameters
+        ----------
+        offsets : dict, list, or int
+            offsets of cooresponding data structure, in bytes
+        sizes : dict, list, or int
+            sizes of cooresponding data structure, in bytes
+        root : weakref.proxy of LazyJSON
+            weakref back to root node, which should be a LazyJSON object.
+        """
         self.offsets = offsets
         self.sizes = sizes
         self.root = root
@@ -181,7 +190,9 @@ class Node(Mapping, Sequence):
 
 
 class LazyJSON(Node):
-    """Represents a lazy json file."""
+    """Represents a lazy json file. Can be used like a normal Python 
+    dict or list.
+    """
 
     def __init__(self, f, reopen=True):
         """Parameters
