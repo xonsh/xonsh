@@ -1,7 +1,9 @@
 """Implements a lazy JSON file class that wraps around json data."""
 from __future__ import print_function, unicode_literals
-from collections import Mapping, Sequence
+import weakref
 from contextlib import contextmanager
+from collections import Mapping, Sequence
+
 try:
     import simplejson as json
 except ImportError:
@@ -96,10 +98,87 @@ def dump(obj, fp, sort_keys=False):
 
 
 
-#class Node(Mapping, Sequence):
+class Node(Mapping, Sequence):
+    """A proxy node for JSON nodes. Acts as both sequence and mapping."""
 
-#class LazyJSON(Node):
-class LazyJSON(object):
+    def __init__(self, offsets, sizes, root):
+        self.offsets = offsets
+        self.sizes = sizes
+        self.root = root
+        self.is_mapping = isinstance(self.offsets, Mapping)
+        self.is_sequence = isinstance(self.offsets, Sequence)
+
+    def __len__(self):
+        # recall that for maps, the '__total__' key is added and for 
+        # sequences the last element represents the total size/offset.
+        return len(self.sizes) - 1
+
+    def load(self):
+        """Returns the Python data structre represened by the node."""
+        if self.is_mapping:
+            offset = self.offsets['__total__']
+            size = self.sizes['__total__']
+        elif self.is_sequence:
+            offset = self.offsets[-1]
+            size = self.sizes[-1]
+        return self._load_or_node(offset, size)
+
+    def _load_or_node(self, offset, size):
+        if isinstance(offset, int):
+            with self.root._open() as f:
+                f.seek(self.root.dloc + offset)
+                s = f.read(size)
+            val = json.loads(s)
+        elif isinstance(offset, (Mapping, Sequence)):
+            val = Node(offset, size, self.root)
+        else:
+            raise TypeError('incorrect types for offset node')
+        return val
+
+    def _getitem_mapping(self, key):
+        if key == '__total__':
+            raise KeyError('"__total__" is a special LazyJSON key!')
+        offset = self.offsets[key]
+        size = self.sizes[key]
+        return self._load_or_node(offset, size)
+
+    def _getitem_sequence(self, key):
+        if isinstance(key, int):
+            rtn = self._load_or_node(self.offsets[key], self.sizes[key])
+        elif isinstance(key, slice):
+            key = slice(*key.indices(len(self)))
+            rtn = list(map(self._load_or_node, self.offsets[key], 
+                           self.sizes[key]))
+        else:
+            raise TypeError('only integer indexing available')
+        return rtn
+
+    def __getitem__(self, key):
+        if self.is_mapping:
+            rtn = self._getitem_mapping(key)
+        elif self.is_sequence:
+            rtn = self._getitem_sequence(key)
+        else:
+            raise NotImplementedError
+        return rtn
+
+    def __iter__(self):
+        if self.is_mapping:
+            keys = set(self.offsets.keys())
+            keys.discard('__total__')
+            yield from iter(keys)
+        elif self.is_sequence:
+            i = 0
+            n = len(self)
+            while i < n:
+                yield self._load_or_node(self.offsets[i], self.sizes[i])
+                i += 1
+        else:
+            raise NotImplementedError
+
+
+class LazyJSON(Node):
+#class LazyJSON(object):
     """Represents a lazy json file."""
 
     def __init__(self, f, reopen=True):
@@ -115,6 +194,9 @@ class LazyJSON(object):
         if not reopen and isinstance(f, string_types):
             self._f = open(f, 'r')
         self._load_index()
+        self.root = weakref.proxy(self)
+        self.is_mapping = isinstance(self.offsets, Mapping)
+        self.is_sequence = isinstance(self.offsets, Sequence)
 
     def __del__(self):
         if not self.reopen:
