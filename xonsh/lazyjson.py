@@ -47,7 +47,7 @@ def _to_json_with_size(obj, offset=0, sort_keys=False):
         for x in obj:
             s_x, o_x, n_x, size_x = _to_json_with_size(x, offset=j,
                                                        sort_keys=sort_keys)
-            o.append(j)
+            o.append(o_x)
             size.append(size_x)
             s += s_x + ', '
             j += n_x + 2
@@ -121,6 +121,9 @@ class Node(Mapping, Sequence):
         elif self.is_sequence:
             offset = self.offsets[-1]
             size = self.sizes[-1]
+        elif isinstance(self.offsets, int):
+            offset = self.offsets
+            size = self.sizes
         return self._load_or_node(offset, size)
 
     def _load_or_node(self, offset, size):
@@ -178,7 +181,6 @@ class Node(Mapping, Sequence):
 
 
 class LazyJSON(Node):
-#class LazyJSON(object):
     """Represents a lazy json file."""
 
     def __init__(self, f, reopen=True):
