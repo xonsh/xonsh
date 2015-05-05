@@ -24,7 +24,7 @@ def _to_json_with_size(obj, offset=0, sort_keys=False):
         size = {}
         items = sorted(obj.items()) if sort_keys else obj.items()
         for key, val in items:
-            s_k, o_k, n_k, size_k = _to_json_with_size(key, offset=j, 
+            s_k, o_k, n_k, size_k = _to_json_with_size(key, offset=j,
                                                        sort_keys=sort_keys)
             s += s_k + ': '
             j += n_k + 2
@@ -78,6 +78,7 @@ JSON_FORMAT = \
 }}
 """
 
+
 def dumps(obj, sort_keys=False):
     """Dumps an object to JSON with an index."""
     data, idx = index(obj, sort_keys=sort_keys)
@@ -86,7 +87,7 @@ def dumps(obj, sort_keys=False):
     ilen = len(jdx)
     dloc = iloc + ilen + 11
     dlen = len(data)
-    s = JSON_FORMAT.format(index=jdx, data=data, iloc=iloc, ilen=ilen, 
+    s = JSON_FORMAT.format(index=jdx, data=data, iloc=iloc, ilen=ilen,
                            dloc=dloc, dlen=dlen)
     return s
 
@@ -97,7 +98,6 @@ def dump(obj, fp, sort_keys=False):
     fp.write(s)
 
 
-
 class Node(Mapping, Sequence):
     """A proxy node for JSON nodes. Acts as both sequence and mapping."""
 
@@ -105,9 +105,9 @@ class Node(Mapping, Sequence):
         """Parameters
         ----------
         offsets : dict, list, or int
-            offsets of cooresponding data structure, in bytes
+            offsets of corresponding data structure, in bytes
         sizes : dict, list, or int
-            sizes of cooresponding data structure, in bytes
+            sizes of corresponding data structure, in bytes
         root : weakref.proxy of LazyJSON
             weakref back to root node, which should be a LazyJSON object.
         """
@@ -118,12 +118,12 @@ class Node(Mapping, Sequence):
         self.is_sequence = isinstance(self.offsets, Sequence)
 
     def __len__(self):
-        # recall that for maps, the '__total__' key is added and for 
+        # recall that for maps, the '__total__' key is added and for
         # sequences the last element represents the total size/offset.
         return len(self.sizes) - 1
 
     def load(self):
-        """Returns the Python data structre represened by the node."""
+        """Returns the Python data structure represented by the node."""
         if self.is_mapping:
             offset = self.offsets['__total__']
             size = self.sizes['__total__']
@@ -159,7 +159,7 @@ class Node(Mapping, Sequence):
             rtn = self._load_or_node(self.offsets[key], self.sizes[key])
         elif isinstance(key, slice):
             key = slice(*key.indices(len(self)))
-            rtn = list(map(self._load_or_node, self.offsets[key], 
+            rtn = list(map(self._load_or_node, self.offsets[key],
                            self.sizes[key]))
         else:
             raise TypeError('only integer indexing available')
@@ -190,7 +190,7 @@ class Node(Mapping, Sequence):
 
 
 class LazyJSON(Node):
-    """Represents a lazy json file. Can be used like a normal Python 
+    """Represents a lazy json file. Can be used like a normal Python
     dict or list.
     """
 
