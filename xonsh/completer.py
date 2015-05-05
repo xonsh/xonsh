@@ -4,6 +4,7 @@ import os
 import re
 import builtins
 import subprocess
+import sys
 
 from xonsh.built_ins import iglobpath
 from xonsh.tools import subexpr_from_unbalanced
@@ -94,6 +95,9 @@ class Completer(object):
             # python mode explicitly
             rtn = set()
         elif cmd not in ctx:
+            if cmd == 'import' and begidx == len('import '):
+                # completing module to import
+                return sorted(self.module_complete(prefix))
             if cmd in self._all_commands():
                 # subproc mode; do path completions
                 return sorted(self.path_complete(prefix))
@@ -130,6 +134,11 @@ class Completer(object):
         """Completes a command name based on what is on the $PATH"""
         space = ' '
         return {s + space for s in self._all_commands() if s.startswith(cmd)}
+
+    def module_complete(self, prefix):
+        """Completes a name of a module to import"""
+        modules = set(sys.modules.keys())
+        return {s for s in modules if s.startswith(prefix)}
 
     def path_complete(self, prefix):
         """Completes based on a path name."""
