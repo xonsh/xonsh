@@ -2331,6 +2331,7 @@ class Parser(object):
                             | TRUE
                             | FALSE
                             | NUMBER
+                            | STRING
         """
         # Many tokens cannot be part of this list, such as $, ', ", ()
         # Use a string atom instead.
