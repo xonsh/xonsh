@@ -580,7 +580,7 @@ def load_builtins(execer=None):
     builtins.__xonsh_active_job__ = None
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     builtins.__history__ = History()
-    builtins.__history__.load_history()
+    builtins.__history__.open_history()
     # public built-ins
     builtins.evalx = None if execer is None else execer.eval
     builtins.execx = None if execer is None else execer.exec
