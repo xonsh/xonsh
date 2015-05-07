@@ -131,7 +131,7 @@ BASE_ENV = {
     'MULTILINE_PROMPT': '.',
     'XONSHRC': os.path.expanduser('~/.xonshrc'),
     'XONSH_HISTORY_SIZE': 8128,
-    'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history'),
+    'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
     'LC_CTYPE': locale.setlocale(locale.LC_CTYPE),
     'LC_COLLATE': locale.setlocale(locale.LC_COLLATE),
     'LC_TIME': locale.setlocale(locale.LC_TIME),
