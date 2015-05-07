@@ -6,11 +6,12 @@ import traceback
 from cmd import Cmd
 from warnings import warn
 from argparse import Namespace
-
 from xonsh.execer import Execer
 from xonsh.tools import XonshError
 from xonsh.completer import Completer
 from xonsh.environ import xonshrc_context, multiline_prompt, format_prompt
+from xonsh.tools import redirect_stdout, redirect_stderr
+from io import StringIO
 
 RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = None
 RL_CAN_RESIZE = False
@@ -38,14 +39,6 @@ def setup_readline():
     RL_CAN_RESIZE = hasattr(lib, 'rl_reset_screen_size')
     # reads in history
     env = builtins.__xonsh_env__
-    hf = env.get('XONSH_HISTORY_FILE', os.path.expanduser('~/.xonsh_history'))
-    if os.path.isfile(hf):
-        try:
-            readline.read_history_file(hf)
-        except PermissionError:
-            warn('do not have read permissions for ' + hf, RuntimeWarning)
-    hs = env.get('XONSH_HISTORY_SIZE', 8128)
-    readline.set_history_length(hs)
     # sets up IPython-like history matching with up and down
     readline.parse_and_bind('"\e[B": history-search-forward')
     readline.parse_and_bind('"\e[A": history-search-backward')
@@ -66,14 +59,6 @@ def teardown_readline():
         import readline
     except ImportError:
         return
-    env = builtins.__xonsh_env__
-    hs = env.get('XONSH_HISTORY_SIZE', 8128)
-    readline.set_history_length(hs)
-    hf = env.get('XONSH_HISTORY_FILE', os.path.expanduser('~/.xonsh_history'))
-    try:
-        readline.write_history_file(hf)
-    except PermissionError:
-        warn('do not have write permissions for ' + hf, RuntimeWarning)
 
 
 def rl_completion_suppress_append(val=1):
@@ -102,6 +87,8 @@ class Shell(Cmd):
         self.ctx['__name__'] = '__main__'
         self.completer = Completer()
         self.buffer = []
+        self.stdout = StringIO()
+        self.stderr = StringIO()
         self.need_more_lines = False
         self.mlprompt = None
         setup_readline()
@@ -128,7 +115,15 @@ class Shell(Cmd):
         if code is None:
             return
         try:
-            self.execer.exec(code, mode='single', glbs=self.ctx)  # no locals
+            # Temporarily redirect stdout and stderr to save results in
+            # history.
+            with redirect_stdout(self.stdout):
+                with redirect_stderr(self.stderr):
+                    self.execer.exec(code, mode='single', glbs=self.ctx)  # no locals
+            self.stdout.seek(0)
+            self.stderr.seek(0)
+            sys.stdout.write(self.stdout.read())
+            sys.stderr.write(self.stderr.read())
         except XonshError as e:
             print(e.args[0], file=sys.stderr, end='')
         except:
@@ -161,7 +156,16 @@ class Shell(Cmd):
 
     def reset_buffer(self):
         """Resets the line buffer."""
-        cmd = ''.join(filter(lambda x: x != '\n', self.buffer))  
+        cmd = {}
+        cmd['cmd']  = ''.join(filter(lambda x: x != '\n', self.buffer))
+        self.stdout.seek(0)
+        cmd['stdout'] = self.stdout.read()
+        self.stderr.seek(0)
+        cmd['stderr'] = self.stderr.read()
+        self.stdout.seek(0)
+        self.stdout.truncate()
+        self.stderr.seek(0)
+        self.stderr.truncate()
         builtins.__history__.add(cmd)
         self.buffer.clear()
         self.need_more_lines = False
@@ -185,6 +189,7 @@ class Shell(Cmd):
                 print()  # Gives a newline
                 self.reset_buffer()
                 intro = None
+        builtins.__history__.close_history()
 
     def settitle(self):
         env = builtins.__xonsh_env__
