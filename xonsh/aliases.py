@@ -1,13 +1,9 @@
 """Aliases for the xonsh shell.
 """
 import os
-import gc
-import time
 import shlex
-import timeit
 import platform
 import builtins
-import itertools
 import subprocess
 from warnings import warn
 
@@ -21,43 +17,6 @@ def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
     kill_all_jobs()
     print()  # gimme a newline
     return None, None
-
-
-# The following time_it alias and Timer was forked from the IPython project:
-# * Copyright (c) 2008-2014, IPython Development Team
-# * Copyright (C) 2001-2007 Fernando Perez <fperez@colorado.edu>
-# * Copyright (c) 2001, Janko Hauser <jhauser@zscout.de>
-# * Copyright (c) 2001, Nathaniel Gray <n8gray@caltech.edu>
-class Timer(timeit.Timer):
-    """Timer class that explicitly uses self.inner
-    which is an undocumented implementation detail of CPython,
-    not shared by PyPy.
-    """
-    # Timer.timeit copied from CPython 3.4.2
-    def timeit(self, number=timeit.default_number):
-        """Time 'number' executions of the main statement.
-        To be precise, this executes the setup statement once, and
-        then returns the time it takes to execute the main statement
-        a number of times, as a float measured in seconds.  The
-        argument is the number of times through the loop, defaulting
-        to one million.  The main statement, the setup statement and
-        the timer function to be used are passed to the constructor.
-        """
-        it = itertools.repeat(None, number)
-        gcold = gc.isenabled()
-        gc.disable()
-        try:
-            timing = self.inner(it, self.timer)
-        finally:
-            if gcold:
-                gc.enable()
-        return timing
-
-
-def time_it(args, stdin=None):
-    """Runs timing study on arguments."""
-    timer = Timer(timer=timefunc)
-    return
 
 
 def source_bash(args, stdin=None):
