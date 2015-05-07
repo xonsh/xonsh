@@ -22,10 +22,6 @@ will fall back to handling that token using one of the handlers in
 ``special_handlers``.
 """
 
-# keywords
-for kw in kwlist:
-    token_map[(tokenize.NAME, kw)] = kw.upper()
-
 # operators
 _op_map = {
         # punctuation
@@ -47,12 +43,22 @@ _op_map = {
 for (op, type) in _op_map.items():
     token_map[(tokenize.OP, op)] = type
 
-token_map[tokenize.NAME] = 'NAME'
 token_map[tokenize.NUMBER] = 'NUMBER'
 token_map[tokenize.STRING] = 'STRING'
 token_map[tokenize.NEWLINE] = 'NEWLINE'
 token_map[tokenize.INDENT] = 'INDENT'
 token_map[tokenize.DEDENT] = 'DEDENT'
+
+
+def handle_name(state, token, stream):
+    """
+    Function for handling name tokens
+    """
+    typ = 'NAME'
+    state['last'] = token
+    if state['pymode'][-1][0] and token.string in kwlist:
+        typ = token.string.upper()
+    yield _new_token(typ, token.string, token.start)
 
 
 def handle_dollar(state, token, stream):
@@ -230,13 +236,25 @@ def handle_rbracket(state, token, stream):
 
 def handle_error_space(state, token, stream):
     """
-    Function for handling special whitespace characters is subprocess mode
+    Function for handling special whitespace characters in subprocess mode
     """
     if not state['pymode'][-1][0]:
         state['last'] = token
         yield _new_token('WS', token.string, token.start)
     else:
         yield from []
+
+
+def handle_error_token(state, token, stream):
+    """
+    Function for handling error tokens
+    """
+    state['last'] = token
+    if not state['pymode'][-1][0]:
+        typ = 'NAME'
+    else:
+        typ = 'ERRORTOKEN'
+    yield _new_token(typ, token.string, token.start)
 
 
 def handle_ignore(state, token, stream):
@@ -251,6 +269,8 @@ special_handlers = {
     tokenize.COMMENT: handle_ignore,
     tokenize.ENCODING: handle_ignore,
     tokenize.ENDMARKER: handle_ignore,
+    tokenize.NAME: handle_name,
+    tokenize.ERRORTOKEN: handle_error_token,
     (tokenize.OP, '@'): handle_at,
     (tokenize.OP, '('): handle_lparen,
     (tokenize.OP, ')'): handle_rparen,
@@ -296,19 +316,16 @@ def handle_token(state, token, stream):
             old = state['last'].end
             if cur[0] == old[0] and cur[1] > old[1]:
                 yield _new_token('WS', token.line[old[1]:cur[1]], old)
-    if typ == tokenize.NAME and not pymode:
-        state['last'] = token
-        yield _new_token('NAME', st, token.start)
+    if (typ, st) in special_handlers:
+        yield from special_handlers[(typ, st)](state, token, stream)
     elif (typ, st) in token_map:
         state['last'] = token
         yield _new_token(token_map[(typ, st)], st, token.start)
+    elif typ in special_handlers:
+        yield from special_handlers[typ](state, token, stream)
     elif typ in token_map:
         state['last'] = token
         yield _new_token(token_map[typ], st, token.start)
-    elif (typ, st) in special_handlers:
-        yield from special_handlers[(typ, st)](state, token, stream)
-    elif typ in special_handlers:
-        yield from special_handlers[typ](state, token, stream)
     else:
         m = "Unexpected token: {0}".format(token)
         yield _new_token("ERRORTOKEN", m, token.start)
@@ -396,6 +413,7 @@ class Lexer(object):
     # All the tokens recognized by the lexer
     #
     tokens = tuple(token_map.values()) + (
+        'NAME',                  # name tokens
         'WS',                    # whitespace in subprocess mode
         'REGEXPATH',             # regex escaped with backticks
         'LPAREN', 'RPAREN',      # ( )
@@ -409,4 +427,4 @@ class Lexer(object):
         'DOLLAR_LPAREN',         # $(
         'DOLLAR_LBRACE',         # ${
         'DOLLAR_LBRACKET',       # $[
-        )
+        ) + tuple(i.upper() for i in kwlist)
