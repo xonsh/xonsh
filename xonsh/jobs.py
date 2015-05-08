@@ -8,10 +8,7 @@ import signal
 import builtins
 from collections import namedtuple
 
-ProcProxy = namedtuple('ProcProxy', ['stdout', 'stderr'])
-"""
-A class representing a Python function to be run as a subprocess command.
-"""
+from xonsh.proc import ProcProxy
 
 try:
     _shell_tty = sys.stderr.fileno()
@@ -25,7 +22,7 @@ def _clear_dead_jobs():
     to_remove = set()
     for num, job in builtins.__xonsh_all_jobs__.items():
         obj = job['obj']
-        if isinstance(obj, ProcProxy) or obj.poll() is not None:
+        if obj.poll() is not None:
             to_remove.add(num)
     for i in to_remove:
         del builtins.__xonsh_all_jobs__[i]
@@ -86,10 +83,13 @@ def add_job(info):
     """
     info['started'] = time.time()
     info['status'] = 'running'
-    try:
-        info['pgrp'] = os.getpgid(info['obj'].pid)
-    except ProcessLookupError:
-        return
+    if isinstance(info['obj'], ProcProxy):
+        info['pgrp'] = None
+    else:
+        try:
+            info['pgrp'] = os.getpgid(info['obj'].pid)
+        except ProcessLookupError:
+            return
     num = get_next_job_number()
     builtins.__xonsh_all_jobs__[num] = info
     builtins.__xonsh_active_job__ = num
@@ -113,6 +113,8 @@ def wait_for_active_job():
     job = builtins.__xonsh_all_jobs__[act]
     obj = job['obj']
     if isinstance(obj, ProcProxy):
+        while obj.poll() is None:
+            time.sleep(0.01)
         return
     if job['bg']:
         return
