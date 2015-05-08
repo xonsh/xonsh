@@ -8,6 +8,7 @@ The following time_it alias and Timer was forked from the IPython project:
 """
 from __future__ import unicode_literals, print_function
 import gc
+import sys
 import math
 import time
 import timeit
@@ -136,6 +137,8 @@ def timeit_alias(args, stdin=None):
     # some real args
     number = 0
     quiet = False
+    repeat = 3
+    precision = 3
     # setup
     ctx = builtins.__xonsh_ctx__
     timer = Timer(timer=clock)
@@ -145,12 +148,12 @@ def timeit_alias(args, stdin=None):
     # Minimum time above which compilation time will be reported
     tc_min = 0.1
     t0 = clock()
-    innercode = builtins.compilex(innerstr, '<xonsh-timeit>', mode='exec',
-                                  glbs=ctx)
+    innercode = builtins.compilex(innerstr, filename='<xonsh-timeit>', 
+                                  mode='exec', glbs=ctx)
     tc = clock() - t0
     # get inner func
     ns = {}
-    builtins.execx(code, glbs=ctx, locs=ns, mode='exec')
+    builtins.execx(innercode, glbs=ctx, locs=ns, mode='exec')
     timer.inner = ns['inner']
     # Check if there is a huge difference between the best and worst timings.
     worst_tuning = 0
@@ -161,7 +164,7 @@ def timeit_alias(args, stdin=None):
             time_number = timer.timeit(number)
             worst_tuning = max(worst_tuning, time_number / number)
             if time_number >= 0.2:
-                    break
+                break
             number *= 10
     all_runs = timer.repeat(repeat, number)
     best = min(all_runs) / number
@@ -172,10 +175,10 @@ def timeit_alias(args, stdin=None):
             worst = max(worst, worst_tuning)
         # Check best timing is greater than zero to avoid a
         # ZeroDivisionError.
-        # In cases where the slowest timing is lesser than a micosecond
+        # In cases where the slowest timing is lesser than 10 micoseconds
         # we assume that it does not really matter if the fastest
         # timing is 4 times faster than the slowest timing or not.
-        if worst > 4 * best and best > 0 and worst > 1e-6:
+        if worst > 4 * best and best > 0 and worst > 1e-5:
             print(('The slowest run took {0:0.2f} times longer than the '
                    'fastest. This could mean that an intermediate result '
                    'is being cached.').format(worst / best))

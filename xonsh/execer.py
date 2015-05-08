@@ -80,10 +80,13 @@ class Execer(object):
         tree = self.ctxtransformer.ctxvisit(tree, input, ctx, mode=mode)
         return tree
 
-    def compile(self, input, mode='exec', glbs=None, locs=None, stacklevel=2):
+    def compile(self, input, mode='exec', glbs=None, locs=None, stacklevel=2, 
+                filename=None):
         """Compiles xonsh code into a Python code object, which may then
         be execed or evaled.
         """
+        if filename is None:
+            filename = self.filename
         if glbs is None or locs is None:
             frame = inspect.stack()[stacklevel][0]
             glbs = frame.f_globals if glbs is None else glbs
@@ -92,7 +95,7 @@ class Execer(object):
         tree = self.parse(input, ctx, mode=mode)
         if tree is None:
             return None  # handles comment only input
-        code = compile(tree, self.filename, mode)
+        code = compile(tree, filename, mode)
         return code
 
     def eval(self, input, glbs=None, locs=None, stacklevel=2):

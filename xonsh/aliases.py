@@ -9,7 +9,7 @@ from warnings import warn
 
 from xonsh.dirstack import cd, pushd, popd, dirs
 from xonsh.jobs import jobs, fg, bg, kill_all_jobs
-
+from xonsh.timings import timeit_alias
 
 def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
     """Sends signal to exit shell."""
@@ -98,6 +98,7 @@ DEFAULT_ALIASES = {
     'exit': exit,
     'quit': exit,
     'xexec': xexec,
+    'timeit': timeit_alias,
     'source-bash': source_bash,
     'grep': ['grep', '--color=auto'],
     'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
