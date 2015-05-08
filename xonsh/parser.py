@@ -1629,8 +1629,8 @@ class Parser(object):
                 | REGEXPATH
                 | DOLLAR_NAME
                 | DOLLAR_LBRACE test RBRACE
-                | DOLLAR_LPAREN subproc RPAREN
-                | DOLLAR_LBRACKET subproc RBRACKET
+                | DOLLAR_LPAREN subproc SUBPROC_END_RPAREN
+                | DOLLAR_LBRACKET subproc SUBPROC_END_RBRACKET
         """
         p1 = p[1]
         if len(p) == 2:
@@ -2235,8 +2235,8 @@ class Parser(object):
                         | DOLLAR_NAME
                         | AT_LPAREN test RPAREN
                         | DOLLAR_LBRACE test RBRACE
-                        | DOLLAR_LPAREN subproc RPAREN
-                        | DOLLAR_LBRACKET subproc RBRACKET
+                        | DOLLAR_LPAREN subproc SUBPROC_END_RPAREN
+                        | DOLLAR_LBRACKET subproc SUBPROC_END_RBRACKET
         """
         lenp = len(p)
         p1 = p[1]
@@ -2332,6 +2332,13 @@ class Parser(object):
                             | FALSE
                             | NUMBER
                             | STRING
+                            | LPAREN
+                            | RPAREN
+                            | LBRACE
+                            | RBRACE
+                            | LBRACKET
+                            | RBRACKET
+                            | COMMA
         """
         # Many tokens cannot be part of this list, such as $, ', ", ()
         # Use a string atom instead.
