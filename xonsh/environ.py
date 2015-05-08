@@ -75,10 +75,22 @@ DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
 DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
 
 
-def _replace_home(x):
-    return x.replace(builtins.__xonsh_env__['HOME'], '~')
 
-FORMATTER_DICT = dict(user=os.environ.get('USER', '<user>'),
+def _replace_home(x):
+    if platform.system() == 'Windows':
+        home = builtins.__xonsh_env__['HOMEDRIVE'] + builtins.__xonsh_env__['HOMEPATH'][0]
+        return x.replace(home, '~')
+    else:
+        return x.replace(builtins.__xonsh_env__['HOME'], '~')
+
+
+if platform.system() == 'Windows':
+    USER = 'USERNAME'
+else:
+    USER = 'USER'
+            
+
+FORMATTER_DICT = dict(user=os.environ.get(USER, '<user>'),
                       hostname=socket.gethostname().split('.', 1)[0],
                       cwd=lambda: _replace_home(builtins.__xonsh_env__['PWD']),
                       curr_branch=lambda: current_branch(),
@@ -136,9 +148,14 @@ BASE_ENV = {
     'LC_COLLATE': locale.setlocale(locale.LC_COLLATE),
     'LC_TIME': locale.setlocale(locale.LC_TIME),
     'LC_MONETARY': locale.setlocale(locale.LC_MONETARY),
-    'LC_MESSAGES': locale.setlocale(locale.LC_MESSAGES),
     'LC_NUMERIC': locale.setlocale(locale.LC_NUMERIC),
 }
+
+try:
+    BASE_ENV['LC_MESSAGES'] = locale.setlocale(locale.LC_MESSAGES)
+except AttributeError:
+    pass
+
 
 if platform.system() == 'Darwin':
     BASE_ENV['BASH_COMPLETIONS'] = [

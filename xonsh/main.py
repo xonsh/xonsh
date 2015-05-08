@@ -8,6 +8,7 @@ import subprocess
 from argparse import ArgumentParser, Namespace
 
 from xonsh.shell import Shell
+from xonsh.jobs import ignore_SIGTSTP
 
 parser = ArgumentParser(description='xonsh')
 parser.add_argument('-c',
@@ -64,7 +65,7 @@ def main(argv=None):
     else:
         # otherwise, enter the shell
         env['XONSH_INTERACTIVE'] = True
-        signal.signal(signal.SIGTSTP, signal.SIG_IGN)
+        ignore_SIGTSTP()
         shell.cmdloop()
 
 

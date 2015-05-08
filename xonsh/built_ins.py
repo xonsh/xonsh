@@ -29,13 +29,16 @@ BUILTINS_LOADED = False
 INSPECTOR = Inspector()
 LOCALE_CATS = {
     'LC_CTYPE': locale.LC_CTYPE,
-    'LC_MESSAGES': locale.LC_MESSAGES,
     'LC_COLLATE': locale.LC_COLLATE,
     'LC_NUMERIC': locale.LC_NUMERIC,
     'LC_MONETARY': locale.LC_MONETARY,
     'LC_TIME': locale.LC_TIME
 }
 
+try:
+    LOCALE_CATS['LC_MESSAGES'] = locale.LC_MESSAGES
+except AttributeError:
+    pass
 
 class Env(MutableMapping):
     """A xonsh environment, whose variables have limited typing
