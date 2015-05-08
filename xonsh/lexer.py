@@ -162,7 +162,7 @@ def handle_lparen(state, token, stream):
     """
     Function for handling ``(``
     """
-    state['pymode'].append((True, '(', ')', token.start))
+    state['pymode'].append((state['pymode'][-1][0], '(', ')', token.start))
     state['last'] = token
     yield _new_token('LPAREN', '(', token.start)
 
@@ -171,7 +171,7 @@ def handle_lbrace(state, token, stream):
     """
     Function for handling ``{``
     """
-    state['pymode'].append((True, '{', '}', token.start))
+    state['pymode'].append((state['pymode'][-1][0], '{', '}', token.start))
     state['last'] = token
     yield _new_token('LBRACE', '{', token.start)
 
@@ -180,7 +180,7 @@ def handle_lbracket(state, token, stream):
     """
     Function for handling ``[``
     """
-    state['pymode'].append((True, '[', ']', token.start))
+    state['pymode'].append((state['pymode'][-1][0], '[', ']', token.start))
     state['last'] = token
     yield _new_token('LBRACKET', '[', token.start)
 
@@ -202,10 +202,14 @@ def handle_rparen(state, token, stream):
     """
     Function for handling ``)``
     """
+    m = state['pymode'][-1][1]
     e = _end_delimiter(state, token)
     if e is None:
         state['last'] = token
-        yield _new_token('RPAREN', ')', token.start)
+        typ = 'RPAREN'
+        if m.startswith('$'):
+            typ = 'SUBPROC_END_RPAREN'
+        yield _new_token(typ, ')', token.start)
     else:
         yield _new_token('ERRORTOKEN', e, token.start)
 
@@ -226,10 +230,14 @@ def handle_rbracket(state, token, stream):
     """
     Function for handling ``]``
     """
+    m = state['pymode'][-1][1]
     e = _end_delimiter(state, token)
     if e is None:
         state['last'] = token
-        yield _new_token('RBRACKET', ']', token.start)
+        typ = 'RBRACKET'
+        if m.startswith('$'):
+            typ = 'SUBPROC_END_RBRACKET'
+        yield _new_token(typ, ']', token.start)
     else:
         yield _new_token('ERRORTOKEN', e, token.start)
 
@@ -418,6 +426,8 @@ class Lexer(object):
         'REGEXPATH',             # regex escaped with backticks
         'LPAREN', 'RPAREN',      # ( )
         'LBRACKET', 'RBRACKET',  # [ ]
+        'SUBPROC_END_RBRACKET',
+        'SUBPROC_END_RPAREN',
         'LBRACE', 'RBRACE',      # { }
         'AT',                    # @
         'QUESTION',              # ?
