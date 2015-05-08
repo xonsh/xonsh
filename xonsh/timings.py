@@ -19,7 +19,7 @@ try:
     import resource
     _HAVE_RESOURCE = True
 except ImportError:
-    # There is no distinction of user/system time under windows, so we 
+    # There is no distinction of user/system time under windows, so we
     # just use time.clock() for everything...
     resource = None
     _HAVE_RESOURCE = False
@@ -53,6 +53,7 @@ if _HAVE_RESOURCE:
         return resource.getrusage(resource.RUSAGE_SELF)[:2]
 else:
     clocku = clocks = clock = time.clock
+
     def clock2():
         """Under windows, system CPU time can't be measured.
         This just returns clock() and zero."""
@@ -63,7 +64,7 @@ def format_time(timespan, precision=3):
     """Formats the timespan in a human readable form"""
     if timespan >= 60.0:
         # we have more than a minute, format that in a human readable form
-        parts = [("d", 60*60*24),("h", 60*60),("min", 60), ("s", 1)]
+        parts = [("d", 60*60*24), ("h", 60*60), ("min", 60), ("s", 1)]
         time = []
         leftover = timespan
         for suffix, length in parts:
@@ -75,11 +76,11 @@ def format_time(timespan, precision=3):
                 break
         return " ".join(time)
     # Unfortunately the unicode 'micro' symbol can cause problems in
-    # certain terminals.  
+    # certain terminals.
     # See bug: https://bugs.launchpad.net/ipython/+bug/348466
     # Try to prevent crashes by being more secure than it needs to
     # E.g. eclipse is able to print a µ, but has no sys.stdout.encoding set.
-    units = ["s", "ms", 'us', "ns"]  # the save value   
+    units = ["s", "ms", 'us', "ns"]  # the save value
     if hasattr(sys.stdout, 'encoding') and sys.stdout.encoding:
         try:
             '\xb5'.encode(sys.stdout.encoding)
@@ -87,7 +88,7 @@ def format_time(timespan, precision=3):
         except:
             pass
     scaling = [1, 1e3, 1e6, 1e9]
-        
+
     if timespan > 0.0:
         order = min(-int(math.floor(math.log10(timespan)) // 3), 3)
     else:
@@ -132,6 +133,7 @@ def inner(_it, _timer):
     return _t1 - _t0
 """
 
+
 def timeit_alias(args, stdin=None):
     """Runs timing study on arguments."""
     # some real args
@@ -148,7 +150,7 @@ def timeit_alias(args, stdin=None):
     # Minimum time above which compilation time will be reported
     tc_min = 0.1
     t0 = clock()
-    innercode = builtins.compilex(innerstr, filename='<xonsh-timeit>', 
+    innercode = builtins.compilex(innerstr, filename='<xonsh-timeit>',
                                   mode='exec', glbs=ctx)
     tc = clock() - t0
     # get inner func
@@ -187,4 +189,3 @@ def timeit_alias(args, stdin=None):
         if tc > tc_min:
             print("Compiler time: {0:.2f} s".format(t))
     return
-

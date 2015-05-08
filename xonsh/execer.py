@@ -80,7 +80,7 @@ class Execer(object):
         tree = self.ctxtransformer.ctxvisit(tree, input, ctx, mode=mode)
         return tree
 
-    def compile(self, input, mode='exec', glbs=None, locs=None, stacklevel=2, 
+    def compile(self, input, mode='exec', glbs=None, locs=None, stacklevel=2,
                 filename=None):
         """Compiles xonsh code into a Python code object, which may then
         be execed or evaled.
