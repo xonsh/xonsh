@@ -3,6 +3,7 @@ from __future__ import unicode_literals, print_function
 import os
 import sys
 import ast
+import platform
 
 from xonsh.execer import Execer
 
@@ -41,15 +42,24 @@ def check_parse(input):
 # Tests
 #
 
-def test_bin_ls():
-    yield check_eval, '/bin/ls -l'
+if platform.system() == 'Windows':
+    def test_win_ipconfig():
+        yield check_eval, 'C:\\Windows\\System32\\ipconfig.exe /all'
 
-def test_ls_dashl():
-    yield check_eval, 'ls -l'
+    def test_ipconfig():
+        yield check_eval, 'ipconfig /all'
 
-def test_which_ls():
-    yield check_eval, 'which ls'
+else:
+    def test_bin_ls():
+        yield check_eval, '/bin/ls -l'
 
+    def test_ls_dashl():
+        yield check_eval, 'ls -l'
+
+    def test_which_ls():
+        yield check_eval, 'which ls'
+
+        
 def test_simple_func():
     code = ('def prompt():\n'
             "    return '{user}'.format(user='me')\n")

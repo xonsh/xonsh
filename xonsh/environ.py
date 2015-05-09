@@ -21,6 +21,11 @@ def current_branch(cwd=None, pad=True):
     bust should be extended in the future.
     """
     branch = None
+
+    if platform.system() == 'Windows':
+        # getting the branch was slow on windows, disabling for now.
+        return ''
+    
     cwd = _get_cwd() if cwd is None else cwd
     if cwd is None:
         return ''
@@ -141,6 +146,7 @@ BASE_ENV = {
     'PROMPT': DEFAULT_PROMPT,
     'TITLE': DEFAULT_TITLE,
     'MULTILINE_PROMPT': '.',
+    'PWD': _get_cwd(),
     'XONSHRC': os.path.expanduser('~/.xonshrc'),
     'XONSH_HISTORY_SIZE': 8128,
     'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history'),
@@ -213,6 +219,16 @@ def default_env(env=None):
     ctx = dict(BASE_ENV)
     ctx.update(os.environ)
     ctx.update(bash_env())
+    if platform.system() == 'Windows':
+        # Windows default prompt doesn't work.
+        ctx['PROMPT'] = DEFAULT_PROMPT
+        
+        # Override bash PWD and PATH; on Windows bash uses
+        # /c/Windows/System32 syntax instead of C:\\Windows\\System32
+        # which messes up the $PATH for xonsh.
+        ctx['PATH'] = os.environ.get('PATH', '')
+        ctx['PWD'] = _get_cwd()
+        
     if env is not None:
         ctx.update(env)
     return ctx

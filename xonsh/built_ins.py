@@ -261,16 +261,19 @@ def expand_path(s):
 def reglob(path, parts=None, i=None):
     """Regular expression-based globbing."""
     if parts is None:
-        parts = path.split(os.sep)
-        d = os.sep if path.startswith(os.sep) else '.'
-        return reglob(d, parts=parts, i=0)
+        path = os.path.normpath(path)
+        drive, tail = os.path.splitdrive(path)
+        parts = tail.split(os.sep)
+        d = os.sep if os.path.isabs(path) else '.'
+        d = os.path.join(drive, d)
+        return reglob(d, parts, i=0)
     base = subdir = path
     if i == 0:
-        if base == '.':
+        if not os.path.isabs(base):
             base = ''
-        elif base == '/' and len(parts) > 1:
+        elif len(parts) > 1:
             i += 1
-    regex = re.compile(os.path.join(base, parts[i]))
+    regex = re.compile(os.path.join(base, parts[i]).replace('\\', '\\\\'))
     files = os.listdir(subdir)
     files.sort()
     paths = []
@@ -287,6 +290,7 @@ def reglob(path, parts=None, i=None):
                 continue
             paths += reglob(p, parts=parts, i=i1)
     return paths
+
 
 
 def regexpath(s):

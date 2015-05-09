@@ -28,14 +28,15 @@ def setup_readline():
     import ctypes
     import ctypes.util
     readline.set_completer_delims(' \t\n')
-    RL_LIB = lib = ctypes.cdll.LoadLibrary(readline.__file__)
-    try:
-        RL_COMPLETION_SUPPRESS_APPEND = ctypes.c_int.in_dll(
-            lib, 'rl_completion_suppress_append')
-    except ValueError:
-        # not all versions of readline have this symbol, ie Macs sometimes
-        RL_COMPLETION_SUPPRESS_APPEND = None
-    RL_CAN_RESIZE = hasattr(lib, 'rl_reset_screen_size')
+    if not readline.__file__.endswith('.py'):
+        RL_LIB = lib = ctypes.cdll.LoadLibrary(readline.__file__)
+        try:
+            RL_COMPLETION_SUPPRESS_APPEND = ctypes.c_int.in_dll(
+                lib, 'rl_completion_suppress_append')
+        except ValueError:
+            # not all versions of readline have this symbol, ie Macs sometimes
+            RL_COMPLETION_SUPPRESS_APPEND = None
+        RL_CAN_RESIZE = hasattr(lib, 'rl_reset_screen_size')
     # reads in history
     env = builtins.__xonsh_env__
     hf = env.get('XONSH_HISTORY_FILE', os.path.expanduser('~/.xonsh_history'))
@@ -54,7 +55,7 @@ def setup_readline():
 
     # handle tab completion differences found in libedit readline compatibility
     # as discussed at http://stackoverflow.com/a/7116997
-    if 'libedit' in readline.__doc__:
+    if readline.__doc__ and 'libedit' in readline.__doc__:
         readline.parse_and_bind("bind ^I rl_complete")
     else:
         readline.parse_and_bind("tab: complete")
