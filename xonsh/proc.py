@@ -1,4 +1,5 @@
 import io
+import os
 import sys
 
 from threading import Thread
@@ -12,24 +13,24 @@ class ProcProxy(Thread, Popen):
         self.pid = None
         self.returncode = None
        
-        self.stdin = None
-        self.stdout = None
-        self.stderr = None
+        self.stdin = stdin
+        self.stdout = stdout
+        self.stderr = stderr
 
-        (p2cread, p2cwrite,
-         c2pread, c2pwrite,
-         errread, errwrite) = self._get_handles(stdin, stdout, stderr)
+        (self.p2cread, self.p2cwrite,
+         self.c2pread, self.c2pwrite,
+         self.errread, self.errwrite) = self._get_handles(stdin, stdout, stderr)
     
-        if p2cwrite != -1:
-            self.stdin = io.open(p2cwrite, 'wb', -1)
+        if self.p2cwrite != -1:
+            self.stdin = io.open(self.p2cwrite, 'wb', -1)
             self.stdin = io.TextIOWrapper(self.stdin, write_through=True,
                                           line_buffering=(bufsize==1))
 
-        if c2pread != -1:
-            self.stdout = io.open(c2pread, 'rb', -1)
+        if self.c2pread != -1:
+            self.stdout = io.open(self.c2pread, 'rb', -1)
             self.stdout = io.TextIOWrapper(self.stdout)
-        if errread != -1:
-            self.stderr = io.open(errread, 'rb', -1)
+        if self.errread != -1:
+            self.stderr = io.open(self.errread, 'rb', -1)
             self.stderr = io.TextIOWrapper(self.stderr)
 
         if self.stdout is None:
@@ -38,15 +39,24 @@ class ProcProxy(Thread, Popen):
             self.stderr = sys.stderr
 
         Thread.__init__(self)
-        self.start() # start executing the function
+        self.start()
 
     def run(self):
         if self.f is not None:
             r = self.f(self.args, self.stdin, self.stdout, self.stderr)
             self.returncode = r if r is not None else True
+        self._cleanup()
 
     def poll(self):
         return self.returncode
+
+    def _cleanup(self):
+        if self.p2cread != -1 and self.p2cwrite != -1:
+            os.close(self.p2cread)
+        if self.c2pwrite != -1 and self.c2pread != -1:
+            os.close(self.c2pwrite)
+        if self.errwrite != -1 and self.errread != -1:
+            os.close(self.errwrite)
 
 class SimpleProcProxy(ProcProxy):
     def __init__(self, f, args, stdin, stdout, stderr):
@@ -56,7 +66,7 @@ class SimpleProcProxy(ProcProxy):
         if self.f is not None:
             try:
                 r = self.f(self.args, self.stdin.read() if self.stdin is not None else "")
-                if isinstance(r, Sequence):
+                if isinstance(r, tuple):
                     if self.stdout is not None:
                         self.stdout.write(r[0] or '')
                     if self.stderr is not None:
@@ -67,3 +77,4 @@ class SimpleProcProxy(ProcProxy):
                 self.returncode = True
             except:
                 self.returncode = False
+        self._cleanup()
