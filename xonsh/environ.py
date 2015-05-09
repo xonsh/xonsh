@@ -146,7 +146,6 @@ BASE_ENV = {
     'PROMPT': DEFAULT_PROMPT,
     'TITLE': DEFAULT_TITLE,
     'MULTILINE_PROMPT': '.',
-    'PWD': _get_cwd(),
     'XONSHRC': os.path.expanduser('~/.xonshrc'),
     'XONSH_HISTORY_SIZE': 8128,
     'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history'),
