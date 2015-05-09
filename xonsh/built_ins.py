@@ -431,9 +431,12 @@ def run_subproc(cmds, captured=True):
             stdin = prev_proc.stdout
         if callable(aliased_cmd):
             if len(inspect.signature(aliased_cmd).parameters) == 2:
-                proc = SimpleProcProxy(aliased_cmd, cmd[1:], stdin, stdout, None)
+                cls = SimpleProcProxy
             else:
-                proc = ProcProxy(aliased_cmd, cmd[1:], stdin, stdout, None)
+                cls = ProcProxy
+            proc = cls(aliased_cmd, cmd[1:],
+                       stdin, stdout, None,
+                       universal_newlines=uninew)
         else:
             subproc_kwargs = {}
             if os.name == 'posix':
@@ -456,7 +459,10 @@ def run_subproc(cmds, captured=True):
         prev = None
         prev_proc = proc
     for proc in procs[:-1]:
-        proc.stdout.close()
+        try:
+            proc.stdout.close()
+        except OSError:
+            pass
     add_job({
         'cmds': cmds,
         'pids': [i.pid for i in procs],

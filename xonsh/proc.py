@@ -6,37 +6,37 @@ from threading import Thread
 from subprocess import Popen
 from collections import Sequence
 
+
 class ProcProxy(Thread, Popen):
-    def __init__(self, f, args, stdin, stdout, stderr):
+    def __init__(self, f, args, stdin, stdout, stderr, universal_newlines):
         self.f = f
         self.args = args
         self.pid = None
         self.returncode = None
        
-        self.stdin = stdin
-        self.stdout = stdout
-        self.stderr = stderr
-
+        handles = self._get_handles(stdin, stdout, stderr)
         (self.p2cread, self.p2cwrite,
          self.c2pread, self.c2pwrite,
-         self.errread, self.errwrite) = self._get_handles(stdin, stdout, stderr)
-    
+         self.errread, self.errwrite) = handles
+
+        # default values
+        self.stdin = None
+        self.stdout = None
+        self.stderr = None
+
         if self.p2cwrite != -1:
             self.stdin = io.open(self.p2cwrite, 'wb', -1)
-            self.stdin = io.TextIOWrapper(self.stdin, write_through=True,
-                                          line_buffering=(bufsize==1))
-
+            if universal_newlines:
+                self.stdin = io.TextIOWrapper(self.stdin, write_through=True,
+                                              line_buffering=False)
         if self.c2pread != -1:
             self.stdout = io.open(self.c2pread, 'rb', -1)
-            self.stdout = io.TextIOWrapper(self.stdout)
+            if universal_newlines:
+                self.stdout = io.TextIOWrapper(self.stdout)
         if self.errread != -1:
             self.stderr = io.open(self.errread, 'rb', -1)
-            self.stderr = io.TextIOWrapper(self.stderr)
-
-        if self.stdout is None:
-            self.stdout = sys.stdout
-        if self.stderr is None:
-            self.stderr = sys.stderr
+            if universal_newlines:
+                self.stderr = io.TextIOWrapper(self.stderr)
 
         Thread.__init__(self)
         self.start()
@@ -58,23 +58,39 @@ class ProcProxy(Thread, Popen):
         if self.errwrite != -1 and self.errread != -1:
             os.close(self.errwrite)
 
+
 class SimpleProcProxy(ProcProxy):
-    def __init__(self, f, args, stdin, stdout, stderr):
-        ProcProxy.__init__(self, f, args, stdin, stdout, stderr)
+    def __init__(self, f, args, stdin, stdout, stderr, universal_newlines):
+        ProcProxy.__init__(self, f, args,
+                           stdin, stdout, stderr,
+                           universal_newlines)
 
     def run(self):
         if self.f is not None:
             try:
-                r = self.f(self.args, self.stdin.read() if self.stdin is not None else "")
+                if self.p2cread != -1:
+                    inp = io.open(self.p2cread, 'rb', -1).read()
+                else:
+                    inp = b""
+                r = self.f(self.args, inp.decode())
                 if isinstance(r, tuple):
                     if self.stdout is not None:
-                        self.stdout.write(r[0] or '')
+                        os.write(self.c2pwrite, _prep(r[0]))
+                    else:
+                        print(r[0])
                     if self.stderr is not None:
-                        self.stderr.write(r[1] or '')
+                        os.write(self.errwrite, _prep(r[1]))
+                    else:
+                        print(r[1], file=sys.stderr)
                 else:
                     if self.stdout is not None:
-                        self.stdout.write(r or '')
+                        os.write(self.c2pwrite, _prep(r))
+                    else:
+                        print(r)
                 self.returncode = True
             except:
                 self.returncode = False
         self._cleanup()
+
+def _prep(x):
+    return (x or '').encode('utf-8')
