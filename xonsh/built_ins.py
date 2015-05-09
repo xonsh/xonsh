@@ -469,12 +469,16 @@ def run_subproc(cmds, captured=True):
     if write_target is None:
         # get output
         output = ''
-        if prev_proc.stdout is not None:
+        if prev_proc.stdout not in (None, sys.stdout):
             output = prev_proc.stdout.read()
         if captured:
             return output
-    elif last_stdout not in (PIPE, None):
+    elif last_stdout not in (PIPE, None, sys.stdout):
         last_stdout.close()
+    o = prev_proc.returncode
+    if isinstance(o, int):
+        return o == 0
+    return o
 
 
 def subproc_captured(*cmds):
