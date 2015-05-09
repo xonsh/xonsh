@@ -366,3 +366,13 @@ def suggestion_sort_helper(x, y):
     inx = len([i for i in x if i not in y])
     iny = len([i for i in y if i not in x])
     return lendiff + inx + iny
+
+
+def escape_windows_command_string(s):
+    s = s.replace('%','%%')
+    for c in ('^', '&', '<', '>', '|', "'", '`', ',', ';', '=', '(', ')'):
+        s = s.replace(c, '^' + c)
+    s = s.replace('!','^^!')
+    for c in ('[', ']', '.', '"', '.', '*', '?'):
+        s = s.replace(c, '\\' + c)
+    return s
