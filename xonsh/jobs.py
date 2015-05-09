@@ -142,7 +142,9 @@ def kill_all_jobs():
     """
     _clear_dead_jobs()
     for job in builtins.__xonsh_all_jobs__.values():
-        os.kill(job['obj'].pid, signal.SIGKILL)
+        p = job['obj'].pid
+        if p is not None:
+            os.kill(job['obj'].pid, signal.SIGKILL)
 
 
 def jobs(args, stdin=None):
