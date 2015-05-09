@@ -69,14 +69,15 @@ def _simple_wrapper(f):
             i = stdin.read()
             with redirect_stdout(stdout), redirect_stderr(stderr):
                 r = f(args, i)
-            if isinstance(r, tuple):
+            if isinstance(r, str):
+                stdout.write(r)
+            if isinstance(r, Sequence):
                 if r[0] is not None:
                     stdout.write(r[0])
                 if r[1] is not None:
                     stderr.write(r[1])
-            else:
-                if r is not None:
-                    stdout.write(r)
+            elif r is not None:
+                stdout.write(str(r))
             return True
         except:
             return False
