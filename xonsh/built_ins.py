@@ -17,7 +17,7 @@ from contextlib import contextmanager
 from collections import Sequence, MutableMapping, Iterable, namedtuple, \
     MutableSequence, MutableSet
 
-from xonsh.tools import string_types, redirect_stdout, redirect_stderr
+from xonsh.tools import string_types
 from xonsh.tools import suggest_commands, XonshError
 from xonsh.inspectors import Inspector
 from xonsh.environ import default_env

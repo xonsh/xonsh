@@ -6,6 +6,7 @@ from threading import Thread
 from subprocess import Popen
 from collections import Sequence
 
+from xonsh.tools import redirect_stdout, redirect_stderr
 
 class ProcProxy(Thread, Popen):
     def __init__(self, f, args, stdin, stdout, stderr, universal_newlines):
@@ -66,7 +67,8 @@ def _simple_wrapper(f):
     def wrapped_simple_command_proxy(args, stdin, stdout, stderr):
         try:
             i = stdin.read()
-            r = f(args, i)
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                r = f(args, i)
             if isinstance(r, tuple):
                 if r[0] is not None:
                     stdout.write(r[0])
