@@ -25,7 +25,6 @@ This includes:
 
 * Support for Python 2.7
 * Support for future versions of Python
-* Testing on Windows
 * Testing on Mac OSX
 
 
