@@ -100,6 +100,7 @@ class Shell(Cmd):
         else:
             rc = env.get('XONSHRC', None)
             self.ctx = xonshrc_context(rcfile=rc, execer=self.execer)
+        builtins.__xonsh_ctx__ = self.ctx
         self.ctx['__name__'] = '__main__'
         self.completer = Completer()
         self.buffer = []

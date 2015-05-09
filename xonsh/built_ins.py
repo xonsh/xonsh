@@ -568,6 +568,7 @@ def load_builtins(execer=None):
     global BUILTINS_LOADED, ENV
     # private built-ins
     builtins.__xonsh_env__ = ENV = Env(default_env())
+    builtins.__xonsh_ctx__ = {}
     builtins.__xonsh_help__ = helper
     builtins.__xonsh_superhelp__ = superhelper
     builtins.__xonsh_regexpath__ = regexpath
@@ -609,6 +610,7 @@ def unload_builtins():
     if not BUILTINS_LOADED:
         return
     names = ['__xonsh_env__',
+             '__xonsh_ctx__',
              '__xonsh_help__',
              '__xonsh_superhelp__',
              '__xonsh_regexpath__',
