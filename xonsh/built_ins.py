@@ -481,10 +481,6 @@ def run_subproc(cmds, captured=True):
             return output
     elif last_stdout not in (PIPE, None, sys.stdout):
         last_stdout.close()
-    o = prev_proc.returncode
-    if not isinstance(o, bool):
-        return o == 0
-    return o
 
 
 def subproc_captured(*cmds):
