@@ -20,7 +20,7 @@ class ProcProxy(Thread, Popen):
          self.errread, self.errwrite) = handles
 
         # default values
-        self.stdin = None
+        self.stdin = stdin
         self.stdout = None
         self.stderr = None
 
@@ -43,54 +43,45 @@ class ProcProxy(Thread, Popen):
 
     def run(self):
         if self.f is not None:
-            r = self.f(self.args, self.stdin, self.stdout, self.stderr)
+            # need to make file-likes here that work in the "opposite" direction
+            if self.stdin is not None:
+                sp_stdin = io.TextIOWrapper(self.stdin)
+            else:
+                sp_stdin = io.StringIO("")
+            if self.c2pwrite != -1:
+                sp_stdout = io.TextIOWrapper(io.open(self.c2pwrite, 'wb', -1))
+            else:
+                sp_stdout = sys.stdout
+            if self.errwrite != -1:
+                sp_stderr = io.TextIOWrapper(io.open(self.errwrite, 'wb', -1))
+            else:
+                sp_stderr = sys.stderr
+            r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr)
             self.returncode = r if r is not None else True
-        self._cleanup()
 
     def poll(self):
         return self.returncode
 
-    def _cleanup(self):
-        if self.p2cread != -1 and self.p2cwrite != -1:
-            os.close(self.p2cread)
-        if self.c2pwrite != -1 and self.c2pread != -1:
-            os.close(self.c2pwrite)
-        if self.errwrite != -1 and self.errread != -1:
-            os.close(self.errwrite)
-
+def _simple_wrapper(f):
+    def wrapped_simple_command_proxy(args, stdin, stdout, stderr):
+        try:
+            i = stdin.read()
+            r = f(args, i)
+            if isinstance(r, tuple):
+                if r[0] is not None:
+                    stdout.write(r[0])
+                if r[1] is not None:
+                    stderr.write(r[1])
+            else:
+                if r is not None:
+                    stdout.write(r)
+            return True
+        except:
+            return False
+    return wrapped_simple_command_proxy
 
 class SimpleProcProxy(ProcProxy):
     def __init__(self, f, args, stdin, stdout, stderr, universal_newlines):
-        ProcProxy.__init__(self, f, args,
+        ProcProxy.__init__(self, _simple_wrapper(f), args,
                            stdin, stdout, stderr,
                            universal_newlines)
-
-    def run(self):
-        if self.f is not None:
-            try:
-                if self.p2cread != -1:
-                    inp = io.open(self.p2cread, 'rb', -1).read()
-                else:
-                    inp = b""
-                r = self.f(self.args, inp.decode())
-                if isinstance(r, tuple):
-                    if self.stdout is not None:
-                        os.write(self.c2pwrite, _prep(r[0]))
-                    else:
-                        print(r[0])
-                    if self.stderr is not None:
-                        os.write(self.errwrite, _prep(r[1]))
-                    else:
-                        print(r[1], file=sys.stderr)
-                else:
-                    if self.stdout is not None:
-                        os.write(self.c2pwrite, _prep(r))
-                    else:
-                        print(r)
-                self.returncode = True
-            except:
-                self.returncode = False
-        self._cleanup()
-
-def _prep(x):
-    return (x or '').encode('utf-8')
