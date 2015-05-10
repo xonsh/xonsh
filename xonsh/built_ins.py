@@ -463,12 +463,13 @@ def run_subproc(cmds, captured=True):
             proc.stdout.close()
         except OSError:
             pass
-    add_job({
-        'cmds': cmds,
-        'pids': [i.pid for i in procs],
-        'obj': prev_proc,
-        'bg': background
-    })
+    if not isinstance(prev_proc, ProcProxy):
+        add_job({
+            'cmds': cmds,
+            'pids': [i.pid for i in procs],
+            'obj': prev_proc,
+            'bg': background
+        })
     if background:
         return
     wait_for_active_job()
