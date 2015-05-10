@@ -9,7 +9,11 @@ from collections import Sequence
 from xonsh.tools import redirect_stdout, redirect_stderr
 
 class ProcProxy(Thread, Popen):
-    def __init__(self, f, args, stdin, stdout, stderr, universal_newlines):
+    def __init__(self, f, args,
+                 stdin=None,
+                 stdout=None,
+                 stderr=None,
+                 universal_newlines=False):
         self.f = f
         self.args = args
         self.pid = None
@@ -84,7 +88,11 @@ def _simple_wrapper(f):
     return wrapped_simple_command_proxy
 
 class SimpleProcProxy(ProcProxy):
-    def __init__(self, f, args, stdin, stdout, stderr, universal_newlines):
-        ProcProxy.__init__(self, _simple_wrapper(f), args,
-                           stdin, stdout, stderr,
-                           universal_newlines)
+    def __init__(self, f, args,
+                 stdin=None,
+                 stdout=None,
+                 stderr=None,
+                 universal_newlines=False):
+        super().__init__(_simple_wrapper(f), args,
+                         stdin, stdout, stderr,
+                         universal_newlines)
