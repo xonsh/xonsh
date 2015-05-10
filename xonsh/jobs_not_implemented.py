@@ -1,5 +1,6 @@
 
 from collections import namedtuple
+from subprocess import TimeoutExpired
 import builtins
 import os
 
@@ -26,7 +27,13 @@ def wait_for_active_job():
         return
     if _active_job['bg']:
         return
-    obj.wait()
+    while obj.returncode is None:
+        try:
+            obj.wait(0.01)
+        except TimeoutExpired:
+            pass
+        except KeyboardInterrupt:
+            obj.kill()
     obj.done = True
 
 
