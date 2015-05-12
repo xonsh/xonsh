@@ -18,9 +18,7 @@ A class representing a Python function to be run as a subprocess command.
 
 
 if not ON_WINDOWS:
-
     _shell_pgrp = os.getpgrp()
-
 
     _block_when_giving = (signal.SIGTTOU, signal.SIGTTIN, signal.SIGTSTP)
 
@@ -45,6 +43,7 @@ def _continue(obj):
     if not ON_WINDOWS:
         os.kill(obj.pid, signal.SIGCONT)
 
+
 def _kill(obj):
     if ON_WINDOWS:
         obj.kill()
@@ -55,7 +54,6 @@ def _kill(obj):
 def ignore_sigtstp():
     if not ON_WINDOWS:
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)
-
 
 
 def _clear_dead_jobs():
