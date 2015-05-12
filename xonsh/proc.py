@@ -1,3 +1,11 @@
+"""Interface for running Python functions as subprocess-mode commands.
+
+Code for several helper methods in the `ProcProxy` class have been reproduced
+without modification from `subprocess.py` in the Python 3.4.2 standard library.
+The contents of that file (and, thus, the reproduced methods) is
+Copyright (c) 2003-2005 by Peter Astrand <astrand@lysator.liu.se>, and was
+licensed to the Python Software foundation under a Contributor Agreement.
+"""
 import io
 import os
 import sys
@@ -16,12 +24,54 @@ if iswindows:
 
 
 class ProcProxy(Thread):
+    """
+    Class representing a Python function to be run as a subprocess-mode command.
+    """
     def __init__(self, f, args,
                  stdin=None,
                  stdout=None,
                  stderr=None,
                  universal_newlines=False):
+        """Parameters
+        ----------
+        f : function
+            The function to be executed.
+        args : list
+            A (possibly empty) list containing the arguments that were given on
+            the command line
+        stdin : file-like, optional
+            A file-like object representing stdin (input can be read from
+            here).  If `stdin` is not provided or if it is explicitly set to
+            `None`, then an instance of `io.StringIO` representing an empty
+            file is used.
+        stdout : file-like, optional
+            A file-like object representing stdout (normal output can be
+            written here).  If `stdout` is not provided or if it is explicitly
+            set to `None`, then `sys.stdout` is used.
+        stderr : file-like, optional
+            A file-like object representing stderr (error output can be
+            written here).  If `stderr` is not provided or if it is explicitly
+            set to `None`, then `sys.stderr` is used.
+        """
         self.f = f
+        """
+        The function to be executed.  It should be a function of four arguments, described below.
+
+        Parameters
+        ----------
+        args : list
+            A (possibly empty) list containing the arguments that were given on
+            the command line
+        stdin : file-like
+            A file-like object representing stdin (input can be read from
+            here).
+        stdout : file-like
+            A file-like object representing stdout (normal output can be
+            written here).
+        stderr : file-like
+            A file-like object representing stderr (error output can be
+            written here).
+        """
         self.args = args
         self.pid = None
         self.returncode = None
@@ -55,6 +105,9 @@ class ProcProxy(Thread):
         self.start()
 
     def run(self):
+        """Set up input/output streams and execute the child function in a new
+        thread.  This is part of the `threading.Thread` interface and should
+        not be called directly."""
         if self.f is None:
             return
         if self.stdin is not None:
@@ -73,6 +126,12 @@ class ProcProxy(Thread):
         self.returncode = r if r is not None else True
 
     def poll(self):
+        """Check if the function has completed.
+
+        :return: `None` if the function is still executing, `True` if the
+                 function finished successfully, and `False` if there was an
+                 error
+        """
         return self.returncode
 
     # The code below (_get_devnull, _get_handles, and _make_inheritable) comes
@@ -216,6 +275,13 @@ class ProcProxy(Thread):
 
 
 class SimpleProcProxy(ProcProxy):
+    """
+    Variant of `ProcProxy` for simpler functions.
+
+    The function passed into the initializer for `SimpleProcProxy` should have
+    the form described in the xonsh tutorial.  This function is then wrapped to
+    make a new function of the form expected by `ProcProxy`.
+    """
     def __init__(self, f, args, stdin=None, stdout=None, stderr=None,
                  universal_newlines=False):
         def wrapped_simple_command(args, stdin, stdout, stderr):
