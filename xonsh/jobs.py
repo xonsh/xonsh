@@ -8,7 +8,6 @@ import signal
 import builtins
 from collections import namedtuple
 
-from xonsh.proc import ProcProxy
 
 try:
     _shell_tty = sys.stderr.fileno()
@@ -83,13 +82,10 @@ def add_job(info):
     """
     info['started'] = time.time()
     info['status'] = 'running'
-    if isinstance(info['obj'], ProcProxy):
-        info['pgrp'] = None
-    else:
-        try:
-            info['pgrp'] = os.getpgid(info['obj'].pid)
-        except ProcessLookupError:
-            return
+    try:
+        info['pgrp'] = os.getpgid(info['obj'].pid)
+    except ProcessLookupError:
+        return
     num = get_next_job_number()
     builtins.__xonsh_all_jobs__[num] = info
     builtins.__xonsh_active_job__ = num
@@ -112,10 +108,6 @@ def wait_for_active_job():
         return
     job = builtins.__xonsh_all_jobs__[act]
     obj = job['obj']
-    if isinstance(obj, ProcProxy):
-        while obj.poll() is None:
-            time.sleep(0.01)
-        return
     if job['bg']:
         return
     pgrp = job['pgrp']
@@ -142,9 +134,7 @@ def kill_all_jobs():
     """
     _clear_dead_jobs()
     for job in builtins.__xonsh_all_jobs__.values():
-        p = job['obj'].pid
-        if p is not None:
-            os.kill(job['obj'].pid, signal.SIGKILL)
+        os.kill(job['obj'].pid, signal.SIGKILL)
 
 
 def jobs(args, stdin=None):
