@@ -4,7 +4,7 @@ import sys
 import platform
 
 from threading import Thread
-from subprocess import Popen
+from subprocess import Popen, PIPE
 from collections import Sequence
 
 from xonsh.tools import redirect_stdout, redirect_stderr
