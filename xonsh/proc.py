@@ -55,22 +55,22 @@ class ProcProxy(Thread):
         self.start()
 
     def run(self):
-        if self.f is not None:
-            # need to make file-likes here that work in the "opposite" direction
-            if self.stdin is not None:
-                sp_stdin = io.TextIOWrapper(self.stdin)
-            else:
-                sp_stdin = io.StringIO("")
-            if self.c2pwrite != -1:
-                sp_stdout = io.TextIOWrapper(io.open(self.c2pwrite, 'wb', -1))
-            else:
-                sp_stdout = sys.stdout
-            if self.errwrite != -1:
-                sp_stderr = io.TextIOWrapper(io.open(self.errwrite, 'wb', -1))
-            else:
-                sp_stderr = sys.stderr
-            r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr)
-            self.returncode = r if r is not None else True
+        if self.f is None:
+            return
+        if self.stdin is not None:
+            sp_stdin = io.TextIOWrapper(self.stdin)
+        else:
+            sp_stdin = io.StringIO("")
+        if self.c2pwrite != -1:
+            sp_stdout = io.TextIOWrapper(io.open(self.c2pwrite, 'wb', -1))
+        else:
+            sp_stdout = sys.stdout
+        if self.errwrite != -1:
+            sp_stderr = io.TextIOWrapper(io.open(self.errwrite, 'wb', -1))
+        else:
+            sp_stderr = sys.stderr
+        r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr)
+        self.returncode = r if r is not None else True
 
     def poll(self):
         return self.returncode
