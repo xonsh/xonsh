@@ -222,7 +222,7 @@ def _simple_wrapper(f):
                 r = f(args, i)
             if isinstance(r, str):
                 stdout.write(r)
-            if isinstance(r, Sequence):
+            elif isinstance(r, Sequence):
                 if r[0] is not None:
                     stdout.write(r[0])
                 if r[1] is not None:
