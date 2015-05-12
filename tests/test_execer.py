@@ -3,9 +3,9 @@ from __future__ import unicode_literals, print_function
 import os
 import sys
 import ast
-import platform
 
 from xonsh.execer import Execer
+from xonsh.tools import ON_WINDOWS
 
 from tools import mock_xonsh_env
 
@@ -42,9 +42,11 @@ def check_parse(input):
 # Tests
 #
 
-if platform.system() == 'Windows':
+if ON_WINDOWS:
     def test_win_ipconfig():
-        yield check_eval, 'C:\\Windows\\System32\\ipconfig.exe /all'
+        yield check_eval, os.path.join(os.environ['SYSTEMROOT'],
+                                       'System32',
+                                       'ipconfig.exe') + ' /all'
 
     def test_ipconfig():
         yield check_eval, 'ipconfig /all'
