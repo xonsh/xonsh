@@ -214,32 +214,27 @@ class ProcProxy(Thread):
                     c2pread, c2pwrite,
                     errread, errwrite)
 
-def _simple_wrapper(f):
-    def wrapped_simple_command_proxy(args, stdin, stdout, stderr):
-        try:
-            i = stdin.read()
-            with redirect_stdout(stdout), redirect_stderr(stderr):
-                r = f(args, i)
-            if isinstance(r, str):
-                stdout.write(r)
-            elif isinstance(r, Sequence):
-                if r[0] is not None:
-                    stdout.write(r[0])
-                if r[1] is not None:
-                    stderr.write(r[1])
-            elif r is not None:
-                stdout.write(str(r))
-            return True
-        except:
-            return False
-    return wrapped_simple_command_proxy
 
 class SimpleProcProxy(ProcProxy):
-    def __init__(self, f, args,
-                 stdin=None,
-                 stdout=None,
-                 stderr=None,
+    def __init__(self, f, args, stdin=None, stdout=None, stderr=None,
                  universal_newlines=False):
-        super().__init__(_simple_wrapper(f), args,
-                         stdin, stdout, stderr,
+        def wrapped_simple_command(args, stdin, stdout, stderr):
+            try:
+                i = stdin.read()
+                with redirect_stdout(stdout), redirect_stderr(stderr):
+                    r = f(args, i)
+                if isinstance(r, str):
+                    stdout.write(r)
+                elif isinstance(r, Sequence):
+                    if r[0] is not None:
+                        stdout.write(r[0])
+                    if r[1] is not None:
+                        stderr.write(r[1])
+                elif r is not None:
+                    stdout.write(str(r))
+                return True
+            except:
+                return False
+        super().__init__(wrapped_simple_command,
+                         args, stdin, stdout, stderr,
                          universal_newlines)
