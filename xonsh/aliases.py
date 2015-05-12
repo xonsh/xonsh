@@ -2,7 +2,6 @@
 """
 import os
 import shlex
-import platform
 import builtins
 import subprocess
 from warnings import warn
@@ -10,6 +9,7 @@ from warnings import warn
 from xonsh.dirstack import cd, pushd, popd, dirs
 from xonsh.jobs import jobs, fg, bg, kill_all_jobs
 from xonsh.timings import timeit_alias
+from xonsh.tools import ON_MAC
 
 
 def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
@@ -106,7 +106,7 @@ DEFAULT_ALIASES = {
     'ipynb': ['ipython', 'notebook', '--no-browser'],
 }
 
-if platform.system() == 'Darwin':
+if ON_MAC:
     DEFAULT_ALIASES['ls'] = ['ls', '-G']
 else:
     DEFAULT_ALIASES['ls'] = ['ls', '--color=auto', '-v']

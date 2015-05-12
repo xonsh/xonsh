@@ -20,6 +20,7 @@ import os
 import re
 import sys
 import builtins
+import platform
 from collections import OrderedDict
 
 if sys.version_info[0] >= 3:
@@ -30,6 +31,10 @@ else:
     unicode_type = unicode
 
 DEFAULT_ENCODING = sys.getdefaultencoding()
+
+ON_WINDOWS = (platform.system() == 'Windows')
+ON_MAC     = (platform.system() == 'Darwin')
+ON_POSIX   = (os.name == 'posix')
 
 
 class XonshError(Exception):

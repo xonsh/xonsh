@@ -2,7 +2,6 @@
 import os
 import sys
 import builtins
-import platform
 import traceback
 from cmd import Cmd
 from warnings import warn
@@ -11,6 +10,7 @@ from argparse import Namespace
 from xonsh.execer import Execer
 from xonsh.completer import Completer
 from xonsh.tools import XonshError, escape_windows_command_string
+from xonsh.tools import ON_WINDOWS
 from xonsh.environ import xonshrc_context, multiline_prompt, format_prompt
 
 RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = None
@@ -197,7 +197,7 @@ class Shell(Cmd):
         else:
             return
         t = format_prompt(t)
-        if platform.system() == 'Windows' and 'ANSICON' not in env:
+        if ON_WINDOWS and 'ANSICON' not in env:
             t = escape_windows_command_string(t)
             os.system('title {}'.format(t))
         else:

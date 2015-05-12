@@ -6,12 +6,11 @@ import locale
 import socket
 import string
 import builtins
-import platform
 import subprocess
 from warnings import warn
 
 from xonsh import __version__ as XONSH_VERSION
-from xonsh.tools import TERM_COLORS
+from xonsh.tools import TERM_COLORS, ON_WINDOWS, ON_MAC
 from xonsh.dirstack import _get_cwd
 
 
@@ -22,7 +21,7 @@ def current_branch(cwd=None, pad=True):
     """
     branch = None
 
-    if platform.system() == 'Windows':
+    if ON_WINDOWS:
         # getting the branch was slow on windows, disabling for now.
         return ''
     
@@ -82,14 +81,14 @@ DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
 
 
 def _replace_home(x):
-    if platform.system() == 'Windows':
+    if ON_WINDOWS:
         home = builtins.__xonsh_env__['HOMEDRIVE'] + builtins.__xonsh_env__['HOMEPATH'][0]
         return x.replace(home, '~')
     else:
         return x.replace(builtins.__xonsh_env__['HOME'], '~')
 
 
-if platform.system() == 'Windows':
+if ON_WINDOWS:
     USER = 'USERNAME'
 else:
     USER = 'USER'
@@ -162,7 +161,7 @@ except AttributeError:
     pass
 
 
-if platform.system() == 'Darwin':
+if ON_MAC:
     BASE_ENV['BASH_COMPLETIONS'] = [
         '/usr/local/etc/bash_completion',
         '/opt/local/etc/profile.d/bash_completion.sh'
@@ -218,7 +217,7 @@ def default_env(env=None):
     ctx = dict(BASE_ENV)
     ctx.update(os.environ)
     ctx.update(bash_env())
-    if platform.system() == 'Windows':
+    if ON_WINDOWS:
         # Windows default prompt doesn't work.
         ctx['PROMPT'] = DEFAULT_PROMPT
         

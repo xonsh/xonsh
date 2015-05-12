@@ -8,7 +8,8 @@ import signal
 import builtins
 from collections import namedtuple
 from subprocess import TimeoutExpired
-import platform
+
+from xonsh.tools import ON_WINDOWS
 
 ProcProxy = namedtuple('ProcProxy', ['stdout', 'stderr'])
 """
@@ -16,7 +17,7 @@ A class representing a Python function to be run as a subprocess command.
 """
 
 
-if platform.system() != 'Windows':
+if not ON_WINDOWS:
 
     _shell_pgrp = os.getpgrp()
 
@@ -41,18 +42,18 @@ except OSError:
 
 
 def _continue(obj):
-    if platform.system() != 'Windows':
+    if not ON_WINDOWS:
         os.kill(obj.pid, signal.SIGCONT)
 
 def _kill(obj):
-    if platform.system() == 'Windows':
+    if ON_WINDOWS:
         obj.kill()
     else:
         os.kill(obj.pid, signal.SIGKILL)
 
 
 def ignore_SIGTSTP():
-    if platform.system() != 'Windows':
+    if not ON_WINDOWS:
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)
 
 
@@ -110,7 +111,7 @@ def add_job(info):
     """
     info['started'] = time.time()
     info['status'] = 'running'
-    if platform.system() != 'Windows':
+    if not ON_WINDOWS:
         try:
             info['pgrp'] = os.getpgid(info['obj'].pid)
         except ProcessLookupError:
@@ -141,7 +142,7 @@ def wait_for_active_job():
         return
     if job['bg']:
         return
-    if platform.system() == 'Windows':
+    if ON_WINDOWS:
         while obj.returncode is None:
             try:
                 obj.wait(0.01)
@@ -166,7 +167,7 @@ def wait_for_active_job():
     if obj.poll() is not None:
         builtins.__xonsh_active_job__ = None
 
-    if platform.system() != 'Windows':
+    if not ON_WINDOWS:
         _give_terminal_to(_shell_pgrp)  # give terminal back to the shell
 
 
