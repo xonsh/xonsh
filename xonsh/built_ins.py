@@ -424,20 +424,25 @@ def run_subproc(cmds, captured=True):
         else:
             aliased_cmd = alias + cmd[1:]
         # compute stdin for subprocess
-        prev_is_proxy = isinstance(prev_proc, ProcProxy)
         if prev_proc is None:
             stdin = None
         else:
             stdin = prev_proc.stdout
         if callable(aliased_cmd):
-            if len(inspect.signature(aliased_cmd).parameters) == 2:
+            prev_is_proxy = True
+            numargs = len(inspect.signature(aliased_cmd).parameters)
+            if numargs == 2:
                 cls = SimpleProcProxy
-            else:
+            elif numargs == 4:
                 cls = ProcProxy
+            else:
+                e = 'Expected callable with 2 or 4 arguments, not {}'
+                raise XonshError(e.format(numargs))
             proc = cls(aliased_cmd, cmd[1:],
                        stdin, stdout, None,
                        universal_newlines=uninew)
         else:
+            prev_is_proxy = False
             subproc_kwargs = {}
             if os.name == 'posix':
                 subproc_kwargs['preexec_fn'] = _subproc_pre
