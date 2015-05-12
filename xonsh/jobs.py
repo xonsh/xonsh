@@ -52,7 +52,7 @@ def _kill(obj):
         os.kill(obj.pid, signal.SIGKILL)
 
 
-def ignore_SIGTSTP():
+def ignore_sigtstp():
     if not ON_WINDOWS:
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)
 
