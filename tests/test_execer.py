@@ -44,9 +44,8 @@ def check_parse(input):
 
 if ON_WINDOWS:
     def test_win_ipconfig():
-        yield check_eval, os.path.join(os.environ['SYSTEMROOT'],
-                                       'System32',
-                                       'ipconfig.exe') + ' /all'
+        yield (check_eval,
+               os.environ['SYSTEMROOT'] + '\\System32\\ipconfig.exe /all')
 
     def test_ipconfig():
         yield check_eval, 'ipconfig /all'
