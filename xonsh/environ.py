@@ -186,6 +186,8 @@ BASE_ENV = {
     'LC_TIME': locale.setlocale(locale.LC_TIME),
     'LC_MONETARY': locale.setlocale(locale.LC_MONETARY),
     'LC_NUMERIC': locale.setlocale(locale.LC_NUMERIC),
+    'PROMPT_TOOLKIT_SHELL': False,
+    'HIGHLIGHTING_LEXER': None,
 }
 
 try:
