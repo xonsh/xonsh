@@ -463,7 +463,7 @@ def run_subproc(cmds, captured=True):
             proc.stdout.close()
         except OSError:
             pass
-    if not isinstance(prev_proc, ProcProxy):
+    if not prev_is_proxy:
         add_job({
             'cmds': cmds,
             'pids': [i.pid for i in procs],
@@ -472,7 +472,10 @@ def run_subproc(cmds, captured=True):
         })
     if background:
         return
-    wait_for_active_job()
+    if prev_is_proxy:
+        prev_proc.wait()
+    else:
+        wait_for_active_job()
     if write_target is None:
         # get output
         output = ''
