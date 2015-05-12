@@ -9,7 +9,7 @@ from warnings import warn
 from xonsh.dirstack import cd, pushd, popd, dirs
 from xonsh.jobs import jobs, fg, bg, kill_all_jobs
 from xonsh.timings import timeit_alias
-from xonsh.tools import ON_MAC
+from xonsh.tools import ON_MAC, ON_WINDOWS
 
 
 def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
@@ -101,12 +101,19 @@ DEFAULT_ALIASES = {
     'xexec': xexec,
     'timeit': timeit_alias,
     'source-bash': source_bash,
-    'grep': ['grep', '--color=auto'],
     'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
     'ipynb': ['ipython', 'notebook', '--no-browser'],
 }
+
+if ON_WINDOWS:
+    DEFAULT_ALIASES['d']    = ['cmd', '/c', 'dir']
+    DEFAULT_ALIASES['xdir'] = ['cmd', '/c', 'dir']
+else:
+    DEFAULT_ALIASES['grep'] = ['grep', '--color=auto'],
 
 if ON_MAC:
     DEFAULT_ALIASES['ls'] = ['ls', '-G']
 else:
     DEFAULT_ALIASES['ls'] = ['ls', '--color=auto', '-v']
+
+
