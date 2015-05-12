@@ -197,7 +197,7 @@ class Shell(Cmd):
         else:
             return
         t = format_prompt(t)
-        if platform.system() == 'Windows':
+        if platform.system() == 'Windows' and 'ANSICON' not in env:
             t = escape_windows_command_string(t)
             os.system('title {}'.format(t))
         else:
