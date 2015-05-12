@@ -17,7 +17,7 @@ from collections import Sequence, MutableMapping, Iterable, namedtuple, \
     MutableSequence, MutableSet
 
 from xonsh.tools import string_types, redirect_stdout, redirect_stderr
-from xonsh.tools import suggest_commands, XonshError
+from xonsh.tools import suggest_commands, XonshError, ON_POSIX
 from xonsh.inspectors import Inspector
 from xonsh.environ import default_env
 from xonsh.aliases import DEFAULT_ALIASES, bash_aliases
@@ -490,7 +490,7 @@ def run_subproc(cmds, captured=True):
         else:
             stdin = prev_proc.stdout
         subproc_kwargs = {}
-        if os.name == 'posix':
+        if ON_POSIX:
             subproc_kwargs['preexec_fn'] = _subproc_pre
         try:
             proc = Popen(aliased_cmd,
