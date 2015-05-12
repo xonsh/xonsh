@@ -147,7 +147,7 @@ def wait_for_active_job():
             except TimeoutExpired:
                 pass
             except KeyboardInterrupt:
-                obj.kill()
+                obj.send_signal(signal.CTRL_C_EVENT)
     else:
         pgrp = job['pgrp']
         obj.done = False
