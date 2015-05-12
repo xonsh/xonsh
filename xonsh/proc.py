@@ -2,8 +2,8 @@
 
 Code for several helper methods in the `ProcProxy` class have been reproduced
 without modification from `subprocess.py` in the Python 3.4.2 standard library.
-The contents of that file (and, thus, the reproduced methods) is
-Copyright (c) 2003-2005 by Peter Astrand <astrand@lysator.liu.se>, and was
+The contents of `subprocess.py` (and, thus, the reproduced methods) are
+Copyright (c) 2003-2005 by Peter Astrand <astrand@lysator.liu.se> and were
 licensed to the Python Software foundation under a Contributor Agreement.
 """
 import io
@@ -25,7 +25,7 @@ if iswindows:
 
 class ProcProxy(Thread):
     """
-    Class representing a Python function to be run as a subprocess-mode command.
+    Class representing a function to be run as a subprocess-mode command.
     """
     def __init__(self, f, args,
                  stdin=None,
@@ -55,7 +55,8 @@ class ProcProxy(Thread):
         """
         self.f = f
         """
-        The function to be executed.  It should be a function of four arguments, described below.
+        The function to be executed.  It should be a function of four
+        arguments, described below.
 
         Parameters
         ----------
