@@ -106,10 +106,10 @@ DEFAULT_ALIASES = {
 }
 
 if ON_WINDOWS:
-    DEFAULT_ALIASES['d']    = ['cmd', '/c', 'dir']
     DEFAULT_ALIASES['xdir'] = ['cmd', '/c', 'dir']
 else:
-    DEFAULT_ALIASES['grep'] = ['grep', '--color=auto'],
+    DEFAULT_ALIASES['xdir'] = ['/bin/dir']
+    DEFAULT_ALIASES['grep'] = ['grep', '--color=auto']
 
 if ON_MAC:
     DEFAULT_ALIASES['ls'] = ['ls', '-G']
