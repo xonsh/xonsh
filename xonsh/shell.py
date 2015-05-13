@@ -90,6 +90,7 @@ class Shell(Cmd):
         self.buffer = []
         self.stdout = StringIO()
         self.stderr = StringIO()
+        self.last = ""
         self.need_more_lines = False
         self.mlprompt = None
         setup_readline()
@@ -118,13 +119,23 @@ class Shell(Cmd):
         try:
             # Temporarily redirect stdout and stderr to save results in
             # history.
-            with redirect_stdout(self.stdout):
-                with redirect_stderr(self.stderr):
-                    self.execer.exec(code, mode='single', glbs=self.ctx)  # no locals
+            with redirect_stdout(self.stdout), redirect_stderr(self.stderr):
+                self.execer.exec(code, mode='single', glbs=self.ctx)  # no locals
             self.stdout.seek(0)
             self.stderr.seek(0)
             sys.stdout.write(self.stdout.read())
             sys.stderr.write(self.stderr.read())
+            cmd = {}
+            cmd['cmd']  = self.last
+            self.stdout.seek(0)
+            cmd['stdout'] = self.stdout.read()
+            self.stderr.seek(0)
+            cmd['stderr'] = self.stderr.read()
+            self.stdout.seek(0)
+            self.stdout.truncate()
+            self.stderr.seek(0)
+            self.stderr.truncate()
+            builtins.__history__.add(cmd)
         except XonshError as e:
             print(e.args[0], file=sys.stderr, end='')
         except:
@@ -146,6 +157,7 @@ class Shell(Cmd):
                                        mode='single',
                                        glbs=None,
                                        locs=self.ctx)
+            self.last = ''.join(filter(lambda x: x != '\n', self.buffer))
             self.reset_buffer()
         except SyntaxError:
             if line == '\n':
@@ -157,17 +169,6 @@ class Shell(Cmd):
 
     def reset_buffer(self):
         """Resets the line buffer."""
-        cmd = {}
-        cmd['cmd']  = ''.join(filter(lambda x: x != '\n', self.buffer))
-        self.stdout.seek(0)
-        cmd['stdout'] = self.stdout.read()
-        self.stderr.seek(0)
-        cmd['stderr'] = self.stderr.read()
-        self.stdout.seek(0)
-        self.stdout.truncate()
-        self.stderr.seek(0)
-        self.stderr.truncate()
-        builtins.__history__.add(cmd)
         self.buffer.clear()
         self.need_more_lines = False
         self.mlprompt = None

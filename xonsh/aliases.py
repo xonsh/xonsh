@@ -72,26 +72,35 @@ def history(args, stdin=None):
     usage: history [n], where n is an optional number of commands to print.
     """
     num = 10
+    print_std = False
+    reverse = False
     if len(args) > 0:
         try:
-            num = int(args[0])
+            if args[0].isdigit():
+                num = int(args[0])
+            if '-s' in args:
+                print_std = True
+            if '-r' in args:
+                reverse = True
         except ValueError:
             return 'xonsh: history: usage: history [-r] [number]'
-    hist_str = ''
-    reversed_history = reversed(builtins.ordered_history)
-    # Skip this command in history
-    next(reversed_history)
-    for i in range(num):
-        try:
-            entry = next(reversed_history)
-        except StopIteration:
-            break 
-        timestamp = datetime.datetime.fromtimestamp(int(entry['timestamp'])
-                    ).strftime('%Y-%m-%d %H:%M:%S') + ": " 
-        cmd = '\033[1m' + entry['cmd'].rstrip() + '\033[0m'
-        cmd = cmd.replace('\n', '\n' + ' '*len(timestamp) + ' ') + '\n'
-        hist_str += '{} {}'.format(timestamp, cmd)
-    return hist_str
+
+    if print_std:
+        header = '| {:^20}  | {:^40} | {:^30} | {:^30} |\n'.format(
+            'Timestamp', 'Command', 'stdout', 'stderr')
+        bar = '|' + '-' *23  + '|' + '-' * 42 + '|' + '-' * 32 + '|' + '-' * 32 + '|\n'
+    else:
+        header = '| {:^20}  | {:^40} |\n'.format('Timesamp', 'Command')
+        bar = '|' + '-' * 23 + '|' + '-' * 42 + '|\n'
+
+
+    return bar + header + bar
+
+
+
+
+
+
 
 
 def bang_bang(args, stdin=None):

@@ -26,6 +26,8 @@ from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.hist import History
 from xonsh.proc import ProcProxy, SimpleProcProxy
 
+from io import StringIO
+
 ENV = None
 BUILTINS_LOADED = False
 INSPECTOR = Inspector()
@@ -452,7 +454,13 @@ def run_subproc(cmds, captured=True):
                              universal_newlines=uninew,
                              env=ENV.detype(),
                              stdin=stdin,
-                             stdout=stdout, **subproc_kwargs)
+                             stdout=PIPE,
+                             stderr=PIPE, **subproc_kwargs)
+                proc_out, proc_err = proc.communicate()
+                sys.stdout.write(proc_out)
+                sys.stderr.write(proc_err)
+                proc.stdout = sys.stdout 
+                proc.stderr = sys.stderr
             except PermissionError:
                 e = 'xonsh: subprocess mode: permission denied: {0}'
                 raise XonshError(e.format(aliased_cmd[0]))
@@ -551,6 +559,9 @@ def load_builtins(execer=None):
     builtins.default_aliases = builtins.aliases = Aliases(DEFAULT_ALIASES)
     builtins.aliases.update(bash_aliases())
     builtins.ordered_history = builtins.__history__.ordered_history
+    builtins.stdout = ""
+    builtins.stderr = ""
+    builtins.last_cmd = ""
     BUILTINS_LOADED = True
 
 
@@ -588,7 +599,10 @@ def unload_builtins():
              '__xonsh_active_job__',
              '__xonsh_ensure_list_of_strs__',
              '__history__',
-             'ordered_history', ]
+             'ordered_history',
+             'stdout',
+             'stderr',
+             'last_cmd', ]
     for name in names:
         if hasattr(builtins, name):
             delattr(builtins, name)
