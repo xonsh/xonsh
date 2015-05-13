@@ -15,10 +15,9 @@ from threading import Thread
 from subprocess import Popen, PIPE, DEVNULL, STDOUT
 from collections import Sequence
 
-from xonsh.tools import redirect_stdout, redirect_stderr
+from xonsh.tools import redirect_stdout, redirect_stderr, ON_WINDOWS
 
-iswindows = platform.system() == 'Windows'
-if iswindows:
+if ON_WINDOWS:
     import _winapi
     import msvcrt
 
@@ -142,7 +141,7 @@ class ProcProxy(Thread):
             self._devnull = os.open(os.devnull, os.O_RDWR)
         return self._devnull
 
-    if iswindows:
+    if ON_WINDOWS:
         def _make_inheritable(self, handle):
             """Return a duplicate of handle, which is inheritable"""
             h = _winapi.DuplicateHandle(
