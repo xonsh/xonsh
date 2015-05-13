@@ -232,7 +232,7 @@ def default_env(env=None):
         for ev in ['PATH', 'TEMP', 'TMP']:
             if ev in os.environ:
                 ctx[ev] = os.environ[ev]
-            else:
+            elif ev in ctx:
                 del ctx[ev]
 
         ctx['PWD'] = _get_cwd()
