@@ -486,8 +486,7 @@ def run_subproc(cmds, captured=True):
         return
     if prev_is_proxy:
         prev_proc.wait()
-    else:
-        wait_for_active_job()
+    wait_for_active_job()
     if write_target is None:
         # get output
         output = ''

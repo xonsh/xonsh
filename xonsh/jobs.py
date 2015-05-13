@@ -102,8 +102,6 @@ else:
             return
         job = builtins.__xonsh_all_jobs__[act]
         obj = job['obj']
-        if isinstance(obj, ProcProxy):
-            return
         if job['bg']:
             return
         pgrp = job['pgrp']
