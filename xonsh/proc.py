@@ -21,6 +21,26 @@ if ON_WINDOWS:
     import _winapi
     import msvcrt
 
+    class Handle(int):
+        closed = False
+
+        def Close(self, CloseHandle=_winapi.CloseHandle):
+            if not self.closed:
+                self.closed = True
+                CloseHandle(self)
+
+        def Detach(self):
+            if not self.closed:
+                self.closed = True
+                return int(self)
+            raise ValueError("already closed")
+
+        def __repr__(self):
+            return "Handle(%d)" % int(self)
+
+        __del__ = Close
+        __str__ = __repr__
+
 
 class ProcProxy(Thread):
     """
