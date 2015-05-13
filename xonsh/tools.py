@@ -33,8 +33,8 @@ else:
 DEFAULT_ENCODING = sys.getdefaultencoding()
 
 ON_WINDOWS = (platform.system() == 'Windows')
-ON_MAC     = (platform.system() == 'Darwin')
-ON_POSIX   = (os.name == 'posix')
+ON_MAC = (platform.system() == 'Darwin')
+ON_POSIX = (os.name == 'posix')
 
 
 class XonshError(Exception):

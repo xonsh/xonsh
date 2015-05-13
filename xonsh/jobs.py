@@ -11,10 +11,6 @@ from subprocess import TimeoutExpired
 
 from xonsh.tools import ON_WINDOWS
 
-ProcProxy = namedtuple('ProcProxy', ['stdout', 'stderr'])
-"""
-A class representing a Python function to be run as a subprocess command.
-"""
 
 
 if not ON_WINDOWS:
@@ -60,7 +56,7 @@ def _clear_dead_jobs():
     to_remove = set()
     for num, job in builtins.__xonsh_all_jobs__.items():
         obj = job['obj']
-        if isinstance(obj, ProcProxy) or obj.poll() is not None:
+        if obj.poll() is not None:
             to_remove.add(num)
     for i in to_remove:
         del builtins.__xonsh_all_jobs__[i]
@@ -136,8 +132,6 @@ def wait_for_active_job():
         return
     job = builtins.__xonsh_all_jobs__[act]
     obj = job['obj']
-    if isinstance(obj, ProcProxy):
-        return
     if job['bg']:
         return
     if ON_WINDOWS:
