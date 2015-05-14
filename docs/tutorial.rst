@@ -810,6 +810,8 @@ By default, the following variables are available for use:
   * ``cwd``: The current working directory
   * ``curr_branch``: The name of the current git branch (preceded by space),
     if any.
+  * ``git_dirty_color``: ``{BOLD_GREEN}`` if the current git branch is clean,
+    otherwise ``{BOLD_RED}``
 
 You can also color your prompt easily by inserting keywords such as ``{GREEN}``
 or ``{BOLD_BLUE}``.  Colors have the form shown below:
