@@ -9,7 +9,7 @@ from argparse import Namespace
 
 from xonsh.execer import Execer
 from xonsh.completer import Completer
-from xonsh.tools import XonshError, escape_windows_command_string
+from xonsh.tools import XonshError, escape_windows_title_string
 from xonsh.tools import ON_WINDOWS
 from xonsh.environ import xonshrc_context, multiline_prompt, format_prompt
 
@@ -198,7 +198,7 @@ class Shell(Cmd):
             return
         t = format_prompt(t)
         if ON_WINDOWS and 'ANSICON' not in env:
-            t = escape_windows_command_string(t)
+            t = escape_windows_title_string(t)
             os.system('title {}'.format(t))
         else:
             sys.stdout.write("\x1b]2;{0}\x07".format(t))

@@ -18,7 +18,7 @@ from collections import Sequence, MutableMapping, Iterable, namedtuple, \
     MutableSequence, MutableSet
 
 from xonsh.tools import string_types
-from xonsh.tools import suggest_commands, XonshError, ON_POSIX
+from xonsh.tools import suggest_commands, XonshError, ON_POSIX, ON_WINDOWS
 from xonsh.inspectors import Inspector
 from xonsh.environ import default_env
 from xonsh.aliases import DEFAULT_ALIASES, bash_aliases
@@ -274,7 +274,12 @@ def reglob(path, parts=None, i=None):
             base = ''
         elif len(parts) > 1:
             i += 1
-    regex = re.compile(os.path.join(base, parts[i]).replace('\\', '\\\\'))
+    regex = os.path.join(base, parts[i])
+    if ON_WINDOWS:
+        # currently unable to access regex backslash sequences
+        # on Windows due to paths using \.
+        regex = regex.replace('\\', '\\\\')
+    regex = re.compile(regex)
     files = os.listdir(subdir)
     files.sort()
     paths = []

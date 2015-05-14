@@ -221,19 +221,22 @@ def default_env(env=None):
         # Windows default prompt doesn't work.
         ctx['PROMPT'] = DEFAULT_PROMPT
         
+        # remove these bash variables which only cause problems.
+        for ev in ['HOME', 'OLDPWD']:
+            if ev in ctx:
+                del ctx[ev]
+
         # Override path-related bash variables; on Windows bash uses
         # /c/Windows/System32 syntax instead of C:\\Windows\\System32
         # which messes up these environment variables for xonsh.
-        if 'PATH' in os.environ:
-            ctx['PATH'] = os.environ['PATH']
+        for ev in ['PATH', 'TEMP', 'TMP']:
+            if ev in os.environ:
+                ctx[ev] = os.environ[ev]
+            elif ev in ctx:
+                del ctx[ev]
 
         ctx['PWD'] = _get_cwd()
         
-        if 'TEMP' in os.environ:
-            ctx['TEMP'] = os.environ['TEMP']
-
-        if 'TMP' in os.environ:
-            ctx['TMP'] = os.environ['TMP']
 
     if env is not None:
         ctx.update(env)
