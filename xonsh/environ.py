@@ -42,10 +42,10 @@ def ensure_git(func):
 
 
 @ensure_git
-def git_current_branch(cwd=None, pad=True):
+def current_branch(cwd=None, pad=True):
     """Gets the branch for a current working directory. Returns None
     if the cwd is not a repository.  This currently only works for git,
-    bust should be extended in the future.
+    but should be extended in the future.
     """
     branch = None
     prompt_scripts = ['/usr/lib/git-core/git-sh-prompt',
@@ -83,9 +83,11 @@ def git_current_branch(cwd=None, pad=True):
 
 
 @ensure_git
-def git_dirty(cwd=None):
+def branch_dirty(cwd=None):
     """Returns a boolean as to whether there are uncommitted files on the
-    current branch of a git repository (if there is one)"""
+    current branch of a git repository (if there is one).  Currently only
+    supports git, but could be extended in the future.
+    """
     try:
         cmd = ['git', 'status', '--porcelain']
         s = subprocess.check_output(cmd,
@@ -97,12 +99,14 @@ def git_dirty(cwd=None):
         return False
 
 
-def git_dirty_color():
-    return TERM_COLORS['BOLD_RED'] if git_dirty() else TERM_COLORS['BOLD_GREEN']
+def branch_color():
+    """Return red if the current branch is dirty, otherwise green"""
+    return (TERM_COLORS['BOLD_RED'] if branch_dirty() else
+            TERM_COLORS['BOLD_GREEN'])
 
 
 DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
-                  '{cwd}{git_dirty_color}{curr_branch} '
+                  '{cwd}{branch_color}{curr_branch} '
                   '{BOLD_BLUE}${NO_COLOR} ')
 DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
 
@@ -125,8 +129,8 @@ else:
 FORMATTER_DICT = dict(user=os.environ.get(USER, '<user>'),
                       hostname=socket.gethostname().split('.', 1)[0],
                       cwd=lambda: _replace_home(builtins.__xonsh_env__['PWD']),
-                      curr_branch=git_current_branch,
-                      git_dirty_color=git_dirty_color,
+                      curr_branch=current_branch,
+                      branch_color=branch_color,
                       **TERM_COLORS)
 
 _formatter = string.Formatter()
