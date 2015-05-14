@@ -1,18 +1,139 @@
-"""Environment for the xonsh shell.
-"""
+"""Environment for the xonsh shell."""
 import os
 import re
 import locale
 import socket
 import string
+import locale
 import builtins
 import platform
 import subprocess
 from warnings import warn
+from collections import MutableMapping, MutableSequence, MutableSet
 
 from xonsh import __version__ as XONSH_VERSION
-from xonsh.tools import TERM_COLORS
+from xonsh.tools import TERM_COLORS, string_types
 from xonsh.dirstack import _get_cwd
+
+LOCALE_CATS = {
+    'LC_CTYPE': locale.LC_CTYPE,
+    'LC_MESSAGES': locale.LC_MESSAGES,
+    'LC_COLLATE': locale.LC_COLLATE,
+    'LC_NUMERIC': locale.LC_NUMERIC,
+    'LC_MONETARY': locale.LC_MONETARY,
+    'LC_TIME': locale.LC_TIME
+}
+
+
+class Env(MutableMapping):
+    """A xonsh environment, whose variables have limited typing
+    (unlike BASH). Most variables are, by default, strings (like BASH).
+    However, the following rules also apply based on variable-name:
+
+    * PATH: any variable whose name ends in PATH is a list of strings.
+    * XONSH_HISTORY_SIZE: this variable is an int.
+    * LC_* (locale categories): locale catergory names get/set the Python
+      locale via locale.getlocale() and locale.setlocale() functions.
+
+    An Env instance may be converted to an untyped version suitable for
+    use in a subprocess.
+    """
+
+    _arg_regex = re.compile(r'ARG(\d+)')
+
+    def __init__(self, *args, **kwargs):
+        """If no initial environment is given, os.environ is used."""
+        self._d = {}
+        if len(args) == 0 and len(kwargs) == 0:
+            args = (os.environ, )
+        for key, val in dict(*args, **kwargs).items():
+            self[key] = val
+        self._detyped = None
+        self._orig_env = None
+
+    def detype(self):
+        if self._detyped is not None:
+            return self._detyped
+        ctx = {}
+        for key, val in self._d.items():
+            if callable(val) or isinstance(val, MutableMapping):
+                continue
+            if not isinstance(key, string_types):
+                key = str(key)
+            if 'PATH' in key:
+                val = os.pathsep.join(val)
+            elif not isinstance(val, string_types):
+                val = str(val)
+            ctx[key] = val
+        self._detyped = ctx
+        return ctx
+
+    def replace_env(self):
+        """Replaces the contents of os.environ with a detyped version
+        of the xonsh environement.
+        """
+        if self._orig_env is None:
+            self._orig_env = dict(os.environ)
+        os.environ.clear()
+        os.environ.update(self.detype())
+
+    def undo_replace_env(self):
+        """Replaces the contents of os.environ with a detyped version
+        of the xonsh environement.
+        """
+        if self._orig_env is not None:
+            os.environ.clear()
+            os.environ.update(self._orig_env)
+            self._orig_env = None
+
+    #
+    # Mutable mapping interface
+    #
+
+    def __getitem__(self, key):
+        m = self._arg_regex.match(key)
+        if (m is not None) and (key not in self._d) and ('ARGS' in self._d):
+            args = self._d['ARGS']
+            ix = int(m.group(1))
+            if ix >= len(args):
+                e = "Not enough arguments given to access ARG{0}."
+                raise IndexError(e.format(ix))
+            return self._d['ARGS'][ix]
+        val = self._d[key]
+        if isinstance(val, (MutableSet, MutableSequence, MutableMapping)):
+            self._detyped = None
+        return self._d[key]
+
+    def __setitem__(self, key, val):
+        if isinstance(key, string_types) and 'PATH' in key:
+            val = val.split(os.pathsep) if isinstance(val, string_types) \
+                  else val
+        elif key == 'XONSH_HISTORY_SIZE' and not isinstance(val, int):
+            val = int(val)
+        elif key in LOCALE_CATS:
+            locale.setlocale(LOCALE_CATS[key], val)
+            val = locale.setlocale(LOCALE_CATS[key])
+        self._d[key] = val
+        self._detyped = None
+
+    def __delitem__(self, key):
+        del self._d[key]
+        self._detyped = None
+
+    def __iter__(self):
+        yield from self._d
+
+    def __len__(self):
+        return len(self._d)
+
+    def __str__(self):
+        return str(self._d)
+
+    def __repr__(self):
+        return '{0}.{1}({2})'.format(self.__class__.__module__,
+                                     self.__class__.__name__, self._d)
+
+
 
 
 def current_branch(cwd=None, pad=True):
