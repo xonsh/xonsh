@@ -33,8 +33,8 @@ else:
 DEFAULT_ENCODING = sys.getdefaultencoding()
 
 ON_WINDOWS = (platform.system() == 'Windows')
-ON_MAC     = (platform.system() == 'Darwin')
-ON_POSIX   = (os.name == 'posix')
+ON_MAC = (platform.system() == 'Darwin')
+ON_POSIX = (os.name == 'posix')
 
 
 class XonshError(Exception):
@@ -373,11 +373,13 @@ def suggestion_sort_helper(x, y):
     return lendiff + inx + iny
 
 
-def escape_windows_command_string(s):
-    s = s.replace('%','%%')
-    for c in ('^', '&', '<', '>', '|', "'", '`', ',', ';', '=', '(', ')'):
+def escape_windows_title_string(s):
+    """Returns a string that is usable by the Windows cmd.exe title 
+    builtin.  The escaping is based on details here and emperical testing:
+    http://www.robvanderwoude.com/escapechars.php
+    """
+    for c in '^&<>|':
         s = s.replace(c, '^' + c)
-    s = s.replace('!','^^!')
-    for c in ('[', ']', '.', '"', '.', '*', '?'):
-        s = s.replace(c, '\\' + c)
+
+    s = s.replace('/?', '/.')
     return s
