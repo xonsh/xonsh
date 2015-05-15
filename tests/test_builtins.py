@@ -1,6 +1,7 @@
 """Tests the xonsh lexer."""
 from __future__ import unicode_literals, print_function
 import os
+import re
 
 import nose
 from nose.tools import assert_equal, assert_true, assert_not_in
@@ -8,6 +9,7 @@ from nose.tools import assert_equal, assert_true, assert_not_in
 from xonsh import built_ins 
 from xonsh.built_ins import Env, reglob, regexpath, helper, superhelper, \
     ensure_list_of_strs
+from xonsh.tools import ON_WINDOWS
 
 def test_env_normal():
     env = Env(VAR='wakka')
@@ -42,6 +44,15 @@ def test_reglob_tests():
     for f in testfiles:
         assert_true(f.startswith('test_'))
 
+if not ON_WINDOWS:
+    def test_repath_backslash():
+        home = os.path.expanduser('~')
+        exp = os.listdir(home)
+        exp = {p for p in exp if re.match(r'\w\w.*', p)}
+        exp = {os.path.join(home, p) for p in exp}
+        obs = set(regexpath(r'~/\w\w.*'))
+        assert_equal(exp, obs)
+        
 def test_repath_home_itself():
     exp = os.path.expanduser('~')
     obs = regexpath('~')

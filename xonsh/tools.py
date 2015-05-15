@@ -371,3 +371,15 @@ def suggestion_sort_helper(x, y):
     inx = len([i for i in x if i not in y])
     iny = len([i for i in y if i not in x])
     return lendiff + inx + iny
+
+
+def escape_windows_title_string(s):
+    """Returns a string that is usable by the Windows cmd.exe title 
+    builtin.  The escaping is based on details here and emperical testing:
+    http://www.robvanderwoude.com/escapechars.php
+    """
+    for c in '^&<>|':
+        s = s.replace(c, '^' + c)
+
+    s = s.replace('/?', '/.')
+    return s
