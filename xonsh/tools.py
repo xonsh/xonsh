@@ -407,10 +407,7 @@ def str_to_env_path(x):
     """Converts a string to an environment path, ie a list of strings, 
     splitting on the OS separator.
     """
-    try:
-        return x.split(os.pathsep)
-    except:
-        import pdb; pdb.set_trace()
+    return x.split(os.pathsep)
 
 def env_path_to_str(x):
     """Converts an environment path to a string by joining on the OS separator.
