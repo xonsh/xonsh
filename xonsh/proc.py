@@ -21,6 +21,26 @@ if ON_WINDOWS:
     import _winapi
     import msvcrt
 
+    class Handle(int):
+        closed = False
+
+        def Close(self, CloseHandle=_winapi.CloseHandle):
+            if not self.closed:
+                self.closed = True
+                CloseHandle(self)
+
+        def Detach(self):
+            if not self.closed:
+                self.closed = True
+                return int(self)
+            raise ValueError("already closed")
+
+        def __repr__(self):
+            return "Handle(%d)" % int(self)
+
+        __del__ = Close
+        __str__ = __repr__
+
 
 class ProcProxy(Thread):
     """
@@ -87,6 +107,14 @@ class ProcProxy(Thread):
         self.stdout = None
         self.stderr = None
 
+        if ON_WINDOWS:
+            if self.p2cwrite != -1:
+                self.p2cwrite = msvcrt.open_osfhandle(self.p2cwrite.Detach(), 0)
+            if self.c2pread != -1:
+                self.c2pread = msvcrt.open_osfhandle(self.c2pread.Detach(), 0)
+            if self.errread != -1:
+                self.errread = msvcrt.open_osfhandle(self.errread.Detach(), 0)
+
         if self.p2cwrite != -1:
             self.stdin = io.open(self.p2cwrite, 'wb', -1)
             if universal_newlines:
@@ -96,6 +124,7 @@ class ProcProxy(Thread):
             self.stdout = io.open(self.c2pread, 'rb', -1)
             if universal_newlines:
                 self.stdout = io.TextIOWrapper(self.stdout)
+
         if self.errread != -1:
             self.stderr = io.open(self.errread, 'rb', -1)
             if universal_newlines:
@@ -114,6 +143,13 @@ class ProcProxy(Thread):
             sp_stdin = io.TextIOWrapper(self.stdin)
         else:
             sp_stdin = io.StringIO("")
+
+        if ON_WINDOWS:
+            if self.c2pwrite != -1:
+                self.c2pwrite = msvcrt.open_osfhandle(self.c2pwrite.Detach(), 0)
+            if self.errwrite != -1:
+                self.errwrite = msvcrt.open_osfhandle(self.errwrite.Detach(), 0)
+
         if self.c2pwrite != -1:
             sp_stdout = io.TextIOWrapper(io.open(self.c2pwrite, 'wb', -1))
         else:
@@ -122,6 +158,7 @@ class ProcProxy(Thread):
             sp_stderr = io.TextIOWrapper(io.open(self.errwrite, 'wb', -1))
         else:
             sp_stderr = sys.stderr
+
         r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr)
         self.returncode = r if r is not None else True
 
@@ -149,6 +186,7 @@ class ProcProxy(Thread):
                 _winapi.GetCurrentProcess(), 0, 1,
                 _winapi.DUPLICATE_SAME_ACCESS)
             return Handle(h)
+
 
         def _get_handles(self, stdin, stdout, stderr):
             """Construct and return tuple with IO objects:
@@ -220,6 +258,7 @@ class ProcProxy(Thread):
             return (p2cread, p2cwrite,
                     c2pread, c2pwrite,
                     errread, errwrite)
+
 
     else:
         # POSIX versions

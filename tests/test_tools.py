@@ -6,6 +6,7 @@ from nose.tools import assert_equal
 
 from xonsh.lexer import Lexer
 from xonsh.tools import subproc_toks, subexpr_from_unbalanced
+from xonsh.tools import escape_windows_title_string
 
 LEXER = Lexer()
 LEXER.build()
@@ -145,6 +146,21 @@ def test_subexpr_from_unbalanced_parens():
     for expr, exp in cases:
         obs = subexpr_from_unbalanced(expr, '(', ')')
         yield assert_equal, exp, obs
+
+
+
+def test_escape_windows_title_string():
+    cases = [
+        ('', ''),
+        ('foo', 'foo'),
+        ('foo&bar', 'foo^&bar'),
+        ('foo$?-/_"\\', 'foo$?-/_"\\'),
+        ('^&<>|', '^^^&^<^>^|'),
+        ('this /?', 'this /.')
+        ]
+    for st, esc in cases:
+        obs = escape_windows_title_string(st)
+        yield assert_equal, esc, obs
 
 
 if __name__ == '__main__':
