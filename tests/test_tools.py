@@ -1,11 +1,15 @@
 """Tests the xonsh lexer."""
 from __future__ import unicode_literals, print_function
+import os
 
 import nose
-from nose.tools import assert_equal
+from nose.tools import assert_equal, assert_true, assert_false
 
 from xonsh.lexer import Lexer
-from xonsh.tools import subproc_toks, subexpr_from_unbalanced
+from xonsh.tools import subproc_toks, subexpr_from_unbalanced, is_int, \
+    always_true, always_false, ensure_string, is_env_path, str_to_env_path, \
+    env_path_to_str
+    
 
 LEXER = Lexer()
 LEXER.build()
@@ -146,6 +150,55 @@ def test_subexpr_from_unbalanced_parens():
         obs = subexpr_from_unbalanced(expr, '(', ')')
         yield assert_equal, exp, obs
 
+def test_is_int():
+    yield assert_true, is_int(42)
+    yield assert_false, is_int('42')
+
+def test_always_true():
+    yield assert_true, always_true(42)
+    yield assert_true, always_true('42')
+
+def test_always_false():
+    yield assert_false, always_false(42)
+    yield assert_false, always_false('42')
+
+def test_ensure_string():
+    cases = [
+        (42, '42'),
+        ('42', '42'),
+        ]
+    for inp, exp in cases:
+        obs = ensure_string(inp)
+        yield assert_equal, exp, obs
+
+def test_is_env_path():
+    cases = [
+        ('/home/wakka', False),
+        (['/home/jawaka'], True),
+        ]
+    for inp, exp in cases:
+        obs = is_env_path(inp)
+        yield assert_equal, exp, obs
+
+def test_str_to_env_path():
+    cases = [
+        ('/home/wakka', ['/home/wakka']),
+        ('/home/wakka' + os.pathsep + '/home/jawaka', 
+         ['/home/wakka', '/home/jawaka']),
+        ]
+    for inp, exp in cases:
+        obs = str_to_env_path(inp)
+        yield assert_equal, exp, obs
+
+def test_env_path_to_str():
+    cases = [
+        (['/home/wakka'], '/home/wakka'),
+        (['/home/wakka', '/home/jawaka'], 
+         '/home/wakka' + os.pathsep + '/home/jawaka'),
+        ]
+    for inp, exp in cases:
+        obs = env_path_to_str(inp)
+        yield assert_equal, exp, obs
 
 if __name__ == '__main__':
     nose.runmodule()

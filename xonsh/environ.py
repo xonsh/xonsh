@@ -9,10 +9,12 @@ import builtins
 import platform
 import subprocess
 from warnings import warn
-from collections import MutableMapping, MutableSequence, MutableSet
+from collections import MutableMapping, MutableSequence, MutableSet, \
+    defaultdict, namedtuple
 
 from xonsh import __version__ as XONSH_VERSION
-from xonsh.tools import TERM_COLORS, string_types
+from xonsh.tools import TERM_COLORS, string_types, is_int, always_true, \
+    always_false, ensure_string, is_env_path, str_to_env_path, env_path_to_str
 from xonsh.dirstack import _get_cwd
 
 LOCALE_CATS = {
@@ -21,8 +23,29 @@ LOCALE_CATS = {
     'LC_COLLATE': locale.LC_COLLATE,
     'LC_NUMERIC': locale.LC_NUMERIC,
     'LC_MONETARY': locale.LC_MONETARY,
-    'LC_TIME': locale.LC_TIME
+    'LC_TIME': locale.LC_TIME,
 }
+
+def locale_convert(key):
+    """Creates a converter for a locale key."""
+    def lc_converter(val):
+        locale.setlocale(LOCALE_CATS[key], val)
+        val = locale.setlocale(LOCALE_CATS[key])
+        return val
+    return lc_converter
+
+Ensurer = namedtuple('Ensurer', ['validate', 'convert', 'detype'])
+
+DEFAULT_ENSURERS = {
+    re.compile('\w*PATH'): (is_env_path, str_to_env_path, env_path_to_str), 
+    'LC_CTYPE': (always_false, locale_convert('LC_CTYPE'), ensure_string),
+    'LC_MESSAGES': (always_false, locale_convert('LC_MESSAGES'), ensure_string),
+    'LC_COLLATE': (always_false, locale_convert('LC_COLLATE'), ensure_string),
+    'LC_NUMERIC': (always_false, locale_convert('LC_NUMERIC'), ensure_string),
+    'LC_MONETARY': (always_false, locale_convert('LC_MONETARY'), ensure_string),
+    'LC_TIME': (always_false, locale_convert('LC_TIME'), ensure_string),
+    'XONSH_HISTORY_SIZE': (is_int, int, str),
+    }
 
 
 class Env(MutableMapping):
@@ -44,6 +67,7 @@ class Env(MutableMapping):
     def __init__(self, *args, **kwargs):
         """If no initial environment is given, os.environ is used."""
         self._d = {}
+        self.ensurers = {k: Ensurer(*v) for k, v in DEFAULT_ENSURERS.items()}
         if len(args) == 0 and len(kwargs) == 0:
             args = (os.environ, )
         for key, val in dict(*args, **kwargs).items():
@@ -60,10 +84,8 @@ class Env(MutableMapping):
                 continue
             if not isinstance(key, string_types):
                 key = str(key)
-            if 'PATH' in key:
-                val = os.pathsep.join(val)
-            elif not isinstance(val, string_types):
-                val = str(val)
+            ensurer = self.get_ensurer(key)
+            val = ensurer.detype(val)
             ctx[key] = val
         self._detyped = ctx
         return ctx
@@ -86,6 +108,23 @@ class Env(MutableMapping):
             os.environ.update(self._orig_env)
             self._orig_env = None
 
+    def get_ensurer(self, key, 
+            default=Ensurer(always_true, None, ensure_string)):
+        """Gets an ensurer for the given key."""
+        if key in self.ensurers:
+            return self.ensurers[key]
+        for k, ensurer in self.ensurers.items():
+            if isinstance(k, string_types):
+                continue
+            m = k.match(key)
+            if m is not None:
+                ens = ensurer
+                break
+        else:
+            ens = default 
+        self.ensurers[key] = ens
+        return ens
+
     #
     # Mutable mapping interface
     #
@@ -105,14 +144,9 @@ class Env(MutableMapping):
         return self._d[key]
 
     def __setitem__(self, key, val):
-        if isinstance(key, string_types) and 'PATH' in key:
-            val = val.split(os.pathsep) if isinstance(val, string_types) \
-                  else val
-        elif key == 'XONSH_HISTORY_SIZE' and not isinstance(val, int):
-            val = int(val)
-        elif key in LOCALE_CATS:
-            locale.setlocale(LOCALE_CATS[key], val)
-            val = locale.setlocale(LOCALE_CATS[key])
+        ensurer = self.get_ensurer(key)
+        if not ensurer.validate(val):
+            val = ensurer.convert(val)
         self._d[key] = val
         self._detyped = None
 
