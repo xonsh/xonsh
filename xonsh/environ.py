@@ -6,25 +6,29 @@ import socket
 import string
 import locale
 import builtins
-import platform
 import subprocess
 from warnings import warn
 from collections import MutableMapping, MutableSequence, MutableSet, \
     defaultdict, namedtuple
 
 from xonsh import __version__ as XONSH_VERSION
-from xonsh.tools import TERM_COLORS, string_types, is_int, always_true, \
-    always_false, ensure_string, is_env_path, str_to_env_path, env_path_to_str
+from xonsh.tools import TERM_COLORS, ON_WINDOWS, ON_MAC, string_types, is_int,\
+    always_true, always_false, ensure_string, is_env_path, str_to_env_path, \
+    env_path_to_str
 from xonsh.dirstack import _get_cwd
 
 LOCALE_CATS = {
     'LC_CTYPE': locale.LC_CTYPE,
-    'LC_MESSAGES': locale.LC_MESSAGES,
     'LC_COLLATE': locale.LC_COLLATE,
     'LC_NUMERIC': locale.LC_NUMERIC,
     'LC_MONETARY': locale.LC_MONETARY,
     'LC_TIME': locale.LC_TIME,
 }
+try:
+    LOCALE_CATS['LC_MESSAGES'] = locale.LC_MESSAGES
+except AttributeError:
+    pass
+
 
 def locale_convert(key):
     """Creates a converter for a locale key."""
@@ -176,6 +180,11 @@ def current_branch(cwd=None, pad=True):
     bust should be extended in the future.
     """
     branch = None
+
+    if ON_WINDOWS:
+        # getting the branch was slow on windows, disabling for now.
+        return ''
+    
     cwd = _get_cwd() if cwd is None else cwd
     if cwd is None:
         return ''
@@ -230,10 +239,22 @@ DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
 DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
 
 
-def _replace_home(x):
-    return x.replace(builtins.__xonsh_env__['HOME'], '~')
 
-FORMATTER_DICT = dict(user=os.environ.get('USER', '<user>'),
+def _replace_home(x):
+    if ON_WINDOWS:
+        home = builtins.__xonsh_env__['HOMEDRIVE'] + builtins.__xonsh_env__['HOMEPATH'][0]
+        return x.replace(home, '~')
+    else:
+        return x.replace(builtins.__xonsh_env__['HOME'], '~')
+
+
+if ON_WINDOWS:
+    USER = 'USERNAME'
+else:
+    USER = 'USER'
+            
+
+FORMATTER_DICT = dict(user=os.environ.get(USER, '<user>'),
                       hostname=socket.gethostname().split('.', 1)[0],
                       cwd=lambda: _replace_home(builtins.__xonsh_env__['PWD']),
                       curr_branch=lambda: current_branch(),
@@ -291,11 +312,16 @@ BASE_ENV = {
     'LC_COLLATE': locale.setlocale(locale.LC_COLLATE),
     'LC_TIME': locale.setlocale(locale.LC_TIME),
     'LC_MONETARY': locale.setlocale(locale.LC_MONETARY),
-    'LC_MESSAGES': locale.setlocale(locale.LC_MESSAGES),
     'LC_NUMERIC': locale.setlocale(locale.LC_NUMERIC),
 }
 
-if platform.system() == 'Darwin':
+try:
+    BASE_ENV['LC_MESSAGES'] = locale.setlocale(locale.LC_MESSAGES)
+except AttributeError:
+    pass
+
+
+if ON_MAC:
     BASE_ENV['BASH_COMPLETIONS'] = [
         '/usr/local/etc/bash_completion',
         '/opt/local/etc/profile.d/bash_completion.sh'
@@ -351,6 +377,27 @@ def default_env(env=None):
     ctx = dict(BASE_ENV)
     ctx.update(os.environ)
     ctx.update(bash_env())
+    if ON_WINDOWS:
+        # Windows default prompt doesn't work.
+        ctx['PROMPT'] = DEFAULT_PROMPT
+        
+        # remove these bash variables which only cause problems.
+        for ev in ['HOME', 'OLDPWD']:
+            if ev in ctx:
+                del ctx[ev]
+
+        # Override path-related bash variables; on Windows bash uses
+        # /c/Windows/System32 syntax instead of C:\\Windows\\System32
+        # which messes up these environment variables for xonsh.
+        for ev in ['PATH', 'TEMP', 'TMP']:
+            if ev in os.environ:
+                ctx[ev] = os.environ[ev]
+            elif ev in ctx:
+                del ctx[ev]
+
+        ctx['PWD'] = _get_cwd()
+        
+
     if env is not None:
         ctx.update(env)
     return ctx

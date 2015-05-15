@@ -17,7 +17,7 @@ from collections import Sequence, MutableMapping, Iterable, namedtuple, \
     MutableSequence, MutableSet
 
 from xonsh.tools import string_types
-from xonsh.tools import suggest_commands, XonshError
+from xonsh.tools import suggest_commands, XonshError, ON_POSIX, ON_WINDOWS
 from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env
 from xonsh.aliases import DEFAULT_ALIASES, bash_aliases
@@ -141,16 +141,24 @@ def expand_path(s):
 def reglob(path, parts=None, i=None):
     """Regular expression-based globbing."""
     if parts is None:
-        parts = path.split(os.sep)
-        d = os.sep if path.startswith(os.sep) else '.'
-        return reglob(d, parts=parts, i=0)
+        path = os.path.normpath(path)
+        drive, tail = os.path.splitdrive(path)
+        parts = tail.split(os.sep)
+        d = os.sep if os.path.isabs(path) else '.'
+        d = os.path.join(drive, d)
+        return reglob(d, parts, i=0)
     base = subdir = path
     if i == 0:
-        if base == '.':
+        if not os.path.isabs(base):
             base = ''
-        elif base == '/' and len(parts) > 1:
+        elif len(parts) > 1:
             i += 1
-    regex = re.compile(os.path.join(base, parts[i]))
+    regex = os.path.join(base, parts[i])
+    if ON_WINDOWS:
+        # currently unable to access regex backslash sequences
+        # on Windows due to paths using \.
+        regex = regex.replace('\\', '\\\\')
+    regex = re.compile(regex)
     files = os.listdir(subdir)
     files.sort()
     paths = []
@@ -167,6 +175,7 @@ def reglob(path, parts=None, i=None):
                 continue
             paths += reglob(p, parts=parts, i=i1)
     return paths
+
 
 
 def regexpath(s):
@@ -326,7 +335,7 @@ def run_subproc(cmds, captured=True):
         else:
             prev_is_proxy = False
             subproc_kwargs = {}
-            if os.name == 'posix':
+            if ON_POSIX:
                 subproc_kwargs['preexec_fn'] = _subproc_pre
             try:
                 proc = Popen(aliased_cmd,

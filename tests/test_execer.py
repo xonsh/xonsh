@@ -5,6 +5,7 @@ import sys
 import ast
 
 from xonsh.execer import Execer
+from xonsh.tools import ON_WINDOWS
 
 from tools import mock_xonsh_env
 
@@ -41,15 +42,25 @@ def check_parse(input):
 # Tests
 #
 
-def test_bin_ls():
-    yield check_eval, '/bin/ls -l'
+if ON_WINDOWS:
+    def test_win_ipconfig():
+        yield (check_eval,
+               os.environ['SYSTEMROOT'] + '\\System32\\ipconfig.exe /all')
 
-def test_ls_dashl():
-    yield check_eval, 'ls -l'
+    def test_ipconfig():
+        yield check_eval, 'ipconfig /all'
 
-def test_which_ls():
-    yield check_eval, 'which ls'
+else:
+    def test_bin_ls():
+        yield check_eval, '/bin/ls -l'
 
+    def test_ls_dashl():
+        yield check_eval, 'ls -l'
+
+    def test_which_ls():
+        yield check_eval, 'which ls'
+
+        
 def test_simple_func():
     code = ('def prompt():\n'
             "    return '{user}'.format(user='me')\n")

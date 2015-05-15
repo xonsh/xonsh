@@ -8,8 +8,7 @@ from nose.tools import assert_equal, assert_true, assert_false
 from xonsh.lexer import Lexer
 from xonsh.tools import subproc_toks, subexpr_from_unbalanced, is_int, \
     always_true, always_false, ensure_string, is_env_path, str_to_env_path, \
-    env_path_to_str
-    
+    env_path_to_str, escape_windows_title_string
 
 LEXER = Lexer()
 LEXER.build()
@@ -199,6 +198,21 @@ def test_env_path_to_str():
     for inp, exp in cases:
         obs = env_path_to_str(inp)
         yield assert_equal, exp, obs
+
+
+def test_escape_windows_title_string():
+    cases = [
+        ('', ''),
+        ('foo', 'foo'),
+        ('foo&bar', 'foo^&bar'),
+        ('foo$?-/_"\\', 'foo$?-/_"\\'),
+        ('^&<>|', '^^^&^<^>^|'),
+        ('this /?', 'this /.')
+        ]
+    for st, esc in cases:
+        obs = escape_windows_title_string(st)
+        yield assert_equal, esc, obs
+
 
 if __name__ == '__main__':
     nose.runmodule()

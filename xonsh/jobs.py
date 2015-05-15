@@ -7,14 +7,119 @@ import time
 import signal
 import builtins
 from collections import namedtuple
+from subprocess import TimeoutExpired
 
+from xonsh.tools import ON_WINDOWS
 
 try:
     _shell_tty = sys.stderr.fileno()
 except OSError:
     _shell_tty = None
 
-_shell_pgrp = os.getpgrp()
+
+if ON_WINDOWS:
+    def _continue(obj):
+        pass
+
+
+    def _kill(obj):
+        return obj.kill()
+
+
+    def ignore_sigtstp():
+        pass
+
+
+    def _set_pgrp(info):
+        pass
+
+    def wait_for_active_job():
+        """
+        Wait for the active job to finish, to be killed by SIGINT, or to be
+        suspended by ctrl-z.
+        """
+        _clear_dead_jobs()
+        act = builtins.__xonsh_active_job__
+        if act is None:
+            return
+        job = builtins.__xonsh_all_jobs__[act]
+        obj = job['obj']
+        if job['bg']:
+            return
+        while obj.returncode is None:
+            try:
+                obj.wait(0.01)
+            except TimeoutExpired:
+                pass
+            except KeyboardInterrupt:
+                obj.kill()
+        if obj.poll() is not None:
+            builtins.__xonsh_active_job__ = None
+
+else:
+    def _continue(obj):
+        os.kill(obj.pid, signal.SIGCONT)
+
+
+    def _kill(obj):
+        os.kill(obj.pid, signal.SIGKILL)
+
+
+    def ignore_sigtstp():
+        signal.signal(signal.SIGTSTP, signal.SIG_IGN)
+
+
+    def _set_pgrp(info):
+        try:
+            info['pgrp'] = os.getpgid(info['obj'].pid)
+        except ProcessLookupError:
+            pass
+
+
+    _shell_pgrp = os.getpgrp()
+
+    _block_when_giving = (signal.SIGTTOU, signal.SIGTTIN, signal.SIGTSTP)
+
+
+    def _give_terminal_to(pgid):
+        # over-simplified version of:
+        #    give_terminal_to from bash 4.3 source, jobs.c, line 4030
+        # this will give the terminal to the process group pgid
+        if _shell_tty is not None and os.isatty(_shell_tty):
+            oldmask = signal.pthread_sigmask(signal.SIG_BLOCK, _block_when_giving)
+            os.tcsetpgrp(_shell_tty, pgid)
+            signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
+
+
+    def wait_for_active_job():
+        """
+        Wait for the active job to finish, to be killed by SIGINT, or to be
+        suspended by ctrl-z.
+        """
+        _clear_dead_jobs()
+        act = builtins.__xonsh_active_job__
+        if act is None:
+            return
+        job = builtins.__xonsh_all_jobs__[act]
+        obj = job['obj']
+        if job['bg']:
+            return
+        pgrp = job['pgrp']
+        obj.done = False
+
+        _give_terminal_to(pgrp)  # give the terminal over to the fg process
+        _, s = os.waitpid(obj.pid, os.WUNTRACED)
+        if os.WIFSTOPPED(s):
+            obj.done = True
+            job['bg'] = True
+            job['status'] = 'stopped'
+            print()  # get a newline because ^Z will have been printed
+            print_one_job(act)
+        elif os.WIFSIGNALED(s):
+            print()  # get a newline because ^C will have been printed
+        if obj.poll() is not None:
+            builtins.__xonsh_active_job__ = None
+        _give_terminal_to(_shell_pgrp)  # give terminal back to the shell
 
 
 def _clear_dead_jobs():
@@ -37,18 +142,6 @@ def _reactivate_job():
     builtins.__xonsh_active_job__ = max(builtins.__xonsh_all_jobs__.items(),
                                         key=lambda x: x[1]['started'])[0]
 
-
-_block_when_giving = (signal.SIGTTOU, signal.SIGTTIN, signal.SIGTSTP)
-
-
-def _give_terminal_to(pgid):
-    # over-simplified version of:
-    #    give_terminal_to from bash 4.3 source, jobs.c, line 4030
-    # this will give the terminal to the process group pgid
-    if _shell_tty is not None and os.isatty(_shell_tty):
-        oldmask = signal.pthread_sigmask(signal.SIG_BLOCK, _block_when_giving)
-        os.tcsetpgrp(_shell_tty, pgid)
-        signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
 
 
 def print_one_job(num):
@@ -82,10 +175,7 @@ def add_job(info):
     """
     info['started'] = time.time()
     info['status'] = 'running'
-    try:
-        info['pgrp'] = os.getpgid(info['obj'].pid)
-    except ProcessLookupError:
-        return
+    _set_pgrp(info)
     num = get_next_job_number()
     builtins.__xonsh_all_jobs__[num] = info
     builtins.__xonsh_active_job__ = num
@@ -97,44 +187,13 @@ def _default_sigint_handler(num, frame):
     raise KeyboardInterrupt
 
 
-def wait_for_active_job():
-    """
-    Wait for the active job to finish, to be killed by SIGINT, or to be
-    suspended by ctrl-z.
-    """
-    _clear_dead_jobs()
-    act = builtins.__xonsh_active_job__
-    if act is None:
-        return
-    job = builtins.__xonsh_all_jobs__[act]
-    obj = job['obj']
-    if job['bg']:
-        return
-    pgrp = job['pgrp']
-    obj.done = False
-
-    _give_terminal_to(pgrp)  # give the terminal over to the fg process
-    _, s = os.waitpid(obj.pid, os.WUNTRACED)
-    if os.WIFSTOPPED(s):
-        obj.done = True
-        job['bg'] = True
-        job['status'] = 'stopped'
-        print()  # get a newline because ^Z will have been printed
-        print_one_job(act)
-    elif os.WIFSIGNALED(s):
-        print()  # get a newline because ^C will have been printed
-    if obj.poll() is not None:
-        builtins.__xonsh_active_job__ = None
-    _give_terminal_to(_shell_pgrp)  # give terminal back to the shell
-
-
 def kill_all_jobs():
     """
     Send SIGKILL to all child processes (called when exiting xonsh).
     """
     _clear_dead_jobs()
     for job in builtins.__xonsh_all_jobs__.values():
-        os.kill(job['obj'].pid, signal.SIGKILL)
+        _kill(job['obj'])
 
 
 def jobs(args, stdin=None):
@@ -176,7 +235,7 @@ def fg(args, stdin=None):
     job['bg'] = False
     job['status'] = 'running'
     print_one_job(act)
-    os.kill(job['obj'].pid, signal.SIGCONT)
+    _continue(job['obj'])
 
 
 def bg(args, stdin=None):
@@ -206,4 +265,4 @@ def bg(args, stdin=None):
     job['bg'] = True
     job['status'] = 'running'
     print_one_job(act)
-    os.kill(job['obj'].pid, signal.SIGCONT)
+    _continue(job['obj'])
