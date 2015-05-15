@@ -8,38 +8,46 @@ import string
 import builtins
 import subprocess
 from warnings import warn
+from functools import wraps
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.tools import TERM_COLORS, ON_WINDOWS, ON_MAC
 from xonsh.dirstack import _get_cwd
 
 
+def ensure_git(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        # getting the branch was slow on windows, disabling for now.
+        if ON_WINDOWS:
+            return ''
+
+        # Get cwd or bail
+        kwargs['cwd'] = kwargs.get('cwd', _get_cwd())
+        if kwargs['cwd'] is None:
+            return
+
+        # step out completely if git is not installed
+        try:
+            binary_location = subprocess.check_output(['which', 'git'],
+                                                      cwd=kwargs['cwd'],
+                                                      stderr=subprocess.PIPE,
+                                                      universal_newlines=True)
+            if not binary_location:
+                return
+        except subprocess.CalledProcessError:
+            return
+        return func(*args, **kwargs)
+    return wrapper
+
+
+@ensure_git
 def current_branch(cwd=None, pad=True):
     """Gets the branch for a current working directory. Returns None
     if the cwd is not a repository.  This currently only works for git,
-    bust should be extended in the future.
+    but should be extended in the future.
     """
     branch = None
-
-    if ON_WINDOWS:
-        # getting the branch was slow on windows, disabling for now.
-        return ''
-    
-    cwd = _get_cwd() if cwd is None else cwd
-    if cwd is None:
-        return ''
-
-    # step out completely if git is not installed
-    try:
-        binary_location = subprocess.check_output(['which', 'git'],
-                                                  cwd=cwd,
-                                                  stderr=subprocess.PIPE,
-                                                  universal_newlines=True)
-        if not binary_location:
-            return branch
-    except subprocess.CalledProcessError:
-        return branch
-
     prompt_scripts = ['/usr/lib/git-core/git-sh-prompt',
                       '/usr/local/etc/bash_completion.d/git-prompt.sh']
 
@@ -74,8 +82,32 @@ def current_branch(cwd=None, pad=True):
     return branch or ''
 
 
+@ensure_git
+def branch_dirty(cwd=None):
+    """Returns a boolean as to whether there are uncommitted files on the
+    current branch of a git repository (if there is one).  Currently only
+    supports git, but could be extended in the future.
+    """
+    try:
+        cmd = ['git', 'status', '--porcelain']
+        s = subprocess.check_output(cmd,
+                                    stderr=subprocess.PIPE,
+                                    cwd=cwd,
+                                    universal_newlines=True)
+        return bool(s)
+    except subprocess.CalledProcessError:
+        return False
+
+
+def branch_color():
+    """Return red if the current branch is dirty, otherwise green"""
+    return (TERM_COLORS['BOLD_RED'] if branch_dirty() else
+            TERM_COLORS['BOLD_GREEN'])
+
+
 DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
-                  '{cwd}{BOLD_RED}{curr_branch} {BOLD_BLUE}${NO_COLOR} ')
+                  '{cwd}{branch_color}{curr_branch} '
+                  '{BOLD_BLUE}${NO_COLOR} ')
 DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
 
 
@@ -92,12 +124,13 @@ if ON_WINDOWS:
     USER = 'USERNAME'
 else:
     USER = 'USER'
-            
+
 
 FORMATTER_DICT = dict(user=os.environ.get(USER, '<user>'),
                       hostname=socket.gethostname().split('.', 1)[0],
                       cwd=lambda: _replace_home(builtins.__xonsh_env__['PWD']),
-                      curr_branch=lambda: current_branch(),
+                      curr_branch=current_branch,
+                      branch_color=branch_color,
                       **TERM_COLORS)
 
 _formatter = string.Formatter()
@@ -220,7 +253,7 @@ def default_env(env=None):
     if ON_WINDOWS:
         # Windows default prompt doesn't work.
         ctx['PROMPT'] = DEFAULT_PROMPT
-        
+
         # remove these bash variables which only cause problems.
         for ev in ['HOME', 'OLDPWD']:
             if ev in ctx:
@@ -236,7 +269,7 @@ def default_env(env=None):
                 del ctx[ev]
 
         ctx['PWD'] = _get_cwd()
-        
+
 
     if env is not None:
         ctx.update(env)
