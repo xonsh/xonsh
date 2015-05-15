@@ -7,6 +7,7 @@ import sys
 import shlex
 import signal
 import locale
+import inspect
 import builtins
 import subprocess
 from io import TextIOWrapper, StringIO
@@ -16,13 +17,13 @@ from contextlib import contextmanager
 from collections import Sequence, MutableMapping, Iterable, namedtuple, \
     MutableSequence, MutableSet
 
-from xonsh.tools import string_types, redirect_stdout, redirect_stderr
+from xonsh.tools import string_types
 from xonsh.tools import suggest_commands, XonshError, ON_POSIX, ON_WINDOWS
 from xonsh.inspectors import Inspector
 from xonsh.environ import default_env
 from xonsh.aliases import DEFAULT_ALIASES, bash_aliases
 from xonsh.jobs import add_job, wait_for_active_job
-from xonsh.jobs import ProcProxy
+from xonsh.proc import ProcProxy, SimpleProcProxy
 
 ENV = None
 BUILTINS_LOADED = False
@@ -322,54 +323,6 @@ def iglobpath(s):
 WRITER_MODES = {'>': 'w', '>>': 'a'}
 
 
-def _run_callable_subproc(alias, args,
-                          captured=True,
-                          prev_proc=None,
-                          stdout=None):
-    """Helper for running callables as a subprocess."""
-    # compute stdin for callable
-    if prev_proc is None:
-        stdin = None
-    elif isinstance(prev_proc, ProcProxy):
-        stdin = prev_proc.stdout
-    else:
-        stdin = StringIO(prev_proc.communicate()[0].decode(), None)
-        stdin.seek(0)
-        stdin, _ = stdin.read(), stdin.close()
-    # Redirect the output streams temporarily. merge with possible
-    # return values from alias function.
-    if stdout is PIPE:
-        # handles captured mode
-        new_stdout, new_stderr = StringIO(), StringIO()
-        with redirect_stdout(new_stdout), redirect_stderr(new_stderr):
-            rtn = alias(args, stdin=stdin)
-        proxy_stdout = new_stdout.getvalue()
-        proxy_stderr = new_stderr.getvalue()
-        if isinstance(rtn, str):
-            proxy_stdout += rtn
-        elif isinstance(rtn, Sequence):
-            if rtn[0]:  # not None nor ''
-                proxy_stdout += rtn[0]
-            if rtn[1]:
-                proxy_stderr += rtn[1]
-        return ProcProxy(proxy_stdout, proxy_stderr)
-    else:
-        # handles uncaptured mode
-        rtn = alias(args, stdin=stdin)
-        rtnout, rtnerr = None, None
-        if isinstance(rtn, str):
-            rtnout = rtn
-            sys.stdout.write(rtn)
-        elif isinstance(rtn, Sequence):
-            if rtn[0]:
-                rtnout = rtn[0]
-                sys.stdout.write(rtn[0])
-            if rtn[1]:
-                rtnerr = rtn[1]
-                sys.stderr.write(rtn[1])
-        return ProcProxy(rtnout, rtnerr)
-
-
 RE_SHEBANG = re.compile(r'#![ \t]*(.+?)$')
 
 
@@ -479,47 +432,55 @@ def run_subproc(cmds, captured=True):
         elif alias is None:
             aliased_cmd = cmd
         elif callable(alias):
-            prev_proc = _run_callable_subproc(alias, cmd[1:],
-                                              captured=captured,
-                                              prev_proc=prev_proc,
-                                              stdout=stdout)
-            continue
+            aliased_cmd = alias
         else:
             aliased_cmd = alias + cmd[1:]
         # compute stdin for subprocess
-        prev_is_proxy = isinstance(prev_proc, ProcProxy)
         if prev_proc is None:
             stdin = None
-        elif prev_is_proxy:
-            stdin = PIPE
         else:
             stdin = prev_proc.stdout
-        subproc_kwargs = {}
-        if ON_POSIX:
-            subproc_kwargs['preexec_fn'] = _subproc_pre
-        try:
-            proc = Popen(aliased_cmd,
-                         universal_newlines=uninew,
-                         env=ENV.detype(),
-                         stdin=stdin,
-                         stdout=stdout, **subproc_kwargs)
-        except PermissionError:
-            e = 'xonsh: subprocess mode: permission denied: {0}'
-            raise XonshError(e.format(aliased_cmd[0]))
-        except FileNotFoundError:
-            cmd = aliased_cmd[0]
-            e = 'xonsh: subprocess mode: command not found: {0}'.format(cmd)
-            e += '\n' + suggest_commands(cmd, ENV, builtins.aliases)
-            raise XonshError(e)
+        if callable(aliased_cmd):
+            prev_is_proxy = True
+            numargs = len(inspect.signature(aliased_cmd).parameters)
+            if numargs == 2:
+                cls = SimpleProcProxy
+            elif numargs == 4:
+                cls = ProcProxy
+            else:
+                e = 'Expected callable with 2 or 4 arguments, not {}'
+                raise XonshError(e.format(numargs))
+            proc = cls(aliased_cmd, cmd[1:],
+                       stdin, stdout, None,
+                       universal_newlines=uninew)
+        else:
+            prev_is_proxy = False
+            subproc_kwargs = {}
+            if ON_POSIX:
+                subproc_kwargs['preexec_fn'] = _subproc_pre
+            try:
+                proc = Popen(aliased_cmd,
+                             universal_newlines=uninew,
+                             env=ENV.detype(),
+                             stdin=stdin,
+                             stdout=stdout, **subproc_kwargs)
+            except PermissionError:
+                e = 'xonsh: subprocess mode: permission denied: {0}'
+                raise XonshError(e.format(aliased_cmd[0]))
+            except FileNotFoundError:
+                cmd = aliased_cmd[0]
+                e = 'xonsh: subprocess mode: command not found: {0}'.format(cmd)
+                e += '\n' + suggest_commands(cmd, ENV, builtins.aliases)
+                raise XonshError(e)
         procs.append(proc)
         prev = None
-        if prev_is_proxy:
-            proc.stdin.write(prev_proc.stdout)
-            proc.stdin.close()
         prev_proc = proc
     for proc in procs[:-1]:
-        proc.stdout.close()
-    if not isinstance(prev_proc, ProcProxy):
+        try:
+            proc.stdout.close()
+        except OSError:
+            pass
+    if not prev_is_proxy:
         add_job({
             'cmds': cmds,
             'pids': [i.pid for i in procs],
@@ -528,16 +489,17 @@ def run_subproc(cmds, captured=True):
         })
     if background:
         return
+    if prev_is_proxy:
+        prev_proc.wait()
     wait_for_active_job()
     if write_target is None:
         # get output
-        if isinstance(prev_proc, ProcProxy):
-            output = prev_proc.stdout
-        elif prev_proc.stdout is not None:
+        output = ''
+        if prev_proc.stdout not in (None, sys.stdout):
             output = prev_proc.stdout.read()
         if captured:
             return output
-    elif last_stdout not in (PIPE, None):
+    elif last_stdout not in (PIPE, None, sys.stdout):
         last_stdout.close()
 
 

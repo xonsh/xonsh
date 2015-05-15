@@ -11,13 +11,71 @@ from subprocess import TimeoutExpired
 
 from xonsh.tools import ON_WINDOWS
 
-ProcProxy = namedtuple('ProcProxy', ['stdout', 'stderr'])
-"""
-A class representing a Python function to be run as a subprocess command.
-"""
+try:
+    _shell_tty = sys.stderr.fileno()
+except OSError:
+    _shell_tty = None
 
 
-if not ON_WINDOWS:
+if ON_WINDOWS:
+    def _continue(obj):
+        pass
+
+
+    def _kill(obj):
+        return obj.kill()
+
+
+    def ignore_sigtstp():
+        pass
+
+
+    def _set_pgrp(info):
+        pass
+
+    def wait_for_active_job():
+        """
+        Wait for the active job to finish, to be killed by SIGINT, or to be
+        suspended by ctrl-z.
+        """
+        _clear_dead_jobs()
+        act = builtins.__xonsh_active_job__
+        if act is None:
+            return
+        job = builtins.__xonsh_all_jobs__[act]
+        obj = job['obj']
+        if job['bg']:
+            return
+        while obj.returncode is None:
+            try:
+                obj.wait(0.01)
+            except TimeoutExpired:
+                pass
+            except KeyboardInterrupt:
+                obj.kill()
+        if obj.poll() is not None:
+            builtins.__xonsh_active_job__ = None
+
+else:
+    def _continue(obj):
+        os.kill(obj.pid, signal.SIGCONT)
+
+
+    def _kill(obj):
+        os.kill(obj.pid, signal.SIGKILL)
+
+
+    def ignore_sigtstp():
+        signal.signal(signal.SIGTSTP, signal.SIG_IGN)
+
+
+    def _set_pgrp(info):
+        try:
+            info['pgrp'] = os.getpgid(info['obj'].pid)
+        except ProcessLookupError:
+            pass
+
+
     _shell_pgrp = os.getpgrp()
 
     _block_when_giving = (signal.SIGTTOU, signal.SIGTTIN, signal.SIGTSTP)
@@ -33,34 +91,42 @@ if not ON_WINDOWS:
             signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
 
 
-try:
-    _shell_tty = sys.stderr.fileno()
-except OSError:
-    _shell_tty = None
+    def wait_for_active_job():
+        """
+        Wait for the active job to finish, to be killed by SIGINT, or to be
+        suspended by ctrl-z.
+        """
+        _clear_dead_jobs()
+        act = builtins.__xonsh_active_job__
+        if act is None:
+            return
+        job = builtins.__xonsh_all_jobs__[act]
+        obj = job['obj']
+        if job['bg']:
+            return
+        pgrp = job['pgrp']
+        obj.done = False
 
-
-def _continue(obj):
-    if not ON_WINDOWS:
-        os.kill(obj.pid, signal.SIGCONT)
-
-
-def _kill(obj):
-    if ON_WINDOWS:
-        obj.kill()
-    else:
-        os.kill(obj.pid, signal.SIGKILL)
-
-
-def ignore_sigtstp():
-    if not ON_WINDOWS:
-        signal.signal(signal.SIGTSTP, signal.SIG_IGN)
+        _give_terminal_to(pgrp)  # give the terminal over to the fg process
+        _, s = os.waitpid(obj.pid, os.WUNTRACED)
+        if os.WIFSTOPPED(s):
+            obj.done = True
+            job['bg'] = True
+            job['status'] = 'stopped'
+            print()  # get a newline because ^Z will have been printed
+            print_one_job(act)
+        elif os.WIFSIGNALED(s):
+            print()  # get a newline because ^C will have been printed
+        if obj.poll() is not None:
+            builtins.__xonsh_active_job__ = None
+        _give_terminal_to(_shell_pgrp)  # give terminal back to the shell
 
 
 def _clear_dead_jobs():
     to_remove = set()
     for num, job in builtins.__xonsh_all_jobs__.items():
         obj = job['obj']
-        if isinstance(obj, ProcProxy) or obj.poll() is not None:
+        if obj.poll() is not None:
             to_remove.add(num)
     for i in to_remove:
         del builtins.__xonsh_all_jobs__[i]
@@ -109,11 +175,7 @@ def add_job(info):
     """
     info['started'] = time.time()
     info['status'] = 'running'
-    if not ON_WINDOWS:
-        try:
-            info['pgrp'] = os.getpgid(info['obj'].pid)
-        except ProcessLookupError:
-            return
+    _set_pgrp(info)
     num = get_next_job_number()
     builtins.__xonsh_all_jobs__[num] = info
     builtins.__xonsh_active_job__ = num
@@ -123,50 +185,6 @@ def add_job(info):
 
 def _default_sigint_handler(num, frame):
     raise KeyboardInterrupt
-
-
-def wait_for_active_job():
-    """
-    Wait for the active job to finish, to be killed by SIGINT, or to be
-    suspended by ctrl-z.
-    """
-    _clear_dead_jobs()
-    act = builtins.__xonsh_active_job__
-    if act is None:
-        return
-    job = builtins.__xonsh_all_jobs__[act]
-    obj = job['obj']
-    if isinstance(obj, ProcProxy):
-        return
-    if job['bg']:
-        return
-    if ON_WINDOWS:
-        while obj.returncode is None:
-            try:
-                obj.wait(0.01)
-            except TimeoutExpired:
-                pass
-            except KeyboardInterrupt:
-                obj.kill()
-    else:
-        pgrp = job['pgrp']
-        obj.done = False
-
-        _give_terminal_to(pgrp)  # give the terminal over to the fg process
-        _, s = os.waitpid(obj.pid, os.WUNTRACED)
-        if os.WIFSTOPPED(s):
-            obj.done = True
-            job['bg'] = True
-            job['status'] = 'stopped'
-            print()  # get a newline because ^Z will have been printed
-            print_one_job(act)
-        elif os.WIFSIGNALED(s):
-            print()  # get a newline because ^C will have been printed
-    if obj.poll() is not None:
-        builtins.__xonsh_active_job__ = None
-
-    if not ON_WINDOWS:
-        _give_terminal_to(_shell_pgrp)  # give terminal back to the shell
 
 
 def kill_all_jobs():
