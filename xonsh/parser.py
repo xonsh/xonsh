@@ -2173,18 +2173,11 @@ class Parser(object):
             del arg._cliarg_action
         return cliargs
 
-    def p_subproc_special_atom(self, p):
-        """subproc_special_atom : PIPE
-                                | GT
-                                | RSHIFT
-        """
-        p[0] = p[1]
-
-    def p_subproc_special(self, p):
-        """subproc_special : subproc_special_atom
-                           | WS subproc_special_atom
-                           | subproc_special_atom WS
-                           | WS subproc_special_atom WS
+    def p_pipe(self, p):
+        """pipe : PIPE
+                | WS PIPE
+                | PIPE WS
+                | WS PIPE WS
         """
         p1 = p[1]
         if len(p) > 2 and len(p1.strip()) == 0:
@@ -2195,8 +2188,8 @@ class Parser(object):
         """subproc : subproc_atoms
                    | subproc_atoms WS
                    | subproc AMPERSAND
-                   | subproc subproc_special subproc_atoms
-                   | subproc subproc_special subproc_atoms WS
+                   | subproc pipe subproc_atoms
+                   | subproc pipe subproc_atoms WS
         """
         lineno = self.lineno
         col = self.col
@@ -2233,6 +2226,10 @@ class Parser(object):
                         | string_literal
                         | REGEXPATH
                         | DOLLAR_NAME
+                        | GT
+                        | LT
+                        | RSHIFT
+                        | IOREDIRECT
                         | AT_LPAREN test RPAREN
                         | DOLLAR_LBRACE test RBRACE
                         | DOLLAR_LPAREN subproc RPAREN
