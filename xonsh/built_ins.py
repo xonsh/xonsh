@@ -11,7 +11,7 @@ import builtins
 import subprocess
 from io import TextIOWrapper, StringIO
 from glob import glob, iglob
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, STDOUT
 from contextlib import contextmanager
 from collections import Sequence, MutableMapping, Iterable, namedtuple, \
     MutableSequence, MutableSet
@@ -198,9 +198,6 @@ def iglobpath(s):
     return iglob(s)
 
 
-WRITER_MODES = {'>': 'w', '>>': 'a'}
-
-
 RE_SHEBANG = re.compile(r'#![ \t]*(.+?)$')
 
 
@@ -258,6 +255,69 @@ def _subproc_pre():
     signal.signal(signal.SIGTSTP, lambda n, f: signal.pause())
 
 
+def _is_redirect(x):
+    return isinstance(x, str) and (x.endswith('>') or x.endswith('<'))
+
+
+def _open(fname, mode):
+    try:
+        return open(fname, mode)
+    except:
+        raise XonshError('xonsh: {0}: no such file or directory'.format(fname))
+
+
+def _setup_streams(orig, r, loc):
+    # special case of redirecting stderr to stdout 
+    if r in {'e>o', 'e>out', 'err>o', 'err>out'}:
+        if 'stderr' in orig:
+            raise XonshError('Multiple redirects for stderr')
+        orig['stderr'] = STDOUT
+        return
+
+    mode = None
+    if r.endswith('>>'):
+        mode = 'a'
+        which = mode[:-2]
+    elif mode.endswith('>'):
+        mode = 'w'
+        which = mode[:-1]
+    elif mode.endswith('<'):
+        which = mode[:-1]
+        mode = 'r'
+
+    if mode == 'r':
+        if len(which) > 0:
+            raise XonshError('Unrecognized redirection command: {}'.format(r))
+        elif 'stdin' in orig:
+            raise XonshError('Multiple inputs for stdin')
+        else:
+            targets = ['stdin']
+    elif mode in {'w', 'a'}:
+        if which in {'&', 'a', 'all'}:
+            if 'stderr' in orig:
+                raise XonshError('Multiple redirects for stderr')
+            elif 'stdout' in orig:
+                raise XonshError('Multiple redirects for stdout')
+            targets = ['stdout', 'stderr']
+        elif which in {'2', 'e', 'err'}:
+            if 'stderr' in orig:
+                raise XonshError('Multiple redirects for stderr')
+            targets = ['stderr']
+        elif which in {'', '1', 'o', 'out'}:
+            if 'stdout' in orig:
+                raise XonshError('Multiple redirects for stdout')
+            targets = ['stdout']
+        else:
+            raise XonshError('Unrecognized redirection command: {}'.format(r))
+        
+        f = _open(loc)
+        for t in targets:
+            orig[t] = f
+
+    else:
+        raise XonshError('Unrecognized redirection command: {}'.format(r))
+
+
 def run_subproc(cmds, captured=True):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
     which may be a list of command line arguments or a string, representing
@@ -278,18 +338,10 @@ def run_subproc(cmds, captured=True):
         background = True
         cmds = cmds[:-1]
     write_target = None
-    if len(cmds) >= 3 and cmds[-2] in WRITER_MODES:
-        write_target = cmds[-1][0]
-        write_mode = WRITER_MODES[cmds[-2]]
+    streams = {}
+    while len(cmds) >= 3 and _is_redirect(cmds[-2]):
+        streams = _setup_streams(streams, cmds[-2], cmds[-1][0])
         cmds = cmds[:-2]
-        if write_target is not None:
-            try:
-                last_stdout = open(write_target, write_mode)
-            except FileNotFoundError:
-                e = 'xonsh: {0}: no such file or directory'
-                raise XonshError(e.format(write_target))
-        else:
-            last_stdout = PIPE
     last_cmd = cmds[-1]
     prev = None
     procs = []
