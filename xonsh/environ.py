@@ -40,6 +40,9 @@ def locale_convert(key):
     return lc_converter
 
 Ensurer = namedtuple('Ensurer', ['validate', 'convert', 'detype'])
+Ensurer.__doc__ = """Named tuples whose elements are functions that 
+represent environment variable validation, conversion, detyping.
+"""
 
 DEFAULT_ENSURERS = {
     re.compile('\w*PATH'): (is_env_path, str_to_env_path, env_path_to_str), 
