@@ -31,6 +31,11 @@ For those of you who want the gritty details.
     inspectors
     completer
     shell
+    base_shell
+    readline_shell
+    prompt_toolkit_shell
+    prompt_toolkit_completer
+    history
 
 
 **Helpers:**

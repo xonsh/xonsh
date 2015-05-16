@@ -432,3 +432,75 @@ def env_path_to_str(x):
     """Converts an environment path to a string by joining on the OS separator.
     """
     return os.pathsep.join(x)
+
+#
+# prompt toolkit tools
+#
+
+class FakeChar(str):
+    """Class that holds a single char and escape sequences that surround it.
+
+    It is used as a workaround for the fact that prompt_toolkit doesn't display
+    colorful prompts correctly.
+    It behaves like normal string created with prefix + char + suffix, but has
+    two differences:
+
+    * len() always returns 2
+
+    * iterating over instance of this class is the same as iterating over
+      the single char - prefix and suffix are ommited.
+    """
+    def __new__(cls, char, prefix='', suffix=''):
+        return str.__new__(cls, prefix + char + suffix)
+
+    def __init__(self, char, prefix='', suffix=''):
+        self.char = char
+        self.prefix = prefix
+        self.suffix = suffix
+        self.length = 2
+        self.iterated = False
+
+    def __len__(self):
+        return self.length
+
+    def __iter__(self):
+        return iter(self.char)
+
+
+RE_HIDDEN_MAX = re.compile('(\001.*?\002)+')
+
+
+def format_prompt_for_prompt_toolkit(prompt):
+    """Uses workaround for passing a string with color sequences.
+
+    Returns list of characters of the prompt, where some characters can be not
+    normal characters but FakeChars - objects that consists of one printable
+    character and escape sequences surrounding it.
+    Returned list can be later passed as a prompt to prompt_toolkit.
+    If prompt contains no printable characters returns equivalent of empty
+    string.
+    """
+    def append_escape_seq(lst, suffix):
+        last = lst.pop()
+        if isinstance(last, FakeChar):
+            lst.append(FakeChar(last.char, prefix=last.prefix, suffix=suffix))
+        else:
+            lst.append(FakeChar(last, suffix=suffix))
+    pos = 0
+    match = RE_HIDDEN_MAX.search(prompt, pos)
+    if match and match.group(0) == prompt:
+        return ['']
+    formatted_prompt = []
+    while match:
+        formatted_prompt.extend(list(prompt[pos:match.start()]))
+        pos = match.end()
+        if not formatted_prompt:
+            formatted_prompt.append(FakeChar(prompt[pos],
+                                             prefix=match.group(0)))
+            pos += 1
+        else:
+            append_escape_seq(formatted_prompt, match.group(0))
+        match = RE_HIDDEN_MAX.search(prompt, pos)
+
+    formatted_prompt.extend(list(prompt[pos:]))
+    return formatted_prompt
