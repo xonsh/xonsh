@@ -1,9 +1,10 @@
-.. _xonsh_shell:
+.. _xonsh_prompt_toolkit_shell:
 
 ******************************************************
-Main Shell Command Prompt (``xonsh.shell``)
+Prompt Toolkit Shell (``xonsh.prompt_toolkit_shell``)
 ******************************************************
 
-.. automodule:: xonsh.shell
+.. automodule:: xonsh.prompt_toolkit_shell
     :members:
+    :undoc-members:
     :inherited-members:
