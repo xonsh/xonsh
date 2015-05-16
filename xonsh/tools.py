@@ -372,8 +372,9 @@ def suggestion_sort_helper(x, y):
     iny = len([i for i in y if i not in x])
     return lendiff + inx + iny
 
+
 def escape_windows_title_string(s):
-    """Returns a string that is usable by the Windows cmd.exe title 
+    """Returns a string that is usable by the Windows cmd.exe title
     builtin.  The escaping is based on details here and emperical testing:
     http://www.robvanderwoude.com/escapechars.php
     """
@@ -387,17 +388,21 @@ def escape_windows_title_string(s):
 # Validators and contervers
 #
 
+
 def is_int(x):
     """Tests if something is an integer"""
     return isinstance(x, int)
+
 
 def always_true(x):
     """Returns True"""
     return True
 
+
 def always_false(x):
     """Returns False"""
     return False
+
 
 def ensure_string(x):
     """Returns a string if x is not a string, and x if it alread is."""
@@ -405,6 +410,7 @@ def ensure_string(x):
         return x
     else:
         return str(x)
+
 
 def is_env_path(x):
     """This tests if something is an environment path, ie a list of strings."""
@@ -414,11 +420,13 @@ def is_env_path(x):
         return isinstance(x, Sequence) and \
                all([isinstance(a, string_types) for a in x])
 
+
 def str_to_env_path(x):
-    """Converts a string to an environment path, ie a list of strings, 
+    """Converts a string to an environment path, ie a list of strings,
     splitting on the OS separator.
     """
     return x.split(os.pathsep)
+
 
 def env_path_to_str(x):
     """Converts an environment path to a string by joining on the OS separator.

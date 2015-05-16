@@ -40,12 +40,12 @@ def locale_convert(key):
     return lc_converter
 
 Ensurer = namedtuple('Ensurer', ['validate', 'convert', 'detype'])
-Ensurer.__doc__ = """Named tuples whose elements are functions that 
+Ensurer.__doc__ = """Named tuples whose elements are functions that
 represent environment variable validation, conversion, detyping.
 """
 
 DEFAULT_ENSURERS = {
-    re.compile('\w*PATH'): (is_env_path, str_to_env_path, env_path_to_str), 
+    re.compile('\w*PATH'): (is_env_path, str_to_env_path, env_path_to_str),
     'LC_CTYPE': (always_false, locale_convert('LC_CTYPE'), ensure_string),
     'LC_MESSAGES': (always_false, locale_convert('LC_MESSAGES'), ensure_string),
     'LC_COLLATE': (always_false, locale_convert('LC_COLLATE'), ensure_string),
@@ -116,8 +116,8 @@ class Env(MutableMapping):
             os.environ.update(self._orig_env)
             self._orig_env = None
 
-    def get_ensurer(self, key, 
-            default=Ensurer(always_true, None, ensure_string)):
+    def get_ensurer(self, key,
+                    default=Ensurer(always_true, None, ensure_string)):
         """Gets an ensurer for the given key."""
         if key in self.ensurers:
             return self.ensurers[key]
@@ -129,7 +129,7 @@ class Env(MutableMapping):
                 ens = ensurer
                 break
         else:
-            ens = default 
+            ens = default
         self.ensurers[key] = ens
         return ens
 
@@ -174,8 +174,6 @@ class Env(MutableMapping):
     def __repr__(self):
         return '{0}.{1}({2})'.format(self.__class__.__module__,
                                      self.__class__.__name__, self._d)
-
-
 
 
 def ensure_git(func):
@@ -274,10 +272,10 @@ DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
 DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
 
 
-
 def _replace_home(x):
     if ON_WINDOWS:
-        home = builtins.__xonsh_env__['HOMEDRIVE'] + builtins.__xonsh_env__['HOMEPATH'][0]
+        home = (builtins.__xonsh_env__['HOMEDRIVE'] +
+                builtins.__xonsh_env__['HOMEPATH'][0])
         return x.replace(home, '~')
     else:
         return x.replace(builtins.__xonsh_env__['HOME'], '~')
@@ -432,7 +430,6 @@ def default_env(env=None):
                 del ctx[ev]
 
         ctx['PWD'] = _get_cwd()
-
 
     if env is not None:
         ctx.update(env)

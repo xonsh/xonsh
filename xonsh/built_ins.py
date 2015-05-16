@@ -177,7 +177,6 @@ def reglob(path, parts=None, i=None):
     return paths
 
 
-
 def regexpath(s):
     """Takes a regular expression string and returns a list of file
     paths that match the regex.
