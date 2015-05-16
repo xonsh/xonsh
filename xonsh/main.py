@@ -21,6 +21,13 @@ parser.add_argument('--no-rc',
                     dest='norc',
                     action='store_true',
                     default=False)
+parser.add_argument('-D',
+                    dest='defines',
+                    help='define an environment variable, in the form of '
+                         '-DNAME=VAL. May be used many times.',
+                    metavar='ITEM',
+                    nargs='*',
+                    default=None)
 parser.add_argument('file',
                     metavar='script-file',
                     help='If present, execute the script in script-file'
@@ -41,6 +48,8 @@ def main(argv=None):
     shell = Shell() if not args.norc else Shell(ctx={})
     from xonsh import imphooks
     env = builtins.__xonsh_env__
+    if args.defines is not None:
+        env.update([x.split('=', 1) for x in args.defines])
     env['XONSH_INTERACTIVE'] = False
     if args.command is not None:
         # run a single command and exit

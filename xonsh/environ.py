@@ -1,18 +1,179 @@
-"""Environment for the xonsh shell.
-"""
+"""Environment for the xonsh shell."""
 import os
 import re
 import locale
 import socket
 import string
+import locale
 import builtins
 import subprocess
 from warnings import warn
 from functools import wraps
+from collections import MutableMapping, MutableSequence, MutableSet, \
+    defaultdict, namedtuple
 
 from xonsh import __version__ as XONSH_VERSION
-from xonsh.tools import TERM_COLORS, ON_WINDOWS, ON_MAC
+from xonsh.tools import TERM_COLORS, ON_WINDOWS, ON_MAC, string_types, is_int,\
+    always_true, always_false, ensure_string, is_env_path, str_to_env_path, \
+    env_path_to_str
 from xonsh.dirstack import _get_cwd
+
+LOCALE_CATS = {
+    'LC_CTYPE': locale.LC_CTYPE,
+    'LC_COLLATE': locale.LC_COLLATE,
+    'LC_NUMERIC': locale.LC_NUMERIC,
+    'LC_MONETARY': locale.LC_MONETARY,
+    'LC_TIME': locale.LC_TIME,
+}
+try:
+    LOCALE_CATS['LC_MESSAGES'] = locale.LC_MESSAGES
+except AttributeError:
+    pass
+
+
+def locale_convert(key):
+    """Creates a converter for a locale key."""
+    def lc_converter(val):
+        locale.setlocale(LOCALE_CATS[key], val)
+        val = locale.setlocale(LOCALE_CATS[key])
+        return val
+    return lc_converter
+
+Ensurer = namedtuple('Ensurer', ['validate', 'convert', 'detype'])
+Ensurer.__doc__ = """Named tuples whose elements are functions that
+represent environment variable validation, conversion, detyping.
+"""
+
+DEFAULT_ENSURERS = {
+    re.compile('\w*PATH'): (is_env_path, str_to_env_path, env_path_to_str),
+    'LC_CTYPE': (always_false, locale_convert('LC_CTYPE'), ensure_string),
+    'LC_MESSAGES': (always_false, locale_convert('LC_MESSAGES'), ensure_string),
+    'LC_COLLATE': (always_false, locale_convert('LC_COLLATE'), ensure_string),
+    'LC_NUMERIC': (always_false, locale_convert('LC_NUMERIC'), ensure_string),
+    'LC_MONETARY': (always_false, locale_convert('LC_MONETARY'), ensure_string),
+    'LC_TIME': (always_false, locale_convert('LC_TIME'), ensure_string),
+    'XONSH_HISTORY_SIZE': (is_int, int, str),
+    }
+
+
+class Env(MutableMapping):
+    """A xonsh environment, whose variables have limited typing
+    (unlike BASH). Most variables are, by default, strings (like BASH).
+    However, the following rules also apply based on variable-name:
+
+    * PATH: any variable whose name ends in PATH is a list of strings.
+    * XONSH_HISTORY_SIZE: this variable is an int.
+    * LC_* (locale categories): locale catergory names get/set the Python
+      locale via locale.getlocale() and locale.setlocale() functions.
+
+    An Env instance may be converted to an untyped version suitable for
+    use in a subprocess.
+    """
+
+    _arg_regex = re.compile(r'ARG(\d+)')
+
+    def __init__(self, *args, **kwargs):
+        """If no initial environment is given, os.environ is used."""
+        self._d = {}
+        self.ensurers = {k: Ensurer(*v) for k, v in DEFAULT_ENSURERS.items()}
+        if len(args) == 0 and len(kwargs) == 0:
+            args = (os.environ, )
+        for key, val in dict(*args, **kwargs).items():
+            self[key] = val
+        self._detyped = None
+        self._orig_env = None
+
+    def detype(self):
+        if self._detyped is not None:
+            return self._detyped
+        ctx = {}
+        for key, val in self._d.items():
+            if callable(val) or isinstance(val, MutableMapping):
+                continue
+            if not isinstance(key, string_types):
+                key = str(key)
+            ensurer = self.get_ensurer(key)
+            val = ensurer.detype(val)
+            ctx[key] = val
+        self._detyped = ctx
+        return ctx
+
+    def replace_env(self):
+        """Replaces the contents of os.environ with a detyped version
+        of the xonsh environement.
+        """
+        if self._orig_env is None:
+            self._orig_env = dict(os.environ)
+        os.environ.clear()
+        os.environ.update(self.detype())
+
+    def undo_replace_env(self):
+        """Replaces the contents of os.environ with a detyped version
+        of the xonsh environement.
+        """
+        if self._orig_env is not None:
+            os.environ.clear()
+            os.environ.update(self._orig_env)
+            self._orig_env = None
+
+    def get_ensurer(self, key,
+                    default=Ensurer(always_true, None, ensure_string)):
+        """Gets an ensurer for the given key."""
+        if key in self.ensurers:
+            return self.ensurers[key]
+        for k, ensurer in self.ensurers.items():
+            if isinstance(k, string_types):
+                continue
+            m = k.match(key)
+            if m is not None:
+                ens = ensurer
+                break
+        else:
+            ens = default
+        self.ensurers[key] = ens
+        return ens
+
+    #
+    # Mutable mapping interface
+    #
+
+    def __getitem__(self, key):
+        m = self._arg_regex.match(key)
+        if (m is not None) and (key not in self._d) and ('ARGS' in self._d):
+            args = self._d['ARGS']
+            ix = int(m.group(1))
+            if ix >= len(args):
+                e = "Not enough arguments given to access ARG{0}."
+                raise IndexError(e.format(ix))
+            return self._d['ARGS'][ix]
+        val = self._d[key]
+        if isinstance(val, (MutableSet, MutableSequence, MutableMapping)):
+            self._detyped = None
+        return self._d[key]
+
+    def __setitem__(self, key, val):
+        ensurer = self.get_ensurer(key)
+        if not ensurer.validate(val):
+            val = ensurer.convert(val)
+        self._d[key] = val
+        self._detyped = None
+
+    def __delitem__(self, key):
+        del self._d[key]
+        self._detyped = None
+
+    def __iter__(self):
+        yield from self._d
+
+    def __len__(self):
+        return len(self._d)
+
+    def __str__(self):
+        return str(self._d)
+
+    def __repr__(self):
+        return '{0}.{1}({2})'.format(self.__class__.__module__,
+                                     self.__class__.__name__, self._d)
 
 
 def ensure_git(func):
@@ -111,10 +272,10 @@ DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
 DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
 
 
-
 def _replace_home(x):
     if ON_WINDOWS:
-        home = builtins.__xonsh_env__['HOMEDRIVE'] + builtins.__xonsh_env__['HOMEPATH'][0]
+        home = (builtins.__xonsh_env__['HOMEDRIVE'] +
+                builtins.__xonsh_env__['HOMEPATH'][0])
         return x.replace(home, '~')
     else:
         return x.replace(builtins.__xonsh_env__['HOME'], '~')
@@ -269,7 +430,6 @@ def default_env(env=None):
                 del ctx[ev]
 
         ctx['PWD'] = _get_cwd()
-
 
     if env is not None:
         ctx.update(env)
