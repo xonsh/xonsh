@@ -208,7 +208,7 @@ def _get_runnable_name(fname):
     if os.path.isfile(fname) and fname != os.path.basename(fname):
         return fname
     for d in builtins.__xonsh_env__['PATH']:
-        if fname in os.listdir(d):
+        if os.path.isdir(d) and fname in os.listdir(d):
             return os.path.join(d, fname)
     return None
 
