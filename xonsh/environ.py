@@ -228,6 +228,8 @@ def ensure_hg(func):
         if path == []:
             return
 
+        kwargs['root'] = os.path.sep.join(path)
+
         # step out completely if hg is not installed
         if locate_binary('hg', kwargs['cwd']) is None:
             return
@@ -290,11 +292,9 @@ def call_hg_command(command, cwd):
 
 
 @ensure_hg
-def get_hg_branch(cwd=None):
+def get_hg_branch(cwd=None, root=None):
     branch = None
     active_bookmark = None
-
-    root = call_hg_command(['root'], cwd)
 
     if root is not None:
         root = root.strip(os.linesep)
@@ -340,7 +340,7 @@ def git_dirty_working_directory(cwd):
 
 
 @ensure_hg
-def hg_dirty_working_directory(cwd=None):
+def hg_dirty_working_directory(cwd=None, root=None):
     id = call_hg_command(['identify', '--id'], cwd)
     if id is None:
         return False
