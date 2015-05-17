@@ -323,7 +323,7 @@ def run_subproc(cmds, captured=True):
             continue
         stdout = last_stdout if cmd is last_cmd else PIPE
         uninew = cmd is last_cmd
-        alias = builtins.aliases.get(cmd[0], None)
+        alias = ENV.get('ALIASES', {}).get(cmd[0], None)
         if callable(alias):
             aliased_cmd = alias
         else:
@@ -373,7 +373,7 @@ def run_subproc(cmds, captured=True):
             except FileNotFoundError:
                 cmd = aliased_cmd[0]
                 e = 'xonsh: subprocess mode: command not found: {0}'.format(cmd)
-                e += '\n' + suggest_commands(cmd, ENV, builtins.aliases)
+                e += '\n' + suggest_commands(cmd, ENV, ENV.get('ALIASES', {}))
                 raise XonshError(e)
         procs.append(proc)
         prev = None
@@ -460,8 +460,8 @@ def load_builtins(execer=None):
     builtins.evalx = None if execer is None else execer.eval
     builtins.execx = None if execer is None else execer.exec
     builtins.compilex = None if execer is None else execer.compile
-    builtins.default_aliases = builtins.aliases = Aliases(DEFAULT_ALIASES)
-    builtins.aliases.update(bash_aliases())
+    ENV['ALIASES'] = Aliases(DEFAULT_ALIASES)
+    ENV['ALIASES'].update(bash_aliases())
     BUILTINS_LOADED = True
 
 
@@ -494,7 +494,6 @@ def unload_builtins():
              'evalx',
              'execx',
              'compilex',
-             'default_aliases',
              '__xonsh_all_jobs__',
              '__xonsh_active_job__',
              '__xonsh_ensure_list_of_strs__', ]

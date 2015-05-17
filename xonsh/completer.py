@@ -73,6 +73,8 @@ class Completer(object):
         rtn : list of str
             Possible completions of prefix, sorted alphabetically.
         """
+        env = builtins.__xonsh_env__
+        aliases = env.get('ALIASES', {})
         space = ' '  # intern some strings for faster appending
         slash = '/'
         dot = '.'
@@ -114,7 +116,7 @@ class Completer(object):
             else:
                 rtn |= {s for s in ctx if s.startswith(prefix)}
         rtn |= {s for s in dir(builtins) if s.startswith(prefix)}
-        rtn |= {s + space for s in builtins.aliases if s.startswith(prefix)}
+        rtn |= {s + space for s in aliases if s.startswith(prefix)}
         rtn |= self.path_complete(prefix)
         return sorted(rtn)
 
@@ -273,13 +275,15 @@ class Completer(object):
         return attrs
 
     def _all_commands(self):
-        path = builtins.__xonsh_env__.get('PATH', [])
+        env = builtins.__xonsh_env__
+        aliases = env.get('ALIASES', {})
+        path = env.get('PATH', [])
         # did PATH change?
         path_hash = hash(tuple(path))
         cache_valid = path_hash == self._path_checksum
         self._path_checksum = path_hash
         # did aliases change?
-        al_hash = hash(tuple(sorted(builtins.aliases.keys())))
+        al_hash = hash(tuple(sorted(aliases.keys())))
         self._alias_checksum = al_hash
         cache_valid = cache_valid and al_hash == self._alias_checksum
         pm = self._path_mtime
@@ -295,6 +299,6 @@ class Completer(object):
         allcmds = set()
         for d in filter(os.path.isdir, path):
             allcmds |= set(os.listdir(d))
-        allcmds |= set(builtins.aliases.keys())
+        allcmds |= set(aliases.keys())
         self._cmds_cache = frozenset(allcmds)
         return self._cmds_cache
