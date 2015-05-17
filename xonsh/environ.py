@@ -14,6 +14,10 @@ from xonsh import __version__ as XONSH_VERSION
 from xonsh.tools import TERM_COLORS, ON_WINDOWS, ON_MAC
 from xonsh.dirstack import _get_cwd
 
+try:
+    import hglib
+except ImportError:
+    hglib = None
 
 def ensure_git(func):
     @wraps(func)
@@ -40,13 +44,32 @@ def ensure_git(func):
         return func(*args, **kwargs)
     return wrapper
 
+def ensure_hg(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        kwargs['cwd'] = kwargs.get('cwd', _get_cwd())
+        if kwargs['cwd'] is None:
+            return
+
+        # bail if hglib is not installed
+        if hglib is None:
+            return
+
+        try:
+            c = hglib.open(kwargs['cwd'])
+            c.tip()
+        except OSError:
+            # hglib is installed but hg isn't, so bail
+            return
+        except hglib.error.CommandError:
+            # cwd is not an hg repository
+            return
+
+        return func(*args, **kwargs)
+    return wrapper
 
 @ensure_git
-def current_branch(cwd=None, pad=True):
-    """Gets the branch for a current working directory. Returns None
-    if the cwd is not a repository.  This currently only works for git,
-    but should be extended in the future.
-    """
+def get_git_branch(cwd=None):
     branch = None
     prompt_scripts = ['/usr/lib/git-core/git-sh-prompt',
                       '/usr/local/etc/bash_completion.d/git-prompt.sh']
@@ -77,17 +100,40 @@ def current_branch(cwd=None, pad=True):
         except subprocess.CalledProcessError:
             pass
 
+    return branch
+
+@ensure_hg
+def get_hg_branch(cwd=None):
+    branch = None
+
+    client = hglib.open(cwd)
+    branch = client.branch().decode('utf8')
+    bookmarks, current_ind = client.bookmarks()
+    if current_ind == -1:
+        active_bookmark = None
+    else:
+        active_bookmark = bookmarks[current_ind][0].decode('utf8')
+
+    if active_bookmark is not None:
+        return "{0}, {1}".format(branch, active_bookmark)
+
+    return branch
+
+def current_branch(pad=True):
+    """Gets the branch for a current working directory. Returns None
+    if the cwd is not a repository.  This currently only works for git and hg
+    and should be extended in the future.
+    """
+
+    branch = get_git_branch() or get_hg_branch()
+
     if pad and branch is not None:
         branch = ' ' + branch
+
     return branch or ''
 
-
 @ensure_git
-def branch_dirty(cwd=None):
-    """Returns a boolean as to whether there are uncommitted files on the
-    current branch of a git repository (if there is one).  Currently only
-    supports git, but could be extended in the future.
-    """
+def git_dirty_working_directory(cwd):
     try:
         cmd = ['git', 'status', '--porcelain']
         s = subprocess.check_output(cmd,
@@ -98,10 +144,21 @@ def branch_dirty(cwd=None):
     except subprocess.CalledProcessError:
         return False
 
+@ensure_hg
+def hg_dirty_working_directory(cwd):
+    client = hglib.open(cwd)
+    return not client.summary()[str.encode('commit')]
+
+
+def dirty_working_directory(cwd=None):
+    """Returns a boolean as to whether there are uncommitted files in version
+    control repository we are inside. Currently supports git and hg.
+    """
+    return git_dirty_working_directory() or hg_dirty_working_directory()
 
 def branch_color():
     """Return red if the current branch is dirty, otherwise green"""
-    return (TERM_COLORS['BOLD_RED'] if branch_dirty() else
+    return (TERM_COLORS['BOLD_RED'] if dirty_working_directory() else
             TERM_COLORS['BOLD_GREEN'])
 
 
