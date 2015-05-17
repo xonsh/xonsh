@@ -82,7 +82,8 @@ def handle_name(state, token, stream):
             if n2 is not None:
                 if (n2.start == n.end and
                         (n2.type == tokenize.NUMBER or
-                        (n2.type == tokenize.NAME and n2.string in _REDIRECT_NAMES))):
+                            (n2.type == tokenize.NAME and
+                             n2.string in _REDIRECT_NAMES))):
                     string += n2.string
                     state['last'] = n2
                     yield _new_token('IOREDIRECT', string, token.start)
@@ -102,6 +103,7 @@ def handle_number(state, token, stream):
     """
     Function for handling number tokens
     """
+    state['last'] = token
     if state['pymode'][-1][0]:
         yield _new_token('NUMBER', token.string, token.start)
     else:
@@ -119,7 +121,8 @@ def handle_number(state, token, stream):
             if n2 is not None:
                 if (n2.start == n.end and
                         (n2.type == tokenize.NUMBER or
-                        (n2.type == tokenize.NAME and n2.string in _REDIRECT_NAMES))):
+                            (n2.type == tokenize.NAME and
+                             n2.string in _REDIRECT_NAMES))):
                     string += n2.string
                     state['last'] = n2
                     yield _new_token('IOREDIRECT', string, token.start)
