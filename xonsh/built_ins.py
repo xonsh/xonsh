@@ -227,7 +227,9 @@ def _is_binary(fname, limit=80):
 
 
 def _un_shebang(x):
-    if x.startswith('/usr/bin') or x.startswith('/usr/local/bin') or x.startswith('/bin'):
+    if x == '/usr/bin/env':
+        return []
+    elif any(x.startswith(i) for i in ['/usr/bin', '/usr/local/bin', '/bin']):
         x = os.path.basename(x)
     elif x.endswith('python') or x.endswith('python.exe'):
         x = 'python'
