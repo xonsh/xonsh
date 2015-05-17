@@ -341,7 +341,7 @@ def git_dirty_working_directory(cwd):
 
 @ensure_hg
 def hg_dirty_working_directory(cwd=None, root=None):
-    id = call_hg_command(['identify', '--id'], cwd)
+    id = call_hg_command(['identify', '--id'], cwd).strip(os.linesep)
     if id is None:
         return False
     return id.endswith('+')
