@@ -58,8 +58,8 @@ def handle_name(state, token, stream):
     typ = 'NAME'
     state['last'] = token
     if state['pymode'][-1][0]:
-        if string in kwlist:
-            typ = string.upper()
+        if token.string in kwlist:
+            typ = token.string.upper()
         yield _new_token(typ, token.string, token.start)
     else:
         # subprocess mode
@@ -74,26 +74,27 @@ def handle_name(state, token, stream):
             #   * this isn't one of our special redirect names
             yield _new_token('NAME', token.string, token.start)
             if n is not None:
-                state['last'] = n
                 yield from handle_token(state, n, stream)
         elif n is not None and n.string in {'<', '>', '>>'}:
             # looks like a redirect to me!
             string += n.string
             n2 = next(stream, None)
             if n2 is not None:
-                state['last'] = n2
                 if (n2.start == n.end and
                         (n2.type == tokenize.NUMBER or
                         (n2.type == tokenize.NAME and n2.string in _REDIRECT_NAMES))):
                     string += n2.string
+                    state['last'] = n2
                     yield _new_token('IOREDIRECT', string, token.start)
                 else:
                     yield _new_token('IOREDIRECT', string, token.start)
                     yield from handle_token(state, n2, stream)
+            else:
+                state['last'] = n
+                yield _new_token('IOREDIRECT', string, token.start)
         else:
             yield _new_token('NAME', token.string, token.start)
             if n is not None:
-                state['last'] = n
                 yield from handle_token(state, n, stream)
 
 
@@ -111,25 +112,26 @@ def handle_number(state, token, stream):
                 n.start != token.end:
             yield _new_token('NUMBER', token.string, token.start)
             if n is not None:
-                state['last'] = n
                 yield from handle_token(state, n, stream)
         elif n is not None and n.string in {'<', '>', '>>'}:
             string += n.string
             n2 = next(stream, None)
             if n2 is not None:
-                state['last'] = n2
                 if (n2.start == n.end and
                         (n2.type == tokenize.NUMBER or
                         (n2.type == tokenize.NAME and n2.string in _REDIRECT_NAMES))):
                     string += n2.string
+                    state['last'] = n2
                     yield _new_token('IOREDIRECT', string, token.start)
                 else:
                     yield _new_token('IOREDIRECT', string, token.start)
                     yield from handle_token(state, n2, stream)
+            else:
+                state['last'] = n
+                yield _new_token('IOREDIRECT', string, token.start)
         else:
             yield _new_token('NUMBER', token.string, token.start)
             if n is not None:
-                state['last'] = n
                 yield from handle_token(state, n, stream)
 
 
@@ -487,6 +489,7 @@ class Lexer(object):
     #
     tokens = tuple(token_map.values()) + (
         'NAME',                  # name tokens
+        'NUMBER',                # numbers
         'WS',                    # whitespace in subprocess mode
         'REGEXPATH',             # regex escaped with backticks
         'IOREDIRECT',            # subprocess io redirection token
