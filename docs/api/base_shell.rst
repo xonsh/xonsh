@@ -1,9 +1,10 @@
-.. _xonsh_shell:
+.. _xonsh_base_shell:
 
 ******************************************************
-Main Shell Command Prompt (``xonsh.shell``)
+Base Shell Class (``xonsh.base_shell``)
 ******************************************************
 
-.. automodule:: xonsh.shell
+.. automodule:: xonsh.base_shell
     :members:
+    :undoc-members:
     :inherited-members:
