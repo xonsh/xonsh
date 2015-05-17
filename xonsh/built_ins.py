@@ -378,7 +378,7 @@ def run_subproc(cmds, captured=True):
         # set standard error
         if 'stderr' in streams:
             stderr = streams['stderr']
-        uninew = cmd is last_cmd
+        uninew = ix == last_cmd
         alias = builtins.aliases.get(cmd[0], None)
         if _is_runnable_name(cmd[0]):
             try:
