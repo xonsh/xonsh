@@ -297,20 +297,24 @@ def get_hg_branch(cwd=None, root=None):
     active_bookmark = None
 
     if root is not None:
-        root = root.strip(os.linesep)
         branch_path = os.path.sep.join([root, '.hg', 'branch'])
         bookmark_path = os.path.sep.join([root, '.hg', 'bookmarks.current'])
+
         if os.path.exists(branch_path):
             with open(branch_path, 'r') as branch_file:
-                branch = branch_file.read().strip(os.linesep)
+                branch = branch_file.read()
+        else:
+            branch = call_hg_command(['branch'], cwd)
+
         if os.path.exists(bookmark_path):
             with open(bookmark_path, 'r') as bookmark_file:
-                active_bookmark = bookmark_file.read().strip(os.linesep)
+                active_bookmark = bookmark_file.read()
 
     if active_bookmark is not None:
-        return "{0}, {1}".format(branch, active_bookmark)
+        return "{0}, {1}".format(
+            *(b.strip(os.linesep) for b in (branch, active_bookmark)))
 
-    return branch
+    return branch.strip(os.linesep)
 
 
 def current_branch(pad=True):
