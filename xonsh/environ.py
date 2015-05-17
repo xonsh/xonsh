@@ -18,11 +18,6 @@ from xonsh.tools import TERM_COLORS, ON_WINDOWS, ON_MAC, string_types, is_int,\
     env_path_to_str
 from xonsh.dirstack import _get_cwd
 
-try:
-    import hglib
-except ImportError:
-    hglib = None
-
 LOCALE_CATS = {
     'LC_CTYPE': locale.LC_CTYPE,
     'LC_COLLATE': locale.LC_COLLATE,
@@ -181,6 +176,20 @@ class Env(MutableMapping):
                                      self.__class__.__name__, self._d)
 
 
+def locate_binary(name, cwd):
+    try:
+        binary_location = subprocess.check_output(['which', name],
+                                                  cwd=cwd,
+                                                  stderr=subprocess.PIPE,
+                                                  universal_newlines=True)
+        if not binary_location:
+            return
+    except subprocess.CalledProcessError:
+        return
+
+    return binary_location
+
+
 def ensure_git(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -194,17 +203,12 @@ def ensure_git(func):
             return
 
         # step out completely if git is not installed
-        try:
-            binary_location = subprocess.check_output(['which', 'git'],
-                                                      cwd=kwargs['cwd'],
-                                                      stderr=subprocess.PIPE,
-                                                      universal_newlines=True)
-            if not binary_location:
-                return
-        except subprocess.CalledProcessError:
+        if locate_binary('git', kwargs['cwd']) is None:
             return
+
         return func(*args, **kwargs)
     return wrapper
+
 
 def ensure_hg(func):
     @wraps(func)
@@ -213,22 +217,24 @@ def ensure_hg(func):
         if kwargs['cwd'] is None:
             return
 
-        # bail if hglib is not installed
-        if hglib is None:
+        # walk up the directory tree to see if we are inside an hg repo
+        path = kwargs['cwd'].split(os.path.sep)
+        while len(path) > 0:
+            if os.path.exists(os.path.sep.join(path + ['.hg'])):
+                break
+            del path[-1]
+
+        # bail if we aren't inside a repository
+        if path == []:
             return
 
-        try:
-            c = hglib.open(kwargs['cwd'])
-            c.tip()
-        except OSError:
-            # hglib is installed but hg isn't, so bail
-            return
-        except hglib.error.CommandError:
-            # cwd is not an hg repository
+        # step out completely if hg is not installed
+        if locate_binary('hg', kwargs['cwd']) is None:
             return
 
         return func(*args, **kwargs)
     return wrapper
+
 
 @ensure_git
 def get_git_branch(cwd=None):
@@ -264,35 +270,61 @@ def get_git_branch(cwd=None):
 
     return branch
 
+
+def call_hg_command(command, cwd):
+    # Override user configurations settings and aliases
+    hg_env = os.environ.copy()
+    hg_env['HGRCPATH'] = ""
+
+    s = None
+    try:
+        s = subprocess.check_output(['hg'] + command,
+                                    stderr=subprocess.PIPE,
+                                    cwd=cwd,
+                                    universal_newlines=True,
+                                    env=hg_env)
+    except subprocess.CalledProcessError:
+        pass
+
+    return s
+
+
 @ensure_hg
 def get_hg_branch(cwd=None):
     branch = None
+    active_bookmark = None
 
-    client = hglib.open(cwd)
-    branch = client.branch().decode('utf8')
-    bookmarks, current_ind = client.bookmarks()
-    if current_ind == -1:
-        active_bookmark = None
-    else:
-        active_bookmark = bookmarks[current_ind][0].decode('utf8')
+    root = call_hg_command(['root'], cwd)
+
+    if root is not None:
+        root = root.strip(os.linesep)
+        branch_path = os.path.sep.join([root, '.hg', 'branch'])
+        bookmark_path = os.path.sep.join([root, '.hg', 'bookmarks.current'])
+        if os.path.exists(branch_path):
+            with open(branch_path, 'r') as branch_file:
+                branch = branch_file.read().strip(os.linesep)
+        if os.path.exists(bookmark_path):
+            with open(bookmark_path, 'r') as bookmark_file:
+                active_bookmark = bookmark_file.read().strip(os.linesep)
 
     if active_bookmark is not None:
         return "{0}, {1}".format(branch, active_bookmark)
 
     return branch
 
+
 def current_branch(pad=True):
     """Gets the branch for a current working directory. Returns None
     if the cwd is not a repository.  This currently only works for git and hg
     and should be extended in the future.
     """
-
     branch = get_git_branch() or get_hg_branch()
 
     if pad and branch is not None:
         branch = ' ' + branch
 
     return branch or ''
+
 
 @ensure_git
 def git_dirty_working_directory(cwd):
@@ -306,10 +338,13 @@ def git_dirty_working_directory(cwd):
     except subprocess.CalledProcessError:
         return False
 
+
 @ensure_hg
-def hg_dirty_working_directory(cwd):
-    client = hglib.open(cwd)
-    return not client.summary()[str.encode('commit')]
+def hg_dirty_working_directory(cwd=None):
+    id = call_hg_command(['identify', '--id'], cwd)
+    if id is None:
+        return False
+    return id.endswith('+')
 
 
 def dirty_working_directory(cwd=None):
@@ -317,6 +352,7 @@ def dirty_working_directory(cwd=None):
     control repository we are inside. Currently supports git and hg.
     """
     return git_dirty_working_directory() or hg_dirty_working_directory()
+
 
 def branch_color():
     """Return red if the current branch is dirty, otherwise green"""
