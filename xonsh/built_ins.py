@@ -324,19 +324,20 @@ def run_subproc(cmds, captured=True):
         stdout = last_stdout if cmd is last_cmd else PIPE
         uninew = cmd is last_cmd
         alias = builtins.aliases.get(cmd[0], None)
-        n = _get_runnable_name(cmd[0])
-        if n is not None:
-            try:
-                aliased_cmd = get_script_subproc_command(n, cmd[1:])
-            except PermissionError:
-                e = 'xonsh: subprocess mode: permission denied: {0}'
-                raise XonshError(e.format(cmd[0]))
-        elif alias is None:
-            aliased_cmd = cmd
-        elif callable(alias):
+        if callable(alias):
             aliased_cmd = alias
         else:
-            aliased_cmd = alias + cmd[1:]
+            if alias is not None:
+                cmd = alias + cmd[1:]
+            n = _get_runnable_name(cmd[0])
+            if n is None:
+                aliased_cmd = cmd
+            else:
+                try:
+                    aliased_cmd = get_script_subproc_command(n, cmd[1:])
+                except PermissionError:
+                    e = 'xonsh: subprocess mode: permission denied: {0}'
+                    raise XonshError(e.format(cmd[0]))
         # compute stdin for subprocess
         if prev_proc is None:
             stdin = None
