@@ -204,8 +204,13 @@ WRITER_MODES = {'>': 'w', '>>': 'a'}
 RE_SHEBANG = re.compile(r'#![ \t]*(.+?)$')
 
 
-def _is_runnable_name(fname):
-    return os.path.isfile(fname) and fname != os.path.basename(fname)
+def _get_runnable_name(fname):
+    if os.path.isfile(fname) and fname != os.path.basename(fname):
+        return fname
+    for d in builtins.__xonsh_env__['PATH']:
+        if os.path.isdir(d) and fname in os.listdir(d):
+            return os.path.join(d, fname)
+    return None
 
 
 def _is_binary(fname, limit=80):
@@ -219,6 +224,18 @@ def _is_binary(fname, limit=80):
             if char == b'':
                 return False
     return False
+
+
+def _un_shebang(x):
+    if x == '/usr/bin/env':
+        return []
+    elif any(x.startswith(i) for i in ['/usr/bin', '/usr/local/bin', '/bin']):
+        x = os.path.basename(x)
+    elif x.endswith('python') or x.endswith('python.exe'):
+        x = 'python'
+    if x == 'xonsh':
+        return ['python', '-m', 'xonsh.main']
+    return [x]
 
 
 def get_script_subproc_command(fname, args):
@@ -249,6 +266,12 @@ def get_script_subproc_command(fname, args):
             interp = shlex.split(interp)
         else:
             interp = ['xonsh']
+
+    if ON_WINDOWS:
+        o = []
+        for i in interp:
+            o.extend(_un_shebang(i))
+        interp = o
 
     return interp + [fname] + args
 
@@ -301,9 +324,10 @@ def run_subproc(cmds, captured=True):
         stdout = last_stdout if cmd is last_cmd else PIPE
         uninew = cmd is last_cmd
         alias = builtins.aliases.get(cmd[0], None)
-        if _is_runnable_name(cmd[0]):
+        n = _get_runnable_name(cmd[0])
+        if n is not None:
             try:
-                aliased_cmd = get_script_subproc_command(cmd[0], cmd[1:])
+                aliased_cmd = get_script_subproc_command(n, cmd[1:])
             except PermissionError:
                 e = 'xonsh: subprocess mode: permission denied: {0}'
                 raise XonshError(e.format(cmd[0]))
