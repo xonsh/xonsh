@@ -2,6 +2,6 @@ language: python
 python:
   - 3.4
 install:
-  - pip install ply nose
+  - pip install ply nose prompt_toolkit
 script:
   - nosetests

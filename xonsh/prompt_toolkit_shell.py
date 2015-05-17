@@ -7,10 +7,10 @@ from prompt_toolkit.shortcuts import create_cli, create_eventloop
 from pygments.token import Token
 
 from xonsh.base_shell import BaseShell
-from xonsh.history import LimitedFileHistory
 from xonsh.pyghooks import XonshLexer
 from xonsh.tools import format_prompt_for_prompt_toolkit
 from xonsh.prompt_toolkit_completer import PromptToolkitCompleter
+from xonsh.prompt_toolkit_history import LimitedFileHistory
 
 
 def setup_history():
