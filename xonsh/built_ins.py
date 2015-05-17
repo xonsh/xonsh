@@ -330,7 +330,6 @@ def run_subproc(cmds, captured=True):
     Lastly, the captured argument affects only the last real command.
     """
     global ENV
-    print(cmds)
     background = False
     if cmds[-1] == '&':
         background = True
@@ -340,7 +339,7 @@ def run_subproc(cmds, captured=True):
     prev = None
     procs = []
     prev_proc = None
-    for cmd in cmds:
+    for ix, cmd in enumerate(cmds):
         stdin = None
         stdout = None
         stderr = None
@@ -369,17 +368,16 @@ def run_subproc(cmds, captured=True):
             stdin = prev_proc.stdout
         # set standard output
         if 'stdout' in streams:
-            if cmd is not last_cmd:
+            if ix != last_cmd:
                 raise XonshError('Multiple redirects for stdout')
             stdout = streams['stdout']
-        elif captured or cmd is not last_cmd:
+        elif captured or ix != last_cmd:
             stdout = PIPE
         else:
             stdout = None
         # set standard error
         if 'stderr' in streams:
             stderr = streams['stderr']
-        print(stdin, stdout, stderr)
         uninew = cmd is last_cmd
         alias = builtins.aliases.get(cmd[0], None)
         if _is_runnable_name(cmd[0]):
@@ -394,11 +392,6 @@ def run_subproc(cmds, captured=True):
             aliased_cmd = alias
         else:
             aliased_cmd = alias + cmd[1:]
-        # compute stdin for subprocess
-        if prev_proc is None:
-            stdin = None
-        else:
-            stdin = prev_proc.stdout
         if callable(aliased_cmd):
             prev_is_proxy = True
             numargs = len(inspect.signature(aliased_cmd).parameters)
