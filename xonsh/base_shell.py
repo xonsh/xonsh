@@ -1,4 +1,5 @@
 """The base class for xonsh shell"""
+import os
 import sys
 import builtins
 import traceback

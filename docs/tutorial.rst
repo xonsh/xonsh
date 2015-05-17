@@ -254,6 +254,8 @@ Running subprocess commands should work like any other in any other shell.
     >>> ls
     build  docs     README.rst  setup.py  xonsh           __pycache__
     dist   license  scripts     tests     xonsh.egg-info
+    >>> dir scripts
+    xonsh  xonsh.bat
     >>> git status
     On branch master
     Your branch is up-to-date with 'origin/master'.
@@ -316,8 +318,9 @@ The determination between the two modes is done well ahead of any execution.
 You do not need to worry about partially executed commands - that is
 impossible.
 
-If absolutely want to run a subprocess command, you can always force xonsh
-to do so with the syntax that we will see in the following sections.
+If you absolutely want to run a subprocess command, you can always
+force xonsh to do so with the syntax that we will see in the following
+sections.
 
 
 Captured Subprocess with ``$()``
@@ -523,6 +526,9 @@ If you start a program in the foreground (with no ampersand), you can suspend
 that program's execution and return to the xonsh prompt by pressing Control-Z.
 This will give control of the terminal back to xonsh, and will keep the program
 paused in the background.
+
+.. note:: Suspending processes via Control-Z is not yet supported when
+	  running on Windows.
 
 To unpause the program and bring it back to the foreground, you can use the
 ``fg`` command.  To unpause the program have it continue in the background
@@ -956,7 +962,8 @@ following:
 
 That's All, Folks
 ======================
-To leave xonsh, hit ``Crtl-D``, type ``EOF``, type ``quit``, or type ``exit``.
+To leave xonsh, hit ``Ctrl-D``, type ``EOF``, type ``quit``, or type ``exit``.
+On Windows you can also type ``Ctrl-Z``.
 
 .. code-block:: xonshcon
 

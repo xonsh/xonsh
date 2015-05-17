@@ -67,6 +67,7 @@ Contents
     :maxdepth: 1
 
     tutorial
+    windows
     api/index
     devguide/
     previous/index

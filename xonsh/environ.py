@@ -176,6 +176,20 @@ class Env(MutableMapping):
                                      self.__class__.__name__, self._d)
 
 
+def locate_binary(name, cwd):
+    try:
+        binary_location = subprocess.check_output(['which', name],
+                                                  cwd=cwd,
+                                                  stderr=subprocess.PIPE,
+                                                  universal_newlines=True)
+        if not binary_location:
+            return
+    except subprocess.CalledProcessError:
+        return
+
+    return binary_location
+
+
 def ensure_git(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -189,25 +203,43 @@ def ensure_git(func):
             return
 
         # step out completely if git is not installed
-        try:
-            binary_location = subprocess.check_output(['which', 'git'],
-                                                      cwd=kwargs['cwd'],
-                                                      stderr=subprocess.PIPE,
-                                                      universal_newlines=True)
-            if not binary_location:
-                return
-        except subprocess.CalledProcessError:
+        if locate_binary('git', kwargs['cwd']) is None:
             return
+
+        return func(*args, **kwargs)
+    return wrapper
+
+
+def ensure_hg(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        kwargs['cwd'] = kwargs.get('cwd', _get_cwd())
+        if kwargs['cwd'] is None:
+            return
+
+        # walk up the directory tree to see if we are inside an hg repo
+        path = kwargs['cwd'].split(os.path.sep)
+        while len(path) > 0:
+            if os.path.exists(os.path.sep.join(path + ['.hg'])):
+                break
+            del path[-1]
+
+        # bail if we aren't inside a repository
+        if path == []:
+            return
+
+        kwargs['root'] = os.path.sep.join(path)
+
+        # step out completely if hg is not installed
+        if locate_binary('hg', kwargs['cwd']) is None:
+            return
+
         return func(*args, **kwargs)
     return wrapper
 
 
 @ensure_git
-def current_branch(cwd=None, pad=True):
-    """Gets the branch for a current working directory. Returns None
-    if the cwd is not a repository.  This currently only works for git,
-    but should be extended in the future.
-    """
+def get_git_branch(cwd=None):
     branch = None
     prompt_scripts = ['/usr/lib/git-core/git-sh-prompt',
                       '/usr/local/etc/bash_completion.d/git-prompt.sh']
@@ -238,17 +270,68 @@ def current_branch(cwd=None, pad=True):
         except subprocess.CalledProcessError:
             pass
 
+    return branch
+
+
+def call_hg_command(command, cwd):
+    # Override user configurations settings and aliases
+    hg_env = os.environ.copy()
+    hg_env['HGRCPATH'] = ""
+
+    s = None
+    try:
+        s = subprocess.check_output(['hg'] + command,
+                                    stderr=subprocess.PIPE,
+                                    cwd=cwd,
+                                    universal_newlines=True,
+                                    env=hg_env)
+    except subprocess.CalledProcessError:
+        pass
+
+    return s
+
+
+@ensure_hg
+def get_hg_branch(cwd=None, root=None):
+    branch = None
+    active_bookmark = None
+
+    if root is not None:
+        branch_path = os.path.sep.join([root, '.hg', 'branch'])
+        bookmark_path = os.path.sep.join([root, '.hg', 'bookmarks.current'])
+
+        if os.path.exists(branch_path):
+            with open(branch_path, 'r') as branch_file:
+                branch = branch_file.read()
+        else:
+            branch = call_hg_command(['branch'], cwd)
+
+        if os.path.exists(bookmark_path):
+            with open(bookmark_path, 'r') as bookmark_file:
+                active_bookmark = bookmark_file.read()
+
+    if active_bookmark is not None:
+        return "{0}, {1}".format(
+            *(b.strip(os.linesep) for b in (branch, active_bookmark)))
+
+    return branch.strip(os.linesep)
+
+
+def current_branch(pad=True):
+    """Gets the branch for a current working directory. Returns None
+    if the cwd is not a repository.  This currently only works for git and hg
+    and should be extended in the future.
+    """
+    branch = get_git_branch() or get_hg_branch()
+
     if pad and branch is not None:
         branch = ' ' + branch
+
     return branch or ''
 
 
 @ensure_git
-def branch_dirty(cwd=None):
-    """Returns a boolean as to whether there are uncommitted files on the
-    current branch of a git repository (if there is one).  Currently only
-    supports git, but could be extended in the future.
-    """
+def git_dirty_working_directory(cwd):
     try:
         cmd = ['git', 'status', '--porcelain']
         s = subprocess.check_output(cmd,
@@ -260,9 +343,24 @@ def branch_dirty(cwd=None):
         return False
 
 
+@ensure_hg
+def hg_dirty_working_directory(cwd=None, root=None):
+    id = call_hg_command(['identify', '--id'], cwd).strip(os.linesep)
+    if id is None:
+        return False
+    return id.endswith('+')
+
+
+def dirty_working_directory(cwd=None):
+    """Returns a boolean as to whether there are uncommitted files in version
+    control repository we are inside. Currently supports git and hg.
+    """
+    return git_dirty_working_directory() or hg_dirty_working_directory()
+
+
 def branch_color():
     """Return red if the current branch is dirty, otherwise green"""
-    return (TERM_COLORS['BOLD_RED'] if branch_dirty() else
+    return (TERM_COLORS['BOLD_RED'] if dirty_working_directory() else
             TERM_COLORS['BOLD_GREEN'])
 
 
