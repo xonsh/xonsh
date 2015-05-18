@@ -191,19 +191,22 @@ def locate_binary(name, cwd):
 
 
 def ensure_git(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        # Get cwd or bail
-        kwargs['cwd'] = kwargs.get('cwd', _get_cwd())
-        if kwargs['cwd'] is None:
-            return
-
-        # step out completely if git is not installed
-        if locate_binary('git', kwargs['cwd']) is None:
-            return
-
-        return func(*args, **kwargs)
-    return wrapper
+    if ON_WINDOWS:
+        return func
+    else:
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            # Get cwd or bail
+            kwargs['cwd'] = kwargs.get('cwd', _get_cwd())
+            if kwargs['cwd'] is None:
+                return
+    
+            # step out completely if git is not installed
+            if locate_binary('git', kwargs['cwd']) is None:
+                return
+    
+            return func(*args, **kwargs)
+        return wrapper
 
 
 def ensure_hg(func):
@@ -231,11 +234,7 @@ def ensure_hg(func):
             return
 
         return func(*args, **kwargs)
-    if ON_WINDOWS:
-        # checking first is too slow on Windows
-        return func
-    else:
-        return wrapper
+    return wrapper
 
 
 @ensure_git
@@ -333,7 +332,7 @@ def current_branch(pad=True):
 
 
 @ensure_git
-def git_dirty_working_directory(cwd):
+def git_dirty_working_directory(cwd=None):
     try:
         cmd = ['git', 'status', '--porcelain']
         s = subprocess.check_output(cmd,
