@@ -1,9 +1,10 @@
-.. _xonsh_shell:
+.. _xonsh_history:
 
 ******************************************************
-Main Shell Command Prompt (``xonsh.shell``)
+History Object (``xonsh.history``)
 ******************************************************
 
-.. automodule:: xonsh.shell
+.. automodule:: xonsh.history
     :members:
+    :undoc-members:
     :inherited-members:

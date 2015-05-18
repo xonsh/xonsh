@@ -6,7 +6,6 @@ import re
 import sys
 import shlex
 import signal
-import locale
 import inspect
 import builtins
 import subprocess
@@ -20,7 +19,7 @@ from collections import Sequence, MutableMapping, Iterable, namedtuple, \
 from xonsh.tools import string_types
 from xonsh.tools import suggest_commands, XonshError, ON_POSIX, ON_WINDOWS
 from xonsh.inspectors import Inspector
-from xonsh.environ import default_env
+from xonsh.environ import Env, default_env
 from xonsh.aliases import DEFAULT_ALIASES, bash_aliases
 from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.proc import ProcProxy, SimpleProcProxy
@@ -28,126 +27,6 @@ from xonsh.proc import ProcProxy, SimpleProcProxy
 ENV = None
 BUILTINS_LOADED = False
 INSPECTOR = Inspector()
-LOCALE_CATS = {
-    'LC_CTYPE': locale.LC_CTYPE,
-    'LC_COLLATE': locale.LC_COLLATE,
-    'LC_NUMERIC': locale.LC_NUMERIC,
-    'LC_MONETARY': locale.LC_MONETARY,
-    'LC_TIME': locale.LC_TIME
-}
-
-try:
-    LOCALE_CATS['LC_MESSAGES'] = locale.LC_MESSAGES
-except AttributeError:
-    pass
-
-class Env(MutableMapping):
-    """A xonsh environment, whose variables have limited typing
-    (unlike BASH). Most variables are, by default, strings (like BASH).
-    However, the following rules also apply based on variable-name:
-
-    * PATH: any variable whose name ends in PATH is a list of strings.
-    * XONSH_HISTORY_SIZE: this variable is an int.
-    * LC_* (locale categories): locale catergory names get/set the Python
-      locale via locale.getlocale() and locale.setlocale() functions.
-
-    An Env instance may be converted to an untyped version suitable for
-    use in a subprocess.
-    """
-
-    _arg_regex = re.compile(r'ARG(\d+)')
-
-    def __init__(self, *args, **kwargs):
-        """If no initial environment is given, os.environ is used."""
-        self._d = {}
-        if len(args) == 0 and len(kwargs) == 0:
-            args = (os.environ, )
-        for key, val in dict(*args, **kwargs).items():
-            self[key] = val
-        self._detyped = None
-        self._orig_env = None
-
-    def detype(self):
-        if self._detyped is not None:
-            return self._detyped
-        ctx = {}
-        for key, val in self._d.items():
-            if callable(val) or isinstance(val, MutableMapping):
-                continue
-            if not isinstance(key, string_types):
-                key = str(key)
-            if 'PATH' in key:
-                val = os.pathsep.join(val)
-            elif not isinstance(val, string_types):
-                val = str(val)
-            ctx[key] = val
-        self._detyped = ctx
-        return ctx
-
-    def replace_env(self):
-        """Replaces the contents of os.environ with a detyped version
-        of the xonsh environement.
-        """
-        if self._orig_env is None:
-            self._orig_env = dict(os.environ)
-        os.environ.clear()
-        os.environ.update(self.detype())
-
-    def undo_replace_env(self):
-        """Replaces the contents of os.environ with a detyped version
-        of the xonsh environement.
-        """
-        if self._orig_env is not None:
-            os.environ.clear()
-            os.environ.update(self._orig_env)
-            self._orig_env = None
-
-    #
-    # Mutable mapping interface
-    #
-
-    def __getitem__(self, key):
-        m = self._arg_regex.match(key)
-        if (m is not None) and (key not in self._d) and ('ARGS' in self._d):
-            args = self._d['ARGS']
-            ix = int(m.group(1))
-            if ix >= len(args):
-                e = "Not enough arguments given to access ARG{0}."
-                raise IndexError(e.format(ix))
-            return self._d['ARGS'][ix]
-        val = self._d[key]
-        if isinstance(val, (MutableSet, MutableSequence, MutableMapping)):
-            self._detyped = None
-        return self._d[key]
-
-    def __setitem__(self, key, val):
-        if isinstance(key, string_types) and 'PATH' in key:
-            val = val.split(os.pathsep) if isinstance(val, string_types) \
-                  else val
-        elif key == 'XONSH_HISTORY_SIZE' and not isinstance(val, int):
-            val = int(val)
-        elif key in LOCALE_CATS:
-            locale.setlocale(LOCALE_CATS[key], val)
-            val = locale.setlocale(LOCALE_CATS[key])
-        self._d[key] = val
-        self._detyped = None
-
-    def __delitem__(self, key):
-        del self._d[key]
-        self._detyped = None
-
-    def __iter__(self):
-        yield from self._d
-
-    def __len__(self):
-        return len(self._d)
-
-    def __str__(self):
-        return str(self._d)
-
-    def __repr__(self):
-        return '{0}.{1}({2})'.format(self.__class__.__module__,
-                                     self.__class__.__name__, self._d)
 
 
 class Aliases(MutableMapping):
@@ -298,7 +177,6 @@ def reglob(path, parts=None, i=None):
     return paths
 
 
-
 def regexpath(s):
     """Takes a regular expression string and returns a list of file
     paths that match the regex.
@@ -326,8 +204,13 @@ WRITER_MODES = {'>': 'w', '>>': 'a'}
 RE_SHEBANG = re.compile(r'#![ \t]*(.+?)$')
 
 
-def _is_runnable_name(fname):
-    return os.path.isfile(fname) and fname != os.path.basename(fname)
+def _get_runnable_name(fname):
+    if os.path.isfile(fname) and fname != os.path.basename(fname):
+        return fname
+    for d in builtins.__xonsh_env__['PATH']:
+        if os.path.isdir(d) and fname in os.listdir(d):
+            return os.path.join(d, fname)
+    return None
 
 
 def _is_binary(fname, limit=80):
@@ -341,6 +224,18 @@ def _is_binary(fname, limit=80):
             if char == b'':
                 return False
     return False
+
+
+def _un_shebang(x):
+    if x == '/usr/bin/env':
+        return []
+    elif any(x.startswith(i) for i in ['/usr/bin', '/usr/local/bin', '/bin']):
+        x = os.path.basename(x)
+    elif x.endswith('python') or x.endswith('python.exe'):
+        x = 'python'
+    if x == 'xonsh':
+        return ['python', '-m', 'xonsh.main']
+    return [x]
 
 
 def get_script_subproc_command(fname, args):
@@ -371,6 +266,12 @@ def get_script_subproc_command(fname, args):
             interp = shlex.split(interp)
         else:
             interp = ['xonsh']
+
+    if ON_WINDOWS:
+        o = []
+        for i in interp:
+            o.extend(_un_shebang(i))
+        interp = o
 
     return interp + [fname] + args
 
@@ -423,18 +324,20 @@ def run_subproc(cmds, captured=True):
         stdout = last_stdout if cmd is last_cmd else PIPE
         uninew = cmd is last_cmd
         alias = builtins.aliases.get(cmd[0], None)
-        if _is_runnable_name(cmd[0]):
-            try:
-                aliased_cmd = get_script_subproc_command(cmd[0], cmd[1:])
-            except PermissionError:
-                e = 'xonsh: subprocess mode: permission denied: {0}'
-                raise XonshError(e.format(cmd[0]))
-        elif alias is None:
-            aliased_cmd = cmd
-        elif callable(alias):
+        if callable(alias):
             aliased_cmd = alias
         else:
-            aliased_cmd = alias + cmd[1:]
+            if alias is not None:
+                cmd = alias + cmd[1:]
+            n = _get_runnable_name(cmd[0])
+            if n is None:
+                aliased_cmd = cmd
+            else:
+                try:
+                    aliased_cmd = get_script_subproc_command(n, cmd[1:])
+                except PermissionError:
+                    e = 'xonsh: subprocess mode: permission denied: {0}'
+                    raise XonshError(e.format(cmd[0]))
         # compute stdin for subprocess
         if prev_proc is None:
             stdin = None

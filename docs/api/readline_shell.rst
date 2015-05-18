@@ -1,9 +1,10 @@
-.. _xonsh_shell:
+.. _xonsh_readline_shell:
 
 ******************************************************
-Main Shell Command Prompt (``xonsh.shell``)
+Readline Shell (``xonsh.readline_shell``)
 ******************************************************
 
-.. automodule:: xonsh.shell
+.. automodule:: xonsh.readline_shell
     :members:
+    :undoc-members:
     :inherited-members:
