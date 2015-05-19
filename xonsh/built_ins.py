@@ -491,7 +491,9 @@ def run_subproc(cmds, captured=True):
             except FileNotFoundError:
                 cmd = aliased_cmd[0]
                 e = 'xonsh: subprocess mode: command not found: {0}'.format(cmd)
-                e += '\n' + suggest_commands(cmd, ENV, builtins.aliases)
+                sug = suggest_commands(cmd, ENV, builtins.aliases)
+                if len(sug.strip()) > 0:
+                    e += '\n' + suggest_commands(cmd, ENV, builtins.aliases)
                 raise XonshError(e)
         procs.append(proc)
         prev = None
