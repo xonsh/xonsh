@@ -65,15 +65,18 @@ def handle_name(state, token, stream):
         # subprocess mode
         n = next(stream, None)
         string = token.string
-        if n is not None and n.string in {'<', '>', '>>'} and n.start == token.end and token.string in _REDIRECT_NAME:
+        if (n is not None and n.string in {'<', '>', '>>'} and
+                n.start == token.end and token.string in _REDIRECT_NAMES):
             # looks like a redirect to me!
+            e = n.end
             string += n.string
             n2 = next(stream, None)
             if n2 is not None and n2.string == '&' and n2.start == n.end:
                 string += n2.string
+                e = n2.end
                 n2 = next(stream, None)
             if n2 is not None:
-                if (n2.start == n.end and
+                if (n2.start == e and
                         (n2.type == tokenize.NUMBER or
                             (n2.type == tokenize.NAME and
                              n2.string in _REDIRECT_NAMES))):
@@ -102,13 +105,16 @@ def _make_special_handler(token_type):
             n = next(stream, None)
             string = token.string
             if n is not None and n.string in {'<', '>', '>>'} and n.start == token.end:
+                e = n.end
                 string += n.string
                 n2 = next(stream, None)
                 if n2 is not None and n2.string == '&' and n2.start == n.end:
+                    state['last'] = n2
                     string += n2.string
+                    e = n2.end
                     n2 = next(stream, None)
                 if n2 is not None:
-                    if (n2.start == n.end and
+                    if (n2.start == e and
                             (n2.type == tokenize.NUMBER or
                                 (n2.type == tokenize.NAME and
                                  n2.string in _REDIRECT_NAMES))):
