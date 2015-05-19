@@ -35,7 +35,7 @@ For those of you who want the gritty details.
     readline_shell
     prompt_toolkit_shell
     prompt_toolkit_completer
-    history
+    prompt_toolkit_history
 
 
 **Helpers:**
