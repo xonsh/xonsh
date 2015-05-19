@@ -21,3 +21,6 @@ pip-selfcheck.json
 bin/
 lib/
 include/
+
+# Mac
+.DS_Store
