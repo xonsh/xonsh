@@ -293,7 +293,7 @@ def _subproc_pre():
     signal.signal(signal.SIGTSTP, lambda n, f: signal.pause())
 
 
-_REDIR_NAME = "(o(?:ut)?|e(?:rr)?|a(?:ll)?|\d?)"
+_REDIR_NAME = "(o(?:ut)?|e(?:rr)?|a(?:ll)?|&?\d?)"
 _REDIR_REGEX = re.compile("{r}(>?>|<){r}$".format(r=_REDIR_NAME))
 _MODES = {'>>': 'a', '>': 'w', '<': 'r'}
 
@@ -303,6 +303,9 @@ def _is_redirect(x):
 
 
 def _open(fname, mode):
+    # file descriptors
+    if isinstance(fname, int):
+        return fname
     try:
         return open(fname, mode)
     except:
@@ -311,14 +314,28 @@ def _open(fname, mode):
 
 def _redirect_io(streams, r, loc=None):
     # special case of redirecting stderr to stdout
-    if r in {'e>o', 'e>out', 'err>o', 'err>o', '2>1',
-             'e>1', 'err>1', '2>out', '2>o'}:
+    if r.replace('&','') in {'e>o', 'e>out', 'err>o', 'err>o', '2>1',
+                             'e>1', 'err>1', '2>out', '2>o'}:
         if 'stderr' in streams:
             raise XonshError('Multiple redirects for stderr')
         streams['stderr'] = STDOUT
         return
 
     orig, mode, dest = _REDIR_REGEX.match(r).groups()
+
+    # redirect to fd
+    if dest.startswith('&'):
+        try:
+            dest = int(dest[1:])
+            if loc is None:
+                loc, dest = dest, ''
+            else:
+                e = 'Unrecognized redirection command: {}'.format(r)
+                raise XonshError(e)
+        except (ValueError, XonshError):
+            raise
+        except:
+            pass
 
     mode = _MODES.get(mode, None)
 
