@@ -297,6 +297,7 @@ _REDIR_NAME = "(o(?:ut)?|e(?:rr)?|a(?:ll)?|\d?)"
 _REDIR_REGEX = re.compile("{r}(>?>|<){r}$".format(r=_REDIR_NAME))
 _MODES = {'>>': 'a', '>': 'w', '<': 'r'}
 
+
 def _is_redirect(x):
     return isinstance(x, str) and _REDIR_REGEX.match(x)
 
@@ -309,9 +310,9 @@ def _open(fname, mode):
 
 
 def _redirect_io(streams, r, loc=None):
-    # special case of redirecting stderr to stdout 
-    if r in {'e>o', 'e>out', 'err>o', 'err>out',
-             '2>1', '2>&1', 'e>1', 'err>1', 'e>&1', 'err>&1'}:
+    # special case of redirecting stderr to stdout
+    if r in {'e>o', 'e>out', 'err>o', 'err>o', '2>1',
+             'e>1', 'err>1', '2>out', '2>o'}:
         if 'stderr' in streams:
             raise XonshError('Multiple redirects for stderr')
         streams['stderr'] = STDOUT
@@ -334,18 +335,27 @@ def _redirect_io(streams, r, loc=None):
                 raise XonshError('Multiple redirects for stderr')
             elif 'stdout' in streams:
                 raise XonshError('Multiple redirects for stdout')
+            elif len(dest) > 0:
+                e = 'Unrecognized redirection command: {}'.format(r)
+                raise XonshError(e)
             targets = ['stdout', 'stderr']
         elif orig in {'2', 'e', 'err'}:
             if 'stderr' in streams:
                 raise XonshError('Multiple redirects for stderr')
+            elif len(dest) > 0:
+                e = 'Unrecognized redirection command: {}'.format(r)
+                raise XonshError(e)
             targets = ['stderr']
         elif orig in {'', '1', 'o', 'out'}:
             if 'stdout' in streams:
                 raise XonshError('Multiple redirects for stdout')
+            elif len(dest) > 0:
+                e = 'Unrecognized redirection command: {}'.format(r)
+                raise XonshError(e)
             targets = ['stdout']
         else:
             raise XonshError('Unrecognized redirection command: {}'.format(r))
-        
+
         f = _open(loc, mode)
         for t in targets:
             streams[t] = f
