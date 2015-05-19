@@ -11,7 +11,7 @@ import builtins
 import subprocess
 from io import TextIOWrapper, StringIO
 from glob import glob, iglob
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, STDOUT
 from contextlib import contextmanager
 from collections import Sequence, MutableMapping, Iterable, namedtuple, \
     MutableSequence, MutableSet
@@ -198,9 +198,6 @@ def iglobpath(s):
     return iglob(s)
 
 
-WRITER_MODES = {'>': 'w', '>>': 'a'}
-
-
 RE_SHEBANG = re.compile(r'#![ \t]*(.+?)$')
 
 
@@ -296,6 +293,67 @@ def _subproc_pre():
     signal.signal(signal.SIGTSTP, lambda n, f: signal.pause())
 
 
+_REDIR_NAME = "(o(?:ut)?|e(?:rr)?|a(?:ll)?|\d?)"
+_REDIR_REGEX = re.compile("{r}(>?>|<){r}$".format(r=_REDIR_NAME))
+_MODES = {'>>': 'a', '>': 'w', '<': 'r'}
+
+def _is_redirect(x):
+    return isinstance(x, str) and _REDIR_REGEX.match(x)
+
+
+def _open(fname, mode):
+    try:
+        return open(fname, mode)
+    except:
+        raise XonshError('xonsh: {0}: no such file or directory'.format(fname))
+
+
+def _redirect_io(streams, r, loc=None):
+    # special case of redirecting stderr to stdout 
+    if r in {'e>o', 'e>out', 'err>o', 'err>out',
+             '2>1', '2>&1', 'e>1', 'err>1', 'e>&1', 'err>&1'}:
+        if 'stderr' in streams:
+            raise XonshError('Multiple redirects for stderr')
+        streams['stderr'] = STDOUT
+        return
+
+    orig, mode, dest = _REDIR_REGEX.match(r).groups()
+
+    mode = _MODES.get(mode, None)
+
+    if mode == 'r':
+        if len(orig) > 0 or len(dest) > 0:
+            raise XonshError('Unrecognized redirection command: {}'.format(r))
+        elif 'stdin' in streams:
+            raise XonshError('Multiple inputs for stdin')
+        else:
+            streams['stdin'] = _open(loc, mode)
+    elif mode in {'w', 'a'}:
+        if orig in {'&', 'a', 'all'}:
+            if 'stderr' in streams:
+                raise XonshError('Multiple redirects for stderr')
+            elif 'stdout' in streams:
+                raise XonshError('Multiple redirects for stdout')
+            targets = ['stdout', 'stderr']
+        elif orig in {'2', 'e', 'err'}:
+            if 'stderr' in streams:
+                raise XonshError('Multiple redirects for stderr')
+            targets = ['stderr']
+        elif orig in {'', '1', 'o', 'out'}:
+            if 'stdout' in streams:
+                raise XonshError('Multiple redirects for stdout')
+            targets = ['stdout']
+        else:
+            raise XonshError('Unrecognized redirection command: {}'.format(r))
+        
+        f = _open(loc, mode)
+        for t in targets:
+            streams[t] = f
+
+    else:
+        raise XonshError('Unrecognized redirection command: {}'.format(r))
+
+
 def run_subproc(cmds, captured=True):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
     which may be a list of command line arguments or a string, representing
@@ -310,34 +368,55 @@ def run_subproc(cmds, captured=True):
     Lastly, the captured argument affects only the last real command.
     """
     global ENV
-    last_stdout = PIPE if captured else None
     background = False
     if cmds[-1] == '&':
         background = True
         cmds = cmds[:-1]
     write_target = None
-    if len(cmds) >= 3 and cmds[-2] in WRITER_MODES:
-        write_target = cmds[-1][0]
-        write_mode = WRITER_MODES[cmds[-2]]
-        cmds = cmds[:-2]
-        if write_target is not None:
-            try:
-                last_stdout = open(write_target, write_mode)
-            except FileNotFoundError:
-                e = 'xonsh: {0}: no such file or directory'
-                raise XonshError(e.format(write_target))
-        else:
-            last_stdout = PIPE
-    last_cmd = cmds[-1]
+    last_cmd = len(cmds)-1
     prev = None
     procs = []
     prev_proc = None
-    for cmd in cmds:
+    for ix, cmd in enumerate(cmds):
+        stdin = None
+        stdout = None
+        stderr = None
         if isinstance(cmd, string_types):
             prev = cmd
             continue
-        stdout = last_stdout if cmd is last_cmd else PIPE
-        uninew = cmd is last_cmd
+        streams = {}
+        while True:
+            if len(cmd) >= 3 and _is_redirect(cmd[-2]):
+                _redirect_io(streams, cmd[-2], cmd[-1])
+                cmd = cmd[:-2]
+            elif len(cmd) >= 2 and _is_redirect(cmd[-1]):
+                _redirect_io(streams, cmd[-1])
+                cmd = cmd[:-1]
+            elif len(cmd) >= 3 and cmd[0] == '<':
+                _redirect_io(streams, cmd[0], cmd[1])
+                cmd = cmd[2:]
+            else:
+                break
+        # set standard input
+        if 'stdin' in streams:
+            if prev_proc is not None:
+                raise XonshError('Multiple inputs for stdin')
+            stdin = streams['stdin']
+        elif prev_proc is not None:
+            stdin = prev_proc.stdout
+        # set standard output
+        if 'stdout' in streams:
+            if ix != last_cmd:
+                raise XonshError('Multiple redirects for stdout')
+            stdout = streams['stdout']
+        elif captured or ix != last_cmd:
+            stdout = PIPE
+        else:
+            stdout = None
+        # set standard error
+        if 'stderr' in streams:
+            stderr = streams['stderr']
+        uninew = ix == last_cmd
         alias = builtins.aliases.get(cmd[0], None)
         if callable(alias):
             aliased_cmd = alias
@@ -353,11 +432,6 @@ def run_subproc(cmds, captured=True):
                 except PermissionError:
                     e = 'xonsh: subprocess mode: permission denied: {0}'
                     raise XonshError(e.format(cmd[0]))
-        # compute stdin for subprocess
-        if prev_proc is None:
-            stdin = None
-        else:
-            stdin = prev_proc.stdout
         if callable(aliased_cmd):
             prev_is_proxy = True
             numargs = len(inspect.signature(aliased_cmd).parameters)
@@ -369,7 +443,7 @@ def run_subproc(cmds, captured=True):
                 e = 'Expected callable with 2 or 4 arguments, not {}'
                 raise XonshError(e.format(numargs))
             proc = cls(aliased_cmd, cmd[1:],
-                       stdin, stdout, None,
+                       stdin, stdout, stderr,
                        universal_newlines=uninew)
         else:
             prev_is_proxy = False
@@ -381,7 +455,9 @@ def run_subproc(cmds, captured=True):
                              universal_newlines=uninew,
                              env=ENV.detype(),
                              stdin=stdin,
-                             stdout=stdout, **subproc_kwargs)
+                             stdout=stdout,
+                             stderr=stderr,
+                             **subproc_kwargs)
             except PermissionError:
                 e = 'xonsh: subprocess mode: permission denied: {0}'
                 raise XonshError(e.format(aliased_cmd[0]))
