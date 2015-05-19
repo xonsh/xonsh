@@ -205,8 +205,16 @@ def _get_runnable_name(fname):
     if os.path.isfile(fname) and fname != os.path.basename(fname):
         return fname
     for d in builtins.__xonsh_env__['PATH']:
-        if os.path.isdir(d) and fname in os.listdir(d):
-            return os.path.join(d, fname)
+        if os.path.isdir(d):
+            files = os.listdir(d)
+            if fname in files:
+                return os.path.join(d, fname)
+            if ON_WINDOWS:
+                PATHEXT = builtins.__xonsh_env__.get('PATHEXT', [])
+                for dirfile in files:
+                    froot, ext = os.path.splitext(dirfile)
+                    if fname == froot and ext.upper() in PATHEXT:
+                        return os.path.join(d, dirfile)
     return None
 
 
@@ -248,6 +256,13 @@ def get_script_subproc_command(fname, args):
     # if the file is a binary, we should call it directly
     if _is_binary(fname):
         return [fname] + args
+
+    if ON_WINDOWS:
+        # Windows can execute various filetypes directly
+        # as given in PATHEXT
+        _, ext = os.path.splitext(fname)
+        if ext.upper() in builtins.__xonsh_env__.get('PATHEXT', []):
+            return [fname] + args
 
     # find interpreter
     with open(fname, 'rb') as f:
