@@ -30,7 +30,7 @@ _op_map = {
         # basic operators
         '+': 'PLUS', '-': 'MINUS', '*': 'TIMES', '/': 'DIVIDE',
         '//': 'DOUBLEDIV', '%': 'MOD', '**': 'POW', '|': 'PIPE',
-        '&': 'AMPERSAND', '~': 'TILDE', '^': 'XOR', '<<': 'LSHIFT',
+        '~': 'TILDE', '^': 'XOR', '<<': 'LSHIFT',
         '>>': 'RSHIFT', '<': 'LT', '<=': 'LE', '>': 'GT', '>=': 'GE',
         '==': 'EQ', '!=': 'NE', '->': 'RARROW',
         # assignment operators
@@ -65,20 +65,13 @@ def handle_name(state, token, stream):
         # subprocess mode
         n = next(stream, None)
         string = token.string
-        if n is None or \
-                n.start != token.end or \
-                token.string not in _REDIRECT_NAMES:
-            # we want to treat this as a normal name if:
-            #   * there is no next token, or
-            #   * the next token isn't adjacent, or
-            #   * this isn't one of our special redirect names
-            yield _new_token('NAME', token.string, token.start)
-            if n is not None:
-                yield from handle_token(state, n, stream)
-        elif n is not None and n.string in {'<', '>', '>>'}:
+        if n is not None and n.string in {'<', '>', '>>'} and n.start == token.end and token.string in _REDIRECT_NAME:
             # looks like a redirect to me!
             string += n.string
             n2 = next(stream, None)
+            if n2 is not None and n2.string == '&' and n2.start == n.end:
+                string += n2.string
+                n2 = next(stream, None)
             if n2 is not None:
                 if (n2.start == n.end and
                         (n2.type == tokenize.NUMBER or
@@ -99,43 +92,47 @@ def handle_name(state, token, stream):
                 yield from handle_token(state, n, stream)
 
 
-def handle_number(state, token, stream):
-    """
-    Function for handling number tokens
-    """
-    state['last'] = token
-    if state['pymode'][-1][0]:
-        yield _new_token('NUMBER', token.string, token.start)
-    else:
-        # subprocess mode
-        n = next(stream, None)
-        string = token.string
-        if n is None or \
-                n.start != token.end:
-            yield _new_token('NUMBER', token.string, token.start)
-            if n is not None:
-                yield from handle_token(state, n, stream)
-        elif n is not None and n.string in {'<', '>', '>>'}:
-            string += n.string
-            n2 = next(stream, None)
-            if n2 is not None:
-                if (n2.start == n.end and
-                        (n2.type == tokenize.NUMBER or
-                            (n2.type == tokenize.NAME and
-                             n2.string in _REDIRECT_NAMES))):
-                    string += n2.string
-                    state['last'] = n2
-                    yield _new_token('IOREDIRECT', string, token.start)
-                else:
-                    yield _new_token('IOREDIRECT', string, token.start)
-                    yield from handle_token(state, n2, stream)
-            else:
-                state['last'] = n
-                yield _new_token('IOREDIRECT', string, token.start)
+def _make_special_handler(token_type):
+    def inner_handler(state, token, stream):
+        state['last'] = token
+        if state['pymode'][-1][0]:
+            yield _new_token(token_type, token.string, token.start)
         else:
-            yield _new_token('NUMBER', token.string, token.start)
-            if n is not None:
-                yield from handle_token(state, n, stream)
+            # subprocess mode
+            n = next(stream, None)
+            string = token.string
+            if n is not None and n.string in {'<', '>', '>>'} and n.start == token.end:
+                string += n.string
+                n2 = next(stream, None)
+                if n2 is not None and n2.string == '&' and n2.start == n.end:
+                    string += n2.string
+                    n2 = next(stream, None)
+                if n2 is not None:
+                    if (n2.start == n.end and
+                            (n2.type == tokenize.NUMBER or
+                                (n2.type == tokenize.NAME and
+                                 n2.string in _REDIRECT_NAMES))):
+                        string += n2.string
+                        state['last'] = n2
+                        yield _new_token('IOREDIRECT', string, token.start)
+                    else:
+                        yield _new_token('IOREDIRECT', string, token.start)
+                        yield from handle_token(state, n2, stream)
+                else:
+                    state['last'] = n
+                    yield _new_token('IOREDIRECT', string, token.start)
+            else:
+                yield _new_token(token_type, token.string, token.start)
+                if n is not None:
+                    yield from handle_token(state, n, stream)
+    return inner_handler
+
+
+handle_number = _make_special_handler('NUMBER')
+"""Function for handling number tokens"""
+
+handle_ampersand = _make_special_handler('AMPERSAND')
+"""Function for handling ampersand tokens"""
 
 
 def handle_dollar(state, token, stream):
@@ -349,6 +346,7 @@ special_handlers = {
     tokenize.NAME: handle_name,
     tokenize.NUMBER: handle_number,
     tokenize.ERRORTOKEN: handle_error_token,
+    (tokenize.OP, '&'): handle_ampersand,
     (tokenize.OP, '@'): handle_at,
     (tokenize.OP, '('): handle_lparen,
     (tokenize.OP, ')'): handle_rparen,
@@ -494,6 +492,7 @@ class Lexer(object):
         'NAME',                  # name tokens
         'NUMBER',                # numbers
         'WS',                    # whitespace in subprocess mode
+        'AMPERSAND',             # &
         'REGEXPATH',             # regex escaped with backticks
         'IOREDIRECT',            # subprocess io redirection token
         'LPAREN', 'RPAREN',      # ( )
