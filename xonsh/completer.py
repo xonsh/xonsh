@@ -94,6 +94,8 @@ class Completer(object):
         elif prefix.startswith('${') or prefix.startswith('@('):
             # python mode explicitly
             rtn = set()
+        elif prefix.startswith('-'):
+            return sorted(self.option_complete(prefix, cmd))
         elif cmd not in ctx:
             if cmd == 'import' and begidx == len('import '):
                 # completing module to import
@@ -136,9 +138,18 @@ class Completer(object):
         return {s + space for s in self._all_commands() if s.startswith(cmd)}
 
     def module_complete(self, prefix):
-        """Completes a name of a module to import"""
+        """Completes a name of a module to import."""
         modules = set(sys.modules.keys())
         return {s for s in modules if s.startswith(prefix)}
+
+    def option_complete(self, prefix, cmd):
+        """Completes an option name, basing on content of man page."""
+        manpage = subprocess.Popen(["man", cmd], stdout=subprocess.PIPE)
+        # This is a trick to get rid of reverse line feeds
+        text = subprocess.check_output(["col", "-b"], stdin=manpage.stdout).decode('utf-8')
+        pattern = r'^\s*(-\w|--[a-z-]+)[\s,]'
+        matches = re.findall(pattern, text, re.M)
+        return {s for s in matches if s.startswith(prefix)}
 
     def path_complete(self, prefix):
         """Completes based on a path name."""
