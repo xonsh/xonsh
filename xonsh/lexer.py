@@ -84,6 +84,7 @@ def handle_name(state, token, stream):
                     state['last'] = n2
                     yield _new_token('IOREDIRECT', string, token.start)
                 else:
+                    state['last'] = n
                     yield _new_token('IOREDIRECT', string, token.start)
                     yield from handle_token(state, n2, stream)
             else:
@@ -122,6 +123,7 @@ def _make_special_handler(token_type):
                         state['last'] = n2
                         yield _new_token('IOREDIRECT', string, token.start)
                     else:
+                        state['last'] = n
                         yield _new_token('IOREDIRECT', string, token.start)
                         yield from handle_token(state, n2, stream)
                 else:
