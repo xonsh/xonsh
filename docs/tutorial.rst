@@ -481,7 +481,6 @@ exist:
 
 .. code-block:: xonshcon
 
-    >>> # The following redirect stdout to a file
     >>> COMMAND > output.txt
     >>> COMMAND out> output.txt
     >>> COMMAND o> output.txt
@@ -500,7 +499,6 @@ exist:
 
 .. code-block:: xonshcon
 
-    >>> # The following redirect stderr to a file
     >>> COMMAND err> errors.txt
     >>> COMMAND e> errors.txt
     >>> COMMAND 2> errors.txt # included for Bash compatability
@@ -517,7 +515,6 @@ that task:
 
 .. code-block:: xonshcon
 
-    >>> # The following redirect both stdout and stderr to a file
     >>> COMMAND all> combined.txt
     >>> COMMAND a> combined.txt
     >>> COMMAND &> combined.txt # included for Bash compatability
@@ -533,7 +530,6 @@ with the following syntax:
     >>> COMMAND e>out
     >>> COMMAND e>o
     >>> COMMAND 2>&1 # included for Bash compatability
-
 
 This merge can be combined with other redirections, including pipes (see the
 section on `Pipes`_ above):
