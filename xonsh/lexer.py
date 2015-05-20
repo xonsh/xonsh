@@ -24,21 +24,21 @@ will fall back to handling that token using one of the handlers in
 
 # operators
 _op_map = {
-        # punctuation
-        ',': 'COMMA', '.': 'PERIOD', ';': 'SEMI', ':': 'COLON',
-        '...': 'ELLIPSIS',
-        # basic operators
-        '+': 'PLUS', '-': 'MINUS', '*': 'TIMES', '/': 'DIVIDE',
-        '//': 'DOUBLEDIV', '%': 'MOD', '**': 'POW', '|': 'PIPE',
-        '~': 'TILDE', '^': 'XOR', '<<': 'LSHIFT',
-        '>>': 'RSHIFT', '<': 'LT', '<=': 'LE', '>': 'GT', '>=': 'GE',
-        '==': 'EQ', '!=': 'NE', '->': 'RARROW',
-        # assignment operators
-        '=': 'EQUALS', '+=': 'PLUSEQUAL', '-=': 'MINUSEQUAL',
-        '*=': 'TIMESEQUAL', '/=': 'DIVEQUAL', '%=': 'MODEQUAL',
-        '**=': 'POWEQUAL', '<<=': 'LSHIFTEQUAL', '>>=': 'RSHIFTEQUAL',
-        '&=': 'AMPERSANDEQUAL', '^=': 'XOREQUAL', '|=': 'PIPEEQUAL',
-        '//=': 'DOUBLEDIVEQUAL',
+    # punctuation
+    ',': 'COMMA', '.': 'PERIOD', ';': 'SEMI', ':': 'COLON',
+    '...': 'ELLIPSIS',
+    # basic operators
+    '+': 'PLUS', '-': 'MINUS', '*': 'TIMES', '/': 'DIVIDE',
+    '//': 'DOUBLEDIV', '%': 'MOD', '**': 'POW', '|': 'PIPE',
+    '~': 'TILDE', '^': 'XOR', '<<': 'LSHIFT', '>>': 'RSHIFT',
+    '<': 'LT', '<=': 'LE', '>': 'GT', '>=': 'GE', '==': 'EQ',
+    '!=': 'NE', '->': 'RARROW',
+    # assignment operators
+    '=': 'EQUALS', '+=': 'PLUSEQUAL', '-=': 'MINUSEQUAL',
+    '*=': 'TIMESEQUAL', '/=': 'DIVEQUAL', '%=': 'MODEQUAL',
+    '**=': 'POWEQUAL', '<<=': 'LSHIFTEQUAL', '>>=': 'RSHIFTEQUAL',
+    '&=': 'AMPERSANDEQUAL', '^=': 'XOREQUAL', '|=': 'PIPEEQUAL',
+    '//=': 'DOUBLEDIVEQUAL',
 }
 for (op, type) in _op_map.items():
     token_map[(tokenize.OP, op)] = type
@@ -96,7 +96,7 @@ def handle_name(state, token, stream):
                 yield from handle_token(state, n, stream)
 
 
-def _make_special_handler(token_type):
+def _make_special_handler(token_type, extra_check=lambda x: True):
     def inner_handler(state, token, stream):
         state['last'] = token
         if state['pymode'][-1][0]:
@@ -105,7 +105,9 @@ def _make_special_handler(token_type):
             # subprocess mode
             n = next(stream, None)
             string = token.string
-            if n is not None and n.string in {'<', '>', '>>'} and n.start == token.end:
+            if (n is not None and
+                    n.string in {'<', '>', '>>'} and
+                    n.start == token.end):
                 e = n.end
                 string += n.string
                 n2 = next(stream, None)
