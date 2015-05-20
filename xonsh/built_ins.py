@@ -314,8 +314,8 @@ def _open(fname, mode):
 
 def _redirect_io(streams, r, loc=None):
     # special case of redirecting stderr to stdout
-    if r.replace('&','') in {'e>o', 'e>out', 'err>o', 'err>o', '2>1',
-                             'e>1', 'err>1', '2>out', '2>o'}:
+    if r.replace('&', '') in {'e>o', 'e>out', 'err>o', 'err>o', '2>1',
+                              'e>1', 'err>1', '2>out', '2>o'}:
         if 'stderr' in streams:
             raise XonshError('Multiple redirects for stderr')
         streams['stderr'] = STDOUT
