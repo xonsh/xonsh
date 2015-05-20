@@ -460,44 +460,65 @@ Python operator.
 If you are unsure of what pipes are, there are many great references out there.
 You should be able to find information on StackOverflow or Google.
 
+Input/Output Redirection
+====================================
 
-Writing Files with ``>``
-=====================================
-In subprocess-mode, if the second to last element is a greater-than sign
-``>`` and the last element evaluates to a string, the output of the
-preceding command will be written to file. If the file already exists, the
-current contents will be erased.  For example, let's write a simple file
-called ``conch.txt`` using ``echo``:
+xonsh also allows you to redirect ``stdin``, ``stdout``, and/or ``stderr``.
+This allows you to control where the output of a command is sent, and where
+it receives its input from.  xonsh supports Bash-like syntax for many of these
+operations (including pipes, mentioned above), but also provides an alternative
+syntax.
+
+xonsh follows a simple naming convention for redirection:
+
+ * The following operations are possible:
+    * ``>`` means "send in write mode" (overwrite the contents of a file, creating the file if it does not exist)
+    * ``>>`` means "send in append mode" (add to the end of a file, creating the file if it does not exist)
+    * ``<`` means "read from" ()
+
+ * Different files are referred to by:
+    * a file descriptor (e.g. ``1`` for stdout), or
+    * a file name, or
+    * a special name:
+       * ``out`` and ``o`` refer to ``stdout``
+       * ``err`` and ``e`` refer to ``stderr``
+       * ``all``, ``a``, and ``&`` refer to the combination of ``stderr`` and ``stdout``
+
+For example, ``COMMAND out> output.txt`` will write the output of ``COMMAND``
+to ``output.txt``, creating it if it does not exist.  This is one of the common
+uses of I/O redirection, and the following examples show some more of what is
+possible:
 
 .. code-block:: xonshcon
 
-    >>> echo Piggy > conch.txt
-    'Piggy\n'
-    >>> cat conch.txt
-    Piggy
+    >>> # The following redirect stdout to a file
+    >>> COMMAND > output.txt
+    >>> COMMAND out> output.txt
+    >>> COMMAND o> output.txt
+    >>> COMMAND 1> output.txt
+    >>>
+    >>> # The following redirect stderr to a file
+    >>> COMMAND err> errors.txt
+    >>> COMMAND e> errors.txt
+    >>> COMMAND 2> errors.txt
+    >>>
+    >>> # The following redirect both stdout and stderr to a file
+    >>> COMMAND all> combined.txt
+    >>> COMMAND a> combined.txt
+    >>> COMMAND &> combined.txt
+    >>> COMMAND err>out > combined.txt
+    >>> COMMAND e>o > combined.txt
+    >>>
+    >>> # The following redirect a file to stdin
+    >>> COMMAND < input.txt
+    >>> < input.txt COMMAND
+    >>>
+    >>> # The following pipes both stdout and stderr to a second command
+    >>> COMMAND1 e>o | COMMAND2
 
-This can be pretty useful.  This does not work in Python-mode, since ``>``
-is a valid Python operator.
 
-
-Appending to Files with ``>>``
-=====================================
-Following the same syntax as with ``>`` in subprocess-mode, the ``>>``
-operator allows us to append to a file rather than overwriting it completely.
-If the file doesn't exist, it is created. Let's reuse the ``conch.txt``
-file from above and add a line.
-
-.. code-block:: xonshcon
-
-    >>> echo Ralph >> conch.txt
-    'Ralph\n'
-    >>> cat conch.txt
-    Piggy
-    Ralph
-
-Again, the ``>>`` does not work as shown here in Python-mode, where it takes
-on its usual meaning.
-
+These commands can also be combined (it is possible, for example, to have a
+command read from a file and output to a file).
 
 Background Jobs
 ===============
