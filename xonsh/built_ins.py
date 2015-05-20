@@ -296,7 +296,12 @@ def _subproc_pre():
 _REDIR_NAME = "(o(?:ut)?|e(?:rr)?|a(?:ll)?|&?\d?)"
 _REDIR_REGEX = re.compile("{r}(>?>|<){r}$".format(r=_REDIR_NAME))
 _MODES = {'>>': 'a', '>': 'w', '<': 'r'}
-
+_WRITE_MODES = frozenset({'w', 'a'})
+_REDIR_ALL = frozenset({'&', 'a', 'all'})
+_REDIR_ERR = frozenset({'2', 'e', 'err'})
+_REDIR_OUT = frozenset({'', '1', 'o', 'out'})
+_E2O_MAP = frozenset({'e>o', 'e>out', 'err>o', 'err>o', '2>1',
+                              'e>1', 'err>1', '2>out', '2>o'})
 
 def _is_redirect(x):
     return isinstance(x, str) and _REDIR_REGEX.match(x)
@@ -314,8 +319,7 @@ def _open(fname, mode):
 
 def _redirect_io(streams, r, loc=None):
     # special case of redirecting stderr to stdout
-    if r.replace('&', '') in {'e>o', 'e>out', 'err>o', 'err>o', '2>1',
-                              'e>1', 'err>1', '2>out', '2>o'}:
+    if r.replace('&', '') in _E2O_MAP:
         if 'stderr' in streams:
             raise XonshError('Multiple redirects for stderr')
         streams['stderr'] = STDOUT
@@ -346,8 +350,8 @@ def _redirect_io(streams, r, loc=None):
             raise XonshError('Multiple inputs for stdin')
         else:
             streams['stdin'] = _open(loc, mode)
-    elif mode in {'w', 'a'}:
-        if orig in {'&', 'a', 'all'}:
+    elif mode in _WRITE_MODES:
+        if orig in _REDIR_ALL:
             if 'stderr' in streams:
                 raise XonshError('Multiple redirects for stderr')
             elif 'stdout' in streams:
@@ -356,14 +360,14 @@ def _redirect_io(streams, r, loc=None):
                 e = 'Unrecognized redirection command: {}'.format(r)
                 raise XonshError(e)
             targets = ['stdout', 'stderr']
-        elif orig in {'2', 'e', 'err'}:
+        elif orig in _REDIR_ERR:
             if 'stderr' in streams:
                 raise XonshError('Multiple redirects for stderr')
             elif len(dest) > 0:
                 e = 'Unrecognized redirection command: {}'.format(r)
                 raise XonshError(e)
             targets = ['stderr']
-        elif orig in {'', '1', 'o', 'out'}:
+        elif orig in _REDIR_OUT:
             if 'stdout' in streams:
                 raise XonshError('Multiple redirects for stdout')
             elif len(dest) > 0:

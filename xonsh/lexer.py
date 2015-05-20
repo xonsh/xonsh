@@ -48,7 +48,7 @@ token_map[tokenize.NEWLINE] = 'NEWLINE'
 token_map[tokenize.INDENT] = 'INDENT'
 token_map[tokenize.DEDENT] = 'DEDENT'
 
-_REDIRECT_NAMES = {'out', 'err', 'all', 'o', 'e', 'a'}
+_REDIRECT_NAMES = frozenset({'out', 'err', 'all', 'o', 'e', 'a'})
 
 
 def handle_name(state, token, stream):
