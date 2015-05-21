@@ -300,8 +300,10 @@ _WRITE_MODES = frozenset({'w', 'a'})
 _REDIR_ALL = frozenset({'&', 'a', 'all'})
 _REDIR_ERR = frozenset({'2', 'e', 'err'})
 _REDIR_OUT = frozenset({'', '1', 'o', 'out'})
-_E2O_MAP = frozenset({'e>o', 'e>out', 'err>o', 'err>out', '2>1',
-                      'e>1', 'err>1', '2>out', '2>o'})
+_E2O_MAP = frozenset({'{}>{}'.format(e, o)
+                      for e in _REDIR_ERR
+                      for o in _REDIR_OUT
+                      if o != ''})
 
 
 def _is_redirect(x):
