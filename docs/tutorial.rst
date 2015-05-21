@@ -167,6 +167,9 @@ They can be seen in the table below:
 ================== ============================= ================================
 variable           default                       description
 ================== ============================= ================================
+ALIASES            xonsh.aliases.DEFAULT_ALIASES A dictionary containing aliases.
+                                                 See `Aliases`_ below for more
+                                                 information.
 PROMPT             xonsh.environ.DEFAULT_PROMPT  The prompt text.  May contain
                                                  keyword arguments which are
                                                  auto-formatted (see `Customizing
@@ -708,14 +711,26 @@ xonsh code you want to use the ``compilex()``, ``evalx()``, and ``execx()``
 functions. If you don't know what these do, you probably don't need them.
 
 
+Up, Down, Tab
+==============
+The up and down keys search history matching from the start of the line,
+much like they do in the IPython shell.
+
+Tab completion is present as well. In Python-mode you are able to complete
+based on the variable names in the current builtins, globals, and locals,
+as well as xonsh languages keywords & operator, files & directories, and
+environment variable names. In subprocess-mode, you additionally complete
+on any file names on your ``$PATH``, alias keys, and full BASH completion
+for the commands themselves.
+
 Aliases
 ==============================
-Another important xonsh built-in is the ``aliases`` mapping.  This is
+An important environment variable is the ``$ALIASES`` mapping.  This is
 like a dictionary that effects how subprocess commands are run.  If you are
 familiar with the BASH ``alias`` built-in, this is similar.  Alias command
 matching only occurs for the first element of a subprocess command.
 
-The keys of ``aliases`` are strings that act as commands in subprocess-mode.
+The keys of ``$ALIASES`` are strings that act as commands in subprocess-mode.
 The values are lists of strings, where the first element is the command and
 the rest are the arguments. You can also set the value to a string, in which
 case it will be converted to a list automatically with ``shlex.split``.
@@ -732,7 +747,7 @@ For example, here are some of the default aliases:
         }
 
 If you were to run ``ls dir/`` with the aliases above in effect (by running
-``aliases.update(DEFAULT_ALIASES)``), it would reduce to
+``$ALIASES.update(DEFAULT_ALIASES)``), it would reduce to
 ``["ls", "--color=auto", "-v", "dir/"]`` before being executed.
 
 Lastly, if an alias value is a function (or other callable), then this
@@ -776,24 +791,12 @@ built-in mapping.  Here is an example using a function value:
 
 .. code-block:: xonshcon
 
-    >>> aliases['banana'] = lambda args, stdin=None: ('My spoon is tooo big!', None)
+    >>> $ALIASES['banana'] = lambda args, stdin=None: ('My spoon is tooo big!', None)
     >>> banana
     'My spoon is tooo big!'
 
 Aliasing is a powerful way that xonsh allows you to seamlessly interact to
 with Python and subprocess.
-
-Up, Down, Tab
-==============
-The up and down keys search history matching from the start of the line,
-much like they do in the IPython shell.
-
-Tab completion is present as well. In Python-mode you are able to complete
-based on the variable names in the current builtins, globals, and locals,
-as well as xonsh languages keywords & operator, files & directories, and
-environment variable names. In subprocess-mode, you additionally complete
-on any file names on your ``$PATH``, alias keys, and full BASH completion
-for the commands themselves.
 
 Customizing the Prompt
 ======================

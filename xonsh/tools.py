@@ -304,7 +304,7 @@ def suggest_commands(cmd, env, aliases):
 
         cmd = cmd.lower()
         suggested = {}
-        for a in builtins.aliases:
+        for a in aliases:
             if a not in suggested:
                 if levenshtein(a.lower(), cmd, thresh) < thresh:
                     suggested[a] = 'Alias'
