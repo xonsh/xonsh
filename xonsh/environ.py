@@ -200,11 +200,11 @@ def ensure_git(func):
             kwargs['cwd'] = kwargs.get('cwd', _get_cwd())
             if kwargs['cwd'] is None:
                 return
-    
+
             # step out completely if git is not installed
             if locate_binary('git', kwargs['cwd']) is None:
                 return
-    
+
             return func(*args, **kwargs)
         return wrapper
 
@@ -244,7 +244,7 @@ def get_git_branch(cwd=None):
     if not ON_WINDOWS:
         prompt_scripts = ['/usr/lib/git-core/git-sh-prompt',
                           '/usr/local/etc/bash_completion.d/git-prompt.sh']
-    
+
         for script in prompt_scripts:
             # note that this is about 10x faster than bash -i "__git_ps1"
             _input = ('source {}; __git_ps1 "${{1:-%s}}"'.format(script))
