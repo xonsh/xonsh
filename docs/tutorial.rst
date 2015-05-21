@@ -212,6 +212,19 @@ SUGGEST_MAX_NUM    ``5``                         xonsh will show at most this
                                                  an invalid command.  If
                                                  negative, there is no limit to
                                                  how many suggestions are shown.
+SHELL_TYPE         ``'readline'``                Which shell is used.
+                                                 Currently two shell types are
+                                                 supported: ``'readline'`` that
+                                                 is backed by python's readline
+                                                 module and ``'prompt_toolkit'``
+                                                 that uses external library of
+                                                 the same name. For using
+                                                 prompt_toolkit shell you need
+                                                 to have `prompt_toolkit
+                                                 <https://github.com/jonathanslenders/python-prompt-toolkit>`_
+                                                 library installed. To specify
+                                                 which shell should be used, do
+                                                 so in the run control file.
 ================== ============================= ================================
 
 Environment Lookup with ``${}``
