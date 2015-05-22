@@ -246,7 +246,7 @@ def handle_lparen(state, token, stream):
     """
     Function for handling ``(``
     """
-    state['pymode'].append((True, '(', ')', token.start))
+    state['pymode'].append((state['pymode'][-1][0], '(', ')', token.start))
     state['last'] = token
     yield _new_token('LPAREN', '(', token.start)
 
@@ -255,7 +255,7 @@ def handle_lbrace(state, token, stream):
     """
     Function for handling ``{``
     """
-    state['pymode'].append((True, '{', '}', token.start))
+    state['pymode'].append((state['pymode'][-1][0], '{', '}', token.start))
     state['last'] = token
     yield _new_token('LBRACE', '{', token.start)
 
@@ -264,7 +264,7 @@ def handle_lbracket(state, token, stream):
     """
     Function for handling ``[``
     """
-    state['pymode'].append((True, '[', ']', token.start))
+    state['pymode'].append((state['pymode'][-1][0], '[', ']', token.start))
     state['last'] = token
     yield _new_token('LBRACKET', '[', token.start)
 
@@ -282,40 +282,28 @@ def _end_delimiter(state, token):
         return 'Unmatched "{}" at line {}, column {}'.format(s, l, c)
 
 
-def handle_rparen(state, token, stream):
-    """
-    Function for handling ``)``
-    """
-    e = _end_delimiter(state, token)
-    if e is None:
-        state['last'] = token
-        yield _new_token('RPAREN', ')', token.start)
-    else:
-        yield _new_token('ERRORTOKEN', e, token.start)
+def _make_delimiter_handler(name, ender):
+    def handler(state, token, stream):
+        m = state['pymode'][-1][1]
+        e = _end_delimiter(state, token)
+        if e is None:
+            state['last'] = token
+            typ = name
+            if m.startswith('$'):
+                typ = "SUBPROC_END_{}".format(name)
+            yield _new_token(typ, ender, token.start)
+        else:
+            yield _new_token('ERRORTOKEN', e, token.start)
+    return handler
 
+handle_rparen = _make_delimiter_handler('RPAREN', ')')
+"""Function for handling ``)``"""
 
-def handle_rbrace(state, token, stream):
-    """
-    Function for handling ``}``
-    """
-    e = _end_delimiter(state, token)
-    if e is None:
-        state['last'] = token
-        yield _new_token('RBRACE', '}', token.start)
-    else:
-        yield _new_token('ERRORTOKEN', e, token.start)
+handle_rbrace = _make_delimiter_handler('RBRACE', '}')
+"""Function for handling ``}``"""
 
-
-def handle_rbracket(state, token, stream):
-    """
-    Function for handling ``]``
-    """
-    e = _end_delimiter(state, token)
-    if e is None:
-        state['last'] = token
-        yield _new_token('RBRACKET', ']', token.start)
-    else:
-        yield _new_token('ERRORTOKEN', e, token.start)
+handle_rbracket = _make_delimiter_handler('RBRACKET', ']')
+"""Function for handling ``]``"""
 
 
 def handle_error_space(state, token, stream):
@@ -508,6 +496,9 @@ class Lexer(object):
         'LPAREN', 'RPAREN',      # ( )
         'LBRACKET', 'RBRACKET',  # [ ]
         'LBRACE', 'RBRACE',      # { }
+        'SUBPROC_END_RPAREN',    # ) matched with $(
+        'SUBPROC_END_RBRACKET',  # ] matched with $[
+        'SUBPROC_END_RBRACE',    # } matched with ${
         'AT',                    # @
         'QUESTION',              # ?
         'DOUBLE_QUESTION',       # ??

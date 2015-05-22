@@ -1628,9 +1628,9 @@ class Parser(object):
                 | FALSE
                 | REGEXPATH
                 | DOLLAR_NAME
-                | DOLLAR_LBRACE test RBRACE
-                | DOLLAR_LPAREN subproc RPAREN
-                | DOLLAR_LBRACKET subproc RBRACKET
+                | DOLLAR_LBRACE test SUBPROC_END_RBRACE
+                | DOLLAR_LPAREN subproc SUBPROC_END_RPAREN
+                | DOLLAR_LBRACKET subproc SUBPROC_END_RBRACKET
         """
         p1 = p[1]
         if len(p) == 2:
@@ -2231,9 +2231,9 @@ class Parser(object):
                         | RSHIFT
                         | IOREDIRECT
                         | AT_LPAREN test RPAREN
-                        | DOLLAR_LBRACE test RBRACE
-                        | DOLLAR_LPAREN subproc RPAREN
-                        | DOLLAR_LBRACKET subproc RBRACKET
+                        | DOLLAR_LBRACE test SUBPROC_END_RBRACE
+                        | DOLLAR_LPAREN subproc SUBPROC_END_RPAREN
+                        | DOLLAR_LBRACKET subproc SUBPROC_END_RBRACKET
         """
         lenp = len(p)
         p1 = p[1]
