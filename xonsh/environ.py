@@ -191,23 +191,22 @@ def locate_binary(name, cwd):
 
 
 def ensure_git(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        # getting the branch was slow on windows, disabling for now.
-        if ON_WINDOWS:
-            return ''
+    if ON_WINDOWS:
+        return func
+    else:
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            # Get cwd or bail
+            kwargs['cwd'] = kwargs.get('cwd', _get_cwd())
+            if kwargs['cwd'] is None:
+                return
 
-        # Get cwd or bail
-        kwargs['cwd'] = kwargs.get('cwd', _get_cwd())
-        if kwargs['cwd'] is None:
-            return
+            # step out completely if git is not installed
+            if locate_binary('git', kwargs['cwd']) is None:
+                return
 
-        # step out completely if git is not installed
-        if locate_binary('git', kwargs['cwd']) is None:
-            return
-
-        return func(*args, **kwargs)
-    return wrapper
+            return func(*args, **kwargs)
+        return wrapper
 
 
 def ensure_hg(func):
@@ -241,20 +240,22 @@ def ensure_hg(func):
 @ensure_git
 def get_git_branch(cwd=None):
     branch = None
-    prompt_scripts = ['/usr/lib/git-core/git-sh-prompt',
-                      '/usr/local/etc/bash_completion.d/git-prompt.sh']
 
-    for script in prompt_scripts:
-        # note that this is about 10x faster than bash -i "__git_ps1"
-        _input = ('source {}; __git_ps1 "${{1:-%s}}"'.format(script))
-        try:
-            branch = subprocess.check_output(['bash', ],
-                                             cwd=cwd,
-                                             input=_input,
-                                             stderr=subprocess.PIPE,
-                                             universal_newlines=True) or None
-        except subprocess.CalledProcessError:
-            continue
+    if not ON_WINDOWS:
+        prompt_scripts = ['/usr/lib/git-core/git-sh-prompt',
+                          '/usr/local/etc/bash_completion.d/git-prompt.sh']
+
+        for script in prompt_scripts:
+            # note that this is about 10x faster than bash -i "__git_ps1"
+            _input = ('source {}; __git_ps1 "${{1:-%s}}"'.format(script))
+            try:
+                branch = subprocess.check_output(['bash', ],
+                                                 cwd=cwd,
+                                                 input=_input,
+                                                 stderr=subprocess.PIPE,
+                                                 universal_newlines=True) or None
+            except subprocess.CalledProcessError:
+                continue
 
     # fall back to using the git binary if the above failed
     if branch is None:
@@ -331,7 +332,7 @@ def current_branch(pad=True):
 
 
 @ensure_git
-def git_dirty_working_directory(cwd):
+def git_dirty_working_directory(cwd=None):
     try:
         cmd = ['git', 'status', '--porcelain']
         s = subprocess.check_output(cmd,
