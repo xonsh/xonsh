@@ -1460,6 +1460,33 @@ def test_ls_quotes_3_space():
 def test_comment_only():
     yield check_xonsh_ast, {}, '# hello'
 
+_error_names = {'e', 'err', '2'}
+_output_names = {'', 'o', 'out', '1'}
+_all_names = {'a', 'all', '&'}
+_e2o_map = {'e>o', 'e>out', 'err>o', 'err>o', '2>1', 'e>1', 'err>1', '2>out',
+            '2>o', 'err>&1', 'e>&1', '2>&1'}
+
+def test_redirect():
+    yield check_xonsh_ast, {}, '$[cat < input.txt]', False
+    yield check_xonsh_ast, {}, '$[< input.txt cat]', False
+    for o in _output_names:
+        yield check_xonsh_ast, {}, '$[echo "test" {}> test.txt]'.format(o), False
+        yield check_xonsh_ast, {}, '$[< input.txt echo "test" {}> test.txt]'.format(o), False
+        yield check_xonsh_ast, {}, '$[echo "test" {}> test.txt < input.txt]'.format(o), False
+    for e in _error_names:
+        yield check_xonsh_ast, {}, '$[echo "test" {}> test.txt]'.format(e), False
+        yield check_xonsh_ast, {}, '$[< input.txt echo "test" {}> test.txt]'.format(e), False
+        yield check_xonsh_ast, {}, '$[echo "test" {}> test.txt < input.txt]'.format(e), False
+    for a in _all_names:
+        yield check_xonsh_ast, {}, '$[echo "test" {}> test.txt]'.format(a), False
+        yield check_xonsh_ast, {}, '$[< input.txt echo "test" {}> test.txt]'.format(a), False
+        yield check_xonsh_ast, {}, '$[echo "test" {}> test.txt < input.txt]'.format(a), False
+    for r in _e2o_map:
+        for o in _output_names:
+            yield check_xonsh_ast, {}, '$[echo "test" {} {}> test.txt]'.format(r, o), False
+            yield check_xonsh_ast, {}, '$[< input.txt echo "test" {} {}> test.txt]'.format(r, o), False
+            yield check_xonsh_ast, {}, '$[echo "test" {} {}> test.txt < input.txt]'.format(r, o), False
+
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100
 

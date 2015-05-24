@@ -24,30 +24,31 @@ will fall back to handling that token using one of the handlers in
 
 # operators
 _op_map = {
-        # punctuation
-        ',': 'COMMA', '.': 'PERIOD', ';': 'SEMI', ':': 'COLON',
-        '...': 'ELLIPSIS',
-        # basic operators
-        '+': 'PLUS', '-': 'MINUS', '*': 'TIMES', '/': 'DIVIDE',
-        '//': 'DOUBLEDIV', '%': 'MOD', '**': 'POW', '|': 'PIPE',
-        '&': 'AMPERSAND', '~': 'TILDE', '^': 'XOR', '<<': 'LSHIFT',
-        '>>': 'RSHIFT', '<': 'LT', '<=': 'LE', '>': 'GT', '>=': 'GE',
-        '==': 'EQ', '!=': 'NE', '->': 'RARROW',
-        # assignment operators
-        '=': 'EQUALS', '+=': 'PLUSEQUAL', '-=': 'MINUSEQUAL',
-        '*=': 'TIMESEQUAL', '/=': 'DIVEQUAL', '%=': 'MODEQUAL',
-        '**=': 'POWEQUAL', '<<=': 'LSHIFTEQUAL', '>>=': 'RSHIFTEQUAL',
-        '&=': 'AMPERSANDEQUAL', '^=': 'XOREQUAL', '|=': 'PIPEEQUAL',
-        '//=': 'DOUBLEDIVEQUAL',
+    # punctuation
+    ',': 'COMMA', '.': 'PERIOD', ';': 'SEMI', ':': 'COLON',
+    '...': 'ELLIPSIS',
+    # basic operators
+    '+': 'PLUS', '-': 'MINUS', '*': 'TIMES', '/': 'DIVIDE',
+    '//': 'DOUBLEDIV', '%': 'MOD', '**': 'POW', '|': 'PIPE',
+    '~': 'TILDE', '^': 'XOR', '<<': 'LSHIFT', '>>': 'RSHIFT',
+    '<': 'LT', '<=': 'LE', '>': 'GT', '>=': 'GE', '==': 'EQ',
+    '!=': 'NE', '->': 'RARROW',
+    # assignment operators
+    '=': 'EQUALS', '+=': 'PLUSEQUAL', '-=': 'MINUSEQUAL',
+    '*=': 'TIMESEQUAL', '/=': 'DIVEQUAL', '%=': 'MODEQUAL',
+    '**=': 'POWEQUAL', '<<=': 'LSHIFTEQUAL', '>>=': 'RSHIFTEQUAL',
+    '&=': 'AMPERSANDEQUAL', '^=': 'XOREQUAL', '|=': 'PIPEEQUAL',
+    '//=': 'DOUBLEDIVEQUAL',
 }
 for (op, type) in _op_map.items():
     token_map[(tokenize.OP, op)] = type
 
-token_map[tokenize.NUMBER] = 'NUMBER'
 token_map[tokenize.STRING] = 'STRING'
 token_map[tokenize.NEWLINE] = 'NEWLINE'
 token_map[tokenize.INDENT] = 'INDENT'
 token_map[tokenize.DEDENT] = 'DEDENT'
+
+_REDIRECT_NAMES = frozenset({'out', 'err', 'all', 'o', 'e', 'a'})
 
 
 def handle_name(state, token, stream):
@@ -56,9 +57,92 @@ def handle_name(state, token, stream):
     """
     typ = 'NAME'
     state['last'] = token
-    if state['pymode'][-1][0] and token.string in kwlist:
-        typ = token.string.upper()
-    yield _new_token(typ, token.string, token.start)
+    if state['pymode'][-1][0]:
+        if token.string in kwlist:
+            typ = token.string.upper()
+        yield _new_token(typ, token.string, token.start)
+    else:
+        # subprocess mode
+        n = next(stream, None)
+        string = token.string
+        if (n is not None and n.string in {'<', '>', '>>'} and
+                n.start == token.end and token.string in _REDIRECT_NAMES):
+            # looks like a redirect to me!
+            e = n.end
+            string += n.string
+            n2 = next(stream, None)
+            if n2 is not None and n2.string == '&' and n2.start == n.end:
+                string += n2.string
+                e = n2.end
+                n2 = next(stream, None)
+            if n2 is not None:
+                if (n2.start == e and
+                        (n2.type == tokenize.NUMBER or
+                            (n2.type == tokenize.NAME and
+                             n2.string in _REDIRECT_NAMES))):
+                    string += n2.string
+                    state['last'] = n2
+                    yield _new_token('IOREDIRECT', string, token.start)
+                else:
+                    state['last'] = n
+                    yield _new_token('IOREDIRECT', string, token.start)
+                    yield from handle_token(state, n2, stream)
+            else:
+                state['last'] = n
+                yield _new_token('IOREDIRECT', string, token.start)
+        else:
+            yield _new_token('NAME', token.string, token.start)
+            if n is not None:
+                yield from handle_token(state, n, stream)
+
+
+def _make_special_handler(token_type, extra_check=lambda x: True):
+    def inner_handler(state, token, stream):
+        state['last'] = token
+        if state['pymode'][-1][0]:
+            yield _new_token(token_type, token.string, token.start)
+        else:
+            # subprocess mode
+            n = next(stream, None)
+            string = token.string
+            if (n is not None and
+                    n.string in {'<', '>', '>>'} and
+                    n.start == token.end):
+                e = n.end
+                string += n.string
+                n2 = next(stream, None)
+                if n2 is not None and n2.string == '&' and n2.start == n.end:
+                    state['last'] = n2
+                    string += n2.string
+                    e = n2.end
+                    n2 = next(stream, None)
+                if n2 is not None:
+                    if (n2.start == e and
+                            (n2.type == tokenize.NUMBER or
+                                (n2.type == tokenize.NAME and
+                                 n2.string in _REDIRECT_NAMES))):
+                        string += n2.string
+                        state['last'] = n2
+                        yield _new_token('IOREDIRECT', string, token.start)
+                    else:
+                        state['last'] = n
+                        yield _new_token('IOREDIRECT', string, token.start)
+                        yield from handle_token(state, n2, stream)
+                else:
+                    state['last'] = n
+                    yield _new_token('IOREDIRECT', string, token.start)
+            else:
+                yield _new_token(token_type, token.string, token.start)
+                if n is not None:
+                    yield from handle_token(state, n, stream)
+    return inner_handler
+
+
+handle_number = _make_special_handler('NUMBER')
+"""Function for handling number tokens"""
+
+handle_ampersand = _make_special_handler('AMPERSAND')
+"""Function for handling ampersand tokens"""
 
 
 def handle_dollar(state, token, stream):
@@ -270,7 +354,9 @@ special_handlers = {
     tokenize.ENCODING: handle_ignore,
     tokenize.ENDMARKER: handle_ignore,
     tokenize.NAME: handle_name,
+    tokenize.NUMBER: handle_number,
     tokenize.ERRORTOKEN: handle_error_token,
+    (tokenize.OP, '&'): handle_ampersand,
     (tokenize.OP, '@'): handle_at,
     (tokenize.OP, '('): handle_lparen,
     (tokenize.OP, ')'): handle_rparen,
@@ -414,8 +500,11 @@ class Lexer(object):
     #
     tokens = tuple(token_map.values()) + (
         'NAME',                  # name tokens
+        'NUMBER',                # numbers
         'WS',                    # whitespace in subprocess mode
+        'AMPERSAND',             # &
         'REGEXPATH',             # regex escaped with backticks
+        'IOREDIRECT',            # subprocess io redirection token
         'LPAREN', 'RPAREN',      # ( )
         'LBRACKET', 'RBRACKET',  # [ ]
         'LBRACE', 'RBRACE',      # { }
