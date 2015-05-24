@@ -187,8 +187,8 @@ XONSHRC            ``'~/.xonshrc'``              Location of run control file
 XONSH_HISTORY_SIZE 8128                          Number of items to store in the
                                                  history.
 XONSH_HISTORY_FILE ``'~/.xonsh_history'``        Location of history file
-XONSH_INTERACTIVE                                ``True`` if xonsh is running 
-                                                 interactively, and ``False`` 
+XONSH_INTERACTIVE                                ``True`` if xonsh is running
+                                                 interactively, and ``False``
                                                  otherwise.
 BASH_COMPLETIONS   ``[] or ['/etc/...']``        This is a list of strings that
                                                  specifies where the BASH
@@ -437,10 +437,9 @@ With great power, and so forth...
           Python mode, it is not possible to nest other subprocess operators
           inside of them.
 
+Pipes
+====================
 
-
-Pipes with ``|``
-====================================
 In subprocess-mode, xonsh allows you to use the ``|`` character to pipe
 together commands as you would in other shells.
 
@@ -461,42 +460,112 @@ If you are unsure of what pipes are, there are many great references out there.
 You should be able to find information on StackOverflow or Google.
 
 
-Writing Files with ``>``
-=====================================
-In subprocess-mode, if the second to last element is a greater-than sign
-``>`` and the last element evaluates to a string, the output of the
-preceding command will be written to file. If the file already exists, the
-current contents will be erased.  For example, let's write a simple file
-called ``conch.txt`` using ``echo``:
+Input/Output Redirection
+====================================
+
+xonsh also allows you to redirect ``stdin``, ``stdout``, and/or ``stderr``.
+This allows you to control where the output of a command is sent, and where
+it receives its input from.  xonsh has its own syntax for these operations,
+but, for campatability purposes, xonsh also support Bash-like syntax.
+
+The basic operations are "write to" (``>``), "append to" (``>>``), and "read
+from" (``<``).  The details of these are perhaps best explained through
+examples.
+
+Redirecting ``stdout``
+----------------------
+
+All of the following examples will execute ``COMMAND`` and write its regular
+output (stdout) to a file called ``output.txt``, creating it if it does not
+exist:
 
 .. code-block:: xonshcon
 
-    >>> echo Piggy > conch.txt
-    'Piggy\n'
-    >>> cat conch.txt
-    Piggy
+    >>> COMMAND > output.txt
+    >>> COMMAND out> output.txt
+    >>> COMMAND o> output.txt
+    >>> COMMAND 1> output.txt # included for Bash compatability
 
-This can be pretty useful.  This does not work in Python-mode, since ``>``
-is a valid Python operator.
+These can be made to append to ``output.txt`` instead of overwriting its contents
+by replacing ``>`` with ``>>`` (note that ``>>`` will still create the file if it
+does not exist).
 
+Redirecting ``stderr``
+----------------------
 
-Appending to Files with ``>>``
-=====================================
-Following the same syntax as with ``>`` in subprocess-mode, the ``>>``
-operator allows us to append to a file rather than overwriting it completely.
-If the file doesn't exist, it is created. Let's reuse the ``conch.txt``
-file from above and add a line.
+All of the following examples will execute ``COMMAND`` and write its error
+output (stderr) to a file called ``errors.txt``, creating it if it does not
+exist:
 
 .. code-block:: xonshcon
 
-    >>> echo Ralph >> conch.txt
-    'Ralph\n'
-    >>> cat conch.txt
-    Piggy
-    Ralph
+    >>> COMMAND err> errors.txt
+    >>> COMMAND e> errors.txt
+    >>> COMMAND 2> errors.txt # included for Bash compatability
 
-Again, the ``>>`` does not work as shown here in Python-mode, where it takes
-on its usual meaning.
+As above, replacing ``>`` with ``>>`` will cause the error output to be
+appended to ``errors.txt``, rather than replacing its contents.
+
+Combining Streams
+----------------------
+
+It is possible to send all of ``COMMAND``'s output (both regular output and
+error output) to the same location.  All of the following examples accomplish
+that task:
+
+.. code-block:: xonshcon
+
+    >>> COMMAND all> combined.txt
+    >>> COMMAND a> combined.txt
+    >>> COMMAND &> combined.txt # included for Bash compatability
+
+It is also possible to explicitly merge stderr into stdout so that error
+messages are reported to the same location as regular output.  You can do this
+with the following syntax:
+
+.. code-block:: xonshcon
+
+    >>> COMMAND err>out
+    >>> COMMAND err>o
+    >>> COMMAND e>out
+    >>> COMMAND e>o
+    >>> COMMAND 2>&1 # included for Bash compatability
+
+This merge can be combined with other redirections, including pipes (see the
+section on `Pipes`_ above):
+
+.. code-block:: xonshcon
+
+    >>> COMMAND err>out | COMMAND2
+    >>> COMMAND e>o > combined.txt
+
+It is worth noting that this last example is equivalent to: ``COMMAND a> combined.txt``
+
+Redirecting ``stdin``
+---------------------
+
+It is also possible to have a command read its input from a file, rather
+than from ``stdin``.  The following examples demonstrate two ways to accomplish this:
+
+.. code-block:: xonshcon
+
+    >>> COMMAND < input.txt
+    >>> < input.txt COMMAND
+
+Combining I/O Redirects
+------------------------
+
+It is worth noting that all of these redirections can be combined.  Below is
+one example of a complicated redirect.
+
+.. code-block:: xonshcon
+
+    >>> COMMAND1 e>o < input.txt | COMMAND2 > output.txt e>> errors.txt
+
+This line will run ``COMMAND1`` with the contents of ``input.txt`` fed in on
+stdin, and will pipe all output (stdout and stderr) to ``COMMAND2``; the
+regular output of this command will be redirected to ``output.txt``, and the
+error output will be appended to ``errors.txt``.
 
 
 Background Jobs
@@ -809,7 +878,7 @@ keyword arguments, which will be replaced automatically:
     snail@home:~ > # it works!
     snail@home:~ > $PROMPT = lambda : '{user}@{hostname}:{cwd} >> '
     snail@home:~ >> # so does that!
-    
+
 By default, the following variables are available for use:
   * ``user``: The username of the current user
   * ``hostname``: The name of the host computer
@@ -821,12 +890,12 @@ By default, the following variables are available for use:
 
 You can also color your prompt easily by inserting keywords such as ``{GREEN}``
 or ``{BOLD_BLUE}``.  Colors have the form shown below:
-    
+
   * ``(QUALIFIER\_)COLORNAME``: Inserts an ANSI color code
       * ``COLORNAME`` can be any of: ``BLACK``, ``RED``, ``GREEN``, ``YELLOW``,
         ``BLUE``, ``PURPLE``, ``CYAN``, or ``WHITE``
       * ``QUALIFIER`` is optional and can be any of: ``BOLD``, ``UNDERLINE``,
-        ``BACKGROUND``, ``INTENSE``, ``BOLD_INTENSE``, or 
+        ``BACKGROUND``, ``INTENSE``, ``BOLD_INTENSE``, or
         ``BACKGROUND_INTENSE``
   * ``NO_COLOR``: Resets any previously used color codes
 
@@ -841,13 +910,13 @@ For example:
 
     snail@home ~ $ $FORMATTER_DICT['test'] = "hey"
     snail@home ~ $ $PROMPT = "{test} {cwd} $ "
-    hey ~ $ 
+    hey ~ $
     hey ~ $ import random
     hey ~ $ $FORMATTER_DICT['test'] = lambda: random.randint(1,9)
-    3 ~ $ 
-    5 ~ $ 
-    2 ~ $ 
-    8 ~ $ 
+    3 ~ $
+    5 ~ $
+    2 ~ $
+    8 ~ $
 
 Executing Commands and Scripts
 ==============================
@@ -866,19 +935,19 @@ script, stored in ``test.xsh``:
 .. code-block:: xonsh
 
     #!/usr/bin/env xonsh
-    
+
     ls
-    
+
     print('removing files')
     rm `file\d+.txt`
-    
+
     ls
-    
+
     print('adding files')
     # This is a comment
     for i, x in enumerate("xonsh"):
         echo @(x) > @("file%d.txt" % i)
-    
+
     print($(ls).replace('\n', ' '))
 
 
@@ -917,21 +986,21 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
 .. code-block:: xonsh
 
     #!/usr/bin/env xonsh
-    
+
     print($ARGS)
-    
+
     ls
-    
+
     print('removing files')
     rm `file\d+.txt`
-    
+
     ls
-    
+
     print('adding files')
     # This is a comment
     for i, x in enumerate($ARG1):
         echo @(x) > @("file%d.txt" % i)
-    
+
     print($(ls).replace('\n', ' '))
     print()
 

@@ -70,6 +70,11 @@ def check_tokens(inp, exp):
     obs = list(l)
     assert_tokens_equal(exp, obs)
 
+def check_tokens_subproc(inp, exp):
+    l = Lexer()
+    l.input('$[{}]'.format(inp))
+    obs = list(l)[1:-1]
+    assert_tokens_equal(exp, obs)
 
 def test_int_literal():
     yield check_token, '42', ['NUMBER', '42', 0]
@@ -159,6 +164,11 @@ def test_float_literals():
              '5E10', '5e+42']
     for s in cases:
         yield check_token, s, ['NUMBER', s, 0]
+
+def test_ioredir():
+    cases = ['2>1', 'err>out', 'o>', 'all>', 'e>o', 'e>', 'out>', '2>&1']
+    for s in cases:
+        yield check_tokens_subproc, s, [('IOREDIRECT', s, 2)]
 
 
 if __name__ == '__main__':

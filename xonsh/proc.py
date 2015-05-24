@@ -154,7 +154,9 @@ class ProcProxy(Thread):
             sp_stdout = io.TextIOWrapper(io.open(self.c2pwrite, 'wb', -1))
         else:
             sp_stdout = sys.stdout
-        if self.errwrite != -1:
+        if self.errwrite == self.c2pwrite:
+            sp_stderr = sp_stdout
+        elif self.errwrite != -1:
             sp_stderr = io.TextIOWrapper(io.open(self.errwrite, 'wb', -1))
         else:
             sp_stderr = sys.stderr

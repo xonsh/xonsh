@@ -332,7 +332,7 @@ def suggest_commands(cmd, env, aliases):
                                                              val)
                                      for key, val in items)
 
-            return '{}\n{}\n'.format(tips, alternatives)
+            return '{}\n{}'.format(tips, alternatives)
 
 
 # Modified from Public Domain code, by Magnus Lie Hetland
