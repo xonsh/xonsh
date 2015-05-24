@@ -4,6 +4,7 @@ import builtins
 from warnings import warn
 
 from prompt_toolkit.shortcuts import create_cli, create_eventloop
+from prompt_toolkit.key_binding.manager import KeyBindingManager
 from pygments.token import Token
 
 from xonsh.base_shell import BaseShell
@@ -11,6 +12,7 @@ from xonsh.pyghooks import XonshLexer
 from xonsh.tools import format_prompt_for_prompt_toolkit
 from xonsh.prompt_toolkit_completer import PromptToolkitCompleter
 from xonsh.prompt_toolkit_history import LimitedFileHistory
+from xonsh.prompt_toolkit_key_bindings import load_xonsh_bindings
 
 
 def setup_history():
@@ -40,6 +42,7 @@ def teardown_history(history):
 def get_user_input(get_prompt_tokens,
                    history=None,
                    lexer=None,
+                   key_bindings_registry=None,
                    completer=None):
     """Customized function that mostly mimics promp_toolkit's get_input.
 
@@ -53,7 +56,8 @@ def get_user_input(get_prompt_tokens,
         lexer=lexer,
         completer=completer,
         history=history,
-        get_prompt_tokens=get_prompt_tokens)
+        get_prompt_tokens=get_prompt_tokens,
+        key_bindings_registry=key_bindings_registry)
 
     try:
         document = cli.read_input()
@@ -71,6 +75,9 @@ class PromptToolkitShell(BaseShell):
         super().__init__(**kwargs)
         self.history = setup_history()
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx)
+        self.key_bindings_manager = KeyBindingManager()
+        load_xonsh_bindings(self.key_bindings_manager)
+
 
     def __del__(self):
         if self.history is not None:
@@ -86,6 +93,7 @@ class PromptToolkitShell(BaseShell):
                     get_prompt_tokens=self._get_prompt_tokens(),
                     completer=self.pt_completer,
                     history=self.history,
+                    key_bindings_registry=self.key_bindings_manager.registry,
                     lexer=self.lexer)
                 if not line:
                     self.emptyline()
