@@ -21,7 +21,7 @@ class PromptToolkitCompleter(Completer):
             begidx = 0
         else:
             begidx = space_pos + endidx + 1
-        prefix = line[begidx:endidx + 1]
+        prefix = line[begidx:endidx]
         completions = self.completer.complete(prefix,
                                               line,
                                               begidx,
