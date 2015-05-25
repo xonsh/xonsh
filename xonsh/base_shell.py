@@ -41,7 +41,7 @@ class BaseShell(object):
         try:
             self.execer.exec(code, mode='single', glbs=self.ctx)  # no locals
         except XonshError as e:
-            print(e.args[0], file=sys.stderr, end='')
+            print(e.args[0], file=sys.stderr)
         except:
             traceback.print_exc()
         if builtins.__xonsh_exit__:
