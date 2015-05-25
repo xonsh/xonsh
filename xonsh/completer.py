@@ -3,6 +3,7 @@ from __future__ import print_function, unicode_literals
 import os
 import re
 import builtins
+import pickle
 import subprocess
 import sys
 
@@ -43,6 +44,7 @@ class Completer(object):
         self._alias_checksum = None
         self._path_mtime = -1
         self._cmds_cache = frozenset()
+        self._man_completer = ManCompleter()
         try:
             # FIXME this could be threaded for faster startup times
             self._load_bash_complete_funcs()
@@ -95,7 +97,7 @@ class Completer(object):
             # python mode explicitly
             rtn = set()
         elif prefix.startswith('-'):
-            return sorted(self.option_complete(prefix, cmd))
+            return sorted(self._man_completer.option_complete(prefix, cmd))
         elif cmd not in ctx:
             if cmd == 'import' and begidx == len('import '):
                 # completing module to import
@@ -141,15 +143,6 @@ class Completer(object):
         """Completes a name of a module to import."""
         modules = set(sys.modules.keys())
         return {s for s in modules if s.startswith(prefix)}
-
-    def option_complete(self, prefix, cmd):
-        """Completes an option name, basing on content of man page."""
-        manpage = subprocess.Popen(["man", cmd], stdout=subprocess.PIPE)
-        # This is a trick to get rid of reverse line feeds
-        text = subprocess.check_output(["col", "-b"], stdin=manpage.stdout).decode('utf-8')
-        pattern = r'^\s*(-\w|--[a-z-]+)[\s,]'
-        matches = re.findall(pattern, text, re.M)
-        return {s for s in matches if s.startswith(prefix)}
 
     def path_complete(self, prefix):
         """Completes based on a path name."""
@@ -309,3 +302,42 @@ class Completer(object):
         allcmds |= set(builtins.aliases.keys())
         self._cmds_cache = frozenset(allcmds)
         return self._cmds_cache
+
+
+OPTIONS_PATH = os.path.expanduser('~') + "/.xonsh_man_completions"
+SCRAPE_RE = re.compile(r'^(?:\s*(?:-\w|--[a-z0-9-]+)[\s,])+', re.M)
+INNER_OPTIONS_RE = re.compile(r'-\w|--[a-z0-9-]+')
+
+
+class ManCompleter(object):
+    """Helper class that loads completions derived from man pages."""
+
+    def __init__(self):
+        self._load_cached_options()
+
+    def __del__(self):
+        self._save_cached_options()
+
+    def option_complete(self, prefix, cmd):
+        """Completes an option name, basing on content of man page."""
+        if cmd not in self._options.keys():
+            manpage = subprocess.Popen(["man", cmd], stdout=subprocess.PIPE)
+            # This is a trick to get rid of reverse line feeds
+            text = subprocess.check_output(["col", "-b"], stdin=manpage.stdout).decode('utf-8')
+            scraped_text = ' '.join(SCRAPE_RE.findall(text))
+            matches = INNER_OPTIONS_RE.findall(scraped_text)
+            self._options[cmd] = matches
+        return {s for s in self._options[cmd] if s.startswith(prefix)}
+
+    def _load_cached_options(self):
+        """Load options from file at startup."""
+        try:
+            with open(OPTIONS_PATH, 'rb') as f:
+                self._options = pickle.load(f)
+        except:
+            self._options = {}
+
+    def _save_cached_options(self):
+        """Save completions to file."""
+        with open(OPTIONS_PATH, 'wb') as f:
+            pickle.dump(self._options, f)
