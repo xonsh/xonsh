@@ -8,7 +8,7 @@ from nose.tools import assert_equal, assert_true, assert_false
 from xonsh.lexer import Lexer
 from xonsh.tools import subproc_toks, subexpr_from_unbalanced, is_int, \
     always_true, always_false, ensure_string, is_env_path, str_to_env_path, \
-    env_path_to_str, escape_windows_title_string
+    env_path_to_str, escape_windows_title_string, convert_bool, is_bool
 
 LEXER = Lexer()
 LEXER.build()
@@ -151,7 +151,12 @@ def test_subexpr_from_unbalanced_parens():
 
 def test_is_int():
     yield assert_true, is_int(42)
+    yield assert_true, is_int(True)
     yield assert_false, is_int('42')
+
+def test_is_bool():
+    yield assert_true, is_int(True)
+    yield assert_false, is_int('True')
 
 def test_always_true():
     yield assert_true, always_true(42)
@@ -213,6 +218,11 @@ def test_escape_windows_title_string():
         obs = escape_windows_title_string(st)
         yield assert_equal, esc, obs
 
+
+def test_convert_bool():
+    cases = [(True, 'True'), (False, 'False'), (False, '1'), (False, 'cat'), (False, 'dog')]
+    for c,s in cases:
+        yield assert_equal, c, convert_bool(s)
 
 if __name__ == '__main__':
     nose.runmodule()
