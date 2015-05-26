@@ -155,8 +155,8 @@ def test_is_int():
     yield assert_false, is_int('42')
 
 def test_is_bool():
-    yield assert_true, is_int(True)
-    yield assert_false, is_int('True')
+    yield assert_true, is_bool(True)
+    yield assert_false, is_bool('True')
 
 def test_always_true():
     yield assert_true, always_true(42)
