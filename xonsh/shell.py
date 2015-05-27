@@ -1,8 +1,10 @@
 """The xonsh shell"""
 import builtins
+from warnings import warn
 
 from xonsh.execer import Execer
 from xonsh.environ import xonshrc_context
+from xonsh.tools import XonshError
 
 def is_prompt_toolkit_available():
     """Checks if prompt_toolkit is available to import."""
@@ -20,17 +22,29 @@ class Shell(object):
     readline version of shell should be used.
     """
 
-    def __init__(self, ctx=None, **kwargs):
+    def __init__(self, ctx=None, shell_type=None, **kwargs):
         self._init_environ(ctx)
         env = builtins.__xonsh_env__
-        if is_prompt_toolkit_available() and env['PROMPT_TOOLKIT_SHELL']:
+
+        if shell_type is not None:
+            env['SHELL_TYPE'] = shell_type
+        if env['SHELL_TYPE'] == 'prompt_toolkit':
+            if not is_prompt_toolkit_available():
+                warn('prompt_toolkit is not available, using readline instead.')
+                env['SHELL_TYPE'] = 'readline'
+
+        if env['SHELL_TYPE'] == 'prompt_toolkit':
             from xonsh.prompt_toolkit_shell import PromptToolkitShell
             self.shell = PromptToolkitShell(execer=self.execer,
                                             ctx=self.ctx, **kwargs)
-        else:
+        elif env['SHELL_TYPE'] == 'readline':
             from xonsh.readline_shell import ReadlineShell
             self.shell = ReadlineShell(execer=self.execer,
                                        ctx=self.ctx, **kwargs)
+        else:
+            raise XonshError('{} is not recognized as a shell type'.format(
+                env['SHELL_TYPE']))
+
 
     def __getattr__(self, attr):
         """Delegates calls to appropriate shell instance."""
