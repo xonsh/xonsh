@@ -28,6 +28,13 @@ parser.add_argument('-D',
                     metavar='ITEM',
                     nargs='*',
                     default=None)
+parser.add_argument('--shell-type',
+                    help='What kind of shell should be used. '
+                         'Possible options: readline, prompt_toolkit. '
+                         'Warning! If set this overrides $SHELL_TYPE variable.',
+                    dest='shell_type',
+                    choices=('readline', 'prompt_toolkit'),
+                    default=None)
 parser.add_argument('file',
                     metavar='script-file',
                     help='If present, execute the script in script-file'
@@ -45,7 +52,10 @@ parser.add_argument('args',
 def main(argv=None):
     """Main entry point for xonsh cli."""
     args = parser.parse_args()
-    shell = Shell() if not args.norc else Shell(ctx={})
+    shell_kwargs = {'shell_type': args.shell_type}
+    if args.norc:
+        shell_kwargs['ctx'] = {}
+    shell = Shell(**shell_kwargs)
     from xonsh import imphooks
     env = builtins.__xonsh_env__
     if args.defines is not None:
