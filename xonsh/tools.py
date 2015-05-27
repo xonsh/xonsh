@@ -394,6 +394,16 @@ def is_int(x):
     return isinstance(x, int)
 
 
+def is_bool(x):
+    """Tests if something is a boolean"""
+    return isinstance(x, bool)
+
+
+def convert_bool(s):
+    """Converts a string of 'True' or 'False' into a boolean"""
+    return s == 'True'
+
+
 def always_true(x):
     """Returns True"""
     return True
