@@ -28,6 +28,13 @@ parser.add_argument('-D',
                     metavar='ITEM',
                     nargs='*',
                     default=None)
+parser.add_argument('--shell-type',
+                    help='What kind of shell should be used. '
+                         'Possible options: readline, prompt_toolkit. '
+                         'Warning! If set this overrides $SHELL_TYPE variable.',
+                    dest='shell_type',
+                    choices=('readline', 'prompt_toolkit'),
+                    default=None)
 parser.add_argument('file',
                     metavar='script-file',
                     help='If present, execute the script in script-file'
@@ -40,13 +47,6 @@ parser.add_argument('args',
                          ' by script-file',
                     nargs='*',
                     default=[])
-parser.add_argument('--shell_type',
-                    help='What kind of shell should be used. '
-                         'Possible options: readline, prompt_toolkit. '
-                         'Warning! If set this overrides $SHELL_TYPE variable.',
-                    dest='shell_type',
-                    choices=['readline', 'prompt_toolkit'],
-                    default=None)
 
 
 def main(argv=None):
