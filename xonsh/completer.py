@@ -134,6 +134,13 @@ class Completer(object):
         if prefix == '..':
             paths.add('../')
 
+    def _add_cdpaths(self, paths, prefix):
+        """Completes current prefix using CDPATH"""
+        env = builtins.__xonsh_env__
+        for cdp in env.get("CDPATH", []):
+            for s in iglobpath(os.path.join(cdp, prefix) + '*'):
+                paths.add(s)
+
     def cmd_complete(self, cmd):
         """Completes a command name based on what is on the $PATH"""
         space = ' '
@@ -163,7 +170,8 @@ class Completer(object):
             paths = {s.replace(home, tilde) for s in paths}
         self._add_env(paths, prefix)
         self._add_dots(paths, prefix)
-        return paths
+        self._add_cdpaths(paths, prefix)
+        return {os.path.normpath(s) for s in paths}
 
     def bash_complete(self, prefix, line, begidx, endidx):
         """Attempts BASH completion."""
