@@ -124,7 +124,9 @@ class Execer(object):
                                 stacklevel=stacklevel)
         if code is None:
             return None  # handles comment only input
-        return exec(code, glbs, locs)
+        e = exec(code, glbs, locs)
+        self.ctxtransformer.forced_subproc = False
+        return e
 
     def _find_next_break(self, line, mincol):
         if mincol >= 1:
@@ -179,6 +181,7 @@ class Execer(object):
                     input = '\n'.join(lines)
                     continue
                 maxcol = self._find_next_break(line, last_error_col)
+                self.ctxtransformer.forced_subproc = True
                 sbpline = subproc_toks(line,
                                        returnline=True,
                                        maxcol=maxcol,

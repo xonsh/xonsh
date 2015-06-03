@@ -61,6 +61,7 @@ class CtxAwareTransformer(NodeTransformer):
         self.contexts = []
         self.lines = None
         self.mode = None
+        self.forced_subproc = False
 
     def ctxvisit(self, node, input, ctx, mode='exec'):
         """Transforms the node in a context-dependent way.
@@ -106,6 +107,7 @@ class CtxAwareTransformer(NodeTransformer):
         line = self.lines[node.lineno - 1]
         mincol = len(line) - len(line.lstrip())
         maxcol = None if self.mode == 'eval' else node.col_offset
+        self.forced_subproc = True
         spline = subproc_toks(line,
                               mincol=mincol,
                               maxcol=maxcol,
@@ -140,10 +142,12 @@ class CtxAwareTransformer(NodeTransformer):
         inscope = self.is_in_scope(body)
         if not inscope:
             node.body = self.try_subproc_toks(body)
+            node.body[0] = self.visit(node.body[0])
         return node
 
     def visit_Expr(self, node):
         if self.is_in_scope(node):
+            node.value = self.visit(node.value)
             return node
         else:
             newnode = self.try_subproc_toks(node)
@@ -151,7 +155,15 @@ class CtxAwareTransformer(NodeTransformer):
                 newnode = Expr(value=newnode,
                                lineno=node.lineno,
                                col_offset=node.col_offset)
+            newnode.value = self.visit(newnode.value)
             return newnode
+
+    def visit_Call(self, node):
+        if (isinstance(node.func, Name) and
+                node.func.id == '__xonsh_subproc_uncaptured__' and
+                self.forced_subproc):
+            node.func.id = '__xonsh_subproc_noreturn__'
+        return node
 
     def visit_Assign(self, node):
         ups = set()
@@ -159,7 +171,7 @@ class CtxAwareTransformer(NodeTransformer):
             if isinstance(targ, (Tuple, List)):
                 ups.update(map(leftmostname, targ.elts))
             elif isinstance(targ, BinOp):
-                newnode = self.try_subproc_toks(node)
+                newnode = self.visit(self.try_subproc_toks(node))
                 if newnode is node:
                     ups.add(leftmostname(targ))
                 else:
