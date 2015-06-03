@@ -246,9 +246,29 @@ def handle_lparen(state, token, stream):
     """
     Function for handling ``(``
     """
-    state['pymode'].append((state['pymode'][-1][0], '(', ')', token.start))
     state['last'] = token
-    yield _new_token('LPAREN', '(', token.start)
+    if state['pymode'][-1][0]:
+        state['pymode'].append((True, '(', ')', token.start))
+        yield _new_token('LPAREN', '(', token.start)
+    else:
+        count = 1
+        buff = '('
+        n = next(stream, None)
+        while n is not None:
+            buff += n.string
+            if n.string == '(':
+                count += 1
+            elif n.string == ')':
+                count -= 1
+                if count == 0:
+                    break
+            n = next(stream, None)
+        state['last'] = n
+        if n is None:
+            e = 'Unmatched ('
+            yield _new_token('ERRORTOKEN', e, n.start)
+        else:
+            yield _new_token('SUBSHELL_COMMAND', buff, token.start)
 
 
 def handle_lbrace(state, token, stream):
@@ -493,6 +513,7 @@ class Lexer(object):
         'AMPERSAND',             # &
         'REGEXPATH',             # regex escaped with backticks
         'IOREDIRECT',            # subprocess io redirection token
+        'SUBSHELL_COMMAND',      # command to be run in a subshell
         'LPAREN', 'RPAREN',      # ( )
         'LBRACKET', 'RBRACKET',  # [ ]
         'LBRACE', 'RBRACE',      # { }

@@ -1636,7 +1636,7 @@ class Parser(object):
         if len(p) == 2:
             # plain-old atoms
             bt = '`'
-            if isinstance(p1, (ast.Num, ast.Str, ast.Bytes)):
+            if isinstance(p1, (ast.Num, ast.Str, ast.Bytes, ast.Call)):
                 pass
             elif p1 == 'True':
                 p1 = ast.NameConstant(value=True,
@@ -2119,9 +2119,12 @@ class Parser(object):
                             lineno=lineno,
                             col=col)
         elif p1 == '$[':
-            p0 = xonsh_call('__xonsh_subproc_uncaptured__', p2,
-                            lineno=lineno,
-                            col=col)
+            if isinstance(p2, ast.Call):
+                p0 = p2
+            else:
+                p0 = xonsh_call('__xonsh_subproc_uncaptured__', p2,
+                                lineno=lineno,
+                                col=col)
         else:
             assert False
         return p0
@@ -2195,7 +2198,9 @@ class Parser(object):
         col = self.col
         lenp = len(p)
         p1 = p[1]
-        if lenp == 2:
+        if isinstance(p1, str):
+            p0 = [ast.Str(s=p1, lineno=lineno, col_offset=col)]
+        elif lenp == 2:
             p0 = [self._subproc_cliargs(p1, lineno=lineno, col=col)]
         elif p[2] == '&':
             p0 = p1 + [ast.Str(s=p[2], lineno=lineno, col_offset=col)]
@@ -2227,6 +2232,7 @@ class Parser(object):
                         | REGEXPATH
                         | DOLLAR_NAME
                         | GT
+                        | SUBSHELL_COMMAND
                         | LT
                         | RSHIFT
                         | IOREDIRECT

@@ -22,7 +22,7 @@ from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env
 from xonsh.aliases import DEFAULT_ALIASES, bash_aliases
 from xonsh.jobs import add_job, wait_for_active_job
-from xonsh.proc import ProcProxy, SimpleProcProxy
+from xonsh.proc import ProcProxy, SimpleProcProxy, SubshellProxy
 
 ENV = None
 BUILTINS_LOADED = False
@@ -415,7 +415,7 @@ def run_subproc(cmds, captured=True):
         stdin = None
         stdout = None
         stderr = None
-        if isinstance(cmd, string_types):
+        if cmd == '|':
             prev = cmd
             continue
         streams = {}
@@ -451,21 +451,24 @@ def run_subproc(cmds, captured=True):
         if 'stderr' in streams:
             stderr = streams['stderr']
         uninew = ix == last_cmd
-        alias = builtins.aliases.get(cmd[0], None)
-        if callable(alias):
-            aliased_cmd = alias
+        if cmd[0][0] == '(':
+            aliased_cmd = cmd[0][1:-1]
         else:
-            if alias is not None:
-                cmd = alias + cmd[1:]
-            n = _get_runnable_name(cmd[0])
-            if n is None:
-                aliased_cmd = cmd
+            alias = builtins.aliases.get(cmd[0], None)
+            if callable(alias):
+                aliased_cmd = alias
             else:
-                try:
-                    aliased_cmd = get_script_subproc_command(n, cmd[1:])
-                except PermissionError:
-                    e = 'xonsh: subprocess mode: permission denied: {0}'
-                    raise XonshError(e.format(cmd[0]))
+                if alias is not None:
+                    cmd = alias + cmd[1:]
+                n = _get_runnable_name(cmd[0])
+                if n is None:
+                    aliased_cmd = cmd
+                else:
+                    try:
+                        aliased_cmd = get_script_subproc_command(n, cmd[1:])
+                    except PermissionError:
+                        e = 'xonsh: subprocess mode: permission denied: {0}'
+                        raise XonshError(e.format(cmd[0]))
         if callable(aliased_cmd):
             prev_is_proxy = True
             numargs = len(inspect.signature(aliased_cmd).parameters)
@@ -479,6 +482,11 @@ def run_subproc(cmds, captured=True):
             proc = cls(aliased_cmd, cmd[1:],
                        stdin, stdout, stderr,
                        universal_newlines=uninew)
+        elif isinstance(aliased_cmd, string_types):
+            prev_is_proxy = True
+            print('SUBSHELL', aliased_cmd, stdout)
+            proc = SubshellProxy(aliased_cmd, stdin, stdout,
+                                 stderr, universal_newlines=uninew)
         else:
             prev_is_proxy = False
             subproc_kwargs = {}
