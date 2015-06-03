@@ -532,7 +532,8 @@ def run_subproc(cmds, captured=True):
             output = out
     elif last_stdout not in (PIPE, None, sys.stdout):
         last_stdout.close()
-    if job and job['obj'].returncode != 0 and 'SUBPROC_CHECK' in ENV and int(ENV['SUBPROC_CHECK']) == 1:
+
+    if job and job['obj'].returncode != 0 and builtins.__xonsh_subproc_check__:
         cmd = [' '.join(i) if isinstance(i, list) else i for i in job['cmds']]
         cmd = ' '.join(cmd)
         raise CalledProcessError(job['obj'].returncode, cmd, output)
@@ -585,6 +586,7 @@ def load_builtins(execer=None):
         del builtins.quit
     builtins.__xonsh_subproc_captured__ = subproc_captured
     builtins.__xonsh_subproc_uncaptured__ = subproc_uncaptured
+    builtins.__xonsh_subproc_check__ = False
     builtins.__xonsh_execer__ = execer
     builtins.__xonsh_all_jobs__ = {}
     builtins.__xonsh_active_job__ = None
@@ -623,6 +625,7 @@ def unload_builtins():
              '__xonsh_pyquit__',
              '__xonsh_subproc_captured__',
              '__xonsh_subproc_uncaptured__',
+             '__xonsh_subproc_check__',
              '__xonsh_execer__',
              'evalx',
              'execx',
