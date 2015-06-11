@@ -4,6 +4,9 @@ xonsh
 .. image:: https://travis-ci.org/scopatz/xonsh.svg?branch=master
     :target: https://travis-ci.org/scopatz/xonsh
 
+.. image:: https://ci.appveyor.com/api/projects/status/ufqtigii8ma3rctt/branch/master?svg=true
+    :target: https://ci.appveyor.com/project/rbrewer123/xonsh-unq93
+
 .. image:: https://landscape.io/github/scopatz/xonsh/master/landscape.svg?style=flat
     :target: https://landscape.io/github/scopatz/xonsh/master
     :alt: Code Health

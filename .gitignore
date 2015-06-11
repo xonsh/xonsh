@@ -16,6 +16,13 @@ dist/
 xonsh.egg-info/
 docs/_build/
 
+# temporary files from vim and emacs
+*~
+*#
+.#*
+*.swp
+*.swo
+
 # Virtualenv
 pip-selfcheck.json
 bin/
