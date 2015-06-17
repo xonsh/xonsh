@@ -321,12 +321,15 @@ class ManCompleter(object):
     def option_complete(self, prefix, cmd):
         """Completes an option name, basing on content of man page."""
         if cmd not in self._options.keys():
-            manpage = subprocess.Popen(["man", cmd], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-            # This is a trick to get rid of reverse line feeds
-            text = subprocess.check_output(["col", "-b"], stdin=manpage.stdout).decode('utf-8')
-            scraped_text = ' '.join(SCRAPE_RE.findall(text))
-            matches = INNER_OPTIONS_RE.findall(scraped_text)
-            self._options[cmd] = matches
+            try:
+                manpage = subprocess.Popen(["man", cmd], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+                # This is a trick to get rid of reverse line feeds
+                text = subprocess.check_output(["col", "-b"], stdin=manpage.stdout).decode('utf-8')
+                scraped_text = ' '.join(SCRAPE_RE.findall(text))
+                matches = INNER_OPTIONS_RE.findall(scraped_text)
+                self._options[cmd] = matches
+            except:
+                return set()
         return {s for s in self._options[cmd] if s.startswith(prefix)}
 
     def _load_cached_options(self):
