@@ -107,7 +107,7 @@ DEFAULT_ALIASES = {
 
 if ON_WINDOWS:
     # Borrow builtin commands from cmd.exe.
-    WINDOWS_CMD_ALIASES = [
+    WINDOWS_CMD_ALIASES = {
         'cls',
         'copy',
         'del',
@@ -124,7 +124,7 @@ if ON_WINDOWS:
         'time',
         'type',
         'vol'
-    ]
+    }
 
     for alias in WINDOWS_CMD_ALIASES:
         DEFAULT_ALIASES[alias] = ['cmd', '/c', alias]
