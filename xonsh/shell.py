@@ -60,4 +60,6 @@ class Shell(object):
             self.ctx = xonshrc_context(rcfile=rc, execer=self.execer)
         builtins.__xonsh_ctx__ = self.ctx
         self.ctx['__name__'] = '__main__'
-        self.ctx['__xonsh_subproc_check__'] = False
+
+        # xonshrc settting takes priority
+        self.ctx.setdefault('__xonsh_subproc_check__', False)

@@ -79,6 +79,7 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
         execer = self.execer
         execer.filename = filename
         ctx = {}  # dummy for modules
+        ctx['__xonsh_subproc_check__'] = False
         code = execer.compile(src, glbs=ctx, locs=ctx)
         return code
 
