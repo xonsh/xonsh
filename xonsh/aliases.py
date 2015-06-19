@@ -113,7 +113,29 @@ DEFAULT_ALIASES = {
 }
 
 if ON_WINDOWS:
-    DEFAULT_ALIASES['dir'] = ['cmd', '/c', 'dir']
+    # Borrow builtin commands from cmd.exe.
+    WINDOWS_CMD_ALIASES = {
+        'cls',
+        'copy',
+        'del',
+        'dir',
+        'erase',
+        'md',
+        'mkdir',
+        'mklink',
+        'move',
+        'rd',
+        'ren',
+        'rename',
+        'rmdir',
+        'time',
+        'type',
+        'vol'
+    }
+
+    for alias in WINDOWS_CMD_ALIASES:
+        DEFAULT_ALIASES[alias] = ['cmd', '/c', alias]
+
 elif ON_MAC:
     DEFAULT_ALIASES['ls'] = ['ls', '-G']
 else:
