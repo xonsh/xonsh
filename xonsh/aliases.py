@@ -82,8 +82,15 @@ def bash_aliases():
     aliases = {}
     for key, value in items:
         try:
-            key = key[6:]
-            value = value.strip('\'')
+            key = key[6:]  # lstrip 'alias '
+
+            # undo bash's weird quoting of single quotes (sh_single_quote)
+            value = value.replace('\'\\\'\'', '\'')
+
+            # strip one single quote at the start and end of value
+            if value[0] == '\'' and value[-1] == '\'':
+                value = value[1:-1]
+
             value = shlex.split(value)
         except ValueError as exc:
             warn('could not parse Bash alias "{0}": {1!r}'.format(key, exc),
