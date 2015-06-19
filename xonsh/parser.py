@@ -2260,6 +2260,7 @@ class Parser(object):
                                     col=self.col)
                     p0._cliarg_action = 'extend'
                 else:
+                    p0.s = os.path.expanduser(p0.s)
                     p0._cliarg_action = 'append'
             elif isinstance(p1, ast.AST):
                 p0 = p1
@@ -2305,7 +2306,7 @@ class Parser(object):
         if len(p) == 2:
             p0 = p1
         else:
-            p0 = os.path.expanduser(p1 + p[2])
+            p0 = p1 + p[2]
         p[0] = p0
 
     def p_subproc_arg_part(self, p):
