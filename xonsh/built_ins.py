@@ -207,14 +207,17 @@ def _get_runnable_name(fname):
     for d in builtins.__xonsh_env__['PATH']:
         if os.path.isdir(d):
             files = os.listdir(d)
-            if fname in files:
-                return os.path.join(d, fname)
+
             if ON_WINDOWS:
                 PATHEXT = builtins.__xonsh_env__.get('PATHEXT', [])
                 for dirfile in files:
                     froot, ext = os.path.splitext(dirfile)
                     if fname == froot and ext.upper() in PATHEXT:
                         return os.path.join(d, dirfile)
+
+            if fname in files:
+                return os.path.join(d, fname)
+
     return None
 
 
