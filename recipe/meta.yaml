@@ -8,6 +8,8 @@ source:
 build:
   script: python setup.py install
   number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
+  entry_points:
+    - xonsh = xonsh.main:main
 
 requirements:
   build:
