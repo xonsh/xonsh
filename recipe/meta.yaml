@@ -1,13 +1,13 @@
 package:
   name: xonsh
-  version: "0.1.6"
+  version: {{ environ['GIT_DESCRIBE_TAG'] }}
 
 source:
-  fn: xonsh.tar.gz
-  url: https://github.com/scopatz/xonsh/archive/master.tar.gz
+  git_url: ../
 
 build:
   script: python setup.py install
+  number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
 
 requirements:
   build:
