@@ -225,6 +225,11 @@ SHELL_TYPE         ``'readline'``                Which shell is used.
                                                  library installed. To specify
                                                  which shell should be used, do
                                                  so in the run control file.
+CDPATH             ``[]``                        A list of paths to be used as
+                                                 roots for a `cd`, breaking
+                                                 compatibility with bash, xonsh
+                                                 always prefer an existing
+                                                 relative path.
 ================== ============================= ================================
 
 Environment Lookup with ``${}``
