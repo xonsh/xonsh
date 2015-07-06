@@ -2,6 +2,7 @@
 """
 import os
 import builtins
+from glob import iglob
 from argparse import ArgumentParser
 
 DIRSTACK = []
@@ -31,6 +32,23 @@ def _change_working_directory(newdir):
         env['PWD'] = new
 
 
+def _try_cdpath(apath):
+    # NOTE: this CDPATH implementation differs from the bash one.
+    # In bash if a CDPATH is set, an unqualified local folder
+    # is considered after all CDPATHs, example:
+    # CDPATH=$HOME/src (with src/xonsh/ inside)
+    # $ cd xonsh -> src/xonsh (whith xonsh/xonsh)
+    # a second $ cd xonsh has no effects, to move in the nested xonsh
+    # in bash a full $ cd ./xonsh is needed.
+    # In xonsh a relative folder is allways preferred.
+    env = builtins.__xonsh_env__
+    cdpaths = env.get('CDPATH', [])
+    for cdp in cdpaths:
+        for cdpath_prefixed_path in iglob(os.path.join(cdp, apath)):
+            return cdpath_prefixed_path
+    return apath
+
+
 def cd(args, stdin=None):
     """Changes the directory.
 
@@ -40,6 +58,7 @@ def cd(args, stdin=None):
     env = builtins.__xonsh_env__
     oldpwd = env.get('OLDPWD', None)
     cwd = _get_cwd()
+
     if len(args) == 0:
         d = os.path.expanduser('~')
     elif len(args) == 1:
@@ -64,6 +83,8 @@ def cd(args, stdin=None):
                     return '', e.format(len(DIRSTACK))
                 else:
                     d = DIRSTACK[num - 1]
+            else:
+                d = _try_cdpath(d)
     else:
         return '', 'cd takes 0 or 1 arguments, not {0}\n'.format(len(args))
     if not os.path.exists(d):
