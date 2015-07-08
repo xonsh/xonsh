@@ -76,7 +76,7 @@ def bash_aliases():
                                     input='alias',
                                     stderr=subprocess.PIPE,
                                     universal_newlines=True)
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         s = ''
     items = [line.split('=', 1) for line in s.splitlines() if '=' in line]
     aliases = {}
