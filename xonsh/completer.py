@@ -51,7 +51,7 @@ class Completer(object):
             # or we could make this lazy
             self._load_bash_complete_files()
             self.have_bash = True
-        except subprocess.CalledProcessError:
+        except (subprocess.CalledProcessError, FileNotFoundError):
             self.have_bash = False
 
     def complete(self, prefix, line, begidx, endidx, ctx=None):
