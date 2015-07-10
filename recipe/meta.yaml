@@ -13,10 +13,10 @@ build:
 
 requirements:
   build:
-    - python >=3.4
+    - python 3.4
     - ply
   run:
-    - python >=3.4
+    - python 3.4
     - ply
 
 about:
