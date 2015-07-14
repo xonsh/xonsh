@@ -304,9 +304,10 @@ def command_not_found(cmd):
         return ''
     elif not os.path.isfile('/usr/lib/command-not-found'):  # utility is not on PATH
         return ''
-    c = '/usr/lib/command-not-found --no-failure-msg {0}; exit 0'
+    c = '/usr/lib/command-not-found {0}; exit 0'
     s = subprocess.check_output(c.format(cmd), universal_newlines=True, 
-                                stderr=subprocess.STDOUT, shell=True).strip()
+                                stderr=subprocess.STDOUT, shell=True)
+    s = '\n'.join(s.splitlines()[:-1]).strip()
     return s
 
 
