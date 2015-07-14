@@ -236,10 +236,10 @@ class Completer(object):
         if len(inp) == 0:
             self.bash_complete_files = {}
             return
-        inp.append('shopt -s extdebug')
-        declare_f = 'declare -F '
-        inp += [declare_f + f for f in self.bash_complete_funcs.values()]
-        inp.append('shopt -u extdebug\n')
+        if self.bash_complete_funcs:
+            inp.append('shopt -s extdebug')
+            inp.append('declare -F ' + ' '.join([f for f in set(self.bash_complete_funcs.values())]))
+            inp.append('shopt -u extdebug\n')
         out = subprocess.check_output(['bash'], input='\n'.join(inp),
                                       universal_newlines=True)
         func_files = {}
