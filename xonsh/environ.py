@@ -1,7 +1,6 @@
 """Environment for the xonsh shell."""
 import os
 import re
-import locale
 import socket
 import string
 import locale
@@ -9,8 +8,7 @@ import builtins
 import subprocess
 from warnings import warn
 from functools import wraps
-from collections import MutableMapping, MutableSequence, MutableSet, \
-    defaultdict, namedtuple
+from collections import MutableMapping, MutableSequence, MutableSet, namedtuple
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.tools import TERM_COLORS, ON_WINDOWS, ON_MAC, string_types, is_int,\
@@ -314,7 +312,7 @@ def get_hg_branch(cwd=None, root=None):
         return "{0}, {1}".format(
             *(b.strip(os.linesep) for b in (branch, active_bookmark)))
 
-    return branch.strip(os.linesep)
+    return branch.strip(os.linesep) if branch else None
 
 
 def current_branch(pad=True):
@@ -344,10 +342,10 @@ def git_dirty_working_directory(cwd=None):
 
 @ensure_hg
 def hg_dirty_working_directory(cwd=None, root=None):
-    id = call_hg_command(['identify', '--id'], cwd).strip(os.linesep)
+    id = call_hg_command(['identify', '--id'], cwd)
     if id is None:
         return False
-    return id.endswith('+')
+    return id.strip(os.linesep).endswith('+')
 
 
 def dirty_working_directory(cwd=None):
