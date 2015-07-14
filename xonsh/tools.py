@@ -346,8 +346,9 @@ def suggest_commands(cmd, env, aliases):
         length = max(len(key) for key, _ in items) + 2
         alternatives = '\n'.join('    {: <{}} {}'.format(key + ":", length, val)
                                  for key, val in items)
-        rtn = '{}\n{}\n\n'.format(tips, alternatives)
-        rtn += command_not_found(cmd)
+        rtn = '{}\n{}'.format(tips, alternatives)
+        c = command_not_found(cmd)
+        rtn += ('\n\n' + c) if len(c) > 0 else ''
     return rtn
 
 
