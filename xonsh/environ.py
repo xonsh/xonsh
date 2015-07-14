@@ -270,8 +270,6 @@ def get_git_branch(cwd=None):
                 branch = s
         except (subprocess.CalledProcessError, FileNotFoundError):
             pass
-        except OSError:
-            pass
 
     return branch
 
