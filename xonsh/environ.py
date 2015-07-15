@@ -184,7 +184,7 @@ def locate_binary(name, cwd):
                                                   universal_newlines=True)
         if not binary_location:
             return
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         return
 
     return binary_location
@@ -254,7 +254,7 @@ def get_git_branch(cwd=None):
                                                  input=_input,
                                                  stderr=subprocess.PIPE,
                                                  universal_newlines=True) or None
-            except subprocess.CalledProcessError:
+            except (subprocess.CalledProcessError, FileNotFoundError):
                 continue
 
     # fall back to using the git binary if the above failed
@@ -268,7 +268,7 @@ def get_git_branch(cwd=None):
             s = s.strip()
             if len(s) > 0:
                 branch = s
-        except subprocess.CalledProcessError:
+        except (subprocess.CalledProcessError, FileNotFoundError):
             pass
 
     return branch
@@ -286,9 +286,9 @@ def call_hg_command(command, cwd):
                                     cwd=cwd,
                                     universal_newlines=True,
                                     env=hg_env)
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         pass
-
+        
     return s
 
 
@@ -340,9 +340,8 @@ def git_dirty_working_directory(cwd=None):
                                     cwd=cwd,
                                     universal_newlines=True)
         return bool(s)
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         return False
-
 
 @ensure_hg
 def hg_dirty_working_directory(cwd=None, root=None):
@@ -478,8 +477,9 @@ def bash_env():
                                     env=currenv,
                                     stderr=subprocess.PIPE,
                                     universal_newlines=True)
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         s = ''
+        
     items = [line.split('=', 1) for line in s.splitlines() if '=' in line]
     env = dict(items)
     return env
