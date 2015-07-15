@@ -177,8 +177,10 @@ class Env(MutableMapping):
 
 
 def locate_binary(name, cwd):
+    # StackOverflow for `where` tip: http://stackoverflow.com/a/304447/90297
+    locator = 'where' if ON_WINDOWS else 'which'
     try:
-        binary_location = subprocess.check_output(['which', name],
+        binary_location = subprocess.check_output([locator, name],
                                                   cwd=cwd,
                                                   stderr=subprocess.PIPE,
                                                   universal_newlines=True)
@@ -191,22 +193,19 @@ def locate_binary(name, cwd):
 
 
 def ensure_git(func):
-    if ON_WINDOWS:
-        return func
-    else:
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            # Get cwd or bail
-            kwargs['cwd'] = kwargs.get('cwd', _get_cwd())
-            if kwargs['cwd'] is None:
-                return
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        # Get cwd or bail
+        kwargs['cwd'] = kwargs.get('cwd', _get_cwd())
+        if kwargs['cwd'] is None:
+            return
 
-            # step out completely if git is not installed
-            if locate_binary('git', kwargs['cwd']) is None:
-                return
+        # step out completely if git is not installed
+        if locate_binary('git', kwargs['cwd']) is None:
+            return
 
-            return func(*args, **kwargs)
-        return wrapper
+        return func(*args, **kwargs)
+    return wrapper
 
 
 def ensure_hg(func):
