@@ -143,6 +143,8 @@ if ON_WINDOWS:
     for alias in WINDOWS_CMD_ALIASES:
         DEFAULT_ALIASES[alias] = ['cmd', '/c', alias]
 
+    DEFAULT_ALIASES['which'] = ['where']
+
 elif ON_MAC:
     DEFAULT_ALIASES['ls'] = ['ls', '-G']
 else:
