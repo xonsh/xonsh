@@ -85,8 +85,8 @@ import re
 import datetime
 from collections import deque
 
-from IPython.utils.py3compat import PY3, cast_unicode
-from IPython.utils.encoding import get_stream_enc
+# from IPython.utils.py3compat import PY3, cast_unicode
+# from IPython.utils.encoding import get_stream_enc
 
 from io import StringIO
 
@@ -109,14 +109,14 @@ def _safe_getattr(obj, attr, default=None):
     except Exception:
         return default
 
-if PY3:
-    CUnicodeIO = StringIO
-else:
-    class CUnicodeIO(StringIO):
-        """StringIO that casts str to unicode on Python 2"""
-        def write(self, text):
-            return super(CUnicodeIO, self).write(
-                cast_unicode(text, encoding=get_stream_enc(sys.stdout)))
+# if PY3:
+CUnicodeIO = StringIO
+# else:
+    # class CUnicodeIO(StringIO):
+        # """StringIO that casts str to unicode on Python 2"""
+        # def write(self, text):
+            # return super(CUnicodeIO, self).write(
+                # cast_unicode(text, encoding=get_stream_enc(sys.stdout)))
 
 
 def pretty(obj, verbose=False, max_width=79, newline='\n', max_seq_length=MAX_SEQ_LENGTH):
