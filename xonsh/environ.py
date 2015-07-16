@@ -175,6 +175,15 @@ class Env(MutableMapping):
         return '{0}.{1}({2})'.format(self.__class__.__module__,
                                      self.__class__.__name__, self._d)
 
+    def _repr_pretty_(self, p, cycle):
+        name = '{0}.{1}'.format(self.__class__.__module__,
+                                self.__class__.__name__)
+        with p.group(0, name + '(', ')'):
+            if cycle:
+                p.text('...')
+            elif len(self):
+                p.break_()
+                p.pretty(dict(self))
 
 def locate_binary(name, cwd):
     # StackOverflow for `where` tip: http://stackoverflow.com/a/304447/90297
