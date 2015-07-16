@@ -117,7 +117,17 @@ class Aliases(MutableMapping):
         return '{0}.{1}({2})'.format(self.__class__.__module__,
                                      self.__class__.__name__, self._raw)
 
-
+    def _repr_pretty_(self, p, cycle):
+        name = '{0}.{1}'.format(self.__class__.__module__,
+                                self.__class__.__name__)
+        with p.group(0, name + '(', ')'):
+            if cycle:
+                p.text('...')
+            elif len(self):
+                p.break_()
+                p.pretty(dict(self))
+                                     
+                                     
 def helper(x, name=''):
     """Prints help about, and then returns that variable."""
     INSPECTOR.pinfo(x, oname=name, detail_level=0)

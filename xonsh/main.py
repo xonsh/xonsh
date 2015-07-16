@@ -8,6 +8,7 @@ import subprocess
 from argparse import ArgumentParser, Namespace
 
 from xonsh.shell import Shell
+from xonsh.pretty import pprint
 from xonsh.jobs import ignore_sigtstp
 
 parser = ArgumentParser(description='xonsh')
@@ -47,6 +48,11 @@ parser.add_argument('args',
                          ' by script-file',
                     nargs='*',
                     default=[])
+          
+def _pprint_displayhook(value):
+    if value is not None:
+        __builtins__['_'] = value
+        pprint(value)
 
 
 def main(argv=None):
@@ -55,6 +61,7 @@ def main(argv=None):
     shell_kwargs = {'shell_type': args.shell_type}
     if args.norc:
         shell_kwargs['ctx'] = {}
+    setattr(sys, 'displayhook', _pprint_displayhook)    
     shell = Shell(**shell_kwargs)
     from xonsh import imphooks
     env = builtins.__xonsh_env__
