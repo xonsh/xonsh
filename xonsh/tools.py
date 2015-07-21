@@ -21,6 +21,7 @@ import re
 import sys
 import builtins
 import platform
+import subprocess
 from collections import OrderedDict, Sequence
 
 if sys.version_info[0] >= 3:
@@ -34,6 +35,7 @@ DEFAULT_ENCODING = sys.getdefaultencoding()
 
 ON_WINDOWS = (platform.system() == 'Windows')
 ON_MAC = (platform.system() == 'Darwin')
+ON_LINUX = (platform.system() == 'Linux')
 ON_POSIX = (os.name == 'posix')
 
 
@@ -294,45 +296,61 @@ class redirect_stderr(_RedirectStream):
     _stream = "stderr"
 
 
+def command_not_found(cmd):
+    """Uses the debian/ubuntu command-not-found utility to suggest packages for a 
+    command that cannot currently be found.
+    """
+    if not ON_LINUX:
+        return ''
+    elif not os.path.isfile('/usr/lib/command-not-found'):  # utility is not on PATH
+        return ''
+    c = '/usr/lib/command-not-found {0}; exit 0'
+    s = subprocess.check_output(c.format(cmd), universal_newlines=True, 
+                                stderr=subprocess.STDOUT, shell=True)
+    s = '\n'.join(s.splitlines()[:-1]).strip()
+    return s
+
+
 def suggest_commands(cmd, env, aliases):
     """Suggests alternative commands given an environment and aliases."""
-    if env.get('SUGGEST_COMMANDS', True):
-        thresh = env.get('SUGGEST_THRESHOLD', 3)
-        max_sugg = env.get('SUGGEST_MAX_NUM', 5)
-        if max_sugg < 0:
-            max_sugg = float('inf')
+    suggest_cmds = env.get('SUGGEST_COMMANDS', True)
+    if not suggest_cmds:
+        return
+    thresh = env.get('SUGGEST_THRESHOLD', 3)
+    max_sugg = env.get('SUGGEST_MAX_NUM', 5)
+    if max_sugg < 0:
+        max_sugg = float('inf')
 
-        cmd = cmd.lower()
-        suggested = {}
-        for a in builtins.aliases:
-            if a not in suggested:
-                if levenshtein(a.lower(), cmd, thresh) < thresh:
-                    suggested[a] = 'Alias'
+    cmd = cmd.lower()
+    suggested = {}
+    for a in builtins.aliases:
+        if a not in suggested:
+            if levenshtein(a.lower(), cmd, thresh) < thresh:
+                suggested[a] = 'Alias'
 
-        for d in filter(os.path.isdir, env.get('PATH', [])):
-            for f in os.listdir(d):
-                if f not in suggested:
-                    if levenshtein(f.lower(), cmd, thresh) < thresh:
-                        fname = os.path.join(d, f)
-                        suggested[f] = 'Command ({0})'.format(fname)
-        suggested = OrderedDict(
-            sorted(suggested.items(),
-                   key=lambda x: suggestion_sort_helper(x[0].lower(), cmd)))
-        num = min(len(suggested), max_sugg)
+    for d in filter(os.path.isdir, env.get('PATH', [])):
+        for f in os.listdir(d):
+            if f not in suggested:
+                if levenshtein(f.lower(), cmd, thresh) < thresh:
+                    fname = os.path.join(d, f)
+                    suggested[f] = 'Command ({0})'.format(fname)
+    suggested = OrderedDict(
+        sorted(suggested.items(),
+               key=lambda x: suggestion_sort_helper(x[0].lower(), cmd)))
+    num = min(len(suggested), max_sugg)
 
-        if num == 0:
-            return ''
-        else:
-            tips = 'Did you mean {}the following?'.format('' if num == 1 else
-                                                          'one of ')
-
-            items = list(suggested.popitem(False) for _ in range(num))
-            length = max(len(key) for key, _ in items) + 2
-            alternatives = '\n'.join('    {: <{}} {}'.format(key + ":", length,
-                                                             val)
-                                     for key, val in items)
-
-            return '{}\n{}'.format(tips, alternatives)
+    if num == 0:
+        rtn = command_not_found(cmd)
+    else:
+        tips = 'Did you mean {}the following?'.format('' if num == 1 else 'one of ')
+        items = list(suggested.popitem(False) for _ in range(num))
+        length = max(len(key) for key, _ in items) + 2
+        alternatives = '\n'.join('    {: <{}} {}'.format(key + ":", length, val)
+                                 for key, val in items)
+        rtn = '{}\n{}'.format(tips, alternatives)
+        c = command_not_found(cmd)
+        rtn += ('\n\n' + c) if len(c) > 0 else ''
+    return rtn
 
 
 # Modified from Public Domain code, by Magnus Lie Hetland
