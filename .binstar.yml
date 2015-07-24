@@ -1,0 +1,19 @@
+package: xonsh
+
+platform: 
+ - linux-64
+
+engine:
+ - python=3
+
+script:
+  - conda build recipe
+
+after_success:
+   - conda convert -p all /opt/miniconda/conda-bld/linux-64/xonsh-*.tar.bz2 -o /opt/miniconda/conda-bld
+
+after_failure:
+   - echo "Build failed!"
+
+build_targets:
+   - /opt/miniconda/conda-bld/*/*.tar.bz2
