@@ -3,8 +3,7 @@ package:
   version: {{ environ['GIT_DESCRIBE_TAG'] }}
 
 source:
-#  git_url: ../
-  git_url: https://github.com/scopatz/xonsh.git
+   path: ../
 
 build:
   script: python setup.py install
