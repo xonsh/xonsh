@@ -3,7 +3,7 @@ package:
   version: {{ environ['GIT_DESCRIBE_TAG'] }}
 
 source:
-  git_url: ../
+   path: ../
 
 build:
   script: python setup.py install
