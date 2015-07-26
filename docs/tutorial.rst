@@ -484,7 +484,7 @@ Input/Output Redirection
 xonsh also allows you to redirect ``stdin``, ``stdout``, and/or ``stderr``.
 This allows you to control where the output of a command is sent, and where
 it receives its input from.  xonsh has its own syntax for these operations,
-but, for campatability purposes, xonsh also support Bash-like syntax.
+but, for compatibility purposes, xonsh also support Bash-like syntax.
 
 The basic operations are "write to" (``>``), "append to" (``>>``), and "read
 from" (``<``).  The details of these are perhaps best explained through
@@ -502,7 +502,7 @@ exist:
     >>> COMMAND > output.txt
     >>> COMMAND out> output.txt
     >>> COMMAND o> output.txt
-    >>> COMMAND 1> output.txt # included for Bash compatability
+    >>> COMMAND 1> output.txt # included for Bash compatibility
 
 These can be made to append to ``output.txt`` instead of overwriting its contents
 by replacing ``>`` with ``>>`` (note that ``>>`` will still create the file if it
@@ -519,7 +519,7 @@ exist:
 
     >>> COMMAND err> errors.txt
     >>> COMMAND e> errors.txt
-    >>> COMMAND 2> errors.txt # included for Bash compatability
+    >>> COMMAND 2> errors.txt # included for Bash compatibility
 
 As above, replacing ``>`` with ``>>`` will cause the error output to be
 appended to ``errors.txt``, rather than replacing its contents.
@@ -535,7 +535,7 @@ that task:
 
     >>> COMMAND all> combined.txt
     >>> COMMAND a> combined.txt
-    >>> COMMAND &> combined.txt # included for Bash compatability
+    >>> COMMAND &> combined.txt # included for Bash compatibility
 
 It is also possible to explicitly merge stderr into stdout so that error
 messages are reported to the same location as regular output.  You can do this
@@ -547,7 +547,7 @@ with the following syntax:
     >>> COMMAND err>o
     >>> COMMAND e>out
     >>> COMMAND e>o
-    >>> COMMAND 2>&1 # included for Bash compatability
+    >>> COMMAND 2>&1 # included for Bash compatibility
 
 This merge can be combined with other redirections, including pipes (see the
 section on `Pipes`_ above):
@@ -841,7 +841,7 @@ must have the following signature:
         # Note: that you have access to the xonsh
         # built-ins if you 'import builtins'.  For example, if you need the
         # environment, you could do to following:
-        import bulitins
+        import builtins
         env = builtins.__xonsh_env__
 
         # The return value of the function can either be None,
