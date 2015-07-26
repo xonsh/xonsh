@@ -478,7 +478,7 @@ def bash_env():
     if hasattr(builtins, '__xonsh_env__'):
         currenv = builtins.__xonsh_env__.detype()
     try:
-        s = subprocess.check_output(['bash', '-i'],
+        s = subprocess.check_output(['bash', '-i', '-l'],
                                     input='env',
                                     env=currenv,
                                     stderr=subprocess.PIPE,
