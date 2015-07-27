@@ -43,7 +43,7 @@ class BaseShell(object):
         except XonshError as e:
             print(e.args[0], file=sys.stderr)
         except:
-            traceback.print_exc()
+            _print_exception()
         if builtins.__xonsh_exit__:
             return True
 
@@ -65,9 +65,13 @@ class BaseShell(object):
         except SyntaxError:
             if line == '\n':
                 self.reset_buffer()
-                traceback.print_exc()
+                _print_exception()
                 return None
             self.need_more_lines = True
+        except:
+            self.reset_buffer()
+            _print_exception()
+            return None
         return code
 
     def reset_buffer(self):
@@ -108,3 +112,14 @@ class BaseShell(object):
             p = "set '$PROMPT = ...' $ "
         self.settitle()
         return p
+        
+def _print_exception():
+    """Print exceptions with/without traceback."""
+    if not 'XONSH_SHOW_TRACEBACK' in builtins.__xonsh_env__:
+        sys.stderr.write('xonsh: For full traceback set: '
+                         '$XONSH_SHOW_TRACEBACK=True\n')
+    if builtins.__xonsh_env__.get('XONSH_SHOW_TRACEBACK', False):
+        traceback.print_exc()
+    else:
+        type, value, exc_traceback = sys.exc_info()
+        sys.stderr.write(''.join(traceback.format_exception_only(type, value)))
