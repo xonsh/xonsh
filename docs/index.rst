@@ -99,6 +99,20 @@ the following from the source directory,
 
     $ python setup.py install
 
+ArchLinux users can install xonsh with e.g. yaourt or aura:
+
+**yaourt:**
+
+.. code-block:: bash
+
+    $ yaourt -Sa xonsh      # yaourt will call sudo when needed
+
+**aura:**
+
+.. code-block:: bash
+
+    $ sudo aura -A xonsh
+
 If you run into any problems, please let us know!
 
 ============
