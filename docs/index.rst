@@ -77,7 +77,21 @@ Contents
 ============
 Installation
 ============
-You can install xonsh using conda, pip, or from source.
+ArchLinux users can install xonsh from AUR with e.g. yaourt or aura:
+
+**yaourt:**
+
+.. code-block:: bash
+
+    $ yaourt -Sa xonsh      # yaourt will call sudo when needed
+
+**aura:**
+
+.. code-block:: bash
+
+    $ sudo aura -A xonsh
+
+If xonsh is not in your distro, you can install xonsh using conda, pip, or from source.
 
 **conda:**
 
