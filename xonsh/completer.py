@@ -104,7 +104,7 @@ class Completer(object):
                 return sorted(self.module_complete(prefix))
             if cmd in self._all_commands():
                 # subproc mode; do path completions
-                return sorted(self.path_complete(prefix))
+                return sorted(self.path_complete(prefix, cdpath=True))
             else:
                 # if we're here, could be anything
                 rtn = set()
@@ -139,7 +139,8 @@ class Completer(object):
         env = builtins.__xonsh_env__
         for cdp in env.get("CDPATH", []):
             for s in iglobpath(os.path.join(cdp, prefix) + '*'):
-                paths.add(s)
+                if os.path.isdir(s):
+                    paths.add(os.path.basename(s))
 
     def cmd_complete(self, cmd):
         """Completes a command name based on what is on the $PATH"""
@@ -151,7 +152,7 @@ class Completer(object):
         modules = set(sys.modules.keys())
         return {s for s in modules if s.startswith(prefix)}
 
-    def path_complete(self, prefix):
+    def path_complete(self, prefix, cdpath=False):
         """Completes based on a path name."""
         space = ' '  # intern some strings for faster appending
         slash = '/'
@@ -170,7 +171,8 @@ class Completer(object):
             paths = {s.replace(home, tilde) for s in paths}
         self._add_env(paths, prefix)
         self._add_dots(paths, prefix)
-        self._add_cdpaths(paths, prefix)
+        if cdpath:
+            self._add_cdpaths(paths, prefix)
         return {os.path.normpath(s) for s in paths}
 
     def bash_complete(self, prefix, line, begidx, endidx):
