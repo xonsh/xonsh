@@ -22,7 +22,7 @@ from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env
 from xonsh.aliases import DEFAULT_ALIASES, bash_aliases
 from xonsh.jobs import add_job, wait_for_active_job
-from xonsh.proc import ProcProxy, SimpleProcProxy
+from xonsh.proc import ProcProxy, SimpleProcProxy, SubshellProxy
 
 ENV = None
 BUILTINS_LOADED = False
@@ -428,7 +428,7 @@ def run_subproc(cmds, captured=True):
         stdin = None
         stdout = None
         stderr = None
-        if isinstance(cmd, string_types):
+        if cmd == '|':
             prev = cmd
             continue
         streams = {}
@@ -464,21 +464,24 @@ def run_subproc(cmds, captured=True):
         if 'stderr' in streams:
             stderr = streams['stderr']
         uninew = ix == last_cmd
-        alias = builtins.aliases.get(cmd[0], None)
-        if callable(alias):
-            aliased_cmd = alias
+        if cmd[0][0] == '(':
+            aliased_cmd = cmd[0][1:-1]
         else:
-            if alias is not None:
-                cmd = alias + cmd[1:]
-            n = _get_runnable_name(cmd[0])
-            if n is None:
-                aliased_cmd = cmd
+            alias = builtins.aliases.get(cmd[0], None)
+            if callable(alias):
+                aliased_cmd = alias
             else:
-                try:
-                    aliased_cmd = get_script_subproc_command(n, cmd[1:])
-                except PermissionError:
-                    e = 'xonsh: subprocess mode: permission denied: {0}'
-                    raise XonshError(e.format(cmd[0]))
+                if alias is not None:
+                    cmd = alias + cmd[1:]
+                n = _get_runnable_name(cmd[0])
+                if n is None:
+                    aliased_cmd = cmd
+                else:
+                    try:
+                        aliased_cmd = get_script_subproc_command(n, cmd[1:])
+                    except PermissionError:
+                        e = 'xonsh: subprocess mode: permission denied: {0}'
+                        raise XonshError(e.format(cmd[0]))
         if callable(aliased_cmd):
             prev_is_proxy = True
             numargs = len(inspect.signature(aliased_cmd).parameters)
@@ -492,6 +495,11 @@ def run_subproc(cmds, captured=True):
             proc = cls(aliased_cmd, cmd[1:],
                        stdin, stdout, stderr,
                        universal_newlines=uninew)
+        elif isinstance(aliased_cmd, string_types):
+            prev_is_proxy = True
+            print('SUBSHELL', aliased_cmd, stdout)
+            proc = SubshellProxy(aliased_cmd, stdin, stdout,
+                                 stderr, universal_newlines=uninew)
         else:
             prev_is_proxy = False
             subproc_kwargs = {}
@@ -544,20 +552,31 @@ def run_subproc(cmds, captured=True):
             return output
     elif last_stdout not in (PIPE, None, sys.stdout):
         last_stdout.close()
+    out = prev_proc.returncode
+    if not isinstance(out, bool):
+        out = out == 0
+    return out
 
 
 def subproc_captured(*cmds):
-    """Runs a subprocess, capturing the output. Returns the stdout
-    that was produced as a str.
+    """Runs a subprocess, capturing the output.  Returns the stdout that was
+    produced as a str.
     """
     return run_subproc(cmds, captured=True)
 
 
 def subproc_uncaptured(*cmds):
-    """Runs a subprocess, without capturing the output. Returns the stdout
-    that was produced as a str.
+    """Runs a subprocess, without capturing the output.  Returns ``True`` if
+    the process completed successfully, and ``False`` otherwise.
     """
     return run_subproc(cmds, captured=False)
+
+
+def subproc_noreturn(*cmds):
+    """Runs a subprocess, without capturing the output.  Always returns
+    ``None``.
+    """
+    run_subproc(cmds, captured=False)
 
 
 def ensure_list_of_strs(x):
@@ -592,6 +611,7 @@ def load_builtins(execer=None):
         del builtins.quit
     builtins.__xonsh_subproc_captured__ = subproc_captured
     builtins.__xonsh_subproc_uncaptured__ = subproc_uncaptured
+    builtins.__xonsh_subproc_noreturn__ = subproc_noreturn
     builtins.__xonsh_execer__ = execer
     builtins.__xonsh_all_jobs__ = {}
     builtins.__xonsh_active_job__ = None
@@ -630,6 +650,7 @@ def unload_builtins():
              '__xonsh_pyquit__',
              '__xonsh_subproc_captured__',
              '__xonsh_subproc_uncaptured__',
+             '__xonsh_subproc_noreturn__',
              '__xonsh_execer__',
              'evalx',
              'execx',

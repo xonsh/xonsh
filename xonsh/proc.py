@@ -9,6 +9,7 @@ licensed to the Python Software foundation under a Contributor Agreement.
 import io
 import os
 import sys
+import builtins
 import platform
 
 from threading import Thread
@@ -42,22 +43,14 @@ if ON_WINDOWS:
         __str__ = __repr__
 
 
-class ProcProxy(Thread):
-    """
-    Class representing a function to be run as a subprocess-mode command.
-    """
-    def __init__(self, f, args,
+class PopenLike(object):
+    def __init__(self,
                  stdin=None,
                  stdout=None,
                  stderr=None,
                  universal_newlines=False):
         """Parameters
         ----------
-        f : function
-            The function to be executed.
-        args : list
-            A (possibly empty) list containing the arguments that were given on
-            the command line
         stdin : file-like, optional
             A file-like object representing stdin (input can be read from
             here).  If `stdin` is not provided or if it is explicitly set to
@@ -72,27 +65,6 @@ class ProcProxy(Thread):
             written here).  If `stderr` is not provided or if it is explicitly
             set to `None`, then `sys.stderr` is used.
         """
-        self.f = f
-        """
-        The function to be executed.  It should be a function of four
-        arguments, described below.
-
-        Parameters
-        ----------
-        args : list
-            A (possibly empty) list containing the arguments that were given on
-            the command line
-        stdin : file-like
-            A file-like object representing stdin (input can be read from
-            here).
-        stdout : file-like
-            A file-like object representing stdout (normal output can be
-            written here).
-        stderr : file-like
-            A file-like object representing stderr (error output can be
-            written here).
-        """
-        self.args = args
         self.pid = None
         self.returncode = None
         self.wait = self.join
@@ -116,7 +88,7 @@ class ProcProxy(Thread):
                 self.errread = msvcrt.open_osfhandle(self.errread.Detach(), 0)
 
         if self.p2cwrite != -1:
-            self.stdin = io.open(self.p2cwrite, 'wb', -1)
+            self.stdin = io.open(self.p2cwrite, 'ab', -1)
             if universal_newlines:
                 self.stdin = io.TextIOWrapper(self.stdin, write_through=True,
                                               line_buffering=False)
@@ -130,49 +102,7 @@ class ProcProxy(Thread):
             if universal_newlines:
                 self.stderr = io.TextIOWrapper(self.stderr)
 
-        Thread.__init__(self)
-        self.start()
-
-    def run(self):
-        """Set up input/output streams and execute the child function in a new
-        thread.  This is part of the `threading.Thread` interface and should
-        not be called directly."""
-        if self.f is None:
-            return
-        if self.stdin is not None:
-            sp_stdin = io.TextIOWrapper(self.stdin)
-        else:
-            sp_stdin = io.StringIO("")
-
-        if ON_WINDOWS:
-            if self.c2pwrite != -1:
-                self.c2pwrite = msvcrt.open_osfhandle(self.c2pwrite.Detach(), 0)
-            if self.errwrite != -1:
-                self.errwrite = msvcrt.open_osfhandle(self.errwrite.Detach(), 0)
-
-        if self.c2pwrite != -1:
-            sp_stdout = io.TextIOWrapper(io.open(self.c2pwrite, 'wb', -1))
-        else:
-            sp_stdout = sys.stdout
-        if self.errwrite == self.c2pwrite:
-            sp_stderr = sp_stdout
-        elif self.errwrite != -1:
-            sp_stderr = io.TextIOWrapper(io.open(self.errwrite, 'wb', -1))
-        else:
-            sp_stderr = sys.stderr
-
-        r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr)
-        self.returncode = r if r is not None else True
-
-    def poll(self):
-        """Check if the function has completed.
-
-        :return: `None` if the function is still executing, `True` if the
-                 function finished successfully, and `False` if there was an
-                 error
-        """
-        return self.returncode
-
+    
     # The code below (_get_devnull, _get_handles, and _make_inheritable) comes
     # from subprocess.py in the Python 3.4.2 Standard Library
     def _get_devnull(self):
@@ -313,6 +243,104 @@ class ProcProxy(Thread):
             return (p2cread, p2cwrite,
                     c2pread, c2pwrite,
                     errread, errwrite)
+    
+    def poll(self):
+        """Check if the function has completed.
+
+        :return: `None` if the function is still executing, `True` if the
+                 function finished successfully, and `False` if there was an
+                 error
+        """
+        return self.returncode
+
+
+class ProcProxy(PopenLike, Thread):
+    """
+    Class representing a function to be run as a subprocess-mode command.
+    """
+    def __init__(self, f, args,
+                 stdin=None,
+                 stdout=None,
+                 stderr=None,
+                 universal_newlines=False):
+        """Parameters
+        ----------
+        f : function
+            The function to be executed.
+        args : list
+            A (possibly empty) list containing the arguments that were given on
+            the command line
+        stdin : file-like, optional
+            A file-like object representing stdin (input can be read from
+            here).  If `stdin` is not provided or if it is explicitly set to
+            `None`, then an instance of `io.StringIO` representing an empty
+            file is used.
+        stdout : file-like, optional
+            A file-like object representing stdout (normal output can be
+            written here).  If `stdout` is not provided or if it is explicitly
+            set to `None`, then `sys.stdout` is used.
+        stderr : file-like, optional
+            A file-like object representing stderr (error output can be
+            written here).  If `stderr` is not provided or if it is explicitly
+            set to `None`, then `sys.stderr` is used.
+        """
+        self.f = f
+        """
+        The function to be executed.  It should be a function of four
+        arguments, described below.
+
+        Parameters
+        ----------
+        args : list
+            A (possibly empty) list containing the arguments that were given on
+            the command line
+        stdin : file-like
+            A file-like object representing stdin (input can be read from
+            here).
+        stdout : file-like
+            A file-like object representing stdout (normal output can be
+            written here).
+        stderr : file-like
+            A file-like object representing stderr (error output can be
+            written here).
+        """
+        self.args = args
+        PopenLike.__init__(self, stdin, stdout, stderr, universal_newlines)
+        Thread.__init__(self)
+        self.start()
+
+    def run(self):
+        """Set up input/output streams and execute the child function in a new
+        thread.  This is part of the `threading.Thread` interface and should
+        not be called directly."""
+        print('MAIN')
+        if self.f is None:
+            return
+        if self.stdin is not None:
+            sp_stdin = io.TextIOWrapper(self.stdin)
+        else:
+            sp_stdin = io.StringIO("")
+
+        if ON_WINDOWS:
+            if self.c2pwrite != -1:
+                self.c2pwrite = msvcrt.open_osfhandle(self.c2pwrite.Detach(), 0)
+            if self.errwrite != -1:
+                self.errwrite = msvcrt.open_osfhandle(self.errwrite.Detach(), 0)
+
+        if self.c2pwrite != -1:
+            sp_stdout = io.TextIOWrapper(io.open(self.c2pwrite, 'ab', -1))
+        else:
+            sp_stdout = sys.stdout
+        if self.errwrite == self.c2pwrite:
+            sp_stderr = sp_stdout
+        elif self.errwrite != -1:
+            sp_stderr = io.TextIOWrapper(io.open(self.errwrite, 'ab', -1))
+        else:
+            sp_stderr = sys.stderr
+        print(sp_stdout)
+        r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr)
+        self.returncode = r if r is not None else True
+
 
 
 class SimpleProcProxy(ProcProxy):
@@ -326,10 +354,13 @@ class SimpleProcProxy(ProcProxy):
     def __init__(self, f, args, stdin=None, stdout=None, stderr=None,
                  universal_newlines=False):
         def wrapped_simple_command(args, stdin, stdout, stderr):
+            print('INSIDE')
             try:
                 i = stdin.read()
                 with redirect_stdout(stdout), redirect_stderr(stderr):
+                    print('CALLING',f)
                     r = f(args, i)
+                    print('CALLED',f)
                 if isinstance(r, str):
                     stdout.write(r)
                 elif isinstance(r, Sequence):
@@ -342,6 +373,31 @@ class SimpleProcProxy(ProcProxy):
                 return True
             except:
                 return False
-        super().__init__(wrapped_simple_command,
-                         args, stdin, stdout, stderr,
-                         universal_newlines)
+        ProcProxy.__init__(self, wrapped_simple_command,
+                           args, stdin, stdout, stderr,
+                           universal_newlines)
+
+class SubshellProxy(PopenLike, Thread):
+    def __init__(self, s, stdin=None, stdout=None, stderr=None,
+                 universal_newlines=False):
+        self.s = s
+        PopenLike.__init__(self, stdin, stdout, stderr, universal_newlines)
+        Thread.__init__(self)
+        self.start()
+
+    def run(self):
+        pid = os.fork()
+        print(pid)
+        if pid == 0:
+            # child process
+            if self.p2cread != -1:
+                sys.stdin = io.TextIOWrapper(io.open(self.p2cread, 'rb', -1))
+            if self.c2pwrite != -1:
+                sys.stdout = io.TextIOWrapper(io.open(self.c2pwrite, 'ab', -1))
+            if self.errwrite != -1:
+                sys.stderr = io.TextIOWrapper(io.open(self.errwrite, 'ab', -1))
+            builtins.evalx(self.s)
+            sys.exit(0)
+        else:
+            r = os.waitpid(pid, 0)
+            self.returncode = r[1] == 0

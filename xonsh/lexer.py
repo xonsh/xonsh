@@ -246,16 +246,36 @@ def handle_lparen(state, token, stream):
     """
     Function for handling ``(``
     """
-    state['pymode'].append((True, '(', ')', token.start))
     state['last'] = token
-    yield _new_token('LPAREN', '(', token.start)
+    if state['pymode'][-1][0]:
+        state['pymode'].append((True, '(', ')', token.start))
+        yield _new_token('LPAREN', '(', token.start)
+    else:
+        count = 1
+        buff = '('
+        n = next(stream, None)
+        while n is not None:
+            buff += n.string
+            if n.string == '(':
+                count += 1
+            elif n.string == ')':
+                count -= 1
+                if count == 0:
+                    break
+            n = next(stream, None)
+        state['last'] = n
+        if n is None:
+            e = 'Unmatched ('
+            yield _new_token('ERRORTOKEN', e, n.start)
+        else:
+            yield _new_token('SUBSHELL_COMMAND', buff, token.start)
 
 
 def handle_lbrace(state, token, stream):
     """
     Function for handling ``{``
     """
-    state['pymode'].append((True, '{', '}', token.start))
+    state['pymode'].append((state['pymode'][-1][0], '{', '}', token.start))
     state['last'] = token
     yield _new_token('LBRACE', '{', token.start)
 
@@ -264,7 +284,7 @@ def handle_lbracket(state, token, stream):
     """
     Function for handling ``[``
     """
-    state['pymode'].append((True, '[', ']', token.start))
+    state['pymode'].append((state['pymode'][-1][0], '[', ']', token.start))
     state['last'] = token
     yield _new_token('LBRACKET', '[', token.start)
 
@@ -282,40 +302,28 @@ def _end_delimiter(state, token):
         return 'Unmatched "{}" at line {}, column {}'.format(s, l, c)
 
 
-def handle_rparen(state, token, stream):
-    """
-    Function for handling ``)``
-    """
-    e = _end_delimiter(state, token)
-    if e is None:
-        state['last'] = token
-        yield _new_token('RPAREN', ')', token.start)
-    else:
-        yield _new_token('ERRORTOKEN', e, token.start)
+def _make_delimiter_handler(name, ender):
+    def handler(state, token, stream):
+        m = state['pymode'][-1][1]
+        e = _end_delimiter(state, token)
+        if e is None:
+            state['last'] = token
+            typ = name
+            if m.startswith('$'):
+                typ = "SUBPROC_END_{}".format(name)
+            yield _new_token(typ, ender, token.start)
+        else:
+            yield _new_token('ERRORTOKEN', e, token.start)
+    return handler
 
+handle_rparen = _make_delimiter_handler('RPAREN', ')')
+"""Function for handling ``)``"""
 
-def handle_rbrace(state, token, stream):
-    """
-    Function for handling ``}``
-    """
-    e = _end_delimiter(state, token)
-    if e is None:
-        state['last'] = token
-        yield _new_token('RBRACE', '}', token.start)
-    else:
-        yield _new_token('ERRORTOKEN', e, token.start)
+handle_rbrace = _make_delimiter_handler('RBRACE', '}')
+"""Function for handling ``}``"""
 
-
-def handle_rbracket(state, token, stream):
-    """
-    Function for handling ``]``
-    """
-    e = _end_delimiter(state, token)
-    if e is None:
-        state['last'] = token
-        yield _new_token('RBRACKET', ']', token.start)
-    else:
-        yield _new_token('ERRORTOKEN', e, token.start)
+handle_rbracket = _make_delimiter_handler('RBRACKET', ']')
+"""Function for handling ``]``"""
 
 
 def handle_error_space(state, token, stream):
@@ -505,9 +513,13 @@ class Lexer(object):
         'AMPERSAND',             # &
         'REGEXPATH',             # regex escaped with backticks
         'IOREDIRECT',            # subprocess io redirection token
+        'SUBSHELL_COMMAND',      # command to be run in a subshell
         'LPAREN', 'RPAREN',      # ( )
         'LBRACKET', 'RBRACKET',  # [ ]
         'LBRACE', 'RBRACE',      # { }
+        'SUBPROC_END_RPAREN',    # ) matched with $(
+        'SUBPROC_END_RBRACKET',  # ] matched with $[
+        'SUBPROC_END_RBRACE',    # } matched with ${
         'AT',                    # @
         'QUESTION',              # ?
         'DOUBLE_QUESTION',       # ??
