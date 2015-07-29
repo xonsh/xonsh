@@ -7,11 +7,16 @@ import builtins
 import subprocess
 from argparse import ArgumentParser, Namespace
 
+from xonsh import __version__
 from xonsh.shell import Shell
 from xonsh.pretty import pprint
 from xonsh.jobs import ignore_sigtstp
 
 parser = ArgumentParser(description='xonsh')
+parser.add_argument('-V', '--version',
+                    action='version',
+                    version='/'.join(('xonsh', __version__)),
+                    help='show version information and exit')
 parser.add_argument('-c',
                     help="Run a single command and exit",
                     dest='command',
