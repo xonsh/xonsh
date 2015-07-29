@@ -143,8 +143,8 @@ hesitate to ask the mailing list (xonsh@googlegroups.com).
 Contact Us
 ==========
 If you have questions or comments, please send them to the mailing list
-xonsh@googlegroups.com, contact the author directly, or open an issue on
-GitHub. 
+xonsh@googlegroups.com, page us on IRC, contact the author directly, or
+open an issue on GitHub. 
 `Join the mailing list here! <https://groups.google.com/forum/#!forum/xonsh>`_
 
 =============
@@ -154,6 +154,7 @@ Helpful Links
 * `Documentation <http://xonsh.org>`_
 * `Mailing list <https://groups.google.com/forum/#!forum/xonsh>`_
 * `GitHub Repository <https://github.com/scopatz/xonsh>`_
+* `IRC: channel #xonsh on OFTC <http://www.oftc.net/>`_
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
