@@ -60,7 +60,7 @@ else:
     def test_which_ls():
         yield check_eval, 'which ls'
 
-        
+
 def test_simple_func():
     code = ('def prompt():\n'
             "    return '{user}'.format(user='me')\n")

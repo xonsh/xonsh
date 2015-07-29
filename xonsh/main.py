@@ -48,7 +48,7 @@ parser.add_argument('args',
                          ' by script-file',
                     nargs='*',
                     default=[])
-          
+
 def _pprint_displayhook(value):
     if value is not None:
         __builtins__['_'] = value
@@ -61,7 +61,7 @@ def main(argv=None):
     shell_kwargs = {'shell_type': args.shell_type}
     if args.norc:
         shell_kwargs['ctx'] = {}
-    setattr(sys, 'displayhook', _pprint_displayhook)    
+    setattr(sys, 'displayhook', _pprint_displayhook)
     shell = Shell(**shell_kwargs)
     from xonsh import imphooks
     env = builtins.__xonsh_env__

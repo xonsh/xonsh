@@ -297,7 +297,7 @@ class redirect_stderr(_RedirectStream):
 
 
 def command_not_found(cmd):
-    """Uses the debian/ubuntu command-not-found utility to suggest packages for a 
+    """Uses the debian/ubuntu command-not-found utility to suggest packages for a
     command that cannot currently be found.
     """
     if not ON_LINUX:
@@ -305,7 +305,7 @@ def command_not_found(cmd):
     elif not os.path.isfile('/usr/lib/command-not-found'):  # utility is not on PATH
         return ''
     c = '/usr/lib/command-not-found {0}; exit 0'
-    s = subprocess.check_output(c.format(cmd), universal_newlines=True, 
+    s = subprocess.check_output(c.format(cmd), universal_newlines=True,
                                 stderr=subprocess.STDOUT, shell=True)
     s = '\n'.join(s.splitlines()[:-1]).strip()
     return s
