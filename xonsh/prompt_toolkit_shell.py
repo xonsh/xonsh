@@ -39,6 +39,7 @@ def teardown_history(history):
     except PermissionError:
         warn('do not have write permissions for ' + hfile, RuntimeWarning)
 
+
 def get_user_input(get_prompt_tokens,
                    history=None,
                    lexer=None,
