@@ -9,7 +9,6 @@ licensed to the Python Software foundation under a Contributor Agreement.
 import io
 import os
 import sys
-import platform
 
 from threading import Thread
 from subprocess import Popen, PIPE, DEVNULL, STDOUT
