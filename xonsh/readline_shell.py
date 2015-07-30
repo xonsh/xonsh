@@ -80,7 +80,6 @@ def rl_completion_suppress_append(val=1):
     RL_COMPLETION_SUPPRESS_APPEND.value = val
 
 
-
 class ReadlineShell(BaseShell, Cmd):
     """The readline based xonsh shell."""
 
