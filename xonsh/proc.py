@@ -189,7 +189,6 @@ class ProcProxy(Thread):
                 _winapi.DUPLICATE_SAME_ACCESS)
             return Handle(h)
 
-
         def _get_handles(self, stdin, stdout, stderr):
             """Construct and return tuple with IO objects:
             p2cread, p2cwrite, c2pread, c2pwrite, errread, errwrite
@@ -260,7 +259,6 @@ class ProcProxy(Thread):
             return (p2cread, p2cwrite,
                     c2pread, c2pwrite,
                     errread, errwrite)
-
 
     else:
         # POSIX versions
