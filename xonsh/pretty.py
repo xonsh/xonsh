@@ -104,6 +104,7 @@ __all__ = ['pretty', 'pprint', 'PrettyPrinter', 'RepresentationPrinter',
 MAX_SEQ_LENGTH = 1000
 _re_pattern_type = type(re.compile(''))
 
+
 def _safe_getattr(obj, attr, default=None):
     """Safe version of getattr.
 
