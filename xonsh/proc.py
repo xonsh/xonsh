@@ -11,7 +11,7 @@ import os
 import sys
 
 from threading import Thread
-from subprocess import Popen, PIPE, DEVNULL, STDOUT
+from subprocess import PIPE, DEVNULL, STDOUT
 from collections import Sequence
 
 from xonsh.tools import redirect_stdout, redirect_stderr, ON_WINDOWS
