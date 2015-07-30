@@ -6,6 +6,7 @@ from xonsh.execer import Execer
 from xonsh.environ import xonshrc_context
 from xonsh.tools import XonshError
 
+
 def is_prompt_toolkit_available():
     """Checks if prompt_toolkit is available to import."""
     try:
