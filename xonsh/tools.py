@@ -455,6 +455,7 @@ def env_path_to_str(x):
 # prompt toolkit tools
 #
 
+
 class FakeChar(str):
     """Class that holds a single char and escape sequences that surround it.
 
