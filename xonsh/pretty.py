@@ -104,6 +104,7 @@ __all__ = ['pretty', 'pprint', 'PrettyPrinter', 'RepresentationPrinter',
 MAX_SEQ_LENGTH = 1000
 _re_pattern_type = type(re.compile(''))
 
+
 def _safe_getattr(obj, attr, default=None):
     """Safe version of getattr.
 
@@ -158,13 +159,14 @@ class _PrettyPrinterBase(object):
             self.indentation -= indent
 
     @contextmanager
-    def group(self, indent=0, open='', close=''):
+    def group(self, indent=0, gopen='', close=''):
         """like begin_group / end_group but for the with statement."""
-        self.begin_group(indent, open)
+        self.begin_group(indent, gopen)
         try:
             yield
         finally:
             self.end_group(indent, close)
+
 
 class PrettyPrinter(_PrettyPrinterBase):
     """
@@ -246,8 +248,7 @@ class PrettyPrinter(_PrettyPrinterBase):
         self.output_width = self.indentation
         self.buffer_width = 0
 
-
-    def begin_group(self, indent=0, open=''):
+    def begin_group(self, indent=0, gopen=''):
         """
         Begin a group.  If you want support for python < 2.5 which doesn't has
         the with statement this is the preferred way:
@@ -265,8 +266,8 @@ class PrettyPrinter(_PrettyPrinterBase):
         the width of the opening text), the second the opening text.  All
         parameters are optional.
         """
-        if open:
-            self.text(open)
+        if gopen:
+            self.text(gopen)
         group = Group(self.group_stack[-1].depth + 1)
         self.group_stack.append(group)
         self.group_queue.enq(group)
@@ -689,7 +690,7 @@ def _repr_pprint(obj, p, cycle):
     """A pprint that just redirects to the normal repr function."""
     # Find newlines and replace them with p.break_()
     output = repr(obj)
-    for idx,output_line in enumerate(output.splitlines()):
+    for idx, output_line in enumerate(output.splitlines()):
         if idx:
             p.break_()
         p.text(output_line)
@@ -753,7 +754,7 @@ try:
     _type_pprinters[types.DictProxyType] = _dict_pprinter_factory('<dictproxy {', '}>')
     _type_pprinters[types.ClassType] = _type_pprint
     _type_pprinters[types.SliceType] = _repr_pprint
-except AttributeError: # Python 3
+except AttributeError:  # Python 3
     _type_pprinters[slice] = _repr_pprint
 
 try:
@@ -767,6 +768,7 @@ except NameError:
 #: printers for types specified by name
 _deferred_type_pprinters = {
 }
+
 
 def for_type(typ, func):
     """
@@ -807,6 +809,7 @@ def _defaultdict_pprint(obj, p, cycle):
             p.breakable()
             p.pretty(dict(obj))
 
+
 def _ordereddict_pprint(obj, p, cycle):
     name = 'OrderedDict'
     with p.group(len(name) + 1, name + '(', ')'):
@@ -814,6 +817,7 @@ def _ordereddict_pprint(obj, p, cycle):
             p.text('...')
         elif len(obj):
             p.pretty(list(obj.items()))
+
 
 def _deque_pprint(obj, p, cycle):
     name = 'deque'
@@ -839,6 +843,7 @@ for_type_by_name('collections', 'Counter', _counter_pprint)
 
 if __name__ == '__main__':
     from random import randrange
+
     class Foo(object):
         def __init__(self):
             self.foo = 1

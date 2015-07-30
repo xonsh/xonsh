@@ -39,6 +39,7 @@ def teardown_history(history):
     except PermissionError:
         warn('do not have write permissions for ' + hfile, RuntimeWarning)
 
+
 def get_user_input(get_prompt_tokens,
                    history=None,
                    lexer=None,
@@ -77,7 +78,6 @@ class PromptToolkitShell(BaseShell):
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx)
         self.key_bindings_manager = KeyBindingManager()
         load_xonsh_bindings(self.key_bindings_manager)
-
 
     def __del__(self):
         if self.history is not None:

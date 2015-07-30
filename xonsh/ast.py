@@ -62,7 +62,7 @@ class CtxAwareTransformer(NodeTransformer):
         self.lines = None
         self.mode = None
 
-    def ctxvisit(self, node, input, ctx, mode='exec'):
+    def ctxvisit(self, node, input_string, ctx, mode='exec'):
         """Transforms the node in a context-dependent way.
 
         Parameters
@@ -79,7 +79,7 @@ class CtxAwareTransformer(NodeTransformer):
         node : ast.AST
             The transformed node.
         """
-        self.lines = input.splitlines()
+        self.lines = input_string.splitlines()
         self.contexts = [ctx, set()]
         self.mode = mode
         node = self.visit(node)

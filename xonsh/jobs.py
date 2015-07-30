@@ -6,7 +6,6 @@ import sys
 import time
 import signal
 import builtins
-from collections import namedtuple
 from subprocess import TimeoutExpired
 
 from xonsh.tools import ON_WINDOWS

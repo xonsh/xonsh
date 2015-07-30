@@ -1,6 +1,7 @@
 """Completer implementation to use with prompt_toolkit."""
 from prompt_toolkit.completion import Completer, Completion
 
+
 class PromptToolkitCompleter(Completer):
     """Simple prompt_toolkit Completer object.
 

@@ -51,7 +51,7 @@ DEFAULT_ENSURERS = {
     'LC_MONETARY': (always_false, locale_convert('LC_MONETARY'), ensure_string),
     'LC_TIME': (always_false, locale_convert('LC_TIME'), ensure_string),
     'XONSH_HISTORY_SIZE': (is_int, int, str),
-    }
+}
 
 
 class Env(MutableMapping):
@@ -182,6 +182,7 @@ class Env(MutableMapping):
             elif len(self):
                 p.break_()
                 p.pretty(dict(self))
+
 
 def locate_binary(name, cwd):
     # StackOverflow for `where` tip: http://stackoverflow.com/a/304447/90297
@@ -348,6 +349,7 @@ def git_dirty_working_directory(cwd=None):
         return bool(s)
     except (subprocess.CalledProcessError, FileNotFoundError):
         return False
+
 
 @ensure_hg
 def hg_dirty_working_directory(cwd=None, root=None):

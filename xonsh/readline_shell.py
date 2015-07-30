@@ -80,7 +80,6 @@ def rl_completion_suppress_append(val=1):
     RL_COMPLETION_SUPPRESS_APPEND.value = val
 
 
-
 class ReadlineShell(BaseShell, Cmd):
     """The readline based xonsh shell."""
 
@@ -116,6 +115,7 @@ class ReadlineShell(BaseShell, Cmd):
                 print()  # Gives a newline
                 self.reset_buffer()
                 intro = None
+
     @property
     def prompt(self):
         """Obtains the current prompt string."""
