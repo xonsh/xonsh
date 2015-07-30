@@ -167,6 +167,7 @@ class _PrettyPrinterBase(object):
         finally:
             self.end_group(indent, close)
 
+
 class PrettyPrinter(_PrettyPrinterBase):
     """
     Baseclass for the `RepresentationPrinter` prettyprinter that is used to
