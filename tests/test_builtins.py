@@ -6,7 +6,7 @@ import re
 import nose
 from nose.tools import assert_equal, assert_true, assert_not_in
 
-from xonsh import built_ins 
+from xonsh import built_ins
 from xonsh.built_ins import reglob, regexpath, helper, superhelper, \
     ensure_list_of_strs
 from xonsh.environ import Env
@@ -26,7 +26,7 @@ if not ON_WINDOWS:
         exp = {os.path.join(home, p) for p in exp}
         obs = set(regexpath(r'~/\w\w.*'))
         assert_equal(exp, obs)
-        
+
 def test_repath_home_itself():
     exp = os.path.expanduser('~')
     obs = regexpath('~')

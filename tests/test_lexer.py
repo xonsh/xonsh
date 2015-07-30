@@ -89,7 +89,7 @@ def test_bin_literal():
     yield check_token, '0b101010', ['NUMBER', '0b101010', 0]
 
 def test_indent():
-    exp = [('INDENT', '  \t  ', 0), 
+    exp = [('INDENT', '  \t  ', 0),
            ('NUMBER', '42', 5),
            ('DEDENT', '', 0)]
     yield check_tokens, '  \t  42', exp
@@ -101,7 +101,7 @@ def test_post_whitespace():
 
 def test_internal_whitespace():
     inp = '42  +\t65'
-    exp = [('NUMBER', '42', 0), 
+    exp = [('NUMBER', '42', 0),
            ('PLUS', '+', 4),
            ('NUMBER', '65', 6),]
     yield check_tokens, inp, exp
@@ -109,7 +109,7 @@ def test_internal_whitespace():
 def test_indent_internal_whitespace():
     inp = ' 42  +\t65'
     exp = [('INDENT', ' ', 0),
-           ('NUMBER', '42', 1), 
+           ('NUMBER', '42', 1),
            ('PLUS', '+', 5),
            ('NUMBER', '65', 7),
            ('DEDENT', '', 0)]
@@ -119,7 +119,7 @@ def test_assignment():
     inp = 'x = 42'
     exp = [('NAME', 'x', 0),
            ('EQUALS', '=', 2),
-           ('NUMBER', '42', 4),] 
+           ('NUMBER', '42', 4),]
     yield check_tokens, inp, exp
 
 def test_multiline():
@@ -160,7 +160,7 @@ def test_single_bytes_literal():
     yield check_token, "b'yo'", ['STRING', "b'yo'", 0]
 
 def test_float_literals():
-    cases = ['0.0', '.0', '0.', '1e10', '1.e42', '0.1e42', '0.5e-42', 
+    cases = ['0.0', '.0', '0.', '1e10', '1.e42', '0.1e42', '0.5e-42',
              '5E10', '5e+42']
     for s in cases:
         yield check_token, s, ['NUMBER', s, 0]

@@ -294,7 +294,7 @@ def call_hg_command(command, cwd):
                                     env=hg_env)
     except (subprocess.CalledProcessError, FileNotFoundError):
         pass
-        
+
     return s
 
 
@@ -485,7 +485,7 @@ def bash_env():
                                     universal_newlines=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
         s = ''
-        
+
     items = [line.split('=', 1) for line in s.splitlines() if '=' in line]
     env = dict(items)
     return env

@@ -32,8 +32,8 @@ def mock_xonsh_env(xenv):
     del builtins.__xonsh_exit__
     del builtins.__xonsh_superhelp__
     del builtins.__xonsh_regexpath__
-    del builtins.__xonsh_subproc_captured__ 
-    del builtins.__xonsh_subproc_uncaptured__ 
+    del builtins.__xonsh_subproc_captured__
+    del builtins.__xonsh_subproc_uncaptured__
     del builtins.__xonsh_ensure_list_of_strs__
     del builtins.evalx
     del builtins.execx
