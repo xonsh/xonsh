@@ -754,7 +754,7 @@ try:
     _type_pprinters[types.DictProxyType] = _dict_pprinter_factory('<dictproxy {', '}>')
     _type_pprinters[types.ClassType] = _type_pprint
     _type_pprinters[types.SliceType] = _repr_pprint
-except AttributeError: # Python 3
+except AttributeError:  # Python 3
     _type_pprinters[slice] = _repr_pprint
 
 try:
