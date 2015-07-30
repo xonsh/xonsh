@@ -79,7 +79,6 @@ class PromptToolkitShell(BaseShell):
         self.key_bindings_manager = KeyBindingManager()
         load_xonsh_bindings(self.key_bindings_manager)
 
-
     def __del__(self):
         if self.history is not None:
             teardown_history(self.history)
