@@ -121,5 +121,6 @@ def _print_exception():
     if builtins.__xonsh_env__.get('XONSH_SHOW_TRACEBACK', False):
         traceback.print_exc()
     else:
-        type, value, exc_traceback = sys.exc_info()
-        sys.stderr.write(''.join(traceback.format_exception_only(type, value)))
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        exception_only =  traceback.format_exception_only(exc_type, exc_value)
+        sys.stderr.write(''.join(exception_only))
