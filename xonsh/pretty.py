@@ -843,6 +843,7 @@ for_type_by_name('collections', 'Counter', _counter_pprint)
 
 if __name__ == '__main__':
     from random import randrange
+
     class Foo(object):
         def __init__(self):
             self.foo = 1
