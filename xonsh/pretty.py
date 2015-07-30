@@ -159,9 +159,9 @@ class _PrettyPrinterBase(object):
             self.indentation -= indent
 
     @contextmanager
-    def group(self, indent=0, open='', close=''):
+    def group(self, indent=0, gopen='', close=''):
         """like begin_group / end_group but for the with statement."""
-        self.begin_group(indent, open)
+        self.begin_group(indent, gopen)
         try:
             yield
         finally:
@@ -248,7 +248,7 @@ class PrettyPrinter(_PrettyPrinterBase):
         self.output_width = self.indentation
         self.buffer_width = 0
 
-    def begin_group(self, indent=0, open=''):
+    def begin_group(self, indent=0, gopen=''):
         """
         Begin a group.  If you want support for python < 2.5 which doesn't has
         the with statement this is the preferred way:
@@ -266,8 +266,8 @@ class PrettyPrinter(_PrettyPrinterBase):
         the width of the opening text), the second the opening text.  All
         parameters are optional.
         """
-        if open:
-            self.text(open)
+        if gopen:
+            self.text(gopen)
         group = Group(self.group_stack[-1].depth + 1)
         self.group_stack.append(group)
         self.group_queue.enq(group)
