@@ -248,7 +248,6 @@ class PrettyPrinter(_PrettyPrinterBase):
         self.output_width = self.indentation
         self.buffer_width = 0
 
-
     def begin_group(self, indent=0, open=''):
         """
         Begin a group.  If you want support for python < 2.5 which doesn't has
