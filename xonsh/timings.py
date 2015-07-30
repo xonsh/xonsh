@@ -64,7 +64,7 @@ def format_time(timespan, precision=3):
     """Formats the timespan in a human readable form"""
     if timespan >= 60.0:
         # we have more than a minute, format that in a human readable form
-        parts = [("d", 60*60*24), ("h", 60*60), ("min", 60), ("s", 1)]
+        parts = [("d", 60 * 60 * 24), ("h", 60 * 60), ("min", 60), ("s", 1)]
         time = []
         leftover = timespan
         for suffix, length in parts:
