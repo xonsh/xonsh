@@ -769,6 +769,7 @@ except NameError:
 _deferred_type_pprinters = {
 }
 
+
 def for_type(typ, func):
     """
     Add a pretty printer for a given type.
