@@ -50,7 +50,8 @@ def source_bash(args, stdin=None):
 def source_alias(args, stdin=None):
     """Executes the contents of the provided files in the current context."""
     for fname in args:
-        execx(open(fname).read(), 'exec', builtins.__xonsh_ctx__)
+        with open(fname, 'r') as fp:
+            execx(fp.read(), 'exec', builtins.__xonsh_ctx__)
 
 
 def xexec(args, stdin=None):
