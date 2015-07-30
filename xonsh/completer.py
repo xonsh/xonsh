@@ -282,7 +282,7 @@ class Completer(object):
             rpl = opt + '(' if callable(a) else opt
             # note that prefix[:prelen-len(attr)] != prefix[:-len(attr)]
             # when len(attr) == 0.
-            comp = prefix[:prelen-len(attr)] + rpl
+            comp = prefix[:prelen - len(attr)] + rpl
             attrs.add(comp)
         return attrs
 
