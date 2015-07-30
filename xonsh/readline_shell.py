@@ -115,6 +115,7 @@ class ReadlineShell(BaseShell, Cmd):
                 print()  # Gives a newline
                 self.reset_buffer()
                 intro = None
+
     @property
     def prompt(self):
         """Obtains the current prompt string."""
