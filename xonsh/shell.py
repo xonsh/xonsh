@@ -46,7 +46,6 @@ class Shell(object):
             raise XonshError('{} is not recognized as a shell type'.format(
                 env['SHELL_TYPE']))
 
-
     def __getattr__(self, attr):
         """Delegates calls to appropriate shell instance."""
         return getattr(self.shell, attr)
