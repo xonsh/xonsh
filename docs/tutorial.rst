@@ -230,13 +230,13 @@ CDPATH               ``[]``                        A list of paths to be used as
                                                    compatibility with bash, xonsh
                                                    always prefer an existing
                                                    relative path.
-XONSH_SHOW_TRACEBACK Not defined				   Controls if a traceback is shown when 
+XONSH_SHOW_TRACEBACK Not defined                   Controls if a traceback is shown when 
                                                    exceptions occur in the shell.  
-												   Set ``'True'`` to always show 
-												   or ``'False'`` to always hide.
-												   If undefined then traceback is 
-												   hidden but a notice is shown on 
-												   how to enable the traceback.
+                                                   Set ``'True'`` to always show 
+                                                   or ``'False'`` to always hide.
+                                                   If undefined then traceback is 
+                                                   hidden but a notice is shown on 
+                                                   how to enable the traceback.
 ==================== ============================= ================================
 
 Environment Lookup with ``${}``
