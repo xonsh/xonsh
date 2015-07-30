@@ -690,7 +690,7 @@ def _repr_pprint(obj, p, cycle):
     """A pprint that just redirects to the normal repr function."""
     # Find newlines and replace them with p.break_()
     output = repr(obj)
-    for idx,output_line in enumerate(output.splitlines()):
+    for idx, output_line in enumerate(output.splitlines()):
         if idx:
             p.break_()
         p.text(output_line)
