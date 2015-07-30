@@ -183,6 +183,7 @@ class Env(MutableMapping):
                 p.break_()
                 p.pretty(dict(self))
 
+
 def locate_binary(name, cwd):
     # StackOverflow for `where` tip: http://stackoverflow.com/a/304447/90297
     locator = 'where' if ON_WINDOWS else 'which'
@@ -348,6 +349,7 @@ def git_dirty_working_directory(cwd=None):
         return bool(s)
     except (subprocess.CalledProcessError, FileNotFoundError):
         return False
+
 
 @ensure_hg
 def hg_dirty_working_directory(cwd=None, root=None):
