@@ -51,7 +51,7 @@ DEFAULT_ENSURERS = {
     'LC_MONETARY': (always_false, locale_convert('LC_MONETARY'), ensure_string),
     'LC_TIME': (always_false, locale_convert('LC_TIME'), ensure_string),
     'XONSH_HISTORY_SIZE': (is_int, int, str),
-    }
+}
 
 
 class Env(MutableMapping):
