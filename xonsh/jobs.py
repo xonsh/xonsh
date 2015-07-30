@@ -21,7 +21,6 @@ if ON_WINDOWS:
     def _continue(obj):
         return None
 
-
     def _kill(obj):
         return obj.kill()
 
