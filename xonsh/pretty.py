@@ -809,6 +809,7 @@ def _defaultdict_pprint(obj, p, cycle):
             p.breakable()
             p.pretty(dict(obj))
 
+
 def _ordereddict_pprint(obj, p, cycle):
     name = 'OrderedDict'
     with p.group(len(name) + 1, name + '(', ')'):
@@ -816,6 +817,7 @@ def _ordereddict_pprint(obj, p, cycle):
             p.text('...')
         elif len(obj):
             p.pretty(list(obj.items()))
+
 
 def _deque_pprint(obj, p, cycle):
     name = 'deque'
