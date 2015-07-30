@@ -159,13 +159,13 @@ class _PrettyPrinterBase(object):
             self.indentation -= indent
 
     @contextmanager
-    def group(self, indent=0, gopen='', close=''):
+    def group(self, indent=0, gopen='', gclose=''):
         """like begin_group / end_group but for the with statement."""
         self.begin_group(indent, gopen)
         try:
             yield
         finally:
-            self.end_group(indent, close)
+            self.end_group(indent, gclose)
 
 
 class PrettyPrinter(_PrettyPrinterBase):
@@ -283,14 +283,14 @@ class PrettyPrinter(_PrettyPrinterBase):
                 raise StopIteration
             yield idx, x
 
-    def end_group(self, dedent=0, close=''):
+    def end_group(self, dedent=0, gclose=''):
         """End a group. See `begin_group` for more details."""
         self.indentation -= dedent
         group = self.group_stack.pop()
         if not group.breakables:
             self.group_queue.remove(group)
-        if close:
-            self.text(close)
+        if gclose:
+            self.text(gclose)
 
     def flush(self):
         """Flush data that is left in the buffer."""
