@@ -510,7 +510,7 @@ class Parser(object):
         p1, p2 = p[1], p[2]
         p3 = p[3] if lenp > 3 else None
         p4 = p[4] if lenp > 4 else None
-        # skip p5 
+        # skip p5
         p6 = p[6] if lenp > 6 else None
         p7 = p[7] if lenp > 7 else None
         # skip p8
@@ -2048,7 +2048,7 @@ class Parser(object):
         if len(targs) == 1:
             targ = targs[0]
         else:
-            targ = ensure_has_elts(targs, lineno=self.lineno, 
+            targ = ensure_has_elts(targs, lineno=self.lineno,
                                    col_offset=self.col)
         store_ctx(targ)
         comp = ast.comprehension(target=targ, iter=it, ifs=[])

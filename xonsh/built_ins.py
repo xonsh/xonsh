@@ -126,8 +126,8 @@ class Aliases(MutableMapping):
             elif len(self):
                 p.break_()
                 p.pretty(dict(self))
-                                     
-                                     
+
+
 def helper(x, name=''):
     """Prints help about, and then returns that variable."""
     INSPECTOR.pinfo(x, oname=name, detail_level=0)

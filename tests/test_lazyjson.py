@@ -39,13 +39,13 @@ def test_index_list_int_str():
     assert_equal(exp, obs)
 
 def test_index_dict_int():
-    exp = {'offsets': {'wakka': 10, '__total__': 0}, 
+    exp = {'offsets': {'wakka': 10, '__total__': 0},
            'sizes': {'wakka': 2, '__total__': 14}}
     s, obs = index({'wakka': 42})
     assert_equal(exp, obs)
 
 def test_index_dict_str():
-    exp = {'offsets': {'wakka': 10, '__total__': 0}, 
+    exp = {'offsets': {'wakka': 10, '__total__': 0},
            'sizes': {'wakka': 8, '__total__': 20}}
     s, obs = index({'wakka': 'jawaka'})
     assert_equal(exp, obs)
@@ -54,7 +54,7 @@ def test_index_dict_dict_int():
     exp = {'offsets': {'wakka': {'jawaka': 21, '__total__': 10},
                       '__total__': 0,
                       },
-           'sizes': {'wakka': {'jawaka': 2, '__total__': 15}, 
+           'sizes': {'wakka': {'jawaka': 2, '__total__': 15},
                     '__total__': 27}
            }
     s, obs = index({'wakka': {'jawaka': 42}})
