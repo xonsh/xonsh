@@ -37,8 +37,9 @@ for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 
 def _normpath(p):
     # Prevent normpath() from removing initial ‘./’
-    if p.startswith('./'):
-        return './' + os.path.normpath(p[2:])
+    here = os.curdir + os.sep
+    if p.startswith(here):
+        return os.path.join(os.curdir, os.path.normpath(p[len(here):]))
     return os.path.normpath(p)
 
 
