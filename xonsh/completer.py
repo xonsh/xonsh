@@ -34,6 +34,14 @@ COMP_CWORD={n}
 for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 """
 
+def startswithlow(x, start, startlow=None):
+    """True if x starts with a string or its lowercase version. The lowercase
+    version may be optionally be provided.
+    """
+    if startlow is None:
+        startlow = start.lower()
+    return x.startswith(start) or x.lower().startswith(startlow)
+
 
 def _normpath(p):
     # Prevent normpath() from removing initial ‘./’
@@ -87,6 +95,7 @@ class Completer(object):
         slash = '/'
         dot = '.'
         ctx = ctx or {}
+        prefixlow = prefix.lower()
         cmd = line.split(' ', 1)[0]
         if begidx == 0:
             # the first thing we're typing; could be python or subprocess, so
@@ -119,14 +128,15 @@ class Completer(object):
         else:
             # if we're here, we're not a command, but could be anything else
             rtn = set()
-        rtn |= {s for s in XONSH_TOKENS if s.startswith(prefix)}
+        rtn |= {s for s in XONSH_TOKENS if startswithlow(s, prefix, prefixlow)}
         if ctx is not None:
             if dot in prefix:
                 rtn |= self.attr_complete(prefix, ctx)
             else:
-                rtn |= {s for s in ctx if s.startswith(prefix)}
-        rtn |= {s for s in dir(builtins) if s.startswith(prefix)}
-        rtn |= {s + space for s in builtins.aliases if s.startswith(prefix)}
+                rtn |= {s for s in ctx if startswithlow(s, prefix, prefixlow)}
+        rtn |= {s for s in dir(builtins) if startswithlow(s, prefix, prefixlow)}
+        rtn |= {s + space for s in builtins.aliases
+                if startswithlow(s, prefix, prefixlow)}
         rtn |= self.path_complete(prefix)
         return sorted(rtn)
 
@@ -134,7 +144,8 @@ class Completer(object):
         if prefix.startswith('$'):
             env = builtins.__xonsh_env__
             key = prefix[1:]
-            paths.update({'$' + k for k in env if k.startswith(key)})
+            keylow = key.lower()
+            paths.update({'$' + k for k in env if startswithlow(k, key, keylow)})
 
     def _add_dots(self, paths, prefix):
         if prefix in {'', '.'}:
@@ -153,12 +164,14 @@ class Completer(object):
     def cmd_complete(self, cmd):
         """Completes a command name based on what is on the $PATH"""
         space = ' '
-        return {s + space for s in self._all_commands() if s.startswith(cmd)}
+        cmdlow = cmd.lower()
+        return {s + space for s in self._all_commands() if startswithlow(s, cmd, cmdlow)}
 
     def module_complete(self, prefix):
         """Completes a name of a module to import."""
+        prefixlow = prefix.lower()
         modules = set(sys.modules.keys())
-        return {s for s in modules if s.startswith(prefix)}
+        return {s for s in modules if startswithlow(s, prefix, prefixlow)}
 
     def path_complete(self, prefix, cdpath=False):
         """Completes based on a path name."""
@@ -283,7 +296,8 @@ class Completer(object):
         if len(attr) == 0:
             opts = [o for o in opts if not o.startswith('_')]
         else:
-            opts = [o for o in opts if o.startswith(attr)]
+            attrlow = attr.lower()
+            opts = [o for o in opts if startswithlow(oattr, attrlow)]
         prelen = len(prefix)
         for opt in opts:
             a = getattr(val, opt)
@@ -348,7 +362,8 @@ class ManCompleter(object):
                 self._options[cmd] = matches
             except:
                 return set()
-        return {s for s in self._options[cmd] if s.startswith(prefix)}
+        prefixlow = prefix.lower()
+        return {s for s in self._options[cmd] if startswithlow(s, prefix, prefixlow)}
 
     def _load_cached_options(self):
         """Load options from file at startup."""
