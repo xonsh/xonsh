@@ -35,6 +35,14 @@ for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 """
 
 
+def _normpath(p):
+    # Prevent normpath() from removing initial ‘./’
+    here = os.curdir + os.sep
+    if p.startswith(here):
+        return os.path.join(os.curdir, os.path.normpath(p[len(here):]))
+    return os.path.normpath(p)
+
+
 class Completer(object):
     """This provides a list of optional completions for the xonsh shell."""
 
@@ -173,7 +181,7 @@ class Completer(object):
         self._add_dots(paths, prefix)
         if cdpath:
             self._add_cdpaths(paths, prefix)
-        return {os.path.normpath(s) for s in paths}
+        return {_normpath(s) for s in paths}
 
     def bash_complete(self, prefix, line, begidx, endidx):
         """Attempts BASH completion."""
