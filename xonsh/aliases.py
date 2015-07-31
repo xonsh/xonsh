@@ -73,7 +73,7 @@ def xexec(args, stdin=None):
 def bash_aliases():
     """Computes a dictionary of aliases based on Bash's aliases."""
     try:
-        s = subprocess.check_output(['bash', '-i'],
+        s = subprocess.check_output(['bash', '-i', '-l'],
                                     input='alias',
                                     stderr=subprocess.PIPE,
                                     universal_newlines=True)
