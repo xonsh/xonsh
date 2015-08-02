@@ -5,7 +5,7 @@ import os
 import nose
 from nose.tools import assert_equal, assert_true, assert_not_in
 
-from xonsh.environ import Env
+from xonsh.environ import Env, format_prompt
 
 def test_env_normal():
     env = Env(VAR='wakka')
@@ -35,6 +35,20 @@ def test_env_detype_no_dict():
     det = env.detype()
     assert_not_in('YO', det)
 
+def test_format_prompt():
+    formatter_dict = {
+        'a_string': 'cat',
+        'none': (lambda: None),
+        'f': (lambda: 'wakka'),
+        }
+    cases = {
+        'my {a_string}': 'my cat',
+        'my {none}{a_string}': 'my cat',
+        '{f} jawaka': 'wakka jawaka',
+        }
+    for p, exp in cases.items():
+        obs = format_prompt(template=p, formatter_dict=formatter_dict)
+        yield assert_equal, exp, obs
 
 if __name__ == '__main__':
     nose.runmodule()

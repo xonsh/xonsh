@@ -891,7 +891,6 @@ for the commands themselves.
 
 Customizing the Prompt
 ======================
-
 Customizing the prompt is probably the most common reason for altering an
 environment variable.  The ``PROMPT`` variable can be a string, or it can be a
 function (of no arguments) that returns a string.  The result can contain
@@ -901,7 +900,7 @@ keyword arguments, which will be replaced automatically:
 
     >>> $PROMPT = '{user}@{hostname}:{cwd} > '
     snail@home:~ > # it works!
-    snail@home:~ > $PROMPT = lambda : '{user}@{hostname}:{cwd} >> '
+    snail@home:~ > $PROMPT = lambda: '{user}@{hostname}:{cwd} >> '
     snail@home:~ >> # so does that!
 
 By default, the following variables are available for use:
@@ -925,7 +924,7 @@ or ``{BOLD_BLUE}``.  Colors have the form shown below:
   * ``NO_COLOR``: Resets any previously used color codes
 
 You can make use of additional variables beyond these by adding them to the
-``FORMATTER_PROMPT`` environment variable.  The values in this dictionary
+``FORMATTER_DICT`` environment variable.  The values in this dictionary
 should be strings (which will be inserted into the prompt verbatim), or
 functions of no arguments (which will be called each time the prompt is
 generated, and the results of those calls will be inserted into the prompt).
@@ -942,6 +941,10 @@ For example:
     5 ~ $
     2 ~ $
     8 ~ $
+
+If a function in ``$FORMATTER_DICT`` returns ``None``, the ``None`` will be 
+interpreted as an empty string.
+
 
 Executing Commands and Scripts
 ==============================

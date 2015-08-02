@@ -400,19 +400,24 @@ FORMATTER_DICT = dict(user=os.environ.get(USER, '<user>'),
                       branch_color=branch_color,
                       **TERM_COLORS)
 
-_formatter = string.Formatter()
+_FORMATTER = string.Formatter()
 
 
-def format_prompt(template=DEFAULT_PROMPT):
-    """Formats a xonsh prompt template string.
-    """
-    env = builtins.__xonsh_env__
+def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
+    """Formats a xonsh prompt template string."""
     template = template() if callable(template) else template
-    fmt = env.get('FORMATTER_DICT', FORMATTER_DICT)
-    included_names = set(i[1] for i in _formatter.parse(template))
-    fmt = {k: (v() if callable(v) else v)
-           for (k, v) in fmt.items()
-           if k in included_names}
+    if formatter_dict is None:
+        fmtter = builtins.__xonsh_env__.get('FORMATTER_DICT', FORMATTER_DICT)
+    else:
+        fmtter = formatter_dict
+    included_names = set(i[1] for i in _FORMATTER.parse(template))
+    fmt = {}
+    for k, v in fmtter.items():
+        if k not in included_names:
+            continue
+        val = v() if callable(v) else v
+        val = '' if val is None else val
+        fmt[k] = val
     return template.format(**fmt)
 
 
