@@ -30,6 +30,7 @@ def test_repath_backslash():
     print("expected\n", exp)
     print("\n=======\nobs\n", obs)
     print("On Windows: ", ON_WINDOWS)
+    print("regex_path:", regexpath(r'~/\w\w.*'))
     assert_equal(exp, obs)
 
 def test_repath_home_itself():
