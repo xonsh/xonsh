@@ -7,6 +7,8 @@ from nose.plugins.skip import SkipTest
 from xonsh.tools import ON_WINDOWS
 from xonsh.completer import ManCompleter
 
+from tools import mock_xonsh_env
+
 _OLD_MANPATH = None
 
 def setup():
@@ -26,8 +28,9 @@ def teardown():
 def test_man_completion():
     if ON_WINDOWS:
         raise SkipTest
-    man_completer = ManCompleter()
-    completions = man_completer.option_complete('--', 'yes')
+    with mock_xonsh_env({}):
+        man_completer = ManCompleter()
+        completions = man_completer.option_complete('--', 'yes')
     assert_true('--version' in completions)
     assert_true('--help' in completions)
 

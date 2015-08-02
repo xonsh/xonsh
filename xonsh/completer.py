@@ -43,6 +43,13 @@ def startswithlow(x, start, startlow=None):
     return x.startswith(start) or x.lower().startswith(startlow)
 
 
+def startswithnorm(x, start, startlow=None):
+    """True if x starts with a string s. Ignores its lowercase version, but 
+    matches the API of startswithlow().
+    """
+    return x.startswith(start)
+
+
 def _normpath(p):
     # Prevent normpath() from removing initial ‘./’
     here = os.curdir + os.sep
@@ -97,6 +104,9 @@ class Completer(object):
         ctx = ctx or {}
         prefixlow = prefix.lower()
         cmd = line.split(' ', 1)[0]
+        env = builtins.__xonsh_env__
+        csc = env.get('CASE_SENSITIVE_COMPLETIONS', True)
+        startswither = startswithnorm if csc else startswithlow
         if begidx == 0:
             # the first thing we're typing; could be python or subprocess, so
             # anything goes.
@@ -128,24 +138,26 @@ class Completer(object):
         else:
             # if we're here, we're not a command, but could be anything else
             rtn = set()
-        rtn |= {s for s in XONSH_TOKENS if startswithlow(s, prefix, prefixlow)}
+        rtn |= {s for s in XONSH_TOKENS if startswither(s, prefix, prefixlow)}
         if ctx is not None:
             if dot in prefix:
                 rtn |= self.attr_complete(prefix, ctx)
             else:
-                rtn |= {s for s in ctx if startswithlow(s, prefix, prefixlow)}
-        rtn |= {s for s in dir(builtins) if startswithlow(s, prefix, prefixlow)}
+                rtn |= {s for s in ctx if startswither(s, prefix, prefixlow)}
+        rtn |= {s for s in dir(builtins) if startswither(s, prefix, prefixlow)}
         rtn |= {s + space for s in builtins.aliases
-                if startswithlow(s, prefix, prefixlow)}
+                if startswither(s, prefix, prefixlow)}
         rtn |= self.path_complete(prefix)
         return sorted(rtn)
 
     def _add_env(self, paths, prefix):
         if prefix.startswith('$'):
             env = builtins.__xonsh_env__
+            csc = env.get('CASE_SENSITIVE_COMPLETIONS', True)
+            startswither = startswithnorm if csc else startswithlow
             key = prefix[1:]
             keylow = key.lower()
-            paths.update({'$' + k for k in env if startswithlow(k, key, keylow)})
+            paths.update({'$' + k for k in env if startswither(k, key, keylow)})
 
     def _add_dots(self, paths, prefix):
         if prefix in {'', '.'}:
@@ -156,8 +168,9 @@ class Completer(object):
     def _add_cdpaths(self, paths, prefix):
         """Completes current prefix using CDPATH"""
         env = builtins.__xonsh_env__
+        csc = env.get('CASE_SENSITIVE_COMPLETIONS', True)
         for cdp in env.get("CDPATH", []):
-            for s in iglobpath(os.path.join(cdp, prefix) + '*', ignore_case=True):
+            for s in iglobpath(os.path.join(cdp, prefix) + '*', ignore_case=(not csc)):
                 if os.path.isdir(s):
                     paths.add(os.path.basename(s))
 
@@ -165,13 +178,19 @@ class Completer(object):
         """Completes a command name based on what is on the $PATH"""
         space = ' '
         cmdlow = cmd.lower()
-        return {s + space for s in self._all_commands() if startswithlow(s, cmd, cmdlow)}
+        env = builtins.__xonsh_env__
+        csc = env.get('CASE_SENSITIVE_COMPLETIONS', True)
+        startswither = startswithnorm if csc else startswithlow
+        return {s + space for s in self._all_commands() if startswither(s, cmd, cmdlow)}
 
     def module_complete(self, prefix):
         """Completes a name of a module to import."""
         prefixlow = prefix.lower()
         modules = set(sys.modules.keys())
-        return {s for s in modules if startswithlow(s, prefix, prefixlow)}
+        env = builtins.__xonsh_env__
+        csc = env.get('CASE_SENSITIVE_COMPLETIONS', True)
+        startswither = startswithnorm if csc else startswithlow
+        return {s for s in modules if startswither(s, prefix, prefixlow)}
 
     def path_complete(self, prefix, cdpath=False):
         """Completes based on a path name."""
@@ -179,9 +198,11 @@ class Completer(object):
         slash = '/'
         tilde = '~'
         paths = set()
+        env = builtins.__xonsh_env__
+        csc = env.get('CASE_SENSITIVE_COMPLETIONS', True)
         if prefix.startswith("'") or prefix.startswith('"'):
             prefix = prefix[1:]
-        for s in iglobpath(prefix + '*', ignore_case=True):
+        for s in iglobpath(prefix + '*', ignore_case=(not csc)):
             if space in s:
                 s = repr(s + (slash if os.path.isdir(s) else ''))
             else:
@@ -296,8 +317,11 @@ class Completer(object):
         if len(attr) == 0:
             opts = [o for o in opts if not o.startswith('_')]
         else:
+            env = builtins.__xonsh_env__
+            csc = env.get('CASE_SENSITIVE_COMPLETIONS', True)
+            startswither = startswithnorm if csc else startswithlow
             attrlow = attr.lower()
-            opts = [o for o in opts if startswithlow(oattr, attrlow)]
+            opts = [o for o in opts if startswither(oattr, attrlow)]
         prelen = len(prefix)
         for opt in opts:
             a = getattr(val, opt)
@@ -352,6 +376,9 @@ class ManCompleter(object):
 
     def option_complete(self, prefix, cmd):
         """Completes an option name, basing on content of man page."""
+        env = builtins.__xonsh_env__
+        csc = env.get('CASE_SENSITIVE_COMPLETIONS', True)
+        startswither = startswithnorm if csc else startswithlow
         if cmd not in self._options.keys():
             try:
                 manpage = subprocess.Popen(["man", cmd], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
@@ -363,7 +390,7 @@ class ManCompleter(object):
             except:
                 return set()
         prefixlow = prefix.lower()
-        return {s for s in self._options[cmd] if startswithlow(s, prefix, prefixlow)}
+        return {s for s in self._options[cmd] if startswither(s, prefix, prefixlow)}
 
     def _load_cached_options(self):
         """Load options from file at startup."""
