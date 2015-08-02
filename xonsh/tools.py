@@ -423,7 +423,7 @@ def always_false(x):
 
 
 def ensure_string(x):
-    """Returns a string if x is not a string, and x if it alread is."""
+    """Returns a string if x is not a string, and x if it already is."""
     if isinstance(x, string_types):
         return x
     else:
@@ -450,6 +450,29 @@ def env_path_to_str(x):
     """Converts an environment path to a string by joining on the OS separator.
     """
     return os.pathsep.join(x)
+
+
+def is_bool(x):
+    """Tests if something is a boolean"""
+    return isinstance(x, bool)
+
+
+_FALSES = frozenset(['', '0', 'n', 'f', 'no', 'none', 'false'])
+
+def to_bool(x):
+    """"Converts to a boolean in a semantically meaningful way."""
+    if isinstance(x, bool):
+        return x
+    elif isinstance(x, string_types):
+        return False if x.lower() in _FALSES else True
+    else:
+        return bool(x)
+
+
+def bool_to_str(x):
+    """"Converts a bool to an empty string if False and the string '1' if True."""
+    return '1' if x else ''
+
 
 #
 # prompt toolkit tools
