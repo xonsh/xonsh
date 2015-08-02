@@ -26,9 +26,10 @@ def test_repath_backslash():
     exp = os.listdir(home)
     exp = {p for p in exp if re.match(r'\w\w.*', p)}
     exp = {os.path.join(home, p) for p in exp}
-    obs = set(regexpath(r'~\\\\\w\w.*'))
+    obs = set(regexpath(r'~/\w\w.*'))
     print("expected\n", exp)
     print("\n=======\nobs\n", obs)
+    print("On Windows: ", ON_WINDOWS)
     assert_equal(exp, obs)
 
 def test_repath_home_itself():
