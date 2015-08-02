@@ -3,7 +3,7 @@ import os
 import builtins
 from warnings import warn
 
-from prompt_toolkit.shortcuts import create_cli, create_eventloop
+from prompt_toolkit.shortcuts import get_input, create_eventloop
 from prompt_toolkit.key_binding.manager import KeyBindingManager
 from pygments.token import Token
 
@@ -50,23 +50,12 @@ def get_user_input(get_prompt_tokens,
     Main difference between this and prompt_toolkit's get_input() is that it
     allows to pass get_tokens() function instead of text prompt.
     """
-    eventloop = create_eventloop()
-
-    cli = create_cli(
-        eventloop,
+    return get_input(
         lexer=lexer,
         completer=completer,
         history=history,
         get_prompt_tokens=get_prompt_tokens,
         key_bindings_registry=key_bindings_registry)
-
-    try:
-        document = cli.read_input()
-
-        if document:
-            return document.text
-    finally:
-        eventloop.close()
 
 
 class PromptToolkitShell(BaseShell):
