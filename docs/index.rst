@@ -23,6 +23,7 @@ the xonsh shell
         "It is pronounced <i>conch</i>",
         "It is pronounced <i>quanxh</i>",
         "It is pronounced <i>zonsch</i>",
+        "It is pronounced <i>jeaunsch</i>",
         "The shell, bourne again",
         "Snailed it",
         "Starfish loves you",
@@ -30,6 +31,7 @@ the xonsh shell
         "This is Major Tom to Ground Xonshtrol",
         "Sally sells csh and keeps xonsh to herself",
         "Nice indeed. Everything's accounted for, except your old shell.",
+        "I wanna thank you for putting me back in my snail shell.",
         ];
     document.write(taglines[Math.floor(Math.random() * taglines.length)]);
     </script>
