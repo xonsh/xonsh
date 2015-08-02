@@ -157,7 +157,7 @@ class Completer(object):
         """Completes current prefix using CDPATH"""
         env = builtins.__xonsh_env__
         for cdp in env.get("CDPATH", []):
-            for s in iglobpath(os.path.join(cdp, prefix) + '*'):
+            for s in iglobpath(os.path.join(cdp, prefix) + '*', ignore_case=True):
                 if os.path.isdir(s):
                     paths.add(os.path.basename(s))
 
@@ -181,7 +181,7 @@ class Completer(object):
         paths = set()
         if prefix.startswith("'") or prefix.startswith('"'):
             prefix = prefix[1:]
-        for s in iglobpath(prefix + '*'):
+        for s in iglobpath(prefix + '*', ignore_case=True):
             if space in s:
                 s = repr(s + (slash if os.path.isdir(s) else ''))
             else:
