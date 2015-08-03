@@ -260,7 +260,9 @@ def get_git_branch(cwd=None):
                                                  cwd=cwd,
                                                  input=_input,
                                                  stderr=subprocess.PIPE,
-                                                 universal_newlines=True) or None
+                                                 universal_newlines=True)
+                if len(branch) == 0:
+                    branch = None
             except (subprocess.CalledProcessError, FileNotFoundError):
                 continue
 

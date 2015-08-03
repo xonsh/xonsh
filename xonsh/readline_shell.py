@@ -120,7 +120,7 @@ class ReadlineShell(BaseShell, Cmd):
     completenames = completedefault
 
     def postcmd(self, stop, line):
-        """Called just before execution of line. For readline, this handles the 
+        """Called just before execution of line. For readline, this handles the
         automatic indentation of code blocks.
         """
         try:
@@ -144,7 +144,8 @@ class ReadlineShell(BaseShell, Cmd):
             else:
                 ind = line[:len(line) - len(line.lstrip())]
                 if ind != self._current_indent:
-                    readline.set_pre_input_hook(_insert_text_func(ind, readline))
+                    insert_func = _insert_text_func(ind, readline)
+                    readline.set_pre_input_hook(insert_func)
                     self._current_indent = ind
         else:
             readline.set_pre_input_hook(None)
