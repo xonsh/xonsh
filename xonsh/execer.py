@@ -178,6 +178,12 @@ class Execer(object):
                     last_error_line = last_error_col = -1
                     input = '\n'.join(lines)
                     continue
+                if last_error_line > 1 and lines[idx-1].rstrip()[-1] == ':':
+                    # catch non-indented blocks and raise error.
+                    prev_indent = len(lines[idx-1]) - len(lines[idx-1].lstrip())
+                    curr_indent = len(lines[idx]) - len(lines[idx].lstrip())
+                    if prev_indent == curr_indent:
+                        raise original_error
                 maxcol = self._find_next_break(line, last_error_col)
                 sbpline = subproc_toks(line,
                                        returnline=True,
