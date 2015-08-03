@@ -102,12 +102,19 @@ class BaseShell(object):
         """Obtains the current prompt string."""
         if self.need_more_lines:
             if self.mlprompt is None:
-                self.mlprompt = multiline_prompt()
+                try:
+                    self.mlprompt = multiline_prompt()
+                except Exception:
+                    _print_exception()
+                    self.mlprompt =  '<multiline prompt error> '
             return self.mlprompt
         env = builtins.__xonsh_env__
         if 'PROMPT' in env:
             p = env['PROMPT']
-            p = format_prompt(p)
+            try:
+                p = format_prompt(p)
+            except Exception:
+                _print_exception()
         else:
             p = "set '$PROMPT = ...' $ "
         self.settitle()
