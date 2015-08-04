@@ -396,12 +396,15 @@ else:
     USER = 'USER'
 
 
-FORMATTER_DICT = dict(user=os.environ.get(USER, '<user>'),
-                      hostname=socket.gethostname().split('.', 1)[0],
-                      cwd=lambda: _replace_home(builtins.__xonsh_env__['PWD']),
-                      curr_branch=current_branch,
-                      branch_color=branch_color,
-                      **TERM_COLORS)
+FORMATTER_DICT = dict(
+    user=os.environ.get(USER, '<user>'),
+    hostname=socket.gethostname().split('.', 1)[0],
+    cwd=lambda: _replace_home(builtins.__xonsh_env__['PWD']),
+    dir_cwd=lambda: os.path.dirname(_replace_home(builtins.__xonsh_env__['PWD'])),
+    base_cwd=lambda: os.path.basename(_replace_home(builtins.__xonsh_env__['PWD'])),
+    curr_branch=current_branch,
+    branch_color=branch_color,
+    **TERM_COLORS)
 
 _FORMATTER = string.Formatter()
 
