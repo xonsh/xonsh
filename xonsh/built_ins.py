@@ -166,9 +166,12 @@ def expand_case_matching(s):
             if len(folded) == 1:
                 c = '[{0}{1}]'.format(c.upper(), c.lower())
             else:
-                newc = ['[{0}{1}]?'.format(f.upper(), f.lower()) for f in folded[:-1]]
+                newc = ['[{0}{1}]?'.format(f.upper(), f.lower())
+                        for f in folded[:-1]]
                 newc = ''.join(newc)
-                newc += '[{0}{1}{2}]'.format(folded[-1].upper(), folded[-1].lower(), c)
+                newc += '[{0}{1}{2}]'.format(folded[-1].upper(),
+                                             folded[-1].lower(),
+                                             c)
                 c = newc
         t.append(c)
     t = ''.join(t)

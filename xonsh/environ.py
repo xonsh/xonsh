@@ -463,7 +463,7 @@ BASE_ENV = {
     'LC_NUMERIC': locale.setlocale(locale.LC_NUMERIC),
     'SHELL_TYPE': 'readline',
     'HIGHLIGHTING_LEXER': None,
-    'CASE_SENSITIVE_COMPLETIONS': ON_LINUX, 
+    'CASE_SENSITIVE_COMPLETIONS': ON_LINUX,
 }
 
 try:

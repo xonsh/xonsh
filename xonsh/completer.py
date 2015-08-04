@@ -34,6 +34,7 @@ COMP_CWORD={n}
 for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 """
 
+
 def startswithlow(x, start, startlow=None):
     """True if x starts with a string or its lowercase version. The lowercase
     version may be optionally be provided.
@@ -44,7 +45,7 @@ def startswithlow(x, start, startlow=None):
 
 
 def startswithnorm(x, start, startlow=None):
-    """True if x starts with a string s. Ignores its lowercase version, but 
+    """True if x starts with a string s. Ignores its lowercase version, but
     matches the API of startswithlow().
     """
     return x.startswith(start)
@@ -170,7 +171,8 @@ class Completer(object):
         env = builtins.__xonsh_env__
         csc = env.get('CASE_SENSITIVE_COMPLETIONS', True)
         for cdp in env.get("CDPATH", []):
-            for s in iglobpath(os.path.join(cdp, prefix) + '*', ignore_case=(not csc)):
+            test_glob = os.path.join(cdp, prefix) + '*'
+            for s in iglobpath(test_glob, ignore_case=(not csc)):
                 if os.path.isdir(s):
                     paths.add(os.path.basename(s))
 
@@ -181,7 +183,9 @@ class Completer(object):
         env = builtins.__xonsh_env__
         csc = env.get('CASE_SENSITIVE_COMPLETIONS', True)
         startswither = startswithnorm if csc else startswithlow
-        return {s + space for s in self._all_commands() if startswither(s, cmd, cmdlow)}
+        return {s + space
+                for s in self._all_commands()
+                if startswither(s, cmd, cmdlow)}
 
     def module_complete(self, prefix):
         """Completes a name of a module to import."""
@@ -282,7 +286,8 @@ class Completer(object):
             return
         if self.bash_complete_funcs:
             inp.append('shopt -s extdebug')
-            inp.append('declare -F ' + ' '.join([f for f in set(self.bash_complete_funcs.values())]))
+            bash_funcs = set(self.bash_complete_funcs.values())
+            inp.append('declare -F ' + ' '.join([f for f in bash_funcs]))
             inp.append('shopt -u extdebug\n')
         out = subprocess.check_output(['bash'], input='\n'.join(inp),
                                       universal_newlines=True)
@@ -381,16 +386,21 @@ class ManCompleter(object):
         startswither = startswithnorm if csc else startswithlow
         if cmd not in self._options.keys():
             try:
-                manpage = subprocess.Popen(["man", cmd], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+                manpage = subprocess.Popen(["man", cmd],
+                                           stdout=subprocess.PIPE,
+                                           stderr=subprocess.DEVNULL)
                 # This is a trick to get rid of reverse line feeds
-                text = subprocess.check_output(["col", "-b"], stdin=manpage.stdout).decode('utf-8')
+                text = subprocess.check_output(["col", "-b"],
+                                               stdin=manpage.stdout)
+                text = text.decode('utf-8')
                 scraped_text = ' '.join(SCRAPE_RE.findall(text))
                 matches = INNER_OPTIONS_RE.findall(scraped_text)
                 self._options[cmd] = matches
             except:
                 return set()
         prefixlow = prefix.lower()
-        return {s for s in self._options[cmd] if startswither(s, prefix, prefixlow)}
+        return {s for s in self._options[cmd]
+                if startswither(s, prefix, prefixlow)}
 
     def _load_cached_options(self):
         """Load options from file at startup."""
