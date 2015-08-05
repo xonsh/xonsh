@@ -523,6 +523,19 @@ def xonshrc_context(rcfile=None, execer=None):
     return env
 
 
+def recursive_base_env_update(env):
+    """Updates the environment with members that may rely on previously defined
+    members. Takes an env as its argument.
+    """
+    home = os.path.expanduser('~')
+    if 'XONSH_DATA_DIR' not in env:
+        xdgdh = env.get('XDG_DATA_HOME', os.path.join(home, '.local', 'share'))
+        env['XONSH_DATA_DIR'] = os.path.join(xdgdh, 'xonsh')
+    if 'XONSH_CONFIG_DIR' not in env:
+        xdgch = env.get('XDG_CONFIG_HOME', os.path.join(home, '.config'))
+        env['XONSH_CONFIG_DIR'] = os.path.join(xdgch, 'xonsh')
+
+
 def default_env(env=None):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence
@@ -548,7 +561,8 @@ def default_env(env=None):
                 del ctx[ev]
 
         ctx['PWD'] = _get_cwd()
-
+    # finalize env
+    recursive_base_env_update(ctx)
     if env is not None:
         ctx.update(env)
     return ctx

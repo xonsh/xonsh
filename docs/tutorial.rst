@@ -240,6 +240,12 @@ XONSH_SHOW_TRACEBACK       Not defined                   Controls if a traceback
 CASE_SENSITIVE_COMPLETIONS True on Linux otherwise False Sets whether completions should
                                                          be case sesistive or case
                                                          insensitive.
+XONSH_DATA_DIR             $XDG_DATA_HOME/xonsh          This is the location where
+                                                         xonsh data files are stored, 
+                                                         such as history.
+XONSH_CONFIG_DIR           $XDG_CONFIG_HOME/xonsh        This is location where xonsh
+                                                         configuration information is
+                                                         stored.
 ========================== ============================= ================================
 
 Environment Lookup with ``${}``

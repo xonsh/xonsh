@@ -12,13 +12,20 @@ from xonsh import lazyjson
 
 class History(object):
 
-    ordered_history = []
+    def __init__(self, filename=None, sessionid=None, buffersize=100):
+        """Represents a xonsh session's history as an in-memory buffer that is
+        periodically flushed to disk.
 
-    def __init__(self, hid=None):
-        #env = builtins.__xonsh_env__
-        #self.hf = env.get('XONSH_HISTORY_FILE',
-        #        os.path.expanduser('~/.xonsh_history.json'))
-        self.hf = '~/.xonsh-history-{0}.json'.format(uuid.uuid4())
+        Parameters
+        ----------
+        filename : str, optional
+            
+        """
+        self.sessionid = uuid.uuid4() if sessionid is None else sessionid
+        self.filename = '~/xonsh-{0}.json'.format(self.sessionid) \
+            if filename is None else filename
+        self.buffer = []
+        self.buffersize = buffersize
 
     def open_history(self):
         """Loads previous history from ~/.xonsh_history.json or
