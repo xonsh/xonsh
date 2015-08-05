@@ -1,13 +1,37 @@
 """Implements the xonsh history object"""
 import os
-import sys
-import json
 import time
 import uuid
 import builtins
-from collections import OrderedDict
+from threading import Thread, Condition
+from collections import deque
 
 from xonsh import lazyjson
+
+
+class HistoryFlusher(Thread):
+
+    def __init__(self, filename, buffer, queue, cond, *args, **kwargs):
+        """Thread for flushing history."""
+        super(HistoryFlusher, self).__init__(*args, **kwargs)
+        self.filename = filename
+        self.buffer = buffer
+        self.queue = queue
+        queue.append(self)
+        self.cond = cond
+        self.running = True
+        self.start()
+
+    def run(self):
+        with self.cond:
+            self.cond.wait_for(self.i_am_at_the_front)
+            with open(self.filename, 'w') as f:
+                lazyjson.dump(self.buffer, f, sort_keys=True)
+            queue.popleft()
+        self.running = False
+
+    def i_am_at_the_front(self):
+        return self is self.queue[0]
 
 
 class History(object):
@@ -29,11 +53,20 @@ class History(object):
         self.sessionid = uuid.uuid4() if sessionid is None else sessionid
         if filename is None: 
             self.filename = os.path.join(builtins.__xonsh_env__['XONSH_DATA_DIR'], 
-                                         'xonsh-{1}.json'.format(self.sessionid))
+                                         'xonsh-{0}.json'.format(self.sessionid))
         else: 
             self.filename = filename
         self.buffer = []
         self.buffersize = buffersize
+        self._queue = deque()
+        self._cond = Condition()
+
+    def __del__(self):
+        if len(self.buffer) == 0:
+            return
+        flusher = HistoryFlusher(self.filename, tuple(self.buffer), self._queue, self._cond)
+        with self._cond:
+            self._cond.wait_for(lambda: not flusher.running)
 
     def open_history(self):
         """Loads previous history from ~/.xonsh_history.json or
@@ -51,14 +84,17 @@ class History(object):
         #    lazyjson.dump(self.ordered_history, fp) 
 
 
-    def add(self, cmd):
-        """Adds command with current timestamp to ordered history.
+    def append(self, cmd):
+        """Adds command with current timestamp to ordered history. Will periodically
+        flush the history to file.
 
         Parameters
         ----------
-        cmd: dict 
+        cmd : dict 
             Command dictionary that should be added to the ordered history.
         """
-        #self.ordered_history[time.time()] = {'cmd': cmd}
         cmd['timestamp'] = time.time()
-        #self.ordered_history.append(cmd)
+        self.buffer.append(cmd)
+        if len(self.buffer) >= self.buffersize:
+            HistoryFlusher(self.filename, tuple(self.buffer), self._queue, self._cond)
+            self.buffer.clear()
