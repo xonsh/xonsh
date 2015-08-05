@@ -19,11 +19,19 @@ class History(object):
         Parameters
         ----------
         filename : str, optional
-            
+            Location of history file, defaults to 
+            ``$XONSH_DATA_DIR/xonsh-{sessionid}.json``.
+        sessionid : int, uuid, str, optional
+            Current session identifier, will generate a new sessionid if not set.
+        buffersize : int, optional
+            Maximum buffersize in memory.
         """
         self.sessionid = uuid.uuid4() if sessionid is None else sessionid
-        self.filename = '~/xonsh-{0}.json'.format(self.sessionid) \
-            if filename is None else filename
+        if filename is None: 
+            self.filename = os.path.join(builtins.__xonsh_env__['XONSH_DATA_DIR'], 
+                                         'xonsh-{1}.json'.format(self.sessionid))
+        else: 
+            self.filename = filename
         self.buffer = []
         self.buffersize = buffersize
 
