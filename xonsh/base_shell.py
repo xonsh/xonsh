@@ -72,6 +72,9 @@ class BaseShell(object):
             self.reset_buffer()
             _print_exception()
             return None
+        finally:
+            hist = builtins.__xonsh_history__
+            hist.append({'inp': src})
         return code
 
     def reset_buffer(self):

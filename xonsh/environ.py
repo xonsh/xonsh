@@ -530,10 +530,12 @@ def recursive_base_env_update(env):
     home = os.path.expanduser('~')
     if 'XONSH_DATA_DIR' not in env:
         xdgdh = env.get('XDG_DATA_HOME', os.path.join(home, '.local', 'share'))
-        env['XONSH_DATA_DIR'] = os.path.join(xdgdh, 'xonsh')
+        env['XONSH_DATA_DIR'] = xdd = os.path.join(xdgdh, 'xonsh')
+        os.makedirs(xdd, exist_ok=True)
     if 'XONSH_CONFIG_DIR' not in env:
         xdgch = env.get('XDG_CONFIG_HOME', os.path.join(home, '.config'))
-        env['XONSH_CONFIG_DIR'] = os.path.join(xdgch, 'xonsh')
+        env['XONSH_CONFIG_DIR'] = xcd = os.path.join(xdgch, 'xonsh')
+        os.makedirs(xcd, exist_ok=True)
 
 
 def default_env(env=None):
