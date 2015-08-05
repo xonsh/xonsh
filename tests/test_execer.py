@@ -79,6 +79,12 @@ def test_bad_indent():
             'x = 1\n')
     assert_raises(SyntaxError, check_parse, code)
 
+def test_indent_with_empty_line():
+    code = ('if True:\n'
+            '\n'
+            '    some_command for_sub_process_mode\n')
+    yield check_parse, code
+
 
 
 if __name__ == '__main__':
