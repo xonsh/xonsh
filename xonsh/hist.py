@@ -1,22 +1,24 @@
 """Implements the xonsh history object"""
-
-from collections import OrderedDict
+import os
+import sys
 import json
 import time
-import os
-import xonsh.lazyjson as lazyjson
-import sys
+import uuid
 import builtins
+from collections import OrderedDict
+
+from xonsh import lazyjson
 
 
 class History(object):
 
     ordered_history = []
 
-    def __init__(self):
-        env = builtins.__xonsh_env__
-        self.hf = env.get('XONSH_HISTORY_FILE',
-                os.path.expanduser('~/.xonsh_history.json'))
+    def __init__(self, hid=None):
+        #env = builtins.__xonsh_env__
+        #self.hf = env.get('XONSH_HISTORY_FILE',
+        #        os.path.expanduser('~/.xonsh_history.json'))
+        self.hf = '~/.xonsh-history-{0}.json'.format(uuid.uuid4())
 
     def open_history(self):
         """Loads previous history from ~/.xonsh_history.json or
