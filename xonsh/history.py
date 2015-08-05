@@ -27,7 +27,7 @@ class HistoryFlusher(Thread):
             self.cond.wait_for(self.i_am_at_the_front)
             with open(self.filename, 'w') as f:
                 lazyjson.dump(self.buffer, f, sort_keys=True)
-            queue.popleft()
+            self.queue.popleft()
         self.running = False
 
     def i_am_at_the_front(self):
@@ -36,7 +36,7 @@ class HistoryFlusher(Thread):
 
 class History(object):
 
-    def __init__(self, filename=None, sessionid=None, buffersize=1):
+    def __init__(self, filename=None, sessionid=None, buffersize=10):
         """Represents a xonsh session's history as an in-memory buffer that is
         periodically flushed to disk.
 
