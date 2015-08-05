@@ -11,7 +11,7 @@ from xonsh import lazyjson
 
 class HistoryFlusher(Thread):
 
-    def __init__(self, filename, buffer, queue, cond, *args, **kwargs):
+    def __init__(self, filename, buffer, queue, cond, at_exit=False, *args, **kwargs):
         """Thread for flushing history."""
         super(HistoryFlusher, self).__init__(*args, **kwargs)
         self.filename = filename
@@ -19,24 +19,28 @@ class HistoryFlusher(Thread):
         self.queue = queue
         queue.append(self)
         self.cond = cond
-        self.running = True
-        self.start()
+        if at_exit:
+            self.dump()
+        else:
+            self.start()
 
     def run(self):
         with self.cond:
             self.cond.wait_for(self.i_am_at_the_front)
-            with open(self.filename, 'w') as f:
-                lazyjson.dump(self.buffer, f, sort_keys=True)
+            self.dump()
             self.queue.popleft()
-        self.running = False
 
     def i_am_at_the_front(self):
         return self is self.queue[0]
 
+    def dump(self):
+        with open(self.filename, 'w') as f:
+            lazyjson.dump(self.buffer, f, sort_keys=True)
+
 
 class History(object):
 
-    def __init__(self, filename=None, sessionid=None, buffersize=10):
+    def __init__(self, filename=None, sessionid=None, buffersize=2):
         """Represents a xonsh session's history as an in-memory buffer that is
         periodically flushed to disk.
 
@@ -61,13 +65,6 @@ class History(object):
         self._queue = deque()
         self._cond = Condition()
 
-    def __del__(self):
-        if len(self.buffer) == 0:
-            return
-        flusher = HistoryFlusher(self.filename, tuple(self.buffer), self._queue, self._cond)
-        with self._cond:
-            self._cond.wait_for(lambda: not flusher.running)
-
     def append(self, cmd):
         """Adds command with current timestamp to ordered history. Will periodically
         flush the history to file.
@@ -81,5 +78,12 @@ class History(object):
         print(cmd)
         self.buffer.append(cmd)
         if len(self.buffer) >= self.buffersize:
-            HistoryFlusher(self.filename, tuple(self.buffer), self._queue, self._cond)
-            self.buffer.clear()
+            self.flush()
+
+    def flush(self, at_exit=False):
+        if len(self.buffer) == 0:
+            return
+        HistoryFlusher(self.filename, tuple(self.buffer), self._queue, self._cond, 
+                       at_exit=at_exit)
+        self.buffer.clear()
+

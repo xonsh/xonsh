@@ -5,6 +5,7 @@ import os
 import re
 import sys
 import shlex
+import atexit
 import signal
 import inspect
 import builtins
@@ -634,6 +635,7 @@ def load_builtins(execer=None):
     builtins.__xonsh_active_job__ = None
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     builtins.__xonsh_history__ = History()
+    atexit.register(builtins.__xonsh_history__.flush, at_exit=True)
     # public built-ins
     builtins.evalx = None if execer is None else execer.eval
     builtins.execx = None if execer is None else execer.exec
