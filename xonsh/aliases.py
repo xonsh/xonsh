@@ -1,9 +1,11 @@
 """Aliases for the xonsh shell.
 """
 import os
+import sys
 import shlex
 import builtins
 import subprocess
+import datetime
 from warnings import warn
 
 from xonsh.dirstack import cd, pushd, popd, dirs
@@ -65,9 +67,76 @@ def xexec(args, stdin=None):
         try:
             os.execvpe(args[0], args, denv)
         except FileNotFoundError as e:
-            return "xonsh: " + e.args[1] + ": " + args[0] + "\n"
+            return 'xonsh: ' + e.args[1] + ': ' + args[0] + '\n'
     else:
-        return "xonsh: exec: no args specified\n"
+        return 'xonsh: exec: no args specified\n'
+
+
+def history(args, stdin=None):
+    """
+    Prints last n commands executed  in the format timestamp: command.
+
+    usage: history [n], where n is an optional number of commands to print.
+    """
+    num = 10
+    print_std = False
+    reverse = False
+    if len(args) > 0:
+        try:
+            if args[0].isdigit():
+                num = int(args[0])
+            if '-s' in args:
+                print_std = True
+            if '-r' in args:
+                reverse = True
+        except ValueError:
+            return 'xonsh: history: usage: history [-r] [number]'
+
+    if print_std:
+        header = '| {:^20}  | {:^40} | {:^30} | {:^30} |\n'.format(
+            'Timestamp', 'Command', 'stdout', 'stderr')
+        bar = '|' + '-' *23  + '|' + '-' * 42 + '|' + '-' * 32 + '|' + '-' * 32 + '|\n'
+    else:
+        header = '| {:^20}  | {:^40} |\n'.format('Timesamp', 'Command')
+        bar = '|' + '-' * 23 + '|' + '-' * 42 + '|\n'
+
+
+    return bar + header + bar
+
+
+
+
+
+
+
+
+def bang_bang(args, stdin=None):
+    """
+    Re-runs the last command. Just a wrapper around bang_n.
+    """
+    return bang_n(['1'])
+
+
+def bang_n(args, stdin=None):
+    """
+    Re-runs the nth command as specified in the argument.
+    """
+    if len(args) == 1:
+        try:
+            # 1 is subtracted here to exclude the current command
+            index = -int(args[0])-1
+        except:
+            return 'xonsh: !n: usage: !n n\n'
+        if len(builtins.ordered_history) >= abs(index):
+            cmd = builtins.ordered_history[index]['cmd']
+            if '!!' not in cmd and '!n' not in cmd:
+                builtins.execx(builtins.ordered_history[index]['cmd'])
+            else:
+                return 'xonsh: error: recursive call to !! or !n\n'
+        else:
+            return 'xonsh: no previous command\n'
+    else:
+        return 'xonsh: !n: usage: !n n\n'
 
 
 def bash_aliases():
@@ -114,6 +183,9 @@ DEFAULT_ALIASES = {
     'quit': exit,
     'xexec': xexec,
     'source': source_alias,
+    'history': history,
+    '!!': bang_bang,
+    '!n': bang_n,
     'timeit': timeit_alias,
     'source-bash': source_bash,
     'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],

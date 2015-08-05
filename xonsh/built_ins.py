@@ -22,7 +22,10 @@ from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env
 from xonsh.aliases import DEFAULT_ALIASES, bash_aliases
 from xonsh.jobs import add_job, wait_for_active_job
+from xonsh.hist import History
 from xonsh.proc import ProcProxy, SimpleProcProxy
+
+from io import StringIO
 
 ENV = None
 BUILTINS_LOADED = False
@@ -630,12 +633,18 @@ def load_builtins(execer=None):
     builtins.__xonsh_all_jobs__ = {}
     builtins.__xonsh_active_job__ = None
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
+    builtins.__history__ = History()
+    builtins.__history__.open_history()
     # public built-ins
     builtins.evalx = None if execer is None else execer.eval
     builtins.execx = None if execer is None else execer.exec
     builtins.compilex = None if execer is None else execer.compile
     builtins.default_aliases = builtins.aliases = Aliases(DEFAULT_ALIASES)
     builtins.aliases.update(bash_aliases())
+    builtins.ordered_history = builtins.__history__.ordered_history
+    builtins.stdout = ""
+    builtins.stderr = ""
+    builtins.last_cmd = ""
     BUILTINS_LOADED = True
 
 
@@ -671,7 +680,12 @@ def unload_builtins():
              'default_aliases',
              '__xonsh_all_jobs__',
              '__xonsh_active_job__',
-             '__xonsh_ensure_list_of_strs__', ]
+             '__xonsh_ensure_list_of_strs__',
+             '__history__',
+             'ordered_history',
+             'stdout',
+             'stderr',
+             'last_cmd', ]
     for name in names:
         if hasattr(builtins, name):
             delattr(builtins, name)
