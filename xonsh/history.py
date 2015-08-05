@@ -36,7 +36,7 @@ class HistoryFlusher(Thread):
 
 class History(object):
 
-    def __init__(self, filename=None, sessionid=None, buffersize=100):
+    def __init__(self, filename=None, sessionid=None, buffersize=1):
         """Represents a xonsh session's history as an in-memory buffer that is
         periodically flushed to disk.
 
@@ -68,22 +68,6 @@ class History(object):
         with self._cond:
             self._cond.wait_for(lambda: not flusher.running)
 
-    def open_history(self):
-        """Loads previous history from ~/.xonsh_history.json or
-        location specified in .xonshrc if it exists.
-        """
-        #if os.path.exists(self.hf):
-        #    self.ordered_history = lazyjson.LazyJSON(self.hf).load()
-        #else:
-        #    sys.stdout.write("No history\n")
-
-
-    def close_history(self):
-        pass
-        #with open(self.hf, 'w+') as fp:
-        #    lazyjson.dump(self.ordered_history, fp) 
-
-
     def append(self, cmd):
         """Adds command with current timestamp to ordered history. Will periodically
         flush the history to file.
@@ -94,6 +78,7 @@ class History(object):
             Command dictionary that should be added to the ordered history.
         """
         cmd['timestamp'] = time.time()
+        print(cmd)
         self.buffer.append(cmd)
         if len(self.buffer) >= self.buffersize:
             HistoryFlusher(self.filename, tuple(self.buffer), self._queue, self._cond)

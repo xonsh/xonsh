@@ -633,17 +633,13 @@ def load_builtins(execer=None):
     builtins.__xonsh_all_jobs__ = {}
     builtins.__xonsh_active_job__ = None
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
-    builtins.__history__ = History()
-    builtins.__history__.open_history()
+    builtins.__xonsh_history__ = History()
     # public built-ins
     builtins.evalx = None if execer is None else execer.eval
     builtins.execx = None if execer is None else execer.exec
     builtins.compilex = None if execer is None else execer.compile
     builtins.default_aliases = builtins.aliases = Aliases(DEFAULT_ALIASES)
     builtins.aliases.update(bash_aliases())
-    builtins.stdout = ""
-    builtins.stderr = ""
-    builtins.last_cmd = ""
     BUILTINS_LOADED = True
 
 
@@ -680,10 +676,8 @@ def unload_builtins():
              '__xonsh_all_jobs__',
              '__xonsh_active_job__',
              '__xonsh_ensure_list_of_strs__',
-             '__history__',
-             'stdout',
-             'stderr',
-             'last_cmd', ]
+             '__xonsh_history__',
+             ]
     for name in names:
         if hasattr(builtins, name):
             delattr(builtins, name)
