@@ -22,8 +22,8 @@ from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env
 from xonsh.aliases import DEFAULT_ALIASES, bash_aliases
 from xonsh.jobs import add_job, wait_for_active_job
-from xonsh.hist import History
 from xonsh.proc import ProcProxy, SimpleProcProxy
+from xonsh.history import History
 
 from io import StringIO
 
