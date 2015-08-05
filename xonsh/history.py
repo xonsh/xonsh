@@ -31,15 +31,16 @@ class History(object):
         """Loads previous history from ~/.xonsh_history.json or
         location specified in .xonshrc if it exists.
         """
-        if os.path.exists(self.hf):
-            self.ordered_history = lazyjson.LazyJSON(self.hf).load()
-        else:
-            sys.stdout.write("No history\n")
+        #if os.path.exists(self.hf):
+        #    self.ordered_history = lazyjson.LazyJSON(self.hf).load()
+        #else:
+        #    sys.stdout.write("No history\n")
 
 
     def close_history(self):
-        with open(self.hf, 'w+') as fp:
-            lazyjson.dump(self.ordered_history, fp) 
+        pass
+        #with open(self.hf, 'w+') as fp:
+        #    lazyjson.dump(self.ordered_history, fp) 
 
 
     def add(self, cmd):
@@ -52,4 +53,4 @@ class History(object):
         """
         #self.ordered_history[time.time()] = {'cmd': cmd}
         cmd['timestamp'] = time.time()
-        self.ordered_history.append(cmd)
+        #self.ordered_history.append(cmd)
