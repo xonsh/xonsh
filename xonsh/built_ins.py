@@ -4,6 +4,7 @@ not to be confused with the special Python builtins module.
 import os
 import re
 import sys
+import time
 import shlex
 import atexit
 import signal
@@ -634,14 +635,16 @@ def load_builtins(execer=None):
     builtins.__xonsh_all_jobs__ = {}
     builtins.__xonsh_active_job__ = None
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
-    builtins.__xonsh_history__ = History()
-    atexit.register(builtins.__xonsh_history__.flush, at_exit=True)
     # public built-ins
     builtins.evalx = None if execer is None else execer.eval
     builtins.execx = None if execer is None else execer.exec
     builtins.compilex = None if execer is None else execer.compile
     builtins.default_aliases = builtins.aliases = Aliases(DEFAULT_ALIASES)
     builtins.aliases.update(bash_aliases())
+    # history needs to be started after env and aliases
+    builtins.__xonsh_history__ = History(env=ENV.detype(), #aliases=builtins.aliases, 
+                                         timestamp=time.time())
+    atexit.register(builtins.__xonsh_history__.flush, at_exit=True)
     BUILTINS_LOADED = True
 
 

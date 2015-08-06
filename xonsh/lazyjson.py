@@ -34,7 +34,8 @@ def _to_json_with_size(obj, offset=0, sort_keys=False):
             size[key] = size_v
             s += s_v + ', '
             j += n_v + 2
-        s = s[:-2]
+        if s.endswith(', '):
+            s = s[:-2]
         s += '}\n'
         n = len(s)
         o['__total__'] = offset
@@ -51,7 +52,8 @@ def _to_json_with_size(obj, offset=0, sort_keys=False):
             size.append(size_x)
             s += s_x + ', '
             j += n_x + 2
-        s = s[:-2]
+        if s.endswith(', '):
+            s = s[:-2]
         s += ']\n'
         n = len(s)
         o.append(offset)
