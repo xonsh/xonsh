@@ -642,6 +642,7 @@ def load_builtins(execer=None):
     builtins.default_aliases = builtins.aliases = Aliases(DEFAULT_ALIASES)
     builtins.aliases.update(bash_aliases())
     # history needs to be started after env and aliases
+    # would be nice to actually include non-detyped versions.
     builtins.__xonsh_history__ = History(env=ENV.detype(), #aliases=builtins.aliases, 
                                          timestamp=time.time())
     atexit.register(builtins.__xonsh_history__.flush, at_exit=True)
