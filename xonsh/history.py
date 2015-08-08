@@ -1,6 +1,5 @@
 """Implements the xonsh history object"""
 import os
-import time
 import uuid
 import builtins
 from threading import Thread, Condition
@@ -76,15 +75,13 @@ class History(object):
             lazyjson.dump(meta, f, sort_keys=True)
 
     def append(self, cmd):
-        """Adds command with current timestamp to ordered history. Will periodically
-        flush the history to file.
+        """Appends command to history. Will periodically flush the history to file.
 
         Parameters
         ----------
         cmd : dict 
             Command dictionary that should be added to the ordered history.
         """
-        cmd['timestamp'] = time.time()
         self.buffer.append(cmd)
         if len(self.buffer) >= self.buffersize:
             self.flush()

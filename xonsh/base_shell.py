@@ -1,6 +1,7 @@
 """The base class for xonsh shell"""
 import os
 import sys
+import time
 import builtins
 import traceback
 
@@ -38,12 +39,20 @@ class BaseShell(object):
         code = self.push(line)
         if code is None:
             return
+        ts1 = None
+        #outstart = sys.stdout.tell()
         try:
+            ts0 = time.time()
             self.execer.exec(code, mode='single', glbs=self.ctx)  # no locals
+            ts1 = time.time()
         except XonshError as e:
             print(e.args[0], file=sys.stderr)
         except:
             _print_exception()
+        finally:
+            ts1 = ts1 or time.time()
+            hist = builtins.__xonsh_history__
+            hist.append({'inp': line, 'ts': [ts0, ts1]})
         if builtins.__xonsh_exit__:
             return True
 
@@ -72,9 +81,6 @@ class BaseShell(object):
             self.reset_buffer()
             _print_exception()
             return None
-        finally:
-            hist = builtins.__xonsh_history__
-            hist.append({'inp': src})
         return code
 
     def reset_buffer(self):
@@ -135,3 +141,5 @@ def _print_exception():
         exc_type, exc_value, exc_traceback = sys.exc_info()
         exception_only = traceback.format_exception_only(exc_type, exc_value)
         sys.stderr.write(''.join(exception_only))
+
+
