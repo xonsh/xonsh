@@ -1,4 +1,5 @@
 """The base class for xonsh shell"""
+import io
 import os
 import sys
 import time
@@ -11,6 +12,28 @@ from xonsh.tools import ON_WINDOWS
 from xonsh.completer import Completer
 from xonsh.environ import multiline_prompt, format_prompt
 
+
+class Tee(io.StringIO):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.stdout = sys.stdout
+        sys.stdout = self
+
+    def __del__(self):
+        sys.stdout = self.stdout
+
+    def close(self):
+        sys.stdout = self.stdout
+        super().close()
+
+    def write(self, data):
+        self.stdout.write(data)
+        super().write(data)
+
+    def flush(self):
+        self.stdout.flush()
+        super().flush()
 
 class BaseShell(object):
     """The xonsh shell."""
@@ -40,7 +63,7 @@ class BaseShell(object):
         if code is None:
             return
         ts1 = None
-        #outstart = sys.stdout.tell()
+        tee = Tee()
         try:
             ts0 = time.time()
             self.execer.exec(code, mode='single', glbs=self.ctx)  # no locals
@@ -52,7 +75,8 @@ class BaseShell(object):
         finally:
             ts1 = ts1 or time.time()
             hist = builtins.__xonsh_history__
-            hist.append({'inp': line, 'ts': [ts0, ts1]})
+            hist.append({'inp': line, 'ts': [ts0, ts1], 'out': tee.getvalue()})
+            tee.close()
         if builtins.__xonsh_exit__:
             return True
 
