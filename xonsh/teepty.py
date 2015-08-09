@@ -24,14 +24,14 @@ END_ALTERNATE_MODE = frozenset('\x1b[?{0}l'.format(i).encode() for i in MODE_NUM
 ALTERNATE_MODE_FLAGS = tuple(START_ALTERNATE_MODE) + tuple(END_ALTERNATE_MODE)
 
 def _findfirst(s, substrs):
-    """Finds whichever of the given substrings occurs last in the given string
+    """Finds whichever of the given substrings occurs first in the given string
     and returns that substring, or returns None if no such strings occur.
     """
-    i = -1
+    i = len(s)
     result = None
     for substr in substrs:
-        pos = s.rfind(substr)
-        if pos < i:
+        pos = s.find(substr)
+        if -1 < pos < i:
             i = pos
             result = substr
     return i, result
@@ -51,6 +51,9 @@ class TeePTY(object):
         self.pid = self.master_fd = None
         self._in_alt_mode = False
         self.buffer = io.BytesIO()
+
+    def __str__(self):
+        return self.buffer.getvalue().decode()
 
     def spawn(self, argv=None):
         """Create a spawned process. Based on the code for pty.spawn().
@@ -147,7 +150,6 @@ class TeePTY(object):
                 self._in_alt_mode = False
                 data = self._sanatize_data(data[i+len(flag):])
         return data
-        
 
     def write_stdout(self, data):
         """Writes to stdout as if the child process had written the data (bytes)."""
@@ -168,13 +170,6 @@ class TeePTY(object):
 
 if __name__ == '__main__':
     tpty = TeePTY()
-    #i.write_stdout('The dream has begun.\n')
-    #i.spawn(['ls', '--color=auto', '-v'])
-    #i.spawn(['less', 'tee-test6.py'])
-    #i.spawn(['vi', 'tee-test6.py'])
-    #i.spawn(['bash', 'long.sh'])
-    #i.stdin_read(b"xonsh = man\nwork\n")
-    #i.spawn(['grep', '-i', 'xonsh'])
-    #i.spawn(['python', '-c', 'print("hello"); raise TypeError("why")'])
     tpty.spawn(sys.argv[1:])
     print(tpty.buffer.getvalue())
+    print(tpty)
