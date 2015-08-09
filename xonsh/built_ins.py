@@ -499,6 +499,7 @@ def run_subproc(cmds, captured=True):
             stdout = PIPE
         else:
             stdout = None
+            #stdout = PIPE
         # set standard error
         if 'stderr' in streams:
             stderr = streams['stderr']
@@ -544,6 +545,14 @@ def run_subproc(cmds, captured=True):
                              stdout=stdout,
                              stderr=stderr,
                              **subproc_kwargs)
+                #if stdout is PIPE and not captured:
+                #    while True:
+                #        oline = proc.stdout.readline()
+                #        sys.stdout.write(oline)
+                        #o.append(line)
+                #        if len(oline) == 0:
+                #            break
+                #    proc.wait()
             except PermissionError:
                 e = 'xonsh: subprocess mode: permission denied: {0}'
                 raise XonshError(e.format(aliased_cmd[0]))

@@ -35,6 +35,9 @@ class Tee(io.StringIO):
         self.stdout.flush()
         super().flush()
 
+    #def fileno(self):
+    #    return self.stdout.fileno()
+
 class BaseShell(object):
     """The xonsh shell."""
 
