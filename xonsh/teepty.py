@@ -6,6 +6,7 @@ See http://sqizit.bartletts.id.au/2011/02/14/pseudo-terminals-in-python/ for
 more information.
 """
 import io
+import re
 import os
 import sys
 import tty
@@ -22,6 +23,9 @@ MODE_NUMS = ('1049', '47', '1047')
 START_ALTERNATE_MODE = frozenset('\x1b[?{0}h'.format(i).encode() for i in MODE_NUMS)
 END_ALTERNATE_MODE = frozenset('\x1b[?{0}l'.format(i).encode() for i in MODE_NUMS)
 ALTERNATE_MODE_FLAGS = tuple(START_ALTERNATE_MODE) + tuple(END_ALTERNATE_MODE)
+
+RE_HIDDEN = re.compile(b'(\001.*?\002)')
+RE_COLOR = re.compile(b'\033\[\d+;?\d*m')
 
 def _findfirst(s, substrs):
     """Finds whichever of the given substrings occurs first in the given string
@@ -40,16 +44,19 @@ def _findfirst(s, substrs):
 class TeePTY(object):
     """This class is a pseudo terminal that tees the stdout and stderr into a buffer."""
 
-    def __init__(self, bufsize=1024):
+    def __init__(self, bufsize=1024, remove_color=True):
         """
         Parameters
         ----------
         bufsize : int, optional
             The buffer size to read from the root terminal to/from the tee'd terminal.
+        remove_color : bool, optional
+            Removes color codes from the tee'd buffer, though not the TTY.
         """
         self.bufsize = bufsize
         self.pid = self.master_fd = None
         self._in_alt_mode = False
+        self.remove_color = remove_color
         self.buffer = io.BytesIO()
 
     def __str__(self):
@@ -64,6 +71,7 @@ class TeePTY(object):
             Arguments to pass in as subprocess. In None, will execute $SHELL.
         """
         assert self.master_fd is None
+        self._in_alt_mode = False
         if not argv:
             argv = [os.environ.get('SHELL', 'sh')]
 
@@ -89,6 +97,7 @@ class TeePTY(object):
 
         os.close(master_fd)
         self.pid = self.master_fd = None
+        self._in_alt_mode = False
         signal.signal(signal.SIGWINCH, old_handler)
 
     def _init_fd(self):
@@ -133,7 +142,7 @@ class TeePTY(object):
     def _sanatize_data(self, data):
         i, flag = _findfirst(data, ALTERNATE_MODE_FLAGS)
         if flag is None and self._in_alt_mode:
-            data = b''
+            return  b''
         elif flag is not None:
             if flag in START_ALTERNATE_MODE:
                 # This code is executed when the child process switches the terminal into
@@ -149,6 +158,9 @@ class TeePTY(object):
                 # returned to the command prompt.
                 self._in_alt_mode = False
                 data = self._sanatize_data(data[i+len(flag):])
+        data = RE_HIDDEN.sub(b'', data)
+        if self.remove_color:
+            data = RE_COLOR.sub(b'', data)
         return data
 
     def write_stdout(self, data):
