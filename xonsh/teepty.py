@@ -62,13 +62,15 @@ class TeePTY(object):
     def __str__(self):
         return self.buffer.getvalue().decode()
 
-    def spawn(self, argv=None):
+    def spawn(self, argv=None, env=None):
         """Create a spawned process. Based on the code for pty.spawn().
 
         Parameters
         ----------
         argv : list of str, optional
             Arguments to pass in as subprocess. In None, will execute $SHELL.
+        env : Mapping, optional
+            Environment to pass execute in.
         """
         assert self.master_fd is None
         self._in_alt_mode = False
@@ -79,7 +81,10 @@ class TeePTY(object):
         self.pid = pid
         self.master_fd = master_fd
         if pid == pty.CHILD:
-            os.execlp(argv[0], *argv)
+            if env is None:
+                os.execvp(argv[0], argv)
+            else:
+                os.execvpe(argv[0], argv, env)
 
         old_handler = signal.signal(signal.SIGWINCH, self._signal_winch)
         try:
@@ -129,7 +134,7 @@ class TeePTY(object):
             try:
                 rfds, wfds, xfds = select.select([master_fd, pty.STDIN_FILENO], [], [])
             except select.error as e:
-                if e[0] == 4:   # Interrupted system call.
+                if e[0] == 4:  # Interrupted system call.
                     continue
 
             if master_fd in rfds:
@@ -183,5 +188,7 @@ class TeePTY(object):
 if __name__ == '__main__':
     tpty = TeePTY()
     tpty.spawn(sys.argv[1:])
+    print('-=-'*10)
     print(tpty.buffer.getvalue())
+    print('-=-'*10)
     print(tpty)
