@@ -16,7 +16,7 @@ from subprocess import Popen, PIPE, DEVNULL, STDOUT, TimeoutExpired
 
 from xonsh.tools import redirect_stdout, redirect_stderr, ON_WINDOWS, ON_LINUX, fallback
 if ON_LINUX:
-    from teepty import TeePTY
+    from xonsh.teepty import TeePTY
 else:
     TeePTY = None
 

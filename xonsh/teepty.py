@@ -114,7 +114,8 @@ class TeePTY(object):
 
         _, self.returncode = os.waitpid(pid, 0)
         os.close(master_fd)
-        self.pid = self.master_fd = None
+        #self.pid = 
+        self.master_fd = None
         self._temp_stdin = None
         self._in_alt_mode = False
         signal.signal(signal.SIGWINCH, old_handler)
@@ -208,6 +209,8 @@ class TeePTY(object):
             #raw = raw.encode()
         elif isinstance(stdin, io.FileIO):
             return stdin.name if os.path.isfile(stdin.name) else None
+        elif isinstance(stdin, io.BufferedIOBase):
+            raw = stdin.read()
         elif isinstance(stdin, str):
             raw = stdin.encode()
         elif isinstance(stdin, bytes):
