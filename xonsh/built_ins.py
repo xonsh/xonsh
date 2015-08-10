@@ -535,7 +535,7 @@ def run_subproc(cmds, captured=True):
             if ON_POSIX:
                 subproc_kwargs['preexec_fn'] = _subproc_pre
             try:
-                cls = TeePTYProc if stdout is None else Popen
+                cls = TeePTYProc if stdout is None and not background else Popen
                 proc = cls(aliased_cmd,
                            universal_newlines=uninew,
                            env=ENV.detype(),
