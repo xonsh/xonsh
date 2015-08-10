@@ -16,6 +16,7 @@ import fcntl
 import select
 import signal
 import termios
+import tempfile
 
 # The following escape codes are xterm codes.
 # See http://rtfm.etla.org/xterm/ctlseq.html for more.
@@ -56,6 +57,7 @@ class TeePTY(object):
         self.bufsize = bufsize
         self.pid = self.master_fd = None
         self._in_alt_mode = False
+        self._temp_stdin = None
         self.remove_color = remove_color
         self.buffer = io.BytesIO()
         self.rtn = None
@@ -63,7 +65,7 @@ class TeePTY(object):
     def __str__(self):
         return self.buffer.getvalue().decode()
 
-    def spawn(self, argv=None, env=None):
+    def spawn(self, argv=None, env=None, stdin=None):
         """Create a spawned process. Based on the code for pty.spawn().
 
         Parameters
@@ -82,6 +84,10 @@ class TeePTY(object):
         self._in_alt_mode = False
         if not argv:
             argv = [os.environ.get('SHELL', 'sh')]
+        stdin_filename = self._ensure_stdin(stdin)
+        if stdin_filename is not None:
+            argv = list(argv)
+            argv.append(stdin_filename)
 
         pid, master_fd = pty.fork()
         self.pid = pid
@@ -109,6 +115,7 @@ class TeePTY(object):
         _, self.rtn = os.waitpid(pid, 0)
         os.close(master_fd)
         self.pid = self.master_fd = None
+        self._temp_stdin = None
         self._in_alt_mode = False
         signal.signal(signal.SIGWINCH, old_handler)
         return self.rtn
@@ -191,6 +198,26 @@ class TeePTY(object):
         while len(data) > 0:
             n = os.write(master_fd, data)
             data = data[n:]
+
+    def _ensure_stdin(self, stdin):
+        if stdin is None:
+            return None
+            #raw = sys.stdin.read()
+            #if len(raw) == 0:
+            #    return None
+            #raw = raw.encode()
+        elif isinstance(stdin, io.FileIO):
+            return stdin.name if os.path.isfile(stdin.name) else None
+        elif isinstance(stdin, str):
+            raw = stdin.encode()
+        elif isinstance(stdin, bytes):
+            raw = stdin
+        else:
+            raise ValueError('stdin not understood {0!r}'.format(stdin))
+        self._temp_stdin = ts = tempfile.NamedTemporaryFile(mode='w+b')
+        ts.write(raw)
+        ts.seek(0)
+        return ts.name
 
 
 if __name__ == '__main__':
