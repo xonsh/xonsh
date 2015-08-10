@@ -60,7 +60,7 @@ class TeePTY(object):
         self._temp_stdin = None
         self.remove_color = remove_color
         self.buffer = io.BytesIO()
-        self.rtn = None
+        self.returncode = None
 
     def __str__(self):
         return self.buffer.getvalue().decode()
@@ -77,7 +77,7 @@ class TeePTY(object):
 
         Returns
         -------
-        rtn : int
+        returncode : int
             Return code for the spawned process.
         """
         assert self.master_fd is None
@@ -112,13 +112,13 @@ class TeePTY(object):
             if restore:
                 tty.tcsetattr(pty.STDIN_FILENO, tty.TCSAFLUSH, mode)
 
-        _, self.rtn = os.waitpid(pid, 0)
+        _, self.returncode = os.waitpid(pid, 0)
         os.close(master_fd)
         self.pid = self.master_fd = None
         self._temp_stdin = None
         self._in_alt_mode = False
         signal.signal(signal.SIGWINCH, old_handler)
-        return self.rtn
+        return self.returncode
 
     def _init_fd(self):
         """Called once when the pty is first set up."""

@@ -9,12 +9,16 @@ licensed to the Python Software foundation under a Contributor Agreement.
 import io
 import os
 import sys
-
+import time
 from threading import Thread
-from subprocess import PIPE, DEVNULL, STDOUT
 from collections import Sequence
+from subprocess import Popen, PIPE, DEVNULL, STDOUT, TimeoutExpired
 
-from xonsh.tools import redirect_stdout, redirect_stderr, ON_WINDOWS
+from xonsh.tools import redirect_stdout, redirect_stderr, ON_WINDOWS, ON_LINUX, fallback
+if ON_LINUX:
+    from teepty import TeePTY
+else:
+    TeePTY = None
 
 if ON_WINDOWS:
     import _winapi
@@ -313,13 +317,13 @@ class ProcProxy(Thread):
 
 
 class SimpleProcProxy(ProcProxy):
-    """
-    Variant of `ProcProxy` for simpler functions.
+    """Variant of `ProcProxy` for simpler functions.
 
     The function passed into the initializer for `SimpleProcProxy` should have
     the form described in the xonsh tutorial.  This function is then wrapped to
     make a new function of the form expected by `ProcProxy`.
     """
+
     def __init__(self, f, args, stdin=None, stdout=None, stderr=None,
                  universal_newlines=False):
         def wrapped_simple_command(args, stdin, stdout, stderr):
@@ -342,3 +346,48 @@ class SimpleProcProxy(ProcProxy):
         super().__init__(wrapped_simple_command,
                          args, stdin, stdout, stderr,
                          universal_newlines)
+
+
+@fallback(ON_LINUX, Popen)
+class TeePTYProc(object):
+
+    def __init__(self, args, stdin=None, stdout=None, stderr=None, preexec_fn=None,
+                 env=None, universal_newlines=False):
+        """Popen replacement for running commands in teed psuedo-terminal. This 
+        allows the capturing AND streaming of stdout and stderr.  Availability 
+        is Linux-only.
+        """
+        self.stdin = stdin
+        self._stdout = stdout
+        self._stderr = stderr
+        self.args = args
+        self.universal_newlines = universal_newlines
+        
+        self._tpty = tpty = TeePTY()
+        if preexec_fn is not None:
+            preexec_fn()
+        tpty.spawn(args, env=env, stdin=stdin)
+
+    @property
+    def pid(self):
+        return self._tpty.pid
+
+    def poll(self):
+        return self._tpty.returncode
+
+    def wait(self, timeout=None):
+        tpty = self._tpty
+        t0 = time.time()
+        while tpty.returncode is None:
+            if timeout is not None and timeout < (time.time() - t0):
+                raise TimeoutExpired
+        return tpty.returncode
+
+    @property
+    def stdout(self):
+        if self.universal_newlines:
+            self._stdout = io.StringIO(str(self._tpty))
+            self._stdout.seek(0)
+        elif self._stdout is None:
+            self._stdout = self._tpty.buffer
+        return self._stdout

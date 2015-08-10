@@ -251,6 +251,14 @@ TERM_COLORS = {
 }
 
 
+def fallback(cond, backup):
+    """Decorator for returning the object if cond is true and a backup if cond is false.
+    """
+    def dec(obj):
+        return obj if cond else backup
+    return dec
+
+
 # The following redirect classes were taken directly from Python 3.5's source
 # code (from the contextlib module). This can be removed when 3.5 is released,
 # although redirect_stdout exists in 3.4, redirect_stderr does not.

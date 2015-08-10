@@ -24,10 +24,8 @@ from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env
 from xonsh.aliases import DEFAULT_ALIASES, bash_aliases
 from xonsh.jobs import add_job, wait_for_active_job
-from xonsh.proc import ProcProxy, SimpleProcProxy
+from xonsh.proc import ProcProxy, SimpleProcProxy, TeePTYProc
 from xonsh.history import History
-
-from io import StringIO
 
 ENV = None
 BUILTINS_LOADED = False
@@ -499,7 +497,6 @@ def run_subproc(cmds, captured=True):
             stdout = PIPE
         else:
             stdout = None
-            #stdout = PIPE
         # set standard error
         if 'stderr' in streams:
             stderr = streams['stderr']
@@ -538,21 +535,14 @@ def run_subproc(cmds, captured=True):
             if ON_POSIX:
                 subproc_kwargs['preexec_fn'] = _subproc_pre
             try:
-                proc = Popen(aliased_cmd,
-                             universal_newlines=uninew,
-                             env=ENV.detype(),
-                             stdin=stdin,
-                             stdout=stdout,
-                             stderr=stderr,
-                             **subproc_kwargs)
-                #if stdout is PIPE and not captured:
-                #    while True:
-                #        oline = proc.stdout.readline()
-                #        sys.stdout.write(oline)
-                        #o.append(line)
-                #        if len(oline) == 0:
-                #            break
-                #    proc.wait()
+                cls = TeePTYProc if stdout is None else Popen
+                proc = cls(aliased_cmd,
+                           universal_newlines=uninew,
+                           env=ENV.detype(),
+                           stdin=stdin,
+                           stdout=stdout,
+                           stderr=stderr,
+                           **subproc_kwargs)
             except PermissionError:
                 e = 'xonsh: subprocess mode: permission denied: {0}'
                 raise XonshError(e.format(aliased_cmd[0]))
