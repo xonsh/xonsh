@@ -58,6 +58,7 @@ class TeePTY(object):
         self._in_alt_mode = False
         self.remove_color = remove_color
         self.buffer = io.BytesIO()
+        self.rtn = None
 
     def __str__(self):
         return self.buffer.getvalue().decode()
@@ -71,6 +72,11 @@ class TeePTY(object):
             Arguments to pass in as subprocess. In None, will execute $SHELL.
         env : Mapping, optional
             Environment to pass execute in.
+
+        Returns
+        -------
+        rtn : int
+            Return code for the spawned process.
         """
         assert self.master_fd is None
         self._in_alt_mode = False
@@ -100,10 +106,12 @@ class TeePTY(object):
             if restore:
                 tty.tcsetattr(pty.STDIN_FILENO, tty.TCSAFLUSH, mode)
 
+        _, self.rtn = os.waitpid(pid, 0)
         os.close(master_fd)
         self.pid = self.master_fd = None
         self._in_alt_mode = False
         signal.signal(signal.SIGWINCH, old_handler)
+        return self.rtn
 
     def _init_fd(self):
         """Called once when the pty is first set up."""
@@ -192,3 +200,5 @@ if __name__ == '__main__':
     print(tpty.buffer.getvalue())
     print('-=-'*10)
     print(tpty)
+    print('-=-'*10)
+    print('Returned with status {0}'.format(tpty.rtn))
