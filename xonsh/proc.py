@@ -385,9 +385,11 @@ class TeePTYProc(object):
 
     @property
     def stdout(self):
-        if self.universal_newlines:
+        if self._stdout is not None:
+            pass
+        elif self.universal_newlines:
             self._stdout = io.StringIO(str(self._tpty))
             self._stdout.seek(0)
-        elif self._stdout is None:
+        else:
             self._stdout = self._tpty.buffer
         return self._stdout
