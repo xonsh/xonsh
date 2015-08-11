@@ -573,6 +573,8 @@ def run_subproc(cmds, captured=True):
     if prev_is_proxy:
         prev_proc.wait()
     wait_for_active_job()
+    hist = builtins.__xonsh_history__
+    hist.last_cmd_rtn = prev_proc.returncode
     if write_target is None:
         # get output
         output = ''
@@ -580,6 +582,8 @@ def run_subproc(cmds, captured=True):
             output = prev_proc.stdout.read()
         if captured:
             return output
+        else:
+            hist.last_cmd_out = output
     #elif last_stdout not in (PIPE, None, sys.stdout):
     #    last_stdout.close()
 

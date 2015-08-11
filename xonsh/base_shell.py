@@ -13,10 +13,11 @@ from xonsh.completer import Completer
 from xonsh.environ import multiline_prompt, format_prompt
 
 
-class Tee(io.StringIO):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class TeeOut(object):
+
+    def __init__(self, tee, *args, **kwargs):
+        self.tee = tee
         self.stdout = sys.stdout
         sys.stdout = self
 
@@ -25,18 +26,54 @@ class Tee(io.StringIO):
 
     def close(self):
         sys.stdout = self.stdout
-        super().close()
 
     def write(self, data):
         self.stdout.write(data)
-        super().write(data)
+        self.tee.write(data)
 
     def flush(self):
         self.stdout.flush()
-        super().flush()
+        self.tee.flush()
 
-    #def fileno(self):
-    #    return self.stdout.fileno()
+
+class TeeErr(object):
+
+    def __init__(self, tee, *args, **kwargs):
+        self.tee = tee
+        self.stderr = sys.stderr
+        sys.stderr = self
+
+    def __del__(self):
+        sys.stderr = self.stderr
+
+    def close(self):
+        sys.stderr = self.stderr
+
+    def write(self, data):
+        self.stderr.write(data)
+        self.tee.write(data)
+
+    def flush(self):
+        self.stderr.flush()
+        self.tee.flush()
+
+
+class Tee(io.StringIO):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.stdout = TeeOut(self)
+        self.stderr = TeeErr(self)
+
+    def __del__(self):
+        del self.stdout, self.stderr
+        super().__del__()
+
+    def close(self):
+        self.stdout.close()
+        self.stderr.close()
+        super().close()
+
 
 class BaseShell(object):
     """The xonsh shell."""
@@ -77,8 +114,7 @@ class BaseShell(object):
             _print_exception()
         finally:
             ts1 = ts1 or time.time()
-            hist = builtins.__xonsh_history__
-            hist.append({'inp': line, 'ts': [ts0, ts1], 'out': tee.getvalue()})
+            self._append_history(inp=line, ts=[ts0, ts1], tee_out=tee.getvalue())
             tee.close()
         if builtins.__xonsh_exit__:
             return True
@@ -156,6 +192,21 @@ class BaseShell(object):
         self.settitle()
         return p
 
+    def _append_history(self, tee_out=None, **info):
+        hist = builtins.__xonsh_history__
+        info['rtn'] = hist.last_cmd_rtn
+        tee_out = tee_out or None
+        last_out = hist.last_cmd_out or None
+        if last_out is None and tee_out is None:
+            pass
+        elif last_out is None and tee_out is not None:
+            info['out'] = tee_out
+        elif last_out is not None and tee_out is None:
+            info['out'] = last_out
+        else:
+            info['out'] = tee_out + '\n' + last_out
+        hist.append(info)
+
 
 def _print_exception():
     """Print exceptions with/without traceback."""
@@ -168,5 +219,4 @@ def _print_exception():
         exc_type, exc_value, exc_traceback = sys.exc_info()
         exception_only = traceback.format_exception_only(exc_type, exc_value)
         sys.stderr.write(''.join(exception_only))
-
 
