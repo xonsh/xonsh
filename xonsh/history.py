@@ -3,10 +3,67 @@ import os
 import uuid
 import time
 import builtins
+from glob import iglob
 from threading import Thread, Condition
 from collections import deque
 
 from xonsh import lazyjson
+
+
+class HistoryGC(Thread):
+
+    def __init__(self, *args, **kwargs):
+        """Thread responsible for garbage collecting old history."""
+        super(HistoryGC, self).__init__(*args, **kwargs)
+        self.daemon = True
+        self.start()
+
+    def run(self):
+        hsize, units = builtins.__xonsh_env__.get('XONSH_HISTORY_SIZE', (8128, 'files'))
+        files = self.unlocked_files()
+        # flag files for removal
+        if units == 'files':
+            rmfiles = files[:-hsize] if len(files) > hsize else []
+        elif units == 's':
+            now = time.time()
+            rmfiles = []
+            for ts, f in files:
+                if (now - ts) < hsize:
+                    break
+                rmfiles.append((None, f))
+        elif units == 'b':
+            n = 0
+            nbytes = 0
+            for f in files[::-1]:
+                fsize = os.stat(f).st_size
+                if nbytes + fsize > hsize:
+                    break
+                nbytes += fsize
+                n += 1
+            rmfiles = f[-n:]    
+        else:
+            raise ValueError('Units of {0!r} not understood'.format(unit))
+        # finally, clean up files
+        for _, f in rmfiles:
+            try:
+                os.remove(f)
+            except OSError:
+                pass
+
+    def unlocked_files(self):
+        """Finds the history files and returns the ones that are unlocked, this is 
+        sorted by the last closed time.
+        """
+        xdd = os.path.abspath(builtins.__xonsh_env__['XONSH_DATA_DIR'])
+        fs = [f for f in iglob(os.path.join(xdd, 'xonsh-*.json'))]
+        files = []
+        for f in files:
+            lj = lazyjson.LazyJSON(f)
+            if lj['locked']:
+                continue
+            files.append((lj['ts'][1], f))
+        files.sort()
+        return files
 
 
 class HistoryFlusher(Thread):
@@ -40,6 +97,7 @@ class HistoryFlusher(Thread):
         hist['cmds'].extend(self.buffer)
         if self.at_exit:
             hist['ts'][1] = time.time()  # apply end time
+            hist['locked'] = False
         with open(self.filename, 'w') as f:
             lazyjson.dump(hist, f, sort_keys=True)
 
@@ -79,6 +137,7 @@ class History(object):
         meta['sessionid'] = str(sid)
         with open(self.filename, 'w') as f:
             lazyjson.dump(meta, f, sort_keys=True)
+        self.gc = HistoryGC()
 
     def append(self, cmd):
         """Appends command to history. Will periodically flush the history to file.

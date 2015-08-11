@@ -647,7 +647,7 @@ def load_builtins(execer=None):
     # history needs to be started after env and aliases
     # would be nice to actually include non-detyped versions.
     builtins.__xonsh_history__ = History(env=ENV.detype(), #aliases=builtins.aliases, 
-                                         ts=[time.time(), None])
+                                         ts=[time.time(), None], locked=True)
     atexit.register(builtins.__xonsh_history__.flush, at_exit=True)
     BUILTINS_LOADED = True
 
