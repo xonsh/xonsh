@@ -117,16 +117,20 @@ class BaseShell(object):
         code = self.push(line)
         if code is None:
             return
+        hist = builtins.__xonsh_history__
         ts1 = None
         tee = Tee()
         try:
             ts0 = time.time()
             self.execer.exec(code, mode='single', glbs=self.ctx)  # no locals
             ts1 = time.time()
+            hist.last_cmd_rtn = 0  # returncode for success
         except XonshError as e:
             print(e.args[0], file=sys.stderr)
+            hist.last_cmd_rtn = 1  # return code for failure
         except:
             print_exception()
+            hist.last_cmd_rtn = 1  # return code for failure
         finally:
             ts1 = ts1 or time.time()
             self._append_history(inp=line, ts=[ts0, ts1], tee_out=tee.getvalue())
