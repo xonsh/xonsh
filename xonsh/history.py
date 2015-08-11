@@ -46,7 +46,7 @@ class HistoryFlusher(Thread):
 
 class History(object):
 
-    def __init__(self, filename=None, sessionid=None, buffersize=2, **meta):
+    def __init__(self, filename=None, sessionid=None, buffersize=100, **meta):
         """Represents a xonsh session's history as an in-memory buffer that is
         periodically flushed to disk.
 
