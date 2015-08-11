@@ -373,16 +373,20 @@ class TeePTYProc(object):
 
     @property
     def pid(self):
+        """The pid of the spawned process."""
         return self._tpty.pid
 
     @property
     def returncode(self):
+        """The return code of the spawned process."""
         return self._tpty.returncode
 
     def poll(self):
+        """Polls the spawned process and returns the returncode."""
         return self._tpty.returncode
 
     def wait(self, timeout=None):
+        """Waits for the spawned process to finish, up to a timeout."""
         tpty = self._tpty
         t0 = time.time()
         while tpty.returncode is None:
@@ -392,6 +396,8 @@ class TeePTYProc(object):
 
     @property
     def stdout(self):
+        """The stdout (and stderr) that was tee'd into a buffer by the psuedo-terminal.
+        """
         if self._stdout is not None:
             pass
         elif self.universal_newlines:
