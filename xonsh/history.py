@@ -63,10 +63,13 @@ class HistoryGC(Thread):
         fs = [f for f in iglob(os.path.join(xdd, 'xonsh-*.json'))]
         files = []
         for f in fs:
-            lj = lazyjson.LazyJSON(f)
-            if lj['locked']:
+            try:
+                lj = lazyjson.LazyJSON(f)
+                if lj['locked']:
+                    continue
+                files.append((lj['ts'][1], f))
+            except (IOError, OSError):
                 continue
-            files.append((lj['ts'][1], f))
         files.sort()
         return files
 
