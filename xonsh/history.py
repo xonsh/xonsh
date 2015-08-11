@@ -113,7 +113,7 @@ class HistoryFlusher(Thread):
 
 class History(object):
 
-    def __init__(self, filename=None, sessionid=None, buffersize=100, **meta):
+    def __init__(self, filename=None, sessionid=None, buffersize=100, gc=True, **meta):
         """Represents a xonsh session's history as an in-memory buffer that is
         periodically flushed to disk.
 
@@ -129,6 +129,8 @@ class History(object):
         meta : optional
             Top-level metadata to store along with the history. The kwargs 'cmds' and 
             'sessionid' are not allowed and will be overwritten.
+        gc : bool, optional
+            Run garbage collector flag.
         """
         self.sessionid = sid = uuid.uuid4() if sessionid is None else sessionid
         if filename is None: 
@@ -146,7 +148,7 @@ class History(object):
         meta['sessionid'] = str(sid)
         with open(self.filename, 'w') as f:
             lazyjson.dump(meta, f, sort_keys=True)
-        self.gc = HistoryGC()
+        self.gc = HistoryGC() if gc else None
 
     def append(self, cmd):
         """Appends command to history. Will periodically flush the history to file.
@@ -155,16 +157,36 @@ class History(object):
         ----------
         cmd : dict 
             Command dictionary that should be added to the ordered history.
+
+        Returns
+        -------
+        hf : HistoryFlusher or None
+            The thread that was spawned to flush history
         """
         self.buffer.append(cmd)
         if len(self.buffer) >= self.buffersize:
-            self.flush()
+            hf = self.flush()
+        else:
+            hf = None
+        return hf
 
     def flush(self, at_exit=False):
-        """Flushes the current command buffer to disk."""
+        """Flushes the current command buffer to disk.
+
+        Parameters
+        ----------
+        at_exit : bool, optional
+            Whether the HistoryFlusher should act as a thread in the background, 
+            or execute immeadiately and block.
+
+        Returns
+        -------
+        hf : HistoryFlusher or None
+            The thread that was spawned to flush history
+        """
         if len(self.buffer) == 0:
             return
-        HistoryFlusher(self.filename, tuple(self.buffer), self._queue, self._cond, 
-                       at_exit=at_exit)
+        hf = HistoryFlusher(self.filename, tuple(self.buffer), self._queue, self._cond, 
+                            at_exit=at_exit)
         self.buffer.clear()
-
+        return hf
