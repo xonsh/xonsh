@@ -34,16 +34,10 @@ def setup_readline():
             # not all versions of readline have this symbol, ie Macs sometimes
             RL_COMPLETION_SUPPRESS_APPEND = None
         RL_CAN_RESIZE = hasattr(lib, 'rl_reset_screen_size')
-    # reads in history
     env = builtins.__xonsh_env__
-    hf = env.get('XONSH_HISTORY_FILE', os.path.expanduser('~/.xonsh_history'))
-    if os.path.isfile(hf):
-        try:
-            readline.read_history_file(hf)
-        except PermissionError:
-            warn('do not have read permissions for ' + hf, RuntimeWarning)
-    hs = env.get('XONSH_HISTORY_SIZE', (8128, 'files'))
+    # reads in history
     readline.set_history_length(-1)
+    ReadlineHistoryAdder()
     # sets up IPython-like history matching with up and down
     readline.parse_and_bind('"\e[B": history-search-forward')
     readline.parse_and_bind('"\e[A": history-search-backward')
@@ -64,14 +58,6 @@ def teardown_readline():
         import readline
     except ImportError:
         return
-    env = builtins.__xonsh_env__
-    hs = env.get('XONSH_HISTORY_SIZE', (8128, 'files'))
-    #readline.set_history_length(hs)
-    hf = env.get('XONSH_HISTORY_FILE', os.path.expanduser('~/.xonsh_history'))
-    try:
-        readline.write_history_file(hf)
-    except PermissionError:
-        warn('do not have write permissions for ' + hf, RuntimeWarning)
 
 
 def rl_completion_suppress_append(val=1):
@@ -180,7 +166,7 @@ class ReadlineHistoryAdder(Thread):
         """Thread responsible for adding inputs from history to the current readline 
         instance. May wait for the history garbage collector to finish.
         """
-        super(HistoryGC, self).__init__(*args, **kwargs)
+        super(ReadlineHistoryAdder, self).__init__(*args, **kwargs)
         self.daemon = True
         self.wait_for_gc = wait_for_gc
         self.start()
