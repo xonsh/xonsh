@@ -39,8 +39,8 @@ def setup_readline():
             readline.read_history_file(hf)
         except PermissionError:
             warn('do not have read permissions for ' + hf, RuntimeWarning)
-    hs = env.get('XONSH_HISTORY_SIZE', 8128)
-    readline.set_history_length(hs)
+    hs = env.get('XONSH_HISTORY_SIZE', (8128, 'files'))
+    #readline.set_history_length(hs)
     # sets up IPython-like history matching with up and down
     readline.parse_and_bind('"\e[B": history-search-forward')
     readline.parse_and_bind('"\e[A": history-search-backward')
@@ -62,8 +62,8 @@ def teardown_readline():
     except ImportError:
         return
     env = builtins.__xonsh_env__
-    hs = env.get('XONSH_HISTORY_SIZE', 8128)
-    readline.set_history_length(hs)
+    hs = env.get('XONSH_HISTORY_SIZE', (8128, 'files'))
+    #readline.set_history_length(hs)
     hf = env.get('XONSH_HISTORY_FILE', os.path.expanduser('~/.xonsh_history'))
     try:
         readline.write_history_file(hf)

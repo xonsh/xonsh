@@ -13,7 +13,8 @@ from collections import MutableMapping, MutableSequence, MutableSet, namedtuple
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.tools import TERM_COLORS, ON_WINDOWS, ON_MAC, ON_LINUX, string_types, \
     is_int, always_true, always_false, ensure_string, is_env_path, str_to_env_path, \
-    env_path_to_str, is_bool, to_bool, bool_to_str
+    env_path_to_str, is_bool, to_bool, bool_to_str, is_history_tuple, to_history_tuple, \
+    history_tuple_to_str
 from xonsh.dirstack import _get_cwd
 
 LOCALE_CATS = {
@@ -50,7 +51,7 @@ DEFAULT_ENSURERS = {
     'LC_NUMERIC': (always_false, locale_convert('LC_NUMERIC'), ensure_string),
     'LC_MONETARY': (always_false, locale_convert('LC_MONETARY'), ensure_string),
     'LC_TIME': (always_false, locale_convert('LC_TIME'), ensure_string),
-    'XONSH_HISTORY_SIZE': (is_int, int, str),
+    'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
     'CASE_SENSITIVE_COMPLETIONS': (is_bool, to_bool, bool_to_str),
     'BASH_COMPLETIONS': (is_env_path, str_to_env_path, env_path_to_str),
 }
