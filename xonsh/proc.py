@@ -14,7 +14,9 @@ from threading import Thread
 from collections import Sequence
 from subprocess import Popen, PIPE, DEVNULL, STDOUT, TimeoutExpired
 
-from xonsh.tools import redirect_stdout, redirect_stderr, ON_WINDOWS, ON_LINUX, fallback
+from xonsh.tools import redirect_stdout, redirect_stderr, ON_WINDOWS, ON_LINUX, \
+    fallback, print_exception
+
 if ON_LINUX:
     from xonsh.teepty import TeePTY
 else:
@@ -165,7 +167,7 @@ class ProcProxy(Thread):
             sp_stderr = sys.stderr
 
         r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr)
-        self.returncode = r if r is not None else True
+        self.returncode = 0 if r is None else r
 
     def poll(self):
         """Check if the function has completed.
@@ -340,9 +342,10 @@ class SimpleProcProxy(ProcProxy):
                         stderr.write(r[1])
                 elif r is not None:
                     stdout.write(str(r))
-                return True
+                return 0  # returncode for succees
             except:
-                return False
+                print_exception()
+                return 1  # returncode for failure
         super().__init__(wrapped_simple_command,
                          args, stdin, stdout, stderr,
                          universal_newlines)

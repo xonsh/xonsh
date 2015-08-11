@@ -7,8 +7,8 @@ import builtins
 import traceback
 
 from xonsh.execer import Execer
-from xonsh.tools import XonshError, escape_windows_title_string
-from xonsh.tools import ON_WINDOWS
+from xonsh.tools import XonshError, escape_windows_title_string, ON_WINDOWS, \
+    print_exception
 from xonsh.completer import Completer
 from xonsh.environ import multiline_prompt, format_prompt
 
@@ -126,7 +126,7 @@ class BaseShell(object):
         except XonshError as e:
             print(e.args[0], file=sys.stderr)
         except:
-            _print_exception()
+            print_exception()
         finally:
             ts1 = ts1 or time.time()
             self._append_history(inp=line, ts=[ts0, ts1], tee_out=tee.getvalue())
@@ -152,12 +152,12 @@ class BaseShell(object):
         except SyntaxError:
             if line == '\n':
                 self.reset_buffer()
-                _print_exception()
+                print_exception()
                 return None
             self.need_more_lines = True
         except:
             self.reset_buffer()
-            _print_exception()
+            print_exception()
             return None
         return code
 
@@ -192,7 +192,7 @@ class BaseShell(object):
                 try:
                     self.mlprompt = multiline_prompt()
                 except Exception:
-                    _print_exception()
+                    print_exception()
                     self.mlprompt = '<multiline prompt error> '
             return self.mlprompt
         env = builtins.__xonsh_env__
@@ -201,7 +201,7 @@ class BaseShell(object):
             try:
                 p = format_prompt(p)
             except Exception:
-                _print_exception()
+                print_exception()
         else:
             p = "set '$PROMPT = ...' $ "
         self.settitle()
@@ -223,16 +223,4 @@ class BaseShell(object):
         hist.append(info)
         hist.last_cmd_rtn = hist.last_cmd_out = None
 
-
-def _print_exception():
-    """Print exceptions with/without traceback."""
-    if 'XONSH_SHOW_TRACEBACK' not in builtins.__xonsh_env__:
-        sys.stderr.write('xonsh: For full traceback set: '
-                         '$XONSH_SHOW_TRACEBACK=True\n')
-    if builtins.__xonsh_env__.get('XONSH_SHOW_TRACEBACK', False):
-        traceback.print_exc()
-    else:
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        exception_only = traceback.format_exception_only(exc_type, exc_value)
-        sys.stderr.write(''.join(exception_only))
 

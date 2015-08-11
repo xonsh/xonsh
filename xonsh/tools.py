@@ -21,6 +21,7 @@ import re
 import sys
 import builtins
 import platform
+import traceback
 import subprocess
 from collections import OrderedDict, Sequence
 
@@ -361,6 +362,19 @@ def suggest_commands(cmd, env, aliases):
         c = command_not_found(cmd)
         rtn += ('\n\n' + c) if len(c) > 0 else ''
     return rtn
+
+
+def print_exception():
+    """Print exceptions with/without traceback."""
+    if 'XONSH_SHOW_TRACEBACK' not in builtins.__xonsh_env__:
+        sys.stderr.write('xonsh: For full traceback set: '
+                         '$XONSH_SHOW_TRACEBACK=True\n')
+    if builtins.__xonsh_env__.get('XONSH_SHOW_TRACEBACK', False):
+        traceback.print_exc()
+    else:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        exception_only = traceback.format_exception_only(exc_type, exc_value)
+        sys.stderr.write(''.join(exception_only))
 
 
 # Modified from Public Domain code, by Magnus Lie Hetland
