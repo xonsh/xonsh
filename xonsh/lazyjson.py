@@ -214,6 +214,10 @@ class LazyJSON(Node):
         self.is_sequence = isinstance(self.offsets, Sequence)
 
     def __del__(self):
+        self.close()
+
+    def close(self):
+        """Close the file handle, if appropriate."""
         if not self.reopen:
             self._f.close()
 

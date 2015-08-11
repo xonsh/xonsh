@@ -64,10 +64,11 @@ class HistoryGC(Thread):
         files = []
         for f in fs:
             try:
-                lj = lazyjson.LazyJSON(f)
+                lj = lazyjson.LazyJSON(f, reopen=False)
                 if lj['locked']:
                     continue
                 files.append((lj['ts'][1], f))
+                lj.close()
             except (IOError, OSError):
                 continue
         files.sort()

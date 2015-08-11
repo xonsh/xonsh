@@ -182,12 +182,13 @@ class ReadlineHistoryAdder(Thread):
         files = hist.gc.unlocked_files()
         for _, f in files:
             try:
-                lj = lazyjson.LazyJSON(f)
+                lj = lazyjson.LazyJSON(f, reopen=False)
                 for cmd in lj['cmds']:
                     inp = cmd['inp'].splitlines()
                     for line in inp:
                         if line == 'EOF':
                             continue
                         readline.add_history(line)
+                lj.close()
             except (IOError, OSError):
                 continue
