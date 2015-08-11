@@ -57,7 +57,7 @@ class HistoryGC(Thread):
 
     def unlocked_files(self):
         """Finds the history files and returns the ones that are unlocked, this is 
-        sorted by the last closed time.
+        sorted by the last closed time. Returns a list of (timestamp, file) tuples.
         """
         xdd = os.path.abspath(builtins.__xonsh_env__['XONSH_DATA_DIR'])
         fs = [f for f in iglob(os.path.join(xdd, 'xonsh-*.json'))]

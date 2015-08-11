@@ -1,9 +1,12 @@
 """The readline based xonsh shell"""
 import os
+import time
 import builtins
 from cmd import Cmd
 from warnings import warn
+from threading import Thread
 
+from xonsh import lazyjson
 from xonsh.base_shell import BaseShell
 
 RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = None
@@ -40,7 +43,7 @@ def setup_readline():
         except PermissionError:
             warn('do not have read permissions for ' + hf, RuntimeWarning)
     hs = env.get('XONSH_HISTORY_SIZE', (8128, 'files'))
-    #readline.set_history_length(hs)
+    readline.set_history_length(-1)
     # sets up IPython-like history matching with up and down
     readline.parse_and_bind('"\e[B": history-search-forward')
     readline.parse_and_bind('"\e[A": history-search-backward')
@@ -169,3 +172,33 @@ class ReadlineShell(BaseShell, Cmd):
             # work. This is a bug in upstream Python, or possibly readline.
             RL_LIB.rl_reset_screen_size()
         return super().prompt
+
+
+class ReadlineHistoryAdder(Thread):
+
+    def __init__(self, wait_for_gc=True, *args, **kwargs):
+        """Thread responsible for adding inputs from history to the current readline 
+        instance. May wait for the history garbage collector to finish.
+        """
+        super(HistoryGC, self).__init__(*args, **kwargs)
+        self.daemon = True
+        self.wait_for_gc = wait_for_gc
+        self.start()
+
+    def run(self):
+        try:
+            import readline
+        except ImportError:
+            return
+        hist = builtins.__xonsh_history__
+        while self.wait_for_gc and hist.gc.is_alive():
+            time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer
+        files = hist.gc.unlocked_files()
+        for _, f in files:
+            lj = lazyjson.LazyJSON(f)
+            for cmd in lj['cmds']:
+                inp = cmd['inp'].splitlines()
+                for line in inp:
+                    if line == 'EOF':
+                        continue
+                    readline.add_history(line)
