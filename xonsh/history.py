@@ -12,13 +12,18 @@ from xonsh import lazyjson
 
 class HistoryGC(Thread):
 
-    def __init__(self, *args, **kwargs):
-        """Thread responsible for garbage collecting old history."""
+    def __init__(self, wait_for_shell=True, *args, **kwargs):
+        """Thread responsible for garbage collecting old history. May wait for 
+        shell (and thus xonshrc to have been loaded) to start work.
+        """
         super(HistoryGC, self).__init__(*args, **kwargs)
         self.daemon = True
+        self.wait_for_shell = wait_for_shell
         self.start()
 
     def run(self):
+        while self.wait_for_shell:
+            time.sleep(0.01)
         hsize, units = builtins.__xonsh_env__.get('XONSH_HISTORY_SIZE', (8128, 'files'))
         files = self.unlocked_files()
         # flag files for removal
@@ -57,7 +62,7 @@ class HistoryGC(Thread):
         xdd = os.path.abspath(builtins.__xonsh_env__['XONSH_DATA_DIR'])
         fs = [f for f in iglob(os.path.join(xdd, 'xonsh-*.json'))]
         files = []
-        for f in files:
+        for f in fs:
             lj = lazyjson.LazyJSON(f)
             if lj['locked']:
                 continue

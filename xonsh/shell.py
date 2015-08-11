@@ -45,6 +45,8 @@ class Shell(object):
         else:
             raise XonshError('{} is not recognized as a shell type'.format(
                 env['SHELL_TYPE']))
+        # allows history garbace colector to start running
+        builtins.__xonsh_history__.gc.wait_for_shell = False
 
     def __getattr__(self, attr):
         """Delegates calls to appropriate shell instance."""

@@ -571,11 +571,13 @@ RE_HISTORY_TUPLE = re.compile('([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)\s*([A-Za
 
 def to_history_tuple(x):
     """Converts to a canonincal history tuple."""
-    if not isinstance(x, Sequence):
-        raise ValueError('history size must be given as a sequence')
+    if not isinstance(x, (Sequence, float, int)):
+        raise ValueError('history size must be given as a sequence or number')
     if isinstance(x, str):
         m = RE_HISTORY_TUPLE.match(x.strip())
         return to_history_tuple((m.group(1), m.group(3)))
+    elif isinstance(x, (float, int)):
+        return to_history_tuple((x, 'files'))
     units, converter = HISTORY_UNITS[x[1]]
     value = converter(x[0])
     return (value, units)
