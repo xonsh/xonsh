@@ -1,6 +1,7 @@
 """Implements the xonsh history object"""
 import os
 import uuid
+import time
 import builtins
 from threading import Thread, Condition
 from collections import deque
@@ -18,6 +19,7 @@ class HistoryFlusher(Thread):
         self.queue = queue
         queue.append(self)
         self.cond = cond
+        self.at_exit = at_exit
         if at_exit:
             self.dump()
         else:
@@ -36,6 +38,8 @@ class HistoryFlusher(Thread):
         with open(self.filename, 'r') as f:
             hist = lazyjson.LazyJSON(f).load()
         hist['cmds'].extend(self.buffer)
+        if self.at_exit:
+            hist['ts'][1] = time.time()  # apply end time
         with open(self.filename, 'w') as f:
             lazyjson.dump(hist, f, sort_keys=True)
 
@@ -69,6 +73,8 @@ class History(object):
         self.buffersize = buffersize
         self._queue = deque()
         self._cond = Condition()
+        self.last_cmd_out = None
+        self.last_cmd_rtn = None
         meta['cmds'] = []
         meta['sessionid'] = str(sid)
         with open(self.filename, 'w') as f:

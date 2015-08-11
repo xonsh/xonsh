@@ -531,11 +531,11 @@ def run_subproc(cmds, captured=True):
                        universal_newlines=uninew)
         else:
             prev_is_proxy = False
+            cls = TeePTYProc if stdout is None and not background else Popen
             subproc_kwargs = {}
-            if ON_POSIX:
+            if ON_POSIX and cls is Popen:
                 subproc_kwargs['preexec_fn'] = _subproc_pre
             try:
-                cls = TeePTYProc if stdout is None and not background else Popen
                 proc = cls(aliased_cmd,
                            universal_newlines=uninew,
                            env=ENV.detype(),
@@ -580,8 +580,8 @@ def run_subproc(cmds, captured=True):
             output = prev_proc.stdout.read()
         if captured:
             return output
-    elif last_stdout not in (PIPE, None, sys.stdout):
-        last_stdout.close()
+    #elif last_stdout not in (PIPE, None, sys.stdout):
+    #    last_stdout.close()
 
 
 def subproc_captured(*cmds):
@@ -643,7 +643,7 @@ def load_builtins(execer=None):
     # history needs to be started after env and aliases
     # would be nice to actually include non-detyped versions.
     builtins.__xonsh_history__ = History(env=ENV.detype(), #aliases=builtins.aliases, 
-                                         timestamp=time.time())
+                                         ts=[time.time(), None])
     atexit.register(builtins.__xonsh_history__.flush, at_exit=True)
     BUILTINS_LOADED = True
 
