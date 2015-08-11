@@ -372,6 +372,10 @@ class TeePTYProc(object):
     def pid(self):
         return self._tpty.pid
 
+    @property
+    def returncode(self):
+        return self._tpty.returncode
+
     def poll(self):
         return self._tpty.returncode
 

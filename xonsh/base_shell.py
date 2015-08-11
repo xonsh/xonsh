@@ -13,11 +13,13 @@ from xonsh.completer import Completer
 from xonsh.environ import multiline_prompt, format_prompt
 
 
-
 class TeeOut(object):
+    """Tees stdout into the original sys.stdout and another buffer instance that is 
+    provided.
+    """
 
-    def __init__(self, tee, *args, **kwargs):
-        self.tee = tee
+    def __init__(self, buf, *args, **kwargs):
+        self.buffer = buf
         self.stdout = sys.stdout
         sys.stdout = self
 
@@ -25,21 +27,27 @@ class TeeOut(object):
         sys.stdout = self.stdout
 
     def close(self):
+        """Restores the original stdout."""
         sys.stdout = self.stdout
 
     def write(self, data):
+        """Writes data to the original stdout and the buffer."""
         self.stdout.write(data)
-        self.tee.write(data)
+        self.buffer.write(data)
 
     def flush(self):
+        """Flushes both the original stdout and the buffer."""
         self.stdout.flush()
-        self.tee.flush()
+        self.buffer.flush()
 
 
 class TeeErr(object):
+    """Tees stderr into the original sys.stdout and another buffer instance that is 
+    provided.
+    """
 
-    def __init__(self, tee, *args, **kwargs):
-        self.tee = tee
+    def __init__(self, buf, *args, **kwargs):
+        self.buffer = buf
         self.stderr = sys.stderr
         sys.stderr = self
 
@@ -47,18 +55,24 @@ class TeeErr(object):
         sys.stderr = self.stderr
 
     def close(self):
+        """Restores the original stderr."""
         sys.stderr = self.stderr
 
     def write(self, data):
+        """Writes data to the original stderr and the buffer."""
         self.stderr.write(data)
-        self.tee.write(data)
+        self.buffer.write(data)
 
     def flush(self):
+        """Flushes both the original stderr and the buffer."""
         self.stderr.flush()
-        self.tee.flush()
+        self.buffer.flush()
 
 
 class Tee(io.StringIO):
+    """Class that merges tee'd stdout and stderr into a single buffer, namely itself. 
+    This represents what a user would actually see on the command line.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -70,6 +84,7 @@ class Tee(io.StringIO):
         super().__del__()
 
     def close(self):
+        """Closes the buffer as well as the stdout and stderr tees."""
         self.stdout.close()
         self.stderr.close()
         super().close()
@@ -206,6 +221,7 @@ class BaseShell(object):
         else:
             info['out'] = tee_out + '\n' + last_out
         hist.append(info)
+        hist.last_cmd_rtn = hist.last_cmd_out = None
 
 
 def _print_exception():
