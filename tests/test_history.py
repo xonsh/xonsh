@@ -15,7 +15,7 @@ def test_hist_init():
     FNAME = 'xonsh-SESSIONID.json'
     FNAME += '.init'
     hist = History(filename=FNAME, here='yup', **HIST_TEST_KWARGS)
-    with LazyJSON(FNAME, reopen=False) as lj:
+    with LazyJSON(FNAME) as lj:
         obs = lj['here']
     assert_equal('yup', obs)
     os.remove(FNAME)
@@ -42,7 +42,7 @@ def test_hist_flush():
     yield assert_true, hf is not None
     while hf.is_alive():
         pass
-    with LazyJSON(FNAME, reopen=False) as lj:
+    with LazyJSON(FNAME) as lj:
         obs = lj['cmds'][0]['joco']
     yield assert_equal, 'still alive', obs
     os.remove(FNAME)
