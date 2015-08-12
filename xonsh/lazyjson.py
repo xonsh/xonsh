@@ -239,7 +239,7 @@ class LazyJSON(Node):
             locs = json.loads(locs)
             self.iloc, self.ilen, self.dloc, self.dlen = locs
             # read in the index
-            f.seek(self.iloc, 0)
+            f.seek(self.iloc)
             idx = f.read(self.ilen)
             try:
                 idx = json.loads(idx)

@@ -101,13 +101,13 @@ class HistoryFlusher(Thread):
         return self is self.queue[0]
 
     def dump(self):
-        with open(self.filename, 'r') as f:
+        with open(self.filename, 'r', newline='\n') as f:
             hist = lazyjson.LazyJSON(f).load()
         hist['cmds'].extend(self.buffer)
         if self.at_exit:
             hist['ts'][1] = time.time()  # apply end time
             hist['locked'] = False
-        with open(self.filename, 'w') as f:
+        with open(self.filename, 'w', newline='\n') as f:
             lazyjson.dump(hist, f, sort_keys=True)
 
 
@@ -146,7 +146,7 @@ class History(object):
         self.last_cmd_rtn = None
         meta['cmds'] = []
         meta['sessionid'] = str(sid)
-        with open(self.filename, 'w') as f:
+        with open(self.filename, 'w', newline='\n') as f:
             lazyjson.dump(meta, f, sort_keys=True)
         self.gc = HistoryGC() if gc else None
 
