@@ -4,6 +4,7 @@ not to be confused with the special Python builtins module.
 import os
 import re
 import sys
+import errno
 import shlex
 import signal
 import inspect
@@ -266,15 +267,22 @@ def _get_runnable_name(fname):
 
 
 def _is_binary(fname, limit=80):
-    with open(fname, 'rb') as f:
-        for i in range(limit):
-            char = f.read(1)
-            if char == b'\0':
-                return True
-            if char == b'\n':
-                return False
-            if char == b'':
-                return False
+    try:
+        with open(fname, 'rb') as f:
+            for i in range(limit):
+                char = f.read(1)
+                if char == b'\0':
+                    return True
+                if char == b'\n':
+                    return False
+                if char == b'':
+                    return False
+    except IOError as exc:
+        if exc.errno != errno.EACCES:
+            raise
+
+        return True
+
     return False
 
 
