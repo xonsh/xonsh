@@ -244,7 +244,9 @@ class LazyJSON(Node):
             try:
                 idx = json.loads(idx)
             except:
-                raise ValueError(idx)
+                f.seek(0)
+                s = f.read()
+                raise ValueError('{0!r}\n{1!r}\n{2!r}'.format(locs, idx, s))
         self.offsets = idx['offsets']
         self.sizes = idx['sizes']
 
