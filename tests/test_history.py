@@ -22,6 +22,9 @@ def test_hist_init():
     with LazyJSON(FNAME, reopen=False) as lj:
         obs = lj['here']
     assert_equal('yup', obs)
+    with open(FNAME) as f:
+        s = f.read()
+    print(s)
 
 
 def test_hist_append():
