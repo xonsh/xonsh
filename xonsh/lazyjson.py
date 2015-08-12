@@ -139,7 +139,7 @@ class Node(Mapping, Sequence):
 
     def _load_or_node(self, offset, size):
         if isinstance(offset, int):
-            with self.root._open() as f:
+            with self.root._open(newline='\n') as f:
                 f.seek(self.root.dloc + offset)
                 s = f.read(size)
             val = json.loads(s)
@@ -207,7 +207,7 @@ class LazyJSON(Node):
         self._f = f
         self.reopen = reopen
         if not reopen and isinstance(f, string_types):
-            self._f = open(f, 'r')
+            self._f = open(f, 'r', newline='\n')
         self._load_index()
         self.root = weakref.proxy(self)
         self.is_mapping = isinstance(self.offsets, Mapping)
@@ -232,7 +232,7 @@ class LazyJSON(Node):
 
     def _load_index(self):
         """Loads the index from the start of the file."""
-        with self._open() as f:
+        with self._open(newline='\n') as f:
             # read in the location data
             f.seek(9)
             locs = f.read(48)
@@ -241,12 +241,7 @@ class LazyJSON(Node):
             # read in the index
             f.seek(self.iloc)
             idx = f.read(self.ilen)
-            try:
-                idx = json.loads(idx)
-            except:
-                f.seek(0)
-                s = f.read()
-                raise ValueError('{0!r}\n{1!r}\n{2!r}'.format(locs, idx, s))
+            idx = json.loads(idx)
         self.offsets = idx['offsets']
         self.sizes = idx['sizes']
 
