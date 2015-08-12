@@ -119,7 +119,8 @@ class BaseShell(object):
             return
         hist = builtins.__xonsh_history__
         ts1 = None
-        tee = Tee()
+        tee = Tee() if builtins.__xonsh_env__.get('XONSH_STORE_STDOUT', False) \
+                    else io.StringIO()
         try:
             ts0 = time.time()
             self.execer.exec(code, mode='single', glbs=self.ctx)  # no locals
