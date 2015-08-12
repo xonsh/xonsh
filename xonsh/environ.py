@@ -52,6 +52,7 @@ DEFAULT_ENSURERS = {
     'LC_MONETARY': (always_false, locale_convert('LC_MONETARY'), ensure_string),
     'LC_TIME': (always_false, locale_convert('LC_TIME'), ensure_string),
     'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
+    'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
     'CASE_SENSITIVE_COMPLETIONS': (is_bool, to_bool, bool_to_str),
     'BASH_COMPLETIONS': (is_env_path, str_to_env_path, env_path_to_str),
 }
@@ -456,8 +457,9 @@ BASE_ENV = {
     'TITLE': DEFAULT_TITLE,
     'MULTILINE_PROMPT': '.',
     'XONSHRC': os.path.expanduser('~/.xonshrc'),
-    'XONSH_HISTORY_SIZE': 8128,
+    'XONSH_HISTORY_SIZE': (8128, 'files'),
     'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
+    'XONSH_STORE_STDOUT': True,
     'LC_CTYPE': locale.setlocale(locale.LC_CTYPE),
     'LC_COLLATE': locale.setlocale(locale.LC_COLLATE),
     'LC_TIME': locale.setlocale(locale.LC_TIME),

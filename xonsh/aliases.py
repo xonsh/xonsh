@@ -104,12 +104,6 @@ def history(args, stdin=None):
     return bar + header + bar
 
 
-
-
-
-
-
-
 def bang_bang(args, stdin=None):
     """
     Re-runs the last command. Just a wrapper around bang_n.

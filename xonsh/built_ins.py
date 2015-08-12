@@ -531,7 +531,10 @@ def run_subproc(cmds, captured=True):
                        universal_newlines=uninew)
         else:
             prev_is_proxy = False
-            cls = TeePTYProc if stdout is None and not background else Popen
+            
+            usetee = (stdout is None) and (not background) and \
+                     ENV.get('XONSH_STORE_STDOUT', False) 
+            cls = TeePTYProc if usetee else Popen
             subproc_kwargs = {}
             if ON_POSIX and cls is Popen:
                 subproc_kwargs['preexec_fn'] = _subproc_pre
