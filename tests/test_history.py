@@ -18,7 +18,7 @@ def test_hist_init():
     with LazyJSON(FNAME) as lj:
         obs = lj['here']
     assert_equal('yup', obs)
-    os.remove(FNAME)
+    #os.remove(FNAME)
 
 
 def test_hist_append():
