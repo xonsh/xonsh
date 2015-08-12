@@ -102,8 +102,6 @@ class HistoryFlusher(Thread):
 
     def dump(self):
         with open(self.filename, 'r') as f:
-            raise ValueError(f.read())
-            f.seek(0)
             hist = lazyjson.LazyJSON(f).load()
         hist['cmds'].extend(self.buffer)
         if self.at_exit:

@@ -241,6 +241,7 @@ class LazyJSON(Node):
             # read in the index
             f.seek(self.iloc)
             idx = f.read(self.ilen)
+            raise ValueError(idx)
             idx = json.loads(idx)
         self.offsets = idx['offsets']
         self.sizes = idx['sizes']
