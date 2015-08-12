@@ -184,9 +184,22 @@ FORMATTER_DICT             xonsh.environ.FORMATTER_DICT  Dictionary containing v
                                                          and TITLE (see `Customizing the
                                                          Prompt`_ below).
 XONSHRC                    ``'~/.xonshrc'``              Location of run control file
-XONSH_HISTORY_SIZE         8128                          Number of items to store in the
-                                                         history.
+XONSH_HISTORY_SIZE         ``(8128, 'files')`` or        Value and units tuple that sets
+                           ``'8128 files'``              the size of history after 
+                                                         garbage collection. Canonical
+                                                         units are ``'files'`` for 
+                                                         the number of history files to
+                                                         keep, ``'s'`` for the number of
+                                                         seconds in the past that are 
+                                                         allowed, and ``'b'`` for the 
+                                                         number of bytes that are allowed
+                                                         for history to consume. Common
+                                                         abbreviations, such as 6 months
+                                                         or 1 GB are also allowed.
 XONSH_HISTORY_FILE         ``'~/.xonsh_history'``        Location of history file
+XONSH_STORE_STDOUT         ``True``                      Whether or not to store the 
+                                                         stdout and stderr streams in
+                                                         the history files.
 XONSH_INTERACTIVE                                        ``True`` if xonsh is running
                                                          interactively, and ``False``
                                                          otherwise.
