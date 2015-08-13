@@ -142,8 +142,10 @@ Like other variables in Python, environment variables have a type. Sometimes
 this type is imposed based on the variable name. The current rules are pretty
 simple:
 
-* ``PATH``: any variable whose name contains PATH is a list of strings.
+* ``\w*PATH``: any variable whose name ends in PATH is a list of strings.
+* ``\w*DIRS``: any variable whose name ends in DIRS is a list of strings.
 * ``XONSH_HISTORY_SIZE``: this variable is an int.
+* ``CASE_SENSITIVE_COMPLETIONS``: this variable is a boolean.
 
 xonsh will automatically convert back and forth to untyped (string-only)
 representations of the environment as needed (mostly by subprocess commands).

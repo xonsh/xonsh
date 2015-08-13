@@ -44,6 +44,7 @@ represent environment variable validation, conversion, detyping.
 
 DEFAULT_ENSURERS = {
     re.compile('\w*PATH'): (is_env_path, str_to_env_path, env_path_to_str),
+    re.compile('\w*DIRS'): (is_env_path, str_to_env_path, env_path_to_str),
     'LC_CTYPE': (always_false, locale_convert('LC_CTYPE'), ensure_string),
     'LC_MESSAGES': (always_false, locale_convert('LC_MESSAGES'), ensure_string),
     'LC_COLLATE': (always_false, locale_convert('LC_COLLATE'), ensure_string),
