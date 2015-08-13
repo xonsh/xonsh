@@ -390,6 +390,8 @@ def _replace_home(x):
     else:
         return x.replace(builtins.__xonsh_env__['HOME'], '~')
 
+_replace_home_cwd = lambda: _replace_home(builtins.__xonsh_env__['PWD'])
+
 
 if ON_WINDOWS:
     USER = 'USERNAME'
@@ -397,12 +399,15 @@ else:
     USER = 'USER'
 
 
-FORMATTER_DICT = dict(user=os.environ.get(USER, '<user>'),
-                      hostname=socket.gethostname().split('.', 1)[0],
-                      cwd=lambda: _replace_home(builtins.__xonsh_env__['PWD']),
-                      curr_branch=current_branch,
-                      branch_color=branch_color,
-                      **TERM_COLORS)
+FORMATTER_DICT = dict(
+    user=os.environ.get(USER, '<user>'),
+    hostname=socket.gethostname().split('.', 1)[0],
+    cwd=_replace_home_cwd,
+    cwd_dir=lambda: os.path.dirname(_replace_home_cwd()),
+    cwd_base=lambda: os.path.basename(_replace_home_cwd()),
+    curr_branch=current_branch,
+    branch_color=branch_color,
+    **TERM_COLORS)
 
 _FORMATTER = string.Formatter()
 

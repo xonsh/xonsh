@@ -912,6 +912,10 @@ By default, the following variables are available for use:
   * ``user``: The username of the current user
   * ``hostname``: The name of the host computer
   * ``cwd``: The current working directory
+  * ``cwd_dir``: The dirname of the current working directory, e.g. ``/path/to`` in
+    ``/path/to/xonsh``.
+  * ``cwd_base``: The basename of the current working directory, e.g. ``xonsh`` in
+    ``/path/to/xonsh``.
   * ``curr_branch``: The name of the current git branch (preceded by space),
     if any.
   * ``branch_color``: ``{BOLD_GREEN}`` if the current git branch is clean,
