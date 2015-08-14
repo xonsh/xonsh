@@ -149,9 +149,9 @@ class TeePTY(object):
         while True:
             try:
                 rfds, wfds, xfds = select.select([master_fd, pty.STDIN_FILENO], [], [])
-            except select.error as e:
-                if e[0] == 4:  # Interrupted system call.
-                    continue
+            except OSError as e:
+                if e.errno == 4:  # Interrupted system call. 
+                    continue      # This happens at terminal resize.
 
             if master_fd in rfds:
                 data = os.read(master_fd, bufsize)

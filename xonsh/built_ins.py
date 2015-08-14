@@ -591,8 +591,6 @@ def run_subproc(cmds, captured=True):
             return output
         else:
             hist.last_cmd_out = output
-    #elif last_stdout not in (PIPE, None, sys.stdout):
-    #    last_stdout.close()
 
 
 def subproc_captured(*cmds):
@@ -655,10 +653,10 @@ def load_builtins(execer=None):
     # would be nice to actually include non-detyped versions.
     builtins.__xonsh_history__ = History(env=ENV.detype(), #aliases=builtins.aliases, 
                                          ts=[time.time(), None], locked=True)
-    lastchanceflusher = lambda s, f: builtins.__xonsh_history__.flush(at_exit=True)
-    atexit.register(lastchanceflusher)
+    lastflush = lambda s=None, f=None: builtins.__xonsh_history__.flush(at_exit=True)
+    atexit.register(lastflush)
     for sig in AT_EXIT_SIGNALS:
-        signal.signal(sig, lastchanceflusher)
+        signal.signal(sig, lastflush)
     BUILTINS_LOADED = True
 
 
