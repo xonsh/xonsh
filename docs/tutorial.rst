@@ -142,8 +142,10 @@ Like other variables in Python, environment variables have a type. Sometimes
 this type is imposed based on the variable name. The current rules are pretty
 simple:
 
-* ``PATH``: any variable whose name contains PATH is a list of strings.
+* ``\w*PATH``: any variable whose name ends in PATH is a list of strings.
+* ``\w*DIRS``: any variable whose name ends in DIRS is a list of strings.
 * ``XONSH_HISTORY_SIZE``: this variable is an int.
+* ``CASE_SENSITIVE_COMPLETIONS``: this variable is a boolean.
 
 xonsh will automatically convert back and forth to untyped (string-only)
 representations of the environment as needed (mostly by subprocess commands).
@@ -929,6 +931,10 @@ By default, the following variables are available for use:
   * ``user``: The username of the current user
   * ``hostname``: The name of the host computer
   * ``cwd``: The current working directory
+  * ``cwd_dir``: The dirname of the current working directory, e.g. ``/path/to`` in
+    ``/path/to/xonsh``.
+  * ``cwd_base``: The basename of the current working directory, e.g. ``xonsh`` in
+    ``/path/to/xonsh``.
   * ``curr_branch``: The name of the current git branch (preceded by space),
     if any.
   * ``branch_color``: ``{BOLD_GREEN}`` if the current git branch is clean,

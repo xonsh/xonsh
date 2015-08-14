@@ -58,7 +58,8 @@ def main():
     if sys.version_info[0] < 3:
         sys.exit('xonsh currently requires Python 3.4+')
     try:
-        print(logo)
+        if '--name' not in sys.argv:
+            print(logo)
     except UnicodeEncodeError:
         pass
     with open(os.path.join(os.path.dirname(__file__), 'README.rst'), 'r') as f:
@@ -132,4 +133,3 @@ logo = """
 
 if __name__ == '__main__':
     main()
-
