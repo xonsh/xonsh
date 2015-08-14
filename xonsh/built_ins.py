@@ -30,6 +30,10 @@ from xonsh.history import History
 ENV = None
 BUILTINS_LOADED = False
 INSPECTOR = Inspector()
+AT_EXIT_SIGNALS = (signal.SIGABRT, signal.SIGFPE, signal.SIGILL, signal.SIGINT, 
+                   signal.SIGSEGV, signal.SIGTERM)
+if ON_POSIX:
+    AT_EXIT_SIGNALS += (signal.SIGTSTP, signal.SIGQUIT, signal.SIGHUP)
 
 
 class Aliases(MutableMapping):
@@ -651,7 +655,10 @@ def load_builtins(execer=None):
     # would be nice to actually include non-detyped versions.
     builtins.__xonsh_history__ = History(env=ENV.detype(), #aliases=builtins.aliases, 
                                          ts=[time.time(), None], locked=True)
-    atexit.register(builtins.__xonsh_history__.flush, at_exit=True)
+    lastchanceflusher = lambda s, f: builtins.__xonsh_history__.flush(at_exit=True)
+    atexit.register(lastchanceflusher)
+    for sig in AT_EXIT_SIGNALS:
+        signal.signal(sig, lastchanceflusher)
     BUILTINS_LOADED = True
 
 
