@@ -310,6 +310,8 @@ def get_script_subproc_command(fname, args):
         _, ext = os.path.splitext(fname)
         if ext.upper() in builtins.__xonsh_env__.get('PATHEXT', []):
             return [fname] + args
+    elif ON_POSIX and os.access(fname, os.X_OK):
+        return [fname] + args
 
     # find interpreter
     with open(fname, 'rb') as f:
