@@ -111,7 +111,7 @@ def bang_n(args, stdin=None):
     """Re-runs the nth command as specified in the argument."""
     global _BANG_N_PARSER
     if _BANG_N_PARSER is None:
-        parser = ArgumentParser('!n', usage='!n <n>',
+        parser = _BANG_N_PARSER = ArgumentParser('!n', usage='!n <n>',
                     description="Re-runs the nth command as specified in the argument.")
         parser.add_argument('n', type=int, help='the command to rerun, may be negative')
     else:
