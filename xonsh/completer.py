@@ -9,6 +9,9 @@ import sys
 
 from xonsh.built_ins import iglobpath
 from xonsh.tools import subexpr_from_unbalanced
+from xonsh.tools import ON_WINDOWS
+
+
 
 RE_DASHF = re.compile(r'-F\s+(\w+)')
 RE_ATTR = re.compile(r'(\S+(\..+)*)\.(\w*)$')
@@ -52,11 +55,20 @@ def startswithnorm(x, start, startlow=None):
 
 
 def _normpath(p):
-    # Prevent normpath() from removing initial ‘./’
-    here = os.curdir + os.sep
-    if p.startswith(here):
-        return os.path.join(os.curdir, os.path.normpath(p[len(here):]))
-    return os.path.normpath(p)
+    """ Wraps os.normpath() to avoid removing './' at the beginning 
+        and '/' at the end. On windows it returns a path with forward slashes
+    """   
+    initial_dotslash = p.startswith(os.curdir + os.sep)
+    initial_dotslash |= (os.altsep and p.startswith(os.curdir + os.altsep))
+    p = p.rstrip()
+    trailing_slash = p.endswith(os.sep) 
+    trailing_slash |= (os.altsep and p.endswith(os.altsep))
+    p = os.path.normpath(p)
+    if initial_dotslash:
+        p = os.path.join(os.curdir, p)
+    if trailing_slash:
+        p = os.path.join(p,'')
+    return p
 
 
 class Completer(object):
