@@ -141,7 +141,8 @@ class ProcProxy(Thread):
     def run(self):
         """Set up input/output streams and execute the child function in a new
         thread.  This is part of the `threading.Thread` interface and should
-        not be called directly."""
+        not be called directly.
+        """
         if self.f is None:
             return
         if self.stdin is not None:

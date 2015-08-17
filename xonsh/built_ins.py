@@ -535,7 +535,6 @@ def run_subproc(cmds, captured=True):
                        universal_newlines=uninew)
         else:
             prev_is_proxy = False
-            
             usetee = (stdout is None) and (not background) and \
                      ENV.get('XONSH_STORE_STDOUT', False) 
             cls = TeePTYProc if usetee else Popen
