@@ -117,6 +117,16 @@ class Aliases(MutableMapping):
         return '{0}.{1}({2})'.format(self.__class__.__module__,
                                      self.__class__.__name__, self._raw)
 
+    def _repr_pretty_(self, p, cycle):
+        name = '{0}.{1}'.format(self.__class__.__module__,
+                                self.__class__.__name__)
+        with p.group(0, name + '(', ')'):
+            if cycle:
+                p.text('...')
+            elif len(self):
+                p.break_()
+                p.pretty(dict(self))
+
 
 def helper(x, name=''):
     """Prints help about, and then returns that variable."""
@@ -136,6 +146,36 @@ def expand_path(s):
     if ENV is not None:
         ENV.replace_env()
     return os.path.expanduser(os.path.expandvars(s))
+
+
+def expand_case_matching(s):
+    """Expands a string to a case insenstive globable string."""
+    t = []
+    openers = {'[', '{'}
+    closers = {']', '}'}
+    nesting = 0
+    for c in s:
+        if c in openers:
+            nesting += 1
+        elif c in closers:
+            nesting -= 1
+        elif nesting > 0:
+            pass
+        elif c.isalpha():
+            folded = c.casefold()
+            if len(folded) == 1:
+                c = '[{0}{1}]'.format(c.upper(), c.lower())
+            else:
+                newc = ['[{0}{1}]?'.format(f.upper(), f.lower())
+                        for f in folded[:-1]]
+                newc = ''.join(newc)
+                newc += '[{0}{1}{2}]'.format(folded[-1].upper(),
+                                             folded[-1].lower(),
+                                             c)
+                c = newc
+        t.append(c)
+    t = ''.join(t)
+    return t
 
 
 def reglob(path, parts=None, i=None):
@@ -185,16 +225,20 @@ def regexpath(s):
     return reglob(s)
 
 
-def globpath(s):
+def globpath(s, ignore_case=False):
     """Simple wrapper around glob that also expands home and env vars."""
     s = expand_path(s)
+    if ignore_case:
+        s = expand_case_matching(s)
     o = glob(s)
     return o if len(o) != 0 else [s]
 
 
-def iglobpath(s):
+def iglobpath(s, ignore_case=False):
     """Simple wrapper around iglob that also expands home and env vars."""
     s = expand_path(s)
+    if ignore_case:
+        s = expand_case_matching(s)
     return iglob(s)
 
 
@@ -207,14 +251,17 @@ def _get_runnable_name(fname):
     for d in builtins.__xonsh_env__['PATH']:
         if os.path.isdir(d):
             files = os.listdir(d)
-            if fname in files:
-                return os.path.join(d, fname)
+
             if ON_WINDOWS:
                 PATHEXT = builtins.__xonsh_env__.get('PATHEXT', [])
                 for dirfile in files:
                     froot, ext = os.path.splitext(dirfile)
                     if fname == froot and ext.upper() in PATHEXT:
                         return os.path.join(d, dirfile)
+
+            if fname in files:
+                return os.path.join(d, fname)
+
     return None
 
 
@@ -407,7 +454,7 @@ def run_subproc(cmds, captured=True):
         background = True
         cmds = cmds[:-1]
     write_target = None
-    last_cmd = len(cmds)-1
+    last_cmd = len(cmds) - 1
     prev = None
     procs = []
     prev_proc = None

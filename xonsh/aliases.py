@@ -50,7 +50,8 @@ def source_bash(args, stdin=None):
 def source_alias(args, stdin=None):
     """Executes the contents of the provided files in the current context."""
     for fname in args:
-        execx(open(fname).read(), 'exec', builtins.__xonsh_ctx__)
+        with open(fname, 'r') as fp:
+            execx(fp.read(), 'exec', builtins.__xonsh_ctx__)
 
 
 def xexec(args, stdin=None):
@@ -60,7 +61,7 @@ def xexec(args, stdin=None):
     """
     env = builtins.__xonsh_env__
     denv = env.detype()
-    if (len(args) > 0):
+    if len(args) > 0:
         try:
             os.execvpe(args[0], args, denv)
         except FileNotFoundError as e:
@@ -72,11 +73,11 @@ def xexec(args, stdin=None):
 def bash_aliases():
     """Computes a dictionary of aliases based on Bash's aliases."""
     try:
-        s = subprocess.check_output(['bash', '-i'],
+        s = subprocess.check_output(['bash', '-i', '-l'],
                                     input='alias',
                                     stderr=subprocess.PIPE,
                                     universal_newlines=True)
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         s = ''
     items = [line.split('=', 1) for line in s.splitlines() if '=' in line]
     aliases = {}
@@ -142,6 +143,8 @@ if ON_WINDOWS:
 
     for alias in WINDOWS_CMD_ALIASES:
         DEFAULT_ALIASES[alias] = ['cmd', '/c', alias]
+
+    DEFAULT_ALIASES['which'] = ['where']
 
 elif ON_MAC:
     DEFAULT_ALIASES['ls'] = ['ls', '-G']

@@ -9,10 +9,9 @@ licensed to the Python Software foundation under a Contributor Agreement.
 import io
 import os
 import sys
-import platform
 
 from threading import Thread
-from subprocess import Popen, PIPE, DEVNULL, STDOUT
+from subprocess import PIPE, DEVNULL, STDOUT
 from collections import Sequence
 
 from xonsh.tools import redirect_stdout, redirect_stderr, ON_WINDOWS
@@ -189,7 +188,6 @@ class ProcProxy(Thread):
                 _winapi.DUPLICATE_SAME_ACCESS)
             return Handle(h)
 
-
         def _get_handles(self, stdin, stdout, stderr):
             """Construct and return tuple with IO objects:
             p2cread, p2cwrite, c2pread, c2pwrite, errread, errwrite
@@ -260,7 +258,6 @@ class ProcProxy(Thread):
             return (p2cread, p2cwrite,
                     c2pread, c2pwrite,
                     errread, errwrite)
-
 
     else:
         # POSIX versions

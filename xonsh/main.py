@@ -7,10 +7,16 @@ import builtins
 import subprocess
 from argparse import ArgumentParser, Namespace
 
+from xonsh import __version__
 from xonsh.shell import Shell
+from xonsh.pretty import pprint
 from xonsh.jobs import ignore_sigtstp
 
 parser = ArgumentParser(description='xonsh')
+parser.add_argument('-V', '--version',
+                    action='version',
+                    version='/'.join(('xonsh', __version__)),
+                    help='show version information and exit')
 parser.add_argument('-c',
                     help="Run a single command and exit",
                     dest='command',
@@ -49,12 +55,19 @@ parser.add_argument('args',
                     default=[])
 
 
+def _pprint_displayhook(value):
+    if value is not None:
+        builtins._ = value
+        pprint(value)
+
+
 def main(argv=None):
     """Main entry point for xonsh cli."""
     args = parser.parse_args()
     shell_kwargs = {'shell_type': args.shell_type}
     if args.norc:
         shell_kwargs['ctx'] = {}
+    setattr(sys, 'displayhook', _pprint_displayhook)
     shell = Shell(**shell_kwargs)
     from xonsh import imphooks
     env = builtins.__xonsh_env__

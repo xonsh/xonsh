@@ -6,7 +6,6 @@ import sys
 import time
 import signal
 import builtins
-from collections import namedtuple
 from subprocess import TimeoutExpired
 
 from xonsh.tools import ON_WINDOWS
@@ -19,7 +18,7 @@ except OSError:
 
 if ON_WINDOWS:
     def _continue(obj):
-        pass
+        return None
 
 
     def _kill(obj):
@@ -33,7 +32,7 @@ if ON_WINDOWS:
     def _set_pgrp(info):
         pass
 
-    def wait_for_active_job():
+    def wait_for_active_job(signal_to_send=None):
         """
         Wait for the active job to finish, to be killed by SIGINT, or to be
         suspended by ctrl-z.
@@ -61,7 +60,7 @@ if ON_WINDOWS:
 
 else:
     def _continue(obj):
-        os.kill(obj.pid, signal.SIGCONT)
+        return signal.SIGCONT
 
 
     def _kill(obj):
@@ -94,7 +93,7 @@ else:
             signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
 
 
-    def wait_for_active_job():
+    def wait_for_active_job(signal_to_send=None):
         """
         Wait for the active job to finish, to be killed by SIGINT, or to be
         suspended by ctrl-z.
@@ -111,7 +110,13 @@ else:
             return None
         pgrp = job['pgrp']
         obj.done = False
-        _give_terminal_to(pgrp)  # give the terminal over to the fg process
+        # give the terminal over to the fg process
+        _give_terminal_to(pgrp)
+        # if necessary, send the specified signal to this process
+        # (this hook  was added because vim, emacs, etc, seem to need to have
+        # the terminal when they receive SIGCONT from the "fg" command)
+        if signal_to_send is not None:
+            os.kill(obj.pid, signal_to_send)
         _, s = os.waitpid(obj.pid, os.WUNTRACED)
         if os.WIFSTOPPED(s):
             obj.done = True
@@ -240,7 +245,7 @@ def fg(args, stdin=None):
     job['bg'] = False
     job['status'] = 'running'
     print_one_job(act)
-    _continue(job['obj'])
+    wait_for_active_job(_continue(job['obj']))
 
 
 def bg(args, stdin=None):
@@ -270,4 +275,4 @@ def bg(args, stdin=None):
     job['bg'] = True
     job['status'] = 'running'
     print_one_job(act)
-    _continue(job['obj'])
+    wait_for_active_job(_continue(job['obj']))

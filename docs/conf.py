@@ -22,7 +22,7 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.pngmath',
               'sphinx.ext.inheritance_diagram', 'sphinx.ext.viewcode',
               #'sphinx.ext.autosummary',
-              'numpydoc', 
+              'numpydoc',
               ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -117,7 +117,7 @@ if not on_rtd:
         'relbarbgcolor': '#000000',
         'footerbgcolor': '#FFFFE7',
         'sidebarwidth': '322px',
-        'sidebarbgcolor': '#e7e7ff', 
+        'sidebarbgcolor': '#e7e7ff',
         #'googleanalytics_id': 'UA-41934829-1',
         'stickysidebar': False,
         'highlighttoc': False,

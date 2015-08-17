@@ -536,7 +536,7 @@ class Inspector(object):
         # Get docstring, special-casing aliases:
         if isalias:
             if not callable(obj):
-                if len(obj)  >= 2 and isinstance(obj[1], string_types):
+                if len(obj) >= 2 and isinstance(obj[1], string_types):
                     ds = "Alias to the system command:\n  {0}".format(obj[1])
                 else:  # pylint:disable=bare-except
                     ds = "Alias: " + str(obj)

@@ -258,5 +258,5 @@ except ImportError:
     def cache_from_source(path, debug_override=None):
         if debug_override is None:
             debug_override = __debug__
-        basename, ext = os.path.splitext(path)
+        basename, _ = os.path.splitext(path)
         return basename + '.pyc' if debug_override else '.pyo'

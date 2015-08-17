@@ -516,4 +516,4 @@ class Lexer(object):
         'DOLLAR_LPAREN',         # $(
         'DOLLAR_LBRACE',         # ${
         'DOLLAR_LBRACKET',       # $[
-        ) + tuple(i.upper() for i in kwlist)
+    ) + tuple(i.upper() for i in kwlist)

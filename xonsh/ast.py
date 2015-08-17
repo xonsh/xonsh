@@ -10,7 +10,7 @@ from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
     YieldFrom, Return, IfExp, Lambda, arguments, arg, Call, keyword, \
     Attribute, Global, Nonlocal, If, While, For, withitem, With, Try, \
     ExceptHandler, FunctionDef, ClassDef, Starred, NodeTransformer, \
-    Interactive, Expression, dump  
+    Interactive, Expression, dump
 from ast import Ellipsis, Index  # pylint:disable=unused-import,redefined-builtin
 
 from xonsh.tools import subproc_toks
@@ -62,7 +62,7 @@ class CtxAwareTransformer(NodeTransformer):
         self.lines = None
         self.mode = None
 
-    def ctxvisit(self, node, input, ctx, mode='exec'):
+    def ctxvisit(self, node, inp, ctx, mode='exec'):
         """Transforms the node in a context-dependent way.
 
         Parameters
@@ -79,7 +79,7 @@ class CtxAwareTransformer(NodeTransformer):
         node : ast.AST
             The transformed node.
         """
-        self.lines = input.splitlines()
+        self.lines = inp.splitlines()
         self.contexts = [ctx, set()]
         self.mode = mode
         node = self.visit(node)

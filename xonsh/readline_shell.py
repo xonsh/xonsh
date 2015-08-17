@@ -80,6 +80,16 @@ def rl_completion_suppress_append(val=1):
     RL_COMPLETION_SUPPRESS_APPEND.value = val
 
 
+def _insert_text_func(s, readline):
+    """Creates a function to insert text via readline."""
+    def inserter():
+        readline.insert_text(s)
+        readline.redisplay()
+    return inserter
+
+
+DEDENT_TOKENS = frozenset(['raise', 'return', 'pass', 'break', 'continue'])
+
 
 class ReadlineShell(BaseShell, Cmd):
     """The readline based xonsh shell."""
@@ -90,6 +100,7 @@ class ReadlineShell(BaseShell, Cmd):
                          stdout=stdout,
                          **kwargs)
         setup_readline()
+        self._current_indent = ''
 
     def __del__(self):
         teardown_readline()
@@ -108,6 +119,38 @@ class ReadlineShell(BaseShell, Cmd):
     # tab complete on first index too
     completenames = completedefault
 
+    def postcmd(self, stop, line):
+        """Called just before execution of line. For readline, this handles the
+        automatic indentation of code blocks.
+        """
+        try:
+            import readline
+        except ImportError:
+            return stop
+        if self.need_more_lines:
+            if len(line.strip()) == 0:
+                readline.set_pre_input_hook(None)
+                self._current_indent = ''
+            elif line.rstrip()[-1] == ':':
+                ind = line[:len(line) - len(line.lstrip())]
+                ind += builtins.__xonsh_env__.get('INDENT', '')
+                readline.set_pre_input_hook(_insert_text_func(ind, readline))
+                self._current_indent = ind
+            elif line.split(maxsplit=1)[0] in DEDENT_TOKENS:
+                env = builtins.__xonsh_env__
+                ind = self._current_indent[:-len(env.get('INDENT', ''))]
+                readline.set_pre_input_hook(_insert_text_func(ind, readline))
+                self._current_indent = ind
+            else:
+                ind = line[:len(line) - len(line.lstrip())]
+                if ind != self._current_indent:
+                    insert_func = _insert_text_func(ind, readline)
+                    readline.set_pre_input_hook(insert_func)
+                    self._current_indent = ind
+        else:
+            readline.set_pre_input_hook(None)
+        return stop
+
     def cmdloop(self, intro=None):
         while not builtins.__xonsh_exit__:
             try:
@@ -116,6 +159,7 @@ class ReadlineShell(BaseShell, Cmd):
                 print()  # Gives a newline
                 self.reset_buffer()
                 intro = None
+
     @property
     def prompt(self):
         """Obtains the current prompt string."""

@@ -22,7 +22,7 @@ def setup():
     # only setup one parser
     global PARSER
     PARSER = Parser(lexer_optimize=False, yacc_optimize=False, yacc_debug=True,
-                    lexer_table='lexer_test_table', 
+                    lexer_table='lexer_test_table',
                     yacc_table='parser_test_table')
 
 def nodes_equal(x, y):
@@ -33,13 +33,13 @@ def nodes_equal(x, y):
             return False
         if x.col_offset != y.col_offset:
             return False
-    for (xname, xval), (yname, yval) in zip(ast.iter_fields(x), 
+    for (xname, xval), (yname, yval) in zip(ast.iter_fields(x),
                                             ast.iter_fields(y)):
         if xname != yname:
             return False
         if xval != yval:
             return False
-    for xchild, ychild in zip(ast.iter_child_nodes(x), 
+    for xchild, ychild in zip(ast.iter_child_nodes(x),
                               ast.iter_child_nodes(y)):
         if not nodes_equal(xchild, ychild):
             return False
@@ -74,7 +74,7 @@ def check_xonsh_ast(xenv, inp, run=True, mode='eval'):
         bytecode = compile(obs, '<test-xonsh-ast>', mode)
         if run:
             exec(bytecode)
-    
+
 def check_xonsh(xenv, inp, run=True, mode='exec'):
     if not inp.endswith('\n'):
         inp += '\n'
@@ -841,10 +841,10 @@ def test_stary_eq():
 
 def test_stary_x():
     yield check_stmts, '*y, x = [1, 2, 3]'
- 
+
 def test_tuple_x_stary():
     yield check_stmts, '(x, *y) = [1, 2, 3]'
- 
+
 def test_list_x_stary():
     yield check_stmts, '[x, *y] = [1, 2, 3]'
 
@@ -889,10 +889,10 @@ def test_del_two_comma():
 
 def test_raise():
     yield check_stmts, 'raise', False
-    
+
 def test_raise_x():
     yield check_stmts, 'raise TypeError', False
-    
+
 def test_raise_x_from():
     yield check_stmts, 'raise TypeError from x', False
 
@@ -907,13 +907,13 @@ def test_import_xyz():
 
 def test_from_x_import_y():
     yield check_stmts, 'from x import y', False
-    
+
 def test_from_dot_import_y():
     yield check_stmts, 'from . import y', False
-    
+
 def test_from_dotx_import_y():
     yield check_stmts, 'from .x import y', False
-    
+
 def test_from_dotdotx_import_y():
     yield check_stmts, 'from ..x import y', False
 
@@ -931,7 +931,7 @@ def test_from_import_x_y_z():
 
 def test_from_dot_import_x_y():
     yield check_stmts, 'from . import x, y', False
-    
+
 def test_from_dot_import_x_y_z():
     yield check_stmts, 'from . import x, y, z', False
 

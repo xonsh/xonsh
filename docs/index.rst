@@ -23,6 +23,7 @@ the xonsh shell
         "It is pronounced <i>conch</i>",
         "It is pronounced <i>quanxh</i>",
         "It is pronounced <i>zonsch</i>",
+        "It is pronounced <i>jeaunsch</i>",
         "The shell, bourne again",
         "Snailed it",
         "Starfish loves you",
@@ -30,6 +31,7 @@ the xonsh shell
         "This is Major Tom to Ground Xonshtrol",
         "Sally sells csh and keeps xonsh to herself",
         "Nice indeed. Everything's accounted for, except your old shell.",
+        "I wanna thank you for putting me back in my snail shell.",
         ];
     document.write(taglines[Math.floor(Math.random() * taglines.length)]);
     </script>
@@ -99,6 +101,20 @@ the following from the source directory,
 
     $ python setup.py install
 
+ArchLinux users can install xonsh with e.g. yaourt or aura:
+
+**yaourt:**
+
+.. code-block:: bash
+
+    $ yaourt -Sa xonsh      # yaourt will call sudo when needed
+
+**aura:**
+
+.. code-block:: bash
+
+    $ sudo aura -A xonsh
+
 If you run into any problems, please let us know!
 
 ============
@@ -129,8 +145,8 @@ hesitate to ask the mailing list (xonsh@googlegroups.com).
 Contact Us
 ==========
 If you have questions or comments, please send them to the mailing list
-xonsh@googlegroups.com, contact the author directly, or open an issue on
-GitHub. 
+xonsh@googlegroups.com, page us on IRC, contact the author directly, or
+open an issue on GitHub. 
 `Join the mailing list here! <https://groups.google.com/forum/#!forum/xonsh>`_
 
 =============
@@ -140,6 +156,7 @@ Helpful Links
 * `Documentation <http://xonsh.org>`_
 * `Mailing list <https://groups.google.com/forum/#!forum/xonsh>`_
 * `GitHub Repository <https://github.com/scopatz/xonsh>`_
+* `IRC: channel #xonsh on OFTC <http://www.oftc.net/>`_
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`

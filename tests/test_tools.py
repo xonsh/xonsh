@@ -8,7 +8,7 @@ from nose.tools import assert_equal, assert_true, assert_false
 from xonsh.lexer import Lexer
 from xonsh.tools import subproc_toks, subexpr_from_unbalanced, is_int, \
     always_true, always_false, ensure_string, is_env_path, str_to_env_path, \
-    env_path_to_str, escape_windows_title_string
+    env_path_to_str, escape_windows_title_string, is_bool, to_bool, bool_to_str
 
 LEXER = Lexer()
 LEXER.build()
@@ -46,14 +46,14 @@ def test_subproc_toks_git_nl():
 def test_subproc_toks_indent_ls():
     s = 'ls -l'
     exp = INDENT + '$[{0}]'.format(s)
-    obs = subproc_toks(INDENT + s, mincol=len(INDENT), lexer=LEXER, 
+    obs = subproc_toks(INDENT + s, mincol=len(INDENT), lexer=LEXER,
                        returnline=True)
     assert_equal(exp, obs)
 
 def test_subproc_toks_indent_ls_nl():
     s = 'ls -l'
     exp = INDENT + '$[{0}]\n'.format(s)
-    obs = subproc_toks(INDENT + s + '\n', mincol=len(INDENT), lexer=LEXER, 
+    obs = subproc_toks(INDENT + s + '\n', mincol=len(INDENT), lexer=LEXER,
                        returnline=True)
     assert_equal(exp, obs)
 
@@ -182,7 +182,7 @@ def test_is_env_path():
 def test_str_to_env_path():
     cases = [
         ('/home/wakka', ['/home/wakka']),
-        ('/home/wakka' + os.pathsep + '/home/jawaka', 
+        ('/home/wakka' + os.pathsep + '/home/jawaka',
          ['/home/wakka', '/home/jawaka']),
         ]
     for inp, exp in cases:
@@ -192,12 +192,43 @@ def test_str_to_env_path():
 def test_env_path_to_str():
     cases = [
         (['/home/wakka'], '/home/wakka'),
-        (['/home/wakka', '/home/jawaka'], 
+        (['/home/wakka', '/home/jawaka'],
          '/home/wakka' + os.pathsep + '/home/jawaka'),
         ]
     for inp, exp in cases:
         obs = env_path_to_str(inp)
         yield assert_equal, exp, obs
+
+
+def test_is_bool():
+    yield assert_equal, True, is_bool(True)
+    yield assert_equal, True, is_bool(False)
+    yield assert_equal, False, is_bool(1)
+    yield assert_equal, False, is_bool('yooo hooo!')
+
+
+def test_to_bool():
+    cases = [
+        (True, True),
+        (False, False),
+        (None, False),
+        ('', False),
+        ('0', False),
+        ('False', False),
+        ('NONE', False),
+        ('TRUE', True),
+        ('1', True),
+        (0, False),
+        (1, True),
+        ]
+    for inp, exp in cases:
+        obs = to_bool(inp)
+        yield assert_equal, exp, obs
+
+
+def test_bool_to_str():
+    yield assert_equal, '1', bool_to_str(True)
+    yield assert_equal, '', bool_to_str(False)
 
 
 def test_escape_windows_title_string():

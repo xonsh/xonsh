@@ -3,6 +3,7 @@ import os
 
 from prompt_toolkit.history import History
 
+
 def load_file_into_list(store, filename):
     """Load content of file filename into list store."""
     if os.path.exists(filename):

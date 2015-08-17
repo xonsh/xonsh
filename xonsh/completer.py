@@ -35,6 +35,30 @@ for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 """
 
 
+def startswithlow(x, start, startlow=None):
+    """True if x starts with a string or its lowercase version. The lowercase
+    version may be optionally be provided.
+    """
+    if startlow is None:
+        startlow = start.lower()
+    return x.startswith(start) or x.lower().startswith(startlow)
+
+
+def startswithnorm(x, start, startlow=None):
+    """True if x starts with a string s. Ignores its lowercase version, but
+    matches the API of startswithlow().
+    """
+    return x.startswith(start)
+
+
+def _normpath(p):
+    # Prevent normpath() from removing initial ‘./’
+    here = os.curdir + os.sep
+    if p.startswith(here):
+        return os.path.join(os.curdir, os.path.normpath(p[len(here):]))
+    return os.path.normpath(p)
+
+
 class Completer(object):
     """This provides a list of optional completions for the xonsh shell."""
 
@@ -51,7 +75,7 @@ class Completer(object):
             # or we could make this lazy
             self._load_bash_complete_files()
             self.have_bash = True
-        except subprocess.CalledProcessError:
+        except (subprocess.CalledProcessError, FileNotFoundError):
             self.have_bash = False
 
     def complete(self, prefix, line, begidx, endidx, ctx=None):
@@ -79,7 +103,11 @@ class Completer(object):
         slash = '/'
         dot = '.'
         ctx = ctx or {}
+        prefixlow = prefix.lower()
         cmd = line.split(' ', 1)[0]
+        env = builtins.__xonsh_env__
+        csc = env.get('CASE_SENSITIVE_COMPLETIONS', True)
+        startswither = startswithnorm if csc else startswithlow
         if begidx == 0:
             # the first thing we're typing; could be python or subprocess, so
             # anything goes.
@@ -104,29 +132,33 @@ class Completer(object):
                 return sorted(self.module_complete(prefix))
             if cmd in self._all_commands():
                 # subproc mode; do path completions
-                return sorted(self.path_complete(prefix))
+                return sorted(self.path_complete(prefix, cdpath=True))
             else:
                 # if we're here, could be anything
                 rtn = set()
         else:
             # if we're here, we're not a command, but could be anything else
             rtn = set()
-        rtn |= {s for s in XONSH_TOKENS if s.startswith(prefix)}
+        rtn |= {s for s in XONSH_TOKENS if startswither(s, prefix, prefixlow)}
         if ctx is not None:
             if dot in prefix:
                 rtn |= self.attr_complete(prefix, ctx)
             else:
-                rtn |= {s for s in ctx if s.startswith(prefix)}
-        rtn |= {s for s in dir(builtins) if s.startswith(prefix)}
-        rtn |= {s + space for s in builtins.aliases if s.startswith(prefix)}
+                rtn |= {s for s in ctx if startswither(s, prefix, prefixlow)}
+        rtn |= {s for s in dir(builtins) if startswither(s, prefix, prefixlow)}
+        rtn |= {s + space for s in builtins.aliases
+                if startswither(s, prefix, prefixlow)}
         rtn |= self.path_complete(prefix)
         return sorted(rtn)
 
     def _add_env(self, paths, prefix):
         if prefix.startswith('$'):
             env = builtins.__xonsh_env__
+            csc = env.get('CASE_SENSITIVE_COMPLETIONS', True)
+            startswither = startswithnorm if csc else startswithlow
             key = prefix[1:]
-            paths.update({'$' + k for k in env if k.startswith(key)})
+            keylow = key.lower()
+            paths.update({'$' + k for k in env if startswither(k, key, keylow)})
 
     def _add_dots(self, paths, prefix):
         if prefix in {'', '.'}:
@@ -134,25 +166,47 @@ class Completer(object):
         if prefix == '..':
             paths.add('../')
 
+    def _add_cdpaths(self, paths, prefix):
+        """Completes current prefix using CDPATH"""
+        env = builtins.__xonsh_env__
+        csc = env.get('CASE_SENSITIVE_COMPLETIONS', True)
+        for cdp in env.get("CDPATH", []):
+            test_glob = os.path.join(cdp, prefix) + '*'
+            for s in iglobpath(test_glob, ignore_case=(not csc)):
+                if os.path.isdir(s):
+                    paths.add(os.path.basename(s))
+
     def cmd_complete(self, cmd):
         """Completes a command name based on what is on the $PATH"""
         space = ' '
-        return {s + space for s in self._all_commands() if s.startswith(cmd)}
+        cmdlow = cmd.lower()
+        env = builtins.__xonsh_env__
+        csc = env.get('CASE_SENSITIVE_COMPLETIONS', True)
+        startswither = startswithnorm if csc else startswithlow
+        return {s + space
+                for s in self._all_commands()
+                if startswither(s, cmd, cmdlow)}
 
     def module_complete(self, prefix):
         """Completes a name of a module to import."""
+        prefixlow = prefix.lower()
         modules = set(sys.modules.keys())
-        return {s for s in modules if s.startswith(prefix)}
+        env = builtins.__xonsh_env__
+        csc = env.get('CASE_SENSITIVE_COMPLETIONS', True)
+        startswither = startswithnorm if csc else startswithlow
+        return {s for s in modules if startswither(s, prefix, prefixlow)}
 
-    def path_complete(self, prefix):
+    def path_complete(self, prefix, cdpath=False):
         """Completes based on a path name."""
         space = ' '  # intern some strings for faster appending
         slash = '/'
         tilde = '~'
         paths = set()
+        env = builtins.__xonsh_env__
+        csc = env.get('CASE_SENSITIVE_COMPLETIONS', True)
         if prefix.startswith("'") or prefix.startswith('"'):
             prefix = prefix[1:]
-        for s in iglobpath(prefix + '*'):
+        for s in iglobpath(prefix + '*', ignore_case=(not csc)):
             if space in s:
                 s = repr(s + (slash if os.path.isdir(s) else ''))
             else:
@@ -163,7 +217,9 @@ class Completer(object):
             paths = {s.replace(home, tilde) for s in paths}
         self._add_env(paths, prefix)
         self._add_dots(paths, prefix)
-        return paths
+        if cdpath:
+            self._add_cdpaths(paths, prefix)
+        return {_normpath(s) for s in paths}
 
     def bash_complete(self, prefix, line, begidx, endidx):
         """Attempts BASH completion."""
@@ -228,10 +284,11 @@ class Completer(object):
         if len(inp) == 0:
             self.bash_complete_files = {}
             return
-        inp.append('shopt -s extdebug')
-        declare_f = 'declare -F '
-        inp += [declare_f + f for f in self.bash_complete_funcs.values()]
-        inp.append('shopt -u extdebug\n')
+        if self.bash_complete_funcs:
+            inp.append('shopt -s extdebug')
+            bash_funcs = set(self.bash_complete_funcs.values())
+            inp.append('declare -F ' + ' '.join([f for f in bash_funcs]))
+            inp.append('shopt -u extdebug\n')
         out = subprocess.check_output(['bash'], input='\n'.join(inp),
                                       universal_newlines=True)
         func_files = {}
@@ -265,14 +322,18 @@ class Completer(object):
         if len(attr) == 0:
             opts = [o for o in opts if not o.startswith('_')]
         else:
-            opts = [o for o in opts if o.startswith(attr)]
+            env = builtins.__xonsh_env__
+            csc = env.get('CASE_SENSITIVE_COMPLETIONS', True)
+            startswither = startswithnorm if csc else startswithlow
+            attrlow = attr.lower()
+            opts = [o for o in opts if startswither(oattr, attrlow)]
         prelen = len(prefix)
         for opt in opts:
             a = getattr(val, opt)
             rpl = opt + '(' if callable(a) else opt
             # note that prefix[:prelen-len(attr)] != prefix[:-len(attr)]
             # when len(attr) == 0.
-            comp = prefix[:prelen-len(attr)] + rpl
+            comp = prefix[:prelen - len(attr)] + rpl
             attrs.add(comp)
         return attrs
 
@@ -320,17 +381,26 @@ class ManCompleter(object):
 
     def option_complete(self, prefix, cmd):
         """Completes an option name, basing on content of man page."""
+        env = builtins.__xonsh_env__
+        csc = env.get('CASE_SENSITIVE_COMPLETIONS', True)
+        startswither = startswithnorm if csc else startswithlow
         if cmd not in self._options.keys():
             try:
-                manpage = subprocess.Popen(["man", cmd], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+                manpage = subprocess.Popen(["man", cmd],
+                                           stdout=subprocess.PIPE,
+                                           stderr=subprocess.DEVNULL)
                 # This is a trick to get rid of reverse line feeds
-                text = subprocess.check_output(["col", "-b"], stdin=manpage.stdout).decode('utf-8')
+                text = subprocess.check_output(["col", "-b"],
+                                               stdin=manpage.stdout)
+                text = text.decode('utf-8')
                 scraped_text = ' '.join(SCRAPE_RE.findall(text))
                 matches = INNER_OPTIONS_RE.findall(scraped_text)
                 self._options[cmd] = matches
             except:
                 return set()
-        return {s for s in self._options[cmd] if s.startswith(prefix)}
+        prefixlow = prefix.lower()
+        return {s for s in self._options[cmd]
+                if startswither(s, prefix, prefixlow)}
 
     def _load_cached_options(self):
         """Load options from file at startup."""

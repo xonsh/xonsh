@@ -43,7 +43,7 @@ class BaseShell(object):
         except XonshError as e:
             print(e.args[0], file=sys.stderr)
         except:
-            traceback.print_exc()
+            _print_exception()
         if builtins.__xonsh_exit__:
             return True
 
@@ -65,9 +65,13 @@ class BaseShell(object):
         except SyntaxError:
             if line == '\n':
                 self.reset_buffer()
-                traceback.print_exc()
+                _print_exception()
                 return None
             self.need_more_lines = True
+        except:
+            self.reset_buffer()
+            _print_exception()
+            return None
         return code
 
     def reset_buffer(self):
@@ -98,13 +102,33 @@ class BaseShell(object):
         """Obtains the current prompt string."""
         if self.need_more_lines:
             if self.mlprompt is None:
-                self.mlprompt = multiline_prompt()
+                try:
+                    self.mlprompt = multiline_prompt()
+                except Exception:
+                    _print_exception()
+                    self.mlprompt = '<multiline prompt error> '
             return self.mlprompt
         env = builtins.__xonsh_env__
         if 'PROMPT' in env:
             p = env['PROMPT']
-            p = format_prompt(p)
+            try:
+                p = format_prompt(p)
+            except Exception:
+                _print_exception()
         else:
             p = "set '$PROMPT = ...' $ "
         self.settitle()
         return p
+
+
+def _print_exception():
+    """Print exceptions with/without traceback."""
+    if 'XONSH_SHOW_TRACEBACK' not in builtins.__xonsh_env__:
+        sys.stderr.write('xonsh: For full traceback set: '
+                         '$XONSH_SHOW_TRACEBACK=True\n')
+    if builtins.__xonsh_env__.get('XONSH_SHOW_TRACEBACK', False):
+        traceback.print_exc()
+    else:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        exception_only = traceback.format_exception_only(exc_type, exc_value)
+        sys.stderr.write(''.join(exception_only))
