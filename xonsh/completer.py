@@ -68,8 +68,6 @@ def _normpath(p):
         p = os.path.join(os.curdir, p)
     if trailing_slash:
         p = os.path.join(p,'')
-#    if ON_WINDOWS:
-#        p = p.replace(os.sep, os.altsep)        
     return p
 
 
