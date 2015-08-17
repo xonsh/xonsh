@@ -7,11 +7,12 @@ import builtins
 import subprocess
 import datetime
 from warnings import warn
+from argparse import ArgumentParser
 
 from xonsh.dirstack import cd, pushd, popd, dirs
 from xonsh.jobs import jobs, fg, bg, kill_all_jobs
 from xonsh.timings import timeit_alias
-from xonsh.tools import ON_MAC, ON_WINDOWS
+from xonsh.tools import ON_MAC, ON_WINDOWS, XonshError
 
 
 def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
@@ -104,33 +105,32 @@ def history(args, stdin=None):
     return bar + header + bar
 
 
-def bang_bang(args, stdin=None):
-    """
-    Re-runs the last command. Just a wrapper around bang_n.
-    """
-    return bang_n(['1'])
-
+_BANG_N_PARSER = None
 
 def bang_n(args, stdin=None):
-    """
-    Re-runs the nth command as specified in the argument.
-    """
-    if len(args) == 1:
-        try:
-            # 1 is subtracted here to exclude the current command
-            index = -int(args[0])-1
-        except:
-            return 'xonsh: !n: usage: !n n\n'
-        if len(builtins.ordered_history) >= abs(index):
-            cmd = builtins.ordered_history[index]['cmd']
-            if '!!' not in cmd and '!n' not in cmd:
-                builtins.execx(builtins.ordered_history[index]['cmd'])
-            else:
-                return 'xonsh: error: recursive call to !! or !n\n'
-        else:
-            return 'xonsh: no previous command\n'
+    """Re-runs the nth command as specified in the argument."""
+    global _BANG_N_PARSER
+    if _BANG_N_PARSER is None:
+        parser = ArgumentParser('!n', usage='!n <n>',
+                    description="Re-runs the nth command as specified in the argument.")
+        parser.add_argument('n', type=int, help='the command to rerun, may be negative')
     else:
-        return 'xonsh: !n: usage: !n n\n'
+        parser = _BANG_N_PARSER
+    ns = parser.parse_args(args)
+    hist = builtins.__xonsh_history__
+    nhist = len(hist)
+    n = nhist + ns.n if ns.n < 0 else ns.n
+    if n < 0 or n >= nhist:
+        raise IndexError('n out of range, {0} for history len {1}'.format(ns.n, nhist))
+    cmd = hist.inps[n]
+    if cmd.startswith('!'):
+        raise XonshError('xonsh: error: recursive call to !n')
+    builtins.execx(cmd)
+
+
+def bang_bang(args, stdin=None):
+    """Re-runs the last command. Just a wrapper around bang_n."""
+    return bang_n(['-1'])
 
 
 def bash_aliases():
