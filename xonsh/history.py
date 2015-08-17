@@ -113,20 +113,23 @@ class HistoryFlusher(Thread):
 
 class CommandField(Sequence):
 
-    def __init__(self, hist, field):
+    def __init__(self, field, hist, default=None):
         """Represents a field in the 'cmds' portion of history. Will query the buffer
         for the relevant data, if possible. Otherwise it will lazily acquire data from 
         the file.
 
         Parameters
         ----------
-        hist : History object
-            The history object to query.
         field : str
             The name of the field to query.
+        hist : History object
+            The history object to query.
+        default : optional
+            The default value to return if key is not present.
         """
-        self.hist = hist
         self.field = field
+        self.hist = hist
+        self.default = default
 
     def __len__(self):
         return len(self.hist)
@@ -141,8 +144,23 @@ class CommandField(Sequence):
         key = size + key if key < 0 else key  # ensure key is non-negative
         bufsize = len(self.hist.buffer)
         if size - bufsize <= key:  # key is in buffer
-            return self.hist.buffer[key + bufsize - size][self.field]
-        
+            return self.hist.buffer[key + bufsize - size].get(self.field, self.default)
+        # now we know we have to go into the file
+        queue = self.hist.queue
+        queue.append(self)
+        with self.hist.cond as cond:
+            cond.wait_for(self.i_am_at_the_front)
+            with open(self.hist.filename, 'r', newline='\n') as f:
+                lj = lazyjson.LazyJSON(f, reopen=False)
+                rtn = lj['cmds'][key].get(self.field, self.default)
+                if isinstance(rtn, lazyjson.Node):
+                    rtn = rtn.load()
+            queue.popleft()
+        return rtn
+
+    def i_am_at_the_front(self):
+        return self is self.hist.queue[0]
+
 
 class History(object):
 
@@ -183,6 +201,11 @@ class History(object):
         with open(self.filename, 'w', newline='\n') as f:
             lazyjson.dump(meta, f, sort_keys=True)
         self.gc = HistoryGC() if gc else None
+        # command fields that are known
+        self.tss = CommandField('ts', self)
+        self.inps = CommandField('inp', self)
+        self.outs = CommandField('out', self)
+        self.rtns = CommandField('rtn', self)
 
     def __len__(self):
         return self._len
