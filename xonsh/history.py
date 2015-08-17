@@ -98,6 +98,7 @@ class HistoryFlusher(Thread):
             self.queue.popleft()
 
     def i_am_at_the_front(self):
+        """Tests if the flusher is at the front of the queue."""
         return self is self.queue[0]
 
     def dump(self):
@@ -146,10 +147,10 @@ class CommandField(Sequence):
         if size - bufsize <= key:  # key is in buffer
             return self.hist.buffer[key + bufsize - size].get(self.field, self.default)
         # now we know we have to go into the file
-        queue = self.hist.queue
+        queue = self.hist._queue
         queue.append(self)
-        with self.hist.cond as cond:
-            cond.wait_for(self.i_am_at_the_front)
+        with self.hist._cond:
+            self.hist._cond.wait_for(self.i_am_at_the_front)
             with open(self.hist.filename, 'r', newline='\n') as f:
                 lj = lazyjson.LazyJSON(f, reopen=False)
                 rtn = lj['cmds'][key].get(self.field, self.default)
@@ -159,7 +160,8 @@ class CommandField(Sequence):
         return rtn
 
     def i_am_at_the_front(self):
-        return self is self.hist.queue[0]
+        """Tests if the command field is at the front of the queue."""
+        return self is self.hist._queue[0]
 
 
 class History(object):
