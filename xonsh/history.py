@@ -4,8 +4,8 @@ import uuid
 import time
 import builtins
 from glob import iglob
+from collections import deque, Sequence
 from threading import Thread, Condition
-from collections import deque
 
 from xonsh import lazyjson
 
@@ -111,6 +111,39 @@ class HistoryFlusher(Thread):
             lazyjson.dump(hist, f, sort_keys=True)
 
 
+class CommandField(Sequence):
+
+    def __init__(self, hist, field):
+        """Represents a field in the 'cmds' portion of history. Will query the buffer
+        for the relevant data, if possible. Otherwise it will lazily acquire data from 
+        the file.
+
+        Parameters
+        ----------
+        hist : History object
+            The history object to query.
+        field : str
+            The name of the field to query.
+        """
+        self.hist = hist
+        self.field = field
+
+    def __len__(self):
+        return len(self.hist)
+
+    def __getitem__(self, key):
+        size = len(self)
+        if isinstance(key, slice):
+            return [self[i] for i in range(*key.indices(size))]
+        elif not isinstance(key, int):
+            raise IndexError('CommandField may only be indexed by int or slice.')
+        # now we know we have an int
+        key = size + key if key < 0 else key  # ensure key is non-negative
+        bufsize = len(self.hist.buffer)
+        if size - bufsize <= key:  # key is in buffer
+            return self.hist.buffer[key + bufsize - size][self.field]
+        
+
 class History(object):
 
     def __init__(self, filename=None, sessionid=None, buffersize=100, gc=True, **meta):
@@ -142,6 +175,7 @@ class History(object):
         self.buffersize = buffersize
         self._queue = deque()
         self._cond = Condition()
+        self._len = 0
         self.last_cmd_out = None
         self.last_cmd_rtn = None
         meta['cmds'] = []
@@ -149,6 +183,9 @@ class History(object):
         with open(self.filename, 'w', newline='\n') as f:
             lazyjson.dump(meta, f, sort_keys=True)
         self.gc = HistoryGC() if gc else None
+
+    def __len__(self):
+        return self._len
 
     def append(self, cmd):
         """Appends command to history. Will periodically flush the history to file.
@@ -164,6 +201,7 @@ class History(object):
             The thread that was spawned to flush history
         """
         self.buffer.append(cmd)
+        self._len += 1  # must come before flushing
         if len(self.buffer) >= self.buffersize:
             hf = self.flush()
         else:
