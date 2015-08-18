@@ -67,6 +67,7 @@ class TeePTY(object):
 
     def spawn(self, argv=None, env=None, stdin=None):
         """Create a spawned process. Based on the code for pty.spawn().
+        This cannot be used except from the main thread.
 
         Parameters
         ----------

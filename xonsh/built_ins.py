@@ -18,8 +18,8 @@ from contextlib import contextmanager
 from collections import Sequence, MutableMapping, Iterable, namedtuple, \
     MutableSequence, MutableSet
 
-from xonsh.tools import string_types
-from xonsh.tools import suggest_commands, XonshError, ON_POSIX, ON_WINDOWS
+from xonsh.tools import suggest_commands, XonshError, ON_POSIX, ON_WINDOWS, \
+    on_main_thread, string_types
 from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env
 from xonsh.aliases import DEFAULT_ALIASES, bash_aliases
@@ -536,7 +536,7 @@ def run_subproc(cmds, captured=True):
         else:
             prev_is_proxy = False
             usetee = (stdout is None) and (not background) and \
-                     ENV.get('XONSH_STORE_STDOUT', False) 
+                     ENV.get('XONSH_STORE_STDOUT', False) and on_main_thread()
             cls = TeePTYProc if usetee else Popen
             subproc_kwargs = {}
             if ON_POSIX and cls is Popen:

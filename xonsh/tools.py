@@ -22,6 +22,7 @@ import sys
 import builtins
 import platform
 import traceback
+import threading
 import subprocess
 from collections import OrderedDict, Sequence
 
@@ -425,6 +426,10 @@ def escape_windows_title_string(s):
 
     s = s.replace('/?', '/.')
     return s
+
+def on_main_thread():
+    """Checks if we are on the main thread or not."""
+    return threading.current_thread() is threading.main_thread()
 
 #
 # Validators and contervers
