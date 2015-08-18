@@ -148,6 +148,36 @@ def expand_path(s):
     return os.path.expanduser(os.path.expandvars(s))
 
 
+def expand_case_matching(s):
+    """Expands a string to a case insenstive globable string."""
+    t = []
+    openers = {'[', '{'}
+    closers = {']', '}'}
+    nesting = 0
+    for c in s:
+        if c in openers:
+            nesting += 1
+        elif c in closers:
+            nesting -= 1
+        elif nesting > 0:
+            pass
+        elif c.isalpha():
+            folded = c.casefold()
+            if len(folded) == 1:
+                c = '[{0}{1}]'.format(c.upper(), c.lower())
+            else:
+                newc = ['[{0}{1}]?'.format(f.upper(), f.lower())
+                        for f in folded[:-1]]
+                newc = ''.join(newc)
+                newc += '[{0}{1}{2}]'.format(folded[-1].upper(),
+                                             folded[-1].lower(),
+                                             c)
+                c = newc
+        t.append(c)
+    t = ''.join(t)
+    return t
+
+
 def reglob(path, parts=None, i=None):
     """Regular expression-based globbing."""
     if parts is None:
@@ -195,16 +225,20 @@ def regexpath(s):
     return reglob(s)
 
 
-def globpath(s):
+def globpath(s, ignore_case=False):
     """Simple wrapper around glob that also expands home and env vars."""
     s = expand_path(s)
+    if ignore_case:
+        s = expand_case_matching(s)
     o = glob(s)
     return o if len(o) != 0 else [s]
 
 
-def iglobpath(s):
+def iglobpath(s, ignore_case=False):
     """Simple wrapper around iglob that also expands home and env vars."""
     s = expand_path(s)
+    if ignore_case:
+        s = expand_case_matching(s)
     return iglob(s)
 
 

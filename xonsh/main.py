@@ -57,7 +57,7 @@ parser.add_argument('args',
 
 def _pprint_displayhook(value):
     if value is not None:
-        __builtins__['_'] = value
+        builtins._ = value
         pprint(value)
 
 

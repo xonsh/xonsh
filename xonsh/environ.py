@@ -11,9 +11,9 @@ from functools import wraps
 from collections import MutableMapping, MutableSequence, MutableSet, namedtuple
 
 from xonsh import __version__ as XONSH_VERSION
-from xonsh.tools import TERM_COLORS, ON_WINDOWS, ON_MAC, string_types, is_int,\
-    always_true, always_false, ensure_string, is_env_path, str_to_env_path, \
-    env_path_to_str
+from xonsh.tools import TERM_COLORS, ON_WINDOWS, ON_MAC, ON_LINUX, string_types, \
+    is_int, always_true, always_false, ensure_string, is_env_path, str_to_env_path, \
+    env_path_to_str, is_bool, to_bool, bool_to_str
 from xonsh.dirstack import _get_cwd
 
 LOCALE_CATS = {
@@ -44,6 +44,7 @@ represent environment variable validation, conversion, detyping.
 
 DEFAULT_ENSURERS = {
     re.compile('\w*PATH'): (is_env_path, str_to_env_path, env_path_to_str),
+    re.compile('\w*DIRS'): (is_env_path, str_to_env_path, env_path_to_str),
     'LC_CTYPE': (always_false, locale_convert('LC_CTYPE'), ensure_string),
     'LC_MESSAGES': (always_false, locale_convert('LC_MESSAGES'), ensure_string),
     'LC_COLLATE': (always_false, locale_convert('LC_COLLATE'), ensure_string),
@@ -51,6 +52,7 @@ DEFAULT_ENSURERS = {
     'LC_MONETARY': (always_false, locale_convert('LC_MONETARY'), ensure_string),
     'LC_TIME': (always_false, locale_convert('LC_TIME'), ensure_string),
     'XONSH_HISTORY_SIZE': (is_int, int, str),
+    'CASE_SENSITIVE_COMPLETIONS': (is_bool, to_bool, bool_to_str),
 }
 
 
@@ -260,7 +262,9 @@ def get_git_branch(cwd=None):
                                                  cwd=cwd,
                                                  input=_input,
                                                  stderr=subprocess.PIPE,
-                                                 universal_newlines=True) or None
+                                                 universal_newlines=True)
+                if len(branch) == 0:
+                    branch = None
             except (subprocess.CalledProcessError, FileNotFoundError):
                 continue
 
@@ -386,6 +390,8 @@ def _replace_home(x):
     else:
         return x.replace(builtins.__xonsh_env__['HOME'], '~')
 
+_replace_home_cwd = lambda: _replace_home(builtins.__xonsh_env__['PWD'])
+
 
 if ON_WINDOWS:
     USER = 'USERNAME'
@@ -393,26 +399,34 @@ else:
     USER = 'USER'
 
 
-FORMATTER_DICT = dict(user=os.environ.get(USER, '<user>'),
-                      hostname=socket.gethostname().split('.', 1)[0],
-                      cwd=lambda: _replace_home(builtins.__xonsh_env__['PWD']),
-                      curr_branch=current_branch,
-                      branch_color=branch_color,
-                      **TERM_COLORS)
+FORMATTER_DICT = dict(
+    user=os.environ.get(USER, '<user>'),
+    hostname=socket.gethostname().split('.', 1)[0],
+    cwd=_replace_home_cwd,
+    cwd_dir=lambda: os.path.dirname(_replace_home_cwd()),
+    cwd_base=lambda: os.path.basename(_replace_home_cwd()),
+    curr_branch=current_branch,
+    branch_color=branch_color,
+    **TERM_COLORS)
 
-_formatter = string.Formatter()
+_FORMATTER = string.Formatter()
 
 
-def format_prompt(template=DEFAULT_PROMPT):
-    """Formats a xonsh prompt template string.
-    """
-    env = builtins.__xonsh_env__
+def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
+    """Formats a xonsh prompt template string."""
     template = template() if callable(template) else template
-    fmt = env.get('FORMATTER_DICT', FORMATTER_DICT)
-    included_names = set(i[1] for i in _formatter.parse(template))
-    fmt = {k: (v() if callable(v) else v)
-           for (k, v) in fmt.items()
-           if k in included_names}
+    if formatter_dict is None:
+        fmtter = builtins.__xonsh_env__.get('FORMATTER_DICT', FORMATTER_DICT)
+    else:
+        fmtter = formatter_dict
+    included_names = set(i[1] for i in _FORMATTER.parse(template))
+    fmt = {}
+    for k, v in fmtter.items():
+        if k not in included_names:
+            continue
+        val = v() if callable(v) else v
+        val = '' if val is None else val
+        fmt[k] = val
     return template.format(**fmt)
 
 
@@ -455,6 +469,7 @@ BASE_ENV = {
     'LC_NUMERIC': locale.setlocale(locale.LC_NUMERIC),
     'SHELL_TYPE': 'readline',
     'HIGHLIGHTING_LEXER': None,
+    'CASE_SENSITIVE_COMPLETIONS': ON_LINUX,
 }
 
 try:

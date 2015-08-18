@@ -4,6 +4,8 @@ import os
 import sys
 import ast
 
+from nose.tools import assert_raises
+
 from xonsh.execer import Execer
 from xonsh.tools import ON_WINDOWS
 
@@ -72,6 +74,16 @@ def test_simple_func_broken():
             "       user='me')\n")
     yield check_parse, code
 
+def test_bad_indent():
+    code = ('if True:\n'
+            'x = 1\n')
+    assert_raises(SyntaxError, check_parse, code)
+
+def test_indent_with_empty_line():
+    code = ('if True:\n'
+            '\n'
+            '    some_command for_sub_process_mode\n')
+    yield check_parse, code
 
 
 
