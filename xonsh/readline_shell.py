@@ -180,6 +180,7 @@ class ReadlineHistoryAdder(Thread):
         while self.wait_for_gc and hist.gc.is_alive():
             time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer
         files = hist.gc.unlocked_files()
+        i = 1
         for _, f in files:
             try:
                 lj = lazyjson.LazyJSON(f, reopen=False)
@@ -189,6 +190,8 @@ class ReadlineHistoryAdder(Thread):
                         if line == 'EOF':
                             continue
                         readline.add_history(line)
+                        RL_LIB.history_set_pos(i)
+                        i += 1
                 lj.close()
             except (IOError, OSError):
                 continue
