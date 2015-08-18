@@ -114,7 +114,7 @@ class BaseShell(object):
     def default(self, line):
         """Implements code execution."""
         line = line if line.endswith('\n') else line + '\n'
-        code = self.push(line)
+        src, code = self.push(line)
         if code is None:
             return
         hist = builtins.__xonsh_history__
@@ -137,7 +137,7 @@ class BaseShell(object):
                 hist.last_cmd_rtn = 1  # return code for failure
         finally:
             ts1 = ts1 or time.time()
-            self._append_history(inp=line, ts=[ts0, ts1], tee_out=tee.getvalue())
+            self._append_history(inp=src, ts=[ts0, ts1], tee_out=tee.getvalue())
             tee.close()
         if builtins.__xonsh_exit__:
             return True
@@ -149,7 +149,7 @@ class BaseShell(object):
         code = None
         self.buffer.append(line)
         if self.need_more_lines:
-            return code
+            return None, code
         src = ''.join(self.buffer)
         try:
             code = self.execer.compile(src,
@@ -161,13 +161,13 @@ class BaseShell(object):
             if line == '\n':
                 self.reset_buffer()
                 print_exception()
-                return None
+                return src, None
             self.need_more_lines = True
         except:
             self.reset_buffer()
             print_exception()
-            return None
-        return code
+            return src, None
+        return src, code
 
     def reset_buffer(self):
         """Resets the line buffer."""
