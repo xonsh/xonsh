@@ -64,7 +64,7 @@ def _normpath(p):
     trailing_slash = p.endswith(os.sep) 
     trailing_slash |= (ON_WINDOWS and p.endswith(os.altsep))
     p = os.path.normpath(p)
-    if initial_dotslash:
+    if initial_dotslash and p != '.':
         p = os.path.join(os.curdir, p)
     if trailing_slash:
         p = os.path.join(p,'')
