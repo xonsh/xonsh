@@ -663,4 +663,4 @@ def format_prompt_for_prompt_toolkit(prompt):
         match = RE_HIDDEN_MAX.search(prompt, pos)
 
     formatted_prompt.extend(list(prompt[pos:]))
-    return formatted_prompt
+    return ''.join(formatted_prompt)

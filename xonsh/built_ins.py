@@ -307,8 +307,14 @@ def get_script_subproc_command(fname, args):
     if not os.access(fname, os.X_OK):
         raise PermissionError
 
-    # if the file is a binary, we should call it directly
-    if _is_binary(fname):
+    if ON_POSIX and not os.access(fname, os.R_OK):
+        # on some systems, some importnat programs (e.g. sudo) will have execute 
+        # permissions but not read/write permisions. This enables things with the SUID 
+        # set to be run. Needs to come before _is_binary() is called, because that 
+        # function tries to read the file.
+        return [fname] + args
+    elif _is_binary(fname):
+        # if the file is a binary, we should call it directly
         return [fname] + args
 
     if ON_WINDOWS:
