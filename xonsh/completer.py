@@ -59,10 +59,10 @@ def _normpath(p):
         and '/' at the end. On windows it returns a path with forward slashes
     """   
     initial_dotslash = p.startswith(os.curdir + os.sep)
-    initial_dotslash |= (os.altsep and p.startswith(os.curdir + os.altsep))
+    initial_dotslash |= (ON_WINDOWS and p.startswith(os.curdir + os.altsep))
     p = p.rstrip()
     trailing_slash = p.endswith(os.sep) 
-    trailing_slash |= (os.altsep and p.endswith(os.altsep))
+    trailing_slash |= (ON_WINDOWS and p.endswith(os.altsep))
     p = os.path.normpath(p)
     if initial_dotslash:
         p = os.path.join(os.curdir, p)
