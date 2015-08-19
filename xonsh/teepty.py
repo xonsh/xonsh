@@ -153,7 +153,6 @@ class TeePTY(object):
             except OSError as e:
                 if e.errno == 4:  # Interrupted system call. 
                     continue      # This happens at terminal resize.
-
             if master_fd in rfds:
                 data = os.read(master_fd, bufsize)
                 self.write_stdout(data)
