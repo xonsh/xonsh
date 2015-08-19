@@ -36,7 +36,7 @@ def test_format_prompt_for_prompt_toolkit():
         ),
         ]
     for test, ans in cases:
-        assert_equal(format_prompt_for_prompt_toolkit(test), ans)
+        yield assert_equal, ''.join(ans), format_prompt_for_prompt_toolkit(test)
 
 
 if __name__ == '__main__':
