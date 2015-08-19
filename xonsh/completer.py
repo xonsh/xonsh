@@ -56,7 +56,7 @@ def startswithnorm(x, start, startlow=None):
 
 def _normpath(p):
     """ Wraps os.normpath() to avoid removing './' at the beginning 
-        and '/' at the end. On windows it returns a path with forward slashes
+        and '/' at the end. On windows it does the same with backslases
     """   
     initial_dotslash = p.startswith(os.curdir + os.sep)
     initial_dotslash |= (ON_WINDOWS and p.startswith(os.curdir + os.altsep))
@@ -64,7 +64,7 @@ def _normpath(p):
     trailing_slash = p.endswith(os.sep) 
     trailing_slash |= (ON_WINDOWS and p.endswith(os.altsep))
     p = os.path.normpath(p)
-    if initial_dotslash:
+    if initial_dotslash and p != '.':
         p = os.path.join(os.curdir, p)
     if trailing_slash:
         p = os.path.join(p,'')
