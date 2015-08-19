@@ -819,20 +819,19 @@ The values are lists of strings, where the first element is the command and
 the rest are the arguments. You can also set the value to a string, in which
 case it will be converted to a list automatically with ``shlex.split``.
 
-For example, here are some of the default aliases:
+For example, the following creates several aliases for the ``git``
+version control software.  Both styles (list of strings and single
+string) are shown:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
-    DEFAULT_ALIASES = {
-        'ls': 'ls --color=auto -v',
-        'grep': 'grep --color=auto',
-        'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
-        'ipynb': ['ipython', 'notebook', '--no-browser'],
-        }
+    >>> aliases['g'] = 'git status -sb'
+    >>> aliases['gco'] = 'git checkout'
+    >>> aliases['gp'] = ['git', 'pull']
 
-If you were to run ``ls dir/`` with the aliases above in effect (by running
-``aliases.update(DEFAULT_ALIASES)``), it would reduce to
-``["ls", "--color=auto", "-v", "dir/"]`` before being executed.
+If you were to run ``gco feature-fabulous`` with the above aliases in effect,
+the command would reduce to ``['git', 'checkout', 'feature-fabulous']`` before
+being executed.
 
 Lastly, if an alias value is a function (or other callable), then this
 function is called *instead* of going to a subprocess command. Such functions
