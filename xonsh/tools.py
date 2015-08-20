@@ -22,7 +22,9 @@ import sys
 import builtins
 import platform
 import subprocess
+from itertools import zip_longest
 from collections import OrderedDict, Sequence
+
 
 if sys.version_info[0] >= 3:
     string_types = (str, bytes)
@@ -517,37 +519,55 @@ class FakeChar(str):
 RE_HIDDEN_MAX = re.compile('(\001.*?\002)+')
 
 
+def _make_style(color_code):
+    """ Convert color codes to pygments styles codes
+        Makes a reverse lookup in TERM_COLORS and converts
+        the xonsh_color names to pygment style. """
+    try:
+        xonsh_color = next(k for k, v in TERM_COLORS.items() if v == color_code)
+    except StopIteration:
+        xonsh_color = ''
+    style = []
+    if 'BOLD' in xonsh_color:
+        style.append('bold')
+    elif 'UNDERLINE' in xonsh_color:
+        style.append('underline')
+    elif 'INTENSE' in xonsh_color: 
+        style.append('italic')
+    if 'BLACK' in xonsh_color: 
+        style.append('#000000')
+    elif 'RED' in xonsh_color: 
+        style.append('#FF0000')
+    elif 'GREEN' in xonsh_color: 
+        style.append('#008000')
+    elif 'YELLOW' in xonsh_color: 
+        style.append('#FFFF00')
+    elif 'BLUE' in xonsh_color: 
+        style.append('#0000FF')
+    elif 'PURPLE' in xonsh_color: 
+        style.append('#0000FF')
+    elif 'CYAN' in xonsh_color: 
+        style.append('#00FFFF')
+    elif 'WHITE' in xonsh_color: 
+        style.append('#FFFFFF')
+    if not style:
+        return ''
+    else:
+        return ' '.join(style)
+         
 def format_prompt_for_prompt_toolkit(prompt):
-    """Uses workaround for passing a string with color sequences.
-
-    Returns list of characters of the prompt, where some characters can be not
-    normal characters but FakeChars - objects that consists of one printable
-    character and escape sequences surrounding it.
-    Returned list can be later passed as a prompt to prompt_toolkit.
-    If prompt contains no printable characters returns equivalent of empty
-    string.
+    """Converts a prompt with color codes to a pygments style and tokens
     """
-    def append_escape_seq(lst, suffix):
-        last = lst.pop()
-        if isinstance(last, FakeChar):
-            lst.append(FakeChar(last.char, prefix=last.prefix, suffix=suffix))
-        else:
-            lst.append(FakeChar(last, suffix=suffix))
-    pos = 0
-    match = RE_HIDDEN_MAX.search(prompt, pos)
-    if match and match.group(0) == prompt:
-        return ['']
-    formatted_prompt = []
-    while match:
-        formatted_prompt.extend(list(prompt[pos:match.start()]))
-        pos = match.end()
-        if not formatted_prompt:
-            formatted_prompt.append(FakeChar(prompt[pos],
-                                             prefix=match.group(0)))
-            pos += 1
-        else:
-            append_escape_seq(formatted_prompt, match.group(0))
-        match = RE_HIDDEN_MAX.search(prompt, pos)
+    parts = RE_HIDDEN_MAX.split(prompt)
+    #if len(parts) > 1:
+    if parts and parts[0] is '': 
+        parts = parts[1:]
+    if len(parts)%2 != 0:
+        parts.insert(0, '')
+    # Convert list to list of tuples [x1,x2,x3,x4] -> [(x1,x2), (x3,x4)]
+    parts = list( zip_longest(*[iter(parts)]*2, fillvalue=''  ) )
+    strings = [s for (_,s) in parts]
+    colors = [ _make_style(c) for (c, _) in parts ]
+    return colors, strings
+    
 
-    formatted_prompt.extend(list(prompt[pos:]))
-    return ''.join(formatted_prompt)
