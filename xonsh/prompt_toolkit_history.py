@@ -23,7 +23,7 @@ class LimitedFileHistory(History):
 
     def __init__(self):
         """Initialize history object."""
-        super().__init__()
+        self.all_entries = []
         self.new_entries = []
         self.old_history = []
 
@@ -32,8 +32,14 @@ class LimitedFileHistory(History):
 
         Entry sould be a one-liner.
         """
-        super().append(entry)
+        self.all_entries.append(entry)
         self.new_entries.append(entry)
+
+    def __getitem__(self, index):
+        return self.all_entries[index]
+
+    def __len__(self):
+        return len(self.all_entries)
 
     def read_history_file(self, filename):
         """Read history from given file into memory.
