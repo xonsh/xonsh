@@ -116,10 +116,10 @@ class ReadlineShell(BaseShell, Cmd):
     def _load_remaining_input_into_queue(self):
         buf = b''
         while True:
-            r, w, x = select.select([sys.stdin], [], [], 1e-6)
+            r, w, x = select.select([self.stdin], [], [], 1e-6)
             if len(r) == 0:
                 break
-            buf += os.read(0, 1024)
+            buf += os.read(self.stdin.fileno(), 1024)
         if len(buf) > 0:
             buf = buf.decode().replace('\r\n', '\n').replace('\r', '\n')
             self.cmdqueue.extend(buf.splitlines(keepends=True))
