@@ -30,8 +30,8 @@ from xonsh.history import History
 ENV = None
 BUILTINS_LOADED = False
 INSPECTOR = Inspector()
-AT_EXIT_SIGNALS = (signal.SIGABRT, signal.SIGFPE, signal.SIGILL, signal.SIGINT, 
-                   signal.SIGSEGV, signal.SIGTERM)
+AT_EXIT_SIGNALS = (signal.SIGABRT, signal.SIGFPE, signal.SIGILL, signal.SIGSEGV, 
+                   signal.SIGTERM)
 if ON_POSIX:
     AT_EXIT_SIGNALS += (signal.SIGTSTP, signal.SIGQUIT, signal.SIGHUP)
 
@@ -376,7 +376,7 @@ def _open(fname, mode):
         return fname
     try:
         return open(fname, mode)
-    except:
+    except Exception:
         raise XonshError('xonsh: {0}: no such file or directory'.format(fname))
 
 
@@ -401,7 +401,7 @@ def _redirect_io(streams, r, loc=None):
                 raise XonshError(e)
         except (ValueError, XonshError):
             raise
-        except:
+        except Exception:
             pass
 
     mode = _MODES.get(mode, None)

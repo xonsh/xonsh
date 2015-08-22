@@ -131,7 +131,7 @@ class BaseShell(object):
             print(e.args[0], file=sys.stderr)
             if hist.last_cmd_rtn is None:
                 hist.last_cmd_rtn = 1  # return code for failure
-        except:
+        except Exception:
             print_exception()
             if hist.last_cmd_rtn is None:
                 hist.last_cmd_rtn = 1  # return code for failure
@@ -163,7 +163,7 @@ class BaseShell(object):
                 print_exception()
                 return src, None
             self.need_more_lines = True
-        except:
+        except Exception:
             self.reset_buffer()
             print_exception()
             return src, None

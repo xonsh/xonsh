@@ -344,7 +344,7 @@ class SimpleProcProxy(ProcProxy):
                 elif r is not None:
                     stdout.write(str(r))
                 return 0  # returncode for succees
-            except:
+            except Exception:
                 print_exception()
                 return 1  # returncode for failure
         super().__init__(wrapped_simple_command,
