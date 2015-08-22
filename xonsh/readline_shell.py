@@ -187,12 +187,16 @@ class ReadlineShell(BaseShell, Cmd):
                     line = self.cmdqueue.popleft()
                     exec_now = line.endswith('\n')
                 if self.use_rawinput and not exec_now:
-                    if line is not None:
-                        ReadlineInputWriter(line)
+                    inserter = None if line is None \
+                                    else _insert_text_func(line, readline)
+                    if inserter is not None:
+                        readline.set_pre_input_hook(inserter)
                     try:
                         line = input(self.prompt)
                     except EOFError:
                         line = 'EOF'
+                    if inserter is not None:
+                        readline.set_pre_input_hook(None)
                 else:
                     self.stdout.write(self.prompt.replace('\001', '')
                                                  .replace('\002', ''))
@@ -276,33 +280,3 @@ class ReadlineHistoryAdder(Thread):
             except (IOError, OSError):
                 continue
 
-class ReadlineInputWriter(Thread):
-    """This allows you to write text to stdin in an input() call after waiting a certain
-    amount of time. This is useful for writing partial commands and still taking human
-    input.
-    """
-
-    def __init__(self, inp, wait=0.1, *args, **kwargs):
-        """
-        Parameters
-        ----------
-        inp : str
-            Text to write
-        wait : int or float, optional
-            Time to wait in seconds, default 0.1 [s].
-        """
-        super().__init__(*args, **kwargs)
-        self.daemon = True
-        self.inp = inp
-        self.wait = wait
-        self.start()
-    
-    def run(self):
-        try:
-            import readline
-        except ImportError:
-            return
-        time.sleep(self.wait)
-        with Lock():
-            readline.insert_text(self.inp)
-            readline.redisplay()
