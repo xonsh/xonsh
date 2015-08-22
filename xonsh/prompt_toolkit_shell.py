@@ -81,10 +81,13 @@ class PromptToolkitShell(BaseShell):
             except EOFError:
                 break
 
+
+
     def _get_prompt_tokens_and_style(self):
         """Returns function to pass as prompt to prompt_toolkit."""
-        colors, strings = format_prompt_for_prompt_toolkit(self.prompt)
-        tokens = [getattr(Token,'X'+str(i)) for i,_ in enumerate(colors)]
+        token_names, cstyles, strings = format_prompt_for_prompt_toolkit(self.prompt)
+        
+        tokens = [getattr(Token, n) for n in token_names]
         def get_tokens(cli):
             return list(zip(tokens, strings))
         class CustomStyle(Style):
@@ -94,10 +97,13 @@ class PromptToolkitShell(BaseShell):
                 Token.Menu.Completions.ProgressButton: 'bg:#003333',
                 Token.Menu.Completions.ProgressBar: 'bg:#00aaaa',
             }
-            styles.update(DefaultStyle.styles)
-            #Lastly we add the prompt custom styles
-            styles.update({t: s for (t,s) in zip(tokens, colors)} )
+            # update with the prompt styles
+            styles.update({t: s for (t,s) in zip(tokens, cstyles)} )
+            # Update with with any user styles
+            userstyle = builtins.__xonsh_env__.get('PROMPT_TOOLKIT_STYLES', {})
+            styles.update(userstyle)
         return get_tokens, CustomStyle
+
 
 
     @property
