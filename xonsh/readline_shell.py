@@ -170,9 +170,10 @@ class ReadlineShell(BaseShell, Cmd):
                 import readline
                 self.old_completer = readline.get_completer()
                 readline.set_completer(self.complete)
-                readline.parse_and_bind(self.completekey+": complete")
+                readline.parse_and_bind(self.completekey + ": complete")
+                have_readline = True
             except ImportError:
-                pass
+                have_readline = False
         try:
             if intro is not None:
                 self.intro = intro
@@ -187,7 +188,7 @@ class ReadlineShell(BaseShell, Cmd):
                     exec_now = line.endswith('\n')
                 if self.use_rawinput and not exec_now:
                     if line is not None:
-                        InputWriter(line)
+                        ReadlineInputWriter(line)
                     try:
                         line = input(self.prompt)
                     except EOFError:
@@ -204,6 +205,8 @@ class ReadlineShell(BaseShell, Cmd):
                         line = 'EOF'
                     else:
                         line = line.rstrip('\r\n')
+                    if have_readline and line != 'EOF':
+                        readline.add_history(line)
                 self._load_remaining_input_into_queue()
                 line = self.precmd(line)
                 stop = self.onecmd(line)
@@ -273,12 +276,25 @@ class ReadlineHistoryAdder(Thread):
             except (IOError, OSError):
                 continue
 
-class InputWriter(Thread):
+class ReadlineInputWriter(Thread):
+    """This allows you to write text to stdin in an input() call after waiting a certain
+    amount of time. This is useful for writing partial commands and still taking human
+    input.
+    """
 
-    def __init__(self, inp, *args, **kwargs):
+    def __init__(self, inp, wait=0.1, *args, **kwargs):
+        """
+        Parameters
+        ----------
+        inp : str
+            Text to write
+        wait : int or float, optional
+            Time to wait in seconds, default 0.1 [s].
+        """
         super().__init__(*args, **kwargs)
         self.daemon = True
         self.inp = inp
+        self.wait = wait
         self.start()
     
     def run(self):
@@ -286,7 +302,7 @@ class InputWriter(Thread):
             import readline
         except ImportError:
             return
-        time.sleep(0.1)
+        time.sleep(self.wait)
         with Lock():
             readline.insert_text(self.inp)
             readline.redisplay()
