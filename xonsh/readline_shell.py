@@ -1,16 +1,20 @@
 """The readline based xonsh shell"""
 import os
+import sys
 import time
+import select
 import builtins
 from cmd import Cmd
 from warnings import warn
-from threading import Thread
+from threading import Thread, Lock
+from collections import deque
 
 from xonsh import lazyjson
 from xonsh.base_shell import BaseShell
 
 RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = None
 RL_CAN_RESIZE = False
+RL_DONE = None
 
 
 def setup_readline():
@@ -90,6 +94,7 @@ class ReadlineShell(BaseShell, Cmd):
                          **kwargs)
         setup_readline()
         self._current_indent = ''
+        self.cmdqueue = deque()
 
     def __del__(self):
         teardown_readline()
@@ -107,6 +112,17 @@ class ReadlineShell(BaseShell, Cmd):
 
     # tab complete on first index too
     completenames = completedefault
+
+    def _load_remaining_input_into_queue(self):
+        buf = b''
+        while True:
+            r, w, x = select.select([sys.stdin], [], [], 1e-6)
+            if len(r) == 0:
+                break
+            buf += os.read(0, 1024)
+        if len(buf) > 0:
+            buf = buf.decode().replace('\r\n', '\n').replace('\r', '\n')
+            self.cmdqueue.extend(buf.splitlines(keepends=True))
 
     def postcmd(self, stop, line):
         """Called just before execution of line. For readline, this handles the
@@ -140,10 +156,71 @@ class ReadlineShell(BaseShell, Cmd):
             readline.set_pre_input_hook(None)
         return stop
 
+    def _cmdloop(self, intro=None):
+        """Repeatedly issue a prompt, accept input, parse an initial prefix
+        off the received input, and dispatch to action methods, passing them
+        the remainder of the line as argument.
+
+        This was forked from Lib/cmd.py from the Python standard library v3.4.3,
+        (C) Python Software Foundation, 2015.
+        """
+        self.preloop()
+        if self.use_rawinput and self.completekey:
+            try:
+                import readline
+                self.old_completer = readline.get_completer()
+                readline.set_completer(self.complete)
+                readline.parse_and_bind(self.completekey+": complete")
+            except ImportError:
+                pass
+        try:
+            if intro is not None:
+                self.intro = intro
+            if self.intro:
+                self.stdout.write(str(self.intro)+"\n")
+            stop = None
+            while not stop:
+                line = None
+                exec_now = False
+                if len(self.cmdqueue) > 0:
+                    line = self.cmdqueue.popleft()
+                    exec_now = line.endswith('\n')
+                if self.use_rawinput and not exec_now:
+                    if line is not None:
+                        InputWriter(line)
+                    try:
+                        line = input(self.prompt)
+                    except EOFError:
+                        line = 'EOF'
+                else:
+                    self.stdout.write(self.prompt.replace('\001', '')
+                                                 .replace('\002', ''))
+                    self.stdout.flush()
+                    if line is not None:
+                        os.write(self.stdin.fileno(), line.encode())
+                    if not exec_now:
+                        line = self.stdin.readline()
+                    if len(line) == 0:
+                        line = 'EOF'
+                    else:
+                        line = line.rstrip('\r\n')
+                self._load_remaining_input_into_queue()
+                line = self.precmd(line)
+                stop = self.onecmd(line)
+                stop = self.postcmd(stop, line)
+            self.postloop()
+        finally:
+            if self.use_rawinput and self.completekey:
+                try:
+                    import readline
+                    readline.set_completer(self.old_completer)
+                except ImportError:
+                    pass
+
     def cmdloop(self, intro=None):
         while not builtins.__xonsh_exit__:
             try:
-                super().cmdloop(intro=intro)
+                self._cmdloop(intro=intro)
             except KeyboardInterrupt:
                 print()  # Gives a newline
                 self.reset_buffer()
@@ -195,3 +272,21 @@ class ReadlineHistoryAdder(Thread):
                 lj.close()
             except (IOError, OSError):
                 continue
+
+class InputWriter(Thread):
+
+    def __init__(self, inp, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.daemon = True
+        self.inp = inp
+        self.start()
+    
+    def run(self):
+        try:
+            import readline
+        except ImportError:
+            return
+        time.sleep(0.1)
+        with Lock():
+            readline.insert_text(self.inp)
+            readline.redisplay()
