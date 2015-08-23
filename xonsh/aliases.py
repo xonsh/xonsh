@@ -74,8 +74,7 @@ def xexec(args, stdin=None):
 
 
 def history(args, stdin=None):
-    """
-    Prints last n commands executed  in the format timestamp: command.
+    """Prints last n commands executed  in the format timestamp: command.
 
     usage: history [n], where n is an optional number of commands to print.
     """

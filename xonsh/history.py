@@ -8,6 +8,7 @@ from collections import deque, Sequence
 from threading import Thread, Condition
 
 from xonsh import lazyjson
+from xonsh.tools import ensure_int_or_slice
 
 
 class HistoryGC(Thread):
@@ -268,3 +269,28 @@ class History(object):
                             at_exit=at_exit)
         self.buffer.clear()
         return hf
+
+#
+# Interface to History
+#
+
+_HIST_PARSER = None
+
+def _create_parser():
+    global _HIST_PARSER
+    if _HIST_PARSER is not None:
+        return _HIST_PARSER
+    from argparse import ArgumentParser
+    p = ArgumentParser(prog='history', description='Displays information about the '
+                                                   'current history')
+    p.add_argument('n', nargs='?', default=None, 
+                   help='displays n history entries, n may be an int or use Python '
+                        'slice notation.')
+    _HIST_PARSER = p
+    return p
+
+def main(args=None, stdin=None):
+    """This acts as a main funtion for history command line interfaces."""
+    parser = _create_parser()
+    ns = parser.parse_args(args)
+    idx = ensure_int_or_slice(ns.n)

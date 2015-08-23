@@ -487,7 +487,6 @@ def is_bool(x):
 
 _FALSES = frozenset(['', '0', 'n', 'f', 'no', 'none', 'false'])
 
-
 def to_bool(x):
     """"Converts to a boolean in a semantically meaningful way."""
     if isinstance(x, bool):
@@ -501,6 +500,21 @@ def to_bool(x):
 def bool_to_str(x):
     """Converts a bool to an empty string if False and the string '1' if True."""
     return '1' if x else ''
+
+
+def ensure_int_or_slice(x):
+    """Makes sure that x is list-indexable."""
+    if x is None:
+        return slice(None)
+    elif is_int(x):
+        return x
+    # must have a string from here on
+    if ':' in x:
+        x = x.strip('[]()')
+        return slice(*(int(x) if len(x) > 0 else None for x in x.split(':')))
+    else:
+        return int(x)
+
 
 # history validation
 
