@@ -59,8 +59,7 @@ def source_alias(args, stdin=None):
 
 
 def xexec(args, stdin=None):
-    """
-    Replaces current process with command specified and passes in the
+    """Replaces current process with command specified and passes in the
     current xonsh environment.
     """
     env = builtins.__xonsh_env__

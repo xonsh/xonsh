@@ -68,7 +68,7 @@ def main(argv=None):
     if args.norc:
         shell_kwargs['ctx'] = {}
     setattr(sys, 'displayhook', _pprint_displayhook)
-    shell = Shell(**shell_kwargs)
+    shell = builtins.__xonsh_shell__ = Shell(**shell_kwargs)
     from xonsh import imphooks
     env = builtins.__xonsh_env__
     if args.defines is not None:
@@ -99,6 +99,7 @@ def main(argv=None):
         env['XONSH_INTERACTIVE'] = True
         ignore_sigtstp()
         shell.cmdloop()
+    del builtins.__xonsh_shell__
 
 
 if __name__ == '__main__':

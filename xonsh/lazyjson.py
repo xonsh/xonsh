@@ -201,7 +201,7 @@ class LazyJSON(Node):
         ----------
         f : file handle or str
             JSON file to open.
-        reopen : bool
+        reopen : bool, optional
             Whether new file handle should be opened for each load.
         """
         self._f = f

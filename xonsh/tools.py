@@ -24,6 +24,7 @@ import platform
 import traceback
 import threading
 import subprocess
+from contextlib import contextmanager
 from collections import OrderedDict, Sequence
 
 if sys.version_info[0] >= 3:
@@ -427,9 +428,24 @@ def escape_windows_title_string(s):
     s = s.replace('/?', '/.')
     return s
 
+
 def on_main_thread():
     """Checks if we are on the main thread or not."""
     return threading.current_thread() is threading.main_thread()
+
+
+@contextmanager
+def swap(namespace, name, value, default=NotImplemented):
+    """Swaps a current variable name in a namespace for another value, and then 
+    replaces it when the context is exited.
+    """
+    old = getattr(namespace, name, default)
+    setattr(namespace, name, value)
+    yield value
+    if old is default:
+        delattr(namespace, name)
+    else:
+        setattr(namespace, name, old)
 
 #
 # Validators and contervers
