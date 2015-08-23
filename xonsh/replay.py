@@ -38,6 +38,8 @@ class Replayer(object):
              swap(builtins, '__xonsh_history__', new_hist):
             for cmd in self._lj['cmds']:
                 inp = cmd['inp']
+                #if inp == 'EOF\n':
+                #    break
                 shell.default(inp)
         new_hist.flush(at_exit=True)
         return new_hist

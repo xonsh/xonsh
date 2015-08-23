@@ -60,7 +60,7 @@ def teardown_readline():
     """Tears down up the readline module, if available."""
     try:
         import readline
-    except ImportError:
+    except (ImportError, TypeError):
         return
 
 

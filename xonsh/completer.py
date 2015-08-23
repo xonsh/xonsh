@@ -389,7 +389,10 @@ class ManCompleter(object):
         self._load_cached_options()
 
     def __del__(self):
-        self._save_cached_options()
+        try:
+            self._save_cached_options()
+        except Exception:
+            pass
 
     def option_complete(self, prefix, cmd):
         """Completes an option name, basing on content of man page."""
