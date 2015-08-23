@@ -74,37 +74,6 @@ def xexec(args, stdin=None):
         return 'xonsh: exec: no args specified\n'
 
 
-def history(args, stdin=None):
-    """Prints last n commands executed  in the format timestamp: command.
-
-    usage: history [n], where n is an optional number of commands to print.
-    """
-    num = 10
-    print_std = False
-    reverse = False
-    if len(args) > 0:
-        try:
-            if args[0].isdigit():
-                num = int(args[0])
-            if '-s' in args:
-                print_std = True
-            if '-r' in args:
-                reverse = True
-        except ValueError:
-            return 'xonsh: history: usage: history [-r] [number]'
-
-    if print_std:
-        header = '| {:^20}  | {:^40} | {:^30} | {:^30} |\n'.format(
-            'Timestamp', 'Command', 'stdout', 'stderr')
-        bar = '|' + '-' *23  + '|' + '-' * 42 + '|' + '-' * 32 + '|' + '-' * 32 + '|\n'
-    else:
-        header = '| {:^20}  | {:^40} |\n'.format('Timesamp', 'Command')
-        bar = '|' + '-' * 23 + '|' + '-' * 42 + '|\n'
-
-
-    return bar + header + bar
-
-
 _BANG_N_PARSER = None
 
 def bang_n(args, stdin=None):
