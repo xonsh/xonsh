@@ -4,7 +4,7 @@ import uuid
 import time
 import builtins
 from glob import iglob
-from collections import deque, Sequence
+from collections import deque, Sequence, OrderedDict
 from threading import Thread, Condition
 
 from xonsh import lazyjson
@@ -283,20 +283,27 @@ def _create_parser():
     from argparse import ArgumentParser
     p = ArgumentParser(prog='history', description='Displays information about the '
                                                    'current history')
-    p.add_argument('-r', dest='reverse', default=False, action='store_true',
-                   help='reverses the direction.')
-    p.add_argument('n', nargs='?', default=None, 
-                   help='displays n history entries, n may be an int or use Python '
-                        'slice notation.')
+    subp = p.add_subparsers(title='action', dest='action')
+    # show action
+    show = subp.add_parser('show', help='displays history, default action')
+    show.add_argument('-r', dest='reverse', default=False, action='store_true',
+                      help='reverses the direction')
+    show.add_argument('n', nargs='?', default=None, 
+                      help='displays n history entries, n may be an int or use Python '
+                           'slice notation')
+    # id
+    idp = subp.add_parser('id', help='displays the session id')
+    # file
+    fp = subp.add_parser('file', help='displays the history filename')
+    # info
+    info = subp.add_parser('info', help='displays information about history')
+    info.add_argument('--json', dest='json', default=False, action='store_true',
+                      help='print in JSON format')
     _HIST_PARSER = p
     return p
 
 
-def main(args=None, stdin=None):
-    """This acts as a main funtion for history command line interfaces."""
-    hist = builtins.__xonsh_history__
-    parser = _create_parser()
-    ns = parser.parse_args(args)
+def _show(ns, hist):
     idx = ensure_int_or_slice(ns.n)
     if len(hist) == 0:
         return
@@ -316,3 +323,36 @@ def main(args=None, stdin=None):
         lines[0] = ' {0:>{1}}  {2}'.format(i, ndigits, lines[0])
         lines[1:] = [indent + x for x in lines[1:]]
         print('\n'.join(lines))
+
+
+def _info(ns, hist):
+    data = OrderedDict()
+    data['sessionid'] = str(hist.sessionid)
+    data['filename'] = hist.filename
+    data['length'] = len(hist)
+    data['buffersize'] = hist.buffersize
+    data['bufferlength'] = len(hist.buffer)
+    if ns.json:
+        import json
+        s = json.dumps(data)
+        print(s)
+    else:
+        lines = ['{0}: {1}'.format(k, v) for k, v in data.items()]
+        print('\n'.join(lines))
+
+
+_MAIN_ACTIONS = {
+    'show': _show,
+    'id': lambda ns, hist: print(hist.sessionid),
+    'file': lambda ns, hist: print(hist.filename),
+    'info': _info,
+    }
+
+def main(args=None, stdin=None):
+    """This acts as a main funtion for history command line interfaces."""
+    hist = builtins.__xonsh_history__
+    parser = _create_parser()
+    ns = parser.parse_args(args)
+    if ns.action is None:  # apply default action
+        ns = parser.parse_args(['show'] + args)
+    _MAIN_ACTIONS[ns.action](ns, hist)
