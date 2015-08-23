@@ -38,6 +38,7 @@ For those of you who want the gritty details.
     prompt_toolkit_completer
     prompt_toolkit_history
     pretty
+    replay
 
 
 **Helpers:**
