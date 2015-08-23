@@ -31,7 +31,7 @@ def setup_history():
 def teardown_history(history):
     """Tears down the history object."""
     env = builtins.__xonsh_env__
-    hsize = env.get('XONSH_HISTORY_SIZE', 8128)
+    hsize = env.get('XONSH_HISTORY_SIZE', (8128, 'commands'))
     hfile = env.get('XONSH_HISTORY_FILE',
                     os.path.expanduser('~/.xonsh_history'))
     try:

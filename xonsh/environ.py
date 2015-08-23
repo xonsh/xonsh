@@ -65,7 +65,7 @@ class Env(MutableMapping):
     However, the following rules also apply based on variable-name:
 
     * PATH: any variable whose name ends in PATH is a list of strings.
-    * XONSH_HISTORY_SIZE: this variable is an int.
+    * XONSH_HISTORY_SIZE: this variable is an (int | float, str) tuple.
     * LC_* (locale categories): locale catergory names get/set the Python
       locale via locale.getlocale() and locale.setlocale() functions.
 
@@ -463,9 +463,9 @@ BASE_ENV = {
     'TITLE': DEFAULT_TITLE,
     'MULTILINE_PROMPT': '.',
     'XONSHRC': os.path.expanduser('~/.xonshrc'),
-    'XONSH_HISTORY_SIZE': (8128, 'files'),
+    'XONSH_HISTORY_SIZE': (8128, 'commands'),
     'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
-    'XONSH_STORE_STDOUT': True,
+    'XONSH_STORE_STDOUT': False,
     'LC_CTYPE': locale.setlocale(locale.LC_CTYPE),
     'LC_COLLATE': locale.setlocale(locale.LC_COLLATE),
     'LC_TIME': locale.setlocale(locale.LC_TIME),

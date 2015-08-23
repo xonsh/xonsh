@@ -265,7 +265,7 @@ class ReadlineHistoryAdder(Thread):
             time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer
         files = hist.gc.unlocked_files()
         i = 1
-        for _, f in files:
+        for _, _, f in files:
             try:
                 lj = lazyjson.LazyJSON(f, reopen=False)
                 for cmd in lj['cmds']:

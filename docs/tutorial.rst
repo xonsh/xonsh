@@ -186,10 +186,12 @@ FORMATTER_DICT             xonsh.environ.FORMATTER_DICT  Dictionary containing v
                                                          and TITLE (see `Customizing the
                                                          Prompt`_ below).
 XONSHRC                    ``'~/.xonshrc'``              Location of run control file
-XONSH_HISTORY_SIZE         ``(8128, 'files')`` or        Value and units tuple that sets
-                           ``'8128 files'``              the size of history after 
+XONSH_HISTORY_SIZE         ``(8128, 'commands')`` or     Value and units tuple that sets
+                           ``'8128 commands'``           the size of history after 
                                                          garbage collection. Canonical
-                                                         units are ``'files'`` for 
+                                                         units are ``'commands'`` for
+                                                         the number of past commands
+                                                         executed, ``'files'`` for 
                                                          the number of history files to
                                                          keep, ``'s'`` for the number of
                                                          seconds in the past that are 
@@ -199,7 +201,7 @@ XONSH_HISTORY_SIZE         ``(8128, 'files')`` or        Value and units tuple t
                                                          abbreviations, such as 6 months
                                                          or 1 GB are also allowed.
 XONSH_HISTORY_FILE         ``'~/.xonsh_history'``        Location of history file
-XONSH_STORE_STDOUT         ``True``                      Whether or not to store the 
+XONSH_STORE_STDOUT         ``False``                     Whether or not to store the 
                                                          stdout and stderr streams in
                                                          the history files.
 XONSH_INTERACTIVE                                        ``True`` if xonsh is running

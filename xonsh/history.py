@@ -24,32 +24,46 @@ class HistoryGC(Thread):
     def run(self):
         while self.wait_for_shell:
             time.sleep(0.01)
-        hsize, units = builtins.__xonsh_env__.get('XONSH_HISTORY_SIZE', (8128, 'files'))
+        env = builtins.__xonsh_env__
+        hsize, units = env.get('XONSH_HISTORY_SIZE', (8128, 'commands'))
         files = self.unlocked_files()
         # flag files for removal
-        if units == 'files':
+        if units == 'commands':
+            n = 0
+            ncmds = 0
+            rmfiles = []
+            for ts, fcmds, f in files[::-1]:
+                if fcmds == 0:
+                    # we need to make sure that 'empty' history files don't hang around
+                    fmfiles.append((ts, fcmds, f))
+                if ncmds + fcmds > hsize:
+                    break
+                ncmds += fcmds
+                n += 1
+            rmfiles += files[:-n]
+        elif units == 'files':
             rmfiles = files[:-hsize] if len(files) > hsize else []
         elif units == 's':
             now = time.time()
             rmfiles = []
-            for ts, f in files:
+            for ts, _, f in files:
                 if (now - ts) < hsize:
                     break
-                rmfiles.append((None, f))
+                rmfiles.append((None, None, f))
         elif units == 'b':
             n = 0
             nbytes = 0
-            for f in files[::-1]:
+            for _, _, f in files[::-1]:
                 fsize = os.stat(f).st_size
                 if nbytes + fsize > hsize:
                     break
                 nbytes += fsize
                 n += 1
-            rmfiles = f[-n:]    
+            rmfiles = files[:-n]
         else:
             raise ValueError('Units of {0!r} not understood'.format(unit))
         # finally, clean up files
-        for _, f in rmfiles:
+        for _, _, f in rmfiles:
             try:
                 os.remove(f)
             except OSError:
@@ -67,7 +81,8 @@ class HistoryGC(Thread):
                 lj = lazyjson.LazyJSON(f, reopen=False)
                 if lj['locked']:
                     continue
-                files.append((lj['ts'][1], f))
+                # info: closing timestamp, number of commands, filename
+                files.append((lj['ts'][1], len(lj.sizes['cmds']) - 1, f))
                 lj.close()
             except (IOError, OSError):
                 continue

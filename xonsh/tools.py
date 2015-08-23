@@ -514,10 +514,15 @@ _mb_to_b = lambda x: 1024 * _kb_to_b(x)
 _gb_to_b = lambda x: 1024 * _mb_to_b(x)
 _tb_to_b = lambda x: 1024 * _tb_to_b(x)
 
-CANON_HISTORY_UNITS = frozenset(['files', 's', 'b'])
+CANON_HISTORY_UNITS = frozenset(['commands', 'files', 's', 'b'])
 
 HISTORY_UNITS = {
-    '': ('files', int),
+    '': ('commands', int),
+    'c': ('commands', int), 
+    'cmd': ('commands', int), 
+    'cmds': ('commands', int), 
+    'command': ('commands', int), 
+    'commands': ('commands', int), 
     'f': ('files', int),
     'files': ('files', int),
     's': ('s', float),
