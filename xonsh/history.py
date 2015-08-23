@@ -85,7 +85,7 @@ class HistoryGC(Thread):
                 # info: closing timestamp, number of commands, filename
                 files.append((lj['ts'][1], len(lj.sizes['cmds']) - 1, f))
                 lj.close()
-            except (IOError, OSError):
+            except (IOError, OSError, ValueError):
                 continue
         files.sort()
         return files
