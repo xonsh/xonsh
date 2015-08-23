@@ -283,6 +283,8 @@ def _create_parser():
     from argparse import ArgumentParser
     p = ArgumentParser(prog='history', description='Displays information about the '
                                                    'current history')
+    p.add_argument('-r', dest='reverse', default=False, action='store_true',
+                   help='reverses the direction.')
     p.add_argument('n', nargs='?', default=None, 
                    help='displays n history entries, n may be an int or use Python '
                         'slice notation.')
@@ -306,6 +308,9 @@ def main(args=None, stdin=None):
         indices = list(range(*idx.indices(len(hist))))
     ndigits = len(str(indices[-1]))
     indent = ' '*(ndigits + 3)
+    if ns.reverse:
+        indices = reversed(indices)
+        inps = reversed(inps)
     for i, inp in zip(indices, inps):
         lines = inp.splitlines()
         lines[0] = ' {0:>{1}}  {2}'.format(i, ndigits, lines[0])
