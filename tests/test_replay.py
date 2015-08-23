@@ -47,5 +47,12 @@ def test_reecho():
         yield assert_equal, 2, len(hist)
 
 
+def test_simple_python():
+    f = os.path.join(HISTDIR, 'simple-python.json')
+    with a_replay(f) as hist:
+        yield assert_equal, 4, len(hist)
+        yield assert_equal, "print('The Turtles')", hist.inps[0].strip()
+
+
 if __name__ == '__main__':
     nose.runmodule()

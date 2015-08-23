@@ -104,6 +104,7 @@ class HistoryFlusher(Thread):
         self.at_exit = at_exit
         if at_exit:
             self.dump()
+            queue.popleft()
         else:
             self.start()
 
