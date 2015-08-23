@@ -13,6 +13,7 @@ from xonsh.dirstack import cd, pushd, popd, dirs
 from xonsh.jobs import jobs, fg, bg, kill_all_jobs
 from xonsh.timings import timeit_alias
 from xonsh.tools import ON_MAC, ON_WINDOWS, XonshError
+from xonsh.history import main as history_alias
 
 
 def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
@@ -176,7 +177,7 @@ DEFAULT_ALIASES = {
     'quit': exit,
     'xexec': xexec,
     'source': source_alias,
-    'history': history,
+    'history': history_alias,
     '!!': bang_bang,
     '!n': bang_n,
     'timeit': timeit_alias,

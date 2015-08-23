@@ -289,8 +289,25 @@ def _create_parser():
     _HIST_PARSER = p
     return p
 
+
 def main(args=None, stdin=None):
     """This acts as a main funtion for history command line interfaces."""
+    hist = builtins.__xonsh_history__
     parser = _create_parser()
     ns = parser.parse_args(args)
     idx = ensure_int_or_slice(ns.n)
+    if len(hist) == 0:
+        return
+    inps = hist.inps[idx]
+    if isinstance(idx, int):
+        inps = [inps]
+        indices = [idx if idx >= 0 else len(hist) + idx]
+    else: 
+        indices = list(range(*idx.indices(len(hist))))
+    ndigits = len(str(indices[-1]))
+    indent = ' '*(ndigits + 3)
+    for i, inp in zip(indices, inps):
+        lines = inp.splitlines()
+        lines[0] = ' {0:>{1}}  {2}'.format(i, ndigits, lines[0])
+        lines[1:] = [indent + x for x in lines[1:]]
+        print('\n'.join(lines))
