@@ -35,9 +35,9 @@ def locale_convert(key):
     def lc_converter(val):
         try:
             locale.setlocale(LOCALE_CATS[key], val)
-        except locale.Error:
+            val = locale.setlocale(LOCALE_CATS[key])
+        except (locale.Error, KeyError):
             warn('Failed to set locale {0!r} to {1!r}'.format(key, val), RuntimeWarning)
-        val = locale.setlocale(LOCALE_CATS[key])
         return val
     return lc_converter
 
