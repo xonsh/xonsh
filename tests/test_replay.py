@@ -12,7 +12,7 @@ from xonsh.shell import Shell
 from xonsh.replay import Replayer
 
 SHELL = Shell()
-
+HISTDIR = os.path.join(os.path.dirname(__file__), 'histories')
 
 def run_replay(re_file):
     with swap(builtins, '__xonsh_shell__', SHELL):
@@ -27,6 +27,7 @@ def cleanup_replay(hist):
     if os.path.isfile(fname):
         os.remove(fname)
 
+
 @contextmanager
 def a_replay(re_file):
     hist = run_replay(re_file)
@@ -35,14 +36,16 @@ def a_replay(re_file):
 
 
 def test_echo():
-    f = os.path.join('histories', 'echo.json')
+    f = os.path.join(HISTDIR, 'echo.json')
     with a_replay(f) as hist:
         yield assert_equal, 2, len(hist)
 
+
 def test_reecho():
-    f = os.path.join('histories', 'echo.json')
+    f = os.path.join(HISTDIR, 'echo.json')
     with a_replay(f) as hist:
         yield assert_equal, 2, len(hist)
+
 
 if __name__ == '__main__':
     nose.runmodule()

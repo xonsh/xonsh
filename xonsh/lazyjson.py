@@ -1,5 +1,6 @@
 """Implements a lazy JSON file class that wraps around json data."""
 from __future__ import print_function, unicode_literals
+import io
 import weakref
 from contextlib import contextmanager
 from collections import Mapping, Sequence
@@ -218,7 +219,7 @@ class LazyJSON(Node):
 
     def close(self):
         """Close the file handle, if appropriate."""
-        if not self.reopen:
+        if not self.reopen and isinstance(self._f, io.IOBase):
             self._f.close()
 
     @contextmanager
