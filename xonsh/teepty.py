@@ -16,7 +16,6 @@ import fcntl
 import select
 import signal
 import termios
-import tempfile
 
 # The following escape codes are xterm codes.
 # See http://rtfm.etla.org/xterm/ctlseq.html for more.
@@ -57,7 +56,6 @@ class TeePTY(object):
         self.bufsize = bufsize
         self.pid = self.master_fd = None
         self._in_alt_mode = False
-        self._temp_stdin = None
         self.remove_color = remove_color
         self.buffer = io.BytesIO()
         self.returncode = None
@@ -85,7 +83,7 @@ class TeePTY(object):
         self._in_alt_mode = False
         if not argv:
             argv = [os.environ.get('SHELL', 'sh')]
-        stdin_filename = self._ensure_stdin(stdin)
+        stdin_filename = self._stdin_filename(stdin)
         if stdin_filename is not None:
             argv = list(argv)
             argv.append(stdin_filename)
@@ -98,6 +96,8 @@ class TeePTY(object):
                 os.execvp(argv[0], argv)
             else:
                 os.execvpe(argv[0], argv, env)
+        else:
+            stdin_filename = self._pipe_stdin(stdin, master_fd)
 
         old_handler = signal.signal(signal.SIGWINCH, self._signal_winch)
         try:
@@ -115,9 +115,7 @@ class TeePTY(object):
 
         _, self.returncode = os.waitpid(pid, 0)
         os.close(master_fd)
-        #self.pid = 
         self.master_fd = None
-        self._temp_stdin = None
         self._in_alt_mode = False
         signal.signal(signal.SIGWINCH, old_handler)
         return self.returncode
@@ -200,15 +198,16 @@ class TeePTY(object):
             n = os.write(master_fd, data)
             data = data[n:]
 
-    def _ensure_stdin(self, stdin):
+    def _stdin_filename(self, stdin):
+        if isinstance(stdin, io.FileIO) and os.path.isfile(stdin.name):
+            return stdin.name
+        return None
+
+    def _pipe_stdin(self, stdin, master_fd):
         if stdin is None:
             return None
-            #raw = sys.stdin.read()
-            #if len(raw) == 0:
-            #    return None
-            #raw = raw.encode()
         elif isinstance(stdin, io.FileIO):
-            return stdin.name if os.path.isfile(stdin.name) else None
+            return None
         elif isinstance(stdin, io.BufferedIOBase):
             raw = stdin.read()
         elif isinstance(stdin, str):
@@ -217,10 +216,8 @@ class TeePTY(object):
             raw = stdin
         else:
             raise ValueError('stdin not understood {0!r}'.format(stdin))
-        self._temp_stdin = ts = tempfile.NamedTemporaryFile(mode='w+b')
-        ts.write(raw)
-        ts.seek(0)
-        return ts.name
+        os.write(master_fd, raw)
+        os.write(master_fd, b'\004')  # 'closes' the file
 
 
 if __name__ == '__main__':
