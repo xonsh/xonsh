@@ -36,15 +36,17 @@ if ON_WINDOWS:
         """
         Wait for the active job to finish, to be killed by SIGINT, or to be
         suspended by ctrl-z.
+        Returns the job if it completed, or None if it
+        did not return (e.g. was killed or suspended).
         """
         _clear_dead_jobs()
         act = builtins.__xonsh_active_job__
         if act is None:
-            return
+            return None
         job = builtins.__xonsh_all_jobs__[act]
         obj = job['obj']
         if job['bg']:
-            return
+            return None
         while obj.returncode is None:
             try:
                 obj.wait(0.01)
@@ -54,6 +56,7 @@ if ON_WINDOWS:
                 obj.kill()
         if obj.poll() is not None:
             builtins.__xonsh_active_job__ = None
+        return job
 
 else:
     def _continue(obj):
@@ -94,18 +97,19 @@ else:
         """
         Wait for the active job to finish, to be killed by SIGINT, or to be
         suspended by ctrl-z.
+        Returns the job only if it completed, otherwise None
+        (e.g. it was killed or suspended).
         """
         _clear_dead_jobs()
         act = builtins.__xonsh_active_job__
         if act is None:
-            return
+            return None
         job = builtins.__xonsh_all_jobs__[act]
         obj = job['obj']
         if job['bg']:
-            return
+            return None
         pgrp = job['pgrp']
         obj.done = False
-
         # give the terminal over to the fg process
         _give_terminal_to(pgrp)
         # if necessary, send the specified signal to this process
@@ -125,6 +129,7 @@ else:
         if obj.poll() is not None:
             builtins.__xonsh_active_job__ = None
         _give_terminal_to(_shell_pgrp)  # give terminal back to the shell
+        return job
 
 
 def _clear_dead_jobs():

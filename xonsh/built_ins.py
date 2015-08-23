@@ -11,7 +11,7 @@ import builtins
 import subprocess
 from io import TextIOWrapper, StringIO
 from glob import glob, iglob
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE, STDOUT, CalledProcessError
 from contextlib import contextmanager
 from collections import Sequence, MutableMapping, Iterable, namedtuple, \
     MutableSequence, MutableSet
@@ -574,16 +574,23 @@ def run_subproc(cmds, captured=True):
         return
     if prev_is_proxy:
         prev_proc.wait()
-    wait_for_active_job()
+    job = wait_for_active_job()
+    output = None
     if write_target is None:
         # get output
-        output = ''
+        out = ''
         if prev_proc.stdout not in (None, sys.stdout):
-            output = prev_proc.stdout.read()
+            out = prev_proc.stdout.read()
         if captured:
-            return output
+            output = out
     elif last_stdout not in (PIPE, None, sys.stdout):
         last_stdout.close()
+
+    if job and job['obj'].returncode != 0 and builtins.__xonsh_ctx__['__xonsh_subproc_check__']:
+        cmd = [' '.join(i) if isinstance(i, list) else i for i in job['cmds']]
+        cmd = ' '.join(cmd)
+        raise CalledProcessError(job['obj'].returncode, cmd, output)
+    return output
 
 
 def subproc_captured(*cmds):
