@@ -29,6 +29,7 @@ For those of you who want the gritty details.
     jobs
     proc
     inspectors
+    history
     completer
     shell
     base_shell
@@ -46,6 +47,7 @@ For those of you who want the gritty details.
 
     tools
     lazyjson
+    teepty
     openpy
     main
     pyghooks
