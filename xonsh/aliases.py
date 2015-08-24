@@ -14,6 +14,7 @@ from xonsh.jobs import jobs, fg, bg, kill_all_jobs
 from xonsh.timings import timeit_alias
 from xonsh.tools import ON_MAC, ON_WINDOWS, XonshError
 from xonsh.history import main as history_alias
+from xonsh.replay import main as replay_main
 
 
 def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
@@ -148,6 +149,7 @@ DEFAULT_ALIASES = {
     'history': history_alias,
     '!!': bang_bang,
     '!n': bang_n,
+    'replay': replay_main,
     'timeit': timeit_alias,
     'source-bash': source_bash,
     'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
