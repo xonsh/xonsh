@@ -39,6 +39,7 @@ For those of you who want the gritty details.
     prompt_toolkit_history
     pretty
     replay
+    diff_history
 
 
 **Helpers:**
