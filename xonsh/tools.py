@@ -550,7 +550,7 @@ def get_xonsh_color_names(color_code):
     try:
         return next(k for k, v in TERM_COLORS.items() if v == color_code)
     except StopIteration:
-        return 'No_Color'
+        return 'NO_COLOR'
 
 
 def format_prompt_for_prompt_toolkit(prompt):
