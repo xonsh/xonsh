@@ -42,7 +42,6 @@ def teardown_history(history):
         warn('do not have write permissions for ' + hfile, RuntimeWarning)
 
 
-
 class PromptToolkitShell(BaseShell):
     """The xonsh shell."""
 
@@ -63,10 +62,10 @@ class PromptToolkitShell(BaseShell):
             print(intro)
         while not builtins.__xonsh_exit__:
             try:
-                token_func, Style_cls = self._get_prompt_tokens_and_style()
+                token_func, style_cls = self._get_prompt_tokens_and_style()
                 line = get_input(
                     get_prompt_tokens=token_func,
-                    style = Style_cls,
+                    style=style_cls,
                     completer=self.pt_completer,
                     history=self.history,
                     key_bindings_registry=self.key_bindings_manager.registry,
@@ -81,15 +80,14 @@ class PromptToolkitShell(BaseShell):
             except EOFError:
                 break
 
-
-
     def _get_prompt_tokens_and_style(self):
         """Returns function to pass as prompt to prompt_toolkit."""
         token_names, cstyles, strings = format_prompt_for_prompt_toolkit(self.prompt)
-        
         tokens = [getattr(Token, n) for n in token_names]
+
         def get_tokens(cli):
             return list(zip(tokens, strings))
+
         class CustomStyle(Style):
             styles = {
                 Token.Menu.Completions.Completion.Current: 'bg:#00aaaa #000000',
@@ -98,13 +96,12 @@ class PromptToolkitShell(BaseShell):
                 Token.Menu.Completions.ProgressBar: 'bg:#00aaaa',
             }
             # update with the prompt styles
-            styles.update({t: s for (t,s) in zip(tokens, cstyles)} )
+            styles.update({t: s for (t, s) in zip(tokens, cstyles)})
             # Update with with any user styles
             userstyle = builtins.__xonsh_env__.get('PROMPT_TOOLKIT_STYLES', {})
             styles.update(userstyle)
+
         return get_tokens, CustomStyle
-
-
 
     @property
     def lexer(self):

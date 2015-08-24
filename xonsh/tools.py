@@ -519,31 +519,32 @@ class FakeChar(str):
 RE_HIDDEN_MAX = re.compile('(\001.*?\002)+')
 
 
-_PT_COLORS={'BLACK': '#000000', 
-            'RED': '#FF0000',
-            'GREEN': '#008000',
-            'YELLOW':'#FFFF00', 
-            'BLUE'  :'#0000FF', 
-            'PURPLE':'#0000FF',
-            'CYAN':'#00FFFF',
-            'WHITE':'#FFFFFF'}
+_PT_COLORS = {'BLACK': '#000000',
+              'RED': '#FF0000',
+              'GREEN': '#008000',
+              'YELLOW': '#FFFF00',
+              'BLUE': '#0000FF',
+              'PURPLE': '#0000FF',
+              'CYAN': '#00FFFF',
+              'WHITE': '#FFFFFF'}
 
 _PT_STYLE = {'BOLD': 'bold',
-             'UNDERLINE':'underline',
-             'INTENSE':'italic'}
+             'UNDERLINE': 'underline',
+             'INTENSE': 'italic'}
 
 
 def _make_style(color_name):
     """ Convert color names to pygments styles codes """
     style = []
-    for k,v in _PT_STYLE.items():
-        if k in color_name: 
+    for k, v in _PT_STYLE.items():
+        if k in color_name:
             style.append(v)
-    for k,v in _PT_COLORS.items():
+    for k, v in _PT_COLORS.items():
         if k in color_name:
             style.append(v)
     return ' '.join(style)
-    
+
+
 def get_xonsh_color_names(color_code):
     """ Makes a reverse lookup in TERM_COLORS  """
     try:
@@ -552,21 +553,18 @@ def get_xonsh_color_names(color_code):
         return 'No_Color'
 
 
-     
 def format_prompt_for_prompt_toolkit(prompt):
     """Converts a prompt with color codes to a pygments style and tokens
     """
     parts = RE_HIDDEN_MAX.split(prompt)
-    #ensure that parts is [colorcode, string, colorcode, string,...]
-    if parts and parts[0] is '': 
+    # ensure that parts is [colorcode, string, colorcode, string,...]
+    if parts and len(parts[0]) == 0:
         parts = parts[1:]
     else:
-        parts.insert(0,'')
-    if len(parts)%2 != 0:
+        parts.insert(0, '')
+    if len(parts) % 2 != 0:
         parts.append()
     strings = parts[1::2]
-    token_names = [get_xonsh_color_names(c) for c in parts[::2] ]
+    token_names = [get_xonsh_color_names(c) for c in parts[::2]]
     cstyles = [_make_style(c) for c in token_names]
     return token_names, cstyles, strings
-    
-
