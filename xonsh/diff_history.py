@@ -94,14 +94,12 @@ class HistoryDiffer(object):
         if len(only_x) == 0:
                 return ''
         if self.verbose:
-            xstr = ',\n'.join(['  {color}{0!r}{no_color}: {color}{1!r}{no_color}'.format(
-                              key, xenv[key], color=color, no_color=NO_COLOR) \
-                              for key in only_x])
+            xstr = ',\n'.join(['    {0!r}: {1!r}'.format(key, xenv[key]) \
+                               for key in only_x])
             xstr = '\n' + xstr
         else:
-            xstr = ', '.join(['{color}{0!r}{no_color}'.format(
-                              key, color=color, no_color=NO_COLOR) for key in only_x])
-        in_x = 'These vars are only in {color}{xid}{no_color}: {xstr}\n\n'
+            xstr = ', '.join(['{0!r}'.format(key) for key in only_x])
+        in_x = 'These vars are only in {color}{xid}{no_color}: {{{xstr}}}\n\n'
         return in_x.format(xid=xid, color=color, no_color=NO_COLOR, xstr=xstr)
 
     def envdiff(self):
