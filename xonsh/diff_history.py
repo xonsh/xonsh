@@ -71,7 +71,7 @@ class HistoryDiffer(object):
                 continue
             aline = RED + '- '
             bline = GREEN + '+ '
-            s += '{0!r} in both, but differs\n'.format(key)
+            s += '{0!r} is in both, but differs\n'.format(key)
             sm.set_seqs(aval, bval)
             for tag, i1, i2, j1, j2 in sm.get_opcodes():
                 if tag == 'replace':
@@ -89,6 +89,21 @@ class HistoryDiffer(object):
             s += aline + NO_COLOR + '\n' + bline + NO_COLOR +'\n\n'
         return s
 
+    def _envinonediff(self, x, y, color, xid, xenv):
+        only_x = sorted(x - y)
+        if len(only_x) == 0:
+                return ''
+        if self.verbose:
+            xstr = ',\n'.join(['  {color}{0!r}{no_color}: {color}{1!r}{no_color}'.format(
+                              key, xenv[key], color=color, no_color=NO_COLOR) \
+                              for key in only_x])
+            xstr = '\n' + xstr
+        else:
+            xstr = ', '.join(['{color}{0!r}{no_color}'.format(
+                              key, color=color, no_color=NO_COLOR) for key in only_x])
+        in_x = 'These vars are only in {color}{xid}{no_color}: {xstr}\n\n'
+        return in_x.format(xid=xid, color=color, no_color=NO_COLOR, xstr=xstr)
+
     def envdiff(self):
         """Computes the difference between the environments."""
         aenv = self.a['env'].load()
@@ -102,8 +117,9 @@ class HistoryDiffer(object):
                 return ''
             in_a = in_b = ''
         else:
-            in_a = in_b = ''
             keydiff = self._envbothdiff(in_both, aenv, benv)
+            in_a = self._envinonediff(akeys, bkeys, RED, self.a['sessionid'], aenv)
+            in_b = self._envinonediff(bkeys, akeys, GREEN, self.b['sessionid'], benv)
         s = 'Environment\n-----------\n' + in_a + keydiff + in_b
         return s
 
