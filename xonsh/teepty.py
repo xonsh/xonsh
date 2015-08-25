@@ -88,16 +88,26 @@ class TeePTY(object):
             argv = list(argv)
             argv.append(stdin_filename)
 
+        #r, w = os.pipe()
+
         pid, master_fd = pty.fork()
         self.pid = pid
         self.master_fd = master_fd
         if pid == pty.CHILD:
+            print('MASTER TTY [child]', os.isatty(master_fd))
+            print('STDIN TTY [child]', os.isatty(0))
+            print('pty.STDIN TTY [child]', os.isatty(pty.STDIN_FILENO))
+            print(os.fstat(0))
             if env is None:
                 os.execvp(argv[0], argv)
             else:
                 os.execvpe(argv[0], argv, env)
         else:
+            print('MASTER TTY [parent]', os.isatty(master_fd))
+            print('STDIN TTY [parent]', os.isatty(0))
+            print('pty.STDIN TTY [parent]', os.isatty(pty.STDIN_FILENO))
             stdin_filename = self._pipe_stdin(stdin, master_fd)
+
 
         old_handler = signal.signal(signal.SIGWINCH, self._signal_winch)
         try:
@@ -218,6 +228,14 @@ class TeePTY(object):
             raise ValueError('stdin not understood {0!r}'.format(stdin))
         os.write(master_fd, raw)
         os.write(master_fd, b'\004')  # 'closes' the file
+        #r, w = os.pipe()
+        #os.dup2(r, master_fd)
+        #self.master_fd = r
+        #os.write(w, raw)
+        #os.close(w)
+        #os.dup2(master_fd, r)
+        #self.master_fd = master_fd
+        
 
 
 if __name__ == '__main__':
