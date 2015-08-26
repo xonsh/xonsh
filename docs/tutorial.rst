@@ -255,8 +255,12 @@ XONSH_SHOW_TRACEBACK       Not defined                   Controls if a traceback
                                                          hidden but a notice is shown on 
                                                          how to enable the traceback.
 CASE_SENSITIVE_COMPLETIONS True on Linux otherwise False Sets whether completions should
-                                                         be case sesistive or case
+                                                         be case sensitive or case
                                                          insensitive.
+FORCE_POSIX_PATHS          Not defined                   Forces forward slashes (``/``) on
+                                                         Windows systems when using auto
+                                                         completion if set to anything
+                                                         truthy.
 XONSH_DATA_DIR             $XDG_DATA_HOME/xonsh          This is the location where
                                                          xonsh data files are stored, 
                                                          such as history.
