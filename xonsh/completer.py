@@ -338,7 +338,7 @@ class Completer(object):
             csc = env.get('CASE_SENSITIVE_COMPLETIONS', True)
             startswither = startswithnorm if csc else startswithlow
             attrlow = attr.lower()
-            opts = [o for o in opts if startswither(oattr, attrlow)]
+            opts = [o for o in opts if startswither(o, attrlow)]
         prelen = len(prefix)
         for opt in opts:
             a = getattr(val, opt)
