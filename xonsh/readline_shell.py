@@ -11,6 +11,7 @@ from collections import deque
 
 from xonsh import lazyjson
 from xonsh.base_shell import BaseShell
+from xonsh.tools import ON_WINDOWS
 
 RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = None
 RL_CAN_RESIZE = False
@@ -211,7 +212,9 @@ class ReadlineShell(BaseShell, Cmd):
                         line = line.rstrip('\r\n')
                     if have_readline and line != 'EOF':
                         readline.add_history(line)
-                self._load_remaining_input_into_queue()
+                if not ON_WINDOWS:
+                    # select() is not fully functional on windows
+                    self._load_remaining_input_into_queue()
                 line = self.precmd(line)
                 stop = self.onecmd(line)
                 stop = self.postcmd(stop, line)
