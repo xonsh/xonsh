@@ -11,6 +11,12 @@ GREEN = TERM_COLORS['GREEN'].replace('\001', '').replace('\002', '')
 BOLD_RED = TERM_COLORS['BOLD_RED'].replace('\001', '').replace('\002', '')
 BOLD_GREEN = TERM_COLORS['BOLD_GREEN'].replace('\001', '').replace('\002', '')
 
+# intern some strings
+REPLACE = 'replace'
+DELETE = 'delete'
+INSERT = 'insert'
+EQUAL = 'equal'
+
 class HistoryDiffer(object):
     """This class helps diff two xonsh history files."""
 
@@ -61,7 +67,7 @@ class HistoryDiffer(object):
                      red=RED, green=GREEN, no_color=NO_COLOR)
         return s
 
-    def _envbothdiff(self, in_both, aenv, benv):
+    def _env_both_diff(self, in_both, aenv, benv):
         sm = self.sm
         s = ''
         for key in sorted(in_both):
@@ -74,14 +80,14 @@ class HistoryDiffer(object):
             s += '{0!r} is in both, but differs\n'.format(key)
             sm.set_seqs(aval, bval)
             for tag, i1, i2, j1, j2 in sm.get_opcodes():
-                if tag == 'replace':
+                if tag == REPLACE:
                     aline += BOLD_RED + aval[i1:i2] + RED
                     bline += BOLD_GREEN + bval[j1:j2] + GREEN
-                elif tag == 'delete':
+                elif tag == DELETE:
                     aline += BOLD_RED + aval[i1:i2] + RED
-                elif tag == 'insert':
+                elif tag == INSERT:
                     bline += BOLD_GREEN + bval[j1:j2] + GREEN
-                elif tag == 'equal':
+                elif tag == EQUAL:
                     aline += aval[i1:i2]
                     bline += bval[j1:j2]
                 else:
@@ -89,7 +95,7 @@ class HistoryDiffer(object):
             s += aline + NO_COLOR + '\n' + bline + NO_COLOR +'\n\n'
         return s
 
-    def _envinonediff(self, x, y, color, xid, xenv):
+    def _env_in_one_diff(self, x, y, color, xid, xenv):
         only_x = sorted(x - y)
         if len(only_x) == 0:
                 return ''
@@ -110,16 +116,59 @@ class HistoryDiffer(object):
         bkeys = frozenset(benv)
         in_both = akeys & bkeys
         if len(in_both) == len(akeys) == len(bkeys):
-            keydiff = self._envbothdiff(in_both, aenv, benv)
+            keydiff = self._env_both_diff(in_both, aenv, benv)
             if len(keydiff) == 0:
                 return ''
             in_a = in_b = ''
         else:
-            keydiff = self._envbothdiff(in_both, aenv, benv)
-            in_a = self._envinonediff(akeys, bkeys, RED, self.a['sessionid'], aenv)
-            in_b = self._envinonediff(bkeys, akeys, GREEN, self.b['sessionid'], benv)
+            keydiff = self._env_both_diff(in_both, aenv, benv)
+            in_a = self._env_in_one_diff(akeys, bkeys, RED, self.a['sessionid'], aenv)
+            in_b = self._env_in_one_diff(bkeys, akeys, GREEN, self.b['sessionid'], benv)
         s = 'Environment\n-----------\n' + in_a + keydiff + in_b
         return s
+
+    def _cmd_in_one_diff(self, inp, i, xlj, xid, color):
+        s = 'cmd #{i} only in {color}{xid}{no_color}:\n'
+        s = s.format(i=i, color=color, xid=xid, no_color=NO_COLOR)
+        lines = inp.splitlines()
+        lt = '{color}{pre}{no_color} {line}\n'
+        s += lt.format(color=color, no_color=NO_COLOR, line=lines[0], pre='>>>')
+        for line in lines[1:]:
+            s += lt.format(color=color, no_color=NO_COLOR, line=line, pre='...')
+        if not self.verbose:
+            return s + '\n'
+        out = xlj['cmds'][0].get('out', 'Note: no output stored')
+        s += out.rstrip() + '\n\n'
+        return s
+
+    def cmdsdiff(self):
+        """Computes the difference of the commands themselves."""
+        aid = self.a['sessionid']
+        bid = self.b['sessionid']
+        ainps = [c['inp'] for c in self.a['cmds']]
+        binps = [c['inp'] for c in self.b['cmds']]
+        sm = self.sm
+        sm.set_seqs(ainps, binps)
+        s = ''
+        for tag, i1, i2, j1, j2 in sm.get_opcodes():
+            if tag == REPLACE:
+                #aline += BOLD_RED + aval[i1:i2] + RED
+                #bline += BOLD_GREEN + bval[j1:j2] + GREEN
+                s += tag + '\n'
+            elif tag == DELETE:
+                for i, inp in enumerate(ainps[i1:i2], i1):
+                    s += self._cmd_in_one_diff(inp, i, self.a, aid, RED)
+            elif tag == INSERT:
+                for j, inp in enumerate(binps[j1:j2], j1):
+                    s += self._cmd_in_one_diff(inp, j, self.b, bid, GREEN)
+            elif tag == EQUAL:
+                s += tag + '\n'
+                #continue  # FIXME
+            else:
+                raise RuntimeError('tag not understood')
+        if len(s) == 0:
+            return s
+        return 'Commands\n--------\n' + s
 
     def format(self):
         """Formats the difference between the two history files."""
@@ -127,6 +176,9 @@ class HistoryDiffer(object):
         ed = self.envdiff()
         if len(ed) > 0:
             s += '\n\n' + ed
+        cd = self.cmdsdiff()
+        if len(cd) > 0:
+            s += '\n\n' + cd
         return s.rstrip()
 
 
