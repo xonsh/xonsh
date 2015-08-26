@@ -1,5 +1,6 @@
 """Tools for diff'ing two xonsh history files in a meaningful fashion."""
 from datetime import datetime
+from itertools import zip_longest
 from difflib import SequenceMatcher
 
 from xonsh import lazyjson
@@ -16,6 +17,66 @@ REPLACE = 'replace'
 DELETE = 'delete'
 INSERT = 'insert'
 EQUAL = 'equal'
+
+
+def bold_str_diff(a, b, sm=None):
+    if sm is None:
+        sm = SequenceMatcher()
+    aline = RED + '- '
+    bline = GREEN + '+ '
+    sm.set_seqs(a, b)
+    for tag, i1, i2, j1, j2 in sm.get_opcodes():
+        if tag == REPLACE:
+            aline += BOLD_RED + a[i1:i2] + RED
+            bline += BOLD_GREEN + b[j1:j2] + GREEN
+        elif tag == DELETE:
+            aline += BOLD_RED + a[i1:i2] + RED
+        elif tag == INSERT:
+            bline += BOLD_GREEN + b[j1:j2] + GREEN
+        elif tag == EQUAL:
+            aline += a[i1:i2]
+            bline += b[j1:j2]
+        else:
+            raise RuntimeError('tag not understood')
+    return aline + NO_COLOR + '\n' + bline + NO_COLOR +'\n'
+
+
+def redline(line):
+   return '{red}- {line}{no_color}\n'.format(red=RED, line=line, no_color=NO_COLOR)
+
+
+def greenline(line):
+   return '{green}+ {line}{no_color}\n'.format(green=GREEN, line=line, no_color=NO_COLOR)
+
+
+def highlighted_ndiff(a, b):
+    """Returns a highlited string, with bold charaters where different."""
+    s = ''
+    sm = SequenceMatcher()
+    sm.set_seqs(a, b)
+    linesm = SequenceMatcher()
+    for tag, i1, i2, j1, j2 in sm.get_opcodes():
+        if tag == REPLACE:
+            for aline, bline in zip_longest(a[i1:i2], b[j1:j2]):
+                if bline is None:
+                    s += redline(aline)
+                elif aline is None:
+                    s += greenline(bline)
+                else:
+                    s += bold_str_diff(aline, bline, sm=linesm)
+        elif tag == DELETE:
+            for aline in a[i1:i2]:
+                s += redline(aline)
+        elif tag == INSERT:
+            for bline in b[j1:j2]:
+                s += greenline(bline)
+        elif tag == EQUAL:
+            for aline in a[i1:i2]:
+                s += '  ' + aline + '\n'
+        else:
+            raise RuntimeError('tag not understood')
+    return s
+
 
 class HistoryDiffer(object):
     """This class helps diff two xonsh history files."""
@@ -75,24 +136,8 @@ class HistoryDiffer(object):
             bval = benv[key]
             if aval == bval:
                 continue
-            aline = RED + '- '
-            bline = GREEN + '+ '
             s += '{0!r} is in both, but differs\n'.format(key)
-            sm.set_seqs(aval, bval)
-            for tag, i1, i2, j1, j2 in sm.get_opcodes():
-                if tag == REPLACE:
-                    aline += BOLD_RED + aval[i1:i2] + RED
-                    bline += BOLD_GREEN + bval[j1:j2] + GREEN
-                elif tag == DELETE:
-                    aline += BOLD_RED + aval[i1:i2] + RED
-                elif tag == INSERT:
-                    bline += BOLD_GREEN + bval[j1:j2] + GREEN
-                elif tag == EQUAL:
-                    aline += aval[i1:i2]
-                    bline += bval[j1:j2]
-                else:
-                    raise RuntimeError('tag not understood')
-            s += aline + NO_COLOR + '\n' + bline + NO_COLOR +'\n\n'
+            s += bold_str_diff(aval, bval, sm=sm) + '\n'
         return s
 
     def _env_in_one_diff(self, x, y, color, xid, xenv):
@@ -141,6 +186,42 @@ class HistoryDiffer(object):
         s += out.rstrip() + '\n\n'
         return s
 
+    def _cmd_out_and_rtn_diff(self, i, j):
+        s = ''
+        aout = self.a['cmds'][i].get('out', None)
+        bout = self.b['cmds'][j].get('out', None)
+        if aout is None and bout is None:
+            s += 'Note: neither output stored\n'
+        elif bout is None:
+            aid = self.a['sessionid']
+            s += 'Note: only {red}{aid}{no_color} output stored\n'.format(red=RED, 
+                                                            aid=aid, no_color=NO_COLOR)
+        elif aout is None:
+            bid = self.b['sessionid']
+            s += 'Note: only {green}{bid}{no_color} output stored\n'.format(green=GREEN,
+                                                            bid=bid, no_color=NO_COLOR)
+        elif aout != bout:
+            s += 'Outputs differ\n'
+            s += highlighted_ndiff(aout.splitlines(), bout.splitlines())
+        else:
+            pass
+        artn = self.a['cmds'][i]['rtn']
+        brtn = self.b['cmds'][j]['rtn']
+        if artn != brtn:
+            s += ('Return vals {red}{artn}{no_color} & {green}{brtn}{no_color} differ\n'
+                  ).format(red=RED, green=GREEN, no_color=NO_COLOR, artn=artn, brtn=brtn)
+        return s
+
+    def _cmd_replace_diff(self, i, ainp, aid, j, binp, bid):
+        s = ('cmd #{i} in {red}{aid}{no_color} is replaced by \n'
+             'cmd #{j} in {green}{bid}{no_color}:\n')
+        s = s.format(i=i, aid=aid, j=j, bid=bid, red=RED, green=GREEN, no_color=NO_COLOR)
+        s += highlighted_ndiff(ainp.splitlines(), binp.splitlines())
+        if not self.verbose:
+            return s + '\n'
+        s += self._cmd_out_and_rtn_diff(i, j)
+        return s + '\n'
+
     def cmdsdiff(self):
         """Computes the difference of the commands themselves."""
         aid = self.a['sessionid']
@@ -152,9 +233,14 @@ class HistoryDiffer(object):
         s = ''
         for tag, i1, i2, j1, j2 in sm.get_opcodes():
             if tag == REPLACE:
-                #aline += BOLD_RED + aval[i1:i2] + RED
-                #bline += BOLD_GREEN + bval[j1:j2] + GREEN
-                s += tag + '\n'
+                for i, ainp, j, binp in zip_longest(range(i1, i2), ainps[i1:i2], 
+                                                    range(j1, j2), binps[j1:j2]):
+                    if j is None:
+                        s += self._cmd_in_one_diff(ainp, i, self.a, aid, RED)
+                    elif i is None:
+                        s += self._cmd_in_one_diff(binp, j, self.b, bid, GREEN)
+                    else:
+                        self._cmd_replace_diff(i, ainp, aid, j, binp, bid)
             elif tag == DELETE:
                 for i, inp in enumerate(ainps[i1:i2], i1):
                     s += self._cmd_in_one_diff(inp, i, self.a, aid, RED)
@@ -162,8 +248,14 @@ class HistoryDiffer(object):
                 for j, inp in enumerate(binps[j1:j2], j1):
                     s += self._cmd_in_one_diff(inp, j, self.b, bid, GREEN)
             elif tag == EQUAL:
-                s += tag + '\n'
-                #continue  # FIXME
+                for i, j, in zip(range(i1, i2), range(j1, j2)):
+                    odiff = self._cmd_out_and_rtn_diff(i, j)
+                    if len(odiff) > 0:
+                        h = ('cmd #{i} in {red}{aid}{no_color} input is the same as \n'
+                             'cmd #{j} in {green}{bid}{no_color}, but output differs:\n')
+                        s += h.format(i=i, aid=aid, j=j, bid=bid, red=RED, green=GREEN, 
+                                      no_color=NO_COLOR)
+                        s += odiff
             else:
                 raise RuntimeError('tag not understood')
         if len(s) == 0:
