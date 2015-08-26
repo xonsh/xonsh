@@ -274,7 +274,8 @@ class ReadlineHistoryAdder(Thread):
                         if line == 'EOF':
                             continue
                         readline.add_history(line)
-                        RL_LIB.history_set_pos(i)
+                        if RL_LIB is not None:
+                            RL_LIB.history_set_pos(i)
                         i += 1
                 lj.close()
             except (IOError, OSError):
