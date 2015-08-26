@@ -16,6 +16,7 @@ import fcntl
 import select
 import signal
 import termios
+import tempfile
 
 # The following escape codes are xterm codes.
 # See http://rtfm.etla.org/xterm/ctlseq.html for more.
@@ -59,9 +60,15 @@ class TeePTY(object):
         self.remove_color = remove_color
         self.buffer = io.BytesIO()
         self.returncode = None
+        self._temp_stdin = None
 
     def __str__(self):
         return self.buffer.getvalue().decode()
+
+    def __del__(self):
+        if self._temp_stdin is not None:
+            self._temp_stdin.close()
+            self._temp_stdin = None
 
     def spawn(self, argv=None, env=None, stdin=None):
         """Create a spawned process. Based on the code for pty.spawn().
@@ -83,31 +90,18 @@ class TeePTY(object):
         self._in_alt_mode = False
         if not argv:
             argv = [os.environ.get('SHELL', 'sh')]
-        stdin_filename = self._stdin_filename(stdin)
-        if stdin_filename is not None:
-            argv = list(argv)
-            argv.append(stdin_filename)
-
-        #r, w = os.pipe()
+        argv = self._put_stdin_in_argv(argv, stdin)
 
         pid, master_fd = pty.fork()
         self.pid = pid
         self.master_fd = master_fd
         if pid == pty.CHILD:
-            print('MASTER TTY [child]', os.isatty(master_fd))
-            print('STDIN TTY [child]', os.isatty(0))
-            print('pty.STDIN TTY [child]', os.isatty(pty.STDIN_FILENO))
-            print(os.fstat(0))
             if env is None:
                 os.execvp(argv[0], argv)
             else:
                 os.execvpe(argv[0], argv, env)
         else:
-            print('MASTER TTY [parent]', os.isatty(master_fd))
-            print('STDIN TTY [parent]', os.isatty(0))
-            print('pty.STDIN TTY [parent]', os.isatty(pty.STDIN_FILENO))
-            stdin_filename = self._pipe_stdin(stdin, master_fd)
-
+            self._pipe_stdin(stdin)
 
         old_handler = signal.signal(signal.SIGWINCH, self._signal_winch)
         try:
@@ -209,32 +203,47 @@ class TeePTY(object):
             data = data[n:]
 
     def _stdin_filename(self, stdin):
-        if isinstance(stdin, io.FileIO) and os.path.isfile(stdin.name):
-            return stdin.name
-        return None
-
-    def _pipe_stdin(self, stdin, master_fd):
-        if stdin is None:
-            return None
-        elif isinstance(stdin, io.FileIO):
-            return None
-        elif isinstance(stdin, io.BufferedIOBase):
-            raw = stdin.read()
-        elif isinstance(stdin, str):
-            raw = stdin.encode()
-        elif isinstance(stdin, bytes):
-            raw = stdin
+        if stdin is None: 
+            rtn = None
+        elif isinstance(stdin, io.FileIO) and os.path.isfile(stdin.name):
+            rtn = stdin.name
+        elif isinstance(stdin, (io.BufferedIOBase, str, bytes)):
+            self._temp_stdin = tsi = tempfile.NamedTemporaryFile()
+            rtn = tsi.name
         else:
             raise ValueError('stdin not understood {0!r}'.format(stdin))
-        os.write(master_fd, raw)
-        os.write(master_fd, b'\004')  # 'closes' the file
-        #r, w = os.pipe()
-        #os.dup2(r, master_fd)
-        #self.master_fd = r
-        #os.write(w, raw)
-        #os.close(w)
-        #os.dup2(master_fd, r)
-        #self.master_fd = master_fd
+        return rtn
+
+    def _put_stdin_in_argv(self, argv, stdin):
+        stdin_filename = self._stdin_filename(stdin)
+        if stdin_filename is None:
+            return argv
+        argv = list(argv)
+        # a lone dash '-' argument means stdin
+        if argv.count('-') == 0:
+            argv.append(stdin_filename)
+        else:
+            argv[argv.index('-')] = stdin_filename
+        return argv
+
+    def _pipe_stdin(self, stdin):
+        if stdin is None or isinstance(stdin, io.FileIO):
+            return None
+        tsi = self._temp_stdin
+        bufsize = self.bufsize
+        if isinstance(stdin, io.BufferedIOBase):
+            buf = stdin.read(bufsize)
+            while len(buf) != 0:
+                tsi.write(buf)
+                tsi.flush()
+                buf = stdin.read(bufsize)
+        elif isinstance(stdin, (str, bytes)):
+            raw = stdin.encode() if isinstance(stdin, str) else stdin
+            for i in range((len(raw)//bufsize) + 1):
+                tsi.write(raw[i*bufsize:(i + 1)*bufsize])
+                tsi.flush()
+        else:
+            raise ValueError('stdin not understood {0!r}'.format(stdin))
         
 
 
