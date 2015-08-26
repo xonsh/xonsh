@@ -36,6 +36,17 @@ if ON_POSIX:
     AT_EXIT_SIGNALS += (signal.SIGTSTP, signal.SIGQUIT, signal.SIGHUP)
 
 
+def resetting_signal_handle(sig, f):
+    """Sets a new signal handle that will automaticallly restore the old value 
+    once the new handle is finished.
+    """
+    oldh = signal.getsignal(sig)
+    def newh(s=None, frame=None):
+        f(s, frame)
+        signal.signal(sig, oldh)
+    signal.signal(sig, newh)
+
+
 class Aliases(MutableMapping):
     """Represents a location to hold and look up aliases."""
 
@@ -661,7 +672,7 @@ def load_builtins(execer=None):
     lastflush = lambda s=None, f=None: builtins.__xonsh_history__.flush(at_exit=True)
     atexit.register(lastflush)
     for sig in AT_EXIT_SIGNALS:
-        signal.signal(sig, lastflush)
+        resetting_signal_handle(sig, lastflush)
     BUILTINS_LOADED = True
 
 
