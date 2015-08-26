@@ -6,6 +6,8 @@ from warnings import warn
 from prompt_toolkit.shortcuts import get_input, create_eventloop
 from prompt_toolkit.key_binding.manager import KeyBindingManager
 from pygments.token import Token
+from pygments.style import Style
+from pygments.styles.default import DefaultStyle
 
 from xonsh.base_shell import BaseShell
 from xonsh.pyghooks import XonshLexer
@@ -40,24 +42,6 @@ def teardown_history(history):
         warn('do not have write permissions for ' + hfile, RuntimeWarning)
 
 
-def get_user_input(get_prompt_tokens,
-                   history=None,
-                   lexer=None,
-                   key_bindings_registry=None,
-                   completer=None):
-    """Customized function that mostly mimics promp_toolkit's get_input.
-
-    Main difference between this and prompt_toolkit's get_input() is that it
-    allows to pass get_tokens() function instead of text prompt.
-    """
-    return get_input(
-        lexer=lexer,
-        completer=completer,
-        history=history,
-        get_prompt_tokens=get_prompt_tokens,
-        key_bindings_registry=key_bindings_registry)
-
-
 class PromptToolkitShell(BaseShell):
     """The xonsh shell."""
 
@@ -78,8 +62,10 @@ class PromptToolkitShell(BaseShell):
             print(intro)
         while not builtins.__xonsh_exit__:
             try:
-                line = get_user_input(
-                    get_prompt_tokens=self._get_prompt_tokens(),
+                token_func, style_cls = self._get_prompt_tokens_and_style()
+                line = get_input(
+                    get_prompt_tokens=token_func,
+                    style=style_cls,
                     completer=self.pt_completer,
                     history=self.history,
                     key_bindings_registry=self.key_bindings_manager.registry,
@@ -94,12 +80,28 @@ class PromptToolkitShell(BaseShell):
             except EOFError:
                 break
 
-    def _get_prompt_tokens(self):
+    def _get_prompt_tokens_and_style(self):
         """Returns function to pass as prompt to prompt_toolkit."""
+        token_names, cstyles, strings = format_prompt_for_prompt_toolkit(self.prompt)
+        tokens = [getattr(Token, n) for n in token_names]
+
         def get_tokens(cli):
-            return [(Token.Prompt,
-                     format_prompt_for_prompt_toolkit(self.prompt))]
-        return get_tokens
+            return list(zip(tokens, strings))
+
+        class CustomStyle(Style):
+            styles = {
+                Token.Menu.Completions.Completion.Current: 'bg:#00aaaa #000000',
+                Token.Menu.Completions.Completion: 'bg:#008888 #ffffff',
+                Token.Menu.Completions.ProgressButton: 'bg:#003333',
+                Token.Menu.Completions.ProgressBar: 'bg:#00aaaa',
+            }
+            # update with the prompt styles
+            styles.update({t: s for (t, s) in zip(tokens, cstyles)})
+            # Update with with any user styles
+            userstyle = builtins.__xonsh_env__.get('PROMPT_TOOLKIT_STYLES', {})
+            styles.update(userstyle)
+
+        return get_tokens, CustomStyle
 
     @property
     def lexer(self):
