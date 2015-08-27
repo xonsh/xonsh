@@ -160,11 +160,96 @@ series of lines. However, it can also return a JSON formatted string.
     bufferlength: 6
 
 .. code-block:: xonshcon
+
     >>> history info --json
     {"sessionid": "ace97177-f8dd-4a8d-8a91-a98ffd0b3d17", 
      "filename": "/home/scopatz/.local/share/xonsh/xonsh-ace97177-f8dd-4a8d-8a91-a98ffd0b3d17.json", 
      "length": 7, "buffersize": 100, "bufferlength": 7}
 
+``replay`` action
+==================
+The ``replay`` action allows for history files to be rerun, as scripts or in an existing xonsh 
+session.
+
+First, the original ``'replay'`` environment is loaded and will be merged with the current ``'native'`` 
+environment. How the environments are merged or not merged can be set at replay time. The default is for 
+the current native environment to take precendence. Next, each input in the environment is executed in order. 
+Lastly, the information of the replayed history file is printed.
+
+Let's walk through an example. To begin with, open up xonsh and run some simple commands, as follows.
+Call this the ``orig`` session.
+
+**orig history**
+
+.. code-block:: xonshcon
+
+    >>> mkdir -p temp/
+    >>> cd temp
+    >>> import random
+    >>> touch @(random.randint(0, 18))
+    >>> ls
+    2
+    >>> history file
+    /home/scopatz/.local/share/xonsh/xonsh-4bc4ecd6-3eba-4f3a-b396-a229ba2b4810.json
+    >>> exit
+
+We can now replay this by passing the filename into the replay command or the replay action 
+of the history command. This action has a few different options, but one of them is that 
+we can select a different target output file with the ``-o`` or ``--target`` option. 
+For example, in a new session, we could run:
+
+**new history**
+
+.. code-block:: xonshcon
+
+    >>> history replay -o ~/new.json ~/.local/share/xonsh/xonsh-4bc4ecd6-3eba-4f3a-b396-a229ba2b4810.json
+    2  6
+    /home/scopatz/new.json
+
+    ------------------------------------------------------------
+    Just replayed history, new history has following information
+    ------------------------------------------------------------
+    sessionid: 1a9ba1d5-6c55-48ac-bd0c-adae403efd6a
+    filename: /home/scopatz/new.json
+    length: 7
+    buffersize: 100
+    bufferlength: 0
+
+As you can see, a new history was created and another random file was added to the file system.
+If we want instead to replay history in its own session, we can always use the ``-c`` option on 
+xonsh itself to execute the replay command.
+
+**next history**
+
+.. code-block:: xonshcon
+
+    >>> xonsh -c "replay -o ~/next.json ~/new.json"
+    2  3  6
+    /home/scopatz/next.json
+
+    ------------------------------------------------------------
+    Just replayed history, new history has following information
+    ------------------------------------------------------------
+    sessionid: 461e798f-ad43-4cd6-a4c1-edc69722c61c
+    filename: /home/scopatz/next.json
+    length: 7
+    buffersize: 100
+    bufferlength: 0
+
+Currently history does not handle alias storage and reloading, but such a feature may be coming in 
+the future.
+
+``diff`` action
+===============
+Between any two history files, we can run the ``diff`` action. This does more that a simple line
+diff that you might generate with the unix ``diff`` command. (If you want a line diff, just 
+use the unix command!) Instead this takes advantage of the fact that we know we have xonsh 
+history files to do a more sophistcated diff on the environment, input, output (if available), 
+and return values.  Of course, the histories inputs should be 'sufficiently similar' if the diff 
+is to be meaningful. However, they don't need to be exactly the same.
+
+The diff action has one major option, ``-v`` or ``--verbose``. This basically says whether the 
+outputs should 
 
 Exciting Techinical Detail: Lazy JSON
 =====================================
