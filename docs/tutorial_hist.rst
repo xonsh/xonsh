@@ -1,8 +1,8 @@
 .. _tutorial_hist:
 
-********************************
-Advanced Tutorial: Livng History
-********************************
+**********************************
+Tutorial [Advanced]: Livng History
+**********************************
 Import your best Leonard Nimoy documenray voice and get ready for the xonsh tutorial 
 on ``history``.
 
@@ -19,18 +19,18 @@ In xonsh, history acknowledges that this is the case. Instead of a single histor
 file of inputs, xonsh implements a collection of JSON-formatted history files that
 can be thought of as having the following structure:
 
-.. code-block:: json
+.. code-block:: python
 
-    {'env': {...},  // Environment that xonsh was started with
-     'sessionid': str, // UUID4 for the session
-     'ts': [start, stop],  // start and stop timestamps for session [s since epoch]
-     'locked': True, // boolean for whether the file is in use or not
-     'cmds': [  // array of commands
-        {'inp': str, // input command
-         'ts': [start, stop], // timestamps for the command
-         'rtn': int, // command return code
-         'out' str, // stdout and stderr of command, for subproc commands 
-                    // this is only available on Linux. Off by default.
+    {'env': {...},  # Environment that xonsh was started with
+     'sessionid': str, # UUID4 for the session
+     'ts': [start, stop],  # start and stop timestamps for session [s since epoch]
+     'locked': True,  # boolean for whether the file is in use or not
+     'cmds': [  # array of commands
+        {'inp': str,  # input command
+         'ts': [start, stop],  # timestamps for the command
+         'rtn': int, # command return code
+         'out' str,  # stdout and stderr of command, for subproc commands 
+                     # this is only available on Linux. Off by default.
          }, 
         ...
         ],
