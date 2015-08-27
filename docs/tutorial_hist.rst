@@ -81,6 +81,9 @@ action, see below.
 
     >>> history
 
+Also note that the history object itself can be accessed through the xonsh builtin variable
+``__xonsh_history__``.
+
 
 ``show`` action
 ================
@@ -114,6 +117,54 @@ only the even indices from above, you could write:
 
 In the future, ``show`` may also be used to display outputs, return values, and time stamps.
 But the default behavior will remain as shown here.
+
+``id`` action
+================
+Each xonsh history has its own universally unique ``sessionid``. The ``id`` action is how you 
+display this identified. For instance, 
+
+.. code-block:: xonshcon
+
+    >>> history id
+    ace97177-f8dd-4a8d-8a91-a98ffd0b3d17
+
+``file`` action
+================
+Similarly, each xonsh history has its own file associated with it. The ``file`` action is 
+how you display the path to this file. For example, 
+
+.. code-block:: xonshcon
+
+    >>> history file
+    /home/me/.local/share/xonsh/xonsh-ace97177-f8dd-4a8d-8a91-a98ffd0b3d17.json
+
+Note that by these files are stored in ``$XONSH_DATA_DIR`` environment variable. This 
+is, by default, set to the ``xonsh`` dir inside of the free desktop standards 
+``$XDG_DATA_HOME`` environment variable. See 
+`this page <http://standards.freedesktop.org/basedir-spec/latest/ar01s03.html>`_ for
+more details.
+
+``info`` action
+===============
+The info action combines the ``id`` and ``file`` actions as well as adds some aditional
+information about the current state of the history. By default, this prints a key-value
+series of lines. However, it can also return a JSON formatted string.
+
+.. code-block:: xonshcon
+
+    >>> history info
+    sessionid: ace97177-f8dd-4a8d-8a91-a98ffd0b3d17
+    filename: /home/scopatz/.local/share/xonsh/xonsh-ace97177-f8dd-4a8d-8a91-a98ffd0b3d17.json
+    length: 6
+    buffersize: 100
+    bufferlength: 6
+
+.. code-block:: xonshcon
+    >>> history info --json
+    {"sessionid": "ace97177-f8dd-4a8d-8a91-a98ffd0b3d17", 
+     "filename": "/home/scopatz/.local/share/xonsh/xonsh-ace97177-f8dd-4a8d-8a91-a98ffd0b3d17.json", 
+     "length": 7, "buffersize": 100, "bufferlength": 7}
+
 
 Exciting Techinical Detail: Lazy JSON
 =====================================
