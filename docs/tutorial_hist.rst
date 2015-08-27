@@ -1,8 +1,8 @@
 .. _tutorial_hist:
 
-**********************************
-Tutorial [Advanced]: Livng History
-**********************************
+************************************
+Tutorial [Advanced]: Living History
+************************************
 Import your best Leonard Nimoy documentary voice and get ready for the xonsh tutorial 
 on ``history``.
 
@@ -36,7 +36,7 @@ can be thought of as having the following structure:
         ],
     }
 
-This rich set of data allows xonsh to do much more advanced inspection and manipution.
+This rich set of data allows xonsh to do much more advanced inspection and manipulation.
 The sessionid, locking, and one-file-per-shell ideas allow for there to be multiple
 instances of xonsh running at the same time without competing and overwriting 
 history constantly. Of course, an external process deleting a history file can still 
@@ -60,14 +60,14 @@ is turned off by default.
 If history was just a static file, it would be more like a server log than a traditional
 history file.  However, xonsh also has the ability to ``replay`` a history file. 
 
-Replaying history allows previous sessions to act as scripts in a new or the same enviornment.
+Replaying history allows previous sessions to act as scripts in a new or the same environment.
 Replaying will create a new, separate history session and file. The two histories - even though
 they contain the same inputs - are then able to be diff'ed. Diff'ing can be done through 
 xonsh custom history diff'ing tool, which can help pinpoint differences stemming from the 
-enviroment as well as the input/output.  This cycle of do-replay-diff is more meaningful than
+environment as well as the input/output.  This cycle of do-replay-diff is more meaningful than
 a traditional, "What did I/it/the Universe just do?!" approach.
 
-Of course, nothing has ever stopped anyone from pulling unix tools like ``env``, ``script``, 
+Of course, nothing has ever stopped anyone from pulling Unix tools like ``env``, ``script``, 
 ``diff``, and others together to deliver the same kind of capability. However, in practice, 
 no one does this. With xonsh, rich and useful history come batteries included.
 
@@ -81,7 +81,7 @@ action, see below.
 
     >>> history
 
-Also note that the history object itself can be accessed through the xonsh builtin variable
+Also note that the history object itself can be accessed through the xonsh built-in variable
 ``__xonsh_history__``.
 
 
@@ -146,7 +146,7 @@ more details.
 
 ``info`` action
 ===============
-The info action combines the ``id`` and ``file`` actions as well as adds some aditional
+The info action combines the ``id`` and ``file`` actions as well as adds some additional
 information about the current state of the history. By default, this prints a key-value
 series of lines. However, it can also return a JSON formatted string.
 
@@ -173,7 +173,7 @@ session.
 
 First, the original ``'replay'`` environment is loaded and will be merged with the current ``'native'`` 
 environment. How the environments are merged or not merged can be set at replay time. The default is for 
-the current native environment to take precendence. Next, each input in the environment is executed in order. 
+the current native environment to take precedence. Next, each input in the environment is executed in order. 
 Lastly, the information of the replayed history file is printed.
 
 Let's walk through an example. To begin with, open up xonsh and run some simple commands, as follows.
@@ -245,12 +245,12 @@ the future.
 Between any two history files, we can run the ``diff`` action. This does more that a simple line
 diff that you might generate with the unix ``diff`` command. (If you want a line diff, just 
 use the unix command!) Instead this takes advantage of the fact that we know we have xonsh 
-history files to do a more sophistcated diff on the environment, input, output (if available), 
+history files to do a more sophisticated diff on the environment, input, output (if available), 
 and return values.  Of course, the histories inputs should be 'sufficiently similar' if the diff 
 is to be meaningful. However, they don't need to be exactly the same.
 
 The diff action has one major option, ``-v`` or ``--verbose``. This basically says whether the 
-diff should go into as much detail as possible or only pick out the relevant peices. Diffing
+diff should go into as much detail as possible or only pick out the relevant pieces. Diffing
 the new and next examples from the replay action, we see the diff looks like:
 
 .. code-block:: xonshcon
@@ -291,9 +291,9 @@ the new and next examples from the replay action, we see the diff looks like:
     - /home/scopatz/new.json
     + /home/scopatz/next.json
 
-As can be seen, the diff has three secions.  
+As can be seen, the diff has three sections.  
 
-1. **The header** descibes the meta-information about the histories, such as 
+1. **The header** describes the meta-information about the histories, such as 
    their file names, sessionids, and time stamps.
 2. **The environment** section describes the differences in the environment 
    when the histories were started or replayed.
@@ -310,8 +310,8 @@ history garbage control. Since history has the potential for a lot of informatio
 to be stored, it is necessary to be able to clean out the cache every once in a 
 while.  
 
-Garbage control is launched autoamatically for every xonsh thread, but runs in the 
-a background thread. The grabage collector only operates on unlocked history files.
+Garbage control is launched automatically for every xonsh thread, but runs in the 
+a background thread. The garbage collector only operates on unlocked history files.
 The action here allows you to manually start a new garbage collector, possibly with 
 different criteria. 
 
@@ -332,7 +332,7 @@ The garbage collector accepts four canonical units:
 4. ``'b'`` is for the number of bytes that are allowed on the file system
    for all history files to collectively consume.
 
-However, other units, aliases, and approriate conversion fucntions have been implemented.
+However, other units, aliases, and appropriate conversion functions have been implemented.
 This makes it easier to garbage collect based on human-friendly values. 
 
 **GC Aliases:**
@@ -355,7 +355,7 @@ you could run the following command:
 
     >>> history gc --size 1 month
 
-Exciting Techinical Detail: Lazy JSON
+Exciting Technical Detail: Lazy JSON
 =====================================
 So now you know how to inspect, run, and remove history. But what *is* a history file exactly?
 While xonsh history files are JSON formatted, and they do have the structure indicated at the 
@@ -374,7 +374,7 @@ yourself for things other than xonsh history! Of course, if you want to read in 
 you should probably use the module.
 
 
-Exciting Techinical Detail: Teeing and Psuedo Terminals
+Exciting Technical Detail: Teeing and Pseudo Terminals
 ========================================================
 Xonsh is able to capture all stdout and stderr transparently and responsively. For aliases,
 Python code, or xonsh code, this isn't a big deal. It is easy to redirect information 
@@ -383,7 +383,7 @@ considerably harder. (Subprocess stdout capturing is currently skipped on Window
 is theoretically possible.)
 
 To be able to tee stdout and stderr and still have the terminal responsive, xonsh implements 
-its own teeing psuedo-terminal on top of the Python standard library ``pty`` module. You 
+its own teeing pseudo-terminal on top of the Python standard library ``pty`` module. You 
 can find this class in the ``xonsh.teepty`` module. Like with lazy JSON, this is independent
 from other parts of xonsh and can be used on its own.  If you find this useful in other areas, 
 please let us know!
@@ -395,7 +395,7 @@ of the iceberg! Here are some hopefully fun ideas that I think would be great to
 implemented:
 
 * Basic statistic reports about command usage, timing, etc.,
-* Global statistics by collecting annonymoized histories from many people,
+* Global statistics by collecting anonymized histories from many people,
 * MCMC-based tab-completer for inputs,
 * and many more!
 
