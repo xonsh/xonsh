@@ -357,12 +357,46 @@ you could run the following command:
 
 Exciting Techinical Detail: Lazy JSON
 =====================================
-woo
+So now you know how to inspect, run, and remove history. But what *is* a history file exactly?
+While xonsh history files are JSON formatted, and they do have the structure indicated at the 
+top of the page, that isn't their top-level structure.  If you open one up, you'll see a bunch 
+of hocus pocus before you get to anything real.  
+
+Xonsh has implemented a generic indexing system (sizes, offsets, etc)for JSON files that lives 
+inside of the file that it indexes.  This is known as ``LazyJSON`` because it allows us to 
+only read in the parts of a file that we need. For example, for replaying we only need to 
+grab the input fields and so that helps us on I/O. For garbage collecting based on the number 
+of commands, we can get this information from the index and don't need to read in any of the 
+original data.
+
+The best part about this is that it is totally generic. Feel free to use ``xonsh.lazyjson``
+yourself for things other than xonsh history! Of course, if you want to read in xonsh history,
+you should probably use the module.
+
 
 Exciting Techinical Detail: Teeing and Psuedo Terminals
 ========================================================
-OMG
+Xonsh is able to capture all stdout and stderr transparently and responsively. For aliases,
+Python code, or xonsh code, this isn't a big deal. It is easy to redirect information 
+flowing through ``sys.stdout`` and ``sys.stderr``.  For subprocess commands, this is 
+considerably harder. (Subprocess stdout capturing is currently skipped on Windows, though
+is theoretically possible.)
+
+To be able to tee stdout and stderr and still have the terminal responsive, xonsh implements 
+its own teeing psuedo-terminal on top of the Python standard library ``pty`` module. You 
+can find this class in the ``xonsh.teepty`` module. Like with lazy JSON, this is independent
+from other parts of xonsh and can be used on its own.  If you find this useful in other areas, 
+please let us know!
 
 Fun ideas for history data
 ==========================
-xxx
+Now that we have all of this history data, it seems like what we have here is just the tip 
+of the iceberg! Here are some hopefully fun ideas that I think would be great to see 
+implemented:
+
+* Basic statistic reports about command usage, timing, etc.,
+* Global statistics by collecting annonymoized histories from many people,
+* MCMC-based tab-completer for inputs,
+* and many more!
+
+Let us know if you'd be interested in working on any of these, inside or outside of xonsh.
