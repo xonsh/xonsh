@@ -304,6 +304,12 @@ def _create_parser():
     # diff
     diff = subp.add_parser('diff', help='diffs two xonsh history files')
     diff_history._create_parser(p=diff)
+    # replay, dynamically
+    from xonsh import replay
+    rp = subp.add_parser('replay', help='replays a xonsh history file')
+    replay._create_parser(p=rp)
+    _MAIN_ACTIONS['replay'] = replay._main_action
+    # set and return
     _HIST_PARSER = p
     return p
 

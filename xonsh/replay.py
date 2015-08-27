@@ -77,12 +77,14 @@ class Replayer(object):
 
 _REPLAY_PARSER = None
 
-def _create_parser():
+def _create_parser(p=None):
     global _REPLAY_PARSER
-    if _REPLAY_PARSER is not None:
+    p_was_none = (p is None)
+    if _REPLAY_PARSER is not None and p_was_none:
         return _REPLAY_PARSER
-    from argparse import ArgumentParser
-    p = ArgumentParser('replay', description='replays a xonsh history file')
+    if p_was_none:
+        from argparse import ArgumentParser
+        p = ArgumentParser('replay', description='replays a xonsh history file')
     p.add_argument('--merge-envs', dest='merge_envs', default=DEFAULT_MERGE_ENVS, 
                    nargs='+', 
                    help="Describes how to merge the environments, in order of "
@@ -96,17 +98,22 @@ def _create_parser():
     p.add_argument('-o', '--target', dest='target', default=None, 
                    help='path to new history file')
     p.add_argument('path', help='path to replay history file')
-    _REPLAY_PARSER = p
+    if p_was_none:
+        _REPLAY_PARSER = p
     return p
 
 
-def main(args, stdin=None):
-    """Acts as main function for replaying a xonsh history file."""
-    parser = _create_parser()
-    ns = parser.parse_args(args)
+def _main_action(ns, h=None):
     replayer = Replayer(ns.path)
     hist = replayer.replay(merge_envs=ns.merge_envs, target=ns.target)
     print('------------------------------------------------------------')
     print('Just replayed history, new history has following information')
     print('------------------------------------------------------------')
     history_info(ns, hist)
+
+
+def main(args, stdin=None):
+    """Acts as main function for replaying a xonsh history file."""
+    parser = _create_parser()
+    ns = parser.parse_args(args)
+    _main_action(ns)
