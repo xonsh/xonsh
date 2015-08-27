@@ -106,9 +106,9 @@ def _create_parser(p=None):
 def _main_action(ns, h=None):
     replayer = Replayer(ns.path)
     hist = replayer.replay(merge_envs=ns.merge_envs, target=ns.target)
-    print('------------------------------------------------------------')
-    print('Just replayed history, new history has following information')
-    print('------------------------------------------------------------')
+    print('----------------------------------------------------------------')
+    print('Just replayed history, new history has the following information')
+    print('----------------------------------------------------------------')
     history_info(ns, hist)
 
 

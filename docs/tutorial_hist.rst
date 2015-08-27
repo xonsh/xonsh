@@ -206,9 +206,9 @@ For example, in a new session, we could run:
     2  10
     /home/scopatz/new.json
 
-    ------------------------------------------------------------
-    Just replayed history, new history has following information
-    ------------------------------------------------------------
+    ----------------------------------------------------------------
+    Just replayed history, new history the has following information
+    ----------------------------------------------------------------
     sessionid: 35712b6f-4b15-4ef9-8ce3-b4c781601bc2
     filename: /home/scopatz/new.json
     length: 7
@@ -227,9 +227,9 @@ xonsh itself to execute the replay command.
     2  7  10
     /home/scopatz/next.json
 
-    ------------------------------------------------------------
-    Just replayed history, new history has following information
-    ------------------------------------------------------------
+    ----------------------------------------------------------------
+    Just replayed history, new history has the following information
+    ----------------------------------------------------------------
     sessionid: 70d7186e-3eb9-4b1c-8f82-45bb8a1b7967
     filename: /home/scopatz/next.json
     length: 7
