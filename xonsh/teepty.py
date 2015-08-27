@@ -17,6 +17,7 @@ import select
 import signal
 import termios
 import tempfile
+import threading
 
 # The following escape codes are xterm codes.
 # See http://rtfm.etla.org/xterm/ctlseq.html for more.
@@ -40,6 +41,13 @@ def _findfirst(s, substrs):
             i = pos
             result = substr
     return i, result
+
+
+def _on_main_thread():
+    """Checks if we are on the main thread or not. Duplicated from xonsh.tools 
+    here so that this module only relies on the Python standrd library.
+    """
+    return threading.current_thread() is threading.main_thread()
 
 
 class TeePTY(object):
@@ -103,7 +111,9 @@ class TeePTY(object):
         else:
             self._pipe_stdin(stdin)
 
-        old_handler = signal.signal(signal.SIGWINCH, self._signal_winch)
+        on_main_thread = _on_main_thread()
+        if on_main_thread:
+            old_handler = signal.signal(signal.SIGWINCH, self._signal_winch)
         try:
             mode = tty.tcgetattr(pty.STDIN_FILENO)
             tty.setraw(pty.STDIN_FILENO)
@@ -121,7 +131,8 @@ class TeePTY(object):
         os.close(master_fd)
         self.master_fd = None
         self._in_alt_mode = False
-        signal.signal(signal.SIGWINCH, old_handler)
+        if on_main_thread:
+            signal.signal(signal.SIGWINCH, old_handler)
         return self.returncode
 
     def _init_fd(self):

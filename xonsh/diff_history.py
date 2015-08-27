@@ -191,7 +191,8 @@ class HistoryDiffer(object):
         aout = self.a['cmds'][i].get('out', None)
         bout = self.b['cmds'][j].get('out', None)
         if aout is None and bout is None:
-            s += 'Note: neither output stored\n'
+            #s += 'Note: neither output stored\n'
+            pass
         elif bout is None:
             aid = self.a['sessionid']
             s += 'Note: only {red}{aid}{no_color} output stored\n'.format(red=RED, 
@@ -255,7 +256,7 @@ class HistoryDiffer(object):
                              'cmd #{j} in {green}{bid}{no_color}, but output differs:\n')
                         s += h.format(i=i, aid=aid, j=j, bid=bid, red=RED, green=GREEN, 
                                       no_color=NO_COLOR)
-                        s += odiff
+                        s += odiff + '\n'
             else:
                 raise RuntimeError('tag not understood')
         if len(s) == 0:
