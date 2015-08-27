@@ -303,6 +303,58 @@ For the commands, the input sequences are diff'd first, prior to the outputs
 being compared. In a terminal, this will appear in color, with the first history
 in red and the second one in green.
 
+``gc`` action
+===============
+Last, but certainly not least, the ``gc`` action is a manual hook into executing
+history garbage control. Since history has the potential for a lot of information
+to be stored, it is necessary to be able to clean out the cache every once in a 
+while.  
+
+Garbage control is launched autoamatically for every xonsh thread, but runs in the 
+a background thread. The grabage collector only operates on unlocked history files.
+The action here allows you to manually start a new garbage collector, possibly with 
+different criteria. 
+
+Normally, the garbage collector uses the environment variable ``$XONSH_HISTORY_SIZE``
+to determine the size and units of what should be allowed to remain on disk. By default, 
+this is ``(8128, 'commands')``. This variable is usually a tuple or list of a
+number and a string, as seen here.  However, you can also use a string with the same 
+information, e.g. ``'8128 commands'``.  On the command line, though, you just pass in
+two arguments to the ``--size`` option, a la ``--size 8128 commands``.
+
+The garbage collector accepts four canonical units:
+
+1. ``'commands'`` is for limiting the number of past commands executed in the 
+    history files, 
+2. ``'files'`` is for specifying the total number of history files to keep, 
+3. ``'s'`` is for the number of seconds in the past that are allowed - which 
+   is effectively a timeout of the history files, and 
+4. ``'b'`` is for the number of bytes that are allowed on the file system
+   for all history files to collectively consume.
+
+However, other units, aliases, and approriate conversion fucntions have been implemented.
+This makes it easier to garbage collect based on human-friendly values. 
+
+**GC Aliases:**
+
+.. code-block:: python
+
+    {'commands': ['', 'c', 'cmd', 'cmds', 'command'],
+     'files': ['f'], 
+     's': ['sec', 'second', 'seconds', 'm', 'min', 'mins', 'h', 'hr', 'hour', 'hours',
+           'd', 'day', 'days', 'mon', 'month', 'months', 'y', 'yr', 'yrs', 'year', 'years'],
+     'b': ['byte', 'bytes', 'kb', 'kilobyte', 'kilobytes', 'mb', 'meg', 'megs', 'megabyte',
+           'megabytes', 'gb', 'gig', 'gigs', 'gigabyte', 'gigabytes', 'tb', 'terabyte', 
+           'terabytes']
+     }
+
+So all said and done, if you wanted to remove all history files older than a month, 
+you could run the following command:
+
+.. code-block:: xonshcon
+
+    >>> history gc --size 1 month
+
 Exciting Techinical Detail: Lazy JSON
 =====================================
 woo
