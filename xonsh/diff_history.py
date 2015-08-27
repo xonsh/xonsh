@@ -276,28 +276,35 @@ class HistoryDiffer(object):
 
 _HD_PARSER = None
 
-def _create_parser():
+def _create_parser(p=None):
     global _HD_PARSER
-    if _HD_PARSER is not None:
+    p_was_none = (p is None)
+    if _HD_PARSER is not None and p_was_none:
         return _HD_PARSER
-    from argparse import ArgumentParser
-    p = ArgumentParser('diff-history', description='diffs two xonsh history files')
+    if p_was_none:
+        from argparse import ArgumentParser
+        p = ArgumentParser('diff-history', description='diffs two xonsh history files')
     p.add_argument('--reopen', dest='reopen', default=False, action='store_true',
                    help='make lazy file loading reopen files each time')
     p.add_argument('-v', '--verbose', dest='verbose', default=False, action='store_true',
                    help='whether to print even more information')
     p.add_argument('a', help='first file in diff')
     p.add_argument('b', help='second file in diff')
-    _HD_PARSER = p
+    if p_was_none:
+        _HD_PARSER = p
     return p
 
+
+def _main_action(ns, hist=None):
+    hd = HistoryDiffer(ns.a, ns.b, reopen=ns.reopen, verbose=ns.verbose)
+    print(hd.format())
+    
 
 def main(args=None, stdin=None):
     """Main entry point for history diff'ing"""
     parser = _create_parser()
     ns = parser.parse_args(args)
-    hd = HistoryDiffer(ns.a, ns.b, reopen=ns.reopen, verbose=ns.verbose)
-    print(hd.format())
+    _main_action(ns)
 
 
 if __name__ == '__main__':

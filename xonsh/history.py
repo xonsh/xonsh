@@ -9,6 +9,7 @@ from threading import Thread, Condition
 
 from xonsh import lazyjson
 from xonsh.tools import ensure_int_or_slice
+from xonsh import diff_history
 
 
 class HistoryGC(Thread):
@@ -282,24 +283,27 @@ def _create_parser():
     if _HIST_PARSER is not None:
         return _HIST_PARSER
     from argparse import ArgumentParser
-    p = ArgumentParser(prog='history', description='Displays information about the '
-                                                   'current history')
+    p = ArgumentParser(prog='history', 
+                       description='Tools for dealing with history')
     subp = p.add_subparsers(title='action', dest='action')
     # show action
-    show = subp.add_parser('show', help='displays history, default action')
+    show = subp.add_parser('show', help='displays current history, default action')
     show.add_argument('-r', dest='reverse', default=False, action='store_true',
                       help='reverses the direction')
     show.add_argument('n', nargs='?', default=None, 
-                      help='displays n history entries, n may be an int or use Python '
-                           'slice notation')
+                      help='displays n current history entries, n may be an int or use '
+                           'Python slice notation')
     # id
-    idp = subp.add_parser('id', help='displays the session id')
+    idp = subp.add_parser('id', help='displays the current session id')
     # file
-    fp = subp.add_parser('file', help='displays the history filename')
+    fp = subp.add_parser('file', help='displays the current history filename')
     # info
-    info = subp.add_parser('info', help='displays information about history')
+    info = subp.add_parser('info', help='displays information about the current history')
     info.add_argument('--json', dest='json', default=False, action='store_true',
                       help='print in JSON format')
+    # diff
+    diff = subp.add_parser('diff', help='diffs two xonsh history files')
+    diff_history._create_parser(p=diff)
     _HIST_PARSER = p
     return p
 
@@ -347,6 +351,7 @@ _MAIN_ACTIONS = {
     'id': lambda ns, hist: print(hist.sessionid),
     'file': lambda ns, hist: print(hist.filename),
     'info': _info,
+    'diff': diff_history._main_action,
     }
 
 def main(args=None, stdin=None):

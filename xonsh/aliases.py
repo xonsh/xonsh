@@ -1,5 +1,4 @@
-"""Aliases for the xonsh shell.
-"""
+"""Aliases for the xonsh shell."""
 import os
 import sys
 import shlex
@@ -15,7 +14,6 @@ from xonsh.timings import timeit_alias
 from xonsh.tools import ON_MAC, ON_WINDOWS, XonshError
 from xonsh.history import main as history_alias
 from xonsh.replay import main as replay_main
-from xonsh.diff_history import main as diff_history_alias
 
 
 def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
@@ -151,7 +149,6 @@ DEFAULT_ALIASES = {
     '!!': bang_bang,
     '!n': bang_n,
     'replay': replay_main,
-    'diff-history': diff_history_alias,
     'timeit': timeit_alias,
     'source-bash': source_bash,
     'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
