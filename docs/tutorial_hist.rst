@@ -73,9 +73,9 @@ no one does this. With xonsh, rich and useful history come batteries included.
 
 ``history`` command
 ====================
-All xonsh history inspection and manipulation goes the the top-level ``history`` alias or 
-command.  If you run this without an ``action`` argument, it will default to the ``show``
-action, see below.
+All xonsh history inspection and manipulation goes through the top-level ``history`` 
+alias or command.  If you run this without an ``action`` argument, it will default to 
+the ``show`` action, see below.
 
 .. code-block:: xonshcon
 
