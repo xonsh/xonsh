@@ -45,7 +45,16 @@ cause problems. But hey, the world and the file system are messy places to be!
 
 Why have rich history?
 =======================
-Often by the time you know that you need.
+Often by the time you know that you need a historical artifact, it is already too
+late. You can't remember: 
+
+* the input exactly, 
+* you think that you remember the output but when you rerun the command what you get 
+  now seems somehow different, 
+* who knows what the return code was, 
+* and whatever command you ran right before is now lost in the mists of time!
+
+
 
 Reproducibility and Debugging.
 y
