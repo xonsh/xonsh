@@ -8,18 +8,19 @@ from collections import deque, Sequence, OrderedDict
 from threading import Thread, Condition
 
 from xonsh import lazyjson
-from xonsh.tools import ensure_int_or_slice
+from xonsh.tools import ensure_int_or_slice, to_history_tuple
 from xonsh import diff_history
 
 
 class HistoryGC(Thread):
 
-    def __init__(self, wait_for_shell=True, *args, **kwargs):
+    def __init__(self, wait_for_shell=True, size=None, *args, **kwargs):
         """Thread responsible for garbage collecting old history. May wait for 
         shell (and thus xonshrc to have been loaded) to start work.
         """
         super(HistoryGC, self).__init__(*args, **kwargs)
         self.daemon = True
+        self.size = size
         self.wait_for_shell = wait_for_shell
         self.start()
 
@@ -27,7 +28,10 @@ class HistoryGC(Thread):
         while self.wait_for_shell:
             time.sleep(0.01)
         env = builtins.__xonsh_env__
-        hsize, units = env.get('XONSH_HISTORY_SIZE', (8128, 'commands'))
+        if self.size is None:
+            hsize, units = env.get('XONSH_HISTORY_SIZE', (8128, 'commands'))
+        else:
+            hsize, units = to_history_tuple(self.size)
         files = self.unlocked_files()
         # flag files for removal
         if units == 'commands':
@@ -309,6 +313,16 @@ def _create_parser():
     rp = subp.add_parser('replay', help='replays a xonsh history file')
     replay._create_parser(p=rp)
     _MAIN_ACTIONS['replay'] = replay._main_action
+    # gc
+    gcp = subp.add_parser('gc', help='launches a new history garbage collector')
+    gcp.add_argument('--size', nargs=2, dest='size', default=None,
+                     help='next two arguments represent the history size and units, '
+                          'eg "--size 8128 commands"')
+    bgcp = gcp.add_mutually_exclusive_group()
+    bgcp.add_argument('--blocking', dest='blocking', default=True, action='store_true',
+                      help='ensures that the gc blocks the main thread, default True')
+    bgcp.add_argument('--non-blocking', dest='blocking', action='store_false', 
+                      help='makes the gc non-blocking, and thus return sooner')
     # set and return
     _HIST_PARSER = p
     return p
@@ -352,12 +366,20 @@ def _info(ns, hist):
         print('\n'.join(lines))
 
 
+def _gc(ns, hist):
+    hist.gc = gc = HistoryGC(wait_for_shell=False, size=ns.size)
+    if ns.blocking:
+        while gc.is_alive():
+            continue
+    
+
 _MAIN_ACTIONS = {
     'show': _show,
     'id': lambda ns, hist: print(hist.sessionid),
     'file': lambda ns, hist: print(hist.filename),
     'info': _info,
     'diff': diff_history._main_action,
+    'gc': _gc,
     }
 
 def main(args=None, stdin=None):

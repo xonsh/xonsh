@@ -619,7 +619,7 @@ def to_history_tuple(x):
         m = RE_HISTORY_TUPLE.match(x.strip())
         return to_history_tuple((m.group(1), m.group(3)))
     elif isinstance(x, (float, int)):
-        return to_history_tuple((x, 'files'))
+        return to_history_tuple((x, 'commands'))
     units, converter = HISTORY_UNITS[x[1]]
     value = converter(x[0])
     return (value, units)
