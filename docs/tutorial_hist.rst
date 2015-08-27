@@ -203,13 +203,13 @@ For example, in a new session, we could run:
 .. code-block:: xonshcon
 
     >>> history replay -o ~/new.json ~/.local/share/xonsh/xonsh-4bc4ecd6-3eba-4f3a-b396-a229ba2b4810.json
-    2  6
+    2  10
     /home/scopatz/new.json
 
     ------------------------------------------------------------
     Just replayed history, new history has following information
     ------------------------------------------------------------
-    sessionid: 1a9ba1d5-6c55-48ac-bd0c-adae403efd6a
+    sessionid: 35712b6f-4b15-4ef9-8ce3-b4c781601bc2
     filename: /home/scopatz/new.json
     length: 7
     buffersize: 100
@@ -224,17 +224,18 @@ xonsh itself to execute the replay command.
 .. code-block:: xonshcon
 
     >>> xonsh -c "replay -o ~/next.json ~/new.json"
-    2  3  6
+    2  7  10
     /home/scopatz/next.json
 
     ------------------------------------------------------------
     Just replayed history, new history has following information
     ------------------------------------------------------------
-    sessionid: 461e798f-ad43-4cd6-a4c1-edc69722c61c
+    sessionid: 70d7186e-3eb9-4b1c-8f82-45bb8a1b7967
     filename: /home/scopatz/next.json
     length: 7
     buffersize: 100
     bufferlength: 0
+
 
 Currently history does not handle alias storage and reloading, but such a feature may be coming in 
 the future.
@@ -249,7 +250,58 @@ and return values.  Of course, the histories inputs should be 'sufficiently simi
 is to be meaningful. However, they don't need to be exactly the same.
 
 The diff action has one major option, ``-v`` or ``--verbose``. This basically says whether the 
-outputs should 
+diff should go into as much detail as possible or only pick out the relevant peices. Diffing
+the new and next examples from the replay action, we see the diff looks like:
+
+.. code-block:: xonshcon
+
+    >>> history diff ~/new.json ~/next.json 
+    --- /home/scopatz/new.json (35712b6f-4b15-4ef9-8ce3-b4c781601bc2) [unlocked] 
+    started: 2015-08-27 15:13:44.873869 stopped: 2015-08-27 15:13:44.918903 runtime: 0:00:00.045034
+    +++ /home/scopatz/next.json (70d7186e-3eb9-4b1c-8f82-45bb8a1b7967) [unlocked] 
+    started: 2015-08-27 15:15:09.423932 stopped: 2015-08-27 15:15:09.619098 runtime: 0:00:00.195166
+
+    Environment
+    -----------
+    'PATH' is in both, but differs
+    - /home/scopatz/.local/bin:/home/scopatz/sandbox/bin:/home/scopatz/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/home/scopatz/origen22/code/
+    + /home/scopatz/.local/bin:/home/scopatz/sandbox/bin:/home/scopatz/miniconda3/bin:/home/scopatz/.local/bin:/home/scopatz/sandbox/bin:/home/scopatz/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/home/scopatz/origen22/code/:/home/scopatz/origen22/code/
+
+    'SHLVL' is in both, but differs
+    - 2
+    + 3
+
+    'XONSH_INTERACTIVE' is in both, but differs
+    - True
+    + False
+
+    These vars are only in 70d7186e-3eb9-4b1c-8f82-45bb8a1b7967: {'OLDPWD'}
+
+    Commands
+    --------
+    cmd #4 in 35712b6f-4b15-4ef9-8ce3-b4c781601bc2 input is the same as 
+    cmd #4 in 70d7186e-3eb9-4b1c-8f82-45bb8a1b7967, but output differs:
+    Outputs differ
+    - 2  10
+    + 2  7  10
+
+    cmd #5 in 35712b6f-4b15-4ef9-8ce3-b4c781601bc2 input is the same as 
+    cmd #5 in 70d7186e-3eb9-4b1c-8f82-45bb8a1b7967, but output differs:
+    Outputs differ
+    - /home/scopatz/new.json
+    + /home/scopatz/next.json
+
+As can be seen, the diff has three secions.  
+
+1. **The header** descibes the meta-information about the histories, such as 
+   their file names, sessionids, and time stamps.
+2. **The environment** section describes the differences in the environment 
+   when the histories were started or replayed.
+3. **The commands** list this differences in the command themselves. 
+
+For the commands, the input sequences are diff'd first, prior to the outputs
+being compared. In a terminal, this will appear in color, with the first history
+in red and the second one in green.
 
 Exciting Techinical Detail: Lazy JSON
 =====================================
