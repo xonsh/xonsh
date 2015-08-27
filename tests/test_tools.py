@@ -8,7 +8,8 @@ from nose.tools import assert_equal, assert_true, assert_false
 from xonsh.lexer import Lexer
 from xonsh.tools import subproc_toks, subexpr_from_unbalanced, is_int, \
     always_true, always_false, ensure_string, is_env_path, str_to_env_path, \
-    env_path_to_str, escape_windows_title_string, is_bool, to_bool, bool_to_str
+    env_path_to_str, escape_windows_title_string, is_bool, to_bool, bool_to_str, \
+    ensure_int_or_slice
 
 LEXER = Lexer()
 LEXER.build()
@@ -230,6 +231,22 @@ def test_bool_to_str():
     yield assert_equal, '1', bool_to_str(True)
     yield assert_equal, '', bool_to_str(False)
 
+
+def test_ensure_int_or_slice():
+    cases = [
+        (42, 42),
+        (None, slice(None, None, None)),
+        ('42', 42),
+        ('-42', -42),
+        ('1:2:3', slice(1, 2, 3)),
+        ('1::3', slice(1, None, 3)),
+        ('1:', slice(1, None, None)),
+        ('[1:2:3]', slice(1, 2, 3)),
+        ('(1:2:3)', slice(1, 2, 3)),
+        ]
+    for inp, exp in cases:
+        obs = ensure_int_or_slice(inp)
+        yield assert_equal, exp, obs
 
 def test_escape_windows_title_string():
     cases = [

@@ -13,7 +13,8 @@ from collections import MutableMapping, MutableSequence, MutableSet, namedtuple
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.tools import TERM_COLORS, ON_WINDOWS, ON_MAC, ON_LINUX, string_types, \
     is_int, always_true, always_false, ensure_string, is_env_path, str_to_env_path, \
-    env_path_to_str, is_bool, to_bool, bool_to_str
+    env_path_to_str, is_bool, to_bool, bool_to_str, is_history_tuple, to_history_tuple, \
+    history_tuple_to_str
 from xonsh.dirstack import _get_cwd
 
 LOCALE_CATS = {
@@ -32,8 +33,11 @@ except AttributeError:
 def locale_convert(key):
     """Creates a converter for a locale key."""
     def lc_converter(val):
-        locale.setlocale(LOCALE_CATS[key], val)
-        val = locale.setlocale(LOCALE_CATS[key])
+        try:
+            locale.setlocale(LOCALE_CATS[key], val)
+            val = locale.setlocale(LOCALE_CATS[key])
+        except (locale.Error, KeyError):
+            warn('Failed to set locale {0!r} to {1!r}'.format(key, val), RuntimeWarning)
         return val
     return lc_converter
 
@@ -51,8 +55,10 @@ DEFAULT_ENSURERS = {
     'LC_NUMERIC': (always_false, locale_convert('LC_NUMERIC'), ensure_string),
     'LC_MONETARY': (always_false, locale_convert('LC_MONETARY'), ensure_string),
     'LC_TIME': (always_false, locale_convert('LC_TIME'), ensure_string),
-    'XONSH_HISTORY_SIZE': (is_int, int, str),
+    'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
+    'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
     'CASE_SENSITIVE_COMPLETIONS': (is_bool, to_bool, bool_to_str),
+    'BASH_COMPLETIONS': (is_env_path, str_to_env_path, env_path_to_str),
 }
 
 
@@ -62,7 +68,7 @@ class Env(MutableMapping):
     However, the following rules also apply based on variable-name:
 
     * PATH: any variable whose name ends in PATH is a list of strings.
-    * XONSH_HISTORY_SIZE: this variable is an int.
+    * XONSH_HISTORY_SIZE: this variable is an (int | float, str) tuple.
     * LC_* (locale categories): locale catergory names get/set the Python
       locale via locale.getlocale() and locale.setlocale() functions.
 
@@ -465,8 +471,9 @@ BASE_ENV = {
     'TITLE': DEFAULT_TITLE,
     'MULTILINE_PROMPT': '.',
     'XONSHRC': os.path.expanduser('~/.xonshrc'),
-    'XONSH_HISTORY_SIZE': 8128,
-    'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history'),
+    'XONSH_HISTORY_SIZE': (8128, 'commands'),
+    'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
+    'XONSH_STORE_STDOUT': False,
     'LC_CTYPE': locale.setlocale(locale.LC_CTYPE),
     'LC_COLLATE': locale.setlocale(locale.LC_COLLATE),
     'LC_TIME': locale.setlocale(locale.LC_TIME),
@@ -534,6 +541,21 @@ def xonshrc_context(rcfile=None, execer=None):
     return env
 
 
+def recursive_base_env_update(env):
+    """Updates the environment with members that may rely on previously defined
+    members. Takes an env as its argument.
+    """
+    home = os.path.expanduser('~')
+    if 'XONSH_DATA_DIR' not in env:
+        xdgdh = env.get('XDG_DATA_HOME', os.path.join(home, '.local', 'share'))
+        env['XONSH_DATA_DIR'] = xdd = os.path.join(xdgdh, 'xonsh')
+        os.makedirs(xdd, exist_ok=True)
+    if 'XONSH_CONFIG_DIR' not in env:
+        xdgch = env.get('XDG_CONFIG_HOME', os.path.join(home, '.config'))
+        env['XONSH_CONFIG_DIR'] = xcd = os.path.join(xdgch, 'xonsh')
+        os.makedirs(xcd, exist_ok=True)
+
+
 def default_env(env=None):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence
@@ -559,7 +581,8 @@ def default_env(env=None):
                 del ctx[ev]
 
         ctx['PWD'] = _get_cwd()
-
+    # finalize env
+    recursive_base_env_update(ctx)
     if env is not None:
         ctx.update(env)
     return ctx

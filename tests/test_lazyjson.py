@@ -82,6 +82,15 @@ def test_lazy_str():
     lj = LazyJSON(f)
     assert_equal('wakka', lj.load())
 
+def test_lazy_list_empty():
+    x = []
+    f = StringIO()
+    dump(x, f)
+    f.seek(0)
+    lj = LazyJSON(f)
+    assert_equal(0, len(lj))
+    assert_equal(x, lj.load())
+
 def test_lazy_list_ints():
     x = [0, 1, 6, 28, 496, 8128]
     f = StringIO()
@@ -92,6 +101,7 @@ def test_lazy_list_ints():
     assert_equal(x[:2:-2], lj[:2:-2])
     assert_equal(x, [_ for _ in lj])
     assert_equal(x, lj.load())
+
 def test_lazy_list_ints():
     x = [0, 1, 6, 28, 496, 8128]
     f = StringIO()
@@ -134,6 +144,15 @@ def test_lazy_list_list_ints():
     assert_is_instance(lj[1], Node)
     assert_equal(28, lj[1][1])
     assert_equal([6, 28], lj[1].load())
+    assert_equal(x, lj.load())
+
+def test_lazy_dict_empty():
+    x = {}
+    f = StringIO()
+    dump(x, f)
+    f.seek(0)
+    lj = LazyJSON(f)
+    assert_equal(0, len(lj))
     assert_equal(x, lj.load())
 
 def test_lazy_dict():

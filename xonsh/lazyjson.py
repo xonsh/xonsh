@@ -1,5 +1,6 @@
 """Implements a lazy JSON file class that wraps around json data."""
 from __future__ import print_function, unicode_literals
+import io
 import weakref
 from contextlib import contextmanager
 from collections import Mapping, Sequence
@@ -34,7 +35,8 @@ def _to_json_with_size(obj, offset=0, sort_keys=False):
             size[key] = size_v
             s += s_v + ', '
             j += n_v + 2
-        s = s[:-2]
+        if s.endswith(', '):
+            s = s[:-2]
         s += '}\n'
         n = len(s)
         o['__total__'] = offset
@@ -51,7 +53,8 @@ def _to_json_with_size(obj, offset=0, sort_keys=False):
             size.append(size_x)
             s += s_x + ', '
             j += n_x + 2
-        s = s[:-2]
+        if s.endswith(', '):
+            s = s[:-2]
         s += ']\n'
         n = len(s)
         o.append(offset)
@@ -137,7 +140,7 @@ class Node(Mapping, Sequence):
 
     def _load_or_node(self, offset, size):
         if isinstance(offset, int):
-            with self.root._open() as f:
+            with self.root._open(newline='\n') as f:
                 f.seek(self.root.dloc + offset)
                 s = f.read(size)
             val = json.loads(s)
@@ -199,20 +202,24 @@ class LazyJSON(Node):
         ----------
         f : file handle or str
             JSON file to open.
-        reopen : bool
+        reopen : bool, optional
             Whether new file handle should be opened for each load.
         """
         self._f = f
         self.reopen = reopen
         if not reopen and isinstance(f, string_types):
-            self._f = open(f, 'r')
+            self._f = open(f, 'r', newline='\n')
         self._load_index()
         self.root = weakref.proxy(self)
         self.is_mapping = isinstance(self.offsets, Mapping)
         self.is_sequence = isinstance(self.offsets, Sequence)
 
     def __del__(self):
-        if not self.reopen:
+        self.close()
+
+    def close(self):
+        """Close the file handle, if appropriate."""
+        if not self.reopen and isinstance(self._f, io.IOBase):
             self._f.close()
 
     @contextmanager
@@ -226,7 +233,7 @@ class LazyJSON(Node):
 
     def _load_index(self):
         """Loads the index from the start of the file."""
-        with self._open() as f:
+        with self._open(newline='\n') as f:
             # read in the location data
             f.seek(9)
             locs = f.read(48)
@@ -238,3 +245,10 @@ class LazyJSON(Node):
             idx = json.loads(idx)
         self.offsets = idx['offsets']
         self.sizes = idx['sizes']
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+

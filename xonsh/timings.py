@@ -85,7 +85,7 @@ def format_time(timespan, precision=3):
         try:
             '\xb5'.encode(sys.stdout.encoding)
             units = ["s", "ms", '\xb5s', "ns"]
-        except:
+        except Exception:
             pass
     scaling = [1, 1e3, 1e6, 1e9]
 

@@ -69,6 +69,8 @@ Contents
     :maxdepth: 1
 
     tutorial
+    tutorial_hist
+    aliases
     windows
     api/index
     devguide/

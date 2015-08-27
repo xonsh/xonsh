@@ -186,9 +186,24 @@ FORMATTER_DICT             xonsh.environ.FORMATTER_DICT  Dictionary containing v
                                                          and TITLE (see `Customizing the
                                                          Prompt`_ below).
 XONSHRC                    ``'~/.xonshrc'``              Location of run control file
-XONSH_HISTORY_SIZE         8128                          Number of items to store in the
-                                                         history.
+XONSH_HISTORY_SIZE         ``(8128, 'commands')`` or     Value and units tuple that sets
+                           ``'8128 commands'``           the size of history after 
+                                                         garbage collection. Canonical
+                                                         units are ``'commands'`` for
+                                                         the number of past commands
+                                                         executed, ``'files'`` for 
+                                                         the number of history files to
+                                                         keep, ``'s'`` for the number of
+                                                         seconds in the past that are 
+                                                         allowed, and ``'b'`` for the 
+                                                         number of bytes that are allowed
+                                                         for history to consume. Common
+                                                         abbreviations, such as 6 months
+                                                         or 1 GB are also allowed.
 XONSH_HISTORY_FILE         ``'~/.xonsh_history'``        Location of history file
+XONSH_STORE_STDOUT         ``False``                     Whether or not to store the 
+                                                         stdout and stderr streams in
+                                                         the history files.
 XONSH_INTERACTIVE                                        ``True`` if xonsh is running
                                                          interactively, and ``False``
                                                          otherwise.
@@ -246,6 +261,12 @@ FORCE_POSIX_PATHS          Not defined                   Forces forward slashes 
                                                          Windows systems when using auto
                                                          completion if set to anything
                                                          truthy.
+XONSH_DATA_DIR             $XDG_DATA_HOME/xonsh          This is the location where
+                                                         xonsh data files are stored, 
+                                                         such as history.
+XONSH_CONFIG_DIR           $XDG_CONFIG_HOME/xonsh        This is location where xonsh
+                                                         configuration information is
+                                                         stored.
 ========================== ============================= ================================
 
 Environment Lookup with ``${}``

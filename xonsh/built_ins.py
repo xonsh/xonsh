@@ -4,7 +4,9 @@ not to be confused with the special Python builtins module.
 import os
 import re
 import sys
+import time
 import shlex
+import atexit
 import signal
 import inspect
 import builtins
@@ -16,17 +18,33 @@ from contextlib import contextmanager
 from collections import Sequence, MutableMapping, Iterable, namedtuple, \
     MutableSequence, MutableSet
 
-from xonsh.tools import string_types
-from xonsh.tools import suggest_commands, XonshError, ON_POSIX, ON_WINDOWS
+from xonsh.tools import suggest_commands, XonshError, ON_POSIX, ON_WINDOWS, \
+    string_types
 from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env
 from xonsh.aliases import DEFAULT_ALIASES, bash_aliases
 from xonsh.jobs import add_job, wait_for_active_job
-from xonsh.proc import ProcProxy, SimpleProcProxy
+from xonsh.proc import ProcProxy, SimpleProcProxy, TeePTYProc
+from xonsh.history import History
 
 ENV = None
 BUILTINS_LOADED = False
 INSPECTOR = Inspector()
+AT_EXIT_SIGNALS = (signal.SIGABRT, signal.SIGFPE, signal.SIGILL, signal.SIGSEGV, 
+                   signal.SIGTERM)
+if ON_POSIX:
+    AT_EXIT_SIGNALS += (signal.SIGTSTP, signal.SIGQUIT, signal.SIGHUP)
+
+
+def resetting_signal_handle(sig, f):
+    """Sets a new signal handle that will automaticallly restore the old value 
+    once the new handle is finished.
+    """
+    oldh = signal.getsignal(sig)
+    def newh(s=None, frame=None):
+        f(s, frame)
+        signal.signal(sig, oldh)
+    signal.signal(sig, newh)
 
 
 class Aliases(MutableMapping):
@@ -369,7 +387,7 @@ def _open(fname, mode):
         return fname
     try:
         return open(fname, mode)
-    except:
+    except Exception:
         raise XonshError('xonsh: {0}: no such file or directory'.format(fname))
 
 
@@ -394,7 +412,7 @@ def _redirect_io(streams, r, loc=None):
                 raise XonshError(e)
         except (ValueError, XonshError):
             raise
-        except:
+        except Exception:
             pass
 
     mode = _MODES.get(mode, None)
@@ -534,17 +552,20 @@ def run_subproc(cmds, captured=True):
                        universal_newlines=uninew)
         else:
             prev_is_proxy = False
+            usetee = (stdout is None) and (not background) and \
+                     ENV.get('XONSH_STORE_STDOUT', False)
+            cls = TeePTYProc if usetee else Popen
             subproc_kwargs = {}
-            if ON_POSIX:
+            if ON_POSIX and cls is Popen:
                 subproc_kwargs['preexec_fn'] = _subproc_pre
             try:
-                proc = Popen(aliased_cmd,
-                             universal_newlines=uninew,
-                             env=ENV.detype(),
-                             stdin=stdin,
-                             stdout=stdout,
-                             stderr=stderr,
-                             **subproc_kwargs)
+                proc = cls(aliased_cmd,
+                           universal_newlines=uninew,
+                           env=ENV.detype(),
+                           stdin=stdin,
+                           stdout=stdout,
+                           stderr=stderr,
+                           **subproc_kwargs)
             except PermissionError:
                 e = 'xonsh: subprocess mode: permission denied: {0}'
                 raise XonshError(e.format(aliased_cmd[0]))
@@ -575,6 +596,8 @@ def run_subproc(cmds, captured=True):
     if prev_is_proxy:
         prev_proc.wait()
     wait_for_active_job()
+    hist = builtins.__xonsh_history__
+    hist.last_cmd_rtn = prev_proc.returncode
     if write_target is None:
         # get output
         output = ''
@@ -582,8 +605,8 @@ def run_subproc(cmds, captured=True):
             output = prev_proc.stdout.read()
         if captured:
             return output
-    elif last_stdout not in (PIPE, None, sys.stdout):
-        last_stdout.close()
+        else:
+            hist.last_cmd_out = output
 
 
 def subproc_captured(*cmds):
@@ -642,6 +665,14 @@ def load_builtins(execer=None):
     builtins.compilex = None if execer is None else execer.compile
     builtins.default_aliases = builtins.aliases = Aliases(DEFAULT_ALIASES)
     builtins.aliases.update(bash_aliases())
+    # history needs to be started after env and aliases
+    # would be nice to actually include non-detyped versions.
+    builtins.__xonsh_history__ = History(env=ENV.detype(), #aliases=builtins.aliases, 
+                                         ts=[time.time(), None], locked=True)
+    lastflush = lambda s=None, f=None: builtins.__xonsh_history__.flush(at_exit=True)
+    atexit.register(lastflush)
+    for sig in AT_EXIT_SIGNALS:
+        resetting_signal_handle(sig, lastflush)
     BUILTINS_LOADED = True
 
 
@@ -677,7 +708,9 @@ def unload_builtins():
              'default_aliases',
              '__xonsh_all_jobs__',
              '__xonsh_active_job__',
-             '__xonsh_ensure_list_of_strs__', ]
+             '__xonsh_ensure_list_of_strs__',
+             '__xonsh_history__',
+             ]
     for name in names:
         if hasattr(builtins, name):
             delattr(builtins, name)

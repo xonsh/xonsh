@@ -21,8 +21,11 @@ import re
 import sys
 import builtins
 import platform
+import traceback
+import threading
 import subprocess
 from itertools import zip_longest
+from contextlib import contextmanager
 from collections import OrderedDict, Sequence
 
 
@@ -143,7 +146,7 @@ def safe_hasattr(obj, attr):
     try:
         getattr(obj, attr)
         return True
-    except:  # pylint:disable=bare-except
+    except Exception:  # pylint:disable=bare-except
         return False
 
 
@@ -253,6 +256,14 @@ TERM_COLORS = {
 }
 
 
+def fallback(cond, backup):
+    """Decorator for returning the object if cond is true and a backup if cond is false.
+    """
+    def dec(obj):
+        return obj if cond else backup
+    return dec
+
+
 # The following redirect classes were taken directly from Python 3.5's source
 # code (from the contextlib module). This can be removed when 3.5 is released,
 # although redirect_stdout exists in 3.4, redirect_stderr does not.
@@ -357,6 +368,19 @@ def suggest_commands(cmd, env, aliases):
     return rtn
 
 
+def print_exception():
+    """Print exceptions with/without traceback."""
+    if 'XONSH_SHOW_TRACEBACK' not in builtins.__xonsh_env__:
+        sys.stderr.write('xonsh: For full traceback set: '
+                         '$XONSH_SHOW_TRACEBACK=True\n')
+    if builtins.__xonsh_env__.get('XONSH_SHOW_TRACEBACK', False):
+        traceback.print_exc()
+    else:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        exception_only = traceback.format_exception_only(exc_type, exc_value)
+        sys.stderr.write(''.join(exception_only))
+
+
 # Modified from Public Domain code, by Magnus Lie Hetland
 # from http://hetland.org/coding/python/levenshtein.py
 def levenshtein(a, b, max_dist=float('inf')):
@@ -406,6 +430,25 @@ def escape_windows_title_string(s):
     s = s.replace('/?', '/.')
     return s
 
+
+def on_main_thread():
+    """Checks if we are on the main thread or not."""
+    return threading.current_thread() is threading.main_thread()
+
+
+@contextmanager
+def swap(namespace, name, value, default=NotImplemented):
+    """Swaps a current variable name in a namespace for another value, and then 
+    replaces it when the context is exited.
+    """
+    old = getattr(namespace, name, default)
+    setattr(namespace, name, value)
+    yield value
+    if old is default:
+        delattr(namespace, name)
+    else:
+        setattr(namespace, name, old)
+
 #
 # Validators and contervers
 #
@@ -451,18 +494,16 @@ def str_to_env_path(x):
 
 
 def env_path_to_str(x):
-    """Converts an environment path to a string by joining on the OS separator.
-    """
+    """Converts an environment path to a string by joining on the OS separator."""
     return os.pathsep.join(x)
 
 
 def is_bool(x):
-    """Tests if something is a boolean"""
+    """Tests if something is a boolean."""
     return isinstance(x, bool)
 
 
 _FALSES = frozenset(['', '0', 'n', 'f', 'no', 'none', 'false'])
-
 
 def to_bool(x):
     """"Converts to a boolean in a semantically meaningful way."""
@@ -475,11 +516,118 @@ def to_bool(x):
 
 
 def bool_to_str(x):
-    """
-    Converts a bool to an empty string if False and the string '1' if True.
-    """
+    """Converts a bool to an empty string if False and the string '1' if True."""
     return '1' if x else ''
 
+
+def ensure_int_or_slice(x):
+    """Makes sure that x is list-indexable."""
+    if x is None:
+        return slice(None)
+    elif is_int(x):
+        return x
+    # must have a string from here on
+    if ':' in x:
+        x = x.strip('[]()')
+        return slice(*(int(x) if len(x) > 0 else None for x in x.split(':')))
+    else:
+        return int(x)
+
+
+# history validation
+
+_min_to_sec = lambda x: 60.0 * float(x)
+_hour_to_sec = lambda x: 60.0 * _min_to_sec(x)
+_day_to_sec = lambda x: 24.0 * _hour_to_sec(x)
+_month_to_sec = lambda x: 30.4375 * _day_to_sec(x)
+_year_to_sec = lambda x: 365.25 * _day_to_sec(x)
+_kb_to_b = lambda x: 1024 * int(x)
+_mb_to_b = lambda x: 1024 * _kb_to_b(x)
+_gb_to_b = lambda x: 1024 * _mb_to_b(x)
+_tb_to_b = lambda x: 1024 * _tb_to_b(x)
+
+CANON_HISTORY_UNITS = frozenset(['commands', 'files', 's', 'b'])
+
+HISTORY_UNITS = {
+    '': ('commands', int),
+    'c': ('commands', int), 
+    'cmd': ('commands', int), 
+    'cmds': ('commands', int), 
+    'command': ('commands', int), 
+    'commands': ('commands', int), 
+    'f': ('files', int),
+    'files': ('files', int),
+    's': ('s', float),
+    'sec': ('s', float),
+    'second': ('s', float),
+    'seconds': ('s', float),
+    'm': ('s', _min_to_sec),
+    'min': ('s', _min_to_sec),
+    'mins': ('s', _min_to_sec),
+    'h': ('s', _hour_to_sec),
+    'hr': ('s', _hour_to_sec),
+    'hour': ('s', _hour_to_sec),
+    'hours': ('s', _hour_to_sec),
+    'd': ('s', _day_to_sec),
+    'day': ('s', _day_to_sec),
+    'days': ('s', _day_to_sec),
+    'mon': ('s', _month_to_sec),
+    'month': ('s', _month_to_sec),
+    'months': ('s', _month_to_sec),
+    'y': ('s', _year_to_sec),
+    'yr': ('s', _year_to_sec),
+    'yrs': ('s', _year_to_sec),
+    'year': ('s', _year_to_sec),
+    'years': ('s', _year_to_sec),
+    'b': ('b', int),
+    'byte': ('b', int),
+    'bytes': ('b', int),
+    'kb': ('b', _kb_to_b),
+    'kilobyte': ('b', _kb_to_b),
+    'kilobytes': ('b', _kb_to_b),
+    'mb': ('b', _mb_to_b),
+    'meg': ('b', _mb_to_b),
+    'megs': ('b', _mb_to_b),
+    'megabyte': ('b', _mb_to_b),
+    'megabytes': ('b', _mb_to_b),
+    'gb': ('b', _gb_to_b),
+    'gig': ('b', _gb_to_b),
+    'gigs': ('b', _gb_to_b),
+    'gigabyte': ('b', _gb_to_b),
+    'gigabytes': ('b', _gb_to_b),
+    'tb': ('b', _tb_to_b),
+    'terabyte': ('b', _tb_to_b),
+    'terabytes': ('b', _tb_to_b),
+    }
+"""Maps lowercase unit names to canonical name and conversion utilities."""
+
+def is_history_tuple(x):
+    """Tests if something is a proper history value, units tuple."""
+    if isinstance(x, Sequence) and len(x) == 2 and isinstance(x[0], (int, float)) \
+                               and x[1].lower() in CANON_HISTORY_UNITS:
+         return True
+    return False
+
+
+RE_HISTORY_TUPLE = re.compile('([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)\s*([A-Za-z]*)')
+
+def to_history_tuple(x):
+    """Converts to a canonincal history tuple."""
+    if not isinstance(x, (Sequence, float, int)):
+        raise ValueError('history size must be given as a sequence or number')
+    if isinstance(x, str):
+        m = RE_HISTORY_TUPLE.match(x.strip())
+        return to_history_tuple((m.group(1), m.group(3)))
+    elif isinstance(x, (float, int)):
+        return to_history_tuple((x, 'commands'))
+    units, converter = HISTORY_UNITS[x[1]]
+    value = converter(x[0])
+    return (value, units)
+
+
+def history_tuple_to_str(x):
+    """Converts a valid history tuple to a canonical string."""
+    return '{0} {1}'.format(*x)
 
 #
 # prompt toolkit tools
