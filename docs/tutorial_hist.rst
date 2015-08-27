@@ -3,7 +3,7 @@
 **********************************
 Tutorial [Advanced]: Livng History
 **********************************
-Import your best Leonard Nimoy documenray voice and get ready for the xonsh tutorial 
+Import your best Leonard Nimoy documentary voice and get ready for the xonsh tutorial 
 on ``history``.
 
 How is xonsh history different?
@@ -54,21 +54,66 @@ late. You can't remember:
 * who knows what the return code was, 
 * and whatever command you ran right before is now lost in the mists of time!
 
+So the reasons for having rich history are debugging and reproducibility. Xonsh takes the
+guess-work out of the past. There is even the ability to store all of stdout, though this 
+is turned off by default.
+If history was just a static file, it would be more like a server log than a traditional
+history file.  However, xonsh also has the ability to ``replay`` a history file. 
+
+Replaying history allows previous sessions to act as scripts in a new or the same enviornment.
+Replaying will create a new, separate history session and file. The two histories - even though
+they contain the same inputs - are then able to be diff'ed. Diff'ing can be done through 
+xonsh custom history diff'ing tool, which can help pinpoint differences stemming from the 
+enviroment as well as the input/output.  This cycle of do-replay-diff is more meaningful than
+a traditional, "What did I/it/the Universe just do?!" approach.
+
+Of course, nothing has ever stopped anyone from pulling unix tools like ``env``, ``script``, 
+``diff``, and others together to deliver the same kind of capability. However, in practice, 
+no one does this. With xonsh, rich and useful history come batteries included.
+
+``history`` command
+====================
+All xonsh history inspection and manipulation goes the the top-level ``history`` alias or 
+command.  If you run this without an ``action`` argument, it will default to the ``show``
+action, see below.
+
+.. code-block:: xonshcon
+
+    >>> history
 
 
-Reproducibility and Debugging.
-y
-
-
-``show`` command
+``show`` action
 ================
-show
+The ``show`` action for the history command mimics what the ``history`` command does
+in other shells.  Namely, it displays the past inputs along with the index of these 
+inputs. This operates on the current session only and is the default action for 
+the ``history`` command. For example,
 
 .. code-block:: xonshcon
 
     >>> 1 + 1
     2
+    >>> history show
+     0  1 + 1
+    >>> history 
+     0  1 + 1
+     1  history show
 
+
+.. note:: History is zero-indexed; this is still Python.
+
+The show command can also optionally take as an argument any integer (to just display
+that history index) or a slice (to display a range of history indices). To display 
+only the even indices from above, you could write:
+
+.. code-block:: xonshcon
+
+    >>> history show ::2
+     0  1 + 1
+     2  history 
+
+In the future, ``show`` may also be used to display outputs, return values, and time stamps.
+But the default behavior will remain as shown here.
 
 Exciting Techinical Detail: Lazy JSON
 =====================================

@@ -1,5 +1,5 @@
 """
-Tools to open *.py files as Unicode, using the encoding specified within the
+Tools to open ``*.py`` files as Unicode, using the encoding specified within the
 file, as per PEP 263.
 
 Much of the code is taken from the tokenize module in Python 3.2.
