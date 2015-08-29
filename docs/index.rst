@@ -70,6 +70,7 @@ Contents
 
     tutorial
     tutorial_hist
+    envvars
     aliases
     windows
     api/index
