@@ -1,7 +1,7 @@
 .. _aliases:
 
 ********************
-Aliases
+Builtin Aliases
 ********************
 This page describes the xonsh builtin commands and aliases.
 
