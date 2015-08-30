@@ -95,3 +95,43 @@ Simple alias defined as ``['rsync', '--partial', '-h', '--progress', '--rsh=ssh'
 =================
 Simple alias defined as ``['ipython', 'notebook', '--no-browser']``.
 
+
+Windows cmd Aliases
+=======================
+The following aliases on Windows are expanded to ``['cmd', '/c', alias]``:
+
+.. code-block:: python
+
+    {'cls': ['cmd', '/c', 'cls'],
+     'copy': ['cmd', '/c', 'copy'],
+     'del': ['cmd', '/c', 'del'],
+     'dir': ['cmd', '/c', 'dir'],
+     'erase': ['cmd', '/c', 'erase'],
+     'md': ['cmd', '/c', 'md'],
+     'mkdir': ['cmd', '/c', 'mkdir'],
+     'mklink': ['cmd', '/c', 'mklink'],
+     'move': ['cmd', '/c', 'move'],
+     'rd': ['cmd', '/c', 'rd'],
+     'ren': ['cmd', '/c', 'ren'],
+     'rename': ['cmd', '/c', 'rename'],
+     'rmdir': ['cmd', '/c', 'rmdir'],
+     'time': ['cmd', '/c', 'time'],
+     'type': ['cmd', '/c', 'type'],
+     'vol': ['cmd', '/c', 'vol'],
+     }
+
+``which`` on Windows
+=====================
+On Windows, ``which`` is aliased to ``['where']``.
+
+
+``ls``
+====================
+The ``ls`` command is aliased to ``['ls', '--color=auto', '-v']`` normally.  On Mac OSX
+it is instead aliased to ``['ls', '-G']``.
+
+
+``grep``
+====================
+The ``grep`` command is aliased to ``['grep', '--color=auto']``.
+
