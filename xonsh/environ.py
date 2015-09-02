@@ -1,4 +1,5 @@
 """Environment for the xonsh shell."""
+import functools
 import os
 import re
 import socket
@@ -31,6 +32,7 @@ except AttributeError:
 
 def locale_convert(key):
     """Creates a converter for a locale key."""
+
     def lc_converter(val):
         locale.setlocale(LOCALE_CATS[key], val)
         val = locale.setlocale(LOCALE_CATS[key])
@@ -185,7 +187,7 @@ class Env(MutableMapping):
                 p.break_()
                 p.pretty(dict(self))
 
-
+@functools.lru_cache(maxsize=10)
 def locate_binary(name, cwd):
     # StackOverflow for `where` tip: http://stackoverflow.com/a/304447/90297
     locator = 'where' if ON_WINDOWS else 'which'
@@ -249,7 +251,6 @@ def ensure_hg(func):
 @ensure_git
 def get_git_branch(cwd=None):
     branch = None
-
     if not ON_WINDOWS:
         prompt_scripts = ['/usr/lib/git-core/git-sh-prompt',
                           '/usr/local/etc/bash_completion.d/git-prompt.sh']
