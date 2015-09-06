@@ -41,6 +41,9 @@ class LimitedFileHistory(History):
     def __len__(self):
         return len(self.strings)
 
+    def __iter__(self):
+        return iter(self.strings)
+
     def read_history_file(self, filename):
         """Read history from given file into memory.
 
