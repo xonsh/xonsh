@@ -432,12 +432,16 @@ def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
         fmtter = formatter_dict
     included_names = set(i[1] for i in _FORMATTER.parse(template))
     fmt = {}
-    for k, v in fmtter.items():
-        if k not in included_names:
+    for name in included_names:
+        if name is None:
             continue
+        if name.startswith('$'):
+            v = builtins.__xonsh_env__[name[1:]]
+        else:
+            v = fmtter[name]
         val = v() if callable(v) else v
         val = '' if val is None else val
-        fmt[k] = val
+        fmt[name] = val
     return template.format(**fmt)
 
 
