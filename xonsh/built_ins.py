@@ -44,6 +44,8 @@ def resetting_signal_handle(sig, f):
     def newh(s=None, frame=None):
         f(s, frame)
         signal.signal(sig, oldh)
+        if sig != 0:
+            sys.exit(sig)
     signal.signal(sig, newh)
 
 
