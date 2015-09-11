@@ -950,9 +950,16 @@ For example:
     2 ~ $
     8 ~ $
 
-If a function in ``$FORMATTER_DICT`` returns ``None``, the ``None`` will be 
+If a function in ``$FORMATTER_DICT`` returns ``None``, the ``None`` will be
 interpreted as an empty string.
 
+Environment variables and functions are also available with the ``$``
+prefix.  For example:
+
+.. code-block:: xonshcon
+
+    snail@home ~ $ $PROMPT = "{$LANG} >"
+    en_US.utf8 >
 
 Executing Commands and Scripts
 ==============================
