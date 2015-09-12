@@ -41,10 +41,11 @@ the xonsh shell
     </span>
     </p>
 
-xonsh is a Python-ish, BASHwards-compatible shell language and command prompt.
-The language is a superset of Python 3.4 with additional shell primitives
-that you are used to from BASH and IPython. xonsh is 
-meant for the daily use of experts and novices alike.
+Xonsh is a Python-ish, BASHwards-looking shell language and command prompt.
+The language is a superset of Python 3.4+ with additional shell primitives
+that you are used to from Bash and IPython. It works on all major systems including
+Linux, Mac OSX, and Windows. Xonsh is meant for the daily use of experts and novices 
+alike.
 
 **At a glance**
 
@@ -116,15 +117,114 @@ ArchLinux users can install xonsh with e.g. yaourt or aura:
 
 If you run into any problems, please let us know!
 
+
+==========
+Comparison
+==========
+Xonsh is significantly different from most other shells or shell tools. The following
+table lists features and capabilities that various tools may or may not share.
+
+.. list-table:: 
+    :widths: 3 1 1 1 1 1 1
+    :header-rows: 1
+    :stub-columns: 1
+
+    * - 
+      - Bash
+      - zsh
+      - plumbum
+      - fish
+      - IPython
+      - xonsh
+    * - Sane language
+      - 
+      - 
+      - ✓
+      - ✓
+      - ✓
+      - ✓
+    * - Easily scriptable
+      - ✓
+      - ✓
+      - ✓
+      - ✓
+      - 
+      - ✓
+    * - Native cross-platform support
+      - 
+      - 
+      - ✓
+      - ✓
+      - ✓
+      - ✓
+    * - Meant as a shell
+      - ✓
+      - ✓
+      - 
+      - ✓
+      - 
+      - ✓
+    * - Tab completion
+      - ✓
+      - ✓
+      - 
+      - ✓
+      - ✓
+      - ✓
+    * - Man-page completion
+      - 
+      - 
+      - 
+      - ✓
+      - 
+      - ✓
+    * - Large standard library
+      - 
+      - ✓
+      - 
+      - 
+      - ✓
+      - ✓
+    * - Typed variables
+      - 
+      - 
+      - ✓
+      - ✓
+      - ✓
+      - ✓
+    * - Syntax highlighting
+      - 
+      - 
+      - 
+      - ✓
+      - in notebook
+      - w/ prompt-toolkit
+    * - Pun in name
+      - ✓
+      - 
+      - ✓
+      - 
+      - 
+      - ✓
+    * - Rich history
+      - 
+      - 
+      - 
+      - 
+      - 
+      - ✓
+
+
 ============
 Dependencies
 ============
-xonsh currently has the following external dependencies,
+Xonsh currently has the following external dependencies,
 
 *Run Time:*
 
     #. Python v3.4+
     #. PLY
+    #. prompt-toolkit (optional)
 
 *Documentation:*
 
