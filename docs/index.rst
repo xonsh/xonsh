@@ -50,14 +50,10 @@ meant for the daily use of experts and novices alike.
 
 .. raw:: html 
 
-    <p style="text-align:center;">
-
-.. raw:: html
-
-    <video controls> <source src="_static/xonsh-demo.webm" type="video/webm"><img src="_static/xonsh-demo.gif"></video>
-
-.. raw:: html 
-
+    <p style="text-align:center;"><script type="text/javascript" 
+      src="https://asciinema.org/a/9kp21a67ahhng25wtzoep3pyx.js" 
+      id="asciicast-9kp21a67ahhng25wtzoep3pyx" async 
+      data-size="medium" data-speed="2"></script>
     </p>
 
 =========
