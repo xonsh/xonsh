@@ -122,9 +122,8 @@ if not on_rtd:
         'stickysidebar': False,
         'highlighttoc': False,
         'externalrefs': False,
-        #'px_per_rem': 1.0,
-        #'rem_per_em': 1.0,
-        'default_layout_text_size': 16,
+        'collapsiblesidebar': True,
+        'default_layout_text_size': 16,  # prevents division by zero error
         }
 
     # Add any paths that contain custom themes here, relative to this directory.
