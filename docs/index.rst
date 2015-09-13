@@ -5,7 +5,6 @@ the xonsh shell
 
     <p style="text-align:center;">
     <span style="font-family:Times;font-size:28px;font-style:normal;font-weight:normal;text-decoration:none;text-transform:none;font-variant:small-caps;color:000000;">
-    <br />
     ~ 
     <script>
     var taglines = [

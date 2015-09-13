@@ -123,7 +123,7 @@ if not on_rtd:
         'highlighttoc': False,
         'externalrefs': False,
         'collapsiblesidebar': True,
-        'default_layout_text_size': 16,  # prevents division by zero error
+        'default_layout_text_size': "100%",  # prevents division by zero error
         }
 
     # Add any paths that contain custom themes here, relative to this directory.
