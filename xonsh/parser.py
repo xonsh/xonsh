@@ -2014,7 +2014,7 @@ class Parser(object):
         p[0] = [p[2]]
 
     def p_argument(self, p):
-        """argument : test
+        """argument : test_or_star_expr
                     | test comp_for
                     | test EQUALS test
         """
