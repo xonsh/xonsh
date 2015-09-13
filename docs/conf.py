@@ -122,6 +122,8 @@ if not on_rtd:
         'stickysidebar': False,
         'highlighttoc': False,
         'externalrefs': False,
+        #'px_per_rem': 1.0,
+        #'rem_per_em': 1.0,
         }
 
     # Add any paths that contain custom themes here, relative to this directory.
