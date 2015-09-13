@@ -124,6 +124,7 @@ if not on_rtd:
         'externalrefs': False,
         #'px_per_rem': 1.0,
         #'rem_per_em': 1.0,
+        'default_layout_text_size': 16,
         }
 
     # Add any paths that contain custom themes here, relative to this directory.
@@ -138,7 +139,7 @@ if not on_rtd:
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = '_static/ascii_conch_part_color.png'
+html_logo = '_static/ascii_conch_part_color_tight.png'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
