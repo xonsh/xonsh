@@ -1,12 +1,26 @@
 """Implements the xonsh parser"""
 from __future__ import print_function, unicode_literals
 import os
+import sys
 from collections import Iterable, Sequence, Mapping
 
 from ply import yacc
 
 from xonsh import ast
 from xonsh.lexer import Lexer
+
+
+V_MAJOR_MINOR = 'v{0}{1}'.format(*sys.version_info[:2])
+
+def docstring_by_version(**kwargs):
+    """Sets a docstring by the python version."""
+    doc = kwargs.get(V_MAJOR_MINOR, None)
+    if V_MAJOR_MINOR is None:
+        raise RuntimeError('unrecognized version ' + V_MAJOR_MINOR)
+    def dec(f):
+        f.__doc__ = doc
+        return f
+    return dec
 
 
 class Location(object):
@@ -2013,11 +2027,19 @@ class Parser(object):
         """comma_argument : COMMA argument """
         p[0] = [p[2]]
 
-    def p_argument(self, p):
+    @docstring_by_version(
+        v34 = \
+        """argument : test
+                    | test comp_for
+                    | test EQUALS test
+        """, 
+        v35 = \
         """argument : test_or_star_expr
                     | test comp_for
                     | test EQUALS test
         """
+        )
+    def p_argument(self, p):
         # Really [keyword '='] test
         # The reason that keywords are test nodes instead of NAME is that using
         # NAME results in an ambiguity.
