@@ -48,6 +48,11 @@ def nodes_equal(x, y):
 def assert_nodes_equal(x, y):
     if nodes_equal(x, y):
         return True
+    if DEBUG_LEVEL > 0:
+        print('x:\n==')
+        print(ast.dump(x), '\n')
+        print('y:\n==')
+        print(ast.dump(y), '\n')
     assert_equal(ast.dump(x), ast.dump(y))
 
 def check_ast(inp, run=True, mode='eval'):

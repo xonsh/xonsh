@@ -1,12 +1,28 @@
 """Implements the xonsh parser"""
 from __future__ import print_function, unicode_literals
 import os
+import sys
 from collections import Iterable, Sequence, Mapping
 
 from ply import yacc
 
 from xonsh import ast
 from xonsh.lexer import Lexer
+
+VER_3_4 = (3, 4)
+VER_3_5 = (3, 5)
+VER_MAJOR_MINOR = sys.version_info[:2]
+V_MAJOR_MINOR = 'v{0}{1}'.format(*sys.version_info[:2])
+
+def docstring_by_version(**kwargs):
+    """Sets a docstring by the python version."""
+    doc = kwargs.get(V_MAJOR_MINOR, None)
+    if V_MAJOR_MINOR is None:
+        raise RuntimeError('unrecognized version ' + V_MAJOR_MINOR)
+    def dec(f):
+        f.__doc__ = doc
+        return f
+    return dec
 
 
 class Location(object):
@@ -1955,7 +1971,10 @@ class Parser(object):
         if isinstance(arg, ast.keyword):
             args['keywords'].append(arg)
         elif ensure_kw:
-            raise SyntaxError('{0} must be a keyword'.format(arg))
+            if VER_MAJOR_MINOR <= VER_3_4:
+                args['kwargs'] = arg
+            elif VER_MAJOR_MINOR >= VER_3_5:
+                args['keywords'].append(ast.keyword(arg=None, value=arg))
         else:
             args['args'].append(arg)
 
@@ -1980,7 +1999,7 @@ class Parser(object):
             if p1 is not None:
                 for arg in p1:
                     self._set_arg(p0, arg)
-            p0['kwargs'] = p[3]
+            self._set_arg(p0, p[3], ensure_kw=True)
         elif lenp == 5:
             p0['starargs'], p4 = p[3], p[4]
             if p1 is not None:
@@ -1990,17 +2009,20 @@ class Parser(object):
                 for arg in p4:
                     self._set_arg(p0, arg, ensure_kw=True)
         elif lenp == 7:
-            p0['starargs'], p0['kwargs'] = p[3], p[6]
+            p0['starargs'] = p[3]
             if p1 is not None:
                 for arg in p1:
                     self._set_arg(p0, arg)
+            self._set_arg(p0, p[6], ensure_kw=True)
         elif lenp == 8:
-            p0['starargs'], p4, p0['kwargs'] = p[3], p[4], p[7]
+            kwkey = 'keywords' if VER_MAJOR_MINOR >= VER_3_5 else 'kwargs'
+            p0['starargs'], p4 = p[3], p[4]
             if p1 is not None:
                 for arg in p1:
                     self._set_arg(p0, arg)
             for arg in p4:
                 self._set_arg(p0, arg, ensure_kw=True)
+            self._set_arg(p0, p[7], ensure_kw=True)
         else:
             assert False
         p[0] = p0
@@ -2013,11 +2035,19 @@ class Parser(object):
         """comma_argument : COMMA argument """
         p[0] = [p[2]]
 
-    def p_argument(self, p):
+    @docstring_by_version(
+        v34 = \
         """argument : test
                     | test comp_for
                     | test EQUALS test
-        """
+        """, 
+        v35 = \
+        """argument : test_or_star_expr
+                    | test comp_for
+                    | test EQUALS test
+        """,
+        )
+    def p_argument(self, p):
         # Really [keyword '='] test
         # The reason that keywords are test nodes instead of NAME is that using
         # NAME results in an ambiguity.

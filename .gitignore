@@ -2,6 +2,7 @@
 *.out
 *.xcf
 *.egg
+.eggs/
 lexer_table.py
 parser_table.py
 parser_test_table.py
