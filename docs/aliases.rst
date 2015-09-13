@@ -1,9 +1,9 @@
 .. _aliases:
 
 ********************
-Builtin Aliases
+Built-in Aliases
 ********************
-This page describes the xonsh builtin commands and aliases.
+This page describes the xonsh built-in commands and aliases.
 
 ``cd``
 ===================
