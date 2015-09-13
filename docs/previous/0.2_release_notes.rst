@@ -1,0 +1,149 @@
+=============================
+Xonsh 0.2 Release Notes
+=============================
+Xonsh is a Python-ish, BASHwards-looking shell language and command prompt.
+The language is a superset of Python 3.4+ with additional shell primitives
+that you are used to from Bash and IPython. It works on all major systems including
+Linux, Mac OSX, and Windows. Xonsh is meant for the daily use of experts and novices 
+alike.
+
+Features include:
+
+* Naturally typed environment variables
+* Inherits the environment from BASH
+* Uses BASH completion for subprocess commands
+* Regular expression filename globbing
+* Its own PLY-based lexer and parser
+* xonsh code parses into a Python AST
+* You can do all the normal Python things, like arithmetic and importing
+* Captured and uncaptured subprocesses
+* Pipes, redirection, and non-blocking subprocess syntax support
+* Help and superhelp with ? and ??
+* Command aliasing
+* Multiline input, unlike ed
+* History matching like in IPython
+* Color prompts
+* Low system overhead
+
+Feedback, bug reports, and pull requests are always welcome!
+
+Installation
+============
+You can install xonsh using conda, pip, or from source.
+
+**conda:**
+
+.. code-block:: bash
+
+    $ conda install -c scopatz xonsh
+
+**pip:**
+
+.. code-block:: bash
+
+    $ pip install xonsh
+
+**source:** Download the source `from github <https://github.com/scopatz/xonsh>`_
+(`zip file <https://github.com/scopatz/xonsh/archive/master.zip>`_), then run
+the following from the source directory,
+
+.. code-block:: bash
+
+    $ python setup.py install
+
+ArchLinux users can install xonsh with e.g. yaourt or aura:
+
+**yaourt:**
+
+.. code-block:: bash
+
+    $ yaourt -Sa xonsh      # yaourt will call sudo when needed
+
+**aura:**
+
+.. code-block:: bash
+
+    $ sudo aura -A xonsh
+
+If you run into any problems, please let us know!
+
+Dependencies
+============
+Polyphemus currently has the following external dependencies,
+
+*Run Time:*
+
+    1. Python v3.4+
+    2. PLY
+    3. prompt-toolkit (optional)
+
+Contributing
+============
+We highly encourage contributions to xonsh!  If you would like to contribute, 
+it is as easy as forking the repository on GitHub, making your changes, and 
+issuing a pull request.  If you have any questions about this process don't 
+hesitate to ask the mailing list (xonsh@googlegroups.com). 
+
+Contact Us
+==========
+If you have questions or comments, please send them to the mailing list
+xonsh@googlegroups.com, contact the author directly, or open an issue on
+GitHub. 
+
+Join the mailing list here: https://groups.google.com/forum/#!forum/xonsh
+
+Helpful Links
+=============
+* Documentation - http://xonsh.org
+* Mailing list - https://groups.google.com/forum/#!forum/xonsh
+* GitHub Repository - https://github.com/scopatz/xonsh
+* IRC: channel #xonsh on OFTC - http://www.oftc.net/
+
+Authors
+=======
+This release contains code written by the following people:
+
+* Anthony Scopatz
+* Adam J Hartz
+* Klaus Alexander Seistrup
+* Aaron Griffin
+* Robert W. Brewer
+* Morten Enemark Lund
+* Michał Zając
+* Burak Yigit Kaya
+* Mattias Ugelvik
+* Nathan Goldbaum
+* anula
+* mel
+* James Elías
+* Jonathan Slenders
+* JuanPablo
+* Marcel Bollmann
+* Matteo Bertini
+* Thomas Marquart
+* Alexandre Ferland
+* Michael Droettboom
+* javValverde
+* Greg Thole
+* K.-Michael Aye
+* Pablo Barton
+* Paul Barton
+* Steven Silvester
+* zajaczajac
+* Aaron Meurer
+* Austin Bingham
+* Brian S. Corbin
+* Cameron Bates
+* Charlie Arnold
+* Daniel Hahler
+* Florian Mounier
+* Glen Zangirolami
+* Katriel Cohn-Gordon
+* Michael Ensslin
+* Ronny Pfannschmidt
+* admiralobvious
+* eyalzek
+* torgny
+
+Changelog
+============
