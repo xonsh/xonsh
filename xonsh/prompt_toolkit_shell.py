@@ -49,7 +49,8 @@ class PromptToolkitShell(BaseShell):
         super().__init__(**kwargs)
         self.history = setup_history()
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx)
-        self.key_bindings_manager = KeyBindingManager()
+        self.key_bindings_manager = KeyBindingManager(
+            enable_search=True, enable_abort_and_exit_bindings=True)
         load_xonsh_bindings(self.key_bindings_manager)
 
     def __del__(self):
