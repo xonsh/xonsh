@@ -12,7 +12,7 @@ assert_equal.__self__.maxDiff = None
 
 from xonsh.parser import Parser
 
-from tools import mock_xonsh_env
+from tools import mock_xonsh_env, skip_if, VER_3_4, VER_3_5, VER_MAJOR_MINOR
 
 PARSER = None
 DEBUG_LEVEL = 0
@@ -683,6 +683,18 @@ def test_call_int_base_dict():
 
 def test_call_dict_kwargs():
     yield check_ast, 'dict(**{"base": 8})'
+
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_call_list_many_star_args():
+    yield check_ast, 'min(*[1, 2], 3, *[4, 5])'
+
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_call_list_many_starstar_args():
+    yield check_ast, 'dict(**{"a": 2}, v=3, **{"c": 5})'
+
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_call_list_many_star_and_starstar_args():
+    yield check_ast, 'x(*[("a", 2)], *[("v", 3)], **{"c": 5})', False
 
 def test_call_alot():
     yield check_ast, 'x(1, *args, **kwargs)', False
