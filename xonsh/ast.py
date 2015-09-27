@@ -1,7 +1,7 @@
 """The xonsh abstract syntax tree node."""
 from __future__ import unicode_literals, print_function
 from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
-    BinOp, Add, Sub, Mult, MatMult, Div, FloorDiv, Mod, Pow, Compare, Lt, Gt, \
+    BinOp, Add, Sub, Mult, Div, FloorDiv, Mod, Pow, Compare, Lt, Gt, \
     LtE, GtE, Eq, NotEq, In, NotIn, Is, IsNot, Not, BoolOp, Or, And, Subscript, \
     Load, Slice, List, Tuple, Set, Dict, AST, NameConstant, \
     Name, GeneratorExp, Store, comprehension, ListComp, SetComp, DictComp, \
@@ -13,7 +13,12 @@ from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
     Interactive, Expression, dump
 from ast import Ellipsis, Index  # pylint:disable=unused-import,redefined-builtin
 
-from xonsh.tools import subproc_toks
+from xonsh.tools import subproc_toks, VER_3_5, VER_MAJOR_MINOR
+
+if VER_3_5 <= VER_MAJOR_MINOR:
+    from ast import MatMult
+else:
+    MatMult = None
 
 STATEMENTS = (FunctionDef, ClassDef, Return, Delete, Assign, AugAssign, For,
               While, If, With, Raise, Try, Assert, Import, ImportFrom, Global,
