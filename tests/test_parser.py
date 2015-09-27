@@ -415,6 +415,10 @@ def test_dict_three():
     yield check_ast, '{42: 65, 6: 28, 1: 2}'
 
 @skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_dict_from_dict_two_xy():
+    yield check_ast, '{"x": 1, **{"y": 2}}'
+
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
 def test_dict_from_dict_two_x_first():
     yield check_ast, '{"x": 1, **{"x": 2}}'
 
