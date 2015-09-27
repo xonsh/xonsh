@@ -384,7 +384,7 @@ special_handlers = {
     (tokenize.ERRORTOKEN, '`'): handle_backtick,
     (tokenize.ERRORTOKEN, '?'): handle_question,
     (tokenize.ERRORTOKEN, ' '): handle_error_space,
-    (tokenize.ERRORTOKEN, 'ASYNC'): handle_error_async,
+    (tokenize.ERRORTOKEN, 'async'): handle_error_async,
 }
 """
 Mapping from ``tokenize`` tokens (or token types) to the proper function for
