@@ -16,9 +16,9 @@ from ast import Ellipsis, Index  # pylint:disable=unused-import,redefined-builti
 from xonsh.tools import subproc_toks, VER_3_5, VER_MAJOR_MINOR
 
 if VER_3_5 <= VER_MAJOR_MINOR:
-    from ast import MatMult, AsyncFunctionDef, AsyncWith
+    from ast import MatMult, AsyncFunctionDef, AsyncWith, AsyncFor
 else:
-    MatMult = AsyncFunctionDef = AsyncWith = None
+    MatMult = AsyncFunctionDef = AsyncWith = AsyncFor = None
 
 STATEMENTS = (FunctionDef, ClassDef, Return, Delete, Assign, AugAssign, For,
               While, If, With, Raise, Try, Assert, Import, ImportFrom, Global,

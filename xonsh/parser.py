@@ -1190,6 +1190,11 @@ class Parser(object):
                         lineno=self.lineno,
                         col_offset=self.col)]
 
+    def p_async_for_stmt(self, p):
+        """async_for_stmt : ASYNC for_stmt"""
+        f = p[2][0]
+        p[0] = [ast.AsyncFor(**f.__dict__)]
+
     def p_except_part(self, p):
         """except_part : except_clause COLON suite"""
         p0 = p[1]
@@ -1279,8 +1284,8 @@ class Parser(object):
     def p_async_stmt(self, p):
         """async_stmt : async_funcdef
                       | async_with_stmt 
+                      | async_for_stmt
         """
-#                      | async_for_stmt
         p[0] = p[1]
 
     def p_suite(self, p):
