@@ -767,6 +767,7 @@ class Parser(object):
         '+=': ast.Add,
         '-=': ast.Sub,
         '*=': ast.Mult,
+        '@=': ast.MatMult,
         '/=': ast.Div,
         '%=': ast.Mod,
         '//=': ast.FloorDiv,
@@ -874,6 +875,7 @@ class Parser(object):
         """augassign : PLUSEQUAL
                      | MINUSEQUAL
                      | TIMESEQUAL
+                     | ATEQUAL
                      | DIVEQUAL
                      | MODEQUAL
                      | AMPERSANDEQUAL
@@ -1519,6 +1521,7 @@ class Parser(object):
         '+': ast.Add,
         '-': ast.Sub,
         '*': ast.Mult,
+        '@': ast.MatMult,
         '/': ast.Div,
         '%': ast.Mod,
         '//': ast.FloorDiv
@@ -1555,6 +1558,7 @@ class Parser(object):
 
     def p_op_factor(self, p):
         """op_factor : TIMES factor
+                     | AT factor
                      | DIVIDE factor
                      | MOD factor
                      | DOUBLEDIV factor
