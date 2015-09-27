@@ -213,7 +213,7 @@ class Parser(object):
             'op_factor_list', 'trailer_list', 'testlist_comp',
             'yield_expr_or_testlist_comp', 'dictorsetmaker',
             'comma_subscript_list', 'test', 'sliceop', 'comp_iter',
-            'yield_arg', 'test_comma_list', 'comma_item_list',]
+            'yield_arg', 'test_comma_list',]
         if VER_MAJOR_MINOR <= VER_3_4:
             opt_rules += ['argument_comma_list', 'comma_argument_list',]
         for rule in opt_rules:
