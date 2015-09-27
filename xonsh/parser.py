@@ -806,11 +806,8 @@ class Parser(object):
                                 col_offset=self.col)
         elif lenp == 4:
             op = self._augassign_op[p2]()
-            p0 = ast.AugAssign(target=p1[0],
-                               op=op,
-                               value=p[3],
-                               lineno=self.lineno,
-                               col_offset=self.col)
+            p0 = ast.AugAssign(target=p1[0], op=op, value=p[3],
+                               lineno=self.lineno, col_offset=self.col)
         elif lenp == 5 or lenp == 6:
             if lenp == 5:
                 targs, rhs = p[3], p[4][0]

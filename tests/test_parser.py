@@ -427,6 +427,26 @@ def test_dict_from_dict_two_x_second():
     yield check_ast, '{**{"x": 2}, "x": 1}'
 
 @skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_unpack_range_tuple():
+    yield check_stmts, '*range(4),'
+
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_unpack_range_tuple_4():
+    yield check_stmts, '*range(4), 4'
+
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_unpack_range_tuple_parens():
+    yield check_ast, '(*range(4),)'
+
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_unpack_range_tuple_parens_4():
+    yield check_ast, '(*range(4), 4)'
+
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_unpack_range_list():
+    yield check_ast, '[*range(4)]'
+
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
 def test_unpack_range_list_4():
     yield check_ast, '[*range(4), 4]'
 
