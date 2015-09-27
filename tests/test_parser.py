@@ -426,6 +426,14 @@ def test_dict_from_dict_two_x_first():
 def test_dict_from_dict_two_x_second():
     yield check_ast, '{**{"x": 2}, "x": 1}'
 
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_unpack_range_list():
+    yield check_ast, '[*range(4), 4]'
+
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_unpack_range_set():
+    yield check_ast, '{*range(4), 4}'
+
 def test_true():
     yield check_ast, 'True'
 

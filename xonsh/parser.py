@@ -228,7 +228,8 @@ class Parser(object):
             'xor_and_expr', 'ampersand_shift_expr', 'shift_arith_expr',
             'pm_term', 'op_factor', 'trailer', 'comma_subscript',
             'comma_expr_or_star_expr', 'comma_test', 'comma_argument', 'comma_item', 
-            'attr_period_name', 'test_comma', 'equals_yield_expr_or_testlist', ]
+            'attr_period_name', 'test_comma', 'equals_yield_expr_or_testlist', 
+            'test_or_star_expr']
         if VER_MAJOR_MINOR <= VER_3_4:
             list_rules += ['argument_comma',]
         for rule in list_rules:
@@ -1900,7 +1901,6 @@ class Parser(object):
         v35=\
         """item : test COLON test
                 | POW expr
-                | star_expr
         """,
         )
     def p_item(self, p):
@@ -1909,8 +1909,6 @@ class Parser(object):
             p0 = [p[1], p[3]]
         elif lenp == 3:
             p0 = [None, p[2]]
-        elif lenp == 2:
-            assert False
         else:
             assert False
         p[0] = p0
@@ -1921,8 +1919,10 @@ class Parser(object):
 
     def p_dictorsetmaker(self, p):
         """dictorsetmaker : item comp_for
-                          | test comp_for
+                          | test_or_star_expr comp_for
                           | testlist
+                          | test_or_star_expr COMMA
+                          | test_or_star_expr comma_test_or_star_expr_list comma_opt
                           | test COLON testlist
                           | item comma_item_list comma_opt
                           | test COLON test comma_item_list comma_opt
@@ -1934,9 +1934,7 @@ class Parser(object):
             if isinstance(p1, ast.Tuple) and \
                     not (hasattr(p1, '_real_tuple') and p1._real_tuple):
                 elts = p1.elts
-            p0 = ast.Set(elts=elts,
-                         ctx=ast.Load(),
-                         lineno=self.lineno,
+            p0 = ast.Set(elts=elts, ctx=ast.Load(), lineno=self.lineno,
                          col_offset=self.col)
         elif lenp == 3:
             comps = p[2].get('comps', [])
@@ -1949,19 +1947,28 @@ class Parser(object):
         elif lenp == 4:
             p2, p3 = p[2], p[3]
             if isinstance(p1, list) and len(p1) == 2:
+                cls = ast.Dict
                 keys = [p1[0]]
                 vals = [p1[1]]
                 for k, v in zip(p2[::2], p2[1::2]):
                     keys.append(k)
                     vals.append(v)
-            else:
+                p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), lineno=self.lineno,
+                              col_offset=self.col)
+            elif p2 == ':':
                 keys = [p1]
                 vals = [p3]
                 if isinstance(p3, ast.Tuple) and \
                    not (hasattr(p3, '_real_tuple') and p3._real_tuple):
                     vals = p3.elts
-            p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), lineno=self.lineno,
-                          col_offset=self.col)
+                p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), lineno=self.lineno,
+                              col_offset=self.col)
+            elif isinstance(p1, ast.AST):
+                elts = [p1] + p2
+                p0 = ast.Set(elts=elts, ctx=ast.Load(), lineno=self.lineno,
+                             col_offset=self.col)
+            else:
+                assert False
         elif lenp == 6:
             p4 = p[4]
             keys = [p1]
