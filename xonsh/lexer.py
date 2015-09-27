@@ -12,6 +12,8 @@ from keyword import kwlist
 from ply import lex
 from ply.lex import TOKEN, LexToken
 
+from xonsh.tools import VER_3_5, VER_MAJOR_MINOR
+
 
 token_map = {}
 """
@@ -47,6 +49,8 @@ token_map[tokenize.STRING] = 'STRING'
 token_map[tokenize.NEWLINE] = 'NEWLINE'
 token_map[tokenize.INDENT] = 'INDENT'
 token_map[tokenize.DEDENT] = 'DEDENT'
+if VER_3_5 <= VER_MAJOR_MINOR:
+    token_map[tokenize.ASYNC] = 'ASYNC'
 
 _REDIRECT_NAMES = frozenset({'out', 'err', 'all', 'o', 'e', 'a'})
 

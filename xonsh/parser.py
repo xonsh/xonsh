@@ -459,10 +459,18 @@ class Parser(object):
         """
         p[0] = [p[1]] if len(p) == 2 else p[1] + [p[2]]
 
-    def p_classdef_or_funcdef(self, p):
+    @docstring_by_version(
+        v34=\
         """classdef_or_funcdef : classdef
                                | funcdef
-        """
+        """,
+        v35=\
+        """classdef_or_funcdef : classdef
+                               | funcdef
+                               | async_funcdef
+        """,
+        )
+    def p_classdef_or_funcdef(self, p):
         p[0] = p[1]
 
     def p_decorated(self, p):
@@ -485,6 +493,11 @@ class Parser(object):
                             lineno=self.lineno,
                             col_offset=self.col)
         p[0] = [f]
+
+    def p_async_funcdef(self, p):
+        """async_funcdef : ASYNC funcdef"""
+        f = p[2][0]
+        p[0] = [ast.AsyncFunctionDef(**f.__dict__)]
 
     def p_parameters(self, p):
         """parameters : LPAREN typedargslist_opt RPAREN"""
@@ -1108,6 +1121,7 @@ class Parser(object):
                          | funcdef
                          | classdef
                          | decorated
+                         | async_stmt
         """
         p[0] = p[1]
 
@@ -1256,6 +1270,13 @@ class Parser(object):
                                    lineno=self.lineno,
                                    col_offset=self.col)
         p[0] = p0
+
+    def p_async_stmt(self, p):
+        """async_stmt : async_funcdef
+        """
+#                      | async_with_stmt 
+#                      | async_for_stmt
+        p[0] = p[1]
 
     def p_suite(self, p):
         """suite : simple_stmt

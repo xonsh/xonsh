@@ -1406,6 +1406,14 @@ def test_function_blank_line():
     yield check_stmts, code, False
 
 
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_async_func():
+    yield check_stmts, 'async def f():\n  pass\n'
+
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_async_decorator():
+    yield check_stmts, '@g\nasync def f():\n  pass', False
+
 #
 # Xonsh specific syntax
 #
