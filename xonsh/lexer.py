@@ -345,6 +345,18 @@ def handle_error_token(state, token, stream):
     yield _new_token(typ, token.string, token.start)
 
 
+def handle_error_async(state, token, stream):
+    """
+    Function for handling sync tokens in versions of python where they don't belong.
+    """
+    state['last'] = token
+    if not state['pymode'][-1][0]:
+        typ = 'NAME'
+    else:
+        typ = 'ERRORTOKEN'
+    yield _new_token(typ, token.string, token.start)
+
+
 def handle_ignore(state, token, stream):
     """
     Function for handling tokens that should be ignored
@@ -372,6 +384,7 @@ special_handlers = {
     (tokenize.ERRORTOKEN, '`'): handle_backtick,
     (tokenize.ERRORTOKEN, '?'): handle_question,
     (tokenize.ERRORTOKEN, ' '): handle_error_space,
+    (tokenize.ERRORTOKEN, 'ASYNC'): handle_error_async,
 }
 """
 Mapping from ``tokenize`` tokens (or token types) to the proper function for
