@@ -1609,14 +1609,55 @@ class Parser(object):
         p[0] = p0
 
     def p_power(self, p):
-        """power : atom trailer_list_opt
-                 | atom trailer_list_opt POW factor
+        """power : atom_expr
+                 | atom_expr POW factor
         """
-        p1, p2 = p[1], p[2]
-        p0 = leader = p1
-        if p2 is None:
-            p2 = []
-        for trailer in p2:
+        lenp = len(p)
+        p1 = p[1]
+        if lenp == 2:
+            p0 = p1
+        elif lenp == 4:
+            # actual power rule
+            p0 = ast.BinOp(left=p1,
+                           op=ast.Pow(),
+                           right=p[3],
+                           lineno=self.lineno,
+                           col_offset=self.col)
+        p[0] = p0
+
+    def p_yield_expr_or_testlist_comp(self, p):
+        """yield_expr_or_testlist_comp : yield_expr
+                                       | testlist_comp
+        """
+        p[0] = p[1]
+
+    def _list_or_elts_if_not_real_tuple(self, x):
+        if isinstance(x, ast.Tuple) and not (hasattr(x, '_real_tuple') and \
+                                             x._real_tuple):
+            rtn = x.elts
+        else:
+            rtn = [x]
+        return rtn
+
+    @docstring_by_version(
+        v34="""atom_expr : atom trailer_list_opt""",
+        v35=\
+        """atom_expr : atom trailer_list_opt
+                     | AWAIT atom trailer_list_opt
+        """
+        )
+    def p_atom_expr(self, p):
+        lenp = len(p)
+        if lenp == 3:
+            leader, trailers = p[1], p[2]
+        elif lenp == 4:
+            leader, trailers = p[2], p[3]
+        else:
+            assert False
+        p0 = leader
+        if trailers is None:
+            trailers = []
+        for trailer in trailers:
             if isinstance(trailer, (ast.Index, ast.Slice)):
                 p0 = ast.Subscript(value=leader,
                                    slice=trailer,
@@ -1643,29 +1684,10 @@ class Parser(object):
             else:
                 assert False
             leader = p0
-
-        # actual power rule
-        if len(p) == 5:
-            p0 = ast.BinOp(left=p0,
-                           op=ast.Pow(),
-                           right=p[4],
-                           lineno=self.lineno,
+        if lenp == 4:
+            p0 = ast.Await(value=p0, ctx=ast.Load(), lineno=self.lineno, 
                            col_offset=self.col)
         p[0] = p0
-
-    def p_yield_expr_or_testlist_comp(self, p):
-        """yield_expr_or_testlist_comp : yield_expr
-                                       | testlist_comp
-        """
-        p[0] = p[1]
-
-    def _list_or_elts_if_not_real_tuple(self, x):
-        if isinstance(x, ast.Tuple) and not (hasattr(x, '_real_tuple') and \
-                                             x._real_tuple):
-            rtn = x.elts
-        else:
-            rtn = [x]
-        return rtn
 
     def p_atom(self, p):
         """atom : LPAREN yield_expr_or_testlist_comp_opt RPAREN

@@ -1422,6 +1422,10 @@ def test_async_func():
 def test_async_decorator():
     yield check_stmts, '@g\nasync def f():\n  pass', False
 
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_async_await():
+    yield check_stmts, "async def f():\n    await fut\n", False
+
 #
 # Xonsh specific syntax
 #

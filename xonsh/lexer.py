@@ -52,8 +52,9 @@ token_map[tokenize.INDENT] = 'INDENT'
 token_map[tokenize.DEDENT] = 'DEDENT'
 if VER_3_5 <= VER_MAJOR_MINOR:
     token_map[tokenize.ASYNC] = 'ASYNC'
+    token_map[tokenize.AWAIT] = 'AWAIT'
 else:
-    future_kwlist += ['async']
+    future_kwlist += ['async', 'await']
 
 _REDIRECT_NAMES = frozenset({'out', 'err', 'all', 'o', 'e', 'a'})
 
