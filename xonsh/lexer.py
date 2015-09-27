@@ -14,6 +14,7 @@ from ply.lex import TOKEN, LexToken
 
 from xonsh.tools import VER_3_5, VER_MAJOR_MINOR
 
+future_kwlist = []
 
 token_map = {}
 """
@@ -51,6 +52,8 @@ token_map[tokenize.INDENT] = 'INDENT'
 token_map[tokenize.DEDENT] = 'DEDENT'
 if VER_3_5 <= VER_MAJOR_MINOR:
     token_map[tokenize.ASYNC] = 'ASYNC'
+else:
+    future_kwlist += ['async']
 
 _REDIRECT_NAMES = frozenset({'out', 'err', 'all', 'o', 'e', 'a'})
 
@@ -345,18 +348,6 @@ def handle_error_token(state, token, stream):
     yield _new_token(typ, token.string, token.start)
 
 
-def handle_error_async(state, token, stream):
-    """
-    Function for handling sync tokens in versions of python where they don't belong.
-    """
-    state['last'] = token
-    if not state['pymode'][-1][0]:
-        typ = 'NAME'
-    else:
-        typ = 'ERRORTOKEN'
-    yield _new_token(typ, token.string, token.start)
-
-
 def handle_ignore(state, token, stream):
     """
     Function for handling tokens that should be ignored
@@ -384,7 +375,6 @@ special_handlers = {
     (tokenize.ERRORTOKEN, '`'): handle_backtick,
     (tokenize.ERRORTOKEN, '?'): handle_question,
     (tokenize.ERRORTOKEN, ' '): handle_error_space,
-    (tokenize.ERRORTOKEN, 'async'): handle_error_async,
 }
 """
 Mapping from ``tokenize`` tokens (or token types) to the proper function for
@@ -533,4 +523,4 @@ class Lexer(object):
         'DOLLAR_LPAREN',         # $(
         'DOLLAR_LBRACE',         # ${
         'DOLLAR_LBRACKET',       # $[
-    ) + tuple(i.upper() for i in kwlist)
+    ) + tuple(i.upper() for i in kwlist) + tuple(i.upper() for i in future_kwlist)
