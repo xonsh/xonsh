@@ -213,7 +213,7 @@ class Parser(object):
             'op_factor_list', 'trailer_list', 'testlist_comp',
             'yield_expr_or_testlist_comp', 'dictorsetmaker',
             'comma_subscript_list', 'test', 'sliceop', 'comp_iter',
-            'yield_arg', 'test_comma_list',]
+            'yield_arg', 'test_comma_list', 'comma_item_list',]
         if VER_MAJOR_MINOR <= VER_3_4:
             opt_rules += ['argument_comma_list', 'comma_argument_list',]
         for rule in opt_rules:
@@ -1895,16 +1895,37 @@ class Parser(object):
             p1.elts += p2
         p[0] = p1
 
+    @docstring_by_version(
+        v34="""item : test COLON test""",
+        v35=\
+        """item : test COLON test
+                | POW expr
+                | star_expr
+        """,
+        )
+    def p_item(self, p):
+        lenp = len(p)
+        if lenp == 4: 
+            p0 = [p[1], p[3]]
+        elif lenp == 3:
+            p0 = [None, p[2]]
+        elif lenp == 2:
+            assert False
+        else:
+            assert False
+        p[0] = p0
+
     def p_comma_item(self, p):
-        """comma_item : COMMA test COLON test"""
-        p[0] = [p[2], p[4]]
+        """comma_item : COMMA item"""
+        p[0] = p[2]
 
     def p_dictorsetmaker(self, p):
-        """dictorsetmaker : test COLON test comp_for
-                          | test COLON test comma_item_list comma_opt
-                          | test COLON testlist
+        """dictorsetmaker : item comp_for
                           | test comp_for
                           | testlist
+                          | test COLON testlist
+                          | item comma_item_list comma_opt
+                          | test COLON test comma_item_list comma_opt
         """
         p1 = p[1]
         lenp = len(p)
@@ -1919,36 +1940,36 @@ class Parser(object):
                          col_offset=self.col)
         elif lenp == 3:
             comps = p[2].get('comps', [])
-            p0 = ast.SetComp(elt=p1,
-                             generators=comps,
-                             lineno=self.lineno,
-                             col_offset=self.col)
+            if isinstance(p1, list) and len(p1) == 2:
+                p0 = ast.DictComp(key=p1[0], value=p1[1], generators=comps,
+                                  lineno=self.lineno, col_offset=self.col)
+            else:
+                p0 = ast.SetComp(elt=p1, generators=comps, lineno=self.lineno,
+                                 col_offset=self.col)
         elif lenp == 4:
-            p3 = p[3]
-            vals = [p3]
-            if isinstance(p3, ast.Tuple) and \
-                    not (hasattr(p3, '_real_tuple') and p3._real_tuple):
-                vals = p3.elts
-            p0 = ast.Dict(keys=[p1],
-                          values=vals,
-                          ctx=ast.Load(),
-                          lineno=self.lineno,
+            p2, p3 = p[2], p[3]
+            if isinstance(p1, list) and len(p1) == 2:
+                keys = [p1[0]]
+                vals = [p1[1]]
+                for k, v in zip(p2[::2], p2[1::2]):
+                    keys.append(k)
+                    vals.append(v)
+            else:
+                keys = [p1]
+                vals = [p3]
+                if isinstance(p3, ast.Tuple) and \
+                   not (hasattr(p3, '_real_tuple') and p3._real_tuple):
+                    vals = p3.elts
+            p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), lineno=self.lineno,
                           col_offset=self.col)
-        elif lenp == 5:
-            comps = p[4].get('comps', [])
-            p0 = ast.DictComp(key=p1,
-                              value=p[3],
-                              generators=comps,
-                              lineno=self.lineno,
-                              col_offset=self.col)
         elif lenp == 6:
-            p3, p4 = p[3], p[4]
-            keys = [p1] + p4[::2]
-            values = [p3] + p4[1::2]
-            p0 = ast.Dict(keys=keys,
-                          values=values,
-                          ctx=ast.Load(),
-                          lineno=self.lineno,
+            p4 = p[4]
+            keys = [p1]
+            vals = [p[3]]
+            for k, v in zip(p4[::2], p4[1::2]):
+                keys.append(k)
+                vals.append(v)
+            p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), lineno=self.lineno,
                           col_offset=self.col)
         else:
             assert False
