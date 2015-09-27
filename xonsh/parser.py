@@ -1634,6 +1634,14 @@ class Parser(object):
         """
         p[0] = p[1]
 
+    def _list_or_elts_if_not_real_tuple(self, x):
+        if isinstance(x, ast.Tuple) and not (hasattr(x, '_real_tuple') and \
+                                             x._real_tuple):
+            rtn = x.elts
+        else:
+            rtn = [x]
+        return rtn
+
     def p_atom(self, p):
         """atom : LPAREN yield_expr_or_testlist_comp_opt RPAREN
                 | LBRACKET testlist_comp_opt RBRACKET
@@ -1921,7 +1929,7 @@ class Parser(object):
         """dictorsetmaker : item comp_for
                           | test_or_star_expr comp_for
                           | testlist
-                          | test_or_star_expr COMMA
+                          | test_or_star_expr comma_opt
                           | test_or_star_expr comma_test_or_star_expr_list comma_opt
                           | test COLON testlist
                           | item comma_item_list comma_opt
@@ -1930,20 +1938,23 @@ class Parser(object):
         p1 = p[1]
         lenp = len(p)
         if lenp == 2:
-            elts = [p1]
-            if isinstance(p1, ast.Tuple) and \
-                    not (hasattr(p1, '_real_tuple') and p1._real_tuple):
-                elts = p1.elts
+            elts = self._list_or_elts_if_not_real_tuple(p1)
             p0 = ast.Set(elts=elts, ctx=ast.Load(), lineno=self.lineno,
                          col_offset=self.col)
         elif lenp == 3:
-            comps = p[2].get('comps', [])
-            if isinstance(p1, list) and len(p1) == 2:
-                p0 = ast.DictComp(key=p1[0], value=p1[1], generators=comps,
-                                  lineno=self.lineno, col_offset=self.col)
+            p2 = p[2]
+            if p2 is None or p2 == ',':
+                elts = self._list_or_elts_if_not_real_tuple(p1)
+                p0 = ast.Set(elts=elts, ctx=ast.Load(), lineno=self.lineno,
+                            col_offset=self.col)
             else:
-                p0 = ast.SetComp(elt=p1, generators=comps, lineno=self.lineno,
-                                 col_offset=self.col)
+                comps = p2.get('comps', [])
+                if isinstance(p1, list) and len(p1) == 2:
+                    p0 = ast.DictComp(key=p1[0], value=p1[1], generators=comps,
+                                      lineno=self.lineno, col_offset=self.col)
+                else:
+                    p0 = ast.SetComp(elt=p1, generators=comps, lineno=self.lineno,
+                                     col_offset=self.col)
         elif lenp == 4:
             p2, p3 = p[2], p[3]
             if isinstance(p1, list) and len(p1) == 2:
@@ -1957,10 +1968,7 @@ class Parser(object):
                               col_offset=self.col)
             elif p2 == ':':
                 keys = [p1]
-                vals = [p3]
-                if isinstance(p3, ast.Tuple) and \
-                   not (hasattr(p3, '_real_tuple') and p3._real_tuple):
-                    vals = p3.elts
+                vals = self._list_or_elts_if_not_real_tuple(p3)
                 p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), lineno=self.lineno,
                               col_offset=self.col)
             elif isinstance(p1, ast.AST):
