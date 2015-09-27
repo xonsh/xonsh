@@ -1238,6 +1238,11 @@ class Parser(object):
                          lineno=self.lineno,
                          col_offset=self.col)]
 
+    def p_async_with_stmt(self, p):
+        """async_with_stmt : ASYNC with_stmt"""
+        w = p[2][0]
+        p[0] = [ast.AsyncWith(**w.__dict__)]
+
     def p_as_expr(self, p):
         """as_expr : AS expr"""
         p2 = p[2]
@@ -1273,8 +1278,8 @@ class Parser(object):
 
     def p_async_stmt(self, p):
         """async_stmt : async_funcdef
+                      | async_with_stmt 
         """
-#                      | async_with_stmt 
 #                      | async_for_stmt
         p[0] = p[1]
 
