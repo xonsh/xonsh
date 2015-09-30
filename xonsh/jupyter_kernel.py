@@ -52,6 +52,15 @@ class XonshKernel(Kernel):
                        'payload': [], 'user_expressions': {}}
         return message
 
+    def  do_complete(self, code, pos):
+        """Get completions."""
+        shell = builtins.__xonsh_shell__
+        comps, beg, end = shell.completer.find_and_complete(code, pos, shell.ctx)
+        message = {'matches': comps, 'cursor_start': beg, 'cursor_end': end+1,
+                   'metadata': {}, 'status': 'ok'}
+        return message
+
+
 
 if __name__ == '__main__':
     from ipykernel.kernelapp import IPKernelApp
