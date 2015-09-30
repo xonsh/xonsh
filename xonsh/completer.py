@@ -36,6 +36,7 @@ COMP_CWORD={n}
 for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 """
 
+WS = set(' \t\r\n')
 
 get_env = lambda name, default=None: builtins.__xonsh_env__.get(name, default)
 
@@ -97,7 +98,7 @@ class Completer(object):
             self.have_bash = False
 
     def complete(self, prefix, line, begidx, endidx, ctx=None):
-        """Complete the string s, given a possible execution context.
+        """Complete the string, given a possible execution context.
 
         Parameters
         ----------
@@ -167,6 +168,41 @@ class Completer(object):
                 if startswither(s, prefix, prefixlow)}
         rtn |= self.path_complete(prefix)
         return sorted(rtn)
+
+    def find_and_complete(self, line, idx, ctx=None):
+        """Finds the completions given only the full code line and a current cursor
+        position. This represents an easier alternative to the complete() method.
+
+        Parameters
+        ----------
+        line : str
+            The line that prefix appears on.
+        idx : int
+            The current position in the line.
+        ctx : Iterable of str (ie dict, set, etc), optional
+            Names in the current execution context.
+
+        Returns
+        -------
+        rtn : list of str
+            Possible completions of prefix, sorted alphabetically.
+        begidx : int
+            The index in line that prefix starts on.
+        endidx : int
+            The index in line that prefix ends on.
+        """
+        if idx < 0:
+            raise ValueError('index must be non-negative!')
+        n = len(line)
+        begidx = endidx = (idx - 1 if idx == n else idx)
+        while 0 < begidx and line[begidx] not in WS:
+            begidx -= 1
+        begidx = begidx + 1 if line[begidx] in WS else begidx
+        while endidx < n - 1 and line[endidx] not in WS:
+            endidx += 1
+        endidx = endidx - 1 if line[endidx] in WS else endidx
+        prefix = line[begidx:endidx+1]
+        return self.complete(prefix, line, begidx, endidx, ctx=ctx), begidx, endidx
 
     def _add_env(self, paths, prefix):
         if prefix.startswith('$'):
