@@ -4,6 +4,8 @@
 from __future__ import print_function, unicode_literals
 import os
 import sys
+import json
+from tempfile import TemporaryDirectory
 try:
     from setuptools import setup
     from setuptools.command.sdist import sdist
@@ -16,6 +18,12 @@ except ImportError:
     from distutils.command.install import install as install
     HAVE_SETUPTOOLS = False
 
+try:
+    from jupyter_client.kernelspec import install_kernel_spec
+    HAVE_JUPYTER = True
+except ImportError:
+    HAVE_JUPYTER = False
+
 from xonsh import __version__ as XONSH_VERSION
 
 TABLES = ['xonsh/lexer_table.py', 'xonsh/parser_table.py']
@@ -26,6 +34,7 @@ def clean_tables():
             os.remove(f)
             print('Remove ' + f)
 
+
 def build_tables():
     print('Building lexer and parser tables.')
     sys.path.insert(0, os.path.dirname(__file__))
@@ -34,17 +43,39 @@ def build_tables():
            outputdir='xonsh')
     sys.path.pop(0)
 
+
+def install_jupyter_hook():
+    if not HAVE_JUPYTER:
+        print('Could not install Jupyter kernel spec, please install Jupyter/IPython.')
+        return
+    spec = {"argv": [sys.executable, "-m", "xonsh.jupyter_kernel",
+                                     "-f", "{connection_file}"],
+            "display_name":"Xonsh",
+            "language":"xonsh",
+            "codemirror_mode":"shell",
+            }
+    with TemporaryDirectory() as d:
+        os.chmod(d, 0o755)  # Starts off as 700, not user readable
+        with open(os.path.join(d, 'kernel.json'), 'w') as f:
+            json.dump(spec, f, sort_keys=True)
+        print('Installing Jupyter kernel spec...')
+        install_kernel_spec(d, 'xonsh', user=('--user' in sys.argv), replace=True)
+
+
 class xinstall(install):
     def run(self):
         clean_tables()
         build_tables()
+        install_jupyter_hook()
         install.run(self)
+
 
 class xsdist(sdist):
     def make_release_tree(self, basedir, files):
         clean_tables()
         build_tables()
         sdist.make_release_tree(self, basedir, files)
+
 
 if HAVE_SETUPTOOLS:
     class xdevelop(develop):

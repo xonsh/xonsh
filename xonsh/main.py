@@ -6,6 +6,7 @@ import signal
 import builtins
 import subprocess
 from argparse import ArgumentParser, Namespace
+from contextlib import contextmanager
 
 from xonsh import __version__
 from xonsh.shell import Shell
@@ -115,7 +116,8 @@ def postmain(args=None):
     del builtins.__xonsh_shell__
 
 
-def main_generator(argv=None):
+@contextmanager
+def main_context(argv=None):
     """Generator that runs pre- and post-main() functions. This has two iterations.
     The first yields the shell. The second returns None but cleans
     up the shell.
@@ -123,6 +125,7 @@ def main_generator(argv=None):
     args = premain(argv)
     yield builtins.__xonsh_shell__
     postmain(args)
+
 
 
 if __name__ == '__main__':
