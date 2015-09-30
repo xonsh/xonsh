@@ -28,6 +28,11 @@ from xonsh import __version__ as XONSH_VERSION
 
 TABLES = ['xonsh/lexer_table.py', 'xonsh/parser_table.py']
 
+
+CONDA = ("--conda" in sys.argv)
+if CONDA:
+    sys.argv.remove("--conda")
+
 def clean_tables():
     for f in TABLES:
         if os.path.isfile(f):
@@ -54,13 +59,22 @@ def install_jupyter_hook():
             "language":"xonsh",
             "codemirror_mode":"shell",
             }
-    with TemporaryDirectory() as d:
-        os.chmod(d, 0o755)  # Starts off as 700, not user readable
+    if CONDA:
+        d = os.path.join(os.environ['PREFIX'] +
+                         '/share/jupyter/kernels/xonsh/')
+        os.makedirs(d, exist_ok=True)
+        if sys.platform == 'win32':
+            # Ensure that conda-build detects the hard coded prefix
+            spec['argv'][0] = spec['argv'][0].replace(os.sep, os.altsep)
         with open(os.path.join(d, 'kernel.json'), 'w') as f:
             json.dump(spec, f, sort_keys=True)
-        print('Installing Jupyter kernel spec...')
-        install_kernel_spec(d, 'xonsh', user=('--user' in sys.argv), replace=True)
-
+    else:
+        with TemporaryDirectory() as d:
+            os.chmod(d, 0o755)  # Starts off as 700, not user readable
+            with open(os.path.join(d, 'kernel.json'), 'w') as f:
+                json.dump(spec, f, sort_keys=True)
+            print('Installing Jupyter kernel spec...')
+            install_kernel_spec(d, 'xonsh', user=('--user' in sys.argv), replace=True)
 
 class xinstall(install):
     def run(self):

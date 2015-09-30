@@ -6,15 +6,16 @@ source:
    path: ../
 
 build:
-  script: python setup.py install
+  script: python setup.py install --conda
   number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
   entry_points:
     - xonsh = xonsh.main:main
-
+  
 requirements:
   build:
     - python
     - ply
+    - jupyter
   run:
     - python
     - ply
