@@ -146,6 +146,13 @@ applicable.
     * - XONSH_INTERACTIVE
       - 
       - ``True`` if xonsh is running interactively, and ``False`` otherwise.
+    * - MOUSE_SUPPORT
+      - ``False``
+      - Enable mouse support in the prompt_toolkit shell. This allows clicking
+        for positioning the cursor or selecting a completion. In some terminals
+        however, this disables the ability to scroll back through the history
+        of the terminal.
+        (Only usable with SHELL_TYPE=prompt_toolkit)
     * - XONSH_SHOW_TRACEBACK
       - ``False`` but not set
       - Controls if a traceback is shown exceptions occur in the shell. Set ``True`` 

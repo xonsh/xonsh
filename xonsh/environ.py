@@ -62,6 +62,7 @@ DEFAULT_ENSURERS = {
     'CASE_SENSITIVE_COMPLETIONS': (is_bool, to_bool, bool_to_str),
     'BASH_COMPLETIONS': (is_env_path, str_to_env_path, env_path_to_str),
     'TEEPTY_PIPE_DELAY': (is_float, float, str),
+    'MOUSE_SUPPORT': (is_bool, to_bool, bool_to_str),
 }
 
 #
@@ -75,7 +76,7 @@ def default_value(f):
 def is_callable_default(x):
     """Checks if a value is a callable default."""
     return callable(x) and getattr(x, '_xonsh_callable_default', False)
-    
+
 DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
                   '{cwd}{branch_color}{curr_branch} '
                   '{BOLD_BLUE}${NO_COLOR} ')
@@ -112,7 +113,7 @@ DEFAULT_VALUES = {
     'AUTO_PUSHD': False,
     'BASH_COMPLETIONS': ('/usr/local/etc/bash_completion',
                          '/opt/local/etc/profile.d/bash_completion.sh') if ON_MAC \
-                        else ('/etc/bash_completion', 
+                        else ('/etc/bash_completion',
                               '/usr/share/bash-completion/completions/git'),
     'CASE_SENSITIVE_COMPLETIONS': ON_LINUX,
     'CDPATH': (),
@@ -581,6 +582,7 @@ BASE_ENV = {
     'LC_MONETARY': locale.setlocale(locale.LC_MONETARY),
     'LC_NUMERIC': locale.setlocale(locale.LC_NUMERIC),
     'XONSH_VERSION': XONSH_VERSION,
+    'MOUSE_SUPPORT': False,
 }
 
 try:
@@ -590,11 +592,11 @@ except AttributeError:
     pass
 
 def load_static_config(ctx):
-    """Loads a static configuration file from a given context, rather than the 
+    """Loads a static configuration file from a given context, rather than the
     current environment.
     """
     env = {}
-    env['XDG_CONFIG_HOME'] = ctx.get('XDG_CONFIG_HOME', 
+    env['XDG_CONFIG_HOME'] = ctx.get('XDG_CONFIG_HOME',
                                      DEFAULT_VALUES['XDG_CONFIG_HOME'])
     env['XONSH_CONFIG_DIR'] = ctx['XONSH_CONFIG_DIR'] if 'XONSH_CONFIG_DIR' in ctx \
                               else xonsh_config_dir(env)
@@ -656,7 +658,7 @@ def default_env(env=None):
     ctx.update(os.environ)
     conf = load_static_config(ctx)
     ctx.update(conf.get('env', ()))
-    ctx.update(load_foreign_envs(shells=conf.get('foreign_shells', DEFAULT_SHELLS), 
+    ctx.update(load_foreign_envs(shells=conf.get('foreign_shells', DEFAULT_SHELLS),
                                  issue_warning=False))
     if ON_WINDOWS:
         windows_env_fixes(ctx)
