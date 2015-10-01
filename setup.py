@@ -60,8 +60,7 @@ def install_jupyter_hook():
             "codemirror_mode":"shell",
             }
     if CONDA:
-        d = os.path.join(os.environ['PREFIX'] +
-                         '/share/jupyter/kernels/xonsh/')
+        d = os.path.join(sys.prefix + '/share/jupyter/kernels/xonsh/')
         os.makedirs(d, exist_ok=True)
         if sys.platform == 'win32':
             # Ensure that conda-build detects the hard coded prefix
