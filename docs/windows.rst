@@ -12,7 +12,16 @@ Next, install the other dependencies via ``pip``:
 .. code-block:: bat
 
    > pip install ply
-   > pip install pyreadline
+   > pip install prompt-toolkit
+
+While prompt-toolkit is considered an optional dependency, it's the
+recommended alternative to pyreadline for Windows users. Once installed,
+you have to enable prompt-toolkit by adding the following to your
+``~/.xonshrc`` file:
+
+.. code-block:: xonsh
+
+   $SHELL_TYPE = 'prompt_toolkit'
 
 Download the latest `xonsh-master.zip`_ from github and unzip it
 to ``xonsh-master``.
