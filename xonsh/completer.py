@@ -14,6 +14,7 @@ from xonsh.tools import ON_WINDOWS
 
 RE_DASHF = re.compile(r'-F\s+(\w+)')
 RE_ATTR = re.compile(r'(\S+(\..+)*)\.(\w*)$')
+RE_WIN_DRIVE = re.compile(r'^([a-zA-Z]):\\')
 
 XONSH_TOKENS = {
     'and ', 'as ', 'assert ', 'break', 'class ', 'continue', 'def ', 'del ',
@@ -271,6 +272,8 @@ class Completer(object):
         srcs = []
         for f in builtins.__xonsh_env__.get('BASH_COMPLETIONS', ()):
             if os.path.isfile(f):
+                if ON_WINDOWS:  # We need to "Unixify" Windows paths for Bash to understand
+                    f = RE_WIN_DRIVE.sub(lambda m: '/{0}/'.format(m.group(1).lower()), f).replace('\\', '/')
                 srcs.append('source ' + f)
         return srcs
 
