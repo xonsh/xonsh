@@ -163,6 +163,8 @@ class CommandField(Sequence):
             return [self[i] for i in range(*key.indices(size))]
         elif not isinstance(key, int):
             raise IndexError('CommandField may only be indexed by int or slice.')
+        elif size == 0:
+            raise IndexError('CommandField is empty.')
         # now we know we have an int
         key = size + key if key < 0 else key  # ensure key is non-negative
         bufsize = len(self.hist.buffer)

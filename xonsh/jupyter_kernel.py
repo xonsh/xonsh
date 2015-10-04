@@ -1,10 +1,12 @@
 """Hooks for Jupyter Xonsh Kernel."""
+import io
 import builtins
 
 from ipykernel.kernelbase import Kernel
 
 from xonsh import __version__ as version
 from xonsh.main import main_context
+from xonsh.tools import redirect_stdout, redirect_stderr
 
 
 class XonshKernel(Kernel):
@@ -30,20 +32,32 @@ class XonshKernel(Kernel):
 
         shell = builtins.__xonsh_shell__
         hist = builtins.__xonsh_history__
+        out = io.StringIO()
+        err = io.StringIO()
         try:
-            shell.default(code)
+            with redirect_stdout(out), redirect_stderr(err):
+                shell.default(code)
             interrupted = False
         except KeyboardInterrupt:
             interrupted = True
 
         if not silent:  # stdout response
-            response = {'name': 'stdout', 'text': hist.outs[-1]}
-            self.send_response(self.iopub_socket, 'stream', response)
+            if out.tell() > 0:
+                out.seek(0)
+                response = {'name': 'stdout', 'text': out.read()}
+                self.send_response(self.iopub_socket, 'stream', response)
+            if len(hist) > 0:
+                response = {'name': 'stdout', 'text': hist.outs[-1]}
+                self.send_response(self.iopub_socket, 'stream', response)
+            if err.tell() > 0:
+                err.seek(0)
+                response = {'name': 'stderr', 'text': err.read()}
+                self.send_response(self.iopub_socket, 'stream', response)
 
         if interrupted:
             return {'status': 'abort', 'execution_count': self.execution_count}
 
-        rtn = hist.rtns[-1]
+        rtn = 0 if len(hist) == 0 else hist.rtns[-1]
         if 0 < rtn:
             message = {'status': 'error', 'execution_count': self.execution_count,
                        'ename': '', 'evalue': str(rtn), 'traceback': []}
