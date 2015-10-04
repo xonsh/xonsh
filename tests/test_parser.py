@@ -12,7 +12,7 @@ assert_equal.__self__.maxDiff = None
 
 from xonsh.parser import Parser
 
-from tools import mock_xonsh_env
+from tools import mock_xonsh_env, skip_if, VER_3_4, VER_3_5, VER_MAJOR_MINOR
 
 PARSER = None
 DEBUG_LEVEL = 0
@@ -414,6 +414,50 @@ def test_dict_two_comma():
 def test_dict_three():
     yield check_ast, '{42: 65, 6: 28, 1: 2}'
 
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_dict_from_dict_two_xy():
+    yield check_ast, '{"x": 1, **{"y": 2}}'
+
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_dict_from_dict_two_x_first():
+    yield check_ast, '{"x": 1, **{"x": 2}}'
+
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_dict_from_dict_two_x_second():
+    yield check_ast, '{**{"x": 2}, "x": 1}'
+
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_unpack_range_tuple():
+    yield check_stmts, '*range(4),'
+
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_unpack_range_tuple_4():
+    yield check_stmts, '*range(4), 4'
+
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_unpack_range_tuple_parens():
+    yield check_ast, '(*range(4),)'
+
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_unpack_range_tuple_parens_4():
+    yield check_ast, '(*range(4), 4)'
+
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_unpack_range_list():
+    yield check_ast, '[*range(4)]'
+
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_unpack_range_list_4():
+    yield check_ast, '[*range(4), 4]'
+
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_unpack_range_set():
+    yield check_ast, '{*range(4)}'
+
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_unpack_range_set_4():
+    yield check_ast, '{*range(4), 4}'
+
 def test_true():
     yield check_ast, 'True'
 
@@ -683,6 +727,18 @@ def test_call_int_base_dict():
 
 def test_call_dict_kwargs():
     yield check_ast, 'dict(**{"base": 8})'
+
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_call_list_many_star_args():
+    yield check_ast, 'min(*[1, 2], 3, *[4, 5])'
+
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_call_list_many_starstar_args():
+    yield check_ast, 'dict(**{"a": 2}, v=3, **{"c": 5})'
+
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_call_list_many_star_and_starstar_args():
+    yield check_ast, 'x(*[("a", 2)], *[("v", 3)], **{"c": 5})', False
 
 def test_call_alot():
     yield check_ast, 'x(1, *args, **kwargs)', False

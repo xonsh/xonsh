@@ -199,7 +199,7 @@ class Parser(object):
         self.lexer = lexer = Lexer()
         self.tokens = lexer.tokens
 
-        opt_rules = (
+        opt_rules = [
             'newlines', 'arglist', 'func_call', 'rarrow_test', 'typedargslist',
             'equals_test', 'colon_test', 'tfpdef', 'comma_tfpdef_list',
             'comma_pow_tfpdef', 'vfpdef', 'comma_vfpdef_list',
@@ -213,12 +213,13 @@ class Parser(object):
             'op_factor_list', 'trailer_list', 'testlist_comp',
             'yield_expr_or_testlist_comp', 'dictorsetmaker',
             'comma_subscript_list', 'test', 'sliceop', 'comp_iter',
-            'yield_arg', 'argument_comma_list', 'comma_argument_list',
-            'test_comma_list', )
+            'yield_arg', 'test_comma_list',]
+        if VER_MAJOR_MINOR <= VER_3_4:
+            opt_rules += ['argument_comma_list', 'comma_argument_list',]
         for rule in opt_rules:
             self._opt_rule(rule)
 
-        list_rules = (
+        list_rules = [
             'comma_tfpdef', 'comma_vfpdef', 'semi_small_stmt',
             'comma_test_or_star_expr', 'period_or_ellipsis',
             'comma_import_as_name', 'comma_dotted_as_name', 'period_name',
@@ -226,9 +227,11 @@ class Parser(object):
             'or_and_test', 'and_not_test', 'comp_op_expr', 'pipe_xor_expr',
             'xor_and_expr', 'ampersand_shift_expr', 'shift_arith_expr',
             'pm_term', 'op_factor', 'trailer', 'comma_subscript',
-            'comma_expr_or_star_expr', 'comma_test', 'argument_comma',
-            'comma_argument', 'comma_item', 'attr_period_name', 'test_comma',
-            'equals_yield_expr_or_testlist', )
+            'comma_expr_or_star_expr', 'comma_test', 'comma_argument', 'comma_item', 
+            'attr_period_name', 'test_comma', 'equals_yield_expr_or_testlist', 
+            'test_or_star_expr']
+        if VER_MAJOR_MINOR <= VER_3_4:
+            list_rules += ['argument_comma',]
         for rule in list_rules:
             self._list_rule(rule)
 
@@ -803,11 +806,8 @@ class Parser(object):
                                 col_offset=self.col)
         elif lenp == 4:
             op = self._augassign_op[p2]()
-            p0 = ast.AugAssign(target=p1[0],
-                               op=op,
-                               value=p[3],
-                               lineno=self.lineno,
-                               col_offset=self.col)
+            p0 = ast.AugAssign(target=p1[0], op=op, value=p[3],
+                               lineno=self.lineno, col_offset=self.col)
         elif lenp == 5 or lenp == 6:
             if lenp == 5:
                 targs, rhs = p[3], p[4][0]
@@ -1631,6 +1631,14 @@ class Parser(object):
         """
         p[0] = p[1]
 
+    def _list_or_elts_if_not_real_tuple(self, x):
+        if isinstance(x, ast.Tuple) and not (hasattr(x, '_real_tuple') and \
+                                             x._real_tuple):
+            rtn = x.elts
+        else:
+            rtn = [x]
+        return rtn
+
     def p_atom(self, p):
         """atom : LPAREN yield_expr_or_testlist_comp_opt RPAREN
                 | LBRACKET testlist_comp_opt RBRACKET
@@ -1893,60 +1901,87 @@ class Parser(object):
             p1.elts += p2
         p[0] = p1
 
+    @docstring_by_version(
+        v34="""item : test COLON test""",
+        v35=\
+        """item : test COLON test
+                | POW expr
+        """,
+        )
+    def p_item(self, p):
+        lenp = len(p)
+        if lenp == 4: 
+            p0 = [p[1], p[3]]
+        elif lenp == 3:
+            p0 = [None, p[2]]
+        else:
+            assert False
+        p[0] = p0
+
     def p_comma_item(self, p):
-        """comma_item : COMMA test COLON test"""
-        p[0] = [p[2], p[4]]
+        """comma_item : COMMA item"""
+        p[0] = p[2]
 
     def p_dictorsetmaker(self, p):
-        """dictorsetmaker : test COLON test comp_for
-                          | test COLON test comma_item_list comma_opt
-                          | test COLON testlist
-                          | test comp_for
+        """dictorsetmaker : item comp_for
+                          | test_or_star_expr comp_for
                           | testlist
+                          | test_or_star_expr comma_opt
+                          | test_or_star_expr comma_test_or_star_expr_list comma_opt
+                          | test COLON testlist
+                          | item comma_item_list comma_opt
+                          | test COLON test comma_item_list comma_opt
         """
         p1 = p[1]
         lenp = len(p)
         if lenp == 2:
-            elts = [p1]
-            if isinstance(p1, ast.Tuple) and \
-                    not (hasattr(p1, '_real_tuple') and p1._real_tuple):
-                elts = p1.elts
-            p0 = ast.Set(elts=elts,
-                         ctx=ast.Load(),
-                         lineno=self.lineno,
+            elts = self._list_or_elts_if_not_real_tuple(p1)
+            p0 = ast.Set(elts=elts, ctx=ast.Load(), lineno=self.lineno,
                          col_offset=self.col)
         elif lenp == 3:
-            comps = p[2].get('comps', [])
-            p0 = ast.SetComp(elt=p1,
-                             generators=comps,
-                             lineno=self.lineno,
-                             col_offset=self.col)
+            p2 = p[2]
+            if p2 is None or p2 == ',':
+                elts = self._list_or_elts_if_not_real_tuple(p1)
+                p0 = ast.Set(elts=elts, ctx=ast.Load(), lineno=self.lineno,
+                            col_offset=self.col)
+            else:
+                comps = p2.get('comps', [])
+                if isinstance(p1, list) and len(p1) == 2:
+                    p0 = ast.DictComp(key=p1[0], value=p1[1], generators=comps,
+                                      lineno=self.lineno, col_offset=self.col)
+                else:
+                    p0 = ast.SetComp(elt=p1, generators=comps, lineno=self.lineno,
+                                     col_offset=self.col)
         elif lenp == 4:
-            p3 = p[3]
-            vals = [p3]
-            if isinstance(p3, ast.Tuple) and \
-                    not (hasattr(p3, '_real_tuple') and p3._real_tuple):
-                vals = p3.elts
-            p0 = ast.Dict(keys=[p1],
-                          values=vals,
-                          ctx=ast.Load(),
-                          lineno=self.lineno,
-                          col_offset=self.col)
-        elif lenp == 5:
-            comps = p[4].get('comps', [])
-            p0 = ast.DictComp(key=p1,
-                              value=p[3],
-                              generators=comps,
-                              lineno=self.lineno,
+            p2, p3 = p[2], p[3]
+            if isinstance(p1, list) and len(p1) == 2:
+                cls = ast.Dict
+                keys = [p1[0]]
+                vals = [p1[1]]
+                for k, v in zip(p2[::2], p2[1::2]):
+                    keys.append(k)
+                    vals.append(v)
+                p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), lineno=self.lineno,
                               col_offset=self.col)
+            elif p2 == ':':
+                keys = [p1]
+                vals = self._list_or_elts_if_not_real_tuple(p3)
+                p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), lineno=self.lineno,
+                              col_offset=self.col)
+            elif isinstance(p1, ast.AST):
+                elts = [p1] + p2
+                p0 = ast.Set(elts=elts, ctx=ast.Load(), lineno=self.lineno,
+                             col_offset=self.col)
+            else:
+                assert False
         elif lenp == 6:
-            p3, p4 = p[3], p[4]
-            keys = [p1] + p4[::2]
-            values = [p3] + p4[1::2]
-            p0 = ast.Dict(keys=keys,
-                          values=values,
-                          ctx=ast.Load(),
-                          lineno=self.lineno,
+            p4 = p[4]
+            keys = [p1]
+            vals = [p[3]]
+            for k, v in zip(p4[::2], p4[1::2]):
+                keys.append(k)
+                vals.append(v)
+            p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), lineno=self.lineno,
                           col_offset=self.col)
         else:
             assert False
@@ -1978,61 +2013,79 @@ class Parser(object):
         else:
             args['args'].append(arg)
 
-    def p_arglist(self, p):
-        """arglist : argument comma_opt
-                   | argument_comma_list argument comma_opt
-                   | argument_comma_list_opt TIMES test comma_argument_list_opt
-                   | argument_comma_list_opt TIMES test COMMA POW test
-                   | argument_comma_list_opt TIMES test comma_argument_list COMMA POW test
-                   | argument_comma_list_opt POW test
-        """
-        lenp = len(p)
-        p1, p2 = p[1], p[2]
-        p0 = {'args': [], 'keywords': [], 'starargs': None, 'kwargs': None}
-        if lenp == 3:
+    #
+    # arglist rule had significant changes
+    #
+    if VER_3_5 <= VER_MAJOR_MINOR:
+        def p_arglist(self, p):
+            """arglist : argument comma_opt
+                       | argument comma_argument_list comma_opt
+            """
+            p0 = {'args': [], 'keywords': []}
+            p1, p2 = p[1], p[2]
+            p2 = None if p2 == ',' else p2
             self._set_arg(p0, p1)
-        elif lenp == 4 and p2 != '**':
-            for arg in p1:
-                self._set_arg(p0, arg)
-            self._set_arg(p0, p2)
-        elif lenp == 4 and p2 == '**':
-            if p1 is not None:
+            if p2 is not None:
+                for arg in p2:
+                    self._set_arg(p0, arg)
+            p[0] = p0
+    else:  # Python v3.4
+        def p_arglist(self, p):
+            """arglist : argument comma_opt
+                       | argument_comma_list argument comma_opt
+                       | argument_comma_list_opt TIMES test comma_argument_list_opt
+                       | argument_comma_list_opt TIMES test COMMA POW test
+                       | argument_comma_list_opt TIMES test comma_argument_list COMMA POW test
+                       | argument_comma_list_opt POW test
+            """
+            lenp = len(p)
+            p1, p2 = p[1], p[2]
+            p0 = {'args': [], 'keywords': [], 'starargs': None, 'kwargs': None}
+            if lenp == 3:
+                self._set_arg(p0, p1)
+            elif lenp == 4 and p2 != '**':
                 for arg in p1:
                     self._set_arg(p0, arg)
-            self._set_arg(p0, p[3], ensure_kw=True)
-        elif lenp == 5:
-            p0['starargs'], p4 = p[3], p[4]
-            if p1 is not None:
-                for arg in p1:
-                    self._set_arg(p0, arg)
-            if p4 is not None:
+                self._set_arg(p0, p2)
+            elif lenp == 4 and p2 == '**':
+                if p1 is not None:
+                    for arg in p1:
+                        self._set_arg(p0, arg)
+                self._set_arg(p0, p[3], ensure_kw=True)
+            elif lenp == 5:
+                p0['starargs'], p4 = p[3], p[4]
+                if p1 is not None:
+                    for arg in p1:
+                        self._set_arg(p0, arg)
+                if p4 is not None:
+                    for arg in p4:
+                        self._set_arg(p0, arg, ensure_kw=True)
+            elif lenp == 7:
+                p0['starargs'] = p[3]
+                if p1 is not None:
+                    for arg in p1:
+                        self._set_arg(p0, arg)
+                self._set_arg(p0, p[6], ensure_kw=True)
+            elif lenp == 8:
+                kwkey = 'keywords' if VER_MAJOR_MINOR >= VER_3_5 else 'kwargs'
+                p0['starargs'], p4 = p[3], p[4]
+                if p1 is not None:
+                    for arg in p1:
+                        self._set_arg(p0, arg)
                 for arg in p4:
                     self._set_arg(p0, arg, ensure_kw=True)
-        elif lenp == 7:
-            p0['starargs'] = p[3]
-            if p1 is not None:
-                for arg in p1:
-                    self._set_arg(p0, arg)
-            self._set_arg(p0, p[6], ensure_kw=True)
-        elif lenp == 8:
-            kwkey = 'keywords' if VER_MAJOR_MINOR >= VER_3_5 else 'kwargs'
-            p0['starargs'], p4 = p[3], p[4]
-            if p1 is not None:
-                for arg in p1:
-                    self._set_arg(p0, arg)
-            for arg in p4:
-                self._set_arg(p0, arg, ensure_kw=True)
-            self._set_arg(p0, p[7], ensure_kw=True)
-        else:
-            assert False
-        p[0] = p0
+                self._set_arg(p0, p[7], ensure_kw=True)
+            else:
+                assert False
+            p[0] = p0
 
-    def p_argument_comma(self, p):
-        """argument_comma : argument COMMA"""
-        p[0] = [p[1]]
+    if VER_MAJOR_MINOR <= VER_3_4:
+        def p_argument_comma(self, p):
+            """argument_comma : argument COMMA"""
+            p[0] = [p[1]]
 
     def p_comma_argument(self, p):
-        """comma_argument : COMMA argument """
+        """comma_argument : COMMA argument"""
         p[0] = [p[2]]
 
     @docstring_by_version(
@@ -2045,21 +2098,36 @@ class Parser(object):
         """argument : test_or_star_expr
                     | test comp_for
                     | test EQUALS test
+                    | POW test
+                    | TIMES test
         """,
         )
     def p_argument(self, p):
+        # v3.4 Notes
         # Really [keyword '='] test
         # The reason that keywords are test nodes instead of NAME is that using
         # NAME results in an ambiguity.
+        #
+        # v3.5 Notes
+        # "test '=' test" is really "keyword '=' test", but we have no such token.
+        # These need to be in a single rule to avoid grammar that is ambiguous
+        # to our LL(1) parser. Even though 'test' includes '*expr' in star_expr,
+        # we explicitly match '*' here, too, to give it proper precedence.
+        # Illegal combinations and orderings are blocked in ast.c:
+        # multiple (test comp_for) arguements are blocked; keyword unpackings
+        # that precede iterable unpackings are blocked; etc.
         p1 = p[1]
         lenp = len(p)
         if lenp == 2:
             p0 = p1
         elif lenp == 3:
-            p0 = ast.GeneratorExp(elt=p1,
-                                  generators=p[2]['comps'],
-                                  lineno=self.lineno,
-                                  col_offset=self.col)
+            if p1 == '**':
+                p0 = ast.keyword(arg=None, value=p[2])
+            elif p1 == '*':
+                p0 = ast.Starred(value=p[2])
+            else:
+                p0 = ast.GeneratorExp(elt=p1, generators=p[2]['comps'],
+                                      lineno=self.lineno, col_offset=self.col)
         elif lenp == 4:
             p0 = ast.keyword(arg=p1.id, value=p[3])
         else:
