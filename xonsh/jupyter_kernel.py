@@ -46,12 +46,12 @@ class XonshKernel(Kernel):
                 out.seek(0)
                 response = {'name': 'stdout', 'text': out.read()}
                 self.send_response(self.iopub_socket, 'stream', response)
-            if len(hist) > 0:
-                response = {'name': 'stdout', 'text': hist.outs[-1]}
-                self.send_response(self.iopub_socket, 'stream', response)
             if err.tell() > 0:
                 err.seek(0)
                 response = {'name': 'stderr', 'text': err.read()}
+                self.send_response(self.iopub_socket, 'stream', response)
+            if len(hist) > 0 and out.tell() == 0 and err.tell() == 0:
+                response = {'name': 'stdout', 'text': hist.outs[-1]}
                 self.send_response(self.iopub_socket, 'stream', response)
 
         if interrupted:
