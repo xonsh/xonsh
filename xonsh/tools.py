@@ -43,6 +43,21 @@ ON_MAC = (platform.system() == 'Darwin')
 ON_LINUX = (platform.system() == 'Linux')
 ON_POSIX = (os.name == 'posix')
 
+VER_3_4 = (3, 4)
+VER_3_5 = (3, 5)
+VER_MAJOR_MINOR = sys.version_info[:2]
+V_MAJOR_MINOR = 'v{0}{1}'.format(*sys.version_info[:2])
+
+def docstring_by_version(**kwargs):
+    """Sets a docstring by the python version."""
+    doc = kwargs.get(V_MAJOR_MINOR, None)
+    if V_MAJOR_MINOR is None:
+        raise RuntimeError('unrecognized version ' + V_MAJOR_MINOR)
+    def dec(f):
+        f.__doc__ = doc
+        return f
+    return dec
+
 
 class XonshError(Exception):
     pass

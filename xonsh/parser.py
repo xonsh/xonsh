@@ -8,21 +8,8 @@ from ply import yacc
 
 from xonsh import ast
 from xonsh.lexer import Lexer
-
-VER_3_4 = (3, 4)
-VER_3_5 = (3, 5)
-VER_MAJOR_MINOR = sys.version_info[:2]
-V_MAJOR_MINOR = 'v{0}{1}'.format(*sys.version_info[:2])
-
-def docstring_by_version(**kwargs):
-    """Sets a docstring by the python version."""
-    doc = kwargs.get(V_MAJOR_MINOR, None)
-    if V_MAJOR_MINOR is None:
-        raise RuntimeError('unrecognized version ' + V_MAJOR_MINOR)
-    def dec(f):
-        f.__doc__ = doc
-        return f
-    return dec
+from xonsh.tools import VER_3_4, VER_3_5, VER_MAJOR_MINOR, V_MAJOR_MINOR, \
+    docstring_by_version
 
 
 class Location(object):
@@ -767,6 +754,7 @@ class Parser(object):
         '+=': ast.Add,
         '-=': ast.Sub,
         '*=': ast.Mult,
+        '@=': ast.MatMult,
         '/=': ast.Div,
         '%=': ast.Mod,
         '//=': ast.FloorDiv,
@@ -805,8 +793,11 @@ class Parser(object):
                                 lineno=self.lineno,
                                 col_offset=self.col)
         elif lenp == 4:
-            op = self._augassign_op[p2]()
-            p0 = ast.AugAssign(target=p1[0], op=op, value=p[3],
+            op = self._augassign_op[p2]
+            if op is None:
+                self._parse_error('operation {0!r} not supported'.format(p2), 
+                                  self.currloc(lineno=p.lineno, column=p.lexpos))
+            p0 = ast.AugAssign(target=p1[0], op=op(), value=p[3],
                                lineno=self.lineno, col_offset=self.col)
         elif lenp == 5 or lenp == 6:
             if lenp == 5:
@@ -874,6 +865,7 @@ class Parser(object):
         """augassign : PLUSEQUAL
                      | MINUSEQUAL
                      | TIMESEQUAL
+                     | ATEQUAL
                      | DIVEQUAL
                      | MODEQUAL
                      | AMPERSANDEQUAL
@@ -1519,6 +1511,7 @@ class Parser(object):
         '+': ast.Add,
         '-': ast.Sub,
         '*': ast.Mult,
+        '@': ast.MatMult,
         '/': ast.Div,
         '%': ast.Mod,
         '//': ast.FloorDiv
@@ -1555,12 +1548,16 @@ class Parser(object):
 
     def p_op_factor(self, p):
         """op_factor : TIMES factor
+                     | AT factor
                      | DIVIDE factor
                      | MOD factor
                      | DOUBLEDIV factor
         """
-        op = self._term_binops[p[1]]()
-        p[0] = [op, p[2]]
+        op = self._term_binops[p[1]]
+        if op is None:
+            self._parse_error('operation {0!r} not supported'.format(p[1]), 
+                              self.currloc(lineno=p.lineno, column=p.lexpos))
+        p[0] = [op(), p[2]]
 
     _factor_ops = {'+': ast.UAdd, '-': ast.USub, '~': ast.Invert}
 

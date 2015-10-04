@@ -28,14 +28,14 @@ _op_map = {
     ',': 'COMMA', '.': 'PERIOD', ';': 'SEMI', ':': 'COLON',
     '...': 'ELLIPSIS',
     # basic operators
-    '+': 'PLUS', '-': 'MINUS', '*': 'TIMES', '/': 'DIVIDE',
+    '+': 'PLUS', '-': 'MINUS', '*': 'TIMES', '@': 'AT', '/': 'DIVIDE',
     '//': 'DOUBLEDIV', '%': 'MOD', '**': 'POW', '|': 'PIPE',
     '~': 'TILDE', '^': 'XOR', '<<': 'LSHIFT', '>>': 'RSHIFT',
     '<': 'LT', '<=': 'LE', '>': 'GT', '>=': 'GE', '==': 'EQ',
     '!=': 'NE', '->': 'RARROW',
     # assignment operators
     '=': 'EQUALS', '+=': 'PLUSEQUAL', '-=': 'MINUSEQUAL',
-    '*=': 'TIMESEQUAL', '/=': 'DIVEQUAL', '%=': 'MODEQUAL',
+    '*=': 'TIMESEQUAL', '@=': 'ATEQUAL', '/=': 'DIVEQUAL', '%=': 'MODEQUAL',
     '**=': 'POWEQUAL', '<<=': 'LSHIFTEQUAL', '>>=': 'RSHIFTEQUAL',
     '&=': 'AMPERSANDEQUAL', '^=': 'XOREQUAL', '|=': 'PIPEEQUAL',
     '//=': 'DOUBLEDIVEQUAL',

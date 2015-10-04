@@ -132,6 +132,10 @@ def test_binop_minus():
 def test_binop_times():
     yield check_ast, '42 * 65'
 
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_binop_matmult():
+    yield check_ast, 'x @ y', False
+
 def test_binop_div():
     yield check_ast, '42 / 65'
 
@@ -851,6 +855,10 @@ def test_sub_eq():
 
 def test_times_eq():
     yield check_stmts, 'x = 42; x *= 2'
+
+@skip_if(VER_MAJOR_MINOR < VER_3_5)
+def test_matmult_eq():
+    yield check_stmts, 'x @= y', False
 
 def test_div_eq():
     yield check_stmts, 'x = 42; x /= 2'
