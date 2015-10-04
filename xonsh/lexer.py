@@ -12,6 +12,9 @@ from keyword import kwlist
 from ply import lex
 from ply.lex import TOKEN, LexToken
 
+from xonsh.tools import VER_3_5, VER_MAJOR_MINOR
+
+future_kwlist = []
 
 token_map = {}
 """
@@ -47,6 +50,11 @@ token_map[tokenize.STRING] = 'STRING'
 token_map[tokenize.NEWLINE] = 'NEWLINE'
 token_map[tokenize.INDENT] = 'INDENT'
 token_map[tokenize.DEDENT] = 'DEDENT'
+if VER_3_5 <= VER_MAJOR_MINOR:
+    token_map[tokenize.ASYNC] = 'ASYNC'
+    token_map[tokenize.AWAIT] = 'AWAIT'
+else:
+    future_kwlist += ['async', 'await']
 
 _REDIRECT_NAMES = frozenset({'out', 'err', 'all', 'o', 'e', 'a'})
 
@@ -516,4 +524,4 @@ class Lexer(object):
         'DOLLAR_LPAREN',         # $(
         'DOLLAR_LBRACE',         # ${
         'DOLLAR_LBRACKET',       # $[
-    ) + tuple(i.upper() for i in kwlist)
+    ) + tuple(i.upper() for i in kwlist) + tuple(i.upper() for i in future_kwlist)
