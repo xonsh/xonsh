@@ -65,5 +65,5 @@ class XonshKernel(Kernel):
 if __name__ == '__main__':
     from ipykernel.kernelapp import IPKernelApp
     # must manually pass in args to avoid interfering w/ Jupyter arg parsing
-    with main_context(argv=[]):
+    with main_context(argv=['--shell-type=readline']):
         IPKernelApp.launch_instance(kernel_class=XonshKernel)
