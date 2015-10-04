@@ -53,3 +53,4 @@ For those of you who want the gritty details.
     openpy
     main
     pyghooks
+    jupyter_kernel
