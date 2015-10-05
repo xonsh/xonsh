@@ -4,6 +4,7 @@ import os
 import re
 import builtins
 import pickle
+import shlex
 import subprocess
 import sys
 
@@ -29,7 +30,7 @@ XONSH_TOKENS = {
 
 BASH_COMPLETE_SCRIPT = """source {filename}
 COMP_WORDS=({line})
-COMP_LINE="{line}"
+COMP_LINE={comp_line}
 COMP_POINT=${{#COMP_LINE}}
 COMP_COUNT={end}
 COMP_CWORD={n}
@@ -252,18 +253,26 @@ class Completer(object):
         if len(prefix) == 0:
             prefix = '""'
             n += 1
+        else:
+            prefix = shlex.quote(prefix)
+
         script = BASH_COMPLETE_SCRIPT.format(filename=fnme,
-                                             line=line,
+                                             line=' '.join(shlex.quote(p) for p in splt),
+                                             comp_line=shlex.quote(line),
                                              n=n,
                                              func=func,
                                              cmd=cmd,
                                              end=endidx + 1,
                                              prefix=prefix,
-                                             prev=prev)
-        out = subprocess.check_output(['bash'],
-                                      input=script,
-                                      universal_newlines=True,
-                                      stderr=subprocess.PIPE)
+                                             prev=shlex.quote(prev))
+        try:
+            out = subprocess.check_output(['bash'],
+                                          input=script,
+                                          universal_newlines=True,
+                                          stderr=subprocess.PIPE)
+        except subprocess.CalledProcessError:
+            out = ''
+
         space = ' '
         rtn = {s + space if s[-1:].isalnum() else s for s in out.splitlines()}
         return rtn
