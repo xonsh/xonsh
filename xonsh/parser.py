@@ -1623,6 +1623,8 @@ class Parser(object):
                            right=p[3],
                            lineno=self.lineno,
                            col_offset=self.col)
+        else:
+            assert False
         p[0] = p0
 
     def p_yield_expr_or_testlist_comp(self, p):
