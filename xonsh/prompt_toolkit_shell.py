@@ -96,7 +96,7 @@ class PromptToolkitShell(BaseShell):
                 Token.Menu.Completions.ProgressButton: 'bg:#003333',
                 Token.Menu.Completions.ProgressBar: 'bg:#00aaaa',
                 Token.AutoSuggestion: '#666666',
-
+                Token.Aborted: '#888888',
             }
             # update with the prompt styles
             styles.update({t: s for (t, s) in zip(tokens, cstyles)})
