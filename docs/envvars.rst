@@ -11,6 +11,9 @@ applicable.
     * - variable
       - default
       - description
+    * - ANSICON
+      - No default set
+      - This is used on Windows to set the title, if available.
     * - BASH_COMPLETIONS
       - Normally this is ``('/etc/bash_completion', 
                             '/usr/share/bash-completion/completions/git')``
@@ -70,6 +73,11 @@ applicable.
       - An error threshold. If the Levenshtein distance between the entered command and 
         a valid command is less than this value, the valid command will be offered as a 
         suggestion.
+    * - TERM
+      - No default
+      - TERM is sometimes set by the terminal emulator. This is used (when valid)
+        to determine whether or not to set the title. Users shouldn't need to 
+        set this themselves.
     * - TITLE
       - xonsh.environ.DEFAULT_TITLE
       - The title text for the window in which xonsh is running. Formatted in the same 

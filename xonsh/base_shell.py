@@ -119,7 +119,7 @@ class BaseShell(object):
             return
         hist = builtins.__xonsh_history__
         ts1 = None
-        tee = Tee() if builtins.__xonsh_env__.get('XONSH_STORE_STDOUT', False) \
+        tee = Tee() if builtins.__xonsh_env__.get('XONSH_STORE_STDOUT') \
                     else io.StringIO()
         try:
             ts0 = time.time()
