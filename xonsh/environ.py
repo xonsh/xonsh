@@ -529,7 +529,7 @@ RE_HIDDEN = re.compile('\001.*?\002')
 
 def multiline_prompt():
     """Returns the filler text for the prompt in multiline scenarios."""
-    curr = builtins.__xonsh_env__.get('PROMPT', "set '$PROMPT = ...' $ ")
+    curr = builtins.__xonsh_env__.get('PROMPT')
     curr = format_prompt(curr)
     line = curr.rsplit('\n', 1)[1] if '\n' in curr else curr
     line = RE_HIDDEN.sub('', line)  # gets rid of colors
@@ -539,7 +539,7 @@ def multiline_prompt():
     # tail is the trailing whitespace
     tail = line if headlen == 0 else line.rsplit(head[-1], 1)[1]
     # now to constuct the actual string
-    dots = builtins.__xonsh_env__.get('MULTILINE_PROMPT', '.')
+    dots = builtins.__xonsh_env__.get('MULTILINE_PROMPT')
     dots = dots() if callable(dots) else dots
     if dots is None or len(dots) == 0:
         return ''
