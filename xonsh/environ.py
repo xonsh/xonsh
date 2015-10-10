@@ -64,10 +64,36 @@ DEFAULT_ENSURERS = {
 #
 # Defaults
 #
+def default_value(f):
+    """Decorator for making callable default values."""
+    f._xonsh_callable_default = True
+    return f
+
+def is_callable_default(x):
+    """Checks if a value is a callable default."""
+    return callable(x) and getattr(x, '_xonsh_callable_default', False)
+    
 DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
                   '{cwd}{branch_color}{curr_branch} '
                   '{BOLD_BLUE}${NO_COLOR} ')
 DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
+
+@default_value
+def xonsh_data_dir(env):
+    """Ensures and returns the $XONSH_DATA_DIR"""
+    xdd = os.path.join(env.get('XDG_DATA_HOME'), 'xonsh')
+    os.makedirs(xdd, exist_ok=True)
+    return xdd
+
+
+@default_value
+def xonsh_config_dir(env):
+    """Ensures and returns the $XONSH_CONFIG_DIR"""
+    xcd = os.path.join(xdgch, 'xonsh')
+    os.makedirs(xcd, exist_ok=True)
+    return xcd
+
+
 # Default values should generally be immutable, that way if a user wants
 # to set them they have to do a copy and write them to the environment.
 DEFAULT_VALUES = {
@@ -91,6 +117,10 @@ DEFAULT_VALUES = {
                         else ('/etc/bash_completion', 
                               '/usr/share/bash-completion/completions/git'),
     'FORCE_POSIX_PATHS': False,
+    'XDG_DATA_HOME': os.path.expanduser(os.path.join('~', '.local', 'share')),
+    'XONSH_DATA_DIR': xonsh_data_dir,
+    'XDG_CONFIG_HOME': os.path.expanduser(os.path.join('~', '.config')),
+    'XONSH_CONFIG_DIR': xonsh_config_dir,
 }
 
 class DefaultNotGivenType(object):
@@ -99,6 +129,9 @@ class DefaultNotGivenType(object):
 
 DefaultNotGiven = DefaultNotGivenType()
 
+#
+# actual environment
+#
 
 class Env(MutableMapping):
     """A xonsh environment, whose variables have limited typing
@@ -215,6 +248,8 @@ class Env(MutableMapping):
             val = self[key]
         elif default is DefaultNotGiven:
             val = self.defaults.get(key, None)
+            if is_callable_default(val):
+                val = val(self)
         else:
             val = default
         return val
@@ -584,21 +619,6 @@ def windows_env_fixes(ctx):
     ctx['PWD'] = _get_cwd()
 
 
-def recursive_base_env_update(env):
-    """Updates the environment with members that may rely on previously defined
-    members. Takes an env as its argument.
-    """
-    home = os.path.expanduser('~')
-    if 'XONSH_DATA_DIR' not in env:
-        xdgdh = env.get('XDG_DATA_HOME', os.path.join(home, '.local', 'share'))
-        env['XONSH_DATA_DIR'] = xdd = os.path.join(xdgdh, 'xonsh')
-        os.makedirs(xdd, exist_ok=True)
-    if 'XONSH_CONFIG_DIR' not in env:
-        xdgch = env.get('XDG_CONFIG_HOME', os.path.join(home, '.config'))
-        env['XONSH_CONFIG_DIR'] = xcd = os.path.join(xdgch, 'xonsh')
-        os.makedirs(xcd, exist_ok=True)
-
-
 def default_env(env=None):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence
@@ -608,7 +628,6 @@ def default_env(env=None):
     if ON_WINDOWS:
         windows_env_fixes(ctx)
     # finalize env
-    recursive_base_env_update(ctx)
     if env is not None:
         ctx.update(env)
     return ctx
