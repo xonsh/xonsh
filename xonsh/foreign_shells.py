@@ -25,7 +25,8 @@ __XONSH_ALIAS_END__
 
 @lru_cache()
 def foreign_shell_data(shell, interactive=True, login=False, envcmd='env', 
-                       aliascmd='alias', extra_args=(), currenv=None):
+                       aliascmd='alias', extra_args=(), currenv=None, 
+                       safe=True):
     """Extracts data from a foreign (non-xonsh) shells. Currently this gets 
     the environment and aliases, but may be extended in the future.
 
@@ -41,10 +42,12 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd='env',
         The command to generate environment output with.
     aliascmd : str, optional
         The command to generate alais output with.
-    extra_args : list of str, optional
+    extra_args : tuple of str, optional
         Addtional command line options to pass into the shell.
-    currenv : dict or None, optional
+    currenv : tuple of items or None, optional
         Manual override for the current environment.
+    safe : bool, optional
+        Flag for whether or not to safely handle exceptions and other errors. 
 
     Returns
     -------
@@ -54,19 +57,23 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd='env',
         Dictionary of shell's alaiases.
     """
     cmd = [shell]
+    cmd.extend(extra_args)  # needs to come here for GNU long options
     if interactive:
         cmd.append('-i')
     if login:
         cmd.append('-l')
-    cmd.extend(extra_args)
     cmd.append('-c')
     cmd.append(COMMAND.format(envcmd=envcmd, aliascmd=aliascmd))
     if currenv is None and hasattr(builtins, '__xonsh_env__'):
         currenv = builtins.__xonsh_env__.detype()
+    elif currenv is not None:
+        currenv = dict(currenv)
     try:
         s = subprocess.check_output(cmd,stderr=subprocess.PIPE, env=currenv,
                                     universal_newlines=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
+        if not safe:
+            raise
         s = FAILED_COMMAND_STDOUT
     env = parse_env(s)
     aliases = parse_aliases(s)
