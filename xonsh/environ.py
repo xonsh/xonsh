@@ -61,6 +61,44 @@ DEFAULT_ENSURERS = {
     'BASH_COMPLETIONS': (is_env_path, str_to_env_path, env_path_to_str),
 }
 
+#
+# Defaults
+#
+DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
+                  '{cwd}{branch_color}{curr_branch} '
+                  '{BOLD_BLUE}${NO_COLOR} ')
+DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
+# Default values should generally be immutable, that way if a user wants
+# to set them they have to do a copy and write them to the environment.
+DEFAULT_VALUES = {
+    'INDENT': '    ',
+    'PROMPT': DEFAULT_PROMPT,
+    'TITLE': DEFAULT_TITLE,
+    'MULTILINE_PROMPT': '.',
+    'XONSHRC': os.path.expanduser('~/.xonshrc'),
+    'XONSH_HISTORY_SIZE': (8128, 'commands'),
+    'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
+    'XONSH_STORE_STDOUT': False,
+    'SHELL_TYPE': 'readline',
+    'CASE_SENSITIVE_COMPLETIONS': ON_LINUX,
+    'LC_CTYPE': locale.setlocale(locale.LC_CTYPE),
+    'LC_COLLATE': locale.setlocale(locale.LC_COLLATE),
+    'LC_TIME': locale.setlocale(locale.LC_TIME),
+    'LC_MONETARY': locale.setlocale(locale.LC_MONETARY),
+    'LC_NUMERIC': locale.setlocale(locale.LC_NUMERIC),
+    'BASH_COMPLETIONS': ('/usr/local/etc/bash_completion',
+                         '/opt/local/etc/profile.d/bash_completion.sh') if ON_MAC \
+                        else ('/etc/bash_completion', 
+                              '/usr/share/bash-completion/completions/git'),
+    'FORCE_POSIX_PATHS': False,
+}
+
+class DefaultNotGivenType(object):
+    """Singleton for representing when no default value is given."""
+
+
+DefaultNotGiven = DefaultNotGivenType()
+
 
 class Env(MutableMapping):
     """A xonsh environment, whose variables have limited typing
@@ -73,7 +111,7 @@ class Env(MutableMapping):
       locale via locale.getlocale() and locale.setlocale() functions.
 
     An Env instance may be converted to an untyped version suitable for
-    use in a subprocess.
+    use in a subprocess. 
     """
 
     _arg_regex = re.compile(r'ARG(\d+)')
@@ -82,6 +120,7 @@ class Env(MutableMapping):
         """If no initial environment is given, os.environ is used."""
         self._d = {}
         self.ensurers = {k: Ensurer(*v) for k, v in DEFAULT_ENSURERS.items()}
+        self.defaults = DEFAULT_VALUES
         if len(args) == 0 and len(kwargs) == 0:
             args = (os.environ, )
         for key, val in dict(*args, **kwargs).items():
@@ -167,6 +206,18 @@ class Env(MutableMapping):
     def __delitem__(self, key):
         del self._d[key]
         self._detyped = None
+
+    def get(self, key, default=DefaultNotGiven):
+        """The environment will look up default values from its own defaults if a
+        default is not given here.
+        """
+        if key in self:
+            val = self[key]
+        elif default is DefaultNotGiven:
+            val = self.defaults.get(key, None)
+        else:
+            val = default
+        return val
 
     def __iter__(self):
         yield from self._d
@@ -382,12 +433,6 @@ def branch_color():
             TERM_COLORS['BOLD_GREEN'])
 
 
-DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
-                  '{cwd}{branch_color}{curr_branch} '
-                  '{BOLD_BLUE}${NO_COLOR} ')
-DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
-
-
 def _replace_home(x):
     if ON_WINDOWS:
         home = (builtins.__xonsh_env__['HOMEDRIVE'] +
@@ -419,9 +464,9 @@ FORMATTER_DICT = dict(
     curr_branch=current_branch,
     branch_color=branch_color,
     **TERM_COLORS)
+DEFAULT_VALUES['FORMATTER_DICT'] = dict(FORMATTER_DICT)
 
 _FORMATTER = string.Formatter()
-
 
 def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
     """Formats a xonsh prompt template string."""
@@ -447,7 +492,6 @@ def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
 
 RE_HIDDEN = re.compile('\001.*?\002')
 
-
 def multiline_prompt():
     """Returns the filler text for the prompt in multiline scenarios."""
     curr = builtins.__xonsh_env__.get('PROMPT', "set '$PROMPT = ...' $ ")
@@ -469,40 +513,18 @@ def multiline_prompt():
 
 BASE_ENV = {
     'XONSH_VERSION': XONSH_VERSION,
-    'INDENT': '    ',
-    'FORMATTER_DICT': dict(FORMATTER_DICT),
-    'PROMPT': DEFAULT_PROMPT,
-    'TITLE': DEFAULT_TITLE,
-    'MULTILINE_PROMPT': '.',
-    'XONSHRC': os.path.expanduser('~/.xonshrc'),
-    'XONSH_HISTORY_SIZE': (8128, 'commands'),
-    'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
-    'XONSH_STORE_STDOUT': False,
     'LC_CTYPE': locale.setlocale(locale.LC_CTYPE),
     'LC_COLLATE': locale.setlocale(locale.LC_COLLATE),
     'LC_TIME': locale.setlocale(locale.LC_TIME),
     'LC_MONETARY': locale.setlocale(locale.LC_MONETARY),
     'LC_NUMERIC': locale.setlocale(locale.LC_NUMERIC),
-    'SHELL_TYPE': 'readline',
-    'CASE_SENSITIVE_COMPLETIONS': ON_LINUX,
 }
 
 try:
-    BASE_ENV['LC_MESSAGES'] = locale.setlocale(locale.LC_MESSAGES)
+    BASE_ENV['LC_MESSAGES'] = DEFAULT_VALUES['LC_MESSAGES'] = \
+        locale.setlocale(locale.LC_MESSAGES)
 except AttributeError:
     pass
-
-
-if ON_MAC:
-    BASE_ENV['BASH_COMPLETIONS'] = [
-        '/usr/local/etc/bash_completion',
-        '/opt/local/etc/profile.d/bash_completion.sh'
-    ]
-else:
-    BASE_ENV['BASH_COMPLETIONS'] = [
-        '/etc/bash_completion', '/usr/share/bash-completion/completions/git'
-    ]
-
 
 def bash_env():
     """Attempts to compute the bash envinronment variables."""
@@ -543,6 +565,24 @@ def xonshrc_context(rcfile=None, execer=None):
         execer.filename = fname
     return env
 
+def windows_env_fixes(ctx):
+    """Environment fixes for Windows. Operates in-place."""
+    # Windows default prompt doesn't work.
+    ctx['PROMPT'] = DEFAULT_PROMPT
+    # remove these bash variables which only cause problems.
+    for ev in ['HOME', 'OLDPWD']:
+        if ev in ctx:
+            del ctx[ev]
+    # Override path-related bash variables; on Windows bash uses
+    # /c/Windows/System32 syntax instead of C:\\Windows\\System32
+    # which messes up these environment variables for xonsh.
+    for ev in ['PATH', 'TEMP', 'TMP']:
+        if ev in os.environ:
+            ctx[ev] = os.environ[ev]
+        elif ev in ctx:
+            del ctx[ev]
+    ctx['PWD'] = _get_cwd()
+
 
 def recursive_base_env_update(env):
     """Updates the environment with members that may rely on previously defined
@@ -566,24 +606,7 @@ def default_env(env=None):
     ctx.update(os.environ)
     ctx.update(bash_env())
     if ON_WINDOWS:
-        # Windows default prompt doesn't work.
-        ctx['PROMPT'] = DEFAULT_PROMPT
-
-        # remove these bash variables which only cause problems.
-        for ev in ['HOME', 'OLDPWD']:
-            if ev in ctx:
-                del ctx[ev]
-
-        # Override path-related bash variables; on Windows bash uses
-        # /c/Windows/System32 syntax instead of C:\\Windows\\System32
-        # which messes up these environment variables for xonsh.
-        for ev in ['PATH', 'TEMP', 'TMP']:
-            if ev in os.environ:
-                ctx[ev] = os.environ[ev]
-            elif ev in ctx:
-                del ctx[ev]
-
-        ctx['PWD'] = _get_cwd()
+        windows_env_fixes(ctx)
     # finalize env
     recursive_base_env_update(ctx)
     if env is not None:
