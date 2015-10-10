@@ -96,31 +96,37 @@ def xonsh_config_dir(env):
 
 # Default values should generally be immutable, that way if a user wants
 # to set them they have to do a copy and write them to the environment.
+# try to keep this sorted.
 DEFAULT_VALUES = {
-    'INDENT': '    ',
-    'PROMPT': DEFAULT_PROMPT,
-    'TITLE': DEFAULT_TITLE,
-    'MULTILINE_PROMPT': '.',
-    'XONSHRC': os.path.expanduser('~/.xonshrc'),
-    'XONSH_HISTORY_SIZE': (8128, 'commands'),
-    'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
-    'XONSH_STORE_STDOUT': False,
-    'SHELL_TYPE': 'readline',
+    'BASH_COMPLETIONS': ('/usr/local/etc/bash_completion',
+                         '/opt/local/etc/profile.d/bash_completion.sh') if ON_MAC \
+                        else ('/etc/bash_completion', 
+                              '/usr/share/bash-completion/completions/git'),
     'CASE_SENSITIVE_COMPLETIONS': ON_LINUX,
+    'FORCE_POSIX_PATHS': False,
+    'INDENT': '    ',
     'LC_CTYPE': locale.setlocale(locale.LC_CTYPE),
     'LC_COLLATE': locale.setlocale(locale.LC_COLLATE),
     'LC_TIME': locale.setlocale(locale.LC_TIME),
     'LC_MONETARY': locale.setlocale(locale.LC_MONETARY),
     'LC_NUMERIC': locale.setlocale(locale.LC_NUMERIC),
-    'BASH_COMPLETIONS': ('/usr/local/etc/bash_completion',
-                         '/opt/local/etc/profile.d/bash_completion.sh') if ON_MAC \
-                        else ('/etc/bash_completion', 
-                              '/usr/share/bash-completion/completions/git'),
-    'FORCE_POSIX_PATHS': False,
-    'XDG_DATA_HOME': os.path.expanduser(os.path.join('~', '.local', 'share')),
-    'XONSH_DATA_DIR': xonsh_data_dir,
+    'MULTILINE_PROMPT': '.',
+    'PATH': (),
+    'PROMPT': DEFAULT_PROMPT,
+    'SHELL_TYPE': 'readline',
+    'SUGGEST_COMMANDS': True,
+    'SUGGEST_MAX_NUM': 5,
+    'SUGGEST_THRESHOLD': 3,
+    'TITLE': DEFAULT_TITLE,
     'XDG_CONFIG_HOME': os.path.expanduser(os.path.join('~', '.config')),
+    'XDG_DATA_HOME': os.path.expanduser(os.path.join('~', '.local', 'share')),
+    'XONSHRC': os.path.expanduser('~/.xonshrc'),
     'XONSH_CONFIG_DIR': xonsh_config_dir,
+    'XONSH_DATA_DIR': xonsh_data_dir,
+    'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
+    'XONSH_HISTORY_SIZE': (8128, 'commands'),
+    'XONSH_SHOW_TRACEBACK': False,
+    'XONSH_STORE_STDOUT': False,
 }
 
 class DefaultNotGivenType(object):

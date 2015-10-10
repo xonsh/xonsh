@@ -342,11 +342,11 @@ def command_not_found(cmd):
 
 def suggest_commands(cmd, env, aliases):
     """Suggests alternative commands given an environment and aliases."""
-    suggest_cmds = env.get('SUGGEST_COMMANDS', True)
+    suggest_cmds = env.get('SUGGEST_COMMANDS')
     if not suggest_cmds:
         return
-    thresh = env.get('SUGGEST_THRESHOLD', 3)
-    max_sugg = env.get('SUGGEST_MAX_NUM', 5)
+    thresh = env.get('SUGGEST_THRESHOLD')
+    max_sugg = env.get('SUGGEST_MAX_NUM')
     if max_sugg < 0:
         max_sugg = float('inf')
 
@@ -357,7 +357,7 @@ def suggest_commands(cmd, env, aliases):
             if levenshtein(a.lower(), cmd, thresh) < thresh:
                 suggested[a] = 'Alias'
 
-    for d in filter(os.path.isdir, env.get('PATH', [])):
+    for d in filter(os.path.isdir, env.get('PATH')):
         for f in os.listdir(d):
             if f not in suggested:
                 if levenshtein(f.lower(), cmd, thresh) < thresh:
@@ -387,8 +387,8 @@ def print_exception():
     """Print exceptions with/without traceback."""
     if 'XONSH_SHOW_TRACEBACK' not in builtins.__xonsh_env__:
         sys.stderr.write('xonsh: For full traceback set: '
-                         '$XONSH_SHOW_TRACEBACK=True\n')
-    if builtins.__xonsh_env__.get('XONSH_SHOW_TRACEBACK', False):
+                         '$XONSH_SHOW_TRACEBACK = True\n')
+    if builtins.__xonsh_env__.get('XONSH_SHOW_TRACEBACK'):
         traceback.print_exc()
     else:
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -401,15 +401,12 @@ def print_exception():
 def levenshtein(a, b, max_dist=float('inf')):
     """Calculates the Levenshtein distance between a and b."""
     n, m = len(a), len(b)
-
     if abs(n - m) > max_dist:
         return float('inf')
-
     if n > m:
         # Make sure n <= m, to use O(min(n,m)) space
         a, b = b, a
         n, m = m, n
-
     current = range(n + 1)
     for i in range(1, m + 1):
         previous, current = current, [i] + [0] * n
@@ -419,7 +416,6 @@ def levenshtein(a, b, max_dist=float('inf')):
             if a[j - 1] != b[i - 1]:
                 change = change + 1
             current[j] = min(add, delete, change)
-
     return current[n]
 
 
@@ -441,7 +437,6 @@ def escape_windows_title_string(s):
     """
     for c in '^&<>|':
         s = s.replace(c, '^' + c)
-
     s = s.replace('/?', '/.')
     return s
 

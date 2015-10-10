@@ -27,17 +27,23 @@ applicable.
       - A list of paths to be used as roots for a ``cd``, breaking compatibility with 
         bash, xonsh always prefer an existing relative path.
     * - FORCE_POSIX_PATHS
-      - Not defined
+      - ``False``
       - Forces forward slashes (``/``) on Windows systems when using auto completion if 
         set to anything truthy.
     * - FORMATTER_DICT
       - xonsh.environ.FORMATTER_DICT  
       - Dictionary containing variables to be used when formatting PROMPT and TITLE 
         see `Customizing the Prompt <tutorial.html#customizing-the-prompt>`_.
+    * - INDENT
+      - ``'    '``
+      - Indentation string for multiline input
     * - MULTILINE_PROMPT
       - ``'.'``
       - Prompt text for 2nd+ lines of input, may be str or function which returns 
         a str.
+    * - PATH
+      - ``()``
+      - List of strings representing where to look for executables.
     * - PROMPT
       - xonsh.environ.DEFAULT_PROMPT  
       - The prompt text.  May contain keyword arguments which are auto-formatted,
@@ -69,6 +75,14 @@ applicable.
       - The title text for the window in which xonsh is running. Formatted in the same 
         manner as PROMPT, 
         see `Customizing the Prompt <tutorial.html#customizing-the-prompt>`_.
+    * - XDG_CONFIG_HOME
+      - ``~/.config``
+      - Open desktop standard configuration home dir. This is the same default as
+        used in the standard.
+    * - XDG_DATA_HOME
+      - ``~/.local/share``
+      - Open desktop standard data home dir. This is the same default as used
+        in the standard.
     * - XONSHRC
       - ``'~/.xonshrc'``
       - Location of run control file.
@@ -93,9 +107,9 @@ applicable.
       - 
       - ``True`` if xonsh is running interactively, and ``False`` otherwise.
     * - XONSH_SHOW_TRACEBACK
-      - Not defined
-      - Controls if a traceback is shown exceptions occur in the shell. Set ``'True'`` 
-        to always show or ``'False'`` to always hide. If undefined then traceback is 
+      - ``False`` but not set
+      - Controls if a traceback is shown exceptions occur in the shell. Set ``True`` 
+        to always show or ``False`` to always hide. If undefined then traceback is 
         hidden but a notice is shown on how to enable the traceback.
     * - XONSH_STORE_STDOUT 
       - ``False``
