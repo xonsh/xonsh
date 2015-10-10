@@ -18,8 +18,7 @@ from xonsh.prompt_toolkit_key_bindings import load_xonsh_bindings
 def setup_history():
     """Creates history object."""
     env = builtins.__xonsh_env__
-    hfile = env.get('XONSH_HISTORY_FILE',
-                    os.path.expanduser('~/.xonsh_history'))
+    hfile = env.get('XONSH_HISTORY_FILE')
     history = LimitedFileHistory()
     try:
         history.read_history_file(hfile)
@@ -31,9 +30,8 @@ def setup_history():
 def teardown_history(history):
     """Tears down the history object."""
     env = builtins.__xonsh_env__
-    hsize = env.get('XONSH_HISTORY_SIZE', (8128, 'commands'))[0]
-    hfile = env.get('XONSH_HISTORY_FILE',
-                    os.path.expanduser('~/.xonsh_history'))
+    hsize = env.get('XONSH_HISTORY_SIZE')[0]
+    hfile = env.get('XONSH_HISTORY_FILE')
     try:
         history.save_history_to_file(hfile, hsize)
     except PermissionError:
@@ -97,7 +95,8 @@ class PromptToolkitShell(BaseShell):
             # update with the prompt styles
             styles.update({t: s for (t, s) in zip(tokens, cstyles)})
             # Update with with any user styles
-            userstyle = builtins.__xonsh_env__.get('PROMPT_TOOLKIT_STYLES', {})
-            styles.update(userstyle)
+            userstyle = builtins.__xonsh_env__.get('PROMPT_TOOLKIT_STYLES')
+            if userstyle is not None:
+                styles.update(userstyle)
 
         return get_tokens, CustomStyle

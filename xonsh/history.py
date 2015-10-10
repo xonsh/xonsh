@@ -29,7 +29,7 @@ class HistoryGC(Thread):
             time.sleep(0.01)
         env = builtins.__xonsh_env__
         if self.size is None:
-            hsize, units = env.get('XONSH_HISTORY_SIZE', (8128, 'commands'))
+            hsize, units = env.get('XONSH_HISTORY_SIZE')
         else:
             hsize, units = to_history_tuple(self.size)
         files = self.unlocked_files()

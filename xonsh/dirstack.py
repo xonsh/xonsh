@@ -6,10 +6,7 @@ from glob import iglob
 from argparse import ArgumentParser
 
 DIRSTACK = []
-"""
-A list containing the currently remembered directories.
-"""
-
+"""A list containing the currently remembered directories."""
 
 def _get_cwd():
     try:
@@ -42,7 +39,7 @@ def _try_cdpath(apath):
     # in bash a full $ cd ./xonsh is needed.
     # In xonsh a relative folder is allways preferred.
     env = builtins.__xonsh_env__
-    cdpaths = env.get('CDPATH', [])
+    cdpaths = env.get('CDPATH')
     for cdp in cdpaths:
         for cdpath_prefixed_path in iglob(os.path.join(cdp, apath)):
             return cdpath_prefixed_path
@@ -92,15 +89,14 @@ def cd(args, stdin=None):
     if not os.path.isdir(d):
         return '', 'cd: {0} is not a directory\n'.format(d)
     # now, push the directory onto the dirstack if AUTO_PUSHD is set
-    if cwd is not None and env.get('AUTO_PUSHD', False):
+    if cwd is not None and env.get('AUTO_PUSHD'):
         pushd(['-n', '-q', cwd])
     _change_working_directory(os.path.abspath(d))
     return None, None
 
 
 def pushd(args, stdin=None):
-    """
-    xonsh command: pushd
+    """xonsh command: pushd
 
     Adds a directory to the top of the directory stack, or rotates the stack,
     making the new top of the stack the current working directory.
@@ -165,11 +161,11 @@ def pushd(args, stdin=None):
         else:
             DIRSTACK.insert(0, os.path.expanduser(os.path.abspath(new_pwd)))
 
-    maxsize = env.get('DIRSTACK_SIZE', 20)
+    maxsize = env.get('DIRSTACK_SIZE')
     if len(DIRSTACK) > maxsize:
         DIRSTACK = DIRSTACK[:maxsize]
 
-    if not args.quiet and not env.get('PUSHD_SILENT', False):
+    if not args.quiet and not env.get('PUSHD_SILENT'):
         return dirs([], None)
 
     return None, None
@@ -190,7 +186,7 @@ def popd(args, stdin=None):
 
     env = builtins.__xonsh_env__
 
-    if env.get('PUSHD_MINUS', False):
+    if env.get('PUSHD_MINUS'):
         BACKWARD = '-'
         FORWARD = '+'
     else:
@@ -238,15 +234,14 @@ def popd(args, stdin=None):
         if args.cd:
             _change_working_directory(os.path.abspath(new_pwd))
 
-    if not args.quiet and not env.get('PUSHD_SILENT', False):
+    if not args.quiet and not env.get('PUSHD_SILENT'):
         return dirs([], None)
 
     return None, None
 
 
 def dirs(args, stdin=None):
-    """
-    xonsh command: dirs
+    """xonsh command: dirs
 
     Displays the list of currently remembered directories.  Can also be used
     to clear the directory stack.
@@ -261,7 +256,7 @@ def dirs(args, stdin=None):
 
     env = builtins.__xonsh_env__
 
-    if env.get('PUSHD_MINUS', False):
+    if env.get('PUSHD_MINUS'):
         BACKWARD = '-'
         FORWARD = '+'
     else:

@@ -14,6 +14,9 @@ applicable.
     * - ANSICON
       - No default set
       - This is used on Windows to set the title, if available.
+    * - AUTO_PUSHD
+      - ``False``
+      - Flag for automatically pushing directorties onto the directory stack.
     * - BASH_COMPLETIONS
       - Normally this is ``('/etc/bash_completion', 
                             '/usr/share/bash-completion/completions/git')``
@@ -29,6 +32,9 @@ applicable.
       - ``[]``
       - A list of paths to be used as roots for a ``cd``, breaking compatibility with 
         bash, xonsh always prefer an existing relative path.
+    * - DIRSTACK_SIZE
+      - ``20``
+      - Maximum size of the directory stack.
     * - FORCE_POSIX_PATHS
       - ``False``
       - Forces forward slashes (``/``) on Windows systems when using auto completion if 
@@ -44,13 +50,29 @@ applicable.
       - ``'.'``
       - Prompt text for 2nd+ lines of input, may be str or function which returns 
         a str.
+    * - OLDPWD
+      - No default
+      - Used to represent a previous present working directory.
     * - PATH
       - ``()``
       - List of strings representing where to look for executables.
+    * - PATHEXT
+      - ``()``
+      - List of strings for filtering valid exeutables by.
     * - PROMPT
       - xonsh.environ.DEFAULT_PROMPT  
       - The prompt text.  May contain keyword arguments which are auto-formatted,
         see `Customizing the Prompt <tutorial.html#customizing-the-prompt>`_.
+    * - PROMPT_TOOLKIT_STYLES
+      - ``None``
+      - This is a mapping of user-specified styles for prompt-toolkit. See the 
+        prompt-toolkit documentation for more details. If None, this is skipped.
+    * - PUSHD_MINUS
+      - ``False``
+      - Flag for directory pushing functionality. False is the normal behaviour.
+    * - PUSHD_SILENT
+      - ``False``
+      - Whether or not to supress directory stack manipulation output.
     * - SHELL_TYPE
       - ``'readline'``
       - Which shell is used. Currently two shell types are supported: ``'readline'`` that

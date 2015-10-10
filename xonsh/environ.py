@@ -98,11 +98,14 @@ def xonsh_config_dir(env):
 # to set them they have to do a copy and write them to the environment.
 # try to keep this sorted.
 DEFAULT_VALUES = {
+    'AUTO_PUSHD': False,
     'BASH_COMPLETIONS': ('/usr/local/etc/bash_completion',
                          '/opt/local/etc/profile.d/bash_completion.sh') if ON_MAC \
                         else ('/etc/bash_completion', 
                               '/usr/share/bash-completion/completions/git'),
     'CASE_SENSITIVE_COMPLETIONS': ON_LINUX,
+    'CDPATH': (),
+    'DIRSTACK_SIZE': 20,
     'FORCE_POSIX_PATHS': False,
     'INDENT': '    ',
     'LC_CTYPE': locale.setlocale(locale.LC_CTYPE),
@@ -112,7 +115,11 @@ DEFAULT_VALUES = {
     'LC_NUMERIC': locale.setlocale(locale.LC_NUMERIC),
     'MULTILINE_PROMPT': '.',
     'PATH': (),
+    'PATHEXT': (),
     'PROMPT': DEFAULT_PROMPT,
+    'PROMPT_TOOLKIT_STYLES': None,
+    'PUSHD_MINUS': False,
+    'PUSHD_SILENT': False,
     'SHELL_TYPE': 'readline',
     'SUGGEST_COMMANDS': True,
     'SUGGEST_MAX_NUM': 5,
