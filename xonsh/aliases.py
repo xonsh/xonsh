@@ -1,10 +1,8 @@
 """Aliases for the xonsh shell."""
 import os
-import sys
 import shlex
 import builtins
 import subprocess
-import datetime
 from warnings import warn
 from argparse import ArgumentParser
 
@@ -75,6 +73,7 @@ def xexec(args, stdin=None):
 
 _BANG_N_PARSER = None
 
+
 def bang_n(args, stdin=None):
     """Re-runs the nth command as specified in the argument."""
     global _BANG_N_PARSER
@@ -109,7 +108,8 @@ def bash_aliases():
                                     universal_newlines=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
         s = ''
-    items = [line.split('=', 1) for line in s.splitlines() if line.startswith('alias ') and '=' in line]
+    items = [line.split('=', 1) for line in s.splitlines()
+             if line.startswith('alias ') and '=' in line]
     aliases = {}
     for key, value in items:
         try:
@@ -185,5 +185,3 @@ elif ON_MAC:
 else:
     DEFAULT_ALIASES['grep'] = ['grep', '--color=auto']
     DEFAULT_ALIASES['ls'] = ['ls', '--color=auto', '-v']
-
-
