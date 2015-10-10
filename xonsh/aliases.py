@@ -104,7 +104,7 @@ def bang_bang(args, stdin=None):
 def bash_aliases():
     """Computes a dictionary of aliases based on Bash's aliases."""
     try:
-        s = subprocess.check_output(['bash', '-i', '-l', '-c', 'alias'],
+        s = subprocess.check_output(['bash', '-i', '-c', 'alias'],
                                     stderr=subprocess.PIPE,
                                     universal_newlines=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
