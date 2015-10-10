@@ -3,14 +3,12 @@ import os
 import builtins
 from warnings import warn
 
-from prompt_toolkit.shortcuts import get_input, create_eventloop
+from prompt_toolkit.shortcuts import get_input
 from prompt_toolkit.key_binding.manager import KeyBindingManager
 from pygments.token import Token
 from pygments.style import Style
-from pygments.styles.default import DefaultStyle
 
 from xonsh.base_shell import BaseShell
-from xonsh.pyghooks import XonshLexer
 from xonsh.tools import format_prompt_for_prompt_toolkit
 from xonsh.prompt_toolkit_completer import PromptToolkitCompleter
 from xonsh.prompt_toolkit_history import LimitedFileHistory
@@ -70,8 +68,7 @@ class PromptToolkitShell(BaseShell):
                     completer=self.pt_completer,
                     history=self.history,
                     key_bindings_registry=self.key_bindings_manager.registry,
-                    display_completions_in_columns=True,
-                    lexer=self.lexer)
+                    display_completions_in_columns=True)
                 if not line:
                     self.emptyline()
                 else:
@@ -104,9 +101,3 @@ class PromptToolkitShell(BaseShell):
             styles.update(userstyle)
 
         return get_tokens, CustomStyle
-
-    @property
-    def lexer(self):
-        """Obtains the current lexer."""
-        env = builtins.__xonsh_env__
-        return env['HIGHLIGHTING_LEXER']
