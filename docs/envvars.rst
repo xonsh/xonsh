@@ -95,6 +95,14 @@ applicable.
       - An error threshold. If the Levenshtein distance between the entered command and 
         a valid command is less than this value, the valid command will be offered as a 
         suggestion.
+    * - TEEPTY_PIPE_DELAY
+      - ``0.01``
+      - The number of [seconds] to delay a spawned process if it has information
+        being piped in via stdin. This value must be a float. If a value less than 
+        or equal to zero is passed in, no delay is used. This can be used to fix 
+        situations where a spawned process, such as piping into ``grep``, exits
+        too quickly for the piping operation itself. TeePTY (and thus this variable)
+        are currently only used when ``$XONSH_STORE_STDOUT`` is ``True``.
     * - TERM
       - No default
       - TERM is sometimes set by the terminal emulator. This is used (when valid)

@@ -268,6 +268,27 @@ class TeePTY(object):
             raise ValueError('stdin not understood {0!r}'.format(stdin))
 
     def _delay_for_pipe(self, env=None, delay=None):
+        # This delay is sometimes needed because the temporary stdin file that 
+        # is being written (the pipe) may not have even hits its first flush()
+        # call by the time the spawned process starts up and determines there 
+        # is nothing in the file. The spawn can thus exit, without doing any
+        # real work.  Consider the case of piping something into grep:
+        #
+        #   $ ps aux | grep root
+        #
+        # grep will exit on EOF and so there is a race between the buffersize 
+        # and flushing the temporary file and grep.  However, this race is not
+        # always meaningful. Pagers, for example, update when the file is written
+        # to. So what is important is that we start the spawned process ASAP:
+        #
+        #   $ ps aux | less
+        #
+        # So there is a push-and-pull between the the competing objectives of
+        # not blocking and letting the spawned process have enough to work with
+        # such that it doesn't exit prematurely.  Unfortunately, there is no
+        # way to know a priori how big the file is, how long the spawned process
+        # will run for, etc. Thus as user-definable delay let's the user 
+        # find something that works for them.
         if delay is None:
             delay = (env or os.environ).get('TEEPTY_PIPE_DELAY', -1.0)
         delay = float(delay)
