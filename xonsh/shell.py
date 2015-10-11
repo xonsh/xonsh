@@ -59,7 +59,7 @@ class Shell(object):
         if ctx is not None:
             self.ctx = ctx
         else:
-            rc = env.get('XONSHRC', None)
+            rc = env.get('XONSHRC')
             self.ctx = xonshrc_context(rcfile=rc, execer=self.execer)
         builtins.__xonsh_ctx__ = self.ctx
         self.ctx['__name__'] = '__main__'
