@@ -113,8 +113,12 @@ applicable.
       - ``~/.local/share``
       - Open desktop standard data home dir. This is the same default as used
         in the standard.
+    * - XONSHCONFIG
+      - ``$XONSH_CONFIG_DIR/config.json``
+      - The location of the static xonsh configuration file, if it exists. This is
+        in JSON format.
     * - XONSHRC
-      - ``'~/.xonshrc'``
+      - ``~/.xonshrc``
       - Location of run control file.
     * - XONSH_CONFIG_DIR
       - ``$XDG_CONFIG_HOME/xonsh``

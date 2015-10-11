@@ -1,6 +1,7 @@
 """Environment for the xonsh shell."""
 import os
 import re
+import json
 import socket
 import string
 import locale
@@ -16,6 +17,7 @@ from xonsh.tools import TERM_COLORS, ON_WINDOWS, ON_MAC, ON_LINUX, string_types,
     env_path_to_str, is_bool, to_bool, bool_to_str, is_history_tuple, to_history_tuple, \
     history_tuple_to_str
 from xonsh.dirstack import _get_cwd
+from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
 
 LOCALE_CATS = {
     'LC_CTYPE': locale.LC_CTYPE,
@@ -89,9 +91,17 @@ def xonsh_data_dir(env):
 @default_value
 def xonsh_config_dir(env):
     """Ensures and returns the $XONSH_CONFIG_DIR"""
-    xcd = os.path.join(xdgch, 'xonsh')
+    xcd = os.path.join(env.get('XDG_CONFIG_HOME'), 'xonsh')
     os.makedirs(xcd, exist_ok=True)
     return xcd
+
+
+@default_value
+def xonshconfig(env):
+    """Ensures and returns the $XONSHCONFIG"""
+    xcd = env.get('XONSH_CONFIG_DIR')
+    xc = os.path.join(xcd, 'config.json')
+    return xc
 
 
 # Default values should generally be immutable, that way if a user wants
@@ -127,6 +137,7 @@ DEFAULT_VALUES = {
     'TITLE': DEFAULT_TITLE,
     'XDG_CONFIG_HOME': os.path.expanduser(os.path.join('~', '.config')),
     'XDG_DATA_HOME': os.path.expanduser(os.path.join('~', '.local', 'share')),
+    'XONSHCONFIG': xonshconfig,
     'XONSHRC': os.path.expanduser('~/.xonshrc'),
     'XONSH_CONFIG_DIR': xonsh_config_dir,
     'XONSH_DATA_DIR': xonsh_data_dir,
@@ -574,23 +585,24 @@ try:
 except AttributeError:
     pass
 
-def bash_env():
-    """Attempts to compute the bash envinronment variables."""
-    currenv = None
-    if hasattr(builtins, '__xonsh_env__'):
-        currenv = builtins.__xonsh_env__.detype()
-    try:
-        s = subprocess.check_output(['bash', '-i', '-l'],
-                                    input='env',
-                                    env=currenv,
-                                    stderr=subprocess.PIPE,
-                                    universal_newlines=True)
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        s = ''
-
-    items = [line.split('=', 1) for line in s.splitlines() if '=' in line]
-    env = dict(items)
-    return env
+def load_static_config(ctx):
+    """Loads a static configuration file from a given context, rather than the 
+    current environment.
+    """
+    env = {}
+    env['XDG_CONFIG_HOME'] = ctx.get('XDG_CONFIG_HOME', 
+                                     DEFAULT_VALUES['XDG_CONFIG_HOME'])
+    env['XONSH_CONFIG_DIR'] = ctx['XONSH_CONFIG_DIR'] if 'XONSH_CONFIG_DIR' in ctx \
+                              else xonsh_config_dir(env)
+    env['XONSHCONFIG'] = ctx['XONSHCONFIG'] if 'XONSHCONFIG' in ctx \
+                                  else xonshconfig(env)
+    config = env['XONSHCONFIG']
+    if os.path.isfile(config):
+        with open(config, 'r') as f:
+            conf = json.load(f)
+    else:
+        conf = {}
+    return conf
 
 
 def xonshrc_context(rcfile=None, execer=None):
@@ -612,6 +624,7 @@ def xonshrc_context(rcfile=None, execer=None):
     finally:
         execer.filename = fname
     return env
+
 
 def windows_env_fixes(ctx):
     """Environment fixes for Windows. Operates in-place."""
@@ -637,7 +650,9 @@ def default_env(env=None):
     # in order of increasing precedence
     ctx = dict(BASE_ENV)
     ctx.update(os.environ)
-    ctx.update(bash_env())
+    conf = load_static_config(ctx)
+    ctx.update(conf.get('env', ()))
+    ctx.update(load_foreign_envs(shells=conf.get('foreign_shells', DEFAULT_SHELLS))
     if ON_WINDOWS:
         windows_env_fixes(ctx)
     # finalize env

@@ -1,10 +1,15 @@
 """Tools to help interface with foreign shells, such as Bash."""
+import os
 import re
+import json
 import shlex
 import builtins
 import subprocess
 from warnings import warn
 from functools import lru_cache
+from collections import MutableMapping, Mapping, Sequence
+
+from xonsh.tools import to_bool, ensure_string
 
 
 COMMAND = """
@@ -34,7 +39,7 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd='env',
     ----------
     shell : str
         The name of the shell, such as 'bash' or '/bin/sh'.
-    login : bool, optional
+    interactive : bool, optional
         Whether the shell should be run in interactive mode.
     login : bool, optional
         Whether the shell should be a login shell.
@@ -121,3 +126,113 @@ def parse_aliases(s):
         aliases[key] = value
     return aliases
 
+
+VALID_SHELL_PARAMS = frozenset(['shell', 'interactive', 'login', 'envcmd', 
+                                'aliascmd', 'extra_args', 'currenv', 'safe'])
+
+def ensure_shell(shell):
+    """Ensures that a mapping follows the shell specification."""
+    if not isinstance(shell, MutableMapping):
+        shell = dict(shell)
+    shell_keys = set(shell.keys())
+    if not (shell_keys <= VALID_SHELL_PARAMS):
+        msg = 'unknown shell keys: {0}'
+        raise KeyError(msg.format(shell_keys - VALID_SHELL_PARAMS))
+    shell['shell'] = ensure_string(shell['shell'])
+    if 'interactive' in shell_keys:
+        shell['interactive'] = to_bool(shell['interactive'])
+    if 'login' in shell_keys:
+        shell['login'] = to_bool(shell['login'])
+    if 'envcmd' in shell_keys:
+        shell['envcmd'] = eunsure_string(shell['envcmd'])
+    if 'aliascmd' in shell_keys:
+        shell['aliascmd'] = eunsure_string(shell['aliascmd'])
+    if 'extra_args' in shell_keys and not isinstance(shell['extra_args'], tuple):
+        shell['extra_args'] = tuple(map(ensure_string, shell['extra_args']))
+    if 'currenv' in shell_keys and not isinstance(shell['currenv'], tuple):
+        ce = shell['currenv']
+        if isinstance(ce, Mapping):
+            ce = tuple([(ensure_string(k), v) for k, v in ce.items()])
+        elif isinstance(ce, Sequence):
+            ce = tuple([(ensure_string(k), v) for k, v in ce])
+        else:
+            raise RuntimeError('unrecognized type for currenv')
+        shell['currenv'] = ce
+    if 'safe' in shell_keys:
+        shell['safe'] = to_bool(shell['safe'])
+    return shell
+
+
+DEFAULT_SHELLS = ({'shell': 'bash'},)
+
+def _get_shells(shells=None, config=None):
+    if shells is not None and config is not None:
+        raise RuntimeError('Only one of shells and config may be non-None.')
+    elif shells is not None:
+        pass
+    else:
+        if config is None:
+            config = builtins.__xonsh_env__.get('XONSHCONFIG')
+        if os.path.isfile(config):
+            with open(config, 'r') as f:
+                conf = json.load(f)
+            shells = conf.get('foreign_shells', DEFAULT_SHELLS)
+        else:
+            msg = 'could not find xonsh config file ($XONSHCONFIG) at {0!r}'
+            warn(msg.format(config), RuntimeWarning)
+            shells = DEFAULT_SHELLS
+    return shells
+
+
+def load_foreign_envs(shells=None, config=None):
+    """Loads environments from foreign shells.
+
+    Parameters
+    ----------
+    shells : sequence of dicts, optional
+        An iterable of dicts that can be passed into foreign_shell_data() as
+        keyword arguments. Not compatible with config not being None.
+    config : str of None, optional
+        Path to the static config file. Not compatible with shell not being None.
+        If both shell and config is None, then it will be read from the 
+        $XONSHCONFIG environment variable.
+
+    Returns
+    -------
+    env : dict
+        A dictionary of the merged environments.
+    """
+    shells = _get_shells(shells=shells, config=config)
+    env = {}
+    for shell in shells:
+        shell = ensure_shell(shell)
+        shenv, _ = foreign_shell_data(**shell)
+        env.update(shenv)
+    return env
+
+
+def load_foreign_aliases(shells=None, config=None):
+    """Loads aliases from foreign shells.
+
+    Parameters
+    ----------
+    shells : sequence of dicts, optional
+        An iterable of dicts that can be passed into foreign_shell_data() as
+        keyword arguments. Not compatible with config not being None.
+    config : str of None, optional
+        Path to the static config file. Not compatible with shell not being None.
+        If both shell and config is None, then it will be read from the 
+        $XONSHCONFIG environment variable.
+
+    Returns
+    -------
+    env : dict
+        A dictionary of the merged environments.
+    """
+    shells = _get_shells(shells=shells, config=config)
+    aliases = {}
+    for shell in shells:
+        shell = ensure_shell(shell)
+        _, shaliases = foreign_shell_data(**shell)
+        aliases.update(shaliases)
+    return aliases
