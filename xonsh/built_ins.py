@@ -22,7 +22,7 @@ from xonsh.tools import suggest_commands, XonshError, ON_POSIX, ON_WINDOWS, \
     string_types
 from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env
-from xonsh.aliases import DEFAULT_ALIASES, bash_aliases
+from xonsh.aliases import DEFAULT_ALIASES
 from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.proc import ProcProxy, SimpleProcProxy, TeePTYProc
 from xonsh.history import History

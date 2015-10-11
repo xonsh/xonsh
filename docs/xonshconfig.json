@@ -1,0 +1,12 @@
+{"env": {
+  "EDITOR": "xo",
+  "PAGER": "more"
+  },
+ "foreign_shells": [
+  {"shell": "bash", 
+   "login": true, 
+   "extra_args": ["--rcfile", "/path/to/rcfile"]
+   },
+  {"shell": "zsh"}
+  ]
+}

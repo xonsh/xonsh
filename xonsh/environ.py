@@ -652,7 +652,8 @@ def default_env(env=None):
     ctx.update(os.environ)
     conf = load_static_config(ctx)
     ctx.update(conf.get('env', ()))
-    ctx.update(load_foreign_envs(shells=conf.get('foreign_shells', DEFAULT_SHELLS))
+    ctx.update(load_foreign_envs(shells=conf.get('foreign_shells', DEFAULT_SHELLS), 
+                                 issue_warning=False))
     if ON_WINDOWS:
         windows_env_fixes(ctx)
     # finalize env
