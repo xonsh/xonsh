@@ -11,6 +11,7 @@ import os
 import sys
 import tty
 import pty
+import time
 import array
 import fcntl
 import select
@@ -78,7 +79,7 @@ class TeePTY(object):
             self._temp_stdin.close()
             self._temp_stdin = None
 
-    def spawn(self, argv=None, env=None, stdin=None):
+    def spawn(self, argv=None, env=None, stdin=None, delay=None):
         """Create a spawned process. Based on the code for pty.spawn().
         This cannot be used except from the main thread.
 
@@ -88,6 +89,12 @@ class TeePTY(object):
             Arguments to pass in as subprocess. In None, will execute $SHELL.
         env : Mapping, optional
             Environment to pass execute in.
+        delay : float, optional
+            Delay timing before executing process if piping in data. The value
+            is passed into time.sleep() so it is in [seconds]. If delay is None,
+            its value will attempted to be looked up from the environment
+            variable $TEEPTY_PIPE_DELAY, from the passed in env or os.environ.
+            If not present or not positive valued, no delay is used.
 
         Returns
         -------
@@ -104,6 +111,10 @@ class TeePTY(object):
         self.pid = pid
         self.master_fd = master_fd
         if pid == pty.CHILD:
+            # determine if a piping delay is needed.
+            if self._temp_stdin is not None:
+                self._delay_for_pipe(env=env, delay=delay)
+            # ok, go
             if env is None:
                 os.execvp(argv[0], argv)
             else:
@@ -255,8 +266,14 @@ class TeePTY(object):
                 tsi.flush()
         else:
             raise ValueError('stdin not understood {0!r}'.format(stdin))
-        
 
+    def _delay_for_pipe(self, env=None, delay=None):
+        if delay is None:
+            delay = (env or os.environ).get('TEEPTY_PIPE_DELAY', -1.0)
+        delay = float(delay)
+        if 0.0 < delay:
+            time.sleep(delay)
+        
 
 if __name__ == '__main__':
     tpty = TeePTY()
@@ -266,4 +283,4 @@ if __name__ == '__main__':
     print('-=-'*10)
     print(tpty)
     print('-=-'*10)
-    print('Returned with status {0}'.format(tpty.rtn))
+    print('Returned with status {0}'.format(tpty.returncode))

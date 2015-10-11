@@ -469,6 +469,11 @@ def is_int(x):
     return isinstance(x, int)
 
 
+def is_float(x):
+    """Tests if something is a float"""
+    return isinstance(x, float)
+
+
 def always_true(x):
     """Returns True"""
     return True

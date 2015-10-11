@@ -15,7 +15,7 @@ from xonsh import __version__ as XONSH_VERSION
 from xonsh.tools import TERM_COLORS, ON_WINDOWS, ON_MAC, ON_LINUX, string_types, \
     is_int, always_true, always_false, ensure_string, is_env_path, str_to_env_path, \
     env_path_to_str, is_bool, to_bool, bool_to_str, is_history_tuple, to_history_tuple, \
-    history_tuple_to_str
+    history_tuple_to_str, is_float
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
 
@@ -61,6 +61,7 @@ DEFAULT_ENSURERS = {
     'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
     'CASE_SENSITIVE_COMPLETIONS': (is_bool, to_bool, bool_to_str),
     'BASH_COMPLETIONS': (is_env_path, str_to_env_path, env_path_to_str),
+    'TEEPTY_PIPE_DELAY': (is_float, float, str),
 }
 
 #
