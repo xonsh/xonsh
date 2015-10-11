@@ -168,7 +168,7 @@ class Env(MutableMapping):
       locale via locale.getlocale() and locale.setlocale() functions.
 
     An Env instance may be converted to an untyped version suitable for
-    use in a subprocess. 
+    use in a subprocess.
     """
 
     _arg_regex = re.compile(r'ARG(\d+)')

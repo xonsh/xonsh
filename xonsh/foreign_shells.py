@@ -21,13 +21,6 @@ echo __XONSH_ALIAS_BEG__
 echo __XONSH_ALIAS_END__
 """.strip()
 
-FAILED_COMMAND_STDOUT = """
-__XONSH_ENV_BEG__
-__XONSH_ENV_END__
-__XONSH_ALIAS_BEG__
-__XONSH_ALIAS_END__
-""".strip()
-
 @lru_cache()
 def foreign_shell_data(shell, interactive=True, login=False, envcmd='env', 
                        aliascmd='alias', extra_args=(), currenv=None, 
@@ -79,7 +72,7 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd='env',
     except (subprocess.CalledProcessError, FileNotFoundError):
         if not safe:
             raise
-        s = FAILED_COMMAND_STDOUT
+        return {}, {}
     env = parse_env(s)
     aliases = parse_aliases(s)
     return env, aliases
@@ -231,8 +224,8 @@ def load_foreign_aliases(shells=None, config=None, issue_warning=True):
 
     Returns
     -------
-    env : dict
-        A dictionary of the merged environments.
+    aliases : dict
+        A dictionary of the merged alaiases.
     """
     shells = _get_shells(shells=shells, config=config, issue_warning=issue_warning)
     aliases = {}

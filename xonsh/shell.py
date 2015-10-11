@@ -26,7 +26,7 @@ class Shell(object):
     def __init__(self, ctx=None, shell_type=None, **kwargs):
         self._init_environ(ctx)
         env = builtins.__xonsh_env__
-        # piclk a valid shell
+        # pick a valid shell
         if shell_type is not None:
             env['SHELL_TYPE'] = shell_type
         shell_type = env.get('SHELL_TYPE')

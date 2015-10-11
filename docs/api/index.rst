@@ -51,6 +51,6 @@ For those of you who want the gritty details.
     lazyjson
     teepty
     openpy
-    foriegn_shells
+    foreign_shells
     main
     pyghooks
