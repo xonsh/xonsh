@@ -100,37 +100,6 @@ def bang_bang(args, stdin=None):
     return bang_n(['-1'])
 
 
-def bash_aliases():
-    """Computes a dictionary of aliases based on Bash's aliases."""
-    try:
-        s = subprocess.check_output(['bash', '-i', '-c', 'alias'],
-                                    stderr=subprocess.PIPE,
-                                    universal_newlines=True)
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        s = ''
-    items = [line.split('=', 1) for line in s.splitlines()
-             if line.startswith('alias ') and '=' in line]
-    aliases = {}
-    for key, value in items:
-        try:
-            key = key[6:]  # lstrip 'alias '
-
-            # undo bash's weird quoting of single quotes (sh_single_quote)
-            value = value.replace('\'\\\'\'', '\'')
-
-            # strip one single quote at the start and end of value
-            if value[0] == '\'' and value[-1] == '\'':
-                value = value[1:-1]
-
-            value = shlex.split(value)
-        except ValueError as exc:
-            warn('could not parse Bash alias "{0}": {1!r}'.format(key, exc),
-                 RuntimeWarning)
-            continue
-        aliases[key] = value
-    return aliases
-
-
 DEFAULT_ALIASES = {
     'cd': cd,
     'pushd': pushd,

@@ -165,7 +165,7 @@ def ensure_shell(shell):
 
 DEFAULT_SHELLS = ({'shell': 'bash'},)
 
-def _get_shells(shells=None, config=None):
+def _get_shells(shells=None, config=None, issue_warning=True):
     if shells is not None and config is not None:
         raise RuntimeError('Only one of shells and config may be non-None.')
     elif shells is not None:
@@ -178,13 +178,14 @@ def _get_shells(shells=None, config=None):
                 conf = json.load(f)
             shells = conf.get('foreign_shells', DEFAULT_SHELLS)
         else:
-            msg = 'could not find xonsh config file ($XONSHCONFIG) at {0!r}'
-            warn(msg.format(config), RuntimeWarning)
+            if issue_warning:
+                msg = 'could not find xonsh config file ($XONSHCONFIG) at {0!r}'
+                warn(msg.format(config), RuntimeWarning)
             shells = DEFAULT_SHELLS
     return shells
 
 
-def load_foreign_envs(shells=None, config=None):
+def load_foreign_envs(shells=None, config=None, issue_warning=True):
     """Loads environments from foreign shells.
 
     Parameters
@@ -196,13 +197,15 @@ def load_foreign_envs(shells=None, config=None):
         Path to the static config file. Not compatible with shell not being None.
         If both shell and config is None, then it will be read from the 
         $XONSHCONFIG environment variable.
+    issue_warning : bool, optional
+        Issues warnings if config file cannot be found.
 
     Returns
     -------
     env : dict
         A dictionary of the merged environments.
     """
-    shells = _get_shells(shells=shells, config=config)
+    shells = _get_shells(shells=shells, config=config, issue_warning=issue_warning)
     env = {}
     for shell in shells:
         shell = ensure_shell(shell)
@@ -211,7 +214,7 @@ def load_foreign_envs(shells=None, config=None):
     return env
 
 
-def load_foreign_aliases(shells=None, config=None):
+def load_foreign_aliases(shells=None, config=None, issue_warning=True):
     """Loads aliases from foreign shells.
 
     Parameters
@@ -223,13 +226,15 @@ def load_foreign_aliases(shells=None, config=None):
         Path to the static config file. Not compatible with shell not being None.
         If both shell and config is None, then it will be read from the 
         $XONSHCONFIG environment variable.
+    issue_warning : bool, optional
+        Issues warnings if config file cannot be found.
 
     Returns
     -------
     env : dict
         A dictionary of the merged environments.
     """
-    shells = _get_shells(shells=shells, config=config)
+    shells = _get_shells(shells=shells, config=config, issue_warning=issue_warning)
     aliases = {}
     for shell in shells:
         shell = ensure_shell(shell)
