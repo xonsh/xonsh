@@ -1,5 +1,4 @@
 """Implements a lazy JSON file class that wraps around json data."""
-from __future__ import print_function, unicode_literals
 import io
 import weakref
 from contextlib import contextmanager

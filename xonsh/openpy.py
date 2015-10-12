@@ -11,8 +11,6 @@ This file was forked from the IPython project:
 * Copyright (c) 2001, Janko Hauser <jhauser@zscout.de>
 * Copyright (c) 2001, Nathaniel Gray <n8gray@caltech.edu>
 """
-from __future__ import absolute_import
-
 import io
 import re
 import os.path
