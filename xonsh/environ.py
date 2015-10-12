@@ -573,12 +573,14 @@ def multiline_prompt():
 
 
 BASE_ENV = {
-    'XONSH_VERSION': XONSH_VERSION,
+    'BASH_COMPLETIONS': list(DEFAULT_VALUES['BASH_COMPLETIONS']),
+    'FORMATTER_DICT': dict(DEFAULT_VALUES['FORMATTER_DICT']),
     'LC_CTYPE': locale.setlocale(locale.LC_CTYPE),
     'LC_COLLATE': locale.setlocale(locale.LC_COLLATE),
     'LC_TIME': locale.setlocale(locale.LC_TIME),
     'LC_MONETARY': locale.setlocale(locale.LC_MONETARY),
     'LC_NUMERIC': locale.setlocale(locale.LC_NUMERIC),
+    'XONSH_VERSION': XONSH_VERSION,
 }
 
 try:
