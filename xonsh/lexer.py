@@ -1,7 +1,6 @@
 """
 Lexer for xonsh code, written using a hybrid of ``tokenize`` and PLY
 """
-from __future__ import print_function, unicode_literals
 import re
 import sys
 import tokenize
