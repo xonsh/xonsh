@@ -18,10 +18,8 @@ applicable.
       - ``False``
       - Flag for automatically pushing directorties onto the directory stack.
     * - BASH_COMPLETIONS
-      - Normally this is ``('/etc/bash_completion', 
-                            '/usr/share/bash-completion/completions/git')``
-        but on Mac is ``'/usr/local/etc/bash_completion',
-                        '/opt/local/etc/profile.d/bash_completion.sh')``.
+      - Normally this is ``('/etc/bash_completion', '/usr/share/bash-completion/completions/git')``
+        but on Mac is ``'/usr/local/etc/bash_completion', '/opt/local/etc/profile.d/bash_completion.sh')``.
       - This is a list (or tuple) of strings that specifies where the BASH completion 
         files may be found. The default values are platform dependent, but sane. 
         To specify an alternate list, do so in the run control file.

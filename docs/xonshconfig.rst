@@ -77,7 +77,7 @@ Putting it all together
 -----------------------
 The following ecample shows a fully fleshed out config file.
 
-:download:`Download config.json <xonshxonfig.json>`
+:download:`Download config.json <xonshconfig.json>`
 
 .. include:: xonshconfig.json
     :code: json
