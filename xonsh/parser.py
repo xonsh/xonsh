@@ -1,5 +1,4 @@
 """Implements the xonsh parser"""
-from __future__ import print_function, unicode_literals
 import os
 import sys
 from collections import Iterable, Sequence, Mapping
