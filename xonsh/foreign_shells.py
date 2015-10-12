@@ -225,7 +225,7 @@ def load_foreign_aliases(shells=None, config=None, issue_warning=True):
     Returns
     -------
     aliases : dict
-        A dictionary of the merged alaiases.
+        A dictionary of the merged aliases.
     """
     shells = _get_shells(shells=shells, config=config, issue_warning=issue_warning)
     aliases = {}
