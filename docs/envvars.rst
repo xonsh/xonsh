@@ -11,60 +11,68 @@ applicable.
     * - variable
       - default
       - description
-    * - PROMPT
-      - xonsh.environ.DEFAULT_PROMPT  
-      - The prompt text.  May contain keyword arguments which are auto-formatted,
-        see `Customizing the Prompt <tutorial.html#customizing-the-prompt>`_.
-    * - MULTILINE_PROMPT
-      - ``'.'``
-      - Prompt text for 2nd+ lines of input, may be str or function which returns a str.
-    * - TITLE
-      - xonsh.environ.DEFAULT_TITLE
-      - The title text for the window in which xonsh is running. Formatted in the same 
-        manner as PROMPT, 
-        see `Customizing the Prompt <tutorial.html#customizing-the-prompt>`_.
+    * - ANSICON
+      - No default set
+      - This is used on Windows to set the title, if available.
+    * - AUTO_PUSHD
+      - ``False``
+      - Flag for automatically pushing directorties onto the directory stack.
+    * - BASH_COMPLETIONS
+      - Normally this is ``('/etc/bash_completion', 
+                            '/usr/share/bash-completion/completions/git')``
+        but on Mac is ``'/usr/local/etc/bash_completion',
+                        '/opt/local/etc/profile.d/bash_completion.sh')``.
+      - This is a list (or tuple) of strings that specifies where the BASH completion 
+        files may be found. The default values are platform dependent, but sane. 
+        To specify an alternate list, do so in the run control file.
+    * - CASE_SENSITIVE_COMPLETIONS
+      - ``True`` on Linux, otherwise ``False``
+      - Sets whether completions should be case sensitive or case insensitive.
+    * - CDPATH
+      - ``[]``
+      - A list of paths to be used as roots for a ``cd``, breaking compatibility with 
+        bash, xonsh always prefer an existing relative path.
+    * - DIRSTACK_SIZE
+      - ``20``
+      - Maximum size of the directory stack.
+    * - FORCE_POSIX_PATHS
+      - ``False``
+      - Forces forward slashes (``/``) on Windows systems when using auto completion if 
+        set to anything truthy.
     * - FORMATTER_DICT
       - xonsh.environ.FORMATTER_DICT  
       - Dictionary containing variables to be used when formatting PROMPT and TITLE 
         see `Customizing the Prompt <tutorial.html#customizing-the-prompt>`_.
-    * - XONSHRC
-      - ``'~/.xonshrc'``
-      - Location of run control file.
-    * - XONSH_HISTORY_SIZE
-      - ``(8128, 'commands')`` or ``'8128 commands'``           
-      - Value and units tuple that sets the size of history after garbage collection. 
-        Canonical units are ``'commands'`` for the number of past commands executed, 
-        ``'files'`` for the number of history files to keep, ``'s'`` for the number of
-        seconds in the past that are allowed, and ``'b'`` for the number of bytes that 
-        are allowed for history to consume. Common abbreviations, such as ``6 months``
-        or ``1 GB`` are also allowed.
-    * - XONSH_HISTORY_FILE
-      - ``'~/.xonsh_history'``
-      - Location of history file (deprecated).
-    * - XONSH_STORE_STDOUT 
+    * - INDENT
+      - ``'    '``
+      - Indentation string for multiline input
+    * - MULTILINE_PROMPT
+      - ``'.'``
+      - Prompt text for 2nd+ lines of input, may be str or function which returns 
+        a str.
+    * - OLDPWD
+      - No default
+      - Used to represent a previous present working directory.
+    * - PATH
+      - ``()``
+      - List of strings representing where to look for executables.
+    * - PATHEXT
+      - ``()``
+      - List of strings for filtering valid exeutables by.
+    * - PROMPT
+      - xonsh.environ.DEFAULT_PROMPT  
+      - The prompt text.  May contain keyword arguments which are auto-formatted,
+        see `Customizing the Prompt <tutorial.html#customizing-the-prompt>`_.
+    * - PROMPT_TOOLKIT_STYLES
+      - ``None``
+      - This is a mapping of user-specified styles for prompt-toolkit. See the 
+        prompt-toolkit documentation for more details. If None, this is skipped.
+    * - PUSHD_MINUS
       - ``False``
-      - Whether or not to store the stdout and stderr streams in the history files.
-    * - XONSH_INTERACTIVE
-      - 
-      - ``True`` if xonsh is running interactively, and ``False`` otherwise.
-    * - BASH_COMPLETIONS
-      - ``[] or ['/etc/...']``
-      - This is a list of strings that specifies where the BASH completion files may 
-        be found. The default values are platform dependent, but sane.  To specify an 
-        alternate list, do so in the run control file.
-    * - SUGGEST_COMMANDS
-      - ``True``
-      - When a user types an invalid command, xonsh will try to offer suggestions of 
-        similar valid commands if this is ``True``.
-    * - SUGGEST_THRESHOLD
-      - ``3``
-      - An error threshold. If the Levenshtein distance between the entered command and 
-        a valid command is less than this value, the valid command will be offered as a 
-        suggestion.
-    * - SUGGEST_MAX_NUM
-      - ``5``
-      - xonsh will show at most this many suggestions in response to an invalid command.
-        If negative, there is no limit to how many suggestions are shown.
+      - Flag for directory pushing functionality. False is the normal behaviour.
+    * - PUSHD_SILENT
+      - ``False``
+      - Whether or not to supress directory stack manipulation output.
     * - SHELL_TYPE
       - ``'readline'``
       - Which shell is used. Currently two shell types are supported: ``'readline'`` that
@@ -74,27 +82,78 @@ applicable.
         `prompt_toolkit <https://github.com/jonathanslenders/python-prompt-toolkit>`_
         library installed. To specify which shell should be used, do so in the run 
         control file.
-    * - CDPATH
-      - ``[]``
-      - A list of paths to be used as roots for a ``cd``, breaking compatibility with 
-        bash, xonsh always prefer an existing relative path.
-    * - XONSH_SHOW_TRACEBACK
-      - Not defined
-      - Controls if a traceback is shown exceptions occur in the shell. Set ``'True'`` 
-        to always show or ``'False'`` to always hide. If undefined then traceback is 
-        hidden but a notice is shown on how to enable the traceback.
-    * - CASE_SENSITIVE_COMPLETIONS
-      - ``True`` on Linux, otherwise ``False``
-      - Sets whether completions should be case sensitive or case insensitive.
-    * - FORCE_POSIX_PATHS
-      - Not defined
-      - Forces forward slashes (``/``) on Windows systems when using auto completion if 
-        set to anything truthy.
-    * - XONSH_DATA_DIR
-      - ``$XDG_DATA_HOME/xonsh``
-      - This is the location where xonsh data files are stored, such as history.
+    * - SUGGEST_COMMANDS
+      - ``True``
+      - When a user types an invalid command, xonsh will try to offer suggestions of 
+        similar valid commands if this is ``True``.
+    * - SUGGEST_MAX_NUM
+      - ``5``
+      - xonsh will show at most this many suggestions in response to an invalid command.
+        If negative, there is no limit to how many suggestions are shown.
+    * - SUGGEST_THRESHOLD
+      - ``3``
+      - An error threshold. If the Levenshtein distance between the entered command and 
+        a valid command is less than this value, the valid command will be offered as a 
+        suggestion.
+    * - TEEPTY_PIPE_DELAY
+      - ``0.01``
+      - The number of [seconds] to delay a spawned process if it has information
+        being piped in via stdin. This value must be a float. If a value less than 
+        or equal to zero is passed in, no delay is used. This can be used to fix 
+        situations where a spawned process, such as piping into ``grep``, exits
+        too quickly for the piping operation itself. TeePTY (and thus this variable)
+        are currently only used when ``$XONSH_STORE_STDOUT`` is ``True``.
+    * - TERM
+      - No default
+      - TERM is sometimes set by the terminal emulator. This is used (when valid)
+        to determine whether or not to set the title. Users shouldn't need to 
+        set this themselves.
+    * - TITLE
+      - xonsh.environ.DEFAULT_TITLE
+      - The title text for the window in which xonsh is running. Formatted in the same 
+        manner as PROMPT, 
+        see `Customizing the Prompt <tutorial.html#customizing-the-prompt>`_.
+    * - XDG_CONFIG_HOME
+      - ``~/.config``
+      - Open desktop standard configuration home dir. This is the same default as
+        used in the standard.
+    * - XDG_DATA_HOME
+      - ``~/.local/share``
+      - Open desktop standard data home dir. This is the same default as used
+        in the standard.
+    * - XONSHCONFIG
+      - ``$XONSH_CONFIG_DIR/config.json``
+      - The location of the static xonsh configuration file, if it exists. This is
+        in JSON format.
+    * - XONSHRC
+      - ``~/.xonshrc``
+      - Location of run control file.
     * - XONSH_CONFIG_DIR
       - ``$XDG_CONFIG_HOME/xonsh``
       - This is location where xonsh configuration information is stored.
-
+    * - XONSH_DATA_DIR
+      - ``$XDG_DATA_HOME/xonsh``
+      - This is the location where xonsh data files are stored, such as history.
+    * - XONSH_HISTORY_FILE
+      - ``'~/.xonsh_history'``
+      - Location of history file (deprecated).
+    * - XONSH_HISTORY_SIZE
+      - ``(8128, 'commands')`` or ``'8128 commands'``           
+      - Value and units tuple that sets the size of history after garbage collection. 
+        Canonical units are ``'commands'`` for the number of past commands executed, 
+        ``'files'`` for the number of history files to keep, ``'s'`` for the number of
+        seconds in the past that are allowed, and ``'b'`` for the number of bytes that 
+        are allowed for history to consume. Common abbreviations, such as ``6 months``
+        or ``1 GB`` are also allowed.
+    * - XONSH_INTERACTIVE
+      - 
+      - ``True`` if xonsh is running interactively, and ``False`` otherwise.
+    * - XONSH_SHOW_TRACEBACK
+      - ``False`` but not set
+      - Controls if a traceback is shown exceptions occur in the shell. Set ``True`` 
+        to always show or ``False`` to always hide. If undefined then traceback is 
+        hidden but a notice is shown on how to enable the traceback.
+    * - XONSH_STORE_STDOUT 
+      - ``False``
+      - Whether or not to store the stdout and stderr streams in the history files.
 

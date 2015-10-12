@@ -119,7 +119,7 @@ class BaseShell(object):
             return
         hist = builtins.__xonsh_history__
         ts1 = None
-        tee = Tee() if builtins.__xonsh_env__.get('XONSH_STORE_STDOUT', False) \
+        tee = Tee() if builtins.__xonsh_env__.get('XONSH_STORE_STDOUT') \
                     else io.StringIO()
         try:
             ts0 = time.time()
@@ -181,9 +181,8 @@ class BaseShell(object):
         term = env.get('TERM', None)
         if term is None or term == 'linux':
             return
-        if 'TITLE' in env:
-            t = env['TITLE']
-        else:
+        t = env.get('TITLE')
+        if t is None:
             return
         t = format_prompt(t)
         if ON_WINDOWS and 'ANSICON' not in env:
@@ -204,14 +203,11 @@ class BaseShell(object):
                     self.mlprompt = '<multiline prompt error> '
             return self.mlprompt
         env = builtins.__xonsh_env__
-        if 'PROMPT' in env:
-            p = env['PROMPT']
-            try:
-                p = format_prompt(p)
-            except Exception:
-                print_exception()
-        else:
-            p = "set '$PROMPT = ...' $ "
+        p = env.get('PROMPT')
+        try:
+            p = format_prompt(p)
+        except Exception:
+            print_exception()
         self.settitle()
         return p
 

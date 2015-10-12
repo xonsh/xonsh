@@ -1,6 +1,7 @@
 """Environment for the xonsh shell."""
 import os
 import re
+import json
 import socket
 import string
 import locale
@@ -14,8 +15,9 @@ from xonsh import __version__ as XONSH_VERSION
 from xonsh.tools import TERM_COLORS, ON_WINDOWS, ON_MAC, ON_LINUX, string_types, \
     is_int, always_true, always_false, ensure_string, is_env_path, str_to_env_path, \
     env_path_to_str, is_bool, to_bool, bool_to_str, is_history_tuple, to_history_tuple, \
-    history_tuple_to_str
+    history_tuple_to_str, is_float
 from xonsh.dirstack import _get_cwd
+from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
 
 LOCALE_CATS = {
     'LC_CTYPE': locale.LC_CTYPE,
@@ -59,8 +61,103 @@ DEFAULT_ENSURERS = {
     'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
     'CASE_SENSITIVE_COMPLETIONS': (is_bool, to_bool, bool_to_str),
     'BASH_COMPLETIONS': (is_env_path, str_to_env_path, env_path_to_str),
+    'TEEPTY_PIPE_DELAY': (is_float, float, str),
 }
 
+#
+# Defaults
+#
+def default_value(f):
+    """Decorator for making callable default values."""
+    f._xonsh_callable_default = True
+    return f
+
+def is_callable_default(x):
+    """Checks if a value is a callable default."""
+    return callable(x) and getattr(x, '_xonsh_callable_default', False)
+    
+DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
+                  '{cwd}{branch_color}{curr_branch} '
+                  '{BOLD_BLUE}${NO_COLOR} ')
+DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
+
+@default_value
+def xonsh_data_dir(env):
+    """Ensures and returns the $XONSH_DATA_DIR"""
+    xdd = os.path.join(env.get('XDG_DATA_HOME'), 'xonsh')
+    os.makedirs(xdd, exist_ok=True)
+    return xdd
+
+
+@default_value
+def xonsh_config_dir(env):
+    """Ensures and returns the $XONSH_CONFIG_DIR"""
+    xcd = os.path.join(env.get('XDG_CONFIG_HOME'), 'xonsh')
+    os.makedirs(xcd, exist_ok=True)
+    return xcd
+
+
+@default_value
+def xonshconfig(env):
+    """Ensures and returns the $XONSHCONFIG"""
+    xcd = env.get('XONSH_CONFIG_DIR')
+    xc = os.path.join(xcd, 'config.json')
+    return xc
+
+
+# Default values should generally be immutable, that way if a user wants
+# to set them they have to do a copy and write them to the environment.
+# try to keep this sorted.
+DEFAULT_VALUES = {
+    'AUTO_PUSHD': False,
+    'BASH_COMPLETIONS': ('/usr/local/etc/bash_completion',
+                         '/opt/local/etc/profile.d/bash_completion.sh') if ON_MAC \
+                        else ('/etc/bash_completion', 
+                              '/usr/share/bash-completion/completions/git'),
+    'CASE_SENSITIVE_COMPLETIONS': ON_LINUX,
+    'CDPATH': (),
+    'DIRSTACK_SIZE': 20,
+    'FORCE_POSIX_PATHS': False,
+    'INDENT': '    ',
+    'LC_CTYPE': locale.setlocale(locale.LC_CTYPE),
+    'LC_COLLATE': locale.setlocale(locale.LC_COLLATE),
+    'LC_TIME': locale.setlocale(locale.LC_TIME),
+    'LC_MONETARY': locale.setlocale(locale.LC_MONETARY),
+    'LC_NUMERIC': locale.setlocale(locale.LC_NUMERIC),
+    'MULTILINE_PROMPT': '.',
+    'PATH': (),
+    'PATHEXT': (),
+    'PROMPT': DEFAULT_PROMPT,
+    'PROMPT_TOOLKIT_STYLES': None,
+    'PUSHD_MINUS': False,
+    'PUSHD_SILENT': False,
+    'SHELL_TYPE': 'readline',
+    'SUGGEST_COMMANDS': True,
+    'SUGGEST_MAX_NUM': 5,
+    'SUGGEST_THRESHOLD': 3,
+    'TEEPTY_PIPE_DELAY': 0.01,
+    'TITLE': DEFAULT_TITLE,
+    'XDG_CONFIG_HOME': os.path.expanduser(os.path.join('~', '.config')),
+    'XDG_DATA_HOME': os.path.expanduser(os.path.join('~', '.local', 'share')),
+    'XONSHCONFIG': xonshconfig,
+    'XONSHRC': os.path.expanduser('~/.xonshrc'),
+    'XONSH_CONFIG_DIR': xonsh_config_dir,
+    'XONSH_DATA_DIR': xonsh_data_dir,
+    'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
+    'XONSH_HISTORY_SIZE': (8128, 'commands'),
+    'XONSH_SHOW_TRACEBACK': False,
+    'XONSH_STORE_STDOUT': False,
+}
+
+class DefaultNotGivenType(object):
+    """Singleton for representing when no default value is given."""
+
+
+DefaultNotGiven = DefaultNotGivenType()
+
+#
+# actual environment
+#
 
 class Env(MutableMapping):
     """A xonsh environment, whose variables have limited typing
@@ -82,6 +179,7 @@ class Env(MutableMapping):
         """If no initial environment is given, os.environ is used."""
         self._d = {}
         self.ensurers = {k: Ensurer(*v) for k, v in DEFAULT_ENSURERS.items()}
+        self.defaults = DEFAULT_VALUES
         if len(args) == 0 and len(kwargs) == 0:
             args = (os.environ, )
         for key, val in dict(*args, **kwargs).items():
@@ -167,6 +265,20 @@ class Env(MutableMapping):
     def __delitem__(self, key):
         del self._d[key]
         self._detyped = None
+
+    def get(self, key, default=DefaultNotGiven):
+        """The environment will look up default values from its own defaults if a
+        default is not given here.
+        """
+        if key in self:
+            val = self[key]
+        elif default is DefaultNotGiven:
+            val = self.defaults.get(key, None)
+            if is_callable_default(val):
+                val = val(self)
+        else:
+            val = default
+        return val
 
     def __iter__(self):
         yield from self._d
@@ -382,12 +494,6 @@ def branch_color():
             TERM_COLORS['BOLD_GREEN'])
 
 
-DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
-                  '{cwd}{branch_color}{curr_branch} '
-                  '{BOLD_BLUE}${NO_COLOR} ')
-DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
-
-
 def _replace_home(x):
     if ON_WINDOWS:
         home = (builtins.__xonsh_env__['HOMEDRIVE'] +
@@ -419,9 +525,9 @@ FORMATTER_DICT = dict(
     curr_branch=current_branch,
     branch_color=branch_color,
     **TERM_COLORS)
+DEFAULT_VALUES['FORMATTER_DICT'] = dict(FORMATTER_DICT)
 
 _FORMATTER = string.Formatter()
-
 
 def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
     """Formats a xonsh prompt template string."""
@@ -447,10 +553,9 @@ def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
 
 RE_HIDDEN = re.compile('\001.*?\002')
 
-
 def multiline_prompt():
     """Returns the filler text for the prompt in multiline scenarios."""
-    curr = builtins.__xonsh_env__.get('PROMPT', "set '$PROMPT = ...' $ ")
+    curr = builtins.__xonsh_env__.get('PROMPT')
     curr = format_prompt(curr)
     line = curr.rsplit('\n', 1)[1] if '\n' in curr else curr
     line = RE_HIDDEN.sub('', line)  # gets rid of colors
@@ -460,7 +565,7 @@ def multiline_prompt():
     # tail is the trailing whitespace
     tail = line if headlen == 0 else line.rsplit(head[-1], 1)[1]
     # now to constuct the actual string
-    dots = builtins.__xonsh_env__.get('MULTILINE_PROMPT', '.')
+    dots = builtins.__xonsh_env__.get('MULTILINE_PROMPT')
     dots = dots() if callable(dots) else dots
     if dots is None or len(dots) == 0:
         return ''
@@ -469,58 +574,37 @@ def multiline_prompt():
 
 BASE_ENV = {
     'XONSH_VERSION': XONSH_VERSION,
-    'INDENT': '    ',
-    'FORMATTER_DICT': dict(FORMATTER_DICT),
-    'PROMPT': DEFAULT_PROMPT,
-    'TITLE': DEFAULT_TITLE,
-    'MULTILINE_PROMPT': '.',
-    'XONSHRC': os.path.expanduser('~/.xonshrc'),
-    'XONSH_HISTORY_SIZE': (8128, 'commands'),
-    'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
-    'XONSH_STORE_STDOUT': False,
     'LC_CTYPE': locale.setlocale(locale.LC_CTYPE),
     'LC_COLLATE': locale.setlocale(locale.LC_COLLATE),
     'LC_TIME': locale.setlocale(locale.LC_TIME),
     'LC_MONETARY': locale.setlocale(locale.LC_MONETARY),
     'LC_NUMERIC': locale.setlocale(locale.LC_NUMERIC),
-    'SHELL_TYPE': 'readline',
-    'CASE_SENSITIVE_COMPLETIONS': ON_LINUX,
 }
 
 try:
-    BASE_ENV['LC_MESSAGES'] = locale.setlocale(locale.LC_MESSAGES)
+    BASE_ENV['LC_MESSAGES'] = DEFAULT_VALUES['LC_MESSAGES'] = \
+        locale.setlocale(locale.LC_MESSAGES)
 except AttributeError:
     pass
 
-
-if ON_MAC:
-    BASE_ENV['BASH_COMPLETIONS'] = [
-        '/usr/local/etc/bash_completion',
-        '/opt/local/etc/profile.d/bash_completion.sh'
-    ]
-else:
-    BASE_ENV['BASH_COMPLETIONS'] = [
-        '/etc/bash_completion', '/usr/share/bash-completion/completions/git'
-    ]
-
-
-def bash_env():
-    """Attempts to compute the bash envinronment variables."""
-    currenv = None
-    if hasattr(builtins, '__xonsh_env__'):
-        currenv = builtins.__xonsh_env__.detype()
-    try:
-        s = subprocess.check_output(['bash', '-i', '-l'],
-                                    input='env',
-                                    env=currenv,
-                                    stderr=subprocess.PIPE,
-                                    universal_newlines=True)
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        s = ''
-
-    items = [line.split('=', 1) for line in s.splitlines() if '=' in line]
-    env = dict(items)
-    return env
+def load_static_config(ctx):
+    """Loads a static configuration file from a given context, rather than the 
+    current environment.
+    """
+    env = {}
+    env['XDG_CONFIG_HOME'] = ctx.get('XDG_CONFIG_HOME', 
+                                     DEFAULT_VALUES['XDG_CONFIG_HOME'])
+    env['XONSH_CONFIG_DIR'] = ctx['XONSH_CONFIG_DIR'] if 'XONSH_CONFIG_DIR' in ctx \
+                              else xonsh_config_dir(env)
+    env['XONSHCONFIG'] = ctx['XONSHCONFIG'] if 'XONSHCONFIG' in ctx \
+                                  else xonshconfig(env)
+    config = env['XONSHCONFIG']
+    if os.path.isfile(config):
+        with open(config, 'r') as f:
+            conf = json.load(f)
+    else:
+        conf = {}
+    return conf
 
 
 def xonshrc_context(rcfile=None, execer=None):
@@ -544,19 +628,23 @@ def xonshrc_context(rcfile=None, execer=None):
     return env
 
 
-def recursive_base_env_update(env):
-    """Updates the environment with members that may rely on previously defined
-    members. Takes an env as its argument.
-    """
-    home = os.path.expanduser('~')
-    if 'XONSH_DATA_DIR' not in env:
-        xdgdh = env.get('XDG_DATA_HOME', os.path.join(home, '.local', 'share'))
-        env['XONSH_DATA_DIR'] = xdd = os.path.join(xdgdh, 'xonsh')
-        os.makedirs(xdd, exist_ok=True)
-    if 'XONSH_CONFIG_DIR' not in env:
-        xdgch = env.get('XDG_CONFIG_HOME', os.path.join(home, '.config'))
-        env['XONSH_CONFIG_DIR'] = xcd = os.path.join(xdgch, 'xonsh')
-        os.makedirs(xcd, exist_ok=True)
+def windows_env_fixes(ctx):
+    """Environment fixes for Windows. Operates in-place."""
+    # Windows default prompt doesn't work.
+    ctx['PROMPT'] = DEFAULT_PROMPT
+    # remove these bash variables which only cause problems.
+    for ev in ['HOME', 'OLDPWD']:
+        if ev in ctx:
+            del ctx[ev]
+    # Override path-related bash variables; on Windows bash uses
+    # /c/Windows/System32 syntax instead of C:\\Windows\\System32
+    # which messes up these environment variables for xonsh.
+    for ev in ['PATH', 'TEMP', 'TMP']:
+        if ev in os.environ:
+            ctx[ev] = os.environ[ev]
+        elif ev in ctx:
+            del ctx[ev]
+    ctx['PWD'] = _get_cwd()
 
 
 def default_env(env=None):
@@ -564,28 +652,13 @@ def default_env(env=None):
     # in order of increasing precedence
     ctx = dict(BASE_ENV)
     ctx.update(os.environ)
-    ctx.update(bash_env())
+    conf = load_static_config(ctx)
+    ctx.update(conf.get('env', ()))
+    ctx.update(load_foreign_envs(shells=conf.get('foreign_shells', DEFAULT_SHELLS), 
+                                 issue_warning=False))
     if ON_WINDOWS:
-        # Windows default prompt doesn't work.
-        ctx['PROMPT'] = DEFAULT_PROMPT
-
-        # remove these bash variables which only cause problems.
-        for ev in ['HOME', 'OLDPWD']:
-            if ev in ctx:
-                del ctx[ev]
-
-        # Override path-related bash variables; on Windows bash uses
-        # /c/Windows/System32 syntax instead of C:\\Windows\\System32
-        # which messes up these environment variables for xonsh.
-        for ev in ['PATH', 'TEMP', 'TMP']:
-            if ev in os.environ:
-                ctx[ev] = os.environ[ev]
-            elif ev in ctx:
-                del ctx[ev]
-
-        ctx['PWD'] = _get_cwd()
+        windows_env_fixes(ctx)
     # finalize env
-    recursive_base_env_update(ctx)
     if env is not None:
         ctx.update(env)
     return ctx

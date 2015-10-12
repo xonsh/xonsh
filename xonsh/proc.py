@@ -10,6 +10,7 @@ import io
 import os
 import sys
 import time
+import builtins
 from threading import Thread
 from collections import Sequence
 from subprocess import Popen, PIPE, DEVNULL, STDOUT, TimeoutExpired
@@ -370,7 +371,9 @@ class TeePTYProc(object):
         self._tpty = tpty = TeePTY()
         if preexec_fn is not None:
             preexec_fn()
-        tpty.spawn(args, env=env, stdin=stdin)
+        delay = builtins.__xonsh_env__.get('TEEPTY_PIPE_DELAY') if \
+                hasattr(builtins, '__xonsh_env__') else None
+        tpty.spawn(args, env=env, stdin=stdin, delay=delay)
 
     @property
     def pid(self):

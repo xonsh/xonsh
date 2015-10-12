@@ -29,7 +29,7 @@ class HistoryGC(Thread):
             time.sleep(0.01)
         env = builtins.__xonsh_env__
         if self.size is None:
-            hsize, units = env.get('XONSH_HISTORY_SIZE', (8128, 'commands'))
+            hsize, units = env.get('XONSH_HISTORY_SIZE')
         else:
             hsize, units = to_history_tuple(self.size)
         files = self.unlocked_files()
@@ -79,7 +79,7 @@ class HistoryGC(Thread):
         """Finds the history files and returns the ones that are unlocked, this is 
         sorted by the last closed time. Returns a list of (timestamp, file) tuples.
         """
-        xdd = os.path.abspath(builtins.__xonsh_env__['XONSH_DATA_DIR'])
+        xdd = os.path.abspath(builtins.__xonsh_env__.get('XONSH_DATA_DIR'))
         fs = [f for f in iglob(os.path.join(xdd, 'xonsh-*.json'))]
         files = []
         for f in fs:
@@ -209,7 +209,7 @@ class History(object):
         """
         self.sessionid = sid = uuid.uuid4() if sessionid is None else sessionid
         if filename is None: 
-            self.filename = os.path.join(builtins.__xonsh_env__['XONSH_DATA_DIR'], 
+            self.filename = os.path.join(builtins.__xonsh_env__.get('XONSH_DATA_DIR'), 
                                          'xonsh-{0}.json'.format(sid))
         else: 
             self.filename = filename

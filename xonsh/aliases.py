@@ -1,10 +1,8 @@
 """Aliases for the xonsh shell."""
 import os
-import sys
 import shlex
 import builtins
 import subprocess
-import datetime
 from warnings import warn
 from argparse import ArgumentParser
 
@@ -75,6 +73,7 @@ def xexec(args, stdin=None):
 
 _BANG_N_PARSER = None
 
+
 def bang_n(args, stdin=None):
     """Re-runs the nth command as specified in the argument."""
     global _BANG_N_PARSER
@@ -99,37 +98,6 @@ def bang_n(args, stdin=None):
 def bang_bang(args, stdin=None):
     """Re-runs the last command. Just a wrapper around bang_n."""
     return bang_n(['-1'])
-
-
-def bash_aliases():
-    """Computes a dictionary of aliases based on Bash's aliases."""
-    try:
-        s = subprocess.check_output(['bash', '-i', '-l'],
-                                    input='alias',
-                                    stderr=subprocess.PIPE,
-                                    universal_newlines=True)
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        s = ''
-    items = [line.split('=', 1) for line in s.splitlines() if '=' in line]
-    aliases = {}
-    for key, value in items:
-        try:
-            key = key[6:]  # lstrip 'alias '
-
-            # undo bash's weird quoting of single quotes (sh_single_quote)
-            value = value.replace('\'\\\'\'', '\'')
-
-            # strip one single quote at the start and end of value
-            if value[0] == '\'' and value[-1] == '\'':
-                value = value[1:-1]
-
-            value = shlex.split(value)
-        except ValueError as exc:
-            warn('could not parse Bash alias "{0}": {1!r}'.format(key, exc),
-                 RuntimeWarning)
-            continue
-        aliases[key] = value
-    return aliases
 
 
 DEFAULT_ALIASES = {
@@ -186,5 +154,3 @@ elif ON_MAC:
 else:
     DEFAULT_ALIASES['grep'] = ['grep', '--color=auto']
     DEFAULT_ALIASES['ls'] = ['ls', '--color=auto', '-v']
-
-

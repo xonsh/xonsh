@@ -22,10 +22,11 @@ from xonsh.tools import suggest_commands, XonshError, ON_POSIX, ON_WINDOWS, \
     string_types
 from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env
-from xonsh.aliases import DEFAULT_ALIASES, bash_aliases
+from xonsh.aliases import DEFAULT_ALIASES
 from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.proc import ProcProxy, SimpleProcProxy, TeePTYProc
 from xonsh.history import History
+from xonsh.foreign_shells import load_foreign_aliases
 
 ENV = None
 BUILTINS_LOADED = False
@@ -268,20 +269,17 @@ RE_SHEBANG = re.compile(r'#![ \t]*(.+?)$')
 def _get_runnable_name(fname):
     if os.path.isfile(fname) and fname != os.path.basename(fname):
         return fname
-    for d in builtins.__xonsh_env__['PATH']:
+    for d in builtins.__xonsh_env__.get('PATH'):
         if os.path.isdir(d):
             files = os.listdir(d)
-
             if ON_WINDOWS:
-                PATHEXT = builtins.__xonsh_env__.get('PATHEXT', [])
+                PATHEXT = builtins.__xonsh_env__.get('PATHEXT')
                 for dirfile in files:
                     froot, ext = os.path.splitext(dirfile)
                     if fname == froot and ext.upper() in PATHEXT:
                         return os.path.join(d, dirfile)
-
             if fname in files:
                 return os.path.join(d, fname)
-
     return None
 
 
@@ -666,7 +664,7 @@ def load_builtins(execer=None):
     builtins.execx = None if execer is None else execer.exec
     builtins.compilex = None if execer is None else execer.compile
     builtins.default_aliases = builtins.aliases = Aliases(DEFAULT_ALIASES)
-    builtins.aliases.update(bash_aliases())
+    builtins.aliases.update(load_foreign_aliases(issue_warning=False))
     # history needs to be started after env and aliases
     # would be nice to actually include non-detyped versions.
     builtins.__xonsh_history__ = History(env=ENV.detype(), #aliases=builtins.aliases, 
