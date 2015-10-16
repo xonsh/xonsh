@@ -346,7 +346,7 @@ class Completer(object):
             csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
             startswither = startswithnorm if csc else startswithlow
             attrlow = attr.lower()
-            opts = [o for o in opts if startswither(o, attrlow)]
+            opts = [o for o in opts if startswither(o, attr, attrlow)]
         prelen = len(prefix)
         for opt in opts:
             a = getattr(val, opt)
