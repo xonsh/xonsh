@@ -4,6 +4,8 @@ The following table displays information about the environment variables that
 effect XONSH performance in some way. It also lists their default values, if
 applicable.
 
+.. Please keep the following in alphabetic order - scopatz
+
 .. list-table:: 
     :widths: 1 1 3
     :header-rows: 1
@@ -44,6 +46,13 @@ applicable.
     * - INDENT
       - ``'    '``
       - Indentation string for multiline input
+    * - MOUSE_SUPPORT
+      - ``False``
+      - Enable mouse support in the prompt_toolkit shell. This allows clicking
+        for positioning the cursor or selecting a completion. In some terminals
+        however, this disables the ability to scroll back through the history
+        of the terminal.
+        (Only usable with SHELL_TYPE=prompt_toolkit)
     * - MULTILINE_PROMPT
       - ``'.'``
       - Prompt text for 2nd+ lines of input, may be str or function which returns 

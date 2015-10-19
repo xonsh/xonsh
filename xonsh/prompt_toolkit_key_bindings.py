@@ -32,5 +32,3 @@ def load_xonsh_bindings(key_bindings_manager):
         indent instead of autocompleting.
         """
         event.cli.current_buffer.insert_text(env.get('INDENT'))
-
-
