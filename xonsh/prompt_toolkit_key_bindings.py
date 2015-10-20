@@ -34,9 +34,9 @@ def load_xonsh_bindings(key_bindings_manager):
         event.cli.current_buffer.insert_text(env.get('INDENT'))
 
     @handle(Keys.BackTab)
-    def _(event):
+    def _(insert_literal_tab):
         """
         Insert literal tab on Shift+Tab instead of autocompleting
         """
-        event.cli.current_buffer.insert_text(env.get('INDENT'))
+        insert_literal_tab.cli.current_buffer.insert_text(env.get('INDENT'))
 
