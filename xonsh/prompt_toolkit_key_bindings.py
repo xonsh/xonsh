@@ -31,6 +31,4 @@ def load_xonsh_bindings(key_bindings_manager):
         If there are only whitespaces before current cursor position insert
         indent instead of autocompleting.
         """
-        event.cli.current_buffer.insert_text(env['INDENT'])
-
-
+        event.cli.current_buffer.insert_text(env.get('INDENT', '    '))
