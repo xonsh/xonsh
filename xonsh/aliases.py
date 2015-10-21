@@ -1,5 +1,6 @@
 """Aliases for the xonsh shell."""
 import os
+import re
 import shlex
 import builtins
 import subprocess
@@ -40,7 +41,7 @@ def source_bash(args, stdin=None):
             return None, 'could not source {0}\n'.format(args)
         f.seek(0)
         exported = f.read()
-    items = [l.split('=', 1) for l in exported.splitlines() if '=' in l]
+    items = re.findall(r'([A-Za-z_]+)=(.+?)\n[A-Za-z_]+=', exported, re.DOTALL)
     newenv = dict(items)
     for k, v in newenv.items():
         if k in env and v == denv[k]:
