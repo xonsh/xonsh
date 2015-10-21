@@ -60,6 +60,6 @@ class Shell(object):
             self.ctx = ctx
         else:
             rc = env.get('XONSHRC')
-            self.ctx = xonshrc_context(rcfile=rc, execer=self.execer)
+            self.ctx = xonshrc_context(rcfiles=rc, execer=self.execer)
         builtins.__xonsh_ctx__ = self.ctx
         self.ctx['__name__'] = '__main__'
