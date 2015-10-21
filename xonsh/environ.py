@@ -620,6 +620,7 @@ def xonshrc_context(rcfiles=None, execer=None):
     if (rcfiles is None or execer is None
        or sum([os.path.isfile(rcfile) for rcfile in rcfiles]) == 0):
         return {}
+    env = {}
     for rcfile in rcfiles:
         if not os.path.isfile(rcfile):
             continue
@@ -628,7 +629,6 @@ def xonshrc_context(rcfiles=None, execer=None):
         if not rc.endswith('\n'):
             rc += '\n'
         fname = execer.filename
-        env = {}
         try:
             execer.filename = rcfile
             execer.exec(rc, glbs=env)
