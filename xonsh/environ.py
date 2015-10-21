@@ -142,7 +142,8 @@ DEFAULT_VALUES = {
     'XDG_CONFIG_HOME': os.path.expanduser(os.path.join('~', '.config')),
     'XDG_DATA_HOME': os.path.expanduser(os.path.join('~', '.local', 'share')),
     'XONSHCONFIG': xonshconfig,
-    'XONSHRC': os.path.expanduser('~/.xonshrc'),
+    'XONSHRC': (os.path.expanduser('~/.xonshrc'),'/etc/xonshrc') if ON_LINUX \
+               else (os.path.expanduser('~/.xonshrc'),'/etc/xonshrc'), 
     'XONSH_CONFIG_DIR': xonsh_config_dir,
     'XONSH_DATA_DIR': xonsh_data_dir,
     'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
@@ -611,24 +612,29 @@ def load_static_config(ctx):
     return conf
 
 
-def xonshrc_context(rcfile=None, execer=None):
+def xonshrc_context(rcfiles=None, execer=None):
     """Attempts to read in xonshrc file, and return the contents."""
-    if rcfile is None or execer is None or not os.path.isfile(rcfile):
+    if (rcfiles is None or execer is None
+       or sum([os.path.isfile(rcfile) for rcfile in rcfiles]) == 0):
         return {}
-    with open(rcfile, 'r') as f:
-        rc = f.read()
-    if not rc.endswith('\n'):
-        rc += '\n'
-    fname = execer.filename
-    env = {}
-    try:
-        execer.filename = rcfile
-        execer.exec(rc, glbs=env)
-    except SyntaxError as err:
-        msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
-        warn(msg.format(rcfile, err), RuntimeWarning)
-    finally:
-        execer.filename = fname
+    for rcfile in rcfiles:
+        try:
+            with open(rcfile, 'r') as f:
+                rc = f.read()
+            if not rc.endswith('\n'):
+                rc += '\n'
+            fname = execer.filename
+            env = {}
+            try:
+                execer.filename = rcfile
+                execer.exec(rc, glbs=env)
+            except SyntaxError as err:
+                msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
+                warn(msg.format(rcfile, err), RuntimeWarning)
+            finally:
+                execer.filename = fname
+        except:
+            pass
     return env
 
 
