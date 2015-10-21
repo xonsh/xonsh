@@ -621,23 +621,22 @@ def xonshrc_context(rcfiles=None, execer=None):
        or sum([os.path.isfile(rcfile) for rcfile in rcfiles]) == 0):
         return {}
     for rcfile in rcfiles:
+        if not os.path.isfile(rcfile):
+            continue
+        with open(rcfile, 'r') as f:
+            rc = f.read()
+        if not rc.endswith('\n'):
+            rc += '\n'
+        fname = execer.filename
+        env = {}
         try:
-            with open(rcfile, 'r') as f:
-                rc = f.read()
-            if not rc.endswith('\n'):
-                rc += '\n'
-            fname = execer.filename
-            env = {}
-            try:
-                execer.filename = rcfile
-                execer.exec(rc, glbs=env)
-            except SyntaxError as err:
-                msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
-                warn(msg.format(rcfile, err), RuntimeWarning)
-            finally:
-                execer.filename = fname
-        except:
-            pass
+            execer.filename = rcfile
+            execer.exec(rc, glbs=env)
+        except SyntaxError as err:
+            msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
+            warn(msg.format(rcfile, err), RuntimeWarning)
+        finally:
+            execer.filename = fname
     return env
 
 
