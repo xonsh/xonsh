@@ -51,6 +51,19 @@ def _on_main_thread():
     return threading.current_thread() is threading.main_thread()
 
 
+def _find_error_code(e):
+    """Gets the approriate error code for an exception e, see
+    http://tldp.org/LDP/abs/html/exitcodes.html for exit codes.
+    """
+    if isinstance(e, PermissionError):
+        code = 126
+    elif isinstance(e, FileNotFoundError):
+        code = 127
+    else:
+        code = 1
+    return code
+
+
 class TeePTY(object):
     """This class is a pseudo terminal that tees the stdout and stderr into a buffer."""
 
@@ -115,10 +128,13 @@ class TeePTY(object):
             if self._temp_stdin is not None:
                 self._delay_for_pipe(env=env, delay=delay)
             # ok, go
-            if env is None:
-                os.execvp(argv[0], argv)
-            else:
-                os.execvpe(argv[0], argv, env)
+            try:
+                if env is None:
+                    os.execvp(argv[0], argv)
+                else:
+                    os.execvpe(argv[0], argv, env)
+            except OSError as e:
+                os._exit(_find_error_code(e))
         else:
             self._pipe_stdin(stdin)
 

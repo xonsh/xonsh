@@ -367,7 +367,11 @@ class TeePTYProc(object):
         self._stderr = stderr
         self.args = args
         self.universal_newlines = universal_newlines
-        
+
+        if not os.access(args[0], os.F_OK):
+            raise FileNotFoundError('command {0!r} not found'.format(args[0]))
+        elif not os.access(args[0], os.X_OK) or os.path.isdir(args[0]):
+            raise PermissionError('permission denied: {0!r}'.format(args[0]))
         self._tpty = tpty = TeePTY()
         if preexec_fn is not None:
             preexec_fn()
