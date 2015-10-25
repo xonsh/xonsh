@@ -15,18 +15,21 @@ class PromptToolkitCompleter(Completer):
 
     def get_completions(self, document, complete_event):
         """Returns a generator for list of completions."""
-        line = document.current_line
-        endidx = document.cursor_position_col
-        space_pos = document.find_backwards(' ')
-        if space_pos is None:
-            begidx = 0
-        else:
-            begidx = space_pos + endidx + 1
-        prefix = line[begidx:endidx]
-        completions = self.completer.complete(prefix,
-                                              line,
-                                              begidx,
-                                              endidx,
-                                              self.ctx)
-        for comp in completions:
-            yield Completion(comp, -len(prefix))
+
+        #  Only generate completions when the user typed not a tab.
+        if not (document.char_before_cursor or '').isspace():
+            line = document.current_line
+            endidx = document.cursor_position_col
+            space_pos = document.find_backwards(' ')
+            if space_pos is None:
+                begidx = 0
+            else:
+                begidx = space_pos + endidx + 1
+            prefix = line[begidx:endidx]
+            completions = self.completer.complete(prefix,
+                                                  line,
+                                                  begidx,
+                                                  endidx,
+                                                  self.ctx)
+            for comp in completions:
+                yield Completion(comp, -len(prefix))

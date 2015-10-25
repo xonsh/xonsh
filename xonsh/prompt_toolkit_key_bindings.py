@@ -15,7 +15,7 @@ class TabShouldInsertIndentFilter(Filter):
     def __call__(self, cli):
         before_cursor = cli.current_buffer.document.current_line_before_cursor
 
-        return bool(not before_cursor or before_cursor.isspace())
+        return bool(before_cursor.isspace())
 
 
 def load_xonsh_bindings(key_bindings_manager):
@@ -31,6 +31,12 @@ def load_xonsh_bindings(key_bindings_manager):
         If there are only whitespaces before current cursor position insert
         indent instead of autocompleting.
         """
-        event.cli.current_buffer.insert_text(env['INDENT'])
+        event.cli.current_buffer.insert_text(env.get('INDENT'))
 
+    @handle(Keys.BackTab)
+    def insert_literal_tab(event):
+        """
+        Insert literal tab on Shift+Tab instead of autocompleting
+        """
+        event.cli.current_buffer.insert_text(env.get('INDENT'))
 

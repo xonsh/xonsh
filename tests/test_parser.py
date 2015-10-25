@@ -1458,34 +1458,34 @@ def test_dollar_py_set():
     yield check_xonsh, {'WAKKA': 42}, 'x = "WAKKA"; ${x} = 65'
 
 def test_dollar_sub():
-    yield check_xonsh_ast, {}, '$(ls)'
+    yield check_xonsh_ast, {}, '$(ls)', False
 
 def test_dollar_sub_space():
-    yield check_xonsh_ast, {}, '$(ls )'
+    yield check_xonsh_ast, {}, '$(ls )', False
 
 def test_ls_dot():
-    yield check_xonsh_ast, {}, '$(ls .)'
+    yield check_xonsh_ast, {}, '$(ls .)', False
 
 def test_ls_dot_nesting():
-    yield check_xonsh_ast, {}, '$(ls @(None or "."))'
+    yield check_xonsh_ast, {}, '$(ls @(None or "."))', False
 
 def test_ls_dot_nesting_var():
-    yield check_xonsh, {}, 'x = "."; $(ls @(None or x))'
+    yield check_xonsh, {}, 'x = "."; $(ls @(None or x))', False
 
 def test_ls_dot_str():
-    yield check_xonsh_ast, {}, '$(ls ".")'
+    yield check_xonsh_ast, {}, '$(ls ".")', False
 
 def test_ls_nest_ls():
-    yield check_xonsh_ast, {}, '$(ls $(ls))'
+    yield check_xonsh_ast, {}, '$(ls $(ls))', False
 
 def test_ls_nest_ls_dashl():
-    yield check_xonsh_ast, {}, '$(ls $(ls) -l)'
+    yield check_xonsh_ast, {}, '$(ls $(ls) -l)', False
 
 def test_ls_envvar_strval():
-    yield check_xonsh_ast, {'WAKKA': '.'}, '$(ls $WAKKA)'
+    yield check_xonsh_ast, {'WAKKA': '.'}, '$(ls $WAKKA)', False
 
 def test_ls_envvar_listval():
-    yield check_xonsh_ast, {'WAKKA': ['.', '.']}, '$(ls $WAKKA)'
+    yield check_xonsh_ast, {'WAKKA': ['.', '.']}, '$(ls $WAKKA)', False
 
 def test_question():
     yield check_xonsh_ast, {}, 'range?'
@@ -1497,13 +1497,13 @@ def test_question_chain():
     yield check_xonsh_ast, {}, 'range?.index?'
 
 def test_ls_regex():
-    yield check_xonsh_ast, {}, '$(ls `[Ff]+i*LE` -l)'
+    yield check_xonsh_ast, {}, '$(ls `[Ff]+i*LE` -l)', False
 
 def test_backtick():
     yield check_xonsh_ast, {}, 'print(`.*`)', False
 
 def test_uncaptured_sub():
-    yield check_xonsh_ast, {}, '$[ls]'
+    yield check_xonsh_ast, {}, '$[ls]', False
 
 def test_two_cmds_one_pipe():
     yield check_xonsh_ast, {}, '$(ls | grep wakka)', False
