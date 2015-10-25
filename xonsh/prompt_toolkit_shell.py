@@ -46,6 +46,11 @@ class PromptToolkitShell(BaseShell):
         super().__init__(**kwargs)
         self.history = setup_history()
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx)
+        self.mouse_support = builtins.__xonsh_env__.get('MOUSE_SUPPORT')
+        if builtins.__xonsh_env__.get('AUTO_SUGGEST') is True:
+            self.auto_suggest = AutoSuggestFromHistory()
+        else:
+            self.auto_suggest = None
         self.key_bindings_manager = KeyBindingManager(
             enable_auto_suggest_bindings=True,
             enable_search=True, enable_abort_and_exit_bindings=True)
@@ -59,13 +64,12 @@ class PromptToolkitShell(BaseShell):
         """Enters a loop that reads and execute input from user."""
         if intro:
             print(intro)
-        mouse_support = builtins.__xonsh_env__.get('MOUSE_SUPPORT')
         while not builtins.__xonsh_exit__:
             try:
                 token_func, style_cls = self._get_prompt_tokens_and_style()
                 line = get_input(
-                    mouse_support=mouse_support,
-                    auto_suggest=AutoSuggestFromHistory(),
+                    mouse_support=self.mouse_support,
+                    auto_suggest=self.auto_suggest,
                     get_prompt_tokens=token_func,
                     style=style_cls,
                     completer=self.pt_completer,

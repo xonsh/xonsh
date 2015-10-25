@@ -19,6 +19,11 @@ applicable.
     * - AUTO_PUSHD
       - ``False``
       - Flag for automatically pushing directorties onto the directory stack.
+    * - AUTO_SUGGEST
+      - ``True``
+      - Enable automatic command suggestions based on history (like in fish shell).
+        Pressing the right arrow key inserts the currently displayed suggestion.
+        (Only usable with SHELL_TYPE=prompt_toolkit)
     * - BASH_COMPLETIONS
       - Normally this is ``('/etc/bash_completion', '/usr/share/bash-completion/completions/git')``
         but on Mac is ``'/usr/local/etc/bash_completion', '/opt/local/etc/profile.d/bash_completion.sh')``.

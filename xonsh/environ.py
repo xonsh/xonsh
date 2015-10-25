@@ -63,6 +63,7 @@ DEFAULT_ENSURERS = {
     'BASH_COMPLETIONS': (is_env_path, str_to_env_path, env_path_to_str),
     'TEEPTY_PIPE_DELAY': (is_float, float, str),
     'MOUSE_SUPPORT': (is_bool, to_bool, bool_to_str),
+    'AUTO_SUGGEST': (is_bool, to_bool, bool_to_str)
 }
 
 #
@@ -111,6 +112,7 @@ def xonshconfig(env):
 # try to keep this sorted.
 DEFAULT_VALUES = {
     'AUTO_PUSHD': False,
+    'AUTO_SUGGEST': True,
     'BASH_COMPLETIONS': ('/usr/local/etc/bash_completion',
                          '/opt/local/etc/profile.d/bash_completion.sh') if ON_MAC \
                         else ('/etc/bash_completion',
