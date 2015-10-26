@@ -133,8 +133,11 @@ applicable.
       - The location of the static xonsh configuration file, if it exists. This is
         in JSON format.
     * - XONSHRC
-      - ``~/.xonshrc``
-      - Location of run control file.
+      - ``('/etc/xonshrc', '~/.xonshrc')`` (Linux and OSX) 
+    	``('%ALLUSERSPROFILE%\xonsh\xonshrc', '~/.xonshrc')`` (Windows)
+      - A tuple of the locations of run control files, if they exist.  User defined
+	run control file will supercede values set in system-wide control file if there
+	is a naming collision.
     * - XONSH_CONFIG_DIR
       - ``$XDG_CONFIG_HOME/xonsh``
       - This is location where xonsh configuration information is stored.

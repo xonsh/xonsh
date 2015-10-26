@@ -59,6 +59,7 @@ DEFAULT_ENSURERS = {
     'LC_TIME': (always_false, locale_convert('LC_TIME'), ensure_string),
     'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
     'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
+    'XONSHRC': (is_env_path, str_to_env_path, env_path_to_str),
     'CASE_SENSITIVE_COMPLETIONS': (is_bool, to_bool, bool_to_str),
     'BASH_COMPLETIONS': (is_env_path, str_to_env_path, env_path_to_str),
     'TEEPTY_PIPE_DELAY': (is_float, float, str),
@@ -142,7 +143,10 @@ DEFAULT_VALUES = {
     'XDG_CONFIG_HOME': os.path.expanduser(os.path.join('~', '.config')),
     'XDG_DATA_HOME': os.path.expanduser(os.path.join('~', '.local', 'share')),
     'XONSHCONFIG': xonshconfig,
-    'XONSHRC': os.path.expanduser('~/.xonshrc'),
+    'XONSHRC': ((os.path.join(os.environ['ALLUSERSPROFILE'],
+                              'xonsh', 'xonshrc'),
+                os.path.expanduser('~/.xonshrc')) if ON_WINDOWS
+               else ('/etc/xonshrc', os.path.expanduser('~/.xonshrc'))), 
     'XONSH_CONFIG_DIR': xonsh_config_dir,
     'XONSH_DATA_DIR': xonsh_data_dir,
     'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
@@ -611,24 +615,28 @@ def load_static_config(ctx):
     return conf
 
 
-def xonshrc_context(rcfile=None, execer=None):
+def xonshrc_context(rcfiles=None, execer=None):
     """Attempts to read in xonshrc file, and return the contents."""
-    if rcfile is None or execer is None or not os.path.isfile(rcfile):
+    if (rcfiles is None or execer is None
+       or sum([os.path.isfile(rcfile) for rcfile in rcfiles]) == 0):
         return {}
-    with open(rcfile, 'r') as f:
-        rc = f.read()
-    if not rc.endswith('\n'):
-        rc += '\n'
-    fname = execer.filename
     env = {}
-    try:
-        execer.filename = rcfile
-        execer.exec(rc, glbs=env)
-    except SyntaxError as err:
-        msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
-        warn(msg.format(rcfile, err), RuntimeWarning)
-    finally:
-        execer.filename = fname
+    for rcfile in rcfiles:
+        if not os.path.isfile(rcfile):
+            continue
+        with open(rcfile, 'r') as f:
+            rc = f.read()
+        if not rc.endswith('\n'):
+            rc += '\n'
+        fname = execer.filename
+        try:
+            execer.filename = rcfile
+            execer.exec(rc, glbs=env)
+        except SyntaxError as err:
+            msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
+            warn(msg.format(rcfile, err), RuntimeWarning)
+        finally:
+            execer.filename = fname
     return env
 
 
