@@ -144,7 +144,7 @@ DEFAULT_VALUES = {
     'XDG_DATA_HOME': os.path.expanduser(os.path.join('~', '.local', 'share')),
     'XONSHCONFIG': xonshconfig,
     'XONSHRC': ((os.path.join(os.environ['ALLUSERSPROFILE'],
-                              'Application Data', 'xonsh', 'xonshrc'),
+                              'xonsh', 'xonshrc'),
                 os.path.expanduser('~/.xonshrc')) if ON_WINDOWS
                else ('/etc/xonshrc', os.path.expanduser('~/.xonshrc'))), 
     'XONSH_CONFIG_DIR': xonsh_config_dir,
