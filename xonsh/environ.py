@@ -12,10 +12,10 @@ from functools import wraps
 from collections import MutableMapping, MutableSequence, MutableSet, namedtuple
 
 from xonsh import __version__ as XONSH_VERSION
-from xonsh.tools import TERM_COLORS, ON_WINDOWS, ON_MAC, ON_LINUX, string_types, \
+from xonsh.tools import TERM_COLORS, ON_WINDOWS, ON_MAC, ON_LINUX, ON_ARCH, \
     is_int, always_true, always_false, ensure_string, is_env_path, str_to_env_path, \
     env_path_to_str, is_bool, to_bool, bool_to_str, is_history_tuple, to_history_tuple, \
-    history_tuple_to_str, is_float
+    history_tuple_to_str, is_float, string_types
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
 
@@ -112,10 +112,14 @@ def xonshconfig(env):
 # try to keep this sorted.
 DEFAULT_VALUES = {
     'AUTO_PUSHD': False,
-    'BASH_COMPLETIONS': ('/usr/local/etc/bash_completion',
-                         '/opt/local/etc/profile.d/bash_completion.sh') if ON_MAC \
-                        else ('/etc/bash_completion',
-                              '/usr/share/bash-completion/completions/git'),
+    'BASH_COMPLETIONS': (('/usr/local/etc/bash_completion',
+                             '/opt/local/etc/profile.d/bash_completion.sh')
+                        if ON_MAC else
+                        ('/usr/share/bash-completion/bash_completion',
+                             '/usr/share/bash-completion/completions/git') 
+                        if ON_ARCH else
+                        ('/etc/bash_completion',
+                             '/usr/share/bash-completion/completions/git')),
     'CASE_SENSITIVE_COMPLETIONS': ON_LINUX,
     'CDPATH': (),
     'DIRSTACK_SIZE': 20,
