@@ -59,13 +59,18 @@ class PromptToolkitShell(BaseShell):
         """Enters a loop that reads and execute input from user."""
         if intro:
             print(intro)
-        mouse_support = builtins.__xonsh_env__.get('MOUSE_SUPPORT')
+        _auto_suggest = AutoSuggestFromHistory()
         while not builtins.__xonsh_exit__:
             try:
                 token_func, style_cls = self._get_prompt_tokens_and_style()
+                mouse_support = builtins.__xonsh_env__.get('MOUSE_SUPPORT')
+                if builtins.__xonsh_env__.get('AUTO_SUGGEST'):
+                    auto_suggest = _auto_suggest
+                else:
+                    auto_suggest = None
                 line = get_input(
                     mouse_support=mouse_support,
-                    auto_suggest=AutoSuggestFromHistory(),
+                    auto_suggest=auto_suggest,
                     get_prompt_tokens=token_func,
                     style=style_cls,
                     completer=self.pt_completer,
