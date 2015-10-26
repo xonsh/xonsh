@@ -26,7 +26,9 @@ applicable.
         (Only usable with SHELL_TYPE=prompt_toolkit)
     * - BASH_COMPLETIONS
       - Normally this is ``('/etc/bash_completion', '/usr/share/bash-completion/completions/git')``
-        but on Mac is ``'/usr/local/etc/bash_completion', '/opt/local/etc/profile.d/bash_completion.sh')``.
+        but on Mac is ``('/usr/local/etc/bash_completion', '/opt/local/etc/profile.d/bash_completion.sh')``
+        and on Arch Linux is ``('/usr/share/bash-completion/bash_completion',
+        '/usr/share/bash-completion/completions/git')``.
       - This is a list (or tuple) of strings that specifies where the BASH completion 
         files may be found. The default values are platform dependent, but sane. 
         To specify an alternate list, do so in the run control file.
@@ -138,8 +140,11 @@ applicable.
       - The location of the static xonsh configuration file, if it exists. This is
         in JSON format.
     * - XONSHRC
-      - ``~/.xonshrc``
-      - Location of run control file.
+      - ``('/etc/xonshrc', '~/.xonshrc')`` (Linux and OSX) 
+    	``('%ALLUSERSPROFILE%\xonsh\xonshrc', '~/.xonshrc')`` (Windows)
+      - A tuple of the locations of run control files, if they exist.  User defined
+	run control file will supercede values set in system-wide control file if there
+	is a naming collision.
     * - XONSH_CONFIG_DIR
       - ``$XDG_CONFIG_HOME/xonsh``
       - This is location where xonsh configuration information is stored.

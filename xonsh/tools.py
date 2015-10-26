@@ -41,6 +41,7 @@ DEFAULT_ENCODING = sys.getdefaultencoding()
 ON_WINDOWS = (platform.system() == 'Windows')
 ON_MAC = (platform.system() == 'Darwin')
 ON_LINUX = (platform.system() == 'Linux')
+ON_ARCH = (platform.linux_distribution()[0] == 'arch')
 ON_POSIX = (os.name == 'posix')
 
 VER_3_4 = (3, 4)
