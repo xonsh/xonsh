@@ -12,6 +12,7 @@ from xonsh.timings import timeit_alias
 from xonsh.tools import ON_MAC, ON_WINDOWS, XonshError
 from xonsh.history import main as history_alias
 from xonsh.replay import main as replay_main
+from xonsh.environ import locate_binary
 
 
 def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
@@ -50,8 +51,11 @@ def source_bash(args, stdin=None):
 
 
 def source_alias(args, stdin=None):
-    """Executes the contents of the provided files in the current context."""
+    """Executes the contents of the provided files in the current context.
+    If sourced file isn't found in cwd, search for file along $PATH to source instead"""
     for fname in args:
+        if not os.path.isfile(fname):
+            fname = locate_binary(fname, cwd=None)[:-1]
         with open(fname, 'r') as fp:
             execx(fp.read(), 'exec', builtins.__xonsh_ctx__)
 
