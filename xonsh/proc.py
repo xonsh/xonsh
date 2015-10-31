@@ -367,19 +367,19 @@ class TeePTYProc(object):
         self._stderr = stderr
         self.args = args
         self.universal_newlines = universal_newlines
-        env = builtins.__xonsh_env__ if hasattr(builtins, '__xonsh_env__') \
-                                     else {'XONSH_ENCODING': 'utf-8', 
-                                           'XONSH_ENCODING_ERRORS': 'strict'}
+        xenv = builtins.__xonsh_env__ if hasattr(builtins, '__xonsh_env__') \
+                                      else {'XONSH_ENCODING': 'utf-8', 
+                                            'XONSH_ENCODING_ERRORS': 'strict'}
 
         if not os.access(args[0], os.F_OK):
             raise FileNotFoundError('command {0!r} not found'.format(args[0]))
         elif not os.access(args[0], os.X_OK) or os.path.isdir(args[0]):
             raise PermissionError('permission denied: {0!r}'.format(args[0]))
-        self._tpty = tpty = TeePTY(encoding=env.get('XONSH_ENCODING'),
-                                   errors=env.get('XONSH_ENCODING_ERRORS'))
+        self._tpty = tpty = TeePTY(encoding=xenv.get('XONSH_ENCODING'),
+                                   errors=xenv.get('XONSH_ENCODING_ERRORS'))
         if preexec_fn is not None:
             preexec_fn()
-        delay = env.get('TEEPTY_PIPE_DELAY')
+        delay = xenv.get('TEEPTY_PIPE_DELAY')
         tpty.spawn(args, env=env, stdin=stdin, delay=delay)
 
     @property
