@@ -602,7 +602,9 @@ def run_subproc(cmds, captured=True):
         # get output
         output = ''
         if prev_proc.stdout not in (None, sys.stdout):
-            output = prev_proc.stdout.read()
+            output = prev_proc.stdout.read(
+                        encoding=ENV.get('XONSH_ENCODING'),
+                        errors=ENV.get('XONSH_ENCODING_ERRORS'))
         if captured:
             return output
         else:
