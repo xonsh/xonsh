@@ -26,10 +26,8 @@ LOCALE_CATS = {
     'LC_MONETARY': locale.LC_MONETARY,
     'LC_TIME': locale.LC_TIME,
 }
-try:
+if hasattr(locale, 'LC_MESSAGES'):
     LOCALE_CATS['LC_MESSAGES'] = locale.LC_MESSAGES
-except AttributeError:
-    pass
 
 
 def locale_convert(key):
@@ -160,6 +158,8 @@ DEFAULT_VALUES = {
     'XONSH_SHOW_TRACEBACK': False,
     'XONSH_STORE_STDOUT': False,
 }
+if hasattr(locale, 'LC_MESSAGES'):
+    DEFAULT_VALUES['LC_MESSAGES'] = locale.setlocale(locale.LC_MESSAGES)
 
 class DefaultNotGivenType(object):
     """Singleton for representing when no default value is given."""
@@ -587,19 +587,8 @@ def multiline_prompt():
 BASE_ENV = {
     'BASH_COMPLETIONS': list(DEFAULT_VALUES['BASH_COMPLETIONS']),
     'FORMATTER_DICT': dict(DEFAULT_VALUES['FORMATTER_DICT']),
-    'LC_CTYPE': locale.setlocale(locale.LC_CTYPE),
-    'LC_COLLATE': locale.setlocale(locale.LC_COLLATE),
-    'LC_TIME': locale.setlocale(locale.LC_TIME),
-    'LC_MONETARY': locale.setlocale(locale.LC_MONETARY),
-    'LC_NUMERIC': locale.setlocale(locale.LC_NUMERIC),
     'XONSH_VERSION': XONSH_VERSION,
 }
-
-try:
-    BASE_ENV['LC_MESSAGES'] = DEFAULT_VALUES['LC_MESSAGES'] = \
-        locale.setlocale(locale.LC_MESSAGES)
-except AttributeError:
-    pass
 
 def load_static_config(ctx):
     """Loads a static configuration file from a given context, rather than the
