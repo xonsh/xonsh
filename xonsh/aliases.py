@@ -9,10 +9,11 @@ from argparse import ArgumentParser
 from xonsh.dirstack import cd, pushd, popd, dirs
 from xonsh.jobs import jobs, fg, bg, kill_all_jobs
 from xonsh.timings import timeit_alias
-from xonsh.tools import ON_MAC, ON_WINDOWS, XonshError
+from xonsh.tools import ON_MAC, ON_WINDOWS, XonshError, to_bool
 from xonsh.history import main as history_alias
 from xonsh.replay import main as replay_main
 from xonsh.environ import locate_binary
+from xonsh.foreign_shells import foreign_shell_data
 
 
 def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
@@ -23,32 +24,70 @@ def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
     return None, None
 
 
-def source_bash(args, stdin=None):
-    """Implements bash's source builtin."""
-    import tempfile
+_SOURCE_FOREIGN_PARSER = None
+
+def _ensure_source_foreign_parser():
+    global _SOURCE_FOREIGN_PARSER
+    if _SOURCE_FOREIGN_PARSER is not None:
+        return _SOURCE_FOREIGN_PARSER
+    desc = "Sources a file written in a foreign shell language."
+    parser = ArgumentParser('source-foreign', description=desc)
+    parser.add_argument('shell', help='Name or path to the foreign shell')
+    parser.add_argument('filenames', nargs='+', help='file paths to source')
+    parser.add_argument('-i', '--interactive', type=to_bool, default=True,
+                        help='whether the sourced shell should be interactive',
+                        dest='interactive')
+    parser.add_argument('-l', '--login', type=to_bool, default=False,
+                        help='whether the sourced shell should be login',
+                        dest='login')
+    parser.add_argument('--envcmd', default='env', dest='envcmd', 
+                        help='command to print environment')
+    parser.add_argument('--aliascmd', default='alias', dest='aliascmd', 
+                        help='command to print aliases')
+    parser.add_argument('--extra-args', default=(), dest='extra_args',
+                        type=(lambda s: tuple(s.split())), 
+                        help='extra arguments needed to run the shell')
+    parser.add_argument('-s', '--safe', type=to_bool, default=True, 
+                        help='whether the source shell should be run safely, '
+                             'and not raise any errors, even if they occur.',
+                        dest='safe')
+    parser.add_argument('--sourcer', default='source', dest='sourcer',
+                        help='the source command in the target shell language, '
+                             'default: source.')
+    _SOURCE_FOREIGN_PARSER = parser
+    return parser
+    
+
+def source_foreign(args, stdin=None):
+    """Sources a file written in a foreign shell language."""
+    parser = _ensure_source_foreign_parser()
+    ns = parser.parse_args(args)
+    prevcmd = '{0} {1}'.format(ns.sourcer, ' '.join(ns.filenames))
+    foreign_shell_data.cache_clear()  # make sure that we don't get prev src
+    fsenv, fsaliases = foreign_shell_data(shell=ns.shell, login=ns.login,
+                            interactive=ns.interactive, envcmd=ns.envcmd, 
+                            aliascmd=ns.aliascmd, extra_args=ns.extra_args,  
+                            safe=ns.safe, prevcmd=prevcmd)
+    # apply results
     env = builtins.__xonsh_env__
     denv = env.detype()
-    with tempfile.NamedTemporaryFile(mode='w+t') as f:
-        args = ' '.join(args)
-        inp = 'source {0}\nenv >> {1}\n'.format(args, f.name)
-        try:
-            subprocess.check_output(['bash'],
-                                    input=inp,
-                                    env=denv,
-                                    stderr=subprocess.PIPE,
-                                    universal_newlines=True)
-        except subprocess.CalledProcessError:
-            return None, 'could not source {0}\n'.format(args)
-        f.seek(0)
-        exported = f.read()
-    items = [l.split('=', 1) for l in exported.splitlines() if '=' in l]
-    newenv = dict(items)
-    for k, v in newenv.items():
+    for k, v in fsenv.items():
         if k in env and v == denv[k]:
             continue  # no change from original
         env[k] = v
-    return
+    baliases = builtins.aliases
+    for k, v in fsaliases.items():
+        if k in baliases and v == baliases[k]:
+            continue  # no change from original
+        baliases[k] = v
 
+
+def source_bash(args, stdin=None):
+    """Simple Bash-specific wrapper around source-foreign."""
+    args = list(args)
+    args.insert(0, 'bash')
+    args.append('--sourcer=source')
+    return source_foreign(args, stdin=stdin)
 
 def source_alias(args, stdin=None):
     """Executes the contents of the provided files in the current context.
@@ -118,6 +157,7 @@ DEFAULT_ALIASES = {
     'xexec': xexec,
     'source': source_alias,
     'source-bash': source_bash,
+    'source-foreign': source_foreign,
     'history': history_alias,
     'replay': replay_main,
     '!!': bang_bang,

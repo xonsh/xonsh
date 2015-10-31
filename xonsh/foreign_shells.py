@@ -13,18 +13,20 @@ from xonsh.tools import to_bool, ensure_string
 
 
 COMMAND = """
+{prevcmd}
 echo __XONSH_ENV_BEG__
 {envcmd}
 echo __XONSH_ENV_END__
 echo __XONSH_ALIAS_BEG__
 {aliascmd}
 echo __XONSH_ALIAS_END__
+{postcmd}
 """.strip()
 
 @lru_cache()
 def foreign_shell_data(shell, interactive=True, login=False, envcmd='env', 
                        aliascmd='alias', extra_args=(), currenv=None, 
-                       safe=True):
+                       safe=True, prevcmd='', postcmd=''):
     """Extracts data from a foreign (non-xonsh) shells. Currently this gets 
     the environment and aliases, but may be extended in the future.
 
@@ -45,7 +47,13 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd='env',
     currenv : tuple of items or None, optional
         Manual override for the current environment.
     safe : bool, optional
-        Flag for whether or not to safely handle exceptions and other errors. 
+        Flag for whether or not to safely handle exceptions and other errors.
+    prevcmd : str, optional
+        A command to run in the shell before anything else, useful for 
+        sourcing and other commands that may require environment recovery.
+    postcmd : str, optional
+        A command to run after everything else, useful for cleaning up any
+        damage that the prevcmd may have caused.
 
     Returns
     -------
@@ -61,7 +69,9 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd='env',
     if login:
         cmd.append('-l')
     cmd.append('-c')
-    cmd.append(COMMAND.format(envcmd=envcmd, aliascmd=aliascmd))
+    command = COMMAND.format(envcmd=envcmd, aliascmd=aliascmd, prevcmd=prevcmd,
+                             postcmd=postcmd).strip()
+    cmd.append(command)
     if currenv is None and hasattr(builtins, '__xonsh_env__'):
         currenv = builtins.__xonsh_env__.detype()
     elif currenv is not None:

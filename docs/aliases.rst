@@ -62,8 +62,13 @@ only works on xonsh and Python files.
 
 ``source-bash``
 ====================
-Like the ``source`` command but for Bash files. It implements Bash's source builtin.
+Like the ``source`` command but for Bash files. This is a thin wrapper around
+the ``source-foreign`` alias.
 
+``source-foreign``
+====================
+Like the ``source`` command but for files in foreign (non-xonsh) languages. 
+It will pick up the environment and any aliases.
 
 ``history``
 ====================
