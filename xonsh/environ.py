@@ -15,7 +15,7 @@ from xonsh import __version__ as XONSH_VERSION
 from xonsh.tools import TERM_COLORS, ON_WINDOWS, ON_MAC, ON_LINUX, ON_ARCH, \
     is_int, always_true, always_false, ensure_string, is_env_path, str_to_env_path, \
     env_path_to_str, is_bool, to_bool, bool_to_str, is_history_tuple, to_history_tuple, \
-    history_tuple_to_str, is_float, string_types
+    history_tuple_to_str, is_float, string_types, is_string, DEFAULT_ENCODING
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
 
@@ -47,22 +47,24 @@ represent environment variable validation, conversion, detyping.
 """
 
 DEFAULT_ENSURERS = {
-    re.compile('\w*PATH'): (is_env_path, str_to_env_path, env_path_to_str),
+    'AUTO_SUGGEST': (is_bool, to_bool, bool_to_str),
+    'BASH_COMPLETIONS': (is_env_path, str_to_env_path, env_path_to_str),
+    'CASE_SENSITIVE_COMPLETIONS': (is_bool, to_bool, bool_to_str),
     re.compile('\w*DIRS'): (is_env_path, str_to_env_path, env_path_to_str),
+    'LC_COLLATE': (always_false, locale_convert('LC_COLLATE'), ensure_string),
     'LC_CTYPE': (always_false, locale_convert('LC_CTYPE'), ensure_string),
     'LC_MESSAGES': (always_false, locale_convert('LC_MESSAGES'), ensure_string),
-    'LC_COLLATE': (always_false, locale_convert('LC_COLLATE'), ensure_string),
-    'LC_NUMERIC': (always_false, locale_convert('LC_NUMERIC'), ensure_string),
     'LC_MONETARY': (always_false, locale_convert('LC_MONETARY'), ensure_string),
+    'LC_NUMERIC': (always_false, locale_convert('LC_NUMERIC'), ensure_string),
     'LC_TIME': (always_false, locale_convert('LC_TIME'), ensure_string),
+    'MOUSE_SUPPORT': (is_bool, to_bool, bool_to_str),
+    re.compile('\w*PATH'): (is_env_path, str_to_env_path, env_path_to_str),
+    'TEEPTY_PIPE_DELAY': (is_float, float, str),
+    'XONSHRC': (is_env_path, str_to_env_path, env_path_to_str),
+    'XONSH_ENCODING': (is_string, ensure_string, ensure_string),
+    'XONSH_ENCODING_ERRORS': (is_string, ensure_string, ensure_string),
     'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
     'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
-    'XONSHRC': (is_env_path, str_to_env_path, env_path_to_str),
-    'CASE_SENSITIVE_COMPLETIONS': (is_bool, to_bool, bool_to_str),
-    'BASH_COMPLETIONS': (is_env_path, str_to_env_path, env_path_to_str),
-    'TEEPTY_PIPE_DELAY': (is_float, float, str),
-    'MOUSE_SUPPORT': (is_bool, to_bool, bool_to_str),
-    'AUTO_SUGGEST': (is_bool, to_bool, bool_to_str)
 }
 
 #
@@ -153,6 +155,8 @@ DEFAULT_VALUES = {
                else ('/etc/xonshrc', os.path.expanduser('~/.xonshrc'))), 
     'XONSH_CONFIG_DIR': xonsh_config_dir,
     'XONSH_DATA_DIR': xonsh_data_dir,
+    'XONSH_ENCODING': DEFAULT_ENCODING,
+    'XONSH_ENCODING_ERRORS': 'surrogateescape',
     'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
     'XONSH_HISTORY_SIZE': (8128, 'commands'),
     'XONSH_SHOW_TRACEBACK': False,

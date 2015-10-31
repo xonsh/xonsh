@@ -67,7 +67,8 @@ def _find_error_code(e):
 class TeePTY(object):
     """This class is a pseudo terminal that tees the stdout and stderr into a buffer."""
 
-    def __init__(self, bufsize=1024, remove_color=True):
+    def __init__(self, bufsize=1024, remove_color=True, encoding='utf-8', 
+                 errors='strict'):
         """
         Parameters
         ----------
@@ -75,17 +76,24 @@ class TeePTY(object):
             The buffer size to read from the root terminal to/from the tee'd terminal.
         remove_color : bool, optional
             Removes color codes from the tee'd buffer, though not the TTY.
+        encoding : str, optional
+            The encoding to use when decoding into a str.
+        errors : str, optional
+            The encoding error flag to use when decoding into a str.
         """
         self.bufsize = bufsize
         self.pid = self.master_fd = None
         self._in_alt_mode = False
         self.remove_color = remove_color
+        self.encoding = encoding
+        self.errors = errors
         self.buffer = io.BytesIO()
         self.returncode = None
         self._temp_stdin = None
 
     def __str__(self):
-        return self.buffer.getvalue().decode()
+        return self.buffer.getvalue().decode(encoding=self.encoding, 
+                                             errors=self.errors)
 
     def __del__(self):
         if self._temp_stdin is not None:
