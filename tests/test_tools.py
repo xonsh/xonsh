@@ -159,8 +159,8 @@ def test_is_float():
     yield assert_false, is_float('42.0')
 
 def test_is_string():
-    yield assert_true, is_float('42.0')
-    yield assert_false, is_float(42.0)
+    yield assert_true, is_string('42.0')
+    yield assert_false, is_string(42.0)
 
 def test_always_true():
     yield assert_true, always_true(42)
