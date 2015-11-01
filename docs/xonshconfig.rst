@@ -28,10 +28,10 @@ variables. For example,
 --------------------
 This is a list (JSON Array) of dicts (JSON objects) that represent the
 foreign shells to inspect for extra start up information, such as environment
-variables and aliases. The suite of data gathered may be expanded in the 
-future.  Each shell dictionary unpacked and passed into the 
-``xonsh.foreign_shells.foreign_shell_data()`` function. Thus these dictionaries 
-have the following structure:
+variables, aliases, and foreign shell functions. The suite of data gathered 
+may be expanded in the future.  Each shell dictionary unpacked and passed into
+the ``xonsh.foreign_shells.foreign_shell_data()`` function. Thus these 
+dictionaries have the following structure:
 
 :shell: *str, required* - The name or path of the shell, such as "bash" or "/bin/sh".
 :interactive: *bool, optional* - Whether the shell should be run in interactive mode.
@@ -48,6 +48,21 @@ have the following structure:
     ``default=null``
 :safe: *bool, optional* - Flag for whether or not to safely handle exceptions 
     and other errors. ``default=true``
+:prevcmd: *str, optional* - An additional command or script to run before 
+    anything else, useful for sourcing and other commands that may require 
+    environment recovery. ``default=''``
+:postcmd: *str, optional* - A command to run after everything else, useful for
+    cleaning up any damage that the ``prevcmd`` may have caused. ``default=''``
+:funcscmd: *str or None, optional* - This is a command or script that can be 
+    used to determine the names and locations of any functions that are native
+    to the foreign shell. This command should print *only* a whitespace 
+    separated sequence of pairs function name & filenames where the functions
+    are defined. If this is None (null), then a default script will attempted
+    to be looked up based on the shell name. Callable wrappers for these 
+    functions will be returned in the aliases dictionary. ``default=null``
+:sourcer: *str or None, optional* - How to source a foreign shell file for 
+    purposes of calling functions in that shell. If this is None, a default 
+    value will attempt to be looked up based on the shell name. ``default=null``
 
 Some examples can be seen below:
 
