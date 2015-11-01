@@ -61,6 +61,11 @@ DEFAULT_FUNCSCMDS = {
     '/bin/bash': DEFAULT_BASH_FUNCSCMD,
 }
 
+DEFAULT_SOURCERS = {
+    'bash': 'source',
+    '/bin/bash': 'source',
+}
+
 @lru_cache()
 def foreign_shell_data(shell, interactive=True, login=False, envcmd='env', 
                        aliascmd='alias', extra_args=(), currenv=None, 
@@ -130,7 +135,7 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd='env',
     elif currenv is not None:
         currenv = dict(currenv)
     try:
-        s = subprocess.check_output(cmd,stderr=subprocess.PIPE, env=currenv,
+        s = subprocess.check_output(cmd, stderr=subprocess.PIPE, env=currenv,
                                     universal_newlines=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
         if not safe:
@@ -183,6 +188,73 @@ def parse_aliases(s):
             continue
         aliases[key] = value
     return aliases
+
+
+FUNCS_RE = re.compile('__XONSH_FUNCS_BEG__\n(.*)__XONSH_FUNCS_END__',
+                      flags=re.DOTALL)
+
+def parse_funcs(s, shell, sourcer=None):
+    """Parses the funcs portion of a string into a dict of callable foreign
+    function wrappers.
+    """
+    m = FUNCS_RE.search(s)
+    if m is None:
+        return {}
+    g1 = m.group(1)
+    funcs = {}
+    flatpairs = g1.strip().split()
+    if len(flatpairs) % 2 != 0:
+        warn('could not parse functions, malformed pairs', RuntimeWarning)
+        return funcs
+    sourcer = DEFAULT_SOURCERS.get(shell, 'source') if sourcer is None \
+                                                    else sourcer
+    for funcname, filename in zip(flatpairs[::2], flatpairs[1::2]):
+        if funcname.startswith('_'):
+            continue  # skip private functions
+        wrapper = ForeignShellFunctionAlias(name=funcname, shell=shell, 
+                                            sourcer=sourcer, filename=filename)
+        funcs[funcname] = wrapper
+    return funcs
+
+
+class ForeignShellFunctionAlias(object):
+    """This class is responsible for calling foreign shell functions as if
+    they were aliases. This does not currently support taking stdin.
+    """
+
+    INPUT = ('{sourcer} {filename}\n'
+             '{funcname} {args}\n') 
+
+    def __init__(self, name, shell, filename, sourcer=None):
+        """
+        Parameters
+        ----------
+        name : str
+            function name
+        shell : str
+            Name or path to shell
+        filename : str
+            Where the function is defined, path to source.
+        sourcer : str or None, optional
+            Command to source foreing files with.
+        """
+        sourcer = DEFAULT_SOURCERS.get(shell, 'source') if sourcer is None \
+                                                        else sourcer
+        self.name = name
+        self.shell = shell
+        self.filename = filename
+        self.sourcer = sourcer
+
+    def __eq__(self, other):
+        return (self.name == other.name) and (self.shell == other.shell) and \
+               (self.filename == other.filename) and (self.sourcer == other.sourcer)
+
+    def __call__(self, args, stdin=None):
+        input = INPUT.format(sourcer=self.sourcer, filename=self.filename,
+                             funcname=self.name, args=' '.join(args))
+        cmd = [shell, '-c', input]
+        denv = builtins.__xonsh_env__.detype()
+        subprocess.check_call(cmd, env=denv)
 
 
 VALID_SHELL_PARAMS = frozenset(['shell', 'interactive', 'login', 'envcmd', 
