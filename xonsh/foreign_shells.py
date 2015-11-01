@@ -253,11 +253,29 @@ class ForeignShellFunctionAlias(object):
                (self.filename == other.filename) and (self.sourcer == other.sourcer)
 
     def __call__(self, args, stdin=None):
+        args, streaming = self._is_streaming(args)
         input = self.INPUT.format(sourcer=self.sourcer, filename=self.filename,
                                   funcname=self.name, args=' '.join(args))
         cmd = [self.shell, '-c', input]
-        denv = builtins.__xonsh_env__.detype()
-        return subprocess.check_output(cmd, env=denv)
+        env = builtins.__xonsh_env__
+        denv = env.detype()
+        if streaming:
+            subprocess.check_call(cmd, env=denv)
+            out = None
+        else:
+            out = subprocess.check_output(cmd, env=denv, stderr=subprocess.STDOUT)
+            out = out.decode(encoding=env.get('XONSH_ENCODING'),
+                             errors=env.get('XONSH_ENCODING_ERRORS'))
+            out = out.replace('\r\n', '\n')
+        return out
+
+    def _is_streaming(self, args):
+        """Test and modify args if --xonsh-stream is present."""
+        if '--xonsh-stream' not in args:
+            return args, False
+        args = list(args)
+        args.remove('--xonsh-stream')
+        return args, True
 
 
 VALID_SHELL_PARAMS = frozenset(['shell', 'interactive', 'login', 'envcmd', 
