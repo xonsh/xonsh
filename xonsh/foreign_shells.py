@@ -20,15 +20,54 @@ echo __XONSH_ENV_END__
 echo __XONSH_ALIAS_BEG__
 {aliascmd}
 echo __XONSH_ALIAS_END__
+echo __XONSH_FUNCS_BEG__
+{funcscmd}
+echo __XONSH_FUNCS_END__
 {postcmd}
 """.strip()
+
+DEFAULT_BASH_FUNCSCMD = """
+# get function names from declare
+declstr=$(declare -F)
+read -r -a decls <<< $declstr
+funcnames=""
+for((n=0;n<${#decls[@]};n++)); do
+  if (( $(($n % 3 )) == 2 )); then
+    # get every 3rd entry
+    funcnames="$funcnames ${decls[$n]}"
+  fi
+done
+
+# get functions locations: funcname lineno filename
+shopt -s extdebug
+namelocfilestr=$(declare -F $funcnames)
+shopt -u extdebug
+
+# print just name and file
+read -r -a namelocfile <<< $namelocfilestr
+namefile=""
+for((n=0;n<${#namelocfile[@]};n++)); do
+  if (( $(($n % 3 )) == 0 )); then
+    namefile="$namefile ${namelocfile[$n]}"
+  elif (( $(($n % 3 )) == 2 )); then
+    namefile="$namefile ${namelocfile[$n]}"
+  fi
+done
+echo $namefile
+""".strip()
+
+DEFAULT_FUNCSCMDS = {
+    'bash': DEFAULT_BASH_FUNCSCMD,
+    '/bin/bash': DEFAULT_BASH_FUNCSCMD,
+}
 
 @lru_cache()
 def foreign_shell_data(shell, interactive=True, login=False, envcmd='env', 
                        aliascmd='alias', extra_args=(), currenv=None, 
-                       safe=True, prevcmd='', postcmd=''):
+                       safe=True, prevcmd='', postcmd='', funcscmd=None,
+                       sourcer=None):
     """Extracts data from a foreign (non-xonsh) shells. Currently this gets 
-    the environment and aliases, but may be extended in the future.
+    the environment, aliases, and functions but may be extended in the future.
 
     Parameters
     ----------
@@ -54,13 +93,26 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd='env',
     postcmd : str, optional
         A command to run after everything else, useful for cleaning up any
         damage that the prevcmd may have caused.
+    funcscmd : str or None, optional
+        This is a command or script that can be used to determine the names
+        and locations of any functions that are native to the foreign shell.
+        This command should print *only* a whitespace separated sequence
+        of pairs function name & filenames where the functions are defined.
+        If this is None, then a default script will attempted to be looked 
+        up based on the shell name. Callable wrappers for these functions
+        will be returned in the aliases dictionary.
+    sourcer : str or None, optional
+        How to source a foreign shell file for purposes of calling functions
+        in that shell. If this is None, a default value will attempt to be 
+        looked up based on the shell name.
 
     Returns
     -------
     env : dict
         Dictionary of shell's environment
     aliases : dict
-        Dictionary of shell's alaiases.
+        Dictionary of shell's alaiases, this includes foreign function 
+        wrappers.
     """
     cmd = [shell]
     cmd.extend(extra_args)  # needs to come here for GNU long options
@@ -69,8 +121,9 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd='env',
     if login:
         cmd.append('-l')
     cmd.append('-c')
+    funcscmd = DEFAULT_FUNCSCMDS.get(shell, '') if funcscmd is None else funcscmd
     command = COMMAND.format(envcmd=envcmd, aliascmd=aliascmd, prevcmd=prevcmd,
-                             postcmd=postcmd).strip()
+                             postcmd=postcmd, funcscmd=funcscmd).strip()
     cmd.append(command)
     if currenv is None and hasattr(builtins, '__xonsh_env__'):
         currenv = builtins.__xonsh_env__.detype()
@@ -85,6 +138,8 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd='env',
         return {}, {}
     env = parse_env(s)
     aliases = parse_aliases(s)
+    funcs = parse_funcs(s, shell=shell, sourcer=sourcer)
+    aliases.update(funcs)
     return env, aliases
 
 
@@ -131,7 +186,8 @@ def parse_aliases(s):
 
 
 VALID_SHELL_PARAMS = frozenset(['shell', 'interactive', 'login', 'envcmd', 
-                                'aliascmd', 'extra_args', 'currenv', 'safe'])
+                                'aliascmd', 'extra_args', 'currenv', 'safe', 
+                                'prevcmd', 'postcmd', 'funcscmd', 'sourcer'])
 
 def ensure_shell(shell):
     """Ensures that a mapping follows the shell specification."""
@@ -163,6 +219,16 @@ def ensure_shell(shell):
         shell['currenv'] = ce
     if 'safe' in shell_keys:
         shell['safe'] = to_bool(shell['safe'])
+    if 'prevcmd' in shell_keys:
+        shell['prevcmd'] = eunsure_string(shell['prevcmd'])
+    if 'postcmd' in shell_keys:
+        shell['postcmd'] = eunsure_string(shell['postcmd'])
+    if 'funcscmd' in shell_keys:
+        shell['funcscmd'] = None if shell['funcscmd'] is None \
+                                 else eunsure_string(shell['funcscmd'])
+    if 'sourcer' in shell_keys:
+        shell['sourcer'] = None if shell['sourcer'] is None \
+                                 else eunsure_string(shell['sourcer'])
     return shell
 
 
