@@ -246,15 +246,18 @@ class ForeignShellFunctionAlias(object):
         self.sourcer = sourcer
 
     def __eq__(self, other):
+        if not hasattr(other, 'name') or not hasattr(other, 'shell') or \
+           not hasattr(other, 'filename') or not hasattr(other, 'sourcer'):
+            return NotImplemented
         return (self.name == other.name) and (self.shell == other.shell) and \
                (self.filename == other.filename) and (self.sourcer == other.sourcer)
 
     def __call__(self, args, stdin=None):
-        input = INPUT.format(sourcer=self.sourcer, filename=self.filename,
-                             funcname=self.name, args=' '.join(args))
-        cmd = [shell, '-c', input]
+        input = self.INPUT.format(sourcer=self.sourcer, filename=self.filename,
+                                  funcname=self.name, args=' '.join(args))
+        cmd = [self.shell, '-c', input]
         denv = builtins.__xonsh_env__.detype()
-        subprocess.check_call(cmd, env=denv)
+        return subprocess.check_output(cmd, env=denv)
 
 
 VALID_SHELL_PARAMS = frozenset(['shell', 'interactive', 'login', 'envcmd', 
