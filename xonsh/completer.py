@@ -130,7 +130,7 @@ class Completer(object):
             # the first thing we're typing; could be python or subprocess, so
             # anything goes.
             rtn = self.cmd_complete(prefix)
-        elif cmd in self.bash_complete_funcs and arg.startswith('-'):
+        elif not arg.startswith(('.', os.sep)) and cmd in self.bash_complete_funcs:
             rtn = set()
             for s in self.bash_complete(prefix, line, begidx, endidx):
                 if os.path.isdir(s.rstrip()):
