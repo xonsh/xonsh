@@ -68,15 +68,18 @@ class PromptToolkitShell(BaseShell):
                     auto_suggest = _auto_suggest
                 else:
                     auto_suggest = None
+                completions_display = builtins.__xonsh_env__.get('COMPLETIONS_DISPLAY')
+                multicolumn = True if completions_display == 'multi' else False
+                completer = None if completions_display == 'none' else self.pt_completer
                 line = get_input(
                     mouse_support=mouse_support,
                     auto_suggest=auto_suggest,
                     get_prompt_tokens=token_func,
                     style=style_cls,
-                    completer=self.pt_completer,
+                    completer=completer,
                     history=self.history,
                     key_bindings_registry=self.key_bindings_manager.registry,
-                    display_completions_in_columns=True)
+                    display_completions_in_columns=multicolumn)
                 if not line:
                     self.emptyline()
                 else:

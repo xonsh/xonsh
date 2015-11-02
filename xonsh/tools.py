@@ -555,6 +555,21 @@ def ensure_int_or_slice(x):
         return int(x)
 
 
+def is_completions_display_value(x):
+    return x in {'none', 'single', 'multi'}
+
+
+def to_completions_display_value(x):
+    if str(x).lower() in {'none', 'false'}:
+        return 'none'
+    if str(x).lower() in {'multi', 'true'}:
+        return 'multi'
+    if str(x).lower() in {'single'}:
+        return 'single'
+    print('Warning: \'{}\' is not a valid value for $COMPLETIONS_DISPLAY. Using \'multi\'.'.format(str(x)))
+    return 'multi'
+
+
 # history validation
 
 _min_to_sec = lambda x: 60.0 * float(x)

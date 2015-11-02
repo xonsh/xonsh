@@ -39,6 +39,18 @@ applicable.
       - ``[]``
       - A list of paths to be used as roots for a ``cd``, breaking compatibility with 
         bash, xonsh always prefer an existing relative path.
+    * - COMPLETIONS_DISPLAY
+      - ``'multi'``
+      - Configure if and how Python completions are displayed by the prompt_toolkit shell.
+        This option does not affect bash completions, auto-suggestions etc.
+        Changing it at runtime will take immediate effect, so you can quickly
+        disable and enable completions during shell sessions.
+        - If COMPLETIONS_DISPLAY is ``'none'`` or ``'false'``, do not display those completions.
+        - If COMPLETIONS_DISPLAY is ``'single'``, display completions in a single column while typing.
+        - If COMPLETIONS_DISPLAY is ``'multi'`` or ``'true'``, display completions in multiple columns while typing.
+        These option values are not case- or type-sensitive, so e.g.
+        writing ``$COMPLETIONS_DISPLAY = None`` and ``$COMPLETIONS_DISPLAY = 'none'`` is equivalent.
+        (Only usable with SHELL_TYPE=prompt_toolkit)
     * - DIRSTACK_SIZE
       - ``20``
       - Maximum size of the directory stack.
