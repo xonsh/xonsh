@@ -22,7 +22,9 @@ applicable.
     * - AUTO_SUGGEST
       - ``True``
       - Enable automatic command suggestions based on history (like in fish shell).
+      
         Pressing the right arrow key inserts the currently displayed suggestion.
+        
         (Only usable with SHELL_TYPE=prompt_toolkit)
     * - BASH_COMPLETIONS
       - Normally this is ``('/etc/bash_completion', '/usr/share/bash-completion/completions/git')``
@@ -42,14 +44,21 @@ applicable.
     * - COMPLETIONS_DISPLAY
       - ``'multi'``
       - Configure if and how Python completions are displayed by the prompt_toolkit shell.
+      
         This option does not affect bash completions, auto-suggestions etc.
+        
         Changing it at runtime will take immediate effect, so you can quickly
         disable and enable completions during shell sessions.
+        
         - If COMPLETIONS_DISPLAY is ``'none'`` or ``'false'``, do not display those completions.
+        
         - If COMPLETIONS_DISPLAY is ``'single'``, display completions in a single column while typing.
+        
         - If COMPLETIONS_DISPLAY is ``'multi'`` or ``'true'``, display completions in multiple columns while typing.
+        
         These option values are not case- or type-sensitive, so e.g.
         writing ``$COMPLETIONS_DISPLAY = None`` and ``$COMPLETIONS_DISPLAY = 'none'`` is equivalent.
+        
         (Only usable with SHELL_TYPE=prompt_toolkit)
     * - DIRSTACK_SIZE
       - ``20``
@@ -67,10 +76,11 @@ applicable.
       - Indentation string for multiline input
     * - MOUSE_SUPPORT
       - ``False``
-      - Enable mouse support in the prompt_toolkit shell. This allows clicking
-        for positioning the cursor or selecting a completion. In some terminals
-        however, this disables the ability to scroll back through the history
-        of the terminal.
+      - Enable mouse support in the prompt_toolkit shell.
+        
+        This allows clicking for positioning the cursor or selecting a completion. In some terminals
+        however, this disables the ability to scroll back through the history of the terminal.
+        
         (Only usable with SHELL_TYPE=prompt_toolkit)
     * - MULTILINE_PROMPT
       - ``'.'``
