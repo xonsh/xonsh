@@ -151,6 +151,15 @@ applicable.
     * - XONSH_DATA_DIR
       - ``$XDG_DATA_HOME/xonsh``
       - This is the location where xonsh data files are stored, such as history.
+    * - XONSH_ENCODING
+      - ``sys.getdefaultencoding()``
+      - This is the that xonsh should use for subrpocess operations.
+    * - XONSH_ENCODING_ERRORS
+      - ``'surrogateescape'``
+      - The flag for how to handle encoding errors should they happen.
+        Any string flag that has been previously registered with Python
+        is allowed. See the `Python codecs documentation <https://docs.python.org/3/library/codecs.html#error-handlers>`_
+        for more information and available options. 
     * - XONSH_HISTORY_FILE
       - ``'~/.xonsh_history'``
       - Location of history file (deprecated).

@@ -521,7 +521,7 @@ def run_subproc(cmds, captured=True):
         # set standard error
         if 'stderr' in streams:
             stderr = streams['stderr']
-        uninew = ix == last_cmd
+        uninew = (ix == last_cmd) and (not captured)
         alias = builtins.aliases.get(cmd[0], None)
         if callable(alias):
             aliased_cmd = alias
@@ -604,6 +604,11 @@ def run_subproc(cmds, captured=True):
         if prev_proc.stdout not in (None, sys.stdout):
             output = prev_proc.stdout.read()
         if captured:
+            # to get proper encoding from Popen, we have to 
+            # use a byte stream and then implement universal_newlines here
+            output = output.decode(encoding=ENV.get('XONSH_ENCODING'),
+                                   errors=ENV.get('XONSH_ENCODING_ERRORS'))
+            output = output.replace('\r\n', '\n')
             return output
         else:
             hist.last_cmd_out = output

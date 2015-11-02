@@ -475,6 +475,11 @@ def is_float(x):
     return isinstance(x, float)
 
 
+def is_string(x):
+    """Tests if something is a string"""
+    return isinstance(x, string_types)
+
+
 def always_true(x):
     """Returns True"""
     return True
