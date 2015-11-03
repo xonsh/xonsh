@@ -16,9 +16,12 @@ applicable.
     * - ANSICON
       - No default set
       - This is used on Windows to set the title, if available.
+    * - AUTO_CD
+      - ``False``
+      - Flag to enable changing to a directory by entering the dirname or full path only (without the `cd` command)
     * - AUTO_PUSHD
       - ``False``
-      - Flag for automatically pushing directorties onto the directory stack.
+      - Flag for automatically pushing directories onto the directory stack.
     * - AUTO_SUGGEST
       - ``True``
       - Enable automatic command suggestions based on history (like in fish shell).
