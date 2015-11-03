@@ -27,7 +27,7 @@ import subprocess
 from itertools import zip_longest
 from contextlib import contextmanager
 from collections import OrderedDict, Sequence
-
+from warnings import warn
 
 if sys.version_info[0] >= 3:
     string_types = (str, bytes)
@@ -553,6 +553,25 @@ def ensure_int_or_slice(x):
         return slice(*(int(x) if len(x) > 0 else None for x in x.split(':')))
     else:
         return int(x)
+
+
+def is_completions_display_value(x):
+    return x in {'none', 'single', 'multi'}
+
+
+def to_completions_display_value(x):
+    x = str(x).lower()
+    if x in {'none', 'false'}:
+        x = 'none'
+    elif x in {'multi', 'true'}:
+        x = 'multi'
+    elif x in {'single'}:
+        x = 'single'
+    else:
+        warn('"{}" is not a valid value for $COMPLETIONS_DISPLAY. '.format(x) +
+             'Using "multi".', RuntimeWarning)
+        x = 'multi'
+    return x
 
 
 # history validation
