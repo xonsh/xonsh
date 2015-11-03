@@ -525,9 +525,9 @@ def run_subproc(cmds, captured=True):
         alias = builtins.aliases.get(cmd[0], None)
         if (alias is None
             and builtins.__xonsh_env__.get('AUTO_CD')
+            and len(cmds)==1
             and os.path.isdir(cmd[0])
-            and locate_binary(cmd[0], cwd=None) is None
-            and len(cmds)==1):
+            and locate_binary(cmd[0], cwd=None) is None):
             cmd.insert(0, 'cd')
             alias = builtins.aliases.get('cd', None)
 
