@@ -69,7 +69,7 @@ class PromptToolkitShell(BaseShell):
                 else:
                     auto_suggest = None
                 completions_display = builtins.__xonsh_env__.get('COMPLETIONS_DISPLAY')
-                multicolumn = True if completions_display == 'multi' else False
+                multicolumn = (completions_display == 'multi')
                 completer = None if completions_display == 'none' else self.pt_completer
                 line = get_input(
                     mouse_support=mouse_support,
