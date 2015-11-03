@@ -529,7 +529,8 @@ def run_subproc(cmds, captured=True):
             and locate_binary(cmd[0], cwd=None) is None
             and len(cmds)==1):
             cmd.insert(0, 'cd')
-            return run_subproc(cmds, captured=False)
+            alias = builtins.aliases.get('cd', None)
+
         if callable(alias):
             aliased_cmd = alias
         else:
