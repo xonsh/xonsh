@@ -47,6 +47,7 @@ represent environment variable validation, conversion, detyping.
 """
 
 DEFAULT_ENSURERS = {
+    'AUTO_CD': (is_bool, to_bool, bool_to_str), 
     'AUTO_SUGGEST': (is_bool, to_bool, bool_to_str),
     'BASH_COMPLETIONS': (is_env_path, str_to_env_path, env_path_to_str),
     'CASE_SENSITIVE_COMPLETIONS': (is_bool, to_bool, bool_to_str),
@@ -112,6 +113,7 @@ def xonshconfig(env):
 # to set them they have to do a copy and write them to the environment.
 # try to keep this sorted.
 DEFAULT_VALUES = {
+    'AUTO_CD': False,                 
     'AUTO_PUSHD': False,
     'AUTO_SUGGEST': True,
     'BASH_COMPLETIONS': (('/usr/local/etc/bash_completion',
