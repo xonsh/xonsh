@@ -77,7 +77,6 @@ def main():
         platforms='Cross Platform',
         classifiers=['Programming Language :: Python :: 3'],
         packages=['xonsh'],
-        scripts=['scripts/xonsh', 'scripts/xonsh.bat'],
         cmdclass={'install': xinstall, 'sdist': xsdist},
         )
     if HAVE_SETUPTOOLS:
@@ -87,8 +86,11 @@ def main():
             'pygments.lexers': ['xonsh = xonsh.pyghooks:XonshLexer',
                                 'xonshcon = xonsh.pyghooks:XonshConsoleLexer',
                                 ],
+            'console_scripts': ['xonsh = xonsh.main:main'],
             }
         skw['cmdclass']['develop'] = xdevelop
+    else:
+        skw['scripts'] = ['scripts/xonsh', 'scripts/xonsh.bat']
     setup(**skw)
 
 logo = """
