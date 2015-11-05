@@ -841,6 +841,7 @@ By default, the following variables are available for use:
     if any.
   * ``branch_color``: ``{BOLD_GREEN}`` if the current git branch is clean,
     otherwise ``{BOLD_RED}``
+  * ``prompt_end``: `#` if the user has root/admin permissions `$` otherwise
 
 You can also color your prompt easily by inserting keywords such as ``{GREEN}``
 or ``{BOLD_BLUE}``.  Colors have the form shown below:
