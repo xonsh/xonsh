@@ -99,12 +99,12 @@ def is_callable_default(x):
     """Checks if a value is a callable default."""
     return callable(x) and getattr(x, '_xonsh_callable_default', False)
 if ON_WINDOWS:
-    DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_CYAN} '
-                      '{cwd}{branch_color}{curr_branch} '
+    DEFAULT_PROMPT = ('{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} '
+                      '{cwd}{branch_color}{curr_branch}{NO_COLOR} '
                       '{BOLD_WHITE}{prompt_end}{NO_COLOR} ')
 else:
     DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
-                      '{cwd}{branch_color}{curr_branch} '
+                      '{cwd}{branch_color}{curr_branch}{NO_COLOR} '
                       '{BOLD_BLUE}{prompt_end}{NO_COLOR} ')
 
 DEFAULT_TITLE = '{current_job}{user}@{hostname}: {cwd} | xonsh'
@@ -809,8 +809,14 @@ def dirty_working_directory(cwd=None):
 
 def branch_color():
     """Return red if the current branch is dirty, otherwise green"""
-    return (TERM_COLORS['BOLD_RED'] if dirty_working_directory() else
-            TERM_COLORS['BOLD_GREEN'])
+    return (TERM_COLORS['BOLD_INTENSE_RED'] if dirty_working_directory() else
+            TERM_COLORS['BOLD_INTENSE_GREEN'])
+
+
+def branch_bg_color():
+    """Return red if the current branch is dirty, otherwise green"""
+    return (TERM_COLORS['BACKGROUND_RED'] if dirty_working_directory() else
+            TERM_COLORS['BACKGROUND_GREEN'])
 
 
 def _replace_home(x):
@@ -870,6 +876,7 @@ FORMATTER_DICT = dict(
     short_cwd=_collapsed_pwd,
     curr_branch=current_branch,
     branch_color=branch_color,
+    branch_bg_color=branch_bg_color,
     current_job=_current_job,
     **TERM_COLORS)
 DEFAULT_VALUES['FORMATTER_DICT'] = dict(FORMATTER_DICT)
