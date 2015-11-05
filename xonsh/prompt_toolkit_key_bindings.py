@@ -31,12 +31,12 @@ def load_xonsh_bindings(key_bindings_manager):
         If there are only whitespaces before current cursor position insert
         indent instead of autocompleting.
         """
-        event.cli.current_buffer.insert_text(env.get('INDENT'))
+        event.cli.current_buffer.insert_text(env.get('INDENT', '    '))
 
     @handle(Keys.BackTab)
     def insert_literal_tab(event):
         """
         Insert literal tab on Shift+Tab instead of autocompleting
         """
-        event.cli.current_buffer.insert_text(env.get('INDENT'))
+        event.cli.current_buffer.insert_text(env.get('INDENT', '    '))
 
