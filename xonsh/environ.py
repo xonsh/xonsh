@@ -12,11 +12,13 @@ from functools import wraps
 from collections import MutableMapping, MutableSequence, MutableSet, namedtuple
 
 from xonsh import __version__ as XONSH_VERSION
-from xonsh.tools import TERM_COLORS, ON_WINDOWS, ON_MAC, ON_LINUX, ON_ARCH, \
-    is_int, always_true, always_false, ensure_string, is_env_path, str_to_env_path, \
-    env_path_to_str, is_bool, to_bool, bool_to_str, is_history_tuple, to_history_tuple, \
-    history_tuple_to_str, is_float, string_types, is_string, DEFAULT_ENCODING, \
+from xonsh.tools import (
+    TERM_COLORS, ON_WINDOWS, ON_MAC, ON_LINUX, ON_ARCH, IS_ROOT,
+    always_true, always_false, ensure_string, is_env_path, str_to_env_path,
+    env_path_to_str, is_bool, to_bool, bool_to_str, is_history_tuple, to_history_tuple,
+    history_tuple_to_str, is_float, string_types, is_string, DEFAULT_ENCODING,
     is_completions_display_value, to_completions_display_value
+)
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
 
@@ -84,7 +86,7 @@ def is_callable_default(x):
 
 DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
                   '{cwd}{branch_color}{curr_branch} '
-                  '{BOLD_BLUE}${NO_COLOR} ')
+                  '{BOLD_BLUE}{prompt_end}{NO_COLOR} ')
 DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
 
 @default_value
@@ -539,6 +541,7 @@ else:
 
 FORMATTER_DICT = dict(
     user=os.environ.get(USER, '<user>'),
+    prompt_end='#' if IS_ROOT else '$',
     hostname=socket.gethostname().split('.', 1)[0],
     cwd=_replace_home_cwd,
     cwd_dir=lambda: os.path.dirname(_replace_home_cwd()),
