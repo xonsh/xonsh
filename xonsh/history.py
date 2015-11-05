@@ -328,6 +328,12 @@ def _create_parser():
     return p
 
 
+def _space_negative_nums(s):
+    """Super janky solution to where argument values cannot start with dash"""
+    if s.startswith('-') and len(s) >= 2 and s[1].isdigit():
+        s = ' ' + s
+    return s
+
 def _show(ns, hist):
     idx = ensure_int_or_slice(ns.n)
     if len(hist) == 0:
@@ -386,7 +392,9 @@ def main(args=None, stdin=None):
     """This acts as a main funtion for history command line interfaces."""
     hist = builtins.__xonsh_history__
     parser = _create_parser()
+    if len(args) == 0 or args[0] not in _MAIN_ACTIONS:
+        args = ['show'] + args
+    if args[0] == 'show':
+        args = list(map(_space_negative_nums, args))
     ns = parser.parse_args(args)
-    if ns.action is None:  # apply default action
-        ns = parser.parse_args(['show'] + args)
     _MAIN_ACTIONS[ns.action](ns, hist)
