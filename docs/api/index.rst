@@ -54,3 +54,4 @@ For those of you who want the gritty details.
     foreign_shells
     main
     pyghooks
+    jupyter_kernel

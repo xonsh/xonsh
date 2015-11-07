@@ -4,7 +4,9 @@ platform:
  - linux-64
 
 engine:
- - python=3
+ - python=3.5
+ - python=3.4
+
 
 script:
   - conda build recipe
