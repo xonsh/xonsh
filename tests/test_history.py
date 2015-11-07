@@ -82,7 +82,7 @@ def test_show_cmd():
     def run_show_cmd(hist_args, commands, base_idx=0, step=1):
         stdout.seek(0, io.SEEK_SET)
         stdout.truncate()
-        history.main(hist_args, hist=hist)
+        history._main(hist, hist_args)  # pylint: disable=protected-access
         stdout.seek(0, io.SEEK_SET)
         hist_lines = stdout.readlines()
         yield assert_equal, len(commands), len(hist_lines)

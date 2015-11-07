@@ -383,10 +383,8 @@ _MAIN_ACTIONS = {
     'gc': _gc,
     }
 
-def main(args=None, stdin=None, hist=None):
-    """This acts as a main funtion for history command line interfaces."""
-    if hist is None:
-        hist = builtins.__xonsh_history__
+def _main(hist, args):
+    """This implements the history CLI."""
     if not args or args[0] not in _MAIN_ACTIONS:
         args.insert(0, 'show')
     if (args[0] == 'show' and len(args) > 1 and args[-1].startswith('-') and
@@ -397,3 +395,8 @@ def main(args=None, stdin=None, hist=None):
     if ns.action is None:  # apply default action
         ns = parser.parse_args(['show'] + args)
     _MAIN_ACTIONS[ns.action](ns, hist)
+
+def main(args=None, stdin=None):
+    """This is the history command entry point."""
+    _ = stdin
+    _main(builtins.__xonsh_history__, args)
