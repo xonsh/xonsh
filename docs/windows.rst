@@ -16,12 +16,14 @@ Next, install the other dependencies via ``pip``:
 
 While prompt-toolkit is considered an optional dependency, it's the
 recommended alternative to pyreadline for Windows users. Once installed,
-you have to enable prompt-toolkit by adding the following to your
-``~/.xonshrc`` file:
+you have to enable prompt-toolkit by creating ``~/.xonshrc`` file and
+adding the following:
 
 .. code-block:: xonsh
 
    $SHELL_TYPE = 'prompt_toolkit'
+
+For Windows, it's recommended to use a replacement console emulator. Good choices are cmder or conemu.
 
 Download the latest `xonsh-master.zip`_ from github and unzip it
 to ``xonsh-master``.
@@ -73,4 +75,3 @@ typing and avoid the ambiguity altogether:
 
 You can add this alias to your ``~/.xonshrc`` to have it always
 available when xonsh starts.
-

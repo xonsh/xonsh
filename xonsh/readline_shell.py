@@ -47,7 +47,7 @@ def setup_readline():
     readline.parse_and_bind('"\e[B": history-search-forward')
     readline.parse_and_bind('"\e[A": history-search-backward')
     # Setup Shift-Tab to indent
-    readline.parse_and_bind('"\e[Z": "{0}"'.format(env.get('INDENT', '')))
+    readline.parse_and_bind('"\e[Z": "{0}"'.format(env.get('INDENT')))
 
     # handle tab completion differences found in libedit readline compatibility
     # as discussed at http://stackoverflow.com/a/7116997
@@ -139,12 +139,12 @@ class ReadlineShell(BaseShell, Cmd):
                 self._current_indent = ''
             elif line.rstrip()[-1] == ':':
                 ind = line[:len(line) - len(line.lstrip())]
-                ind += builtins.__xonsh_env__.get('INDENT', '')
+                ind += builtins.__xonsh_env__.get('INDENT')
                 readline.set_pre_input_hook(_insert_text_func(ind, readline))
                 self._current_indent = ind
             elif line.split(maxsplit=1)[0] in DEDENT_TOKENS:
                 env = builtins.__xonsh_env__
-                ind = self._current_indent[:-len(env.get('INDENT', ''))]
+                ind = self._current_indent[:-len(env.get('INDENT'))]
                 readline.set_pre_input_hook(_insert_text_func(ind, readline))
                 self._current_indent = ind
             else:

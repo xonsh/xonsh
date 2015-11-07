@@ -1,9 +1,10 @@
-.. _xonsh_base_shell:
+.. _xonsh_foreign_shells:
 
 ******************************************************
-Base Shell Class (``xonsh.base_shell``)
+Foreign Shell Tools (``xonsh.foreign_shells``)
 ******************************************************
 
-.. automodule:: xonsh.base_shell
+.. automodule:: xonsh.foreign_shells
     :members:
     :undoc-members:
+    :inherited-members:

@@ -11,6 +11,8 @@ from xonsh.tools import swap
 from xonsh.shell import Shell
 from xonsh.replay import Replayer
 
+from tools import ON_MAC, skip_if
+
 SHELL = Shell()
 HISTDIR = os.path.join(os.path.dirname(__file__), 'histories')
 
@@ -35,18 +37,21 @@ def a_replay(re_file):
     cleanup_replay(hist)
 
 
+@skip_if(ON_MAC)
 def test_echo():
     f = os.path.join(HISTDIR, 'echo.json')
     with a_replay(f) as hist:
         yield assert_equal, 2, len(hist)
 
 
+@skip_if(ON_MAC)
 def test_reecho():
     f = os.path.join(HISTDIR, 'echo.json')
     with a_replay(f) as hist:
         yield assert_equal, 2, len(hist)
 
 
+@skip_if(ON_MAC)
 def test_simple_python():
     f = os.path.join(HISTDIR, 'simple-python.json')
     with a_replay(f) as hist:

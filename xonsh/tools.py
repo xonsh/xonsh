@@ -16,6 +16,7 @@ Implementations:
 * indent()
 
 """
+import ctypes
 import os
 import re
 import sys
@@ -24,10 +25,9 @@ import platform
 import traceback
 import threading
 import subprocess
-from itertools import zip_longest
 from contextlib import contextmanager
 from collections import OrderedDict, Sequence
-
+from warnings import warn
 
 if sys.version_info[0] >= 3:
     string_types = (str, bytes)
@@ -41,7 +41,9 @@ DEFAULT_ENCODING = sys.getdefaultencoding()
 ON_WINDOWS = (platform.system() == 'Windows')
 ON_MAC = (platform.system() == 'Darwin')
 ON_LINUX = (platform.system() == 'Linux')
+ON_ARCH = (platform.linux_distribution()[0] == 'arch')
 ON_POSIX = (os.name == 'posix')
+IS_ROOT = ctypes.windll.shell32.IsUserAnAdmin() != 0 if ON_WINDOWS else os.getuid() == 0
 
 VER_3_4 = (3, 4)
 VER_3_5 = (3, 5)
@@ -342,11 +344,11 @@ def command_not_found(cmd):
 
 def suggest_commands(cmd, env, aliases):
     """Suggests alternative commands given an environment and aliases."""
-    suggest_cmds = env.get('SUGGEST_COMMANDS', True)
+    suggest_cmds = env.get('SUGGEST_COMMANDS')
     if not suggest_cmds:
         return
-    thresh = env.get('SUGGEST_THRESHOLD', 3)
-    max_sugg = env.get('SUGGEST_MAX_NUM', 5)
+    thresh = env.get('SUGGEST_THRESHOLD')
+    max_sugg = env.get('SUGGEST_MAX_NUM')
     if max_sugg < 0:
         max_sugg = float('inf')
 
@@ -357,7 +359,7 @@ def suggest_commands(cmd, env, aliases):
             if levenshtein(a.lower(), cmd, thresh) < thresh:
                 suggested[a] = 'Alias'
 
-    for d in filter(os.path.isdir, env.get('PATH', [])):
+    for d in filter(os.path.isdir, env.get('PATH')):
         for f in os.listdir(d):
             if f not in suggested:
                 if levenshtein(f.lower(), cmd, thresh) < thresh:
@@ -387,8 +389,8 @@ def print_exception():
     """Print exceptions with/without traceback."""
     if 'XONSH_SHOW_TRACEBACK' not in builtins.__xonsh_env__:
         sys.stderr.write('xonsh: For full traceback set: '
-                         '$XONSH_SHOW_TRACEBACK=True\n')
-    if builtins.__xonsh_env__.get('XONSH_SHOW_TRACEBACK', False):
+                         '$XONSH_SHOW_TRACEBACK = True\n')
+    if builtins.__xonsh_env__.get('XONSH_SHOW_TRACEBACK'):
         traceback.print_exc()
     else:
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -401,15 +403,12 @@ def print_exception():
 def levenshtein(a, b, max_dist=float('inf')):
     """Calculates the Levenshtein distance between a and b."""
     n, m = len(a), len(b)
-
     if abs(n - m) > max_dist:
         return float('inf')
-
     if n > m:
         # Make sure n <= m, to use O(min(n,m)) space
         a, b = b, a
         n, m = m, n
-
     current = range(n + 1)
     for i in range(1, m + 1):
         previous, current = current, [i] + [0] * n
@@ -419,7 +418,6 @@ def levenshtein(a, b, max_dist=float('inf')):
             if a[j - 1] != b[i - 1]:
                 change = change + 1
             current[j] = min(add, delete, change)
-
     return current[n]
 
 
@@ -441,7 +439,6 @@ def escape_windows_title_string(s):
     """
     for c in '^&<>|':
         s = s.replace(c, '^' + c)
-
     s = s.replace('/?', '/.')
     return s
 
@@ -472,6 +469,16 @@ def swap(namespace, name, value, default=NotImplemented):
 def is_int(x):
     """Tests if something is an integer"""
     return isinstance(x, int)
+
+
+def is_float(x):
+    """Tests if something is a float"""
+    return isinstance(x, float)
+
+
+def is_string(x):
+    """Tests if something is a string"""
+    return isinstance(x, string_types)
 
 
 def always_true(x):
@@ -547,6 +554,25 @@ def ensure_int_or_slice(x):
         return slice(*(int(x) if len(x) > 0 else None for x in x.split(':')))
     else:
         return int(x)
+
+
+def is_completions_display_value(x):
+    return x in {'none', 'single', 'multi'}
+
+
+def to_completions_display_value(x):
+    x = str(x).lower()
+    if x in {'none', 'false'}:
+        x = 'none'
+    elif x in {'multi', 'true'}:
+        x = 'multi'
+    elif x in {'single'}:
+        x = 'single'
+    else:
+        warn('"{}" is not a valid value for $COMPLETIONS_DISPLAY. '.format(x) +
+             'Using "multi".', RuntimeWarning)
+        x = 'multi'
+    return x
 
 
 # history validation

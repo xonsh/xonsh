@@ -11,6 +11,7 @@ import os
 import sys
 import tty
 import pty
+import time
 import array
 import fcntl
 import select
@@ -50,10 +51,24 @@ def _on_main_thread():
     return threading.current_thread() is threading.main_thread()
 
 
+def _find_error_code(e):
+    """Gets the approriate error code for an exception e, see
+    http://tldp.org/LDP/abs/html/exitcodes.html for exit codes.
+    """
+    if isinstance(e, PermissionError):
+        code = 126
+    elif isinstance(e, FileNotFoundError):
+        code = 127
+    else:
+        code = 1
+    return code
+
+
 class TeePTY(object):
     """This class is a pseudo terminal that tees the stdout and stderr into a buffer."""
 
-    def __init__(self, bufsize=1024, remove_color=True):
+    def __init__(self, bufsize=1024, remove_color=True, encoding='utf-8', 
+                 errors='strict'):
         """
         Parameters
         ----------
@@ -61,24 +76,31 @@ class TeePTY(object):
             The buffer size to read from the root terminal to/from the tee'd terminal.
         remove_color : bool, optional
             Removes color codes from the tee'd buffer, though not the TTY.
+        encoding : str, optional
+            The encoding to use when decoding into a str.
+        errors : str, optional
+            The encoding error flag to use when decoding into a str.
         """
         self.bufsize = bufsize
         self.pid = self.master_fd = None
         self._in_alt_mode = False
         self.remove_color = remove_color
+        self.encoding = encoding
+        self.errors = errors
         self.buffer = io.BytesIO()
         self.returncode = None
         self._temp_stdin = None
 
     def __str__(self):
-        return self.buffer.getvalue().decode()
+        return self.buffer.getvalue().decode(encoding=self.encoding, 
+                                             errors=self.errors)
 
     def __del__(self):
         if self._temp_stdin is not None:
             self._temp_stdin.close()
             self._temp_stdin = None
 
-    def spawn(self, argv=None, env=None, stdin=None):
+    def spawn(self, argv=None, env=None, stdin=None, delay=None):
         """Create a spawned process. Based on the code for pty.spawn().
         This cannot be used except from the main thread.
 
@@ -88,6 +110,12 @@ class TeePTY(object):
             Arguments to pass in as subprocess. In None, will execute $SHELL.
         env : Mapping, optional
             Environment to pass execute in.
+        delay : float, optional
+            Delay timing before executing process if piping in data. The value
+            is passed into time.sleep() so it is in [seconds]. If delay is None,
+            its value will attempted to be looked up from the environment
+            variable $TEEPTY_PIPE_DELAY, from the passed in env or os.environ.
+            If not present or not positive valued, no delay is used.
 
         Returns
         -------
@@ -104,10 +132,17 @@ class TeePTY(object):
         self.pid = pid
         self.master_fd = master_fd
         if pid == pty.CHILD:
-            if env is None:
-                os.execvp(argv[0], argv)
-            else:
-                os.execvpe(argv[0], argv, env)
+            # determine if a piping delay is needed.
+            if self._temp_stdin is not None:
+                self._delay_for_pipe(env=env, delay=delay)
+            # ok, go
+            try:
+                if env is None:
+                    os.execvp(argv[0], argv)
+                else:
+                    os.execvpe(argv[0], argv, env)
+            except OSError as e:
+                os._exit(_find_error_code(e))
         else:
             self._pipe_stdin(stdin)
 
@@ -255,8 +290,35 @@ class TeePTY(object):
                 tsi.flush()
         else:
             raise ValueError('stdin not understood {0!r}'.format(stdin))
-        
 
+    def _delay_for_pipe(self, env=None, delay=None):
+        # This delay is sometimes needed because the temporary stdin file that 
+        # is being written (the pipe) may not have even hits its first flush()
+        # call by the time the spawned process starts up and determines there 
+        # is nothing in the file. The spawn can thus exit, without doing any
+        # real work.  Consider the case of piping something into grep:
+        #
+        #   $ ps aux | grep root
+        #
+        # grep will exit on EOF and so there is a race between the buffersize 
+        # and flushing the temporary file and grep.  However, this race is not
+        # always meaningful. Pagers, for example, update when the file is written
+        # to. So what is important is that we start the spawned process ASAP:
+        #
+        #   $ ps aux | less
+        #
+        # So there is a push-and-pull between the the competing objectives of
+        # not blocking and letting the spawned process have enough to work with
+        # such that it doesn't exit prematurely.  Unfortunately, there is no
+        # way to know a priori how big the file is, how long the spawned process
+        # will run for, etc. Thus as user-definable delay let's the user 
+        # find something that works for them.
+        if delay is None:
+            delay = (env or os.environ).get('TEEPTY_PIPE_DELAY', -1.0)
+        delay = float(delay)
+        if 0.0 < delay:
+            time.sleep(delay)
+        
 
 if __name__ == '__main__':
     tpty = TeePTY()
@@ -266,4 +328,4 @@ if __name__ == '__main__':
     print('-=-'*10)
     print(tpty)
     print('-=-'*10)
-    print('Returned with status {0}'.format(tpty.rtn))
+    print('Returned with status {0}'.format(tpty.returncode))

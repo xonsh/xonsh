@@ -26,25 +26,26 @@ class Shell(object):
     def __init__(self, ctx=None, shell_type=None, **kwargs):
         self._init_environ(ctx)
         env = builtins.__xonsh_env__
-
+        # pick a valid shell
         if shell_type is not None:
             env['SHELL_TYPE'] = shell_type
-        if env['SHELL_TYPE'] == 'prompt_toolkit':
+        shell_type = env.get('SHELL_TYPE')
+        if shell_type == 'prompt_toolkit':
             if not is_prompt_toolkit_available():
                 warn('prompt_toolkit is not available, using readline instead.')
-                env['SHELL_TYPE'] = 'readline'
-
-        if env['SHELL_TYPE'] == 'prompt_toolkit':
+                shell_type = env['SHELL_TYPE'] = 'readline'
+        # actually make the shell
+        if shell_type == 'prompt_toolkit':
             from xonsh.prompt_toolkit_shell import PromptToolkitShell
             self.shell = PromptToolkitShell(execer=self.execer,
                                             ctx=self.ctx, **kwargs)
-        elif env['SHELL_TYPE'] == 'readline':
+        elif shell_type == 'readline':
             from xonsh.readline_shell import ReadlineShell
             self.shell = ReadlineShell(execer=self.execer,
                                        ctx=self.ctx, **kwargs)
         else:
             raise XonshError('{} is not recognized as a shell type'.format(
-                env['SHELL_TYPE']))
+                             shell_type))
         # allows history garbace colector to start running
         builtins.__xonsh_history__.gc.wait_for_shell = False
 
@@ -58,7 +59,7 @@ class Shell(object):
         if ctx is not None:
             self.ctx = ctx
         else:
-            rc = env.get('XONSHRC', None)
-            self.ctx = xonshrc_context(rcfile=rc, execer=self.execer)
+            rc = env.get('XONSHRC')
+            self.ctx = xonshrc_context(rcfiles=rc, execer=self.execer)
         builtins.__xonsh_ctx__ = self.ctx
         self.ctx['__name__'] = '__main__'

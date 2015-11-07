@@ -67,6 +67,7 @@ Contents
     tutorial
     tutorial_hist
     xonshrc
+    xonshconfig
     envvars
     aliases
     windows

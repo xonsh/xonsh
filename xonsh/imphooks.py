@@ -1,7 +1,6 @@
 """Import hooks for importing xonsh source files. This module registers
 the hooks it defines when it is imported.
 """
-from __future__ import print_function, unicode_literals
 import os
 import sys
 import builtins

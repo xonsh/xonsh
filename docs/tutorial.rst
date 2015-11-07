@@ -6,7 +6,7 @@ Tutorial
 xonsh is a shell language and command prompt. Unlike other shells, xonsh is
 based on Python, with additional syntax added that makes calling subprocess
 commands, manipulating the environment, and dealing with the file system
-easily.  The xonsh command prompt gives users interactive access to the xonsh
+easy.  The xonsh command prompt gives users interactive access to the xonsh
 language.
 
 While all Python code is also xonsh, not all BASH code can be used in xonsh.
@@ -841,6 +841,7 @@ By default, the following variables are available for use:
     if any.
   * ``branch_color``: ``{BOLD_GREEN}`` if the current git branch is clean,
     otherwise ``{BOLD_RED}``
+  * ``prompt_end``: `#` if the user has root/admin permissions `$` otherwise
 
 You can also color your prompt easily by inserting keywords such as ``{GREEN}``
 or ``{BOLD_BLUE}``.  Colors have the form shown below:

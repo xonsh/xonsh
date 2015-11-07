@@ -9,7 +9,7 @@ from xonsh.lexer import Lexer
 from xonsh.tools import subproc_toks, subexpr_from_unbalanced, is_int, \
     always_true, always_false, ensure_string, is_env_path, str_to_env_path, \
     env_path_to_str, escape_windows_title_string, is_bool, to_bool, bool_to_str, \
-    ensure_int_or_slice
+    ensure_int_or_slice, is_float, is_string
 
 LEXER = Lexer()
 LEXER.build()
@@ -153,6 +153,14 @@ def test_subexpr_from_unbalanced_parens():
 def test_is_int():
     yield assert_true, is_int(42)
     yield assert_false, is_int('42')
+
+def test_is_float():
+    yield assert_true, is_float(42.0)
+    yield assert_false, is_float('42.0')
+
+def test_is_string():
+    yield assert_true, is_string('42.0')
+    yield assert_false, is_string(42.0)
 
 def test_always_true():
     yield assert_true, always_true(42)

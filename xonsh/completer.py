@@ -1,9 +1,9 @@
 """A (tab-)completer for xonsh."""
-from __future__ import print_function, unicode_literals
 import os
 import re
 import builtins
 import pickle
+import shlex
 import subprocess
 import sys
 
@@ -29,7 +29,7 @@ XONSH_TOKENS = {
 
 BASH_COMPLETE_SCRIPT = """source {filename}
 COMP_WORDS=({line})
-COMP_LINE="{line}"
+COMP_LINE={comp_line}
 COMP_POINT=${{#COMP_LINE}}
 COMP_COUNT={end}
 COMP_CWORD={n}
@@ -38,9 +38,6 @@ for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 """
 
 WS = set(' \t\r\n')
-
-get_env = lambda name, default=None: builtins.__xonsh_env__.get(name, default)
-
 
 def startswithlow(x, start, startlow=None):
     """True if x starts with a string or its lowercase version. The lowercase
@@ -73,7 +70,7 @@ def _normpath(p):
     if trailing_slash:
         p = os.path.join(p, '')
 
-    if ON_WINDOWS and get_env('FORCE_POSIX_PATHS', False):
+    if ON_WINDOWS and builtins.__xonsh_env__.get('FORCE_POSIX_PATHS'):
         p = p.replace(os.sep, os.altsep)
 
     return p
@@ -125,7 +122,7 @@ class Completer(object):
         ctx = ctx or {}
         prefixlow = prefix.lower()
         cmd = line.split(' ', 1)[0]
-        csc = get_env('CASE_SENSITIVE_COMPLETIONS', True)
+        csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
         startswither = startswithnorm if csc else startswithlow
         if begidx == 0:
             # the first thing we're typing; could be python or subprocess, so
@@ -207,7 +204,7 @@ class Completer(object):
 
     def _add_env(self, paths, prefix):
         if prefix.startswith('$'):
-            csc = get_env('CASE_SENSITIVE_COMPLETIONS', True)
+            csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
             startswither = startswithnorm if csc else startswithlow
             key = prefix[1:]
             keylow = key.lower()
@@ -221,8 +218,9 @@ class Completer(object):
 
     def _add_cdpaths(self, paths, prefix):
         """Completes current prefix using CDPATH"""
-        csc = get_env('CASE_SENSITIVE_COMPLETIONS', True)
-        for cdp in get_env("CDPATH", []):
+        env = builtins.__xonsh_env__
+        csc = env.get('CASE_SENSITIVE_COMPLETIONS')
+        for cdp in env.get('CDPATH'):
             test_glob = os.path.join(cdp, prefix) + '*'
             for s in iglobpath(test_glob, ignore_case=(not csc)):
                 if os.path.isdir(s):
@@ -232,7 +230,7 @@ class Completer(object):
         """Completes a command name based on what is on the $PATH"""
         space = ' '
         cmdlow = cmd.lower()
-        csc = get_env('CASE_SENSITIVE_COMPLETIONS', True)
+        csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
         startswither = startswithnorm if csc else startswithlow
         return {s + space
                 for s in self._all_commands()
@@ -242,7 +240,7 @@ class Completer(object):
         """Completes a name of a module to import."""
         prefixlow = prefix.lower()
         modules = set(sys.modules.keys())
-        csc = get_env('CASE_SENSITIVE_COMPLETIONS', True)
+        csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
         startswither = startswithnorm if csc else startswithlow
         return {s for s in modules if startswither(s, prefix, prefixlow)}
 
@@ -252,7 +250,7 @@ class Completer(object):
         slash = '/'
         tilde = '~'
         paths = set()
-        csc = get_env('CASE_SENSITIVE_COMPLETIONS', True)
+        csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
         if prefix.startswith("'") or prefix.startswith('"'):
             prefix = prefix[1:]
         for s in iglobpath(prefix + '*', ignore_case=(not csc)):
@@ -288,27 +286,36 @@ class Completer(object):
         if len(prefix) == 0:
             prefix = '""'
             n += 1
+        else:
+            prefix = shlex.quote(prefix)
+
         script = BASH_COMPLETE_SCRIPT.format(filename=fnme,
-                                             line=line,
+                                             line=' '.join(shlex.quote(p) for p in splt),
+                                             comp_line=shlex.quote(line),
                                              n=n,
                                              func=func,
                                              cmd=cmd,
                                              end=endidx + 1,
                                              prefix=prefix,
-                                             prev=prev)
-        out = subprocess.check_output(['bash'],
-                                      input=script,
-                                      universal_newlines=True,
-                                      stderr=subprocess.PIPE)
+                                             prev=shlex.quote(prev))
+        try:
+            out = subprocess.check_output(['bash'],
+                                          input=script,
+                                          universal_newlines=True,
+                                          stderr=subprocess.PIPE)
+        except subprocess.CalledProcessError:
+            out = ''
+
         space = ' '
         rtn = {s + space if s[-1:].isalnum() else s for s in out.splitlines()}
         return rtn
 
     def _source_completions(self):
         srcs = []
-        for f in builtins.__xonsh_env__.get('BASH_COMPLETIONS', ()):
+        for f in builtins.__xonsh_env__.get('BASH_COMPLETIONS'):
             if os.path.isfile(f):
-                if ON_WINDOWS:  # We need to "Unixify" Windows paths for Bash to understand
+                # We need to "Unixify" Windows paths for Bash to understand
+                if ON_WINDOWS:  
                     f = RE_WIN_DRIVE.sub(lambda m: '/{0}/'.format(m.group(1).lower()), f).replace('\\', '/')
                 srcs.append('source ' + f)
         return srcs
@@ -373,10 +380,10 @@ class Completer(object):
         if len(attr) == 0:
             opts = [o for o in opts if not o.startswith('_')]
         else:
-            csc = get_env('CASE_SENSITIVE_COMPLETIONS', True)
+            csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
             startswither = startswithnorm if csc else startswithlow
             attrlow = attr.lower()
-            opts = [o for o in opts if startswither(o, attrlow)]
+            opts = [o for o in opts if startswither(o, attr, attrlow)]
         prelen = len(prefix)
         for opt in opts:
             a = getattr(val, opt)
@@ -434,7 +441,7 @@ class ManCompleter(object):
 
     def option_complete(self, prefix, cmd):
         """Completes an option name, basing on content of man page."""
-        csc = get_env('CASE_SENSITIVE_COMPLETIONS', True)
+        csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
         startswither = startswithnorm if csc else startswithlow
         if cmd not in self._options.keys():
             try:

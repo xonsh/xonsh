@@ -121,7 +121,7 @@ def main():
         platforms='Cross Platform',
         classifiers=['Programming Language :: Python :: 3'],
         packages=['xonsh'],
-        scripts=['scripts/xonsh'],
+        scripts=['scripts/xonsh', 'scripts/xonsh.bat'],
         cmdclass={'install': xinstall, 'sdist': xsdist},
         )
     if HAVE_SETUPTOOLS:
