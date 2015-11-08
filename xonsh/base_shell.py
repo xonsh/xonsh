@@ -179,7 +179,9 @@ class BaseShell(object):
         """Sets terminal title."""
         env = builtins.__xonsh_env__
         term = env.get('TERM', None)
-        if term is None or term == 'linux':
+        # Shells running in emacs sets TERM to "dumb" or "eterm-color".
+        # Do not set title for these to avoid garbled prompt.
+        if term is None or term in ['dumb', 'eterm-color', 'linux']:
             return
         t = env.get('TITLE')
         if t is None:
