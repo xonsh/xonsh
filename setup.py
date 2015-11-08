@@ -19,7 +19,7 @@ except ImportError:
     HAVE_SETUPTOOLS = False
 
 try:
-    from jupyter_client.kernelspec import install_kernel_spec
+    from jupyter_client.kernelspec import KernelSpecManager
     HAVE_JUPYTER = True
 except ImportError:
     HAVE_JUPYTER = False
@@ -49,7 +49,7 @@ def build_tables():
     sys.path.pop(0)
 
 
-def install_jupyter_hook():
+def install_jupyter_hook(root=None):
     if not HAVE_JUPYTER:
         print('Could not install Jupyter kernel spec, please install Jupyter/IPython.')
         return
@@ -73,13 +73,13 @@ def install_jupyter_hook():
             with open(os.path.join(d, 'kernel.json'), 'w') as f:
                 json.dump(spec, f, sort_keys=True)
             print('Installing Jupyter kernel spec...')
-            install_kernel_spec(d, 'xonsh', user=('--user' in sys.argv), replace=True)
+            KernelSpecManager().install_kernel_spec(d, 'xonsh', user=('--user' in sys.argv), replace=True, prefix=root)
 
 class xinstall(install):
     def run(self):
         clean_tables()
         build_tables()
-        install_jupyter_hook()
+        install_jupyter_hook(self.root if self.root else None)
         install.run(self)
 
 
