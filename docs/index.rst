@@ -102,7 +102,8 @@ the following from the source directory,
 
     $ python setup.py install
 
-ArchLinux users can install xonsh with e.g. yaourt or aura:
+Arch Linux users can install xonsh from the Arch User Repository with e.g.
+yaourt or aura:
 
 **yaourt:**
 
