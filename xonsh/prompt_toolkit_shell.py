@@ -48,6 +48,7 @@ class PromptToolkitShell(BaseShell):
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx)
         self.key_bindings_manager = KeyBindingManager(
             enable_auto_suggest_bindings=True,
+            enable_open_in_editor=True,
             enable_search=True, enable_abort_and_exit_bindings=True)
         load_xonsh_bindings(self.key_bindings_manager)
 
