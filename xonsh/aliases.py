@@ -72,7 +72,7 @@ def source_foreign(args, stdin=None):
     """Sources a file written in a foreign shell language."""
     parser = _ensure_source_foreign_parser()
     ns = parser.parse_args(args)
-    if not os.path.isfile(ns.files_or_code[0]):
+    if ns.prevcmd is not None and not os.path.isfile(ns.files_or_code[0]):
         ns.prevcmd = ' '.join(ns.files_or_code)
     elif ns.prevcmd is None:
         ns.prevcmd = '{0} {1}'.format(ns.sourcer, ' '.join(ns.files_or_code))
