@@ -114,6 +114,8 @@ else:
         if signal_to_send is not None:
             os.kill(obj.pid, signal_to_send)
         _, s = os.waitpid(obj.pid, os.WUNTRACED)
+        # s contains signal and exit code, get the real exit code
+        exit_code = s >> 8
         if os.WIFSTOPPED(s):
             obj.done = True
             job['bg'] = True
@@ -124,6 +126,7 @@ else:
             print()  # get a newline because ^C will have been printed
         if obj.poll() is not None:
             builtins.__xonsh_active_job__ = None
+        obj.returncode = exit_code
         _give_terminal_to(_shell_pgrp)  # give terminal back to the shell
 
 
