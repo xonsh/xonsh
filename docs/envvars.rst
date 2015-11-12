@@ -74,6 +74,9 @@ applicable.
       - xonsh.environ.FORMATTER_DICT  
       - Dictionary containing variables to be used when formatting PROMPT and TITLE 
         see `Customizing the Prompt <tutorial.html#customizing-the-prompt>`_.
+    * - IGNOREEOF
+      - ``False``
+      - Prevents Ctrl-D from exiting the shell.
     * - INDENT
       - ``'    '``
       - Indentation string for multiline input

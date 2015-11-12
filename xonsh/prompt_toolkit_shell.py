@@ -88,7 +88,8 @@ class PromptToolkitShell(BaseShell):
             except KeyboardInterrupt:
                 self.reset_buffer()
             except EOFError:
-                break
+                if not builtins.__xonsh_env__.get("IGNOREEOF"):
+                    break
 
     def _get_prompt_tokens_and_style(self):
         """Returns function to pass as prompt to prompt_toolkit."""

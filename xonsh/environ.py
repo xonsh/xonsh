@@ -50,12 +50,13 @@ represent environment variable validation, conversion, detyping.
 """
 
 DEFAULT_ENSURERS = {
-    'AUTO_CD': (is_bool, to_bool, bool_to_str), 
+    'AUTO_CD': (is_bool, to_bool, bool_to_str),
     'AUTO_SUGGEST': (is_bool, to_bool, bool_to_str),
     'BASH_COMPLETIONS': (is_env_path, str_to_env_path, env_path_to_str),
     'CASE_SENSITIVE_COMPLETIONS': (is_bool, to_bool, bool_to_str),
     re.compile('\w*DIRS'): (is_env_path, str_to_env_path, env_path_to_str),
     'COMPLETIONS_DISPLAY': (is_completions_display_value, to_completions_display_value, str),
+    'IGNOREEOF': (is_bool, to_bool, bool_to_str),
     'LC_COLLATE': (always_false, locale_convert('LC_COLLATE'), ensure_string),
     'LC_CTYPE': (always_false, locale_convert('LC_CTYPE'), ensure_string),
     'LC_MESSAGES': (always_false, locale_convert('LC_MESSAGES'), ensure_string),
@@ -117,7 +118,7 @@ def xonshconfig(env):
 # to set them they have to do a copy and write them to the environment.
 # try to keep this sorted.
 DEFAULT_VALUES = {
-    'AUTO_CD': False,                 
+    'AUTO_CD': False,
     'AUTO_PUSHD': False,
     'AUTO_SUGGEST': True,
     'BASH_COMPLETIONS': (('/usr/local/etc/bash_completion',
@@ -133,6 +134,7 @@ DEFAULT_VALUES = {
     'COMPLETIONS_DISPLAY': 'multi',
     'DIRSTACK_SIZE': 20,
     'FORCE_POSIX_PATHS': False,
+    'IGNOREEOF': False,
     'INDENT': '    ',
     'LC_CTYPE': locale.setlocale(locale.LC_CTYPE),
     'LC_COLLATE': locale.setlocale(locale.LC_COLLATE),
