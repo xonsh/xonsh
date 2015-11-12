@@ -195,7 +195,8 @@ class ReadlineShell(BaseShell, Cmd):
                     try:
                         line = input(self.prompt)
                     except EOFError:
-                        line = 'EOF'
+                        env = builtins.__xonsh_env__
+                        line = 'EOF' if not env.get("IGNOREEOF") else ''
                     if inserter is not None:
                         readline.set_pre_input_hook(None)
                 else:
