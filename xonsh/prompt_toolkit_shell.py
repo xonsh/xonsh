@@ -3,7 +3,7 @@ import os
 import builtins
 from warnings import warn
 
-from prompt_toolkit.shortcuts import get_input
+from prompt_toolkit.shortcuts import prompt
 from prompt_toolkit.key_binding.manager import KeyBindingManager
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from pygments.token import Token
@@ -71,7 +71,7 @@ class PromptToolkitShell(BaseShell):
                 completions_display = builtins.__xonsh_env__.get('COMPLETIONS_DISPLAY')
                 multicolumn = (completions_display == 'multi')
                 completer = None if completions_display == 'none' else self.pt_completer
-                line = get_input(
+                line = prompt(
                     mouse_support=mouse_support,
                     auto_suggest=auto_suggest,
                     get_prompt_tokens=token_func,
