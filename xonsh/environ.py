@@ -70,6 +70,7 @@ DEFAULT_ENSURERS = {
     'XONSH_ENCODING_ERRORS': (is_string, ensure_string, ensure_string),
     'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
     'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
+    'VI_MODE': (is_bool, to_bool, bool_to_str),
 }
 
 #
@@ -153,6 +154,7 @@ DEFAULT_VALUES = {
     'SUGGEST_THRESHOLD': 3,
     'TEEPTY_PIPE_DELAY': 0.01,
     'TITLE': DEFAULT_TITLE,
+    'VI_MODE': False,
     'XDG_CONFIG_HOME': os.path.expanduser(os.path.join('~', '.config')),
     'XDG_DATA_HOME': os.path.expanduser(os.path.join('~', '.local', 'share')),
     'XONSHCONFIG': xonshconfig,

@@ -6,6 +6,7 @@ from warnings import warn
 from prompt_toolkit.shortcuts import get_input
 from prompt_toolkit.key_binding.manager import KeyBindingManager
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.filters import Condition
 from pygments.token import Token
 from pygments.style import Style
 
@@ -46,9 +47,11 @@ class PromptToolkitShell(BaseShell):
         super().__init__(**kwargs)
         self.history = setup_history()
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx)
+        self.vi_mode_enabled = builtins.__xonsh_env__.get('VI_MODE')
         self.key_bindings_manager = KeyBindingManager(
             enable_auto_suggest_bindings=True,
-            enable_search=True, enable_abort_and_exit_bindings=True)
+            enable_search=True, enable_abort_and_exit_bindings=True,
+            enable_vi_mode=Condition(lambda cli: self.vi_mode_enabled))
         load_xonsh_bindings(self.key_bindings_manager)
 
     def __del__(self):
@@ -71,6 +74,7 @@ class PromptToolkitShell(BaseShell):
                 completions_display = builtins.__xonsh_env__.get('COMPLETIONS_DISPLAY')
                 multicolumn = (completions_display == 'multi')
                 completer = None if completions_display == 'none' else self.pt_completer
+                self.vi_mode_enabled = builtins.__xonsh_env__.get('VI_MODE')
                 line = get_input(
                     mouse_support=mouse_support,
                     auto_suggest=auto_suggest,

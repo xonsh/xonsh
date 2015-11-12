@@ -152,6 +152,9 @@ applicable.
       - The title text for the window in which xonsh is running. Formatted in the same 
         manner as PROMPT, 
         see `Customizing the Prompt <tutorial.html#customizing-the-prompt>`_.
+    * - VI_MODE
+      - ``False``
+      - Flag to enable ``vi_mode`` in the ``prompt_toolkit`` shell.  
     * - XDG_CONFIG_HOME
       - ``~/.config``
       - Open desktop standard configuration home dir. This is the same default as
