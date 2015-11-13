@@ -2,6 +2,7 @@
 #
 # Run all the nosetests or just the ones relevant for the edited files.
 #
+make build-tables  # ensure lexer/parser table module is up to date
 if [[ $1 == "-e" ]]; then
     tmp_file=$(mktemp /tmp/nose_tests_XXXXXX)
     git status -s |
