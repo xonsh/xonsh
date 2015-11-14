@@ -33,7 +33,9 @@ def _ensure_source_foreign_parser():
     desc = "Sources a file written in a foreign shell language."
     parser = ArgumentParser('source-foreign', description=desc)
     parser.add_argument('shell', help='Name or path to the foreign shell')
-    parser.add_argument('filenames', nargs='+', help='file paths to source')
+    parser.add_argument('files_or_code', nargs='+', 
+                        help='file paths to source or code in the target '
+                             'language.')
     parser.add_argument('-i', '--interactive', type=to_bool, default=True,
                         help='whether the sourced shell should be interactive',
                         dest='interactive')
@@ -51,7 +53,15 @@ def _ensure_source_foreign_parser():
                         help='whether the source shell should be run safely, '
                              'and not raise any errors, even if they occur.',
                         dest='safe')
-    parser.add_argument('--sourcer', default='source', dest='sourcer',
+    parser.add_argument('-p', '--prevcmd', default=None, dest='prevcmd', 
+                        help='command(s) to run before any other commands, '
+                             'replaces traditional source.')
+    parser.add_argument('--postcmd', default='', dest='postcmd', 
+                        help='command(s) to run after all other commands')
+    parser.add_argument('--funcscmd', default=None, dest='funcscmd', 
+                        help='code to find locations of all native functions '
+                             'in the shell language.')
+    parser.add_argument('--sourcer', default=None, dest='sourcer',
                         help='the source command in the target shell language, '
                              'default: source.')
     _SOURCE_FOREIGN_PARSER = parser
@@ -62,12 +72,17 @@ def source_foreign(args, stdin=None):
     """Sources a file written in a foreign shell language."""
     parser = _ensure_source_foreign_parser()
     ns = parser.parse_args(args)
-    prevcmd = '{0} {1}'.format(ns.sourcer, ' '.join(ns.filenames))
+    if ns.prevcmd is not None and not os.path.isfile(ns.files_or_code[0]):
+        ns.prevcmd = ' '.join(ns.files_or_code)
+    elif ns.prevcmd is None:
+        ns.prevcmd = '{0} {1}'.format(ns.sourcer, ' '.join(ns.files_or_code))
     foreign_shell_data.cache_clear()  # make sure that we don't get prev src
     fsenv, fsaliases = foreign_shell_data(shell=ns.shell, login=ns.login,
                             interactive=ns.interactive, envcmd=ns.envcmd, 
                             aliascmd=ns.aliascmd, extra_args=ns.extra_args,  
-                            safe=ns.safe, prevcmd=prevcmd)
+                            safe=ns.safe, prevcmd=ns.prevcmd, 
+                            postcmd=ns.postcmd, funcscmd=ns.funcscmd, 
+                            sourcer=ns.sourcer)
     # apply results
     env = builtins.__xonsh_env__
     denv = env.detype()
