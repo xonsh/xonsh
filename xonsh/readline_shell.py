@@ -195,7 +195,12 @@ class ReadlineShell(BaseShell, Cmd):
                     try:
                         line = input(self.prompt)
                     except EOFError:
-                        line = 'EOF'
+                        if builtins.__xonsh_env__.get("IGNOREEOF"):
+                            self.stdout.write('Use "exit" to leave the shell.'
+                                              '\n')
+                            line = ''
+                        else:
+                            line = 'EOF'
                     if inserter is not None:
                         readline.set_pre_input_hook(None)
                 else:
