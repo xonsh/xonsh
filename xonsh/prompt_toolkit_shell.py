@@ -3,7 +3,7 @@ import os
 import builtins
 from warnings import warn
 
-from prompt_toolkit.shortcuts import get_input
+from prompt_toolkit.shortcuts import prompt
 from prompt_toolkit.key_binding.manager import KeyBindingManager
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.filters import Condition
@@ -50,8 +50,10 @@ class PromptToolkitShell(BaseShell):
         self.vi_mode_enabled = builtins.__xonsh_env__.get('VI_MODE')
         self.key_bindings_manager = KeyBindingManager(
             enable_auto_suggest_bindings=True,
-            enable_search=True, enable_abort_and_exit_bindings=True,
-            enable_vi_mode=Condition(lambda cli: self.vi_mode_enabled))
+            enable_search=True, 
+            enable_abort_and_exit_bindings=True,
+            enable_vi_mode=Condition(lambda cli: self.vi_mode_enabled),
+            enable_open_in_editor=True)
         load_xonsh_bindings(self.key_bindings_manager)
 
     def __del__(self):
@@ -75,7 +77,7 @@ class PromptToolkitShell(BaseShell):
                 multicolumn = (completions_display == 'multi')
                 completer = None if completions_display == 'none' else self.pt_completer
                 self.vi_mode_enabled = builtins.__xonsh_env__.get('VI_MODE')
-                line = get_input(
+                line = prompt(
                     mouse_support=mouse_support,
                     auto_suggest=auto_suggest,
                     get_prompt_tokens=token_func,
