@@ -31,6 +31,7 @@ def setup_history():
 
 def teardown_history(history):
     """Tears down the history object."""
+    import builtins
     env = builtins.__xonsh_env__
     hsize = env.get('XONSH_HISTORY_SIZE')[0]
     hfile = env.get('XONSH_HISTORY_FILE')
@@ -47,12 +48,11 @@ class PromptToolkitShell(BaseShell):
         super().__init__(**kwargs)
         self.history = setup_history()
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx)
-        self.vi_mode_enabled = builtins.__xonsh_env__.get('VI_MODE')
         self.key_bindings_manager = KeyBindingManager(
             enable_auto_suggest_bindings=True,
             enable_search=True, 
             enable_abort_and_exit_bindings=True,
-            enable_vi_mode=Condition(lambda cli: self.vi_mode_enabled),
+            enable_vi_mode=Condition(lambda cli: builtins.__xonsh_env__.get('VI_MODE')),
             enable_open_in_editor=True)
         load_xonsh_bindings(self.key_bindings_manager)
 
@@ -76,7 +76,6 @@ class PromptToolkitShell(BaseShell):
                 completions_display = builtins.__xonsh_env__.get('COMPLETIONS_DISPLAY')
                 multicolumn = (completions_display == 'multi')
                 completer = None if completions_display == 'none' else self.pt_completer
-                self.vi_mode_enabled = builtins.__xonsh_env__.get('VI_MODE')
                 line = prompt(
                     mouse_support=mouse_support,
                     auto_suggest=auto_suggest,
