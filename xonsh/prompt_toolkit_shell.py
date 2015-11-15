@@ -6,6 +6,7 @@ from warnings import warn
 from prompt_toolkit.shortcuts import prompt
 from prompt_toolkit.key_binding.manager import KeyBindingManager
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.filters import Condition
 from pygments.token import Token
 from pygments.style import Style
 
@@ -30,6 +31,7 @@ def setup_history():
 
 def teardown_history(history):
     """Tears down the history object."""
+    import builtins
     env = builtins.__xonsh_env__
     hsize = env.get('XONSH_HISTORY_SIZE')[0]
     hfile = env.get('XONSH_HISTORY_FILE')
@@ -48,8 +50,10 @@ class PromptToolkitShell(BaseShell):
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx)
         self.key_bindings_manager = KeyBindingManager(
             enable_auto_suggest_bindings=True,
-            enable_open_in_editor=True,
-            enable_search=True, enable_abort_and_exit_bindings=True)
+            enable_search=True, 
+            enable_abort_and_exit_bindings=True,
+            enable_vi_mode=Condition(lambda cli: builtins.__xonsh_env__.get('VI_MODE')),
+            enable_open_in_editor=True)
         load_xonsh_bindings(self.key_bindings_manager)
 
     def __del__(self):
