@@ -61,22 +61,66 @@ is open to interpretation.
   unittest directly or write tests in an object-oriented style.
 * Test generators make more dots and the dots must flow!
 
+You can easily check for style issues, including some outright bugs such
+as mispelled variable names, using pylint. If you're using Anaconda you'll
+need to run "conda install pylint" once. You can easily run pylint on
+the edited files in your uncommited git change:
+
+    $ make lint
+
+If you want to lint the entire code base run:
+
+    $ make lint-all
+
 How to Test
 ================
-First, install nose: http://nose.readthedocs.org/en/latest/
+First, install nose: http://nose.readthedocs.org/en/latest/. Second, ensure
+your cwd is the root directory of the project (i.e., the one containing the
+.git directory).
 
 To perform all unit tests::
 
-    $ cd tests/
-    $ nosetests
+    $ make test-all
 
-This will recursively look through the currently directory, open up every file
-named test_* and run every function (or method) named test_*.
+Or, if you want to do it the hard way:
 
-Nosetests can also take file(s) as an argument. For example, to run just the
-lexer and parser module tests::
+    $ scripts/run-tests.xsh
 
-    $ nosetests test_lexer.py test_parser.py
+Or, if you want to do it the really hard way:
+
+    $ python3 -c 'import setup; setup.build_tables()'
+    $ XONSHRC='' nosetests
+
+If you're working on a change and haven't yet commited it you can run the
+associated tests with:
+
+    $ make test
+
+If you want to run specific tests you can specify the test names. For example
+to run test_parser:
+
+    $ python3 -c 'import setup; setup.build_tables()'
+    $ XONSHRC='' nosetests tests/test_parser.py
+
+If you want to run specific tests you can pass the test name to the
+scripts/run_tests.xsh script. The test name can be the bare test name
+(e.g., ``aliases``), include the ``test_`` prefix and ``.py`` suffix
+without the directory (e.g., ``test_aliases.py``), or the complete relative
+path (e.g., ``tests/test_aliases.py``). For example:
+
+    $ make test which=aliases
+
+Or by invoking the run_tests script directly:
+
+    $ scripts/run_tests.xsh aliases
+
+Note that you can pass multiple test names in the above examples:
+
+    $ make test which='aliases environ'
+
+Or:
+
+    $ scripts/run_tests.xsh aliases environ
 
 Happy testing!
 
@@ -247,7 +291,10 @@ When releasing xonsh, make sure to do the following items in order:
 --------------------
 Maintenance Tasks
 --------------------
-None currently.
+You can cleanup your local repository of transient files such as \*.pyc files
+created by unit testing by running:
+
+    $ make clean
 
 -----------------------
 Performing the Release

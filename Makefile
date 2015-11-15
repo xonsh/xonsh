@@ -1,5 +1,7 @@
 SHELL = /bin/sh
 
+which = edited # which tests to run
+
 all:
 	@echo "You must specifiy a make target."
 	@echo "Targets are:"
@@ -32,13 +34,14 @@ lint-all:
 # Test just the changed python files. It doesn't matter if "git add" has
 # already been done but obviously if you've already done "git commit" then
 # they're no longer consider changed. This should be run (along with "make
-# lint") before commiting a set of changes.
+# lint") before commiting a set of changes. You can also pass a list of test
+# names via a "which=name1 name2..." argument.
 test:
-	scripts/run_tests.sh -e
+	scripts/run_tests.xsh $(which)
 
 # Test all the python files.
 test-all:
-	scripts/run_tests.sh
+	scripts/run_tests.xsh all
 
 # Build the parser_table.py module. This is normally done by setup.py at
 # install time. This just makes it easy to create the parser module on the fly
