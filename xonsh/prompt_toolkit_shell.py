@@ -89,7 +89,10 @@ class PromptToolkitShell(BaseShell):
             except KeyboardInterrupt:
                 self.reset_buffer()
             except EOFError:
-                break
+                if builtins.__xonsh_env__.get("IGNOREEOF"):
+                    print('Use "exit" to leave the shell.')
+                else:
+                    break
 
     def _get_prompt_tokens_and_style(self):
         """Returns function to pass as prompt to prompt_toolkit."""
