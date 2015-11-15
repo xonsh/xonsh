@@ -149,7 +149,7 @@ DEFAULT_VALUES = {
     'PROMPT_TOOLKIT_STYLES': None,
     'PUSHD_MINUS': False,
     'PUSHD_SILENT': False,
-    'SHELL_TYPE': 'readline',
+    'SHELL_TYPE': 'prompt_toolkit' if ON_WINDOWS else 'readline',
     'SUGGEST_COMMANDS': True,
     'SUGGEST_MAX_NUM': 5,
     'SUGGEST_THRESHOLD': 3,
