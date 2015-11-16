@@ -78,41 +78,47 @@ First, install nose: http://nose.readthedocs.org/en/latest/. Second, ensure
 your cwd is the root directory of the project (i.e., the one containing the
 .git directory).
 
-To perform all unit tests::
+To perform all unit tests:
 
     $ make test-all
 
-Or, if you want to do it the hard way:
+Or, if if make isn't available to you (e.g., you're on MS-Windows) invoke
+the script directly:
 
     $ scripts/run-tests.xsh
 
-Or, if you want to do it the really hard way:
+Or, you can do it the hard way:
 
     $ python3 -c 'import setup; setup.build_tables()'
-    $ XONSHRC='' nosetests
+    $ env XONSHRC='' nosetests
 
-If you're working on a change and haven't yet commited it you can run the
-associated tests with:
+If you want to test the xonsh code that is installed on your system first
+cd into the ``tests`` directory then run the tests:
+
+    $ cd tests
+    $ env XONSHRC='' nosetests
+
+If you're working on a change and haven't yet committed it you can run the
+tests associated with the change. This does not require that the change
+include the unit test module. This will execute any unit tests that are
+part of the change as well as the unit tests for xonsh source modules in
+the change:
 
     $ make test
 
-If you want to run specific tests you can specify the test names. For example
-to run test_parser:
-
-    $ python3 -c 'import setup; setup.build_tables()'
-    $ XONSHRC='' nosetests tests/test_parser.py
-
-If you want to run specific tests you can pass the test name to the
-scripts/run_tests.xsh script. The test name can be the bare test name
-(e.g., ``aliases``), include the ``test_`` prefix and ``.py`` suffix
-without the directory (e.g., ``test_aliases.py``), or the complete relative
-path (e.g., ``tests/test_aliases.py``). For example:
+If you want to run specific tests you can specify the test names to
+execute. For example to run test_aliases:
 
     $ make test which=aliases
 
-Or by invoking the run_tests script directly:
+Or, if make isn't available run the test script directly:
 
     $ scripts/run_tests.xsh aliases
+
+The test name can be the bare test name (e.g., ``aliases``), include
+the ``test_`` prefix and ``.py`` suffix without the directory
+(e.g., ``test_aliases.py``), or the complete relative path (e.g.,
+``tests/test_aliases.py``). For example:
 
 Note that you can pass multiple test names in the above examples:
 
@@ -121,6 +127,12 @@ Note that you can pass multiple test names in the above examples:
 Or:
 
     $ scripts/run_tests.xsh aliases environ
+
+As before, if you want to test the xonsh code that is installed on your
+system first cd into the `tests` directory then run the tests:
+
+    $ cd tests
+    $ env XONSHRC='' nosetests test_aliases.py test_environ.py
 
 Happy testing!
 
