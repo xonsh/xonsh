@@ -129,7 +129,7 @@ else:
             obj.signal = abs(s)
             obj.returncode = None
         else:
-            obj.returncode = rtn
+            obj.returncode = s
             obj.signal = None
         _give_terminal_to(_shell_pgrp)  # give terminal back to the shell
 
