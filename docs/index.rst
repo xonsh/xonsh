@@ -230,7 +230,8 @@ Xonsh currently has the following external dependencies,
 
 *Documentation:*
 
-    #. Sphinx
+    #. `Sphinx <http://sphinx-doc.org/>` (which uses
+           `reStructuredText <http://sphinx-doc.org/rest.html>`)
     #. Numpydoc
     #. Cloud Sphinx Theme
 

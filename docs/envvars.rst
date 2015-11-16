@@ -116,7 +116,7 @@ applicable.
       - ``False``
       - Whether or not to supress directory stack manipulation output.
     * - SHELL_TYPE
-      - ``'readline'``
+      - ``'prompt_toolkit'`` if on Windows, otherwise ``'readline'``
       - Which shell is used. Currently two shell types are supported: ``'readline'`` that
         is backed by Python's readline module, and ``'prompt_toolkit'`` that uses 
         external library of the same name. For using prompt_toolkit shell you need 
