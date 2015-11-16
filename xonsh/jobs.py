@@ -45,7 +45,7 @@ if ON_WINDOWS:
         obj = job['obj']
         if job['bg']:
             return
-        while obj.returncode is None:
+        while (obj.returncode, obj.signal) == (None, None):
             try:
                 obj.wait(0.01)
             except TimeoutExpired:
@@ -124,6 +124,13 @@ else:
             print()  # get a newline because ^C will have been printed
         if obj.poll() is not None:
             builtins.__xonsh_active_job__ = None
+        # s is in terms of subprocess semantics, not os.W* format.
+        if s < 0:
+            obj.signal = abs(s)
+            obj.returncode = None
+        else:
+            obj.returncode = rtn
+            obj.signal = None
         _give_terminal_to(_shell_pgrp)  # give terminal back to the shell
 
 
