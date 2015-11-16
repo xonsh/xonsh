@@ -61,22 +61,78 @@ is open to interpretation.
   unittest directly or write tests in an object-oriented style.
 * Test generators make more dots and the dots must flow!
 
+You can easily check for style issues, including some outright bugs such
+as mispelled variable names, using pylint. If you're using Anaconda you'll
+need to run "conda install pylint" once. You can easily run pylint on
+the edited files in your uncommited git change:
+
+    $ make lint
+
+If you want to lint the entire code base run:
+
+    $ make lint-all
+
 How to Test
 ================
-First, install nose: http://nose.readthedocs.org/en/latest/
+First, install nose: http://nose.readthedocs.org/en/latest/. Second, ensure
+your cwd is the root directory of the project (i.e., the one containing the
+.git directory).
 
-To perform all unit tests::
+To perform all unit tests:
 
-    $ cd tests/
-    $ nosetests
+    $ make test-all
 
-This will recursively look through the currently directory, open up every file
-named test_* and run every function (or method) named test_*.
+Or, if if make isn't available to you (e.g., you're on MS-Windows) invoke
+the script directly:
 
-Nosetests can also take file(s) as an argument. For example, to run just the
-lexer and parser module tests::
+    $ scripts/run-tests.xsh
 
-    $ nosetests test_lexer.py test_parser.py
+Or, you can do it the hard way:
+
+    $ python3 -c 'import setup; setup.build_tables()'
+    $ env XONSHRC='' nosetests
+
+If you want to test the xonsh code that is installed on your system first
+cd into the ``tests`` directory then run the tests:
+
+    $ cd tests
+    $ env XONSHRC='' nosetests
+
+If you're working on a change and haven't yet committed it you can run the
+tests associated with the change. This does not require that the change
+include the unit test module. This will execute any unit tests that are
+part of the change as well as the unit tests for xonsh source modules in
+the change:
+
+    $ make test
+
+If you want to run specific tests you can specify the test names to
+execute. For example to run test_aliases:
+
+    $ make test which=aliases
+
+Or, if make isn't available run the test script directly:
+
+    $ scripts/run_tests.xsh aliases
+
+The test name can be the bare test name (e.g., ``aliases``), include
+the ``test_`` prefix and ``.py`` suffix without the directory
+(e.g., ``test_aliases.py``), or the complete relative path (e.g.,
+``tests/test_aliases.py``). For example:
+
+Note that you can pass multiple test names in the above examples:
+
+    $ make test which='aliases environ'
+
+Or:
+
+    $ scripts/run_tests.xsh aliases environ
+
+As before, if you want to test the xonsh code that is installed on your
+system first cd into the `tests` directory then run the tests:
+
+    $ cd tests
+    $ env XONSHRC='' nosetests test_aliases.py test_environ.py
 
 Happy testing!
 
@@ -247,7 +303,10 @@ When releasing xonsh, make sure to do the following items in order:
 --------------------
 Maintenance Tasks
 --------------------
-None currently.
+You can cleanup your local repository of transient files such as \*.pyc files
+created by unit testing by running:
+
+    $ make clean
 
 -----------------------
 Performing the Release
