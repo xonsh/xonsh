@@ -1,4 +1,5 @@
-"""Implements the xonsh history object"""
+# -*- coding: utf-8 -*-
+"""Implements the xonsh history object."""
 import argparse
 import functools
 import os

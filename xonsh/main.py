@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """The main xonsh script."""
 import os
 import sys

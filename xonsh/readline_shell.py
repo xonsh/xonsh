@@ -1,4 +1,5 @@
-"""The readline based xonsh shell"""
+# -*- coding: utf-8 -*-
+"""The readline based xonsh shell."""
 import os
 import sys
 import time
@@ -255,7 +256,7 @@ class ReadlineShell(BaseShell, Cmd):
 class ReadlineHistoryAdder(Thread):
 
     def __init__(self, wait_for_gc=True, *args, **kwargs):
-        """Thread responsible for adding inputs from history to the current readline 
+        """Thread responsible for adding inputs from history to the current readline
         instance. May wait for the history garbage collector to finish.
         """
         super(ReadlineHistoryAdder, self).__init__(*args, **kwargs)

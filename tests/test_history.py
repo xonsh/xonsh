@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Tests the xonsh history."""
 # pylint: disable=protected-access
 # TODO: Remove the following pylint directive when it correctly handles calls

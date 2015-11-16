@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Tests lazy json functionality."""
 from __future__ import unicode_literals, print_function
 from io import StringIO

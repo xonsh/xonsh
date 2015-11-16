@@ -1,4 +1,5 @@
-"""The prompt_toolkit based xonsh shell"""
+# -*- coding: utf-8 -*-
+"""The prompt_toolkit based xonsh shell."""
 import os
 import builtins
 from warnings import warn
@@ -50,7 +51,7 @@ class PromptToolkitShell(BaseShell):
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx)
         self.key_bindings_manager = KeyBindingManager(
             enable_auto_suggest_bindings=True,
-            enable_search=True, 
+            enable_search=True,
             enable_abort_and_exit_bindings=True,
             enable_vi_mode=Condition(lambda cli: builtins.__xonsh_env__.get('VI_MODE')),
             enable_open_in_editor=True)

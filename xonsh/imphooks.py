@@ -1,5 +1,7 @@
-"""Import hooks for importing xonsh source files. This module registers
-the hooks it defines when it is imported.
+# -*- coding: utf-8 -*-
+"""Import hooks for importing xonsh source files.
+
+This module registers the hooks it defines when it is imported.
 """
 import os
 import sys

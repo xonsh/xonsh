@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Hooks for Jupyter Xonsh Kernel."""
 import io
 import builtins

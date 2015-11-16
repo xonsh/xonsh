@@ -1,5 +1,8 @@
-"""The xonsh built-ins. Note that this module is named 'built_ins' so as
-not to be confused with the special Python builtins module.
+# -*- coding: utf-8 -*-
+"""The xonsh built-ins.
+
+Note that this module is named 'built_ins' so as not to be confused with the
+special Python builtins module.
 """
 import os
 import re
@@ -31,14 +34,14 @@ from xonsh.foreign_shells import load_foreign_aliases
 ENV = None
 BUILTINS_LOADED = False
 INSPECTOR = Inspector()
-AT_EXIT_SIGNALS = (signal.SIGABRT, signal.SIGFPE, signal.SIGILL, signal.SIGSEGV, 
+AT_EXIT_SIGNALS = (signal.SIGABRT, signal.SIGFPE, signal.SIGILL, signal.SIGSEGV,
                    signal.SIGTERM)
 if ON_POSIX:
     AT_EXIT_SIGNALS += (signal.SIGTSTP, signal.SIGQUIT, signal.SIGHUP)
 
 
 def resetting_signal_handle(sig, f):
-    """Sets a new signal handle that will automaticallly restore the old value 
+    """Sets a new signal handle that will automaticallly restore the old value
     once the new handle is finished.
     """
     oldh = signal.getsignal(sig)
@@ -319,9 +322,9 @@ def get_script_subproc_command(fname, args):
         raise PermissionError
 
     if ON_POSIX and not os.access(fname, os.R_OK):
-        # on some systems, some importnat programs (e.g. sudo) will have execute 
-        # permissions but not read/write permisions. This enables things with the SUID 
-        # set to be run. Needs to come before _is_binary() is called, because that 
+        # on some systems, some importnat programs (e.g. sudo) will have execute
+        # permissions but not read/write permisions. This enables things with the SUID
+        # set to be run. Needs to come before _is_binary() is called, because that
         # function tries to read the file.
         return [fname] + args
     elif _is_binary(fname):
@@ -612,7 +615,7 @@ def run_subproc(cmds, captured=True):
         if prev_proc.stdout not in (None, sys.stdout):
             output = prev_proc.stdout.read()
         if captured:
-            # to get proper encoding from Popen, we have to 
+            # to get proper encoding from Popen, we have to
             # use a byte stream and then implement universal_newlines here
             output = output.decode(encoding=ENV.get('XONSH_ENCODING'),
                                    errors=ENV.get('XONSH_ENCODING_ERRORS'))
@@ -681,7 +684,7 @@ def load_builtins(execer=None):
     builtins.aliases.update(load_foreign_aliases(issue_warning=False))
     # history needs to be started after env and aliases
     # would be nice to actually include non-detyped versions.
-    builtins.__xonsh_history__ = History(env=ENV.detype(), #aliases=builtins.aliases, 
+    builtins.__xonsh_history__ = History(env=ENV.detype(), #aliases=builtins.aliases,
                                          ts=[time.time(), None], locked=True)
     lastflush = lambda s=None, f=None: builtins.__xonsh_history__.flush(at_exit=True)
     atexit.register(lastflush)

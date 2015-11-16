@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Tests some tools function for prompt_toolkit integration."""
 from __future__ import unicode_literals, print_function
 
