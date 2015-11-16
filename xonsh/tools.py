@@ -757,3 +757,7 @@ def format_prompt_for_prompt_toolkit(prompt):
     token_names = [get_xonsh_color_names(c) for c in parts[::2]]
     cstyles = [_make_style(c) for c in token_names]
     return token_names, cstyles, strings
+
+
+def print_color(string):
+    print(string.format(**TERM_COLORS).replace('\001', '').replace('\002', ''))
