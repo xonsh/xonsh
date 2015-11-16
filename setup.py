@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# coding=utf-8
+# -*- coding: utf-8 -*-
 """The xonsh installer."""
 from __future__ import print_function, unicode_literals
 import os
@@ -33,6 +33,7 @@ CONDA = ("--conda" in sys.argv)
 if CONDA:
     sys.argv.remove("--conda")
 
+
 def clean_tables():
     for f in TABLES:
         if os.path.isfile(f):
@@ -51,13 +52,14 @@ def build_tables():
 
 def install_jupyter_hook(root=None):
     if not HAVE_JUPYTER:
-        print('Could not install Jupyter kernel spec, please install Jupyter/IPython.')
+        print('Could not install Jupyter kernel spec, please install '
+              'Jupyter/IPython.')
         return
     spec = {"argv": [sys.executable, "-m", "xonsh.jupyter_kernel",
                                      "-f", "{connection_file}"],
-            "display_name":"Xonsh",
-            "language":"xonsh",
-            "codemirror_mode":"shell",
+            "display_name": "Xonsh",
+            "language": "xonsh",
+            "codemirror_mode": "shell",
             }
     if CONDA:
         d = os.path.join(sys.prefix + '/share/jupyter/kernels/xonsh/')
@@ -73,7 +75,10 @@ def install_jupyter_hook(root=None):
             with open(os.path.join(d, 'kernel.json'), 'w') as f:
                 json.dump(spec, f, sort_keys=True)
             print('Installing Jupyter kernel spec...')
-            KernelSpecManager().install_kernel_spec(d, 'xonsh', user=('--user' in sys.argv), replace=True, prefix=root)
+            KernelSpecManager().install_kernel_spec(
+                d, 'xonsh', user=('--user' in sys.argv), replace=True,
+                prefix=root)
+
 
 class xinstall(install):
     def run(self):

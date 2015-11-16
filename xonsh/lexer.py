@@ -1,5 +1,7 @@
-"""
-Lexer for xonsh code, written using a hybrid of ``tokenize`` and PLY
+# -*- coding: utf-8 -*-
+"""Lexer for xonsh code.
+
+Written using a hybrid of ``tokenize`` and PLY.
 """
 import re
 import sys

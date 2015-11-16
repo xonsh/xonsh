@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Tools for inspecting Python objects.
 
 This file was forked from the IPython project:

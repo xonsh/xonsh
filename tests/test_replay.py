@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Tests the xonsh replay functionality."""
 from __future__ import unicode_literals, print_function
 import os

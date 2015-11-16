@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """The xonsh abstract syntax tree node."""
 # These are imported into our module namespace for the benefit of parser.py.
 # pylint: disable=unused-import

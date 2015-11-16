@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Completer implementation to use with prompt_toolkit."""
 from prompt_toolkit.completion import Completer, Completion
 

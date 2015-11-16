@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """History object for use with prompt_toolkit."""
 import os
 
