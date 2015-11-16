@@ -1,5 +1,6 @@
 """Implements the xonsh history object"""
 import argparse
+import functools
 import os
 import uuid
 import time
@@ -321,6 +322,7 @@ class History(object):
 #
 # Interface to History
 #
+@functools.lru_cache()
 def _create_parser():
     """Create a parser for the "history" command."""
     p = argparse.ArgumentParser(prog='history',
@@ -431,9 +433,9 @@ def _main(hist, args):
     if (args[0] == 'show' and len(args) > 1 and args[-1].startswith('-') and
             args[-1][1].isdigit()):
         args.insert(-1, '--')  # ensure parsing stops before a negative int
-    ns = _HIST_PARSER.parse_args(args)
+    ns = _create_parser().parse_args(args)
     if ns.action is None:  # apply default action
-        ns = _HIST_PARSER.parse_args(['show'] + args)
+        ns = _create_parser().parse_args(['show'] + args)
     _MAIN_ACTIONS[ns.action](ns, hist)
 
 
@@ -441,5 +443,3 @@ def main(args=None, stdin=None):
     """This is the history command entry point."""
     _ = stdin
     _main(builtins.__xonsh_history__, args)  # pylint: disable=no-member
-
-_HIST_PARSER = _create_parser()
