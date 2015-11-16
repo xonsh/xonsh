@@ -19,8 +19,6 @@ docs/_build/
 
 # temporary files from vim and emacs
 *~
-*#
-.#*
 *.swp
 *.swo
 
