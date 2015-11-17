@@ -40,9 +40,11 @@ for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 
 WS = set(' \t\r\n')
 
+
 def startswithlow(x, start, startlow=None):
-    """True if x starts with a string or its lowercase version. The lowercase
-    version may be optionally be provided.
+    """True if x starts with a string or its lowercase version.
+
+    The lowercase version may be optionally be provided.
     """
     if startlow is None:
         startlow = start.lower()
@@ -50,15 +52,19 @@ def startswithlow(x, start, startlow=None):
 
 
 def startswithnorm(x, start, startlow=None):
-    """True if x starts with a string s. Ignores its lowercase version, but
-    matches the API of startswithlow().
+    """True if x starts with a string s.
+
+    Ignores its lowercase version, but matches the API of startswithlow().
     """
+    _ = startlow
     return x.startswith(start)
 
 
 def _normpath(p):
-    """ Wraps os.normpath() to avoid removing './' at the beginning
-        and '/' at the end. On windows it does the same with backslases
+    """This is os.normpath() modified for the needs of xonsh.
+
+    This wraps os.normpath() to avoid removing './' at the beginning and '/' at
+    the end. On MS Windows it does the same with backslashes.
     """
     initial_dotslash = p.startswith(os.curdir + os.sep)
     initial_dotslash |= (ON_WINDOWS and p.startswith(os.curdir + os.altsep))
@@ -169,8 +175,11 @@ class Completer(object):
         return sorted(rtn)
 
     def find_and_complete(self, line, idx, ctx=None):
-        """Finds the completions given only the full code line and a current cursor
-        position. This represents an easier alternative to the complete() method.
+        """Find the completions for the current token.
+
+        Find the completions given only the full code line and a current cursor
+        position. This represents an easier alternative to the complete()
+        method.
 
         Parameters
         ----------
@@ -201,24 +210,29 @@ class Completer(object):
             endidx += 1
         endidx = endidx - 1 if line[endidx] in WS else endidx
         prefix = line[begidx:endidx+1]
-        return self.complete(prefix, line, begidx, endidx, ctx=ctx), begidx, endidx
+        return (self.complete(prefix, line, begidx, endidx, ctx=ctx),
+                begidx, endidx)
 
     def _add_env(self, paths, prefix):
+        _ = self
         if prefix.startswith('$'):
             csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
             startswither = startswithnorm if csc else startswithlow
             key = prefix[1:]
             keylow = key.lower()
-            paths.update({'$' + k for k in builtins.__xonsh_env__ if startswither(k, key, keylow)})
+            paths.update('$' + k for k in builtins.__xonsh_env__
+                         if startswither(k, key, keylow))
 
     def _add_dots(self, paths, prefix):
-        if prefix in {'', '.'}:
-            paths.update({'./', '../'})
-        if prefix == '..':
+        _ = self
+        if prefix in ('', '.'):
+            paths.update('./', '../')
+        elif prefix == '..':
             paths.add('../')
 
     def _add_cdpaths(self, paths, prefix):
         """Completes current prefix using CDPATH"""
+        _ = self
         env = builtins.__xonsh_env__
         csc = env.get('CASE_SENSITIVE_COMPLETIONS')
         for cdp in env.get('CDPATH'):
@@ -239,6 +253,7 @@ class Completer(object):
 
     def module_complete(self, prefix):
         """Completes a name of a module to import."""
+        _ = self
         prefixlow = prefix.lower()
         modules = set(sys.modules.keys())
         csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
@@ -290,15 +305,10 @@ class Completer(object):
         else:
             prefix = shlex.quote(prefix)
 
-        script = BASH_COMPLETE_SCRIPT.format(filename=fnme,
-                                             line=' '.join(shlex.quote(p) for p in splt),
-                                             comp_line=shlex.quote(line),
-                                             n=n,
-                                             func=func,
-                                             cmd=cmd,
-                                             end=endidx + 1,
-                                             prefix=prefix,
-                                             prev=shlex.quote(prev))
+        script = BASH_COMPLETE_SCRIPT.format(
+            filename=fnme, line=' '.join(shlex.quote(p) for p in splt),
+            comp_line=shlex.quote(line), n=n, func=func, cmd=cmd,
+            end=endidx + 1, prefix=prefix, prev=shlex.quote(prev))
         try:
             out = subprocess.check_output(['bash'],
                                           input=script,
@@ -312,19 +322,28 @@ class Completer(object):
         return rtn
 
     def _source_completions(self):
+        """Return list of source commands for Bash completion files.
+
+        Note that this silently ignores any file name in the completion list
+        that does not exist.
+        """
+        _ = self
         srcs = []
         for f in builtins.__xonsh_env__.get('BASH_COMPLETIONS'):
             if os.path.isfile(f):
-                # We need to "Unixify" Windows paths for Bash to understand
                 if ON_WINDOWS:
-                    f = RE_WIN_DRIVE.sub(lambda m: '/{0}/'.format(m.group(1).lower()), f).replace('\\', '/')
+                    # "Unixify" Windows paths for Bash to understand them.
+                    f = RE_WIN_DRIVE.sub(
+                        lambda m: '/{0}/'.format(m.group(1).lower()),
+                        f).replace('\\', '/')
                 srcs.append('source ' + f)
         return srcs
 
     def _load_bash_complete_funcs(self):
+        """Attempt to load any Bash completion functions we can find."""
         self.bash_complete_funcs = bcf = {}
         inp = self._source_completions()
-        if len(inp) == 0:
+        if not inp:  # no completion files could be found
             return
         inp.append('complete -p\n')
         out = subprocess.check_output(['bash'], input='\n'.join(inp),
@@ -339,8 +358,9 @@ class Completer(object):
             bcf[cmd] = m.group(1)
 
     def _load_bash_complete_files(self):
+        """Load the Bash completion files we can locate."""
         inp = self._source_completions()
-        if len(inp) == 0:
+        if not inp:  # no completion files could be found
             self.bash_complete_files = {}
             return
         if self.bash_complete_funcs:
@@ -362,6 +382,7 @@ class Completer(object):
 
     def attr_complete(self, prefix, ctx):
         """Complete attributes of an object."""
+        _ = self
         attrs = set()
         m = RE_ATTR.match(prefix)
         if m is None:
@@ -396,30 +417,32 @@ class Completer(object):
         return attrs
 
     def _all_commands(self):
+        """Possibly update our set of cached commands and return the set."""
         path = builtins.__xonsh_env__.get('PATH', [])
-        # did PATH change?
+        # Did PATH change?
         path_hash = hash(tuple(path))
         cache_valid = path_hash == self._path_checksum
         self._path_checksum = path_hash
-        # did aliases change?
+        # Did aliases change?
         al_hash = hash(tuple(sorted(builtins.aliases.keys())))
         self._alias_checksum = al_hash
         cache_valid = cache_valid and al_hash == self._alias_checksum
         pm = self._path_mtime
-        # did the contents of any directory in PATH change?
-        for d in filter(os.path.isdir, path):
+        # Did the contents of any directory in PATH change?
+        for d in (p for p in path if os.path.isdir(p)):
             m = os.stat(d).st_mtime
             if m > pm:
                 pm = m
                 cache_valid = False
-        self._path_mtime = pm
-        if cache_valid:
-            return self._cmds_cache
-        allcmds = set()
-        for d in filter(os.path.isdir, path):
-            allcmds |= set(os.listdir(d))
-        allcmds |= set(builtins.aliases.keys())
-        self._cmds_cache = frozenset(allcmds)
+
+        if not cache_valid:
+            self._path_mtime = pm
+            allcmds = set()
+            for d in (p for p in path if os.path.isdir(p)):
+                allcmds |= set(os.listdir(d))
+            allcmds |= set(builtins.aliases.keys())
+            self._cmds_cache = frozenset(allcmds)
+
         return self._cmds_cache
 
 
@@ -435,10 +458,7 @@ class ManCompleter(object):
         self._load_cached_options()
 
     def __del__(self):
-        try:
-            self._save_cached_options()
-        except Exception:
-            pass
+        self._save_cached_options()
 
     def option_complete(self, prefix, cmd):
         """Completes an option name, basing on content of man page."""
@@ -449,14 +469,14 @@ class ManCompleter(object):
                 manpage = subprocess.Popen(["man", cmd],
                                            stdout=subprocess.PIPE,
                                            stderr=subprocess.DEVNULL)
-                # This is a trick to get rid of reverse line feeds
+                # This is a trick to get rid of reverse line feeds.
                 text = subprocess.check_output(["col", "-b"],
                                                stdin=manpage.stdout)
                 text = text.decode('utf-8')
                 scraped_text = ' '.join(SCRAPE_RE.findall(text))
                 matches = INNER_OPTIONS_RE.findall(scraped_text)
                 self._options[cmd] = matches
-            except:
+            except Exception:  # pylint: disable=broad-except
                 return set()
         prefixlow = prefix.lower()
         return {s for s in self._options[cmd]
@@ -467,10 +487,13 @@ class ManCompleter(object):
         try:
             with open(OPTIONS_PATH, 'rb') as f:
                 self._options = pickle.load(f)
-        except:
+        except Exception:  # pylint: disable=broad-except
             self._options = {}
 
     def _save_cached_options(self):
         """Save completions to file."""
-        with open(OPTIONS_PATH, 'wb') as f:
-            pickle.dump(self._options, f)
+        try:
+            with open(OPTIONS_PATH, 'wb') as f:
+                pickle.dump(self._options, f)
+        except Exception:  # pylint: disable=broad-except
+            pass
