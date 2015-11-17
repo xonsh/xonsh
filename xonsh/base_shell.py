@@ -12,13 +12,13 @@ from xonsh.completer import Completer
 from xonsh.environ import multiline_prompt, format_prompt
 
 
-class TeeOut(object):
+class _TeeOut(object):
     """Tees stdout into the original sys.stdout and another buffer."""
 
-    def __init__(self, buf, *args, **kwargs):
-        _, _ = args, kwargs
+    def __init__(self, buf):
         self.buffer = buf
         self.stdout = sys.stdout
+        self.encoding = self.stdout.encoding
         sys.stdout = self
 
     def __del__(self):
@@ -38,14 +38,19 @@ class TeeOut(object):
         self.stdout.flush()
         self.buffer.flush()
 
+    def fileno(self):
+        """Tunnel fileno() calls."""
+        _ = self
+        return sys.stdout.fileno()
 
-class TeeErr(object):
+
+class _TeeErr(object):
     """Tees stderr into the original sys.stdout and another buffer."""
 
-    def __init__(self, buf, *args, **kwargs):
-        _, _ = args, kwargs
+    def __init__(self, buf):
         self.buffer = buf
         self.stderr = sys.stderr
+        self.encoding = self.stderr.encoding
         sys.stderr = self
 
     def __del__(self):
@@ -65,6 +70,11 @@ class TeeErr(object):
         self.stderr.flush()
         self.buffer.flush()
 
+    def fileno(self):
+        """Tunnel fileno() calls."""
+        _ = self
+        return sys.stderr.fileno()
+
 
 class Tee(io.StringIO):
     """Class that merges tee'd stdout and stderr into a single buffer.
@@ -76,8 +86,8 @@ class Tee(io.StringIO):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.stdout = TeeOut(self)
-        self.stderr = TeeErr(self)
+        self.stdout = _TeeOut(self)
+        self.stderr = _TeeErr(self)
 
     def __del__(self):
         del self.stdout, self.stderr
@@ -119,7 +129,7 @@ class BaseShell(object):
             return
         hist = builtins.__xonsh_history__  # pylint: disable=no-member
         ts1 = None
-        store_stdout = builtins.__xonsh_env__.get('XONSH_STORE_STDOUT', False)  # pylint: disable=no-member
+        store_stdout = builtins.__xonsh_env__.get('XONSH_STORE_STDOUT')  # pylint: disable=no-member
         tee = Tee() if store_stdout else io.StringIO()
         try:
             ts0 = time.time()
