@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Tests for the LimitedFileHistory class."""
 import os
 from tempfile import NamedTemporaryFile

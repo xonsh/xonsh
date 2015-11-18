@@ -1,6 +1,5 @@
-"""
-Job control for the xonsh shell.
-"""
+# -*- coding: utf-8 -*-
+"""Job control for the xonsh shell."""
 import os
 import sys
 import time

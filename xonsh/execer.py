@@ -1,4 +1,5 @@
-"""Implements the xonsh executer"""
+# -*- coding: utf-8 -*-
+"""Implements the xonsh executer."""
 import re
 import os
 import types

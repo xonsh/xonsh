@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""
-Python advanced pretty printer.  This pretty printer is intended to
-replace the old `pprint` python module which does not allow developers
-to provide their own pretty print callbacks.
+"""Python advanced pretty printer.
+
+This pretty printer is intended to replace the old `pprint` python module which
+does not allow developers to provide their own pretty print callbacks.
 
 This module is based on ruby's `prettyprint.rb` library by `Tanaka Akira`.
 

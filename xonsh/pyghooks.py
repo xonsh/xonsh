@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Hooks for pygments syntax highlighting."""
 from pygments.lexer import inherit, bygroups, using, this
 from pygments.token import Name, Generic, Keyword, Text, String

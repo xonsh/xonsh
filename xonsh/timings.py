@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Timing related functionality for the xonsh shell.
 
 The following time_it alias and Timer was forked from the IPython project:

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Key bindings for prompt_toolkit xonsh shell."""
 import builtins
 

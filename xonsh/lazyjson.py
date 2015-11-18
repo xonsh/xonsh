@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Implements a lazy JSON file class that wraps around json data."""
 import io
 import weakref

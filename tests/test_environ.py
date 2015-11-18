@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Tests the xonsh environment."""
 from __future__ import unicode_literals, print_function
 import os
