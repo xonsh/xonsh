@@ -122,15 +122,17 @@ else:
             print_one_job(act)
         elif os.WIFSIGNALED(s):
             print()  # get a newline because ^C will have been printed
-        if obj.poll() is not None:
-            builtins.__xonsh_active_job__ = None
-        # s is in terms of subprocess semantics, not os.W* format.
-        if s < 0:
-            obj.signal = abs(s)
+            obj.signal = os.WTERMSIG(s)
+            obj.coredump = os.WCOREDUMP(s)
             obj.returncode = None
         else:
-            obj.returncode = s
+            obj.returncode = os.WEXITSTATUS(s)
             obj.signal = None
+            obj.coredump = False
+
+        if obj.poll() is not None:
+            builtins.__xonsh_active_job__ = None
+
         _give_terminal_to(_shell_pgrp)  # give terminal back to the shell
 
 
