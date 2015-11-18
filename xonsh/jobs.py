@@ -45,7 +45,7 @@ if ON_WINDOWS:
         obj = job['obj']
         if job['bg']:
             return
-        while (obj.returncode, obj.signal) == (None, None):
+        while obj.returncode is None:
             try:
                 obj.wait(0.01)
             except TimeoutExpired:
