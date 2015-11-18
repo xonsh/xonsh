@@ -16,9 +16,12 @@ applicable.
     * - ANSICON
       - No default set
       - This is used on Windows to set the title, if available.
+    * - AUTO_CD
+      - ``False``
+      - Flag to enable changing to a directory by entering the dirname or full path only (without the `cd` command)
     * - AUTO_PUSHD
       - ``False``
-      - Flag for automatically pushing directorties onto the directory stack.
+      - Flag for automatically pushing directories onto the directory stack.
     * - AUTO_SUGGEST
       - ``True``
       - Enable automatic command suggestions based on history (like in fish shell).
@@ -71,6 +74,9 @@ applicable.
       - xonsh.environ.FORMATTER_DICT  
       - Dictionary containing variables to be used when formatting PROMPT and TITLE 
         see `Customizing the Prompt <tutorial.html#customizing-the-prompt>`_.
+    * - IGNOREEOF
+      - ``False``
+      - Prevents Ctrl-D from exiting the shell.
     * - INDENT
       - ``'    '``
       - Indentation string for multiline input
@@ -110,7 +116,7 @@ applicable.
       - ``False``
       - Whether or not to supress directory stack manipulation output.
     * - SHELL_TYPE
-      - ``'readline'``
+      - ``'prompt_toolkit'`` if on Windows, otherwise ``'readline'``
       - Which shell is used. Currently two shell types are supported: ``'readline'`` that
         is backed by Python's readline module, and ``'prompt_toolkit'`` that uses 
         external library of the same name. For using prompt_toolkit shell you need 
@@ -149,6 +155,9 @@ applicable.
       - The title text for the window in which xonsh is running. Formatted in the same 
         manner as PROMPT, 
         see `Customizing the Prompt <tutorial.html#customizing-the-prompt>`_.
+    * - VI_MODE
+      - ``False``
+      - Flag to enable ``vi_mode`` in the ``prompt_toolkit`` shell.  
     * - XDG_CONFIG_HOME
       - ``~/.config``
       - Open desktop standard configuration home dir. This is the same default as

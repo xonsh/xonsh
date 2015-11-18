@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Environment for the xonsh shell."""
 import os
 import re
@@ -12,11 +13,13 @@ from functools import wraps
 from collections import MutableMapping, MutableSequence, MutableSet, namedtuple
 
 from xonsh import __version__ as XONSH_VERSION
-from xonsh.tools import TERM_COLORS, ON_WINDOWS, ON_MAC, ON_LINUX, ON_ARCH, \
-    is_int, always_true, always_false, ensure_string, is_env_path, str_to_env_path, \
-    env_path_to_str, is_bool, to_bool, bool_to_str, is_history_tuple, to_history_tuple, \
-    history_tuple_to_str, is_float, string_types, is_string, DEFAULT_ENCODING, \
+from xonsh.tools import (
+    TERM_COLORS, ON_WINDOWS, ON_MAC, ON_LINUX, ON_ARCH, IS_ROOT,
+    always_true, always_false, ensure_string, is_env_path, str_to_env_path,
+    env_path_to_str, is_bool, to_bool, bool_to_str, is_history_tuple, to_history_tuple,
+    history_tuple_to_str, is_float, string_types, is_string, DEFAULT_ENCODING,
     is_completions_display_value, to_completions_display_value
+)
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
 
@@ -48,11 +51,13 @@ represent environment variable validation, conversion, detyping.
 """
 
 DEFAULT_ENSURERS = {
+    'AUTO_CD': (is_bool, to_bool, bool_to_str),
     'AUTO_SUGGEST': (is_bool, to_bool, bool_to_str),
     'BASH_COMPLETIONS': (is_env_path, str_to_env_path, env_path_to_str),
     'CASE_SENSITIVE_COMPLETIONS': (is_bool, to_bool, bool_to_str),
     re.compile('\w*DIRS'): (is_env_path, str_to_env_path, env_path_to_str),
     'COMPLETIONS_DISPLAY': (is_completions_display_value, to_completions_display_value, str),
+    'IGNOREEOF': (is_bool, to_bool, bool_to_str),
     'LC_COLLATE': (always_false, locale_convert('LC_COLLATE'), ensure_string),
     'LC_CTYPE': (always_false, locale_convert('LC_CTYPE'), ensure_string),
     'LC_MESSAGES': (always_false, locale_convert('LC_MESSAGES'), ensure_string),
@@ -67,6 +72,7 @@ DEFAULT_ENSURERS = {
     'XONSH_ENCODING_ERRORS': (is_string, ensure_string, ensure_string),
     'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
     'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
+    'VI_MODE': (is_bool, to_bool, bool_to_str),
 }
 
 #
@@ -83,7 +89,7 @@ def is_callable_default(x):
 
 DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
                   '{cwd}{branch_color}{curr_branch} '
-                  '{BOLD_BLUE}${NO_COLOR} ')
+                  '{BOLD_BLUE}{prompt_end}{NO_COLOR} ')
 DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
 
 @default_value
@@ -114,13 +120,14 @@ def xonshconfig(env):
 # to set them they have to do a copy and write them to the environment.
 # try to keep this sorted.
 DEFAULT_VALUES = {
+    'AUTO_CD': False,
     'AUTO_PUSHD': False,
     'AUTO_SUGGEST': True,
     'BASH_COMPLETIONS': (('/usr/local/etc/bash_completion',
                              '/opt/local/etc/profile.d/bash_completion.sh')
                         if ON_MAC else
                         ('/usr/share/bash-completion/bash_completion',
-                             '/usr/share/bash-completion/completions/git') 
+                             '/usr/share/bash-completion/completions/git')
                         if ON_ARCH else
                         ('/etc/bash_completion',
                              '/usr/share/bash-completion/completions/git')),
@@ -129,6 +136,7 @@ DEFAULT_VALUES = {
     'COMPLETIONS_DISPLAY': 'multi',
     'DIRSTACK_SIZE': 20,
     'FORCE_POSIX_PATHS': False,
+    'IGNOREEOF': False,
     'INDENT': '    ',
     'LC_CTYPE': locale.setlocale(locale.LC_CTYPE),
     'LC_COLLATE': locale.setlocale(locale.LC_COLLATE),
@@ -143,19 +151,20 @@ DEFAULT_VALUES = {
     'PROMPT_TOOLKIT_STYLES': None,
     'PUSHD_MINUS': False,
     'PUSHD_SILENT': False,
-    'SHELL_TYPE': 'readline',
+    'SHELL_TYPE': 'prompt_toolkit' if ON_WINDOWS else 'readline',
     'SUGGEST_COMMANDS': True,
     'SUGGEST_MAX_NUM': 5,
     'SUGGEST_THRESHOLD': 3,
     'TEEPTY_PIPE_DELAY': 0.01,
     'TITLE': DEFAULT_TITLE,
+    'VI_MODE': False,
     'XDG_CONFIG_HOME': os.path.expanduser(os.path.join('~', '.config')),
     'XDG_DATA_HOME': os.path.expanduser(os.path.join('~', '.local', 'share')),
     'XONSHCONFIG': xonshconfig,
     'XONSHRC': ((os.path.join(os.environ['ALLUSERSPROFILE'],
                               'xonsh', 'xonshrc'),
                 os.path.expanduser('~/.xonshrc')) if ON_WINDOWS
-               else ('/etc/xonshrc', os.path.expanduser('~/.xonshrc'))), 
+               else ('/etc/xonshrc', os.path.expanduser('~/.xonshrc'))),
     'XONSH_CONFIG_DIR': xonsh_config_dir,
     'XONSH_DATA_DIR': xonsh_data_dir,
     'XONSH_ENCODING': DEFAULT_ENCODING,
@@ -537,6 +546,7 @@ else:
 
 FORMATTER_DICT = dict(
     user=os.environ.get(USER, '<user>'),
+    prompt_end='#' if IS_ROOT else '$',
     hostname=socket.gethostname().split('.', 1)[0],
     cwd=_replace_home_cwd,
     cwd_dir=lambda: os.path.dirname(_replace_home_cwd()),

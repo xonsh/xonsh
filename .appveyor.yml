@@ -1,4 +1,4 @@
-version: 0.2.2.{build}
+version: 0.2.3.{build}
 os: Windows Server 2012 R2
 install:
 - C:\Python34\Scripts\pip install ply pyreadline nose prompt_toolkit

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Misc. xonsh tools.
 
 The following implementations were forked from the IPython project:
@@ -16,6 +17,7 @@ Implementations:
 * indent()
 
 """
+import ctypes
 import os
 import re
 import sys
@@ -24,7 +26,6 @@ import platform
 import traceback
 import threading
 import subprocess
-from itertools import zip_longest
 from contextlib import contextmanager
 from collections import OrderedDict, Sequence
 from warnings import warn
@@ -43,6 +44,7 @@ ON_MAC = (platform.system() == 'Darwin')
 ON_LINUX = (platform.system() == 'Linux')
 ON_ARCH = (platform.linux_distribution()[0] == 'arch')
 ON_POSIX = (os.name == 'posix')
+IS_ROOT = ctypes.windll.shell32.IsUserAnAdmin() != 0 if ON_WINDOWS else os.getuid() == 0
 
 VER_3_4 = (3, 4)
 VER_3_5 = (3, 5)
@@ -449,7 +451,7 @@ def on_main_thread():
 
 @contextmanager
 def swap(namespace, name, value, default=NotImplemented):
-    """Swaps a current variable name in a namespace for another value, and then 
+    """Swaps a current variable name in a namespace for another value, and then
     replaces it when the context is exited.
     """
     old = getattr(namespace, name, default)
@@ -590,11 +592,11 @@ CANON_HISTORY_UNITS = frozenset(['commands', 'files', 's', 'b'])
 
 HISTORY_UNITS = {
     '': ('commands', int),
-    'c': ('commands', int), 
-    'cmd': ('commands', int), 
-    'cmds': ('commands', int), 
-    'command': ('commands', int), 
-    'commands': ('commands', int), 
+    'c': ('commands', int),
+    'cmd': ('commands', int),
+    'cmds': ('commands', int),
+    'command': ('commands', int),
+    'commands': ('commands', int),
     'f': ('files', int),
     'files': ('files', int),
     's': ('s', float),

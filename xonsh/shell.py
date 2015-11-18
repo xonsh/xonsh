@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """The xonsh shell"""
 import builtins
 from warnings import warn

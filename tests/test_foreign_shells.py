@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Tests foreign shells."""
 from __future__ import unicode_literals, print_function
 import os
@@ -43,7 +44,7 @@ def test_foreign_bash_data():
     rcfile = os.path.join(os.path.dirname(__file__), 'bashrc.sh')
     try:
         obsenv, obsaliases = foreign_shell_data('bash', currenv=(),
-                                                extra_args=('--rcfile', rcfile), 
+                                                extra_args=('--rcfile', rcfile),
                                                 safe=False)
     except (subprocess.CalledProcessError, FileNotFoundError):
         raise SkipTest

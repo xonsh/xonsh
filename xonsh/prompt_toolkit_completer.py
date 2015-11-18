@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Completer implementation to use with prompt_toolkit."""
 from prompt_toolkit.completion import Completer, Completion
 
@@ -16,8 +17,8 @@ class PromptToolkitCompleter(Completer):
     def get_completions(self, document, complete_event):
         """Returns a generator for list of completions."""
 
-        #  Only generate completions when the user typed not a tab.
-        if not (document.char_before_cursor or '').isspace():
+        #  Only generate completions when the user hits tab.
+        if complete_event.completion_requested:
             line = document.current_line
             endidx = document.cursor_position_col
             space_pos = document.find_backwards(' ')

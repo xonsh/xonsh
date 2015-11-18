@@ -102,7 +102,8 @@ the following from the source directory,
 
     $ python setup.py install
 
-ArchLinux users can install xonsh with e.g. yaourt or aura:
+Arch Linux users can install xonsh from the Arch User Repository with e.g.
+yaourt or aura:
 
 **yaourt:**
 
@@ -229,7 +230,8 @@ Xonsh currently has the following external dependencies,
 
 *Documentation:*
 
-    #. Sphinx
+    #. `Sphinx <http://sphinx-doc.org/>` (which uses
+           `reStructuredText <http://sphinx-doc.org/rest.html>`)
     #. Numpydoc
     #. Cloud Sphinx Theme
 

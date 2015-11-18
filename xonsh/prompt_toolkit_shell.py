@@ -1,11 +1,13 @@
-"""The prompt_toolkit based xonsh shell"""
+# -*- coding: utf-8 -*-
+"""The prompt_toolkit based xonsh shell."""
 import os
 import builtins
 from warnings import warn
 
-from prompt_toolkit.shortcuts import get_input
+from prompt_toolkit.shortcuts import prompt
 from prompt_toolkit.key_binding.manager import KeyBindingManager
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.filters import Condition
 from pygments.token import Token
 from pygments.style import Style
 
@@ -30,6 +32,7 @@ def setup_history():
 
 def teardown_history(history):
     """Tears down the history object."""
+    import builtins
     env = builtins.__xonsh_env__
     hsize = env.get('XONSH_HISTORY_SIZE')[0]
     hfile = env.get('XONSH_HISTORY_FILE')
@@ -48,7 +51,10 @@ class PromptToolkitShell(BaseShell):
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx)
         self.key_bindings_manager = KeyBindingManager(
             enable_auto_suggest_bindings=True,
-            enable_search=True, enable_abort_and_exit_bindings=True)
+            enable_search=True,
+            enable_abort_and_exit_bindings=True,
+            enable_vi_mode=Condition(lambda cli: builtins.__xonsh_env__.get('VI_MODE')),
+            enable_open_in_editor=True)
         load_xonsh_bindings(self.key_bindings_manager)
 
     def __del__(self):
@@ -71,7 +77,7 @@ class PromptToolkitShell(BaseShell):
                 completions_display = builtins.__xonsh_env__.get('COMPLETIONS_DISPLAY')
                 multicolumn = (completions_display == 'multi')
                 completer = None if completions_display == 'none' else self.pt_completer
-                line = get_input(
+                line = prompt(
                     mouse_support=mouse_support,
                     auto_suggest=auto_suggest,
                     get_prompt_tokens=token_func,
@@ -88,7 +94,10 @@ class PromptToolkitShell(BaseShell):
             except KeyboardInterrupt:
                 self.reset_buffer()
             except EOFError:
-                break
+                if builtins.__xonsh_env__.get("IGNOREEOF"):
+                    print('Use "exit" to leave the shell.')
+                else:
+                    break
 
     def _get_prompt_tokens_and_style(self):
         """Returns function to pass as prompt to prompt_toolkit."""

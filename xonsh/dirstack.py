@@ -1,5 +1,5 @@
-"""Directory stack and associated utilities for the xonsh shell.
-"""
+# -*- coding: utf-8 -*-
+"""Directory stack and associated utilities for the xonsh shell."""
 import os
 import builtins
 from glob import iglob

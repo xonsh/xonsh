@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """The main xonsh script."""
 import os
 import sys
@@ -6,6 +7,7 @@ import signal
 import builtins
 import subprocess
 from argparse import ArgumentParser, Namespace
+from contextlib import contextmanager
 
 from xonsh import __version__
 from xonsh.shell import Shell
@@ -61,9 +63,9 @@ def _pprint_displayhook(value):
         pprint(value)
 
 
-def main(argv=None):
-    """Main entry point for xonsh cli."""
-    args = parser.parse_args()
+def premain(argv=None):
+    """Setup for main xonsh entry point, returns parsed arguments."""
+    args = parser.parse_args(argv)
     shell_kwargs = {'shell_type': args.shell_type}
     if args.norc:
         shell_kwargs['ctx'] = {}
@@ -74,6 +76,14 @@ def main(argv=None):
     if args.defines is not None:
         env.update([x.split('=', 1) for x in args.defines])
     env['XONSH_INTERACTIVE'] = False
+    return args
+
+
+def main(argv=None):
+    """Main entry point for xonsh cli."""
+    args = premain(argv)
+    env = builtins.__xonsh_env__
+    shell = builtins.__xonsh_shell__
     if args.command is not None:
         # run a single command and exit
         shell.default(args.command)
@@ -99,7 +109,24 @@ def main(argv=None):
         env['XONSH_INTERACTIVE'] = True
         ignore_sigtstp()
         shell.cmdloop()
+    postmain(args)
+
+
+def postmain(args=None):
+    """Teardown for main xonsh entry point, accepts parsed arguments."""
     del builtins.__xonsh_shell__
+
+
+@contextmanager
+def main_context(argv=None):
+    """Generator that runs pre- and post-main() functions. This has two iterations.
+    The first yields the shell. The second returns None but cleans
+    up the shell.
+    """
+    args = premain(argv)
+    yield builtins.__xonsh_shell__
+    postmain(args)
+
 
 
 if __name__ == '__main__':
