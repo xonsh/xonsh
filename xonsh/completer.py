@@ -122,14 +122,18 @@ class Completer(object):
         dot = '.'
         ctx = ctx or {}
         prefixlow = prefix.lower()
-        cmd = line.split(' ', 1)[0]
+
+        cmd_and_arg = line.split(' ', 1)
+        cmd = cmd_and_arg[0]
+        arg = '' if len(cmd_and_arg) == 1 else cmd_and_arg[1]
+
         csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
         startswither = startswithnorm if csc else startswithlow
         if begidx == 0:
             # the first thing we're typing; could be python or subprocess, so
             # anything goes.
             rtn = self.cmd_complete(prefix)
-        elif cmd in self.bash_complete_funcs:
+        elif not arg.startswith(('.', os.sep)) and cmd in self.bash_complete_funcs:
             rtn = set()
             for s in self.bash_complete(prefix, line, begidx, endidx):
                 if os.path.isdir(s.rstrip()):
@@ -308,7 +312,7 @@ class Completer(object):
             out = ''
 
         space = ' '
-        rtn = {s + space if s[-1:].isalnum() else s for s in out.splitlines()}
+        rtn = {s + space if s[-1].isalnum() else s for s in out.splitlines()}
         return rtn
 
     def _source_completions(self):
