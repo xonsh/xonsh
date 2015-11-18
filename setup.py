@@ -138,7 +138,6 @@ def main():
         platforms='Cross Platform',
         classifiers=['Programming Language :: Python :: 3'],
         packages=['xonsh'],
-        scripts=['scripts/xonsh'] if 'win' not in sys.platform else ['scripts/xonsh.bat'],
         cmdclass={'install': xinstall, 'sdist': xsdist},
         )
     if HAVE_SETUPTOOLS:
@@ -152,7 +151,8 @@ def main():
             }
         skw['cmdclass']['develop'] = xdevelop
     else:
-        skw['scripts'] = ['scripts/xonsh', 'scripts/xonsh.bat']
+        skw['scripts'] = ['scripts/xonsh'] if 'win' not in sys.platform else ['scripts/xonsh.bat'],
+
     setup(**skw)
 
 
