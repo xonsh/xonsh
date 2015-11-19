@@ -113,22 +113,20 @@ else:
         # the terminal when they receive SIGCONT from the "fg" command)
         if signal_to_send is not None:
             os.kill(obj.pid, signal_to_send)
-        _, s = os.waitpid(obj.pid, os.WUNTRACED)
-        if os.WIFSTOPPED(s):
+        _, wcode = os.waitpid(obj.pid, os.WUNTRACED)
+        if os.WIFSTOPPED(wcode):
             obj.done = True
             job['bg'] = True
             job['status'] = 'stopped'
             print()  # get a newline because ^Z will have been printed
             print_one_job(act)
-        elif os.WIFSIGNALED(s):
+        elif os.WIFSIGNALED(wcode):
             print()  # get a newline because ^C will have been printed
-            obj.signal = os.WTERMSIG(s)
-            obj.coredump = os.WCOREDUMP(s)
+            obj.signal = (os.WTERMSIG(wcode), os.WCOREDUMP(wcode))
             obj.returncode = None
         else:
-            obj.returncode = os.WEXITSTATUS(s)
+            obj.returncode = os.WEXITSTATUS(wcode)
             obj.signal = None
-            obj.coredump = False
 
         if obj.poll() is not None:
             builtins.__xonsh_active_job__ = None
