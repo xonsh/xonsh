@@ -442,6 +442,5 @@ def _wcode_to_popen(code):
     elif os.WIFSIGNALED(code):
         return -1 * os.WTERMSIG(code)
     else:
-        # Can this happen?
-        return None
-        #raise ValueError("Invalid os.wait code: {}".format(code))
+        # Can this happen? Let's find out. Returning None is not an option.
+        raise ValueError("Invalid os.wait code: {}".format(code))
