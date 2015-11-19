@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """The prompt_toolkit based xonsh shell."""
+import os
+import sys
 import builtins
 from warnings import warn
 
@@ -7,7 +9,8 @@ from prompt_toolkit.shortcuts import prompt
 from prompt_toolkit.key_binding.manager import KeyBindingManager
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.layout.lexers import PygmentsLexer
-from prompt_toolkit.filters import Condition
+from prompt_toolkit.filters import Condition, IsMultiline
+from prompt_toolkit.keys import Keys
 from pygments.style import Style
 from pygments.styles.default import DefaultStyle
 from pygments.token import (Keyword, Name, Comment, String, Error, Number,
@@ -60,6 +63,7 @@ class PromptToolkitShell(BaseShell):
             enable_open_in_editor=True)
         load_xonsh_bindings(self.key_bindings_manager)
 
+
     def __del__(self):
         if self.history is not None:
             teardown_history(self.history)
@@ -72,14 +76,22 @@ class PromptToolkitShell(BaseShell):
         while not builtins.__xonsh_exit__:
             try:
                 token_func, style_cls = self._get_prompt_tokens_and_style()
-                mouse_support = builtins.__xonsh_env__.get('MOUSE_SUPPORT')
-                if builtins.__xonsh_env__.get('AUTO_SUGGEST'):
+                env = builtins.__xonsh_env__
+                mouse_support = env.get('MOUSE_SUPPORT')
+                if env.get('AUTO_SUGGEST'):
                     auto_suggest = _auto_suggest
                 else:
                     auto_suggest = None
-                completions_display = builtins.__xonsh_env__.get('COMPLETIONS_DISPLAY')
+                completions_display = env.get('COMPLETIONS_DISPLAY')
                 multicolumn = (completions_display == 'multi')
                 completer = None if completions_display == 'none' else self.pt_completer
+                @self.key_bindings_manager.registry.add_binding(Keys.F10, filter=IsMultiline())
+                def _(event):
+                    b = event.cli.current_buffer
+                    if b.document.char_before_cursor == ':':
+                        b.document = b.document.insert_after('\n'+env.get('INDENT'))
+                        b.cursor_down()
+
                 line = prompt(
                     mouse_support=mouse_support,
                     auto_suggest=auto_suggest,
@@ -88,8 +100,13 @@ class PromptToolkitShell(BaseShell):
                     completer=completer,
                     lexer=PygmentsLexer(XonshLexer),
                     history=self.history,
+                    multiline=True,
                     key_bindings_registry=self.key_bindings_manager.registry,
                     display_completions_in_columns=multicolumn)
+
+
+
+                    
                 if not line:
                     self.emptyline()
                 else:
