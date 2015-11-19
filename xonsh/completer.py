@@ -40,9 +40,91 @@ for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 
 WS = set(' \t\r\n')
 
+
+def _add_env(paths, prefix):
+    if prefix.startswith('$'):
+        csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
+        startswither = startswithnorm if csc else startswithlow
+        key = prefix[1:]
+        keylow = key.lower()
+        paths.update('$' + k for k in builtins.__xonsh_env__
+                     if startswither(k, key, keylow))
+
+
+def _add_dots(paths, prefix):
+    if prefix in ('', '.'):
+        paths.update('./', '../')
+    elif prefix == '..':
+        paths.add('../')
+
+
+def _add_cdpaths(paths, prefix):
+    """Completes current prefix using CDPATH"""
+    env = builtins.__xonsh_env__
+    csc = env.get('CASE_SENSITIVE_COMPLETIONS')
+    for cdp in env.get('CDPATH'):
+        test_glob = os.path.join(cdp, prefix) + '*'
+        for s in iglobpath(test_glob, ignore_case=(not csc)):
+            if os.path.isdir(s):
+                paths.add(os.path.basename(s))
+
+
+def _path_complete(prefix, cdpath=False):
+    """Completes based on a path name."""
+    space = ' '  # intern some strings for faster appending
+    slash = '/'
+    tilde = '~'
+    paths = set()
+    csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
+    if prefix.startswith("'") or prefix.startswith('"'):
+        prefix = prefix[1:]
+    for s in iglobpath(prefix + '*', ignore_case=(not csc)):
+        if space in s:
+            s = repr(s + (slash if os.path.isdir(s) else ''))
+        else:
+            s = s + (slash if os.path.isdir(s) else space)
+        paths.add(s)
+    if tilde in prefix:
+        home = os.path.expanduser(tilde)
+        paths = {s.replace(home, tilde) for s in paths}
+    _add_env(paths, prefix)
+    _add_dots(paths, prefix)
+    if cdpath:
+        _add_cdpaths(paths, prefix)
+    return {_normpath(s) for s in paths}
+
+
+def _module_complete(prefix):
+    """Completes a name of a module to import."""
+    prefixlow = prefix.lower()
+    modules = set(sys.modules.keys())
+    csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
+    startswither = startswithnorm if csc else startswithlow
+    return {s for s in modules if startswither(s, prefix, prefixlow)}
+
+
+def _source_bash_completions():
+    """Return list of source commands for Bash completion files.
+
+    Note that this silently ignores any file name in the completion list
+    that does not exist.
+    """
+    srcs = []
+    for f in builtins.__xonsh_env__.get('BASH_COMPLETIONS'):
+        if os.path.isfile(f):
+            if ON_WINDOWS:
+                # "Unixify" Windows paths for Bash to understand them.
+                f = RE_WIN_DRIVE.sub(
+                    lambda m: '/{0}/'.format(m.group(1).lower()),
+                    f).replace('\\', '/')
+            srcs.append('source ' + f)
+    return srcs
+
+
 def startswithlow(x, start, startlow=None):
-    """True if x starts with a string or its lowercase version. The lowercase
-    version may be optionally be provided.
+    """True if x starts with a string or its lowercase version.
+
+    The lowercase version defaults to start.lower() but can be overridden.
     """
     if startlow is None:
         startlow = start.lower()
@@ -50,15 +132,19 @@ def startswithlow(x, start, startlow=None):
 
 
 def startswithnorm(x, start, startlow=None):
-    """True if x starts with a string s. Ignores its lowercase version, but
-    matches the API of startswithlow().
+    """True if x starts with a string s.
+
+    Ignores its lowercase version, but matches the API of startswithlow().
     """
+    _ = startlow
     return x.startswith(start)
 
 
 def _normpath(p):
-    """ Wraps os.normpath() to avoid removing './' at the beginning
-        and '/' at the end. On windows it does the same with backslases
+    """This is os.normpath() modified for the needs of xonsh.
+
+    This wraps os.normpath() to avoid removing './' at the beginning and '/' at
+    the end. On MS Windows it does the same with backslashes.
     """
     initial_dotslash = p.startswith(os.curdir + os.sep)
     initial_dotslash |= (ON_WINDOWS and p.startswith(os.curdir + os.altsep))
@@ -136,7 +222,7 @@ class Completer(object):
                     s = s.rstrip() + slash
                 rtn.add(s)
             if len(rtn) == 0:
-                rtn = self.path_complete(prefix)
+                rtn = _path_complete(prefix)
             return sorted(rtn)
         elif prefix.startswith('${') or prefix.startswith('@('):
             # python mode explicitly
@@ -146,10 +232,10 @@ class Completer(object):
         elif cmd not in ctx:
             if cmd == 'import' and begidx == len('import '):
                 # completing module to import
-                return sorted(self.module_complete(prefix))
+                return sorted(_module_complete(prefix))
             if cmd in self._all_commands():
                 # subproc mode; do path completions
-                return sorted(self.path_complete(prefix, cdpath=True))
+                return sorted(_path_complete(prefix, cdpath=True))
             else:
                 # if we're here, could be anything
                 rtn = set()
@@ -165,12 +251,15 @@ class Completer(object):
         rtn |= {s for s in dir(builtins) if startswither(s, prefix, prefixlow)}
         rtn |= {s + space for s in builtins.aliases
                 if startswither(s, prefix, prefixlow)}
-        rtn |= self.path_complete(prefix)
+        rtn |= _path_complete(prefix)
         return sorted(rtn)
 
     def find_and_complete(self, line, idx, ctx=None):
-        """Finds the completions given only the full code line and a current cursor
-        position. This represents an easier alternative to the complete() method.
+        """Find the completions for the current token.
+
+        Find the completions given only the full code line and a current cursor
+        position. This represents an easier alternative to the complete()
+        method.
 
         Parameters
         ----------
@@ -201,31 +290,8 @@ class Completer(object):
             endidx += 1
         endidx = endidx - 1 if line[endidx] in WS else endidx
         prefix = line[begidx:endidx+1]
-        return self.complete(prefix, line, begidx, endidx, ctx=ctx), begidx, endidx
-
-    def _add_env(self, paths, prefix):
-        if prefix.startswith('$'):
-            csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
-            startswither = startswithnorm if csc else startswithlow
-            key = prefix[1:]
-            keylow = key.lower()
-            paths.update({'$' + k for k in builtins.__xonsh_env__ if startswither(k, key, keylow)})
-
-    def _add_dots(self, paths, prefix):
-        if prefix in {'', '.'}:
-            paths.update({'./', '../'})
-        if prefix == '..':
-            paths.add('../')
-
-    def _add_cdpaths(self, paths, prefix):
-        """Completes current prefix using CDPATH"""
-        env = builtins.__xonsh_env__
-        csc = env.get('CASE_SENSITIVE_COMPLETIONS')
-        for cdp in env.get('CDPATH'):
-            test_glob = os.path.join(cdp, prefix) + '*'
-            for s in iglobpath(test_glob, ignore_case=(not csc)):
-                if os.path.isdir(s):
-                    paths.add(os.path.basename(s))
+        return (self.complete(prefix, line, begidx, endidx, ctx=ctx),
+                begidx, endidx)
 
     def cmd_complete(self, cmd):
         """Completes a command name based on what is on the $PATH"""
@@ -236,38 +302,6 @@ class Completer(object):
         return {s + space
                 for s in self._all_commands()
                 if startswither(s, cmd, cmdlow)}
-
-    def module_complete(self, prefix):
-        """Completes a name of a module to import."""
-        prefixlow = prefix.lower()
-        modules = set(sys.modules.keys())
-        csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
-        startswither = startswithnorm if csc else startswithlow
-        return {s for s in modules if startswither(s, prefix, prefixlow)}
-
-    def path_complete(self, prefix, cdpath=False):
-        """Completes based on a path name."""
-        space = ' '  # intern some strings for faster appending
-        slash = '/'
-        tilde = '~'
-        paths = set()
-        csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
-        if prefix.startswith("'") or prefix.startswith('"'):
-            prefix = prefix[1:]
-        for s in iglobpath(prefix + '*', ignore_case=(not csc)):
-            if space in s:
-                s = repr(s + (slash if os.path.isdir(s) else ''))
-            else:
-                s = s + (slash if os.path.isdir(s) else space)
-            paths.add(s)
-        if tilde in prefix:
-            home = os.path.expanduser(tilde)
-            paths = {s.replace(home, tilde) for s in paths}
-        self._add_env(paths, prefix)
-        self._add_dots(paths, prefix)
-        if cdpath:
-            self._add_cdpaths(paths, prefix)
-        return {_normpath(s) for s in paths}
 
     def bash_complete(self, prefix, line, begidx, endidx):
         """Attempts BASH completion."""
@@ -290,15 +324,10 @@ class Completer(object):
         else:
             prefix = shlex.quote(prefix)
 
-        script = BASH_COMPLETE_SCRIPT.format(filename=fnme,
-                                             line=' '.join(shlex.quote(p) for p in splt),
-                                             comp_line=shlex.quote(line),
-                                             n=n,
-                                             func=func,
-                                             cmd=cmd,
-                                             end=endidx + 1,
-                                             prefix=prefix,
-                                             prev=shlex.quote(prev))
+        script = BASH_COMPLETE_SCRIPT.format(
+            filename=fnme, line=' '.join(shlex.quote(p) for p in splt),
+            comp_line=shlex.quote(line), n=n, func=func, cmd=cmd,
+            end=endidx + 1, prefix=prefix, prev=shlex.quote(prev))
         try:
             out = subprocess.check_output(['bash'],
                                           input=script,
@@ -311,20 +340,11 @@ class Completer(object):
         rtn = {s + space if s[-1:].isalnum() else s for s in out.splitlines()}
         return rtn
 
-    def _source_completions(self):
-        srcs = []
-        for f in builtins.__xonsh_env__.get('BASH_COMPLETIONS'):
-            if os.path.isfile(f):
-                # We need to "Unixify" Windows paths for Bash to understand
-                if ON_WINDOWS:
-                    f = RE_WIN_DRIVE.sub(lambda m: '/{0}/'.format(m.group(1).lower()), f).replace('\\', '/')
-                srcs.append('source ' + f)
-        return srcs
-
     def _load_bash_complete_funcs(self):
+        """Attempt to load any Bash completion functions we can find."""
         self.bash_complete_funcs = bcf = {}
-        inp = self._source_completions()
-        if len(inp) == 0:
+        inp = _source_bash_completions()
+        if not inp:  # no completion files could be found
             return
         inp.append('complete -p\n')
         out = subprocess.check_output(['bash'], input='\n'.join(inp),
@@ -339,8 +359,9 @@ class Completer(object):
             bcf[cmd] = m.group(1)
 
     def _load_bash_complete_files(self):
-        inp = self._source_completions()
-        if len(inp) == 0:
+        """Load the Bash completion files we can locate."""
+        inp = _source_bash_completions()
+        if not inp:  # no completion files could be found
             self.bash_complete_files = {}
             return
         if self.bash_complete_funcs:
@@ -362,6 +383,7 @@ class Completer(object):
 
     def attr_complete(self, prefix, ctx):
         """Complete attributes of an object."""
+        _ = self
         attrs = set()
         m = RE_ATTR.match(prefix)
         if m is None:
@@ -396,27 +418,30 @@ class Completer(object):
         return attrs
 
     def _all_commands(self):
+        """Possibly update our set of cached commands and return the set."""
         path = builtins.__xonsh_env__.get('PATH', [])
-        # did PATH change?
+        # Did PATH change?
         path_hash = hash(tuple(path))
         cache_valid = path_hash == self._path_checksum
         self._path_checksum = path_hash
-        # did aliases change?
+        # Did aliases change?
         al_hash = hash(tuple(sorted(builtins.aliases.keys())))
         self._alias_checksum = al_hash
         cache_valid = cache_valid and al_hash == self._alias_checksum
         pm = self._path_mtime
-        # did the contents of any directory in PATH change?
-        for d in filter(os.path.isdir, path):
+        # Did the contents of any directory in PATH change?
+        for d in (p for p in path if os.path.isdir(p)):
             m = os.stat(d).st_mtime
             if m > pm:
                 pm = m
                 cache_valid = False
-        self._path_mtime = pm
+
         if cache_valid:
             return self._cmds_cache
+
+        self._path_mtime = pm
         allcmds = set()
-        for d in filter(os.path.isdir, path):
+        for d in (p for p in path if os.path.isdir(p)):
             allcmds |= set(os.listdir(d))
         allcmds |= set(builtins.aliases.keys())
         self._cmds_cache = frozenset(allcmds)
@@ -430,15 +455,13 @@ INNER_OPTIONS_RE = re.compile(r'-\w|--[a-z0-9-]+')
 
 class ManCompleter(object):
     """Helper class that loads completions derived from man pages."""
+    # pylint: disable=too-few-public-methods
 
     def __init__(self):
         self._load_cached_options()
 
     def __del__(self):
-        try:
-            self._save_cached_options()
-        except Exception:
-            pass
+        self._save_cached_options()
 
     def option_complete(self, prefix, cmd):
         """Completes an option name, basing on content of man page."""
@@ -449,14 +472,14 @@ class ManCompleter(object):
                 manpage = subprocess.Popen(["man", cmd],
                                            stdout=subprocess.PIPE,
                                            stderr=subprocess.DEVNULL)
-                # This is a trick to get rid of reverse line feeds
+                # This is a trick to get rid of reverse line feeds.
                 text = subprocess.check_output(["col", "-b"],
                                                stdin=manpage.stdout)
                 text = text.decode('utf-8')
                 scraped_text = ' '.join(SCRAPE_RE.findall(text))
                 matches = INNER_OPTIONS_RE.findall(scraped_text)
                 self._options[cmd] = matches
-            except:
+            except Exception:  # pylint: disable=broad-except
                 return set()
         prefixlow = prefix.lower()
         return {s for s in self._options[cmd]
@@ -467,10 +490,13 @@ class ManCompleter(object):
         try:
             with open(OPTIONS_PATH, 'rb') as f:
                 self._options = pickle.load(f)
-        except:
+        except Exception:  # pylint: disable=broad-except
             self._options = {}
 
     def _save_cached_options(self):
         """Save completions to file."""
-        with open(OPTIONS_PATH, 'wb') as f:
-            pickle.dump(self._options, f)
+        try:
+            with open(OPTIONS_PATH, 'wb') as f:
+                pickle.dump(self._options, f)
+        except Exception:  # pylint: disable=broad-except
+            pass
