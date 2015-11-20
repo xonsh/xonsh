@@ -100,10 +100,9 @@ else:
             return
         job = builtins.__xonsh_all_jobs__[act]
         obj = job['obj']
-        if job['bg']:
+        if job['bg'] and job['status'] == 'running':
             return
         pgrp = job['pgrp']
-        obj.done = False
 
         # give the terminal over to the fg process
         _give_terminal_to(pgrp)
@@ -111,10 +110,16 @@ else:
         # (this hook  was added because vim, emacs, etc, seem to need to have
         # the terminal when they receive SIGCONT from the "fg" command)
         if signal_to_send is not None:
+            if signal_to_send == signal.SIGCONT:
+                job['status'] = 'running'
+
             os.kill(obj.pid, signal_to_send)
+            if job['bg']:
+                _give_terminal_to(_shell_pgrp)
+                return
+
         _, s = os.waitpid(obj.pid, os.WUNTRACED)
         if os.WIFSTOPPED(s):
-            obj.done = True
             job['bg'] = True
             job['status'] = 'stopped'
             print()  # get a newline because ^Z will have been printed
@@ -276,6 +281,6 @@ def bg(args, stdin=None):
     builtins.__xonsh_active_job__ = act
     job = builtins.__xonsh_all_jobs__[act]
     job['bg'] = True
-    job['status'] = 'running'
+    # When the SIGCONT is sent job['status'] is set to running.
     print_one_job(act)
     wait_for_active_job(_continue(job['obj']))
