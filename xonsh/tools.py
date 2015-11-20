@@ -758,3 +758,11 @@ def format_prompt_for_prompt_toolkit(prompt):
     token_names = [get_xonsh_color_names(c) for c in parts[::2]]
     cstyles = [_make_style(c) for c in token_names]
     return token_names, cstyles, strings
+
+
+def print_color(string, file=sys.stdout):
+    """Print strings that contain xonsh.tools.TERM_COLORS values. By default
+    `sys.stdout` is used as the output stream but an alternate can be specified
+    by the `file` keyword argument."""
+    print(string.format(**TERM_COLORS).replace('\001', '').replace('\002', ''),
+          file=file)
