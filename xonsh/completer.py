@@ -28,6 +28,8 @@ XONSH_TOKENS = {
     '...'
 }
 
+COMPLETION_SKIP_TOKENS = {'sudo', 'time'}
+
 BASH_COMPLETE_SCRIPT = """source {filename}
 COMP_WORDS=({line})
 COMP_LINE={comp_line}
@@ -123,6 +125,11 @@ class Completer(object):
         ctx = ctx or {}
         prefixlow = prefix.lower()
         cmd = line.split(' ', 1)[0]
+        if cmd in COMPLETION_SKIP_TOKENS:
+            begidx -= len(cmd)+1
+            endidx -= len(cmd)+1
+            cmd = line.split(' ', 2)[1]
+            line = line.split(' ', 1)[1]
         csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
         startswither = startswithnorm if csc else startswithlow
         if begidx == 0:
