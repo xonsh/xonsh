@@ -143,8 +143,6 @@ class Completer(object):
             if len(rtn) == 0:
                 rtn = self.path_complete(prefix)
             return sorted(rtn)
-#        elif prefix.startswith('sudo '):
-#            rtn = self.cmd_complete(prefixe[5:], begidx,endidx)
         elif prefix.startswith('${') or prefix.startswith('@('):
             # python mode explicitly
             rtn = set()
