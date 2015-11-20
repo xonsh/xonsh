@@ -123,6 +123,11 @@ class Completer(object):
         ctx = ctx or {}
         prefixlow = prefix.lower()
         cmd = line.split(' ', 1)[0]
+        if cmd == 'sudo':
+            cmd = line.split(' ', 2)[1]
+            line = line.split(' ', 1)[1]
+            begidx -= 5
+            endidx -= 5
         csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
         startswither = startswithnorm if csc else startswithlow
         if begidx == 0:
@@ -138,6 +143,8 @@ class Completer(object):
             if len(rtn) == 0:
                 rtn = self.path_complete(prefix)
             return sorted(rtn)
+#        elif prefix.startswith('sudo '):
+#            rtn = self.cmd_complete(prefixe[5:], begidx,endidx)
         elif prefix.startswith('${') or prefix.startswith('@('):
             # python mode explicitly
             rtn = set()
