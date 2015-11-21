@@ -222,7 +222,9 @@ class History(object):
         self._cond = Condition()
         self._len = 0
         self.last_cmd_out = None
+        # The exit status
         self.last_cmd_rtn = None
+        self.last_cmd_err = None   # See xonsh.built_ins.LastCmdErrorInfo
         meta['cmds'] = []
         meta['sessionid'] = str(sid)
         with open(self.filename, 'w', newline='\n') as f:

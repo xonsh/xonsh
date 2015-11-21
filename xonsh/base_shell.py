@@ -11,6 +11,7 @@ from xonsh.tools import XonshError, escape_windows_title_string, ON_WINDOWS, \
     print_exception
 from xonsh.completer import Completer
 from xonsh.environ import multiline_prompt, format_prompt
+from xonsh.built_ins import LastCmdErrorInfo
 
 
 class TeeOut(object):
@@ -131,10 +132,12 @@ class BaseShell(object):
             print(e.args[0], file=sys.stderr)
             if hist.last_cmd_rtn is None:
                 hist.last_cmd_rtn = 1  # return code for failure
-        except Exception:
+                hist.last_cmd_err = LastCmdErrorInfo(exception=e, signal=None)
+        except Exception as e:
             print_exception()
             if hist.last_cmd_rtn is None:
                 hist.last_cmd_rtn = 1  # return code for failure
+                hist.last_cmd_err = LastCmdErrorInfo(exception=e, signal=None)
         finally:
             ts1 = ts1 or time.time()
             self._append_history(inp=src, ts=[ts0, ts1], tee_out=tee.getvalue())
@@ -216,6 +219,7 @@ class BaseShell(object):
     def _append_history(self, tee_out=None, **info):
         hist = builtins.__xonsh_history__
         info['rtn'] = hist.last_cmd_rtn
+        info['err'] = hist.last_cmd_err
         tee_out = tee_out or None
         last_out = hist.last_cmd_out or None
         if last_out is None and tee_out is None:
@@ -227,6 +231,6 @@ class BaseShell(object):
         else:
             info['out'] = tee_out + '\n' + last_out
         hist.append(info)
-        hist.last_cmd_rtn = hist.last_cmd_out = None
+        hist.last_cmd_rtn = hist.last_cmd_out = hist.last_cmd_err = None
 
 
