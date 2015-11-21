@@ -36,7 +36,7 @@ elif len($ARGS) == 2 and $ARG1 == 'edited':
             if os.path.exists(test_fname):
                 tests.add(test_fname)
         elif edited_fname.startswith('tests/'):
-            tests.add(test_fname)
+            tests.add(edited_fname)
         else:
             print('Ignoring file because I cannot find a test for: {!r}.'.
                   format(edited_fname), file=sys.stderr)
