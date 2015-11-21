@@ -205,7 +205,7 @@ class ReadlineShell(BaseShell, Cmd):
                     if inserter is not None:
                         readline.set_pre_input_hook(None)
                 else:
-                    print_color(self.prompt)
+                    print_color(self.prompt, file=self.stdout)
                     if line is not None:
                         os.write(self.stdin.fileno(), line.encode())
                     if not exec_now:
