@@ -2,17 +2,26 @@
 """The main xonsh script."""
 import os
 import sys
-import shlex
-import signal
 import builtins
-import subprocess
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser, ArgumentTypeError
 from contextlib import contextmanager
 
 from xonsh import __version__
 from xonsh.shell import Shell
 from xonsh.pretty import pprint
 from xonsh.jobs import ignore_sigtstp
+
+def path_argument(s):
+    """Return a path only if the path is actually legal
+
+    This is very similar to argparse.FileType, except that it doesn't return
+    an open file handle, but rather simply validates the path."""
+
+    s = os.path.abspath(os.path.expanduser(s))
+    if not os.path.isfile(s):
+        raise ArgumentTypeError('"%s" must be a valid path to a file' % s)
+    return s
+
 
 parser = ArgumentParser(description='xonsh')
 parser.add_argument('-V', '--version',
@@ -34,6 +43,10 @@ parser.add_argument('-l',
                     dest='login',
                     action='store_true',
                     default=False)
+parser.add_argument('--config-path',
+                    help='specify a custom static configuration file',
+                    dest='config_path',
+                    type=path_argument)
 parser.add_argument('--no-rc',
                     help="Do not load the .xonshrc file",
                     dest='norc',
@@ -79,6 +92,8 @@ def premain(argv=None):
     shell_kwargs = {'shell_type': args.shell_type}
     if args.norc:
         shell_kwargs['ctx'] = {}
+    if args.config_path:
+        shell_kwargs['ctx']= {'XONSHCONFIG': args.config_path}
     setattr(sys, 'displayhook', _pprint_displayhook)
     shell = builtins.__xonsh_shell__ = Shell(**shell_kwargs)
     from xonsh import imphooks
