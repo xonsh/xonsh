@@ -297,9 +297,9 @@ def ensure_shell(shell):
     if 'login' in shell_keys:
         shell['login'] = to_bool(shell['login'])
     if 'envcmd' in shell_keys:
-        shell['envcmd'] = eunsure_string(shell['envcmd'])
+        shell['envcmd'] = ensure_string(shell['envcmd'])
     if 'aliascmd' in shell_keys:
-        shell['aliascmd'] = eunsure_string(shell['aliascmd'])
+        shell['aliascmd'] = ensure_string(shell['aliascmd'])
     if 'extra_args' in shell_keys and not isinstance(shell['extra_args'], tuple):
         shell['extra_args'] = tuple(map(ensure_string, shell['extra_args']))
     if 'currenv' in shell_keys and not isinstance(shell['currenv'], tuple):
@@ -314,15 +314,15 @@ def ensure_shell(shell):
     if 'safe' in shell_keys:
         shell['safe'] = to_bool(shell['safe'])
     if 'prevcmd' in shell_keys:
-        shell['prevcmd'] = eunsure_string(shell['prevcmd'])
+        shell['prevcmd'] = ensure_string(shell['prevcmd'])
     if 'postcmd' in shell_keys:
-        shell['postcmd'] = eunsure_string(shell['postcmd'])
+        shell['postcmd'] = ensure_string(shell['postcmd'])
     if 'funcscmd' in shell_keys:
         shell['funcscmd'] = None if shell['funcscmd'] is None \
-                                 else eunsure_string(shell['funcscmd'])
+                                 else ensure_string(shell['funcscmd'])
     if 'sourcer' in shell_keys:
         shell['sourcer'] = None if shell['sourcer'] is None \
-                                 else eunsure_string(shell['sourcer'])
+                                 else ensure_string(shell['sourcer'])
     return shell
 
 
