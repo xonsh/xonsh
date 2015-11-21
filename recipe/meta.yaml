@@ -15,10 +15,12 @@ requirements:
   build:
     - python
     - ply
+    - setuptools
     - jupyter
   run:
     - python
     - ply
+    - prompt_toolkit  # [win]
 
 about:
   home: http://xonsh.org/

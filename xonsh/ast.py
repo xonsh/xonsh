@@ -1,20 +1,26 @@
+# -*- coding: utf-8 -*-
 """The xonsh abstract syntax tree node."""
+# These are imported into our module namespace for the benefit of parser.py.
+# pylint: disable=unused-import
 from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
     BinOp, Add, Sub, Mult, Div, FloorDiv, Mod, Pow, Compare, Lt, Gt, \
-    LtE, GtE, Eq, NotEq, In, NotIn, Is, IsNot, Not, BoolOp, Or, And, Subscript, \
-    Load, Slice, List, Tuple, Set, Dict, AST, NameConstant, \
+    LtE, GtE, Eq, NotEq, In, NotIn, Is, IsNot, Not, BoolOp, Or, And, \
+    Subscript, Load, Slice, List, Tuple, Set, Dict, AST, NameConstant, \
     Name, GeneratorExp, Store, comprehension, ListComp, SetComp, DictComp, \
     Assign, AugAssign, BitXor, BitAnd, BitOr, LShift, RShift, Assert, Delete, \
     Del, Pass, Raise, Import, alias, ImportFrom, Continue, Break, Yield, \
     YieldFrom, Return, IfExp, Lambda, arguments, arg, Call, keyword, \
     Attribute, Global, Nonlocal, If, While, For, withitem, With, Try, \
     ExceptHandler, FunctionDef, ClassDef, Starred, NodeTransformer, \
-    Interactive, Expression, dump
-from ast import Ellipsis, Index  # pylint:disable=unused-import,redefined-builtin
+    Interactive, Expression, Index, dump
+from ast import Ellipsis  # pylint: disable=redefined-builtin
+# pylint: enable=unused-import
 
 from xonsh.tools import subproc_toks, VER_3_5, VER_MAJOR_MINOR
 
 if VER_3_5 <= VER_MAJOR_MINOR:
+    # pylint: disable=unused-import
+    # pylint: disable=no-name-in-module
     from ast import MatMult, AsyncFunctionDef, AsyncWith, AsyncFor, Await
 else:
     MatMult = AsyncFunctionDef = AsyncWith = AsyncFor = Await = None
@@ -140,6 +146,7 @@ class CtxAwareTransformer(NodeTransformer):
         return inscope
 
     def visit_Expression(self, node):
+        """Handle visiting an expression body."""
         body = node.body
         inscope = self.is_in_scope(body)
         if not inscope:
@@ -147,6 +154,7 @@ class CtxAwareTransformer(NodeTransformer):
         return node
 
     def visit_Expr(self, node):
+        """Handle visiting an expression."""
         if self.is_in_scope(node):
             return node
         else:
@@ -158,10 +166,11 @@ class CtxAwareTransformer(NodeTransformer):
             return newnode
 
     def visit_Assign(self, node):
+        """Handle visiting an assignment statement."""
         ups = set()
         for targ in node.targets:
             if isinstance(targ, (Tuple, List)):
-                ups.update(map(leftmostname, targ.elts))
+                ups.update(leftmostname(elt) for elt in targ.elts)
             elif isinstance(targ, BinOp):
                 newnode = self.try_subproc_toks(node)
                 if newnode is node:
@@ -174,6 +183,7 @@ class CtxAwareTransformer(NodeTransformer):
         return node
 
     def visit_Import(self, node):
+        """Handle visiting a import statement."""
         for name in node.names:
             if name.asname is None:
                 self.ctxadd(name.name)
@@ -182,6 +192,7 @@ class CtxAwareTransformer(NodeTransformer):
         return node
 
     def visit_ImportFrom(self, node):
+        """Handle visiting a "from ... import ..." statement."""
         for name in node.names:
             if name.asname is None:
                 self.ctxadd(name.name)
@@ -190,6 +201,7 @@ class CtxAwareTransformer(NodeTransformer):
         return node
 
     def visit_With(self, node):
+        """Handle visiting a with statement."""
         for item in node.items:
             if item.optional_vars is not None:
                 self.ctxadd(leftmostname(item.optional_vars))
@@ -197,15 +209,17 @@ class CtxAwareTransformer(NodeTransformer):
         return node
 
     def visit_For(self, node):
+        """Handle visiting a for statement."""
         targ = node.target
         if isinstance(targ, (Tuple, List)):
-            self.ctxupdate(map(leftmostname, targ.elts))
+            self.ctxupdate(leftmostname(elt) for elt in targ.elts)
         else:
             self.ctxadd(leftmostname(targ))
         self.generic_visit(node)
         return node
 
     def visit_FunctionDef(self, node):
+        """Handle visiting a function definition."""
         self.ctxadd(node.name)
         self.contexts.append(set())
         self.generic_visit(node)
@@ -213,6 +227,7 @@ class CtxAwareTransformer(NodeTransformer):
         return node
 
     def visit_ClassDef(self, node):
+        """Handle visiting a class definition."""
         self.ctxadd(node.name)
         self.contexts.append(set())
         self.generic_visit(node)
@@ -220,6 +235,7 @@ class CtxAwareTransformer(NodeTransformer):
         return node
 
     def visit_Delete(self, node):
+        """Handle visiting a del statement."""
         for targ in node.targets:
             if isinstance(targ, Name):
                 self.ctxremove(targ.id)
@@ -227,6 +243,7 @@ class CtxAwareTransformer(NodeTransformer):
         return node
 
     def visit_Try(self, node):
+        """Handle visiting a try statement."""
         for handler in node.handlers:
             if handler.name is not None:
                 self.ctxadd(handler.name)
@@ -234,6 +251,7 @@ class CtxAwareTransformer(NodeTransformer):
         return node
 
     def visit_Global(self, node):
+        """Handle visiting a global statement."""
         self.contexts[1].update(node.names)  # contexts[1] is the global ctx
         self.generic_visit(node)
         return node

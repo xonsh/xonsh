@@ -1,4 +1,5 @@
-"""The readline based xonsh shell"""
+# -*- coding: utf-8 -*-
+"""The readline based xonsh shell."""
 import os
 import sys
 import time
@@ -11,7 +12,7 @@ from collections import deque
 
 from xonsh import lazyjson
 from xonsh.base_shell import BaseShell
-from xonsh.tools import ON_WINDOWS
+from xonsh.tools import ON_WINDOWS, print_color
 
 RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = None
 RL_CAN_RESIZE = False
@@ -204,9 +205,7 @@ class ReadlineShell(BaseShell, Cmd):
                     if inserter is not None:
                         readline.set_pre_input_hook(None)
                 else:
-                    self.stdout.write(self.prompt.replace('\001', '')
-                                                 .replace('\002', ''))
-                    self.stdout.flush()
+                    print_color(self.prompt, file=self.stdout)
                     if line is not None:
                         os.write(self.stdin.fileno(), line.encode())
                     if not exec_now:
@@ -255,7 +254,7 @@ class ReadlineShell(BaseShell, Cmd):
 class ReadlineHistoryAdder(Thread):
 
     def __init__(self, wait_for_gc=True, *args, **kwargs):
-        """Thread responsible for adding inputs from history to the current readline 
+        """Thread responsible for adding inputs from history to the current readline
         instance. May wait for the history garbage collector to finish.
         """
         super(ReadlineHistoryAdder, self).__init__(*args, **kwargs)

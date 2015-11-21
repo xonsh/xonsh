@@ -1,4 +1,5 @@
-"""Implements the xonsh parser"""
+# -*- coding: utf-8 -*-
+"""Implements the xonsh parser."""
 import os
 import sys
 from collections import Iterable, Sequence, Mapping
@@ -213,8 +214,8 @@ class Parser(object):
             'or_and_test', 'and_not_test', 'comp_op_expr', 'pipe_xor_expr',
             'xor_and_expr', 'ampersand_shift_expr', 'shift_arith_expr',
             'pm_term', 'op_factor', 'trailer', 'comma_subscript',
-            'comma_expr_or_star_expr', 'comma_test', 'comma_argument', 'comma_item', 
-            'attr_period_name', 'test_comma', 'equals_yield_expr_or_testlist', 
+            'comma_expr_or_star_expr', 'comma_test', 'comma_argument', 'comma_item',
+            'attr_period_name', 'test_comma', 'equals_yield_expr_or_testlist',
             'test_or_star_expr']
         if VER_MAJOR_MINOR <= VER_3_4:
             list_rules += ['argument_comma',]
@@ -807,7 +808,7 @@ class Parser(object):
         elif lenp == 4:
             op = self._augassign_op[p2]
             if op is None:
-                self._parse_error('operation {0!r} not supported'.format(p2), 
+                self._parse_error('operation {0!r} not supported'.format(p2),
                                   self.currloc(lineno=p.lineno, column=p.lexpos))
             p0 = ast.AugAssign(target=p1[0], op=op(), value=p[3],
                                lineno=self.lineno, col_offset=self.col)
@@ -1282,7 +1283,7 @@ class Parser(object):
 
     def p_async_stmt(self, p):
         """async_stmt : async_funcdef
-                      | async_with_stmt 
+                      | async_with_stmt
                       | async_for_stmt
         """
         p[0] = p[1]
@@ -1585,7 +1586,7 @@ class Parser(object):
         """
         op = self._term_binops[p[1]]
         if op is None:
-            self._parse_error('operation {0!r} not supported'.format(p[1]), 
+            self._parse_error('operation {0!r} not supported'.format(p[1]),
                               self.currloc(lineno=p.lineno, column=p.lexpos))
         p[0] = [op(), p[2]]
 
@@ -1686,7 +1687,7 @@ class Parser(object):
                 assert False
             leader = p0
         if lenp == 4:
-            p0 = ast.Await(value=p0, ctx=ast.Load(), lineno=self.lineno, 
+            p0 = ast.Await(value=p0, ctx=ast.Load(), lineno=self.lineno,
                            col_offset=self.col)
         p[0] = p0
 
@@ -1961,7 +1962,7 @@ class Parser(object):
         )
     def p_item(self, p):
         lenp = len(p)
-        if lenp == 4: 
+        if lenp == 4:
             p0 = [p[1], p[3]]
         elif lenp == 3:
             p0 = [None, p[2]]
@@ -2144,7 +2145,7 @@ class Parser(object):
         """argument : test
                     | test comp_for
                     | test EQUALS test
-        """, 
+        """,
         v35 = \
         """argument : test_or_star_expr
                     | test comp_for

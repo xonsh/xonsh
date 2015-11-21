@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Misc. xonsh tools.
 
 The following implementations were forked from the IPython project:
@@ -450,7 +451,7 @@ def on_main_thread():
 
 @contextmanager
 def swap(namespace, name, value, default=NotImplemented):
-    """Swaps a current variable name in a namespace for another value, and then 
+    """Swaps a current variable name in a namespace for another value, and then
     replaces it when the context is exited.
     """
     old = getattr(namespace, name, default)
@@ -591,11 +592,11 @@ CANON_HISTORY_UNITS = frozenset(['commands', 'files', 's', 'b'])
 
 HISTORY_UNITS = {
     '': ('commands', int),
-    'c': ('commands', int), 
-    'cmd': ('commands', int), 
-    'cmds': ('commands', int), 
-    'command': ('commands', int), 
-    'commands': ('commands', int), 
+    'c': ('commands', int),
+    'cmd': ('commands', int),
+    'cmds': ('commands', int),
+    'command': ('commands', int),
+    'commands': ('commands', int),
     'f': ('files', int),
     'files': ('files', int),
     's': ('s', float),
@@ -757,3 +758,11 @@ def format_prompt_for_prompt_toolkit(prompt):
     token_names = [get_xonsh_color_names(c) for c in parts[::2]]
     cstyles = [_make_style(c) for c in token_names]
     return token_names, cstyles, strings
+
+
+def print_color(string, file=sys.stdout):
+    """Print strings that contain xonsh.tools.TERM_COLORS values. By default
+    `sys.stdout` is used as the output stream but an alternate can be specified
+    by the `file` keyword argument."""
+    print(string.format(**TERM_COLORS).replace('\001', '').replace('\002', ''),
+          file=file)

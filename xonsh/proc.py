@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Interface for running Python functions as subprocess-mode commands.
 
 Code for several helper methods in the `ProcProxy` class have been reproduced
@@ -358,8 +359,8 @@ class TeePTYProc(object):
 
     def __init__(self, args, stdin=None, stdout=None, stderr=None, preexec_fn=None,
                  env=None, universal_newlines=False):
-        """Popen replacement for running commands in teed psuedo-terminal. This 
-        allows the capturing AND streaming of stdout and stderr.  Availability 
+        """Popen replacement for running commands in teed psuedo-terminal. This
+        allows the capturing AND streaming of stdout and stderr.  Availability
         is Linux-only.
         """
         self.stdin = stdin
@@ -368,7 +369,7 @@ class TeePTYProc(object):
         self.args = args
         self.universal_newlines = universal_newlines
         xenv = builtins.__xonsh_env__ if hasattr(builtins, '__xonsh_env__') \
-                                      else {'XONSH_ENCODING': 'utf-8', 
+                                      else {'XONSH_ENCODING': 'utf-8',
                                             'XONSH_ENCODING_ERRORS': 'strict'}
 
         if not os.access(args[0], os.F_OK):

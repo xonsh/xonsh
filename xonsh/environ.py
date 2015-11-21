@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Environment for the xonsh shell."""
 import os
 import re
@@ -126,7 +127,7 @@ DEFAULT_VALUES = {
                              '/opt/local/etc/profile.d/bash_completion.sh')
                         if ON_MAC else
                         ('/usr/share/bash-completion/bash_completion',
-                             '/usr/share/bash-completion/completions/git') 
+                             '/usr/share/bash-completion/completions/git')
                         if ON_ARCH else
                         ('/etc/bash_completion',
                              '/usr/share/bash-completion/completions/git')),
@@ -150,7 +151,7 @@ DEFAULT_VALUES = {
     'PROMPT_TOOLKIT_STYLES': None,
     'PUSHD_MINUS': False,
     'PUSHD_SILENT': False,
-    'SHELL_TYPE': 'readline',
+    'SHELL_TYPE': 'prompt_toolkit' if ON_WINDOWS else 'readline',
     'SUGGEST_COMMANDS': True,
     'SUGGEST_MAX_NUM': 5,
     'SUGGEST_THRESHOLD': 3,
@@ -163,7 +164,7 @@ DEFAULT_VALUES = {
     'XONSHRC': ((os.path.join(os.environ['ALLUSERSPROFILE'],
                               'xonsh', 'xonshrc'),
                 os.path.expanduser('~/.xonshrc')) if ON_WINDOWS
-               else ('/etc/xonshrc', os.path.expanduser('~/.xonshrc'))), 
+               else ('/etc/xonshrc', os.path.expanduser('~/.xonshrc'))),
     'XONSH_CONFIG_DIR': xonsh_config_dir,
     'XONSH_DATA_DIR': xonsh_data_dir,
     'XONSH_ENCODING': DEFAULT_ENCODING,

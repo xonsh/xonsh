@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Tools for diff'ing two xonsh history files in a meaningful fashion."""
 from datetime import datetime
 from itertools import zip_longest
@@ -117,7 +118,7 @@ class HistoryDiffer(object):
         s += ' started: ' + ts0.isoformat(' ')
         if ts[1] is not None:
             ts1 = datetime.fromtimestamp(ts[1])
-            s += ' stopped: ' + ts1.isoformat(' ') + ' runtime: ' + str(ts1 - ts0) 
+            s += ' stopped: ' + ts1.isoformat(' ') + ' runtime: ' + str(ts1 - ts0)
         return s
 
     def header(self):
@@ -195,7 +196,7 @@ class HistoryDiffer(object):
             pass
         elif bout is None:
             aid = self.a['sessionid']
-            s += 'Note: only {red}{aid}{no_color} output stored\n'.format(red=RED, 
+            s += 'Note: only {red}{aid}{no_color} output stored\n'.format(red=RED,
                                                             aid=aid, no_color=NO_COLOR)
         elif aout is None:
             bid = self.b['sessionid']
@@ -234,7 +235,7 @@ class HistoryDiffer(object):
         s = ''
         for tag, i1, i2, j1, j2 in sm.get_opcodes():
             if tag == REPLACE:
-                for i, ainp, j, binp in zip_longest(range(i1, i2), ainps[i1:i2], 
+                for i, ainp, j, binp in zip_longest(range(i1, i2), ainps[i1:i2],
                                                     range(j1, j2), binps[j1:j2]):
                     if j is None:
                         s += self._cmd_in_one_diff(ainp, i, self.a, aid, RED)
@@ -254,7 +255,7 @@ class HistoryDiffer(object):
                     if len(odiff) > 0:
                         h = ('cmd #{i} in {red}{aid}{no_color} input is the same as \n'
                              'cmd #{j} in {green}{bid}{no_color}, but output differs:\n')
-                        s += h.format(i=i, aid=aid, j=j, bid=bid, red=RED, green=GREEN, 
+                        s += h.format(i=i, aid=aid, j=j, bid=bid, red=RED, green=GREEN,
                                       no_color=NO_COLOR)
                         s += odiff + '\n'
             else:
@@ -299,7 +300,7 @@ def _create_parser(p=None):
 def _main_action(ns, hist=None):
     hd = HistoryDiffer(ns.a, ns.b, reopen=ns.reopen, verbose=ns.verbose)
     print(hd.format())
-    
+
 
 def main(args=None, stdin=None):
     """Main entry point for history diff'ing"""

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Tools to replay xonsh history files."""
 import time
 import builtins
@@ -31,7 +32,7 @@ class Replayer(object):
         self._lj.close()
 
     def replay(self, merge_envs=DEFAULT_MERGE_ENVS, target=None):
-        """Replays the history specified, returns the history object where the code 
+        """Replays the history specified, returns the history object where the code
         was executed.
 
         Parameters
@@ -40,7 +41,7 @@ class Replayer(object):
             Describes how to merge the environments, in order of increasing precednce.
             Available strings are 'replay' and 'native'. The 'replay' env comes from the
             history file that we are replaying. The 'native' env comes from what this
-            instance of xonsh was started up with. Instead of a string, a dict or other 
+            instance of xonsh was started up with. Instead of a string, a dict or other
             mapping may be passed in as well. Defaults to ('replay', 'native').
         target : str, optional
             Path to new history file.
@@ -85,8 +86,8 @@ def _create_parser(p=None):
     if p_was_none:
         from argparse import ArgumentParser
         p = ArgumentParser('replay', description='replays a xonsh history file')
-    p.add_argument('--merge-envs', dest='merge_envs', default=DEFAULT_MERGE_ENVS, 
-                   nargs='+', 
+    p.add_argument('--merge-envs', dest='merge_envs', default=DEFAULT_MERGE_ENVS,
+                   nargs='+',
                    help="Describes how to merge the environments, in order of "
                         "increasing precedence. Available strings are 'replay' and "
                         "'native'. The 'replay' env comes from the history file that we "
@@ -95,7 +96,7 @@ def _create_parser(p=None):
                         "be passed in. Defaults to '--merge-envs replay native'.")
     p.add_argument('--json', dest='json', default=False, action='store_true',
                    help='print history info in JSON format')
-    p.add_argument('-o', '--target', dest='target', default=None, 
+    p.add_argument('-o', '--target', dest='target', default=None,
                    help='path to new history file')
     p.add_argument('path', help='path to replay history file')
     if p_was_none:

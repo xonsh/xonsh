@@ -1,26 +1,24 @@
+# -*- coding: utf-8 -*-
 """The base class for xonsh shell"""
 import io
 import os
 import sys
 import time
 import builtins
-import traceback
 
-from xonsh.execer import Execer
 from xonsh.tools import XonshError, escape_windows_title_string, ON_WINDOWS, \
     print_exception
 from xonsh.completer import Completer
 from xonsh.environ import multiline_prompt, format_prompt
 
 
-class TeeOut(object):
-    """Tees stdout into the original sys.stdout and another buffer instance that is 
-    provided.
-    """
+class _TeeOut(object):
+    """Tees stdout into the original sys.stdout and another buffer."""
 
-    def __init__(self, buf, *args, **kwargs):
+    def __init__(self, buf):
         self.buffer = buf
         self.stdout = sys.stdout
+        self.encoding = self.stdout.encoding
         sys.stdout = self
 
     def __del__(self):
@@ -40,15 +38,19 @@ class TeeOut(object):
         self.stdout.flush()
         self.buffer.flush()
 
+    def fileno(self):
+        """Tunnel fileno() calls."""
+        _ = self
+        return sys.stdout.fileno()
 
-class TeeErr(object):
-    """Tees stderr into the original sys.stdout and another buffer instance that is 
-    provided.
-    """
 
-    def __init__(self, buf, *args, **kwargs):
+class _TeeErr(object):
+    """Tees stderr into the original sys.stdout and another buffer."""
+
+    def __init__(self, buf):
         self.buffer = buf
         self.stderr = sys.stderr
+        self.encoding = self.stderr.encoding
         sys.stderr = self
 
     def __del__(self):
@@ -68,16 +70,24 @@ class TeeErr(object):
         self.stderr.flush()
         self.buffer.flush()
 
+    def fileno(self):
+        """Tunnel fileno() calls."""
+        _ = self
+        return sys.stderr.fileno()
+
 
 class Tee(io.StringIO):
-    """Class that merges tee'd stdout and stderr into a single buffer, namely itself. 
+    """Class that merges tee'd stdout and stderr into a single buffer.
+
     This represents what a user would actually see on the command line.
     """
+    # pylint is a stupid about counting public methods when using inheritance.
+    # pylint: disable=too-few-public-methods
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.stdout = TeeOut(self)
-        self.stderr = TeeErr(self)
+        self.stdout = _TeeOut(self)
+        self.stderr = _TeeErr(self)
 
     def __del__(self):
         del self.stdout, self.stderr
@@ -117,10 +127,10 @@ class BaseShell(object):
         src, code = self.push(line)
         if code is None:
             return
-        hist = builtins.__xonsh_history__
+        hist = builtins.__xonsh_history__  # pylint: disable=no-member
         ts1 = None
-        tee = Tee() if builtins.__xonsh_env__.get('XONSH_STORE_STDOUT') \
-                    else io.StringIO()
+        store_stdout = builtins.__xonsh_env__.get('XONSH_STORE_STDOUT')  # pylint: disable=no-member
+        tee = Tee() if store_stdout else io.StringIO()
         try:
             ts0 = time.time()
             self.execer.exec(code, mode='single', glbs=self.ctx)  # no locals
@@ -131,7 +141,7 @@ class BaseShell(object):
             print(e.args[0], file=sys.stderr)
             if hist.last_cmd_rtn is None:
                 hist.last_cmd_rtn = 1  # return code for failure
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             print_exception()
             if hist.last_cmd_rtn is None:
                 hist.last_cmd_rtn = 1  # return code for failure
@@ -139,7 +149,7 @@ class BaseShell(object):
             ts1 = ts1 or time.time()
             self._append_history(inp=src, ts=[ts0, ts1], tee_out=tee.getvalue())
             tee.close()
-        if builtins.__xonsh_exit__:
+        if builtins.__xonsh_exit__:  # pylint: disable=no-member
             return True
 
     def push(self, line):
@@ -163,7 +173,7 @@ class BaseShell(object):
                 print_exception()
                 return src, None
             self.need_more_lines = True
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             self.reset_buffer()
             print_exception()
             return src, None
@@ -177,7 +187,8 @@ class BaseShell(object):
 
     def settitle(self):
         """Sets terminal title."""
-        env = builtins.__xonsh_env__
+        _ = self
+        env = builtins.__xonsh_env__  # pylint: disable=no-member
         term = env.get('TERM', None)
         # Shells running in emacs sets TERM to "dumb" or "eterm-color".
         # Do not set title for these to avoid garbled prompt.
@@ -200,21 +211,23 @@ class BaseShell(object):
             if self.mlprompt is None:
                 try:
                     self.mlprompt = multiline_prompt()
-                except Exception:
+                except Exception:  # pylint: disable=broad-except
                     print_exception()
                     self.mlprompt = '<multiline prompt error> '
             return self.mlprompt
-        env = builtins.__xonsh_env__
+        env = builtins.__xonsh_env__  # pylint: disable=no-member
         p = env.get('PROMPT')
         try:
             p = format_prompt(p)
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             print_exception()
         self.settitle()
         return p
 
     def _append_history(self, tee_out=None, **info):
-        hist = builtins.__xonsh_history__
+        """Append information about the command to the history."""
+        _ = self
+        hist = builtins.__xonsh_history__  # pylint: disable=no-member
         info['rtn'] = hist.last_cmd_rtn
         tee_out = tee_out or None
         last_out = hist.last_cmd_out or None
@@ -228,5 +241,3 @@ class BaseShell(object):
             info['out'] = tee_out + '\n' + last_out
         hist.append(info)
         hist.last_cmd_rtn = hist.last_cmd_out = None
-
-

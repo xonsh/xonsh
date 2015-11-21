@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Tools to help interface with foreign shells, such as Bash."""
 import os
 import re
@@ -67,11 +68,11 @@ DEFAULT_SOURCERS = {
 }
 
 @lru_cache()
-def foreign_shell_data(shell, interactive=True, login=False, envcmd='env', 
-                       aliascmd='alias', extra_args=(), currenv=None, 
+def foreign_shell_data(shell, interactive=True, login=False, envcmd='env',
+                       aliascmd='alias', extra_args=(), currenv=None,
                        safe=True, prevcmd='', postcmd='', funcscmd=None,
                        sourcer=None):
-    """Extracts data from a foreign (non-xonsh) shells. Currently this gets 
+    """Extracts data from a foreign (non-xonsh) shells. Currently this gets
     the environment, aliases, and functions but may be extended in the future.
 
     Parameters
@@ -93,7 +94,7 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd='env',
     safe : bool, optional
         Flag for whether or not to safely handle exceptions and other errors.
     prevcmd : str, optional
-        A command to run in the shell before anything else, useful for 
+        A command to run in the shell before anything else, useful for
         sourcing and other commands that may require environment recovery.
     postcmd : str, optional
         A command to run after everything else, useful for cleaning up any
@@ -103,12 +104,12 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd='env',
         and locations of any functions that are native to the foreign shell.
         This command should print *only* a whitespace separated sequence
         of pairs function name & filenames where the functions are defined.
-        If this is None, then a default script will attempted to be looked 
+        If this is None, then a default script will attempted to be looked
         up based on the shell name. Callable wrappers for these functions
         will be returned in the aliases dictionary.
     sourcer : str or None, optional
         How to source a foreign shell file for purposes of calling functions
-        in that shell. If this is None, a default value will attempt to be 
+        in that shell. If this is None, a default value will attempt to be
         looked up based on the shell name.
 
     Returns
@@ -116,7 +117,7 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd='env',
     env : dict
         Dictionary of shell's environment
     aliases : dict
-        Dictionary of shell's alaiases, this includes foreign function 
+        Dictionary of shell's alaiases, this includes foreign function
         wrappers.
     """
     cmd = [shell]
@@ -161,7 +162,7 @@ def parse_env(s):
     return env
 
 
-ALIAS_RE = re.compile('__XONSH_ALIAS_BEG__\n(.*)__XONSH_ALIAS_END__', 
+ALIAS_RE = re.compile('__XONSH_ALIAS_BEG__\n(.*)__XONSH_ALIAS_END__',
                       flags=re.DOTALL)
 
 def parse_aliases(s):
@@ -211,7 +212,7 @@ def parse_funcs(s, shell, sourcer=None):
     for funcname, filename in zip(flatpairs[::2], flatpairs[1::2]):
         if funcname.startswith('_'):
             continue  # skip private functions
-        wrapper = ForeignShellFunctionAlias(name=funcname, shell=shell, 
+        wrapper = ForeignShellFunctionAlias(name=funcname, shell=shell,
                                             sourcer=sourcer, filename=filename)
         funcs[funcname] = wrapper
     return funcs
@@ -223,7 +224,7 @@ class ForeignShellFunctionAlias(object):
     """
 
     INPUT = ('{sourcer} {filename}\n'
-             '{funcname} {args}\n') 
+             '{funcname} {args}\n')
 
     def __init__(self, name, shell, filename, sourcer=None):
         """
@@ -278,8 +279,8 @@ class ForeignShellFunctionAlias(object):
         return args, True
 
 
-VALID_SHELL_PARAMS = frozenset(['shell', 'interactive', 'login', 'envcmd', 
-                                'aliascmd', 'extra_args', 'currenv', 'safe', 
+VALID_SHELL_PARAMS = frozenset(['shell', 'interactive', 'login', 'envcmd',
+                                'aliascmd', 'extra_args', 'currenv', 'safe',
                                 'prevcmd', 'postcmd', 'funcscmd', 'sourcer'])
 
 def ensure_shell(shell):
@@ -296,9 +297,9 @@ def ensure_shell(shell):
     if 'login' in shell_keys:
         shell['login'] = to_bool(shell['login'])
     if 'envcmd' in shell_keys:
-        shell['envcmd'] = eunsure_string(shell['envcmd'])
+        shell['envcmd'] = ensure_string(shell['envcmd'])
     if 'aliascmd' in shell_keys:
-        shell['aliascmd'] = eunsure_string(shell['aliascmd'])
+        shell['aliascmd'] = ensure_string(shell['aliascmd'])
     if 'extra_args' in shell_keys and not isinstance(shell['extra_args'], tuple):
         shell['extra_args'] = tuple(map(ensure_string, shell['extra_args']))
     if 'currenv' in shell_keys and not isinstance(shell['currenv'], tuple):
@@ -313,15 +314,15 @@ def ensure_shell(shell):
     if 'safe' in shell_keys:
         shell['safe'] = to_bool(shell['safe'])
     if 'prevcmd' in shell_keys:
-        shell['prevcmd'] = eunsure_string(shell['prevcmd'])
+        shell['prevcmd'] = ensure_string(shell['prevcmd'])
     if 'postcmd' in shell_keys:
-        shell['postcmd'] = eunsure_string(shell['postcmd'])
+        shell['postcmd'] = ensure_string(shell['postcmd'])
     if 'funcscmd' in shell_keys:
         shell['funcscmd'] = None if shell['funcscmd'] is None \
-                                 else eunsure_string(shell['funcscmd'])
+                                 else ensure_string(shell['funcscmd'])
     if 'sourcer' in shell_keys:
         shell['sourcer'] = None if shell['sourcer'] is None \
-                                 else eunsure_string(shell['sourcer'])
+                                 else ensure_string(shell['sourcer'])
     return shell
 
 
@@ -357,7 +358,7 @@ def load_foreign_envs(shells=None, config=None, issue_warning=True):
         keyword arguments. Not compatible with config not being None.
     config : str of None, optional
         Path to the static config file. Not compatible with shell not being None.
-        If both shell and config is None, then it will be read from the 
+        If both shell and config is None, then it will be read from the
         $XONSHCONFIG environment variable.
     issue_warning : bool, optional
         Issues warnings if config file cannot be found.
@@ -386,7 +387,7 @@ def load_foreign_aliases(shells=None, config=None, issue_warning=True):
         keyword arguments. Not compatible with config not being None.
     config : str of None, optional
         Path to the static config file. Not compatible with shell not being None.
-        If both shell and config is None, then it will be read from the 
+        If both shell and config is None, then it will be read from the
         $XONSHCONFIG environment variable.
     issue_warning : bool, optional
         Issues warnings if config file cannot be found.

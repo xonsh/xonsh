@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Testing built_ins.Aliases"""
 from __future__ import unicode_literals, print_function
 

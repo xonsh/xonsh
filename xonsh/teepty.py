@@ -1,8 +1,9 @@
+# -*- coding: utf-8 -*-
 """This implements a psuedo-TTY that tees its output into a Python buffer.
 
 This file was forked from a version distibuted under an MIT license and
-Copyright (c) 2011 Joshua D. Bartlett. 
-See http://sqizit.bartletts.id.au/2011/02/14/pseudo-terminals-in-python/ for 
+Copyright (c) 2011 Joshua D. Bartlett.
+See http://sqizit.bartletts.id.au/2011/02/14/pseudo-terminals-in-python/ for
 more information.
 """
 import io
@@ -45,7 +46,7 @@ def _findfirst(s, substrs):
 
 
 def _on_main_thread():
-    """Checks if we are on the main thread or not. Duplicated from xonsh.tools 
+    """Checks if we are on the main thread or not. Duplicated from xonsh.tools
     here so that this module only relies on the Python standrd library.
     """
     return threading.current_thread() is threading.main_thread()
@@ -67,7 +68,7 @@ def _find_error_code(e):
 class TeePTY(object):
     """This class is a pseudo terminal that tees the stdout and stderr into a buffer."""
 
-    def __init__(self, bufsize=1024, remove_color=True, encoding='utf-8', 
+    def __init__(self, bufsize=1024, remove_color=True, encoding='utf-8',
                  errors='strict'):
         """
         Parameters
@@ -92,7 +93,7 @@ class TeePTY(object):
         self._temp_stdin = None
 
     def __str__(self):
-        return self.buffer.getvalue().decode(encoding=self.encoding, 
+        return self.buffer.getvalue().decode(encoding=self.encoding,
                                              errors=self.errors)
 
     def __del__(self):
@@ -179,7 +180,7 @@ class TeePTY(object):
         self._set_pty_size()
 
     def _set_pty_size(self):
-        """Sets the window size of the child pty based on the window size of 
+        """Sets the window size of the child pty based on the window size of
         our own controlling terminal.
         """
         assert self.master_fd is not None
@@ -199,7 +200,7 @@ class TeePTY(object):
             try:
                 rfds, wfds, xfds = select.select([master_fd, pty.STDIN_FILENO], [], [])
             except OSError as e:
-                if e.errno == 4:  # Interrupted system call. 
+                if e.errno == 4:  # Interrupted system call.
                     continue      # This happens at terminal resize.
             if master_fd in rfds:
                 data = os.read(master_fd, bufsize)
@@ -215,15 +216,15 @@ class TeePTY(object):
         elif flag is not None:
             if flag in START_ALTERNATE_MODE:
                 # This code is executed when the child process switches the terminal into
-                # alternate mode. The line below assumes that the user has opened vim, 
+                # alternate mode. The line below assumes that the user has opened vim,
                 # less, or similar, and writes writes to stdin.
-                d0 = data[:i] 
+                d0 = data[:i]
                 self._in_alt_mode = True
                 d1 = self._sanatize_data(data[i+len(flag):])
                 data = d0 + d1
             elif flag in END_ALTERNATE_MODE:
                 # This code is executed when the child process switches the terminal back
-                # out of alternate mode. The line below assumes that the user has 
+                # out of alternate mode. The line below assumes that the user has
                 # returned to the command prompt.
                 self._in_alt_mode = False
                 data = self._sanatize_data(data[i+len(flag):])
@@ -249,7 +250,7 @@ class TeePTY(object):
             data = data[n:]
 
     def _stdin_filename(self, stdin):
-        if stdin is None: 
+        if stdin is None:
             rtn = None
         elif isinstance(stdin, io.FileIO) and os.path.isfile(stdin.name):
             rtn = stdin.name
@@ -292,15 +293,15 @@ class TeePTY(object):
             raise ValueError('stdin not understood {0!r}'.format(stdin))
 
     def _delay_for_pipe(self, env=None, delay=None):
-        # This delay is sometimes needed because the temporary stdin file that 
+        # This delay is sometimes needed because the temporary stdin file that
         # is being written (the pipe) may not have even hits its first flush()
-        # call by the time the spawned process starts up and determines there 
+        # call by the time the spawned process starts up and determines there
         # is nothing in the file. The spawn can thus exit, without doing any
         # real work.  Consider the case of piping something into grep:
         #
         #   $ ps aux | grep root
         #
-        # grep will exit on EOF and so there is a race between the buffersize 
+        # grep will exit on EOF and so there is a race between the buffersize
         # and flushing the temporary file and grep.  However, this race is not
         # always meaningful. Pagers, for example, update when the file is written
         # to. So what is important is that we start the spawned process ASAP:
@@ -311,7 +312,7 @@ class TeePTY(object):
         # not blocking and letting the spawned process have enough to work with
         # such that it doesn't exit prematurely.  Unfortunately, there is no
         # way to know a priori how big the file is, how long the spawned process
-        # will run for, etc. Thus as user-definable delay let's the user 
+        # will run for, etc. Thus as user-definable delay let's the user
         # find something that works for them.
         if delay is None:
             delay = (env or os.environ).get('TEEPTY_PIPE_DELAY', -1.0)

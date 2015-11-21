@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """A (tab-)completer for xonsh."""
 import os
 import re
@@ -26,6 +27,8 @@ XONSH_TOKENS = {
     '&=', '^=', '|=', '//=', ',', ';', ':', '?', '??', '$(', '${', '$[', '..',
     '...'
 }
+
+COMPLETION_SKIP_TOKENS = {'sudo', 'time'}
 
 BASH_COMPLETE_SCRIPT = """source {filename}
 COMP_WORDS=({line})
@@ -56,13 +59,13 @@ def startswithnorm(x, start, startlow=None):
 
 
 def _normpath(p):
-    """ Wraps os.normpath() to avoid removing './' at the beginning 
+    """ Wraps os.normpath() to avoid removing './' at the beginning
         and '/' at the end. On windows it does the same with backslases
-    """   
+    """
     initial_dotslash = p.startswith(os.curdir + os.sep)
     initial_dotslash |= (ON_WINDOWS and p.startswith(os.curdir + os.altsep))
     p = p.rstrip()
-    trailing_slash = p.endswith(os.sep) 
+    trailing_slash = p.endswith(os.sep)
     trailing_slash |= (ON_WINDOWS and p.endswith(os.altsep))
     p = os.path.normpath(p)
     if initial_dotslash and p != '.':
@@ -122,6 +125,11 @@ class Completer(object):
         ctx = ctx or {}
         prefixlow = prefix.lower()
         cmd = line.split(' ', 1)[0]
+        if cmd in COMPLETION_SKIP_TOKENS:
+            begidx -= len(cmd)+1
+            endidx -= len(cmd)+1
+            cmd = line.split(' ', 2)[1]
+            line = line.split(' ', 1)[1]
         csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
         startswither = startswithnorm if csc else startswithlow
         if begidx == 0:
@@ -315,7 +323,7 @@ class Completer(object):
         for f in builtins.__xonsh_env__.get('BASH_COMPLETIONS'):
             if os.path.isfile(f):
                 # We need to "Unixify" Windows paths for Bash to understand
-                if ON_WINDOWS:  
+                if ON_WINDOWS:
                     f = RE_WIN_DRIVE.sub(lambda m: '/{0}/'.format(m.group(1).lower()), f).replace('\\', '/')
                 srcs.append('source ' + f)
         return srcs

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Testing xonsh import hooks"""
 from __future__ import unicode_literals, print_function
 
