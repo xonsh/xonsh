@@ -29,19 +29,9 @@ can be thought of as having the following structure:
         {'inp': str,  # input command
          'ts': [start, stop],  # timestamps for the command
          'rtn': int, # command return code
-         'err': LastCmdErrorInfo, # If 'err' is not None it is the namedtuple
-                                  # xonsh.built_ins.LastCmdErrorInfo. A
-                                  # subprocess that was killed via a OS signal
-                                  # will result in the LastCmdErrorInfo.signal
-                                  # value being set with a 2-tuple of the form
-                                  # (int, bool), indicating the signal number
-                                  # the terminated the process and whether core
-                                  # file resulted. For other commands the
-                                  # LastCmdErrorInfo.exception value is set to
-                                  # the raised Exception.
          'out' str,  # stdout and stderr of command, for subproc commands 
                      # this is only available on Linux. Off by default.
-         },
+         }, 
         ...
         ],
     }
@@ -320,7 +310,7 @@ history garbage control. Since history has the potential for a lot of informatio
 to be stored, it is necessary to be able to clean out the cache every once in a 
 while.  
 
-Garbage control is launched automatically for every xonsh thread, but runs in
+Garbage control is launched automatically for every xonsh thread, but runs in the 
 a background thread. The garbage collector only operates on unlocked history files.
 The action here allows you to manually start a new garbage collector, possibly with 
 different criteria. 

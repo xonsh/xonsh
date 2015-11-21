@@ -91,7 +91,6 @@ class ProcProxy(Thread):
         stdin : file-like
             A file-like object representing stdin (input can be read from
             here).
-
         stdout : file-like
             A file-like object representing stdout (normal output can be
             written here).
@@ -102,7 +101,6 @@ class ProcProxy(Thread):
         self.args = args
         self.pid = None
         self.returncode = None
-        self.error = None  # The exception for failed commands
         self.wait = self.join
 
         handles = self._get_handles(stdin, stdout, stderr)

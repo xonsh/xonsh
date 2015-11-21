@@ -36,8 +36,6 @@ AT_EXIT_SIGNALS = (signal.SIGABRT, signal.SIGFPE, signal.SIGILL, signal.SIGSEGV,
 if ON_POSIX:
     AT_EXIT_SIGNALS += (signal.SIGTSTP, signal.SIGQUIT, signal.SIGHUP)
 
-LastCmdErrorInfo = namedtuple("LastCmdErrorInfo", ["exception", "signal"])
-
 
 def resetting_signal_handle(sig, f):
     """Sets a new signal handle that will automaticallly restore the old value 
@@ -607,16 +605,7 @@ def run_subproc(cmds, captured=True):
         prev_proc.wait()
     wait_for_active_job()
     hist = builtins.__xonsh_history__
-
-    # Stash exit status or error info
     hist.last_cmd_rtn = prev_proc.returncode
-    if prev_is_proxy and prev_proc.error:
-        hist.last_cmd_err = LastCmdErrorInfo(exception=prev_proc.error,
-                                             signal=None)
-    elif not prev_is_proxy and prev_proc.signal:
-        hist.last_cmd_err = LastCmdErrorInfo(signal=prev_proc.signal,
-                                             exception=None)
-
     if write_target is None:
         # get output
         output = ''
