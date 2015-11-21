@@ -24,6 +24,16 @@ parser.add_argument('-c',
                     dest='command',
                     required=False,
                     default=None)
+parser.add_argument('-i',
+                    help='force running in interactive mode',
+                    dest='force_interactive',
+                    action='store_true',
+                    default=False)
+parser.add_argument('-l',
+                    help='run as a login shell',
+                    dest='login',
+                    action='store_true',
+                    default=False)
 parser.add_argument('--no-rc',
                     help="Do not load the .xonshrc file",
                     dest='norc',
@@ -75,6 +85,8 @@ def premain(argv=None):
     env = builtins.__xonsh_env__
     if args.defines is not None:
         env.update([x.split('=', 1) for x in args.defines])
+    if args.login:
+        env['XONSH_LOGIN'] = True
     env['XONSH_INTERACTIVE'] = False
     return args
 
@@ -98,7 +110,7 @@ def main(argv=None):
             shell.execer.exec(code, mode='exec', glbs=shell.ctx)
         else:
             print('xonsh: {0}: No such file or directory.'.format(args.file))
-    elif not sys.stdin.isatty():
+    elif not sys.stdin.isatty() and not args.force_interactive:
         # run a script given on stdin
         code = sys.stdin.read()
         code = code if code.endswith('\n') else code + '\n'

@@ -205,6 +205,8 @@ applicable.
     * - XONSH_INTERACTIVE
       - 
       - ``True`` if xonsh is running interactively, and ``False`` otherwise.
+    * - XONSH_LOGIN
+      - ``True`` if xonsh is running as a login shell, and ``False`` otherwise.
     * - XONSH_SHOW_TRACEBACK
       - ``False`` but not set
       - Controls if a traceback is shown exceptions occur in the shell. Set ``True`` 
