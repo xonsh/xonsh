@@ -11,7 +11,7 @@ from collections import deque, Sequence, OrderedDict
 from threading import Thread, Condition
 
 from xonsh import lazyjson
-from xonsh.tools import ensure_int_or_slice, to_history_tuple, TERM_COLORS
+from xonsh.tools import ensure_int_or_slice, to_history_tuple
 from xonsh import diff_history
 
 
@@ -337,8 +337,6 @@ def _create_parser():
     show.add_argument('n', nargs='?', default=None,
                       help='display n\'th history entry if n is a simple int, '
                            'or range of entries if it is Python slice notation')
-    show.add_argument('-c', dest='color', default=False, action='store_true',
-                      help='color output reflects command success')
     # 'id' subcommand
     subp.add_parser('id', help='displays the current session id')
     # 'file' subcommand
@@ -389,21 +387,9 @@ def _show(ns, hist):
         inps = reversed(inps)
     for i, inp in zip(indices, inps):
         lines = inp.splitlines()
-        if ns.color:
-            # FIXME: colors need to be configurable
-            color = TERM_COLORS["GREEN"] if hist.buffer[i]['rtn'] == 0 \
-                                         else TERM_COLORS["RED"]
-        else:
-            color = ""
-        lines[0] = ' {c}{0:>{1}}{nc}  {2}'\
-                   .format(i, ndigits, lines[0], c=color,
-                           nc=TERM_COLORS["NO_COLOR"] if ns.color else "")
+        lines[0] = ' {0:>{1}}  {2}'.format(i, ndigits, lines[0])
         lines[1:] = [indent + x for x in lines[1:]]
-        if ns.color:
-            print('\n'.join(lines).format(**TERM_COLORS).replace('\001', '')
-                                                        .replace('\002', ''))
-        else:
-            print('\n'.join(lines))
+        print('\n'.join(lines))
 
 
 def _info(ns, hist):
