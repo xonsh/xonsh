@@ -114,20 +114,28 @@ else:
                 job['status'] = 'running'
 
             os.kill(obj.pid, signal_to_send)
+
             if job['bg']:
                 _give_terminal_to(_shell_pgrp)
                 return
 
-        _, s = os.waitpid(obj.pid, os.WUNTRACED)
-        if os.WIFSTOPPED(s):
+        _, wcode = os.waitpid(obj.pid, os.WUNTRACED)
+        if os.WIFSTOPPED(wcode):
             job['bg'] = True
             job['status'] = 'stopped'
             print()  # get a newline because ^Z will have been printed
             print_one_job(act)
-        elif os.WIFSIGNALED(s):
+        elif os.WIFSIGNALED(wcode):
             print()  # get a newline because ^C will have been printed
+            obj.signal = (os.WTERMSIG(wcode), os.WCOREDUMP(wcode))
+            obj.returncode = None
+        else:
+            obj.returncode = os.WEXITSTATUS(wcode)
+            obj.signal = None
+
         if obj.poll() is not None:
             builtins.__xonsh_active_job__ = None
+
         _give_terminal_to(_shell_pgrp)  # give terminal back to the shell
 
 
