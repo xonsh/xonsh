@@ -120,7 +120,7 @@ else:
                 return
 
         _, wcode = os.waitpid(obj.pid, os.WUNTRACED)
-        if os.WIFSTOPPED(s):
+        if os.WIFSTOPPED(wcode):
             job['bg'] = True
             job['status'] = 'stopped'
             print()  # get a newline because ^Z will have been printed
