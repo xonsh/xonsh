@@ -38,7 +38,7 @@ else:
     unicode_type = unicode
 
 if os.name == 'nt':
-    DEFAULT_ENCODING = sys.stdout.encoding
+    DEFAULT_ENCODING = sys.stdout.encoding if sys.stdout.encoding else sys.getdefaultencoding()
 else:
     DEFAULT_ENCODING = sys.getdefaultencoding()
 ON_WINDOWS = (platform.system() == 'Windows')
