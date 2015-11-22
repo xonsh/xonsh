@@ -89,7 +89,7 @@ class TeePTY(object):
         self.encoding = encoding
         self.errors = errors
         self.buffer = io.BytesIO()
-        self.returncode = None
+        self.wcode = None  # os.wait encoded retval 
         self._temp_stdin = None
 
     def __str__(self):
@@ -120,8 +120,8 @@ class TeePTY(object):
 
         Returns
         -------
-        returncode : int
-            Return code for the spawned process.
+        wcode : int
+            Return code for the spawned process encoded as os.wait format.
         """
         assert self.master_fd is None
         self._in_alt_mode = False
@@ -163,13 +163,13 @@ class TeePTY(object):
             if restore:
                 tty.tcsetattr(pty.STDIN_FILENO, tty.TCSAFLUSH, mode)
 
-        _, self.returncode = os.waitpid(pid, 0)
+        _, self.wcode = os.waitpid(pid, 0)
         os.close(master_fd)
         self.master_fd = None
         self._in_alt_mode = False
         if on_main_thread:
             signal.signal(signal.SIGWINCH, old_handler)
-        return self.returncode
+        return self.wcode
 
     def _init_fd(self):
         """Called once when the pty is first set up."""
@@ -329,4 +329,4 @@ if __name__ == '__main__':
     print('-=-'*10)
     print(tpty)
     print('-=-'*10)
-    print('Returned with status {0}'.format(tpty.returncode))
+    print('Returned with status {0}'.format(tpty.wcode))
