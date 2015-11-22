@@ -71,6 +71,7 @@ DEFAULT_ENSURERS = {
     'XONSH_ENCODING': (is_string, ensure_string, ensure_string),
     'XONSH_ENCODING_ERRORS': (is_string, ensure_string, ensure_string),
     'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
+    'XONSH_LOGIN': (is_bool, to_bool, bool_to_str),
     'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
     'VI_MODE': (is_bool, to_bool, bool_to_str),
 }
@@ -171,6 +172,7 @@ DEFAULT_VALUES = {
     'XONSH_ENCODING_ERRORS': 'surrogateescape',
     'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
     'XONSH_HISTORY_SIZE': (8128, 'commands'),
+    'XONSH_LOGIN': False,
     'XONSH_SHOW_TRACEBACK': False,
     'XONSH_STORE_STDOUT': False,
 }

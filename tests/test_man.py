@@ -8,7 +8,7 @@ from nose.plugins.skip import SkipTest
 from xonsh.tools import ON_WINDOWS
 from xonsh.completer import ManCompleter
 
-from tools import mock_xonsh_env
+from tests.tools import mock_xonsh_env
 
 _OLD_MANPATH = None
 
