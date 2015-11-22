@@ -437,7 +437,7 @@ class TeePTYProc(object):
 
 
 def _wcode_to_popen(code):
-    '''Converts os.wait return code into Popen format.'''
+    """Converts os.wait return code into Popen format."""
     if os.WIFEXITED(code):
         return os.WEXITSTATUS(code)
     elif os.WIFSIGNALED(code):
