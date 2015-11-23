@@ -78,6 +78,21 @@ def _normpath(p):
 
     return p
 
+def alias_expand(line):
+    """ Expands any aliases present in line if alias does not point to a builtin function and if alias is only a single command.
+    """
+    
+    for word in line.split(' '):
+        if (word in builtins.aliases
+            and type(builtins.aliases.get(word)) is list
+            and len(builtins.aliases.get(word)) == 1):
+            word_idx = line.find(word)
+            line = line[:word_idx] +\
+                    builtins.aliases.get(word)[0] +\
+                    line[word_idx+len(word):]
+
+    return line
+
 
 class Completer(object):
     """This provides a list of optional completions for the xonsh shell."""
@@ -124,6 +139,7 @@ class Completer(object):
         dot = '.'
         ctx = ctx or {}
         prefixlow = prefix.lower()
+        line = alias_expand(line)
         cmd = line.split(' ', 1)[0]
         if cmd in COMPLETION_SKIP_TOKENS:
             begidx -= len(cmd)+1
@@ -174,6 +190,7 @@ class Completer(object):
                 if startswither(s, prefix, prefixlow)}
         rtn |= self.path_complete(prefix)
         return sorted(rtn)
+
 
     def find_and_complete(self, line, idx, ctx=None):
         """Finds the completions given only the full code line and a current cursor
