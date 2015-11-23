@@ -37,16 +37,17 @@ else:
     string_types = (str, unicode)
     unicode_type = unicode
 
-if os.name == 'nt':
-    DEFAULT_ENCODING = sys.stdout.encoding if sys.stdout.encoding else sys.getdefaultencoding()
-else:
-    DEFAULT_ENCODING = sys.getdefaultencoding()
 ON_WINDOWS = (platform.system() == 'Windows')
 ON_MAC = (platform.system() == 'Darwin')
 ON_LINUX = (platform.system() == 'Linux')
 ON_ARCH = (platform.linux_distribution()[0] == 'arch')
 ON_POSIX = (os.name == 'posix')
 IS_ROOT = ctypes.windll.shell32.IsUserAnAdmin() != 0 if ON_WINDOWS else os.getuid() == 0
+
+if ON_WINDOWS == True and sys.stdout.encoding is not None:
+    DEFAULT_ENCODING = sys.stdout.encoding
+else:
+    DEFAULT_ENCODING = sys.getdefaultencoding()
 
 VER_3_4 = (3, 4)
 VER_3_5 = (3, 5)
