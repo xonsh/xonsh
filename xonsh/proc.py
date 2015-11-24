@@ -16,13 +16,22 @@ from threading import Thread
 from collections import Sequence
 from subprocess import Popen, PIPE, DEVNULL, STDOUT, TimeoutExpired
 
-from xonsh.tools import redirect_stdout, redirect_stderr, ON_WINDOWS, ON_LINUX, \
-    fallback, print_exception
+from xonsh.tools import (redirect_stdout, redirect_stderr, ON_WINDOWS, ON_LINUX,
+        fallback, print_exception, XonshError)
 
 if ON_LINUX:
     from xonsh.teepty import TeePTY
 else:
     TeePTY = None
+
+
+class CommandError(XonshError):
+    """An Exception type than can be raised by commands (e.g. aliases) to
+    signal error (error string dispayed to stderr and exit status non-zero)
+    but will not have any traceback printed. It can service an alternative to
+    ``return (None, 'stderr error msg')"""
+    returncode = 1
+
 
 if ON_WINDOWS:
     import _winapi
@@ -336,6 +345,8 @@ class SimpleProcProxy(ProcProxy):
                 i = stdin.read()
                 with redirect_stdout(stdout), redirect_stderr(stderr):
                     r = f(args, i)
+
+                cmd_result = 0
                 if isinstance(r, str):
                     stdout.write(r)
                 elif isinstance(r, Sequence):
@@ -343,9 +354,13 @@ class SimpleProcProxy(ProcProxy):
                         stdout.write(r[0])
                     if r[1] is not None:
                         stderr.write(r[1])
+                        cmd_result = 1
                 elif r is not None:
                     stdout.write(str(r))
-                return 0  # returncode for succees
+                return cmd_result
+            except CommandError as err:
+                stderr.write('{}\n'.format(err))
+                return err.returncode
             except Exception:
                 print_exception()
                 return 1  # returncode for failure
