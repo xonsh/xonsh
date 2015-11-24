@@ -78,7 +78,6 @@ def _normpath(p):
 
     return p
 
-
 class Completer(object):
     """This provides a list of optional completions for the xonsh shell."""
 
@@ -124,6 +123,7 @@ class Completer(object):
         dot = '.'
         ctx = ctx or {}
         prefixlow = prefix.lower()
+        line = builtins.aliases.expand_alias(line)
         cmd = line.split(' ', 1)[0]
         if cmd in COMPLETION_SKIP_TOKENS:
             begidx -= len(cmd)+1
@@ -174,6 +174,7 @@ class Completer(object):
                 if startswither(s, prefix, prefixlow)}
         rtn |= self.path_complete(prefix)
         return sorted(rtn)
+
 
     def find_and_complete(self, line, idx, ctx=None):
         """Finds the completions given only the full code line and a current cursor
