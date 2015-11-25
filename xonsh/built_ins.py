@@ -109,19 +109,14 @@ class Aliases(MutableMapping):
                                        rest + acc_args)
 
     def expand_alias(self, line):
-        """
-        Expands any aliases present in line if alias does not point to a
+        """Expands any aliases present in line if alias does not point to a
         builtin function and if alias is only a single command.
         """
         word = line.split(' ', 1)[0]
-        if (word in builtins.aliases and
-            type(self.get(word)) is list and
-            len(self.get(word)) == 1):
+        if word in builtins.aliases and isinstance(self.get(word), Sequence):
             word_idx = line.find(word)
-            line = line[:word_idx] +\
-                self.get(word)[0] +\
-                line[word_idx+len(word):]
-
+            expansion = ' '.join(self.get(word))
+            line = line[:word_idx] + expansion + line[word_idx+len(word):]
         return line
 
     #
