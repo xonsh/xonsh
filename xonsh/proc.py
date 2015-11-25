@@ -355,7 +355,8 @@ class SimpleProcProxy(ProcProxy):
                         stdout.write(r[0])
                     if r[1] is not None:
                         stderr.write(r[1])
-                        cmd_result = 1
+                    if len(r) > 2 and r[2] is not None:
+                        cmd_result = r[2]
                 elif r is not None:
                     stdout.write(str(r))
                 return cmd_result
