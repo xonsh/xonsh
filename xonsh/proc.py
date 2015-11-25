@@ -28,8 +28,9 @@ else:
 class CommandError(XonshError):
     """An Exception type than can be raised by commands (e.g. aliases) to
     signal error (error string dispayed to stderr and exit status non-zero)
-    but will not have any traceback printed. It can service an alternative to
-    ``return (None, 'stderr error msg')"""
+    but will not have any traceback printed. It can serve as an alternative to
+    ``return (None, 'stderr error msg')``. The ``returncode`` can be an non-zero
+    value and defaults to 1."""
     returncode = 1
 
 
