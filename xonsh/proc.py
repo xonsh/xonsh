@@ -16,13 +16,14 @@ from threading import Thread
 from collections import Sequence
 from subprocess import Popen, PIPE, DEVNULL, STDOUT, TimeoutExpired
 
-from xonsh.tools import redirect_stdout, redirect_stderr, ON_WINDOWS, ON_LINUX, \
-    fallback, print_exception
+from xonsh.tools import (redirect_stdout, redirect_stderr, ON_WINDOWS, ON_LINUX,
+                         fallback, print_exception)
 
 if ON_LINUX:
     from xonsh.teepty import TeePTY
 else:
     TeePTY = None
+
 
 if ON_WINDOWS:
     import _winapi
@@ -336,6 +337,8 @@ class SimpleProcProxy(ProcProxy):
                 i = stdin.read()
                 with redirect_stdout(stdout), redirect_stderr(stderr):
                     r = f(args, i)
+
+                cmd_result = 0
                 if isinstance(r, str):
                     stdout.write(r)
                 elif isinstance(r, Sequence):
@@ -343,9 +346,11 @@ class SimpleProcProxy(ProcProxy):
                         stdout.write(r[0])
                     if r[1] is not None:
                         stderr.write(r[1])
+                    if len(r) > 2 and r[2] is not None:
+                        cmd_result = r[2]
                 elif r is not None:
                     stdout.write(str(r))
-                return 0  # returncode for succees
+                return cmd_result
             except Exception:
                 print_exception()
                 return 1  # returncode for failure
