@@ -17,21 +17,12 @@ from collections import Sequence
 from subprocess import Popen, PIPE, DEVNULL, STDOUT, TimeoutExpired
 
 from xonsh.tools import (redirect_stdout, redirect_stderr, ON_WINDOWS, ON_LINUX,
-        fallback, print_exception, XonshError)
+                         fallback, print_exception)
 
 if ON_LINUX:
     from xonsh.teepty import TeePTY
 else:
     TeePTY = None
-
-
-class CommandError(XonshError):
-    """An Exception type than can be raised by commands (e.g. aliases) to
-    signal error (error string dispayed to stderr and exit status non-zero)
-    but will not have any traceback printed. It can serve as an alternative to
-    ``return (None, 'stderr error msg')``. The ``returncode`` can be an non-zero
-    value and defaults to 1."""
-    returncode = 1
 
 
 if ON_WINDOWS:
@@ -360,9 +351,6 @@ class SimpleProcProxy(ProcProxy):
                 elif r is not None:
                     stdout.write(str(r))
                 return cmd_result
-            except CommandError as err:
-                stderr.write('{}\n'.format(err))
-                return err.returncode
             except Exception:
                 print_exception()
                 return 1  # returncode for failure
