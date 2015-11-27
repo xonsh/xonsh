@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 """The prompt_toolkit based xonsh shell."""
-import os
 import builtins
 from warnings import warn
 
 from prompt_toolkit.shortcuts import prompt
 from prompt_toolkit.key_binding.manager import KeyBindingManager
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.layout.lexers import PygmentsLexer
 from prompt_toolkit.filters import Condition
 from pygments.token import Token
 from pygments.style import Style
+from pygments.styles.default import DefaultStyle
+from pygments.lexers import PythonLexer
 
 from xonsh.base_shell import BaseShell
 from xonsh.tools import format_prompt_for_prompt_toolkit
@@ -83,6 +85,7 @@ class PromptToolkitShell(BaseShell):
                     get_prompt_tokens=token_func,
                     style=style_cls,
                     completer=completer,
+                    lexer=PygmentsLexer(PythonLexer),
                     history=self.history,
                     key_bindings_registry=self.key_bindings_manager.registry,
                     display_completions_in_columns=multicolumn)
@@ -108,14 +111,15 @@ class PromptToolkitShell(BaseShell):
             return list(zip(tokens, strings))
 
         class CustomStyle(Style):
-            styles = {
+            styles = DefaultStyle.styles.copy()
+            styles.update({
                 Token.Menu.Completions.Completion.Current: 'bg:#00aaaa #000000',
                 Token.Menu.Completions.Completion: 'bg:#008888 #ffffff',
                 Token.Menu.Completions.ProgressButton: 'bg:#003333',
                 Token.Menu.Completions.ProgressBar: 'bg:#00aaaa',
                 Token.AutoSuggestion: '#666666',
                 Token.Aborted: '#888888',
-            }
+            })
             # update with the prompt styles
             styles.update({t: s for (t, s) in zip(tokens, cstyles)})
             # Update with with any user styles
