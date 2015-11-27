@@ -791,6 +791,11 @@ must have the following signature:
         stderr = None
         return stdout, stderr
 
+        # Lastly, a 3-tuple return value can be used to include an integer
+        # return code indicating failure (> 0 return code). In the previous
+        # examples the return code would be 0/success.
+        return (None, "I failed", 2)
+
 We can dynamically alter the aliases present simply by modifying the
 built-in mapping.  Here is an example using a function value:
 
