@@ -74,6 +74,13 @@ applicable.
       - xonsh.environ.FORMATTER_DICT  
       - Dictionary containing variables to be used when formatting PROMPT and TITLE 
         see `Customizing the Prompt <tutorial.html#customizing-the-prompt>`_.
+    * - HISTCONTROL
+      - ``''``
+      - A comma-separated list of options that determine if commands are saved
+        to the history list. By default all commands are saved. The option
+        ``ignoredups`` will not save the command if it matches the previous
+        command. The option ``ignoreerr`` will cause any commands that fail
+        (i.e. return non-zero exit status) to not be added to the history list.
     * - IGNOREEOF
       - ``False``
       - Prevents Ctrl-D from exiting the shell.
