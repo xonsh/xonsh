@@ -294,10 +294,10 @@ class History(object):
         if ('ignoredups' in opts and len(self.buffer)
                 and cmd['inp'] == self.buffer[-1]['inp']):
             # Skipping dup cmd
-            return
+            return None
         elif 'ignoreerr' in opts and cmd['rtn'] != 0:
             # Skipping failed cmd
-            return
+            return None
 
         self.buffer.append(cmd)
         self._len += 1  # must come before flushing
