@@ -169,7 +169,6 @@ def test_histcontrol():
     with mock_xonsh_env({'HISTCONTROL': 'ignoredups,ignoreerr'}):
         yield assert_equal, len(hist.buffer), 0
 
-        import ipdb; ipdb.set_trace()
         # An error, buffer remains empty
         hist.append({'inp': 'ls foo', 'rtn': 2})
         yield assert_equal, len(hist.buffer), 0
