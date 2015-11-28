@@ -557,6 +557,28 @@ def ensure_int_or_slice(x):
         return int(x)
 
 
+def is_string_set(x):
+    """Tests if something is a set"""
+    if isinstance(x, string_types):
+        return False
+    else:
+        return (isinstance(x, set) and
+                all([isinstance(a, string_types) for a in x]))
+
+
+def csv_to_set(x):
+    """Convert a comma-separated list of strings to a set of strings."""
+    if not x:
+        return set()
+    else:
+        return set(x.split(','))
+
+
+def set_to_csv(x):
+    """Convert a set of strings to a comma-separated list of strings."""
+    return ','.join(x)
+
+
 def is_completions_display_value(x):
     return x in {'none', 'single', 'multi'}
 

@@ -290,7 +290,7 @@ class History(object):
         hf : HistoryFlusher or None
             The thread that was spawned to flush history
         """
-        opts = builtins.__xonsh_env__.get('HISTCONTROL', '').split(',')
+        opts = builtins.__xonsh_env__.get('HISTCONTROL', set())
         if ('ignoredups' in opts and len(self.buffer)
                 and cmd['inp'] == self.buffer[-1]['inp']):
             # Skipping dup cmd
