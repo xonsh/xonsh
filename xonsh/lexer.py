@@ -3,15 +3,12 @@
 
 Written using a hybrid of ``tokenize`` and PLY.
 """
-import re
-import sys
 import tokenize
 
 from io import BytesIO
 from keyword import kwlist
 
-from ply import lex
-from ply.lex import TOKEN, LexToken
+from ply.lex import LexToken
 
 from xonsh.tools import VER_3_5, VER_MAJOR_MINOR
 
