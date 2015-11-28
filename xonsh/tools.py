@@ -343,6 +343,16 @@ def command_not_found(cmd):
     return s
 
 
+def _compute_known_commands(env, aliases):
+    list_ = []
+    list_.extend(aliases)
+    for d in filter(os.path.isdir, env.get('PATH')):
+        for f in os.scandir(d):
+            list_.append(f.name)
+    return list_
+
+
+
 def suggest_commands(cmd, env, aliases):
     """Suggests alternative commands given an environment and aliases."""
     suggest_cmds = env.get('SUGGEST_COMMANDS')

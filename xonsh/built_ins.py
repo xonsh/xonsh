@@ -13,16 +13,13 @@ import atexit
 import signal
 import inspect
 import builtins
-import subprocess
-from io import TextIOWrapper, StringIO
 from glob import glob, iglob
 from subprocess import Popen, PIPE, STDOUT
 from contextlib import contextmanager
-from collections import Sequence, MutableMapping, Iterable, namedtuple, \
-    MutableSequence, MutableSet
+from collections import Sequence, MutableMapping, Iterable
 
 from xonsh.tools import suggest_commands, XonshError, ON_POSIX, ON_WINDOWS, \
-    string_types
+    string_types, _compute_known_commands
 from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env, locate_binary
 from xonsh.aliases import DEFAULT_ALIASES
@@ -472,6 +469,9 @@ def _redirect_io(streams, r, loc=None):
     else:
         raise XonshError('Unrecognized redirection command: {}'.format(r))
 
+def known_commands():
+    return _compute_known_commands(ENV, builtins.aliases)
+
 
 def run_subproc(cmds, captured=True):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
@@ -493,7 +493,6 @@ def run_subproc(cmds, captured=True):
         cmds = cmds[:-1]
     write_target = None
     last_cmd = len(cmds) - 1
-    prev = None
     procs = []
     prev_proc = None
     for ix, cmd in enumerate(cmds):
@@ -501,7 +500,6 @@ def run_subproc(cmds, captured=True):
         stdout = None
         stderr = None
         if isinstance(cmd, string_types):
-            prev = cmd
             continue
         streams = {}
         while True:
@@ -599,7 +597,6 @@ def run_subproc(cmds, captured=True):
                     e += '\n' + suggest_commands(cmd, ENV, builtins.aliases)
                 raise XonshError(e)
         procs.append(proc)
-        prev = None
         prev_proc = proc
     for proc in procs[:-1]:
         try:
