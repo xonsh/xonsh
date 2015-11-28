@@ -17,8 +17,7 @@ from xonsh.tools import format_prompt_for_prompt_toolkit
 from xonsh.prompt_toolkit_completer import PromptToolkitCompleter
 from xonsh.prompt_toolkit_history import LimitedFileHistory
 from xonsh.prompt_toolkit_key_bindings import load_xonsh_bindings
-
-from .pyghooks import XonshLexer
+from xonsh.pyghooks import XonshLexer
 
 
 def setup_history():
