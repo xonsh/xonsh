@@ -11,13 +11,14 @@ from prompt_toolkit.filters import Condition
 from pygments.token import Token
 from pygments.style import Style
 from pygments.styles.default import DefaultStyle
-from pygments.lexers import PythonLexer
 
 from xonsh.base_shell import BaseShell
 from xonsh.tools import format_prompt_for_prompt_toolkit
 from xonsh.prompt_toolkit_completer import PromptToolkitCompleter
 from xonsh.prompt_toolkit_history import LimitedFileHistory
 from xonsh.prompt_toolkit_key_bindings import load_xonsh_bindings
+
+from .pyghooks import XonshLexer
 
 
 def setup_history():
@@ -85,7 +86,7 @@ class PromptToolkitShell(BaseShell):
                     get_prompt_tokens=token_func,
                     style=style_cls,
                     completer=completer,
-                    lexer=PygmentsLexer(PythonLexer),
+                    lexer=PygmentsLexer(XonshLexer),
                     history=self.history,
                     key_bindings_registry=self.key_bindings_manager.registry,
                     display_completions_in_columns=multicolumn)
