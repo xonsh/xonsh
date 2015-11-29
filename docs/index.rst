@@ -23,6 +23,7 @@ the xonsh shell
         "It is pronounced <i>quanxh</i>",
         "It is pronounced <i>zonsch</i>",
         "It is pronounced <i>jeaunsch</i>",
+        "It is pronounced <i>măjˈĭk</i>",
         "The shell, bourne again",
         "Snailed it",
         "Starfish loves you",
