@@ -8,12 +8,13 @@ from prompt_toolkit.key_binding.manager import KeyBindingManager
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.layout.lexers import PygmentsLexer
 from prompt_toolkit.filters import Condition
-from pygments.token import Token
 from pygments.style import Style
 from pygments.styles.default import DefaultStyle
+from pygments.token import (Keyword, Name, Comment, String, Error, Number,
+                            Operator, Generic, Whitespace, Token)
 
 from xonsh.base_shell import BaseShell
-from xonsh.tools import format_prompt_for_prompt_toolkit
+from xonsh.tools import format_prompt_for_prompt_toolkit, _make_style
 from xonsh.prompt_toolkit_completer import PromptToolkitCompleter
 from xonsh.prompt_toolkit_history import LimitedFileHistory
 from xonsh.prompt_toolkit_key_bindings import load_xonsh_bindings
@@ -110,21 +111,66 @@ class PromptToolkitShell(BaseShell):
         def get_tokens(cli):
             return list(zip(tokens, strings))
 
-        class CustomStyle(Style):
-            styles = DefaultStyle.styles.copy()
-            styles.update({
-                Token.Menu.Completions.Completion.Current: 'bg:#00aaaa #000000',
-                Token.Menu.Completions.Completion: 'bg:#008888 #ffffff',
-                Token.Menu.Completions.ProgressButton: 'bg:#003333',
-                Token.Menu.Completions.ProgressBar: 'bg:#00aaaa',
-                Token.AutoSuggestion: '#666666',
-                Token.Aborted: '#888888',
-            })
-            # update with the prompt styles
-            styles.update({t: s for (t, s) in zip(tokens, cstyles)})
-            # Update with with any user styles
-            userstyle = builtins.__xonsh_env__.get('PROMPT_TOOLKIT_STYLES')
-            if userstyle is not None:
-                styles.update(userstyle)
+        custom_style = _xonsh_style(tokens, cstyles)
 
-        return get_tokens, CustomStyle
+        return get_tokens, custom_style
+
+
+def _xonsh_style(tokens=[], cstyles=[]):
+    class XonshStyle(Style):
+        styles = {
+            Whitespace: "GRAY",
+            Comment: "UNDERLINE INTENSE GRAY",
+            Comment.Preproc: "UNDERLINE INTENSE GRAY",
+            Keyword: "BOLD BLUE",
+            Keyword.Pseudo: "BLUE",
+            Keyword.Type: "MAGENTA",
+            Operator: "GRAY",
+            Operator.Word: "BOLD",
+            Name.Builtin: "INTENSE GREEN",
+            Name.Function: "BLUE",
+            Name.Class: "BOLD BLUE",
+            Name.Namespace: "BOLD BLUE",
+            Name.Exception: "BOLD INTENSE RED",
+            Name.Variable: "CYAN",
+            Name.Constant: "RED",
+            Name.Label: "YELLOW",
+            Name.Entity: "BOLD WHITE",
+            Name.Attribute: "CYAN",
+            Name.Tag: "BOLD GREEN",
+            Name.Decorator: "CYAN",
+            String: "MAGENTA",
+            String.Doc: "UNDERLINE MAGENTA",
+            String.Interpol: "BOLD MAGENTA",
+            String.Escape: "BOLD RED",
+            String.Regex: "MAGENTA",
+            String.Symbol: "BOLD GREEN",
+            String.Other: "GREEN",
+            Number: "RED",
+            Generic.Heading: "BOLD BLUE",
+            Generic.Subheading: "BOLD MAGENTA",
+            Generic.Deleted: "RED",
+            Generic.Inserted: "GREEN",
+            Generic.Error: "BOLD RED",
+            Generic.Emph: "UNDERLINE",
+            Generic.Prompt: "BOLD BLUE",
+            Generic.Output: "GRAY",
+            Generic.Traceback: "RED",
+            Error: "RED",
+        }
+        styles = {k: _make_style(v) for k, v in styles.items()}
+        styles.update({
+            Token.Menu.Completions.Completion.Current: 'bg:#00aaaa #000000',
+            Token.Menu.Completions.Completion: 'bg:#008888 #ffffff',
+            Token.Menu.Completions.ProgressButton: 'bg:#003333',
+            Token.Menu.Completions.ProgressBar: 'bg:#00aaaa',
+            Token.AutoSuggestion: '#666666',
+            Token.Aborted: '#888888',
+        })
+        # update with the prompt styles
+        styles.update({t: s for (t, s) in zip(tokens, cstyles)})
+        # Update with with any user styles
+        userstyle = builtins.__xonsh_env__.get('PROMPT_TOOLKIT_STYLES')
+        if userstyle is not None:
+            styles.update(userstyle)
+    return XonshStyle

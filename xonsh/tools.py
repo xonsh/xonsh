@@ -716,7 +716,8 @@ _PT_COLORS = {'BLACK': '#000000',
               'BLUE': '#0000FF',
               'PURPLE': '#0000FF',
               'CYAN': '#00FFFF',
-              'WHITE': '#FFFFFF'}
+              'WHITE': '#FFFFFF',
+              'GRAY': '#888888'}
 
 _PT_STYLE = {'BOLD': 'bold',
              'UNDERLINE': 'underline',
