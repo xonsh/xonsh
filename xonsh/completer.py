@@ -393,9 +393,9 @@ class Completer(object):
         opts = []
         for i in _opts:
             try:
-                v = eval('%s.%s' % (expr,i), _ctx)
+                v = eval('{0}.{1}'.format(expr, i), _ctx)
                 opts.append(i)
-            except:
+            except:  # pylint:disable=bare-except
                 continue
         if len(attr) == 0:
             opts = [o for o in opts if not o.startswith('_')]
