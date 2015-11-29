@@ -5,10 +5,12 @@ from __future__ import unicode_literals, print_function
 import nose
 from nose.tools import assert_equal
 
+import builtins
 from xonsh.tools import format_prompt_for_prompt_toolkit
 from xonsh.tools import TERM_COLORS
-from xonsh.environ import format_prompt
+from xonsh.environ import format_prompt, Env
 
+builtins.__xonsh_env__ = Env()
 
 
 def test_format_prompt_for_prompt_toolkit():
@@ -18,7 +20,6 @@ def test_format_prompt_for_prompt_toolkit():
     assert_equal(token_names, ['NO_COLOR', 'BOLD_BLUE', 'WHITE', 'NO_COLOR'])
     assert_equal(color_styles, ['', 'bold #0000FF', '#FFFFFF', ''])
     assert_equal(strings, ['>>> ', '~/xonsh ', ' (main)', ''])
-
 
 
 if __name__ == '__main__':
