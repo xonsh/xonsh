@@ -16,7 +16,7 @@ from xonsh.lazyjson import LazyJSON
 from xonsh.history import History
 from xonsh import history
 
-from tools import mock_xonsh_env
+from tests.tools import mock_xonsh_env
 
 HIST_TEST_KWARGS = dict(sessionid='SESSIONID', gc=False)
 
@@ -37,7 +37,7 @@ def test_hist_append():
     FNAME = 'xonsh-SESSIONID.json'
     FNAME += '.append'
     hist = History(filename=FNAME, here='yup', **HIST_TEST_KWARGS)
-    with mock_xonsh_env({}):
+    with mock_xonsh_env({'HISTCONTROL': set()}):
         hf = hist.append({'joco': 'still alive'})
     yield assert_is_none, hf
     yield assert_equal, 'still alive', hist.buffer[0]['joco']
@@ -51,7 +51,7 @@ def test_hist_flush():
     hist = History(filename=FNAME, here='yup', **HIST_TEST_KWARGS)
     hf = hist.flush()
     yield assert_is_none, hf
-    with mock_xonsh_env({}):
+    with mock_xonsh_env({'HISTCONTROL': set()}):
         hist.append({'joco': 'still alive'})
     hf = hist.flush()
     yield assert_is_not_none, hf
@@ -69,7 +69,7 @@ def test_cmd_field():
     FNAME += '.cmdfield'
     hist = History(filename=FNAME, here='yup', **HIST_TEST_KWARGS)
     # in-memory
-    with mock_xonsh_env({}):
+    with mock_xonsh_env({'HISTCONTROL': set()}):
         hf = hist.append({'rtn': 1})
     yield assert_is_none, hf
     yield assert_equal, 1, hist.rtns[0]
@@ -113,7 +113,7 @@ def test_show_cmd():
     saved_stdout = sys.stdout
     sys.stdout = stdout
 
-    with mock_xonsh_env({}):
+    with mock_xonsh_env({'HISTCONTROL': set()}):
         for cmd in cmds:  # populate the shell history
             hist.append({'inp': cmd, 'rtn': 0})
 

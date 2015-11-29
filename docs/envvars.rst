@@ -75,7 +75,7 @@ applicable.
       - Dictionary containing variables to be used when formatting PROMPT and TITLE 
         see `Customizing the Prompt <tutorial.html#customizing-the-prompt>`_.
     * - HISTCONTROL
-      - ``''``
+      - ``set([])``
       - A set of strings (comma-separated list in string form) of options that
         determine what commands are saved to the history list. By default all
         commands are saved. The option ``ignoredups`` will not save the command
