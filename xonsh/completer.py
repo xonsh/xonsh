@@ -397,7 +397,7 @@ class Completer(object):
                 opts.append(i)
             except:
                 continue
-        if len(attrs) == 0:
+        if len(attr) == 0:
             opts = [o for o in opts if not o.startswith('_')]
         else:
             csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
