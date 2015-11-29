@@ -378,14 +378,25 @@ class Completer(object):
         expr = subexpr_from_unbalanced(expr, '(', ')')
         expr = subexpr_from_unbalanced(expr, '[', ']')
         expr = subexpr_from_unbalanced(expr, '{', '}')
+        _ctx = None
         try:
-            val = builtins.evalx(expr, glbs=ctx)
+            val = eval(expr, ctx)
+            _ctx = ctx
         except:  # pylint:disable=bare-except
             try:
-                val = builtins.evalx(expr, glbs=builtins.__dict__)
+                val = eval(expr, builtins.__dict__)
+                _ctx = builtins.__dict__
             except:  # pylint:disable=bare-except
                 return attrs  # anything could have gone wrong!
-        opts = dir(val)
+        _opts = dir(val)
+        # check whether these options actually work (e.g., disallow 7.imag)
+        opts = []
+        for i in _opts:
+            try:
+                v = eval('%s.%s' % (expr,i), _ctx)
+                opts.append(i)
+            except:
+                continue
         if len(attr) == 0:
             opts = [o for o in opts if not o.startswith('_')]
         else:
