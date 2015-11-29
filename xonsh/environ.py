@@ -539,6 +539,13 @@ def _replace_home(x):
 
 _replace_home_cwd = lambda: _replace_home(builtins.__xonsh_env__['PWD'])
 
+def _collapsed_pwd():
+    pwd = _replace_home_cwd().split('/')
+    l = len(pwd)
+    leader = '/' if l>0 and len(pwd[0])==0 else ''
+    base = [i[0] if ix != l-1 else i for ix,i in enumerate(pwd) if len(i) > 0]
+    return leader + '/'.join(base)
+
 
 if ON_WINDOWS:
     USER = 'USERNAME'
@@ -553,6 +560,7 @@ FORMATTER_DICT = dict(
     cwd=_replace_home_cwd,
     cwd_dir=lambda: os.path.dirname(_replace_home_cwd()),
     cwd_base=lambda: os.path.basename(_replace_home_cwd()),
+    short_cwd=_collapsed_pwd,
     curr_branch=current_branch,
     branch_color=branch_color,
     **TERM_COLORS)
