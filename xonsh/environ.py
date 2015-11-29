@@ -528,14 +528,18 @@ def _replace_home(x):
     if ON_WINDOWS:
         home = (builtins.__xonsh_env__['HOMEDRIVE'] +
                 builtins.__xonsh_env__['HOMEPATH'][0])
-        cwd = x.replace(home, '~')
+        if x.startswith(home):
+            x = x.replace(home, '~', 1)
 
         if builtins.__xonsh_env__.get('FORCE_POSIX_PATHS'):
-            cwd = cwd.replace(os.sep, os.altsep)
+            x = x.replace(os.sep, os.altsep)
 
-        return cwd
+        return x
     else:
-        return x.replace(builtins.__xonsh_env__['HOME'], '~')
+        home = builtins.__xonsh_env__['HOME']
+        if x.startswith(home):
+            x = x.replace(home, '~', 1)
+        return x
 
 _replace_home_cwd = lambda: _replace_home(builtins.__xonsh_env__['PWD'])
 
