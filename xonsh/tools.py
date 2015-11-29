@@ -730,7 +730,7 @@ def _make_style(color_name):
     for k, v in _PT_STYLE.items():
         if k in color_name:
             style.append(v)
-    _custom_colors = builtins.__xonsh_env__.get('PROMPT_TOOLKIT_COLORS', {})
+    _custom_colors = builtins.__xonsh_env__.get('PROMPT_TOOLKIT_COLORS')
     for k, v in _custom_colors.items():
         if k in color_name:
             style.append(v)
