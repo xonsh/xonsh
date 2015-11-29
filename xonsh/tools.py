@@ -729,8 +729,12 @@ def _make_style(color_name):
     for k, v in _PT_STYLE.items():
         if k in color_name:
             style.append(v)
-    for k, v in _PT_COLORS.items():
+    _custom_colors = builtins.__xonsh_env__.get('PROMPT_TOOLKIT_COLORS', {})
+    for k, v in _custom_colors.items():
         if k in color_name:
+            style.append(v)
+    for k, v in _PT_COLORS.items():
+        if k not in _custom_colors and k in color_name:
             style.append(v)
     return ' '.join(style)
 
