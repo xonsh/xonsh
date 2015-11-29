@@ -379,10 +379,10 @@ class Completer(object):
         expr = subexpr_from_unbalanced(expr, '[', ']')
         expr = subexpr_from_unbalanced(expr, '{', '}')
         try:
-            val = builtins.evalx(expr, glbs=ctx)
+            val = eval(expr, ctx)
         except:  # pylint:disable=bare-except
             try:
-                val = builtins.evalx(expr, glbs=builtins.__dict__)
+                val = eval(expr, builtins.__dict__)
             except:  # pylint:disable=bare-except
                 return attrs  # anything could have gone wrong!
         opts = dir(val)
