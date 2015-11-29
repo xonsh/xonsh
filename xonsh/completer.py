@@ -378,15 +378,26 @@ class Completer(object):
         expr = subexpr_from_unbalanced(expr, '(', ')')
         expr = subexpr_from_unbalanced(expr, '[', ']')
         expr = subexpr_from_unbalanced(expr, '{', '}')
+        _ctx = None
         try:
             val = eval(expr, ctx)
+            _ctx = ctx
         except:  # pylint:disable=bare-except
             try:
                 val = eval(expr, builtins.__dict__)
+                _ctx = builtins.__dict__
             except:  # pylint:disable=bare-except
                 return attrs  # anything could have gone wrong!
-        opts = dir(val)
-        if len(attr) == 0:
+        _opts = dir(val)
+        # check whether these options actually work (e.g., disallow 7.imag)
+        opts = []
+        for i in _opts:
+            try:
+                v = eval('%s.%s' % (expr,i), _ctx)
+                opts.append(i)
+            except:
+                continue
+        if len(attrs) == 0:
             opts = [o for o in opts if not o.startswith('_')]
         else:
             csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
