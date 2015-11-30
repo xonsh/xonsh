@@ -116,7 +116,7 @@ class PromptToolkitShell(BaseShell):
         return get_tokens, custom_style
 
 
-def _xonsh_style(tokens=[], cstyles=[]):
+def _xonsh_style(tokens=tuple(), cstyles=tuple()):
     class XonshStyle(Style):
         styles = {
             Whitespace: "GRAY",
