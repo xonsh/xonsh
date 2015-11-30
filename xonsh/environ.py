@@ -57,6 +57,7 @@ DEFAULT_ENSURERS = {
     'CASE_SENSITIVE_COMPLETIONS': (is_bool, to_bool, bool_to_str),
     re.compile('\w*DIRS'): (is_env_path, str_to_env_path, env_path_to_str),
     'COMPLETIONS_DISPLAY': (is_completions_display_value, to_completions_display_value, str),
+    'FORCE_POSIX_PATHS': (is_bool, to_bool, bool_to_str),
     'IGNOREEOF': (is_bool, to_bool, bool_to_str),
     'LC_COLLATE': (always_false, locale_convert('LC_COLLATE'), ensure_string),
     'LC_CTYPE': (always_false, locale_convert('LC_CTYPE'), ensure_string),
