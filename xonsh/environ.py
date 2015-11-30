@@ -18,7 +18,8 @@ from xonsh.tools import (
     always_true, always_false, ensure_string, is_env_path, str_to_env_path,
     env_path_to_str, is_bool, to_bool, bool_to_str, is_history_tuple, to_history_tuple,
     history_tuple_to_str, is_float, string_types, is_string, DEFAULT_ENCODING,
-    is_completions_display_value, to_completions_display_value
+    is_completions_display_value, to_completions_display_value, is_string_set,
+    csv_to_set, set_to_csv
 )
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
@@ -57,6 +58,7 @@ DEFAULT_ENSURERS = {
     'CASE_SENSITIVE_COMPLETIONS': (is_bool, to_bool, bool_to_str),
     re.compile('\w*DIRS'): (is_env_path, str_to_env_path, env_path_to_str),
     'COMPLETIONS_DISPLAY': (is_completions_display_value, to_completions_display_value, str),
+    'HISTCONTROL': (is_string_set, csv_to_set, set_to_csv),
     'IGNOREEOF': (is_bool, to_bool, bool_to_str),
     'LC_COLLATE': (always_false, locale_convert('LC_COLLATE'), ensure_string),
     'LC_CTYPE': (always_false, locale_convert('LC_CTYPE'), ensure_string),
@@ -137,6 +139,7 @@ DEFAULT_VALUES = {
     'COMPLETIONS_DISPLAY': 'multi',
     'DIRSTACK_SIZE': 20,
     'FORCE_POSIX_PATHS': False,
+    'HISTCONTROL': set(),
     'IGNOREEOF': False,
     'INDENT': '    ',
     'LC_CTYPE': locale.setlocale(locale.LC_CTYPE),
