@@ -117,6 +117,14 @@ applicable.
       - ``None``
       - This is a mapping of user-specified styles for prompt-toolkit. See the 
         prompt-toolkit documentation for more details. If None, this is skipped.
+    * - PROMPT_TOOLKIT_COLORS
+      - ``{}``
+      - This is a mapping of from color names to HTML color codes.  Whenever
+        prompt-toolkit would color a word a particular color (in the prompt, or
+        in syntax highlighting), it will use the value specified here to
+        represent that color, instead of its default.  If a color is not
+        specified here, prompt-toolkit uses the colors from
+        ``xonsh.tools._PT_COLORS``.
     * - PUSHD_MINUS
       - ``False``
       - Flag for directory pushing functionality. False is the normal behaviour.

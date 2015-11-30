@@ -152,6 +152,7 @@ DEFAULT_VALUES = {
     'PATH': (),
     'PATHEXT': (),
     'PROMPT': DEFAULT_PROMPT,
+    'PROMPT_TOOLKIT_COLORS': {},
     'PROMPT_TOOLKIT_STYLES': None,
     'PUSHD_MINUS': False,
     'PUSHD_SILENT': False,
