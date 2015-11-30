@@ -540,11 +540,14 @@ def _replace_home(x):
 _replace_home_cwd = lambda: _replace_home(builtins.__xonsh_env__['PWD'])
 
 def _collapsed_pwd():
-    pwd = _replace_home_cwd().split('/')
+    sep = os.sep
+    if ON_WINDOWS and builtins.__xonsh_env__.get('FORCE_POSIX_PATHS'):
+        sep = os.altsep
+    pwd = _replace_home_cwd().split(sep)
     l = len(pwd)
-    leader = '/' if l>0 and len(pwd[0])==0 else ''
+    leader = sep if l>0 and len(pwd[0])==0 else ''
     base = [i[0] if ix != l-1 else i for ix,i in enumerate(pwd) if len(i) > 0]
-    return leader + '/'.join(base)
+    return leader + sep.join(base)
 
 
 if ON_WINDOWS:
