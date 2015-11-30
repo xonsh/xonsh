@@ -422,8 +422,8 @@ class Completer(object):
         self._path_checksum = path_hash
         # did aliases change?
         al_hash = hash(tuple(sorted(builtins.aliases.keys())))
-        self._alias_checksum = al_hash
         cache_valid = cache_valid and al_hash == self._alias_checksum
+        self._alias_checksum = al_hash
         pm = self._path_mtime
         # did the contents of any directory in PATH change?
         for d in filter(os.path.isdir, path):
