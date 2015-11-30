@@ -44,7 +44,7 @@ ON_ARCH = (platform.linux_distribution()[0] == 'arch')
 ON_POSIX = (os.name == 'posix')
 IS_ROOT = ctypes.windll.shell32.IsUserAnAdmin() != 0 if ON_WINDOWS else os.getuid() == 0
 
-if ON_WINDOWS == True and sys.stdout.encoding is not None:
+if ON_WINDOWS and sys.stdout.encoding is not None:
     DEFAULT_ENCODING = sys.stdout.encoding
 else:
     DEFAULT_ENCODING = sys.getdefaultencoding()
