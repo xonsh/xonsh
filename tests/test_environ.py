@@ -4,7 +4,8 @@ from __future__ import unicode_literals, print_function
 import os
 
 import nose
-from nose.tools import assert_equal, assert_true, assert_not_in
+from nose.tools import (assert_equal, assert_true, assert_not_in,
+                        assert_is_instance, assert_in)
 
 from xonsh.environ import Env, format_prompt
 
@@ -50,6 +51,26 @@ def test_format_prompt():
     for p, exp in cases.items():
         obs = format_prompt(template=p, formatter_dict=formatter_dict)
         yield assert_equal, exp, obs
+
+def test_HISTCONTROL():
+    env = Env(HISTCONTROL=None)
+    assert_is_instance(env['HISTCONTROL'], set)
+    assert_equal(len(env['HISTCONTROL']), 0)
+
+    env['HISTCONTROL'] = ''
+    assert_is_instance(env['HISTCONTROL'], set)
+    assert_equal(len(env['HISTCONTROL']), 0)
+
+    env['HISTCONTROL'] = 'ignoredups'
+    assert_is_instance(env['HISTCONTROL'], set)
+    assert_equal(len(env['HISTCONTROL']), 1)
+    assert_true('ignoredups' in env['HISTCONTROL'])
+    assert_true('ignoreerr' not in env['HISTCONTROL'])
+
+    env['HISTCONTROL'] = 'ignoreerr,ignoredups,ignoreerr'
+    assert_equal(len(env['HISTCONTROL']), 2)
+    assert_true('ignoreerr' in env['HISTCONTROL'])
+    assert_true('ignoredups' in env['HISTCONTROL'])
 
 if __name__ == '__main__':
     nose.runmodule()

@@ -557,6 +557,28 @@ def ensure_int_or_slice(x):
         return int(x)
 
 
+def is_string_set(x):
+    """Tests if something is a set"""
+    if isinstance(x, string_types):
+        return False
+    else:
+        return (isinstance(x, set) and
+                all([isinstance(a, string_types) for a in x]))
+
+
+def csv_to_set(x):
+    """Convert a comma-separated list of strings to a set of strings."""
+    if not x:
+        return set()
+    else:
+        return set(x.split(','))
+
+
+def set_to_csv(x):
+    """Convert a set of strings to a comma-separated list of strings."""
+    return ','.join(x)
+
+
 def is_completions_display_value(x):
     return x in {'none', 'single', 'multi'}
 
@@ -716,7 +738,8 @@ _PT_COLORS = {'BLACK': '#000000',
               'BLUE': '#0000FF',
               'PURPLE': '#0000FF',
               'CYAN': '#00FFFF',
-              'WHITE': '#FFFFFF'}
+              'WHITE': '#FFFFFF',
+              'GRAY': '#888888'}
 
 _PT_STYLE = {'BOLD': 'bold',
              'UNDERLINE': 'underline',
@@ -729,8 +752,12 @@ def _make_style(color_name):
     for k, v in _PT_STYLE.items():
         if k in color_name:
             style.append(v)
-    for k, v in _PT_COLORS.items():
+    _custom_colors = builtins.__xonsh_env__.get('PROMPT_TOOLKIT_COLORS')
+    for k, v in _custom_colors.items():
         if k in color_name:
+            style.append(v)
+    for k, v in _PT_COLORS.items():
+        if k not in _custom_colors and k in color_name:
             style.append(v)
     return ' '.join(style)
 

@@ -74,6 +74,14 @@ applicable.
       - xonsh.environ.FORMATTER_DICT  
       - Dictionary containing variables to be used when formatting PROMPT and TITLE 
         see `Customizing the Prompt <tutorial.html#customizing-the-prompt>`_.
+    * - HISTCONTROL
+      - ``set([])``
+      - A set of strings (comma-separated list in string form) of options that
+        determine what commands are saved to the history list. By default all
+        commands are saved. The option ``ignoredups`` will not save the command
+        if it matches the previous command. The option ``ignoreerr`` will cause
+        any commands that fail (i.e. return non-zero exit status) to not be
+        added to the history list.
     * - IGNOREEOF
       - ``False``
       - Prevents Ctrl-D from exiting the shell.
@@ -109,6 +117,14 @@ applicable.
       - ``None``
       - This is a mapping of user-specified styles for prompt-toolkit. See the 
         prompt-toolkit documentation for more details. If None, this is skipped.
+    * - PROMPT_TOOLKIT_COLORS
+      - ``{}``
+      - This is a mapping of from color names to HTML color codes.  Whenever
+        prompt-toolkit would color a word a particular color (in the prompt, or
+        in syntax highlighting), it will use the value specified here to
+        represent that color, instead of its default.  If a color is not
+        specified here, prompt-toolkit uses the colors from
+        ``xonsh.tools._PT_COLORS``.
     * - PUSHD_MINUS
       - ``False``
       - Flag for directory pushing functionality. False is the normal behaviour.
