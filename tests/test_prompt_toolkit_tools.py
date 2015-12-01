@@ -18,7 +18,7 @@ def test_format_prompt_for_prompt_toolkit():
     prompt = format_prompt(templ, TERM_COLORS)
     token_names, color_styles, strings = format_prompt_for_prompt_toolkit(prompt)
     assert_equal(token_names, ['NO_COLOR', 'BOLD_BLUE', 'WHITE', 'NO_COLOR'])
-    assert_equal(color_styles, ['', 'bold #0000FF', '#ffffff', ''])
+    assert_equal(color_styles, ['', 'bold #0000D2', '#ffffff', ''])
     assert_equal(strings, ['>>> ', '~/xonsh ', ' (main)', ''])
 
 
