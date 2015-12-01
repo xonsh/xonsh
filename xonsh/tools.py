@@ -731,16 +731,26 @@ class FakeChar(str):
 RE_HIDDEN_MAX = re.compile('(\001.*?\002)+')
 
 
-_PT_COLORS = {'BLACK': '#000000',
-              'RED': '#FF0000',
-              'GREEN': '#008000',
-              'YELLOW': '#FFFF00',
-              'BLUE': '#0000FF',
-              'PURPLE': '#0000FF',
-              'CYAN': '#00FFFF',
-              'WHITE': '#FFFFFF',
-              'GRAY': '#888888'}
+_PT_COLORS_DARK = {'BLACK': '#000000',
+                   'RED': '#ff1010',
+                   'GREEN': '#00FF18',
+                   'YELLOW': '#FFFF00',
+                   'BLUE': '#0000D2',
+                   'PURPLE': '#FF00FF',
+                   'CYAN': '#00FFFF',
+                   'WHITE': '#FFFFFF',
+                   'GRAY': '#c0c0c0'}
 
+_PT_COLORS_LIGHT = {'BLACK': '#000000',
+                    'RED': '#800000',
+                    'GREEN': '#008000',
+                    'YELLOW': '#808000',
+                    'BLUE': '#000080',
+                    'PURPLE': '#800080',
+                    'CYAN': '#008080',
+                    'WHITE': '#FFFFFF',
+                    'GRAY': '#008080'}              
+              
 _PT_STYLE = {'BOLD': 'bold',
              'UNDERLINE': 'underline',
              'INTENSE': 'italic'}
@@ -756,7 +766,7 @@ def _make_style(color_name):
     for k, v in _custom_colors.items():
         if k in color_name:
             style.append(v)
-    for k, v in _PT_COLORS.items():
+    for k, v in _PT_COLORS_DARK.items():
         if k not in _custom_colors and k in color_name:
             style.append(v)
     return ' '.join(style)
