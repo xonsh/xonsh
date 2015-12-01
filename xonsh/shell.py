@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """The xonsh shell"""
+import random
 import builtins
 from warnings import warn
 
@@ -31,6 +32,8 @@ class Shell(object):
         if shell_type is not None:
             env['SHELL_TYPE'] = shell_type
         shell_type = env.get('SHELL_TYPE')
+        if shell_type == 'random':
+            shell_type = random.choice(('readline', 'prompt_toolkit'))
         if shell_type == 'prompt_toolkit':
             if not is_prompt_toolkit_available():
                 warn('prompt_toolkit is not available, using readline instead.')

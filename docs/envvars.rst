@@ -113,10 +113,6 @@ applicable.
       - xonsh.environ.DEFAULT_PROMPT  
       - The prompt text.  May contain keyword arguments which are auto-formatted,
         see `Customizing the Prompt <tutorial.html#customizing-the-prompt>`_.
-    * - PROMPT_TOOLKIT_STYLES
-      - ``None``
-      - This is a mapping of user-specified styles for prompt-toolkit. See the 
-        prompt-toolkit documentation for more details. If None, this is skipped.
     * - PROMPT_TOOLKIT_COLORS
       - ``{}``
       - This is a mapping of from color names to HTML color codes.  Whenever
@@ -125,6 +121,10 @@ applicable.
         represent that color, instead of its default.  If a color is not
         specified here, prompt-toolkit uses the colors from
         ``xonsh.tools._PT_COLORS``.
+    * - PROMPT_TOOLKIT_STYLES
+      - ``None``
+      - This is a mapping of user-specified styles for prompt-toolkit. See the 
+        prompt-toolkit documentation for more details. If None, this is skipped.
     * - PUSHD_MINUS
       - ``False``
       - Flag for directory pushing functionality. False is the normal behaviour.
@@ -133,13 +133,14 @@ applicable.
       - Whether or not to supress directory stack manipulation output.
     * - SHELL_TYPE
       - ``'prompt_toolkit'`` if on Windows, otherwise ``'readline'``
-      - Which shell is used. Currently two shell types are supported: ``'readline'`` that
-        is backed by Python's readline module, and ``'prompt_toolkit'`` that uses 
-        external library of the same name. For using prompt_toolkit shell you need 
-        to have 
+      - Which shell is used. Currently two base shell types are supported: 
+        ``'readline'`` that is backed by Python's readline module, and 
+        ``'prompt_toolkit'`` that uses external library of the same name. 
+        To use the prompt_toolkit shell you need to have 
         `prompt_toolkit <https://github.com/jonathanslenders/python-prompt-toolkit>`_
         library installed. To specify which shell should be used, do so in the run 
-        control file.
+        control file. Additionally, you may also set this value to ``'random'``
+        to get a random choice of shell type on startup.
     * - SUGGEST_COMMANDS
       - ``True``
       - When a user types an invalid command, xonsh will try to offer suggestions of 
@@ -190,8 +191,8 @@ applicable.
       - ``('/etc/xonshrc', '~/.xonshrc')`` (Linux and OSX) 
     	``('%ALLUSERSPROFILE%\xonsh\xonshrc', '~/.xonshrc')`` (Windows)
       - A tuple of the locations of run control files, if they exist.  User defined
-	run control file will supercede values set in system-wide control file if there
-	is a naming collision.
+        run control file will supercede values set in system-wide control file if there
+        is a naming collision.
     * - XONSH_CONFIG_DIR
       - ``$XDG_CONFIG_HOME/xonsh``
       - This is location where xonsh configuration information is stored.
