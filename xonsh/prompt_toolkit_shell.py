@@ -88,6 +88,7 @@ class PromptToolkitShell(BaseShell):
                     completer=completer,
                     lexer=PygmentsLexer(XonshLexer),
                     history=self.history,
+                    enable_history_search=True,
                     key_bindings_registry=self.key_bindings_manager.registry,
                     display_completions_in_columns=multicolumn)
                 if not line:
