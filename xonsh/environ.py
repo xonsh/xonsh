@@ -90,10 +90,15 @@ def default_value(f):
 def is_callable_default(x):
     """Checks if a value is a callable default."""
     return callable(x) and getattr(x, '_xonsh_callable_default', False)
-
-DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
-                  '{cwd}{branch_color}{curr_branch} '
-                  '{BOLD_BLUE}{prompt_end}{NO_COLOR} ')
+if ON_WINDOWS:
+    DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_CYAN} '
+                      '{cwd}{branch_color}{curr_branch} '
+                      '{BOLD_WHITE}{prompt_end}{NO_COLOR} ')
+else:
+    DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
+                      '{cwd}{branch_color}{curr_branch} '
+                      '{BOLD_BLUE}{prompt_end}{NO_COLOR} ')
+                  
 DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
 
 @default_value
