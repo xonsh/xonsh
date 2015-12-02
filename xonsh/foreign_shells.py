@@ -43,18 +43,7 @@ done
 shopt -s extdebug
 namelocfilestr=$(declare -F $funcnames)
 shopt -u extdebug
-
-# print just name and file
-read -r -a namelocfile <<< $namelocfilestr
-namefile=""
-for((n=0;n<${#namelocfile[@]};n++)); do
-  if (( $(($n % 3 )) == 0 )); then
-    namefile="$namefile ${namelocfile[$n]}"
-  elif (( $(($n % 3 )) == 2 )); then
-    namefile="$namefile ${namelocfile[$n]}"
-  fi
-done
-echo $namefile
+echo $namelocfilestr
 """.strip()
 
 DEFAULT_FUNCSCMDS = {
@@ -193,6 +182,7 @@ def parse_aliases(s):
 
 FUNCS_RE = re.compile('__XONSH_FUNCS_BEG__\n(.*)__XONSH_FUNCS_END__',
                       flags=re.DOTALL)
+FUNCS_LINE_NUMBER_RE = re.compile(r'(\w+)\s\d+\s')
 
 def parse_funcs(s, shell, sourcer=None):
     """Parses the funcs portion of a string into a dict of callable foreign
@@ -203,7 +193,7 @@ def parse_funcs(s, shell, sourcer=None):
         return {}
     g1 = m.group(1)
     funcs = {}
-    flatpairs = g1.strip().split()
+    flatpairs = [e for e in FUNCS_LINE_NUMBER_RE.split(g1) if e]
     if len(flatpairs) % 2 != 0:
         warn('could not parse functions, malformed pairs', RuntimeWarning)
         return funcs
