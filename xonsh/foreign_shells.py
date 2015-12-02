@@ -53,7 +53,7 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
   locfile=${line#*"$sep"}
   loc=${locfile%%"$sep"*}
   file=${locfile#*"$sep"}
-  namefile="${namefile}\\"${name}\\":\\"${file}\\","
+  namefile="${namefile}\\"${name}\\":\\"${file//\\/\\\\}\\","
 done <<< "$namelocfilestr"
 namefile="${namefile%?}}"
 echo $namefile
