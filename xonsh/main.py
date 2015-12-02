@@ -61,10 +61,10 @@ parser.add_argument('-D',
                     default=None)
 parser.add_argument('--shell-type',
                     help='What kind of shell should be used. '
-                         'Possible options: readline, prompt_toolkit. '
+                         'Possible options: readline, prompt_toolkit, random. '
                          'Warning! If set this overrides $SHELL_TYPE variable.',
                     dest='shell_type',
-                    choices=('readline', 'prompt_toolkit'),
+                    choices=('readline', 'prompt_toolkit', 'random'),
                     default=None)
 parser.add_argument('file',
                     metavar='script-file',
