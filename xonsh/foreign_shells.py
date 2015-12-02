@@ -204,6 +204,8 @@ def parse_funcs(s, shell, sourcer=None):
     if m is None:
         return {}
     g1 = m.group(1)
+    import sys
+    print(g1, file=sys.stderr)
     namefiles = json.loads(g1.strip())
     sourcer = DEFAULT_SOURCERS.get(shell, 'source') if sourcer is None \
                                                     else sourcer
