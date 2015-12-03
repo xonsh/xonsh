@@ -9,7 +9,6 @@ from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.layout.lexers import PygmentsLexer
 from prompt_toolkit.filters import Condition
 from pygments.style import Style
-from pygments.styles.default import DefaultStyle
 from pygments.token import (Keyword, Name, Comment, String, Error, Number,
                             Operator, Generic, Whitespace, Token)
 
