@@ -6,7 +6,6 @@ source:
    path: ../
 
 build:
-  script: python setup.py install --conda
   number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
   entry_points:
     - xonsh = xonsh.main:main
@@ -20,13 +19,14 @@ requirements:
   run:
     - python
     - ply
-    - prompt_toolkit  # [win]
+    - prompt_toolkit
 
 about:
   home: http://xonsh.org/
   license: BSD
   summary: xonsh is a Python-ish, BASHwards-compatible shell.
 
-app:
-  entry: xonsh
-  icon: ../docs/_static/ascii_conch_part_color.png
+# Removed temporarily until this is better support by the Anaconda launcher
+#app:
+#  entry: xonsh
+#  icon: icon.png
