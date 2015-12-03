@@ -68,6 +68,11 @@ class PromptToolkitShell(BaseShell):
         if intro:
             print(intro)
         _auto_suggest = AutoSuggestFromHistory()
+
+        # no way in prompt_toolkit to pass extra args to the lexer. 
+        lexer = PygmentsLexer(XonshLexer)
+        lexer.known_commands = self.known_commands
+        
         while not builtins.__xonsh_exit__:
             try:
                 token_func, style_cls = self._get_prompt_tokens_and_style()
@@ -85,7 +90,7 @@ class PromptToolkitShell(BaseShell):
                     get_prompt_tokens=token_func,
                     style=style_cls,
                     completer=completer,
-                    lexer=PygmentsLexer(XonshLexer),
+                    lexer=lexer,
                     history=self.history,
                     enable_history_search=True,
                     key_bindings_registry=self.key_bindings_manager.registry,
