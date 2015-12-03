@@ -47,12 +47,10 @@ class XonshLexer(PythonLexer):
     def get_tokens_unprocessed(self, text):
         super_iter =  super().get_tokens_unprocessed(text)
         first = next(super_iter)
-        if first:
-            if(first[1] == Token.Name) and (first[2] in self.known_commands._all_commands()):
-                yield first[0], Token.Name.KnowExecuteble, first[2]
-            else :
-                yield first
-        else:
+        
+        if first and (first[1] == Token.Name) and (first[2] in self.known_commands.all_commands()):
+            yield first[0], Token.Name.KnowExecuteble, first[2]
+        else :
             yield first
 
         yield from super_iter
