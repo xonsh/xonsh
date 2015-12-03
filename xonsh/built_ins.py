@@ -19,7 +19,7 @@ from contextlib import contextmanager
 from collections import Sequence, MutableMapping, Iterable
 
 from xonsh.tools import suggest_commands, XonshError, ON_POSIX, ON_WINDOWS, \
-    string_types, _compute_known_commands
+    string_types
 from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env, locate_binary
 from xonsh.aliases import DEFAULT_ALIASES
@@ -468,9 +468,6 @@ def _redirect_io(streams, r, loc=None):
 
     else:
         raise XonshError('Unrecognized redirection command: {}'.format(r))
-
-def known_commands():
-    return _compute_known_commands(ENV, builtins.aliases)
 
 
 def run_subproc(cmds, captured=True):

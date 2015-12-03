@@ -86,7 +86,9 @@ class KnownCommands(object):
         self._path_mtime = -1
         self._cmds_cache = frozenset()
     
-    def _all_commands(self):
+    def all_commands(self):
+        """find all commands available in PATH
+        """
         path = builtins.__xonsh_env__.get('PATH', [])
         # did PATH change?
         path_hash = hash(tuple(path))
@@ -451,7 +453,7 @@ class Completer(object):
         return attrs
 
     def _all_commands(self):
-        return self._known_commands._all_commands()
+        return self._known_commands.all_commands()
 
 
 
