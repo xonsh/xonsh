@@ -320,7 +320,7 @@ class Completer(object):
         space = ' '
         slash = '/'
         rtn = {_normpath(repr(s + (slash if os.path.isdir(s) else '')))
-               if (COMPLETION_WRAP_TOKENS.intersection(s) != set()) else
+               if COMPLETION_WRAP_TOKENS.intersection(s) else
                s + space
                if s[-1:].isalnum() else
                s for s in out.splitlines()}
