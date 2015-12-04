@@ -88,6 +88,8 @@ def cd(args, stdin=None):
         return '', 'cd: no such file or directory: {0}\n'.format(d)
     if not os.path.isdir(d):
         return '', 'cd: {0} is not a directory\n'.format(d)
+    if not os.access(d, os.X_OK):
+        return '', 'cd: permission denied: {0}\n'.format(d)
     # now, push the directory onto the dirstack if AUTO_PUSHD is set
     if cwd is not None and env.get('AUTO_PUSHD'):
         pushd(['-n', '-q', cwd])
