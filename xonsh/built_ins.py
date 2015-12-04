@@ -13,13 +13,10 @@ import atexit
 import signal
 import inspect
 import builtins
-import subprocess
-from io import TextIOWrapper, StringIO
 from glob import glob, iglob
 from subprocess import Popen, PIPE, STDOUT
 from contextlib import contextmanager
-from collections import Sequence, MutableMapping, Iterable, namedtuple, \
-    MutableSequence, MutableSet
+from collections import Sequence, MutableMapping, Iterable
 
 from xonsh.tools import suggest_commands, XonshError, ON_POSIX, ON_WINDOWS, \
     string_types
@@ -493,7 +490,6 @@ def run_subproc(cmds, captured=True):
         cmds = cmds[:-1]
     write_target = None
     last_cmd = len(cmds) - 1
-    prev = None
     procs = []
     prev_proc = None
     for ix, cmd in enumerate(cmds):
@@ -501,7 +497,6 @@ def run_subproc(cmds, captured=True):
         stdout = None
         stderr = None
         if isinstance(cmd, string_types):
-            prev = cmd
             continue
         streams = {}
         while True:
@@ -599,7 +594,6 @@ def run_subproc(cmds, captured=True):
                     e += '\n' + suggest_commands(cmd, ENV, builtins.aliases)
                 raise XonshError(e)
         procs.append(proc)
-        prev = None
         prev_proc = proc
     for proc in procs[:-1]:
         try:

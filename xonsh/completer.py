@@ -78,16 +78,54 @@ def _normpath(p):
 
     return p
 
-class Completer(object):
-    """This provides a list of optional completions for the xonsh shell."""
+class KnownCommands(object):
 
     def __init__(self):
-        # initialize command cache
         self._path_checksum = None
         self._alias_checksum = None
         self._path_mtime = -1
         self._cmds_cache = frozenset()
+    
+    def all_commands(self):
+        """find all commands available in PATH
+        """
+        path = builtins.__xonsh_env__.get('PATH', [])
+        # did PATH change?
+        path_hash = hash(tuple(path))
+        cache_valid = path_hash == self._path_checksum
+        self._path_checksum = path_hash
+        # did aliases change?
+        al_hash = hash(tuple(sorted(builtins.aliases.keys())))
+        cache_valid = cache_valid and al_hash == self._alias_checksum
+        self._alias_checksum = al_hash
+        pm = self._path_mtime
+        # did the contents of any directory in PATH change?
+        for d in filter(os.path.isdir, path):
+            m = os.stat(d).st_mtime
+            if m > pm:
+                pm = m
+                cache_valid = False
+        self._path_mtime = pm
+        if cache_valid:
+            return self._cmds_cache
+        allcmds = set()
+        for d in filter(os.path.isdir, path):
+            allcmds |= set(os.listdir(d))
+        allcmds |= set(builtins.aliases.keys())
+        self._cmds_cache = frozenset(allcmds)
+        return self._cmds_cache
+
+class Completer(object):
+    """This provides a list of optional completions for the xonsh shell."""
+
+    def __init__(self, known_commands=None):
+        # initialize command cache
         self._man_completer = ManCompleter()
+
+        if not known_commands:
+            known_commands = KnownCommands()
+        self._known_commands = known_commands
+
         try:
             # FIXME this could be threaded for faster startup times
             self._load_bash_complete_funcs()
@@ -393,7 +431,7 @@ class Completer(object):
         opts = []
         for i in _opts:
             try:
-                v = eval('{0}.{1}'.format(expr, i), _ctx)
+                eval('{0}.{1}'.format(expr, i), _ctx)
                 opts.append(i)
             except:  # pylint:disable=bare-except
                 continue
@@ -415,31 +453,8 @@ class Completer(object):
         return attrs
 
     def _all_commands(self):
-        path = builtins.__xonsh_env__.get('PATH', [])
-        # did PATH change?
-        path_hash = hash(tuple(path))
-        cache_valid = path_hash == self._path_checksum
-        self._path_checksum = path_hash
-        # did aliases change?
-        al_hash = hash(tuple(sorted(builtins.aliases.keys())))
-        cache_valid = cache_valid and al_hash == self._alias_checksum
-        self._alias_checksum = al_hash
-        pm = self._path_mtime
-        # did the contents of any directory in PATH change?
-        for d in filter(os.path.isdir, path):
-            m = os.stat(d).st_mtime
-            if m > pm:
-                pm = m
-                cache_valid = False
-        self._path_mtime = pm
-        if cache_valid:
-            return self._cmds_cache
-        allcmds = set()
-        for d in filter(os.path.isdir, path):
-            allcmds |= set(os.listdir(d))
-        allcmds |= set(builtins.aliases.keys())
-        self._cmds_cache = frozenset(allcmds)
-        return self._cmds_cache
+        return self._known_commands.all_commands()
+
 
 
 OPTIONS_PATH = os.path.expanduser('~') + "/.xonsh_man_completions"

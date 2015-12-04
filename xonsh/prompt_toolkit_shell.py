@@ -9,7 +9,6 @@ from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.layout.lexers import PygmentsLexer
 from prompt_toolkit.filters import Condition
 from pygments.style import Style
-from pygments.styles.default import DefaultStyle
 from pygments.token import (Keyword, Name, Comment, String, Error, Number,
                             Operator, Generic, Whitespace, Token)
 
@@ -69,6 +68,11 @@ class PromptToolkitShell(BaseShell):
         if intro:
             print(intro)
         _auto_suggest = AutoSuggestFromHistory()
+
+        # no way in prompt_toolkit to pass extra args to the lexer. 
+        lexer = PygmentsLexer(XonshLexer)
+        lexer.known_commands = self.known_commands
+        
         while not builtins.__xonsh_exit__:
             try:
                 token_func, style_cls = self._get_prompt_tokens_and_style()
@@ -86,7 +90,7 @@ class PromptToolkitShell(BaseShell):
                     get_prompt_tokens=token_func,
                     style=style_cls,
                     completer=completer,
-                    lexer=PygmentsLexer(XonshLexer),
+                    lexer=lexer,
                     history=self.history,
                     enable_history_search=True,
                     key_bindings_registry=self.key_bindings_manager.registry,
@@ -108,6 +112,7 @@ class PromptToolkitShell(BaseShell):
         """Returns function to pass as prompt to prompt_toolkit."""
         token_names, cstyles, strings = format_prompt_for_prompt_toolkit(self.prompt)
         tokens = [getattr(Token, n) for n in token_names]
+
 
         def get_tokens(cli):
             return list(zip(tokens, strings))
@@ -161,6 +166,7 @@ def _xonsh_style(tokens=tuple(), cstyles=tuple()):
         }
         styles = {k: _make_style(v) for k, v in styles.items()}
         styles.update({
+            Token.Name.KnowExecuteble : '#005FD7',
             Token.Menu.Completions.Completion.Current: 'bg:#00aaaa #000000',
             Token.Menu.Completions.Completion: 'bg:#008888 #ffffff',
             Token.Menu.Completions.ProgressButton: 'bg:#003333',

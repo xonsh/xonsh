@@ -8,7 +8,7 @@ import builtins
 
 from xonsh.tools import XonshError, escape_windows_title_string, ON_WINDOWS, \
     print_exception
-from xonsh.completer import Completer
+from xonsh.completer import Completer, KnownCommands
 from xonsh.environ import multiline_prompt, format_prompt
 
 
@@ -107,7 +107,8 @@ class BaseShell(object):
         super().__init__(**kwargs)
         self.execer = execer
         self.ctx = ctx
-        self.completer = Completer()
+        self.known_commands = KnownCommands()
+        self.completer = Completer(known_commands=self.known_commands)
         self.buffer = []
         self.need_more_lines = False
         self.mlprompt = None

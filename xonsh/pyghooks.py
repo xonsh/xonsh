@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Hooks for pygments syntax highlighting."""
 from pygments.lexer import inherit, bygroups, using, this
-from pygments.token import Name, Generic, Keyword, Text, String
+from pygments.token import Name, Generic, Keyword, String, Token
 from pygments.lexers.shell import BashLexer
 from pygments.lexers.agile import PythonLexer
 
@@ -43,6 +43,17 @@ class XonshLexer(PythonLexer):
         'pymode': PYMODE_TOKENS,
         'subproc': SUBPROC_TOKENS,
     }
+
+    def get_tokens_unprocessed(self, text):
+        super_iter =  super().get_tokens_unprocessed(text)
+        first = next(super_iter)
+        
+        if first and (first[1] == Token.Name) and (first[2] in self.known_commands.all_commands()):
+            yield first[0], Token.Name.KnowExecuteble, first[2]
+        else :
+            yield first
+
+        yield from super_iter
 
 
 class XonshConsoleLexer(PythonLexer):
