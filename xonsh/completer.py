@@ -30,6 +30,8 @@ XONSH_TOKENS = {
 
 COMPLETION_SKIP_TOKENS = {'sudo', 'time'}
 
+COMPLETION_WRAP_TOKENS = {' ',',','[',']','(',')','{','}'}
+
 BASH_COMPLETE_SCRIPT = """source {filename}
 COMP_WORDS=({line})
 COMP_LINE={comp_line}
@@ -318,7 +320,7 @@ class Completer(object):
         space = ' '
         slash = '/'
         rtn = {_normpath(repr(s + (slash if os.path.isdir(s) else '')))
-               if space in s else
+               if (COMPLETION_WRAP_TOKENS.intersection(s) != set()) else
                s + space
                if s[-1:].isalnum() else
                s for s in out.splitlines()}
