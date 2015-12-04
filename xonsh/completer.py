@@ -316,7 +316,12 @@ class Completer(object):
             out = ''
 
         space = ' '
-        rtn = {s + space if s[-1:].isalnum() else s for s in out.splitlines()}
+        slash = '/'
+        rtn = {_normpath(repr(s + (slash if os.path.isdir(s) else '')))
+               if space in s else
+               s + space
+               if s[-1:].isalnum() else
+               s for s in out.splitlines()}
         return rtn
 
     def _source_completions(self):
