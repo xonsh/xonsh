@@ -9,7 +9,7 @@ import subprocess
 import sys
 
 from xonsh.built_ins import iglobpath
-from xonsh.tools import subexpr_from_unbalanced
+from xonsh.tools import subexpr_from_unbalanced, get_sep
 from xonsh.tools import ON_WINDOWS
 
 
@@ -29,6 +29,8 @@ XONSH_TOKENS = {
 }
 
 COMPLETION_SKIP_TOKENS = {'sudo', 'time'}
+
+COMPLETION_WRAP_TOKENS = {' ',',','[',']','(',')','{','}'}
 
 BASH_COMPLETE_SCRIPT = """source {filename}
 COMP_WORDS=({line})
@@ -77,6 +79,18 @@ def _normpath(p):
         p = p.replace(os.sep, os.altsep)
 
     return p
+
+def completionwrap(s):
+    """ Returns the repr of input string s if that string contains 
+    a 'problem' token that will confuse the xonsh parser
+    """
+    space = ' '
+    slash = get_sep()
+    return (_normpath(repr(s + (slash if os.path.isdir(s) else '')))
+           if COMPLETION_WRAP_TOKENS.intersection(s) else
+           s + space
+           if s[-1:].isalnum() else
+           s) 
 
 class Completer(object):
     """This provides a list of optional completions for the xonsh shell."""
@@ -315,8 +329,7 @@ class Completer(object):
         except subprocess.CalledProcessError:
             out = ''
 
-        space = ' '
-        rtn = {s + space if s[-1:].isalnum() else s for s in out.splitlines()}
+        rtn = set(map(completionwrap, out.splitlines()))
         return rtn
 
     def _source_completions(self):
