@@ -204,6 +204,14 @@ def indent(instr, nspaces=4, ntabs=0, flatten=False):
     else:
         return outstr
 
+def get_sep():
+    """ Returns the appropriate filepath separator char depending on OS and
+    xonsh options set
+    """
+    return (os.altsep if ON_WINDOWS 
+            and builtins.__xonsh_env__.get('FORCE_POSIX_PATHS') else
+            os.sep)
+
 
 TERM_COLORS = {
     # Reset

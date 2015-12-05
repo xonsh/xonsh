@@ -9,7 +9,7 @@ import subprocess
 import sys
 
 from xonsh.built_ins import iglobpath
-from xonsh.tools import subexpr_from_unbalanced
+from xonsh.tools import subexpr_from_unbalanced, get_sep
 from xonsh.tools import ON_WINDOWS
 
 
@@ -85,7 +85,7 @@ def completionwrap(s):
     a 'problem' token that will confuse the xonsh parser
     """
     space = ' '
-    slash = '/'
+    slash = get_sep()
     return (_normpath(repr(s + (slash if os.path.isdir(s) else '')))
            if COMPLETION_WRAP_TOKENS.intersection(s) else
            s + space
