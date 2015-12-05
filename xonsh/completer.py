@@ -80,6 +80,18 @@ def _normpath(p):
 
     return p
 
+def completionwrap(s):
+    """ Returns the repr of input string s if that string contains 
+    a 'problem' token that will confuse the xonsh parser
+    """
+    space = ' '
+    slash = '/'
+    return (_normpath(repr(s + (slash if os.path.isdir(s) else '')))
+           if COMPLETION_WRAP_TOKENS.intersection(s) else
+           s + space
+           if s[-1:].isalnum() else
+           s) 
+
 class Completer(object):
     """This provides a list of optional completions for the xonsh shell."""
 
@@ -317,13 +329,7 @@ class Completer(object):
         except subprocess.CalledProcessError:
             out = ''
 
-        space = ' '
-        slash = '/'
-        rtn = {_normpath(repr(s + (slash if os.path.isdir(s) else '')))
-               if COMPLETION_WRAP_TOKENS.intersection(s) else
-               s + space
-               if s[-1:].isalnum() else
-               s for s in out.splitlines()}
+        rtn = set(map(completionwrap, out.splitlines()))
         return rtn
 
     def _source_completions(self):
