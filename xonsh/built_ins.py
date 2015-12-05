@@ -613,7 +613,10 @@ def run_subproc(cmds, captured=True):
             'obj': prev_proc,
             'bg': background
         })
-    builtins.__xonsh_shell__.settitle()
+    try:
+        builtins.__xonsh_shell__.settitle()
+    except AttributeError:
+        pass
     if background:
         return
     if prev_is_proxy:
