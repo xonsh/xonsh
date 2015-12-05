@@ -569,7 +569,11 @@ def _current_job():
     if j is not None:
         j = builtins.__xonsh_all_jobs__[j]
         if not j['bg']:
-            return '{} | '.format(j['cmds'][-1][0])
+            cmd = j['cmds'][-1]
+            s = cmd[0]
+            if s == 'sudo' and len(cmd) > 1:
+                s = cmd[1]
+            return '{} | '.format(s)
     return ''
 
 
