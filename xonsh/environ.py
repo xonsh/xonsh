@@ -98,8 +98,8 @@ else:
     DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
                       '{cwd}{branch_color}{curr_branch} '
                       '{BOLD_BLUE}{prompt_end}{NO_COLOR} ')
-                  
-DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
+
+DEFAULT_TITLE = '{current_job}{user}@{hostname}: {cwd} | xonsh'
 
 @default_value
 def xonsh_data_dir(env):
@@ -564,6 +564,15 @@ def _collapsed_pwd():
     return leader + sep.join(base)
 
 
+def _current_job():
+    j = builtins.__xonsh_active_job__
+    if j is not None:
+        j = builtins.__xonsh_all_jobs__[j]
+        if not j['bg']:
+            return '{} | '.format(j['cmds'][-1][0])
+    return ''
+
+
 if ON_WINDOWS:
     USER = 'USERNAME'
 else:
@@ -580,6 +589,7 @@ FORMATTER_DICT = dict(
     short_cwd=_collapsed_pwd,
     curr_branch=current_branch,
     branch_color=branch_color,
+    current_job=_current_job,
     **TERM_COLORS)
 DEFAULT_VALUES['FORMATTER_DICT'] = dict(FORMATTER_DICT)
 

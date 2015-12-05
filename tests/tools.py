@@ -21,9 +21,14 @@ ON_MAC = (platform.system() == 'Darwin')
 def sp(cmd):
     return subprocess.check_output(cmd, universal_newlines=True)
 
+class DummyShell:
+    def settitle():
+        pass
+
 @contextmanager
 def mock_xonsh_env(xenv):
     builtins.__xonsh_env__ = xenv
+    builtins.__xonsh_shell__ = DummyShell()
     builtins.__xonsh_help__ = lambda x: x
     builtins.__xonsh_glob__ = glob.glob
     builtins.__xonsh_exit__ = False
@@ -38,6 +43,7 @@ def mock_xonsh_env(xenv):
     builtins.aliases = {}
     yield
     del builtins.__xonsh_env__
+    del builtins.__xonsh_shell__
     del builtins.__xonsh_help__
     del builtins.__xonsh_glob__
     del builtins.__xonsh_exit__
