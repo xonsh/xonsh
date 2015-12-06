@@ -47,12 +47,13 @@ class XonshLexer(PythonLexer):
     def get_tokens_unprocessed(self, text):
         super_iter =  super().get_tokens_unprocessed(text)
         first = next(super_iter)
-        
-        if first and (first[1] == Token.Name) and (first[2] in self.known_commands.all_commands()):
-            yield first[0], Token.Name.KnowExecuteble, first[2]
-        else :
-            yield first
-
+        try: 
+            if first and (first[1] == Token.Name) and (first[2] in self.known_commands.all_commands()):
+                yield first[0], Token.Name.KnowExecuteble, first[2]
+            else :
+                yield first
+        except :
+            import pdb;pdb.set_trace()
         yield from super_iter
 
 
@@ -72,7 +73,7 @@ class XonshConsoleLexer(PythonLexer):
         'subproc': SUBPROC_TOKENS,
     }
 
-# XonshLexer & XonshSubprocLexer have to refernce each other
+# XonshLexer & XonshSubprocLexer have to reference each other
 XonshSubprocLexer.tokens['root'] = [
     (r'(\$\{)(.*)(\})', bygroups(Keyword, using(XonshLexer), Keyword)),
     (r'(@\()(.+)(\))', bygroups(Keyword, using(XonshLexer), Keyword)),

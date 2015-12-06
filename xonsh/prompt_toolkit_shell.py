@@ -71,7 +71,7 @@ class PromptToolkitShell(BaseShell):
 
         # no way in prompt_toolkit to pass extra args to the lexer. 
         lexer = PygmentsLexer(XonshLexer)
-        lexer.known_commands = self.known_commands
+        lexer.pygments_lexer.known_commands = self.known_commands
         
         while not builtins.__xonsh_exit__:
             try:
