@@ -613,6 +613,9 @@ def run_subproc(cmds, captured=True):
             'obj': prev_proc,
             'bg': background
         })
+    if ENV.get('XONSH_INTERACTIVE') and not ENV.get('XONSH_STORE_STDOUT'):
+        # set title here to get current command running
+        builtins.__xonsh_shell__.settitle()
     if background:
         return
     if prev_is_proxy:
