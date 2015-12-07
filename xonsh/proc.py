@@ -19,11 +19,6 @@ from subprocess import Popen, PIPE, DEVNULL, STDOUT, TimeoutExpired
 from xonsh.tools import (redirect_stdout, redirect_stderr, ON_WINDOWS, ON_LINUX,
                          fallback, print_exception)
 
-if ON_LINUX:
-    from xonsh.teepty import TeePTY
-else:
-    TeePTY = None
-
 if ON_WINDOWS:
     import _winapi
     import msvcrt
