@@ -6,12 +6,16 @@ special Python builtins module.
 """
 import os
 import re
+import pty
 import sys
 import time
+import array
+import fcntl
 import shlex
 import atexit
 import signal
 import inspect
+import termios
 import builtins
 import tempfile
 import subprocess
@@ -473,6 +477,22 @@ def _redirect_io(streams, r, loc=None):
     else:
         raise XonshError('Unrecognized redirection command: {}'.format(r))
 
+def _sigwinch_maker(m):
+    def _signal_winch(signum, frame):
+        """Signal handler for SIGWINCH - window size has changed."""
+        _set_pty_size(m)
+    return _signal_winch
+
+def _set_pty_size(m):
+    """Sets the window size of the child pty based on the window size of
+    our own controlling terminal.
+    """
+    # Get the terminal size of the real terminal, set it on the
+    #       pseudoterminal.
+    buf = array.array('h', [0, 0, 0, 0])
+    fcntl.ioctl(pty.STDOUT_FILENO, termios.TIOCGWINSZ, buf, True)
+    fcntl.ioctl(m, termios.TIOCSWINSZ, buf)
+
 
 def run_subproc(cmds, captured=True):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
@@ -564,6 +584,7 @@ def run_subproc(cmds, captured=True):
                   (stdout is None) and
                   (not background) and
                   ENV.get('XONSH_STORE_STDOUT', False))
+        old_sigwinch_handler = None
         if callable(aliased_cmd):
             prev_is_proxy = True
             numargs = len(inspect.signature(aliased_cmd).parameters)
@@ -594,14 +615,20 @@ def run_subproc(cmds, captured=True):
             try:
                 if usetee:
                     _tee_file = tempfile.NamedTemporaryFile()
+                    m, s = pty.openpty()
+                    _set_pty_size(m)
+                    try:
+                        old_sigwinch_handler = signal.signal(signal.SIGWINCH, _sigwinch_maker(m))
+                    except:
+                        pass
                     tproc = Popen(['tee', _tee_file.name],
-                                  stdin=subprocess.PIPE,
+                                  stdin=m,
                                   stdout=stdout)
                     proc = Popen(aliased_cmd,
                                  universal_newlines=uninew,
                                  env=ENV.detype(),
                                  stdin=stdin,
-                                 stdout=tproc.stdin,
+                                 stdout=s,
                                  stderr=stderr,
                                  **subproc_kwargs)
                 else:
@@ -645,6 +672,11 @@ def run_subproc(cmds, captured=True):
     if prev_is_proxy:
         prev_proc.wait()
     wait_for_active_job()
+    if old_sigwinch_handler is not None:
+        try:
+            signal.signal(signal.SIGWINCH, old_sigwinch_handler)
+        except:
+            pass
     hist = builtins.__xonsh_history__
     hist.last_cmd_rtn = prev_proc.returncode
     if write_target is None:
