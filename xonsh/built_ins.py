@@ -27,7 +27,7 @@ from collections import Sequence, MutableMapping, Iterable, namedtuple, \
     MutableSequence, MutableSet
 
 from xonsh.tools import suggest_commands, XonshError, ON_POSIX, ON_WINDOWS, \
-    string_types
+    string_types, sanitize_terminal_data
 from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env, locate_binary
 from xonsh.aliases import DEFAULT_ALIASES
@@ -684,7 +684,7 @@ def run_subproc(cmds, captured=True):
         output = ''
         if usetee:
             _tee_file.seek(0)
-            output = _tee_file.read().decode()
+            output = sanitize_terminal_data(_tee_file.read()).decode()
             _tee_file.close()
         elif prev_proc.stdout not in (None, sys.stdout):
             output = prev_proc.stdout.read()

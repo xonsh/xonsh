@@ -811,3 +811,47 @@ def print_color(string, file=sys.stdout):
     by the `file` keyword argument."""
     print(string.format(**TERM_COLORS).replace('\001', '').replace('\002', ''),
           file=file)
+
+def _findfirst(s, substrs):
+    """Finds whichever of the given substrings occurs first in the given string
+    and returns that substring, or returns None if no such strings occur.
+    """
+    i = len(s)
+    result = None
+    for substr in substrs:
+        pos = s.find(substr)
+        if -1 < pos < i:
+            i = pos
+            result = substr
+    return i, result
+
+# The following escape codes are xterm codes.
+# See http://rtfm.etla.org/xterm/ctlseq.html for more.
+MODE_NUMS = ('1049', '47', '1047')
+START_ALTERNATE_MODE = frozenset('\x1b[?{0}h'.format(i).encode() for i in MODE_NUMS)
+END_ALTERNATE_MODE = frozenset('\x1b[?{0}l'.format(i).encode() for i in MODE_NUMS)
+ALTERNATE_MODE_FLAGS = tuple(START_ALTERNATE_MODE) + tuple(END_ALTERNATE_MODE)
+
+RE_HIDDEN = re.compile(b'(\001.*?\002)')
+RE_COLOR = re.compile(b'\033\[\d+;?\d*m')
+
+def sanitize_terminal_data(data, in_alt=False):
+    i, flag = _findfirst(data, ALTERNATE_MODE_FLAGS)
+    if flag is None and in_alt:
+        return  b''
+    elif flag is not None:
+        if flag in START_ALTERNATE_MODE:
+            # This code is executed when the child process switches the terminal into
+            # alternate mode. The line below assumes that the user has opened vim,
+            # less, or similar, and writes writes to stdin.
+            d0 = data[:i]
+            d1 = sanitize_terminal_data(data[i+len(flag):], True)
+            data = d0 + d1
+        elif flag in END_ALTERNATE_MODE:
+            # This code is executed when the child process switches the terminal back
+            # out of alternate mode. The line below assumes that the user has
+            # returned to the command prompt.
+            data = sanitize_terminal_data(data[i+len(flag):], False)
+    data = RE_HIDDEN.sub(b'', data)
+    data = RE_COLOR.sub(b'', data)
+    return data
