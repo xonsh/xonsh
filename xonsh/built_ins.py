@@ -13,6 +13,7 @@ import atexit
 import signal
 import inspect
 import builtins
+import tempfile
 import subprocess
 from io import TextIOWrapper, StringIO
 from glob import glob, iglob
@@ -27,7 +28,7 @@ from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env, locate_binary
 from xonsh.aliases import DEFAULT_ALIASES
 from xonsh.jobs import add_job, wait_for_active_job
-from xonsh.proc import ProcProxy, SimpleProcProxy, TeePTYProc
+from xonsh.proc import ProcProxy, SimpleProcProxy
 from xonsh.history import History
 from xonsh.foreign_shells import load_foreign_aliases
 
@@ -559,6 +560,10 @@ def run_subproc(cmds, captured=True):
                 except PermissionError:
                     e = 'xonsh: subprocess mode: permission denied: {0}'
                     raise XonshError(e.format(cmd[0]))
+        usetee = (ON_POSIX and
+                  (stdout is None) and
+                  (not background) and
+                  ENV.get('XONSH_STORE_STDOUT', False))
         if callable(aliased_cmd):
             prev_is_proxy = True
             numargs = len(inspect.signature(aliased_cmd).parameters)
@@ -569,25 +574,44 @@ def run_subproc(cmds, captured=True):
             else:
                 e = 'Expected callable with 2 or 4 arguments, not {}'
                 raise XonshError(e.format(numargs))
-            proc = cls(aliased_cmd, cmd[1:],
-                       stdin, stdout, stderr,
-                       universal_newlines=uninew)
+            if usetee:
+                _tee_file = tempfile.NamedTemporaryFile()
+                tproc = Popen(['tee', _tee_file.name],
+                              stdin=subprocess.PIPE,
+                              stdout=stdout)
+                proc = cls(aliased_cmd, cmd[1:],
+                           stdin, tproc.stdin, stderr,
+                           universal_newlines=uninew)
+            else:
+                proc = cls(aliased_cmd, cmd[1:],
+                           stdin, stdout, stderr,
+                           universal_newlines=uninew)
         else:
             prev_is_proxy = False
-            usetee = (stdout is None) and (not background) and \
-                     ENV.get('XONSH_STORE_STDOUT', False)
-            cls = TeePTYProc if usetee else Popen
             subproc_kwargs = {}
-            if ON_POSIX and cls is Popen:
+            if ON_POSIX:
                 subproc_kwargs['preexec_fn'] = _subproc_pre
             try:
-                proc = cls(aliased_cmd,
-                           universal_newlines=uninew,
-                           env=ENV.detype(),
-                           stdin=stdin,
-                           stdout=stdout,
-                           stderr=stderr,
-                           **subproc_kwargs)
+                if usetee:
+                    _tee_file = tempfile.NamedTemporaryFile()
+                    tproc = Popen(['tee', _tee_file.name],
+                                  stdin=subprocess.PIPE,
+                                  stdout=stdout)
+                    proc = Popen(aliased_cmd,
+                                 universal_newlines=uninew,
+                                 env=ENV.detype(),
+                                 stdin=stdin,
+                                 stdout=tproc.stdin,
+                                 stderr=stderr,
+                                 **subproc_kwargs)
+                else:
+                    proc = Popen(aliased_cmd,
+                                 universal_newlines=uninew,
+                                 env=ENV.detype(),
+                                 stdin=stdin,
+                                 stdout=stdout,
+                                 stderr=stderr,
+                                 **subproc_kwargs)
             except PermissionError:
                 e = 'xonsh: subprocess mode: permission denied: {0}'
                 raise XonshError(e.format(aliased_cmd[0]))
@@ -613,7 +637,7 @@ def run_subproc(cmds, captured=True):
             'obj': prev_proc,
             'bg': background
         })
-    if ENV.get('XONSH_INTERACTIVE') and not ENV.get('XONSH_STORE_STDOUT'):
+    if ENV.get('XONSH_INTERACTIVE'):
         # set title here to get current command running
         builtins.__xonsh_shell__.settitle()
     if background:
@@ -626,7 +650,11 @@ def run_subproc(cmds, captured=True):
     if write_target is None:
         # get output
         output = ''
-        if prev_proc.stdout not in (None, sys.stdout):
+        if usetee:
+            _tee_file.seek(0)
+            output = _tee_file.read().decode()
+            _tee_file.close()
+        elif prev_proc.stdout not in (None, sys.stdout):
             output = prev_proc.stdout.read()
         if captured:
             # to get proper encoding from Popen, we have to
