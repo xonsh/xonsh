@@ -9,7 +9,6 @@ import re
 import sys
 import time
 import array
-import fcntl
 import shlex
 import atexit
 import signal
@@ -35,10 +34,9 @@ from xonsh.proc import ProcProxy, SimpleProcProxy
 from xonsh.history import History
 from xonsh.foreign_shells import load_foreign_aliases
 
-if ON_WINDOWS:
-    pty = None
-else:
+if not ON_WINDOWS:
     import pty
+    import fcntl
 
 ENV = None
 BUILTINS_LOADED = False
