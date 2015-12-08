@@ -19,7 +19,7 @@ from xonsh.tools import (
     env_path_to_str, is_bool, to_bool, bool_to_str, is_history_tuple, to_history_tuple,
     history_tuple_to_str, is_float, string_types, is_string, DEFAULT_ENCODING,
     is_completions_display_value, to_completions_display_value, is_string_set,
-    csv_to_set, set_to_csv
+    csv_to_set, set_to_csv, get_sep
 )
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
@@ -554,9 +554,7 @@ def _replace_home(x):
 _replace_home_cwd = lambda: _replace_home(builtins.__xonsh_env__['PWD'])
 
 def _collapsed_pwd():
-    sep = os.sep
-    if ON_WINDOWS and builtins.__xonsh_env__.get('FORCE_POSIX_PATHS'):
-        sep = os.altsep
+    sep = get_sep()
     pwd = _replace_home_cwd().split(sep)
     l = len(pwd)
     leader = sep if l>0 and len(pwd[0])==0 else ''
