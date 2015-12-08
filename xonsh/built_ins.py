@@ -602,13 +602,12 @@ def run_subproc(cmds, captured=True):
                 tproc = Popen(['tee', _tee_file.name],
                               stdin=subprocess.PIPE,
                               stdout=stdout)
-                proc = cls(aliased_cmd, cmd[1:],
-                           stdin, tproc.stdin, stderr,
-                           universal_newlines=uninew)
+                so = tproc.stdin
             else:
-                proc = cls(aliased_cmd, cmd[1:],
-                           stdin, stdout, stderr,
-                           universal_newlines=uninew)
+                so = stdout
+            proc = cls(aliased_cmd, cmd[1:],
+                       stdin, so, stderr,
+                       universal_newlines=uninew)
         else:
             prev_is_proxy = False
             subproc_kwargs = {}
@@ -626,21 +625,16 @@ def run_subproc(cmds, captured=True):
                     tproc = Popen(['tee', _tee_file.name],
                                   stdin=m,
                                   stdout=stdout)
-                    proc = Popen(aliased_cmd,
-                                 universal_newlines=uninew,
-                                 env=ENV.detype(),
-                                 stdin=stdin,
-                                 stdout=s,
-                                 stderr=stderr,
-                                 **subproc_kwargs)
+                    so = s
                 else:
-                    proc = Popen(aliased_cmd,
-                                 universal_newlines=uninew,
-                                 env=ENV.detype(),
-                                 stdin=stdin,
-                                 stdout=stdout,
-                                 stderr=stderr,
-                                 **subproc_kwargs)
+                    so = stdout
+                proc = Popen(aliased_cmd,
+                             universal_newlines=uninew,
+                             env=ENV.detype(),
+                             stdin=stdin,
+                             stdout=so,
+                             stderr=stderr,
+                             **subproc_kwargs)
             except PermissionError:
                 e = 'xonsh: subprocess mode: permission denied: {0}'
                 raise XonshError(e.format(aliased_cmd[0]))
