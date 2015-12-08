@@ -6,7 +6,6 @@ special Python builtins module.
 """
 import os
 import re
-import pty
 import sys
 import time
 import array
@@ -35,6 +34,11 @@ from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.proc import ProcProxy, SimpleProcProxy
 from xonsh.history import History
 from xonsh.foreign_shells import load_foreign_aliases
+
+if ON_WINDOWS:
+    pty = None
+else:
+    import pty
 
 ENV = None
 BUILTINS_LOADED = False
