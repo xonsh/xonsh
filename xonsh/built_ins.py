@@ -690,6 +690,10 @@ def run_subproc(cmds, captured=True):
             _tee_file.seek(0)
             output = sanitize_terminal_data(_tee_file.read()).decode()
             _tee_file.close()
+            try:
+                os.remove(_tee_file.name)
+            except FileNotFoundError:
+                pass
         elif prev_proc.stdout not in (None, sys.stdout):
             output = prev_proc.stdout.read()
         if captured:
