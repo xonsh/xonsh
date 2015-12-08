@@ -28,7 +28,7 @@ XONSH_TOKENS = {
     '...'
 }
 
-COMPLETION_SKIP_TOKENS = {'sudo', 'time'}
+COMPLETION_SKIP_TOKENS = {'sudo', 'time', 'man'}
 
 COMPLETION_WRAP_TOKENS = {' ',',','[',']','(',')','{','}'}
 
