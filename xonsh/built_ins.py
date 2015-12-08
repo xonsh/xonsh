@@ -13,7 +13,6 @@ import shlex
 import atexit
 import signal
 import inspect
-import termios
 import builtins
 import tempfile
 import subprocess
@@ -37,6 +36,7 @@ from xonsh.foreign_shells import load_foreign_aliases
 if not ON_WINDOWS:
     import pty
     import fcntl
+    import termios
 
 ENV = None
 BUILTINS_LOADED = False
