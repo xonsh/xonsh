@@ -834,6 +834,7 @@ ALTERNATE_MODE_FLAGS = tuple(START_ALTERNATE_MODE) + tuple(END_ALTERNATE_MODE)
 
 RE_HIDDEN = re.compile(b'(\001.*?\002)')
 RE_COLOR = re.compile(b'\033\[\d+;?\d*m')
+RE_SOMETHING = re.compile(b'\r\x1b\[\?1l\x1b>')
 RE_COLOR_KEEP_CHAR = re.compile(b'\x1b\[k(.*?)\x1b\[m\x1b\[k', re.I)
 
 def sanitize_terminal_data(data, in_alt=False):
@@ -853,7 +854,7 @@ def sanitize_terminal_data(data, in_alt=False):
             # out of alternate mode. The line below assumes that the user has
             # returned to the command prompt.
             data = sanitize_terminal_data(data[i+len(flag):], False)
-    data = RE_HIDDEN.sub(b'', data)
-    data = RE_COLOR.sub(b'', data)
+    for i in (RE_HIDDEN, RE_COLOR, RE_SOMETHING):
+        data = i.sub(b'', data)
     data = RE_COLOR_KEEP_CHAR.sub(lambda m: m.group(1), data)
     return data
