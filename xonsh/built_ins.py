@@ -496,6 +496,9 @@ def _set_pty_size(m):
     fcntl.ioctl(m, termios.TIOCSWINSZ, buf)
 
 
+PTY_BREAKS = frozenset({'mutt'})
+
+
 def run_subproc(cmds, captured=True):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
     which may be a list of command line arguments or a string, representing
@@ -617,19 +620,25 @@ def run_subproc(cmds, captured=True):
                 subproc_kwargs['preexec_fn'] = _subproc_pre
             try:
                 if usetee:
+                    _use_pty = os.path.basename(aliased_cmd[0]) not in PTY_BREAKS
                     _tee_file = tempfile.NamedTemporaryFile()
-                    m, s = pty.openpty()
-                    _set_pty_size(m)
                     try:
                         old_sigwinch_handler = signal.signal(signal.SIGWINCH, _sigwinch_maker(m))
                     except:
                         pass
+                    if _use_pty:
+                        m, s = pty.openpty()
+                        _set_pty_size(m)
+                        sin = m
+                    else:
+                        sin = PIPE
                     tproc = Popen(['tee', _tee_file.name],
-                                  stdin=m,
+                                  stdin=sin,
                                   stdout=stdout)
-                    so = s
+                    so = s if _use_pty else tproc.stdin
                 else:
                     so = stdout
+
                 proc = Popen(aliased_cmd,
                              universal_newlines=uninew,
                              env=ENV.detype(),
