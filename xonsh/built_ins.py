@@ -568,6 +568,12 @@ def run_subproc(cmds, captured=True):
             cmd.insert(0, 'cd')
             alias = builtins.aliases.get('cd', None)
 
+        usetee = (ON_POSIX and
+                  (stdout is None) and
+                  (not background) and
+                  ENV.get('XONSH_STORE_STDOUT', False) and
+                  cmd is cmds[-1])
+
         if callable(alias):
             aliased_cmd = alias
         else:
@@ -582,10 +588,6 @@ def run_subproc(cmds, captured=True):
                 except PermissionError:
                     e = 'xonsh: subprocess mode: permission denied: {0}'
                     raise XonshError(e.format(cmd[0]))
-        usetee = (ON_POSIX and
-                  (stdout is None) and
-                  (not background) and
-                  ENV.get('XONSH_STORE_STDOUT', False))
         old_sigwinch_handler = None
         if callable(aliased_cmd):
             prev_is_proxy = True
