@@ -834,6 +834,7 @@ ALTERNATE_MODE_FLAGS = tuple(START_ALTERNATE_MODE) + tuple(END_ALTERNATE_MODE)
 
 RE_HIDDEN = re.compile(b'(\001.*?\002)')
 RE_COLOR = re.compile(b'\033\[\d+;?\d*m')
+RE_COLOR_KEEP_CHAR = re.compile(b'\x1b\[k(.*?)\x1b\[m\x1b\[k', re.I)
 
 def sanitize_terminal_data(data, in_alt=False):
     i, flag = _findfirst(data, ALTERNATE_MODE_FLAGS)
@@ -854,4 +855,5 @@ def sanitize_terminal_data(data, in_alt=False):
             data = sanitize_terminal_data(data[i+len(flag):], False)
     data = RE_HIDDEN.sub(b'', data)
     data = RE_COLOR.sub(b'', data)
+    data = RE_COLOR_KEEP_CHAR.sub(lambda m: m.group(1), data)
     return data
