@@ -659,11 +659,6 @@ def run_subproc(cmds, captured=True):
         procs.append(proc)
         prev = None
         prev_proc = proc
-    for proc in procs[:-1]:
-        try:
-            proc.stdout.close()
-        except OSError:
-            pass
     if not prev_is_proxy:
         add_job({
             'cmds': cmds,
@@ -679,6 +674,11 @@ def run_subproc(cmds, captured=True):
     if prev_is_proxy:
         prev_proc.wait()
     wait_for_active_job()
+    for proc in procs[:-1]:
+        try:
+            proc.stdout.close()
+        except OSError:
+            pass
     if old_sigwinch_handler is not None:
         try:
             signal.signal(signal.SIGWINCH, old_sigwinch_handler)
