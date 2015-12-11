@@ -48,6 +48,8 @@ IS_ROOT = ctypes.windll.shell32.IsUserAnAdmin() != 0 if ON_WINDOWS else os.getui
 
 VER_3_4 = (3, 4)
 VER_3_5 = (3, 5)
+VER_3_5_1 = (3, 5, 1)
+VER_FULL = sys.version_info[:3]
 VER_MAJOR_MINOR = sys.version_info[:2]
 V_MAJOR_MINOR = 'v{0}{1}'.format(*sys.version_info[:2])
 
