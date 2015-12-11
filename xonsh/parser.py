@@ -709,7 +709,14 @@ class Parser(object):
 
     def p_vfpdef(self, p):
         """vfpdef : NAME"""
-        p[0] = ast.arg(arg=p[1], annotation=None)
+        kwargs = {'arg': p[1],
+                  'annotation': None}
+        if VER_FULL >= VER_3_5_1:
+            kwargs.update({
+                'lineno': self.lineno,
+                'col_offset': self.col,
+            })
+        p[0] = ast.arg(**kwargs)
 
     def p_comma_vfpdef(self, p):
         """comma_vfpdef : COMMA
