@@ -139,7 +139,7 @@ class Completer(object):
         prefixlow = prefix.lower()
         line = builtins.aliases.expand_alias(line)
         cmd = line.split(' ', 1)[0]
-        if cmd in COMPLETION_SKIP_TOKENS:
+        while cmd in COMPLETION_SKIP_TOKENS:
             begidx -= len(cmd)+1
             endidx -= len(cmd)+1
             cmd = line.split(' ', 2)[1]
