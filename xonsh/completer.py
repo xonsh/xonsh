@@ -29,16 +29,22 @@ def _path_from_partial_string(inp, pos=None):
         pos = len(inp)
     partial = inp[:pos]
     for (regex, end) in STRINGS:
-        x = re.findall(regex, partial)
+        x = list(re.finditer(regex, partial))
         if len(x) > 0:
-            s = x[-1][0]
-            _s = x[-1][0]
+            m = x[-1]
+            s = m.group(0)
+            if m.end() != pos:
+                continue
+            _s = s
             if not _s.endswith(end):
                 _s = _s+end
-            val = eval(_s)
+            try:
+                val = eval(_s)
+            except:
+                continue
             if isinstance(val, bytes):
                 val = val.decode()
-            return s, val, x[-1][1], end
+            return s, val, m.group(2), end
 
 
 XONSH_TOKENS = {
