@@ -835,6 +835,7 @@ RE_STRING_CONT = {
 
 def partial_string_finder(x):
     o = []
+    o2 = []
     s = 0
     match = re.search(RE_BEGIN_STRING, x)
     while match is not None:
@@ -844,6 +845,7 @@ def partial_string_finder(x):
         lg = len(g)
         s += start
         o.append(s)
+        o2.append(g)
         ender = re.sub(RE_STRING_START, '', g)
         x = x[start + lg:]
         s += lg
@@ -856,4 +858,4 @@ def partial_string_finder(x):
             o.append(s)
         x = x[lg + len(ender):]
         match = re.search(RE_BEGIN_STRING, x)
-    return o
+    return o, o2

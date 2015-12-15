@@ -9,7 +9,7 @@ import subprocess
 import sys
 
 from xonsh.built_ins import iglobpath
-from xonsh.tools import subexpr_from_unbalanced, get_sep
+from xonsh.tools import subexpr_from_unbalanced, get_sep, partial_string_finder
 from xonsh.tools import ON_WINDOWS
 
 
@@ -17,34 +17,33 @@ RE_DASHF = re.compile(r'-F\s+(\w+)')
 RE_ATTR = re.compile(r'(\S+(\..+)*)\.(\w*)$')
 RE_WIN_DRIVE = re.compile(r'^([a-zA-Z]):\\')
 
-RE_PARTIAL_TRIPLE_DOUBLE_STRING = (r'(([bBrRuU]*""")((\\(.|\n))|([^"\\])|("(?!""))|\n)*(?:""")?)', '"""')
-RE_PARTIAL_TRIPLE_SINGLE_STRING = (r"(([bBrRuU]*''')((\\(.|\n))|([^'\\])|('(?!''))|\n)*(?:''')?)", "'''")
-RE_PARTIAL_DOUBLE_STRING = (r'(([bBrRuU]*")((\\(.|\n))|([^"\\]))*"?)', '"')
-RE_PARTIAL_SINGLE_STRING = (r"(([bBrRuU]*')((\\(.|\n))|([^'\\]))*'?)", "'")
-STRINGS = (RE_PARTIAL_TRIPLE_DOUBLE_STRING, RE_PARTIAL_TRIPLE_SINGLE_STRING,
-           RE_PARTIAL_DOUBLE_STRING, RE_PARTIAL_SINGLE_STRING)
 
 def _path_from_partial_string(inp, pos=None):
     if pos is None:
         pos = len(inp)
     partial = inp[:pos]
-    for (regex, end) in STRINGS:
-        x = list(re.finditer(regex, partial))
-        if len(x) > 0:
-            m = x[-1]
-            s = m.group(0)
-            if m.end() != pos:
-                continue
-            _s = s
-            if not _s.endswith(end):
-                _s = _s+end
-            try:
-                val = eval(_s)
-            except:
-                continue
-            if isinstance(val, bytes):
-                val = val.decode()
-            return s, val, m.group(2), end
+    x, b = partial_string_finder(partial)
+    lx = len(x)
+    if lx == 0:
+        return None
+    elif lx % 2: # odd number: in the middle of a string
+        s = partial[x[-1]:]
+    else:
+        if x[-1] != pos:
+            return None
+        s = partial[x[-2]:x[-1]]
+    b = b[-1]
+    end = re.sub('[rRbBuU]*','',b)
+    _s = s
+    if not _s.endswith(end):
+        _s = _s + end
+    try:
+        val = eval(_s)
+    except:
+        return None
+    if isinstance(val, bytes):
+        val = val.decode()
+    return s, val, b, end
 
 
 XONSH_TOKENS = {
