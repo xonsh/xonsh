@@ -813,3 +813,47 @@ def print_color(string, file=sys.stdout):
     by the `file` keyword argument."""
     print(string.format(**TERM_COLORS).replace('\001', '').replace('\002', ''),
           file=file)
+
+RE_STRING_START = "[bBrRuU]*"
+RE_STRING_TRIPLE_DOUBLE = '"""'
+RE_STRING_TRIPLE_SINGLE = "'''"
+RE_STRING_DOUBLE = '"'
+RE_STRING_SINGLE = "'"
+_STRINGS = [RE_STRING_TRIPLE_DOUBLE,
+            RE_STRING_TRIPLE_SINGLE,
+            RE_STRING_DOUBLE,
+            RE_STRING_SINGLE]
+RE_BEGIN_STRING = "(" + RE_STRING_START + "|".join(_STRINGS) + ')'
+
+RE_STRING_CONT = {
+    '"': r'((\\(.|\n))|([^"\\]))*',
+    "'": r"((\\(.|\n))|([^'\\]))*",
+    '"""': r'((\\(.|\n))|([^"\\])|("(?!""))|\n)*',
+    "'''": r"((\\(.|\n))|([^'\\])|('(?!''))|\n)*",
+}
+
+
+def partial_string_finder(x):
+    o = []
+    s = 0
+    match = re.search(RE_BEGIN_STRING, x)
+    while match is not None:
+        # add the start in
+        start = match.start()
+        g = match.group(0)
+        lg = len(g)
+        s += start
+        o.append(s)
+        ender = re.sub(RE_STRING_START, '', g)
+        x = x[start + lg:]
+        s += lg
+        continuer = RE_STRING_CONT[ender]
+        contents = re.match(continuer, x)
+        g = contents.group(0)
+        lg = len(g)
+        s += contents.start() + lg + len(ender)
+        if contents.end() < len(x):
+            o.append(s)
+        x = x[lg + len(ender):]
+        match = re.search(RE_BEGIN_STRING, x)
+    return o
