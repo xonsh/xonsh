@@ -311,7 +311,7 @@ class Completer(object):
     def path_complete(self, prefix, start, end, cdpath=False):
         """Completes based on a path name."""
         space = ' '  # intern some strings for faster appending
-        slash = '/'
+        slash = get_sep()
         tilde = '~'
         paths = set()
         csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
