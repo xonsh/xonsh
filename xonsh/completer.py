@@ -320,7 +320,13 @@ class Completer(object):
             if space in s and start == '':
                 s = repr(s + (slash if os.path.isdir(s) else ''))
             else:
-                s = start + s + (slash if os.path.isdir(s) else space) + end
+                if os.path.isdir(s):
+                    _tail = slash
+                elif end == '':
+                    _tail = space
+                else:
+                    _tail = ''
+                s = start + s + _tail + end
             paths.add(s)
         if tilde in prefix:
             home = os.path.expanduser(tilde)
