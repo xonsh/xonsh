@@ -819,18 +819,19 @@ RE_STRING_TRIPLE_DOUBLE = '"""'
 RE_STRING_TRIPLE_SINGLE = "'''"
 RE_STRING_DOUBLE = '"'
 RE_STRING_SINGLE = "'"
-_STRINGS = [RE_STRING_TRIPLE_DOUBLE,
+_STRINGS = (RE_STRING_TRIPLE_DOUBLE,
             RE_STRING_TRIPLE_SINGLE,
             RE_STRING_DOUBLE,
-            RE_STRING_SINGLE]
-RE_BEGIN_STRING = "(" + RE_STRING_START + "|".join(_STRINGS) + ')'
+            RE_STRING_SINGLE)
+RE_BEGIN_STRING = re.compile("(" + RE_STRING_START + "|".join(_STRINGS) + ')')
+RE_STRING_START = re.compile(RE_STRING_START)
 
-RE_STRING_CONT = {
+RE_STRING_CONT = {k: re.compile(v) for k,v in {
     '"': r'((\\(.|\n))|([^"\\]))*',
     "'": r"((\\(.|\n))|([^'\\]))*",
     '"""': r'((\\(.|\n))|([^"\\])|("(?!""))|\n)*',
     "'''": r"((\\(.|\n))|([^'\\])|('(?!''))|\n)*",
-}
+}.items()}
 
 
 def partial_string_finder(x):

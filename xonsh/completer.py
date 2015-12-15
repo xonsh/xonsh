@@ -9,7 +9,7 @@ import subprocess
 import sys
 
 from xonsh.built_ins import iglobpath
-from xonsh.tools import subexpr_from_unbalanced, get_sep, partial_string_finder
+from xonsh.tools import subexpr_from_unbalanced, get_sep, partial_string_finder, RE_STRING_START
 from xonsh.tools import ON_WINDOWS
 
 
@@ -33,7 +33,7 @@ def _path_from_partial_string(inp, pos=None):
             return None
         s = partial[x[-2]:x[-1]]
     b = b[-1]
-    end = re.sub('[rRbBuU]*','',b)
+    end = re.sub(RE_STRING_START,'',b)
     _s = s
     if not _s.endswith(end):
         _s = _s + end
