@@ -2,11 +2,12 @@
 """A (tab-)completer for xonsh."""
 import os
 import re
-import builtins
-import pickle
-import shlex
-import subprocess
+import ast
 import sys
+import shlex
+import pickle
+import builtins
+import subprocess
 
 from xonsh.built_ins import iglobpath
 from xonsh.tools import subexpr_from_unbalanced, get_sep, partial_string_finder, RE_STRING_START
@@ -38,8 +39,8 @@ def _path_from_partial_string(inp, pos=None):
     if not _s.endswith(end):
         _s = _s + end
     try:
-        val = eval(_s)
-    except:
+        val = ast.literal_eval(_s)
+    except SyntaxError:
         return None
     if isinstance(val, bytes):
         val = val.decode()
