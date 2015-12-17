@@ -823,7 +823,9 @@ _STRINGS = (_RE_STRING_TRIPLE_DOUBLE,
             _RE_STRING_TRIPLE_SINGLE,
             _RE_STRING_DOUBLE,
             _RE_STRING_SINGLE)
-RE_BEGIN_STRING = re.compile("(" + _RE_STRING_START + "|".join(_STRINGS) + ')')
+RE_BEGIN_STRING = re.compile("(" + _RE_STRING_START +
+                             '(' + "|".join(_STRINGS) +
+                             '))')
 """Regular expression matching the start of a string, including quotes and
 leading characters (r, b, or u)"""
 
