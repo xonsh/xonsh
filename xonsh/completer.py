@@ -171,14 +171,12 @@ class Completer(object):
         path_str_start = ''
         path_str_end = ''
         p = _path_from_partial_string(_line, endidx)
-        in_partial_str = False
         lprefix = len(prefix)
         if p is not None:
             lprefix = len(p[0])
             prefix = p[1]
             path_str_start = p[2]
             path_str_end = p[3]
-            in_partial_str = True
         cmd = line.split(' ', 1)[0]
         while cmd in COMPLETION_SKIP_TOKENS:
             begidx -= len(cmd)+1
@@ -316,16 +314,18 @@ class Completer(object):
         csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
         # look for being inside a string
         for s in iglobpath(prefix + '*', ignore_case=(not csc)):
-            if space in s and start == '':
-                s = repr(s + (slash if os.path.isdir(s) else ''))
+            if (space in s or "\\" in s) and start == '':
+                start = "'"
+                end = "'"
+            if os.path.isdir(s):
+                _tail = slash
+            elif end == '':
+                _tail = space
             else:
-                if os.path.isdir(s):
-                    _tail = slash
-                elif end == '':
-                    _tail = space
-                else:
-                    _tail = ''
-                s = start + s + _tail + end
+                _tail = ''
+            s = start + s + _tail + end
+            if "r" not in start.lower():
+                s = s.replace('\\','\\\\')
             paths.add(s)
         if tilde in prefix:
             home = os.path.expanduser(tilde)
