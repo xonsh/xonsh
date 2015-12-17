@@ -10,7 +10,7 @@ import builtins
 import subprocess
 
 from xonsh.built_ins import iglobpath
-from xonsh.tools import subexpr_from_unbalanced, get_sep, partial_string_finder, RE_STRING_START
+from xonsh.tools import subexpr_from_unbalanced, get_sep, check_for_partial_string, RE_STRING_START
 from xonsh.tools import ON_WINDOWS
 
 
@@ -23,28 +23,26 @@ def _path_from_partial_string(inp, pos=None):
     if pos is None:
         pos = len(inp)
     partial = inp[:pos]
-    x, b = partial_string_finder(partial)
-    lx = len(x)
-    if lx == 0:
+    startix, endix, quote = check_for_partial_string(partial)
+    if startix is None:
         return None
-    elif lx % 2: # odd number: in the middle of a string
-        s = partial[x[-1]:]
+    elif endix is None:
+        string = partial[startix:]
     else:
-        if x[-1] != pos:
+        if endix != pos:
             return None
-        s = partial[x[-2]:x[-1]]
-    b = b[-1]
-    end = re.sub(RE_STRING_START,'',b)
-    _s = s
-    if not _s.endswith(end):
-        _s = _s + end
+        string = partial[startix:endix]
+    end = re.sub(RE_STRING_START,'',quote)
+    _string = string
+    if not _string.endswith(end):
+        _string = _string + end
     try:
-        val = ast.literal_eval(_s)
+        val = ast.literal_eval(_string)
     except SyntaxError:
         return None
     if isinstance(val, bytes):
         val = val.decode()
-    return s, val, b, end
+    return string, val, quote, end
 
 
 XONSH_TOKENS = {

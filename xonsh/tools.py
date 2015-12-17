@@ -834,29 +834,42 @@ RE_STRING_CONT = {k: re.compile(v) for k,v in {
 }.items()}
 
 
-def partial_string_finder(x):
-    o = []
-    o2 = []
-    s = 0
+def check_for_partial_string(x):
+    string_indices = []
+    starting_quote = []
+    current_index = 0
     match = re.search(RE_BEGIN_STRING, x)
     while match is not None:
         # add the start in
         start = match.start()
-        g = match.group(0)
-        lg = len(g)
-        s += start
-        o.append(s)
-        o2.append(g)
-        ender = re.sub(RE_STRING_START, '', g)
-        x = x[start + lg:]
-        s += lg
+        quote = match.group(0)
+        lenquote = len(quote)
+        current_index += start
+        # store the starting index of the string, as well as the
+        # characters in the starting quotes (e.g., ", ', """, r", etc)
+        string_indices.append(current_index)
+        starting_quote.append(quote)
+        # determine the string that should terminate this string
+        ender = re.sub(RE_STRING_START, '', quote)
+        x = x[start + lenquote:]
+        current_index += lenquote
+        # figure out what is inside the string
         continuer = RE_STRING_CONT[ender]
         contents = re.match(continuer, x)
-        g = contents.group(0)
-        lg = len(g)
-        s += contents.start() + lg + len(ender)
+        inside = contents.group(0)
+        leninside = len(inside)
+        current_index += contents.start() + leninside + len(ender)
+        # if we are not at the end of the input string, add the ending index of
+        # the string to string_indices
         if contents.end() < len(x):
-            o.append(s)
-        x = x[lg + len(ender):]
+            string_indices.append(current_index)
+        x = x[leninside + len(ender):]
+        # find the next match
         match = re.search(RE_BEGIN_STRING, x)
-    return o, o2
+    numquotes = len(string_indices)
+    if numquotes == 0:
+        return (None, None, None)
+    elif numquotes % 2:
+        return (string_indices[-1], None, starting_quote[-1])
+    else:
+        return (string_indices[-2], string_indices[-1], starting_quote[-1])
