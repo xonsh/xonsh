@@ -814,17 +814,22 @@ def print_color(string, file=sys.stdout):
     print(string.format(**TERM_COLORS).replace('\001', '').replace('\002', ''),
           file=file)
 
-RE_STRING_START = "[bBrRuU]*"
-RE_STRING_TRIPLE_DOUBLE = '"""'
-RE_STRING_TRIPLE_SINGLE = "'''"
-RE_STRING_DOUBLE = '"'
-RE_STRING_SINGLE = "'"
-_STRINGS = (RE_STRING_TRIPLE_DOUBLE,
-            RE_STRING_TRIPLE_SINGLE,
-            RE_STRING_DOUBLE,
-            RE_STRING_SINGLE)
-RE_BEGIN_STRING = re.compile("(" + RE_STRING_START + "|".join(_STRINGS) + ')')
-RE_STRING_START = re.compile(RE_STRING_START)
+_RE_STRING_START = "[bBrRuU]*"
+_RE_STRING_TRIPLE_DOUBLE = '"""'
+_RE_STRING_TRIPLE_SINGLE = "'''"
+_RE_STRING_DOUBLE = '"'
+_RE_STRING_SINGLE = "'"
+_STRINGS = (_RE_STRING_TRIPLE_DOUBLE,
+            _RE_STRING_TRIPLE_SINGLE,
+            _RE_STRING_DOUBLE,
+            _RE_STRING_SINGLE)
+RE_BEGIN_STRING = re.compile("(" + _RE_STRING_START + "|".join(_STRINGS) + ')')
+"""Regular expression matching the start of a string, including quotes and
+leading characters (r, b, or u)"""
+
+RE_STRING_START = re.compile(_RE_STRING_START)
+"""Regular expression matching the characters before the quotes when starting a
+string (r, b, or u, case insensitive)"""
 
 RE_STRING_CONT = {k: re.compile(v) for k,v in {
     '"': r'((\\(.|\n))|([^"\\]))*',
@@ -832,9 +837,38 @@ RE_STRING_CONT = {k: re.compile(v) for k,v in {
     '"""': r'((\\(.|\n))|([^"\\])|("(?!""))|\n)*',
     "'''": r"((\\(.|\n))|([^'\\])|('(?!''))|\n)*",
 }.items()}
+"""Dictionary mapping starting quote sequences to regular expressions that
+match the contents of a string beginning with those quotes (not including the
+terminating quotes)"""
 
 
 def check_for_partial_string(x):
+    """
+    Returns the starting index (inclusive), ending index (exclusive), and
+    starting quote string of the most recent Python string found in the input.
+
+    check_for_partial_string(x) -> (startix, endix, quote)
+
+    Parameters
+    ----------
+    x : str
+        The string to be checked (representing a line of terminal input)
+
+    Returns
+    -------
+    startix : int (or None)
+        The index where the most recent Python string found started
+        (inclusive), or None if no strings exist in the input
+
+    endix : int (or None)
+        The index where the most recent Python string found ended (exclusive),
+        or None if no strings exist in the input OR if the input ended in the
+        middle of a Python string
+
+    quote : str (or None)
+        A string containing the quote used to start the string (e.g., b", ",
+        '''), or None if no string was found.
+    """
     string_indices = []
     starting_quote = []
     current_index = 0
