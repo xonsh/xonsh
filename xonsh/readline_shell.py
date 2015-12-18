@@ -112,7 +112,7 @@ class ReadlineShell(BaseShell, Cmd):
         offs = len(mline) - len(text)
         x = [i[offs:] for i in self.completer.complete(text, line,
                                                        begidx, endidx,
-                                                       ctx=self.ctx)[1]]
+                                                       ctx=self.ctx)[0]]
         return x
 
     # tab complete on first index too

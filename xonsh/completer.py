@@ -159,6 +159,9 @@ class Completer(object):
         -------
         rtn : list of str
             Possible completions of prefix, sorted alphabetically.
+        lprefix : int
+            Length of the prefix to be replaced in the completion
+            (only used with prompt_toolkit)
         """
         space = ' '  # intern some strings for faster appending
         slash = '/'
@@ -201,14 +204,14 @@ class Completer(object):
             # python mode explicitly
             rtn = set()
         elif prefix.startswith('-'):
-            return lprefix, sorted(self._man_completer.option_complete(prefix, cmd))
+            return sorted(self._man_completer.option_complete(prefix, cmd)), lprefix
         elif cmd not in ctx:
             if cmd == 'import' and begidx == len('import '):
                 # completing module to import
-                return lprefix, sorted(self.module_complete(prefix))
+                return sorted(self.module_complete(prefix)), lprefix
             if cmd in self._all_commands():
                 # subproc mode; do path completions
-                return lprefix, sorted(self.path_complete(prefix, path_str_start, path_str_end, cdpath=True))
+                return sorted(self.path_complete(prefix, path_str_start, path_str_end, cdpath=True)), lprefix
             else:
                 # if we're here, could be anything
                 rtn = set()
@@ -225,7 +228,7 @@ class Completer(object):
         rtn |= {s + space for s in builtins.aliases
                 if startswither(s, prefix, prefixlow)}
         rtn |= self.path_complete(prefix, path_str_start, path_str_end)
-        return lprefix, sorted(rtn)
+        return sorted(rtn), lprefix
 
 
     def find_and_complete(self, line, idx, ctx=None):
