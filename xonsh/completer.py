@@ -322,7 +322,8 @@ class Completer(object):
         double_backslash = '\\\\'
         slash = get_sep()
         for s in paths:
-            if (space in s or backslash in s) and start == '':
+            if (start == '' and
+                    (space in s or (backslash in s and slash != backslash))):
                 start = "'"
                 end = "'"
             if os.path.isdir(s):
@@ -332,10 +333,11 @@ class Completer(object):
             else:
                 _tail = ''
             s = s + _tail
-            if "r" not in start.lower():
-                s = s.replace(backslash, double_backslash)
-            elif s.endswith(backslash):
-                s += backslash
+            if end != '':
+                if "r" not in start.lower():
+                    s = s.replace(backslash, double_backslash)
+                elif s.endswith(backslash):
+                    s += backslash
             out.add(start + s + end)
         return out
 
