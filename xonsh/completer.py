@@ -24,13 +24,18 @@ def _path_from_partial_string(inp, pos=None):
         pos = len(inp)
     partial = inp[:pos]
     startix, endix, quote = check_for_partial_string(partial)
+    _post = ""
     if startix is None:
         return None
     elif endix is None:
         string = partial[startix:]
     else:
         if endix != pos:
-            return None
+            _test = partial[endix:pos]
+            if not any(i == ' ' for i in _test):
+                _post = _test
+            else:
+                return None
         string = partial[startix:endix]
     end = re.sub(RE_STRING_START,'',quote)
     _string = string
@@ -44,7 +49,7 @@ def _path_from_partial_string(inp, pos=None):
         env = builtins.__xonsh_env__
         val = val.decode(encoding=env.get('XONSH_ENCODING'),
                          errors=env.get('XONSH_ENCODING_ERRORS'))
-    return string, val, quote, end
+    return string + _post, val + _post, quote, end
 
 
 XONSH_TOKENS = {
