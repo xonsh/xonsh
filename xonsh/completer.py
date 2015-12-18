@@ -315,16 +315,14 @@ class Completer(object):
         startswither = startswithnorm if csc else startswithlow
         return {s for s in modules if startswither(s, prefix, prefixlow)}
 
-    def path_complete(self, prefix, start, end, cdpath=False):
-        """Completes based on a path name."""
-        space = ' '  # intern some strings for faster appending
+    def _quote_paths(self, paths, start, end):
+        out = set()
+        space = ' '
+        backslash = '\\'
+        double_backslash = '\\\\'
         slash = get_sep()
-        tilde = '~'
-        paths = set()
-        csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
-        # look for being inside a string
-        for s in iglobpath(prefix + '*', ignore_case=(not csc)):
-            if (space in s or "\\" in s) and start == '':
+        for s in paths:
+            if (space in s or backslash in s) and start == '':
                 start = "'"
                 end = "'"
             if os.path.isdir(s):
@@ -333,9 +331,22 @@ class Completer(object):
                 _tail = space
             else:
                 _tail = ''
-            s = start + s + _tail + end
+            s = s + _tail
             if "r" not in start.lower():
-                s = s.replace('\\','\\\\')
+                s = s.replace(backslash, double_backslash)
+            elif s.endswith(backslash):
+                s += backslash
+            out.add(start + s + end)
+        return out
+
+
+    def path_complete(self, prefix, start, end, cdpath=False):
+        """Completes based on a path name."""
+        space = ' '  # intern some strings for faster appending
+        tilde = '~'
+        paths = set()
+        csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
+        for s in iglobpath(prefix + '*', ignore_case=(not csc)):
             paths.add(s)
         if tilde in prefix:
             home = os.path.expanduser(tilde)
@@ -344,7 +355,7 @@ class Completer(object):
         self._add_dots(paths, prefix)
         if cdpath:
             self._add_cdpaths(paths, prefix)
-        return {_normpath(s) for s in paths}
+        return self._quote_paths({_normpath(s) for s in paths}, start, end)
 
     def bash_complete(self, prefix, line, begidx, endidx):
         """Attempts BASH completion."""
