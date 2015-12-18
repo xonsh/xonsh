@@ -12,7 +12,7 @@ from collections import deque
 
 from xonsh import lazyjson
 from xonsh.base_shell import BaseShell
-from xonsh.tools import ON_WINDOWS, print_color, partial_string_finder
+from xonsh.tools import ON_WINDOWS, print_color
 
 RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = None
 RL_CAN_RESIZE = False
