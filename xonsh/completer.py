@@ -41,7 +41,9 @@ def _path_from_partial_string(inp, pos=None):
     except SyntaxError:
         return None
     if isinstance(val, bytes):
-        val = val.decode()
+        env = builtins.__xonsh_env__
+        val = val.decode(encoding=env.get('XONSH_ENCODING'),
+                         errors=env.get('XONSH_ENCODING_ERRORS'))
     return string, val, quote, end
 
 
