@@ -813,3 +813,99 @@ def print_color(string, file=sys.stdout):
     by the `file` keyword argument."""
     print(string.format(**TERM_COLORS).replace('\001', '').replace('\002', ''),
           file=file)
+
+_RE_STRING_START = "[bBrRuU]*"
+_RE_STRING_TRIPLE_DOUBLE = '"""'
+_RE_STRING_TRIPLE_SINGLE = "'''"
+_RE_STRING_DOUBLE = '"'
+_RE_STRING_SINGLE = "'"
+_STRINGS = (_RE_STRING_TRIPLE_DOUBLE,
+            _RE_STRING_TRIPLE_SINGLE,
+            _RE_STRING_DOUBLE,
+            _RE_STRING_SINGLE)
+RE_BEGIN_STRING = re.compile("(" + _RE_STRING_START +
+                             '(' + "|".join(_STRINGS) +
+                             '))')
+"""Regular expression matching the start of a string, including quotes and
+leading characters (r, b, or u)"""
+
+RE_STRING_START = re.compile(_RE_STRING_START)
+"""Regular expression matching the characters before the quotes when starting a
+string (r, b, or u, case insensitive)"""
+
+RE_STRING_CONT = {k: re.compile(v) for k,v in {
+    '"': r'((\\(.|\n))|([^"\\]))*',
+    "'": r"((\\(.|\n))|([^'\\]))*",
+    '"""': r'((\\(.|\n))|([^"\\])|("(?!""))|\n)*',
+    "'''": r"((\\(.|\n))|([^'\\])|('(?!''))|\n)*",
+}.items()}
+"""Dictionary mapping starting quote sequences to regular expressions that
+match the contents of a string beginning with those quotes (not including the
+terminating quotes)"""
+
+
+def check_for_partial_string(x):
+    """
+    Returns the starting index (inclusive), ending index (exclusive), and
+    starting quote string of the most recent Python string found in the input.
+
+    check_for_partial_string(x) -> (startix, endix, quote)
+
+    Parameters
+    ----------
+    x : str
+        The string to be checked (representing a line of terminal input)
+
+    Returns
+    -------
+    startix : int (or None)
+        The index where the most recent Python string found started
+        (inclusive), or None if no strings exist in the input
+
+    endix : int (or None)
+        The index where the most recent Python string found ended (exclusive),
+        or None if no strings exist in the input OR if the input ended in the
+        middle of a Python string
+
+    quote : str (or None)
+        A string containing the quote used to start the string (e.g., b", ",
+        '''), or None if no string was found.
+    """
+    string_indices = []
+    starting_quote = []
+    current_index = 0
+    match = re.search(RE_BEGIN_STRING, x)
+    while match is not None:
+        # add the start in
+        start = match.start()
+        quote = match.group(0)
+        lenquote = len(quote)
+        current_index += start
+        # store the starting index of the string, as well as the
+        # characters in the starting quotes (e.g., ", ', """, r", etc)
+        string_indices.append(current_index)
+        starting_quote.append(quote)
+        # determine the string that should terminate this string
+        ender = re.sub(RE_STRING_START, '', quote)
+        x = x[start + lenquote:]
+        current_index += lenquote
+        # figure out what is inside the string
+        continuer = RE_STRING_CONT[ender]
+        contents = re.match(continuer, x)
+        inside = contents.group(0)
+        leninside = len(inside)
+        current_index += contents.start() + leninside + len(ender)
+        # if we are not at the end of the input string, add the ending index of
+        # the string to string_indices
+        if contents.end() < len(x):
+            string_indices.append(current_index)
+        x = x[leninside + len(ender):]
+        # find the next match
+        match = re.search(RE_BEGIN_STRING, x)
+    numquotes = len(string_indices)
+    if numquotes == 0:
+        return (None, None, None)
+    elif numquotes % 2:
+        return (string_indices[-1], None, starting_quote[-1])
+    else:
+        return (string_indices[-2], string_indices[-1], starting_quote[-1])

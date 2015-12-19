@@ -2,20 +2,55 @@
 """A (tab-)completer for xonsh."""
 import os
 import re
-import builtins
-import pickle
-import shlex
-import subprocess
+import ast
 import sys
+import shlex
+import pickle
+import builtins
+import subprocess
 
 from xonsh.built_ins import iglobpath
-from xonsh.tools import subexpr_from_unbalanced, get_sep
+from xonsh.tools import subexpr_from_unbalanced, get_sep, check_for_partial_string, RE_STRING_START
 from xonsh.tools import ON_WINDOWS
 
 
 RE_DASHF = re.compile(r'-F\s+(\w+)')
 RE_ATTR = re.compile(r'(\S+(\..+)*)\.(\w*)$')
 RE_WIN_DRIVE = re.compile(r'^([a-zA-Z]):\\')
+
+
+def _path_from_partial_string(inp, pos=None):
+    if pos is None:
+        pos = len(inp)
+    partial = inp[:pos]
+    startix, endix, quote = check_for_partial_string(partial)
+    _post = ""
+    if startix is None:
+        return None
+    elif endix is None:
+        string = partial[startix:]
+    else:
+        if endix != pos:
+            _test = partial[endix:pos]
+            if not any(i == ' ' for i in _test):
+                _post = _test
+            else:
+                return None
+        string = partial[startix:endix]
+    end = re.sub(RE_STRING_START,'',quote)
+    _string = string
+    if not _string.endswith(end):
+        _string = _string + end
+    try:
+        val = ast.literal_eval(_string)
+    except SyntaxError:
+        return None
+    if isinstance(val, bytes):
+        env = builtins.__xonsh_env__
+        val = val.decode(encoding=env.get('XONSH_ENCODING'),
+                         errors=env.get('XONSH_ENCODING_ERRORS'))
+    return string + _post, val + _post, quote, end
+
 
 XONSH_TOKENS = {
     'and ', 'as ', 'assert ', 'break', 'class ', 'continue', 'def ', 'del ',
@@ -90,7 +125,7 @@ def completionwrap(s):
            if COMPLETION_WRAP_TOKENS.intersection(s) else
            s + space
            if s[-1:].isalnum() else
-           s) 
+           s)
 
 class Completer(object):
     """This provides a list of optional completions for the xonsh shell."""
@@ -131,15 +166,29 @@ class Completer(object):
         -------
         rtn : list of str
             Possible completions of prefix, sorted alphabetically.
+        lprefix : int
+            Length of the prefix to be replaced in the completion
+            (only used with prompt_toolkit)
         """
         space = ' '  # intern some strings for faster appending
         slash = '/'
         dot = '.'
         ctx = ctx or {}
         prefixlow = prefix.lower()
+        _line = line
         line = builtins.aliases.expand_alias(line)
+        # string stuff for automatic quoting
+        path_str_start = ''
+        path_str_end = ''
+        p = _path_from_partial_string(_line, endidx)
+        lprefix = len(prefix)
+        if p is not None:
+            lprefix = len(p[0])
+            prefix = p[1]
+            path_str_start = p[2]
+            path_str_end = p[3]
         cmd = line.split(' ', 1)[0]
-        if cmd in COMPLETION_SKIP_TOKENS:
+        while cmd in COMPLETION_SKIP_TOKENS:
             begidx -= len(cmd)+1
             endidx -= len(cmd)+1
             cmd = line.split(' ', 2)[1]
@@ -157,20 +206,19 @@ class Completer(object):
                     s = s.rstrip() + slash
                 rtn.add(s)
             if len(rtn) == 0:
-                rtn = self.path_complete(prefix)
-            return sorted(rtn)
+                rtn = self.path_complete(prefix, path_str_start, path_str_end)
         elif prefix.startswith('${') or prefix.startswith('@('):
             # python mode explicitly
             rtn = set()
         elif prefix.startswith('-'):
-            return sorted(self._man_completer.option_complete(prefix, cmd))
+            return sorted(self._man_completer.option_complete(prefix, cmd)), lprefix
         elif cmd not in ctx:
             if cmd == 'import' and begidx == len('import '):
                 # completing module to import
-                return sorted(self.module_complete(prefix))
+                return sorted(self.module_complete(prefix)), lprefix
             if cmd in self._all_commands():
                 # subproc mode; do path completions
-                return sorted(self.path_complete(prefix, cdpath=True))
+                return sorted(self.path_complete(prefix, path_str_start, path_str_end, cdpath=True)), lprefix
             else:
                 # if we're here, could be anything
                 rtn = set()
@@ -186,8 +234,8 @@ class Completer(object):
         rtn |= {s for s in dir(builtins) if startswither(s, prefix, prefixlow)}
         rtn |= {s + space for s in builtins.aliases
                 if startswither(s, prefix, prefixlow)}
-        rtn |= self.path_complete(prefix)
-        return sorted(rtn)
+        rtn |= self.path_complete(prefix, path_str_start, path_str_end)
+        return sorted(rtn), lprefix
 
 
     def find_and_complete(self, line, idx, ctx=None):
@@ -267,20 +315,40 @@ class Completer(object):
         startswither = startswithnorm if csc else startswithlow
         return {s for s in modules if startswither(s, prefix, prefixlow)}
 
-    def path_complete(self, prefix, cdpath=False):
+    def _quote_paths(self, paths, start, end):
+        out = set()
+        space = ' '
+        backslash = '\\'
+        double_backslash = '\\\\'
+        slash = get_sep()
+        for s in paths:
+            if (start == '' and
+                    (space in s or (backslash in s and slash != backslash))):
+                start = "'"
+                end = "'"
+            if os.path.isdir(s):
+                _tail = slash
+            elif end == '':
+                _tail = space
+            else:
+                _tail = ''
+            s = s + _tail
+            if end != '':
+                if "r" not in start.lower():
+                    s = s.replace(backslash, double_backslash)
+                elif s.endswith(backslash):
+                    s += backslash
+            out.add(start + s + end)
+        return out
+
+
+    def path_complete(self, prefix, start, end, cdpath=False):
         """Completes based on a path name."""
         space = ' '  # intern some strings for faster appending
-        slash = '/'
         tilde = '~'
         paths = set()
         csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
-        if prefix.startswith("'") or prefix.startswith('"'):
-            prefix = prefix[1:]
         for s in iglobpath(prefix + '*', ignore_case=(not csc)):
-            if space in s:
-                s = repr(s + (slash if os.path.isdir(s) else ''))
-            else:
-                s = s + (slash if os.path.isdir(s) else space)
             paths.add(s)
         if tilde in prefix:
             home = os.path.expanduser(tilde)
@@ -289,7 +357,7 @@ class Completer(object):
         self._add_dots(paths, prefix)
         if cdpath:
             self._add_cdpaths(paths, prefix)
-        return {_normpath(s) for s in paths}
+        return self._quote_paths({_normpath(s) for s in paths}, start, end)
 
     def bash_complete(self, prefix, line, begidx, endidx):
         """Attempts BASH completion."""
