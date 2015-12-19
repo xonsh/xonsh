@@ -942,13 +942,14 @@ def expandvars(path):
         name = m.group(1)
         if name.startswith(start) and name.endswith(end):
             name = eval(name[1:-1]) # change for non-POSIX ${...}
-        try:
+        if name in ENV._d or name in ENV.defaults:
             value = ENV.get(name)
-        except KeyError:
-            i = j
-        else:
+            ensurer = ENV.get_ensurer(name)
+            value = ensurer.detype(value)
             tail = path[j:]
             path = path[:i] + value
             i = len(path)
             path += tail
+        else:
+            i = j
     return path
