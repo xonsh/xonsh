@@ -147,6 +147,7 @@ DEFAULT_VALUES = {
     'EXPAND_ENV_VARS': True,
     'FORCE_POSIX_PATHS': False,
     'HISTCONTROL': set(),
+    'HOME': os.path.expanduser('~'),
     'IGNOREEOF': False,
     'INDENT': '    ',
     'LC_CTYPE': locale.setlocale(locale.LC_CTYPE),
