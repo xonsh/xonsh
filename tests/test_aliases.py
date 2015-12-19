@@ -10,6 +10,8 @@ import xonsh.built_ins as built_ins
 from xonsh.built_ins import Aliases
 from xonsh.environ import Env
 
+from tools import mock_xonsh_env
+
 
 def cd(args, stdin=None):
     return args
@@ -41,8 +43,9 @@ def test_eval_recursive():
 
 def test_eval_recursive_callable_partial():
     built_ins.ENV = Env(HOME=os.path.expanduser('~'))
-    assert_equal(ALIASES.get('indirect_cd')(['arg2', 'arg3']),
-                 ['..', 'arg2', 'arg3'])
+    with mock_xonsh_env(built_ins.ENV):
+        assert_equal(ALIASES.get('indirect_cd')(['arg2', 'arg3']),
+                     ['..', 'arg2', 'arg3'])
 
 if __name__ == '__main__':
     nose.runmodule()
