@@ -180,7 +180,9 @@ def expand_path(s):
     global ENV
     if ENV is not None:
         ENV.replace_env()
-    return os.path.expanduser(os.path.expandvars(s))
+    if ENV.get('EXPAND_ENV_VARS'):
+        s = os.path.expandvars(s)
+    return os.path.expanduser(s)
 
 
 def expand_case_matching(s):

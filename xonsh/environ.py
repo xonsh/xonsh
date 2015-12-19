@@ -144,6 +144,7 @@ DEFAULT_VALUES = {
     'CDPATH': (),
     'COMPLETIONS_DISPLAY': 'multi',
     'DIRSTACK_SIZE': 20,
+    'EXPAND_ENV_VARS': True,
     'FORCE_POSIX_PATHS': False,
     'HISTCONTROL': set(),
     'IGNOREEOF': False,
