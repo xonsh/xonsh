@@ -24,6 +24,7 @@ def test_repath_backslash():
     if ON_WINDOWS:
         raise SkipTest
     home = os.path.expanduser('~')
+    built_ins.ENV = Env(HOME=home)
     exp = os.listdir(home)
     exp = {p for p in exp if re.match(r'\w\w.*', p)}
     exp = {os.path.join(home, p) for p in exp}
@@ -32,12 +33,14 @@ def test_repath_backslash():
 
 def test_repath_home_itself():
     exp = os.path.expanduser('~')
+    built_ins.ENV = Env(HOME=exp)
     obs = regexpath('~')
     assert_equal(1, len(obs))
     assert_equal(exp, obs[0])
 
 def test_repath_home_contents():
     home = os.path.expanduser('~')
+    built_ins.ENV = Env(HOME=home)
     exp = os.listdir(home)
     exp = {os.path.join(home, p) for p in exp}
     obs = set(regexpath('~/.*'))
