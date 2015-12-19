@@ -66,6 +66,9 @@ applicable.
     * - DIRSTACK_SIZE
       - ``20``
       - Maximum size of the directory stack.
+    * - EXPAND_ENV_VARS
+      - ``True``
+      - Toggles whether environment variables are expanded inside of strings in subprocess mode.
     * - FORCE_POSIX_PATHS
       - ``False``
       - Forces forward slashes (``/``) on Windows systems when using auto completion if 
