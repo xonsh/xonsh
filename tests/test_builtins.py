@@ -35,6 +35,8 @@ def test_repath_backslash():
         assert_equal(exp, obs)
 
 def test_repath_home_itself():
+    if ON_WINDOWS:
+        raise SkipTest
     exp = os.path.expanduser('~')
     built_ins.ENV = Env(HOME=exp)
     with mock_xonsh_env(built_ins.ENV):
@@ -43,6 +45,8 @@ def test_repath_home_itself():
         assert_equal(exp, obs[0])
 
 def test_repath_home_contents():
+    if ON_WINDOWS:
+        raise SkipTest
     home = os.path.expanduser('~')
     built_ins.ENV = Env(HOME=home)
     with mock_xonsh_env(built_ins.ENV):
@@ -52,6 +56,8 @@ def test_repath_home_contents():
         assert_equal(exp, obs)
 
 def test_repath_home_var():
+    if ON_WINDOWS:
+        raise SkipTest
     exp = os.path.expanduser('~')
     built_ins.ENV = Env(HOME=exp)
     with mock_xonsh_env(built_ins.ENV):
@@ -62,6 +68,8 @@ def test_repath_home_var():
         assert_equal(exp, obs[0])
 
 def test_repath_home_var_brace():
+    if ON_WINDOWS:
+        raise SkipTest
     exp = os.path.expanduser('~')
     built_ins.ENV = Env(HOME=exp)
     with mock_xonsh_env(built_ins.ENV):
