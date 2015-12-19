@@ -22,7 +22,7 @@ from collections import Sequence, MutableMapping, Iterable, namedtuple, \
     MutableSequence, MutableSet
 
 from xonsh.tools import suggest_commands, XonshError, ON_POSIX, ON_WINDOWS, \
-    string_types
+    string_types, expandvars
 from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env, locate_binary
 from xonsh.aliases import DEFAULT_ALIASES
@@ -183,7 +183,7 @@ def expand_path(s):
     if ENV is not None:
         ENV.replace_env()
     if ENV.get('EXPAND_ENV_VARS'):
-        s = os.path.expandvars(s)
+        s = expandvars(s)
     return os.path.expanduser(s)
 
 
