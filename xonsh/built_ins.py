@@ -92,8 +92,10 @@ class Aliases(MutableMapping):
         # only once.
         if callable(value):
             if acc_args:  # Partial application
-                return lambda args, stdin=None: value(acc_args + args,
-                                                      stdin=stdin)
+                def _alias(args, stdin=None):
+                    args = [expand_path(i) for i in (acc_args + args)]
+                    return value(args, stdin=stdin)
+                return _alias
             else:
                 return value
         else:
