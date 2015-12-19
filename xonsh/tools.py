@@ -210,7 +210,7 @@ def get_sep():
     """ Returns the appropriate filepath separator char depending on OS and
     xonsh options set
     """
-    return (os.altsep if ON_WINDOWS 
+    return (os.altsep if ON_WINDOWS
             and builtins.__xonsh_env__.get('FORCE_POSIX_PATHS') else
             os.sep)
 
@@ -759,8 +759,8 @@ _PT_COLORS_LIGHT = {'BLACK': '#000000',
                     'PURPLE': '#800080',
                     'CYAN': '#008080',
                     'WHITE': '#FFFFFF',
-                    'GRAY': '#008080'}              
-              
+                    'GRAY': '#008080'}
+
 _PT_STYLE = {'BOLD': 'bold',
              'UNDERLINE': 'underline',
              'INTENSE': 'italic'}
@@ -945,7 +945,10 @@ def expandvars(path):
         if name in ENV._d or name in ENV.defaults:
             value = ENV.get(name)
             ensurer = ENV.get_ensurer(name)
-            value = ensurer.detype(value)
+            if ensurer.detype is bool_to_str:
+                value = ensure_string(value)
+            else:
+                value = ensurer.detype(value)
             tail = path[j:]
             path = path[:i] + value
             i = len(path)
