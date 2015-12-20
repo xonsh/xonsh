@@ -994,7 +994,7 @@ def expandvars(path):
                 else:
                     var = path[:index]
                     try:
-                        var = builtins.evalx(var, builtins.__xonsh_ctx__)
+                        var = eval(var, builtins.__xonsh_ctx__)
                         if _is_in_env(var):
                             value = _get_env_string(var)
                         else:
