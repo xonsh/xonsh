@@ -91,6 +91,10 @@ class PromptToolkitShell(BaseShell):
                         b.document = b.document.insert_after('\n'+env.get('INDENT'))
                         b.cursor_down()
 
+                    else:
+                        mycli = event.cli
+                        b.accept_action.validate_and_handle(mycli, b)
+
                 line = prompt(
                     mouse_support=mouse_support,
                     auto_suggest=auto_suggest,
