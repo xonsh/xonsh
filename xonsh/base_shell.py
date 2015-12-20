@@ -203,6 +203,7 @@ class BaseShell(object):
             os.system('title {}'.format(t))
         else:
             sys.stdout.write("\x1b]2;{0}\x07".format(t))
+            sys.stdout.flush()
 
     @property
     def prompt(self):

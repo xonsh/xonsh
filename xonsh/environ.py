@@ -18,7 +18,8 @@ from xonsh.tools import (
     always_true, always_false, ensure_string, is_env_path, str_to_env_path,
     env_path_to_str, is_bool, to_bool, bool_to_str, is_history_tuple, to_history_tuple,
     history_tuple_to_str, is_float, string_types, is_string, DEFAULT_ENCODING,
-    is_completions_display_value, to_completions_display_value
+    is_completions_display_value, to_completions_display_value, is_string_set,
+    csv_to_set, set_to_csv, get_sep
 )
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
@@ -55,8 +56,10 @@ DEFAULT_ENSURERS = {
     'AUTO_SUGGEST': (is_bool, to_bool, bool_to_str),
     'BASH_COMPLETIONS': (is_env_path, str_to_env_path, env_path_to_str),
     'CASE_SENSITIVE_COMPLETIONS': (is_bool, to_bool, bool_to_str),
-    re.compile('\w*DIRS'): (is_env_path, str_to_env_path, env_path_to_str),
+    re.compile('\w*DIRS$'): (is_env_path, str_to_env_path, env_path_to_str),
     'COMPLETIONS_DISPLAY': (is_completions_display_value, to_completions_display_value, str),
+    'FORCE_POSIX_PATHS': (is_bool, to_bool, bool_to_str),
+    'HISTCONTROL': (is_string_set, csv_to_set, set_to_csv),
     'IGNOREEOF': (is_bool, to_bool, bool_to_str),
     'LC_COLLATE': (always_false, locale_convert('LC_COLLATE'), ensure_string),
     'LC_CTYPE': (always_false, locale_convert('LC_CTYPE'), ensure_string),
@@ -65,12 +68,13 @@ DEFAULT_ENSURERS = {
     'LC_NUMERIC': (always_false, locale_convert('LC_NUMERIC'), ensure_string),
     'LC_TIME': (always_false, locale_convert('LC_TIME'), ensure_string),
     'MOUSE_SUPPORT': (is_bool, to_bool, bool_to_str),
-    re.compile('\w*PATH'): (is_env_path, str_to_env_path, env_path_to_str),
+    re.compile('\w*PATH$'): (is_env_path, str_to_env_path, env_path_to_str),
     'TEEPTY_PIPE_DELAY': (is_float, float, str),
     'XONSHRC': (is_env_path, str_to_env_path, env_path_to_str),
     'XONSH_ENCODING': (is_string, ensure_string, ensure_string),
     'XONSH_ENCODING_ERRORS': (is_string, ensure_string, ensure_string),
     'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
+    'XONSH_LOGIN': (is_bool, to_bool, bool_to_str),
     'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
     'VI_MODE': (is_bool, to_bool, bool_to_str),
 }
@@ -86,11 +90,16 @@ def default_value(f):
 def is_callable_default(x):
     """Checks if a value is a callable default."""
     return callable(x) and getattr(x, '_xonsh_callable_default', False)
+if ON_WINDOWS:
+    DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_CYAN} '
+                      '{cwd}{branch_color}{curr_branch} '
+                      '{BOLD_WHITE}{prompt_end}{NO_COLOR} ')
+else:
+    DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
+                      '{cwd}{branch_color}{curr_branch} '
+                      '{BOLD_BLUE}{prompt_end}{NO_COLOR} ')
 
-DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
-                  '{cwd}{branch_color}{curr_branch} '
-                  '{BOLD_BLUE}{prompt_end}{NO_COLOR} ')
-DEFAULT_TITLE = '{user}@{hostname}: {cwd} | xonsh'
+DEFAULT_TITLE = '{current_job}{user}@{hostname}: {cwd} | xonsh'
 
 @default_value
 def xonsh_data_dir(env):
@@ -135,7 +144,9 @@ DEFAULT_VALUES = {
     'CDPATH': (),
     'COMPLETIONS_DISPLAY': 'multi',
     'DIRSTACK_SIZE': 20,
+    'EXPAND_ENV_VARS': True,
     'FORCE_POSIX_PATHS': False,
+    'HISTCONTROL': set(),
     'IGNOREEOF': False,
     'INDENT': '    ',
     'LC_CTYPE': locale.setlocale(locale.LC_CTYPE),
@@ -148,6 +159,7 @@ DEFAULT_VALUES = {
     'PATH': (),
     'PATHEXT': (),
     'PROMPT': DEFAULT_PROMPT,
+    'PROMPT_TOOLKIT_COLORS': {},
     'PROMPT_TOOLKIT_STYLES': None,
     'PUSHD_MINUS': False,
     'PUSHD_SILENT': False,
@@ -171,6 +183,7 @@ DEFAULT_VALUES = {
     'XONSH_ENCODING_ERRORS': 'surrogateescape',
     'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
     'XONSH_HISTORY_SIZE': (8128, 'commands'),
+    'XONSH_LOGIN': False,
     'XONSH_SHOW_TRACEBACK': False,
     'XONSH_STORE_STDOUT': False,
 }
@@ -270,18 +283,7 @@ class Env(MutableMapping):
     #
 
     def __getitem__(self, key):
-        m = self._arg_regex.match(key)
-        if (m is not None) and (key not in self._d) and ('ARGS' in self._d):
-            args = self._d['ARGS']
-            ix = int(m.group(1))
-            if ix >= len(args):
-                e = "Not enough arguments given to access ARG{0}."
-                raise IndexError(e.format(ix))
-            return self._d['ARGS'][ix]
-        val = self._d[key]
-        if isinstance(val, (MutableSet, MutableSequence, MutableMapping)):
-            self._detyped = None
-        return self._d[key]
+        return self.get(key)
 
     def __setitem__(self, key, val):
         ensurer = self.get_ensurer(key)
@@ -298,14 +300,24 @@ class Env(MutableMapping):
         """The environment will look up default values from its own defaults if a
         default is not given here.
         """
-        if key in self:
-            val = self[key]
+        m = self._arg_regex.match(key)
+        if (m is not None) and (key not in self._d) and ('ARGS' in self._d):
+            args = self._d['ARGS']
+            ix = int(m.group(1))
+            if ix >= len(args):
+                e = "Not enough arguments given to access ARG{0}."
+                raise IndexError(e.format(ix))
+            val = self._d['ARGS'][ix]
+        elif key in self._d:
+            val = self._d[key]
         elif default is DefaultNotGiven:
             val = self.defaults.get(key, None)
             if is_callable_default(val):
                 val = val(self)
         else:
             val = default
+        if isinstance(val, (MutableSet, MutableSequence, MutableMapping)):
+            self._detyped = None
         return val
 
     def __iter__(self):
@@ -526,16 +538,41 @@ def _replace_home(x):
     if ON_WINDOWS:
         home = (builtins.__xonsh_env__['HOMEDRIVE'] +
                 builtins.__xonsh_env__['HOMEPATH'][0])
-        cwd = x.replace(home, '~')
+        if x.startswith(home):
+            x = x.replace(home, '~', 1)
 
         if builtins.__xonsh_env__.get('FORCE_POSIX_PATHS'):
-            cwd = cwd.replace(os.sep, os.altsep)
+            x = x.replace(os.sep, os.altsep)
 
-        return cwd
+        return x
     else:
-        return x.replace(builtins.__xonsh_env__['HOME'], '~')
+        home = builtins.__xonsh_env__['HOME']
+        if x.startswith(home):
+            x = x.replace(home, '~', 1)
+        return x
 
 _replace_home_cwd = lambda: _replace_home(builtins.__xonsh_env__['PWD'])
+
+def _collapsed_pwd():
+    sep = get_sep()
+    pwd = _replace_home_cwd().split(sep)
+    l = len(pwd)
+    leader = sep if l>0 and len(pwd[0])==0 else ''
+    base = [i[0] if ix != l-1 else i for ix,i in enumerate(pwd) if len(i) > 0]
+    return leader + sep.join(base)
+
+
+def _current_job():
+    j = builtins.__xonsh_active_job__
+    if j is not None:
+        j = builtins.__xonsh_all_jobs__[j]
+        if not j['bg']:
+            cmd = j['cmds'][-1]
+            s = cmd[0]
+            if s == 'sudo' and len(cmd) > 1:
+                s = cmd[1]
+            return '{} | '.format(s)
+    return ''
 
 
 if ON_WINDOWS:
@@ -551,8 +588,10 @@ FORMATTER_DICT = dict(
     cwd=_replace_home_cwd,
     cwd_dir=lambda: os.path.dirname(_replace_home_cwd()),
     cwd_base=lambda: os.path.basename(_replace_home_cwd()),
+    short_cwd=_collapsed_pwd,
     curr_branch=current_branch,
     branch_color=branch_color,
+    current_job=_current_job,
     **TERM_COLORS)
 DEFAULT_VALUES['FORMATTER_DICT'] = dict(FORMATTER_DICT)
 

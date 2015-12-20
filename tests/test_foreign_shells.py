@@ -50,7 +50,8 @@ def test_foreign_bash_data():
         raise SkipTest
     for key, expval in expenv.items():
         yield assert_equal, expval, obsenv.get(key, False)
-    yield assert_equal, expaliases, obsaliases
+    for key, expval in expaliases.items():
+        yield assert_equal, expval, obsaliases.get(key, False)
 
 
 if __name__ == '__main__':

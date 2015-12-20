@@ -27,10 +27,10 @@ class PromptToolkitCompleter(Completer):
             else:
                 begidx = space_pos + endidx + 1
             prefix = line[begidx:endidx]
-            completions = self.completer.complete(prefix,
-                                                  line,
-                                                  begidx,
-                                                  endidx,
-                                                  self.ctx)
+            completions, l = self.completer.complete(prefix,
+                                                     line,
+                                                     begidx,
+                                                     endidx,
+                                                     self.ctx)
             for comp in completions:
-                yield Completion(comp, -len(prefix))
+                yield Completion(comp, -l)

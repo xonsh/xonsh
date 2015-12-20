@@ -583,8 +583,29 @@ strings."  Let's see it go!
     -rw-rw-r-- 1 snail snail 0 Mar  8 17:50 sp ace
     -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
 
-Spaces in filenames, of course, are just the beginning.
+By default, the name of an environment variable inside a string will be
+replaced by the contents of that variable (in subprocess mode only).  For
+example:
 
+.. code-block:: xonshcon
+
+    >>> print("my home is $HOME")
+    my home is $HOME
+    >>> echo "my home is $HOME"
+    my home is /home/snail
+
+You can avoid this expansion within a particular command by forcing the strings
+to be evaluated in Python mode using the ``@()`` syntax:
+
+.. code-block:: xonshcon
+
+    >>> echo "my home is $HOME"
+    my home is /home/snail
+    >>> echo @("my home is $HOME")
+    my home is $HOME
+
+You can also disable environment variable expansion completely by setting
+``$EXPAND_ENV_VARS`` to ``False``.
 
 Filename Globbing with ``*``
 ===============================
@@ -791,6 +812,11 @@ must have the following signature:
         stderr = None
         return stdout, stderr
 
+        # Lastly, a 3-tuple return value can be used to include an integer
+        # return code indicating failure (> 0 return code). In the previous
+        # examples the return code would be 0/success.
+        return (None, "I failed", 2)
+
 We can dynamically alter the aliases present simply by modifying the
 built-in mapping.  Here is an example using a function value:
 
@@ -833,6 +859,8 @@ By default, the following variables are available for use:
   * ``user``: The username of the current user
   * ``hostname``: The name of the host computer
   * ``cwd``: The current working directory
+  * ``short_cwd``: A shortened form of the current working directory; e.g.,
+    ``/path/to/xonsh`` becomes ``/p/t/xonsh``
   * ``cwd_dir``: The dirname of the current working directory, e.g. ``/path/to`` in
     ``/path/to/xonsh``.
   * ``cwd_base``: The basename of the current working directory, e.g. ``xonsh`` in
@@ -842,6 +870,8 @@ By default, the following variables are available for use:
   * ``branch_color``: ``{BOLD_GREEN}`` if the current git branch is clean,
     otherwise ``{BOLD_RED}``
   * ``prompt_end``: `#` if the user has root/admin permissions `$` otherwise
+  * ``current_job``: The name of the command currently running in the
+    foreground, if any.
 
 You can also color your prompt easily by inserting keywords such as ``{GREEN}``
 or ``{BOLD_BLUE}``.  Colors have the form shown below:

@@ -44,16 +44,18 @@ shopt -s extdebug
 namelocfilestr=$(declare -F $funcnames)
 shopt -u extdebug
 
-# print just name and file
+# print just names and files as JSON object 
 read -r -a namelocfile <<< $namelocfilestr
-namefile=""
-for((n=0;n<${#namelocfile[@]};n++)); do
-  if (( $(($n % 3 )) == 0 )); then
-    namefile="$namefile ${namelocfile[$n]}"
-  elif (( $(($n % 3 )) == 2 )); then
-    namefile="$namefile ${namelocfile[$n]}"
-  fi
-done
+sep=" "
+namefile="{"
+while IFS='' read -r line || [[ -n "$line" ]]; do
+  name=${line%%"$sep"*}
+  locfile=${line#*"$sep"}
+  loc=${locfile%%"$sep"*}
+  file=${locfile#*"$sep"}
+  namefile="${namefile}\\"${name}\\":\\"${file//\\/\\\\}\\","
+done <<< "$namelocfilestr"
+namefile="${namefile%?}}"
 echo $namefile
 """.strip()
 
@@ -102,8 +104,8 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd='env',
     funcscmd : str or None, optional
         This is a command or script that can be used to determine the names
         and locations of any functions that are native to the foreign shell.
-        This command should print *only* a whitespace separated sequence
-        of pairs function name & filenames where the functions are defined.
+        This command should print *only* a JSON object that maps
+        function names to the filenames where the functions are defined.
         If this is None, then a default script will attempted to be looked
         up based on the shell name. Callable wrappers for these functions
         will be returned in the aliases dictionary.
@@ -202,14 +204,11 @@ def parse_funcs(s, shell, sourcer=None):
     if m is None:
         return {}
     g1 = m.group(1)
-    funcs = {}
-    flatpairs = g1.strip().split()
-    if len(flatpairs) % 2 != 0:
-        warn('could not parse functions, malformed pairs', RuntimeWarning)
-        return funcs
+    namefiles = json.loads(g1.strip())
     sourcer = DEFAULT_SOURCERS.get(shell, 'source') if sourcer is None \
                                                     else sourcer
-    for funcname, filename in zip(flatpairs[::2], flatpairs[1::2]):
+    funcs = {}
+    for funcname, filename in namefiles.items():
         if funcname.startswith('_'):
             continue  # skip private functions
         wrapper = ForeignShellFunctionAlias(name=funcname, shell=shell,
@@ -297,9 +296,9 @@ def ensure_shell(shell):
     if 'login' in shell_keys:
         shell['login'] = to_bool(shell['login'])
     if 'envcmd' in shell_keys:
-        shell['envcmd'] = eunsure_string(shell['envcmd'])
+        shell['envcmd'] = ensure_string(shell['envcmd'])
     if 'aliascmd' in shell_keys:
-        shell['aliascmd'] = eunsure_string(shell['aliascmd'])
+        shell['aliascmd'] = ensure_string(shell['aliascmd'])
     if 'extra_args' in shell_keys and not isinstance(shell['extra_args'], tuple):
         shell['extra_args'] = tuple(map(ensure_string, shell['extra_args']))
     if 'currenv' in shell_keys and not isinstance(shell['currenv'], tuple):
@@ -314,15 +313,15 @@ def ensure_shell(shell):
     if 'safe' in shell_keys:
         shell['safe'] = to_bool(shell['safe'])
     if 'prevcmd' in shell_keys:
-        shell['prevcmd'] = eunsure_string(shell['prevcmd'])
+        shell['prevcmd'] = ensure_string(shell['prevcmd'])
     if 'postcmd' in shell_keys:
-        shell['postcmd'] = eunsure_string(shell['postcmd'])
+        shell['postcmd'] = ensure_string(shell['postcmd'])
     if 'funcscmd' in shell_keys:
         shell['funcscmd'] = None if shell['funcscmd'] is None \
-                                 else eunsure_string(shell['funcscmd'])
+                                 else ensure_string(shell['funcscmd'])
     if 'sourcer' in shell_keys:
         shell['sourcer'] = None if shell['sourcer'] is None \
-                                 else eunsure_string(shell['sourcer'])
+                                 else ensure_string(shell['sourcer'])
     return shell
 
 

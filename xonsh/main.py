@@ -2,17 +2,26 @@
 """The main xonsh script."""
 import os
 import sys
-import shlex
-import signal
 import builtins
-import subprocess
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser, ArgumentTypeError
 from contextlib import contextmanager
 
 from xonsh import __version__
 from xonsh.shell import Shell
 from xonsh.pretty import pprint
 from xonsh.jobs import ignore_sigtstp
+
+def path_argument(s):
+    """Return a path only if the path is actually legal
+
+    This is very similar to argparse.FileType, except that it doesn't return
+    an open file handle, but rather simply validates the path."""
+
+    s = os.path.abspath(os.path.expanduser(s))
+    if not os.path.isfile(s):
+        raise ArgumentTypeError('"%s" must be a valid path to a file' % s)
+    return s
+
 
 parser = ArgumentParser(description='xonsh')
 parser.add_argument('-V', '--version',
@@ -24,6 +33,20 @@ parser.add_argument('-c',
                     dest='command',
                     required=False,
                     default=None)
+parser.add_argument('-i',
+                    help='force running in interactive mode',
+                    dest='force_interactive',
+                    action='store_true',
+                    default=False)
+parser.add_argument('-l',
+                    help='run as a login shell',
+                    dest='login',
+                    action='store_true',
+                    default=False)
+parser.add_argument('--config-path',
+                    help='specify a custom static configuration file',
+                    dest='config_path',
+                    type=path_argument)
 parser.add_argument('--no-rc',
                     help="Do not load the .xonshrc file",
                     dest='norc',
@@ -38,10 +61,10 @@ parser.add_argument('-D',
                     default=None)
 parser.add_argument('--shell-type',
                     help='What kind of shell should be used. '
-                         'Possible options: readline, prompt_toolkit. '
+                         'Possible options: readline, prompt_toolkit, random. '
                          'Warning! If set this overrides $SHELL_TYPE variable.',
                     dest='shell_type',
-                    choices=('readline', 'prompt_toolkit'),
+                    choices=('readline', 'prompt_toolkit', 'random'),
                     default=None)
 parser.add_argument('file',
                     metavar='script-file',
@@ -69,12 +92,16 @@ def premain(argv=None):
     shell_kwargs = {'shell_type': args.shell_type}
     if args.norc:
         shell_kwargs['ctx'] = {}
+    if args.config_path:
+        shell_kwargs['ctx']= {'XONSHCONFIG': args.config_path}
     setattr(sys, 'displayhook', _pprint_displayhook)
     shell = builtins.__xonsh_shell__ = Shell(**shell_kwargs)
     from xonsh import imphooks
     env = builtins.__xonsh_env__
     if args.defines is not None:
         env.update([x.split('=', 1) for x in args.defines])
+    if args.login:
+        env['XONSH_LOGIN'] = True
     env['XONSH_INTERACTIVE'] = False
     return args
 
@@ -98,7 +125,7 @@ def main(argv=None):
             shell.execer.exec(code, mode='exec', glbs=shell.ctx)
         else:
             print('xonsh: {0}: No such file or directory.'.format(args.file))
-    elif not sys.stdin.isatty():
+    elif not sys.stdin.isatty() and not args.force_interactive:
         # run a script given on stdin
         code = sys.stdin.read()
         code = code if code.endswith('\n') else code + '\n'

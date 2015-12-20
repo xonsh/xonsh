@@ -16,8 +16,8 @@ from threading import Thread
 from collections import Sequence
 from subprocess import Popen, PIPE, DEVNULL, STDOUT, TimeoutExpired
 
-from xonsh.tools import redirect_stdout, redirect_stderr, ON_WINDOWS, ON_LINUX, \
-    fallback, print_exception
+from xonsh.tools import (redirect_stdout, redirect_stderr, ON_WINDOWS, ON_LINUX,
+                         fallback, print_exception)
 
 if ON_LINUX:
     from xonsh.teepty import TeePTY
@@ -336,6 +336,8 @@ class SimpleProcProxy(ProcProxy):
                 i = stdin.read()
                 with redirect_stdout(stdout), redirect_stderr(stderr):
                     r = f(args, i)
+
+                cmd_result = 0
                 if isinstance(r, str):
                     stdout.write(r)
                 elif isinstance(r, Sequence):
@@ -343,9 +345,11 @@ class SimpleProcProxy(ProcProxy):
                         stdout.write(r[0])
                     if r[1] is not None:
                         stderr.write(r[1])
+                    if len(r) > 2 and r[2] is not None:
+                        cmd_result = r[2]
                 elif r is not None:
                     stdout.write(str(r))
-                return 0  # returncode for succees
+                return cmd_result
             except Exception:
                 print_exception()
                 return 1  # returncode for failure
@@ -390,21 +394,37 @@ class TeePTYProc(object):
 
     @property
     def returncode(self):
-        """The return code of the spawned process."""
-        return self._tpty.returncode
+        """The return value of the spawned process or None if the process
+        exited due to a signal."""
+        if os.WIFEXITED(self._tpty.wcode):
+            return os.WEXITSTATUS(self._tpty.wcode)
+        else:
+            return None
+
+    @property
+    def signal(self):
+        """If the process was terminated by a signal a 2-tuple is returned
+        containing the signal number and a boolean indicating whether a core
+        file was produced. Otherwise None is returned."""
+        if os.WIFSIGNALED(self._tpty.wcode):
+            return (os.WTERMSIG(self._tpty.wcode),
+                    os.WCOREDUMP(self._tpty.wcode))
+        else:
+            return None
 
     def poll(self):
-        """Polls the spawned process and returns the returncode."""
-        return self._tpty.returncode
+        """Polls the spawned process and returns the os.wait code."""
+        return _wcode_to_popen(self._tpty.wcode)
 
     def wait(self, timeout=None):
-        """Waits for the spawned process to finish, up to a timeout."""
+        """Waits for the spawned process to finish, up to a timeout.
+        Returns the return os.wait code."""
         tpty = self._tpty
         t0 = time.time()
-        while tpty.returncode is None:
+        while tpty.wcode is None:
             if timeout is not None and timeout < (time.time() - t0):
                 raise TimeoutExpired
-        return tpty.returncode
+        return _wcode_to_popen(tpty.wcode)
 
     @property
     def stdout(self):
@@ -418,3 +438,14 @@ class TeePTYProc(object):
         else:
             self._stdout = self._tpty.buffer
         return self._stdout
+
+
+def _wcode_to_popen(code):
+    """Converts os.wait return code into Popen format."""
+    if os.WIFEXITED(code):
+        return os.WEXITSTATUS(code)
+    elif os.WIFSIGNALED(code):
+        return -1 * os.WTERMSIG(code)
+    else:
+        # Can this happen? Let's find out. Returning None is not an option.
+        raise ValueError("Invalid os.wait code: {}".format(code))

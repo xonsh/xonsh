@@ -48,6 +48,8 @@ IS_ROOT = ctypes.windll.shell32.IsUserAnAdmin() != 0 if ON_WINDOWS else os.getui
 
 VER_3_4 = (3, 4)
 VER_3_5 = (3, 5)
+VER_3_5_1 = (3, 5, 1)
+VER_FULL = sys.version_info[:3]
 VER_MAJOR_MINOR = sys.version_info[:2]
 V_MAJOR_MINOR = 'v{0}{1}'.format(*sys.version_info[:2])
 
@@ -203,6 +205,14 @@ def indent(instr, nspaces=4, ntabs=0, flatten=False):
         return outstr[:-len(ind)]
     else:
         return outstr
+
+def get_sep():
+    """ Returns the appropriate filepath separator char depending on OS and
+    xonsh options set
+    """
+    return (os.altsep if ON_WINDOWS
+            and builtins.__xonsh_env__.get('FORCE_POSIX_PATHS') else
+            os.sep)
 
 
 TERM_COLORS = {
@@ -557,6 +567,28 @@ def ensure_int_or_slice(x):
         return int(x)
 
 
+def is_string_set(x):
+    """Tests if something is a set"""
+    if isinstance(x, string_types):
+        return False
+    else:
+        return (isinstance(x, set) and
+                all([isinstance(a, string_types) for a in x]))
+
+
+def csv_to_set(x):
+    """Convert a comma-separated list of strings to a set of strings."""
+    if not x:
+        return set()
+    else:
+        return set(x.split(','))
+
+
+def set_to_csv(x):
+    """Convert a set of strings to a comma-separated list of strings."""
+    return ','.join(x)
+
+
 def is_completions_display_value(x):
     return x in {'none', 'single', 'multi'}
 
@@ -709,14 +741,25 @@ class FakeChar(str):
 RE_HIDDEN_MAX = re.compile('(\001.*?\002)+')
 
 
-_PT_COLORS = {'BLACK': '#000000',
-              'RED': '#FF0000',
-              'GREEN': '#008000',
-              'YELLOW': '#FFFF00',
-              'BLUE': '#0000FF',
-              'PURPLE': '#0000FF',
-              'CYAN': '#00FFFF',
-              'WHITE': '#FFFFFF'}
+_PT_COLORS_DARK = {'BLACK': '#000000',
+                   'RED': '#ff1010',
+                   'GREEN': '#00FF18',
+                   'YELLOW': '#FFFF00',
+                   'BLUE': '#0000D2',
+                   'PURPLE': '#FF00FF',
+                   'CYAN': '#00FFFF',
+                   'WHITE': '#FFFFFF',
+                   'GRAY': '#c0c0c0'}
+
+_PT_COLORS_LIGHT = {'BLACK': '#000000',
+                    'RED': '#800000',
+                    'GREEN': '#008000',
+                    'YELLOW': '#808000',
+                    'BLUE': '#000080',
+                    'PURPLE': '#800080',
+                    'CYAN': '#008080',
+                    'WHITE': '#FFFFFF',
+                    'GRAY': '#008080'}
 
 _PT_STYLE = {'BOLD': 'bold',
              'UNDERLINE': 'underline',
@@ -729,8 +772,12 @@ def _make_style(color_name):
     for k, v in _PT_STYLE.items():
         if k in color_name:
             style.append(v)
-    for k, v in _PT_COLORS.items():
+    _custom_colors = builtins.__xonsh_env__.get('PROMPT_TOOLKIT_COLORS')
+    for k, v in _custom_colors.items():
         if k in color_name:
+            style.append(v)
+    for k, v in _PT_COLORS_DARK.items():
+        if k not in _custom_colors and k in color_name:
             style.append(v)
     return ' '.join(style)
 
@@ -758,3 +805,219 @@ def format_prompt_for_prompt_toolkit(prompt):
     token_names = [get_xonsh_color_names(c) for c in parts[::2]]
     cstyles = [_make_style(c) for c in token_names]
     return token_names, cstyles, strings
+
+
+def print_color(string, file=sys.stdout):
+    """Print strings that contain xonsh.tools.TERM_COLORS values. By default
+    `sys.stdout` is used as the output stream but an alternate can be specified
+    by the `file` keyword argument."""
+    print(string.format(**TERM_COLORS).replace('\001', '').replace('\002', ''),
+          file=file)
+
+_RE_STRING_START = "[bBrRuU]*"
+_RE_STRING_TRIPLE_DOUBLE = '"""'
+_RE_STRING_TRIPLE_SINGLE = "'''"
+_RE_STRING_DOUBLE = '"'
+_RE_STRING_SINGLE = "'"
+_STRINGS = (_RE_STRING_TRIPLE_DOUBLE,
+            _RE_STRING_TRIPLE_SINGLE,
+            _RE_STRING_DOUBLE,
+            _RE_STRING_SINGLE)
+RE_BEGIN_STRING = re.compile("(" + _RE_STRING_START +
+                             '(' + "|".join(_STRINGS) +
+                             '))')
+"""Regular expression matching the start of a string, including quotes and
+leading characters (r, b, or u)"""
+
+RE_STRING_START = re.compile(_RE_STRING_START)
+"""Regular expression matching the characters before the quotes when starting a
+string (r, b, or u, case insensitive)"""
+
+RE_STRING_CONT = {k: re.compile(v) for k,v in {
+    '"': r'((\\(.|\n))|([^"\\]))*',
+    "'": r"((\\(.|\n))|([^'\\]))*",
+    '"""': r'((\\(.|\n))|([^"\\])|("(?!""))|\n)*',
+    "'''": r"((\\(.|\n))|([^'\\])|('(?!''))|\n)*",
+}.items()}
+"""Dictionary mapping starting quote sequences to regular expressions that
+match the contents of a string beginning with those quotes (not including the
+terminating quotes)"""
+
+
+def check_for_partial_string(x):
+    """
+    Returns the starting index (inclusive), ending index (exclusive), and
+    starting quote string of the most recent Python string found in the input.
+
+    check_for_partial_string(x) -> (startix, endix, quote)
+
+    Parameters
+    ----------
+    x : str
+        The string to be checked (representing a line of terminal input)
+
+    Returns
+    -------
+    startix : int (or None)
+        The index where the most recent Python string found started
+        (inclusive), or None if no strings exist in the input
+
+    endix : int (or None)
+        The index where the most recent Python string found ended (exclusive),
+        or None if no strings exist in the input OR if the input ended in the
+        middle of a Python string
+
+    quote : str (or None)
+        A string containing the quote used to start the string (e.g., b", ",
+        '''), or None if no string was found.
+    """
+    string_indices = []
+    starting_quote = []
+    current_index = 0
+    match = re.search(RE_BEGIN_STRING, x)
+    while match is not None:
+        # add the start in
+        start = match.start()
+        quote = match.group(0)
+        lenquote = len(quote)
+        current_index += start
+        # store the starting index of the string, as well as the
+        # characters in the starting quotes (e.g., ", ', """, r", etc)
+        string_indices.append(current_index)
+        starting_quote.append(quote)
+        # determine the string that should terminate this string
+        ender = re.sub(RE_STRING_START, '', quote)
+        x = x[start + lenquote:]
+        current_index += lenquote
+        # figure out what is inside the string
+        continuer = RE_STRING_CONT[ender]
+        contents = re.match(continuer, x)
+        inside = contents.group(0)
+        leninside = len(inside)
+        current_index += contents.start() + leninside + len(ender)
+        # if we are not at the end of the input string, add the ending index of
+        # the string to string_indices
+        if contents.end() < len(x):
+            string_indices.append(current_index)
+        x = x[leninside + len(ender):]
+        # find the next match
+        match = re.search(RE_BEGIN_STRING, x)
+    numquotes = len(string_indices)
+    if numquotes == 0:
+        return (None, None, None)
+    elif numquotes % 2:
+        return (string_indices[-1], None, starting_quote[-1])
+    else:
+        return (string_indices[-2], string_indices[-1], starting_quote[-1])
+
+
+# expandvars is a modified version of os.path.expandvars from the Python 3.5.1
+# source code (root/Lib/ntpath.py, line 353)
+
+def _is_in_env(name):
+    ENV = builtins.__xonsh_env__
+    return name in ENV._d or name in ENV.defaults
+
+def _get_env_string(name):
+    ENV = builtins.__xonsh_env__
+    value = ENV.get(name)
+    ensurer = ENV.get_ensurer(name)
+    if ensurer.detype is bool_to_str:
+        value = ensure_string(value)
+    else:
+        value = ensurer.detype(value)
+    return value
+
+
+def expandvars(path):
+    """Expand shell variables of the forms $var, ${var} and %var%.
+
+    Unknown variables are left unchanged."""
+    ENV = builtins.__xonsh_env__
+    if isinstance(path, bytes):
+        path = path.decode(encoding=ENV.get('XONSH_ENCODING'),
+                           errors=ENV.get('XONSH_ENCODING_ERRORS'))
+    if '$' not in path and ((not ON_WINDOWS) or ('%' not in path)):
+        return path
+    import string
+    varchars = string.ascii_letters + string.digits + '_-'
+    quote = '\''
+    percent = '%'
+    brace = '{'
+    rbrace = '}'
+    dollar = '$'
+    res = path[:0]
+    index = 0
+    pathlen = len(path)
+    while index < pathlen:
+        c = path[index:index+1]
+        if c == quote:   # no expansion within single quotes
+            path = path[index + 1:]
+            pathlen = len(path)
+            try:
+                index = path.index(c)
+                res += c + path[:index + 1]
+            except ValueError:
+                res += c + path
+                index = pathlen - 1
+        elif c == percent and ON_WINDOWS:  # variable or '%'
+            if path[index + 1:index + 2] == percent:
+                res += c
+                index += 1
+            else:
+                path = path[index+1:]
+                pathlen = len(path)
+                try:
+                    index = path.index(percent)
+                except ValueError:
+                    res += percent + path
+                    index = pathlen - 1
+                else:
+                    var = path[:index]
+                    if _is_in_env(var):
+                        value = _get_env_string(var)
+                    else:
+                        value = percent + var + percent
+                    res += value
+        elif c == dollar:  # variable or '$$'
+            if path[index + 1:index + 2] == dollar:
+                res += c
+                index += 1
+            elif path[index + 1:index + 2] == brace:
+                path = path[index+2:]
+                pathlen = len(path)
+                try:
+                    index = path.index(rbrace)
+                except ValueError:
+                    res += dollar + brace + path
+                    index = pathlen - 1
+                else:
+                    var = path[:index]
+                    try:
+                        var = eval(var, builtins.__xonsh_ctx__)
+                        if _is_in_env(var):
+                            value = _get_env_string(var)
+                        else:
+                            value = dollar + brace + var + rbrace
+                    except:
+                        value = dollar + brace + var + rbrace
+                    res += value
+            else:
+                var = path[:0]
+                index += 1
+                c = path[index:index + 1]
+                while c and c in varchars:
+                    var += c
+                    index += 1
+                    c = path[index:index + 1]
+                if _is_in_env(var):
+                    value = _get_env_string(var)
+                else:
+                    value = dollar + var
+                res += value
+                if c:
+                    index -= 1
+        else:
+            res += c
+        index += 1
+    return res

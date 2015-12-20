@@ -10,6 +10,7 @@ from xonsh import built_ins
 from xonsh.execer import Execer
 from xonsh.built_ins import load_builtins, unload_builtins
 
+from tests.tools import mock_xonsh_env
 LOADED_HERE = False
 
 def setup():
@@ -24,21 +25,25 @@ def teardown():
         unload_builtins()
 
 def test_import():
-    import sample
-    assert_equal('hello mom jawaka\n', sample.x)
+    with mock_xonsh_env({}):
+        import sample
+        assert_equal('hello mom jawaka\n', sample.x)
 
 def test_absolute_import():
-    from xpack import sample
-    assert_equal('hello mom jawaka\n', sample.x)
+    with mock_xonsh_env({}):
+        from xpack import sample
+        assert_equal('hello mom jawaka\n', sample.x)
 
 def test_relative_import():
-    from xpack import relimp
-    assert_equal('hello mom jawaka\n', relimp.sample.x)
-    assert_equal('hello mom jawaka\ndark chest of wonders', relimp.y)
+    with mock_xonsh_env({}):
+        from xpack import relimp
+        assert_equal('hello mom jawaka\n', relimp.sample.x)
+        assert_equal('hello mom jawaka\ndark chest of wonders', relimp.y)
 
 def test_sub_import():
-    from xpack.sub import sample
-    assert_equal('hello mom jawaka\n', sample.x)
+    with mock_xonsh_env({}):
+        from xpack.sub import sample
+        assert_equal('hello mom jawaka\n', sample.x)
 
 
 if __name__ == '__main__':

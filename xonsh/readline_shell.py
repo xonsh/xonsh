@@ -12,7 +12,7 @@ from collections import deque
 
 from xonsh import lazyjson
 from xonsh.base_shell import BaseShell
-from xonsh.tools import ON_WINDOWS
+from xonsh.tools import ON_WINDOWS, print_color
 
 RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = None
 RL_CAN_RESIZE = False
@@ -108,9 +108,13 @@ class ReadlineShell(BaseShell, Cmd):
     def completedefault(self, text, line, begidx, endidx):
         """Implements tab-completion for text."""
         rl_completion_suppress_append()  # this needs to be called each time
-        return self.completer.complete(text, line,
-                                       begidx, endidx,
-                                       ctx=self.ctx)
+        mline = line.partition(' ')[2]
+        offs = len(mline) - len(text)
+        x = [(i[offs:] if " " in i[:-1] else i)
+             for i in self.completer.complete(text, line,
+                                              begidx, endidx,
+                                              ctx=self.ctx)[0]]
+        return x
 
     # tab complete on first index too
     completenames = completedefault
@@ -205,9 +209,7 @@ class ReadlineShell(BaseShell, Cmd):
                     if inserter is not None:
                         readline.set_pre_input_hook(None)
                 else:
-                    self.stdout.write(self.prompt.replace('\001', '')
-                                                 .replace('\002', ''))
-                    self.stdout.flush()
+                    print_color(self.prompt, file=self.stdout)
                     if line is not None:
                         os.write(self.stdin.fileno(), line.encode())
                     if not exec_now:
