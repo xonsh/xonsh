@@ -923,8 +923,8 @@ def expandvars(path):
     global _varprog
     ENV = builtins.__xonsh_env__
     if isinstance(path, bytes):
-        path = path.decode(encoding=env.get('XONSH_ENCODING'),
-                           errors=env.get('XONSH_ENCODING_ERRORS'))
+        path = path.decode(encoding=ENV.get('XONSH_ENCODING'),
+                           errors=ENV.get('XONSH_ENCODING_ERRORS'))
     if '$' not in path:
         return path
     if not _varprog:
