@@ -317,6 +317,8 @@ class Env(MutableMapping):
                 val = val(self)
         else:
             val = default
+        if isinstance(val, (MutableSet, MutableSequence, MutableMapping)):
+            self._detyped = None
         return val
 
     def __iter__(self):
