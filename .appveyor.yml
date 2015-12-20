@@ -7,6 +7,6 @@ build_script:
 - C:\Python34\python setup.py install
 - C:\Python35\python setup.py install
 test_script:
-- C:\Python34\Scripts\nosetests
-- C:\Python35\Scripts\nosetests
+- C:\Python34\Scripts\nosetests -q
+- C:\Python35\Scripts\nosetests -q
 

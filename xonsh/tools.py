@@ -210,7 +210,7 @@ def get_sep():
     """ Returns the appropriate filepath separator char depending on OS and
     xonsh options set
     """
-    return (os.altsep if ON_WINDOWS 
+    return (os.altsep if ON_WINDOWS
             and builtins.__xonsh_env__.get('FORCE_POSIX_PATHS') else
             os.sep)
 
@@ -759,8 +759,8 @@ _PT_COLORS_LIGHT = {'BLACK': '#000000',
                     'PURPLE': '#800080',
                     'CYAN': '#008080',
                     'WHITE': '#FFFFFF',
-                    'GRAY': '#008080'}              
-              
+                    'GRAY': '#008080'}
+
 _PT_STYLE = {'BOLD': 'bold',
              'UNDERLINE': 'underline',
              'INTENSE': 'italic'}
@@ -909,3 +909,50 @@ def check_for_partial_string(x):
         return (string_indices[-1], None, starting_quote[-1])
     else:
         return (string_indices[-2], string_indices[-1], starting_quote[-1])
+
+
+# expandvars is a modified version of os.path.expandvars from the Python 3.5.1
+# source code (root/Lib/posixpath.py, line 266)
+
+_varprog = None
+
+
+def expandvars(path):
+    """Expand shell variables of form $var and ${var}.  Unknown variables
+    are left unchanged."""
+    global _varprog
+    ENV = builtins.__xonsh_env__
+    if isinstance(path, bytes):
+        path = path.decode(encoding=env.get('XONSH_ENCODING'),
+                           errors=env.get('XONSH_ENCODING_ERRORS'))
+    if '$' not in path:
+        return path
+    if not _varprog:
+        import re
+        _varprog = re.compile(r'\$(\w+|\{[^}]*\})', re.ASCII)
+    search = _varprog.search
+    start = '{'
+    end = '}'
+    i = 0
+    while True:
+        m = search(path, i)
+        if not m:
+            break
+        i, j = m.span(0)
+        name = m.group(1)
+        if name.startswith(start) and name.endswith(end):
+            name = eval(name[1:-1]) # change for non-POSIX ${...}
+        if name in ENV._d or name in ENV.defaults:
+            value = ENV.get(name)
+            ensurer = ENV.get_ensurer(name)
+            if ensurer.detype is bool_to_str:
+                value = ensure_string(value)
+            else:
+                value = ensurer.detype(value)
+            tail = path[j:]
+            path = path[:i] + value
+            i = len(path)
+            path += tail
+        else:
+            i = j
+    return path
