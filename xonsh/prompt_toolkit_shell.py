@@ -16,33 +16,10 @@ from pygments.token import (Keyword, Name, Comment, String, Error, Number,
 from xonsh.base_shell import BaseShell
 from xonsh.tools import format_prompt_for_prompt_toolkit, _make_style
 from xonsh.prompt_toolkit_completer import PromptToolkitCompleter
-from xonsh.prompt_toolkit_history import LimitedFileHistory
+from xonsh.prompt_toolkit_history import PromptToolkitHistory
 from xonsh.prompt_toolkit_key_bindings import load_xonsh_bindings
 from xonsh.pyghooks import XonshLexer
 
-
-def setup_history():
-    """Creates history object."""
-    env = builtins.__xonsh_env__
-    hfile = env.get('XONSH_HISTORY_FILE')
-    history = LimitedFileHistory()
-    try:
-        history.read_history_file(hfile)
-    except PermissionError:
-        warn('do not have read permissions for ' + hfile, RuntimeWarning)
-    return history
-
-
-def teardown_history(history):
-    """Tears down the history object."""
-    import builtins
-    env = builtins.__xonsh_env__
-    hsize = env.get('XONSH_HISTORY_SIZE')[0]
-    hfile = env.get('XONSH_HISTORY_FILE')
-    try:
-        history.save_history_to_file(hfile, hsize)
-    except PermissionError:
-        warn('do not have write permissions for ' + hfile, RuntimeWarning)
 
 
 class PromptToolkitShell(BaseShell):
@@ -50,7 +27,7 @@ class PromptToolkitShell(BaseShell):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.history = setup_history()
+        self.history = PromptToolkitHistory()
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx)
         self.key_bindings_manager = KeyBindingManager(
             enable_auto_suggest_bindings=True,
@@ -59,10 +36,6 @@ class PromptToolkitShell(BaseShell):
             enable_vi_mode=Condition(lambda cli: builtins.__xonsh_env__.get('VI_MODE')),
             enable_open_in_editor=True)
         load_xonsh_bindings(self.key_bindings_manager)
-
-    def __del__(self):
-        if self.history is not None:
-            teardown_history(self.history)
 
     def cmdloop(self, intro=None):
         """Enters a loop that reads and execute input from user."""
