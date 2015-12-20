@@ -62,8 +62,6 @@ def test_repath_home_var():
     built_ins.ENV = Env(HOME=exp)
     with mock_xonsh_env(built_ins.ENV):
         obs = regexpath('$HOME')
-        assert_equal(1, len(os.environ))
-        built_ins.ENV.undo_replace_env()
         assert_equal(1, len(obs))
         assert_equal(exp, obs[0])
 
@@ -74,8 +72,6 @@ def test_repath_home_var_brace():
     built_ins.ENV = Env(HOME=exp)
     with mock_xonsh_env(built_ins.ENV):
         obs = regexpath('${"HOME"}')
-        assert_equal(1, len(os.environ))
-        built_ins.ENV.undo_replace_env()
         assert_equal(1, len(obs))
         assert_equal(exp, obs[0])
 
