@@ -717,9 +717,6 @@ def unload_builtins():
     BUILTINS_LOADED is True, sets BUILTINS_LOADED to False, and returns.
     """
     global BUILTINS_LOADED, ENV
-    if ENV is not None:
-        ENV.undo_replace_env()
-        ENV = None
     if hasattr(builtins, '__xonsh_pyexit__'):
         builtins.exit = builtins.__xonsh_pyexit__
     if hasattr(builtins, '__xonsh_pyquit__'):
