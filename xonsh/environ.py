@@ -284,18 +284,7 @@ class Env(MutableMapping):
     #
 
     def __getitem__(self, key):
-        m = self._arg_regex.match(key)
-        if (m is not None) and (key not in self._d) and ('ARGS' in self._d):
-            args = self._d['ARGS']
-            ix = int(m.group(1))
-            if ix >= len(args):
-                e = "Not enough arguments given to access ARG{0}."
-                raise IndexError(e.format(ix))
-            return self._d['ARGS'][ix]
-        val = self._d[key]
-        if isinstance(val, (MutableSet, MutableSequence, MutableMapping)):
-            self._detyped = None
-        return self._d[key]
+        return self.get(key)
 
     def __setitem__(self, key, val):
         ensurer = self.get_ensurer(key)
@@ -312,8 +301,16 @@ class Env(MutableMapping):
         """The environment will look up default values from its own defaults if a
         default is not given here.
         """
-        if key in self:
-            val = self[key]
+        m = self._arg_regex.match(key)
+        if (m is not None) and (key not in self._d) and ('ARGS' in self._d):
+            args = self._d['ARGS']
+            ix = int(m.group(1))
+            if ix >= len(args):
+                e = "Not enough arguments given to access ARG{0}."
+                raise IndexError(e.format(ix))
+            val = self._d['ARGS'][ix]
+        elif key in self._d:
+            val = self._d[key]
         elif default is DefaultNotGiven:
             val = self.defaults.get(key, None)
             if is_callable_default(val):
