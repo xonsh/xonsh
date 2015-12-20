@@ -180,8 +180,6 @@ def superhelper(x, name=''):
 def expand_path(s):
     """Takes a string path and expands ~ to home and environment vars."""
     global ENV
-    if ENV is not None:
-        ENV.replace_env()
     if ENV.get('EXPAND_ENV_VARS'):
         s = expandvars(s)
     return os.path.expanduser(s)
