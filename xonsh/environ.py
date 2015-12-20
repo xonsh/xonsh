@@ -243,6 +243,24 @@ class Env(MutableMapping):
         self._detyped = ctx
         return ctx
 
+    def replace_env(self):
+        """Replaces the contents of os.environ with a detyped version
+        of the xonsh environement.
+        """
+        if self._orig_env is None:
+            self._orig_env = dict(os.environ)
+        os.environ.clear()
+        os.environ.update(self.detype())
+
+    def undo_replace_env(self):
+        """Replaces the contents of os.environ with a detyped version
+        of the xonsh environement.
+        """
+        if self._orig_env is not None:
+            os.environ.clear()
+            os.environ.update(self._orig_env)
+            self._orig_env = None
+
     def get_ensurer(self, key,
                     default=Ensurer(always_true, None, ensure_string)):
         """Gets an ensurer for the given key."""
