@@ -210,7 +210,7 @@ def get_sep():
     """ Returns the appropriate filepath separator char depending on OS and
     xonsh options set
     """
-    return (os.altsep if ON_WINDOWS 
+    return (os.altsep if ON_WINDOWS
             and builtins.__xonsh_env__.get('FORCE_POSIX_PATHS') else
             os.sep)
 
@@ -759,8 +759,8 @@ _PT_COLORS_LIGHT = {'BLACK': '#000000',
                     'PURPLE': '#800080',
                     'CYAN': '#008080',
                     'WHITE': '#FFFFFF',
-                    'GRAY': '#008080'}              
-              
+                    'GRAY': '#008080'}
+
 _PT_STYLE = {'BOLD': 'bold',
              'UNDERLINE': 'underline',
              'INTENSE': 'italic'}
@@ -909,3 +909,115 @@ def check_for_partial_string(x):
         return (string_indices[-1], None, starting_quote[-1])
     else:
         return (string_indices[-2], string_indices[-1], starting_quote[-1])
+
+
+# expandvars is a modified version of os.path.expandvars from the Python 3.5.1
+# source code (root/Lib/ntpath.py, line 353)
+
+def _is_in_env(name):
+    ENV = builtins.__xonsh_env__
+    return name in ENV._d or name in ENV.defaults
+
+def _get_env_string(name):
+    ENV = builtins.__xonsh_env__
+    value = ENV.get(name)
+    ensurer = ENV.get_ensurer(name)
+    if ensurer.detype is bool_to_str:
+        value = ensure_string(value)
+    else:
+        value = ensurer.detype(value)
+    return value
+
+
+def expandvars(path):
+    """Expand shell variables of the forms $var, ${var} and %var%.
+
+    Unknown variables are left unchanged."""
+    ENV = builtins.__xonsh_env__
+    if isinstance(path, bytes):
+        path = path.decode(encoding=ENV.get('XONSH_ENCODING'),
+                           errors=ENV.get('XONSH_ENCODING_ERRORS'))
+    if '$' not in path and ((not ON_WINDOWS) or ('%' not in path)):
+        return path
+    import string
+    varchars = string.ascii_letters + string.digits + '_-'
+    quote = '\''
+    percent = '%'
+    brace = '{'
+    rbrace = '}'
+    dollar = '$'
+    res = path[:0]
+    index = 0
+    pathlen = len(path)
+    while index < pathlen:
+        c = path[index:index+1]
+        if c == quote:   # no expansion within single quotes
+            path = path[index + 1:]
+            pathlen = len(path)
+            try:
+                index = path.index(c)
+                res += c + path[:index + 1]
+            except ValueError:
+                res += c + path
+                index = pathlen - 1
+        elif c == percent and ON_WINDOWS:  # variable or '%'
+            if path[index + 1:index + 2] == percent:
+                res += c
+                index += 1
+            else:
+                path = path[index+1:]
+                pathlen = len(path)
+                try:
+                    index = path.index(percent)
+                except ValueError:
+                    res += percent + path
+                    index = pathlen - 1
+                else:
+                    var = path[:index]
+                    if _is_in_env(var):
+                        value = _get_env_string(var)
+                    else:
+                        value = percent + var + percent
+                    res += value
+        elif c == dollar:  # variable or '$$'
+            if path[index + 1:index + 2] == dollar:
+                res += c
+                index += 1
+            elif path[index + 1:index + 2] == brace:
+                path = path[index+2:]
+                pathlen = len(path)
+                try:
+                    index = path.index(rbrace)
+                except ValueError:
+                    res += dollar + brace + path
+                    index = pathlen - 1
+                else:
+                    var = path[:index]
+                    try:
+                        var = eval(var, builtins.__xonsh_ctx__)
+                        if _is_in_env(var):
+                            value = _get_env_string(var)
+                        else:
+                            value = dollar + brace + var + rbrace
+                    except:
+                        value = dollar + brace + var + rbrace
+                    res += value
+            else:
+                var = path[:0]
+                index += 1
+                c = path[index:index + 1]
+                while c and c in varchars:
+                    var += c
+                    index += 1
+                    c = path[index:index + 1]
+                if _is_in_env(var):
+                    value = _get_env_string(var)
+                else:
+                    value = dollar + var
+                res += value
+                if c:
+                    index -= 1
+        else:
+            res += c
+        index += 1
+    return res

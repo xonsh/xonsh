@@ -14,6 +14,8 @@ from xonsh.built_ins import reglob, regexpath, helper, superhelper, \
 from xonsh.environ import Env
 from xonsh.tools import ON_WINDOWS
 
+from tools import mock_xonsh_env
+
 
 def test_reglob_tests():
     testfiles = reglob('test_.*')
@@ -24,42 +26,54 @@ def test_repath_backslash():
     if ON_WINDOWS:
         raise SkipTest
     home = os.path.expanduser('~')
-    exp = os.listdir(home)
-    exp = {p for p in exp if re.match(r'\w\w.*', p)}
-    exp = {os.path.join(home, p) for p in exp}
-    obs = set(regexpath(r'~/\w\w.*'))
-    assert_equal(exp, obs)
+    built_ins.ENV = Env(HOME=home)
+    with mock_xonsh_env(built_ins.ENV):
+        exp = os.listdir(home)
+        exp = {p for p in exp if re.match(r'\w\w.*', p)}
+        exp = {os.path.join(home, p) for p in exp}
+        obs = set(regexpath(r'~/\w\w.*'))
+        assert_equal(exp, obs)
 
 def test_repath_home_itself():
+    if ON_WINDOWS:
+        raise SkipTest
     exp = os.path.expanduser('~')
-    obs = regexpath('~')
-    assert_equal(1, len(obs))
-    assert_equal(exp, obs[0])
+    built_ins.ENV = Env(HOME=exp)
+    with mock_xonsh_env(built_ins.ENV):
+        obs = regexpath('~')
+        assert_equal(1, len(obs))
+        assert_equal(exp, obs[0])
 
 def test_repath_home_contents():
+    if ON_WINDOWS:
+        raise SkipTest
     home = os.path.expanduser('~')
-    exp = os.listdir(home)
-    exp = {os.path.join(home, p) for p in exp}
-    obs = set(regexpath('~/.*'))
-    assert_equal(exp, obs)
+    built_ins.ENV = Env(HOME=home)
+    with mock_xonsh_env(built_ins.ENV):
+        exp = os.listdir(home)
+        exp = {os.path.join(home, p) for p in exp}
+        obs = set(regexpath('~/.*'))
+        assert_equal(exp, obs)
 
 def test_repath_home_var():
+    if ON_WINDOWS:
+        raise SkipTest
     exp = os.path.expanduser('~')
     built_ins.ENV = Env(HOME=exp)
-    obs = regexpath('$HOME')
-    assert_equal(1, len(os.environ))
-    built_ins.ENV.undo_replace_env()
-    assert_equal(1, len(obs))
-    assert_equal(exp, obs[0])
+    with mock_xonsh_env(built_ins.ENV):
+        obs = regexpath('$HOME')
+        assert_equal(1, len(obs))
+        assert_equal(exp, obs[0])
 
 def test_repath_home_var_brace():
+    if ON_WINDOWS:
+        raise SkipTest
     exp = os.path.expanduser('~')
     built_ins.ENV = Env(HOME=exp)
-    obs = regexpath('${HOME}')
-    assert_equal(1, len(os.environ))
-    built_ins.ENV.undo_replace_env()
-    assert_equal(1, len(obs))
-    assert_equal(exp, obs[0])
+    with mock_xonsh_env(built_ins.ENV):
+        obs = regexpath('${"HOME"}')
+        assert_equal(1, len(obs))
+        assert_equal(exp, obs[0])
 
 def test_helper_int():
     helper(int, 'int')

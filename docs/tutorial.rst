@@ -583,8 +583,29 @@ strings."  Let's see it go!
     -rw-rw-r-- 1 snail snail 0 Mar  8 17:50 sp ace
     -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
 
-Spaces in filenames, of course, are just the beginning.
+By default, the name of an environment variable inside a string will be
+replaced by the contents of that variable (in subprocess mode only).  For
+example:
 
+.. code-block:: xonshcon
+
+    >>> print("my home is $HOME")
+    my home is $HOME
+    >>> echo "my home is $HOME"
+    my home is /home/snail
+
+You can avoid this expansion within a particular command by forcing the strings
+to be evaluated in Python mode using the ``@()`` syntax:
+
+.. code-block:: xonshcon
+
+    >>> echo "my home is $HOME"
+    my home is /home/snail
+    >>> echo @("my home is $HOME")
+    my home is $HOME
+
+You can also disable environment variable expansion completely by setting
+``$EXPAND_ENV_VARS`` to ``False``.
 
 Filename Globbing with ``*``
 ===============================
