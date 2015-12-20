@@ -10,7 +10,7 @@ from xonsh.lexer import Lexer
 from xonsh.tools import subproc_toks, subexpr_from_unbalanced, is_int, \
     always_true, always_false, ensure_string, is_env_path, str_to_env_path, \
     env_path_to_str, escape_windows_title_string, is_bool, to_bool, bool_to_str, \
-    ensure_int_or_slice, is_float, is_string
+    ensure_int_or_slice, is_float, is_string, check_for_partial_string
 
 LEXER = Lexer()
 LEXER.build()
@@ -269,6 +269,46 @@ def test_escape_windows_title_string():
     for st, esc in cases:
         obs = escape_windows_title_string(st)
         yield assert_equal, esc, obs
+
+_leaders = ('', 'not empty')
+_r = ('r', '')
+_b = ('b', '')
+_u = ('u', '')
+_chars = set(i+j+k for i in _r for j in _b for k in _u)
+_chars |= set(i+j+k for i in _r for j in _u for k in _b)
+_chars |= set(i+j+k for i in _b for j in _u for k in _r)
+_chars |= set(i+j+k for i in _b for j in _r for k in _u)
+_chars |= set(i+j+k for i in _u for j in _r for k in _b)
+_chars |= set(i+j+k for i in _u for j in _b for k in _r)
+_squote = ('"""', '"', "'''", "'")
+_startend = {c+s: s for c in _chars for s in _squote}
+
+inners = "this is a string"
+
+def test_partial_string():
+    # single string at start
+    yield assert_equal, check_for_partial_string('no strings here'), (None, None, None)
+    yield assert_equal, check_for_partial_string(''), (None, None, None)
+    for s,e in _startend.items():
+        _test = s + inners + e
+        for l in _leaders:
+            for f in _leaders:
+                # single string
+                _res = check_for_partial_string(l + _test + f)
+                yield assert_equal, _res, (len(l), len(l) + len(_test), s)
+                # single partial
+                _res = check_for_partial_string(l + f + s + inners)
+                yield assert_equal, _res, (len(l+f), None, s)
+                for s2, e2 in _startend.items():
+                    _test2 = s2 + inners + e2
+                    for l2 in _leaders:
+                        for f2 in _leaders:
+                            # two strings
+                            _res = check_for_partial_string(l + _test + f + l2 + _test2 + f2)
+                            yield assert_equal, _res, (len(l+_test+f+l2), len(l+_test+f+l2+_test2), s2)
+                            # one string, one partial
+                            _res = check_for_partial_string(l + _test + f + l2 + s2 + inners)
+                            yield assert_equal, _res, (len(l+_test+f+l2), None, s2)
 
 
 if __name__ == '__main__':

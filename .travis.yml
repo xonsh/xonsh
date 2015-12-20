@@ -5,4 +5,4 @@ python:
 install:
   - pip install ply nose prompt_toolkit
 script:
-  - nosetests
+  - nosetests -q

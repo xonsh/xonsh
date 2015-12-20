@@ -8,8 +8,9 @@ from ply import yacc
 
 from xonsh import ast
 from xonsh.lexer import Lexer
-from xonsh.tools import VER_3_4, VER_3_5, VER_MAJOR_MINOR, V_MAJOR_MINOR, \
-    docstring_by_version
+from xonsh.tools import (VER_3_4, VER_3_5, VER_3_5_1,
+                         VER_MAJOR_MINOR, VER_FULL,
+                         docstring_by_version)
 
 
 class Location(object):
@@ -582,7 +583,14 @@ class Parser(object):
 
     def p_tfpdef(self, p):
         """tfpdef : NAME colon_test_opt"""
-        p[0] = ast.arg(arg=p[1], annotation=p[2])
+        kwargs = {'arg': p[1],
+                  'annotation': p[2]}
+        if VER_FULL >= VER_3_5_1:
+            kwargs.update({
+                'lineno': self.lineno,
+                'col_offset': self.col,
+            })
+        p[0] = ast.arg(**kwargs)
 
     def p_comma_tfpdef(self, p):
         """comma_tfpdef : COMMA
@@ -701,7 +709,14 @@ class Parser(object):
 
     def p_vfpdef(self, p):
         """vfpdef : NAME"""
-        p[0] = ast.arg(arg=p[1], annotation=None)
+        kwargs = {'arg': p[1],
+                  'annotation': None}
+        if VER_FULL >= VER_3_5_1:
+            kwargs.update({
+                'lineno': self.lineno,
+                'col_offset': self.col,
+            })
+        p[0] = ast.arg(**kwargs)
 
     def p_comma_vfpdef(self, p):
         """comma_vfpdef : COMMA
