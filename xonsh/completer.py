@@ -9,7 +9,7 @@ import pickle
 import builtins
 import subprocess
 
-from xonsh.built_ins import iglobpath
+from xonsh.built_ins import iglobpath, expand_path
 from xonsh.tools import subexpr_from_unbalanced, get_sep, check_for_partial_string, RE_STRING_START
 from xonsh.tools import ON_WINDOWS
 
@@ -326,7 +326,7 @@ class Completer(object):
                     (space in s or (backslash in s and slash != backslash))):
                 start = "'"
                 end = "'"
-            if os.path.isdir(s):
+            if os.path.isdir(expand_path(s)):
                 _tail = slash
             elif end == '':
                 _tail = space
