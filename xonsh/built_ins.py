@@ -8,11 +8,13 @@ import os
 import re
 import sys
 import time
+import array
 import shlex
 import atexit
 import signal
 import inspect
 import builtins
+import tempfile
 import subprocess
 from io import TextIOWrapper, StringIO
 from glob import glob, iglob
@@ -22,14 +24,19 @@ from collections import Sequence, MutableMapping, Iterable, namedtuple, \
     MutableSequence, MutableSet
 
 from xonsh.tools import suggest_commands, XonshError, ON_POSIX, ON_WINDOWS, \
-    string_types, expandvars
+    string_types, sanitize_terminal_data, expandvars
 from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env, locate_binary
 from xonsh.aliases import DEFAULT_ALIASES
 from xonsh.jobs import add_job, wait_for_active_job
-from xonsh.proc import ProcProxy, SimpleProcProxy, TeePTYProc
+from xonsh.proc import ProcProxy, SimpleProcProxy
 from xonsh.history import History
 from xonsh.foreign_shells import load_foreign_aliases
+
+if not ON_WINDOWS:
+    import pty
+    import fcntl
+    import termios
 
 ENV = None
 BUILTINS_LOADED = False
@@ -474,6 +481,25 @@ def _redirect_io(streams, r, loc=None):
     else:
         raise XonshError('Unrecognized redirection command: {}'.format(r))
 
+def _sigwinch_maker(m):
+    def _signal_winch(signum, frame):
+        """Signal handler for SIGWINCH - window size has changed."""
+        _set_pty_size(m)
+    return _signal_winch
+
+def _set_pty_size(m):
+    """Sets the window size of the child pty based on the window size of
+    our own controlling terminal.
+    """
+    # Get the terminal size of the real terminal, set it on the
+    #       pseudoterminal.
+    buf = array.array('h', [0, 0, 0, 0])
+    fcntl.ioctl(pty.STDOUT_FILENO, termios.TIOCGWINSZ, buf, True)
+    fcntl.ioctl(m, termios.TIOCSWINSZ, buf)
+
+
+PTY_BREAKS = frozenset({'mutt'})
+
 
 def run_subproc(cmds, captured=True):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
@@ -547,6 +573,12 @@ def run_subproc(cmds, captured=True):
             cmd.insert(0, 'cd')
             alias = builtins.aliases.get('cd', None)
 
+        usetee = (ON_POSIX and
+                  (stdout is None) and
+                  (not background) and
+                  ENV.get('XONSH_STORE_STDOUT', False) and
+                  cmd is cmds[-1])
+
         if callable(alias):
             aliased_cmd = alias
         else:
@@ -561,6 +593,7 @@ def run_subproc(cmds, captured=True):
                 except PermissionError:
                     e = 'xonsh: subprocess mode: permission denied: {0}'
                     raise XonshError(e.format(cmd[0]))
+        old_sigwinch_handler = None
         if callable(aliased_cmd):
             prev_is_proxy = True
             numargs = len(inspect.signature(aliased_cmd).parameters)
@@ -571,25 +604,50 @@ def run_subproc(cmds, captured=True):
             else:
                 e = 'Expected callable with 2 or 4 arguments, not {}'
                 raise XonshError(e.format(numargs))
+            if usetee:
+                _tee_file = tempfile.NamedTemporaryFile()
+                tproc = Popen(['tee', _tee_file.name],
+                              stdin=subprocess.PIPE,
+                              stdout=stdout)
+                so = tproc.stdin
+            else:
+                so = stdout
             proc = cls(aliased_cmd, cmd[1:],
-                       stdin, stdout, stderr,
+                       stdin, so, stderr,
                        universal_newlines=uninew)
         else:
             prev_is_proxy = False
-            usetee = (stdout is None) and (not background) and \
-                     ENV.get('XONSH_STORE_STDOUT', False)
-            cls = TeePTYProc if usetee else Popen
             subproc_kwargs = {}
-            if ON_POSIX and cls is Popen:
+            if ON_POSIX:
                 subproc_kwargs['preexec_fn'] = _subproc_pre
             try:
-                proc = cls(aliased_cmd,
-                           universal_newlines=uninew,
-                           env=ENV.detype(),
-                           stdin=stdin,
-                           stdout=stdout,
-                           stderr=stderr,
-                           **subproc_kwargs)
+                if usetee:
+                    _use_pty = os.path.basename(aliased_cmd[0]) not in PTY_BREAKS
+                    _tee_file = tempfile.NamedTemporaryFile()
+                    try:
+                        old_sigwinch_handler = signal.signal(signal.SIGWINCH, _sigwinch_maker(m))
+                    except:
+                        pass
+                    if _use_pty:
+                        m, s = pty.openpty()
+                        _set_pty_size(m)
+                        sin = m
+                    else:
+                        sin = PIPE
+                    tproc = Popen(['tee', _tee_file.name],
+                                  stdin=sin,
+                                  stdout=stdout)
+                    so = s if _use_pty else tproc.stdin
+                else:
+                    so = stdout
+
+                proc = Popen(aliased_cmd,
+                             universal_newlines=uninew,
+                             env=ENV.detype(),
+                             stdin=stdin,
+                             stdout=so,
+                             stderr=stderr,
+                             **subproc_kwargs)
             except PermissionError:
                 e = 'xonsh: subprocess mode: permission denied: {0}'
                 raise XonshError(e.format(aliased_cmd[0]))
@@ -603,11 +661,6 @@ def run_subproc(cmds, captured=True):
         procs.append(proc)
         prev = None
         prev_proc = proc
-    for proc in procs[:-1]:
-        try:
-            proc.stdout.close()
-        except OSError:
-            pass
     if not prev_is_proxy:
         add_job({
             'cmds': cmds,
@@ -615,7 +668,7 @@ def run_subproc(cmds, captured=True):
             'obj': prev_proc,
             'bg': background
         })
-    if ENV.get('XONSH_INTERACTIVE') and not ENV.get('XONSH_STORE_STDOUT'):
+    if ENV.get('XONSH_INTERACTIVE'):
         # set title here to get current command running
         try:
             builtins.__xonsh_shell__.settitle()
@@ -626,12 +679,30 @@ def run_subproc(cmds, captured=True):
     if prev_is_proxy:
         prev_proc.wait()
     wait_for_active_job()
+    for proc in procs[:-1]:
+        try:
+            proc.stdout.close()
+        except OSError:
+            pass
+    if old_sigwinch_handler is not None:
+        try:
+            signal.signal(signal.SIGWINCH, old_sigwinch_handler)
+        except:
+            pass
     hist = builtins.__xonsh_history__
     hist.last_cmd_rtn = prev_proc.returncode
     if write_target is None:
         # get output
         output = ''
-        if prev_proc.stdout not in (None, sys.stdout):
+        if usetee:
+            _tee_file.seek(0)
+            output = sanitize_terminal_data(_tee_file.read()).decode()
+            _tee_file.close()
+            try:
+                os.remove(_tee_file.name)
+            except FileNotFoundError:
+                pass
+        elif prev_proc.stdout not in (None, sys.stdout):
             output = prev_proc.stdout.read()
         if captured:
             # to get proper encoding from Popen, we have to
