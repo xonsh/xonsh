@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """History object for use with prompt_toolkit."""
 import os
-import gc
 import time
 import builtins
 from threading import Thread
@@ -22,8 +21,7 @@ class PromptToolkitHistory(prompt_toolkit.history.History):
         super().__init__()
         self.strings = []
         if load_prev:
-            #PromptToolkitHistoryAdder(self, wait_for_gc=wait_for_gc)
-            self._load(wait_for_gc=wait_for_gc)
+            PromptToolkitHistoryAdder(self, wait_for_gc=wait_for_gc)
 
     def append(self, entry):
         """Append new entry to the history."""
@@ -37,24 +35,6 @@ class PromptToolkitHistory(prompt_toolkit.history.History):
 
     def __iter__(self):
         return iter(self.strings)
-
-    def _load(self, wait_for_gc=True):
-        hist = builtins.__xonsh_history__
-        while wait_for_gc and hist.gc.is_alive():
-            time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer
-        files = hist.gc.unlocked_files()
-        for _, _, f in files:
-            try:
-                lj = lazyjson.LazyJSON(f, reopen=False)
-                for cmd in lj['cmds']:
-                    inp = cmd['inp'].splitlines()
-                    for line in inp:
-                        if line == 'EOF':
-                            continue
-                        self.append(line)
-                lj.close()
-            except (IOError, OSError):
-                continue
 
 
 class PromptToolkitHistoryAdder(Thread):
@@ -75,7 +55,6 @@ class PromptToolkitHistoryAdder(Thread):
         while self.wait_for_gc and hist.gc.is_alive():
             time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer
         files = hist.gc.unlocked_files()
-        #buf = self._find_buffer()
         for _, _, f in files:
             try:
                 lj = lazyjson.LazyJSON(f, reopen=False)
@@ -84,20 +63,9 @@ class PromptToolkitHistoryAdder(Thread):
                     for line in inp:
                         if line == 'EOF':
                             continue
-                        self.ptkhist.append(line)
-                        #if buf is None:
-                        #    buf = self._find_buffer()
-                        #if buf is not None:
-                        #    buf['_working_lines'] = self.ptkhist.strings[:]
-                        #    buf['_Buffer__working_index'] = len(self.ptkhist) - 1
+                        if len(self.ptkhist) == 0 or line != self.ptkhist[-1]:
+                            self.ptkhist.append(line)
                 lj.close()
             except (IOError, OSError):
                 continue
-
-    def _find_buffer(self):
-        # dirty hack to get the prompt-toolkit buffer
-        bufs = [o for o in gc.get_referrers(self.ptkhist) \
-                if '_Buffer__working_index' in o]
-        buf = bufs[-1] if len(bufs) > 0 else None
-        return buf
         
