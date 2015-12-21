@@ -1,40 +1,31 @@
 # -*- coding: utf-8 -*-
 """History object for use with prompt_toolkit."""
 import os
+import time
+import builtins
+from threading import Thread
 
-from prompt_toolkit.history import History
+import prompt_toolkit.history
+from prompt_toolkit.buffer import Buffer
 
-
-def load_file_into_list(store, filename):
-    """Load content of file filename into list store."""
-    if os.path.exists(filename):
-        with open(filename, 'rb') as hfile:
-            for line in hfile:
-                line = line.decode('utf-8')
-                # Drop trailing newline
-                store.append(line[:-1])
+from xonsh import lazyjson
 
 
-class LimitedFileHistory(History):
-
-    """History class that keeps entries in file with limit on number of those.
-
-    It handles only one-line entries.
+class PromptToolkitHistory(prompt_toolkit.history.History):
+    """History class that implements the promt-toolkit history interface
+    with the xonsh backend.
     """
 
-    def __init__(self):
+    def __init__(self, load_prev=True, wait_for_gc=True, *args, **kwargs):
         """Initialize history object."""
+        super().__init__()
         self.strings = []
-        self.new_entries = []
-        self.old_history = []
+        if load_prev:
+            PromptToolkitHistoryAdder(self, wait_for_gc=wait_for_gc)
 
     def append(self, entry):
-        """Append new entry to the history.
-
-        Entry sould be a one-liner.
-        """
+        """Append new entry to the history."""
         self.strings.append(entry)
-        self.new_entries.append(entry)
 
     def __getitem__(self, index):
         return self.strings[index]
@@ -45,58 +36,36 @@ class LimitedFileHistory(History):
     def __iter__(self):
         return iter(self.strings)
 
-    def read_history_file(self, filename):
-        """Read history from given file into memory.
 
-        It first discards all history entries that were read by this function
-        before, and then tries to read entries from filename as history of
-        commands that happend before current session.
-        Entries that were appendend in current session are left unharmed.
+class PromptToolkitHistoryAdder(Thread):
 
-        Parameters
-        ----------
-        filename : str
-            Path to history file.
+    def __init__(self, ptkhist, wait_for_gc=True, *args, **kwargs):
+        """Thread responsible for adding inputs from history to the current 
+        prompt-toolkit history instance. May wait for the history garbage 
+        collector to finish.
         """
-        self.old_history = []
-        load_file_into_list(self.old_history, filename)
-        self.strings = self.old_history[:]
-        self.strings.extend(self.new_entries)
+        super(PromptToolkitHistoryAdder, self).__init__(*args, **kwargs)
+        self.daemon = True
+        self.ptkhist = ptkhist
+        self.wait_for_gc = wait_for_gc
+        self.start()
 
-    def save_history_to_file(self, filename, limit=-1):
-        """Save history to file.
-
-        It first reads existing history file again, so nothing is overrided. If
-        combined number of entries from history file and current session
-        exceeds limit old entries are dropped.
-        Not thread safe.
-
-        Parameters
-        ----------
-        filename : str
-            Path to file to save history to.
-        limit : int
-            Limit on number of entries in history file. Negative values imply
-            unlimited history.
-        """
-        def write_list(lst, file_obj):
-            """Write each element of list as separate lint into file_obj."""
-            text = ('\n'.join(lst)) + '\n'
-            file_obj.write(text.encode('utf-8'))
-
-        if limit < 0:
-            with open(filename, 'ab') as hfile:
-                write_list(self.new_entries, hfile)
-            return
-
-        new_history = []
-        load_file_into_list(new_history, filename)
-
-        if len(new_history) + len(self.new_entries) <= limit:
-            if self.new_entries:
-                with open(filename, 'ab') as hfile:
-                    write_list(self.new_entries, hfile)
-        else:
-            new_history.extend(self.new_entries)
-            with open(filename, 'wb') as hfile:
-                write_list(new_history[-limit:], hfile)
+    def run(self):
+        hist = builtins.__xonsh_history__
+        while self.wait_for_gc and hist.gc.is_alive():
+            time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer
+        files = hist.gc.unlocked_files()
+        for _, _, f in files:
+            try:
+                lj = lazyjson.LazyJSON(f, reopen=False)
+                for cmd in lj['cmds']:
+                    inp = cmd['inp'].splitlines()
+                    for line in inp:
+                        if line == 'EOF':
+                            continue
+                        if len(self.ptkhist) == 0 or line != self.ptkhist[-1]:
+                            self.ptkhist.append(line)
+                lj.close()
+            except (IOError, OSError):
+                continue
+        
