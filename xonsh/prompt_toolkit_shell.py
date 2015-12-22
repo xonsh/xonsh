@@ -6,7 +6,7 @@ from warnings import warn
 from prompt_toolkit.shortcuts import prompt
 from prompt_toolkit.key_binding.manager import KeyBindingManager
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
-from prompt_toolkit.filters import Condition, IsMultiline
+from prompt_toolkit.filters import Condition
 from prompt_toolkit.keys import Keys
 from pygments.token import Token
 from prompt_toolkit.layout.lexers import PygmentsLexer
@@ -84,16 +84,6 @@ class PromptToolkitShell(BaseShell):
                 completions_display = env.get('COMPLETIONS_DISPLAY')
                 multicolumn = (completions_display == 'multi')
                 completer = None if completions_display == 'none' else self.pt_completer
-                @self.key_bindings_manager.registry.add_binding(Keys.F10, filter=IsMultiline())
-                def _(event):
-                    b = event.cli.current_buffer
-                    if b.document.char_before_cursor == ':':
-                        b.document = b.document.insert_after('\n'+env.get('INDENT'))
-                        b.cursor_down()
-
-                    else:
-                        mycli = event.cli
-                        b.accept_action.validate_and_handle(mycli, b)
 
                 line = prompt(
                     mouse_support=mouse_support,

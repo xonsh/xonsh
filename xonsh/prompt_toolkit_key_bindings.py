@@ -2,7 +2,7 @@
 """Key bindings for prompt_toolkit xonsh shell."""
 import builtins
 
-from prompt_toolkit.filters import Filter
+from prompt_toolkit.filters import Filter, IsMultiline
 from prompt_toolkit.keys import Keys
 
 
@@ -41,3 +41,14 @@ def load_xonsh_bindings(key_bindings_manager):
         """
         event.cli.current_buffer.insert_text(env.get('INDENT'))
 
+
+    @handle(Keys.F10, filter=IsMultiline())
+    def _(event):
+        b = event.cli.current_buffer
+        if b.document.char_before_cursor == ':':
+            b.document = b.document.insert_after('\n'+env.get('INDENT'))
+            b.cursor_down()
+
+        else:
+            mycli = event.cli
+            b.accept_action.validate_and_handle(mycli, b)
