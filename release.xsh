@@ -3,7 +3,7 @@
 import os
 import re
 import sys
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Action
 
 def replace_in_file(pattern, new, fname):
     """Replaces a given pattern in a file"""
@@ -55,10 +55,24 @@ def condaify(ver):
     conda convert -p all -o @(conda_bld) @(pkg)
     anaconda upload @(pkgpath)
 
-def docer():
+def docser():
     cd docs
     make clean html push-root
     cd ..
+
+
+DOERS = ('do_version_bump', 'do_git', 'do_pip', 'do_conda', 'do-docs')
+
+class OnlyAction(Action):
+    def __init__(self, option_strings, dest, **kwargs):
+        super().__init__(option_strings, dest, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        for doer in DOERS:
+            if doer == self.dest:
+                setattr(namespace, doer, True)
+            else:
+                setattr(namespace, doer, False)
 
 
 def main(args=None):
@@ -68,16 +82,30 @@ def main(args=None):
     parser.add_argument('--upstream', 
                         default='git@github.com:scopatz/xonsh.git', 
                         help='upstream repo')
-    parser.add_arguement('-b', '--branch', default='master', 
+    parser.add_argument('-b', '--branch', default='master', 
                          help='branch to commit / push to.')
+    for doer in DOERS:
+        base = doer[3:].replace('_', '-')
+        parser.add_argument('--do-' + base, dest=doer, default=True,
+                            action='store_true',
+                            help='runs ' + base)
+        parser.add_argument('--no-' + base, dest=doer, action='store_false',
+                            help='does not run ' + base)
+        parser.add_argument('--only-' + base, dest=doer, action=OnlyAction,
+                            help='only runs ' + base, nargs=0)
     parser.add_argument('ver', help='target version string')
     ns = parser.parse_args(args or $ARGS[1:])
 
-    version_update(ns.ver)
-    just_do_git(ns)
-    pipify()
-    condaify(ns.ver)
-    docer()
+    if ns.do_version_bump:
+        version_update(ns.ver)
+    if ns.do_git:
+        just_do_git(ns)
+    if ns.do_pip:
+        pipify()
+    if ns.do_conda:
+        condaify(ns.ver)
+    if ns.do_docs:
+        docser()
 
 if __name__ == '__main__':
     main()
