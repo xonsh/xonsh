@@ -23,10 +23,16 @@ def path_argument(s):
     return s
 
 
-parser = ArgumentParser(description='xonsh')
+parser = ArgumentParser(description='xonsh', add_help=False)
+parser.add_argument('-h', '--hel[',
+                    dest='help',
+                    action='store_true',
+                    default=False,
+                    help='show help and exit')
 parser.add_argument('-V', '--version',
-                    action='version',
-                    version='/'.join(('xonsh', __version__)),
+                    dest='version',
+                    action='store_true',
+                    default=False,
                     help='show version information and exit')
 parser.add_argument('-c',
                     help="Run a single command and exit",
@@ -74,11 +80,39 @@ parser.add_argument('file',
                     default=None)
 parser.add_argument('args',
                     metavar='args',
-                    help='Additional arguments to the script specified'
-                         ' by script-file',
+                    help='Additional arguments to the script specified '
+                         'by script-file',
                     nargs='*',
                     default=[])
 
+
+def arg_undoers():
+    au = { 
+        '-h': (lambda args: setattr(args, 'help', False)),
+        '-V': (lambda args: setattr(args, 'version', False)),
+        '-c': (lambda args: setattr(args, 'command', None)),
+        '-i': (lambda args: setattr(args, 'force_interactive', Fals)),
+        '-l': (lambda args: setattr(args, 'login', False)),
+        '-c': (lambda args: setattr(args, 'command', None)),
+        '--config-path': (lambda args: delattr(args, 'config_path')),
+        '--no-rc': (lambda args: setattr(args, 'norc', False)),
+        '-D': (lambda args: setattr(args, 'defines', None)),
+        '--shell-type': (lambda args: setattr(args, 'shell_type', None)),
+        }
+    au['--help'] = au['-h']
+    au['--version'] = au['-V']
+    return au
+
+def undo_args(args):
+    """Undoes missaligned args."""
+    au = arg_undoers()
+    for a in args.args:
+        if a in au:
+            au[a](args)
+        else:
+            for k in au:
+                if a.startswith(k):
+                    au[k](args)
 
 def _pprint_displayhook(value):
     if value is not None:
@@ -88,7 +122,19 @@ def _pprint_displayhook(value):
 
 def premain(argv=None):
     """Setup for main xonsh entry point, returns parsed arguments."""
-    args = parser.parse_args(argv)
+    args, other = parser.parse_known_args(argv)
+    if args.file is not None:
+        real_argv = (argv or sys.argv)
+        i = real_argv.index(args.file)
+        args.args = real_argv[i+1:]
+        undo_args(args)
+    if args.help:
+        parser.print_help()
+        exit()
+    if args.version:
+        version = '/'.join(('xonsh', __version__)),
+        print(version)
+        exit()
     shell_kwargs = {'shell_type': args.shell_type}
     if args.norc:
         shell_kwargs['ctx'] = {}
@@ -120,6 +166,7 @@ def main(argv=None):
             with open(args.file) as f:
                 code = f.read()
             code = code if code.endswith('\n') else code + '\n'
+            sys.argv = args.args
             env['ARGS'] = [args.file] + args.args
             code = shell.execer.compile(code, mode='exec', glbs=shell.ctx)
             shell.execer.exec(code, mode='exec', glbs=shell.ctx)

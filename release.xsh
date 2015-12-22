@@ -35,6 +35,7 @@ def main(args=None):
     parser.add_argument('ver', help='target version string')
     ns = parser.parse_args(args or $ARGS[1:])
 
+    print(sys.argv)
     version_update(ns.ver)
 
 if __name__ == '__main__':
