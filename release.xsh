@@ -53,7 +53,7 @@ def condaify(ver):
     pkgpath = os.path.join(conda_bld, '*', 'xonsh-{0}*.tar.bz2'.format(ver))
     pkg = __xonsh_glob__(pkgpath)[0]
     conda convert -p all -o @(conda_bld) @(pkg)
-    anaconda upload @(pkgpath)
+    anaconda upload -u xonsh @(pkgpath)
 
 def docser():
     cd docs

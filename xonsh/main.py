@@ -24,7 +24,7 @@ def path_argument(s):
 
 
 parser = ArgumentParser(description='xonsh', add_help=False)
-parser.add_argument('-h', '--hel[',
+parser.add_argument('-h', '--help',
                     dest='help',
                     action='store_true',
                     default=False,
