@@ -13,16 +13,15 @@ import atexit
 import signal
 import inspect
 import builtins
-import subprocess
-from io import TextIOWrapper, StringIO
 from glob import glob, iglob
 from subprocess import Popen, PIPE, STDOUT
 from contextlib import contextmanager
-from collections import Sequence, MutableMapping, Iterable, namedtuple, \
-    MutableSequence, MutableSet
+from collections import Sequence, MutableMapping, Iterable
 
-from xonsh.tools import suggest_commands, XonshError, ON_POSIX, ON_WINDOWS, \
-    string_types, expandvars
+from xonsh.tools import (
+    suggest_commands, XonshError, ON_POSIX, ON_WINDOWS, string_types,
+    expandvars,
+)
 from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env, locate_binary
 from xonsh.aliases import DEFAULT_ALIASES
@@ -41,7 +40,7 @@ if ON_POSIX:
 
 
 def resetting_signal_handle(sig, f):
-    """Sets a new signal handle that will automaticallly restore the old value
+    """Sets a new signal handle that will automatically restore the old value
     once the new handle is finished.
     """
     oldh = signal.getsignal(sig)
@@ -348,7 +347,7 @@ def get_script_subproc_command(fname, args):
         # Windows can execute various filetypes directly
         # as given in PATHEXT
         _, ext = os.path.splitext(fname)
-        if ext.upper() in builtins.__xonsh_env__.get('PATHEXT', []):
+        if ext.upper() in builtins.__xonsh_env__.get('PATHEXT'):
             return [fname] + args
 
     # find interpreter
@@ -495,15 +494,12 @@ def run_subproc(cmds, captured=True):
         cmds = cmds[:-1]
     write_target = None
     last_cmd = len(cmds) - 1
-    prev = None
     procs = []
     prev_proc = None
     for ix, cmd in enumerate(cmds):
         stdin = None
-        stdout = None
         stderr = None
         if isinstance(cmd, string_types):
-            prev = cmd
             continue
         streams = {}
         while True:
@@ -541,7 +537,7 @@ def run_subproc(cmds, captured=True):
         alias = builtins.aliases.get(cmd[0], None)
         if (alias is None
             and builtins.__xonsh_env__.get('AUTO_CD')
-            and len(cmds)==1
+            and len(cmds) == 1
             and os.path.isdir(cmd[0])
             and locate_binary(cmd[0], cwd=None) is None):
             cmd.insert(0, 'cd')
@@ -601,7 +597,6 @@ def run_subproc(cmds, captured=True):
                     e += '\n' + suggest_commands(cmd, ENV, builtins.aliases)
                 raise XonshError(e)
         procs.append(proc)
-        prev = None
         prev_proc = proc
     for proc in procs[:-1]:
         try:
