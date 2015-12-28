@@ -24,7 +24,8 @@ def version_update(ver):
     pnfs = [
         ('__version__\s*=.*', "__version__ = '{0}'".format(ver), 
          ['xonsh', '__init__.py']),
-        ('version:\s*', 'version: {0}.{{build}}'.format(ver), '.appveyor.yml'),
+        ('version:\s*', 'version: {0}.{{build}}'.format(ver), 
+         ['.appveyor.yml']),
       ]
     for p, n, f in pnfs:
         replace_in_file(p, n, os.path.join(*f))
@@ -47,7 +48,7 @@ def pipify():
 def condaify(ver):
     """Make and upload conda packages."""
     conda_dir = os.path.dirname(os.path.dirname($(which conda)))
-    conda_bld = os.path.join(conad_dir, 'conda-bld')
+    conda_bld = os.path.join(conda_dir, 'conda-bld')
     rm -f @(os.path.join(conda_bld, 'src_cache', 'xonsh.tar.gz'))
     conda build --no-test recipe
     pkgpath = os.path.join(conda_bld, '*', 'xonsh-{0}*.tar.bz2'.format(ver))
@@ -77,8 +78,6 @@ class OnlyAction(Action):
 
 def main(args=None):
     parser = ArgumentParser('release')
-    parser.add_argument('-d', action='store_true', default=False, 
-                        help='dry run')
     parser.add_argument('--upstream', 
                         default='git@github.com:scopatz/xonsh.git', 
                         help='upstream repo')
