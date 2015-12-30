@@ -1,10 +1,10 @@
-.. _xonsh_prompt_toolkit_history:
+.. _xonsh_ptk_history:
 
 ****************************************************************
-Prompt Toolkit History Object (``xonsh.prompt_toolkit_history``)
+Prompt Toolkit History Object (``xonsh.ptk.history``)
 ****************************************************************
 
-.. automodule:: xonsh.prompt_toolkit_history
+.. automodule:: xonsh.ptk.history
     :members:
     :undoc-members:
     :inherited-members:

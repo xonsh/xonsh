@@ -34,9 +34,10 @@ For those of you who want the gritty details.
     shell
     base_shell
     readline_shell
-    prompt_toolkit_shell
-    prompt_toolkit_completer
-    prompt_toolkit_history
+    ptk/shell
+    ptk/history
+    ptk/completer
+    ptk/key_bindings
     pretty
     replay
     diff_history
