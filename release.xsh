@@ -62,7 +62,7 @@ def docser():
     cd ..
 
 
-DOERS = ('do_version_bump', 'do_git', 'do_pip', 'do_conda', 'do-docs')
+DOERS = ('do_version_bump', 'do_git', 'do_pip', 'do_conda', 'do_docs')
 
 class OnlyAction(Action):
     def __init__(self, option_strings, dest, **kwargs):
