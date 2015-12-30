@@ -15,9 +15,9 @@ from pygments.token import (Keyword, Name, Comment, String, Error, Number,
 
 from xonsh.base_shell import BaseShell
 from xonsh.tools import format_prompt_for_prompt_toolkit, _make_style
-from xonsh.prompt_toolkit_completer import PromptToolkitCompleter
-from xonsh.prompt_toolkit_history import PromptToolkitHistory
-from xonsh.prompt_toolkit_key_bindings import load_xonsh_bindings
+from xonsh.ptk.completer import PromptToolkitCompleter
+from xonsh.ptk.history import PromptToolkitHistory
+from xonsh.ptk.key_bindings import load_xonsh_bindings
 from xonsh.pyghooks import XonshLexer
 
 

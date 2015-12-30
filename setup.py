@@ -137,7 +137,7 @@ def main():
         url='https://github.com/scopatz/xonsh',
         platforms='Cross Platform',
         classifiers=['Programming Language :: Python :: 3'],
-        packages=['xonsh'],
+        packages=['xonsh', 'xonsh.ptk'],
         cmdclass={'install': xinstall, 'sdist': xsdist},
         )
     if HAVE_SETUPTOOLS:

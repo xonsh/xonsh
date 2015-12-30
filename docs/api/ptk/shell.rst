@@ -1,10 +1,10 @@
-.. _xonsh_prompt_toolkit_shell:
+.. _xonsh_ptk_shell:
 
 ******************************************************
-Prompt Toolkit Shell (``xonsh.prompt_toolkit_shell``)
+Prompt Toolkit Shell (``xonsh.ptk.shell``)
 ******************************************************
 
-.. automodule:: xonsh.prompt_toolkit_shell
+.. automodule:: xonsh.ptk.shell
     :members:
     :undoc-members:
     :inherited-members:
