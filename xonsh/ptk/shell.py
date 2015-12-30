@@ -3,7 +3,6 @@
 import builtins
 from warnings import warn
 
-from prompt_toolkit.shortcuts import prompt
 from prompt_toolkit.key_binding.manager import KeyBindingManager
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.layout.lexers import PygmentsLexer
@@ -18,6 +17,7 @@ from xonsh.tools import format_prompt_for_prompt_toolkit, _make_style
 from xonsh.ptk.completer import PromptToolkitCompleter
 from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings
+from xonsh.ptk.shortcuts import Prompter
 from xonsh.pyghooks import XonshLexer
 
 
@@ -27,6 +27,7 @@ class PromptToolkitShell(BaseShell):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.prompter = Prompter()
         self.history = PromptToolkitHistory()
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx)
         self.key_bindings_manager = KeyBindingManager(
@@ -53,17 +54,18 @@ class PromptToolkitShell(BaseShell):
                 completions_display = builtins.__xonsh_env__.get('COMPLETIONS_DISPLAY')
                 multicolumn = (completions_display == 'multi')
                 completer = None if completions_display == 'none' else self.pt_completer
-                line = prompt(
-                    mouse_support=mouse_support,
-                    auto_suggest=auto_suggest,
-                    get_prompt_tokens=token_func,
-                    style=style_cls,
-                    completer=completer,
-                    lexer=PygmentsLexer(XonshLexer),
-                    history=self.history,
-                    enable_history_search=True,
-                    key_bindings_registry=self.key_bindings_manager.registry,
-                    display_completions_in_columns=multicolumn)
+                with self.prompter:
+                    line = self.prompter.prompt(
+                        mouse_support=mouse_support,
+                        auto_suggest=auto_suggest,
+                        get_prompt_tokens=token_func,
+                        style=style_cls,
+                        completer=completer,
+                        lexer=PygmentsLexer(XonshLexer),
+                        history=self.history,
+                        enable_history_search=True,
+                        key_bindings_registry=self.key_bindings_manager.registry,
+                        display_completions_in_columns=multicolumn)
                 if not line:
                     self.emptyline()
                 else:

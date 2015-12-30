@@ -10,7 +10,8 @@ class Prompter(object):
 
     def __init__(self, cli=None, *args, **kwargs):
         """Implements a prompt that statefully holds a command-line 
-        interface.
+        interface.  When used as a context manager, it will return itself
+        on entry and reset itself on exit.
 
         Parameters
         ----------
@@ -19,6 +20,12 @@ class Prompter(object):
             will be created when the prompt() method is called.
         """
         self.cli = cli
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.reset()
 
     def prompt(self, message='', **kwargs):
         """Get input from the user and return it.
