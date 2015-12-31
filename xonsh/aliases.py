@@ -162,6 +162,12 @@ def bang_bang(args, stdin=None):
     return bang_n(['-1'])
 
 
+def xonfig(args, stdin=None):
+    """Runs the xonsh configuration utility."""
+    from xonsh.xonfig import main  # lazy import
+    return main(args)
+
+
 DEFAULT_ALIASES = {
     'cd': cd,
     'pushd': pushd,
@@ -182,6 +188,7 @@ DEFAULT_ALIASES = {
     '!!': bang_bang,
     '!n': bang_n,
     'timeit': timeit_alias,
+    'xonfig': xonfig,
     'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
     'ipynb': ['ipython', 'notebook', '--no-browser'],
 }

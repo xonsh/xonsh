@@ -9,6 +9,15 @@ from xonsh.environ import xonshrc_context
 from xonsh.tools import XonshError
 
 
+def is_readline_available():
+    """Checks if readline is available to import."""
+    try:
+        import readline
+        return True
+    except ImportError:
+        return False
+
+
 def is_prompt_toolkit_available():
     """Checks if prompt_toolkit is available to import."""
     try:
