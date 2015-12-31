@@ -65,8 +65,6 @@ XONSH_TOKENS = {
 
 COMPLETION_SKIP_TOKENS = {'sudo', 'time', 'timeit', 'man'}
 
-COMPLETION_WRAP_TOKENS = {' ',',','[',']','(',')','{','}'}
-
 BASH_COMPLETE_SCRIPT = """source {filename}
 COMP_WORDS=({line})
 COMP_LINE={comp_line}
@@ -114,18 +112,6 @@ def _normpath(p):
         p = p.replace(os.sep, os.altsep)
 
     return p
-
-def completionwrap(s):
-    """ Returns the repr of input string s if that string contains 
-    a 'problem' token that will confuse the xonsh parser
-    """
-    space = ' '
-    slash = get_sep()
-    return (_normpath(repr(s + (slash if os.path.isdir(s) else '')))
-           if COMPLETION_WRAP_TOKENS.intersection(s) else
-           s + space
-           if s[-1:].isalnum() else
-           s)
 
 class Completer(object):
     """This provides a list of optional completions for the xonsh shell."""
@@ -200,13 +186,9 @@ class Completer(object):
             # anything goes.
             rtn = self.cmd_complete(prefix)
         elif cmd in self.bash_complete_funcs:
-            rtn = set()
-            for s in self.bash_complete(prefix, line, begidx, endidx):
-                if os.path.isdir(s.rstrip()):
-                    s = s.rstrip() + slash
-                rtn.add(s)
-            if len(rtn) == 0:
-                rtn = self.path_complete(prefix, path_str_start, path_str_end)
+            rtn = self.bash_complete(prefix, line, begidx, endidx)
+            rtn |= self.path_complete(prefix, path_str_start, path_str_end)
+            return self._filter_repeats(rtn), lprefix
         elif prefix.startswith('${') or prefix.startswith('@('):
             # python mode explicitly
             rtn = set()
@@ -237,6 +219,25 @@ class Completer(object):
         rtn |= self.path_complete(prefix, path_str_start, path_str_end)
         return sorted(rtn), lprefix
 
+    def _canonical_rep(self, x):
+        if x.endswith('"') or x.endswith("'"):
+            x = ast.literal_eval(x)
+            if isinstance(x, bytes):
+                env = builtins.__xonsh_env__
+                x = x.decode(encoding=env.get('XONSH_ENCODING'),
+                             errors=env.get('XONSH_ENCODING_ERRORS'))
+        if x.endswith('\\') or x.endswith(' ') or x.endswith('/'):
+            x = x[:-1]
+        return x
+
+    def _filter_repeats(self, comps):
+        reps = {}
+        for comp in comps:
+            canon = self._canonical_rep(comp)
+            if canon not in reps:
+                reps[canon] = []
+            reps[canon].append(comp)
+        return {max(i, key=len) for i in reps.values()}
 
     def find_and_complete(self, line, idx, ctx=None):
         """Finds the completions given only the full code line and a current cursor
@@ -317,13 +318,15 @@ class Completer(object):
 
     def _quote_paths(self, paths, start, end):
         out = set()
+        quotable = ' (){}-,+*'
         space = ' '
         backslash = '\\'
         double_backslash = '\\\\'
         slash = get_sep()
         for s in paths:
             if (start == '' and
-                    (space in s or (backslash in s and slash != backslash))):
+                    (any(i in s for i in quotable) or
+                     (backslash in s and slash != backslash))):
                 start = "'"
                 end = "'"
             if os.path.isdir(expand_path(s)):
@@ -397,7 +400,7 @@ class Completer(object):
         except subprocess.CalledProcessError:
             out = ''
 
-        rtn = set(map(completionwrap, out.splitlines()))
+        rtn = set(out.splitlines())
         return rtn
 
     def _source_completions(self):
