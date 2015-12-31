@@ -117,6 +117,11 @@ class BaseShell(object):
         self.need_more_lines = False
         self.default('')
 
+    def singleline(self, **kwargs):
+        """Reads a single line of input from the shell."""
+        msg = '{0} has not implemented singleline().'
+        raise RuntimeError(msg.format(self.__class__.__name__))
+
     def precmd(self, line):
         """Called just before execution of line."""
         return line if self.need_more_lines else line.lstrip()

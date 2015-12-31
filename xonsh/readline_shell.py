@@ -101,6 +101,10 @@ class ReadlineShell(BaseShell, Cmd):
     def __del__(self):
         teardown_readline()
 
+    def singleline(self, **kwargs):
+        """Reads a single line of input."""
+        return input(self.prompt)
+
     def parseline(self, line):
         """Overridden to no-op."""
         return '', line, line
@@ -198,7 +202,7 @@ class ReadlineShell(BaseShell, Cmd):
                     if inserter is not None:
                         readline.set_pre_input_hook(inserter)
                     try:
-                        line = input(self.prompt)
+                        line = self.singleline()
                     except EOFError:
                         if builtins.__xonsh_env__.get("IGNOREEOF"):
                             self.stdout.write('Use "exit" to leave the shell.'
