@@ -6,6 +6,7 @@ import ast
 import sys
 import shlex
 import pickle
+import inspect
 import builtins
 import subprocess
 
@@ -186,15 +187,25 @@ class Completer(object):
             # anything goes.
             rtn = self.cmd_complete(prefix)
         elif cmd in self.bash_complete_funcs:
+            # bash completions
             rtn = self.bash_complete(prefix, line, begidx, endidx)
             rtn |= self.path_complete(prefix, path_str_start, path_str_end)
             return self._filter_repeats(rtn), lprefix
         elif prefix.startswith('${') or prefix.startswith('@('):
             # python mode explicitly
-            rtn = set()
+            return _python_mode_completions(self, prefix, prefixlow, startswither)
         elif prefix.startswith('-'):
             return sorted(self._man_completer.option_complete(prefix, cmd)), lprefix
         elif cmd not in ctx:
+            ltoks = line.split()
+            if len(ltoks) > 2:
+                if ltoks[0] == 'from' and ltoks[2] == 'import':
+                    # complete thing inside a module
+                    mod = __import__(ltoks[1])
+                    out = sorted(i[0] for i in inspect.getmembers(mod) if i[0].startswith(prefix))
+                    return out, lprefix
+            if len(ltoks) == 2 and ltoks[0] == 'from':
+                return sorted(self.module_complete(prefix)), lprefix
             if cmd == 'import' and begidx == len('import '):
                 # completing module to import
                 return sorted(self.module_complete(prefix)), lprefix
@@ -207,17 +218,21 @@ class Completer(object):
         else:
             # if we're here, we're not a command, but could be anything else
             rtn = set()
-        rtn |= {s for s in XONSH_TOKENS if startswither(s, prefix, prefixlow)}
+        rrn |= _python_mode_completions(self, prefix, prefixlow, startswither)
+        rtn |= {s + space for s in builtins.aliases
+                if startswither(s, prefix, prefixlow)}
+        rtn |= self.path_complete(prefix, path_str_start, path_str_end)
+        return sorted(rtn), lprefix
+
+    def _python_mode_completions(self, prefix, prefixlow, startswither):
+        rtn = {s for s in XONSH_TOKENS if startswither(s, prefix, prefixlow)}
         if ctx is not None:
             if dot in prefix:
                 rtn |= self.attr_complete(prefix, ctx)
             else:
                 rtn |= {s for s in ctx if startswither(s, prefix, prefixlow)}
         rtn |= {s for s in dir(builtins) if startswither(s, prefix, prefixlow)}
-        rtn |= {s + space for s in builtins.aliases
-                if startswither(s, prefix, prefixlow)}
-        rtn |= self.path_complete(prefix, path_str_start, path_str_end)
-        return sorted(rtn), lprefix
+        return rtn
 
     def _canonical_rep(self, x):
         if x.endswith('"') or x.endswith("'"):
