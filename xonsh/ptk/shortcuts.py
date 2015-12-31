@@ -94,7 +94,6 @@ class Prompter(object):
         else:
             eventloop = kwargs.pop('eventloop', None) or create_eventloop()
 
-        kwargs['reserve_space_for_menu'] = 0
         # Create CommandLineInterface.
         if self.cli is None:
             cli = CommandLineInterface(

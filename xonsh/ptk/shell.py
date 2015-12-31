@@ -64,6 +64,7 @@ class PromptToolkitShell(BaseShell):
                         lexer=PygmentsLexer(XonshLexer),
                         history=self.history,
                         enable_history_search=True,
+                        reserve_space_for_menu=0,
                         key_bindings_registry=self.key_bindings_manager.registry,
                         display_completions_in_columns=multicolumn)
                 if not line:
