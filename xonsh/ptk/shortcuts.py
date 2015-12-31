@@ -169,6 +169,14 @@ class Prompter(object):
         wrap_lines : `bool` or :class:`~prompt_toolkit.filters.CLIFilter`.
             When True (the default), automatically wrap long lines instead of
             scrolling horizontally.
+
+        Notes
+        -----
+        This method was forked from the mainline prompt-toolkit repo.
+        Copyright (c) 2014, Jonathan Slenders, All rights reserved.
+
+        WARNING; This method is due for removal once prompt-toolkit >v0.54 
+        is released.
         """
         assert isinstance(message, str)
         assert get_bottom_toolbar_tokens is None or callable(get_bottom_toolbar_tokens)
@@ -379,6 +387,14 @@ class Prompter(object):
             to enable mouse support.
         default : The default text to be shown in the input buffer. (This can
             be edited by the user.)
+
+        Notes
+        -----
+        This method was forked from the mainline prompt-toolkit repo.
+        Copyright (c) 2014, Jonathan Slenders, All rights reserved.
+
+        WARNING; This method is due for removal once prompt-toolkit >v0.54 
+        is released.
         """
         if key_bindings_registry is None:
             key_bindings_registry = KeyBindingManager.for_prompt(
