@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Completer implementation to use with prompt_toolkit."""
+import os
 import builtins
 
 from prompt_toolkit.layout.dimension import LayoutDimension
@@ -35,8 +36,9 @@ class PromptToolkitCompleter(Completer):
                                                      begidx,
                                                      endidx,
                                                      self.ctx)
-            #print(completions)
-            if len(completions) > 1:
+            if len(completions) <= 1:
+                pass
+            elif len(os.path.commonprefix(completions)) == len(prefix):
                 self.reserve_space()
             for comp in completions:
                 yield Completion(comp, -l)

@@ -280,9 +280,6 @@ class Prompter(object):
                                                ~display_completions_in_columns)),
                         Float(xcursor=True,
                               ycursor=True,
-                              #ycursor=False,
-                              #top=0,
-                              #bottom=7,
                               content=MultiColumnCompletionsMenu(
                                   extra_filter=HasFocus(DEFAULT_BUFFER) &
                                                display_completions_in_columns,
