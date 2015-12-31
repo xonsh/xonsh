@@ -8,6 +8,7 @@ xonsh:
 .. toctree::
    :maxdepth: 1
 
+   changelog
    0.2_release_notes
    0.1_release_notes
 
