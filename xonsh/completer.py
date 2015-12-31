@@ -498,11 +498,11 @@ class Completer(object):
     def _all_commands(self):
         path = builtins.__xonsh_env__.get('PATH', [])
         # did PATH change?
-        path_hash = hash(tuple(path))
+        path_hash = hash(frozenset(path))
         cache_valid = path_hash == self._path_checksum
         self._path_checksum = path_hash
         # did aliases change?
-        al_hash = hash(tuple(sorted(builtins.aliases.keys())))
+        al_hash = hash(frozenset(builtins.aliases.keys()))
         cache_valid = cache_valid and al_hash == self._alias_checksum
         self._alias_checksum = al_hash
         pm = self._path_mtime
