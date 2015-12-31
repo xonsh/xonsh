@@ -55,10 +55,12 @@ class Prompter(object):
         self.cli = cli
 
     def __enter__(self):
+        self.reset()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.reset()
+        #self.reset()
+        pass
 
     def prompt(self, message='', **kwargs):
         """Get input from the user and return it.
@@ -92,6 +94,7 @@ class Prompter(object):
         else:
             eventloop = kwargs.pop('eventloop', None) or create_eventloop()
 
+        kwargs['reserve_space_for_menu'] = 0
         # Create CommandLineInterface.
         if self.cli is None:
             cli = CommandLineInterface(
@@ -138,7 +141,7 @@ class Prompter(object):
         self.cli = None
 
     def create_prompt_layout(self, message='', lexer=None, is_password=False,
-        reserve_space_for_menu=False, get_prompt_tokens=None, 
+        reserve_space_for_menu=8, get_prompt_tokens=None, 
         get_bottom_toolbar_tokens=None, display_completions_in_columns=False,
         extra_input_processors=None, multiline=False, wrap_lines=True):
         """
@@ -148,8 +151,9 @@ class Prompter(object):
             the highlighting.
         :param is_password: `bool` or :class:`~prompt_toolkit.filters.CLIFilter`.
             When True, display input as '*'.
-        :param reserve_space_for_menu: When True, make sure that a minimal height is
-            allocated in the terminal, in order to display the completion menu.
+        :param reserve_space_for_menu: Space to be reserved for the menu. When >0,
+            make sure that a minimal height is allocated in the terminal, in order
+            to display the completion menu.
         :param get_prompt_tokens: An optional callable that returns the tokens to be
             shown in the menu. (To be used instead of a `message`.)
         :param get_bottom_toolbar_tokens: An optional callable that returns the
@@ -232,7 +236,7 @@ class Prompter(object):
             # If there is an autocompletion menu to be shown, make sure that our
             # layout has at least a minimal height in order to display it.
             if reserve_space_for_menu and not cli.is_done:
-                return LayoutDimension(min=8)
+                return LayoutDimension(min=reserve_space_for_menu)
             else:
                 return LayoutDimension()
 
@@ -276,6 +280,9 @@ class Prompter(object):
                                                ~display_completions_in_columns)),
                         Float(xcursor=True,
                               ycursor=True,
+                              #ycursor=False,
+                              #top=0,
+                              #bottom=7,
                               content=MultiColumnCompletionsMenu(
                                   extra_filter=HasFocus(DEFAULT_BUFFER) &
                                                display_completions_in_columns,
@@ -305,6 +312,7 @@ class Prompter(object):
         enable_open_in_editor=False,
         validator=None,
         completer=None,
+        reserve_space_for_menu=8,
         auto_suggest=None,
         style=None,
         history=None,
@@ -346,6 +354,8 @@ class Prompter(object):
             for input validation.
         :param completer: :class:`~prompt_toolkit.completion.Completer` instance
             for input completion.
+        :param reserve_space_for_menu: Space to be reserved for displaying the menu.
+            (0 means that no space needs to be reserved.)
         :param auto_suggest: :class:`~prompt_toolkit.auto_suggest.AutoSuggest`
             instance for input suggestions.
         :param style: Pygments style class for the color scheme.
@@ -399,7 +409,7 @@ class Prompter(object):
                 message=message,
                 lexer=lexer,
                 is_password=is_password,
-                reserve_space_for_menu=(completer is not None),
+                reserve_space_for_menu=(reserve_space_for_menu if completer is not None else 0),
                 multiline=Condition(lambda cli: multiline()),
                 get_prompt_tokens=get_prompt_tokens,
                 get_bottom_toolbar_tokens=get_bottom_toolbar_tokens,
