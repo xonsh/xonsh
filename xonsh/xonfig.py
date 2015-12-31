@@ -4,6 +4,8 @@ import json
 import functools
 from argparse import ArgumentParser
 
+import ply
+
 from xonsh import __version__ as XONSH_VERSION
 from xonsh import tools
 from xonsh.shell import is_readline_available, is_prompt_toolkit_available
@@ -32,7 +34,8 @@ def _format_json(data):
 def _info(ns):
     data = [
         ('xonsh', XONSH_VERSION), 
-        ('Python', '.'.join(map(str, tools.VER_FULL))), 
+        ('Python', '.'.join(map(str, tools.VER_FULL))),
+        ('PLY', ply.__version__),
         ('have readline', is_readline_available()),
         ('have prompt toolkit', is_prompt_toolkit_available()),
         ('on posix', tools.ON_POSIX),
@@ -40,7 +43,7 @@ def _info(ns):
         ('on arch', tools.ON_ARCH),
         ('on windows', tools.ON_WINDOWS),
         ('on mac', tools.ON_MAC),
-        ('are root', tools.IS_ROOT),
+        ('are root user', tools.IS_ROOT),
         ('default encoding', tools.DEFAULT_ENCODING),
         ]
     formatter = _format_json if ns.json else _format_human
@@ -65,7 +68,8 @@ _MAIN_ACTIONS = {
 
 def main(args=None):
     """Main xonfig entry point."""
-    if not args or (args[0] not in _MAIN_ACTIONS and args[0] not in {'-h', '--help'}):
+    if not args or (args[0] not in _MAIN_ACTIONS and 
+                    args[0] not in {'-h', '--help'}):
         args.insert(0, 'info')
     parser = _create_parser()
     ns = parser.parse_args(args)
