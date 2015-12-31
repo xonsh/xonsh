@@ -7,10 +7,13 @@ Current Developments
 **Added:**
 
 * timeit alias will now complete its arguments.
+* $COMPLETIONS_MENU_ROWS environment variable controls the size of the 
+  tab-completion menu in prompt-toolkit.
 
 **Changed:**
 
-None
+* Prompt-toolkit shell will now dynamically allocate space for the 
+  tab-completion menu.
 
 **Deprecated:**
 
