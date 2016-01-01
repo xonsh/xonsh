@@ -194,8 +194,9 @@ class Completer(object):
             return self._filter_repeats(rtn), lprefix
         elif prefix.startswith('${') or prefix.startswith('@('):
             # python mode explicitly
-            return _python_mode_completions(self, prefix,
-                                            prefixlow, startswither)
+            return self._python_mode_completions(prefix, ctx,
+                                                 prefixlow,
+                                                 startswither)
         elif prefix.startswith('-'):
             comps = self._man_completer.option_complete(prefix, cmd)
             return sorted(comps), lprefix
@@ -227,16 +228,18 @@ class Completer(object):
         else:
             # if we're here, we're not a command, but could be anything else
             rtn = set()
-        rrn |= _python_mode_completions(self, prefix, prefixlow, startswither)
+        rtn |= self._python_mode_completions(prefix, ctx,
+                                             prefixlow,
+                                             startswither)
         rtn |= {s + space for s in builtins.aliases
                 if startswither(s, prefix, prefixlow)}
         rtn |= self.path_complete(prefix, path_str_start, path_str_end)
         return sorted(rtn), lprefix
 
-    def _python_mode_completions(self, prefix, prefixlow, startswither):
+    def _python_mode_completions(self, prefix, ctx, prefixlow, startswither):
         rtn = {s for s in XONSH_TOKENS if startswither(s, prefix, prefixlow)}
         if ctx is not None:
-            if dot in prefix:
+            if '.' in prefix:
                 rtn |= self.attr_complete(prefix, ctx)
             else:
                 rtn |= {s for s in ctx if startswither(s, prefix, prefixlow)}
