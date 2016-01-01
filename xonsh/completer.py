@@ -65,6 +65,10 @@ XONSH_TOKENS = {
     '...'
 }
 
+CHARACTERS_NEED_QUOTES = ' `\t\r\n${}*()'
+if ON_WINDOWS:
+    CHARACTERS_NEED_QUOTES += '%'
+
 COMPLETION_SKIP_TOKENS = {'sudo', 'time', 'timeit', 'man'}
 
 BASH_COMPLETE_SCRIPT = """source {filename}
@@ -345,14 +349,13 @@ class Completer(object):
 
     def _quote_paths(self, paths, start, end):
         out = set()
-        quotable = ' (){}-,+*'
         space = ' '
         backslash = '\\'
         double_backslash = '\\\\'
         slash = get_sep()
         for s in paths:
             if (start == '' and
-                    (any(i in s for i in quotable) or
+                    (any(i in s for i in CHARACTERS_NEED_QUOTES) or
                      (backslash in s and slash != backslash))):
                 start = "'"
                 end = "'"
