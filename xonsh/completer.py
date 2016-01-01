@@ -8,6 +8,7 @@ import shlex
 import pickle
 import inspect
 import builtins
+import importlib
 import subprocess
 
 from xonsh.built_ins import iglobpath, expand_path
@@ -198,12 +199,14 @@ class Completer(object):
             return sorted(self._man_completer.option_complete(prefix, cmd)), lprefix
         elif cmd not in ctx:
             ltoks = line.split()
-            if len(ltoks) > 2:
-                if ltoks[0] == 'from' and ltoks[2] == 'import':
-                    # complete thing inside a module
-                    mod = __import__(ltoks[1])
-                    out = sorted(i[0] for i in inspect.getmembers(mod) if i[0].startswith(prefix))
-                    return out, lprefix
+            if len(ltoks) > 2 and ltoks[0] == 'from' and ltoks[2] == 'import':
+                # complete thing inside a module
+                try:
+                    mod = importlib.import_module(ltoks[1])
+                except ImportError:
+                    return set(), lprefix
+                out = sorted(i[0] for i in inspect.getmembers(mod) if i[0].startswith(prefix))
+                return out, lprefix
             if len(ltoks) == 2 and ltoks[0] == 'from':
                 return sorted(self.module_complete(prefix)), lprefix
             if cmd == 'import' and begidx == len('import '):
