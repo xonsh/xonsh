@@ -217,7 +217,8 @@ class Completer(object):
                        if i[0].startswith(prefix))
                 return out, lprefix
             if len(ltoks) == 2 and ltoks[0] == 'from':
-                return sorted(self.module_complete(prefix)), lprefix
+                comps = ('{} '.format(i) for i in self.module_complete(prefix))
+                return sorted(comps), lprefix
             if cmd == 'import' and begidx == len('import '):
                 # completing module to import
                 return sorted(self.module_complete(prefix)), lprefix
