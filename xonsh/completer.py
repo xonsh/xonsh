@@ -194,9 +194,11 @@ class Completer(object):
             return self._filter_repeats(rtn), lprefix
         elif prefix.startswith('${') or prefix.startswith('@('):
             # python mode explicitly
-            return _python_mode_completions(self, prefix, prefixlow, startswither)
+            return _python_mode_completions(self, prefix,
+                                            prefixlow, startswither)
         elif prefix.startswith('-'):
-            return sorted(self._man_completer.option_complete(prefix, cmd)), lprefix
+            comps = self._man_completer.option_complete(prefix, cmd)
+            return sorted(comps), lprefix
         elif cmd not in ctx:
             ltoks = line.split()
             if len(ltoks) > 2 and ltoks[0] == 'from' and ltoks[2] == 'import':
@@ -205,7 +207,9 @@ class Completer(object):
                     mod = importlib.import_module(ltoks[1])
                 except ImportError:
                     return set(), lprefix
-                out = sorted(i[0] for i in inspect.getmembers(mod) if i[0].startswith(prefix))
+                out = sorted(i[0]
+                             for i in inspect.getmembers(mod)
+                             if i[0].startswith(prefix))
                 return out, lprefix
             if len(ltoks) == 2 and ltoks[0] == 'from':
                 return sorted(self.module_complete(prefix)), lprefix
@@ -214,7 +218,9 @@ class Completer(object):
                 return sorted(self.module_complete(prefix)), lprefix
             if cmd in self._all_commands():
                 # subproc mode; do path completions
-                return sorted(self.path_complete(prefix, path_str_start, path_str_end, cdpath=True)), lprefix
+                comps = self.path_complete(prefix, path_str_start,
+                                           path_str_end, cdpath=True)
+                return sorted(comps), lprefix
             else:
                 # if we're here, could be anything
                 rtn = set()
