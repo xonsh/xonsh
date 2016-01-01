@@ -353,7 +353,11 @@ class Completer(object):
         backslash = '\\'
         double_backslash = '\\\\'
         slash = get_sep()
+        orig_start = start
+        orig_end = end
         for s in paths:
+            start = orig_start
+            end = orig_end
             if (start == '' and
                     (any(i in s for i in CHARACTERS_NEED_QUOTES) or
                      (backslash in s and slash != backslash))):
