@@ -21,7 +21,6 @@ from xonsh.ptk.shortcuts import Prompter
 from xonsh.pyghooks import XonshLexer
 
 
-
 class PromptToolkitShell(BaseShell):
     """The xonsh shell."""
 
