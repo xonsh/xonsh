@@ -64,7 +64,7 @@ applicable.
         
         (Only usable with SHELL_TYPE=prompt_toolkit)
     * - COMPLETIONS_MENU_ROWS
-      - ``3``
+      - ``5``
       - Number of rows to reserve for tab-completions menu if
         ``$COMPLETIONS_DISPLAY`` is ``'single'`` or ``'multi'``. This only 
         effects the prompt-toolkit shell.
