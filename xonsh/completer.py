@@ -208,9 +208,9 @@ class Completer(object):
                     mod = importlib.import_module(ltoks[1])
                 except ImportError:
                     return set(), lprefix
-                out = sorted(i[0]
-                             for i in inspect.getmembers(mod)
-                             if i[0].startswith(prefix))
+                out = (i[0]
+                       for i in inspect.getmembers(mod)
+                       if i[0].startswith(prefix))
                 return out, lprefix
             if len(ltoks) == 2 and ltoks[0] == 'from':
                 return sorted(self.module_complete(prefix)), lprefix
