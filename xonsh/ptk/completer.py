@@ -38,7 +38,7 @@ class PromptToolkitCompleter(Completer):
                                                      self.ctx)
             if len(completions) <= 1:
                 pass
-            elif len(os.path.commonprefix(completions)) == len(prefix):
+            elif len(os.path.commonprefix(completions)) <= len(prefix):
                 self.reserve_space()
             for comp in completions:
                 yield Completion(comp, -l)
