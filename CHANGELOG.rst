@@ -25,7 +25,8 @@ None
 
 **Fixed:**
 
-None
+* First prompt in the prompt-toolkit shell now allows for up and down
+  arrows to search through history.
 
 **Security:**
 

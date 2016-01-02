@@ -52,6 +52,8 @@ class PromptToolkitHistoryAdder(Thread):
 
     def run(self):
         hist = builtins.__xonsh_history__
+        buf = None
+        ptkhist = self.ptkhist
         while self.wait_for_gc and hist.gc.is_alive():
             time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer
         files = hist.gc.unlocked_files()
@@ -63,9 +65,21 @@ class PromptToolkitHistoryAdder(Thread):
                     for line in inp:
                         if line == 'EOF':
                             continue
-                        if len(self.ptkhist) == 0 or line != self.ptkhist[-1]:
-                            self.ptkhist.append(line)
+                        if len(ptkhist) == 0 or line != ptkhist[-1]:
+                            ptkhist.append(line)
+                            if buf is None:
+                                buf = self._buf()
+                                if buf is None:
+                                    continue
+                            buf.reset()
                 lj.close()
             except (IOError, OSError):
                 continue
+
+    def _buf(self):
+        if hasattr(builtins, '__xonsh_shell__'):
+            buf = builtins.__xonsh_shell__.shell.prompter.cli.application.buffer
+        else:
+            buf = None
+        return buf
         
