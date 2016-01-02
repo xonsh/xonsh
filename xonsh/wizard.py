@@ -22,10 +22,11 @@ class Node(object):
 class Wizard(Node):
     """Top-level node in the tree."""
 
-    attrs = ('children',)
+    attrs = ('children', 'path')
 
-    def __init__(self, children):
+    def __init__(self, children, path=None):
         self.children = children
+        self.path = None
 
 
 class Pass(Node):
@@ -35,7 +36,7 @@ class Pass(Node):
 class Message(Node):
     """Contains a simple message to report to the user."""
 
-    attrs = ('message',)
+    attrs = ('message')
 
     def __init__(self, message):
         self.message = message
@@ -45,9 +46,9 @@ class Question(Node):
     """Asks a question and then chooses the next node based on the response.
     """
 
-    attrs = ('question', 'responses')
+    attrs = ('question', 'responses', 'path')
 
-    def __init__(self, question, responses):
+    def __init__(self, question, responses, path=None):
         """
         Parameters
         ----------
@@ -55,9 +56,12 @@ class Question(Node):
             The question itself.
         responses : dict with str keys and Node values
             Mapping from user-input responses to nodes.
+        path : str or sequence of str
+            A path within the storage object.
         """
         self.question = question
         self.responses = responses
+        self.path = None
 
 
 #
@@ -120,13 +124,19 @@ class PrettyFormatter(Visitor):
     def visit_wizard(self, node):
         s = 'Wizard(children=['
         if len(node.children) == 0:
-            return s + '])'
+            if node.path is None:
+                return s + '])'
+            else:
+                return s + '], path={0!r})'.format(node.path)
         s += '\n'
         self.level += 1
         s += textwrap.indent(',\n'.join(map(self.visit, node.children)), 
                              self.indent)
         self.level -= 1
-        s += '\n])'
+        if node.path is None:
+            s += '\n])'
+        else:
+            s += '{0}],\n{0}path={1!r}\n)'.format(self.indent, node.path)
         return s
 
     def visit_message(self, node):
@@ -145,6 +155,8 @@ class PrettyFormatter(Visitor):
             t = ['{0!r}: {1}'.format(k, self.visit(v)) for k, v in t]
             s += textwrap.indent(',\n'.join(t), 2*self.indent) 
             s += '\n' + self.indent + '}'
+        if node.path is not None:
+            s += ',\n' + self.indent + 'path={0!r}'.format(node.path)
         self.level -= 1
         s += '\n)'
         return s
