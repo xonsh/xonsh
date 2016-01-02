@@ -1,7 +1,9 @@
 """Tools for creating command-line and web-based wizards from a tree of nodes.
 """
+import ast
 import textwrap
 from pprint import pformat
+from collections.abc import MutableSequence
 
 #
 # Nodes themselves 
@@ -162,3 +164,54 @@ class PrettyFormatter(Visitor):
         return s
 
 
+def ensure_str_or_int(x):
+    """Creates a string or int."""
+    if isinstance(x, int):
+        return x
+    x = x if isinstance(x, str) else str(x)
+    try:
+        x = ast.literal_eval(x)
+    except ValueError:
+        pass
+    if not isinstance(x, (int, str)):
+        msg = '{0!r} could not be converted to int or str'.format(x)
+        raise ValueError(msg)
+    return x
+
+
+def canon_path(path):
+    """Returns the canonical form of a path, which is a tuple of str or ints."""
+    if not isinstance(path, str):
+        return tuple(map(ensure_str_or_int, path))
+    path = path[1:] if path.startswith('/') else path
+    path = path[:-1] if path.endswith('/') else path
+    if len(path) == 0:
+        return ()
+    return tuple(map(ensure_str_or_int, path.split('/')))
+
+
+class StateVisitor(Visitor):
+    """This class visits the nodes and stores the results in a top-level
+    dict of data according to the state path of the node. The the node
+    does not have a path or the path does not exist, the storage is skipped.
+    This class can be optionally initialized with an existing state.
+    """
+
+    def __init__(self, tree=None, state=None):
+        super().__init__(tree=tree)
+        self.state = {} if state is None else state
+
+    def visit(self, node=None):
+        if node is None:
+            node = self.tree
+        if node is None:
+            raise RuntimeError('no node or tree given!')
+        rtn = super().visit(node)
+        path = getattr(node, 'path', None)
+        if path is not None:
+            self.store(path, rtn)            
+        return rtn
+
+    def store(self, path, val):
+        """Stores a value at the path location."""
+        path = canon_path(path)
