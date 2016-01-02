@@ -231,6 +231,7 @@ Xonsh currently has the following external dependencies,
     #. Python v3.4+
     #. PLY
     #. prompt-toolkit (optional)
+    #. Jupyter (optional)
 
 *Documentation:*
 
