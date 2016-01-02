@@ -171,7 +171,7 @@ def ensure_str_or_int(x):
     x = x if isinstance(x, str) else str(x)
     try:
         x = ast.literal_eval(x)
-    except ValueError:
+    except (ValueError, SyntaxError):
         pass
     if not isinstance(x, (int, str)):
         msg = '{0!r} could not be converted to int or str'.format(x)
