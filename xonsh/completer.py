@@ -391,11 +391,12 @@ class Completer(object):
         if tilde in prefix:
             home = os.path.expanduser(tilde)
             paths = {s.replace(home, tilde) for s in paths}
-        self._add_env(paths, prefix)
-        self._add_dots(paths, prefix)
         if cdpath:
             self._add_cdpaths(paths, prefix)
-        return self._quote_paths({_normpath(s) for s in paths}, start, end)
+        paths = self._quote_paths({_normpath(s) for s in paths}, start, end)
+        self._add_env(paths, prefix)
+        self._add_dots(paths, prefix)
+        return paths
 
     def bash_complete(self, prefix, line, begidx, endidx):
         """Attempts BASH completion."""
