@@ -65,7 +65,7 @@ XONSH_TOKENS = {
     '...'
 }
 
-CHARACTERS_NEED_QUOTES = ' `\t\r\n${}*()'
+CHARACTERS_NEED_QUOTES = ' `\t\r\n{}*()'
 if ON_WINDOWS:
     CHARACTERS_NEED_QUOTES += '%'
 
