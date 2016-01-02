@@ -3,7 +3,7 @@
 import ast
 import textwrap
 from pprint import pformat
-from collections.abc import MutableSequence
+from collections.abc import MutableSequence, Mapping, Sequence
 
 #
 # Nodes themselves 
@@ -215,3 +215,17 @@ class StateVisitor(Visitor):
     def store(self, path, val):
         """Stores a value at the path location."""
         path = canon_path(path)
+        loc = self.state
+        for p, n in zip(path[:-1], path[1:]):
+            if isinstance(p, str) and p not in loc:
+                loc[p] = {} if isinstance(n, str) else []
+            elif isinstance(p, int) and abs(p) + (p >= 0) > len(loc):
+                i = abs(p) + (p >= 0) - len(loc)
+                if isinstance(n, str):
+                    ex = [{} for _ in range(i)]
+                else:
+                    ex = [[] for _ in range(i)]
+                loc.extend(ex)
+            loc = loc[p]
+        p = path[-1]
+        loc[p] = val
