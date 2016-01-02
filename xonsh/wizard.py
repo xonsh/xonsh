@@ -3,18 +3,17 @@
 import textwrap
 from pprint import pformat
 
+#
+# Nodes themselves 
+#
+
 class Node(object):
     """Base type of all nodes."""
 
     attrs = ()
 
     def __str__(self):
-        s = self.__class__.__name__ + '('
-        if len(self.attrs) > 0:
-            s += '\n'
-            s += ',\n '.join(map(pformat, attrs))
-        s += ')'
-        return s
+        return PrettyFormatter(self).visit()
 
     def __repr__(self):
         return str(self).replace('\n', '')

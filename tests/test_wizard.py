@@ -19,7 +19,9 @@ def test_pretty_format_tree0():
            " Message('yo')\n"
            '])')
     obs = PrettyFormatter(TREE0).visit()
-    assert_equal(exp, obs)
+    yield assert_equal, exp, obs
+    yield assert_equal, exp, str(TREE0)
+    yield assert_equal, exp.replace('\n', ''), repr(TREE0)
 
 
 def test_pretty_format_tree1():
@@ -30,7 +32,9 @@ def test_pretty_format_tree1():
            ' }\n'
            ')')
     obs = PrettyFormatter(TREE1).visit()
-    assert_equal(exp, obs)
+    yield assert_equal, exp, obs
+    yield assert_equal, exp, str(TREE1)
+    yield assert_equal, exp.replace('\n', ''), repr(TREE1)
 
 if __name__ == '__main__':
     nose.runmodule()
