@@ -199,7 +199,7 @@ class PrettyFormatter(Visitor):
             s += textwrap.indent(',\n'.join(t), 2*self.indent) 
             s += '\n' + self.indent + '}'
         if node.converter is not None:
-            s += ',\n' self.indent + 'converter={0!r}'.format(node.converter)
+            s += ',\n' + self.indent + 'converter={0!r}'.format(node.converter)
         if node.path is not None:
             s += ',\n' + self.indent + 'path={0!r}'.format(node.path)
         self.level -= 1
@@ -211,9 +211,9 @@ class PrettyFormatter(Visitor):
         if node.converter is None and node.path is None:
             return s + '\n)'
         if node.converter is not None:
-            s += ',\n' self.indent + 'converter={0!r}'.format(node.converter)
+            s += ',\n' + self.indent + 'converter={0!r}'.format(node.converter)
         if node.path is not None:
-            s += ',\n' self.indent + 'path={0!r}'.format(node.path)
+            s += ',\n' + self.indent + 'path={0!r}'.format(node.path)
         s += '\n)'
         return s
 
