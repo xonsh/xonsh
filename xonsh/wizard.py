@@ -1,6 +1,7 @@
 """Tools for creating command-line and web-based wizards from a tree of nodes.
 """
 import ast
+import builtins
 import textwrap
 from pprint import pformat
 from collections.abc import MutableSequence, Mapping, Sequence
@@ -229,3 +230,28 @@ class StateVisitor(Visitor):
             loc = loc[p]
         p = path[-1]
         loc[p] = val
+
+
+class PromptVisitor(StateVisitor):
+    """Visits the nodes in the tree via the a command-line prompt."""
+
+    def __init__(self, tree=None, state=None):
+        super().__init__(tree=tree, state=state)
+        self.env = builtins.__xonsh_env__
+        self.shell = builtins.__xonsh_shell__.shell
+
+    def visit_wizard(self, node):
+        for child in node.children:
+            self.visit(child)
+
+    def visit_pass(self, node):
+        pass
+
+    def visit_message(self, node):
+        print(node.message)
+
+    def visit_question(self, node):
+        self.env['PROMPT'] = node.question
+        r = self.shell.singleline()
+        self.visit(node.responses[r])
+        return r
