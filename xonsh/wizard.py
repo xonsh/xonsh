@@ -6,10 +6,11 @@ import textwrap
 from pprint import pformat
 from collections.abc import MutableSequence, Mapping, Sequence
 
+from xonsh.tools import to_bool_or_break
+
 #
 # Nodes themselves 
 #
-
 class Node(object):
     """Base type of all nodes."""
 
@@ -29,7 +30,7 @@ class Wizard(Node):
 
     def __init__(self, children, path=None):
         self.children = children
-        self.path = None
+        self.path = path
 
 
 class Pass(Node):
@@ -49,9 +50,9 @@ class Question(Node):
     """Asks a question and then chooses the next node based on the response.
     """
 
-    attrs = ('question', 'responses', 'path')
+    attrs = ('question', 'responses', 'converter', 'path')
 
-    def __init__(self, question, responses, path=None):
+    def __init__(self, question, responses, converter=None, path=None):
         """
         Parameters
         ----------
@@ -59,13 +60,52 @@ class Question(Node):
             The question itself.
         responses : dict with str keys and Node values
             Mapping from user-input responses to nodes.
-        path : str or sequence of str
+        converter : callable, optional
+            Converts the string the user typed into another object
+            that serves as a key to the reponses dict.
+        path : str or sequence of str, optional
             A path within the storage object.
         """
         self.question = question
         self.responses = responses
-        self.path = None
+        self.converter = converter
+        self.path = path
 
+
+class Input(Node):
+    """Gets input from the user."""
+
+    attrs = ('prompt', 'converter', 'confirm', 'path')
+
+    def __init__(self, prompt='>>> ', converter=None, confirm=False, 
+                 path=None):
+        """
+        Parameters
+        ----------
+        prompt : str, optional
+            Prompt string prior to input
+        converter : callable, optional
+            Converts the string the user typed into another object
+            prior to storage.
+        confirm : bool, optional
+            Whether the input should be confirmed until true or broken, 
+            default False.
+        path : str or sequence of str, optional
+            A path within the storage object.
+        """
+        self.prompt = prompt
+        self.converter = converter
+        self.path = path
+
+#
+# Helper nodes
+#
+class TrueFalseBreak(Input):
+    """Input node the returns a True, False, or 'break' value."""
+
+    def __init__(self, prompt='yes, no, or break? ', path=None):
+        super().__init__(prompt=prompt, converter=to_bool_or_break, 
+                         confirm=False, path=path)
 
 #
 # Tools for trees of nodes.
@@ -158,9 +198,22 @@ class PrettyFormatter(Visitor):
             t = ['{0!r}: {1}'.format(k, self.visit(v)) for k, v in t]
             s += textwrap.indent(',\n'.join(t), 2*self.indent) 
             s += '\n' + self.indent + '}'
+        if node.converter is not None:
+            s += ',\n' self.indent + 'converter={0!r}'.format(node.converter)
         if node.path is not None:
             s += ',\n' + self.indent + 'path={0!r}'.format(node.path)
         self.level -= 1
+        s += '\n)'
+        return s
+
+    def visit_input(self, node):
+        s = '{0}(prompt={1!r}'.format(node.__class__.__name__, node.prompt)
+        if node.converter is None and node.path is None:
+            return s + '\n)'
+        if node.converter is not None:
+            s += ',\n' self.indent + 'converter={0!r}'.format(node.converter)
+        if node.path is not None:
+            s += ',\n' self.indent + 'path={0!r}'.format(node.path)
         s += '\n)'
         return s
 
@@ -253,5 +306,24 @@ class PromptVisitor(StateVisitor):
     def visit_question(self, node):
         self.env['PROMPT'] = node.question
         r = self.shell.singleline()
+        if callable(node.converter):
+            r = node.converter(r)
         self.visit(node.responses[r])
         return r
+
+    def visit_input(self, node):
+        need_input = True
+        while need_input:
+            self.env['PROMPT'] = node.prompt
+            x = self.shell.singleline()
+            if callable(node.converter)
+                x = node.converter(x)
+            if node.confirm:
+                confirmer = TrueFalseBreak()
+                need_input = self.visit(confirmer)
+                if isinstance(need_input, str) and need_input == 'break':
+                    x = None
+                    break
+            else:
+                need_input = False
+        return x

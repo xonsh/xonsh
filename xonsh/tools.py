@@ -553,6 +553,15 @@ def bool_to_str(x):
     return '1' if x else ''
 
 
+_BREAKS = frozenset(['b', 'break', 's', 'skip', 'q', 'quit'])
+
+def to_bool_or_break(x):
+    if isinstance(x, string_types) and x.lower() in _BREAKS:
+        return 'break'
+    else:
+        return to_bool(x)
+
+
 def ensure_int_or_slice(x):
     """Makes sure that x is list-indexable."""
     if x is None:
