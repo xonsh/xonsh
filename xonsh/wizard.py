@@ -319,6 +319,8 @@ class PromptVisitor(StateVisitor):
             if callable(node.converter)
                 x = node.converter(x)
             if node.confirm:
+                msg = 'Would you like to keep the input: {0}'
+                print(msg.format(pformat(x)))
                 confirmer = TrueFalseBreak()
                 need_input = self.visit(confirmer)
                 if isinstance(need_input, str) and need_input == 'break':
