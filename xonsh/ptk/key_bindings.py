@@ -40,7 +40,7 @@ def load_xonsh_bindings(key_bindings_manager):
         """
         event.cli.current_buffer.insert_text(env.get('INDENT'))
 
-    @handle(Keys.F10, filter=IsMultiline())
+    @handle(Keys.ControlJ, filter=IsMultiline())
     def multiline_carriage_return(event):
         b = event.cli.current_buffer
         indent_length = len(env.get('INDENT'))
