@@ -316,7 +316,7 @@ class PromptVisitor(StateVisitor):
         while need_input:
             self.env['PROMPT'] = node.prompt
             x = self.shell.singleline()
-            if callable(node.converter)
+            if callable(node.converter):
                 x = node.converter(x)
             if node.confirm:
                 msg = 'Would you like to keep the input: {0}'
