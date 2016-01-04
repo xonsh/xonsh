@@ -40,14 +40,18 @@ def load_xonsh_bindings(key_bindings_manager):
         """
         event.cli.current_buffer.insert_text(env.get('INDENT'))
 
-
     @handle(Keys.F10, filter=IsMultiline())
     def multiline_carriage_return(event):
         b = event.cli.current_buffer
         indent_length = len(env.get('INDENT'))
+        #check if last character is a colon
         if b.document.char_before_cursor == ':':
             b.newline()
             b.insert_text(env.get('INDENT'), fire_event=False)
+        #then check if there's an open paren block
+        elif b.document.text.count('(') > b.document.text.count(')'):
+            b.newline()
+        #then check if the line ends in a backslash
         elif b.document.char_before_cursor == '\\':
             b.newline()
 
