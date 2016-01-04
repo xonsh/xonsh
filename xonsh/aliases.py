@@ -73,10 +73,13 @@ def source_foreign(args, stdin=None):
     """Sources a file written in a foreign shell language."""
     parser = _ensure_source_foreign_parser()
     ns = parser.parse_args(args)
-    if ns.prevcmd is not None and not os.path.isfile(ns.files_or_code[0]):
-        ns.prevcmd = ' '.join(ns.files_or_code)
-    elif ns.prevcmd is None:
+    if ns.prevcmd is not None: 
+        pass  # don't change prevcmd if given explicitly
+    elif os.path.isfile(ns.files_or_code[0]):
+        # we have filename to source
         ns.prevcmd = '{0} {1}'.format(ns.sourcer, ' '.join(ns.files_or_code))
+    elif ns.prevcmd is None:
+        ns.prevcmd = ' '.join(ns.files_or_code)  # code to run, no files
     foreign_shell_data.cache_clear()  # make sure that we don't get prev src
     fsenv, fsaliases = foreign_shell_data(shell=ns.shell, login=ns.login,
                             interactive=ns.interactive, envcmd=ns.envcmd,

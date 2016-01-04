@@ -14,7 +14,7 @@ from xonsh.replay import Replayer
 
 from tools import ON_MAC, skip_if
 
-SHELL = Shell()
+SHELL = Shell({'PATH': []})
 HISTDIR = os.path.join(os.path.dirname(__file__), 'histories')
 
 def run_replay(re_file):

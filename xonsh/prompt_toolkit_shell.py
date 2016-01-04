@@ -11,6 +11,7 @@ from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.layout.lexers import PygmentsLexer
 from prompt_toolkit.filters import Condition, IsMultiline
 from prompt_toolkit.keys import Keys
+from pygments.token import Token
 from pygments.style import Style
 from pygments.styles.default import DefaultStyle
 from pygments.token import (Keyword, Name, Comment, String, Error, Number,
@@ -85,12 +86,6 @@ class PromptToolkitShell(BaseShell):
                 completions_display = env.get('COMPLETIONS_DISPLAY')
                 multicolumn = (completions_display == 'multi')
                 completer = None if completions_display == 'none' else self.pt_completer
-                @self.key_bindings_manager.registry.add_binding(Keys.F10, filter=IsMultiline())
-                def _(event):
-                    b = event.cli.current_buffer
-                    if b.document.char_before_cursor == ':':
-                        b.document = b.document.insert_after('\n'+env.get('INDENT'))
-                        b.cursor_down()
 
                 line = prompt(
                     mouse_support=mouse_support,
@@ -101,6 +96,7 @@ class PromptToolkitShell(BaseShell):
                     lexer=PygmentsLexer(XonshLexer),
                     history=self.history,
                     multiline=True,
+                    enable_history_search=True,
                     key_bindings_registry=self.key_bindings_manager.registry,
                     display_completions_in_columns=multicolumn)
 

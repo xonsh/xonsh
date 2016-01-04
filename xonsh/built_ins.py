@@ -22,7 +22,7 @@ from collections import Sequence, MutableMapping, Iterable, namedtuple, \
     MutableSequence, MutableSet
 
 from xonsh.tools import suggest_commands, XonshError, ON_POSIX, ON_WINDOWS, \
-    string_types
+    string_types, expandvars
 from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env, locate_binary
 from xonsh.aliases import DEFAULT_ALIASES
@@ -92,8 +92,10 @@ class Aliases(MutableMapping):
         # only once.
         if callable(value):
             if acc_args:  # Partial application
-                return lambda args, stdin=None: value(acc_args + args,
-                                                      stdin=stdin)
+                def _alias(args, stdin=None):
+                    args = [expand_path(i) for i in (acc_args + args)]
+                    return value(args, stdin=stdin)
+                return _alias
             else:
                 return value
         else:
@@ -178,9 +180,9 @@ def superhelper(x, name=''):
 def expand_path(s):
     """Takes a string path and expands ~ to home and environment vars."""
     global ENV
-    if ENV is not None:
-        ENV.replace_env()
-    return os.path.expanduser(os.path.expandvars(s))
+    if ENV.get('EXPAND_ENV_VARS'):
+        s = expandvars(s)
+    return os.path.expanduser(s)
 
 
 def expand_case_matching(s):
@@ -613,6 +615,12 @@ def run_subproc(cmds, captured=True):
             'obj': prev_proc,
             'bg': background
         })
+    if ENV.get('XONSH_INTERACTIVE') and not ENV.get('XONSH_STORE_STDOUT'):
+        # set title here to get current command running
+        try:
+            builtins.__xonsh_shell__.settitle()
+        except AttributeError:
+            pass
     if background:
         return
     if prev_is_proxy:

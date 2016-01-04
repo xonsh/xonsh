@@ -65,34 +65,36 @@ def cd(args, stdin=None):
                 if oldpwd is not None:
                     d = oldpwd
                 else:
-                    return '', 'cd: no previous directory stored\n'
+                    return '', 'cd: no previous directory stored\n', 1
             elif d.startswith('-'):
                 try:
                     num = int(d[1:])
                 except ValueError:
-                    return '', 'cd: Invalid destination: {0}\n'.format(d)
+                    return '', 'cd: Invalid destination: {0}\n'.format(d), 1
                 if num == 0:
-                    return
+                    return None, None, 0
                 elif num < 0:
-                    return '', 'cd: Invalid destination: {0}\n'.format(d)
+                    return '', 'cd: Invalid destination: {0}\n'.format(d), 1
                 elif num > len(DIRSTACK):
                     e = 'cd: Too few elements in dirstack ({0} elements)\n'
-                    return '', e.format(len(DIRSTACK))
+                    return '', e.format(len(DIRSTACK)), 1
                 else:
                     d = DIRSTACK[num - 1]
             else:
                 d = _try_cdpath(d)
     else:
-        return '', 'cd takes 0 or 1 arguments, not {0}\n'.format(len(args))
+        return '', 'cd takes 0 or 1 arguments, not {0}\n'.format(len(args)), 1
     if not os.path.exists(d):
-        return '', 'cd: no such file or directory: {0}\n'.format(d)
+        return '', 'cd: no such file or directory: {0}\n'.format(d), 1
     if not os.path.isdir(d):
-        return '', 'cd: {0} is not a directory\n'.format(d)
+        return '', 'cd: {0} is not a directory\n'.format(d), 1
+    if not os.access(d, os.X_OK):
+        return '', 'cd: permission denied: {0}\n'.format(d), 1
     # now, push the directory onto the dirstack if AUTO_PUSHD is set
     if cwd is not None and env.get('AUTO_PUSHD'):
         pushd(['-n', '-q', cwd])
     _change_working_directory(os.path.abspath(d))
-    return None, None
+    return None, None, 0
 
 
 def pushd(args, stdin=None):
@@ -106,7 +108,7 @@ def pushd(args, stdin=None):
     try:
         args = pushd_parser.parse_args(args)
     except SystemExit:
-        return None, None
+        return None, None, 1
 
     env = builtins.__xonsh_env__
 
@@ -124,7 +126,7 @@ def pushd(args, stdin=None):
             new_pwd = DIRSTACK.pop(0)
         except IndexError:
             e = 'pushd: Directory stack is empty\n'
-            return None, e
+            return None, e, 1
     elif os.path.isdir(args.dir):
         new_pwd = args.dir
     else:
@@ -132,15 +134,15 @@ def pushd(args, stdin=None):
             num = int(args.dir[1:])
         except ValueError:
             e = 'Invalid argument to pushd: {0}\n'
-            return None, e.format(args.dir)
+            return None, e.format(args.dir), 1
 
         if num < 0:
             e = 'Invalid argument to pushd: {0}\n'
-            return None, e.format(args.dir)
+            return None, e.format(args.dir), 1
 
         if num > len(DIRSTACK):
             e = 'Too few elements in dirstack ({0} elements)\n'
-            return None, e.format(len(DIRSTACK))
+            return None, e.format(len(DIRSTACK)), 1
         elif args.dir.startswith(FORWARD):
             if num == len(DIRSTACK):
                 new_pwd = None
@@ -153,7 +155,7 @@ def pushd(args, stdin=None):
                 new_pwd = DIRSTACK.pop(num - 1)
         else:
             e = 'Invalid argument to pushd: {0}\n'
-            return None, e.format(args.dir)
+            return None, e.format(args.dir), 1
     if new_pwd is not None:
         if args.cd:
             DIRSTACK.insert(0, os.path.expanduser(pwd))
@@ -168,7 +170,7 @@ def pushd(args, stdin=None):
     if not args.quiet and not env.get('PUSHD_SILENT'):
         return dirs([], None)
 
-    return None, None
+    return None, None, 0
 
 
 def popd(args, stdin=None):
@@ -182,7 +184,7 @@ def popd(args, stdin=None):
     try:
         args = pushd_parser.parse_args(args)
     except SystemExit:
-        return None, None
+        return None, None, 1
 
     env = builtins.__xonsh_env__
 
@@ -198,21 +200,21 @@ def popd(args, stdin=None):
             new_pwd = DIRSTACK.pop(0)
         except IndexError:
             e = 'popd: Directory stack is empty\n'
-            return None, e
+            return None, e, 1
     else:
         try:
             num = int(args.dir[1:])
         except ValueError:
             e = 'Invalid argument to popd: {0}\n'
-            return None, e.format(args.dir)
+            return None, e.format(args.dir), 1
 
         if num < 0:
             e = 'Invalid argument to popd: {0}\n'
-            return None, e.format(args.dir)
+            return None, e.format(args.dir), 1
 
         if num > len(DIRSTACK):
             e = 'Too few elements in dirstack ({0} elements)\n'
-            return None, e.format(len(DIRSTACK))
+            return None, e.format(len(DIRSTACK)), 1
         elif args.dir.startswith(FORWARD):
             if num == len(DIRSTACK):
                 new_pwd = DIRSTACK.pop(0)
@@ -227,7 +229,7 @@ def popd(args, stdin=None):
                 DIRSTACK.pop(num - 1)
         else:
             e = 'Invalid argument to popd: {0}\n'
-            return None, e.format(args.dir)
+            return None, e.format(args.dir), 1
 
     if new_pwd is not None:
         e = None
@@ -237,7 +239,7 @@ def popd(args, stdin=None):
     if not args.quiet and not env.get('PUSHD_SILENT'):
         return dirs([], None)
 
-    return None, None
+    return None, None, 0
 
 
 def dirs(args, stdin=None):
@@ -264,8 +266,8 @@ def dirs(args, stdin=None):
         FORWARD = '+'
 
     if args.clear:
-        dirstack = []
-        return None, None
+        DIRSTACK = []
+        return None, None, 0
 
     if args.long:
         o = dirstack
@@ -291,15 +293,15 @@ def dirs(args, stdin=None):
             num = int(N[1:])
         except ValueError:
             e = 'Invalid argument to dirs: {0}\n'
-            return None, e.format(N)
+            return None, e.format(N), 1
 
         if num < 0:
             e = 'Invalid argument to dirs: {0}\n'
-            return None, e.format(len(o))
+            return None, e.format(len(o)), 1
 
         if num >= len(o):
             e = 'Too few elements in dirstack ({0} elements)\n'
-            return None, e.format(len(o))
+            return None, e.format(len(o)), 1
 
         if N.startswith(BACKWARD):
             idx = num
@@ -307,11 +309,11 @@ def dirs(args, stdin=None):
             idx = len(o) - 1 - num
         else:
             e = 'Invalid argument to dirs: {0}\n'
-            return None, e.format(N)
+            return None, e.format(N), 1
 
         out = o[idx]
 
-    return out + '\n', None
+    return out + '\n', None, 0
 
 
 pushd_parser = ArgumentParser(prog="pushd")
