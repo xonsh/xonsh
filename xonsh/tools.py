@@ -1030,3 +1030,18 @@ def expandvars(path):
             res += c
         index += 1
     return res
+
+#
+# File handling tools
+# 
+
+def backup_file(fname):
+    """Moves an existing file to a new name that has the current time right
+    before the extension.
+    """
+    # lazy imports
+    import shutil
+    from datetime import datetime
+    base, ext = os.path.splitext(fname)
+    newfname = base + '.' + datetime.now().isoformat() + ext
+    shutil.move(fname, newfname)

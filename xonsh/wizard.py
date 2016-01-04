@@ -1,12 +1,13 @@
 """Tools for creating command-line and web-based wizards from a tree of nodes.
 """
 import ast
+import json
 import builtins
 import textwrap
 from pprint import pformat
 from collections.abc import MutableSequence, Mapping, Sequence
 
-from xonsh.tools import to_bool_or_break
+from xonsh.tools import to_bool, to_bool_or_break, backup_file
 
 #
 # Nodes themselves 
@@ -101,12 +102,57 @@ class Input(Node):
 #
 # Helper nodes
 #
+class TrueFalse(Input):
+    """Input node the returns a True or False value."""
+
+    def __init__(self, prompt='yes or no (default)? ', path=None):
+        super().__init__(prompt=prompt, converter=to_bool, 
+                         confirm=False, path=path)
+
+
 class TrueFalseBreak(Input):
     """Input node the returns a True, False, or 'break' value."""
 
-    def __init__(self, prompt='yes, no, or break? ', path=None):
+    def __init__(self, prompt='yes, no (default), or break? ', path=None):
         super().__init__(prompt=prompt, converter=to_bool_or_break, 
                          confirm=False, path=path)
+
+
+class Save(Input):
+    """Node for saving the state as a JSON file under a default or user
+    given file name.
+    """
+
+    attrs = ('default_file', 'check')
+
+    def __init__(self, default_file=None, check=True):
+        """
+        Parameters
+        ----------
+        default_file : str, optional
+            The default filename to save the file as.
+        check : bool, optional
+            Whether to print the current state and ask if it should be 
+            saved prior to asking for the file name and saving the file,
+            default=True.
+        """
+        self._df = None
+        super().__init__(prompt='filename: ', converter=None, 
+                         confirm=False, path=None)
+        self.default_file = default_file
+        self.check = check
+
+    @property
+    def default_file(self):
+        return self._df
+
+    @default_file.setter
+    def default_file(self, val):
+        self._df = val
+        if val is None:
+            self.prompt = 'filename: '
+        else:
+            self.prompt = 'filename [default={0!r}]: '.format(val)
 
 #
 # Tools for trees of nodes.
@@ -218,6 +264,12 @@ class PrettyFormatter(Visitor):
         s += '\n)'
         return s
 
+    def visit_save(self, node):
+        s = '{0}(default_file={1!r}, check={2})'.format(node.__class__.__name__,
+                                                        node.default_file,
+                                                        node.check)
+        return s
+
 
 def ensure_str_or_int(x):
     """Creates a string or int."""
@@ -258,6 +310,7 @@ class UnstorableType(object):
             cls._inst = super(UnstorableType, cls).__new__(cls, *args, 
                                                            **kwargs)
         return cls._inst
+
 
 Unstorable = UnstorableType()
 
@@ -349,3 +402,22 @@ class PromptVisitor(StateVisitor):
             else:
                 need_input = False
         return x
+
+    def visit_save(self, node):
+        jstate = json.dumps(self.state, indent=1, sort_keys=True)
+        if node.check:
+            msg = 'The current state is:\n{0}\n'
+            print(msg.format(textwrap.indent(jstate, '    ')))
+            ap = 'Would you like to save the file, yes or no (default)?'
+            asker = TrueFalse(prompt=ap)
+            do_save = self.visit(asker)
+            if not do_save:
+                return Unsortable
+        fname = self.visit_input(node):
+        if fname is None or len(fname) == 0:
+            fname = node.default_file
+        if os.path.isfile(fname):
+            backup_file(fname)
+        with open(fname, 'w') as f:
+            f.write(jstate)
+        return fname
