@@ -42,7 +42,7 @@ def load_xonsh_bindings(key_bindings_manager):
 
 
     @handle(Keys.F10, filter=IsMultiline())
-    def _(event):
+    def multiline_carriage_return(event):
         b = event.cli.current_buffer
         indent_length = len(env.get('INDENT'))
         if b.document.char_before_cursor == ':':
