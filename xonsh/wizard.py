@@ -95,6 +95,7 @@ class Input(Node):
         """
         self.prompt = prompt
         self.converter = converter
+        self.confirm = confirm
         self.path = path
 
 #
@@ -322,10 +323,12 @@ class PromptVisitor(StateVisitor):
                 msg = 'Would you like to keep the input: {0}'
                 print(msg.format(pformat(x)))
                 confirmer = TrueFalseBreak()
-                need_input = self.visit(confirmer)
-                if isinstance(need_input, str) and need_input == 'break':
+                status = self.visit(confirmer)
+                if isinstance(status, str) and status == 'break':
                     x = None
                     break
+                else:
+                    need_input = not status
             else:
                 need_input = False
         return x
