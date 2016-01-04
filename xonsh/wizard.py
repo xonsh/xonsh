@@ -121,7 +121,7 @@ class YesNo(Question):
         """
         responses = {True: yes, False: no}
         super().__init__(self, question, responses, converter=to_bool,
-                         path=path):
+                         path=path)
 
 class TrueFalse(Input):
     """Input node the returns a True or False value."""
@@ -434,7 +434,7 @@ class PromptVisitor(StateVisitor):
             do_save = self.visit(asker)
             if not do_save:
                 return Unsortable
-        fname = self.visit_input(node):
+        fname = self.visit_input(node)
         if fname is None or len(fname) == 0:
             fname = node.default_file
         if os.path.isfile(fname):
