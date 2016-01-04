@@ -42,35 +42,31 @@ def load_xonsh_bindings(key_bindings_manager):
 
     @handle(Keys.ControlJ, filter=IsMultiline())
     def multiline_carriage_return(event):
+        """
+        Preliminary parser to determine if 'Enter' key should send command to the
+        xonsh parser for execution or should insert a newline for continued
+        input.
+        
+        Current 'triggers' for inserting a newline are:
+        - Not on first line of buffer and line is non-empty
+        - Previous character is a colon (covers if, for, etc...)
+        - User is in an open paren-block
+        - Line ends with backslash
+        - Any text exists below cursor position (relevant when editing previous
+        multiline blocks)
+        """
         b = event.cli.current_buffer
-        #check if last character is a colon
-        if b.document.char_before_cursor == ':':
+        if (not b.document.on_first_line and
+              not b.document.current_line.isspace()):
+            b.newline(copy_margin=True)
+        elif b.document.char_before_cursor == ':':
             b.newline()
             b.insert_text(env.get('INDENT'), fire_event=False)
-        #then check if there's an open paren block
         elif b.document.text.count('(') > b.document.text.count(')'):
             b.newline()
-        #then check if the line ends in a backslash
         elif b.document.char_before_cursor == '\\':
             b.newline()
-
-        #if previous line is empty, and we're on the last line of the buffer
-        #then execute on second carriage return (otherwise you can't hit
-        #enter when editing in the middle of an old block)
-        elif (b.document.empty_line_count_at_the_end() > 0
-              and b.document.on_last_line):
-            b.accept_action.validate_and_handle(event.cli, b)
-
-        #if not first line 
-            #and nonblank char before cursor then newline at same indent
-        elif (not b.document.on_first_line and
-            not b.document.current_line_before_cursor.isspace()):
+        elif b.document.find_next_word_beginning() is not None:
             b.newline(copy_margin=True)
-            b.cursor_down()
-        #and only empty space before cursor, then unindent
-        elif not b.document.on_first_line:
-            b.newline(copy_margin=False)
-            b.cursor_down()
-
         else:
             b.accept_action.validate_and_handle(event.cli, b)
