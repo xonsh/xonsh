@@ -6,7 +6,9 @@ import ast
 import sys
 import shlex
 import pickle
+import inspect
 import builtins
+import importlib
 import subprocess
 
 from xonsh.built_ins import iglobpath, expand_path
@@ -63,9 +65,11 @@ XONSH_TOKENS = {
     '...'
 }
 
-COMPLETION_SKIP_TOKENS = {'sudo', 'time', 'man'}
+CHARACTERS_NEED_QUOTES = ' `\t\r\n${}*()'
+if ON_WINDOWS:
+    CHARACTERS_NEED_QUOTES += '%'
 
-COMPLETION_WRAP_TOKENS = {' ',',','[',']','(',')','{','}'}
+COMPLETION_SKIP_TOKENS = {'sudo', 'time', 'timeit', 'man'}
 
 BASH_COMPLETE_SCRIPT = """source {filename}
 COMP_WORDS=({line})
@@ -114,18 +118,6 @@ def _normpath(p):
         p = p.replace(os.sep, os.altsep)
 
     return p
-
-def completionwrap(s):
-    """ Returns the repr of input string s if that string contains 
-    a 'problem' token that will confuse the xonsh parser
-    """
-    space = ' '
-    slash = get_sep()
-    return (_normpath(repr(s + (slash if os.path.isdir(s) else '')))
-           if COMPLETION_WRAP_TOKENS.intersection(s) else
-           s + space
-           if s[-1:].isalnum() else
-           s)
 
 class Completer(object):
     """This provides a list of optional completions for the xonsh shell."""
@@ -200,43 +192,84 @@ class Completer(object):
             # anything goes.
             rtn = self.cmd_complete(prefix)
         elif cmd in self.bash_complete_funcs:
-            rtn = set()
-            for s in self.bash_complete(prefix, line, begidx, endidx):
-                if os.path.isdir(s.rstrip()):
-                    s = s.rstrip() + slash
-                rtn.add(s)
-            if len(rtn) == 0:
-                rtn = self.path_complete(prefix, path_str_start, path_str_end)
+            # bash completions
+            rtn = self.bash_complete(prefix, line, begidx, endidx)
+            rtn |= self.path_complete(prefix, path_str_start, path_str_end)
+            return self._filter_repeats(rtn), lprefix
         elif prefix.startswith('${') or prefix.startswith('@('):
             # python mode explicitly
-            rtn = set()
+            return self._python_mode_completions(prefix, ctx,
+                                                 prefixlow,
+                                                 startswither)
         elif prefix.startswith('-'):
-            return sorted(self._man_completer.option_complete(prefix, cmd)), lprefix
+            comps = self._man_completer.option_complete(prefix, cmd)
+            return sorted(comps), lprefix
         elif cmd not in ctx:
+            ltoks = line.split()
+            if len(ltoks) > 2 and ltoks[0] == 'from' and ltoks[2] == 'import':
+                # complete thing inside a module
+                try:
+                    mod = importlib.import_module(ltoks[1])
+                except ImportError:
+                    return set(), lprefix
+                out = (i[0]
+                       for i in inspect.getmembers(mod)
+                       if i[0].startswith(prefix))
+                return out, lprefix
+            if len(ltoks) == 2 and ltoks[0] == 'from':
+                comps = ('{} '.format(i) for i in self.module_complete(prefix))
+                return sorted(comps), lprefix
             if cmd == 'import' and begidx == len('import '):
                 # completing module to import
                 return sorted(self.module_complete(prefix)), lprefix
             if cmd in self._all_commands():
                 # subproc mode; do path completions
-                return sorted(self.path_complete(prefix, path_str_start, path_str_end, cdpath=True)), lprefix
+                comps = self.path_complete(prefix, path_str_start,
+                                           path_str_end, cdpath=True)
+                return sorted(comps), lprefix
             else:
                 # if we're here, could be anything
                 rtn = set()
         else:
             # if we're here, we're not a command, but could be anything else
             rtn = set()
-        rtn |= {s for s in XONSH_TOKENS if startswither(s, prefix, prefixlow)}
-        if ctx is not None:
-            if dot in prefix:
-                rtn |= self.attr_complete(prefix, ctx)
-            else:
-                rtn |= {s for s in ctx if startswither(s, prefix, prefixlow)}
-        rtn |= {s for s in dir(builtins) if startswither(s, prefix, prefixlow)}
+        rtn |= self._python_mode_completions(prefix, ctx,
+                                             prefixlow,
+                                             startswither)
         rtn |= {s + space for s in builtins.aliases
                 if startswither(s, prefix, prefixlow)}
         rtn |= self.path_complete(prefix, path_str_start, path_str_end)
         return sorted(rtn), lprefix
 
+    def _python_mode_completions(self, prefix, ctx, prefixlow, startswither):
+        rtn = {s for s in XONSH_TOKENS if startswither(s, prefix, prefixlow)}
+        if ctx is not None:
+            if '.' in prefix:
+                rtn |= self.attr_complete(prefix, ctx)
+            else:
+                rtn |= {s for s in ctx if startswither(s, prefix, prefixlow)}
+        rtn |= {s for s in dir(builtins) if startswither(s, prefix, prefixlow)}
+        return rtn
+
+    def _canonical_rep(self, x):
+        if x.endswith('"') or x.endswith("'"):
+            x = ast.literal_eval(x)
+            if isinstance(x, bytes):
+                env = builtins.__xonsh_env__
+                x = x.decode(encoding=env.get('XONSH_ENCODING'),
+                             errors=env.get('XONSH_ENCODING_ERRORS'))
+        if x.endswith('\\') or x.endswith(' ') or x.endswith('/'):
+            x = x[:-1]
+        return x
+
+    def _filter_repeats(self, comps):
+        reps = {}
+        for comp in comps:
+            canon = self._canonical_rep(comp)
+            if canon not in reps:
+                reps[canon] = []
+            reps[canon].append(comp)
+        return {max(i, key=len) for i in reps.values()}
 
     def find_and_complete(self, line, idx, ctx=None):
         """Finds the completions given only the full code line and a current cursor
@@ -321,9 +354,14 @@ class Completer(object):
         backslash = '\\'
         double_backslash = '\\\\'
         slash = get_sep()
+        orig_start = start
+        orig_end = end
         for s in paths:
+            start = orig_start
+            end = orig_end
             if (start == '' and
-                    (space in s or (backslash in s and slash != backslash))):
+                    (any(i in s for i in CHARACTERS_NEED_QUOTES) or
+                     (backslash in s and slash != backslash))):
                 start = "'"
                 end = "'"
             if os.path.isdir(expand_path(s)):
@@ -353,11 +391,12 @@ class Completer(object):
         if tilde in prefix:
             home = os.path.expanduser(tilde)
             paths = {s.replace(home, tilde) for s in paths}
-        self._add_env(paths, prefix)
-        self._add_dots(paths, prefix)
         if cdpath:
             self._add_cdpaths(paths, prefix)
-        return self._quote_paths({_normpath(s) for s in paths}, start, end)
+        paths = self._quote_paths({_normpath(s) for s in paths}, start, end)
+        self._add_env(paths, prefix)
+        self._add_dots(paths, prefix)
+        return paths
 
     def bash_complete(self, prefix, line, begidx, endidx):
         """Attempts BASH completion."""
@@ -397,7 +436,7 @@ class Completer(object):
         except subprocess.CalledProcessError:
             out = ''
 
-        rtn = set(map(completionwrap, out.splitlines()))
+        rtn = set(out.splitlines())
         return rtn
 
     def _source_completions(self):
@@ -498,11 +537,11 @@ class Completer(object):
     def _all_commands(self):
         path = builtins.__xonsh_env__.get('PATH', [])
         # did PATH change?
-        path_hash = hash(tuple(path))
+        path_hash = hash(frozenset(path))
         cache_valid = path_hash == self._path_checksum
         self._path_checksum = path_hash
         # did aliases change?
-        al_hash = hash(tuple(sorted(builtins.aliases.keys())))
+        al_hash = hash(frozenset(builtins.aliases.keys()))
         cache_valid = cache_valid and al_hash == self._alias_checksum
         self._alias_checksum = al_hash
         pm = self._path_mtime

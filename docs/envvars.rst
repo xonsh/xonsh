@@ -63,6 +63,11 @@ applicable.
         writing ``$COMPLETIONS_DISPLAY = None`` and ``$COMPLETIONS_DISPLAY = 'none'`` is equivalent.
         
         (Only usable with SHELL_TYPE=prompt_toolkit)
+    * - COMPLETIONS_MENU_ROWS
+      - ``5``
+      - Number of rows to reserve for tab-completions menu if
+        ``$COMPLETIONS_DISPLAY`` is ``'single'`` or ``'multi'``. This only 
+        effects the prompt-toolkit shell.
     * - DIRSTACK_SIZE
       - ``20``
       - Maximum size of the directory stack.
@@ -227,6 +232,7 @@ applicable.
       - ``True`` if xonsh is running interactively, and ``False`` otherwise.
     * - XONSH_LOGIN
       - ``True`` if xonsh is running as a login shell, and ``False`` otherwise.
+      - Whether or not xonsh is a login shell.
     * - XONSH_SHOW_TRACEBACK
       - ``False`` but not set
       - Controls if a traceback is shown exceptions occur in the shell. Set ``True`` 

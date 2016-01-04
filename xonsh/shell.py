@@ -40,7 +40,7 @@ class Shell(object):
                 shell_type = env['SHELL_TYPE'] = 'readline'
         # actually make the shell
         if shell_type == 'prompt_toolkit':
-            from xonsh.prompt_toolkit_shell import PromptToolkitShell
+            from xonsh.ptk.shell import PromptToolkitShell
             self.shell = PromptToolkitShell(execer=self.execer,
                                             ctx=self.ctx, **kwargs)
         elif shell_type == 'readline':

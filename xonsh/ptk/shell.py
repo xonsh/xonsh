@@ -5,7 +5,6 @@ import sys
 import builtins
 from warnings import warn
 
-from prompt_toolkit.shortcuts import prompt
 from prompt_toolkit.key_binding.manager import KeyBindingManager
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.layout.lexers import PygmentsLexer
@@ -19,34 +18,11 @@ from pygments.token import (Keyword, Name, Comment, String, Error, Number,
 
 from xonsh.base_shell import BaseShell
 from xonsh.tools import format_prompt_for_prompt_toolkit, _make_style
-from xonsh.prompt_toolkit_completer import PromptToolkitCompleter
-from xonsh.prompt_toolkit_history import LimitedFileHistory
-from xonsh.prompt_toolkit_key_bindings import load_xonsh_bindings
+from xonsh.ptk.completer import PromptToolkitCompleter
+from xonsh.ptk.history import PromptToolkitHistory
+from xonsh.ptk.key_bindings import load_xonsh_bindings
+from xonsh.ptk.shortcuts import Prompter
 from xonsh.pyghooks import XonshLexer
-
-
-def setup_history():
-    """Creates history object."""
-    env = builtins.__xonsh_env__
-    hfile = env.get('XONSH_HISTORY_FILE')
-    history = LimitedFileHistory()
-    try:
-        history.read_history_file(hfile)
-    except PermissionError:
-        warn('do not have read permissions for ' + hfile, RuntimeWarning)
-    return history
-
-
-def teardown_history(history):
-    """Tears down the history object."""
-    import builtins
-    env = builtins.__xonsh_env__
-    hsize = env.get('XONSH_HISTORY_SIZE')[0]
-    hfile = env.get('XONSH_HISTORY_FILE')
-    try:
-        history.save_history_to_file(hfile, hsize)
-    except PermissionError:
-        warn('do not have write permissions for ' + hfile, RuntimeWarning)
 
 
 class PromptToolkitShell(BaseShell):
@@ -54,7 +30,8 @@ class PromptToolkitShell(BaseShell):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.history = setup_history()
+        self.prompter = Prompter()
+        self.history = PromptToolkitHistory()
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx)
         self.key_bindings_manager = KeyBindingManager(
             enable_auto_suggest_bindings=True,
@@ -63,11 +40,6 @@ class PromptToolkitShell(BaseShell):
             enable_vi_mode=Condition(lambda cli: builtins.__xonsh_env__.get('VI_MODE')),
             enable_open_in_editor=True)
         load_xonsh_bindings(self.key_bindings_manager)
-
-
-    def __del__(self):
-        if self.history is not None:
-            teardown_history(self.history)
 
     def cmdloop(self, intro=None):
         """Enters a loop that reads and execute input from user."""
@@ -86,23 +58,20 @@ class PromptToolkitShell(BaseShell):
                 completions_display = env.get('COMPLETIONS_DISPLAY')
                 multicolumn = (completions_display == 'multi')
                 completer = None if completions_display == 'none' else self.pt_completer
-
-                line = prompt(
-                    mouse_support=mouse_support,
-                    auto_suggest=auto_suggest,
-                    get_prompt_tokens=token_func,
-                    style=style_cls,
-                    completer=completer,
-                    lexer=PygmentsLexer(XonshLexer),
-                    history=self.history,
-                    multiline=True,
-                    enable_history_search=True,
-                    key_bindings_registry=self.key_bindings_manager.registry,
-                    display_completions_in_columns=multicolumn)
-
-
-
-                    
+                with self.prompter:
+                    line = self.prompter.prompt(
+                        mouse_support=mouse_support,
+                        auto_suggest=auto_suggest,
+                        get_prompt_tokens=token_func,
+                        style=style_cls,
+                        completer=completer,
+                        lexer=PygmentsLexer(XonshLexer),
+                        history=self.history,
+                        multiline=True, 
+                        enable_history_search=True,
+                        reserve_space_for_menu=0,
+                        key_bindings_registry=self.key_bindings_manager.registry,
+                        display_completions_in_columns=multicolumn)
                 if not line:
                     self.emptyline()
                 else:
