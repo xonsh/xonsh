@@ -102,6 +102,27 @@ class Input(Node):
 #
 # Helper nodes
 #
+
+class YesNo(Question):
+    """Represents a simple yes/no question."""
+    
+    def __init__(self, question, yes, no, path=None):
+        """
+        Parameters
+        ----------
+        question : str
+            The question itself.
+        yes : Node
+            Node to execute if the response is True.
+        no : Node
+            Node to execute if the response is False.
+        path : str or sequence of str, optional
+            A path within the storage object.
+        """
+        responses = {True: yes, False: no}
+        super().__init__(self, question, responses, converter=to_bool,
+                         path=path):
+
 class TrueFalse(Input):
     """Input node the returns a True or False value."""
 
@@ -233,7 +254,7 @@ class PrettyFormatter(Visitor):
         return 'Message({0!r})'.format(node.message)
 
     def visit_question(self, node):
-        s = 'Question(\n'
+        s = node.__class__.__name__ + '(\n'
         self.level += 1
         s += self.indent + 'question={0!r},\n'.format(node.question)
         s += self.indent + 'responses={'
