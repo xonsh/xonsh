@@ -245,6 +245,23 @@ def canon_path(path):
     return tuple(map(ensure_str_or_int, path.split('/')))
 
 
+class UnstorableType(object):
+    """Represents an unstorable return value for when no input was given
+    or such input was skipped. Typically represented by the Unstorable
+    singleton.
+    """
+
+    _inst = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._inst is None:
+            cls._inst = super(UnstorableType, cls).__new__(cls, *args, 
+                                                           **kwargs)
+        return cls._inst
+
+Unstorable = UnstorableType()
+
+
 class StateVisitor(Visitor):
     """This class visits the nodes and stores the results in a top-level
     dict of data according to the state path of the node. The the node
@@ -263,7 +280,7 @@ class StateVisitor(Visitor):
             raise RuntimeError('no node or tree given!')
         rtn = super().visit(node)
         path = getattr(node, 'path', None)
-        if path is not None:
+        if path is not None and rtn is not Unstorable:
             self.store(path, rtn)            
         return rtn
 
@@ -325,7 +342,7 @@ class PromptVisitor(StateVisitor):
                 confirmer = TrueFalseBreak()
                 status = self.visit(confirmer)
                 if isinstance(status, str) and status == 'break':
-                    x = None
+                    x = Unstorable
                     break
                 else:
                     need_input = not status
