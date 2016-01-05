@@ -64,10 +64,13 @@ def load_xonsh_bindings(key_bindings_manager):
 
         b = event.cli.current_buffer
 
+        #indent after a colon
         if b.document.char_before_cursor == ':':
             b.newline()
             b.insert_text(indent_, fire_event=False)
-        elif (not len(b.document.current_line) == 0 and
+        #if current line isn't blank, check dedent tokens
+        elif (not (len(b.document.current_line) == 0 or
+                   b.document.current_line.isspace()) and
               b.document.current_line.split(maxsplit=1)[0] in DEDENT_TOKENS):
             b.newline(copy_margin=True)
             _ = b.delete_before_cursor(count=len(indent_))
