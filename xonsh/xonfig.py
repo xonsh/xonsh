@@ -1,6 +1,7 @@
 """The xonsh configuration (xonfig) utility."""
 import os
 import json
+import  builtins
 import functools
 from argparse import ArgumentParser
 
@@ -9,6 +10,38 @@ import ply
 from xonsh import __version__ as XONSH_VERSION
 from xonsh import tools
 from xonsh.shell import is_readline_available, is_prompt_toolkit_available
+from xonsh.wizard import Wizard, Pass, Message, Save, Load, YesNo
+
+
+def make_wizard(default_file=None, confirm=False):
+    """Makes a configuration wizard for xonsh config file.
+
+    Parameters
+    ----------
+    default_file : str, optional
+        Default filename to save and load to. User will still be prompted.
+    confirm : bool, optional
+        Confirm that the main part of the wizard should be run.
+    """
+    wiz = Wizard(children=[
+            Message(message=WIZARD_HEAD),
+            Load(default_file=default_file, check=True),
+            YesNo(question=WIZARD_DO_FS, yes=Pass(), no=Pass()),
+            YesNo(question=WIZARD_DO_EV, yes=Pass(), no=Pass()),
+            Save(default_file=default_file, check=True),
+            Message(message=WIZARD_TAIL),
+            ])
+    if confirm:
+        q = ('Would you like to run the xonsh configuration wizard now?\n'
+             'yes or no (default)? ')
+        wiz = YesNo(question=q, yes=wiz, no=Pass())
+    return wiz
+
+
+def _wizard(ns);
+    env = builtins.__xonsh_env__
+    fname = env.get('XONSHCONFIG') if ns.file is None else ns.file
+    wiz = make_wizard(default_file=fname, confirm=ns.confirm)
 
 
 def _format_human(data):
@@ -60,10 +93,18 @@ def _create_parser():
                                          'default action'))
     info.add_argument('--json', action='store_true', default=False, 
                       help='reports results as json')
+    wiz = subp.add_parser('wizard', help=('displays configuration information, '
+                                         'default action'))
+    wiz.add_argument('--file', default=None, 
+                     help='config file location, default=$XONSHCONFIG')
+    wiz.add_argument('--confirm', action='store_true', default=False, 
+                      help='confirm that the wizard should be run.')
     return p
+
 
 _MAIN_ACTIONS = {
     'info': _info,
+    'wizard': _wizard,
     }
 
 def main(args=None):
@@ -76,6 +117,7 @@ def main(args=None):
     if ns.action is None:  # apply default action
         ns = parser.parse_args(['info'] + args)
     return _MAIN_ACTIONS[ns.action](ns)
+
 
 if __name__ == '__main__':
     main()
