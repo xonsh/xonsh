@@ -139,9 +139,9 @@ class TrueFalseBreak(Input):
                          confirm=False, path=path)
 
 
-class Save(Input):
-    """Node for saving the state as a JSON file under a default or user
-    given file name.
+class StateFile(Input):
+    """Node for repesenting the state as a JSON file under a default or user
+    given file name. This node type is likely not useful on its own.
     """
 
     attrs = ('default_file', 'check')
@@ -154,8 +154,8 @@ class Save(Input):
             The default filename to save the file as.
         check : bool, optional
             Whether to print the current state and ask if it should be 
-            saved prior to asking for the file name and saving the file,
-            default=True.
+            saved/loaded prior to asking for the file name and saving the 
+            file, default=True.
         """
         self._df = None
         super().__init__(prompt='filename: ', converter=None, 
@@ -174,6 +174,19 @@ class Save(Input):
             self.prompt = 'filename: '
         else:
             self.prompt = 'filename [default={0!r}]: '.format(val)
+
+
+class Save(StateFile):
+    """Node for saving the state as a JSON file under a default or user
+    given file name.
+    """
+
+
+class Load(StateFile):
+    """Node for loading the state as a JSON file under a default or user
+    given file name.
+    """
+
 
 #
 # Tools for trees of nodes.
@@ -285,10 +298,9 @@ class PrettyFormatter(Visitor):
         s += '\n)'
         return s
 
-    def visit_save(self, node):
-        s = '{0}(default_file={1!r}, check={2})'.format(node.__class__.__name__,
-                                                        node.default_file,
-                                                        node.check)
+    def visit_statefile(self, node):
+        s = '{0}(default_file={1!r}, check={2})'
+        s = s.format(node.__class__.__name__, node.default_file, node.check)
         return s
 
 
@@ -429,11 +441,11 @@ class PromptVisitor(StateVisitor):
         if node.check:
             msg = 'The current state is:\n{0}\n'
             print(msg.format(textwrap.indent(jstate, '    ')))
-            ap = 'Would you like to save the file, yes or no (default)?'
+            ap = 'Would you like to save the file, yes or no (default)? '
             asker = TrueFalse(prompt=ap)
             do_save = self.visit(asker)
             if not do_save:
-                return Unsortable
+                return Unstorable
         fname = self.visit_input(node)
         if fname is None or len(fname) == 0:
             fname = node.default_file
@@ -441,4 +453,23 @@ class PromptVisitor(StateVisitor):
             backup_file(fname)
         with open(fname, 'w') as f:
             f.write(jstate)
+        return fname
+
+    def visit_load(self, node):
+        if node.check:
+            ap = ('Would you like to load an existing file, '
+                  'yes or no (default)? ')
+            asker = TrueFalse(prompt=ap)
+            do_load = self.visit(asker)
+            if not do_load:
+                return Unstorable
+        fname = self.visit_input(node)
+        if fname is None or len(fname) == 0:
+            fname = node.default_file
+        if os.path.isfile(fname):
+            with open(fname, 'r') as f:
+                self.state = json.loads(f)
+            print('{0!r} loaded.'.format(fname))
+        else:
+            print('{0!r} could not be found, continuing.'.format(fname))
         return fname
