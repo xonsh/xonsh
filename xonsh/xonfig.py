@@ -13,6 +13,49 @@ from xonsh.shell import is_readline_available, is_prompt_toolkit_available
 from xonsh.wizard import Wizard, Pass, Message, Save, Load, YesNo
 
 
+"{GREEN}yes{NO_COLOR} or {RED}no{NO_COLOR} (default)? "
+HR = "'`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*'"
+WIZARD_HEAD = """{hr}
+          Welcome to the xonsh configuration wizard!
+          ------------------------------------------
+This will present a guided tour through setting up the xonsh static 
+config file. Xonsh will automatically ask you if you want to run this 
+wizard if the configuration file does not exist. However, you can
+always rerun this wizard with the xonfig command:
+
+    $ xonfig wizard
+
+This wizard will load an existing configuration, if it is available.
+Also never fear when this wizard saves its results! It will create
+a backup of any existing configuration automatically.
+
+This wizard has two main phases: foreign shell setup and environment
+variable setup. Each phase may be skipped in its entirety.
+
+For the configuration to take effect, you will need to restart xonsh.
+{hr}""".format(hr=HR)
+
+WIZARD_DO_FS = """{hr}
+                      Foreign Shell Setup
+                      -------------------
+The xonsh shell has the ability to interface with foreign shells such
+as Bash, zsh, or fish. 
+
+For configuration, this means that xonsh can load the environment, 
+aliases, and functions specified in the config files of these shells. 
+Naturally, these shells must be available on the system to work. 
+Being able to share configuration (and source) from foreign shells 
+makes it easier to transition to and from xonsh.
+
+Would you like to configure any foreign shells, """.format(hr=HR) + YN 
+
+WIZARD_DO_EV = YN
+
+WIZARD_TAIL = """
+Thanks for using the xonsh configuration wizard!
+""".strip()
+
+
 def make_wizard(default_file=None, confirm=False):
     """Makes a configuration wizard for xonsh config file.
 
