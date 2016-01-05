@@ -10,6 +10,7 @@ import builtins
 import subprocess
 from warnings import warn
 from functools import wraps
+from contextlib import contextmanager
 from collections import MutableMapping, MutableSequence, MutableSet, namedtuple
 
 from xonsh import __version__ as XONSH_VERSION
@@ -280,6 +281,24 @@ class Env(MutableMapping):
             ens = default
         self.ensurers[key] = ens
         return ens
+
+    @contextmanager
+    def swap(self, other):
+        """Provides a context manager for temporarily swapping out certain
+        environment variables with other values. On exit from the context
+        manager, the original values are restored.
+        """
+        old = {}
+        for k, v in other.items():
+            old[k] = self.get(k, NotImplemented)
+            self[k] = v
+        yield self
+        for k, v in old.items():
+            if v is NotImplemented:
+                del self[k]
+            else:
+                self[k] = v
+
 
     #
     # Mutable mapping interface

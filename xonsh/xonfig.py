@@ -93,6 +93,7 @@ def make_fs():
                       path='/foreign_shells/{idx}/funcscmd'),
         StoreNonEmpty("source command [str, default=None]: ",
                       path='/foreign_shells/{idx}/sourcer'),
+        Message(message='')  # inserts a newline
         ])
     return fs
 
@@ -127,8 +128,10 @@ def _wizard(ns):
     env = builtins.__xonsh_env__
     fname = env.get('XONSHCONFIG') if ns.file is None else ns.file
     wiz = make_wizard(default_file=fname, confirm=ns.confirm)
+    tempenv = {'PROMPT': '', 'XONSH_STORE_STDOUT': False}
     pv = PromptVisitor(wiz)
-    pv.visit()
+    with env.swap(tempenv):
+        pv.visit()
 
 
 def _format_human(data):
