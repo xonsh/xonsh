@@ -79,8 +79,12 @@ class PromptToolkitHistoryAdder(Thread):
     def _buf(self):
         # Thread-safe version of
         # buf = builtins.__xonsh_shell__.shell.prompter.cli.application.buffer
-        buf = getattr(getattr(getattr(getattr(getattr(getattr(builtins, 
-               '__xonsh_shell__', None), 'shell', None), 'prompter', None),
-               'cli', None), 'application', None), 'buffer', None)
+        path = ['__xonsh_shell__', 'shell', 'prompter', 'cli', 'application', 
+                'buffer']
+        buf = builtins
+        for a in path:
+            buf = getattr(buf, a, None)
+            if buf is None:
+                break
         return buf
         
