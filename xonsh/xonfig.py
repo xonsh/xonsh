@@ -17,8 +17,6 @@ from xonsh.wizard import (Wizard, Pass, Message, Save, Load, YesNo,
 YN = "{GREEN}yes{NO_COLOR} or {RED}no{NO_COLOR} (default)? "
 HR = "'`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*'"
 WIZARD_HEAD = """
-{hr}
-
           Welcome to the xonsh configuration wizard!
           ------------------------------------------
 This will present a guided tour through setting up the xonsh static 
