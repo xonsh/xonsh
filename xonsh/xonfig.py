@@ -11,7 +11,7 @@ from xonsh import __version__ as XONSH_VERSION
 from xonsh import tools
 from xonsh.shell import is_readline_available, is_prompt_toolkit_available
 from xonsh.wizard import (Wizard, Pass, Message, Save, Load, YesNo, 
-    PromptVisitor)
+    PromptVisitor, While, create_truefalse_cond)
 
 
 YN = "{GREEN}yes{NO_COLOR} or {RED}no{NO_COLOR} (default)? "
@@ -38,7 +38,7 @@ For the configuration to take effect, you will need to restart xonsh.
 {hr}
 """.format(hr=HR)
 
-WIZARD_DO_FS = """
+WIZARD_FS = """
 {hr}
 
                       Foreign Shell Setup
@@ -51,14 +51,20 @@ aliases, and functions specified in the config files of these shells.
 Naturally, these shells must be available on the system to work. 
 Being able to share configuration (and source) from foreign shells 
 makes it easier to transition to and from xonsh.
-
-Would you like to configure your foreign shells?
 """.format(hr=HR) + YN 
 
 WIZARD_DO_EV = "EV: " + YN
 
 WIZARD_TAIL = """
 Thanks for using the xonsh configuration wizard!"""
+
+
+def make_fs():
+    """Makes the foreign shell part of the wizard."""
+    cond = create_truefalse_cond(prompt='Add a foreign shell, ' + YN)
+    fs = While(cond=cond, body=[
+        ])
+    return fs
 
 
 def make_wizard(default_file=None, confirm=False):
@@ -74,7 +80,8 @@ def make_wizard(default_file=None, confirm=False):
     wiz = Wizard(children=[
             Message(message=WIZARD_HEAD),
             Load(default_file=default_file, check=True),
-            YesNo(question=WIZARD_DO_FS, yes=Pass(), no=Pass()),
+            Message(message=WIZARD_FS),
+            make_fs(),
             YesNo(question=WIZARD_DO_EV, yes=Pass(), no=Pass()),
             Save(default_file=default_file, check=True),
             Message(message=WIZARD_TAIL),

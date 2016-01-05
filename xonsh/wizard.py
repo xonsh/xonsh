@@ -108,9 +108,9 @@ class While(Node):
     specifies the number to start the loop iteration at.
     """
 
-    attrs = ('cond', 'body', 'beg', 'path')
+    attrs = ('cond', 'body', 'idxname', 'beg', 'path')
 
-    def __init__(self, cond, body, beg=0, path=None):
+    def __init__(self, cond, body, idxname='idx', beg=0, path=None):
         """
         Parameters
         ----------
@@ -121,13 +121,16 @@ class While(Node):
             is convertable to a bool.
         body : sequence of nodes
             A list of node to execute on each iteration.
+        idxname : str, optional
+            The variable name for the index.
         beg : int, optional
-            The first idx value when evaluating path format strings.
+            The first index value when evaluating path format strings.
         path : str or sequence of str, optional
             A path within the storage object.
         """
         self.cond = cond
         self.body = body
+        self.idxname = idxname
         self.beg = beg
         self.path = path
 
@@ -219,6 +222,20 @@ class Load(StateFile):
     """Node for loading the state as a JSON file under a default or user
     given file name.
     """
+
+
+def create_truefalse_cond(prompt='yes or no (default)? ', path=None):
+    """This creates a basic condition function for use with nodes like While
+    or other conditions. The condition function creates and visits a TrueFalse
+    node and returns the result. This TrueFalse node takes the prompt and
+    path that is passed in here.
+    """
+    def truefalse_cond(visitor, node=None):
+        """Prompts the user for a true/false condition."""
+        tf = TrueFalse(prompt=prompt, path=path)
+        rtn = visitor.visit(tf)
+        return rtn
+    return cond
 
 
 #
@@ -347,6 +364,7 @@ class PrettyFormatter(Visitor):
             self.level -= 1
             s += '\n' + self.indent
         s += ']'
+        s += ',\n' + self.indent + 'idxname={0!r}'.format(node.idxname)
         s += ',\n' + self.indent + 'beg={0!r}'.format(node.beg)
         if node.path is not None:
             s += ',\n' + self.indent + 'path={0!r}'.format(node.path)
@@ -369,10 +387,14 @@ def ensure_str_or_int(x):
     return x
 
 
-def canon_path(path):
-    """Returns the canonical form of a path, which is a tuple of str or ints."""
+def canon_path(path, indices=None):
+    """Returns the canonical form of a path, which is a tuple of str or ints.
+    Indices may be optionally passed in.
+    """
     if not isinstance(path, str):
         return tuple(map(ensure_str_or_int, path))
+    if indices is not None:
+        path = path.format(**indices)
     path = path[1:] if path.startswith('/') else path
     path = path[:-1] if path.endswith('/') else path
     if len(path) == 0:
@@ -405,9 +427,10 @@ class StateVisitor(Visitor):
     This class can be optionally initialized with an existing state.
     """
 
-    def __init__(self, tree=None, state=None):
+    def __init__(self, tree=None, state=None, indices=None):
         super().__init__(tree=tree)
         self.state = {} if state is None else state
+        self.indices = {} if indices is None else indices
 
     def visit(self, node=None):
         if node is None:
@@ -417,12 +440,12 @@ class StateVisitor(Visitor):
         rtn = super().visit(node)
         path = getattr(node, 'path', None)
         if path is not None and rtn is not Unstorable:
-            self.store(path, rtn)            
+            self.store(path, rtn, indicies=self.indices)
         return rtn
 
-    def store(self, path, val):
+    def store(self, path, val, indicies=None):
         """Stores a value at the path location."""
-        path = canon_path(path)
+        path = canon_path(path, indicies=indices)
         loc = self.state
         for p, n in zip(path[:-1], path[1:]):
             if isinstance(p, str) and p not in loc:
@@ -485,6 +508,21 @@ class PromptVisitor(StateVisitor):
             else:
                 need_input = False
         return x
+
+    def visit_while(self, node):
+        rtns = []
+        origidx = self.indices.get(self.idxname, None)
+        self.indices[self.idxname] = idx = self.beg
+        while node.cond(visitor=self, node=node):
+            rtn = list(map(self.visit, node.body))
+            rtns.append(rtn)
+            idx += 1
+            self.indices[self.idxname] = idx
+        if origidx is None:
+            del self.indices[self.idxname]
+        else:
+            self.indices[self.idxname] = origidx
+        return rtns
 
     def visit_save(self, node):
         jstate = json.dumps(self.state, indent=1, sort_keys=True)
