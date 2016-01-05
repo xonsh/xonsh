@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Key bindings for prompt_toolkit xonsh shell."""
 import builtins
-
+import re
 from prompt_toolkit.filters import Filter, IsMultiline
 from prompt_toolkit.keys import Keys
 
@@ -25,6 +25,10 @@ def load_xonsh_bindings(key_bindings_manager):
     """
     handle = key_bindings_manager.registry.add_binding
     env = builtins.__xonsh_env__
+    indent_ = env.get('INDENT')
+
+    parens = re.compile('["\'].*[\\(\\)]*.*["\']')
+
 
     @handle(Keys.Tab, filter=TabShouldInsertIndentFilter())
     def _(event):
@@ -56,14 +60,26 @@ def load_xonsh_bindings(key_bindings_manager):
         - Any text exists below cursor position (relevant when editing previous
         multiline blocks)
         """
+
         b = event.cli.current_buffer
+
         if b.document.char_before_cursor == ':':
             b.newline()
-            b.insert_text(env.get('INDENT'), fire_event=False)
+            b.insert_text(indent_, fire_event=False)
         elif (not b.document.on_first_line and
            not b.document.current_line.isspace()):
             b.newline(copy_margin=True)
-        elif b.document.text.count('(') > b.document.text.count(')'):
+        #if there are stray parens hanging aroung inside quotes
+        elif (re.search(parens, b.document.text) is not None and
+              ((b.document.text.count('(') -
+              re.search(parens, b.document.text).group().count('('))
+              >
+              (b.document.text.count(')') -
+               re.search(parens, b.document.text).group().count(')')))):
+            b.newline()
+        #and if there aren't stray parens hanging around inside quotes
+        elif (re.search(parens, b.document.text) is None and
+              b.document.text.count('(') > b.document.text.count(')')):
             b.newline()
         elif b.document.char_before_cursor == '\\':
             b.newline()
