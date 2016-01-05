@@ -1,5 +1,6 @@
 """Tools for creating command-line and web-based wizards from a tree of nodes.
 """
+import os
 import ast
 import json
 import builtins
@@ -439,9 +440,9 @@ class PromptVisitor(StateVisitor):
     def visit_save(self, node):
         jstate = json.dumps(self.state, indent=1, sort_keys=True)
         if node.check:
-            msg = 'The current state is:\n{0}\n'
+            msg = 'The current state is:\n\n{0}\n'
             print(msg.format(textwrap.indent(jstate, '    ')))
-            ap = 'Would you like to save the file, yes or no (default)? '
+            ap = 'Would you like to save this state, yes or no (default)? '
             asker = TrueFalse(prompt=ap)
             do_save = self.visit(asker)
             if not do_save:

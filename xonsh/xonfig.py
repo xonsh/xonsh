@@ -10,12 +10,15 @@ import ply
 from xonsh import __version__ as XONSH_VERSION
 from xonsh import tools
 from xonsh.shell import is_readline_available, is_prompt_toolkit_available
-from xonsh.wizard import Wizard, Pass, Message, Save, Load, YesNo
+from xonsh.wizard import (Wizard, Pass, Message, Save, Load, YesNo, 
+    PromptVisitor)
 
 
 YN = "{GREEN}yes{NO_COLOR} or {RED}no{NO_COLOR} (default)? "
 HR = "'`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*'"
-WIZARD_HEAD = """{hr}
+WIZARD_HEAD = """
+{hr}
+
           Welcome to the xonsh configuration wizard!
           ------------------------------------------
 This will present a guided tour through setting up the xonsh static 
@@ -33,9 +36,13 @@ This wizard has two main phases: foreign shell setup and environment
 variable setup. Each phase may be skipped in its entirety.
 
 For the configuration to take effect, you will need to restart xonsh.
-{hr}""".format(hr=HR)
 
-WIZARD_DO_FS = """{hr}
+{hr}
+""".format(hr=HR)
+
+WIZARD_DO_FS = """
+{hr}
+
                       Foreign Shell Setup
                       -------------------
 The xonsh shell has the ability to interface with foreign shells such
@@ -47,13 +54,13 @@ Naturally, these shells must be available on the system to work.
 Being able to share configuration (and source) from foreign shells 
 makes it easier to transition to and from xonsh.
 
-Would you like to configure any foreign shells, """.format(hr=HR) + YN 
+Would you like to configure your foreign shells?
+""".format(hr=HR) + YN 
 
-WIZARD_DO_EV = YN
+WIZARD_DO_EV = "EV: " + YN
 
 WIZARD_TAIL = """
-Thanks for using the xonsh configuration wizard!
-""".strip()
+Thanks for using the xonsh configuration wizard!"""
 
 
 def make_wizard(default_file=None, confirm=False):
@@ -85,6 +92,8 @@ def _wizard(ns):
     env = builtins.__xonsh_env__
     fname = env.get('XONSHCONFIG') if ns.file is None else ns.file
     wiz = make_wizard(default_file=fname, confirm=ns.confirm)
+    pv = PromptVisitor(wiz)
+    pv.visit()
 
 
 def _format_human(data):
