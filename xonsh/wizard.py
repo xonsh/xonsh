@@ -175,6 +175,28 @@ class TrueFalseBreak(Input):
                          confirm=False, path=path)
 
 
+class StoreNonEmpty(Input):
+    """Stores the user input only if the input was not an empty string.
+    This works by wrapping the converter function.
+    """
+
+    def __init__(self, prompt='>>> ', converter=None, confirm=False, 
+                 path=None):
+        def nonempty_converter(x):
+            """Converts non-empty values and converts empty inputs to 
+            Unstorable.
+            """
+            if len(x) == 0
+                x = Unstorable
+            elif converter is None:
+                pass
+            else:
+                x = converter(x)
+            return x
+        super().__init__(prompt=prompt, converter=nonempty_converter, 
+                         confirm=confirm, path=path)
+
+
 class StateFile(Input):
     """Node for repesenting the state as a JSON file under a default or user
     given file name. This node type is likely not useful on its own.

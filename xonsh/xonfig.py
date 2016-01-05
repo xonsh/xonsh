@@ -1,5 +1,6 @@
 """The xonsh configuration (xonfig) utility."""
 import os
+import ast
 import json
 import  builtins
 import functools
@@ -11,7 +12,7 @@ from xonsh import __version__ as XONSH_VERSION
 from xonsh import tools
 from xonsh.shell import is_readline_available, is_prompt_toolkit_available
 from xonsh.wizard import (Wizard, Pass, Message, Save, Load, YesNo, 
-    PromptVisitor, While, create_truefalse_cond)
+    PromptVisitor, While, StoreNonEmpty, create_truefalse_cond)
 
 
 YN = "{GREEN}yes{NO_COLOR} or {RED}no{NO_COLOR} (default)? "
@@ -63,6 +64,35 @@ def make_fs():
     """Makes the foreign shell part of the wizard."""
     cond = create_truefalse_cond(prompt='Add a foreign shell, ' + YN)
     fs = While(cond=cond, body=[
+        Input('shell name (e.g. bash): ', path='/foreign_shells/{idx}/shell'),
+        StoreNonEmpty('interactive shell [bool, default=True]: ',
+                      converter=tools.to_bool,
+                      path='/foreign_shells/{idx}/interactive')),
+        StoreNonEmpty('login shell [bool, default=False]: ',
+                      converter=tools.to_bool,
+                      path='/foreign_shells/{idx}/login')),
+        StoreNonEmpty("env command [str, default='env']: ",
+                      path='/foreign_shells/{idx}/envcmd')),
+        StoreNonEmpty("alias command [str, default='alias']: ",
+                      path='/foreign_shells/{idx}/aliascmd')),
+        StoreNonEmpty(("extra command line arguments [list of str, "
+                       "default=[]]: "),
+                      converter=ast.literal_eval,
+                      path='/foreign_shells/{idx}/extra_args')),
+        StoreNonEmpty('current environment [dict, default=None]: ',
+                      converter=ast.literal_eval,
+                      path='/foreign_shells/{idx}/currenv')),
+        StoreNonEmpty('safely handle exceptions [bool, default=True]: ',
+                      converter=tools.to_bool,
+                      path='/foreign_shells/{idx}/safe')),
+        StoreNonEmpty("pre-command [str, default='']: ",
+                      path='/foreign_shells/{idx}/prevcmd')),
+        StoreNonEmpty("post-command [str, default='']: ",
+                      path='/foreign_shells/{idx}/postcmd')),
+        StoreNonEmpty("foreign function command [str, default=None]: ",
+                      path='/foreign_shells/{idx}/funcscmd')),
+        StoreNonEmpty("source command [str, default=None]: ",
+                      path='/foreign_shells/{idx}/sourcer')),
         ])
     return fs
 
