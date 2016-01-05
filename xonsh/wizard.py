@@ -120,7 +120,7 @@ class YesNo(Question):
             A path within the storage object.
         """
         responses = {True: yes, False: no}
-        super().__init__(self, question, responses, converter=to_bool,
+        super().__init__(question, responses, converter=to_bool,
                          path=path)
 
 class TrueFalse(Input):

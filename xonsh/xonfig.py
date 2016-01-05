@@ -13,7 +13,7 @@ from xonsh.shell import is_readline_available, is_prompt_toolkit_available
 from xonsh.wizard import Wizard, Pass, Message, Save, Load, YesNo
 
 
-"{GREEN}yes{NO_COLOR} or {RED}no{NO_COLOR} (default)? "
+YN = "{GREEN}yes{NO_COLOR} or {RED}no{NO_COLOR} (default)? "
 HR = "'`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*'"
 WIZARD_HEAD = """{hr}
           Welcome to the xonsh configuration wizard!
