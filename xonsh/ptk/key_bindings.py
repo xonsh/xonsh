@@ -5,6 +5,7 @@ import builtins
 from prompt_toolkit.filters import Filter, IsMultiline
 from prompt_toolkit.keys import Keys
 
+
 class TabShouldInsertIndentFilter(Filter):
     """
     Filter that is intended to check if <Tab> should insert indent instead of
@@ -43,10 +44,10 @@ def load_xonsh_bindings(key_bindings_manager):
     @handle(Keys.ControlJ, filter=IsMultiline())
     def multiline_carriage_return(event):
         """
-        Preliminary parser to determine if 'Enter' key should send command to the
-        xonsh parser for execution or should insert a newline for continued
+        Preliminary parser to determine if 'Enter' key should send command to
+        the xonsh parser for execution or should insert a newline for continued
         input.
-        
+
         Current 'triggers' for inserting a newline are:
         - Not on first line of buffer and line is non-empty
         - Previous character is a colon (covers if, for, etc...)
@@ -57,7 +58,7 @@ def load_xonsh_bindings(key_bindings_manager):
         """
         b = event.cli.current_buffer
         if (not b.document.on_first_line and
-              not b.document.current_line.isspace()):
+           not b.document.current_line.isspace()):
             b.newline(copy_margin=True)
         elif b.document.char_before_cursor == ':':
             b.newline()

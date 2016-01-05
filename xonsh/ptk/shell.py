@@ -1,16 +1,12 @@
 # -*- coding: utf-8 -*-
 """The prompt_toolkit based xonsh shell."""
-import os
-import sys
 import builtins
 from warnings import warn
 
 from prompt_toolkit.key_binding.manager import KeyBindingManager
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.layout.lexers import PygmentsLexer
-from prompt_toolkit.filters import Condition, IsMultiline
-from prompt_toolkit.keys import Keys
-from pygments.token import Token
+from prompt_toolkit.filters import Condition
 from pygments.style import Style
 from pygments.styles.default import DefaultStyle
 from pygments.token import (Keyword, Name, Comment, String, Error, Number,

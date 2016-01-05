@@ -53,4 +53,3 @@ class PromptToolkitCompleter(Completer):
             else:
                 return LayoutDimension()
         window._height = comp_height
-    
