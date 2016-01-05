@@ -100,6 +100,38 @@ class Input(Node):
         self.confirm = confirm
         self.path = path
 
+
+class While(Node):
+    """Computes a body while a condition function evaluates to true.
+    The condition function has the form cond(visitor=None, node=None) and
+    should return an object that is convertable to a bool. The beg attribute
+    specifies the number to start the loop iteration at.
+    """
+
+    attrs = ('cond', 'body', 'beg', 'path')
+
+    def __init__(self, cond, body, beg=0, path=None):
+        """
+        Parameters
+        ----------
+        cond : callable
+            Function that determines if the next loop iteration should 
+            be executed. The condition function has the form 
+            cond(visitor=None, node=None) and should return an object that 
+            is convertable to a bool.
+        body : sequence of nodes
+            A list of node to execute on each iteration.
+        beg : int, optional
+            The first idx value when evaluating path format strings.
+        path : str or sequence of str, optional
+            A path within the storage object.
+        """
+        self.cond = cond
+        self.body = body
+        self.beg = beg
+        self.path = path
+
+
 #
 # Helper nodes
 #
@@ -302,6 +334,23 @@ class PrettyFormatter(Visitor):
     def visit_statefile(self, node):
         s = '{0}(default_file={1!r}, check={2})'
         s = s.format(node.__class__.__name__, node.default_file, node.check)
+        return s
+
+    def visit_while(self, node):
+        s = '{0}(cond={1!r}'.format(node.__class__.__name__, node.cond)
+        s += ',\n' + self.indent + 'body=['
+        if len(node.body) > 0:
+            s += '\n'
+            self.level += 1
+            s += textwrap.indent(',\n'.join(map(self.visit, node.body)), 
+                                 self.indent)
+            self.level -= 1
+            s += '\n' + self.indent
+        s += ']'
+        s += ',\n' + self.indent + 'beg={0!r}'.format(node.beg)
+        if node.path is not None:
+            s += ',\n' + self.indent + 'path={0!r}'.format(node.path)
+        s += '\n)'
         return s
 
 
