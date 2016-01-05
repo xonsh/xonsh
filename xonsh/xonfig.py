@@ -81,7 +81,7 @@ def make_wizard(default_file=None, confirm=False):
     return wiz
 
 
-def _wizard(ns);
+def _wizard(ns):
     env = builtins.__xonsh_env__
     fname = env.get('XONSHCONFIG') if ns.file is None else ns.file
     wiz = make_wizard(default_file=fname, confirm=ns.confirm)
