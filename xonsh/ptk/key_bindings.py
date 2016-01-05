@@ -26,8 +26,9 @@ def load_xonsh_bindings(key_bindings_manager):
     handle = key_bindings_manager.registry.add_binding
     env = builtins.__xonsh_env__
     indent_ = env.get('INDENT')
-
     parens = re.compile('["\'].*[\\(\\)]*.*["\']')
+
+    DEDENT_TOKENS = frozenset(['raise', 'return', 'pass', 'break', 'continue'])
 
 
     @handle(Keys.Tab, filter=TabShouldInsertIndentFilter())
@@ -66,8 +67,12 @@ def load_xonsh_bindings(key_bindings_manager):
         if b.document.char_before_cursor == ':':
             b.newline()
             b.insert_text(indent_, fire_event=False)
+        elif (not len(b.document.current_line) == 0 and
+              b.document.current_line.split(maxsplit=1)[0] in DEDENT_TOKENS):
+            b.newline(copy_margin=True)
+            _ = b.delete_before_cursor(count=len(indent_))
         elif (not b.document.on_first_line and
-           not b.document.current_line.isspace()):
+           not len(b.document.current_line) == 0):
             b.newline(copy_margin=True)
         #if there are stray parens hanging aroung inside quotes
         elif (re.search(parens, b.document.text) is not None and
