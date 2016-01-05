@@ -30,6 +30,7 @@ class _TeeOut(object):
 
     def write(self, data):
         """Writes data to the original stdout and the buffer."""
+        data = data.replace('\001', '').replace('\002', '')
         self.stdout.write(data)
         self.buffer.write(data)
 
@@ -62,6 +63,7 @@ class _TeeErr(object):
 
     def write(self, data):
         """Writes data to the original stderr and the buffer."""
+        data = data.replace('\001', '').replace('\002', '')
         self.stderr.write(data)
         self.buffer.write(data)
 

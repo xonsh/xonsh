@@ -8,7 +8,7 @@ import textwrap
 from pprint import pformat
 from collections.abc import MutableSequence, Mapping, Sequence
 
-from xonsh.tools import to_bool, to_bool_or_break, backup_file
+from xonsh.tools import to_bool, to_bool_or_break, backup_file, print_color
 
 #
 # Nodes themselves 
@@ -484,6 +484,10 @@ class StateVisitor(Visitor):
         loc[p] = val
 
 
+YN = "{GREEN}yes{NO_COLOR} or {RED}no{NO_COLOR} (default)? "
+YNB = ('{GREEN}yes{NO_COLOR}, {RED}no{NO_COLOR} (default), or '
+       '{YELLOW}break{NO_COLOR}? ')
+
 class PromptVisitor(StateVisitor):
     """Visits the nodes in the tree via the a command-line prompt."""
 
@@ -500,7 +504,7 @@ class PromptVisitor(StateVisitor):
         pass
 
     def visit_message(self, node):
-        print(node.message)
+        print_color(node.message)
 
     def visit_question(self, node):
         self.env['PROMPT'] = node.question
@@ -520,7 +524,7 @@ class PromptVisitor(StateVisitor):
             if node.confirm:
                 msg = 'Would you like to keep the input: {0}'
                 print(msg.format(pformat(x)))
-                confirmer = TrueFalseBreak()
+                confirmer = TrueFalseBreak(prompt=YNB)
                 status = self.visit(confirmer)
                 if isinstance(status, str) and status == 'break':
                     x = Unstorable
@@ -551,7 +555,7 @@ class PromptVisitor(StateVisitor):
         if node.check:
             msg = 'The current state is:\n\n{0}\n'
             print(msg.format(textwrap.indent(jstate, '    ')))
-            ap = 'Would you like to save this state, yes or no (default)? '
+            ap = 'Would you like to save this state, ' + YN
             asker = TrueFalse(prompt=ap)
             do_save = self.visit(asker)
             if not do_save:
@@ -567,8 +571,7 @@ class PromptVisitor(StateVisitor):
 
     def visit_load(self, node):
         if node.check:
-            ap = ('Would you like to load an existing file, '
-                  'yes or no (default)? ')
+            ap = 'Would you like to load an existing file, ' + YN
             asker = TrueFalse(prompt=ap)
             do_load = self.visit(asker)
             if not do_load:
@@ -579,7 +582,8 @@ class PromptVisitor(StateVisitor):
         if os.path.isfile(fname):
             with open(fname, 'r') as f:
                 self.state = json.loads(f)
-            print('{0!r} loaded.'.format(fname))
+            print_color('{{GREEN}}{0!r} loaded.{{NO_COLOR}}'.format(fname))
         else:
-            print('{0!r} could not be found, continuing.'.format(fname))
+            print_color(('{{RED}}{0!r} could not be found, '
+                         'continuing.{{NO_COLOR}}').format(fname))
         return fname

@@ -12,14 +12,13 @@ from xonsh import __version__ as XONSH_VERSION
 from xonsh import tools
 from xonsh.shell import is_readline_available, is_prompt_toolkit_available
 from xonsh.wizard import (Wizard, Pass, Message, Save, Load, YesNo, Input,
-    PromptVisitor, While, StoreNonEmpty, create_truefalse_cond)
+    PromptVisitor, While, StoreNonEmpty, create_truefalse_cond, YN)
 
 
-YN = "{GREEN}yes{NO_COLOR} or {RED}no{NO_COLOR} (default)? "
 HR = "'`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*'"
 WIZARD_HEAD = """
-          Welcome to the xonsh configuration wizard!
-          ------------------------------------------
+          {{BOLD_WHITE}}Welcome to the xonsh configuration wizard!{{NO_COLOR}}
+          {{YELLOW}}------------------------------------------{{NO_COLOR}}
 This will present a guided tour through setting up the xonsh static 
 config file. Xonsh will automatically ask you if you want to run this 
 wizard if the configuration file does not exist. However, you can
@@ -42,8 +41,8 @@ For the configuration to take effect, you will need to restart xonsh.
 WIZARD_FS = """
 {hr}
 
-                      Foreign Shell Setup
-                      -------------------
+                      {{BOLD_WHITE}}Foreign Shell Setup{{NO_COLOR}}
+                      {{YELLOW}}-------------------{{NO_COLOR}}
 The xonsh shell has the ability to interface with foreign shells such
 as Bash, zsh, or fish. 
 
@@ -54,7 +53,18 @@ Being able to share configuration (and source) from foreign shells
 makes it easier to transition to and from xonsh.
 """.format(hr=HR)
 
-WIZARD_DO_EV = "EV: " + YN
+WIZARD_ENV = """
+{hr}
+
+                  {{BOLD_WHITE}}Environment Variable Setup{{NO_COLOR}}
+                  {{YELLOW}}--------------------------{{NO_COLOR}}
+The xonsh shell also allows you to setup environment variables from
+the static configuration file. Any variables set in this way are
+superceded by the definitions in the xonshrc or on the command line.
+Still, setting environment variables in this way can help define
+options that are global to the system or user.
+
+Would you like to set env vars now, """.format(hr=HR) + YN
 
 WIZARD_TAIL = """
 Thanks for using the xonsh configuration wizard!"""
@@ -98,6 +108,17 @@ def make_fs():
     return fs
 
 
+def make_envvar(name):
+    """Makes a StoreNonEmpty node for an environment variable."""
+    
+
+def make_env():
+    """Makes an environment variable wizard."""
+    wiz = Wizard(children=[
+        ])
+    return wiz
+
+
 def make_wizard(default_file=None, confirm=False):
     """Makes a configuration wizard for xonsh config file.
 
@@ -113,13 +134,12 @@ def make_wizard(default_file=None, confirm=False):
             Load(default_file=default_file, check=True),
             Message(message=WIZARD_FS),
             make_fs(),
-            YesNo(question=WIZARD_DO_EV, yes=Pass(), no=Pass()),
+            YesNo(question=WIZARD_ENV, yes=make_env(), no=Pass()),
             Save(default_file=default_file, check=True),
             Message(message=WIZARD_TAIL),
             ])
     if confirm:
-        q = ('Would you like to run the xonsh configuration wizard now?\n'
-             'yes or no (default)? ')
+        q = 'Would you like to run the xonsh configuration wizard now?\n' + YN
         wiz = YesNo(question=q, yes=wiz, no=Pass())
     return wiz
 

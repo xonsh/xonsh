@@ -816,12 +816,17 @@ def format_prompt_for_prompt_toolkit(prompt):
     return token_names, cstyles, strings
 
 
+def format_color(string):
+    """Formats strings that contain xonsh.tools.TERM_COLORS values."""
+    s = string.format(**TERM_COLORS).replace('\001', '').replace('\002', '')
+    return s
+
+
 def print_color(string, file=sys.stdout):
     """Print strings that contain xonsh.tools.TERM_COLORS values. By default
     `sys.stdout` is used as the output stream but an alternate can be specified
     by the `file` keyword argument."""
-    print(string.format(**TERM_COLORS).replace('\001', '').replace('\002', ''),
-          file=file)
+    print(format_color(string), file=file)
 
 _RE_STRING_START = "[bBrRuU]*"
 _RE_STRING_TRIPLE_DOUBLE = '"""'
