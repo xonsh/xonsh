@@ -186,7 +186,7 @@ class StoreNonEmpty(Input):
             """Converts non-empty values and converts empty inputs to 
             Unstorable.
             """
-            if len(x) == 0
+            if len(x) == 0:
                 x = Unstorable
             elif converter is None:
                 pass
