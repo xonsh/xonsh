@@ -11,7 +11,7 @@ import ply
 from xonsh import __version__ as XONSH_VERSION
 from xonsh import tools
 from xonsh.shell import is_readline_available, is_prompt_toolkit_available
-from xonsh.wizard import (Wizard, Pass, Message, Save, Load, YesNo, 
+from xonsh.wizard import (Wizard, Pass, Message, Save, Load, YesNo, Input,
     PromptVisitor, While, StoreNonEmpty, create_truefalse_cond)
 
 
@@ -52,7 +52,7 @@ aliases, and functions specified in the config files of these shells.
 Naturally, these shells must be available on the system to work. 
 Being able to share configuration (and source) from foreign shells 
 makes it easier to transition to and from xonsh.
-""".format(hr=HR) + YN 
+""".format(hr=HR)
 
 WIZARD_DO_EV = "EV: " + YN
 

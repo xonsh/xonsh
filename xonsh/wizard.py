@@ -257,7 +257,7 @@ def create_truefalse_cond(prompt='yes or no (default)? ', path=None):
         tf = TrueFalse(prompt=prompt, path=path)
         rtn = visitor.visit(tf)
         return rtn
-    return cond
+    return truefalse_cond
 
 
 #
@@ -462,12 +462,12 @@ class StateVisitor(Visitor):
         rtn = super().visit(node)
         path = getattr(node, 'path', None)
         if path is not None and rtn is not Unstorable:
-            self.store(path, rtn, indicies=self.indices)
+            self.store(path, rtn, indices=self.indices)
         return rtn
 
-    def store(self, path, val, indicies=None):
+    def store(self, path, val, indices=None):
         """Stores a value at the path location."""
-        path = canon_path(path, indicies=indices)
+        path = canon_path(path, indices=indices)
         loc = self.state
         for p, n in zip(path[:-1], path[1:]):
             if isinstance(p, str) and p not in loc:
@@ -533,17 +533,17 @@ class PromptVisitor(StateVisitor):
 
     def visit_while(self, node):
         rtns = []
-        origidx = self.indices.get(self.idxname, None)
-        self.indices[self.idxname] = idx = self.beg
+        origidx = self.indices.get(node.idxname, None)
+        self.indices[node.idxname] = idx = node.beg
         while node.cond(visitor=self, node=node):
             rtn = list(map(self.visit, node.body))
             rtns.append(rtn)
             idx += 1
-            self.indices[self.idxname] = idx
+            self.indices[node.idxname] = idx
         if origidx is None:
-            del self.indices[self.idxname]
+            del self.indices[node.idxname]
         else:
-            self.indices[self.idxname] = origidx
+            self.indices[node.idxname] = origidx
         return rtns
 
     def visit_save(self, node):
