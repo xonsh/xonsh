@@ -57,12 +57,12 @@ def load_xonsh_bindings(key_bindings_manager):
         multiline blocks)
         """
         b = event.cli.current_buffer
-        if (not b.document.on_first_line and
-           not b.document.current_line.isspace()):
-            b.newline(copy_margin=True)
-        elif b.document.char_before_cursor == ':':
+        if b.document.char_before_cursor == ':':
             b.newline()
             b.insert_text(env.get('INDENT'), fire_event=False)
+        elif (not b.document.on_first_line and
+           not b.document.current_line.isspace()):
+            b.newline(copy_margin=True)
         elif b.document.text.count('(') > b.document.text.count(')'):
             b.newline()
         elif b.document.char_before_cursor == '\\':
