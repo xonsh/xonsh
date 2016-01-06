@@ -581,7 +581,7 @@ class PromptVisitor(StateVisitor):
             fname = node.default_file
         if os.path.isfile(fname):
             with open(fname, 'r') as f:
-                self.state = json.loads(f)
+                self.state = json.load(f)
             print_color('{{GREEN}}{0!r} loaded.{{NO_COLOR}}'.format(fname))
         else:
             print_color(('{{RED}}{0!r} could not be found, '

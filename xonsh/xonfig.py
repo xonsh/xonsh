@@ -178,7 +178,7 @@ def make_wizard(default_file=None, confirm=False):
             Message(message=WIZARD_TAIL),
             ])
     if confirm:
-        q = 'Would you like to run the xonsh configuration wizard now?\n' + YN
+        q = 'Would you like to run the xonsh configuration wizard now, ' + YN
         wiz = YesNo(question=q, yes=wiz, no=Pass())
     return wiz
 

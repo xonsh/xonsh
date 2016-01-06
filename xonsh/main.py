@@ -182,6 +182,10 @@ def main(argv=None):
         # otherwise, enter the shell
         env['XONSH_INTERACTIVE'] = True
         ignore_sigtstp()
+        if not os.path.isfile(env.get('XONSHCONFIG')):
+            print('Could not find xonsh configuration file.')
+            code = '$[xonfig wizard --confirm]'
+            shell.execer.exec(code, mode='single', glbs=shell.ctx)
         shell.cmdloop()
     postmain(args)
 
