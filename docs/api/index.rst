@@ -56,3 +56,5 @@ For those of you who want the gritty details.
     main
     pyghooks
     jupyter_kernel
+    wizard
+    xonfig

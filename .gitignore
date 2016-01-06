@@ -16,6 +16,7 @@ build/
 dist/
 xonsh.egg-info/
 docs/_build/
+docs/envvarsbody
 
 # temporary files from vim and emacs
 *~

@@ -10,6 +10,7 @@
 
 import sys, os
 from xonsh import __version__ as XONSH_VERSION
+from xonsh.environ import DEFAULT_DOCS, Env
 
 # -- General configuration -----------------------------------------------------
 
@@ -230,3 +231,43 @@ autosummary_generate = []
 # Prevent numpy from making silly tables
 numpydoc_show_class_members = False
 
+
+#
+# Auto-generate some docs
+#
+
+def make_envvars():
+    env = Env()
+    vars = sorted(DEFAULT_DOCS.keys())
+    s = ('.. list-table::\n'
+         '    :header-rows: 0\n\n')
+    table = []
+    ncol = 3
+    row = '    {0} - :ref:`${1} <{2}>`'
+    for i, var in enumerate(vars):
+        star = '*' if i%ncol == 0 else ' '
+        table.append(row.format(star, var, var.lower()))
+    table.extend(['      -']*((ncol - len(vars)%ncol)%ncol))
+    s += '\n'.join(table) + '\n\n'
+    s += ('Listing\n'
+          '-------\n\n')
+    sec = ('.. _{low}:\n\n'
+           '{title}\n'
+           '{under}\n'
+           '{docstr}\n\n'
+           '**configurable:** {configurable}\n\n'
+           '**default:** {default}\n\n'
+           '-------\n\n')
+    for var in vars:
+        title = '$' + var
+        under = '.' * len(title)
+        vd = env.get_docs(var)
+        s += sec.format(low=var.lower(), title=title, under=under, 
+                        docstr=vd.docstr, configurable=vd.configurable, 
+                        default=vd.default)
+    s = s[:-9]
+    fname = os.path.join(os.path.dirname(__file__), 'envvarsbody')
+    with open(fname, 'w') as f:
+        f.write(s)
+
+make_envvars()

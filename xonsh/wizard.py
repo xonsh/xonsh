@@ -566,7 +566,7 @@ class PromptVisitor(StateVisitor):
         if os.path.isfile(fname):
             backup_file(fname)
         else:
-            os.makedirs(os.path.split(fname)[0], exist_ok=True)
+            os.makedirs(os.path.dirname(fname), exist_ok=True)
         with open(fname, 'w') as f:
             f.write(jstate)
         return fname
