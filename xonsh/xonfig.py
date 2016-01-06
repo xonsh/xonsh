@@ -136,9 +136,11 @@ def make_envvar(name):
     default = vd.default
     if '\n' in default:
         default = '\n' + _wrap_paragraphs(default, width=69)
-    curr = pformat(env.get(name))
+    curr = pformat(env.get(name), width=69)
     if '\n' in curr:
-        curr = '\n' + _wrap_paragraphs(curr, width=69)
+        curr = '\n' + curr
+    if 'NO_COLOR' in curr:
+        curr = curr.replace('{', '{{').replace('}', '}}')
     prompt = ENVVAR_PROMPT.format(name=name, default=default, current=curr,
                                 docstr=_wrap_paragraphs(vd.docstr, width=69))
     ens = env.get_ensurer(name)

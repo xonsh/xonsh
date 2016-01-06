@@ -828,6 +828,18 @@ def print_color(string, file=sys.stdout):
     by the `file` keyword argument."""
     print(format_color(string), file=file)
 
+
+def escape_color(string):
+    """Escapes color formatting, ie '{RED}' becomes '{{RED}}'."""
+    s = string
+    for color in TERM_COLORS.keys():
+        if color in s:
+            bc = '{' + color + '}'  # braced color
+            dbc = '{' + bc + '}'  # double-braced color
+            s = s.replace(bc, dbc)
+    return s
+
+
 _RE_STRING_START = "[bBrRuU]*"
 _RE_STRING_TRIPLE_DOUBLE = '"""'
 _RE_STRING_TRIPLE_SINGLE = "'''"
