@@ -306,79 +306,72 @@ DEFAULT_DOCS = {
         'List of strings representing where to look for executables.'),
     'PATHEXT': VarDocs('List of strings for filtering valid exeutables by.'),
     'PROMPT': VarDocs(
-        ('xonsh.environ.DEFAULT_PROMPT  
-        ('The prompt text.  May contain keyword arguments which are auto-formatted,
-        see `Customizing the Prompt <tutorial.html#customizing-the-prompt>`_.
+        'The prompt text. May contain keyword arguments which are '
+        "auto-formatted, see 'Customizing the Prompt' at "
+        'http://xonsh.org/tutorial.html#customizing-the-prompt.'
+        default='xonsh.environ.DEFAULT_PROMPT'),
     'PROMPT_TOOLKIT_COLORS': VarDocs(
-        ('``{}``
-        ('This is a mapping of from color names to HTML color codes.  Whenever
-        prompt-toolkit would color a word a particular color (in the prompt, or
-        in syntax highlighting), it will use the value specified here to
-        represent that color, instead of its default.  If a color is not
-        specified here, prompt-toolkit uses the colors from
-        ``xonsh.tools._PT_COLORS``.
+        'This is a mapping of from color names to HTML color codes. Whenever '
+        'prompt-toolkit would color a word a particular color (in the prompt, '
+        'or in syntax highlighting), it will use the value specified here to '
+        'represent that color, instead of its default.  If a color is not '
+        'specified here, prompt-toolkit uses the colors from '
+        "'xonsh.tools._PT_COLORS'.", configurable=False), 
     'PROMPT_TOOLKIT_STYLES': VarDocs(
-        ('``None``
-        ('This is a mapping of user-specified styles for prompt-toolkit. See the 
-        prompt-toolkit documentation for more details. If None, this is skipped.
+        'This is a mapping of user-specified styles for prompt-toolkit. See '
+        'the prompt-toolkit documentation for more details. If None, this is '
+        'skipped.'),
     'PUSHD_MINUS': VarDocs(
-        ('``False``
-        ('Flag for directory pushing functionality. False is the normal behaviour.
+        'Flag for directory pushing functionality. False is the normal '
+        'behaviour.'),
     'PUSHD_SILENT': VarDocs(
-        ('``False``
-        ('Whether or not to supress directory stack manipulation output.
+        'Whether or not to supress directory stack manipulation output.'),
     'SHELL_TYPE': VarDocs(
-        ('``'prompt_toolkit'`` if on Windows, otherwise ``'readline'``
-        ('Which shell is used. Currently two base shell types are supported: 
-        ``'readline'`` that is backed by Python's readline module, and 
-        ``'prompt_toolkit'`` that uses external library of the same name. 
-        To use the prompt_toolkit shell you need to have 
-        `prompt_toolkit <https://github.com/jonathanslenders/python-prompt-toolkit>`_
-        library installed. To specify which shell should be used, do so in the run 
-        control file. Additionally, you may also set this value to ``'random'``
-        to get a random choice of shell type on startup.
+        'Which shell is used. Currently two base shell types are supported:\n\n'
+        "    - 'readline' that is backed by Python's readline module, and\n"
+        "    - 'prompt_toolkit' that uses external library of the same name.\n" 
+        "    - 'random' selects a random shell from the above on startup.\n\n"
+        'To use the prompt_toolkit shell you need to have prompt_toolkit '
+        '(https://github.com/jonathanslenders/python-prompt-toolkit)'
+        'library installed. To specify which shell should be used, do so in '
+        'the run control file.', default=("'prompt_toolkit' if on Windows, "
+        "and 'readline' otherwise.")),
     'SUGGEST_COMMANDS': VarDocs(
-        ('``True``
-        ('When a user types an invalid command, xonsh will try to offer suggestions of 
-        similar valid commands if this is ``True``.
+        'When a user types an invalid command, xonsh will try to offer '
+        'suggestions of similar valid commands if this is True.'),
     'SUGGEST_MAX_NUM': VarDocs(
-        ('``5``
-        ('xonsh will show at most this many suggestions in response to an invalid command.
-        If negative, there is no limit to how many suggestions are shown.
+        'xonsh will show at most this many suggestions in response to an '
+        'invalid command. If negative, there is no limit to how many '
+        'suggestions are shown.'),
     'SUGGEST_THRESHOLD': VarDocs(
-        ('``3``
-        ('An error threshold. If the Levenshtein distance between the entered command and 
-        a valid command is less than this value, the valid command will be offered as a 
-        suggestion.
+        'An error threshold. If the Levenshtein distance between the entered '
+        'command and a valid command is less than this value, the valid '
+        'command will be offered as a suggestion.'),
     'TEEPTY_PIPE_DELAY': VarDocs(
-        ('``0.01``
-        ('The number of [seconds] to delay a spawned process if it has information
-        being piped in via stdin. This value must be a float. If a value less than 
-        or equal to zero is passed in, no delay is used. This can be used to fix 
-        situations where a spawned process, such as piping into ``grep``, exits
-        too quickly for the piping operation itself. TeePTY (and thus this variable)
-        are currently only used when ``$XONSH_STORE_STDOUT`` is ``True``.
+        'The number of [seconds] to delay a spawned process if it has '
+        'information being piped in via stdin. This value must be a float. '
+        'If a value less than or equal to zero is passed in, no delay is '
+        'used. This can be used to fix situations where a spawned process, '
+        'such as piping into \'grep\', exits too quickly for the piping '
+        'operation itself. TeePTY (and thus this variable) are currently '
+        'only used when $XONSH_STORE_STDOUT is True.', configurable=ON_LINUX),
     'TERM': VarDocs(
-        ('No default
-        ('TERM is sometimes set by the terminal emulator. This is used (when valid)
-        to determine whether or not to set the title. Users shouldn't need to 
-        set this themselves.
+        'TERM is sometimes set by the terminal emulator. This is used (when 
+        "valid) to determine whether or not to set the title. Users shouldn't "
+        "need to set this themselves.", configurable=False),
     'TITLE': VarDocs(
-        ('xonsh.environ.DEFAULT_TITLE
-        ('The title text for the window in which xonsh is running. Formatted in the same 
-        manner as PROMPT, 
-        see `Customizing the Prompt <tutorial.html#customizing-the-prompt>`_.
+        'The title text for the window in which xonsh is running. Formatted '
+        "in the same manner as $PROMPT, see 'Customizing the Prompt' "
+        'http://xonsh.org/tutorial.html#customizing-the-prompt.',
+        default='xonsh.environ.DEFAULT_TITLE'),
     'VI_MODE': VarDocs(
-        ('``False``
-        ('Flag to enable ``vi_mode`` in the ``prompt_toolkit`` shell.  
+        "Flag to enable 'vi_mode' in the 'prompt_toolkit' shell."),
     'XDG_CONFIG_HOME': VarDocs(
-        ('``~/.config``
-        ('Open desktop standard configuration home dir. This is the same default as
-        used in the standard.
+        'Open desktop standard configuration home dir. This is the same '
+        'default as used in the standard.', default="'~/.config'"),
     'XDG_DATA_HOME': VarDocs(
-        ('``~/.local/share``
-        ('Open desktop standard data home dir. This is the same default as used
-        in the standard.
+        'Open desktop standard data home dir. This is the same default as '
+        'used in the standard.', default="'~/.local/share'"),
     'XONSHCONFIG': VarDocs(
         ('``$XONSH_CONFIG_DIR/config.json``
         ('The location of the static xonsh configuration file, if it exists. This is
@@ -429,8 +422,6 @@ DEFAULT_DOCS = {
     'XONSH_STORE_STDOUT': VarDocs(
         ('``False``
         ('Whether or not to store the stdout and stderr streams in the history files.
-
-
     }
 
 #
