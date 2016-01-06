@@ -368,46 +368,47 @@ DEFAULT_DOCS = {
         "Flag to enable 'vi_mode' in the 'prompt_toolkit' shell."),
     'XDG_CONFIG_HOME': VarDocs(
         'Open desktop standard configuration home dir. This is the same '
-        'default as used in the standard.', default="'~/.config'"),
+        'default as used in the standard.', configurable=False, 
+        default="'~/.config'"),
     'XDG_DATA_HOME': VarDocs(
         'Open desktop standard data home dir. This is the same default as '
         'used in the standard.', default="'~/.local/share'"),
     'XONSHCONFIG': VarDocs(
-        ('``$XONSH_CONFIG_DIR/config.json``
-        ('The location of the static xonsh configuration file, if it exists. This is
-        in JSON format.
+        'The location of the static xonsh configuration file, if it exists. '
+        'This is in JSON format.', configurable=False,
+        default="'$XONSH_CONFIG_DIR/config.json'"),
     'XONSHRC': VarDocs(
-        ('``('/etc/xonshrc', '~/.xonshrc')`` (Linux and OSX) 
-    	``('%ALLUSERSPROFILE%\xonsh\xonshrc', '~/.xonshrc')`` (Windows)
-        ('A tuple of the locations of run control files, if they exist.  User defined
-        run control file will supercede values set in system-wide control file if there
-        is a naming collision.
+        'A tuple of the locations of run control files, if they exist.  User '
+        'defined run control file will supercede values set in system-wide '
+        'control file if there is a naming collision.', default=(
+        "On Linux & Mac OSX: ('/etc/xonshrc', '~/.xonshrc')\n"
+        "On Windows: ('%ALLUSERSPROFILE%\xonsh\xonshrc', '~/.xonshrc')"),
     'XONSH_CONFIG_DIR': VarDocs(
-        ('``$XDG_CONFIG_HOME/xonsh``
-        ('This is location where xonsh configuration information is stored.
+        'This is location where xonsh configuration information is stored.',
+        configurable=False, default="'$XDG_CONFIG_HOME/xonsh'"),
     'XONSH_DATA_DIR': VarDocs(
-        ('``$XDG_DATA_HOME/xonsh``
-        ('This is the location where xonsh data files are stored, such as history.
+        'This is the location where xonsh data files are stored, such as '
+        'history.', default="'$XDG_DATA_HOME/xonsh'"),
     'XONSH_ENCODING': VarDocs(
-        ('``sys.getdefaultencoding()``
-        ('This is the that xonsh should use for subrpocess operations.
+        'This is the that xonsh should use for subrpocess operations.',
+        default='sys.getdefaultencoding()'),
     'XONSH_ENCODING_ERRORS': VarDocs(
-        ('``'surrogateescape'``
-        ('The flag for how to handle encoding errors should they happen.
-        Any string flag that has been previously registered with Python
-        is allowed. See the `Python codecs documentation <https://docs.python.org/3/library/codecs.html#error-handlers>`_
-        for more information and available options. 
-    'XONSH_HISTORY_FILE': VarDocs(
-        ('``'~/.xonsh_history'``
-        ('Location of history file (deprecated).
+        'The flag for how to handle encoding errors should they happen. '
+        'Any string flag that has been previously registered with Python '
+        "is allowed. See the 'Python codecs documentation' "
+        "(https://docs.python.org/3/library/codecs.html#error-handlers) "
+        'for more information and available options.', 
+        default="'surrogateescape'"),
+    'XONSH_HISTORY_FILE': VarDocs('Location of history file (deprecated).',
+        configurable=False, default="'~/.xonsh_history'"),
     'XONSH_HISTORY_SIZE': VarDocs(
-        ('``(8128, 'commands')`` or ``'8128 commands'``           
         ('Value and units tuple that sets the size of history after garbage collection. 
         Canonical units are ``'commands'`` for the number of past commands executed, 
         ``'files'`` for the number of history files to keep, ``'s'`` for the number of
         seconds in the past that are allowed, and ``'b'`` for the number of bytes that 
         are allowed for history to consume. Common abbreviations, such as ``6 months``
         or ``1 GB`` are also allowed.
+        ('``(8128, 'commands')`` or ``'8128 commands'``           
     'XONSH_INTERACTIVE': VarDocs(
         ('
         ('``True`` if xonsh is running interactively, and ``False`` otherwise.
