@@ -409,7 +409,7 @@ DEFAULT_DOCS = {
         "- 'commands' for the number of past commands executed,\n"
         "- 'files' for the number of history files to keep,\n"
         "- 's' for the number of seconds in the past that are allowed, and\n"
-        "- 'b' for the number of bytes that are allowed for history to consume.\n\n"
+        "- 'b' for the number of bytes that history may consume.\n\n"
         "Common abbreviations, such as '6 months' or '1 GB' are also allowed.",
         default="(8128, 'commands') or '8128 commands'"),
     'XONSH_INTERACTIVE': VarDocs(
