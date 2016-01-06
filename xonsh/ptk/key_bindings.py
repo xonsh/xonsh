@@ -74,7 +74,8 @@ def load_xonsh_bindings(key_bindings_manager):
             b.newline(copy_margin=True)
             _ = b.delete_before_cursor(count=len(indent_))
         elif (not b.document.on_first_line and
-              not len(b.document.current_line) == 0):
+              not (len(b.document.current_line) == 0 or
+                   b.document.current_line.isspace())):
             b.newline(copy_margin=True)
         # if there are stray parens hanging aroung inside quotes
         elif (re.search(parens, b.document.text) is not None and
