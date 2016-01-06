@@ -2,8 +2,10 @@
 import os
 import ast
 import json
+import textwrap
 import  builtins
 import functools
+from pprint import pformat
 from argparse import ArgumentParser
 
 import ply
@@ -64,6 +66,9 @@ superceded by the definitions in the xonshrc or on the command line.
 Still, setting environment variables in this way can help define
 options that are global to the system or user.
 
+{{BOLD_GREEN}}Note:{{NO_COLOR}} Simply hitting enter for any
+environment variable will skip that entry.
+
 Would you like to set env vars now, """.format(hr=HR) + YN
 
 WIZARD_TAIL = """
@@ -108,14 +113,38 @@ def make_fs():
     return fs
 
 
+ENVVAR_PROMPT = """
+Environment variable {{BOLD_CYAN}}${name}{{NO_COLOR}}
+{docstr}
+{{RED}}default value:{{NO_COLOR}} {default}
+{{RED}}current value:{{NO_COLOR}} {current}
+{{BOLD_GREEN}}>>>{{NO_COLOR}} """
+
 def make_envvar(name):
     """Makes a StoreNonEmpty node for an environment variable."""
+    env = builtins.__xonsh_env__
+    vd = env.get_docs(name)
+    if not vd.configurable:
+        return
+    default = vd.default
+    if '\n' in default:
+        default = '\n' + '\n'.join(textwrap.wrap(default, width=69))
+    curr = pformat(env.get(name))
+    if '\n' in curr:
+        curr = '\n' + '\n'.join(textwrap.wrap(curr, width=69))
+    prompt = ENVVAR_PROMPT.format(name=name, default=default, current=curr,
+                        docstr='\n'.join(textwrap.wrap(vd.docstr, width=69)))
+    ens = env.get_ensurer(name)
+    path = '/env/' + name
+    node = StoreNonEmpty(prompt, converter=ens.convert, path=path)
+    return node
     
 
 def make_env():
     """Makes an environment variable wizard."""
-    wiz = Wizard(children=[
-        ])
+    kids = map(make_envvar, sorted(builtins.__xonsh_env__.docs.keys()))
+    kids = [k for k in kids if k is not None]
+    wiz = Wizard(children=kids)
     return wiz
 
 
@@ -135,6 +164,7 @@ def make_wizard(default_file=None, confirm=False):
             Message(message=WIZARD_FS),
             make_fs(),
             YesNo(question=WIZARD_ENV, yes=make_env(), no=Pass()),
+            Message(message='\n' + HR + '\n'),
             Save(default_file=default_file, check=True),
             Message(message=WIZARD_TAIL),
             ])

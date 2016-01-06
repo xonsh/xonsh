@@ -247,7 +247,7 @@ DEFAULT_DOCS = {
         "Other OS-specific defaults may be added in the future.")),
     'CASE_SENSITIVE_COMPLETIONS': VarDocs(
         'Sets whether completions should be case sensitive or case '
-        'insensitive.', default=('True on Linux, False otherwise.')),
+        'insensitive.', default='True on Linux, False otherwise.'),
     'CDPATH': VarDocs(
         'A list of paths to be used as roots for a cd, breaking compatibility '
         'with Bash, xonsh always prefer an existing relative path.'),
@@ -451,6 +451,7 @@ class Env(MutableMapping):
         self._d = {}
         self.ensurers = {k: Ensurer(*v) for k, v in DEFAULT_ENSURERS.items()}
         self.defaults = DEFAULT_VALUES
+        self.docs = DEFAULT_DOCS
         if len(args) == 0 and len(kwargs) == 0:
             args = (os.environ, )
         for key, val in dict(*args, **kwargs).items():
@@ -507,6 +508,17 @@ class Env(MutableMapping):
             ens = default
         self.ensurers[key] = ens
         return ens
+
+    def get_docs(self, key, default=VarDocs('<no documentation>')):
+        """Gets the documentation for the environment variable."""
+        vd = self.docs.get(key, None)
+        if vd is None:
+            return default
+        if vd.default is DefaultNotGiven:
+            dval = ensure_string(self.defaults.get(key, '<default not set>'))
+            vd = vd._replace(default=dval)
+            self.docs[key] = vd
+        return vd
 
     @contextmanager
     def swap(self, other):
