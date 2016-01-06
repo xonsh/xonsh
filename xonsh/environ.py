@@ -227,100 +227,84 @@ DEFAULT_DOCS = {
         'Flag for automatically pushing directories onto the directory stack.'
         ),
     'AUTO_SUGGEST': VarDocs(
-        ('``True``
-        ('Enable automatic command suggestions based on history (like in fish shell).
-      
-        Pressing the right arrow key inserts the currently displayed suggestion.
-        
-        (Only usable with SHELL_TYPE=prompt_toolkit)
+        'Enable automatic command suggestions based on history, like in fish '
+        'shell.\n\nPressing the right arrow key inserts the currently '
+        'displayed suggestion. Only usable with $SHELL_TYPE=prompt_toolkit.'),
     'BASH_COMPLETIONS': VarDocs(
-        ('Normally this is ``('/etc/bash_completion', '/usr/share/bash-completion/completions/git')``
-        but on Mac is ``('/usr/local/etc/bash_completion', '/opt/local/etc/profile.d/bash_completion.sh')``
-        and on Arch Linux is ``('/usr/share/bash-completion/bash_completion',
-        '/usr/share/bash-completion/completions/git')``.
-        ('This is a list (or tuple) of strings that specifies where the BASH completion 
-        files may be found. The default values are platform dependent, but sane. 
-        To specify an alternate list, do so in the run control file.
+        'This is a list (or tuple) of strings that specifies where the BASH '
+        'completion files may be found. The default values are platform '
+        'dependent, but sane. To specify an alternate list, do so in the run '
+        'control file.', default=(
+        "Normally this is:\n\n"
+        "    ('/etc/bash_completion',\n"
+        "     '/usr/share/bash-completion/completions/git')\n\n"
+        "But, on Mac it is:\n\n"
+        "    ('/usr/local/etc/bash_completion',\n"
+        "     '/opt/local/etc/profile.d/bash_completion.sh')\n\n"
+        "And on Arch Linux it is:\n\n"
+        "    ('/usr/share/bash-completion/bash_completion',\n"
+        "     '/usr/share/bash-completion/completions/git')\n\n"
+        "Other OS-specific defaults may be added in the future.")),
     'CASE_SENSITIVE_COMPLETIONS': VarDocs(
-        ('``True`` on Linux, otherwise ``False``
-        ('Sets whether completions should be case sensitive or case insensitive.
+        'Sets whether completions should be case sensitive or case '
+        'insensitive.', default=('True on Linux, False otherwise.')),
     'CDPATH': VarDocs(
-        ('``[]``
-        ('A list of paths to be used as roots for a ``cd``, breaking compatibility with 
-        bash, xonsh always prefer an existing relative path.
+        'A list of paths to be used as roots for a cd, breaking compatibility '
+        'with Bash, xonsh always prefer an existing relative path.'),
     'COMPLETIONS_DISPLAY': VarDocs(
-        ('``'multi'``
-        ('Configure if and how Python completions are displayed by the prompt_toolkit shell.
-      
-        This option does not affect bash completions, auto-suggestions etc.
-        
-        Changing it at runtime will take immediate effect, so you can quickly
-        disable and enable completions during shell sessions.
-        
-          ('If COMPLETIONS_DISPLAY is ``'none'`` or ``'false'``, do not display those completions.
-        
-          ('If COMPLETIONS_DISPLAY is ``'single'``, display completions in a single column while typing.
-        
-          ('If COMPLETIONS_DISPLAY is ``'multi'`` or ``'true'``, display completions in multiple columns while typing.
-        
-        These option values are not case- or type-sensitive, so e.g.
-        writing ``$COMPLETIONS_DISPLAY = None`` and ``$COMPLETIONS_DISPLAY = 'none'`` is equivalent.
-        
-        (Only usable with SHELL_TYPE=prompt_toolkit)
+        'Configure if and how Python completions are displayed by the '
+        'prompt_toolkit shell.\n\nThis option does not affect Bash '
+        'completions, auto-suggestions, etc.\n\nChanging it at runtime will '
+        'take immediate effect, so you can quickly disable and enable '
+        'completions during shell sessions.\n\n'
+        "- If $COMPLETIONS_DISPLAY is 'none' or 'false', do not display "
+           "those completions\n."
+        "- If $COMPLETIONS_DISPLAY is 'single', display completions in a "
+           'single column while typing.\n'
+        "- If $COMPLETIONS_DISPLAY is 'multi' or 'true', display completions "
+           "in multiple columns while typing.\n\n"
+        'These option values are not case- or type-sensitive, so e.g.'
+        "writing \"$COMPLETIONS_DISPLAY = None\" and \"$COMPLETIONS_DISPLAY "
+        "= 'none'\" are equivalent. Only usable with "
+        "$SHELL_TYPE=prompt_toolkit"),
     'COMPLETIONS_MENU_ROWS': VarDocs(
-        ('``5``
-        ('Number of rows to reserve for tab-completions menu if
-        ``$COMPLETIONS_DISPLAY`` is ``'single'`` or ``'multi'``. This only 
-        effects the prompt-toolkit shell.
-    'DIRSTACK_SIZE': VarDocs(
-        ('``20``
-        ('Maximum size of the directory stack.
+        'Number of rows to reserve for tab-completions menu if '
+        "$COMPLETIONS_DISPLAY is 'single' or 'multi'. This only effects the "
+        'prompt-toolkit shell.'),
+    'DIRSTACK_SIZE': VarDocs('Maximum size of the directory stack.'),
     'EXPAND_ENV_VARS': VarDocs(
-        ('``True``
-        ('Toggles whether environment variables are expanded inside of strings in subprocess mode.
+        'Toggles whether environment variables are expanded inside of strings '
+        'in subprocess mode.'),
     'FORCE_POSIX_PATHS': VarDocs(
-        ('``False``
-        ('Forces forward slashes (``/``) on Windows systems when using auto completion if 
-        set to anything truthy.
+        "Forces forward slashes ('/') on Windows systems when using auto "
+        'completion if set to anything truthy.', configurable=ON_WINDOWS),
     'FORMATTER_DICT': VarDocs(
-        ('xonsh.environ.FORMATTER_DICT  
-        ('Dictionary containing variables to be used when formatting PROMPT and TITLE 
-        see `Customizing the Prompt <tutorial.html#customizing-the-prompt>`_.
+        'Dictionary containing variables to be used when formatting $PROMPT '
+        "and $TITLE. See 'Customizing the Prompt' "
+        'http://xonsh.org/tutorial.html#customizing-the-prompt', 
+        configurable=False, default='xonsh.environ.FORMATTER_DICT'),
     'HISTCONTROL': VarDocs(
-        ('``set([])``
-        ('A set of strings (comma-separated list in string form) of options that
-        determine what commands are saved to the history list. By default all
-        commands are saved. The option ``ignoredups`` will not save the command
-        if it matches the previous command. The option ``ignoreerr`` will cause
-        any commands that fail (i.e. return non-zero exit status) to not be
-        added to the history list.
-    'IGNOREEOF': VarDocs(
-        ('``False``
-        ('Prevents Ctrl-D from exiting the shell.
-    'INDENT': VarDocs(
-        ('``'    '``
-        ('Indentation string for multiline input
+        'A set of strings (comma-separated list in string form) of options '
+        'that determine what commands are saved to the history list. By '
+        "default all commands are saved. The option 'ignoredups' will not "
+        "save the command if it matches the previous command. The option "
+        "'ignoreerr' will cause any commands that fail (i.e. return non-zero "
+        "exit status) to not be added to the history list."),
+    'IGNOREEOF': VarDocs('Prevents Ctrl-D from exiting the shell.'),
+    'INDENT': VarDocs('Indentation string for multiline input'),
     'MOUSE_SUPPORT': VarDocs(
-        ('``False``
-        ('Enable mouse support in the prompt_toolkit shell.
-        
-        This allows clicking for positioning the cursor or selecting a completion. In some terminals
-        however, this disables the ability to scroll back through the history of the terminal.
-        
-        (Only usable with SHELL_TYPE=prompt_toolkit)
+        'Enable mouse support in the prompt_toolkit shell. This allows '
+        'clicking for positioning the cursor or selecting a completion. In '
+        'some terminals however, this disables the ability to scroll back '
+        'through the history of the terminal. Only usable with '
+        '$SHELL_TYPE=prompt_toolkit')
     'MULTILINE_PROMPT': VarDocs(
-        ('``'.'``
-        ('Prompt text for 2nd+ lines of input, may be str or function which returns 
-        a str.
-    'OLDPWD': VarDocs(
-        ('No default
-        ('Used to represent a previous present working directory.
+        'Prompt text for 2nd+ lines of input, may be str or function which '
+        'returns a str.')
+    'OLDPWD': VarDocs('Used to represent a previous present working directory.'),
     'PATH': VarDocs(
-        ('``()``
-        ('List of strings representing where to look for executables.
-    'PATHEXT': VarDocs(
-        ('``()``
-        ('List of strings for filtering valid exeutables by.
+        'List of strings representing where to look for executables.'),
+    'PATHEXT': VarDocs('List of strings for filtering valid exeutables by.'),
     'PROMPT': VarDocs(
         ('xonsh.environ.DEFAULT_PROMPT  
         ('The prompt text.  May contain keyword arguments which are auto-formatted,
