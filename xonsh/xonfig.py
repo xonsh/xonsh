@@ -114,7 +114,7 @@ def make_fs():
 
 
 ENVVAR_PROMPT = """
-Environment variable {{BOLD_CYAN}}${name}{{NO_COLOR}}
+{{BOLD_CYAN}}${name}{{NO_COLOR}}
 {docstr}
 {{RED}}default value:{{NO_COLOR}} {default}
 {{RED}}current value:{{NO_COLOR}} {current}
