@@ -30,7 +30,6 @@ def load_xonsh_bindings(key_bindings_manager):
 
     DEDENT_TOKENS = frozenset(['raise', 'return', 'pass', 'break', 'continue'])
 
-
     @handle(Keys.Tab, filter=TabShouldInsertIndentFilter())
     def _(event):
         """
@@ -64,28 +63,27 @@ def load_xonsh_bindings(key_bindings_manager):
 
         b = event.cli.current_buffer
 
-        #indent after a colon
+        # indent after a colon
         if b.document.char_before_cursor == ':':
             b.newline()
             b.insert_text(indent_, fire_event=False)
-        #if current line isn't blank, check dedent tokens
+        # if current line isn't blank, check dedent tokens
         elif (not (len(b.document.current_line) == 0 or
                    b.document.current_line.isspace()) and
               b.document.current_line.split(maxsplit=1)[0] in DEDENT_TOKENS):
             b.newline(copy_margin=True)
             _ = b.delete_before_cursor(count=len(indent_))
         elif (not b.document.on_first_line and
-           not len(b.document.current_line) == 0):
+              not len(b.document.current_line) == 0):
             b.newline(copy_margin=True)
-        #if there are stray parens hanging aroung inside quotes
+        # if there are stray parens hanging aroung inside quotes
         elif (re.search(parens, b.document.text) is not None and
               ((b.document.text.count('(') -
-              re.search(parens, b.document.text).group().count('('))
-              >
+               re.search(parens, b.document.text).group().count('(')) >
               (b.document.text.count(')') -
                re.search(parens, b.document.text).group().count(')')))):
             b.newline()
-        #and if there aren't stray parens hanging around inside quotes
+        # and if there aren't stray parens hanging around inside quotes
         elif (re.search(parens, b.document.text) is None and
               b.document.text.count('(') > b.document.text.count(')')):
             b.newline()
