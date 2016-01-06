@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """Key bindings for prompt_toolkit xonsh shell."""
-import builtins
 import re
+import builtins
+
 from prompt_toolkit.filters import Filter, IsMultiline
 from prompt_toolkit.keys import Keys
 
@@ -17,6 +18,17 @@ class TabShouldInsertIndentFilter(Filter):
         before_cursor = cli.current_buffer.document.current_line_before_cursor
 
         return bool(before_cursor.isspace())
+
+
+def can_compile(src):
+    """Returns whether the code can be compiled, i.e. it is valid xonsh."""
+    try:
+        builtins.__xonsh_execer__.compile(src, mode='single', glbs=None,
+                                          locs=builtins.__xonsh_ctx__)
+        rtn = True
+    except SyntaxError:
+        rtn = False
+    return rtn
 
 
 def load_xonsh_bindings(key_bindings_manager):
@@ -77,20 +89,11 @@ def load_xonsh_bindings(key_bindings_manager):
               not (len(b.document.current_line) == 0 or
                    b.document.current_line.isspace())):
             b.newline(copy_margin=True)
-        # if there are stray parens hanging aroung inside quotes
-        elif (re.search(parens, b.document.text) is not None and
-              ((b.document.text.count('(') -
-               re.search(parens, b.document.text).group().count('(')) >
-              (b.document.text.count(')') -
-               re.search(parens, b.document.text).group().count(')')))):
-            b.newline()
-        # and if there aren't stray parens hanging around inside quotes
-        elif (re.search(parens, b.document.text) is None and
-              b.document.text.count('(') > b.document.text.count(')')):
-            b.newline()
         elif b.document.char_before_cursor == '\\':
             b.newline()
         elif b.document.find_next_word_beginning() is not None:
             b.newline(copy_margin=True)
+        elif not can_compile(b.document.text):
+            b.newline()
         else:
             b.accept_action.validate_and_handle(event.cli, b)
