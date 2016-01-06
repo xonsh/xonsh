@@ -9,6 +9,7 @@ import locale
 import builtins
 import subprocess
 from warnings import warn
+from pprint import pformat
 from functools import wraps
 from contextlib import contextmanager
 from collections import MutableMapping, MutableSequence, MutableSet, namedtuple
@@ -54,6 +55,7 @@ represent environment variable validation, conversion, detyping.
 
 DEFAULT_ENSURERS = {
     'AUTO_CD': (is_bool, to_bool, bool_to_str),
+    'AUTO_PUSHD': (is_bool, to_bool, bool_to_str),
     'AUTO_SUGGEST': (is_bool, to_bool, bool_to_str),
     'BASH_COMPLETIONS': (is_env_path, str_to_env_path, env_path_to_str),
     'CASE_SENSITIVE_COMPLETIONS': (is_bool, to_bool, bool_to_str),
@@ -257,12 +259,12 @@ DEFAULT_DOCS = {
         'completions, auto-suggestions, etc.\n\nChanging it at runtime will '
         'take immediate effect, so you can quickly disable and enable '
         'completions during shell sessions.\n\n'
-        "- If $COMPLETIONS_DISPLAY is 'none' or 'false', do not display "
-           "those completions\n."
-        "- If $COMPLETIONS_DISPLAY is 'single', display completions in a "
-           'single column while typing.\n'
-        "- If $COMPLETIONS_DISPLAY is 'multi' or 'true', display completions "
-           "in multiple columns while typing.\n\n"
+        "- If $COMPLETIONS_DISPLAY is 'none' or 'false', do not display\n"
+        "  those completions.\n"
+        "- If $COMPLETIONS_DISPLAY is 'single', display completions in a\n"
+        '  single column while typing.\n'
+        "- If $COMPLETIONS_DISPLAY is 'multi' or 'true', display completions\n"
+        "  in multiple columns while typing.\n\n"
         'These option values are not case- or type-sensitive, so e.g.'
         "writing \"$COMPLETIONS_DISPLAY = None\" and \"$COMPLETIONS_DISPLAY "
         "= 'none'\" are equivalent. Only usable with "
@@ -320,7 +322,7 @@ DEFAULT_DOCS = {
     'PROMPT_TOOLKIT_STYLES': VarDocs(
         'This is a mapping of user-specified styles for prompt-toolkit. See '
         'the prompt-toolkit documentation for more details. If None, this is '
-        'skipped.'),
+        'skipped.', configurable=False),
     'PUSHD_MINUS': VarDocs(
         'Flag for directory pushing functionality. False is the normal '
         'behaviour.'),
@@ -328,9 +330,9 @@ DEFAULT_DOCS = {
         'Whether or not to supress directory stack manipulation output.'),
     'SHELL_TYPE': VarDocs(
         'Which shell is used. Currently two base shell types are supported:\n\n'
-        "    - 'readline' that is backed by Python's readline module, and\n"
-        "    - 'prompt_toolkit' that uses external library of the same name.\n" 
-        "    - 'random' selects a random shell from the above on startup.\n\n"
+        "    - 'readline' that is backed by Python's readline module\n"
+        "    - 'prompt_toolkit' that uses external library of the same name\n" 
+        "    - 'random' selects a random shell from the above on startup\n\n"
         'To use the prompt_toolkit shell you need to have prompt_toolkit '
         '(https://github.com/jonathanslenders/python-prompt-toolkit)'
         'library installed. To specify which shell should be used, do so in '
@@ -404,10 +406,10 @@ DEFAULT_DOCS = {
     'XONSH_HISTORY_SIZE': VarDocs(
         'Value and units tuple that sets the size of history after garbage '
         'collection. Canonical units are:\n\n'
-        "    - 'commands' for the number of past commands executed,\n"
-        "    - 'files' for the number of history files to keep,\n"
-        "    - 's' for the number of seconds in the past that are allowed, and\n"
-        "    - 'b' for the number of bytes that are allowed for history to consume.\n\n"
+        "- 'commands' for the number of past commands executed,\n"
+        "- 'files' for the number of history files to keep,\n"
+        "- 's' for the number of seconds in the past that are allowed, and\n"
+        "- 'b' for the number of bytes that are allowed for history to consume.\n\n"
         "Common abbreviations, such as '6 months' or '1 GB' are also allowed.",
         default="(8128, 'commands') or '8128 commands'"),
     'XONSH_INTERACTIVE': VarDocs(
@@ -515,7 +517,7 @@ class Env(MutableMapping):
         if vd is None:
             return default
         if vd.default is DefaultNotGiven:
-            dval = ensure_string(self.defaults.get(key, '<default not set>'))
+            dval = pformat(self.defaults.get(key, '<default not set>'))
             vd = vd._replace(default=dval)
             self.docs[key] = vd
         return vd

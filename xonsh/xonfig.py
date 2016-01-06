@@ -66,8 +66,8 @@ superceded by the definitions in the xonshrc or on the command line.
 Still, setting environment variables in this way can help define
 options that are global to the system or user.
 
-{{BOLD_GREEN}}Note:{{NO_COLOR}} Simply hitting enter for any
-environment variable will skip that entry.
+{{BOLD_GREEN}}Note:{{NO_COLOR}} Simply hitting enter for any environment variable 
+will skip that entry.
 
 Would you like to set env vars now, """.format(hr=HR) + YN
 
@@ -113,6 +113,13 @@ def make_fs():
     return fs
 
 
+def _wrap_paragraphs(text, width=70, **kwargs):
+    """Wraps paragraphs instead."""
+    pars = text.split('\n')
+    pars = ['\n'.join(textwrap.wrap(p, width=width, **kwargs)) for p in pars]
+    s = '\n'.join(pars)
+    return s
+
 ENVVAR_PROMPT = """
 {{BOLD_CYAN}}${name}{{NO_COLOR}}
 {docstr}
@@ -128,12 +135,12 @@ def make_envvar(name):
         return
     default = vd.default
     if '\n' in default:
-        default = '\n' + '\n'.join(textwrap.wrap(default, width=69))
+        default = '\n' + _wrap_paragraphs(default, width=69)
     curr = pformat(env.get(name))
     if '\n' in curr:
-        curr = '\n' + '\n'.join(textwrap.wrap(curr, width=69))
+        curr = '\n' + _wrap_paragraphs(curr, width=69)
     prompt = ENVVAR_PROMPT.format(name=name, default=default, current=curr,
-                        docstr='\n'.join(textwrap.wrap(vd.docstr, width=69)))
+                                docstr=_wrap_paragraphs(vd.docstr, width=69))
     ens = env.get_ensurer(name)
     path = '/env/' + name
     node = StoreNonEmpty(prompt, converter=ens.convert, path=path)
