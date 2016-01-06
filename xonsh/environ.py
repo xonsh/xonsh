@@ -297,10 +297,10 @@ DEFAULT_DOCS = {
         'clicking for positioning the cursor or selecting a completion. In '
         'some terminals however, this disables the ability to scroll back '
         'through the history of the terminal. Only usable with '
-        '$SHELL_TYPE=prompt_toolkit')
+        '$SHELL_TYPE=prompt_toolkit'),
     'MULTILINE_PROMPT': VarDocs(
         'Prompt text for 2nd+ lines of input, may be str or function which '
-        'returns a str.')
+        'returns a str.'),
     'OLDPWD': VarDocs('Used to represent a previous present working directory.'),
     'PATH': VarDocs(
         'List of strings representing where to look for executables.'),
@@ -308,7 +308,7 @@ DEFAULT_DOCS = {
     'PROMPT': VarDocs(
         'The prompt text. May contain keyword arguments which are '
         "auto-formatted, see 'Customizing the Prompt' at "
-        'http://xonsh.org/tutorial.html#customizing-the-prompt.'
+        'http://xonsh.org/tutorial.html#customizing-the-prompt.',
         default='xonsh.environ.DEFAULT_PROMPT'),
     'PROMPT_TOOLKIT_COLORS': VarDocs(
         'This is a mapping of from color names to HTML color codes. Whenever '
@@ -356,7 +356,7 @@ DEFAULT_DOCS = {
         'operation itself. TeePTY (and thus this variable) are currently '
         'only used when $XONSH_STORE_STDOUT is True.', configurable=ON_LINUX),
     'TERM': VarDocs(
-        'TERM is sometimes set by the terminal emulator. This is used (when 
+        'TERM is sometimes set by the terminal emulator. This is used (when '
         "valid) to determine whether or not to set the title. Users shouldn't "
         "need to set this themselves.", configurable=False),
     'TITLE': VarDocs(
@@ -382,7 +382,7 @@ DEFAULT_DOCS = {
         'defined run control file will supercede values set in system-wide '
         'control file if there is a naming collision.', default=(
         "On Linux & Mac OSX: ('/etc/xonshrc', '~/.xonshrc')\n"
-        "On Windows: ('%ALLUSERSPROFILE%\xonsh\xonshrc', '~/.xonshrc')"),
+        "On Windows: ('%ALLUSERSPROFILE%\\xonsh\\xonshrc', '~/.xonshrc')")),
     'XONSH_CONFIG_DIR': VarDocs(
         'This is location where xonsh configuration information is stored.',
         configurable=False, default="'$XDG_CONFIG_HOME/xonsh'"),
@@ -402,27 +402,28 @@ DEFAULT_DOCS = {
     'XONSH_HISTORY_FILE': VarDocs('Location of history file (deprecated).',
         configurable=False, default="'~/.xonsh_history'"),
     'XONSH_HISTORY_SIZE': VarDocs(
-        ('Value and units tuple that sets the size of history after garbage collection. 
-        Canonical units are ``'commands'`` for the number of past commands executed, 
-        ``'files'`` for the number of history files to keep, ``'s'`` for the number of
-        seconds in the past that are allowed, and ``'b'`` for the number of bytes that 
-        are allowed for history to consume. Common abbreviations, such as ``6 months``
-        or ``1 GB`` are also allowed.
-        ('``(8128, 'commands')`` or ``'8128 commands'``           
+        'Value and units tuple that sets the size of history after garbage '
+        'collection. Canonical units are:\n\n'
+        "    - 'commands' for the number of past commands executed,\n"
+        "    - 'files' for the number of history files to keep,\n"
+        "    - 's' for the number of seconds in the past that are allowed, and\n"
+        "    - 'b' for the number of bytes that are allowed for history to consume.\n\n"
+        "Common abbreviations, such as '6 months' or '1 GB' are also allowed.",
+        default="(8128, 'commands') or '8128 commands'"),
     'XONSH_INTERACTIVE': VarDocs(
-        ('
-        ('``True`` if xonsh is running interactively, and ``False`` otherwise.
+        'True if xonsh is running interactively, and False otherwise.',
+        configurable=False),
     'XONSH_LOGIN': VarDocs(
-        ('``True`` if xonsh is running as a login shell, and ``False`` otherwise.
-        ('Whether or not xonsh is a login shell.
+        'True if xonsh is running as a login shell, and False otherwise.',
+        configurable=False),
     'XONSH_SHOW_TRACEBACK': VarDocs(
-        ('``False`` but not set
-        ('Controls if a traceback is shown exceptions occur in the shell. Set ``True`` 
-        to always show or ``False`` to always hide. If undefined then traceback is 
-        hidden but a notice is shown on how to enable the traceback.
+        'Controls if a traceback is shown exceptions occur in the shell. '
+        'Set to True to always show or False to always hide. If undefined '
+        'then traceback is hidden but a notice is shown on how to enable the '
+        'traceback.'),
     'XONSH_STORE_STDOUT': VarDocs(
-        ('``False``
-        ('Whether or not to store the stdout and stderr streams in the history files.
+        'Whether or not to store the stdout and stderr streams in the '
+        'history files.', configurable=False),
     }
 
 #
