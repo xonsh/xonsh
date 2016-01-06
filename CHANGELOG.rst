@@ -27,6 +27,7 @@ None
 
 * First prompt in the prompt-toolkit shell now allows for up and down
   arrows to search through history.
+* Made obtaining the prompt-toolkit buffer thread-safe.
 
 **Security:**
 
