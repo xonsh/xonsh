@@ -70,7 +70,7 @@ class PromptToolkitHistoryAdder(Thread):
                             buf = self._buf()
                             if buf is None:
                                 continue
-                        buf.reset()
+                        buf.reset(initial_document=buf.document)
                 lj.close()
             except (IOError, OSError):
                 continue
