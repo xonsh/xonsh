@@ -21,6 +21,8 @@ class TabShouldInsertIndentFilter(Filter):
 
 def can_compile(src):
     """Returns whether the code can be compiled, i.e. it is valid xonsh."""
+    if not src.endswith('\n') and not src.endswith('\''):
+        src = src + '\n'
     try:
         builtins.__xonsh_execer__.compile(src, mode='single', glbs=None,
                                           locs=builtins.__xonsh_ctx__)
