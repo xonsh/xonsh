@@ -55,6 +55,7 @@ class PromptToolkitShell(BaseShell):
                     style=style_cls,
                     completer=completer,
                     lexer=PygmentsLexer(XonshLexer),
+                    multiline=True, 
                     history=self.history,
                     enable_history_search=enable_history_search,
                     reserve_space_for_menu=0,
