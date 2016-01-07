@@ -9,6 +9,8 @@ Current Developments
 * timeit alias will now complete its arguments.
 * $COMPLETIONS_MENU_ROWS environment variable controls the size of the 
   tab-completion menu in prompt-toolkit.
+* Prompt-toolkit shell now supports true multiline input with the ability
+  to scroll up and down in the prompt.
 
 **Changed:**
 

@@ -61,17 +61,16 @@ class PromptToolkitHistoryAdder(Thread):
             try:
                 lj = lazyjson.LazyJSON(f, reopen=False)
                 for cmd in lj['cmds']:
-                    inp = cmd['inp'].splitlines()
-                    for line in inp:
-                        if line == 'EOF':
-                            continue
-                        if len(ptkhist) == 0 or line != ptkhist[-1]:
-                            ptkhist.append(line)
+                    line = cmd['inp'].rstrip()
+                    if line == 'EOF':
+                        continue
+                    if len(ptkhist) == 0 or line != ptkhist[-1]:
+                        ptkhist.append(line)
+                        if buf is None:
+                            buf = self._buf()
                             if buf is None:
-                                buf = self._buf()
-                                if buf is None:
-                                    continue
-                            buf.reset()
+                                continue
+                        buf.reset()
                 lj.close()
             except (IOError, OSError):
                 continue

@@ -45,12 +45,13 @@ class PromptToolkitShell(BaseShell):
         while not builtins.__xonsh_exit__:
             try:
                 token_func, style_cls = self._get_prompt_tokens_and_style()
-                mouse_support = builtins.__xonsh_env__.get('MOUSE_SUPPORT')
-                if builtins.__xonsh_env__.get('AUTO_SUGGEST'):
+                env = builtins.__xonsh_env__
+                mouse_support = env.get('MOUSE_SUPPORT')
+                if env.get('AUTO_SUGGEST'):
                     auto_suggest = _auto_suggest
                 else:
                     auto_suggest = None
-                completions_display = builtins.__xonsh_env__.get('COMPLETIONS_DISPLAY')
+                completions_display = env.get('COMPLETIONS_DISPLAY')
                 multicolumn = (completions_display == 'multi')
                 completer = None if completions_display == 'none' else self.pt_completer
                 with self.prompter:
@@ -62,6 +63,7 @@ class PromptToolkitShell(BaseShell):
                         completer=completer,
                         lexer=PygmentsLexer(XonshLexer),
                         history=self.history,
+                        multiline=True, 
                         enable_history_search=True,
                         reserve_space_for_menu=0,
                         key_bindings_registry=self.key_bindings_manager.registry,

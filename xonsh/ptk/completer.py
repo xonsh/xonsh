@@ -23,13 +23,9 @@ class PromptToolkitCompleter(Completer):
 
         #  Only generate completions when the user hits tab.
         if complete_event.completion_requested:
-            line = document.current_line
+            line = document.current_line.lstrip()
             endidx = document.cursor_position_col
-            space_pos = document.find_backwards(' ')
-            if space_pos is None:
-                begidx = 0
-            else:
-                begidx = space_pos + endidx + 1
+            begidx = line.rfind(' ') + 1 if line.rfind(' ') >= 0 else 0
             prefix = line[begidx:endidx]
             completions, l = self.completer.complete(prefix,
                                                      line,
@@ -57,4 +53,3 @@ class PromptToolkitCompleter(Completer):
             else:
                 return LayoutDimension()
         window._height = comp_height
-    
