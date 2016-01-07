@@ -11,9 +11,9 @@ xonsh
     :target: https://landscape.io/github/scopatz/xonsh/master
     :alt: Code Health
 
-xonsh is a Python-ish, BASHwards-compatible shell language and command prompt.
-The language is a superset of Python 3.4 with additional shell primitives.
+xonsh is a Python-ish, BASHwards-looking shell language and command prompt.
+The language is a superset of Python 3.4+ with additional shell primitives.
 xonsh (pronounced *conch*) is meant for the daily use of experts and novices 
 alike.
 
-Please visit http://xonsh.org or http://xonsh.readthedocs.org for more information.
+Please visit http://xonsh.org for more information.
