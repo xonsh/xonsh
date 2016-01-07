@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Key bindings for prompt_toolkit xonsh shell."""
-import re
 import builtins
 
 from prompt_toolkit.filters import Filter, IsMultiline
@@ -38,7 +37,6 @@ def load_xonsh_bindings(key_bindings_manager):
     handle = key_bindings_manager.registry.add_binding
     env = builtins.__xonsh_env__
     indent_ = env.get('INDENT')
-    parens = re.compile('["\'].*[\\(\\)]*.*["\']')
 
     DEDENT_TOKENS = frozenset(['raise', 'return', 'pass', 'break', 'continue'])
 
