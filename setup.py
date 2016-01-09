@@ -127,7 +127,7 @@ def main():
         readme = f.read()
     skw = dict(
         name='xonsh',
-        description='an exotic, usable shell',
+        description='A general purpose, Python-ish shell',
         long_description=readme,
         license='BSD',
         version=XONSH_VERSION,
