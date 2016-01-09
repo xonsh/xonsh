@@ -17,7 +17,7 @@ from xonsh.wizard import (Wizard, Pass, Message, Save, Load, YesNo, Input,
     PromptVisitor, While, StoreNonEmpty, create_truefalse_cond, YN)
 
 
-HR = "'`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*¯`·.,¸,.·*'"
+HR = "'`-.,¸,.-*¯`-.,¸,.-*¯`-.,¸,.-*¯`-.,¸,.-*¯`-.,¸,.-*¯`-.,¸,.-*¯`-.,¸,.-*'"
 WIZARD_HEAD = """
           {{BOLD_WHITE}}Welcome to the xonsh configuration wizard!{{NO_COLOR}}
           {{YELLOW}}------------------------------------------{{NO_COLOR}}
@@ -188,7 +188,7 @@ def _wizard(ns):
     fname = env.get('XONSHCONFIG') if ns.file is None else ns.file
     wiz = make_wizard(default_file=fname, confirm=ns.confirm)
     tempenv = {'PROMPT': '', 'XONSH_STORE_STDOUT': False}
-    pv = PromptVisitor(wiz)
+    pv = PromptVisitor(wiz, multiline=False)
     with env.swap(tempenv):
         pv.visit()
 

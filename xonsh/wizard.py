@@ -491,10 +491,22 @@ YNB = ('{GREEN}yes{NO_COLOR}, {RED}no{NO_COLOR} (default), or '
 class PromptVisitor(StateVisitor):
     """Visits the nodes in the tree via the a command-line prompt."""
 
-    def __init__(self, tree=None, state=None):
+    def __init__(self, tree=None, state=None, **kwargs):
+        """
+        Parameters
+        ----------
+        tree : Node, optional
+            Tree of nodes to start visitor with.
+        state : dict, optional
+            Initial state to begin with.
+        kwargs : optional
+            Options that are passed through to the prompt via the shell's
+            singleline() method. See BaseShell for mor details.
+        """
         super().__init__(tree=tree, state=state)
         self.env = builtins.__xonsh_env__
         self.shell = builtins.__xonsh_shell__.shell
+        self.shell_kwargs = kwargs
 
     def visit_wizard(self, node):
         for child in node.children:
@@ -508,7 +520,7 @@ class PromptVisitor(StateVisitor):
 
     def visit_question(self, node):
         self.env['PROMPT'] = node.question
-        r = self.shell.singleline()
+        r = self.shell.singleline(**self.shell_kwargs)
         if callable(node.converter):
             r = node.converter(r)
         self.visit(node.responses[r])
@@ -518,7 +530,7 @@ class PromptVisitor(StateVisitor):
         need_input = True
         while need_input:
             self.env['PROMPT'] = node.prompt
-            x = self.shell.singleline()
+            x = self.shell.singleline(**self.shell_kwargs)
             if callable(node.converter):
                 x = node.converter(x)
             if node.confirm:

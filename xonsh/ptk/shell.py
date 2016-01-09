@@ -38,7 +38,7 @@ class PromptToolkitShell(BaseShell):
         load_xonsh_bindings(self.key_bindings_manager)
 
     def singleline(self, auto_suggest=None, enable_history_search=True, 
-                   **kwargs):
+                   multiline=True, **kwargs):
         """Reads a single line of input from the shell."""
         token_func, style_cls = self._get_prompt_tokens_and_style()
         env = builtins.__xonsh_env__
@@ -55,7 +55,7 @@ class PromptToolkitShell(BaseShell):
                     style=style_cls,
                     completer=completer,
                     lexer=PygmentsLexer(XonshLexer),
-                    multiline=True, 
+                    multiline=multiline, 
                     history=self.history,
                     enable_history_search=enable_history_search,
                     reserve_space_for_menu=0,
