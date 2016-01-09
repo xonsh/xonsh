@@ -67,7 +67,7 @@ Still, setting environment variables in this way can help define
 options that are global to the system or user.
 
 {{BOLD_GREEN}}Note:{{NO_COLOR}} Simply hitting enter for any environment variable 
-will skip that entry.
+will accept the default value for that entry.
 
 Would you like to set env vars now, """.format(hr=HR) + YN
 

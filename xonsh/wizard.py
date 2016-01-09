@@ -162,7 +162,7 @@ class YesNo(Question):
 class TrueFalse(Input):
     """Input node the returns a True or False value."""
 
-    def __init__(self, prompt='yes or no (default)? ', path=None):
+    def __init__(self, prompt='yes or no [default: no]? ', path=None):
         super().__init__(prompt=prompt, converter=to_bool, 
                          confirm=False, path=path)
 
@@ -170,7 +170,7 @@ class TrueFalse(Input):
 class TrueFalseBreak(Input):
     """Input node the returns a True, False, or 'break' value."""
 
-    def __init__(self, prompt='yes, no (default), or break? ', path=None):
+    def __init__(self, prompt='yes, no, or break [default: no]? ', path=None):
         super().__init__(prompt=prompt, converter=to_bool_or_break, 
                          confirm=False, path=path)
 
@@ -246,7 +246,7 @@ class Load(StateFile):
     """
 
 
-def create_truefalse_cond(prompt='yes or no (default)? ', path=None):
+def create_truefalse_cond(prompt='yes or no [default: no]? ', path=None):
     """This creates a basic condition function for use with nodes like While
     or other conditions. The condition function creates and visits a TrueFalse
     node and returns the result. This TrueFalse node takes the prompt and
@@ -484,9 +484,9 @@ class StateVisitor(Visitor):
         loc[p] = val
 
 
-YN = "{GREEN}yes{NO_COLOR} or {RED}no{NO_COLOR} (default)? "
-YNB = ('{GREEN}yes{NO_COLOR}, {RED}no{NO_COLOR} (default), or '
-       '{YELLOW}break{NO_COLOR}? ')
+YN = "{GREEN}yes{NO_COLOR} or {RED}no{NO_COLOR} [default: no]? "
+YNB = ('{GREEN}yes{NO_COLOR}, {RED}no{NO_COLOR}, or '
+       '{YELLOW}break{NO_COLOR} [default: no]? ')
 
 class PromptVisitor(StateVisitor):
     """Visits the nodes in the tree via the a command-line prompt."""
