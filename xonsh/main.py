@@ -182,7 +182,7 @@ def main(argv=None):
         # otherwise, enter the shell
         env['XONSH_INTERACTIVE'] = True
         ignore_sigtstp()
-        if not any([env['LOADED_CONFIG']] + env['LOADED_RC_FILES']):
+        if not env['LOADED_CONFIG'] and not any(env['LOADED_RC_FILES']):
             print('Could not find xonsh configuration or run control files.')
             code = '$[xonfig wizard --confirm]'
             shell.execer.exec(code, mode='single', glbs=shell.ctx)
