@@ -21,7 +21,8 @@ from xonsh.tools import (
     env_path_to_str, is_bool, to_bool, bool_to_str, is_history_tuple, to_history_tuple,
     history_tuple_to_str, is_float, string_types, is_string, DEFAULT_ENCODING,
     is_completions_display_value, to_completions_display_value, is_string_set,
-    csv_to_set, set_to_csv, get_sep, is_int
+    csv_to_set, set_to_csv, get_sep, is_int, is_bool_seq, csv_to_bool_seq,
+    bool_seq_to_csv
 )
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
@@ -70,7 +71,9 @@ DEFAULT_ENSURERS = {
     'LC_MESSAGES': (always_false, locale_convert('LC_MESSAGES'), ensure_string),
     'LC_MONETARY': (always_false, locale_convert('LC_MONETARY'), ensure_string),
     'LC_NUMERIC': (always_false, locale_convert('LC_NUMERIC'), ensure_string),
-    'LC_TIME': (always_false, locale_convert('LC_TIME'), ensure_string),
+    'LC_TIME': (always_false, locale_convert('LC_TIME'), ensure_string),    
+    'LOADED_CONFIG': (is_bool, to_bool, bool_to_str),
+    'LOADED_RC_FILES': (is_bool_seq, csv_to_bool_seq, bool_seq_to_csv),
     'MOUSE_SUPPORT': (is_bool, to_bool, bool_to_str),
     re.compile('\w*PATH$'): (is_env_path, str_to_env_path, env_path_to_str),
     'PATHEXT': (is_env_path, str_to_env_path, env_path_to_str),
@@ -160,6 +163,8 @@ DEFAULT_VALUES = {
     'LC_TIME': locale.setlocale(locale.LC_TIME),
     'LC_MONETARY': locale.setlocale(locale.LC_MONETARY),
     'LC_NUMERIC': locale.setlocale(locale.LC_NUMERIC),
+    'LOADED_CONFIG': False,
+    'LOADED_RC_FILES': (),
     'MOUSE_SUPPORT': False,
     'MULTILINE_PROMPT': '.',
     'PATH': (),
@@ -294,6 +299,13 @@ DEFAULT_DOCS = {
         "exit status) to not be added to the history list."),
     'IGNOREEOF': VarDocs('Prevents Ctrl-D from exiting the shell.'),
     'INDENT': VarDocs('Indentation string for multiline input'),
+    'LOADED_CONFIG': VarDocs('Whether or not the xonsh config file was loaded',
+        configurable=False),
+    'LOADED_RC_FILES': VarDocs(
+        'Whether or not any of the xonsh run control files were loaded at '
+        'startup. This is a sequence of bools in Python that is converted '
+        "to a CSV list in string form, ie [True, False] becomes 'True,False'.",
+        configurable=False),
     'MOUSE_SUPPORT': VarDocs(
         'Enable mouse support in the prompt_toolkit shell. This allows '
         'clicking for positioning the cursor or selecting a completion. In '
@@ -923,8 +935,10 @@ def load_static_config(ctx):
     if os.path.isfile(config):
         with open(config, 'r') as f:
             conf = json.load(f)
+        ctx['LOADED_CONFIG'] = True
     else:
         conf = {}
+        ctx['LOADED_CONFIG'] = False
     return conf
 
 
@@ -934,8 +948,10 @@ def xonshrc_context(rcfiles=None, execer=None):
        or sum([os.path.isfile(rcfile) for rcfile in rcfiles]) == 0):
         return {}
     env = {}
+    loaded = builtins.__xonsh_env__['LOADED_RC_FILES'] = []
     for rcfile in rcfiles:
         if not os.path.isfile(rcfile):
+            loaded.append(False)
             continue
         with open(rcfile, 'r') as f:
             rc = f.read()
@@ -950,6 +966,7 @@ def xonshrc_context(rcfiles=None, execer=None):
             warn(msg.format(rcfile, err), RuntimeWarning)
         finally:
             execer.filename = fname
+            loaded.append(True)
     return env
 
 

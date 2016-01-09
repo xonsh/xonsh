@@ -27,7 +27,7 @@ import traceback
 import threading
 import subprocess
 from contextlib import contextmanager
-from collections import OrderedDict, Sequence
+from collections import OrderedDict, Sequence, Set
 from warnings import warn
 
 if sys.version_info[0] >= 3:
@@ -581,7 +581,7 @@ def is_string_set(x):
     if isinstance(x, string_types):
         return False
     else:
-        return (isinstance(x, set) and
+        return (isinstance(x, Set) and
                 all([isinstance(a, string_types) for a in x]))
 
 
@@ -596,6 +596,23 @@ def csv_to_set(x):
 def set_to_csv(x):
     """Convert a set of strings to a comma-separated list of strings."""
     return ','.join(x)
+
+
+def is_bool_seq(x):
+    """Tests if an object is a sequence of bools."""
+    return isinstance(x, Sequence) and all(map(isinstance, x, [bool]*len(x)))
+
+
+def csv_to_bool_seq(x):
+    """Takes a comma-separated string and converts it into a list of bools."""
+    if len(x) == 0:
+        return []
+    return list(map(to_bool, x.split(',')))
+
+
+def bool_seq_to_csv(x):
+    """Converts a sequence of bools to a comma-separated string."""
+    return ','.join(map(str, x))
 
 
 def is_completions_display_value(x):
