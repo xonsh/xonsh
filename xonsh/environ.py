@@ -920,18 +920,22 @@ BASE_ENV = {
     'XONSH_VERSION': XONSH_VERSION,
 }
 
-def load_static_config(ctx):
+def load_static_config(ctx, config=None):
     """Loads a static configuration file from a given context, rather than the
-    current environment.
+    current environment.  Optionally may pass in configuration file name.
     """
     env = {}
     env['XDG_CONFIG_HOME'] = ctx.get('XDG_CONFIG_HOME',
                                      DEFAULT_VALUES['XDG_CONFIG_HOME'])
     env['XONSH_CONFIG_DIR'] = ctx['XONSH_CONFIG_DIR'] if 'XONSH_CONFIG_DIR' in ctx \
                               else xonsh_config_dir(env)
-    env['XONSHCONFIG'] = ctx['XONSHCONFIG'] if 'XONSHCONFIG' in ctx \
-                                  else xonshconfig(env)
-    config = env['XONSHCONFIG']
+    if config is not None:
+        env['XONSHCONFIG'] = ctx['XONSHCONFIG'] = config
+    elif 'XONSHCONFIG' in ctx:
+        config = env['XONSHCONFIG'] = ctx['XONSHCONFIG'] 
+    else:
+        # don't set in ctx in order to maintain default 
+        config = env['XONSHCONFIG'] = xonshconfig(env)
     if os.path.isfile(config):
         with open(config, 'r') as f:
             conf = json.load(f)
@@ -944,11 +948,10 @@ def load_static_config(ctx):
 
 def xonshrc_context(rcfiles=None, execer=None):
     """Attempts to read in xonshrc file, and return the contents."""
-    if (rcfiles is None or execer is None
-       or sum([os.path.isfile(rcfile) for rcfile in rcfiles]) == 0):
+    loaded = builtins.__xonsh_env__['LOADED_RC_FILES'] = []
+    if (rcfiles is None or execer is None):
         return {}
     env = {}
-    loaded = builtins.__xonsh_env__['LOADED_RC_FILES'] = []
     for rcfile in rcfiles:
         if not os.path.isfile(rcfile):
             loaded.append(False)
@@ -961,12 +964,13 @@ def xonshrc_context(rcfiles=None, execer=None):
         try:
             execer.filename = rcfile
             execer.exec(rc, glbs=env)
+            loaded.append(True)
         except SyntaxError as err:
+            loaded.append(False)
             msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
             warn(msg.format(rcfile, err), RuntimeWarning)
         finally:
             execer.filename = fname
-            loaded.append(True)
     return env
 
 
@@ -989,12 +993,12 @@ def windows_env_fixes(ctx):
     ctx['PWD'] = _get_cwd()
 
 
-def default_env(env=None):
+def default_env(env=None, config=None):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence
     ctx = dict(BASE_ENV)
     ctx.update(os.environ)
-    conf = load_static_config(ctx)
+    conf = load_static_config(ctx, config=config)
     ctx.update(conf.get('env', ()))
     ctx.update(load_foreign_envs(shells=conf.get('foreign_shells', DEFAULT_SHELLS),
                                  issue_warning=False))

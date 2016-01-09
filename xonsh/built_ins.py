@@ -664,13 +664,13 @@ def ensure_list_of_strs(x):
     return rtn
 
 
-def load_builtins(execer=None):
+def load_builtins(execer=None, config=None):
     """Loads the xonsh builtins into the Python builtins. Sets the
     BUILTINS_LOADED variable to True.
     """
     global BUILTINS_LOADED, ENV
     # private built-ins
-    builtins.__xonsh_env__ = ENV = Env(default_env())
+    builtins.__xonsh_env__ = ENV = Env(default_env(config=config))
     builtins.__xonsh_ctx__ = {}
     builtins.__xonsh_help__ = helper
     builtins.__xonsh_superhelp__ = superhelper
