@@ -82,9 +82,11 @@ def make_fs():
         Input('shell name (e.g. bash): ', path='/foreign_shells/{idx}/shell'),
         StoreNonEmpty('interactive shell [bool, default=True]: ',
                       converter=tools.to_bool,
+                      show_conversion=True,
                       path='/foreign_shells/{idx}/interactive'),
         StoreNonEmpty('login shell [bool, default=False]: ',
                       converter=tools.to_bool,
+                      show_conversion=True,
                       path='/foreign_shells/{idx}/login'),
         StoreNonEmpty("env command [str, default='env']: ",
                       path='/foreign_shells/{idx}/envcmd'),
@@ -93,12 +95,15 @@ def make_fs():
         StoreNonEmpty(("extra command line arguments [list of str, "
                        "default=[]]: "),
                       converter=ast.literal_eval,
+                      show_conversion=True,
                       path='/foreign_shells/{idx}/extra_args'),
         StoreNonEmpty('current environment [dict, default=None]: ',
                       converter=ast.literal_eval,
+                      show_conversion=True,
                       path='/foreign_shells/{idx}/currenv'),
         StoreNonEmpty('safely handle exceptions [bool, default=True]: ',
                       converter=tools.to_bool,
+                      show_conversion=True,
                       path='/foreign_shells/{idx}/safe'),
         StoreNonEmpty("pre-command [str, default='']: ",
                       path='/foreign_shells/{idx}/prevcmd'),
@@ -145,7 +150,8 @@ def make_envvar(name):
                                 docstr=_wrap_paragraphs(vd.docstr, width=69))
     ens = env.get_ensurer(name)
     path = '/env/' + name
-    node = StoreNonEmpty(prompt, converter=ens.convert, path=path)
+    node = StoreNonEmpty(prompt, converter=ens.convert, show_conversion=True,
+                         path=path)
     return node
     
 

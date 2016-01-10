@@ -77,10 +77,10 @@ class Question(Node):
 class Input(Node):
     """Gets input from the user."""
 
-    attrs = ('prompt', 'converter', 'confirm', 'path')
+    attrs = ('prompt', 'converter', 'show_conversion', 'confirm', 'path')
 
-    def __init__(self, prompt='>>> ', converter=None, confirm=False, 
-                 path=None):
+    def __init__(self, prompt='>>> ', converter=None, show_conversion=False, 
+                 confirm=False, path=None):
         """
         Parameters
         ----------
@@ -89,6 +89,10 @@ class Input(Node):
         converter : callable, optional
             Converts the string the user typed into another object
             prior to storage.
+        show_conversion : bool, optional
+            Flag for whether or not to show the results of the conversion 
+            function if the conversion function was meaningfully executed.
+            Default False.
         confirm : bool, optional
             Whether the input should be confirmed until true or broken, 
             default False.
@@ -97,6 +101,7 @@ class Input(Node):
         """
         self.prompt = prompt
         self.converter = converter
+        self.show_conversion = show_conversion
         self.confirm = confirm
         self.path = path
 
@@ -163,8 +168,8 @@ class TrueFalse(Input):
     """Input node the returns a True or False value."""
 
     def __init__(self, prompt='yes or no [default: no]? ', path=None):
-        super().__init__(prompt=prompt, converter=to_bool, 
-                         confirm=False, path=path)
+        super().__init__(prompt=prompt, converter=to_bool,
+                         show_conversion=False, confirm=False, path=path)
 
 
 class TrueFalseBreak(Input):
@@ -172,7 +177,7 @@ class TrueFalseBreak(Input):
 
     def __init__(self, prompt='yes, no, or break [default: no]? ', path=None):
         super().__init__(prompt=prompt, converter=to_bool_or_break, 
-                         confirm=False, path=path)
+                         show_conversion=False, confirm=False, path=path)
 
 
 class StoreNonEmpty(Input):
@@ -180,8 +185,8 @@ class StoreNonEmpty(Input):
     This works by wrapping the converter function.
     """
 
-    def __init__(self, prompt='>>> ', converter=None, confirm=False, 
-                 path=None):
+    def __init__(self, prompt='>>> ', converter=None, show_conversion=False, 
+                 confirm=False, path=None):
         def nonempty_converter(x):
             """Converts non-empty values and converts empty inputs to 
             Unstorable.
@@ -193,8 +198,9 @@ class StoreNonEmpty(Input):
             else:
                 x = converter(x)
             return x
-        super().__init__(prompt=prompt, converter=nonempty_converter, 
-                         confirm=confirm, path=path)
+        super().__init__(prompt=prompt, converter=nonempty_converter,
+                         show_conversion=show_conversion, confirm=confirm,
+                         path=path)
 
 
 class StateFile(Input):
@@ -365,6 +371,7 @@ class PrettyFormatter(Visitor):
             return s + '\n)'
         if node.converter is not None:
             s += ',\n' + self.indent + 'converter={0!r}'.format(node.converter)
+        s += ',\n' + self.indent + 'show_conversion={0!r}'.format(node.show_conversion)
         if node.path is not None:
             s += ',\n' + self.indent + 'path={0!r}'.format(node.path)
         s += '\n)'
@@ -532,7 +539,11 @@ class PromptVisitor(StateVisitor):
             self.env['PROMPT'] = node.prompt
             x = self.shell.singleline(**self.shell_kwargs)
             if callable(node.converter):
-                x = node.converter(x)
+                x, raw = node.converter(x), x
+                if node.show_conversion and x is not Unstorable \
+                                        and str(x) != raw:
+                    msg = '{{BOLD_PURPLE}}Converted{{NO_COLOR}} input {0!r} to {1!r}.'
+                    print_color(msg.format(raw, x))
             if node.confirm:
                 msg = 'Would you like to keep the input: {0}'
                 print(msg.format(pformat(x)))
