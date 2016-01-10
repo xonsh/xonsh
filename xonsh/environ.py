@@ -339,7 +339,7 @@ DEFAULT_DOCS = {
         'Flag for directory pushing functionality. False is the normal '
         'behaviour.'),
     'PUSHD_SILENT': VarDocs(
-        'Whether or not to supress directory stack manipulation output.'),
+        'Whether or not to suppress directory stack manipulation output.'),
     'SHELL_TYPE': VarDocs(
         'Which shell is used. Currently two base shell types are supported:\n\n'
         "    - 'readline' that is backed by Python's readline module\n"

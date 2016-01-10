@@ -20,7 +20,7 @@ RL_DONE = None
 
 
 def setup_readline():
-    """Sets up the readline module and completion supression, if available."""
+    """Sets up the readline module and completion suppression, if available."""
     global RL_COMPLETION_SUPPRESS_APPEND, RL_LIB, RL_CAN_RESIZE
     if RL_COMPLETION_SUPPRESS_APPEND is not None:
         return
