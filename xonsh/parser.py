@@ -2298,6 +2298,23 @@ class Parser(object):
                         lineno=lineno,
                         col_offset=col)
 
+    def _envvar_getter_by_name(self, var, lineno=None, col=None):
+        xenv = self._xenv(lineno=lineno, col=col)
+        func = ast.Attribute(value=xenv,
+                             attr='get',
+                             ctx = ast.Load(),
+                             lineno=lineno,
+                             col_offset=col)
+        return ast.Call(func=func,
+                        args=[ast.Str(s=var, lineno=lineno, col_offset=col),
+                              ast.Str(s='', lineno=lineno, col_offset=col)],
+                        keywords=[],
+                        starargs=None,
+                        kwargs=None,
+                        lineno=lineno,
+                        col_offset=col)
+
+
     def _envvar_by_name(self, var, lineno=None, col=None):
         """Looks up a xonsh variable by name."""
         xenv = self._xenv(lineno=lineno, col=col)
@@ -2417,9 +2434,9 @@ class Parser(object):
                                     col=self.col)
                     p0._cliarg_action = 'extend'
                 elif p1.startswith('$'):
-                    p0 = self._envvar_by_name(p1[1:],
-                                              lineno=self.lineno,
-                                              col=self.col)
+                    p0 = self._envvar_getter_by_name(p1[1:],
+                                                     lineno=self.lineno,
+                                                     col=self.col)
                     p0 = xonsh_call('__xonsh_ensure_list_of_strs__', [p0],
                                     lineno=self.lineno,
                                     col=self.col)
