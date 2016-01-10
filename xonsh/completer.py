@@ -65,7 +65,7 @@ XONSH_TOKENS = {
     '...'
 }
 
-CHARACTERS_NEED_QUOTES = ' `\t\r\n${}*()'
+CHARACTERS_NEED_QUOTES = ' `\t\r\n${}*()"\',?&'
 if ON_WINDOWS:
     CHARACTERS_NEED_QUOTES += '%'
 
@@ -348,6 +348,15 @@ class Completer(object):
         startswither = startswithnorm if csc else startswithlow
         return {s for s in modules if startswither(s, prefix, prefixlow)}
 
+    def _quote_to_use(self, x):
+        single = "'"
+        double = '"'
+        if single in x and double not in x:
+            return double
+        else:
+            return single
+
+
     def _quote_paths(self, paths, start, end):
         out = set()
         space = ' '
@@ -362,8 +371,7 @@ class Completer(object):
             if (start == '' and
                     (any(i in s for i in CHARACTERS_NEED_QUOTES) or
                      (backslash in s and slash != backslash))):
-                start = "'"
-                end = "'"
+                start = end = self._quote_to_use(s)
             if os.path.isdir(expand_path(s)):
                 _tail = slash
             elif end == '':
@@ -376,6 +384,8 @@ class Completer(object):
                     s = s.replace(backslash, double_backslash)
                 elif s.endswith(backslash):
                     s += backslash
+            if end in s:
+                s = s.replace(end, ''.join('\\%s' % i for i in end))
             out.add(start + s + end)
         return out
 
