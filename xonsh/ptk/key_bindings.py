@@ -79,7 +79,8 @@ def load_xonsh_bindings(key_bindings_manager):
         current_line_blank = _is_blank(b.document.current_line)
 
         # indent after a colon
-        if (b.document.char_before_cursor == ':' and at_end_of_line):
+        if (b.document.current_line_before_cursor.strip().endswith(':')
+                and at_end_of_line):
             b.newline()
             b.insert_text(indent_, fire_event=False)
         # if current line isn't blank, check dedent tokens
