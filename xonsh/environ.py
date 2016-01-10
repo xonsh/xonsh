@@ -328,8 +328,7 @@ class Env(MutableMapping):
             return default
 
     def __iter__(self):
-        yield from self._d
-        yield from self.defaults
+        yield from (set(self._d) | set(self.defaults))
 
     def __len__(self):
         return len(self._d)
