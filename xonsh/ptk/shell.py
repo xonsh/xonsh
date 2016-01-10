@@ -13,7 +13,8 @@ from pygments.token import (Keyword, Name, Comment, String, Error, Number,
                             Operator, Generic, Whitespace, Token)
 
 from xonsh.base_shell import BaseShell
-from xonsh.tools import format_prompt_for_prompt_toolkit, _make_style
+from xonsh.tools import (format_prompt_for_prompt_toolkit, _make_style,
+                         print_exception)
 from xonsh.ptk.completer import PromptToolkitCompleter
 from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings
@@ -36,6 +37,27 @@ class PromptToolkitShell(BaseShell):
             enable_vi_mode=Condition(lambda cli: builtins.__xonsh_env__.get('VI_MODE')),
             enable_open_in_editor=True)
         load_xonsh_bindings(self.key_bindings_manager)
+
+    def push(self, line):
+        """Pushes a line onto the buffer and compiles the code in a way that
+        enables multiline input.
+        """
+        code = None
+        self.buffer.append(line)
+        if self.need_more_lines:
+            return None, code
+        src = ''.join(self.buffer)
+        try:
+            code = self.execer.compile(src,
+                                       mode='single',
+                                       glbs=None,
+                                       locs=self.ctx)
+            self.reset_buffer()
+        except Exception:  # pylint: disable=broad-except
+            self.reset_buffer()
+            print_exception()
+            return src, None
+        return src, code
 
     def cmdloop(self, intro=None):
         """Enters a loop that reads and execute input from user."""
