@@ -21,8 +21,7 @@ class TabShouldInsertIndentFilter(Filter):
 
 def can_compile(src):
     """Returns whether the code can be compiled, i.e. it is valid xonsh."""
-    if not src.endswith('\n') and not src.endswith('\''):
-        src = src + '\n'
+    src = src if src.endswith('\n') else '{}\n'.format(src)
     try:
         builtins.__xonsh_execer__.compile(src, mode='single', glbs=None,
                                           locs=builtins.__xonsh_ctx__)
@@ -75,25 +74,33 @@ def load_xonsh_bindings(key_bindings_manager):
 
         b = event.cli.current_buffer
 
+        at_end_of_line = _is_blank(b.document.current_line_after_cursor)
+        current_line_blank = _is_blank(b.document.current_line)
+
         # indent after a colon
-        if b.document.char_before_cursor == ':':
+        if (b.document.current_line_before_cursor.strip().endswith(':')
+                and at_end_of_line):
             b.newline()
             b.insert_text(indent_, fire_event=False)
         # if current line isn't blank, check dedent tokens
-        elif (not (len(b.document.current_line) == 0 or
-                   b.document.current_line.isspace()) and
+        elif (not current_line_blank and
               b.document.current_line.split(maxsplit=1)[0] in DEDENT_TOKENS):
             b.newline(copy_margin=True)
             _ = b.delete_before_cursor(count=len(indent_))
         elif (not b.document.on_first_line and
-              not (len(b.document.current_line) == 0 or
-                   b.document.current_line.isspace())):
+              not current_line_blank):
             b.newline(copy_margin=True)
         elif b.document.char_before_cursor == '\\':
             b.newline()
-        elif b.document.find_next_word_beginning() is not None:
+        elif (b.document.find_next_word_beginning() is not None and
+                (any(not _is_blank(i)
+                     for i
+                     in b.document.lines_from_current[1:]))):
             b.newline(copy_margin=True)
-        elif not can_compile(b.document.text):
+        elif not current_line_blank and not can_compile(b.document.text):
             b.newline()
         else:
             b.accept_action.validate_and_handle(event.cli, b)
+
+def _is_blank(l):
+    return len(l.strip()) == 0
