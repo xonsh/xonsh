@@ -27,6 +27,12 @@ def is_prompt_toolkit_available():
         return False
 
 
+def prompt_toolkit_version():
+    """Gets the prompt toolkit version."""
+    import prompt_toolkit
+    return getattr(prompt_toolkit, '__version__', '<0.57')
+
+
 class Shell(object):
     """Main xonsh shell.
 

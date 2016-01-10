@@ -12,7 +12,8 @@ import ply
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh import tools
-from xonsh.shell import is_readline_available, is_prompt_toolkit_available
+from xonsh.shell import (is_readline_available, is_prompt_toolkit_available,
+    prompt_toolkit_version)
 from xonsh.wizard import (Wizard, Pass, Message, Save, Load, YesNo, Input,
     PromptVisitor, While, StoreNonEmpty, create_truefalse_cond, YN)
 
@@ -228,7 +229,8 @@ def _info(ns):
         ('Python', '.'.join(map(str, tools.VER_FULL))),
         ('PLY', ply.__version__),
         ('have readline', is_readline_available()),
-        ('have prompt toolkit', is_prompt_toolkit_available()),
+        ('prompt toolkit', prompt_toolkit_version() if \
+                           is_prompt_toolkit_available() else False),
         ('on posix', tools.ON_POSIX),
         ('on linux', tools.ON_LINUX),
         ('on arch', tools.ON_ARCH),
