@@ -21,8 +21,6 @@ class TabShouldInsertIndentFilter(Filter):
 
 def can_compile(src):
     """Returns whether the code can be compiled, i.e. it is valid xonsh."""
-    if not src.endswith('\n') and not src.endswith('\''):
-        src = src + '\n'
     try:
         builtins.__xonsh_execer__.compile(src, mode='single', glbs=None,
                                           locs=builtins.__xonsh_ctx__)
@@ -89,8 +87,7 @@ def load_xonsh_bindings(key_bindings_manager):
             b.newline(copy_margin=True)
             _ = b.delete_before_cursor(count=len(indent_))
         elif (not b.document.on_first_line and
-              not (len(b.document.current_line) == 0 or
-                   b.document.current_line.isspace())):
+              not current_line_blank):
             b.newline(copy_margin=True)
         elif b.document.char_before_cursor == '\\':
             b.newline()
