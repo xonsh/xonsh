@@ -91,6 +91,8 @@ def load_xonsh_bindings(key_bindings_manager):
             b.newline(copy_margin=True)
         elif b.document.char_before_cursor == '\\':
             b.newline()
+        elif b.document.find_next_word_beginning() is not None:
+            b.newline(copy_margin=True)
         elif not can_compile(b.document.text):
             b.newline()
         else:
