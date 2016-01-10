@@ -196,7 +196,10 @@ def _wizard(ns):
     tempenv = {'PROMPT': '', 'XONSH_STORE_STDOUT': False}
     pv = PromptVisitor(wiz, multiline=False)
     with env.swap(tempenv):
-        pv.visit()
+        try:
+            pv.visit()
+        except (KeyboardInterrupt, EOFError):
+            pass
 
 
 def _format_human(data):
