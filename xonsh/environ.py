@@ -301,7 +301,8 @@ class Env(MutableMapping):
             if is_callable_default(val):
                 val = val(self)
         else:
-            raise KeyError()
+            e = "Unknown environment variable: ${}"
+            raise KeyError(e.format(key))
         if isinstance(val, (MutableSet, MutableSequence, MutableMapping)):
             self._detyped = None
         return val
