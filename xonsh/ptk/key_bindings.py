@@ -76,14 +76,15 @@ def load_xonsh_bindings(key_bindings_manager):
         b = event.cli.current_buffer
 
         at_end_of_line = b.document.current_line_after_cursor.strip() == ''
+        current_line_blank = (len(b.document.current_line) == 0 or
+                              b.document.current_line.isspace())
 
         # indent after a colon
         if (b.document.char_before_cursor == ':' and at_end_of_line):
             b.newline()
             b.insert_text(indent_, fire_event=False)
         # if current line isn't blank, check dedent tokens
-        elif (not (len(b.document.current_line) == 0 or
-                   b.document.current_line.isspace()) and
+        elif (not current_line_blank and
               b.document.current_line.split(maxsplit=1)[0] in DEDENT_TOKENS):
             b.newline(copy_margin=True)
             _ = b.delete_before_cursor(count=len(indent_))
@@ -95,7 +96,7 @@ def load_xonsh_bindings(key_bindings_manager):
             b.newline()
         elif b.document.find_next_word_beginning() is not None:
             b.newline(copy_margin=True)
-        elif not can_compile(b.document.text):
+        elif not current_line_blank and not can_compile(b.document.text):
             b.newline()
         else:
             b.accept_action.validate_and_handle(event.cli, b)
