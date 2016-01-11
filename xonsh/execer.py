@@ -186,6 +186,11 @@ class Execer(object):
                     if prev_indent == curr_indent:
                         raise original_error
                 maxcol = self._find_next_break(line, last_error_col)
+                if line.startswith('$['):
+                    # if we have already wrapped this in subproc tokens
+                    # and it still doesn't work, adding more won't help
+                    # anything
+                    raise original_error
                 sbpline = subproc_toks(line,
                                        returnline=True,
                                        maxcol=maxcol,
