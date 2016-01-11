@@ -5,9 +5,11 @@ import builtins
 from prompt_toolkit.filters import Filter, IsMultiline
 from prompt_toolkit.keys import Keys
 
+env = builtins.__xonsh_env__
+indent_ = env.get('INDENT')
 DEDENT_TOKENS = frozenset(['raise', 'return', 'pass', 'break', 'continue'])
 
-def carriage_return(b, cli, indent_):
+def carriage_return(b, cli):
 
     at_end_of_line = _is_blank(b.document.current_line_after_cursor)
     current_line_blank = _is_blank(b.document.current_line)
@@ -67,8 +69,6 @@ def load_xonsh_bindings(key_bindings_manager):
     Load custom key bindings.
     """
     handle = key_bindings_manager.registry.add_binding
-    env = builtins.__xonsh_env__
-    indent_ = env.get('INDENT')
 
 
     @handle(Keys.Tab, filter=TabShouldInsertIndentFilter())
@@ -103,7 +103,7 @@ def load_xonsh_bindings(key_bindings_manager):
         """
 
         b = event.cli.current_buffer
-        carriage_return(b, event.cli, indent_)
+        carriage_return(b, event.cli)
 
 
 def _is_blank(l):
