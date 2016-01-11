@@ -876,6 +876,23 @@ DEFAULT_VALUES['FORMATTER_DICT'] = dict(FORMATTER_DICT)
 
 _FORMATTER = string.Formatter()
 
+
+def is_template_string(template, formatter_dict=None):
+    """Returns whether or not the string is a valid template."""
+    template = template() if callable(template) else template
+    try:
+        included_names = set(i[1] for i in _FORMATTER.parse(template))
+    except ValueError:
+        return False
+    included_names.discard(None)
+    if formatter_dict is None:
+        fmtter = builtins.__xonsh_env__.get('FORMATTER_DICT', FORMATTER_DICT)
+    else:
+        fmtter = formatter_dict
+    known_names = set(fmtter.keys())
+    return included_names <= known_names
+    
+
 def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
     """Formats a xonsh prompt template string."""
     template = template() if callable(template) else template

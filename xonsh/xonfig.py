@@ -12,6 +12,7 @@ import ply
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh import tools
+from xonsh.environ import is_template_string
 from xonsh.shell import (is_readline_available, is_prompt_toolkit_available,
     prompt_toolkit_version)
 from xonsh.wizard import (Wizard, Pass, Message, Save, Load, YesNo, Input,
@@ -66,6 +67,10 @@ the static configuration file. Any variables set in this way are
 superceded by the definitions in the xonshrc or on the command line.
 Still, setting environment variables in this way can help define
 options that are global to the system or user.
+
+The following lists the environment variable name, its documentation,
+the default value, and the current value. The default and current 
+values are presented as pretty repr strings of their Python types.
 
 {{BOLD_GREEN}}Note:{{NO_COLOR}} Simply hitting enter for any environment variable 
 will accept the default value for that entry.
@@ -142,11 +147,12 @@ def make_envvar(name):
     default = vd.default
     if '\n' in default:
         default = '\n' + _wrap_paragraphs(default, width=69)
-    curr = pformat(env.get(name), width=69)
+    curr = env.get(name)
+    if tools.is_string(curr) and is_template_string(curr):
+        curr = curr.replace('{', '{{').replace('}', '}}')
+    curr = pformat(curr, width=69)
     if '\n' in curr:
         curr = '\n' + curr
-    if 'NO_COLOR' in curr:
-        curr = curr.replace('{', '{{').replace('}', '}}')
     prompt = ENVVAR_PROMPT.format(name=name, default=default, current=curr,
                                 docstr=_wrap_paragraphs(vd.docstr, width=69))
     ens = env.get_ensurer(name)
