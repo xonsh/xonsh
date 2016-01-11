@@ -315,7 +315,8 @@ DEFAULT_DOCS = {
     'MULTILINE_PROMPT': VarDocs(
         'Prompt text for 2nd+ lines of input, may be str or function which '
         'returns a str.'),
-    'OLDPWD': VarDocs('Used to represent a previous present working directory.'),
+    'OLDPWD': VarDocs('Used to represent a previous present working directory.',
+        configurable=False),
     'PATH': VarDocs(
         'List of strings representing where to look for executables.'),
     'PATHEXT': VarDocs('List of strings for filtering valid exeutables by.'),

@@ -195,7 +195,7 @@ def _wizard(ns):
     fname = env.get('XONSHCONFIG') if ns.file is None else ns.file
     wiz = make_wizard(default_file=fname, confirm=ns.confirm)
     tempenv = {'PROMPT': '', 'XONSH_STORE_STDOUT': False}
-    pv = PromptVisitor(wiz, multiline=False)
+    pv = PromptVisitor(wiz, store_in_history=False, multiline=False)
     with env.swap(tempenv):
         try:
             pv.visit()

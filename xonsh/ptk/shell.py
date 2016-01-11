@@ -38,12 +38,20 @@ class PromptToolkitShell(BaseShell):
             enable_open_in_editor=True)
         load_xonsh_bindings(self.key_bindings_manager)
 
-    def singleline(self, auto_suggest=None, enable_history_search=True, 
-                   multiline=True, **kwargs):
-        """Reads a single line of input from the shell."""
+    def singleline(self, store_in_history=True, auto_suggest=None, 
+                   enable_history_search=True, multiline=True, **kwargs):
+        """Reads a single line of input from the shell. The store_in_history
+        kwarg flags whether the input should be stored in PTK's in-memory
+        history.
+        """
         token_func, style_cls = self._get_prompt_tokens_and_style()
         env = builtins.__xonsh_env__
         mouse_support = env.get('MOUSE_SUPPORT')
+        if store_in_history:
+            history = self.history
+        else:
+            history = None
+            enable_history_search = False
         auto_suggest = auto_suggest if env.get('AUTO_SUGGEST') else None
         completions_display = env.get('COMPLETIONS_DISPLAY')
         multicolumn = (completions_display == 'multi')
@@ -57,7 +65,7 @@ class PromptToolkitShell(BaseShell):
                     completer=completer,
                     lexer=PygmentsLexer(XonshLexer),
                     multiline=multiline, 
-                    history=self.history,
+                    history=history,
                     enable_history_search=enable_history_search,
                     reserve_space_for_menu=0,
                     key_bindings_registry=self.key_bindings_manager.registry,

@@ -101,9 +101,21 @@ class ReadlineShell(BaseShell, Cmd):
     def __del__(self):
         teardown_readline()
 
-    def singleline(self, **kwargs):
-        """Reads a single line of input."""
-        return input(self.prompt)
+    def singleline(self, store_in_history=True, **kwargs):
+        """Reads a single line of input. The store_in_history kwarg
+        flags whether the input should be stored in readline's in-memory 
+        history.
+        """
+        if not store_in_history:  # store current position to remove it later
+            try:
+                import readline
+            except ImportError:
+                store_in_history = True
+            pos = readline.get_current_history_length() - 1
+        rtn = input(self.prompt)
+        if not store_in_history:
+            readline.remove_history_item(pos)
+        return rtn
 
     def parseline(self, line):
         """Overridden to no-op."""
