@@ -24,6 +24,10 @@ Current Developments
 * Environment variable docs are now auto-generated.
 * Prompt-toolkit shell will now dynamically allocate space for the 
   tab-completion menu.
+* Looking up nonexistent environment variables now generates an error
+  in Python mode, but produces a sane default value in subprocess mode.
+* Environments are now considered to contain all manually-adjusted keys,
+  and also all keys with an associated default value.
 
 **Deprecated:**
 

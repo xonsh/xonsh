@@ -557,7 +557,26 @@ class Env(MutableMapping):
     #
 
     def __getitem__(self, key):
-        return self.get(key)
+        m = self._arg_regex.match(key)
+        if (m is not None) and (key not in self._d) and ('ARGS' in self._d):
+            args = self._d['ARGS']
+            ix = int(m.group(1))
+            if ix >= len(args):
+                e = "Not enough arguments given to access ARG{0}."
+                raise KeyError(e.format(ix))
+            val = self._d['ARGS'][ix]
+        elif key in self._d:
+            val = self._d[key]
+        elif key in self.defaults:
+            val = self.defaults[key]
+            if is_callable_default(val):
+                val = val(self)
+        else:
+            e = "Unknown environment variable: ${}"
+            raise KeyError(e.format(key))
+        if isinstance(val, (MutableSet, MutableSequence, MutableMapping)):
+            self._detyped = None
+        return val
 
     def __setitem__(self, key, val):
         ensurer = self.get_ensurer(key)
@@ -570,32 +589,17 @@ class Env(MutableMapping):
         del self._d[key]
         self._detyped = None
 
-    def get(self, key, default=DefaultNotGiven):
+    def get(self, key, default=None):
         """The environment will look up default values from its own defaults if a
         default is not given here.
         """
-        m = self._arg_regex.match(key)
-        if (m is not None) and (key not in self._d) and ('ARGS' in self._d):
-            args = self._d['ARGS']
-            ix = int(m.group(1))
-            if ix >= len(args):
-                e = "Not enough arguments given to access ARG{0}."
-                raise IndexError(e.format(ix))
-            val = self._d['ARGS'][ix]
-        elif key in self._d:
-            val = self._d[key]
-        elif default is DefaultNotGiven:
-            val = self.defaults.get(key, None)
-            if is_callable_default(val):
-                val = val(self)
-        else:
-            val = default
-        if isinstance(val, (MutableSet, MutableSequence, MutableMapping)):
-            self._detyped = None
-        return val
+        try:
+            return self[key]
+        except KeyError:
+            return default
 
     def __iter__(self):
-        yield from self._d
+        yield from (set(self._d) | set(self.defaults))
 
     def __len__(self):
         return len(self._d)

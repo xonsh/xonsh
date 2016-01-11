@@ -166,6 +166,11 @@ useful to have more sophisticated types, like functions, in the environment.
 There are handful of environment variables that xonsh considers special.
 They can be seen on the `Environment Variables page <envvars.html>`_.
 
+.. note:: In subprocess mode, referencing an undefined environment variable
+          will produce an empty string.  In Python mode, however, a
+          ``KeyError`` will be raised if the variable does not exist in the
+          environment.
+
 Environment Lookup with ``${}``
 ================================
 The ``$NAME`` is great as long as you know the name of the environment

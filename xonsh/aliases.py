@@ -91,7 +91,7 @@ def source_foreign(args, stdin=None):
     env = builtins.__xonsh_env__
     denv = env.detype()
     for k, v in fsenv.items():
-        if k in env and v == denv[k]:
+        if k in denv and v == denv[k]:
             continue  # no change from original
         env[k] = v
     baliases = builtins.aliases
