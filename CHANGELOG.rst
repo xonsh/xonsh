@@ -6,7 +6,7 @@ Current Developments
 ====================
 **Added:**
 
-* timeit alias will now complete its arguments.
+* timeit and which aliases will now complete their arguments.
 * $COMPLETIONS_MENU_ROWS environment variable controls the size of the 
   tab-completion menu in prompt-toolkit.
 * Prompt-toolkit shell now supports true multiline input with the ability
@@ -34,6 +34,8 @@ None
 * First prompt in the prompt-toolkit shell now allows for up and down
   arrows to search through history.
 * Made obtaining the prompt-toolkit buffer thread-safe.
+* Now always set non-detypable environment variables when sourcing 
+  foreign shells.
 
 **Security:**
 
