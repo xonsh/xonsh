@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """Tests sample inputs to PTK multiline and checks parser response"""
-from __future__ import unicode_literals, print_function
-
 import nose
 from nose.tools import assert_equal
 from unittest.mock import MagicMock, patch
