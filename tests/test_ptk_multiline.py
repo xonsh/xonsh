@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Tests some tools function for prompt_toolkit integration."""
+"""Tests sample inputs to PTK multiline and checks parser response"""
 from __future__ import unicode_literals, print_function
 
 import nose
