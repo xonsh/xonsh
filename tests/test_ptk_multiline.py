@@ -1,28 +1,49 @@
 # -*- coding: utf-8 -*-
 """Tests sample inputs to PTK multiline and checks parser response"""
 import nose
-from nose.tools import assert_equal
+from nose.tools import assert_equal, with_setup
 from unittest.mock import MagicMock, patch
-
-import builtins
-from xonsh.environ import Env
-builtins.__xonsh_env__ = Env()
-builtins.__xonsh_env__['INDENT'] = '    '
-
-from xonsh.ptk.key_bindings import carriage_return
 
 from prompt_toolkit.interface import CommandLineInterface
 from prompt_toolkit.document import Document
 from prompt_toolkit.buffer import Buffer, AcceptAction
+from xonsh.environ import Env
 
-##Setup
-indent_ = '    '
-buffer = Buffer()
-bufaccept = MagicMock(name='accept', spec=AcceptAction)
-cli = MagicMock(name='cli', spec=CommandLineInterface)
+def setup():
+    global indent_
+    global buffer
+    global bufaccept
+    global cli
+    global carriage_return
+    global builtins
+    
+    import builtins
 
+    builtins.__xonsh_env__ = Env()
+    builtins.__xonsh_env__['INDENT'] = '    '
 
-buffer.accept_action = bufaccept
+    from xonsh.ptk.key_bindings import carriage_return
+
+    indent_ = '    '
+    buffer = Buffer()
+    bufaccept = MagicMock(name='accept', spec=AcceptAction)
+    cli = MagicMock(name='cli', spec=CommandLineInterface)
+    buffer.accept_action = bufaccept
+
+def teardown():
+    global indent_
+    global buffer
+    global bufaccept
+    global cli
+    global carriage_return
+    global builtins
+    
+    del indent_
+    del buffer
+    del bufaccept
+    del cli
+    del carriage_return
+    del builtins
 
 def test_colon_indent():
     document = Document('for i in range(5):')
