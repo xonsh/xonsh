@@ -208,7 +208,7 @@ applicable.
       - ``$XDG_DATA_HOME/xonsh``
       - This is the location where xonsh data files are stored, such as history.
     * - XONSH_ENCODING
-      - ``sys.getdefaultencoding()``
+      - ``sys.stdout.encoding`` if it is not None and on Windows, otherwise ``sys.getdefaultencoding()`` 
       - This is the that xonsh should use for subrpocess operations.
     * - XONSH_ENCODING_ERRORS
       - ``'surrogateescape'``
