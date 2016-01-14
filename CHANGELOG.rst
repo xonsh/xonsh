@@ -6,6 +6,10 @@ Current Developments
 ====================
 **Added:**
 
+* New configuration utility 'xonfig' which reports current system 
+  setup information and creates config files through an interactive
+  wizard.
+* Toolkit for creating wizards now available
 * timeit and which aliases will now complete their arguments.
 * $COMPLETIONS_MENU_ROWS environment variable controls the size of the 
   tab-completion menu in prompt-toolkit.
@@ -14,6 +18,10 @@ Current Developments
 
 **Changed:**
 
+* The xonfig wizard will run on interactive startup if no configuration
+  file is found.
+* BaseShell now has a singleline() method for prompting a single input.
+* Environment variable docs are now auto-generated.
 * Prompt-toolkit shell will now dynamically allocate space for the 
   tab-completion menu.
 * Looking up nonexistent environment variables now generates an error

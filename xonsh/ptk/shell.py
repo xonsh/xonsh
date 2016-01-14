@@ -38,6 +38,40 @@ class PromptToolkitShell(BaseShell):
             enable_open_in_editor=True)
         load_xonsh_bindings(self.key_bindings_manager)
 
+    def singleline(self, store_in_history=True, auto_suggest=None, 
+                   enable_history_search=True, multiline=True, **kwargs):
+        """Reads a single line of input from the shell. The store_in_history
+        kwarg flags whether the input should be stored in PTK's in-memory
+        history.
+        """
+        token_func, style_cls = self._get_prompt_tokens_and_style()
+        env = builtins.__xonsh_env__
+        mouse_support = env.get('MOUSE_SUPPORT')
+        if store_in_history:
+            history = self.history
+        else:
+            history = None
+            enable_history_search = False
+        auto_suggest = auto_suggest if env.get('AUTO_SUGGEST') else None
+        completions_display = env.get('COMPLETIONS_DISPLAY')
+        multicolumn = (completions_display == 'multi')
+        completer = None if completions_display == 'none' else self.pt_completer
+        with self.prompter:
+            line = self.prompter.prompt(
+                    mouse_support=mouse_support,
+                    auto_suggest=auto_suggest,
+                    get_prompt_tokens=token_func,
+                    style=style_cls,
+                    completer=completer,
+                    lexer=PygmentsLexer(XonshLexer),
+                    multiline=multiline, 
+                    history=history,
+                    enable_history_search=enable_history_search,
+                    reserve_space_for_menu=0,
+                    key_bindings_registry=self.key_bindings_manager.registry,
+                    display_completions_in_columns=multicolumn)
+        return line
+
     def push(self, line):
         """Pushes a line onto the buffer and compiles the code in a way that
         enables multiline input.
@@ -63,33 +97,10 @@ class PromptToolkitShell(BaseShell):
         """Enters a loop that reads and execute input from user."""
         if intro:
             print(intro)
-        _auto_suggest = AutoSuggestFromHistory()
+        auto_suggest = AutoSuggestFromHistory()
         while not builtins.__xonsh_exit__:
             try:
-                token_func, style_cls = self._get_prompt_tokens_and_style()
-                env = builtins.__xonsh_env__
-                mouse_support = env.get('MOUSE_SUPPORT')
-                if env.get('AUTO_SUGGEST'):
-                    auto_suggest = _auto_suggest
-                else:
-                    auto_suggest = None
-                completions_display = env.get('COMPLETIONS_DISPLAY')
-                multicolumn = (completions_display == 'multi')
-                completer = None if completions_display == 'none' else self.pt_completer
-                with self.prompter:
-                    line = self.prompter.prompt(
-                        mouse_support=mouse_support,
-                        auto_suggest=auto_suggest,
-                        get_prompt_tokens=token_func,
-                        style=style_cls,
-                        completer=completer,
-                        lexer=PygmentsLexer(XonshLexer),
-                        history=self.history,
-                        multiline=True, 
-                        enable_history_search=True,
-                        reserve_space_for_menu=0,
-                        key_bindings_registry=self.key_bindings_manager.registry,
-                        display_completions_in_columns=multicolumn)
+                line = self.singleline(auto_suggest=auto_suggest)
                 if not line:
                     self.emptyline()
                 else:

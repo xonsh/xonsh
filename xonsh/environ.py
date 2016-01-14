@@ -9,7 +9,9 @@ import locale
 import builtins
 import subprocess
 from warnings import warn
+from pprint import pformat
 from functools import wraps
+from contextlib import contextmanager
 from collections import MutableMapping, MutableSequence, MutableSet, namedtuple
 
 from xonsh import __version__ as XONSH_VERSION
@@ -19,7 +21,8 @@ from xonsh.tools import (
     env_path_to_str, is_bool, to_bool, bool_to_str, is_history_tuple, to_history_tuple,
     history_tuple_to_str, is_float, string_types, is_string, DEFAULT_ENCODING,
     is_completions_display_value, to_completions_display_value, is_string_set,
-    csv_to_set, set_to_csv, get_sep, is_int
+    csv_to_set, set_to_csv, get_sep, is_int, is_bool_seq, csv_to_bool_seq,
+    bool_seq_to_csv
 )
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
@@ -53,6 +56,7 @@ represent environment variable validation, conversion, detyping.
 
 DEFAULT_ENSURERS = {
     'AUTO_CD': (is_bool, to_bool, bool_to_str),
+    'AUTO_PUSHD': (is_bool, to_bool, bool_to_str),
     'AUTO_SUGGEST': (is_bool, to_bool, bool_to_str),
     'BASH_COMPLETIONS': (is_env_path, str_to_env_path, env_path_to_str),
     'CASE_SENSITIVE_COMPLETIONS': (is_bool, to_bool, bool_to_str),
@@ -67,7 +71,9 @@ DEFAULT_ENSURERS = {
     'LC_MESSAGES': (always_false, locale_convert('LC_MESSAGES'), ensure_string),
     'LC_MONETARY': (always_false, locale_convert('LC_MONETARY'), ensure_string),
     'LC_NUMERIC': (always_false, locale_convert('LC_NUMERIC'), ensure_string),
-    'LC_TIME': (always_false, locale_convert('LC_TIME'), ensure_string),
+    'LC_TIME': (always_false, locale_convert('LC_TIME'), ensure_string),    
+    'LOADED_CONFIG': (is_bool, to_bool, bool_to_str),
+    'LOADED_RC_FILES': (is_bool_seq, csv_to_bool_seq, bool_seq_to_csv),
     'MOUSE_SUPPORT': (is_bool, to_bool, bool_to_str),
     re.compile('\w*PATH$'): (is_env_path, str_to_env_path, env_path_to_str),
     'PATHEXT': (is_env_path, str_to_env_path, env_path_to_str),
@@ -157,6 +163,8 @@ DEFAULT_VALUES = {
     'LC_TIME': locale.setlocale(locale.LC_TIME),
     'LC_MONETARY': locale.setlocale(locale.LC_MONETARY),
     'LC_NUMERIC': locale.setlocale(locale.LC_NUMERIC),
+    'LOADED_CONFIG': False,
+    'LOADED_RC_FILES': (),
     'MOUSE_SUPPORT': False,
     'MULTILINE_PROMPT': '.',
     'PATH': (),
@@ -199,6 +207,240 @@ class DefaultNotGivenType(object):
 
 DefaultNotGiven = DefaultNotGivenType()
 
+VarDocs = namedtuple('VarDocs', ['docstr', 'configurable', 'default'])
+VarDocs.__doc__ = """Named tuple for environment variable documentation
+    
+Parameters
+----------
+docstr : str
+   The environment variable docstring.
+configurable : bool, optional
+    Flag for whether the environment variable is configurable or not.
+default : str, optional
+    Custom docstring for the default value for complex defaults.
+    Is this is DefaultNotGiven, then the default will be looked up 
+    from DEFAULT_VALUES and converted to a str.
+"""
+VarDocs.__new__.__defaults__ = (True, DefaultNotGiven)  # iterates from back
+
+# Please keep the following in alphabetic order - scopatz
+DEFAULT_DOCS = {
+    'ANSICON': VarDocs('This is used on Windows to set the title, '
+                       'if available.', configurable=ON_WINDOWS),
+    'AUTO_CD': VarDocs(
+        'Flag to enable changing to a directory by entering the dirname or '
+        'full path only (without the cd command).'),
+    'AUTO_PUSHD': VarDocs(
+        'Flag for automatically pushing directories onto the directory stack.'
+        ),
+    'AUTO_SUGGEST': VarDocs(
+        'Enable automatic command suggestions based on history, like in fish '
+        'shell.\n\nPressing the right arrow key inserts the currently '
+        'displayed suggestion. Only usable with $SHELL_TYPE=prompt_toolkit.'),
+    'BASH_COMPLETIONS': VarDocs(
+        'This is a list (or tuple) of strings that specifies where the BASH '
+        'completion files may be found. The default values are platform '
+        'dependent, but sane. To specify an alternate list, do so in the run '
+        'control file.', default=(
+        "Normally this is:\n\n"
+        "    ('/etc/bash_completion',\n"
+        "     '/usr/share/bash-completion/completions/git')\n\n"
+        "But, on Mac it is:\n\n"
+        "    ('/usr/local/etc/bash_completion',\n"
+        "     '/opt/local/etc/profile.d/bash_completion.sh')\n\n"
+        "And on Arch Linux it is:\n\n"
+        "    ('/usr/share/bash-completion/bash_completion',\n"
+        "     '/usr/share/bash-completion/completions/git')\n\n"
+        "Other OS-specific defaults may be added in the future.")),
+    'CASE_SENSITIVE_COMPLETIONS': VarDocs(
+        'Sets whether completions should be case sensitive or case '
+        'insensitive.', default='True on Linux, False otherwise.'),
+    'CDPATH': VarDocs(
+        'A list of paths to be used as roots for a cd, breaking compatibility '
+        'with Bash, xonsh always prefer an existing relative path.'),
+    'COMPLETIONS_DISPLAY': VarDocs(
+        'Configure if and how Python completions are displayed by the '
+        'prompt_toolkit shell.\n\nThis option does not affect Bash '
+        'completions, auto-suggestions, etc.\n\nChanging it at runtime will '
+        'take immediate effect, so you can quickly disable and enable '
+        'completions during shell sessions.\n\n'
+        "- If $COMPLETIONS_DISPLAY is 'none' or 'false', do not display\n"
+        "  those completions.\n"
+        "- If $COMPLETIONS_DISPLAY is 'single', display completions in a\n"
+        '  single column while typing.\n'
+        "- If $COMPLETIONS_DISPLAY is 'multi' or 'true', display completions\n"
+        "  in multiple columns while typing.\n\n"
+        'These option values are not case- or type-sensitive, so e.g.'
+        "writing \"$COMPLETIONS_DISPLAY = None\" and \"$COMPLETIONS_DISPLAY "
+        "= 'none'\" are equivalent. Only usable with "
+        "$SHELL_TYPE=prompt_toolkit"),
+    'COMPLETIONS_MENU_ROWS': VarDocs(
+        'Number of rows to reserve for tab-completions menu if '
+        "$COMPLETIONS_DISPLAY is 'single' or 'multi'. This only effects the "
+        'prompt-toolkit shell.'),
+    'DIRSTACK_SIZE': VarDocs('Maximum size of the directory stack.'),
+    'EXPAND_ENV_VARS': VarDocs(
+        'Toggles whether environment variables are expanded inside of strings '
+        'in subprocess mode.'),
+    'FORCE_POSIX_PATHS': VarDocs(
+        "Forces forward slashes ('/') on Windows systems when using auto "
+        'completion if set to anything truthy.', configurable=ON_WINDOWS),
+    'FORMATTER_DICT': VarDocs(
+        'Dictionary containing variables to be used when formatting $PROMPT '
+        "and $TITLE. See 'Customizing the Prompt' "
+        'http://xonsh.org/tutorial.html#customizing-the-prompt', 
+        configurable=False, default='xonsh.environ.FORMATTER_DICT'),
+    'HISTCONTROL': VarDocs(
+        'A set of strings (comma-separated list in string form) of options '
+        'that determine what commands are saved to the history list. By '
+        "default all commands are saved. The option 'ignoredups' will not "
+        "save the command if it matches the previous command. The option "
+        "'ignoreerr' will cause any commands that fail (i.e. return non-zero "
+        "exit status) to not be added to the history list."),
+    'IGNOREEOF': VarDocs('Prevents Ctrl-D from exiting the shell.'),
+    'INDENT': VarDocs('Indentation string for multiline input'),
+    'LOADED_CONFIG': VarDocs('Whether or not the xonsh config file was loaded',
+        configurable=False),
+    'LOADED_RC_FILES': VarDocs(
+        'Whether or not any of the xonsh run control files were loaded at '
+        'startup. This is a sequence of bools in Python that is converted '
+        "to a CSV list in string form, ie [True, False] becomes 'True,False'.",
+        configurable=False),
+    'MOUSE_SUPPORT': VarDocs(
+        'Enable mouse support in the prompt_toolkit shell. This allows '
+        'clicking for positioning the cursor or selecting a completion. In '
+        'some terminals however, this disables the ability to scroll back '
+        'through the history of the terminal. Only usable with '
+        '$SHELL_TYPE=prompt_toolkit'),
+    'MULTILINE_PROMPT': VarDocs(
+        'Prompt text for 2nd+ lines of input, may be str or function which '
+        'returns a str.'),
+    'OLDPWD': VarDocs('Used to represent a previous present working directory.',
+        configurable=False),
+    'PATH': VarDocs(
+        'List of strings representing where to look for executables.'),
+    'PATHEXT': VarDocs('List of strings for filtering valid exeutables by.'),
+    'PROMPT': VarDocs(
+        'The prompt text. May contain keyword arguments which are '
+        "auto-formatted, see 'Customizing the Prompt' at "
+        'http://xonsh.org/tutorial.html#customizing-the-prompt.',
+        default='xonsh.environ.DEFAULT_PROMPT'),
+    'PROMPT_TOOLKIT_COLORS': VarDocs(
+        'This is a mapping of from color names to HTML color codes. Whenever '
+        'prompt-toolkit would color a word a particular color (in the prompt, '
+        'or in syntax highlighting), it will use the value specified here to '
+        'represent that color, instead of its default.  If a color is not '
+        'specified here, prompt-toolkit uses the colors from '
+        "'xonsh.tools._PT_COLORS'.", configurable=False), 
+    'PROMPT_TOOLKIT_STYLES': VarDocs(
+        'This is a mapping of user-specified styles for prompt-toolkit. See '
+        'the prompt-toolkit documentation for more details. If None, this is '
+        'skipped.', configurable=False),
+    'PUSHD_MINUS': VarDocs(
+        'Flag for directory pushing functionality. False is the normal '
+        'behaviour.'),
+    'PUSHD_SILENT': VarDocs(
+        'Whether or not to suppress directory stack manipulation output.'),
+    'SHELL_TYPE': VarDocs(
+        'Which shell is used. Currently two base shell types are supported:\n\n'
+        "    - 'readline' that is backed by Python's readline module\n"
+        "    - 'prompt_toolkit' that uses external library of the same name\n" 
+        "    - 'random' selects a random shell from the above on startup\n\n"
+        'To use the prompt_toolkit shell you need to have prompt_toolkit '
+        '(https://github.com/jonathanslenders/python-prompt-toolkit)'
+        'library installed. To specify which shell should be used, do so in '
+        'the run control file.', default=("'prompt_toolkit' if on Windows, "
+        "and 'readline' otherwise.")),
+    'SUGGEST_COMMANDS': VarDocs(
+        'When a user types an invalid command, xonsh will try to offer '
+        'suggestions of similar valid commands if this is True.'),
+    'SUGGEST_MAX_NUM': VarDocs(
+        'xonsh will show at most this many suggestions in response to an '
+        'invalid command. If negative, there is no limit to how many '
+        'suggestions are shown.'),
+    'SUGGEST_THRESHOLD': VarDocs(
+        'An error threshold. If the Levenshtein distance between the entered '
+        'command and a valid command is less than this value, the valid '
+        'command will be offered as a suggestion.'),
+    'TEEPTY_PIPE_DELAY': VarDocs(
+        'The number of [seconds] to delay a spawned process if it has '
+        'information being piped in via stdin. This value must be a float. '
+        'If a value less than or equal to zero is passed in, no delay is '
+        'used. This can be used to fix situations where a spawned process, '
+        'such as piping into \'grep\', exits too quickly for the piping '
+        'operation itself. TeePTY (and thus this variable) are currently '
+        'only used when $XONSH_STORE_STDOUT is True.', configurable=ON_LINUX),
+    'TERM': VarDocs(
+        'TERM is sometimes set by the terminal emulator. This is used (when '
+        "valid) to determine whether or not to set the title. Users shouldn't "
+        "need to set this themselves.", configurable=False),
+    'TITLE': VarDocs(
+        'The title text for the window in which xonsh is running. Formatted '
+        "in the same manner as $PROMPT, see 'Customizing the Prompt' "
+        'http://xonsh.org/tutorial.html#customizing-the-prompt.',
+        default='xonsh.environ.DEFAULT_TITLE'),
+    'VI_MODE': VarDocs(
+        "Flag to enable 'vi_mode' in the 'prompt_toolkit' shell."),
+    'XDG_CONFIG_HOME': VarDocs(
+        'Open desktop standard configuration home dir. This is the same '
+        'default as used in the standard.', configurable=False, 
+        default="'~/.config'"),
+    'XDG_DATA_HOME': VarDocs(
+        'Open desktop standard data home dir. This is the same default as '
+        'used in the standard.', default="'~/.local/share'"),
+    'XONSHCONFIG': VarDocs(
+        'The location of the static xonsh configuration file, if it exists. '
+        'This is in JSON format.', configurable=False,
+        default="'$XONSH_CONFIG_DIR/config.json'"),
+    'XONSHRC': VarDocs(
+        'A tuple of the locations of run control files, if they exist.  User '
+        'defined run control file will supercede values set in system-wide '
+        'control file if there is a naming collision.', default=(
+        "On Linux & Mac OSX: ('/etc/xonshrc', '~/.xonshrc')\n"
+        "On Windows: ('%ALLUSERSPROFILE%\\xonsh\\xonshrc', '~/.xonshrc')")),
+    'XONSH_CONFIG_DIR': VarDocs(
+        'This is location where xonsh configuration information is stored.',
+        configurable=False, default="'$XDG_CONFIG_HOME/xonsh'"),
+    'XONSH_DATA_DIR': VarDocs(
+        'This is the location where xonsh data files are stored, such as '
+        'history.', default="'$XDG_DATA_HOME/xonsh'"),
+    'XONSH_ENCODING': VarDocs(
+        'This is the that xonsh should use for subrpocess operations.',
+        default='sys.getdefaultencoding()'),
+    'XONSH_ENCODING_ERRORS': VarDocs(
+        'The flag for how to handle encoding errors should they happen. '
+        'Any string flag that has been previously registered with Python '
+        "is allowed. See the 'Python codecs documentation' "
+        "(https://docs.python.org/3/library/codecs.html#error-handlers) "
+        'for more information and available options.', 
+        default="'surrogateescape'"),
+    'XONSH_HISTORY_FILE': VarDocs('Location of history file (deprecated).',
+        configurable=False, default="'~/.xonsh_history'"),
+    'XONSH_HISTORY_SIZE': VarDocs(
+        'Value and units tuple that sets the size of history after garbage '
+        'collection. Canonical units are:\n\n'
+        "- 'commands' for the number of past commands executed,\n"
+        "- 'files' for the number of history files to keep,\n"
+        "- 's' for the number of seconds in the past that are allowed, and\n"
+        "- 'b' for the number of bytes that history may consume.\n\n"
+        "Common abbreviations, such as '6 months' or '1 GB' are also allowed.",
+        default="(8128, 'commands') or '8128 commands'"),
+    'XONSH_INTERACTIVE': VarDocs(
+        'True if xonsh is running interactively, and False otherwise.',
+        configurable=False),
+    'XONSH_LOGIN': VarDocs(
+        'True if xonsh is running as a login shell, and False otherwise.',
+        configurable=False),
+    'XONSH_SHOW_TRACEBACK': VarDocs(
+        'Controls if a traceback is shown exceptions occur in the shell. '
+        'Set to True to always show or False to always hide. If undefined '
+        'then traceback is hidden but a notice is shown on how to enable the '
+        'traceback.'),
+    'XONSH_STORE_STDOUT': VarDocs(
+        'Whether or not to store the stdout and stderr streams in the '
+        'history files.', configurable=False),
+    }
+
 #
 # actual environment
 #
@@ -224,6 +466,7 @@ class Env(MutableMapping):
         self._d = {}
         self.ensurers = {k: Ensurer(*v) for k, v in DEFAULT_ENSURERS.items()}
         self.defaults = DEFAULT_VALUES
+        self.docs = DEFAULT_DOCS
         if len(args) == 0 and len(kwargs) == 0:
             args = (os.environ, )
         for key, val in dict(*args, **kwargs).items():
@@ -280,6 +523,35 @@ class Env(MutableMapping):
             ens = default
         self.ensurers[key] = ens
         return ens
+
+    def get_docs(self, key, default=VarDocs('<no documentation>')):
+        """Gets the documentation for the environment variable."""
+        vd = self.docs.get(key, None)
+        if vd is None:
+            return default
+        if vd.default is DefaultNotGiven:
+            dval = pformat(self.defaults.get(key, '<default not set>'))
+            vd = vd._replace(default=dval)
+            self.docs[key] = vd
+        return vd
+
+    @contextmanager
+    def swap(self, other):
+        """Provides a context manager for temporarily swapping out certain
+        environment variables with other values. On exit from the context
+        manager, the original values are restored.
+        """
+        old = {}
+        for k, v in other.items():
+            old[k] = self.get(k, NotImplemented)
+            self[k] = v
+        yield self
+        for k, v in old.items():
+            if v is NotImplemented:
+                del self[k]
+            else:
+                self[k] = v
+
 
     #
     # Mutable mapping interface
@@ -604,6 +876,23 @@ DEFAULT_VALUES['FORMATTER_DICT'] = dict(FORMATTER_DICT)
 
 _FORMATTER = string.Formatter()
 
+
+def is_template_string(template, formatter_dict=None):
+    """Returns whether or not the string is a valid template."""
+    template = template() if callable(template) else template
+    try:
+        included_names = set(i[1] for i in _FORMATTER.parse(template))
+    except ValueError:
+        return False
+    included_names.discard(None)
+    if formatter_dict is None:
+        fmtter = builtins.__xonsh_env__.get('FORMATTER_DICT', FORMATTER_DICT)
+    else:
+        fmtter = formatter_dict
+    known_names = set(fmtter.keys())
+    return included_names <= known_names
+    
+
 def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
     """Formats a xonsh prompt template string."""
     template = template() if callable(template) else template
@@ -653,34 +942,41 @@ BASE_ENV = {
     'XONSH_VERSION': XONSH_VERSION,
 }
 
-def load_static_config(ctx):
+def load_static_config(ctx, config=None):
     """Loads a static configuration file from a given context, rather than the
-    current environment.
+    current environment.  Optionally may pass in configuration file name.
     """
     env = {}
     env['XDG_CONFIG_HOME'] = ctx.get('XDG_CONFIG_HOME',
                                      DEFAULT_VALUES['XDG_CONFIG_HOME'])
     env['XONSH_CONFIG_DIR'] = ctx['XONSH_CONFIG_DIR'] if 'XONSH_CONFIG_DIR' in ctx \
                               else xonsh_config_dir(env)
-    env['XONSHCONFIG'] = ctx['XONSHCONFIG'] if 'XONSHCONFIG' in ctx \
-                                  else xonshconfig(env)
-    config = env['XONSHCONFIG']
+    if config is not None:
+        env['XONSHCONFIG'] = ctx['XONSHCONFIG'] = config
+    elif 'XONSHCONFIG' in ctx:
+        config = env['XONSHCONFIG'] = ctx['XONSHCONFIG'] 
+    else:
+        # don't set in ctx in order to maintain default 
+        config = env['XONSHCONFIG'] = xonshconfig(env)
     if os.path.isfile(config):
         with open(config, 'r') as f:
             conf = json.load(f)
+        ctx['LOADED_CONFIG'] = True
     else:
         conf = {}
+        ctx['LOADED_CONFIG'] = False
     return conf
 
 
 def xonshrc_context(rcfiles=None, execer=None):
     """Attempts to read in xonshrc file, and return the contents."""
-    if (rcfiles is None or execer is None
-       or sum([os.path.isfile(rcfile) for rcfile in rcfiles]) == 0):
+    loaded = builtins.__xonsh_env__['LOADED_RC_FILES'] = []
+    if (rcfiles is None or execer is None):
         return {}
     env = {}
     for rcfile in rcfiles:
         if not os.path.isfile(rcfile):
+            loaded.append(False)
             continue
         with open(rcfile, 'r') as f:
             rc = f.read()
@@ -690,7 +986,9 @@ def xonshrc_context(rcfiles=None, execer=None):
         try:
             execer.filename = rcfile
             execer.exec(rc, glbs=env)
+            loaded.append(True)
         except SyntaxError as err:
+            loaded.append(False)
             msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
             warn(msg.format(rcfile, err), RuntimeWarning)
         finally:
@@ -717,12 +1015,12 @@ def windows_env_fixes(ctx):
     ctx['PWD'] = _get_cwd()
 
 
-def default_env(env=None):
+def default_env(env=None, config=None):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence
     ctx = dict(BASE_ENV)
     ctx.update(os.environ)
-    conf = load_static_config(ctx)
+    conf = load_static_config(ctx, config=config)
     ctx.update(conf.get('env', ()))
     ctx.update(load_foreign_envs(shells=conf.get('foreign_shells', DEFAULT_SHELLS),
                                  issue_warning=False))

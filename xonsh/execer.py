@@ -16,11 +16,8 @@ from xonsh.built_ins import load_builtins, unload_builtins
 class Execer(object):
     """Executes xonsh code in a context."""
 
-    def __init__(self,
-                 filename='<xonsh-code>',
-                 debug_level=0,
-                 parser_args=None,
-                 unload=True):
+    def __init__(self, filename='<xonsh-code>', debug_level=0, parser_args=None,
+                 unload=True, config=None):
         """Parameters
         ----------
         filename : str, optional
@@ -31,6 +28,8 @@ class Execer(object):
             Arguments to pass down to the parser.
         unload : bool, optional
             Whether or not to unload xonsh builtins upon deletion.
+        config : str, optional
+            Path to configuration file.
         """
         parser_args = parser_args or {}
         self.parser = Parser(**parser_args)
@@ -38,7 +37,7 @@ class Execer(object):
         self.debug_level = debug_level
         self.unload = unload
         self.ctxtransformer = ast.CtxAwareTransformer(self.parser)
-        load_builtins(execer=self)
+        load_builtins(execer=self, config=config)
 
     def __del__(self):
         if self.unload:

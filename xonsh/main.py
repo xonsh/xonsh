@@ -52,9 +52,10 @@ parser.add_argument('-l',
 parser.add_argument('--config-path',
                     help='specify a custom static configuration file',
                     dest='config_path',
+                    default=None,
                     type=path_argument)
 parser.add_argument('--no-rc',
-                    help="Do not load the .xonshrc file",
+                    help="Do not load the .xonshrc files",
                     dest='norc',
                     action='store_true',
                     default=False)
@@ -136,10 +137,10 @@ def premain(argv=None):
         print(version)
         exit()
     shell_kwargs = {'shell_type': args.shell_type}
+    if args.config_path is None:
+        shell_kwargs['config'] = args.config_path
     if args.norc:
-        shell_kwargs['ctx'] = {}
-    if args.config_path:
-        shell_kwargs['ctx']= {'XONSHCONFIG': args.config_path}
+        shell_kwargs['rc'] = ()
     setattr(sys, 'displayhook', _pprint_displayhook)
     shell = builtins.__xonsh_shell__ = Shell(**shell_kwargs)
     from xonsh import imphooks
@@ -182,6 +183,10 @@ def main(argv=None):
         # otherwise, enter the shell
         env['XONSH_INTERACTIVE'] = True
         ignore_sigtstp()
+        if not env['LOADED_CONFIG'] and not any(env['LOADED_RC_FILES']):
+            print('Could not find xonsh configuration or run control files.')
+            code = '$[xonfig wizard --confirm]'
+            shell.execer.exec(code, mode='single', glbs=shell.ctx)
         shell.cmdloop()
     postmain(args)
 

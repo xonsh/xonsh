@@ -9,6 +9,15 @@ from xonsh.environ import xonshrc_context
 from xonsh.tools import XonshError
 
 
+def is_readline_available():
+    """Checks if readline is available to import."""
+    try:
+        import readline
+        return True
+    except ImportError:
+        return False
+
+
 def is_prompt_toolkit_available():
     """Checks if prompt_toolkit is available to import."""
     try:
@@ -18,6 +27,12 @@ def is_prompt_toolkit_available():
         return False
 
 
+def prompt_toolkit_version():
+    """Gets the prompt toolkit version."""
+    import prompt_toolkit
+    return getattr(prompt_toolkit, '__version__', '<0.57')
+
+
 class Shell(object):
     """Main xonsh shell.
 
@@ -25,8 +40,25 @@ class Shell(object):
     readline version of shell should be used.
     """
 
-    def __init__(self, ctx=None, shell_type=None, **kwargs):
-        self._init_environ(ctx)
+    def __init__(self, ctx=None, shell_type=None, config=None, rc=None, 
+                 **kwargs):
+        """
+        Parameters
+        ----------
+        ctx : Mapping, optional
+            The execution context for the shell (e.g. the globals namespace).
+            If none, this is computed by loading the rc files. If not None,
+            this no additional context is computed and this is used 
+            directly.
+        shell_type : str, optional
+            The shell type to start, such as 'readline', 'prompt_toolkit', 
+            or 'random'.
+        config : str, optional
+            Path to configuration file.
+        rc : list of str, optional
+            Sequence of paths to run control files.
+        """
+        self._init_environ(ctx, config, rc)
         env = builtins.__xonsh_env__
         # pick a valid shell
         if shell_type is not None:
@@ -57,13 +89,13 @@ class Shell(object):
         """Delegates calls to appropriate shell instance."""
         return getattr(self.shell, attr)
 
-    def _init_environ(self, ctx):
-        self.execer = Execer()
+    def _init_environ(self, ctx, config, rc):
+        self.execer = Execer(config=config)
         env = builtins.__xonsh_env__
-        if ctx is not None:
-            self.ctx = ctx
-        else:
-            rc = env.get('XONSHRC')
+        if ctx is None:
+            rc = env.get('XONSHRC') if rc is None else rc
             self.ctx = xonshrc_context(rcfiles=rc, execer=self.execer)
+        else:
+            self.ctx = ctx
         builtins.__xonsh_ctx__ = self.ctx
         self.ctx['__name__'] = '__main__'

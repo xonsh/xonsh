@@ -27,7 +27,7 @@ import traceback
 import threading
 import subprocess
 from contextlib import contextmanager
-from collections import OrderedDict, Sequence
+from collections import OrderedDict, Sequence, Set
 from warnings import warn
 
 if sys.version_info[0] >= 3:
@@ -553,6 +553,15 @@ def bool_to_str(x):
     return '1' if x else ''
 
 
+_BREAKS = frozenset(['b', 'break', 's', 'skip', 'q', 'quit'])
+
+def to_bool_or_break(x):
+    if isinstance(x, string_types) and x.lower() in _BREAKS:
+        return 'break'
+    else:
+        return to_bool(x)
+
+
 def ensure_int_or_slice(x):
     """Makes sure that x is list-indexable."""
     if x is None:
@@ -572,7 +581,7 @@ def is_string_set(x):
     if isinstance(x, string_types):
         return False
     else:
-        return (isinstance(x, set) and
+        return (isinstance(x, Set) and
                 all([isinstance(a, string_types) for a in x]))
 
 
@@ -587,6 +596,23 @@ def csv_to_set(x):
 def set_to_csv(x):
     """Convert a set of strings to a comma-separated list of strings."""
     return ','.join(x)
+
+
+def is_bool_seq(x):
+    """Tests if an object is a sequence of bools."""
+    return isinstance(x, Sequence) and all(map(isinstance, x, [bool]*len(x)))
+
+
+def csv_to_bool_seq(x):
+    """Takes a comma-separated string and converts it into a list of bools."""
+    if len(x) == 0:
+        return []
+    return list(map(to_bool, x.split(',')))
+
+
+def bool_seq_to_csv(x):
+    """Converts a sequence of bools to a comma-separated string."""
+    return ','.join(map(str, x))
 
 
 def is_completions_display_value(x):
@@ -807,12 +833,29 @@ def format_prompt_for_prompt_toolkit(prompt):
     return token_names, cstyles, strings
 
 
+def format_color(string):
+    """Formats strings that contain xonsh.tools.TERM_COLORS values."""
+    s = string.format(**TERM_COLORS).replace('\001', '').replace('\002', '')
+    return s
+
+
 def print_color(string, file=sys.stdout):
     """Print strings that contain xonsh.tools.TERM_COLORS values. By default
     `sys.stdout` is used as the output stream but an alternate can be specified
     by the `file` keyword argument."""
-    print(string.format(**TERM_COLORS).replace('\001', '').replace('\002', ''),
-          file=file)
+    print(format_color(string), file=file)
+
+
+def escape_color(string):
+    """Escapes color formatting, ie '{RED}' becomes '{{RED}}'."""
+    s = string
+    for color in TERM_COLORS.keys():
+        if color in s:
+            bc = '{' + color + '}'  # braced color
+            dbc = '{' + bc + '}'  # double-braced color
+            s = s.replace(bc, dbc)
+    return s
+
 
 _RE_STRING_START = "[bBrRuU]*"
 _RE_STRING_TRIPLE_DOUBLE = '"""'
@@ -1021,3 +1064,18 @@ def expandvars(path):
             res += c
         index += 1
     return res
+
+#
+# File handling tools
+# 
+
+def backup_file(fname):
+    """Moves an existing file to a new name that has the current time right
+    before the extension.
+    """
+    # lazy imports
+    import shutil
+    from datetime import datetime
+    base, ext = os.path.splitext(fname)
+    newfname = base + '.' + datetime.now().isoformat() + ext
+    shutil.move(fname, newfname)

@@ -20,7 +20,7 @@ RL_DONE = None
 
 
 def setup_readline():
-    """Sets up the readline module and completion supression, if available."""
+    """Sets up the readline module and completion suppression, if available."""
     global RL_COMPLETION_SUPPRESS_APPEND, RL_LIB, RL_CAN_RESIZE
     if RL_COMPLETION_SUPPRESS_APPEND is not None:
         return
@@ -100,6 +100,22 @@ class ReadlineShell(BaseShell, Cmd):
 
     def __del__(self):
         teardown_readline()
+
+    def singleline(self, store_in_history=True, **kwargs):
+        """Reads a single line of input. The store_in_history kwarg
+        flags whether the input should be stored in readline's in-memory 
+        history.
+        """
+        if not store_in_history:  # store current position to remove it later
+            try:
+                import readline
+            except ImportError:
+                store_in_history = True
+            pos = readline.get_current_history_length() - 1
+        rtn = input(self.prompt)
+        if not store_in_history:
+            readline.remove_history_item(pos)
+        return rtn
 
     def parseline(self, line):
         """Overridden to no-op."""
@@ -198,7 +214,7 @@ class ReadlineShell(BaseShell, Cmd):
                     if inserter is not None:
                         readline.set_pre_input_hook(inserter)
                     try:
-                        line = input(self.prompt)
+                        line = self.singleline()
                     except EOFError:
                         if builtins.__xonsh_env__.get("IGNOREEOF"):
                             self.stdout.write('Use "exit" to leave the shell.'
