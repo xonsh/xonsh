@@ -139,6 +139,8 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd='env',
         currenv = dict(currenv)
     try:
         s = subprocess.check_output(cmd, stderr=subprocess.PIPE, env=currenv,
+                                    # start new session to avoid hangs
+                                    start_new_session=True,
                                     universal_newlines=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
         if not safe:
