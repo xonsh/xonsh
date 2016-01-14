@@ -44,6 +44,8 @@ None
 * Made obtaining the prompt-toolkit buffer thread-safe.
 * Now always set non-detypable environment variables when sourcing 
   foreign shells.
+* Fixed issue with job management if a TTY existed but was not controlled
+  by the process, posix only.
 
 **Security:**
 
