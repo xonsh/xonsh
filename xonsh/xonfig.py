@@ -205,7 +205,7 @@ def _wizard(ns):
     with env.swap(tempenv):
         try:
             pv.visit()
-        except (KeyboardInterrupt, EOFError):
+        except (KeyboardInterrupt, Exception):
             pass
 
 
