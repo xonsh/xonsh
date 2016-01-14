@@ -46,6 +46,7 @@ None
   foreign shells.
 * Fixed issue with job management if a TTY existed but was not controlled
   by the process, posix only.
+* Jupyter kernel no longer times out when using foreign shells on startup.
 
 **Security:**
 
