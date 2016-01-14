@@ -113,7 +113,7 @@ class ReadlineShell(BaseShell, Cmd):
                 store_in_history = True
             pos = readline.get_current_history_length() - 1
         rtn = input(self.prompt)
-        if not store_in_history:
+        if not store_in_history and pos >= 0:
             readline.remove_history_item(pos)
         return rtn
 
