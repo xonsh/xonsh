@@ -9,11 +9,6 @@ from subprocess import TimeoutExpired
 
 from xonsh.tools import ON_WINDOWS
 
-try:
-    _shell_tty = sys.stderr.fileno()
-except OSError:
-    _shell_tty = None
-
 
 if ON_WINDOWS:
     def _continue(obj):
@@ -87,6 +82,16 @@ else:
             oldmask = signal.pthread_sigmask(signal.SIG_BLOCK, _block_when_giving)
             os.tcsetpgrp(_shell_tty, pgid)
             signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
+
+
+    # check for shell tty
+    try:
+        _shell_tty = sys.stderr.fileno()
+        if os.tcgetpgrp(_shell_tty) != os.getpgid(os.getpid()):
+            # we don't own it
+            _shell_tty = None
+    except OSError:
+        _shell_tty = None
 
 
     def wait_for_active_job(signal_to_send=None):
