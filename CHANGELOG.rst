@@ -47,6 +47,8 @@ None
 * Fixed issue with job management if a TTY existed but was not controlled
   by the process, posix only.
 * Jupyter kernel no longer times out when using foreign shells on startup.
+* Capturing redirections, e.g. ``$(echo hello > f.txt)``, no longer fails
+  with a decoding error.
 
 **Security:**
 

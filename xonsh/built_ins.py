@@ -625,7 +625,7 @@ def run_subproc(cmds, captured=True):
     hist.last_cmd_rtn = prev_proc.returncode
     if write_target is None:
         # get output
-        output = ''
+        output = b''
         if prev_proc.stdout not in (None, sys.stdout):
             output = prev_proc.stdout.read()
         if captured:
