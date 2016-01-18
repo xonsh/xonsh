@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """Hooks for Jupyter Xonsh Kernel."""
 import io
+import sys
 import builtins
+from pprint import pformat
 
 from ipykernel.kernelbase import Kernel
 
@@ -9,6 +11,13 @@ from xonsh import __version__ as version
 from xonsh.main import main_context
 from xonsh.tools import redirect_stdout, redirect_stderr
 
+def str_fh(fh, name):
+    s = name + '\n' + ('-'*len(name)) + '\n'
+    loc = fh.tell()
+    s += 'loc: ' + str(loc) + '\n'
+    s += 'value:\n' + fh.read() + '\n'
+    fh.seek(loc)
+    return s
 
 class XonshKernel(Kernel):
     """Xonsh xernal for Jupyter"""
@@ -51,6 +60,11 @@ class XonshKernel(Kernel):
                 err.seek(0)
                 response = {'name': 'stderr', 'text': err.read()}
                 self.send_response(self.iopub_socket, 'stream', response)
+            if builtins._ is not None:
+                # rely on sys.displayhook functionality
+                response = {'name': 'stdout', 'text': pformat(builtins._)}
+                self.send_response(self.iopub_socket, 'stream', response)
+                builtins._ = None
             if len(hist) > 0 and out.tell() == 0 and err.tell() == 0:
                 response = {'name': 'stdout', 'text': hist.outs[-1]}
                 self.send_response(self.iopub_socket, 'stream', response)
@@ -67,10 +81,15 @@ class XonshKernel(Kernel):
                        'payload': [], 'user_expressions': {}}
         return message
 
-    def  do_complete(self, code, pos):
+    def perr(self, s):
+        response = {'name': 'stderr', 'text': s}
+        self.send_response(self.iopub_socket, 'stream', response)
+
+    def do_complete(self, code, pos):
         """Get completions."""
         shell = builtins.__xonsh_shell__
         comps, beg, end = shell.completer.find_and_complete(code, pos, shell.ctx)
+        self.perr(str(comps))
         message = {'matches': comps, 'cursor_start': beg, 'cursor_end': end+1,
                    'metadata': {}, 'status': 'ok'}
         return message
