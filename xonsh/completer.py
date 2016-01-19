@@ -304,7 +304,8 @@ class Completer(object):
             endidx += 1
         endidx = endidx - 1 if line[endidx] in WS else endidx
         prefix = line[begidx:endidx+1]
-        return self.complete(prefix, line, begidx, endidx, ctx=ctx), begidx, endidx
+        rtn, _ = self.complete(prefix, line, begidx, endidx, ctx=ctx)
+        return rtn, begidx, endidx
 
     def _add_env(self, paths, prefix):
         if prefix.startswith('$'):
