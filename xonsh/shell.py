@@ -14,7 +14,7 @@ def is_readline_available():
     try:
         import readline
         return True
-    except ImportError:
+    except Exception:  # pyreadline will sometimes fail in strange ways
         return False
 
 
