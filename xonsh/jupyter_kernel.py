@@ -35,10 +35,10 @@ class XonshKernel(Kernel):
         if len(code.strip()) == 0:
             return {'status': 'ok', 'execution_count': self.execution_count,
                     'payload': [], 'user_expressions': {}}
-
+        env = builtins.__xonsh_env__
         shell = builtins.__xonsh_shell__
         hist = builtins.__xonsh_history__
-        enc = builtins.__xonsh_env__.get('XONSH_ENCODING')
+        enc = env.get('XONSH_ENCODING')
         out = SpooledTemporaryFile(max_size=MAX_SIZE, mode='w+t',
                                    encoding=enc, newline='\n')
         err = SpooledTemporaryFile(max_size=MAX_SIZE, mode='w+t',
@@ -46,7 +46,8 @@ class XonshKernel(Kernel):
         try:
             with redirect_stdout(out), redirect_stderr(err), \
                  swap(builtins, '__xonsh_stdout_uncaptured__', out), \
-                 swap(builtins, '__xonsh_stderr_uncaptured__', err):
+                 swap(builtins, '__xonsh_stderr_uncaptured__', err), \
+                 env.swap({'XONSH_STORE_STDOUT': False}):
                 shell.default(code)
             interrupted = False
         except KeyboardInterrupt:
@@ -82,6 +83,8 @@ class XonshKernel(Kernel):
         return message
 
     def _respond_in_chunks(self, name, s, chunksize=1024):
+        if s is None:
+            return
         n = len(s)
         if n == 0:
             return
