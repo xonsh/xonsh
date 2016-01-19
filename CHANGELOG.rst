@@ -35,7 +35,10 @@ None
 
 **Removed:**
 
-None
+* Removed ``xonsh.ptk.shortcuts.Prompter.create_prompt_layout()`` and 
+  ``xonsh.ptk.shortcuts.Prompter.create_prompt_application()`` methods
+  to reduce portion of xonsh that forks prompt-toolkit. This may require
+  users to upgrade to prompt-toolkit v0.57+.
 
 **Fixed:**
 

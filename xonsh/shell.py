@@ -72,6 +72,12 @@ class Shell(object):
                 shell_type = env['SHELL_TYPE'] = 'readline'
         # actually make the shell
         if shell_type == 'prompt_toolkit':
+            vptk = prompt_toolkit_version()
+            minor = int(vptk.split('.')[1])
+            if minor < 57 or vptk == '<0.57':  # TODO: remove in future
+                msg = ('prompt-toolkit version < v0.57 and may not work as '
+                       'expected. Please update.')
+                warn(msg, RuntimeWarning)
             from xonsh.ptk.shell import PromptToolkitShell
             self.shell = PromptToolkitShell(execer=self.execer,
                                             ctx=self.ctx, **kwargs)
