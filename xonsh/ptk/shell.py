@@ -129,8 +129,10 @@ class PromptToolkitShell(BaseShell):
 
     def continuation_tokens(self, cli, width):
         """Displays dots in multiline prompt"""
-
-        return [(Token, '.' * (width - 1) + ' ')]
+        dots = builtins.__xonsh_env__.get('MULTILINE_PROMPT')
+        _width = width - 1
+        dots = _width // len(dots) * dots + dots[:_width % len(dots)]
+        return [(Token, dots + ' ')]
 
 
 def _xonsh_style(tokens=tuple(), cstyles=tuple()):
