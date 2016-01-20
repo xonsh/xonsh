@@ -41,7 +41,7 @@ class PromptToolkitCompleter(Completer):
 
     def reserve_space(self):
         cli = builtins.__xonsh_shell__.shell.prompter.cli
-        window = cli.application.layout.children[1].children[1].content
+        window = cli.application.layout.children[1].content
         h = window.render_info.content_height
         r = builtins.__xonsh_env__.get('COMPLETIONS_MENU_ROWS')
         size = h + r
