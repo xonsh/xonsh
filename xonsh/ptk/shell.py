@@ -38,7 +38,7 @@ class PromptToolkitShell(BaseShell):
             enable_open_in_editor=True)
         load_xonsh_bindings(self.key_bindings_manager)
 
-    def singleline(self, store_in_history=True, auto_suggest=None, 
+    def singleline(self, store_in_history=True, auto_suggest=None,
                    enable_history_search=True, multiline=True, **kwargs):
         """Reads a single line of input from the shell. The store_in_history
         kwarg flags whether the input should be stored in PTK's in-memory
@@ -64,7 +64,8 @@ class PromptToolkitShell(BaseShell):
                     style=style_cls,
                     completer=completer,
                     lexer=PygmentsLexer(XonshLexer),
-                    multiline=multiline, 
+                    multiline=multiline,
+                    get_continuation_tokens=self.continuation_tokens,
                     history=history,
                     enable_history_search=enable_history_search,
                     reserve_space_for_menu=0,
@@ -125,6 +126,11 @@ class PromptToolkitShell(BaseShell):
         custom_style = _xonsh_style(tokens, cstyles)
 
         return get_tokens, custom_style
+
+    def continuation_tokens(self, cli, width):
+        """Displays dots in multiline prompt"""
+
+        return [(Token, '.' * (width - 1) + ' ')]
 
 
 def _xonsh_style(tokens=tuple(), cstyles=tuple()):
