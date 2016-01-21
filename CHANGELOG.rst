@@ -52,6 +52,9 @@ None
 * Jupyter kernel no longer times out when using foreign shells on startup.
 * Capturing redirections, e.g. ``$(echo hello > f.txt)``, no longer fails
   with a decoding error.
+* Evaluation in a Jupyter cell will return pformatted object.
+* Jupyter with redirect uncaptured subprocs to notebook.
+* Tab completion in Jupyter fixed.
 
 **Security:**
 

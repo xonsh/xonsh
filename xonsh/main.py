@@ -117,8 +117,9 @@ def undo_args(args):
 
 def _pprint_displayhook(value):
     if value is not None:
-        builtins._ = value
+        builtins._ = None  # Set '_' to None to avoid recursion
         pprint(value)
+        builtins._ = value
 
 
 def premain(argv=None):

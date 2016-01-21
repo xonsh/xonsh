@@ -574,11 +574,15 @@ def run_subproc(cmds, captured=True):
             stdout = streams['stdout']
         elif captured or ix != last_cmd:
             stdout = PIPE
+        elif builtins.__xonsh_stdout_uncaptured__ is not None:
+            stdout = builtins.__xonsh_stdout_uncaptured__
         else:
             stdout = None
         # set standard error
         if 'stderr' in streams:
             stderr = streams['stderr']
+        elif builtins.__xonsh_stderr_uncaptured__ is not None:
+            stderr = builtins.__xonsh_stderr_uncaptured__
         uninew = (ix == last_cmd) and (not captured)
         alias = builtins.aliases.get(cmd[0], None)
         if (alias is None
@@ -724,6 +728,8 @@ def load_builtins(execer=None, config=None):
     builtins.__xonsh_glob__ = globpath
     builtins.__xonsh_expand_path__ = expand_path
     builtins.__xonsh_exit__ = False
+    builtins.__xonsh_stdout_uncaptured__ = None
+    builtins.__xonsh_stderr_uncaptured__ = None
     if hasattr(builtins, 'exit'):
         builtins.__xonsh_pyexit__ = builtins.exit
         del builtins.exit
@@ -775,6 +781,8 @@ def unload_builtins():
              '__xonsh_glob__',
              '__xonsh_expand_path__',
              '__xonsh_exit__',
+             '__xonsh_stdout_uncaptured__',
+             '__xonsh_stderr_uncaptured__',
              '__xonsh_pyexit__',
              '__xonsh_pyquit__',
              '__xonsh_subproc_captured__',
