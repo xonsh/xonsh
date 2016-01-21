@@ -598,7 +598,6 @@ def run_subproc(cmds, captured=True):
             if n is None:
                 aliased_cmd = cmd
             else:
-                print(n, cmd[1:])
                 try:
                     aliased_cmd = get_script_subproc_command(n, cmd[1:])
                 except PermissionError:
@@ -697,7 +696,6 @@ def subproc_uncaptured(*cmds):
     """Runs a subprocess, without capturing the output. Returns the stdout
     that was produced as a str.
     """
-    print(cmds)
     return run_subproc(cmds, captured=False)
 
 
