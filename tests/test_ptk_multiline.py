@@ -8,6 +8,7 @@ from prompt_toolkit.interface import CommandLineInterface
 from prompt_toolkit.document import Document
 from prompt_toolkit.buffer import Buffer, AcceptAction
 from xonsh.environ import Env
+from xonsh.tools import ON_WINDOWS
 
 def setup():
     global indent_
@@ -69,10 +70,15 @@ def test_continuation_line():
     assert_equal(buffer.document.current_line, '')
 
 def test_trailing_slash():
-    document = Document('this line will \\')
-    buffer.set_document(document)
-    carriage_return(buffer, cli)
-    assert_equal(buffer.document.current_line, '')
+    mock = MagicMock(return_value = True)
+    with patch('xonsh.ptk.key_bindings.can_compile', mock):
+        document = Document('this line will \\')
+        buffer.set_document(document)
+        carriage_return(buffer, cli)
+        if not ON_WINDOWS:
+            assert_equal(buffer.document.current_line, '')
+        else:
+            assert bufaccept.mock_calls is not None
 
 def test_cant_compile_newline():
     mock = MagicMock(return_value = False)
@@ -89,16 +95,6 @@ def test_can_compile_and_executes():
         buffer.set_document(document)
         carriage_return(buffer, cli)
         assert bufaccept.mock_calls is not None
-
-def test_trailing_slash_on_windows():
-    mock = MagicMock(return_value = True)
-    with patch('xonsh.ptk.key_bindings.can_compile', mock):
-        with patch('xonsh.tools.ON_WINDOWS', mock):
-            builtins.__xonsh_env__['FORCE_POSIX_PATHS'] = True
-            document = Document('this shouldnt newline \\')
-            buffer.set_document(document)
-            carriage_return(buffer, cli)
-            assert bufaccept.mock_calls is not None
 
 if __name__ == '__main__':
     nose.runmodule()
