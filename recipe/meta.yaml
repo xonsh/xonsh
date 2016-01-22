@@ -1,12 +1,12 @@
 package:
   name: xonsh
-  version: {{ environ['GIT_DESCRIBE_TAG'] }}
+  version: 0.2.4
 
 source:
    path: ../
 
 build:
-  number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
+  number: 0
   entry_points:
     - xonsh = xonsh.main:main
 
