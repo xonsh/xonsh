@@ -4,6 +4,22 @@ Xonsh Change Log
 
 Current Developments
 ====================
+
+**Added:** None
+
+**Changed:** None
+
+**Deprecated:** None
+
+**Removed:** None
+
+**Fixed:** None
+
+**Security:** None
+
+
+v0.2.5
+===========
 **Added:**
 
 * New configuration utility 'xonfig' which reports current system 
@@ -29,10 +45,6 @@ Current Developments
 * Environments are now considered to contain all manually-adjusted keys,
   and also all keys with an associated default value.
 
-**Deprecated:**
-
-None
-
 **Removed:**
 
 * Removed ``xonsh.ptk.shortcuts.Prompter.create_prompt_layout()`` and 
@@ -55,10 +67,6 @@ None
 * Evaluation in a Jupyter cell will return pformatted object.
 * Jupyter with redirect uncaptured subprocs to notebook.
 * Tab completion in Jupyter fixed.
-
-**Security:**
-
-None
 
 
 v0.2.1 - v0.2.4
