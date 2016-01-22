@@ -15,7 +15,7 @@ import signal
 import inspect
 import builtins
 from glob import glob, iglob
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE, STDOUT, CalledProcessError
 from contextlib import contextmanager
 from collections import Sequence, MutableMapping, Iterable
 
@@ -673,9 +673,9 @@ def run_subproc(cmds, captured=True):
     wait_for_active_job()
     hist = builtins.__xonsh_history__
     hist.last_cmd_rtn = prev_proc.returncode
+    # get output
+    output = b''
     if write_target is None:
-        # get output
-        output = b''
         if prev_proc.stdout not in (None, sys.stdout):
             output = prev_proc.stdout.read()
         if captured:
@@ -684,9 +684,12 @@ def run_subproc(cmds, captured=True):
             output = output.decode(encoding=ENV.get('XONSH_ENCODING'),
                                    errors=ENV.get('XONSH_ENCODING_ERRORS'))
             output = output.replace('\r\n', '\n')
-            return output
         else:
             hist.last_cmd_out = output
+    if hist.last_cmd_rtn > 0 and ENV.get('RAISE_SUBPROC_ERROR'):
+        raise CalledProcessError(hist.last_cmd_rtn, aliased_cmd, output=output)
+    if captured:
+        return output
 
 
 def subproc_captured(*cmds):
