@@ -90,5 +90,15 @@ def test_can_compile_and_executes():
         carriage_return(buffer, cli)
         assert bufaccept.mock_calls is not None
 
+def test_trailing_slash_on_windows():
+    mock = MagicMock(return_value = True)
+    with patch('xonsh.ptk.key_bindings.can_compile', mock):
+        with patch('xonsh.tools.ON_WINDOWS', mock):
+            builtins.__xonsh_env__['FORCE_POSIX_PATHS'] = True
+            document = Document('this shouldnt newline \\')
+            buffer.set_document(document)
+            carriage_return(buffer, cli)
+            assert bufaccept.mock_calls is not None
+
 if __name__ == '__main__':
     nose.runmodule()
