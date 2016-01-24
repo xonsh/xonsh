@@ -1018,6 +1018,11 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
     bash $ echo @(' '.join($(cat @('file%d.txt' % i)).strip() for i in range(6)))
     s n a i l s
 
+Additionally, if the script should exit if a command fails, set the 
+environment variable ``$RAISE_SUBPROC_ERROR = True`` at the top of the 
+file. Errors in Python mode will already raise exceptions and so this 
+is roughly equivelent to Bash's `set -e`.
+
 Importing Xonsh (``*.xsh``)
 ==============================
 You can import xonsh source files with the ``*.xsh`` file extension using
