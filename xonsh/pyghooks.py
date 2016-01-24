@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Hooks for pygments syntax highlighting."""
 from pygments.lexer import inherit, bygroups, using, this
-from pygments.token import Name, Generic, Keyword, Text, String
+from pygments.token import Name, Generic, Keyword, String
 from pygments.lexers.shell import BashLexer
 from pygments.lexers.agile import PythonLexer
 
@@ -61,7 +61,7 @@ class XonshConsoleLexer(PythonLexer):
         'subproc': SUBPROC_TOKENS,
     }
 
-# XonshLexer & XonshSubprocLexer have to refernce each other
+# XonshLexer & XonshSubprocLexer have to reference each other
 XonshSubprocLexer.tokens['root'] = [
     (r'(\$\{)(.*)(\})', bygroups(Keyword, using(XonshLexer), Keyword)),
     (r'(@\()(.+)(\))', bygroups(Keyword, using(XonshLexer), Keyword)),

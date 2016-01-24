@@ -53,6 +53,7 @@ VER_FULL = sys.version_info[:3]
 VER_MAJOR_MINOR = sys.version_info[:2]
 V_MAJOR_MINOR = 'v{0}{1}'.format(*sys.version_info[:2])
 
+
 def docstring_by_version(**kwargs):
     """Sets a docstring by the python version."""
     doc = kwargs.get(V_MAJOR_MINOR, None)
@@ -764,71 +765,94 @@ class FakeChar(str):
         return iter(self.char)
 
 
-RE_HIDDEN_MAX = re.compile('(\001.*?\002)+')
+COLOR_CODE_SPLIT_RE = re.compile(r'(\001\033\[[\d;m]+\002)')
+TERM_COLORS_REVERSED = {v: k for k, v in TERM_COLORS.items()}
+COLOR_NAME_REGEX = re.compile(r'(?:(\w+)_)?(\w+)')
 
+_PT_COLORS = {
+    'BLACK': '#000000',
+    'RED': '#800000',
+    'GREEN': '#008000',
+    'YELLOW': '#808000',
+    'BLUE': '#000080',
+    'PURPLE': '#800080',
+    'CYAN': '#008080',
+    'WHITE': '#ffffff',
+    'GRAY': '#008080',
+    'INTENSE_RED': '#ff1010',
+    'INTENSE_GREEN': '#00ff18',
+    'INTENSE_YELLOW': '#ffff00',
+    'INTENSE_BLUE': '#0000d2',
+    'INTENSE_PURPLE': '#ff00ff',
+    'INTENSE_CYAN': '#00ffff',
+    'INTENSE_GRAY': '#c0c0c0',
+    None: '',
+}
 
-_PT_COLORS_DARK = {'BLACK': '#000000',
-                   'RED': '#ff1010',
-                   'GREEN': '#00FF18',
-                   'YELLOW': '#FFFF00',
-                   'BLUE': '#0000D2',
-                   'PURPLE': '#FF00FF',
-                   'CYAN': '#00FFFF',
-                   'WHITE': '#FFFFFF',
-                   'GRAY': '#c0c0c0'}
+_PT_STYLE = {
+    'BOLD': 'bold',
+    'UNDERLINE': 'underline',
+}
 
-_PT_COLORS_LIGHT = {'BLACK': '#000000',
-                    'RED': '#800000',
-                    'GREEN': '#008000',
-                    'YELLOW': '#808000',
-                    'BLUE': '#000080',
-                    'PURPLE': '#800080',
-                    'CYAN': '#008080',
-                    'WHITE': '#FFFFFF',
-                    'GRAY': '#008080'}
-
-_PT_STYLE = {'BOLD': 'bold',
-             'UNDERLINE': 'underline',
-             'INTENSE': 'italic'}
+_LAST_BG_COLOR = None
 
 
 def _make_style(color_name):
     """ Convert color names to pygments styles codes """
+    global _LAST_BG_COLOR
+
+    colors = _PT_COLORS.copy()
+    # Extend with custom colors
+    colors.update(builtins.__xonsh_env__.get('PROMPT_TOOLKIT_COLORS'))
+
+    if color_name == 'NO_COLOR':
+        _LAST_BG_COLOR = None
+        return 'noinherit'
+
+    qualifiers, name = COLOR_NAME_REGEX.match(color_name).groups()
+
+    if name not in colors:
+        qualifiers = name
+        name = None
+
+    qualifiers = qualifiers.split('_') if qualifiers else []
+    is_bg_color = False
     style = []
-    for k, v in _PT_STYLE.items():
-        if k in color_name:
-            style.append(v)
-    _custom_colors = builtins.__xonsh_env__.get('PROMPT_TOOLKIT_COLORS')
-    for k, v in _custom_colors.items():
-        if k in color_name:
-            style.append(v)
-    for k, v in _PT_COLORS_DARK.items():
-        if k not in _custom_colors and k in color_name:
-            style.append(v)
+
+    for qualifier in qualifiers:
+        if qualifier == 'INTENSE' and name is not None:
+            name = 'INTENSE_' + name
+        elif qualifier == 'BACKGROUND':
+            is_bg_color = True
+        elif qualifier in _PT_STYLE:
+            style.append(_PT_STYLE[qualifier])
+
+    color = colors[name]
+    if is_bg_color:
+        _LAST_BG_COLOR = color = 'bg:' + color
+    elif _LAST_BG_COLOR:
+        style.append(_LAST_BG_COLOR)
+
+    style.append(color)
+
     return ' '.join(style)
-
-
-def get_xonsh_color_names(color_code):
-    """ Makes a reverse lookup in TERM_COLORS  """
-    try:
-        return next(k for k, v in TERM_COLORS.items() if v == color_code)
-    except StopIteration:
-        return 'NO_COLOR'
 
 
 def format_prompt_for_prompt_toolkit(prompt):
     """Converts a prompt with color codes to a pygments style and tokens
     """
-    parts = RE_HIDDEN_MAX.split(prompt)
+    parts = COLOR_CODE_SPLIT_RE.split(prompt)
     # ensure that parts is [colorcode, string, colorcode, string,...]
-    if parts and len(parts[0]) == 0:
+    if len(parts[0]) == 0:
         parts = parts[1:]
     else:
         parts.insert(0, '')
+
     if len(parts) % 2 != 0:
-        parts.append()
+        parts.append('')
+
     strings = parts[1::2]
-    token_names = [get_xonsh_color_names(c) for c in parts[::2]]
+    token_names = [TERM_COLORS_REVERSED.get(c, 'NO_COLOR') for c in parts[::2]]
     cstyles = [_make_style(c) for c in token_names]
     return token_names, cstyles, strings
 
