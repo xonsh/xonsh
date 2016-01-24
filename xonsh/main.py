@@ -170,7 +170,8 @@ def main(argv=None):
             code = code if code.endswith('\n') else code + '\n'
             sys.argv = args.args
             env['ARGS'] = [args.file] + args.args
-            code = shell.execer.compile(code, mode='exec', glbs=shell.ctx)
+            code = shell.execer.compile(code, mode='exec', glbs=shell.ctx,
+                                        filename=args.file)
             shell.execer.exec(code, mode='exec', glbs=shell.ctx)
         else:
             print('xonsh: {0}: No such file or directory.'.format(args.file))
@@ -178,7 +179,8 @@ def main(argv=None):
         # run a script given on stdin
         code = sys.stdin.read()
         code = code if code.endswith('\n') else code + '\n'
-        code = shell.execer.compile(code, mode='exec', glbs=shell.ctx)
+        code = shell.execer.compile(code, mode='exec', glbs=shell.ctx,
+                                    filename='<stdin>')
         shell.execer.exec(code, mode='exec', glbs=shell.ctx)
     else:
         # otherwise, enter the shell

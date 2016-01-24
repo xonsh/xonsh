@@ -5,7 +5,12 @@ Xonsh Change Log
 Current Developments
 ====================
 
-**Added:** None
+**Added:** 
+
+* Added boolean ``$RAISE_SUBPROC_ERROR`` environment variable. If true
+  and a subprocess command exits with a non-zero return code, a 
+  CalledProcessError will be raised. This is useful in scripts that should
+  fail at the first error.
 
 **Changed:** None
 

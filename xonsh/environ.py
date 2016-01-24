@@ -77,6 +77,7 @@ DEFAULT_ENSURERS = {
     'MOUSE_SUPPORT': (is_bool, to_bool, bool_to_str),
     re.compile('\w*PATH$'): (is_env_path, str_to_env_path, env_path_to_str),
     'PATHEXT': (is_env_path, str_to_env_path, env_path_to_str),
+    'RAISE_SUBPROC_ERROR': (is_bool, to_bool, bool_to_str),
     'TEEPTY_PIPE_DELAY': (is_float, float, str),
     'XONSHRC': (is_env_path, str_to_env_path, env_path_to_str),
     'XONSH_ENCODING': (is_string, ensure_string, ensure_string),
@@ -174,6 +175,7 @@ DEFAULT_VALUES = {
     'PROMPT_TOOLKIT_STYLES': None,
     'PUSHD_MINUS': False,
     'PUSHD_SILENT': False,
+    'RAISE_SUBPROC_ERROR': False,
     'SHELL_TYPE': 'prompt_toolkit' if ON_WINDOWS else 'readline',
     'SUGGEST_COMMANDS': True,
     'SUGGEST_MAX_NUM': 5,
@@ -341,6 +343,12 @@ DEFAULT_DOCS = {
         'behaviour.'),
     'PUSHD_SILENT': VarDocs(
         'Whether or not to suppress directory stack manipulation output.'),
+    'RAISE_SUBPROC_ERROR': VarDocs(
+        'Whether or not to raise an error if a subprocess (captured or '
+        'uncaptured) returns a non-zero exit status, which indicates failure.'
+        'This is most useful in xonsh scripts or modules where failures '
+        'should cause an end to execution. This is less useful at a terminal.'
+        'The error that is raised is a subprocess.CalledProcessError.'),
     'SHELL_TYPE': VarDocs(
         'Which shell is used. Currently two base shell types are supported:\n\n'
         "    - 'readline' that is backed by Python's readline module\n"
