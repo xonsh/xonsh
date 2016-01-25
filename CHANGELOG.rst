@@ -18,7 +18,9 @@ Current Developments
 
 **Removed:** None
 
-**Fixed:** None
+**Fixed:**
+
+* Fixed path completion not working for absolute paths or for expanded paths on Windows.
 
 **Security:** None
 

@@ -185,12 +185,23 @@ def expand_path(s):
     return os.path.expanduser(s)
 
 
+WINDOWS_DRIVE_MATCHER = re.compile(r'^\w:')
+
+
 def expand_case_matching(s):
     """Expands a string to a case insenstive globable string."""
     t = []
     openers = {'[', '{'}
     closers = {']', '}'}
     nesting = 0
+
+    drive_part = WINDOWS_DRIVE_MATCHER.match(s) if ON_WINDOWS else None
+
+    if drive_part:
+        drive_part = drive_part.group(0)
+        t.append(drive_part)
+        s = s[len(drive_part):]
+
     for c in s:
         if c in openers:
             nesting += 1
@@ -211,8 +222,7 @@ def expand_case_matching(s):
                                              c)
                 c = newc
         t.append(c)
-    t = ''.join(t)
-    return t
+    return ''.join(t)
 
 
 def reglob(path, parts=None, i=None):
