@@ -69,6 +69,13 @@ class XonshError(Exception):
     pass
 
 
+class DefaultNotGivenType(object):
+    """Singleton for representing when no default value is given."""
+
+
+DefaultNotGiven = DefaultNotGivenType()
+
+
 def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     """Excapsulates tokens in a source code line in a uncaptured
     subprocess $[] starting at a minimum column. If there are no tokens
@@ -729,6 +736,19 @@ def to_history_tuple(x):
 def history_tuple_to_str(x):
     """Converts a valid history tuple to a canonical string."""
     return '{0} {1}'.format(*x)
+
+#
+# Check pygments
+#
+
+def pygments_version():
+    """Returns the Pygments version or False."""
+    try:
+        import pygments
+        v = pygments.__version__
+    except ImportError:
+        v = False
+    return v
 
 #
 # prompt toolkit tools
