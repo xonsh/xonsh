@@ -163,8 +163,6 @@ class Completer(object):
             (only used with prompt_toolkit)
         """
         space = ' '  # intern some strings for faster appending
-        slash = '/'
-        dot = '.'
         ctx = ctx or {}
         prefixlow = prefix.lower()
         _line = line
@@ -393,7 +391,6 @@ class Completer(object):
 
     def path_complete(self, prefix, start, end, cdpath=False):
         """Completes based on a path name."""
-        space = ' '  # intern some strings for faster appending
         tilde = '~'
         paths = set()
         csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')

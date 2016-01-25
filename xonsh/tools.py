@@ -735,36 +735,6 @@ def history_tuple_to_str(x):
 #
 
 
-class FakeChar(str):
-    """Class that holds a single char and escape sequences that surround it.
-
-    It is used as a workaround for the fact that prompt_toolkit doesn't display
-    colorful prompts correctly.
-    It behaves like normal string created with prefix + char + suffix, but has
-    two differences:
-
-    * len() always returns 2
-
-    * iterating over instance of this class is the same as iterating over
-      the single char - prefix and suffix are ommited.
-    """
-    def __new__(cls, char, prefix='', suffix=''):
-        return str.__new__(cls, prefix + char + suffix)
-
-    def __init__(self, char, prefix='', suffix=''):
-        self.char = char
-        self.prefix = prefix
-        self.suffix = suffix
-        self.length = 2
-        self.iterated = False
-
-    def __len__(self):
-        return self.length
-
-    def __iter__(self):
-        return iter(self.char)
-
-
 COLOR_CODE_SPLIT_RE = re.compile(r'(\001\033\[[\d;m]+\002)')
 TERM_COLORS_REVERSED = {v: k for k, v in TERM_COLORS.items()}
 COLOR_NAME_REGEX = re.compile(r'(?:(\w+)_)?(\w+)')
@@ -868,17 +838,6 @@ def print_color(string, file=sys.stdout):
     `sys.stdout` is used as the output stream but an alternate can be specified
     by the `file` keyword argument."""
     print(format_color(string), file=file)
-
-
-def escape_color(string):
-    """Escapes color formatting, ie '{RED}' becomes '{{RED}}'."""
-    s = string
-    for color in TERM_COLORS.keys():
-        if color in s:
-            bc = '{' + color + '}'  # braced color
-            dbc = '{' + bc + '}'  # double-braced color
-            s = s.replace(bc, dbc)
-    return s
 
 
 _RE_STRING_START = "[bBrRuU]*"
