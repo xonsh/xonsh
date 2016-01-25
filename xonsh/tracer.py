@@ -28,7 +28,7 @@ class TracerType(object):
         self.usecolor = True
 
     def __del__(self):
-        for f in self.files:
+        for f in set(self.files):
             self.stop(f)
 
     def start(self, filename):
@@ -36,20 +36,22 @@ class TracerType(object):
         if len(self.files) == 0:
             self.prev_tracer = sys.gettrace()
         self.files.add(filename)
-        self.settrace(self.trace)
+        sys.settrace(self.trace)
+        print(self.files)
 
     def stop(self, filename):
         """Stops tracing a file."""
         self.files.discard(filename)
         if len(self.files) == 0:
-            self.settrace(self.prev_tracer)
+            sys.settrace(self.prev_tracer)
             self.prev_tracer = DefaultNotGiven
 
     def trace(self, frame, event, arg):
         """Implements a line tracing function."""
+        fname = frame.f_code.co_filename
+        print(fname, frame.f_lineno)
         if event != 'line':
             return self.trace
-        fname = frame.f_code.co_filename
         if fname in self.files:
             lineno = frame.f_lineno
             line = linecache.getline(fname, lineno)
