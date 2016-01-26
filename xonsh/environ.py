@@ -8,6 +8,7 @@ import string
 import locale
 import builtins
 import subprocess
+from itertools import chain
 from warnings import warn
 from pprint import pformat
 from functools import wraps
@@ -631,20 +632,63 @@ class Env(MutableMapping):
                 p.pretty(dict(self))
 
 
-def locate_binary(name, cwd):
-    # StackOverflow for `where` tip: http://stackoverflow.com/a/304447/90297
-    locator = 'where' if ON_WINDOWS else 'which'
-    try:
-        binary_location = subprocess.check_output([locator, name],
-                                                  cwd=cwd,
-                                                  stderr=subprocess.PIPE,
-                                                  universal_newlines=True)
-        if not binary_location:
-            return
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return
+def _is_executable_file(path):
+    """Checks that path is an executable regular file, or a symlink towards one.
+    This is roughly ``os.path isfile(path) and os.access(path, os.X_OK)``.
 
-    return binary_location
+    This function was forked from pexpect originally:
+
+    Copyright (c) 2013-2014, Pexpect development team
+    Copyright (c) 2012, Noah Spurrier <noah@noah.org>
+
+    PERMISSION TO USE, COPY, MODIFY, AND/OR DISTRIBUTE THIS SOFTWARE FOR ANY
+    PURPOSE WITH OR WITHOUT FEE IS HEREBY GRANTED, PROVIDED THAT THE ABOVE
+    COPYRIGHT NOTICE AND THIS PERMISSION NOTICE APPEAR IN ALL COPIES.
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+    WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+    MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+    ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+    WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+    ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+    """
+    # follow symlinks,
+    fpath = os.path.realpath(path)
+
+    if not os.path.isfile(fpath):
+        # non-files (directories, fifo, etc.)
+        return False
+
+    return os.access(fpath, os.X_OK)
+
+
+def yield_executables_windows(directory, name):
+    extensions = builtins.__xonsh_env__.get('PATHEXT')
+    for a_file in os.listdir(directory):
+        base_name, ext = os.path.splitext(a_file)
+        if name == base_name and ext.upper() in extensions:
+            yield os.path.join(directory, a_file)
+
+
+def yield_executables_posix(directory, name):
+    if name in os.listdir(directory):
+        path = os.path.join(directory, name)
+        if _is_executable_file(path):
+            yield path
+
+
+yield_executables = yield_executables_windows if ON_WINDOWS else yield_executables_posix
+
+
+def locate_binary(name):
+    if os.path.isfile(name) and name != os.path.basename(name):
+        return name
+
+    try:
+        return next(chain.from_iterable(yield_executables(directory, name) for
+                    directory in builtins.__xonsh_env__.get('PATH') if os.path.isdir(directory)))
+    except StopIteration:
+        return None
 
 
 def ensure_git(func):
@@ -656,7 +700,7 @@ def ensure_git(func):
             return
 
         # step out completely if git is not installed
-        if locate_binary('git', kwargs['cwd']) is None:
+        if locate_binary('git') is None:
             return
 
         return func(*args, **kwargs)
@@ -684,7 +728,7 @@ def ensure_hg(func):
         kwargs['root'] = os.path.sep.join(path)
 
         # step out completely if hg is not installed
-        if locate_binary('hg', kwargs['cwd']) is None:
+        if locate_binary('hg') is None:
             return
 
         return func(*args, **kwargs)
