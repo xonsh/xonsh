@@ -8,6 +8,7 @@ import string
 import locale
 import builtins
 import subprocess
+from itertools import chain
 from warnings import warn
 from pprint import pformat
 from functools import wraps
@@ -77,6 +78,7 @@ DEFAULT_ENSURERS = {
     'MOUSE_SUPPORT': (is_bool, to_bool, bool_to_str),
     re.compile('\w*PATH$'): (is_env_path, str_to_env_path, env_path_to_str),
     'PATHEXT': (is_env_path, str_to_env_path, env_path_to_str),
+    'RAISE_SUBPROC_ERROR': (is_bool, to_bool, bool_to_str),
     'TEEPTY_PIPE_DELAY': (is_float, float, str),
     'XONSHRC': (is_env_path, str_to_env_path, env_path_to_str),
     'XONSH_ENCODING': (is_string, ensure_string, ensure_string),
@@ -174,6 +176,7 @@ DEFAULT_VALUES = {
     'PROMPT_TOOLKIT_STYLES': None,
     'PUSHD_MINUS': False,
     'PUSHD_SILENT': False,
+    'RAISE_SUBPROC_ERROR': False,
     'SHELL_TYPE': 'prompt_toolkit' if ON_WINDOWS else 'readline',
     'SUGGEST_COMMANDS': True,
     'SUGGEST_MAX_NUM': 5,
@@ -335,6 +338,12 @@ DEFAULT_DOCS = {
         'behaviour.'),
     'PUSHD_SILENT': VarDocs(
         'Whether or not to suppress directory stack manipulation output.'),
+    'RAISE_SUBPROC_ERROR': VarDocs(
+        'Whether or not to raise an error if a subprocess (captured or '
+        'uncaptured) returns a non-zero exit status, which indicates failure.'
+        'This is most useful in xonsh scripts or modules where failures '
+        'should cause an end to execution. This is less useful at a terminal.'
+        'The error that is raised is a subprocess.CalledProcessError.'),
     'SHELL_TYPE': VarDocs(
         'Which shell is used. Currently two base shell types are supported:\n\n'
         "    - 'readline' that is backed by Python's readline module\n"
@@ -617,20 +626,63 @@ class Env(MutableMapping):
                 p.pretty(dict(self))
 
 
-def locate_binary(name, cwd):
-    # StackOverflow for `where` tip: http://stackoverflow.com/a/304447/90297
-    locator = 'where' if ON_WINDOWS else 'which'
-    try:
-        binary_location = subprocess.check_output([locator, name],
-                                                  cwd=cwd,
-                                                  stderr=subprocess.PIPE,
-                                                  universal_newlines=True)
-        if not binary_location:
-            return
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return
+def _is_executable_file(path):
+    """Checks that path is an executable regular file, or a symlink towards one.
+    This is roughly ``os.path isfile(path) and os.access(path, os.X_OK)``.
 
-    return binary_location
+    This function was forked from pexpect originally:
+
+    Copyright (c) 2013-2014, Pexpect development team
+    Copyright (c) 2012, Noah Spurrier <noah@noah.org>
+
+    PERMISSION TO USE, COPY, MODIFY, AND/OR DISTRIBUTE THIS SOFTWARE FOR ANY
+    PURPOSE WITH OR WITHOUT FEE IS HEREBY GRANTED, PROVIDED THAT THE ABOVE
+    COPYRIGHT NOTICE AND THIS PERMISSION NOTICE APPEAR IN ALL COPIES.
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+    WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+    MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+    ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+    WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+    ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+    """
+    # follow symlinks,
+    fpath = os.path.realpath(path)
+
+    if not os.path.isfile(fpath):
+        # non-files (directories, fifo, etc.)
+        return False
+
+    return os.access(fpath, os.X_OK)
+
+
+def yield_executables_windows(directory, name):
+    extensions = builtins.__xonsh_env__.get('PATHEXT')
+    for a_file in os.listdir(directory):
+        base_name, ext = os.path.splitext(a_file)
+        if name == base_name and ext.upper() in extensions:
+            yield os.path.join(directory, a_file)
+
+
+def yield_executables_posix(directory, name):
+    if name in os.listdir(directory):
+        path = os.path.join(directory, name)
+        if _is_executable_file(path):
+            yield path
+
+
+yield_executables = yield_executables_windows if ON_WINDOWS else yield_executables_posix
+
+
+def locate_binary(name):
+    if os.path.isfile(name) and name != os.path.basename(name):
+        return name
+
+    try:
+        return next(chain.from_iterable(yield_executables(directory, name) for
+                    directory in builtins.__xonsh_env__.get('PATH') if os.path.isdir(directory)))
+    except StopIteration:
+        return None
 
 
 def ensure_git(func):
@@ -642,7 +694,7 @@ def ensure_git(func):
             return
 
         # step out completely if git is not installed
-        if locate_binary('git', kwargs['cwd']) is None:
+        if locate_binary('git') is None:
             return
 
         return func(*args, **kwargs)
@@ -670,7 +722,7 @@ def ensure_hg(func):
         kwargs['root'] = os.path.sep.join(path)
 
         # step out completely if hg is not installed
-        if locate_binary('hg', kwargs['cwd']) is None:
+        if locate_binary('hg') is None:
             return
 
         return func(*args, **kwargs)

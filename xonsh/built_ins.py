@@ -7,7 +7,6 @@ special Python builtins module.
 import os
 import re
 import sys
-import stat
 import time
 import shlex
 import atexit
@@ -15,7 +14,7 @@ import signal
 import inspect
 import builtins
 from glob import glob, iglob
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE, STDOUT, CalledProcessError
 from contextlib import contextmanager
 from collections import Sequence, MutableMapping, Iterable
 
@@ -185,12 +184,23 @@ def expand_path(s):
     return os.path.expanduser(s)
 
 
+WINDOWS_DRIVE_MATCHER = re.compile(r'^\w:')
+
+
 def expand_case_matching(s):
     """Expands a string to a case insenstive globable string."""
     t = []
     openers = {'[', '{'}
     closers = {']', '}'}
     nesting = 0
+
+    drive_part = WINDOWS_DRIVE_MATCHER.match(s) if ON_WINDOWS else None
+
+    if drive_part:
+        drive_part = drive_part.group(0)
+        t.append(drive_part)
+        s = s[len(drive_part):]
+
     for c in s:
         if c in openers:
             nesting += 1
@@ -211,8 +221,7 @@ def expand_case_matching(s):
                                              c)
                 c = newc
         t.append(c)
-    t = ''.join(t)
-    return t
+    return ''.join(t)
 
 
 def reglob(path, parts=None, i=None):
@@ -280,68 +289,6 @@ def iglobpath(s, ignore_case=False):
 
 
 RE_SHEBANG = re.compile(r'#![ \t]*(.+?)$')
-
-
-def _is_executable_file(path):
-    """Checks that path is an executable regular file (or a symlink to a file).
-
-    This is roughly ``os.path isfile(path) and os.access(path, os.X_OK)``, but
-    on some platforms :func:`os.access` gives us the wrong answer, so this
-    checks permission bits directly.
-    """
-    # follow symlinks,
-    fpath = os.path.realpath(path)
-
-    # return False for non-files (directories, fifo, etc.)
-    if not os.path.isfile(fpath):
-        return False
-
-    # On Solaris, etc., "If the process has appropriate privileges, an
-    # implementation may indicate success for X_OK even if none of the
-    # execute file permission bits are set."
-    #
-    # For this reason, it is necessary to explicitly check st_mode
-
-    # get file mode using os.stat, and check if `other',
-    # that is anybody, may read and execute.
-    mode = os.stat(fpath).st_mode
-    if mode & stat.S_IROTH and mode & stat.S_IXOTH:
-        return True
-
-    # get current user's group ids, and check if `group',
-    # when matching ours, may read and execute.
-    user_gids = os.getgroups() + [os.getgid()]
-    if (os.stat(fpath).st_gid in user_gids and
-            mode & stat.S_IRGRP and mode & stat.S_IXGRP):
-        return True
-
-    # finally, if file owner matches our effective userid,
-    # check if `user', may read and execute.
-    user_gids = os.getgroups() + [os.getgid()]
-    if (os.stat(fpath).st_uid == os.geteuid() and
-            mode & stat.S_IRUSR and mode & stat.S_IXUSR):
-        return True
-
-    return False
-
-
-def _get_runnable_name(fname):
-    if os.path.isfile(fname) and fname != os.path.basename(fname):
-        return fname
-    for d in builtins.__xonsh_env__.get('PATH'):
-        if os.path.isdir(d):
-            files = os.listdir(d)
-            if ON_WINDOWS:
-                PATHEXT = builtins.__xonsh_env__.get('PATHEXT')
-                for dirfile in files:
-                    froot, ext = os.path.splitext(dirfile)
-                    if fname == froot and ext.upper() in PATHEXT:
-                        return os.path.join(d, dirfile)
-            if fname in files:
-                path = os.path.join(d, fname)
-                if _is_executable_file(path):
-                    return path
-    return None
 
 
 def _is_binary(fname, limit=80):
@@ -589,7 +536,7 @@ def run_subproc(cmds, captured=True):
             and builtins.__xonsh_env__.get('AUTO_CD')
             and len(cmd) == 1
             and os.path.isdir(cmd[0])
-            and locate_binary(cmd[0], cwd=None) is None):
+            and locate_binary(cmd[0]) is None):
             cmd.insert(0, 'cd')
             alias = builtins.aliases.get('cd', None)
 
@@ -598,7 +545,7 @@ def run_subproc(cmds, captured=True):
         else:
             if alias is not None:
                 cmd = alias + cmd[1:]
-            n = _get_runnable_name(cmd[0])
+            n = locate_binary(cmd[0])
             if n is None:
                 aliased_cmd = cmd
             else:
@@ -673,9 +620,9 @@ def run_subproc(cmds, captured=True):
     wait_for_active_job()
     hist = builtins.__xonsh_history__
     hist.last_cmd_rtn = prev_proc.returncode
+    # get output
+    output = b''
     if write_target is None:
-        # get output
-        output = b''
         if prev_proc.stdout not in (None, sys.stdout):
             output = prev_proc.stdout.read()
         if captured:
@@ -684,9 +631,12 @@ def run_subproc(cmds, captured=True):
             output = output.decode(encoding=ENV.get('XONSH_ENCODING'),
                                    errors=ENV.get('XONSH_ENCODING_ERRORS'))
             output = output.replace('\r\n', '\n')
-            return output
         else:
             hist.last_cmd_out = output
+    if hist.last_cmd_rtn > 0 and ENV.get('RAISE_SUBPROC_ERROR'):
+        raise CalledProcessError(hist.last_cmd_rtn, aliased_cmd, output=output)
+    if captured:
+        return output
 
 
 def subproc_captured(*cmds):
