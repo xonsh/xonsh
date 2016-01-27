@@ -691,17 +691,36 @@ def locate_binary(name):
         return None
 
 
+def _get_parent_dir_for(path, dir_name):
+    # walk up the directory tree to see if we are inside an hg repo
+    previous_path = ''
+    while path != previous_path:
+        if os.path.isdir(os.path.join(path, dir_name)):
+            return path
+
+        previous_path = path
+        path, _ = os.path.split(path)
+
+    return False
+
+
 def ensure_git(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        # Get cwd or bail
-        kwargs['cwd'] = kwargs.get('cwd', _get_cwd())
-        if kwargs['cwd'] is None:
+        cwd = kwargs.get('cwd', _get_cwd())
+        if cwd is None:
             return
 
         # step out completely if git is not installed
         if locate_binary('git') is None:
             return
+
+        root_path = _get_parent_dir_for(cwd, '.git')
+        # Bail if we're not in a repo
+        if not root_path:
+            return
+
+        kwargs['cwd'] = cwd
 
         return func(*args, **kwargs)
     return wrapper
@@ -710,26 +729,21 @@ def ensure_git(func):
 def ensure_hg(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        kwargs['cwd'] = kwargs.get('cwd', _get_cwd())
-        if kwargs['cwd'] is None:
+        cwd = kwargs.get('cwd', _get_cwd())
+        if cwd is None:
             return
-
-        # walk up the directory tree to see if we are inside an hg repo
-        path = kwargs['cwd'].split(os.path.sep)
-        while len(path) > 0:
-            if os.path.exists(os.path.sep.join(path + ['.hg'])):
-                break
-            del path[-1]
-
-        # bail if we aren't inside a repository
-        if path == []:
-            return
-
-        kwargs['root'] = os.path.sep.join(path)
 
         # step out completely if hg is not installed
         if locate_binary('hg') is None:
             return
+
+        root_path = _get_parent_dir_for(cwd, '.hg')
+        # Bail if we're not in a repo
+        if not root_path:
+            return
+
+        kwargs['cwd'] = cwd
+        kwargs['root'] = root_path
 
         return func(*args, **kwargs)
     return wrapper
