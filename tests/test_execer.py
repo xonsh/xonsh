@@ -14,6 +14,7 @@ from tools import mock_xonsh_env
 
 DEBUG_LEVEL = 0
 EXECER = None
+ENV = {'EXPAND_ENV_VARS': True, 'FORCE_POSIX_PATHS': False}
 
 #
 # Helpers
@@ -25,19 +26,19 @@ def setup():
     EXECER = Execer(debug_level=DEBUG_LEVEL)
 
 def check_exec(input):
-    with mock_xonsh_env(None):
+    with mock_xonsh_env(ENV):
         if not input.endswith('\n'):
             input += '\n'
         EXECER.debug_level = DEBUG_LEVEL
         EXECER.exec(input)
 
 def check_eval(input):
-    with mock_xonsh_env(None):
+    with mock_xonsh_env(ENV):
         EXECER.debug_level = DEBUG_LEVEL
         EXECER.eval(input)
 
 def check_parse(input):
-    with mock_xonsh_env(None):
+    with mock_xonsh_env(ENV):
         EXECER.debug_level = DEBUG_LEVEL
         EXECER.parse(input, ctx=None)
 
