@@ -1,11 +1,13 @@
 """Implements a xonsh tracer."""
 import sys
+import inspect
 import linecache    
 
 from xonsh.tools import DefaultNotGiven, print_color, pygments_version
 if pygments_version():
     from xonsh import pyghooks
     import pygments
+    import pygments.formatters.terminal
 else:
     pyghooks = None
 
@@ -26,6 +28,8 @@ class TracerType(object):
         self.prev_tracer = DefaultNotGiven
         self.files = set()
         self.usecolor = True
+        self.lexer = pyghooks.XonshLexer()
+        self.formatter = pygments.formatters.terminal.TerminalFormatter()
 
     def __del__(self):
         for f in set(self.files):
@@ -49,13 +53,17 @@ class TracerType(object):
     def trace(self, frame, event, arg):
         """Implements a line tracing function."""
         fname = frame.f_code.co_filename
-        print(fname, frame.f_lineno)
+        #print(fname, frame.f_lineno)
         if event != 'line':
             return self.trace
         if fname in self.files:
-            lineno = frame.f_lineno
-            line = linecache.getline(fname, lineno)
-            s = format_line(fname, lineno, line, color=self.usecolor)
+            lineno = frame.f_back.f_lineno
+            print(lineno)
+            #line = linecache.getline(fname, lineno)
+            line = inspect.getsource(frame)
+            print(line)
+            #s = format_line(fname, lineno, line, color=self.usecolor,
+            #                lexer=self.lexer, formatter=self.formatter)
             print_color(s)
         return self.trace
 
@@ -66,11 +74,13 @@ COLOR_LINE = ('{{PURPLE}}{fname}{{BLUE}}:'
               '{{GREEN}}{lineno}{{BLUE}}:'
               '{{NO_COLOR}}{line}')
 
-def format_line(fname, lineno, line, color=True):
+def format_line(fname, lineno, line, color=True, lexer=None, formatter=None):
     """Formats a trace line suitable for printing."""
     if not color:
         return COLORLESS_LINE.format(fname=fname, lineno=lineno, line=line)
     if pyghooks is not None:
-        line = pygments.highlight(line, pyghooks.XonshLexer, 
-                            pygments.formatters.terminal.TerminalFormatter)
+        lexer = lexer or pyghooks.XonshLexer()
+        formatter = formatter or pygments.formatters.terminal.TerminalFormatter()
+        line = pygments.highlight(line, lexer, formatter)
+        print(repr(line))
     return COLOR_LINE.format(fname=fname, lineno=lineno, line=line)
