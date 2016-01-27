@@ -114,7 +114,7 @@ def source_alias(args, stdin=None):
     If sourced file isn't found in cwd, search for file along $PATH to source instead"""
     for fname in args:
         if not os.path.isfile(fname):
-            fname = locate_binary(fname)[:-1]
+            fname = locate_binary(fname)
         with open(fname, 'r') as fp:
             execx(fp.read(), 'exec', builtins.__xonsh_ctx__)
 
