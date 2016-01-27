@@ -178,10 +178,13 @@ def superhelper(x, name=''):
 
 def expand_path(s):
     """Takes a string path and expands ~ to home and environment vars."""
-    global ENV
-    if ENV.get('EXPAND_ENV_VARS'):
+    env = builtins.__xonsh_env__
+    if env.get('EXPAND_ENV_VARS'):
         s = expandvars(s)
-    return os.path.expanduser(s)
+    s = os.path.expanduser(s)
+    if ON_WINDOWS and env.get('FORCE_POSIX_PATHS'):
+        s = os.path.normpath(s)
+    return s 
 
 
 WINDOWS_DRIVE_MATCHER = re.compile(r'^\w:')
