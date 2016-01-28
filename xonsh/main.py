@@ -130,7 +130,7 @@ def _pprint_displayhook(value):
 def premain(argv=None):
     """Setup for main xonsh entry point, returns parsed arguments."""
     if setproctitle is not None:
-        setproctitle('xonsh')
+        setproctitle(' '.join(['xonsh'] + sys.argv[1:]))
     args, other = parser.parse_known_args(argv)
     if args.file is not None:
         real_argv = (argv or sys.argv)
