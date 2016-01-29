@@ -6,6 +6,11 @@ import builtins
 from argparse import ArgumentParser, ArgumentTypeError
 from contextlib import contextmanager
 
+try:
+    from setproctitle import setproctitle
+except ImportError:
+    setproctitle = None
+
 from xonsh import __version__
 from xonsh.shell import Shell
 from xonsh.pretty import pprint
@@ -124,6 +129,8 @@ def _pprint_displayhook(value):
 
 def premain(argv=None):
     """Setup for main xonsh entry point, returns parsed arguments."""
+    if setproctitle is not None:
+        setproctitle(' '.join(['xonsh'] + sys.argv[1:]))
     args, other = parser.parse_known_args(argv)
     if args.file is not None:
         real_argv = (argv or sys.argv)
