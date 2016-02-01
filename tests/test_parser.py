@@ -45,16 +45,16 @@ def nodes_equal(x, y):
             return False
     return True
 
-def assert_nodes_equal(x, y):
+def assert_nodes_equal(x, y, include_attributes=True):
     if nodes_equal(x, y):
         return True
-    kw = dict(include_attributes=True)
     if DEBUG_LEVEL > 0:
         print('x:\n==')
-        print(ast.dump(x, **kw), '\n')
+        print(ast.dump(x, include_attributes=include_attributes), '\n')
         print('y:\n==')
-        print(ast.dump(y, **kw), '\n')
-    assert_equal(ast.dump(x, **kw), ast.dump(y, **kw))
+        print(ast.dump(y, include_attributes=include_attributes), '\n')
+    assert_equal(ast.dump(x, include_attributes=include_attributes), 
+                 ast.dump(y, include_attributes=include_attributes))
 
 def check_ast(inp, run=True, mode='eval'):
     # expect a Python AST
@@ -62,7 +62,7 @@ def check_ast(inp, run=True, mode='eval'):
     # observe something from xonsh
     obs = PARSER.parse(inp, debug_level=DEBUG_LEVEL)
     # Check that they are equal
-    assert_nodes_equal(exp, obs)
+    assert_nodes_equal(exp, obs, include_attributes=run)
     # round trip by running xonsh AST via Python
     if run:
         exec(compile(obs, '<test-ast>', mode))

@@ -223,6 +223,10 @@ class Parser(object):
         for rule in list_rules:
             self._list_rule(rule)
 
+        tok_rules = ['def', 'class', 'async']
+        for rule in tok_rules:
+            self._tok_rule(rule)
+
         yacc_kwargs = dict(module=self,
                            debug=yacc_debug,
                            start='start_symbols',
@@ -303,6 +307,19 @@ class Parser(object):
                             '         | {0}_list {0}').format(rulename)
         listfunc.__name__ = 'p_' + rulename + '_list'
         setattr(self.__class__, listfunc.__name__, listfunc)
+
+    def _tok_rule(self, rulename):
+        """For a rule name, creates a rule that retuns the corresponding token.
+        '_tok' is appended to the rule name.
+        """
+
+        def tokfunc(self, p):
+            _, t = self._yacc_lookahead_token()
+            p[0] = t
+
+        tokfunc.__doc__ = '{0}_tok : {1}'.format(rulename, rulename.upper())
+        tokfunc.__name__ = 'p_' + rulename + '_tok'
+        setattr(self.__class__, tokfunc.__name__, tokfunc)
 
     def currloc(self, lineno, column=None):
         """Returns the current location."""
@@ -488,15 +505,15 @@ class Parser(object):
         p[0] = p[2]
 
     def p_funcdef(self, p):
-        """funcdef : DEF NAME parameters rarrow_test_opt COLON suite"""
+        """funcdef : def_tok NAME parameters rarrow_test_opt COLON suite"""
         f = ast.FunctionDef(name=p[2],
                             args=p[3],
                             returns=p[4],
                             body=p[6],
                             decorator_list=[],
                             #lineno=self.lineno,
-                            lineno=p[2].lineno,
-                            col_offset=self.col)
+                            lineno=p[1].lineno,
+                            col_offset=p[1].lexpos)
         p[0] = [f]
 
     def p_async_funcdef(self, p):
