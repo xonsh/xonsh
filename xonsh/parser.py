@@ -226,7 +226,8 @@ class Parser(object):
             self._list_rule(rule)
 
         tok_rules = ['def', 'class', 'async', 'return', 'number', 'name', 
-                     'none', 'true', 'false', 'ellipsis', 'if', 'del', 'assert']
+                     'none', 'true', 'false', 'ellipsis', 'if', 'del', 'assert', 
+                     'lparen']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -847,10 +848,17 @@ class Parser(object):
                 assert False
             else:
                 list(map(store_ctx, p2[:-1]))
-                p0 = ast.Assign(targets=p1 + p2[:-1],
-                                value=p2[-1],
-                                lineno=p1[0].lineno,
-                                col_offset=p1[0].col_offset)
+                first = p1[0]
+                if hasattr(first, '_lparen_lineno'):
+                    # handles (x, y) = 42, 65
+                    lineno = first._lparen_lineno
+                    col = first._lparen_col_offset
+                else:
+                    # handles x, y = 42, 65
+                    lineno = first.lineno
+                    col = first.col_offset
+                p0 = ast.Assign(targets=p1 + p2[:-1], value=p2[-1],
+                                lineno=lineno, col_offset=col)
         elif lenp == 4:
             op = self._augassign_op[p2]
             if op is None:
@@ -870,10 +878,14 @@ class Parser(object):
             p1.extend(targs)
             p1 = [ast.Tuple(elts=p1,
                             ctx=ast.Store(),
+                            #lineno=p1.lineno,
+                            #col_offset=p1.col_offset)]
                             lineno=self.lineno,
                             col_offset=self.col)]
             p0 = ast.Assign(targets=p1,
                             value=rhs,
+                            #lineno=p1[0].lineno,
+                            #col_offset=p1[0].col_offset)
                             lineno=self.lineno,
                             col_offset=self.col)
         else:
@@ -1742,13 +1754,12 @@ class Parser(object):
         p[0] = p0
 
     def p_atom(self, p):
-        """atom : LPAREN yield_expr_or_testlist_comp_opt RPAREN
+        """atom : lparen_tok yield_expr_or_testlist_comp_opt RPAREN
                 | LBRACKET testlist_comp_opt RBRACKET
                 | LBRACE dictorsetmaker_opt RBRACE
                 | name_tok
                 | number
                 | string_literal_list
-                | ELLIPSIS
                 | ellipsis_tok
                 | none_tok
                 | true_tok
@@ -1802,6 +1813,8 @@ class Parser(object):
                 raise ValueError('{0!r} not understood'.format(p1))
             p[0] = p1
             return
+        if isinstance(p1, LexToken):
+            p1, p1_tok = p1.value, p1
         p2 = p[2]
         if p2 is None:
             # empty container atoms
@@ -1827,6 +1840,8 @@ class Parser(object):
             # filled, possible group container tuple atoms
             if isinstance(p2, ast.AST):
                 p0 = p2
+                p0._lparen_lineno = p1_tok.lineno
+                p0._lparen_col_offset = p1_tok.lexpos
                 p0._real_tuple = True
             elif len(p2) == 1 and isinstance(p2[0], ast.AST):
                 p0 = p2[0]
