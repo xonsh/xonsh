@@ -53,18 +53,21 @@ class TracerType(object):
     def trace(self, frame, event, arg):
         """Implements a line tracing function."""
         fname = frame.f_code.co_filename
+        #print(f)
         #print(fname, frame.f_lineno)
-        if event != 'line':
-            return self.trace
+        #if event != 'line' and event != 'call':
+        #    return self.trace
         if fname in self.files:
-            lineno = frame.f_back.f_lineno
-            print(lineno)
+            print('-'*10)
+            #lineno = frame.f_back.f_lineno
+            lineno = frame.f_lineno
+            print(frame.f_code.co_filename, lineno)
             #line = linecache.getline(fname, lineno)
             line = inspect.getsource(frame)
             print(line)
             #s = format_line(fname, lineno, line, color=self.usecolor,
             #                lexer=self.lexer, formatter=self.formatter)
-            print_color(s)
+            #print_color(s)
         return self.trace
 
 tracer = TracerType()

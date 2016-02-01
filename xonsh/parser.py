@@ -275,8 +275,8 @@ class Parser(object):
         self._parse_error(msg, self.currloc(line, column))
 
     def _yacc_lookahead_token(self):
-        """Gets the last token seen by the lexer."""
-        return self.lexer.last
+        """Gets the next-to-last and last token seen by the lexer."""
+        return self.lexer.beforelast, self.lexer.last
 
     def _opt_rule(self, rulename):
         """For a rule name, creates an associated optional rule.
@@ -319,16 +319,19 @@ class Parser(object):
     @property
     def lineno(self):
         if self.lexer.last is None:
-            return 0
+            return 1
         else:
             return self.lexer.last.lineno
 
     @property
     def col(self):
-        t = self._yacc_lookahead_token()
+        s, t = self._yacc_lookahead_token()
         if t is not None:
+            #raise ValueError
+            if t.type == 'NEWLINE':
+                t = s
             return self.token_col(t)
-        return 1
+        return 0
 
     def _parse_error(self, msg, loc):
         err = SyntaxError('{0}: {1}'.format(loc, msg))
@@ -491,7 +494,8 @@ class Parser(object):
                             returns=p[4],
                             body=p[6],
                             decorator_list=[],
-                            lineno=self.lineno,
+                            #lineno=self.lineno,
+                            lineno=p[2].lineno,
                             col_offset=self.col)
         p[0] = [f]
 

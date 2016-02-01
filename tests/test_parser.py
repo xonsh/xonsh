@@ -28,7 +28,7 @@ def setup():
 def nodes_equal(x, y):
     if type(x) != type(y):
         return False
-    if isinstance(x, ast.Expr):
+    if isinstance(x, (ast.Expr, ast.FunctionDef, ast.ClassDef)):
         if x.lineno != y.lineno:
             return False
         if x.col_offset != y.col_offset:
@@ -48,12 +48,13 @@ def nodes_equal(x, y):
 def assert_nodes_equal(x, y):
     if nodes_equal(x, y):
         return True
+    kw = dict(include_attributes=True)
     if DEBUG_LEVEL > 0:
         print('x:\n==')
-        print(ast.dump(x), '\n')
+        print(ast.dump(x, **kw), '\n')
         print('y:\n==')
-        print(ast.dump(y), '\n')
-    assert_equal(ast.dump(x), ast.dump(y))
+        print(ast.dump(y, **kw), '\n')
+    assert_equal(ast.dump(x, **kw), ast.dump(y, **kw))
 
 def check_ast(inp, run=True, mode='eval'):
     # expect a Python AST
