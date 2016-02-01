@@ -10,6 +10,7 @@ import nose
 from nose.tools import assert_equal
 assert_equal.__self__.maxDiff = None
 
+from xonsh.ast import pdump
 from xonsh.parser import Parser
 
 from tools import mock_xonsh_env, skip_if, VER_3_4, VER_3_5, VER_MAJOR_MINOR
@@ -50,11 +51,11 @@ def assert_nodes_equal(x, y, include_attributes=True):
         return True
     if DEBUG_LEVEL > 0:
         print('x:\n==')
-        print(ast.dump(x, include_attributes=include_attributes), '\n')
+        print(pdump(x, include_attributes=include_attributes), '\n')
         print('y:\n==')
-        print(ast.dump(y, include_attributes=include_attributes), '\n')
-    assert_equal(ast.dump(x, include_attributes=include_attributes), 
-                 ast.dump(y, include_attributes=include_attributes))
+        print(pdump(y, include_attributes=include_attributes), '\n')
+    assert_equal(pdump(x, include_attributes=include_attributes), 
+                 pdump(y, include_attributes=include_attributes))
 
 def check_ast(inp, run=True, mode='eval'):
     # expect a Python AST

@@ -1876,8 +1876,10 @@ class Parser(object):
             elif p2 == ',':
                 p0 = ast.Tuple(elts=[p1],
                                ctx=ast.Load(),
-                               lineno=self.lineno,
-                               col_offset=self.col)
+                               lineno=p1.lineno,
+                               col_offset=p1.col_offset)
+                               #lineno=self.lineno,
+                               #col_offset=self.col)
             elif 'comps' in p2:
                 p0 = ast.GeneratorExp(elt=p1,
                                       generators=p2['comps'],
@@ -1888,8 +1890,10 @@ class Parser(object):
         elif len(p) == 4:
             p0 = ast.Tuple(elts=[p1],
                            ctx=ast.Load(),
-                           lineno=self.lineno,
-                           col_offset=self.col)
+                           lineno=p1.lineno,
+                           col_offset=p1.col_offset)
+                           #lineno=self.lineno,
+                           #col_offset=self.col)
             if p2 is not None:
                 p0.elts.extend(p2)
             else:
@@ -1925,8 +1929,10 @@ class Parser(object):
         if p2 is not None:
             p1.value = ast.Tuple(elts=[p1.value] + [x.value for x in p2],
                                  ctx=ast.Load(),
-                                 lineno=self.lineno,
-                                 col_offset=self.col)
+                                 lineno=p1.lineno,
+                                 col_offset=p1.lexpos)
+                                 #lineno=self.lineno,
+                                 #col_offset=self.col)
         p[0] = p1
 
     def p_comma_subscript(self, p):

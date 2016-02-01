@@ -15,6 +15,7 @@ from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
     Interactive, Expression, Index, literal_eval, dump
 from ast import Ellipsis  # pylint: disable=redefined-builtin
 # pylint: enable=unused-import
+import textwrap
 
 from xonsh.tools import subproc_toks, VER_3_5, VER_MAJOR_MINOR
 
@@ -255,3 +256,32 @@ class CtxAwareTransformer(NodeTransformer):
         self.contexts[1].update(node.names)  # contexts[1] is the global ctx
         self.generic_visit(node)
         return node
+
+
+
+def pdump(s, **kwargs):
+    """performs a pretty dump of an AST node."""
+    if isinstance(s, AST):
+        s = dump(s, **kwargs).replace(',', ',\n')
+    openers = '([{'
+    closers = ')]}'
+    lens = len(s) + 1
+    if lens == 1:
+        return s
+    i = min([s.find(o)%lens for o in openers])
+    if i == lens - 1:
+        return s
+    closer = closers[openers.find(s[i])]
+    j = s.rfind(closer)
+    if j == -1 or j <= i:
+        return s[:i+1] + '\n' + textwrap.indent(pdump(s[i+1:]), ' ')
+    pre = s[:i+1] + '\n'
+    mid = s[i+1:j]
+    post = '\n' + s[j:]
+    mid = textwrap.indent(pdump(mid), ' ')
+    if '(' in post or '[' in post or '{' in post:
+        post = pdump(post)
+    return pre + mid + post
+    
+
+
