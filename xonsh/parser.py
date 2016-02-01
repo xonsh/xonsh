@@ -7,7 +7,7 @@ from collections import Iterable, Sequence, Mapping
 from ply import yacc
 
 from xonsh import ast
-from xonsh.lexer import Lexer
+from xonsh.lexer import Lexer, LexToken
 from xonsh.tools import (VER_3_4, VER_3_5, VER_3_5_1,
                          VER_MAJOR_MINOR, VER_FULL,
                          docstring_by_version)
@@ -225,7 +225,8 @@ class Parser(object):
         for rule in list_rules:
             self._list_rule(rule)
 
-        tok_rules = ['def', 'class', 'async', 'return', 'number', 'name']
+        tok_rules = ['def', 'class', 'async', 'return', 'number', 'name', 
+                     'none', 'true', 'false', 'ellipsis']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -737,13 +738,14 @@ class Parser(object):
         p[0] = p0
 
     def p_vfpdef(self, p):
-        """vfpdef : NAME"""
-        kwargs = {'arg': p[1],
+        """vfpdef : name_tok"""
+        p1 = p[1]
+        kwargs = {'arg': p1.value,
                   'annotation': None}
         if VER_FULL >= VER_3_5_1:
             kwargs.update({
-                'lineno': self.lineno,
-                'col_offset': self.col,
+                'lineno': p1.lineno,
+                'col_offset': p1.lexpos,
             })
         p[0] = ast.arg(**kwargs)
 
@@ -847,8 +849,8 @@ class Parser(object):
                 list(map(store_ctx, p2[:-1]))
                 p0 = ast.Assign(targets=p1 + p2[:-1],
                                 value=p2[-1],
-                                lineno=self.lineno,
-                                col_offset=self.col)
+                                lineno=p1[0].lineno,
+                                col_offset=p1[0].col_offset)
         elif lenp == 4:
             op = self._augassign_op[p2]
             if op is None:
@@ -1744,9 +1746,10 @@ class Parser(object):
                 | number
                 | string_literal_list
                 | ELLIPSIS
-                | NONE
-                | TRUE
-                | FALSE
+                | ellipsis_tok
+                | none_tok
+                | true_tok
+                | false_tok
                 | REGEXPATH
                 | DOLLAR_NAME
                 | DOLLAR_LBRACE test RBRACE
@@ -1760,21 +1763,7 @@ class Parser(object):
             if isinstance(p1, (ast.Num, ast.Str, ast.Bytes)):
                 pass
             elif isinstance(p1, str):
-                if p1 == 'True':
-                    p1 = ast.NameConstant(value=True,
-                                          lineno=self.lineno,
-                                          col_offset=self.col)
-                elif p1 == 'False':
-                    p1 = ast.NameConstant(value=False,
-                                          lineno=self.lineno,
-                                          col_offset=self.col)
-                elif p1 == 'None':
-                    p1 = ast.NameConstant(value=None,
-                                          lineno=self.lineno,
-                                          col_offset=self.col)
-                elif p1 == '...':
-                    p1 = ast.Ellipsis(lineno=self.lineno, col_offset=self.col)
-                elif p1.startswith(bt) and p1.endswith(bt):
+                if p1.startswith(bt) and p1.endswith(bt):
                     p1 = ast.Str(s=p1.strip(bt),
                                  lineno=self.lineno,
                                  col_offset=self.col)
@@ -1785,11 +1774,29 @@ class Parser(object):
                                               col=self.col)
                 else:
                     raise ValueError(p1 + " not understood")
+            elif isinstance(p1, LexToken):
+                p1_value = p1.value
+                if p1_value == 'True':
+                    p1 = ast.NameConstant(value=True,
+                                          lineno=p1.lineno,
+                                          col_offset=p1.lexpos)
+                elif p1_value == 'False':
+                    p1 = ast.NameConstant(value=False,
+                                          lineno=p1.lineno,
+                                          col_offset=p1.lexpos)
+                elif p1_value == 'None':
+                    p1 = ast.NameConstant(value=None,
+                                          lineno=p1.lineno,
+                                          col_offset=p1.lexpos)
+                elif p1_value == '...':
+                    p1 = ast.Ellipsis(lineno=p1.lineno, col_offset=p1.lexpos)
+                else:
+                    p1 = ast.Name(id=p1_value,
+                                  ctx=ast.Load(),
+                                  lineno=p1.lineno,
+                                  col_offset=p1.lexpos)
             else:
-                p1 = ast.Name(id=p1.value,
-                              ctx=ast.Load(),
-                              lineno=p1.lineno,
-                              col_offset=p1.lexpos)
+                raise ValueError('{0!r} not understood'.format(p1))
             p[0] = p1
             return
         p2 = p[2]
