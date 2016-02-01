@@ -55,6 +55,8 @@ def empty_list(lineno=None, col=None):
 
 def binop(x, op, y, lineno=None, col=None):
     """Creates the AST node for a binary operation."""
+    lineno = x.lineno if lineno is None else lineno
+    col = x.col_offset if col is None else col
     return ast.BinOp(left=x, op=op, right=y, lineno=lineno, col_offset=col)
 
 
@@ -236,7 +238,7 @@ class Parser(object):
 
         tok_rules = ['def', 'class', 'async', 'return', 'number', 'name', 
                      'none', 'true', 'false', 'ellipsis', 'if', 'del', 'assert', 
-                     'lparen', 'lbrace', 'lbracket']
+                     'lparen', 'lbrace', 'lbracket', 'string']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -1520,6 +1522,7 @@ class Parser(object):
             for bop in p2[1:]:
                 bop.left = p0
                 p0 = bop
+            p0.lineno, p0.col_offset = p1.lineno, p1.col_offset
         else:
             p0 = p1 + p2
         return p0
@@ -1581,23 +1584,24 @@ class Parser(object):
         """arith_expr : term
                       | term pm_term_list
         """
+        p1 = p[1]
         p2 = p[2] if len(p) > 2 else None
         if p2 is None:
-            p0 = p[1]
+            p0 = p1
         elif len(p2) == 2:
-            p0 = ast.BinOp(left=p[1],
+            p0 = ast.BinOp(left=p1,
                            op=p2[0],
                            right=p2[1],
-                           lineno=self.lineno,
-                           col_offset=self.col)
+                           lineno=p1.lineno,
+                           col_offset=p1.col_offset)
         else:
-            left = p[1]
+            left = p1
             for op, right in zip(p2[::2], p2[1::2]):
                 left = ast.BinOp(left=left,
                                  op=op,
                                  right=right,
-                                 lineno=self.lineno,
-                                 col_offset=self.col)
+                                 lineno=p1.lineno,
+                                 col_offset=p1.col_offset)
             p0 = left
         p[0] = p0
 
@@ -1620,23 +1624,23 @@ class Parser(object):
 
     def p_term(self, p):
         """term : factor op_factor_list_opt"""
-        p2 = p[2]
+        p1, p2 = p[1], p[2]
         if p2 is None:
-            p0 = p[1]
+            p0 = p1
         elif len(p2) == 2:
-            p0 = ast.BinOp(left=p[1],
+            p0 = ast.BinOp(left=p1,
                            op=p2[0],
                            right=p2[1],
-                           lineno=self.lineno,
-                           col_offset=self.col)
+                           lineno=p1.lineno,
+                           col_offset=p1.col_offset)
         else:
-            left = p[1]
+            left = p1
             for op, right in zip(p2[::2], p2[1::2]):
                 left = ast.BinOp(left=left,
                                  op=op,
                                  right=right,
-                                 lineno=self.lineno,
-                                 col_offset=self.col)
+                                 lineno=p1.lineno,
+                                 col_offset=p1.col_offset)
             p0 = left
         p[0] = p0
 
@@ -1684,8 +1688,10 @@ class Parser(object):
             p0 = ast.BinOp(left=p1,
                            op=ast.Pow(),
                            right=p[3],
-                           lineno=self.lineno,
-                           col_offset=self.col)
+                           lineno=p1.lineno,
+                           col_offset=p1.col_offset)
+                           #lineno=self.lineno,
+                           #col_offset=self.col)
         else:
             assert False
         p[0] = p0
@@ -1876,10 +1882,11 @@ class Parser(object):
         p[0] = p0
 
     def p_string_literal(self, p):
-        """string_literal : STRING"""
-        s = eval(p[1])
-        cls = ast.Bytes if p[1].startswith('b') else ast.Str
-        p[0] = cls(s=s, lineno=self.lineno, col_offset=self.col)
+        """string_literal : string_tok"""
+        p1 = p[1]
+        s = ast.literal_eval(p1.value)
+        cls = ast.Bytes if p1.value.startswith('b') else ast.Str
+        p[0] = cls(s=s, lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_string_literal_list(self, p):
         """string_literal_list : string_literal
