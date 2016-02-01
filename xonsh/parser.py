@@ -226,7 +226,7 @@ class Parser(object):
             self._list_rule(rule)
 
         tok_rules = ['def', 'class', 'async', 'return', 'number', 'name', 
-                     'none', 'true', 'false', 'ellipsis']
+                     'none', 'true', 'false', 'ellipsis', 'if', 'del', 'assert']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -952,11 +952,12 @@ class Parser(object):
     # by the interpreter
     #
     def p_del_stmt(self, p):
-        """del_stmt : DEL exprlist"""
+        """del_stmt : del_tok exprlist"""
+        p1 = p[1]
         p2 = p[2]
         for targ in p2:
             targ.ctx = ast.Del()
-        p0 = ast.Delete(targets=p2, lineno=self.lineno, col_offset=self.col)
+        p0 = ast.Delete(targets=p2, lineno=p1.lineno, col_offset=p1.lexpos)
         p[0] = p0
 
     def p_pass_stmt(self, p):
@@ -1147,16 +1148,16 @@ class Parser(object):
         p[0] = [p[2]]
 
     def p_assert_stmt(self, p):
-        """assert_stmt : ASSERT test comma_test_opt"""
-        p2, p3 = p[2], p[3]
+        """assert_stmt : assert_tok test comma_test_opt"""
+        p1, p2, p3 = p[1], p[2], p[3]
         if p3 is not None:
             if len(p3) != 1:
                 assert False
             p3 = p3[0]
         p0 = ast.Assert(test=p2,
                         msg=p3,
-                        lineno=self.lineno,
-                        col_offset=self.col)
+                        lineno=p1.lineno,
+                        col_offset=p1.lexpos)
         p[0] = p0
 
     def p_compound_stmt(self, p):
@@ -1185,14 +1186,15 @@ class Parser(object):
         p[0] = p[3]
 
     def p_if_stmt(self, p):
-        """if_stmt : IF test COLON suite elif_part_list_opt
-                   | IF test COLON suite elif_part_list_opt else_part
+        """if_stmt : if_tok test COLON suite elif_part_list_opt
+                   | if_tok test COLON suite elif_part_list_opt else_part
         """
+        p1 = p[1]
         lastif = ast.If(test=p[2],
                         body=p[4],
                         orelse=[],
-                        lineno=self.lineno,
-                        col_offset=self.col)
+                        lineno=p1.lineno,
+                        col_offset=p1.lexpos)
         p0 = [lastif]
         p5 = p[5]
         p6 = p[6] if len(p) > 6 else []
@@ -1441,15 +1443,16 @@ class Parser(object):
 
     def p_comparison(self, p):
         """comparison : expr comp_op_expr_list_opt"""
+        p1 = p[1]
         p2 = p[2]
         if p2 is None:
-            p0 = p[1]
+            p0 = p1
         else:
-            p0 = ast.Compare(left=p[1],
+            p0 = ast.Compare(left=p1,
                              ops=p2[::2],
                              comparators=p2[1::2],
-                             lineno=self.lineno,
-                             col_offset=self.col)
+                             lineno=p1.lineno,
+                             col_offset=p1.col_offset)
         p[0] = p0
 
     def p_comp_op_expr(self, p):
