@@ -34,11 +34,13 @@ def has_elts(x):
     return isinstance(x, ast.AST) and hasattr(x, 'elts')
 
 
-def ensure_has_elts(x, lineno=1, col_offset=1):
+def ensure_has_elts(x, lineno=None, col_offset=None):
     """Ensures that x is an AST node with elements."""
     if not has_elts(x):
         if not isinstance(x, Iterable):
             x = [x]
+        lineno = x[0].lineno if lineno is None else lineno
+        col_offset = x[0].col_offset if col_offset is None else col_offset
         x = ast.Tuple(elts=x,
                       ctx=ast.Load(),
                       lineno=lineno,
@@ -1996,9 +1998,7 @@ class Parser(object):
                                lineno=self.lineno,
                                col_offset=self.col)
             else:
-                p1 = ensure_has_elts(p1,
-                                     lineno=self.lineno,
-                                     col_offset=self.col)
+                p1 = ensure_has_elts(p1)
             p2 = p[2] if lenp > 2 else []
             p2 = [] if p2 == ',' else p2
             p1.elts += p2
