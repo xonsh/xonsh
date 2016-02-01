@@ -223,7 +223,7 @@ class Parser(object):
         for rule in list_rules:
             self._list_rule(rule)
 
-        tok_rules = ['def', 'class', 'async']
+        tok_rules = ['def', 'class', 'async', 'return', 'number']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -314,8 +314,14 @@ class Parser(object):
         """
 
         def tokfunc(self, p):
-            _, t = self._yacc_lookahead_token()
-            p[0] = t
+            s, t = self._yacc_lookahead_token()
+            uprule = rulename.upper()
+            if t.type == uprule:
+                p[0] = t
+            elif s.type == uprule:
+                p[0] = s
+            else:
+                raise TypeError('token for {0!r} not found.'.format(rulename))
 
         tokfunc.__doc__ = '{0}_tok : {1}'.format(rulename, rulename.upper())
         tokfunc.__name__ = 'p_' + rulename + '_tok'
@@ -971,8 +977,9 @@ class Parser(object):
         p[0] = ast.Continue(lineno=self.lineno, col_offset=self.col)
 
     def p_return_stmt(self, p):
-        """return_stmt : RETURN testlist_opt"""
-        p[0] = ast.Return(value=p[2], lineno=self.lineno, col_offset=self.col)
+        """return_stmt : return_tok testlist_opt"""
+        p1 = p[1]
+        p[0] = ast.Return(value=p[2], lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_yield_stmt(self, p):
         """yield_stmt : yield_expr"""
@@ -1851,8 +1858,10 @@ class Parser(object):
         p[0] = p[1]
 
     def p_number(self, p):
-        """number : NUMBER"""
-        p[0] = ast.Num(n=eval(p[1]), lineno=self.lineno, col_offset=self.col)
+        """number : number_tok"""
+        p1 = p[1]
+        p[0] = ast.Num(n=ast.literal_eval(p1.value), lineno=p1.lineno,
+                       col_offset=p1.lexpos)
 
     def p_testlist_comp(self, p):
         """testlist_comp : test_or_star_expr comp_for

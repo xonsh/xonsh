@@ -12,7 +12,7 @@ from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
     YieldFrom, Return, IfExp, Lambda, arguments, arg, Call, keyword, \
     Attribute, Global, Nonlocal, If, While, For, withitem, With, Try, \
     ExceptHandler, FunctionDef, ClassDef, Starred, NodeTransformer, \
-    Interactive, Expression, Index, dump
+    Interactive, Expression, Index, literal_eval, dump
 from ast import Ellipsis  # pylint: disable=redefined-builtin
 # pylint: enable=unused-import
 
