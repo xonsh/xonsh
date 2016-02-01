@@ -610,13 +610,14 @@ class Parser(object):
         p[0] = p[2]
 
     def p_tfpdef(self, p):
-        """tfpdef : NAME colon_test_opt"""
-        kwargs = {'arg': p[1],
+        """tfpdef : name_tok colon_test_opt"""
+        p1 = p[1]
+        kwargs = {'arg': p1.value,
                   'annotation': p[2]}
         if VER_FULL >= VER_3_5_1:
             kwargs.update({
-                'lineno': self.lineno,
-                'col_offset': self.col,
+                'lineno': p1.lineno,
+                'col_offset': p1.lexpos,
             })
         p[0] = ast.arg(**kwargs)
 
