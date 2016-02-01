@@ -161,6 +161,15 @@ def empty_list_if_newline(x):
     return [] if x == '\n' else x
 
 
+def lopen_loc(x):
+    """Extracts the line and column number for a node that may have anb opening
+    parenthesis, brace, or braket.
+    """
+    lineno = x._lopen_lineno if hasattr(x, '_lopen_lineno') else x.lineno
+    col = x._lopen_col if hasattr(x, '_lopen_col') else x.col_offset
+    return lineno, col
+
+
 class Parser(object):
     """A class that parses the xonsh language."""
 
@@ -227,7 +236,7 @@ class Parser(object):
 
         tok_rules = ['def', 'class', 'async', 'return', 'number', 'name', 
                      'none', 'true', 'false', 'ellipsis', 'if', 'del', 'assert', 
-                     'lparen']
+                     'lparen', 'lbrace', 'lbracket']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -848,15 +857,7 @@ class Parser(object):
                 assert False
             else:
                 list(map(store_ctx, p2[:-1]))
-                first = p1[0]
-                if hasattr(first, '_lparen_lineno'):
-                    # handles (x, y) = 42, 65
-                    lineno = first._lparen_lineno
-                    col = first._lparen_col_offset
-                else:
-                    # handles x, y = 42, 65
-                    lineno = first.lineno
-                    col = first.col_offset
+                lineno, col = lopen_loc(p1[0])
                 p0 = ast.Assign(targets=p1 + p2[:-1], value=p2[-1],
                                 lineno=lineno, col_offset=col)
         elif lenp == 4:
@@ -865,7 +866,7 @@ class Parser(object):
                 self._parse_error('operation {0!r} not supported'.format(p2),
                                   self.currloc(lineno=p.lineno, column=p.lexpos))
             p0 = ast.AugAssign(target=p1[0], op=op(), value=p[3],
-                               lineno=self.lineno, col_offset=self.col)
+                               lineno=p1[0].lineno, col_offset=p1[0].col_offset)
         elif lenp == 5 or lenp == 6:
             if lenp == 5:
                 targs, rhs = p[3], p[4][0]
@@ -1755,8 +1756,8 @@ class Parser(object):
 
     def p_atom(self, p):
         """atom : lparen_tok yield_expr_or_testlist_comp_opt RPAREN
-                | LBRACKET testlist_comp_opt RBRACKET
-                | LBRACE dictorsetmaker_opt RBRACE
+                | lbracket_tok testlist_comp_opt RBRACKET
+                | lbrace_tok dictorsetmaker_opt RBRACE
                 | name_tok
                 | number
                 | string_literal_list
@@ -1840,8 +1841,7 @@ class Parser(object):
             # filled, possible group container tuple atoms
             if isinstance(p2, ast.AST):
                 p0 = p2
-                p0._lparen_lineno = p1_tok.lineno
-                p0._lparen_col_offset = p1_tok.lexpos
+                p0._lopen_lineno, p0._lopen_col = p1_tok.lineno, p1_tok.lexpos
                 p0._real_tuple = True
             elif len(p2) == 1 and isinstance(p2[0], ast.AST):
                 p0 = p2[0]
@@ -1867,6 +1867,8 @@ class Parser(object):
                               col_offset=self.col)
         elif p1 == '{':
             p0 = p2
+            #assert False
+            p0.lineno, p0.col_offset = p1_tok.lineno, p1_tok.lexpos
         elif p1.startswith('$'):
             p0 = self._dollar_rules(p)
         else:
@@ -2092,13 +2094,16 @@ class Parser(object):
                 for k, v in zip(p2[::2], p2[1::2]):
                     keys.append(k)
                     vals.append(v)
-                p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), lineno=self.lineno,
-                              col_offset=self.col)
+                lineno, col = lopen_loc(p1[0])
+                p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), 
+                              lineno=lineno, col_offset=col)
             elif p2 == ':':
                 keys = [p1]
                 vals = self._list_or_elts_if_not_real_tuple(p3)
-                p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), lineno=self.lineno,
-                              col_offset=self.col)
+                lineno, col = lopen_loc(p1)
+                p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), 
+                              lineno=lineno, col_offset=col)
+                              #lineno=self.lineno, col_offset=self.col)
             elif isinstance(p1, ast.AST):
                 elts = [p1] + p2
                 p0 = ast.Set(elts=elts, ctx=ast.Load(), lineno=self.lineno,
@@ -2112,8 +2117,10 @@ class Parser(object):
             for k, v in zip(p4[::2], p4[1::2]):
                 keys.append(k)
                 vals.append(v)
-            p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), lineno=self.lineno,
-                          col_offset=self.col)
+            lineno, col = lopen_loc(p1)
+            p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), 
+                          lineno=lineno, col_offset=col)
+                          #lineno=self.lineno, col_offset=self.col)
         else:
             assert False
         p[0] = p0
