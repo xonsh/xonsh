@@ -1713,8 +1713,8 @@ class Parser(object):
                                    col_offset=self.col)
             elif isinstance(trailer, Mapping):
                 p0 = ast.Call(func=leader,
-                              lineno=self.lineno,
-                              col_offset=self.col, **trailer)
+                              lineno=leader.lineno,
+                              col_offset=leader.col_offset, **trailer)
             elif isinstance(trailer, str):
                 if trailer == '?':
                     p0 = xonsh_help(leader, lineno=self.lineno, col=self.col)
