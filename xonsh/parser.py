@@ -225,7 +225,7 @@ class Parser(object):
         for rule in list_rules:
             self._list_rule(rule)
 
-        tok_rules = ['def', 'class', 'async', 'return', 'number']
+        tok_rules = ['def', 'class', 'async', 'return', 'number', 'name']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -434,14 +434,14 @@ class Parser(object):
         p[0] = [p[2]]
 
     def p_attr_name(self, p):
-        """attr_name : NAME
-                     | NAME attr_period_name_list
+        """attr_name : name_tok
+                     | name_tok attr_period_name_list
         """
         p1 = p[1]
-        name = ast.Name(id=p1,
+        name = ast.Name(id=p1.value,
                         ctx=ast.Load(),
-                        lineno=self.lineno,
-                        col_offset=self.col)
+                        lineno=p1.lineno,
+                        col_offset=p1.lexpos)
         if len(p) == 2:
             p0 = name
         else:
@@ -519,7 +519,6 @@ class Parser(object):
                             returns=p[4],
                             body=p[6],
                             decorator_list=[],
-                            #lineno=self.lineno,
                             lineno=p[1].lineno,
                             col_offset=p[1].lexpos)
         p[0] = [f]
@@ -1740,7 +1739,7 @@ class Parser(object):
         """atom : LPAREN yield_expr_or_testlist_comp_opt RPAREN
                 | LBRACKET testlist_comp_opt RBRACKET
                 | LBRACE dictorsetmaker_opt RBRACE
-                | NAME
+                | name_tok
                 | number
                 | string_literal_list
                 | ELLIPSIS
@@ -1759,34 +1758,37 @@ class Parser(object):
             bt = '`'
             if isinstance(p1, (ast.Num, ast.Str, ast.Bytes)):
                 pass
-            elif p1 == 'True':
-                p1 = ast.NameConstant(value=True,
-                                      lineno=self.lineno,
-                                      col_offset=self.col)
-            elif p1 == 'False':
-                p1 = ast.NameConstant(value=False,
-                                      lineno=self.lineno,
-                                      col_offset=self.col)
-            elif p1 == 'None':
-                p1 = ast.NameConstant(value=None,
-                                      lineno=self.lineno,
-                                      col_offset=self.col)
-            elif p1 == '...':
-                p1 = ast.Ellipsis(lineno=self.lineno, col_offset=self.col)
-            elif p1.startswith(bt) and p1.endswith(bt):
-                p1 = ast.Str(s=p1.strip(bt),
-                             lineno=self.lineno,
-                             col_offset=self.col)
-                p1 = xonsh_regexpath(p1, lineno=self.lineno, col=self.col)
-            elif p1.startswith('$'):
-                p1 = self._envvar_by_name(p1[1:],
+            elif isinstance(p1, str):
+                if p1 == 'True':
+                    p1 = ast.NameConstant(value=True,
                                           lineno=self.lineno,
-                                          col=self.col)
+                                          col_offset=self.col)
+                elif p1 == 'False':
+                    p1 = ast.NameConstant(value=False,
+                                          lineno=self.lineno,
+                                          col_offset=self.col)
+                elif p1 == 'None':
+                    p1 = ast.NameConstant(value=None,
+                                          lineno=self.lineno,
+                                          col_offset=self.col)
+                elif p1 == '...':
+                    p1 = ast.Ellipsis(lineno=self.lineno, col_offset=self.col)
+                elif p1.startswith(bt) and p1.endswith(bt):
+                    p1 = ast.Str(s=p1.strip(bt),
+                                 lineno=self.lineno,
+                                 col_offset=self.col)
+                    p1 = xonsh_regexpath(p1, lineno=self.lineno, col=self.col)
+                elif p1.startswith('$'):
+                    p1 = self._envvar_by_name(p1[1:],
+                                              lineno=self.lineno,
+                                              col=self.col)
+                else:
+                    raise ValueError(p1 + " not understood")
             else:
-                p1 = ast.Name(id=p1,
+                p1 = ast.Name(id=p1.value,
                               ctx=ast.Load(),
-                              lineno=self.lineno,
-                              col_offset=self.col)
+                              lineno=p1.lineno,
+                              col_offset=p1.lexpos)
             p[0] = p1
             return
         p2 = p[2]
