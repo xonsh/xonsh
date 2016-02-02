@@ -331,9 +331,9 @@ class Parser(object):
         def tokfunc(self, p):
             s, t = self._yacc_lookahead_token()
             uprule = rulename.upper()
-            if t.type == uprule:
+            if t is not None and t.type == uprule:
                 p[0] = t
-            elif s.type == uprule:
+            elif s is not None and s.type == uprule:
                 p[0] = s
             else:
                 raise TypeError('token for {0!r} not found.'.format(rulename))
@@ -436,6 +436,11 @@ class Parser(object):
     def p_eval_input(self, p):
         """eval_input : testlist newlines_opt
         """
+        #p1 = p[1]
+        #lineno, col = lopen_loc(p1)
+        #p[0] = ast.Expression(body=p1, lineno=lineno, col_offset=col)
+        #p1.lineno, p1.col_offset = lopen_loc(p1)
+        #p[0] = ast.Expression(body=p1)
         p[0] = ast.Expression(body=p[1])
 
     def p_func_call(self, p):
@@ -926,11 +931,15 @@ class Parser(object):
         elif p2 == ',':
             p0 = [ast.Tuple(elts=[p1],
                             ctx=ast.Load(),
+                            #lineno=p1.lineno,
+                            #col_offset=p1.col_offset)]
                             lineno=self.lineno,
                             col_offset=self.col)]
         else:
             p0 = [ast.Tuple(elts=[p1] + p2,
                             ctx=ast.Load(),
+                            #lineno=p1.lineno,
+                            #col_offset=p1.col_offset)]
                             lineno=self.lineno,
                             col_offset=self.col)]
         p[0] = p0
@@ -1684,6 +1693,7 @@ class Parser(object):
         p1 = p[1]
         if lenp == 2:
             p0 = p1
+            #p0.lineno, p0.col_offset = lopen_loc(p0)
         elif lenp == 4:
             # actual power rule
             p0 = ast.BinOp(left=p1,
@@ -1852,6 +1862,8 @@ class Parser(object):
                 p0._real_tuple = True
             elif len(p2) == 1 and isinstance(p2[0], ast.AST):
                 p0 = p2[0]
+                p0._lopen_lineno, p0._lopen_col = p1_tok.lineno, p1_tok.lexpos
+                #p0.lineno, p0.col_offset = p1_tok.lineno, p1_tok.lexpos
             else:
                 assert False
         elif p1 == '[':
@@ -2029,6 +2041,8 @@ class Parser(object):
                     (hasattr(p1, '_real_tuple') and p1._real_tuple):
                 p1 = ast.Tuple(elts=[p1],
                                ctx=ast.Load(),
+                               #lineno=p1.lineno,
+                               #col_offset=p1.col_offset)
                                lineno=self.lineno,
                                col_offset=self.col)
             else:
@@ -2036,6 +2050,10 @@ class Parser(object):
             p2 = p[2] if lenp > 2 else []
             p2 = [] if p2 == ',' else p2
             p1.elts += p2
+        # potential fix
+        #elif isinstance(p1, ast.Tuple) and \
+        #            (hasattr(p1, '_real_tuple') and p1._real_tuple) and lenp == 2:
+        #    p1.lineno, p1.col_offset = lopen_loc(p1)
         p[0] = p1
 
     @docstring_by_version(
@@ -2269,7 +2287,7 @@ class Parser(object):
                 p0 = ast.Starred(value=p[2])
             else:
                 p0 = ast.GeneratorExp(elt=p1, generators=p[2]['comps'],
-                                      lineno=self.lineno, col_offset=self.col)
+                                      lineno=p1.lineno, col_offset=p1.col_offset)
         elif lenp == 4:
             p0 = ast.keyword(arg=p1.id, value=p[3])
         else:
