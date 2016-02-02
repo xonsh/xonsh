@@ -240,7 +240,7 @@ class Parser(object):
                      'none', 'true', 'false', 'ellipsis', 'if', 'del', 'assert', 
                      'lparen', 'lbrace', 'lbracket', 'string', 'times', 'plus', 
                      'minus', 'divide', 'doublediv', 'mod', 'at', 'lshift', 'rshift',
-                     'pipe', 'xor', 'ampersand', 'elif']
+                     'pipe', 'xor', 'ampersand', 'elif', 'await', 'for']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -1240,10 +1240,10 @@ class Parser(object):
                           col_offset=self.col)]
 
     def p_for_stmt(self, p):
-        """for_stmt : FOR exprlist IN testlist COLON suite
-                    | FOR exprlist IN testlist COLON suite else_part
+        """for_stmt : for_tok exprlist IN testlist COLON suite
+                    | for_tok exprlist IN testlist COLON suite else_part
         """
-        p2 = p[2]
+        p1, p2 = p[1], p[2]
         p7 = p[7] if len(p) > 7 else []
         if len(p2) == 1:
             p2 = p2[0]
@@ -1259,8 +1259,8 @@ class Parser(object):
                         iter=p[4],
                         body=p[6],
                         orelse=p7,
-                        lineno=self.lineno,
-                        col_offset=self.col)]
+                        lineno=p1.lineno,
+                        col_offset=p1.lexpos)]
 
     def p_async_for_stmt(self, p):
         """async_for_stmt : ASYNC for_stmt"""
@@ -1742,7 +1742,7 @@ class Parser(object):
         v34="""atom_expr : atom trailer_list_opt""",
         v35=\
         """atom_expr : atom trailer_list_opt
-                     | AWAIT atom trailer_list_opt
+                     | await_tok atom trailer_list_opt
         """
         )
     def p_atom_expr(self, p):
@@ -1761,19 +1761,19 @@ class Parser(object):
                 p0 = ast.Subscript(value=leader,
                                    slice=trailer,
                                    ctx=ast.Load(),
-                                   lineno=self.lineno,
-                                   col_offset=self.col)
+                                   lineno=leader.lineno,
+                                   col_offset=leader.col_offset)
             elif isinstance(trailer, Mapping):
                 p0 = ast.Call(func=leader,
                               lineno=leader.lineno,
                               col_offset=leader.col_offset, **trailer)
             elif isinstance(trailer, str):
                 if trailer == '?':
-                    p0 = xonsh_help(leader, lineno=self.lineno, col=self.col)
+                    p0 = xonsh_help(leader, lineno=leader.lineno, col=leader.col_offset)
                 elif trailer == '??':
                     p0 = xonsh_superhelp(leader,
-                                         lineno=self.lineno,
-                                         col=self.col)
+                                         lineno=leader.lineno,
+                                         col=leader.col_offset)
                 else:
                     p0 = ast.Attribute(value=leader,
                                        attr=trailer,
@@ -1784,8 +1784,9 @@ class Parser(object):
                 assert False
             leader = p0
         if lenp == 4:
-            p0 = ast.Await(value=p0, ctx=ast.Load(), lineno=self.lineno,
-                           col_offset=self.col)
+            p1 = p[1]
+            p0 = ast.Await(value=p0, ctx=ast.Load(), lineno=p1.lineno,
+                           col_offset=p1.lexpos)
         p[0] = p0
 
     def p_atom(self, p):
@@ -2323,8 +2324,7 @@ class Parser(object):
         if len(targs) == 1:
             targ = targs[0]
         else:
-            targ = ensure_has_elts(targs, lineno=self.lineno,
-                                   col_offset=self.col)
+            targ = ensure_has_elts(targs)
         store_ctx(targ)
         comp = ast.comprehension(target=targ, iter=it, ifs=[])
         comps = [comp]
