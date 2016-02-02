@@ -933,17 +933,13 @@ class Parser(object):
         elif p2 == ',':
             p0 = [ast.Tuple(elts=[p1],
                             ctx=ast.Load(),
-                            #lineno=p1.lineno,
-                            #col_offset=p1.col_offset)]
-                            lineno=self.lineno,
-                            col_offset=self.col)]
+                            lineno=p1.lineno,
+                            col_offset=p1.col_offset)]
         else:
             p0 = [ast.Tuple(elts=[p1] + p2,
                             ctx=ast.Load(),
-                            #lineno=p1.lineno,
-                            #col_offset=p1.col_offset)]
-                            lineno=self.lineno,
-                            col_offset=self.col)]
+                            lineno=p1.lineno,
+                            col_offset=p1.col_offset)]
         p[0] = p0
 
     def p_augassign(self, p):
@@ -2061,10 +2057,10 @@ class Parser(object):
                     (hasattr(p1, '_real_tuple') and p1._real_tuple):
                 p1 = ast.Tuple(elts=[p1],
                                ctx=ast.Load(),
-                               #lineno=p1.lineno,
-                               #col_offset=p1.col_offset)
-                               lineno=self.lineno,
-                               col_offset=self.col)
+                               lineno=p1.lineno,
+                               col_offset=p1.col_offset)
+                               #lineno=self.lineno,
+                               #col_offset=self.col)
             else:
                 p1 = ensure_has_elts(p1)
             p2 = p[2] if lenp > 2 else []
