@@ -1532,7 +1532,7 @@ class Parser(object):
             p0.left = p1
             p0.lineno, p0.col_offset = p1.lineno, p1.col_offset
             for bop in p2[1:]:
-                locer = p1 if p0.left is p1 else bop
+                locer = p1 if p0.left is p1 else p0
                 bop.left = p0
                 p0.lineno, p0.col_offset = locer.lineno, locer.col_offset
                 p0 = bop
@@ -1587,7 +1587,7 @@ class Parser(object):
                             | rshift_tok arith_expr
         """
         p1 = p[1]
-        op = ast.LShift() if p1 == '<<' else ast.RShift()
+        op = ast.LShift() if p1.value == '<<' else ast.RShift()
         p[0] = [ast.BinOp(left=None,
                           op=op,
                           right=p[2],
