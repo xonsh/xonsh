@@ -1531,11 +1531,11 @@ class Parser(object):
         elif isinstance(p2, Sequence) and isinstance(p2[0], ast.BinOp):
             p0 = p2[0]
             p0.left = p1
-            p0.lineno, p0.col_offset = p1.lineno, p1.col_offset
+            p0.lineno, p0.col_offset = lopen_loc(p1)
             for bop in p2[1:]:
                 locer = p1 if p0.left is p1 else p0
                 bop.left = p0
-                p0.lineno, p0.col_offset = locer.lineno, locer.col_offset
+                p0.lineno, p0.col_offset = lopen_loc(locer)
                 p0 = bop
         else:
             p0 = p1 + p2
@@ -1607,20 +1607,22 @@ class Parser(object):
         if p2 is None:
             p0 = p1
         elif len(p2) == 2:
+            lineno, col = lopen_loc(p1)
             p0 = ast.BinOp(left=p1,
                            op=p2[0],
                            right=p2[1],
-                           lineno=p1.lineno,
-                           col_offset=p1.col_offset)
+                           lineno=lineno,
+                           col_offset=col)
         else:
             left = p1
             for op, right in zip(p2[::2], p2[1::2]):
                 locer = left if left is p1 else op
+                lineno, col = lopen_loc(locer)
                 left = ast.BinOp(left=left,
                                  op=op,
                                  right=right,
-                                 lineno=locer.lineno,
-                                 col_offset=locer.col_offset)
+                                 lineno=lineno,
+                                 col_offset=col)
             p0 = left
         p[0] = p0
 
@@ -1648,20 +1650,22 @@ class Parser(object):
         if p2 is None:
             p0 = p1
         elif len(p2) == 2:
+            lineno, col = lopen_loc(p1)
             p0 = ast.BinOp(left=p1,
                            op=p2[0],
                            right=p2[1],
-                           lineno=p1.lineno,
-                           col_offset=p1.col_offset)
+                           lineno=lineno,
+                           col_offset=col)
         else:
             left = p1
             for op, right in zip(p2[::2], p2[1::2]):
                 locer = left if left is p1 else op
+                lineno, col = lopen_loc(locer)
                 left = ast.BinOp(left=left,
                                  op=op,
                                  right=right,
-                                 lineno=locer.lineno,
-                                 col_offset=locer.col_offset)
+                                 lineno=lineno,
+                                 col_offset=col_offset)
             p0 = left
         p[0] = p0
 
