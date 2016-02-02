@@ -238,7 +238,7 @@ class Parser(object):
 
         tok_rules = ['def', 'class', 'async', 'return', 'number', 'name', 
                      'none', 'true', 'false', 'ellipsis', 'if', 'del', 'assert', 
-                     'lparen', 'lbrace', 'lbracket', 'string']
+                     'lparen', 'lbrace', 'lbracket', 'string', 'times']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -1503,11 +1503,12 @@ class Parser(object):
         p[0] = self._comp_ops[key]()
 
     def p_star_expr(self, p):
-        """star_expr : TIMES expr"""
+        """star_expr : times_tok expr"""
+        p1 = p[1]
         p[0] = ast.Starred(value=p[2],
                            ctx=ast.Load(),
-                           lineno=self.lineno,
-                           col_offset=self.col)
+                           lineno=p1.lineno,
+                           col_offset=p1.lexpos)
 
     def _binop_combine(self, p1, p2):
         """Combines binary operations"""
@@ -1869,8 +1870,8 @@ class Parser(object):
                     elts = [p2]
                 p0 = ast.List(elts=elts,
                               ctx=ast.Load(),
-                              lineno=self.lineno,
-                              col_offset=self.col)
+                              lineno=p1_tok.lineno,
+                              col_offset=p1_tok.lexpos)
         elif p1 == '{':
             p0 = p2
             #assert False
