@@ -2065,10 +2065,13 @@ class Parser(object):
         if lenp > 2:
             if isinstance(p1, ast.Tuple) and \
                     (hasattr(p1, '_real_tuple') and p1._real_tuple):
+                lineno, col = lopen_loc(p1)
                 p1 = ast.Tuple(elts=[p1],
                                ctx=ast.Load(),
                                lineno=p1.lineno,
                                col_offset=p1.col_offset)
+                               #lineno=lineno,
+                               #col_offset=col)
                                #lineno=self.lineno,
                                #col_offset=self.col)
             else:
@@ -2077,9 +2080,9 @@ class Parser(object):
             p2 = [] if p2 == ',' else p2
             p1.elts += p2
         # potential fix
-        #elif isinstance(p1, ast.Tuple) and \
-        #            (hasattr(p1, '_real_tuple') and p1._real_tuple) and lenp == 2:
-        #    p1.lineno, p1.col_offset = lopen_loc(p1)
+        elif lenp == 2 and isinstance(p1, ast.Tuple) and \
+                           (hasattr(p1, '_real_tuple') and p1._real_tuple):
+            p1.lineno, p1.col_offset = lopen_loc(p1.elts[0])
         p[0] = p1
 
     @docstring_by_version(
@@ -2151,7 +2154,6 @@ class Parser(object):
                 lineno, col = lopen_loc(p1)
                 p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), 
                               lineno=lineno, col_offset=col)
-                              #lineno=self.lineno, col_offset=self.col)
             elif isinstance(p1, ast.AST):
                 elts = [p1] + p2
                 p0 = ast.Set(elts=elts, ctx=ast.Load(), lineno=self.lineno,
