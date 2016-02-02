@@ -1418,15 +1418,17 @@ class Parser(object):
         if p2 is None:
             p0 = p1
         elif len(p2) == 2:
+            lineno, col = lopen_loc(p1)
             p0 = ast.BoolOp(op=p2[0],
                             values=[p1, p2[1]],
-                            lineno=p1.lineno,
-                            col_offset=p1.col_offset)
+                            lineno=lineno,
+                            col_offset=col)
         else:
+            lineno, col = lopen_loc(p1)
             p0 = ast.BoolOp(op=p2[0],
                             values=[p[1]] + p2[1::2],
-                            lineno=p1.lineno,
-                            col_offset=p1.col_offset)
+                            lineno=lineno,
+                            col_offset=col)
         p[0] = p0
 
     def p_or_and_test(self, p):
@@ -1439,15 +1441,17 @@ class Parser(object):
         if p2 is None:
             p0 = p1
         elif len(p2) == 2:
+            lineno, col = lopen_loc(p1)
             p0 = ast.BoolOp(op=p2[0],
                             values=[p1, p2[1]],
-                            lineno=p1.lineno,
-                            col_offset=p1.col_offset)
+                            lineno=lineno,
+                            col_offset=col)
         else:
+            lineno, col = lopen_loc(p1)
             p0 = ast.BoolOp(op=p2[0],
                             values=[p1] + p2[1::2],
-                            lineno=p1.lineno,
-                            col_offset=p1.col_offset)
+                            lineno=lineno,
+                            col_offset=col)
         p[0] = p0
 
     def p_and_not_test(self, p):
@@ -1665,7 +1669,7 @@ class Parser(object):
                                  op=op,
                                  right=right,
                                  lineno=lineno,
-                                 col_offset=col_offset)
+                                 col_offset=col)
             p0 = left
         p[0] = p0
 
