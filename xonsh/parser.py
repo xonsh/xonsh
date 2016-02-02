@@ -240,7 +240,7 @@ class Parser(object):
                      'none', 'true', 'false', 'ellipsis', 'if', 'del', 'assert', 
                      'lparen', 'lbrace', 'lbracket', 'string', 'times', 'plus', 
                      'minus', 'divide', 'doublediv', 'mod', 'at', 'lshift', 'rshift',
-                     'pipe', 'xor', 'ampersand']
+                     'pipe', 'xor', 'ampersand', 'elif']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -469,8 +469,8 @@ class Parser(object):
             p0 = ast.Attribute(value=name,
                                attr=p2[0],
                                ctx=ast.Load(),
-                               lineno=self.lineno,
-                               col_offset=self.col)
+                               lineno=p1.lineno,
+                               col_offset=p1.lexpos)
             for a in p2[1:]:
                 p0 = ast.Attribute(value=p0,
                                    attr=a,
@@ -888,16 +888,16 @@ class Parser(object):
             p1.extend(targs)
             p1 = [ast.Tuple(elts=p1,
                             ctx=ast.Store(),
-                            #lineno=p1.lineno,
-                            #col_offset=p1.col_offset)]
-                            lineno=self.lineno,
-                            col_offset=self.col)]
+                            lineno=p1[0].lineno,
+                            col_offset=p1[0].col_offset)]
+                            #lineno=self.lineno,
+                            #col_offset=self.col)]
             p0 = ast.Assign(targets=p1,
                             value=rhs,
-                            #lineno=p1[0].lineno,
-                            #col_offset=p1[0].col_offset)
-                            lineno=self.lineno,
-                            col_offset=self.col)
+                            lineno=p1[0].lineno,
+                            col_offset=p1[0].col_offset)
+                            #lineno=self.lineno,
+                            #col_offset=self.col)
         else:
             assert False
         p[0] = p0
@@ -1197,11 +1197,12 @@ class Parser(object):
 
     def p_elif_part(self, p):
         """elif_part : ELIF test COLON suite"""
-        p[0] = [ast.If(test=p[2],
+        p2 = p[2]
+        p[0] = [ast.If(test=p2,
                        body=p[4],
                        orelse=[],
-                       lineno=self.lineno,
-                       col_offset=self.col)]
+                       lineno=p2.lineno,
+                       col_offset=p2.col_offset)]
 
     def p_else_part(self, p):
         """else_part : ELSE COLON suite"""
@@ -2164,8 +2165,8 @@ class Parser(object):
         p[0] = p0
 
     def p_classdef(self, p):
-        """classdef : CLASS NAME func_call_opt COLON suite"""
-        p3 = p[3]
+        """classdef : class_tok NAME func_call_opt COLON suite"""
+        p1, p3 = p[1], p[3]
         b, kw = ([], []) if p3 is None else (p3['args'], p3['keywords'])
         c = ast.ClassDef(name=p[2],
                          bases=b,
@@ -2174,8 +2175,8 @@ class Parser(object):
                          kwargs=None,
                          body=p[5],
                          decorator_list=[],
-                         lineno=self.lineno,
-                         col_offset=self.col)
+                         lineno=p1.lineno,
+                         col_offset=p1.lexpos)
         p[0] = [c]
 
     def _set_arg(self, args, arg, ensure_kw=False):
