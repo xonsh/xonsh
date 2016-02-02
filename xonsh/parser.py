@@ -2142,7 +2142,7 @@ class Parser(object):
                 for k, v in zip(p2[::2], p2[1::2]):
                     keys.append(k)
                     vals.append(v)
-                lineno, col = lopen_loc(p1[0])
+                lineno, col = lopen_loc(p1[0] or p2[0])
                 p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), 
                               lineno=lineno, col_offset=col)
             elif p2 == ':':
