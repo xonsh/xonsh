@@ -240,7 +240,7 @@ class Parser(object):
                      'none', 'true', 'false', 'ellipsis', 'if', 'del', 'assert', 
                      'lparen', 'lbrace', 'lbracket', 'string', 'times', 'plus', 
                      'minus', 'divide', 'doublediv', 'mod', 'at', 'lshift', 'rshift',
-                     'pipe', 'xor', 'ampersand', 'elif', 'await', 'for']
+                     'pipe', 'xor', 'ampersand', 'elif', 'await', 'for', 'colon']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -1996,7 +1996,8 @@ class Parser(object):
             p1.value = ast.Tuple(elts=[p1.value] + [x.value for x in p2],
                                  ctx=ast.Load(),
                                  lineno=p1.lineno,
-                                 col_offset=p1.lexpos)
+                                 col_offset=p1.col_offset)
+                                 #col_offset=p1.lexpos)
                                  #lineno=self.lineno,
                                  #col_offset=self.col)
         p[0] = p1
@@ -2007,12 +2008,19 @@ class Parser(object):
 
     def p_subscript(self, p):
         """subscript : test
-                     | test_opt COLON test_opt sliceop_opt
+                     | test_opt colon_tok test_opt sliceop_opt
         """
+        p1 = p[1]
         if len(p) == 2:
-            p0 = ast.Index(value=p[1])
+            p0 = ast.Index(value=p1, lineno=p1.lineno, col_offset=p1.col_offset)
         else:
-            p0 = ast.Slice(lower=p[1], upper=p[3], step=p[4])
+            if p1 is None:
+                p2 = p[2]
+                lineno, col = p2.lineno, p2.lexpos
+            else:
+                lineno, col = p1.lineno, p1.col_offset
+            p0 = ast.Slice(lower=p1, upper=p[3], step=p[4], 
+                           lineno=lineno, col_offset=col)
         p[0] = p0
 
     def p_sliceop(self, p):
