@@ -239,7 +239,7 @@ class Parser(object):
         tok_rules = ['def', 'class', 'async', 'return', 'number', 'name', 
                      'none', 'true', 'false', 'ellipsis', 'if', 'del', 'assert', 
                      'lparen', 'lbrace', 'lbracket', 'string', 'times', 'plus', 
-                     'minus', 'divide', 'doublediv', 'mod', 'at', ]
+                     'minus', 'divide', 'doublediv', 'mod', 'at', 'lshift', 'rshift']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -1530,10 +1530,12 @@ class Parser(object):
         elif isinstance(p2, Sequence) and isinstance(p2[0], ast.BinOp):
             p0 = p2[0]
             p0.left = p1
-            for bop in p2[1:]:
-                bop.left = p0
-                p0 = bop
             p0.lineno, p0.col_offset = p1.lineno, p1.col_offset
+            for bop in p2[1:]:
+                locer = p1 if p0.left is p1 else bop
+                bop.left = p0
+                p0.lineno, p0.col_offset = locer.lineno, locer.col_offset
+                p0 = bop
         else:
             p0 = p1 + p2
         return p0
@@ -1581,15 +1583,16 @@ class Parser(object):
         p[0] = self._binop_combine(p[1], p[2])
 
     def p_shift_arith_expr(self, p):
-        """shift_arith_expr : LSHIFT arith_expr
-                            | RSHIFT arith_expr
+        """shift_arith_expr : lshift_tok arith_expr
+                            | rshift_tok arith_expr
         """
-        op = ast.LShift() if p[1] == '<<' else ast.RShift()
+        p1 = p[1]
+        op = ast.LShift() if p1 == '<<' else ast.RShift()
         p[0] = [ast.BinOp(left=None,
                           op=op,
                           right=p[2],
-                          lineno=self.lineno,
-                          col_offset=self.col)]
+                          lineno=p1.lineno,
+                          col_offset=p1.lexpos)]
 
     def p_arith_expr(self, p):
         """arith_expr : term
@@ -1655,8 +1658,6 @@ class Parser(object):
                                  right=right,
                                  lineno=locer.lineno,
                                  col_offset=locer.col_offset)
-                                 #lineno=p1.lineno,
-                                 #col_offset=p1.col_offset)
             p0 = left
         p[0] = p0
 
