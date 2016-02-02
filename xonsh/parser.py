@@ -239,7 +239,8 @@ class Parser(object):
         tok_rules = ['def', 'class', 'async', 'return', 'number', 'name', 
                      'none', 'true', 'false', 'ellipsis', 'if', 'del', 'assert', 
                      'lparen', 'lbrace', 'lbracket', 'string', 'times', 'plus', 
-                     'minus', 'divide', 'doublediv', 'mod', 'at', 'lshift', 'rshift']
+                     'minus', 'divide', 'doublediv', 'mod', 'at', 'lshift', 'rshift',
+                     'pipe', 'xor', 'ampersand']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -1547,36 +1548,39 @@ class Parser(object):
         p[0] = self._binop_combine(p[1], p[2] if len(p) > 2 else None)
 
     def p_pipe_xor_expr(self, p):
-        """pipe_xor_expr : PIPE xor_expr"""
+        """pipe_xor_expr : pipe_tok xor_expr"""
+        p1 = p[1]
         p[0] = [ast.BinOp(left=None,
                           op=ast.BitOr(),
                           right=p[2],
-                          lineno=self.lineno,
-                          col_offset=self.col)]
+                          lineno=p1.lineno,
+                          col_offset=p1.lexpos)]
 
     def p_xor_expr(self, p):
         """xor_expr : and_expr xor_and_expr_list_opt"""
         p[0] = self._binop_combine(p[1], p[2])
 
     def p_xor_and_expr(self, p):
-        """xor_and_expr : XOR and_expr"""
+        """xor_and_expr : xor_tok and_expr"""
+        p1 = p[1]
         p[0] = [ast.BinOp(left=None,
                           op=ast.BitXor(),
                           right=p[2],
-                          lineno=self.lineno,
-                          col_offset=self.col)]
+                          lineno=p1.lineno,
+                          col_offset=p1.lexpos)]
 
     def p_and_expr(self, p):
         """and_expr : shift_expr ampersand_shift_expr_list_opt"""
         p[0] = self._binop_combine(p[1], p[2])
 
     def p_ampersand_shift_expr(self, p):
-        """ampersand_shift_expr : AMPERSAND shift_expr"""
+        """ampersand_shift_expr : ampersand_tok shift_expr"""
+        p1 = p[1]
         p[0] = [ast.BinOp(left=None,
                           op=ast.BitAnd(),
                           right=p[2],
-                          lineno=self.lineno,
-                          col_offset=self.col)]
+                          lineno=p1.lineno,
+                          col_offset=p1.lexpos)]
 
     def p_shift_expr(self, p):
         """shift_expr : arith_expr shift_arith_expr_list_opt"""
