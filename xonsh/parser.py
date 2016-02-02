@@ -1245,8 +1245,8 @@ class Parser(object):
                 store_ctx(x)
             p2 = ast.Tuple(elts=p2,
                            ctx=ast.Store(),
-                           lineno=self.lineno,
-                           col_offset=self.col)
+                           lineno=p2[0].lineno,
+                           col_offset=p2[0].col_offset)
         p[0] = [ast.For(target=p2,
                         iter=p[4],
                         body=p[6],
@@ -1403,19 +1403,19 @@ class Parser(object):
 
     def p_or_test(self, p):
         """or_test : and_test or_and_test_list_opt"""
-        p2 = p[2]
+        p1, p2 = p[1], p[2]
         if p2 is None:
-            p0 = p[1]
+            p0 = p1
         elif len(p2) == 2:
             p0 = ast.BoolOp(op=p2[0],
-                            values=[p[1], p2[1]],
-                            lineno=self.lineno,
-                            col_offset=self.col)
+                            values=[p1, p2[1]],
+                            lineno=p1.lineno,
+                            col_offset=p1.col_offset)
         else:
             p0 = ast.BoolOp(op=p2[0],
                             values=[p[1]] + p2[1::2],
-                            lineno=self.lineno,
-                            col_offset=self.col)
+                            lineno=p1.lineno,
+                            col_offset=p1.col_offset)
         p[0] = p0
 
     def p_or_and_test(self, p):
@@ -1424,19 +1424,19 @@ class Parser(object):
 
     def p_and_test(self, p):
         """and_test : not_test and_not_test_list_opt"""
-        p2 = p[2]
+        p1, p2 = p[1], p[2]
         if p2 is None:
-            p0 = p[1]
+            p0 = p1
         elif len(p2) == 2:
             p0 = ast.BoolOp(op=p2[0],
-                            values=[p[1], p2[1]],
-                            lineno=self.lineno,
-                            col_offset=self.col)
+                            values=[p1, p2[1]],
+                            lineno=p1.lineno,
+                            col_offset=p1.col_offset)
         else:
             p0 = ast.BoolOp(op=p2[0],
-                            values=[p[1]] + p2[1::2],
-                            lineno=self.lineno,
-                            col_offset=self.col)
+                            values=[p1] + p2[1::2],
+                            lineno=p1.lineno,
+                            col_offset=p1.col_offset)
         p[0] = p0
 
     def p_and_not_test(self, p):
