@@ -238,7 +238,8 @@ class Parser(object):
 
         tok_rules = ['def', 'class', 'async', 'return', 'number', 'name', 
                      'none', 'true', 'false', 'ellipsis', 'if', 'del', 'assert', 
-                     'lparen', 'lbrace', 'lbracket', 'string', 'times']
+                     'lparen', 'lbrace', 'lbracket', 'string', 'times', 'plus', 
+                     'minus']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -330,11 +331,13 @@ class Parser(object):
 
         def tokfunc(self, p):
             s, t = self._yacc_lookahead_token()
+            #p[0] = s if t is None else t
+            #return
             uprule = rulename.upper()
-            if t is not None and t.type == uprule:
-                p[0] = t
-            elif s is not None and s.type == uprule:
+            if s is not None and s.type == uprule:
                 p[0] = s
+            elif t is not None and t.type == uprule:
+                p[0] = t
             else:
                 raise TypeError('token for {0!r} not found.'.format(rulename))
 
@@ -1607,11 +1610,12 @@ class Parser(object):
         else:
             left = p1
             for op, right in zip(p2[::2], p2[1::2]):
+                locer = left if left is p1 else op
                 left = ast.BinOp(left=left,
                                  op=op,
                                  right=right,
-                                 lineno=p1.lineno,
-                                 col_offset=p1.col_offset)
+                                 lineno=locer.lineno,
+                                 col_offset=locer.col_offset)
             p0 = left
         p[0] = p0
 
@@ -1626,10 +1630,11 @@ class Parser(object):
     }
 
     def p_pm_term(self, p):
-        """pm_term : PLUS term
-                   | MINUS term
+        """pm_term : plus_tok term
+                   | minus_tok term
         """
-        op = self._term_binops[p[1]]()
+        p1 = p[1]
+        op = self._term_binops[p1.value](lineno=p1.lineno, col_offset=p1.lexpos)
         p[0] = [op, p[2]]
 
     def p_term(self, p):
