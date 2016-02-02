@@ -63,7 +63,7 @@ def check_ast(inp, run=True, mode='eval'):
     # observe something from xonsh
     obs = PARSER.parse(inp, debug_level=DEBUG_LEVEL)
     # Check that they are equal
-    assert_nodes_equal(exp, obs, include_attributes=run)
+    assert_nodes_equal(exp, obs, include_attributes=True)
     # round trip by running xonsh AST via Python
     if run:
         exec(compile(obs, '<test-ast>', mode))

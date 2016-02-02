@@ -2079,7 +2079,6 @@ class Parser(object):
             p2 = p[2] if lenp > 2 else []
             p2 = [] if p2 == ',' else p2
             p1.elts += p2
-        # potential fix
         elif lenp == 2 and isinstance(p1, ast.Tuple) and \
                            (hasattr(p1, '_real_tuple') and p1._real_tuple):
             p1.lineno, p1.col_offset = lopen_loc(p1.elts[0])
