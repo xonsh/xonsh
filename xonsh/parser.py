@@ -1917,13 +1917,11 @@ class Parser(object):
                                ctx=ast.Load(),
                                lineno=p1.lineno,
                                col_offset=p1.col_offset)
-                               #lineno=self.lineno,
-                               #col_offset=self.col)
             elif 'comps' in p2:
                 p0 = ast.GeneratorExp(elt=p1,
                                       generators=p2['comps'],
-                                      lineno=self.lineno,
-                                      col_offset=self.col)
+                                      lineno=p1.lineno,
+                                      col_offset=p1.col_offset)
             else:
                 assert False
         elif len(p) == 4:
@@ -1931,8 +1929,6 @@ class Parser(object):
                            ctx=ast.Load(),
                            lineno=p1.lineno,
                            col_offset=p1.col_offset)
-                           #lineno=self.lineno,
-                           #col_offset=self.col)
             if p2 is not None:
                 p0.elts.extend(p2)
             else:
