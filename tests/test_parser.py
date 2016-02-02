@@ -189,6 +189,9 @@ def test_times_div_mod_floor():
 def test_str_str():
     yield check_ast, '"hello" \'mom\''
 
+def test_str_str_str():
+    yield check_ast, '"hello" \'mom\'    "wow"'
+
 def test_str_plus_str():
     yield check_ast, '"hello" + \'mom\''
 

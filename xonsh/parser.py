@@ -239,7 +239,7 @@ class Parser(object):
         tok_rules = ['def', 'class', 'async', 'return', 'number', 'name', 
                      'none', 'true', 'false', 'ellipsis', 'if', 'del', 'assert', 
                      'lparen', 'lbrace', 'lbracket', 'string', 'times', 'plus', 
-                     'minus']
+                     'minus', 'divide', 'doublediv', 'mod', 'at', ]
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -331,8 +331,6 @@ class Parser(object):
 
         def tokfunc(self, p):
             s, t = self._yacc_lookahead_token()
-            #p[0] = s if t is None else t
-            #return
             uprule = rulename.upper()
             if s is not None and s.type == uprule:
                 p[0] = s
@@ -1651,26 +1649,30 @@ class Parser(object):
         else:
             left = p1
             for op, right in zip(p2[::2], p2[1::2]):
+                locer = left if left is p1 else op
                 left = ast.BinOp(left=left,
                                  op=op,
                                  right=right,
-                                 lineno=p1.lineno,
-                                 col_offset=p1.col_offset)
+                                 lineno=locer.lineno,
+                                 col_offset=locer.col_offset)
+                                 #lineno=p1.lineno,
+                                 #col_offset=p1.col_offset)
             p0 = left
         p[0] = p0
 
     def p_op_factor(self, p):
-        """op_factor : TIMES factor
-                     | AT factor
-                     | DIVIDE factor
-                     | MOD factor
-                     | DOUBLEDIV factor
+        """op_factor : times_tok factor
+                     | at_tok factor
+                     | divide_tok factor
+                     | mod_tok factor
+                     | doublediv_tok factor
         """
-        op = self._term_binops[p[1]]
+        p1 = p[1]
+        op = self._term_binops[p1.value]
         if op is None:
-            self._parse_error('operation {0!r} not supported'.format(p[1]),
+            self._parse_error('operation {0!r} not supported'.format(p1),
                               self.currloc(lineno=p.lineno, column=p.lexpos))
-        p[0] = [op(), p[2]]
+        p[0] = [op(lineno=p1.lineno, col_offset=p1.lexpos), p[2]]
 
     _factor_ops = {'+': ast.UAdd, '-': ast.USub, '~': ast.Invert}
 
