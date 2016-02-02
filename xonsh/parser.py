@@ -1778,8 +1778,8 @@ class Parser(object):
                     p0 = ast.Attribute(value=leader,
                                        attr=trailer,
                                        ctx=ast.Load(),
-                                       lineno=self.lineno,
-                                       col_offset=self.col)
+                                       lineno=leader.lineno,
+                                       col_offset=leader.col_offset)
             else:
                 assert False
             leader = p0
