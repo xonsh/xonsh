@@ -906,14 +906,10 @@ class Parser(object):
                             ctx=ast.Store(),
                             lineno=p1[0].lineno,
                             col_offset=p1[0].col_offset)]
-                            #lineno=self.lineno,
-                            #col_offset=self.col)]
             p0 = ast.Assign(targets=p1,
                             value=rhs,
                             lineno=p1[0].lineno,
                             col_offset=p1[0].col_offset)
-                            #lineno=self.lineno,
-                            #col_offset=self.col)
         else:
             assert False
         p[0] = p0
@@ -1730,7 +1726,6 @@ class Parser(object):
         p1 = p[1]
         if lenp == 2:
             p0 = p1
-            #p0.lineno, p0.col_offset = lopen_loc(p0)
         elif lenp == 4:
             # actual power rule
             p0 = ast.BinOp(left=p1,
@@ -1738,8 +1733,6 @@ class Parser(object):
                            right=p[3],
                            lineno=p1.lineno,
                            col_offset=p1.col_offset)
-                           #lineno=self.lineno,
-                           #col_offset=self.col)
         else:
             assert False
         p[0] = p0
@@ -1901,7 +1894,6 @@ class Parser(object):
             elif len(p2) == 1 and isinstance(p2[0], ast.AST):
                 p0 = p2[0]
                 p0._lopen_lineno, p0._lopen_col = p1_tok.lineno, p1_tok.lexpos
-                #p0.lineno, p0.col_offset = p1_tok.lineno, p1_tok.lexpos
             else:
                 assert False
         elif p1 == '[':
@@ -1924,7 +1916,6 @@ class Parser(object):
                               col_offset=p1_tok.lexpos)
         elif p1 == '{':
             p0 = p2
-            #assert False
             p0.lineno, p0.col_offset = p1_tok.lineno, p1_tok.lexpos
         elif p1.startswith('$'):
             p0 = self._dollar_rules(p)
@@ -2017,9 +2008,6 @@ class Parser(object):
                                  ctx=ast.Load(),
                                  lineno=p1.lineno,
                                  col_offset=p1.col_offset)
-                                 #col_offset=p1.lexpos)
-                                 #lineno=self.lineno,
-                                 #col_offset=self.col)
         p[0] = p1
 
     def p_comma_subscript(self, p):
@@ -2185,7 +2173,6 @@ class Parser(object):
             lineno, col = lopen_loc(p1)
             p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), 
                           lineno=lineno, col_offset=col)
-                          #lineno=self.lineno, col_offset=self.col)
         else:
             assert False
         p[0] = p0
