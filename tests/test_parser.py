@@ -13,11 +13,15 @@ assert_equal.__self__.maxDiff = None
 from xonsh.ast import pdump
 from xonsh.parser import Parser
 
-from tools import mock_xonsh_env, skip_if, VER_3_4, VER_3_5, VER_MAJOR_MINOR
+from tools import (mock_xonsh_env, skip_if, VER_3_4, VER_3_5, VER_MAJOR_MINOR,
+                   VER_MAJOR_MINOR_MICRO)
 
 PARSER = None
 DEBUG_LEVEL = 0
 #DEBUG_LEVEL = 100
+
+# a lot of col_offset data changed from Py v3.5.0 -> v3.5.1
+INC_ATTRS = (3, 5, 1) <= VER_MAJOR_MINOR_MICRO
 
 def setup():
     # only setup one parser
@@ -63,7 +67,7 @@ def check_ast(inp, run=True, mode='eval'):
     # observe something from xonsh
     obs = PARSER.parse(inp, debug_level=DEBUG_LEVEL)
     # Check that they are equal
-    assert_nodes_equal(exp, obs, include_attributes=True)
+    assert_nodes_equal(exp, obs, include_attributes=INC_ATTRS)
     # round trip by running xonsh AST via Python
     if run:
         exec(compile(obs, '<test-ast>', mode))
