@@ -241,7 +241,7 @@ class Parser(object):
                      'lparen', 'lbrace', 'lbracket', 'string', 'times', 'plus', 
                      'minus', 'divide', 'doublediv', 'mod', 'at', 'lshift', 'rshift',
                      'pipe', 'xor', 'ampersand', 'elif', 'await', 'for', 'colon',
-                     'import', 'except']
+                     'import', 'except', 'nonlocal']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -526,7 +526,17 @@ class Parser(object):
     def p_decorated(self, p):
         """decorated : decorators classdef_or_funcdef"""
         p1, p2 = p[1], p[2]
-        p2[0].decorator_list = p1
+        targ = p2[0]
+        targ.decorator_list = p1
+        # this is silly, CPython. This claims a func or class starts on 
+        # the line of the first decorator, rather than the 'def' or 'class'
+        # line.  However, it retains the original col_offset.
+        targ.lineno = p1[0].lineno
+        # async functions take the col number of the 'def', unless they are
+        # decorated, in which case they have the col of the 'async'. WAT?
+        if hasattr(targ, '_async_tok'):
+            targ.col_offset = targ._async_tok.lexpos
+            del targ._async_tok
         p[0] = p2
 
     def p_rarrow_test(self, p):
@@ -545,9 +555,10 @@ class Parser(object):
         p[0] = [f]
 
     def p_async_funcdef(self, p):
-        """async_funcdef : ASYNC funcdef"""
-        f = p[2][0]
+        """async_funcdef : async_tok funcdef"""
+        p1, f = p[1], p[2][0]
         p[0] = [ast.AsyncFunctionDef(**f.__dict__)]
+        p[0][0]._async_tok = p1
 
     def p_parameters(self, p):
         """parameters : LPAREN typedargslist_opt RPAREN"""
@@ -1158,14 +1169,14 @@ class Parser(object):
         p[0] = ast.Global(names=names, lineno=self.lineno, col_offset=self.col)
 
     def p_nonlocal_stmt(self, p):
-        """nonlocal_stmt : NONLOCAL NAME comma_name_list_opt"""
-        p2, p3 = p[2], p[3]
+        """nonlocal_stmt : nonlocal_tok NAME comma_name_list_opt"""
+        p1, p2, p3 = p[1], p[2], p[3]
         names = [p2]
         if p3 is not None:
             names += p3
         p[0] = ast.Nonlocal(names=names,
-                            lineno=self.lineno,
-                            col_offset=self.col)
+                            lineno=p1.lineno,
+                            col_offset=p1.lexpos)
 
     def p_comma_test(self, p):
         """comma_test : COMMA test"""
