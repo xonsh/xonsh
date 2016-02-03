@@ -242,7 +242,7 @@ class Parser(object):
                      'minus', 'divide', 'doublediv', 'mod', 'at', 'lshift', 'rshift',
                      'pipe', 'xor', 'ampersand', 'elif', 'await', 'for', 'colon',
                      'import', 'except', 'nonlocal', 'global', 'yield', 'from', 
-                     'raise']
+                     'raise', 'with']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -486,7 +486,11 @@ class Parser(object):
                      | at_tok attr_name func_call NEWLINE
         """
         lenp = len(p)
-        p1, name = p[1], p[2]   
+        p1, name = p[1], p[2]
+        if isinstance(name, ast.Attribute):
+            lineno, col = name.lineno, name.col_offset
+        else:
+            lineno, col = p1.lineno, p1.lexpos
         p3 = p[3] if lenp > 3 else None
         if lenp == 4:
             p0 = name
@@ -496,12 +500,12 @@ class Parser(object):
                           keywords=[],
                           starargs=None,
                           kwargs=None,
-                          lineno=p1.lineno,
-                          col_offset=p1.lexpos)
+                          lineno=lineno,
+                          col_offset=col)
         else:
             p0 = ast.Call(func=name,
-                          lineno=p1.lineno,
-                          col_offset=p1.lexpos, **p3)
+                          lineno=lineno,
+                          col_offset=col, **p3)
         p[0] = p0
 
     def p_decorators(self, p):
@@ -1317,10 +1321,10 @@ class Parser(object):
         p[0] = [t]
 
     def p_with_stmt(self, p):
-        """with_stmt : WITH with_item COLON suite
-                     | WITH with_item comma_with_item_list COLON suite
+        """with_stmt : with_tok with_item COLON suite
+                     | with_tok with_item comma_with_item_list COLON suite
         """
-        p2, p3 = [p[2]], p[3]
+        p1, p2, p3 = p[1], [p[2]], p[3]
         if len(p) == 5:
             body = p[4]
         else:
@@ -1328,8 +1332,8 @@ class Parser(object):
             body = p[5]
         p[0] = [ast.With(items=p2,
                          body=body,
-                         lineno=self.lineno,
-                         col_offset=self.col)]
+                         lineno=p1.lineno,
+                         col_offset=p1.lexpos)]
 
     def p_async_with_stmt(self, p):
         """async_with_stmt : ASYNC with_stmt"""

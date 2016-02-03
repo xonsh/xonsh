@@ -1166,6 +1166,9 @@ def test_with_x_as_y_z():
 def test_with_x_as_y_a_as_b():
     yield check_stmts, 'with x as y, a as b:\n  pass', False
 
+def test_with_in_func():
+    yield check_stmts, "def f():\n    with x:\n        pass\n"
+
 @skip_if(VER_MAJOR_MINOR < VER_3_5)
 def test_async_with():
     yield check_stmts, "async def f():\n    async with x as y:\n        pass\n", False
