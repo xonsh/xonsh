@@ -352,7 +352,6 @@ class Parser(object):
 
     def expr(self, p):
         """Creates an expression for a token."""
-        #return ast.Expr(value=p, lineno=p.lineno, col_offset=p.col_offset)
         expr = ast.Expr(value=p, lineno=p.lineno, col_offset=p.col_offset)
         expr.max_lineno = self.lineno
         expr.max_col = self.col
