@@ -240,7 +240,7 @@ class Parser(object):
                      'none', 'true', 'false', 'ellipsis', 'if', 'del', 'assert', 
                      'lparen', 'lbrace', 'lbracket', 'string', 'times', 'plus', 
                      'minus', 'divide', 'doublediv', 'mod', 'at', 'lshift', 'rshift',
-                     'pipe', 'xor', 'ampersand', 'elif', 'await', 'for', 'colon',
+                     'pipe', 'xor', 'ampersand', 'await', 'for', 'colon',
                      'import', 'except', 'nonlocal', 'global', 'yield', 'from', 
                      'raise', 'with']
         for rule in tok_rules:
@@ -352,7 +352,11 @@ class Parser(object):
 
     def expr(self, p):
         """Creates an expression for a token."""
-        return ast.Expr(value=p, lineno=p.lineno, col_offset=p.col_offset)
+        #return ast.Expr(value=p, lineno=p.lineno, col_offset=p.col_offset)
+        expr = ast.Expr(value=p, lineno=p.lineno, col_offset=p.col_offset)
+        expr.max_lineno = self.lineno
+        expr.max_col = self.col
+        return expr
 
     def token_col(self, t):
         """Gets ths token column"""
@@ -440,11 +444,6 @@ class Parser(object):
     def p_eval_input(self, p):
         """eval_input : testlist newlines_opt
         """
-        #p1 = p[1]
-        #lineno, col = lopen_loc(p1)
-        #p[0] = ast.Expression(body=p1, lineno=lineno, col_offset=col)
-        #p1.lineno, p1.col_offset = lopen_loc(p1)
-        #p[0] = ast.Expression(body=p1)
         p[0] = ast.Expression(body=p[1])
 
     def p_func_call(self, p):

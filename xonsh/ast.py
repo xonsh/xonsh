@@ -12,10 +12,11 @@ from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
     YieldFrom, Return, IfExp, Lambda, arguments, arg, Call, keyword, \
     Attribute, Global, Nonlocal, If, While, For, withitem, With, Try, \
     ExceptHandler, FunctionDef, ClassDef, Starred, NodeTransformer, \
-    Interactive, Expression, Index, literal_eval, dump
+    Interactive, Expression, Index, literal_eval, dump, walk
 from ast import Ellipsis  # pylint: disable=redefined-builtin
 # pylint: enable=unused-import
 import textwrap
+from itertools import repeat
 
 from xonsh.tools import subproc_toks, VER_3_5, VER_MAJOR_MINOR
 
@@ -51,6 +52,24 @@ def leftmostname(node):
     else:
         rtn = None
     return rtn
+
+
+def get_col(node, default=-1):
+    """Gets the col_offset of a node, or returns the default"""
+    return getattr(node, 'col_offset', default)
+
+
+def min_col(node):
+    """Computes the minimum col_offset."""
+    return min(map(get_col, walk(node), repeat(node.col_offset)))
+
+
+def max_col(node):
+    """Returns the maximum col_offset of the node and all sub-nodes."""
+    col = getattr(node, 'max_col', None)
+    if col is None:
+        col = max(map(get_col, walk(node)))
+    return col
 
 
 class CtxAwareTransformer(NodeTransformer):
@@ -115,8 +134,12 @@ class CtxAwareTransformer(NodeTransformer):
     def try_subproc_toks(self, node):
         """Tries to parse the line of the node as a subprocess."""
         line = self.lines[node.lineno - 1]
-        mincol = len(line) - len(line.lstrip())
-        maxcol = None if self.mode == 'eval' else node.col_offset
+        if self.mode == 'eval':
+            mincol = len(line) - len(line.lstrip())
+            maxcol = None
+        else: 
+            mincol = min_col(node)
+            maxcol = max_col(node) + 1
         spline = subproc_toks(line,
                               mincol=mincol,
                               maxcol=maxcol,
