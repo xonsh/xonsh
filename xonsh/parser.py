@@ -482,11 +482,11 @@ class Parser(object):
         p[0] = p0
 
     def p_decorator(self, p):
-        """decorator : AT attr_name NEWLINE
-                     | AT attr_name func_call NEWLINE
+        """decorator : at_tok attr_name NEWLINE
+                     | at_tok attr_name func_call NEWLINE
         """
         lenp = len(p)
-        name = p[2]
+        p1, name = p[1], p[2]   
         p3 = p[3] if lenp > 3 else None
         if lenp == 4:
             p0 = name
@@ -496,12 +496,12 @@ class Parser(object):
                           keywords=[],
                           starargs=None,
                           kwargs=None,
-                          lineno=self.lineno,
-                          col_offset=self.col)
+                          lineno=p1.lineno,
+                          col_offset=p1.lexpos)
         else:
             p0 = ast.Call(func=name,
-                          lineno=self.lineno,
-                          col_offset=self.col, **p3)
+                          lineno=p1.lineno,
+                          col_offset=p1.lexpos, **p3)
         p[0] = p0
 
     def p_decorators(self, p):
