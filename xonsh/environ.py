@@ -356,7 +356,7 @@ DEFAULT_DOCS = {
         "    - 'prompt_toolkit' that uses external library of the same name\n" 
         "    - 'random' selects a random shell from the above on startup\n\n"
         'To use the prompt_toolkit shell you need to have prompt_toolkit '
-        '(https://github.com/jonathanslenders/python-prompt-toolkit)'
+        '(https://github.com/jonathanslenders/python-prompt-toolkit) '
         'library installed. To specify which shell should be used, do so in '
         'the run control file.', default=("'prompt_toolkit' if on Windows, "
         "and 'readline' otherwise.")),
