@@ -1,15 +1,18 @@
 """Implements a xonsh tracer."""
+import os
 import sys
 import inspect
 import linecache    
 
-from xonsh.tools import DefaultNotGiven, print_color, pygments_version
+from xonsh.tools import DefaultNotGiven, print_color, pygments_version, normabspath
+from xonsh import inspectors
 if pygments_version():
     from xonsh import pyghooks
     import pygments
     import pygments.formatters.terminal
 else:
     pyghooks = None
+from xonsh.environ import _replace_home as replace_home
 
 class TracerType(object):
     """Represents a xonsh tracer object, which keeps track of all tracing
@@ -39,36 +42,30 @@ class TracerType(object):
         """Starts tracing a file."""
         if len(self.files) == 0:
             self.prev_tracer = sys.gettrace()
-        self.files.add(filename)
+        self.files.add(normabspath(filename))
         sys.settrace(self.trace)
-        print(self.files)
 
     def stop(self, filename):
         """Stops tracing a file."""
-        self.files.discard(filename)
+        self.files.discard(normabspath(filename))
         if len(self.files) == 0:
             sys.settrace(self.prev_tracer)
             self.prev_tracer = DefaultNotGiven
 
     def trace(self, frame, event, arg):
         """Implements a line tracing function."""
-        fname = frame.f_code.co_filename
-        #print(f)
-        #print(fname, frame.f_lineno)
-        #if event != 'line' and event != 'call':
+        #if event != 'line':
         #    return self.trace
+        #fname = frame.f_code.co_filename
+        fname = inspectors.find_file(frame)
         if fname in self.files:
-            print('-'*10)
-            #lineno = frame.f_back.f_lineno
             lineno = frame.f_lineno
-            print(frame.f_code.co_filename, lineno)
-            #line = linecache.getline(fname, lineno)
-            line = inspect.getsource(frame)
-            print(line)
-            #s = format_line(fname, lineno, line, color=self.usecolor,
-            #                lexer=self.lexer, formatter=self.formatter)
-            #print_color(s)
+            line = linecache.getline(fname, lineno).rstrip()
+            s = format_line(fname, lineno, line, color=self.usecolor,
+                            lexer=self.lexer, formatter=self.formatter).rstrip()
+            print_color(s)
         return self.trace
+
 
 tracer = TracerType()
 
@@ -79,11 +76,11 @@ COLOR_LINE = ('{{PURPLE}}{fname}{{BLUE}}:'
 
 def format_line(fname, lineno, line, color=True, lexer=None, formatter=None):
     """Formats a trace line suitable for printing."""
+    fname = min(fname, replace_home(fname), os.path.relpath(fname), key=len)
     if not color:
         return COLORLESS_LINE.format(fname=fname, lineno=lineno, line=line)
     if pyghooks is not None:
         lexer = lexer or pyghooks.XonshLexer()
         formatter = formatter or pygments.formatters.terminal.TerminalFormatter()
         line = pygments.highlight(line, lexer, formatter)
-        print(repr(line))
     return COLOR_LINE.format(fname=fname, lineno=lineno, line=line)

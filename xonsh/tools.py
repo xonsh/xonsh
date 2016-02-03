@@ -1082,3 +1082,8 @@ def backup_file(fname):
     base, ext = os.path.splitext(fname)
     newfname = base + '.' + datetime.now().isoformat() + ext
     shutil.move(fname, newfname)
+
+
+def normabspath(p):
+    """Retuns as normalized absolute path, namely, normcase(abspath(p))"""
+    return os.path.normcase(os.path.abspath(p))
