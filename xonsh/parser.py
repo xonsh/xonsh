@@ -477,8 +477,8 @@ class Parser(object):
                 p0 = ast.Attribute(value=p0,
                                    attr=a,
                                    ctx=ast.Load(),
-                                   lineno=self.lineno,
-                                   col_offset=self.col)
+                                   lineno=p0.lineno,
+                                   col_offset=p0.col_offset)
         p[0] = p0
 
     def p_decorator(self, p):
@@ -487,11 +487,11 @@ class Parser(object):
         """
         lenp = len(p)
         p1, name = p[1], p[2]
-        if isinstance(name, ast.Attribute):
+        p3 = p[3] if lenp > 3 else None
+        if isinstance(name, ast.Attribute) or (lenp == 5 and p3 is not None):
             lineno, col = name.lineno, name.col_offset
         else:
             lineno, col = p1.lineno, p1.lexpos
-        p3 = p[3] if lenp > 3 else None
         if lenp == 4:
             p0 = name
         elif p3 is None:
