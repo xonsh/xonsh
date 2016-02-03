@@ -240,7 +240,8 @@ class Parser(object):
                      'none', 'true', 'false', 'ellipsis', 'if', 'del', 'assert', 
                      'lparen', 'lbrace', 'lbracket', 'string', 'times', 'plus', 
                      'minus', 'divide', 'doublediv', 'mod', 'at', 'lshift', 'rshift',
-                     'pipe', 'xor', 'ampersand', 'elif', 'await', 'for', 'colon']
+                     'pipe', 'xor', 'ampersand', 'elif', 'await', 'for', 'colon',
+                     'import', 'except']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -1041,9 +1042,10 @@ class Parser(object):
         p[0] = p[1]
 
     def p_import_name(self, p):
-        """import_name : IMPORT dotted_as_names
+        """import_name : import_tok dotted_as_names
         """
-        p[0] = ast.Import(names=p[2], lineno=self.lineno, col_offset=self.col)
+        p1 = p[1]
+        p[0] = ast.Import(names=p[2], lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_import_from_pre(self, p):
         """import_from_pre : FROM period_or_ellipsis_list_opt dotted_name
@@ -1338,19 +1340,20 @@ class Parser(object):
         p[0] = [p[2]]
 
     def p_except_clause(self, p):
-        """except_clause : EXCEPT
-                         | EXCEPT test as_name_opt
+        """except_clause : except_tok
+                         | except_tok test as_name_opt
         """
+        p1 = p[1]
         if len(p) == 2:
             p0 = ast.ExceptHandler(type=None,
                                    name=None,
-                                   lineno=self.lineno,
-                                   col_offset=self.col)
+                                   lineno=p1.lineno,
+                                   col_offset=p1.lexpos)
         else:
             p0 = ast.ExceptHandler(type=p[2],
                                    name=p[3],
-                                   lineno=self.lineno,
-                                   col_offset=self.col)
+                                   lineno=p1.lineno,
+                                   col_offset=p1.lexpos)
         p[0] = p0
 
     def p_async_stmt(self, p):
