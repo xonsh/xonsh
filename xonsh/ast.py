@@ -187,6 +187,9 @@ class CtxAwareTransformer(NodeTransformer):
                 newnode = Expr(value=newnode,
                                lineno=node.lineno,
                                col_offset=node.col_offset)
+                if hasattr(node, 'max_lineno'):
+                    newnode.max_lineno = node.max_lineno
+                    newnode.max_col = node.max_col
             return newnode
 
     def visit_Assign(self, node):

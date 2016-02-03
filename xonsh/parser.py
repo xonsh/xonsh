@@ -242,7 +242,8 @@ class Parser(object):
                      'minus', 'divide', 'doublediv', 'mod', 'at', 'lshift', 'rshift',
                      'pipe', 'xor', 'ampersand', 'await', 'for', 'colon',
                      'import', 'except', 'nonlocal', 'global', 'yield', 'from', 
-                     'raise', 'with']
+                     'raise', 'with', 'dollar_lparen', 'dollar_lbrace', 
+                     'dollar_lbracket']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -1821,9 +1822,9 @@ class Parser(object):
                 | false_tok
                 | REGEXPATH
                 | DOLLAR_NAME
-                | DOLLAR_LBRACE test RBRACE
-                | DOLLAR_LPAREN subproc RPAREN
-                | DOLLAR_LBRACKET subproc RBRACKET
+                | dollar_lbrace_tok test RBRACE
+                | dollar_lparen_tok subproc RPAREN
+                | dollar_lbracket_tok subproc RBRACKET
         """
         p1 = p[1]
         if len(p) == 2:
@@ -2089,10 +2090,6 @@ class Parser(object):
                                ctx=ast.Load(),
                                lineno=p1.lineno,
                                col_offset=p1.col_offset)
-                               #lineno=lineno,
-                               #col_offset=col)
-                               #lineno=self.lineno,
-                               #col_offset=self.col)
             else:
                 p1 = ensure_has_elts(p1)
             p2 = p[2] if lenp > 2 else []
@@ -2405,8 +2402,11 @@ class Parser(object):
         """
         lenp = len(p)
         p1, p2 = p[1], p[2]
-        col = self.col
-        lineno = self.lineno
+        if isinstance(p1, LexToken):
+            p1, p1_tok = p1.value, p1
+            lineno, col = p1_tok.lineno, p1_tok.lexpos
+        else:
+            lineno, col = self.lineno, self.col
         if lenp == 3:  # $NAME
             p0 = self._envvar_by_name(p2, lineno=lineno, col=col)
         elif p1 == '${':
@@ -2550,12 +2550,14 @@ class Parser(object):
                         | RSHIFT
                         | IOREDIRECT
                         | AT_LPAREN test RPAREN
-                        | DOLLAR_LBRACE test RBRACE
-                        | DOLLAR_LPAREN subproc RPAREN
-                        | DOLLAR_LBRACKET subproc RBRACKET
+                        | dollar_lbrace_tok test RBRACE
+                        | dollar_lparen_tok subproc RPAREN
+                        | dollar_lbracket_tok subproc RBRACKET
         """
         lenp = len(p)
         p1 = p[1]
+        if isinstance(p1, LexToken):
+            p1, p1_tok = p1.value, p1
         if lenp == 2:
             if isinstance(p1, str):
                 p0 = ast.Str(s=p1, lineno=self.lineno, col_offset=self.col)
@@ -2597,34 +2599,35 @@ class Parser(object):
                             col=self.col)
             p0._cliarg_action = 'extend'
         elif p1 == '${':
-            xenv = self._xenv(lineno=self.lineno, col=self.col)
+            lineno, col = p1_tok.lineno, p1_tok.lexpos
+            xenv = self._xenv(lineno=lineno, col=col)
             func = ast.Attribute(value=xenv,
                                  attr='get',
                                  ctx = ast.Load(),
-                                 lineno=self.lineno,
-                                 col_offset=self.col)
+                                 lineno=lineno,
+                                 col_offset=col)
             p0 = ast.Call(func=func,
                           args=[p[2],
                                 ast.Str(s='',
-                                        lineno=self.lineno,
-                                        col_offset=self.col)],
+                                        lineno=lineno,
+                                        col_offset=col)],
                           keywords=[],
                           starargs=None,
                           kwargs=None,
-                          lineno=self.lineno,
-                          col_offset=self.col)
+                          lineno=lineno,
+                          col_offset=col)
             p0._cliarg_action = 'append'
         elif p1 == '$(':
             p0 = xonsh_call('__xonsh_subproc_captured__',
                             args=p[2],
-                            lineno=self.lineno,
-                            col=self.col)
+                            lineno=p1_tok.lineno,
+                            col=p1_tok.lexpos)
             p0._cliarg_action = 'splitlines'
         elif p1 == '$[':
             p0 = xonsh_call('__xonsh_subproc_uncaptured__',
                             args=p[2],
-                            lineno=self.lineno,
-                            col=self.col)
+                            lineno=p1_tok.lineno,
+                            col=p1_tok.lexpos)
             p0._cliarg_action = 'splitlines'
         else:
             assert False
