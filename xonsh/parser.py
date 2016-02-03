@@ -241,7 +241,8 @@ class Parser(object):
                      'lparen', 'lbrace', 'lbracket', 'string', 'times', 'plus', 
                      'minus', 'divide', 'doublediv', 'mod', 'at', 'lshift', 'rshift',
                      'pipe', 'xor', 'ampersand', 'elif', 'await', 'for', 'colon',
-                     'import', 'except', 'nonlocal']
+                     'import', 'except', 'nonlocal', 'global', 'yield', 'from', 
+                     'raise']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -1025,10 +1026,11 @@ class Parser(object):
         p[0] = self.expr(p[1])
 
     def p_raise_stmt(self, p):
-        """raise_stmt : RAISE
-                      | RAISE test
-                      | RAISE test FROM test
+        """raise_stmt : raise_tok
+                      | raise_tok test
+                      | raise_tok test FROM test
         """
+        p1 = p[1]
         lenp = len(p)
         cause = None
         if lenp == 2:
@@ -1042,8 +1044,8 @@ class Parser(object):
             assert False
         p0 = ast.Raise(exc=exc,
                        cause=cause,
-                       lineno=self.lineno,
-                       col_offset=self.col)
+                       lineno=p1.lineno,
+                       col_offset=p1.lexpos)
         p[0] = p0
 
     def p_import_stmt(self, p):
@@ -1059,9 +1061,10 @@ class Parser(object):
         p[0] = ast.Import(names=p[2], lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_import_from_pre(self, p):
-        """import_from_pre : FROM period_or_ellipsis_list_opt dotted_name
-                           | FROM period_or_ellipsis_list
+        """import_from_pre : from_tok period_or_ellipsis_list_opt dotted_name
+                           | from_tok period_or_ellipsis_list
         """
+        p1 = p[1]
         if len(p) == 3:
             p0 = p[2]
         elif len(p) == 4:
@@ -1069,7 +1072,7 @@ class Parser(object):
             p0 = p3 if p2 is None else p2 + p3
         else:
             assert False
-        p[0] = p0
+        p[0] = (p0, p1.lineno, p1.lexpos)
 
     def p_import_from_post(self, p):
         """import_from_post : TIMES
@@ -1091,15 +1094,15 @@ class Parser(object):
         """
         # note below: the ('.' | '...') is necessary because '...' is
         # tokenized as ELLIPSIS
-        p1 = p[1]
+        p1, lineno, col = p[1]
         mod = p1.lstrip('.')
         lvl = len(p1) - len(mod)
         mod = mod or None
         p[0] = ast.ImportFrom(module=mod,
                               names=p[3],
                               level=lvl,
-                              lineno=self.lineno,
-                              col_offset=self.col)
+                              lineno=lineno,
+                              col_offset=col)
 
     def p_period_or_ellipsis(self, p):
         """period_or_ellipsis : PERIOD
@@ -1161,12 +1164,12 @@ class Parser(object):
         p[0] = [p[2]]
 
     def p_global_stmt(self, p):
-        """global_stmt : GLOBAL NAME comma_name_list_opt"""
-        p2, p3 = p[2], p[3]
+        """global_stmt : global_tok NAME comma_name_list_opt"""
+        p1, p2, p3 = p[1], p[2], p[3]
         names = [p2]
         if p3 is not None:
             names += p3
-        p[0] = ast.Global(names=names, lineno=self.lineno, col_offset=self.col)
+        p[0] = ast.Global(names=names, lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_nonlocal_stmt(self, p):
         """nonlocal_stmt : nonlocal_tok NAME comma_name_list_opt"""
@@ -2366,18 +2369,18 @@ class Parser(object):
         p[0] = p0
 
     def p_yield_expr(self, p):
-        """yield_expr : YIELD yield_arg_opt"""
-        p2 = p[2]
+        """yield_expr : yield_tok yield_arg_opt"""
+        p1, p2 = p[1], p[2]
         if p2 is None:
-            p0 = ast.Yield(value=p2, lineno=self.lineno, col_offset=self.col)
+            p0 = ast.Yield(value=p2, lineno=p1.lineno, col_offset=p1.lexpos)
         elif p2['from']:
             p0 = ast.YieldFrom(value=p2['val'],
-                               lineno=self.lineno,
-                               col_offset=self.col)
+                               lineno=p1.lineno,
+                               col_offset=p1.lexpos)
         else:
             p0 = ast.Yield(value=p2['val'],
-                           lineno=self.lineno,
-                           col_offset=self.col)
+                           lineno=p1.lineno,
+                           col_offset=p1.lexpos)
         p[0] = p0
 
     def p_yield_arg(self, p):
