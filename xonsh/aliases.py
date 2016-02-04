@@ -9,6 +9,7 @@ from argparse import ArgumentParser
 
 from xonsh.dirstack import cd, pushd, popd, dirs
 from xonsh.jobs import jobs, fg, bg, kill_all_jobs
+from xonsh.proc import foreground
 from xonsh.timings import timeit_alias
 from xonsh.tools import ON_MAC, ON_WINDOWS, XonshError, to_bool
 from xonsh.history import main as history_alias
