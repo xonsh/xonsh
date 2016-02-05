@@ -169,6 +169,12 @@ def xonfig(args, stdin=None):
     return main(args)
 
 
+def trace(args, stdin=None):
+    """Runs the xonsh tracer utility."""
+    from xonsh.tracer import main  # lazy import
+    return main(args)
+
+
 DEFAULT_ALIASES = {
     'cd': cd,
     'pushd': pushd,
@@ -188,6 +194,7 @@ DEFAULT_ALIASES = {
     'replay': replay_main,
     '!!': bang_bang,
     '!n': bang_n,
+    'trace': trace,
     'timeit': timeit_alias,
     'xonfig': xonfig,
     'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],

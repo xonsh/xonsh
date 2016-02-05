@@ -2,17 +2,20 @@
 import os
 import sys
 import inspect
-import linecache    
+import linecache
+from functools import lru_cache
+from argparse import ArgumentParser
 
-from xonsh.tools import DefaultNotGiven, print_color, pygments_version, normabspath
+from xonsh.tools import (DefaultNotGiven, print_color, pygments_version, normabspath,
+    to_bool)
 from xonsh import inspectors
+from xonsh.environ import _replace_home as replace_home
 if pygments_version():
     from xonsh import pyghooks
     import pygments
     import pygments.formatters.terminal
 else:
     pyghooks = None
-from xonsh.environ import _replace_home as replace_home
 
 class TracerType(object):
     """Represents a xonsh tracer object, which keeps track of all tracing
@@ -98,3 +101,76 @@ def format_line(fname, lineno, line, color=True, lexer=None, formatter=None):
         formatter = formatter or pygments.formatters.terminal.TerminalFormatter()
         line = pygments.highlight(line, lexer, formatter)
     return COLOR_LINE.format(fname=fname, lineno=lineno, line=line)
+
+
+#
+# Command line interface
+#
+def _find_caller(args):
+    import pdb; pdb.set_trace()
+
+
+def _on(ns, args):
+    """Turns on tracing for files."""
+    for f in ns.files:
+        if f == '__file__':
+            f = _find_caller(args)
+        tracer.start(f)
+
+
+def _off(ns, args):
+    """Turns off tracing for files."""
+    for f in ns.files:
+        if f == '__file__':
+            f = _find_caller(args)
+        tracer.stop(f)
+
+
+def _color(ns, args):
+    """Manages color action for tracer CLI."""
+    tracer.usecolor = ns.toggle
+
+
+@lru_cache()
+def _create_parser():
+    """Creates tracer argument parser"""
+    p = ArgumentParser(prog='trace',
+                       description='tool for tracing xonsh code as it runs.')
+    subp = p.add_subparsers(title='action', dest='action')
+    onp = subp.add_parser('on', aliases=['start', 'add'],
+                          help='begins tracing selected files.')
+    onp.add_argument('files', nargs='*', default=['__file__'], 
+                     help=('file paths to watch, use "__file__" (default) to select '
+                           'the current file.'))
+    off = subp.add_parser('off', aliases=['stop', 'del', 'rm'],
+                          help='removes selected files fom tracing.')
+    off.add_argument('files', nargs='*', default=['__file__'], 
+                     help=('file paths to stop watching, use "__file__" (default) to '
+                           'select the current file.'))
+    col = subp.add_parser('color', help='output color management for tracer.')
+    col.add_argument('toggle', type=to_bool, 
+                     help='true/false, y/n, etc. to toggle color usage.')
+    return p
+
+_MAIN_ACTIONS = {
+    'on': _on,
+    'add': _on,
+    'start': _on,
+    'rm': _off,
+    'off': _off,
+    'del': _off,
+    'stop': _off,
+    'color': _color,
+    }
+
+def main(args=None):
+    """Main function for tracer command-line interface."""
+    print(args)
+    parser = _create_parser()
+    ns = parser.parse_args(args)
+    return _MAIN_ACTIONS[ns.action](ns, args)
+
+
+if __name__ == '__main__':
+    main()
+
