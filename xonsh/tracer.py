@@ -111,8 +111,8 @@ def _find_caller(args):
     """Somewhat hacky method of finding the __file__ based on the line executed."""
     re_line = re.compile(r'[\w.-]+\s+' + r'\s+'.join(args))
     curr = inspect.currentframe()
-    for _, fname, _, _, (line,), _  in inspectors.getouterframes(curr, context=1)[3:]:
-        if re_line.search(line) is not None:
+    for _, fname, _, _, lines, _  in inspectors.getouterframes(curr, context=1)[3:]:
+        if lines is not None and re_line.search(lines[0]) is not None:
             return fname
 
 
@@ -121,6 +121,8 @@ def _on(ns, args):
     for f in ns.files:
         if f == '__file__':
             f = _find_caller(args)
+        if f is None:
+            continue
         tracer.start(f)
 
 
@@ -129,6 +131,8 @@ def _off(ns, args):
     for f in ns.files:
         if f == '__file__':
             f = _find_caller(args)
+        if f is None:
+            continue
         tracer.stop(f)
 
 
