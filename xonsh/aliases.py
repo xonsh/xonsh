@@ -170,6 +170,7 @@ def xonfig(args, stdin=None):
     return main(args)
 
 
+@foreground
 def trace(args, stdin=None):
     """Runs the xonsh tracer utility."""
     from xonsh.tracer import main  # lazy import

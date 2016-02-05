@@ -325,11 +325,15 @@ class ProcProxy(Thread):
 
 def wrap_simple_command(f, args, stdin, stdout, stderr):
     """Decorator for creating 'simple' callable aliases."""
+    bgable = getattr(f, '__xonsh_backgroundable__', True)
     @wraps(f)
     def wrapped_simple_command(args, stdin, stdout, stderr):
         try:
             i = stdin.read()
-            with redirect_stdout(stdout), redirect_stderr(stderr):
+            if bgable:
+                with redirect_stdout(stdout), redirect_stderr(stderr):
+                    r = f(args, i)
+            else:
                 r = f(args, i)
 
             cmd_result = 0
@@ -379,6 +383,7 @@ class ForegroundProcProxy(object):
     def __init__(self, f, args, stdin=None, stdout=None, stderr=None,
                  universal_newlines=False):
         self.f = f
+        self.args = args
         self.pid = os.getpid()
         self.returncode = None
         self.stdin = stdin
@@ -397,7 +402,11 @@ class ForegroundProcProxy(object):
         """
         if self.f is None:
             return
-        r = self.f(self.args, self.stdin, self.stdout, self.stderr)
+        if self.stdin is None:
+            stdin = io.StringIO("")
+        else:
+            stdin = io.TextIOWrapper(self.stdin)
+        r = self.f(self.args, stdin, self.stdout, self.stderr)
         self.returncode = 0 if r is None else r
         return self.returncode
 
