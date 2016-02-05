@@ -19,8 +19,11 @@ Current Developments
   and a subprocess command exits with a non-zero return code, a 
   CalledProcessError will be raised. This is useful in scripts that should
   fail at the first error.
+* Process title now set if the optional dependncy ``setproctitle`` is present.
 
-**Changed:** None
+**Changed:** 
+
+* Updated alias docs to pull in usage from the commands automatically.
 
 **Deprecated:** None
 
