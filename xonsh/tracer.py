@@ -114,6 +114,11 @@ def _find_caller(args):
     for _, fname, _, _, lines, _  in inspectors.getouterframes(curr, context=1)[3:]:
         if lines is not None and re_line.search(lines[0]) is not None:
             return fname
+    else:
+        msg = ('xonsh: warning: __file__ name could not be found. You may be '
+               'trying to trace interactively. Please pass in the file names '
+               'you want to trace explicitly.')
+        print(msg, file=sys.stderr)
 
 
 def _on(ns, args):
