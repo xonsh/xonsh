@@ -111,8 +111,13 @@ def _find_caller(args):
     """Somewhat hacky method of finding the __file__ based on the line executed."""
     re_line = re.compile(r'[\w.-]+\s+' + r'\s+'.join(args))
     curr = inspect.currentframe()
-    for _, fname, _, _, lines, _  in inspectors.getouterframes(curr, context=1)[3:]:
+    for _, fname, lineno, _, lines, _  in inspectors.getouterframes(curr, context=1)[3:]:
         if lines is not None and re_line.search(lines[0]) is not None:
+            return fname
+        elif lineno == 1 and re_line.search(linecache.getline(fname, lineno)) is not None:
+            # There is a bug in CPython such that inspectors.getouterframes(curr, context=1)
+            # will actually return the 2nd line in the code_context field, even though 
+            # line number is itself correct. We manually fix that in this branch.
             return fname
     else:
         msg = ('xonsh: warning: __file__ name could not be found. You may be '
