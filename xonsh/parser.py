@@ -243,7 +243,7 @@ class Parser(object):
                      'pipe', 'xor', 'ampersand', 'await', 'for', 'colon',
                      'import', 'except', 'nonlocal', 'global', 'yield', 'from', 
                      'raise', 'with', 'dollar_lparen', 'dollar_lbrace', 
-                     'dollar_lbracket']
+                     'dollar_lbracket', 'try']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -1293,12 +1293,13 @@ class Parser(object):
         p[0] = p[3]
 
     def p_try_stmt(self, p):
-        """try_stmt : TRY COLON suite except_part_list else_part finally_part_opt
-                    | TRY COLON suite except_part_list finally_part_opt
-                    | TRY COLON suite finally_part
+        """try_stmt : try_tok COLON suite except_part_list else_part finally_part_opt
+                    | try_tok COLON suite except_part_list finally_part_opt
+                    | try_tok COLON suite finally_part
         """
         lenp = len(p)
-        t = ast.Try(body=p[3], lineno=self.lineno, col_offset=self.col)
+        p1 = p[1]
+        t = ast.Try(body=p[3], lineno=p1.lineno, col_offset=p1.lexpos)
         if lenp == 7:
             p5, p6 = p[5], p[6]
             t.handlers = p[4]
