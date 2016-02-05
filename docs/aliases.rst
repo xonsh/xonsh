@@ -15,6 +15,8 @@ then this changes to the current user's home directory.
 Adds a directory to the top of the directory stack, or rotates the stack,
 making the new top of the stack the current working directory.
 
+.. command-help:: xonsh.dirstack.pushd
+
 ``popd``
 ===================
 Removes entries from the directory stack.
