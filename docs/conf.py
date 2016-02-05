@@ -9,6 +9,7 @@
 # serve to show the default.
 import os
 import sys
+import builtins
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.environ import DEFAULT_DOCS, Env
 
@@ -273,3 +274,5 @@ def make_envvars():
         f.write(s)
 
 make_envvars()
+
+builtins.__xonsh_history__= None

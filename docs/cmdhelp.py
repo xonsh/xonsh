@@ -47,7 +47,10 @@ class CommandHelp(Directive):
         stdout = io.StringIO()
         stderr = io.StringIO()
         with redirect_stdout(stdout), redirect_stderr(stderr):
-            func(args)
+            try:
+                func(args)
+            except SystemExit:
+                pass
         stdout.seek(0)
         s = stdout.read()
         lines += textwrap.indent(s, '    ').splitlines()
