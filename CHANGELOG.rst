@@ -19,7 +19,8 @@ Current Developments
   and a subprocess command exits with a non-zero return code, a 
   CalledProcessError will be raised. This is useful in scripts that should
   fail at the first error.
-* Process title now set if the optional dependncy ``setproctitle`` is present.
+* If the ``setproctitle`` package is installed, the process title will be
+  set to ``'xonsh'`` rather than the path to the Python interpreter.
 
 **Changed:** 
 
