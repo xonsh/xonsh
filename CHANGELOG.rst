@@ -23,6 +23,7 @@ Current Developments
 **Fixed:**
 
 * Fixed path completion not working for absolute paths or for expanded paths on Windows.
+* Fixed issue with hg dirty branches and $PATH.
 
 **Security:** None
 

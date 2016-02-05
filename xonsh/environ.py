@@ -790,7 +790,7 @@ def get_git_branch(cwd=None):
 
 def call_hg_command(command, cwd):
     # Override user configurations settings and aliases
-    hg_env = os.environ.copy()
+    hg_env = builtins.__xonsh_env__.detype()
     hg_env['HGRCPATH'] = ""
 
     s = None
