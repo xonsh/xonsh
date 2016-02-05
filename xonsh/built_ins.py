@@ -26,7 +26,8 @@ from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env, locate_binary
 from xonsh.aliases import DEFAULT_ALIASES
 from xonsh.jobs import add_job, wait_for_active_job
-from xonsh.proc import ProcProxy, SimpleProcProxy, TeePTYProc
+from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy, 
+    SimpleForegroundProcProxy,TeePTYProc)
 from xonsh.history import History
 from xonsh.foreign_shells import load_foreign_aliases
 
@@ -556,11 +557,12 @@ def run_subproc(cmds, captured=True):
                     raise XonshError(e.format(cmd[0]))
         if callable(aliased_cmd):
             prev_is_proxy = True
+            bgable = getattr(aliased_cmd, '__xonsh_backgroundable__', True)
             numargs = len(inspect.signature(aliased_cmd).parameters)
             if numargs == 2:
-                cls = SimpleProcProxy
+                cls = SimpleProcProxy if bgable else SimpleForegroundProcProxy
             elif numargs == 4:
-                cls = ProcProxy
+                cls = ProcProxy if bgable else ForegroundProcProxy
             else:
                 e = 'Expected callable with 2 or 4 arguments, not {}'
                 raise XonshError(e.format(numargs))
