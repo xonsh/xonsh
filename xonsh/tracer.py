@@ -1,5 +1,6 @@
 """Implements a xonsh tracer."""
 import os
+import re
 import sys
 import inspect
 import linecache
@@ -51,7 +52,7 @@ class TracerType(object):
         files.add(normabspath(filename))
         sys.settrace(self.trace)
         curr = inspect.currentframe()
-        for frame, fname, *_ in inspect.getouterframes(curr, context=0):
+        for frame, fname, *_ in inspectors.getouterframes(curr, context=0):
             if normabspath(fname) in files:
                 frame.f_trace = self.trace
 
@@ -62,7 +63,7 @@ class TracerType(object):
         if len(self.files) == 0:
             sys.settrace(self.prev_tracer)
             curr = inspect.currentframe()
-            for frame, fname, *_ in inspect.getouterframes(curr, context=0):
+            for frame, fname, *_ in inspectors.getouterframes(curr, context=0):
                 if normabspath(fname) == filename:
                     frame.f_trace = self.prev_tracer
             self.prev_tracer = DefaultNotGiven
@@ -107,7 +108,12 @@ def format_line(fname, lineno, line, color=True, lexer=None, formatter=None):
 # Command line interface
 #
 def _find_caller(args):
-    import pdb; pdb.set_trace()
+    """Somewhat hacky method of finding the __file__ based on the line executed."""
+    re_line = re.compile(r'[\w.-]+\s+' + r'\s+'.join(args))
+    curr = inspect.currentframe()
+    for _, fname, _, _, (line,), _  in inspectors.getouterframes(curr, context=1)[3:]:
+        if re_line.search(line) is not None:
+            return fname
 
 
 def _on(ns, args):
@@ -152,6 +158,7 @@ def _create_parser():
                      help='true/false, y/n, etc. to toggle color usage.')
     return p
 
+
 _MAIN_ACTIONS = {
     'on': _on,
     'add': _on,
@@ -165,7 +172,6 @@ _MAIN_ACTIONS = {
 
 def main(args=None):
     """Main function for tracer command-line interface."""
-    print(args)
     parser = _create_parser()
     ns = parser.parse_args(args)
     return _MAIN_ACTIONS[ns.action](ns, args)

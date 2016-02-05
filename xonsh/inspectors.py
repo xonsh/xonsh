@@ -14,9 +14,11 @@ import types
 import inspect
 import linecache
 import io as stdlib_io
+from collections import namedtuple
 
 from xonsh import openpy
-from xonsh.tools import cast_unicode, safe_hasattr, string_types, indent
+from xonsh.tools import (cast_unicode, safe_hasattr, string_types, indent, 
+    VER_MAJOR_MINOR, VER_3_4)
 
 if sys.version_info[0] > 2:
     ISPY3K = True
@@ -292,6 +294,17 @@ def find_source_lines(obj):
         return None
 
     return lineno
+
+
+if VER_MAJOR_MINOR <= VER_3_4:
+    FrameInfo = namedtuple('FrameInfo', ['frame', 'filename', 'lineno', 'function', 
+                                         'code_context', 'index'])
+    def getouterframes(frame, context=1):
+        """Wrapper for getouterframes so that it acts like the Python v3.5 version."""
+        return [FrameInfo(f, *inspect.getframeinfo(f, context=context)) for f in \
+                inspect.getouterframes(f, context=context)]
+else:
+    getouterframes = inspect.getouterframes
 
 
 class Inspector(object):
