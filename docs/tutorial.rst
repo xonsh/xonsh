@@ -1038,7 +1038,7 @@ file. Errors in Python mode will already raise exceptions and so this
 is roughly equivelent to Bash's ``set -e``.
 
 Furthermore, you can also toggle the ability to print source code lines with the
-``trace on`` and ``trace off`` commands.  This is roughly equivalent to 
+``trace on`` and ``trace off`` commands.  This is roughly equivelent to 
 Bash's ``set -x`` or Python's ``python -m trace``, but you know, better.
 
 Importing Xonsh (``*.xsh``)
