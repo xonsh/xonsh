@@ -77,7 +77,7 @@ def source_foreign(args, stdin=None):
         pass  # don't change prevcmd if given explicitly
     elif os.path.isfile(ns.files_or_code[0]):
         # we have filename to source
-        ns.prevcmd = '{0} {1}'.format(ns.sourcer, ' '.join(ns.files_or_code))
+        ns.prevcmd = '{0} "{1}"'.format(ns.sourcer, '" "'.join(ns.files_or_code))
     elif ns.prevcmd is None:
         ns.prevcmd = ' '.join(ns.files_or_code)  # code to run, no files
     foreign_shell_data.cache_clear()  # make sure that we don't get prev src

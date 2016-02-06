@@ -59,6 +59,17 @@ namefile="${namefile%?}}"
 echo $namefile
 """.strip()
 
+DEFAULT_ZSH_FUNCSCMD = """
+namefile="{"
+for name in ${(ok)functions}; do
+  loc=$(whence -v $name)
+  loc=${(z)loc}
+  file=${loc[7,-1]}
+  namefile="${namefile}\\"${name}\\":\\"${(Q)file:A}\\","
+done 
+namefile="${namefile%?}}"
+echo ${namefile}
+""".strip()
 
 DEFAULT_ENVCMDS = {
     'bash': 'env',
@@ -75,8 +86,8 @@ DEFAULT_ALIASCMDS = {
 DEFAULT_FUNCSCMDS = {
     'bash': DEFAULT_BASH_FUNCSCMD,
     '/bin/bash': DEFAULT_BASH_FUNCSCMD,
-    'zsh': 'echo {}',
-    '/usr/bin/zsh': 'echo {}',
+    'zsh': DEFAULT_ZSH_FUNCSCMD,
+    '/usr/bin/zsh': DEFAULT_ZSH_FUNCSCMD,
 }
 DEFAULT_SOURCERS = {
     'bash': 'source',
@@ -231,6 +242,8 @@ def parse_funcs(s, shell, sourcer=None):
     for funcname, filename in namefiles.items():
         if funcname.startswith('_'):
             continue  # skip private functions
+        if not os.path.isabs(filename):
+            filename = os.path.abspath(filename)
         wrapper = ForeignShellFunctionAlias(name=funcname, shell=shell,
                                             sourcer=sourcer, filename=filename)
         funcs[funcname] = wrapper
@@ -242,7 +255,7 @@ class ForeignShellFunctionAlias(object):
     they were aliases. This does not currently support taking stdin.
     """
 
-    INPUT = ('{sourcer} {filename}\n'
+    INPUT = ('{sourcer} "{filename}"\n'
              '{funcname} {args}\n')
 
     def __init__(self, name, shell, filename, sourcer=None):
