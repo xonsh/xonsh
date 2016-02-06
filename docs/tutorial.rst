@@ -831,6 +831,20 @@ built-in mapping.  Here is an example using a function value:
     >>> banana
     'My spoon is tooo big!'
 
+Usually, callable alias comamnds will be run in a separate thread so that 
+users may background them interactively. However, some aliases may need to be 
+executed on the thread that they were called from. This is mostly useful for debuggers
+and profilers. To make an alias run in the foreground, decorate its function
+with the ``xonsh.proc.foreground`` decorator. 
+
+.. code-block:: python
+
+    from xonsh.proc import foreground
+
+    @foreground
+    def mycmd(args, stdin=None):
+        return 'In your face!'
+
 Aliasing is a powerful way that xonsh allows you to seamlessly interact to
 with Python and subprocess.
 
@@ -1021,7 +1035,11 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
 Additionally, if the script should exit if a command fails, set the 
 environment variable ``$RAISE_SUBPROC_ERROR = True`` at the top of the 
 file. Errors in Python mode will already raise exceptions and so this 
-is roughly equivelent to Bash's `set -e`.
+is roughly equivelent to Bash's ``set -e``.
+
+Furthermore, you can also toggle the ability to print source code lines with the
+``trace on`` and ``trace off`` commands.  This is roughly equivelent to 
+Bash's ``set -x`` or Python's ``python -m trace``, but you know, better.
 
 Importing Xonsh (``*.xsh``)
 ==============================

@@ -7,7 +7,7 @@ from collections import Iterable, Sequence, Mapping
 from ply import yacc
 
 from xonsh import ast
-from xonsh.lexer import Lexer
+from xonsh.lexer import Lexer, LexToken
 from xonsh.tools import (VER_3_4, VER_3_5, VER_3_5_1,
                          VER_MAJOR_MINOR, VER_FULL,
                          docstring_by_version)
@@ -34,11 +34,13 @@ def has_elts(x):
     return isinstance(x, ast.AST) and hasattr(x, 'elts')
 
 
-def ensure_has_elts(x, lineno=1, col_offset=1):
+def ensure_has_elts(x, lineno=None, col_offset=None):
     """Ensures that x is an AST node with elements."""
     if not has_elts(x):
         if not isinstance(x, Iterable):
             x = [x]
+        lineno = x[0].lineno if lineno is None else lineno
+        col_offset = x[0].col_offset if col_offset is None else col_offset
         x = ast.Tuple(elts=x,
                       ctx=ast.Load(),
                       lineno=lineno,
@@ -53,6 +55,8 @@ def empty_list(lineno=None, col=None):
 
 def binop(x, op, y, lineno=None, col=None):
     """Creates the AST node for a binary operation."""
+    lineno = x.lineno if lineno is None else lineno
+    col = x.col_offset if col is None else col
     return ast.BinOp(left=x, op=op, right=y, lineno=lineno, col_offset=col)
 
 
@@ -159,6 +163,15 @@ def empty_list_if_newline(x):
     return [] if x == '\n' else x
 
 
+def lopen_loc(x):
+    """Extracts the line and column number for a node that may have anb opening
+    parenthesis, brace, or braket.
+    """
+    lineno = x._lopen_lineno if hasattr(x, '_lopen_lineno') else x.lineno
+    col = x._lopen_col if hasattr(x, '_lopen_col') else x.col_offset
+    return lineno, col
+
+
 class Parser(object):
     """A class that parses the xonsh language."""
 
@@ -223,6 +236,17 @@ class Parser(object):
         for rule in list_rules:
             self._list_rule(rule)
 
+        tok_rules = ['def', 'class', 'async', 'return', 'number', 'name', 
+                     'none', 'true', 'false', 'ellipsis', 'if', 'del', 'assert', 
+                     'lparen', 'lbrace', 'lbracket', 'string', 'times', 'plus', 
+                     'minus', 'divide', 'doublediv', 'mod', 'at', 'lshift', 'rshift',
+                     'pipe', 'xor', 'ampersand', 'await', 'for', 'colon',
+                     'import', 'except', 'nonlocal', 'global', 'yield', 'from', 
+                     'raise', 'with', 'dollar_lparen', 'dollar_lbrace', 
+                     'dollar_lbracket', 'try']
+        for rule in tok_rules:
+            self._tok_rule(rule)
+
         yacc_kwargs = dict(module=self,
                            debug=yacc_debug,
                            start='start_symbols',
@@ -275,8 +299,8 @@ class Parser(object):
         self._parse_error(msg, self.currloc(line, column))
 
     def _yacc_lookahead_token(self):
-        """Gets the last token seen by the lexer."""
-        return self.lexer.last
+        """Gets the next-to-last and last token seen by the lexer."""
+        return self.lexer.beforelast, self.lexer.last
 
     def _opt_rule(self, rulename):
         """For a rule name, creates an associated optional rule.
@@ -304,13 +328,35 @@ class Parser(object):
         listfunc.__name__ = 'p_' + rulename + '_list'
         setattr(self.__class__, listfunc.__name__, listfunc)
 
+    def _tok_rule(self, rulename):
+        """For a rule name, creates a rule that retuns the corresponding token.
+        '_tok' is appended to the rule name.
+        """
+
+        def tokfunc(self, p):
+            s, t = self._yacc_lookahead_token()
+            uprule = rulename.upper()
+            if s is not None and s.type == uprule:
+                p[0] = s
+            elif t is not None and t.type == uprule:
+                p[0] = t
+            else:
+                raise TypeError('token for {0!r} not found.'.format(rulename))
+
+        tokfunc.__doc__ = '{0}_tok : {1}'.format(rulename, rulename.upper())
+        tokfunc.__name__ = 'p_' + rulename + '_tok'
+        setattr(self.__class__, tokfunc.__name__, tokfunc)
+
     def currloc(self, lineno, column=None):
         """Returns the current location."""
         return Location(fname=self.lexer.fname, lineno=lineno, column=column)
 
     def expr(self, p):
         """Creates an expression for a token."""
-        return ast.Expr(value=p, lineno=p.lineno, col_offset=p.col_offset)
+        expr = ast.Expr(value=p, lineno=p.lineno, col_offset=p.col_offset)
+        expr.max_lineno = self.lineno
+        expr.max_col = self.col
+        return expr
 
     def token_col(self, t):
         """Gets ths token column"""
@@ -319,16 +365,19 @@ class Parser(object):
     @property
     def lineno(self):
         if self.lexer.last is None:
-            return 0
+            return 1
         else:
             return self.lexer.last.lineno
 
     @property
     def col(self):
-        t = self._yacc_lookahead_token()
+        s, t = self._yacc_lookahead_token()
         if t is not None:
+            #raise ValueError
+            if t.type == 'NEWLINE':
+                t = s
             return self.token_col(t)
-        return 1
+        return 0
 
     def _parse_error(self, msg, loc):
         err = SyntaxError('{0}: {1}'.format(loc, msg))
@@ -406,14 +455,14 @@ class Parser(object):
         p[0] = [p[2]]
 
     def p_attr_name(self, p):
-        """attr_name : NAME
-                     | NAME attr_period_name_list
+        """attr_name : name_tok
+                     | name_tok attr_period_name_list
         """
         p1 = p[1]
-        name = ast.Name(id=p1,
+        name = ast.Name(id=p1.value,
                         ctx=ast.Load(),
-                        lineno=self.lineno,
-                        col_offset=self.col)
+                        lineno=p1.lineno,
+                        col_offset=p1.lexpos)
         if len(p) == 2:
             p0 = name
         else:
@@ -421,23 +470,27 @@ class Parser(object):
             p0 = ast.Attribute(value=name,
                                attr=p2[0],
                                ctx=ast.Load(),
-                               lineno=self.lineno,
-                               col_offset=self.col)
+                               lineno=p1.lineno,
+                               col_offset=p1.lexpos)
             for a in p2[1:]:
                 p0 = ast.Attribute(value=p0,
                                    attr=a,
                                    ctx=ast.Load(),
-                                   lineno=self.lineno,
-                                   col_offset=self.col)
+                                   lineno=p0.lineno,
+                                   col_offset=p0.col_offset)
         p[0] = p0
 
     def p_decorator(self, p):
-        """decorator : AT attr_name NEWLINE
-                     | AT attr_name func_call NEWLINE
+        """decorator : at_tok attr_name NEWLINE
+                     | at_tok attr_name func_call NEWLINE
         """
         lenp = len(p)
-        name = p[2]
+        p1, name = p[1], p[2]
         p3 = p[3] if lenp > 3 else None
+        if isinstance(name, ast.Attribute) or (lenp == 5 and p3 is not None):
+            lineno, col = name.lineno, name.col_offset
+        else:
+            lineno, col = p1.lineno, p1.lexpos
         if lenp == 4:
             p0 = name
         elif p3 is None:
@@ -446,12 +499,12 @@ class Parser(object):
                           keywords=[],
                           starargs=None,
                           kwargs=None,
-                          lineno=self.lineno,
-                          col_offset=self.col)
+                          lineno=lineno,
+                          col_offset=col)
         else:
             p0 = ast.Call(func=name,
-                          lineno=self.lineno,
-                          col_offset=self.col, **p3)
+                          lineno=lineno,
+                          col_offset=col, **p3)
         p[0] = p0
 
     def p_decorators(self, p):
@@ -477,7 +530,17 @@ class Parser(object):
     def p_decorated(self, p):
         """decorated : decorators classdef_or_funcdef"""
         p1, p2 = p[1], p[2]
-        p2[0].decorator_list = p1
+        targ = p2[0]
+        targ.decorator_list = p1
+        # this is silly, CPython. This claims a func or class starts on 
+        # the line of the first decorator, rather than the 'def' or 'class'
+        # line.  However, it retains the original col_offset.
+        targ.lineno = p1[0].lineno
+        # async functions take the col number of the 'def', unless they are
+        # decorated, in which case they have the col of the 'async'. WAT?
+        if hasattr(targ, '_async_tok'):
+            targ.col_offset = targ._async_tok.lexpos
+            del targ._async_tok
         p[0] = p2
 
     def p_rarrow_test(self, p):
@@ -485,20 +548,21 @@ class Parser(object):
         p[0] = p[2]
 
     def p_funcdef(self, p):
-        """funcdef : DEF NAME parameters rarrow_test_opt COLON suite"""
+        """funcdef : def_tok NAME parameters rarrow_test_opt COLON suite"""
         f = ast.FunctionDef(name=p[2],
                             args=p[3],
                             returns=p[4],
                             body=p[6],
                             decorator_list=[],
-                            lineno=self.lineno,
-                            col_offset=self.col)
+                            lineno=p[1].lineno,
+                            col_offset=p[1].lexpos)
         p[0] = [f]
 
     def p_async_funcdef(self, p):
-        """async_funcdef : ASYNC funcdef"""
-        f = p[2][0]
+        """async_funcdef : async_tok funcdef"""
+        p1, f = p[1], p[2][0]
         p[0] = [ast.AsyncFunctionDef(**f.__dict__)]
+        p[0][0]._async_tok = p1
 
     def p_parameters(self, p):
         """parameters : LPAREN typedargslist_opt RPAREN"""
@@ -582,13 +646,14 @@ class Parser(object):
         p[0] = p[2]
 
     def p_tfpdef(self, p):
-        """tfpdef : NAME colon_test_opt"""
-        kwargs = {'arg': p[1],
+        """tfpdef : name_tok colon_test_opt"""
+        p1 = p[1]
+        kwargs = {'arg': p1.value,
                   'annotation': p[2]}
         if VER_FULL >= VER_3_5_1:
             kwargs.update({
-                'lineno': self.lineno,
-                'col_offset': self.col,
+                'lineno': p1.lineno,
+                'col_offset': p1.lexpos,
             })
         p[0] = ast.arg(**kwargs)
 
@@ -708,13 +773,14 @@ class Parser(object):
         p[0] = p0
 
     def p_vfpdef(self, p):
-        """vfpdef : NAME"""
-        kwargs = {'arg': p[1],
+        """vfpdef : name_tok"""
+        p1 = p[1]
+        kwargs = {'arg': p1.value,
                   'annotation': None}
         if VER_FULL >= VER_3_5_1:
             kwargs.update({
-                'lineno': self.lineno,
-                'col_offset': self.col,
+                'lineno': p1.lineno,
+                'col_offset': p1.lexpos,
             })
         p[0] = ast.arg(**kwargs)
 
@@ -816,17 +882,16 @@ class Parser(object):
                 assert False
             else:
                 list(map(store_ctx, p2[:-1]))
-                p0 = ast.Assign(targets=p1 + p2[:-1],
-                                value=p2[-1],
-                                lineno=self.lineno,
-                                col_offset=self.col)
+                lineno, col = lopen_loc(p1[0])
+                p0 = ast.Assign(targets=p1 + p2[:-1], value=p2[-1],
+                                lineno=lineno, col_offset=col)
         elif lenp == 4:
             op = self._augassign_op[p2]
             if op is None:
                 self._parse_error('operation {0!r} not supported'.format(p2),
                                   self.currloc(lineno=p.lineno, column=p.lexpos))
             p0 = ast.AugAssign(target=p1[0], op=op(), value=p[3],
-                               lineno=self.lineno, col_offset=self.col)
+                               lineno=p1[0].lineno, col_offset=p1[0].col_offset)
         elif lenp == 5 or lenp == 6:
             if lenp == 5:
                 targs, rhs = p[3], p[4][0]
@@ -839,12 +904,12 @@ class Parser(object):
             p1.extend(targs)
             p1 = [ast.Tuple(elts=p1,
                             ctx=ast.Store(),
-                            lineno=self.lineno,
-                            col_offset=self.col)]
+                            lineno=p1[0].lineno,
+                            col_offset=p1[0].col_offset)]
             p0 = ast.Assign(targets=p1,
                             value=rhs,
-                            lineno=self.lineno,
-                            col_offset=self.col)
+                            lineno=p1[0].lineno,
+                            col_offset=p1[0].col_offset)
         else:
             assert False
         p[0] = p0
@@ -880,13 +945,13 @@ class Parser(object):
         elif p2 == ',':
             p0 = [ast.Tuple(elts=[p1],
                             ctx=ast.Load(),
-                            lineno=self.lineno,
-                            col_offset=self.col)]
+                            lineno=p1.lineno,
+                            col_offset=p1.col_offset)]
         else:
             p0 = [ast.Tuple(elts=[p1] + p2,
                             ctx=ast.Load(),
-                            lineno=self.lineno,
-                            col_offset=self.col)]
+                            lineno=p1.lineno,
+                            col_offset=p1.col_offset)]
         p[0] = p0
 
     def p_augassign(self, p):
@@ -921,11 +986,12 @@ class Parser(object):
     # by the interpreter
     #
     def p_del_stmt(self, p):
-        """del_stmt : DEL exprlist"""
+        """del_stmt : del_tok exprlist"""
+        p1 = p[1]
         p2 = p[2]
         for targ in p2:
             targ.ctx = ast.Del()
-        p0 = ast.Delete(targets=p2, lineno=self.lineno, col_offset=self.col)
+        p0 = ast.Delete(targets=p2, lineno=p1.lineno, col_offset=p1.lexpos)
         p[0] = p0
 
     def p_pass_stmt(self, p):
@@ -950,18 +1016,20 @@ class Parser(object):
         p[0] = ast.Continue(lineno=self.lineno, col_offset=self.col)
 
     def p_return_stmt(self, p):
-        """return_stmt : RETURN testlist_opt"""
-        p[0] = ast.Return(value=p[2], lineno=self.lineno, col_offset=self.col)
+        """return_stmt : return_tok testlist_opt"""
+        p1 = p[1]
+        p[0] = ast.Return(value=p[2], lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_yield_stmt(self, p):
         """yield_stmt : yield_expr"""
         p[0] = self.expr(p[1])
 
     def p_raise_stmt(self, p):
-        """raise_stmt : RAISE
-                      | RAISE test
-                      | RAISE test FROM test
+        """raise_stmt : raise_tok
+                      | raise_tok test
+                      | raise_tok test FROM test
         """
+        p1 = p[1]
         lenp = len(p)
         cause = None
         if lenp == 2:
@@ -975,8 +1043,8 @@ class Parser(object):
             assert False
         p0 = ast.Raise(exc=exc,
                        cause=cause,
-                       lineno=self.lineno,
-                       col_offset=self.col)
+                       lineno=p1.lineno,
+                       col_offset=p1.lexpos)
         p[0] = p0
 
     def p_import_stmt(self, p):
@@ -986,14 +1054,16 @@ class Parser(object):
         p[0] = p[1]
 
     def p_import_name(self, p):
-        """import_name : IMPORT dotted_as_names
+        """import_name : import_tok dotted_as_names
         """
-        p[0] = ast.Import(names=p[2], lineno=self.lineno, col_offset=self.col)
+        p1 = p[1]
+        p[0] = ast.Import(names=p[2], lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_import_from_pre(self, p):
-        """import_from_pre : FROM period_or_ellipsis_list_opt dotted_name
-                           | FROM period_or_ellipsis_list
+        """import_from_pre : from_tok period_or_ellipsis_list_opt dotted_name
+                           | from_tok period_or_ellipsis_list
         """
+        p1 = p[1]
         if len(p) == 3:
             p0 = p[2]
         elif len(p) == 4:
@@ -1001,7 +1071,7 @@ class Parser(object):
             p0 = p3 if p2 is None else p2 + p3
         else:
             assert False
-        p[0] = p0
+        p[0] = (p0, p1.lineno, p1.lexpos)
 
     def p_import_from_post(self, p):
         """import_from_post : TIMES
@@ -1023,15 +1093,15 @@ class Parser(object):
         """
         # note below: the ('.' | '...') is necessary because '...' is
         # tokenized as ELLIPSIS
-        p1 = p[1]
+        p1, lineno, col = p[1]
         mod = p1.lstrip('.')
         lvl = len(p1) - len(mod)
         mod = mod or None
         p[0] = ast.ImportFrom(module=mod,
                               names=p[3],
                               level=lvl,
-                              lineno=self.lineno,
-                              col_offset=self.col)
+                              lineno=lineno,
+                              col_offset=col)
 
     def p_period_or_ellipsis(self, p):
         """period_or_ellipsis : PERIOD
@@ -1093,38 +1163,38 @@ class Parser(object):
         p[0] = [p[2]]
 
     def p_global_stmt(self, p):
-        """global_stmt : GLOBAL NAME comma_name_list_opt"""
-        p2, p3 = p[2], p[3]
+        """global_stmt : global_tok NAME comma_name_list_opt"""
+        p1, p2, p3 = p[1], p[2], p[3]
         names = [p2]
         if p3 is not None:
             names += p3
-        p[0] = ast.Global(names=names, lineno=self.lineno, col_offset=self.col)
+        p[0] = ast.Global(names=names, lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_nonlocal_stmt(self, p):
-        """nonlocal_stmt : NONLOCAL NAME comma_name_list_opt"""
-        p2, p3 = p[2], p[3]
+        """nonlocal_stmt : nonlocal_tok NAME comma_name_list_opt"""
+        p1, p2, p3 = p[1], p[2], p[3]
         names = [p2]
         if p3 is not None:
             names += p3
         p[0] = ast.Nonlocal(names=names,
-                            lineno=self.lineno,
-                            col_offset=self.col)
+                            lineno=p1.lineno,
+                            col_offset=p1.lexpos)
 
     def p_comma_test(self, p):
         """comma_test : COMMA test"""
         p[0] = [p[2]]
 
     def p_assert_stmt(self, p):
-        """assert_stmt : ASSERT test comma_test_opt"""
-        p2, p3 = p[2], p[3]
+        """assert_stmt : assert_tok test comma_test_opt"""
+        p1, p2, p3 = p[1], p[2], p[3]
         if p3 is not None:
             if len(p3) != 1:
                 assert False
             p3 = p3[0]
         p0 = ast.Assert(test=p2,
                         msg=p3,
-                        lineno=self.lineno,
-                        col_offset=self.col)
+                        lineno=p1.lineno,
+                        col_offset=p1.lexpos)
         p[0] = p0
 
     def p_compound_stmt(self, p):
@@ -1142,25 +1212,27 @@ class Parser(object):
 
     def p_elif_part(self, p):
         """elif_part : ELIF test COLON suite"""
-        p[0] = [ast.If(test=p[2],
+        p2 = p[2]
+        p[0] = [ast.If(test=p2,
                        body=p[4],
                        orelse=[],
-                       lineno=self.lineno,
-                       col_offset=self.col)]
+                       lineno=p2.lineno,
+                       col_offset=p2.col_offset)]
 
     def p_else_part(self, p):
         """else_part : ELSE COLON suite"""
         p[0] = p[3]
 
     def p_if_stmt(self, p):
-        """if_stmt : IF test COLON suite elif_part_list_opt
-                   | IF test COLON suite elif_part_list_opt else_part
+        """if_stmt : if_tok test COLON suite elif_part_list_opt
+                   | if_tok test COLON suite elif_part_list_opt else_part
         """
+        p1 = p[1]
         lastif = ast.If(test=p[2],
                         body=p[4],
                         orelse=[],
-                        lineno=self.lineno,
-                        col_offset=self.col)
+                        lineno=p1.lineno,
+                        col_offset=p1.lexpos)
         p0 = [lastif]
         p5 = p[5]
         p6 = p[6] if len(p) > 6 else []
@@ -1183,10 +1255,10 @@ class Parser(object):
                           col_offset=self.col)]
 
     def p_for_stmt(self, p):
-        """for_stmt : FOR exprlist IN testlist COLON suite
-                    | FOR exprlist IN testlist COLON suite else_part
+        """for_stmt : for_tok exprlist IN testlist COLON suite
+                    | for_tok exprlist IN testlist COLON suite else_part
         """
-        p2 = p[2]
+        p1, p2 = p[1], p[2]
         p7 = p[7] if len(p) > 7 else []
         if len(p2) == 1:
             p2 = p2[0]
@@ -1196,14 +1268,14 @@ class Parser(object):
                 store_ctx(x)
             p2 = ast.Tuple(elts=p2,
                            ctx=ast.Store(),
-                           lineno=self.lineno,
-                           col_offset=self.col)
+                           lineno=p2[0].lineno,
+                           col_offset=p2[0].col_offset)
         p[0] = [ast.For(target=p2,
                         iter=p[4],
                         body=p[6],
                         orelse=p7,
-                        lineno=self.lineno,
-                        col_offset=self.col)]
+                        lineno=p1.lineno,
+                        col_offset=p1.lexpos)]
 
     def p_async_for_stmt(self, p):
         """async_for_stmt : ASYNC for_stmt"""
@@ -1221,12 +1293,13 @@ class Parser(object):
         p[0] = p[3]
 
     def p_try_stmt(self, p):
-        """try_stmt : TRY COLON suite except_part_list else_part finally_part_opt
-                    | TRY COLON suite except_part_list finally_part_opt
-                    | TRY COLON suite finally_part
+        """try_stmt : try_tok COLON suite except_part_list else_part finally_part_opt
+                    | try_tok COLON suite except_part_list finally_part_opt
+                    | try_tok COLON suite finally_part
         """
         lenp = len(p)
-        t = ast.Try(body=p[3], lineno=self.lineno, col_offset=self.col)
+        p1 = p[1]
+        t = ast.Try(body=p[3], lineno=p1.lineno, col_offset=p1.lexpos)
         if lenp == 7:
             p5, p6 = p[5], p[6]
             t.handlers = p[4]
@@ -1244,10 +1317,10 @@ class Parser(object):
         p[0] = [t]
 
     def p_with_stmt(self, p):
-        """with_stmt : WITH with_item COLON suite
-                     | WITH with_item comma_with_item_list COLON suite
+        """with_stmt : with_tok with_item COLON suite
+                     | with_tok with_item comma_with_item_list COLON suite
         """
-        p2, p3 = [p[2]], p[3]
+        p1, p2, p3 = p[1], [p[2]], p[3]
         if len(p) == 5:
             body = p[4]
         else:
@@ -1255,8 +1328,8 @@ class Parser(object):
             body = p[5]
         p[0] = [ast.With(items=p2,
                          body=body,
-                         lineno=self.lineno,
-                         col_offset=self.col)]
+                         lineno=p1.lineno,
+                         col_offset=p1.lexpos)]
 
     def p_async_with_stmt(self, p):
         """async_with_stmt : ASYNC with_stmt"""
@@ -1281,19 +1354,20 @@ class Parser(object):
         p[0] = [p[2]]
 
     def p_except_clause(self, p):
-        """except_clause : EXCEPT
-                         | EXCEPT test as_name_opt
+        """except_clause : except_tok
+                         | except_tok test as_name_opt
         """
+        p1 = p[1]
         if len(p) == 2:
             p0 = ast.ExceptHandler(type=None,
                                    name=None,
-                                   lineno=self.lineno,
-                                   col_offset=self.col)
+                                   lineno=p1.lineno,
+                                   col_offset=p1.lexpos)
         else:
             p0 = ast.ExceptHandler(type=p[2],
                                    name=p[3],
-                                   lineno=self.lineno,
-                                   col_offset=self.col)
+                                   lineno=p1.lineno,
+                                   col_offset=p1.lexpos)
         p[0] = p0
 
     def p_async_stmt(self, p):
@@ -1354,19 +1428,21 @@ class Parser(object):
 
     def p_or_test(self, p):
         """or_test : and_test or_and_test_list_opt"""
-        p2 = p[2]
+        p1, p2 = p[1], p[2]
         if p2 is None:
-            p0 = p[1]
+            p0 = p1
         elif len(p2) == 2:
+            lineno, col = lopen_loc(p1)
             p0 = ast.BoolOp(op=p2[0],
-                            values=[p[1], p2[1]],
-                            lineno=self.lineno,
-                            col_offset=self.col)
+                            values=[p1, p2[1]],
+                            lineno=lineno,
+                            col_offset=col)
         else:
+            lineno, col = lopen_loc(p1)
             p0 = ast.BoolOp(op=p2[0],
                             values=[p[1]] + p2[1::2],
-                            lineno=self.lineno,
-                            col_offset=self.col)
+                            lineno=lineno,
+                            col_offset=col)
         p[0] = p0
 
     def p_or_and_test(self, p):
@@ -1375,19 +1451,21 @@ class Parser(object):
 
     def p_and_test(self, p):
         """and_test : not_test and_not_test_list_opt"""
-        p2 = p[2]
+        p1, p2 = p[1], p[2]
         if p2 is None:
-            p0 = p[1]
+            p0 = p1
         elif len(p2) == 2:
+            lineno, col = lopen_loc(p1)
             p0 = ast.BoolOp(op=p2[0],
-                            values=[p[1], p2[1]],
-                            lineno=self.lineno,
-                            col_offset=self.col)
+                            values=[p1, p2[1]],
+                            lineno=lineno,
+                            col_offset=col)
         else:
+            lineno, col = lopen_loc(p1)
             p0 = ast.BoolOp(op=p2[0],
-                            values=[p[1]] + p2[1::2],
-                            lineno=self.lineno,
-                            col_offset=self.col)
+                            values=[p1] + p2[1::2],
+                            lineno=lineno,
+                            col_offset=col)
         p[0] = p0
 
     def p_and_not_test(self, p):
@@ -1409,15 +1487,16 @@ class Parser(object):
 
     def p_comparison(self, p):
         """comparison : expr comp_op_expr_list_opt"""
+        p1 = p[1]
         p2 = p[2]
         if p2 is None:
-            p0 = p[1]
+            p0 = p1
         else:
-            p0 = ast.Compare(left=p[1],
+            p0 = ast.Compare(left=p1,
                              ops=p2[::2],
                              comparators=p2[1::2],
-                             lineno=self.lineno,
-                             col_offset=self.col)
+                             lineno=p1.lineno,
+                             col_offset=p1.col_offset)
         p[0] = p0
 
     def p_comp_op_expr(self, p):
@@ -1453,11 +1532,12 @@ class Parser(object):
         p[0] = self._comp_ops[key]()
 
     def p_star_expr(self, p):
-        """star_expr : TIMES expr"""
+        """star_expr : times_tok expr"""
+        p1 = p[1]
         p[0] = ast.Starred(value=p[2],
                            ctx=ast.Load(),
-                           lineno=self.lineno,
-                           col_offset=self.col)
+                           lineno=p1.lineno,
+                           col_offset=p1.lexpos)
 
     def _binop_combine(self, p1, p2):
         """Combines binary operations"""
@@ -1469,8 +1549,11 @@ class Parser(object):
         elif isinstance(p2, Sequence) and isinstance(p2[0], ast.BinOp):
             p0 = p2[0]
             p0.left = p1
+            p0.lineno, p0.col_offset = lopen_loc(p1)
             for bop in p2[1:]:
+                locer = p1 if p0.left is p1 else p0
                 bop.left = p0
+                p0.lineno, p0.col_offset = lopen_loc(locer)
                 p0 = bop
         else:
             p0 = p1 + p2
@@ -1483,73 +1566,81 @@ class Parser(object):
         p[0] = self._binop_combine(p[1], p[2] if len(p) > 2 else None)
 
     def p_pipe_xor_expr(self, p):
-        """pipe_xor_expr : PIPE xor_expr"""
+        """pipe_xor_expr : pipe_tok xor_expr"""
+        p1 = p[1]
         p[0] = [ast.BinOp(left=None,
                           op=ast.BitOr(),
                           right=p[2],
-                          lineno=self.lineno,
-                          col_offset=self.col)]
+                          lineno=p1.lineno,
+                          col_offset=p1.lexpos)]
 
     def p_xor_expr(self, p):
         """xor_expr : and_expr xor_and_expr_list_opt"""
         p[0] = self._binop_combine(p[1], p[2])
 
     def p_xor_and_expr(self, p):
-        """xor_and_expr : XOR and_expr"""
+        """xor_and_expr : xor_tok and_expr"""
+        p1 = p[1]
         p[0] = [ast.BinOp(left=None,
                           op=ast.BitXor(),
                           right=p[2],
-                          lineno=self.lineno,
-                          col_offset=self.col)]
+                          lineno=p1.lineno,
+                          col_offset=p1.lexpos)]
 
     def p_and_expr(self, p):
         """and_expr : shift_expr ampersand_shift_expr_list_opt"""
         p[0] = self._binop_combine(p[1], p[2])
 
     def p_ampersand_shift_expr(self, p):
-        """ampersand_shift_expr : AMPERSAND shift_expr"""
+        """ampersand_shift_expr : ampersand_tok shift_expr"""
+        p1 = p[1]
         p[0] = [ast.BinOp(left=None,
                           op=ast.BitAnd(),
                           right=p[2],
-                          lineno=self.lineno,
-                          col_offset=self.col)]
+                          lineno=p1.lineno,
+                          col_offset=p1.lexpos)]
 
     def p_shift_expr(self, p):
         """shift_expr : arith_expr shift_arith_expr_list_opt"""
         p[0] = self._binop_combine(p[1], p[2])
 
     def p_shift_arith_expr(self, p):
-        """shift_arith_expr : LSHIFT arith_expr
-                            | RSHIFT arith_expr
+        """shift_arith_expr : lshift_tok arith_expr
+                            | rshift_tok arith_expr
         """
-        op = ast.LShift() if p[1] == '<<' else ast.RShift()
+        p1 = p[1]
+        op = ast.LShift() if p1.value == '<<' else ast.RShift()
         p[0] = [ast.BinOp(left=None,
                           op=op,
                           right=p[2],
-                          lineno=self.lineno,
-                          col_offset=self.col)]
+                          lineno=p1.lineno,
+                          col_offset=p1.lexpos)]
 
     def p_arith_expr(self, p):
         """arith_expr : term
                       | term pm_term_list
         """
+        p1 = p[1]
         p2 = p[2] if len(p) > 2 else None
         if p2 is None:
-            p0 = p[1]
+            p0 = p1
         elif len(p2) == 2:
-            p0 = ast.BinOp(left=p[1],
+            lineno, col = lopen_loc(p1)
+            p0 = ast.BinOp(left=p1,
                            op=p2[0],
                            right=p2[1],
-                           lineno=self.lineno,
-                           col_offset=self.col)
+                           lineno=lineno,
+                           col_offset=col)
         else:
-            left = p[1]
+            left = p1
             for op, right in zip(p2[::2], p2[1::2]):
+                locer = left if left is p1 else op
+                lineno, col = lopen_loc(locer)
                 left = ast.BinOp(left=left,
                                  op=op,
                                  right=right,
-                                 lineno=self.lineno,
-                                 col_offset=self.col)
+                                 lineno=lineno,
+                                 col_offset=col)
             p0 = left
         p[0] = p0
 
@@ -1564,46 +1655,51 @@ class Parser(object):
     }
 
     def p_pm_term(self, p):
-        """pm_term : PLUS term
-                   | MINUS term
+        """pm_term : plus_tok term
+                   | minus_tok term
         """
-        op = self._term_binops[p[1]]()
+        p1 = p[1]
+        op = self._term_binops[p1.value](lineno=p1.lineno, col_offset=p1.lexpos)
         p[0] = [op, p[2]]
 
     def p_term(self, p):
         """term : factor op_factor_list_opt"""
-        p2 = p[2]
+        p1, p2 = p[1], p[2]
         if p2 is None:
-            p0 = p[1]
+            p0 = p1
         elif len(p2) == 2:
-            p0 = ast.BinOp(left=p[1],
+            lineno, col = lopen_loc(p1)
+            p0 = ast.BinOp(left=p1,
                            op=p2[0],
                            right=p2[1],
-                           lineno=self.lineno,
-                           col_offset=self.col)
+                           lineno=lineno,
+                           col_offset=col)
         else:
-            left = p[1]
+            left = p1
             for op, right in zip(p2[::2], p2[1::2]):
+                locer = left if left is p1 else op
+                lineno, col = lopen_loc(locer)
                 left = ast.BinOp(left=left,
                                  op=op,
                                  right=right,
-                                 lineno=self.lineno,
-                                 col_offset=self.col)
+                                 lineno=lineno,
+                                 col_offset=col)
             p0 = left
         p[0] = p0
 
     def p_op_factor(self, p):
-        """op_factor : TIMES factor
-                     | AT factor
-                     | DIVIDE factor
-                     | MOD factor
-                     | DOUBLEDIV factor
+        """op_factor : times_tok factor
+                     | at_tok factor
+                     | divide_tok factor
+                     | mod_tok factor
+                     | doublediv_tok factor
         """
-        op = self._term_binops[p[1]]
+        p1 = p[1]
+        op = self._term_binops[p1.value]
         if op is None:
-            self._parse_error('operation {0!r} not supported'.format(p[1]),
+            self._parse_error('operation {0!r} not supported'.format(p1),
                               self.currloc(lineno=p.lineno, column=p.lexpos))
-        p[0] = [op(), p[2]]
+        p[0] = [op(lineno=p1.lineno, col_offset=p1.lexpos), p[2]]
 
     _factor_ops = {'+': ast.UAdd, '-': ast.USub, '~': ast.Invert}
 
@@ -1636,8 +1732,8 @@ class Parser(object):
             p0 = ast.BinOp(left=p1,
                            op=ast.Pow(),
                            right=p[3],
-                           lineno=self.lineno,
-                           col_offset=self.col)
+                           lineno=p1.lineno,
+                           col_offset=p1.col_offset)
         else:
             assert False
         p[0] = p0
@@ -1660,7 +1756,7 @@ class Parser(object):
         v34="""atom_expr : atom trailer_list_opt""",
         v35=\
         """atom_expr : atom trailer_list_opt
-                     | AWAIT atom trailer_list_opt
+                     | await_tok atom trailer_list_opt
         """
         )
     def p_atom_expr(self, p):
@@ -1679,49 +1775,50 @@ class Parser(object):
                 p0 = ast.Subscript(value=leader,
                                    slice=trailer,
                                    ctx=ast.Load(),
-                                   lineno=self.lineno,
-                                   col_offset=self.col)
+                                   lineno=leader.lineno,
+                                   col_offset=leader.col_offset)
             elif isinstance(trailer, Mapping):
                 p0 = ast.Call(func=leader,
-                              lineno=self.lineno,
-                              col_offset=self.col, **trailer)
+                              lineno=leader.lineno,
+                              col_offset=leader.col_offset, **trailer)
             elif isinstance(trailer, str):
                 if trailer == '?':
-                    p0 = xonsh_help(leader, lineno=self.lineno, col=self.col)
+                    p0 = xonsh_help(leader, lineno=leader.lineno, col=leader.col_offset)
                 elif trailer == '??':
                     p0 = xonsh_superhelp(leader,
-                                         lineno=self.lineno,
-                                         col=self.col)
+                                         lineno=leader.lineno,
+                                         col=leader.col_offset)
                 else:
                     p0 = ast.Attribute(value=leader,
                                        attr=trailer,
                                        ctx=ast.Load(),
-                                       lineno=self.lineno,
-                                       col_offset=self.col)
+                                       lineno=leader.lineno,
+                                       col_offset=leader.col_offset)
             else:
                 assert False
             leader = p0
         if lenp == 4:
-            p0 = ast.Await(value=p0, ctx=ast.Load(), lineno=self.lineno,
-                           col_offset=self.col)
+            p1 = p[1]
+            p0 = ast.Await(value=p0, ctx=ast.Load(), lineno=p1.lineno,
+                           col_offset=p1.lexpos)
         p[0] = p0
 
     def p_atom(self, p):
-        """atom : LPAREN yield_expr_or_testlist_comp_opt RPAREN
-                | LBRACKET testlist_comp_opt RBRACKET
-                | LBRACE dictorsetmaker_opt RBRACE
-                | NAME
+        """atom : lparen_tok yield_expr_or_testlist_comp_opt RPAREN
+                | lbracket_tok testlist_comp_opt RBRACKET
+                | lbrace_tok dictorsetmaker_opt RBRACE
+                | name_tok
                 | number
                 | string_literal_list
-                | ELLIPSIS
-                | NONE
-                | TRUE
-                | FALSE
+                | ellipsis_tok
+                | none_tok
+                | true_tok
+                | false_tok
                 | REGEXPATH
                 | DOLLAR_NAME
-                | DOLLAR_LBRACE test RBRACE
-                | DOLLAR_LPAREN subproc RPAREN
-                | DOLLAR_LBRACKET subproc RBRACKET
+                | dollar_lbrace_tok test RBRACE
+                | dollar_lparen_tok subproc RPAREN
+                | dollar_lbracket_tok subproc RBRACKET
         """
         p1 = p[1]
         if len(p) == 2:
@@ -1729,36 +1826,45 @@ class Parser(object):
             bt = '`'
             if isinstance(p1, (ast.Num, ast.Str, ast.Bytes)):
                 pass
-            elif p1 == 'True':
-                p1 = ast.NameConstant(value=True,
-                                      lineno=self.lineno,
-                                      col_offset=self.col)
-            elif p1 == 'False':
-                p1 = ast.NameConstant(value=False,
-                                      lineno=self.lineno,
-                                      col_offset=self.col)
-            elif p1 == 'None':
-                p1 = ast.NameConstant(value=None,
-                                      lineno=self.lineno,
-                                      col_offset=self.col)
-            elif p1 == '...':
-                p1 = ast.Ellipsis(lineno=self.lineno, col_offset=self.col)
-            elif p1.startswith(bt) and p1.endswith(bt):
-                p1 = ast.Str(s=p1.strip(bt),
-                             lineno=self.lineno,
-                             col_offset=self.col)
-                p1 = xonsh_regexpath(p1, lineno=self.lineno, col=self.col)
-            elif p1.startswith('$'):
-                p1 = self._envvar_by_name(p1[1:],
-                                          lineno=self.lineno,
-                                          col=self.col)
+            elif isinstance(p1, str):
+                if p1.startswith(bt) and p1.endswith(bt):
+                    p1 = ast.Str(s=p1.strip(bt),
+                                 lineno=self.lineno,
+                                 col_offset=self.col)
+                    p1 = xonsh_regexpath(p1, lineno=self.lineno, col=self.col)
+                elif p1.startswith('$'):
+                    p1 = self._envvar_by_name(p1[1:],
+                                              lineno=self.lineno,
+                                              col=self.col)
+                else:
+                    raise ValueError(p1 + " not understood")
+            elif isinstance(p1, LexToken):
+                p1_value = p1.value
+                if p1_value == 'True':
+                    p1 = ast.NameConstant(value=True,
+                                          lineno=p1.lineno,
+                                          col_offset=p1.lexpos)
+                elif p1_value == 'False':
+                    p1 = ast.NameConstant(value=False,
+                                          lineno=p1.lineno,
+                                          col_offset=p1.lexpos)
+                elif p1_value == 'None':
+                    p1 = ast.NameConstant(value=None,
+                                          lineno=p1.lineno,
+                                          col_offset=p1.lexpos)
+                elif p1_value == '...':
+                    p1 = ast.Ellipsis(lineno=p1.lineno, col_offset=p1.lexpos)
+                else:
+                    p1 = ast.Name(id=p1_value,
+                                  ctx=ast.Load(),
+                                  lineno=p1.lineno,
+                                  col_offset=p1.lexpos)
             else:
-                p1 = ast.Name(id=p1,
-                              ctx=ast.Load(),
-                              lineno=self.lineno,
-                              col_offset=self.col)
+                raise ValueError('{0!r} not understood'.format(p1))
             p[0] = p1
             return
+        if isinstance(p1, LexToken):
+            p1, p1_tok = p1.value, p1
         p2 = p[2]
         if p2 is None:
             # empty container atoms
@@ -1784,9 +1890,11 @@ class Parser(object):
             # filled, possible group container tuple atoms
             if isinstance(p2, ast.AST):
                 p0 = p2
+                p0._lopen_lineno, p0._lopen_col = p1_tok.lineno, p1_tok.lexpos
                 p0._real_tuple = True
             elif len(p2) == 1 and isinstance(p2[0], ast.AST):
                 p0 = p2[0]
+                p0._lopen_lineno, p0._lopen_col = p1_tok.lineno, p1_tok.lexpos
             else:
                 assert False
         elif p1 == '[':
@@ -1805,10 +1913,11 @@ class Parser(object):
                     elts = [p2]
                 p0 = ast.List(elts=elts,
                               ctx=ast.Load(),
-                              lineno=self.lineno,
-                              col_offset=self.col)
+                              lineno=p1_tok.lineno,
+                              col_offset=p1_tok.lexpos)
         elif p1 == '{':
             p0 = p2
+            p0.lineno, p0.col_offset = p1_tok.lineno, p1_tok.lexpos
         elif p1.startswith('$'):
             p0 = self._dollar_rules(p)
         else:
@@ -1816,10 +1925,11 @@ class Parser(object):
         p[0] = p0
 
     def p_string_literal(self, p):
-        """string_literal : STRING"""
-        s = eval(p[1])
-        cls = ast.Bytes if p[1].startswith('b') else ast.Str
-        p[0] = cls(s=s, lineno=self.lineno, col_offset=self.col)
+        """string_literal : string_tok"""
+        p1 = p[1]
+        s = ast.literal_eval(p1.value)
+        cls = ast.Bytes if p1.value.startswith('b') else ast.Str
+        p[0] = cls(s=s, lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_string_literal_list(self, p):
         """string_literal_list : string_literal
@@ -1830,8 +1940,10 @@ class Parser(object):
         p[0] = p[1]
 
     def p_number(self, p):
-        """number : NUMBER"""
-        p[0] = ast.Num(n=eval(p[1]), lineno=self.lineno, col_offset=self.col)
+        """number : number_tok"""
+        p1 = p[1]
+        p[0] = ast.Num(n=ast.literal_eval(p1.value), lineno=p1.lineno,
+                       col_offset=p1.lexpos)
 
     def p_testlist_comp(self, p):
         """testlist_comp : test_or_star_expr comp_for
@@ -1846,20 +1958,20 @@ class Parser(object):
             elif p2 == ',':
                 p0 = ast.Tuple(elts=[p1],
                                ctx=ast.Load(),
-                               lineno=self.lineno,
-                               col_offset=self.col)
+                               lineno=p1.lineno,
+                               col_offset=p1.col_offset)
             elif 'comps' in p2:
                 p0 = ast.GeneratorExp(elt=p1,
                                       generators=p2['comps'],
-                                      lineno=self.lineno,
-                                      col_offset=self.col)
+                                      lineno=p1.lineno,
+                                      col_offset=p1.col_offset)
             else:
                 assert False
         elif len(p) == 4:
             p0 = ast.Tuple(elts=[p1],
                            ctx=ast.Load(),
-                           lineno=self.lineno,
-                           col_offset=self.col)
+                           lineno=p1.lineno,
+                           col_offset=p1.col_offset)
             if p2 is not None:
                 p0.elts.extend(p2)
             else:
@@ -1895,8 +2007,8 @@ class Parser(object):
         if p2 is not None:
             p1.value = ast.Tuple(elts=[p1.value] + [x.value for x in p2],
                                  ctx=ast.Load(),
-                                 lineno=self.lineno,
-                                 col_offset=self.col)
+                                 lineno=p1.lineno,
+                                 col_offset=p1.col_offset)
         p[0] = p1
 
     def p_comma_subscript(self, p):
@@ -1905,12 +2017,19 @@ class Parser(object):
 
     def p_subscript(self, p):
         """subscript : test
-                     | test_opt COLON test_opt sliceop_opt
+                     | test_opt colon_tok test_opt sliceop_opt
         """
+        p1 = p[1]
         if len(p) == 2:
-            p0 = ast.Index(value=p[1])
+            p0 = ast.Index(value=p1, lineno=p1.lineno, col_offset=p1.col_offset)
         else:
-            p0 = ast.Slice(lower=p[1], upper=p[3], step=p[4])
+            if p1 is None:
+                p2 = p[2]
+                lineno, col = p2.lineno, p2.lexpos
+            else:
+                lineno, col = p1.lineno, p1.col_offset
+            p0 = ast.Slice(lower=p1, upper=p[3], step=p[4], 
+                           lineno=lineno, col_offset=col)
         p[0] = p0
 
     def p_sliceop(self, p):
@@ -1955,17 +2074,19 @@ class Parser(object):
         if lenp > 2:
             if isinstance(p1, ast.Tuple) and \
                     (hasattr(p1, '_real_tuple') and p1._real_tuple):
+                lineno, col = lopen_loc(p1)
                 p1 = ast.Tuple(elts=[p1],
                                ctx=ast.Load(),
-                               lineno=self.lineno,
-                               col_offset=self.col)
+                               lineno=p1.lineno,
+                               col_offset=p1.col_offset)
             else:
-                p1 = ensure_has_elts(p1,
-                                     lineno=self.lineno,
-                                     col_offset=self.col)
+                p1 = ensure_has_elts(p1)
             p2 = p[2] if lenp > 2 else []
             p2 = [] if p2 == ',' else p2
             p1.elts += p2
+        elif lenp == 2 and isinstance(p1, ast.Tuple) and \
+                           (hasattr(p1, '_real_tuple') and p1._real_tuple):
+            p1.lineno, p1.col_offset = lopen_loc(p1.elts[0])
         p[0] = p1
 
     @docstring_by_version(
@@ -2028,13 +2149,15 @@ class Parser(object):
                 for k, v in zip(p2[::2], p2[1::2]):
                     keys.append(k)
                     vals.append(v)
-                p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), lineno=self.lineno,
-                              col_offset=self.col)
+                lineno, col = lopen_loc(p1[0] or p2[0])
+                p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), 
+                              lineno=lineno, col_offset=col)
             elif p2 == ':':
                 keys = [p1]
                 vals = self._list_or_elts_if_not_real_tuple(p3)
-                p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), lineno=self.lineno,
-                              col_offset=self.col)
+                lineno, col = lopen_loc(p1)
+                p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), 
+                              lineno=lineno, col_offset=col)
             elif isinstance(p1, ast.AST):
                 elts = [p1] + p2
                 p0 = ast.Set(elts=elts, ctx=ast.Load(), lineno=self.lineno,
@@ -2048,15 +2171,16 @@ class Parser(object):
             for k, v in zip(p4[::2], p4[1::2]):
                 keys.append(k)
                 vals.append(v)
-            p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), lineno=self.lineno,
-                          col_offset=self.col)
+            lineno, col = lopen_loc(p1)
+            p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), 
+                          lineno=lineno, col_offset=col)
         else:
             assert False
         p[0] = p0
 
     def p_classdef(self, p):
-        """classdef : CLASS NAME func_call_opt COLON suite"""
-        p3 = p[3]
+        """classdef : class_tok NAME func_call_opt COLON suite"""
+        p1, p3 = p[1], p[3]
         b, kw = ([], []) if p3 is None else (p3['args'], p3['keywords'])
         c = ast.ClassDef(name=p[2],
                          bases=b,
@@ -2065,8 +2189,8 @@ class Parser(object):
                          kwargs=None,
                          body=p[5],
                          decorator_list=[],
-                         lineno=self.lineno,
-                         col_offset=self.col)
+                         lineno=p1.lineno,
+                         col_offset=p1.lexpos)
         p[0] = [c]
 
     def _set_arg(self, args, arg, ensure_kw=False):
@@ -2194,7 +2318,7 @@ class Parser(object):
                 p0 = ast.Starred(value=p[2])
             else:
                 p0 = ast.GeneratorExp(elt=p1, generators=p[2]['comps'],
-                                      lineno=self.lineno, col_offset=self.col)
+                                      lineno=p1.lineno, col_offset=p1.col_offset)
         elif lenp == 4:
             p0 = ast.keyword(arg=p1.id, value=p[3])
         else:
@@ -2213,8 +2337,7 @@ class Parser(object):
         if len(targs) == 1:
             targ = targs[0]
         else:
-            targ = ensure_has_elts(targs, lineno=self.lineno,
-                                   col_offset=self.col)
+            targ = ensure_has_elts(targs)
         store_ctx(targ)
         comp = ast.comprehension(target=targ, iter=it, ifs=[])
         comps = [comp]
@@ -2233,18 +2356,18 @@ class Parser(object):
         p[0] = p0
 
     def p_yield_expr(self, p):
-        """yield_expr : YIELD yield_arg_opt"""
-        p2 = p[2]
+        """yield_expr : yield_tok yield_arg_opt"""
+        p1, p2 = p[1], p[2]
         if p2 is None:
-            p0 = ast.Yield(value=p2, lineno=self.lineno, col_offset=self.col)
+            p0 = ast.Yield(value=p2, lineno=p1.lineno, col_offset=p1.lexpos)
         elif p2['from']:
             p0 = ast.YieldFrom(value=p2['val'],
-                               lineno=self.lineno,
-                               col_offset=self.col)
+                               lineno=p1.lineno,
+                               col_offset=p1.lexpos)
         else:
             p0 = ast.Yield(value=p2['val'],
-                           lineno=self.lineno,
-                           col_offset=self.col)
+                           lineno=p1.lineno,
+                           col_offset=p1.lexpos)
         p[0] = p0
 
     def p_yield_arg(self, p):
@@ -2267,8 +2390,11 @@ class Parser(object):
         """
         lenp = len(p)
         p1, p2 = p[1], p[2]
-        col = self.col
-        lineno = self.lineno
+        if isinstance(p1, LexToken):
+            p1, p1_tok = p1.value, p1
+            lineno, col = p1_tok.lineno, p1_tok.lexpos
+        else:
+            lineno, col = self.lineno, self.col
         if lenp == 3:  # $NAME
             p0 = self._envvar_by_name(p2, lineno=lineno, col=col)
         elif p1 == '${':
@@ -2412,12 +2538,14 @@ class Parser(object):
                         | RSHIFT
                         | IOREDIRECT
                         | AT_LPAREN test RPAREN
-                        | DOLLAR_LBRACE test RBRACE
-                        | DOLLAR_LPAREN subproc RPAREN
-                        | DOLLAR_LBRACKET subproc RBRACKET
+                        | dollar_lbrace_tok test RBRACE
+                        | dollar_lparen_tok subproc RPAREN
+                        | dollar_lbracket_tok subproc RBRACKET
         """
         lenp = len(p)
         p1 = p[1]
+        if isinstance(p1, LexToken):
+            p1, p1_tok = p1.value, p1
         if lenp == 2:
             if isinstance(p1, str):
                 p0 = ast.Str(s=p1, lineno=self.lineno, col_offset=self.col)
@@ -2459,34 +2587,35 @@ class Parser(object):
                             col=self.col)
             p0._cliarg_action = 'extend'
         elif p1 == '${':
-            xenv = self._xenv(lineno=self.lineno, col=self.col)
+            lineno, col = p1_tok.lineno, p1_tok.lexpos
+            xenv = self._xenv(lineno=lineno, col=col)
             func = ast.Attribute(value=xenv,
                                  attr='get',
                                  ctx = ast.Load(),
-                                 lineno=self.lineno,
-                                 col_offset=self.col)
+                                 lineno=lineno,
+                                 col_offset=col)
             p0 = ast.Call(func=func,
                           args=[p[2],
                                 ast.Str(s='',
-                                        lineno=self.lineno,
-                                        col_offset=self.col)],
+                                        lineno=lineno,
+                                        col_offset=col)],
                           keywords=[],
                           starargs=None,
                           kwargs=None,
-                          lineno=self.lineno,
-                          col_offset=self.col)
+                          lineno=lineno,
+                          col_offset=col)
             p0._cliarg_action = 'append'
         elif p1 == '$(':
             p0 = xonsh_call('__xonsh_subproc_captured__',
                             args=p[2],
-                            lineno=self.lineno,
-                            col=self.col)
+                            lineno=p1_tok.lineno,
+                            col=p1_tok.lexpos)
             p0._cliarg_action = 'splitlines'
         elif p1 == '$[':
             p0 = xonsh_call('__xonsh_subproc_uncaptured__',
                             args=p[2],
-                            lineno=self.lineno,
-                            col=self.col)
+                            lineno=p1_tok.lineno,
+                            col=p1_tok.lexpos)
             p0._cliarg_action = 'splitlines'
         else:
             assert False

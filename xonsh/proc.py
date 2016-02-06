@@ -12,6 +12,7 @@ import os
 import sys
 import time
 import builtins
+from functools import wraps
 from threading import Thread
 from collections import Sequence
 from subprocess import Popen, PIPE, DEVNULL, STDOUT, TimeoutExpired
@@ -175,9 +176,10 @@ class ProcProxy(Thread):
     def poll(self):
         """Check if the function has completed.
 
-        :return: `None` if the function is still executing, `True` if the
-                 function finished successfully, and `False` if there was an
-                 error
+        Returns
+        -------
+        `None` if the function is still executing, `True` if the function 
+        finished successfully, and `False` if there was an error.
         """
         return self.returncode
 
@@ -321,6 +323,38 @@ class ProcProxy(Thread):
                     errread, errwrite)
 
 
+def wrap_simple_command(f, args, stdin, stdout, stderr):
+    """Decorator for creating 'simple' callable aliases."""
+    bgable = getattr(f, '__xonsh_backgroundable__', True)
+    @wraps(f)
+    def wrapped_simple_command(args, stdin, stdout, stderr):
+        try:
+            i = stdin.read()
+            if bgable:
+                with redirect_stdout(stdout), redirect_stderr(stderr):
+                    r = f(args, i)
+            else:
+                r = f(args, i)
+
+            cmd_result = 0
+            if isinstance(r, str):
+                stdout.write(r)
+            elif isinstance(r, Sequence):
+                if r[0] is not None:
+                    stdout.write(r[0])
+                if r[1] is not None:
+                    stderr.write(r[1])
+                if len(r) > 2 and r[2] is not None:
+                    cmd_result = r[2]
+            elif r is not None:
+                stdout.write(str(r))
+            return cmd_result
+        except Exception:
+            print_exception()
+            return 1  # returncode for failure
+    return wrapped_simple_command
+
+
 class SimpleProcProxy(ProcProxy):
     """Variant of `ProcProxy` for simpler functions.
 
@@ -331,32 +365,77 @@ class SimpleProcProxy(ProcProxy):
 
     def __init__(self, f, args, stdin=None, stdout=None, stderr=None,
                  universal_newlines=False):
-        def wrapped_simple_command(args, stdin, stdout, stderr):
-            try:
-                i = stdin.read()
-                with redirect_stdout(stdout), redirect_stderr(stderr):
-                    r = f(args, i)
+        f = wrap_simple_command(f, args, stdin, stdout, stderr)
+        super().__init__(f, args, stdin, stdout, stderr, universal_newlines)
 
-                cmd_result = 0
-                if isinstance(r, str):
-                    stdout.write(r)
-                elif isinstance(r, Sequence):
-                    if r[0] is not None:
-                        stdout.write(r[0])
-                    if r[1] is not None:
-                        stderr.write(r[1])
-                    if len(r) > 2 and r[2] is not None:
-                        cmd_result = r[2]
-                elif r is not None:
-                    stdout.write(str(r))
-                return cmd_result
-            except Exception:
-                print_exception()
-                return 1  # returncode for failure
-        super().__init__(wrapped_simple_command,
-                         args, stdin, stdout, stderr,
-                         universal_newlines)
+#
+# Foreground Process Proxies 
+#
 
+class ForegroundProcProxy(object):
+    """This is process proxy class that runs its alias functions on the
+    same thread that it was called from, which is typically the main thread.
+    This prevents backgrounding the process, but enables debugger and 
+    profiler tools (functions) be run on the same thread that they are 
+    attempting to debug.
+    """
+
+    def __init__(self, f, args, stdin=None, stdout=None, stderr=None,
+                 universal_newlines=False):
+        self.f = f
+        self.args = args
+        self.pid = os.getpid()
+        self.returncode = None
+        self.stdin = stdin
+        self.stdout = None
+        self.stderr = None
+        self.universal_newlines = universal_newlines
+
+    def poll(self):
+        """Check if the function has completed via the returncode or None.
+        """
+        return self.returncode
+
+    def wait(self, timeout=None):
+        """Runs the function and returns the result. Timeout argument only 
+        present for API compatability.
+        """
+        if self.f is None:
+            return
+        if self.stdin is None:
+            stdin = io.StringIO("")
+        else:
+            stdin = io.TextIOWrapper(self.stdin)
+        r = self.f(self.args, stdin, self.stdout, self.stderr)
+        self.returncode = 0 if r is None else r
+        return self.returncode
+
+
+class SimpleForegroundProcProxy(ForegroundProcProxy):
+    """Variant of `ForegroundProcProxy` for simpler functions.
+
+    The function passed into the initializer for `SimpleForegroundProcProxy`
+    should have the form described in the xonsh tutorial. This function is 
+    then wrapped to make a new function of the form expected by
+    `ForegroundProcProxy`.
+    """
+
+    def __init__(self, f, args, stdin=None, stdout=None, stderr=None,
+                 universal_newlines=False):
+        f = wrap_simple_command(f, args, stdin, stdout, stderr)
+        super().__init__(f, args, stdin, stdout, stderr, universal_newlines)
+
+
+def foreground(f):
+    """Decorator that specifies that a callable alias should be run only
+    as a foreground process. This is often needed for debuggers and profilers.
+    """
+    f.__xonsh_backgroundable__ = False
+    return f
+
+#
+# Pseudo-terminal Proxies
+#
 
 @fallback(ON_LINUX, Popen)
 class TeePTYProc(object):

@@ -53,8 +53,10 @@ For those of you who want the gritty details.
     teepty
     openpy
     foreign_shells
+    tracer
     main
     pyghooks
     jupyter_kernel
     wizard
     xonfig
+
