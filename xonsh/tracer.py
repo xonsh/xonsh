@@ -92,6 +92,14 @@ COLOR_LINE = ('{{PURPLE}}{fname}{{BLUE}}:'
               '{{GREEN}}{lineno}{{BLUE}}:'
               '{{NO_COLOR}}{line}')
 
+RAW_COLOR_CODE_RE = re.compile(r'(\033\[[\d;]+m)')
+def _escape_code_adder(m):
+    return '\001' + m.group(1) + '\002'
+
+NO_SEMI_COLOR_CODE_RE = re.compile(r'(\033\[\d+m)')
+def _0semi_adder(m):
+    return  m.group(1).replace('[', '[0;')
+
 def format_line(fname, lineno, line, color=True, lexer=None, formatter=None):
     """Formats a trace line suitable for printing."""
     fname = min(fname, replace_home(fname), os.path.relpath(fname), key=len)
@@ -101,6 +109,9 @@ def format_line(fname, lineno, line, color=True, lexer=None, formatter=None):
         lexer = lexer or pyghooks.XonshLexer()
         formatter = formatter or pygments.formatters.terminal.TerminalFormatter()
         line = pygments.highlight(line, lexer, formatter)
+        line = line.replace('\033[39;49;00m', '\033[0m')
+        line = NO_SEMI_COLOR_CODE_RE.sub(_0semi_adder, line)
+        line = RAW_COLOR_CODE_RE.sub(_escape_code_adder, line)
     return COLOR_LINE.format(fname=fname, lineno=lineno, line=line)
 
 
