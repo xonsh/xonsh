@@ -163,8 +163,6 @@ class Completer(object):
             (only used with prompt_toolkit)
         """
         space = ' '  # intern some strings for faster appending
-        slash = '/'
-        dot = '.'
         ctx = ctx or {}
         prefixlow = prefix.lower()
         _line = line
@@ -304,7 +302,8 @@ class Completer(object):
             endidx += 1
         endidx = endidx - 1 if line[endidx] in WS else endidx
         prefix = line[begidx:endidx+1]
-        return self.complete(prefix, line, begidx, endidx, ctx=ctx), begidx, endidx
+        rtn, _ = self.complete(prefix, line, begidx, endidx, ctx=ctx)
+        return rtn, begidx, endidx
 
     def _add_env(self, paths, prefix):
         if prefix.startswith('$'):
@@ -392,7 +391,6 @@ class Completer(object):
 
     def path_complete(self, prefix, start, end, cdpath=False):
         """Completes based on a path name."""
-        space = ' '  # intern some strings for faster appending
         tilde = '~'
         paths = set()
         csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')

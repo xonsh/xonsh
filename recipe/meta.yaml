@@ -20,6 +20,7 @@ requirements:
     - python
     - ply
     - prompt_toolkit
+    - setproctitle
 
 about:
   home: http://xonsh.org/

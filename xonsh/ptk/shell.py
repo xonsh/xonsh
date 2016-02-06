@@ -187,7 +187,7 @@ def _xonsh_style(tokens=tuple(), cstyles=tuple()):
             Token.Aborted: '#888888',
         })
         # update with the prompt styles
-        styles.update({t: s for (t, s) in zip(tokens, cstyles)})
+        styles.update(dict(zip(tokens, cstyles)))
         # Update with with any user styles
         userstyle = builtins.__xonsh_env__.get('PROMPT_TOOLKIT_STYLES')
         if userstyle is not None:

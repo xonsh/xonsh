@@ -8,6 +8,7 @@ import string
 import locale
 import builtins
 import subprocess
+from itertools import chain
 from warnings import warn
 from pprint import pformat
 from functools import wraps
@@ -77,6 +78,7 @@ DEFAULT_ENSURERS = {
     'MOUSE_SUPPORT': (is_bool, to_bool, bool_to_str),
     re.compile('\w*PATH$'): (is_env_path, str_to_env_path, env_path_to_str),
     'PATHEXT': (is_env_path, str_to_env_path, env_path_to_str),
+    'RAISE_SUBPROC_ERROR': (is_bool, to_bool, bool_to_str),
     'TEEPTY_PIPE_DELAY': (is_float, float, str),
     'XONSHRC': (is_env_path, str_to_env_path, env_path_to_str),
     'XONSH_ENCODING': (is_string, ensure_string, ensure_string),
@@ -99,12 +101,12 @@ def is_callable_default(x):
     """Checks if a value is a callable default."""
     return callable(x) and getattr(x, '_xonsh_callable_default', False)
 if ON_WINDOWS:
-    DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_CYAN} '
-                      '{cwd}{branch_color}{curr_branch} '
+    DEFAULT_PROMPT = ('{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} '
+                      '{cwd}{branch_color}{curr_branch}{NO_COLOR} '
                       '{BOLD_WHITE}{prompt_end}{NO_COLOR} ')
 else:
     DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
-                      '{cwd}{branch_color}{curr_branch} '
+                      '{cwd}{branch_color}{curr_branch}{NO_COLOR} '
                       '{BOLD_BLUE}{prompt_end}{NO_COLOR} ')
 
 DEFAULT_TITLE = '{current_job}{user}@{hostname}: {cwd} | xonsh'
@@ -174,6 +176,7 @@ DEFAULT_VALUES = {
     'PROMPT_TOOLKIT_STYLES': None,
     'PUSHD_MINUS': False,
     'PUSHD_SILENT': False,
+    'RAISE_SUBPROC_ERROR': False,
     'SHELL_TYPE': 'prompt_toolkit' if ON_WINDOWS else 'readline',
     'SUGGEST_COMMANDS': True,
     'SUGGEST_MAX_NUM': 5,
@@ -341,13 +344,19 @@ DEFAULT_DOCS = {
         'behaviour.'),
     'PUSHD_SILENT': VarDocs(
         'Whether or not to suppress directory stack manipulation output.'),
+    'RAISE_SUBPROC_ERROR': VarDocs(
+        'Whether or not to raise an error if a subprocess (captured or '
+        'uncaptured) returns a non-zero exit status, which indicates failure.'
+        'This is most useful in xonsh scripts or modules where failures '
+        'should cause an end to execution. This is less useful at a terminal.'
+        'The error that is raised is a subprocess.CalledProcessError.'),
     'SHELL_TYPE': VarDocs(
         'Which shell is used. Currently two base shell types are supported:\n\n'
         "    - 'readline' that is backed by Python's readline module\n"
         "    - 'prompt_toolkit' that uses external library of the same name\n" 
         "    - 'random' selects a random shell from the above on startup\n\n"
         'To use the prompt_toolkit shell you need to have prompt_toolkit '
-        '(https://github.com/jonathanslenders/python-prompt-toolkit)'
+        '(https://github.com/jonathanslenders/python-prompt-toolkit) '
         'library installed. To specify which shell should be used, do so in '
         'the run control file.', default=("'prompt_toolkit' if on Windows, "
         "and 'readline' otherwise.")),
@@ -623,33 +632,95 @@ class Env(MutableMapping):
                 p.pretty(dict(self))
 
 
-def locate_binary(name, cwd):
-    # StackOverflow for `where` tip: http://stackoverflow.com/a/304447/90297
-    locator = 'where' if ON_WINDOWS else 'which'
-    try:
-        binary_location = subprocess.check_output([locator, name],
-                                                  cwd=cwd,
-                                                  stderr=subprocess.PIPE,
-                                                  universal_newlines=True)
-        if not binary_location:
-            return
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return
+def _is_executable_file(path):
+    """Checks that path is an executable regular file, or a symlink towards one.
+    This is roughly ``os.path isfile(path) and os.access(path, os.X_OK)``.
 
-    return binary_location
+    This function was forked from pexpect originally:
+
+    Copyright (c) 2013-2014, Pexpect development team
+    Copyright (c) 2012, Noah Spurrier <noah@noah.org>
+
+    PERMISSION TO USE, COPY, MODIFY, AND/OR DISTRIBUTE THIS SOFTWARE FOR ANY
+    PURPOSE WITH OR WITHOUT FEE IS HEREBY GRANTED, PROVIDED THAT THE ABOVE
+    COPYRIGHT NOTICE AND THIS PERMISSION NOTICE APPEAR IN ALL COPIES.
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+    WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+    MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+    ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+    WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+    ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+    """
+    # follow symlinks,
+    fpath = os.path.realpath(path)
+
+    if not os.path.isfile(fpath):
+        # non-files (directories, fifo, etc.)
+        return False
+
+    return os.access(fpath, os.X_OK)
+
+
+def yield_executables_windows(directory, name):
+    extensions = builtins.__xonsh_env__.get('PATHEXT')
+    for a_file in os.listdir(directory):
+        base_name, ext = os.path.splitext(a_file)
+        if name == base_name and ext.upper() in extensions:
+            yield os.path.join(directory, a_file)
+
+
+def yield_executables_posix(directory, name):
+    if name in os.listdir(directory):
+        path = os.path.join(directory, name)
+        if _is_executable_file(path):
+            yield path
+
+
+yield_executables = yield_executables_windows if ON_WINDOWS else yield_executables_posix
+
+
+def locate_binary(name):
+    if os.path.isfile(name) and name != os.path.basename(name):
+        return name
+
+    try:
+        return next(chain.from_iterable(yield_executables(directory, name) for
+                    directory in builtins.__xonsh_env__.get('PATH') if os.path.isdir(directory)))
+    except StopIteration:
+        return None
+
+
+def _get_parent_dir_for(path, dir_name):
+    # walk up the directory tree to see if we are inside an hg repo
+    previous_path = ''
+    while path != previous_path:
+        if os.path.isdir(os.path.join(path, dir_name)):
+            return path
+
+        previous_path = path
+        path, _ = os.path.split(path)
+
+    return False
 
 
 def ensure_git(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        # Get cwd or bail
-        kwargs['cwd'] = kwargs.get('cwd', _get_cwd())
-        if kwargs['cwd'] is None:
+        cwd = kwargs.get('cwd', _get_cwd())
+        if cwd is None:
             return
 
         # step out completely if git is not installed
-        if locate_binary('git', kwargs['cwd']) is None:
+        if locate_binary('git') is None:
             return
+
+        root_path = _get_parent_dir_for(cwd, '.git')
+        # Bail if we're not in a repo
+        if not root_path:
+            return
+
+        kwargs['cwd'] = cwd
 
         return func(*args, **kwargs)
     return wrapper
@@ -658,26 +729,21 @@ def ensure_git(func):
 def ensure_hg(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        kwargs['cwd'] = kwargs.get('cwd', _get_cwd())
-        if kwargs['cwd'] is None:
+        cwd = kwargs.get('cwd', _get_cwd())
+        if cwd is None:
             return
-
-        # walk up the directory tree to see if we are inside an hg repo
-        path = kwargs['cwd'].split(os.path.sep)
-        while len(path) > 0:
-            if os.path.exists(os.path.sep.join(path + ['.hg'])):
-                break
-            del path[-1]
-
-        # bail if we aren't inside a repository
-        if path == []:
-            return
-
-        kwargs['root'] = os.path.sep.join(path)
 
         # step out completely if hg is not installed
-        if locate_binary('hg', kwargs['cwd']) is None:
+        if locate_binary('hg') is None:
             return
+
+        root_path = _get_parent_dir_for(cwd, '.hg')
+        # Bail if we're not in a repo
+        if not root_path:
+            return
+
+        kwargs['cwd'] = cwd
+        kwargs['root'] = root_path
 
         return func(*args, **kwargs)
     return wrapper
@@ -724,7 +790,7 @@ def get_git_branch(cwd=None):
 
 def call_hg_command(command, cwd):
     # Override user configurations settings and aliases
-    hg_env = os.environ.copy()
+    hg_env = builtins.__xonsh_env__.detype()
     hg_env['HGRCPATH'] = ""
 
     s = None
@@ -809,8 +875,14 @@ def dirty_working_directory(cwd=None):
 
 def branch_color():
     """Return red if the current branch is dirty, otherwise green"""
-    return (TERM_COLORS['BOLD_RED'] if dirty_working_directory() else
-            TERM_COLORS['BOLD_GREEN'])
+    return (TERM_COLORS['BOLD_INTENSE_RED'] if dirty_working_directory() else
+            TERM_COLORS['BOLD_INTENSE_GREEN'])
+
+
+def branch_bg_color():
+    """Return red if the current branch is dirty, otherwise green"""
+    return (TERM_COLORS['BACKGROUND_RED'] if dirty_working_directory() else
+            TERM_COLORS['BACKGROUND_GREEN'])
 
 
 def _replace_home(x):
@@ -870,6 +942,7 @@ FORMATTER_DICT = dict(
     short_cwd=_collapsed_pwd,
     curr_branch=current_branch,
     branch_color=branch_color,
+    branch_bg_color=branch_bg_color,
     current_job=_current_job,
     **TERM_COLORS)
 DEFAULT_VALUES['FORMATTER_DICT'] = dict(FORMATTER_DICT)

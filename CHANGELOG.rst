@@ -4,6 +4,32 @@ Xonsh Change Log
 
 Current Developments
 ====================
+
+**Added:** 
+
+* Added boolean ``$RAISE_SUBPROC_ERROR`` environment variable. If true
+  and a subprocess command exits with a non-zero return code, a 
+  CalledProcessError will be raised. This is useful in scripts that should
+  fail at the first error.
+* If the ``setproctitle`` package is installed, the process title will be
+  set to ``'xonsh'`` rather than the path to the Python interpreter.
+
+**Changed:** None
+
+**Deprecated:** None
+
+**Removed:** None
+
+**Fixed:**
+
+* Fixed path completion not working for absolute paths or for expanded paths on Windows.
+* Fixed issue with hg dirty branches and $PATH.
+
+**Security:** None
+
+
+v0.2.5
+===========
 **Added:**
 
 * New configuration utility 'xonfig' which reports current system 
@@ -29,10 +55,6 @@ Current Developments
 * Environments are now considered to contain all manually-adjusted keys,
   and also all keys with an associated default value.
 
-**Deprecated:**
-
-None
-
 **Removed:**
 
 * Removed ``xonsh.ptk.shortcuts.Prompter.create_prompt_layout()`` and 
@@ -52,10 +74,9 @@ None
 * Jupyter kernel no longer times out when using foreign shells on startup.
 * Capturing redirections, e.g. ``$(echo hello > f.txt)``, no longer fails
   with a decoding error.
-
-**Security:**
-
-None
+* Evaluation in a Jupyter cell will return pformatted object.
+* Jupyter with redirect uncaptured subprocs to notebook.
+* Tab completion in Jupyter fixed.
 
 
 v0.2.1 - v0.2.4

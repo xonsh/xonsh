@@ -6,6 +6,11 @@ import builtins
 from argparse import ArgumentParser, ArgumentTypeError
 from contextlib import contextmanager
 
+try:
+    from setproctitle import setproctitle
+except ImportError:
+    setproctitle = None
+
 from xonsh import __version__
 from xonsh.shell import Shell
 from xonsh.pretty import pprint
@@ -117,12 +122,15 @@ def undo_args(args):
 
 def _pprint_displayhook(value):
     if value is not None:
-        builtins._ = value
+        builtins._ = None  # Set '_' to None to avoid recursion
         pprint(value)
+        builtins._ = value
 
 
 def premain(argv=None):
     """Setup for main xonsh entry point, returns parsed arguments."""
+    if setproctitle is not None:
+        setproctitle(' '.join(['xonsh'] + sys.argv[1:]))
     args, other = parser.parse_known_args(argv)
     if args.file is not None:
         real_argv = (argv or sys.argv)
@@ -169,7 +177,8 @@ def main(argv=None):
             code = code if code.endswith('\n') else code + '\n'
             sys.argv = args.args
             env['ARGS'] = [args.file] + args.args
-            code = shell.execer.compile(code, mode='exec', glbs=shell.ctx)
+            code = shell.execer.compile(code, mode='exec', glbs=shell.ctx,
+                                        filename=args.file)
             shell.execer.exec(code, mode='exec', glbs=shell.ctx)
         else:
             print('xonsh: {0}: No such file or directory.'.format(args.file))
@@ -177,7 +186,8 @@ def main(argv=None):
         # run a script given on stdin
         code = sys.stdin.read()
         code = code if code.endswith('\n') else code + '\n'
-        code = shell.execer.compile(code, mode='exec', glbs=shell.ctx)
+        code = shell.execer.compile(code, mode='exec', glbs=shell.ctx,
+                                    filename='<stdin>')
         shell.execer.exec(code, mode='exec', glbs=shell.ctx)
     else:
         # otherwise, enter the shell
