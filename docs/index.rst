@@ -60,6 +60,7 @@ alike.
 =========
 Contents
 =========
+**Guides:**
 
 .. toctree::
     :titlesonly:
@@ -67,11 +68,26 @@ Contents
 
     tutorial
     tutorial_hist
+    windows
+    bash_to_xsh
+
+**Configuration & Setup:**
+
+.. toctree::
+    :titlesonly:
+    :maxdepth: 1
+
     xonshrc
     xonshconfig
     envvars
     aliases
-    windows
+
+**Development Spiral:**
+
+.. toctree::
+    :titlesonly:
+    :maxdepth: 1
+
     api/index
     devguide/
     previous/index

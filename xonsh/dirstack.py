@@ -249,14 +249,13 @@ def dirs(args, stdin=None):
     to clear the directory stack.
     """
     global DIRSTACK
-    dirstack = [os.path.expanduser(builtins.__xonsh_env__['PWD'])] + DIRSTACK
-
     try:
         args = dirs_parser.parse_args(args)
     except SystemExit:
         return None, None
 
     env = builtins.__xonsh_env__
+    dirstack = [os.path.expanduser(env['PWD'])] + DIRSTACK
 
     if env.get('PUSHD_MINUS'):
         BACKWARD = '-'

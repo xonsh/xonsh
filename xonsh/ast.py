@@ -12,9 +12,11 @@ from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
     YieldFrom, Return, IfExp, Lambda, arguments, arg, Call, keyword, \
     Attribute, Global, Nonlocal, If, While, For, withitem, With, Try, \
     ExceptHandler, FunctionDef, ClassDef, Starred, NodeTransformer, \
-    Interactive, Expression, Index, dump
+    Interactive, Expression, Index, literal_eval, dump, walk
 from ast import Ellipsis  # pylint: disable=redefined-builtin
 # pylint: enable=unused-import
+import textwrap
+from itertools import repeat
 
 from xonsh.tools import subproc_toks, VER_3_5, VER_MAJOR_MINOR
 
@@ -50,6 +52,24 @@ def leftmostname(node):
     else:
         rtn = None
     return rtn
+
+
+def get_col(node, default=-1):
+    """Gets the col_offset of a node, or returns the default"""
+    return getattr(node, 'col_offset', default)
+
+
+def min_col(node):
+    """Computes the minimum col_offset."""
+    return min(map(get_col, walk(node), repeat(node.col_offset)))
+
+
+def max_col(node):
+    """Returns the maximum col_offset of the node and all sub-nodes."""
+    col = getattr(node, 'max_col', None)
+    if col is None:
+        col = max(map(get_col, walk(node)))
+    return col
 
 
 class CtxAwareTransformer(NodeTransformer):
@@ -114,8 +134,12 @@ class CtxAwareTransformer(NodeTransformer):
     def try_subproc_toks(self, node):
         """Tries to parse the line of the node as a subprocess."""
         line = self.lines[node.lineno - 1]
-        mincol = len(line) - len(line.lstrip())
-        maxcol = None if self.mode == 'eval' else node.col_offset
+        if self.mode == 'eval':
+            mincol = len(line) - len(line.lstrip())
+            maxcol = None
+        else: 
+            mincol = min_col(node)
+            maxcol = max_col(node) + 1
         spline = subproc_toks(line,
                               mincol=mincol,
                               maxcol=maxcol,
@@ -163,6 +187,9 @@ class CtxAwareTransformer(NodeTransformer):
                 newnode = Expr(value=newnode,
                                lineno=node.lineno,
                                col_offset=node.col_offset)
+                if hasattr(node, 'max_lineno'):
+                    newnode.max_lineno = node.max_lineno
+                    newnode.max_col = node.max_col
             return newnode
 
     def visit_Assign(self, node):
@@ -255,3 +282,32 @@ class CtxAwareTransformer(NodeTransformer):
         self.contexts[1].update(node.names)  # contexts[1] is the global ctx
         self.generic_visit(node)
         return node
+
+
+
+def pdump(s, **kwargs):
+    """performs a pretty dump of an AST node."""
+    if isinstance(s, AST):
+        s = dump(s, **kwargs).replace(',', ',\n')
+    openers = '([{'
+    closers = ')]}'
+    lens = len(s) + 1
+    if lens == 1:
+        return s
+    i = min([s.find(o)%lens for o in openers])
+    if i == lens - 1:
+        return s
+    closer = closers[openers.find(s[i])]
+    j = s.rfind(closer)
+    if j == -1 or j <= i:
+        return s[:i+1] + '\n' + textwrap.indent(pdump(s[i+1:]), ' ')
+    pre = s[:i+1] + '\n'
+    mid = s[i+1:j]
+    post = '\n' + s[j:]
+    mid = textwrap.indent(pdump(mid), ' ')
+    if '(' in post or '[' in post or '{' in post:
+        post = pdump(post)
+    return pre + mid + post
+    
+
+

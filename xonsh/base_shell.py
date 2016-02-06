@@ -7,7 +7,7 @@ import time
 import builtins
 
 from xonsh.tools import XonshError, escape_windows_title_string, ON_WINDOWS, \
-    print_exception
+    print_exception, format_color
 from xonsh.completer import Completer
 from xonsh.environ import multiline_prompt, format_prompt
 
@@ -249,3 +249,9 @@ class BaseShell(object):
             info['out'] = tee_out + '\n' + last_out
         hist.append(info)
         hist.last_cmd_rtn = hist.last_cmd_out = None
+
+    def print_color(self, string, **kwargs):
+        """Prints a string in color. This base implmentation uses ANSI
+        color codes.
+        """
+        print(format_color(string), **kwargs)

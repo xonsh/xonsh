@@ -23,7 +23,7 @@ from xonsh.tools import (
     history_tuple_to_str, is_float, string_types, is_string, DEFAULT_ENCODING,
     is_completions_display_value, to_completions_display_value, is_string_set,
     csv_to_set, set_to_csv, get_sep, is_int, is_bool_seq, csv_to_bool_seq,
-    bool_seq_to_csv
+    bool_seq_to_csv, DefaultNotGiven
 )
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
@@ -203,12 +203,6 @@ DEFAULT_VALUES = {
 }
 if hasattr(locale, 'LC_MESSAGES'):
     DEFAULT_VALUES['LC_MESSAGES'] = locale.setlocale(locale.LC_MESSAGES)
-
-class DefaultNotGivenType(object):
-    """Singleton for representing when no default value is given."""
-
-
-DefaultNotGiven = DefaultNotGivenType()
 
 VarDocs = namedtuple('VarDocs', ['docstr', 'configurable', 'default'])
 VarDocs.__doc__ = """Named tuple for environment variable documentation

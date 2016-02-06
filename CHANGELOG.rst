@@ -7,6 +7,14 @@ Current Developments
 
 **Added:** 
 
+* ``trace`` alias added that enables users to turn on and off the printing 
+  of source code lines prior to their execution. This is useful for debugging scripts.
+* New ability to force callable alias functions to be run in the foreground, i.e.
+  the main thread from which the function was called. This is useful for debuggers 
+  and profilers which may require such access. Use the ``xonsh.proc.foreground``
+  decorator on an alias function to flag it. ``ForegroundProcProxy`` and
+  ``SimpleForegroundProcProxy`` classes have been added to support this feature.
+  Normally, forcing a foreground alias is not needed.
 * Added boolean ``$RAISE_SUBPROC_ERROR`` environment variable. If true
   and a subprocess command exits with a non-zero return code, a 
   CalledProcessError will be raised. This is useful in scripts that should
@@ -14,7 +22,9 @@ Current Developments
 * If the ``setproctitle`` package is installed, the process title will be
   set to ``'xonsh'`` rather than the path to the Python interpreter.
 
-**Changed:** None
+**Changed:** 
+
+* Updated alias docs to pull in usage from the commands automatically.
 
 **Deprecated:** None
 
@@ -22,6 +32,7 @@ Current Developments
 
 **Fixed:**
 
+* Hundreds of bugs related to line and column numbers have been addressed.
 * Fixed path completion not working for absolute paths or for expanded paths on Windows.
 * Fixed issue with hg dirty branches and $PATH.
 

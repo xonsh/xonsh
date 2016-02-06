@@ -69,6 +69,13 @@ class XonshError(Exception):
     pass
 
 
+class DefaultNotGivenType(object):
+    """Singleton for representing when no default value is given."""
+
+
+DefaultNotGiven = DefaultNotGivenType()
+
+
 def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     """Excapsulates tokens in a source code line in a uncaptured
     subprocess $[] starting at a minimum column. If there are no tokens
@@ -731,6 +738,19 @@ def history_tuple_to_str(x):
     return '{0} {1}'.format(*x)
 
 #
+# Check pygments
+#
+
+def pygments_version():
+    """Returns the Pygments version or False."""
+    try:
+        import pygments
+        v = pygments.__version__
+    except ImportError:
+        v = False
+    return v
+
+#
 # prompt toolkit tools
 #
 
@@ -827,17 +847,20 @@ def format_prompt_for_prompt_toolkit(prompt):
     return token_names, cstyles, strings
 
 
-def format_color(string):
+def format_color(string, remove_escapes=True):
     """Formats strings that contain xonsh.tools.TERM_COLORS values."""
-    s = string.format(**TERM_COLORS).replace('\001', '').replace('\002', '')
+    s = string.format(**TERM_COLORS)
+    if remove_escapes:
+        s = s.replace('\001', '').replace('\002', '')
     return s
 
 
-def print_color(string, file=sys.stdout):
+def print_color(string, **kwargs):
     """Print strings that contain xonsh.tools.TERM_COLORS values. By default
     `sys.stdout` is used as the output stream but an alternate can be specified
-    by the `file` keyword argument."""
-    print(format_color(string), file=file)
+    by the `file` keyword argument.
+    """
+    builtins.__xonsh_shell__.shell.print_color(string, **kwargs)
 
 
 _RE_STRING_START = "[bBrRuU]*"
@@ -1062,3 +1085,8 @@ def backup_file(fname):
     base, ext = os.path.splitext(fname)
     newfname = base + '.' + datetime.now().isoformat() + ext
     shutil.move(fname, newfname)
+
+
+def normabspath(p):
+    """Retuns as normalized absolute path, namely, normcase(abspath(p))"""
+    return os.path.normcase(os.path.abspath(p))

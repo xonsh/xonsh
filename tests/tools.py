@@ -16,6 +16,7 @@ from xonsh.built_ins import ensure_list_of_strs
 VER_3_4 = (3, 4)
 VER_3_5 = (3, 5)
 VER_MAJOR_MINOR = sys.version_info[:2]
+VER_FULL = sys.version_info[:3]
 ON_MAC = (platform.system() == 'Darwin')
 
 def sp(cmd):
