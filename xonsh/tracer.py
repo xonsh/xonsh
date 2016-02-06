@@ -109,7 +109,7 @@ def format_line(fname, lineno, line, color=True, lexer=None, formatter=None):
 #
 def _find_caller(args):
     """Somewhat hacky method of finding the __file__ based on the line executed."""
-    re_line = re.compile(r'[\w.-]+\s+' + r'\s+'.join(args))
+    re_line = re.compile(r'[^;\s|&<>]+\s+' + r'\s+'.join(args))
     curr = inspect.currentframe()
     for _, fname, lineno, _, lines, _  in inspectors.getouterframes(curr, context=1)[3:]:
         if lines is not None and re_line.search(lines[0]) is not None:
