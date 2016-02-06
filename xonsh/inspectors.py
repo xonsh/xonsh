@@ -302,7 +302,7 @@ if VER_MAJOR_MINOR <= VER_3_4:
     def getouterframes(frame, context=1):
         """Wrapper for getouterframes so that it acts like the Python v3.5 version."""
         return [FrameInfo(f, *inspect.getframeinfo(f, context=context)) for f in \
-                inspect.getouterframes(f, context=context)]
+                inspect.getouterframes(frame, context=context)]
 else:
     getouterframes = inspect.getouterframes
 
