@@ -4,6 +4,20 @@ Xonsh Change Log
 
 Current Developments
 ====================
+**Added:** None
+
+**Changed:** None
+
+**Deprecated:** None
+
+**Removed:** None
+
+**Fixed:** None
+
+**Security:** None
+
+v0.2.6
+====================
 **Added:** 
 
 * ``trace`` alias added that enables users to turn on and off the printing 
@@ -29,10 +43,6 @@ Current Developments
   now default to ``None``.
 * Updated alias docs to pull in usage from the commands automatically.
 
-**Deprecated:** None
-
-**Removed:** None
-
 **Fixed:**
 
 * Hundreds of bugs related to line and column numbers have been addressed.
@@ -41,8 +51,6 @@ Current Developments
 * Fixed issues related to foreign shell data in files with whitespace in the names.
 * Worked around bug in ConEmu/cmder which prevented ``get_git_branch()`` 
   from working in these terminal emulators on Windows.
-
-**Security:** None
 
 
 v0.2.5

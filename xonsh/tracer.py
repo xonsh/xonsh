@@ -109,6 +109,7 @@ def format_line(fname, lineno, line, color=True, lexer=None, formatter=None):
         lexer = lexer or pyghooks.XonshLexer()
         formatter = formatter or pygments.formatters.terminal.TerminalFormatter()
         line = pygments.highlight(line, lexer, formatter)
+        line = line.replace('{', '{{').replace('}', '}}')
         line = line.replace('\033[39;49;00m', '\033[0m')
         line = NO_SEMI_COLOR_CODE_RE.sub(_0semi_adder, line)
         line = RAW_COLOR_CODE_RE.sub(_escape_code_adder, line)
