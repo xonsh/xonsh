@@ -235,7 +235,14 @@ def parse_funcs(s, shell, sourcer=None):
     if m is None:
         return {}
     g1 = m.group(1)
-    namefiles = json.loads(g1.strip())
+    try:
+        namefiles = json.loads(g1.strip())
+    except json.decoder.JSONDecodeError as exc:
+        msg = ('{0!r}\n\ncould not parse {1} functions:\n'
+               '  s  = {2!r}\n'
+               '  g1 = {3!r}\n')
+        warn(msg.format(exc, shell, s, g1), RuntimeWarning)
+        return {}
     sourcer = DEFAULT_SOURCERS.get(shell, 'source') if sourcer is None \
                                                     else sourcer
     funcs = {}
