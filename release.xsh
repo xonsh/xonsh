@@ -130,5 +130,8 @@ def main(args=None):
     if ns.do_docs:
         docser()
 
+    # disable debugging
+    trace off
+
 if __name__ == '__main__':
     main()
