@@ -103,7 +103,7 @@ def is_callable_default(x):
 if ON_WINDOWS:
     DEFAULT_PROMPT = ('{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} '
                       '{cwd}{branch_color}{curr_branch}{NO_COLOR} '
-                      '{BOLD_WHITE}{prompt_end}{NO_COLOR} ')
+                      '{BOLD_INTENSE_CYAN}{prompt_end}{NO_COLOR} ')
 else:
     DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
                       '{cwd}{branch_color}{curr_branch}{NO_COLOR} '
@@ -773,6 +773,12 @@ def get_git_branch(cwd=None):
                                         stderr=subprocess.PIPE,
                                         cwd=cwd,
                                         universal_newlines=True)
+            if len(s) == 0:
+                # Workaround for a bug in ConEMU/cmder 
+                # retry without redirection
+                s = subprocess.check_output(cmd,
+                                            cwd=cwd,
+                                            universal_newlines=True)
             s = s.strip()
             if len(s) > 0:
                 branch = s

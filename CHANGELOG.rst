@@ -40,6 +40,8 @@ Current Developments
 * Fixed path completion not working for absolute paths or for expanded paths on Windows.
 * Fixed issue with hg dirty branches and $PATH.
 * Fixed issues related to foreign shell data in files with whitespace in the names.
+* Worked around bug in ConEmu/cmder which prevented ``get_git_branch()`` 
+  from working in these terminal emulators on Windows.
 
 **Security:** None
 
