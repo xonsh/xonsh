@@ -237,6 +237,7 @@ def _info(ns):
         ('have readline', is_readline_available()),
         ('prompt toolkit', prompt_toolkit_version() if \
                            is_prompt_toolkit_available() else False),
+        ('pygments', tools.pygments_version()),
         ('on posix', tools.ON_POSIX),
         ('on linux', tools.ON_LINUX),
         ('on arch', tools.ON_ARCH),
