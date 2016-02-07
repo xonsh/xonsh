@@ -240,7 +240,10 @@ def parse_funcs(s, shell, sourcer=None):
     except json.decoder.JSONDecodeError as exc:
         msg = ('{0!r}\n\ncould not parse {1} functions:\n'
                '  s  = {2!r}\n'
-               '  g1 = {3!r}\n')
+               '  g1 = {3!r}\n\n'
+               'Note: you may be seeing this error if you use zsh with '
+               'prezto. Prezto overwrites GNU coreutils functions (like echo) '
+               'with its own zsh functions. Please try disabling prezto.')
         warn(msg.format(exc, shell, s, g1), RuntimeWarning)
         return {}
     sourcer = DEFAULT_SOURCERS.get(shell, 'source') if sourcer is None \
