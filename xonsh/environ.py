@@ -103,7 +103,7 @@ def is_callable_default(x):
 if ON_WINDOWS:
     DEFAULT_PROMPT = ('{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} '
                       '{cwd}{branch_color}{curr_branch}{NO_COLOR} '
-                      '{BOLD_WHITE}{prompt_end}{NO_COLOR} ')
+                      '{BOLD_INTENSE_CYAN}{prompt_end}{NO_COLOR} ')
 else:
     DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
                       '{cwd}{branch_color}{curr_branch}{NO_COLOR} '
