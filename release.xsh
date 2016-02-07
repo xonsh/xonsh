@@ -73,7 +73,9 @@ def condaify(ver):
     anaconda upload -u xonsh @(__xonsh_glob__(pkgpath))
 
 def docser():
-    ./setup.py install --user  # FIXME: this should be made more general
+    """Create docs"""
+    # FIXME this should be made more general
+    ./setup.py install --user
     cd docs
     make clean html push-root
     cd ..
