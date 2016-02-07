@@ -4,7 +4,6 @@ Xonsh Change Log
 
 Current Developments
 ====================
-
 **Added:** 
 
 * ``trace`` alias added that enables users to turn on and off the printing 
