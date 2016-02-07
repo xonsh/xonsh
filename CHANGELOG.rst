@@ -21,9 +21,13 @@ Current Developments
   fail at the first error.
 * If the ``setproctitle`` package is installed, the process title will be
   set to ``'xonsh'`` rather than the path to the Python interpreter.
+* zsh foreign shell interface now supported natively in xonsh, like with Bash.
+  New ``source-zsh`` alias allows easy access to zsh scripts and functions.
 
-**Changed:** 
+**Changed:**
 
+* The ``foreign_shell_data()`` keyword arguments ``envcmd`` and ``aliascmd``
+  now default to ``None``.
 * Updated alias docs to pull in usage from the commands automatically.
 
 **Deprecated:** None
@@ -35,6 +39,7 @@ Current Developments
 * Hundreds of bugs related to line and column numbers have been addressed.
 * Fixed path completion not working for absolute paths or for expanded paths on Windows.
 * Fixed issue with hg dirty branches and $PATH.
+* Fixed issues related to foreign shell data in files with whitespace in the names.
 * Worked around bug in ConEmu/cmder which prevented ``get_git_branch()`` 
   from working in these terminal emulators on Windows.
 

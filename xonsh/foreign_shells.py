@@ -59,19 +59,46 @@ namefile="${namefile%?}}"
 echo $namefile
 """.strip()
 
+DEFAULT_ZSH_FUNCSCMD = """
+namefile="{"
+for name in ${(ok)functions}; do
+  loc=$(whence -v $name)
+  loc=${(z)loc}
+  file=${loc[7,-1]}
+  namefile="${namefile}\\"${name}\\":\\"${(Q)file:A}\\","
+done 
+namefile="${namefile%?}}"
+echo ${namefile}
+""".strip()
+
+DEFAULT_ENVCMDS = {
+    'bash': 'env',
+    '/bin/bash': 'env',
+    'zsh': 'env',
+    '/usr/bin/zsh': 'env',
+}
+DEFAULT_ALIASCMDS = {
+    'bash': 'alias',
+    '/bin/bash': 'alias',
+    'zsh': 'alias -L',
+    '/usr/bin/zsh': 'alias -L',
+}
 DEFAULT_FUNCSCMDS = {
     'bash': DEFAULT_BASH_FUNCSCMD,
     '/bin/bash': DEFAULT_BASH_FUNCSCMD,
+    'zsh': DEFAULT_ZSH_FUNCSCMD,
+    '/usr/bin/zsh': DEFAULT_ZSH_FUNCSCMD,
 }
-
 DEFAULT_SOURCERS = {
     'bash': 'source',
     '/bin/bash': 'source',
+    'zsh': 'source',
+    '/usr/bin/zsh': 'source',
 }
 
 @lru_cache()
-def foreign_shell_data(shell, interactive=True, login=False, envcmd='env',
-                       aliascmd='alias', extra_args=(), currenv=None,
+def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
+                       aliascmd=None, extra_args=(), currenv=None,
                        safe=True, prevcmd='', postcmd='', funcscmd=None,
                        sourcer=None):
     """Extracts data from a foreign (non-xonsh) shells. Currently this gets
@@ -85,10 +112,10 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd='env',
         Whether the shell should be run in interactive mode.
     login : bool, optional
         Whether the shell should be a login shell.
-    envcmd : str, optional
+    envcmd : str or None, optional
         The command to generate environment output with.
-    aliascmd : str, optional
-        The command to generate alais output with.
+    aliascmd : str or None, optional
+        The command to generate alias output with.
     extra_args : tuple of str, optional
         Addtional command line options to pass into the shell.
     currenv : tuple of items or None, optional
@@ -129,6 +156,8 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd='env',
     if login:
         cmd.append('-l')
     cmd.append('-c')
+    envcmd = DEFAULT_ENVCMDS.get(shell, 'env') if envcmd is None else envcmd
+    aliascmd = DEFAULT_ALIASCMDS.get(shell, 'alias') if aliascmd is None else aliascmd
     funcscmd = DEFAULT_FUNCSCMDS.get(shell, '') if funcscmd is None else funcscmd
     command = COMMAND.format(envcmd=envcmd, aliascmd=aliascmd, prevcmd=prevcmd,
                              postcmd=postcmd, funcscmd=funcscmd).strip()
@@ -206,13 +235,25 @@ def parse_funcs(s, shell, sourcer=None):
     if m is None:
         return {}
     g1 = m.group(1)
-    namefiles = json.loads(g1.strip())
+    try:
+        namefiles = json.loads(g1.strip())
+    except json.decoder.JSONDecodeError as exc:
+        msg = ('{0!r}\n\ncould not parse {1} functions:\n'
+               '  s  = {2!r}\n'
+               '  g1 = {3!r}\n\n'
+               'Note: you may be seeing this error if you use zsh with '
+               'prezto. Prezto overwrites GNU coreutils functions (like echo) '
+               'with its own zsh functions. Please try disabling prezto.')
+        warn(msg.format(exc, shell, s, g1), RuntimeWarning)
+        return {}
     sourcer = DEFAULT_SOURCERS.get(shell, 'source') if sourcer is None \
                                                     else sourcer
     funcs = {}
     for funcname, filename in namefiles.items():
         if funcname.startswith('_'):
             continue  # skip private functions
+        if not os.path.isabs(filename):
+            filename = os.path.abspath(filename)
         wrapper = ForeignShellFunctionAlias(name=funcname, shell=shell,
                                             sourcer=sourcer, filename=filename)
         funcs[funcname] = wrapper
@@ -224,7 +265,7 @@ class ForeignShellFunctionAlias(object):
     they were aliases. This does not currently support taking stdin.
     """
 
-    INPUT = ('{sourcer} {filename}\n'
+    INPUT = ('{sourcer} "{filename}"\n'
              '{funcname} {args}\n')
 
     def __init__(self, name, shell, filename, sourcer=None):
@@ -298,9 +339,11 @@ def ensure_shell(shell):
     if 'login' in shell_keys:
         shell['login'] = to_bool(shell['login'])
     if 'envcmd' in shell_keys:
-        shell['envcmd'] = ensure_string(shell['envcmd'])
+        shell['envcmd'] = None if shell['envcmd'] is None \
+                               else ensure_string(shell['envcmd'])
     if 'aliascmd' in shell_keys:
-        shell['aliascmd'] = ensure_string(shell['aliascmd'])
+        shell['aliascmd'] = None if shell['aliascmd'] is None \
+                                 else ensure_string(shell['aliascmd'])
     if 'extra_args' in shell_keys and not isinstance(shell['extra_args'], tuple):
         shell['extra_args'] = tuple(map(ensure_string, shell['extra_args']))
     if 'currenv' in shell_keys and not isinstance(shell['currenv'], tuple):
