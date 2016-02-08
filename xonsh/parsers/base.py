@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Implements the xonsh parser."""
+"""Implements the base xonsh parser."""
 import os
 import sys
 from collections import Iterable, Sequence, Mapping
@@ -173,7 +173,7 @@ def lopen_loc(x):
 
 
 class BaseParser(object):
-    """A class that parses the xonsh language."""
+    """A base class that parses the xonsh language."""
 
     def __init__(self,
                  lexer_optimize=True,
