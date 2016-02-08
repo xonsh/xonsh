@@ -64,52 +64,12 @@ class Parser(BaseParser):
         w = p[2][0]
         p[0] = [ast.AsyncWith(**w.__dict__)]
 
-    def p_atom_expr(self, p):
-        """atom_expr : atom trailer_list_opt
-                     | await_tok atom trailer_list_opt
-        """
-        lenp = len(p)
-        if lenp == 3:
-            leader, trailers = p[1], p[2]
-        elif lenp == 4:
-            leader, trailers = p[2], p[3]
-        else:
-            assert False
-        p0 = leader
-        if trailers is None:
-            trailers = []
-        for trailer in trailers:
-            if isinstance(trailer, (ast.Index, ast.Slice)):
-                p0 = ast.Subscript(value=leader,
-                                   slice=trailer,
-                                   ctx=ast.Load(),
-                                   lineno=leader.lineno,
-                                   col_offset=leader.col_offset)
-            elif isinstance(trailer, Mapping):
-                p0 = ast.Call(func=leader,
-                              lineno=leader.lineno,
-                              col_offset=leader.col_offset, **trailer)
-            elif isinstance(trailer, str):
-                if trailer == '?':
-                    p0 = xonsh_help(leader, lineno=leader.lineno, 
-                                    col=leader.col_offset)
-                elif trailer == '??':
-                    p0 = xonsh_superhelp(leader,
-                                         lineno=leader.lineno,
-                                         col=leader.col_offset)
-                else:
-                    p0 = ast.Attribute(value=leader,
-                                       attr=trailer,
-                                       ctx=ast.Load(),
-                                       lineno=leader.lineno,
-                                       col_offset=leader.col_offset)
-            else:
-                assert False
-            leader = p0
-        if lenp == 4:
-            p1 = p[1]
-            p0 = ast.Await(value=p0, ctx=ast.Load(), lineno=p1.lineno,
-                           col_offset=p1.lexpos)
+    def p_atom_expr_await(self, p):
+        """atom_expr : await_tok atom trailer_list_opt"""
+        p0 = self.apply_trailers(p[2], p[3])
+        p1 = p[1]
+        p0 = ast.Await(value=p0, ctx=ast.Load(), lineno=p1.lineno,
+                       col_offset=p1.lexpos)
         p[0] = p0
 
     def p_async_stmt(self, p):

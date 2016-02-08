@@ -1707,6 +1707,45 @@ class BaseParser(object):
             rtn = [x]
         return rtn
 
+    def apply_trailers(self, leader, trailers):
+        """Helper function for atom expr."""
+        if trailers is None:
+            return leader
+        p0 = leader
+        for trailer in trailers:
+            if isinstance(trailer, (ast.Index, ast.Slice)):
+                p0 = ast.Subscript(value=leader,
+                                   slice=trailer,
+                                   ctx=ast.Load(),
+                                   lineno=leader.lineno,
+                                   col_offset=leader.col_offset)
+            elif isinstance(trailer, Mapping):
+                p0 = ast.Call(func=leader,
+                              lineno=leader.lineno,
+                              col_offset=leader.col_offset, **trailer)
+            elif isinstance(trailer, str):
+                if trailer == '?':
+                    p0 = xonsh_help(leader, lineno=leader.lineno, 
+                                    col=leader.col_offset)
+                elif trailer == '??':
+                    p0 = xonsh_superhelp(leader,
+                                         lineno=leader.lineno,
+                                         col=leader.col_offset)
+                else:
+                    p0 = ast.Attribute(value=leader,
+                                       attr=trailer,
+                                       ctx=ast.Load(),
+                                       lineno=leader.lineno,
+                                       col_offset=leader.col_offset)
+            else:
+                assert False
+            leader = p0
+        return p0
+
+    def p_atom_expr(self, p):
+        """atom_expr : atom trailer_list_opt"""
+        p[0] = self.apply_trailers(p[1], p[2])
+
     def p_atom(self, p):
         """atom : lparen_tok yield_expr_or_testlist_comp_opt RPAREN
                 | lbracket_tok testlist_comp_opt RBRACKET
