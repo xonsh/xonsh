@@ -409,18 +409,16 @@ class BaseParser(object):
         """file_input : file_stmts"""
         p[0] = ast.Module(body=p[1])
 
-    def p_file_stmts(self, p):
-        """file_stmts : newline_or_stmt
-                      | file_stmts newline_or_stmt
-        """
-        if len(p) == 2:
-            # newline_or_stmt ENDMARKER
-            p1 = empty_list_if_newline(p[1])
-            p[0] = p1
-        else:
-            # file_input newline_or_stmt ENDMARKER
-            p2 = empty_list_if_newline(p[2])
-            p[0] = p[1] + p2
+    def p_file_stmts_nl(self, p):
+        """file_stmts : newline_or_stmt"""
+        # newline_or_stmt ENDMARKER
+        p[0] = empty_list_if_newline(p[1])
+
+    def p_file_stmts_files(self, p):
+        """file_stmts : file_stmts newline_or_stmt"""
+        # file_input newline_or_stmt ENDMARKER
+        p2 = empty_list_if_newline(p[2])
+        p[0] = p[1] + p2
 
     def p_newline_or_stmt(self, p):
         """newline_or_stmt : NEWLINE
@@ -447,57 +445,41 @@ class BaseParser(object):
         """attr_period_name : PERIOD NAME"""
         p[0] = [p[2]]
 
-    def p_attr_name(self, p):
-        """attr_name : name_tok
-                     | name_tok attr_period_name_list
-        """
+    def p_attr_name_alone(self, p):
+        """attr_name : name_tok"""
         p1 = p[1]
-        name = ast.Name(id=p1.value,
-                        ctx=ast.Load(),
-                        lineno=p1.lineno,
-                        col_offset=p1.lexpos)
-        if len(p) == 2:
-            p0 = name
-        else:
-            p2 = p[2]
-            p0 = ast.Attribute(value=name,
-                               attr=p2[0],
-                               ctx=ast.Load(),
-                               lineno=p1.lineno,
-                               col_offset=p1.lexpos)
-            for a in p2[1:]:
-                p0 = ast.Attribute(value=p0,
-                                   attr=a,
-                                   ctx=ast.Load(),
-                                   lineno=p0.lineno,
-                                   col_offset=p0.col_offset)
+        p[0] = ast.Name(id=p1.value, ctx=ast.Load(),
+                        lineno=p1.lineno, col_offset=p1.lexpos)
+
+    def p_attr_name_with(self, p):
+        """attr_name : name_tok attr_period_name_list"""
+        p1 = p[1]
+        name = ast.Name(id=p1.value, ctx=ast.Load(),
+                        lineno=p1.lineno, col_offset=p1.lexpos)
+        p2 = p[2]
+        p0 = ast.Attribute(value=name, attr=p2[0], ctx=ast.Load(),
+                           lineno=p1.lineno, col_offset=p1.lexpos)
+        for a in p2[1:]:
+            p0 = ast.Attribute(value=p0, attr=a, ctx=ast.Load(),
+                               lineno=p0.lineno, col_offset=p0.col_offset)
         p[0] = p0
 
-    def p_decorator(self, p):
-        """decorator : at_tok attr_name NEWLINE
-                     | at_tok attr_name func_call NEWLINE
-        """
-        lenp = len(p)
-        p1, name = p[1], p[2]
-        p3 = p[3] if lenp > 3 else None
-        if isinstance(name, ast.Attribute) or (lenp == 5 and p3 is not None):
+    def p_decorator_no_call(self, p):
+        """decorator : at_tok attr_name NEWLINE"""
+        p[0] = p[2]
+
+    def p_decorator_call(self, p):
+        """decorator : at_tok attr_name func_call NEWLINE"""
+        p1, name, p3 = p[1], p[2], p[3]
+        if isinstance(name, ast.Attribute) or (p3 is not None):
             lineno, col = name.lineno, name.col_offset
         else:
             lineno, col = p1.lineno, p1.lexpos
-        if lenp == 4:
-            p0 = name
-        elif p3 is None:
-            p0 = ast.Call(func=name,
-                          args=[],
-                          keywords=[],
-                          starargs=None,
-                          kwargs=None,
-                          lineno=lineno,
-                          col_offset=col)
+        if p3 is None:
+            p0 = ast.Call(func=name, args=[], keywords=[], starargs=None,
+                          kwargs=None, lineno=lineno, col_offset=col)
         else:
-            p0 = ast.Call(func=name,
-                          lineno=lineno,
-                          col_offset=col, **p3)
+            p0 = ast.Call(func=name, lineno=lineno, col_offset=col, **p3)
         p[0] = p0
 
     def p_decorators(self, p):
