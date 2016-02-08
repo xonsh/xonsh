@@ -34,7 +34,7 @@ class Parser(BaseParser):
         for rule in opt_rules:
             self._opt_rule(rule)
 
-        list_rules = ['argument_comma', 'test_or_star_expr']
+        list_rules = ['argument_comma']
         for rule in list_rules:
             self._list_rule(rule)
 
@@ -140,7 +140,7 @@ class Parser(BaseParser):
                     self._set_arg(p0, arg)
             self._set_arg(p0, p[6], ensure_kw=True)
         elif lenp == 8:
-            kwkey = 'keywords' if VER_MAJOR_MINOR >= VER_3_5 else 'kwargs'
+            kwkey = 'kwargs'
             p0['starargs'], p4 = p[3], p[4]
             if p1 is not None:
                 for arg in p1:
