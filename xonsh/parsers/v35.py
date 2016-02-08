@@ -30,6 +30,9 @@ class Parser(BaseParser):
             The directory to place generated tables within.
         """
         # Rule creation and modifiation *must* take place before super()
+        tok_rules = ['await', 'async']
+        for rule in tok_rules:
+            self._tok_rule(rule)
         super().__init__(lexer_optimize=lexer_optimize, lexer_table=lexer_table,
                  yacc_optimize=yacc_optimize, yacc_table=yacc_table, 
                  yacc_debug=yacc_debug, outputdir=outputdir)
@@ -40,6 +43,26 @@ class Parser(BaseParser):
                                | async_funcdef
         """
         p[0] = p[1]
+
+    def p_async_funcdef(self, p):
+        """async_funcdef : async_tok funcdef"""
+        p1, f = p[1], p[2][0]
+        p[0] = [ast.AsyncFunctionDef(**f.__dict__)]
+        p[0][0]._async_tok = p1
+
+    def p_async_compound_stmt(self, p):
+        """compound_stmt : async_stmt"""
+        p[0] = p[1]
+
+    def p_async_for_stmt(self, p):
+        """async_for_stmt : ASYNC for_stmt"""
+        f = p[2][0]
+        p[0] = [ast.AsyncFor(**f.__dict__)]
+
+    def p_async_with_stmt(self, p):
+        """async_with_stmt : ASYNC with_stmt"""
+        w = p[2][0]
+        p[0] = [ast.AsyncWith(**w.__dict__)]
 
     def p_atom_expr(self, p):
         """atom_expr : atom trailer_list_opt
@@ -108,6 +131,14 @@ class Parser(BaseParser):
         else:
             assert False
         p[0] = p0
+
+    def _set_arg(self, args, arg, ensure_kw=False):
+        if isinstance(arg, ast.keyword):
+            args['keywords'].append(arg)
+        elif ensure_kw:
+            args['keywords'].append(ast.keyword(arg=None, value=arg))
+        else:
+            args['args'].append(arg)
 
     def p_arglist(self, p):
         """arglist : argument comma_opt

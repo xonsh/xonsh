@@ -34,7 +34,7 @@ class Parser(BaseParser):
         for rule in opt_rules:
             self._opt_rule(rule)
 
-        list_rules = ['argument_comma',]
+        list_rules = ['argument_comma', 'test_or_star_expr']
         for rule in list_rules:
             self._list_rule(rule)
 
@@ -94,6 +94,14 @@ class Parser(BaseParser):
         else:
             assert False
         p[0] = p0
+
+    def _set_arg(self, args, arg, ensure_kw=False):
+        if isinstance(arg, ast.keyword):
+            args['keywords'].append(arg)
+        elif ensure_kw:
+            args['kwargs'] = arg
+        else:
+            args['args'].append(arg)
 
     def p_arglist(self, p):
         """arglist : argument comma_opt

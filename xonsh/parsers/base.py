@@ -8,9 +8,7 @@ from ply import yacc
 
 from xonsh import ast
 from xonsh.lexer import Lexer, LexToken
-from xonsh.tools import (VER_3_4, VER_3_5, VER_3_5_1,
-                         VER_MAJOR_MINOR, VER_FULL,
-                         docstring_by_version)
+from xonsh.tools import VER_3_5_1, VER_FULL
 
 
 class Location(object):
@@ -227,16 +225,15 @@ class BaseParser(object):
             'xor_and_expr', 'ampersand_shift_expr', 'shift_arith_expr',
             'pm_term', 'op_factor', 'trailer', 'comma_subscript',
             'comma_expr_or_star_expr', 'comma_test', 'comma_argument', 'comma_item',
-            'attr_period_name', 'test_comma', 'equals_yield_expr_or_testlist',
-            'test_or_star_expr']
+            'attr_period_name', 'test_comma', 'equals_yield_expr_or_testlist',]
         for rule in list_rules:
             self._list_rule(rule)
 
-        tok_rules = ['def', 'class', 'async', 'return', 'number', 'name', 
+        tok_rules = ['def', 'class', 'return', 'number', 'name', 
                      'none', 'true', 'false', 'ellipsis', 'if', 'del', 'assert', 
                      'lparen', 'lbrace', 'lbracket', 'string', 'times', 'plus', 
                      'minus', 'divide', 'doublediv', 'mod', 'at', 'lshift', 'rshift',
-                     'pipe', 'xor', 'ampersand', 'await', 'for', 'colon',
+                     'pipe', 'xor', 'ampersand', 'for', 'colon',
                      'import', 'except', 'nonlocal', 'global', 'yield', 'from', 
                      'raise', 'with', 'dollar_lparen', 'dollar_lbrace', 
                      'dollar_lbracket', 'try']
@@ -539,12 +536,6 @@ class BaseParser(object):
                             lineno=p[1].lineno,
                             col_offset=p[1].lexpos)
         p[0] = [f]
-
-    def p_async_funcdef(self, p):
-        """async_funcdef : async_tok funcdef"""
-        p1, f = p[1], p[2][0]
-        p[0] = [ast.AsyncFunctionDef(**f.__dict__)]
-        p[0][0]._async_tok = p1
 
     def p_parameters(self, p):
         """parameters : LPAREN typedargslist_opt RPAREN"""
@@ -1188,7 +1179,6 @@ class BaseParser(object):
                          | funcdef
                          | classdef
                          | decorated
-                         | async_stmt
         """
         p[0] = p[1]
 
@@ -1259,11 +1249,6 @@ class BaseParser(object):
                         lineno=p1.lineno,
                         col_offset=p1.lexpos)]
 
-    def p_async_for_stmt(self, p):
-        """async_for_stmt : ASYNC for_stmt"""
-        f = p[2][0]
-        p[0] = [ast.AsyncFor(**f.__dict__)]
-
     def p_except_part(self, p):
         """except_part : except_clause COLON suite"""
         p0 = p[1]
@@ -1312,11 +1297,6 @@ class BaseParser(object):
                          body=body,
                          lineno=p1.lineno,
                          col_offset=p1.lexpos)]
-
-    def p_async_with_stmt(self, p):
-        """async_with_stmt : ASYNC with_stmt"""
-        w = p[2][0]
-        p[0] = [ast.AsyncWith(**w.__dict__)]
 
     def p_as_expr(self, p):
         """as_expr : AS expr"""
@@ -2099,17 +2079,6 @@ class BaseParser(object):
                          lineno=p1.lineno,
                          col_offset=p1.lexpos)
         p[0] = [c]
-
-    def _set_arg(self, args, arg, ensure_kw=False):
-        if isinstance(arg, ast.keyword):
-            args['keywords'].append(arg)
-        elif ensure_kw:
-            if VER_MAJOR_MINOR <= VER_3_4:
-                args['kwargs'] = arg
-            elif VER_MAJOR_MINOR >= VER_3_5:
-                args['keywords'].append(ast.keyword(arg=None, value=arg))
-        else:
-            args['args'].append(arg)
 
     def p_comma_argument(self, p):
         """comma_argument : COMMA argument"""
