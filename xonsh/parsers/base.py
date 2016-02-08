@@ -758,7 +758,8 @@ class BaseParser(object):
 
     def p_stmt_list(self, p):
         """stmt_list : stmt
-                     | stmt_list stmt"""
+                     | stmt_list stmt
+        """
         if len(p) == 2:
             p[0] = p[1]
         else:
@@ -813,59 +814,65 @@ class BaseParser(object):
         '>>=': ast.RShift
     }
 
-    def p_expr_stmt(self, p):
-        """expr_stmt : testlist_star_expr augassign yield_expr_or_testlist
-                     | testlist_star_expr equals_yield_expr_or_testlist_list_opt
+    def p_expr_stmt_testlist_assign(self, p):
+        """expr_stmt : testlist_star_expr equals_yield_expr_or_testlist_list_opt
                      | testlist equals_yield_expr_or_testlist_list_opt
-                     | test_comma_list_opt star_expr comma_test_list equals_yield_expr_or_testlist
-                     | test_comma_list_opt star_expr comma_opt test_comma_list_opt equals_yield_expr_or_testlist
         """
-        lenp = len(p)
         p1, p2 = p[1], p[2]
+        if isinstance(p1, ast.Tuple):
+            p1 = [p1]
+        if p2 is None and len(p1) == 1:
+            p[0] = self.expr(p1[0])
+        elif p2 is None:
+            assert False
+        else:
+            for targ in p1:
+                store_ctx(targ)
+            list(map(store_ctx, p2[:-1]))
+            lineno, col = lopen_loc(p1[0])
+            p[0] = ast.Assign(targets=p1 + p2[:-1], value=p2[-1],
+                              lineno=lineno, col_offset=col)
+
+    def p_expr_stmt_augassign(self, p):
+        """expr_stmt : testlist_star_expr augassign yield_expr_or_testlist"""
+        p1, p2 = p[1], p[2]
+        if not isinstance(p1, ast.Tuple):
+            p1 = p1[0]
+        store_ctx(p1)
+        op = self._augassign_op[p2]
+        if op is None:
+            self._parse_error('operation {0!r} not supported'.format(p2),
+                               self.currloc(lineno=p.lineno, column=p.lexpos))
+        p[0] = ast.AugAssign(target=p1, op=op(), value=p[3],
+                             lineno=p1.lineno, col_offset=p1.col_offset)
+
+    def store_star_expr(self, p1, p2, targs, rhs):
+        """Stores complex unpacking statements that target *x variables."""
         p1 = [] if p1 is None else p1
         if isinstance(p1, ast.Tuple):
             p1 = [p1]
         for targ in p1:
             store_ctx(targ)
-        if lenp == 3:
-            if p2 is None and len(p1) == 1:
-                load_ctx(p1[0])
-                p0 = self.expr(p1[0])
-            elif p2 is None:
-                assert False
-            else:
-                list(map(store_ctx, p2[:-1]))
-                lineno, col = lopen_loc(p1[0])
-                p0 = ast.Assign(targets=p1 + p2[:-1], value=p2[-1],
-                                lineno=lineno, col_offset=col)
-        elif lenp == 4:
-            op = self._augassign_op[p2]
-            if op is None:
-                self._parse_error('operation {0!r} not supported'.format(p2),
-                                  self.currloc(lineno=p.lineno, column=p.lexpos))
-            p0 = ast.AugAssign(target=p1[0], op=op(), value=p[3],
-                               lineno=p1[0].lineno, col_offset=p1[0].col_offset)
-        elif lenp == 5 or lenp == 6:
-            if lenp == 5:
-                targs, rhs = p[3], p[4][0]
-            else:
-                targs, rhs = (p[4] or []), p[5][0]
-            store_ctx(p2)
-            for targ in targs:
-                store_ctx(targ)
-            p1.append(p2)
-            p1.extend(targs)
-            p1 = [ast.Tuple(elts=p1,
-                            ctx=ast.Store(),
-                            lineno=p1[0].lineno,
-                            col_offset=p1[0].col_offset)]
-            p0 = ast.Assign(targets=p1,
-                            value=rhs,
-                            lineno=p1[0].lineno,
-                            col_offset=p1[0].col_offset)
-        else:
-            assert False
-        p[0] = p0
+        store_ctx(p2)
+        for targ in targs:
+            store_ctx(targ)
+        p1.append(p2)
+        p1.extend(targs)
+        p1 = [ast.Tuple(elts=p1, ctx=ast.Store(), lineno=p1[0].lineno, 
+                        col_offset=p1[0].col_offset)]
+        p0 = ast.Assign(targets=p1, value=rhs, lineno=p1[0].lineno, 
+                        col_offset=p1[0].col_offset)
+        return p0
+
+    def p_expr_stmt_star5(self, p):
+        """expr_stmt : test_comma_list_opt star_expr comma_test_list equals_yield_expr_or_testlist"""
+        targs, rhs = p[3], p[4][0]
+        p[0] = self.store_star_expr(p[1], p[2], targs, rhs)
+
+    def p_expr_stmt_star6(self, p):
+        """expr_stmt : test_comma_list_opt star_expr comma_opt test_comma_list_opt equals_yield_expr_or_testlist"""
+        targs, rhs = (p[4] or []), p[5][0]
+        p[0] = self.store_star_expr(p[1], p[2], targs, rhs)
 
     def p_test_comma(self, p):
         """test_comma : test COMMA"""
