@@ -119,18 +119,13 @@ class Parser(BaseParser):
         """
         p[0] = p[1]
 
-    def p_item(self, p):
-        """item : test COLON test
-                | POW expr
-        """
-        lenp = len(p)
-        if lenp == 4:
-            p0 = [p[1], p[3]]
-        elif lenp == 3:
-            p0 = [None, p[2]]
-        else:
-            assert False
-        p[0] = p0
+    def p_item_test(self, p):
+        """item : test COLON test"""
+        p[0] = [p[1], p[3]]
+
+    def p_item_pow(self, p):
+        """item : POW expr"""
+        p[0] = [None, p[2]]
 
     def _set_arg(self, args, arg, ensure_kw=False):
         if isinstance(arg, ast.keyword):
@@ -140,47 +135,47 @@ class Parser(BaseParser):
         else:
             args['args'].append(arg)
 
-    def p_arglist(self, p):
-        """arglist : argument comma_opt
-                   | argument comma_argument_list comma_opt
-        """
+    def p_arglist_single(self, p):
+        """arglist : argument comma_opt"""
         p0 = {'args': [], 'keywords': []}
-        p1, p2 = p[1], p[2]
-        p2 = None if p2 == ',' else p2
-        self._set_arg(p0, p1)
-        if p2 is not None:
-            for arg in p2:
-                self._set_arg(p0, arg)
+        self._set_arg(p0, p[1])
         p[0] = p0
 
-    def p_argument(self, p):
-        """argument : test_or_star_expr
-                    | test comp_for
-                    | test EQUALS test
-                    | POW test
-                    | TIMES test
+    def p_arglist_many(self, p):
+        """arglist : argument comma_argument_list comma_opt
         """
-        # "test '=' test" is really "keyword '=' test", but we have no such token.
-        # These need to be in a single rule to avoid grammar that is ambiguous
-        # to our LL(1) parser. Even though 'test' includes '*expr' in star_expr,
-        # we explicitly match '*' here, too, to give it proper precedence.
-        # Illegal combinations and orderings are blocked in ast.c:
-        # multiple (test comp_for) arguements are blocked; keyword unpackings
-        # that precede iterable unpackings are blocked; etc.
-        p1 = p[1]
-        lenp = len(p)
-        if lenp == 2:
-            p0 = p1
-        elif lenp == 3:
-            if p1 == '**':
-                p0 = ast.keyword(arg=None, value=p[2])
-            elif p1 == '*':
-                p0 = ast.Starred(value=p[2])
-            else:
-                p0 = ast.GeneratorExp(elt=p1, generators=p[2]['comps'],
-                                      lineno=p1.lineno, col_offset=p1.col_offset)
-        elif lenp == 4:
-            p0 = ast.keyword(arg=p1.id, value=p[3])
-        else:
-            assert False
+        p0 = {'args': [], 'keywords': []}
+        self._set_arg(p0, p[1])
+        for arg in p[2]:
+            self._set_arg(p0, arg)
         p[0] = p0
+
+    # Argument rules
+    # "test '=' test" is really "keyword '=' test", but we have no such token.
+    # These need to be in a single rule to avoid grammar that is ambiguous
+    # to our LL(1) parser. Even though 'test' includes '*expr' in star_expr,
+    # we explicitly match '*' here, too, to give it proper precedence.
+    # Illegal combinations and orderings are blocked in ast.c:
+    # multiple (test comp_for) arguements are blocked; keyword unpackings
+    # that precede iterable unpackings are blocked; etc.
+    def p_argument_test_or_star(self, p):
+        """argument : test_or_star_expr"""
+        p[0] = p[1]
+
+    def p_argument_kwargs(self, p):
+        """argument : POW test"""
+        p[0] = ast.keyword(arg=None, value=p[2])
+
+    def p_argument_args(self, p):
+        """argument : TIMES test"""
+        p[0] = ast.Starred(value=p[2])
+
+    def p_argument(self, p):
+        """argument : test comp_for"""
+        p1 = p[1]
+        p[0] = ast.GeneratorExp(elt=p1, generators=p[2]['comps'],
+                                lineno=p1.lineno, col_offset=p1.col_offset)
+
+    def p_argument_eq(self, p):
+        """argument : test EQUALS test"""
+        p[0] = ast.keyword(arg=p[1].id, value=p[3])
