@@ -94,3 +94,83 @@ class Parser(BaseParser):
         else:
             assert False
         p[0] = p0
+
+    def p_arglist(self, p):
+        """arglist : argument comma_opt
+                   | argument_comma_list argument comma_opt
+                   | argument_comma_list_opt TIMES test comma_argument_list_opt
+                   | argument_comma_list_opt TIMES test COMMA POW test
+                   | argument_comma_list_opt TIMES test comma_argument_list COMMA
+                   | argument_comma_list_opt POW test
+        """
+        lenp = len(p)
+        p1, p2 = p[1], p[2]
+        p0 = {'args': [], 'keywords': [], 'starargs': None, 'kwargs': None}
+        if lenp == 3:
+            self._set_arg(p0, p1)
+        elif lenp == 4 and p2 != '**':
+            for arg in p1:
+                self._set_arg(p0, arg)
+            self._set_arg(p0, p2)
+        elif lenp == 4 and p2 == '**':
+            if p1 is not None:
+                for arg in p1:
+                    self._set_arg(p0, arg)
+            self._set_arg(p0, p[3], ensure_kw=True)
+        elif lenp == 5:
+            p0['starargs'], p4 = p[3], p[4]
+            if p1 is not None:
+                for arg in p1:
+                    self._set_arg(p0, arg)
+            if p4 is not None:
+                for arg in p4:
+                    self._set_arg(p0, arg, ensure_kw=True)
+        elif lenp == 7:
+            p0['starargs'] = p[3]
+            if p1 is not None:
+                for arg in p1:
+                    self._set_arg(p0, arg)
+            self._set_arg(p0, p[6], ensure_kw=True)
+        elif lenp == 8:
+            kwkey = 'keywords' if VER_MAJOR_MINOR >= VER_3_5 else 'kwargs'
+            p0['starargs'], p4 = p[3], p[4]
+            if p1 is not None:
+                for arg in p1:
+                    self._set_arg(p0, arg)
+            for arg in p4:
+                self._set_arg(p0, arg, ensure_kw=True)
+            self._set_arg(p0, p[7], ensure_kw=True)
+        else:
+            assert False
+        p[0] = p0
+
+    def p_argument_comma(self, p):
+        """argument_comma : argument COMMA"""
+        p[0] = [p[1]]
+
+    def p_argument(self, p):
+        """argument : test
+                    | test comp_for
+                    | test EQUALS test
+        """
+        # Really [keyword '='] test
+        # The reason that keywords are test nodes instead of NAME is that using
+        # NAME results in an ambiguity.
+        p1 = p[1]
+        lenp = len(p)
+        if lenp == 2:
+            p0 = p1
+        elif lenp == 3:
+            if p1 == '**':
+                p0 = ast.keyword(arg=None, value=p[2])
+            elif p1 == '*':
+                p0 = ast.Starred(value=p[2])
+            else:
+                p0 = ast.GeneratorExp(elt=p1, generators=p[2]['comps'],
+                                      lineno=p1.lineno, col_offset=p1.col_offset)
+        elif lenp == 4:
+            p0 = ast.keyword(arg=p1.id, value=p[3])
+        else:
+            assert False
+        p[0] = p0
+
