@@ -108,7 +108,7 @@ class Parser(BaseParser):
                    | argument_comma_list argument comma_opt
                    | argument_comma_list_opt TIMES test comma_argument_list_opt
                    | argument_comma_list_opt TIMES test COMMA POW test
-                   | argument_comma_list_opt TIMES test comma_argument_list COMMA
+                   | argument_comma_list_opt TIMES test comma_argument_list COMMA POW test
                    | argument_comma_list_opt POW test
         """
         lenp = len(p)

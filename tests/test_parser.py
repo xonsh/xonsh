@@ -760,10 +760,7 @@ def test_call_alot_next():
     yield check_ast, 'x(x=1, *args, **kwargs)', False
 
 def test_call_alot_next_next():
-    global DEBUG_LEVEL
-    DEBUG_LEVEL = 100
     yield check_ast, 'x(x=1, *args, y=42, **kwargs)', False
-    DEBUG_LEVEL = 0
 
 def test_getattr():
     yield check_ast, 'list.append'
