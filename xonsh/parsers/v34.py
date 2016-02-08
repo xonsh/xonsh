@@ -6,7 +6,7 @@ from collections import Iterable, Sequence, Mapping
 
 from xonsh import ast
 from xonsh.lexer import LexToken
-from xonsh.parsers.base import BaseParser
+from xonsh.parsers.base import BaseParser, xonsh_help, xonsh_superhelp
 
 class Parser(BaseParser):
     """A Python v3.4 compliant parser for the xonsh language."""
@@ -47,3 +47,50 @@ class Parser(BaseParser):
                                | funcdef
         """
         p[0] = p[1]
+
+    def p_atom_expr(self, p):
+        """atom_expr : atom trailer_list_opt"""
+        leader, trailers = p[1], p[2]
+        p0 = leader
+        if trailers is None:
+            trailers = []
+        for trailer in trailers:
+            if isinstance(trailer, (ast.Index, ast.Slice)):
+                p0 = ast.Subscript(value=leader,
+                                   slice=trailer,
+                                   ctx=ast.Load(),
+                                   lineno=leader.lineno,
+                                   col_offset=leader.col_offset)
+            elif isinstance(trailer, Mapping):
+                p0 = ast.Call(func=leader,
+                              lineno=leader.lineno,
+                              col_offset=leader.col_offset, **trailer)
+            elif isinstance(trailer, str):
+                if trailer == '?':
+                    p0 = xonsh_help(leader, lineno=leader.lineno, 
+                                    col=leader.col_offset)
+                elif trailer == '??':
+                    p0 = xonsh_superhelp(leader,
+                                         lineno=leader.lineno,
+                                         col=leader.col_offset)
+                else:
+                    p0 = ast.Attribute(value=leader,
+                                       attr=trailer,
+                                       ctx=ast.Load(),
+                                       lineno=leader.lineno,
+                                       col_offset=leader.col_offset)
+            else:
+                assert False
+            leader = p0
+        p[0] = p0
+
+    def p_item(self, p):
+        """item : test COLON test"""
+        lenp = len(p)
+        if lenp == 4:
+            p0 = [p[1], p[3]]
+        elif lenp == 3:
+            p0 = [None, p[2]]
+        else:
+            assert False
+        p[0] = p0
