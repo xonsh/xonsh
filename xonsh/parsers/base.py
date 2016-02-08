@@ -535,8 +535,9 @@ class BaseParser(object):
         """equals_test : EQUALS test"""
         p[0] = p[2]
 
+    """
     def p_typedargslist(self, p):
-        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt
+        ""typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt
                          | tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt TIMES tfpdef_opt COMMA POW vfpdef
                          | tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt TIMES tfpdef_opt comma_tfpdef_list_opt
                          | tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt TIMES tfpdef_opt comma_tfpdef_list COMMA POW tfpdef
@@ -544,7 +545,7 @@ class BaseParser(object):
                          | TIMES tfpdef_opt comma_tfpdef_list comma_pow_tfpdef_opt
                          | TIMES tfpdef_opt comma_pow_tfpdef_opt
                          | POW tfpdef
-        """
+        ""
         lenp = len(p)
         p1, p2 = p[1], p[2]
         p3 = p[3] if lenp > 3 else None
@@ -595,6 +596,69 @@ class BaseParser(object):
         else:
             assert False
         p[0] = p0
+    """
+
+    def p_typedargslist_kwarg(self, p):
+        """typedargslist : POW tfpdef"""
+        p[0] = ast.arguments(args=[], vararg=None, kwonlyargs=[], 
+                             kw_defaults=[], kwarg=p[2], defaults=[])
+
+    def p_typedargslist_times4(self, p):
+        """typedargslist : TIMES tfpdef_opt comma_pow_tfpdef_opt"""
+        p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[],
+                           kwarg=p[3], defaults=[])
+        self._set_var_args(p0, p[2], None)
+        p[0] = p0
+
+    def p_typedargslist_times5(self, p):
+        """typedargslist : TIMES tfpdef_opt comma_tfpdef_list comma_pow_tfpdef_opt"""
+        # *args, x, **kwargs
+        p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[],
+                           kwarg=p[4], defaults=[])
+        self._set_var_args(p0, p[2], p[3])  # *args
+        p[0] = p0
+
+    def p_typedargslist_t5(self, p):
+        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt"""
+        # x
+        p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[],
+                           kwarg=None, defaults=[])
+        self._set_regular_args(p0, p[1], p[2], p[3], p[4])
+        p[0] = p0
+
+    def p_typedargslist_t7(self, p):
+        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt POW tfpdef"""
+        # x, **kwargs
+        p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[],
+                           kwarg=p[6], defaults=[])
+        self._set_regular_args(p0, p[1], p[2], p[3], p[4])
+        p[0] = p0
+
+    def p_typedargslist_t8(self, p):
+        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt TIMES tfpdef_opt comma_tfpdef_list_opt"""
+        p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[],
+                           kwarg=None, defaults=[])
+        self._set_regular_args(p0, p[1], p[2], p[3], p[4])
+        self._set_var_args(p0, p[6], p[7])
+        p[0] = p0
+
+    def p_typedargslist_t10(self, p):
+        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt TIMES tfpdef_opt COMMA POW vfpdef"""
+        # x, *args, **kwargs
+        p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[],
+                           kwarg=p[9], defaults=[])
+        self._set_regular_args(p0, p[1], p[2], p[3], p[4])
+        self._set_var_args(p0, p[6], None)
+        p[0] = p0
+
+    def p_typedargslist_t11(self, p):
+        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt TIMES tfpdef_opt comma_tfpdef_list COMMA POW tfpdef"""
+        # x, *args, **kwargs
+        p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[],
+                           kwarg=p[10], defaults=[])
+        self._set_regular_args(p0, p[1], p[2], p[3], p[4])
+        self._set_var_args(p0, p[6], p[7])
+        p[0] = p0
 
     def p_colon_test(self, p):
         """colon_test : COLON test"""
@@ -603,8 +667,7 @@ class BaseParser(object):
     def p_tfpdef(self, p):
         """tfpdef : name_tok colon_test_opt"""
         p1 = p[1]
-        kwargs = {'arg': p1.value,
-                  'annotation': p[2]}
+        kwargs = {'arg': p1.value, 'annotation': p[2]}
         if VER_FULL >= VER_3_5_1:
             kwargs.update({
                 'lineno': p1.lineno,
