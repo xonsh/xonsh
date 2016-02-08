@@ -14,7 +14,7 @@ class Parser(BaseParser):
     def __init__(self, lexer_optimize=True, lexer_table='xonsh.lexer_table',
                  yacc_optimize=True, yacc_table='xonsh.parser_table', 
                  yacc_debug=False, outputdir=None):
-       """Parameters
+        """Parameters
         ----------
         lexer_optimize : bool, optional
             Set to false when unstable and true when lexer is stable.
