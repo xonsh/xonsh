@@ -17,8 +17,8 @@ from tools import (mock_xonsh_env, skip_if, VER_3_4, VER_3_5, VER_MAJOR_MINOR,
                    VER_FULL)
 
 PARSER = None
-DEBUG_LEVEL = 0
-#DEBUG_LEVEL = 100
+#DEBUG_LEVEL = 0
+DEBUG_LEVEL = 100
 
 # a lot of col_offset data changed from Py v3.5.0 -> v3.5.1
 INC_ATTRS = (3, 5, 1) <= VER_FULL
