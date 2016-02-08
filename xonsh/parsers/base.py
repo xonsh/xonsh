@@ -215,8 +215,6 @@ class BaseParser(object):
             'yield_expr_or_testlist_comp', 'dictorsetmaker',
             'comma_subscript_list', 'test', 'sliceop', 'comp_iter',
             'yield_arg', 'test_comma_list',]
-        if VER_MAJOR_MINOR <= VER_3_4:
-            opt_rules += ['argument_comma_list', 'comma_argument_list',]
         for rule in opt_rules:
             self._opt_rule(rule)
 
@@ -231,8 +229,6 @@ class BaseParser(object):
             'comma_expr_or_star_expr', 'comma_test', 'comma_argument', 'comma_item',
             'attr_period_name', 'test_comma', 'equals_yield_expr_or_testlist',
             'test_or_star_expr']
-        if VER_MAJOR_MINOR <= VER_3_4:
-            list_rules += ['argument_comma',]
         for rule in list_rules:
             self._list_rule(rule)
 
@@ -512,20 +508,6 @@ class BaseParser(object):
                       | decorators decorator
         """
         p[0] = [p[1]] if len(p) == 2 else p[1] + [p[2]]
-
-    @docstring_by_version(
-        v34=\
-        """classdef_or_funcdef : classdef
-                               | funcdef
-        """,
-        v35=\
-        """classdef_or_funcdef : classdef
-                               | funcdef
-                               | async_funcdef
-        """,
-        )
-    def p_classdef_or_funcdef(self, p):
-        p[0] = p[1]
 
     def p_decorated(self, p):
         """decorated : decorators classdef_or_funcdef"""
