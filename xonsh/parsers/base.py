@@ -1752,69 +1752,50 @@ class BaseParser(object):
         p[0] = ast.Num(n=ast.literal_eval(p1.value), lineno=p1.lineno,
                        col_offset=p1.lexpos)
 
-    def p_testlist_comp(self, p):
-        """testlist_comp : test_or_star_expr comp_for
-                         | test_or_star_expr comma_opt
-                         | test_or_star_expr comma_test_or_star_expr_list comma_opt
-        """
+    def p_testlist_comp_comp(self, p):
+        """testlist_comp : test_or_star_expr comp_for"""
         p1, p2 = p[1], p[2]
-        if len(p) == 3:
-            if p2 is None:
-                # split out grouping parentheses.
-                p0 = p1
-            elif p2 == ',':
-                p0 = ast.Tuple(elts=[p1],
-                               ctx=ast.Load(),
-                               lineno=p1.lineno,
-                               col_offset=p1.col_offset)
-            elif 'comps' in p2:
-                p0 = ast.GeneratorExp(elt=p1,
-                                      generators=p2['comps'],
-                                      lineno=p1.lineno,
-                                      col_offset=p1.col_offset)
-            else:
-                assert False
-        elif len(p) == 4:
-            p0 = ast.Tuple(elts=[p1],
-                           ctx=ast.Load(),
-                           lineno=p1.lineno,
-                           col_offset=p1.col_offset)
-            if p2 is not None:
-                p0.elts.extend(p2)
-            else:
-                assert False
-        else:
-            assert False
-        p[0] = p0
+        p[0] = ast.GeneratorExp(elt=p1, generators=p2['comps'],
+                                lineno=p1.lineno, col_offset=p1.col_offset)
 
-    def p_trailer(self, p):
-        """trailer : LPAREN arglist_opt RPAREN
-                   | LBRACKET subscriptlist RBRACKET
+
+    def p_testlist_comp_comma(self, p):
+        """testlist_comp : test_or_star_expr comma_opt"""
+        p1, p2 = p[1], p[2]
+        if p2 is None:  # split out grouping parentheses.
+           p[0] = p1
+        else:
+           p[0] = ast.Tuple(elts=[p1], ctx=ast.Load(),
+                            lineno=p1.lineno, col_offset=p1.col_offset)
+
+    def p_testlist_comp_many(self, p):
+        """testlist_comp : test_or_star_expr comma_test_or_star_expr_list comma_opt"""
+        p1, p2 = p[1], p[2]
+        p[0] = ast.Tuple(elts=[p1] + p2, ctx=ast.Load(),
+                         lineno=p1.lineno, col_offset=p1.col_offset)
+
+    def p_trailer_lparen(self, p):
+        """trailer : LPAREN arglist_opt RPAREN"""
+        p[0] = [p[2] or dict(args=[], keywords=[], starargs=None, kwargs=None)]
+
+    def p_trailer_p3(self, p):
+        """trailer : LBRACKET subscriptlist RBRACKET
                    | PERIOD NAME
-                   | DOUBLE_QUESTION
+        """
+        p[0] = [p[2]]
+
+    def p_trailer_quest(self, p):
+        """trailer : DOUBLE_QUESTION
                    | QUESTION
         """
-        p1 = p[1]
-        p2 = p[2] if len(p) > 2 else None
-        if p1 == '[':
-            p0 = [p2]
-        elif p1 == '(':
-            p0 = [p2 or dict(args=[], keywords=[], starargs=None, kwargs=None)]
-        elif p1 == '.':
-            p0 = [p2]
-        elif p1 == '?' or p1 == '??':
-            p0 = [p1]
-        else:
-            assert False
-        p[0] = p0
+        p[0] = [p[1]]
 
     def p_subscriptlist(self, p):
         """subscriptlist : subscript comma_subscript_list_opt comma_opt"""
         p1, p2 = p[1], p[2]
         if p2 is not None:
             p1.value = ast.Tuple(elts=[p1.value] + [x.value for x in p2],
-                                 ctx=ast.Load(),
-                                 lineno=p1.lineno,
+                                 ctx=ast.Load(), lineno=p1.lineno,
                                  col_offset=p1.col_offset)
         p[0] = p1
 
@@ -1822,22 +1803,21 @@ class BaseParser(object):
         """comma_subscript : COMMA subscript"""
         p[0] = [p[2]]
 
-    def p_subscript(self, p):
-        """subscript : test
-                     | test_opt colon_tok test_opt sliceop_opt
-        """
+    def p_subscript_test(self, p):
+        """subscript : test"""
         p1 = p[1]
-        if len(p) == 2:
-            p0 = ast.Index(value=p1, lineno=p1.lineno, col_offset=p1.col_offset)
+        p[0] = ast.Index(value=p1, lineno=p1.lineno, col_offset=p1.col_offset)
+
+    def p_subscript_tok(self, p):
+        """subscript : test_opt colon_tok test_opt sliceop_opt"""
+        p1 = p[1]
+        if p1 is None:
+            p2 = p[2]
+            lineno, col = p2.lineno, p2.lexpos
         else:
-            if p1 is None:
-                p2 = p[2]
-                lineno, col = p2.lineno, p2.lexpos
-            else:
-                lineno, col = p1.lineno, p1.col_offset
-            p0 = ast.Slice(lower=p1, upper=p[3], step=p[4], 
-                           lineno=lineno, col_offset=col)
-        p[0] = p0
+            lineno, col = p1.lineno, p1.col_offset
+        p[0] = ast.Slice(lower=p1, upper=p[3], step=p[4], 
+                         lineno=lineno, col_offset=col)
 
     def p_sliceop(self, p):
         """sliceop : COLON test_opt"""
