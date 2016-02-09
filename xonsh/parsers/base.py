@@ -1012,48 +1012,38 @@ class BaseParser(object):
         p1 = p[1]
         p[0] = ast.Import(names=p[2], lineno=p1.lineno, col_offset=p1.lexpos)
 
-    def p_import_from_pre(self, p):
-        """import_from_pre : from_tok period_or_ellipsis_list_opt dotted_name
-                           | from_tok period_or_ellipsis_list
-        """
+    def p_import_from_pre_f3(self, p):
+        """import_from_pre : from_tok period_or_ellipsis_list"""
         p1 = p[1]
-        if len(p) == 3:
-            p0 = p[2]
-        elif len(p) == 4:
-            p2, p3 = p[2], p[3]
-            p0 = p3 if p2 is None else p2 + p3
-        else:
-            assert False
+        p[0] = (p[2], p1.lineno, p1.lexpos)
+
+    def p_import_from_pre_f4(self, p):
+        """import_from_pre : from_tok period_or_ellipsis_list_opt dotted_name"""
+        p1, p2, p3 = p[1], p[2], p[3]
+        p0 = p3 if p2 is None else p2 + p3
         p[0] = (p0, p1.lineno, p1.lexpos)
 
-    def p_import_from_post(self, p):
-        """import_from_post : TIMES
-                            | LPAREN import_as_names RPAREN
-                            | import_as_names
-        """
-        if len(p) == 2:
-            if p[1] == '*':
-                p[1] = [ast.alias(name='*', asname=None)]
-            p0 = p[1]
-        elif len(p) == 4:
-            p0 = p[2]
-        else:
-            assert False
-        p[0] = p0
+    def p_import_from_post_times(self, p):
+        """import_from_post : TIMES"""
+        p[0] = [ast.alias(name='*', asname=None)]
+
+    def p_import_from_post_as(self, p):
+        """import_from_post : import_as_names"""
+        p[0] = p[1]
+
+    def p_import_from_post_paren(self, p):
+        """import_from_post : LPAREN import_as_names RPAREN"""
+        p[0] = p[2]
 
     def p_import_from(self, p):
-        """import_from : import_from_pre IMPORT import_from_post
-        """
+        """import_from : import_from_pre IMPORT import_from_post"""
         # note below: the ('.' | '...') is necessary because '...' is
         # tokenized as ELLIPSIS
         p1, lineno, col = p[1]
         mod = p1.lstrip('.')
         lvl = len(p1) - len(mod)
         mod = mod or None
-        p[0] = ast.ImportFrom(module=mod,
-                              names=p[3],
-                              level=lvl,
-                              lineno=lineno,
+        p[0] = ast.ImportFrom(module=mod, names=p[3], level=lvl, lineno=lineno,
                               col_offset=col)
 
     def p_period_or_ellipsis(self, p):
@@ -1129,9 +1119,7 @@ class BaseParser(object):
         names = [p2]
         if p3 is not None:
             names += p3
-        p[0] = ast.Nonlocal(names=names,
-                            lineno=p1.lineno,
-                            col_offset=p1.lexpos)
+        p[0] = ast.Nonlocal(names=names, lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_comma_test(self, p):
         """comma_test : COMMA test"""
