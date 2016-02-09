@@ -32,7 +32,7 @@ _op_map = {
     '~': 'TILDE', '^': 'XOR', '<<': 'LSHIFT', '>>': 'RSHIFT',
     '<': 'LT', '<=': 'LE', '>': 'GT', '>=': 'GE', '==': 'EQ',
     '!=': 'NE', '->': 'RARROW',
-    '&&': 'DOUBLEAMP',
+    '&&': 'DOUBLEAMP', '||': 'DOUBLEPIPE',
     # assignment operators
     '=': 'EQUALS', '+=': 'PLUSEQUAL', '-=': 'MINUSEQUAL',
     '*=': 'TIMESEQUAL', '@=': 'ATEQUAL', '/=': 'DIVEQUAL', '%=': 'MODEQUAL',
@@ -155,6 +155,20 @@ def handle_ampersands(state, token, stream):
         state['last'] = token
         if state['pymode'][-1][0]:
             yield _new_token('AMPERSAND', token.string, token.start)
+        if n is not None:
+            yield from handle_token(state, n, stream)
+
+
+def handle_pipes(state, token, stream):
+    """Function for generating PLY tokens for single and double pipes."""
+    n = next(stream, None)
+    if n is not None and n.type == tokenize.OP and \
+            n.string == '|' and n.start == token.end:
+        state['last'] = n
+        yield _new_token('DOUBLEPIPE', '||', token.start)
+    else:
+        state['last'] = token
+        yield _new_token('PIPE', token.string, token.start)
         if n is not None:
             yield from handle_token(state, n, stream)
 
@@ -369,6 +383,8 @@ special_handlers = {
     tokenize.NAME: handle_name,
     tokenize.NUMBER: handle_number,
     tokenize.ERRORTOKEN: handle_error_token,
+    (tokenize.OP, '|'): handle_pipes,
+    (tokenize.OP, '||'): handle_pipes,
     (tokenize.OP, '&'): handle_ampersands,
     (tokenize.OP, '&&'): handle_ampersands,
     (tokenize.OP, '@'): handle_at,
@@ -519,7 +535,6 @@ class Lexer(object):
         'NUMBER',                # numbers
         'WS',                    # whitespace in subprocess mode
         'AMPERSAND',             # &
-        'DOUBLEAMP',             # &&
         'REGEXPATH',             # regex escaped with backticks
         'IOREDIRECT',            # subprocess io redirection token
         'LPAREN', 'RPAREN',      # ( )
