@@ -55,7 +55,11 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
   file=${locfile#*"$sep"}
   namefile="${namefile}\\"${name}\\":\\"${file//\\/\\\\}\\","
 done <<< "$namelocfilestr"
-namefile="${namefile%?}}"
+if [[ "{" == "${namefile}" ]]; then
+  namefile="${namefile}}"
+else
+  namefile="${namefile%?}}"
+fi
 echo $namefile
 """.strip()
 
@@ -67,7 +71,11 @@ for name in ${(ok)functions}; do
   file=${loc[7,-1]}
   namefile="${namefile}\\"${name}\\":\\"${(Q)file:A}\\","
 done 
-namefile="${namefile%?}}"
+if [[ "{" == "${namefile}" ]]; then
+  namefile="${namefile}}"
+else
+  namefile="${namefile%?}}"
+fi
 echo ${namefile}
 """.strip()
 
@@ -75,24 +83,28 @@ DEFAULT_ENVCMDS = {
     'bash': 'env',
     '/bin/bash': 'env',
     'zsh': 'env',
+    '/bin/zsh': 'env',
     '/usr/bin/zsh': 'env',
 }
 DEFAULT_ALIASCMDS = {
     'bash': 'alias',
     '/bin/bash': 'alias',
     'zsh': 'alias -L',
+    '/bin/zsh': 'alias -L',
     '/usr/bin/zsh': 'alias -L',
 }
 DEFAULT_FUNCSCMDS = {
     'bash': DEFAULT_BASH_FUNCSCMD,
     '/bin/bash': DEFAULT_BASH_FUNCSCMD,
     'zsh': DEFAULT_ZSH_FUNCSCMD,
+    '/bin/zsh': DEFAULT_ZSH_FUNCSCMD,
     '/usr/bin/zsh': DEFAULT_ZSH_FUNCSCMD,
 }
 DEFAULT_SOURCERS = {
     'bash': 'source',
     '/bin/bash': 'source',
     'zsh': 'source',
+    '/bin/zsh': 'source',
     '/usr/bin/zsh': 'source',
 }
 
@@ -158,7 +170,7 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
     cmd.append('-c')
     envcmd = DEFAULT_ENVCMDS.get(shell, 'env') if envcmd is None else envcmd
     aliascmd = DEFAULT_ALIASCMDS.get(shell, 'alias') if aliascmd is None else aliascmd
-    funcscmd = DEFAULT_FUNCSCMDS.get(shell, '') if funcscmd is None else funcscmd
+    funcscmd = DEFAULT_FUNCSCMDS.get(shell, 'echo {}') if funcscmd is None else funcscmd
     command = COMMAND.format(envcmd=envcmd, aliascmd=aliascmd, prevcmd=prevcmd,
                              postcmd=postcmd, funcscmd=funcscmd).strip()
     cmd.append(command)
