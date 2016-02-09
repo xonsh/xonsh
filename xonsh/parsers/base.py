@@ -2102,6 +2102,16 @@ class BaseParser(object):
         """
         p[0] = ast.Str(s='|', lineno=self.lineno, col_offset=self.col)
 
+
+    def p_andproc(self, p):
+        """andproc : DOUBLEAMP
+                   | WS DOUBLEAMP
+                   | DOUBLEAMP WS
+                   | WS DOUBLEAMP WS
+                   | WS AND WS
+        """
+        p[0] = ast.Str(s='and', lineno=self.lineno, col_offset=self.col)
+
     def p_subproc_s2(self, p):
         """subproc : subproc_atoms
                    | subproc_atoms WS
@@ -2114,12 +2124,16 @@ class BaseParser(object):
         p1 = p[1]
         p[0] = p1 + [ast.Str(s=p[2], lineno=self.lineno, col_offset=self.col)]
 
+    _valid_redir = frozenset(['|', 'and', 'or'])
+
     def p_subproc_pipe(self, p):
         """subproc : subproc pipe subproc_atoms
                    | subproc pipe subproc_atoms WS
+                   | subproc andproc subproc_atoms
+                   | subproc andproc subproc_atoms WS
         """
         p1 = p[1]
-        if len(p1) > 1 and hasattr(p1[-2], 's') and p1[-2].s != '|':
+        if len(p1) > 1 and hasattr(p1[-2], 's') and p1[-2].s not in self._valid_redir:
             msg = 'additional redirect following non-pipe redirect'
             self._parse_error(msg, self.currloc(lineno=self.lineno, column=self.col))
         cliargs = self._subproc_cliargs(p[3], lineno=self.lineno, col=self.col)

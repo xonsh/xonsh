@@ -32,6 +32,7 @@ _op_map = {
     '~': 'TILDE', '^': 'XOR', '<<': 'LSHIFT', '>>': 'RSHIFT',
     '<': 'LT', '<=': 'LE', '>': 'GT', '>=': 'GE', '==': 'EQ',
     '!=': 'NE', '->': 'RARROW',
+    '&&': 'DOUBLEAMP',
     # assignment operators
     '=': 'EQUALS', '+=': 'PLUSEQUAL', '-=': 'MINUSEQUAL',
     '*=': 'TIMESEQUAL', '@=': 'ATEQUAL', '/=': 'DIVEQUAL', '%=': 'MODEQUAL',
@@ -143,8 +144,19 @@ def _make_special_handler(token_type, extra_check=lambda x: True):
 handle_number = _make_special_handler('NUMBER')
 """Function for handling number tokens"""
 
-handle_ampersand = _make_special_handler('AMPERSAND')
-"""Function for handling ampersand tokens"""
+def handle_ampersands(state, token, stream):
+    """Function for generating PLY tokens for single and double ampersands."""
+    n = next(stream, None)
+    if n is not None and n.type == tokenize.OP and \
+            n.string == '&' and n.start == token.end:
+        state['last'] = n
+        yield _new_token('DOUBLEAMP', '&&', token.start)
+    else:
+        state['last'] = token
+        if state['pymode'][-1][0]:
+            yield _new_token('AMPERSAND', token.string, token.start)
+        if n is not None:
+            yield from handle_token(state, n, stream)
 
 
 def handle_dollar(state, token, stream):
@@ -216,7 +228,6 @@ def handle_question(state, token, stream):
         yield _new_token('QUESTION', '?', token.start)
         if n is not None:
             yield from handle_token(state, n, stream)
-
 
 def handle_backtick(state, token, stream):
     """
@@ -358,7 +369,8 @@ special_handlers = {
     tokenize.NAME: handle_name,
     tokenize.NUMBER: handle_number,
     tokenize.ERRORTOKEN: handle_error_token,
-    (tokenize.OP, '&'): handle_ampersand,
+    (tokenize.OP, '&'): handle_ampersands,
+    (tokenize.OP, '&&'): handle_ampersands,
     (tokenize.OP, '@'): handle_at,
     (tokenize.OP, '('): handle_lparen,
     (tokenize.OP, ')'): handle_rparen,
@@ -507,6 +519,7 @@ class Lexer(object):
         'NUMBER',                # numbers
         'WS',                    # whitespace in subprocess mode
         'AMPERSAND',             # &
+        'DOUBLEAMP',             # &&
         'REGEXPATH',             # regex escaped with backticks
         'IOREDIRECT',            # subprocess io redirection token
         'LPAREN', 'RPAREN',      # ( )

@@ -1523,6 +1523,18 @@ def test_two_cmds_one_pipe():
 def test_three_cmds_two_pipes():
     yield check_xonsh_ast, {}, '$(ls | grep wakka | grep jawaka)', False
 
+def test_two_cmds_one_and():
+    yield check_xonsh_ast, {}, '$(ls and grep wakka)', False
+
+def test_three_cmds_two_ands():
+    yield check_xonsh_ast, {}, '$(ls and grep wakka and grep jawaka)', False
+
+def test_two_cmds_one_doubleamps():
+    yield check_xonsh_ast, {}, '$(ls && grep wakka)', False
+
+def test_three_cmds_two_doubleamps():
+    yield check_xonsh_ast, {}, '$(ls && grep wakka && grep jawaka)', False
+
 def test_one_cmd_write():
     yield check_xonsh_ast, {}, '$(ls > x.py)', False
 
