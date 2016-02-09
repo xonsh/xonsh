@@ -1362,11 +1362,8 @@ class BaseParser(object):
         if p2 is None:
             p0 = p1
         else:
-            p0 = ast.Compare(left=p1,
-                             ops=p2[::2],
-                             comparators=p2[1::2],
-                             lineno=p1.lineno,
-                             col_offset=p1.col_offset)
+            p0 = ast.Compare(left=p1, ops=p2[::2], comparators=p2[1::2],
+                             lineno=p1.lineno, col_offset=p1.col_offset)
         p[0] = p0
 
     def p_comp_op_expr(self, p):
@@ -1386,7 +1383,7 @@ class BaseParser(object):
         ('is', 'not'): ast.IsNot
     }
 
-    def p_comp_op(self, p):
+    def p_comp_op_monograph(self, p):
         """comp_op : LT
                    | GT
                    | EQ
@@ -1394,20 +1391,21 @@ class BaseParser(object):
                    | LE
                    | NE
                    | IN
-                   | NOT IN
                    | IS
+        """
+        p[0] = self._comp_ops[p[1]]()
+
+    def p_comp_op_digraph(self, p):
+        """comp_op : NOT IN
                    | IS NOT
         """
-        key = p[1] if len(p) == 2 else (p[1], p[2])
-        p[0] = self._comp_ops[key]()
+        p[0] = self._comp_ops[(p[1], p[2])]()
 
     def p_star_expr(self, p):
         """star_expr : times_tok expr"""
         p1 = p[1]
-        p[0] = ast.Starred(value=p[2],
-                           ctx=ast.Load(),
-                           lineno=p1.lineno,
-                           col_offset=p1.lexpos)
+        p[0] = ast.Starred(value=p[2], ctx=ast.Load(),
+                           lineno=p1.lineno, col_offset=p1.lexpos)
 
     def _binop_combine(self, p1, p2):
         """Combines binary operations"""
@@ -1438,11 +1436,8 @@ class BaseParser(object):
     def p_pipe_xor_expr(self, p):
         """pipe_xor_expr : pipe_tok xor_expr"""
         p1 = p[1]
-        p[0] = [ast.BinOp(left=None,
-                          op=ast.BitOr(),
-                          right=p[2],
-                          lineno=p1.lineno,
-                          col_offset=p1.lexpos)]
+        p[0] = [ast.BinOp(left=None, op=ast.BitOr(), right=p[2],
+                          lineno=p1.lineno, col_offset=p1.lexpos)]
 
     def p_xor_expr(self, p):
         """xor_expr : and_expr xor_and_expr_list_opt"""
@@ -1451,11 +1446,8 @@ class BaseParser(object):
     def p_xor_and_expr(self, p):
         """xor_and_expr : xor_tok and_expr"""
         p1 = p[1]
-        p[0] = [ast.BinOp(left=None,
-                          op=ast.BitXor(),
-                          right=p[2],
-                          lineno=p1.lineno,
-                          col_offset=p1.lexpos)]
+        p[0] = [ast.BinOp(left=None, op=ast.BitXor(), right=p[2],
+                          lineno=p1.lineno, col_offset=p1.lexpos)]
 
     def p_and_expr(self, p):
         """and_expr : shift_expr ampersand_shift_expr_list_opt"""
@@ -1464,11 +1456,8 @@ class BaseParser(object):
     def p_ampersand_shift_expr(self, p):
         """ampersand_shift_expr : ampersand_tok shift_expr"""
         p1 = p[1]
-        p[0] = [ast.BinOp(left=None,
-                          op=ast.BitAnd(),
-                          right=p[2],
-                          lineno=p1.lineno,
-                          col_offset=p1.lexpos)]
+        p[0] = [ast.BinOp(left=None, op=ast.BitAnd(), right=p[2],
+                          lineno=p1.lineno, col_offset=p1.lexpos)]
 
     def p_shift_expr(self, p):
         """shift_expr : arith_expr shift_arith_expr_list_opt"""
@@ -1480,37 +1469,27 @@ class BaseParser(object):
         """
         p1 = p[1]
         op = ast.LShift() if p1.value == '<<' else ast.RShift()
-        p[0] = [ast.BinOp(left=None,
-                          op=op,
-                          right=p[2],
-                          lineno=p1.lineno,
-                          col_offset=p1.lexpos)]
+        p[0] = [ast.BinOp(left=None, op=op, right=p[2],
+                          lineno=p1.lineno, col_offset=p1.lexpos)]
 
-    def p_arith_expr(self, p):
-        """arith_expr : term
-                      | term pm_term_list
-        """
-        p1 = p[1]
-        p2 = p[2] if len(p) > 2 else None
-        if p2 is None:
-            p0 = p1
-        elif len(p2) == 2:
+    def p_arith_expr_single(self, p):
+        """arith_expr : term"""
+        p[0] = p[1]
+
+    def p_arith_expr_many(self, p):
+        """arith_expr : term pm_term_list"""
+        p1, p2 = p[1], p[2]
+        if len(p2) == 2:
             lineno, col = lopen_loc(p1)
-            p0 = ast.BinOp(left=p1,
-                           op=p2[0],
-                           right=p2[1],
-                           lineno=lineno,
-                           col_offset=col)
+            p0 = ast.BinOp(left=p1, op=p2[0], right=p2[1],
+                           lineno=lineno, col_offset=col)
         else:
             left = p1
             for op, right in zip(p2[::2], p2[1::2]):
                 locer = left if left is p1 else op
                 lineno, col = lopen_loc(locer)
-                left = ast.BinOp(left=left,
-                                 op=op,
-                                 right=right,
-                                 lineno=lineno,
-                                 col_offset=col)
+                left = ast.BinOp(left=left, op=op, right=right,
+                                 lineno=lineno, col_offset=col)
             p0 = left
         p[0] = p0
 
@@ -1539,21 +1518,15 @@ class BaseParser(object):
             p0 = p1
         elif len(p2) == 2:
             lineno, col = lopen_loc(p1)
-            p0 = ast.BinOp(left=p1,
-                           op=p2[0],
-                           right=p2[1],
-                           lineno=lineno,
-                           col_offset=col)
+            p0 = ast.BinOp(left=p1, op=p2[0], right=p2[1],
+                           lineno=lineno, col_offset=col)
         else:
             left = p1
             for op, right in zip(p2[::2], p2[1::2]):
                 locer = left if left is p1 else op
                 lineno, col = lopen_loc(locer)
-                left = ast.BinOp(left=left,
-                                 op=op,
-                                 right=right,
-                                 lineno=lineno,
-                                 col_offset=col)
+                left = ast.BinOp(left=left, op=op, right=right,
+                                 lineno=lineno, col_offset=col)
             p0 = left
         p[0] = p0
 
