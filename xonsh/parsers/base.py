@@ -1297,17 +1297,11 @@ class BaseParser(object):
         """lambdef : LAMBDA varargslist_opt COLON test"""
         p2, p4 = p[2], p[4]
         if p2 is None:
-            args = ast.arguments(args=[],
-                                 vararg=None,
-                                 kwonlyargs=[],
-                                 kw_defaults=[],
-                                 kwarg=None,
-                                 defaults=[])
+            args = ast.arguments(args=[], vararg=None, kwonlyargs=[],
+                                 kw_defaults=[], kwarg=None, defaults=[])
         else:
             args = p2
-        p0 = ast.Lambda(args=args,
-                        body=p4,
-                        lineno=self.lineno,
+        p0 = ast.Lambda(args=args, body=p4, lineno=self.lineno,
                         col_offset=self.col)
         p[0] = p0
 
@@ -1322,16 +1316,12 @@ class BaseParser(object):
             p0 = p1
         elif len(p2) == 2:
             lineno, col = lopen_loc(p1)
-            p0 = ast.BoolOp(op=p2[0],
-                            values=[p1, p2[1]],
-                            lineno=lineno,
+            p0 = ast.BoolOp(op=p2[0], values=[p1, p2[1]], lineno=lineno,
                             col_offset=col)
         else:
             lineno, col = lopen_loc(p1)
-            p0 = ast.BoolOp(op=p2[0],
-                            values=[p[1]] + p2[1::2],
-                            lineno=lineno,
-                            col_offset=col)
+            p0 = ast.BoolOp(op=p2[0], values=[p[1]] + p2[1::2],
+                            lineno=lineno, col_offset=col)
         p[0] = p0
 
     def p_or_and_test(self, p):
@@ -1345,39 +1335,30 @@ class BaseParser(object):
             p0 = p1
         elif len(p2) == 2:
             lineno, col = lopen_loc(p1)
-            p0 = ast.BoolOp(op=p2[0],
-                            values=[p1, p2[1]],
-                            lineno=lineno,
-                            col_offset=col)
+            p0 = ast.BoolOp(op=p2[0], values=[p1, p2[1]],
+                            lineno=lineno, col_offset=col)
         else:
             lineno, col = lopen_loc(p1)
-            p0 = ast.BoolOp(op=p2[0],
-                            values=[p1] + p2[1::2],
-                            lineno=lineno,
-                            col_offset=col)
+            p0 = ast.BoolOp(op=p2[0], values=[p1] + p2[1::2],
+                            lineno=lineno, col_offset=col)
         p[0] = p0
 
     def p_and_not_test(self, p):
         """and_not_test : AND not_test"""
         p[0] = [ast.And(), p[2]]
 
+    def p_not_test_not(self, p):
+        """not_test : NOT not_test"""
+        p[0] = ast.UnaryOp(op=ast.Not(), operand=p[2],
+                           lineno=self.lineno, col_offset=self.col)
+
     def p_not_test(self, p):
-        """not_test : NOT not_test
-                    | comparison
-        """
-        if len(p) == 2:
-            p0 = p[1]
-        else:
-            p0 = ast.UnaryOp(op=ast.Not(),
-                             operand=p[2],
-                             lineno=self.lineno,
-                             col_offset=self.col)
-        p[0] = p0
+        """not_test : comparison"""
+        p[0] = p[1]
 
     def p_comparison(self, p):
         """comparison : expr comp_op_expr_list_opt"""
-        p1 = p[1]
-        p2 = p[2]
+        p1, p2 = p[1], p[2]
         if p2 is None:
             p0 = p1
         else:
