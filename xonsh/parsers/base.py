@@ -2112,6 +2112,15 @@ class BaseParser(object):
         """
         p[0] = ast.Str(s='and', lineno=self.lineno, col_offset=self.col)
 
+    def p_orproc(self, p):
+        """orproc : DOUBLEPIPE
+                  | WS DOUBLEPIPE
+                  | DOUBLEPIPE WS
+                  | WS DOUBLEPIPE WS
+                  | WS OR WS
+        """
+        p[0] = ast.Str(s='or', lineno=self.lineno, col_offset=self.col)
+
     def p_subproc_s2(self, p):
         """subproc : subproc_atoms
                    | subproc_atoms WS
@@ -2131,6 +2140,8 @@ class BaseParser(object):
                    | subproc pipe subproc_atoms WS
                    | subproc andproc subproc_atoms
                    | subproc andproc subproc_atoms WS
+                   | subproc orproc subproc_atoms
+                   | subproc orproc subproc_atoms WS
         """
         p1 = p[1]
         if len(p1) > 1 and hasattr(p1[-2], 's') and p1[-2].s not in self._valid_redir:
