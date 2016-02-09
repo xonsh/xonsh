@@ -776,15 +776,13 @@ class BaseParser(object):
         """semi_small_stmt : SEMI small_stmt"""
         p[0] = [p[2]]
 
-    def p_simple_stmt(self, p):
-        """simple_stmt : small_stmt semi_small_stmt_list semi_opt NEWLINE
-                       | small_stmt semi_opt NEWLINE
-        """
-        p1, p2 = p[1], p[2]
-        p0 = [p1]
-        if p2 is not None and p2 != ';':
-            p0 += p2
-        p[0] = p0
+    def p_simple_stmt_single(self, p):
+        """simple_stmt : small_stmt semi_opt NEWLINE"""
+        p[0] = [p[1]]
+
+    def p_simple_stmt_many(self, p):
+        """simple_stmt : small_stmt semi_small_stmt_list semi_opt NEWLINE"""
+        p[0] = [p[1]] + p[2]
 
     def p_small_stmt(self, p):
         """small_stmt : expr_stmt
@@ -984,28 +982,23 @@ class BaseParser(object):
         """yield_stmt : yield_expr"""
         p[0] = self.expr(p[1])
 
-    def p_raise_stmt(self, p):
-        """raise_stmt : raise_tok
-                      | raise_tok test
-                      | raise_tok test FROM test
-        """
+    def p_raise_stmt_r1(self, p):
+        """raise_stmt : raise_tok"""
         p1 = p[1]
-        lenp = len(p)
-        cause = None
-        if lenp == 2:
-            exc = None
-        elif lenp == 3:
-            exc = p[2]
-        elif lenp == 5:
-            exc = p[2]
-            cause = p[4]
-        else:
-            assert False
-        p0 = ast.Raise(exc=exc,
-                       cause=cause,
-                       lineno=p1.lineno,
-                       col_offset=p1.lexpos)
-        p[0] = p0
+        p[0] = ast.Raise(exc=None, cause=None, lineno=p1.lineno, 
+                         col_offset=p1.lexpos)
+
+    def p_raise_stmt_r2(self, p):
+        """raise_stmt : raise_tok test"""
+        p1 = p[1]
+        p[0] = ast.Raise(exc=p[2], cause=None, lineno=p1.lineno,
+                         col_offset=p1.lexpos)
+
+    def p_raise_stmt_r3(self, p):
+        """raise_stmt : raise_tok test FROM test"""
+        p1 = p[1]
+        p[0] = ast.Raise(exc=p[2], cause=p[4], lineno=p1.lineno,
+                         col_offset=p1.lexpos)
 
     def p_import_stmt(self, p):
         """import_stmt : import_name
