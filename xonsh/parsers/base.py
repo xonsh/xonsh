@@ -1132,11 +1132,7 @@ class BaseParser(object):
             if len(p3) != 1:
                 assert False
             p3 = p3[0]
-        p0 = ast.Assert(test=p2,
-                        msg=p3,
-                        lineno=p1.lineno,
-                        col_offset=p1.lexpos)
-        p[0] = p0
+        p[0] = ast.Assert(test=p2, msg=p3, lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_compound_stmt(self, p):
         """compound_stmt : if_stmt
@@ -1153,10 +1149,7 @@ class BaseParser(object):
     def p_elif_part(self, p):
         """elif_part : ELIF test COLON suite"""
         p2 = p[2]
-        p[0] = [ast.If(test=p2,
-                       body=p[4],
-                       orelse=[],
-                       lineno=p2.lineno,
+        p[0] = [ast.If(test=p2, body=p[4], orelse=[], lineno=p2.lineno,
                        col_offset=p2.col_offset)]
 
     def p_else_part(self, p):
@@ -1168,10 +1161,7 @@ class BaseParser(object):
                    | if_tok test COLON suite elif_part_list_opt else_part
         """
         p1 = p[1]
-        lastif = ast.If(test=p[2],
-                        body=p[4],
-                        orelse=[],
-                        lineno=p1.lineno,
+        lastif = ast.If(test=p[2], body=p[4], orelse=[], lineno=p1.lineno,
                         col_offset=p1.lexpos)
         p0 = [lastif]
         p5 = p[5]
@@ -1188,10 +1178,7 @@ class BaseParser(object):
                       | WHILE test COLON suite else_part
         """
         p5 = p[5] if len(p) > 5 else []
-        p[0] = [ast.While(test=p[2],
-                          body=p[4],
-                          orelse=p5,
-                          lineno=self.lineno,
+        p[0] = [ast.While(test=p[2], body=p[4], orelse=p5, lineno=self.lineno,
                           col_offset=self.col)]
 
     def p_for_stmt(self, p):
@@ -1206,16 +1193,10 @@ class BaseParser(object):
         else:
             for x in p2:
                 store_ctx(x)
-            p2 = ast.Tuple(elts=p2,
-                           ctx=ast.Store(),
-                           lineno=p2[0].lineno,
+            p2 = ast.Tuple(elts=p2, ctx=ast.Store(), lineno=p2[0].lineno,
                            col_offset=p2[0].col_offset)
-        p[0] = [ast.For(target=p2,
-                        iter=p[4],
-                        body=p[6],
-                        orelse=p7,
-                        lineno=p1.lineno,
-                        col_offset=p1.lexpos)]
+        p[0] = [ast.For(target=p2, iter=p[4], body=p[6], orelse=p7,
+                        lineno=p1.lineno, col_offset=p1.lexpos)]
 
     def p_except_part(self, p):
         """except_part : except_clause COLON suite"""
@@ -1227,44 +1208,38 @@ class BaseParser(object):
         """finally_part : FINALLY COLON suite"""
         p[0] = p[3]
 
-    def p_try_stmt(self, p):
-        """try_stmt : try_tok COLON suite except_part_list else_part finally_part_opt
-                    | try_tok COLON suite except_part_list finally_part_opt
-                    | try_tok COLON suite finally_part
-        """
-        lenp = len(p)
+    def p_try_stmt_t5(self, p):
+        """try_stmt : try_tok COLON suite finally_part"""
         p1 = p[1]
-        t = ast.Try(body=p[3], lineno=p1.lineno, col_offset=p1.lexpos)
-        if lenp == 7:
-            p5, p6 = p[5], p[6]
-            t.handlers = p[4]
-            t.orelse = [] if p5 is None else p5
-            t.finalbody = [] if p6 is None else p6
-        elif lenp == 6:
-            p5 = p[5]
-            t.handlers = p[4]
-            t.orelse = []
-            t.finalbody = [] if p5 is None else p5
-        else:
-            t.handlers = []
-            t.orelse = []
-            t.finalbody = p[4]
-        p[0] = [t]
+        p[0] = [ast.Try(body=p[3], handlers=[], orelse=[], finalbody=p[4],
+                        lineno=p1.lineno, col_offset=p1.lexpos)]
 
-    def p_with_stmt(self, p):
-        """with_stmt : with_tok with_item COLON suite
-                     | with_tok with_item comma_with_item_list COLON suite
-        """
-        p1, p2, p3 = p[1], [p[2]], p[3]
-        if len(p) == 5:
-            body = p[4]
-        else:
-            p2 += p3
-            body = p[5]
-        p[0] = [ast.With(items=p2,
-                         body=body,
-                         lineno=p1.lineno,
-                         col_offset=p1.lexpos)]
+    def p_try_stmt_t6(self, p):
+        """try_stmt : try_tok COLON suite except_part_list finally_part_opt"""
+        p1 = p[1]
+        p[0] = [ast.Try(body=p[3], handlers=p[4], orelse=[], 
+                        finalbody=([] if p[5] is None else p[5]),
+                        lineno=p1.lineno, col_offset=p1.lexpos)]
+
+    def p_try_stmt_t7(self, p):
+        """try_stmt : try_tok COLON suite except_part_list else_part finally_part_opt"""
+        p1 = p[1]
+        p[0] = [ast.Try(body=p[3], handlers=p[4],
+                        orelse=([] if p[5] is None else p[5]),
+                        finalbody=([] if p[6] is None else p[6]),
+                        lineno=p1.lineno, col_offset=p1.lexpos)]
+
+    def p_with_stmt_w5(self, p):
+        """with_stmt : with_tok with_item COLON suite"""
+        p1 = p[1]
+        p[0] = [ast.With(items=[p[2]], body=p[4],
+                         lineno=p1.lineno, col_offset=p1.lexpos)]
+
+    def p_with_stmt_p6(self, p):
+        """with_stmt : with_tok with_item comma_with_item_list COLON suite"""
+        p1 = p[1]
+        p[0] = [ast.With(items=[p[2]] + p[3], body=p[5],
+                         lineno=p1.lineno, col_offset=p1.lexpos)]
 
     def p_as_expr(self, p):
         """as_expr : AS expr"""
@@ -1283,22 +1258,17 @@ class BaseParser(object):
         """comma_with_item : COMMA with_item"""
         p[0] = [p[2]]
 
-    def p_except_clause(self, p):
-        """except_clause : except_tok
-                         | except_tok test as_name_opt
-        """
+    def p_except_clause_e2(self, p):        
+        """except_clause : except_tok"""
         p1 = p[1]
-        if len(p) == 2:
-            p0 = ast.ExceptHandler(type=None,
-                                   name=None,
-                                   lineno=p1.lineno,
-                                   col_offset=p1.lexpos)
-        else:
-            p0 = ast.ExceptHandler(type=p[2],
-                                   name=p[3],
-                                   lineno=p1.lineno,
-                                   col_offset=p1.lexpos)
-        p[0] = p0
+        p[0] = ast.ExceptHandler(type=None, name=None, lineno=p1.lineno,
+                                 col_offset=p1.lexpos)
+
+    def p_except_clause(self, p):
+        """except_clause : except_tok test as_name_opt"""
+        p1 = p[1]
+        p[0] = ast.ExceptHandler(type=p[2], name=p[3], lineno=p1.lineno,
+                                 col_offset=p1.lexpos)
 
     def p_suite(self, p):
         """suite : simple_stmt
@@ -1306,20 +1276,16 @@ class BaseParser(object):
         """
         p[0] = p[1] if len(p) == 2 else p[3]
 
-    def p_test(self, p):
+    def p_test_ol(self, p):
         """test : or_test
-                | or_test IF or_test ELSE test
                 | lambdef
         """
-        if len(p) == 2:
-            p0 = p[1]
-        else:
-            p0 = ast.IfExp(test=p[3],
-                           body=p[1],
-                           orelse=p[5],
-                           lineno=self.lineno,
-                           col_offset=self.col)
-        p[0] = p0
+        p[0] = p[1]
+
+    def p_test_o5(self, p):
+        """test : or_test IF or_test ELSE test"""
+        p[0] = ast.IfExp(test=p[3], body=p[1], orelse=p[5],
+                         lineno=self.lineno, col_offset=self.col)
 
     def p_test_nocond(self, p):
         """test_nocond : or_test
