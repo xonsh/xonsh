@@ -1833,47 +1833,48 @@ class BaseParser(object):
         """comma_expr_or_star_expr : COMMA expr_or_star_expr"""
         p[0] = [p[2]]
 
-    def p_exprlist(self, p):
-        """exprlist : expr_or_star_expr comma_expr_or_star_expr_list comma_opt
-                    | expr_or_star_expr comma_opt
-        """
-        p1, p2 = p[1], p[2]
-        p3 = p[3] if len(p) == 4 else None
-        if p2 is None and p3 is None:
-            p0 = [p1]
-        elif p2 == ',' and p3 is None:
-            p0 = [p1]
-        elif p2 is not None:
-            p2.insert(0, p1)
-            p0 = p2
-        else:
-            assert False
-        p[0] = p0
+    def p_exprlist_e3(self, p):
+        """exprlist : expr_or_star_expr comma_opt"""
+        p[0] = [p[1]]
 
-    def p_testlist(self, p):
+    def p_exprlist_many(self, p):
+        """exprlist : expr_or_star_expr comma_expr_or_star_expr_list comma_opt"""
+        p2 = p[2]
+        p2.insert(0, p[1])
+        p[0] = p2
+
+    def p_testlist_test(self, p):
+        """testlist : test"""
+        p1 = p[1]
+        if isinstance(p1, ast.Tuple) and (hasattr(p1, '_real_tuple') and 
+                                          p1._real_tuple):
+            p1.lineno, p1.col_offset = lopen_loc(p1.elts[0])
+        p[0] = p1
+
+    def p_testlist_single(self, p):
+        """testlist : test COMMA"""
+        p1 = p[1]
+        if isinstance(p1, ast.Tuple) and (hasattr(p1, '_real_tuple') and 
+                                          p1._real_tuple):
+            lineno, col = lopen_loc(p1)
+            p[0] = ast.Tuple(elts=[p1], ctx=ast.Load(),
+                             lineno=p1.lineno, col_offset=p1.col_offset)
+        else:
+            p[0] = ensure_has_elts(p[1])
+
+    def p_testlist_many(self, p):
         """testlist : test comma_test_list COMMA
                     | test comma_test_list
-                    | test COMMA
-                    | test
         """
-        lenp = len(p)
         p1 = p[1]
-        if lenp > 2:
-            if isinstance(p1, ast.Tuple) and \
-                    (hasattr(p1, '_real_tuple') and p1._real_tuple):
-                lineno, col = lopen_loc(p1)
-                p1 = ast.Tuple(elts=[p1],
-                               ctx=ast.Load(),
-                               lineno=p1.lineno,
-                               col_offset=p1.col_offset)
-            else:
-                p1 = ensure_has_elts(p1)
-            p2 = p[2] if lenp > 2 else []
-            p2 = [] if p2 == ',' else p2
-            p1.elts += p2
-        elif lenp == 2 and isinstance(p1, ast.Tuple) and \
-                           (hasattr(p1, '_real_tuple') and p1._real_tuple):
-            p1.lineno, p1.col_offset = lopen_loc(p1.elts[0])
+        if isinstance(p1, ast.Tuple) and (hasattr(p1, '_real_tuple') and 
+                                          p1._real_tuple):
+            lineno, col = lopen_loc(p1)
+            p1 = ast.Tuple(elts=[p1], ctx=ast.Load(),
+                           lineno=p1.lineno, col_offset=p1.col_offset)
+        else:
+            p1 = ensure_has_elts(p1)
+        p1.elts += p[2]
         p[0] = p1
 
     def p_comma_item(self, p):
