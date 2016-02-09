@@ -93,6 +93,14 @@ def handle_name(state, token, stream):
             else:
                 state['last'] = n
                 yield _new_token('IOREDIRECT', string, token.start)
+        elif token.string == 'and':
+            yield _new_token('AND', token.string, token.start)
+            if n is not None:
+                yield from handle_token(state, n, stream)
+        elif token.string == 'or':
+            yield _new_token('OR', token.string, token.start)
+            if n is not None:
+                yield from handle_token(state, n, stream)
         else:
             yield _new_token('NAME', token.string, token.start)
             if n is not None:

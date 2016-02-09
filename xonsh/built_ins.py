@@ -494,7 +494,10 @@ def run_subproc(cmds, captured=True):
         stdin = None
         stderr = None
         if isinstance(cmd, string_types):
-            continue
+            if cmd == '|':
+                continue
+            else:
+                raise RuntimeError('{0!r} not understood'.format(cmd))
         streams = {}
         while True:
             if len(cmd) >= 3 and _is_redirect(cmd[-2]):

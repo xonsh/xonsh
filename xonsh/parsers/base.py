@@ -375,12 +375,14 @@ class BaseParser(object):
     def _parse_error(self, msg, loc):
         err = SyntaxError('{0}: {1}'.format(loc, msg))
         err.loc = loc
+        err.filename = '<xonsh-parser>'
         raise err
 
     #
     # Precedence of operators
     #
-    precedence = (('left', 'PIPE'), ('left', 'XOR'), ('left', 'AMPERSAND'),
+    precedence = (('left', 'PIPE'), 
+                  ('left', 'XOR'), ('left', 'AMPERSAND'),
                   ('left', 'EQ', 'NE'), ('left', 'GT', 'GE', 'LT', 'LE'),
                   ('left', 'RSHIFT', 'LSHIFT'), ('left', 'PLUS', 'MINUS'),
                   ('left', 'TIMES', 'DIVIDE', 'DOUBLEDIV', 'MOD'),
@@ -2108,6 +2110,7 @@ class BaseParser(object):
                    | WS DOUBLEAMP
                    | DOUBLEAMP WS
                    | WS DOUBLEAMP WS
+                   | AND WS
                    | WS AND WS
         """
         p[0] = ast.Str(s='and', lineno=self.lineno, col_offset=self.col)
@@ -2117,6 +2120,7 @@ class BaseParser(object):
                   | WS DOUBLEPIPE
                   | DOUBLEPIPE WS
                   | WS DOUBLEPIPE WS
+                  | OR WS
                   | WS OR WS
         """
         p[0] = ast.Str(s='or', lineno=self.lineno, col_offset=self.col)
