@@ -2102,147 +2102,134 @@ class BaseParser(object):
         """
         p[0] = ast.Str(s='|', lineno=self.lineno, col_offset=self.col)
 
-    def p_subproc(self, p):
+    def p_subproc_s2(self, p):
         """subproc : subproc_atoms
                    | subproc_atoms WS
-                   | subproc AMPERSAND
-                   | subproc pipe subproc_atoms
+        """
+        p1 = p[1]
+        p[0] = [self._subproc_cliargs(p1, lineno=self.lineno, col=self.col)]
+
+    def p_subproc_amp(self, p):
+        """subproc : subproc AMPERSAND"""
+        p1 = p[1]
+        p[0] = p1 + [ast.Str(s=p[2], lineno=self.lineno, col_offset=self.col)]
+
+    def p_subproc_pipe(self, p):
+        """subproc : subproc pipe subproc_atoms
                    | subproc pipe subproc_atoms WS
         """
-        lineno = self.lineno
-        col = self.col
-        lenp = len(p)
         p1 = p[1]
-        if lenp == 2:
-            p0 = [self._subproc_cliargs(p1, lineno=lineno, col=col)]
-        elif p[2] == '&':
-            p0 = p1 + [ast.Str(s=p[2], lineno=lineno, col_offset=col)]
-        elif lenp == 3:
-            p0 = [self._subproc_cliargs(p1, lineno=lineno, col=col)]
-        else:
-            if len(p1) > 1 and hasattr(p1[-2], 's') and p1[-2].s != '|':
-                msg = 'additional redirect following non-pipe redirect'
-                self._parse_error(msg, self.currloc(lineno=lineno, column=col))
-            cliargs = self._subproc_cliargs(p[3], lineno=lineno, col=col)
-            p0 = p1 + [p[2], cliargs]
-        # return arguments list
-        p[0] = p0
+        if len(p1) > 1 and hasattr(p1[-2], 's') and p1[-2].s != '|':
+            msg = 'additional redirect following non-pipe redirect'
+            self._parse_error(msg, self.currloc(lineno=self.lineno, column=self.col))
+        cliargs = self._subproc_cliargs(p[3], lineno=self.lineno, col=self.col)
+        p[0] = p1 + [p[2], cliargs]
 
-    def p_subproc_atoms(self, p):
-        """subproc_atoms : subproc_atom
-                         | subproc_atoms WS subproc_atom
-        """
+    def p_subproc_atoms_single(self, p):
+        """subproc_atoms : subproc_atom"""
+        p[0] = [p[1]]
+
+    def p_subproc_atoms_many(self, p):
+        """subproc_atoms : subproc_atoms WS subproc_atom"""
         p1 = p[1]
-        if len(p) < 4:
-            p1 = [p1]
-        else:
-            p1.append(p[3])
+        p1.append(p[3])
         p[0] = p1
 
-    def p_subproc_atom(self, p):
-        """subproc_atom : subproc_arg
-                        | string_literal
-                        | REGEXPATH
-                        | DOLLAR_NAME
-                        | GT
+    #
+    # Subproc atom rules
+    #
+    def p_subproc_atom_uncaptured(self, p):
+        """subproc_atom : dollar_lbracket_tok subproc RBRACKET"""
+        
+        p1 = p[1]
+        p0 = xonsh_call('__xonsh_subproc_uncaptured__', args=p[2],
+                        lineno=p1.lineno, col=p1.lexpos)
+        p0._cliarg_action = 'splitlines'
+        p[0] = p0
+
+    def p_subproc_atom_captured(self, p):
+        """subproc_atom : dollar_lparen_tok subproc RPAREN"""
+        p1 = p[1]
+        p0 = xonsh_call('__xonsh_subproc_captured__', args=p[2],
+                        lineno=p1.lineno, col=p1.lexpos)
+        p0._cliarg_action = 'splitlines'
+        p[0] = p0
+
+    def p_subproc_atom_pyenv_lookup(self, p):
+        """subproc_atom : dollar_lbrace_tok test RBRACE"""
+        p1 = p[1]
+        lineno, col = p1.lineno, p1.lexpos
+        xenv = self._xenv(lineno=lineno, col=col)
+        func = ast.Attribute(value=xenv, attr='get', ctx = ast.Load(),
+                             lineno=lineno, col_offset=col)
+        p0 = ast.Call(func=func, args=[p[2], ast.Str(s='', lineno=lineno,
+                                                     col_offset=col)],
+                      keywords=[], starargs=None, kwargs=None, lineno=lineno,
+                      col_offset=col)
+        p0._cliarg_action = 'append'
+        p[0] = p0
+
+    def p_subproc_atom_pyeval(self, p):
+        """subproc_atom : AT_LPAREN test RPAREN"""
+        p0 = xonsh_call('__xonsh_ensure_list_of_strs__', [p[2]],
+                        lineno=self.lineno, col=self.col)
+        p0._cliarg_action = 'extend'
+        p[0] = p0
+
+    def p_subproc_atom_redirect(self, p):
+        """subproc_atom : GT
                         | LT
                         | RSHIFT
                         | IOREDIRECT
-                        | AT_LPAREN test RPAREN
-                        | dollar_lbrace_tok test RBRACE
-                        | dollar_lparen_tok subproc RPAREN
-                        | dollar_lbracket_tok subproc RBRACKET
         """
-        lenp = len(p)
-        p1 = p[1]
-        if isinstance(p1, LexToken):
-            p1, p1_tok = p1.value, p1
-        if lenp == 2:
-            if isinstance(p1, str):
-                p0 = ast.Str(s=p1, lineno=self.lineno, col_offset=self.col)
-                bt = '`'
-                if p1.startswith(bt) and p1.endswith(bt):
-                    p0.s = p1.strip(bt)
-                    p0 = xonsh_regexpath(p0, lineno=self.lineno, col=self.col)
-                    p0._cliarg_action = 'extend'
-                elif '*' in p1:
-                    p0 = xonsh_call('__xonsh_glob__',
-                                    args=[p0],
-                                    lineno=self.lineno,
-                                    col=self.col)
-                    p0._cliarg_action = 'extend'
-                elif p1.startswith('$'):
-                    p0 = self._envvar_getter_by_name(p1[1:],
-                                                     lineno=self.lineno,
-                                                     col=self.col)
-                    p0 = xonsh_call('__xonsh_ensure_list_of_strs__', [p0],
-                                    lineno=self.lineno,
-                                    col=self.col)
-                    p0._cliarg_action = 'extend'
-                else:
-                    p0 = xonsh_call('__xonsh_expand_path__', args=[p0],
-                                    lineno=self.lineno, col=self.col)
-                    p0._cliarg_action = 'append'
-            elif isinstance(p1, ast.Str):
-                p0 = xonsh_call('__xonsh_expand_path__', args=[p1],
-                                lineno=self.lineno, col=self.col)
-                p0._cliarg_action = 'append'
-            elif isinstance(p1, ast.AST):
-                p0 = p1
-                p0._cliarg_action = 'append'
-            else:
-                assert False
-        elif p1 == '@(':
-            p0 = xonsh_call('__xonsh_ensure_list_of_strs__', [p[2]],
-                            lineno=self.lineno,
-                            col=self.col)
-            p0._cliarg_action = 'extend'
-        elif p1 == '${':
-            lineno, col = p1_tok.lineno, p1_tok.lexpos
-            xenv = self._xenv(lineno=lineno, col=col)
-            func = ast.Attribute(value=xenv,
-                                 attr='get',
-                                 ctx = ast.Load(),
-                                 lineno=lineno,
-                                 col_offset=col)
-            p0 = ast.Call(func=func,
-                          args=[p[2],
-                                ast.Str(s='',
-                                        lineno=lineno,
-                                        col_offset=col)],
-                          keywords=[],
-                          starargs=None,
-                          kwargs=None,
-                          lineno=lineno,
-                          col_offset=col)
-            p0._cliarg_action = 'append'
-        elif p1 == '$(':
-            p0 = xonsh_call('__xonsh_subproc_captured__',
-                            args=p[2],
-                            lineno=p1_tok.lineno,
-                            col=p1_tok.lexpos)
-            p0._cliarg_action = 'splitlines'
-        elif p1 == '$[':
-            p0 = xonsh_call('__xonsh_subproc_uncaptured__',
-                            args=p[2],
-                            lineno=p1_tok.lineno,
-                            col=p1_tok.lexpos)
-            p0._cliarg_action = 'splitlines'
-        else:
-            assert False
+        p0 = ast.Str(s=p[1], lineno=self.lineno, col_offset=self.col)
+        p0._cliarg_action = 'append'
         p[0] = p0
 
-    def p_subproc_arg(self, p):
-        """subproc_arg : subproc_arg_part
-                       | subproc_arg subproc_arg_part
-        """
-        # This glues the string together after parsing
-        p1 = p[1]
-        if len(p) == 2:
-            p0 = p1
-        else:
-            p0 = p1 + p[2]
+    def p_subproc_atom_dollar_name(self, p):
+        """subproc_atom : DOLLAR_NAME"""
+        p0 = self._envvar_getter_by_name(p[1][1:], lineno=self.lineno, col=self.col)
+        p0 = xonsh_call('__xonsh_ensure_list_of_strs__', [p0], lineno=self.lineno,
+                        col=self.col)
+        p0._cliarg_action = 'extend'
         p[0] = p0
+
+    def p_subproc_atom_re(self, p):
+        """subproc_atom : REGEXPATH"""
+        p1 = ast.Str(s=p[1].strip('`'), lineno=self.lineno, col_offset=self.col)
+        p0 = xonsh_regexpath(p1, lineno=self.lineno, col=self.col)
+        p0._cliarg_action = 'extend'
+        p[0] = p0
+
+    def p_subproc_atom_str(self, p):
+        """subproc_atom : string_literal"""
+        p0 = xonsh_call('__xonsh_expand_path__', args=[p[1]],
+                                lineno=self.lineno, col=self.col)
+        p0._cliarg_action = 'append'
+        p[0] = p0
+
+    def p_subproc_atom_arg(self, p):
+        """subproc_atom : subproc_arg"""
+        p1 = p[1]
+        p0 = ast.Str(s=p[1], lineno=self.lineno, col_offset=self.col)
+        if '*' in p1:
+            p0 = xonsh_call('__xonsh_glob__', args=[p0],
+                            lineno=self.lineno, col=self.col)
+            p0._cliarg_action = 'extend'
+        else:
+            p0 = xonsh_call('__xonsh_expand_path__', args=[p0],
+                            lineno=self.lineno, col=self.col)
+            p0._cliarg_action = 'append'
+        p[0] = p0
+
+    def p_subproc_arg_single(self, p):
+        """subproc_arg : subproc_arg_part"""
+        p[0] = p[1]
+
+    def p_subproc_arg_many(self, p):
+        """subproc_arg : subproc_arg subproc_arg_part"""
+        # This glues the string together after parsing
+        p[0] = p[1] + p[2]
 
     def p_subproc_arg_part(self, p):
         """subproc_arg_part : NAME
