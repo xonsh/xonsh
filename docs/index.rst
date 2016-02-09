@@ -32,6 +32,7 @@ the xonsh shell
         "Sally sells csh and keeps xonsh to herself",
         "Nice indeed. Everything's accounted for, except your old shell.",
         "I wanna thank you for putting me back in my snail shell.",
+        "Crustaceanly Yours",
         ];
     document.write(taglines[Math.floor(Math.random() * taglines.length)]);
     </script>
