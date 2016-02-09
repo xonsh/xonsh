@@ -1881,73 +1881,70 @@ class BaseParser(object):
         """comma_item : COMMA item"""
         p[0] = p[2]
 
-    def p_dictorsetmaker(self, p):
+    #
+    # Dict or set maker
+    #
+    def p_dictorsetmaker_t6(self, p):
+        """dictorsetmaker : test COLON test comma_item_list comma_opt"""
+        p1, p4 = p[1], p[4]
+        keys = [p1]
+        vals = [p[3]]
+        for k, v in zip(p4[::2], p4[1::2]):
+            keys.append(k)
+            vals.append(v)
+        lineno, col = lopen_loc(p1)
+        p[0] = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), 
+                        lineno=lineno, col_offset=col)
+
+    def p_dictorsetmaker_i4(self, p):
+        """dictorsetmaker : item comma_item_list comma_opt"""
+        p1, p2 = p[1], p[2]
+        keys = [p1[0]]
+        vals = [p1[1]]
+        for k, v in zip(p2[::2], p2[1::2]):
+            keys.append(k)
+            vals.append(v)
+        lineno, col = lopen_loc(p1[0] or p2[0])
+        p[0] = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), 
+                        lineno=lineno, col_offset=col)
+
+    def p_dictorsetmaker_t4_dict(self, p):
+        """dictorsetmaker : test COLON testlist"""
+        keys = [p[1]]
+        vals = self._list_or_elts_if_not_real_tuple(p[3])
+        lineno, col = lopen_loc(p[1])
+        p[0] = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), 
+                        lineno=lineno, col_offset=col)
+
+    def p_dictorsetmaker_t4_set(self, p):
+        """dictorsetmaker : test_or_star_expr comma_test_or_star_expr_list comma_opt"""
+        p[0] = ast.Set(elts=[p[1]] + p[2], ctx=ast.Load(), lineno=self.lineno,
+                       col_offset=self.col)
+
+    def p_dictorsetmaker_test_comma(self, p):
+        """dictorsetmaker : test_or_star_expr comma_opt"""
+        elts = self._list_or_elts_if_not_real_tuple(p[1])
+        p[0] = ast.Set(elts=elts, ctx=ast.Load(), lineno=self.lineno,
+                       col_offset=self.col)
+
+    def p_dictorsetmaker_testlist(self, p):
+        """dictorsetmaker : testlist"""
+        elts = self._list_or_elts_if_not_real_tuple(p[1])
+        p[0] = ast.Set(elts=elts, ctx=ast.Load(), lineno=self.lineno,
+                     col_offset=self.col)
+
+    def p_dictorsetmaker_comp(self, p):
         """dictorsetmaker : item comp_for
                           | test_or_star_expr comp_for
-                          | testlist
-                          | test_or_star_expr comma_opt
-                          | test_or_star_expr comma_test_or_star_expr_list comma_opt
-                          | test COLON testlist
-                          | item comma_item_list comma_opt
-                          | test COLON test comma_item_list comma_opt
         """
         p1 = p[1]
-        lenp = len(p)
-        if lenp == 2:
-            elts = self._list_or_elts_if_not_real_tuple(p1)
-            p0 = ast.Set(elts=elts, ctx=ast.Load(), lineno=self.lineno,
-                         col_offset=self.col)
-        elif lenp == 3:
-            p2 = p[2]
-            if p2 is None or p2 == ',':
-                elts = self._list_or_elts_if_not_real_tuple(p1)
-                p0 = ast.Set(elts=elts, ctx=ast.Load(), lineno=self.lineno,
-                            col_offset=self.col)
-            else:
-                comps = p2.get('comps', [])
-                if isinstance(p1, list) and len(p1) == 2:
-                    p0 = ast.DictComp(key=p1[0], value=p1[1], generators=comps,
-                                      lineno=self.lineno, col_offset=self.col)
-                else:
-                    p0 = ast.SetComp(elt=p1, generators=comps, lineno=self.lineno,
-                                     col_offset=self.col)
-        elif lenp == 4:
-            p2, p3 = p[2], p[3]
-            if isinstance(p1, list) and len(p1) == 2:
-                cls = ast.Dict
-                keys = [p1[0]]
-                vals = [p1[1]]
-                for k, v in zip(p2[::2], p2[1::2]):
-                    keys.append(k)
-                    vals.append(v)
-                lineno, col = lopen_loc(p1[0] or p2[0])
-                p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), 
-                              lineno=lineno, col_offset=col)
-            elif p2 == ':':
-                keys = [p1]
-                vals = self._list_or_elts_if_not_real_tuple(p3)
-                lineno, col = lopen_loc(p1)
-                p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), 
-                              lineno=lineno, col_offset=col)
-            elif isinstance(p1, ast.AST):
-                elts = [p1] + p2
-                p0 = ast.Set(elts=elts, ctx=ast.Load(), lineno=self.lineno,
-                             col_offset=self.col)
-            else:
-                assert False
-        elif lenp == 6:
-            p4 = p[4]
-            keys = [p1]
-            vals = [p[3]]
-            for k, v in zip(p4[::2], p4[1::2]):
-                keys.append(k)
-                vals.append(v)
-            lineno, col = lopen_loc(p1)
-            p0 = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), 
-                          lineno=lineno, col_offset=col)
+        comps = p[2].get('comps', [])
+        if isinstance(p1, list) and len(p1) == 2:
+            p[0] = ast.DictComp(key=p1[0], value=p1[1], generators=comps,
+                                lineno=self.lineno, col_offset=self.col)
         else:
-            assert False
-        p[0] = p0
+            p[0] = ast.SetComp(elt=p1, generators=comps, lineno=self.lineno,
+                               col_offset=self.col)
 
     def p_classdef(self, p):
         """classdef : class_tok NAME func_call_opt COLON suite"""
