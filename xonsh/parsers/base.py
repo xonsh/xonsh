@@ -1622,126 +1622,114 @@ class BaseParser(object):
         """atom_expr : atom trailer_list_opt"""
         p[0] = self.apply_trailers(p[1], p[2])
 
-    def p_atom(self, p):
-        """atom : lparen_tok yield_expr_or_testlist_comp_opt RPAREN
-                | lbracket_tok testlist_comp_opt RBRACKET
-                | lbrace_tok dictorsetmaker_opt RBRACE
-                | name_tok
-                | number
+    #
+    # Atom rules! (So does Adam!)
+    #
+    def p_atom_lparen(self, p):
+        """atom : lparen_tok yield_expr_or_testlist_comp_opt RPAREN"""
+        p1, p2 = p[1], p[2]
+        p1, p1_tok = p1.value, p1
+        if p2 is None:
+            # empty container atom
+            p0 = ast.Tuple(elts=[], ctx=ast.Load(), lineno=self.lineno,
+                           col_offset=self.col)
+        elif isinstance(p2, ast.AST):
+            p0 = p2
+            p0._lopen_lineno, p0._lopen_col = p1_tok.lineno, p1_tok.lexpos
+            p0._real_tuple = True
+        elif len(p2) == 1 and isinstance(p2[0], ast.AST):
+            p0 = p2[0]
+            p0._lopen_lineno, p0._lopen_col = p1_tok.lineno, p1_tok.lexpos
+        else:
+            self.p_error(p)
+        p[0] = p0
+
+    def p_atom_lbraket(self, p):
+        """atom : lbracket_tok testlist_comp_opt RBRACKET"""
+        p1, p2 = p[1], p[2]
+        p1, p1_tok = p1.value, p1
+        if p2 is None:
+            p0 = ast.List(elts=[], ctx=ast.Load(), lineno=self.lineno,
+                          col_offset=self.col)
+
+        elif isinstance(p2, ast.GeneratorExp):
+            p0 = ast.ListComp(elt=p2.elt, generators=p2.generators,
+                              lineno=p2.lineno, col_offset=p2.col_offset)
+        else:
+            if isinstance(p2, ast.Tuple):
+                if hasattr(p2, '_real_tuple') and p2._real_tuple:
+                    elts = [p2]
+                else:
+                    elts = p2.elts
+            else:
+                elts = [p2]
+            p0 = ast.List(elts=elts, ctx=ast.Load(),
+                          lineno=p1_tok.lineno, col_offset=p1_tok.lexpos)
+        p[0] = p0
+
+    def p_atom_lbrace(self, p):
+        """atom : lbrace_tok dictorsetmaker_opt RBRACE"""
+        p1, p2 = p[1], p[2]
+        p1, p1_tok = p1.value, p1
+        if p2 is None:
+            p0 = ast.Dict(keys=[], values=[], ctx=ast.Load(),
+                          lineno=self.lineno, col_offset=self.col)
+        else:
+            p0 = p2
+            p0.lineno, p0.col_offset = p1_tok.lineno, p1_tok.lexpos
+        p[0] = p0
+
+    def p_atom_ns(self, p):
+        """atom : number
                 | string_literal_list
-                | ellipsis_tok
-                | none_tok
-                | true_tok
-                | false_tok
-                | REGEXPATH
-                | DOLLAR_NAME
-                | dollar_lbrace_tok test RBRACE
+        """
+        p[0] = p[1]
+
+    def p_atom_name(self, p):
+        """atom : name_tok"""
+        p1 = p[1]
+        p[0] = ast.Name(id=p1.value, ctx=ast.Load(),
+                        lineno=p1.lineno, col_offset=p1.lexpos)
+
+    def p_atom_ellip(self, p):
+        """atom : ellipsis_tok"""
+        p1 = p[1]
+        p[0] = ast.Ellipsis(lineno=p1.lineno, col_offset=p1.lexpos)
+
+    def p_atom_none(self, p):
+        """atom : none_tok"""
+        p1 = p[1]
+        p[0] = ast.NameConstant(value=None, lineno=p1.lineno,
+                                col_offset=p1.lexpos)
+
+    def p_atom_true(self, p):
+        """atom : true_tok"""
+        p1 = p[1]
+        p[0] = ast.NameConstant(value=True, lineno=p1.lineno,
+                                col_offset=p1.lexpos)
+
+    def p_atom_false(self, p):
+        """atom : false_tok"""
+        p1 = p[1]
+        p[0] = ast.NameConstant(value=False, lineno=p1.lineno,
+                                col_offset=p1.lexpos)
+
+    def p_atom_re(self, p):
+        """atom : REGEXPATH"""
+        p1 = ast.Str(s=p[1].strip('`'), lineno=self.lineno,
+                     col_offset=self.col)
+        p[0] = xonsh_regexpath(p1, lineno=self.lineno, col=self.col)
+
+    def p_atom_dname(self, p):
+        """atom : DOLLAR_NAME"""
+        p[0] = self._envvar_by_name(p[1][1:], lineno=self.lineno, col=self.col)
+
+    def p_atom_fisful_of_dollars(self, p):
+        """atom : dollar_lbrace_tok test RBRACE
                 | dollar_lparen_tok subproc RPAREN
                 | dollar_lbracket_tok subproc RBRACKET
         """
-        p1 = p[1]
-        if len(p) == 2:
-            # plain-old atoms
-            bt = '`'
-            if isinstance(p1, (ast.Num, ast.Str, ast.Bytes)):
-                pass
-            elif isinstance(p1, str):
-                if p1.startswith(bt) and p1.endswith(bt):
-                    p1 = ast.Str(s=p1.strip(bt),
-                                 lineno=self.lineno,
-                                 col_offset=self.col)
-                    p1 = xonsh_regexpath(p1, lineno=self.lineno, col=self.col)
-                elif p1.startswith('$'):
-                    p1 = self._envvar_by_name(p1[1:],
-                                              lineno=self.lineno,
-                                              col=self.col)
-                else:
-                    raise ValueError(p1 + " not understood")
-            elif isinstance(p1, LexToken):
-                p1_value = p1.value
-                if p1_value == 'True':
-                    p1 = ast.NameConstant(value=True,
-                                          lineno=p1.lineno,
-                                          col_offset=p1.lexpos)
-                elif p1_value == 'False':
-                    p1 = ast.NameConstant(value=False,
-                                          lineno=p1.lineno,
-                                          col_offset=p1.lexpos)
-                elif p1_value == 'None':
-                    p1 = ast.NameConstant(value=None,
-                                          lineno=p1.lineno,
-                                          col_offset=p1.lexpos)
-                elif p1_value == '...':
-                    p1 = ast.Ellipsis(lineno=p1.lineno, col_offset=p1.lexpos)
-                else:
-                    p1 = ast.Name(id=p1_value,
-                                  ctx=ast.Load(),
-                                  lineno=p1.lineno,
-                                  col_offset=p1.lexpos)
-            else:
-                raise ValueError('{0!r} not understood'.format(p1))
-            p[0] = p1
-            return
-        if isinstance(p1, LexToken):
-            p1, p1_tok = p1.value, p1
-        p2 = p[2]
-        if p2 is None:
-            # empty container atoms
-            if p1 == '(':
-                p0 = ast.Tuple(elts=[],
-                               ctx=ast.Load(),
-                               lineno=self.lineno,
-                               col_offset=self.col)
-            elif p1 == '[':
-                p0 = ast.List(elts=[],
-                              ctx=ast.Load(),
-                              lineno=self.lineno,
-                              col_offset=self.col)
-            elif p1 == '{':
-                p0 = ast.Dict(keys=[],
-                              values=[],
-                              ctx=ast.Load(),
-                              lineno=self.lineno,
-                              col_offset=self.col)
-            else:
-                assert False
-        elif p1 == '(':
-            # filled, possible group container tuple atoms
-            if isinstance(p2, ast.AST):
-                p0 = p2
-                p0._lopen_lineno, p0._lopen_col = p1_tok.lineno, p1_tok.lexpos
-                p0._real_tuple = True
-            elif len(p2) == 1 and isinstance(p2[0], ast.AST):
-                p0 = p2[0]
-                p0._lopen_lineno, p0._lopen_col = p1_tok.lineno, p1_tok.lexpos
-            else:
-                assert False
-        elif p1 == '[':
-            if isinstance(p2, ast.GeneratorExp):
-                p0 = ast.ListComp(elt=p2.elt,
-                                  generators=p2.generators,
-                                  lineno=p2.lineno,
-                                  col_offset=p2.col_offset)
-            else:
-                if isinstance(p2, ast.Tuple):
-                    if hasattr(p2, '_real_tuple') and p2._real_tuple:
-                        elts = [p2]
-                    else:
-                        elts = p2.elts
-                else:
-                    elts = [p2]
-                p0 = ast.List(elts=elts,
-                              ctx=ast.Load(),
-                              lineno=p1_tok.lineno,
-                              col_offset=p1_tok.lexpos)
-        elif p1 == '{':
-            p0 = p2
-            p0.lineno, p0.col_offset = p1_tok.lineno, p1_tok.lexpos
-        elif p1.startswith('$'):
-            p0 = self._dollar_rules(p)
-        else:
-            assert False
-        p[0] = p0
+        p[0] = self._dollar_rules(p)
 
     def p_string_literal(self, p):
         """string_literal : string_tok"""
