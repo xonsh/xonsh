@@ -1546,40 +1546,28 @@ class BaseParser(object):
 
     _factor_ops = {'+': ast.UAdd, '-': ast.USub, '~': ast.Invert}
 
-    def p_factor(self, p):
+    def p_factor_power(self, p):
+        """factor : power"""
+        p[0] = p[1]
+
+    def p_factor_unary(self, p):
         """factor : PLUS factor
                   | MINUS factor
                   | TILDE factor
-                  | power
         """
-        if len(p) == 2:
-            p0 = p[1]
-        else:
-            op = self._factor_ops[p[1]]()
-            p0 = ast.UnaryOp(op=op,
-                             operand=p[2],
-                             lineno=self.lineno,
-                             col_offset=self.col)
-        p[0] = p0
+        op = self._factor_ops[p[1]]()
+        p[0] = ast.UnaryOp(op=op, operand=p[2], lineno=self.lineno,
+                           col_offset=self.col)
+
+    def p_power_atom(self, p):
+        """power : atom_expr"""
+        p[0] = p[1]
 
     def p_power(self, p):
-        """power : atom_expr
-                 | atom_expr POW factor
-        """
-        lenp = len(p)
+        """power : atom_expr POW factor"""
         p1 = p[1]
-        if lenp == 2:
-            p0 = p1
-        elif lenp == 4:
-            # actual power rule
-            p0 = ast.BinOp(left=p1,
-                           op=ast.Pow(),
-                           right=p[3],
-                           lineno=p1.lineno,
-                           col_offset=p1.col_offset)
-        else:
-            assert False
-        p[0] = p0
+        p[0] = ast.BinOp(left=p1, op=ast.Pow(), right=p[3],
+                         lineno=p1.lineno, col_offset=p1.col_offset)
 
     def p_yield_expr_or_testlist_comp(self, p):
         """yield_expr_or_testlist_comp : yield_expr
