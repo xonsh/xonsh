@@ -55,7 +55,11 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
   file=${locfile#*"$sep"}
   namefile="${namefile}\\"${name}\\":\\"${file//\\/\\\\}\\","
 done <<< "$namelocfilestr"
-namefile="${namefile%?}}"
+if [[ "{" == "${namefile}" ]]; then
+  namefile="${namefile}}"
+else
+  namefile="${namefile%?}}"
+fi
 echo $namefile
 """.strip()
 
@@ -67,7 +71,11 @@ for name in ${(ok)functions}; do
   file=${loc[7,-1]}
   namefile="${namefile}\\"${name}\\":\\"${(Q)file:A}\\","
 done 
-namefile="${namefile%?}}"
+if [[ "{" == "${namefile}" ]]; then
+  namefile="${namefile}}"
+else
+  namefile="${namefile%?}}"
+fi
 echo ${namefile}
 """.strip()
 
