@@ -2032,55 +2032,39 @@ class BaseParser(object):
         elif p1 == '${':
             xenv = self._xenv(lineno=lineno, col=col)
             idx = ast.Index(value=p2)
-            p0 = ast.Subscript(value=xenv,
-                               slice=idx,
-                               ctx=ast.Load(),
-                               lineno=lineno,
-                               col_offset=col)
+            p0 = ast.Subscript(value=xenv, slice=idx,ctx=ast.Load(),
+                               lineno=lineno, col_offset=col)
         elif p1 == '$(':
             p0 = xonsh_call('__xonsh_subproc_captured__', p2,
-                            lineno=lineno,
-                            col=col)
+                            lineno=lineno, col=col)
         elif p1 == '$[':
             p0 = xonsh_call('__xonsh_subproc_uncaptured__', p2,
-                            lineno=lineno,
-                            col=col)
+                            lineno=lineno, col=col)
         else:
             assert False
         return p0
 
     def _xenv(self, lineno=lineno, col=col):
         """Creates a new xonsh env reference."""
-        return ast.Name(id='__xonsh_env__',
-                        ctx=ast.Load(),
-                        lineno=lineno,
-                        col_offset=col)
+        return ast.Name(id='__xonsh_env__', ctx=ast.Load(),
+                        lineno=lineno, col_offset=col)
 
     def _envvar_getter_by_name(self, var, lineno=None, col=None):
         xenv = self._xenv(lineno=lineno, col=col)
-        func = ast.Attribute(value=xenv,
-                             attr='get',
-                             ctx = ast.Load(),
-                             lineno=lineno,
-                             col_offset=col)
+        func = ast.Attribute(value=xenv, attr='get', ctx = ast.Load(),
+                             lineno=lineno, col_offset=col)
         return ast.Call(func=func,
                         args=[ast.Str(s=var, lineno=lineno, col_offset=col),
                               ast.Str(s='', lineno=lineno, col_offset=col)],
-                        keywords=[],
-                        starargs=None,
-                        kwargs=None,
-                        lineno=lineno,
-                        col_offset=col)
+                        keywords=[], starargs=None, kwargs=None,
+                        lineno=lineno, col_offset=col)
 
     def _envvar_by_name(self, var, lineno=None, col=None):
         """Looks up a xonsh variable by name."""
         xenv = self._xenv(lineno=lineno, col=col)
         idx = ast.Index(value=ast.Str(s=var, lineno=lineno, col_offset=col))
-        return ast.Subscript(value=xenv,
-                             slice=idx,
-                             ctx=ast.Load(),
-                             lineno=lineno,
-                             col_offset=col)
+        return ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
+                             lineno=lineno, col_offset=col)
 
     def _subproc_cliargs(self, args, lineno=None, col=None):
         """Creates an expression for subprocess CLI arguments."""
@@ -2091,13 +2075,11 @@ class BaseParser(object):
                 if currlist is None:
                     currlist = empty_list(lineno=lineno, col=col)
                     cliargs = binop(cliargs, ast.Add(), currlist,
-                                    lineno=lineno,
-                                    col=col)
+                                    lineno=lineno, col=col)
                 currlist.elts.append(arg)
             elif action == 'extend':
                 cliargs = binop(cliargs, ast.Add(), arg,
-                                lineno=lineno,
-                                col=col)
+                                lineno=lineno, col=col)
                 currlist = None
             elif action == 'splitlines':
                 sl = call_split_lines(arg, lineno=lineno, col=col)
@@ -2118,10 +2100,7 @@ class BaseParser(object):
                 | PIPE WS
                 | WS PIPE WS
         """
-        p1 = p[1]
-        if len(p) > 2 and len(p1.strip()) == 0:
-            p1 = p[2]
-        p[0] = ast.Str(s=p1, lineno=self.lineno, col_offset=self.col)
+        p[0] = ast.Str(s='|', lineno=self.lineno, col_offset=self.col)
 
     def p_subproc(self, p):
         """subproc : subproc_atoms
