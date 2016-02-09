@@ -1950,15 +1950,9 @@ class BaseParser(object):
         """classdef : class_tok NAME func_call_opt COLON suite"""
         p1, p3 = p[1], p[3]
         b, kw = ([], []) if p3 is None else (p3['args'], p3['keywords'])
-        c = ast.ClassDef(name=p[2],
-                         bases=b,
-                         keywords=kw,
-                         starargs=None,
-                         kwargs=None,
-                         body=p[5],
-                         decorator_list=[],
-                         lineno=p1.lineno,
-                         col_offset=p1.lexpos)
+        c = ast.ClassDef(name=p[2], bases=b, keywords=kw, starargs=None,
+                         kwargs=None, body=p[5], decorator_list=[],
+                         lineno=p1.lineno, col_offset=p1.lexpos)
         p[0] = [c]
 
     def p_comma_argument(self, p):
@@ -2010,15 +2004,13 @@ class BaseParser(object):
                            col_offset=p1.lexpos)
         p[0] = p0
 
-    def p_yield_arg(self, p):
-        """yield_arg : FROM test
-                     | testlist
-        """
-        if len(p) == 2:
-            p0 = {'from': False, 'val': p[1]}
-        else:
-            p0 = {'from': True, 'val': p[2]}
-        p[0] = p0
+    def p_yield_arg_from(self, p):
+        """yield_arg : FROM test"""
+        p[0] = {'from': True, 'val': p[2]}
+
+    def p_yield_arg_testlist(self, p):
+        """yield_arg : testlist"""
+        p[0] = {'from': False, 'val': p[1]}
 
     #
     # subprocess
