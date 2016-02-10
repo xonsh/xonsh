@@ -42,8 +42,8 @@ def leftmostname(node):
         rtn = leftmostname(node.value)
     elif isinstance(node, Call):
         rtn = leftmostname(node.func)
-    elif isinstance(node, (BinOp, Compare)):
-        rtn = leftmostname(node.left)
+    elif isinstance(node, BoolOp):
+        rtn = leftmostname(node.values[0])
     elif isinstance(node, Assign):
         rtn = leftmostname(node.targets[0])
     elif isinstance(node, (Str, Bytes)):
