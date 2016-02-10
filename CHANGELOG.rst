@@ -15,7 +15,9 @@ Current Developments
 
 **Removed:** None
 
-**Fixed:** None
+**Fixed:**
+
+* Some minor zsh fixes for more platforms and setups.
 
 **Security:** None
 

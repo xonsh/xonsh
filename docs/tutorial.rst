@@ -23,7 +23,7 @@ Let's dive in!
 
 Starting xonsh
 ========================
-Assuming you have successfully installed xonsh (see http://xonsh.org),
+Assuming you have successfully installed xonsh (see http://xon.sh),
 you can start up the xonsh interpreter via the ``xonsh`` command. Suppose
 you are in a lesser terminal:
 
