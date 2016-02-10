@@ -467,6 +467,68 @@ def _redirect_io(streams, r, loc=None):
     else:
         raise XonshError('Unrecognized redirection command: {}'.format(r))
 
+def _wait_for_proc(prev_proc, prev_is_proxy, procs, cmds, background):
+    """Helper for run_subproc(), after this command the return code should be 
+    availble on prev_proc.
+    """
+    for proc in procs[:-1]:
+        try:
+            proc.stdout.close()
+        except OSError:
+            pass
+    if not prev_is_proxy:
+        add_job({
+            'cmds': cmds,
+            'pids': [i.pid for i in procs],
+            'obj': prev_proc,
+            'bg': background
+        })
+    env = builtins.__xonsh_env__
+    if env.get('XONSH_INTERACTIVE') and not env.get('XONSH_STORE_STDOUT'):
+        # set title here to get current command running
+        try:
+            builtins.__xonsh_shell__.settitle()
+        except AttributeError:
+            pass
+    if background:
+        return True
+    if prev_is_proxy:
+        prev_proc.wait()
+    wait_for_active_job()
+    return False
+
+
+def _proc_output(prev_proc, accumulated_output):
+    stdout = prev_proc.stdout
+    if stdout is not None and stdout is not sys.stdout:
+        env = builtins.__xonsh_env__
+        # to get proper encoding from Popen, we have to
+        # use a byte stream and then implement universal_newlines here
+        output = stdout.read()
+        if isinstance(output, bytes):
+            output = output.decode(encoding=env.get('XONSH_ENCODING'),
+                                   errors=env.get('XONSH_ENCODING_ERRORS'))
+        output = output.replace('\r\n', '\n')
+        output = accumulated_output + output
+    else:
+        output = accumulated_output
+    return output
+
+
+def _finish_subproc(prev_proc, prev_is_proxy, captured, aliased_cmd, 
+                    accumulated_output):
+    """Finalizes subprocess execution. Helper function for run_subproc()."""
+    env = builtins.__xonsh_env__
+    hist = builtins.__xonsh_history__
+    hist.last_cmd_rtn = prev_proc.returncode
+    output = _proc_output(prev_proc, accumulated_output)
+    if not captured:
+        hist.last_cmd_out = output
+    if not prev_is_proxy and hist.last_cmd_rtn > 0 and env.get('RAISE_SUBPROC_ERROR'):
+        raise CalledProcessError(hist.last_cmd_rtn, aliased_cmd, output=output)
+    if captured:
+        return output
+
 
 def run_subproc(cmds, captured=True):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
@@ -486,16 +548,36 @@ def run_subproc(cmds, captured=True):
     if cmds[-1] == '&':
         background = True
         cmds = cmds[:-1]
-    write_target = None
     last_cmd = len(cmds) - 1
     procs = []
     prev_proc = None
+    accumulated_output = ''
     for ix, cmd in enumerate(cmds):
         stdin = None
         stderr = None
         if isinstance(cmd, string_types):
             if cmd == '|':
                 continue
+            elif cmd == 'and':
+                _wait_for_proc(prev_proc, prev_is_proxy, procs, cmds[:ix], 
+                               background=False)
+                if prev_proc.returncode == 0:
+                    accumulated_output = _proc_output(prev_proc, accumulated_output)
+                    continue
+                else:
+                    return _finish_subproc(prev_proc, prev_is_proxy, 
+                                           captured, aliased_cmd, 
+                                           accumulated_output)
+            elif cmd == 'or':
+                _wait_for_proc(prev_proc, prev_is_proxy, procs, cmds[:ix], 
+                               background=False)
+                if prev_proc.returncode == 0:
+                    return _finish_subproc(prev_proc, prev_is_proxy, 
+                                           captured, aliased_cmd,
+                                           accumulated_output)
+                else:
+                    accumulated_output = _proc_output(prev_proc, accumulated_output)
+                    continue
             else:
                 raise RuntimeError('{0!r} not understood'.format(cmd))
         streams = {}
@@ -516,14 +598,14 @@ def run_subproc(cmds, captured=True):
             if prev_proc is not None:
                 raise XonshError('Multiple inputs for stdin')
             stdin = streams['stdin']
-        elif prev_proc is not None:
+        elif prev_proc is not None and cmds[ix-1] == '|':
             stdin = prev_proc.stdout
         # set standard output
         if 'stdout' in streams:
             if ix != last_cmd:
                 raise XonshError('Multiple redirects for stdout')
             stdout = streams['stdout']
-        elif captured or ix != last_cmd:
+        elif captured or (ix != last_cmd and cmds[ix+1] == '|'):
             stdout = PIPE
         elif builtins.__xonsh_stdout_uncaptured__ is not None:
             stdout = builtins.__xonsh_stdout_uncaptured__
@@ -600,48 +682,10 @@ def run_subproc(cmds, captured=True):
                 raise XonshError(e)
         procs.append(proc)
         prev_proc = proc
-    for proc in procs[:-1]:
-        try:
-            proc.stdout.close()
-        except OSError:
-            pass
-    if not prev_is_proxy:
-        add_job({
-            'cmds': cmds,
-            'pids': [i.pid for i in procs],
-            'obj': prev_proc,
-            'bg': background
-        })
-    if ENV.get('XONSH_INTERACTIVE') and not ENV.get('XONSH_STORE_STDOUT'):
-        # set title here to get current command running
-        try:
-            builtins.__xonsh_shell__.settitle()
-        except AttributeError:
-            pass
-    if background:
+    if _wait_for_proc(prev_proc, prev_is_proxy, procs, cmds, background):
         return
-    if prev_is_proxy:
-        prev_proc.wait()
-    wait_for_active_job()
-    hist = builtins.__xonsh_history__
-    hist.last_cmd_rtn = prev_proc.returncode
-    # get output
-    output = b''
-    if write_target is None:
-        if prev_proc.stdout not in (None, sys.stdout):
-            output = prev_proc.stdout.read()
-        if captured:
-            # to get proper encoding from Popen, we have to
-            # use a byte stream and then implement universal_newlines here
-            output = output.decode(encoding=ENV.get('XONSH_ENCODING'),
-                                   errors=ENV.get('XONSH_ENCODING_ERRORS'))
-            output = output.replace('\r\n', '\n')
-        else:
-            hist.last_cmd_out = output
-    if not prev_is_proxy and hist.last_cmd_rtn > 0 and ENV.get('RAISE_SUBPROC_ERROR'):
-        raise CalledProcessError(hist.last_cmd_rtn, aliased_cmd, output=output)
-    if captured:
-        return output
+    return _finish_subproc(prev_proc, prev_is_proxy, captured, aliased_cmd, 
+                           accumulated_output)
 
 
 def subproc_captured(*cmds):
