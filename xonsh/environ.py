@@ -285,7 +285,7 @@ DEFAULT_DOCS = {
     'FORMATTER_DICT': VarDocs(
         'Dictionary containing variables to be used when formatting $PROMPT '
         "and $TITLE. See 'Customizing the Prompt' "
-        'http://xonsh.org/tutorial.html#customizing-the-prompt', 
+        'http://xon.sh/tutorial.html#customizing-the-prompt', 
         configurable=False, default='xonsh.environ.FORMATTER_DICT'),
     'HISTCONTROL': VarDocs(
         'A set of strings (comma-separated list in string form) of options '
@@ -320,7 +320,7 @@ DEFAULT_DOCS = {
     'PROMPT': VarDocs(
         'The prompt text. May contain keyword arguments which are '
         "auto-formatted, see 'Customizing the Prompt' at "
-        'http://xonsh.org/tutorial.html#customizing-the-prompt.',
+        'http://xon.sh/tutorial.html#customizing-the-prompt.',
         default='xonsh.environ.DEFAULT_PROMPT'),
     'PROMPT_TOOLKIT_COLORS': VarDocs(
         'This is a mapping of from color names to HTML color codes. Whenever '
@@ -380,7 +380,7 @@ DEFAULT_DOCS = {
     'TITLE': VarDocs(
         'The title text for the window in which xonsh is running. Formatted '
         "in the same manner as $PROMPT, see 'Customizing the Prompt' "
-        'http://xonsh.org/tutorial.html#customizing-the-prompt.',
+        'http://xon.sh/tutorial.html#customizing-the-prompt.',
         default='xonsh.environ.DEFAULT_TITLE'),
     'VI_MODE': VarDocs(
         "Flag to enable 'vi_mode' in the 'prompt_toolkit' shell."),
