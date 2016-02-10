@@ -416,6 +416,59 @@ Python operator.
 If you are unsure of what pipes are, there are many great references out there.
 You should be able to find information on StackOverflow or Google.
 
+Logical Subprocess And
+=======================
+
+Subprocess-mode also allows you to use the ``and`` operator to chain together 
+subprocess commands. The truth value of a command is evaluates as whether
+its return code is zero (i.e. ``proc.returncode == 0``).  Like in Python, 
+if the a command evaluates to ``False``, subsequent commands will not be executed.
+For example, suppose we want to lists files that may or may not exist:
+
+.. code-block:: xonshcon
+
+    >>> touch exists
+    >>> ls exists and ls doesnt
+    exists
+    /bin/ls: cannot access doesnt: No such file or directory
+
+However, if you list the file that doesn't exist first, 
+you would have only seen the error:
+
+.. code-block:: xonshcon
+
+    >>> ls doesnt and ls exists 
+    /bin/ls: cannot access doesnt: No such file or directory
+
+Also, don't worry. Xonsh directly translates the ``&&`` operator into ``and``
+for you. It is less Pythonic, of course, but it is your shell!
+
+Logical Subprocess Or
+=======================
+
+Much like with ``and``, you can use the ``or`` operator to chain together 
+subprocess commands. The difference, to be certain, is that 
+subsequent commands will be executed only if the
+if the return code is non-zero (i.e. a failure). Using the file example
+from above:
+
+.. code-block:: xonshcon
+
+    >>> ls exists or ls doesnt
+    exists
+
+This doesn't even try to list a non-existent file!
+However, if you list the file that doesn't exist first, 
+you will see the error and then the file that does exist:
+
+.. code-block:: xonshcon
+
+    >>> ls doesnt or ls exists 
+    /bin/ls: cannot access doesnt: No such file or directory
+    exists
+
+Never fear! Xonsh also directly translates the ``||`` operator into ``or``,
+too. Your muscle memory is safe now, here with us.
 
 Input/Output Redirection
 ====================================

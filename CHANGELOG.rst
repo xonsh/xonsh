@@ -4,7 +4,10 @@ Xonsh Change Log
 
 Current Developments
 ====================
-**Added:** None
+**Added:**
+
+* ``and``, ``or``, ``&&``, ``||`` have been added as subprocess logical operators, 
+  by popular demand!
 
 **Changed:** None
 
