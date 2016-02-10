@@ -33,6 +33,8 @@ the xonsh shell
         "Nice indeed. Everything's accounted for, except your old shell.",
         "I wanna thank you for putting me back in my snail shell.",
         "Crustaceanly Yours",
+        "With great shell comes great reproducibility",
+        "None shell pass",
         ];
     document.write(taglines[Math.floor(Math.random() * taglines.length)]);
     </script>
