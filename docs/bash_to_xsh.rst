@@ -31,3 +31,9 @@ will help you put a finger on how to do the equivelent task in xonsh.
     * - ``set -x``
       - ``trace on``
       - Turns on tracing of source code lines during execution.
+    * - ``&&``
+      - ``and`` or ``&&``
+      - Logical-and operator for subprocesses.
+    * - ``||``
+      - ``or`` as well as ``||``
+      - Logical-or operator for subprocesses.
