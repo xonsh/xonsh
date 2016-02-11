@@ -108,7 +108,7 @@ You can install xonsh using conda, pip, or from source.
 
     $ conda install -c xonsh xonsh
 
-.. note:: For the bleeding edge development version use ``conda -c xonsh/channel/dev xonsh``
+.. note:: For the bleeding edge development version use ``conda install -c xonsh/channel/dev xonsh``
     
 
 **pip:**
