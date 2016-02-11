@@ -15,6 +15,7 @@ from xonsh.history import main as history_alias
 from xonsh.replay import main as replay_main
 from xonsh.environ import locate_binary
 from xonsh.foreign_shells import foreign_shell_data
+from xonsh.vox import Vox
 
 
 def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
@@ -192,6 +193,7 @@ DEFAULT_ALIASES = {
     'xonfig': xonfig,
     'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
     'ipynb': ['ipython', 'notebook', '--no-browser'],
+    'vox': Vox(),
 }
 
 if ON_WINDOWS:
