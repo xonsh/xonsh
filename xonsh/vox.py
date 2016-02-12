@@ -104,7 +104,7 @@ class Vox:
     def deactivate():
         """Deactive the active virtual environment."""
 
-        if 'VIRTUAL_ENV' not in ENV:
+        if 'VIRTUAL_ENV' not in builtins.__xonsh_env__:
             print('No environment currently active. Activate one with "vox activate".\n')
             return None
 
@@ -156,7 +156,7 @@ class Vox:
         :param name: virtual environment name
         """
 
-        if 'VIRTUAL_ENV' in ENV:
+        if 'VIRTUAL_ENV' in builtins.__xonsh_env__:
             print('This environment is currently active. If you really want to remove it, deactivate it first with "vox deactivate %s".\n' % name)
             return None
 
