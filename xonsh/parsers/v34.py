@@ -12,7 +12,7 @@ class Parser(BaseParser):
     """A Python v3.4 compliant parser for the xonsh language."""
 
     def __init__(self, lexer_optimize=True, lexer_table='xonsh.lexer_table',
-                 yacc_optimize=True, yacc_table='xonsh.parser_table', 
+                 yacc_optimize=True, yacc_table='xonsh.parser_table',
                  yacc_debug=False, outputdir=None):
         """Parameters
         ----------
@@ -39,7 +39,7 @@ class Parser(BaseParser):
             self._list_rule(rule)
 
         super().__init__(lexer_optimize=lexer_optimize, lexer_table=lexer_table,
-                 yacc_optimize=yacc_optimize, yacc_table=yacc_table, 
+                 yacc_optimize=yacc_optimize, yacc_table=yacc_table,
                  yacc_debug=yacc_debug, outputdir=outputdir)
 
     def p_classdef_or_funcdef(self, p):
