@@ -57,7 +57,7 @@ class Vox:
 
     @staticmethod
     def new(name):
-        """Create a virtual environment in $VIRTUALENV_HOME with ``python3 -m venv``.
+        """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
 
         :param name: virtual environment name
         """
