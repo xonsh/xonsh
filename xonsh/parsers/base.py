@@ -229,13 +229,13 @@ class BaseParser(object):
         for rule in list_rules:
             self._list_rule(rule)
 
-        tok_rules = ['def', 'class', 'return', 'number', 'name', 
-                     'none', 'true', 'false', 'ellipsis', 'if', 'del', 'assert', 
-                     'lparen', 'lbrace', 'lbracket', 'string', 'times', 'plus', 
+        tok_rules = ['def', 'class', 'return', 'number', 'name',
+                     'none', 'true', 'false', 'ellipsis', 'if', 'del', 'assert',
+                     'lparen', 'lbrace', 'lbracket', 'string', 'times', 'plus',
                      'minus', 'divide', 'doublediv', 'mod', 'at', 'lshift', 'rshift',
                      'pipe', 'xor', 'ampersand', 'for', 'colon',
-                     'import', 'except', 'nonlocal', 'global', 'yield', 'from', 
-                     'raise', 'with', 'dollar_lparen', 'dollar_lbrace', 
+                     'import', 'except', 'nonlocal', 'global', 'yield', 'from',
+                     'raise', 'with', 'dollar_lparen', 'dollar_lbrace',
                      'dollar_lbracket', 'try']
         for rule in tok_rules:
             self._tok_rule(rule)
@@ -493,7 +493,7 @@ class BaseParser(object):
         p1, p2 = p[1], p[2]
         targ = p2[0]
         targ.decorator_list = p1
-        # this is silly, CPython. This claims a func or class starts on 
+        # this is silly, CPython. This claims a func or class starts on
         # the line of the first decorator, rather than the 'def' or 'class'
         # line.  However, it retains the original col_offset.
         targ.lineno = p1[0].lineno
@@ -537,7 +537,7 @@ class BaseParser(object):
 
     def p_typedargslist_kwarg(self, p):
         """typedargslist : POW tfpdef"""
-        p[0] = ast.arguments(args=[], vararg=None, kwonlyargs=[], 
+        p[0] = ast.arguments(args=[], vararg=None, kwonlyargs=[],
                              kw_defaults=[], kwarg=p[2], defaults=[])
 
     def p_typedargslist_times4(self, p):
@@ -667,12 +667,12 @@ class BaseParser(object):
 
     def p_varargslist_kwargs(self, p):
         """varargslist : POW vfpdef"""
-        p[0] = ast.arguments(args=[], vararg=None, kwonlyargs=[], 
+        p[0] = ast.arguments(args=[], vararg=None, kwonlyargs=[],
                              kw_defaults=[], kwarg=p[2], defaults=[])
 
     def p_varargslist_times4(self, p):
         """varargslist : TIMES vfpdef_opt comma_pow_vfpdef_opt"""
-        p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[], 
+        p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[],
                            kwarg=p[3], defaults=[])
         self._set_var_args(p0, p[2], None)
         p[0] = p0
@@ -680,7 +680,7 @@ class BaseParser(object):
     def p_varargslist_times5(self, p):
         """varargslist : TIMES vfpdef_opt comma_vfpdef_list comma_pow_vfpdef_opt"""
         # *args, x, **kwargs
-        p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[], 
+        p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[],
                            kwarg=p[4], defaults=[])
         self._set_var_args(p0, p[2], p[3])  # *args
         p[0] = p0
@@ -688,7 +688,7 @@ class BaseParser(object):
     def p_varargslist_v5(self, p):
         """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt"""
         # x
-        p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[], 
+        p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[],
                            kwarg=None, defaults=[])
         self._set_regular_args(p0, p[1], p[2], p[3], p[4])
         p[0] = p0
@@ -696,7 +696,7 @@ class BaseParser(object):
     def p_varargslist_v7(self, p):
         """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt POW vfpdef"""
         # x, **kwargs
-        p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[], 
+        p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[],
                            kwarg=p[6], defaults=[])
         self._set_regular_args(p0, p[1], p[2], p[3], p[4])
         p[0] = p0
@@ -704,7 +704,7 @@ class BaseParser(object):
     def p_varargslist_v8(self, p):
         """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt TIMES vfpdef_opt comma_vfpdef_list_opt"""
         # x, *args
-        p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[], 
+        p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[],
                            kwarg=None, defaults=[])
         self._set_regular_args(p0, p[1], p[2], p[3], p[4])
         self._set_var_args(p0, p[6], p[7])
@@ -713,7 +713,7 @@ class BaseParser(object):
     def p_varargslist_v10(self, p):
         """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt TIMES vfpdef_opt COMMA POW vfpdef"""
         # x, *args, **kwargs
-        p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[], 
+        p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[],
                            kwarg=p[9], defaults=[])
         self._set_regular_args(p0, p[1], p[2], p[3], p[4])
         self._set_var_args(p0, p[6], None)
@@ -721,7 +721,7 @@ class BaseParser(object):
 
     def p_varargslist_v11(self, p):
         """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt TIMES vfpdef_opt comma_vfpdef_list COMMA POW vfpdef"""
-        p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[], 
+        p0 = ast.arguments(args=[], vararg=None, kwonlyargs=[], kw_defaults=[],
                            kwarg=p[10], defaults=[])
         self._set_regular_args(p0, p[1], p[2], p[3], p[4])
         self._set_var_args(p0, p[6], p[7])
@@ -856,9 +856,9 @@ class BaseParser(object):
             store_ctx(targ)
         p1.append(p2)
         p1.extend(targs)
-        p1 = [ast.Tuple(elts=p1, ctx=ast.Store(), lineno=p1[0].lineno, 
+        p1 = [ast.Tuple(elts=p1, ctx=ast.Store(), lineno=p1[0].lineno,
                         col_offset=p1[0].col_offset)]
-        p0 = ast.Assign(targets=p1, value=rhs, lineno=p1[0].lineno, 
+        p0 = ast.Assign(targets=p1, value=rhs, lineno=p1[0].lineno,
                         col_offset=p1[0].col_offset)
         return p0
 
@@ -985,7 +985,7 @@ class BaseParser(object):
     def p_raise_stmt_r1(self, p):
         """raise_stmt : raise_tok"""
         p1 = p[1]
-        p[0] = ast.Raise(exc=None, cause=None, lineno=p1.lineno, 
+        p[0] = ast.Raise(exc=None, cause=None, lineno=p1.lineno,
                          col_offset=p1.lexpos)
 
     def p_raise_stmt_r2(self, p):
@@ -1217,7 +1217,7 @@ class BaseParser(object):
     def p_try_stmt_t6(self, p):
         """try_stmt : try_tok COLON suite except_part_list finally_part_opt"""
         p1 = p[1]
-        p[0] = [ast.Try(body=p[3], handlers=p[4], orelse=[], 
+        p[0] = [ast.Try(body=p[3], handlers=p[4], orelse=[],
                         finalbody=([] if p[5] is None else p[5]),
                         lineno=p1.lineno, col_offset=p1.lexpos)]
 
@@ -1258,7 +1258,7 @@ class BaseParser(object):
         """comma_with_item : COMMA with_item"""
         p[0] = [p[2]]
 
-    def p_except_clause_e2(self, p):        
+    def p_except_clause_e2(self, p):
         """except_clause : except_tok"""
         p1 = p[1]
         p[0] = ast.ExceptHandler(type=None, name=None, lineno=p1.lineno,
@@ -1601,7 +1601,7 @@ class BaseParser(object):
                               col_offset=leader.col_offset, **trailer)
             elif isinstance(trailer, str):
                 if trailer == '?':
-                    p0 = xonsh_help(leader, lineno=leader.lineno, 
+                    p0 = xonsh_help(leader, lineno=leader.lineno,
                                     col=leader.col_offset)
                 elif trailer == '??':
                     p0 = xonsh_superhelp(leader,
@@ -1816,7 +1816,7 @@ class BaseParser(object):
             lineno, col = p2.lineno, p2.lexpos
         else:
             lineno, col = p1.lineno, p1.col_offset
-        p[0] = ast.Slice(lower=p1, upper=p[3], step=p[4], 
+        p[0] = ast.Slice(lower=p1, upper=p[3], step=p[4],
                          lineno=lineno, col_offset=col)
 
     def p_sliceop(self, p):
@@ -1846,7 +1846,7 @@ class BaseParser(object):
     def p_testlist_test(self, p):
         """testlist : test"""
         p1 = p[1]
-        if isinstance(p1, ast.Tuple) and (hasattr(p1, '_real_tuple') and 
+        if isinstance(p1, ast.Tuple) and (hasattr(p1, '_real_tuple') and
                                           p1._real_tuple):
             p1.lineno, p1.col_offset = lopen_loc(p1.elts[0])
         p[0] = p1
@@ -1854,7 +1854,7 @@ class BaseParser(object):
     def p_testlist_single(self, p):
         """testlist : test COMMA"""
         p1 = p[1]
-        if isinstance(p1, ast.Tuple) and (hasattr(p1, '_real_tuple') and 
+        if isinstance(p1, ast.Tuple) and (hasattr(p1, '_real_tuple') and
                                           p1._real_tuple):
             lineno, col = lopen_loc(p1)
             p[0] = ast.Tuple(elts=[p1], ctx=ast.Load(),
@@ -1867,7 +1867,7 @@ class BaseParser(object):
                     | test comma_test_list
         """
         p1 = p[1]
-        if isinstance(p1, ast.Tuple) and (hasattr(p1, '_real_tuple') and 
+        if isinstance(p1, ast.Tuple) and (hasattr(p1, '_real_tuple') and
                                           p1._real_tuple):
             lineno, col = lopen_loc(p1)
             p1 = ast.Tuple(elts=[p1], ctx=ast.Load(),
@@ -1893,7 +1893,7 @@ class BaseParser(object):
             keys.append(k)
             vals.append(v)
         lineno, col = lopen_loc(p1)
-        p[0] = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), 
+        p[0] = ast.Dict(keys=keys, values=vals, ctx=ast.Load(),
                         lineno=lineno, col_offset=col)
 
     def p_dictorsetmaker_i4(self, p):
@@ -1905,7 +1905,7 @@ class BaseParser(object):
             keys.append(k)
             vals.append(v)
         lineno, col = lopen_loc(p1[0] or p2[0])
-        p[0] = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), 
+        p[0] = ast.Dict(keys=keys, values=vals, ctx=ast.Load(),
                         lineno=lineno, col_offset=col)
 
     def p_dictorsetmaker_t4_dict(self, p):
@@ -1913,7 +1913,7 @@ class BaseParser(object):
         keys = [p[1]]
         vals = self._list_or_elts_if_not_real_tuple(p[3])
         lineno, col = lopen_loc(p[1])
-        p[0] = ast.Dict(keys=keys, values=vals, ctx=ast.Load(), 
+        p[0] = ast.Dict(keys=keys, values=vals, ctx=ast.Load(),
                         lineno=lineno, col_offset=col)
 
     def p_dictorsetmaker_t4_set(self, p):
@@ -2140,7 +2140,7 @@ class BaseParser(object):
     #
     def p_subproc_atom_uncaptured(self, p):
         """subproc_atom : dollar_lbracket_tok subproc RBRACKET"""
-        
+
         p1 = p[1]
         p0 = xonsh_call('__xonsh_subproc_uncaptured__', args=p[2],
                         lineno=p1.lineno, col=p1.lexpos)
