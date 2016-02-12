@@ -8,6 +8,7 @@ from xonsh import ast
 from xonsh.lexer import LexToken
 from xonsh.parsers.base import BaseParser, xonsh_help, xonsh_superhelp
 
+
 class Parser(BaseParser):
     """A Python v3.5 compliant parser for the xonsh language."""
 
@@ -33,9 +34,10 @@ class Parser(BaseParser):
         tok_rules = ['await', 'async']
         for rule in tok_rules:
             self._tok_rule(rule)
-        super().__init__(lexer_optimize=lexer_optimize, lexer_table=lexer_table,
-                 yacc_optimize=yacc_optimize, yacc_table=yacc_table,
-                 yacc_debug=yacc_debug, outputdir=outputdir)
+        super().__init__(lexer_optimize=lexer_optimize,
+                         lexer_table=lexer_table, yacc_optimize=yacc_optimize,
+                         yacc_table=yacc_table, yacc_debug=yacc_debug,
+                         outputdir=outputdir)
 
     def p_classdef_or_funcdef(self, p):
         """classdef_or_funcdef : classdef

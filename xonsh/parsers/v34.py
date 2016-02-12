@@ -8,6 +8,7 @@ from xonsh import ast
 from xonsh.lexer import LexToken
 from xonsh.parsers.base import BaseParser, xonsh_help, xonsh_superhelp
 
+
 class Parser(BaseParser):
     """A Python v3.4 compliant parser for the xonsh language."""
 
@@ -30,7 +31,7 @@ class Parser(BaseParser):
             The directory to place generated tables within.
         """
         # Rule creation and modifiation *must* take place before super()
-        opt_rules = ['argument_comma_list', 'comma_argument_list',]
+        opt_rules = ['argument_comma_list', 'comma_argument_list']
         for rule in opt_rules:
             self._opt_rule(rule)
 
@@ -38,9 +39,10 @@ class Parser(BaseParser):
         for rule in list_rules:
             self._list_rule(rule)
 
-        super().__init__(lexer_optimize=lexer_optimize, lexer_table=lexer_table,
-                 yacc_optimize=yacc_optimize, yacc_table=yacc_table,
-                 yacc_debug=yacc_debug, outputdir=outputdir)
+        super().__init__(lexer_optimize=lexer_optimize,
+                         lexer_table=lexer_table, yacc_optimize=yacc_optimize,
+                         yacc_table=yacc_table, yacc_debug=yacc_debug,
+                         outputdir=outputdir)
 
     def p_classdef_or_funcdef(self, p):
         """classdef_or_funcdef : classdef
@@ -139,10 +141,10 @@ class Parser(BaseParser):
                 p0 = ast.Starred(value=p[2])
             else:
                 p0 = ast.GeneratorExp(elt=p1, generators=p[2]['comps'],
-                                      lineno=p1.lineno, col_offset=p1.col_offset)
+                                      lineno=p1.lineno,
+                                      col_offset=p1.col_offset)
         elif lenp == 4:
             p0 = ast.keyword(arg=p1.id, value=p[3])
         else:
             assert False
         p[0] = p0
-
