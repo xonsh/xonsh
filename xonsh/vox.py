@@ -6,27 +6,24 @@ import venv
 import builtins
 
 
-ENV = builtins.__xonsh_env__
-
-
 class Vox:
     """Vox is a virtual environment manager for xonsh."""
 
     def __init__(self):
         """Ensure that $VIRTUALENV_HOME is defined and declare the available vox commands"""
 
-        if not ENV.get('VIRTUALENV_HOME'):
+        if not builtins.__xonsh_env__.get('VIRTUALENV_HOME'):
             if os.name == 'nt':
-                home_path = ENV['USERPROFILE']
+                home_path = builtins.__xonsh_env__['USERPROFILE']
 
             elif os.name == 'posix':
-                home_path = ENV['HOME']
+                home_path = builtins.__xonsh_env__['HOME']
 
             else:
                 print('This OS is not supported.')
                 return None
 
-            ENV['VIRTUALENV_HOME'] = join(home_path, '.virtualenvs')
+            builtins.__xonsh_env__['VIRTUALENV_HOME'] = join(home_path, '.virtualenvs')
 
         self.commands = {
             ('new',): self.new,
@@ -65,11 +62,11 @@ class Vox:
         :param name: virtual environment name
         """
 
-        env_path = join(ENV['VIRTUALENV_HOME'], name)
+        env_path = join(builtins.__xonsh_env__['VIRTUALENV_HOME'], name)
 
         print('Creating environment...')
 
-        venv.create(env_path, with_pip=True)
+        vbuiltins.__xonsh_env__.create(env_path, with_pip=True)
 
         print('Environment "%s" created. Activate it with "vox activate %s".\n' % (name, name))
 
@@ -80,7 +77,7 @@ class Vox:
         :param name: virtual environment name
         """
 
-        env_path = join(ENV['VIRTUALENV_HOME'], name)
+        env_path = join(builtins.__xonsh_env__['VIRTUALENV_HOME'], name)
 
         if not exists(env_path):
             print('This environment doesn\'t exist. Create it with "vox new %s".\n' % name)
@@ -98,8 +95,8 @@ class Vox:
 
         bin_path = join(env_path, bin_dir)
 
-        ENV['PATH'].insert(0, bin_path)
-        ENV['VIRTUAL_ENV'] = env_path
+        builtins.__xonsh_env__['PATH'].insert(0, bin_path)
+        builtins.__xonsh_env__['VIRTUAL_ENV'] = env_path
 
         print('Activated "%s".\n' % name)
 
@@ -111,7 +108,7 @@ class Vox:
             print('No environment currently active. Activate one with "vox activate".\n')
             return None
 
-        env_path = ENV['VIRTUAL_ENV']
+        env_path = builtins.__xonsh_env__['VIRTUAL_ENV']
 
         env_name = basename(env_path)
 
@@ -127,10 +124,10 @@ class Vox:
 
         bin_path = join(env_path, bin_dir)
 
-        while bin_path in ENV['PATH']:
-            ENV['PATH'].remove(bin_path)
+        while bin_path in builtins.__xonsh_env__['PATH']:
+            builtins.__xonsh_env__['PATH'].remove(bin_path)
 
-        ENV.pop('VIRTUAL_ENV')
+        builtins.__xonsh_env__.pop('VIRTUAL_ENV')
 
         print('Deactivated "%s".\n' % env_name)
 
@@ -138,7 +135,7 @@ class Vox:
     def list():
         """List available virtual environments."""
 
-        env_names = os.listdir(ENV['VIRTUALENV_HOME'])
+        env_names = os.listdir(builtins.__xonsh_env__['VIRTUALENV_HOME'])
 
         if not env_names:
             print('No environments evailable. Create one with "vox new".\n')
@@ -163,7 +160,7 @@ class Vox:
             print('This environment is currently active. If you really want to remove it, deactivate it first with "vox deactivate %s".\n' % name)
             return None
 
-        env_path = join(ENV['VIRTUALENV_HOME'], name)
+        env_path = join(builtins.__xonsh_env__['VIRTUALENV_HOME'], name)
 
         rmtree(env_path)
 
