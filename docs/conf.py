@@ -7,10 +7,13 @@
 #
 # All configuration values have a default; values that are commented out
 # serve to show the default.
-
-import sys, os
+import os
+import sys
+import builtins
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.environ import DEFAULT_DOCS, Env
+
+sys.path.insert(0, os.path.dirname(__file__))
 
 # -- General configuration -----------------------------------------------------
 
@@ -23,7 +26,7 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.pngmath',
               'sphinx.ext.inheritance_diagram', 'sphinx.ext.viewcode',
               #'sphinx.ext.autosummary',
-              'numpydoc',
+              'numpydoc', 'cmdhelp',
               ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -271,3 +274,5 @@ def make_envvars():
         f.write(s)
 
 make_envvars()
+
+builtins.__xonsh_history__= None

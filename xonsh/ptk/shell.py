@@ -7,6 +7,7 @@ from prompt_toolkit.key_binding.manager import KeyBindingManager
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.layout.lexers import PygmentsLexer
 from prompt_toolkit.filters import Condition
+from prompt_toolkit.styles import PygmentsStyle
 from pygments.style import Style
 from pygments.styles.default import DefaultStyle
 from pygments.token import (Keyword, Name, Comment, String, Error, Number,
@@ -14,11 +15,11 @@ from pygments.token import (Keyword, Name, Comment, String, Error, Number,
 
 from xonsh.base_shell import BaseShell
 from xonsh.tools import (format_prompt_for_prompt_toolkit, _make_style,
-                         print_exception)
+                         print_exception, format_color)
 from xonsh.ptk.completer import PromptToolkitCompleter
 from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings
-from xonsh.ptk.shortcuts import Prompter
+from xonsh.ptk.shortcuts import Prompter, print_tokens
 from xonsh.pyghooks import XonshLexer
 
 
@@ -118,13 +119,19 @@ class PromptToolkitShell(BaseShell):
         """Returns function to pass as prompt to prompt_toolkit."""
         token_names, cstyles, strings = format_prompt_for_prompt_toolkit(self.prompt)
         tokens = [getattr(Token, n) for n in token_names]
-
         def get_tokens(cli):
             return list(zip(tokens, strings))
-
         custom_style = _xonsh_style(tokens, cstyles)
-
         return get_tokens, custom_style
+
+    def print_color(self, string,end='\n', **kwargs):
+        """Prints a color string using prompt-toolkit color management."""
+        s = format_color(string + end, remove_escapes=False)
+        token_names, cstyles, strings = format_prompt_for_prompt_toolkit(s)
+        toks = [getattr(Token, n) for n in token_names]
+        custom_style = PygmentsStyle(_xonsh_style(toks, cstyles))
+        tokens = list(zip(toks, strings))
+        print_tokens(tokens, style=custom_style)
 
 
 def _xonsh_style(tokens=tuple(), cstyles=tuple()):

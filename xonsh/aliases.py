@@ -9,6 +9,7 @@ from argparse import ArgumentParser
 
 from xonsh.dirstack import cd, pushd, popd, dirs
 from xonsh.jobs import jobs, fg, bg, kill_all_jobs
+from xonsh.proc import foreground
 from xonsh.timings import timeit_alias
 from xonsh.tools import ON_MAC, ON_WINDOWS, XonshError, to_bool
 from xonsh.history import main as history_alias
@@ -44,9 +45,9 @@ def _ensure_source_foreign_parser():
     parser.add_argument('-l', '--login', type=to_bool, default=False,
                         help='whether the sourced shell should be login',
                         dest='login')
-    parser.add_argument('--envcmd', default='env', dest='envcmd',
+    parser.add_argument('--envcmd', default=None, dest='envcmd',
                         help='command to print environment')
-    parser.add_argument('--aliascmd', default='alias', dest='aliascmd',
+    parser.add_argument('--aliascmd', default=None, dest='aliascmd',
                         help='command to print aliases')
     parser.add_argument('--extra-args', default=(), dest='extra_args',
                         type=(lambda s: tuple(s.split())),
@@ -78,7 +79,7 @@ def source_foreign(args, stdin=None):
         pass  # don't change prevcmd if given explicitly
     elif os.path.isfile(ns.files_or_code[0]):
         # we have filename to source
-        ns.prevcmd = '{0} {1}'.format(ns.sourcer, ' '.join(ns.files_or_code))
+        ns.prevcmd = '{0} "{1}"'.format(ns.sourcer, '" "'.join(ns.files_or_code))
     elif ns.prevcmd is None:
         ns.prevcmd = ' '.join(ns.files_or_code)  # code to run, no files
     foreign_shell_data.cache_clear()  # make sure that we don't get prev src
@@ -106,6 +107,14 @@ def source_bash(args, stdin=None):
     """Simple Bash-specific wrapper around source-foreign."""
     args = list(args)
     args.insert(0, 'bash')
+    args.append('--sourcer=source')
+    return source_foreign(args, stdin=stdin)
+
+
+def source_zsh(args, stdin=None):
+    """Simple zsh-specific wrapper around source-foreign."""
+    args = list(args)
+    args.insert(0, 'zsh')
     args.append('--sourcer=source')
     return source_foreign(args, stdin=stdin)
 
@@ -170,6 +179,13 @@ def xonfig(args, stdin=None):
     return main(args)
 
 
+@foreground
+def trace(args, stdin=None):
+    """Runs the xonsh tracer utility."""
+    from xonsh.tracer import main  # lazy import
+    return main(args)
+
+
 def vox(args, stdin=None):
     """Runs Vox environment manager."""
     vox = Vox()
@@ -189,12 +205,14 @@ DEFAULT_ALIASES = {
     'quit': exit,
     'xexec': xexec,
     'source': source_alias,
+    'source-zsh': source_zsh,
     'source-bash': source_bash,
     'source-foreign': source_foreign,
     'history': history_alias,
     'replay': replay_main,
     '!!': bang_bang,
     '!n': bang_n,
+    'trace': trace,
     'timeit': timeit_alias,
     'xonfig': xonfig,
     'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],

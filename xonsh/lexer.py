@@ -12,8 +12,6 @@ from ply.lex import LexToken
 
 from xonsh.tools import VER_3_5, VER_MAJOR_MINOR
 
-future_kwlist = []
-
 token_map = {}
 """
 Mapping from ``tokenize`` tokens (or token types) to PLY token types.  If a
@@ -51,8 +49,6 @@ token_map[tokenize.DEDENT] = 'DEDENT'
 if VER_3_5 <= VER_MAJOR_MINOR:
     token_map[tokenize.ASYNC] = 'ASYNC'
     token_map[tokenize.AWAIT] = 'AWAIT'
-else:
-    future_kwlist += ['async', 'await']
 
 _REDIRECT_NAMES = frozenset({'out', 'err', 'all', 'o', 'e', 'a'})
 
@@ -478,6 +474,7 @@ class Lexer(object):
         """
         self.fname = ''
         self.last = None
+        self.beforelast = None
 
     def build(self, **kwargs):
         """Part of the PLY lexer API."""
@@ -492,6 +489,7 @@ class Lexer(object):
 
     def token(self):
         """Retrieves the next token."""
+        self.beforelast = self.last
         self.last = next(self.token_stream, None)
         return self.last
 
@@ -522,4 +520,4 @@ class Lexer(object):
         'DOLLAR_LPAREN',         # $(
         'DOLLAR_LBRACE',         # ${
         'DOLLAR_LBRACKET',       # $[
-    ) + tuple(i.upper() for i in kwlist) + tuple(i.upper() for i in future_kwlist)
+    ) + tuple(i.upper() for i in kwlist)

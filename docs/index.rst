@@ -32,6 +32,9 @@ the xonsh shell
         "Sally sells csh and keeps xonsh to herself",
         "Nice indeed. Everything's accounted for, except your old shell.",
         "I wanna thank you for putting me back in my snail shell.",
+        "Crustaceanly Yours",
+        "With great shell comes great reproducibility",
+        "None shell pass",
         ];
     document.write(taglines[Math.floor(Math.random() * taglines.length)]);
     </script>
@@ -60,6 +63,7 @@ alike.
 =========
 Contents
 =========
+**Guides:**
 
 .. toctree::
     :titlesonly:
@@ -67,11 +71,26 @@ Contents
 
     tutorial
     tutorial_hist
+    windows
+    bash_to_xsh
+
+**Configuration & Setup:**
+
+.. toctree::
+    :titlesonly:
+    :maxdepth: 1
+
     xonshrc
     xonshconfig
     envvars
     aliases
-    windows
+
+**Development Spiral:**
+
+.. toctree::
+    :titlesonly:
+    :maxdepth: 1
+
     api/index
     devguide/
     previous/index
@@ -261,7 +280,7 @@ open an issue on GitHub.
 Helpful Links
 =============
 
-* `Documentation <http://xonsh.org>`_
+* `Documentation <http://xon.sh>`_
 * `Mailing list <https://groups.google.com/forum/#!forum/xonsh>`_
 * `GitHub Repository <https://github.com/scopatz/xonsh>`_
 * `IRC: channel #xonsh on OFTC <http://www.oftc.net/>`_

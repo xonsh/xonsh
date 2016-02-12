@@ -10,13 +10,18 @@ import nose
 from nose.tools import assert_equal
 assert_equal.__self__.maxDiff = None
 
+from xonsh.ast import pdump
 from xonsh.parser import Parser
 
-from tools import mock_xonsh_env, skip_if, VER_3_4, VER_3_5, VER_MAJOR_MINOR
+from tools import (mock_xonsh_env, skip_if, VER_3_4, VER_3_5, VER_MAJOR_MINOR,
+                   VER_FULL)
 
 PARSER = None
 DEBUG_LEVEL = 0
 #DEBUG_LEVEL = 100
+
+# a lot of col_offset data changed from Py v3.5.0 -> v3.5.1
+INC_ATTRS = (3, 5, 1) <= VER_FULL
 
 def setup():
     # only setup one parser
@@ -28,7 +33,7 @@ def setup():
 def nodes_equal(x, y):
     if type(x) != type(y):
         return False
-    if isinstance(x, ast.Expr):
+    if isinstance(x, (ast.Expr, ast.FunctionDef, ast.ClassDef)):
         if x.lineno != y.lineno:
             return False
         if x.col_offset != y.col_offset:
@@ -45,15 +50,16 @@ def nodes_equal(x, y):
             return False
     return True
 
-def assert_nodes_equal(x, y):
+def assert_nodes_equal(x, y, include_attributes=True):
     if nodes_equal(x, y):
         return True
     if DEBUG_LEVEL > 0:
         print('x:\n==')
-        print(ast.dump(x), '\n')
+        print(pdump(x, include_attributes=include_attributes), '\n')
         print('y:\n==')
-        print(ast.dump(y), '\n')
-    assert_equal(ast.dump(x), ast.dump(y))
+        print(pdump(y, include_attributes=include_attributes), '\n')
+    assert_equal(pdump(x, include_attributes=include_attributes), 
+                 pdump(y, include_attributes=include_attributes))
 
 def check_ast(inp, run=True, mode='eval'):
     # expect a Python AST
@@ -61,7 +67,7 @@ def check_ast(inp, run=True, mode='eval'):
     # observe something from xonsh
     obs = PARSER.parse(inp, debug_level=DEBUG_LEVEL)
     # Check that they are equal
-    assert_nodes_equal(exp, obs)
+    assert_nodes_equal(exp, obs, include_attributes=INC_ATTRS)
     # round trip by running xonsh AST via Python
     if run:
         exec(compile(obs, '<test-ast>', mode))
@@ -186,6 +192,9 @@ def test_times_div_mod_floor():
 
 def test_str_str():
     yield check_ast, '"hello" \'mom\''
+
+def test_str_str_str():
+    yield check_ast, '"hello" \'mom\'    "wow"'
 
 def test_str_plus_str():
     yield check_ast, '"hello" + \'mom\''
@@ -1160,6 +1169,9 @@ def test_with_x_as_y_z():
 
 def test_with_x_as_y_a_as_b():
     yield check_stmts, 'with x as y, a as b:\n  pass', False
+
+def test_with_in_func():
+    yield check_stmts, "def f():\n    with x:\n        pass\n"
 
 @skip_if(VER_MAJOR_MINOR < VER_3_5)
 def test_async_with():

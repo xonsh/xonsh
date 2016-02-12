@@ -23,7 +23,7 @@ from xonsh.tools import (
     history_tuple_to_str, is_float, string_types, is_string, DEFAULT_ENCODING,
     is_completions_display_value, to_completions_display_value, is_string_set,
     csv_to_set, set_to_csv, get_sep, is_int, is_bool_seq, csv_to_bool_seq,
-    bool_seq_to_csv
+    bool_seq_to_csv, DefaultNotGiven
 )
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
@@ -104,7 +104,7 @@ if ON_WINDOWS:
     DEFAULT_PROMPT = ('{env_name}'
                       '{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} '
                       '{cwd}{branch_color}{curr_branch}{NO_COLOR} '
-                      '{BOLD_WHITE}{prompt_end}{NO_COLOR} ')
+                      '{BOLD_INTENSE_CYAN}{prompt_end}{NO_COLOR} ')
 else:
     DEFAULT_PROMPT = ('{env_name}'
                       '{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
@@ -206,12 +206,6 @@ DEFAULT_VALUES = {
 if hasattr(locale, 'LC_MESSAGES'):
     DEFAULT_VALUES['LC_MESSAGES'] = locale.setlocale(locale.LC_MESSAGES)
 
-class DefaultNotGivenType(object):
-    """Singleton for representing when no default value is given."""
-
-
-DefaultNotGiven = DefaultNotGivenType()
-
 VarDocs = namedtuple('VarDocs', ['docstr', 'configurable', 'default'])
 VarDocs.__doc__ = """Named tuple for environment variable documentation
     
@@ -293,7 +287,7 @@ DEFAULT_DOCS = {
     'FORMATTER_DICT': VarDocs(
         'Dictionary containing variables to be used when formatting $PROMPT '
         "and $TITLE. See 'Customizing the Prompt' "
-        'http://xonsh.org/tutorial.html#customizing-the-prompt', 
+        'http://xon.sh/tutorial.html#customizing-the-prompt', 
         configurable=False, default='xonsh.environ.FORMATTER_DICT'),
     'HISTCONTROL': VarDocs(
         'A set of strings (comma-separated list in string form) of options '
@@ -328,7 +322,7 @@ DEFAULT_DOCS = {
     'PROMPT': VarDocs(
         'The prompt text. May contain keyword arguments which are '
         "auto-formatted, see 'Customizing the Prompt' at "
-        'http://xonsh.org/tutorial.html#customizing-the-prompt.',
+        'http://xon.sh/tutorial.html#customizing-the-prompt.',
         default='xonsh.environ.DEFAULT_PROMPT'),
     'PROMPT_TOOLKIT_COLORS': VarDocs(
         'This is a mapping of from color names to HTML color codes. Whenever '
@@ -388,7 +382,7 @@ DEFAULT_DOCS = {
     'TITLE': VarDocs(
         'The title text for the window in which xonsh is running. Formatted '
         "in the same manner as $PROMPT, see 'Customizing the Prompt' "
-        'http://xonsh.org/tutorial.html#customizing-the-prompt.',
+        'http://xon.sh/tutorial.html#customizing-the-prompt.',
         default='xonsh.environ.DEFAULT_TITLE'),
     'VI_MODE': VarDocs(
         "Flag to enable 'vi_mode' in the 'prompt_toolkit' shell."),
@@ -781,6 +775,12 @@ def get_git_branch(cwd=None):
                                         stderr=subprocess.PIPE,
                                         cwd=cwd,
                                         universal_newlines=True)
+            if len(s) == 0:
+                # Workaround for a bug in ConEMU/cmder 
+                # retry without redirection
+                s = subprocess.check_output(cmd,
+                                            cwd=cwd,
+                                            universal_newlines=True)
             s = s.strip()
             if len(s) > 0:
                 branch = s
@@ -792,7 +792,7 @@ def get_git_branch(cwd=None):
 
 def call_hg_command(command, cwd):
     # Override user configurations settings and aliases
-    hg_env = os.environ.copy()
+    hg_env = builtins.__xonsh_env__.detype()
     hg_env['HGRCPATH'] = ""
 
     s = None

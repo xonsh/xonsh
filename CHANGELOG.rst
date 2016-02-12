@@ -4,15 +4,7 @@ Xonsh Change Log
 
 Current Developments
 ====================
-
-**Added:** 
-
-* Added boolean ``$RAISE_SUBPROC_ERROR`` environment variable. If true
-  and a subprocess command exits with a non-zero return code, a 
-  CalledProcessError will be raised. This is useful in scripts that should
-  fail at the first error.
-* If the ``setproctitle`` package is installed, the process title will be
-  set to ``'xonsh'`` rather than the path to the Python interpreter.
+**Added:** None
 
 **Changed:** None
 
@@ -22,9 +14,45 @@ Current Developments
 
 **Fixed:**
 
-* Fixed path completion not working for absolute paths or for expanded paths on Windows.
+* Some minor zsh fixes for more platforms and setups.
 
 **Security:** None
+
+v0.2.6
+====================
+**Added:** 
+
+* ``trace`` alias added that enables users to turn on and off the printing 
+  of source code lines prior to their execution. This is useful for debugging scripts.
+* New ability to force callable alias functions to be run in the foreground, i.e.
+  the main thread from which the function was called. This is useful for debuggers 
+  and profilers which may require such access. Use the ``xonsh.proc.foreground``
+  decorator on an alias function to flag it. ``ForegroundProcProxy`` and
+  ``SimpleForegroundProcProxy`` classes have been added to support this feature.
+  Normally, forcing a foreground alias is not needed.
+* Added boolean ``$RAISE_SUBPROC_ERROR`` environment variable. If true
+  and a subprocess command exits with a non-zero return code, a 
+  CalledProcessError will be raised. This is useful in scripts that should
+  fail at the first error.
+* If the ``setproctitle`` package is installed, the process title will be
+  set to ``'xonsh'`` rather than the path to the Python interpreter.
+* zsh foreign shell interface now supported natively in xonsh, like with Bash.
+  New ``source-zsh`` alias allows easy access to zsh scripts and functions.
+
+**Changed:**
+
+* The ``foreign_shell_data()`` keyword arguments ``envcmd`` and ``aliascmd``
+  now default to ``None``.
+* Updated alias docs to pull in usage from the commands automatically.
+
+**Fixed:**
+
+* Hundreds of bugs related to line and column numbers have been addressed.
+* Fixed path completion not working for absolute paths or for expanded paths on Windows.
+* Fixed issue with hg dirty branches and $PATH.
+* Fixed issues related to foreign shell data in files with whitespace in the names.
+* Worked around bug in ConEmu/cmder which prevented ``get_git_branch()`` 
+  from working in these terminal emulators on Windows.
 
 
 v0.2.5
