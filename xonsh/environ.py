@@ -926,6 +926,15 @@ def _current_job():
     return ''
 
 
+def env_name(pre_chars='(', post_chars=') '):
+    """Extract the current environment name from $VIRTUAL_ENV."""
+    env_path = builtins.__xonsh_env__.get('VIRTUAL_ENV', '')
+    
+    env_name = os.path.basename(env_path)
+    
+    return pre_chars + env_name + post_chars if env_name else ''
+
+
 if ON_WINDOWS:
     USER = 'USERNAME'
 else:
@@ -944,6 +953,7 @@ FORMATTER_DICT = dict(
     branch_color=branch_color,
     branch_bg_color=branch_bg_color,
     current_job=_current_job,
+    env_name=env_name,
     **TERM_COLORS)
 DEFAULT_VALUES['FORMATTER_DICT'] = dict(FORMATTER_DICT)
 
