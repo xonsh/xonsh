@@ -66,7 +66,7 @@ class Vox:
 
         print('Creating environment...')
 
-        vbuiltins.__xonsh_env__.create(env_path, with_pip=True)
+        venv.create(env_path, with_pip=True)
 
         print('Environment "%s" created. Activate it with "vox activate %s".\n' % (name, name))
 
