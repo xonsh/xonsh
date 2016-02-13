@@ -87,6 +87,7 @@ DEFAULT_ENSURERS = {
     'XONSH_LOGIN': (is_bool, to_bool, bool_to_str),
     'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
     'VI_MODE': (is_bool, to_bool, bool_to_str),
+    'VIRTUAL_ENV': (is_string, ensure_string, ensure_string),
 }
 
 #
@@ -386,6 +387,8 @@ DEFAULT_DOCS = {
         default='xonsh.environ.DEFAULT_TITLE'),
     'VI_MODE': VarDocs(
         "Flag to enable 'vi_mode' in the 'prompt_toolkit' shell."),
+    'VIRTUAL_ENV': VarDocs(
+        "Path to the currently active Python environment."),
     'XDG_CONFIG_HOME': VarDocs(
         'Open desktop standard configuration home dir. This is the same '
         'default as used in the standard.', configurable=False, 
