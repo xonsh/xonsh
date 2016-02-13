@@ -13,15 +13,7 @@ class Vox:
         """Ensure that $VIRTUALENV_HOME is defined and declare the available vox commands"""
 
         if not builtins.__xonsh_env__.get('VIRTUALENV_HOME'):
-            if os.name == 'nt':
-                home_path = builtins.__xonsh_env__['USERPROFILE']
-
-            elif os.name == 'posix':
-                home_path = os.path.expanduser('~')
-
-            else:
-                print('This OS is not supported.')
-                return None
+            home_path = os.path.expanduser('~')
 
             builtins.__xonsh_env__['VIRTUALENV_HOME'] = join(home_path, '.virtualenvs')
 
