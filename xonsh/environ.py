@@ -389,7 +389,7 @@ DEFAULT_DOCS = {
     'VI_MODE': VarDocs(
         "Flag to enable 'vi_mode' in the 'prompt_toolkit' shell."),
     'VIRTUAL_ENV': VarDocs(
-        "Path to the currently active Python environment."),
+        'Path to the currently active Python environment.', configurable=False),
     'XDG_CONFIG_HOME': VarDocs(
         'Open desktop standard configuration home dir. This is the same '
         'default as used in the standard.', configurable=False, 
