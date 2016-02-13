@@ -17,7 +17,7 @@ class Vox:
                 home_path = builtins.__xonsh_env__['USERPROFILE']
 
             elif os.name == 'posix':
-                home_path = builtins.__xonsh_env__['HOME']
+                home_path = os.path.expanduser('~')
 
             else:
                 print('This OS is not supported.')
