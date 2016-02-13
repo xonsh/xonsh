@@ -1,16 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Python advanced pretty printer.
-
-This pretty printer is intended to replace the old `pprint` python module which
-does not allow developers to provide their own pretty print callbacks.
+"""
+Python advanced pretty printer.  This pretty printer is intended to
+replace the old `pprint` python module which does not allow developers
+to provide their own pretty print callbacks.
 
 This module is based on ruby's `prettyprint.rb` library by `Tanaka Akira`.
-
-The following implementations were forked from the IPython project:
-* Copyright (c) 2008-2014, IPython Development Team
-* Copyright (C) 2001-2007 Fernando Perez <fperez@colorado.edu>
-* Copyright (c) 2001, Janko Hauser <jhauser@zscout.de>
-* Copyright (c) 2001, Nathaniel Gray <n8gray@caltech.edu>
 
 
 Example Usage
@@ -69,7 +63,7 @@ line (if the items are short enough) or aligned with the right edge of the
 opening bracket of `MyList`.
 
 If you just want to indent something you can use the group function
-without open / close parameters.  Yu can also use this code::
+without open / close parameters.  You can also use this code::
 
     with p.indent(2):
         ...
@@ -83,6 +77,7 @@ Inheritance diagram:
             Portions (c) 2009 by Robert Kern.
 :license: BSD License.
 """
+from __future__ import print_function
 from contextlib import contextmanager
 import sys
 import types
@@ -90,8 +85,9 @@ import re
 import datetime
 from collections import deque
 
-# from IPython.utils.py3compat import PY3, cast_unicode
-# from IPython.utils.encoding import get_stream_enc
+#from IPython.utils.py3compat import PY3, cast_unicode, string_types
+#from IPython.utils.encoding import get_stream_enc
+string_types = (str,)
 
 from io import StringIO
 
@@ -103,10 +99,9 @@ __all__ = ['pretty', 'pprint', 'PrettyPrinter', 'RepresentationPrinter',
 MAX_SEQ_LENGTH = 1000
 _re_pattern_type = type(re.compile(''))
 
-
 def _safe_getattr(obj, attr, default=None):
     """Safe version of getattr.
-
+    
     Same as getattr, but will return ``default`` on any Exception,
     rather than raising.
     """
@@ -115,14 +110,14 @@ def _safe_getattr(obj, attr, default=None):
     except Exception:
         return default
 
-# if PY3:
+#if PY3:
 CUnicodeIO = StringIO
-# else:
-    # class CUnicodeIO(StringIO):
-        # """StringIO that casts str to unicode on Python 2"""
-        # def write(self, text):
-            # return super(CUnicodeIO, self).write(
-                # cast_unicode(text, encoding=get_stream_enc(sys.stdout)))
+#else:
+#    class CUnicodeIO(StringIO):
+#        """StringIO that casts str to unicode on Python 2"""
+#        def write(self, text):
+#            return super(CUnicodeIO, self).write(
+#                cast_unicode(text, encoding=get_stream_enc(sys.stdout)))
 
 
 def pretty(obj, verbose=False, max_width=79, newline='\n', max_seq_length=MAX_SEQ_LENGTH):
@@ -130,7 +125,7 @@ def pretty(obj, verbose=False, max_width=79, newline='\n', max_seq_length=MAX_SE
     Pretty print the object's representation.
     """
     stream = CUnicodeIO()
-    printer = RepresentationPrinter(stream, verbose, max_width, newline, max_seq_length)
+    printer = RepresentationPrinter(stream, verbose, max_width, newline, max_seq_length=max_seq_length)
     printer.pretty(obj)
     printer.flush()
     return stream.getvalue()
@@ -140,7 +135,7 @@ def pprint(obj, verbose=False, max_width=79, newline='\n', max_seq_length=MAX_SE
     """
     Like `pretty` but print to stdout.
     """
-    printer = RepresentationPrinter(sys.stdout, verbose, max_width, newline, max_seq_length)
+    printer = RepresentationPrinter(sys.stdout, verbose, max_width, newline, max_seq_length=max_seq_length)
     printer.pretty(obj)
     printer.flush()
     sys.stdout.write(newline)
@@ -158,14 +153,13 @@ class _PrettyPrinterBase(object):
             self.indentation -= indent
 
     @contextmanager
-    def group(self, indent=0, gopen='', gclose=''):
+    def group(self, indent=0, open='', close=''):
         """like begin_group / end_group but for the with statement."""
-        self.begin_group(indent, gopen)
+        self.begin_group(indent, open)
         try:
             yield
         finally:
-            self.end_group(indent, gclose)
-
+            self.end_group(indent, close)
 
 class PrettyPrinter(_PrettyPrinterBase):
     """
@@ -236,7 +230,7 @@ class PrettyPrinter(_PrettyPrinterBase):
             self.buffer.append(Breakable(sep, width, self))
             self.buffer_width += width
             self._break_outer_groups()
-
+            
     def break_(self):
         """
         Explicitly insert a newline into the output, maintaining correct indentation.
@@ -246,8 +240,9 @@ class PrettyPrinter(_PrettyPrinterBase):
         self.output.write(' ' * self.indentation)
         self.output_width = self.indentation
         self.buffer_width = 0
+        
 
-    def begin_group(self, indent=0, gopen=''):
+    def begin_group(self, indent=0, open=''):
         """
         Begin a group.  If you want support for python < 2.5 which doesn't has
         the with statement this is the preferred way:
@@ -265,13 +260,13 @@ class PrettyPrinter(_PrettyPrinterBase):
         the width of the opening text), the second the opening text.  All
         parameters are optional.
         """
-        if gopen:
-            self.text(gopen)
+        if open:
+            self.text(open)
         group = Group(self.group_stack[-1].depth + 1)
         self.group_stack.append(group)
         self.group_queue.enq(group)
         self.indentation += indent
-
+    
     def _enumerate(self, seq):
         """like enumerate, but with an upper limit on the number of items"""
         for idx, x in enumerate(seq):
@@ -279,17 +274,17 @@ class PrettyPrinter(_PrettyPrinterBase):
                 self.text(',')
                 self.breakable()
                 self.text('...')
-                raise StopIteration
+                return
             yield idx, x
-
-    def end_group(self, dedent=0, gclose=''):
+    
+    def end_group(self, dedent=0, close=''):
         """End a group. See `begin_group` for more details."""
         self.indentation -= dedent
         group = self.group_stack.pop()
         if not group.breakables:
             self.group_queue.remove(group)
-        if gclose:
-            self.text(gclose)
+        if close:
+            self.text(close)
 
     def flush(self):
         """Flush data that is left in the buffer."""
@@ -677,7 +672,16 @@ def _type_pprint(obj, p, cycle):
         return
 
     mod = _safe_getattr(obj, '__module__', None)
-    name = _safe_getattr(obj, '__qualname__', obj.__name__)
+    try:
+        name = obj.__qualname__
+        if not isinstance(name, string_types):
+            # This can happen if the type implements __qualname__ as a property
+            # or other descriptor in Python 2.
+            raise Exception("Try __name__")
+    except Exception:
+        name = obj.__name__
+        if not isinstance(name, string_types):
+            name = '<unknown type>'
 
     if mod in (None, '__builtin__', 'builtins', 'exceptions'):
         p.text(name)
@@ -689,7 +693,7 @@ def _repr_pprint(obj, p, cycle):
     """A pprint that just redirects to the normal repr function."""
     # Find newlines and replace them with p.break_()
     output = repr(obj)
-    for idx, output_line in enumerate(output.splitlines()):
+    for idx,output_line in enumerate(output.splitlines()):
         if idx:
             p.break_()
         p.text(output_line)
@@ -734,7 +738,7 @@ _type_pprinters = {
     tuple:                      _seq_pprinter_factory('(', ')', tuple),
     list:                       _seq_pprinter_factory('[', ']', list),
     dict:                       _dict_pprinter_factory('{', '}', dict),
-
+    
     set:                        _set_pprinter_factory('{', '}', set),
     frozenset:                  _set_pprinter_factory('frozenset({', '})', frozenset),
     super:                      _super_pprint,
@@ -743,7 +747,7 @@ _type_pprinters = {
     types.FunctionType:         _function_pprint,
     types.BuiltinFunctionType:  _function_pprint,
     types.MethodType:           _repr_pprint,
-
+    
     datetime.datetime:          _repr_pprint,
     datetime.timedelta:         _repr_pprint,
     _exception_base:            _exception_pprint
@@ -753,9 +757,9 @@ try:
     _type_pprinters[types.DictProxyType] = _dict_pprinter_factory('<dictproxy {', '}>')
     _type_pprinters[types.ClassType] = _type_pprint
     _type_pprinters[types.SliceType] = _repr_pprint
-except AttributeError:  # Python 3
+except AttributeError: # Python 3
     _type_pprinters[slice] = _repr_pprint
-
+    
 try:
     _type_pprinters[xrange] = _repr_pprint
     _type_pprinters[long] = _repr_pprint
@@ -767,7 +771,6 @@ except NameError:
 #: printers for types specified by name
 _deferred_type_pprinters = {
 }
-
 
 def for_type(typ, func):
     """
@@ -798,7 +801,7 @@ _singleton_pprinters = dict.fromkeys(map(id, [None, True, False, Ellipsis,
 
 
 def _defaultdict_pprint(obj, p, cycle):
-    name = 'defaultdict'
+    name = obj.__class__.__name__
     with p.group(len(name) + 1, name + '(', ')'):
         if cycle:
             p.text('...')
@@ -808,18 +811,16 @@ def _defaultdict_pprint(obj, p, cycle):
             p.breakable()
             p.pretty(dict(obj))
 
-
 def _ordereddict_pprint(obj, p, cycle):
-    name = 'OrderedDict'
+    name = obj.__class__.__name__
     with p.group(len(name) + 1, name + '(', ')'):
         if cycle:
             p.text('...')
         elif len(obj):
             p.pretty(list(obj.items()))
 
-
 def _deque_pprint(obj, p, cycle):
-    name = 'deque'
+    name = obj.__class__.__name__
     with p.group(len(name) + 1, name + '(', ')'):
         if cycle:
             p.text('...')
@@ -828,7 +829,7 @@ def _deque_pprint(obj, p, cycle):
 
 
 def _counter_pprint(obj, p, cycle):
-    name = 'Counter'
+    name = obj.__class__.__name__
     with p.group(len(name) + 1, name + '(', ')'):
         if cycle:
             p.text('...')
@@ -842,7 +843,6 @@ for_type_by_name('collections', 'Counter', _counter_pprint)
 
 if __name__ == '__main__':
     from random import randrange
-
     class Foo(object):
         def __init__(self):
             self.foo = 1
