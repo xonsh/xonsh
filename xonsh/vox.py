@@ -26,19 +26,19 @@ class Vox:
             builtins.__xonsh_env__['VIRTUALENV_HOME'] = join(home_path, '.virtualenvs')
 
         self.commands = {
-            ('new',): self.new,
-            ('activate', 'workon', 'enter'): self.activate,
-            ('deactivate', 'exit'): self.deactivate,
-            ('list', 'ls'): self.list,
-            ('remove', 'rm', 'delete', 'del'): self.remove,
-            ('help', '-h', '--help'): self.help
+            ('new',): self.create_env,
+            ('activate', 'workon', 'enter'): self.activate_env,
+            ('deactivate', 'exit'): self.deactivate_env,
+            ('list', 'ls'): self.list_envs,
+            ('remove', 'rm', 'delete', 'del'): self.remove_env,
+            ('help', '-h', '--help'): self.show_help
         }
 
     def __call__(self, args, stdin=None):
         """Call the right handler method for a given command."""
 
         if not args:
-            self.help()
+            self.show_help()
             return None
 
         command_name, params = args[0], args[1:]
@@ -56,7 +56,7 @@ class Vox:
             self.print_commands()
 
     @staticmethod
-    def new(name):
+    def create_env(name):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
 
         Parameters
@@ -74,7 +74,7 @@ class Vox:
         print('Environment "%s" created. Activate it with "vox activate %s".\n' % (name, name))
 
     @staticmethod
-    def activate(name):
+    def activate_env(name):
         """Activate a virtual environment.
 
         Parameters
@@ -107,7 +107,7 @@ class Vox:
         print('Activated "%s".\n' % name)
 
     @staticmethod
-    def deactivate():
+    def deactivate_env():
         """Deactive the active virtual environment."""
 
         if 'VIRTUAL_ENV' not in builtins.__xonsh_env__:
@@ -138,7 +138,7 @@ class Vox:
         print('Deactivated "%s".\n' % env_name)
 
     @staticmethod
-    def list():
+    def list_envs():
         """List available virtual environments."""
 
         env_names = os.listdir(builtins.__xonsh_env__['VIRTUALENV_HOME'])
@@ -156,7 +156,7 @@ class Vox:
             print()
 
     @staticmethod
-    def remove(name):
+    def remove_env(name):
         """Remove virtual environment.
 
         Parameters
@@ -175,7 +175,7 @@ class Vox:
 
         print('Environment "%s" removed.\n' % name)
 
-    def help(self):
+    def show_help(self):
         """Show help."""
 
         print(self.__doc__, '\n')
