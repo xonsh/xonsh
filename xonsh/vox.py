@@ -1,9 +1,11 @@
-from os.path import join, basename, exists
-import os
+from os.path import join, basename, exists, expanduser
+from os import listdir
 from shutil import rmtree
 import venv
 
 import builtins
+
+import xonsh.tools
 
 
 class Vox:
@@ -13,7 +15,7 @@ class Vox:
         """Ensure that $VIRTUALENV_HOME is defined and declare the available vox commands"""
 
         if not builtins.__xonsh_env__.get('VIRTUALENV_HOME'):
-            home_path = os.path.expanduser('~')
+            home_path = expanduser('~')
 
             builtins.__xonsh_env__['VIRTUALENV_HOME'] = join(home_path, '.virtualenvs')
 
@@ -81,10 +83,10 @@ class Vox:
             print('This environment doesn\'t exist. Create it with "vox new %s".\n' % name)
             return None
 
-        if os.name == 'nt':
+        if xonsh.tools.ON_WINDOWS:
             bin_dir = 'Scripts'
 
-        elif os.name == 'posix':
+        elif xonsh.tools.ON_POSIX:
             bin_dir = 'bin'
 
         else:
@@ -110,10 +112,10 @@ class Vox:
 
         env_name = basename(env_path)
 
-        if os.name == 'nt':
+        if xonsh.tools.ON_WINDOWS:
             bin_dir = 'Scripts'
 
-        elif os.name == 'posix':
+        elif xonsh.tools.ON_POSIX:
             bin_dir = 'bin'
 
         else:
@@ -133,7 +135,7 @@ class Vox:
     def list_envs():
         """List available virtual environments."""
 
-        env_names = os.listdir(builtins.__xonsh_env__['VIRTUALENV_HOME'])
+        env_names = listdir(builtins.__xonsh_env__['VIRTUALENV_HOME'])
 
         if not env_names:
             print('No environments evailable. Create one with "vox new".\n')
