@@ -6,7 +6,7 @@ from warnings import warn
 
 from xonsh.execer import Execer
 from xonsh.environ import xonshrc_context
-from xonsh.tools import XonshError
+from xonsh.tools import XonshError, ON_WINDOWS
 
 
 def is_readline_available():
@@ -33,6 +33,15 @@ def prompt_toolkit_version():
     return getattr(prompt_toolkit, '__version__', '<0.57')
 
 
+def best_shell_type():
+    """Gets the best shell type that is available"""
+    if ON_WINDOWS or is_prompt_toolkit_available():
+        shell_type = 'prompt_toolkit'
+    else:
+        shell_type = 'readline'
+    return shell_type
+
+
 class Shell(object):
     """Main xonsh shell.
 
@@ -40,7 +49,7 @@ class Shell(object):
     readline version of shell should be used.
     """
 
-    def __init__(self, ctx=None, shell_type=None, config=None, rc=None, 
+    def __init__(self, ctx=None, shell_type=None, config=None, rc=None,
                  **kwargs):
         """
         Parameters
@@ -48,10 +57,10 @@ class Shell(object):
         ctx : Mapping, optional
             The execution context for the shell (e.g. the globals namespace).
             If none, this is computed by loading the rc files. If not None,
-            this no additional context is computed and this is used 
+            this no additional context is computed and this is used
             directly.
         shell_type : str, optional
-            The shell type to start, such as 'readline', 'prompt_toolkit', 
+            The shell type to start, such as 'readline', 'prompt_toolkit',
             or 'random'.
         config : str, optional
             Path to configuration file.
@@ -64,7 +73,9 @@ class Shell(object):
         if shell_type is not None:
             env['SHELL_TYPE'] = shell_type
         shell_type = env.get('SHELL_TYPE')
-        if shell_type == 'random':
+        if shell_type == 'best':
+            shell_type = best_shell_type()
+        elif shell_type == 'random':
             shell_type = random.choice(('readline', 'prompt_toolkit'))
         if shell_type == 'prompt_toolkit':
             if not is_prompt_toolkit_available():

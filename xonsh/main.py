@@ -76,7 +76,7 @@ parser.add_argument('--shell-type',
                          'Possible options: readline, prompt_toolkit, random. '
                          'Warning! If set this overrides $SHELL_TYPE variable.',
                     dest='shell_type',
-                    choices=('readline', 'prompt_toolkit', 'random'),
+                    choices=('readline', 'prompt_toolkit', 'best', 'random'),
                     default=None)
 parser.add_argument('file',
                     metavar='script-file',
@@ -93,7 +93,7 @@ parser.add_argument('args',
 
 
 def arg_undoers():
-    au = { 
+    au = {
         '-h': (lambda args: setattr(args, 'help', False)),
         '-V': (lambda args: setattr(args, 'version', False)),
         '-c': (lambda args: setattr(args, 'command', None)),
