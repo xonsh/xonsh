@@ -72,7 +72,7 @@ DEFAULT_ENSURERS = {
     'LC_MESSAGES': (always_false, locale_convert('LC_MESSAGES'), ensure_string),
     'LC_MONETARY': (always_false, locale_convert('LC_MONETARY'), ensure_string),
     'LC_NUMERIC': (always_false, locale_convert('LC_NUMERIC'), ensure_string),
-    'LC_TIME': (always_false, locale_convert('LC_TIME'), ensure_string),    
+    'LC_TIME': (always_false, locale_convert('LC_TIME'), ensure_string),
     'LOADED_CONFIG': (is_bool, to_bool, bool_to_str),
     'LOADED_RC_FILES': (is_bool_seq, csv_to_bool_seq, bool_seq_to_csv),
     'MOUSE_SUPPORT': (is_bool, to_bool, bool_to_str),
@@ -180,7 +180,7 @@ DEFAULT_VALUES = {
     'PUSHD_MINUS': False,
     'PUSHD_SILENT': False,
     'RAISE_SUBPROC_ERROR': False,
-    'SHELL_TYPE': 'prompt_toolkit' if ON_WINDOWS else 'readline',
+    'SHELL_TYPE': 'best',
     'SUGGEST_COMMANDS': True,
     'SUGGEST_MAX_NUM': 5,
     'SUGGEST_THRESHOLD': 3,
@@ -210,7 +210,7 @@ if hasattr(locale, 'LC_MESSAGES'):
 
 VarDocs = namedtuple('VarDocs', ['docstr', 'configurable', 'default'])
 VarDocs.__doc__ = """Named tuple for environment variable documentation
-    
+
 Parameters
 ----------
 docstr : str
@@ -219,7 +219,7 @@ configurable : bool, optional
     Flag for whether the environment variable is configurable or not.
 default : str, optional
     Custom docstring for the default value for complex defaults.
-    Is this is DefaultNotGiven, then the default will be looked up 
+    Is this is DefaultNotGiven, then the default will be looked up
     from DEFAULT_VALUES and converted to a str.
 """
 VarDocs.__new__.__defaults__ = (True, DefaultNotGiven)  # iterates from back
@@ -289,7 +289,7 @@ DEFAULT_DOCS = {
     'FORMATTER_DICT': VarDocs(
         'Dictionary containing variables to be used when formatting $PROMPT '
         "and $TITLE. See 'Customizing the Prompt' "
-        'http://xon.sh/tutorial.html#customizing-the-prompt', 
+        'http://xon.sh/tutorial.html#customizing-the-prompt',
         configurable=False, default='xonsh.environ.FORMATTER_DICT'),
     'HISTCONTROL': VarDocs(
         'A set of strings (comma-separated list in string form) of options '
@@ -332,7 +332,7 @@ DEFAULT_DOCS = {
         'or in syntax highlighting), it will use the value specified here to '
         'represent that color, instead of its default.  If a color is not '
         'specified here, prompt-toolkit uses the colors from '
-        "'xonsh.tools._PT_COLORS'.", configurable=False), 
+        "'xonsh.tools._PT_COLORS'.", configurable=False),
     'PROMPT_TOOLKIT_STYLES': VarDocs(
         'This is a mapping of user-specified styles for prompt-toolkit. See '
         'the prompt-toolkit documentation for more details. If None, this is '
@@ -351,13 +351,14 @@ DEFAULT_DOCS = {
     'SHELL_TYPE': VarDocs(
         'Which shell is used. Currently two base shell types are supported:\n\n'
         "    - 'readline' that is backed by Python's readline module\n"
-        "    - 'prompt_toolkit' that uses external library of the same name\n" 
-        "    - 'random' selects a random shell from the above on startup\n\n"
+        "    - 'prompt_toolkit' that uses external library of the same name\n"
+        "    - 'random' selects a random shell from the above on startup\n"
+        "    - 'best' selects the most feature-rich shell available on the\n"
+        "       user's system\n\n"
         'To use the prompt_toolkit shell you need to have prompt_toolkit '
         '(https://github.com/jonathanslenders/python-prompt-toolkit) '
         'library installed. To specify which shell should be used, do so in '
-        'the run control file.', default=("'prompt_toolkit' if on Windows, "
-        "and 'readline' otherwise.")),
+        'the run control file.'),
     'SUGGEST_COMMANDS': VarDocs(
         'When a user types an invalid command, xonsh will try to offer '
         'suggestions of similar valid commands if this is True.'),
@@ -392,7 +393,7 @@ DEFAULT_DOCS = {
         'Path to the currently active Python environment.', configurable=False),
     'XDG_CONFIG_HOME': VarDocs(
         'Open desktop standard configuration home dir. This is the same '
-        'default as used in the standard.', configurable=False, 
+        'default as used in the standard.', configurable=False,
         default="'~/.config'"),
     'XDG_DATA_HOME': VarDocs(
         'Open desktop standard data home dir. This is the same default as '
@@ -421,7 +422,7 @@ DEFAULT_DOCS = {
         'Any string flag that has been previously registered with Python '
         "is allowed. See the 'Python codecs documentation' "
         "(https://docs.python.org/3/library/codecs.html#error-handlers) "
-        'for more information and available options.', 
+        'for more information and available options.',
         default="'surrogateescape'"),
     'XONSH_HISTORY_FILE': VarDocs('Location of history file (deprecated).',
         configurable=False, default="'~/.xonsh_history'"),
@@ -780,7 +781,7 @@ def get_git_branch(cwd=None):
                                         cwd=cwd,
                                         universal_newlines=True)
             if len(s) == 0:
-                # Workaround for a bug in ConEMU/cmder 
+                # Workaround for a bug in ConEMU/cmder
                 # retry without redirection
                 s = subprocess.check_output(cmd,
                                             cwd=cwd,
@@ -980,7 +981,7 @@ def is_template_string(template, formatter_dict=None):
         fmtter = formatter_dict
     known_names = set(fmtter.keys())
     return included_names <= known_names
-    
+
 
 def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
     """Formats a xonsh prompt template string."""
@@ -1043,9 +1044,9 @@ def load_static_config(ctx, config=None):
     if config is not None:
         env['XONSHCONFIG'] = ctx['XONSHCONFIG'] = config
     elif 'XONSHCONFIG' in ctx:
-        config = env['XONSHCONFIG'] = ctx['XONSHCONFIG'] 
+        config = env['XONSHCONFIG'] = ctx['XONSHCONFIG']
     else:
-        # don't set in ctx in order to maintain default 
+        # don't set in ctx in order to maintain default
         config = env['XONSHCONFIG'] = xonshconfig(env)
     if os.path.isfile(config):
         with open(config, 'r') as f:
