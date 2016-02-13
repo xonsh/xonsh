@@ -354,8 +354,7 @@ DEFAULT_DOCS = {
         'To use the prompt_toolkit shell you need to have prompt_toolkit '
         '(https://github.com/jonathanslenders/python-prompt-toolkit) '
         'library installed. To specify which shell should be used, do so in '
-        'the run control file.', default=("'prompt_toolkit' if on Windows, "
-        "and 'readline' otherwise.")),
+        'the run control file.'),
     'SUGGEST_COMMANDS': VarDocs(
         'When a user types an invalid command, xonsh will try to offer '
         'suggestions of similar valid commands if this is True.'),
