@@ -41,6 +41,7 @@ v0.2.6
   set to ``'xonsh'`` rather than the path to the Python interpreter.
 * zsh foreign shell interface now supported natively in xonsh, like with Bash.
   New ``source-zsh`` alias allows easy access to zsh scripts and functions.
+* Vox virtual environment manager added.
 
 **Changed:**
 

@@ -87,6 +87,7 @@ DEFAULT_ENSURERS = {
     'XONSH_LOGIN': (is_bool, to_bool, bool_to_str),
     'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
     'VI_MODE': (is_bool, to_bool, bool_to_str),
+    'VIRTUAL_ENV': (is_string, ensure_string, ensure_string),
 }
 
 #
@@ -101,11 +102,13 @@ def is_callable_default(x):
     """Checks if a value is a callable default."""
     return callable(x) and getattr(x, '_xonsh_callable_default', False)
 if ON_WINDOWS:
-    DEFAULT_PROMPT = ('{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} '
+    DEFAULT_PROMPT = ('{env_name}'
+                      '{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} '
                       '{cwd}{branch_color}{curr_branch}{NO_COLOR} '
                       '{BOLD_INTENSE_CYAN}{prompt_end}{NO_COLOR} ')
 else:
-    DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
+    DEFAULT_PROMPT = ('{env_name}'
+                      '{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
                       '{cwd}{branch_color}{curr_branch}{NO_COLOR} '
                       '{BOLD_BLUE}{prompt_end}{NO_COLOR} ')
 
@@ -184,6 +187,7 @@ DEFAULT_VALUES = {
     'TEEPTY_PIPE_DELAY': 0.01,
     'TITLE': DEFAULT_TITLE,
     'VI_MODE': False,
+    'VIRTUAL_ENV': '',
     'XDG_CONFIG_HOME': os.path.expanduser(os.path.join('~', '.config')),
     'XDG_DATA_HOME': os.path.expanduser(os.path.join('~', '.local', 'share')),
     'XONSHCONFIG': xonshconfig,
@@ -384,6 +388,8 @@ DEFAULT_DOCS = {
         default='xonsh.environ.DEFAULT_TITLE'),
     'VI_MODE': VarDocs(
         "Flag to enable 'vi_mode' in the 'prompt_toolkit' shell."),
+    'VIRTUAL_ENV': VarDocs(
+        'Path to the currently active Python environment.', configurable=False),
     'XDG_CONFIG_HOME': VarDocs(
         'Open desktop standard configuration home dir. This is the same '
         'default as used in the standard.', configurable=False, 
@@ -926,6 +932,15 @@ def _current_job():
     return ''
 
 
+def env_name(pre_chars='(', post_chars=') '):
+    """Extract the current environment name from $VIRTUAL_ENV."""
+    env_path = __xonsh_env__.get('VIRTUAL_ENV')
+    
+    env_name = os.path.basename(env_path)
+    
+    return pre_chars + env_name + post_chars if env_name else ''
+
+
 if ON_WINDOWS:
     USER = 'USERNAME'
 else:
@@ -944,6 +959,7 @@ FORMATTER_DICT = dict(
     branch_color=branch_color,
     branch_bg_color=branch_bg_color,
     current_job=_current_job,
+    env_name=env_name,
     **TERM_COLORS)
 DEFAULT_VALUES['FORMATTER_DICT'] = dict(FORMATTER_DICT)
 
