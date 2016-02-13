@@ -59,7 +59,10 @@ class Vox:
     def new(name):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
 
-        :param name: virtual environment name
+        Parameters
+        ----------
+        name : str
+            Virtual environment name
         """
 
         env_path = join(builtins.__xonsh_env__['VIRTUALENV_HOME'], name)
@@ -74,7 +77,10 @@ class Vox:
     def activate(name):
         """Activate a virtual environment.
 
-        :param name: virtual environment name
+        Parameters
+        ----------
+        name : str
+            Virtual environment name
         """
 
         env_path = join(builtins.__xonsh_env__['VIRTUALENV_HOME'], name)
@@ -153,7 +159,10 @@ class Vox:
     def remove(name):
         """Remove virtual environment.
 
-        :param name: virtual environment name
+        Parameters
+        ----------
+        name : str
+            virtual environment name
         """
 
         if 'VIRTUAL_ENV' in builtins.__xonsh_env__:
