@@ -4,26 +4,43 @@ Windows Guide
 
 Installation
 ================
-To install xonsh on Windows, first install `Python v3.4+`_ from
-http://python.org .
 
-Next, install the other dependencies via ``pip``:
+The easy way
+----------------
+
+The easiest way to install xonsh on windows is to use the conda package manager. First download and install the `Anaconda Python Distribution`_ 
+
+.. note:: Be sure to install the version with Python3.4 or 3.5. Xonsh does is not supported on lagacy Python (2.7). 
+
+The run the following in a command prompt:
 
 .. code-block:: bat
 
-   > pip install ply
+   > conda install xonsh --channel xonsh
+
+This will install xonsh and all the recommended dependencies. Next, run xonsh:
+
+.. code-block:: bat
+
+   > xonsh
+   snail@home ~ $
+
+
+Install from source
+-------------------
+      
+To install xonsh from source on Windows, first install `Python v3.4+`_ from
+http://python.org .
+
+Next, install the prompt_toolkit dependency via ``pip``:
+
+.. code-block:: bat
+
    > pip install prompt-toolkit
 
 While prompt-toolkit is considered an optional dependency, it's the
-recommended alternative to pyreadline for Windows users. Once installed,
-you have to enable prompt-toolkit by creating ``~/.xonshrc`` file and
-adding the following:
-
-.. code-block:: xonsh
-
-   $SHELL_TYPE = 'prompt_toolkit'
-
-For Windows, it's recommended to use a replacement console emulator. Good choices are cmder or conemu.
+recommended alternative to pyreadline for Windows users. For Windows, 
+it's recommended to use a replacement console emulator. Good choices are cmder or conemu.
 
 Download the latest `xonsh-master.zip`_ from github and unzip it
 to ``xonsh-master``.
@@ -34,20 +51,20 @@ Now install xonsh:
 
    > cd xonsh-master
    > python setup.py install
+   
+Next, run xonsh: 
+   
+.. code-block:: bat
 
-.. _Python v3.4+: https://www.python.org/downloads/release/python-343/
+  > scripts\xonsh
+  snail@home ~ $
+
+.. _Python v3.4+: https://www.python.org/downloads/windows/
 .. _xonsh-master.zip: https://github.com/scopatz/xonsh/archive/master.zip
 
 
 Usage
 ================
-Now you are ready to run xonsh:
-
-.. code-block:: bat
-
-   > scripts\xonsh
-   snail@home ~ $
-
 Due to ambiguity with the Python ``dir`` builtin, to list the current
 directory via the ``cmd.exe`` builtin you must explicitly request
 the ``.``, like this:
