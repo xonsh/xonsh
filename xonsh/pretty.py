@@ -6,6 +6,11 @@ to provide their own pretty print callbacks.
 
 This module is based on ruby's `prettyprint.rb` library by `Tanaka Akira`.
 
+The following implementations were forked from the IPython project:
+* Copyright (c) 2008-2014, IPython Development Team
+* Copyright (C) 2001-2007 Fernando Perez <fperez@colorado.edu>
+* Copyright (c) 2001, Janko Hauser <jhauser@zscout.de>
+* Copyright (c) 2001, Nathaniel Gray <n8gray@caltech.edu>
 
 Example Usage
 -------------
@@ -68,16 +73,12 @@ without open / close parameters.  You can also use this code::
     with p.indent(2):
         ...
 
-Inheritance diagram:
-
-.. inheritance-diagram:: IPython.lib.pretty
-   :parts: 3
-
+   
 :copyright: 2007 by Armin Ronacher.
             Portions (c) 2009 by Robert Kern.
 :license: BSD License.
 """
-from __future__ import print_function
+#from __future__ import print_function
 from contextlib import contextmanager
 import sys
 import types
