@@ -936,9 +936,9 @@ def _current_job():
 def env_name(pre_chars='(', post_chars=') '):
     """Extract the current environment name from $VIRTUAL_ENV."""
     env_path = __xonsh_env__.get('VIRTUAL_ENV')
-    
+
     env_name = os.path.basename(env_path)
-    
+
     return pre_chars + env_name + post_chars if env_name else ''
 
 
@@ -1049,7 +1049,14 @@ def load_static_config(ctx, config=None):
         # don't set in ctx in order to maintain default
         config = env['XONSHCONFIG'] = xonshconfig(env)
     if os.path.isfile(config):
-        with open(config, 'r') as f:
+        # Note that an Env instance at __xonsh_env__ has not been started yet,
+        # per se, so we have to use os.environ
+        encoding = os.environ.get('XONSH_ENCODING',
+                                  DEFAULT_VALUES.get('XONSH_ENCODING', 'utf8'))
+        errors = os.environ.get('XONSH_ENCODING_ERRORS',
+                                DEFAULT_VALUES.get('XONSH_ENCODING_ERRORS',
+                                                   'surrogateescape'))
+        with open(config, 'r', encoding=encoding, errors=errors) as f:
             conf = json.load(f)
         ctx['LOADED_CONFIG'] = True
     else:
