@@ -16,6 +16,7 @@ from xonsh.history import main as history_alias
 from xonsh.replay import main as replay_main
 from xonsh.environ import locate_binary
 from xonsh.foreign_shells import foreign_shell_data
+from xonsh.vox import Vox
 
 
 def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
@@ -185,6 +186,12 @@ def trace(args, stdin=None):
     return main(args)
 
 
+def vox(args, stdin=None):
+    """Runs Vox environment manager."""
+    vox = Vox()
+    return vox(args, stdin=stdin)
+
+
 DEFAULT_ALIASES = {
     'cd': cd,
     'pushd': pushd,
@@ -210,6 +217,7 @@ DEFAULT_ALIASES = {
     'xonfig': xonfig,
     'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
     'ipynb': ['ipython', 'notebook', '--no-browser'],
+    'vox': vox,
 }
 
 if ON_WINDOWS:
