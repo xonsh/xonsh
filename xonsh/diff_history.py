@@ -5,13 +5,12 @@ from itertools import zip_longest
 from difflib import SequenceMatcher
 
 from xonsh import lazyjson
-from xonsh.tools import TERM_COLORS
 
-NO_COLOR = TERM_COLORS['NO_COLOR'].replace('\001', '').replace('\002', '')
-RED = TERM_COLORS['RED'].replace('\001', '').replace('\002', '')
-GREEN = TERM_COLORS['GREEN'].replace('\001', '').replace('\002', '')
-BOLD_RED = TERM_COLORS['BOLD_RED'].replace('\001', '').replace('\002', '')
-BOLD_GREEN = TERM_COLORS['BOLD_GREEN'].replace('\001', '').replace('\002', '')
+#NO_COLOR = TERM_COLORS['NO_COLOR'].replace('\001', '').replace('\002', '')
+#RED = TERM_COLORS['RED'].replace('\001', '').replace('\002', '')
+#GREEN = TERM_COLORS['GREEN'].replace('\001', '').replace('\002', '')
+#BOLD_RED = TERM_COLORS['BOLD_RED'].replace('\001', '').replace('\002', '')
+#BOLD_GREEN = TERM_COLORS['BOLD_GREEN'].replace('\001', '').replace('\002', '')
 
 # intern some strings
 REPLACE = 'replace'

@@ -12,7 +12,9 @@ from collections import deque
 
 from xonsh import lazyjson
 from xonsh.base_shell import BaseShell
-from xonsh.tools import ON_WINDOWS, print_color
+from xonsh.ansi_colors import partial_color_format
+from xonsh.environ import partial_format_prompt, multiline_prompt
+from xonsh.tools import ON_WINDOWS, print_color, print_exception
 
 RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = None
 RL_CAN_RESIZE = False
@@ -96,6 +98,7 @@ class ReadlineShell(BaseShell, Cmd):
                          **kwargs)
         setup_readline()
         self._current_indent = ''
+        self._current_prompt = ''
         self.cmdqueue = deque()
 
     def __del__(self):
@@ -103,7 +106,7 @@ class ReadlineShell(BaseShell, Cmd):
 
     def singleline(self, store_in_history=True, **kwargs):
         """Reads a single line of input. The store_in_history kwarg
-        flags whether the input should be stored in readline's in-memory 
+        flags whether the input should be stored in readline's in-memory
         history.
         """
         if not store_in_history:  # store current position to remove it later
@@ -268,7 +271,26 @@ class ReadlineShell(BaseShell, Cmd):
             # This is needed to support some system where line-wrapping doesn't
             # work. This is a bug in upstream Python, or possibly readline.
             RL_LIB.rl_reset_screen_size()
-        return super().prompt
+        #return super().prompt
+        if self.need_more_lines:
+            if self.mlprompt is None:
+                try:
+                    self.mlprompt = multiline_prompt(curr=self._current_prompt)
+                except Exception:  # pylint: disable=broad-except
+                    print_exception()
+                    self.mlprompt = '<multiline prompt error> '
+            return self.mlprompt
+        env = builtins.__xonsh_env__  # pylint: disable=no-member
+        p = env.get('PROMPT')
+        try:
+            p = partial_format_prompt(p)
+        except Exception:  # pylint: disable=broad-except
+            print_exception()
+        p = partial_color_format(p, style=env.get('XONSH_COLOR_STYLE'),
+                                 hide=True)
+        self._current_prompt = p
+        self.settitle()
+        return p
 
 
 class ReadlineHistoryAdder(Thread):

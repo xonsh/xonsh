@@ -223,74 +223,6 @@ def get_sep():
             os.sep)
 
 
-TERM_COLORS = {
-    # Reset
-    'NO_COLOR': '\001\033[0m\002',  # Text Reset
-    # Regular Colors
-    'BLACK': '\001\033[0;30m\002',  # BLACK
-    'RED': '\001\033[0;31m\002',  # RED
-    'GREEN': '\001\033[0;32m\002',  # GREEN
-    'YELLOW': '\001\033[0;33m\002',  # YELLOW
-    'BLUE': '\001\033[0;34m\002',  # BLUE
-    'PURPLE': '\001\033[0;35m\002',  # PURPLE
-    'CYAN': '\001\033[0;36m\002',  # CYAN
-    'WHITE': '\001\033[0;37m\002',  # WHITE
-    # Bold
-    'BOLD_BLACK': '\001\033[1;30m\002',  # BLACK
-    'BOLD_RED': '\001\033[1;31m\002',  # RED
-    'BOLD_GREEN': '\001\033[1;32m\002',  # GREEN
-    'BOLD_YELLOW': '\001\033[1;33m\002',  # YELLOW
-    'BOLD_BLUE': '\001\033[1;34m\002',  # BLUE
-    'BOLD_PURPLE': '\001\033[1;35m\002',  # PURPLE
-    'BOLD_CYAN': '\001\033[1;36m\002',  # CYAN
-    'BOLD_WHITE': '\001\033[1;37m\002',  # WHITE
-    # Underline
-    'UNDERLINE_BLACK': '\001\033[4;30m\002',  # BLACK
-    'UNDERLINE_RED': '\001\033[4;31m\002',  # RED
-    'UNDERLINE_GREEN': '\001\033[4;32m\002',  # GREEN
-    'UNDERLINE_YELLOW': '\001\033[4;33m\002',  # YELLOW
-    'UNDERLINE_BLUE': '\001\033[4;34m\002',  # BLUE
-    'UNDERLINE_PURPLE': '\001\033[4;35m\002',  # PURPLE
-    'UNDERLINE_CYAN': '\001\033[4;36m\002',  # CYAN
-    'UNDERLINE_WHITE': '\001\033[4;37m\002',  # WHITE
-    # Background
-    'BACKGROUND_BLACK': '\001\033[40m\002',  # BLACK
-    'BACKGROUND_RED': '\001\033[41m\002',  # RED
-    'BACKGROUND_GREEN': '\001\033[42m\002',  # GREEN
-    'BACKGROUND_YELLOW': '\001\033[43m\002',  # YELLOW
-    'BACKGROUND_BLUE': '\001\033[44m\002',  # BLUE
-    'BACKGROUND_PURPLE': '\001\033[45m\002',  # PURPLE
-    'BACKGROUND_CYAN': '\001\033[46m\002',  # CYAN
-    'BACKGROUND_WHITE': '\001\033[47m\002',  # WHITE
-    # High Intensity
-    'INTENSE_BLACK': '\001\033[0;90m\002',  # BLACK
-    'INTENSE_RED': '\001\033[0;91m\002',  # RED
-    'INTENSE_GREEN': '\001\033[0;92m\002',  # GREEN
-    'INTENSE_YELLOW': '\001\033[0;93m\002',  # YELLOW
-    'INTENSE_BLUE': '\001\033[0;94m\002',  # BLUE
-    'INTENSE_PURPLE': '\001\033[0;95m\002',  # PURPLE
-    'INTENSE_CYAN': '\001\033[0;96m\002',  # CYAN
-    'INTENSE_WHITE': '\001\033[0;97m\002',  # WHITE
-    # Bold High Intensity
-    'BOLD_INTENSE_BLACK': '\001\033[1;90m\002',  # BLACK
-    'BOLD_INTENSE_RED': '\001\033[1;91m\002',  # RED
-    'BOLD_INTENSE_GREEN': '\001\033[1;92m\002',  # GREEN
-    'BOLD_INTENSE_YELLOW': '\001\033[1;93m\002',  # YELLOW
-    'BOLD_INTENSE_BLUE': '\001\033[1;94m\002',  # BLUE
-    'BOLD_INTENSE_PURPLE': '\001\033[1;95m\002',  # PURPLE
-    'BOLD_INTENSE_CYAN': '\001\033[1;96m\002',  # CYAN
-    'BOLD_INTENSE_WHITE': '\001\033[1;97m\002',  # WHITE
-    # High Intensity backgrounds
-    'BACKGROUND_INTENSE_BLACK': '\001\033[0;100m\002',  # BLACK
-    'BACKGROUND_INTENSE_RED': '\001\033[0;101m\002',  # RED
-    'BACKGROUND_INTENSE_GREEN': '\001\033[0;102m\002',  # GREEN
-    'BACKGROUND_INTENSE_YELLOW': '\001\033[0;103m\002',  # YELLOW
-    'BACKGROUND_INTENSE_BLUE': '\001\033[0;104m\002',  # BLUE
-    'BACKGROUND_INTENSE_PURPLE': '\001\033[0;105m\002',  # PURPLE
-    'BACKGROUND_INTENSE_CYAN': '\001\033[0;106m\002',  # CYAN
-    'BACKGROUND_INTENSE_WHITE': '\001\033[0;107m\002',  # WHITE
-}
-
 
 def fallback(cond, backup):
     """Decorator for returning the object if cond is true and a backup if cond is false.
@@ -756,7 +688,7 @@ def pygments_version():
 
 
 COLOR_CODE_SPLIT_RE = re.compile(r'(\001\033\[[\d;m]+\002)')
-TERM_COLORS_REVERSED = {v: k for k, v in TERM_COLORS.items()}
+#TERM_COLORS_REVERSED = {v: k for k, v in TERM_COLORS.items()}
 COLOR_NAME_REGEX = re.compile(r'(?:(\w+)_)?(\w+)')
 
 _PT_COLORS = {
@@ -1073,7 +1005,7 @@ def expandvars(path):
 
 #
 # File handling tools
-# 
+#
 
 def backup_file(fname):
     """Moves an existing file to a new name that has the current time right

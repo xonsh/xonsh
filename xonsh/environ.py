@@ -17,7 +17,7 @@ from collections import MutableMapping, MutableSequence, MutableSet, namedtuple
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.tools import (
-    TERM_COLORS, ON_WINDOWS, ON_MAC, ON_LINUX, ON_ARCH, IS_ROOT,
+    ON_WINDOWS, ON_MAC, ON_LINUX, ON_ARCH, IS_ROOT,
     always_true, always_false, ensure_string, is_env_path, str_to_env_path,
     env_path_to_str, is_bool, to_bool, bool_to_str, is_history_tuple, to_history_tuple,
     history_tuple_to_str, is_float, string_types, is_string, DEFAULT_ENCODING,
@@ -81,6 +81,7 @@ DEFAULT_ENSURERS = {
     'RAISE_SUBPROC_ERROR': (is_bool, to_bool, bool_to_str),
     'TEEPTY_PIPE_DELAY': (is_float, float, str),
     'XONSHRC': (is_env_path, str_to_env_path, env_path_to_str),
+    'XONSH_COLOR_STYLE': (is_string, ensure_string, ensure_string),
     'XONSH_ENCODING': (is_string, ensure_string, ensure_string),
     'XONSH_ENCODING_ERRORS': (is_string, ensure_string, ensure_string),
     'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
@@ -195,6 +196,7 @@ DEFAULT_VALUES = {
                               'xonsh', 'xonshrc'),
                 os.path.expanduser('~/.xonshrc')) if ON_WINDOWS
                else ('/etc/xonshrc', os.path.expanduser('~/.xonshrc'))),
+    'XONSH_COLOR_STYLE': 'default',
     'XONSH_CONFIG_DIR': xonsh_config_dir,
     'XONSH_DATA_DIR': xonsh_data_dir,
     'XONSH_ENCODING': DEFAULT_ENCODING,
@@ -408,6 +410,9 @@ DEFAULT_DOCS = {
         'control file if there is a naming collision.', default=(
         "On Linux & Mac OSX: ('/etc/xonshrc', '~/.xonshrc')\n"
         "On Windows: ('%ALLUSERSPROFILE%\\xonsh\\xonshrc', '~/.xonshrc')")),
+    'XONSH_COLOR_STYLE': VarDocs(
+        'Sets the color style for xonsh colors. This is a style name, not '
+        'a color map.'),
     'XONSH_CONFIG_DIR': VarDocs(
         'This is location where xonsh configuration information is stored.',
         configurable=False, default="'$XDG_CONFIG_HOME/xonsh'"),
@@ -882,14 +887,14 @@ def dirty_working_directory(cwd=None):
 
 def branch_color():
     """Return red if the current branch is dirty, otherwise green"""
-    return (TERM_COLORS['BOLD_INTENSE_RED'] if dirty_working_directory() else
-            TERM_COLORS['BOLD_INTENSE_GREEN'])
+    return ('{BOLD_INTENSE_RED}' if dirty_working_directory() else
+            '{BOLD_INTENSE_GREEN}')
 
 
 def branch_bg_color():
     """Return red if the current branch is dirty, otherwise green"""
-    return (TERM_COLORS['BACKGROUND_RED'] if dirty_working_directory() else
-            TERM_COLORS['BACKGROUND_GREEN'])
+    return ('{BACKGROUND_RED}' if dirty_working_directory() else
+            '{BACKGROUND_GREEN}')
 
 
 def _replace_home(x):
@@ -961,7 +966,7 @@ FORMATTER_DICT = dict(
     branch_bg_color=branch_bg_color,
     current_job=_current_job,
     env_name=env_name,
-    **TERM_COLORS)
+    )
 DEFAULT_VALUES['FORMATTER_DICT'] = dict(FORMATTER_DICT)
 
 _FORMATTER = string.Formatter()
@@ -983,13 +988,18 @@ def is_template_string(template, formatter_dict=None):
     return included_names <= known_names
 
 
-def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
-    """Formats a xonsh prompt template string."""
-    template = template() if callable(template) else template
+def _get_fmtter(formatter_dict=None):
     if formatter_dict is None:
         fmtter = builtins.__xonsh_env__.get('FORMATTER_DICT', FORMATTER_DICT)
     else:
         fmtter = formatter_dict
+    return fmtter
+
+
+def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
+    """Formats a xonsh prompt template string."""
+    template = template() if callable(template) else template
+    fmtter = _get_fmtter(formatter_dict)
     included_names = set(i[1] for i in _FORMATTER.parse(template))
     fmt = {}
     for name in included_names:
@@ -1005,12 +1015,47 @@ def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
     return template.format(**fmt)
 
 
+def partial_format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
+    """Formats a xonsh prompt template string."""
+    template = template() if callable(template) else template
+    fmtter = _get_fmtter(formatter_dict)
+    bopen = '{'
+    bclose = '}'
+    colon = ':'
+    expl = '!'
+    toks = []
+    for literal, field, spec, conv in _FORMATTER.parse(template):
+        toks.append(literal)
+        if field is None:
+            continue
+        elif field.startswith('$'):
+            v = builtins.__xonsh_env__[name[1:]]
+            v = _FORMATTER.convert_field(v, conv)
+            v = _FORMATTER.format_field(v, spec)
+            toks.append(v)
+            continue
+        elif field in fmtter:
+            v = fmtter[field]
+            val = v() if callable(v) else v
+            val = '' if val is None else val
+            toks.append(val)
+        else:
+            toks.append(bopen)
+            toks.append(field)
+            if conv is not None and len(conv) > 0:
+                toks.append(expl)
+                toks.append(conv)
+            if spec is not None and len(spec) > 0:
+                toks.append(colon)
+                toks.append(spec)
+            toks.append(bclose)
+    return ''.join(toks)
+
+
 RE_HIDDEN = re.compile('\001.*?\002')
 
-def multiline_prompt():
+def multiline_prompt(curr=''):
     """Returns the filler text for the prompt in multiline scenarios."""
-    curr = builtins.__xonsh_env__.get('PROMPT')
-    curr = format_prompt(curr)
     line = curr.rsplit('\n', 1)[1] if '\n' in curr else curr
     line = RE_HIDDEN.sub('', line)  # gets rid of colors
     # most prompts end in whitespace, head is the part before that.
