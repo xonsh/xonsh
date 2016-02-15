@@ -3,7 +3,7 @@ Static Configuration File
 In addition to the run control file, xonsh allows you to have a static config file.
 This JSON-formatted file lives at ``$XONSH_CONFIG_DIR/config.json``, which is
 normally ``~/.config/xonsh/config.json``. The purpose of this file is to allow
-users to set runtime parameters *before* anything else happens. This inlcudes 
+users to set runtime parameters *before* anything else happens. This includes 
 loading data from various foreign shells or setting critical environment
 variables.
 
@@ -30,7 +30,7 @@ This is a list (JSON Array) of dicts (JSON objects) that represent the
 foreign shells to inspect for extra start up information, such as environment
 variables, aliases, and foreign shell functions. The suite of data gathered 
 may be expanded in the future.  Each shell dictionary unpacked and passed into
-the ``xonsh.foreign_shells.foreign_shell_data()`` function. Thus these 
+the ``xonsh.foreign_shells.foreign_shell_data()`` function. Thus, these 
 dictionaries have the following structure:
 
 :shell: *str, required* - The name or path of the shell, such as "bash" or "/bin/sh".
