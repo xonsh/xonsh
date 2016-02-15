@@ -10,7 +10,7 @@ The easy way
 
 The easiest way to install xonsh on windows is through the `Anaconda Python Distribution`_ and the conda package manager. 
 
-.. note:: Be sure to install the version with Python3.4 or later. Xonsh does is not supported on legacy Python (2.7). 
+.. note:: Be sure to install the version with Python3.4 or later. Xonsh is not supported on legacy Python (2.7). 
 
 Install xonsh with the following command:
 
