@@ -14,8 +14,7 @@ from pygments.token import (Keyword, Name, Comment, String, Error, Number,
                             Operator, Generic, Whitespace, Token)
 
 from xonsh.base_shell import BaseShell
-from xonsh.tools import (format_prompt_for_prompt_toolkit, _make_style,
-                         print_exception, format_color)
+from xonsh.tools import print_exception, format_color
 from xonsh.environ import partial_format_prompt
 from xonsh.pyghooks import XonshLexer, XonshStyle, partial_color_tokenize
 from xonsh.ptk.completer import PromptToolkitCompleter
