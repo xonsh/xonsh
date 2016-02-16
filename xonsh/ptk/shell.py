@@ -29,6 +29,8 @@ class PromptToolkitShell(BaseShell):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.styler = XonshStyle(builtins.__xonsh_env__.get('XONSH_COLOR_STYLE'))
+        XonshStyleProxy.target = self.styler
+        self.style_proxy = PygmentsStyle(XonshStyleProxy)
         self.prompter = Prompter()
         self.history = PromptToolkitHistory()
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx)
@@ -64,7 +66,7 @@ class PromptToolkitShell(BaseShell):
                     mouse_support=mouse_support,
                     auto_suggest=auto_suggest,
                     get_prompt_tokens=self.prompt_tokens,
-                    style=self.styler,
+                    style=self.style_proxy,
                     completer=completer,
                     lexer=PygmentsLexer(XonshLexer),
                     multiline=multiline,
@@ -135,6 +137,7 @@ class PromptToolkitShell(BaseShell):
             print_exception()
         toks = partial_color_tokenize(p)
         self.settitle()
+        #print(toks)
         return toks
 
     def print_color(self, string,end='\n', **kwargs):
@@ -146,4 +149,12 @@ class PromptToolkitShell(BaseShell):
         tokens = list(zip(toks, strings))
         print_tokens(tokens, style=custom_style)
 
+
+class XonshStyleProxy(Style):
+    """Simple proxy class to fool prompt toolkit."""
+
+    target = None
+
+    def __new__(cls, *args, **kwargs):
+        return cls.target
 

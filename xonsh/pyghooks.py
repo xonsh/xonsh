@@ -5,7 +5,8 @@ from warnings import warn
 from collections import ChainMap
 
 from pygments.lexer import inherit, bygroups, using, this
-from pygments.token import Token, Name, Generic, Keyword, String
+from pygments.token import (Keyword, Name, Comment, String, Error, Number,
+                            Operator, Generic, Whitespace, Token)
 from pygments.lexers.shell import BashLexer
 from pygments.lexers.agile import PythonLexer
 from pygments.style import Style
@@ -132,9 +133,9 @@ class XonshStyle(Style):
         style_name : str, optional
             The style name to initialize with.
         """
+        self.trap = {}  # for custom colors
         self._style_name = ''
         self.style_name = style_name
-        self.trap = {}  # for custom colors
         super().__init__()
 
     @property
@@ -152,7 +153,7 @@ class XonshStyle(Style):
                  RuntimeWarning)
             cmap = DEFAULT_STYLE
         try:
-            smap = get_style_by_name(value)
+            smap = get_style_by_name(value)().styles
         except (ImportError, pygments.util.ClassNotFound):
             smap = XONSH_BASE_STYLE
         self.styles = ChainMap(self.trap, cmap, PTK_STYLE, smap)
