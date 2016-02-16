@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """Hooks for pygments syntax highlighting."""
-from collections import ChainMap
+import string
 from warnings import warn
+from collections import ChainMap
 
 from pygments.lexer import inherit, bygroups, using, this
 from pygments.token import Token, Name, Generic, Keyword, String
@@ -79,6 +80,44 @@ XonshSubprocLexer.tokens['root'] = [
 #
 
 Color = Token.Color  # alias to new color token namespace
+
+def partial_color_tokenize(template):
+    """Toeknizes a template string containing colors. Will return a list
+    of tuples mapping the token to the string which has that color.
+    These sub-strings maybe templates themselves.
+    """
+    formatter = string.Formatter()
+    bopen = '{'
+    bclose = '}'
+    colon = ':'
+    expl = '!'
+    color = Color.NO_COLOR
+    value = ''
+    toks = []
+    for literal, field, spec, conv in formatter.parse(template):
+        if field in KNOWN_COLORS:
+            value += literal
+            next_color = getattr(Color, field)
+            if next_color is not color:
+                if len(value) > 0:
+                    toks.append((color, value))
+                color = next_color
+                value = ''
+        elif field is not None:
+            parts = [literal, bopen, field]
+            if conv is not None and len(conv) > 0:
+                parts.append(expl)
+                parts.append(conv)
+            if spec is not None and len(spec) > 0:
+                parts.append(colon)
+                parts.append(spec)
+            parts.append(bclose)
+            value += ''.join(parts)
+        else:
+            value += literal
+    toks.append((color, value))
+    return toks
+
 
 class XonshStyle(Style):
     """A xonsh pygments style that will dispatch to the correct color map
@@ -174,6 +213,89 @@ XONSH_BASE_STYLE = {
     Error: '#800000',
 }
 
+KNOWN_COLORS = frozenset([
+    'BACKGROUND_BLACK',
+    'BACKGROUND_BLUE',
+    'BACKGROUND_CYAN',
+    'BACKGROUND_GREEN',
+    'BACKGROUND_INTENSE_BLACK',
+    'BACKGROUND_INTENSE_BLUE',
+    'BACKGROUND_INTENSE_CYAN',
+    'BACKGROUND_INTENSE_GREEN',
+    'BACKGROUND_INTENSE_PURPLE',
+    'BACKGROUND_INTENSE_RED',
+    'BACKGROUND_INTENSE_WHITE',
+    'BACKGROUND_INTENSE_YELLOW',
+    'BACKGROUND_PURPLE',
+    'BACKGROUND_RED',
+    'BACKGROUND_WHITE',
+    'BACKGROUND_YELLOW',
+    'BLACK',
+    'BLUE',
+    'BOLD_BLACK',
+    'BOLD_BLUE',
+    'BOLD_CYAN',
+    'BOLD_GREEN',
+    'BOLD_INTENSE_BLACK',
+    'BOLD_INTENSE_BLUE',
+    'BOLD_INTENSE_CYAN',
+    'BOLD_INTENSE_GREEN',
+    'BOLD_INTENSE_PURPLE',
+    'BOLD_INTENSE_RED',
+    'BOLD_INTENSE_WHITE',
+    'BOLD_INTENSE_YELLOW',
+    'BOLD_PURPLE',
+    'BOLD_RED',
+    'BOLD_UNDERLINE_BLACK',
+    'BOLD_UNDERLINE_BLUE',
+    'BOLD_UNDERLINE_CYAN',
+    'BOLD_UNDERLINE_GREEN',
+    'BOLD_UNDERLINE_INTENSE_BLACK',
+    'BOLD_UNDERLINE_INTENSE_BLUE',
+    'BOLD_UNDERLINE_INTENSE_CYAN',
+    'BOLD_UNDERLINE_INTENSE_GREEN',
+    'BOLD_UNDERLINE_INTENSE_PURPLE',
+    'BOLD_UNDERLINE_INTENSE_RED',
+    'BOLD_UNDERLINE_INTENSE_WHITE',
+    'BOLD_UNDERLINE_INTENSE_YELLOW',
+    'BOLD_UNDERLINE_PURPLE',
+    'BOLD_UNDERLINE_RED',
+    'BOLD_UNDERLINE_WHITE',
+    'BOLD_UNDERLINE_YELLOW',
+    'BOLD_WHITE',
+    'BOLD_YELLOW',
+    'CYAN',
+    'GREEN',
+    'INTENSE_BLACK',
+    'INTENSE_BLUE',
+    'INTENSE_CYAN',
+    'INTENSE_GREEN',
+    'INTENSE_PURPLE',
+    'INTENSE_RED',
+    'INTENSE_WHITE',
+    'INTENSE_YELLOW',
+    'NO_COLOR',
+    'PURPLE',
+    'RED',
+    'UNDERLINE_BLACK',
+    'UNDERLINE_BLUE',
+    'UNDERLINE_CYAN',
+    'UNDERLINE_GREEN',
+    'UNDERLINE_INTENSE_BLACK',
+    'UNDERLINE_INTENSE_BLUE',
+    'UNDERLINE_INTENSE_CYAN',
+    'UNDERLINE_INTENSE_GREEN',
+    'UNDERLINE_INTENSE_PURPLE',
+    'UNDERLINE_INTENSE_RED',
+    'UNDERLINE_INTENSE_WHITE',
+    'UNDERLINE_INTENSE_YELLOW',
+    'UNDERLINE_PURPLE',
+    'UNDERLINE_RED',
+    'UNDERLINE_WHITE',
+    'UNDERLINE_YELLOW',
+    'WHITE',
+    'YELLOW',
+])
 
 #############################################################
 #############   Auto-generated below this line   ############

@@ -16,11 +16,12 @@ from pygments.token import (Keyword, Name, Comment, String, Error, Number,
 from xonsh.base_shell import BaseShell
 from xonsh.tools import (format_prompt_for_prompt_toolkit, _make_style,
                          print_exception, format_color)
+from xonsh.environ import partial_format_prompt
+from xonsh.pyghooks import XonshLexer, XonshStyle, partial_color_tokenize
 from xonsh.ptk.completer import PromptToolkitCompleter
 from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings
 from xonsh.ptk.shortcuts import Prompter, print_tokens
-from xonsh.pyghooks import XonshLexer
 
 
 class PromptToolkitShell(BaseShell):
@@ -28,6 +29,7 @@ class PromptToolkitShell(BaseShell):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.styler = XonshStyle(builtins.__xonsh_env__.get('XONSH_COLOR_STYLE'))
         self.prompter = Prompter()
         self.history = PromptToolkitHistory()
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx)
@@ -39,13 +41,13 @@ class PromptToolkitShell(BaseShell):
             enable_open_in_editor=True)
         load_xonsh_bindings(self.key_bindings_manager)
 
-    def singleline(self, store_in_history=True, auto_suggest=None, 
+    def singleline(self, store_in_history=True, auto_suggest=None,
                    enable_history_search=True, multiline=True, **kwargs):
         """Reads a single line of input from the shell. The store_in_history
         kwarg flags whether the input should be stored in PTK's in-memory
         history.
         """
-        token_func, style_cls = self._get_prompt_tokens_and_style()
+        #token_func, style_cls = self._get_prompt_tokens_and_style()
         env = builtins.__xonsh_env__
         mouse_support = env.get('MOUSE_SUPPORT')
         if store_in_history:
@@ -56,16 +58,17 @@ class PromptToolkitShell(BaseShell):
         auto_suggest = auto_suggest if env.get('AUTO_SUGGEST') else None
         completions_display = env.get('COMPLETIONS_DISPLAY')
         multicolumn = (completions_display == 'multi')
+        self.styler.style_name = env.get('XONSH_COLOR_STYLE')
         completer = None if completions_display == 'none' else self.pt_completer
         with self.prompter:
             line = self.prompter.prompt(
                     mouse_support=mouse_support,
                     auto_suggest=auto_suggest,
-                    get_prompt_tokens=token_func,
-                    style=style_cls,
+                    get_prompt_tokens=self.prompt_tokens,
+                    style=self.styler,
                     completer=completer,
                     lexer=PygmentsLexer(XonshLexer),
-                    multiline=multiline, 
+                    multiline=multiline,
                     history=history,
                     enable_history_search=enable_history_search,
                     reserve_space_for_menu=0,
@@ -115,14 +118,25 @@ class PromptToolkitShell(BaseShell):
                 else:
                     break
 
-    def _get_prompt_tokens_and_style(self):
-        """Returns function to pass as prompt to prompt_toolkit."""
-        token_names, cstyles, strings = format_prompt_for_prompt_toolkit(self.prompt)
-        tokens = [getattr(Token, n) for n in token_names]
-        def get_tokens(cli):
-            return list(zip(tokens, strings))
-        custom_style = _xonsh_style(tokens, cstyles)
-        return get_tokens, custom_style
+    #def _get_prompt_tokens_and_style(self):
+    #    """Returns function to pass as prompt to prompt_toolkit."""
+    #    token_names, cstyles, strings = format_prompt_for_prompt_toolkit(self.prompt)
+    #    tokens = [getattr(Token, n) for n in token_names]
+    #    def get_tokens(cli):
+    #        return list(zip(tokens, strings))
+    #    custom_style = _xonsh_style(tokens, cstyles)
+    #    return get_tokens, custom_style
+
+    def prompt_tokens(self, cli):
+        """Returns a list of (token, str) tuples for the current prompt."""
+        p = builtins.__xonsh_env__.get('PROMPT')
+        try:
+            p = partial_format_prompt(p)
+        except Exception:  # pylint: disable=broad-except
+            print_exception()
+        toks = partial_color_tokenize(p)
+        self.settitle()
+        return toks
 
     def print_color(self, string,end='\n', **kwargs):
         """Prints a color string using prompt-toolkit color management."""
@@ -134,61 +148,3 @@ class PromptToolkitShell(BaseShell):
         print_tokens(tokens, style=custom_style)
 
 
-def _xonsh_style(tokens=tuple(), cstyles=tuple()):
-    class XonshStyle(Style):
-        styles = {
-            Whitespace: "GRAY",
-            Comment: "UNDERLINE INTENSE GRAY",
-            Comment.Preproc: "UNDERLINE INTENSE GRAY",
-            Keyword: "BOLD GREEN",
-            Keyword.Pseudo: "GREEN",
-            Keyword.Type: "MAGENTA",
-            Operator: "GRAY",
-            Operator.Word: "BOLD",
-            Name.Builtin: "INTENSE GREEN",
-            Name.Function: "BLUE",
-            Name.Class: "BOLD BLUE",
-            Name.Namespace: "BOLD BLUE",
-            Name.Exception: "BOLD INTENSE RED",
-            Name.Variable: "CYAN",
-            Name.Constant: "RED",
-            Name.Label: "YELLOW",
-            Name.Entity: "BOLD WHITE",
-            Name.Attribute: "CYAN",
-            Name.Tag: "BOLD GREEN",
-            Name.Decorator: "CYAN",
-            String: "MAGENTA",
-            String.Doc: "UNDERLINE MAGENTA",
-            String.Interpol: "BOLD MAGENTA",
-            String.Escape: "BOLD RED",
-            String.Regex: "MAGENTA",
-            String.Symbol: "BOLD GREEN",
-            String.Other: "GREEN",
-            Number: "RED",
-            Generic.Heading: "BOLD BLUE",
-            Generic.Subheading: "BOLD MAGENTA",
-            Generic.Deleted: "RED",
-            Generic.Inserted: "GREEN",
-            Generic.Error: "BOLD RED",
-            Generic.Emph: "UNDERLINE",
-            Generic.Prompt: "BOLD BLUE",
-            Generic.Output: "GRAY",
-            Generic.Traceback: "RED",
-            Error: "RED",
-        }
-        styles = {k: _make_style(v) for k, v in styles.items()}
-        styles.update({
-            Token.Menu.Completions.Completion.Current: 'bg:#00aaaa #000000',
-            Token.Menu.Completions.Completion: 'bg:#008888 #ffffff',
-            Token.Menu.Completions.ProgressButton: 'bg:#003333',
-            Token.Menu.Completions.ProgressBar: 'bg:#00aaaa',
-            Token.AutoSuggestion: '#666666',
-            Token.Aborted: '#888888',
-        })
-        # update with the prompt styles
-        styles.update(dict(zip(tokens, cstyles)))
-        # Update with with any user styles
-        userstyle = builtins.__xonsh_env__.get('PROMPT_TOOLKIT_STYLES')
-        if userstyle is not None:
-            styles.update(userstyle)
-    return XonshStyle
