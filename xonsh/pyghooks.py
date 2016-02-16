@@ -1,9 +1,15 @@
 # -*- coding: utf-8 -*-
 """Hooks for pygments syntax highlighting."""
+from collections import ChainMap
+from warnings import warn
+
 from pygments.lexer import inherit, bygroups, using, this
 from pygments.token import Token, Name, Generic, Keyword, String
 from pygments.lexers.shell import BashLexer
 from pygments.lexers.agile import PythonLexer
+from pygments.style import Style
+from pygments.styles import get_style_by_name
+import pygments.util
 
 
 class XonshSubprocLexer(BashLexer):
@@ -73,6 +79,100 @@ XonshSubprocLexer.tokens['root'] = [
 #
 
 Color = Token.Color  # alias to new color token namespace
+
+class XonshStyle(Style):
+    """A xonsh pygments style that will dispatch to the correct color map
+    by using a ChainMap.  The style_name property may be used to reset
+    the current style.
+    """
+
+    def __init__(self, style_name='default'):
+        """
+        Parameters
+        ----------
+        style_name : str, optional
+            The style name to initialize with.
+        """
+        self._style_name = ''
+        self.style_name = style_name
+        self.trap = {}  # for custom colors
+        super().__init__()
+
+    @property
+    def style_name(self):
+        return self._style_name
+
+    @style_name.setter
+    def style_name(self, value):
+        if self._style_name == value:
+            return
+        if value in STYLES:
+            cmap = STYLES[value]
+        else:
+            warn('Could not find style {0!r}, using default'.format(value),
+                 RuntimeWarning)
+            cmap = DEFAULT_STYLE
+        try:
+            smap = get_style_by_name(value)
+        except (ImportError, pygments.util.ClassNotFound):
+            smap = XONSH_BASE_STYLE
+        self.styles = ChainMap(self.trap, cmap, PTK_STYLE, smap)
+        self._style_name = value
+
+    @style_name.deleter
+    def style_name(self):
+        self._style_name = ''
+
+
+PTK_STYLE = {
+    Token.Menu.Completions.Completion.Current: 'bg:#00aaaa #000000',
+    Token.Menu.Completions.Completion: 'bg:#008888 #ffffff',
+    Token.Menu.Completions.ProgressButton: 'bg:#003333',
+    Token.Menu.Completions.ProgressBar: 'bg:#00aaaa',
+    Token.AutoSuggestion: '#666666',
+    Token.Aborted: '#888888',
+}
+
+XONSH_BASE_STYLE = {
+    Whitespace: '#008080',
+    Comment: 'underline',
+    Comment.Preproc: 'underline',
+    Keyword: 'bold',
+    Keyword.Pseudo: '#008000',
+    Keyword.Type: '',
+    Operator: '#008080',
+    Operator.Word: 'bold',
+    Name.Builtin: '',
+    Name.Function: '#000080',
+    Name.Class: 'bold',
+    Name.Namespace: 'bold',
+    Name.Exception: 'bold',
+    Name.Variable: '#008080',
+    Name.Constant: '#800000',
+    Name.Label: '#808000',
+    Name.Entity: 'bold',
+    Name.Attribute: '#008080',
+    Name.Tag: 'bold',
+    Name.Decorator: '#008080',
+    String: '',
+    String.Doc: 'underline',
+    String.Interpol: 'bold',
+    String.Escape: 'bold',
+    String.Regex: '',
+    String.Symbol: '',
+    String.Other: '#008000',
+    Number: '#800000',
+    Generic.Heading: 'bold',
+    Generic.Subheading: 'bold',
+    Generic.Deleted: '#800000',
+    Generic.Inserted: '#008000',
+    Generic.Error: 'bold',
+    Generic.Emph: 'underline',
+    Generic.Prompt: 'bold',
+    Generic.Output: '#008080',
+    Generic.Traceback: '#800000',
+    Error: '#800000',
+}
 
 
 #############################################################
