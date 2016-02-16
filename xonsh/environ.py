@@ -235,7 +235,7 @@ DEFAULT_DOCS = {
         'Flag for automatically pushing directories onto the directory stack.'
         ),
     'AUTO_SUGGEST': VarDocs(
-        'Enable automatic command suggestions based on history, like in fish '
+        'Enable automatic command suggestions based on history, like in the fish '
         'shell.\n\nPressing the right arrow key inserts the currently '
         'displayed suggestion. Only usable with $SHELL_TYPE=prompt_toolkit.'),
     'BASH_COMPLETIONS': VarDocs(
@@ -277,7 +277,7 @@ DEFAULT_DOCS = {
         "$SHELL_TYPE=prompt_toolkit"),
     'COMPLETIONS_MENU_ROWS': VarDocs(
         'Number of rows to reserve for tab-completions menu if '
-        "$COMPLETIONS_DISPLAY is 'single' or 'multi'. This only effects the "
+        "$COMPLETIONS_DISPLAY is 'single' or 'multi'. This only affects the "
         'prompt-toolkit shell.'),
     'DIRSTACK_SIZE': VarDocs('Maximum size of the directory stack.'),
     'EXPAND_ENV_VARS': VarDocs(
@@ -320,7 +320,7 @@ DEFAULT_DOCS = {
         configurable=False),
     'PATH': VarDocs(
         'List of strings representing where to look for executables.'),
-    'PATHEXT': VarDocs('List of strings for filtering valid exeutables by.'),
+    'PATHEXT': VarDocs('List of strings for filtering valid executables by.'),
     'PROMPT': VarDocs(
         'The prompt text. May contain keyword arguments which are '
         "auto-formatted, see 'Customizing the Prompt' at "
@@ -334,12 +334,12 @@ DEFAULT_DOCS = {
         'specified here, prompt-toolkit uses the colors from '
         "'xonsh.tools._PT_COLORS'.", configurable=False),
     'PROMPT_TOOLKIT_STYLES': VarDocs(
-        'This is a mapping of user-specified styles for prompt-toolkit. See '
-        'the prompt-toolkit documentation for more details. If None, this is '
-        'skipped.', configurable=False),
+        'This is a mapping of pygments tokens to user-specified styles for '
+        'prompt-toolkit. See the prompt-toolkit and pygments documentation '
+        'for more details. If None, this is skipped.', configurable=False),
     'PUSHD_MINUS': VarDocs(
         'Flag for directory pushing functionality. False is the normal '
-        'behaviour.'),
+        'behavior.'),
     'PUSHD_SILENT': VarDocs(
         'Whether or not to suppress directory stack manipulation output.'),
     'RAISE_SUBPROC_ERROR': VarDocs(
@@ -355,7 +355,7 @@ DEFAULT_DOCS = {
         "    - 'random' selects a random shell from the above on startup\n"
         "    - 'best' selects the most feature-rich shell available on the\n"
         "       user's system\n\n"
-        'To use the prompt_toolkit shell you need to have prompt_toolkit '
+        'To use the prompt_toolkit shell you need to have the prompt_toolkit '
         '(https://github.com/jonathanslenders/python-prompt-toolkit) '
         'library installed. To specify which shell should be used, do so in '
         'the run control file.'),
@@ -404,18 +404,18 @@ DEFAULT_DOCS = {
         default="'$XONSH_CONFIG_DIR/config.json'"),
     'XONSHRC': VarDocs(
         'A tuple of the locations of run control files, if they exist.  User '
-        'defined run control file will supercede values set in system-wide '
+        'defined run control file will supersede values set in system-wide '
         'control file if there is a naming collision.', default=(
         "On Linux & Mac OSX: ('/etc/xonshrc', '~/.xonshrc')\n"
         "On Windows: ('%ALLUSERSPROFILE%\\xonsh\\xonshrc', '~/.xonshrc')")),
     'XONSH_CONFIG_DIR': VarDocs(
-        'This is location where xonsh configuration information is stored.',
+        'This is the location where xonsh configuration information is stored.',
         configurable=False, default="'$XDG_CONFIG_HOME/xonsh'"),
     'XONSH_DATA_DIR': VarDocs(
         'This is the location where xonsh data files are stored, such as '
         'history.', default="'$XDG_DATA_HOME/xonsh'"),
     'XONSH_ENCODING': VarDocs(
-        'This is the that xonsh should use for subrpocess operations.',
+        'This is the encoding that xonsh should use for subrpocess operations.',
         default='sys.getdefaultencoding()'),
     'XONSH_ENCODING_ERRORS': VarDocs(
         'The flag for how to handle encoding errors should they happen. '
@@ -442,10 +442,10 @@ DEFAULT_DOCS = {
         'True if xonsh is running as a login shell, and False otherwise.',
         configurable=False),
     'XONSH_SHOW_TRACEBACK': VarDocs(
-        'Controls if a traceback is shown exceptions occur in the shell. '
-        'Set to True to always show or False to always hide. If undefined '
-        'then traceback is hidden but a notice is shown on how to enable the '
-        'traceback.'),
+        'Controls if a traceback is shown if exceptions occur in the shell. '
+        'Set to True to always show traceback or False to always hide. '
+        'If undefined then the traceback is hidden but a notice is shown on how '
+        'to enable the full traceback.'),
     'XONSH_STORE_STDOUT': VarDocs(
         'Whether or not to store the stdout and stderr streams in the '
         'history files.', configurable=False),

@@ -27,14 +27,3 @@ This includes:
 * Support for future versions of Python
 * Testing on Mac OSX
 
-
-4. Jupyter notebook shim
--------------------------
-Having an Ixonsh notebook would be approximately the best thing ever. It is
-known.
-
-
-5. Pygments parser
-------------------
-A true interface to pygments is highly desirable.
-
