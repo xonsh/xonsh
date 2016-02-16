@@ -187,7 +187,6 @@ DEFAULT_VALUES = {
     'TEEPTY_PIPE_DELAY': 0.01,
     'TITLE': DEFAULT_TITLE,
     'VI_MODE': False,
-    'VIRTUAL_ENV': '',
     'XDG_CONFIG_HOME': os.path.expanduser(os.path.join('~', '.config')),
     'XDG_DATA_HOME': os.path.expanduser(os.path.join('~', '.local', 'share')),
     'XONSHCONFIG': xonshconfig,
@@ -935,7 +934,7 @@ def _current_job():
 
 def env_name(pre_chars='(', post_chars=') '):
     """Extract the current environment name from $VIRTUAL_ENV."""
-    env_path = __xonsh_env__.get('VIRTUAL_ENV')
+    env_path = __xonsh_env__.get('VIRTUAL_ENV', '')
 
     env_name = os.path.basename(env_path)
 
