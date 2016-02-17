@@ -164,6 +164,20 @@ class XonshStyle(Style):
         self._style_name = ''
 
 
+def xonsh_style_proxy(styler):
+    """Factory for a proxy class to a xonsh style."""
+    class XonshStyleProxy(Style):
+        """Simple proxy class to fool prompt toolkit."""
+
+        target = styler
+        styles = styler.styles
+
+        def __new__(cls, *args, **kwargs):
+            return cls.target
+
+    return XonshStyleProxy
+
+
 PTK_STYLE = {
     Token.Menu.Completions.Completion.Current: 'bg:#00aaaa #000000',
     Token.Menu.Completions.Completion: 'bg:#008888 #ffffff',

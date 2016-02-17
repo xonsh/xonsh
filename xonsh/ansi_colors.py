@@ -26,7 +26,7 @@ def partial_color_format(template, style='default', cmap=None, hide=False):
     """
     if cmap is not None:
         pass
-    elif style in styles:
+    elif style in STYLES:
         cmap = STYLES[style]
     else:
         warn('Could not find color style {0!r}, using default.'.format(style),

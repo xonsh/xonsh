@@ -14,7 +14,12 @@ from xonsh import lazyjson
 from xonsh.base_shell import BaseShell
 from xonsh.ansi_colors import partial_color_format
 from xonsh.environ import partial_format_prompt, multiline_prompt
-from xonsh.tools import ON_WINDOWS, print_color, print_exception
+from xonsh.tools import ON_WINDOWS, print_exception, HAVE_PYGMENTS
+
+if HAVE_PYGMENTS:
+    from xonsh import pyghooks
+    import pygments
+    from pygments.formatters.terminal256 import Terminal256Formatter
 
 RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = None
 RL_CAN_RESIZE = False
@@ -228,7 +233,7 @@ class ReadlineShell(BaseShell, Cmd):
                     if inserter is not None:
                         readline.set_pre_input_hook(None)
                 else:
-                    print_color(self.prompt, file=self.stdout)
+                    self.print_color(self.prompt, file=self.stdout)
                     if line is not None:
                         os.write(self.stdin.fileno(), line.encode())
                     if not exec_now:
@@ -292,6 +297,25 @@ class ReadlineShell(BaseShell, Cmd):
         self.settitle()
         return p
 
+    def format_color(self, string, hide=False, **kwargs):
+        """Readline implementation of color formatting. This usesg ANSI color
+        codes.
+        """
+        return partial_color_format(string, hide=hide,
+                    style=builtins.__xonsh_env__.get('XONSH_COLOR_STYLE'))
+
+    def print_color(self, string, hide=False, **kwargs):
+        if isinstance(string, str):
+            s = self.format_color(string, hide=hide)
+        else:
+            # assume this is a list of (Token, str) tuples and format it
+            env = builtins.__xonsh_env__
+            self.styler.style_name = env.get('XONSH_COLOR_STYLE')
+            style_proxy = pyghooks.xonsh_style_proxy(self.styler)
+            formatter = Terminal256Formatter(style=style_proxy)
+            s = pygments.format(string, formatter).rstrip()
+        print(s, **kwargs)
+
 
 class ReadlineHistoryAdder(Thread):
 
@@ -329,4 +353,3 @@ class ReadlineHistoryAdder(Thread):
                 lj.close()
             except (IOError, OSError):
                 continue
-

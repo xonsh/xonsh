@@ -16,7 +16,8 @@ from pygments.token import (Keyword, Name, Comment, String, Error, Number,
 from xonsh.base_shell import BaseShell
 from xonsh.tools import print_exception, format_color
 from xonsh.environ import partial_format_prompt
-from xonsh.pyghooks import XonshLexer, XonshStyle, partial_color_tokenize
+from xonsh.pyghooks import XonshLexer, XonshStyle, partial_color_tokenize, \
+    xonsh_style_proxy
 from xonsh.ptk.completer import PromptToolkitCompleter
 from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings
@@ -28,7 +29,6 @@ class PromptToolkitShell(BaseShell):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.styler = XonshStyle(builtins.__xonsh_env__.get('XONSH_COLOR_STYLE'))
         self.prompter = Prompter()
         self.history = PromptToolkitHistory()
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx)
@@ -116,15 +116,6 @@ class PromptToolkitShell(BaseShell):
                 else:
                     break
 
-    #def _get_prompt_tokens_and_style(self):
-    #    """Returns function to pass as prompt to prompt_toolkit."""
-    #    token_names, cstyles, strings = format_prompt_for_prompt_toolkit(self.prompt)
-    #    tokens = [getattr(Token, n) for n in token_names]
-    #    def get_tokens(cli):
-    #        return list(zip(tokens, strings))
-    #    custom_style = _xonsh_style(tokens, cstyles)
-    #    return get_tokens, custom_style
-
     def prompt_tokens(self, cli):
         """Returns a list of (token, str) tuples for the current prompt."""
         p = builtins.__xonsh_env__.get('PROMPT')
@@ -136,25 +127,20 @@ class PromptToolkitShell(BaseShell):
         self.settitle()
         return toks
 
-    def print_color(self, string,end='\n', **kwargs):
+    def format_color(self, string, **kwargs):
+        """Formats a color string using Pygments. This, therefore, returns
+        a list of (Token, str) tuples.
+        """
+        return partial_color_tokenize(string)
+
+    def print_color(self, string, end='\n', **kwargs):
         """Prints a color string using prompt-toolkit color management."""
-        s = format_color(string + end, remove_escapes=False)
-        token_names, cstyles, strings = format_prompt_for_prompt_toolkit(s)
-        toks = [getattr(Token, n) for n in token_names]
-        custom_style = PygmentsStyle(_xonsh_style(toks, cstyles))
-        tokens = list(zip(toks, strings))
-        print_tokens(tokens, style=custom_style)
-
-
-def xonsh_style_proxy(styler):
-    """Factory for a proxy class to a xonsh style."""
-    class XonshStyleProxy(Style):
-        """Simple proxy class to fool prompt toolkit."""
-
-        target = styler
-        styles = styler.styles
-
-        def __new__(cls, *args, **kwargs):
-            return cls.target
-
-    return XonshStyleProxy
+        if isinstance(string, str):
+            tokens = partial_color_tokenize(string + end)
+        else:
+            # assume this is a list of (Token, str) tuples and just print
+            tokens = string
+        env = builtins.__xonsh_env__
+        self.styler.style_name = env.get('XONSH_COLOR_STYLE')
+        proxy_style = PygmentsStyle(xonsh_style_proxy(self.styler))
+        print_tokens(tokens, style=proxy_style)

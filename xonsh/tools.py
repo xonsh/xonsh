@@ -30,12 +30,26 @@ from contextlib import contextmanager
 from collections import OrderedDict, Sequence, Set
 from warnings import warn
 
+#
+# Check pygments
+#
+
+def pygments_version():
+    """Returns the Pygments version or False."""
+    try:
+        import pygments
+        v = pygments.__version__
+    except ImportError:
+        v = False
+    return v
+
 if sys.version_info[0] >= 3:
     string_types = (str, bytes)
     unicode_type = str
 else:
     string_types = (str, unicode)
     unicode_type = unicode
+
 
 DEFAULT_ENCODING = sys.getdefaultencoding()
 
@@ -45,6 +59,7 @@ ON_LINUX = (platform.system() == 'Linux')
 ON_ARCH = (platform.linux_distribution()[0] == 'arch')
 ON_POSIX = (os.name == 'posix')
 IS_ROOT = ctypes.windll.shell32.IsUserAnAdmin() != 0 if ON_WINDOWS else os.getuid() == 0
+HAVE_PYGMENTS = bool(pygments_version())
 
 VER_3_4 = (3, 4)
 VER_3_5 = (3, 5)
@@ -669,31 +684,19 @@ def history_tuple_to_str(x):
     """Converts a valid history tuple to a canonical string."""
     return '{0} {1}'.format(*x)
 
-#
-# Check pygments
-#
 
-def pygments_version():
-    """Returns the Pygments version or False."""
-    try:
-        import pygments
-        v = pygments.__version__
-    except ImportError:
-        v = False
-    return v
-
-def format_color(string, remove_escapes=True):
-    """Formats strings that contain xonsh.tools.TERM_COLORS values."""
-    s = string.format(**TERM_COLORS)
-    if remove_escapes:
-        s = s.replace('\001', '').replace('\002', '')
-    return s
+def format_color(string, **kwargs):
+    """Formats strings that may contain colors. This simply dispatches to the
+    shell instances method of the same name. The results of this function should
+    be directly usable by print_color().
+    """
+    return builtins.__xonsh_shell__.shell.format_color(string, **kwargs)
 
 
 def print_color(string, **kwargs):
-    """Print strings that contain xonsh.tools.TERM_COLORS values. By default
-    `sys.stdout` is used as the output stream but an alternate can be specified
-    by the `file` keyword argument.
+    """Prints a string that may contain colors. This dispatched to the shell
+    method of the same name. Colors will be formatted if they have not already
+    been.
     """
     builtins.__xonsh_shell__.shell.print_color(string, **kwargs)
 
