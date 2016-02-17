@@ -29,8 +29,6 @@ class PromptToolkitShell(BaseShell):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.styler = XonshStyle(builtins.__xonsh_env__.get('XONSH_COLOR_STYLE'))
-        XonshStyleProxy.target = self.styler
-        self.style_proxy = PygmentsStyle(XonshStyleProxy)
         self.prompter = Prompter()
         self.history = PromptToolkitHistory()
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx)
@@ -48,7 +46,6 @@ class PromptToolkitShell(BaseShell):
         kwarg flags whether the input should be stored in PTK's in-memory
         history.
         """
-        #token_func, style_cls = self._get_prompt_tokens_and_style()
         env = builtins.__xonsh_env__
         mouse_support = env.get('MOUSE_SUPPORT')
         if store_in_history:
@@ -66,7 +63,7 @@ class PromptToolkitShell(BaseShell):
                     mouse_support=mouse_support,
                     auto_suggest=auto_suggest,
                     get_prompt_tokens=self.prompt_tokens,
-                    style=self.style_proxy,
+                    style=PygmentsStyle(xonsh_style_proxy(self.styler)),
                     completer=completer,
                     lexer=PygmentsLexer(XonshLexer),
                     multiline=multiline,
@@ -137,7 +134,6 @@ class PromptToolkitShell(BaseShell):
             print_exception()
         toks = partial_color_tokenize(p)
         self.settitle()
-        #print(toks)
         return toks
 
     def print_color(self, string,end='\n', **kwargs):
@@ -150,11 +146,15 @@ class PromptToolkitShell(BaseShell):
         print_tokens(tokens, style=custom_style)
 
 
-class XonshStyleProxy(Style):
-    """Simple proxy class to fool prompt toolkit."""
+def xonsh_style_proxy(styler):
+    """Factory for a proxy class to a xonsh style."""
+    class XonshStyleProxy(Style):
+        """Simple proxy class to fool prompt toolkit."""
 
-    target = None
+        target = styler
+        styles = styler.styles
 
-    def __new__(cls, *args, **kwargs):
-        return cls.target
+        def __new__(cls, *args, **kwargs):
+            return cls.target
 
+    return XonshStyleProxy
