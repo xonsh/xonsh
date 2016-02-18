@@ -17,8 +17,12 @@ import io as stdlib_io
 from collections import namedtuple
 
 from xonsh import openpy
-from xonsh.tools import (cast_unicode, safe_hasattr, string_types, indent, 
-    VER_MAJOR_MINOR, VER_3_4)
+from xonsh.tools import (cast_unicode, safe_hasattr, string_types, indent,
+    VER_MAJOR_MINOR, VER_3_4, print_color, format_color, HAVE_PYGMENTS)
+
+if HAVE_PYGMENTS:
+    import pygments
+    from xonsh import pyghooks
 
 if sys.version_info[0] > 2:
     ISPY3K = True
@@ -297,7 +301,7 @@ def find_source_lines(obj):
 
 
 if VER_MAJOR_MINOR <= VER_3_4:
-    FrameInfo = namedtuple('FrameInfo', ['frame', 'filename', 'lineno', 'function', 
+    FrameInfo = namedtuple('FrameInfo', ['frame', 'filename', 'lineno', 'function',
                                          'code_context', 'index'])
     def getouterframes(frame, context=1):
         """Wrapper for getouterframes so that it acts like the Python v3.5 version."""
@@ -420,8 +424,8 @@ class Inspector(object):
             o = openpy.read_py_file(ofile, skip_encoding_cookie=False)
             print(o, lineno - 1)
 
-    def _format_fields(self, fields, title_width=0):
-        """Formats a list of fields for display.
+    def _format_fields_str(self, fields, title_width=0):
+        """Formats a list of fields for display using color strings.
 
         Parameters
         ----------
@@ -434,12 +438,61 @@ class Inspector(object):
         if title_width == 0:
             title_width = max(len(title) + 2 for title, _ in fields)
         for title, content in fields:
+            title_len = len(title)
+            title = '{BOLD_RED}' + title + ':{NO_COLOR}'
             if len(content.splitlines()) > 1:
-                title = title + ":\n"
+                title += '\n'
             else:
-                title = (title + ":").ljust(title_width)
+                title += " ".ljust(title_width - title_len)
             out.append(cast_unicode(title) + cast_unicode(content))
-        return "\n".join(out)
+        return format_color("\n".join(out) + '\n')
+
+    def _format_fields_tokens(self, fields, title_width=0):
+        """Formats a list of fields for display using color tokens from
+        pygments.
+
+        Parameters
+        ----------
+        fields : list
+          A list of 2-tuples: (field_title, field_content)
+        title_width : int
+          How many characters to pad titles to. Default to longest title.
+        """
+        out = []
+        if title_width == 0:
+            title_width = max(len(title) + 2 for title, _ in fields)
+        for title, content in fields:
+            title_len = len(title)
+            title = '{BOLD_RED}' + title + ':{NO_COLOR}'
+            if not isinstance(content, str) or len(content.splitlines()) > 1:
+                title += '\n'
+            else:
+                title += " ".ljust(title_width - title_len)
+            out += pyghooks.partial_color_tokenize(title)
+            if isinstance(content, str):
+                out[-1] = (out[-1][0], out[-1][1] + content + '\n')
+            else:
+                out += content
+                out[-1] = (out[-1][0], out[-1][1] + '\n')
+        out[-1] = (out[-1][0], out[-1][1] + '\n')
+        return out
+
+    def _format_fields(self, fields, title_width=0):
+        """Formats a list of fields for display using color tokens from
+        pygments.
+
+        Parameters
+        ----------
+        fields : list
+          A list of 2-tuples: (field_title, field_content)
+        title_width : int
+          How many characters to pad titles to. Default to longest title.
+        """
+        if HAVE_PYGMENTS:
+            rtn = self._format_fields_tokens(fields, title_width=title_width)
+        else:
+            rtn = self._format_fields_str(fields, title_width=title_width)
+        return rtn
 
     # The fields to be displayed by pinfo: (fancy_name, key_in_info_dict)
     pinfo_fields1 = [("Type", "type_name")]
@@ -521,7 +574,7 @@ class Inspector(object):
 
         # Finally send to printer/pager:
         if displayfields:
-            print(self._format_fields(displayfields))
+            print_color(self._format_fields(displayfields))
 
     def info(self, obj, oname='', info=None, detail_level=0):
         """Compute a dict with detailed information about an object.
@@ -635,7 +688,11 @@ class Inspector(object):
                     if hasattr(obj, '__class__'):
                         source = getsource(obj.__class__, binary_file)
                 if source is not None:
-                    out['source'] = source.rstrip()
+                    source = source.rstrip()
+                    if HAVE_PYGMENTS:
+                        lexer = pyghooks.XonshLexer()
+                        source = list(pygments.lex(source, lexer=lexer))
+                    out['source'] = source
             except Exception:  # pylint:disable=broad-except
                 pass
 
