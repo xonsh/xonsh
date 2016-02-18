@@ -267,4 +267,6 @@ class BaseShell(object):
         """Prints a string in color. This base implmentation does not actually
         do any coloring, but just prints the string directly.
         """
+        if not isinstance(string, str):
+            string = ''.join([x for _, x in string])
         print(string, **kwargs)
