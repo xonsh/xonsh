@@ -8,14 +8,38 @@ Current Developments
 
 * Added new valid ``$SHELL_TYPE`` called ``'best'``. This selects the best value
   for the concrete shell type based on the availability on the user's machine.
+* New environment variable ``$XONSH_COLOR_STYLE`` will set the color mapping
+  for all of xonsh.
+* New ``XonshStyle`` pygments style will determine the approriate color
+  mapping based on ``$XONSH_COLOR_STYLE``.  The associated ``xonsh_style_proxy()``
+  is intended for wrapping ``XonshStyle`` when actually being used by
+  pygments.
+* The functions ``print_color()`` and ``format_color()`` found in ``xonsh.tools``
+  dispatch to the approriate shell color handling and may be used from
+  anywhere.
+* ``xonsh.tools.HAVE_PYGMENTS`` flag now denotes if pygments is installed and
+  available on the users system.
+* The ``ansi_colors`` module is now availble for handling ANSI color codes.
+* ``?`` and ``??`` operator output now has colored titles, like in IPython.
+* ``??`` will syntax highlight source code if pygments is available.
+* Python mode output is now syntax highlighted if pygments is available.
 
 **Changed:**
 
 * Updated ``$SHELL_TYPE`` default to ``'best'``.
+* Shell classes are now responsible for implementing their own color
+  formatting and printing.
+* Prompt coloring, history diffing, and tracing uses new color handling
+  capabilities.
+* New ``Token.Color`` token for xonsh color names, e.g. we now use
+  ``Token.Color.RED`` rather than ``Token.RED``.
 
 **Deprecated:** None
 
-**Removed:** None
+**Removed:**
+
+* The ``xonsh.tools.TERM_COLORS`` mapping has been axed, along with all
+  references to it.
 
 **Fixed:**
 
