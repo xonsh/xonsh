@@ -76,22 +76,28 @@ def test_repath_home_var_brace():
         assert_equal(exp, obs[0])
 
 def test_helper_int():
-    helper(int, 'int')
+    with mock_xonsh_env({}):
+        helper(int, 'int')
 
 def test_helper_helper():
-    helper(helper, 'helper')
+    with mock_xonsh_env({}):
+        helper(helper, 'helper')
 
 def test_helper_env():
-    helper(Env, 'Env')
+    with mock_xonsh_env({}):
+        helper(Env, 'Env')
 
 def test_superhelper_int():
-    superhelper(int, 'int')
+    with mock_xonsh_env({}):
+        superhelper(int, 'int')
 
 def test_superhelper_helper():
-    superhelper(helper, 'helper')
+    with mock_xonsh_env({}):
+        superhelper(helper, 'helper')
 
 def test_superhelper_env():
-    superhelper(Env, 'Env')
+    with mock_xonsh_env({}):
+        superhelper(Env, 'Env')
 
 def test_ensure_list_of_strs():
     cases = [(['yo'], 'yo'), (['yo'], ['yo']), (['42'], 42), (['42'], [42])]
