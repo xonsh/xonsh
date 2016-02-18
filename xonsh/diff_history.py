@@ -5,12 +5,13 @@ from itertools import zip_longest
 from difflib import SequenceMatcher
 
 from xonsh import lazyjson
+from xonsh.tools import print_color, format_color
 
-#NO_COLOR = TERM_COLORS['NO_COLOR'].replace('\001', '').replace('\002', '')
-#RED = TERM_COLORS['RED'].replace('\001', '').replace('\002', '')
-#GREEN = TERM_COLORS['GREEN'].replace('\001', '').replace('\002', '')
-#BOLD_RED = TERM_COLORS['BOLD_RED'].replace('\001', '').replace('\002', '')
-#BOLD_GREEN = TERM_COLORS['BOLD_GREEN'].replace('\001', '').replace('\002', '')
+NO_COLOR = '{NO_COLOR}'
+RED = '{RED}'
+GREEN = '{GREEN}'
+BOLD_RED = '{BOLD_RED}'
+BOLD_GREEN = '{BOLD_GREEN}'
 
 # intern some strings
 REPLACE = 'replace'
@@ -298,7 +299,7 @@ def _create_parser(p=None):
 
 def _main_action(ns, hist=None):
     hd = HistoryDiffer(ns.a, ns.b, reopen=ns.reopen, verbose=ns.verbose)
-    print(hd.format())
+    print_color(hd.format())
 
 
 def main(args=None, stdin=None):
