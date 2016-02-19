@@ -588,11 +588,9 @@ class ManCompleter(object):
         if cmd not in self._options.keys():
             try:
                 manpage = subprocess.Popen(["man", cmd],
-                            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                            env=builtins.__xonsh_env__.detype())
+                            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
                 # This is a trick to get rid of reverse line feeds
                 text = subprocess.check_output(["col", "-b"],
-                        env=builtins.__xonsh_env__.detype(),
                         stdin=manpage.stdout)
                 text = text.decode('utf-8')
                 scraped_text = ' '.join(SCRAPE_RE.findall(text))
