@@ -19,11 +19,13 @@ if not os.path.isdir('.git'):
 
 if len($ARGS) == 1:
     # Run all tests.
-    $[make build-tables] # ensure lexer/parser table module is up to date
+    # ensure lexer/parser table module is up to date
+    $[python3 -c 'import setup; setup.build_tables()']
     $[env XONSHRC='' nosetests]
 elif len($ARGS) == 2 and $ARG1 == 'all':
     # Run all tests.
-    $[make build-tables] # ensure lexer/parser table module is up to date
+    # ensure lexer/parser table module is up to date
+    $[python3 -c 'import setup; setup.build_tables()']
     $[env XONSHRC='' nosetests]
 elif len($ARGS) == 2 and $ARG1 == 'edited':
     # Run just the tests for the files edited in the uncommited change.
@@ -42,7 +44,8 @@ elif len($ARGS) == 2 and $ARG1 == 'edited':
                   format(edited_fname), file=sys.stderr)
 
     if tests:
-        $[make build-tables] # ensure lexer/parser table module is up to date
+        # ensure lexer/parser table module is up to date
+        $[python3 -c 'import setup; setup.build_tables()']
         $[env XONSHRC='' nosetests -v @(sorted(tests))]
     else:
         print('Cannot find any tests in the pending changes.', file=sys.stderr)
@@ -62,7 +65,8 @@ else:
                   format(test_fname), file=sys.stderr)
 
     if tests:
-        $[make build-tables] # ensure lexer/parser table module is up to date
+        # ensure lexer/parser table module is up to date
+        $[python3 -c 'import setup; setup.build_tables()']
         $[env XONSHRC='' nosetests -v @(sorted(tests))]
     else:
         print('Cannot find any tests matching {}.'.format($ARGS[1:]),
