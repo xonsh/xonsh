@@ -12,7 +12,14 @@ from collections import deque
 
 from xonsh import lazyjson
 from xonsh.base_shell import BaseShell
-from xonsh.tools import ON_WINDOWS, print_color
+from xonsh.ansi_colors import partial_color_format
+from xonsh.environ import partial_format_prompt, multiline_prompt
+from xonsh.tools import ON_WINDOWS, print_exception, HAVE_PYGMENTS
+
+if HAVE_PYGMENTS:
+    from xonsh import pyghooks
+    import pygments
+    from pygments.formatters.terminal256 import Terminal256Formatter
 
 RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = None
 RL_CAN_RESIZE = False
@@ -96,6 +103,7 @@ class ReadlineShell(BaseShell, Cmd):
                          **kwargs)
         setup_readline()
         self._current_indent = ''
+        self._current_prompt = ''
         self.cmdqueue = deque()
 
     def __del__(self):
@@ -103,7 +111,7 @@ class ReadlineShell(BaseShell, Cmd):
 
     def singleline(self, store_in_history=True, **kwargs):
         """Reads a single line of input. The store_in_history kwarg
-        flags whether the input should be stored in readline's in-memory 
+        flags whether the input should be stored in readline's in-memory
         history.
         """
         if not store_in_history:  # store current position to remove it later
@@ -225,7 +233,7 @@ class ReadlineShell(BaseShell, Cmd):
                     if inserter is not None:
                         readline.set_pre_input_hook(None)
                 else:
-                    print_color(self.prompt, file=self.stdout)
+                    self.print_color(self.prompt, file=self.stdout)
                     if line is not None:
                         os.write(self.stdin.fileno(), line.encode())
                     if not exec_now:
@@ -268,7 +276,45 @@ class ReadlineShell(BaseShell, Cmd):
             # This is needed to support some system where line-wrapping doesn't
             # work. This is a bug in upstream Python, or possibly readline.
             RL_LIB.rl_reset_screen_size()
-        return super().prompt
+        #return super().prompt
+        if self.need_more_lines:
+            if self.mlprompt is None:
+                try:
+                    self.mlprompt = multiline_prompt(curr=self._current_prompt)
+                except Exception:  # pylint: disable=broad-except
+                    print_exception()
+                    self.mlprompt = '<multiline prompt error> '
+            return self.mlprompt
+        env = builtins.__xonsh_env__  # pylint: disable=no-member
+        p = env.get('PROMPT')
+        try:
+            p = partial_format_prompt(p)
+        except Exception:  # pylint: disable=broad-except
+            print_exception()
+        p = partial_color_format(p, style=env.get('XONSH_COLOR_STYLE'),
+                                 hide=True)
+        self._current_prompt = p
+        self.settitle()
+        return p
+
+    def format_color(self, string, hide=False, **kwargs):
+        """Readline implementation of color formatting. This usesg ANSI color
+        codes.
+        """
+        return partial_color_format(string, hide=hide,
+                    style=builtins.__xonsh_env__.get('XONSH_COLOR_STYLE'))
+
+    def print_color(self, string, hide=False, **kwargs):
+        if isinstance(string, str):
+            s = self.format_color(string, hide=hide)
+        else:
+            # assume this is a list of (Token, str) tuples and format it
+            env = builtins.__xonsh_env__
+            self.styler.style_name = env.get('XONSH_COLOR_STYLE')
+            style_proxy = pyghooks.xonsh_style_proxy(self.styler)
+            formatter = Terminal256Formatter(style=style_proxy)
+            s = pygments.format(string, formatter).rstrip()
+        print(s, **kwargs)
 
 
 class ReadlineHistoryAdder(Thread):
@@ -307,4 +353,3 @@ class ReadlineHistoryAdder(Thread):
                 lj.close()
             except (IOError, OSError):
                 continue
-

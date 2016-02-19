@@ -284,7 +284,7 @@ Captured Subprocess with ``$()``
 ================================
 The ``$(<expr>)`` operator in xonsh executes a subprocess command and
 *captures* the output. The expression in the parentheses will be run and
-stdout will be returned as string. This is similar to how ``$()`` performs in
+stdout will be returned as a string. This is similar to how ``$()`` performs in
 BASH.  For example,
 
 .. code-block:: xonshcon
@@ -312,13 +312,13 @@ still query the environment with ``$NAME`` variables.
 
 Uncaptured Subprocess with ``$[]``
 ===================================
-Uncaptured subprocess are denoted with the ``$[<expr>]`` operator. They are
+Uncaptured subprocesses are denoted with the ``$[<expr>]`` operator. They are
 the same as ``$()`` captured subprocesses in almost every way. The only
 difference is that the subprocess's stdout passes directly through xonsh and
 to the screen.  The return value of ``$[]`` is always ``None``.
 
 In the following, we can see that the results of ``$[]`` are automatically
-printed and the return value is not a string.
+printed, and the return value is not a string.
 
 .. code-block:: xonshcon
 
@@ -336,7 +336,7 @@ Python Evaluation with ``@()``
 ===============================
 
 The ``@(<expr>)`` operator from will evaluate arbitrary Python code in
-subprocess mode, and the result will be appended to the subprocess command
+subprocess mode and the result will be appended to the subprocess command
 list. If the result is a string, it is appended to the argument list.
 If the result is a list or other non-string sequence, the contents are
 converted to strings and appended to the argument list in order. Otherwise, the
@@ -389,7 +389,7 @@ the absurd is shown below:
 With great power, and so forth...
 
 .. note:: Nesting these subprocess operators inside of ``$()`` and/or ``$[]``
-          works, because the contents of those operators are executed in
+          works because the contents of those operators are executed in
           subprocess mode.  Since ``@()`` and ``${}`` run their contents in
           Python mode, it is not possible to nest other subprocess operators
           inside of them.
@@ -681,7 +681,7 @@ details.  As an example, start with a lovely bunch of xonshs:
     >>> ls *o*
     conch  konk  xonsh
 
-This is not available in Python-mode, because multiplication is pretty
+This is not available in Python-mode because multiplication is pretty
 important.
 
 
@@ -714,14 +714,14 @@ For more information, please see the documentation for the ``re`` module in
 the Python standard library.
 
 .. warning:: This backtick syntax has very different from that of BASH.  In
-             BASH, backticks means to run a captured subprocess ``$()``.
+             BASH, backticks mean to run a captured subprocess ``$()``.
 
 
 Help & Superhelp with ``?`` & ``??``
 =====================================================
 From IPython, xonsh allows you to inspect objects with question marks.
-A single question mark (``?``) is used to display normal level of help.
-Double question marks (``??``) are used to display higher level of help,
+A single question mark (``?``) is used to display the normal level of help.
+Double question marks (``??``) are used to display a higher level of help,
 called superhelp. Superhelp usually includes source code if the object was
 written in pure Python.
 
@@ -811,12 +811,12 @@ functions. If you don't know what these do, you probably don't need them.
 Aliases
 ==============================
 Another important xonsh built-in is the ``aliases`` mapping.  This is
-like a dictionary that effects how subprocess commands are run.  If you are
+like a dictionary that affects how subprocess commands are run.  If you are
 familiar with the BASH ``alias`` built-in, this is similar.  Alias command
 matching only occurs for the first element of a subprocess command.
 
 The keys of ``aliases`` are strings that act as commands in subprocess-mode.
-The values are lists of strings, where the first element is the command and
+The values are lists of strings, where the first element is the command, and
 the rest are the arguments. You can also set the value to a string, in which
 case it will be converted to a list automatically with ``shlex.split``.
 
@@ -884,7 +884,7 @@ built-in mapping.  Here is an example using a function value:
     >>> banana
     'My spoon is tooo big!'
 
-Usually, callable alias comamnds will be run in a separate thread so that 
+Usually, callable alias commands will be run in a separate thread so that 
 users may background them interactively. However, some aliases may need to be 
 executed on the thread that they were called from. This is mostly useful for debuggers
 and profilers. To make an alias run in the foreground, decorate its function
@@ -1088,7 +1088,7 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
 Additionally, if the script should exit if a command fails, set the 
 environment variable ``$RAISE_SUBPROC_ERROR = True`` at the top of the 
 file. Errors in Python mode will already raise exceptions and so this 
-is roughly equivelent to Bash's ``set -e``.
+is roughly equivalent to Bash's ``set -e``.
 
 Furthermore, you can also toggle the ability to print source code lines with the
 ``trace on`` and ``trace off`` commands.  This is roughly equivelent to 
@@ -1097,8 +1097,8 @@ Bash's ``set -x`` or Python's ``python -m trace``, but you know, better.
 Importing Xonsh (``*.xsh``)
 ==============================
 You can import xonsh source files with the ``*.xsh`` file extension using
-the normal Python syntax.  Say you had a file called ``mine.xsh``, you could
-therefore perform a Bash-like source into your current shell with the
+the normal Python syntax.  Say you had a file called ``mine.xsh``, you could,
+therefore, perform a Bash-like source into your current shell with the
 following:
 
 .. code-block:: xonsh
@@ -1109,7 +1109,7 @@ following:
 That's All, Folks
 ======================
 To leave xonsh, hit ``Ctrl-D``, type ``EOF``, type ``quit``, or type ``exit``.
-On Windows you can also type ``Ctrl-Z``.
+On Windows, you can also type ``Ctrl-Z``.
 
 .. code-block:: xonshcon
 

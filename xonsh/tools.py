@@ -30,12 +30,26 @@ from contextlib import contextmanager
 from collections import OrderedDict, Sequence, Set
 from warnings import warn
 
+#
+# Check pygments
+#
+
+def pygments_version():
+    """Returns the Pygments version or False."""
+    try:
+        import pygments
+        v = pygments.__version__
+    except ImportError:
+        v = False
+    return v
+
 if sys.version_info[0] >= 3:
     string_types = (str, bytes)
     unicode_type = str
 else:
     string_types = (str, unicode)
     unicode_type = unicode
+
 
 DEFAULT_ENCODING = sys.getdefaultencoding()
 
@@ -45,6 +59,7 @@ ON_LINUX = (platform.system() == 'Linux')
 ON_ARCH = (platform.linux_distribution()[0] == 'arch')
 ON_POSIX = (os.name == 'posix')
 IS_ROOT = ctypes.windll.shell32.IsUserAnAdmin() != 0 if ON_WINDOWS else os.getuid() == 0
+HAVE_PYGMENTS = bool(pygments_version())
 
 VER_3_4 = (3, 4)
 VER_3_5 = (3, 5)
@@ -222,74 +237,6 @@ def get_sep():
             and builtins.__xonsh_env__.get('FORCE_POSIX_PATHS') else
             os.sep)
 
-
-TERM_COLORS = {
-    # Reset
-    'NO_COLOR': '\001\033[0m\002',  # Text Reset
-    # Regular Colors
-    'BLACK': '\001\033[0;30m\002',  # BLACK
-    'RED': '\001\033[0;31m\002',  # RED
-    'GREEN': '\001\033[0;32m\002',  # GREEN
-    'YELLOW': '\001\033[0;33m\002',  # YELLOW
-    'BLUE': '\001\033[0;34m\002',  # BLUE
-    'PURPLE': '\001\033[0;35m\002',  # PURPLE
-    'CYAN': '\001\033[0;36m\002',  # CYAN
-    'WHITE': '\001\033[0;37m\002',  # WHITE
-    # Bold
-    'BOLD_BLACK': '\001\033[1;30m\002',  # BLACK
-    'BOLD_RED': '\001\033[1;31m\002',  # RED
-    'BOLD_GREEN': '\001\033[1;32m\002',  # GREEN
-    'BOLD_YELLOW': '\001\033[1;33m\002',  # YELLOW
-    'BOLD_BLUE': '\001\033[1;34m\002',  # BLUE
-    'BOLD_PURPLE': '\001\033[1;35m\002',  # PURPLE
-    'BOLD_CYAN': '\001\033[1;36m\002',  # CYAN
-    'BOLD_WHITE': '\001\033[1;37m\002',  # WHITE
-    # Underline
-    'UNDERLINE_BLACK': '\001\033[4;30m\002',  # BLACK
-    'UNDERLINE_RED': '\001\033[4;31m\002',  # RED
-    'UNDERLINE_GREEN': '\001\033[4;32m\002',  # GREEN
-    'UNDERLINE_YELLOW': '\001\033[4;33m\002',  # YELLOW
-    'UNDERLINE_BLUE': '\001\033[4;34m\002',  # BLUE
-    'UNDERLINE_PURPLE': '\001\033[4;35m\002',  # PURPLE
-    'UNDERLINE_CYAN': '\001\033[4;36m\002',  # CYAN
-    'UNDERLINE_WHITE': '\001\033[4;37m\002',  # WHITE
-    # Background
-    'BACKGROUND_BLACK': '\001\033[40m\002',  # BLACK
-    'BACKGROUND_RED': '\001\033[41m\002',  # RED
-    'BACKGROUND_GREEN': '\001\033[42m\002',  # GREEN
-    'BACKGROUND_YELLOW': '\001\033[43m\002',  # YELLOW
-    'BACKGROUND_BLUE': '\001\033[44m\002',  # BLUE
-    'BACKGROUND_PURPLE': '\001\033[45m\002',  # PURPLE
-    'BACKGROUND_CYAN': '\001\033[46m\002',  # CYAN
-    'BACKGROUND_WHITE': '\001\033[47m\002',  # WHITE
-    # High Intensity
-    'INTENSE_BLACK': '\001\033[0;90m\002',  # BLACK
-    'INTENSE_RED': '\001\033[0;91m\002',  # RED
-    'INTENSE_GREEN': '\001\033[0;92m\002',  # GREEN
-    'INTENSE_YELLOW': '\001\033[0;93m\002',  # YELLOW
-    'INTENSE_BLUE': '\001\033[0;94m\002',  # BLUE
-    'INTENSE_PURPLE': '\001\033[0;95m\002',  # PURPLE
-    'INTENSE_CYAN': '\001\033[0;96m\002',  # CYAN
-    'INTENSE_WHITE': '\001\033[0;97m\002',  # WHITE
-    # Bold High Intensity
-    'BOLD_INTENSE_BLACK': '\001\033[1;90m\002',  # BLACK
-    'BOLD_INTENSE_RED': '\001\033[1;91m\002',  # RED
-    'BOLD_INTENSE_GREEN': '\001\033[1;92m\002',  # GREEN
-    'BOLD_INTENSE_YELLOW': '\001\033[1;93m\002',  # YELLOW
-    'BOLD_INTENSE_BLUE': '\001\033[1;94m\002',  # BLUE
-    'BOLD_INTENSE_PURPLE': '\001\033[1;95m\002',  # PURPLE
-    'BOLD_INTENSE_CYAN': '\001\033[1;96m\002',  # CYAN
-    'BOLD_INTENSE_WHITE': '\001\033[1;97m\002',  # WHITE
-    # High Intensity backgrounds
-    'BACKGROUND_INTENSE_BLACK': '\001\033[0;100m\002',  # BLACK
-    'BACKGROUND_INTENSE_RED': '\001\033[0;101m\002',  # RED
-    'BACKGROUND_INTENSE_GREEN': '\001\033[0;102m\002',  # GREEN
-    'BACKGROUND_INTENSE_YELLOW': '\001\033[0;103m\002',  # YELLOW
-    'BACKGROUND_INTENSE_BLUE': '\001\033[0;104m\002',  # BLUE
-    'BACKGROUND_INTENSE_PURPLE': '\001\033[0;105m\002',  # PURPLE
-    'BACKGROUND_INTENSE_CYAN': '\001\033[0;106m\002',  # CYAN
-    'BACKGROUND_INTENSE_WHITE': '\001\033[0;107m\002',  # WHITE
-}
 
 
 def fallback(cond, backup):
@@ -737,128 +684,19 @@ def history_tuple_to_str(x):
     """Converts a valid history tuple to a canonical string."""
     return '{0} {1}'.format(*x)
 
-#
-# Check pygments
-#
 
-def pygments_version():
-    """Returns the Pygments version or False."""
-    try:
-        import pygments
-        v = pygments.__version__
-    except ImportError:
-        v = False
-    return v
-
-#
-# prompt toolkit tools
-#
-
-
-COLOR_CODE_SPLIT_RE = re.compile(r'(\001\033\[[\d;m]+\002)')
-TERM_COLORS_REVERSED = {v: k for k, v in TERM_COLORS.items()}
-COLOR_NAME_REGEX = re.compile(r'(?:(\w+)_)?(\w+)')
-
-_PT_COLORS = {
-    'BLACK': '#000000',
-    'RED': '#800000',
-    'GREEN': '#008000',
-    'YELLOW': '#808000',
-    'BLUE': '#000080',
-    'PURPLE': '#800080',
-    'CYAN': '#008080',
-    'WHITE': '#ffffff',
-    'GRAY': '#008080',
-    'INTENSE_RED': '#ff1010',
-    'INTENSE_GREEN': '#00ff18',
-    'INTENSE_YELLOW': '#ffff00',
-    'INTENSE_BLUE': '#0000d2',
-    'INTENSE_PURPLE': '#ff00ff',
-    'INTENSE_CYAN': '#00ffff',
-    'INTENSE_GRAY': '#c0c0c0',
-    None: '',
-}
-
-_PT_STYLE = {
-    'BOLD': 'bold',
-    'UNDERLINE': 'underline',
-}
-
-_LAST_BG_COLOR = None
-
-
-def _make_style(color_name):
-    """ Convert color names to pygments styles codes """
-    global _LAST_BG_COLOR
-
-    colors = _PT_COLORS.copy()
-    # Extend with custom colors
-    colors.update(builtins.__xonsh_env__.get('PROMPT_TOOLKIT_COLORS'))
-
-    if color_name == 'NO_COLOR':
-        _LAST_BG_COLOR = None
-        return 'noinherit'
-
-    qualifiers, name = COLOR_NAME_REGEX.match(color_name).groups()
-
-    if name not in colors:
-        qualifiers = name
-        name = None
-
-    qualifiers = qualifiers.split('_') if qualifiers else []
-    is_bg_color = False
-    style = []
-
-    for qualifier in qualifiers:
-        if qualifier == 'INTENSE' and name is not None:
-            name = 'INTENSE_' + name
-        elif qualifier == 'BACKGROUND':
-            is_bg_color = True
-        elif qualifier in _PT_STYLE:
-            style.append(_PT_STYLE[qualifier])
-
-    color = colors[name]
-    if is_bg_color:
-        _LAST_BG_COLOR = color = 'bg:' + color
-    elif _LAST_BG_COLOR:
-        style.append(_LAST_BG_COLOR)
-
-    style.append(color)
-
-    return ' '.join(style)
-
-
-def format_prompt_for_prompt_toolkit(prompt):
-    """Converts a prompt with color codes to a pygments style and tokens
+def format_color(string, **kwargs):
+    """Formats strings that may contain colors. This simply dispatches to the
+    shell instances method of the same name. The results of this function should
+    be directly usable by print_color().
     """
-    parts = COLOR_CODE_SPLIT_RE.split(prompt)
-    # ensure that parts is [colorcode, string, colorcode, string,...]
-    if len(parts[0]) == 0:
-        parts = parts[1:]
-    else:
-        parts.insert(0, '')
-
-    if len(parts) % 2 != 0:
-        parts.append('')
-
-    strings = parts[1::2]
-    token_names = [TERM_COLORS_REVERSED.get(c, 'NO_COLOR') for c in parts[::2]]
-    cstyles = [_make_style(c) for c in token_names]
-    return token_names, cstyles, strings
-
-
-def format_color(string, remove_escapes=True):
-    """Formats strings that contain xonsh.tools.TERM_COLORS values."""
-    s = string.format(**TERM_COLORS)
-    if remove_escapes:
-        s = s.replace('\001', '').replace('\002', '')
-    return s
+    return builtins.__xonsh_shell__.shell.format_color(string, **kwargs)
 
 
 def print_color(string, **kwargs):
-    """Print strings that contain xonsh.tools.TERM_COLORS values. By default
-    `sys.stdout` is used as the output stream but an alternate can be specified
-    by the `file` keyword argument.
+    """Prints a string that may contain colors. This dispatched to the shell
+    method of the same name. Colors will be formatted if they have not already
+    been.
     """
     builtins.__xonsh_shell__.shell.print_color(string, **kwargs)
 
@@ -1073,7 +911,7 @@ def expandvars(path):
 
 #
 # File handling tools
-# 
+#
 
 def backup_file(fname):
     """Moves an existing file to a new name that has the current time right

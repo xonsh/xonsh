@@ -13,8 +13,14 @@ except ImportError:
 
 from xonsh import __version__
 from xonsh.shell import Shell
-from xonsh.pretty import pprint
+from xonsh.pretty import pprint, pretty
 from xonsh.jobs import ignore_sigtstp
+from xonsh.tools import HAVE_PYGMENTS, print_color
+
+if HAVE_PYGMENTS:
+    import pygments
+    from xonsh import pyghooks
+
 
 def path_argument(s):
     """Return a path only if the path is actually legal
@@ -76,7 +82,7 @@ parser.add_argument('--shell-type',
                          'Possible options: readline, prompt_toolkit, random. '
                          'Warning! If set this overrides $SHELL_TYPE variable.',
                     dest='shell_type',
-                    choices=('readline', 'prompt_toolkit', 'random'),
+                    choices=('readline', 'prompt_toolkit', 'best', 'random'),
                     default=None)
 parser.add_argument('file',
                     metavar='script-file',
@@ -93,7 +99,7 @@ parser.add_argument('args',
 
 
 def arg_undoers():
-    au = { 
+    au = {
         '-h': (lambda args: setattr(args, 'help', False)),
         '-V': (lambda args: setattr(args, 'version', False)),
         '-c': (lambda args: setattr(args, 'command', None)),
@@ -123,7 +129,13 @@ def undo_args(args):
 def _pprint_displayhook(value):
     if value is not None:
         builtins._ = None  # Set '_' to None to avoid recursion
-        pprint(value)
+        if HAVE_PYGMENTS:
+            s = pretty(value)  # color case
+            lexer = pyghooks.XonshLexer()
+            tokens = list(pygments.lex(s, lexer=lexer))
+            print_color(tokens)
+        else:
+            pprint(value)  # black & white case
         builtins._ = value
 
 
