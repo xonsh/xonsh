@@ -86,9 +86,9 @@ If you're working on a change and haven't yet committed it you can run the
 tests associated with the change. This does not require that the change
 include the unit test module. This will execute any unit tests that are
 part of the change as well as the unit tests for xonsh source modules in
-the changes::
+the change::
 
-    $ scripts/run_tests.xsh $(which)
+    $ scripts/run_tests.xsh 
 
 If you want to run specific tests you can specify the test names to
 execute. For example to run test_aliases::
