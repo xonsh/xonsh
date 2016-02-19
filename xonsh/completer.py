@@ -428,19 +428,13 @@ class Completer(object):
             prefix = shlex.quote(prefix)
 
         script = BASH_COMPLETE_SCRIPT.format(filename=fnme,
-                                             line=' '.join(shlex.quote(p) for p in splt),
-                                             comp_line=shlex.quote(line),
-                                             n=n,
-                                             func=func,
-                                             cmd=cmd,
-                                             end=endidx + 1,
-                                             prefix=prefix,
-                                             prev=shlex.quote(prev))
+                    line=' '.join(shlex.quote(p) for p in splt),
+                    comp_line=shlex.quote(line), n=n, func=func, cmd=cmd,
+                    end=endidx + 1, prefix=prefix, prev=shlex.quote(prev))
         try:
-            out = subprocess.check_output(['bash'],
-                                          input=script,
-                                          universal_newlines=True,
-                                          stderr=subprocess.PIPE)
+            out = subprocess.check_output(['bash'], input=script,
+                    universal_newlines=True, stderr=subprocess.PIPE,
+                    env=builtins.__xonsh_env__.detype())
         except subprocess.CalledProcessError:
             out = ''
 
@@ -464,7 +458,7 @@ class Completer(object):
             return
         inp.append('complete -p\n')
         out = subprocess.check_output(['bash'], input='\n'.join(inp),
-                                      universal_newlines=True)
+                env=builtins.__xonsh_env__.detype(), universal_newlines=True)
         for line in out.splitlines():
             head, cmd = line.rsplit(' ', 1)
             if len(cmd) == 0 or cmd == 'cd':
@@ -485,7 +479,7 @@ class Completer(object):
             inp.append('declare -F ' + ' '.join([f for f in bash_funcs]))
             inp.append('shopt -u extdebug\n')
         out = subprocess.check_output(['bash'], input='\n'.join(inp),
-                                      universal_newlines=True)
+                env=builtins.__xonsh_env__.detype(), universal_newlines=True)
         func_files = {}
         for line in out.splitlines():
             parts = line.split()
@@ -594,11 +588,12 @@ class ManCompleter(object):
         if cmd not in self._options.keys():
             try:
                 manpage = subprocess.Popen(["man", cmd],
-                                           stdout=subprocess.PIPE,
-                                           stderr=subprocess.DEVNULL)
+                            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                            env=builtins.__xonsh_env__.detype())
                 # This is a trick to get rid of reverse line feeds
                 text = subprocess.check_output(["col", "-b"],
-                                               stdin=manpage.stdout)
+                        env=builtins.__xonsh_env__.detype(),
+                        stdin=manpage.stdout)
                 text = text.decode('utf-8')
                 scraped_text = ' '.join(SCRAPE_RE.findall(text))
                 matches = INNER_OPTIONS_RE.findall(scraped_text)
