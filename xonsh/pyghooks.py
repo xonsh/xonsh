@@ -93,12 +93,13 @@ def partial_color_tokenize(template):
     colon = ':'
     expl = '!'
     color = Color.NO_COLOR
+    fg = bg = None
     value = ''
     toks = []
     for literal, field, spec, conv in formatter.parse(template):
         if field in KNOWN_COLORS:
             value += literal
-            next_color = getattr(Color, field)
+            next_color, fg, bg = getattr(Color, field)
             if next_color is not color:
                 if len(value) > 0:
                     toks.append((color, value))
