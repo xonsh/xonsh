@@ -8,9 +8,9 @@ Installation
 The easy way
 ----------------
 
-The easiest way to install xonsh on windows is through the `Anaconda Python Distribution`_ and the conda package manager. 
+The easiest way to install xonsh on windows is through the `Anaconda Python Distribution`_ and the conda package manager.
 
-.. note:: Be sure to install the version with Python3.4 or later. Xonsh is not supported on legacy Python (2.7). 
+.. note:: Be sure to install the version with Python3.4 or later. Xonsh is not supported on legacy Python (2.7).
 
 Install xonsh with the following command:
 
@@ -28,7 +28,7 @@ This will install xonsh and all the recommended dependencies. Next, run xonsh:
 
 Install from source
 -------------------
-      
+
 To install xonsh from source on Windows, first install `Python v3.4+`_ from
 http://python.org. Remember to select "Add python to PATH" during installation.
 
@@ -39,7 +39,7 @@ Next, install the prompt_toolkit dependency via ``pip``:
    > pip install prompt-toolkit
 
 While prompt-toolkit is considered an optional dependency, it is the
-recommended alternative to pyreadline for Windows users. For Windows, 
+recommended alternative to pyreadline for Windows users. For Windows,
 it is recommended to use a replacement console emulator. Good choices are `cmder`_ or `conemu`_.
 
 Download the latest `xonsh-master.zip`_ from github and unzip it
@@ -51,9 +51,9 @@ Now install xonsh:
 
    > cd xonsh-master
    > python setup.py install
-   
-Next, run xonsh: 
-   
+
+Next, run xonsh:
+
 .. code-block:: bat
 
   > xonsh
@@ -75,23 +75,24 @@ the ``.``, like this:
    >>> dir .
     Volume in drive C is Windows
     Volume Serial Number is 30E8-8B86
-   
+
     Directory of C:\Users\snail\xonsh
-   
+
    2015-05-12  03:04    <DIR>          .
    2015-05-12  03:04    <DIR>          ..
    2015-05-01  01:31    <DIR>          xonsh
                   0 File(s)              0 bytes
                   3 Dir(s)  11,008,000,000 bytes free
 
-                                   
-                  
-Many people create a ``d`` alias for the ``dir`` command to save
+
+
+Many people create a ``d`` or ``ls`` alias for the ``dir`` command to save
 typing and avoid the ambiguity altogether:
 
 .. code-block:: xonshcon
 
    >>> aliases['d'] = ['cmd', '/c', 'dir']
+   >>> aliases['ls'] = 'dir'
 
-You can add this alias to your ``~/.xonshrc`` to have it always
+You can add aliases to your ``~/.xonshrc`` to have it always
 available when xonsh starts.
