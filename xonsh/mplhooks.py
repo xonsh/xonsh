@@ -2,6 +2,7 @@
 import shutil
 
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 
 from xonsh.tools import print_color
@@ -15,17 +16,28 @@ def figure_to_rgb_array(fig, width, height):
     dpi = fig.get_dpi()
     fig.set_size_inches(width/dpi, height/dpi, forward=True)
     width, height = fig.canvas.get_width_height()
-    # draw the renderer
-    fig.canvas.draw()
+    ax = fig.gca()
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    fig.set_tight_layout(True)
+    fig.set_frameon(False)
+    fig.set_facecolor('w')
+    font_size = matplotlib.rcParams['font.size']
+    matplotlib.rcParams.update({'font.size': 1})
 
-    # Get the RGB buffer from the figure
+    # Draw the renderer and get the RGB buffer from the figure
+    fig.canvas.draw()
     buf = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8)
     buf.shape = (height, width, 3)
+
+    # clean up and return
+    matplotlib.rcParams.update({'font.size': font_size})
     return buf
 
 
 def buf_to_color_str(buf):
     """Converts an RGB array to a xonsh color string."""
+    space = ' '
     pix = '{{bg#{0:02x}{1:02x}{2:02x}}} '
     pixels = []
     for h in range(buf.shape[0]):
@@ -33,7 +45,7 @@ def buf_to_color_str(buf):
         for w in range(buf.shape[1]):
             rgb = buf[h,w]
             if last is not None and (last == rgb).all():
-                pixels.append(' ')
+                pixels.append(space)
             else:
                 pixels.append(pix.format(*rgb))
             last = rgb

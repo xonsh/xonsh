@@ -6,6 +6,7 @@ import glob
 import builtins
 import platform
 import subprocess
+from collections import defaultdict
 from contextlib import contextmanager
 
 from nose.plugins.skip import SkipTest
@@ -23,10 +24,13 @@ ON_MAC = (platform.system() == 'Darwin')
 def sp(cmd):
     return subprocess.check_output(cmd, universal_newlines=True)
 
+class DummyStyler():
+    styles = defaultdict(None.__class__)
+
 class DummyBaseShell(BaseShell):
 
     def __init__(self):
-        pass
+        self.styler = DummyStyler()
 
 
 class DummyShell:
