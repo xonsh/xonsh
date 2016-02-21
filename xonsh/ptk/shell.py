@@ -63,6 +63,7 @@ class PromptToolkitShell(BaseShell):
                     mouse_support=mouse_support,
                     auto_suggest=auto_suggest,
                     get_prompt_tokens=self.prompt_tokens,
+                    get_rprompt_tokens=self.rprompt_tokens,
                     style=PygmentsStyle(xonsh_style_proxy(self.styler)),
                     completer=completer,
                     lexer=PygmentsLexer(XonshLexer),
@@ -125,6 +126,20 @@ class PromptToolkitShell(BaseShell):
             print_exception()
         toks = partial_color_tokenize(p)
         self.settitle()
+        return toks
+
+    def rprompt_tokens(self, cli):
+        """Returns a list of (token, str) tuples for the current right 
+        prompt.
+        """
+        p = builtins.__xonsh_env__.get('RIGHT_PROMPT')
+        if len(p) == 0:
+            return []
+        try:
+            p = partial_format_prompt(p)
+        except Exception:  # pylint: disable=broad-except
+            print_exception()
+        toks = partial_color_tokenize(p)
         return toks
 
     def format_color(self, string, **kwargs):
