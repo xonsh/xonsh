@@ -35,6 +35,7 @@ the xonsh shell
         "Crustaceanly Yours",
         "With great shell comes great reproducibility",
         "None shell pass",
+        "The x-on shell",
         ];
     document.write(taglines[Math.floor(Math.random() * taglines.length)]);
     </script>
