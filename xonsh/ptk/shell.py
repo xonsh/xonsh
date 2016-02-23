@@ -58,11 +58,13 @@ class PromptToolkitShell(BaseShell):
         multicolumn = (completions_display == 'multi')
         self.styler.style_name = env.get('XONSH_COLOR_STYLE')
         completer = None if completions_display == 'none' else self.pt_completer
+        prompt_tokens = self.prompt_tokens(None)
+        get_prompt_tokens = lambda cli: prompt_tokens
         with self.prompter:
             line = self.prompter.prompt(
                     mouse_support=mouse_support,
                     auto_suggest=auto_suggest,
-                    get_prompt_tokens=self.prompt_tokens,
+                    get_prompt_tokens=get_prompt_tokens,
                     style=PygmentsStyle(xonsh_style_proxy(self.styler)),
                     completer=completer,
                     lexer=PygmentsLexer(XonshLexer),
