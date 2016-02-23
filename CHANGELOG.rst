@@ -39,7 +39,9 @@ Current Developments
 **Removed:**
 
 * The ``xonsh.tools.TERM_COLORS`` mapping has been axed, along with all
-  references to it.
+  references to it. This may cause a problem if you were using a raw color code
+  in your xonshrc file from ``$FORMATTER_DICT``. To fix, simply remove these
+  references.
 
 **Fixed:**
 
