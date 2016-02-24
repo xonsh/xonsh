@@ -153,7 +153,7 @@ class PromptToolkitShell(BaseShell):
         _width = width - 1
         dots = _width // len(dots) * dots + dots[:_width % len(dots)]
         return [(Token, dots + ' ')]
-
+    
     def format_color(self, string, **kwargs):
         """Formats a color string using Pygments. This, therefore, returns
         a list of (Token, str) tuples.
