@@ -1,4 +1,4 @@
-#!/usr/bin/env xonsh
+#!/usr/bin/env xonsh 
 """Release helper script for xonsh."""
 import os
 import re
@@ -37,10 +37,9 @@ Current Developments
 def version_update(ver):
     """Updates version strings in relevant files."""
     pnfs = [
-        ('__version__\s*=.*', "__version__ = '{0}'".format(ver),
+        ('__version__\s*=.*', "__version__ = '{0}'".format(ver), 
          ['xonsh', '__init__.py']),
         ('version:\s*', 'version: {0}.{{build}}'.format(ver), ['.appveyor.yml']),
-        ('  version:\s*.*', '  version: "{0}"'.format(ver), ['recipe', 'meta.yaml']),
         ('\*\*\w+:\*\* None', '', ['CHANGELOG.rst']),
         ('Current Developments', NEW_DEV + '\n\nv' + ver, ['CHANGELOG.rst']),
       ]
@@ -98,10 +97,10 @@ class OnlyAction(Action):
 
 def main(args=None):
     parser = ArgumentParser('release')
-    parser.add_argument('--upstream',
-                        default='git@github.com:scopatz/xonsh.git',
+    parser.add_argument('--upstream', 
+                        default='git@github.com:scopatz/xonsh.git', 
                         help='upstream repo')
-    parser.add_argument('-b', '--branch', default='master',
+    parser.add_argument('-b', '--branch', default='master', 
                          help='branch to commit / push to.')
     for doer in DOERS:
         base = doer[3:].replace('_', '-')
