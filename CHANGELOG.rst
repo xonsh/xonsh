@@ -23,6 +23,8 @@ Current Developments
 * ``?`` and ``??`` operator output now has colored titles, like in IPython.
 * ``??`` will syntax highlight source code if pygments is available.
 * Python mode output is now syntax highlighted if pygments is available.
+* New ``$RIGHT_PROMPT`` environment variable for displaying right-aligned
+  text in prompt-toolkit shell.
 
 **Changed:**
 

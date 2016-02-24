@@ -33,6 +33,12 @@ def prompt_toolkit_version():
     return getattr(prompt_toolkit, '__version__', '<0.57')
 
 
+def prompt_toolkit_version_info():
+    """Gets the prompt toolkit version info tuple."""
+    v = prompt_toolkit_version().strip('<>+-=.')
+    return tuple(map(int, v.split('.')))
+
+
 def best_shell_type():
     """Gets the best shell type that is available"""
     if ON_WINDOWS or is_prompt_toolkit_available():

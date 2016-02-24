@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 """Hooks for pygments syntax highlighting."""
+import re
 import string
+import builtins
 from warnings import warn
 from collections import ChainMap
+from collections.abc import MutableMapping
 
 from pygments.lexer import inherit, bygroups, using, this
 from pygments.token import (Keyword, Name, Comment, String, Error, Number,
@@ -82,26 +85,131 @@ XonshSubprocLexer.tokens['root'] = [
 
 Color = Token.Color  # alias to new color token namespace
 
+RE_BACKGROUND = re.compile('(BG#|BGHEX|BACKGROUND)')
+
+def norm_name(name):
+    """Normalizes a color name."""
+    return name.replace('#', 'HEX').replace('BGHEX', 'BACKGROUND_HEX')
+
+def color_by_name(name, fg=None, bg=None):
+    """Converts a color name to a color token, foreground name,
+    and background name.  Will take into consideration current foreground
+    and background colors, if provided.
+
+    Parameters
+    ----------
+    name : str
+        Color name.
+    fg : str, optional
+        Foreground color name.
+    bg : str, optional
+        Background color name.
+
+    Returns
+    -------
+    tok : Token
+        Pygments Token.Color subclass
+    fg : str or None
+        New computed foreground color name.
+    bg : str or None
+        New computed background color name.
+    """
+    name = name.upper()
+    if name == 'NO_COLOR':
+        return Color.NO_COLOR, None, None
+    m = RE_BACKGROUND.search(name)
+    if m is None:  # must be foreground color
+        fg = norm_name(name)
+    else:
+        bg = norm_name(name)
+    # assmble token
+    if fg is None and bg is None:
+        tokname = 'NO_COLOR'
+    elif fg is None:
+        tokname = bg
+    elif bg is None:
+        tokname = fg
+    else:
+        tokname = fg + '__' + bg
+    tok = getattr(Color, tokname)
+    return tok, fg, bg
+
+
+def code_by_name(name, styles):
+    """Converts a token name into a pygments-style color code.
+
+    Parameters
+    ----------
+    name : str
+        Color token name.
+    styles : Mapping
+        Mapping for looking up non-hex colors
+
+    Returns
+    -------
+    code : str
+        Pygments style color code.
+    """
+    fg, _, bg = name.lower().partition('__')
+    if fg.startswith('background_'):
+        fg, bg = bg, fg
+    codes = []
+    # foreground color
+    if len(fg) == 0:
+        pass
+    elif 'hex' in fg:
+        for p in fg.split('_'):
+            codes.append('#'+p[3:] if p.startswith('hex') else p)
+    else:
+        fgtok = getattr(Color, fg.upper())
+        if fgtok in styles:
+            codes.append(styles[fgtok])
+        else:
+            codes += fg.split('_')
+    # background color
+    if len(bg) == 0:
+        pass
+    elif bg.startswith('background_hex'):
+        codes.append('bg:#'+bg[14:])
+    else:
+        bgtok = getattr(Color, bg.upper())
+        if bgtok in styles:
+            codes.append(styles[bgtok])
+        else:
+            codes.append(bg.replace('background_', 'bg:'))
+    code = ' '.join(codes)
+    return code
+
+
 def partial_color_tokenize(template):
     """Toeknizes a template string containing colors. Will return a list
     of tuples mapping the token to the string which has that color.
     These sub-strings maybe templates themselves.
     """
     formatter = string.Formatter()
+    if hasattr(builtins, '__xonsh_shell__'):
+        styles = __xonsh_shell__.shell.styler.styles
+    else:
+        styles = None
     bopen = '{'
     bclose = '}'
     colon = ':'
     expl = '!'
     color = Color.NO_COLOR
+    fg = bg = None
     value = ''
     toks = []
     for literal, field, spec, conv in formatter.parse(template):
-        if field in KNOWN_COLORS:
+        if field is None:
             value += literal
-            next_color = getattr(Color, field)
+        elif field in KNOWN_COLORS or '#' in field:
+            value += literal
+            next_color, fg, bg = color_by_name(field, fg, bg)
             if next_color is not color:
                 if len(value) > 0:
                     toks.append((color, value))
+                    if styles is not None:
+                        styles[color]  # ensure color is available
                 color = next_color
                 value = ''
         elif field is not None:
@@ -117,7 +225,47 @@ def partial_color_tokenize(template):
         else:
             value += literal
     toks.append((color, value))
+    if styles is not None:
+        styles[color]  # ensure color is available
     return toks
+
+
+class CompoundColorMap(MutableMapping):
+    """Looks up color tokes by name, potentailly generating the value
+    from the lookup.
+    """
+
+    def __init__(self, styles, *args, **kwargs):
+        self.styles = styles
+        self.colors = dict(*args, **kwargs)
+
+    def __getitem__(self, key):
+        if key in self.colors:
+            return self.colors[key]
+        if key in self.styles:
+            value = self.styles[key]
+            self[key] = value
+            return value
+        if key is Color:
+            raise KeyError
+        pre, _, name = str(key).rpartition('.')
+        if pre != 'Token.Color':
+            raise KeyError
+        value = code_by_name(name, self.styles)
+        self[key] = value
+        return value
+
+    def __setitem__(self, key, value):
+        self.colors[key] = value
+
+    def __delitem__(self, key):
+        del self.colors[key]
+
+    def __iter__(self):
+        yield from self.colors.keys()
+
+    def __len__(self):
+        return len(self.colors)
 
 
 class XonshStyle(Style):
@@ -156,7 +304,8 @@ class XonshStyle(Style):
             smap = get_style_by_name(value)().styles
         except (ImportError, pygments.util.ClassNotFound):
             smap = XONSH_BASE_STYLE
-        self.styles = ChainMap(self.trap, cmap, PTK_STYLE, smap)
+        compound = CompoundColorMap(ChainMap(self.trap, cmap, PTK_STYLE, smap))
+        self.styles = ChainMap(self.trap, cmap, PTK_STYLE, smap, compound)
         self._style_name = value
 
     @style_name.deleter

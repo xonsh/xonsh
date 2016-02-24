@@ -79,6 +79,7 @@ DEFAULT_ENSURERS = {
     re.compile('\w*PATH$'): (is_env_path, str_to_env_path, env_path_to_str),
     'PATHEXT': (is_env_path, str_to_env_path, env_path_to_str),
     'RAISE_SUBPROC_ERROR': (is_bool, to_bool, bool_to_str),
+    'RIGHT_PROMPT': (is_string, ensure_string, ensure_string),
     'TEEPTY_PIPE_DELAY': (is_float, float, str),
     'XONSHRC': (is_env_path, str_to_env_path, env_path_to_str),
     'XONSH_COLOR_STYLE': (is_string, ensure_string, ensure_string),
@@ -181,6 +182,7 @@ DEFAULT_VALUES = {
     'PUSHD_MINUS': False,
     'PUSHD_SILENT': False,
     'RAISE_SUBPROC_ERROR': False,
+    'RIGHT_PROMPT': '', 
     'SHELL_TYPE': 'best',
     'SUGGEST_COMMANDS': True,
     'SUGGEST_MAX_NUM': 5,
@@ -349,6 +351,10 @@ DEFAULT_DOCS = {
         'This is most useful in xonsh scripts or modules where failures '
         'should cause an end to execution. This is less useful at a terminal.'
         'The error that is raised is a subprocess.CalledProcessError.'),
+    'RIGHT_PROMPT': VarDocs('Template string for right-aligned text '
+        'at the prompt. This may be parameterized in the same way as '
+        'the $PROMPT variable. Currently, this is only available in the '
+        'prompt-toolkit shell.'),
     'SHELL_TYPE': VarDocs(
         'Which shell is used. Currently two base shell types are supported:\n\n'
         "    - 'readline' that is backed by Python's readline module\n"
