@@ -32,6 +32,10 @@ the xonsh shell
         "Sally sells csh and keeps xonsh to herself",
         "Nice indeed. Everything's accounted for, except your old shell.",
         "I wanna thank you for putting me back in my snail shell.",
+        "Crustaceanly Yours",
+        "With great shell comes great reproducibility",
+        "None shell pass",
+        "The x-on shell",
         ];
     document.write(taglines[Math.floor(Math.random() * taglines.length)]);
     </script>
@@ -105,7 +109,7 @@ You can install xonsh using conda, pip, or from source.
 
     $ conda install -c xonsh xonsh
 
-.. note:: For the bleeding edge development version use ``conda -c xonsh/channel/dev xonsh``
+.. note:: For the bleeding edge development version use ``conda install -c xonsh/channel/dev xonsh``
     
 
 **pip:**
@@ -277,7 +281,7 @@ open an issue on GitHub.
 Helpful Links
 =============
 
-* `Documentation <http://xonsh.org>`_
+* `Documentation <http://xon.sh>`_
 * `Mailing list <https://groups.google.com/forum/#!forum/xonsh>`_
 * `GitHub Repository <https://github.com/scopatz/xonsh>`_
 * `IRC: channel #xonsh on OFTC <http://www.oftc.net/>`_

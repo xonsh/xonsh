@@ -18,14 +18,30 @@ def replace_in_file(pattern, new, fname):
     with open(fname, 'w') as f:
         f.write(upd)
 
+NEW_DEV = """
+Current Developments
+====================
+**Added:** None
+
+**Changed:** None
+
+**Deprecated:** None
+
+**Removed:** None
+
+**Fixed:** None
+
+**Security:** None
+""".strip()
 
 def version_update(ver):
     """Updates version strings in relevant files."""
     pnfs = [
         ('__version__\s*=.*', "__version__ = '{0}'".format(ver), 
          ['xonsh', '__init__.py']),
-        ('version:\s*', 'version: {0}.{{build}}'.format(ver), 
-         ['.appveyor.yml']),
+        ('version:\s*', 'version: {0}.{{build}}'.format(ver), ['.appveyor.yml']),
+        ('\*\*\w+:\*\* None', '', ['CHANGELOG.rst']),
+        ('Current Developments', NEW_DEV + '\n\nv' + ver, ['CHANGELOG.rst']),
       ]
     for p, n, f in pnfs:
         replace_in_file(p, n, os.path.join(*f))
@@ -57,6 +73,9 @@ def condaify(ver):
     anaconda upload -u xonsh @(__xonsh_glob__(pkgpath))
 
 def docser():
+    """Create docs"""
+    # FIXME this should be made more general
+    ./setup.py install --user
     cd docs
     make clean html push-root
     cd ..
@@ -95,6 +114,11 @@ def main(args=None):
     parser.add_argument('ver', help='target version string')
     ns = parser.parse_args(args or $ARGS[1:])
 
+    # enable debugging
+    $RAISE_SUBPROC_ERROR = True
+    trace on
+
+    # run commands
     if ns.do_version_bump:
         version_update(ns.ver)
     if ns.do_git:
@@ -105,6 +129,9 @@ def main(args=None):
         condaify(ns.ver)
     if ns.do_docs:
         docser()
+
+    # disable debugging
+    trace off
 
 if __name__ == '__main__':
     main()

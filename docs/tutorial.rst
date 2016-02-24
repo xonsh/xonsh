@@ -23,7 +23,7 @@ Let's dive in!
 
 Starting xonsh
 ========================
-Assuming you have successfully installed xonsh (see http://xonsh.org),
+Assuming you have successfully installed xonsh (see http://xon.sh),
 you can start up the xonsh interpreter via the ``xonsh`` command. Suppose
 you are in a lesser terminal:
 
@@ -284,7 +284,7 @@ Captured Subprocess with ``$()``
 ================================
 The ``$(<expr>)`` operator in xonsh executes a subprocess command and
 *captures* the output. The expression in the parentheses will be run and
-stdout will be returned as string. This is similar to how ``$()`` performs in
+stdout will be returned as a string. This is similar to how ``$()`` performs in
 BASH.  For example,
 
 .. code-block:: xonshcon
@@ -312,13 +312,13 @@ still query the environment with ``$NAME`` variables.
 
 Uncaptured Subprocess with ``$[]``
 ===================================
-Uncaptured subprocess are denoted with the ``$[<expr>]`` operator. They are
+Uncaptured subprocesses are denoted with the ``$[<expr>]`` operator. They are
 the same as ``$()`` captured subprocesses in almost every way. The only
 difference is that the subprocess's stdout passes directly through xonsh and
 to the screen.  The return value of ``$[]`` is always ``None``.
 
 In the following, we can see that the results of ``$[]`` are automatically
-printed and the return value is not a string.
+printed, and the return value is not a string.
 
 .. code-block:: xonshcon
 
@@ -336,7 +336,7 @@ Python Evaluation with ``@()``
 ===============================
 
 The ``@(<expr>)`` operator from will evaluate arbitrary Python code in
-subprocess mode, and the result will be appended to the subprocess command
+subprocess mode and the result will be appended to the subprocess command
 list. If the result is a string, it is appended to the argument list.
 If the result is a list or other non-string sequence, the contents are
 converted to strings and appended to the argument list in order. Otherwise, the
@@ -389,7 +389,7 @@ the absurd is shown below:
 With great power, and so forth...
 
 .. note:: Nesting these subprocess operators inside of ``$()`` and/or ``$[]``
-          works, because the contents of those operators are executed in
+          works because the contents of those operators are executed in
           subprocess mode.  Since ``@()`` and ``${}`` run their contents in
           Python mode, it is not possible to nest other subprocess operators
           inside of them.
@@ -628,7 +628,7 @@ details.  As an example, start with a lovely bunch of xonshs:
     >>> ls *o*
     conch  konk  xonsh
 
-This is not available in Python-mode, because multiplication is pretty
+This is not available in Python-mode because multiplication is pretty
 important.
 
 
@@ -661,14 +661,14 @@ For more information, please see the documentation for the ``re`` module in
 the Python standard library.
 
 .. warning:: This backtick syntax has very different from that of BASH.  In
-             BASH, backticks means to run a captured subprocess ``$()``.
+             BASH, backticks mean to run a captured subprocess ``$()``.
 
 
 Help & Superhelp with ``?`` & ``??``
 =====================================================
 From IPython, xonsh allows you to inspect objects with question marks.
-A single question mark (``?``) is used to display normal level of help.
-Double question marks (``??``) are used to display higher level of help,
+A single question mark (``?``) is used to display the normal level of help.
+Double question marks (``??``) are used to display a higher level of help,
 called superhelp. Superhelp usually includes source code if the object was
 written in pure Python.
 
@@ -758,12 +758,12 @@ functions. If you don't know what these do, you probably don't need them.
 Aliases
 ==============================
 Another important xonsh built-in is the ``aliases`` mapping.  This is
-like a dictionary that effects how subprocess commands are run.  If you are
+like a dictionary that affects how subprocess commands are run.  If you are
 familiar with the BASH ``alias`` built-in, this is similar.  Alias command
 matching only occurs for the first element of a subprocess command.
 
 The keys of ``aliases`` are strings that act as commands in subprocess-mode.
-The values are lists of strings, where the first element is the command and
+The values are lists of strings, where the first element is the command, and
 the rest are the arguments. You can also set the value to a string, in which
 case it will be converted to a list automatically with ``shlex.split``.
 
@@ -831,7 +831,7 @@ built-in mapping.  Here is an example using a function value:
     >>> banana
     'My spoon is tooo big!'
 
-Usually, callable alias comamnds will be run in a separate thread so that 
+Usually, callable alias commands will be run in a separate thread so that 
 users may background them interactively. However, some aliases may need to be 
 executed on the thread that they were called from. This is mostly useful for debuggers
 and profilers. To make an alias run in the foreground, decorate its function
@@ -875,6 +875,7 @@ keyword arguments, which will be replaced automatically:
     snail@home:~ >> # so does that!
 
 By default, the following variables are available for use:
+
   * ``user``: The username of the current user
   * ``hostname``: The name of the host computer
   * ``cwd``: The current working directory
@@ -895,13 +896,35 @@ By default, the following variables are available for use:
 You can also color your prompt easily by inserting keywords such as ``{GREEN}``
 or ``{BOLD_BLUE}``.  Colors have the form shown below:
 
-  * ``(QUALIFIER\_)COLORNAME``: Inserts an ANSI color code
-      * ``COLORNAME`` can be any of: ``BLACK``, ``RED``, ``GREEN``, ``YELLOW``,
-        ``BLUE``, ``PURPLE``, ``CYAN``, or ``WHITE``
-      * ``QUALIFIER`` is optional and can be any of: ``BOLD``, ``UNDERLINE``,
-        ``BACKGROUND``, ``INTENSE``, ``BOLD_INTENSE``, or
-        ``BACKGROUND_INTENSE``
-  * ``NO_COLOR``: Resets any previously used color codes
+* ``NO_COLOR``: Resets any previously used color codes
+* ``COLORNAME``: Inserts a color code for the following basic colors, 
+  which come in regular (dark) and intense (light) forms:
+
+    - ``BLACK`` or ``INTENSE_BLACK`` 
+    - ``RED`` or ``INTENSE_RED``
+    - ``GREEN`` or ``INTENSE_GREEN``
+    - ``YELLOW`` or ``INTENSE_YELLOW``
+    - ``BLUE`` or ``INTENSE_BLUE``
+    - ``PURPLE`` or ``INTENSE_PURPLE``
+    - ``CYAN`` or ``INTENSE_CYAN``
+    - ``WHITE`` or ``INTENSE_WHITE``
+
+* ``#HEX``: A ``#`` before a len-3 or len-6 hex code will use that 
+  hex color, or the nearest approximation that that is supported by 
+  the shell and terminal.  For example, ``#fff`` and ``#fafad2`` are
+  both valid.
+* ``BACKGROUND_`` may be added to the begining of a color name or hex
+  color to set a background color.  For example, ``BACKGROUND_INTENSE_RED``
+  and ``BACKGROUND_#123456`` can both be used.
+* ``bg#HEX`` or ``BG#HEX`` are shortcuts for setting a background hex color.
+  Thus you can set ``bg#0012ab`` or the uppercase version.
+* ``BOLD_`` is a prefix qualifier that may be used with any foreground color.
+  For example, ``BOLD_RED`` and ``BOLD_#112233`` are OK!
+* ``UNDERLINE_`` is a prefix qualifier that also may be used with any 
+  foreground color. For example, ``UNDERLINE_GREEN``.
+* Or any other combination of qualifiers, such as 
+  ``BOLD_UNDERLINE_INTENSE_BLACK``,   which is the most metal color you 
+  can use!
 
 You can make use of additional variables beyond these by adding them to the
 ``FORMATTER_DICT`` environment variable.  The values in this dictionary
@@ -1035,7 +1058,7 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
 Additionally, if the script should exit if a command fails, set the 
 environment variable ``$RAISE_SUBPROC_ERROR = True`` at the top of the 
 file. Errors in Python mode will already raise exceptions and so this 
-is roughly equivelent to Bash's ``set -e``.
+is roughly equivalent to Bash's ``set -e``.
 
 Furthermore, you can also toggle the ability to print source code lines with the
 ``trace on`` and ``trace off`` commands.  This is roughly equivelent to 
@@ -1044,8 +1067,8 @@ Bash's ``set -x`` or Python's ``python -m trace``, but you know, better.
 Importing Xonsh (``*.xsh``)
 ==============================
 You can import xonsh source files with the ``*.xsh`` file extension using
-the normal Python syntax.  Say you had a file called ``mine.xsh``, you could
-therefore perform a Bash-like source into your current shell with the
+the normal Python syntax.  Say you had a file called ``mine.xsh``, you could,
+therefore, perform a Bash-like source into your current shell with the
 following:
 
 .. code-block:: xonsh
@@ -1056,7 +1079,7 @@ following:
 That's All, Folks
 ======================
 To leave xonsh, hit ``Ctrl-D``, type ``EOF``, type ``quit``, or type ``exit``.
-On Windows you can also type ``Ctrl-Z``.
+On Windows, you can also type ``Ctrl-Z``.
 
 .. code-block:: xonshcon
 

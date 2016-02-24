@@ -7,16 +7,14 @@ import linecache
 from functools import lru_cache
 from argparse import ArgumentParser
 
-from xonsh.tools import (DefaultNotGiven, print_color, pygments_version, normabspath,
-    to_bool)
+from xonsh.tools import (DefaultNotGiven, print_color, pygments_version,
+    format_color, normabspath, to_bool, HAVE_PYGMENTS)
 from xonsh import inspectors
 from xonsh.environ import _replace_home as replace_home
-if pygments_version():
+if HAVE_PYGMENTS:
     from xonsh import pyghooks
     import pygments
     import pygments.formatters.terminal
-else:
-    pyghooks = None
 
 class TracerType(object):
     """Represents a xonsh tracer object, which keeps track of all tracing
@@ -28,7 +26,7 @@ class TracerType(object):
 
     def __new__(cls, *args, **kwargs):
         if cls._inst is None:
-            cls._inst = super(TracerType, cls).__new__(cls, *args, 
+            cls._inst = super(TracerType, cls).__new__(cls, *args,
                                                            **kwargs)
         return cls._inst
 
@@ -79,7 +77,7 @@ class TracerType(object):
             if curr != self._last:
                 line = linecache.getline(fname, lineno).rstrip()
                 s = format_line(fname, lineno, line, color=self.usecolor,
-                                lexer=self.lexer, formatter=self.formatter).rstrip()
+                                lexer=self.lexer, formatter=self.formatter)
                 print_color(s)
                 self._last = curr
         return self.trace
@@ -90,29 +88,22 @@ tracer = TracerType()
 COLORLESS_LINE = '{fname}:{lineno}:{line}'
 COLOR_LINE = ('{{PURPLE}}{fname}{{BLUE}}:'
               '{{GREEN}}{lineno}{{BLUE}}:'
-              '{{NO_COLOR}}{line}')
+              '{{NO_COLOR}}')
 
-RAW_COLOR_CODE_RE = re.compile(r'(\033\[[\d;]+m)')
-def _escape_code_adder(m):
-    return '\001' + m.group(1) + '\002'
-
-NO_SEMI_COLOR_CODE_RE = re.compile(r'(\033\[\d+m)')
-def _0semi_adder(m):
-    return  m.group(1).replace('[', '[0;')
 
 def format_line(fname, lineno, line, color=True, lexer=None, formatter=None):
     """Formats a trace line suitable for printing."""
     fname = min(fname, replace_home(fname), os.path.relpath(fname), key=len)
     if not color:
         return COLORLESS_LINE.format(fname=fname, lineno=lineno, line=line)
-    if pyghooks is not None:
-        lexer = lexer or pyghooks.XonshLexer()
-        formatter = formatter or pygments.formatters.terminal.TerminalFormatter()
-        line = pygments.highlight(line, lexer, formatter)
-        line = line.replace('\033[39;49;00m', '\033[0m')
-        line = NO_SEMI_COLOR_CODE_RE.sub(_0semi_adder, line)
-        line = RAW_COLOR_CODE_RE.sub(_escape_code_adder, line)
-    return COLOR_LINE.format(fname=fname, lineno=lineno, line=line)
+    cline = COLOR_LINE.format(fname=fname, lineno=lineno)
+    if not HAVE_PYGMENTS:
+        return cline + line
+    # OK, so we have pygments
+    tokens = pyghooks.partial_color_tokenize(cline)
+    lexer = lexer or pyghooks.XonshLexer()
+    tokens += pygments.lex(line, lexer=lexer)
+    return tokens
 
 
 #
@@ -127,7 +118,7 @@ def _find_caller(args):
             return fname
         elif lineno == 1 and re_line.search(linecache.getline(fname, lineno)) is not None:
             # There is a bug in CPython such that inspectors.getouterframes(curr, context=1)
-            # will actually return the 2nd line in the code_context field, even though 
+            # will actually return the 2nd line in the code_context field, even though
             # line number is itself correct. We manually fix that in this branch.
             return fname
     else:
@@ -170,16 +161,16 @@ def _create_parser():
     subp = p.add_subparsers(title='action', dest='action')
     onp = subp.add_parser('on', aliases=['start', 'add'],
                           help='begins tracing selected files.')
-    onp.add_argument('files', nargs='*', default=['__file__'], 
+    onp.add_argument('files', nargs='*', default=['__file__'],
                      help=('file paths to watch, use "__file__" (default) to select '
                            'the current file.'))
     off = subp.add_parser('off', aliases=['stop', 'del', 'rm'],
                           help='removes selected files fom tracing.')
-    off.add_argument('files', nargs='*', default=['__file__'], 
+    off.add_argument('files', nargs='*', default=['__file__'],
                      help=('file paths to stop watching, use "__file__" (default) to '
                            'select the current file.'))
     col = subp.add_parser('color', help='output color management for tracer.')
-    col.add_argument('toggle', type=to_bool, 
+    col.add_argument('toggle', type=to_bool,
                      help='true/false, y/n, etc. to toggle color usage.')
     return p
 

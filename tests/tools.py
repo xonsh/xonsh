@@ -6,11 +6,13 @@ import glob
 import builtins
 import platform
 import subprocess
+from collections import defaultdict
 from contextlib import contextmanager
 
 from nose.plugins.skip import SkipTest
 
 from xonsh.built_ins import ensure_list_of_strs
+from xonsh.base_shell import BaseShell
 
 
 VER_3_4 = (3, 4)
@@ -22,9 +24,27 @@ ON_MAC = (platform.system() == 'Darwin')
 def sp(cmd):
     return subprocess.check_output(cmd, universal_newlines=True)
 
+class DummyStyler():
+    styles = defaultdict(None.__class__)
+
+class DummyBaseShell(BaseShell):
+
+    def __init__(self):
+        self.styler = DummyStyler()
+
+
 class DummyShell:
     def settitle():
         pass
+
+    _shell = None
+
+    @property
+    def shell(self):
+        if self._shell is None:
+            self._shell = DummyBaseShell()
+        return self._shell
+
 
 @contextmanager
 def mock_xonsh_env(xenv):
