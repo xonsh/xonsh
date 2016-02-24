@@ -154,12 +154,12 @@ class PromptToolkitShell(BaseShell):
 
     def print_color(self, string, end='\n', **kwargs):
         """Prints a color string using prompt-toolkit color management."""
+        env = builtins.__xonsh_env__
+        self.styler.style_name = env.get('XONSH_COLOR_STYLE')
         if isinstance(string, str):
             tokens = partial_color_tokenize(string + end)
         else:
             # assume this is a list of (Token, str) tuples and just print
             tokens = string
-        env = builtins.__xonsh_env__
-        self.styler.style_name = env.get('XONSH_COLOR_STYLE')
         proxy_style = PygmentsStyle(xonsh_style_proxy(self.styler))
         print_tokens(tokens, style=proxy_style)
