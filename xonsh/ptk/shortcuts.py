@@ -66,6 +66,7 @@ class Prompter(object):
         if self.cli is None:
             if self.major_minor <= (0, 57):
                 kwargs.pop('get_rprompt_tokens', None)
+                kwargs.pop('get_continuation_tokens', None)
             cli = CommandLineInterface(
                 application=create_prompt_application(message, **kwargs),
                 eventloop=eventloop,

@@ -72,6 +72,7 @@ class PromptToolkitShell(BaseShell):
                     completer=completer,
                     lexer=PygmentsLexer(XonshLexer),
                     multiline=multiline,
+                    get_continuation_tokens=self.continuation_tokens,
                     history=history,
                     enable_history_search=enable_history_search,
                     reserve_space_for_menu=0,
@@ -146,6 +147,13 @@ class PromptToolkitShell(BaseShell):
         toks = partial_color_tokenize(p)
         return toks
 
+    def continuation_tokens(self, cli, width):
+        """Displays dots in multiline prompt"""
+        dots = builtins.__xonsh_env__.get('MULTILINE_PROMPT')
+        _width = width - 1
+        dots = _width // len(dots) * dots + dots[:_width % len(dots)]
+        return [(Token, dots + ' ')]
+    
     def format_color(self, string, **kwargs):
         """Formats a color string using Pygments. This, therefore, returns
         a list of (Token, str) tuples.
