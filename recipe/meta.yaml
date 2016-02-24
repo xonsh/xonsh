@@ -1,12 +1,12 @@
 package:
   name: xonsh
-  version: "0.2.6"
+  version: {{ environ['GIT_DESCRIBE_TAG'] }}
 
 source:
    path: ../
 
 build:
-  number: 0
+  number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
   entry_points:
     - xonsh = xonsh.main:main
 
@@ -19,7 +19,6 @@ requirements:
   run:
     - python
     - ply
-    - pygments
     - prompt_toolkit
     - setproctitle
 
