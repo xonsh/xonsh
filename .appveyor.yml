@@ -1,8 +1,8 @@
 version: 0.2.6.{build}
 os: Windows Server 2012 R2
 install:
-- C:\Python34\Scripts\pip install ply pyreadline nose prompt_toolkit
-- C:\Python35\Scripts\pip install ply pyreadline nose prompt_toolkit
+- C:\Python34\Scripts\pip install ply pyreadline nose pygments prompt_toolkit
+- C:\Python35\Scripts\pip install ply pyreadline nose pygments prompt_toolkit
 build_script:
 - C:\Python34\python setup.py install
 - C:\Python35\python setup.py install
