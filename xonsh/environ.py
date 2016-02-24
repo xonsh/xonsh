@@ -870,6 +870,12 @@ def git_dirty_working_directory(cwd=None):
                                     stderr=subprocess.PIPE,
                                     cwd=cwd,
                                     universal_newlines=True)
+        if len(s) == 0:
+            # Workaround for a bug in ConEMU/cmder 
+ +          # retry without redirection
+            s = subprocess.check_output(cmd,
+                                        cwd=cwd,
+                                        universal_newlines=True)
         return bool(s)
     except (subprocess.CalledProcessError, FileNotFoundError):
         return False
