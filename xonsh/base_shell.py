@@ -7,9 +7,11 @@ import time
 import builtins
 
 from xonsh.tools import XonshError, escape_windows_title_string, ON_WINDOWS, \
-    print_exception
+    print_exception, HAVE_PYGMENTS
 from xonsh.completer import Completer
 from xonsh.environ import multiline_prompt, format_prompt
+if HAVE_PYGMENTS:
+    from xonsh.pyghooks import XonshStyle
 
 
 class _TeeOut(object):
@@ -30,7 +32,7 @@ class _TeeOut(object):
 
     def write(self, data):
         """Writes data to the original stdout and the buffer."""
-        data = data.replace('\001', '').replace('\002', '')
+        #data = data.replace('\001', '').replace('\002', '')
         self.stdout.write(data)
         self.buffer.write(data)
 
@@ -63,7 +65,7 @@ class _TeeErr(object):
 
     def write(self, data):
         """Writes data to the original stderr and the buffer."""
-        data = data.replace('\001', '').replace('\002', '')
+        #data = data.replace('\001', '').replace('\002', '')
         self.stderr.write(data)
         self.buffer.write(data)
 
@@ -113,6 +115,11 @@ class BaseShell(object):
         self.buffer = []
         self.need_more_lines = False
         self.mlprompt = None
+        if HAVE_PYGMENTS:
+            env = builtins.__xonsh_env__
+            self.styler = XonshStyle(env.get('XONSH_COLOR_STYLE'))
+        else:
+            self.styler = None
 
     def emptyline(self):
         """Called when an empty line has been entered."""
@@ -249,3 +256,17 @@ class BaseShell(object):
             info['out'] = tee_out + '\n' + last_out
         hist.append(info)
         hist.last_cmd_rtn = hist.last_cmd_out = None
+
+    def format_color(self, string, **kwargs):
+        """Formats the colors in a string. This base implmentation does not
+        actually do any coloring, but just returns the string directly.
+        """
+        return string
+
+    def print_color(self, string, **kwargs):
+        """Prints a string in color. This base implmentation does not actually
+        do any coloring, but just prints the string directly.
+        """
+        if not isinstance(string, str):
+            string = ''.join([x for _, x in string])
+        print(string, **kwargs)

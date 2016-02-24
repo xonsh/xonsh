@@ -19,7 +19,7 @@ from xonsh.wizard import (Wizard, Pass, Message, Save, Load, YesNo, Input,
     PromptVisitor, While, StoreNonEmpty, create_truefalse_cond, YN)
 
 
-HR = "'`-.,¸,.-*¯`-.,¸,.-*¯`-.,¸,.-*¯`-.,¸,.-*¯`-.,¸,.-*¯`-.,¸,.-*¯`-.,¸,.-*'"
+HR = "'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'"
 WIZARD_HEAD = """
           {{BOLD_WHITE}}Welcome to the xonsh configuration wizard!{{NO_COLOR}}
           {{YELLOW}}------------------------------------------{{NO_COLOR}}
@@ -206,7 +206,7 @@ def _wizard(ns):
         try:
             pv.visit()
         except (KeyboardInterrupt, Exception):
-            pass
+            tools.print_exception()
 
 
 def _format_human(data):
@@ -237,6 +237,7 @@ def _info(ns):
         ('have readline', is_readline_available()),
         ('prompt toolkit', prompt_toolkit_version() if \
                            is_prompt_toolkit_available() else False),
+        ('pygments', tools.pygments_version()),
         ('on posix', tools.ON_POSIX),
         ('on linux', tools.ON_LINUX),
         ('on arch', tools.ON_ARCH),

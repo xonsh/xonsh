@@ -438,7 +438,8 @@ _MAIN_ACTIONS = {
 
 def _main(hist, args):
     """This implements the history CLI."""
-    if not args or args[0] not in _MAIN_ACTIONS:
+    if not args or (args[0] not in _MAIN_ACTIONS and
+                    args[0] not in {'-h', '--help'}):
         args.insert(0, 'show')
     if (args[0] == 'show' and len(args) > 1 and args[-1].startswith('-') and
             args[-1][1].isdigit()):

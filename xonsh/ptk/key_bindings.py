@@ -4,6 +4,7 @@ import builtins
 
 from prompt_toolkit.filters import Filter, IsMultiline
 from prompt_toolkit.keys import Keys
+from xonsh.tools import ON_WINDOWS
 
 env = builtins.__xonsh_env__
 indent_ = env.get('INDENT')
@@ -41,7 +42,9 @@ def carriage_return(b, cli):
     elif (not b.document.on_first_line and
             not current_line_blank):
         b.newline(copy_margin=True)
-    elif b.document.char_before_cursor == '\\':
+    elif (b.document.char_before_cursor == '\\' and 
+            not (not builtins.__xonsh_env__.get('FORCE_POSIX_PATHS') 
+                and ON_WINDOWS)):
         b.newline()
     elif (b.document.find_next_word_beginning() is not None and
             (any(not _is_blank(i)
@@ -69,7 +72,8 @@ class TabShouldInsertIndentFilter(Filter):
 
 def can_compile(src):
     """Returns whether the code can be compiled, i.e. it is valid xonsh."""
-    src = src if src.endswith('\n') else '{}\n'.format(src)
+    src = src if src.endswith('\n') else src + '\n'
+    src = src.lstrip()
     try:
         builtins.__xonsh_execer__.compile(src, mode='single', glbs=None,
                                           locs=builtins.__xonsh_ctx__)

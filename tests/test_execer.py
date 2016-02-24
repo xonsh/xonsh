@@ -86,6 +86,16 @@ def test_indent_with_empty_line():
             '    some_command for_sub_process_mode\n')
     yield check_parse, code
 
+def test_command_in_func():
+    code = ('def f():\n'
+            '    echo hello\n')
+    yield check_parse, code
+
+def test_command_in_func_with_comment():
+    code = ('def f():\n'
+            '    echo hello # comment\n')
+    yield check_parse, code
+
 
 
 if __name__ == '__main__':

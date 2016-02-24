@@ -8,6 +8,7 @@ import string
 import locale
 import builtins
 import subprocess
+from itertools import chain
 from warnings import warn
 from pprint import pformat
 from functools import wraps
@@ -16,13 +17,13 @@ from collections import MutableMapping, MutableSequence, MutableSet, namedtuple
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.tools import (
-    TERM_COLORS, ON_WINDOWS, ON_MAC, ON_LINUX, ON_ARCH, IS_ROOT,
+    ON_WINDOWS, ON_MAC, ON_LINUX, ON_ARCH, IS_ROOT,
     always_true, always_false, ensure_string, is_env_path, str_to_env_path,
     env_path_to_str, is_bool, to_bool, bool_to_str, is_history_tuple, to_history_tuple,
     history_tuple_to_str, is_float, string_types, is_string, DEFAULT_ENCODING,
     is_completions_display_value, to_completions_display_value, is_string_set,
     csv_to_set, set_to_csv, get_sep, is_int, is_bool_seq, csv_to_bool_seq,
-    bool_seq_to_csv
+    bool_seq_to_csv, DefaultNotGiven
 )
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
@@ -71,20 +72,24 @@ DEFAULT_ENSURERS = {
     'LC_MESSAGES': (always_false, locale_convert('LC_MESSAGES'), ensure_string),
     'LC_MONETARY': (always_false, locale_convert('LC_MONETARY'), ensure_string),
     'LC_NUMERIC': (always_false, locale_convert('LC_NUMERIC'), ensure_string),
-    'LC_TIME': (always_false, locale_convert('LC_TIME'), ensure_string),    
+    'LC_TIME': (always_false, locale_convert('LC_TIME'), ensure_string),
     'LOADED_CONFIG': (is_bool, to_bool, bool_to_str),
     'LOADED_RC_FILES': (is_bool_seq, csv_to_bool_seq, bool_seq_to_csv),
     'MOUSE_SUPPORT': (is_bool, to_bool, bool_to_str),
     re.compile('\w*PATH$'): (is_env_path, str_to_env_path, env_path_to_str),
     'PATHEXT': (is_env_path, str_to_env_path, env_path_to_str),
+    'RAISE_SUBPROC_ERROR': (is_bool, to_bool, bool_to_str),
+    'RIGHT_PROMPT': (is_string, ensure_string, ensure_string),
     'TEEPTY_PIPE_DELAY': (is_float, float, str),
     'XONSHRC': (is_env_path, str_to_env_path, env_path_to_str),
+    'XONSH_COLOR_STYLE': (is_string, ensure_string, ensure_string),
     'XONSH_ENCODING': (is_string, ensure_string, ensure_string),
     'XONSH_ENCODING_ERRORS': (is_string, ensure_string, ensure_string),
     'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
     'XONSH_LOGIN': (is_bool, to_bool, bool_to_str),
     'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
     'VI_MODE': (is_bool, to_bool, bool_to_str),
+    'VIRTUAL_ENV': (is_string, ensure_string, ensure_string),
 }
 
 #
@@ -99,12 +104,14 @@ def is_callable_default(x):
     """Checks if a value is a callable default."""
     return callable(x) and getattr(x, '_xonsh_callable_default', False)
 if ON_WINDOWS:
-    DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_CYAN} '
-                      '{cwd}{branch_color}{curr_branch} '
-                      '{BOLD_WHITE}{prompt_end}{NO_COLOR} ')
+    DEFAULT_PROMPT = ('{env_name}'
+                      '{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} '
+                      '{cwd}{branch_color}{curr_branch}{NO_COLOR} '
+                      '{BOLD_INTENSE_CYAN}{prompt_end}{NO_COLOR} ')
 else:
-    DEFAULT_PROMPT = ('{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
-                      '{cwd}{branch_color}{curr_branch} '
+    DEFAULT_PROMPT = ('{env_name}'
+                      '{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
+                      '{cwd}{branch_color}{curr_branch}{NO_COLOR} '
                       '{BOLD_BLUE}{prompt_end}{NO_COLOR} ')
 
 DEFAULT_TITLE = '{current_job}{user}@{hostname}: {cwd} | xonsh'
@@ -174,7 +181,9 @@ DEFAULT_VALUES = {
     'PROMPT_TOOLKIT_STYLES': None,
     'PUSHD_MINUS': False,
     'PUSHD_SILENT': False,
-    'SHELL_TYPE': 'prompt_toolkit' if ON_WINDOWS else 'readline',
+    'RAISE_SUBPROC_ERROR': False,
+    'RIGHT_PROMPT': '', 
+    'SHELL_TYPE': 'best',
     'SUGGEST_COMMANDS': True,
     'SUGGEST_MAX_NUM': 5,
     'SUGGEST_THRESHOLD': 3,
@@ -188,6 +197,7 @@ DEFAULT_VALUES = {
                               'xonsh', 'xonshrc'),
                 os.path.expanduser('~/.xonshrc')) if ON_WINDOWS
                else ('/etc/xonshrc', os.path.expanduser('~/.xonshrc'))),
+    'XONSH_COLOR_STYLE': 'default',
     'XONSH_CONFIG_DIR': xonsh_config_dir,
     'XONSH_DATA_DIR': xonsh_data_dir,
     'XONSH_ENCODING': DEFAULT_ENCODING,
@@ -201,15 +211,9 @@ DEFAULT_VALUES = {
 if hasattr(locale, 'LC_MESSAGES'):
     DEFAULT_VALUES['LC_MESSAGES'] = locale.setlocale(locale.LC_MESSAGES)
 
-class DefaultNotGivenType(object):
-    """Singleton for representing when no default value is given."""
-
-
-DefaultNotGiven = DefaultNotGivenType()
-
 VarDocs = namedtuple('VarDocs', ['docstr', 'configurable', 'default'])
 VarDocs.__doc__ = """Named tuple for environment variable documentation
-    
+
 Parameters
 ----------
 docstr : str
@@ -218,7 +222,7 @@ configurable : bool, optional
     Flag for whether the environment variable is configurable or not.
 default : str, optional
     Custom docstring for the default value for complex defaults.
-    Is this is DefaultNotGiven, then the default will be looked up 
+    Is this is DefaultNotGiven, then the default will be looked up
     from DEFAULT_VALUES and converted to a str.
 """
 VarDocs.__new__.__defaults__ = (True, DefaultNotGiven)  # iterates from back
@@ -234,7 +238,7 @@ DEFAULT_DOCS = {
         'Flag for automatically pushing directories onto the directory stack.'
         ),
     'AUTO_SUGGEST': VarDocs(
-        'Enable automatic command suggestions based on history, like in fish '
+        'Enable automatic command suggestions based on history, like in the fish '
         'shell.\n\nPressing the right arrow key inserts the currently '
         'displayed suggestion. Only usable with $SHELL_TYPE=prompt_toolkit.'),
     'BASH_COMPLETIONS': VarDocs(
@@ -276,7 +280,7 @@ DEFAULT_DOCS = {
         "$SHELL_TYPE=prompt_toolkit"),
     'COMPLETIONS_MENU_ROWS': VarDocs(
         'Number of rows to reserve for tab-completions menu if '
-        "$COMPLETIONS_DISPLAY is 'single' or 'multi'. This only effects the "
+        "$COMPLETIONS_DISPLAY is 'single' or 'multi'. This only affects the "
         'prompt-toolkit shell.'),
     'DIRSTACK_SIZE': VarDocs('Maximum size of the directory stack.'),
     'EXPAND_ENV_VARS': VarDocs(
@@ -288,7 +292,7 @@ DEFAULT_DOCS = {
     'FORMATTER_DICT': VarDocs(
         'Dictionary containing variables to be used when formatting $PROMPT '
         "and $TITLE. See 'Customizing the Prompt' "
-        'http://xonsh.org/tutorial.html#customizing-the-prompt', 
+        'http://xon.sh/tutorial.html#customizing-the-prompt',
         configurable=False, default='xonsh.environ.FORMATTER_DICT'),
     'HISTCONTROL': VarDocs(
         'A set of strings (comma-separated list in string form) of options '
@@ -319,11 +323,11 @@ DEFAULT_DOCS = {
         configurable=False),
     'PATH': VarDocs(
         'List of strings representing where to look for executables.'),
-    'PATHEXT': VarDocs('List of strings for filtering valid exeutables by.'),
+    'PATHEXT': VarDocs('List of strings for filtering valid executables by.'),
     'PROMPT': VarDocs(
         'The prompt text. May contain keyword arguments which are '
         "auto-formatted, see 'Customizing the Prompt' at "
-        'http://xonsh.org/tutorial.html#customizing-the-prompt.',
+        'http://xon.sh/tutorial.html#customizing-the-prompt.',
         default='xonsh.environ.DEFAULT_PROMPT'),
     'PROMPT_TOOLKIT_COLORS': VarDocs(
         'This is a mapping of from color names to HTML color codes. Whenever '
@@ -331,26 +335,37 @@ DEFAULT_DOCS = {
         'or in syntax highlighting), it will use the value specified here to '
         'represent that color, instead of its default.  If a color is not '
         'specified here, prompt-toolkit uses the colors from '
-        "'xonsh.tools._PT_COLORS'.", configurable=False), 
+        "'xonsh.tools._PT_COLORS'.", configurable=False),
     'PROMPT_TOOLKIT_STYLES': VarDocs(
-        'This is a mapping of user-specified styles for prompt-toolkit. See '
-        'the prompt-toolkit documentation for more details. If None, this is '
-        'skipped.', configurable=False),
+        'This is a mapping of pygments tokens to user-specified styles for '
+        'prompt-toolkit. See the prompt-toolkit and pygments documentation '
+        'for more details. If None, this is skipped.', configurable=False),
     'PUSHD_MINUS': VarDocs(
         'Flag for directory pushing functionality. False is the normal '
-        'behaviour.'),
+        'behavior.'),
     'PUSHD_SILENT': VarDocs(
         'Whether or not to suppress directory stack manipulation output.'),
+    'RAISE_SUBPROC_ERROR': VarDocs(
+        'Whether or not to raise an error if a subprocess (captured or '
+        'uncaptured) returns a non-zero exit status, which indicates failure.'
+        'This is most useful in xonsh scripts or modules where failures '
+        'should cause an end to execution. This is less useful at a terminal.'
+        'The error that is raised is a subprocess.CalledProcessError.'),
+    'RIGHT_PROMPT': VarDocs('Template string for right-aligned text '
+        'at the prompt. This may be parameterized in the same way as '
+        'the $PROMPT variable. Currently, this is only available in the '
+        'prompt-toolkit shell.'),
     'SHELL_TYPE': VarDocs(
         'Which shell is used. Currently two base shell types are supported:\n\n'
         "    - 'readline' that is backed by Python's readline module\n"
-        "    - 'prompt_toolkit' that uses external library of the same name\n" 
-        "    - 'random' selects a random shell from the above on startup\n\n"
-        'To use the prompt_toolkit shell you need to have prompt_toolkit '
-        '(https://github.com/jonathanslenders/python-prompt-toolkit)'
+        "    - 'prompt_toolkit' that uses external library of the same name\n"
+        "    - 'random' selects a random shell from the above on startup\n"
+        "    - 'best' selects the most feature-rich shell available on the\n"
+        "       user's system\n\n"
+        'To use the prompt_toolkit shell you need to have the prompt_toolkit '
+        '(https://github.com/jonathanslenders/python-prompt-toolkit) '
         'library installed. To specify which shell should be used, do so in '
-        'the run control file.', default=("'prompt_toolkit' if on Windows, "
-        "and 'readline' otherwise.")),
+        'the run control file.'),
     'SUGGEST_COMMANDS': VarDocs(
         'When a user types an invalid command, xonsh will try to offer '
         'suggestions of similar valid commands if this is True.'),
@@ -377,13 +392,15 @@ DEFAULT_DOCS = {
     'TITLE': VarDocs(
         'The title text for the window in which xonsh is running. Formatted '
         "in the same manner as $PROMPT, see 'Customizing the Prompt' "
-        'http://xonsh.org/tutorial.html#customizing-the-prompt.',
+        'http://xon.sh/tutorial.html#customizing-the-prompt.',
         default='xonsh.environ.DEFAULT_TITLE'),
     'VI_MODE': VarDocs(
         "Flag to enable 'vi_mode' in the 'prompt_toolkit' shell."),
+    'VIRTUAL_ENV': VarDocs(
+        'Path to the currently active Python environment.', configurable=False),
     'XDG_CONFIG_HOME': VarDocs(
         'Open desktop standard configuration home dir. This is the same '
-        'default as used in the standard.', configurable=False, 
+        'default as used in the standard.', configurable=False,
         default="'~/.config'"),
     'XDG_DATA_HOME': VarDocs(
         'Open desktop standard data home dir. This is the same default as '
@@ -394,25 +411,28 @@ DEFAULT_DOCS = {
         default="'$XONSH_CONFIG_DIR/config.json'"),
     'XONSHRC': VarDocs(
         'A tuple of the locations of run control files, if they exist.  User '
-        'defined run control file will supercede values set in system-wide '
+        'defined run control file will supersede values set in system-wide '
         'control file if there is a naming collision.', default=(
         "On Linux & Mac OSX: ('/etc/xonshrc', '~/.xonshrc')\n"
         "On Windows: ('%ALLUSERSPROFILE%\\xonsh\\xonshrc', '~/.xonshrc')")),
+    'XONSH_COLOR_STYLE': VarDocs(
+        'Sets the color style for xonsh colors. This is a style name, not '
+        'a color map.'),
     'XONSH_CONFIG_DIR': VarDocs(
-        'This is location where xonsh configuration information is stored.',
+        'This is the location where xonsh configuration information is stored.',
         configurable=False, default="'$XDG_CONFIG_HOME/xonsh'"),
     'XONSH_DATA_DIR': VarDocs(
         'This is the location where xonsh data files are stored, such as '
         'history.', default="'$XDG_DATA_HOME/xonsh'"),
     'XONSH_ENCODING': VarDocs(
-        'This is the that xonsh should use for subrpocess operations.',
+        'This is the encoding that xonsh should use for subrpocess operations.',
         default='sys.getdefaultencoding()'),
     'XONSH_ENCODING_ERRORS': VarDocs(
         'The flag for how to handle encoding errors should they happen. '
         'Any string flag that has been previously registered with Python '
         "is allowed. See the 'Python codecs documentation' "
         "(https://docs.python.org/3/library/codecs.html#error-handlers) "
-        'for more information and available options.', 
+        'for more information and available options.',
         default="'surrogateescape'"),
     'XONSH_HISTORY_FILE': VarDocs('Location of history file (deprecated).',
         configurable=False, default="'~/.xonsh_history'"),
@@ -432,10 +452,10 @@ DEFAULT_DOCS = {
         'True if xonsh is running as a login shell, and False otherwise.',
         configurable=False),
     'XONSH_SHOW_TRACEBACK': VarDocs(
-        'Controls if a traceback is shown exceptions occur in the shell. '
-        'Set to True to always show or False to always hide. If undefined '
-        'then traceback is hidden but a notice is shown on how to enable the '
-        'traceback.'),
+        'Controls if a traceback is shown if exceptions occur in the shell. '
+        'Set to True to always show traceback or False to always hide. '
+        'If undefined then the traceback is hidden but a notice is shown on how '
+        'to enable the full traceback.'),
     'XONSH_STORE_STDOUT': VarDocs(
         'Whether or not to store the stdout and stderr streams in the '
         'history files.', configurable=False),
@@ -623,33 +643,95 @@ class Env(MutableMapping):
                 p.pretty(dict(self))
 
 
-def locate_binary(name, cwd):
-    # StackOverflow for `where` tip: http://stackoverflow.com/a/304447/90297
-    locator = 'where' if ON_WINDOWS else 'which'
-    try:
-        binary_location = subprocess.check_output([locator, name],
-                                                  cwd=cwd,
-                                                  stderr=subprocess.PIPE,
-                                                  universal_newlines=True)
-        if not binary_location:
-            return
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return
+def _is_executable_file(path):
+    """Checks that path is an executable regular file, or a symlink towards one.
+    This is roughly ``os.path isfile(path) and os.access(path, os.X_OK)``.
 
-    return binary_location
+    This function was forked from pexpect originally:
+
+    Copyright (c) 2013-2014, Pexpect development team
+    Copyright (c) 2012, Noah Spurrier <noah@noah.org>
+
+    PERMISSION TO USE, COPY, MODIFY, AND/OR DISTRIBUTE THIS SOFTWARE FOR ANY
+    PURPOSE WITH OR WITHOUT FEE IS HEREBY GRANTED, PROVIDED THAT THE ABOVE
+    COPYRIGHT NOTICE AND THIS PERMISSION NOTICE APPEAR IN ALL COPIES.
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+    WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+    MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+    ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+    WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+    ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+    """
+    # follow symlinks,
+    fpath = os.path.realpath(path)
+
+    if not os.path.isfile(fpath):
+        # non-files (directories, fifo, etc.)
+        return False
+
+    return os.access(fpath, os.X_OK)
+
+
+def yield_executables_windows(directory, name):
+    extensions = builtins.__xonsh_env__.get('PATHEXT')
+    for a_file in os.listdir(directory):
+        base_name, ext = os.path.splitext(a_file)
+        if name == base_name and ext.upper() in extensions:
+            yield os.path.join(directory, a_file)
+
+
+def yield_executables_posix(directory, name):
+    if name in os.listdir(directory):
+        path = os.path.join(directory, name)
+        if _is_executable_file(path):
+            yield path
+
+
+yield_executables = yield_executables_windows if ON_WINDOWS else yield_executables_posix
+
+
+def locate_binary(name):
+    if os.path.isfile(name) and name != os.path.basename(name):
+        return name
+
+    try:
+        return next(chain.from_iterable(yield_executables(directory, name) for
+                    directory in builtins.__xonsh_env__.get('PATH') if os.path.isdir(directory)))
+    except StopIteration:
+        return None
+
+
+def _get_parent_dir_for(path, dir_name):
+    # walk up the directory tree to see if we are inside an hg repo
+    previous_path = ''
+    while path != previous_path:
+        if os.path.isdir(os.path.join(path, dir_name)):
+            return path
+
+        previous_path = path
+        path, _ = os.path.split(path)
+
+    return False
 
 
 def ensure_git(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        # Get cwd or bail
-        kwargs['cwd'] = kwargs.get('cwd', _get_cwd())
-        if kwargs['cwd'] is None:
+        cwd = kwargs.get('cwd', _get_cwd())
+        if cwd is None:
             return
 
         # step out completely if git is not installed
-        if locate_binary('git', kwargs['cwd']) is None:
+        if locate_binary('git') is None:
             return
+
+        root_path = _get_parent_dir_for(cwd, '.git')
+        # Bail if we're not in a repo
+        if not root_path:
+            return
+
+        kwargs['cwd'] = cwd
 
         return func(*args, **kwargs)
     return wrapper
@@ -658,26 +740,21 @@ def ensure_git(func):
 def ensure_hg(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        kwargs['cwd'] = kwargs.get('cwd', _get_cwd())
-        if kwargs['cwd'] is None:
+        cwd = kwargs.get('cwd', _get_cwd())
+        if cwd is None:
             return
-
-        # walk up the directory tree to see if we are inside an hg repo
-        path = kwargs['cwd'].split(os.path.sep)
-        while len(path) > 0:
-            if os.path.exists(os.path.sep.join(path + ['.hg'])):
-                break
-            del path[-1]
-
-        # bail if we aren't inside a repository
-        if path == []:
-            return
-
-        kwargs['root'] = os.path.sep.join(path)
 
         # step out completely if hg is not installed
-        if locate_binary('hg', kwargs['cwd']) is None:
+        if locate_binary('hg') is None:
             return
+
+        root_path = _get_parent_dir_for(cwd, '.hg')
+        # Bail if we're not in a repo
+        if not root_path:
+            return
+
+        kwargs['cwd'] = cwd
+        kwargs['root'] = root_path
 
         return func(*args, **kwargs)
     return wrapper
@@ -713,6 +790,12 @@ def get_git_branch(cwd=None):
                                         stderr=subprocess.PIPE,
                                         cwd=cwd,
                                         universal_newlines=True)
+            if len(s) == 0:
+                # Workaround for a bug in ConEMU/cmder
+                # retry without redirection
+                s = subprocess.check_output(cmd,
+                                            cwd=cwd,
+                                            universal_newlines=True)
             s = s.strip()
             if len(s) > 0:
                 branch = s
@@ -724,7 +807,7 @@ def get_git_branch(cwd=None):
 
 def call_hg_command(command, cwd):
     # Override user configurations settings and aliases
-    hg_env = os.environ.copy()
+    hg_env = builtins.__xonsh_env__.detype()
     hg_env['HGRCPATH'] = ""
 
     s = None
@@ -787,6 +870,12 @@ def git_dirty_working_directory(cwd=None):
                                     stderr=subprocess.PIPE,
                                     cwd=cwd,
                                     universal_newlines=True)
+        if len(s) == 0:
+            # Workaround for a bug in ConEMU/cmder 
+            # retry without redirection
+            s = subprocess.check_output(cmd,
+                                        cwd=cwd,
+                                        universal_newlines=True)
         return bool(s)
     except (subprocess.CalledProcessError, FileNotFoundError):
         return False
@@ -809,8 +898,14 @@ def dirty_working_directory(cwd=None):
 
 def branch_color():
     """Return red if the current branch is dirty, otherwise green"""
-    return (TERM_COLORS['BOLD_RED'] if dirty_working_directory() else
-            TERM_COLORS['BOLD_GREEN'])
+    return ('{BOLD_INTENSE_RED}' if dirty_working_directory() else
+            '{BOLD_INTENSE_GREEN}')
+
+
+def branch_bg_color():
+    """Return red if the current branch is dirty, otherwise green"""
+    return ('{BACKGROUND_RED}' if dirty_working_directory() else
+            '{BACKGROUND_GREEN}')
 
 
 def _replace_home(x):
@@ -854,6 +949,15 @@ def _current_job():
     return ''
 
 
+def env_name(pre_chars='(', post_chars=') '):
+    """Extract the current environment name from $VIRTUAL_ENV."""
+    env_path = __xonsh_env__.get('VIRTUAL_ENV', '')
+
+    env_name = os.path.basename(env_path)
+
+    return pre_chars + env_name + post_chars if env_name else ''
+
+
 if ON_WINDOWS:
     USER = 'USERNAME'
 else:
@@ -870,8 +974,10 @@ FORMATTER_DICT = dict(
     short_cwd=_collapsed_pwd,
     curr_branch=current_branch,
     branch_color=branch_color,
+    branch_bg_color=branch_bg_color,
     current_job=_current_job,
-    **TERM_COLORS)
+    env_name=env_name,
+    )
 DEFAULT_VALUES['FORMATTER_DICT'] = dict(FORMATTER_DICT)
 
 _FORMATTER = string.Formatter()
@@ -891,15 +997,20 @@ def is_template_string(template, formatter_dict=None):
         fmtter = formatter_dict
     known_names = set(fmtter.keys())
     return included_names <= known_names
-    
 
-def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
-    """Formats a xonsh prompt template string."""
-    template = template() if callable(template) else template
+
+def _get_fmtter(formatter_dict=None):
     if formatter_dict is None:
         fmtter = builtins.__xonsh_env__.get('FORMATTER_DICT', FORMATTER_DICT)
     else:
         fmtter = formatter_dict
+    return fmtter
+
+
+def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
+    """Formats a xonsh prompt template string."""
+    template = template() if callable(template) else template
+    fmtter = _get_fmtter(formatter_dict)
     included_names = set(i[1] for i in _FORMATTER.parse(template))
     fmt = {}
     for name in included_names:
@@ -915,12 +1026,47 @@ def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
     return template.format(**fmt)
 
 
+def partial_format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
+    """Formats a xonsh prompt template string."""
+    template = template() if callable(template) else template
+    fmtter = _get_fmtter(formatter_dict)
+    bopen = '{'
+    bclose = '}'
+    colon = ':'
+    expl = '!'
+    toks = []
+    for literal, field, spec, conv in _FORMATTER.parse(template):
+        toks.append(literal)
+        if field is None:
+            continue
+        elif field.startswith('$'):
+            v = builtins.__xonsh_env__[name[1:]]
+            v = _FORMATTER.convert_field(v, conv)
+            v = _FORMATTER.format_field(v, spec)
+            toks.append(v)
+            continue
+        elif field in fmtter:
+            v = fmtter[field]
+            val = v() if callable(v) else v
+            val = '' if val is None else val
+            toks.append(val)
+        else:
+            toks.append(bopen)
+            toks.append(field)
+            if conv is not None and len(conv) > 0:
+                toks.append(expl)
+                toks.append(conv)
+            if spec is not None and len(spec) > 0:
+                toks.append(colon)
+                toks.append(spec)
+            toks.append(bclose)
+    return ''.join(toks)
+
+
 RE_HIDDEN = re.compile('\001.*?\002')
 
-def multiline_prompt():
+def multiline_prompt(curr=''):
     """Returns the filler text for the prompt in multiline scenarios."""
-    curr = builtins.__xonsh_env__.get('PROMPT')
-    curr = format_prompt(curr)
     line = curr.rsplit('\n', 1)[1] if '\n' in curr else curr
     line = RE_HIDDEN.sub('', line)  # gets rid of colors
     # most prompts end in whitespace, head is the part before that.
@@ -954,12 +1100,19 @@ def load_static_config(ctx, config=None):
     if config is not None:
         env['XONSHCONFIG'] = ctx['XONSHCONFIG'] = config
     elif 'XONSHCONFIG' in ctx:
-        config = env['XONSHCONFIG'] = ctx['XONSHCONFIG'] 
+        config = env['XONSHCONFIG'] = ctx['XONSHCONFIG']
     else:
-        # don't set in ctx in order to maintain default 
+        # don't set in ctx in order to maintain default
         config = env['XONSHCONFIG'] = xonshconfig(env)
     if os.path.isfile(config):
-        with open(config, 'r') as f:
+        # Note that an Env instance at __xonsh_env__ has not been started yet,
+        # per se, so we have to use os.environ
+        encoding = os.environ.get('XONSH_ENCODING',
+                                  DEFAULT_VALUES.get('XONSH_ENCODING', 'utf8'))
+        errors = os.environ.get('XONSH_ENCODING_ERRORS',
+                                DEFAULT_VALUES.get('XONSH_ENCODING_ERRORS',
+                                                   'surrogateescape'))
+        with open(config, 'r', encoding=encoding, errors=errors) as f:
             conf = json.load(f)
         ctx['LOADED_CONFIG'] = True
     else:

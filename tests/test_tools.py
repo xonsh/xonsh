@@ -104,6 +104,22 @@ def test_subproc_toks_ls_str_comment():
     obs = subproc_toks(s + com, lexer=LEXER, returnline=True)
     assert_equal(exp, obs)
 
+def test_subproc_toks_indent_ls_comment():
+    ind = '    '
+    s = 'ls -l'
+    com = '  # lets list'
+    exp = '{0}$[{1}]{2}'.format(ind, s, com)
+    obs = subproc_toks(ind + s + com, lexer=LEXER, returnline=True)
+    assert_equal(exp, obs)
+
+def test_subproc_toks_indent_ls_str():
+    ind = '    '
+    s = 'ls "wakka"'
+    com = '  # lets list'
+    exp = '{0}$[{1}]{2}'.format(ind, s, com)
+    obs = subproc_toks(ind + s + com, lexer=LEXER, returnline=True)
+    assert_equal(exp, obs)
+
 def test_subproc_toks_ls_l_semi_ls_first():
     lsdl = 'ls -l'
     ls = 'ls'

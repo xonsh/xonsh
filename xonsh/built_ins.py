@@ -14,7 +14,7 @@ import signal
 import inspect
 import builtins
 from glob import glob, iglob
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE, STDOUT, CalledProcessError
 from contextlib import contextmanager
 from collections import Sequence, MutableMapping, Iterable
 
@@ -26,7 +26,8 @@ from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env, locate_binary
 from xonsh.aliases import DEFAULT_ALIASES
 from xonsh.jobs import add_job, wait_for_active_job
-from xonsh.proc import ProcProxy, SimpleProcProxy, TeePTYProc
+from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy, 
+    SimpleForegroundProcProxy,TeePTYProc)
 from xonsh.history import History
 from xonsh.foreign_shells import load_foreign_aliases
 
@@ -184,12 +185,23 @@ def expand_path(s):
     return os.path.expanduser(s)
 
 
+WINDOWS_DRIVE_MATCHER = re.compile(r'^\w:')
+
+
 def expand_case_matching(s):
     """Expands a string to a case insenstive globable string."""
     t = []
     openers = {'[', '{'}
     closers = {']', '}'}
     nesting = 0
+
+    drive_part = WINDOWS_DRIVE_MATCHER.match(s) if ON_WINDOWS else None
+
+    if drive_part:
+        drive_part = drive_part.group(0)
+        t.append(drive_part)
+        s = s[len(drive_part):]
+
     for c in s:
         if c in openers:
             nesting += 1
@@ -210,8 +222,7 @@ def expand_case_matching(s):
                                              c)
                 c = newc
         t.append(c)
-    t = ''.join(t)
-    return t
+    return ''.join(t)
 
 
 def reglob(path, parts=None, i=None):
@@ -279,23 +290,6 @@ def iglobpath(s, ignore_case=False):
 
 
 RE_SHEBANG = re.compile(r'#![ \t]*(.+?)$')
-
-
-def _get_runnable_name(fname):
-    if os.path.isfile(fname) and fname != os.path.basename(fname):
-        return fname
-    for d in builtins.__xonsh_env__.get('PATH'):
-        if os.path.isdir(d):
-            files = os.listdir(d)
-            if ON_WINDOWS:
-                PATHEXT = builtins.__xonsh_env__.get('PATHEXT')
-                for dirfile in files:
-                    froot, ext = os.path.splitext(dirfile)
-                    if fname == froot and ext.upper() in PATHEXT:
-                        return os.path.join(d, dirfile)
-            if fname in files:
-                return os.path.join(d, fname)
-    return None
 
 
 def _is_binary(fname, limit=80):
@@ -528,18 +522,22 @@ def run_subproc(cmds, captured=True):
             stdout = streams['stdout']
         elif captured or ix != last_cmd:
             stdout = PIPE
+        elif builtins.__xonsh_stdout_uncaptured__ is not None:
+            stdout = builtins.__xonsh_stdout_uncaptured__
         else:
             stdout = None
         # set standard error
         if 'stderr' in streams:
             stderr = streams['stderr']
+        elif builtins.__xonsh_stderr_uncaptured__ is not None:
+            stderr = builtins.__xonsh_stderr_uncaptured__
         uninew = (ix == last_cmd) and (not captured)
         alias = builtins.aliases.get(cmd[0], None)
         if (alias is None
             and builtins.__xonsh_env__.get('AUTO_CD')
             and len(cmd) == 1
             and os.path.isdir(cmd[0])
-            and locate_binary(cmd[0], cwd=None) is None):
+            and locate_binary(cmd[0]) is None):
             cmd.insert(0, 'cd')
             alias = builtins.aliases.get('cd', None)
 
@@ -548,7 +546,7 @@ def run_subproc(cmds, captured=True):
         else:
             if alias is not None:
                 cmd = alias + cmd[1:]
-            n = _get_runnable_name(cmd[0])
+            n = locate_binary(cmd[0])
             if n is None:
                 aliased_cmd = cmd
             else:
@@ -559,11 +557,12 @@ def run_subproc(cmds, captured=True):
                     raise XonshError(e.format(cmd[0]))
         if callable(aliased_cmd):
             prev_is_proxy = True
+            bgable = getattr(aliased_cmd, '__xonsh_backgroundable__', True)
             numargs = len(inspect.signature(aliased_cmd).parameters)
             if numargs == 2:
-                cls = SimpleProcProxy
+                cls = SimpleProcProxy if bgable else SimpleForegroundProcProxy
             elif numargs == 4:
-                cls = ProcProxy
+                cls = ProcProxy if bgable else ForegroundProcProxy
             else:
                 e = 'Expected callable with 2 or 4 arguments, not {}'
                 raise XonshError(e.format(numargs))
@@ -623,9 +622,9 @@ def run_subproc(cmds, captured=True):
     wait_for_active_job()
     hist = builtins.__xonsh_history__
     hist.last_cmd_rtn = prev_proc.returncode
+    # get output
+    output = b''
     if write_target is None:
-        # get output
-        output = b''
         if prev_proc.stdout not in (None, sys.stdout):
             output = prev_proc.stdout.read()
         if captured:
@@ -634,9 +633,12 @@ def run_subproc(cmds, captured=True):
             output = output.decode(encoding=ENV.get('XONSH_ENCODING'),
                                    errors=ENV.get('XONSH_ENCODING_ERRORS'))
             output = output.replace('\r\n', '\n')
-            return output
         else:
             hist.last_cmd_out = output
+    if not prev_is_proxy and hist.last_cmd_rtn > 0 and ENV.get('RAISE_SUBPROC_ERROR'):
+        raise CalledProcessError(hist.last_cmd_rtn, aliased_cmd, output=output)
+    if captured:
+        return output
 
 
 def subproc_captured(*cmds):
@@ -678,6 +680,8 @@ def load_builtins(execer=None, config=None):
     builtins.__xonsh_glob__ = globpath
     builtins.__xonsh_expand_path__ = expand_path
     builtins.__xonsh_exit__ = False
+    builtins.__xonsh_stdout_uncaptured__ = None
+    builtins.__xonsh_stderr_uncaptured__ = None
     if hasattr(builtins, 'exit'):
         builtins.__xonsh_pyexit__ = builtins.exit
         del builtins.exit
@@ -729,6 +733,8 @@ def unload_builtins():
              '__xonsh_glob__',
              '__xonsh_expand_path__',
              '__xonsh_exit__',
+             '__xonsh_stdout_uncaptured__',
+             '__xonsh_stderr_uncaptured__',
              '__xonsh_pyexit__',
              '__xonsh_pyquit__',
              '__xonsh_subproc_captured__',

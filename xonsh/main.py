@@ -6,10 +6,21 @@ import builtins
 from argparse import ArgumentParser, ArgumentTypeError
 from contextlib import contextmanager
 
+try:
+    from setproctitle import setproctitle
+except ImportError:
+    setproctitle = None
+
 from xonsh import __version__
 from xonsh.shell import Shell
-from xonsh.pretty import pprint
+from xonsh.pretty import pprint, pretty
 from xonsh.jobs import ignore_sigtstp
+from xonsh.tools import HAVE_PYGMENTS, print_color
+
+if HAVE_PYGMENTS:
+    import pygments
+    from xonsh import pyghooks
+
 
 def path_argument(s):
     """Return a path only if the path is actually legal
@@ -71,7 +82,7 @@ parser.add_argument('--shell-type',
                          'Possible options: readline, prompt_toolkit, random. '
                          'Warning! If set this overrides $SHELL_TYPE variable.',
                     dest='shell_type',
-                    choices=('readline', 'prompt_toolkit', 'random'),
+                    choices=('readline', 'prompt_toolkit', 'best', 'random'),
                     default=None)
 parser.add_argument('file',
                     metavar='script-file',
@@ -88,7 +99,7 @@ parser.add_argument('args',
 
 
 def arg_undoers():
-    au = { 
+    au = {
         '-h': (lambda args: setattr(args, 'help', False)),
         '-V': (lambda args: setattr(args, 'version', False)),
         '-c': (lambda args: setattr(args, 'command', None)),
@@ -117,12 +128,21 @@ def undo_args(args):
 
 def _pprint_displayhook(value):
     if value is not None:
+        builtins._ = None  # Set '_' to None to avoid recursion
+        if HAVE_PYGMENTS:
+            s = pretty(value)  # color case
+            lexer = pyghooks.XonshLexer()
+            tokens = list(pygments.lex(s, lexer=lexer))
+            print_color(tokens)
+        else:
+            pprint(value)  # black & white case
         builtins._ = value
-        pprint(value)
 
 
 def premain(argv=None):
     """Setup for main xonsh entry point, returns parsed arguments."""
+    if setproctitle is not None:
+        setproctitle(' '.join(['xonsh'] + sys.argv[1:]))
     args, other = parser.parse_known_args(argv)
     if args.file is not None:
         real_argv = (argv or sys.argv)
@@ -169,7 +189,8 @@ def main(argv=None):
             code = code if code.endswith('\n') else code + '\n'
             sys.argv = args.args
             env['ARGS'] = [args.file] + args.args
-            code = shell.execer.compile(code, mode='exec', glbs=shell.ctx)
+            code = shell.execer.compile(code, mode='exec', glbs=shell.ctx,
+                                        filename=args.file)
             shell.execer.exec(code, mode='exec', glbs=shell.ctx)
         else:
             print('xonsh: {0}: No such file or directory.'.format(args.file))
@@ -177,7 +198,8 @@ def main(argv=None):
         # run a script given on stdin
         code = sys.stdin.read()
         code = code if code.endswith('\n') else code + '\n'
-        code = shell.execer.compile(code, mode='exec', glbs=shell.ctx)
+        code = shell.execer.compile(code, mode='exec', glbs=shell.ctx,
+                                    filename='<stdin>')
         shell.execer.exec(code, mode='exec', glbs=shell.ctx)
     else:
         # otherwise, enter the shell

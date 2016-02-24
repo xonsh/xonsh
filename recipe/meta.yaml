@@ -20,11 +20,12 @@ requirements:
     - python
     - ply
     - prompt_toolkit
+    - setproctitle
 
 about:
-  home: http://xonsh.org/
+  home: http://xon.sh/
   license: BSD
-  summary: xonsh is a Python-ish, BASHwards-compatible shell.
+  summary: xonsh is a Python-ish, BASHwards-facing shell.
 
 # Removed temporarily until this is better support by the Anaconda launcher
 #app:
