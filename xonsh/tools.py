@@ -125,7 +125,14 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
             tok.type = 'NEWLINE'
             tok.value = '\n'
             tok.lineno -= 1
-            tok.lexpos = len(line)
+            if len(toks) >= 2:
+                prev_tok_end = toks[-2].lexpos + len(toks[-2].value)
+            else:
+                prev_tok_end = len(line)
+            if '#' in line[prev_tok_end:]:
+                tok.lexpos = prev_tok_end  # prevents wrapping comments
+            else:
+                tok.lexpos = len(line)
             break
     else:
         if len(toks) == 0:
