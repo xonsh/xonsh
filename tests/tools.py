@@ -58,6 +58,7 @@ def mock_xonsh_env(xenv):
     builtins.__xonsh_regexpath__ = lambda x: []
     builtins.__xonsh_subproc_captured__ = sp
     builtins.__xonsh_subproc_uncaptured__ = sp
+    builtins.__xonsh_subproc_noreturn__ = sp
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     builtins.evalx = eval
     builtins.execx = None
@@ -74,6 +75,7 @@ def mock_xonsh_env(xenv):
     del builtins.__xonsh_regexpath__
     del builtins.__xonsh_subproc_captured__
     del builtins.__xonsh_subproc_uncaptured__
+    del builtins.__xonsh_subproc_noreturn__
     del builtins.__xonsh_ensure_list_of_strs__
     del builtins.evalx
     del builtins.execx

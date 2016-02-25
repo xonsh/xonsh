@@ -60,6 +60,9 @@ else:
     def test_ls_dashl():
         yield check_eval, 'ls -l'
 
+    def test_ls_dashl_2():
+        yield check_eval, '$[ls -l]'
+
     def test_which_ls():
         yield check_eval, 'which ls'
 
