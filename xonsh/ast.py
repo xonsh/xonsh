@@ -205,6 +205,7 @@ class CtxAwareTransformer(NodeTransformer):
                 node.func.id == '__xonsh_subproc_uncaptured__' and
                 self.forced_subproc):
             node.func.id = '__xonsh_subproc_noreturn__'
+            self.forced_subproc = False
         return node
 
     def visit_Assign(self, node):
