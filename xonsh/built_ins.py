@@ -26,7 +26,7 @@ from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env, locate_binary
 from xonsh.aliases import DEFAULT_ALIASES
 from xonsh.jobs import add_job, wait_for_active_job
-from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy, 
+from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
     SimpleForegroundProcProxy,TeePTYProc)
 from xonsh.history import History
 from xonsh.foreign_shells import load_foreign_aliases
@@ -468,12 +468,15 @@ def _redirect_io(streams, r, loc=None):
         raise XonshError('Unrecognized redirection command: {}'.format(r))
 
 def _wait_for_proc(prev_proc, prev_is_proxy, procs, cmds, background):
-    """Helper for run_subproc(), after this command the return code should be 
+    """Helper for run_subproc(), after this command the return code should be
     availble on prev_proc.
     """
     for proc in procs[:-1]:
+        stdout = proc.stdout
+        if stdout is None:
+            continue
         try:
-            proc.stdout.close()
+            stdout.close()
         except OSError:
             pass
     if not prev_is_proxy:
@@ -515,7 +518,7 @@ def _proc_output(prev_proc, accumulated_output):
     return output
 
 
-def _finish_subproc(prev_proc, prev_is_proxy, captured, aliased_cmd, 
+def _finish_subproc(prev_proc, prev_is_proxy, captured, aliased_cmd,
                     accumulated_output):
     """Finalizes subprocess execution. Helper function for run_subproc()."""
     env = builtins.__xonsh_env__
@@ -559,20 +562,20 @@ def run_subproc(cmds, captured=True):
             if cmd == '|':
                 continue
             elif cmd == 'and':
-                _wait_for_proc(prev_proc, prev_is_proxy, procs, cmds[:ix], 
+                _wait_for_proc(prev_proc, prev_is_proxy, procs, cmds[:ix],
                                background=False)
                 if prev_proc.returncode == 0:
                     accumulated_output = _proc_output(prev_proc, accumulated_output)
                     continue
                 else:
-                    return _finish_subproc(prev_proc, prev_is_proxy, 
-                                           captured, aliased_cmd, 
+                    return _finish_subproc(prev_proc, prev_is_proxy,
+                                           captured, aliased_cmd,
                                            accumulated_output)
             elif cmd == 'or':
-                _wait_for_proc(prev_proc, prev_is_proxy, procs, cmds[:ix], 
+                _wait_for_proc(prev_proc, prev_is_proxy, procs, cmds[:ix],
                                background=False)
                 if prev_proc.returncode == 0:
-                    return _finish_subproc(prev_proc, prev_is_proxy, 
+                    return _finish_subproc(prev_proc, prev_is_proxy,
                                            captured, aliased_cmd,
                                            accumulated_output)
                 else:
@@ -684,7 +687,7 @@ def run_subproc(cmds, captured=True):
         prev_proc = proc
     if _wait_for_proc(prev_proc, prev_is_proxy, procs, cmds, background):
         return
-    return _finish_subproc(prev_proc, prev_is_proxy, captured, aliased_cmd, 
+    return _finish_subproc(prev_proc, prev_is_proxy, captured, aliased_cmd,
                            accumulated_output)
 
 
