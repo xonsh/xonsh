@@ -3,6 +3,6 @@ python:
   - 3.4
   - 3.5
 install:
-  - pip install ply nose prompt_toolkit
+  - pip install ply nose pygments prompt_toolkit
 script:
   - nosetests -q

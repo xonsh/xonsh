@@ -1,6 +1,6 @@
 Bash to Xonsh Translation Guide
 ================================
-As you have probably figures out by now, Bash is not ``sh``-lang compliant.
+As you have probably figured out by now, xonsh is not ``sh``-lang compliant.
 If your muscles have memorized all of the Bash prestidigitations, this page
 will help you put a finger on how to do the equivelent task in xonsh.
 

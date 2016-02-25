@@ -4,6 +4,8 @@ from prompt_toolkit.utils import DummyContext
 from prompt_toolkit.shortcuts import (create_prompt_application, 
     create_eventloop, create_asyncio_eventloop, create_output)
 
+from xonsh.shell import prompt_toolkit_version_info
+
 class Prompter(object):
 
     def __init__(self, cli=None, *args, **kwargs):
@@ -18,6 +20,7 @@ class Prompter(object):
             will be created when the prompt() method is called.
         """
         self.cli = cli
+        self.major_minor = prompt_toolkit_version_info()[:2]
 
     def __enter__(self):
         self.reset()
@@ -61,6 +64,9 @@ class Prompter(object):
 
         # Create CommandLineInterface.
         if self.cli is None:
+            if self.major_minor <= (0, 57):
+                kwargs.pop('get_rprompt_tokens', None)
+                kwargs.pop('get_continuation_tokens', None)
             cli = CommandLineInterface(
                 application=create_prompt_application(message, **kwargs),
                 eventloop=eventloop,

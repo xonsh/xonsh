@@ -67,8 +67,7 @@ class Vox:
 
         print('Environment "%s" created. Activate it with "vox activate %s".\n' % (name, name))
 
-    @staticmethod
-    def activate_env(name):
+    def activate_env(self, name):
         """Activate a virtual environment.
 
         Parameters
@@ -95,7 +94,10 @@ class Vox:
 
         bin_path = join(env_path, bin_dir)
 
-        builtins.__xonsh_env__['PATH'].insert(0, bin_path)
+        if 'VIRTUAL_ENV' in __xonsh_env__:
+            self.deactivate_env()
+
+        __xonsh_env__['PATH'].insert(0, bin_path)
         __xonsh_env__['VIRTUAL_ENV'] = env_path
 
         print('Activated "%s".\n' % name)
@@ -124,8 +126,8 @@ class Vox:
 
         bin_path = join(env_path, bin_dir)
 
-        while bin_path in builtins.__xonsh_env__['PATH']:
-            builtins.__xonsh_env__['PATH'].remove(bin_path)
+        while bin_path in __xonsh_env__['PATH']:
+            __xonsh_env__['PATH'].remove(bin_path)
 
         __xonsh_env__.pop('VIRTUAL_ENV')
 

@@ -75,7 +75,7 @@ def source_foreign(args, stdin=None):
     """Sources a file written in a foreign shell language."""
     parser = _ensure_source_foreign_parser()
     ns = parser.parse_args(args)
-    if ns.prevcmd is not None: 
+    if ns.prevcmd is not None:
         pass  # don't change prevcmd if given explicitly
     elif os.path.isfile(ns.files_or_code[0]):
         # we have filename to source
@@ -191,6 +191,11 @@ def vox(args, stdin=None):
     vox = Vox()
     return vox(args, stdin=stdin)
 
+def mpl(args, stdin=None):
+    """Hooks to matplotlib"""
+    from xonsh.mplhooks import show
+    show()
+
 
 DEFAULT_ALIASES = {
     'cd': cd,
@@ -212,6 +217,7 @@ DEFAULT_ALIASES = {
     'replay': replay_main,
     '!!': bang_bang,
     '!n': bang_n,
+    'mpl': mpl,
     'trace': trace,
     'timeit': timeit_alias,
     'xonfig': xonfig,

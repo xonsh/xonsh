@@ -928,6 +928,7 @@ keyword arguments, which will be replaced automatically:
     snail@home:~ >> # so does that!
 
 By default, the following variables are available for use:
+
   * ``user``: The username of the current user
   * ``hostname``: The name of the host computer
   * ``cwd``: The current working directory
@@ -948,13 +949,35 @@ By default, the following variables are available for use:
 You can also color your prompt easily by inserting keywords such as ``{GREEN}``
 or ``{BOLD_BLUE}``.  Colors have the form shown below:
 
-  * ``(QUALIFIER\_)COLORNAME``: Inserts an ANSI color code
-      * ``COLORNAME`` can be any of: ``BLACK``, ``RED``, ``GREEN``, ``YELLOW``,
-        ``BLUE``, ``PURPLE``, ``CYAN``, or ``WHITE``
-      * ``QUALIFIER`` is optional and can be any of: ``BOLD``, ``UNDERLINE``,
-        ``BACKGROUND``, ``INTENSE``, ``BOLD_INTENSE``, or
-        ``BACKGROUND_INTENSE``
-  * ``NO_COLOR``: Resets any previously used color codes
+* ``NO_COLOR``: Resets any previously used color codes
+* ``COLORNAME``: Inserts a color code for the following basic colors, 
+  which come in regular (dark) and intense (light) forms:
+
+    - ``BLACK`` or ``INTENSE_BLACK`` 
+    - ``RED`` or ``INTENSE_RED``
+    - ``GREEN`` or ``INTENSE_GREEN``
+    - ``YELLOW`` or ``INTENSE_YELLOW``
+    - ``BLUE`` or ``INTENSE_BLUE``
+    - ``PURPLE`` or ``INTENSE_PURPLE``
+    - ``CYAN`` or ``INTENSE_CYAN``
+    - ``WHITE`` or ``INTENSE_WHITE``
+
+* ``#HEX``: A ``#`` before a len-3 or len-6 hex code will use that 
+  hex color, or the nearest approximation that that is supported by 
+  the shell and terminal.  For example, ``#fff`` and ``#fafad2`` are
+  both valid.
+* ``BACKGROUND_`` may be added to the begining of a color name or hex
+  color to set a background color.  For example, ``BACKGROUND_INTENSE_RED``
+  and ``BACKGROUND_#123456`` can both be used.
+* ``bg#HEX`` or ``BG#HEX`` are shortcuts for setting a background hex color.
+  Thus you can set ``bg#0012ab`` or the uppercase version.
+* ``BOLD_`` is a prefix qualifier that may be used with any foreground color.
+  For example, ``BOLD_RED`` and ``BOLD_#112233`` are OK!
+* ``UNDERLINE_`` is a prefix qualifier that also may be used with any 
+  foreground color. For example, ``UNDERLINE_GREEN``.
+* Or any other combination of qualifiers, such as 
+  ``BOLD_UNDERLINE_INTENSE_BLACK``,   which is the most metal color you 
+  can use!
 
 You can make use of additional variables beyond these by adding them to the
 ``FORMATTER_DICT`` environment variable.  The values in this dictionary

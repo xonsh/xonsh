@@ -58,15 +58,21 @@ class PromptToolkitShell(BaseShell):
         multicolumn = (completions_display == 'multi')
         self.styler.style_name = env.get('XONSH_COLOR_STYLE')
         completer = None if completions_display == 'none' else self.pt_completer
+        prompt_tokens = self.prompt_tokens(None)
+        get_prompt_tokens = lambda cli: prompt_tokens
+        rprompt_tokens = self.rprompt_tokens(None)
+        get_rprompt_tokens = lambda cli: rprompt_tokens
         with self.prompter:
             line = self.prompter.prompt(
                     mouse_support=mouse_support,
                     auto_suggest=auto_suggest,
-                    get_prompt_tokens=self.prompt_tokens,
+                    get_prompt_tokens=get_prompt_tokens,
+                    get_rprompt_tokens=get_rprompt_tokens,
                     style=PygmentsStyle(xonsh_style_proxy(self.styler)),
                     completer=completer,
                     lexer=PygmentsLexer(XonshLexer),
                     multiline=multiline,
+                    get_continuation_tokens=self.continuation_tokens,
                     history=history,
                     enable_history_search=enable_history_search,
                     reserve_space_for_menu=0,
@@ -127,6 +133,27 @@ class PromptToolkitShell(BaseShell):
         self.settitle()
         return toks
 
+    def rprompt_tokens(self, cli):
+        """Returns a list of (token, str) tuples for the current right
+        prompt.
+        """
+        p = builtins.__xonsh_env__.get('RIGHT_PROMPT')
+        if len(p) == 0:
+            return []
+        try:
+            p = partial_format_prompt(p)
+        except Exception:  # pylint: disable=broad-except
+            print_exception()
+        toks = partial_color_tokenize(p)
+        return toks
+
+    def continuation_tokens(self, cli, width):
+        """Displays dots in multiline prompt"""
+        dots = builtins.__xonsh_env__.get('MULTILINE_PROMPT')
+        _width = width - 1
+        dots = _width // len(dots) * dots + dots[:_width % len(dots)]
+        return [(Token, dots + ' ')]
+    
     def format_color(self, string, **kwargs):
         """Formats a color string using Pygments. This, therefore, returns
         a list of (Token, str) tuples.
