@@ -190,6 +190,7 @@ class Execer(object):
                     # and it still doesn't work, adding more won't help
                     # anything
                     raise original_error
+                self.ctxtransformer.forced_subproc = True
                 sbpline = subproc_toks(line,
                                        returnline=True,
                                        maxcol=maxcol,
