@@ -12,7 +12,7 @@ from collections import deque
 
 from xonsh import lazyjson
 from xonsh.base_shell import BaseShell
-from xonsh.ansi_colors import partial_color_format
+from xonsh.ansi_colors import partial_color_format, color_style_names, color_style
 from xonsh.environ import partial_format_prompt, multiline_prompt
 from xonsh.tools import ON_WINDOWS, print_exception, HAVE_PYGMENTS
 
@@ -316,6 +316,14 @@ class ReadlineShell(BaseShell, Cmd):
             s = pygments.format(string, formatter).rstrip()
         print(s, **kwargs)
 
+    def color_style_names(self):
+        """Returns an iterable of all available style names."""
+        return color_style_names()
+
+    def color_style(self):
+        """Returns the current color map."""
+        style = style=builtins.__xonsh_env__.get('XONSH_COLOR_STYLE')
+        return color_style(style=style)
 
 class ReadlineHistoryAdder(Thread):
 

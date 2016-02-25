@@ -3,7 +3,7 @@ import os
 import ast
 import json
 import textwrap
-import  builtins
+import builtins
 import functools
 from pprint import pformat
 from argparse import ArgumentParser
@@ -23,8 +23,8 @@ HR = "'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'"
 WIZARD_HEAD = """
           {{BOLD_WHITE}}Welcome to the xonsh configuration wizard!{{NO_COLOR}}
           {{YELLOW}}------------------------------------------{{NO_COLOR}}
-This will present a guided tour through setting up the xonsh static 
-config file. Xonsh will automatically ask you if you want to run this 
+This will present a guided tour through setting up the xonsh static
+config file. Xonsh will automatically ask you if you want to run this
 wizard if the configuration file does not exist. However, you can
 always rerun this wizard with the xonfig command:
 
@@ -48,12 +48,12 @@ WIZARD_FS = """
                       {{BOLD_WHITE}}Foreign Shell Setup{{NO_COLOR}}
                       {{YELLOW}}-------------------{{NO_COLOR}}
 The xonsh shell has the ability to interface with foreign shells such
-as Bash, zsh, or fish. 
+as Bash, zsh, or fish.
 
-For configuration, this means that xonsh can load the environment, 
-aliases, and functions specified in the config files of these shells. 
-Naturally, these shells must be available on the system to work. 
-Being able to share configuration (and source) from foreign shells 
+For configuration, this means that xonsh can load the environment,
+aliases, and functions specified in the config files of these shells.
+Naturally, these shells must be available on the system to work.
+Being able to share configuration (and source) from foreign shells
 makes it easier to transition to and from xonsh.
 """.format(hr=HR)
 
@@ -69,10 +69,10 @@ Still, setting environment variables in this way can help define
 options that are global to the system or user.
 
 The following lists the environment variable name, its documentation,
-the default value, and the current value. The default and current 
+the default value, and the current value. The default and current
 values are presented as pretty repr strings of their Python types.
 
-{{BOLD_GREEN}}Note:{{NO_COLOR}} Simply hitting enter for any environment variable 
+{{BOLD_GREEN}}Note:{{NO_COLOR}} Simply hitting enter for any environment variable
 will accept the default value for that entry.
 
 Would you like to set env vars now, """.format(hr=HR) + YN
@@ -160,7 +160,7 @@ def make_envvar(name):
     node = StoreNonEmpty(prompt, converter=ens.convert, show_conversion=True,
                          path=path)
     return node
-    
+
 
 def make_env():
     """Makes an environment variable wizard."""
@@ -227,11 +227,11 @@ def _format_json(data):
     data = {k.replace(' ', '_'): v for k, v in data}
     s = json.dumps(data, sort_keys=True, indent=1) + '\n'
     return s
-    
+
 
 def _info(ns):
     data = [
-        ('xonsh', XONSH_VERSION), 
+        ('xonsh', XONSH_VERSION),
         ('Python', '.'.join(map(str, tools.VER_FULL))),
         ('PLY', ply.__version__),
         ('have readline', is_readline_available()),
@@ -251,32 +251,54 @@ def _info(ns):
     return s
 
 
+def _styles(ns):
+    env = builtins.__xonsh_env__
+    curr = env.get('XONSH_COLOR_STYLE')
+    styles = sorted(tools.color_style_names())
+    if ns.json:
+        s = json.dumps(styles, sort_keys=True, indent=1)
+        print(s)
+        return
+    lines = []
+    for style in styles:
+        if style == curr:
+            lines.append('* {GREEN}' + style + '{NO_COLOR}')
+        else:
+            lines.append('  ' + style)
+    s = '\n'.join(lines)
+    tools.print_color(s)
+
+
 @functools.lru_cache()
 def _create_parser():
-    p = ArgumentParser(prog='xonfig', 
+    p = ArgumentParser(prog='xonfig',
                        description='Manages xonsh configuration.')
     subp = p.add_subparsers(title='action', dest='action')
     info = subp.add_parser('info', help=('displays configuration information, '
                                          'default action'))
-    info.add_argument('--json', action='store_true', default=False, 
+    info.add_argument('--json', action='store_true', default=False,
                       help='reports results as json')
     wiz = subp.add_parser('wizard', help=('displays configuration information, '
                                          'default action'))
-    wiz.add_argument('--file', default=None, 
+    wiz.add_argument('--file', default=None,
                      help='config file location, default=$XONSHCONFIG')
-    wiz.add_argument('--confirm', action='store_true', default=False, 
+    wiz.add_argument('--confirm', action='store_true', default=False,
                       help='confirm that the wizard should be run.')
+    sty = subp.add_parser('styles', help='prints available xonsh color styles')
+    sty.add_argument('--json', action='store_true', default=False,
+                     help='reports results as json')
     return p
 
 
 _MAIN_ACTIONS = {
     'info': _info,
     'wizard': _wizard,
+    'styles': _styles,
     }
 
 def main(args=None):
     """Main xonfig entry point."""
-    if not args or (args[0] not in _MAIN_ACTIONS and 
+    if not args or (args[0] not in _MAIN_ACTIONS and
                     args[0] not in {'-h', '--help'}):
         args.insert(0, 'info')
     parser = _create_parser()

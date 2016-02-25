@@ -74,6 +74,7 @@ def partial_color_format(template, style='default', cmap=None, hide=False):
             toks.append(bclose)
     return ''.join(toks)
 
+
 RGB_256 = {
     '000000': '16',
     '00005f': '17',
@@ -361,6 +362,22 @@ def rgb_to_256(rgb):
     res = ''.join([('%02.x' % i) for i in res])
     equiv = RGB_256[res]
     return equiv, res
+
+
+def color_style_names():
+    """Returns an iterable of all ANSI color style names."""
+    return STYLES.keys()
+
+
+def color_style(style='default'):
+    """Returns the current color map."""
+    if style in STYLES:
+        cmap = STYLES[style]
+    else:
+        warn('Could not find color style {0!r}, using default.'.format(style),
+             RuntimeWarning)
+        cmap = DEFAULT_STYLE
+    return cmap
 
 
 DEFAULT_STYLE = {
