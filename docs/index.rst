@@ -36,6 +36,9 @@ the xonsh shell
         "With great shell comes great reproducibility",
         "None shell pass",
         "The x-on shell",
+        "It is pronounced <i>コンチ</i>",
+        "It is pronounced <i>コンッチ</i>",
+        "It is pronounced <i>コンシュ</i>",
         ];
     document.write(taglines[Math.floor(Math.random() * taglines.length)]);
     </script>
