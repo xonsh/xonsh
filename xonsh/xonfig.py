@@ -134,12 +134,13 @@ def _wrap_paragraphs(text, width=70, **kwargs):
     s = '\n'.join(pars)
     return s
 
-ENVVAR_PROMPT = """
+ENVVAR_MESSAGE = """
 {{BOLD_CYAN}}${name}{{NO_COLOR}}
 {docstr}
 {{RED}}default value:{{NO_COLOR}} {default}
-{{RED}}current value:{{NO_COLOR}} {current}
-{{BOLD_GREEN}}>>>{{NO_COLOR}} """
+{{RED}}current value:{{NO_COLOR}} {current}"""
+
+ENVVAR_PROMPT = "{BOLD_GREEN}>>>{NO_COLOR} "
 
 def make_envvar(name):
     """Makes a StoreNonEmpty node for an environment variable."""
@@ -156,20 +157,25 @@ def make_envvar(name):
     curr = pformat(curr, width=69)
     if '\n' in curr:
         curr = '\n' + curr
-    prompt = ENVVAR_PROMPT.format(name=name, default=default, current=curr,
+    msg = ENVVAR_MESSAGE.format(name=name, default=default, current=curr,
                                 docstr=_wrap_paragraphs(vd.docstr, width=69))
+    mnode = Message(message=msg)
     ens = env.get_ensurer(name)
     path = '/env/' + name
-    node = StoreNonEmpty(prompt, converter=ens.convert, show_conversion=True,
-                         path=path)
-    return node
+    pnode = StoreNonEmpty(ENVVAR_PROMPT, converter=ens.convert,
+                          show_conversion=True, path=path)
+    return mnode, pnode
 
 
 def make_env():
     """Makes an environment variable wizard."""
     kids = map(make_envvar, sorted(builtins.__xonsh_env__.docs.keys()))
-    kids = [k for k in kids if k is not None]
-    wiz = Wizard(children=kids)
+    flatkids = []
+    for k in kids:
+        if k is None:
+            continue
+        flatkids.extend(k)
+    wiz = Wizard(children=flatkids)
     return wiz
 
 
