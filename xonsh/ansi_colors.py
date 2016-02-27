@@ -380,6 +380,17 @@ def color_style(style='default'):
     return cmap
 
 
+def _expand_style(cmap):
+    """Expands a style in order to more quickly make color map changes."""
+    for key, val in list(cmap.items()):
+        if key == 'NO_COLOR':
+            continue
+        cmap['BOLD_'+key] = '1;' + val
+        cmap['UNDERLINE_'+key] = '4;' + val
+        cmap['BOLD_UNDERLINE_'+key] = '1;4;' + val
+        cmap['BACKGROUND_'+key] = val.replace('38', '48', 1)
+
+
 DEFAULT_STYLE = {
     # Reset
     'NO_COLOR': '0',  # Text Reset
@@ -474,6 +485,27 @@ DEFAULT_STYLE = {
     'BACKGROUND_INTENSE_CYAN': '0;106',  # CYAN
     'BACKGROUND_INTENSE_WHITE': '0;107',  # WHITE
 }
+
+MONOKAI_STYLE = {
+    'NO_COLOR': '0',
+    'BLACK': '38;5;16',
+    'BLUE': '38;5;63',
+    'CYAN': '38;5;81',
+    'GREEN': '38;5;40',
+    'PURPLE': '38;5;89',
+    'RED': '38;5;124',
+    'WHITE': '38;5;188',
+    'YELLOW': '38;5;184',
+    'INTENSE_BLACK': '38;5;59',
+    'INTENSE_BLUE': '38;5;20',
+    'INTENSE_CYAN': '38;5;44',
+    'INTENSE_GREEN': '38;5;148',
+    'INTENSE_PURPLE': '38;5;141',
+    'INTENSE_RED': '38;5;197',
+    'INTENSE_WHITE': '38;5;15',
+    'INTENSE_YELLOW': '38;5;186',
+}
+_expand_style(MONOKAI_STYLE)
 
 #############################################################
 #############   Auto-generated below this line   ############
@@ -1485,90 +1517,6 @@ MANNI_STYLE = {
     'UNDERLINE_YELLOW': '4;38;5;166',
     'WHITE': '38;5;145',
     'YELLOW': '38;5;166',
-}
-
-MONOKAI_STYLE = {
-    'BACKGROUND_BLACK': '48;5;16',
-    'BACKGROUND_BLUE': '48;5;16',
-    'BACKGROUND_CYAN': '48;5;81',
-    'BACKGROUND_GREEN': '48;5;95',
-    'BACKGROUND_INTENSE_BLACK': '48;5;95',
-    'BACKGROUND_INTENSE_BLUE': '48;5;141',
-    'BACKGROUND_INTENSE_CYAN': '48;5;81',
-    'BACKGROUND_INTENSE_GREEN': '48;5;148',
-    'BACKGROUND_INTENSE_PURPLE': '48;5;141',
-    'BACKGROUND_INTENSE_RED': '48;5;197',
-    'BACKGROUND_INTENSE_WHITE': '48;5;15',
-    'BACKGROUND_INTENSE_YELLOW': '48;5;186',
-    'BACKGROUND_PURPLE': '48;5;89',
-    'BACKGROUND_RED': '48;5;89',
-    'BACKGROUND_WHITE': '48;5;186',
-    'BACKGROUND_YELLOW': '48;5;95',
-    'BLACK': '38;5;16',
-    'BLUE': '38;5;16',
-    'BOLD_BLACK': '1;38;5;16',
-    'BOLD_BLUE': '1;38;5;16',
-    'BOLD_CYAN': '1;38;5;81',
-    'BOLD_GREEN': '1;38;5;95',
-    'BOLD_INTENSE_BLACK': '1;38;5;95',
-    'BOLD_INTENSE_BLUE': '1;38;5;141',
-    'BOLD_INTENSE_CYAN': '1;38;5;81',
-    'BOLD_INTENSE_GREEN': '1;38;5;148',
-    'BOLD_INTENSE_PURPLE': '1;38;5;141',
-    'BOLD_INTENSE_RED': '1;38;5;197',
-    'BOLD_INTENSE_WHITE': '1;38;5;15',
-    'BOLD_INTENSE_YELLOW': '1;38;5;186',
-    'BOLD_PURPLE': '1;38;5;89',
-    'BOLD_RED': '1;38;5;89',
-    'BOLD_UNDERLINE_BLACK': '1;4;38;5;16',
-    'BOLD_UNDERLINE_BLUE': '1;4;38;5;16',
-    'BOLD_UNDERLINE_CYAN': '1;4;38;5;81',
-    'BOLD_UNDERLINE_GREEN': '1;4;38;5;95',
-    'BOLD_UNDERLINE_INTENSE_BLACK': '1;4;38;5;95',
-    'BOLD_UNDERLINE_INTENSE_BLUE': '1;4;38;5;141',
-    'BOLD_UNDERLINE_INTENSE_CYAN': '1;4;38;5;81',
-    'BOLD_UNDERLINE_INTENSE_GREEN': '1;4;38;5;148',
-    'BOLD_UNDERLINE_INTENSE_PURPLE': '1;4;38;5;141',
-    'BOLD_UNDERLINE_INTENSE_RED': '1;4;38;5;197',
-    'BOLD_UNDERLINE_INTENSE_WHITE': '1;4;38;5;15',
-    'BOLD_UNDERLINE_INTENSE_YELLOW': '1;4;38;5;186',
-    'BOLD_UNDERLINE_PURPLE': '1;4;38;5;89',
-    'BOLD_UNDERLINE_RED': '1;4;38;5;89',
-    'BOLD_UNDERLINE_WHITE': '1;4;38;5;186',
-    'BOLD_UNDERLINE_YELLOW': '1;4;38;5;95',
-    'BOLD_WHITE': '1;38;5;186',
-    'BOLD_YELLOW': '1;38;5;95',
-    'CYAN': '38;5;81',
-    'GREEN': '38;5;95',
-    'INTENSE_BLACK': '38;5;95',
-    'INTENSE_BLUE': '38;5;141',
-    'INTENSE_CYAN': '38;5;81',
-    'INTENSE_GREEN': '38;5;148',
-    'INTENSE_PURPLE': '38;5;141',
-    'INTENSE_RED': '38;5;197',
-    'INTENSE_WHITE': '38;5;15',
-    'INTENSE_YELLOW': '38;5;186',
-    'NO_COLOR': '0',
-    'PURPLE': '38;5;89',
-    'RED': '38;5;89',
-    'UNDERLINE_BLACK': '4;38;5;16',
-    'UNDERLINE_BLUE': '4;38;5;16',
-    'UNDERLINE_CYAN': '4;38;5;81',
-    'UNDERLINE_GREEN': '4;38;5;95',
-    'UNDERLINE_INTENSE_BLACK': '4;38;5;95',
-    'UNDERLINE_INTENSE_BLUE': '4;38;5;141',
-    'UNDERLINE_INTENSE_CYAN': '4;38;5;81',
-    'UNDERLINE_INTENSE_GREEN': '4;38;5;148',
-    'UNDERLINE_INTENSE_PURPLE': '4;38;5;141',
-    'UNDERLINE_INTENSE_RED': '4;38;5;197',
-    'UNDERLINE_INTENSE_WHITE': '4;38;5;15',
-    'UNDERLINE_INTENSE_YELLOW': '4;38;5;186',
-    'UNDERLINE_PURPLE': '4;38;5;89',
-    'UNDERLINE_RED': '4;38;5;89',
-    'UNDERLINE_WHITE': '4;38;5;186',
-    'UNDERLINE_YELLOW': '4;38;5;95',
-    'WHITE': '38;5;186',
-    'YELLOW': '38;5;95',
 }
 
 MURPHY_STYLE = {
