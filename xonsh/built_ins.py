@@ -253,12 +253,12 @@ def reglob(path, parts=None, i=None):
     if i1 == len(parts):
         for f in files:
             p = os.path.join(base, f)
-            if regex.match(p) is not None:
+            if regex.search(p) is not None:
                 paths.append(p)
     else:
         for f in files:
             p = os.path.join(base, f)
-            if regex.match(p) is None or not os.path.isdir(p):
+            if regex.search(p) is None or not os.path.isdir(p):
                 continue
             paths += reglob(p, parts=parts, i=i1)
     return paths
