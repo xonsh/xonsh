@@ -37,6 +37,8 @@ Current Developments
   capabilities.
 * New ``Token.Color`` token for xonsh color names, e.g. we now use
   ``Token.Color.RED`` rather than ``Token.RED``.
+* Untracked files in git are ignored when determining if a git workdir is 
+  is dirty. This affects the coloring of the branch label. 
 
 **Deprecated:** None
 

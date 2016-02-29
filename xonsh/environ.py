@@ -862,10 +862,13 @@ def current_branch(pad=True):
     return branch or ''
 
 
-@ensure_git
-def git_dirty_working_directory(cwd=None):
+def git_dirty_working_directory(cwd=None, include_untracked=False):
     try:
         cmd = ['git', 'status', '--porcelain']
+        if include_untracked:
+            cmd.append('--untracked-files=yes')
+        else:
+            cmd.append('--untracked-files=no')
         s = subprocess.check_output(cmd,
                                     stderr=subprocess.PIPE,
                                     cwd=cwd,

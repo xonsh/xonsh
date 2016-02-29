@@ -7,7 +7,12 @@ from __future__ import print_function, unicode_literals
 import os
 import sys
 import json
-from tempfile import TemporaryDirectory
+
+try:
+    from tempfile import TemporaryDirectory
+except ImportError:
+    pass
+
 try:
     from setuptools import setup
     from setuptools.command.sdist import sdist
