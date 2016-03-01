@@ -50,6 +50,11 @@ else:
     string_types = (str, unicode)
     unicode_type = unicode
 
+try:
+    import win_unicode_console
+except ImportError:
+    win_unicode_console = None
+    
 
 DEFAULT_ENCODING = sys.getdefaultencoding()
 
@@ -596,6 +601,16 @@ def to_completions_display_value(x):
     return x
 
 
+def setup_win_unicode_console(enable):
+    """"Enables or disables unicode display on windows."""
+    enable = to_bool(enable)
+    if ON_WINDOWS and win_unicode_console:
+        if enable:
+            win_unicode_console.enable()
+        else:
+            win_unicode_console.disable()
+    return enable
+    
 # history validation
 
 _min_to_sec = lambda x: 60.0 * float(x)

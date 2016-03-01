@@ -23,7 +23,7 @@ from xonsh.tools import (
     history_tuple_to_str, is_float, string_types, is_string, DEFAULT_ENCODING,
     is_completions_display_value, to_completions_display_value, is_string_set,
     csv_to_set, set_to_csv, get_sep, is_int, is_bool_seq, csv_to_bool_seq,
-    bool_seq_to_csv, DefaultNotGiven
+    bool_seq_to_csv, DefaultNotGiven, setup_win_unicode_console
 )
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
@@ -90,6 +90,7 @@ DEFAULT_ENSURERS = {
     'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
     'VI_MODE': (is_bool, to_bool, bool_to_str),
     'VIRTUAL_ENV': (is_string, ensure_string, ensure_string),
+    'WIN_UNICODE_CONSOLE': (always_false, setup_win_unicode_console, bool_to_str),
 }
 
 #
@@ -190,6 +191,7 @@ DEFAULT_VALUES = {
     'TEEPTY_PIPE_DELAY': 0.01,
     'TITLE': DEFAULT_TITLE,
     'VI_MODE': False,
+    'WIN_UNICODE_CONSOLE': True,
     'XDG_CONFIG_HOME': os.path.expanduser(os.path.join('~', '.config')),
     'XDG_DATA_HOME': os.path.expanduser(os.path.join('~', '.local', 'share')),
     'XONSHCONFIG': xonshconfig,
@@ -398,6 +400,10 @@ DEFAULT_DOCS = {
         "Flag to enable 'vi_mode' in the 'prompt_toolkit' shell."),
     'VIRTUAL_ENV': VarDocs(
         'Path to the currently active Python environment.', configurable=False),
+    'WIN_UNICODE_CONSOLE': VarDocs(
+        "Enables unicode support in windows terminals. Requires the external "
+        "library 'win_unicode_console'.",
+        configurable=ON_WINDOWS),
     'XDG_CONFIG_HOME': VarDocs(
         'Open desktop standard configuration home dir. This is the same '
         'default as used in the standard.', configurable=False,
