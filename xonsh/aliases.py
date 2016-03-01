@@ -191,6 +191,7 @@ def vox(args, stdin=None):
     vox = Vox()
     return vox(args, stdin=stdin)
 
+@foreground
 def mpl(args, stdin=None):
     """Hooks to matplotlib"""
     from xonsh.mplhooks import show
