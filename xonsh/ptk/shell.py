@@ -9,6 +9,7 @@ from prompt_toolkit.layout.lexers import PygmentsLexer
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.styles import PygmentsStyle
 from pygments.style import Style
+from pygments.styles import get_all_styles
 from pygments.styles.default import DefaultStyle
 from pygments.token import (Keyword, Name, Comment, String, Error, Number,
                             Operator, Generic, Whitespace, Token)
@@ -153,7 +154,7 @@ class PromptToolkitShell(BaseShell):
         _width = width - 1
         dots = _width // len(dots) * dots + dots[:_width % len(dots)]
         return [(Token, dots + ' ')]
-    
+
     def format_color(self, string, **kwargs):
         """Formats a color string using Pygments. This, therefore, returns
         a list of (Token, str) tuples.
@@ -162,12 +163,22 @@ class PromptToolkitShell(BaseShell):
 
     def print_color(self, string, end='\n', **kwargs):
         """Prints a color string using prompt-toolkit color management."""
+        env = builtins.__xonsh_env__
+        self.styler.style_name = env.get('XONSH_COLOR_STYLE')
         if isinstance(string, str):
             tokens = partial_color_tokenize(string + end)
         else:
             # assume this is a list of (Token, str) tuples and just print
             tokens = string
-        env = builtins.__xonsh_env__
-        self.styler.style_name = env.get('XONSH_COLOR_STYLE')
         proxy_style = PygmentsStyle(xonsh_style_proxy(self.styler))
         print_tokens(tokens, style=proxy_style)
+
+    def color_style_names(self):
+        """Returns an iterable of all available style names."""
+        return get_all_styles()
+
+    def color_style(self):
+        """Returns the current color map."""
+        env = builtins.__xonsh_env__
+        self.styler.style_name = env.get('XONSH_COLOR_STYLE')
+        return self.styler.styles
