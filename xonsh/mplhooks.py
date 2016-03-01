@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-from xonsh.tools import print_color
+from xonsh.tools import print_color, ON_WINDOWS
 
 def figure_to_rgb_array(fig, width, height):
     """Converts figure to a numpy array of rgb values
@@ -57,6 +57,8 @@ def buf_to_color_str(buf):
 def show():
     fig = plt.gcf()
     w, h = shutil.get_terminal_size()
+    if ON_WINDOWS:
+        w -= 1  # @melund reports that win terminals are too thin
     h -= 1  # leave space for next prompt
     buf = figure_to_rgb_array(fig, w, h)
     s = buf_to_color_str(buf)

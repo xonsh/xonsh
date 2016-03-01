@@ -270,3 +270,11 @@ class BaseShell(object):
         if not isinstance(string, str):
             string = ''.join([x for _, x in string])
         print(string, **kwargs)
+
+    def color_style_names(self):
+        """Returns an iterable of all available style names."""
+        return ()
+
+    def color_style(self):
+        """Returns the current color map."""
+        return {}

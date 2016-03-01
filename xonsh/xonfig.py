@@ -2,9 +2,11 @@
 import os
 import ast
 import json
+import shutil
 import textwrap
-import  builtins
+import builtins
 import functools
+import itertools
 from pprint import pformat
 from argparse import ArgumentParser
 
@@ -261,6 +263,76 @@ def _info(ns):
     return s
 
 
+def _styles(ns):
+    env = builtins.__xonsh_env__
+    curr = env.get('XONSH_COLOR_STYLE')
+    styles = sorted(tools.color_style_names())
+    if ns.json:
+        s = json.dumps(styles, sort_keys=True, indent=1)
+        print(s)
+        return
+    lines = []
+    for style in styles:
+        if style == curr:
+            lines.append('* {GREEN}' + style + '{NO_COLOR}')
+        else:
+            lines.append('  ' + style)
+    s = '\n'.join(lines)
+    tools.print_color(s)
+
+
+def _str_colors(cmap, cols):
+    color_names = sorted(cmap.keys(), key=(lambda s: (len(s), s)))
+    grper = lambda s: min(cols // (len(s) + 1), 8)
+    lines = []
+    for n, group in itertools.groupby(color_names, key=grper):
+        width = cols // n
+        line = ''
+        for i, name in enumerate(group):
+            buf = ' ' * (width - len(name))
+            line += '{' + name + '}' + name + '{NO_COLOR}' + buf
+            if (i+1)%n == 0:
+                lines.append(line)
+                line = ''
+        if len(line) != 0:
+            lines.append(line)
+    return '\n'.join(lines)
+
+def _tok_colors(cmap, cols):
+    from xonsh.pyghooks import Color
+    nc = Color.NO_COLOR
+    names_toks = {}
+    for t in cmap.keys():
+        name = str(t)
+        if name.startswith('Token.Color.'):
+            _, _, name = name.rpartition('.')
+        names_toks[name] = t
+    color_names = sorted(names_toks.keys(), key=(lambda s: (len(s), s)))
+    grper = lambda s: min(cols // (len(s) + 1), 8)
+    toks = []
+    for n, group in itertools.groupby(color_names, key=grper):
+        width = cols // n
+        for i, name in enumerate(group):
+            toks.append((names_toks[name], name))
+            buf = ' ' * (width - len(name))
+            if (i+1)%n == 0:
+                buf += '\n'
+            toks.append((nc, buf))
+        if not toks[-1][1].endswith('\n'):
+            toks[-1] = (nc, toks[-1][1] + '\n')
+    return toks
+
+def _colors(ns):
+    cols, _ = shutil.get_terminal_size()
+    cmap = tools.color_style()
+    akey = next(iter(cmap))
+    if isinstance(akey, str):
+        s = _str_colors(cmap, cols)
+    else:
+        s = _tok_colors(cmap, cols)
+    tools.print_color(s)
+
+
 @functools.lru_cache()
 def _create_parser():
     p = ArgumentParser(prog='xonfig',
@@ -276,12 +348,19 @@ def _create_parser():
                      help='config file location, default=$XONSHCONFIG')
     wiz.add_argument('--confirm', action='store_true', default=False,
                       help='confirm that the wizard should be run.')
+    sty = subp.add_parser('styles', help='prints available xonsh color styles')
+    sty.add_argument('--json', action='store_true', default=False,
+                     help='reports results as json')
+    clrs = subp.add_parser('colors', help=('displays the color palette for '
+                                           'the current xonsh color style'))
     return p
 
 
 _MAIN_ACTIONS = {
     'info': _info,
     'wizard': _wizard,
+    'styles': _styles,
+    'colors': _colors,
     }
 
 def main(args=None):
