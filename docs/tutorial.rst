@@ -419,10 +419,10 @@ You should be able to find information on StackOverflow or Google.
 Logical Subprocess And
 =======================
 
-Subprocess-mode also allows you to use the ``and`` operator to chain together 
-subprocess commands. The truth value of a command is evaluates as whether
-its return code is zero (i.e. ``proc.returncode == 0``).  Like in Python, 
-if the a command evaluates to ``False``, subsequent commands will not be executed.
+Subprocess-mode also allows you to use the ``and`` operator to chain together
+subprocess commands. The truth value of a command is evaluated as whether
+its return code is zero (i.e. ``proc.returncode == 0``).  Like in Python,
+if the command evaluates to ``False``, subsequent commands will not be executed.
 For example, suppose we want to lists files that may or may not exist:
 
 .. code-block:: xonshcon
@@ -432,12 +432,12 @@ For example, suppose we want to lists files that may or may not exist:
     exists
     /bin/ls: cannot access doesnt: No such file or directory
 
-However, if you list the file that doesn't exist first, 
+However, if you list the file that doesn't exist first,
 you would have only seen the error:
 
 .. code-block:: xonshcon
 
-    >>> ls doesnt and ls exists 
+    >>> ls doesnt and ls exists
     /bin/ls: cannot access doesnt: No such file or directory
 
 Also, don't worry. Xonsh directly translates the ``&&`` operator into ``and``
@@ -446,8 +446,8 @@ for you. It is less Pythonic, of course, but it is your shell!
 Logical Subprocess Or
 =======================
 
-Much like with ``and``, you can use the ``or`` operator to chain together 
-subprocess commands. The difference, to be certain, is that 
+Much like with ``and``, you can use the ``or`` operator to chain together
+subprocess commands. The difference, to be certain, is that
 subsequent commands will be executed only if the
 if the return code is non-zero (i.e. a failure). Using the file example
 from above:
@@ -458,12 +458,12 @@ from above:
     exists
 
 This doesn't even try to list a non-existent file!
-However, if you list the file that doesn't exist first, 
+However, if you list the file that doesn't exist first,
 you will see the error and then the file that does exist:
 
 .. code-block:: xonshcon
 
-    >>> ls doesnt or ls exists 
+    >>> ls doesnt or ls exists
     /bin/ls: cannot access doesnt: No such file or directory
     exists
 
@@ -884,11 +884,11 @@ built-in mapping.  Here is an example using a function value:
     >>> banana
     'My spoon is tooo big!'
 
-Usually, callable alias commands will be run in a separate thread so that 
-users may background them interactively. However, some aliases may need to be 
+Usually, callable alias commands will be run in a separate thread so that
+users may background them interactively. However, some aliases may need to be
 executed on the thread that they were called from. This is mostly useful for debuggers
 and profilers. To make an alias run in the foreground, decorate its function
-with the ``xonsh.proc.foreground`` decorator. 
+with the ``xonsh.proc.foreground`` decorator.
 
 .. code-block:: python
 
@@ -950,10 +950,10 @@ You can also color your prompt easily by inserting keywords such as ``{GREEN}``
 or ``{BOLD_BLUE}``.  Colors have the form shown below:
 
 * ``NO_COLOR``: Resets any previously used color codes
-* ``COLORNAME``: Inserts a color code for the following basic colors, 
+* ``COLORNAME``: Inserts a color code for the following basic colors,
   which come in regular (dark) and intense (light) forms:
 
-    - ``BLACK`` or ``INTENSE_BLACK`` 
+    - ``BLACK`` or ``INTENSE_BLACK``
     - ``RED`` or ``INTENSE_RED``
     - ``GREEN`` or ``INTENSE_GREEN``
     - ``YELLOW`` or ``INTENSE_YELLOW``
@@ -962,8 +962,8 @@ or ``{BOLD_BLUE}``.  Colors have the form shown below:
     - ``CYAN`` or ``INTENSE_CYAN``
     - ``WHITE`` or ``INTENSE_WHITE``
 
-* ``#HEX``: A ``#`` before a len-3 or len-6 hex code will use that 
-  hex color, or the nearest approximation that that is supported by 
+* ``#HEX``: A ``#`` before a len-3 or len-6 hex code will use that
+  hex color, or the nearest approximation that that is supported by
   the shell and terminal.  For example, ``#fff`` and ``#fafad2`` are
   both valid.
 * ``BACKGROUND_`` may be added to the begining of a color name or hex
@@ -973,10 +973,10 @@ or ``{BOLD_BLUE}``.  Colors have the form shown below:
   Thus you can set ``bg#0012ab`` or the uppercase version.
 * ``BOLD_`` is a prefix qualifier that may be used with any foreground color.
   For example, ``BOLD_RED`` and ``BOLD_#112233`` are OK!
-* ``UNDERLINE_`` is a prefix qualifier that also may be used with any 
+* ``UNDERLINE_`` is a prefix qualifier that also may be used with any
   foreground color. For example, ``UNDERLINE_GREEN``.
-* Or any other combination of qualifiers, such as 
-  ``BOLD_UNDERLINE_INTENSE_BLACK``,   which is the most metal color you 
+* Or any other combination of qualifiers, such as
+  ``BOLD_UNDERLINE_INTENSE_BLACK``,   which is the most metal color you
   can use!
 
 You can make use of additional variables beyond these by adding them to the
@@ -1108,13 +1108,13 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
     bash $ echo @(' '.join($(cat @('file%d.txt' % i)).strip() for i in range(6)))
     s n a i l s
 
-Additionally, if the script should exit if a command fails, set the 
-environment variable ``$RAISE_SUBPROC_ERROR = True`` at the top of the 
-file. Errors in Python mode will already raise exceptions and so this 
+Additionally, if the script should exit if a command fails, set the
+environment variable ``$RAISE_SUBPROC_ERROR = True`` at the top of the
+file. Errors in Python mode will already raise exceptions and so this
 is roughly equivalent to Bash's ``set -e``.
 
 Furthermore, you can also toggle the ability to print source code lines with the
-``trace on`` and ``trace off`` commands.  This is roughly equivelent to 
+``trace on`` and ``trace off`` commands.  This is roughly equivelent to
 Bash's ``set -x`` or Python's ``python -m trace``, but you know, better.
 
 Importing Xonsh (``*.xsh``)
