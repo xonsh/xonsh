@@ -171,7 +171,7 @@ def premain(argv=None):
         env['XONSH_LOGIN'] = True
     env['XONSH_INTERACTIVE'] = False
     if ON_WINDOWS:
-        setup_win_unicode_console(env['WIN_UNICODE_CONSOLE'])
+        setup_win_unicode_console(env.get('WIN_UNICODE_CONSOLE', True))
     return args
 
 
