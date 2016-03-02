@@ -189,7 +189,7 @@ class Execer(object):
                                        returnline=True,
                                        maxcol=maxcol,
                                        lexer=self.parser.lexer)
-                if line.startswith('$[$['):
+                if sbpline.startswith('$[$['):
                     # if we have already wrapped this in subproc tokens
                     # and it still doesn't work, adding more won't help
                     # anything
