@@ -527,7 +527,8 @@ def _finish_subproc(prev_proc, prev_is_proxy, captured, aliased_cmd,
     output = _proc_output(prev_proc, accumulated_output)
     if not captured:
         hist.last_cmd_out = output
-    if not prev_is_proxy and hist.last_cmd_rtn > 0 and env.get('RAISE_SUBPROC_ERROR'):
+    if not prev_is_proxy and hist.last_cmd_rtn is not None and \
+            hist.last_cmd_rtn > 0 and env.get('RAISE_SUBPROC_ERROR'):
         raise CalledProcessError(hist.last_cmd_rtn, aliased_cmd, output=output)
     if captured:
         return output
