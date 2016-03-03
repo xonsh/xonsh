@@ -1728,7 +1728,7 @@ class BaseParser(object):
         """atom : DOLLAR_NAME"""
         p[0] = self._envvar_by_name(p[1][1:], lineno=self.lineno, col=self.col)
 
-    def p_atom_fisful_of_dollars(self, p):
+    def p_atom_fistful_of_dollars(self, p):
         """atom : dollar_lbrace_tok test RBRACE
                 | dollar_lparen_tok subproc RPAREN
                 | question_lparen_tok subproc RPAREN
