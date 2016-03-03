@@ -237,7 +237,8 @@ class BaseParser(object):
                      'at', 'lshift', 'rshift', 'pipe', 'xor', 'ampersand',
                      'for', 'colon', 'import', 'except', 'nonlocal', 'global',
                      'yield', 'from', 'raise', 'with', 'dollar_lparen',
-                     'dollar_lbrace', 'dollar_lbracket', 'try']
+                     'dollar_lbrace', 'dollar_lbracket', 'try',
+                     'question_lparen']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -2150,10 +2151,18 @@ class BaseParser(object):
         p0._cliarg_action = 'splitlines'
         p[0] = p0
 
-    def p_subproc_atom_captured(self, p):
+    def p_subproc_atom_captured_stdout(self, p):
         """subproc_atom : dollar_lparen_tok subproc RPAREN"""
         p1 = p[1]
-        p0 = xonsh_call('__xonsh_subproc_captured__', args=p[2],
+        p0 = xonsh_call('__xonsh_subproc_captured_stdout__', args=p[2],
+                        lineno=p1.lineno, col=p1.lexpos)
+        p0._cliarg_action = 'splitlines'
+        p[0] = p0
+
+    def p_subproc_atom_captured_object(self, p):
+        """subproc_atom : question_lparen_tok subproc RPAREN"""
+        p1 = p[1]
+        p0 = xonsh_call('__xonsh_subproc_captured_object__', args=p[2],
                         lineno=p1.lineno, col=p1.lexpos)
         p0._cliarg_action = 'splitlines'
         p[0] = p0
