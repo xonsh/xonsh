@@ -635,12 +635,10 @@ def run_subproc(cmds, captured=True):
             output = output.replace('\r\n', '\n')
         else:
             hist.last_cmd_out = output
-    if not prev_is_proxy and prev_proc.returncode > 0 and ENV.get('RAISE_SUBPROC_ERROR'):
+    if not prev_is_proxy and hist.last_cmd_rtn > 0 and ENV.get('RAISE_SUBPROC_ERROR'):
         raise CalledProcessError(hist.last_cmd_rtn, aliased_cmd, output=output)
     if captured:
         return output
-    else:
-        return prev_proc.returncode
 
 
 def subproc_captured(*cmds):
@@ -651,20 +649,10 @@ def subproc_captured(*cmds):
 
 
 def subproc_uncaptured(*cmds):
-    """
-    Runs a subprocess, without capturing the output. Returns the return code
-    of the command that was run.
+    """Runs a subprocess, without capturing the output. Returns the stdout
+    that was produced as a str.
     """
     return run_subproc(cmds, captured=False)
-
-
-def subproc_noreturn(*cmds):
-    """
-    Runs a subprocess, without capturing the output. Always returns
-    ``None``.
-    """
-    run_subproc(cmds, captured=False)
-    return None
 
 
 def ensure_list_of_strs(x):
@@ -702,7 +690,6 @@ def load_builtins(execer=None, config=None):
         del builtins.quit
     builtins.__xonsh_subproc_captured__ = subproc_captured
     builtins.__xonsh_subproc_uncaptured__ = subproc_uncaptured
-    builtins.__xonsh_subproc_noreturn__ = subproc_noreturn
     builtins.__xonsh_execer__ = execer
     builtins.__xonsh_all_jobs__ = {}
     builtins.__xonsh_active_job__ = None
@@ -752,7 +739,6 @@ def unload_builtins():
              '__xonsh_pyquit__',
              '__xonsh_subproc_captured__',
              '__xonsh_subproc_uncaptured__',
-             '__xonsh_subproc_noreturn__',
              '__xonsh_execer__',
              'evalx',
              'execx',

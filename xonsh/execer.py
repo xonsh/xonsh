@@ -123,9 +123,7 @@ class Execer(object):
                                 stacklevel=stacklevel)
         if code is None:
             return None  # handles comment only input
-        e = exec(code, glbs, locs)
-        self.ctxtransformer.forced_subproc = False
-        return e
+        return exec(code, glbs, locs)
 
     def _find_next_break(self, line, mincol):
         if mincol >= 1:
@@ -192,7 +190,6 @@ class Execer(object):
                     # and it still doesn't work, adding more won't help
                     # anything
                     raise original_error
-                self.ctxtransformer.forced_subproc = True
                 sbpline = subproc_toks(line,
                                        returnline=True,
                                        maxcol=maxcol,

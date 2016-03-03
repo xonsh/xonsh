@@ -91,7 +91,6 @@ class CtxAwareTransformer(NodeTransformer):
         self.contexts = []
         self.lines = None
         self.mode = None
-        self.forced_subproc = False
 
     def ctxvisit(self, node, inp, ctx, mode='exec'):
         """Transforms the node in a context-dependent way.
@@ -138,10 +137,9 @@ class CtxAwareTransformer(NodeTransformer):
         if self.mode == 'eval':
             mincol = len(line) - len(line.lstrip())
             maxcol = None
-        else:
+        else: 
             mincol = min_col(node)
             maxcol = max_col(node) + 1
-        self.forced_subproc = True
         spline = subproc_toks(line,
                               mincol=mincol,
                               maxcol=maxcol,
@@ -177,16 +175,11 @@ class CtxAwareTransformer(NodeTransformer):
         inscope = self.is_in_scope(body)
         if not inscope:
             node.body = self.try_subproc_toks(body)
-            if isinstance(node.body, list):
-                node.body[0] = self.visit(node.body[0])
-            else:
-                node.body = self.visit(node.body)
         return node
 
     def visit_Expr(self, node):
         """Handle visiting an expression."""
         if self.is_in_scope(node):
-            node.value = self.visit(node.value)
             return node
         else:
             newnode = self.try_subproc_toks(node)
@@ -197,16 +190,7 @@ class CtxAwareTransformer(NodeTransformer):
                 if hasattr(node, 'max_lineno'):
                     newnode.max_lineno = node.max_lineno
                     newnode.max_col = node.max_col
-            newnode.value = self.visit(newnode.value)
             return newnode
-
-    def visit_Call(self, node):
-        if (isinstance(node.func, Name) and
-                node.func.id == '__xonsh_subproc_uncaptured__' and
-                self.forced_subproc):
-            node.func.id = '__xonsh_subproc_noreturn__'
-            self.forced_subproc = False
-        return node
 
     def visit_Assign(self, node):
         """Handle visiting an assignment statement."""
@@ -216,7 +200,6 @@ class CtxAwareTransformer(NodeTransformer):
                 ups.update(leftmostname(elt) for elt in targ.elts)
             elif isinstance(targ, BinOp):
                 newnode = self.try_subproc_toks(node)
-                newnode = self.visit(newnode)
                 if newnode is node:
                     ups.add(leftmostname(targ))
                 else:
@@ -325,6 +308,6 @@ def pdump(s, **kwargs):
     if '(' in post or '[' in post or '{' in post:
         post = pdump(post)
     return pre + mid + post
-
+    
 
 
