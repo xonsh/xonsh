@@ -1731,6 +1731,7 @@ class BaseParser(object):
     def p_atom_fisful_of_dollars(self, p):
         """atom : dollar_lbrace_tok test RBRACE
                 | dollar_lparen_tok subproc RPAREN
+                | question_lparen_tok subproc RPAREN
                 | dollar_lbracket_tok subproc RBRACKET
         """
         p[0] = self._dollar_rules(p)
@@ -2038,7 +2039,10 @@ class BaseParser(object):
             p0 = ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
                                lineno=lineno, col_offset=col)
         elif p1 == '$(':
-            p0 = xonsh_call('__xonsh_subproc_captured__', p2,
+            p0 = xonsh_call('__xonsh_subproc_captured_stdout__', p2,
+                            lineno=lineno, col=col)
+        elif p1 == '?(':
+            p0 = xonsh_call('__xonsh_subproc_captured_object__', p2,
                             lineno=lineno, col=col)
         elif p1 == '$[':
             p0 = xonsh_call('__xonsh_subproc_uncaptured__', p2,
