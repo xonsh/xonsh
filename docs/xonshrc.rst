@@ -15,5 +15,35 @@ at startup. The following is a real-world example of such a file.
     :code: xonsh
 
 
+Snippets for xonshrc
+=========================
+The following are usefull snippets and code that tweaks and adjust xonsh in various ways.
+If you have any useful tricks, feel free to share them. 
 
-    
+Adjust how git branch label behaves
+---------------------------------
+Xonsh adds a colored branch name to the prompt when working with git or hg repositories. 
+This behavior can be controlled with the ``$PROMPT`` environment variable. See how to `customize the prompt`_ . 
+The branch name changes color if the work dir is dirty or not. This is controlled by the ``{branch_color}`` formatter string. 
+
+
+The following snippet reimplements the formatter also to include untracked files when considering if a git directory is dirty. 
+
+.. code-block:: xonshcon
+
+    >>> from xonsh.environ import git_dirty_working_directory
+    >>> $FORMATTER_DICT['branch_color'] = lambda: ('{BOLD_INTENSE_RED}'
+                                                   if git_dirty_working_directory(include_untracked=True)
+                                                   else '{BOLD_INTENSE_GREEN}')
+
+                                                   
+.. _customize the prompt: http://xon.sh/tutorial.html#customizing-the-prompt
+
+
+Get better colors from the ``ls`` command
+----------------------------------------------
+The colors of the ``ls`` command may be hard to read in a dark terminal. If so, this is an excellent addition to the xonshrc file. 
+
+.. code-block:: xonshcon
+
+    >>> $LS_COLORS='rs=0:di=01;36:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:'

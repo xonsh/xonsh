@@ -708,6 +708,17 @@ def print_color(string, **kwargs):
     builtins.__xonsh_shell__.shell.print_color(string, **kwargs)
 
 
+def color_style_names():
+    """Returns an iterable of all available style names."""
+    return builtins.__xonsh_shell__.shell.color_style_names()
+
+
+def color_style():
+    """Returns the current color map."""
+    return builtins.__xonsh_shell__.shell.color_style()
+
+
+
 _RE_STRING_START = "[bBrRuU]*"
 _RE_STRING_TRIPLE_DOUBLE = '"""'
 _RE_STRING_TRIPLE_SINGLE = "'''"

@@ -182,7 +182,7 @@ DEFAULT_VALUES = {
     'PUSHD_MINUS': False,
     'PUSHD_SILENT': False,
     'RAISE_SUBPROC_ERROR': False,
-    'RIGHT_PROMPT': '', 
+    'RIGHT_PROMPT': '',
     'SHELL_TYPE': 'best',
     'SUGGEST_COMMANDS': True,
     'SUGGEST_MAX_NUM': 5,
@@ -230,7 +230,7 @@ VarDocs.__new__.__defaults__ = (True, DefaultNotGiven)  # iterates from back
 # Please keep the following in alphabetic order - scopatz
 DEFAULT_DOCS = {
     'ANSICON': VarDocs('This is used on Windows to set the title, '
-                       'if available.', configurable=ON_WINDOWS),
+                       'if available.', configurable=False),
     'AUTO_CD': VarDocs(
         'Flag to enable changing to a directory by entering the dirname or '
         'full path only (without the cd command).'),
@@ -862,16 +862,19 @@ def current_branch(pad=True):
     return branch or ''
 
 
-@ensure_git
-def git_dirty_working_directory(cwd=None):
+def git_dirty_working_directory(cwd=None, include_untracked=False):
     try:
         cmd = ['git', 'status', '--porcelain']
+        if include_untracked:
+            cmd.append('--untracked-files=yes')
+        else:
+            cmd.append('--untracked-files=no')
         s = subprocess.check_output(cmd,
                                     stderr=subprocess.PIPE,
                                     cwd=cwd,
                                     universal_newlines=True)
         if len(s) == 0:
-            # Workaround for a bug in ConEMU/cmder 
+            # Workaround for a bug in ConEMU/cmder
             # retry without redirection
             s = subprocess.check_output(cmd,
                                         cwd=cwd,
