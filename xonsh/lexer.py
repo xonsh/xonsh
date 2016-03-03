@@ -211,6 +211,10 @@ def handle_question(state, token, stream):
             n.string == '?' and n.start == token.end:
         state['last'] = n
         yield _new_token('DOUBLE_QUESTION', '??', token.start)
+    elif (n is not None and n.type == tokenize.OP
+            and n.string == '(' and n.start == token.end):
+        state['last'] = n
+        yield _new_token('QUESTION_LPAREN', '?(', token.start)
     else:
         state['last'] = token
         yield _new_token('QUESTION', '?', token.start)
