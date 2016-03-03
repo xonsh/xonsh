@@ -654,6 +654,11 @@ class CompletedProcess:
     def __eq__(self, other):
         return self.proc.returncode == other
 
+    def __getattr__(self, attr):
+        if hasattr(self.proc, attr):
+            return getattr(self.proc, attr)
+        raise AttributeError('CompletedProcess instance has no attribute: %r' % attr)
+
 
 def subproc_captured_stdout(*cmds):
     """Runs a subprocess, capturing the output. Returns the stdout
