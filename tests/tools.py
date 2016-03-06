@@ -34,7 +34,7 @@ class DummyBaseShell(BaseShell):
 
 
 class DummyShell:
-    def settitle():
+    def settitle(self):
         pass
 
     _shell = None

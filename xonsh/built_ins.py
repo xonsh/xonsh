@@ -468,7 +468,7 @@ def _redirect_io(streams, r, loc=None):
         raise XonshError('Unrecognized redirection command: {}'.format(r))
 
 
-def run_subproc(cmds, captured=True):
+def run_subproc(cmds, captured=False):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
     which may be a list of command line arguments or a string, representing
     a special connecting character.  For example::
@@ -637,15 +637,41 @@ def run_subproc(cmds, captured=True):
             hist.last_cmd_out = output
     if not prev_is_proxy and hist.last_cmd_rtn > 0 and ENV.get('RAISE_SUBPROC_ERROR'):
         raise CalledProcessError(hist.last_cmd_rtn, aliased_cmd, output=output)
-    if captured:
+    if captured=='stdout':
         return output
+    elif captured=='object':
+        return CompletedProcess(prev_proc, output)
 
 
-def subproc_captured(*cmds):
+class CompletedProcess:
+    def __init__(self, proc, output=''):
+        self.output = output
+        self.proc = proc
+
+    def __bool__(self):
+        return self.proc.returncode == 0
+
+    def __eq__(self, other):
+        return self.proc.returncode == other
+
+    def __getattr__(self, attr):
+        if hasattr(self.proc, attr):
+            return getattr(self.proc, attr)
+        raise AttributeError('CompletedProcess instance has no attribute: %r' % attr)
+
+
+def subproc_captured_stdout(*cmds):
     """Runs a subprocess, capturing the output. Returns the stdout
     that was produced as a str.
     """
-    return run_subproc(cmds, captured=True)
+    return run_subproc(cmds, captured='stdout')
+
+
+def subproc_captured_object(*cmds):
+    """Runs a subprocess, capturing the output. Returns the stdout
+    that was produced as a str.
+    """
+    return run_subproc(cmds, captured='object')
 
 
 def subproc_uncaptured(*cmds):
@@ -688,7 +714,8 @@ def load_builtins(execer=None, config=None):
     if hasattr(builtins, 'quit'):
         builtins.__xonsh_pyquit__ = builtins.quit
         del builtins.quit
-    builtins.__xonsh_subproc_captured__ = subproc_captured
+    builtins.__xonsh_subproc_captured_stdout__ = subproc_captured_stdout
+    builtins.__xonsh_subproc_captured_object__ = subproc_captured_object
     builtins.__xonsh_subproc_uncaptured__ = subproc_uncaptured
     builtins.__xonsh_execer__ = execer
     builtins.__xonsh_all_jobs__ = {}
@@ -737,7 +764,8 @@ def unload_builtins():
              '__xonsh_stderr_uncaptured__',
              '__xonsh_pyexit__',
              '__xonsh_pyquit__',
-             '__xonsh_subproc_captured__',
+             '__xonsh_subproc_captured_stdout__',
+             '__xonsh_subproc_captured_object__',
              '__xonsh_subproc_uncaptured__',
              '__xonsh_execer__',
              'evalx',
