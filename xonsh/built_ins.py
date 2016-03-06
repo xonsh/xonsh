@@ -26,8 +26,8 @@ from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env, locate_binary
 from xonsh.aliases import DEFAULT_ALIASES
 from xonsh.jobs import add_job, wait_for_active_job
-from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy, 
-    SimpleForegroundProcProxy,TeePTYProc)
+from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
+    SimpleForegroundProcProxy, TeePTYProc, make_completed_process)
 from xonsh.history import History
 from xonsh.foreign_shells import load_foreign_aliases
 
@@ -405,7 +405,7 @@ def _redirect_io(streams, r, loc=None):
     if r.replace('&', '') in _E2O_MAP:
         if 'stderr' in streams:
             raise XonshError('Multiple redirects for stderr')
-        streams['stderr'] = STDOUT
+        streams['stderr'] = ('<stdout>', 'a', STDOUT)
         return
 
     orig, mode, dest = _REDIR_REGEX.match(r).groups()
@@ -432,7 +432,7 @@ def _redirect_io(streams, r, loc=None):
         elif 'stdin' in streams:
             raise XonshError('Multiple inputs for stdin')
         else:
-            streams['stdin'] = _open(loc, mode)
+            streams['stdin'] = (loc, 'r', _open(loc, mode))
     elif mode in _WRITE_MODES:
         if orig in _REDIR_ALL:
             if 'stderr' in streams:
@@ -462,7 +462,7 @@ def _redirect_io(streams, r, loc=None):
 
         f = _open(loc, mode)
         for t in targets:
-            streams[t] = f
+            streams[t] = (loc, mode, f)
 
     else:
         raise XonshError('Unrecognized redirection command: {}'.format(r))
@@ -483,6 +483,7 @@ def run_subproc(cmds, captured=False):
     """
     global ENV
     background = False
+    procinfo = {}
     if cmds[-1] == '&':
         background = True
         cmds = cmds[:-1]
@@ -491,6 +492,7 @@ def run_subproc(cmds, captured=False):
     procs = []
     prev_proc = None
     for ix, cmd in enumerate(cmds):
+        procinfo['args'] = list(cmd)
         stdin = None
         stderr = None
         if isinstance(cmd, string_types):
@@ -512,14 +514,16 @@ def run_subproc(cmds, captured=False):
         if 'stdin' in streams:
             if prev_proc is not None:
                 raise XonshError('Multiple inputs for stdin')
-            stdin = streams['stdin']
+            stdin = streams['stdin'][-1]
+            procinfo['stdin_redirect'] = streams['stdin'][:-1]
         elif prev_proc is not None:
             stdin = prev_proc.stdout
         # set standard output
         if 'stdout' in streams:
             if ix != last_cmd:
                 raise XonshError('Multiple redirects for stdout')
-            stdout = streams['stdout']
+            stdout = streams['stdout'][-1]
+            procinfo['stdout_redirect'] = streams['stdout'][:-1]
         elif captured or ix != last_cmd:
             stdout = PIPE
         elif builtins.__xonsh_stdout_uncaptured__ is not None:
@@ -528,11 +532,15 @@ def run_subproc(cmds, captured=False):
             stdout = None
         # set standard error
         if 'stderr' in streams:
-            stderr = streams['stderr']
+            stderr = streams['stderr'][-1]
+            procinfo['stderr_redirect'] = streams['stderr'][:-1]
+        elif captured == 'object':
+            stderr = PIPE
         elif builtins.__xonsh_stderr_uncaptured__ is not None:
             stderr = builtins.__xonsh_stderr_uncaptured__
         uninew = (ix == last_cmd) and (not captured)
         alias = builtins.aliases.get(cmd[0], None)
+        procinfo['alias'] = alias
         if (alias is None
             and builtins.__xonsh_env__.get('AUTO_CD')
             and len(cmd) == 1
@@ -635,29 +643,22 @@ def run_subproc(cmds, captured=False):
             output = output.replace('\r\n', '\n')
         else:
             hist.last_cmd_out = output
+        if captured == 'object' and prev_proc.stderr not in {None, sys.stderr}:
+            errout = prev_proc.stderr.read()
+            errout = errout.decode(encoding=ENV.get('XONSH_ENCODING'),
+                                   errors=ENV.get('XONSH_ENCODING_ERRORS'))
+            errout = errout.replace('\r\n', '\n')
+            procinfo['stderr'] = errout
+
     if not prev_is_proxy and hist.last_cmd_rtn > 0 and ENV.get('RAISE_SUBPROC_ERROR'):
         raise CalledProcessError(hist.last_cmd_rtn, aliased_cmd, output=output)
     if captured=='stdout':
         return output
     elif captured=='object':
-        return CompletedProcess(prev_proc, output)
-
-
-class CompletedProcess:
-    def __init__(self, proc, output=''):
-        self.output = output
-        self.proc = proc
-
-    def __bool__(self):
-        return self.proc.returncode == 0
-
-    def __eq__(self, other):
-        return self.proc.returncode == other
-
-    def __getattr__(self, attr):
-        if hasattr(self.proc, attr):
-            return getattr(self.proc, attr)
-        raise AttributeError('CompletedProcess instance has no attribute: %r' % attr)
+        procinfo['pid'] = prev_proc.pid
+        procinfo['returncode'] = prev_proc.returncode
+        procinfo['stdout'] = output
+        return make_completed_process(**procinfo)
 
 
 def subproc_captured_stdout(*cmds):
