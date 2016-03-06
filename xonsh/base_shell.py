@@ -216,8 +216,7 @@ class BaseShell(object):
             t = escape_windows_title_string(t)
             os.system('title {}'.format(t))
         else:
-            sys.stdout.write("\x1b]2;{0}\x07".format(t))
-            sys.stdout.flush()
+            os.write(1, "\x1b]2;{0}\x07".format(t).encode())
 
     @property
     def prompt(self):
