@@ -14,7 +14,7 @@ import time
 import builtins
 from functools import wraps
 from threading import Thread
-from collections import Sequence
+from collections import Sequence, namedtuple
 from subprocess import Popen, PIPE, DEVNULL, STDOUT, TimeoutExpired
 
 from xonsh.tools import (redirect_stdout, redirect_stderr, ON_WINDOWS, ON_LINUX,
@@ -528,3 +528,27 @@ def _wcode_to_popen(code):
     else:
         # Can this happen? Let's find out. Returning None is not an option.
         raise ValueError("Invalid os.wait code: {}".format(code))
+
+
+CPTuple = namedtuple("CPTuple", ["stdin",
+                                 "stdout",
+                                 "stderr",
+                                 "returncode",
+                                 "args",
+                                 "mode",
+                                 "function",
+                                 "stdin_redir",
+                                 "stdout_redir",
+                                 "stderr_redir",
+                                 "alias",
+                                 "pid"])
+
+class CompletedProcess(CPTuple):
+    def __bool__(self):
+        return self.returncode == 0
+
+    def __eq__(self, other):
+        return self.returncode == other
+
+def make_completed_process(**kwargs):
+    return CompletedProcess(*(kwargs.get(i, None) for i in CPTuple._fields))
