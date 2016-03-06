@@ -108,7 +108,7 @@ Python's utf-8 unicode is not compatible with the default shell 'cmd.exe' on Win
 
 .. note:: Even with unicode support enabled the symbols available will depend on the font used in cmd.exe.
 
-The packages ``win_unicode_console`can be installed using pip or conda.
+The packages ``win_unicode_console`` can be installed using pip or conda.
 
 .. code-block:: bat
 
