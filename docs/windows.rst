@@ -86,13 +86,12 @@ the ``.``, like this:
 
 
 
-Many people create a ``d`` or ``ls`` alias for the ``dir`` command to save
+Many people create a ``d`` alias for the ``dir`` command to save
 typing and avoid the ambiguity altogether:
 
 .. code-block:: xonshcon
 
    >>> aliases['d'] = ['cmd', '/c', 'dir']
-   >>> aliases['ls'] = 'dir'
 
 You can add aliases to your ``~/.xonshrc`` to have it always
 available when xonsh starts.
