@@ -25,6 +25,9 @@ Current Developments
 * Python mode output is now syntax highlighted if pygments is available.
 * New ``$RIGHT_PROMPT`` environment variable for displaying right-aligned
   text in prompt-toolkit shell.
+* Optional dependency on the win_unicode_console package to enable unicode
+  support in cmd.exe on Windows. This can be disabled/enabled with the
+  ``$WIN_UNICODE_CONSOLE`` environment variable.
 
 **Changed:**
 
