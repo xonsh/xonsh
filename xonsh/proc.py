@@ -530,20 +530,18 @@ def _wcode_to_popen(code):
         raise ValueError("Invalid os.wait code: {}".format(code))
 
 
-CPTuple = namedtuple("CPTuple", ["stdin",
-                                 "stdout",
-                                 "stderr",
-                                 "returncode",
-                                 "args",
-                                 "mode",
-                                 "function",
-                                 "stdin_redir",
-                                 "stdout_redir",
-                                 "stderr_redir",
-                                 "alias",
-                                 "pid"])
+_CPTuple = namedtuple("CPTuple", ["stdin",
+                                  "stdout",
+                                  "stderr",
+                                  "pid",
+                                  "returncode",
+                                  "args",
+                                  "alias",
+                                  "stdin_redirect",
+                                  "stdout_redirect",
+                                  "stderr_redirect"])
 
-class CompletedProcess(CPTuple):
+class CompletedProcess(_CPTuple):
     def __bool__(self):
         return self.returncode == 0
 
@@ -551,4 +549,4 @@ class CompletedProcess(CPTuple):
         return self.returncode == other
 
 def make_completed_process(**kwargs):
-    return CompletedProcess(*(kwargs.get(i, None) for i in CPTuple._fields))
+    return CompletedProcess(*(kwargs.get(i, None) for i in _CPTuple._fields))
