@@ -13,6 +13,7 @@ import atexit
 import signal
 import inspect
 import builtins
+import tempfile
 from glob import glob, iglob
 from subprocess import Popen, PIPE, STDOUT, CalledProcessError
 from contextlib import contextmanager
@@ -20,7 +21,7 @@ from collections import Sequence, MutableMapping, Iterable
 
 from xonsh.tools import (
     suggest_commands, XonshError, ON_POSIX, ON_WINDOWS, string_types,
-    expandvars,
+    expandvars
 )
 from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env, locate_binary
@@ -563,6 +564,16 @@ def run_subproc(cmds, captured=False):
                 except PermissionError:
                     e = 'xonsh: subprocess mode: permission denied: {0}'
                     raise XonshError(e.format(cmd[0]))
+        _stdin_file = None
+        if captured == 'object' and stdin is not None:
+            _stdin_file = tempfile.NamedTemporaryFile()
+            cproc = Popen(['cat'],
+                          stdin=stdin,
+                          stdout=PIPE)
+            tproc = Popen(['tee', _stdin_file.name],
+                          stdin=cproc.stdout,
+                          stdout=PIPE)
+            stdin = tproc.stdout
         if callable(aliased_cmd):
             prev_is_proxy = True
             bgable = getattr(aliased_cmd, '__xonsh_backgroundable__', True)
@@ -658,6 +669,10 @@ def run_subproc(cmds, captured=False):
         procinfo['pid'] = prev_proc.pid
         procinfo['returncode'] = prev_proc.returncode
         procinfo['stdout'] = output
+        if _stdin_file is not None:
+            _stdin_file.seek(0)
+            procinfo['stdin'] = _stdin_file.read().decode()
+            _stdin_file.close()
         return make_completed_process(**procinfo)
 
 
