@@ -25,6 +25,9 @@ Current Developments
 * Python mode output is now syntax highlighted if pygments is available.
 * New ``$RIGHT_PROMPT`` environment variable for displaying right-aligned
   text in prompt-toolkit shell.
+* Added ``?(...)`` operator, which returns an object representing the result
+  of running a command.  This object is truthy if the command had a non-zero
+  return code, and it is equal (via ``==``) to its return code value.
 
 **Changed:**
 
@@ -50,6 +53,8 @@ Current Developments
 **Fixed:**
 
 * Some minor zsh fixes for more platforms and setups.
+* The ``BaseShell.settitle`` method no longer has its commands captured by
+  ``$(...)``
 
 **Security:** None
 
