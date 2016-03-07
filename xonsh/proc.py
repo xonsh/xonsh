@@ -542,6 +542,10 @@ _CCTuple = namedtuple("_CCTuple", ["stdin",
                                    "stderr_redirect"])
 
 class CompletedCommand(_CCTuple):
+    """
+    Represents a completed subprocess-mode command.
+    """
+
     def __bool__(self):
         return self.returncode == 0
 
@@ -549,4 +553,8 @@ class CompletedCommand(_CCTuple):
         return self.returncode == other
 
 def make_completed_command(**kwargs):
+    """
+    Make an instance of ``CompletedCommand`` from the specified kwargs.  Values
+    not specified via kwargs will default to ``None`` in the resulting object.
+    """
     return CompletedCommand(*(kwargs.get(i, None) for i in _CCTuple._fields))
