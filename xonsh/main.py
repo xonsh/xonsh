@@ -15,7 +15,7 @@ from xonsh import __version__
 from xonsh.shell import Shell
 from xonsh.pretty import pprint, pretty
 from xonsh.jobs import ignore_sigtstp
-from xonsh.tools import HAVE_PYGMENTS, print_color
+from xonsh.tools import HAVE_PYGMENTS, setup_win_unicode_console, print_color, ON_WINDOWS
 
 if HAVE_PYGMENTS:
     import pygments
@@ -170,6 +170,8 @@ def premain(argv=None):
     if args.login:
         env['XONSH_LOGIN'] = True
     env['XONSH_INTERACTIVE'] = False
+    if ON_WINDOWS:
+        setup_win_unicode_console(env.get('WIN_UNICODE_CONSOLE', True))
     return args
 
 
@@ -215,6 +217,8 @@ def main(argv=None):
 
 def postmain(args=None):
     """Teardown for main xonsh entry point, accepts parsed arguments."""
+    if ON_WINDOWS:
+        setup_win_unicode_console(enable=False)
     del builtins.__xonsh_shell__
 
 
