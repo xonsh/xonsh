@@ -26,8 +26,8 @@ Current Developments
 * New ``$RIGHT_PROMPT`` environment variable for displaying right-aligned
   text in prompt-toolkit shell.
 * Added ``?(...)`` operator, which returns an object representing the result
-  of running a command.  This object is truthy if the command had a non-zero
-  return code, and it is equal (via ``==``) to its return code value.
+  of running a command.  This object is truthy if the command had a return
+  code of zero, and it is equal (via ``==``) to its return code value.
 
 **Changed:**
 
