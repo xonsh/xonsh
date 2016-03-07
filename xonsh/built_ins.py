@@ -28,7 +28,7 @@ from xonsh.environ import Env, default_env, locate_binary
 from xonsh.aliases import DEFAULT_ALIASES
 from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
-    SimpleForegroundProcProxy, TeePTYProc, make_completed_process)
+    SimpleForegroundProcProxy, TeePTYProc, make_completed_command)
 from xonsh.history import History
 from xonsh.foreign_shells import load_foreign_aliases
 
@@ -673,7 +673,7 @@ def run_subproc(cmds, captured=False):
             _stdin_file.seek(0)
             procinfo['stdin'] = _stdin_file.read().decode()
             _stdin_file.close()
-        return make_completed_process(**procinfo)
+        return make_completed_command(**procinfo)
 
 
 def subproc_captured_stdout(*cmds):
