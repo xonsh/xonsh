@@ -385,11 +385,38 @@ def _expand_style(cmap):
     for key, val in list(cmap.items()):
         if key == 'NO_COLOR':
             continue
-        cmap['BOLD_'+key] = '1;' + val
-        cmap['UNDERLINE_'+key] = '4;' + val
-        cmap['BOLD_UNDERLINE_'+key] = '1;4;' + val
-        cmap['BACKGROUND_'+key] = val.replace('38', '48', 1)
+        elif len(val) == 0:
+            cmap['BOLD_'+key] = '1'
+            cmap['UNDERLINE_'+key] = '4'
+            cmap['BOLD_UNDERLINE_'+key] = '1;4'
+            cmap['BACKGROUND_'+key] = val
+        else:
+            cmap['BOLD_'+key] = '1;' + val
+            cmap['UNDERLINE_'+key] = '4;' + val
+            cmap['BOLD_UNDERLINE_'+key] = '1;4;' + val
+            cmap['BACKGROUND_'+key] = val.replace('38', '48', 1)
 
+
+BW_STYLE = {
+    'BLACK': '',
+    'BLUE': '',
+    'CYAN': '',
+    'GREEN': '',
+    'INTENSE_BLACK': '',
+    'INTENSE_BLUE': '',
+    'INTENSE_CYAN': '',
+    'INTENSE_GREEN': '',
+    'INTENSE_PURPLE': '',
+    'INTENSE_RED': '',
+    'INTENSE_WHITE': '',
+    'INTENSE_YELLOW': '',
+    'NO_COLOR': '0',
+    'PURPLE': '',
+    'RED': '',
+    'WHITE': '',
+    'YELLOW': '',
+}
+_expand_style(BW_STYLE)
 
 DEFAULT_STYLE = {
     # Reset
@@ -845,90 +872,6 @@ BORLAND_STYLE = {
     'UNDERLINE_YELLOW': '4;38;5;124',
     'WHITE': '38;5;145',
     'YELLOW': '38;5;124',
-}
-
-BW_STYLE = {
-    'BACKGROUND_BLACK': '48;5;09',
-    'BACKGROUND_BLUE': '48;5;09',
-    'BACKGROUND_CYAN': '48;5;09',
-    'BACKGROUND_GREEN': '48;5;09',
-    'BACKGROUND_INTENSE_BLACK': '48;5;09',
-    'BACKGROUND_INTENSE_BLUE': '48;5;09',
-    'BACKGROUND_INTENSE_CYAN': '48;5;09',
-    'BACKGROUND_INTENSE_GREEN': '48;5;09',
-    'BACKGROUND_INTENSE_PURPLE': '48;5;09',
-    'BACKGROUND_INTENSE_RED': '48;5;09',
-    'BACKGROUND_INTENSE_WHITE': '48;5;09',
-    'BACKGROUND_INTENSE_YELLOW': '48;5;09',
-    'BACKGROUND_PURPLE': '48;5;09',
-    'BACKGROUND_RED': '48;5;09',
-    'BACKGROUND_WHITE': '48;5;09',
-    'BACKGROUND_YELLOW': '48;5;09',
-    'BLACK': '38;5;09',
-    'BLUE': '38;5;09',
-    'BOLD_BLACK': '1;38;5;09',
-    'BOLD_BLUE': '1;38;5;09',
-    'BOLD_CYAN': '1;38;5;09',
-    'BOLD_GREEN': '1;38;5;09',
-    'BOLD_INTENSE_BLACK': '1;38;5;09',
-    'BOLD_INTENSE_BLUE': '1;38;5;09',
-    'BOLD_INTENSE_CYAN': '1;38;5;09',
-    'BOLD_INTENSE_GREEN': '1;38;5;09',
-    'BOLD_INTENSE_PURPLE': '1;38;5;09',
-    'BOLD_INTENSE_RED': '1;38;5;09',
-    'BOLD_INTENSE_WHITE': '1;38;5;09',
-    'BOLD_INTENSE_YELLOW': '1;38;5;09',
-    'BOLD_PURPLE': '1;38;5;09',
-    'BOLD_RED': '1;38;5;09',
-    'BOLD_UNDERLINE_BLACK': '1;4;38;5;09',
-    'BOLD_UNDERLINE_BLUE': '1;4;38;5;09',
-    'BOLD_UNDERLINE_CYAN': '1;4;38;5;09',
-    'BOLD_UNDERLINE_GREEN': '1;4;38;5;09',
-    'BOLD_UNDERLINE_INTENSE_BLACK': '1;4;38;5;09',
-    'BOLD_UNDERLINE_INTENSE_BLUE': '1;4;38;5;09',
-    'BOLD_UNDERLINE_INTENSE_CYAN': '1;4;38;5;09',
-    'BOLD_UNDERLINE_INTENSE_GREEN': '1;4;38;5;09',
-    'BOLD_UNDERLINE_INTENSE_PURPLE': '1;4;38;5;09',
-    'BOLD_UNDERLINE_INTENSE_RED': '1;4;38;5;09',
-    'BOLD_UNDERLINE_INTENSE_WHITE': '1;4;38;5;09',
-    'BOLD_UNDERLINE_INTENSE_YELLOW': '1;4;38;5;09',
-    'BOLD_UNDERLINE_PURPLE': '1;4;38;5;09',
-    'BOLD_UNDERLINE_RED': '1;4;38;5;09',
-    'BOLD_UNDERLINE_WHITE': '1;4;38;5;09',
-    'BOLD_UNDERLINE_YELLOW': '1;4;38;5;09',
-    'BOLD_WHITE': '1;38;5;09',
-    'BOLD_YELLOW': '1;38;5;09',
-    'CYAN': '38;5;09',
-    'GREEN': '38;5;09',
-    'INTENSE_BLACK': '38;5;09',
-    'INTENSE_BLUE': '38;5;09',
-    'INTENSE_CYAN': '38;5;09',
-    'INTENSE_GREEN': '38;5;09',
-    'INTENSE_PURPLE': '38;5;09',
-    'INTENSE_RED': '38;5;09',
-    'INTENSE_WHITE': '38;5;09',
-    'INTENSE_YELLOW': '38;5;09',
-    'NO_COLOR': '0',
-    'PURPLE': '38;5;09',
-    'RED': '38;5;09',
-    'UNDERLINE_BLACK': '4;38;5;09',
-    'UNDERLINE_BLUE': '4;38;5;09',
-    'UNDERLINE_CYAN': '4;38;5;09',
-    'UNDERLINE_GREEN': '4;38;5;09',
-    'UNDERLINE_INTENSE_BLACK': '4;38;5;09',
-    'UNDERLINE_INTENSE_BLUE': '4;38;5;09',
-    'UNDERLINE_INTENSE_CYAN': '4;38;5;09',
-    'UNDERLINE_INTENSE_GREEN': '4;38;5;09',
-    'UNDERLINE_INTENSE_PURPLE': '4;38;5;09',
-    'UNDERLINE_INTENSE_RED': '4;38;5;09',
-    'UNDERLINE_INTENSE_WHITE': '4;38;5;09',
-    'UNDERLINE_INTENSE_YELLOW': '4;38;5;09',
-    'UNDERLINE_PURPLE': '4;38;5;09',
-    'UNDERLINE_RED': '4;38;5;09',
-    'UNDERLINE_WHITE': '4;38;5;09',
-    'UNDERLINE_YELLOW': '4;38;5;09',
-    'WHITE': '38;5;09',
-    'YELLOW': '38;5;09',
 }
 
 COLORFUL_STYLE = {
