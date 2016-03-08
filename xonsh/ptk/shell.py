@@ -93,8 +93,8 @@ class PromptToolkitShell(BaseShell):
         try:
             code = self.execer.compile(src,
                                        mode='single',
-                                       glbs=None,
-                                       locs=self.ctx)
+                                       glbs=self.ctx,
+                                       locs=None)
             self.reset_buffer()
         except Exception:  # pylint: disable=broad-except
             self.reset_buffer()

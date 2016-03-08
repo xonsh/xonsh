@@ -178,8 +178,8 @@ class BaseShell(object):
         try:
             code = self.execer.compile(src,
                                        mode='single',
-                                       glbs=None,
-                                       locs=self.ctx)
+                                       glbs=self.ctx,
+                                       locs=None)
             self.reset_buffer()
         except SyntaxError:
             if line == '\n':
