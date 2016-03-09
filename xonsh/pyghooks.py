@@ -498,25 +498,48 @@ BW_STYLE = {
 }
 _expand_style(BW_STYLE)
 
-DEFAULT_STYLE = {
-    Color.BLACK: '#000000',
-    Color.BLUE: '#0000AA',
-    Color.CYAN: '#00AAAA',
-    Color.GREEN: '#00AA00',
-    Color.INTENSE_BLACK: '#555555',
-    Color.INTENSE_BLUE: '#0000FF',
-    Color.INTENSE_CYAN: '#55FFFF',
-    Color.INTENSE_GREEN: '#00FF00',
-    Color.INTENSE_PURPLE: '#FF00FF',
-    Color.INTENSE_RED: '#FF0000',
-    Color.INTENSE_WHITE: '#aaaaaa',
-    Color.INTENSE_YELLOW: '#FFFF55',
-    Color.NO_COLOR: 'noinherit',
-    Color.PURPLE: '#AA00AA',
-    Color.RED: '#AA0000',
-    Color.WHITE: '#ffffff',
-    Color.YELLOW: '#ffff00',
-}
+
+if hasattr(pygments.style, 'ansicolors'):
+    DEFAULT_STYLE = {
+        Color.BLACK: '#ansidarkgray',
+        Color.BLUE: '#ansiblue',
+        Color.CYAN: '#ansiturquoise',
+        Color.GREEN: '#ansigreen',
+        Color.INTENSE_BLACK: '#ansiblack',
+        Color.INTENSE_BLUE: '#ansidarkblue',
+        Color.INTENSE_CYAN: '#ansiteal',
+        Color.INTENSE_GREEN: '#ansidarkgreen',
+        Color.INTENSE_PURPLE: '#ansipurple',
+        Color.INTENSE_RED: '#ansidarkred',
+        Color.INTENSE_WHITE: '#ansilightgray',
+        Color.INTENSE_YELLOW: '#ansibrown',
+        Color.NO_COLOR: 'noinherit',
+        Color.PURPLE: '#ansifuchsia',
+        Color.RED: '#ansired',
+        Color.WHITE: '#ansiwhite',
+        Color.YELLOW: '#ansiyellow',
+    }
+else:
+    DEFAULT_STYLE = {
+        Color.BLACK: '#000000',
+        Color.BLUE: '#0000AA',
+        Color.CYAN: '#00AAAA',
+        Color.GREEN: '#00AA00',
+        Color.INTENSE_BLACK: '#555555',
+        Color.INTENSE_BLUE: '#0000FF',
+        Color.INTENSE_CYAN: '#55FFFF',
+        Color.INTENSE_GREEN: '#00FF00',
+        Color.INTENSE_PURPLE: '#FF00FF',
+        Color.INTENSE_RED: '#FF0000',
+        Color.INTENSE_WHITE: '#aaaaaa',
+        Color.INTENSE_YELLOW: '#FFFF55',
+        Color.NO_COLOR: 'noinherit',
+        Color.PURPLE: '#AA00AA',
+        Color.RED: '#AA0000',
+        Color.WHITE: '#ffffff',
+        Color.YELLOW: '#ffff00',
+    }
+
 _expand_style(DEFAULT_STYLE)
 
 MONOKAI_STYLE = {
