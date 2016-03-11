@@ -40,6 +40,9 @@ Current Developments
   ``Token.Color.RED`` rather than ``Token.RED``.
 * Untracked files in git are ignored when determining if a git workdir is 
   is dirty. This affects the coloring of the branch label. 
+* Regular expression globbing now uses ``re.fullmatch`` instead of
+  ``re.match``, and the result of an empty regex glob does not cause the
+  argument to be deleted.
 
 **Deprecated:** None
 
