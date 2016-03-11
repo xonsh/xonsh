@@ -556,3 +556,8 @@ class CompletedCommand(_CCTuple):
         return hash(self.returncode)
 
 CompletedCommand.__new__.__defaults__ = (None,) * len(CompletedCommand._fields)
+
+
+class HiddenCompletedCommand(CompletedCommand):
+    def __repr__(self):
+        return ''

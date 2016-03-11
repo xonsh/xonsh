@@ -29,7 +29,7 @@ from xonsh.aliases import DEFAULT_ALIASES
 from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
                         SimpleForegroundProcProxy, TeePTYProc,
-                        CompletedCommand)
+                        CompletedCommand, HiddenCompletedCommand)
 from xonsh.history import History
 from xonsh.foreign_shells import load_foreign_aliases
 
@@ -537,7 +537,7 @@ def run_subproc(cmds, captured=False):
         if 'stderr' in streams:
             stderr = streams['stderr'][-1]
             procinfo['stderr_redirect'] = streams['stderr'][:-1]
-        elif captured == 'object':
+        elif captured in {'object', 'hiddenobject'}:
             stderr = PIPE
         elif builtins.__xonsh_stderr_uncaptured__ is not None:
             stderr = builtins.__xonsh_stderr_uncaptured__
@@ -567,7 +567,7 @@ def run_subproc(cmds, captured=False):
                     e = 'xonsh: subprocess mode: permission denied: {0}'
                     raise XonshError(e.format(cmd[0]))
         _stdin_file = None
-        if captured == 'object' and stdin is not None:
+        if captured in {'object', 'hiddenobject'} and stdin is not None:
             _stdin_file = tempfile.NamedTemporaryFile()
             cproc = Popen(['cat'],
                           stdin=stdin,
@@ -659,7 +659,8 @@ def run_subproc(cmds, captured=False):
             output = output.replace('\r\n', '\n')
         else:
             hist.last_cmd_out = output
-        if captured == 'object' and prev_proc.stderr not in {None, sys.stderr}:
+        if (captured in {'object', 'hiddenobject'} and
+                prev_proc.stderr not in {None, sys.stderr}):
             errout = prev_proc.stderr.read()
             errout = errout.decode(encoding=ENV.get('XONSH_ENCODING'),
                                    errors=ENV.get('XONSH_ENCODING_ERRORS'))
@@ -672,7 +673,7 @@ def run_subproc(cmds, captured=False):
         raise CalledProcessError(hist.last_cmd_rtn, aliased_cmd, output=output)
     if captured == 'stdout':
         return output
-    elif captured == 'object':
+    elif captured in {'object', 'hiddenobject'}:
         procinfo['pid'] = prev_proc.pid
         procinfo['returncode'] = prev_proc.returncode
         procinfo['stdout'] = output
@@ -680,7 +681,10 @@ def run_subproc(cmds, captured=False):
             _stdin_file.seek(0)
             procinfo['stdin'] = _stdin_file.read().decode()
             _stdin_file.close()
-        return CompletedCommand(**procinfo)
+        if captured == 'object':
+            return CompletedCommand(**procinfo)
+        else:
+            return HiddenCompletedCommand(**procinfo)
 
 
 def subproc_captured_stdout(*cmds):
@@ -691,10 +695,19 @@ def subproc_captured_stdout(*cmds):
 
 
 def subproc_captured_object(*cmds):
-    """Runs a subprocess, capturing the output. Returns the stdout
-    that was produced as a str.
+    """
+    Runs a subprocess, capturing the output. Returns an instance of
+    ``CompletedCommand`` representing the completed command.
     """
     return run_subproc(cmds, captured='object')
+
+
+def subproc_captured_hiddenobject(*cmds):
+    """
+    Runs a subprocess, capturing the output. Returns an instance of
+    ``COmpletedCOmmand`` representing the completed command.
+    """
+    return run_subproc(cmds, captured='hiddenobject')
 
 
 def subproc_uncaptured(*cmds):
@@ -739,6 +752,7 @@ def load_builtins(execer=None, config=None):
         del builtins.quit
     builtins.__xonsh_subproc_captured_stdout__ = subproc_captured_stdout
     builtins.__xonsh_subproc_captured_object__ = subproc_captured_object
+    builtins.__xonsh_subproc_captured_hiddenobject__ = subproc_captured_hiddenobject
     builtins.__xonsh_subproc_uncaptured__ = subproc_uncaptured
     builtins.__xonsh_execer__ = execer
     builtins.__xonsh_all_jobs__ = {}
@@ -793,6 +807,7 @@ def unload_builtins():
              '__xonsh_pyquit__',
              '__xonsh_subproc_captured_stdout__',
              '__xonsh_subproc_captured_object__',
+             '__xonsh_subproc_captured_hiddenobject__',
              '__xonsh_subproc_uncaptured__',
              '__xonsh_execer__',
              'evalx',
