@@ -28,6 +28,9 @@ Current Developments
 * Added ``?(...)`` operator, which returns an object representing the result
   of running a command.  This object is truthy if the command had a return
   code of zero, and it is equal (via ``==``) to its return code value.
+* Optional dependency on the win_unicode_console package to enable unicode
+  support in cmd.exe on Windows. This can be disabled/enabled with the
+  ``$WIN_UNICODE_CONSOLE`` environment variable.
 
 **Changed:**
 
