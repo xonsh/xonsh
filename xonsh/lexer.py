@@ -211,21 +211,31 @@ def handle_question(state, token, stream):
             n.string == '?' and n.start == token.end:
         state['last'] = n
         yield _new_token('DOUBLE_QUESTION', '??', token.start)
-    elif (n is not None and n.type == tokenize.OP
-            and n.string == '(' and n.start == token.end):
-        state['pymode'].append((False, '?(', ')', token.start))
-        state['last'] = n
-        yield _new_token('QUESTION_LPAREN', '?(', token.start)
-    elif (n is not None and n.type == tokenize.OP
-            and n.string == '[' and n.start == token.end):
-        state['pymode'].append((False, '?[', ']', token.start))
-        state['last'] = n
-        yield _new_token('QUESTION_LBRACKET', '?[', token.start)
     else:
         state['last'] = token
         yield _new_token('QUESTION', '?', token.start)
         if n is not None:
             yield from handle_token(state, n, stream)
+
+
+def handle_bang(state, token, stream):
+    """
+    Function for generating PLY tokens starting with !
+    """
+    n = next(stream, None)
+    if (n is not None and n.type == tokenize.OP
+            and n.string == '(' and n.start == token.end):
+        state['pymode'].append((False, '!(', ')', token.start))
+        state['last'] = n
+        yield _new_token('BANG_LPAREN', '!(', token.start)
+    elif (n is not None and n.type == tokenize.OP
+            and n.string == '[' and n.start == token.end):
+        state['pymode'].append((False, '![', ']', token.start))
+        state['last'] = n
+        yield _new_token('BANG_LBRACKET', '![', token.start)
+    else:
+        e = 'unexpected single token: !'
+        yield _new_token("ERRORTOKEN", e, token.start)
 
 
 def handle_backtick(state, token, stream):
@@ -379,6 +389,7 @@ special_handlers = {
     (tokenize.ERRORTOKEN, '$'): handle_dollar,
     (tokenize.ERRORTOKEN, '`'): handle_backtick,
     (tokenize.ERRORTOKEN, '?'): handle_question,
+    (tokenize.ERRORTOKEN, '!'): handle_bang,
     (tokenize.ERRORTOKEN, ' '): handle_error_space,
 }
 """
@@ -527,8 +538,8 @@ class Lexer(object):
         'DOUBLE_QUESTION',       # ??
         'AT_LPAREN',             # @(
         'DOLLAR_NAME',           # $NAME
-        'QUESTION_LPAREN',       # ?(
-        'QUESTION_LBRACKET',     # ?[
+        'BANG_LPAREN',           # !(
+        'BANG_LBRACKET',         # ![
         'DOLLAR_LPAREN',         # $(
         'DOLLAR_LBRACE',         # ${
         'DOLLAR_LBRACKET',       # $[
