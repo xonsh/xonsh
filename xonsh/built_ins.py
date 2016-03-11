@@ -21,7 +21,7 @@ from collections import Sequence, MutableMapping, Iterable
 
 from xonsh.tools import (
     suggest_commands, XonshError, ON_POSIX, ON_WINDOWS, string_types,
-    expandvars
+    expandvars, CommandsCache
 )
 from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env, locate_binary
@@ -755,6 +755,7 @@ def load_builtins(execer=None, config=None):
     builtins.__xonsh_subproc_captured_hiddenobject__ = subproc_captured_hiddenobject
     builtins.__xonsh_subproc_uncaptured__ = subproc_uncaptured
     builtins.__xonsh_execer__ = execer
+    builtins.__xonsh_commands_cache__ = CommandsCache()
     builtins.__xonsh_all_jobs__ = {}
     builtins.__xonsh_active_job__ = None
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
@@ -810,6 +811,7 @@ def unload_builtins():
              '__xonsh_subproc_captured_hiddenobject__',
              '__xonsh_subproc_uncaptured__',
              '__xonsh_execer__',
+             '__xonsh_commands_cache__',
              'evalx',
              'execx',
              'compilex',
