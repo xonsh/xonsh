@@ -494,7 +494,7 @@ def run_subproc(cmds, captured=False):
     last_cmd = len(cmds) - 1
     procs = []
     prev_proc = None
-    _capture_streams = captured not in {False, 'hiddenobject'}
+    _capture_streams = captured in {'stdout', 'object'}
     for ix, cmd in enumerate(cmds):
         procinfo['args'] = list(cmd)
         stdin = None
@@ -542,7 +542,7 @@ def run_subproc(cmds, captured=False):
             stderr = PIPE
         elif builtins.__xonsh_stderr_uncaptured__ is not None:
             stderr = builtins.__xonsh_stderr_uncaptured__
-        uninew = (ix == last_cmd) and (_capture_streams)
+        uninew = (ix == last_cmd) and (not _capture_streams)
         alias = builtins.aliases.get(cmd[0], None)
         procinfo['alias'] = alias
         if (alias is None and
@@ -678,7 +678,7 @@ def run_subproc(cmds, captured=False):
         raise CalledProcessError(hist.last_cmd_rtn, aliased_cmd, output=output)
     if captured == 'stdout':
         return output
-    elif captured in {'object', 'hiddenobject'}:
+    elif captured is not False:
         procinfo['pid'] = prev_proc.pid
         procinfo['returncode'] = prev_proc.returncode
         if captured == 'object':
