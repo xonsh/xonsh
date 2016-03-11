@@ -552,6 +552,10 @@ class CompletedCommand(_CCTuple):
     def __eq__(self, other):
         return self.returncode == other
 
+    def __hash__(self):
+        return hash(self.returncode)
+
+
 def make_completed_command(**kwargs):
     """
     Make an instance of ``CompletedCommand`` from the specified kwargs.  Values
