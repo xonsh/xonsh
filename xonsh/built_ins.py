@@ -494,6 +494,7 @@ def run_subproc(cmds, captured=False):
     last_cmd = len(cmds) - 1
     procs = []
     prev_proc = None
+    _capture_streams = captured not in {False, 'hiddenobject'}
     for ix, cmd in enumerate(cmds):
         procinfo['args'] = list(cmd)
         stdin = None
@@ -527,7 +528,7 @@ def run_subproc(cmds, captured=False):
                 raise XonshError('Multiple redirects for stdout')
             stdout = streams['stdout'][-1]
             procinfo['stdout_redirect'] = streams['stdout'][:-1]
-        elif captured or ix != last_cmd:
+        elif _capture_streams or ix != last_cmd:
             stdout = PIPE
         elif builtins.__xonsh_stdout_uncaptured__ is not None:
             stdout = builtins.__xonsh_stdout_uncaptured__
@@ -537,11 +538,11 @@ def run_subproc(cmds, captured=False):
         if 'stderr' in streams:
             stderr = streams['stderr'][-1]
             procinfo['stderr_redirect'] = streams['stderr'][:-1]
-        elif captured in {'object', 'hiddenobject'}:
+        elif captured == 'object':
             stderr = PIPE
         elif builtins.__xonsh_stderr_uncaptured__ is not None:
             stderr = builtins.__xonsh_stderr_uncaptured__
-        uninew = (ix == last_cmd) and (not captured)
+        uninew = (ix == last_cmd) and (_capture_streams)
         alias = builtins.aliases.get(cmd[0], None)
         procinfo['alias'] = alias
         if (alias is None and
@@ -567,7 +568,7 @@ def run_subproc(cmds, captured=False):
                     e = 'xonsh: subprocess mode: permission denied: {0}'
                     raise XonshError(e.format(cmd[0]))
         _stdin_file = None
-        if (captured in {'object', 'hiddenobject'} and
+        if (captured == 'object' and
                 stdin is not None and
                 __xonsh_env__['XONSH_STORE_STDIN'] and
                 'cat' in __xonsh_commands_cache__ and
@@ -637,7 +638,7 @@ def run_subproc(cmds, captured=False):
         })
     if (ENV.get('XONSH_INTERACTIVE') and
             not ENV.get('XONSH_STORE_STDOUT') and
-            captured is False):
+            not _capture_streams):
         # set title here to get current command running
         try:
             builtins.__xonsh_shell__.settitle()
@@ -655,7 +656,7 @@ def run_subproc(cmds, captured=False):
     if write_target is None:
         if prev_proc.stdout not in (None, sys.stdout):
             output = prev_proc.stdout.read()
-        if captured:
+        if _capture_streams:
             # to get proper encoding from Popen, we have to
             # use a byte stream and then implement universal_newlines here
             output = output.decode(encoding=ENV.get('XONSH_ENCODING'),
@@ -663,7 +664,7 @@ def run_subproc(cmds, captured=False):
             output = output.replace('\r\n', '\n')
         else:
             hist.last_cmd_out = output
-        if (captured in {'object', 'hiddenobject'} and
+        if (captured == 'object' and
                 prev_proc.stderr not in {None, sys.stderr}):
             errout = prev_proc.stderr.read()
             errout = errout.decode(encoding=ENV.get('XONSH_ENCODING'),
@@ -680,12 +681,12 @@ def run_subproc(cmds, captured=False):
     elif captured in {'object', 'hiddenobject'}:
         procinfo['pid'] = prev_proc.pid
         procinfo['returncode'] = prev_proc.returncode
-        procinfo['stdout'] = output
-        if _stdin_file is not None:
-            _stdin_file.seek(0)
-            procinfo['stdin'] = _stdin_file.read().decode()
-            _stdin_file.close()
         if captured == 'object':
+            procinfo['stdout'] = output
+            if _stdin_file is not None:
+                _stdin_file.seek(0)
+                procinfo['stdin'] = _stdin_file.read().decode()
+                _stdin_file.close()
             return CompletedCommand(**procinfo)
         else:
             return HiddenCompletedCommand(**procinfo)
