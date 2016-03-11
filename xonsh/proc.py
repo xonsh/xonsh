@@ -555,10 +555,4 @@ class CompletedCommand(_CCTuple):
     def __hash__(self):
         return hash(self.returncode)
 
-
-def make_completed_command(**kwargs):
-    """
-    Make an instance of ``CompletedCommand`` from the specified kwargs.  Values
-    not specified via kwargs will default to ``None`` in the resulting object.
-    """
-    return CompletedCommand(*(kwargs.get(i, None) for i in _CCTuple._fields))
+CompletedCommand.__new__.__defaults__ = (None,) * len(CompletedCommand._fields)
