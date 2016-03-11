@@ -238,7 +238,7 @@ class BaseParser(object):
                      'for', 'colon', 'import', 'except', 'nonlocal', 'global',
                      'yield', 'from', 'raise', 'with', 'dollar_lparen',
                      'dollar_lbrace', 'dollar_lbracket', 'try',
-                     'question_lparen']
+                     'question_lparen', 'question_lbracket']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -1732,6 +1732,7 @@ class BaseParser(object):
         """atom : dollar_lbrace_tok test RBRACE
                 | dollar_lparen_tok subproc RPAREN
                 | question_lparen_tok subproc RPAREN
+                | question_lbracket_tok subproc RBRACKET
                 | dollar_lbracket_tok subproc RBRACKET
         """
         p[0] = self._dollar_rules(p)
@@ -2044,6 +2045,9 @@ class BaseParser(object):
         elif p1 == '?(':
             p0 = xonsh_call('__xonsh_subproc_captured_object__', p2,
                             lineno=lineno, col=col)
+        elif p1 == '?[':
+            p0 = xonsh_call('__xonsh_subproc_captured_hiddenobject__', p2,
+                            lineno=lineno, col=col)
         elif p1 == '$[':
             p0 = xonsh_call('__xonsh_subproc_uncaptured__', p2,
                             lineno=lineno, col=col)
@@ -2167,6 +2171,14 @@ class BaseParser(object):
         """subproc_atom : question_lparen_tok subproc RPAREN"""
         p1 = p[1]
         p0 = xonsh_call('__xonsh_subproc_captured_object__', args=p[2],
+                        lineno=p1.lineno, col=p1.lexpos)
+        p0._cliarg_action = 'splitlines'
+        p[0] = p0
+    
+    def p_subproc_atom_captured_hiddenobject(self, p):
+        """subproc_atom : question_lbracket_tok subproc RBRACKET"""
+        p1 = p[1]
+        p0 = xonsh_call('__xonsh_subproc_captured_hiddenobject__', args=p[2],
                         lineno=p1.lineno, col=p1.lexpos)
         p0._cliarg_action = 'splitlines'
         p[0] = p0

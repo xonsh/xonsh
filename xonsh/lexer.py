@@ -216,6 +216,11 @@ def handle_question(state, token, stream):
         state['pymode'].append((False, '?(', ')', token.start))
         state['last'] = n
         yield _new_token('QUESTION_LPAREN', '?(', token.start)
+    elif (n is not None and n.type == tokenize.OP
+            and n.string == '[' and n.start == token.end):
+        state['pymode'].append((False, '?[', ']', token.start))
+        state['last'] = n
+        yield _new_token('QUESTION_LBRACKET', '?[', token.start)
     else:
         state['last'] = token
         yield _new_token('QUESTION', '?', token.start)
@@ -523,6 +528,7 @@ class Lexer(object):
         'AT_LPAREN',             # @(
         'DOLLAR_NAME',           # $NAME
         'QUESTION_LPAREN',       # ?(
+        'QUESTION_LBRACKET',     # ?[
         'DOLLAR_LPAREN',         # $(
         'DOLLAR_LBRACE',         # ${
         'DOLLAR_LBRACKET',       # $[
