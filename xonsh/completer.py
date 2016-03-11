@@ -218,7 +218,7 @@ class Completer(object):
             if cmd == 'import' and begidx == len('import '):
                 # completing module to import
                 return sorted(self.module_complete(prefix)), lprefix
-            if cmd in self._cmds_cache.all_commands:
+            if cmd in self._cmds_cache:
                 # subproc mode; do path completions
                 comps = self.path_complete(prefix, path_str_start,
                                            path_str_end, cdpath=True)
@@ -334,7 +334,7 @@ class Completer(object):
         csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
         startswither = startswithnorm if csc else startswithlow
         return {s + space
-                for s in self._cmds_cache.all_commands
+                for s in self._cmds_cache
                 if startswither(s, cmd, cmdlow)}
 
     def module_complete(self, prefix):

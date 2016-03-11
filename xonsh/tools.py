@@ -970,6 +970,15 @@ class CommandsCache:
         self._alias_checksum = None
         self._path_mtime = -1
 
+    def __contains__(self, item):
+        return item in self.all_commands
+
+    def __iter__(self):
+        return iter(self.all_commands)
+
+    def __len__(self):
+        return len(self.all_commands)
+
     @property
     def all_commands(self):
         path = builtins.__xonsh_env__.get('PATH', [])
