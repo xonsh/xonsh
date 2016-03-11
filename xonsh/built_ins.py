@@ -28,7 +28,8 @@ from xonsh.environ import Env, default_env, locate_binary
 from xonsh.aliases import DEFAULT_ALIASES
 from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
-    SimpleForegroundProcProxy, TeePTYProc, make_completed_command)
+                        SimpleForegroundProcProxy, TeePTYProc,
+                        make_completed_command)
 from xonsh.history import History
 from xonsh.foreign_shells import load_foreign_aliases
 
@@ -46,6 +47,7 @@ def resetting_signal_handle(sig, f):
     once the new handle is finished.
     """
     oldh = signal.getsignal(sig)
+
     def newh(s=None, frame=None):
         f(s, frame)
         signal.signal(sig, oldh)
@@ -329,10 +331,10 @@ def get_script_subproc_command(fname, args):
         raise PermissionError
 
     if ON_POSIX and not os.access(fname, os.R_OK):
-        # on some systems, some importnat programs (e.g. sudo) will have execute
-        # permissions but not read/write permisions. This enables things with the SUID
-        # set to be run. Needs to come before _is_binary() is called, because that
-        # function tries to read the file.
+        # on some systems, some importnat programs (e.g. sudo) will have
+        # execute permissions but not read/write permisions. This enables
+        # things with the SUID set to be run. Needs to come before _is_binary()
+        # is called, because that function tries to read the file.
         return [fname] + args
     elif _is_binary(fname):
         # if the file is a binary, we should call it directly
@@ -542,11 +544,11 @@ def run_subproc(cmds, captured=False):
         uninew = (ix == last_cmd) and (not captured)
         alias = builtins.aliases.get(cmd[0], None)
         procinfo['alias'] = alias
-        if (alias is None
-            and builtins.__xonsh_env__.get('AUTO_CD')
-            and len(cmd) == 1
-            and os.path.isdir(cmd[0])
-            and locate_binary(cmd[0]) is None):
+        if (alias is None and
+                builtins.__xonsh_env__.get('AUTO_CD') and
+                len(cmd) == 1 and
+                os.path.isdir(cmd[0]) and
+                locate_binary(cmd[0]) is None):
             cmd.insert(0, 'cd')
             alias = builtins.aliases.get('cd', None)
 
@@ -590,8 +592,9 @@ def run_subproc(cmds, captured=False):
                        universal_newlines=uninew)
         else:
             prev_is_proxy = False
-            usetee = (stdout is None) and (not background) and \
-                     ENV.get('XONSH_STORE_STDOUT', False)
+            usetee = ((stdout is None) and
+                      (not background) and
+                      ENV.get('XONSH_STORE_STDOUT', False))
             cls = TeePTYProc if usetee else Popen
             subproc_kwargs = {}
             if ON_POSIX and cls is Popen:
@@ -628,7 +631,9 @@ def run_subproc(cmds, captured=False):
             'obj': prev_proc,
             'bg': background
         })
-    if ENV.get('XONSH_INTERACTIVE') and not ENV.get('XONSH_STORE_STDOUT') and captured is False:
+    if (ENV.get('XONSH_INTERACTIVE') and
+            not ENV.get('XONSH_STORE_STDOUT') and
+            captured is False):
         # set title here to get current command running
         try:
             builtins.__xonsh_shell__.settitle()
@@ -661,11 +666,13 @@ def run_subproc(cmds, captured=False):
             errout = errout.replace('\r\n', '\n')
             procinfo['stderr'] = errout
 
-    if not prev_is_proxy and hist.last_cmd_rtn > 0 and ENV.get('RAISE_SUBPROC_ERROR'):
+    if (not prev_is_proxy and
+            hist.last_cmd_rtn > 0 and
+            ENV.get('RAISE_SUBPROC_ERROR')):
         raise CalledProcessError(hist.last_cmd_rtn, aliased_cmd, output=output)
-    if captured=='stdout':
+    if captured == 'stdout':
         return output
-    elif captured=='object':
+    elif captured == 'object':
         procinfo['pid'] = prev_proc.pid
         procinfo['returncode'] = prev_proc.returncode
         procinfo['stdout'] = output
@@ -745,13 +752,17 @@ def load_builtins(execer=None, config=None):
     builtins.aliases.update(load_foreign_aliases(issue_warning=False))
     # history needs to be started after env and aliases
     # would be nice to actually include non-detyped versions.
-    builtins.__xonsh_history__ = History(env=ENV.detype(), #aliases=builtins.aliases,
+    builtins.__xonsh_history__ = History(env=ENV.detype(),
                                          ts=[time.time(), None], locked=True)
-    lastflush = lambda s=None, f=None: builtins.__xonsh_history__.flush(at_exit=True)
+    lastflush = _lastflush
     atexit.register(lastflush)
     for sig in AT_EXIT_SIGNALS:
         resetting_signal_handle(sig, lastflush)
     BUILTINS_LOADED = True
+
+
+def _lastflush(s=None, f=None):
+    builtins.__xonsh_history__.flush(at_exit=True)
 
 
 def unload_builtins():
