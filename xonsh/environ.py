@@ -88,6 +88,7 @@ DEFAULT_ENSURERS = {
     'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
     'XONSH_LOGIN': (is_bool, to_bool, bool_to_str),
     'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
+    'XONSH_STORE_STIN': (is_bool, to_bool, bool_to_str),
     'VI_MODE': (is_bool, to_bool, bool_to_str),
     'VIRTUAL_ENV': (is_string, ensure_string, ensure_string),
     'WIN_UNICODE_CONSOLE': (always_false, setup_win_unicode_console, bool_to_str),
@@ -208,6 +209,7 @@ DEFAULT_VALUES = {
     'XONSH_HISTORY_SIZE': (8128, 'commands'),
     'XONSH_LOGIN': False,
     'XONSH_SHOW_TRACEBACK': False,
+    'XONSH_STORE_STDIN': False,
     'XONSH_STORE_STDOUT': False,
 }
 if hasattr(locale, 'LC_MESSAGES'):
