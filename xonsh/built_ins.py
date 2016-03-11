@@ -567,7 +567,11 @@ def run_subproc(cmds, captured=False):
                     e = 'xonsh: subprocess mode: permission denied: {0}'
                     raise XonshError(e.format(cmd[0]))
         _stdin_file = None
-        if captured in {'object', 'hiddenobject'} and stdin is not None:
+        if (captured in {'object', 'hiddenobject'} and
+                stdin is not None and
+                __xonsh_env__['XONSH_STORE_STDIN'] and
+                'cat' in __xonsh_commands_cache__ and
+                'tee' in __xonsh_commands_cache__):
             _stdin_file = tempfile.NamedTemporaryFile()
             cproc = Popen(['cat'],
                           stdin=stdin,
