@@ -25,7 +25,7 @@ Current Developments
 * Python mode output is now syntax highlighted if pygments is available.
 * New ``$RIGHT_PROMPT`` environment variable for displaying right-aligned
   text in prompt-toolkit shell.
-* Added ``?(...)`` operator, which returns an object representing the result
+* Added ``!(...)`` operator, which returns an object representing the result
   of running a command.  This object is truthy if the command had a return
   code of zero, and it is equal (via ``==``) to its return code value.
 * Optional dependency on the win_unicode_console package to enable unicode
