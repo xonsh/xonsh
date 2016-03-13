@@ -280,20 +280,55 @@ force xonsh to do so with the syntax that we will see in the following
 sections.
 
 
-Captured Subprocess with ``$()``
-================================
+Captured Subprocess with ``$()`` and ``!()``
+============================================
 The ``$(<expr>)`` operator in xonsh executes a subprocess command and
-*captures* the output. The expression in the parentheses will be run and
-stdout will be returned as a string. This is similar to how ``$()`` performs in
-BASH.  For example,
+*captures* some information about that command.
+
+The ``$()`` syntax captures and returns the standard output stream of the
+command as a Python string.  This is similar to how ``$()`` performs in BASH.
+For example,
 
 .. code-block:: xonshcon
 
     >>> $(ls -l)
     'total 0\n-rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh\n'
 
-The ``$()`` operator is an expression itself. This means that we can
-assign the results to a variable or perform any other manipulations we want.
+The ``!()`` syntax captured more information about the command, as an instance
+of a class called ``CompletedCommand``.  This object contains more information
+about the result of the given command, including the return code, the process
+id, the stdanard output and standard error streams, and information about how
+input and output were redirected.  For example:
+
+.. code-block:: xonshcon
+
+    >>> !(ls nonexistent_directory)
+    CompletedCommand(stdin=None, stdout='', stderr='/bin/ls: cannot access nonexistent_directory: No such file or directory\n', pid=1862, returncode=2, args=['ls', 'nonexistent_directory'], alias=['ls', '--color=auto'], stdin_redirect=None, stdout_redirect=None, stderr_redirect=None)
+
+This object will be "truthy" if its return code was 0, and it is equal (via
+``==``) to its return code.  It also hashes to its return code.  This allows
+for some interesting new kinds of interactions with subprocess commands, for
+example:
+
+.. code-block:: xonshcon
+
+    def check_file(file):
+        if ?(test -e @(file)):
+            if ?(test -f @(file)) or ?(test -d @(file)):
+                print("File is a regular file or directory")
+            else:
+                print("File is not a regular file or directory")
+        else:
+            print("File does not exist")
+
+    def wait_until_google_responds():
+        while not ?(ping -c 1 google.com):
+            sleep 1
+
+
+The ``$()`` and ``!()`` operators are expressions themselves. This means that
+we can assign the results to a variable or perform any other manipulations we
+want.
 
 .. code-block:: xonshcon
 
@@ -301,18 +336,25 @@ assign the results to a variable or perform any other manipulations we want.
     >>> print(x.upper())
     TOTAL 0
     -RW-RW-R-- 1 SNAIL SNAIL 0 MAR  8 15:46 XONSH
+    >>> y = !(ls -l)
+    >>> print(y.returncode)
+    0
+
+
+.. warning:: Job control is not implemented for captured subprocesses.
 
 While in subprocess-mode or inside of a captured subprocess, we can always
-still query the environment with ``$NAME`` variables.
+still query the environment with ``$NAME`` variables or the ``${}`` syntax,
+or inject Python values with the ``@()`` operator:
 
 .. code-block:: xonshcon
 
     >>> $(echo $HOME)
     '/home/snail\n'
 
-Uncaptured Subprocess with ``$[]``
+Uncaptured Subprocess with ``$[]`` and ``![]``
 ===================================
-Uncaptured subprocesses are denoted with the ``$[<expr>]`` operator. They are
+Uncaptured subprocesses are denoted with the ``$[]`` and ``![]`` operators. They are
 the same as ``$()`` captured subprocesses in almost every way. The only
 difference is that the subprocess's stdout passes directly through xonsh and
 to the screen.  The return value of ``$[]`` is always ``None``.
@@ -331,6 +373,19 @@ printed, and the return value is not a string.
 Previously when we automatically entered subprocess-mode, uncaptured
 subprocesses were used.  Thus ``ls -l`` and ``$[ls -l]`` are usually
 equivalent.
+
+The ``![]`` operator is similar to the ``!()`` in that it returns an object
+containing information about the result of executing the given command.
+However, its standard output and standard error streams are directed to the
+terminal, and the resulting object is not displayed.  For example
+
+.. code-block:: xonshcon
+
+    >>> x = ![ls -l] and ![echo "hi"]
+    total 0
+    -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
+    hi
+
 
 Python Evaluation with ``@()``
 ===============================
@@ -831,11 +886,11 @@ built-in mapping.  Here is an example using a function value:
     >>> banana
     'My spoon is tooo big!'
 
-Usually, callable alias commands will be run in a separate thread so that 
-users may background them interactively. However, some aliases may need to be 
+Usually, callable alias commands will be run in a separate thread so that
+users may background them interactively. However, some aliases may need to be
 executed on the thread that they were called from. This is mostly useful for debuggers
 and profilers. To make an alias run in the foreground, decorate its function
-with the ``xonsh.proc.foreground`` decorator. 
+with the ``xonsh.proc.foreground`` decorator.
 
 .. code-block:: python
 
@@ -897,10 +952,10 @@ You can also color your prompt easily by inserting keywords such as ``{GREEN}``
 or ``{BOLD_BLUE}``.  Colors have the form shown below:
 
 * ``NO_COLOR``: Resets any previously used color codes
-* ``COLORNAME``: Inserts a color code for the following basic colors, 
+* ``COLORNAME``: Inserts a color code for the following basic colors,
   which come in regular (dark) and intense (light) forms:
 
-    - ``BLACK`` or ``INTENSE_BLACK`` 
+    - ``BLACK`` or ``INTENSE_BLACK``
     - ``RED`` or ``INTENSE_RED``
     - ``GREEN`` or ``INTENSE_GREEN``
     - ``YELLOW`` or ``INTENSE_YELLOW``
@@ -909,8 +964,8 @@ or ``{BOLD_BLUE}``.  Colors have the form shown below:
     - ``CYAN`` or ``INTENSE_CYAN``
     - ``WHITE`` or ``INTENSE_WHITE``
 
-* ``#HEX``: A ``#`` before a len-3 or len-6 hex code will use that 
-  hex color, or the nearest approximation that that is supported by 
+* ``#HEX``: A ``#`` before a len-3 or len-6 hex code will use that
+  hex color, or the nearest approximation that that is supported by
   the shell and terminal.  For example, ``#fff`` and ``#fafad2`` are
   both valid.
 * ``BACKGROUND_`` may be added to the begining of a color name or hex
@@ -920,10 +975,10 @@ or ``{BOLD_BLUE}``.  Colors have the form shown below:
   Thus you can set ``bg#0012ab`` or the uppercase version.
 * ``BOLD_`` is a prefix qualifier that may be used with any foreground color.
   For example, ``BOLD_RED`` and ``BOLD_#112233`` are OK!
-* ``UNDERLINE_`` is a prefix qualifier that also may be used with any 
+* ``UNDERLINE_`` is a prefix qualifier that also may be used with any
   foreground color. For example, ``UNDERLINE_GREEN``.
-* Or any other combination of qualifiers, such as 
-  ``BOLD_UNDERLINE_INTENSE_BLACK``,   which is the most metal color you 
+* Or any other combination of qualifiers, such as
+  ``BOLD_UNDERLINE_INTENSE_BLACK``,   which is the most metal color you
   can use!
 
 You can make use of additional variables beyond these by adding them to the
@@ -1055,13 +1110,13 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
     bash $ echo @(' '.join($(cat @('file%d.txt' % i)).strip() for i in range(6)))
     s n a i l s
 
-Additionally, if the script should exit if a command fails, set the 
-environment variable ``$RAISE_SUBPROC_ERROR = True`` at the top of the 
-file. Errors in Python mode will already raise exceptions and so this 
+Additionally, if the script should exit if a command fails, set the
+environment variable ``$RAISE_SUBPROC_ERROR = True`` at the top of the
+file. Errors in Python mode will already raise exceptions and so this
 is roughly equivalent to Bash's ``set -e``.
 
 Furthermore, you can also toggle the ability to print source code lines with the
-``trace on`` and ``trace off`` commands.  This is roughly equivelent to 
+``trace on`` and ``trace off`` commands.  This is roughly equivelent to
 Bash's ``set -x`` or Python's ``python -m trace``, but you know, better.
 
 Importing Xonsh (``*.xsh``)
