@@ -710,7 +710,7 @@ def subproc_captured_object(*cmds):
 def subproc_captured_hiddenobject(*cmds):
     """
     Runs a subprocess, capturing the output. Returns an instance of
-    ``COmpletedCOmmand`` representing the completed command.
+    ``HiddenCompletedCommand`` representing the completed command.
     """
     return run_subproc(cmds, captured='hiddenobject')
 
