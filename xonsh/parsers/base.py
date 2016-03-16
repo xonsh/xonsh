@@ -237,7 +237,8 @@ class BaseParser(object):
                      'at', 'lshift', 'rshift', 'pipe', 'xor', 'ampersand',
                      'for', 'colon', 'import', 'except', 'nonlocal', 'global',
                      'yield', 'from', 'raise', 'with', 'dollar_lparen',
-                     'dollar_lbrace', 'dollar_lbracket', 'try']
+                     'dollar_lbrace', 'dollar_lbracket', 'try',
+                     'bang_lparen', 'bang_lbracket']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -1727,9 +1728,11 @@ class BaseParser(object):
         """atom : DOLLAR_NAME"""
         p[0] = self._envvar_by_name(p[1][1:], lineno=self.lineno, col=self.col)
 
-    def p_atom_fisful_of_dollars(self, p):
+    def p_atom_fistful_of_dollars(self, p):
         """atom : dollar_lbrace_tok test RBRACE
                 | dollar_lparen_tok subproc RPAREN
+                | bang_lparen_tok subproc RPAREN
+                | bang_lbracket_tok subproc RBRACKET
                 | dollar_lbracket_tok subproc RBRACKET
         """
         p[0] = self._dollar_rules(p)
@@ -2037,7 +2040,13 @@ class BaseParser(object):
             p0 = ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
                                lineno=lineno, col_offset=col)
         elif p1 == '$(':
-            p0 = xonsh_call('__xonsh_subproc_captured__', p2,
+            p0 = xonsh_call('__xonsh_subproc_captured_stdout__', p2,
+                            lineno=lineno, col=col)
+        elif p1 == '!(':
+            p0 = xonsh_call('__xonsh_subproc_captured_object__', p2,
+                            lineno=lineno, col=col)
+        elif p1 == '![':
+            p0 = xonsh_call('__xonsh_subproc_captured_hiddenobject__', p2,
                             lineno=lineno, col=col)
         elif p1 == '$[':
             p0 = xonsh_call('__xonsh_subproc_uncaptured__', p2,
@@ -2150,10 +2159,26 @@ class BaseParser(object):
         p0._cliarg_action = 'splitlines'
         p[0] = p0
 
-    def p_subproc_atom_captured(self, p):
+    def p_subproc_atom_captured_stdout(self, p):
         """subproc_atom : dollar_lparen_tok subproc RPAREN"""
         p1 = p[1]
-        p0 = xonsh_call('__xonsh_subproc_captured__', args=p[2],
+        p0 = xonsh_call('__xonsh_subproc_captured_stdout__', args=p[2],
+                        lineno=p1.lineno, col=p1.lexpos)
+        p0._cliarg_action = 'splitlines'
+        p[0] = p0
+
+    def p_subproc_atom_captured_object(self, p):
+        """subproc_atom : bang_lparen_tok subproc RPAREN"""
+        p1 = p[1]
+        p0 = xonsh_call('__xonsh_subproc_captured_object__', args=p[2],
+                        lineno=p1.lineno, col=p1.lexpos)
+        p0._cliarg_action = 'splitlines'
+        p[0] = p0
+    
+    def p_subproc_atom_captured_hiddenobject(self, p):
+        """subproc_atom : bang_lbracket_tok subproc RBRACKET"""
+        p1 = p[1]
+        p0 = xonsh_call('__xonsh_subproc_captured_hiddenobject__', args=p[2],
                         lineno=p1.lineno, col=p1.lexpos)
         p0._cliarg_action = 'splitlines'
         p[0] = p0

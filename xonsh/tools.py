@@ -961,3 +961,48 @@ def backup_file(fname):
 def normabspath(p):
     """Retuns as normalized absolute path, namely, normcase(abspath(p))"""
     return os.path.normcase(os.path.abspath(p))
+
+
+class CommandsCache:
+    def __init__(self):
+        self._cmds_cache = frozenset()
+        self._path_checksum = None
+        self._alias_checksum = None
+        self._path_mtime = -1
+
+    def __contains__(self, item):
+        return item in self.all_commands
+
+    def __iter__(self):
+        return iter(self.all_commands)
+
+    def __len__(self):
+        return len(self.all_commands)
+
+    @property
+    def all_commands(self):
+        path = builtins.__xonsh_env__.get('PATH', [])
+        # did PATH change?
+        path_hash = hash(frozenset(path))
+        cache_valid = path_hash == self._path_checksum
+        self._path_checksum = path_hash
+        # did aliases change?
+        al_hash = hash(frozenset(builtins.aliases.keys()))
+        cache_valid = cache_valid and al_hash == self._alias_checksum
+        self._alias_checksum = al_hash
+        pm = self._path_mtime
+        # did the contents of any directory in PATH change?
+        for d in filter(os.path.isdir, path):
+            m = os.stat(d).st_mtime
+            if m > pm:
+                pm = m
+                cache_valid = False
+        self._path_mtime = pm
+        if cache_valid:
+            return self._cmds_cache
+        allcmds = set()
+        for d in filter(os.path.isdir, path):
+            allcmds |= set(os.listdir(d))
+        allcmds |= set(builtins.aliases.keys())
+        self._cmds_cache = frozenset(allcmds)
+        return self._cmds_cache

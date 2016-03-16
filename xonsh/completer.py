@@ -12,7 +12,8 @@ import importlib
 import subprocess
 
 from xonsh.built_ins import iglobpath, expand_path
-from xonsh.tools import subexpr_from_unbalanced, get_sep, check_for_partial_string, RE_STRING_START
+from xonsh.tools import (subexpr_from_unbalanced, get_sep,
+                         check_for_partial_string, RE_STRING_START)
 from xonsh.tools import ON_WINDOWS
 
 
@@ -124,10 +125,7 @@ class Completer(object):
 
     def __init__(self):
         # initialize command cache
-        self._path_checksum = None
-        self._alias_checksum = None
-        self._path_mtime = -1
-        self._cmds_cache = frozenset()
+        self._cmds_cache = builtins.__xonsh_commands_cache__
         self._man_completer = ManCompleter()
         try:
             # FIXME this could be threaded for faster startup times
@@ -220,7 +218,7 @@ class Completer(object):
             if cmd == 'import' and begidx == len('import '):
                 # completing module to import
                 return sorted(self.module_complete(prefix)), lprefix
-            if cmd in self._all_commands():
+            if cmd in self._cmds_cache:
                 # subproc mode; do path completions
                 comps = self.path_complete(prefix, path_str_start,
                                            path_str_end, cdpath=True)
@@ -336,7 +334,7 @@ class Completer(object):
         csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
         startswither = startswithnorm if csc else startswithlow
         return {s + space
-                for s in self._all_commands()
+                for s in self._cmds_cache
                 if startswither(s, cmd, cmdlow)}
 
     def module_complete(self, prefix):
@@ -535,33 +533,6 @@ class Completer(object):
             comp = prefix[:prelen - len(attr)] + rpl
             attrs.add(comp)
         return attrs
-
-    def _all_commands(self):
-        path = builtins.__xonsh_env__.get('PATH', [])
-        # did PATH change?
-        path_hash = hash(frozenset(path))
-        cache_valid = path_hash == self._path_checksum
-        self._path_checksum = path_hash
-        # did aliases change?
-        al_hash = hash(frozenset(builtins.aliases.keys()))
-        cache_valid = cache_valid and al_hash == self._alias_checksum
-        self._alias_checksum = al_hash
-        pm = self._path_mtime
-        # did the contents of any directory in PATH change?
-        for d in filter(os.path.isdir, path):
-            m = os.stat(d).st_mtime
-            if m > pm:
-                pm = m
-                cache_valid = False
-        self._path_mtime = pm
-        if cache_valid:
-            return self._cmds_cache
-        allcmds = set()
-        for d in filter(os.path.isdir, path):
-            allcmds |= set(os.listdir(d))
-        allcmds |= set(builtins.aliases.keys())
-        self._cmds_cache = frozenset(allcmds)
-        return self._cmds_cache
 
 
 OPTIONS_PATH = os.path.expanduser('~') + "/.xonsh_man_completions"

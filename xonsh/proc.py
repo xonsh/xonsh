@@ -14,7 +14,7 @@ import time
 import builtins
 from functools import wraps
 from threading import Thread
-from collections import Sequence
+from collections import Sequence, namedtuple
 from subprocess import Popen, PIPE, DEVNULL, STDOUT, TimeoutExpired
 
 from xonsh.tools import (redirect_stdout, redirect_stderr, ON_WINDOWS, ON_LINUX,
@@ -528,3 +528,36 @@ def _wcode_to_popen(code):
     else:
         # Can this happen? Let's find out. Returning None is not an option.
         raise ValueError("Invalid os.wait code: {}".format(code))
+
+
+_CCTuple = namedtuple("_CCTuple", ["stdin",
+                                   "stdout",
+                                   "stderr",
+                                   "pid",
+                                   "returncode",
+                                   "args",
+                                   "alias",
+                                   "stdin_redirect",
+                                   "stdout_redirect",
+                                   "stderr_redirect"])
+
+class CompletedCommand(_CCTuple):
+    """
+    Represents a completed subprocess-mode command.
+    """
+
+    def __bool__(self):
+        return self.returncode == 0
+
+    def __eq__(self, other):
+        return self.returncode == other
+
+    def __hash__(self):
+        return hash(self.returncode)
+
+CompletedCommand.__new__.__defaults__ = (None,) * len(CompletedCommand._fields)
+
+
+class HiddenCompletedCommand(CompletedCommand):
+    def __repr__(self):
+        return ''
