@@ -26,8 +26,8 @@ Current Developments
 * New ``$RIGHT_PROMPT`` environment variable for displaying right-aligned
   text in prompt-toolkit shell.
 * Added ``!(...)`` operator, which returns an object representing the result
-  of running a command.  This object is truthy if the command had a return
-  code of zero, and it is equal (via ``==``) to its return code value.
+  of running a command.  The truth value of this object is True if the
+  return code is equal to zero and False otherwise.
 * Optional dependency on the win_unicode_console package to enable unicode
   support in cmd.exe on Windows. This can be disabled/enabled with the
   ``$WIN_UNICODE_CONSOLE`` environment variable.
@@ -41,8 +41,8 @@ Current Developments
   capabilities.
 * New ``Token.Color`` token for xonsh color names, e.g. we now use
   ``Token.Color.RED`` rather than ``Token.RED``.
-* Untracked files in git are ignored when determining if a git workdir is 
-  is dirty. This affects the coloring of the branch label. 
+* Untracked files in git are ignored when determining if a git workdir is
+  is dirty. This affects the coloring of the branch label.
 * Regular expression globbing now uses ``re.fullmatch`` instead of
   ``re.match``, and the result of an empty regex glob does not cause the
   argument to be deleted.
