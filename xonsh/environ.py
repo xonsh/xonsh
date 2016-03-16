@@ -464,9 +464,12 @@ DEFAULT_DOCS = {
         'Set to True to always show traceback or False to always hide. '
         'If undefined then the traceback is hidden but a notice is shown on how '
         'to enable the full traceback.'),
+    'XONSH_STORE_STDIN': VarDocs(
+        'Whether or not to store the stdin that is supplied to the !() and ![] '
+        'operators.'),
     'XONSH_STORE_STDOUT': VarDocs(
         'Whether or not to store the stdout and stderr streams in the '
-        'history files.', configurable=False),
+        'history files.'),
     }
 
 #

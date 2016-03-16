@@ -313,8 +313,8 @@ example:
 .. code-block:: xonshcon
 
     def check_file(file):
-        if ?(test -e @(file)):
-            if ?(test -f @(file)) or ?(test -d @(file)):
+        if !(test -e @(file)):
+            if !(test -f @(file)) or !(test -d @(file)):
                 print("File is a regular file or directory")
             else:
                 print("File is not a regular file or directory")
@@ -322,7 +322,7 @@ example:
             print("File does not exist")
 
     def wait_until_google_responds():
-        while not ?(ping -c 1 google.com):
+        while not !(ping -c 1 google.com):
             sleep 1
 
 
@@ -339,6 +339,8 @@ want.
     >>> y = !(ls -l)
     >>> print(y.returncode)
     0
+    >>> print(y.rtn)  # alias to returncode
+    0
 
 
 .. warning:: Job control is not implemented for captured subprocesses.
@@ -353,7 +355,7 @@ or inject Python values with the ``@()`` operator:
     '/home/snail\n'
 
 Uncaptured Subprocess with ``$[]`` and ``![]``
-===================================
+===============================================
 Uncaptured subprocesses are denoted with the ``$[]`` and ``![]`` operators. They are
 the same as ``$()`` captured subprocesses in almost every way. The only
 difference is that the subprocess's stdout passes directly through xonsh and
