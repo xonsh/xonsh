@@ -353,7 +353,7 @@ or inject Python values with the ``@()`` operator:
     '/home/snail\n'
 
 Uncaptured Subprocess with ``$[]`` and ``![]``
-===================================
+===============================================
 Uncaptured subprocesses are denoted with the ``$[]`` and ``![]`` operators. They are
 the same as ``$()`` captured subprocesses in almost every way. The only
 difference is that the subprocess's stdout passes directly through xonsh and

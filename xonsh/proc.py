@@ -178,7 +178,7 @@ class ProcProxy(Thread):
 
         Returns
         -------
-        `None` if the function is still executing, `True` if the function 
+        `None` if the function is still executing, `True` if the function
         finished successfully, and `False` if there was an error.
         """
         return self.returncode
@@ -369,14 +369,14 @@ class SimpleProcProxy(ProcProxy):
         super().__init__(f, args, stdin, stdout, stderr, universal_newlines)
 
 #
-# Foreground Process Proxies 
+# Foreground Process Proxies
 #
 
 class ForegroundProcProxy(object):
     """This is process proxy class that runs its alias functions on the
     same thread that it was called from, which is typically the main thread.
-    This prevents backgrounding the process, but enables debugger and 
-    profiler tools (functions) be run on the same thread that they are 
+    This prevents backgrounding the process, but enables debugger and
+    profiler tools (functions) be run on the same thread that they are
     attempting to debug.
     """
 
@@ -397,7 +397,7 @@ class ForegroundProcProxy(object):
         return self.returncode
 
     def wait(self, timeout=None):
-        """Runs the function and returns the result. Timeout argument only 
+        """Runs the function and returns the result. Timeout argument only
         present for API compatability.
         """
         if self.f is None:
@@ -415,7 +415,7 @@ class SimpleForegroundProcProxy(ForegroundProcProxy):
     """Variant of `ForegroundProcProxy` for simpler functions.
 
     The function passed into the initializer for `SimpleForegroundProcProxy`
-    should have the form described in the xonsh tutorial. This function is 
+    should have the form described in the xonsh tutorial. This function is
     then wrapped to make a new function of the form expected by
     `ForegroundProcProxy`.
     """
@@ -542,9 +542,7 @@ _CCTuple = namedtuple("_CCTuple", ["stdin",
                                    "stderr_redirect"])
 
 class CompletedCommand(_CCTuple):
-    """
-    Represents a completed subprocess-mode command.
-    """
+    """Represents a completed subprocess-mode command."""
 
     def __bool__(self):
         return self.returncode == 0
@@ -552,8 +550,6 @@ class CompletedCommand(_CCTuple):
     def __eq__(self, other):
         return self.returncode == other
 
-    def __hash__(self):
-        return hash(self.returncode)
 
 CompletedCommand.__new__.__defaults__ = (None,) * len(CompletedCommand._fields)
 

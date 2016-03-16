@@ -54,7 +54,7 @@ try:
     import win_unicode_console
 except ImportError:
     win_unicode_console = None
-    
+
 
 DEFAULT_ENCODING = sys.getdefaultencoding()
 
@@ -610,7 +610,7 @@ def setup_win_unicode_console(enable):
         else:
             win_unicode_console.disable()
     return enable
-    
+
 # history validation
 
 _min_to_sec = lambda x: 60.0 * float(x)
@@ -963,7 +963,9 @@ def normabspath(p):
     return os.path.normcase(os.path.abspath(p))
 
 
-class CommandsCache:
+class CommandsCache(Set):
+    """A lazy cache representing the commands available on the file system."""
+
     def __init__(self):
         self._cmds_cache = frozenset()
         self._path_checksum = None

@@ -569,9 +569,9 @@ def run_subproc(cmds, captured=False):
                     e = 'xonsh: subprocess mode: permission denied: {0}'
                     raise XonshError(e.format(cmd[0]))
         _stdin_file = None
-        if (captured == 'object' and
-                stdin is not None and
-                __xonsh_env__['XONSH_STORE_STDIN'] and
+        if (stdin is not None and
+                ENV.get('XONSH_STORE_STDIN') and
+                captured == 'object' and
                 'cat' in __xonsh_commands_cache__ and
                 'tee' in __xonsh_commands_cache__):
             _stdin_file = tempfile.NamedTemporaryFile()
@@ -775,10 +775,9 @@ def load_builtins(execer=None, config=None):
     # would be nice to actually include non-detyped versions.
     builtins.__xonsh_history__ = History(env=ENV.detype(),
                                          ts=[time.time(), None], locked=True)
-    lastflush = _lastflush
-    atexit.register(lastflush)
+    atexit.register(_lastflush)
     for sig in AT_EXIT_SIGNALS:
-        resetting_signal_handle(sig, lastflush)
+        resetting_signal_handle(sig, _lastflush)
     BUILTINS_LOADED = True
 
 
