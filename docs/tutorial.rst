@@ -313,8 +313,8 @@ example:
 .. code-block:: xonshcon
 
     def check_file(file):
-        if ?(test -e @(file)):
-            if ?(test -f @(file)) or ?(test -d @(file)):
+        if !(test -e @(file)):
+            if !(test -f @(file)) or !(test -d @(file)):
                 print("File is a regular file or directory")
             else:
                 print("File is not a regular file or directory")
@@ -322,7 +322,7 @@ example:
             print("File does not exist")
 
     def wait_until_google_responds():
-        while not ?(ping -c 1 google.com):
+        while not !(ping -c 1 google.com):
             sleep 1
 
 
@@ -338,6 +338,8 @@ want.
     -RW-RW-R-- 1 SNAIL SNAIL 0 MAR  8 15:46 XONSH
     >>> y = !(ls -l)
     >>> print(y.returncode)
+    0
+    >>> print(y.rtn)  # alias to returncode
     0
 
 

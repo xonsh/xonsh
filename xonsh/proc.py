@@ -547,9 +547,25 @@ class CompletedCommand(_CCTuple):
     def __bool__(self):
         return self.returncode == 0
 
-    def __eq__(self, other):
-        return self.returncode == other
+    @property
+    def inp(self):
+        """Creates normalized input string from args."""
+        return ' '.join(self.args)
 
+    @property
+    def out(self):
+        """Alias to stdout."""
+        return self.stdout
+
+    @property
+    def err(self):
+        """Alias to stderr."""
+        return self.stderr
+
+    @property
+    def rtn(self):
+        """Alias to return code."""
+        return self.returncode
 
 CompletedCommand.__new__.__defaults__ = (None,) * len(CompletedCommand._fields)
 
