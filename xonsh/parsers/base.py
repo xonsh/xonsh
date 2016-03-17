@@ -1799,8 +1799,8 @@ class BaseParser(object):
         """subscriptlist : subscript comma_subscript_list_opt comma_opt"""
         p1, p2 = p[1], p[2]
         if isinstance(p1, ast.Slice):
-            if p2 is not None:
-                p1 = ast.ExtSlice(dims=[p1, *p2])
+            if p2 is not None and True in [isinstance(x, ast.Slice) for x in p2]:
+                p1 = ast.ExtSlice(dims=[p1]+p2)
         elif p2 is not None:
             p1.value = ast.Tuple(elts=[p1.value] + [x.value for x in p2],
                                  ctx=ast.Load(), lineno=p1.lineno,
