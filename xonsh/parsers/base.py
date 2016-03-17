@@ -1798,7 +1798,10 @@ class BaseParser(object):
     def p_subscriptlist(self, p):
         """subscriptlist : subscript comma_subscript_list_opt comma_opt"""
         p1, p2 = p[1], p[2]
-        if p2 is not None:
+        if isinstance(p1, ast.Slice):
+            if p2 is not None:
+                p1 = ast.ExtSlice(dims=[p1, *p2])
+        elif p2 is not None:
             p1.value = ast.Tuple(elts=[p1.value] + [x.value for x in p2],
                                  ctx=ast.Load(), lineno=p1.lineno,
                                  col_offset=p1.col_offset)
@@ -1822,58 +1825,7 @@ class BaseParser(object):
         else:
             lineno, col = p1.lineno, p1.col_offset
         p[0] = ast.Slice(lower=p1, upper=p[3], step=p[4],
-                                            lineno=lineno, col_offset=col)
-
-    def p_subscript_2slice(self, p):
-        """subscript : test_opt colon_tok test_opt sliceop_opt COMMA test_opt colon_tok test_opt sliceop_opt"""
-        p1 = p[1]
-        if p1 is None:
-            p2 = p[2]
-            lineno1, col1 = p2.lineno, p2.lexpos
-        else:
-            lineno1, col1 = p1.lineno, p1.col_offset
-
-        p6 = p[6]
-        if p6 is None:
-            p7 = p[7]
-            lineno2, col2 = p7.lineno, p7.lexpos
-        else:
-            lineno2, col2 = p6.lineno, p6.col_offset
-
-        p[0] = ast.ExtSlice(dims=[ast.Slice(lower=p1, upper=p[3], step=p[4],
-                                            lineno=lineno1, col_offset=col1),
-                                  ast.Slice(lower=p6, upper=p[8], step=p[9],
-                                            lineno=lineno2, col_offset=col2)])
-
-    def p_subscript_3slice(self, p):
-        """subscript : test_opt colon_tok test_opt sliceop_opt COMMA test_opt colon_tok test_opt sliceop_opt COMMA test_opt colon_tok test_opt sliceop_opt"""
-        p1 = p[1]
-        if p1 is None:
-            p2 = p[2]
-            lineno1, col1 = p2.lineno, p2.lexpos
-        else:
-            lineno1, col1 = p1.lineno, p1.col_offset
-
-        p6 = p[6]
-        if p6 is None:
-            p7 = p[7]
-            lineno2, col2 = p7.lineno, p7.lexpos
-        else:
-            lineno2, col2 = p6.lineno, p6.col_offset
-
-        p11 = p[11]
-        if p11 is None:
-            p12 = p[12]
-            lineno3, col3 = p12.lineno, p12.lexpos
-        else:
-            lineno3, col3 = p11.lineno, p11.col_offset
-
-        p[0] = ast.ExtSlice(dims=[ast.Slice(lower=p1, upper=p[3], step=p[4],
-                                            lineno=lineno1, col_offset=col1),
-                                  ast.Slice(lower=p6, upper=p[8], step=p[9],
-                                            lineno=lineno2, col_offset=col2),
-                                  ast.Slice(lower=p11, upper=p[13], step=p[14],
-                                            lineno=lineno3, col_offset=col3)])
+                         lineno=lineno, col_offset=col)
 
     def p_sliceop(self, p):
         """sliceop : COLON test_opt"""
