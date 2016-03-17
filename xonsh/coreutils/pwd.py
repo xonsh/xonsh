@@ -1,4 +1,4 @@
 import builtins
 
-def pwd(args, stdin=None):
-    print(__xonsh_env__['PWD'])
+def pwd(args, stdin, stdout, stderr):
+    print(__xonsh_env__['PWD'], file=stdout)
