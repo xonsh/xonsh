@@ -310,6 +310,75 @@ def test_str_slice_lower_other():
 def test_str_slice_upper_other():
     yield check_ast, '"hello"[3::2]'
 
+def test_str_2slice():
+    yield check_ast, '"hello"[0:3,0:3]', False
+
+def test_str_2step():
+    yield check_ast, '"hello"[0:3:1,0:4:2]', False
+
+def test_str_2slice_all():
+    yield check_ast, '"hello"[:,:]', False
+
+def test_str_2slice_upper():
+    yield check_ast, '"hello"[5:,5:]', False
+
+def test_str_2slice_lower():
+    yield check_ast, '"hello"[:3,:3]', False
+
+def test_str_2slice_lowerupper():
+    yield check_ast, '"hello"[5:,:3]', False
+
+def test_str_2slice_other():
+    yield check_ast, '"hello"[::2,::2]', False
+
+def test_str_2slice_lower_other():
+    yield check_ast, '"hello"[:3:2,:3:2]', False
+
+def test_str_2slice_upper_other():
+    yield check_ast, '"hello"[3::2,3::2]', False
+
+def test_str_3slice():
+    yield check_ast, '"hello"[0:3,0:3,0:3]', False
+
+def test_str_3step():
+    yield check_ast, '"hello"[0:3:1,0:4:2,1:3:2]', False
+
+def test_str_3slice_all():
+    yield check_ast, '"hello"[:,:,:]', False
+
+def test_str_3slice_upper():
+    yield check_ast, '"hello"[5:,5:,5:]', False
+
+def test_str_3slice_lower():
+    yield check_ast, '"hello"[:3,:3,:3]', False
+
+def test_str_3slice_lowerlowerupper():
+    yield check_ast, '"hello"[:3,:3,:3]', False
+
+def test_str_3slice_lowerupperlower():
+    yield check_ast, '"hello"[:3,5:,:3]', False
+
+def test_str_3slice_lowerupperupper():
+    yield check_ast, '"hello"[:3,5:,5:]', False
+
+def test_str_3slice_upperlowerlower():
+    yield check_ast, '"hello"[5:,5:,:3]', False
+
+def test_str_3slice_upperlowerupper():
+    yield check_ast, '"hello"[5:,:3,5:]', False
+
+def test_str_3slice_upperupperlower():
+    yield check_ast, '"hello"[5:,5:,:3]', False
+
+def test_str_3slice_other():
+    yield check_ast, '"hello"[::2,::2,::2]', False
+
+def test_str_3slice_lower_other():
+    yield check_ast, '"hello"[:3:2,:3:2,:3:2]', False
+
+def test_str_3slice_upper_other():
+    yield check_ast, '"hello"[3::2,3::2,3::2]', False
+
 def test_list_empty():
     yield check_ast, '[]'
 
