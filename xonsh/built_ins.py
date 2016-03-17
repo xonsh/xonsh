@@ -674,6 +674,7 @@ def run_subproc(cmds, captured=False):
             procinfo['stderr'] = errout
 
     if (not prev_is_proxy and
+            hist.last_cmd_rtn is not None and
             hist.last_cmd_rtn > 0 and
             ENV.get('RAISE_SUBPROC_ERROR')):
         raise CalledProcessError(hist.last_cmd_rtn, aliased_cmd, output=output)
