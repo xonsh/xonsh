@@ -5,7 +5,7 @@
 from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
     BinOp, Add, Sub, Mult, Div, FloorDiv, Mod, Pow, Compare, Lt, Gt, \
     LtE, GtE, Eq, NotEq, In, NotIn, Is, IsNot, Not, BoolOp, Or, And, \
-    Subscript, Load, Slice, List, Tuple, Set, Dict, AST, NameConstant, \
+    Subscript, Load, Slice, ExtSlice, List, Tuple, Set, Dict, AST, NameConstant, \
     Name, GeneratorExp, Store, comprehension, ListComp, SetComp, DictComp, \
     Assign, AugAssign, BitXor, BitAnd, BitOr, LShift, RShift, Assert, Delete, \
     Del, Pass, Raise, Import, alias, ImportFrom, Continue, Break, Yield, \

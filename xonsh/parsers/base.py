@@ -1593,7 +1593,7 @@ class BaseParser(object):
             return leader
         p0 = leader
         for trailer in trailers:
-            if isinstance(trailer, (ast.Index, ast.Slice)):
+            if isinstance(trailer, (ast.Index, ast.Slice, ast.ExtSlice)):
                 p0 = ast.Subscript(value=leader,
                                    slice=trailer,
                                    ctx=ast.Load(),
@@ -1822,7 +1822,28 @@ class BaseParser(object):
         else:
             lineno, col = p1.lineno, p1.col_offset
         p[0] = ast.Slice(lower=p1, upper=p[3], step=p[4],
-                         lineno=lineno, col_offset=col)
+                                            lineno=lineno, col_offset=col)
+
+    def p_subscript_tok_slice(self, p):
+        """subscript : test_opt colon_tok test_opt sliceop_opt COMMA test_opt colon_tok test_opt sliceop_opt"""
+        p1 = p[1]
+        if p1 is None:
+            p2 = p[2]
+            lineno1, col1 = p2.lineno, p2.lexpos
+        else:
+            lineno1, col1 = p1.lineno, p1.col_offset
+
+        p6 = p[6]
+        if p6 is None:
+            p7 = p[7]
+            lineno2, col2 = p7.lineno, p7.lexpos
+        else:
+            lineno2, col2 = p6.lineno, p6.col_offset
+
+        p[0] = ast.ExtSlice(dims=[ast.Slice(lower=p1, upper=p[3], step=p[4],
+                                            lineno=lineno1, col_offset=col1),
+                                  ast.Slice(lower=p6, upper=p[8], step=p[9],
+                                            lineno=lineno2, col_offset=col2)])
 
     def p_sliceop(self, p):
         """sliceop : COLON test_opt"""
