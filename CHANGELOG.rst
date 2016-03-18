@@ -58,6 +58,7 @@ Current Developments
 
 **Fixed:**
 
+* Multidimensional slicing, as in numpy, no longer throws SyntaxErrors.
 * Some minor zsh fixes for more platforms and setups.
 * The ``BaseShell.settitle`` method no longer has its commands captured by
   ``$(...)``
