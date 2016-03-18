@@ -12,24 +12,28 @@ def _cat_single_file(opts, fname, stdin, out, err):
         print("cat: {}: No such file or directory.".format(fname), file=err)
         return True
     else:
-        f = open(fname)
+        f = open(fname, 'rb')
+        sep = os.linesep.encode()
         last_was_blank = False
         while True:
             _r = r = f.readline()
-            if r == '':
+            if r == b'':
                 break
-            if r.endswith(os.linesep):
-                _r = _r[:-len(os.linesep)]
-            this_one_blank = _r == ''
+            if r.endswith(sep):
+                _r = _r[:-len(sep)]
+            this_one_blank = _r == b''
             if last_was_blank and this_one_blank and opts['squeeze_blank']:
                 continue
             last_was_blank = this_one_blank
             if (not this_one_blank) and opts['number']:
-                _r = "%6d %s" % (line_count, _r)
+                _r = b"%6d %s" % (line_count, _r)
                 line_count += 1
             if opts['show_ends']:
-                _r = '%s$' % _r
-            print(_r, flush=True, file=out)
+                _r = b'%s$' % _r
+            try:
+                print(_r.decode('unicode_escape'), flush=True, file=out)
+            except:
+                pass
         return False
 
 
