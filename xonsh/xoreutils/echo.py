@@ -1,12 +1,10 @@
-from argparse import ArgumentParser
-
 def echo(args, stdin, stdout, stderr):
     opts = _parse_args(args)
     if opts is None:
         return
-    
+
     ender = opts['end']
-    
+
     args = map(str, args)
     if opts['escapes']:
         args = map(lambda x: x.encode().decode('unicode_escape'), args)

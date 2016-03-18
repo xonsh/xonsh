@@ -1,6 +1,7 @@
 import os
 import sys
 
+
 def _cat_single_file(opts, fname, stdin, out, err):
     global line_count
     if fname == '-':
@@ -40,7 +41,7 @@ def _cat_single_file(opts, fname, stdin, out, err):
 def cat(args, stdin, stdout, stderr):
     global line_count
     opts = _parse_args(args)
-    
+
     line_count = 1
     errors = False
     if len(args) == 0:
