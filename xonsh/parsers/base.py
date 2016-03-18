@@ -1593,7 +1593,7 @@ class BaseParser(object):
             return leader
         p0 = leader
         for trailer in trailers:
-            if isinstance(trailer, (ast.Index, ast.Slice)):
+            if isinstance(trailer, (ast.Index, ast.Slice, ast.ExtSlice)):
                 p0 = ast.Subscript(value=leader,
                                    slice=trailer,
                                    ctx=ast.Load(),
@@ -1798,7 +1798,10 @@ class BaseParser(object):
     def p_subscriptlist(self, p):
         """subscriptlist : subscript comma_subscript_list_opt comma_opt"""
         p1, p2 = p[1], p[2]
-        if p2 is not None:
+        if isinstance(p1, ast.Slice):
+            if p2 is not None and True in [isinstance(x, ast.Slice) for x in p2]:
+                p1 = ast.ExtSlice(dims=[p1]+p2)
+        elif p2 is not None:
             p1.value = ast.Tuple(elts=[p1.value] + [x.value for x in p2],
                                  ctx=ast.Load(), lineno=p1.lineno,
                                  col_offset=p1.col_offset)
