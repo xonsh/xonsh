@@ -1798,10 +1798,12 @@ class BaseParser(object):
     def p_subscriptlist(self, p):
         """subscriptlist : subscript comma_subscript_list_opt comma_opt"""
         p1, p2 = p[1], p[2]
-        if isinstance(p1, ast.Slice):
-            if p2 is not None and True in [isinstance(x, ast.Slice) for x in p2]:
-                p1 = ast.ExtSlice(dims=[p1]+p2)
-        elif p2 is not None:
+        if p2 is None:
+            pass
+        elif isinstance(p1, ast.Slice) or \
+                any([isinstance(x, ast.Slice) for x in p2]):
+            p1 = ast.ExtSlice(dims=[p1]+p2)
+        else:
             p1.value = ast.Tuple(elts=[p1.value] + [x.value for x in p2],
                                  ctx=ast.Load(), lineno=p1.lineno,
                                  col_offset=p1.col_offset)
@@ -2177,7 +2179,7 @@ class BaseParser(object):
                         lineno=p1.lineno, col=p1.lexpos)
         p0._cliarg_action = 'splitlines'
         p[0] = p0
-    
+
     def p_subproc_atom_captured_hiddenobject(self, p):
         """subproc_atom : bang_lbracket_tok subproc RBRACKET"""
         p1 = p[1]

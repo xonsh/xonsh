@@ -58,7 +58,7 @@ def assert_nodes_equal(x, y, include_attributes=True):
         print(pdump(x, include_attributes=include_attributes), '\n')
         print('y:\n==')
         print(pdump(y, include_attributes=include_attributes), '\n')
-    assert_equal(pdump(x, include_attributes=include_attributes), 
+    assert_equal(pdump(x, include_attributes=include_attributes),
                  pdump(y, include_attributes=include_attributes))
 
 def check_ast(inp, run=True, mode='eval'):
@@ -378,6 +378,12 @@ def test_str_3slice_lower_other():
 
 def test_str_3slice_upper_other():
     yield check_ast, '"hello"[3::2,3::2,3::2]', False
+
+def test_str_slice_true():
+    yield check_ast, '"hello"[0:3,True]', False
+
+def test_str_true_slice():
+    yield check_ast, '"hello"[True,0:3]', False
 
 def test_list_empty():
     yield check_ast, '[]'
