@@ -1568,11 +1568,35 @@ def test_ls_nest_ls():
 def test_ls_nest_ls_dashl():
     yield check_xonsh_ast, {}, '$(ls $(ls) -l)', False
 
-def test_ls_envvar_strval():
-    yield check_xonsh_ast, {'WAKKA': '.'}, '$(ls $WAKKA)', False
+def test_bang_sub():
+    yield check_xonsh_ast, {}, '!(ls)', False
 
-def test_ls_envvar_listval():
-    yield check_xonsh_ast, {'WAKKA': ['.', '.']}, '$(ls $WAKKA)', False
+def test_bang_sub_space():
+    yield check_xonsh_ast, {}, '!(ls )', False
+
+def test_bang_ls_dot():
+    yield check_xonsh_ast, {}, '!(ls .)', False
+
+def test_bang_ls_dot_nesting():
+    yield check_xonsh_ast, {}, '!(ls @(None or "."))', False
+
+def test_bang_ls_dot_nesting_var():
+    yield check_xonsh, {}, 'x = "."; !(ls @(None or x))', False
+
+def test_bang_ls_dot_str():
+    yield check_xonsh_ast, {}, '!(ls ".")', False
+
+def test_bang_ls_nest_ls():
+    yield check_xonsh_ast, {}, '!(ls $(ls))', False
+
+def test_bang_ls_nest_ls_dashl():
+    yield check_xonsh_ast, {}, '!(ls $(ls) -l)', False
+
+def test_bang_ls_envvar_strval():
+    yield check_xonsh_ast, {'WAKKA': '.'}, '!(ls $WAKKA)', False
+
+def test_bang_ls_envvar_listval():
+    yield check_xonsh_ast, {'WAKKA': ['.', '.']}, '!(ls $WAKKA)', False
 
 def test_question():
     yield check_xonsh_ast, {}, 'range?'
@@ -1591,6 +1615,50 @@ def test_backtick():
 
 def test_uncaptured_sub():
     yield check_xonsh_ast, {}, '$[ls]', False
+
+def test_hiddenobj_sub():
+    yield check_xonsh_ast, {}, '![ls]', False
+
+def test_bang_two_cmds_one_pipe():
+    yield check_xonsh_ast, {}, '!(ls | grep wakka)', False
+
+def test_bang_three_cmds_two_pipes():
+    yield check_xonsh_ast, {}, '!(ls | grep wakka | grep jawaka)', False
+
+def test_bang_one_cmd_write():
+    yield check_xonsh_ast, {}, '!(ls > x.py)', False
+
+def test_bang_one_cmd_append():
+    yield check_xonsh_ast, {}, '!(ls >> x.py)', False
+
+def test_bang_two_cmds_write():
+    yield check_xonsh_ast, {}, '!(ls | grep wakka > x.py)', False
+
+def test_bang_two_cmds_append():
+    yield check_xonsh_ast, {}, '!(ls | grep wakka >> x.py)', False
+
+def test_bang_cmd_background():
+    yield check_xonsh_ast, {}, '!(emacs ugggh &)', False
+
+def test_bang_cmd_background_nospace():
+    yield check_xonsh_ast, {}, '!(emacs ugggh&)', False
+
+def test_bang_git_quotes_no_space():
+    yield check_xonsh_ast, {}, '![git commit -am "wakka"]', False
+
+def test_bang_git_quotes_space():
+    yield check_xonsh_ast, {}, '![git commit -am "wakka jawaka"]', False
+
+def test_bang_git_two_quotes_space():
+    yield check_xonsh, {}, ('![git commit -am "wakka jawaka"]\n'
+                            '![git commit -am "flock jawaka"]\n'), False
+
+def test_bang_git_two_quotes_space_space():
+    yield check_xonsh, {}, ('![git commit -am "wakka jawaka" ]\n'
+                            '![git commit -am "flock jawaka milwaka" ]\n'), False
+
+def test_bang_ls_quotes_3_space():
+    yield check_xonsh_ast, {}, '![ls "wakka jawaka baraka"]', False
 
 def test_two_cmds_one_pipe():
     yield check_xonsh_ast, {}, '$(ls | grep wakka)', False
