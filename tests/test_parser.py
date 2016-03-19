@@ -1568,6 +1568,12 @@ def test_ls_nest_ls():
 def test_ls_nest_ls_dashl():
     yield check_xonsh_ast, {}, '$(ls $(ls) -l)', False
 
+def test_ls_envvar_strval():
+    yield check_xonsh_ast, {'WAKKA': '.'}, '$(ls $WAKKA)', False
+
+def test_ls_envvar_listval():
+    yield check_xonsh_ast, {'WAKKA': ['.', '.']}, '$(ls $WAKKA)', False
+
 def test_bang_sub():
     yield check_xonsh_ast, {}, '!(ls)', False
 
