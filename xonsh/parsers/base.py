@@ -2172,22 +2172,6 @@ class BaseParser(object):
         p0._cliarg_action = 'splitlines'
         p[0] = p0
 
-    def p_subproc_atom_captured_object(self, p):
-        """subproc_atom : bang_lparen_tok subproc RPAREN"""
-        p1 = p[1]
-        p0 = xonsh_call('__xonsh_subproc_captured_object__', args=p[2],
-                        lineno=p1.lineno, col=p1.lexpos)
-        p0._cliarg_action = 'splitlines'
-        p[0] = p0
-
-    def p_subproc_atom_captured_hiddenobject(self, p):
-        """subproc_atom : bang_lbracket_tok subproc RBRACKET"""
-        p1 = p[1]
-        p0 = xonsh_call('__xonsh_subproc_captured_hiddenobject__', args=p[2],
-                        lineno=p1.lineno, col=p1.lexpos)
-        p0._cliarg_action = 'splitlines'
-        p[0] = p0
-
     def p_subproc_atom_pyenv_lookup(self, p):
         """subproc_atom : dollar_lbrace_tok test RBRACE"""
         p1 = p[1]

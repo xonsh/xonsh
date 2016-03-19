@@ -539,7 +539,8 @@ _CCTuple = namedtuple("_CCTuple", ["stdin",
                                    "alias",
                                    "stdin_redirect",
                                    "stdout_redirect",
-                                   "stderr_redirect"])
+                                   "stderr_redirect",
+                                   "timestamp"])
 
 class CompletedCommand(_CCTuple):
     """Represents a completed subprocess-mode command."""
