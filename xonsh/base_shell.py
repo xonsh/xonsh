@@ -108,10 +108,11 @@ class BaseShell(object):
     """The xonsh shell."""
 
     def __init__(self, execer, ctx, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__()
         self.execer = execer
         self.ctx = ctx
-        self.completer = Completer()
+        if kwargs['completer']:
+            self.completer = Completer()
         self.buffer = []
         self.need_more_lines = False
         self.mlprompt = None

@@ -89,7 +89,7 @@ class Shell(object):
                 shell_type = env['SHELL_TYPE'] = 'readline'
         # actually make the shell
         if shell_type == 'none':
-            from xonsh.base_shell import BaseShell as cls
+            from xonsh.base_shell import BaseShell as shell_class
         elif shell_type == 'prompt_toolkit':
             vptk = prompt_toolkit_version()
             minor = int(vptk.split('.')[1])
@@ -97,15 +97,17 @@ class Shell(object):
                 msg = ('prompt-toolkit version < v0.57 and may not work as '
                        'expected. Please update.')
                 warn(msg, RuntimeWarning)
-            from xonsh.ptk.shell import PromptToolkitShell as cls
+            from xonsh.ptk.shell import PromptToolkitShell as shell_class
         elif shell_type == 'readline':
-            from xonsh.readline_shell import ReadlineShell as cls
+            from xonsh.readline_shell import ReadlineShell as shell_class
         else:
             raise XonshError('{} is not recognized as a shell type'.format(
                              shell_type))
-        self.shell = cls(execer=self.execer,
-                         ctx=self.ctx, **kwargs)
+        self.shell = shell_class(execer=self.execer,
+                                 ctx=self.ctx, **kwargs)
         # allows history garbace colector to start running
+        self.shell = shell_class(execer=self.execer,
+                                 ctx=self.ctx, **kwargs)
         builtins.__xonsh_history__.gc.wait_for_shell = False
 
     def __getattr__(self, attr):

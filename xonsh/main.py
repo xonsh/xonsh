@@ -138,6 +138,10 @@ def _pprint_displayhook(value):
             pprint(value)  # black & white case
         builtins._ = value
 
+MODE_SINGLE_COMMAND = 0
+MODE_SCRIPT_FROM_FILE = 1
+MODE_SCRIPT_FROM_STDIN = 2
+MODE_INTERACTIVE = 3
 
 def premain(argv=None):
     """Setup for main xonsh entry point, returns parsed arguments."""
@@ -156,12 +160,24 @@ def premain(argv=None):
         version = '/'.join(('xonsh', __version__)),
         print(version)
         exit()
-    shell_kwargs = {'shell_type': args.shell_type}
+    shell_kwargs = {'shell_type': args.shell_type, 'completer': False}
     if args.config_path is None:
         shell_kwargs['config'] = args.config_path
     if args.norc:
         shell_kwargs['rc'] = ()
     setattr(sys, 'displayhook', _pprint_displayhook)
+    if args.command is not None:
+        args.mode = MODE_SINGLE_COMMAND
+        shell_kwargs['shell_type'] = 'none'
+    elif args.file is not None:
+        args.mode = MODE_SCRIPT_FROM_FILE
+        shell_kwargs['shell_type'] = 'none'
+    elif not sys.stdin.isatty() and not args.force_interactive:
+        args.mode = MODE_SCRIPT_FROM_STDIN
+        shell_kwargs['shell_type'] = 'none'
+    else:
+        args.mode = MODE_INTERACTIVE
+        shell_kwargs['completer'] = True
     shell = builtins.__xonsh_shell__ = Shell(**shell_kwargs)
     from xonsh import imphooks
     env = builtins.__xonsh_env__

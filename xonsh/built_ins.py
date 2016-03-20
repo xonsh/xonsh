@@ -771,7 +771,7 @@ def load_builtins(execer=None, config=None):
     builtins.execx = None if execer is None else execer.exec
     builtins.compilex = None if execer is None else execer.compile
     builtins.default_aliases = builtins.aliases = Aliases(DEFAULT_ALIASES)
-    builtins.aliases.update(load_foreign_aliases(issue_warning=False))
+    #builtins.aliases.update(load_foreign_aliases(issue_warning=False))
     # history needs to be started after env and aliases
     # would be nice to actually include non-detyped versions.
     builtins.__xonsh_history__ = History(env=ENV.detype(),
