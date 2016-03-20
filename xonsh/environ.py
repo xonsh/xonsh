@@ -1165,11 +1165,9 @@ def xonshrc_context(rcfiles=None, execer=None):
                 # use the compiled version and leave
                 with open(cachefname, 'rb') as cfile:
                     ccode = marshal.load(cfile)
-                    print('using cached marshaled rcfile')
                     use_cached = True
                     loaded.append(True)
         if not use_cached:
-            print('not using cached marshaled rcfile')
             with open(rcfile, 'r') as f:
                 rc = f.read()
             if not rc.endswith('\n'):
