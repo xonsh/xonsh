@@ -73,6 +73,8 @@ class Shell(object):
         rc : list of str, optional
             Sequence of paths to run control files.
         """
+        self.login = kwargs['login']
+        self.stype = shell_type
         self._init_environ(ctx, config, rc)
         env = builtins.__xonsh_env__
         # pick a valid shell
@@ -106,8 +108,6 @@ class Shell(object):
         self.shell = shell_class(execer=self.execer,
                                  ctx=self.ctx, **kwargs)
         # allows history garbace colector to start running
-        self.shell = shell_class(execer=self.execer,
-                                 ctx=self.ctx, **kwargs)
         builtins.__xonsh_history__.gc.wait_for_shell = False
 
     def __getattr__(self, attr):
@@ -115,12 +115,16 @@ class Shell(object):
         return getattr(self.shell, attr)
 
     def _init_environ(self, ctx, config, rc):
-        self.execer = Execer(config=config)
+        self.execer = Execer(config=config, login=self.login)
         env = builtins.__xonsh_env__
         if ctx is None:
-            rc = env.get('XONSHRC') if rc is None else rc
-            self.ctx = xonshrc_context(rcfiles=rc, execer=self.execer)
+            if self.stype == 'none' and not self.login:
+                self.ctx = {}
+            else:
+                rc = env.get('XONSHRC') if rc is None else rc
+                self.ctx = xonshrc_context(rcfiles=rc, execer=self.execer)
         else:
             self.ctx = ctx
+        env['XONSH_LOGIN'] = self.login
         builtins.__xonsh_ctx__ = self.ctx
         self.ctx['__name__'] = '__main__'

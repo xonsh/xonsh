@@ -17,7 +17,7 @@ class Execer(object):
     """Executes xonsh code in a context."""
 
     def __init__(self, filename='<xonsh-code>', debug_level=0, parser_args=None,
-                 unload=True, config=None):
+                 unload=True, config=None, login=True):
         """Parameters
         ----------
         filename : str, optional
@@ -37,7 +37,7 @@ class Execer(object):
         self.debug_level = debug_level
         self.unload = unload
         self.ctxtransformer = ast.CtxAwareTransformer(self.parser)
-        load_builtins(execer=self, config=config)
+        load_builtins(execer=self, config=config, login=login)
 
     def __del__(self):
         if self.unload:

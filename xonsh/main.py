@@ -160,7 +160,11 @@ def premain(argv=None):
         version = '/'.join(('xonsh', __version__)),
         print(version)
         exit()
-    shell_kwargs = {'shell_type': args.shell_type, 'completer': False}
+    shell_kwargs = {'shell_type': args.shell_type,
+                    'completer': False,
+                    'login': False}
+    if args.login:
+        shell_kwargs['login'] = True
     if args.config_path is None:
         shell_kwargs['config'] = args.config_path
     if args.norc:
@@ -178,13 +182,12 @@ def premain(argv=None):
     else:
         args.mode = MODE_INTERACTIVE
         shell_kwargs['completer'] = True
+        shell_kwargs['login'] = True
     shell = builtins.__xonsh_shell__ = Shell(**shell_kwargs)
     from xonsh import imphooks
     env = builtins.__xonsh_env__
     if args.defines is not None:
         env.update([x.split('=', 1) for x in args.defines])
-    if args.login:
-        env['XONSH_LOGIN'] = True
     env['XONSH_INTERACTIVE'] = False
     if ON_WINDOWS:
         setup_win_unicode_console(env.get('WIN_UNICODE_CONSOLE', True))
