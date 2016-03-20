@@ -181,7 +181,6 @@ DEFAULT_VALUES = {
     'PATH': (),
     'PATHEXT': (),
     'PROMPT': DEFAULT_PROMPT,
-    'PROMPT_TOOLKIT_COLORS': {},
     'PROMPT_TOOLKIT_STYLES': None,
     'PUSHD_MINUS': False,
     'PUSHD_SILENT': False,
@@ -335,17 +334,10 @@ DEFAULT_DOCS = {
         "auto-formatted, see 'Customizing the Prompt' at "
         'http://xon.sh/tutorial.html#customizing-the-prompt.',
         default='xonsh.environ.DEFAULT_PROMPT'),
-    'PROMPT_TOOLKIT_COLORS': VarDocs(
-        'This is a mapping of from color names to HTML color codes. Whenever '
-        'prompt-toolkit would color a word a particular color (in the prompt, '
-        'or in syntax highlighting), it will use the value specified here to '
-        'represent that color, instead of its default.  If a color is not '
-        'specified here, prompt-toolkit uses the colors from '
-        "'xonsh.tools._PT_COLORS'.", configurable=False),
     'PROMPT_TOOLKIT_STYLES': VarDocs(
         'This is a mapping of pygments tokens to user-specified styles for '
-        'prompt-toolkit. See the prompt-toolkit and pygments documentation '
-        'for more details. If None, this is skipped.', configurable=False),
+        'prompt-toolkit. This can be used to override modify the color '
+        'in the XONSH_COLOR_STYLE. If None, this is skipped.'),
     'PUSHD_MINUS': VarDocs(
         'Flag for directory pushing functionality. False is the normal '
         'behavior.'),
