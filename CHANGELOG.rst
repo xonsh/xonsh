@@ -4,6 +4,20 @@ Xonsh Change Log
 
 Current Developments
 ====================
+**Added:** None
+
+**Changed:** None
+
+**Deprecated:** None
+
+**Removed:** None
+
+**Fixed:** None
+
+**Security:** None
+
+v0.2.7
+====================
 **Added:**
 
 * Added new valid ``$SHELL_TYPE`` called ``'best'``. This selects the best value
@@ -47,7 +61,7 @@ Current Developments
   ``re.match``, and the result of an empty regex glob does not cause the
   argument to be deleted.
 
-**Deprecated:** None
+
 
 **Removed:**
 
@@ -63,7 +77,7 @@ Current Developments
 * The ``BaseShell.settitle`` method no longer has its commands captured by
   ``$(...)``
 
-**Security:** None
+
 
 v0.2.6
 ====================
