@@ -186,6 +186,7 @@ def premain(argv=None):
     shell = builtins.__xonsh_shell__ = Shell(**shell_kwargs)
     from xonsh import imphooks
     env = builtins.__xonsh_env__
+    env['XONSH_LOGIN'] = shell_kwargs['login']
     if args.defines is not None:
         env.update([x.split('=', 1) for x in args.defines])
     env['XONSH_INTERACTIVE'] = False

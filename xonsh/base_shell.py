@@ -111,7 +111,7 @@ class BaseShell(object):
         super().__init__()
         self.execer = execer
         self.ctx = ctx
-        if kwargs['completer']:
+        if kwargs.get('completer', True):
             self.completer = Completer()
         self.buffer = []
         self.need_more_lines = False

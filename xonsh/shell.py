@@ -73,7 +73,7 @@ class Shell(object):
         rc : list of str, optional
             Sequence of paths to run control files.
         """
-        self.login = kwargs['login']
+        self.login = kwargs.get('login', True)
         self.stype = shell_type
         self._init_environ(ctx, config, rc)
         env = builtins.__xonsh_env__
@@ -125,6 +125,5 @@ class Shell(object):
                 self.ctx = xonshrc_context(rcfiles=rc, execer=self.execer)
         else:
             self.ctx = ctx
-        env['XONSH_LOGIN'] = self.login
         builtins.__xonsh_ctx__ = self.ctx
         self.ctx['__name__'] = '__main__'
