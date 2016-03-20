@@ -334,7 +334,7 @@ def enhance_colors_for_cmd_exe():
     # Test if we are on WINDOWS with CMD.exe 
     # and PROMPT_TOOLKIT_STYLES is unset
     env = builtins.__xonsh_env__
-    if 'ConEmuANSI' not in env and env.get('PROMPT_TOOLKIT_STYLES') is None:
+    if 'CONEMUANSI' not in env and env.get('PROMPT_TOOLKIT_STYLES') is None:
         # Only change the style if $PROMPT_TOOLKIT_STYLES is not touched and
         # and we are not using ConEmu. 
         smap = {Token.Name.Variable:'#44ffff',
