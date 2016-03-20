@@ -6,6 +6,7 @@ import json
 import socket
 import string
 import locale
+import marshal
 import builtins
 import subprocess
 from itertools import chain
@@ -1135,9 +1136,21 @@ def load_static_config(ctx, config=None):
     return conf
 
 
+def _cache_filename(fname):
+    fname = os.path.abspath(os.path.expanduser(fname))
+    return fname.replace('/', '__SLASH__').replace('\\','__BACKSLASH__')
+
+
+def _make_if_not_exists(dirname):
+    if not os.path.isdir(dirname):
+        os.makedirs(dirname)
+
+
 def xonshrc_context(rcfiles=None, execer=None):
     """Attempts to read in xonshrc file, and return the contents."""
     loaded = builtins.__xonsh_env__['LOADED_RC_FILES'] = []
+    homedir = builtins.__xonsh_env__['HOME']
+    cachedir = os.path.join(homedir, '.xonsh_cache')
     if (rcfiles is None or execer is None):
         return {}
     env = {}
@@ -1145,21 +1158,38 @@ def xonshrc_context(rcfiles=None, execer=None):
         if not os.path.isfile(rcfile):
             loaded.append(False)
             continue
-        with open(rcfile, 'r') as f:
-            rc = f.read()
-        if not rc.endswith('\n'):
-            rc += '\n'
-        fname = execer.filename
-        try:
-            execer.filename = rcfile
-            execer.exec(rc, glbs=env)
-            loaded.append(True)
-        except SyntaxError as err:
-            loaded.append(False)
-            msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
-            warn(msg.format(rcfile, err), RuntimeWarning)
-        finally:
-            execer.filename = fname
+        use_cached = False
+        cachefname = os.path.join(cachedir, _cache_filename(rcfile))
+        if os.path.isfile(cachefname):
+            if os.stat(cachefname).st_mtime >= os.stat(rcfile).st_mtime:
+                # use the compiled version and leave
+                with open(cachefname, 'rb') as cfile:
+                    ccode = marshal.load(cfile)
+                    print('using cached marshaled rcfile')
+                    use_cached = True
+                    loaded.append(True)
+        if not use_cached:
+            print('not using cached marshaled rcfile')
+            with open(rcfile, 'r') as f:
+                rc = f.read()
+            if not rc.endswith('\n'):
+                rc += '\n'
+            fname = execer.filename
+            try:
+                execer.filename = rcfile
+                ccode = execer.compile(rc, glbs=env)
+                _make_if_not_exists(cachedir)
+                with open(cachefname, 'wb') as cfile:
+                    marshal.dump(ccode, cfile)
+                loaded.append(True)
+            except SyntaxError as err:
+                loaded.append(False)
+                msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
+                warn(msg.format(rcfile, err), RuntimeWarning)
+                continue
+            finally:
+                execer.filename = fname
+        exec(ccode, env, None)
     return env
 
 
