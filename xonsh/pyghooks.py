@@ -16,6 +16,7 @@ from pygments.style import Style
 from pygments.styles import get_style_by_name
 import pygments.util
 
+from xonsh.tools import ON_WINDOWS
 
 class XonshSubprocLexer(BashLexer):
     """Lexer for xonsh subproc mode."""
@@ -281,7 +282,9 @@ class XonshStyle(Style):
         style_name : str, optional
             The style name to initialize with.
         """
-        self.trap = {}  # for custom colors
+        if ON_WINDOWS and style_name == 'default':
+            enhance_colors_for_cmd_exe()
+        self.trap = builtins.__xonsh_env__.get('PROMPT_TOOLKIT_STYLES') or {}
         self._style_name = ''
         self.style_name = style_name
         super().__init__()
@@ -327,6 +330,28 @@ def xonsh_style_proxy(styler):
     return XonshStyleProxy
 
 
+def enhance_colors_for_cmd_exe():
+    # Test if we are on WINDOWS with CMD.exe 
+    # and PROMPT_TOOLKIT_STYLES is unset
+    env = builtins.__xonsh_env__
+    if 'ConEmuANSI' not in env and env.get('PROMPT_TOOLKIT_STYLES') is None:
+        # Only change the style if $PROMPT_TOOLKIT_STYLES is not touched and
+        # and we are not using ConEmu. 
+        smap = {Token.Name.Variable:'#44ffff',
+                Token.Generic.Prompt:'#44ffff',
+                Token.Name.Namespace:'#00aaaa',
+                Token.Name.Function:'#00aaaa',
+                Token.Name.Class:'#00aaaa',
+                Token.Generic.Heading:'#00aaaa',
+                Token.Literal.String.Symbol:'#00aaaa',
+                Token.Literal.String:'#ff4444',
+                Token.Name.Constant:'#ff4444',
+                Token.Keyword.Type:'#ff4444',
+                Token.Generic.Error:'#ff4444',
+                Token.AutoSuggestion:'#ansidarkgray'}         
+        env['PROMPT_TOOLKIT_STYLES'] = smap
+    
+    
 PTK_STYLE = {
     Token.Menu.Completions.Completion.Current: 'bg:#00aaaa #000000',
     Token.Menu.Completions.Completion: 'bg:#008888 #ffffff',
