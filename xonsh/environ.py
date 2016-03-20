@@ -1150,7 +1150,7 @@ def xonshrc_context(rcfiles=None, execer=None):
     """Attempts to read in xonshrc file, and return the contents."""
     loaded = builtins.__xonsh_env__['LOADED_RC_FILES'] = []
     homedir = builtins.__xonsh_env__['HOME']
-    cachedir = os.path.join(homedir, '.xonsh_cache')
+    cachedir = os.path.join(homedir, '.xonshrc_cache')
     if (rcfiles is None or execer is None):
         return {}
     env = {}
