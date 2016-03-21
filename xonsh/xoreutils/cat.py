@@ -1,6 +1,7 @@
 import os
 import sys
 
+from xonsh.xoreutils.util import arg_handler
 
 def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
     if fname == '-':
@@ -56,33 +57,17 @@ def cat(args, stdin, stdout, stderr):
     return int(errors)
 
 
-def _arg_handler(args, out, short, key, val, long=None):
-    if short in args:
-        args.remove(short)
-        if isinstance(key, (list, tuple)):
-            for k in key:
-                out[k] = val
-        else:
-            out[key] = val
-    if long is not None and long in args:
-        args.remove(long)
-        if isinstance(key, (list, tuple)):
-            for k in key:
-                out[k] = val
-        else:
-            out[key] = val
-
-
 def _parse_args(args):
     out = {'number_nonblank': False, 'number_all': False, 'squeeze_blank': False, 'show_ends': False}
     if '--help' in args:
         print(HELP_STR)
         return
-    _arg_handler(args, out, '-b', 'number_nonblank', True, '--number-nonblank')
-    _arg_handler(args, out, '-n', 'number_all', True, '--number')
-    _arg_handler(args, out, '-E', 'show_ends', True, '--show-ends')
-    _arg_handler(args, out, '-s', 'squeeze_blank', True, '--squeeze-blank')
-    _arg_handler(args, out, '-T', 'show_tabs', True, '--show-tabs')
+
+    arg_handler(args, out, '-b', 'number_nonblank', True, '--number-nonblank')
+    arg_handler(args, out, '-n', 'number_all', True, '--number')
+    arg_handler(args, out, '-E', 'show_ends', True, '--show-ends')
+    arg_handler(args, out, '-s', 'squeeze_blank', True, '--squeeze-blank')
+    arg_handler(args, out, '-T', 'show_tabs', True, '--show-tabs')
 
     return out
 
