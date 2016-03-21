@@ -2,9 +2,13 @@ import os
 
 def pwd(args, stdin, stdout, stderr):
     e = __xonsh_env__['PWD']
+    if '--help' in args:
+        print(HELP_STR, file=stdout)
+        return 0
     if '-P' in args:
         e = os.path.realpath(e)
     print(e, file=stdout)
+    return 0
 
 
 HELP_STR = """This version of pwd was written in Python for the xonsh project: http://xon.sh

@@ -44,6 +44,7 @@ def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
 def cat(args, stdin, stdout, stderr):
     opts = _parse_args(args)
     if opts is None:
+        print(HELP_STR, file=stdout)
         return 0
 
     line_count = 1
@@ -60,7 +61,6 @@ def cat(args, stdin, stdout, stderr):
 def _parse_args(args):
     out = {'number_nonblank': False, 'number_all': False, 'squeeze_blank': False, 'show_ends': False}
     if '--help' in args:
-        print(HELP_STR)
         return
 
     arg_handler(args, out, '-b', 'number_nonblank', True, '--number-nonblank')
