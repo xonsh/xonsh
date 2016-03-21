@@ -2,66 +2,114 @@ import os
 import sys
 
 
-def _cat_single_file(opts, fname, stdin, out, err):
-    global line_count
+def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
     if fname == '-':
         f = stdin
     elif os.path.isdir(fname):
         print("cat: {}: Is a directory.".format(fname), file=err)
-        return True
+        return True, line_count
     elif not os.path.isfile(fname):
         print("cat: {}: No such file or directory.".format(fname), file=err)
-        return True
+        return True, line_count
     else:
         f = open(fname, 'rb')
-        sep = os.linesep.encode()
-        last_was_blank = False
-        while True:
-            _r = r = f.readline()
-            if r == b'':
-                break
-            if r.endswith(sep):
-                _r = _r[:-len(sep)]
-            this_one_blank = _r == b''
-            if last_was_blank and this_one_blank and opts['squeeze_blank']:
-                continue
-            last_was_blank = this_one_blank
-            if (not this_one_blank) and opts['number']:
-                _r = b"%6d %s" % (line_count, _r)
-                line_count += 1
-            if opts['show_ends']:
-                _r = b'%s$' % _r
-            try:
-                print(_r.decode('unicode_escape'), flush=True, file=out)
-            except:
-                pass
-        return False
+    sep = os.linesep.encode()
+    last_was_blank = False
+    while True:
+        _r = r = f.readline()
+        if isinstance(_r, str):
+            _r = r = _r.encode()
+        if r == b'':
+            break
+        if r.endswith(sep):
+            _r = _r[:-len(sep)]
+        this_one_blank = _r == b''
+        if last_was_blank and this_one_blank and opts['squeeze_blank']:
+            continue
+        last_was_blank = this_one_blank
+        if (opts['number_all'] or
+                (opts['number_nonblank'] and not this_one_blank)):
+            _r = b"%6d %s" % (line_count, _r)
+            line_count += 1
+        if opts['show_ends']:
+            _r = b'%s$' % _r
+        try:
+            print(_r.decode('unicode_escape'), flush=True, file=out)
+        except:
+            pass
+    return False, line_count
 
 
 def cat(args, stdin, stdout, stderr):
-    global line_count
     opts = _parse_args(args)
+    if opts is None:
+        return 0
 
     line_count = 1
     errors = False
     if len(args) == 0:
         args = ['-']
     for i in args:
-        errors = _cat_single_file(opts, i, stdin, stdout, stderr) or errors
+        _e, line_count = _cat_single_file(opts, i, stdin, stdout, stderr, line_count)
+        errors = _e or errors
 
     return int(errors)
 
 
+def _arg_handler(args, out, short, key, val, long=None):
+    if short in args:
+        args.remove(short)
+        if isinstance(key, (list, tuple)):
+            for k in key:
+                out[k] = val
+        else:
+            out[key] = val
+    if long is not None and long in args:
+        args.remove(long)
+        if isinstance(key, (list, tuple)):
+            for k in key:
+                out[k] = val
+        else:
+            out[key] = val
+
+
 def _parse_args(args):
-    out = {'number': False, 'squeeze_blank': False, 'show_ends': False}
-    if '-b' in args:
-        args.remove('-b')
-        out['number'] = True
-    if '-E' in args:
-        args.remove('-E')
-        out['show_ends'] = True
-    if '-s' in args:
-        args.remove('-s')
-        out['squeeze_blank'] = True
+    out = {'number_nonblank': False, 'number_all': False, 'squeeze_blank': False, 'show_ends': False}
+    if '--help' in args:
+        print(HELP_STR)
+        return
+    _arg_handler(args, out, '-b', 'number_nonblank', True, '--number-nonblank')
+    _arg_handler(args, out, '-n', 'number_all', True, '--number')
+    _arg_handler(args, out, '-E', 'show_ends', True, '--show-ends')
+    _arg_handler(args, out, '-s', 'squeeze_blank', True, '--squeeze-blank')
+    _arg_handler(args, out, '-T', 'show_tabs', True, '--show-tabs')
 
     return out
+
+
+HELP_STR = """This version of cat was written in Python for the xonsh project: http://xon.sh
+Based on cat from GNU coreutils: http://www.gnu.org/software/coreutils/
+
+Usage: cat [OPTION]... [FILE]...
+Concatenate FILE(s), or standard input, to standard output.
+
+  -b, --number-nonblank    number nonempty output lines, overrides -n
+  -E, --show-ends          display $ at end of each line
+  -n, --number             number all output lines
+  -s, --squeeze-blank      suppress repeated empty output lines
+  -T, --show-tabs          display TAB characters as ^I
+  -u                       (ignored)
+      --help     display this help and exit
+
+With no FILE, or when FILE is -, read standard input.
+
+Examples:
+  cat f - g  Output f's contents, then standard input, then g's contents.
+  cat        Copy standard input to standard output."""
+
+#NOT IMPLEMENTED:
+#  -A, --show-all           equivalent to -vET
+#  -e                       equivalent to -vE
+#  -t                       equivalent to -vT
+#  -v, --show-nonprinting   use ^ and M- notation, except for LFD and TAB
+#      --version  output version information and exit"""
