@@ -1146,21 +1146,15 @@ def _splitpath(path, sofar=[]):
     else:
         return _splitpath(folder, sofar + [path])
 
-_uppercase = {chr(i) for i in range(65, 91)}
-
-def _replacer(x):
-    if x == '.':
-        return '_.'
-    if x == '_':
-        return '__'
-    if x in _uppercase:
-        return '_%s' % x.lower()
-    return x
+_character_map = {chr(o): '_%s' % chr(o+32) for o in range(65, 91)}
+_character_map.update({'.': '_.', '_': '__'})
 
 
 def _cache_renamer(path):
     path = os.path.abspath(path)
-    return [''.join(_replacer(i) for i in w) for w in _splitpath(path)]
+    o = [''.join(_character_map.get(i, i) for i in w) for w in _splitpath(path)]
+    o[-1] = "{}.{}".format(o[-1], sys.implementation.cache_tag)
+    return o
 
 
 def _make_if_not_exists(dirname):
@@ -1181,10 +1175,7 @@ def xonshrc_context(rcfiles=None, execer=None):
             loaded.append(False)
             continue
         use_cached = False
-        cache_tag = sys.implementation.cache_tag
-        cachefname = _cache_renamer(rcfile)
-        cachefname[-1] = "{}.{}".format(cachefname[-1], cache_tag)
-        cachefname = os.path.join(cachedir, *cachefname)
+        cachefname = os.path.join(cachedir, *_cache_renamer(rcfile))
         if os.path.isfile(cachefname):
             if os.stat(cachefname).st_mtime >= os.stat(rcfile).st_mtime:
                 # use the compiled version and leave
