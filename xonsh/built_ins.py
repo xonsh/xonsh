@@ -33,6 +33,7 @@ from xonsh.tools import (
     suggest_commands, XonshError, expandvars, CommandsCache
 )
 
+from xonsh.xoreutils import cat, tee
 
 ENV = None
 BUILTINS_LOADED = False
@@ -492,16 +493,11 @@ def run_subproc(cmds, captured=False):
         _stdin_file = None
         if (stdin is not None and
                 ENV.get('XONSH_STORE_STDIN') and
-                captured == 'object' and
-                'cat' in __xonsh_commands_cache__ and
-                'tee' in __xonsh_commands_cache__):
+                captured in {'object', 'hiddenobject'}):
             _stdin_file = tempfile.NamedTemporaryFile()
-            cproc = Popen(['cat'],
-                          stdin=stdin,
-                          stdout=PIPE)
-            tproc = Popen(['tee', _stdin_file.name],
-                          stdin=cproc.stdout,
-                          stdout=PIPE)
+            cproc = ProcProxy(cat, [], stdin=stdin, stdout=PIPE)
+            tproc = ProcProxy(tee, [_stdin_file.name],
+                              stdin=cproc.stdout, stdout=PIPE)
             stdin = tproc.stdout
         if callable(aliased_cmd):
             prev_is_proxy = True
