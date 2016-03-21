@@ -2,6 +2,7 @@
 """Environment for the xonsh shell."""
 import os
 import re
+import sys
 import json
 import socket
 import string
@@ -1159,7 +1160,9 @@ def xonshrc_context(rcfiles=None, execer=None):
             loaded.append(False)
             continue
         use_cached = False
-        cachefname = os.path.join(cachedir, _cache_filename(rcfile))
+        cache_tag = sys.implementation.cache_tag
+        cachefname = "{}.{}".format(_cache_filename(rcfile), cache_tag)
+        cachefname = os.path.join(cachedir, cachefname)
         if os.path.isfile(cachefname):
             if os.stat(cachefname).st_mtime >= os.stat(rcfile).st_mtime:
                 # use the compiled version and leave
