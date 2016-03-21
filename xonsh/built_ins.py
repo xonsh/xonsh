@@ -546,11 +546,6 @@ def run_subproc(cmds, captured=False):
                 raise XonshError(e)
         procs.append(proc)
         prev_proc = proc
-    for proc in procs[:-1]:
-        try:
-            proc.stdout.close()
-        except OSError:
-            pass
     if not prev_is_proxy:
         add_job({
             'cmds': cmds,
@@ -571,6 +566,11 @@ def run_subproc(cmds, captured=False):
     if prev_is_proxy:
         prev_proc.wait()
     wait_for_active_job()
+    for proc in procs[:-1]:
+        try:
+            proc.stdout.close()
+        except OSError:
+            pass
     hist = builtins.__xonsh_history__
     hist.last_cmd_rtn = prev_proc.returncode
     # get output
