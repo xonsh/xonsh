@@ -139,7 +139,7 @@ class Aliases(MutableMapping):
                 p.pretty(dict(self))
 
 
-from xonsh.xoreutils import (echo, pwd, cat, tty)
+from xonsh.xoreutils import (echo, pwd, cat, tty, tee)
 
 def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
     """Sends signal to exit shell."""
