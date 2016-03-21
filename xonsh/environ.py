@@ -1146,15 +1146,15 @@ def _splitpath(path, sofar=[]):
     else:
         return _splitpath(folder, sofar + [path])
 
+_uppercase = {chr(i) for i in range(65, 91)}
 
 def _replacer(x):
-    o = ord(x)
-    if o == 46: # .
+    if x == '.':
         return '_.'
-    if o == 95: # _
+    if x == '_':
         return '__'
-    if 65 <= o <= 90: # A-Z
-        return '_%s' % chr(o+32)
+    if x in _uppercase:
+        return '_%s' % x.lower()
     return x
 
 
