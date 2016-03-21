@@ -1137,9 +1137,30 @@ def load_static_config(ctx, config=None):
     return conf
 
 
-def _cache_filename(fname):
-    fname = os.path.abspath(os.path.expanduser(fname))
-    return fname.replace('/', '__SLASH__').replace('\\','__BACKSLASH__')
+def _splitpath(path, sofar=[]):
+    folder, path = os.path.split(path)
+    if path == "":
+        return sofar[::-1]
+    elif folder == "":
+        return (sofar + [path])[::-1]
+    else:
+        return _splitpath(folder, sofar + [path])
+
+
+def _replacer(x):
+    o = ord(x)
+    if o == 46: # .
+        return '_.'
+    if o == 95: # _
+        return '__'
+    if 65 <= o <= 90: # A-Z
+        return '_%s' % chr(o+32)
+    return x
+
+
+def _cache_renamer(path):
+    path = os.path.abspath(path)
+    return [''.join(_replacer(i) for i in w) for w in _splitpath(path)]
 
 
 def _make_if_not_exists(dirname):
@@ -1161,8 +1182,9 @@ def xonshrc_context(rcfiles=None, execer=None):
             continue
         use_cached = False
         cache_tag = sys.implementation.cache_tag
-        cachefname = "{}.{}".format(_cache_filename(rcfile), cache_tag)
-        cachefname = os.path.join(cachedir, cachefname)
+        cachefname = _cache_renamer(rcfile)
+        cachefname[-1] = "{}.{}".format(cachefname[-1], cache_tag)
+        cachefname = os.path.join(cachedir, *cachefname)
         if os.path.isfile(cachefname):
             if os.stat(cachefname).st_mtime >= os.stat(rcfile).st_mtime:
                 # use the compiled version and leave
@@ -1179,7 +1201,7 @@ def xonshrc_context(rcfiles=None, execer=None):
             try:
                 execer.filename = rcfile
                 ccode = execer.compile(rc, glbs=env)
-                _make_if_not_exists(cachedir)
+                _make_if_not_exists(os.path.dirname(cachefname))
                 with open(cachefname, 'wb') as cfile:
                     marshal.dump(ccode, cfile)
                 loaded.append(True)
