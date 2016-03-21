@@ -25,7 +25,6 @@ from xonsh.tools import (
 )
 from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env, locate_binary
-from xonsh.aliases import DEFAULT_ALIASES
 from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
                         SimpleForegroundProcProxy, TeePTYProc,
@@ -772,6 +771,9 @@ def load_builtins(execer=None, config=None, login=False):
     builtins.evalx = None if execer is None else execer.eval
     builtins.execx = None if execer is None else execer.exec
     builtins.compilex = None if execer is None else execer.compile
+
+    # Need this inline/lazy import here since we use locate_binary that relies on __xonsh_env__ in default aliases
+    from xonsh.aliases import DEFAULT_ALIASES
     builtins.default_aliases = builtins.aliases = Aliases(DEFAULT_ALIASES)
     if login:
         builtins.aliases.update(load_foreign_aliases(issue_warning=False))

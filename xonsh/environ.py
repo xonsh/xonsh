@@ -687,10 +687,15 @@ def _is_executable_file(path):
 
 
 def yield_executables_windows(directory, name):
+    normalized_name = os.path.normcase(name)
     extensions = builtins.__xonsh_env__.get('PATHEXT')
     for a_file in os.listdir(directory):
-        base_name, ext = os.path.splitext(a_file)
-        if name == base_name and ext.upper() in extensions:
+        normalized_file_name = os.path.normcase(a_file)
+        base_name, ext = os.path.splitext(normalized_file_name)
+
+        if (
+            normalized_name == base_name or normalized_name == normalized_file_name
+        ) and ext.upper() in extensions:
             yield os.path.join(directory, a_file)
 
 
@@ -708,9 +713,15 @@ def locate_binary(name):
     if os.path.isfile(name) and name != os.path.basename(name):
         return name
 
+    directories = builtins.__xonsh_env__.get('PATH')
+
+    # Windows users expect t obe able to execute files in the same directory without `./`
+    if ON_WINDOWS:
+        directories = [_get_cwd()] + directories
+
     try:
         return next(chain.from_iterable(yield_executables(directory, name) for
-                    directory in builtins.__xonsh_env__.get('PATH') if os.path.isdir(directory)))
+                    directory in directories if os.path.isdir(directory)))
     except StopIteration:
         return None
 
