@@ -41,14 +41,14 @@ def test_simple():
         assert_equal(os.getcwd(), HERE)
 
 def test_cdpath_simple():
-    with xonsh_env(Env(CDPATH=PARENT)):
+    with xonsh_env(Env(CDPATH=PARENT, PWD=HERE)):
         with chdir(os.path.normpath("/")):
             assert_not_equal(os.getcwd(), HERE)
             dirstack.cd(["tests"])
             assert_equal(os.getcwd(), HERE)
 
 def test_cdpath_collision():
-    with xonsh_env(Env(CDPATH=PARENT)):
+    with xonsh_env(Env(CDPATH=PARENT, PWD=HERE)):
         sub_tests = os.path.join(HERE, "tests")
         if not os.path.exists(sub_tests):
             os.mkdir(sub_tests)
