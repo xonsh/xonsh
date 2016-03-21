@@ -1173,6 +1173,7 @@ BASE_ENV = {
     'BASH_COMPLETIONS': list(DEFAULT_VALUES['BASH_COMPLETIONS']),
     'FORMATTER_DICT': dict(DEFAULT_VALUES['FORMATTER_DICT']),
     'XONSH_VERSION': XONSH_VERSION,
+    'PWD': _get_cwd(),
 }
 
 def load_static_config(ctx, config=None):
