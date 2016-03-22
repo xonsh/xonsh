@@ -282,8 +282,6 @@ class XonshStyle(Style):
         style_name : str, optional
             The style name to initialize with.
         """
-        if ON_WINDOWS and style_name == 'default':
-            enhance_colors_for_cmd_exe()
         self.trap = builtins.__xonsh_env__.get('PROMPT_TOOLKIT_STYLES') or {}
         self._style_name = ''
         self.style_name = style_name
@@ -310,10 +308,37 @@ class XonshStyle(Style):
         compound = CompoundColorMap(ChainMap(self.trap, cmap, PTK_STYLE, smap))
         self.styles = ChainMap(self.trap, cmap, PTK_STYLE, smap, compound)
         self._style_name = value
+        if ON_WINDOWS:
+            self.enhance_colors_for_cmd_exe()
+            
 
     @style_name.deleter
     def style_name(self):
         self._style_name = ''
+
+    def enhance_colors_for_cmd_exe(self):
+        """ Enhance colors when using cmd.exe on windows.
+            When using the default style all blue and dark red colors
+            are changed to CYAN and intence red.
+        """
+        env = builtins.__xonsh_env__
+        # Ensure we are not using ConEmu
+        if 'CONEMUANSI' not in env:
+            self.styles.update({Token.AutoSuggestion:'#444444'})
+            if self._style_name == 'default' and env.get('PROMPT_TOOLKIT_STYLES') is None: 
+                s = {Token.Name.Variable:'#44ffff',
+                    Token.Generic.Prompt:'#44ffff',
+                    Token.Name.Namespace:'#00aaaa',
+                    Token.Name.Function:'#00aaaa',
+                    Token.Name.Class:'#00aaaa',
+                    Token.Generic.Heading:'#00aaaa',
+                    Token.Literal.String.Symbol:'#00aaaa',
+                    Token.Literal.String:'#ff4444',
+                    Token.Name.Constant:'#ff4444',
+                    Token.Keyword.Type:'#ff4444',
+                    Token.Generic.Error:'#ff4444'}   
+            env['PROMPT_TOOLKIT_STYLES'] = s
+            self.styles.update(s)
 
 
 def xonsh_style_proxy(styler):
@@ -329,27 +354,6 @@ def xonsh_style_proxy(styler):
 
     return XonshStyleProxy
 
-
-def enhance_colors_for_cmd_exe():
-    # Test if we are on WINDOWS with CMD.exe 
-    # and PROMPT_TOOLKIT_STYLES is unset
-    env = builtins.__xonsh_env__
-    if 'CONEMUANSI' not in env and env.get('PROMPT_TOOLKIT_STYLES') is None:
-        # Only change the style if $PROMPT_TOOLKIT_STYLES is not touched and
-        # and we are not using ConEmu. 
-        smap = {Token.Name.Variable:'#44ffff',
-                Token.Generic.Prompt:'#44ffff',
-                Token.Name.Namespace:'#00aaaa',
-                Token.Name.Function:'#00aaaa',
-                Token.Name.Class:'#00aaaa',
-                Token.Generic.Heading:'#00aaaa',
-                Token.Literal.String.Symbol:'#00aaaa',
-                Token.Literal.String:'#ff4444',
-                Token.Name.Constant:'#ff4444',
-                Token.Keyword.Type:'#ff4444',
-                Token.Generic.Error:'#ff4444',
-                Token.AutoSuggestion:'#ansidarkgray'}         
-        env['PROMPT_TOOLKIT_STYLES'] = smap
     
     
 PTK_STYLE = {
