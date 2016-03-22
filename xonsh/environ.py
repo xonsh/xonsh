@@ -181,7 +181,6 @@ DEFAULT_VALUES = {
     'PATH': (),
     'PATHEXT': (),
     'PROMPT': DEFAULT_PROMPT,
-    'PROMPT_TOOLKIT_STYLES': None,
     'PUSHD_MINUS': False,
     'PUSHD_SILENT': False,
     'RAISE_SUBPROC_ERROR': False,
@@ -334,10 +333,6 @@ DEFAULT_DOCS = {
         "auto-formatted, see 'Customizing the Prompt' at "
         'http://xon.sh/tutorial.html#customizing-the-prompt.',
         default='xonsh.environ.DEFAULT_PROMPT'),
-    'PROMPT_TOOLKIT_STYLES': VarDocs(
-        'This is a mapping of pygments tokens to user-specified styles for '
-        'prompt-toolkit. This can be used to override modify the color '
-        'in the XONSH_COLOR_STYLE. If None, this is skipped.'),
     'PUSHD_MINUS': VarDocs(
         'Flag for directory pushing functionality. False is the normal '
         'behavior.'),

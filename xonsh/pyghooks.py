@@ -282,7 +282,7 @@ class XonshStyle(Style):
         style_name : str, optional
             The style name to initialize with.
         """
-        self.trap = builtins.__xonsh_env__.get('PROMPT_TOOLKIT_STYLES') or {}
+        self.trap = {}
         self._style_name = ''
         self.style_name = style_name
         super().__init__()
@@ -325,7 +325,7 @@ class XonshStyle(Style):
         # Ensure we are not using ConEmu
         if 'CONEMUANSI' not in env:
             self.styles.update({Token.AutoSuggestion:'#444444'})
-            if self._style_name == 'default' and env.get('PROMPT_TOOLKIT_STYLES') is None: 
+            if self._style_name == 'default': 
                 s = {Token.Name.Variable:'#44ffff',
                     Token.Generic.Prompt:'#44ffff',
                     Token.Name.Namespace:'#00aaaa',
@@ -337,7 +337,6 @@ class XonshStyle(Style):
                     Token.Name.Constant:'#ff4444',
                     Token.Keyword.Type:'#ff4444',
                     Token.Generic.Error:'#ff4444'}   
-            env['PROMPT_TOOLKIT_STYLES'] = s
             self.styles.update(s)
 
 
