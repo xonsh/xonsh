@@ -2,6 +2,7 @@
 """The main xonsh script."""
 import os
 import sys
+import enum
 import builtins
 from argparse import ArgumentParser, ArgumentTypeError
 from contextlib import contextmanager
@@ -138,10 +139,11 @@ def _pprint_displayhook(value):
             pprint(value)  # black & white case
         builtins._ = value
 
-MODE_SINGLE_COMMAND = 0
-MODE_SCRIPT_FROM_FILE = 1
-MODE_SCRIPT_FROM_STDIN = 2
-MODE_INTERACTIVE = 3
+class XonshMode(enum.Enum):
+    single_command = 0
+    script_from_file = 1
+    script_from_stdin = 2
+    interactive = 3
 
 def premain(argv=None):
     """Setup for main xonsh entry point, returns parsed arguments."""
@@ -171,16 +173,16 @@ def premain(argv=None):
         shell_kwargs['rc'] = ()
     setattr(sys, 'displayhook', _pprint_displayhook)
     if args.command is not None:
-        args.mode = MODE_SINGLE_COMMAND
+        args.mode = XonshMode.single_command
         shell_kwargs['shell_type'] = 'none'
     elif args.file is not None:
-        args.mode = MODE_SCRIPT_FROM_FILE
+        args.mode = XonshMode.script_from_file
         shell_kwargs['shell_type'] = 'none'
     elif not sys.stdin.isatty() and not args.force_interactive:
-        args.mode = MODE_SCRIPT_FROM_STDIN
+        args.mode = XonshMode.script_from_stdin
         shell_kwargs['shell_type'] = 'none'
     else:
-        args.mode = MODE_INTERACTIVE
+        args.mode = XonshMode.interactive
         shell_kwargs['completer'] = True
         shell_kwargs['login'] = True
     shell = builtins.__xonsh_shell__ = Shell(**shell_kwargs)
@@ -200,10 +202,10 @@ def main(argv=None):
     args = premain(argv)
     env = builtins.__xonsh_env__
     shell = builtins.__xonsh_shell__
-    if args.command is not None:
+    if args.mode == XonshMode.single_command:
         # run a single command and exit
         shell.default(args.command)
-    elif args.file is not None:
+    elif args.mode == XonshMode.script_from_file:
         # run a script contained in a file
         if os.path.isfile(args.file):
             with open(args.file) as f:
@@ -216,7 +218,7 @@ def main(argv=None):
             shell.execer.exec(code, mode='exec', glbs=shell.ctx)
         else:
             print('xonsh: {0}: No such file or directory.'.format(args.file))
-    elif not sys.stdin.isatty() and not args.force_interactive:
+    elif args.mode == XonshMode.script_from_stdin:
         # run a script given on stdin
         code = sys.stdin.read()
         code = code if code.endswith('\n') else code + '\n'
