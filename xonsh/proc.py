@@ -327,10 +327,9 @@ class ProcProxy(Thread):
 
 
 class ProcProxyController(Thread):
-    def __init__(self, f, args, stdin=None, stdout=None, stderr=None, universal_newlines=False, wait_time=0.1):
+    def __init__(self, f, args, stdin=None, stdout=None, stderr=None, universal_newlines=False):
         self.execution_lock = Lock()
         self.is_killed = False
-        self.wait_time = wait_time
         self.proc = ProcProxy(f, args, stdin, stdout, stderr, universal_newlines, self, daemon=True)
         Thread.__init__(self)
         self.start()
@@ -344,9 +343,9 @@ class ProcProxyController(Thread):
 
 
 class SimpleProcProxyController(ProcProxyController):
-    def __init__(self, f, args, stdin=None, stdout=None, stderr=None, universal_newlines=False, wait_time=0.01):
+    def __init__(self, f, args, stdin=None, stdout=None, stderr=None, universal_newlines=False):
         f = wrap_simple_controlled_command(f)
-        super().__init__(f, args, stdin, stdout, stderr, universal_newlines, wait_time)
+        super().__init__(f, args, stdin, stdout, stderr, universal_newlines)
 
 
 def wrap_simple_controlled_command(f):
