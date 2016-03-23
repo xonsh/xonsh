@@ -4,9 +4,19 @@ Xonsh Change Log
 
 Current Developments
 ====================
-**Added:** None
+**Added:**
 
-**Changed:** None
+* Added a new shell type ``'none'``, used to avoid importing ``readline`` or
+  ``prompt_toolkit`` when running scripts or running a single command.
+
+**Changed:**
+
+* Running scripts through xonsh (or running a single command with ``-c``) no
+  longer runs the user's rc file, unless the ``--login`` option is specified.
+  Also avoids loading aliases and environments from foreign shells, as well as
+  loading bash completions.
+* rc files are now compiled and cached, to avoid re-parsing when they haven't
+  changed.
 
 **Deprecated:** None
 
