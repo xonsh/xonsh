@@ -25,7 +25,8 @@ from xonsh.tools import (
     history_tuple_to_str, is_float, string_types, is_string, DEFAULT_ENCODING,
     is_completions_display_value, to_completions_display_value, is_string_set,
     csv_to_set, set_to_csv, get_sep, is_int, is_bool_seq, csv_to_bool_seq,
-    bool_seq_to_csv, DefaultNotGiven, setup_win_unicode_console
+    bool_seq_to_csv, DefaultNotGiven, setup_win_unicode_console,
+    intensify_colors_on_win_setter
 )
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
@@ -69,6 +70,7 @@ DEFAULT_ENSURERS = {
     'FORCE_POSIX_PATHS': (is_bool, to_bool, bool_to_str),
     'HISTCONTROL': (is_string_set, csv_to_set, set_to_csv),
     'IGNOREEOF': (is_bool, to_bool, bool_to_str),
+    'INTENSIFY_COLORS_ON_WIN':(always_false, intensify_colors_on_win_setter, bool_to_str),
     'LC_COLLATE': (always_false, locale_convert('LC_COLLATE'), ensure_string),
     'LC_CTYPE': (always_false, locale_convert('LC_CTYPE'), ensure_string),
     'LC_MESSAGES': (always_false, locale_convert('LC_MESSAGES'), ensure_string),
@@ -169,6 +171,7 @@ DEFAULT_VALUES = {
     'HISTCONTROL': set(),
     'IGNOREEOF': False,
     'INDENT': '    ',
+    'INTENSIFY_COLORS_ON_WIN': True,
     'LC_CTYPE': locale.setlocale(locale.LC_CTYPE),
     'LC_COLLATE': locale.setlocale(locale.LC_COLLATE),
     'LC_TIME': locale.setlocale(locale.LC_TIME),
@@ -307,6 +310,10 @@ DEFAULT_DOCS = {
         "exit status) to not be added to the history list."),
     'IGNOREEOF': VarDocs('Prevents Ctrl-D from exiting the shell.'),
     'INDENT': VarDocs('Indentation string for multiline input'),
+    'INTENSIFY_COLORS_ON_WIN': VarDocs('Enhance style colors for readability '
+        'when using the default terminal (cmd.exe) on winodws. Blue colors, '
+        'which are hard to read, are replaced with cyan. Other colors are '
+        'generally replaced by their bright counter parts.'),
     'LOADED_CONFIG': VarDocs('Whether or not the xonsh config file was loaded',
         configurable=False),
     'LOADED_RC_FILES': VarDocs(

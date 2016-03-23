@@ -55,6 +55,12 @@ try:
 except ImportError:
     win_unicode_console = None
 
+try:
+    import prompt_toolkit
+except ImportError:
+    prompt_toolkit = None
+
+    
 
 DEFAULT_ENCODING = sys.getdefaultencoding()
 
@@ -733,7 +739,37 @@ def color_style():
     return builtins.__xonsh_shell__.shell.color_style()
 
 
-
+def intensify_colors_for_cmd_exe(style_map, replace_colors = None):
+    """Returns a modified style to where colors that maps to dark 
+       colors are replaced with brighter versions.  
+    """
+    modified_style = {}
+    if not ON_WINDOWS or prompt_toolkit is None:
+        return modified_style
+    if replace_colors is None:
+        replace_colors = {1: '#44ffff', #subst dark blue with bright cyan
+                          2: '#44ff44', #subst dark green with bright green
+                          4: '#ff4444', #subst dark red with bright
+                          5: '#ff44ff', #subst dark magenta with bright
+                          6: '#ffff44', #subst dark yellow with bright
+                          }
+    table = prompt_toolkit.terminal.win32_output.ColorLookupTable()
+    style = prompt_toolkit.styles.style_from_dict(style_map)
+    for token, attr in style.token_to_attrs.items():
+        if attr.color is not None:
+            index = table.lookup_color(attr.color, 'black')
+            if index in replace_colors:
+                modified_style[token] = replace_colors[index]
+    return modified_style
+    
+def intensify_colors_on_win_setter(enable):
+    """ Resets the style when setting the INTENSIFY_COLORS_ON_WIN 
+        environment variable. """
+    enable = to_bool(enable)
+    delattr(builtins.__xonsh_shell__.shell.styler, 'style_name')
+    return enable
+    
+    
 _RE_STRING_START = "[bBrRuU]*"
 _RE_STRING_TRIPLE_DOUBLE = '"""'
 _RE_STRING_TRIPLE_SINGLE = "'''"

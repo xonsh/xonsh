@@ -16,7 +16,7 @@ from pygments.style import Style
 from pygments.styles import get_style_by_name
 import pygments.util
 
-from xonsh.tools import ON_WINDOWS
+from xonsh.tools import ON_WINDOWS, intensify_colors_for_cmd_exe
 
 class XonshSubprocLexer(BashLexer):
     """Lexer for xonsh subproc mode."""
@@ -282,7 +282,8 @@ class XonshStyle(Style):
         style_name : str, optional
             The style name to initialize with.
         """
-        self.trap = {}
+        self.trap = {} # for traping custom colors set by user
+        self._mod = {} # for internal modification of the style
         self._style_name = ''
         self.style_name = style_name
         super().__init__()
@@ -295,6 +296,7 @@ class XonshStyle(Style):
     def style_name(self, value):
         if self._style_name == value:
             return
+        self._mod.clear()
         if value in STYLES:
             cmap = STYLES[value]
         else:
@@ -305,8 +307,8 @@ class XonshStyle(Style):
             smap = get_style_by_name(value)().styles
         except (ImportError, pygments.util.ClassNotFound):
             smap = XONSH_BASE_STYLE
-        compound = CompoundColorMap(ChainMap(self.trap, cmap, PTK_STYLE, smap))
-        self.styles = ChainMap(self.trap, cmap, PTK_STYLE, smap, compound)
+        compound = CompoundColorMap(ChainMap(self.trap, self._mod, cmap, PTK_STYLE, smap))
+        self.styles = ChainMap(self.trap, self._mod, cmap, PTK_STYLE, smap, compound)
         self._style_name = value
         if ON_WINDOWS:
             self.enhance_colors_for_cmd_exe()
@@ -320,25 +322,19 @@ class XonshStyle(Style):
         """ Enhance colors when using cmd.exe on windows.
             When using the default style all blue and dark red colors
             are changed to CYAN and intence red.
-        """
+        """          
         env = builtins.__xonsh_env__
         # Ensure we are not using ConEmu
         if 'CONEMUANSI' not in env:
-            self.styles.update({Token.AutoSuggestion:'#444444'})
-            if self._style_name == 'default': 
-                s = {Token.Name.Variable:'#44ffff',
-                    Token.Generic.Prompt:'#44ffff',
-                    Token.Name.Namespace:'#00aaaa',
-                    Token.Name.Function:'#00aaaa',
-                    Token.Name.Class:'#00aaaa',
-                    Token.Generic.Heading:'#00aaaa',
-                    Token.Literal.String.Symbol:'#00aaaa',
-                    Token.Literal.String:'#ff4444',
-                    Token.Name.Constant:'#ff4444',
-                    Token.Keyword.Type:'#ff4444',
-                    Token.Generic.Error:'#ff4444'}   
-            self.styles.update(s)
-
+            self._mod.update({Token.AutoSuggestion:'#444444'})
+            if env.get('INTENSIFY_COLORS_ON_WIN', False):
+                # Only modify the pygments part of the style
+                try:
+                    smap = get_style_by_name(self.style_name)().styles
+                except (ImportError, pygments.util.ClassNotFound):
+                    smap = XONSH_BASE_STYLE
+                s = intensify_colors_for_cmd_exe(smap)
+                self._mod.update(s)
 
 def xonsh_style_proxy(styler):
     """Factory for a proxy class to a xonsh style."""
