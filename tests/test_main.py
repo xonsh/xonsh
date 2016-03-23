@@ -19,6 +19,14 @@ def test_login_shell():
 
     with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
         xonsh.main.premain([])
+        assert_true(builtins.__xonsh_env__.get('XONSH_LOGIN'))
+
+    with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
+        xonsh.main.premain(['-l', '-c', 'echo "hi"'])
+        assert_true(builtins.__xonsh_env__.get('XONSH_LOGIN'))
+
+    with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
+        xonsh.main.premain(['-c', 'echo "hi"'])
         assert_false(builtins.__xonsh_env__.get('XONSH_LOGIN'))
 
     with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):

@@ -737,13 +737,13 @@ def ensure_list_of_strs(x):
     return rtn
 
 
-def load_builtins(execer=None, config=None):
+def load_builtins(execer=None, config=None, login=False):
     """Loads the xonsh builtins into the Python builtins. Sets the
     BUILTINS_LOADED variable to True.
     """
     global BUILTINS_LOADED, ENV
     # private built-ins
-    builtins.__xonsh_env__ = ENV = Env(default_env(config=config))
+    builtins.__xonsh_env__ = ENV = Env(default_env(config=config, login=login))
     builtins.__xonsh_ctx__ = {}
     builtins.__xonsh_help__ = helper
     builtins.__xonsh_superhelp__ = superhelper
@@ -773,7 +773,8 @@ def load_builtins(execer=None, config=None):
     builtins.execx = None if execer is None else execer.exec
     builtins.compilex = None if execer is None else execer.compile
     builtins.default_aliases = builtins.aliases = Aliases(DEFAULT_ALIASES)
-    builtins.aliases.update(load_foreign_aliases(issue_warning=False))
+    if login:
+        builtins.aliases.update(load_foreign_aliases(issue_warning=False))
     # history needs to be started after env and aliases
     # would be nice to actually include non-detyped versions.
     builtins.__xonsh_history__ = History(env=ENV.detype(),

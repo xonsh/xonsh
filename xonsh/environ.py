@@ -2,10 +2,12 @@
 """Environment for the xonsh shell."""
 import os
 import re
+import sys
 import json
 import socket
 import string
 import locale
+import marshal
 import builtins
 import subprocess
 from itertools import chain
@@ -1135,9 +1137,36 @@ def load_static_config(ctx, config=None):
     return conf
 
 
+def _splitpath(path, sofar=[]):
+    folder, path = os.path.split(path)
+    if path == "":
+        return sofar[::-1]
+    elif folder == "":
+        return (sofar + [path])[::-1]
+    else:
+        return _splitpath(folder, sofar + [path])
+
+_CHARACTER_MAP = {chr(o): '_%s' % chr(o+32) for o in range(65, 91)}
+_CHARACTER_MAP.update({'.': '_.', '_': '__'})
+
+
+def _cache_renamer(path):
+    path = os.path.abspath(path)
+    o = [''.join(_CHARACTER_MAP.get(i, i) for i in w) for w in _splitpath(path)]
+    o[-1] = "{}.{}".format(o[-1], sys.implementation.cache_tag)
+    return o
+
+
+def _make_if_not_exists(dirname):
+    if not os.path.isdir(dirname):
+        os.makedirs(dirname)
+
+
 def xonshrc_context(rcfiles=None, execer=None):
     """Attempts to read in xonshrc file, and return the contents."""
     loaded = builtins.__xonsh_env__['LOADED_RC_FILES'] = []
+    datadir = builtins.__xonsh_env__['XONSH_DATA_DIR']
+    cachedir = os.path.join(datadir, 'xonshrc_cache')
     if (rcfiles is None or execer is None):
         return {}
     env = {}
@@ -1145,21 +1174,36 @@ def xonshrc_context(rcfiles=None, execer=None):
         if not os.path.isfile(rcfile):
             loaded.append(False)
             continue
-        with open(rcfile, 'r') as f:
-            rc = f.read()
-        if not rc.endswith('\n'):
-            rc += '\n'
-        fname = execer.filename
-        try:
-            execer.filename = rcfile
-            execer.exec(rc, glbs=env)
-            loaded.append(True)
-        except SyntaxError as err:
-            loaded.append(False)
-            msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
-            warn(msg.format(rcfile, err), RuntimeWarning)
-        finally:
-            execer.filename = fname
+        use_cached = False
+        cachefname = os.path.join(cachedir, *_cache_renamer(rcfile))
+        if os.path.isfile(cachefname):
+            if os.stat(cachefname).st_mtime >= os.stat(rcfile).st_mtime:
+                # use the compiled version and leave
+                with open(cachefname, 'rb') as cfile:
+                    ccode = marshal.load(cfile)
+                    use_cached = True
+                    loaded.append(True)
+        if not use_cached:
+            with open(rcfile, 'r') as f:
+                rc = f.read()
+            if not rc.endswith('\n'):
+                rc += '\n'
+            fname = execer.filename
+            try:
+                execer.filename = rcfile
+                ccode = execer.compile(rc, glbs=env)
+                _make_if_not_exists(os.path.dirname(cachefname))
+                with open(cachefname, 'wb') as cfile:
+                    marshal.dump(ccode, cfile)
+                loaded.append(True)
+            except SyntaxError as err:
+                loaded.append(False)
+                msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
+                warn(msg.format(rcfile, err), RuntimeWarning)
+                continue
+            finally:
+                execer.filename = fname
+        exec(ccode, env, None)
     return env
 
 
@@ -1182,15 +1226,18 @@ def windows_env_fixes(ctx):
     ctx['PWD'] = _get_cwd()
 
 
-def default_env(env=None, config=None):
+def default_env(env=None, config=None, login=True):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence
-    ctx = dict(BASE_ENV)
-    ctx.update(os.environ)
-    conf = load_static_config(ctx, config=config)
-    ctx.update(conf.get('env', ()))
-    ctx.update(load_foreign_envs(shells=conf.get('foreign_shells', DEFAULT_SHELLS),
-                                 issue_warning=False))
+    if login:
+        ctx = dict(BASE_ENV)
+        ctx.update(os.environ)
+        conf = load_static_config(ctx, config=config)
+        ctx.update(conf.get('env', ()))
+        ctx.update(load_foreign_envs(shells=conf.get('foreign_shells', DEFAULT_SHELLS),
+                                     issue_warning=False))
+    else:
+        ctx = {}
     if ON_WINDOWS:
         windows_env_fixes(ctx)
     # finalize env
