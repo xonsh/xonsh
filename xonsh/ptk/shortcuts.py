@@ -1,7 +1,7 @@
 """A prompt-toolkit inspired shortcut collection."""
 from prompt_toolkit.interface import CommandLineInterface
 from prompt_toolkit.utils import DummyContext
-from prompt_toolkit.shortcuts import (create_prompt_application, 
+from prompt_toolkit.shortcuts import (create_prompt_application,
     create_eventloop, create_asyncio_eventloop, create_output)
 
 from xonsh.shell import prompt_toolkit_version_info
@@ -9,7 +9,7 @@ from xonsh.shell import prompt_toolkit_version_info
 class Prompter(object):
 
     def __init__(self, cli=None, *args, **kwargs):
-        """Implements a prompt that statefully holds a command-line 
+        """Implements a prompt that statefully holds a command-line
         interface.  When used as a context manager, it will return itself
         on entry and reset itself on exit.
 
@@ -33,18 +33,18 @@ class Prompter(object):
     def prompt(self, message='', **kwargs):
         """Get input from the user and return it.
 
-        This is a wrapper around a lot of prompt_toolkit functionality and 
-        can be a replacement for raw_input. (or GNU readline.) If you want 
-        to keep your history across several calls, create one 
-        `~prompt_toolkit.history.History instance and pass it every 
-        time. This function accepts many keyword arguments. Except for the 
-        following. they are a proxy to the arguments of 
+        This is a wrapper around a lot of prompt_toolkit functionality and
+        can be a replacement for raw_input. (or GNU readline.) If you want
+        to keep your history across several calls, create one
+        `~prompt_toolkit.history.History instance and pass it every
+        time. This function accepts many keyword arguments. Except for the
+        following. they are a proxy to the arguments of
         create_prompt_application().
 
         Parameters
         ----------
         patch_stdout : file-like, optional
-            Replace ``sys.stdout`` by a proxy that ensures that print 
+            Replace ``sys.stdout`` by a proxy that ensures that print
             statements from other threads won't destroy the prompt. (They
             will be printed above the prompt instead.)
         return_asyncio_coroutine : bool, optional
@@ -64,6 +64,8 @@ class Prompter(object):
 
         # Create CommandLineInterface.
         if self.cli is None:
+            if self.major_minor < (0, 57):
+                kwargs.pop('reserve_space_for_menu', None)
             if self.major_minor <= (0, 57):
                 kwargs.pop('get_rprompt_tokens', None)
                 kwargs.pop('get_continuation_tokens', None)
@@ -93,9 +95,9 @@ class Prompter(object):
             '''), exec_context)
             return exec_context['prompt_coro']()
         else:
-            # Note: We pass `reset_current_buffer=False`, because that way 
-            # it's easy to give DEFAULT_BUFFER a default value, without it 
-            # getting erased. We don't have to reset anyway, because this is 
+            # Note: We pass `reset_current_buffer=False`, because that way
+            # it's easy to give DEFAULT_BUFFER a default value, without it
+            # getting erased. We don't have to reset anyway, because this is
             # the first and only time that this CommandLineInterface will run.
             try:
                 with patch_context:
@@ -140,7 +142,7 @@ except ImportError:
         This method was forked from the mainline prompt-toolkit repo.
         Copyright (c) 2014, Jonathan Slenders, All rights reserved.
         This is deprecated and slated for removal after a prompt-toolkit
-        v0.57+ release. 
+        v0.57+ release.
         """
         stdout = stdout or sys.__stdout__
         true_color = to_simple_filter(true_color)
@@ -179,7 +181,7 @@ except ImportError:
         This method was forked from the mainline prompt-toolkit repo.
         Copyright (c) 2014, Jonathan Slenders, All rights reserved.
         This is deprecated and slated for removal after a prompt-toolkit
-        v0.57+ release. 
+        v0.57+ release.
         """
         assert isinstance(style, Style)
         output = create_output(true_color=true_color)
