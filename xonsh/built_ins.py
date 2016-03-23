@@ -497,6 +497,7 @@ def run_subproc(cmds, captured=False):
     prev_proc = None
     _capture_streams = captured in {'stdout', 'object'}
     for ix, cmd in enumerate(cmds):
+        starttime = time.time()
         procinfo['args'] = list(cmd)
         stdin = None
         stderr = None
@@ -683,6 +684,7 @@ def run_subproc(cmds, captured=False):
     elif captured is not False:
         procinfo['pid'] = prev_proc.pid
         procinfo['returncode'] = prev_proc.returncode
+        procinfo['timestamp'] = (starttime, time.time())
         if captured == 'object':
             procinfo['stdout'] = output
             if _stdin_file is not None:

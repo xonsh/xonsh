@@ -1593,7 +1593,7 @@ class BaseParser(object):
             return leader
         p0 = leader
         for trailer in trailers:
-            if isinstance(trailer, (ast.Index, ast.Slice)):
+            if isinstance(trailer, (ast.Index, ast.Slice, ast.ExtSlice)):
                 p0 = ast.Subscript(value=leader,
                                    slice=trailer,
                                    ctx=ast.Load(),
@@ -1798,7 +1798,12 @@ class BaseParser(object):
     def p_subscriptlist(self, p):
         """subscriptlist : subscript comma_subscript_list_opt comma_opt"""
         p1, p2 = p[1], p[2]
-        if p2 is not None:
+        if p2 is None:
+            pass
+        elif isinstance(p1, ast.Slice) or \
+                any([isinstance(x, ast.Slice) for x in p2]):
+            p1 = ast.ExtSlice(dims=[p1]+p2)
+        else:
             p1.value = ast.Tuple(elts=[p1.value] + [x.value for x in p2],
                                  ctx=ast.Load(), lineno=p1.lineno,
                                  col_offset=p1.col_offset)
@@ -2163,22 +2168,6 @@ class BaseParser(object):
         """subproc_atom : dollar_lparen_tok subproc RPAREN"""
         p1 = p[1]
         p0 = xonsh_call('__xonsh_subproc_captured_stdout__', args=p[2],
-                        lineno=p1.lineno, col=p1.lexpos)
-        p0._cliarg_action = 'splitlines'
-        p[0] = p0
-
-    def p_subproc_atom_captured_object(self, p):
-        """subproc_atom : bang_lparen_tok subproc RPAREN"""
-        p1 = p[1]
-        p0 = xonsh_call('__xonsh_subproc_captured_object__', args=p[2],
-                        lineno=p1.lineno, col=p1.lexpos)
-        p0._cliarg_action = 'splitlines'
-        p[0] = p0
-    
-    def p_subproc_atom_captured_hiddenobject(self, p):
-        """subproc_atom : bang_lbracket_tok subproc RBRACKET"""
-        p1 = p[1]
-        p0 = xonsh_call('__xonsh_subproc_captured_hiddenobject__', args=p[2],
                         lineno=p1.lineno, col=p1.lexpos)
         p0._cliarg_action = 'splitlines'
         p[0] = p0
