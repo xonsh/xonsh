@@ -503,11 +503,15 @@ def run_subproc(cmds, captured=False):
             bgable = getattr(aliased_cmd, '__xonsh_backgroundable__', True)
             numargs = len(inspect.signature(aliased_cmd).parameters)
             if numargs == 2:
+                cls = SimpleProcProxy if bgable else SimpleForegroundProcProxy
+            elif numargs == 3:
                 cls = SimpleProcProxyController if bgable else SimpleForegroundProcProxy
             elif numargs == 4:
+                cls = ProcProxy if bgable else ForegroundProcProxy
+            elif numargs == 5:
                 cls = ProcProxyController if bgable else ForegroundProcProxy
             else:
-                e = 'Expected callable with 2 or 4 arguments, not {}'
+                e = 'Expected callable with 2-5 arguments, not {}'
                 raise XonshError(e.format(numargs))
             proc = cls(aliased_cmd, cmd[1:],
                        stdin, stdout, stderr,
@@ -541,13 +545,16 @@ def run_subproc(cmds, captured=False):
                 raise XonshError(e)
         procs.append(proc)
         prev_proc = proc
-    if not prev_is_proxy:
-        add_job({
-            'cmds': cmds,
-            'pids': [i.pid for i in procs],
-            'obj': prev_proc,
-            'bg': background
-        })
+    if prev_is_proxy:
+        _p = 'pyfunc_{}'.format(id(prev_proc))
+    else:
+        _p = prev_proc.pid
+    add_job({
+        'cmds': cmds,
+        'pid': _p,
+        'obj': prev_proc,
+        'bg': background
+    })
     if (ENV.get('XONSH_INTERACTIVE') and
             not ENV.get('XONSH_STORE_STDOUT') and
             not _capture_streams):
@@ -558,8 +565,6 @@ def run_subproc(cmds, captured=False):
             pass
     if background:
         return
-    if prev_is_proxy:
-        prev_proc.wait()
     wait_for_active_job()
     for proc in procs[:-1]:
         try:

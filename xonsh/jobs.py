@@ -68,7 +68,9 @@ else:
 
     def _set_pgrp(info):
         try:
-            info['pgrp'] = os.getpgid(info['obj'].pid)
+            info['pgrp'] = os.getpgid(info['pid'])
+        except TypeError:
+            info['pgrp'] = 'py'
         except ProcessLookupError:
             pass
 
@@ -170,7 +172,7 @@ def print_one_job(num):
     status = job['status']
     cmd = [' '.join(i) if isinstance(i, list) else i for i in job['cmds']]
     cmd = ' '.join(cmd)
-    pid = job['pids'][-1]
+    pid = job['pid']
     bg = ' &' if job['bg'] else ''
     print('[{}] {}: {}{} ({})'.format(num, status, cmd, bg, pid))
 
