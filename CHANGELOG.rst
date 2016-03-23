@@ -12,7 +12,9 @@ Current Developments
 
 **Removed:** None
 
-**Fixed:** None
+**Fixed:**
+
+* Fixed bug with loading prompt-toolkit shell < v0.57.
 
 **Security:** None
 
