@@ -1146,13 +1146,13 @@ def _splitpath(path, sofar=[]):
     else:
         return _splitpath(folder, sofar + [path])
 
-_character_map = {chr(o): '_%s' % chr(o+32) for o in range(65, 91)}
-_character_map.update({'.': '_.', '_': '__'})
+_CHARACTER_MAP = {chr(o): '_%s' % chr(o+32) for o in range(65, 91)}
+_CHARACTER_MAP.update({'.': '_.', '_': '__'})
 
 
 def _cache_renamer(path):
     path = os.path.abspath(path)
-    o = [''.join(_character_map.get(i, i) for i in w) for w in _splitpath(path)]
+    o = [''.join(_CHARACTER_MAP.get(i, i) for i in w) for w in _splitpath(path)]
     o[-1] = "{}.{}".format(o[-1], sys.implementation.cache_tag)
     return o
 
