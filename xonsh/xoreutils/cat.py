@@ -3,20 +3,19 @@ import sys
 
 from xonsh.xoreutils.util import arg_handler
 
-def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
+def _cat_single_file(opts, fname, stdin, out, err, line_count=1, controller=None):
     if fname == '-':
         f = stdin
     elif os.path.isdir(fname):
         print("cat: {}: Is a directory.".format(fname), file=err)
-        return True, line_count
-    elif not os.path.isfile(fname):
-        print("cat: {}: No such file or directory.".format(fname), file=err)
         return True, line_count
     else:
         f = open(fname, 'rb')
     sep = os.linesep.encode()
     last_was_blank = False
     while True:
+        if controller.is_killed:
+            return None
         _r = r = f.readline()
         if isinstance(_r, str):
             _r = r = _r.encode()
@@ -41,7 +40,7 @@ def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
     return False, line_count
 
 
-def cat(args, stdin, stdout, stderr):
+def cat(args, stdin, stdout, stderr, controller):
     opts = _parse_args(args)
     if opts is None:
         print(HELP_STR, file=stdout)
@@ -52,7 +51,10 @@ def cat(args, stdin, stdout, stderr):
     if len(args) == 0:
         args = ['-']
     for i in args:
-        _e, line_count = _cat_single_file(opts, i, stdin, stdout, stderr, line_count)
+        o = _cat_single_file(opts, i, stdin, stdout, stderr, line_count, controller)
+        if o is None:
+            return -1
+        _e, line_count = o
         errors = _e or errors
 
     return int(errors)

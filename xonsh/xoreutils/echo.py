@@ -1,4 +1,4 @@
-def echo(args, stdin, stdout, stderr):
+def echo(args, stdin, stdout, stderr, controller):
     opts = _parse_args(args)
     if opts is None:
         return
