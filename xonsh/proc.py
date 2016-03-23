@@ -13,7 +13,7 @@ import sys
 import time
 import builtins
 from functools import wraps
-from threading import Thread
+from threading import Thread, Lock
 from collections import Sequence, namedtuple
 from subprocess import Popen, PIPE, DEVNULL, STDOUT, TimeoutExpired
 
@@ -173,7 +173,7 @@ class ProcProxy(Thread):
         else:
             sp_stderr = sys.stderr
 
-        r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr)
+        r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr, self.controller)
         self.returncode = 0 if r is None else r
 
     def poll(self):
@@ -327,61 +327,65 @@ class ProcProxy(Thread):
 
 
 class ProcProxyController(Thread):
-    def __init__(self, f, args, stdin=None, stdout=None, stderr=None, universal_newlines=False, wait_time=0.01):
-        self.proc = ProcProxy(f, args, stdin, stdout, stderr, universal_newlines, self, daemon=True)
-        self.is_stopped = False
+    def __init__(self, f, args, stdin=None, stdout=None, stderr=None, universal_newlines=False, wait_time=0.1):
+        self.execution_lock = Lock()
+        self.is_killed = False
         self.wait_time = wait_time
-        self.active_signal = None
-        self._handlers = {}
-        self._handlers['KILL'] = self._handle_kill
-        self._handlers['STOP'] = self._handle_stop
-        self._handlers['CONT'] = self._handle_cont
+        self.proc = ProcProxy(f, args, stdin, stdout, stderr, universal_newlines, self, daemon=True)
+        Thread.__init__(self)
+        self.start()
 
     def run(self):
-        while True:
-            if active_signal is None:
-                if self.proc.is_alive():
-                    time.sleep(wait_time)
-                    continue
-                else:
-                    return
-            else:
-                if self._handlers[active_signal]() is None:
-                    return
-                self.active_signal = None
-
-    def _handle_kill(self):
-        return None
-
-    def _handle_stop(self):
-        self.is_stopped = True
-        return True
-
-    def _handle_cont(self):
-        self.is_stopped = False
-        return True
+        while self.proc.is_alive():
+            pass
 
     def __getattr__(self, attr):
         return getattr(self.proc, attr)
 
-    def signal(self, sig):
-        self.active_signal = sig
-
-    def register(self, sig, func):
-        self._handlers[sig] = func
-
 
 class SimpleProcProxyController(ProcProxyController):
     def __init__(self, f, args, stdin=None, stdout=None, stderr=None, universal_newlines=False, wait_time=0.01):
-        f = wrap_simple_command(f, args, stdin, stdout, stderr)
+        f = wrap_simple_controlled_command(f)
         super().__init__(f, args, stdin, stdout, stderr, universal_newlines, wait_time)
 
 
-def wrap_simple_command(f, args, stdin, stdout, stderr):
+def wrap_simple_controlled_command(f):
     """Decorator for creating 'simple' callable aliases."""
     bgable = getattr(f, '__xonsh_backgroundable__', True)
     @wraps(f)
-    def wrapped_simple_command(args, stdin, stdout, stderr):
+    def wrapped_simple_command(args, stdin, stdout, stderr, controller):
+        try:
+            i = stdin.read()
+            if bgable:
+                with redirect_stdout(stdout), redirect_stderr(stderr):
+                    r = f(args, i, controller)
+            else:
+                r = f(args, i, controller)
+
+            cmd_result = 0
+            if isinstance(r, str):
+                stdout.write(r)
+            elif isinstance(r, Sequence):
+                if r[0] is not None:
+                    stdout.write(r[0])
+                if r[1] is not None:
+                    stderr.write(r[1])
+                if len(r) > 2 and r[2] is not None:
+                    cmd_result = r[2]
+            elif r is not None:
+                stdout.write(str(r))
+            return cmd_result
+        except Exception:
+            print_exception()
+            return 1  # returncode for failure
+    return wrapped_simple_command
+
+
+def wrap_simple_command(f):
+    """Decorator for creating 'simple' callable aliases."""
+    bgable = getattr(f, '__xonsh_backgroundable__', True)
+    @wraps(f)
+    def wrapped_simple_command(args, stdin, stdout, stderr, controller):
         try:
             i = stdin.read()
             if bgable:
@@ -419,7 +423,7 @@ class SimpleProcProxy(ProcProxy):
 
     def __init__(self, f, args, stdin=None, stdout=None, stderr=None,
                  universal_newlines=False):
-        f = wrap_simple_command(f, args, stdin, stdout, stderr)
+        f = wrap_simple_command(f)
         super().__init__(f, args, stdin, stdout, stderr, universal_newlines)
 
 #
