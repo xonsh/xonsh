@@ -9,6 +9,9 @@ def _cat_single_file(opts, fname, stdin, out, err, line_count=1, controller=None
     elif os.path.isdir(fname):
         print("cat: {}: Is a directory.".format(fname), file=err)
         return True, line_count
+    elif not os.path.exists(fname):
+        print("cat: No such file or directory: {}".format(fname), file=err)
+        return True, line_count
     else:
         f = open(fname, 'rb')
     sep = os.linesep.encode()
@@ -29,10 +32,11 @@ def _cat_single_file(opts, fname, stdin, out, err, line_count=1, controller=None
         last_was_blank = this_one_blank
         if (opts['number_all'] or
                 (opts['number_nonblank'] and not this_one_blank)):
-            _r = b"%6d %s" % (line_count, _r)
+            start = ("%6d " % line_count).encode()
+            _r = start + _r
             line_count += 1
         if opts['show_ends']:
-            _r = b'%s$' % _r
+            _r = _r + b'$'
         try:
             print(_r.decode('unicode_escape'), flush=True, file=out)
         except:
