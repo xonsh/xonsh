@@ -32,7 +32,6 @@ from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
 from xonsh.tools import (
     suggest_commands, XonshError, expandvars, CommandsCache
 )
-
 from xonsh.xoreutils import cat, tee
 
 ENV = None
@@ -495,8 +494,8 @@ def run_subproc(cmds, captured=False):
                 ENV.get('XONSH_STORE_STDIN') and
                 captured in {'object', 'hiddenobject'}):
             _stdin_file = tempfile.NamedTemporaryFile()
-            cproc = ProcProxy(cat, [], stdin=stdin, stdout=PIPE)
-            tproc = ProcProxy(tee, [_stdin_file.name],
+            cproc = ProcProxyController(cat, [], stdin=stdin, stdout=PIPE)
+            tproc = ProcProxyController(tee, [_stdin_file.name],
                               stdin=cproc.stdout, stdout=PIPE)
             stdin = tproc.stdout
         if callable(aliased_cmd):
@@ -504,9 +503,9 @@ def run_subproc(cmds, captured=False):
             bgable = getattr(aliased_cmd, '__xonsh_backgroundable__', True)
             numargs = len(inspect.signature(aliased_cmd).parameters)
             if numargs == 2:
-                cls = SimpleProcProxy if bgable else SimpleForegroundProcProxy
+                cls = SimpleProcProxyController if bgable else SimpleForegroundProcProxy
             elif numargs == 4:
-                cls = ProcProxy if bgable else ForegroundProcProxy
+                cls = ProcProxyController if bgable else ForegroundProcProxy
             else:
                 e = 'Expected callable with 2 or 4 arguments, not {}'
                 raise XonshError(e.format(numargs))

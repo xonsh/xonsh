@@ -58,7 +58,9 @@ class ProcProxy(Thread):
                  stdin=None,
                  stdout=None,
                  stderr=None,
-                 universal_newlines=False):
+                 universal_newlines=False,
+                 controller=None,
+                 daemon=None):
         """Parameters
         ----------
         f : function
@@ -104,6 +106,7 @@ class ProcProxy(Thread):
         self.pid = None
         self.returncode = None
         self.wait = self.join
+        self.controller = controller
 
         handles = self._get_handles(stdin, stdout, stderr)
         (self.p2cread, self.p2cwrite,
@@ -138,7 +141,7 @@ class ProcProxy(Thread):
             if universal_newlines:
                 self.stderr = io.TextIOWrapper(self.stderr)
 
-        Thread.__init__(self)
+        Thread.__init__(self, daemon=daemon)
         self.start()
 
     def run(self):
@@ -321,6 +324,57 @@ class ProcProxy(Thread):
             return (p2cread, p2cwrite,
                     c2pread, c2pwrite,
                     errread, errwrite)
+
+
+class ProcProxyController(Thread):
+    def __init__(self, f, args, stdin=None, stdout=None, stderr=None, universal_newlines=False, wait_time=0.01):
+        self.proc = ProcProxy(f, args, stdin, stdout, stderr, universal_newlines, self, daemon=True)
+        self.is_stopped = False
+        self.wait_time = wait_time
+        self.active_signal = None
+        self._handlers = {}
+        self._handlers['KILL'] = self._handle_kill
+        self._handlers['STOP'] = self._handle_stop
+        self._handlers['CONT'] = self._handle_cont
+
+    def run(self):
+        while True:
+            if active_signal is None:
+                if self.proc.is_alive():
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    return
+            else:
+                if self._handlers[active_signal]() is None:
+                    return
+                self.active_signal = None
+
+    def _handle_kill(self):
+        return None
+
+    def _handle_stop(self):
+        self.is_stopped = True
+        return True
+
+    def _handle_cont(self):
+        self.is_stopped = False
+        return True
+
+    def __getattr__(self, attr):
+        return getattr(self.proc, attr)
+
+    def signal(self, sig):
+        self.active_signal = sig
+
+    def register(self, sig, func):
+        self._handlers[sig] = func
+
+
+class SimpleProcProxyController(ProcProxyController):
+    def __init__(self, f, args, stdin=None, stdout=None, stderr=None, universal_newlines=False, wait_time=0.01):
+        f = wrap_simple_command(f, args, stdin, stdout, stderr)
+        super().__init__(f, args, stdin, stdout, stderr, universal_newlines, wait_time)
 
 
 def wrap_simple_command(f, args, stdin, stdout, stderr):
