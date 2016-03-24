@@ -1,11 +1,11 @@
 the xonsh shell
 ===============
 
-.. raw:: html 
+.. raw:: html
 
     <p style="text-align:center;">
     <span style="font-family:Times;font-size:28px;font-style:normal;font-weight:normal;text-decoration:none;text-transform:none;font-variant:small-caps;color:000000;">
-    ~ 
+    ~
     <script>
     var taglines = [
         "Exofrills in the shell",
@@ -25,6 +25,7 @@ the xonsh shell
         "It is pronounced <i>jeaunsch</i>",
         "It is pronounced <i>🐚</i>",
         "It is pronounced <i>măjˈĭk</i>",
+        "It is pronounced <i>gif</i>",
         "The shell, bourne again",
         "Snailed it",
         "Starfish loves you",
@@ -52,16 +53,16 @@ the xonsh shell
 Xonsh is a Python-ish, BASHwards-looking shell language and command prompt.
 The language is a superset of Python 3.4+ with additional shell primitives
 that you are used to from Bash and IPython. It works on all major systems including
-Linux, Mac OSX, and Windows. Xonsh is meant for the daily use of experts and novices 
+Linux, Mac OSX, and Windows. Xonsh is meant for the daily use of experts and novices
 alike.
 
 **At a glance**
 
-.. raw:: html 
+.. raw:: html
 
-    <p style="text-align:center;"><script type="text/javascript" 
-      src="https://asciinema.org/a/9kp21a67ahhng25wtzoep3pyx.js" 
-      id="asciicast-9kp21a67ahhng25wtzoep3pyx" async 
+    <p style="text-align:center;"><script type="text/javascript"
+      src="https://asciinema.org/a/9kp21a67ahhng25wtzoep3pyx.js"
+      id="asciicast-9kp21a67ahhng25wtzoep3pyx" async
       data-size="medium" data-speed="2"></script>
     </p>
 
@@ -114,7 +115,7 @@ You can install xonsh using conda, pip, or from source.
     $ conda install -c xonsh xonsh
 
 .. note:: For the bleeding edge development version use ``conda install -c xonsh/channel/dev xonsh``
-    
+
 
 **pip:**
 
@@ -154,12 +155,12 @@ Comparison
 Xonsh is significantly different from most other shells or shell tools. The following
 table lists features and capabilities that various tools may or may not share.
 
-.. list-table:: 
+.. list-table::
     :widths: 3 1 1 1 1 1 1
     :header-rows: 1
     :stub-columns: 1
 
-    * - 
+    * -
       - Bash
       - zsh
       - plumbum
@@ -167,8 +168,8 @@ table lists features and capabilities that various tools may or may not share.
       - IPython
       - xonsh
     * - Sane language
-      - 
-      - 
+      -
+      -
       - ✓
       - ✓
       - ✓
@@ -178,11 +179,11 @@ table lists features and capabilities that various tools may or may not share.
       - ✓
       - ✓
       - ✓
-      - 
+      -
       - ✓
     * - Native cross-platform support
-      - 
-      - 
+      -
+      -
       - ✓
       - ✓
       - ✓
@@ -190,58 +191,58 @@ table lists features and capabilities that various tools may or may not share.
     * - Meant as a shell
       - ✓
       - ✓
-      - 
+      -
       - ✓
-      - 
+      -
       - ✓
     * - Tab completion
       - ✓
       - ✓
-      - 
+      -
       - ✓
       - ✓
       - ✓
     * - Man-page completion
-      - 
-      - 
-      - 
+      -
+      -
+      -
       - ✓
-      - 
+      -
       - ✓
     * - Large standard library
-      - 
+      -
       - ✓
-      - 
-      - 
+      -
+      -
       - ✓
       - ✓
     * - Typed variables
-      - 
-      - 
+      -
+      -
       - ✓
       - ✓
       - ✓
       - ✓
     * - Syntax highlighting
-      - 
-      - 
-      - 
+      -
+      -
+      -
       - ✓
       - in notebook
       - w/ prompt-toolkit
     * - Pun in name
       - ✓
-      - 
+      -
       - ✓
-      - 
-      - 
+      -
+      -
       - ✓
     * - Rich history
-      - 
-      - 
-      - 
-      - 
-      - 
+      -
+      -
+      -
+      -
+      -
       - ✓
 
 
@@ -268,17 +269,17 @@ Xonsh currently has the following external dependencies,
 ============
 Contributing
 ============
-We highly encourage contributions to xonsh!  If you would like to contribute, 
-it is as easy as forking the repository on GitHub, making your changes, and 
-issuing a pull request.  If you have any questions about this process don't 
-hesitate to ask the mailing list (xonsh@googlegroups.com). 
+We highly encourage contributions to xonsh!  If you would like to contribute,
+it is as easy as forking the repository on GitHub, making your changes, and
+issuing a pull request.  If you have any questions about this process don't
+hesitate to ask the mailing list (xonsh@googlegroups.com).
 
 ==========
 Contact Us
 ==========
 If you have questions or comments, please send them to the mailing list
 xonsh@googlegroups.com, page us on IRC, contact the author directly, or
-open an issue on GitHub. 
+open an issue on GitHub.
 `Join the mailing list here! <https://groups.google.com/forum/#!forum/xonsh>`_
 
 =============
