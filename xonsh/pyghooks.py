@@ -16,7 +16,8 @@ from pygments.style import Style
 from pygments.styles import get_style_by_name
 import pygments.util
 
-from xonsh.tools import ON_WINDOWS, intensify_colors_for_cmd_exe
+from xonsh.tools import (ON_WINDOWS, intensify_colors_for_cmd_exe,
+                         expand_gray_colors_for_cmd_exe)
 
 class XonshSubprocLexer(BashLexer):
     """Lexer for xonsh subproc mode."""
@@ -282,7 +283,7 @@ class XonshStyle(Style):
         style_name : str, optional
             The style name to initialize with.
         """
-        self.trap = {} # for traping custom colors set by user
+        self.trap = {}  # for traping custom colors set by user
         self._smap = {}
         self._style_name = ''
         self.style_name = style_name
@@ -311,7 +312,6 @@ class XonshStyle(Style):
         self._style_name = value
         if ON_WINDOWS:
             self.enhance_colors_for_cmd_exe()
-            
 
     @style_name.deleter
     def style_name(self):
@@ -321,7 +321,7 @@ class XonshStyle(Style):
         """ Enhance colors when using cmd.exe on windows.
             When using the default style all blue and dark red colors
             are changed to CYAN and intence red.
-        """          
+        """
         env = builtins.__xonsh_env__
         # Ensure we are not using ConEmu
         if 'CONEMUANSI' not in env:
@@ -329,8 +329,9 @@ class XonshStyle(Style):
             # from the default color
             self.styles[Token.AutoSuggestion] = '#444444'
             if env.get('INTENSIFY_COLORS_ON_WIN', False):
-                s = intensify_colors_for_cmd_exe(self._smap)
-                self._smap.update(s)
+                self._smap.update(expand_gray_colors_for_cmd_exe(self._smap))
+                self._smap.update(intensify_colors_for_cmd_exe(self._smap))
+
 
 def xonsh_style_proxy(styler):
     """Factory for a proxy class to a xonsh style."""
@@ -345,8 +346,7 @@ def xonsh_style_proxy(styler):
 
     return XonshStyleProxy
 
-    
-    
+
 PTK_STYLE = {
     Token.Menu.Completions.Completion.Current: 'bg:#00aaaa #000000',
     Token.Menu.Completions.Completion: 'bg:#008888 #ffffff',
