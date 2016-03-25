@@ -283,7 +283,7 @@ class XonshStyle(Style):
             The style name to initialize with.
         """
         self.trap = {} # for traping custom colors set by user
-        self._mod = {} # for internal modification of the style
+        self._smap = {}
         self._style_name = ''
         self.style_name = style_name
         super().__init__()
@@ -296,7 +296,6 @@ class XonshStyle(Style):
     def style_name(self, value):
         if self._style_name == value:
             return
-        self._mod.clear()
         if value in STYLES:
             cmap = STYLES[value]
         else:
@@ -304,11 +303,11 @@ class XonshStyle(Style):
                  RuntimeWarning)
             cmap = DEFAULT_STYLE
         try:
-            smap = get_style_by_name(value)().styles
+            self._smap = get_style_by_name(value)().styles.copy()
         except (ImportError, pygments.util.ClassNotFound):
-            smap = XONSH_BASE_STYLE
-        compound = CompoundColorMap(ChainMap(self.trap, self._mod, cmap, PTK_STYLE, smap))
-        self.styles = ChainMap(self.trap, self._mod, cmap, PTK_STYLE, smap, compound)
+            self._smap = XONSH_BASE_STYLE.copy()
+        compound = CompoundColorMap(ChainMap(self.trap, cmap, PTK_STYLE, self._smap))
+        self.styles = ChainMap(self.trap, cmap, PTK_STYLE, self._smap, compound)
         self._style_name = value
         if ON_WINDOWS:
             self.enhance_colors_for_cmd_exe()
@@ -326,15 +325,12 @@ class XonshStyle(Style):
         env = builtins.__xonsh_env__
         # Ensure we are not using ConEmu
         if 'CONEMUANSI' not in env:
-            self._mod.update({Token.AutoSuggestion:'#444444'})
+            # Auto suggest needs to be a darker shade to be distinguishable
+            # from the default color
+            self.styles[Token.AutoSuggestion] = '#444444'
             if env.get('INTENSIFY_COLORS_ON_WIN', False):
-                # Only modify the pygments part of the style
-                try:
-                    smap = get_style_by_name(self.style_name)().styles
-                except (ImportError, pygments.util.ClassNotFound):
-                    smap = XONSH_BASE_STYLE
-                s = intensify_colors_for_cmd_exe(smap)
-                self._mod.update(s)
+                s = intensify_colors_for_cmd_exe(self._smap)
+                self._smap.update(s)
 
 def xonsh_style_proxy(styler):
     """Factory for a proxy class to a xonsh style."""
