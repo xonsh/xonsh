@@ -60,7 +60,7 @@ class ProcProxy(Thread):
                  stderr=None,
                  universal_newlines=False,
                  controller=None,
-                 daemon=None):
+                 wrap=True):
         """Parameters
         ----------
         f : function
@@ -102,6 +102,10 @@ class ProcProxy(Thread):
             A file-like object representing stderr (error output can be
             written here).
         """
+        if wrap:
+            def _new_f(args, stdin, stdout, stderr, controller):
+                return f(args, stdin, stdout, stderr)
+            self.f = _new_f
         self.args = args
         self.pid = None
         self.returncode = None
@@ -141,7 +145,7 @@ class ProcProxy(Thread):
             if universal_newlines:
                 self.stderr = io.TextIOWrapper(self.stderr)
 
-        Thread.__init__(self, daemon=daemon)
+        Thread.__init__(self)
         self.start()
 
     def run(self):
@@ -330,7 +334,7 @@ class ProcProxyController(Thread):
     def __init__(self, f, args, stdin=None, stdout=None, stderr=None, universal_newlines=False):
         self.execution_lock = Lock()
         self.is_killed = False
-        self.proc = ProcProxy(f, args, stdin, stdout, stderr, universal_newlines, self, daemon=True)
+        self.proc = ProcProxy(f, args, stdin, stdout, stderr, universal_newlines, self, wrap=False)
         Thread.__init__(self)
         self.start()
 
@@ -352,7 +356,7 @@ def wrap_simple_controlled_command(f):
     """Decorator for creating 'simple' callable aliases."""
     bgable = getattr(f, '__xonsh_backgroundable__', True)
     @wraps(f)
-    def wrapped_simple_command(args, stdin, stdout, stderr, controller):
+    def wrapped_simple_controlled_command(args, stdin, stdout, stderr, controller):
         try:
             i = stdin.read()
             if bgable:
@@ -377,14 +381,14 @@ def wrap_simple_controlled_command(f):
         except Exception:
             print_exception()
             return 1  # returncode for failure
-    return wrapped_simple_command
+    return wrapped_simple_controlled_command
 
 
 def wrap_simple_command(f):
     """Decorator for creating 'simple' callable aliases."""
     bgable = getattr(f, '__xonsh_backgroundable__', True)
     @wraps(f)
-    def wrapped_simple_command(args, stdin, stdout, stderr, controller):
+    def wrapped_simple_command(args, stdin, stdout, stderr):
         try:
             i = stdin.read()
             if bgable:
