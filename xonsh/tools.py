@@ -747,11 +747,13 @@ def intensify_colors_for_cmd_exe(style_map, replace_colors = None):
     if not ON_WINDOWS or prompt_toolkit is None:
         return modified_style
     if replace_colors is None:
-        replace_colors = {1: '#44ffff', #subst dark blue with bright cyan
-                          2: '#44ff44', #subst dark green with bright green
-                          4: '#ff4444', #subst dark red with bright
-                          5: '#ff44ff', #subst dark magenta with bright
-                          6: '#ffff44', #subst dark yellow with bright
+        replace_colors = {1: '#44ffff', #subst blue with bright cyan
+                          2: '#44ff44', #subst green with bright green
+                          4: '#ff4444', #subst red with bright red
+                          5: '#ff44ff', #subst magenta with bright magenta
+                          6: '#ffff44', #subst yellow with bright yellow
+                          9: '#00aaaa', #subst intense blue (hard to read) 
+                                        #with dark cyan (which is readable) 
                           }
     table = prompt_toolkit.terminal.win32_output.ColorLookupTable()
     style = prompt_toolkit.styles.style_from_dict(style_map)
