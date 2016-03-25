@@ -17,7 +17,10 @@ def tty(args, stdin, stdout, stderr):
                 print('tty: Invalid option: {}'.format(i), file=stderr)
             print("Try 'tty --help' for more information", file=stderr)
         return 2
-    fd = stdin.fileno()
+    try:
+        fd = stdin.fileno()
+    except:
+        fd = sys.stdin.fileno()
     if not os.isatty(fd):
         if not silent:
             print('not a tty', file=stdout)
