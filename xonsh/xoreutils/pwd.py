@@ -1,6 +1,6 @@
 import os
 
-def pwd(args, stdin, stdout, stderr, controller):
+def pwd(args, stdin, stdout, stderr):
     e = __xonsh_env__['PWD']
     if '--help' in args:
         print(HELP_STR, file=stdout)
