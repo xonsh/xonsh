@@ -35,10 +35,11 @@ def xonsh_env(env):
 
 def test_simple():
     load_builtins()
-    with chdir(PARENT):
-        assert_not_equal(os.getcwd(), HERE)
-        dirstack.cd(["tests"])
-        assert_equal(os.getcwd(), HERE)
+    with xonsh_env(Env(CDPATH=PARENT, PWD=HERE)):
+        with chdir(PARENT):
+            assert_not_equal(os.getcwd(), HERE)
+            dirstack.cd(["tests"])
+            assert_equal(os.getcwd(), HERE)
 
 def test_cdpath_simple():
     with xonsh_env(Env(CDPATH=PARENT, PWD=HERE)):
