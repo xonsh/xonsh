@@ -35,7 +35,7 @@ def xonsh_env(env):
 
 def test_simple():
     load_builtins()
-    with xonsh_env(Env(CDPATH=PARENT, PWD=HERE)):
+    with xonsh_env(Env(CDPATH=PARENT, PWD=PARENT)):
         with chdir(PARENT):
             assert_not_equal(os.getcwd(), HERE)
             dirstack.cd(["tests"])
