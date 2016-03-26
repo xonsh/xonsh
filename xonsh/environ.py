@@ -7,7 +7,6 @@ import json
 import socket
 import string
 import locale
-import marshal
 import builtins
 import subprocess
 from itertools import chain
@@ -26,7 +25,7 @@ from xonsh.tools import (
     is_completions_display_value, to_completions_display_value, is_string_set,
     csv_to_set, set_to_csv, get_sep, is_int, is_bool_seq, csv_to_bool_seq,
     bool_seq_to_csv, DefaultNotGiven, setup_win_unicode_console,
-    intensify_colors_on_win_setter
+    intensify_colors_on_win_setter, run_script_with_cache,
 )
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
@@ -1188,77 +1187,25 @@ def load_static_config(ctx, config=None):
     return conf
 
 
-def _splitpath(path, sofar=[]):
-    folder, path = os.path.split(path)
-    if path == "":
-        return sofar[::-1]
-    elif folder == "":
-        return (sofar + [path])[::-1]
-    else:
-        return _splitpath(folder, sofar + [path])
-
-_CHARACTER_MAP = {chr(o): '_%s' % chr(o+32) for o in range(65, 91)}
-_CHARACTER_MAP.update({'.': '_.', '_': '__'})
-
-
-def _cache_renamer(path):
-    path = os.path.abspath(path)
-    o = [''.join(_CHARACTER_MAP.get(i, i) for i in w) for w in _splitpath(path)]
-    o[-1] = "{}.{}".format(o[-1], sys.implementation.cache_tag)
-    return o
-
-
-def _make_if_not_exists(dirname):
-    if not os.path.isdir(dirname):
-        os.makedirs(dirname)
-
-
-def xonshrc_context(rcfiles=None, execer=None, ctx=None):
+def xonshrc_context(rcfiles=None, execer=None):
     """Attempts to read in xonshrc file, and return the contents."""
     loaded = builtins.__xonsh_env__['LOADED_RC_FILES'] = []
-    datadir = builtins.__xonsh_env__['XONSH_DATA_DIR']
-    cachedir = os.path.join(datadir, 'xonshrc_cache')
     if (rcfiles is None or execer is None):
         return {}
-    if ctx is None:
-        ctx = getattr(builtins, '__xonsh_ctx__', {})
+    env = {}
     for rcfile in rcfiles:
         if not os.path.isfile(rcfile):
             loaded.append(False)
             continue
-        use_cached = False
-        cachefname = os.path.join(cachedir, *_cache_renamer(rcfile))
-        if os.path.isfile(cachefname):
-            if os.stat(cachefname).st_mtime >= os.stat(rcfile).st_mtime:
-                # use the compiled version and leave
-                with open(cachefname, 'rb') as cfile:
-                    ccode = marshal.load(cfile)
-                    use_cached = True
-                    loaded.append(True)
-        if not use_cached:
-            with open(rcfile, 'r') as f:
-                rc = f.read()
-            if not rc.endswith('\n'):
-                rc += '\n'
-            fname = execer.filename
-            try:
-                execer.filename = rcfile
-                ccode = execer.compile(rc, glbs=ctx)
-                _make_if_not_exists(os.path.dirname(cachefname))
-                with open(cachefname, 'wb') as cfile:
-                    marshal.dump(ccode, cfile)
-                loaded.append(True)
-            except SyntaxError as err:
-                loaded.append(False)
-                msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
-                warn(msg.format(rcfile, err), RuntimeWarning)
-                continue
-            finally:
-                execer.filename = fname
-        if ccode is None:
-            return ctx
-        exec(ccode, ctx, None)
-    return ctx
+        try:
+            run_script_with_cache(rcfile, execer, env)
+            loaded.append(True)
+        except SyntaxError as err:
+            loaded.append(False)
+            msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
+            warn(msg.format(rcfile, err), RuntimeWarning)
+            continue
+    return env
 
 
 def windows_env_fixes(ctx):

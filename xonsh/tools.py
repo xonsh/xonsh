@@ -17,10 +17,11 @@ Implementations:
 * indent()
 
 """
-import ctypes
 import os
 import re
 import sys
+import ctypes
+import marshal
 import builtins
 import platform
 import traceback
@@ -1131,3 +1132,67 @@ class CommandsCache(Set):
         allcmds |= set(builtins.aliases.keys())
         self._cmds_cache = frozenset(allcmds)
         return self._cmds_cache
+
+
+def _splitpath(path, sofar=[]):
+    folder, path = os.path.split(path)
+    if path == "":
+        return sofar[::-1]
+    elif folder == "":
+        return (sofar + [path])[::-1]
+    else:
+        return _splitpath(folder, sofar + [path])
+
+_CHARACTER_MAP = {chr(o): '_%s' % chr(o+32) for o in range(65, 91)}
+_CHARACTER_MAP.update({'.': '_.', '_': '__'})
+
+
+def _cache_renamer(path):
+    path = os.path.abspath(path)
+    o = [''.join(_CHARACTER_MAP.get(i, i) for i in w) for w in _splitpath(path)]
+    o[-1] = "{}.{}".format(o[-1], sys.implementation.cache_tag)
+    return o
+
+
+def _make_if_not_exists(dirname):
+    if not os.path.isdir(dirname):
+        os.makedirs(dirname)
+
+
+def run_script_with_cache(filename, execer, context=None, use_cache=True):
+    """
+    Run a script, using a cached version if it exists (and the source has not
+    changed), and updating the cache as necessary.
+    """
+    run_cached = False
+    if use_cache:
+        datadir = builtins.__xonsh_env__['XONSH_DATA_DIR']
+        cachedir = os.path.join(datadir, 'xonshrc_cache')
+        cachefname = os.path.join(cachedir, *_cache_renamer(filename))
+        if os.path.isfile(cachefname):
+            if os.stat(cachefname).st_mtime >= os.stat(filename).st_mtime:
+                with open(cachefname, 'rb') as cfile:
+                    ccode = marshal.load(cfile)
+                    run_cached = True
+    if not run_cached:
+        print('NOT USING CACHE')
+        with open(filename, 'r') as f:
+            code = f.read()
+        if not code.endswith('\n'):
+            code += '\n'
+        try:
+            old_filename = execer.filename
+            execer.filename = filename
+            ccode = execer.compile(code)
+            if use_cache:
+                _make_if_not_exists(os.path.dirname(cachefname))
+                with open(cachefname, 'wb') as cfile:
+                    marshal.dump(ccode, cfile)
+        except:
+            raise
+        finally:
+            execer.filename = old_filename
+    if context is None:
+        exec(ccode)
+    else:
+        exec(ccode, context)
