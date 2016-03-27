@@ -77,7 +77,8 @@ class Shell(object):
         self.login = kwargs.get('login', True)
         self.stype = shell_type
         self._init_environ(ctx, config, rc,
-                           kwargs['scriptcache'], kwargs['cacheall'])
+                           kwargs.get('scriptcache', True),
+                           kwargs.get('cacheall', False))
         env = builtins.__xonsh_env__
         # pick a valid shell
         if shell_type is not None:
