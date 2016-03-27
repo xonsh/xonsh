@@ -29,16 +29,24 @@ def _make_if_not_exists(dirname):
         os.makedirs(dirname)
 
 def should_use_cache(execer, mode):
+    """
+    Return ``True`` if caching has been enabled for this mode (through command
+    line flags or environment variables)
+    """
     if mode == 'exec':
         return ((execer.scriptcache or
                     execer.cacheall) and
                 (builtins.__xonsh_env__['XONSH_CACHE_SCRIPTS'] or
                     builtins.__xonsh_env__['XONSH_CACHE_EVERYTHING']))
     else:
-        return (execer.cacheall or builtins.__xonsh_env__['XONSH_CACHE_EVERYTHING'])
+        return (execer.cacheall or
+                builtins.__xonsh_env__['XONSH_CACHE_EVERYTHING'])
 
 
 def run_compiled_code(code, glb, loc, mode):
+    """
+    Helper to run code in a given mode and context
+    """
     if mode in {'exec', 'single'}:
         func = exec
     else:
@@ -47,6 +55,15 @@ def run_compiled_code(code, glb, loc, mode):
 
 
 def get_cache_filename(fname, code=True):
+    """
+    Return the filename of the cache for the given filename.
+
+    Cache filenames are similar to those used by the Mercurial DVCS for its
+    internal store.
+
+    The ``code`` switch should be true if we should use the code store rather
+    than the script store.
+    """
     datadir = builtins.__xonsh_env__['XONSH_DATA_DIR']
     cachedir = os.path.join(datadir, 'xonsh_code_cache' if code else 'xonsh_script_cache')
     cachefname = os.path.join(cachedir, *_cache_renamer(fname))
@@ -54,13 +71,20 @@ def get_cache_filename(fname, code=True):
 
 
 def update_cache(ccode, cache_file_name):
+    """
+    Update the cache at ``cache_file_name`` to contain the compiled code
+    represented by ``ccode``.
+    """
     if cache_file_name is not None:
         _make_if_not_exists(os.path.dirname(cache_file_name))
         with open(cache_file_name, 'wb') as cfile:
             marshal.dump(ccode, cfile)
 
 
-def compile_code(filename, code, execer, glb, loc, mode, cache_file_name):
+def compile_code(filename, code, execer, glb, loc, mode):
+    """
+    Wrapper for ``execer.compile`` to compile the given code
+    """
     try:
         if not code.endswith('\n'):
             code += '\n'
@@ -75,6 +99,13 @@ def compile_code(filename, code, execer, glb, loc, mode, cache_file_name):
 
 
 def script_cache_check(filename, cachefname):
+    """
+    Check whether the script cache for a particular file is valid.
+
+    Returns a tuple containing: a boolean representing whether the cached code
+    should be used, and the cached code (or ``None`` if the cache should not be
+    used).
+    """
     ccode = None
     run_cached = False
     if os.path.isfile(cachefname):
@@ -98,13 +129,15 @@ def run_script_with_cache(filename, execer, glb=None, loc=None, mode='exec'):
     if not run_cached:
         with open(filename, 'r') as f:
             code = f.read()
-        ccode = compile_code(filename, code, execer,
-                             glb, loc, mode, cachefname)
+        ccode = compile_code(filename, code, execer, glb, loc, mode)
         update_cache(ccode, cachefname) 
     run_compiled_code(ccode, glb, loc, mode)
 
 
 def code_cache_name(code):
+    """
+    Return an appropriate spoofed filename for the given code.
+    """
     if isinstance(code, str):
         _code = code.encode()
     else:
@@ -113,6 +146,13 @@ def code_cache_name(code):
 
 
 def code_cache_check(cachefname):
+    """
+    Check whether the code cache for a particular piece of code is valid.
+
+    Returns a tuple containing: a boolean representing whether the cached code
+    should be used, and the cached code (or ``None`` if the cache should not be
+    used).
+    """
     ccode = None
     run_cached = False
     if os.path.isfile(cachefname):
@@ -134,7 +174,6 @@ def run_code_with_cache(code, execer, glb=None, loc=None, mode='exec'):
     if use_cache:
         run_cached, ccode = code_cache_check(cachefname)
     if not run_cached:
-        ccode = compile_code(filename, code, execer,
-                              glb, loc, mode, cachefname)
+        ccode = compile_code(filename, code, execer, glb, loc, mode)
         update_cache(ccode, cachefname) 
     run_compiled_code(ccode, glb, loc, mode)

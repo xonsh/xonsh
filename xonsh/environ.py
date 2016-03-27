@@ -428,6 +428,12 @@ DEFAULT_DOCS = {
         'control file if there is a naming collision.', default=(
         "On Linux & Mac OSX: ('/etc/xonshrc', '~/.xonshrc')\n"
         "On Windows: ('%ALLUSERSPROFILE%\\xonsh\\xonshrc', '~/.xonshrc')")),
+    'XONSH_CACHE_SCRIPTS': VarDocs(
+        'Controls whether the code for scripts run from xonsh will be cached'
+        ' (``True``) or re-compiled each time (``False``).'),
+    'XONSH_CACHE_EVERYTHING': VarDocs(
+        'Controls whether all code (including code enetered at the interactive'
+        ' prompt) will be cached.'),
     'XONSH_COLOR_STYLE': VarDocs(
         'Sets the color style for xonsh colors. This is a style name, not '
         'a color map.'),
