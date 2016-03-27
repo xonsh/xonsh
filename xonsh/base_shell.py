@@ -7,7 +7,7 @@ import time
 import builtins
 
 from xonsh.tools import XonshError, escape_windows_cmd_string, ON_WINDOWS, \
-    print_exception, HAVE_PYGMENTS
+    print_exception, HAVE_PYGMENTS, run_code_with_cache
 from xonsh.completer import Completer
 from xonsh.environ import multiline_prompt, format_prompt
 if HAVE_PYGMENTS:
@@ -148,7 +148,7 @@ class BaseShell(object):
         tee = Tee() if store_stdout else io.StringIO()
         try:
             ts0 = time.time()
-            self.execer.exec(code, mode='single', glbs=self.ctx)  # no locals
+            run_code_with_cache(src, self.execer, self.ctx, None, 'single')
             ts1 = time.time()
             if hist.last_cmd_rtn is None:
                 hist.last_cmd_rtn = 0  # returncode for success

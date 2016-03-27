@@ -86,6 +86,8 @@ DEFAULT_ENSURERS = {
     'TEEPTY_PIPE_DELAY': (is_float, float, str),
     'UPDATE_OS_ENVIRON': (is_bool, to_bool, bool_to_str),
     'XONSHRC': (is_env_path, str_to_env_path, env_path_to_str),
+    'XONSH_CACHE_SCRIPTS': (is_bool, to_bool, bool_to_str),
+    'XONSH_CACHE_EVERYTHING': (is_bool, to_bool, bool_to_str),
     'XONSH_COLOR_STYLE': (is_string, ensure_string, ensure_string),
     'XONSH_ENCODING': (is_string, ensure_string, ensure_string),
     'XONSH_ENCODING_ERRORS': (is_string, ensure_string, ensure_string),
@@ -204,6 +206,8 @@ DEFAULT_VALUES = {
                               'xonsh', 'xonshrc'),
                 os.path.expanduser('~/.xonshrc')) if ON_WINDOWS
                else ('/etc/xonshrc', os.path.expanduser('~/.xonshrc'))),
+    'XONSH_CACHE_SCRIPTS': True,
+    'XONSH_CACHE_EVERYTHING': False,
     'XONSH_COLOR_STYLE': 'default',
     'XONSH_CONFIG_DIR': xonsh_config_dir,
     'XONSH_DATA_DIR': xonsh_data_dir,

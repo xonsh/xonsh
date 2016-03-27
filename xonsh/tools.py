@@ -21,6 +21,7 @@ import os
 import re
 import sys
 import ctypes
+import hashlib
 import marshal
 import builtins
 import platform
@@ -1158,16 +1159,26 @@ def _make_if_not_exists(dirname):
     if not os.path.isdir(dirname):
         os.makedirs(dirname)
 
+def _should_use_cache(execer, mode):
+    if mode == 'exec':
+        return ((execer.scriptcache or
+                    execer.cacheall) and
+                (builtins.__xonsh_env__['XONSH_CACHE_SCRIPTS'] or
+                    builtins.__xonsh_env__['XONSH_CACHE_EVERYTHING']))
+    else:
+        return (execer.cacheall or builtins.__xonsh_env__['XONSH_CACHE_EVERYTHING'])
 
-def run_script_with_cache(filename, execer, context=None, use_cache=True):
+
+def run_script_with_cache(filename, execer, glb=None, loc=None, mode='exec'):
     """
     Run a script, using a cached version if it exists (and the source has not
     changed), and updating the cache as necessary.
     """
     run_cached = False
+    use_cache = _should_use_cache(execer, mode)
     if use_cache:
         datadir = builtins.__xonsh_env__['XONSH_DATA_DIR']
-        cachedir = os.path.join(datadir, 'xonshrc_cache')
+        cachedir = os.path.join(datadir, 'xonsh_script_cache')
         cachefname = os.path.join(cachedir, *_cache_renamer(filename))
         if os.path.isfile(cachefname):
             if os.stat(cachefname).st_mtime >= os.stat(filename).st_mtime:
@@ -1175,7 +1186,6 @@ def run_script_with_cache(filename, execer, context=None, use_cache=True):
                     ccode = marshal.load(cfile)
                     run_cached = True
     if not run_cached:
-        print('NOT USING CACHE')
         with open(filename, 'r') as f:
             code = f.read()
         if not code.endswith('\n'):
@@ -1183,7 +1193,7 @@ def run_script_with_cache(filename, execer, context=None, use_cache=True):
         try:
             old_filename = execer.filename
             execer.filename = filename
-            ccode = execer.compile(code)
+            ccode = execer.compile(code, glbs=glb, locs=loc, mode=mode)
             if use_cache:
                 _make_if_not_exists(os.path.dirname(cachefname))
                 with open(cachefname, 'wb') as cfile:
@@ -1192,7 +1202,51 @@ def run_script_with_cache(filename, execer, context=None, use_cache=True):
             raise
         finally:
             execer.filename = old_filename
-    if context is None:
-        exec(ccode)
+    if mode in {'exec', 'single'}:
+        func = exec
     else:
-        exec(ccode, context)
+        func = eval
+    func(ccode, glb, loc)
+
+
+def run_code_with_cache(code, execer, glb=None, loc=None, mode='exec'):
+    """
+    Run a piece of code, using a cached version if it exists, and updating the
+    cache as necessary.
+    """
+    run_cached = False
+    use_cache = _should_use_cache(execer, mode)
+    if isinstance(code, str):
+        _code = code.encode()
+    else:
+        _code = code
+    filename = "{}.{}".format(hashlib.md5(_code).hexdigest(),
+                              sys.implementation.cache_tag)
+    if use_cache:
+        datadir = builtins.__xonsh_env__['XONSH_DATA_DIR']
+        cachedir = os.path.join(datadir, 'xonsh_code_cache')
+        cachefname = os.path.join(cachedir, filename)
+        if os.path.isfile(cachefname):
+            with open(cachefname, 'rb') as cfile:
+                ccode = marshal.load(cfile)
+                run_cached = True
+    if not run_cached:
+        if not code.endswith('\n'):
+            code += '\n'
+        try:
+            old_filename = execer.filename
+            execer.filename = filename
+            ccode = execer.compile(code, glbs=glb, locs=loc, mode=mode)
+            if use_cache:
+                _make_if_not_exists(cachedir)
+                with open(cachefname, 'wb') as cfile:
+                    marshal.dump(ccode, cfile)
+        except:
+            raise
+        finally:
+            execer.filename = old_filename
+    if mode in {'exec', 'single'}:
+        func= exec
+    else:
+        func = eval
+    func(ccode, glb, loc)

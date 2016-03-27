@@ -76,7 +76,8 @@ class Shell(object):
         """
         self.login = kwargs.get('login', True)
         self.stype = shell_type
-        self._init_environ(ctx, config, rc)
+        self._init_environ(ctx, config, rc,
+                           kwargs['scriptcache'], kwargs['cacheall'])
         env = builtins.__xonsh_env__
         # pick a valid shell
         if shell_type is not None:
@@ -115,8 +116,11 @@ class Shell(object):
         """Delegates calls to appropriate shell instance."""
         return getattr(self.shell, attr)
 
-    def _init_environ(self, ctx, config, rc):
+    def _init_environ(self, ctx, config, rc, scriptcache, cacheall):
         self.execer = Execer(config=config, login=self.login)
+        self.execer.scriptcache = scriptcache
+        self.execer.cacheall = cacheall
+        env = builtins.__xonsh_env__
         if ctx is None:
             builtins.__xonsh_ctx__ = self.ctx = context = {}
             if self.login or self.stype != 'none':
