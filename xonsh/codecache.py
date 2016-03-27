@@ -17,8 +17,9 @@ _CHARACTER_MAP = {chr(o): '_%s' % chr(o+32) for o in range(65, 91)}
 _CHARACTER_MAP.update({'.': '_.', '_': '__'})
 
 
-def _cache_renamer(path):
-    path = os.path.abspath(path)
+def _cache_renamer(path, code=False):
+    if not code:
+        path = os.path.abspath(path)
     o = [''.join(_CHARACTER_MAP.get(i, i) for i in w) for w in _splitpath(path)]
     o[-1] = "{}.{}".format(o[-1], sys.implementation.cache_tag)
     return o
@@ -66,7 +67,7 @@ def get_cache_filename(fname, code=True):
     """
     datadir = builtins.__xonsh_env__['XONSH_DATA_DIR']
     cachedir = os.path.join(datadir, 'xonsh_code_cache' if code else 'xonsh_script_cache')
-    cachefname = os.path.join(cachedir, *_cache_renamer(fname))
+    cachefname = os.path.join(cachedir, *_cache_renamer(fname, code=code))
     return cachefname
 
 
