@@ -18,7 +18,8 @@ from xonsh.pretty import pprint, pretty
 from xonsh.proc import HiddenCompletedCommand
 from xonsh.jobs import ignore_sigtstp
 from xonsh.tools import (HAVE_PYGMENTS, setup_win_unicode_console, print_color,
-                         ON_WINDOWS, run_script_with_cache, run_code_with_cache)
+                         ON_WINDOWS)
+from xonsh.codecache import (run_script_with_cache, run_code_with_cache)
 
 if HAVE_PYGMENTS:
     import pygments

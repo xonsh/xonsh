@@ -25,8 +25,9 @@ from xonsh.tools import (
     is_completions_display_value, to_completions_display_value, is_string_set,
     csv_to_set, set_to_csv, get_sep, is_int, is_bool_seq, csv_to_bool_seq,
     bool_seq_to_csv, DefaultNotGiven, setup_win_unicode_console,
-    intensify_colors_on_win_setter, run_script_with_cache,
+    intensify_colors_on_win_setter
 )
+from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
 
