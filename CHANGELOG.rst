@@ -8,6 +8,7 @@ Current Developments
 
 * Added a new shell type ``'none'``, used to avoid importing ``readline`` or
   ``prompt_toolkit`` when running scripts or running a single command.
+* New: `sudo` functionality on Windows through an alias
 
 **Changed:**
 

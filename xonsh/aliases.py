@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 """Aliases for the xonsh shell."""
-import os
-import shlex
+
 import builtins
-import subprocess
-from warnings import warn
+import os
 from argparse import ArgumentParser
 
-from xonsh.dirstack import cd, pushd, popd, dirs
+from xonsh.dirstack import cd, pushd, popd, dirs, _get_cwd
 from xonsh.jobs import jobs, fg, bg, kill_all_jobs
 from xonsh.proc import foreground
 from xonsh.timings import timeit_alias
@@ -252,6 +250,25 @@ if ON_WINDOWS:
         DEFAULT_ALIASES[alias] = ['cmd', '/c', alias]
 
     DEFAULT_ALIASES['which'] = ['where']
+
+    if not locate_binary('sudo'):
+        import xonsh.winutils as winutils
+
+        def sudo(args, sdin=None):
+            if len(args) < 1:
+                print('You need to provide an executable to run as Administrator.')
+                return
+
+            cmd = args[0]
+
+            if locate_binary(cmd):
+                return winutils.sudo(cmd, args[1:])
+            elif cmd.lower() in WINDOWS_CMD_ALIASES:
+                return winutils.sudo('cmd', ['/D', '/C', 'CD', _get_cwd(), '&&'] + args)
+            else:
+                print('Cannot find the path for executable "{0}".'.format(cmd))
+
+        DEFAULT_ALIASES['sudo'] = sudo
 
 elif ON_MAC:
     DEFAULT_ALIASES['ls'] = ['ls', '-G']
