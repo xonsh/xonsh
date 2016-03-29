@@ -16,6 +16,8 @@ from pygments.style import Style
 from pygments.styles import get_style_by_name
 import pygments.util
 
+from xonsh.tools import (ON_WINDOWS, intensify_colors_for_cmd_exe,
+                         expand_gray_colors_for_cmd_exe)
 
 class XonshSubprocLexer(BashLexer):
     """Lexer for xonsh subproc mode."""
@@ -281,7 +283,8 @@ class XonshStyle(Style):
         style_name : str, optional
             The style name to initialize with.
         """
-        self.trap = {}  # for custom colors
+        self.trap = {}  # for traping custom colors set by user
+        self._smap = {}
         self._style_name = ''
         self.style_name = style_name
         super().__init__()
@@ -301,16 +304,33 @@ class XonshStyle(Style):
                  RuntimeWarning)
             cmap = DEFAULT_STYLE
         try:
-            smap = get_style_by_name(value)().styles
+            self._smap = get_style_by_name(value)().styles.copy()
         except (ImportError, pygments.util.ClassNotFound):
-            smap = XONSH_BASE_STYLE
-        compound = CompoundColorMap(ChainMap(self.trap, cmap, PTK_STYLE, smap))
-        self.styles = ChainMap(self.trap, cmap, PTK_STYLE, smap, compound)
+            self._smap = XONSH_BASE_STYLE.copy()
+        compound = CompoundColorMap(ChainMap(self.trap, cmap, PTK_STYLE, self._smap))
+        self.styles = ChainMap(self.trap, cmap, PTK_STYLE, self._smap, compound)
         self._style_name = value
+        if ON_WINDOWS:
+            self.enhance_colors_for_cmd_exe()
 
     @style_name.deleter
     def style_name(self):
         self._style_name = ''
+
+    def enhance_colors_for_cmd_exe(self):
+        """ Enhance colors when using cmd.exe on windows.
+            When using the default style all blue and dark red colors
+            are changed to CYAN and intence red.
+        """
+        env = builtins.__xonsh_env__
+        # Ensure we are not using ConEmu
+        if 'CONEMUANSI' not in env:
+            # Auto suggest needs to be a darker shade to be distinguishable
+            # from the default color
+            self.styles[Token.AutoSuggestion] = '#444444'
+            if env.get('INTENSIFY_COLORS_ON_WIN', False):
+                self._smap.update(expand_gray_colors_for_cmd_exe(self._smap))
+                self._smap.update(intensify_colors_for_cmd_exe(self._smap))
 
 
 def xonsh_style_proxy(styler):

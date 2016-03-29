@@ -9,7 +9,11 @@ Current Developments
 * Added a new shell type ``'none'``, used to avoid importing ``readline`` or
   ``prompt_toolkit`` when running scripts or running a single command.
 * New: `sudo` functionality on Windows through an alias
-
+* Automatically enhance colors for readability in the default terminal (cmd.exe)
+  on Windows. This functionality can be enabled/disabled with the
+  $INTENSIFY_COLORS_ON_WIN environment variable. 
+  
+  
 **Changed:**
 
 * Running scripts through xonsh (or running a single command with ``-c``) no
