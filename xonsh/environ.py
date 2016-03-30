@@ -1208,6 +1208,8 @@ def xonshrc_context(rcfiles=None, execer=None):
                 continue
             finally:
                 execer.filename = fname
+        if ccode is None:
+            return env
         exec(ccode, env, None)
     return env
 
