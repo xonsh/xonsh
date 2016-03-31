@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """The prompt_toolkit based xonsh shell."""
 import builtins
-from warnings import warn
 
 from prompt_toolkit.key_binding.manager import KeyBindingManager
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
@@ -15,7 +14,7 @@ from pygments.token import (Keyword, Name, Comment, String, Error, Number,
                             Operator, Generic, Whitespace, Token)
 
 from xonsh.base_shell import BaseShell
-from xonsh.tools import print_exception, format_color
+from xonsh.tools import print_exception
 from xonsh.environ import partial_format_prompt
 from xonsh.pyghooks import XonshLexer, XonshStyle, partial_color_tokenize, \
     xonsh_style_proxy

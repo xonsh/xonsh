@@ -1,5 +1,4 @@
 """The xonsh configuration (xonfig) utility."""
-import os
 import ast
 import json
 import shutil

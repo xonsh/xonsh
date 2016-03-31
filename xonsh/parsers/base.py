@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """Implements the base xonsh parser."""
-import os
-import sys
 from collections import Iterable, Sequence, Mapping
 
 from ply import yacc

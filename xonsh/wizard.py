@@ -6,7 +6,7 @@ import json
 import builtins
 import textwrap
 from pprint import pformat
-from collections.abc import MutableSequence, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
 from xonsh.tools import to_bool, to_bool_or_break, backup_file, print_color
 
