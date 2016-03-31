@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """Hooks for Jupyter Xonsh Kernel."""
-import io
-import sys
 import builtins
 from pprint import pformat
 from tempfile import SpooledTemporaryFile

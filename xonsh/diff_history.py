@@ -5,7 +5,7 @@ from itertools import zip_longest
 from difflib import SequenceMatcher
 
 from xonsh import lazyjson
-from xonsh.tools import print_color, format_color
+from xonsh.tools import print_color
 
 NO_COLOR = '{NO_COLOR}'
 RED = '{RED}'
