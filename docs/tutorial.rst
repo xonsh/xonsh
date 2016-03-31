@@ -197,6 +197,14 @@ examples in action:
 
 Not bad, xonsh, not bad.
 
+If you want to check if an environment variable is present in your current
+session (say, in your awesome new ``xonsh`` script) you can pass an Ellipsis to
+the ``${}`` operator:
+
+.. code-block:: xonshcon
+
+   >>> 'HOME' in ${...}
+   True
 
 Running Commands
 ==============================
