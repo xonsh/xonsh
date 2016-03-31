@@ -585,6 +585,9 @@ class Env(MutableMapping):
     #
 
     def __getitem__(self, key):
+        if key is Ellipsis:
+            val = builtins.__xonsh_env__
+            return val
         m = self._arg_regex.match(key)
         if (m is not None) and (key not in self._d) and ('ARGS' in self._d):
             args = self._d['ARGS']
