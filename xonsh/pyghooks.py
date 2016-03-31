@@ -30,8 +30,8 @@ class XonshSubprocLexer(BashLexer):
 ROOT_TOKENS = [(r'\?', Keyword),
                (r'\$\w+', Name.Variable),
                (r'\$\{', Keyword, ('pymode', )),
-               (r'\$\(', Keyword, ('subproc', )),
-               (r'\$\[', Keyword, ('subproc', )),
+               (r'[\!\$]\(', Keyword, ('subproc', )),
+               (r'[\!\$]\[', Keyword, ('subproc', )),
                (r'@\(', Keyword, ('pymode', )),
                inherit, ]
 
