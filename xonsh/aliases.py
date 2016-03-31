@@ -221,7 +221,7 @@ DEFAULT_ALIASES = {
     'timeit': timeit_alias,
     'xonfig': xonfig,
     'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
-    'ipynb': ['ipython', 'notebook', '--no-browser'],
+    'ipynb': ['jupyter', 'notebook', '--no-browser'],
     'vox': vox,
 }
 
