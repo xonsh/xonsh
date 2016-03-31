@@ -12,6 +12,7 @@ Current Developments
 * Automatically enhance colors for readability in the default terminal (cmd.exe)
   on Windows. This functionality can be enabled/disabled with the
   $INTENSIFY_COLORS_ON_WIN environment variable. 
+* Added ``Ellipsis`` lookup to ``__xonsh_env__`` to allow environment variable checks, e.g. ``'HOME' in ${...}``
   
   
 **Changed:**
