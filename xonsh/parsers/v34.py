@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 """Implements the xonsh parser for Python v3.4."""
-import os
-import sys
-from collections import Iterable, Sequence, Mapping
+from collections import Iterable, Sequence
 
 from xonsh import ast
-from xonsh.lexer import LexToken
-from xonsh.parsers.base import BaseParser, xonsh_help, xonsh_superhelp
+from xonsh.parsers.base import BaseParser, xonsh_superhelp
 
 
 class Parser(BaseParser):
