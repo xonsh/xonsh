@@ -3,7 +3,7 @@
 import types
 import inspect
 import builtins
-from collections import Iterable, Mapping
+from collections import Mapping
 
 from xonsh import ast
 from xonsh.parser import Parser
