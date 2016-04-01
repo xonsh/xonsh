@@ -2,6 +2,7 @@
 """The main xonsh script."""
 import os
 import sys
+import enum
 import builtins
 from argparse import ArgumentParser, ArgumentTypeError
 from contextlib import contextmanager
@@ -15,7 +16,7 @@ from xonsh import __version__
 from xonsh.shell import Shell
 from xonsh.pretty import pprint, pretty
 from xonsh.jobs import ignore_sigtstp
-from xonsh.tools import HAVE_PYGMENTS, print_color
+from xonsh.tools import HAVE_PYGMENTS, setup_win_unicode_console, print_color, ON_WINDOWS
 
 if HAVE_PYGMENTS:
     import pygments
@@ -138,6 +139,11 @@ def _pprint_displayhook(value):
             pprint(value)  # black & white case
         builtins._ = value
 
+class XonshMode(enum.Enum):
+    single_command = 0
+    script_from_file = 1
+    script_from_stdin = 2
+    interactive = 3
 
 def premain(argv=None):
     """Setup for main xonsh entry point, returns parsed arguments."""
@@ -156,20 +162,38 @@ def premain(argv=None):
         version = '/'.join(('xonsh', __version__)),
         print(version)
         exit()
-    shell_kwargs = {'shell_type': args.shell_type}
+    shell_kwargs = {'shell_type': args.shell_type,
+                    'completer': False,
+                    'login': False}
+    if args.login:
+        shell_kwargs['login'] = True
     if args.config_path is None:
         shell_kwargs['config'] = args.config_path
     if args.norc:
         shell_kwargs['rc'] = ()
     setattr(sys, 'displayhook', _pprint_displayhook)
+    if args.command is not None:
+        args.mode = XonshMode.single_command
+        shell_kwargs['shell_type'] = 'none'
+    elif args.file is not None:
+        args.mode = XonshMode.script_from_file
+        shell_kwargs['shell_type'] = 'none'
+    elif not sys.stdin.isatty() and not args.force_interactive:
+        args.mode = XonshMode.script_from_stdin
+        shell_kwargs['shell_type'] = 'none'
+    else:
+        args.mode = XonshMode.interactive
+        shell_kwargs['completer'] = True
+        shell_kwargs['login'] = True
     shell = builtins.__xonsh_shell__ = Shell(**shell_kwargs)
     from xonsh import imphooks
     env = builtins.__xonsh_env__
+    env['XONSH_LOGIN'] = shell_kwargs['login']
     if args.defines is not None:
         env.update([x.split('=', 1) for x in args.defines])
-    if args.login:
-        env['XONSH_LOGIN'] = True
     env['XONSH_INTERACTIVE'] = False
+    if ON_WINDOWS:
+        setup_win_unicode_console(env.get('WIN_UNICODE_CONSOLE', True))
     return args
 
 
@@ -178,10 +202,10 @@ def main(argv=None):
     args = premain(argv)
     env = builtins.__xonsh_env__
     shell = builtins.__xonsh_shell__
-    if args.command is not None:
+    if args.mode == XonshMode.single_command:
         # run a single command and exit
         shell.default(args.command)
-    elif args.file is not None:
+    elif args.mode == XonshMode.script_from_file:
         # run a script contained in a file
         if os.path.isfile(args.file):
             with open(args.file) as f:
@@ -194,7 +218,7 @@ def main(argv=None):
             shell.execer.exec(code, mode='exec', glbs=shell.ctx)
         else:
             print('xonsh: {0}: No such file or directory.'.format(args.file))
-    elif not sys.stdin.isatty() and not args.force_interactive:
+    elif args.mode == XonshMode.script_from_stdin:
         # run a script given on stdin
         code = sys.stdin.read()
         code = code if code.endswith('\n') else code + '\n'
@@ -215,6 +239,8 @@ def main(argv=None):
 
 def postmain(args=None):
     """Teardown for main xonsh entry point, accepts parsed arguments."""
+    if ON_WINDOWS:
+        setup_win_unicode_console(enable=False)
     del builtins.__xonsh_shell__
 
 

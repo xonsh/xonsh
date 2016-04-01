@@ -6,8 +6,40 @@ Current Developments
 ====================
 **Added:**
 
-* ``and``, ``or``, ``&&``, ``||`` have been added as subprocess logical operators, 
+* ``and``, ``or``, ``&&``, ``||`` have been added as subprocess logical operators,
   by popular demand!
+* Added a new shell type ``'none'``, used to avoid importing ``readline`` or
+  ``prompt_toolkit`` when running scripts or running a single command.
+* New: `sudo` functionality on Windows through an alias
+* Automatically enhance colors for readability in the default terminal (cmd.exe)
+  on Windows. This functionality can be enabled/disabled with the
+  $INTENSIFY_COLORS_ON_WIN environment variable.
+* Added ``Ellipsis`` lookup to ``__xonsh_env__`` to allow environment variable checks, e.g. ``'HOME' in ${...}``
+
+
+**Changed:**
+
+* Running scripts through xonsh (or running a single command with ``-c``) no
+  longer runs the user's rc file, unless the ``--login`` option is specified.
+  Also avoids loading aliases and environments from foreign shells, as well as
+  loading bash completions.
+* rc files are now compiled and cached, to avoid re-parsing when they haven't
+  changed.
+
+**Deprecated:** None
+
+**Removed:** None
+
+**Fixed:**
+
+* Fixed bug with loading prompt-toolkit shell < v0.57.
+
+**Security:** None
+
+v0.2.7
+====================
+**Added:**
+
 * Added new valid ``$SHELL_TYPE`` called ``'best'``. This selects the best value
   for the concrete shell type based on the availability on the user's machine.
 * New environment variable ``$XONSH_COLOR_STYLE`` will set the color mapping
@@ -27,6 +59,12 @@ Current Developments
 * Python mode output is now syntax highlighted if pygments is available.
 * New ``$RIGHT_PROMPT`` environment variable for displaying right-aligned
   text in prompt-toolkit shell.
+* Added ``!(...)`` operator, which returns an object representing the result
+  of running a command.  The truth value of this object is True if the
+  return code is equal to zero and False otherwise.
+* Optional dependency on the win_unicode_console package to enable unicode
+  support in cmd.exe on Windows. This can be disabled/enabled with the
+  ``$WIN_UNICODE_CONSOLE`` environment variable.
 
 **Changed:**
 
@@ -37,10 +75,13 @@ Current Developments
   capabilities.
 * New ``Token.Color`` token for xonsh color names, e.g. we now use
   ``Token.Color.RED`` rather than ``Token.RED``.
-* Untracked files in git are ignored when determining if a git workdir is 
-  is dirty. This affects the coloring of the branch label. 
+* Untracked files in git are ignored when determining if a git workdir is
+  is dirty. This affects the coloring of the branch label.
+* Regular expression globbing now uses ``re.fullmatch`` instead of
+  ``re.match``, and the result of an empty regex glob does not cause the
+  argument to be deleted.
 
-**Deprecated:** None
+
 
 **Removed:**
 
@@ -51,9 +92,12 @@ Current Developments
 
 **Fixed:**
 
+* Multidimensional slicing, as in numpy, no longer throws SyntaxErrors.
 * Some minor zsh fixes for more platforms and setups.
+* The ``BaseShell.settitle`` method no longer has its commands captured by
+  ``$(...)``
 
-**Security:** None
+
 
 v0.2.6
 ====================

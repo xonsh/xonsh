@@ -14,7 +14,7 @@ import time
 import builtins
 from functools import wraps
 from threading import Thread
-from collections import Sequence
+from collections import Sequence, namedtuple
 from subprocess import Popen, PIPE, DEVNULL, STDOUT, TimeoutExpired
 
 from xonsh.tools import (redirect_stdout, redirect_stderr, ON_WINDOWS, ON_LINUX,
@@ -178,7 +178,7 @@ class ProcProxy(Thread):
 
         Returns
         -------
-        `None` if the function is still executing, `True` if the function 
+        `None` if the function is still executing, `True` if the function
         finished successfully, and `False` if there was an error.
         """
         return self.returncode
@@ -369,14 +369,14 @@ class SimpleProcProxy(ProcProxy):
         super().__init__(f, args, stdin, stdout, stderr, universal_newlines)
 
 #
-# Foreground Process Proxies 
+# Foreground Process Proxies
 #
 
 class ForegroundProcProxy(object):
     """This is process proxy class that runs its alias functions on the
     same thread that it was called from, which is typically the main thread.
-    This prevents backgrounding the process, but enables debugger and 
-    profiler tools (functions) be run on the same thread that they are 
+    This prevents backgrounding the process, but enables debugger and
+    profiler tools (functions) be run on the same thread that they are
     attempting to debug.
     """
 
@@ -397,7 +397,7 @@ class ForegroundProcProxy(object):
         return self.returncode
 
     def wait(self, timeout=None):
-        """Runs the function and returns the result. Timeout argument only 
+        """Runs the function and returns the result. Timeout argument only
         present for API compatability.
         """
         if self.f is None:
@@ -415,7 +415,7 @@ class SimpleForegroundProcProxy(ForegroundProcProxy):
     """Variant of `ForegroundProcProxy` for simpler functions.
 
     The function passed into the initializer for `SimpleForegroundProcProxy`
-    should have the form described in the xonsh tutorial. This function is 
+    should have the form described in the xonsh tutorial. This function is
     then wrapped to make a new function of the form expected by
     `ForegroundProcProxy`.
     """
@@ -528,3 +528,49 @@ def _wcode_to_popen(code):
     else:
         # Can this happen? Let's find out. Returning None is not an option.
         raise ValueError("Invalid os.wait code: {}".format(code))
+
+
+_CCTuple = namedtuple("_CCTuple", ["stdin",
+                                   "stdout",
+                                   "stderr",
+                                   "pid",
+                                   "returncode",
+                                   "args",
+                                   "alias",
+                                   "stdin_redirect",
+                                   "stdout_redirect",
+                                   "stderr_redirect",
+                                   "timestamp"])
+
+class CompletedCommand(_CCTuple):
+    """Represents a completed subprocess-mode command."""
+
+    def __bool__(self):
+        return self.returncode == 0
+
+    @property
+    def inp(self):
+        """Creates normalized input string from args."""
+        return ' '.join(self.args)
+
+    @property
+    def out(self):
+        """Alias to stdout."""
+        return self.stdout
+
+    @property
+    def err(self):
+        """Alias to stderr."""
+        return self.stderr
+
+    @property
+    def rtn(self):
+        """Alias to return code."""
+        return self.returncode
+
+CompletedCommand.__new__.__defaults__ = (None,) * len(CompletedCommand._fields)
+
+
+class HiddenCompletedCommand(CompletedCommand):
+    def __repr__(self):
+        return ''

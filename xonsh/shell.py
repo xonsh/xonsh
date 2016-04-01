@@ -73,6 +73,8 @@ class Shell(object):
         rc : list of str, optional
             Sequence of paths to run control files.
         """
+        self.login = kwargs.get('login', True)
+        self.stype = shell_type
         self._init_environ(ctx, config, rc)
         env = builtins.__xonsh_env__
         # pick a valid shell
@@ -88,23 +90,23 @@ class Shell(object):
                 warn('prompt_toolkit is not available, using readline instead.')
                 shell_type = env['SHELL_TYPE'] = 'readline'
         # actually make the shell
-        if shell_type == 'prompt_toolkit':
+        if shell_type == 'none':
+            from xonsh.base_shell import BaseShell as shell_class
+        elif shell_type == 'prompt_toolkit':
             vptk = prompt_toolkit_version()
             minor = int(vptk.split('.')[1])
             if minor < 57 or vptk == '<0.57':  # TODO: remove in future
                 msg = ('prompt-toolkit version < v0.57 and may not work as '
                        'expected. Please update.')
                 warn(msg, RuntimeWarning)
-            from xonsh.ptk.shell import PromptToolkitShell
-            self.shell = PromptToolkitShell(execer=self.execer,
-                                            ctx=self.ctx, **kwargs)
+            from xonsh.ptk.shell import PromptToolkitShell as shell_class
         elif shell_type == 'readline':
-            from xonsh.readline_shell import ReadlineShell
-            self.shell = ReadlineShell(execer=self.execer,
-                                       ctx=self.ctx, **kwargs)
+            from xonsh.readline_shell import ReadlineShell as shell_class
         else:
             raise XonshError('{} is not recognized as a shell type'.format(
                              shell_type))
+        self.shell = shell_class(execer=self.execer,
+                                 ctx=self.ctx, **kwargs)
         # allows history garbace colector to start running
         builtins.__xonsh_history__.gc.wait_for_shell = False
 
@@ -113,11 +115,14 @@ class Shell(object):
         return getattr(self.shell, attr)
 
     def _init_environ(self, ctx, config, rc):
-        self.execer = Execer(config=config)
+        self.execer = Execer(config=config, login=self.login)
         env = builtins.__xonsh_env__
         if ctx is None:
-            rc = env.get('XONSHRC') if rc is None else rc
-            self.ctx = xonshrc_context(rcfiles=rc, execer=self.execer)
+            if self.stype == 'none' and not self.login:
+                self.ctx = {}
+            else:
+                rc = env.get('XONSHRC') if rc is None else rc
+                self.ctx = xonshrc_context(rcfiles=rc, execer=self.execer)
         else:
             self.ctx = ctx
         builtins.__xonsh_ctx__ = self.ctx

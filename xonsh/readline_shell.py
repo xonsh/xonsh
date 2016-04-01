@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 """The readline based xonsh shell."""
 import os
-import sys
 import time
 import select
 import builtins
 from cmd import Cmd
-from warnings import warn
-from threading import Thread, Lock
+from threading import Thread
 from collections import deque
 
 from xonsh import lazyjson

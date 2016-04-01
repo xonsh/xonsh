@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 """Implements the xonsh executer."""
-import re
-import os
 import types
 import inspect
 import builtins
-from collections import Iterable, Sequence, Mapping
+from collections import Mapping
 
 from xonsh import ast
 from xonsh.parser import Parser
@@ -17,7 +15,7 @@ class Execer(object):
     """Executes xonsh code in a context."""
 
     def __init__(self, filename='<xonsh-code>', debug_level=0, parser_args=None,
-                 unload=True, config=None):
+                 unload=True, config=None, login=True):
         """Parameters
         ----------
         filename : str, optional
@@ -37,7 +35,7 @@ class Execer(object):
         self.debug_level = debug_level
         self.unload = unload
         self.ctxtransformer = ast.CtxAwareTransformer(self.parser)
-        load_builtins(execer=self, config=config)
+        load_builtins(execer=self, config=config, login=login)
 
     def __del__(self):
         if self.unload:
@@ -185,15 +183,15 @@ class Execer(object):
                     if prev_indent == curr_indent:
                         raise original_error
                 maxcol = self._find_next_break(line, last_error_col)
-                if line.startswith('$['):
-                    # if we have already wrapped this in subproc tokens
-                    # and it still doesn't work, adding more won't help
-                    # anything
-                    raise original_error
                 sbpline = subproc_toks(line,
                                        returnline=True,
                                        maxcol=maxcol,
                                        lexer=self.parser.lexer)
+                if sbpline.lstrip().startswith('$[$['):
+                    # if we have already wrapped this in subproc tokens
+                    # and it still doesn't work, adding more won't help
+                    # anything
+                    raise original_error
                 if sbpline is None:
                     # subprocess line had no valid tokens, likely because
                     # it only contained a comment.

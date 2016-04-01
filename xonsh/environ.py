@@ -2,10 +2,12 @@
 """Environment for the xonsh shell."""
 import os
 import re
+import sys
 import json
 import socket
 import string
 import locale
+import marshal
 import builtins
 import subprocess
 from itertools import chain
@@ -23,7 +25,8 @@ from xonsh.tools import (
     history_tuple_to_str, is_float, string_types, is_string, DEFAULT_ENCODING,
     is_completions_display_value, to_completions_display_value, is_string_set,
     csv_to_set, set_to_csv, get_sep, is_int, is_bool_seq, csv_to_bool_seq,
-    bool_seq_to_csv, DefaultNotGiven
+    bool_seq_to_csv, DefaultNotGiven, setup_win_unicode_console,
+    intensify_colors_on_win_setter
 )
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
@@ -67,6 +70,7 @@ DEFAULT_ENSURERS = {
     'FORCE_POSIX_PATHS': (is_bool, to_bool, bool_to_str),
     'HISTCONTROL': (is_string_set, csv_to_set, set_to_csv),
     'IGNOREEOF': (is_bool, to_bool, bool_to_str),
+    'INTENSIFY_COLORS_ON_WIN':(always_false, intensify_colors_on_win_setter, bool_to_str),
     'LC_COLLATE': (always_false, locale_convert('LC_COLLATE'), ensure_string),
     'LC_CTYPE': (always_false, locale_convert('LC_CTYPE'), ensure_string),
     'LC_MESSAGES': (always_false, locale_convert('LC_MESSAGES'), ensure_string),
@@ -88,8 +92,10 @@ DEFAULT_ENSURERS = {
     'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
     'XONSH_LOGIN': (is_bool, to_bool, bool_to_str),
     'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
+    'XONSH_STORE_STDIN': (is_bool, to_bool, bool_to_str),
     'VI_MODE': (is_bool, to_bool, bool_to_str),
     'VIRTUAL_ENV': (is_string, ensure_string, ensure_string),
+    'WIN_UNICODE_CONSOLE': (always_false, setup_win_unicode_console, bool_to_str),
 }
 
 #
@@ -165,6 +171,7 @@ DEFAULT_VALUES = {
     'HISTCONTROL': set(),
     'IGNOREEOF': False,
     'INDENT': '    ',
+    'INTENSIFY_COLORS_ON_WIN': True,
     'LC_CTYPE': locale.setlocale(locale.LC_CTYPE),
     'LC_COLLATE': locale.setlocale(locale.LC_COLLATE),
     'LC_TIME': locale.setlocale(locale.LC_TIME),
@@ -177,12 +184,10 @@ DEFAULT_VALUES = {
     'PATH': (),
     'PATHEXT': (),
     'PROMPT': DEFAULT_PROMPT,
-    'PROMPT_TOOLKIT_COLORS': {},
-    'PROMPT_TOOLKIT_STYLES': None,
     'PUSHD_MINUS': False,
     'PUSHD_SILENT': False,
     'RAISE_SUBPROC_ERROR': False,
-    'RIGHT_PROMPT': '', 
+    'RIGHT_PROMPT': '',
     'SHELL_TYPE': 'best',
     'SUGGEST_COMMANDS': True,
     'SUGGEST_MAX_NUM': 5,
@@ -190,6 +195,7 @@ DEFAULT_VALUES = {
     'TEEPTY_PIPE_DELAY': 0.01,
     'TITLE': DEFAULT_TITLE,
     'VI_MODE': False,
+    'WIN_UNICODE_CONSOLE': True,
     'XDG_CONFIG_HOME': os.path.expanduser(os.path.join('~', '.config')),
     'XDG_DATA_HOME': os.path.expanduser(os.path.join('~', '.local', 'share')),
     'XONSHCONFIG': xonshconfig,
@@ -206,6 +212,7 @@ DEFAULT_VALUES = {
     'XONSH_HISTORY_SIZE': (8128, 'commands'),
     'XONSH_LOGIN': False,
     'XONSH_SHOW_TRACEBACK': False,
+    'XONSH_STORE_STDIN': False,
     'XONSH_STORE_STDOUT': False,
 }
 if hasattr(locale, 'LC_MESSAGES'):
@@ -230,7 +237,7 @@ VarDocs.__new__.__defaults__ = (True, DefaultNotGiven)  # iterates from back
 # Please keep the following in alphabetic order - scopatz
 DEFAULT_DOCS = {
     'ANSICON': VarDocs('This is used on Windows to set the title, '
-                       'if available.', configurable=ON_WINDOWS),
+                       'if available.', configurable=False),
     'AUTO_CD': VarDocs(
         'Flag to enable changing to a directory by entering the dirname or '
         'full path only (without the cd command).'),
@@ -303,6 +310,10 @@ DEFAULT_DOCS = {
         "exit status) to not be added to the history list."),
     'IGNOREEOF': VarDocs('Prevents Ctrl-D from exiting the shell.'),
     'INDENT': VarDocs('Indentation string for multiline input'),
+    'INTENSIFY_COLORS_ON_WIN': VarDocs('Enhance style colors for readability '
+        'when using the default terminal (cmd.exe) on winodws. Blue colors, '
+        'which are hard to read, are replaced with cyan. Other colors are '
+        'generally replaced by their bright counter parts.'),
     'LOADED_CONFIG': VarDocs('Whether or not the xonsh config file was loaded',
         configurable=False),
     'LOADED_RC_FILES': VarDocs(
@@ -329,17 +340,6 @@ DEFAULT_DOCS = {
         "auto-formatted, see 'Customizing the Prompt' at "
         'http://xon.sh/tutorial.html#customizing-the-prompt.',
         default='xonsh.environ.DEFAULT_PROMPT'),
-    'PROMPT_TOOLKIT_COLORS': VarDocs(
-        'This is a mapping of from color names to HTML color codes. Whenever '
-        'prompt-toolkit would color a word a particular color (in the prompt, '
-        'or in syntax highlighting), it will use the value specified here to '
-        'represent that color, instead of its default.  If a color is not '
-        'specified here, prompt-toolkit uses the colors from '
-        "'xonsh.tools._PT_COLORS'.", configurable=False),
-    'PROMPT_TOOLKIT_STYLES': VarDocs(
-        'This is a mapping of pygments tokens to user-specified styles for '
-        'prompt-toolkit. See the prompt-toolkit and pygments documentation '
-        'for more details. If None, this is skipped.', configurable=False),
     'PUSHD_MINUS': VarDocs(
         'Flag for directory pushing functionality. False is the normal '
         'behavior.'),
@@ -398,6 +398,10 @@ DEFAULT_DOCS = {
         "Flag to enable 'vi_mode' in the 'prompt_toolkit' shell."),
     'VIRTUAL_ENV': VarDocs(
         'Path to the currently active Python environment.', configurable=False),
+    'WIN_UNICODE_CONSOLE': VarDocs(
+        "Enables unicode support in windows terminals. Requires the external "
+        "library 'win_unicode_console'.",
+        configurable=ON_WINDOWS),
     'XDG_CONFIG_HOME': VarDocs(
         'Open desktop standard configuration home dir. This is the same '
         'default as used in the standard.', configurable=False,
@@ -456,9 +460,12 @@ DEFAULT_DOCS = {
         'Set to True to always show traceback or False to always hide. '
         'If undefined then the traceback is hidden but a notice is shown on how '
         'to enable the full traceback.'),
+    'XONSH_STORE_STDIN': VarDocs(
+        'Whether or not to store the stdin that is supplied to the !() and ![] '
+        'operators.'),
     'XONSH_STORE_STDOUT': VarDocs(
         'Whether or not to store the stdout and stderr streams in the '
-        'history files.', configurable=False),
+        'history files.'),
     }
 
 #
@@ -578,6 +585,8 @@ class Env(MutableMapping):
     #
 
     def __getitem__(self, key):
+        if key is Ellipsis:
+            return self
         m = self._arg_regex.match(key)
         if (m is not None) and (key not in self._d) and ('ARGS' in self._d):
             args = self._d['ARGS']
@@ -674,10 +683,15 @@ def _is_executable_file(path):
 
 
 def yield_executables_windows(directory, name):
+    normalized_name = os.path.normcase(name)
     extensions = builtins.__xonsh_env__.get('PATHEXT')
     for a_file in os.listdir(directory):
-        base_name, ext = os.path.splitext(a_file)
-        if name == base_name and ext.upper() in extensions:
+        normalized_file_name = os.path.normcase(a_file)
+        base_name, ext = os.path.splitext(normalized_file_name)
+
+        if (
+            normalized_name == base_name or normalized_name == normalized_file_name
+        ) and ext.upper() in extensions:
             yield os.path.join(directory, a_file)
 
 
@@ -695,9 +709,15 @@ def locate_binary(name):
     if os.path.isfile(name) and name != os.path.basename(name):
         return name
 
+    directories = builtins.__xonsh_env__.get('PATH')
+
+    # Windows users expect t obe able to execute files in the same directory without `./`
+    if ON_WINDOWS:
+        directories = [_get_cwd()] + directories
+
     try:
         return next(chain.from_iterable(yield_executables(directory, name) for
-                    directory in builtins.__xonsh_env__.get('PATH') if os.path.isdir(directory)))
+                    directory in directories if os.path.isdir(directory)))
     except StopIteration:
         return None
 
@@ -874,7 +894,7 @@ def git_dirty_working_directory(cwd=None, include_untracked=False):
                                     cwd=cwd,
                                     universal_newlines=True)
         if len(s) == 0:
-            # Workaround for a bug in ConEMU/cmder 
+            # Workaround for a bug in ConEMU/cmder
             # retry without redirection
             s = subprocess.check_output(cmd,
                                         cwd=cwd,
@@ -1124,9 +1144,36 @@ def load_static_config(ctx, config=None):
     return conf
 
 
+def _splitpath(path, sofar=[]):
+    folder, path = os.path.split(path)
+    if path == "":
+        return sofar[::-1]
+    elif folder == "":
+        return (sofar + [path])[::-1]
+    else:
+        return _splitpath(folder, sofar + [path])
+
+_CHARACTER_MAP = {chr(o): '_%s' % chr(o+32) for o in range(65, 91)}
+_CHARACTER_MAP.update({'.': '_.', '_': '__'})
+
+
+def _cache_renamer(path):
+    path = os.path.abspath(path)
+    o = [''.join(_CHARACTER_MAP.get(i, i) for i in w) for w in _splitpath(path)]
+    o[-1] = "{}.{}".format(o[-1], sys.implementation.cache_tag)
+    return o
+
+
+def _make_if_not_exists(dirname):
+    if not os.path.isdir(dirname):
+        os.makedirs(dirname)
+
+
 def xonshrc_context(rcfiles=None, execer=None):
     """Attempts to read in xonshrc file, and return the contents."""
     loaded = builtins.__xonsh_env__['LOADED_RC_FILES'] = []
+    datadir = builtins.__xonsh_env__['XONSH_DATA_DIR']
+    cachedir = os.path.join(datadir, 'xonshrc_cache')
     if (rcfiles is None or execer is None):
         return {}
     env = {}
@@ -1134,21 +1181,38 @@ def xonshrc_context(rcfiles=None, execer=None):
         if not os.path.isfile(rcfile):
             loaded.append(False)
             continue
-        with open(rcfile, 'r') as f:
-            rc = f.read()
-        if not rc.endswith('\n'):
-            rc += '\n'
-        fname = execer.filename
-        try:
-            execer.filename = rcfile
-            execer.exec(rc, glbs=env)
-            loaded.append(True)
-        except SyntaxError as err:
-            loaded.append(False)
-            msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
-            warn(msg.format(rcfile, err), RuntimeWarning)
-        finally:
-            execer.filename = fname
+        use_cached = False
+        cachefname = os.path.join(cachedir, *_cache_renamer(rcfile))
+        if os.path.isfile(cachefname):
+            if os.stat(cachefname).st_mtime >= os.stat(rcfile).st_mtime:
+                # use the compiled version and leave
+                with open(cachefname, 'rb') as cfile:
+                    ccode = marshal.load(cfile)
+                    use_cached = True
+                    loaded.append(True)
+        if not use_cached:
+            with open(rcfile, 'r') as f:
+                rc = f.read()
+            if not rc.endswith('\n'):
+                rc += '\n'
+            fname = execer.filename
+            try:
+                execer.filename = rcfile
+                ccode = execer.compile(rc, glbs=env)
+                _make_if_not_exists(os.path.dirname(cachefname))
+                with open(cachefname, 'wb') as cfile:
+                    marshal.dump(ccode, cfile)
+                loaded.append(True)
+            except SyntaxError as err:
+                loaded.append(False)
+                msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
+                warn(msg.format(rcfile, err), RuntimeWarning)
+                continue
+            finally:
+                execer.filename = fname
+        if ccode is None:
+            return env
+        exec(ccode, env, None)
     return env
 
 
@@ -1171,15 +1235,18 @@ def windows_env_fixes(ctx):
     ctx['PWD'] = _get_cwd()
 
 
-def default_env(env=None, config=None):
+def default_env(env=None, config=None, login=True):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence
-    ctx = dict(BASE_ENV)
-    ctx.update(os.environ)
-    conf = load_static_config(ctx, config=config)
-    ctx.update(conf.get('env', ()))
-    ctx.update(load_foreign_envs(shells=conf.get('foreign_shells', DEFAULT_SHELLS),
-                                 issue_warning=False))
+    if login:
+        ctx = dict(BASE_ENV)
+        ctx.update(os.environ)
+        conf = load_static_config(ctx, config=config)
+        ctx.update(conf.get('env', ()))
+        ctx.update(load_foreign_envs(shells=conf.get('foreign_shells', DEFAULT_SHELLS),
+                                     issue_warning=False))
+    else:
+        ctx = {}
     if ON_WINDOWS:
         windows_env_fixes(ctx)
     # finalize env

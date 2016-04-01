@@ -16,6 +16,8 @@ from pygments.style import Style
 from pygments.styles import get_style_by_name
 import pygments.util
 
+from xonsh.tools import (ON_WINDOWS, intensify_colors_for_cmd_exe,
+                         expand_gray_colors_for_cmd_exe)
 
 class XonshSubprocLexer(BashLexer):
     """Lexer for xonsh subproc mode."""
@@ -28,8 +30,8 @@ class XonshSubprocLexer(BashLexer):
 ROOT_TOKENS = [(r'\?', Keyword),
                (r'\$\w+', Name.Variable),
                (r'\$\{', Keyword, ('pymode', )),
-               (r'\$\(', Keyword, ('subproc', )),
-               (r'\$\[', Keyword, ('subproc', )),
+               (r'[\!\$]\(', Keyword, ('subproc', )),
+               (r'[\!\$]\[', Keyword, ('subproc', )),
                (r'@\(', Keyword, ('pymode', )),
                inherit, ]
 
@@ -281,7 +283,8 @@ class XonshStyle(Style):
         style_name : str, optional
             The style name to initialize with.
         """
-        self.trap = {}  # for custom colors
+        self.trap = {}  # for traping custom colors set by user
+        self._smap = {}
         self._style_name = ''
         self.style_name = style_name
         super().__init__()
@@ -301,16 +304,33 @@ class XonshStyle(Style):
                  RuntimeWarning)
             cmap = DEFAULT_STYLE
         try:
-            smap = get_style_by_name(value)().styles
+            self._smap = get_style_by_name(value)().styles.copy()
         except (ImportError, pygments.util.ClassNotFound):
-            smap = XONSH_BASE_STYLE
-        compound = CompoundColorMap(ChainMap(self.trap, cmap, PTK_STYLE, smap))
-        self.styles = ChainMap(self.trap, cmap, PTK_STYLE, smap, compound)
+            self._smap = XONSH_BASE_STYLE.copy()
+        compound = CompoundColorMap(ChainMap(self.trap, cmap, PTK_STYLE, self._smap))
+        self.styles = ChainMap(self.trap, cmap, PTK_STYLE, self._smap, compound)
         self._style_name = value
+        if ON_WINDOWS:
+            self.enhance_colors_for_cmd_exe()
 
     @style_name.deleter
     def style_name(self):
         self._style_name = ''
+
+    def enhance_colors_for_cmd_exe(self):
+        """ Enhance colors when using cmd.exe on windows.
+            When using the default style all blue and dark red colors
+            are changed to CYAN and intence red.
+        """
+        env = builtins.__xonsh_env__
+        # Ensure we are not using ConEmu
+        if 'CONEMUANSI' not in env:
+            # Auto suggest needs to be a darker shade to be distinguishable
+            # from the default color
+            self.styles[Token.AutoSuggestion] = '#444444'
+            if env.get('INTENSIFY_COLORS_ON_WIN', False):
+                self._smap.update(expand_gray_colors_for_cmd_exe(self._smap))
+                self._smap.update(intensify_colors_for_cmd_exe(self._smap))
 
 
 def xonsh_style_proxy(styler):
@@ -471,28 +491,75 @@ def _expand_style(cmap):
         cmap[getattr(Color, 'BOLD_'+key)] = 'bold ' + val
         cmap[getattr(Color, 'UNDERLINE_'+key)] = 'underline ' + val
         cmap[getattr(Color, 'BOLD_UNDERLINE_'+key)] = 'bold underline ' + val
-        cmap[getattr(Color, 'BACKGROUND_'+key)] = 'bg:' + val
+        if val == 'noinherit':
+            cmap[getattr(Color, 'BACKGROUND_'+key)] = val
+        else:
+            cmap[getattr(Color, 'BACKGROUND_'+key)] = 'bg:' + val
 
 
-DEFAULT_STYLE = {
-    Color.BLACK: '#000000',
-    Color.BLUE: '#0000AA',
-    Color.CYAN: '#00AAAA',
-    Color.GREEN: '#00AA00',
-    Color.INTENSE_BLACK: '#555555',
-    Color.INTENSE_BLUE: '#0000FF',
-    Color.INTENSE_CYAN: '#55FFFF',
-    Color.INTENSE_GREEN: '#00FF00',
-    Color.INTENSE_PURPLE: '#FF00FF',
-    Color.INTENSE_RED: '#FF0000',
-    Color.INTENSE_WHITE: '#aaaaaa',
-    Color.INTENSE_YELLOW: '#FFFF55',
+BW_STYLE = {
+    Color.BLACK: 'noinherit',
+    Color.BLUE: 'noinherit',
+    Color.CYAN: 'noinherit',
+    Color.GREEN: 'noinherit',
+    Color.INTENSE_BLACK: 'noinherit',
+    Color.INTENSE_BLUE: 'noinherit',
+    Color.INTENSE_CYAN: 'noinherit',
+    Color.INTENSE_GREEN: 'noinherit',
+    Color.INTENSE_PURPLE: 'noinherit',
+    Color.INTENSE_RED: 'noinherit',
+    Color.INTENSE_WHITE: 'noinherit',
+    Color.INTENSE_YELLOW: 'noinherit',
     Color.NO_COLOR: 'noinherit',
-    Color.PURPLE: '#AA00AA',
-    Color.RED: '#AA0000',
-    Color.WHITE: '#ffffff',
-    Color.YELLOW: '#ffff00',
+    Color.PURPLE: 'noinherit',
+    Color.RED: 'noinherit',
+    Color.WHITE: 'noinherit',
+    Color.YELLOW: 'noinherit',
 }
+_expand_style(BW_STYLE)
+
+
+if hasattr(pygments.style, 'ansicolors'):
+    DEFAULT_STYLE = {
+        Color.BLACK: '#ansidarkgray',
+        Color.BLUE: '#ansiblue',
+        Color.CYAN: '#ansiturquoise',
+        Color.GREEN: '#ansigreen',
+        Color.INTENSE_BLACK: '#ansiblack',
+        Color.INTENSE_BLUE: '#ansidarkblue',
+        Color.INTENSE_CYAN: '#ansiteal',
+        Color.INTENSE_GREEN: '#ansidarkgreen',
+        Color.INTENSE_PURPLE: '#ansipurple',
+        Color.INTENSE_RED: '#ansidarkred',
+        Color.INTENSE_WHITE: '#ansilightgray',
+        Color.INTENSE_YELLOW: '#ansibrown',
+        Color.NO_COLOR: 'noinherit',
+        Color.PURPLE: '#ansifuchsia',
+        Color.RED: '#ansired',
+        Color.WHITE: '#ansiwhite',
+        Color.YELLOW: '#ansiyellow',
+    }
+else:
+    DEFAULT_STYLE = {
+        Color.BLACK: '#000000',
+        Color.BLUE: '#0000AA',
+        Color.CYAN: '#00AAAA',
+        Color.GREEN: '#00AA00',
+        Color.INTENSE_BLACK: '#555555',
+        Color.INTENSE_BLUE: '#0000FF',
+        Color.INTENSE_CYAN: '#55FFFF',
+        Color.INTENSE_GREEN: '#00FF00',
+        Color.INTENSE_PURPLE: '#FF00FF',
+        Color.INTENSE_RED: '#FF0000',
+        Color.INTENSE_WHITE: '#aaaaaa',
+        Color.INTENSE_YELLOW: '#FFFF55',
+        Color.NO_COLOR: 'noinherit',
+        Color.PURPLE: '#AA00AA',
+        Color.RED: '#AA0000',
+        Color.WHITE: '#ffffff',
+        Color.YELLOW: '#ffff00',
+    }
+
 _expand_style(DEFAULT_STYLE)
 
 MONOKAI_STYLE = {
@@ -854,90 +921,6 @@ BORLAND_STYLE = {
     Color.UNDERLINE_YELLOW: 'underline #a61717',
     Color.WHITE: '#aaaaaa',
     Color.YELLOW: '#a61717',
-}
-
-BW_STYLE = {
-    Color.BACKGROUND_BLACK: 'bg:#FF0000',
-    Color.BACKGROUND_BLUE: 'bg:#FF0000',
-    Color.BACKGROUND_CYAN: 'bg:#FF0000',
-    Color.BACKGROUND_GREEN: 'bg:#FF0000',
-    Color.BACKGROUND_INTENSE_BLACK: 'bg:#FF0000',
-    Color.BACKGROUND_INTENSE_BLUE: 'bg:#FF0000',
-    Color.BACKGROUND_INTENSE_CYAN: 'bg:#FF0000',
-    Color.BACKGROUND_INTENSE_GREEN: 'bg:#FF0000',
-    Color.BACKGROUND_INTENSE_PURPLE: 'bg:#FF0000',
-    Color.BACKGROUND_INTENSE_RED: 'bg:#FF0000',
-    Color.BACKGROUND_INTENSE_WHITE: 'bg:#FF0000',
-    Color.BACKGROUND_INTENSE_YELLOW: 'bg:#FF0000',
-    Color.BACKGROUND_PURPLE: 'bg:#FF0000',
-    Color.BACKGROUND_RED: 'bg:#FF0000',
-    Color.BACKGROUND_WHITE: 'bg:#FF0000',
-    Color.BACKGROUND_YELLOW: 'bg:#FF0000',
-    Color.BLACK: '#FF0000',
-    Color.BLUE: '#FF0000',
-    Color.BOLD_BLACK: 'bold #FF0000',
-    Color.BOLD_BLUE: 'bold #FF0000',
-    Color.BOLD_CYAN: 'bold #FF0000',
-    Color.BOLD_GREEN: 'bold #FF0000',
-    Color.BOLD_INTENSE_BLACK: 'bold #FF0000',
-    Color.BOLD_INTENSE_BLUE: 'bold #FF0000',
-    Color.BOLD_INTENSE_CYAN: 'bold #FF0000',
-    Color.BOLD_INTENSE_GREEN: 'bold #FF0000',
-    Color.BOLD_INTENSE_PURPLE: 'bold #FF0000',
-    Color.BOLD_INTENSE_RED: 'bold #FF0000',
-    Color.BOLD_INTENSE_WHITE: 'bold #FF0000',
-    Color.BOLD_INTENSE_YELLOW: 'bold #FF0000',
-    Color.BOLD_PURPLE: 'bold #FF0000',
-    Color.BOLD_RED: 'bold #FF0000',
-    Color.BOLD_UNDERLINE_BLACK: 'bold underline #FF0000',
-    Color.BOLD_UNDERLINE_BLUE: 'bold underline #FF0000',
-    Color.BOLD_UNDERLINE_CYAN: 'bold underline #FF0000',
-    Color.BOLD_UNDERLINE_GREEN: 'bold underline #FF0000',
-    Color.BOLD_UNDERLINE_INTENSE_BLACK: 'bold underline #FF0000',
-    Color.BOLD_UNDERLINE_INTENSE_BLUE: 'bold underline #FF0000',
-    Color.BOLD_UNDERLINE_INTENSE_CYAN: 'bold underline #FF0000',
-    Color.BOLD_UNDERLINE_INTENSE_GREEN: 'bold underline #FF0000',
-    Color.BOLD_UNDERLINE_INTENSE_PURPLE: 'bold underline #FF0000',
-    Color.BOLD_UNDERLINE_INTENSE_RED: 'bold underline #FF0000',
-    Color.BOLD_UNDERLINE_INTENSE_WHITE: 'bold underline #FF0000',
-    Color.BOLD_UNDERLINE_INTENSE_YELLOW: 'bold underline #FF0000',
-    Color.BOLD_UNDERLINE_PURPLE: 'bold underline #FF0000',
-    Color.BOLD_UNDERLINE_RED: 'bold underline #FF0000',
-    Color.BOLD_UNDERLINE_WHITE: 'bold underline #FF0000',
-    Color.BOLD_UNDERLINE_YELLOW: 'bold underline #FF0000',
-    Color.BOLD_WHITE: 'bold #FF0000',
-    Color.BOLD_YELLOW: 'bold #FF0000',
-    Color.CYAN: '#FF0000',
-    Color.GREEN: '#FF0000',
-    Color.INTENSE_BLACK: '#FF0000',
-    Color.INTENSE_BLUE: '#FF0000',
-    Color.INTENSE_CYAN: '#FF0000',
-    Color.INTENSE_GREEN: '#FF0000',
-    Color.INTENSE_PURPLE: '#FF0000',
-    Color.INTENSE_RED: '#FF0000',
-    Color.INTENSE_WHITE: '#FF0000',
-    Color.INTENSE_YELLOW: '#FF0000',
-    Color.NO_COLOR: 'noinherit',
-    Color.PURPLE: '#FF0000',
-    Color.RED: '#FF0000',
-    Color.UNDERLINE_BLACK: 'underline #FF0000',
-    Color.UNDERLINE_BLUE: 'underline #FF0000',
-    Color.UNDERLINE_CYAN: 'underline #FF0000',
-    Color.UNDERLINE_GREEN: 'underline #FF0000',
-    Color.UNDERLINE_INTENSE_BLACK: 'underline #FF0000',
-    Color.UNDERLINE_INTENSE_BLUE: 'underline #FF0000',
-    Color.UNDERLINE_INTENSE_CYAN: 'underline #FF0000',
-    Color.UNDERLINE_INTENSE_GREEN: 'underline #FF0000',
-    Color.UNDERLINE_INTENSE_PURPLE: 'underline #FF0000',
-    Color.UNDERLINE_INTENSE_RED: 'underline #FF0000',
-    Color.UNDERLINE_INTENSE_WHITE: 'underline #FF0000',
-    Color.UNDERLINE_INTENSE_YELLOW: 'underline #FF0000',
-    Color.UNDERLINE_PURPLE: 'underline #FF0000',
-    Color.UNDERLINE_RED: 'underline #FF0000',
-    Color.UNDERLINE_WHITE: 'underline #FF0000',
-    Color.UNDERLINE_YELLOW: 'underline #FF0000',
-    Color.WHITE: '#FF0000',
-    Color.YELLOW: '#FF0000',
 }
 
 COLORFUL_STYLE = {

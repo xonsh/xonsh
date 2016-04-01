@@ -53,15 +53,32 @@ def test_colon_indent():
     assert_equal(buffer.document.current_line, indent_)
 
 def test_dedent():
-    document = Document(indent_+'pass')
+    document = Document('\n'+indent_+'pass')
     buffer.set_document(document)
     carriage_return(buffer, cli)
     assert_equal(buffer.document.current_line, '')
 
-    document = Document(2*indent_+'continue')
+    document = Document('\n'+2*indent_+'continue')
     buffer.set_document(document)
     carriage_return(buffer, cli)
     assert_equal(buffer.document.current_line,indent_)
+
+def test_nodedent():
+    '''don't dedent if first line of buffer'''
+    mock = MagicMock(return_value = True)
+    with patch('xonsh.ptk.key_bindings.can_compile', mock):
+        document = Document('pass')
+        buffer.set_document(document)
+        carriage_return(buffer, cli)
+        assert bufaccept.mock_calls is not None
+
+
+    mock = MagicMock(return_value = True)
+    with patch('xonsh.ptk.key_bindings.can_compile', mock):
+        document = Document(indent_+'pass')
+        buffer.set_document(document)
+        carriage_return(buffer, cli)
+        assert bufaccept.mock_calls is not None
 
 def test_continuation_line():
     document = Document('\nsecond line')

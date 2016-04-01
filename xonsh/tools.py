@@ -50,6 +50,11 @@ else:
     string_types = (str, unicode)
     unicode_type = unicode
 
+try:
+    import win_unicode_console
+except ImportError:
+    win_unicode_console = None
+
 
 DEFAULT_ENCODING = sys.getdefaultencoding()
 
@@ -596,6 +601,16 @@ def to_completions_display_value(x):
     return x
 
 
+def setup_win_unicode_console(enable):
+    """"Enables or disables unicode display on windows."""
+    enable = to_bool(enable)
+    if ON_WINDOWS and win_unicode_console:
+        if enable:
+            win_unicode_console.enable()
+        else:
+            win_unicode_console.disable()
+    return enable
+
 # history validation
 
 _min_to_sec = lambda x: 60.0 * float(x)
@@ -717,6 +732,78 @@ def color_style():
     """Returns the current color map."""
     return builtins.__xonsh_shell__.shell.color_style()
 
+
+try:
+    import prompt_toolkit
+except ImportError:
+    prompt_toolkit = None
+
+
+def _get_color_indexes(style_map):
+    """ Generates the color and windows color index for a style """
+    table = prompt_toolkit.terminal.win32_output.ColorLookupTable()
+    pt_style = prompt_toolkit.styles.style_from_dict(style_map)
+    for token in style_map:
+        attr = pt_style.token_to_attrs[token]
+        if attr.color is not None:
+            index = table.lookup_color(attr.color, attr.bgcolor)
+            try:
+                rgb = (int(attr.color[0:2], 16),
+                       int(attr.color[2:4], 16),
+                       int(attr.color[4:6], 16))
+            except:
+                rgb = None
+            yield token, index, rgb
+
+
+def intensify_colors_for_cmd_exe(style_map, replace_colors=None):
+    """Returns a modified style to where colors that maps to dark
+       colors are replaced with brighter versions. Also expands the
+       range used by the gray colors
+    """
+    modified_style = {}
+    if not ON_WINDOWS or prompt_toolkit is None:
+        return modified_style
+    if replace_colors is None:
+        replace_colors = {1: '#44ffff',  # subst blue with bright cyan
+                          2: '#44ff44',  # subst green with bright green
+                          4: '#ff4444',  # subst red with bright red
+                          5: '#ff44ff',  # subst magenta with bright magenta
+                          6: '#ffff44',  # subst yellow with bright yellow
+                          9: '#00aaaa',  # subst intense blue (hard to read)
+                                         # with dark cyan (which is readable)
+                          }
+    for token, idx, _ in _get_color_indexes(style_map):
+        if idx in replace_colors:
+            modified_style[token] = replace_colors[idx]
+    return modified_style
+
+
+def expand_gray_colors_for_cmd_exe(style_map):
+    """ Expand the style's gray scale color range.
+        All gray scale colors has a tendency to map to the same default GRAY
+        in cmd.exe.
+    """
+    modified_style = {}
+    if not ON_WINDOWS or prompt_toolkit is None:
+        return modified_style
+    for token, idx, rgb in _get_color_indexes(style_map):
+        if idx == 7 and rgb:
+            if sum(rgb) <= 306:
+                # Equal and below '#666666 is reset to dark gray
+                modified_style[token] = '#444444'
+            elif sum(rgb) >= 408:
+                # Equal and above 0x888888 is reset to white
+                modified_style[token] = '#ffffff'
+    return modified_style
+
+
+def intensify_colors_on_win_setter(enable):
+    """ Resets the style when setting the INTENSIFY_COLORS_ON_WIN
+        environment variable. """
+    enable = to_bool(enable)
+    delattr(builtins.__xonsh_shell__.shell.styler, 'style_name')
+    return enable
 
 
 _RE_STRING_START = "[bBrRuU]*"
@@ -946,3 +1033,50 @@ def backup_file(fname):
 def normabspath(p):
     """Retuns as normalized absolute path, namely, normcase(abspath(p))"""
     return os.path.normcase(os.path.abspath(p))
+
+
+class CommandsCache(Set):
+    """A lazy cache representing the commands available on the file system."""
+
+    def __init__(self):
+        self._cmds_cache = frozenset()
+        self._path_checksum = None
+        self._alias_checksum = None
+        self._path_mtime = -1
+
+    def __contains__(self, item):
+        return item in self.all_commands
+
+    def __iter__(self):
+        return iter(self.all_commands)
+
+    def __len__(self):
+        return len(self.all_commands)
+
+    @property
+    def all_commands(self):
+        path = builtins.__xonsh_env__.get('PATH', [])
+        # did PATH change?
+        path_hash = hash(frozenset(path))
+        cache_valid = path_hash == self._path_checksum
+        self._path_checksum = path_hash
+        # did aliases change?
+        al_hash = hash(frozenset(builtins.aliases.keys()))
+        cache_valid = cache_valid and al_hash == self._alias_checksum
+        self._alias_checksum = al_hash
+        pm = self._path_mtime
+        # did the contents of any directory in PATH change?
+        for d in filter(os.path.isdir, path):
+            m = os.stat(d).st_mtime
+            if m > pm:
+                pm = m
+                cache_valid = False
+        self._path_mtime = pm
+        if cache_valid:
+            return self._cmds_cache
+        allcmds = set()
+        for d in filter(os.path.isdir, path):
+            allcmds |= set(os.listdir(d))
+        allcmds |= set(builtins.aliases.keys())
+        self._cmds_cache = frozenset(allcmds)
+        return self._cmds_cache

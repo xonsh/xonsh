@@ -13,6 +13,7 @@ import atexit
 import signal
 import inspect
 import builtins
+import tempfile
 from glob import glob, iglob
 from subprocess import Popen, PIPE, STDOUT, CalledProcessError
 from contextlib import contextmanager
@@ -20,14 +21,14 @@ from collections import Sequence, MutableMapping, Iterable
 
 from xonsh.tools import (
     suggest_commands, XonshError, ON_POSIX, ON_WINDOWS, string_types,
-    expandvars,
+    expandvars, CommandsCache
 )
 from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env, locate_binary
-from xonsh.aliases import DEFAULT_ALIASES
 from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
-    SimpleForegroundProcProxy,TeePTYProc)
+                        SimpleForegroundProcProxy, TeePTYProc,
+                        CompletedCommand, HiddenCompletedCommand)
 from xonsh.history import History
 from xonsh.foreign_shells import load_foreign_aliases
 
@@ -45,6 +46,7 @@ def resetting_signal_handle(sig, f):
     once the new handle is finished.
     """
     oldh = signal.getsignal(sig)
+
     def newh(s=None, frame=None):
         f(s, frame)
         signal.signal(sig, oldh)
@@ -253,12 +255,12 @@ def reglob(path, parts=None, i=None):
     if i1 == len(parts):
         for f in files:
             p = os.path.join(base, f)
-            if regex.match(p) is not None:
+            if regex.fullmatch(p) is not None:
                 paths.append(p)
     else:
         for f in files:
             p = os.path.join(base, f)
-            if regex.match(p) is None or not os.path.isdir(p):
+            if regex.fullmatch(p) is None or not os.path.isdir(p):
                 continue
             paths += reglob(p, parts=parts, i=i1)
     return paths
@@ -269,7 +271,8 @@ def regexpath(s):
     paths that match the regex.
     """
     s = expand_path(s)
-    return reglob(s)
+    o = reglob(s)
+    return o if len(o) != 0 else [s]
 
 
 def globpath(s, ignore_case=False):
@@ -328,10 +331,10 @@ def get_script_subproc_command(fname, args):
         raise PermissionError
 
     if ON_POSIX and not os.access(fname, os.R_OK):
-        # on some systems, some importnat programs (e.g. sudo) will have execute
-        # permissions but not read/write permisions. This enables things with the SUID
-        # set to be run. Needs to come before _is_binary() is called, because that
-        # function tries to read the file.
+        # on some systems, some importnat programs (e.g. sudo) will have
+        # execute permissions but not read/write permisions. This enables
+        # things with the SUID set to be run. Needs to come before _is_binary()
+        # is called, because that function tries to read the file.
         return [fname] + args
     elif _is_binary(fname):
         # if the file is a binary, we should call it directly
@@ -405,7 +408,7 @@ def _redirect_io(streams, r, loc=None):
     if r.replace('&', '') in _E2O_MAP:
         if 'stderr' in streams:
             raise XonshError('Multiple redirects for stderr')
-        streams['stderr'] = STDOUT
+        streams['stderr'] = ('<stdout>', 'a', STDOUT)
         return
 
     orig, mode, dest = _REDIR_REGEX.match(r).groups()
@@ -432,7 +435,7 @@ def _redirect_io(streams, r, loc=None):
         elif 'stdin' in streams:
             raise XonshError('Multiple inputs for stdin')
         else:
-            streams['stdin'] = _open(loc, mode)
+            streams['stdin'] = (loc, 'r', _open(loc, mode))
     elif mode in _WRITE_MODES:
         if orig in _REDIR_ALL:
             if 'stderr' in streams:
@@ -462,7 +465,7 @@ def _redirect_io(streams, r, loc=None):
 
         f = _open(loc, mode)
         for t in targets:
-            streams[t] = f
+            streams[t] = (loc, mode, f)
 
     else:
         raise XonshError('Unrecognized redirection command: {}'.format(r))
@@ -534,7 +537,7 @@ def _finish_subproc(prev_proc, prev_is_proxy, captured, aliased_cmd,
         return output
 
 
-def run_subproc(cmds, captured=True):
+def run_subproc(cmds, captured=False):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
     which may be a list of command line arguments or a string, representing
     a special connecting character.  For example::
@@ -549,14 +552,17 @@ def run_subproc(cmds, captured=True):
     """
     global ENV
     background = False
+    procinfo = {}
     if cmds[-1] == '&':
         background = True
         cmds = cmds[:-1]
     last_cmd = len(cmds) - 1
     procs = []
     prev_proc = None
-    accumulated_output = ''
+    _capture_streams = captured in {'stdout', 'object'}
     for ix, cmd in enumerate(cmds):
+        starttime = time.time()
+        procinfo['args'] = list(cmd)
         stdin = None
         stderr = None
         if isinstance(cmd, string_types):
@@ -601,15 +607,17 @@ def run_subproc(cmds, captured=True):
         if 'stdin' in streams:
             if prev_proc is not None:
                 raise XonshError('Multiple inputs for stdin')
-            stdin = streams['stdin']
-        elif prev_proc is not None and cmds[ix-1] == '|':
+            stdin = streams['stdin'][-1]
+            procinfo['stdin_redirect'] = streams['stdin'][:-1]
+        elif prev_proc is not None:
             stdin = prev_proc.stdout
         # set standard output
         if 'stdout' in streams:
             if ix != last_cmd:
                 raise XonshError('Multiple redirects for stdout')
-            stdout = streams['stdout']
-        elif captured or (ix != last_cmd and cmds[ix+1] == '|'):
+            stdout = streams['stdout'][-1]
+            procinfo['stdout_redirect'] = streams['stdout'][:-1]
+        elif _capture_streams or ix != last_cmd:
             stdout = PIPE
         elif builtins.__xonsh_stdout_uncaptured__ is not None:
             stdout = builtins.__xonsh_stdout_uncaptured__
@@ -617,16 +625,20 @@ def run_subproc(cmds, captured=True):
             stdout = None
         # set standard error
         if 'stderr' in streams:
-            stderr = streams['stderr']
+            stderr = streams['stderr'][-1]
+            procinfo['stderr_redirect'] = streams['stderr'][:-1]
+        elif captured == 'object':
+            stderr = PIPE
         elif builtins.__xonsh_stderr_uncaptured__ is not None:
             stderr = builtins.__xonsh_stderr_uncaptured__
-        uninew = (ix == last_cmd) and (not captured)
+        uninew = (ix == last_cmd) and (not _capture_streams)
         alias = builtins.aliases.get(cmd[0], None)
-        if (alias is None
-            and builtins.__xonsh_env__.get('AUTO_CD')
-            and len(cmd) == 1
-            and os.path.isdir(cmd[0])
-            and locate_binary(cmd[0]) is None):
+        procinfo['alias'] = alias
+        if (alias is None and
+                builtins.__xonsh_env__.get('AUTO_CD') and
+                len(cmd) == 1 and
+                os.path.isdir(cmd[0]) and
+                locate_binary(cmd[0]) is None):
             cmd.insert(0, 'cd')
             alias = builtins.aliases.get('cd', None)
 
@@ -644,6 +656,20 @@ def run_subproc(cmds, captured=True):
                 except PermissionError:
                     e = 'xonsh: subprocess mode: permission denied: {0}'
                     raise XonshError(e.format(cmd[0]))
+        _stdin_file = None
+        if (stdin is not None and
+                ENV.get('XONSH_STORE_STDIN') and
+                captured == 'object' and
+                'cat' in __xonsh_commands_cache__ and
+                'tee' in __xonsh_commands_cache__):
+            _stdin_file = tempfile.NamedTemporaryFile()
+            cproc = Popen(['cat'],
+                          stdin=stdin,
+                          stdout=PIPE)
+            tproc = Popen(['tee', _stdin_file.name],
+                          stdin=cproc.stdout,
+                          stdout=PIPE)
+            stdin = tproc.stdout
         if callable(aliased_cmd):
             prev_is_proxy = True
             bgable = getattr(aliased_cmd, '__xonsh_backgroundable__', True)
@@ -660,8 +686,9 @@ def run_subproc(cmds, captured=True):
                        universal_newlines=uninew)
         else:
             prev_is_proxy = False
-            usetee = (stdout is None) and (not background) and \
-                     ENV.get('XONSH_STORE_STDOUT', False)
+            usetee = ((stdout is None) and
+                      (not background) and
+                      ENV.get('XONSH_STORE_STDOUT', False))
             cls = TeePTYProc if usetee else Popen
             subproc_kwargs = {}
             if ON_POSIX and cls is Popen:
@@ -686,17 +713,101 @@ def run_subproc(cmds, captured=True):
                 raise XonshError(e)
         procs.append(proc)
         prev_proc = proc
-    if _wait_for_proc(prev_proc, prev_is_proxy, procs, cmds, background):
+#    if _wait_for_proc(prev_proc, prev_is_proxy, procs, cmds, background):
+#        return
+#    return _finish_subproc(prev_proc, prev_is_proxy, captured, aliased_cmd,
+#                           accumulated_output)
+    for proc in procs[:-1]:
+        try:
+            proc.stdout.close()
+        except OSError:
+            pass
+    if not prev_is_proxy:
+        add_job({
+            'cmds': cmds,
+            'pids': [i.pid for i in procs],
+            'obj': prev_proc,
+            'bg': background
+        })
+    if (ENV.get('XONSH_INTERACTIVE') and
+            not ENV.get('XONSH_STORE_STDOUT') and
+            not _capture_streams):
+        # set title here to get current command running
+        try:
+            builtins.__xonsh_shell__.settitle()
+        except AttributeError:
+            pass
+    if background:
         return
-    return _finish_subproc(prev_proc, prev_is_proxy, captured, aliased_cmd,
-                           accumulated_output)
+    if prev_is_proxy:
+        prev_proc.wait()
+    wait_for_active_job()
+    hist = builtins.__xonsh_history__
+    hist.last_cmd_rtn = prev_proc.returncode
+    # get output
+    output = b''
+    if write_target is None:
+        if prev_proc.stdout not in (None, sys.stdout):
+            output = prev_proc.stdout.read()
+        if _capture_streams:
+            # to get proper encoding from Popen, we have to
+            # use a byte stream and then implement universal_newlines here
+            output = output.decode(encoding=ENV.get('XONSH_ENCODING'),
+                                   errors=ENV.get('XONSH_ENCODING_ERRORS'))
+            output = output.replace('\r\n', '\n')
+        else:
+            hist.last_cmd_out = output
+        if (captured == 'object' and
+                prev_proc.stderr not in {None, sys.stderr}):
+            errout = prev_proc.stderr.read()
+            errout = errout.decode(encoding=ENV.get('XONSH_ENCODING'),
+                                   errors=ENV.get('XONSH_ENCODING_ERRORS'))
+            errout = errout.replace('\r\n', '\n')
+            procinfo['stderr'] = errout
+
+    if (not prev_is_proxy and
+            hist.last_cmd_rtn is not None and
+            hist.last_cmd_rtn > 0 and
+            ENV.get('RAISE_SUBPROC_ERROR')):
+        raise CalledProcessError(hist.last_cmd_rtn, aliased_cmd, output=output)
+    if captured == 'stdout':
+        return output
+    elif captured is not False:
+        procinfo['pid'] = prev_proc.pid
+        procinfo['returncode'] = prev_proc.returncode
+        procinfo['timestamp'] = (starttime, time.time())
+        if captured == 'object':
+            procinfo['stdout'] = output
+            if _stdin_file is not None:
+                _stdin_file.seek(0)
+                procinfo['stdin'] = _stdin_file.read().decode()
+                _stdin_file.close()
+            return CompletedCommand(**procinfo)
+        else:
+            return HiddenCompletedCommand(**procinfo)
 
 
-def subproc_captured(*cmds):
+def subproc_captured_stdout(*cmds):
     """Runs a subprocess, capturing the output. Returns the stdout
     that was produced as a str.
     """
-    return run_subproc(cmds, captured=True)
+    return run_subproc(cmds, captured='stdout')
+
+
+def subproc_captured_object(*cmds):
+    """
+    Runs a subprocess, capturing the output. Returns an instance of
+    ``CompletedCommand`` representing the completed command.
+    """
+    return run_subproc(cmds, captured='object')
+
+
+def subproc_captured_hiddenobject(*cmds):
+    """
+    Runs a subprocess, capturing the output. Returns an instance of
+    ``HiddenCompletedCommand`` representing the completed command.
+    """
+    return run_subproc(cmds, captured='hiddenobject')
 
 
 def subproc_uncaptured(*cmds):
@@ -717,13 +828,13 @@ def ensure_list_of_strs(x):
     return rtn
 
 
-def load_builtins(execer=None, config=None):
+def load_builtins(execer=None, config=None, login=False):
     """Loads the xonsh builtins into the Python builtins. Sets the
     BUILTINS_LOADED variable to True.
     """
     global BUILTINS_LOADED, ENV
     # private built-ins
-    builtins.__xonsh_env__ = ENV = Env(default_env(config=config))
+    builtins.__xonsh_env__ = ENV = Env(default_env(config=config, login=login))
     builtins.__xonsh_ctx__ = {}
     builtins.__xonsh_help__ = helper
     builtins.__xonsh_superhelp__ = superhelper
@@ -739,9 +850,12 @@ def load_builtins(execer=None, config=None):
     if hasattr(builtins, 'quit'):
         builtins.__xonsh_pyquit__ = builtins.quit
         del builtins.quit
-    builtins.__xonsh_subproc_captured__ = subproc_captured
+    builtins.__xonsh_subproc_captured_stdout__ = subproc_captured_stdout
+    builtins.__xonsh_subproc_captured_object__ = subproc_captured_object
+    builtins.__xonsh_subproc_captured_hiddenobject__ = subproc_captured_hiddenobject
     builtins.__xonsh_subproc_uncaptured__ = subproc_uncaptured
     builtins.__xonsh_execer__ = execer
+    builtins.__xonsh_commands_cache__ = CommandsCache()
     builtins.__xonsh_all_jobs__ = {}
     builtins.__xonsh_active_job__ = None
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
@@ -749,17 +863,24 @@ def load_builtins(execer=None, config=None):
     builtins.evalx = None if execer is None else execer.eval
     builtins.execx = None if execer is None else execer.exec
     builtins.compilex = None if execer is None else execer.compile
+
+    # Need this inline/lazy import here since we use locate_binary that relies on __xonsh_env__ in default aliases
+    from xonsh.aliases import DEFAULT_ALIASES
     builtins.default_aliases = builtins.aliases = Aliases(DEFAULT_ALIASES)
-    builtins.aliases.update(load_foreign_aliases(issue_warning=False))
+    if login:
+        builtins.aliases.update(load_foreign_aliases(issue_warning=False))
     # history needs to be started after env and aliases
     # would be nice to actually include non-detyped versions.
-    builtins.__xonsh_history__ = History(env=ENV.detype(), #aliases=builtins.aliases,
+    builtins.__xonsh_history__ = History(env=ENV.detype(),
                                          ts=[time.time(), None], locked=True)
-    lastflush = lambda s=None, f=None: builtins.__xonsh_history__.flush(at_exit=True)
-    atexit.register(lastflush)
+    atexit.register(_lastflush)
     for sig in AT_EXIT_SIGNALS:
-        resetting_signal_handle(sig, lastflush)
+        resetting_signal_handle(sig, _lastflush)
     BUILTINS_LOADED = True
+
+
+def _lastflush(s=None, f=None):
+    builtins.__xonsh_history__.flush(at_exit=True)
 
 
 def unload_builtins():
@@ -788,9 +909,12 @@ def unload_builtins():
              '__xonsh_stderr_uncaptured__',
              '__xonsh_pyexit__',
              '__xonsh_pyquit__',
-             '__xonsh_subproc_captured__',
+             '__xonsh_subproc_captured_stdout__',
+             '__xonsh_subproc_captured_object__',
+             '__xonsh_subproc_captured_hiddenobject__',
              '__xonsh_subproc_uncaptured__',
              '__xonsh_execer__',
+             '__xonsh_commands_cache__',
              'evalx',
              'execx',
              'compilex',

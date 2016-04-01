@@ -8,9 +8,13 @@ Installation
 The easy way
 ----------------
 
-The easiest way to install xonsh on windows is through the `Anaconda Python Distribution`_ and the conda package manager.
+The easiest way to install xonsh on windows is through the Anaconda Python
+Distribution and the conda package manager.
 
-.. note:: Be sure to install the version with Python3.4 or later. Xonsh is not supported on legacy Python (2.7).
+.. note::
+
+    Be sure to install the version with Python3.4 or later.
+    Xonsh is not yet supported on legacy Python (2.7).
 
 Install xonsh with the following command:
 
@@ -66,6 +70,10 @@ Next, run xonsh:
 
 Usage
 ================
+
+Name space conflicts
+--------------------
+
 Due to ambiguity with the Python ``dir`` builtin, to list the current
 directory via the ``cmd.exe`` builtin you must explicitly request
 the ``.``, like this:
@@ -86,13 +94,31 @@ the ``.``, like this:
 
 
 
-Many people create a ``d`` or ``ls`` alias for the ``dir`` command to save
+Many people create a ``d`` alias for the ``dir`` command to save
 typing and avoid the ambiguity altogether:
 
 .. code-block:: xonshcon
 
    >>> aliases['d'] = ['cmd', '/c', 'dir']
-   >>> aliases['ls'] = 'dir'
 
 You can add aliases to your ``~/.xonshrc`` to have it always
 available when xonsh starts.
+
+
+Unicode support for Windows
+----------------------------
+
+Python's utf-8 unicode is not compatible with the default shell 'cmd.exe' on Windows. The package ``win_unicode_console`` fixes this. Xonsh will use ``win_unicode_console`` if it is installed. This can be disabled/enabled with the ``$WIN_UNICODE_CONSOLE``` environment variable.
+
+.. note:: Even with unicode support enabled the symbols available will depend on the font used in cmd.exe.
+
+The packages ``win_unicode_console`` can be installed using pip or conda.
+
+.. code-block:: bat
+
+  > pip install win_unicode_console
+
+
+.. code-block:: bat
+
+  > conda install --channel xonsh win_unicode_console
