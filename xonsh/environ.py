@@ -563,16 +563,27 @@ class Env(MutableMapping):
         return vd
 
     @contextmanager
-    def swap(self, other):
+    def swap(self, other=None, **kwargs):
         """Provides a context manager for temporarily swapping out certain
         environment variables with other values. On exit from the context
         manager, the original values are restored.
         """
         old = {}
-        for k, v in other.items():
+
+        # single positional argument should be a dict-like object
+        if other is not None:
+            for k, v in other.items():
+                old[k] = self.get(k, NotImplemented)
+                self[k] = v
+
+        # kwargs could also have been sent in
+        for k, v in kwargs.items():
             old[k] = self.get(k, NotImplemented)
             self[k] = v
+
         yield self
+
+        # restore the values
         for k, v in old.items():
             if v is NotImplemented:
                 del self[k]
