@@ -272,7 +272,7 @@ def regexpath(s):
     """
     s = expand_path(s)
     o = reglob(s)
-    return o if len(o) != 0 else [s]
+    return o if len(o) != 0 else []
 
 
 def globpath(s, ignore_case=False):
