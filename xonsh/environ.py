@@ -505,13 +505,17 @@ class Env(MutableMapping):
         for key, val in dict(*args, **kwargs).items():
             self[key] = val
         self._detyped = None
-
+    
+    @staticmethod
+    def detypeable(val):
+        return not (callable(val) or isinstance(val, MutableMapping))
+        
     def detype(self):
         if self._detyped is not None:
             return self._detyped
         ctx = {}
         for key, val in self._d.items():
-            if callable(val) or isinstance(val, MutableMapping):
+            if not self.detypeable(val):
                 continue
             if not isinstance(key, string_types):
                 key = str(key)
@@ -521,19 +525,6 @@ class Env(MutableMapping):
         self._detyped = ctx
         return ctx
 
-    def update_env(self):
-        """Updates the os.environ mapping with the 
-        a detyped version of the xonsh environment.
-        """
-        if self._orig_env is None: 
-            self.replace_env()
-        else: 
-            if self._detyped is None:
-                self.detype()
-            os.environ.clear()
-            os.environ.update(self._detyped)
-                
-                    
     def replace_env(self):
         """Replaces the contents of os.environ with a detyped version
         of the xonsh environement.
@@ -642,17 +633,23 @@ class Env(MutableMapping):
         if not ensurer.validate(val):
             val = ensurer.convert(val)
         self._d[key] = val
-        self._detyped = None
-        if self.get('UPDATE_OS_ENVIRON'):
-            self.update_env()
-
+        if self.detypeable(val):
+            self._detyped = None
+            if self.get('UPDATE_OS_ENVIRON'):
+                if self._orig_env is None:
+                    self.replace_env()
+                else:
+                    dval = ensurer.detype(val)
+                    os.environ[key] = dval
+            
     def __delitem__(self, key):
-        del self._d[key]
-        if self._detyped is not None and str(key) in self._detyped:
-            del self._detyped[str(key)]
-        if self.get('UPDATE_OS_ENVIRON'):
-            self.update_env()
-
+        val = self._d.pop(key)
+        if self.detypeable(val):
+            self._detyped = None
+            if self.get('UPDATE_OS_ENVIRON'):
+                if key in os.environ:
+                    del os.environ[key]
+        
     def get(self, key, default=None):
         """The environment will look up default values from its own defaults if a
         default is not given here.
