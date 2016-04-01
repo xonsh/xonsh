@@ -380,10 +380,13 @@ class BaseParser(object):
     #
     # Precedence of operators
     #
-    precedence = (('left', 'PIPE'), 
-                  ('left', 'XOR'), ('left', 'AMPERSAND'),
-                  ('left', 'EQ', 'NE'), ('left', 'GT', 'GE', 'LT', 'LE'),
-                  ('left', 'RSHIFT', 'LSHIFT'), ('left', 'PLUS', 'MINUS'),
+    precedence = (('left', 'PIPE'),
+                  ('left', 'XOR'),
+                  ('left', 'AMPERSAND'),
+                  ('left', 'EQ', 'NE'),
+                  ('left', 'GT', 'GE', 'LT', 'LE'),
+                  ('left', 'RSHIFT', 'LSHIFT'),
+                  ('left', 'PLUS', 'MINUS'),
                   ('left', 'TIMES', 'DIVIDE', 'DOUBLEDIV', 'MOD'),
                   ('left', 'POW'), )
 
@@ -2151,24 +2154,96 @@ class BaseParser(object):
         p1 = p[1]
         p[0] = p1 + [ast.Str(s=p[2], lineno=self.lineno, col_offset=self.col)]
 
-    _valid_redir = frozenset(['|', 'and', 'or'])
-
     def p_subproc_pipe(self, p):
         """subproc : subproc pipe subproc_atoms
                    | subproc pipe subproc_atoms WS
-                   | subproc andproc subproc_atoms
-                   | subproc andproc subproc_atoms WS
-                   | subproc orproc subproc_atoms
-                   | subproc orproc subproc_atoms WS
         """
         p1 = p[1]
-        if len(p1) > 1 and hasattr(p1[-2], 's') and p1[-2].s not in self._valid_redir:
+        if len(p1) > 1 and hasattr(p1[-2], 's') and p1[-2].s != '|':
             msg = 'additional redirect following non-pipe redirect'
             self._parse_error(msg, self.currloc(lineno=self.lineno,
                               column=self.col))
         cliargs = self._subproc_cliargs(p[3], lineno=self.lineno, col=self.col)
         p[0] = p1 + [p[2], cliargs]
 
+    _to_bang = {
+        '__xonsh_subproc_captured_stdout__': '__xonsh_subproc_captured_object__',
+        '__xonsh_subproc_captured_object__': '__xonsh_subproc_captured_object__',
+        '__xonsh_subproc_uncaptured__': '__xonsh_subproc_captured_hiddenobject__',
+        '__xonsh_subproc_captured_hiddenobject__': '__xonsh_subproc_captured_hiddenobject__',
+        }
+
+    def _ensure_bang(self, node):
+        node.func.id = self._to_bang[node.func.id]
+
+    def p_or_subproc(self, p):
+        """or_test : subproc or_and_test_list_opt"""
+        p1, p2 = p[1], p[2]
+        p1 = self._subproc_cliargs(p1, lineno=self.lineno, col=self.col)
+        p1 = self._dollar_rules([None, '$[', p1, ']'])
+        if p2 is None:
+            p0 = p1
+        elif len(p2) == 2:
+            lineno, col = lopen_loc(p1)
+            self._ensure_bang(p1)
+            p0 = ast.BoolOp(op=p2[0], values=[p1, p2[1]], lineno=lineno,
+                            col_offset=col)
+        else:
+            lineno, col = lopen_loc(p1)
+            self._ensure_bang(p1)
+            p0 = ast.BoolOp(op=p2[0], values=[p1] + p2[1::2],
+                            lineno=lineno, col_offset=col)
+        p[0] = p0
+
+    def p_or_and_subproc(self, p):
+        """or_and_test : orproc subproc"""
+        p2 = self._subproc_cliargs(p[2], lineno=self.lineno, col=self.col)
+        p2 = self._dollar_rules([None, '$[', p2, ']'])
+        self._ensure_bang(p2)
+        p[0] = [ast.Or(), p2]
+
+    def p_and_subproc(self, p):
+        """and_test : subproc and_not_test_list_opt"""
+        p1, p2 = p[1], p[2]
+        p1._cliarg_action = 'append'
+        p1 = self._subproc_cliargs(p1, lineno=self.lineno, col=self.col)
+        p1 = self._dollar_rules([None, '$[', p1, ']'])
+        if p2 is None:
+            p0 = p1
+        elif len(p2) == 2:
+            lineno, col = lopen_loc(p1)
+            self._ensure_bang(p1)
+            p0 = ast.BoolOp(op=p2[0], values=[p1, p2[1]],
+                            lineno=lineno, col_offset=col)
+        else:
+            lineno, col = lopen_loc(p1)
+            self._ensure_bang(p1)
+            p0 = ast.BoolOp(op=p2[0], values=[p1] + p2[1::2],
+                            lineno=lineno, col_offset=col)
+        p[0] = p0
+
+    def p_and_not_subproc(self, p):
+        """and_not_test : andproc subproc"""
+        #p2 = p[2]
+        p2 = self._subproc_cliargs(p[2], lineno=self.lineno, col=self.col)
+        p2 = self._dollar_rules([None, '$[', p2, ']'])
+        #p2 = self._dollar_rules([None, '$[', p[2], ']'])
+        self._ensure_bang(p2)
+        p[0] = [ast.And(), p2]
+
+    def p_subproc_not_test_not(self, p):
+        """not_test : NOT subproc"""
+        #p2 = p[2]
+        #p2 = self._dollar_rules([None, '$[', p[2], ']'])
+        p2 = self._subproc_cliargs(p[2], lineno=self.lineno, col=self.col)
+        p2 = self._dollar_rules([None, '$[', p2, ']'])
+        self._ensure_bang(p2)
+        p[0] = ast.UnaryOp(op=ast.Not(), operand=p2,
+                           lineno=self.lineno, col_offset=self.col)
+
+    #
+    # Subproc atoms
+    #
     def p_subproc_atoms_single(self, p):
         """subproc_atoms : subproc_atom"""
         p[0] = [p[1]]

@@ -1672,8 +1672,12 @@ def test_two_cmds_one_pipe():
 def test_three_cmds_two_pipes():
     yield check_xonsh_ast, {}, '$(ls | grep wakka | grep jawaka)', False
 
-def test_two_cmds_one_and():
-    yield check_xonsh_ast, {}, '$(ls and grep wakka)', False
+DEBUG_LEVEL = 100
+def test_two_cmds_one_damps():
+    yield check_xonsh_ast, {}, 'ls me && grep wakka', False
+
+def test_two_cmds_one_and_brackets():
+    yield check_xonsh_ast, {}, '![ls me] and ![grep wakka]', False
 
 def test_three_cmds_two_ands():
     yield check_xonsh_ast, {}, '$(ls and grep wakka and grep jawaka)', False
