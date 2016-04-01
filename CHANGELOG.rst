@@ -23,6 +23,8 @@ Current Developments
   loading bash completions.
 * rc files are now compiled and cached, to avoid re-parsing when they haven't
   changed.
+* Left and Right arrows in the ``prompt_toolkit`` shell now wrap in multiline
+  environments
 
 **Deprecated:** None
 
