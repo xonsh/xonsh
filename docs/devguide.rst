@@ -74,9 +74,33 @@ If you want to lint the entire code base run::
 
 How to Test
 ================
-First, install nose: http://nose.readthedocs.org/en/latest/. Second, ensure
-your cwd is the root directory of the project (i.e., the one containing the
+
+Ensure your cwd is the root directory of the project (i.e., the one containing the
 .git directory).
+
+----------------------------------
+Dependencies
+----------------------------------
+
+Prep your environment for running the tests::
+
+    $ pip install requirements-tests.txt
+
+
+----------------------------------
+Running the Tests - Basic
+----------------------------------
+
+Run all the tests using Nose:
+
+    $ nosetests -q
+
+Use "-q" to keep nose from outputing a dot for every test.  There are A LOT of tests
+and you will waste time waiting for all the dots to get pushed through stdout.
+
+----------------------------------
+Running the Tests - Advanced
+----------------------------------
 
 To perform all unit tests::
 

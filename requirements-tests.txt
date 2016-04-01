@@ -1,0 +1,4 @@
+ply
+nose
+prompt-toolkit
+pygments
