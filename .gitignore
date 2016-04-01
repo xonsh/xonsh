@@ -33,3 +33,6 @@ include/
 
 # Mac
 .DS_Store
+
+# Editor project files
+*.komodo*
