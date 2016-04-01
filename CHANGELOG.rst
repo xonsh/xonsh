@@ -31,6 +31,7 @@ Current Developments
 **Fixed:**
 
 * Fixed bug with loading prompt-toolkit shell < v0.57.
+* Fixed bug with prompt-toolkit completion when the cursor is not at the end of the line
 
 **Security:** None
 
