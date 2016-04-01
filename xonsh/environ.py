@@ -85,6 +85,7 @@ DEFAULT_ENSURERS = {
     'RAISE_SUBPROC_ERROR': (is_bool, to_bool, bool_to_str),
     'RIGHT_PROMPT': (is_string, ensure_string, ensure_string),
     'TEEPTY_PIPE_DELAY': (is_float, float, str),
+    'UPDATE_OS_ENVIRON': (is_bool, to_bool, bool_to_str),
     'XONSHRC': (is_env_path, str_to_env_path, env_path_to_str),
     'XONSH_COLOR_STYLE': (is_string, ensure_string, ensure_string),
     'XONSH_ENCODING': (is_string, ensure_string, ensure_string),
@@ -194,6 +195,7 @@ DEFAULT_VALUES = {
     'SUGGEST_THRESHOLD': 3,
     'TEEPTY_PIPE_DELAY': 0.01,
     'TITLE': DEFAULT_TITLE,
+    'UPDATE_OS_ENVIRON': True,
     'VI_MODE': False,
     'WIN_UNICODE_CONSOLE': True,
     'XDG_CONFIG_HOME': os.path.expanduser(os.path.join('~', '.config')),
@@ -394,6 +396,9 @@ DEFAULT_DOCS = {
         "in the same manner as $PROMPT, see 'Customizing the Prompt' "
         'http://xon.sh/tutorial.html#customizing-the-prompt.',
         default='xonsh.environ.DEFAULT_TITLE'),
+    'UPDATE_OS_ENVIRON': VarDocs("If True os.environ will always be updated "
+        "when the xonsh environment changes. The environment can be reset to "
+        "the default value by calling '__xonsh_env__.undo_replace_env()'"),
     'VI_MODE': VarDocs(
         "Flag to enable 'vi_mode' in the 'prompt_toolkit' shell."),
     'VIRTUAL_ENV': VarDocs(
@@ -491,6 +496,7 @@ class Env(MutableMapping):
     def __init__(self, *args, **kwargs):
         """If no initial environment is given, os.environ is used."""
         self._d = {}
+        self._orig_env = None
         self.ensurers = {k: Ensurer(*v) for k, v in DEFAULT_ENSURERS.items()}
         self.defaults = DEFAULT_VALUES
         self.docs = DEFAULT_DOCS
@@ -499,7 +505,6 @@ class Env(MutableMapping):
         for key, val in dict(*args, **kwargs).items():
             self[key] = val
         self._detyped = None
-        self._orig_env = None
 
     def detype(self):
         if self._detyped is not None:
@@ -516,6 +521,15 @@ class Env(MutableMapping):
         self._detyped = ctx
         return ctx
 
+    def update_env(self):
+        """Updates the os.environ mapping with the 
+        a detyped version of the xonsh environment.
+        """
+        if self._orig_env is None: 
+            self.replace_env()
+        else:
+            os.environ.update(self.detype())
+        
     def replace_env(self):
         """Replaces the contents of os.environ with a detyped version
         of the xonsh environement.
@@ -625,10 +639,14 @@ class Env(MutableMapping):
             val = ensurer.convert(val)
         self._d[key] = val
         self._detyped = None
+        if self.get('UPDATE_OS_ENVIRON'):
+            self.update_env()
 
     def __delitem__(self, key):
         del self._d[key]
         self._detyped = None
+        if self.get('UPDATE_OS_ENVIRON'):
+            self.update_env()
 
     def get(self, key, default=None):
         """The environment will look up default values from its own defaults if a
