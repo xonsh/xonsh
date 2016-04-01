@@ -28,6 +28,11 @@ Current Developments
   changed.
 * Left and Right arrows in the ``prompt_toolkit`` shell now wrap in multiline
   environments
+* Changed the way regular rxpression filename globbing with backticks behave.
+  It previously returned the regex expression when no match was found. Now it 
+  returns and empty list.
+
+
 
 **Deprecated:** None
 
