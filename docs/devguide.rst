@@ -91,7 +91,7 @@ Prep your environment for running the tests::
 Running the Tests - Basic
 ----------------------------------
 
-Run all the tests using Nose:
+Run all the tests using Nose::
 
     $ nosetests -q
 
