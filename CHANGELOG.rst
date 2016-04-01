@@ -13,6 +13,9 @@ Current Developments
   on Windows. This functionality can be enabled/disabled with the
   $INTENSIFY_COLORS_ON_WIN environment variable. 
 * Added ``Ellipsis`` lookup to ``__xonsh_env__`` to allow environment variable checks, e.g. ``'HOME' in ${...}``
+* Added an option to update ``os.environ`` every time the xonsh environment changes.  
+  This disabled by default, but can be enabled by setting ``$UPDATE_OS_ENVIRON`` to 
+  True.
   
   
 **Changed:**
