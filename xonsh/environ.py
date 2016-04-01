@@ -195,7 +195,7 @@ DEFAULT_VALUES = {
     'SUGGEST_THRESHOLD': 3,
     'TEEPTY_PIPE_DELAY': 0.01,
     'TITLE': DEFAULT_TITLE,
-    'UPDATE_OS_ENVIRON': True,
+    'UPDATE_OS_ENVIRON': False,
     'VI_MODE': False,
     'WIN_UNICODE_CONSOLE': True,
     'XDG_CONFIG_HOME': os.path.expanduser(os.path.join('~', '.config')),
@@ -531,10 +531,19 @@ class Env(MutableMapping):
             os.environ.clear()
             os.environ.update(self.detype())
         else:
-            if key in self:
-                os.environ[key] = self.detype()[key]
-            else:
+            if key not in self._d:
+                if not isinstance(key, string_types):
+                    key = str(key)
                 os.environ.pop(key,None)
+            else:
+                val = self._d[key]
+                if callable(val) or isinstance(val, MutableMapping):
+                    return
+                if not isinstance(key, string_types):
+                    key = str(key)
+                ensurer = self.get_ensurer(key)
+                val = ensurer.detype(val)        
+                os.environ[key] = val
         
     def replace_env(self):
         """Replaces the contents of os.environ with a detyped version
