@@ -521,14 +521,20 @@ class Env(MutableMapping):
         self._detyped = ctx
         return ctx
 
-    def update_env(self):
+    def update_env(self, key=None):
         """Updates the os.environ mapping with the 
         a detyped version of the xonsh environment.
         """
         if self._orig_env is None: 
             self.replace_env()
-        else:
+        elif key is None: 
+            os.environ.clear()
             os.environ.update(self.detype())
+        else:
+            if key in self:
+                os.environ[key] = self.detype()[key]
+            else:
+                os.environ.pop(key,None)
         
     def replace_env(self):
         """Replaces the contents of os.environ with a detyped version
@@ -640,13 +646,13 @@ class Env(MutableMapping):
         self._d[key] = val
         self._detyped = None
         if self.get('UPDATE_OS_ENVIRON'):
-            self.update_env()
+            self.update_env(key)
 
     def __delitem__(self, key):
         del self._d[key]
         self._detyped = None
         if self.get('UPDATE_OS_ENVIRON'):
-            self.update_env()
+            self.update_env(key)
 
     def get(self, key, default=None):
         """The environment will look up default values from its own defaults if a
