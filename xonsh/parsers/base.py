@@ -126,10 +126,11 @@ def xonsh_superhelp(x, lineno=None, col=None):
     return xonsh_call('__xonsh_superhelp__', [x], lineno=lineno, col=col)
 
 
-def xonsh_regexpath(x, pymode, lineno=None, col=None):
+def xonsh_regexpath(x, pymode=False, lineno=None, col=None):
     """Creates the AST node for calling the __xonsh_regexpath__() function."""
-    return xonsh_call('__xonsh_regexpath__', [x, pymode], lineno=lineno,
+    return xonsh_call('__xonsh_regexpath__', args=[x, pymode], lineno=lineno,
                       col=col)
+
 
 def load_ctx(x):
     """Recursively sets ctx to ast.Load()"""
@@ -1720,8 +1721,7 @@ class BaseParser(object):
         """atom : REGEXPATH"""
         p1 = ast.Str(s=p[1].strip('`'), lineno=self.lineno,
                      col_offset=self.col)
-        pymode = True
-        p[0] = xonsh_regexpath(p1, pymode, lineno=self.lineno,
+        p[0] = xonsh_regexpath(p1, pymode=True, lineno=self.lineno,
                                col=self.col)
 
     def p_atom_dname(self, p):
@@ -2216,8 +2216,7 @@ class BaseParser(object):
         """subproc_atom : REGEXPATH"""
         p1 = ast.Str(s=p[1].strip('`'), lineno=self.lineno,
                      col_offset=self.col)
-        pymode = False
-        p0 = xonsh_regexpath(p1, pymode, lineno=self.lineno,
+        p0 = xonsh_regexpath(p1, pymode=False, lineno=self.lineno,
                              col=self.col)
         p0._cliarg_action = 'extend'
         p[0] = p0
