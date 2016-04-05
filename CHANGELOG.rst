@@ -31,6 +31,7 @@ Current Developments
 * Changed the way regular rxpression filename globbing with backticks behave.
   It previously returned the regex expression when no match was found. Now it 
   returns and empty list.
+* Regexpath matching with backticks, now returns an empty list in python mode.
 
 
 
@@ -39,6 +40,7 @@ Current Developments
 **Removed:** None
 
 **Fixed:**
+
 
 * Fixed bug with loading prompt-toolkit shell < v0.57.
 * Fixed bug with prompt-toolkit completion when the cursor is not at the end of the line
