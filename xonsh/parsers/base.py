@@ -127,7 +127,9 @@ def xonsh_superhelp(x, lineno=None, col=None):
 
 
 def xonsh_regexpath(x, pymode=False, lineno=None, col=None):
-    """Creates the AST node for calling the __xonsh_regexpath__() function."""
+    """Creates the AST node for calling the __xonsh_regexpath__() function.
+    The pymode argument indicate if it is called from subproc or python mode"""
+    pymode = ast.NameConstant(value=pymode, lineno=lineno, col_offset=col)
     return xonsh_call('__xonsh_regexpath__', args=[x, pymode], lineno=lineno,
                       col=col)
 
