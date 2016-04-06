@@ -272,8 +272,8 @@ def regexpath(s, pymode=False):
     """
     s = expand_path(s)
     o = reglob(s)
-    no_match = [] if pymode else o
-    return no_match if len(o) != 0 else [s]
+    no_match = [] if pymode else [s]
+    return o if len(o) != 0 else no_match
 
 
 def globpath(s, ignore_case=False):
