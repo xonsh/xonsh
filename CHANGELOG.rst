@@ -11,13 +11,13 @@ Current Developments
 * New: `sudo` functionality on Windows through an alias
 * Automatically enhance colors for readability in the default terminal (cmd.exe)
   on Windows. This functionality can be enabled/disabled with the
-  $INTENSIFY_COLORS_ON_WIN environment variable. 
+  $INTENSIFY_COLORS_ON_WIN environment variable.
 * Added ``Ellipsis`` lookup to ``__xonsh_env__`` to allow environment variable checks, e.g. ``'HOME' in ${...}``
-* Added an option to update ``os.environ`` every time the xonsh environment changes.  
-  This disabled by default, but can be enabled by setting ``$UPDATE_OS_ENVIRON`` to 
+* Added an option to update ``os.environ`` every time the xonsh environment changes.
+  This disabled by default, but can be enabled by setting ``$UPDATE_OS_ENVIRON`` to
   True.
-  
-  
+
+
 **Changed:**
 
 * Running scripts through xonsh (or running a single command with ``-c``) no
@@ -28,9 +28,6 @@ Current Developments
   changed.
 * Left and Right arrows in the ``prompt_toolkit`` shell now wrap in multiline
   environments
-* Changed the way regular rxpression filename globbing with backticks behave.
-  It previously returned the regex expression when no match was found. Now it 
-  returns and empty list.
 * Regexpath matching with backticks, now returns an empty list in python mode.
 
 
