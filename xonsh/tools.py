@@ -989,6 +989,8 @@ def expandvars(path):
                         var = eval(var, builtins.__xonsh_ctx__)
                         if _is_in_env(var):
                             value = _get_env_string(var)
+                        elif var is Ellipsis:
+                            value = dollar + brace + '...' + rbrace
                         else:
                             value = dollar + brace + var + rbrace
                     except:
