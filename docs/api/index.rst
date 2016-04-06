@@ -59,4 +59,5 @@ For those of you who want the gritty details.
     jupyter_kernel
     wizard
     xonfig
+    vox
 
