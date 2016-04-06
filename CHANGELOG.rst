@@ -6,6 +6,48 @@ Current Developments
 ====================
 **Added:**
 
+* Added a new shell type ``'none'``, used to avoid importing ``readline`` or
+  ``prompt_toolkit`` when running scripts or running a single command.
+* New: `sudo` functionality on Windows through an alias
+* Automatically enhance colors for readability in the default terminal (cmd.exe)
+  on Windows. This functionality can be enabled/disabled with the
+  $INTENSIFY_COLORS_ON_WIN environment variable.
+* Added ``Ellipsis`` lookup to ``__xonsh_env__`` to allow environment variable checks, e.g. ``'HOME' in ${...}``
+* Added an option to update ``os.environ`` every time the xonsh environment changes.
+  This disabled by default, but can be enabled by setting ``$UPDATE_OS_ENVIRON`` to
+  True.
+
+
+**Changed:**
+
+* Running scripts through xonsh (or running a single command with ``-c``) no
+  longer runs the user's rc file, unless the ``--login`` option is specified.
+  Also avoids loading aliases and environments from foreign shells, as well as
+  loading bash completions.
+* rc files are now compiled and cached, to avoid re-parsing when they haven't
+  changed.
+* Left and Right arrows in the ``prompt_toolkit`` shell now wrap in multiline
+  environments
+* Regexpath matching with backticks, now returns an empty list in python mode.
+
+
+
+**Deprecated:** None
+
+**Removed:** None
+
+**Fixed:**
+
+
+* Fixed bug with loading prompt-toolkit shell < v0.57.
+* Fixed bug with prompt-toolkit completion when the cursor is not at the end of the line
+
+**Security:** None
+
+v0.2.7
+====================
+**Added:**
+
 * Added new valid ``$SHELL_TYPE`` called ``'best'``. This selects the best value
   for the concrete shell type based on the availability on the user's machine.
 * New environment variable ``$XONSH_COLOR_STYLE`` will set the color mapping
@@ -47,7 +89,7 @@ Current Developments
   ``re.match``, and the result of an empty regex glob does not cause the
   argument to be deleted.
 
-**Deprecated:** None
+
 
 **Removed:**
 
@@ -58,11 +100,12 @@ Current Developments
 
 **Fixed:**
 
+* Multidimensional slicing, as in numpy, no longer throws SyntaxErrors.
 * Some minor zsh fixes for more platforms and setups.
 * The ``BaseShell.settitle`` method no longer has its commands captured by
   ``$(...)``
 
-**Security:** None
+
 
 v0.2.6
 ====================

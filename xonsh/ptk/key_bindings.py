@@ -70,6 +70,28 @@ class TabShouldInsertIndentFilter(Filter):
 
         return bool(before_cursor.isspace())
 
+class BeginningOfLine(Filter):
+    """
+    Check if cursor is at beginning of a line other than the first line
+    in a multiline document
+    """
+    def __call__(self, cli):
+        before_cursor = cli.current_buffer.document.current_line_before_cursor
+
+        return bool(len(before_cursor) == 0
+                    and not cli.current_buffer.document.on_first_line)
+
+class EndOfLine(Filter):
+    """
+    Check if cursor is at the end of a line other than the last line
+    in a multiline document
+    """
+    def __call__(self, cli):
+        d = cli.current_buffer.document
+        at_end = d.is_cursor_at_the_end_of_line
+        last_line = d.is_cursor_at_the_end
+
+        return bool(at_end and not last_line)
 
 def can_compile(src):
     """Returns whether the code can be compiled, i.e. it is valid xonsh."""
@@ -109,6 +131,21 @@ def load_xonsh_bindings(key_bindings_manager):
         b = event.cli.current_buffer
         carriage_return(b, event.cli)
 
+    @handle(Keys.Left, filter=BeginningOfLine())
+    def wrap_cursor_back(event):
+        """Move cursor to end of previous line unless at beginning of document"""
+        b = event.cli.current_buffer
+        b.cursor_up(count=1)
+        relative_end_index = b.document.get_end_of_line_position()
+        b.cursor_right(count=relative_end_index)
+
+    @handle(Keys.Right, filter=EndOfLine())
+    def wrap_cursor_forward(event):
+        """Move cursor to beginning of next line unless at end of document"""
+        b = event.cli.current_buffer
+        relative_begin_index = b.document.get_start_of_line_position()
+        b.cursor_left(count=abs(relative_begin_index))
+        b.cursor_down(count=1)
 
 def _is_blank(l):
     return len(l.strip()) == 0

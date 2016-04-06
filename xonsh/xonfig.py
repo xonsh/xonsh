@@ -1,5 +1,4 @@
 """The xonsh configuration (xonfig) utility."""
-import os
 import ast
 import json
 import shutil
@@ -324,6 +323,8 @@ def _tok_colors(cmap, cols):
 
 def _colors(ns):
     cols, _ = shutil.get_terminal_size()
+    if tools.ON_WINDOWS:
+        cols -= 1
     cmap = tools.color_style()
     akey = next(iter(cmap))
     if isinstance(akey, str):

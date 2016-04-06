@@ -178,6 +178,14 @@ The following aliases on Windows are expanded to ``['cmd', '/c', alias]``:
 On Windows, ``which`` is aliased to ``['where']``.
 
 
+``sudo`` on Windows
+====================
+On Windows, if no executables named ``sudo`` are found, Xonsh adds a ``sudo`` alias
+that poly fills the "run as Admin" behavior with the help of ``ShellExecuteEx`` and
+``ctypes``. It doesn't support any actual ``sudo`` parameters and just takes the 
+command to run.
+
+
 ``ls``
 ====================
 The ``ls`` command is aliased to ``['ls', '--color=auto', '-v']`` normally.  On Mac OSX

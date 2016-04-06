@@ -134,9 +134,31 @@ variable in Python.  The same is true for deleting them too.
     Become the Lord of the Files
     >>> del $GOAL
 
-Very nice. All environment variables live in the built-in
-``__xonsh_env__`` mapping. You can access this mapping directly, but in most
-situations, you shouldn't need to.
+Very nice.
+
+__xonsh_env__
+--------------
+
+All environment variables live in the built-in ``__xonsh_env__`` mapping. You can access this
+mapping directly, but in most situations, you shouldn't need to.
+
+One helpful method on the __xonsh_env__ is :func:`~xonsh.environ.Env.swap`.  It can be used to temporarily set an
+environment variable:
+
+
+.. code-block:: xonshcon
+
+    >>> with __xonsh_env__.swap(SOMEVAR='foo'):
+    ...     echo $SOMEVAR
+    ...
+    ...
+    foo
+    >>> echo $SOMEVAR
+
+    >>>
+
+Environment Types
+-----------------
 
 Like other variables in Python, environment variables have a type. Sometimes
 this type is imposed based on the variable name. The current rules are pretty
@@ -197,6 +219,14 @@ examples in action:
 
 Not bad, xonsh, not bad.
 
+If you want to check if an environment variable is present in your current
+session (say, in your awesome new ``xonsh`` script) you can pass an Ellipsis to
+the ``${}`` operator:
+
+.. code-block:: xonshcon
+
+   >>> 'HOME' in ${...}
+   True
 
 Running Commands
 ==============================

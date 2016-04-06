@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """Implements the base xonsh parser."""
-import os
-import sys
 from collections import Iterable, Sequence, Mapping
 
 from ply import yacc
@@ -128,9 +126,12 @@ def xonsh_superhelp(x, lineno=None, col=None):
     return xonsh_call('__xonsh_superhelp__', [x], lineno=lineno, col=col)
 
 
-def xonsh_regexpath(x, lineno=None, col=None):
-    """Creates the AST node for calling the __xonsh_regexpath__() function."""
-    return xonsh_call('__xonsh_regexpath__', [x], lineno=lineno, col=col)
+def xonsh_regexpath(x, pymode=False, lineno=None, col=None):
+    """Creates the AST node for calling the __xonsh_regexpath__() function.
+    The pymode argument indicate if it is called from subproc or python mode"""
+    pymode = ast.NameConstant(value=pymode, lineno=lineno, col_offset=col)
+    return xonsh_call('__xonsh_regexpath__', args=[x, pymode], lineno=lineno,
+                      col=col)
 
 
 def load_ctx(x):
@@ -1593,7 +1594,7 @@ class BaseParser(object):
             return leader
         p0 = leader
         for trailer in trailers:
-            if isinstance(trailer, (ast.Index, ast.Slice)):
+            if isinstance(trailer, (ast.Index, ast.Slice, ast.ExtSlice)):
                 p0 = ast.Subscript(value=leader,
                                    slice=trailer,
                                    ctx=ast.Load(),
@@ -1722,7 +1723,8 @@ class BaseParser(object):
         """atom : REGEXPATH"""
         p1 = ast.Str(s=p[1].strip('`'), lineno=self.lineno,
                      col_offset=self.col)
-        p[0] = xonsh_regexpath(p1, lineno=self.lineno, col=self.col)
+        p[0] = xonsh_regexpath(p1, pymode=True, lineno=self.lineno,
+                               col=self.col)
 
     def p_atom_dname(self, p):
         """atom : DOLLAR_NAME"""
@@ -1798,7 +1800,12 @@ class BaseParser(object):
     def p_subscriptlist(self, p):
         """subscriptlist : subscript comma_subscript_list_opt comma_opt"""
         p1, p2 = p[1], p[2]
-        if p2 is not None:
+        if p2 is None:
+            pass
+        elif isinstance(p1, ast.Slice) or \
+                any([isinstance(x, ast.Slice) for x in p2]):
+            p1 = ast.ExtSlice(dims=[p1]+p2)
+        else:
             p1.value = ast.Tuple(elts=[p1.value] + [x.value for x in p2],
                                  ctx=ast.Load(), lineno=p1.lineno,
                                  col_offset=p1.col_offset)
@@ -2167,22 +2174,6 @@ class BaseParser(object):
         p0._cliarg_action = 'splitlines'
         p[0] = p0
 
-    def p_subproc_atom_captured_object(self, p):
-        """subproc_atom : bang_lparen_tok subproc RPAREN"""
-        p1 = p[1]
-        p0 = xonsh_call('__xonsh_subproc_captured_object__', args=p[2],
-                        lineno=p1.lineno, col=p1.lexpos)
-        p0._cliarg_action = 'splitlines'
-        p[0] = p0
-    
-    def p_subproc_atom_captured_hiddenobject(self, p):
-        """subproc_atom : bang_lbracket_tok subproc RBRACKET"""
-        p1 = p[1]
-        p0 = xonsh_call('__xonsh_subproc_captured_hiddenobject__', args=p[2],
-                        lineno=p1.lineno, col=p1.lexpos)
-        p0._cliarg_action = 'splitlines'
-        p[0] = p0
-
     def p_subproc_atom_pyenv_lookup(self, p):
         """subproc_atom : dollar_lbrace_tok test RBRACE"""
         p1 = p[1]
@@ -2227,7 +2218,8 @@ class BaseParser(object):
         """subproc_atom : REGEXPATH"""
         p1 = ast.Str(s=p[1].strip('`'), lineno=self.lineno,
                      col_offset=self.col)
-        p0 = xonsh_regexpath(p1, lineno=self.lineno, col=self.col)
+        p0 = xonsh_regexpath(p1, pymode=False, lineno=self.lineno,
+                             col=self.col)
         p0._cliarg_action = 'extend'
         p[0] = p0
 

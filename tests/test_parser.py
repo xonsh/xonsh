@@ -58,7 +58,7 @@ def assert_nodes_equal(x, y, include_attributes=True):
         print(pdump(x, include_attributes=include_attributes), '\n')
         print('y:\n==')
         print(pdump(y, include_attributes=include_attributes), '\n')
-    assert_equal(pdump(x, include_attributes=include_attributes), 
+    assert_equal(pdump(x, include_attributes=include_attributes),
                  pdump(y, include_attributes=include_attributes))
 
 def check_ast(inp, run=True, mode='eval'):
@@ -309,6 +309,81 @@ def test_str_slice_lower_other():
 
 def test_str_slice_upper_other():
     yield check_ast, '"hello"[3::2]'
+
+def test_str_2slice():
+    yield check_ast, '"hello"[0:3,0:3]', False
+
+def test_str_2step():
+    yield check_ast, '"hello"[0:3:1,0:4:2]', False
+
+def test_str_2slice_all():
+    yield check_ast, '"hello"[:,:]', False
+
+def test_str_2slice_upper():
+    yield check_ast, '"hello"[5:,5:]', False
+
+def test_str_2slice_lower():
+    yield check_ast, '"hello"[:3,:3]', False
+
+def test_str_2slice_lowerupper():
+    yield check_ast, '"hello"[5:,:3]', False
+
+def test_str_2slice_other():
+    yield check_ast, '"hello"[::2,::2]', False
+
+def test_str_2slice_lower_other():
+    yield check_ast, '"hello"[:3:2,:3:2]', False
+
+def test_str_2slice_upper_other():
+    yield check_ast, '"hello"[3::2,3::2]', False
+
+def test_str_3slice():
+    yield check_ast, '"hello"[0:3,0:3,0:3]', False
+
+def test_str_3step():
+    yield check_ast, '"hello"[0:3:1,0:4:2,1:3:2]', False
+
+def test_str_3slice_all():
+    yield check_ast, '"hello"[:,:,:]', False
+
+def test_str_3slice_upper():
+    yield check_ast, '"hello"[5:,5:,5:]', False
+
+def test_str_3slice_lower():
+    yield check_ast, '"hello"[:3,:3,:3]', False
+
+def test_str_3slice_lowerlowerupper():
+    yield check_ast, '"hello"[:3,:3,:3]', False
+
+def test_str_3slice_lowerupperlower():
+    yield check_ast, '"hello"[:3,5:,:3]', False
+
+def test_str_3slice_lowerupperupper():
+    yield check_ast, '"hello"[:3,5:,5:]', False
+
+def test_str_3slice_upperlowerlower():
+    yield check_ast, '"hello"[5:,5:,:3]', False
+
+def test_str_3slice_upperlowerupper():
+    yield check_ast, '"hello"[5:,:3,5:]', False
+
+def test_str_3slice_upperupperlower():
+    yield check_ast, '"hello"[5:,5:,:3]', False
+
+def test_str_3slice_other():
+    yield check_ast, '"hello"[::2,::2,::2]', False
+
+def test_str_3slice_lower_other():
+    yield check_ast, '"hello"[:3:2,:3:2,:3:2]', False
+
+def test_str_3slice_upper_other():
+    yield check_ast, '"hello"[3::2,3::2,3::2]', False
+
+def test_str_slice_true():
+    yield check_ast, '"hello"[0:3,True]', False
+
+def test_str_true_slice():
+    yield check_ast, '"hello"[True,0:3]', False
 
 def test_list_empty():
     yield check_ast, '[]'
@@ -1499,6 +1574,36 @@ def test_ls_envvar_strval():
 def test_ls_envvar_listval():
     yield check_xonsh_ast, {'WAKKA': ['.', '.']}, '$(ls $WAKKA)', False
 
+def test_bang_sub():
+    yield check_xonsh_ast, {}, '!(ls)', False
+
+def test_bang_sub_space():
+    yield check_xonsh_ast, {}, '!(ls )', False
+
+def test_bang_ls_dot():
+    yield check_xonsh_ast, {}, '!(ls .)', False
+
+def test_bang_ls_dot_nesting():
+    yield check_xonsh_ast, {}, '!(ls @(None or "."))', False
+
+def test_bang_ls_dot_nesting_var():
+    yield check_xonsh, {}, 'x = "."; !(ls @(None or x))', False
+
+def test_bang_ls_dot_str():
+    yield check_xonsh_ast, {}, '!(ls ".")', False
+
+def test_bang_ls_nest_ls():
+    yield check_xonsh_ast, {}, '!(ls $(ls))', False
+
+def test_bang_ls_nest_ls_dashl():
+    yield check_xonsh_ast, {}, '!(ls $(ls) -l)', False
+
+def test_bang_ls_envvar_strval():
+    yield check_xonsh_ast, {'WAKKA': '.'}, '!(ls $WAKKA)', False
+
+def test_bang_ls_envvar_listval():
+    yield check_xonsh_ast, {'WAKKA': ['.', '.']}, '!(ls $WAKKA)', False
+
 def test_question():
     yield check_xonsh_ast, {}, 'range?'
 
@@ -1516,6 +1621,50 @@ def test_backtick():
 
 def test_uncaptured_sub():
     yield check_xonsh_ast, {}, '$[ls]', False
+
+def test_hiddenobj_sub():
+    yield check_xonsh_ast, {}, '![ls]', False
+
+def test_bang_two_cmds_one_pipe():
+    yield check_xonsh_ast, {}, '!(ls | grep wakka)', False
+
+def test_bang_three_cmds_two_pipes():
+    yield check_xonsh_ast, {}, '!(ls | grep wakka | grep jawaka)', False
+
+def test_bang_one_cmd_write():
+    yield check_xonsh_ast, {}, '!(ls > x.py)', False
+
+def test_bang_one_cmd_append():
+    yield check_xonsh_ast, {}, '!(ls >> x.py)', False
+
+def test_bang_two_cmds_write():
+    yield check_xonsh_ast, {}, '!(ls | grep wakka > x.py)', False
+
+def test_bang_two_cmds_append():
+    yield check_xonsh_ast, {}, '!(ls | grep wakka >> x.py)', False
+
+def test_bang_cmd_background():
+    yield check_xonsh_ast, {}, '!(emacs ugggh &)', False
+
+def test_bang_cmd_background_nospace():
+    yield check_xonsh_ast, {}, '!(emacs ugggh&)', False
+
+def test_bang_git_quotes_no_space():
+    yield check_xonsh_ast, {}, '![git commit -am "wakka"]', False
+
+def test_bang_git_quotes_space():
+    yield check_xonsh_ast, {}, '![git commit -am "wakka jawaka"]', False
+
+def test_bang_git_two_quotes_space():
+    yield check_xonsh, {}, ('![git commit -am "wakka jawaka"]\n'
+                            '![git commit -am "flock jawaka"]\n'), False
+
+def test_bang_git_two_quotes_space_space():
+    yield check_xonsh, {}, ('![git commit -am "wakka jawaka" ]\n'
+                            '![git commit -am "flock jawaka milwaka" ]\n'), False
+
+def test_bang_ls_quotes_3_space():
+    yield check_xonsh_ast, {}, '![ls "wakka jawaka baraka"]', False
 
 def test_two_cmds_one_pipe():
     yield check_xonsh_ast, {}, '$(ls | grep wakka)', False

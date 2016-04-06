@@ -25,7 +25,6 @@ from xonsh.tools import (
 )
 from xonsh.inspectors import Inspector
 from xonsh.environ import Env, default_env, locate_binary
-from xonsh.aliases import DEFAULT_ALIASES
 from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
                         SimpleForegroundProcProxy, TeePTYProc,
@@ -267,13 +266,14 @@ def reglob(path, parts=None, i=None):
     return paths
 
 
-def regexpath(s):
+def regexpath(s, pymode=False):
     """Takes a regular expression string and returns a list of file
     paths that match the regex.
     """
     s = expand_path(s)
     o = reglob(s)
-    return o if len(o) != 0 else [s]
+    no_match = [] if pymode else [s]
+    return o if len(o) != 0 else no_match
 
 
 def globpath(s, ignore_case=False):
@@ -497,6 +497,7 @@ def run_subproc(cmds, captured=False):
     prev_proc = None
     _capture_streams = captured in {'stdout', 'object'}
     for ix, cmd in enumerate(cmds):
+        starttime = time.time()
         procinfo['args'] = list(cmd)
         stdin = None
         stderr = None
@@ -674,6 +675,7 @@ def run_subproc(cmds, captured=False):
             procinfo['stderr'] = errout
 
     if (not prev_is_proxy and
+            hist.last_cmd_rtn is not None and
             hist.last_cmd_rtn > 0 and
             ENV.get('RAISE_SUBPROC_ERROR')):
         raise CalledProcessError(hist.last_cmd_rtn, aliased_cmd, output=output)
@@ -682,6 +684,7 @@ def run_subproc(cmds, captured=False):
     elif captured is not False:
         procinfo['pid'] = prev_proc.pid
         procinfo['returncode'] = prev_proc.returncode
+        procinfo['timestamp'] = (starttime, time.time())
         if captured == 'object':
             procinfo['stdout'] = output
             if _stdin_file is not None:
@@ -734,13 +737,13 @@ def ensure_list_of_strs(x):
     return rtn
 
 
-def load_builtins(execer=None, config=None):
+def load_builtins(execer=None, config=None, login=False):
     """Loads the xonsh builtins into the Python builtins. Sets the
     BUILTINS_LOADED variable to True.
     """
     global BUILTINS_LOADED, ENV
     # private built-ins
-    builtins.__xonsh_env__ = ENV = Env(default_env(config=config))
+    builtins.__xonsh_env__ = ENV = Env(default_env(config=config, login=login))
     builtins.__xonsh_ctx__ = {}
     builtins.__xonsh_help__ = helper
     builtins.__xonsh_superhelp__ = superhelper
@@ -769,8 +772,12 @@ def load_builtins(execer=None, config=None):
     builtins.evalx = None if execer is None else execer.eval
     builtins.execx = None if execer is None else execer.exec
     builtins.compilex = None if execer is None else execer.compile
+
+    # Need this inline/lazy import here since we use locate_binary that relies on __xonsh_env__ in default aliases
+    from xonsh.aliases import DEFAULT_ALIASES
     builtins.default_aliases = builtins.aliases = Aliases(DEFAULT_ALIASES)
-    builtins.aliases.update(load_foreign_aliases(issue_warning=False))
+    if login:
+        builtins.aliases.update(load_foreign_aliases(issue_warning=False))
     # history needs to be started after env and aliases
     # would be nice to actually include non-detyped versions.
     builtins.__xonsh_history__ = History(env=ENV.detype(),

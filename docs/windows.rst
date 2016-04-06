@@ -8,9 +8,13 @@ Installation
 The easy way
 ----------------
 
-The easiest way to install xonsh on windows is through the `Anaconda Python Distribution`_ and the conda package manager.
+The easiest way to install xonsh on windows is through the Anaconda Python
+Distribution and the conda package manager.
 
-.. note:: Be sure to install the version with Python3.4 or later. Xonsh is not supported on legacy Python (2.7).
+.. note::
+
+    Be sure to install the version with Python3.4 or later.
+    Xonsh is not yet supported on legacy Python (2.7).
 
 Install xonsh with the following command:
 
@@ -63,9 +67,6 @@ Next, run xonsh:
 .. _xonsh-master.zip: https://github.com/scopatz/xonsh/archive/master.zip
 .. _cmder: http://cmder.net/
 .. _conemu: https://conemu.github.io/
-.. _Anaconda Python Distribution: https://www.continuum.io/downloads#_windows
-
-.. include:: dependencies.rst
 
 Usage
 ================
@@ -107,7 +108,7 @@ available when xonsh starts.
 Unicode support for Windows
 ----------------------------
 
-Python's utf-8 unicode is not compatible with the default shell 'cmd.exe' on Windows. The package ``win_unicode_console`` fixes this. Xonsh will use ``win_unicode_console`` if it is installed. This can be disabled/enabled with the ``$WIN_UNICODE_CONSOLE``` environment variable. 
+Python's utf-8 unicode is not compatible with the default shell 'cmd.exe' on Windows. The package ``win_unicode_console`` fixes this. Xonsh will use ``win_unicode_console`` if it is installed. This can be disabled/enabled with the ``$WIN_UNICODE_CONSOLE``` environment variable.
 
 .. note:: Even with unicode support enabled the symbols available will depend on the font used in cmd.exe.
 
