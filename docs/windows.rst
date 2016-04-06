@@ -63,6 +63,9 @@ Next, run xonsh:
 .. _xonsh-master.zip: https://github.com/scopatz/xonsh/archive/master.zip
 .. _cmder: http://cmder.net/
 .. _conemu: https://conemu.github.io/
+.. _Anaconda Python Distribution: https://www.continuum.io/downloads#_windows
+
+.. include:: dependencies.rst
 
 Usage
 ================

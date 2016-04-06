@@ -5,7 +5,7 @@ Linux Guide
 Installation
 ============
 
-You can install xonsh using conda, pip, or from source.
+You can install xonsh using ``conda``, ``pip``, or from source.
 
 **conda:**
 
@@ -33,7 +33,7 @@ the following from the source directory,
 
 
 Arch Linux users can install xonsh from the Arch User Repository with e.g.
-yaourt or aura:
+``yaourt``, ``aura``, ``pacaur``, ``PKGBUILD``, etc...:
 
 **yaourt:**
 
@@ -47,49 +47,14 @@ yaourt or aura:
 
     $ sudo aura -A xonsh
 
+**pacaur:**
+
+.. code-block:: bash
+
+    $ pacaur -S xonsh
+
 If you run into any problems, please let us know!
 
-Additional Setup
-=============
+.. include:: add_to_shell.rst
 
-If you want to use xonsh as your default shell, you will first have to add xonsh to `/etc/shells`.
-
-First ensure that xonsh is on your $PATH
-
-.. code-block:: bash
-
-    $ which xonsh
-
-Then, as root, add xonsh to the shell list
-
-.. code-block:: bash
-
-   # echo $(which xonsh) >> /etc/shells
-
-To change shells, run
-
-.. code-block:: bash
-
-   $ chsh -s $(which xonsh)
-
-You will have to log out and log back in before the changes take effect.   
-
-
-Dependencies
-============
-Xonsh currently has the following external dependencies,
-
-*Run Time:*
-
-    #. Python v3.4+
-    #. PLY
-    #. prompt-toolkit (optional)
-    #. Jupyter (optional)
-    #. setproctitle (optional)
-
-*Documentation:*
-
-    #. `Sphinx <http://sphinx-doc.org/>` (which uses
-           `reStructuredText <http://sphinx-doc.org/rest.html>`)
-    #. Numpydoc
-    #. Cloud Sphinx Theme
+.. include:: dependencies.rst
