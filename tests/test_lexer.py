@@ -137,13 +137,13 @@ def test_ampersand():
     yield check_token, '&', ['AMPERSAND', '&', 0]
 
 def test_doubleamp():
-    yield check_token, '&&', ['DOUBLEAMP', '&&', 0]
+    yield check_token, '&&', ['AND', 'and', 0]
 
 def test_pipe():
     yield check_token, '|', ['PIPE', '|', 0]
 
 def test_doublepipe():
-    yield check_token, '||', ['DOUBLEPIPE', '||', 0]
+    yield check_token, '||', ['OR', 'or', 0]
 
 def test_single_quote_literal():
     yield check_token, "'yo'", ['STRING', "'yo'", 0]

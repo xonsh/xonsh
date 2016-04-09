@@ -1672,32 +1672,29 @@ def test_two_cmds_one_pipe():
 def test_three_cmds_two_pipes():
     yield check_xonsh_ast, {}, '$(ls | grep wakka | grep jawaka)', False
 
-def test_two_cmds_one_damps():
-    yield check_xonsh_ast, {}, '![ls me] && ![grep wakka]', False
-
 def test_two_cmds_one_and_brackets():
     yield check_xonsh_ast, {}, '![ls me] and ![grep wakka]', False
 
 def test_three_cmds_two_ands():
-    yield check_xonsh_ast, {}, '$(ls and grep wakka and grep jawaka)', False
+    yield check_xonsh_ast, {}, '![ls] and ![grep wakka] and ![grep jawaka]', False
 
 def test_two_cmds_one_doubleamps():
-    yield check_xonsh_ast, {}, '$(ls && grep wakka)', False
+    yield check_xonsh_ast, {}, '![ls] && ![grep wakka]', False
 
 def test_three_cmds_two_doubleamps():
-    yield check_xonsh_ast, {}, '$(ls && grep wakka && grep jawaka)', False
+    yield check_xonsh_ast, {}, '![ls] && ![grep wakka] && ![grep jawaka]', False
 
 def test_two_cmds_one_or():
-    yield check_xonsh_ast, {}, '$(ls or grep wakka)', False
+    yield check_xonsh_ast, {}, '![ls] or ![grep wakka]', False
 
 def test_three_cmds_two_ors():
-    yield check_xonsh_ast, {}, '$(ls or grep wakka or grep jawaka)', False
+    yield check_xonsh_ast, {}, '![ls] or ![grep wakka] or ![grep jawaka]', False
 
 def test_two_cmds_one_doublepipe():
-    yield check_xonsh_ast, {}, '$(ls || grep wakka)', False
+    yield check_xonsh_ast, {}, '![ls] || ![grep wakka]', False
 
 def test_three_cmds_two_doublepipe():
-    yield check_xonsh_ast, {}, '$(ls || grep wakka || grep jawaka)', False
+    yield check_xonsh_ast, {}, '![ls] || ![grep wakka] || ![grep jawaka]', False
 
 def test_one_cmd_write():
     yield check_xonsh_ast, {}, '$(ls > x.py)', False

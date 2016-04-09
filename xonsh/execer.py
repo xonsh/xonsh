@@ -201,7 +201,6 @@ class Execer(object):
                                        maxcol=maxcol,
                                        lexer=self.parser.lexer)
                 #if sbpline.lstrip().startswith('$[$['):
-                print(maxcol, sbpline)
                 #if maxcol is not None:
                 #    break
                 if sbpline.lstrip().startswith('![!['):
