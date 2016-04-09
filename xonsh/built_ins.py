@@ -266,13 +266,14 @@ def reglob(path, parts=None, i=None):
     return paths
 
 
-def regexpath(s):
+def regexpath(s, pymode=False):
     """Takes a regular expression string and returns a list of file
     paths that match the regex.
     """
     s = expand_path(s)
     o = reglob(s)
-    return o if len(o) != 0 else [s]
+    no_match = [] if pymode else [s]
+    return o if len(o) != 0 else no_match
 
 
 def globpath(s, ignore_case=False):

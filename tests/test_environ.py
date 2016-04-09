@@ -72,5 +72,35 @@ def test_HISTCONTROL():
     assert_true('ignoreerr' in env['HISTCONTROL'])
     assert_true('ignoredups' in env['HISTCONTROL'])
 
+def test_swap():
+
+    env = Env(VAR='wakka')
+    assert_equal(env['VAR'], 'wakka')
+
+    # positional arg
+    with env.swap({'VAR': 'foo'}):
+        assert_equal(env['VAR'], 'foo')
+
+    # make sure the environment goes back outside the context manager
+    assert_equal(env['VAR'], 'wakka')
+
+    # kwargs only
+    with env.swap(VAR1='foo', VAR2='bar'):
+        assert_equal(env['VAR1'], 'foo')
+        assert_equal(env['VAR2'], 'bar')
+
+    # positional and kwargs
+    with env.swap({'VAR3': 'baz'}, VAR1='foo', VAR2='bar'):
+        assert_equal(env['VAR1'], 'foo')
+        assert_equal(env['VAR2'], 'bar')
+        assert_equal(env['VAR3'], 'baz')
+
+    # make sure the environment goes back outside the context manager
+    assert_equal(env['VAR'], 'wakka')
+    assert 'VAR1' not in env
+    assert 'VAR2' not in env
+    assert 'VAR3' not in env
+
+
 if __name__ == '__main__':
     nose.runmodule()

@@ -85,6 +85,7 @@ DEFAULT_ENSURERS = {
     'RAISE_SUBPROC_ERROR': (is_bool, to_bool, bool_to_str),
     'RIGHT_PROMPT': (is_string, ensure_string, ensure_string),
     'TEEPTY_PIPE_DELAY': (is_float, float, str),
+    'UPDATE_OS_ENVIRON': (is_bool, to_bool, bool_to_str),
     'XONSHRC': (is_env_path, str_to_env_path, env_path_to_str),
     'XONSH_COLOR_STYLE': (is_string, ensure_string, ensure_string),
     'XONSH_ENCODING': (is_string, ensure_string, ensure_string),
@@ -194,6 +195,7 @@ DEFAULT_VALUES = {
     'SUGGEST_THRESHOLD': 3,
     'TEEPTY_PIPE_DELAY': 0.01,
     'TITLE': DEFAULT_TITLE,
+    'UPDATE_OS_ENVIRON': False,
     'VI_MODE': False,
     'WIN_UNICODE_CONSOLE': True,
     'XDG_CONFIG_HOME': os.path.expanduser(os.path.join('~', '.config')),
@@ -394,6 +396,9 @@ DEFAULT_DOCS = {
         "in the same manner as $PROMPT, see 'Customizing the Prompt' "
         'http://xon.sh/tutorial.html#customizing-the-prompt.',
         default='xonsh.environ.DEFAULT_TITLE'),
+    'UPDATE_OS_ENVIRON': VarDocs("If True os.environ will always be updated "
+        "when the xonsh environment changes. The environment can be reset to "
+        "the default value by calling '__xonsh_env__.undo_replace_env()'"),
     'VI_MODE': VarDocs(
         "Flag to enable 'vi_mode' in the 'prompt_toolkit' shell."),
     'VIRTUAL_ENV': VarDocs(
@@ -491,6 +496,7 @@ class Env(MutableMapping):
     def __init__(self, *args, **kwargs):
         """If no initial environment is given, os.environ is used."""
         self._d = {}
+        self._orig_env = None
         self.ensurers = {k: Ensurer(*v) for k, v in DEFAULT_ENSURERS.items()}
         self.defaults = DEFAULT_VALUES
         self.docs = DEFAULT_DOCS
@@ -499,14 +505,17 @@ class Env(MutableMapping):
         for key, val in dict(*args, **kwargs).items():
             self[key] = val
         self._detyped = None
-        self._orig_env = None
-
+    
+    @staticmethod
+    def detypeable(val):
+        return not (callable(val) or isinstance(val, MutableMapping))
+        
     def detype(self):
         if self._detyped is not None:
             return self._detyped
         ctx = {}
         for key, val in self._d.items():
-            if callable(val) or isinstance(val, MutableMapping):
+            if not self.detypeable(val):
                 continue
             if not isinstance(key, string_types):
                 key = str(key)
@@ -563,16 +572,27 @@ class Env(MutableMapping):
         return vd
 
     @contextmanager
-    def swap(self, other):
+    def swap(self, other=None, **kwargs):
         """Provides a context manager for temporarily swapping out certain
         environment variables with other values. On exit from the context
         manager, the original values are restored.
         """
         old = {}
-        for k, v in other.items():
+
+        # single positional argument should be a dict-like object
+        if other is not None:
+            for k, v in other.items():
+                old[k] = self.get(k, NotImplemented)
+                self[k] = v
+
+        # kwargs could also have been sent in
+        for k, v in kwargs.items():
             old[k] = self.get(k, NotImplemented)
             self[k] = v
+
         yield self
+
+        # restore the values
         for k, v in old.items():
             if v is NotImplemented:
                 del self[k]
@@ -613,12 +633,23 @@ class Env(MutableMapping):
         if not ensurer.validate(val):
             val = ensurer.convert(val)
         self._d[key] = val
-        self._detyped = None
-
+        if self.detypeable(val):
+            self._detyped = None
+            if self.get('UPDATE_OS_ENVIRON'):
+                if self._orig_env is None:
+                    self.replace_env()
+                else:
+                    dval = ensurer.detype(val)
+                    os.environ[key] = dval
+            
     def __delitem__(self, key):
-        del self._d[key]
-        self._detyped = None
-
+        val = self._d.pop(key)
+        if self.detypeable(val):
+            self._detyped = None
+            if self.get('UPDATE_OS_ENVIRON'):
+                if key in os.environ:
+                    del os.environ[key]
+        
     def get(self, key, default=None):
         """The environment will look up default values from its own defaults if a
         default is not given here.

@@ -93,6 +93,6 @@ manually use the ``$[]`` or ``$()`` operators on your code.
 
 5. Context-sensitive parsing is gross
 --------------------------------------
-Yes, context-sensitive parsing is gross. But the point of xonsh is that it
+Yes, context-sensitive parsing is gross. But the point of xonsh is that it uses xontext-sensitive parsing and 
 is ultimately a lot less gross than other shell languages, such as BASH.
 Furthermore, its use is heavily limited here.

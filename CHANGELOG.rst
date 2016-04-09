@@ -15,7 +15,9 @@ Current Developments
   on Windows. This functionality can be enabled/disabled with the
   $INTENSIFY_COLORS_ON_WIN environment variable.
 * Added ``Ellipsis`` lookup to ``__xonsh_env__`` to allow environment variable checks, e.g. ``'HOME' in ${...}``
-
+* Added an option to update ``os.environ`` every time the xonsh environment changes.
+  This disabled by default, but can be enabled by setting ``$UPDATE_OS_ENVIRON`` to
+  True.
 
 **Changed:**
 
@@ -25,6 +27,9 @@ Current Developments
   loading bash completions.
 * rc files are now compiled and cached, to avoid re-parsing when they haven't
   changed.
+* Left and Right arrows in the ``prompt_toolkit`` shell now wrap in multiline
+  environments
+* Regexpath matching with backticks, now returns an empty list in python mode.
 
 **Deprecated:** None
 
@@ -33,8 +38,10 @@ Current Developments
 **Fixed:**
 
 * Fixed bug with loading prompt-toolkit shell < v0.57.
+* Fixed bug with prompt-toolkit completion when the cursor is not at the end of the line
 
 **Security:** None
+
 
 v0.2.7
 ====================
@@ -80,7 +87,6 @@ v0.2.7
 * Regular expression globbing now uses ``re.fullmatch`` instead of
   ``re.match``, and the result of an empty regex glob does not cause the
   argument to be deleted.
-
 
 
 **Removed:**

@@ -25,7 +25,7 @@ class PromptToolkitCompleter(Completer):
         if complete_event.completion_requested:
             line = document.current_line.lstrip()
             endidx = document.cursor_position_col
-            begidx = line.rfind(' ') + 1 if line.rfind(' ') >= 0 else 0
+            begidx = line[:endidx].rfind(' ') + 1 if line[:endidx].rfind(' ') >= 0 else 0
             prefix = line[begidx:endidx]
             completions, l = self.completer.complete(prefix,
                                                      line,
