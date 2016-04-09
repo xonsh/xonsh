@@ -1014,6 +1014,7 @@ def env_name(pre_chars='(', post_chars=') '):
     env_name = os.path.basename(env_path)
     return pre_chars + env_name + post_chars if env_name else ''
 
+
 if ON_WINDOWS:
     USER = 'USERNAME'
 else:
@@ -1034,8 +1035,6 @@ FORMATTER_DICT = dict(
     current_job=_current_job,
     env_name=env_name,
     )
-
-
 
 DEFAULT_VALUES['FORMATTER_DICT'] = dict(FORMATTER_DICT)
 

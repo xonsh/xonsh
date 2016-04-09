@@ -94,7 +94,7 @@ DEFAULT_ALIASCMDS = {
     'zsh': 'alias -L',
     '/bin/zsh': 'alias -L',
     '/usr/bin/zsh': 'alias -L',
-    'cmd': 'echo.',
+    'cmd': '',
 }
 DEFAULT_FUNCSCMDS = {
     'bash': DEFAULT_BASH_FUNCSCMD,
@@ -102,7 +102,7 @@ DEFAULT_FUNCSCMDS = {
     'zsh': DEFAULT_ZSH_FUNCSCMD,
     '/bin/zsh': DEFAULT_ZSH_FUNCSCMD,
     '/usr/bin/zsh': DEFAULT_ZSH_FUNCSCMD,
-    'cmd': 'echo.',
+    'cmd': '',
 }
 DEFAULT_SOURCERS = {
     'bash': 'source',
@@ -208,7 +208,6 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
     if not use_tmpfile:
         cmd.append(command)
     else:
-        import pdb; pdb.set_trace()
         tmpfile = NamedTemporaryFile(suffix=tmpfile_ext, delete=False)
         tmpfile.write(command.encode('utf8'))
         tmpfile.close()
