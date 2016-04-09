@@ -3,6 +3,7 @@
 
 import builtins
 import os
+import sys
 from argparse import ArgumentParser
 
 from xonsh.dirstack import cd, pushd, popd, dirs, _get_cwd
@@ -263,8 +264,20 @@ if ON_WINDOWS:
         'rmdir',
         'time',
         'type',
-        'vol'
+        'vol',
     }
+
+    if 'Anaconda' in sys.version:
+        def _source_cmd_keep_prompt(args,stdin=None, ):
+            p = builtins.__xonsh_env__.get('PROMPT')
+            source_cmd(args,stdin=stdin)
+            builtins.__xonsh_env__['PROMPT'] = p
+
+        DEFAULT_ALIASES['_source_cmd_keep_prompt'] = _source_cmd_keep_prompt
+
+        DEFAULT_ALIASES['activate'] = ['_source_cmd_keep_prompt', 'activate.bat']
+        DEFAULT_ALIASES['deactivate'] = ['_source_cmd_keep_prompt', 'deactivate.bat']
+
 
     for alias in WINDOWS_CMD_ALIASES:
         DEFAULT_ALIASES[alias] = ['cmd', '/c', alias]

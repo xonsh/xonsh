@@ -505,11 +505,11 @@ class Env(MutableMapping):
         for key, val in dict(*args, **kwargs).items():
             self[key] = val
         self._detyped = None
-    
+
     @staticmethod
     def detypeable(val):
         return not (callable(val) or isinstance(val, MutableMapping))
-        
+
     def detype(self):
         if self._detyped is not None:
             return self._detyped
@@ -641,7 +641,7 @@ class Env(MutableMapping):
                 else:
                     dval = ensurer.detype(val)
                     os.environ[key] = dval
-            
+
     def __delitem__(self, key):
         val = self._d.pop(key)
         if self.detypeable(val):
@@ -649,7 +649,7 @@ class Env(MutableMapping):
             if self.get('UPDATE_OS_ENVIRON'):
                 if key in os.environ:
                     del os.environ[key]
-        
+
     def get(self, key, default=None):
         """The environment will look up default values from its own defaults if a
         default is not given here.
@@ -1004,13 +1004,15 @@ def _current_job():
 
 
 def env_name(pre_chars='(', post_chars=') '):
-    """Extract the current environment name from $VIRTUAL_ENV."""
-    env_path = __xonsh_env__.get('VIRTUAL_ENV', '')
-
+    """Extract the current environment name from $VIRTUAL_ENV or
+    $CONDA_DEFAULT_ENV if that is set
+    """
+    env_path = builtins.__xonsh_env__.get('VIRTUAL_ENV', '')
+    if len(env_path) == 0 and 'Anaconda' in sys.version:
+        pre_chars, post_chars = '[', '] '
+        env_path = builtins.__xonsh_env__.get('CONDA_DEFAULT_ENV', '')
     env_name = os.path.basename(env_path)
-
     return pre_chars + env_name + post_chars if env_name else ''
-
 
 if ON_WINDOWS:
     USER = 'USERNAME'
@@ -1032,6 +1034,9 @@ FORMATTER_DICT = dict(
     current_job=_current_job,
     env_name=env_name,
     )
+
+
+
 DEFAULT_VALUES['FORMATTER_DICT'] = dict(FORMATTER_DICT)
 
 _FORMATTER = string.Formatter()
