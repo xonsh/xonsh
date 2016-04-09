@@ -85,6 +85,7 @@ DEFAULT_ENVCMDS = {
     'zsh': 'env',
     '/bin/zsh': 'env',
     '/usr/bin/zsh': 'env',
+    'cmd': 'set',
 }
 DEFAULT_ALIASCMDS = {
     'bash': 'alias',
@@ -92,6 +93,7 @@ DEFAULT_ALIASCMDS = {
     'zsh': 'alias -L',
     '/bin/zsh': 'alias -L',
     '/usr/bin/zsh': 'alias -L',
+    'cmd': 'echo.',
 }
 DEFAULT_FUNCSCMDS = {
     'bash': DEFAULT_BASH_FUNCSCMD,
@@ -99,6 +101,7 @@ DEFAULT_FUNCSCMDS = {
     'zsh': DEFAULT_ZSH_FUNCSCMD,
     '/bin/zsh': DEFAULT_ZSH_FUNCSCMD,
     '/usr/bin/zsh': DEFAULT_ZSH_FUNCSCMD,
+    'cmd': 'echo.',
 }
 DEFAULT_SOURCERS = {
     'bash': 'source',
@@ -106,6 +109,7 @@ DEFAULT_SOURCERS = {
     'zsh': 'source',
     '/bin/zsh': 'source',
     '/usr/bin/zsh': 'source',
+    'cmd': 'call',
 }
 
 @lru_cache()
@@ -173,6 +177,11 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
     funcscmd = DEFAULT_FUNCSCMDS.get(shell, 'echo {}') if funcscmd is None else funcscmd
     command = COMMAND.format(envcmd=envcmd, aliascmd=aliascmd, prevcmd=prevcmd,
                              postcmd=postcmd, funcscmd=funcscmd).strip()
+    if shell == 'cmd':
+        cmd.remove('-c')
+        cmd.append('/C')
+        command = command.replace('\n','&&')
+
     cmd.append(command)
     if currenv is None and hasattr(builtins, '__xonsh_env__'):
         currenv = builtins.__xonsh_env__.detype()
@@ -236,7 +245,7 @@ def parse_aliases(s):
     return aliases
 
 
-FUNCS_RE = re.compile('__XONSH_FUNCS_BEG__\n(.*)__XONSH_FUNCS_END__',
+FUNCS_RE = re.compile('__XONSH_FUNCS_BEG__\n(.+)\n__XONSH_FUNCS_END__',
                       flags=re.DOTALL)
 
 def parse_funcs(s, shell, sourcer=None):

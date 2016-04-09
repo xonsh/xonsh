@@ -75,7 +75,7 @@ def source_foreign(args, stdin=None):
     ns = parser.parse_args(args)
     if ns.prevcmd is not None:
         pass  # don't change prevcmd if given explicitly
-    elif os.path.isfile(ns.files_or_code[0]):
+    elif os.path.isfile(ns.files_or_code[0]) and args[0] != 'cmd':
         # we have filename to source
         ns.prevcmd = '{0} "{1}"'.format(ns.sourcer, '" "'.join(ns.files_or_code))
     elif ns.prevcmd is None:
@@ -94,6 +94,10 @@ def source_foreign(args, stdin=None):
         if k in denv and v == denv[k]:
             continue  # no change from original
         env[k] = v
+    # If run in un-safe mode we are sure the command completed correctly,
+    # thus we can remove any env-vars that were unset by the script.
+    if not ns.safe:
+        [env.pop(k, None) for k in denv if k not in fsenv]
     baliases = builtins.aliases
     for k, v in fsaliases.items():
         if k in baliases and v == baliases[k]:
@@ -106,6 +110,22 @@ def source_bash(args, stdin=None):
     args = list(args)
     args.insert(0, 'bash')
     args.append('--sourcer=source')
+    return source_foreign(args, stdin=stdin)
+
+
+def source_cmd(args, stdin=None):
+    """Simple cmd.exe-specific wrapper around source-foreign."""
+    args = list(args)
+    fpath = locate_binary(args[0])
+    args[0] = fpath if fpath else args[0]
+    args.insert(0, 'cmd')
+    args.append('--interactive=0')
+    args.append('--sourcer=call')
+    args.append('--funcscmd=echo.')
+    args.append('--aliascmd=echo.')
+    args.append('--envcmd=set')
+    args.append('--safe=0')
+
     return source_foreign(args, stdin=stdin)
 
 
@@ -250,6 +270,7 @@ if ON_WINDOWS:
         DEFAULT_ALIASES[alias] = ['cmd', '/c', alias]
 
     DEFAULT_ALIASES['which'] = ['where']
+    DEFAULT_ALIASES ['source_cmd'] = source_cmd
 
     if not locate_binary('sudo'):
         import xonsh.winutils as winutils
