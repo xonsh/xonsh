@@ -18,6 +18,8 @@ from xonsh.foreign_shells import foreign_shell_data
 from xonsh.vox import Vox
 
 
+DEFAULT_ALIASES = {}
+
 def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
     """Sends signal to exit shell."""
     builtins.__xonsh_exit__ = True
@@ -66,6 +68,10 @@ def _ensure_source_foreign_parser():
     parser.add_argument('--sourcer', default=None, dest='sourcer',
                         help='the source command in the target shell language, '
                              'default: source.')
+    parser.add_argument('--use-tmpfile', type=to_bool, default=False,
+                        help='whether the commands for source shell should be '
+                             'written to a temporary file.',
+                        dest='use_tmpfile')
     _SOURCE_FOREIGN_PARSER = parser
     return parser
 
@@ -76,7 +82,7 @@ def source_foreign(args, stdin=None):
     ns = parser.parse_args(args)
     if ns.prevcmd is not None:
         pass  # don't change prevcmd if given explicitly
-    elif os.path.isfile(ns.files_or_code[0]) and args[0] != 'cmd':
+    elif os.path.isfile(ns.files_or_code[0]):
         # we have filename to source
         ns.prevcmd = '{0} "{1}"'.format(ns.sourcer, '" "'.join(ns.files_or_code))
     elif ns.prevcmd is None:
@@ -87,7 +93,7 @@ def source_foreign(args, stdin=None):
                             aliascmd=ns.aliascmd, extra_args=ns.extra_args,
                             safe=ns.safe, prevcmd=ns.prevcmd,
                             postcmd=ns.postcmd, funcscmd=ns.funcscmd,
-                            sourcer=ns.sourcer)
+                            sourcer=ns.sourcer, use_tmpfile=ns.use_tmpfile)
     # apply results
     env = builtins.__xonsh_env__
     denv = env.detype()
@@ -98,44 +104,14 @@ def source_foreign(args, stdin=None):
     # If run in un-safe mode we are sure the command completed correctly,
     # thus we can remove any env-vars that were unset by the script.
     if not ns.safe:
-        [env.pop(k, None) for k in denv if k not in fsenv]
+        for k in denv:
+            if k not in fsenv:
+                env.pop(k, None)
     baliases = builtins.aliases
     for k, v in fsaliases.items():
         if k in baliases and v == baliases[k]:
             continue  # no change from original
         baliases[k] = v
-
-
-def source_bash(args, stdin=None):
-    """Simple Bash-specific wrapper around source-foreign."""
-    args = list(args)
-    args.insert(0, 'bash')
-    args.append('--sourcer=source')
-    return source_foreign(args, stdin=stdin)
-
-
-def source_cmd(args, stdin=None):
-    """Simple cmd.exe-specific wrapper around source-foreign."""
-    args = list(args)
-    fpath = locate_binary(args[0])
-    args[0] = fpath if fpath else args[0]
-    args.insert(0, 'cmd')
-    args.append('--interactive=0')
-    args.append('--sourcer=call')
-    args.append('--funcscmd=echo.')
-    args.append('--aliascmd=echo.')
-    args.append('--envcmd=set')
-    args.append('--safe=0')
-
-    return source_foreign(args, stdin=stdin)
-
-
-def source_zsh(args, stdin=None):
-    """Simple zsh-specific wrapper around source-foreign."""
-    args = list(args)
-    args.insert(0, 'zsh')
-    args.append('--sourcer=source')
-    return source_foreign(args, stdin=stdin)
 
 
 def source_alias(args, stdin=None):
@@ -146,6 +122,29 @@ def source_alias(args, stdin=None):
             fname = locate_binary(fname)
         with open(fname, 'r') as fp:
             execx(fp.read(), 'exec', builtins.__xonsh_ctx__)
+
+
+def source_cmd(args, stdin=None):
+    """Simple cmd.exe-specific wrapper around source-foreign."""
+    args = list(args)
+    fpath = locate_binary(args[0])
+    args[0] = fpath if fpath else args[0]
+    args.insert(0, 'cmd')
+    args.append('--interactive=0')
+    args.append('--sourcer=call')
+    args.append('--envcmd=set')
+    args.append('--safe=0')
+    args.append('--use-tmpfile=1')
+    return source_foreign(args, stdin=stdin)
+
+
+DEFAULT_ALIASES.update({
+    'source-foreign': source_foreign,
+    'source-bash': ['source-foreign', 'bash', '--sourcer=source'],
+    'source-zsh': ['source-foreign', 'zsh', '--sourcer=source'],
+    'source-cmd': source_cmd,
+    'source-alias': source_alias,
+})
 
 
 def xexec(args, stdin=None):
@@ -217,7 +216,7 @@ def mpl(args, stdin=None):
     show()
 
 
-DEFAULT_ALIASES = {
+DEFAULT_ALIASES.update({
     'cd': cd,
     'pushd': pushd,
     'popd': popd,
@@ -229,10 +228,6 @@ DEFAULT_ALIASES = {
     'exit': exit,
     'quit': exit,
     'xexec': xexec,
-    'source': source_alias,
-    'source-zsh': source_zsh,
-    'source-bash': source_bash,
-    'source-foreign': source_foreign,
     'history': history_alias,
     'replay': replay_main,
     '!!': bang_bang,
@@ -244,7 +239,7 @@ DEFAULT_ALIASES = {
     'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
     'ipynb': ['jupyter', 'notebook', '--no-browser'],
     'vox': vox,
-}
+})
 
 if ON_WINDOWS:
     # Borrow builtin commands from cmd.exe.
@@ -268,15 +263,16 @@ if ON_WINDOWS:
     }
 
     if 'Anaconda' in sys.version:
-        def _source_cmd_keep_prompt(args,stdin=None, ):
+        def _source_cmd_preserve_prompt(args, stdin=None):
             p = builtins.__xonsh_env__.get('PROMPT')
-            source_cmd(args,stdin=stdin)
+            source_cmd(args, stdin=stdin)
             builtins.__xonsh_env__['PROMPT'] = p
 
-        DEFAULT_ALIASES['_source_cmd_keep_prompt'] = _source_cmd_keep_prompt
-
-        DEFAULT_ALIASES['activate'] = ['_source_cmd_keep_prompt', 'activate.bat']
-        DEFAULT_ALIASES['deactivate'] = ['_source_cmd_keep_prompt', 'deactivate.bat']
+        DEFAULT_ALIASES['_source-cmd-preserve-prompt'] = _source_cmd_preserve_prompt
+        DEFAULT_ALIASES['activate'] = ['_source-cmd-preserve-prompt',
+                                       'activate.bat']
+        DEFAULT_ALIASES['deactivate'] = ['_source-cmd-preserve-prompt',
+                                         'deactivate.bat']
 
 
     for alias in WINDOWS_CMD_ALIASES:
