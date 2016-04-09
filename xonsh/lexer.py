@@ -32,7 +32,8 @@ _op_map = {
     '~': 'TILDE', '^': 'XOR', '<<': 'LSHIFT', '>>': 'RSHIFT',
     '<': 'LT', '<=': 'LE', '>': 'GT', '>=': 'GE', '==': 'EQ',
     '!=': 'NE', '->': 'RARROW',
-    '&&': 'DOUBLEAMP', '||': 'DOUBLEPIPE',
+    #'&&': 'DOUBLEAMP', '||': 'DOUBLEPIPE',
+    '&&': 'AND', '||': 'OR',
     # assignment operators
     '=': 'EQUALS', '+=': 'PLUSEQUAL', '-=': 'MINUSEQUAL',
     '*=': 'TIMESEQUAL', '@=': 'ATEQUAL', '/=': 'DIVEQUAL', '%=': 'MODEQUAL',
@@ -158,7 +159,8 @@ def handle_ampersands(state, token, stream):
     if n is not None and n.type == tokenize.OP and \
             n.string == '&' and n.start == token.end:
         state['last'] = n
-        yield _new_token('DOUBLEAMP', '&&', token.start)
+        #yield _new_token('DOUBLEAMP', '&&', token.start)
+        yield _new_token('AND', 'and', token.start)
     else:
         state['last'] = token
         if state['pymode'][-1][0]:
@@ -173,7 +175,8 @@ def handle_pipes(state, token, stream):
     if n is not None and n.type == tokenize.OP and \
             n.string == '|' and n.start == token.end:
         state['last'] = n
-        yield _new_token('DOUBLEPIPE', '||', token.start)
+        #yield _new_token('DOUBLEPIPE', '||', token.start)
+        yield _new_token('OR', 'or', token.start)
     else:
         state['last'] = token
         yield _new_token('PIPE', token.string, token.start)

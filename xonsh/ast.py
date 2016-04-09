@@ -137,7 +137,7 @@ class CtxAwareTransformer(NodeTransformer):
         if self.mode == 'eval':
             mincol = len(line) - len(line.lstrip())
             maxcol = None
-        else: 
+        else:
             mincol = min_col(node)
             maxcol = max_col(node) + 1
         spline = subproc_toks(line,
@@ -308,6 +308,6 @@ def pdump(s, **kwargs):
     if '(' in post or '[' in post or '{' in post:
         post = pdump(post)
     return pre + mid + post
-    
+
 
 

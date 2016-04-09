@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Implements the xonsh executer."""
+import re
 import types
 import inspect
 import builtins
@@ -7,9 +8,12 @@ from collections import Mapping
 
 from xonsh import ast
 from xonsh.parser import Parser
-from xonsh.tools import subproc_toks
+#from xonsh.tools import subproc_toks
+from xonsh.tools import subproc_toks, END_TOK_TYPES
 from xonsh.built_ins import load_builtins, unload_builtins
 
+
+RE_END_TOKS = re.compile('(;|and|\&\&|or|\|\|)')
 
 class Execer(object):
     """Executes xonsh code in a context."""
@@ -126,12 +130,21 @@ class Execer(object):
     def _find_next_break(self, line, mincol):
         if mincol >= 1:
             line = line[mincol:]
-        if ';' not in line:
+        #if ';' not in line:
+        #    return None
+        #print('mincol', mincol, line)
+        #in_line = False
+        #for s in [';', 'and', '&&', 'or', '||']:
+        #    if s in line:
+        #        in_line = True
+        #        break
+        if RE_END_TOKS.search(line) is None:
             return None
         maxcol = None
         self.parser.lexer.input(line)
         for tok in self.parser.lexer:
-            if tok.type == 'SEMI':
+            #if tok.type == 'SEMI':
+            if tok.type in END_TOK_TYPES:
                 maxcol = tok.lexpos + mincol + 1
                 break
         return maxcol
@@ -187,7 +200,11 @@ class Execer(object):
                                        returnline=True,
                                        maxcol=maxcol,
                                        lexer=self.parser.lexer)
-                if sbpline.lstrip().startswith('$[$['):
+                #if sbpline.lstrip().startswith('$[$['):
+                print(maxcol, sbpline)
+                #if maxcol is not None:
+                #    break
+                if sbpline.lstrip().startswith('![!['):
                     # if we have already wrapped this in subproc tokens
                     # and it still doesn't work, adding more won't help
                     # anything

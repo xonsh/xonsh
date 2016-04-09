@@ -126,9 +126,12 @@ def xonsh_superhelp(x, lineno=None, col=None):
     return xonsh_call('__xonsh_superhelp__', [x], lineno=lineno, col=col)
 
 
-def xonsh_regexpath(x, lineno=None, col=None):
-    """Creates the AST node for calling the __xonsh_regexpath__() function."""
-    return xonsh_call('__xonsh_regexpath__', [x], lineno=lineno, col=col)
+def xonsh_regexpath(x, pymode=False, lineno=None, col=None):
+    """Creates the AST node for calling the __xonsh_regexpath__() function.
+    The pymode argument indicate if it is called from subproc or python mode"""
+    pymode = ast.NameConstant(value=pymode, lineno=lineno, col_offset=col)
+    return xonsh_call('__xonsh_regexpath__', args=[x, pymode], lineno=lineno,
+                      col=col)
 
 
 def load_ctx(x):
@@ -374,19 +377,14 @@ class BaseParser(object):
     def _parse_error(self, msg, loc):
         err = SyntaxError('{0}: {1}'.format(loc, msg))
         err.loc = loc
-        err.filename = '<xonsh-parser>'
         raise err
 
     #
     # Precedence of operators
     #
-    precedence = (('left', 'PIPE'),
-                  ('left', 'XOR'),
-                  ('left', 'AMPERSAND'),
-                  ('left', 'EQ', 'NE'),
-                  ('left', 'GT', 'GE', 'LT', 'LE'),
-                  ('left', 'RSHIFT', 'LSHIFT'),
-                  ('left', 'PLUS', 'MINUS'),
+    precedence = (('left', 'PIPE'), ('left', 'XOR'), ('left', 'AMPERSAND'),
+                  ('left', 'EQ', 'NE'), ('left', 'GT', 'GE', 'LT', 'LE'),
+                  ('left', 'RSHIFT', 'LSHIFT'), ('left', 'PLUS', 'MINUS'),
                   ('left', 'TIMES', 'DIVIDE', 'DOUBLEDIV', 'MOD'),
                   ('left', 'POW'), )
 
@@ -1725,7 +1723,8 @@ class BaseParser(object):
         """atom : REGEXPATH"""
         p1 = ast.Str(s=p[1].strip('`'), lineno=self.lineno,
                      col_offset=self.col)
-        p[0] = xonsh_regexpath(p1, lineno=self.lineno, col=self.col)
+        p[0] = xonsh_regexpath(p1, pymode=True, lineno=self.lineno,
+                               col=self.col)
 
     def p_atom_dname(self, p):
         """atom : DOLLAR_NAME"""
@@ -2121,27 +2120,6 @@ class BaseParser(object):
         """
         p[0] = ast.Str(s='|', lineno=self.lineno, col_offset=self.col)
 
-
-    def p_andproc(self, p):
-        """andproc : DOUBLEAMP
-                   | WS DOUBLEAMP
-                   | DOUBLEAMP WS
-                   | WS DOUBLEAMP WS
-                   | AND WS
-                   | WS AND WS
-        """
-        p[0] = ast.Str(s='and', lineno=self.lineno, col_offset=self.col)
-
-    def p_orproc(self, p):
-        """orproc : DOUBLEPIPE
-                  | WS DOUBLEPIPE
-                  | DOUBLEPIPE WS
-                  | WS DOUBLEPIPE WS
-                  | OR WS
-                  | WS OR WS
-        """
-        p[0] = ast.Str(s='or', lineno=self.lineno, col_offset=self.col)
-
     def p_subproc_s2(self, p):
         """subproc : subproc_atoms
                    | subproc_atoms WS
@@ -2166,84 +2144,6 @@ class BaseParser(object):
         cliargs = self._subproc_cliargs(p[3], lineno=self.lineno, col=self.col)
         p[0] = p1 + [p[2], cliargs]
 
-    _to_bang = {
-        '__xonsh_subproc_captured_stdout__': '__xonsh_subproc_captured_object__',
-        '__xonsh_subproc_captured_object__': '__xonsh_subproc_captured_object__',
-        '__xonsh_subproc_uncaptured__': '__xonsh_subproc_captured_hiddenobject__',
-        '__xonsh_subproc_captured_hiddenobject__': '__xonsh_subproc_captured_hiddenobject__',
-        }
-
-    def _ensure_bang(self, node):
-        node.func.id = self._to_bang[node.func.id]
-
-    def p_or_subproc(self, p):
-        """or_test : subproc or_and_test_list_opt"""
-        p1, p2 = p[1], p[2]
-        p1 = self._subproc_cliargs(p1, lineno=self.lineno, col=self.col)
-        p1 = self._dollar_rules([None, '$[', p1, ']'])
-        if p2 is None:
-            p0 = p1
-        elif len(p2) == 2:
-            lineno, col = lopen_loc(p1)
-            self._ensure_bang(p1)
-            p0 = ast.BoolOp(op=p2[0], values=[p1, p2[1]], lineno=lineno,
-                            col_offset=col)
-        else:
-            lineno, col = lopen_loc(p1)
-            self._ensure_bang(p1)
-            p0 = ast.BoolOp(op=p2[0], values=[p1] + p2[1::2],
-                            lineno=lineno, col_offset=col)
-        p[0] = p0
-
-    def p_or_and_subproc(self, p):
-        """or_and_test : orproc subproc"""
-        p2 = self._subproc_cliargs(p[2], lineno=self.lineno, col=self.col)
-        p2 = self._dollar_rules([None, '$[', p2, ']'])
-        self._ensure_bang(p2)
-        p[0] = [ast.Or(), p2]
-
-    def p_and_subproc(self, p):
-        """and_test : subproc and_not_test_list_opt"""
-        p1, p2 = p[1], p[2]
-        p1._cliarg_action = 'append'
-        p1 = self._subproc_cliargs(p1, lineno=self.lineno, col=self.col)
-        p1 = self._dollar_rules([None, '$[', p1, ']'])
-        if p2 is None:
-            p0 = p1
-        elif len(p2) == 2:
-            lineno, col = lopen_loc(p1)
-            self._ensure_bang(p1)
-            p0 = ast.BoolOp(op=p2[0], values=[p1, p2[1]],
-                            lineno=lineno, col_offset=col)
-        else:
-            lineno, col = lopen_loc(p1)
-            self._ensure_bang(p1)
-            p0 = ast.BoolOp(op=p2[0], values=[p1] + p2[1::2],
-                            lineno=lineno, col_offset=col)
-        p[0] = p0
-
-    def p_and_not_subproc(self, p):
-        """and_not_test : andproc subproc"""
-        #p2 = p[2]
-        p2 = self._subproc_cliargs(p[2], lineno=self.lineno, col=self.col)
-        p2 = self._dollar_rules([None, '$[', p2, ']'])
-        #p2 = self._dollar_rules([None, '$[', p[2], ']'])
-        self._ensure_bang(p2)
-        p[0] = [ast.And(), p2]
-
-    def p_subproc_not_test_not(self, p):
-        """not_test : NOT subproc"""
-        #p2 = p[2]
-        #p2 = self._dollar_rules([None, '$[', p[2], ']'])
-        p2 = self._subproc_cliargs(p[2], lineno=self.lineno, col=self.col)
-        p2 = self._dollar_rules([None, '$[', p2, ']'])
-        self._ensure_bang(p2)
-        p[0] = ast.UnaryOp(op=ast.Not(), operand=p2,
-                           lineno=self.lineno, col_offset=self.col)
-
-    #
-    # Subproc atoms
-    #
     def p_subproc_atoms_single(self, p):
         """subproc_atoms : subproc_atom"""
         p[0] = [p[1]]
@@ -2318,7 +2218,8 @@ class BaseParser(object):
         """subproc_atom : REGEXPATH"""
         p1 = ast.Str(s=p[1].strip('`'), lineno=self.lineno,
                      col_offset=self.col)
-        p0 = xonsh_regexpath(p1, lineno=self.lineno, col=self.col)
+        p0 = xonsh_regexpath(p1, pymode=False, lineno=self.lineno,
+                             col=self.col)
         p0._cliarg_action = 'extend'
         p[0] = p0
 
