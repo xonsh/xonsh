@@ -281,9 +281,11 @@ if ON_WINDOWS:
                                        'activate.bat']
         DEFAULT_ALIASES['deactivate'] = ['_source-cmd-preserve-prompt',
                                          'deactivate.bat']
+
     for alias in WINDOWS_CMD_ALIASES:
         DEFAULT_ALIASES[alias] = ['cmd', '/c', alias]
 
+    DEFAULT_ALIASES['call'] = ['source-cmd']
     DEFAULT_ALIASES['which'] = ['where']
 
     if not locate_binary('sudo'):
