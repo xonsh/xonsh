@@ -20,6 +20,7 @@ from xonsh.vox import Vox
 
 DEFAULT_ALIASES = {}
 
+
 def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
     """Sends signal to exit shell."""
     builtins.__xonsh_exit__ = True
@@ -29,6 +30,7 @@ def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
 
 
 _SOURCE_FOREIGN_PARSER = None
+
 
 def _ensure_source_foreign_parser():
     global _SOURCE_FOREIGN_PARSER
@@ -66,8 +68,8 @@ def _ensure_source_foreign_parser():
                         help='code to find locations of all native functions '
                              'in the shell language.')
     parser.add_argument('--sourcer', default=None, dest='sourcer',
-                        help='the source command in the target shell language, '
-                             'default: source.')
+                        help='the source command in the target shell '
+                        'language, default: source.')
     parser.add_argument('--use-tmpfile', type=to_bool, default=False,
                         help='whether the commands for source shell should be '
                              'written to a temporary file.',
@@ -84,16 +86,20 @@ def source_foreign(args, stdin=None):
         pass  # don't change prevcmd if given explicitly
     elif os.path.isfile(ns.files_or_code[0]):
         # we have filename to source
-        ns.prevcmd = '{0} "{1}"'.format(ns.sourcer, '" "'.join(ns.files_or_code))
+        ns.prevcmd = '{} "{}"'.format(ns.sourcer, '" "'.join(ns.files_or_code))
     elif ns.prevcmd is None:
         ns.prevcmd = ' '.join(ns.files_or_code)  # code to run, no files
     foreign_shell_data.cache_clear()  # make sure that we don't get prev src
     fsenv, fsaliases = foreign_shell_data(shell=ns.shell, login=ns.login,
-                            interactive=ns.interactive, envcmd=ns.envcmd,
-                            aliascmd=ns.aliascmd, extra_args=ns.extra_args,
-                            safe=ns.safe, prevcmd=ns.prevcmd,
-                            postcmd=ns.postcmd, funcscmd=ns.funcscmd,
-                            sourcer=ns.sourcer, use_tmpfile=ns.use_tmpfile)
+                                          interactive=ns.interactive,
+                                          envcmd=ns.envcmd,
+                                          aliascmd=ns.aliascmd,
+                                          extra_args=ns.extra_args,
+                                          safe=ns.safe, prevcmd=ns.prevcmd,
+                                          postcmd=ns.postcmd,
+                                          funcscmd=ns.funcscmd,
+                                          sourcer=ns.sourcer,
+                                          use_tmpfile=ns.use_tmpfile)
     # apply results
     env = builtins.__xonsh_env__
     denv = env.detype()
@@ -116,7 +122,8 @@ def source_foreign(args, stdin=None):
 
 def source_alias(args, stdin=None):
     """Executes the contents of the provided files in the current context.
-    If sourced file isn't found in cwd, search for file along $PATH to source instead"""
+    If sourced file isn't found in cwd, search for file along $PATH to source
+    instead"""
     for fname in args:
         if not os.path.isfile(fname):
             fname = locate_binary(fname)
@@ -209,6 +216,7 @@ def vox(args, stdin=None):
     vox = Vox()
     return vox(args, stdin=stdin)
 
+
 @foreground
 def mpl(args, stdin=None):
     """Hooks to matplotlib"""
@@ -273,13 +281,11 @@ if ON_WINDOWS:
                                        'activate.bat']
         DEFAULT_ALIASES['deactivate'] = ['_source-cmd-preserve-prompt',
                                          'deactivate.bat']
-
-
     for alias in WINDOWS_CMD_ALIASES:
         DEFAULT_ALIASES[alias] = ['cmd', '/c', alias]
 
     DEFAULT_ALIASES['which'] = ['where']
-    DEFAULT_ALIASES ['source-cmd'] = source_cmd
+    DEFAULT_ALIASES['source-cmd'] = source_cmd
 
     if not locate_binary('sudo'):
         import xonsh.winutils as winutils

@@ -135,7 +135,7 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
                        aliascmd=None, extra_args=(), currenv=None,
                        safe=True, prevcmd='', postcmd='', funcscmd=None,
                        sourcer=None, use_tmpfile=False, tmpfile_ext=None,
-                       runcmd= None):
+                       runcmd=None):
     """Extracts data from a foreign (non-xonsh) shells. Currently this gets
     the environment, aliases, and functions but may be extended in the future.
 
@@ -238,6 +238,7 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
 
 ENV_RE = re.compile('__XONSH_ENV_BEG__\n(.*)__XONSH_ENV_END__', flags=re.DOTALL)
 
+
 def parse_env(s):
     """Parses the environment portion of string into a dict."""
     m = ENV_RE.search(s)
@@ -252,13 +253,14 @@ def parse_env(s):
 ALIAS_RE = re.compile('__XONSH_ALIAS_BEG__\n(.*)__XONSH_ALIAS_END__',
                       flags=re.DOTALL)
 
+
 def parse_aliases(s):
     """Parses the aliases portion of string into a dict."""
     m = ALIAS_RE.search(s)
     if m is None:
         return {}
     g1 = m.group(1)
-    items = [line.split('=', 1) for line in g1.splitlines() if \
+    items = [line.split('=', 1) for line in g1.splitlines() if
              line.startswith('alias ') and '=' in line]
     aliases = {}
     for key, value in items:
@@ -280,6 +282,7 @@ def parse_aliases(s):
 
 FUNCS_RE = re.compile('__XONSH_FUNCS_BEG__\n(.+)\n__XONSH_FUNCS_END__',
                       flags=re.DOTALL)
+
 
 def parse_funcs(s, shell, sourcer=None):
     """Parses the funcs portion of a string into a dict of callable foreign
