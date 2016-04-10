@@ -285,7 +285,6 @@ if ON_WINDOWS:
         DEFAULT_ALIASES[alias] = ['cmd', '/c', alias]
 
     DEFAULT_ALIASES['which'] = ['where']
-    DEFAULT_ALIASES['source-cmd'] = source_cmd
 
     if not locate_binary('sudo'):
         import xonsh.winutils as winutils
