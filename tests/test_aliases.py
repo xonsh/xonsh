@@ -8,7 +8,7 @@ from nose.plugins.skip import SkipTest
 from nose.tools import assert_equal
 
 import xonsh.built_ins as built_ins
-from xonsh.built_ins import Aliases
+from xonsh.aliases import Aliases
 from xonsh.environ import Env
 from xonsh.tools import ON_WINDOWS
 
@@ -35,13 +35,16 @@ def test_imports():
     })
 
 def test_eval_normal():
-    assert_equal(ALIASES.get('o'), ['omg', 'lala'])
+    with mock_xonsh_env({}):
+        assert_equal(ALIASES.get('o'), ['omg', 'lala'])
 
 def test_eval_self_reference():
-    assert_equal(ALIASES.get('ls'), ['ls', '-  -'])
+    with mock_xonsh_env({}):
+        assert_equal(ALIASES.get('ls'), ['ls', '-  -'])
 
 def test_eval_recursive():
-    assert_equal(ALIASES.get('color_ls'), ['ls', '-  -', '--color=true'])
+    with mock_xonsh_env({}):
+        assert_equal(ALIASES.get('color_ls'), ['ls', '-  -', '--color=true'])
 
 def test_eval_recursive_callable_partial():
     if ON_WINDOWS:
