@@ -308,6 +308,7 @@ def vox(args, stdin=None):
     vox = Vox()
     return vox(args, stdin=stdin)
 
+
 @foreground
 def mpl(args, stdin=None):
     """Hooks to matplotlib"""
@@ -315,82 +316,79 @@ def mpl(args, stdin=None):
     show()
 
 
-DEFAULT_ALIASES = {
-    'cd': cd,
-    'pushd': pushd,
-    'popd': popd,
-    'dirs': dirs,
-    'jobs': jobs,
-    'fg': fg,
-    'bg': bg,
-    'EOF': exit,
-    'exit': exit,
-    'quit': exit,
-    'xexec': xexec,
-    'source': source_alias,
-    'source-zsh': source_zsh,
-    'source-bash': source_bash,
-    'source-foreign': source_foreign,
-    'history': history_alias,
-    'replay': replay_main,
-    '!!': bang_bang,
-    '!n': bang_n,
-    'mpl': mpl,
-    'trace': trace,
-    'timeit': timeit_alias,
-    'xonfig': xonfig,
-    'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
-    'ipynb': ['jupyter', 'notebook', '--no-browser'],
-    'vox': vox,
-}
-
-if ON_WINDOWS:
-    # Borrow builtin commands from cmd.exe.
-    WINDOWS_CMD_ALIASES = {
-        'cls',
-        'copy',
-        'del',
-        'dir',
-        'erase',
-        'md',
-        'mkdir',
-        'mklink',
-        'move',
-        'rd',
-        'ren',
-        'rename',
-        'rmdir',
-        'time',
-        'type',
-        'vol'
+def make_default_aliases():
+    """Creates a new default aliases dictionary."""
+    default_aliases = {
+        'cd': cd,
+        'pushd': pushd,
+        'popd': popd,
+        'dirs': dirs,
+        'jobs': jobs,
+        'fg': fg,
+        'bg': bg,
+        'EOF': exit,
+        'exit': exit,
+        'quit': exit,
+        'xexec': xexec,
+        'source': source_alias,
+        'source-zsh': source_zsh,
+        'source-bash': source_bash,
+        'source-foreign': source_foreign,
+        'history': history_alias,
+        'replay': replay_main,
+        '!!': bang_bang,
+        '!n': bang_n,
+        'mpl': mpl,
+        'trace': trace,
+        'timeit': timeit_alias,
+        'xonfig': xonfig,
+        'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
+        'ipynb': ['jupyter', 'notebook', '--no-browser'],
+        'vox': vox,
     }
-
-    for alias in WINDOWS_CMD_ALIASES:
-        DEFAULT_ALIASES[alias] = ['cmd', '/c', alias]
-
-    DEFAULT_ALIASES['which'] = ['where']
-
-    if not locate_binary('sudo'):
-        import xonsh.winutils as winutils
-
-        def sudo(args, sdin=None):
-            if len(args) < 1:
-                print('You need to provide an executable to run as Administrator.')
-                return
-
-            cmd = args[0]
-
-            if locate_binary(cmd):
-                return winutils.sudo(cmd, args[1:])
-            elif cmd.lower() in WINDOWS_CMD_ALIASES:
-                return winutils.sudo('cmd', ['/D', '/C', 'CD', _get_cwd(), '&&'] + args)
-            else:
-                print('Cannot find the path for executable "{0}".'.format(cmd))
-
-        DEFAULT_ALIASES['sudo'] = sudo
-
-elif ON_MAC:
-    DEFAULT_ALIASES['ls'] = ['ls', '-G']
-else:
-    DEFAULT_ALIASES['grep'] = ['grep', '--color=auto']
-    DEFAULT_ALIASES['ls'] = ['ls', '--color=auto', '-v']
+    if ON_WINDOWS:
+        # Borrow builtin commands from cmd.exe.
+        windows_cmd_aliases = {
+            'cls',
+            'copy',
+            'del',
+            'dir',
+            'erase',
+            'md',
+            'mkdir',
+            'mklink',
+            'move',
+            'rd',
+            'ren',
+            'rename',
+            'rmdir',
+            'time',
+            'type',
+            'vol'
+        }
+        for alias in windows_cmd_aliases:
+            default_aliases[alias] = ['cmd', '/c', alias]
+        default_aliases['which'] = ['where']
+        if not locate_binary('sudo'):
+            import xonsh.winutils as winutils
+            def sudo(args, sdin=None):
+                if len(args) < 1:
+                    print('You need to provide an executable to run as '
+                          'Administrator.')
+                    return
+                cmd = args[0]
+                if locate_binary(cmd):
+                    return winutils.sudo(cmd, args[1:])
+                elif cmd.lower() in windows_cmd_aliases:
+                    return winutils.sudo('cmd',
+                                ['/D', '/C', 'CD', _get_cwd(), '&&'] + args)
+                else:
+                    msg = 'Cannot find the path for executable "{0}".'
+                    print(msg.format(cmd))
+            default_aliases['sudo'] = sudo
+    elif ON_MAC:
+        default_aliases['ls'] = ['ls', '-G']
+    else:
+        default_aliases['grep'] = ['grep', '--color=auto']
+        default_aliases['ls'] = ['ls', '--color=auto', '-v']
+    return default_aliases

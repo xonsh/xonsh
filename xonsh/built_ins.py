@@ -29,7 +29,7 @@ from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
                         SimpleForegroundProcProxy, TeePTYProc,
                         CompletedCommand, HiddenCompletedCommand)
-from xonsh.aliases import Aliases
+from xonsh.aliases import Aliases, make_default_aliases
 from xonsh.history import History
 from xonsh.foreign_shells import load_foreign_aliases
 
@@ -663,8 +663,7 @@ def load_builtins(execer=None, config=None, login=False):
     builtins.compilex = None if execer is None else execer.compile
 
     # Need this inline/lazy import here since we use locate_binary that relies on __xonsh_env__ in default aliases
-    from xonsh.aliases import DEFAULT_ALIASES
-    builtins.default_aliases = builtins.aliases = Aliases(DEFAULT_ALIASES)
+    builtins.default_aliases = builtins.aliases = Aliases(make_default_aliases())
     if login:
         builtins.aliases.update(load_foreign_aliases(issue_warning=False))
     # history needs to be started after env and aliases
