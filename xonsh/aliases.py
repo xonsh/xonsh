@@ -1,20 +1,139 @@
 # -*- coding: utf-8 -*-
 """Aliases for the xonsh shell."""
 
-import builtins
 import os
+import shlex
+import builtins
 from argparse import ArgumentParser
+from collections.abc import MutableMapping, Iterable, Sequence
 
 from xonsh.dirstack import cd, pushd, popd, dirs, _get_cwd
 from xonsh.jobs import jobs, fg, bg, kill_all_jobs
 from xonsh.proc import foreground
 from xonsh.timings import timeit_alias
-from xonsh.tools import ON_MAC, ON_WINDOWS, XonshError, to_bool
+from xonsh.tools import ON_MAC, ON_WINDOWS, XonshError, to_bool, string_types
 from xonsh.history import main as history_alias
 from xonsh.replay import main as replay_main
 from xonsh.environ import locate_binary
 from xonsh.foreign_shells import foreign_shell_data
 from xonsh.vox import Vox
+
+
+class Aliases(MutableMapping):
+    """Represents a location to hold and look up aliases."""
+
+    def __init__(self, *args, **kwargs):
+        self._raw = {}
+        self.update(*args, **kwargs)
+
+    def get(self, key, default=None):
+        """Returns the (possibly modified) value. If the key is not present,
+        then `default` is returned.
+        If the value is callable, it is returned without modification. If it
+        is an iterable of strings it will be evaluated recursively to expand
+        other aliases, resulting in a new list or a "partially applied"
+        callable.
+        """
+        val = self._raw.get(key)
+        if val is None:
+            return default
+        elif isinstance(val, Iterable) or callable(val):
+            return self.eval_alias(val, seen_tokens={key})
+        else:
+            msg = 'alias of {!r} has an inappropriate type: {!r}'
+            raise TypeError(msg.format(key, val))
+
+    def eval_alias(self, value, seen_tokens=frozenset(), acc_args=()):
+        """
+        "Evaluates" the alias `value`, by recursively looking up the leftmost
+        token and "expanding" if it's also an alias.
+
+        A value like ["cmd", "arg"] might transform like this:
+        > ["cmd", "arg"] -> ["ls", "-al", "arg"] -> callable()
+        where `cmd=ls -al` and `ls` is an alias with its value being a
+        callable.  The resulting callable will be "partially applied" with
+        ["-al", "arg"].
+        """
+        # Beware of mutability: default values for keyword args are evaluated
+        # only once.
+        if callable(value):
+            if acc_args:  # Partial application
+                def _alias(args, stdin=None):
+                    args = list(acc_args) + args
+                    return value(args, stdin=stdin)
+                return _alias
+            else:
+                return value
+        else:
+            expand_path = builtins.__xonsh_expand_path__
+            token, *rest = map(expand_path, value)
+            if token in seen_tokens or token not in self._raw:
+                # ^ Making sure things like `egrep=egrep --color=auto` works,
+                # and that `l` evals to `ls --color=auto -CF` if `l=ls -CF`
+                # and `ls=ls --color=auto`
+                rtn = [token]
+                rtn.extend(rest)
+                rtn.extend(acc_args)
+                return rtn
+            else:
+                seen_tokens = seen_tokens | {token}
+                acc_args = rest + list(acc_args)
+                return self.eval_alias(self._raw[token], seen_tokens, acc_args)
+
+    def expand_alias(self, line):
+        """Expands any aliases present in line if alias does not point to a
+        builtin function and if alias is only a single command.
+        """
+        word = line.split(' ', 1)[0]
+        if word in builtins.aliases and isinstance(self.get(word), Sequence):
+            word_idx = line.find(word)
+            expansion = ' '.join(self.get(word))
+            line = line[:word_idx] + expansion + line[word_idx+len(word):]
+        return line
+
+    #
+    # Mutable mapping interface
+    #
+
+    def __getitem__(self, key):
+        return self._raw[key]
+
+    def __setitem__(self, key, val):
+        if isinstance(val, string_types):
+            self._raw[key] = shlex.split(val)
+        else:
+            self._raw[key] = val
+
+    def __delitem__(self, key):
+        del self._raw[key]
+
+    def update(self, *args, **kwargs):
+        for key, val in dict(*args, **kwargs).items():
+            self[key] = val
+
+    def __iter__(self):
+        yield from self._raw
+
+    def __len__(self):
+        return len(self._raw)
+
+    def __str__(self):
+        return str(self._raw)
+
+    def __repr__(self):
+        return '{0}.{1}({2})'.format(self.__class__.__module__,
+                                     self.__class__.__name__, self._raw)
+
+    def _repr_pretty_(self, p, cycle):
+        name = '{0}.{1}'.format(self.__class__.__module__,
+                                self.__class__.__name__)
+        with p.group(0, name + '(', ')'):
+            if cycle:
+                p.text('...')
+            elif len(self):
+                p.break_()
+                p.pretty(dict(self))
+
 
 
 def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
@@ -189,6 +308,7 @@ def vox(args, stdin=None):
     vox = Vox()
     return vox(args, stdin=stdin)
 
+
 @foreground
 def mpl(args, stdin=None):
     """Hooks to matplotlib"""
@@ -196,82 +316,79 @@ def mpl(args, stdin=None):
     show()
 
 
-DEFAULT_ALIASES = {
-    'cd': cd,
-    'pushd': pushd,
-    'popd': popd,
-    'dirs': dirs,
-    'jobs': jobs,
-    'fg': fg,
-    'bg': bg,
-    'EOF': exit,
-    'exit': exit,
-    'quit': exit,
-    'xexec': xexec,
-    'source': source_alias,
-    'source-zsh': source_zsh,
-    'source-bash': source_bash,
-    'source-foreign': source_foreign,
-    'history': history_alias,
-    'replay': replay_main,
-    '!!': bang_bang,
-    '!n': bang_n,
-    'mpl': mpl,
-    'trace': trace,
-    'timeit': timeit_alias,
-    'xonfig': xonfig,
-    'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
-    'ipynb': ['jupyter', 'notebook', '--no-browser'],
-    'vox': vox,
-}
-
-if ON_WINDOWS:
-    # Borrow builtin commands from cmd.exe.
-    WINDOWS_CMD_ALIASES = {
-        'cls',
-        'copy',
-        'del',
-        'dir',
-        'erase',
-        'md',
-        'mkdir',
-        'mklink',
-        'move',
-        'rd',
-        'ren',
-        'rename',
-        'rmdir',
-        'time',
-        'type',
-        'vol'
+def make_default_aliases():
+    """Creates a new default aliases dictionary."""
+    default_aliases = {
+        'cd': cd,
+        'pushd': pushd,
+        'popd': popd,
+        'dirs': dirs,
+        'jobs': jobs,
+        'fg': fg,
+        'bg': bg,
+        'EOF': exit,
+        'exit': exit,
+        'quit': exit,
+        'xexec': xexec,
+        'source': source_alias,
+        'source-zsh': source_zsh,
+        'source-bash': source_bash,
+        'source-foreign': source_foreign,
+        'history': history_alias,
+        'replay': replay_main,
+        '!!': bang_bang,
+        '!n': bang_n,
+        'mpl': mpl,
+        'trace': trace,
+        'timeit': timeit_alias,
+        'xonfig': xonfig,
+        'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
+        'ipynb': ['jupyter', 'notebook', '--no-browser'],
+        'vox': vox,
     }
-
-    for alias in WINDOWS_CMD_ALIASES:
-        DEFAULT_ALIASES[alias] = ['cmd', '/c', alias]
-
-    DEFAULT_ALIASES['which'] = ['where']
-
-    if not locate_binary('sudo'):
-        import xonsh.winutils as winutils
-
-        def sudo(args, sdin=None):
-            if len(args) < 1:
-                print('You need to provide an executable to run as Administrator.')
-                return
-
-            cmd = args[0]
-
-            if locate_binary(cmd):
-                return winutils.sudo(cmd, args[1:])
-            elif cmd.lower() in WINDOWS_CMD_ALIASES:
-                return winutils.sudo('cmd', ['/D', '/C', 'CD', _get_cwd(), '&&'] + args)
-            else:
-                print('Cannot find the path for executable "{0}".'.format(cmd))
-
-        DEFAULT_ALIASES['sudo'] = sudo
-
-elif ON_MAC:
-    DEFAULT_ALIASES['ls'] = ['ls', '-G']
-else:
-    DEFAULT_ALIASES['grep'] = ['grep', '--color=auto']
-    DEFAULT_ALIASES['ls'] = ['ls', '--color=auto', '-v']
+    if ON_WINDOWS:
+        # Borrow builtin commands from cmd.exe.
+        windows_cmd_aliases = {
+            'cls',
+            'copy',
+            'del',
+            'dir',
+            'erase',
+            'md',
+            'mkdir',
+            'mklink',
+            'move',
+            'rd',
+            'ren',
+            'rename',
+            'rmdir',
+            'time',
+            'type',
+            'vol'
+        }
+        for alias in windows_cmd_aliases:
+            default_aliases[alias] = ['cmd', '/c', alias]
+        default_aliases['which'] = ['where']
+        if not locate_binary('sudo'):
+            import xonsh.winutils as winutils
+            def sudo(args, sdin=None):
+                if len(args) < 1:
+                    print('You need to provide an executable to run as '
+                          'Administrator.')
+                    return
+                cmd = args[0]
+                if locate_binary(cmd):
+                    return winutils.sudo(cmd, args[1:])
+                elif cmd.lower() in windows_cmd_aliases:
+                    return winutils.sudo('cmd',
+                                ['/D', '/C', 'CD', _get_cwd(), '&&'] + args)
+                else:
+                    msg = 'Cannot find the path for executable "{0}".'
+                    print(msg.format(cmd))
+            default_aliases['sudo'] = sudo
+    elif ON_MAC:
+        default_aliases['ls'] = ['ls', '-G']
+    else:
+        default_aliases['grep'] = ['grep', '--color=auto']
+        default_aliases['ls'] = ['ls', '--color=auto', '-v']
+    return default_aliases
