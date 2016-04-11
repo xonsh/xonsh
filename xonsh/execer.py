@@ -12,7 +12,7 @@ from xonsh.tools import subproc_toks, END_TOK_TYPES
 from xonsh.built_ins import load_builtins, unload_builtins
 
 
-RE_END_TOKS = re.compile('(;|and|\&\&|or|\|\|)')
+RE_END_TOKS = re.compile('(;|and|\&\&|or|\|\||\))')
 
 class Execer(object):
     """Executes xonsh code in a context."""
@@ -134,7 +134,8 @@ class Execer(object):
         maxcol = None
         self.parser.lexer.input(line)
         for tok in self.parser.lexer:
-            if tok.type in END_TOK_TYPES:
+            if tok.type in END_TOK_TYPES or \
+                    (tok.type == 'ERRORTOKEN' and ')' in tok.value):
                 maxcol = tok.lexpos + mincol + 1
                 break
         return maxcol

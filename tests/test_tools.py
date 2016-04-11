@@ -157,6 +157,36 @@ def test_subproc_toks_comment():
     obs = subproc_toks('# I am a comment', lexer=LEXER, returnline=True)
     assert_equal(exp, obs)
 
+def test_subproc_toks_not():
+    exp = 'not ![echo mom]'
+    obs = subproc_toks('not echo mom', lexer=LEXER, returnline=True)
+    assert_equal(exp, obs)
+
+def test_subproc_toks_paren():
+    exp = '(![echo mom])'
+    obs = subproc_toks('(echo mom)', lexer=LEXER, returnline=True)
+    assert_equal(exp, obs)
+
+def test_subproc_toks_paren_ws():
+    exp = '(![echo mom])  '
+    obs = subproc_toks('(echo mom)  ', lexer=LEXER, returnline=True)
+    assert_equal(exp, obs)
+
+def test_subproc_toks_not_paren():
+    exp = 'not (![echo mom])'
+    obs = subproc_toks('not (echo mom)', lexer=LEXER, returnline=True)
+    assert_equal(exp, obs)
+
+def test_subproc_toks_and_paren():
+    exp = 'True and (![echo mom])'
+    obs = subproc_toks('True and (echo mom)', lexer=LEXER, returnline=True)
+    assert_equal(exp, obs)
+
+def test_subproc_toks_paren_and_paren():
+    exp = '(![echo a]) and (echo b)'
+    obs = subproc_toks('(echo a) and (echo b)', maxcol=9, lexer=LEXER, returnline=True)
+    assert_equal(exp, obs)
+
 def test_subexpr_from_unbalanced_parens():
     cases = [
         ('f(x.', 'x.'),

@@ -95,13 +95,15 @@ class DefaultNotGivenType(object):
 
 DefaultNotGiven = DefaultNotGivenType()
 
-END_TOK_TYPES = frozenset(['SEMI', 'AND', 'OR'])
+BEG_TOK_SKIPS = frozenset(['WS', 'INDENT', 'NOT', 'LPAREN'])
+END_TOK_TYPES = frozenset(['SEMI', 'AND', 'OR', 'RPAREN'])
 
 def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     """Excapsulates tokens in a source code line in a uncaptured
     subprocess ![] starting at a minimum column. If there are no tokens
     (ie in a comment line) this returns None.
     """
+    #print(line)
     if lexer is None:
         lexer = builtins.__xonsh_execer__.parser.lexer
     if maxcol is None:
@@ -114,11 +116,13 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
         pos = tok.lexpos
         if tok.type not in END_TOK_TYPES and pos >= maxcol:
             break
-        if len(toks) == 0 and tok.type in ('WS', 'INDENT'):
+        if len(toks) == 0 and tok.type in BEG_TOK_SKIPS:
             continue  # handle indentation
         elif len(toks) > 0 and toks[-1].type in END_TOK_TYPES:
             if pos < maxcol and tok.type not in ('NEWLINE', 'DEDENT', 'WS'):
                 toks.clear()
+                if tok.type in BEG_TOK_SKIPS:
+                    continue
             else:
                 break
         if pos < mincol:
