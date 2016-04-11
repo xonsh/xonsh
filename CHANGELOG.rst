@@ -43,9 +43,11 @@ Current Developments
 
 **Fixed:**
 
-
 * Fixed bug with loading prompt-toolkit shell < v0.57.
-* Fixed bug with prompt-toolkit completion when the cursor is not at the end of the line
+* Fixed bug with prompt-toolkit completion when the cursor is not at the end of
+  the line.
+* Aliases will now evaluate enviornment variables and other expansions
+  at execution time rather than passing through a literal string.
 
 **Security:** None
 
