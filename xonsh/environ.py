@@ -505,11 +505,11 @@ class Env(MutableMapping):
         for key, val in dict(*args, **kwargs).items():
             self[key] = val
         self._detyped = None
-    
+
     @staticmethod
     def detypeable(val):
         return not (callable(val) or isinstance(val, MutableMapping))
-        
+
     def detype(self):
         if self._detyped is not None:
             return self._detyped
@@ -641,7 +641,7 @@ class Env(MutableMapping):
                 else:
                     dval = ensurer.detype(val)
                     os.environ[key] = dval
-            
+
     def __delitem__(self, key):
         val = self._d.pop(key)
         if self.detypeable(val):
@@ -649,7 +649,7 @@ class Env(MutableMapping):
             if self.get('UPDATE_OS_ENVIRON'):
                 if key in os.environ:
                     del os.environ[key]
-        
+
     def get(self, key, default=None):
         """The environment will look up default values from its own defaults if a
         default is not given here.
@@ -1269,15 +1269,13 @@ def windows_env_fixes(ctx):
 def default_env(env=None, config=None, login=True):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence
+    ctx = dict(BASE_ENV)
+    ctx.update(os.environ)
     if login:
-        ctx = dict(BASE_ENV)
-        ctx.update(os.environ)
         conf = load_static_config(ctx, config=config)
         ctx.update(conf.get('env', ()))
         ctx.update(load_foreign_envs(shells=conf.get('foreign_shells', DEFAULT_SHELLS),
                                      issue_warning=False))
-    else:
-        ctx = {}
     if ON_WINDOWS:
         windows_env_fixes(ctx)
     # finalize env
