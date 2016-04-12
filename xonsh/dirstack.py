@@ -41,7 +41,7 @@ def _try_cdpath(apath):
     env = builtins.__xonsh_env__
     cdpaths = env.get('CDPATH')
     for cdp in cdpaths:
-        for cdpath_prefixed_path in iglob(os.path.join(cdp, apath)):
+        for cdpath_prefixed_path in iglob(os.path.expanduser(os.path.join(cdp, apath))):
             return cdpath_prefixed_path
     return apath
 
