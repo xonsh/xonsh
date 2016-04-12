@@ -104,7 +104,7 @@ def arg_undoers():
         '-h': (lambda args: setattr(args, 'help', False)),
         '-V': (lambda args: setattr(args, 'version', False)),
         '-c': (lambda args: setattr(args, 'command', None)),
-        '-i': (lambda args: setattr(args, 'force_interactive', Fals)),
+        '-i': (lambda args: setattr(args, 'force_interactive', False)),
         '-l': (lambda args: setattr(args, 'login', False)),
         '-c': (lambda args: setattr(args, 'command', None)),
         '--config-path': (lambda args: delattr(args, 'config_path')),
@@ -114,6 +114,9 @@ def arg_undoers():
         }
     au['--help'] = au['-h']
     au['--version'] = au['-V']
+    au['--interactive'] = au['-i']
+    au['--login'] = au['-l']
+
     return au
 
 def undo_args(args):
