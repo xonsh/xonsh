@@ -21,6 +21,7 @@ requirements:
     - ply
     - prompt_toolkit
     - setproctitle
+    - pygments
 
 about:
   home: http://xon.sh/
