@@ -252,6 +252,8 @@ def source_cmd(args, stdin=None):
     args = list(args)
     fpath = locate_binary(args[0])
     args[0] = fpath if fpath else args[0]
+    if not os.path.isfile(args[0]):
+        raise FileNotFoundError(args[0])
     args.insert(0, 'cmd')
     args.append('--interactive=0')
     args.append('--sourcer=call')
