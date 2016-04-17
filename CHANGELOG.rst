@@ -29,6 +29,7 @@ Current Developments
 * Left and Right arrows in the ``prompt_toolkit`` shell now wrap in multiline
   environments
 * Regexpath matching with backticks, now returns an empty list in python mode.
+* Pygments added as a dependency for the conda package
 
 
 
