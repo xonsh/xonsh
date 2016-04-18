@@ -48,6 +48,8 @@ Current Developments
   the line.
 * Aliases will now evaluate enviornment variables and other expansions
   at execution time rather than passing through a literal string.
+* Fixed environment variables from os.environ not beeing loaded when a running 
+  a script
 
 **Security:** None
 

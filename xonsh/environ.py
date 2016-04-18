@@ -1273,15 +1273,13 @@ def windows_env_fixes(ctx):
 def default_env(env=None, config=None, login=True):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence
+    ctx = dict(BASE_ENV)
+    ctx.update(os.environ)
     if login:
-        ctx = dict(BASE_ENV)
-        ctx.update(os.environ)
         conf = load_static_config(ctx, config=config)
         ctx.update(conf.get('env', ()))
         ctx.update(load_foreign_envs(shells=conf.get('foreign_shells', DEFAULT_SHELLS),
                                      issue_warning=False))
-    else:
-        ctx = {}
     if ON_WINDOWS:
         windows_env_fixes(ctx)
     # finalize env
