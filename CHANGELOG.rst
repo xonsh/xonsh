@@ -56,6 +56,8 @@ Current Developments
 * Fixed environment variables from os.environ not beeing loaded when a running 
   a script
 * Fixed bug that prevented `source-alias` from working. 
+* Fixed deadlock on Windows when runing subprocess that generates enough output
+  to fill the OS pipe buffer 
 
 **Security:** None
 
