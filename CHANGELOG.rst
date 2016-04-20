@@ -17,8 +17,9 @@ Current Developments
   This is disabled by default but can be enabled by setting ``$UPDATE_OS_ENVIRON`` to
   True.
 * Added Windows 'cmd.exe' as a foreign shell. This gives xonsh the ability to source 
-  Windows Batch files (.bat and .cmd). Calling ``source-cmd script.bat`` will call 
-  the bat file and changes to the environment variables will be reflected in xonsh.
+  Windows Batch files (.bat and .cmd). Calling ``source-cmd script.bat`` or the 
+  alias ``source-bat script.bat`` will call the bat file and changes to the 
+  environment variables will be reflected in xonsh.
 * Added an alias for the conda environment activate/deactivate batch scripts when 
   running the Anaconda python distribution on Windows.
 

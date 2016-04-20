@@ -389,6 +389,7 @@ def make_default_aliases():
         for alias in windows_cmd_aliases:
             default_aliases[alias] = ['cmd', '/c', alias]
         default_aliases['call'] = ['source-cmd']
+        default_aliases['source-bat'] = ['source-cmd']
         # Add aliases specific to the Anaconda python distribution.
         if 'Anaconda' in sys.version:
             def source_cmd_keep_prompt(args, stdin=None):
