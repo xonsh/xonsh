@@ -21,6 +21,7 @@ Current Developments
   the bat file and changes to the environment variables will be reflected in xonsh.
 * Added an alias for the conda environment activate/deactivate batch scripts when 
   running the Anaconda python distribution on Windows.
+* Added a menu entry to launch xonsh when installing xonsh from a conda package
 
 
 **Changed:**
