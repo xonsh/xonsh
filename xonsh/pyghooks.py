@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Hooks for pygments syntax highlighting."""
+import os
 import re
 import string
 import builtins
@@ -539,10 +540,10 @@ if hasattr(pygments.style, 'ansicolors'):
         Color.WHITE: '#ansiwhite',
         Color.YELLOW: '#ansiyellow',
     }
-elif ON_WINDOWS:
+elif ON_WINDOWS and 'CONEMUANSI' not in os.environ:
     # These colors must match the color specification
     # in prompt_toolkit, so the colors are converted 
-    # correctly
+    # correctly when using cmd.exe
     DEFAULT_STYLE = {
         Color.BLACK: '#000000',
         Color.BLUE: '#0000AA',
