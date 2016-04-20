@@ -28,7 +28,6 @@ about:
   license: BSD
   summary: xonsh is a Python-ish, BASHwards-facing shell.
 
-# Removed temporarily until this is better support by the Anaconda launcher
-#app:
-#  entry: xonsh
-#  icon: icon.png
+app:
+  entry: xonsh
+  icon: ../docs/_static/ascii_conch_part_color.png
