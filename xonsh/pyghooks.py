@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Hooks for pygments syntax highlighting."""
+import os
 import re
 import string
 import builtins
@@ -539,6 +540,29 @@ if hasattr(pygments.style, 'ansicolors'):
         Color.WHITE: '#ansiwhite',
         Color.YELLOW: '#ansiyellow',
     }
+elif ON_WINDOWS and 'CONEMUANSI' not in os.environ:
+    # These colors must match the color specification
+    # in prompt_toolkit, so the colors are converted 
+    # correctly when using cmd.exe
+    DEFAULT_STYLE = {
+        Color.BLACK: '#000000',
+        Color.BLUE: '#0000AA',
+        Color.CYAN: '#00AAAA',
+        Color.GREEN: '#00AA00',
+        Color.INTENSE_BLACK: '#444444',
+        Color.INTENSE_BLUE: '#4444FF',
+        Color.INTENSE_CYAN: '#44FFFF',
+        Color.INTENSE_GREEN: '#44FF44',
+        Color.INTENSE_PURPLE: '#FF44FF',
+        Color.INTENSE_RED: '#FF4444',
+        Color.INTENSE_WHITE: '#888888',
+        Color.INTENSE_YELLOW: '#FFFF44',
+        Color.NO_COLOR: 'noinherit',
+        Color.PURPLE: '#AA00AA',
+        Color.RED: '#AA0000',
+        Color.WHITE: '#FFFFFF',
+        Color.YELLOW: '#AAAA00',
+        }
 else:
     DEFAULT_STYLE = {
         Color.BLACK: '#000000',
