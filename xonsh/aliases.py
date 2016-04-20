@@ -244,7 +244,7 @@ def source_alias(args, stdin=None):
         if not os.path.isfile(fname):
             fname = locate_binary(fname)
         with open(fname, 'r') as fp:
-            execx(fp.read(), 'exec', builtins.__xonsh_ctx__)
+            builtins.execx(fp.read(), 'exec', builtins.__xonsh_ctx__)
 
 
 def source_cmd(args, stdin=None):

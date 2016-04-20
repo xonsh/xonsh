@@ -51,6 +51,7 @@ Current Developments
   at execution time rather than passing through a literal string.
 * Fixed environment variables from os.environ not beeing loaded when a running 
   a script
+* Fixed bug that prevented `source-alias` from working. 
 
 **Security:** None
 
