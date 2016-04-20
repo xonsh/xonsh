@@ -14,8 +14,13 @@ Current Developments
   $INTENSIFY_COLORS_ON_WIN environment variable.
 * Added ``Ellipsis`` lookup to ``__xonsh_env__`` to allow environment variable checks, e.g. ``'HOME' in ${...}``
 * Added an option to update ``os.environ`` every time the xonsh environment changes.
-  This disabled by default, but can be enabled by setting ``$UPDATE_OS_ENVIRON`` to
+  This is disabled by default but can be enabled by setting ``$UPDATE_OS_ENVIRON`` to
   True.
+* Added Windows 'cmd.exe' as a foreign shell. This gives xonsh the ability to source 
+  Windows Batch files (.bat and .cmd). Calling ``source-cmd script.bat`` will call 
+  the bat file and changes to the environment variables will be reflected in xonsh.
+* Added an alias for the conda environment activate/deactivate batch scripts when 
+  running the Anaconda python distribution on Windows.
 
 
 **Changed:**

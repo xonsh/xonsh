@@ -1004,11 +1004,14 @@ def _current_job():
 
 
 def env_name(pre_chars='(', post_chars=') '):
-    """Extract the current environment name from $VIRTUAL_ENV."""
-    env_path = __xonsh_env__.get('VIRTUAL_ENV', '')
-
+    """Extract the current environment name from $VIRTUAL_ENV or
+    $CONDA_DEFAULT_ENV if that is set
+    """
+    env_path = builtins.__xonsh_env__.get('VIRTUAL_ENV', '')
+    if len(env_path) == 0 and 'Anaconda' in sys.version:
+        pre_chars, post_chars = '[', '] '
+        env_path = builtins.__xonsh_env__.get('CONDA_DEFAULT_ENV', '')
     env_name = os.path.basename(env_path)
-
     return pre_chars + env_name + post_chars if env_name else ''
 
 
@@ -1032,6 +1035,7 @@ FORMATTER_DICT = dict(
     current_job=_current_job,
     env_name=env_name,
     )
+
 DEFAULT_VALUES['FORMATTER_DICT'] = dict(FORMATTER_DICT)
 
 _FORMATTER = string.Formatter()

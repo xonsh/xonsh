@@ -8,6 +8,7 @@ import builtins
 import subprocess
 from warnings import warn
 from functools import lru_cache
+from tempfile import NamedTemporaryFile
 from collections import MutableMapping, Mapping, Sequence
 
 from xonsh.tools import to_bool, ensure_string
@@ -44,7 +45,7 @@ shopt -s extdebug
 namelocfilestr=$(declare -F $funcnames)
 shopt -u extdebug
 
-# print just names and files as JSON object 
+# print just names and files as JSON object
 read -r -a namelocfile <<< $namelocfilestr
 sep=" "
 namefile="{"
@@ -70,7 +71,7 @@ for name in ${(ok)functions}; do
   loc=${(z)loc}
   file=${loc[7,-1]}
   namefile="${namefile}\\"${name}\\":\\"${(Q)file:A}\\","
-done 
+done
 if [[ "{" == "${namefile}" ]]; then
   namefile="${namefile}}"
 else
@@ -85,6 +86,7 @@ DEFAULT_ENVCMDS = {
     'zsh': 'env',
     '/bin/zsh': 'env',
     '/usr/bin/zsh': 'env',
+    'cmd': 'set',
 }
 DEFAULT_ALIASCMDS = {
     'bash': 'alias',
@@ -92,6 +94,7 @@ DEFAULT_ALIASCMDS = {
     'zsh': 'alias -L',
     '/bin/zsh': 'alias -L',
     '/usr/bin/zsh': 'alias -L',
+    'cmd': '',
 }
 DEFAULT_FUNCSCMDS = {
     'bash': DEFAULT_BASH_FUNCSCMD,
@@ -99,6 +102,7 @@ DEFAULT_FUNCSCMDS = {
     'zsh': DEFAULT_ZSH_FUNCSCMD,
     '/bin/zsh': DEFAULT_ZSH_FUNCSCMD,
     '/usr/bin/zsh': DEFAULT_ZSH_FUNCSCMD,
+    'cmd': '',
 }
 DEFAULT_SOURCERS = {
     'bash': 'source',
@@ -106,13 +110,32 @@ DEFAULT_SOURCERS = {
     'zsh': 'source',
     '/bin/zsh': 'source',
     '/usr/bin/zsh': 'source',
+    'cmd': 'call',
 }
+DEFAULT_TMPFILE_EXT = {
+    'bash': '.sh',
+    '/bin/bash': '.sh',
+    'zsh': '.zsh',
+    '/bin/zsh': '.zsh',
+    '/usr/bin/zsh': '.zsh',
+    'cmd': '.bat',
+}
+DEFAULT_RUNCMD = {
+    'bash': '-c',
+    '/bin/bash': '-c',
+    'zsh': '-c',
+    '/bin/zsh': '-c',
+    '/usr/bin/zsh': '-c',
+    'cmd': '/C',
+}
+
 
 @lru_cache()
 def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
                        aliascmd=None, extra_args=(), currenv=None,
                        safe=True, prevcmd='', postcmd='', funcscmd=None,
-                       sourcer=None):
+                       sourcer=None, use_tmpfile=False, tmpfile_ext=None,
+                       runcmd=None):
     """Extracts data from a foreign (non-xonsh) shells. Currently this gets
     the environment, aliases, and functions but may be extended in the future.
 
@@ -152,6 +175,11 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
         How to source a foreign shell file for purposes of calling functions
         in that shell. If this is None, a default value will attempt to be
         looked up based on the shell name.
+    use_tmpfile : bool, optional
+        This specifies if the commands are written to a tmp file or just
+        parsed directly to the shell
+    tmpfile_ext : str or None, optional
+        If tmpfile is True this sets specifies the extension used.
 
     Returns
     -------
@@ -167,13 +195,24 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
         cmd.append('-i')
     if login:
         cmd.append('-l')
-    cmd.append('-c')
     envcmd = DEFAULT_ENVCMDS.get(shell, 'env') if envcmd is None else envcmd
     aliascmd = DEFAULT_ALIASCMDS.get(shell, 'alias') if aliascmd is None else aliascmd
     funcscmd = DEFAULT_FUNCSCMDS.get(shell, 'echo {}') if funcscmd is None else funcscmd
+    tmpfile_ext = DEFAULT_TMPFILE_EXT.get(shell, 'sh') if tmpfile_ext is None else tmpfile_ext
+    runcmd = DEFAULT_RUNCMD.get(shell, '-c') if runcmd is None else runcmd
     command = COMMAND.format(envcmd=envcmd, aliascmd=aliascmd, prevcmd=prevcmd,
                              postcmd=postcmd, funcscmd=funcscmd).strip()
-    cmd.append(command)
+
+    cmd.append(runcmd)
+
+    if not use_tmpfile:
+        cmd.append(command)
+    else:
+        tmpfile = NamedTemporaryFile(suffix=tmpfile_ext, delete=False)
+        tmpfile.write(command.encode('utf8'))
+        tmpfile.close()
+        cmd.append(tmpfile.name)
+
     if currenv is None and hasattr(builtins, '__xonsh_env__'):
         currenv = builtins.__xonsh_env__.detype()
     elif currenv is not None:
@@ -187,6 +226,9 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
         if not safe:
             raise
         return {}, {}
+    finally:
+        if use_tmpfile:
+            os.remove(tmpfile.name)
     env = parse_env(s)
     aliases = parse_aliases(s)
     funcs = parse_funcs(s, shell=shell, sourcer=sourcer)
@@ -195,6 +237,7 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
 
 
 ENV_RE = re.compile('__XONSH_ENV_BEG__\n(.*)__XONSH_ENV_END__', flags=re.DOTALL)
+
 
 def parse_env(s):
     """Parses the environment portion of string into a dict."""
@@ -210,13 +253,14 @@ def parse_env(s):
 ALIAS_RE = re.compile('__XONSH_ALIAS_BEG__\n(.*)__XONSH_ALIAS_END__',
                       flags=re.DOTALL)
 
+
 def parse_aliases(s):
     """Parses the aliases portion of string into a dict."""
     m = ALIAS_RE.search(s)
     if m is None:
         return {}
     g1 = m.group(1)
-    items = [line.split('=', 1) for line in g1.splitlines() if \
+    items = [line.split('=', 1) for line in g1.splitlines() if
              line.startswith('alias ') and '=' in line]
     aliases = {}
     for key, value in items:
@@ -236,8 +280,9 @@ def parse_aliases(s):
     return aliases
 
 
-FUNCS_RE = re.compile('__XONSH_FUNCS_BEG__\n(.*)__XONSH_FUNCS_END__',
+FUNCS_RE = re.compile('__XONSH_FUNCS_BEG__\n(.+)\n__XONSH_FUNCS_END__',
                       flags=re.DOTALL)
+
 
 def parse_funcs(s, shell, sourcer=None):
     """Parses the funcs portion of a string into a dict of callable foreign

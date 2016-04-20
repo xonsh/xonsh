@@ -4,6 +4,7 @@
 import os
 import shlex
 import builtins
+import sys
 from argparse import ArgumentParser
 from collections.abc import MutableMapping, Iterable, Sequence
 
@@ -146,6 +147,7 @@ def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
 
 _SOURCE_FOREIGN_PARSER = None
 
+
 def _ensure_source_foreign_parser():
     global _SOURCE_FOREIGN_PARSER
     if _SOURCE_FOREIGN_PARSER is not None:
@@ -182,8 +184,12 @@ def _ensure_source_foreign_parser():
                         help='code to find locations of all native functions '
                              'in the shell language.')
     parser.add_argument('--sourcer', default=None, dest='sourcer',
-                        help='the source command in the target shell language, '
-                             'default: source.')
+                        help='the source command in the target shell '
+                        'language, default: source.')
+    parser.add_argument('--use-tmpfile', type=to_bool, default=False,
+                        help='whether the commands for source shell should be '
+                             'written to a temporary file.',
+                        dest='use_tmpfile')
     _SOURCE_FOREIGN_PARSER = parser
     return parser
 
@@ -196,16 +202,20 @@ def source_foreign(args, stdin=None):
         pass  # don't change prevcmd if given explicitly
     elif os.path.isfile(ns.files_or_code[0]):
         # we have filename to source
-        ns.prevcmd = '{0} "{1}"'.format(ns.sourcer, '" "'.join(ns.files_or_code))
+        ns.prevcmd = '{} "{}"'.format(ns.sourcer, '" "'.join(ns.files_or_code))
     elif ns.prevcmd is None:
         ns.prevcmd = ' '.join(ns.files_or_code)  # code to run, no files
     foreign_shell_data.cache_clear()  # make sure that we don't get prev src
     fsenv, fsaliases = foreign_shell_data(shell=ns.shell, login=ns.login,
-                            interactive=ns.interactive, envcmd=ns.envcmd,
-                            aliascmd=ns.aliascmd, extra_args=ns.extra_args,
-                            safe=ns.safe, prevcmd=ns.prevcmd,
-                            postcmd=ns.postcmd, funcscmd=ns.funcscmd,
-                            sourcer=ns.sourcer)
+                                          interactive=ns.interactive,
+                                          envcmd=ns.envcmd,
+                                          aliascmd=ns.aliascmd,
+                                          extra_args=ns.extra_args,
+                                          safe=ns.safe, prevcmd=ns.prevcmd,
+                                          postcmd=ns.postcmd,
+                                          funcscmd=ns.funcscmd,
+                                          sourcer=ns.sourcer,
+                                          use_tmpfile=ns.use_tmpfile)
     # apply results
     env = builtins.__xonsh_env__
     denv = env.detype()
@@ -213,6 +223,12 @@ def source_foreign(args, stdin=None):
         if k in denv and v == denv[k]:
             continue  # no change from original
         env[k] = v
+    # If run in un-safe mode we are sure the command completed correctly,
+    # thus we can remove any env-vars that were unset by the script.
+    if not ns.safe:
+        for k in denv:
+            if k not in fsenv:
+                env.pop(k, None)
     baliases = builtins.aliases
     for k, v in fsaliases.items():
         if k in baliases and v == baliases[k]:
@@ -220,30 +236,33 @@ def source_foreign(args, stdin=None):
         baliases[k] = v
 
 
-def source_bash(args, stdin=None):
-    """Simple Bash-specific wrapper around source-foreign."""
-    args = list(args)
-    args.insert(0, 'bash')
-    args.append('--sourcer=source')
-    return source_foreign(args, stdin=stdin)
-
-
-def source_zsh(args, stdin=None):
-    """Simple zsh-specific wrapper around source-foreign."""
-    args = list(args)
-    args.insert(0, 'zsh')
-    args.append('--sourcer=source')
-    return source_foreign(args, stdin=stdin)
-
-
 def source_alias(args, stdin=None):
     """Executes the contents of the provided files in the current context.
-    If sourced file isn't found in cwd, search for file along $PATH to source instead"""
+    If sourced file isn't found in cwd, search for file along $PATH to source
+    instead"""
     for fname in args:
         if not os.path.isfile(fname):
             fname = locate_binary(fname)
         with open(fname, 'r') as fp:
             execx(fp.read(), 'exec', builtins.__xonsh_ctx__)
+
+
+def source_cmd(args, stdin=None):
+    """Simple cmd.exe-specific wrapper around source-foreign."""
+    args = list(args)
+    fpath = locate_binary(args[0])
+    args[0] = fpath if fpath else args[0]
+    if not os.path.isfile(args[0]):
+        raise FileNotFoundError(args[0])
+    prevcmd = 'call "{}"\necho off'.format(args[0])
+    args.append('--prevcmd={}'.format(prevcmd))
+    args.insert(0, 'cmd')
+    args.append('--interactive=0')
+    args.append('--sourcer=call')
+    args.append('--envcmd=set')
+    args.append('--safe=0')
+    args.append('--use-tmpfile=1')
+    return source_foreign(args, stdin=stdin)
 
 
 def xexec(args, stdin=None):
@@ -331,8 +350,9 @@ def make_default_aliases():
         'quit': exit,
         'xexec': xexec,
         'source': source_alias,
-        'source-zsh': source_zsh,
-        'source-bash': source_bash,
+        'source-zsh': ['source-foreign', 'zsh', '--sourcer=source'],
+        'source-bash':  ['source-foreign', 'bash', '--sourcer=source'],
+        'source-cmd': source_cmd,
         'source-foreign': source_foreign,
         'history': history_alias,
         'replay': replay_main,
@@ -368,9 +388,22 @@ def make_default_aliases():
         }
         for alias in windows_cmd_aliases:
             default_aliases[alias] = ['cmd', '/c', alias]
+        default_aliases['call'] = ['source-cmd']
+        # Add aliases specific to the Anaconda python distribution.
+        if 'Anaconda' in sys.version:
+            def source_cmd_keep_prompt(args, stdin=None):
+                p = builtins.__xonsh_env__.get('PROMPT')
+                source_cmd(args, stdin=stdin)
+                builtins.__xonsh_env__['PROMPT'] = p
+            default_aliases['source-cmd-keep-promt'] = source_cmd_keep_prompt
+            default_aliases['activate'] = ['source-cmd-keep-promt',
+                                           'activate.bat']
+            default_aliases['deactivate'] = ['source-cmd-keep-promt',
+                                             'deactivate.bat']
         default_aliases['which'] = ['where']
         if not locate_binary('sudo'):
             import xonsh.winutils as winutils
+
             def sudo(args, sdin=None):
                 if len(args) < 1:
                     print('You need to provide an executable to run as '
@@ -380,11 +413,12 @@ def make_default_aliases():
                 if locate_binary(cmd):
                     return winutils.sudo(cmd, args[1:])
                 elif cmd.lower() in windows_cmd_aliases:
-                    return winutils.sudo('cmd',
-                                ['/D', '/C', 'CD', _get_cwd(), '&&'] + args)
+                    args = ['/D', '/C', 'CD', _get_cwd(), '&&'] + args
+                    return winutils.sudo('cmd', args)
                 else:
                     msg = 'Cannot find the path for executable "{0}".'
                     print(msg.format(cmd))
+
             default_aliases['sudo'] = sudo
     elif ON_MAC:
         default_aliases['ls'] = ['ls', '-G']
@@ -392,3 +426,4 @@ def make_default_aliases():
         default_aliases['grep'] = ['grep', '--color=auto']
         default_aliases['ls'] = ['ls', '--color=auto', '-v']
     return default_aliases
+
