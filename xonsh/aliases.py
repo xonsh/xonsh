@@ -254,7 +254,7 @@ def source_cmd(args, stdin=None):
     args[0] = fpath if fpath else args[0]
     if not os.path.isfile(args[0]):
         raise FileNotFoundError(args[0])
-    prevcmd = 'call "{}"'.format('" "'.join(args))
+    prevcmd = 'call {}'.format(' '.join(args))
     prevcmd += '\necho off'
     args.append('--prevcmd={}'.format(prevcmd))
     args.insert(0, 'cmd')
