@@ -422,14 +422,16 @@ def escape_windows_cmd_string(s):
 
 
 def argvquote(arg, force=False):
-    """ It Converts arguments to a command line such
-    that CommandLineToArgvW will return the argument string unchanged.
+    """ Returns an argument quoted in such a way that that CommandLineToArgvW
+    on Windows will return the argument string unchanged.
+    This is the same thing Popen does when supplied with an list of arguments.
     Arguments in a command line should be separated by spaces; this
-    function does not add these spaces. This follows the suggestions outlined
-    here: https://blogs.msdn.microsoft.com/twistylittlepassagesallalike/2011/04/23/everyone-quotes-command-line-arguments-the-wrong-way/
+    function does not add these spaces. This implementation follows the
+    suggestions outlined here:
+    https://blogs.msdn.microsoft.com/twistylittlepassagesallalike/2011/04/23/everyone-quotes-command-line-arguments-the-wrong-way/
     """
     if not force and len(arg) != 0 and not any([c in arg for c in ' \t\n\v"']):
-        cmdline = arg
+        return arg
     else:
         n_backslashes = 0
         cmdline = '"'
@@ -443,8 +445,7 @@ def argvquote(arg, force=False):
                 n_backslashes = 0
             else:
                 n_backslashes += 1
-        cmdline += n_backslashes * 2 * '\\' + '"'
-    return cmdline
+        return cmdline + n_backslashes * 2 * '\\' + '"'
 
 
 def on_main_thread():
