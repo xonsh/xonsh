@@ -18,6 +18,7 @@ from xonsh.replay import main as replay_main
 from xonsh.environ import locate_binary
 from xonsh.foreign_shells import foreign_shell_data
 from xonsh.vox import Vox
+from xonsh.tools import argvquote, escape_windows_cmd_string
 
 
 class Aliases(MutableMapping):
@@ -254,8 +255,10 @@ def source_cmd(args, stdin=None):
     args[0] = fpath if fpath else args[0]
     if not os.path.isfile(args[0]):
         raise FileNotFoundError(args[0])
-    prevcmd = 'call {}'.format(' '.join(args))
-    prevcmd += '\necho off'
+    prevcmd = 'call '
+    prevcmd += ' '.join([argvquote(arg,force=True) for arg in args])
+    prevcmd = escape_windows_cmd_string(prevcmd)
+    prevcmd += '\n@echo off'
     args.append('--prevcmd={}'.format(prevcmd))
     args.insert(0, 'cmd')
     args.append('--interactive=0')

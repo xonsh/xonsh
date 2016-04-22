@@ -410,15 +410,41 @@ def suggestion_sort_helper(x, y):
     return lendiff + inx + iny
 
 
-def escape_windows_title_string(s):
-    """Returns a string that is usable by the Windows cmd.exe title
-    builtin.  The escaping is based on details here and emperical testing:
+def escape_windows_cmd_string(s):
+    """Returns a string that is usable by the Windows cmd.exe.
+    The escaping is based on details here and emperical testing:
     http://www.robvanderwoude.com/escapechars.php
     """
-    for c in '^&<>|':
+    for c in '()%!^<>&|"':
         s = s.replace(c, '^' + c)
     s = s.replace('/?', '/.')
     return s
+
+
+def argvquote(arg, force=False):
+    """ It Converts arguments to a command line such
+    that CommandLineToArgvW will return the argument string unchanged.
+    Arguments in a command line should be separated by spaces; this
+    function does not add these spaces. This follows the suggestions outlined
+    here: https://blogs.msdn.microsoft.com/twistylittlepassagesallalike/2011/04/23/everyone-quotes-command-line-arguments-the-wrong-way/
+    """
+    if not force and len(arg) != 0 and not any([c in arg for c in ' \t\n\v"']):
+        cmdline = arg
+    else:
+        n_backslashes = 0
+        cmdline = '"'
+        for c in arg:
+            if c == '"':
+                cmdline += (n_backslashes * 2 + 1) * '\\'
+            else:
+                cmdline += n_backslashes * '\\'
+            if c != '\\':
+                cmdline += c
+                n_backslashes = 0
+            else:
+                n_backslashes += 1
+        cmdline += n_backslashes * 2 * '\\' + '"'
+    return cmdline
 
 
 def on_main_thread():

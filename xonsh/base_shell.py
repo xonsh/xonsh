@@ -6,7 +6,7 @@ import sys
 import time
 import builtins
 
-from xonsh.tools import XonshError, escape_windows_title_string, ON_WINDOWS, \
+from xonsh.tools import XonshError, escape_windows_cmd_string, ON_WINDOWS, \
     print_exception, HAVE_PYGMENTS
 from xonsh.completer import Completer
 from xonsh.environ import multiline_prompt, format_prompt
@@ -214,7 +214,7 @@ class BaseShell(object):
             return
         t = format_prompt(t)
         if ON_WINDOWS and 'ANSICON' not in env:
-            t = escape_windows_title_string(t)
+            t = escape_windows_cmd_string(t)
             os.system('title {}'.format(t))
         else:
             os.write(1, "\x1b]2;{0}\x07".format(t).encode())
