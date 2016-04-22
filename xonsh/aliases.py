@@ -256,7 +256,7 @@ def source_cmd(args, stdin=None):
     if not os.path.isfile(args[0]):
         raise FileNotFoundError(args[0])
     prevcmd = 'call '
-    prevcmd += ' '.join([argvquote(arg,force=True) for arg in args])
+    prevcmd += ' '.join([argvquote(arg, force=True) for arg in args])
     prevcmd = escape_windows_cmd_string(prevcmd)
     prevcmd += '\n@echo off'
     args.append('--prevcmd={}'.format(prevcmd))
