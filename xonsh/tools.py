@@ -140,10 +140,10 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
                 tok.lexpos = len(line)
             break
     else:
+        if len(toks) > 0 and toks[-1].type == 'SEMI':
+            toks.pop()
         if len(toks) == 0:
             return  # handle comment lines
-        if toks[-1].type == 'SEMI':
-            toks.pop()
         tok = toks[-1]
         pos = tok.lexpos
         if isinstance(tok.value, string_types):

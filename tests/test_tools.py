@@ -7,9 +7,9 @@ import nose
 from nose.tools import assert_equal, assert_true, assert_false
 
 from xonsh.lexer import Lexer
-from xonsh.tools import (subproc_toks, subexpr_from_unbalanced, is_int, 
-    always_true, always_false, ensure_string, is_env_path, str_to_env_path, 
-    env_path_to_str, escape_windows_cmd_string, is_bool, to_bool, bool_to_str, 
+from xonsh.tools import (subproc_toks, subexpr_from_unbalanced, is_int,
+    always_true, always_false, ensure_string, is_env_path, str_to_env_path,
+    env_path_to_str, escape_windows_cmd_string, is_bool, to_bool, bool_to_str,
     ensure_int_or_slice, is_float, is_string, check_for_partial_string,
     argvquote)
 
@@ -156,6 +156,11 @@ def test_subproc_hello_mom_second():
 def test_subproc_toks_comment():
     exp = None
     obs = subproc_toks('# I am a comment', lexer=LEXER, returnline=True)
+    assert_equal(exp, obs)
+
+def test_subproc_toks_semicolon_only():
+    exp = None
+    obs = subproc_toks(';', lexer=LEXER, returnline=True)
     assert_equal(exp, obs)
 
 def test_subexpr_from_unbalanced_parens():
