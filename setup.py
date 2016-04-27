@@ -74,7 +74,7 @@ def install_jupyter_hook(root=None):
         with open(os.path.join(d, 'kernel.json'), 'w') as f:
             json.dump(spec, f, sort_keys=True)
         if 'CONDA_BUILD' in os.environ:
-            root = self.prefix
+            root = sys.prefix
             if sys.platform == 'win32':
                 root = root.replace(os.sep, os.altsep)
         print('Installing Jupyter kernel spec...')
