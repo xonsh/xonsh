@@ -5,6 +5,7 @@ import os
 import shlex
 import builtins
 import sys
+import subprocess
 from argparse import ArgumentParser
 from collections.abc import MutableMapping, Iterable, Sequence
 
@@ -313,6 +314,37 @@ def bang_bang(args, stdin=None):
     return bang_n(['-1'])
 
 
+def which(args, stdin=None):
+    """
+    Checks if argument is a xonsh alias, then if it's an executable, then
+    finally throw an error.
+    If '-a' flag is passed, run both to return both `xonsh` match and
+    `which` match
+    """
+    match = set(args).intersection(builtins.aliases)
+    #skip alias check if user asks a skip or the version number
+    if (match and
+      not '--skip-alias' in args and
+      not {'--version','-v','-V'}.intersection(set(args))):
+        match = match.pop()
+        print('{} -> {}'.format(match,builtins.aliases[match]))
+        if '-a' in args:
+            try:
+                subprocess.run(['which'] + args,
+                               stderr=subprocess.PIPE,
+                               check=True)
+            except subprocess.CalledProcessError:
+                pass
+    else:
+        try:
+            subprocess.run(['which'] + args,
+                           stderr=subprocess.PIPE,
+                           check=True)
+        except subprocess.CalledProcessError:
+            raise XonshError('{} not in {} or xonsh.builtins.aliases'
+                            .format(args[0], ':'.join(__xonsh_env__['PATH'])))
+
+
 def xonfig(args, stdin=None):
     """Runs the xonsh configuration utility."""
     from xonsh.xonfig import main  # lazy import
@@ -369,6 +401,7 @@ def make_default_aliases():
         'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
         'ipynb': ['jupyter', 'notebook', '--no-browser'],
         'vox': vox,
+        'which': which,
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.
