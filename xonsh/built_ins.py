@@ -176,9 +176,13 @@ def _iglobpath(s, ignore_case=False):
     s = expand_path(s)
     if ignore_case:
         s = expand_case_matching(s)
-    if '**' in s and '**/*' not in s:
-        s = s.replace('**', '**/*')
-    return iglob(s, recursive=True), s
+    if sys.version_info > (3, 5):
+        if '**' in s and '**/*' not in s:
+            s = s.replace('**', '**/*')
+        # `recursive` is only a 3.5+ kwarg. 
+        return iglob(s, recursive=True), s
+    else:
+        return iglob(s), s
 
 def iglobpath(s, ignore_case=False):
     """Simple wrapper around iglob that also expands home and env vars."""
