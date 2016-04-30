@@ -453,7 +453,6 @@ def make_default_aliases():
                                            'activate.bat']
             default_aliases['deactivate'] = ['source-cmd-keep-promt',
                                              'deactivate.bat']
-        default_aliases['which'] = ['where']
         if not locate_binary('sudo'):
             import xonsh.winutils as winutils
 
