@@ -314,6 +314,12 @@ def bang_bang(args, stdin=None):
     return bang_n(['-1'])
 
 
+def which_version():
+    """Returns output from system `which -v`"""
+    _ver = subprocess.run(['which','-v'], stdout=subprocess.PIPE)
+    return(_ver.stdout.decode('utf-8'))
+
+
 def which(args, stdin=None):
     """
     Checks if argument is a xonsh alias, then if it's an executable, then
@@ -321,14 +327,23 @@ def which(args, stdin=None):
     If '-a' flag is passed, run both to return both `xonsh` match and
     `which` match
     """
-    match = set(args).intersection(builtins.aliases)
-    #skip alias check if user asks a skip or the version number
-    if (match and
-      not '--skip-alias' in args and
-      not {'--version','-v','-V'}.intersection(set(args))):
-        match = match.pop()
-        print('{} -> {}'.format(match,builtins.aliases[match]))
-        if '-a' in args:
+    desc = "Parses arguments to which wrapper"
+    parser = ArgumentParser('which', description=desc)
+    parser.add_argument('arg', type=str, default='-h',
+                        help='The executable or alias to search for')
+    parser.add_argument('-a', action='store_true', dest='all',
+                        help='Show all matches in $PATH and xonsh.aliases')
+    parser.add_argument('-s', '--skip-alias', action='store_true',
+                        help='Do not search in xonsh.aliases', dest='skip')
+    parser.add_argument('-v', '-V', '--version', action='version',
+                        version='{}'.format(which_version()))
+
+    pargs = parser.parse_args(args)
+    #skip alias check if user asks to skip
+    if (pargs.arg in builtins.aliases and not pargs.skip):
+        match = pargs.arg
+        print('{} -> {}'.format(match, builtins.aliases[match]))
+        if pargs.all:
             try:
                 subprocess.run(['which'] + args,
                                stderr=subprocess.PIPE,
