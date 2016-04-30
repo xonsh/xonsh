@@ -329,7 +329,7 @@ def which(args, stdin=None):
     """
     desc = "Parses arguments to which wrapper"
     parser = ArgumentParser('which', description=desc)
-    parser.add_argument('arg', type=str, default='-h',
+    parser.add_argument('arg', type=str,
                         help='The executable or alias to search for')
     parser.add_argument('-a', action='store_true', dest='all',
                         help='Show all matches in $PATH and xonsh.aliases')
