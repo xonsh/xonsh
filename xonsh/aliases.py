@@ -5,6 +5,7 @@ import os
 import shlex
 import builtins
 import sys
+import subprocess
 from argparse import ArgumentParser
 from collections.abc import MutableMapping, Iterable, Sequence
 
@@ -313,6 +314,52 @@ def bang_bang(args, stdin=None):
     return bang_n(['-1'])
 
 
+def which_version():
+    """Returns output from system `which -v`"""
+    _ver = subprocess.run(['which','-v'], stdout=subprocess.PIPE)
+    return(_ver.stdout.decode('utf-8'))
+
+
+def which(args, stdin=None):
+    """
+    Checks if argument is a xonsh alias, then if it's an executable, then
+    finally throw an error.
+    If '-a' flag is passed, run both to return both `xonsh` match and
+    `which` match
+    """
+    desc = "Parses arguments to which wrapper"
+    parser = ArgumentParser('which', description=desc)
+    parser.add_argument('arg', type=str,
+                        help='The executable or alias to search for')
+    parser.add_argument('-a', action='store_true', dest='all',
+                        help='Show all matches in $PATH and xonsh.aliases')
+    parser.add_argument('-s', '--skip-alias', action='store_true',
+                        help='Do not search in xonsh.aliases', dest='skip')
+    parser.add_argument('-v', '-V', '--version', action='version',
+                        version='{}'.format(which_version()))
+
+    pargs = parser.parse_args(args)
+    #skip alias check if user asks to skip
+    if (pargs.arg in builtins.aliases and not pargs.skip):
+        match = pargs.arg
+        print('{} -> {}'.format(match, builtins.aliases[match]))
+        if pargs.all:
+            try:
+                subprocess.run(['which'] + args,
+                               stderr=subprocess.PIPE,
+                               check=True)
+            except subprocess.CalledProcessError:
+                pass
+    else:
+        try:
+            subprocess.run(['which'] + args,
+                           stderr=subprocess.PIPE,
+                           check=True)
+        except subprocess.CalledProcessError:
+            raise XonshError('{} not in {} or xonsh.builtins.aliases'
+                            .format(args[0], ':'.join(__xonsh_env__['PATH'])))
+
+
 def xonfig(args, stdin=None):
     """Runs the xonsh configuration utility."""
     from xonsh.xonfig import main  # lazy import
@@ -369,6 +416,7 @@ def make_default_aliases():
         'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
         'ipynb': ['jupyter', 'notebook', '--no-browser'],
         'vox': vox,
+        'which': which,
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.
@@ -405,7 +453,6 @@ def make_default_aliases():
                                            'activate.bat']
             default_aliases['deactivate'] = ['source-cmd-keep-promt',
                                              'deactivate.bat']
-        default_aliases['which'] = ['where']
         if not locate_binary('sudo'):
             import xonsh.winutils as winutils
 

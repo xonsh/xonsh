@@ -23,6 +23,8 @@ Current Developments
 * Added an alias for the conda environment activate/deactivate batch scripts when 
   running the Anaconda python distribution on Windows.
 * Added a menu entry to launch xonsh when installing xonsh from a conda package
+* Added a new ``which`` alias that supports both regular ``which`` and also searches
+  through xonsh aliases
 
 
 **Changed:**
