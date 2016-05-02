@@ -96,3 +96,15 @@ manually use the ``$[]`` or ``$()`` operators on your code.
 Yes, context-sensitive parsing is gross. But the point of xonsh is that it uses xontext-sensitive parsing and 
 is ultimately a lot less gross than other shell languages, such as BASH.
 Furthermore, its use is heavily limited here.
+
+
+
+6. Gotchas
+----------
+
+There are a few gotchas when using xonsh across multiple versions of Python,
+where some behavior can differ, as the underlying Python might behave
+differently.
+
+For example double star globbing `**` will only work on Python 3.5+ (ie not on 3.4)
+as recursive globbing is `new in Python 3.5 <https://docs.python.org/3/library/glob.html#glob.glob>`_
