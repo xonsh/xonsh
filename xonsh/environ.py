@@ -887,7 +887,7 @@ def get_hg_branch(cwd=None, root=None):
             with open(branch_path, 'r') as branch_file:
                 branch = branch_file.read()
         else:
-            branch = call_hg_command(['branch'], cwd)
+            branch = 'default'
 
         if os.path.exists(bookmark_path):
             with open(bookmark_path, 'r') as bookmark_file:
