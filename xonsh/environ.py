@@ -114,12 +114,12 @@ if ON_WINDOWS:
     DEFAULT_PROMPT = ('{env_name}'
                       '{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} '
                       '{cwd}{branch_color}{curr_branch}{NO_COLOR} '
-                      '{BOLD_INTENSE_CYAN}{prompt_end}{NO_COLOR} ')
+                      '{end_color}{prompt_end}{NO_COLOR} ')
 else:
     DEFAULT_PROMPT = ('{env_name}'
                       '{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
                       '{cwd}{branch_color}{curr_branch}{NO_COLOR} '
-                      '{BOLD_BLUE}{prompt_end}{NO_COLOR} ')
+                      '{end_color}{prompt_end}{NO_COLOR} ')
 
 DEFAULT_TITLE = '{current_job}{user}@{hostname}: {cwd} | xonsh'
 
@@ -913,6 +913,23 @@ def current_branch(pad=True):
     return branch or ''
 
 
+def end_color():
+    if __xonsh_history__.rtns:
+        color = 'blue' if __xonsh_history__.rtns[-1] == 0 else 'red'
+    else:
+        color = 'blue'
+    if ON_WINDOWS:
+        if color == 'blue':
+            return '{BOLD_INTENSE_CYAN}'
+        elif color == 'red':
+            return '{BOLD_INTENSE_RED}'
+    else:
+        if color == 'blue':
+            return '{BOLD_BLUE}'
+        elif color == 'red':
+            return '{BOLD_RED}'
+
+
 def git_dirty_working_directory(cwd=None, include_untracked=False):
     try:
         cmd = ['git', 'status', '--porcelain']
@@ -1023,6 +1040,7 @@ else:
 
 FORMATTER_DICT = dict(
     user=os.environ.get(USER, '<user>'),
+    end_color=end_color,
     prompt_end='#' if IS_ROOT else '$',
     hostname=socket.gethostname().split('.', 1)[0],
     cwd=_replace_home_cwd,
