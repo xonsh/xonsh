@@ -2,6 +2,7 @@
 """The prompt_toolkit based xonsh shell."""
 import builtins
 
+from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.key_binding.manager import KeyBindingManager
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.layout.lexers import PygmentsLexer
@@ -36,7 +37,6 @@ class PromptToolkitShell(BaseShell):
             enable_auto_suggest_bindings=True,
             enable_search=True,
             enable_abort_and_exit_bindings=True,
-            enable_vi_mode=Condition(lambda cli: builtins.__xonsh_env__.get('VI_MODE')),
             enable_open_in_editor=True)
         load_xonsh_bindings(self.key_bindings_manager)
 
@@ -53,6 +53,12 @@ class PromptToolkitShell(BaseShell):
         else:
             history = None
             enable_history_search = False
+
+        if builtins.__xonsh_env__.get('VI_MODE'):
+            editing_mode = EditingMode.VI
+        else:
+            editing_mode = EditingMode.EMACS
+
         auto_suggest = auto_suggest if env.get('AUTO_SUGGEST') else None
         completions_display = env.get('COMPLETIONS_DISPLAY')
         multicolumn = (completions_display == 'multi')
@@ -75,9 +81,9 @@ class PromptToolkitShell(BaseShell):
                     get_continuation_tokens=self.continuation_tokens,
                     history=history,
                     enable_history_search=enable_history_search,
-                    reserve_space_for_menu=0,
                     key_bindings_registry=self.key_bindings_manager.registry,
-                    display_completions_in_columns=multicolumn)
+                    display_completions_in_columns=multicolumn,
+                    editing_mode=editing_mode)
         return line
 
     def push(self, line):
