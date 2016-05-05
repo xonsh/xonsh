@@ -218,6 +218,8 @@ def source_foreign(args, stdin=None):
                                           funcscmd=ns.funcscmd,
                                           sourcer=ns.sourcer,
                                           use_tmpfile=ns.use_tmpfile)
+    if fsenv is None:
+        return (None, "xonsh: error: Failed to source: {}".format(ns.prevcmd), 1)
     # apply results
     env = builtins.__xonsh_env__
     denv = env.detype()
@@ -227,10 +229,9 @@ def source_foreign(args, stdin=None):
         env[k] = v
     # If run in un-safe mode we are sure the command completed correctly,
     # thus we can remove any env-vars that were unset by the script.
-    if not ns.safe:
-        for k in denv:
-            if k not in fsenv:
-                env.pop(k, None)
+    for k in denv:
+        if k not in fsenv:
+            env.pop(k, None)
     baliases = builtins.aliases
     for k, v in fsaliases.items():
         if k in baliases and v == baliases[k]:

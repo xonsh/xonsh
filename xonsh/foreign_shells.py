@@ -225,7 +225,7 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
     except (subprocess.CalledProcessError, FileNotFoundError):
         if not safe:
             raise
-        return {}, {}
+        return None, None
     finally:
         if use_tmpfile:
             os.remove(tmpfile.name)
@@ -474,7 +474,8 @@ def load_foreign_envs(shells=None, config=None, issue_warning=True):
     for shell in shells:
         shell = ensure_shell(shell)
         shenv, _ = foreign_shell_data(**shell)
-        env.update(shenv)
+        if shenv:
+            env.update(shenv)
     return env
 
 
@@ -503,5 +504,6 @@ def load_foreign_aliases(shells=None, config=None, issue_warning=True):
     for shell in shells:
         shell = ensure_shell(shell)
         _, shaliases = foreign_shell_data(**shell)
-        aliases.update(shaliases)
+        if shaliases:
+            aliases.update(shaliases)
     return aliases
