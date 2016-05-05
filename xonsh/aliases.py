@@ -219,7 +219,8 @@ def source_foreign(args, stdin=None):
                                           sourcer=ns.sourcer,
                                           use_tmpfile=ns.use_tmpfile)
     if fsenv is None:
-        return (None, "xonsh: error: Failed to source: {}".format(ns.prevcmd), 1)
+        return (None, 'xonsh: error: Failed to source: '
+                      '{}\n'.format(ns.prevcmd), 1)
     # apply results
     env = builtins.__xonsh_env__
     denv = env.detype()
@@ -227,11 +228,11 @@ def source_foreign(args, stdin=None):
         if k in denv and v == denv[k]:
             continue  # no change from original
         env[k] = v
-    # If run in un-safe mode we are sure the command completed correctly,
-    # thus we can remove any env-vars that were unset by the script.
+    # Remove any env-vars that were unset by the script.
     for k in denv:
         if k not in fsenv:
             env.pop(k, None)
+    # Update aliases
     baliases = builtins.aliases
     for k, v in fsaliases.items():
         if k in baliases and v == baliases[k]:
@@ -283,7 +284,7 @@ def xexec(args, stdin=None):
         except FileNotFoundError as e:
             return 'xonsh: ' + e.args[1] + ': ' + args[0] + '\n'
     else:
-        return 'xonsh: exec: no args specified\n'
+        return (None, 'xonsh: exec: no args specified\n', 1)
 
 
 _BANG_N_PARSER = None
