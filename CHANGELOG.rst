@@ -25,6 +25,7 @@ Current Developments
 * Added a menu entry to launch xonsh when installing xonsh from a conda package
 * Added a new ``which`` alias that supports both regular ``which`` and also searches
   through xonsh aliases
+* Add support for prompt_toolkit_1.0.0
 
 
 **Changed:**

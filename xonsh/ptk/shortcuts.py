@@ -71,7 +71,7 @@ class Prompter(object):
             if self.major_minor <= (0, 57):
                 kwargs.pop('get_rprompt_tokens', None)
                 kwargs.pop('get_continuation_tokens', None)
-            #VI_Mode handling changed in prompt_toolkit v1.0
+            # VI_Mode handling changed in prompt_toolkit v1.0
             if self.major_minor >= (1, 0):
                 from prompt_toolkit.enums import EditingMode
                 if builtins.__xonsh_env__.get('VI_MODE'):
