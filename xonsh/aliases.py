@@ -219,7 +219,7 @@ def source_foreign(args, stdin=None):
                                           sourcer=ns.sourcer,
                                           use_tmpfile=ns.use_tmpfile)
     if fsenv is None:
-        return (None, 'xonsh: error: Failed to source: '
+        return (None, 'xonsh: error: Source failed: '
                       '{}\n'.format(ns.prevcmd), 1)
     # apply results
     env = builtins.__xonsh_env__
@@ -257,7 +257,7 @@ def source_cmd(args, stdin=None):
     fpath = locate_binary(args[0])
     args[0] = fpath if fpath else args[0]
     if not os.path.isfile(args[0]):
-        raise FileNotFoundError(args[0])
+        return (None, 'xonsh: error: File not found: {}\n'.format(args[0]), 1)
     prevcmd = 'call '
     prevcmd += ' '.join([argvquote(arg, force=True) for arg in args])
     prevcmd = escape_windows_cmd_string(prevcmd)
@@ -267,7 +267,7 @@ def source_cmd(args, stdin=None):
     args.append('--interactive=0')
     args.append('--sourcer=call')
     args.append('--envcmd=set')
-    args.append('--safe=0')
+    args.append('--postcmd=if errorlevel 1 exit 1')
     args.append('--use-tmpfile=1')
     return source_foreign(args, stdin=stdin)
 
@@ -282,7 +282,8 @@ def xexec(args, stdin=None):
         try:
             os.execvpe(args[0], args, denv)
         except FileNotFoundError as e:
-            return 'xonsh: ' + e.args[1] + ': ' + args[0] + '\n'
+            return (None, 'xonsh: exec: file not found: {}: {}'
+                          '\n'.format(e.args[1], args[0]), 1)
     else:
         return (None, 'xonsh: exec: no args specified\n', 1)
 
