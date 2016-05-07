@@ -66,9 +66,14 @@ dictionaries have the following structure:
 :runcmd : *str or None, optional* - Command line switches to use when
     running the script, such as ``-c`` for Bash and ``/C`` for cmd.exe.
     ``default=null``
-:seterrcmd : *str or None, optional* - Command that enables exit-on-error
-    for the shell. For example, this is "set -e" in Bash. To disable
-    exit-on-error behavior, simply pass in an empty string. ``default=null``
+:seterrprevcmd : *str or None, optional* - Command that enables exit-on-error
+    for the shell before all other commands. For example, this is "set -e" in Bash.
+    To disable this exit-on-error behavior, simply pass in an empty string.
+    ``default=null``
+:seterrpostcmd : *str or None, optional* - Command that enables exit-on-error
+    for the shell after all other commands. For example, this is "set -e" in Bash.
+    To disable this exit-on-error behavior, simply pass in an empty string.
+    ``default=null``
 
 
 Some examples can be seen below:

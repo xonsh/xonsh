@@ -15,7 +15,7 @@ from xonsh.tools import to_bool, ensure_string
 
 
 COMMAND = """
-{seterrcmd}
+{seterrprevcmd}
 {prevcmd}
 echo __XONSH_ENV_BEG__
 {envcmd}
@@ -27,6 +27,7 @@ echo __XONSH_FUNCS_BEG__
 {funcscmd}
 echo __XONSH_FUNCS_END__
 {postcmd}
+{seterrpostcmd}
 """.strip()
 
 DEFAULT_BASH_FUNCSCMD = """
@@ -122,10 +123,15 @@ DEFAULT_RUNCMD = {
     'zsh': '-c',
     'cmd': '/C',
 }
-DEFAULT_SETERRCMD = {
+DEFAULT_SETERRPREVCMD = {
     'bash': 'set -e',
     'zsh': 'set -e',
     'cmd': '',
+}
+DEFAULT_SETERRPOSTCMD = {
+    'bash': '',
+    'zsh': '',
+    'cmd': 'if errorlevel 1 exit 1',
 }
 
 
@@ -134,7 +140,7 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
                        aliascmd=None, extra_args=(), currenv=None,
                        safe=True, prevcmd='', postcmd='', funcscmd=None,
                        sourcer=None, use_tmpfile=False, tmpfile_ext=None,
-                       runcmd=None, seterrcmd=None):
+                       runcmd=None, seterrprevcmd=None, seterrpostcmd=None):
     """Extracts data from a foreign (non-xonsh) shells. Currently this gets
     the environment, aliases, and functions but may be extended in the future.
 
@@ -182,10 +188,15 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
     runcmd : str or None, optional
         Command line switches to use when running the script, such as
         -c for Bash and /C for cmd.exe.
-    seterrcmd : str or None, optional
-        Command that enables exit-on-error for the shell. For example, this
-        is "set -e" in Bash. To disable exit-on-error behavior, simply pass
-        in an empty string.
+    seterrprevcmd : str or None, optional
+        Command that enables exit-on-error for the shell that is run at the
+        start of the script. For example, this is "set -e" in Bash. To disable
+        exit-on-error behavior, simply pass in an empty string.
+    seterrpostcmd : str or None, optional
+        Command that enables exit-on-error for the shell that is run at the end
+        of the script. For example, this is "if errorlevel 1 exit 1" in
+        cmd.exe. To disable exit-on-error behavior, simply pass in an
+        empty string.
 
     Returns
     -------
@@ -207,10 +218,14 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
     funcscmd = DEFAULT_FUNCSCMDS.get(shkey, 'echo {}') if funcscmd is None else funcscmd
     tmpfile_ext = DEFAULT_TMPFILE_EXT.get(shkey, 'sh') if tmpfile_ext is None else tmpfile_ext
     runcmd = DEFAULT_RUNCMD.get(shkey, '-c') if runcmd is None else runcmd
-    seterrcmd = DEFAULT_SETERRCMD.get(shkey, '') if seterrcmd is None else seterrcmd
+    seterrprevcmd = DEFAULT_SETERRPREVCMD.get(shkey, '') \
+                        if seterrprevcmd is None else seterrprevcmd
+    seterrpostcmd = DEFAULT_SETERRPOSTCMD.get(shkey, '') \
+                        if seterrpostcmd is None else seterrpostcmd
     command = COMMAND.format(envcmd=envcmd, aliascmd=aliascmd, prevcmd=prevcmd,
                              postcmd=postcmd, funcscmd=funcscmd,
-                             seterrcmd=seterrcmd).strip()
+                             seterrprevcmd=seterrprevcmd,
+                             seterrpostcmd=seterrpostcmd).strip()
 
     cmd.append(runcmd)
 
@@ -433,9 +448,12 @@ def ensure_shell(shell):
     if 'sourcer' in shell_keys:
         shell['sourcer'] = None if shell['sourcer'] is None \
                                  else ensure_string(shell['sourcer'])
-    if 'seterrcmd' in shell_keys:
-        shell['seterrcmd'] = None if shell['seterrcmd'] is None \
-                                 else ensure_string(shell['seterrcmd'])
+    if 'seterrprevcmd' in shell_keys:
+        shell['seterrprevcmd'] = None if shell['seterrprevcmd'] is None \
+                                 else ensure_string(shell['seterrprevcmd'])
+    if 'seterrpostcmd' in shell_keys:
+        shell['seterrpostcmd'] = None if shell['seterrpostcmd'] is None \
+                                 else ensure_string(shell['seterrpostcmd'])
     return shell
 
 

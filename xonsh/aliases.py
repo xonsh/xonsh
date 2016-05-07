@@ -192,6 +192,12 @@ def _ensure_source_foreign_parser():
                         help='whether the commands for source shell should be '
                              'written to a temporary file.',
                         dest='use_tmpfile')
+    parser.add_argument('--seterrprevcmd', default=None, dest='seterrprevcmd',
+                        help='command(s) to set exit-on-error before any'
+                             'other commands.')
+    parser.add_argument('--seterrpostcmd', default=None, dest='seterrpostcmd',
+                        help='command(s) to set exit-on-error after all'
+                             'other commands.')
     _SOURCE_FOREIGN_PARSER = parser
     return parser
 
@@ -217,7 +223,9 @@ def source_foreign(args, stdin=None):
                                           postcmd=ns.postcmd,
                                           funcscmd=ns.funcscmd,
                                           sourcer=ns.sourcer,
-                                          use_tmpfile=ns.use_tmpfile)
+                                          use_tmpfile=ns.use_tmpfile,
+                                          seterrprevcmd=ns.seterrprevcmd,
+                                          seterrpostcmd=ns.seterrpostcmd)
     if fsenv is None:
         return (None, 'xonsh: error: Source failed: '
                       '{}\n'.format(ns.prevcmd), 1)
@@ -267,7 +275,7 @@ def source_cmd(args, stdin=None):
     args.append('--interactive=0')
     args.append('--sourcer=call')
     args.append('--envcmd=set')
-    args.append('--postcmd=if errorlevel 1 exit 1')
+    args.append('--seterrpostcmd=if errorlevel 1 exit 1')
     args.append('--use-tmpfile=1')
     return source_foreign(args, stdin=stdin)
 
