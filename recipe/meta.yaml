@@ -15,12 +15,10 @@ build:
 requirements:
   build:
     - python
-    - ply
     - setuptools
     - jupyter
   run:
     - python
-    - ply
     - prompt_toolkit
     - setproctitle
     - pygments
