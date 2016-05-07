@@ -16,11 +16,11 @@ Current Developments
 * Added an option to update ``os.environ`` every time the xonsh environment changes.
   This is disabled by default but can be enabled by setting ``$UPDATE_OS_ENVIRON`` to
   True.
-* Added Windows 'cmd.exe' as a foreign shell. This gives xonsh the ability to source 
-  Windows Batch files (.bat and .cmd). Calling ``source-cmd script.bat`` or the 
-  alias ``source-bat script.bat`` will call the bat file and changes to the 
+* Added Windows 'cmd.exe' as a foreign shell. This gives xonsh the ability to source
+  Windows Batch files (.bat and .cmd). Calling ``source-cmd script.bat`` or the
+  alias ``source-bat script.bat`` will call the bat file and changes to the
   environment variables will be reflected in xonsh.
-* Added an alias for the conda environment activate/deactivate batch scripts when 
+* Added an alias for the conda environment activate/deactivate batch scripts when
   running the Anaconda python distribution on Windows.
 * Added a menu entry to launch xonsh when installing xonsh from a conda package
 * Added a new ``which`` alias that supports both regular ``which`` and also searches
@@ -54,11 +54,12 @@ Current Developments
   the line.
 * Aliases will now evaluate enviornment variables and other expansions
   at execution time rather than passing through a literal string.
-* Fixed environment variables from os.environ not beeing loaded when a running 
+* Fixed environment variables from os.environ not beeing loaded when a running
   a script
-* Fixed bug that prevented `source-alias` from working. 
+* Fixed bug that prevented `source-alias` from working.
+* Now able to ``^C`` the xonfig wizard on start up.
 * Fixed deadlock on Windows when runing subprocess that generates enough output
-  to fill the OS pipe buffer 
+  to fill the OS pipe buffer
 
 **Security:** None
 
