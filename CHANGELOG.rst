@@ -40,7 +40,9 @@ Current Developments
   environments
 * Regexpath matching with backticks, now returns an empty list in python mode.
 * Pygments added as a dependency for the conda package
-
+* PLY is no longer a external dependency but is bundled in xonsh/ply. Xonsh can
+  therefore run without any external dependencies, although having prompt-toolkit 
+  recommended. 
 
 
 **Deprecated:** None
