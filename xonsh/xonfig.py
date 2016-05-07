@@ -9,8 +9,7 @@ import itertools
 from pprint import pformat
 from argparse import ArgumentParser
 
-import ply
-
+from xonsh import ply
 from xonsh import __version__ as XONSH_VERSION
 from xonsh import tools
 from xonsh.environ import is_template_string

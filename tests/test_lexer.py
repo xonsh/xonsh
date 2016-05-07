@@ -9,7 +9,7 @@ from pprint import pformat
 
 import nose
 
-from ply.lex import LexToken
+from xonsh.ply.lex import LexToken
 
 from xonsh.lexer import Lexer
 
