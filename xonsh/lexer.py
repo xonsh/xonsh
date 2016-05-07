@@ -8,7 +8,10 @@ import tokenize
 from io import BytesIO
 from keyword import kwlist
 
-from xonsh.ply.lex import LexToken
+try:
+    from ply.lex import LexToken
+except ImportError:
+    from xonsh.ply.lex import LexToken
 
 from xonsh.tools import VER_3_5, VER_MAJOR_MINOR
 
