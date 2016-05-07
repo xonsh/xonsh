@@ -14,7 +14,7 @@ try:
 except ImportError:
     from xonsh import ply
 
-    from xonsh import __version__ as XONSH_VERSION
+from xonsh import __version__ as XONSH_VERSION
 from xonsh import tools
 from xonsh.environ import is_template_string
 from xonsh.shell import (is_readline_available, is_prompt_toolkit_available,
