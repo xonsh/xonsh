@@ -9,7 +9,10 @@ import itertools
 from pprint import pformat
 from argparse import ArgumentParser
 
-import ply
+try:
+    import ply
+except ImportError:
+    from xonsh import ply
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh import tools
