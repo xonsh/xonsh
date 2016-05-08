@@ -32,7 +32,7 @@ def check_exec(input):
         EXECER.exec(input)
 
 def check_eval(input):
-    with mock_xonsh_env(None):
+    with mock_xonsh_env({'AUTO_CD': False}):
         EXECER.debug_level = DEBUG_LEVEL
         EXECER.eval(input)
 
@@ -57,12 +57,14 @@ else:
     def test_bin_ls():
         yield check_eval, '/bin/ls -l'
 
-    def test_ls_dashl():
-        yield check_eval, 'ls -l'
+def test_ls_dashl():
+    yield check_parse, 'ls -l'
 
-    def test_which_ls():
-        yield check_eval, 'which ls'
+def test_which_ls():
+    yield check_parse, 'which ls'
 
+def test_echo_hello():
+    yield check_parse, 'echo hello'
 
 def test_simple_func():
     code = ('def prompt():\n'

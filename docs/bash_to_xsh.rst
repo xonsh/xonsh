@@ -31,6 +31,12 @@ will help you put a finger on how to do the equivelent task in xonsh.
     * - ``set -x``
       - ``trace on``
       - Turns on tracing of source code lines during execution.
+    * - ``&&``
+      - ``and`` or ``&&``
+      - Logical-and operator for subprocesses.
+    * - ``||``
+      - ``or`` as well as ``||``
+      - Logical-or operator for subprocesses.
     * - ``$?``
       - ``__xonsh_history__.rtns[-1]``
       - Returns the exit code, or status, of the previous command.

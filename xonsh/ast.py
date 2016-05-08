@@ -42,8 +42,10 @@ def leftmostname(node):
         rtn = leftmostname(node.value)
     elif isinstance(node, Call):
         rtn = leftmostname(node.func)
-    elif isinstance(node, (BinOp, Compare)):
-        rtn = leftmostname(node.left)
+    elif isinstance(node, UnaryOp):
+        rtn = leftmostname(node.operand)
+    elif isinstance(node, BoolOp):
+        rtn = leftmostname(node.values[0])
     elif isinstance(node, Assign):
         rtn = leftmostname(node.targets[0])
     elif isinstance(node, (Str, Bytes)):
@@ -70,6 +72,13 @@ def max_col(node):
     if col is None:
         col = max(map(get_col, walk(node)))
     return col
+
+
+def isdescendable(node):
+    """Deteremines whether or not a node is worth visiting. Currently only
+    UnaryOp and BoolOp nodes are visited.
+    """
+    return isinstance(node, (UnaryOp, BoolOp))
 
 
 class CtxAwareTransformer(NodeTransformer):
@@ -131,13 +140,13 @@ class CtxAwareTransformer(NodeTransformer):
                 ctx.remove(value)
                 break
 
-    def try_subproc_toks(self, node):
+    def try_subproc_toks(self, node, strip_expr=False):
         """Tries to parse the line of the node as a subprocess."""
         line = self.lines[node.lineno - 1]
         if self.mode == 'eval':
             mincol = len(line) - len(line.lstrip())
             maxcol = None
-        else: 
+        else:
             mincol = min_col(node)
             maxcol = max_col(node) + 1
         spline = subproc_toks(line,
@@ -145,6 +154,8 @@ class CtxAwareTransformer(NodeTransformer):
                               maxcol=maxcol,
                               returnline=False,
                               lexer=self.parser.lexer)
+        if spline is None:
+            return node
         try:
             newnode = self.parser.parse(spline, mode=self.mode)
             newnode = newnode.body
@@ -155,6 +166,8 @@ class CtxAwareTransformer(NodeTransformer):
             newnode.col_offset = node.col_offset
         except SyntaxError:
             newnode = node
+        if strip_expr and isinstance(newnode, Expr):
+            newnode = newnode.value
         return newnode
 
     def is_in_scope(self, node):
@@ -169,8 +182,14 @@ class CtxAwareTransformer(NodeTransformer):
                 break
         return inscope
 
+    #
+    # Replacement visitors
+    #
+
     def visit_Expression(self, node):
         """Handle visiting an expression body."""
+        if isdescendable(node.body):
+            node.body = self.visit(node.body)
         body = node.body
         inscope = self.is_in_scope(body)
         if not inscope:
@@ -179,6 +198,8 @@ class CtxAwareTransformer(NodeTransformer):
 
     def visit_Expr(self, node):
         """Handle visiting an expression."""
+        if isdescendable(node.value):
+            node.value = self.visit(node.value)  # this allows diving into BoolOps
         if self.is_in_scope(node):
             return node
         else:
@@ -191,6 +212,31 @@ class CtxAwareTransformer(NodeTransformer):
                     newnode.max_lineno = node.max_lineno
                     newnode.max_col = node.max_col
             return newnode
+
+    def visit_UnaryOp(self, node):
+        """Handle visiting an unary operands, like not."""
+        if isdescendable(node.operand):
+            node.operand = self.visit(node.operand)
+        operand = node.operand
+        inscope = self.is_in_scope(operand)
+        if not inscope:
+            node.operand = self.try_subproc_toks(operand, strip_expr=True)
+        return node
+
+    def visit_BoolOp(self, node):
+        """Handle visiting an boolean operands, like and/or."""
+        for i in range(len(node.values)):
+            val = node.values[i]
+            if isdescendable(val):
+                val = node.values[i] = self.visit(val)
+            inscope = self.is_in_scope(val)
+            if not inscope:
+                node.values[i] = self.try_subproc_toks(val, strip_expr=True)
+        return node
+
+    #
+    # Context aggregator visitors
+    #
 
     def visit_Assign(self, node):
         """Handle visiting an assignment statement."""
@@ -308,6 +354,6 @@ def pdump(s, **kwargs):
     if '(' in post or '[' in post or '{' in post:
         post = pdump(post)
     return pre + mid + post
-    
+
 
 
