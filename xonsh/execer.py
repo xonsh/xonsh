@@ -67,7 +67,7 @@ class Execer(object):
         # tokens for all of the Python rules. The lazy way implemented here
         # is to parse a line a second time with a $() wrapper if it fails
         # the first time. This is a context-free phase.
-        tree = self._parse_ctx_free(input, mode=mode)
+        tree, input = self._parse_ctx_free(input, mode=mode)
         if tree is None:
             return None
 
@@ -207,4 +207,4 @@ class Execer(object):
                     lines[idx] = sbpline
                 last_error_col += 3
                 input = '\n'.join(lines)
-        return tree
+        return tree, input

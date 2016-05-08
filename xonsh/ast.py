@@ -74,6 +74,13 @@ def max_col(node):
     return col
 
 
+def isdescendable(node):
+    """Deteremines whether or not a node is worth visiting. Currently only
+    UnaryOp and BoolOp nodes are visited.
+    """
+    return isinstance(node, (UnaryOp, BoolOp))
+
+
 class CtxAwareTransformer(NodeTransformer):
     """Transforms a xonsh AST based to use subprocess calls when
     the first name in an expression statement is not known in the context.
@@ -147,7 +154,8 @@ class CtxAwareTransformer(NodeTransformer):
                               maxcol=maxcol,
                               returnline=False,
                               lexer=self.parser.lexer)
-        #import pdb; pdb.set_trace()
+        if spline is None:
+            return node
         try:
             newnode = self.parser.parse(spline, mode=self.mode)
             newnode = newnode.body
@@ -180,7 +188,8 @@ class CtxAwareTransformer(NodeTransformer):
 
     def visit_Expression(self, node):
         """Handle visiting an expression body."""
-        node.body = self.visit(node.body)
+        if isdescendable(node.body):
+            node.body = self.visit(node.body)
         body = node.body
         inscope = self.is_in_scope(body)
         if not inscope:
@@ -189,7 +198,8 @@ class CtxAwareTransformer(NodeTransformer):
 
     def visit_Expr(self, node):
         """Handle visiting an expression."""
-        node.value = self.visit(node.value)  # this allows diving into BoolOps
+        if isdescendable(node.value):
+            node.value = self.visit(node.value)  # this allows diving into BoolOps
         if self.is_in_scope(node):
             return node
         else:
@@ -204,8 +214,9 @@ class CtxAwareTransformer(NodeTransformer):
             return newnode
 
     def visit_UnaryOp(self, node):
-        """Handle visiting an unary operands, like for not."""
-        node.operand = self.visit(node.operand)
+        """Handle visiting an unary operands, like not."""
+        if isdescendable(node.operand):
+            node.operand = self.visit(node.operand)
         operand = node.operand
         inscope = self.is_in_scope(operand)
         if not inscope:
@@ -213,10 +224,11 @@ class CtxAwareTransformer(NodeTransformer):
         return node
 
     def visit_BoolOp(self, node):
-        """Handle visiting an boolean operands, like for and/or."""
+        """Handle visiting an boolean operands, like and/or."""
         for i in range(len(node.values)):
-            node.values[i] = self.visit(node.values[i])
             val = node.values[i]
+            if isdescendable(val):
+                val = node.values[i] = self.visit(val)
             inscope = self.is_in_scope(val)
             if not inscope:
                 node.values[i] = self.try_subproc_toks(val, strip_expr=True)
