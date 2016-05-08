@@ -9,7 +9,11 @@ from pprint import pformat
 
 import nose
 
-from ply.lex import LexToken
+try:
+    from ply.lex import LexToken
+except ImportError:
+    from xonsh.ply.lex import LexToken
+    
 
 from xonsh.lexer import Lexer
 
@@ -132,6 +136,18 @@ def test_multiline():
 
 def test_and():
     yield check_token, 'and', ['AND', 'and', 0]
+
+def test_ampersand():
+    yield check_token, '&', ['AMPERSAND', '&', 0]
+
+def test_doubleamp():
+    yield check_token, '&&', ['AND', 'and', 0]
+
+def test_pipe():
+    yield check_token, '|', ['PIPE', '|', 0]
+
+def test_doublepipe():
+    yield check_token, '||', ['OR', 'or', 0]
 
 def test_single_quote_literal():
     yield check_token, "'yo'", ['STRING', "'yo'", 0]

@@ -15,6 +15,7 @@ from xonsh.tools import to_bool, ensure_string
 
 
 COMMAND = """
+{seterrprevcmd}
 {prevcmd}
 echo __XONSH_ENV_BEG__
 {envcmd}
@@ -26,6 +27,7 @@ echo __XONSH_FUNCS_BEG__
 {funcscmd}
 echo __XONSH_FUNCS_END__
 {postcmd}
+{seterrpostcmd}
 """.strip()
 
 DEFAULT_BASH_FUNCSCMD = """
@@ -80,53 +82,56 @@ fi
 echo ${namefile}
 """.strip()
 
+# mapping of shell name alises to keys in other lookup dictionaries.
+CANON_SHELL_NAMES = {
+    'bash': 'bash',
+    '/bin/bash': 'bash',
+    'zsh': 'zsh',
+    '/bin/zsh': 'zsh',
+    '/usr/bin/zsh': 'zsh',
+    'cmd': 'cmd',
+    'cmd.exe': 'cmd',
+}
+
 DEFAULT_ENVCMDS = {
     'bash': 'env',
-    '/bin/bash': 'env',
     'zsh': 'env',
-    '/bin/zsh': 'env',
-    '/usr/bin/zsh': 'env',
     'cmd': 'set',
 }
 DEFAULT_ALIASCMDS = {
     'bash': 'alias',
-    '/bin/bash': 'alias',
     'zsh': 'alias -L',
-    '/bin/zsh': 'alias -L',
-    '/usr/bin/zsh': 'alias -L',
     'cmd': '',
 }
 DEFAULT_FUNCSCMDS = {
     'bash': DEFAULT_BASH_FUNCSCMD,
-    '/bin/bash': DEFAULT_BASH_FUNCSCMD,
     'zsh': DEFAULT_ZSH_FUNCSCMD,
-    '/bin/zsh': DEFAULT_ZSH_FUNCSCMD,
-    '/usr/bin/zsh': DEFAULT_ZSH_FUNCSCMD,
     'cmd': '',
 }
 DEFAULT_SOURCERS = {
     'bash': 'source',
-    '/bin/bash': 'source',
     'zsh': 'source',
-    '/bin/zsh': 'source',
-    '/usr/bin/zsh': 'source',
     'cmd': 'call',
 }
 DEFAULT_TMPFILE_EXT = {
     'bash': '.sh',
-    '/bin/bash': '.sh',
     'zsh': '.zsh',
-    '/bin/zsh': '.zsh',
-    '/usr/bin/zsh': '.zsh',
     'cmd': '.bat',
 }
 DEFAULT_RUNCMD = {
     'bash': '-c',
-    '/bin/bash': '-c',
     'zsh': '-c',
-    '/bin/zsh': '-c',
-    '/usr/bin/zsh': '-c',
     'cmd': '/C',
+}
+DEFAULT_SETERRPREVCMD = {
+    'bash': 'set -e',
+    'zsh': 'set -e',
+    'cmd': '@echo off',
+}
+DEFAULT_SETERRPOSTCMD = {
+    'bash': '',
+    'zsh': '',
+    'cmd': 'if errorlevel 1 exit 1',
 }
 
 
@@ -135,7 +140,7 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
                        aliascmd=None, extra_args=(), currenv=None,
                        safe=True, prevcmd='', postcmd='', funcscmd=None,
                        sourcer=None, use_tmpfile=False, tmpfile_ext=None,
-                       runcmd=None):
+                       runcmd=None, seterrprevcmd=None, seterrpostcmd=None):
     """Extracts data from a foreign (non-xonsh) shells. Currently this gets
     the environment, aliases, and functions but may be extended in the future.
 
@@ -180,6 +185,18 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
         parsed directly to the shell
     tmpfile_ext : str or None, optional
         If tmpfile is True this sets specifies the extension used.
+    runcmd : str or None, optional
+        Command line switches to use when running the script, such as
+        -c for Bash and /C for cmd.exe.
+    seterrprevcmd : str or None, optional
+        Command that enables exit-on-error for the shell that is run at the
+        start of the script. For example, this is "set -e" in Bash. To disable
+        exit-on-error behavior, simply pass in an empty string.
+    seterrpostcmd : str or None, optional
+        Command that enables exit-on-error for the shell that is run at the end
+        of the script. For example, this is "if errorlevel 1 exit 1" in
+        cmd.exe. To disable exit-on-error behavior, simply pass in an
+        empty string.
 
     Returns
     -------
@@ -195,13 +212,20 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
         cmd.append('-i')
     if login:
         cmd.append('-l')
-    envcmd = DEFAULT_ENVCMDS.get(shell, 'env') if envcmd is None else envcmd
-    aliascmd = DEFAULT_ALIASCMDS.get(shell, 'alias') if aliascmd is None else aliascmd
-    funcscmd = DEFAULT_FUNCSCMDS.get(shell, 'echo {}') if funcscmd is None else funcscmd
-    tmpfile_ext = DEFAULT_TMPFILE_EXT.get(shell, 'sh') if tmpfile_ext is None else tmpfile_ext
-    runcmd = DEFAULT_RUNCMD.get(shell, '-c') if runcmd is None else runcmd
+    shkey = CANON_SHELL_NAMES[shell]
+    envcmd = DEFAULT_ENVCMDS.get(shkey, 'env') if envcmd is None else envcmd
+    aliascmd = DEFAULT_ALIASCMDS.get(shkey, 'alias') if aliascmd is None else aliascmd
+    funcscmd = DEFAULT_FUNCSCMDS.get(shkey, 'echo {}') if funcscmd is None else funcscmd
+    tmpfile_ext = DEFAULT_TMPFILE_EXT.get(shkey, 'sh') if tmpfile_ext is None else tmpfile_ext
+    runcmd = DEFAULT_RUNCMD.get(shkey, '-c') if runcmd is None else runcmd
+    seterrprevcmd = DEFAULT_SETERRPREVCMD.get(shkey, '') \
+                        if seterrprevcmd is None else seterrprevcmd
+    seterrpostcmd = DEFAULT_SETERRPOSTCMD.get(shkey, '') \
+                        if seterrpostcmd is None else seterrpostcmd
     command = COMMAND.format(envcmd=envcmd, aliascmd=aliascmd, prevcmd=prevcmd,
-                             postcmd=postcmd, funcscmd=funcscmd).strip()
+                             postcmd=postcmd, funcscmd=funcscmd,
+                             seterrprevcmd=seterrprevcmd,
+                             seterrpostcmd=seterrpostcmd).strip()
 
     cmd.append(runcmd)
 
@@ -424,6 +448,12 @@ def ensure_shell(shell):
     if 'sourcer' in shell_keys:
         shell['sourcer'] = None if shell['sourcer'] is None \
                                  else ensure_string(shell['sourcer'])
+    if 'seterrprevcmd' in shell_keys:
+        shell['seterrprevcmd'] = None if shell['seterrprevcmd'] is None \
+                                 else ensure_string(shell['seterrprevcmd'])
+    if 'seterrpostcmd' in shell_keys:
+        shell['seterrpostcmd'] = None if shell['seterrpostcmd'] is None \
+                                 else ensure_string(shell['seterrpostcmd'])
     return shell
 
 

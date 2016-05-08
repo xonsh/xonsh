@@ -139,8 +139,6 @@ def main():
         cmdclass={'install': xinstall, 'sdist': xsdist},
         )
     if HAVE_SETUPTOOLS:
-        skw['setup_requires'] = ['ply']
-        skw['install_requires'] = ['ply']
         skw['entry_points'] = {
             'pygments.lexers': ['xonsh = xonsh.pyghooks:XonshLexer',
                                 'xonshcon = xonsh.pyghooks:XonshConsoleLexer',

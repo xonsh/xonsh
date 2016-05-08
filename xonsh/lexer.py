@@ -8,7 +8,10 @@ import tokenize
 from io import BytesIO
 from keyword import kwlist
 
-from ply.lex import LexToken
+try:
+    from ply.lex import LexToken
+except ImportError:
+    from xonsh.ply.lex import LexToken
 
 from xonsh.tools import VER_3_5, VER_MAJOR_MINOR
 
@@ -32,6 +35,7 @@ _op_map = {
     '~': 'TILDE', '^': 'XOR', '<<': 'LSHIFT', '>>': 'RSHIFT',
     '<': 'LT', '<=': 'LE', '>': 'GT', '>=': 'GE', '==': 'EQ',
     '!=': 'NE', '->': 'RARROW',
+    '&&': 'AND', '||': 'OR',
     # assignment operators
     '=': 'EQUALS', '+=': 'PLUSEQUAL', '-=': 'MINUSEQUAL',
     '*=': 'TIMESEQUAL', '@=': 'ATEQUAL', '/=': 'DIVEQUAL', '%=': 'MODEQUAL',
@@ -92,6 +96,14 @@ def handle_name(state, token, stream):
             else:
                 state['last'] = n
                 yield _new_token('IOREDIRECT', string, token.start)
+        elif token.string == 'and':
+            yield _new_token('AND', token.string, token.start)
+            if n is not None:
+                yield from handle_token(state, n, stream)
+        elif token.string == 'or':
+            yield _new_token('OR', token.string, token.start)
+            if n is not None:
+                yield from handle_token(state, n, stream)
         else:
             yield _new_token('NAME', token.string, token.start)
             if n is not None:
@@ -143,8 +155,33 @@ def _make_special_handler(token_type, extra_check=lambda x: True):
 handle_number = _make_special_handler('NUMBER')
 """Function for handling number tokens"""
 
-handle_ampersand = _make_special_handler('AMPERSAND')
-"""Function for handling ampersand tokens"""
+def handle_ampersands(state, token, stream):
+    """Function for generating PLY tokens for single and double ampersands."""
+    n = next(stream, None)
+    if n is not None and n.type == tokenize.OP and \
+            n.string == '&' and n.start == token.end:
+        state['last'] = n
+        yield _new_token('AND', 'and', token.start)
+    else:
+        state['last'] = token
+        if state['pymode'][-1][0]:
+            yield _new_token('AMPERSAND', token.string, token.start)
+        if n is not None:
+            yield from handle_token(state, n, stream)
+
+
+def handle_pipes(state, token, stream):
+    """Function for generating PLY tokens for single and double pipes."""
+    n = next(stream, None)
+    if n is not None and n.type == tokenize.OP and \
+            n.string == '|' and n.start == token.end:
+        state['last'] = n
+        yield _new_token('OR', 'or', token.start)
+    else:
+        state['last'] = token
+        yield _new_token('PIPE', token.string, token.start)
+        if n is not None:
+            yield from handle_token(state, n, stream)
 
 
 def handle_dollar(state, token, stream):
@@ -378,7 +415,10 @@ special_handlers = {
     tokenize.NAME: handle_name,
     tokenize.NUMBER: handle_number,
     tokenize.ERRORTOKEN: handle_error_token,
-    (tokenize.OP, '&'): handle_ampersand,
+    (tokenize.OP, '|'): handle_pipes,
+    (tokenize.OP, '||'): handle_pipes,
+    (tokenize.OP, '&'): handle_ampersands,
+    (tokenize.OP, '&&'): handle_ampersands,
     (tokenize.OP, '@'): handle_at,
     (tokenize.OP, '('): handle_lparen,
     (tokenize.OP, ')'): handle_rparen,

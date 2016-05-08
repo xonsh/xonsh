@@ -5,7 +5,7 @@ Xonsh currently has the following external dependencies,
 *Run Time:*
 
     #. Python v3.4+
-    #. PLY
+    #. PLY (optional, included with xonsh)
     #. prompt-toolkit (optional)
     #. Jupyter (optional)
     #. setproctitle (optional)

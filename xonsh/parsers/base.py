@@ -2,7 +2,10 @@
 """Implements the base xonsh parser."""
 from collections import Iterable, Sequence, Mapping
 
-from ply import yacc
+try:
+    from ply import yacc
+except ImportError:
+    from xonsh.ply import yacc
 
 from xonsh import ast
 from xonsh.lexer import Lexer, LexToken
