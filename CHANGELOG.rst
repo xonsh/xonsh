@@ -43,6 +43,9 @@ Current Developments
 * Foreign shells now allow for setting exit-on-error commands before and after
   all other commands via the ``seterrprevcmd`` and ``seterrpostcmd`` arguments.
   Sensinble defaults are provided for existing shells.
+* PLY is no longer a external dependency but is bundled in xonsh/ply. Xonsh can
+  therefore run without any external dependencies, although having prompt-toolkit
+  recommended.
 
 
 **Deprecated:** None
