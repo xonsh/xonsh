@@ -7,10 +7,11 @@ import nose
 from nose.tools import assert_equal, assert_true, assert_false
 
 from xonsh.lexer import Lexer
-from xonsh.tools import subproc_toks, subexpr_from_unbalanced, is_int, \
-    always_true, always_false, ensure_string, is_env_path, str_to_env_path, \
-    env_path_to_str, escape_windows_title_string, is_bool, to_bool, bool_to_str, \
-    ensure_int_or_slice, is_float, is_string, check_for_partial_string
+from xonsh.tools import (subproc_toks, subexpr_from_unbalanced, is_int,
+    always_true, always_false, ensure_string, is_env_path, str_to_env_path,
+    env_path_to_str, escape_windows_cmd_string, is_bool, to_bool, bool_to_str,
+    ensure_int_or_slice, is_float, is_string, check_for_partial_string,
+    argvquote)
 
 LEXER = Lexer()
 LEXER.build()
@@ -187,6 +188,11 @@ def test_subproc_toks_paren_and_paren():
     obs = subproc_toks('(echo a) and (echo b)', maxcol=9, lexer=LEXER, returnline=True)
     assert_equal(exp, obs)
 
+def test_subproc_toks_semicolon_only():
+    exp = None
+    obs = subproc_toks(';', lexer=LEXER, returnline=True)
+    assert_equal(exp, obs)
+
 def test_subexpr_from_unbalanced_parens():
     cases = [
         ('f(x.', 'x.'),
@@ -303,18 +309,36 @@ def test_ensure_int_or_slice():
         obs = ensure_int_or_slice(inp)
         yield assert_equal, exp, obs
 
-def test_escape_windows_title_string():
+
+def test_escape_windows_cmd_string():
     cases = [
         ('', ''),
         ('foo', 'foo'),
         ('foo&bar', 'foo^&bar'),
-        ('foo$?-/_"\\', 'foo$?-/_"\\'),
+        ('foo$?-/_"\\', 'foo$?-/_^"\\'),
         ('^&<>|', '^^^&^<^>^|'),
         ('this /?', 'this /.')
         ]
     for st, esc in cases:
-        obs = escape_windows_title_string(st)
+        obs = escape_windows_cmd_string(st)
         yield assert_equal, esc, obs
+
+
+def test_argvquote():
+    cases = [
+        ('', '""'),
+        ('foo', 'foo'),
+        (r'arg1 "hallo, "world""  "\some\path with\spaces")',
+         r'"arg1 \"hallo, \"world\"\"  \"\some\path with\spaces\")"'),
+        (r'"argument"2" argument3 argument4',
+         r'"\"argument\"2\" argument3 argument4"'),
+        (r'"\foo\bar bar\foo\" arg',
+         r'"\"\foo\bar bar\foo\\\" arg"')
+        ]
+    for st, esc in cases:
+        obs = argvquote(st)
+        yield assert_equal, esc, obs
+
 
 _leaders = ('', 'not empty')
 _r = ('r', '')

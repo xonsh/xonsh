@@ -94,8 +94,8 @@ class Shell(object):
             from xonsh.base_shell import BaseShell as shell_class
         elif shell_type == 'prompt_toolkit':
             vptk = prompt_toolkit_version()
-            minor = int(vptk.split('.')[1])
-            if minor < 57 or vptk == '<0.57':  # TODO: remove in future
+            major,minor = [int(x) for x in vptk.split('.')[:2]]
+            if (major,minor) < (0, 57) or vptk == '<0.57':  # TODO: remove in future
                 msg = ('prompt-toolkit version < v0.57 and may not work as '
                        'expected. Please update.')
                 warn(msg, RuntimeWarning)

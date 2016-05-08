@@ -6,6 +6,7 @@ import time
 import signal
 import builtins
 from subprocess import TimeoutExpired
+from io import BytesIO
 
 from xonsh.tools import ON_WINDOWS
 
@@ -41,13 +42,16 @@ if ON_WINDOWS:
             return
         while obj.returncode is None:
             try:
-                obj.wait(0.01)
+                outs, errs = obj.communicate(timeout=0.01)
             except TimeoutExpired:
                 pass
             except KeyboardInterrupt:
                 obj.kill()
+                outs, errs = obj.communicate()
         if obj.poll() is not None:
             builtins.__xonsh_active_job__ = None
+            obj.stdout = BytesIO(outs)
+            obj.stderr = BytesIO(errs)
 
 else:
     def _continue(obj):

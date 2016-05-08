@@ -52,12 +52,12 @@ parser.add_argument('-c',
                     dest='command',
                     required=False,
                     default=None)
-parser.add_argument('-i',
+parser.add_argument('-i', '--interactive',
                     help='force running in interactive mode',
                     dest='force_interactive',
                     action='store_true',
                     default=False)
-parser.add_argument('-l',
+parser.add_argument('-l', '--login',
                     help='run as a login shell',
                     dest='login',
                     action='store_true',
@@ -105,7 +105,7 @@ def arg_undoers():
         '-h': (lambda args: setattr(args, 'help', False)),
         '-V': (lambda args: setattr(args, 'version', False)),
         '-c': (lambda args: setattr(args, 'command', None)),
-        '-i': (lambda args: setattr(args, 'force_interactive', Fals)),
+        '-i': (lambda args: setattr(args, 'force_interactive', False)),
         '-l': (lambda args: setattr(args, 'login', False)),
         '-c': (lambda args: setattr(args, 'command', None)),
         '--config-path': (lambda args: delattr(args, 'config_path')),
@@ -115,6 +115,9 @@ def arg_undoers():
         }
     au['--help'] = au['-h']
     au['--version'] = au['-V']
+    au['--interactive'] = au['-i']
+    au['--login'] = au['-l']
+
     return au
 
 def undo_args(args):

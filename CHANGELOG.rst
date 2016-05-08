@@ -17,8 +17,18 @@ Current Developments
   $INTENSIFY_COLORS_ON_WIN environment variable.
 * Added ``Ellipsis`` lookup to ``__xonsh_env__`` to allow environment variable checks, e.g. ``'HOME' in ${...}``
 * Added an option to update ``os.environ`` every time the xonsh environment changes.
-  This disabled by default, but can be enabled by setting ``$UPDATE_OS_ENVIRON`` to
+  This is disabled by default but can be enabled by setting ``$UPDATE_OS_ENVIRON`` to
   True.
+* Added Windows 'cmd.exe' as a foreign shell. This gives xonsh the ability to source
+  Windows Batch files (.bat and .cmd). Calling ``source-cmd script.bat`` or the
+  alias ``source-bat script.bat`` will call the bat file and changes to the
+  environment variables will be reflected in xonsh.
+* Added an alias for the conda environment activate/deactivate batch scripts when
+  running the Anaconda python distribution on Windows.
+* Added a menu entry to launch xonsh when installing xonsh from a conda package
+* Added a new ``which`` alias that supports both regular ``which`` and also searches
+  through xonsh aliases
+* Add support for prompt_toolkit_1.0.0
 
 **Changed:**
 
@@ -31,6 +41,10 @@ Current Developments
 * Left and Right arrows in the ``prompt_toolkit`` shell now wrap in multiline
   environments
 * Regexpath matching with backticks, now returns an empty list in python mode.
+* Pygments added as a dependency for the conda package
+* PLY is no longer a external dependency but is bundled in xonsh/ply. Xonsh can
+  therefore run without any external dependencies, although having prompt-toolkit
+  recommended.
 
 **Deprecated:** None
 
@@ -39,7 +53,15 @@ Current Developments
 **Fixed:**
 
 * Fixed bug with loading prompt-toolkit shell < v0.57.
-* Fixed bug with prompt-toolkit completion when the cursor is not at the end of the line
+* Fixed bug with prompt-toolkit completion when the cursor is not at the end of
+  the line.
+* Aliases will now evaluate enviornment variables and other expansions
+  at execution time rather than passing through a literal string.
+* Fixed environment variables from os.environ not beeing loaded when a running
+  a script
+* Fixed bug that prevented `source-alias` from working.
+* Fixed deadlock on Windows when runing subprocess that generates enough output
+  to fill the OS pipe buffer
 
 **Security:** None
 

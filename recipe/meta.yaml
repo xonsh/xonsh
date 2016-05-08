@@ -6,7 +6,9 @@ source:
    git_url: ../
 
 build:
+  script: python setup.py install --single-version-externally-managed --record=record.txt
   number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
+  skip: True  # [py2k]
   entry_points:
     - xonsh = xonsh.main:main
 
@@ -21,13 +23,14 @@ requirements:
     - ply
     - prompt_toolkit
     - setproctitle
+    - pygments
+
+app:
+  entry: xonsh
+  icon: ../docs/_static/ascii_conch_part_color.png
 
 about:
   home: http://xon.sh/
   license: BSD
   summary: xonsh is a Python-ish, BASHwards-facing shell.
 
-# Removed temporarily until this is better support by the Anaconda launcher
-#app:
-#  entry: xonsh
-#  icon: icon.png

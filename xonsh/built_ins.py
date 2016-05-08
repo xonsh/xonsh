@@ -17,7 +17,7 @@ import tempfile
 from glob import glob, iglob
 from subprocess import Popen, PIPE, STDOUT, CalledProcessError
 from contextlib import contextmanager
-from collections import Sequence, MutableMapping, Iterable
+from collections import Sequence, Iterable
 
 from xonsh.tools import (
     suggest_commands, XonshError, ON_POSIX, ON_WINDOWS, string_types,
@@ -29,6 +29,7 @@ from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
                         SimpleForegroundProcProxy, TeePTYProc,
                         CompletedCommand, HiddenCompletedCommand)
+from xonsh.aliases import Aliases, make_default_aliases
 from xonsh.history import History
 from xonsh.foreign_shells import load_foreign_aliases
 
@@ -53,118 +54,6 @@ def resetting_signal_handle(sig, f):
         if sig != 0:
             sys.exit(sig)
     signal.signal(sig, newh)
-
-
-class Aliases(MutableMapping):
-    """Represents a location to hold and look up aliases."""
-
-    def __init__(self, *args, **kwargs):
-        self._raw = {}
-        self.update(*args, **kwargs)
-
-    def get(self, key, default=None):
-        """Returns the (possibly modified) value. If the key is not present,
-        then `default` is returned.
-        If the value is callable, it is returned without modification. If it
-        is an iterable of strings it will be evaluated recursively to expand
-        other aliases, resulting in a new list or a "partially applied"
-        callable.
-        """
-        val = self._raw.get(key)
-        if val is None:
-            return default
-        elif isinstance(val, Iterable) or callable(val):
-            return self.eval_alias(val, seen_tokens={key})
-        else:
-            msg = 'alias of {!r} has an inappropriate type: {!r}'
-            raise TypeError(msg.format(key, val))
-
-    def eval_alias(self, value, seen_tokens, acc_args=[]):
-        """
-        "Evaluates" the alias `value`, by recursively looking up the leftmost
-        token and "expanding" if it's also an alias.
-
-        A value like ["cmd", "arg"] might transform like this:
-        > ["cmd", "arg"] -> ["ls", "-al", "arg"] -> callable()
-        where `cmd=ls -al` and `ls` is an alias with its value being a
-        callable.  The resulting callable will be "partially applied" with
-        ["-al", "arg"].
-        """
-        # Beware of mutability: default values for keyword args are evaluated
-        # only once.
-        if callable(value):
-            if acc_args:  # Partial application
-                def _alias(args, stdin=None):
-                    args = [expand_path(i) for i in (acc_args + args)]
-                    return value(args, stdin=stdin)
-                return _alias
-            else:
-                return value
-        else:
-            token, *rest = value
-            if token in seen_tokens or token not in self._raw:
-                # ^ Making sure things like `egrep=egrep --color=auto` works,
-                # and that `l` evals to `ls --color=auto -CF` if `l=ls -CF`
-                # and `ls=ls --color=auto`
-                return value + acc_args
-            else:
-                return self.eval_alias(self._raw[token],
-                                       seen_tokens | {token},
-                                       rest + acc_args)
-
-    def expand_alias(self, line):
-        """Expands any aliases present in line if alias does not point to a
-        builtin function and if alias is only a single command.
-        """
-        word = line.split(' ', 1)[0]
-        if word in builtins.aliases and isinstance(self.get(word), Sequence):
-            word_idx = line.find(word)
-            expansion = ' '.join(self.get(word))
-            line = line[:word_idx] + expansion + line[word_idx+len(word):]
-        return line
-
-    #
-    # Mutable mapping interface
-    #
-
-    def __getitem__(self, key):
-        return self._raw[key]
-
-    def __setitem__(self, key, val):
-        if isinstance(val, string_types):
-            self._raw[key] = shlex.split(val)
-        else:
-            self._raw[key] = val
-
-    def __delitem__(self, key):
-        del self._raw[key]
-
-    def update(self, *args, **kwargs):
-        for key, val in dict(*args, **kwargs).items():
-            self[key] = val
-
-    def __iter__(self):
-        yield from self._raw
-
-    def __len__(self):
-        return len(self._raw)
-
-    def __str__(self):
-        return str(self._raw)
-
-    def __repr__(self):
-        return '{0}.{1}({2})'.format(self.__class__.__module__,
-                                     self.__class__.__name__, self._raw)
-
-    def _repr_pretty_(self, p, cycle):
-        name = '{0}.{1}'.format(self.__class__.__module__,
-                                self.__class__.__name__)
-        with p.group(0, name + '(', ')'):
-            if cycle:
-                p.text('...')
-            elif len(self):
-                p.break_()
-                p.pretty(dict(self))
 
 
 def helper(x, name=''):
@@ -278,19 +167,26 @@ def regexpath(s, pymode=False):
 
 def globpath(s, ignore_case=False):
     """Simple wrapper around glob that also expands home and env vars."""
-    s = expand_path(s)
-    if ignore_case:
-        s = expand_case_matching(s)
-    o = glob(s)
+    o, s = _iglobpath(s, ignore_case=ignore_case)
+    o = list(o)
     return o if len(o) != 0 else [s]
 
 
-def iglobpath(s, ignore_case=False):
-    """Simple wrapper around iglob that also expands home and env vars."""
+def _iglobpath(s, ignore_case=False):
     s = expand_path(s)
     if ignore_case:
         s = expand_case_matching(s)
-    return iglob(s)
+    if sys.version_info > (3, 5):
+        if '**' in s and '**/*' not in s:
+            s = s.replace('**', '**/*')
+        # `recursive` is only a 3.5+ kwarg. 
+        return iglob(s, recursive=True), s
+    else:
+        return iglob(s), s
+
+def iglobpath(s, ignore_case=False):
+    """Simple wrapper around iglob that also expands home and env vars."""
+    return _iglobpath(s, ignore_case)[0]
 
 
 RE_SHEBANG = re.compile(r'#![ \t]*(.+?)$')
@@ -774,8 +670,7 @@ def load_builtins(execer=None, config=None, login=False):
     builtins.compilex = None if execer is None else execer.compile
 
     # Need this inline/lazy import here since we use locate_binary that relies on __xonsh_env__ in default aliases
-    from xonsh.aliases import DEFAULT_ALIASES
-    builtins.default_aliases = builtins.aliases = Aliases(DEFAULT_ALIASES)
+    builtins.default_aliases = builtins.aliases = Aliases(make_default_aliases())
     if login:
         builtins.aliases.update(load_foreign_aliases(issue_warning=False))
     # history needs to be started after env and aliases

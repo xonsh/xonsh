@@ -6,6 +6,8 @@ from prompt_toolkit.shortcuts import (create_prompt_application,
 
 from xonsh.shell import prompt_toolkit_version_info
 
+import builtins
+
 class Prompter(object):
 
     def __init__(self, cli=None, *args, **kwargs):
@@ -69,6 +71,15 @@ class Prompter(object):
             if self.major_minor <= (0, 57):
                 kwargs.pop('get_rprompt_tokens', None)
                 kwargs.pop('get_continuation_tokens', None)
+            # VI_Mode handling changed in prompt_toolkit v1.0
+            if self.major_minor >= (1, 0):
+                from prompt_toolkit.enums import EditingMode
+                if builtins.__xonsh_env__.get('VI_MODE'):
+                    editing_mode = EditingMode.VI
+                else:
+                    editing_mode = EditingMode.EMACS
+
+                kwargs['editing_mode'] = editing_mode
             cli = CommandLineInterface(
                 application=create_prompt_application(message, **kwargs),
                 eventloop=eventloop,
