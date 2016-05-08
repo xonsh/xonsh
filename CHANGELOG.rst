@@ -6,6 +6,9 @@ Current Developments
 ====================
 **Added:**
 
+* ``and``, ``or``, ``&&``, ``||`` have been added as subprocess logical operators,
+  by popular demand!
+* Subprocesses may be negated with ``not`` and grouped together with parentheses.
 * Added a new shell type ``'none'``, used to avoid importing ``readline`` or
   ``prompt_toolkit`` when running scripts or running a single command.
 * New: `sudo` functionality on Windows through an alias
@@ -27,7 +30,6 @@ Current Developments
   through xonsh aliases
 * Added support for prompt toolkit v1.0.0.
 
-
 **Changed:**
 
 * Running scripts through xonsh (or running a single command with ``-c``) no
@@ -46,7 +48,6 @@ Current Developments
 * PLY is no longer a external dependency but is bundled in xonsh/ply. Xonsh can
   therefore run without any external dependencies, although having prompt-toolkit
   recommended.
-
 
 **Deprecated:** None
 
@@ -68,6 +69,7 @@ Current Developments
   source operation failed for some reason.
 
 **Security:** None
+
 
 v0.2.7
 ====================
@@ -113,7 +115,6 @@ v0.2.7
 * Regular expression globbing now uses ``re.fullmatch`` instead of
   ``re.match``, and the result of an empty regex glob does not cause the
   argument to be deleted.
-
 
 
 **Removed:**

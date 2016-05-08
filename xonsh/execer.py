@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Implements the xonsh executer."""
+import re
 import types
 import inspect
 import builtins
@@ -7,9 +8,11 @@ from collections import Mapping
 
 from xonsh import ast
 from xonsh.parser import Parser
-from xonsh.tools import subproc_toks
+from xonsh.tools import subproc_toks, END_TOK_TYPES
 from xonsh.built_ins import load_builtins, unload_builtins
 
+
+RE_END_TOKS = re.compile('(;|and|\&\&|or|\|\||\))')
 
 class Execer(object):
     """Executes xonsh code in a context."""
@@ -64,7 +67,7 @@ class Execer(object):
         # tokens for all of the Python rules. The lazy way implemented here
         # is to parse a line a second time with a $() wrapper if it fails
         # the first time. This is a context-free phase.
-        tree = self._parse_ctx_free(input, mode=mode)
+        tree, input = self._parse_ctx_free(input, mode=mode)
         if tree is None:
             return None
 
@@ -126,12 +129,13 @@ class Execer(object):
     def _find_next_break(self, line, mincol):
         if mincol >= 1:
             line = line[mincol:]
-        if ';' not in line:
+        if RE_END_TOKS.search(line) is None:
             return None
         maxcol = None
         self.parser.lexer.input(line)
         for tok in self.parser.lexer:
-            if tok.type == 'SEMI':
+            if tok.type in END_TOK_TYPES or \
+                    (tok.type == 'ERRORTOKEN' and ')' in tok.value):
                 maxcol = tok.lexpos + mincol + 1
                 break
         return maxcol
@@ -187,7 +191,7 @@ class Execer(object):
                                        returnline=True,
                                        maxcol=maxcol,
                                        lexer=self.parser.lexer)
-                if sbpline.lstrip().startswith('$[$['):
+                if sbpline.lstrip().startswith('![!['):
                     # if we have already wrapped this in subproc tokens
                     # and it still doesn't work, adding more won't help
                     # anything
@@ -203,4 +207,4 @@ class Execer(object):
                     lines[idx] = sbpline
                 last_error_col += 3
                 input = '\n'.join(lines)
-        return tree
+        return tree, input
