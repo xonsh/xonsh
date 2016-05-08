@@ -28,7 +28,7 @@ Current Developments
 * Added a menu entry to launch xonsh when installing xonsh from a conda package
 * Added a new ``which`` alias that supports both regular ``which`` and also searches
   through xonsh aliases
-* Add support for prompt_toolkit_1.0.0
+* Added support for prompt toolkit v1.0.0.
 
 **Changed:**
 
@@ -42,6 +42,9 @@ Current Developments
   environments
 * Regexpath matching with backticks, now returns an empty list in python mode.
 * Pygments added as a dependency for the conda package
+* Foreign shells now allow for setting exit-on-error commands before and after
+  all other commands via the ``seterrprevcmd`` and ``seterrpostcmd`` arguments.
+  Sensinble defaults are provided for existing shells.
 * PLY is no longer a external dependency but is bundled in xonsh/ply. Xonsh can
   therefore run without any external dependencies, although having prompt-toolkit
   recommended.
@@ -61,7 +64,9 @@ Current Developments
   a script
 * Fixed bug that prevented `source-alias` from working.
 * Fixed deadlock on Windows when runing subprocess that generates enough output
-  to fill the OS pipe buffer
+  to fill the OS pipe buffer.
+* Sourcing foreign shells will now return a non-zero exit code if the
+  source operation failed for some reason.
 
 **Security:** None
 
