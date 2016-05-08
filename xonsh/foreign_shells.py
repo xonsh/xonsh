@@ -126,7 +126,7 @@ DEFAULT_RUNCMD = {
 DEFAULT_SETERRPREVCMD = {
     'bash': 'set -e',
     'zsh': 'set -e',
-    'cmd': '',
+    'cmd': '@echo off',
 }
 DEFAULT_SETERRPOSTCMD = {
     'bash': '',

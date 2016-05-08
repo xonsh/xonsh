@@ -71,9 +71,9 @@ dictionaries have the following structure:
     To disable this exit-on-error behavior, simply pass in an empty string.
     ``default=null``
 :seterrpostcmd : *str or None, optional* - Command that enables exit-on-error
-    for the shell after all other commands. For example, this is "set -e" in Bash.
-    To disable this exit-on-error behavior, simply pass in an empty string.
-    ``default=null``
+    for the shell after all other commands. For example, this is
+    "if errorlevel 1 exit 1" in cmd.exe. To disable this exit-on-error behavior,
+    simply pass in an empty string. ``default=null``
 
 
 Some examples can be seen below:

@@ -269,7 +269,6 @@ def source_cmd(args, stdin=None):
     prevcmd = 'call '
     prevcmd += ' '.join([argvquote(arg, force=True) for arg in args])
     prevcmd = escape_windows_cmd_string(prevcmd)
-    prevcmd += '\n@echo off'
     args.append('--prevcmd={}'.format(prevcmd))
     args.insert(0, 'cmd')
     args.append('--interactive=0')
