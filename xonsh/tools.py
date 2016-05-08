@@ -103,7 +103,6 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     subprocess ![] starting at a minimum column. If there are no tokens
     (ie in a comment line) this returns None.
     """
-    #print(line)
     if lexer is None:
         lexer = builtins.__xonsh_execer__.parser.lexer
     if maxcol is None:
