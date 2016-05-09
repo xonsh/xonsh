@@ -382,13 +382,6 @@ def vox(args, stdin=None):
     return vox(args, stdin=stdin)
 
 
-@foreground
-def mpl(args, stdin=None):
-    """Hooks to matplotlib"""
-    from xonsh.mplhooks import show
-    show()
-
-
 def make_default_aliases():
     """Creates a new default aliases dictionary."""
     default_aliases = {
@@ -412,7 +405,6 @@ def make_default_aliases():
         'replay': replay_main,
         '!!': bang_bang,
         '!n': bang_n,
-        'mpl': mpl,
         'trace': trace,
         'timeit': timeit_alias,
         'xonfig': xonfig,
