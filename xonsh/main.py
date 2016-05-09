@@ -15,6 +15,7 @@ except ImportError:
 from xonsh import __version__
 from xonsh.shell import Shell
 from xonsh.pretty import pprint, pretty
+from xonsh.proc import HiddenCompletedCommand
 from xonsh.jobs import ignore_sigtstp
 from xonsh.tools import HAVE_PYGMENTS, setup_win_unicode_console, print_color, ON_WINDOWS
 
@@ -131,16 +132,17 @@ def undo_args(args):
                     au[k](args)
 
 def _pprint_displayhook(value):
-    if value is not None:
-        builtins._ = None  # Set '_' to None to avoid recursion
-        if HAVE_PYGMENTS:
-            s = pretty(value)  # color case
-            lexer = pyghooks.XonshLexer()
-            tokens = list(pygments.lex(s, lexer=lexer))
-            print_color(tokens)
-        else:
-            pprint(value)  # black & white case
-        builtins._ = value
+    if value is None or isinstance(value, HiddenCompletedCommand):
+        return
+    builtins._ = None  # Set '_' to None to avoid recursion
+    if HAVE_PYGMENTS:
+        s = pretty(value)  # color case
+        lexer = pyghooks.XonshLexer()
+        tokens = list(pygments.lex(s, lexer=lexer))
+        print_color(tokens)
+    else:
+        pprint(value)  # black & white case
+    builtins._ = value
 
 class XonshMode(enum.Enum):
     single_command = 0
@@ -234,8 +236,8 @@ def main(argv=None):
         ignore_sigtstp()
         if not env['LOADED_CONFIG'] and not any(env['LOADED_RC_FILES']):
             print('Could not find xonsh configuration or run control files.')
-            code = '$[xonfig wizard --confirm]'
-            shell.execer.exec(code, mode='single', glbs=shell.ctx)
+            from xonsh import xonfig  # lazy import
+            xonfig.main(['wizard', '--confirm'])
         shell.cmdloop()
     postmain(args)
 

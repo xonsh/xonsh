@@ -83,12 +83,12 @@ except ImportError:
                 codec = lookup(encoding)
             except LookupError:
                 # This behaviour mimics the Python interpreter
-                raise SyntaxError("unknown encoding: " + encoding)
+                raise SyntaxError("unknown encoding: " + encoding, filename='<file>')
 
             if bom_found:
                 if codec.name != 'utf-8':
                     # This behaviour mimics the Python interpreter
-                    raise SyntaxError('encoding problem: utf-8')
+                    raise SyntaxError('encoding problem: utf-8', filename='<file>')
                 encoding += '-sig'
             return encoding
 

@@ -6,6 +6,9 @@ Current Developments
 ====================
 **Added:**
 
+* ``and``, ``or``, ``&&``, ``||`` have been added as subprocess logical operators,
+  by popular demand!
+* Subprocesses may be negated with ``not`` and grouped together with parentheses.
 * Added a new shell type ``'none'``, used to avoid importing ``readline`` or
   ``prompt_toolkit`` when running scripts or running a single command.
 * New: `sudo` functionality on Windows through an alias
@@ -16,17 +19,16 @@ Current Developments
 * Added an option to update ``os.environ`` every time the xonsh environment changes.
   This is disabled by default but can be enabled by setting ``$UPDATE_OS_ENVIRON`` to
   True.
-* Added Windows 'cmd.exe' as a foreign shell. This gives xonsh the ability to source 
-  Windows Batch files (.bat and .cmd). Calling ``source-cmd script.bat`` or the 
-  alias ``source-bat script.bat`` will call the bat file and changes to the 
+* Added Windows 'cmd.exe' as a foreign shell. This gives xonsh the ability to source
+  Windows Batch files (.bat and .cmd). Calling ``source-cmd script.bat`` or the
+  alias ``source-bat script.bat`` will call the bat file and changes to the
   environment variables will be reflected in xonsh.
-* Added an alias for the conda environment activate/deactivate batch scripts when 
+* Added an alias for the conda environment activate/deactivate batch scripts when
   running the Anaconda python distribution on Windows.
 * Added a menu entry to launch xonsh when installing xonsh from a conda package
 * Added a new ``which`` alias that supports both regular ``which`` and also searches
   through xonsh aliases
-* Add support for prompt_toolkit_1.0.0
-
+* Added support for prompt toolkit v1.0.0.
 
 **Changed:**
 
@@ -40,10 +42,12 @@ Current Developments
   environments
 * Regexpath matching with backticks, now returns an empty list in python mode.
 * Pygments added as a dependency for the conda package
+* Foreign shells now allow for setting exit-on-error commands before and after
+  all other commands via the ``seterrprevcmd`` and ``seterrpostcmd`` arguments.
+  Sensinble defaults are provided for existing shells.
 * PLY is no longer a external dependency but is bundled in xonsh/ply. Xonsh can
-  therefore run without any external dependencies, although having prompt-toolkit 
-  recommended. 
-
+  therefore run without any external dependencies, although having prompt-toolkit
+  recommended.
 
 **Deprecated:** None
 
@@ -56,13 +60,17 @@ Current Developments
   the line.
 * Aliases will now evaluate enviornment variables and other expansions
   at execution time rather than passing through a literal string.
-* Fixed environment variables from os.environ not beeing loaded when a running 
+* Fixed environment variables from os.environ not beeing loaded when a running
   a script
-* Fixed bug that prevented `source-alias` from working. 
+* Fixed bug that prevented `source-alias` from working.
+* Now able to ``^C`` the xonfig wizard on start up.
 * Fixed deadlock on Windows when runing subprocess that generates enough output
-  to fill the OS pipe buffer 
+  to fill the OS pipe buffer.
+* Sourcing foreign shells will now return a non-zero exit code if the
+  source operation failed for some reason.
 
 **Security:** None
+
 
 v0.2.7
 ====================
@@ -108,7 +116,6 @@ v0.2.7
 * Regular expression globbing now uses ``re.fullmatch`` instead of
   ``re.match``, and the result of an empty regex glob does not cause the
   argument to be deleted.
-
 
 
 **Removed:**

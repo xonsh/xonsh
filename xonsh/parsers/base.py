@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """Implements the base xonsh parser."""
 from collections import Iterable, Sequence, Mapping
-   
+
 try:
     from ply import yacc
 except ImportError:
     from xonsh.ply import yacc
- 
+
 from xonsh import ast
 from xonsh.lexer import Lexer, LexToken
 from xonsh.tools import VER_3_5_1, VER_FULL
