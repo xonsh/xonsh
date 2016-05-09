@@ -1,8 +1,9 @@
 """Tools for helping manage xontributions."""
 import builtins
+from warnings import warn
 from argparse import ArgumentParser
 from importlib import import_module
-from importlib.util import find_spec, module_from_spec
+from importlib.util import find_spec
 
 
 def find_xontrib(name):
@@ -17,6 +18,9 @@ def find_xontrib(name):
 def xontrib_context(name):
     """Return a context dictionary for a xontrib of a given name."""
     spec = find_xontrib(name)
+    if spec is None:
+        warn('could not find xontrib module {0!r}'.format(name), ImportWarning)
+        return {}
     m = import_module(spec.name)
     ctx = {k: getattr(m, k) for k in dir(m) if not k.startswith('_')}
     return ctx
