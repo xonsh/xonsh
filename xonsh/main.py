@@ -236,8 +236,8 @@ def main(argv=None):
         ignore_sigtstp()
         if not env['LOADED_CONFIG'] and not any(env['LOADED_RC_FILES']):
             print('Could not find xonsh configuration or run control files.')
-            code = '$[xonfig wizard --confirm]'
-            shell.execer.exec(code, mode='single', glbs=shell.ctx)
+            from xonsh import xonfig  # lazy import
+            xonfig.main(['wizard', '--confirm'])
         shell.cmdloop()
     postmain(args)
 

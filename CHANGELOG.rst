@@ -63,6 +63,7 @@ Current Developments
 * Fixed environment variables from os.environ not beeing loaded when a running
   a script
 * Fixed bug that prevented `source-alias` from working.
+* Now able to ``^C`` the xonfig wizard on start up.
 * Fixed deadlock on Windows when runing subprocess that generates enough output
   to fill the OS pipe buffer.
 * Sourcing foreign shells will now return a non-zero exit code if the
