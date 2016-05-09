@@ -16,6 +16,7 @@ from xonsh.timings import timeit_alias
 from xonsh.tools import ON_MAC, ON_WINDOWS, XonshError, to_bool, string_types
 from xonsh.history import main as history_alias
 from xonsh.replay import main as replay_main
+from xonsh.xontribs import main as xontribs_main
 from xonsh.environ import locate_binary
 from xonsh.foreign_shells import foreign_shell_data
 from xonsh.vox import Vox
@@ -419,6 +420,7 @@ def make_default_aliases():
         'ipynb': ['jupyter', 'notebook', '--no-browser'],
         'vox': vox,
         'which': which,
+        'xontrib': xontribs_main,
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.

@@ -179,7 +179,7 @@ def _iglobpath(s, ignore_case=False):
     if sys.version_info > (3, 5):
         if '**' in s and '**/*' not in s:
             s = s.replace('**', '**/*')
-        # `recursive` is only a 3.5+ kwarg. 
+        # `recursive` is only a 3.5+ kwarg.
         return iglob(s, recursive=True), s
     else:
         return iglob(s), s
@@ -639,6 +639,7 @@ def load_builtins(execer=None, config=None, login=False):
     """
     global BUILTINS_LOADED, ENV
     # private built-ins
+    builtins.__xonsh_config__ = {}
     builtins.__xonsh_env__ = ENV = Env(default_env(config=config, login=login))
     builtins.__xonsh_ctx__ = {}
     builtins.__xonsh_help__ = helper
@@ -701,7 +702,8 @@ def unload_builtins():
         builtins.quit = builtins.__xonsh_pyquit__
     if not BUILTINS_LOADED:
         return
-    names = ['__xonsh_env__',
+    names = ['__xonsh_config__',
+             '__xonsh_env__',
              '__xonsh_ctx__',
              '__xonsh_help__',
              '__xonsh_superhelp__',
