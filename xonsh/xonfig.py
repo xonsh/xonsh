@@ -227,6 +227,8 @@ def make_xontrib(xontrib, package):
             msg += '{RED}package-url:{NO_COLOR} ' + package['url'] + '\n'
     if 'license' in package:
         msg += '{RED}license:{NO_COLOR} ' + package['license'] + '\n'
+    msg += '{PURPLE}installed?{NO_COLOR} '
+    msg += ('no' if find_xontrib(name) is None else 'yes') + '\n'
     desc = xontrib.get('description', '')
     if not isinstance(desc, str):
         desc = ''.join(desc)
