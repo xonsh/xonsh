@@ -3,7 +3,7 @@
   "package": "xonsh",
   "url": "http://xon.sh",
   "description": ["Matplotlib hooks for xonsh, including the new 'mpl' alias ",
-                  "that dumps the current figure to the screen."]
+                  "that displays the current figure on the screen."]
   }
  ],
  "packages": {

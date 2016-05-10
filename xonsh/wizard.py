@@ -11,7 +11,7 @@ from collections.abc import Mapping, Sequence
 from xonsh.tools import to_bool, to_bool_or_break, backup_file, print_color
 
 #
-# Nodes themselves 
+# Nodes themselves
 #
 class Node(object):
     """Base type of all nodes."""
@@ -79,7 +79,7 @@ class Input(Node):
 
     attrs = ('prompt', 'converter', 'show_conversion', 'confirm', 'path')
 
-    def __init__(self, prompt='>>> ', converter=None, show_conversion=False, 
+    def __init__(self, prompt='>>> ', converter=None, show_conversion=False,
                  confirm=False, path=None):
         """
         Parameters
@@ -90,11 +90,11 @@ class Input(Node):
             Converts the string the user typed into another object
             prior to storage.
         show_conversion : bool, optional
-            Flag for whether or not to show the results of the conversion 
+            Flag for whether or not to show the results of the conversion
             function if the conversion function was meaningfully executed.
             Default False.
         confirm : bool, optional
-            Whether the input should be confirmed until true or broken, 
+            Whether the input should be confirmed until true or broken,
             default False.
         path : str or sequence of str, optional
             A path within the storage object.
@@ -120,9 +120,9 @@ class While(Node):
         Parameters
         ----------
         cond : callable
-            Function that determines if the next loop iteration should 
-            be executed. The condition function has the form 
-            cond(visitor=None, node=None) and should return an object that 
+            Function that determines if the next loop iteration should
+            be executed. The condition function has the form
+            cond(visitor=None, node=None) and should return an object that
             is convertable to a bool.
         body : sequence of nodes
             A list of node to execute on each iteration.
@@ -146,7 +146,7 @@ class While(Node):
 
 class YesNo(Question):
     """Represents a simple yes/no question."""
-    
+
     def __init__(self, question, yes, no, path=None):
         """
         Parameters
@@ -176,7 +176,7 @@ class TrueFalseBreak(Input):
     """Input node the returns a True, False, or 'break' value."""
 
     def __init__(self, prompt='yes, no, or break [default: no]? ', path=None):
-        super().__init__(prompt=prompt, converter=to_bool_or_break, 
+        super().__init__(prompt=prompt, converter=to_bool_or_break,
                          show_conversion=False, confirm=False, path=path)
 
 
@@ -185,10 +185,10 @@ class StoreNonEmpty(Input):
     This works by wrapping the converter function.
     """
 
-    def __init__(self, prompt='>>> ', converter=None, show_conversion=False, 
+    def __init__(self, prompt='>>> ', converter=None, show_conversion=False,
                  confirm=False, path=None):
         def nonempty_converter(x):
-            """Converts non-empty values and converts empty inputs to 
+            """Converts non-empty values and converts empty inputs to
             Unstorable.
             """
             if len(x) == 0:
@@ -217,12 +217,12 @@ class StateFile(Input):
         default_file : str, optional
             The default filename to save the file as.
         check : bool, optional
-            Whether to print the current state and ask if it should be 
-            saved/loaded prior to asking for the file name and saving the 
+            Whether to print the current state and ask if it should be
+            saved/loaded prior to asking for the file name and saving the
             file, default=True.
         """
         self._df = None
-        super().__init__(prompt='filename: ', converter=None, 
+        super().__init__(prompt='filename: ', converter=None,
                          confirm=False, path=None)
         self.default_file = default_file
         self.check = check
@@ -268,7 +268,7 @@ def create_truefalse_cond(prompt='yes or no [default: no]? ', path=None):
 
 #
 # Tools for trees of nodes.
-# 
+#
 
 _lowername = lambda cls: cls.__name__.lower()
 
@@ -293,11 +293,11 @@ class Visitor(object):
                 break
         else:
             msg = 'could not find valid visitor method for {0} on {1}'
-            nodename = node.__class__.__name__ 
+            nodename = node.__class__.__name__
             selfname = self.__class__.__name__
             raise AttributeError(msg.format(nodename, selfname))
         return rtn
-                
+
 
 class PrettyFormatter(Visitor):
     """Formats a tree of nodes into a pretty string"""
@@ -332,7 +332,7 @@ class PrettyFormatter(Visitor):
                 return s + '], path={0!r})'.format(node.path)
         s += '\n'
         self.level += 1
-        s += textwrap.indent(',\n'.join(map(self.visit, node.children)), 
+        s += textwrap.indent(',\n'.join(map(self.visit, node.children)),
                              self.indent)
         self.level -= 1
         if node.path is None:
@@ -355,7 +355,7 @@ class PrettyFormatter(Visitor):
             s += '\n'
             t = sorted(node.responses.items())
             t = ['{0!r}: {1}'.format(k, self.visit(v)) for k, v in t]
-            s += textwrap.indent(',\n'.join(t), 2*self.indent) 
+            s += textwrap.indent(',\n'.join(t), 2*self.indent)
             s += '\n' + self.indent + '}'
         if node.converter is not None:
             s += ',\n' + self.indent + 'converter={0!r}'.format(node.converter)
@@ -388,7 +388,7 @@ class PrettyFormatter(Visitor):
         if len(node.body) > 0:
             s += '\n'
             self.level += 1
-            s += textwrap.indent(',\n'.join(map(self.visit, node.body)), 
+            s += textwrap.indent(',\n'.join(map(self.visit, node.body)),
                                  self.indent)
             self.level -= 1
             s += '\n' + self.indent
@@ -441,7 +441,7 @@ class UnstorableType(object):
 
     def __new__(cls, *args, **kwargs):
         if cls._inst is None:
-            cls._inst = super(UnstorableType, cls).__new__(cls, *args, 
+            cls._inst = super(UnstorableType, cls).__new__(cls, *args,
                                                            **kwargs)
         return cls._inst
 
@@ -468,6 +468,8 @@ class StateVisitor(Visitor):
             raise RuntimeError('no node or tree given!')
         rtn = super().visit(node)
         path = getattr(node, 'path', None)
+        if callable(path):
+            path = path(visitor=self, node=node, val=rtn)
         if path is not None and rtn is not Unstorable:
             self.store(path, rtn, indices=self.indices)
         return rtn
@@ -488,6 +490,10 @@ class StateVisitor(Visitor):
                 loc.extend(ex)
             loc = loc[p]
         p = path[-1]
+        if isinstance(p, int) and abs(p) + (p >= 0) > len(loc):
+            i = abs(p) + (p >= 0) - len(loc)
+            ex = [None]*i
+            loc.extend(ex)
         loc[p] = val
 
 

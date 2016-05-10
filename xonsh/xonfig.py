@@ -20,7 +20,8 @@ from xonsh.environ import is_template_string
 from xonsh.shell import (is_readline_available, is_prompt_toolkit_available,
     prompt_toolkit_version)
 from xonsh.wizard import (Wizard, Pass, Message, Save, Load, YesNo, Input,
-    PromptVisitor, While, StoreNonEmpty, create_truefalse_cond, YN)
+    PromptVisitor, While, StoreNonEmpty, create_truefalse_cond, YN, Unstorable)
+from xonsh.xontribs import xontrib_metadata, find_xontrib
 
 
 HR = "'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'"
@@ -81,6 +82,24 @@ will accept the default value for that entry.
 """.format(hr=HR)
 
 WIZARD_ENV_QUESTION = "Would you like to set env vars now, " + YN
+
+WIZARD_XONTRIB = """
+{hr}
+
+                           {{BOLD_WHITE}}Xontribs{{NO_COLOR}}
+                           {{YELLOW}}--------{{NO_COLOR}}
+No shell is complete without extentions, and xonsh is no exception. Xonsh
+extensions are called {{BOLD_GREEN}}xontribs{{NO_COLOR}}, or xonsh contributions.
+Xontribs are dynamically loadable, either by importing them directly or by
+using the 'xontrib' command. However, you can also configure xonsh to load
+xontribs autoumatically on startup prior to loading the run control files.
+This allows the xontrib to be used immeadiately in your xonshrc files.
+
+The following describes all xontribs that have been registered with xonsh.
+These come from users, 3rd party developers, or xonsh itself!
+""".format(hr=HR)
+
+WIZARD_XONTRIB_QUESTION = "Would you like to enable xontribs now, " + YN
 
 
 WIZARD_TAIL = """
@@ -171,9 +190,8 @@ def make_envvar(name):
     return mnode, pnode
 
 
-def make_env():
-    """Makes an environment variable wizard."""
-    kids = map(make_envvar, sorted(builtins.__xonsh_env__.docs.keys()))
+def _make_flat_wiz(kidfunc, *args):
+    kids = map(kidfunc, *args)
     flatkids = []
     for k in kids:
         if k is None:
@@ -181,6 +199,53 @@ def make_env():
         flatkids.extend(k)
     wiz = Wizard(children=flatkids)
     return wiz
+
+
+def make_env():
+    """Makes an environment variable wizard."""
+    w = _make_flat_wiz(make_envvar, sorted(builtins.__xonsh_env__.docs.keys()))
+    return w
+
+
+XONTRIB_PROMPT = '{BOLD_GREEN}Add this xontrib{NO_COLOR}, ' + YN
+
+def _xontrib_path(visitor=None, node=None, val=None):
+    # need this to append only based on user-selected size
+    return ('xontribs', len(visitor.state.get('xontribs', ())))
+
+
+def make_xontrib(xontrib, package):
+    """Makes a message and StoreNonEmpty node for a xontrib."""
+    name = xontrib.get('name', '<unknown-xontrib-name>')
+    msg = '\n{BOLD_CYAN}' + name + '{NO_COLOR}\n'
+    if 'url' in xontrib:
+        msg += '{RED}url:{NO_COLOR} ' + xontrib['url'] + '\n'
+    if 'package' in xontrib:
+        msg += '{RED}package:{NO_COLOR} ' + xontrib['package'] + '\n'
+    if 'url' in package:
+        if 'url' in xontrib and package['url'] != xontrib['url']:
+            msg += '{RED}package-url:{NO_COLOR} ' + package['url'] + '\n'
+    if 'license' in package:
+        msg += '{RED}license:{NO_COLOR} ' + package['license'] + '\n'
+    desc = xontrib.get('description', '')
+    if not isinstance(desc, str):
+        desc = ''.join(desc)
+    msg += _wrap_paragraphs(desc, width=69)
+    if msg.endswith('\n'):
+        msg = msg[:-1]
+    mnode = Message(message=msg)
+    convert = lambda x: name if tools.to_bool(x) else Unstorable
+    pnode = StoreNonEmpty(XONTRIB_PROMPT, converter=convert,
+                          path=_xontrib_path)
+    return mnode, pnode
+
+
+def make_xontribs():
+    """Makes a xontrib wizard."""
+    md = xontrib_metadata()
+    pkgs = [md['packages'].get(d.get('package', None), {}) for d in md['xontribs']]
+    w = _make_flat_wiz(make_xontrib, md['xontribs'], pkgs)
+    return w
 
 
 def make_wizard(default_file=None, confirm=False):
@@ -200,6 +265,8 @@ def make_wizard(default_file=None, confirm=False):
             make_fs(),
             Message(message=WIZARD_ENV),
             YesNo(question=WIZARD_ENV_QUESTION, yes=make_env(), no=Pass()),
+            Message(message=WIZARD_XONTRIB),
+            YesNo(question=WIZARD_XONTRIB_QUESTION, yes=make_xontribs(), no=Pass()),
             Message(message='\n' + HR + '\n'),
             Save(default_file=default_file, check=True),
             Message(message=WIZARD_TAIL),
