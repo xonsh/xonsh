@@ -2,9 +2,10 @@
   "EDITOR": "xo",
   "PAGER": "more"
   },
+ "xontribs": ["mpl"],
  "foreign_shells": [
-  {"shell": "bash", 
-   "login": true, 
+  {"shell": "bash",
+   "login": true,
    "extra_args": ["--rcfile", "/path/to/rcfile"]
    },
   {"shell": "zsh"}

@@ -24,6 +24,16 @@ variables. For example,
     }
 
 
+``xontribs``
+------------
+This is a list (JSON array) of xontrib names (strings) to load prior to
+loading any run control files.  For example,
+
+.. code:: json
+
+    {"xontribs": ["mpl", "example"]}
+
+
 ``foreign_shells``
 --------------------
 This is a list (JSON Array) of dicts (JSON objects) that represent the
