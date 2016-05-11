@@ -10,8 +10,10 @@
 import os
 import sys
 import builtins
+
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.environ import DEFAULT_DOCS, Env
+from xonsh.xontribs import xontrib_metadata
 
 sys.path.insert(0, os.path.dirname(__file__))
 
@@ -265,14 +267,77 @@ def make_envvars():
         title = '$' + var
         under = '.' * len(title)
         vd = env.get_docs(var)
-        s += sec.format(low=var.lower(), title=title, under=under, 
-                        docstr=vd.docstr, configurable=vd.configurable, 
+        s += sec.format(low=var.lower(), title=title, under=under,
+                        docstr=vd.docstr, configurable=vd.configurable,
                         default=vd.default)
     s = s[:-9]
     fname = os.path.join(os.path.dirname(__file__), 'envvarsbody')
     with open(fname, 'w') as f:
         f.write(s)
 
+
+def make_xontribs():
+    md = xontrib_metadata()
+    names = sorted(d['name'] for d in md['xontribs'] if 'name' in d)
+    s = ('.. list-table::\n'
+         '    :header-rows: 0\n\n')
+    table = []
+    ncol = 3
+    row = '    {0} - :ref:`{1} <{2}>`'
+    for i, name in enumerate(names):
+        star = '*' if i%ncol == 0 else ' '
+        table.append(row.format(star, name, name.lower()))
+    table.extend(['      -']*((ncol - len(names)%ncol)%ncol))
+    s += '\n'.join(table) + '\n\n'
+    s += ('Information\n'
+          '-----------\n\n')
+    sec = ('.. _{low}:\n\n'
+           '{title}\n'
+           '{under}\n'
+           ':Website: {url}\n'
+           ':Package: {pkg}\n\n'
+           '{desc}\n\n'
+           '{inst}'
+           '-------\n\n')
+    for name in names:
+        for d in md['xontribs']:
+            if d.get('name', None) == name:
+                break
+        title = name
+        under = '.' * len(title)
+        desc = d.get('description', '')
+        if not isinstance(desc, str):
+            desc = ''.join(desc)
+        pkgname = d.get('package', None)
+        if pkgname is None:
+            pkg = 'unknown'
+            inst = ''
+        else:
+            pd = md['packages'].get(pkgname, {})
+            pkg = pkgname
+            if 'url' in pd:
+                pkg = '`{0} <{1}>`_'.format(pkg, pd['url'])
+            if 'license' in pd:
+                pkg = pkg + ', ' + pd['license']
+            inst = ''
+            installd = pd.get('install', {})
+            if len(installd) > 0:
+                inst = ('**Installation:**\n\n'
+                        '.. code-block:: xonsh\n\n')
+                for k, v in sorted(pd.get('install', {}).items()):
+                    cmd = "\n    ".join(v.split('\n'))
+                    inst += ('    # install with {k}\n'
+                             '    {cmd}\n\n').format(k=k, cmd=cmd)
+        s += sec.format(low=name.lower(), title=title, under=under,
+                        url=d.get('url', 'unknown'), desc=desc,
+                        pkg=pkg, inst=inst)
+    s = s[:-9]
+    fname = os.path.join(os.path.dirname(__file__), 'xontribsbody')
+    with open(fname, 'w') as f:
+        f.write(s)
+
+
 make_envvars()
+make_xontribs()
 
 builtins.__xonsh_history__= None

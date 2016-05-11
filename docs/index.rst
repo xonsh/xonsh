@@ -90,6 +90,7 @@ Contents
 
     tutorial
     tutorial_hist
+    tutorial_xontrib
     windows
     bash_to_xsh
 
@@ -103,6 +104,7 @@ Contents
     xonshconfig
     envvars
     aliases
+    xontribs
 
 **Development Spiral:**
 

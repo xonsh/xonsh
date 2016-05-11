@@ -1,0 +1,20 @@
+{"xontribs": [
+ {"name": "mpl",
+  "package": "xonsh",
+  "url": "http://xon.sh",
+  "description": ["Matplotlib hooks for xonsh, including the new 'mpl' alias ",
+                  "that displays the current figure on the screen."]
+  }
+ ],
+ "packages": {
+  "xonsh": {
+   "license": "BSD 3-clause",
+   "url": "http://xon.sh",
+   "install": {
+    "conda": "conda install -c conda-forge xonsh",
+    "pip": "pip install xonsh",
+    "aura": "sudo aura -A xonsh",
+    "yaourt": "yaourt -Sa xonsh"}
+   }
+ }
+}

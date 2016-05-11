@@ -7,9 +7,9 @@ lexer_table.py
 parser_table.py
 parser_test_table.py
 xonsh/lexer_table.py
-xonsh/parser_table.py 
+xonsh/parser_table.py
 tests/lexer_table.py
-tests/parser_table.py 
+tests/parser_table.py
 tests/lexer_test_table.py
 tests/parser_test_table.py
 build/
@@ -17,6 +17,7 @@ dist/
 xonsh.egg-info/
 docs/_build/
 docs/envvarsbody
+docs/xontribsbody
 
 # temporary files from vim and emacs
 *~

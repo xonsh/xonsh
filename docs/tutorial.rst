@@ -1161,6 +1161,7 @@ For example, consider a slight variation of the example script from above that
 operates on a given argument, rather than on the string ``'xonsh'`` (notice how
 ``$ARGS`` and ``$ARG1`` are used):
 
+
 .. code-block:: xonsh
 
     #!/usr/bin/env xonsh
@@ -1181,6 +1182,7 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
 
     print($(ls).replace('\n', ' '))
     print()
+
 
 .. code-block:: bash
 

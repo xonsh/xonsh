@@ -1176,6 +1176,7 @@ def load_static_config(ctx, config=None):
     else:
         conf = {}
         ctx['LOADED_CONFIG'] = False
+    builtins.__xonsh_config__ = conf
     return conf
 
 
@@ -1204,14 +1205,15 @@ def _make_if_not_exists(dirname):
         os.makedirs(dirname)
 
 
-def xonshrc_context(rcfiles=None, execer=None):
+def xonshrc_context(rcfiles=None, execer=None, ctx=None):
     """Attempts to read in xonshrc file, and return the contents."""
     loaded = builtins.__xonsh_env__['LOADED_RC_FILES'] = []
     datadir = builtins.__xonsh_env__['XONSH_DATA_DIR']
     cachedir = os.path.join(datadir, 'xonshrc_cache')
     if (rcfiles is None or execer is None):
         return {}
-    env = {}
+    if ctx is None:
+        ctx = getattr(builtins, '__xonsh_ctx__', {})
     for rcfile in rcfiles:
         if not os.path.isfile(rcfile):
             loaded.append(False)
@@ -1233,7 +1235,7 @@ def xonshrc_context(rcfiles=None, execer=None):
             fname = execer.filename
             try:
                 execer.filename = rcfile
-                ccode = execer.compile(rc, glbs=env)
+                ccode = execer.compile(rc, glbs=ctx)
                 _make_if_not_exists(os.path.dirname(cachefname))
                 with open(cachefname, 'wb') as cfile:
                     marshal.dump(ccode, cfile)
@@ -1246,9 +1248,9 @@ def xonshrc_context(rcfiles=None, execer=None):
             finally:
                 execer.filename = fname
         if ccode is None:
-            return env
-        exec(ccode, env, None)
-    return env
+            return ctx
+        exec(ccode, ctx, None)
+    return ctx
 
 
 def windows_env_fixes(ctx):

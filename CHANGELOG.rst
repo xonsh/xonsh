@@ -9,6 +9,7 @@ Current Developments
 * ``and``, ``or``, ``&&``, ``||`` have been added as subprocess logical operators,
   by popular demand!
 * Subprocesses may be negated with ``not`` and grouped together with parentheses.
+* New framework for writing xonsh extentions, called ``xontribs``.
 * Added a new shell type ``'none'``, used to avoid importing ``readline`` or
   ``prompt_toolkit`` when running scripts or running a single command.
 * New: `sudo` functionality on Windows through an alias

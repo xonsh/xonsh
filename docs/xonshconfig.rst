@@ -24,6 +24,16 @@ variables. For example,
     }
 
 
+``xontribs``
+------------
+This is a list (JSON array) of xontrib names (strings) to load prior to
+loading any run control files.  For example,
+
+.. code:: json
+
+    {"xontribs": ["mpl", "example"]}
+
+
 ``foreign_shells``
 --------------------
 This is a list (JSON Array) of dicts (JSON objects) that represent the
@@ -63,14 +73,14 @@ dictionaries have the following structure:
 :sourcer: *str or None, optional* - How to source a foreign shell file for
     purposes of calling functions in that shell. If this is None, a default
     value will attempt to be looked up based on the shell name. ``default=null``
-:runcmd : *str or None, optional* - Command line switches to use when
+:runcmd: *str or None, optional* - Command line switches to use when
     running the script, such as ``-c`` for Bash and ``/C`` for cmd.exe.
     ``default=null``
-:seterrprevcmd : *str or None, optional* - Command that enables exit-on-error
+:seterrprevcmd: *str or None, optional* - Command that enables exit-on-error
     for the shell before all other commands. For example, this is "set -e" in Bash.
     To disable this exit-on-error behavior, simply pass in an empty string.
     ``default=null``
-:seterrpostcmd : *str or None, optional* - Command that enables exit-on-error
+:seterrpostcmd: *str or None, optional* - Command that enables exit-on-error
     for the shell after all other commands. For example, this is
     "if errorlevel 1 exit 1" in cmd.exe. To disable this exit-on-error behavior,
     simply pass in an empty string. ``default=null``

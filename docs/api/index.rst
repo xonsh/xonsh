@@ -61,3 +61,10 @@ For those of you who want the gritty details.
     xonfig
     vox
 
+
+**Xontribs:**
+
+.. toctree::
+    :maxdepth: 1
+
+    mplhooks
