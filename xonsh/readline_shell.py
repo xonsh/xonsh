@@ -23,6 +23,8 @@ RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = None
 RL_CAN_RESIZE = False
 RL_DONE = None
 
+PT_ONLY_OPTIONS = ['VI_MODE', 'MOUSE_SUPPORT', 'RIGHT_PROMPT']
+
 
 def setup_readline():
     """Sets up the readline module and completion suppression, if available."""
@@ -61,6 +63,14 @@ def setup_readline():
         readline.parse_and_bind("bind ^I rl_complete")
     else:
         readline.parse_and_bind("tab: complete")
+
+    invalid_option = False
+    for option in PT_ONLY_OPTIONS:
+        if env.get(option):
+            invalid_option = True
+            print('{} is set to {} but has no effect in the readline shell.'.format(option, env.get(option)))
+    if invalid_option:
+        print('To make use of these options, install `prompt_toolkit`.  See https://xon.sh for more information.')
 
 
 def teardown_readline():
