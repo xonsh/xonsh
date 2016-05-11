@@ -103,6 +103,7 @@ Contents
     xonshconfig
     envvars
     aliases
+    xontribs
 
 **Development Spiral:**
 

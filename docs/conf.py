@@ -287,15 +287,15 @@ def make_xontribs():
     for i, name in enumerate(names):
         star = '*' if i%ncol == 0 else ' '
         table.append(row.format(star, name, name.lower()))
-    table.extend(['      -']*((ncol - len(vars)%ncol)%ncol))
+    table.extend(['      -']*((ncol - len(names)%ncol)%ncol))
     s += '\n'.join(table) + '\n\n'
     s += ('Information\n'
           '-----------\n\n')
     sec = ('.. _{low}:\n\n'
            '{title}\n'
            '{under}\n'
-           '**Website:** {url}\n\n'
-           '**Package:** {pkg}\n\n'
+           ':Website: {url}\n'
+           ':Package: {pkg}\n\n'
            '{desc}\n\n'
            '{inst}'
            '-------\n\n')
@@ -320,12 +320,14 @@ def make_xontribs():
             if 'license' in pd:
                 pkg = pkg + ', ' + pd['license']
             inst = ''
-            for k, v in sorted(pd.get('install', {}).items()):
-                cmd = "\n    $ ".join(v.split('\n'))
-                inst += ('**Install with {k}:**\n\n'
-                         '.. code-block:: xonshcon\n\n'
-                         '    $ {cmd}'
-                         '\n\n').format(k=k, cmd=cmd)
+            installd = pd.get('install', {})
+            if len(installd) > 0:
+                inst = ('**Installation:**\n\n'
+                        '.. code-block:: xonsh\n\n')
+                for k, v in sorted(pd.get('install', {}).items()):
+                    cmd = "\n    ".join(v.split('\n'))
+                    inst += ('    # install with {k}\n'
+                             '    {cmd}\n\n').format(k=k, cmd=cmd)
         s += sec.format(low=name.lower(), title=title, under=under,
                         url=d.get('url', 'unknown'), desc=desc,
                         pkg=pkg, inst=inst)
