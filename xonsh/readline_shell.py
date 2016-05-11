@@ -13,6 +13,7 @@ from xonsh.base_shell import BaseShell
 from xonsh.ansi_colors import partial_color_format, color_style_names, color_style
 from xonsh.environ import partial_format_prompt, multiline_prompt
 from xonsh.tools import ON_WINDOWS, print_exception, HAVE_PYGMENTS
+from xonsh.shell import is_prompt_toolkit_available
 
 if HAVE_PYGMENTS:
     from xonsh import pyghooks
@@ -64,12 +65,17 @@ def setup_readline():
     else:
         readline.parse_and_bind("tab: complete")
 
-    invalid_option = False
+    invalid_option = []
     for option in PT_ONLY_OPTIONS:
         if env.get(option):
-            invalid_option = True
-            print('{} is set to {} but has no effect in the readline shell.'.format(option, env.get(option)))
+            invalid_option.append(option)
     if invalid_option:
+        print('The following options are unavailable in the readline shell: {}'
+              .format(', '.join(invalid_option)))
+    if is_prompt_toolkit_available():
+        print('To enable the prompt_toolkit shell, '
+                'put `$SHELL_TYPE=\'prompt_toolkit\'` in your `xonshrc`')
+    else:
         print('To make use of these options, install `prompt_toolkit`.  See https://xon.sh for more information.')
 
 
