@@ -103,6 +103,123 @@ Of course, you have to use the full module name to import a xontrib:
     from mypkg.show import *
 
 
+Listing Known Xontribs
+======================
+In addition to loading extensions, the ``xontrib`` command also allow you to
+list the known xontribs. This command will report whether known xontribs are
+installed and if they are loaded in the current session. To display this
+information, pass the ``list`` action to the ``xontrib`` command:
+
+.. code-block:: xonshcon
+
+    >>> xontrib list
+    mpl     installed      not-loaded
+    myext   not-installed  not-loaded
+
+By default, this will display information for all known xontribs. However,
+you can restrict this to a set of names passed in on the command line.
+
+.. code-block:: xonshcon
+
+    >>> xontrib list mpl
+    mpl     installed      not-loaded
+
+For programatic access, you may also have this command print a JSON formatted
+string:
+
+.. code-block:: xonshcon
+
+    >>> xontrib list --json mpl
+    {"mpl": {"loaded": false, "installed": true}}
+
+Authoring Xontribs
+=========================
+Writing a xontrib is as easy as writing a xonsh or Python file and sticking
+it in a directory named ``xontrib/``. However, please do not place an
+``__init__.py`` in the ``xontrib/`` directory. It is an
+*implicit namespace package* and should not have one. See
+`PEP 420 <https://www.python.org/dev/peps/pep-0420/>`_ for more details.
+
+.. warning::
+
+    Do not place an ``__init__.py`` in the ``xontrib/`` directory!
+
+If you plan on using ``*.xsh`` files in you xontrib, then you'll
+have to add some hooks to distutils, setuptools, pip, etc. to install these
+files. Try adding entries like the following entries to your ``setup()`` call
+in your ``setup.py``:
+
+.. code-block:: python
+
+    try:
+        from setuptools import setup
+    except ImportError:
+        from distutils.core import setup
+
+    setup(...,
+          packages=[..., 'xontrib'],
+          package_dir={..., 'xontrib': 'xontrib'},
+          package_data={..., 'xontrib': ['*.xsh']},
+          ...)
+
+Something similar can be done for any non-xontrib package or sub-package
+that needs to distribute ``*.xsh`` files.
+
+
 Tell Us About Your Xontrib!
 ===========================
-x
+We request that you register your xontrib with us.  We think that this is a
+good idea, in general, because then:
+
+* Your xontrib will show up as an entension the xonsh website,
+* It will appear in the ``xontrib list`` command, and
+* It will show up in ``xonfig wizard``.
+
+All of this let's users know that your xontrib is out there, ready to be used.
+Of course, your under no obligation to register your xontrib.  Users will
+still be able to load your xontrib, as long as they have it installed.
+
+To register a xontrib, add an entry to
+`the xontribs.json file <https://github.com/scopatz/xonsh/blob/master/xonsh/xontribs.json>`_
+in the main xonsh repository.  A pull request is probably best, but if you
+are having trouble figuring it out please contact one of the xonsh devs
+with the relevant information.
+This is a JSON file with two top-level keys: ``"xontribs"`` and ``"packages"``.
+
+The ``"xontribs"`` key is a list of dictionaries that describes the xontrib
+module itself.  Such entries have the following structure:
+
+.. code-block:: json
+
+    {"xontribs": [
+     {"name": "xontrib-name",
+      "package": "package-name",
+      "url": "http://example.com/api/xontrib",
+      "description": ["Textual description as string or list or strings ",
+                      "enabling long content to be split over many lines."]
+      }
+     ]
+    }
+
+The ``"packages"`` key, on the other hand, is a dict mapping package names
+(associated with the xontrib entries) to metadata about the package. Package
+entries have the following structure:
+
+.. code-block:: json
+
+    {"packages": {
+      "package-name": {
+       "license": "WTFPL v1.1",
+       "url": "http://example",
+       "install": {
+        "conda": "conda install package-name",
+        "pip": "pip install package-name"}
+       }
+     }
+    }
+
+Note that you can have as many entries in the ``"install"`` dict as you
+want. Also, the keys are arbitrary labels, so feel free to pick whatever
+you want.
+
+Go forth!
