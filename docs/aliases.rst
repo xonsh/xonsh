@@ -7,7 +7,7 @@ This page describes the xonsh built-in commands and aliases.
 
 ``cd``
 ===================
-Changes the directory. If no directory is specified (i.e. if there are no arguments) 
+Changes the directory. If no directory is specified (i.e. if there are no arguments)
 then this changes to the current user's home directory.
 
 
@@ -28,7 +28,7 @@ Removes entries from the directory stack.
 
 ``dirs``
 ===================
-Displays the list of currently remembered directories.  Can also be used to clear the 
+Displays the list of currently remembered directories.  Can also be used to clear the
 directory stack.
 
 .. command-help:: xonsh.dirstack.dirs
@@ -53,39 +53,39 @@ single number is given as an argument, resume that job in the background.
 
 ``EOF``, ``exit``, and ``quit``
 ===================================
-The commands ``EOF``, ``exit``, and ``quit`` all alias the same action, which is to 
-leave xonsh in a safe manner. Typing ``Crtl-d`` is the same as typing ``EOF`` and 
+The commands ``EOF``, ``exit``, and ``quit`` all alias the same action, which is to
+leave xonsh in a safe manner. Typing ``Crtl-d`` is the same as typing ``EOF`` and
 pressing enter.
 
 
 ``xexec``
 ====================
 xexec uses the ``os.execvpe()`` function to replace the xonsh process with
-the specified program. This provides the functionality of the bash ``exec`` 
+the specified program. This provides the functionality of the bash ``exec``
 builtin.
 
 .. code-block:: bash
 
   >>> xexec bash
-  bash $ 
+  bash $
 
 
 ``source``
 ====================
-Executes the contents of the provided files in the current context. This, of course, 
+Executes the contents of the provided files in the current context. This, of course,
 only works on xonsh and Python files.
 
 
 ``source-bash``
 ====================
 Like the ``source`` command but for Bash files. This is a thin wrapper around
-the ``source-foreign`` alias where the ``shell`` argument is autoamtically set 
+the ``source-foreign`` alias where the ``shell`` argument is autoamtically set
 to ``bash``.
 
 
 ``source-foreign``
 ====================
-Like the ``source`` command but for files in foreign (non-xonsh) languages. 
+Like the ``source`` command but for files in foreign (non-xonsh) languages.
 It will pick up the environment and any aliases.
 
 .. command-help:: xonsh.aliases.source_foreign
@@ -101,7 +101,7 @@ for more information all the history command and all of its sub-commands.
 
 ``replay``
 =====================
-Replays a xonsh history file.  See `the replay section of the history tutorial 
+Replays a xonsh history file.  See `the replay section of the history tutorial
 <tutorial_hist.html#replay-action>`_ for more information about this command.
 
 .. command-help:: xonsh.replay.main
@@ -182,7 +182,7 @@ On Windows, ``which`` is aliased to ``['where']``.
 ====================
 On Windows, if no executables named ``sudo`` are found, Xonsh adds a ``sudo`` alias
 that poly fills the "run as Admin" behavior with the help of ``ShellExecuteEx`` and
-``ctypes``. It doesn't support any actual ``sudo`` parameters and just takes the 
+``ctypes``. It doesn't support any actual ``sudo`` parameters and just takes the
 command to run.
 
 
@@ -196,3 +196,7 @@ it is instead aliased to ``['ls', '-G']``.
 ====================
 The ``grep`` command is aliased to ``['grep', '--color=auto']``.
 
+
+``xontrib``
+==============
+Manages xonsh extensions.
