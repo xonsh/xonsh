@@ -4,20 +4,20 @@
 Tutorial: Extensions
 ************************************
 Take a deep breath and prepare for some serious Show & Tell; it's time to
-learn about xonsh extentions!
+learn about xonsh extensions!
 
 Overview
 ================================
 Xontributions, or ``xontribs``, are a set of tools and conventions for
 extending the functionality of xonsh beyond what is provided by default. This
-allows 3rd party developers and users to improve thier xonsh experiance without
+allows 3rd party developers and users to improve their xonsh experience without
 having to go through the xonsh development and release cycle.
 
-Many tools anbd libraries have extension capabilities. Here are some that we
+Many tools and libraries have extension capabilities. Here are some that we
 took inspiration from for xonsh:
 
 * `Sphinx <http://sphinx-doc.org/>`_: Extensions are just Python modules,
-  bundles some entensions with the main package, interface is a list of
+  bundles some extensions with the main package, interface is a list of
   string names.
 * `Oh My Zsh <http://ohmyz.sh/>`_: Centralized registry, autoloading, and
   for a shell.
@@ -33,10 +33,10 @@ Normally, these are stored and found in an
 called ``xontrib``. However, xontribs may be placed in any package or directory
 that is on the ``$PYTHONPATH``.
 
-If a module is in the ``xontrib`` namespace package, it can be refered to just
+If a module is in the ``xontrib`` namespace package, it can be referred to just
 by its module name. If a module is in any other package, then it must be
-refered to by its full package path, separated by ``.`` like you would in an
-import statement.  Of course, a module in ``xontrib`` may be refered to
+referred to by its full package path, separated by ``.`` like you would in an
+import statement.  Of course, a module in ``xontrib`` may be referred to
 with the full ``xontrib.myext``. But just calling it ``myext`` is a lot shorter
 and one of the main advantages of placing an extension in the ``xontrib``
 namespace package.
@@ -80,7 +80,7 @@ would load the ``"mpl"`` and ``"example"`` xontribs.
 
     {"xontribs": ["mpl", "example"]}
 
-Exetnstions may also be loaded via the ``xontrib`` command, which is a xonsh
+Extensions may also be loaded via the ``xontrib`` command, which is a xonsh
 default alias. This command may be run from anywhere in a xonshrc file or at
 any point after xonsh has started up. Loading is the default action of the
 ``xontrib`` command. Thus the following methods for loading via this command
@@ -124,7 +124,7 @@ you can restrict this to a set of names passed in on the command line.
     >>> xontrib list mpl
     mpl     installed      not-loaded
 
-For programatic access, you may also have this command print a JSON formatted
+For programmatic access, you may also have this command print a JSON formatted
 string:
 
 .. code-block:: xonshcon
@@ -171,7 +171,7 @@ Tell Us About Your Xontrib!
 We request that you register your xontrib with us.  We think that this is a
 good idea, in general, because then:
 
-* Your xontrib will show up as an entension the xonsh website,
+* Your xontrib will show up as an extension the xonsh website,
 * It will appear in the ``xontrib list`` command, and
 * It will show up in ``xonfig wizard``.
 
