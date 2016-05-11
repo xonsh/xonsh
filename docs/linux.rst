@@ -11,7 +11,7 @@ You can install xonsh using ``conda``, ``pip``, or from source.
 
 .. code-block:: bash
 
-    $ conda install -c xonsh xonsh
+    $ conda install -c conda-forge xonsh
 
 .. note:: For the bleeding edge development version use ``conda install -c xonsh/channel/dev xonsh``
     

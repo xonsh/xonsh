@@ -91,7 +91,6 @@ Contents
     tutorial
     tutorial_hist
     tutorial_xontrib
-    windows
     bash_to_xsh
 
 **Configuration & Setup:**
