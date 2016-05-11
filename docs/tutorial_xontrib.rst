@@ -105,7 +105,7 @@ Of course, you have to use the full module name to import a xontrib:
 
 Listing Known Xontribs
 ======================
-In addition to loading extensions, the ``xontrib`` command also allow you to
+In addition to loading extensions, the ``xontrib`` command also allows you to
 list the known xontribs. This command will report whether known xontribs are
 installed and if they are loaded in the current session. To display this
 information, pass the ``list`` action to the ``xontrib`` command:

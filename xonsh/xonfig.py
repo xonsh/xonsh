@@ -88,12 +88,12 @@ WIZARD_XONTRIB = """
 
                            {{BOLD_WHITE}}Xontribs{{NO_COLOR}}
                            {{YELLOW}}--------{{NO_COLOR}}
-No shell is complete without extentions, and xonsh is no exception. Xonsh
+No shell is complete without extensions, and xonsh is no exception. Xonsh
 extensions are called {{BOLD_GREEN}}xontribs{{NO_COLOR}}, or xonsh contributions.
 Xontribs are dynamically loadable, either by importing them directly or by
 using the 'xontrib' command. However, you can also configure xonsh to load
-xontribs autoumatically on startup prior to loading the run control files.
-This allows the xontrib to be used immeadiately in your xonshrc files.
+xontribs automatically on startup prior to loading the run control files.
+This allows the xontrib to be used immediately your xonshrc files.
 
 The following describes all xontribs that have been registered with xonsh.
 These come from users, 3rd party developers, or xonsh itself!
