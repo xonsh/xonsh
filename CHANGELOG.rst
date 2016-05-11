@@ -69,6 +69,7 @@ Current Developments
   to fill the OS pipe buffer.
 * Sourcing foreign shells will now return a non-zero exit code if the
   source operation failed for some reason.
+* Fixed PermissionError when running commands in directories without read permissions
 
 **Security:** None
 

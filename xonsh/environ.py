@@ -716,7 +716,11 @@ def _is_executable_file(path):
 def yield_executables_windows(directory, name):
     normalized_name = os.path.normcase(name)
     extensions = builtins.__xonsh_env__.get('PATHEXT')
-    for a_file in os.listdir(directory):
+    try: 
+        names = os.listdir(directory)
+    except PermissionError:
+        return
+    for a_file in names:
         normalized_file_name = os.path.normcase(a_file)
         base_name, ext = os.path.splitext(normalized_file_name)
 
@@ -727,6 +731,10 @@ def yield_executables_windows(directory, name):
 
 
 def yield_executables_posix(directory, name):
+    try: 
+        names = os.listdir(directory)
+    except PermissionError:
+        return 
     if name in os.listdir(directory):
         path = os.path.join(directory, name)
         if _is_executable_file(path):
