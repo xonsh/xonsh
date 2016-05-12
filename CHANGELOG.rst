@@ -30,6 +30,10 @@ Current Developments
 * Added a new ``which`` alias that supports both regular ``which`` and also searches
   through xonsh aliases
 * Added support for prompt toolkit v1.0.0.
+* Added ``$XONSH_CACHE_SCRIPTS`` and ``$XONSH_CACHE_EVERYTHING`` environment
+  variables to control caching of scripts and interactive commands.  These can
+  also be controlled by command line options ``--no-script-cache`` and
+  ``--cache-everything`` when starting xonsh.
 
 **Changed:**
 
@@ -38,7 +42,8 @@ Current Developments
   Also avoids loading aliases and environments from foreign shells, as well as
   loading bash completions.
 * rc files are now compiled and cached, to avoid re-parsing when they haven't
-  changed.
+  changed.  Scripts are also compiled and cached, and there is the option to
+  cache interactive commands.
 * Left and Right arrows in the ``prompt_toolkit`` shell now wrap in multiline
   environments
 * Regexpath matching with backticks, now returns an empty list in python mode.

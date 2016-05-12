@@ -8,6 +8,9 @@ import builtins
 
 from xonsh.tools import XonshError, escape_windows_cmd_string, ON_WINDOWS, \
     print_exception, HAVE_PYGMENTS
+from xonsh.codecache import (should_use_cache, code_cache_name,
+                             code_cache_check, get_cache_filename,
+                             update_cache, run_compiled_code)
 from xonsh.completer import Completer
 from xonsh.environ import multiline_prompt, format_prompt
 if HAVE_PYGMENTS:
@@ -148,7 +151,7 @@ class BaseShell(object):
         tee = Tee() if store_stdout else io.StringIO()
         try:
             ts0 = time.time()
-            self.execer.exec(code, mode='single', glbs=self.ctx)  # no locals
+            run_compiled_code(code, self.ctx, None, 'single')
             ts1 = time.time()
             if hist.last_cmd_rtn is None:
                 hist.last_cmd_rtn = 0  # returncode for success
@@ -176,11 +179,21 @@ class BaseShell(object):
         if self.need_more_lines:
             return None, code
         src = ''.join(self.buffer)
+        _cache = should_use_cache(self.execer, 'single')
+        if _cache:
+            codefname = code_cache_name(src)
+            cachefname = get_cache_filename(codefname, code=True)
+            usecache, code = code_cache_check(cachefname)
+            if usecache:
+                self.reset_buffer()
+                return src, code
         try:
             code = self.execer.compile(src,
                                        mode='single',
                                        glbs=self.ctx,
                                        locs=None)
+            if _cache:
+                update_cache(code, cachefname)
             self.reset_buffer()
         except SyntaxError:
             if line == '\n':

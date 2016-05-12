@@ -17,7 +17,9 @@ from xonsh.shell import Shell
 from xonsh.pretty import pprint, pretty
 from xonsh.proc import HiddenCompletedCommand
 from xonsh.jobs import ignore_sigtstp
-from xonsh.tools import HAVE_PYGMENTS, setup_win_unicode_console, print_color, ON_WINDOWS
+from xonsh.tools import (HAVE_PYGMENTS, setup_win_unicode_console, print_color,
+                         ON_WINDOWS)
+from xonsh.codecache import (run_script_with_cache, run_code_with_cache)
 
 if HAVE_PYGMENTS:
     import pygments
@@ -72,6 +74,16 @@ parser.add_argument('--no-rc',
                     dest='norc',
                     action='store_true',
                     default=False)
+parser.add_argument('--no-script-cache',
+                    help="Do not cache scripts as they are run",
+                    dest='scriptcache',
+                    action='store_false',
+                    default=True)
+parser.add_argument('--cache-everything',
+                    help="Use a cache, even for interactive commands",
+                    dest='cacheall',
+                    action='store_true',
+                    default=False)
 parser.add_argument('-D',
                     dest='defines',
                     help='define an environment variable, in the form of '
@@ -108,6 +120,8 @@ def arg_undoers():
         '-i': (lambda args: setattr(args, 'force_interactive', False)),
         '-l': (lambda args: setattr(args, 'login', False)),
         '-c': (lambda args: setattr(args, 'command', None)),
+        '--no-script-cache': (lambda args: setattr(args, 'scriptcache', True)),
+        '--cache-everything': (lambda args: setattr(args, 'cacheall', False)),
         '--config-path': (lambda args: delattr(args, 'config_path')),
         '--no-rc': (lambda args: setattr(args, 'norc', False)),
         '-D': (lambda args: setattr(args, 'defines', None)),
@@ -169,7 +183,9 @@ def premain(argv=None):
         exit()
     shell_kwargs = {'shell_type': args.shell_type,
                     'completer': False,
-                    'login': False}
+                    'login': False,
+                    'scriptcache': args.scriptcache,
+                    'cacheall': args.cacheall}
     if args.login:
         shell_kwargs['login'] = True
     if args.config_path is None:
@@ -209,27 +225,19 @@ def main(argv=None):
     shell = builtins.__xonsh_shell__
     if args.mode == XonshMode.single_command:
         # run a single command and exit
-        shell.default(args.command)
+        run_code_with_cache(args.command, shell.execer, mode='single')
     elif args.mode == XonshMode.script_from_file:
         # run a script contained in a file
         if os.path.isfile(args.file):
-            with open(args.file) as f:
-                code = f.read()
-            code = code if code.endswith('\n') else code + '\n'
             sys.argv = args.args
             env['ARGS'] = [args.file] + args.args
-            code = shell.execer.compile(code, mode='exec', glbs=shell.ctx,
-                                        filename=args.file)
-            shell.execer.exec(code, mode='exec', glbs=shell.ctx)
+            run_script_with_cache(args.file, shell.execer, glb=shell.ctx, loc=None, mode='exec')
         else:
             print('xonsh: {0}: No such file or directory.'.format(args.file))
     elif args.mode == XonshMode.script_from_stdin:
         # run a script given on stdin
         code = sys.stdin.read()
-        code = code if code.endswith('\n') else code + '\n'
-        code = shell.execer.compile(code, mode='exec', glbs=shell.ctx,
-                                    filename='<stdin>')
-        shell.execer.exec(code, mode='exec', glbs=shell.ctx)
+        run_code_with_cache(code, shell.execer, glb=shell.ctx, loc=None, mode='exec')
     else:
         # otherwise, enter the shell
         env['XONSH_INTERACTIVE'] = True
