@@ -76,7 +76,9 @@ class Shell(object):
         """
         self.login = kwargs.get('login', True)
         self.stype = shell_type
-        self._init_environ(ctx, config, rc)
+        self._init_environ(ctx, config, rc,
+                           kwargs.get('scriptcache', True),
+                           kwargs.get('cacheall', False))
         env = builtins.__xonsh_env__
         # pick a valid shell
         if shell_type is not None:
@@ -115,19 +117,21 @@ class Shell(object):
         """Delegates calls to appropriate shell instance."""
         return getattr(self.shell, attr)
 
-    def _init_environ(self, ctx, config, rc):
+    def _init_environ(self, ctx, config, rc, scriptcache, cacheall):
         self.execer = Execer(config=config, login=self.login)
+        self.execer.scriptcache = scriptcache
+        self.execer.cacheall = cacheall
         if ctx is None:
-            builtins.__xonsh_ctx__ = self.ctx = context = {}
-            if self.login or self.stype != 'none':
-                # load xontrib files listed in the config file
+            self.ctx = {}
+            if self.stype != 'none' or self.login:
                 names = builtins.__xonsh_config__.get('xontribs', ())
                 for name in names:
-                    xontribs.update_context(name, ctx=context)
+                    xontribs.update_context(name, ctx=self.ctx)
                 # load run contol files
                 env = builtins.__xonsh_env__
                 rc = env.get('XONSHRC') if rc is None else rc
-                xonshrc_context(rcfiles=rc, execer=self.execer, ctx=context)
+                self.ctx.update(xonshrc_context(rcfiles=rc, execer=self.execer))
         else:
-            builtins.__xonsh_ctx__ = self.ctx = ctx
+            self.ctx = ctx
+        builtins.__xonsh_ctx__ = self.ctx
         self.ctx['__name__'] = '__main__'

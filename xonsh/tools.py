@@ -17,10 +17,10 @@ Implementations:
 * indent()
 
 """
-import ctypes
 import os
 import re
 import sys
+import ctypes
 import builtins
 import platform
 import traceback
