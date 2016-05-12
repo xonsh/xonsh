@@ -328,6 +328,10 @@ def bang_bang(args, stdin=None):
 
 def which_version():
     """Returns output from system `which -v`"""
+    if sys.platform == 'darwin':
+        if ('gnu' not in subprocess.run(['which'], stderr=subprocess.PIPE).stderr.decode('utf-8')):
+            return '<no version number available on OS X>'
+
     _ver = subprocess.run(['which','-v'], stdout=subprocess.PIPE)
     return(_ver.stdout.decode('utf-8'))
 
