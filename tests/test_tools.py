@@ -137,7 +137,7 @@ def test_subproc_toks_ls_l_semi_ls_second():
     obs = subproc_toks(s, lexer=LEXER, mincol=7, returnline=True)
     assert_equal(exp, obs)
 
-def test_subproc_hello_mom_first():
+def test_subproc_toks_hello_mom_first():
     fst = "echo 'hello'"
     sec = "echo 'mom'"
     s = '{0}; {1}'.format(fst, sec)
@@ -145,7 +145,7 @@ def test_subproc_hello_mom_first():
     obs = subproc_toks(s, lexer=LEXER, maxcol=len(fst)+1, returnline=True)
     assert_equal(exp, obs)
 
-def test_subproc_hello_mom_second():
+def test_subproc_toks_hello_mom_second():
     fst = "echo 'hello'"
     sec = "echo 'mom'"
     s = '{0}; {1}'.format(fst, sec)
@@ -191,6 +191,32 @@ def test_subproc_toks_paren_and_paren():
 def test_subproc_toks_semicolon_only():
     exp = None
     obs = subproc_toks(';', lexer=LEXER, returnline=True)
+    assert_equal(exp, obs)
+
+def test_subproc_toks_pyeval():
+    s = 'echo @(1+1)'
+    exp = '![{0}]'.format(s)
+    obs = subproc_toks(s, lexer=LEXER, returnline=True)
+    assert_equal(exp, obs)
+
+def test_subproc_toks_twopyeval():
+    s = 'echo @(1+1) @(40 + 2)'
+    exp = '![{0}]'.format(s)
+    obs = subproc_toks(s, lexer=LEXER, returnline=True)
+    assert_equal(exp, obs)
+
+def test_subproc_toks_pyeval_parens():
+    s = 'echo @(1+1)'
+    inp = '({0})'.format(s)
+    exp = '(![{0}])'.format(s)
+    obs = subproc_toks(inp, lexer=LEXER, returnline=True)
+    assert_equal(exp, obs)
+
+def test_subproc_toks_twopyeval_parens():
+    s = 'echo @(1+1) @(40+2)'
+    inp = '({0})'.format(s)
+    exp = '(![{0}])'.format(s)
+    obs = subproc_toks(inp, lexer=LEXER, returnline=True)
     assert_equal(exp, obs)
 
 def test_subexpr_from_unbalanced_parens():
