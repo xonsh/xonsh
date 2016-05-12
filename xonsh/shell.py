@@ -123,16 +123,12 @@ class Shell(object):
         self.execer.cacheall = cacheall
         env = builtins.__xonsh_env__
         if ctx is None:
-            builtins.__xonsh_ctx__ = self.ctx = context = {}
-            if self.login or self.stype != 'none':
-                # load xontrib files listed in the config file
-                names = builtins.__xonsh_config__.get('xontribs', ())
-                for name in names:
-                    xontribs.update_context(name, ctx=context)
-                # load run contol files
-                env = builtins.__xonsh_env__
+            if self.stype == 'none' and not self.login:
+                self.ctx = {}
+            else:
                 rc = env.get('XONSHRC') if rc is None else rc
-                xonshrc_context(rcfiles=rc, execer=self.execer, ctx=context)
+                self.ctx = xonshrc_context(rcfiles=rc, execer=self.execer)
         else:
-            builtins.__xonsh_ctx__ = self.ctx = ctx
+            self.ctx = ctx
+        builtins.__xonsh_ctx__ = self.ctx
         self.ctx['__name__'] = '__main__'

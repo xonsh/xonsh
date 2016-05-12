@@ -6,7 +6,7 @@ import sys
 import time
 import builtins
 
-from xonsh.tools import XonshError, escape_windows_title_string, ON_WINDOWS, \
+from xonsh.tools import XonshError, escape_windows_cmd_string, ON_WINDOWS, \
     print_exception, HAVE_PYGMENTS
 from xonsh.codecache import (should_use_cache, code_cache_name,
                              code_cache_check, get_cache_filename,
