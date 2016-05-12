@@ -556,7 +556,8 @@ def run_subproc(cmds, captured=False):
             'cmds': cmds,
             'pids': [i.pid for i in procs],
             'obj': prev_proc,
-            'bg': background
+            'bg': background,
+            'signal': None
         })
     if (ENV.get('XONSH_INTERACTIVE') and
             not ENV.get('XONSH_STORE_STDOUT') and
