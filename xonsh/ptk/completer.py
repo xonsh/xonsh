@@ -2,6 +2,7 @@
 """Completer implementation to use with prompt_toolkit."""
 import os
 import builtins
+import prompt_toolkit
 
 from prompt_toolkit.layout.dimension import LayoutDimension
 from prompt_toolkit.completion import Completer, Completion
@@ -46,13 +47,13 @@ class PromptToolkitCompleter(Completer):
             #old layout to be removed at next ptk release
             window = cli.application.layout.children[1].children[1].content
         except AttributeError:
-            try:
-                # This is the layout for ptk 1.0
-                window = cli.application.layout.children[0].content.children[1]
-            except AttributeError:
-                #new layout to become default
-                window = cli.application.layout.children[1].content
-            
+            #new layout to become default
+            window = cli.application.layout.children[1].content
+
+        # This is the layout for ptk 1.0
+        if prompt_toolkit.__version__.startswith("1."):
+            window = cli.application.layout.children[0].content.children[1]
+
         if window and window.render_info:
             h = window.render_info.content_height
             r = builtins.__xonsh_env__.get('COMPLETIONS_MENU_ROWS')
@@ -65,4 +66,3 @@ class PromptToolkitCompleter(Completer):
                 else:
                     return LayoutDimension()
             window._height = comp_height
-
