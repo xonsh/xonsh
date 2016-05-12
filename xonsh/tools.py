@@ -743,7 +743,7 @@ def to_history_tuple(x):
     if not isinstance(x, (Sequence, float, int)):
         raise ValueError('history size must be given as a sequence or number')
     if isinstance(x, str):
-        m = RE_HISTORY_TUPLE.match(x.strip())
+        m = RE_HISTORY_TUPLE.match(x.strip().lower())
         return to_history_tuple((m.group(1), m.group(3)))
     elif isinstance(x, (float, int)):
         return to_history_tuple((x, 'commands'))
