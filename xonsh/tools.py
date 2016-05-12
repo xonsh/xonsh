@@ -103,7 +103,8 @@ def _is_not_lparen_and_rparen(lparens, rtok):
     """Tests if an RPAREN token is matched with something other than a plain old
     LPAREN type.
     """
-    return rtok.type == 'RPAREN' and len(lparens) > 0 and lparens[-1] != 'LPAREN'
+    # note that any([]) is False, so this covers len(lparens) == 0
+    return rtok.type == 'RPAREN' and any(x != 'LPAREN' for x in lparens)
 
 
 def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
@@ -122,12 +123,10 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     end_offset = 0
     for tok in lexer:
         pos = tok.lexpos
-        print(tok.type)
         if tok.type not in END_TOK_TYPES and pos >= maxcol:
             break
         if tok.type in LPARENS:
             lparens.append(tok.type)
-            print("adding", lparens)
         if len(toks) == 0 and tok.type in BEG_TOK_SKIPS:
             continue  # handle indentation
         elif len(toks) > 0 and toks[-1].type in END_TOK_TYPES:

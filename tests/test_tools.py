@@ -219,6 +219,32 @@ def test_subproc_toks_twopyeval_parens():
     obs = subproc_toks(inp, lexer=LEXER, returnline=True)
     assert_equal(exp, obs)
 
+def test_subproc_toks_pyeval_nested():
+    s = 'echo @(min(1, 42))'
+    exp = '![{0}]'.format(s)
+    obs = subproc_toks(s, lexer=LEXER, returnline=True)
+    assert_equal(exp, obs)
+
+def test_subproc_toks_pyeval_nested_parens():
+    s = 'echo @(min(1, 42))'
+    inp = '({0})'.format(s)
+    exp = '(![{0}])'.format(s)
+    obs = subproc_toks(inp, lexer=LEXER, returnline=True)
+    assert_equal(exp, obs)
+
+def test_subproc_toks_capstdout():
+    s = 'echo $(echo bat)'
+    exp = '![{0}]'.format(s)
+    obs = subproc_toks(s, lexer=LEXER, returnline=True)
+    assert_equal(exp, obs)
+
+def test_subproc_toks_capproc():
+    s = 'echo !(echo bat)'
+    exp = '![{0}]'.format(s)
+    obs = subproc_toks(s, lexer=LEXER, returnline=True)
+    assert_equal(exp, obs)
+
+
 def test_subexpr_from_unbalanced_parens():
     cases = [
         ('f(x.', 'x.'),
