@@ -458,7 +458,7 @@ class Completer(object):
         out = subprocess.check_output(['bash'], input='\n'.join(inp),
                 env=builtins.__xonsh_env__.detype(), universal_newlines=True)
         for line in out.splitlines():
-            head, cmd = line.rsplit(' ', 1)
+            head, _, cmd = line.rpartition(' ')
             if len(cmd) == 0 or cmd == 'cd':
                 continue
             m = RE_DASHF.search(head)
