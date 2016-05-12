@@ -123,7 +123,6 @@ else:
         if signal_to_send is not None:
             if signal_to_send == signal.SIGCONT:
                 job['status'] = 'running'
-
             os.kill(obj.pid, signal_to_send)
             job['signal'] = None
 
@@ -135,6 +134,8 @@ else:
         if os.WIFSTOPPED(wcode):
             job['bg'] = True
             job['status'] = 'stopped'
+            # The task was stopped therefore we don't have any active task
+            builtins.__xonsh_active_job__ = None
             print()  # get a newline because ^Z will have been printed
             print_one_job(act)
         elif os.WIFSIGNALED(wcode):
@@ -161,16 +162,17 @@ def _clear_dead_jobs():
         del builtins.__xonsh_all_jobs__[i]
         if builtins.__xonsh_active_job__ == i:
             builtins.__xonsh_active_job__ = None
-    if builtins.__xonsh_active_job__ is None:
-        _reactivate_job()
 
 
 def _reactivate_job():
     if len(builtins.__xonsh_all_jobs__) == 0:
         return
-    builtins.__xonsh_active_job__ = max(builtins.__xonsh_all_jobs__.items(),
-                                        key=lambda x: x[1]['started'])[0]
 
+    all_jobs = builtins.__xonsh_all_jobs__.items()
+    reactivable_jobs = [job for job in all_jobs if job[1]['status'] == 'stopped']
+
+    builtins.__xonsh_active_job__ = max(reactivable_jobs,
+                                        key=lambda x: x[1]['started'])[0]
 
 
 def print_one_job(num):
@@ -247,6 +249,7 @@ def fg(args, stdin=None):
     _clear_dead_jobs()
     if len(args) == 0:
         # start active job in foreground
+        _reactivate_job()
         act = builtins.__xonsh_active_job__
         if act is None:
             return '', 'Cannot bring nonexistent job to foreground.\n'
