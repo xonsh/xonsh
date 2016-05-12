@@ -6,7 +6,7 @@ import shlex
 import builtins
 import sys
 import subprocess
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Action
 from collections.abc import MutableMapping, Iterable, Sequence
 
 from xonsh.dirstack import cd, pushd, popd, dirs, _get_cwd
@@ -329,11 +329,25 @@ def bang_bang(args, stdin=None):
 def which_version():
     """Returns output from system `which -v`"""
     if sys.platform == 'darwin':
-        if ('gnu' not in subprocess.run(['which'], stderr=subprocess.PIPE).stderr.decode('utf-8')):
+        if ('gnu' not in subprocess.check_output(['which'],
+                                                 stderr=subprocess.PIPE)):
             return '<no version number available on OS X>'
 
-    _ver = subprocess.run(['which','-v'], stdout=subprocess.PIPE)
-    return(_ver.stdout.decode('utf-8'))
+    _ver = subprocess.check_output(['which','-v'])
+    return _ver.decode('UTF-8')
+
+
+class AWitchAWitch(Action):
+    SUPPRESS = '==SUPPRESS=='
+    def __init__(self, option_strings, version=None, dest=SUPPRESS,
+                 default=SUPPRESS, **kwargs):
+        super().__init__(option_strings=option_strings, dest=dest,
+                         default=default, nargs=0, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        import webbrowser
+        webbrowser.open('https://github.com/scopatz/xonsh/commit/f49b400')
+        parser.exit()
 
 
 def which(args, stdin=None):
@@ -353,6 +367,7 @@ def which(args, stdin=None):
                         help='Do not search in xonsh.aliases', dest='skip')
     parser.add_argument('-v', '-V', '--version', action='version',
                         version='{}'.format(which_version()))
+    parser.add_argument('--very-small-rocks', action=AWitchAWitch)
 
     pargs = parser.parse_args(args)
     #skip alias check if user asks to skip
@@ -361,16 +376,14 @@ def which(args, stdin=None):
         print('{} -> {}'.format(match, builtins.aliases[match]))
         if pargs.all:
             try:
-                subprocess.run(['which'] + args,
-                               stderr=subprocess.PIPE,
-                               check=True)
+                subprocess.check_call(['which'] + args,
+                                      stderr=subprocess.PIPE)
             except subprocess.CalledProcessError:
                 pass
     else:
         try:
-            subprocess.run(['which'] + args,
-                           stderr=subprocess.PIPE,
-                           check=True)
+            subprocess.check_call(['which'] + args,
+                                  stderr=subprocess.PIPE)
         except subprocess.CalledProcessError:
             raise XonshError('{} not in {} or xonsh.builtins.aliases'
                             .format(args[0], ':'.join(__xonsh_env__['PATH'])))
