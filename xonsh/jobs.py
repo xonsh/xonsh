@@ -12,8 +12,8 @@ from xonsh.tools import ON_WINDOWS
 
 
 if ON_WINDOWS:
-    def _continue(obj):
-        return None
+    def _continue(job):
+        job['status'] = 'running'
 
 
     def _kill(obj):
@@ -54,8 +54,9 @@ if ON_WINDOWS:
             obj.stderr = BytesIO(errs)
 
 else:
-    def _continue(obj):
-        return signal.SIGCONT
+    def _continue(job):
+        job['signal'] = signal.SIGCONT
+        job['status'] = 'running'
 
 
     def _kill(obj):
@@ -118,11 +119,13 @@ else:
         # if necessary, send the specified signal to this process
         # (this hook  was added because vim, emacs, etc, seem to need to have
         # the terminal when they receive SIGCONT from the "fg" command)
+        signal_to_send = job['signal']
         if signal_to_send is not None:
             if signal_to_send == signal.SIGCONT:
                 job['status'] = 'running'
 
             os.kill(obj.pid, signal_to_send)
+            job['signal'] = None
 
             if job['bg']:
                 _give_terminal_to(_shell_pgrp)
@@ -259,9 +262,8 @@ def fg(args, stdin=None):
     builtins.__xonsh_active_job__ = act
     job = builtins.__xonsh_all_jobs__[act]
     job['bg'] = False
-    job['status'] = 'running'
+    _continue(job)
     print_one_job(act)
-    wait_for_active_job(_continue(job['obj']))
 
 
 def bg(args, stdin=None):
@@ -290,5 +292,5 @@ def bg(args, stdin=None):
     job = builtins.__xonsh_all_jobs__[act]
     job['bg'] = True
     # When the SIGCONT is sent job['status'] is set to running.
+    _continue(job)
     print_one_job(act)
-    wait_for_active_job(_continue(job['obj']))
