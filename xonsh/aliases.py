@@ -377,19 +377,13 @@ def which(args, stdin=None):
         if pargs.all:
             try:
                 subprocess.check_call(['which'] + args,
-                                      stdout=subprocess.PIPE,
                                       stderr=subprocess.PIPE)
-                subprocess.call(['which'] + args,
-                               stderr=subprocess.PIPE)
             except subprocess.CalledProcessError:
                 pass
     else:
         try:
             subprocess.check_call(['which'] + args,
-                                  stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE)
-            subprocess.call(['which'] + args,
-                            stderr=subprocess.PIPE)
         except subprocess.CalledProcessError:
             raise XonshError('{} not in {} or xonsh.builtins.aliases'
                             .format(args[0], ':'.join(__xonsh_env__['PATH'])))
