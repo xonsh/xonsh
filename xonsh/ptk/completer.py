@@ -2,7 +2,7 @@
 """Completer implementation to use with prompt_toolkit."""
 import os
 import builtins
-import xonsh
+import xonsh.shell
 
 from prompt_toolkit.layout.dimension import LayoutDimension
 from prompt_toolkit.completion import Completer, Completion
