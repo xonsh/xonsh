@@ -58,6 +58,7 @@ except ImportError:
 
 DEFAULT_ENCODING = sys.getdefaultencoding()
 
+ON_ANACONDA = any(s in sys.version for s in ['Anaconda','Continuum'])
 ON_WINDOWS = (platform.system() == 'Windows')
 ON_MAC = (platform.system() == 'Darwin')
 ON_LINUX = (platform.system() == 'Linux')

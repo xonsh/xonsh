@@ -19,7 +19,7 @@ from collections import MutableMapping, MutableSequence, MutableSet, namedtuple
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.tools import (
-    ON_WINDOWS, ON_MAC, ON_LINUX, ON_ARCH, IS_ROOT,
+    ON_WINDOWS, ON_MAC, ON_LINUX, ON_ARCH, IS_ROOT, ON_ANACONDA,
     always_true, always_false, ensure_string, is_env_path, str_to_env_path,
     env_path_to_str, is_bool, to_bool, bool_to_str, is_history_tuple, to_history_tuple,
     history_tuple_to_str, is_float, string_types, is_string, DEFAULT_ENCODING,
@@ -1016,7 +1016,7 @@ def env_name(pre_chars='(', post_chars=') '):
     $CONDA_DEFAULT_ENV if that is set
     """
     env_path = builtins.__xonsh_env__.get('VIRTUAL_ENV', '')
-    if len(env_path) == 0 and 'Anaconda' in sys.version:
+    if len(env_path) == 0 and ON_ANACONDA:
         pre_chars, post_chars = '[', '] '
         env_path = builtins.__xonsh_env__.get('CONDA_DEFAULT_ENV', '')
     env_name = os.path.basename(env_path)

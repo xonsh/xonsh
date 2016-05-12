@@ -13,7 +13,8 @@ from xonsh.dirstack import cd, pushd, popd, dirs, _get_cwd
 from xonsh.jobs import jobs, fg, bg, kill_all_jobs
 from xonsh.proc import foreground
 from xonsh.timings import timeit_alias
-from xonsh.tools import ON_MAC, ON_WINDOWS, XonshError, to_bool, string_types
+from xonsh.tools import (ON_MAC, ON_WINDOWS, ON_ANACONDA,
+    XonshError, to_bool, string_types)
 from xonsh.history import main as history_alias
 from xonsh.replay import main as replay_main
 from xonsh.xontribs import main as xontribs_main
@@ -447,7 +448,7 @@ def make_default_aliases():
         default_aliases['call'] = ['source-cmd']
         default_aliases['source-bat'] = ['source-cmd']
         # Add aliases specific to the Anaconda python distribution.
-        if 'Anaconda' in sys.version:
+        if ON_ANACONDA:
             def source_cmd_keep_prompt(args, stdin=None):
                 p = builtins.__xonsh_env__.get('PROMPT')
                 source_cmd(args, stdin=stdin)
