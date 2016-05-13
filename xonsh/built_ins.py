@@ -429,7 +429,7 @@ def run_subproc(cmds, captured=False):
             stdout = streams['stdout'][-1]
             procinfo['stdout_redirect'] = streams['stdout'][:-1]
         elif _capture_streams or ix != last_cmd:
-            stdout = tempfile.NamedTemporaryFile(delete=False)
+            _nstdout = stdout = tempfile.NamedTemporaryFile(delete=False)
             _stdout_name = stdout.name
         elif builtins.__xonsh_stdout_uncaptured__ is not None:
             stdout = builtins.__xonsh_stdout_uncaptured__
@@ -440,7 +440,7 @@ def run_subproc(cmds, captured=False):
             stderr = streams['stderr'][-1]
             procinfo['stderr_redirect'] = streams['stderr'][:-1]
         elif captured == 'object':
-            stderr = tempfile.NamedTemporaryFile(delete=False)
+            _nstderr = stderr = tempfile.NamedTemporaryFile(delete=False)
             _stderr_name = stderr.name
         elif builtins.__xonsh_stderr_uncaptured__ is not None:
             stderr = builtins.__xonsh_stderr_uncaptured__
@@ -557,9 +557,12 @@ def run_subproc(cmds, captured=False):
     output = b''
     if write_target is None:
         if _stdout_name is not None:
-            stdout = open(_stdout_name, 'rb')
-            output = stdout.read()
-            stdout.close()
+            with open(_stdout_name, 'rb') as stdoutfile:
+                output = stdoutfile.read()
+            try:
+                _nstdout.close()
+            except:
+                pass
             os.unlink(_stdout_name)
         elif prev_proc.stdout not in (None, sys.stdout):
             output = prev_proc.stdout.read()
@@ -575,9 +578,12 @@ def run_subproc(cmds, captured=False):
             named = _stderr_name is not None
             unnamed = prev_proc.stderr not in {None, sys.stderr}
             if named:
-                stderr = open(_stderr_name, 'rb')
-                errout = stderr.read()
-                stderr.close()
+                with open(_stderr_name, 'rb') as stderrfile:
+                    errout = stderrfile.read()
+                try:
+                    _nstderr.close()
+                except:
+                    pass
                 os.unlink(_stderr_name)
             elif unnamed:
                 errout = prev_proc.stderr.read()
