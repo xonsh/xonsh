@@ -36,7 +36,7 @@ class PromptToolkitShell(BaseShell):
             enable_auto_suggest_bindings=True,
             enable_search=True,
             enable_abort_and_exit_bindings=True,
-            enable_vi_mode=Condition(lambda cli: builtins.__xonsh_env__.get('VI_MODE')),
+            # enable_vi_mode=Condition(lambda cli: builtins.__xonsh_env__.get('VI_MODE')), # deprecated acoording to prompt_toolset 1.0 document
             enable_open_in_editor=True)
         load_xonsh_bindings(self.key_bindings_manager)
 
@@ -77,7 +77,8 @@ class PromptToolkitShell(BaseShell):
                     enable_history_search=enable_history_search,
                     reserve_space_for_menu=0,
                     key_bindings_registry=self.key_bindings_manager.registry,
-                    display_completions_in_columns=multicolumn)
+                    display_completions_in_columns=multicolumn,
+                    vi_mode=builtins.__xonsh_env__.get('VI_MODE'))
         return line
 
     def push(self, line):
