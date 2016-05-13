@@ -296,6 +296,8 @@ def _open(fname, mode):
         return fname
     try:
         return open(fname, mode)
+    except PermissionError:
+        raise XonshError('xonsh: {0}: permission denied'.format(fname))
     except Exception:
         raise XonshError('xonsh: {0}: no such file or directory'.format(fname))
 
