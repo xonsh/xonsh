@@ -298,8 +298,10 @@ def _open(fname, mode):
         return open(fname, mode)
     except PermissionError:
         raise XonshError('xonsh: {0}: permission denied'.format(fname))
-    except Exception:
+    except FileNotFoundError:
         raise XonshError('xonsh: {0}: no such file or directory'.format(fname))
+    except Exception:
+        raise XonshError('xonsh: {0}: unable to open file'.format(fname))
 
 
 def _redirect_io(streams, r, loc=None):
