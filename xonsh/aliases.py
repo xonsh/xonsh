@@ -330,14 +330,15 @@ def bang_bang(args, stdin=None):
 @lru_cache(1)
 def which_version():
     """Returns output from system `which -v`"""
+    denv = __xonsh_env__.detype()
     try:
-        _ver = subprocess.check_output(['which', '-v'],
+        _ver = subprocess.check_output(['which', '-v'], env=denv,
                                        stderr=subprocess.PIPE).decode('UTF-8')
     except subprocess.CalledProcessError:
         _ver = '<no version number available on your OS>'
     except FileNotFoundError:
         _ver = "<'which' binary not found>"
-        
+
     return _ver
 
 class AWitchAWitch(Action):
@@ -374,12 +375,13 @@ def which(args, stdin=None):
     pargs = parser.parse_args(args)
 
     #skip alias check if user asks to skip
+    denv = __xonsh_env__.detype()
     if (pargs.arg in builtins.aliases and not pargs.skip):
         match = pargs.arg
         print('{} -> {}'.format(match, builtins.aliases[match]))
         if pargs.all:
             try:
-                subprocess.check_call(['which'] + args,
+                subprocess.check_call(['which'] + args, env=denv,
                                       stderr=subprocess.PIPE)
             except subprocess.CalledProcessError:
                 pass
@@ -387,7 +389,7 @@ def which(args, stdin=None):
                 print("'which' binary not found")
     else:
         try:
-            subprocess.check_call(['which'] + args,
+            subprocess.check_call(['which'] + args, env=denv,
                                   stderr=subprocess.PIPE)
         except subprocess.CalledProcessError:
             raise XonshError('{} not in {} or xonsh.builtins.aliases'
