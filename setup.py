@@ -18,11 +18,13 @@ try:
     from setuptools.command.sdist import sdist
     from setuptools.command.install import install
     from setuptools.command.develop import develop
+    from setuptools.command.install_scripts import install_scripts
     HAVE_SETUPTOOLS = True
 except ImportError:
     from distutils.core import setup
     from distutils.command.sdist import sdist as sdist
     from distutils.command.install import install as install
+    from distutils.command.install_scripts import install_scripts
     HAVE_SETUPTOOLS = False
 
 try:
@@ -100,6 +102,29 @@ class xsdist(sdist):
         sdist.make_release_tree(self, basedir, files)
 
 
+#-----------------------------------------------------------------------------
+# Hack to overcome pip/setuptools problem on Win 10.  See:
+#   https://github.com/tomduck/pandoc-eqnos/issues/6
+#   https://github.com/pypa/pip/issues/2783
+
+# Custom install_scripts command class for setup()
+class install_scripts_quoted_shebang(install_scripts):
+    """Ensure there are quotes around shebang paths with spaces."""
+    def write_script(self, script_name, contents, mode="t", *ignored):
+        shebang = str(contents.splitlines()[0])
+        if shebang.startswith('#!') and ' ' in shebang[2:].strip() \
+          and '"' not in shebang:
+            quoted_shebang = '#!"%s"' % shebang[2:].strip()
+            contents = contents.replace(shebang, quoted_shebang)
+        super().write_script(script_name, contents, mode, *ignored)
+
+# The custom install needs to be used on Windows machines
+if os.name == 'nt':
+    cmdclass = {'install': xinstall, 'sdist': xsdist, 'install_scripts': install_scripts_quoted_shebang}
+else:
+    cmdclass = {'install': xinstall, 'sdist': xsdist}
+
+
 if HAVE_SETUPTOOLS:
     class xdevelop(develop):
         """Xonsh specialization of setuptools develop class."""
@@ -138,7 +163,7 @@ def main():
         packages=['xonsh', 'xonsh.ptk', 'xonsh.parsers', 'xontrib'],
         package_dir={'xonsh': 'xonsh', 'xontrib': 'xontrib'},
         package_data={'xonsh': ['*.json'], 'xontrib': ['*.xsh']},
-        cmdclass={'install': xinstall, 'sdist': xsdist},
+        cmdclass=cmdclass
         )
     if HAVE_SETUPTOOLS:
         skw['entry_points'] = {
