@@ -12,7 +12,7 @@ from xonsh.codecache import (should_use_cache, code_cache_name,
                              code_cache_check, get_cache_filename,
                              update_cache, run_compiled_code)
 from xonsh.completer import Completer
-from xonsh.environ import multiline_prompt, format_prompt
+from xonsh.environ import multiline_prompt, format_prompt, partial_format_prompt
 if HAVE_PYGMENTS:
     from xonsh.pyghooks import XonshStyle
 
@@ -246,7 +246,7 @@ class BaseShell(object):
         env = builtins.__xonsh_env__  # pylint: disable=no-member
         p = env.get('PROMPT')
         try:
-            p = format_prompt(p)
+            p = partial_format_prompt(p)
         except Exception:  # pylint: disable=broad-except
             print_exception()
         self.settitle()
