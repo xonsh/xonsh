@@ -429,9 +429,8 @@ def run_subproc(cmds, captured=False):
             stdout = streams['stdout'][-1]
             procinfo['stdout_redirect'] = streams['stdout'][:-1]
         elif _capture_streams or ix != last_cmd:
-            _stdout = tempfile.NamedTemporaryFile(delete=False)
-            _stdout_name = _stdout.name
-            stdout = open(_stdout_name, 'w')
+            stdout = tempfile.NamedTemporaryFile(delete=False)
+            _stdout_name = stdout.name
         elif builtins.__xonsh_stdout_uncaptured__ is not None:
             stdout = builtins.__xonsh_stdout_uncaptured__
         else:
@@ -441,9 +440,8 @@ def run_subproc(cmds, captured=False):
             stderr = streams['stderr'][-1]
             procinfo['stderr_redirect'] = streams['stderr'][:-1]
         elif captured == 'object':
-            _stderr = tempfile.NamedTemporaryFile(delete=False)
-            _stderr_name = _stderr.name
-            stderr = open(_stderr_name, 'w')
+            stderr = tempfile.NamedTemporaryFile(delete=False)
+            _stderr_name = stderr.name
         elif builtins.__xonsh_stderr_uncaptured__ is not None:
             stderr = builtins.__xonsh_stderr_uncaptured__
         uninew = (ix == last_cmd) and (not _capture_streams)
