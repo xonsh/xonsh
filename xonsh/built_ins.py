@@ -428,7 +428,9 @@ def run_subproc(cmds, captured=False):
                 raise XonshError('Multiple redirects for stdout')
             stdout = streams['stdout'][-1]
             procinfo['stdout_redirect'] = streams['stdout'][:-1]
-        elif _capture_streams or ix != last_cmd:
+        elif ix != last_cmd:
+            stdout = PIPE
+        elif _capture_streams:
             _nstdout = stdout = tempfile.NamedTemporaryFile(delete=False)
             _stdout_name = stdout.name
         elif builtins.__xonsh_stdout_uncaptured__ is not None:
@@ -439,7 +441,7 @@ def run_subproc(cmds, captured=False):
         if 'stderr' in streams:
             stderr = streams['stderr'][-1]
             procinfo['stderr_redirect'] = streams['stderr'][:-1]
-        elif captured == 'object':
+        elif captured == 'object' and ix != last_cmd:
             _nstderr = stderr = tempfile.NamedTemporaryFile(delete=False)
             _stderr_name = stderr.name
         elif builtins.__xonsh_stderr_uncaptured__ is not None:
