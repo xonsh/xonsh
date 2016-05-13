@@ -335,7 +335,7 @@ def which_version():
                                        stderr=subprocess.PIPE).decode('UTF-8')
     except subprocess.CalledProcessError:
         _ver = '<no version number available on your OS>'
-    except subprocess.FileNotFoundError:
+    except FileNotFoundError:
         _ver = "<'which' binary not found>"
         
     return _ver
