@@ -331,14 +331,14 @@ def bang_bang(args, stdin=None):
 def which_version():
     """Returns output from system `which -v`"""
     try:
-        subprocess.check_output(['which', '-v'],
-                                stderr=subprocess.PIPE).decode('UTF-8')
+        _ver = subprocess.check_output(['which', '-v'],
+                                       stderr=subprocess.PIPE).decode('UTF-8')
     except subprocess.CalledProcessError:
-        return '<no version number available on your OS>'
-
-    _ver = subprocess.check_output(['which','-v']).decode('UTF-8')
+        _ver = '<no version number available on your OS>'
+    except subprocess.FileNotFoundError:
+        _ver = "<'which' binary not found>"
+        
     return _ver
-
 
 class AWitchAWitch(Action):
     SUPPRESS = '==SUPPRESS=='
@@ -351,7 +351,6 @@ class AWitchAWitch(Action):
         import webbrowser
         webbrowser.open('https://github.com/scopatz/xonsh/commit/f49b400')
         parser.exit()
-
 
 def which(args, stdin=None):
     """
@@ -373,6 +372,7 @@ def which(args, stdin=None):
     parser.add_argument('--very-small-rocks', action=AWitchAWitch)
 
     pargs = parser.parse_args(args)
+
     #skip alias check if user asks to skip
     if (pargs.arg in builtins.aliases and not pargs.skip):
         match = pargs.arg
@@ -383,6 +383,8 @@ def which(args, stdin=None):
                                       stderr=subprocess.PIPE)
             except subprocess.CalledProcessError:
                 pass
+            except FileNotFoundError:
+                print("'which' binary not found")
     else:
         try:
             subprocess.check_call(['which'] + args,
@@ -390,6 +392,8 @@ def which(args, stdin=None):
         except subprocess.CalledProcessError:
             raise XonshError('{} not in {} or xonsh.builtins.aliases'
                             .format(args[0], ':'.join(__xonsh_env__['PATH'])))
+        except FileNotFoundError:
+            print("'which' binary not found")
 
 
 def xonfig(args, stdin=None):
