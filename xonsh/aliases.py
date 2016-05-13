@@ -333,6 +333,9 @@ def which_version():
     try:
         subprocess.check_output(['which', '-v'],
                                 stderr=subprocess.PIPE).decode('UTF-8')
+    except FileNotFoundError:
+        if ON_WINDOWS:
+            return "<'which' is not available on your OS>"
     except subprocess.CalledProcessError:
         return '<no version number available on your OS>'
 
@@ -379,19 +382,30 @@ def which(args, stdin=None):
         print('{} -> {}'.format(match, builtins.aliases[match]))
         if pargs.all:
             try:
-                subprocess.check_call(['which'] + args,
-                                      stderr=subprocess.PIPE)
+                try:
+                    subprocess.check_call(['which'] + args,
+                                          stderr=subprocess.PIPE)
+                except FileNotFoundError as e:
+                    if ON_WINDOWS:
+                        subprocess.check_call(['where'] + [pargs.arg],
+                                              stderr=subprocess.PIPE)
             except subprocess.CalledProcessError:
                 pass
     else:
         try:
-            subprocess.check_call(['which'] + args,
-                                  stderr=subprocess.PIPE)
+            try:
+                subprocess.check_call(['which'] + args,
+                                      stderr=subprocess.PIPE)
+            except FileNotFoundError as e:
+                if ON_WINDOWS:
+                    subprocess.check_call(['where'] + [pargs.arg],
+                                          stderr=subprocess.PIPE)
         except subprocess.CalledProcessError:
-            raise XonshError('{} not in {} or xonsh.builtins.aliases'
-                            .format(args[0], ':'.join(__xonsh_env__['PATH'])))
+            raise XonshError('{} not in $PATH or xonsh.builtins.aliases'
+                            .format(args[0]))
 
-
+         
+                            
 def xonfig(args, stdin=None):
     """Runs the xonsh configuration utility."""
     from xonsh.xonfig import main  # lazy import
