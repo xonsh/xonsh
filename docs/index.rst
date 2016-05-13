@@ -92,6 +92,7 @@ Contents
     tutorial_hist
     tutorial_xontrib
     bash_to_xsh
+    python_virtual_environments
 
 **Configuration & Setup:**
 
