@@ -441,7 +441,7 @@ def run_subproc(cmds, captured=False):
         if 'stderr' in streams:
             stderr = streams['stderr'][-1]
             procinfo['stderr_redirect'] = streams['stderr'][:-1]
-        elif captured == 'object' and ix != last_cmd:
+        elif captured == 'object' and ix == last_cmd:
             _nstderr = stderr = tempfile.NamedTemporaryFile(delete=False)
             _stderr_name = stderr.name
         elif builtins.__xonsh_stderr_uncaptured__ is not None:
