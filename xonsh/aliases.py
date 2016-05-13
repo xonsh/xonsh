@@ -6,6 +6,7 @@ import shlex
 import builtins
 import sys
 import subprocess
+from functools import lru_cache
 from argparse import ArgumentParser, Action
 from collections.abc import MutableMapping, Iterable, Sequence
 
@@ -326,6 +327,7 @@ def bang_bang(args, stdin=None):
     return bang_n(['-1'])
 
 
+@lru_cache(1)
 def which_version():
     """Returns output from system `which -v`"""
     try:
