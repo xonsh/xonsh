@@ -22,7 +22,7 @@ from xonsh.ptk.completer import PromptToolkitCompleter
 from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings
 from xonsh.ptk.shortcuts import Prompter, print_tokens
-
+from xonsh.shell import prompt_toolkit_version
 
 class PromptToolkitShell(BaseShell):
     """The xonsh shell."""
@@ -39,10 +39,9 @@ class PromptToolkitShell(BaseShell):
                 'enable_abort_and_exit_bindings': True,
                 'enable_open_in_editor': True
                 }
-        import prompt_toolkit
-        vptk = getattr(prompt_toolkit, '__version__', '0.0')
+        vptk = prompt_toolkit_version()
         major, minor = [int(x) for x in vptk.split('.')[:2]]
-        self.new_vi_mode_flag = (major, minor) >= (1, 0)
+        self.new_vi_mode_flag = ((major, minor) >= (1, 0)) and (vptk != '<0.57')
         if not(self.new_vi_mode_flag):
             # enable_vi_mode is deprecated acoording to prompt_toolset 1.0 document.
             key_bindings_manager_args['enable_vi_mode'] = Condition(lambda cli: builtins.__xonsh_env__.get('VI_MODE'))
