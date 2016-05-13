@@ -70,6 +70,7 @@ Current Developments
 * Sourcing foreign shells will now return a non-zero exit code if the
   source operation failed for some reason.
 * Fixed PermissionError when running commands in directories without read permissions
+* Prevent Windows fixups from overriding environment vars in static config
 
 **Security:** None
 
