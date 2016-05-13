@@ -54,6 +54,8 @@ Current Developments
 * PLY is no longer a external dependency but is bundled in xonsh/ply. Xonsh can
   therefore run without any external dependencies, although having prompt-toolkit
   recommended.
+* Provide better user feedback when running ``which`` in a platform that doesn't
+  provide it (e.g. Windows).
 
 **Deprecated:** None
 
