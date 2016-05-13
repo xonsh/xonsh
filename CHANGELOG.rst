@@ -76,6 +76,7 @@ Current Developments
   source operation failed for some reason.
 * Fixed PermissionError when running commands in directories without read permissions
 * Prevent Windows fixups from overriding environment vars in static config
+* Fixed Optional Github project status to reflect added/removed files via git_dirty_working_directory()
 
 **Security:** None
 
