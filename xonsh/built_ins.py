@@ -558,7 +558,6 @@ def run_subproc(cmds, captured=False):
     if write_target is None:
         if _stdout_name is not None:
             stdout = open(_stdout_name, 'rb')
-            stdout.seek(0)
             output = stdout.read()
             stdout.close()
             os.unlink(_stdout_name)
@@ -577,7 +576,6 @@ def run_subproc(cmds, captured=False):
             unnamed = prev_proc.stderr not in {None, sys.stderr}
             if named:
                 stderr = open(_stderr_name, 'rb')
-                stderr.seek(0)
                 errout = stderr.read()
                 stderr.close()
                 os.unlink(_stderr_name)
