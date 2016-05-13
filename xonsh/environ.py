@@ -1284,8 +1284,8 @@ def default_env(env=None, config=None, login=True):
     ctx = dict(BASE_ENV)
     ctx.update(os.environ)
     if ON_WINDOWS:
-        # Windows default prompt doesn't work.
-        ctx['PROMPT'] = DEFAULT_PROMPT
+        # Windows style PROMPT definitions don't work in XONSH:
+        del ctx['PROMPT']
 
     if login:
         conf = load_static_config(ctx, config=config)
