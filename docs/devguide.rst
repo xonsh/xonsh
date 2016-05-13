@@ -75,6 +75,16 @@ If you want to lint the entire code base run::
 How to Test
 ================
 
+----------------------------------
+Docker
+----------------------------------
+
+If you want to run your "work in progress version" without installing 
+and in a fresh environment you can use Docker and the Docker file
+in the repository. If Docker is installed you just have to run this::
+
+  $ docker build -t xonsh . && docker run -it xonsh
+
 Ensure your cwd is the root directory of the project (i.e., the one containing the
 .git directory).
 
