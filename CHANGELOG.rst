@@ -28,7 +28,8 @@ Current Developments
   running the Anaconda python distribution on Windows.
 * Added a menu entry to launch xonsh when installing xonsh from a conda package
 * Added a new ``which`` alias that supports both regular ``which`` and also searches
-  through xonsh aliases
+  through xonsh aliases. On Windows if the ``which`` binary is not available this will 
+  fall back to using the ``where`` command 
 * Added support for prompt toolkit v1.0.0.
 * Added ``$XONSH_CACHE_SCRIPTS`` and ``$XONSH_CACHE_EVERYTHING`` environment
   variables to control caching of scripts and interactive commands.  These can
