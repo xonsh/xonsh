@@ -9,6 +9,8 @@ import string
 import locale
 import builtins
 import subprocess
+import shutil
+import math
 from itertools import chain
 from warnings import warn
 from pprint import pformat
@@ -84,6 +86,7 @@ DEFAULT_ENSURERS = {
     'PATHEXT': (is_env_path, str_to_env_path, env_path_to_str),
     'RAISE_SUBPROC_ERROR': (is_bool, to_bool, bool_to_str),
     'RIGHT_PROMPT': (is_string, ensure_string, ensure_string),
+    'DYNAMIC_CWD_WIDTH': (is_string, ensure_string, ensure_string),
     'TEEPTY_PIPE_DELAY': (is_float, float, str),
     'UPDATE_OS_ENVIRON': (is_bool, to_bool, bool_to_str),
     'XONSHRC': (is_env_path, str_to_env_path, env_path_to_str),
@@ -191,6 +194,7 @@ DEFAULT_VALUES = {
     'PUSHD_SILENT': False,
     'RAISE_SUBPROC_ERROR': False,
     'RIGHT_PROMPT': '',
+    'DYNAMIC_CWD_WIDTH': '20',
     'SHELL_TYPE': 'best',
     'SUGGEST_COMMANDS': True,
     'SUGGEST_MAX_NUM': 5,
@@ -361,6 +365,8 @@ DEFAULT_DOCS = {
         'at the prompt. This may be parameterized in the same way as '
         'the $PROMPT variable. Currently, this is only available in the '
         'prompt-toolkit shell.'),
+    'DYNAMIC_CWD_WIDTH': VarDocs('Target length in number of characters '
+        'for the {dynamic_cwd} prompt var'),
     'SHELL_TYPE': VarDocs(
         'Which shell is used. Currently two base shell types are supported:\n\n'
         "    - 'readline' that is backed by Python's readline module\n"
@@ -1007,6 +1013,36 @@ def _collapsed_pwd():
     base = [i[0] if ix != l-1 else i for ix,i in enumerate(pwd) if len(i) > 0]
     return leader + sep.join(base)
 
+def _dynamically_collapsed_pwd():
+    sep = get_sep()
+    pwd = _replace_home_cwd().split(sep)
+    cols, _ = shutil.get_terminal_size()
+    targetWidthRaw = builtins.__xonsh_env__['DYNAMIC_CWD_WIDTH']
+
+    if (targetWidthRaw[-1] == '%'):
+        targetWidth = math.floor(float(targetWidthRaw[:-1]) / 100 * cols)
+    else:
+        targetWidth = int(targetWidthRaw)
+
+    last = pwd.pop()
+    remaining_space = targetWidth - len(last) 
+    # Reserve space for separators
+    remaining_space_for_text = remaining_space - len(pwd) 
+
+    parts = []
+    for i  in range(len(pwd)):
+        part = pwd[i]
+        part_len = min(len(part), max(1, math.floor(remaining_space_for_text / (len(pwd) - i))))
+        remaining_space_for_text -= part_len
+        reduced_part = part[0:part_len]
+        parts.append(reduced_part)
+
+    full = sep.join(parts) + sep + last
+    if (len(full) > targetWidth):
+        full = full[-targetWidth:]
+    return full
+
+
 
 def _current_job():
     j = builtins.__xonsh_active_job__
@@ -1047,6 +1083,7 @@ FORMATTER_DICT = dict(
     cwd_dir=lambda: os.path.dirname(_replace_home_cwd()),
     cwd_base=lambda: os.path.basename(_replace_home_cwd()),
     short_cwd=_collapsed_pwd,
+    dynamic_cwd=_dynamically_collapsed_pwd,
     curr_branch=current_branch,
     branch_color=branch_color,
     branch_bg_color=branch_bg_color,
