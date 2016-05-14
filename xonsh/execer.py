@@ -191,18 +191,22 @@ class Execer(object):
                                        returnline=True,
                                        maxcol=maxcol,
                                        lexer=self.parser.lexer)
-                if sbpline.lstrip().startswith('![!['):
+                if sbpline is None:
+                    # subprocess line had no valid tokens,
+                    if len(line.partition('#')[0].strip()) == 0:
+                        # likely because it only contained a comment.
+                        del lines[idx]
+                        last_error_line = last_error_col = -1
+                        input = '\n'.join(lines)
+                        continue
+                    else:
+                        # or for some other syntax error
+                        raise original_error
+                elif sbpline.lstrip().startswith('![!['):
                     # if we have already wrapped this in subproc tokens
                     # and it still doesn't work, adding more won't help
                     # anything
                     raise original_error
-                if sbpline is None:
-                    # subprocess line had no valid tokens, likely because
-                    # it only contained a comment.
-                    del lines[idx]
-                    last_error_line = last_error_col = -1
-                    input = '\n'.join(lines)
-                    continue
                 else:
                     lines[idx] = sbpline
                 last_error_col += 3
