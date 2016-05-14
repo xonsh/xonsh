@@ -8,7 +8,7 @@ from collections import Mapping
 
 from xonsh import ast
 from xonsh.parser import Parser
-from xonsh.tools import subproc_toks, END_TOK_TYPES, XonshError
+from xonsh.tools import subproc_toks, END_TOK_TYPES
 from xonsh.built_ins import load_builtins, unload_builtins
 
 
