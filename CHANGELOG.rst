@@ -54,6 +54,8 @@ Current Developments
 * PLY is no longer a external dependency but is bundled in xonsh/ply. Xonsh can
   therefore run without any external dependencies, although having prompt-toolkit
   recommended.
+* Provide better user feedback when running ``which`` in a platform that doesn't
+  provide it (e.g. Windows).
 
 **Deprecated:** None
 
@@ -75,6 +77,9 @@ Current Developments
 * Sourcing foreign shells will now return a non-zero exit code if the
   source operation failed for some reason.
 * Fixed PermissionError when running commands in directories without read permissions
+* Prevent Windows fixups from overriding environment vars in static config
+* Fixed Optional Github project status to reflect added/removed files via git_dirty_working_directory()
+* Fixed xonsh.exe launcher on Windows, when Python install directory has a space in it
 
 **Security:** None
 

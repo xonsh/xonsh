@@ -935,7 +935,7 @@ def git_dirty_working_directory(cwd=None, include_untracked=False):
     try:
         cmd = ['git', 'status', '--porcelain']
         if include_untracked:
-            cmd.append('--untracked-files=yes')
+            cmd.append('--untracked-files=normal')
         else:
             cmd.append('--untracked-files=no')
         s = subprocess.check_output(cmd,
@@ -1219,10 +1219,8 @@ def xonshrc_context(rcfiles=None, execer=None):
     return env
 
 
-def windows_env_fixes(ctx):
+def windows_foreign_env_fixes(ctx):
     """Environment fixes for Windows. Operates in-place."""
-    # Windows default prompt doesn't work.
-    ctx['PROMPT'] = DEFAULT_PROMPT
     # remove these bash variables which only cause problems.
     for ev in ['HOME', 'OLDPWD']:
         if ev in ctx:
@@ -1243,13 +1241,27 @@ def default_env(env=None, config=None, login=True):
     # in order of increasing precedence
     ctx = dict(BASE_ENV)
     ctx.update(os.environ)
+    if ON_WINDOWS:
+        # Windows style PROMPT definitions don't work in XONSH:
+        try:
+            del ctx['PROMPT']
+        except KeyError:
+            pass
+
     if login:
         conf = load_static_config(ctx, config=config)
+
+        foreign_env = load_foreign_envs(shells=conf.get('foreign_shells', DEFAULT_SHELLS),
+                                        issue_warning=False)
+        if ON_WINDOWS:
+            windows_foreign_env_fixes(foreign_env)
+
+        ctx.update(foreign_env)
+
+        # Do static config environment last, to allow user to override any of
+        # our environment choices
         ctx.update(conf.get('env', ()))
-        ctx.update(load_foreign_envs(shells=conf.get('foreign_shells', DEFAULT_SHELLS),
-                                     issue_warning=False))
-    if ON_WINDOWS:
-        windows_env_fixes(ctx)
+
     # finalize env
     if env is not None:
         ctx.update(env)
