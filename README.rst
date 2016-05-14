@@ -21,3 +21,8 @@ xonsh (pronounced *conch*) is meant for the daily use of experts and novices
 alike.
 
 Please visit http://xon.sh for more information.
+
+Projects that use xonsh
+***********************
+
+- `gitsome <https://github.com/donnemartin/gitsome>`_: A supercharged Git/shell autocompleter with GitHub integration.
