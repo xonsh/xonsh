@@ -353,9 +353,9 @@ DEFAULT_DOCS = {
         'Whether or not to suppress directory stack manipulation output.'),
     'RAISE_SUBPROC_ERROR': VarDocs(
         'Whether or not to raise an error if a subprocess (captured or '
-        'uncaptured) returns a non-zero exit status, which indicates failure.'
+        'uncaptured) returns a non-zero exit status, which indicates failure. '
         'This is most useful in xonsh scripts or modules where failures '
-        'should cause an end to execution. This is less useful at a terminal.'
+        'should cause an end to execution. This is less useful at a terminal. '
         'The error that is raised is a subprocess.CalledProcessError.'),
     'RIGHT_PROMPT': VarDocs('Template string for right-aligned text '
         'at the prompt. This may be parameterized in the same way as '
@@ -726,7 +726,7 @@ def _is_executable_file(path):
 def yield_executables_windows(directory, name):
     normalized_name = os.path.normcase(name)
     extensions = builtins.__xonsh_env__.get('PATHEXT')
-    try: 
+    try:
         names = os.listdir(directory)
     except PermissionError:
         return
@@ -741,10 +741,10 @@ def yield_executables_windows(directory, name):
 
 
 def yield_executables_posix(directory, name):
-    try: 
+    try:
         names = os.listdir(directory)
     except PermissionError:
-        return 
+        return
     if name in os.listdir(directory):
         path = os.path.join(directory, name)
         if _is_executable_file(path):
