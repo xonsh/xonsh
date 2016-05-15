@@ -23,6 +23,7 @@ from xonsh.environ import locate_binary
 from xonsh.foreign_shells import foreign_shell_data
 from xonsh.vox import Vox
 from xonsh.tools import argvquote, escape_windows_cmd_string
+from xonsh.xoreutils import _which
 
 
 class Aliases(MutableMapping):
@@ -327,22 +328,9 @@ def bang_bang(args, stdin=None):
     return bang_n(['-1'])
 
 
-@lru_cache(1)
-def which_version():
-    """Returns output from system `which -v`"""
-    denv = __xonsh_env__.detype()
-    try:
-        _ver = subprocess.check_output(['which', '-v'], env=denv,
-                                       stderr=subprocess.PIPE).decode('UTF-8')
-    except subprocess.CalledProcessError:
-        _ver = '<no version number available on your OS>'
-    except FileNotFoundError:
-        _ver = "<'which' binary not found>"
-
-    return _ver
-
 class AWitchAWitch(Action):
     SUPPRESS = '==SUPPRESS=='
+
     def __init__(self, option_strings, version=None, dest=SUPPRESS,
                  default=SUPPRESS, **kwargs):
         super().__init__(option_strings=option_strings, dest=dest,
@@ -353,49 +341,67 @@ class AWitchAWitch(Action):
         webbrowser.open('https://github.com/scopatz/xonsh/commit/f49b400')
         parser.exit()
 
+
 def which(args, stdin=None):
     """
-    Checks if argument is a xonsh alias, then if it's an executable, then
-    finally throw an error.
+    Checks if each arguments is a xonsh aliases, then if it's an executable,
+    then finally return an error code equal to the number of misses.
     If '-a' flag is passed, run both to return both `xonsh` match and
-    `which` match
+    `which` match.
     """
     desc = "Parses arguments to which wrapper"
     parser = ArgumentParser('which', description=desc)
-    parser.add_argument('arg', type=str,
-                        help='The executable or alias to search for')
+    parser.add_argument('args', type=str, nargs='+',
+                        help='The executables or aliases to search for')
     parser.add_argument('-a', action='store_true', dest='all',
                         help='Show all matches in $PATH and xonsh.aliases')
     parser.add_argument('-s', '--skip-alias', action='store_true',
                         help='Do not search in xonsh.aliases', dest='skip')
-    parser.add_argument('-v', '-V', '--version', action='version',
-                        version='{}'.format(which_version()))
+    parser.add_argument('-V', '--version', action='version',
+                        version='{}'.format(_which.__version__))
+    parser.add_argument('-v', '--verbose', action='store_true', dest='verbose')
     parser.add_argument('--very-small-rocks', action=AWitchAWitch)
-
+    if ON_WINDOWS:
+        parser.add_argument('-e', '--exts', nargs='*', type=str,
+                            help='Specify a list of extensions to use instead '
+                            'of the stan dard list for this system. This can '
+                            'effectively be used as an optimization to, for '
+                            'example, avoid stat\'s of "foo.vbs" when '
+                            'searching for "foo" and you know it is not a '
+                            'VisualBasic script but ".vbs" is on PATHEXT. '
+                            'This option is only supported on Windows',
+                            dest='exts')
     pargs = parser.parse_args(args)
-
-    #skip alias check if user asks to skip
-    denv = __xonsh_env__.detype()
-    if (pargs.arg in builtins.aliases and not pargs.skip):
-        match = pargs.arg
-        print('{} -> {}'.format(match, builtins.aliases[match]))
-        if pargs.all:
-            try:
-                subprocess.check_call(['which'] + args, env=denv,
-                                      stderr=subprocess.PIPE)
-            except subprocess.CalledProcessError:
-                pass
-            except FileNotFoundError:
-                print("'which' binary not found")
+    if len(pargs.args) == 0:
+        return (None, None, -1)
+    exts = pargs.exts if ON_WINDOWS else []
+    failures = []
+    for arg in pargs.args:
+        nmatches = 0
+        # skip alias check if user asks to skip
+        if (arg in builtins.aliases and not pargs.skip):
+            match = arg
+            print('{} -> {}'.format(match, builtins.aliases[match]))
+            nmatches += 1
+            if not pargs.all:
+                continue
+        for match in _which.whichgen(arg, path=builtins.__xonsh_env__['PATH'],
+                                     exts=exts, verbose=pargs.verbose):
+            if pargs.verbose:
+                print('{} ({})'.format(*match))
+            else:
+                print(match)
+            nmatches += 1
+            if not pargs.all:
+                break
+        if not nmatches:
+            failures.append(arg)
+    if len(failures) == 0:
+        return (None, None, 0)
     else:
-        try:
-            subprocess.check_call(['which'] + args, env=denv,
-                                  stderr=subprocess.PIPE)
-        except subprocess.CalledProcessError:
-            raise XonshError('{} not in {} or xonsh.builtins.aliases'
-                            .format(args[0], ':'.join(__xonsh_env__['PATH'])))
-        except FileNotFoundError:
-            print("'which' binary not found")
+        err_str = '{} not in $PATH or xonsh.builtins.aliases\n'.format(
+            ', '.join(failures))
+        return (None, err_str, len(failures))
 
 
 def xonfig(args, stdin=None):
