@@ -45,7 +45,6 @@ subprocess.call(['docker', 'build', '-t' , 'xonsh', '.'])
 os.remove('./Dockerfile')
 
 run_args = ['docker', 'run', '-ti']
-print(args.env)
 for e in args.env:
     run_args += ['-e', e]
 if args.rm:
