@@ -342,7 +342,7 @@ class AWitchAWitch(Action):
         parser.exit()
 
 
-def which(args, stdin=None):
+def which(args, stdin, stdout, stderr):
     """
     Checks if each arguments is a xonsh aliases, then if it's an executable,
     then finally return an error code equal to the number of misses.
@@ -371,37 +371,37 @@ def which(args, stdin=None):
                             'VisualBasic script but ".vbs" is on PATHEXT. '
                             'This option is only supported on Windows',
                             dest='exts')
+    if len(args) == 0:
+        parser.print_usage(file=stderr)
+        return -1
     pargs = parser.parse_args(args)
-    if len(pargs.args) == 0:
-        return (None, None, -1)
     exts = pargs.exts if ON_WINDOWS else []
     failures = []
     for arg in pargs.args:
         nmatches = 0
         # skip alias check if user asks to skip
         if (arg in builtins.aliases and not pargs.skip):
-            match = arg
-            print('{} -> {}'.format(match, builtins.aliases[match]))
+            print('{} -> {}'.format(arg, builtins.aliases[arg]), file=stdout)
             nmatches += 1
             if not pargs.all:
                 continue
         for match in _which.whichgen(arg, path=builtins.__xonsh_env__['PATH'],
                                      exts=exts, verbose=pargs.verbose):
             if pargs.verbose:
-                print('{} ({})'.format(*match))
+                print('{} ({})'.format(*match), file=stdout)
             else:
-                print(match)
+                print(match, file=stdout)
             nmatches += 1
             if not pargs.all:
                 break
         if not nmatches:
             failures.append(arg)
     if len(failures) == 0:
-        return (None, None, 0)
+        return 0
     else:
-        err_str = '{} not in $PATH or xonsh.builtins.aliases\n'.format(
-            ', '.join(failures))
-        return (None, err_str, len(failures))
+        print('{} not in $PATH or xonsh.builtins.aliases\n'.format(
+              ', '.join(failures), file=stderr))
+        return len(failures)
 
 
 def xonfig(args, stdin=None):
