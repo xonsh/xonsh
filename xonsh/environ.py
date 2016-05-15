@@ -10,7 +10,6 @@ import locale
 import builtins
 import subprocess
 import shutil
-import math
 from itertools import chain
 from warnings import warn
 from pprint import pformat
@@ -194,7 +193,7 @@ DEFAULT_VALUES = {
     'PUSHD_SILENT': False,
     'RAISE_SUBPROC_ERROR': False,
     'RIGHT_PROMPT': '',
-    'DYNAMIC_CWD_WIDTH': '20',
+    'DYNAMIC_CWD_WIDTH': 'inf',
     'SHELL_TYPE': 'best',
     'SUGGEST_COMMANDS': True,
     'SUGGEST_MAX_NUM': 5,
@@ -1015,36 +1014,36 @@ def _collapsed_pwd():
 
 def _dynamically_collapsed_pwd():
     sep = get_sep()
-    pwd = _replace_home_cwd().split(sep)
+    originial_path = _replace_home_cwd()
+    pwd = originial_path.split(sep)
     cols, _ = shutil.get_terminal_size()
     targetWidthRaw = builtins.__xonsh_env__['DYNAMIC_CWD_WIDTH']
 
     if (targetWidthRaw[-1] == '%'):
-        targetWidth = math.floor(float(targetWidthRaw[:-1]) / 100 * cols)
+        targetWidth = (cols * float(targetWidthRaw[:-1])) // 100
     else:
-        targetWidth = int(targetWidthRaw)
+        targetWidth = float(targetWidthRaw)
+    if targetWidth == float('inf'):
+        return originial_path
+    else:
+        last = pwd.pop()
+        remaining_space = targetWidth - len(last) 
+        # Reserve space for separators
+        remaining_space_for_text = remaining_space - len(pwd) 
 
-    last = pwd.pop()
-    remaining_space = targetWidth - len(last) 
-    # Reserve space for separators
-    remaining_space_for_text = remaining_space - len(pwd) 
+        parts = []
+        for i  in range(len(pwd)):
+            part = pwd[i]
+            part_len = int(min(len(part), max(1, remaining_space_for_text // (len(pwd) - i))))
+            remaining_space_for_text -= part_len
+            reduced_part = part[0:part_len]
+            parts.append(reduced_part)
 
-    parts = []
-    for i  in range(len(pwd)):
-        part = pwd[i]
-        part_len = min(len(part), max(1, math.floor(remaining_space_for_text / (len(pwd) - i))))
-        remaining_space_for_text -= part_len
-        reduced_part = part[0:part_len]
-        parts.append(reduced_part)
-
-    parts.append(last)
-    full = sep.join(parts)
-    if (len(full) > targetWidth):
-        full = full[-targetWidth:]
-    print("full", full)
-    return full
-
-
+        parts.append(last)
+        full = sep.join(parts)
+        if (len(full) > targetWidth):
+            full = full[int(-targetWidth):]
+        return full
 
 def _current_job():
     j = builtins.__xonsh_active_job__
@@ -1081,11 +1080,10 @@ FORMATTER_DICT = dict(
     user=os.environ.get(USER, '<user>'),
     prompt_end='#' if IS_ROOT else '$',
     hostname=socket.gethostname().split('.', 1)[0],
-    cwd=_replace_home_cwd,
+    cwd=_dynamically_collapsed_pwd,
     cwd_dir=lambda: os.path.dirname(_replace_home_cwd()),
     cwd_base=lambda: os.path.basename(_replace_home_cwd()),
     short_cwd=_collapsed_pwd,
-    dynamic_cwd=_dynamically_collapsed_pwd,
     curr_branch=current_branch,
     branch_color=branch_color,
     branch_bg_color=branch_bg_color,
