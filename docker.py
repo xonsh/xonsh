@@ -2,36 +2,50 @@
 import sys 
 import subprocess
 import os
+import argparse
 
-pythonVersion = '3.5'
-ptkVersion = '1.00'
+program_description = """Build and run Xonsh in a fresh, controlled 
+    environment using docker """
 
-if len(sys.argv) > 1:
-    pythonVersion = sys.argv[1]
-    if len(sys.argv) > 2:
-        ptkVersion = sys.argv[2]
+parser = argparse.ArgumentParser(description=program_description)
 
-print('Building and runing Xonsh')
-print('Using python ', pythonVersion)
-print('Using prompt-toolkit ', ptkVersion)
+parser.add_argument('env', nargs='*', default=[], metavar='ENV=value')
+parser.add_argument('--python', '-p', default='3.4', metavar='python_version')
+parser.add_argument('--ptk', '-t', default='1.00', metavar='ptk_version')
+parser.add_argument('--command', '-c', default='/usr/bin/env xonsh', 
+                    metavar='command')
 
-dockerFile = 'from python:'+pythonVersion + '\n'
-dockerFile += 'RUN pip install --upgrade pip && pip install \\\n'
-dockerFile += '  ply \\\n'
-dockerFile += '  prompt-toolkit=='+ptkVersion+ ' \\\n'
-dockerFile += '  pygments\n'
-dockerFile += 'RUN mkdir /xonsh\n'
-dockerFile += 'WORKDIR /xonsh\n'
-dockerFile += 'CMD /usr/bin/env xonsh\n'
-dockerFile += 'ENV XONSH_COLOR_STYLE "paraiso-dark\n'
-dockerFile += 'ADD ./ ./\n'
-dockerFile += 'RUN python setup.py install\n'
+args = parser.parse_args()
+
+docker_script = """
+from python:{python_version}
+RUN pip install --upgrade pip && pip install \\
+  ply \\
+  prompt-toolkit=={ptk_version} \\
+  pygments
+RUN mkdir /xonsh
+WORKDIR /xonsh
+CMD {command}
+ENV {env}
+ADD ./ ./
+RUN python setup.py install
+""".format(
+        python_version = args.python,
+        ptk_version = args.ptk,
+        command = args.command,
+        env = ' '.join(args.env))
+        
+
+print(docker_script)
+
+print('Building and running Xonsh')
+print('Using python ', args.python)
+print('Using prompt-toolkit ', args.ptk)
 
 with open('./Dockerfile', 'w+') as f:
-    f.write(dockerFile)
+    f.write(docker_script)
 
 subprocess.call(['docker', 'build', '-t' , 'xonsh', '.'])
 os.remove('./Dockerfile')
 subprocess.call(['docker', 'run', '-ti' , 'xonsh'])
-
 
