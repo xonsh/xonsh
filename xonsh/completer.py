@@ -1,21 +1,21 @@
 # -*- coding: utf-8 -*-
 """A (tab-)completer for xonsh."""
-import os
-import re
 import ast
-import sys
-import shlex
+import builtins
+import inspect
+import importlib
+import os
 from pathlib import Path
 import pickle
-import inspect
-import builtins
-import importlib
+import re
+import shlex
 import subprocess
+import sys
 
 from xonsh.built_ins import iglobpath, expand_path
+from xonsh.platform import ON_WINDOWS, scandir
 from xonsh.tools import (subexpr_from_unbalanced, get_sep,
                          check_for_partial_string, RE_STRING_START)
-from xonsh.tools import ON_WINDOWS
 
 
 RE_DASHF = re.compile(r'-F\s+(\w+)')
@@ -445,13 +445,13 @@ class Completer(object):
     def _collect_completions_sources():
         sources = []
         paths = (Path(x) for x in
-                 builtins.__xonsh_env__.get('BASH_COMPLETIONS'))
+                 builtins.__xonsh_env__.get('BASH_COMPLETIONS', ()))
         for path in paths:
             if path.is_file():
-                sources.append('source ' + str(path))
+                sources.append('source ' + path.path)
             elif path.is_dir():
-                for _file in (x for x in path.glob('*') if x.is_file()):
-                    sources.append('source ' + str(_file))
+                for _file in (x for x in scandir(str(path)) if x.is_file()):
+                    sources.append('source ' + _file.path)
         return sources
 
     def _load_bash_complete_funcs(self):

@@ -1,52 +1,15 @@
 # -*- coding: utf-8 -*-
 """The xonsh shell"""
-import random
 import builtins
+import random
 from warnings import warn
 
 from xonsh import xontribs
-from xonsh.execer import Execer
 from xonsh.environ import xonshrc_context
-from xonsh.tools import XonshError, ON_WINDOWS
-
-
-def is_readline_available():
-    """Checks if readline is available to import."""
-    try:
-        import readline
-        return True
-    except Exception:  # pyreadline will sometimes fail in strange ways
-        return False
-
-
-def is_prompt_toolkit_available():
-    """Checks if prompt_toolkit is available to import."""
-    try:
-        import prompt_toolkit
-        return True
-    except ImportError:
-        return False
-
-
-def prompt_toolkit_version():
-    """Gets the prompt toolkit version."""
-    import prompt_toolkit
-    return getattr(prompt_toolkit, '__version__', '<0.57')
-
-
-def prompt_toolkit_version_info():
-    """Gets the prompt toolkit version info tuple."""
-    v = prompt_toolkit_version().strip('<>+-=.')
-    return tuple(map(int, v.split('.')))
-
-
-def best_shell_type():
-    """Gets the best shell type that is available"""
-    if ON_WINDOWS or is_prompt_toolkit_available():
-        shell_type = 'prompt_toolkit'
-    else:
-        shell_type = 'readline'
-    return shell_type
+from xonsh.execer import Execer
+from xonsh.platform import (BEST_SHELL_TYPE, has_prompt_toolkit, ptk_version,
+                            ptk_version_info)
+from xonsh.tools import XonshError
 
 
 class Shell(object):
@@ -85,20 +48,19 @@ class Shell(object):
             env['SHELL_TYPE'] = shell_type
         shell_type = env.get('SHELL_TYPE')
         if shell_type == 'best':
-            shell_type = best_shell_type()
+            shell_type = BEST_SHELL_TYPE
         elif shell_type == 'random':
             shell_type = random.choice(('readline', 'prompt_toolkit'))
         if shell_type == 'prompt_toolkit':
-            if not is_prompt_toolkit_available():
+            if not has_prompt_toolkit():
                 warn('prompt_toolkit is not available, using readline instead.')
                 shell_type = env['SHELL_TYPE'] = 'readline'
         # actually make the shell
         if shell_type == 'none':
             from xonsh.base_shell import BaseShell as shell_class
         elif shell_type == 'prompt_toolkit':
-            vptk = prompt_toolkit_version()
-            major,minor = [int(x) for x in vptk.split('.')[:2]]
-            if (major,minor) < (0, 57) or vptk == '<0.57':  # TODO: remove in future
+            if ptk_version_info()[:2] < (0, 57) or \
+                    ptk_version() == '<0.57':  # TODO: remove in future
                 msg = ('prompt-toolkit version < v0.57 and may not work as '
                        'expected. Please update.')
                 warn(msg, RuntimeWarning)

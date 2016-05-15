@@ -1,14 +1,13 @@
 """The xonsh configuration (xonfig) utility."""
-import os
+from argparse import ArgumentParser
 import ast
-import json
-import shutil
-import textwrap
 import builtins
 import functools
 import itertools
+import json
 from pprint import pformat
-from argparse import ArgumentParser
+import shutil
+import textwrap
 
 try:
     import ply
@@ -16,10 +15,10 @@ except ImportError:
     from xonsh import ply
 
 from xonsh import __version__ as XONSH_VERSION
-from xonsh import tools
 from xonsh.environ import is_template_string
-from xonsh.shell import (is_readline_available, is_prompt_toolkit_available,
-    prompt_toolkit_version)
+from xonsh import platform
+from xonsh.platform import is_readline_available, ptk_version
+from xonsh import tools
 from xonsh.wizard import (Wizard, Pass, Message, Save, Load, YesNo, Input,
     PromptVisitor, While, StoreNonEmpty, create_truefalse_cond, YN, Unstorable,
     Question)
@@ -322,20 +321,21 @@ def _format_json(data):
 def _info(ns):
     data = [
         ('xonsh', XONSH_VERSION),
-        ('Python', '.'.join(map(str, tools.VER_FULL))),
+        ('Python', '{}.{}.{}'.format(*platform.PYTHON_VERSION_INFO)),
         ('PLY', ply.__version__),
         ('have readline', is_readline_available()),
-        ('prompt toolkit', prompt_toolkit_version() if \
-                           is_prompt_toolkit_available() else False),
-        ('pygments', tools.pygments_version()),
-        ('on posix', tools.ON_POSIX),
-        ('on linux', tools.ON_LINUX),
-        ('on arch', tools.ON_ARCH),
-        ('on windows', tools.ON_WINDOWS),
-        ('on mac', tools.ON_MAC),
-        ('are root user', tools.IS_ROOT),
-        ('default encoding', tools.DEFAULT_ENCODING),
-        ]
+        ('prompt toolkit', ptk_version() or None),
+        ('pygments', platform.PYGMENTS_VERSION),
+        ('on posix', platform.ON_POSIX),
+        ('on linux', platform.ON_LINUX)]
+    if platform.ON_LINUX:
+        data.append(('distro', platform.LINUX_DISTRO))
+    data.extend([
+        ('on darwin', platform.ON_DARWIN),
+        ('on windows', platform.ON_WINDOWS),
+        ('is superuser', tools.IS_SUPERUSER),
+        ('default encoding', platform.DEFAULT_ENCODING),
+        ])
     formatter = _format_json if ns.json else _format_human
     s = formatter(data)
     return s

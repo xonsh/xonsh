@@ -17,73 +17,31 @@ Implementations:
 * indent()
 
 """
+import builtins
+from collections import OrderedDict, Sequence, Set
+from contextlib import contextmanager
+import ctypes
 import os
 import re
-import sys
-import ctypes
-import builtins
-import platform
-import traceback
-import threading
+import string
 import subprocess
-from contextlib import contextmanager
-from collections import OrderedDict, Sequence, Set
+import sys
+import threading
+import traceback
 from warnings import warn
 
-#
-# Check pygments
-#
+# adding further imports from xonsh modules is discouraged to avoid cirular
+# dependencies
+from xonsh.platform import (has_prompt_toolkit, scandir, win_unicode_console,
+                            DEFAULT_ENCODING, ON_LINUX, ON_WINDOWS)
 
-def pygments_version():
-    """Returns the Pygments version or False."""
-    try:
-        import pygments
-        v = pygments.__version__
-    except ImportError:
-        v = False
-    return v
-
-if sys.version_info[0] >= 3:
-    string_types = (str, bytes)
-    unicode_type = str
+if has_prompt_toolkit():
+    import prompt_toolkit
 else:
-    string_types = (str, unicode)
-    unicode_type = unicode
-
-try:
-    import win_unicode_console
-except ImportError:
-    win_unicode_console = None
+    prompt_toolkit = None
 
 
-DEFAULT_ENCODING = sys.getdefaultencoding()
-
-ON_ANACONDA = any(s in sys.version for s in ['Anaconda','Continuum'])
-ON_WINDOWS = (platform.system() == 'Windows')
-ON_MAC = (platform.system() == 'Darwin')
-ON_LINUX = (platform.system() == 'Linux')
-ON_ARCH = (platform.linux_distribution()[0] == 'arch')
-ON_POSIX = (os.name == 'posix')
-IS_ROOT = ctypes.windll.shell32.IsUserAnAdmin() != 0 if ON_WINDOWS else os.getuid() == 0
-HAVE_PYGMENTS = bool(pygments_version())
-
-VER_3_4 = (3, 4)
-VER_3_5 = (3, 5)
-VER_3_5_1 = (3, 5, 1)
-VER_FULL = sys.version_info[:3]
-VER_MAJOR_MINOR = sys.version_info[:2]
-V_MAJOR_MINOR = 'v{0}{1}'.format(*sys.version_info[:2])
-
-
-def docstring_by_version(**kwargs):
-    """Sets a docstring by the python version."""
-    doc = kwargs.get(V_MAJOR_MINOR, None)
-    if V_MAJOR_MINOR is None:
-        raise RuntimeError('unrecognized version ' + V_MAJOR_MINOR)
-    def dec(f):
-        f.__doc__ = doc
-        return f
-    return dec
+IS_SUPERUSER = ctypes.windll.shell32.IsUserAnAdmin() != 0 if ON_WINDOWS else os.getuid() == 0
 
 
 class XonshError(Exception):
@@ -168,7 +126,7 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
             return  # handle comment lines
         tok = toks[-1]
         pos = tok.lexpos
-        if isinstance(tok.value, string_types):
+        if isinstance(tok.value, str):
             end_offset = len(tok.value.rstrip())
         else:
             el = line[pos:].split('#')[0].rstrip()
@@ -361,7 +319,7 @@ def suggest_commands(cmd, env, aliases):
                 suggested[a] = 'Alias'
 
     for d in filter(os.path.isdir, env.get('PATH')):
-        for f in os.listdir(d):
+        for f in (x.name for x in scandir(d)):
             if f not in suggested:
                 if levenshtein(f.lower(), cmd, thresh) < thresh:
                     fname = os.path.join(d, f)
@@ -507,7 +465,7 @@ def is_float(x):
 
 def is_string(x):
     """Tests if something is a string"""
-    return isinstance(x, string_types)
+    return isinstance(x, str)
 
 
 def always_true(x):
@@ -522,19 +480,16 @@ def always_false(x):
 
 def ensure_string(x):
     """Returns a string if x is not a string, and x if it already is."""
-    if isinstance(x, string_types):
-        return x
-    else:
-        return str(x)
+    return str(x)
 
 
 def is_env_path(x):
     """This tests if something is an environment path, ie a list of strings."""
-    if isinstance(x, string_types):
+    if isinstance(x, str):
         return False
     else:
         return (isinstance(x, Sequence) and
-                all([isinstance(a, string_types) for a in x]))
+                all(isinstance(a, str) for a in x))
 
 
 def str_to_env_path(x):
@@ -560,7 +515,7 @@ def to_bool(x):
     """"Converts to a boolean in a semantically meaningful way."""
     if isinstance(x, bool):
         return x
-    elif isinstance(x, string_types):
+    elif isinstance(x, str):
         return False if x.lower() in _FALSES else True
     else:
         return bool(x)
@@ -573,8 +528,9 @@ def bool_to_str(x):
 
 _BREAKS = frozenset(['b', 'break', 's', 'skip', 'q', 'quit'])
 
+
 def to_bool_or_break(x):
-    if isinstance(x, string_types) and x.lower() in _BREAKS:
+    if isinstance(x, str) and x.lower() in _BREAKS:
         return 'break'
     else:
         return to_bool(x)
@@ -596,11 +552,8 @@ def ensure_int_or_slice(x):
 
 def is_string_set(x):
     """Tests if something is a set"""
-    if isinstance(x, string_types):
-        return False
-    else:
-        return (isinstance(x, Set) and
-                all([isinstance(a, string_types) for a in x]))
+    return (isinstance(x, Set) and
+            all(isinstance(a, str) for a in x))
 
 
 def csv_to_set(x):
@@ -618,14 +571,12 @@ def set_to_csv(x):
 
 def is_bool_seq(x):
     """Tests if an object is a sequence of bools."""
-    return isinstance(x, Sequence) and all(map(isinstance, x, [bool]*len(x)))
+    return isinstance(x, Sequence) and all(isinstance(y, bool) for y in x)
 
 
 def csv_to_bool_seq(x):
     """Takes a comma-separated string and converts it into a list of bools."""
-    if len(x) == 0:
-        return []
-    return list(map(to_bool, x.split(',')))
+    return [to_bool(y) for y in csv_to_set(x)]
 
 
 def bool_seq_to_csv(x):
@@ -643,8 +594,8 @@ def to_completions_display_value(x):
         x = 'none'
     elif x in {'multi', 'true'}:
         x = 'multi'
-    elif x in {'single'}:
-        x = 'single'
+    elif x == 'single':
+        pass
     else:
         warn('"{}" is not a valid value for $COMPLETIONS_DISPLAY. '.format(x) +
              'Using "multi".', RuntimeWarning)
@@ -782,12 +733,6 @@ def color_style_names():
 def color_style():
     """Returns the current color map."""
     return builtins.__xonsh_shell__.shell.color_style()
-
-
-try:
-    import prompt_toolkit
-except ImportError:
-    prompt_toolkit = None
 
 
 def _get_color_indexes(style_map):
@@ -980,9 +925,8 @@ def expandvars(path):
     if isinstance(path, bytes):
         path = path.decode(encoding=ENV.get('XONSH_ENCODING'),
                            errors=ENV.get('XONSH_ENCODING_ERRORS'))
-    if '$' not in path and ((not ON_WINDOWS) or ('%' not in path)):
+    if '$' not in path and (not ON_WINDOWS or '%' not in path):
         return path
-    import string
     varchars = string.ascii_letters + string.digits + '_-'
     quote = '\''
     percent = '%'
@@ -1108,28 +1052,30 @@ class CommandsCache(Set):
 
     @property
     def all_commands(self):
-        path = builtins.__xonsh_env__.get('PATH', [])
+        paths = builtins.__xonsh_env__.get('PATH', [])
+        paths = frozenset(x for x in paths if os.path.isdir(x))
         # did PATH change?
-        path_hash = hash(frozenset(path))
+        path_hash = hash(paths)
         cache_valid = path_hash == self._path_checksum
         self._path_checksum = path_hash
         # did aliases change?
-        al_hash = hash(frozenset(builtins.aliases.keys()))
+        al_hash = hash(frozenset(builtins.aliases))
         cache_valid = cache_valid and al_hash == self._alias_checksum
         self._alias_checksum = al_hash
-        pm = self._path_mtime
         # did the contents of any directory in PATH change?
-        for d in filter(os.path.isdir, path):
-            m = os.stat(d).st_mtime
-            if m > pm:
-                pm = m
-                cache_valid = False
-        self._path_mtime = pm
+        max_mtime = 0
+        for path in paths:
+            mtime = os.stat(path).st_mtime
+            if mtime > max_mtime:
+                max_mtime = mtime
+        cache_valid = cache_valid and max_mtime > self._path_mtime
+        self._path_mtime = max_mtime
         if cache_valid:
             return self._cmds_cache
         allcmds = set()
-        for d in filter(os.path.isdir, path):
-            allcmds |= set(os.listdir(d))
-        allcmds |= set(builtins.aliases.keys())
+        for path in paths:
+            allcmds |= set(x.name for x in scandir(path)
+                           if x.is_file() and os.access(x.path, os.X_OK))
+            allcmds |= set(builtins.aliases)
         self._cmds_cache = frozenset(allcmds)
         return self._cmds_cache

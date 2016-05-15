@@ -8,28 +8,23 @@ This file was forked from the IPython project:
 * Copyright (c) 2001, Janko Hauser <jhauser@zscout.de>
 * Copyright (c) 2001, Nathaniel Gray <n8gray@caltech.edu>
 """
+from collections import namedtuple
+import inspect
+import io as stdlib_io
+from itertools import zip_longest
+import linecache
 import os
 import sys
 import types
-import inspect
-import linecache
-import io as stdlib_io
-from collections import namedtuple
 
 from xonsh import openpy
-from xonsh.tools import (cast_unicode, safe_hasattr, string_types, indent,
-    VER_MAJOR_MINOR, VER_3_4, print_color, format_color, HAVE_PYGMENTS)
+from xonsh.tools import (cast_unicode, safe_hasattr, indent,
+                         print_color, format_color)
+from xonsh.platform import HAS_PYGMENTS, PYTHON_VERSION_INFO
 
-if HAVE_PYGMENTS:
+if HAS_PYGMENTS:
     import pygments
     from xonsh import pyghooks
-
-if sys.version_info[0] > 2:
-    ISPY3K = True
-    from itertools import zip_longest
-else:
-    ISPY3K = False
-    from itertools import izip_longest as zip_longest
 
 
 # builtin docstrings to ignore
@@ -100,7 +95,7 @@ def getdoc(obj):
         pass
     else:
         # if we get extra info, we add it to the normal docstring.
-        if isinstance(ds, string_types):
+        if isinstance(ds, str):
             return inspect.cleandoc(ds)
 
     try:
@@ -162,7 +157,7 @@ def getargspec(obj):
     if safe_hasattr(obj, '__call__') and not is_simple_callable(obj):
         obj = obj.__call__
 
-    return inspect.getfullargspec(obj) if ISPY3K else inspect.getargspec(obj)
+    return inspect.getfullargspec(obj)
 
 
 def format_argspec(argspec):
@@ -300,7 +295,7 @@ def find_source_lines(obj):
     return lineno
 
 
-if VER_MAJOR_MINOR <= VER_3_4:
+if PYTHON_VERSION_INFO < (3, 5, 0):
     FrameInfo = namedtuple('FrameInfo', ['frame', 'filename', 'lineno', 'function',
                                          'code_context', 'index'])
     def getouterframes(frame, context=1):
@@ -351,8 +346,6 @@ class Inspector(object):
         if inspect.isclass(obj):
             header = self.__head('Class constructor information:\n')
             obj = obj.__init__
-        elif (not ISPY3K) and type(obj) is types.InstanceType:
-            obj = obj.__call__
 
         output = self._getdef(obj, oname)
         if output is None:
@@ -488,7 +481,7 @@ class Inspector(object):
         title_width : int
           How many characters to pad titles to. Default to longest title.
         """
-        if HAVE_PYGMENTS:
+        if HAS_PYGMENTS:
             rtn = self._format_fields_tokens(fields, title_width=title_width)
         else:
             rtn = self._format_fields_str(fields, title_width=title_width)
@@ -535,14 +528,6 @@ class Inspector(object):
                     displayfields.append((title, field.rstrip()))
 
         add_fields(self.pinfo_fields1)
-
-        # Base class for old-style instances
-        if ((not ISPY3K) and
-           isinstance(obj, types.InstanceType) and
-           info['base_class']):
-                o = ("Base Class", info['base_class'].rstrip())
-                displayfields.append(o)
-
         add_fields(self.pinfo_fields2)
 
         # Namespace
@@ -600,7 +585,7 @@ class Inspector(object):
         # Get docstring, special-casing aliases:
         if isalias:
             if not callable(obj):
-                if len(obj) >= 2 and isinstance(obj[1], string_types):
+                if len(obj) >= 2 and isinstance(obj[1], str):
                     ds = "Alias to the system command:\n  {0}".format(obj[1])
                 else:  # pylint:disable=bare-except
                     ds = "Alias: " + str(obj)
@@ -689,7 +674,7 @@ class Inspector(object):
                         source = getsource(obj.__class__, binary_file)
                 if source is not None:
                     source = source.rstrip()
-                    if HAVE_PYGMENTS:
+                    if HAS_PYGMENTS:
                         lexer = pyghooks.XonshLexer()
                         source = list(pygments.lex(source, lexer=lexer))
                     out['source'] = source

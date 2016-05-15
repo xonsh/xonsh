@@ -18,9 +18,10 @@ from ast import Ellipsis  # pylint: disable=redefined-builtin
 import textwrap
 from itertools import repeat
 
-from xonsh.tools import subproc_toks, VER_3_5, VER_MAJOR_MINOR
+from xonsh.tools import subproc_toks
+from xonsh.platform import PYTHON_VERSION_INFO
 
-if VER_3_5 <= VER_MAJOR_MINOR:
+if PYTHON_VERSION_INFO >= (3, 5, 0):
     # pylint: disable=unused-import
     # pylint: disable=no-name-in-module
     from ast import MatMult, AsyncFunctionDef, AsyncWith, AsyncFor, Await

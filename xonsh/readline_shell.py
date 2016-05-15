@@ -12,9 +12,10 @@ from xonsh import lazyjson
 from xonsh.base_shell import BaseShell
 from xonsh.ansi_colors import partial_color_format, color_style_names, color_style
 from xonsh.environ import partial_format_prompt, multiline_prompt
-from xonsh.tools import ON_WINDOWS, print_exception, HAVE_PYGMENTS
+from xonsh.tools import print_exception
+from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 
-if HAVE_PYGMENTS:
+if HAS_PYGMENTS:
     from xonsh import pyghooks
     import pygments
     from pygments.formatters.terminal256 import Terminal256Formatter

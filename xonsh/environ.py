@@ -1,36 +1,37 @@
 # -*- coding: utf-8 -*-
 """Environment for the xonsh shell."""
-import os
-import re
-import sys
+import builtins
+from collections import Mapping, MutableMapping, MutableSequence, MutableSet, namedtuple
+from contextlib import contextmanager
+from functools import wraps
+from itertools import chain
 import json
+import locale
+import os
+from pprint import pformat
+import re
 import socket
 import string
-import locale
-import builtins
 import subprocess
-from itertools import chain
+import sys
 from warnings import warn
-from pprint import pformat
-from functools import wraps
-from contextlib import contextmanager
-from collections import (Mapping, MutableMapping, MutableSequence,
-    MutableSet, namedtuple)
 
 from xonsh import __version__ as XONSH_VERSION
-from xonsh.tools import (
-    ON_WINDOWS, ON_MAC, ON_LINUX, ON_ARCH, IS_ROOT, ON_ANACONDA,
-    always_true, always_false, ensure_string, is_env_path, str_to_env_path,
-    env_path_to_str, is_bool, to_bool, bool_to_str, is_history_tuple, to_history_tuple,
-    history_tuple_to_str, is_float, string_types, is_string, DEFAULT_ENCODING,
-    is_completions_display_value, to_completions_display_value, is_string_set,
-    csv_to_set, set_to_csv, get_sep, is_int, is_bool_seq, csv_to_bool_seq,
-    bool_seq_to_csv, DefaultNotGiven, setup_win_unicode_console,
-    intensify_colors_on_win_setter, print_exception
-)
 from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
+from xonsh.platform import (BASH_COMPLETIONS_DEFAULT, ON_ANACONDA, ON_LINUX,
+                            ON_WINDOWS, DEFAULT_ENCODING)
+from xonsh.tools import (
+    IS_SUPERUSER, always_true, always_false, ensure_string, is_env_path,
+    str_to_env_path, env_path_to_str, is_bool, to_bool, bool_to_str,
+    is_history_tuple, to_history_tuple, history_tuple_to_str, is_float,
+    is_string, is_completions_display_value, to_completions_display_value,
+    is_string_set, csv_to_set, set_to_csv, get_sep, is_int, is_bool_seq,
+    csv_to_bool_seq, bool_seq_to_csv, DefaultNotGiven, print_exception,
+    setup_win_unicode_console, intensify_colors_on_win_setter
+)
+
 
 LOCALE_CATS = {
     'LC_CTYPE': locale.LC_CTYPE,
@@ -157,14 +158,7 @@ DEFAULT_VALUES = {
     'AUTO_CD': False,
     'AUTO_PUSHD': False,
     'AUTO_SUGGEST': True,
-    'BASH_COMPLETIONS': (('/usr/local/etc/bash_completion',
-                             '/opt/local/etc/profile.d/bash_completion.sh')
-                        if ON_MAC else
-                        ('/usr/share/bash-completion/bash_completion',
-                             '/usr/share/bash-completion/completions/git')
-                        if ON_ARCH else
-                        ('/etc/bash_completion',
-                             '/usr/share/bash-completion/completions/git')),
+    'BASH_COMPLETIONS': BASH_COMPLETIONS_DEFAULT,
     'CASE_SENSITIVE_COMPLETIONS': ON_LINUX,
     'CDPATH': (),
     'COMPLETIONS_DISPLAY': 'multi',
@@ -320,7 +314,8 @@ DEFAULT_DOCS = {
     'INTENSIFY_COLORS_ON_WIN': VarDocs('Enhance style colors for readability '
         'when using the default terminal (cmd.exe) on winodws. Blue colors, '
         'which are hard to read, are replaced with cyan. Other colors are '
-        'generally replaced by their bright counter parts.'),
+        'generally replaced by their bright counter parts.',
+        configurable=ON_WINDOWS),
     'LOADED_CONFIG': VarDocs('Whether or not the xonsh config file was loaded',
         configurable=False),
     'LOADED_RC_FILES': VarDocs(
@@ -391,7 +386,8 @@ DEFAULT_DOCS = {
         'used. This can be used to fix situations where a spawned process, '
         'such as piping into \'grep\', exits too quickly for the piping '
         'operation itself. TeePTY (and thus this variable) are currently '
-        'only used when $XONSH_STORE_STDOUT is True.', configurable=ON_LINUX),
+        'only used when $XONSH_STORE_STDOUT is True.',
+        configurable=ON_LINUX),
     'TERM': VarDocs(
         'TERM is sometimes set by the terminal emulator. This is used (when '
         "valid) to determine whether or not to set the title. Users shouldn't "
@@ -538,7 +534,7 @@ class Env(MutableMapping):
         for key, val in self._d.items():
             if not self.detypeable(val):
                 continue
-            if not isinstance(key, string_types):
+            if not isinstance(key, str):
                 key = str(key)
             ensurer = self.get_ensurer(key)
             val = ensurer.detype(val)
@@ -570,16 +566,14 @@ class Env(MutableMapping):
         if key in self.ensurers:
             return self.ensurers[key]
         for k, ensurer in self.ensurers.items():
-            if isinstance(k, string_types):
+            if isinstance(k, str):
                 continue
-            m = k.match(key)
-            if m is not None:
-                ens = ensurer
+            if k.match(key) is not None:
                 break
         else:
-            ens = default
-        self.ensurers[key] = ens
-        return ens
+            ensurer = default
+        self.ensurers[key] = ensurer
+        return ensurer
 
     def get_docs(self, key, default=VarDocs('<no documentation>')):
         """Gets the documentation for the environment variable."""
@@ -660,16 +654,14 @@ class Env(MutableMapping):
                 if self._orig_env is None:
                     self.replace_env()
                 else:
-                    dval = ensurer.detype(val)
-                    os.environ[key] = dval
+                    os.environ[key] = ensurer.detype(val)
 
     def __delitem__(self, key):
         val = self._d.pop(key)
         if self.detypeable(val):
             self._detyped = None
-            if self.get('UPDATE_OS_ENVIRON'):
-                if key in os.environ:
-                    del os.environ[key]
+            if self.get('UPDATE_OS_ENVIRON') and key in os.environ:
+                del os.environ[key]
 
     def get(self, key, default=None):
         """The environment will look up default values from its own defaults if a
@@ -756,7 +748,7 @@ def yield_executables_posix(directory, name):
         names = os.listdir(directory)
     except PermissionError:
         return
-    if name in os.listdir(directory):
+    if name in names:
         path = os.path.join(directory, name)
         if _is_executable_file(path):
             yield path
@@ -1052,7 +1044,7 @@ else:
 
 FORMATTER_DICT = dict(
     user=os.environ.get(USER, '<user>'),
-    prompt_end='#' if IS_ROOT else '$',
+    prompt_end='#' if IS_SUPERUSER else '$',
     hostname=socket.gethostname().split('.', 1)[0],
     cwd=_replace_home_cwd,
     cwd_dir=lambda: os.path.dirname(_replace_home_cwd()),
@@ -1127,7 +1119,7 @@ def partial_format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
         if field is None:
             continue
         elif field.startswith('$'):
-            v = builtins.__xonsh_env__[name[1:]]
+            v = builtins.__xonsh_env__[name[1:]]  # FIXME `name` is an unresolved ref
             v = _FORMATTER.convert_field(v, conv)
             v = _FORMATTER.format_field(v, spec)
             toks.append(v)
@@ -1226,7 +1218,7 @@ def load_static_config(ctx, config=None):
 def xonshrc_context(rcfiles=None, execer=None):
     """Attempts to read in xonshrc file, and return the contents."""
     loaded = builtins.__xonsh_env__['LOADED_RC_FILES'] = []
-    if (rcfiles is None or execer is None):
+    if rcfiles is None or execer is None:
         return {}
     env = {}
     for rcfile in rcfiles:

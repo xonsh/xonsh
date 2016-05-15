@@ -1,10 +1,9 @@
+import builtins
 from os.path import join, basename, exists, expanduser
-from os import listdir
 from shutil import rmtree
 import venv
 
-import builtins
-
+from xonsh.platform import scandir, ON_POSIX, ON_WINDOWS
 import xonsh.tools
 
 
@@ -82,10 +81,10 @@ class Vox:
             print('This environment doesn\'t exist. Create it with "vox new %s".\n' % name)
             return None
 
-        if xonsh.tools.ON_WINDOWS:
+        if ON_WINDOWS:
             bin_dir = 'Scripts'
 
-        elif xonsh.tools.ON_POSIX:
+        elif ON_POSIX:
             bin_dir = 'bin'
 
         else:
@@ -117,7 +116,7 @@ class Vox:
         if xonsh.tools.ON_WINDOWS:
             bin_dir = 'Scripts'
 
-        elif xonsh.tools.ON_POSIX:
+        elif ON_POSIX:
             bin_dir = 'bin'
 
         else:
@@ -137,19 +136,20 @@ class Vox:
     def list_envs():
         """List available virtual environments."""
 
-        env_names = listdir(builtins.__xonsh_env__['VIRTUALENV_HOME'])
+        venv_home = builtins.__xonsh_env__['VIRTUALENV_HOME']
+        try:
+            env_dirs = (x.name for x in scandir(venv_home) if x.is_dir())
+        except PermissionError:
+            print('No permissions on {}'.format(venv_home))
+            return None
 
-        if not env_names:
-            print('No environments evailable. Create one with "vox new".\n')
+        if not env_dirs:
+            print('No environments available. Create one with "vox new".\n')
             return None
 
         print('Available environments:')
+        print('\n'.join(env_dirs))
 
-        for env_name in env_names:
-            print('    %s' % env_name)
-
-        else:
-            print()
 
     @staticmethod
     def remove_env(name):
