@@ -425,13 +425,18 @@ def run_subproc(cmds, captured=False):
         elif prev_proc is not None:
             stdin = prev_proc.stdout
         # set standard output
+        _stdout_name = None
+        _stderr_name = None
         if 'stdout' in streams:
             if ix != last_cmd:
                 raise XonshError('Multiple redirects for stdout')
             stdout = streams['stdout'][-1]
             procinfo['stdout_redirect'] = streams['stdout'][:-1]
-        elif _capture_streams or ix != last_cmd:
+        elif ix != last_cmd:
             stdout = PIPE
+        elif _capture_streams:
+            _nstdout = stdout = tempfile.NamedTemporaryFile(delete=False)
+            _stdout_name = stdout.name
         elif builtins.__xonsh_stdout_uncaptured__ is not None:
             stdout = builtins.__xonsh_stdout_uncaptured__
         else:
@@ -440,8 +445,9 @@ def run_subproc(cmds, captured=False):
         if 'stderr' in streams:
             stderr = streams['stderr'][-1]
             procinfo['stderr_redirect'] = streams['stderr'][:-1]
-        elif captured == 'object':
-            stderr = PIPE
+        elif captured == 'object' and ix == last_cmd:
+            _nstderr = stderr = tempfile.NamedTemporaryFile(delete=False)
+            _stderr_name = stderr.name
         elif builtins.__xonsh_stderr_uncaptured__ is not None:
             stderr = builtins.__xonsh_stderr_uncaptured__
         uninew = (ix == last_cmd) and (not _capture_streams)
@@ -556,7 +562,15 @@ def run_subproc(cmds, captured=False):
     # get output
     output = b''
     if write_target is None:
-        if prev_proc.stdout not in (None, sys.stdout):
+        if _stdout_name is not None:
+            with open(_stdout_name, 'rb') as stdoutfile:
+                output = stdoutfile.read()
+            try:
+                _nstdout.close()
+            except:
+                pass
+            os.unlink(_stdout_name)
+        elif prev_proc.stdout not in (None, sys.stdout):
             output = prev_proc.stdout.read()
         if _capture_streams:
             # to get proper encoding from Popen, we have to
@@ -566,13 +580,24 @@ def run_subproc(cmds, captured=False):
             output = output.replace('\r\n', '\n')
         else:
             hist.last_cmd_out = output
-        if (captured == 'object' and
-                prev_proc.stderr not in {None, sys.stderr}):
-            errout = prev_proc.stderr.read()
-            errout = errout.decode(encoding=ENV.get('XONSH_ENCODING'),
-                                   errors=ENV.get('XONSH_ENCODING_ERRORS'))
-            errout = errout.replace('\r\n', '\n')
-            procinfo['stderr'] = errout
+        if captured == 'object': # get stderr as well
+            named = _stderr_name is not None
+            unnamed = prev_proc.stderr not in {None, sys.stderr}
+            if named:
+                with open(_stderr_name, 'rb') as stderrfile:
+                    errout = stderrfile.read()
+                try:
+                    _nstderr.close()
+                except:
+                    pass
+                os.unlink(_stderr_name)
+            elif unnamed:
+                errout = prev_proc.stderr.read()
+            if named or unnamed:
+                errout = errout.decode(encoding=ENV.get('XONSH_ENCODING'),
+                                       errors=ENV.get('XONSH_ENCODING_ERRORS'))
+                errout = errout.replace('\r\n', '\n')
+                procinfo['stderr'] = errout
 
     if (not prev_is_proxy and
             hist.last_cmd_rtn is not None and

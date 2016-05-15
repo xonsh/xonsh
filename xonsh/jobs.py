@@ -42,16 +42,13 @@ if ON_WINDOWS:
             return
         while obj.returncode is None:
             try:
-                outs, errs = obj.communicate(timeout=0.01)
+                obj.wait(0.01)
             except TimeoutExpired:
                 pass
             except KeyboardInterrupt:
                 obj.kill()
-                outs, errs = obj.communicate()
         if obj.poll() is not None:
             builtins.__xonsh_active_job__ = None
-            obj.stdout = BytesIO(outs)
-            obj.stderr = BytesIO(errs)
 
 else:
     def _continue(obj):
