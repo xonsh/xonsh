@@ -1037,9 +1037,11 @@ def _dynamically_collapsed_pwd():
         reduced_part = part[0:part_len]
         parts.append(reduced_part)
 
-    full = sep.join(parts) + sep + last
+    parts.append(last)
+    full = sep.join(parts)
     if (len(full) > targetWidth):
         full = full[-targetWidth:]
+    print("full", full)
     return full
 
 
