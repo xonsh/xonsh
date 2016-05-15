@@ -84,13 +84,23 @@ for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 
 WS = set(' \t\r\n')
 
+def fuzzyMatch(ref, typed):
+    if len(typed) == 0:
+        return True
+    elif len(ref) == 0:
+        return False
+    elif ref[0] == typed[0]:
+        return fuzzyMatch(ref[1:], typed[1:])
+    else:
+        return fuzzyMatch(ref[1:], typed)
+
 def startswithlow(x, start, startlow=None):
     """True if x starts with a string or its lowercase version. The lowercase
     version may be optionally be provided.
     """
     if startlow is None:
         startlow = start.lower()
-    return x.startswith(start) or x.lower().startswith(startlow)
+    return startswithnorm(x, startlow) or startswithnorm(x.lower(), startlow)
 
 
 def startswithnorm(x, start, startlow=None):
@@ -392,13 +402,14 @@ class Completer(object):
         tilde = '~'
         paths = set()
         csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
-        for s in iglobpath(prefix + '*', ignore_case=(not csc)):
+        for s in iglobpath('*', ignore_case=(not csc)):
             paths.add(s)
         if tilde in prefix:
             home = os.path.expanduser(tilde)
             paths = {s.replace(home, tilde) for s in paths}
         if cdpath:
             self._add_cdpaths(paths, prefix)
+        paths = {x for x in paths if fuzzyMatch(x, prefix)}
         paths = self._quote_paths({_normpath(s) for s in paths}, start, end)
         self._add_env(paths, prefix)
         self._add_dots(paths, prefix)
