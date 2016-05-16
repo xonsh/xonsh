@@ -51,7 +51,7 @@ is open to interpretation.
   ``"""triple double quotes"""`` for docstrings. Double quotes are allowed to
   prevent single quote escaping, e.g. ``"Y'all c'mon o'er here!"``
 * We use sphinx with the numpydoc extension to autogenerate API documentation. Follow
-  the numpydoc standard for docstrings `described here <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt>`_.
+  the `numpydoc`_ standard for docstrings.
 * Simple functions should have simple docstrings.
 * Lines should be at most 80 characters long. The 72 and 79 character
   recommendations from PEP8 are not required here.
@@ -112,7 +112,7 @@ include the unit test module. This will execute any unit tests that are
 part of the change as well as the unit tests for xonsh source modules in
 the change::
 
-    $ scripts/run_tests.xsh 
+    $ scripts/run_tests.xsh
 
 If you want to run specific tests you can specify the test names to
 execute. For example to run test_aliases::
@@ -148,7 +148,7 @@ Docstrings
 No matter what language you are writing in, you should always have
 documentation strings along with you code. This is so important that it is
 part of the style guide.  When writing in Python, your docstrings should be
-in reStructured Text using the numpydoc format.
+in reStructured Text using the `numpydoc`_ format.
 
 ------------------------
 Auto-Documentation Hooks
@@ -346,4 +346,5 @@ Document History
 Portions of this page have been forked from the PyNE documentation,
 Copyright 2011-2015, the PyNE Development Team. All rights reserved.
 
-.. _PEP8: http://www.python.org/dev/peps/pep-0008/
+.. _PEP8: https://www.python.org/dev/peps/pep-0008/
+.. _numpydoc: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
