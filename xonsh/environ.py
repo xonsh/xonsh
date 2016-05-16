@@ -14,7 +14,8 @@ from warnings import warn
 from pprint import pformat
 from functools import wraps
 from contextlib import contextmanager
-from collections import MutableMapping, MutableSequence, MutableSet, namedtuple
+from collections import (Mapping, MutableMapping, MutableSequence,
+    MutableSet, namedtuple)
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.tools import (
@@ -25,7 +26,7 @@ from xonsh.tools import (
     is_completions_display_value, to_completions_display_value, is_string_set,
     csv_to_set, set_to_csv, get_sep, is_int, is_bool_seq, csv_to_bool_seq,
     bool_seq_to_csv, DefaultNotGiven, setup_win_unicode_console,
-    intensify_colors_on_win_setter
+    intensify_colors_on_win_setter, print_exception
 )
 from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
@@ -726,7 +727,7 @@ def _is_executable_file(path):
 def yield_executables_windows(directory, name):
     normalized_name = os.path.normcase(name)
     extensions = builtins.__xonsh_env__.get('PATHEXT')
-    try: 
+    try:
         names = os.listdir(directory)
     except PermissionError:
         return
@@ -741,10 +742,10 @@ def yield_executables_windows(directory, name):
 
 
 def yield_executables_posix(directory, name):
-    try: 
+    try:
         names = os.listdir(directory)
     except PermissionError:
-        return 
+        return
     if name in os.listdir(directory):
         path = os.path.join(directory, name)
         if _is_executable_file(path):
@@ -1189,8 +1190,19 @@ def load_static_config(ctx, config=None):
                                 DEFAULT_VALUES.get('XONSH_ENCODING_ERRORS',
                                                    'surrogateescape'))
         with open(config, 'r', encoding=encoding, errors=errors) as f:
-            conf = json.load(f)
-        ctx['LOADED_CONFIG'] = True
+            try:
+                conf = json.load(f)
+                assert isinstance(conf, Mapping)
+                ctx['LOADED_CONFIG'] = True
+            except Exception as e:
+                conf = {}
+                ctx['LOADED_CONFIG'] = False
+                print_exception()
+                if isinstance(e, json.JSONDecodeError):
+                    msg = 'Xonsh config file is not valid JSON.'
+                else:
+                    msg = 'Could not load xonsh config.'
+                print(msg, file=sys.stderr)
     else:
         conf = {}
         ctx['LOADED_CONFIG'] = False

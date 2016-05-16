@@ -2,12 +2,14 @@
 """Tests the xonsh environment."""
 from __future__ import unicode_literals, print_function
 import os
+import tempfile
+import builtins
 
 import nose
 from nose.tools import (assert_equal, assert_true, assert_not_in,
-                        assert_is_instance, assert_in)
+    assert_is_instance, assert_in, assert_raises)
 
-from xonsh.environ import Env, format_prompt
+from xonsh.environ import Env, format_prompt, load_static_config
 
 def test_env_normal():
     env = Env(VAR='wakka')
@@ -73,7 +75,6 @@ def test_HISTCONTROL():
     assert_true('ignoredups' in env['HISTCONTROL'])
 
 def test_swap():
-
     env = Env(VAR='wakka')
     assert_equal(env['VAR'], 'wakka')
 
@@ -100,6 +101,36 @@ def test_swap():
     assert 'VAR1' not in env
     assert 'VAR2' not in env
     assert 'VAR3' not in env
+
+def test_load_static_config_works():
+    s = b'{"best": "awash"}'
+    env = {}
+    with tempfile.NamedTemporaryFile() as f:
+        f.write(s)
+        f.flush()
+        conf = load_static_config(env, f.name)
+    assert_equal({'best': 'awash'}, conf)
+    assert_equal(env['LOADED_CONFIG'], True)
+
+def test_load_static_config_type_fail():
+    s = b'["best", "awash"]'
+    builtins.__xonsh_env__ = env = {'XONSH_SHOW_TRACEBACK': False}
+    with tempfile.NamedTemporaryFile() as f:
+        f.write(s)
+        f.flush()
+        conf = load_static_config(env, f.name)
+    assert_equal(conf, {})
+    assert_equal(env['LOADED_CONFIG'], False)
+
+def test_load_static_config_json_fail():
+    s = b'{"best": "awash"'
+    builtins.__xonsh_env__ = env = {'XONSH_SHOW_TRACEBACK': False}
+    with tempfile.NamedTemporaryFile() as f:
+        f.write(s)
+        f.flush()
+        conf = load_static_config(env, f.name)
+    assert_equal(conf, {})
+    assert_equal(env['LOADED_CONFIG'], False)
 
 
 if __name__ == '__main__':
