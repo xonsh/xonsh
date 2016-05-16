@@ -1198,7 +1198,10 @@ def load_static_config(ctx, config=None):
                 conf = {}
                 ctx['LOADED_CONFIG'] = False
                 print_exception()
-                if isinstance(e, json.JSONDecodeError):
+                # JSONDecodeError was added in Python v3.5
+                jerr = json.JSONDecodeError \
+                       if hasattr(json, 'JSONDecodeError') else ValueError
+                if isinstance(e, jerr):
                     msg = 'Xonsh config file is not valid JSON.'
                 else:
                     msg = 'Could not load xonsh config.'
