@@ -7,9 +7,14 @@ import signal
 import builtins
 from subprocess import TimeoutExpired
 from io import BytesIO
+from collections import deque
 
 from xonsh.tools import ON_WINDOWS
 
+RUNNING = 1
+STOPPED = 0
+
+tasks = deque()
 
 if ON_WINDOWS:
     def _continue(job):
@@ -52,8 +57,7 @@ if ON_WINDOWS:
 
 else:
     def _continue(job):
-        job['signal'] = signal.SIGCONT
-        job['status'] = 'running'
+        os.kill(job['obj'].pid, signal.SIGCONT)
 
 
     def _kill(obj):
@@ -95,46 +99,45 @@ else:
     except OSError:
         _shell_tty = None
 
+    def _get_next_task():
+        """ Get the next active task and put it on top of the queue"""
+        selected_task = None
+        for tid in tasks:
+            task = get_task(tid)
+            if not task['bg'] and task['status'] == RUNNING:
+                selected_task = tid
+                break
+        if selected_task == None:
+            return
+        tasks.remove(selected_task)
+        tasks.appendleft(selected_task)
+        return get_task(selected_task)
 
-    def wait_for_active_job(signal_to_send=None):
+
+    def wait_for_active_job():
         """
         Wait for the active job to finish, to be killed by SIGINT, or to be
         suspended by ctrl-z.
         """
-        _clear_dead_jobs()
-        act = builtins.__xonsh_active_job__
-        if act is None:
-            return
-        job = builtins.__xonsh_all_jobs__[act]
-        obj = job['obj']
-        if job['bg'] and job['status'] == 'running':
-            return
-        pgrp = job['pgrp']
 
+        _clear_dead_jobs()
+
+        active_task = _get_next_task()
+
+        # Return when there are no foreground active task
+        if active_task is None:
+            _give_terminal_to(_shell_pgrp)  # give terminal back to the shell
+            return
+
+        pgrp = active_task['pgrp']
+        obj = active_task['obj']
         # give the terminal over to the fg process
         _give_terminal_to(pgrp)
-        # if necessary, send the specified signal to this process
-        # (this hook  was added because vim, emacs, etc, seem to need to have
-        # the terminal when they receive SIGCONT from the "fg" command)
-        signal_to_send = job['signal']
-        if signal_to_send is not None:
-            if signal_to_send == signal.SIGCONT:
-                job['status'] = 'running'
-            os.kill(obj.pid, signal_to_send)
-            job['signal'] = None
-
-            if job['bg']:
-                _give_terminal_to(_shell_pgrp)
-                return
 
         _, wcode = os.waitpid(obj.pid, os.WUNTRACED)
         if os.WIFSTOPPED(wcode):
-            job['bg'] = True
-            job['status'] = 'stopped'
-            # The task was stopped therefore we don't have any active task
-            builtins.__xonsh_active_job__ = None
             print()  # get a newline because ^Z will have been printed
-            print_one_job(act)
+            active_task['status'] = STOPPED
         elif os.WIFSIGNALED(wcode):
             print()  # get a newline because ^C will have been printed
             obj.signal = (os.WTERMSIG(wcode), os.WCOREDUMP(wcode))
@@ -143,33 +146,22 @@ else:
             obj.returncode = os.WEXITSTATUS(wcode)
             obj.signal = None
 
-        if obj.poll() is not None:
-            builtins.__xonsh_active_job__ = None
+        return wait_for_active_job()
 
-        _give_terminal_to(_shell_pgrp)  # give terminal back to the shell
+
+def get_task(tid):
+    return builtins.__xonsh_all_jobs__[tid]
 
 
 def _clear_dead_jobs():
     to_remove = set()
-    for num, job in builtins.__xonsh_all_jobs__.items():
-        obj = job['obj']
+    for tid in tasks:
+        obj = get_task(tid)['obj']
         if obj.poll() is not None:
-            to_remove.add(num)
-    for i in to_remove:
-        del builtins.__xonsh_all_jobs__[i]
-        if builtins.__xonsh_active_job__ == i:
-            builtins.__xonsh_active_job__ = None
-
-
-def _reactivate_job():
-    if len(builtins.__xonsh_all_jobs__) == 0:
-        return
-
-    all_jobs = builtins.__xonsh_all_jobs__.items()
-    reactivable_jobs = [job for job in all_jobs if job[1]['status'] == 'stopped']
-
-    builtins.__xonsh_active_job__ = max(reactivable_jobs,
-                                        key=lambda x: x[1]['started'])[0]
+            to_remove.add(tid)
+    for job in to_remove:
+        tasks.remove(job)
+        del builtins.__xonsh_all_jobs__[job]
 
 
 def print_one_job(num):
@@ -179,7 +171,7 @@ def print_one_job(num):
     except KeyError:
         return
     act = '*' if num == builtins.__xonsh_active_job__ else ' '
-    status = job['status']
+    status = "running" if job['status'] == RUNNING else "stopped"
     cmd = [' '.join(i) if isinstance(i, list) else i for i in job['cmds']]
     cmd = ' '.join(cmd)
     pid = job['pids'][-1]
@@ -201,18 +193,14 @@ def add_job(info):
     """
     Add a new job to the jobs dictionary.
     """
-    info['started'] = time.time()
-    info['status'] = 'running'
-    _set_pgrp(info)
     num = get_next_job_number()
+    info['started'] = time.time()
+    info['status'] = RUNNING
+    _set_pgrp(info)
+    tasks.appendleft(num)
     builtins.__xonsh_all_jobs__[num] = info
-    builtins.__xonsh_active_job__ = num
     if info['bg']:
         print_one_job(num)
-
-
-def _default_sigint_handler(num, frame):
-    raise KeyboardInterrupt
 
 
 def kill_all_jobs():
@@ -231,7 +219,7 @@ def jobs(args, stdin=None):
     Display a list of all current jobs.
     """
     _clear_dead_jobs()
-    for j in sorted(builtins.__xonsh_all_jobs__):
+    for j in tasks:
         print_one_job(j)
     return None, None
 
@@ -243,13 +231,13 @@ def fg(args, stdin=None):
     Bring the currently active job to the foreground, or, if a single number is
     given as an argument, bring that job to the foreground.
     """
+
     _clear_dead_jobs()
+    if len(tasks) == 0:
+        return '', 'Cannot bring nonexistent job to foreground.\n'
+
     if len(args) == 0:
-        # start active job in foreground
-        _reactivate_job()
-        act = builtins.__xonsh_active_job__
-        if act is None:
-            return '', 'Cannot bring nonexistent job to foreground.\n'
+        act = tasks[0] # take the last manipulated task by default
     elif len(args) == 1:
         try:
             act = int(args[0])
@@ -259,9 +247,14 @@ def fg(args, stdin=None):
             return '', 'Invalid job: {}\n'.format(args[0])
     else:
         return '', 'fg expects 0 or 1 arguments, not {}\n'.format(len(args))
-    builtins.__xonsh_active_job__ = act
-    job = builtins.__xonsh_all_jobs__[act]
+
+    # Put this one on top of the queue
+    tasks.remove(act)
+    tasks.appendleft(act)
+
+    job = get_task(act)
     job['bg'] = False
+    job['status'] = RUNNING
     _continue(job)
     print_one_job(act)
 
@@ -273,24 +266,8 @@ def bg(args, stdin=None):
     Resume execution of the currently active job in the background, or, if a
     single number is given as an argument, resume that job in the background.
     """
-    _clear_dead_jobs()
-    if len(args) == 0:
-        # start active job in foreground
-        act = builtins.__xonsh_active_job__
-        if act is None:
-            return '', 'Cannot send nonexistent job to background.\n'
-    elif len(args) == 1:
-        try:
-            act = int(args[0])
-        except ValueError:
-            return '', 'Invalid job: {}\n'.format(args[0])
-        if act not in builtins.__xonsh_all_jobs__:
-            return '', 'Invalid job: {}\n'.format(args[0])
+    res = fg(args, stdin)
+    if res == None:
+        get_task(tasks[0])['bg'] = True
     else:
-        return '', 'bg expects 0 or 1 arguments, not {}\n'.format(len(args))
-    builtins.__xonsh_active_job__ = act
-    job = builtins.__xonsh_all_jobs__[act]
-    job['bg'] = True
-    # When the SIGCONT is sent job['status'] is set to running.
-    _continue(job)
-    print_one_job(act)
+        return res
