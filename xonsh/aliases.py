@@ -375,7 +375,7 @@ def which(args, stdin, stdout, stderr):
         parser.print_usage(file=stderr)
         return -1
     pargs = parser.parse_args(args)
-    exts = pargs.exts if ON_WINDOWS else []
+    exts = pargs.exts if ON_WINDOWS else None
     failures = []
     for arg in pargs.args:
         nmatches = 0
