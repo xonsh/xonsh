@@ -80,7 +80,7 @@ class Input(Node):
     attrs = ('prompt', 'converter', 'show_conversion', 'confirm', 'path')
 
     def __init__(self, prompt='>>> ', converter=None, show_conversion=False,
-                 confirm=False, path=None):
+                 confirm=False, retry=False, path=None):
         """
         Parameters
         ----------
@@ -96,6 +96,9 @@ class Input(Node):
         confirm : bool, optional
             Whether the input should be confirmed until true or broken,
             default False.
+        retry : bool, optional
+            In the event that the conversion operation fails, should
+            users be re-prompted until they provide valid input. Deafult False.
         path : str or sequence of str, optional
             A path within the storage object.
         """
@@ -103,6 +106,7 @@ class Input(Node):
         self.converter = converter
         self.show_conversion = show_conversion
         self.confirm = confirm
+        self.retry = retry
         self.path = path
 
 
@@ -186,7 +190,7 @@ class StoreNonEmpty(Input):
     """
 
     def __init__(self, prompt='>>> ', converter=None, show_conversion=False,
-                 confirm=False, path=None):
+                 confirm=False, retry=False, path=None):
         def nonempty_converter(x):
             """Converts non-empty values and converts empty inputs to
             Unstorable.
@@ -200,7 +204,7 @@ class StoreNonEmpty(Input):
             return x
         super().__init__(prompt=prompt, converter=nonempty_converter,
                          show_conversion=show_conversion, confirm=confirm,
-                         path=path)
+                         path=path, retry=retry)
 
 
 class StateFile(Input):
@@ -372,6 +376,8 @@ class PrettyFormatter(Visitor):
         if node.converter is not None:
             s += ',\n' + self.indent + 'converter={0!r}'.format(node.converter)
         s += ',\n' + self.indent + 'show_conversion={0!r}'.format(node.show_conversion)
+        s += ',\n' + self.indent + 'confirm={0!r}'.format(node.confirm)
+        s += ',\n' + self.indent + 'retry={0!r}'.format(node.retry)
         if node.path is not None:
             s += ',\n' + self.indent + 'path={0!r}'.format(node.path)
         s += '\n)'
@@ -543,9 +549,18 @@ class PromptVisitor(StateVisitor):
         need_input = True
         while need_input:
             self.env['PROMPT'] = node.prompt
-            x = self.shell.singleline(**self.shell_kwargs)
+            raw = self.shell.singleline(**self.shell_kwargs)
             if callable(node.converter):
-                x, raw = node.converter(x), x
+                try:
+                    x = node.converter(raw)
+                except Exception:
+                    if node.retry:
+                        msg = ('{{BOLD_RED}}Invalid{{NO_COLOR}} input {0!r}, '
+                               'please retry.')
+                        print_color(msg.format(raw))
+                        continue
+                    else:
+                        raise
                 if node.show_conversion and x is not Unstorable \
                                         and str(x) != raw:
                     msg = '{{BOLD_PURPLE}}Converted{{NO_COLOR}} input {0!r} to {1!r}.'
