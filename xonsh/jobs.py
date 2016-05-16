@@ -134,6 +134,8 @@ else:
         # give the terminal over to the fg process
         _give_terminal_to(pgrp)
 
+        _continue(active_task)
+
         _, wcode = os.waitpid(obj.pid, os.WUNTRACED)
         if os.WIFSTOPPED(wcode):
             print()  # get a newline because ^Z will have been printed
@@ -255,7 +257,6 @@ def fg(args, stdin=None):
     job = get_task(act)
     job['bg'] = False
     job['status'] = RUNNING
-    _continue(job)
     print_one_job(act)
 
 
@@ -268,6 +269,8 @@ def bg(args, stdin=None):
     """
     res = fg(args, stdin)
     if res == None:
-        get_task(tasks[0])['bg'] = True
+        curTask = get_task(tasks[0])
+        curTask['bg'] = True
+        _continue(curTask)
     else:
         return res
