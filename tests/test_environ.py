@@ -11,6 +11,8 @@ from nose.tools import (assert_equal, assert_true, assert_not_in,
 
 from xonsh.environ import Env, format_prompt, load_static_config
 
+from tests.tools import mock_xonsh_env
+
 def test_env_normal():
     env = Env(VAR='wakka')
     assert_equal('wakka', env['VAR'])
@@ -102,35 +104,26 @@ def test_swap():
     assert 'VAR2' not in env
     assert 'VAR3' not in env
 
-def test_load_static_config_works():
-    s = b'{"best": "awash"}'
-    env = {}
-    with tempfile.NamedTemporaryFile() as f:
+def check_load_static_config(s, exp, loaded):
+    env = {'XONSH_SHOW_TRACEBACK': False}
+    with tempfile.NamedTemporaryFile() as f, mock_xonsh_env(env):
         f.write(s)
         f.flush()
         conf = load_static_config(env, f.name)
-    assert_equal({'best': 'awash'}, conf)
-    assert_equal(env['LOADED_CONFIG'], True)
+    assert_equal(exp, conf)
+    assert_equal(env['LOADED_CONFIG'], loaded)
+
+def test_load_static_config_works():
+    s = b'{"best": "awash"}'
+    check_load_static_config(s, {'best': 'awash'}, True)
 
 def test_load_static_config_type_fail():
     s = b'["best", "awash"]'
-    builtins.__xonsh_env__ = env = {'XONSH_SHOW_TRACEBACK': False}
-    with tempfile.NamedTemporaryFile() as f:
-        f.write(s)
-        f.flush()
-        conf = load_static_config(env, f.name)
-    assert_equal(conf, {})
-    assert_equal(env['LOADED_CONFIG'], False)
+    check_load_static_config(s, {}, False)
 
 def test_load_static_config_json_fail():
     s = b'{"best": "awash"'
-    builtins.__xonsh_env__ = env = {'XONSH_SHOW_TRACEBACK': False}
-    with tempfile.NamedTemporaryFile() as f:
-        f.write(s)
-        f.flush()
-        conf = load_static_config(env, f.name)
-    assert_equal(conf, {})
-    assert_equal(env['LOADED_CONFIG'], False)
+    check_load_static_config(s, {}, False)
 
 
 if __name__ == '__main__':
