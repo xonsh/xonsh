@@ -32,7 +32,8 @@ def check_exec(input):
         EXECER.exec(input)
 
 def check_eval(input):
-    with mock_xonsh_env({'AUTO_CD': False}):
+    with mock_xonsh_env({'AUTO_CD': False, 'XONSH_ENCODING' :'utf-8',
+                         'XONSH_ENCODING_ERRORS': 'strict', 'PATH': []}):
         EXECER.debug_level = DEBUG_LEVEL
         EXECER.eval(input)
 
