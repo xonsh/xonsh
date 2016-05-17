@@ -69,3 +69,4 @@ For those of you who want the gritty details.
     :maxdepth: 1
 
     mplhooks
+
