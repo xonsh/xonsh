@@ -342,7 +342,7 @@ class AWitchAWitch(Action):
         parser.exit()
 
 
-def which(args, stdin, stdout, stderr):
+def which(args, stdin=None, stdout=None, stderr=None):
     """
     Checks if each arguments is a xonsh aliases, then if it's an executable,
     then finally return an error code equal to the number of misses.
@@ -364,7 +364,7 @@ def which(args, stdin, stdout, stderr):
     if ON_WINDOWS:
         parser.add_argument('-e', '--exts', nargs='*', type=str,
                             help='Specify a list of extensions to use instead '
-                            'of the stan dard list for this system. This can '
+                            'of the standard list for this system. This can '
                             'effectively be used as an optimization to, for '
                             'example, avoid stat\'s of "foo.vbs" when '
                             'searching for "foo" and you know it is not a '
@@ -375,7 +375,15 @@ def which(args, stdin, stdout, stderr):
         parser.print_usage(file=stderr)
         return -1
     pargs = parser.parse_args(args)
-    exts = pargs.exts if ON_WINDOWS else None
+    
+    if ON_WINDOWS:
+        if len(pargs.exts) > 0:
+            exts = pargs.exts
+        else:
+            exts = builtins.__xonsh_env__.get('PATHEXT', ['.COM', '.EXE', '.BAT'])
+    else:
+        exts = None
+
     failures = []
     for arg in pargs.args:
         nmatches = 0
@@ -387,10 +395,19 @@ def which(args, stdin, stdout, stderr):
                 continue
         for match in _which.whichgen(arg, path=builtins.__xonsh_env__['PATH'],
                                      exts=exts, verbose=pargs.verbose):
+            abs_name, from_where = match if pargs.verbose else (match, '')
+            if ON_WINDOWS:
+                # Use list dir to get correct case for the filename
+                # i.e. windows is case insesitive but case preserving
+                p, f = os.path.split(abs_name)
+                f = next(s for s in os.listdir(p) if s.lower() == f.lower())
+                abs_name = os.path.join(p, f)
+                if builtins.__xonsh_env__.get('FORCE_POSIX_PATHS', False):
+                    abs_name.replace(os.sep, os.altsep)
             if pargs.verbose:
-                print('{} ({})'.format(*match), file=stdout)
+                print('{} ({})'.format(abs_name, from_where), file=stdout)
             else:
-                print(match, file=stdout)
+                print(abs_name, file=stdout)
             nmatches += 1
             if not pargs.all:
                 break
