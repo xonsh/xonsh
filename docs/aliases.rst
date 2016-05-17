@@ -177,7 +177,7 @@ The following aliases on Windows are expanded to ``['cmd', '/c', alias]``:
 ``activate``/``deactivate`` on Windows with Anaconda
 =====================
 On Windows with an Anaconda Python distribution, ``activate`` and
-``deactivate`` is to aliased to ``['source-bat activate']`` and ``['source-bat deactivate']``.
+``deactivate`` are aliased to ``['source-bat activate']`` and ``['source-bat deactivate']``.
 This makes it possible to use the same commands to activate/deactivate conda environments as 
 in cmd.exe.  
 
