@@ -377,7 +377,7 @@ def which(args, stdin=None, stdout=None, stderr=None):
     pargs = parser.parse_args(args)
     
     if ON_WINDOWS:
-        if len(pargs.exts) > 0:
+        if pargs.exts:
             exts = pargs.exts
         else:
             exts = builtins.__xonsh_env__.get('PATHEXT', ['.COM', '.EXE', '.BAT'])
@@ -416,8 +416,10 @@ def which(args, stdin=None, stdout=None, stderr=None):
     if len(failures) == 0:
         return 0
     else:
-        print('{} not in $PATH or xonsh.builtins.aliases\n'.format(
-              ', '.join(failures), file=stderr))
+        print('{} not in $PATH'.format(', '.join(failures)), file=stderr, end='')
+        if not pargs.skip:
+            print(' or xonsh.builtins.aliases', file=stderr, end='')
+        print('', end='\n')
         return len(failures)
 
 
