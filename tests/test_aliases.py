@@ -85,7 +85,7 @@ class TestWhich:
         arg = 'whichtestapp1'
         matches = list(_which.whichgen(arg, path=[testdir]))
         assert len(matches) == 1
-        assert self._file_match(matches[0], os.path.join(testdir, arg))
+        assert self._file_match(matches[0][0], os.path.join(testdir, arg))
 
     def test_whichgen_failure(self):
         testdir = self.testdirs[0].name
@@ -108,8 +108,8 @@ class TestWhich:
         arg = 'whichtestapp1'
         matches = list(_which.whichgen(arg, path=[testdir0, testdir1]))
         assert len(matches) == 2
-        assert self._file_match(matches[0], os.path.join(testdir0, arg))
-        assert self._file_match(matches[1], os.path.join(testdir1, arg))
+        assert self._file_match(matches[0][0], os.path.join(testdir0, arg))
+        assert self._file_match(matches[1][0], os.path.join(testdir1, arg))
 
     if ON_WINDOWS:
         def test_whichgen_ext_failure(self):
@@ -123,7 +123,7 @@ class TestWhich:
                 arg = 'whichtestapp2'
                 matches = list(_which.whichgen(arg, path=[testdir], exts = ['.wta']))
                 assert len(matches) == 1
-                assert self._file_match(matches[0], os.path.join(testdir, arg))
+                assert self._file_match(matches[0][0], os.path.join(testdir, arg))
 
     def _file_match(self, path1, path2):
         if ON_WINDOWS:
