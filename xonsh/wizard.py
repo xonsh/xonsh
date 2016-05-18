@@ -214,7 +214,7 @@ class StateFile(Input):
 
     attrs = ('default_file', 'check')
 
-    def __init__(self, default_file=None, check=True):
+    def __init__(self, default_file=None, check=True, ask=True):
         """
         Parameters
         ----------
@@ -224,10 +224,14 @@ class StateFile(Input):
             Whether to print the current state and ask if it should be
             saved/loaded prior to asking for the file name and saving the
             file, default=True.
+        ask : bool, optional
+            Whether to ask for the filename (if ``False``, always use the
+            default filename)
         """
         self._df = None
         super().__init__(prompt='filename: ', converter=None,
                          confirm=False, path=None)
+        self.ask_filename = ask
         self.default_file = default_file
         self.check = check
 
@@ -604,7 +608,9 @@ class PromptVisitor(StateVisitor):
             do_save = self.visit(asker)
             if not do_save:
                 return Unstorable
-        fname = self.visit_input(node)
+        fname = None
+        if node.ask_filename:
+            fname = self.visit_input(node)
         if fname is None or len(fname) == 0:
             fname = node.default_file
         if os.path.isfile(fname):
