@@ -35,7 +35,8 @@ Current Developments
   variables to control caching of scripts and interactive commands.  These can
   also be controlled by command line options ``--no-script-cache`` and
   ``--cache-everything`` when starting xonsh.
-  
+* Added a workaround to allow ctrl-c to interrupt reverse incremental search in
+  the readline shell
 
 **Changed:**
 
