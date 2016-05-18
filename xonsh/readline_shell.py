@@ -19,14 +19,16 @@ if HAVE_PYGMENTS:
     import pygments
     from pygments.formatters.terminal256 import Terminal256Formatter
 
-RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = None
+readline = None
+RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = RL_STATE = None
 RL_CAN_RESIZE = False
 RL_DONE = None
-
+_RL_STATE_DONE = 0x1000000
+_RL_STATE_ISEARCH = 0x0000080
 
 def setup_readline():
     """Sets up the readline module and completion suppression, if available."""
-    global RL_COMPLETION_SUPPRESS_APPEND, RL_LIB, RL_CAN_RESIZE
+    global RL_COMPLETION_SUPPRESS_APPEND, RL_LIB, RL_CAN_RESIZE, RL_STATE, readline
     if RL_COMPLETION_SUPPRESS_APPEND is not None:
         return
     try:
@@ -44,6 +46,10 @@ def setup_readline():
         except ValueError:
             # not all versions of readline have this symbol, ie Macs sometimes
             RL_COMPLETION_SUPPRESS_APPEND = None
+        try:
+            RL_STATE = ctypes.c_int.in_dll(lib, 'rl_readline_state')
+        except:
+            pass
         RL_CAN_RESIZE = hasattr(lib, 'rl_reset_screen_size')
     env = builtins.__xonsh_env__
     # reads in history
@@ -69,6 +75,29 @@ def teardown_readline():
         import readline
     except (ImportError, TypeError):
         return
+
+
+def fix_readline_state_after_ctrl_c():
+    """
+    Fix to allow Ctrl-C to exit reverse-i-search.
+
+    Based on code from:
+        http://bugs.python.org/file39467/raw_input__workaround_demo.py
+    """
+    if ON_WINDOWS:
+        # hack to make pyreadline mimic the desired behavior
+        try:
+            _q = readline.rl.mode.process_keyevent_queue
+            if len(_q) > 1:
+                _q.pop()
+        except:
+            pass
+    if RL_STATE is None:
+        return
+    if RL_STATE.value & _RL_STATE_ISEARCH:
+        RL_STATE.value &= ~_RL_STATE_ISEARCH
+    if not RL_STATE.value & _RL_STATE_DONE:
+        RL_STATE.value |= _RL_STATE_DONE
 
 
 def rl_completion_suppress_append(val=1):
@@ -263,6 +292,7 @@ class ReadlineShell(BaseShell, Cmd):
                 self._cmdloop(intro=intro)
             except KeyboardInterrupt:
                 print()  # Gives a newline
+                fix_readline_state_after_ctrl_c()
                 self.reset_buffer()
                 intro = None
 
