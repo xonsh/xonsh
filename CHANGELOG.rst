@@ -73,6 +73,7 @@ Current Developments
   at execution time rather than passing through a literal string.
 * Fixed environment variables from os.environ not beeing loaded when a running
   a script
+* The readline shell will now load the inputrc files.
 * Fixed bug that prevented `source-alias` from working.
 * Now able to ``^C`` the xonfig wizard on start up.
 * Fixed deadlock on Windows when runing subprocess that generates enough output
