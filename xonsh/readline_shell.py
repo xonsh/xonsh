@@ -45,7 +45,10 @@ def setup_readline():
         except ValueError:
             # not all versions of readline have this symbol, ie Macs sometimes
             RL_COMPLETION_SUPPRESS_APPEND = None
-        RL_STATE = ctypes.c_int.in_dll(lib, 'rl_readline_state')
+        try:
+            RL_STATE = ctypes.c_int.in_dll(lib, 'rl_readline_state')
+        except:
+            pass
         RL_CAN_RESIZE = hasattr(lib, 'rl_reset_screen_size')
     env = builtins.__xonsh_env__
     # reads in history
@@ -80,9 +83,10 @@ def fix_readline_state_after_ctrl_c():
     Based on code from:
         http://bugs.python.org/file39467/raw_input__workaround_demo.py
     """
+    if RL_STATE is None:
+        return
     if RL_STATE.value & _RL_STATE_ISEARCH:
         RL_STATE.value &= ~_RL_STATE_ISEARCH
-
     if not RL_STATE.value & _RL_STATE_DONE:
         RL_STATE.value |= _RL_STATE_DONE
 
