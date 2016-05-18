@@ -465,17 +465,13 @@ def _get_shells(shells=None, config=None, issue_warning=True):
     elif shells is not None:
         pass
     else:
-        if config is None:
-            config = builtins.__xonsh_env__.get('XONSHCONFIG')
-        if os.path.isfile(config):
-            with open(config, 'r') as f:
-                conf = json.load(f)
-            shells = conf.get('foreign_shells', DEFAULT_SHELLS)
+        env = getattr(builtins, '__xonsh_env__', os.environ)
+        if env.get('LOADED_CONFIG', False):
+            conf = builtins.__xonsh_config__
         else:
-            if issue_warning:
-                msg = 'could not find xonsh config file ($XONSHCONFIG) at {0!r}'
-                warn(msg.format(config), RuntimeWarning)
-            shells = DEFAULT_SHELLS
+            from xonsh.environ import load_static_config
+            conf = load_static_config(env, config)
+        shells = conf.get('foreign_shells', DEFAULT_SHELLS)
     return shells
 
 
