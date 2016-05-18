@@ -149,11 +149,11 @@ class ReadlineShell(BaseShell, Cmd):
     """The readline based xonsh shell."""
 
     def __init__(self, completekey='tab', stdin=None, stdout=None, **kwargs):
-        setup_readline()
         super().__init__(completekey=completekey,
                          stdin=stdin,
                          stdout=stdout,
                          **kwargs)
+        setup_readline()
         self._current_indent = ''
         self._current_prompt = ''
         self.cmdqueue = deque()
