@@ -394,10 +394,17 @@ DEFAULT_DOCS = {
     'TERM': VarDocs(
         'TERM is sometimes set by the terminal emulator. This is used (when '
         "valid) to determine whether or not to set the title. Users shouldn't "
-        "need to set this themselves. Note that this variable cannot be set from "
-        "within xonsh itself; you need to see this from the program that launches "
-        "xonsh. On posix systems, this can be performed by using env, e.g. "
-        "'/usr/bin/env TERM=xterm-color xonsh' or similar.", configurable=False),
+        "need to set this themselves. Note that this variable should be set as "
+        "early as possible in order to ensure it is effective. Here are a few "
+        "options:\n\n"
+        "* Set this from the program that launches xonsh. On posix systems, \n"
+        "  this can be performed by using env, e.g. \n"
+        "  '/usr/bin/env TERM=xterm-color xonsh' or similar.\n"
+        "* From the xonsh command line, namely 'xonsh -DTERM=xterm-color'.\n"
+        "* In the config file with '{\"env\": {\"TERM\": \"xterm-color\"}}'.\n"
+        "* Lastly, in xonshrc with '$TERM'\n\n"
+        "Ideally, your terminal emulator will set this correctly but that does "
+        "not always happen.", configurable=False),
     'TITLE': VarDocs(
         'The title text for the window in which xonsh is running. Formatted '
         "in the same manner as $PROMPT, see 'Customizing the Prompt' "
