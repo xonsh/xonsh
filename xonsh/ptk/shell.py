@@ -22,7 +22,7 @@ from xonsh.ptk.completer import PromptToolkitCompleter
 from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings
 from xonsh.ptk.shortcuts import Prompter, print_tokens
-
+from xonsh.shell import prompt_toolkit_version
 
 class PromptToolkitShell(BaseShell):
     """The xonsh shell."""
@@ -32,12 +32,21 @@ class PromptToolkitShell(BaseShell):
         self.prompter = Prompter()
         self.history = PromptToolkitHistory()
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx)
-        self.key_bindings_manager = KeyBindingManager(
-            enable_auto_suggest_bindings=True,
-            enable_search=True,
-            enable_abort_and_exit_bindings=True,
-            enable_vi_mode=Condition(lambda cli: builtins.__xonsh_env__.get('VI_MODE')),
-            enable_open_in_editor=True)
+
+        key_bindings_manager_args = {
+                'enable_auto_suggest_bindings': True,
+                'enable_search': True,
+                'enable_abort_and_exit_bindings': True,
+                'enable_open_in_editor': True
+                }
+        vptk = prompt_toolkit_version()
+        major, minor = [int(x) for x in vptk.split('.')[:2]]
+        self.new_vi_mode_flag = ((major, minor) >= (1, 0)) and (vptk != '<0.57')
+        if not(self.new_vi_mode_flag):
+            # enable_vi_mode is deprecated acoording to prompt_toolset 1.0 document.
+            key_bindings_manager_args['enable_vi_mode'] = Condition(lambda cli: builtins.__xonsh_env__.get('VI_MODE'))
+
+        self.key_bindings_manager = KeyBindingManager(**key_bindings_manager_args)
         load_xonsh_bindings(self.key_bindings_manager)
 
     def singleline(self, store_in_history=True, auto_suggest=None,
@@ -63,21 +72,25 @@ class PromptToolkitShell(BaseShell):
         rprompt_tokens = self.rprompt_tokens(None)
         get_rprompt_tokens = lambda cli: rprompt_tokens
         with self.prompter:
-            line = self.prompter.prompt(
-                    mouse_support=mouse_support,
-                    auto_suggest=auto_suggest,
-                    get_prompt_tokens=get_prompt_tokens,
-                    get_rprompt_tokens=get_rprompt_tokens,
-                    style=PygmentsStyle(xonsh_style_proxy(self.styler)),
-                    completer=completer,
-                    lexer=PygmentsLexer(XonshLexer),
-                    multiline=multiline,
-                    get_continuation_tokens=self.continuation_tokens,
-                    history=history,
-                    enable_history_search=enable_history_search,
-                    reserve_space_for_menu=0,
-                    key_bindings_registry=self.key_bindings_manager.registry,
-                    display_completions_in_columns=multicolumn)
+            prompt_args = {
+                    'mouse_support': mouse_support,
+                    'auto_suggest': auto_suggest,
+                    'get_prompt_tokens': get_prompt_tokens,
+                    'get_rprompt_tokens': get_rprompt_tokens,
+                    'style': PygmentsStyle(xonsh_style_proxy(self.styler)),
+                    'completer': completer,
+                    'lexer': PygmentsLexer(XonshLexer),
+                    'multiline': multiline,
+                    'get_continuation_tokens': self.continuation_tokens,
+                    'history': history,
+                    'enable_history_search': enable_history_search,
+                    'reserve_space_for_menu': 0,
+                    'key_bindings_registry': self.key_bindings_manager.registry,
+                    'display_completions_in_columns': multicolumn
+                    }
+            if self.new_vi_mode_flag:
+                prompt_args['vi_mode'] = env.get('VI_MODE')
+            line = self.prompter.prompt(**prompt_args)
         return line
 
     def push(self, line):
