@@ -48,6 +48,8 @@ def run_compiled_code(code, glb, loc, mode):
     """
     Helper to run code in a given mode and context
     """
+    if code is None:
+        return
     if mode in {'exec', 'single'}:
         func = exec
     else:
