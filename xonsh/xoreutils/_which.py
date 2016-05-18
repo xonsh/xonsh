@@ -177,8 +177,7 @@ def whichgen(command, path=None, verbose=0, exts=None):
         not a VisualBasic script but ".vbs" is on PATHEXT. This option
         is only supported on Windows.
 
-    This method returns a generator which yields either full paths to
-    the given command or, if verbose, tuples of the form (<path to
+    This method returns a generator which yields tuples of the form (<path to
     command>, <where path found>).
     """
     matches = []
@@ -214,10 +213,7 @@ def whichgen(command, path=None, verbose=0, exts=None):
     if os.sep in command or os.altsep and os.altsep in command:
         if os.path.exists(command):
             match = _cull((command, "explicit path given"), matches, verbose)
-            if verbose:
-                yield match
-            else:
-                yield match[0]
+            yield match
     else:
         for i in range(len(path)):
             dirName = path[i]
@@ -239,18 +235,12 @@ def whichgen(command, path=None, verbose=0, exts=None):
                         fromWhere = "from PATH element %d" % (i-1)
                     match = _cull((absName, fromWhere), matches, verbose)
                     if match:
-                        if verbose:
-                            yield match
-                        else:
-                            yield match[0]
+                        yield match
         match = _getRegisteredExecutable(command)
         if match is not None:
             match = _cull(match, matches, verbose)
             if match:
-                if verbose:
-                    yield match
-                else:
-                    yield match[0]
+                yield match
 
 
 def which(command, path=None, verbose=0, exts=None):
@@ -272,10 +262,13 @@ def which(command, path=None, verbose=0, exts=None):
     If no match is found for the command, a WhichError is raised.
     """
     try:
-        match = whichgen(command, path, verbose, exts).next()
+        absName, fromWhere = whichgen(command, path, verbose, exts).next()
     except StopIteration:
         raise WhichError("Could not find '%s' on the path." % command)
-    return match
+    if verbose:
+        return absName, fromWhere
+    else:
+        return absName
 
 
 def whichall(command, path=None, verbose=0, exts=None):
@@ -295,7 +288,10 @@ def whichall(command, path=None, verbose=0, exts=None):
         not a VisualBasic script but ".vbs" is on PATHEXT. This option
         is only supported on Windows.
     """
-    return list( whichgen(command, path, verbose, exts) )
+    if verbose:
+        return list( whichgen(command, path, verbose, exts) )
+    else:
+        return list( absName for absName, _ in whichgen(command, path, verbose, exts))
 
 
 
@@ -345,11 +341,11 @@ def main(argv):
     for arg in args:
         #print "debug: search for %r" % arg
         nmatches = 0
-        for match in whichgen(arg, path=altpath, verbose=verbose, exts=exts):
+        for absName, fromWhere in whichgen(arg, path=altpath, verbose=verbose, exts=exts):
             if verbose:
-                print( "%s (%s)" % match)
+                print( "%s (%s)" % (absName, fromWhere))
             else:
-                print(match)
+                print(absName)
             nmatches += 1
             if not all:
                 break
