@@ -360,6 +360,8 @@ def which(args, stdin=None, stdout=None, stderr=None):
     parser.add_argument('-V', '--version', action='version',
                         version='{}'.format(_which.__version__))
     parser.add_argument('-v', '--verbose', action='store_true', dest='verbose')
+    parser.add_argument('-p', '--plain', action='store_true', dest='plain',
+                        help='Do not display alias expansions')
     parser.add_argument('--very-small-rocks', action=AWitchAWitch)
     if ON_WINDOWS:
         parser.add_argument('-e', '--exts', nargs='*', type=str,
@@ -389,7 +391,10 @@ def which(args, stdin=None, stdout=None, stderr=None):
         nmatches = 0
         # skip alias check if user asks to skip
         if (arg in builtins.aliases and not pargs.skip):
-            print('{} -> {}'.format(arg, builtins.aliases[arg]), file=stdout)
+            if pargs.plain:
+                print(arg, file=stdout)
+            else:
+                print('{} -> {}'.format(arg, builtins.aliases[arg]), file=stdout)
             nmatches += 1
             if not pargs.all:
                 continue
