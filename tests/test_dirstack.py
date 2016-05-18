@@ -57,6 +57,20 @@ def test_cdpath_collision():
             dirstack.cd(["tests"])
             assert_equal(os.getcwd(), os.path.join(HERE, "tests"))
 
+def test_cdpath_expansion():
+    with xonsh_env(Env(HERE=HERE, CDPATH=("~", "$HERE"))):
+        test_dirs = (
+            os.path.join(HERE, "xonsh-test-cdpath-here"),
+            os.path.expanduser("~/xonsh-test-cdpath-home")
+        )
+        try:
+            for _ in test_dirs:
+                if not os.path.exists(_):
+                    os.mkdir(_)
+                assert os.path.exists(dirstack._try_cdpath(_)), "dirstack._try_cdpath: could not resolve {0}".format(_)
+        except Exception as e:
+            tuple(os.rmdir(_) for _ in test_dirs if os.path.exists(_))
+            raise e
 
 if __name__ == '__main__':
     nose.runmodule()
