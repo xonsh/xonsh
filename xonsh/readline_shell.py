@@ -19,6 +19,7 @@ if HAVE_PYGMENTS:
     import pygments
     from pygments.formatters.terminal256 import Terminal256Formatter
 
+readline = None
 RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = RL_STATE = None
 RL_CAN_RESIZE = False
 RL_DONE = None
@@ -27,7 +28,7 @@ _RL_STATE_ISEARCH = 0x0000080
 
 def setup_readline():
     """Sets up the readline module and completion suppression, if available."""
-    global RL_COMPLETION_SUPPRESS_APPEND, RL_LIB, RL_CAN_RESIZE, RL_STATE
+    global RL_COMPLETION_SUPPRESS_APPEND, RL_LIB, RL_CAN_RESIZE, RL_STATE, readline
     if RL_COMPLETION_SUPPRESS_APPEND is not None:
         return
     try:
@@ -83,6 +84,12 @@ def fix_readline_state_after_ctrl_c():
     Based on code from:
         http://bugs.python.org/file39467/raw_input__workaround_demo.py
     """
+    if ON_WINDOWS:
+        # hack to make pyreadline mimic the desired behavior
+        try:
+            readline.rl.mode.process_keyevent_queue.pop()
+        except:
+            pass
     if RL_STATE is None:
         return
     if RL_STATE.value & _RL_STATE_ISEARCH:
