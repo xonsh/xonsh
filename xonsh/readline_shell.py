@@ -87,7 +87,9 @@ def fix_readline_state_after_ctrl_c():
     if ON_WINDOWS:
         # hack to make pyreadline mimic the desired behavior
         try:
-            readline.rl.mode.process_keyevent_queue.pop()
+            _q = readline.rl.mode.process_keyevent_queue
+            if len(_q) > 1:
+                _q.pop()
         except:
             pass
     if RL_STATE is None:
