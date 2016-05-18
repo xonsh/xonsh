@@ -80,6 +80,7 @@ Current Developments
 * Prevent Windows fixups from overriding environment vars in static config
 * Fixed Optional Github project status to reflect added/removed files via git_dirty_working_directory()
 * Fixed xonsh.exe launcher on Windows, when Python install directory has a space in it
+* Fixed `$CDPATH` to support `~` and environments variables in its items
 
 **Security:** None
 
