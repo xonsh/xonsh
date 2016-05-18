@@ -281,7 +281,7 @@ def make_wizard(default_file=None, confirm=False):
              "\n\n1, 2, or 3 [default: 2]? ")
         passer = Pass()
         saver = Save(check=False, ask=False, default_file=default_file)
-        wiz = Question(q, {1: wiz, 2: Pass(), 3: saver},
+        wiz = Question(q, {1: wiz, 2: passer, 3: saver},
                        converter=lambda x: int(x.strip()) if x !='' else 2)
     return wiz
 
