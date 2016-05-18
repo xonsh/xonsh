@@ -23,6 +23,7 @@ readline = None
 RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = RL_STATE = None
 RL_CAN_RESIZE = False
 RL_DONE = None
+RL_VARIABLE_VALUE = None
 _RL_STATE_DONE = 0x1000000
 _RL_STATE_ISEARCH = 0x0000080
 
@@ -67,6 +68,8 @@ def setup_readline():
         readline.parse_and_bind("bind ^I rl_complete")
     else:
         readline.parse_and_bind("tab: complete")
+    # load custom user settings
+    readline.read_init_file()
 
 
 def teardown_readline():
@@ -109,6 +112,28 @@ def rl_completion_suppress_append(val=1):
     RL_COMPLETION_SUPPRESS_APPEND.value = val
 
 
+def rl_variable_dumper(readable=True):
+    """Dumps the currently set readline variables. If readable is True, then this
+    output may be used in an inputrc file.
+    """
+    RL_LIB.rl_variable_dumper(int(readable))
+
+
+def rl_variable_value(variable):
+    """Returns the currently set value for a readline configuration variable."""
+    global RL_VARIABLE_VALUE
+    if RL_VARIABLE_VALUE is None:
+        import ctypes
+        RL_VARIABLE_VALUE = RL_LIB.rl_variable_value
+        RL_VARIABLE_VALUE.restype = ctypes.c_char_p
+    env = builtins.__xonsh_env__
+    enc, errors = env.get('XONSH_ENCODING'), env.get('XONSH_ENCODING_ERRORS')
+    if isinstance(variable, str):
+        variable = variable.encode(encoding=enc, errors=errors)
+    rtn = RL_VARIABLE_VALUE(variable)
+    return rtn.decode(encoding=enc, errors=errors)
+
+
 def _insert_text_func(s, readline):
     """Creates a function to insert text via readline."""
     def inserter():
@@ -124,11 +149,11 @@ class ReadlineShell(BaseShell, Cmd):
     """The readline based xonsh shell."""
 
     def __init__(self, completekey='tab', stdin=None, stdout=None, **kwargs):
+        setup_readline()
         super().__init__(completekey=completekey,
                          stdin=stdin,
                          stdout=stdout,
                          **kwargs)
-        setup_readline()
         self._current_indent = ''
         self._current_prompt = ''
         self.cmdqueue = deque()
@@ -352,6 +377,7 @@ class ReadlineShell(BaseShell, Cmd):
         """Returns the current color map."""
         style = style=builtins.__xonsh_env__.get('XONSH_COLOR_STYLE')
         return color_style(style=style)
+
 
 class ReadlineHistoryAdder(Thread):
 
