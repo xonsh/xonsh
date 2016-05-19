@@ -10,7 +10,6 @@
   "url": "https://github.com/Siecje/xontrib-prompt-ret-code",
   "description": ["Adds return code info to the prompt"]
   }
-
  ],
  "packages": {
   "xonsh": {
@@ -28,5 +27,6 @@
    "install": {
     "pip": "pip install xontrib-prompt-ret-code"
    }
+  }
  }
 }
