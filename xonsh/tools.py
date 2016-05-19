@@ -736,6 +736,27 @@ def is_history_tuple(x):
     return False
 
 
+def is_dynamic_cwd_width(x):
+    if x[-1] == '%':
+        x = x[:-1]
+    return x.isdigit()
+
+
+def to_dynamic_cwd_tuple(x):
+    unit = 'c'
+    if x[-1] == '%':
+        x = x[:-1]
+        unit = '%'
+    return (float(x), unit)
+
+
+def dynamic_cwd_tuple_to_str(x):
+    if x[1] == '%':
+        return str(x[0]) + '%'
+    else:
+        return str(x[0])
+
+
 RE_HISTORY_TUPLE = re.compile('([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)\s*([A-Za-z]*)')
 
 def to_history_tuple(x):

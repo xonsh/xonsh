@@ -26,7 +26,7 @@ from xonsh.tools import (
     is_completions_display_value, to_completions_display_value, is_string_set,
     csv_to_set, set_to_csv, get_sep, is_int, is_bool_seq, csv_to_bool_seq,
     bool_seq_to_csv, DefaultNotGiven, setup_win_unicode_console,
-    intensify_colors_on_win_setter
+    intensify_colors_on_win_setter, is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str
 )
 from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
@@ -85,7 +85,7 @@ DEFAULT_ENSURERS = {
     'PATHEXT': (is_env_path, str_to_env_path, env_path_to_str),
     'RAISE_SUBPROC_ERROR': (is_bool, to_bool, bool_to_str),
     'RIGHT_PROMPT': (is_string, ensure_string, ensure_string),
-    'DYNAMIC_CWD_WIDTH': (is_string, ensure_string, ensure_string),
+    'DYNAMIC_CWD_WIDTH': (is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str),
     'TEEPTY_PIPE_DELAY': (is_float, float, str),
     'UPDATE_OS_ENVIRON': (is_bool, to_bool, bool_to_str),
     'XONSHRC': (is_env_path, str_to_env_path, env_path_to_str),
