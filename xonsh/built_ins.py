@@ -662,7 +662,7 @@ def ensure_list_of_strs(x):
     return rtn
 
 
-def load_builtins(execer=None, config=None, login=False):
+def load_builtins(execer=None, config=None, login=False, ctx=None):
     """Loads the xonsh builtins into the Python builtins. Sets the
     BUILTINS_LOADED variable to True.
     """
@@ -670,7 +670,7 @@ def load_builtins(execer=None, config=None, login=False):
     # private built-ins
     builtins.__xonsh_config__ = {}
     builtins.__xonsh_env__ = ENV = Env(default_env(config=config, login=login))
-    builtins.__xonsh_ctx__ = {}
+    builtins.__xonsh_ctx__ = {} if ctx is None else ctx
     builtins.__xonsh_help__ = helper
     builtins.__xonsh_superhelp__ = superhelper
     builtins.__xonsh_regexpath__ = regexpath
