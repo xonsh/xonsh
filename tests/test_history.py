@@ -16,7 +16,7 @@ from xonsh.lazyjson import LazyJSON
 from xonsh.history import History
 from xonsh import history
 
-from tests.tools import mock_xonsh_env
+from tools import mock_xonsh_env
 
 HIST_TEST_KWARGS = dict(sessionid='SESSIONID', gc=False)
 
