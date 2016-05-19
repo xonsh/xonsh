@@ -57,11 +57,14 @@ if ON_WINDOWS:
 
 else:
     def _continue(job):
-        os.kill(job['obj'].pid, signal.SIGCONT)
+        _sendSignal(job, signal.SIGCONT)
 
 
-    def _kill(obj):
-        os.kill(obj.pid, signal.SIGKILL)
+    def _kill(job):
+        _sendSignal(job, signal.SIGKILL)
+
+    def _sendSignal(job, signal):
+        os.killpg(job['pgrp'], signal)
 
 
     def ignore_sigtstp():
@@ -211,7 +214,7 @@ def kill_all_jobs():
     """
     _clear_dead_jobs()
     for job in builtins.__xonsh_all_jobs__.values():
-        _kill(job['obj'])
+        _kill(job)
 
 
 def jobs(args, stdin=None):
