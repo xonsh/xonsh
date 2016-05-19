@@ -322,7 +322,7 @@ class Completer(object):
         env = builtins.__xonsh_env__
         csc = env.get('CASE_SENSITIVE_COMPLETIONS')
         for cdp in env.get('CDPATH'):
-            test_glob = os.path.join(cdp, prefix) + '*'
+            test_glob = os.path.join(builtins.__xonsh_expand_path__(cdp), prefix) + '*'
             for s in iglobpath(test_glob, ignore_case=(not csc)):
                 if os.path.isdir(s):
                     paths.add(os.path.basename(s))
