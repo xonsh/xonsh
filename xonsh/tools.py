@@ -738,12 +738,19 @@ def is_history_tuple(x):
 
 
 def is_dynamic_cwd_width(x):
+    """ 
+        Determine if the input is a valid input for the DYNAMIC_CWD_WIDTH
+        environement variable
+    """
     if x[-1] == '%':
         x = x[:-1]
     return x.isdigit()
 
 
 def to_dynamic_cwd_tuple(x):
+    """
+        Convert to a canonical cwd_width tuple
+    """
     unit = 'c'
     if x[-1] == '%':
         x = x[:-1]
@@ -752,6 +759,9 @@ def to_dynamic_cwd_tuple(x):
 
 
 def dynamic_cwd_tuple_to_str(x):
+    """
+        Convert a canonical cwd_width tuple to a string
+    """
     if x[1] == '%':
         return str(x[0]) + '%'
     else:

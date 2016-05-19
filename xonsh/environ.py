@@ -1025,6 +1025,12 @@ def _collapsed_pwd():
     return leader + sep.join(base)
 
 def _dynamically_collapsed_pwd():
+    """
+        Return the compact current working directory
+
+        It respects the environment variable DYNAMIC_CWD_WIDTH.
+    """
+
     sep = get_sep()
     originial_path = _replace_home_cwd()
     pwd = originial_path.split(sep)
