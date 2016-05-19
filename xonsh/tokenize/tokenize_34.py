@@ -1,29 +1,18 @@
-"""Tokenization help for Python programs.
+"""Tokenization help for xonsh programs.
 
-tokenize(readline) is a generator that breaks a stream of bytes into
-Python tokens.  It decodes the bytes according to PEP-0263 for
-determining source file encoding.
+This file is a modified version of tokenize.py form the Python 3.4 standard
+library (licensed under the Python Software Foundation License, version 2),
+which provides tokenization help for Python programs.
 
-It accepts a readline-like method which is called repeatedly to get the
-next line of input (or b"" for EOF).  It generates 5-tuples with these
-members:
+It is modified to properly tokenize xonsh's backtick operator.
 
-    the token type (see token.py)
-    the token (a string)
-    the starting (row, column) indices of the token (a 2-tuple of ints)
-    the ending (row, column) indices of the token (a 2-tuple of ints)
-    the original line (string)
-
-It is designed to match the working of the Python tokenizer exactly, except
-that it produces COMMENT tokens for comments and gives type OP for all
-operators.  Additionally, all token lists start with an ENCODING token
-which tells you which encoding was used to decode the bytes stream.
+Original file credits:
+   __author__ = 'Ka-Ping Yee <ping@lfw.org>'
+   __credits__ = ('GvR, ESR, Tim Peters, Thomas Wouters, Fred Drake, '
+                  'Skip Montanaro, Raymond Hettinger, Trent Nelson, '
+                  'Michael Foord')
 """
 
-__author__ = 'Ka-Ping Yee <ping@lfw.org>'
-__credits__ = ('GvR, ESR, Tim Peters, Thomas Wouters, Fred Drake, '
-               'Skip Montanaro, Raymond Hettinger, Trent Nelson, '
-               'Michael Foord')
 from codecs import lookup, BOM_UTF8
 import collections
 from io import TextIOWrapper
@@ -37,7 +26,8 @@ blank_re = re.compile(br'^[ \t\f]*(?:[#\r\n]|$)', re.ASCII)
 
 import token
 __all__ = token.__all__ + ["COMMENT", "tokenize", "detect_encoding",
-                           "NL", "untokenize", "ENCODING", "TokenInfo"]
+                           "NL", "untokenize", "ENCODING", "TokenInfo",
+                           "REGEXPATH", "TokenError"]
 del token
 
 COMMENT = N_TOKENS
@@ -47,6 +37,9 @@ tok_name[NL] = 'NL'
 ENCODING = N_TOKENS + 2
 tok_name[ENCODING] = 'ENCODING'
 N_TOKENS += 3
+REGEXPATH = N_TOKENS
+tok_name[REGEXPATH] = 'REGEXPATH'
+N_TOKENS += 1
 EXACT_TOKEN_TYPES = {
     '(':   LPAR,
     ')':   RPAR,
@@ -144,6 +137,9 @@ Triple = group(StringPrefix + "'''", StringPrefix + '"""')
 String = group(StringPrefix + r"'[^\n'\\]*(?:\\.[^\n'\\]*)*'",
                StringPrefix + r'"[^\n"\\]*(?:\\.[^\n"\\]*)*"')
 
+# Xonsh-specific Regular Expression Glob Syntax
+RegexPath = r"`[^\n`\\]*(?:\\.[^\n`\\]*)*`"
+
 # Because of leftmost-then-longest match semantics, be sure to put the
 # longest operators first (e.g., if = came before ==, == would get
 # recognized as two instances of =).
@@ -156,7 +152,7 @@ Bracket = '[][(){}]'
 Special = group(r'\r?\n', r'\.\.\.', r'[:;.,@]')
 Funny = group(Operator, Bracket, Special)
 
-PlainToken = group(Number, Funny, String, Name)
+PlainToken = group(Number, Funny, String, Name, RegexPath)
 Token = Ignore + PlainToken
 
 # First (or only) line of ' or " string.
@@ -164,7 +160,7 @@ ContStr = group(StringPrefix + r"'[^\n'\\]*(?:\\.[^\n'\\]*)*" +
                 group("'", r'\\\r?\n'),
                 StringPrefix + r'"[^\n"\\]*(?:\\.[^\n"\\]*)*' +
                 group('"', r'\\\r?\n'))
-PseudoExtras = group(r'\\\r?\n|\Z', Comment, Triple)
+PseudoExtras = group(r'\\\r?\n|\Z', Comment, Triple, RegexPath)
 PseudoToken = Whitespace + group(PseudoExtras, Number, Funny, ContStr, Name)
 
 def _compile(expr):
@@ -578,6 +574,9 @@ def _tokenize(readline, encoding):
                 elif initial == '#':
                     assert not token.endswith("\n")
                     yield TokenInfo(COMMENT, token, spos, epos, line)
+                elif initial == '`':
+                    # Xonsh-specific Regex Globbing
+                    yield TokenInfo(REGEXPATH, token, spos, epos, line)
                 elif token in triple_quoted:
                     endprog = _compile(endpats[token])
                     endmatch = endprog.match(line, pos)
