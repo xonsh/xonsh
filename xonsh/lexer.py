@@ -3,7 +3,7 @@
 
 Written using a hybrid of ``tokenize`` and PLY.
 """
-import tokenize
+import xonsh.tokenize as tokenize
 
 from io import BytesIO
 from keyword import kwlist
@@ -47,6 +47,7 @@ for (op, type) in _op_map.items():
     token_map[(tokenize.OP, op)] = type
 
 token_map[tokenize.STRING] = 'STRING'
+token_map[tokenize.REGEXPATH] = 'REGEXPATH'
 token_map[tokenize.NEWLINE] = 'NEWLINE'
 token_map[tokenize.INDENT] = 'INDENT'
 token_map[tokenize.DEDENT] = 'DEDENT'
@@ -275,32 +276,6 @@ def handle_bang(state, token):
         yield _new_token("ERRORTOKEN", e, token.start)
 
 
-def handle_backtick(state, token):
-    """
-    Function for generating PLY tokens representing regex globs.
-    """
-    n = next(state['stream'], None)
-
-    found_match = False
-    sofar = '`'
-    while n is not None:
-        sofar += n.string
-        if n.type == tokenize.ERRORTOKEN and n.string == '`':
-            found_match = True
-            break
-        elif n.type == tokenize.NEWLINE or n.type == tokenize.NL:
-            break
-        n = next(state['stream'], None)
-    if found_match:
-        state['last'] = n
-        yield _new_token('REGEXPATH', sofar, token.start)
-    else:
-        state['last'] = token
-        e = "Could not find matching backtick for regex on line {0}"
-        m = e.format(token.start[0])
-        yield _new_token("ERRORTOKEN", m, token.start)
-
-
 def handle_lparen(state, token):
     """
     Function for handling ``(``
@@ -427,7 +402,6 @@ special_handlers = {
     (tokenize.OP, '['): handle_lbracket,
     (tokenize.OP, ']'): handle_rbracket,
     (tokenize.ERRORTOKEN, '$'): handle_dollar,
-    (tokenize.ERRORTOKEN, '`'): handle_backtick,
     (tokenize.ERRORTOKEN, '?'): handle_question,
     (tokenize.ERRORTOKEN, '!'): handle_bang,
     (tokenize.ERRORTOKEN, ' '): handle_error_space,
