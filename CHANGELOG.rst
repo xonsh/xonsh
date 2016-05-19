@@ -28,12 +28,15 @@ Current Developments
   running the Anaconda python distribution on Windows.
 * Added a menu entry to launch xonsh when installing xonsh from a conda package
 * Added a new ``which`` alias that supports both regular ``which`` and also searches
-  through xonsh aliases
+  through xonsh aliases. A pure python implementation of ``which`` is used. Thanks
+  to Trent Mick. https://github.com/trentm/which/
 * Added support for prompt toolkit v1.0.0.
 * Added ``$XONSH_CACHE_SCRIPTS`` and ``$XONSH_CACHE_EVERYTHING`` environment
   variables to control caching of scripts and interactive commands.  These can
   also be controlled by command line options ``--no-script-cache`` and
   ``--cache-everything`` when starting xonsh.
+* Added a workaround to allow ctrl-c to interrupt reverse incremental search in
+  the readline shell
 
 **Changed:**
 
@@ -70,6 +73,7 @@ Current Developments
   at execution time rather than passing through a literal string.
 * Fixed environment variables from os.environ not beeing loaded when a running
   a script
+* The readline shell will now load the inputrc files.
 * Fixed bug that prevented `source-alias` from working.
 * Now able to ``^C`` the xonfig wizard on start up.
 * Fixed deadlock on Windows when runing subprocess that generates enough output
@@ -80,6 +84,7 @@ Current Developments
 * Prevent Windows fixups from overriding environment vars in static config
 * Fixed Optional Github project status to reflect added/removed files via git_dirty_working_directory()
 * Fixed xonsh.exe launcher on Windows, when Python install directory has a space in it
+* Fixed `$CDPATH` to support `~` and environments variables in its items
 
 **Security:** None
 

@@ -118,20 +118,17 @@ class Shell(object):
         return getattr(self.shell, attr)
 
     def _init_environ(self, ctx, config, rc, scriptcache, cacheall):
-        self.execer = Execer(config=config, login=self.login)
+        self.ctx = {} if ctx is None else ctx
+        self.execer = Execer(config=config, login=self.login, xonsh_ctx=self.ctx)
         self.execer.scriptcache = scriptcache
         self.execer.cacheall = cacheall
-        if ctx is None:
-            self.ctx = {}
-            if self.stype != 'none' or self.login:
-                names = builtins.__xonsh_config__.get('xontribs', ())
-                for name in names:
-                    xontribs.update_context(name, ctx=self.ctx)
-                # load run contol files
-                env = builtins.__xonsh_env__
-                rc = env.get('XONSHRC') if rc is None else rc
-                self.ctx.update(xonshrc_context(rcfiles=rc, execer=self.execer))
-        else:
-            self.ctx = ctx
-        builtins.__xonsh_ctx__ = self.ctx
+        if ctx is None and (self.stype != 'none' or self.login):
+            # load xontribs from config file
+            names = builtins.__xonsh_config__.get('xontribs', ())
+            for name in names:
+                xontribs.update_context(name, ctx=self.ctx)
+            # load run contol files
+            env = builtins.__xonsh_env__
+            rc = env.get('XONSHRC') if rc is None else rc
+            self.ctx.update(xonshrc_context(rcfiles=rc, execer=self.execer))
         self.ctx['__name__'] = '__main__'

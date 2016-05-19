@@ -206,8 +206,8 @@ def premain(argv=None):
         args.mode = XonshMode.interactive
         shell_kwargs['completer'] = True
         shell_kwargs['login'] = True
-    shell = builtins.__xonsh_shell__ = Shell(**shell_kwargs)
     from xonsh import imphooks
+    shell = builtins.__xonsh_shell__ = Shell(**shell_kwargs)
     env = builtins.__xonsh_env__
     env['XONSH_LOGIN'] = shell_kwargs['login']
     if args.defines is not None:

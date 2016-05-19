@@ -4,7 +4,7 @@ import sys
 import json
 import builtins
 import functools
-from warnings import warn
+from warnings import warn, catch_warnings, simplefilter
 from argparse import ArgumentParser
 from importlib import import_module
 from importlib.util import find_spec
@@ -27,7 +27,9 @@ def xontrib_context(name):
     """Return a context dictionary for a xontrib of a given name."""
     spec = find_xontrib(name)
     if spec is None:
-        warn('could not find xontrib module {0!r}'.format(name), ImportWarning)
+        with catch_warnings():
+            simplefilter('default', ImportWarning)
+            warn('could not find xontrib module {0!r}'.format(name), ImportWarning)
         return {}
     m = import_module(spec.name)
     ctx = {k: getattr(m, k) for k in dir(m) if not k.startswith('_')}

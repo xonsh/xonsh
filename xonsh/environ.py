@@ -15,7 +15,8 @@ from warnings import warn
 from pprint import pformat
 from functools import wraps
 from contextlib import contextmanager
-from collections import MutableMapping, MutableSequence, MutableSet, namedtuple
+from collections import (Mapping, MutableMapping, MutableSequence,
+    MutableSet, namedtuple)
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.tools import (
@@ -26,7 +27,8 @@ from xonsh.tools import (
     is_completions_display_value, to_completions_display_value, is_string_set,
     csv_to_set, set_to_csv, get_sep, is_int, is_bool_seq, csv_to_bool_seq,
     bool_seq_to_csv, DefaultNotGiven, setup_win_unicode_console,
-    intensify_colors_on_win_setter, is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str
+    intensify_colors_on_win_setter, print_exception, is_dynamic_cwd_width,
+    to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str
 )
 from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
@@ -356,9 +358,9 @@ DEFAULT_DOCS = {
         'Whether or not to suppress directory stack manipulation output.'),
     'RAISE_SUBPROC_ERROR': VarDocs(
         'Whether or not to raise an error if a subprocess (captured or '
-        'uncaptured) returns a non-zero exit status, which indicates failure.'
+        'uncaptured) returns a non-zero exit status, which indicates failure. '
         'This is most useful in xonsh scripts or modules where failures '
-        'should cause an end to execution. This is less useful at a terminal.'
+        'should cause an end to execution. This is less useful at a terminal. '
         'The error that is raised is a subprocess.CalledProcessError.'),
     'RIGHT_PROMPT': VarDocs('Template string for right-aligned text '
         'at the prompt. This may be parameterized in the same way as '
@@ -399,7 +401,17 @@ DEFAULT_DOCS = {
     'TERM': VarDocs(
         'TERM is sometimes set by the terminal emulator. This is used (when '
         "valid) to determine whether or not to set the title. Users shouldn't "
-        "need to set this themselves.", configurable=False),
+        "need to set this themselves. Note that this variable should be set as "
+        "early as possible in order to ensure it is effective. Here are a few "
+        "options:\n\n"
+        "* Set this from the program that launches xonsh. On posix systems, \n"
+        "  this can be performed by using env, e.g. \n"
+        "  '/usr/bin/env TERM=xterm-color xonsh' or similar.\n"
+        "* From the xonsh command line, namely 'xonsh -DTERM=xterm-color'.\n"
+        "* In the config file with '{\"env\": {\"TERM\": \"xterm-color\"}}'.\n"
+        "* Lastly, in xonshrc with '$TERM'\n\n"
+        "Ideally, your terminal emulator will set this correctly but that does "
+        "not always happen.", configurable=False),
     'TITLE': VarDocs(
         'The title text for the window in which xonsh is running. Formatted '
         "in the same manner as $PROMPT, see 'Customizing the Prompt' "
@@ -731,7 +743,7 @@ def _is_executable_file(path):
 def yield_executables_windows(directory, name):
     normalized_name = os.path.normcase(name)
     extensions = builtins.__xonsh_env__.get('PATHEXT')
-    try: 
+    try:
         names = os.listdir(directory)
     except PermissionError:
         return
@@ -746,10 +758,10 @@ def yield_executables_windows(directory, name):
 
 
 def yield_executables_posix(directory, name):
-    try: 
+    try:
         names = os.listdir(directory)
     except PermissionError:
-        return 
+        return
     if name in os.listdir(directory):
         path = os.path.join(directory, name)
         if _is_executable_file(path):
@@ -1232,8 +1244,22 @@ def load_static_config(ctx, config=None):
                                 DEFAULT_VALUES.get('XONSH_ENCODING_ERRORS',
                                                    'surrogateescape'))
         with open(config, 'r', encoding=encoding, errors=errors) as f:
-            conf = json.load(f)
-        ctx['LOADED_CONFIG'] = True
+            try:
+                conf = json.load(f)
+                assert isinstance(conf, Mapping)
+                ctx['LOADED_CONFIG'] = True
+            except Exception as e:
+                conf = {}
+                ctx['LOADED_CONFIG'] = False
+                print_exception()
+                # JSONDecodeError was added in Python v3.5
+                jerr = json.JSONDecodeError \
+                       if hasattr(json, 'JSONDecodeError') else ValueError
+                if isinstance(e, jerr):
+                    msg = 'Xonsh config file is not valid JSON.'
+                else:
+                    msg = 'Could not load xonsh config.'
+                print(msg, file=sys.stderr)
     else:
         conf = {}
         ctx['LOADED_CONFIG'] = False
