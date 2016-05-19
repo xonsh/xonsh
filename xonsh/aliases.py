@@ -357,11 +357,15 @@ def which(args, stdin=None, stdout=None, stderr=None):
                         help='Show all matches in $PATH and xonsh.aliases')
     parser.add_argument('-s', '--skip-alias', action='store_true',
                         help='Do not search in xonsh.aliases', dest='skip')
-    parser.add_argument('-V', '--version', action='version',
-                        version='{}'.format(_which.__version__))
-    parser.add_argument('-v', '--verbose', action='store_true', dest='verbose')
+    parser.add_argument('-V', '-v', '--version', action='version',
+                        version='{}'.format(_which.__version__),
+                        help='Display the version of the python which module '
+                        'used by xonsh')
+    parser.add_argument('--verbose', action='store_true', dest='verbose',
+                        help='Show extra information on for example near misses')
     parser.add_argument('-p', '--plain', action='store_true', dest='plain',
-                        help='Do not display alias expansions')
+                        help='Do not display alias expansions or location of '
+                             'where binaries are found.')
     parser.add_argument('--very-small-rocks', action=AWitchAWitch)
     if ON_WINDOWS:
         parser.add_argument('-e', '--exts', nargs='*', type=str,
@@ -377,7 +381,7 @@ def which(args, stdin=None, stdout=None, stderr=None):
         parser.print_usage(file=stderr)
         return -1
     pargs = parser.parse_args(args)
-    
+
     if ON_WINDOWS:
         if pargs.exts:
             exts = pargs.exts
@@ -398,9 +402,9 @@ def which(args, stdin=None, stdout=None, stderr=None):
             nmatches += 1
             if not pargs.all:
                 continue
-        for match in _which.whichgen(arg, path=builtins.__xonsh_env__['PATH'],
-                                     exts=exts, verbose=pargs.verbose):
-            abs_name, from_where = match if pargs.verbose else (match, '')
+        macthes = _which.whichgen(arg, exts=exts, verbose=pargs.verbose,
+                                  path=builtins.__xonsh_env__['PATH'])
+        for abs_name, from_where in macthes:
             if ON_WINDOWS:
                 # Use list dir to get correct case for the filename
                 # i.e. windows is case insesitive but case preserving
@@ -409,8 +413,8 @@ def which(args, stdin=None, stdout=None, stderr=None):
                 abs_name = os.path.join(p, f)
                 if builtins.__xonsh_env__.get('FORCE_POSIX_PATHS', False):
                     abs_name.replace(os.sep, os.altsep)
-            if pargs.verbose:
-                print('{} ({})'.format(abs_name, from_where), file=stdout)
+            if not pargs.plain:
+                print('{} -> ({})'.format(abs_name, from_where), file=stdout)
             else:
                 print(abs_name, file=stdout)
             nmatches += 1
