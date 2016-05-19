@@ -14,7 +14,7 @@ You can install xonsh using ``conda``, ``pip``, or from source.
     $ conda install -c conda-forge xonsh
 
 .. note:: For the bleeding edge development version use ``conda install -c xonsh/channel/dev xonsh``
-    
+
 
 **pip:**
 
@@ -58,3 +58,31 @@ If you run into any problems, please let us know!
 .. include:: add_to_shell.rst
 
 .. include:: dependencies.rst
+
+
+
+Possible conflicts with Bash
+============================
+
+Depending on how your installation of Bash is configured, Xonsh may have trouble
+loading certain shell modules. Particularly if you see errors similar to this
+when launching Xonsh:
+
+.. code-block:: bash
+
+    bash: module: line 1: syntax error: unexpected end of file
+    bash: error importing function definition for `BASH_FUNC_module'
+    bash: scl: line 1: syntax error: unexpected end of file
+    bash: error importing function definition for `BASH_FUNC_scl'
+    bash: module: line 1: syntax error: unexpected end of file
+    bash: error importing function definition for `BASH_FUNC_module'
+    bash: scl: line 1: syntax error: unexpected end of file
+    bash: error importing function definition for `BASH_FUNC_scl'
+
+...You can correct the problem by unsetting the modules, by adding the following
+lines to your ``~/.bashrc file``:
+
+.. code-block:: bash
+
+    unset module
+    unset scl
