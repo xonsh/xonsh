@@ -8,7 +8,8 @@ from collections import Mapping
 
 from xonsh import ast
 from xonsh.parser import Parser
-from xonsh.tools import subproc_toks, END_TOK_TYPES
+from xonsh.tools import (subproc_toks, END_TOK_TYPES, LPARENS,
+    _is_not_lparen_and_rparen)
 from xonsh.built_ins import load_builtins, unload_builtins
 
 
@@ -134,10 +135,18 @@ class Execer(object):
         if RE_END_TOKS.search(line) is None:
             return None
         maxcol = None
+        lparens = []
         self.parser.lexer.input(line)
         for tok in self.parser.lexer:
-            if tok.type in END_TOK_TYPES or \
-                    (tok.type == 'ERRORTOKEN' and ')' in tok.value):
+            if tok.type in LPARENS:
+                lparens.append(tok.type)
+            elif tok.type in END_TOK_TYPES:
+                if _is_not_lparen_and_rparen(lparens, tok):
+                    lparens.pop()
+                else:
+                    maxcol = tok.lexpos + mincol + 1
+                    break
+            elif tok.type == 'ERRORTOKEN' and ')' in tok.value:
                 maxcol = tok.lexpos + mincol + 1
                 break
         return maxcol
