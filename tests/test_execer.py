@@ -19,7 +19,7 @@ EXECER = None
 # Helpers
 #
 
-def setup():
+def setup_module():
     # only setup one parser
     global EXECER
     EXECER = Execer(debug_level=DEBUG_LEVEL)

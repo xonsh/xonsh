@@ -23,7 +23,7 @@ DEBUG_LEVEL = 0
 # a lot of col_offset data changed from Py v3.5.0 -> v3.5.1
 INC_ATTRS = (3, 5, 1) <= VER_FULL
 
-def setup():
+def setup_module():
     # only setup one parser
     global PARSER
     PARSER = Parser(lexer_optimize=False, yacc_optimize=False, yacc_debug=True,

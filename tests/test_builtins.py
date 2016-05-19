@@ -22,6 +22,7 @@ def test_reglob_tests():
     for f in testfiles:
         assert_true(f.startswith('test_'))
 
+
 def test_repath_backslash():
     if ON_WINDOWS:
         raise SkipTest
