@@ -4,7 +4,13 @@
   "url": "http://xon.sh",
   "description": ["Matplotlib hooks for xonsh, including the new 'mpl' alias ",
                   "that displays the current figure on the screen."]
+  },
+ {"name": "prompt_ret_code",
+  "package": "xontrib-prompt-ret-code",
+  "url": "https://github.com/Siecje/xontrib-prompt-ret-code",
+  "description": ["Adds return code info to the prompt"]
   }
+
  ],
  "packages": {
   "xonsh": {
@@ -15,6 +21,12 @@
     "pip": "pip install xonsh",
     "aura": "sudo aura -A xonsh",
     "yaourt": "yaourt -Sa xonsh"}
+   },
+  "xontrib-prompt-ret-code": {
+   "license": "MIT",
+   "url": "https://github.com/Siecje/xontrib-prompt-ret-code",
+   "install": {
+    "pip": "pip install xontrib-prompt-ret-code"
    }
  }
 }
