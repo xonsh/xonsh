@@ -1017,17 +1017,17 @@ def _dynamically_collapsed_pwd():
     originial_path = _replace_home_cwd()
     pwd = originial_path.split(sep)
     cols, _ = shutil.get_terminal_size()
-    targetWidthRaw = builtins.__xonsh_env__['DYNAMIC_CWD_WIDTH']
+    target_width_raw = builtins.__xonsh_env__['DYNAMIC_CWD_WIDTH']
 
-    if (targetWidthRaw[-1] == '%'):
-        targetWidth = (cols * float(targetWidthRaw[:-1])) // 100
+    if (target_width_raw[-1] == '%'):
+        target_width = (cols * float(target_width_raw[:-1])) // 100
     else:
-        targetWidth = float(targetWidthRaw)
-    if targetWidth == float('inf'):
+        target_width = float(target_width_raw)
+    if target_width == float('inf'):
         return originial_path
     else:
         last = pwd.pop()
-        remaining_space = targetWidth - len(last) 
+        remaining_space = target_width - len(last) 
         # Reserve space for separators
         remaining_space_for_text = remaining_space - len(pwd) 
 
@@ -1041,8 +1041,8 @@ def _dynamically_collapsed_pwd():
 
         parts.append(last)
         full = sep.join(parts)
-        if (len(full) > targetWidth):
-            full = full[int(-targetWidth):]
+        if (len(full) > target_width):
+            full = full[int(-target_width):]
         return full
 
 def _current_job():
