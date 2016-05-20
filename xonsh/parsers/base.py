@@ -9,7 +9,7 @@ except ImportError:
 
 from xonsh import ast
 from xonsh.lexer import Lexer, LexToken
-from xonsh.tools import VER_3_5_1, VER_FULL
+from xonsh.platform import PYTHON_VERSION_INFO
 
 
 class Location(object):
@@ -610,7 +610,7 @@ class BaseParser(object):
         """tfpdef : name_tok colon_test_opt"""
         p1 = p[1]
         kwargs = {'arg': p1.value, 'annotation': p[2]}
-        if VER_FULL >= VER_3_5_1:
+        if PYTHON_VERSION_INFO >= (3, 5, 1):
             kwargs.update({
                 'lineno': p1.lineno,
                 'col_offset': p1.lexpos,
@@ -736,7 +736,7 @@ class BaseParser(object):
         """vfpdef : name_tok"""
         p1 = p[1]
         kwargs = {'arg': p1.value, 'annotation': None}
-        if VER_FULL >= VER_3_5_1:
+        if PYTHON_VERSION_INFO >= (3, 5, 1):
             kwargs.update({
                 'lineno': p1.lineno,
                 'col_offset': p1.lexpos,

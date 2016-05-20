@@ -92,12 +92,6 @@ resultlimit = 40               # Size limit of results when running in debug mod
 
 pickle_protocol = 0            # Protocol to use when writing pickle files
 
-# String type-checking compatibility
-if sys.version_info[0] < 3:
-    string_types = basestring
-else:
-    string_types = str
-
 MAXINT = sys.maxsize
 
 # This object is a stand-in for a logging object created by the
@@ -1982,7 +1976,7 @@ class LRTable(object):
             import cPickle as pickle
         except ImportError:
             import pickle
-        
+
         if not os.path.exists(filename):
           raise ImportError
 
@@ -3002,7 +2996,7 @@ class ParserReflect(object):
     # Validate the start symbol
     def validate_start(self):
         if self.start is not None:
-            if not isinstance(self.start, string_types):
+            if not isinstance(self.start, str):
                 self.log.error("'start' must be a string")
 
     # Look for error handler
@@ -3088,12 +3082,12 @@ class ParserReflect(object):
                     self.error = True
                     return
                 assoc = p[0]
-                if not isinstance(assoc, string_types):
+                if not isinstance(assoc, str):
                     self.log.error('precedence associativity must be a string')
                     self.error = True
                     return
                 for term in p[1:]:
-                    if not isinstance(term, string_types):
+                    if not isinstance(term, str):
                         self.log.error('precedence items must be strings')
                         self.error = True
                         return

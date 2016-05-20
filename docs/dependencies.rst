@@ -9,6 +9,7 @@ Xonsh currently has the following external dependencies,
     #. prompt-toolkit (optional)
     #. Jupyter (optional)
     #. setproctitle (optional)
+    #. distro (optional)
 
 *Documentation:*
 

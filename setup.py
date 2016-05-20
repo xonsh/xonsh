@@ -136,7 +136,7 @@ if HAVE_SETUPTOOLS:
 
 def main():
     """The main entry point."""
-    if sys.version_info[0] < 3:
+    if sys.version_info[:2] < (3, 4):
         sys.exit('xonsh currently requires Python 3.4+')
     try:
         if '--name' not in sys.argv:
@@ -168,8 +168,7 @@ def main():
     if HAVE_SETUPTOOLS:
         skw['entry_points'] = {
             'pygments.lexers': ['xonsh = xonsh.pyghooks:XonshLexer',
-                                'xonshcon = xonsh.pyghooks:XonshConsoleLexer',
-                               ],
+                                'xonshcon = xonsh.pyghooks:XonshConsoleLexer'],
             'console_scripts': ['xonsh = xonsh.main:main'],
             }
         skw['cmdclass']['develop'] = xdevelop
