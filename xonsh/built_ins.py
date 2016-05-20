@@ -649,6 +649,12 @@ def subproc_captured_stdout(*cmds):
     return run_subproc(cmds, captured='stdout')
 
 
+def subproc_captured_inject(*cmds):
+    """Runs a subprocess, capturing the output. Returns a list of
+    whitespace-separated strings in the stdout that was produced."""
+    return [i.strip() for i in run_subproc(cmds, captured='stdout').split()]
+
+
 def subproc_captured_object(*cmds):
     """
     Runs a subprocess, capturing the output. Returns an instance of
@@ -707,6 +713,7 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
         builtins.__xonsh_pyquit__ = builtins.quit
         del builtins.quit
     builtins.__xonsh_subproc_captured_stdout__ = subproc_captured_stdout
+    builtins.__xonsh_subproc_captured_inject__ = subproc_captured_inject
     builtins.__xonsh_subproc_captured_object__ = subproc_captured_object
     builtins.__xonsh_subproc_captured_hiddenobject__ = subproc_captured_hiddenobject
     builtins.__xonsh_subproc_uncaptured__ = subproc_uncaptured
@@ -766,6 +773,7 @@ def unload_builtins():
              '__xonsh_pyexit__',
              '__xonsh_pyquit__',
              '__xonsh_subproc_captured_stdout__',
+             '__xonsh_subproc_captured_inject__',
              '__xonsh_subproc_captured_object__',
              '__xonsh_subproc_captured_hiddenobject__',
              '__xonsh_subproc_uncaptured__',
