@@ -224,7 +224,7 @@ class StateFile(Input):
             Whether to print the current state and ask if it should be
             saved/loaded prior to asking for the file name and saving the
             file, default=True.
-        ask : bool, optional
+        ask_filename : bool, optional
             Whether to ask for the filename (if ``False``, always use the
             default filename)
         """
