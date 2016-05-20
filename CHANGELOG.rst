@@ -4,6 +4,20 @@ Xonsh Change Log
 
 Current Developments
 ====================
+**Added:** None
+
+**Changed:** None
+
+**Deprecated:** None
+
+**Removed:** None
+
+**Fixed:** None
+
+**Security:** None
+
+v0.3.0
+====================
 **Added:**
 
 * ``and``, ``or``, ``&&``, ``||`` have been added as subprocess logical operators,
@@ -63,9 +77,9 @@ Current Developments
   way.
 
 
-**Deprecated:** None
 
-**Removed:** None
+
+
 
 **Fixed:**
 
@@ -89,7 +103,7 @@ Current Developments
 * Fixed xonsh.exe launcher on Windows, when Python install directory has a space in it
 * Fixed `$CDPATH` to support `~` and environments variables in its items
 
-**Security:** None
+
 
 
 v0.2.7
