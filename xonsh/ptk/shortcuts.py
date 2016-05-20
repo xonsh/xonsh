@@ -80,8 +80,8 @@ class Prompter(object):
                     editing_mode = EditingMode.VI
                 else:
                     editing_mode = EditingMode.EMACS
-
                 kwargs['editing_mode'] = editing_mode
+                kwargs['vi_mode'] = builtins.__xonsh_env__.get('VI_MODE')
             cli = CommandLineInterface(
                 application=create_prompt_application(message, **kwargs),
                 eventloop=eventloop,

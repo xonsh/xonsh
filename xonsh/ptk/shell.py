@@ -35,7 +35,7 @@ class PromptToolkitShell(BaseShell):
                 'enable_auto_suggest_bindings': True,
                 'enable_search': True,
                 'enable_abort_and_exit_bindings': True,
-                'enable_open_in_editor': True
+                'enable_open_in_editor': True,
                 }
         major, minor = ptk_version_info()[:2]
         self.new_vi_mode_flag = (major, minor) >= (1, 0) \
