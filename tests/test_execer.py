@@ -99,6 +99,10 @@ def test_command_in_func_with_comment():
             '    echo hello # comment\n')
     yield check_parse, code
 
+def test_pyeval_redirect():
+    code = 'echo @("foo") > bar\n'
+    yield check_parse, code
+
 
 
 if __name__ == '__main__':
