@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Implements the xonsh parser."""
-from xonsh.tools import (VER_3_4, VER_3_5, VER_MAJOR_MINOR)
+from xonsh.platform import PYTHON_VERSION_INFO
 
-if VER_MAJOR_MINOR <= VER_3_4:
+if PYTHON_VERSION_INFO < (3, 5, 0):
     from xonsh.parsers.v34 import Parser
 else:
     from xonsh.parsers.v35 import Parser

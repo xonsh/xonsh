@@ -3,7 +3,6 @@
 
 Written using a hybrid of ``tokenize`` and PLY.
 """
-import xonsh.tokenize as tokenize
 
 from io import BytesIO
 from keyword import kwlist
@@ -13,7 +12,8 @@ try:
 except ImportError:
     from xonsh.ply.lex import LexToken
 
-from xonsh.tools import VER_3_5, VER_MAJOR_MINOR
+from xonsh.platform import PYTHON_VERSION_INFO
+import xonsh.tokenize as tokenize
 
 token_map = {}
 """
@@ -51,7 +51,7 @@ token_map[tokenize.REGEXPATH] = 'REGEXPATH'
 token_map[tokenize.NEWLINE] = 'NEWLINE'
 token_map[tokenize.INDENT] = 'INDENT'
 token_map[tokenize.DEDENT] = 'DEDENT'
-if VER_3_5 <= VER_MAJOR_MINOR:
+if PYTHON_VERSION_INFO >= (3, 5, 0):
     token_map[tokenize.ASYNC] = 'ASYNC'
     token_map[tokenize.AWAIT] = 'AWAIT'
 

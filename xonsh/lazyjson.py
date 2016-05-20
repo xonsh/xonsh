@@ -1,20 +1,15 @@
 # -*- coding: utf-8 -*-
 """Implements a lazy JSON file class that wraps around json data."""
 import io
-import weakref
-from contextlib import contextmanager
+import json
 from collections import Mapping, Sequence
+from contextlib import contextmanager
+import weakref
 
-try:
-    import simplejson as json
-except ImportError:
-    import json
-
-from xonsh.tools import string_types
 
 
 def _to_json_with_size(obj, offset=0, sort_keys=False):
-    if isinstance(obj, string_types):
+    if isinstance(obj, str):
         s = json.dumps(obj)
         o = offset
         n = size = len(s.encode())  # size in bytes
@@ -207,7 +202,7 @@ class LazyJSON(Node):
         """
         self._f = f
         self.reopen = reopen
-        if not reopen and isinstance(f, string_types):
+        if not reopen and isinstance(f, str):
             self._f = open(f, 'r', newline='\n')
         self._load_index()
         self.root = weakref.proxy(self)
@@ -224,7 +219,7 @@ class LazyJSON(Node):
 
     @contextmanager
     def _open(self, *args, **kwargs):
-        if self.reopen and isinstance(self._f, string_types):
+        if self.reopen and isinstance(self._f, str):
             f = open(self._f, *args, **kwargs)
             yield f
             f.close()
