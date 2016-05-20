@@ -83,6 +83,16 @@ def test_bad_indent():
             'x = 1\n')
     assert_raises(SyntaxError, check_parse, code)
 
+def test_good_rhs_subproc():
+    # nonsense but parsebale
+    code = 'str().split() | ![grep exit]\n'
+    check_parse(code)
+
+def test_bad_rhs_subproc():
+    # nonsense but unparsebale
+    code = 'str().split() | grep exit\n'
+    assert_raises(SyntaxError, check_parse, code)
+
 def test_indent_with_empty_line():
     code = ('if True:\n'
             '\n'

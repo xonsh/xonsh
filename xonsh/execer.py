@@ -213,7 +213,8 @@ class Execer(object):
                     else:
                         # or for some other syntax error
                         raise original_error
-                elif sbpline.lstrip().startswith('![!['):
+                elif sbpline[last_error_col:].startswith('![![') or \
+                     sbpline.lstrip().startswith('![!['):
                     # if we have already wrapped this in subproc tokens
                     # and it still doesn't work, adding more won't help
                     # anything
