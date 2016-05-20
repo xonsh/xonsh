@@ -9,6 +9,7 @@ import functools
 import itertools
 from pprint import pformat
 from argparse import ArgumentParser
+from contextlib import contextmanager
 
 try:
     import ply
@@ -288,11 +289,20 @@ def make_wizard(default_file=None, confirm=False):
 
 def _wizard(ns):
     env = builtins.__xonsh_env__
+    shell = builtins.__xonsh_shell__.shell
     fname = env.get('XONSHCONFIG') if ns.file is None else ns.file
     wiz = make_wizard(default_file=fname, confirm=ns.confirm)
     tempenv = {'PROMPT': '', 'XONSH_STORE_STDOUT': False}
     pv = PromptVisitor(wiz, store_in_history=False, multiline=False)
-    with env.swap(tempenv):
+    @contextmanager
+    def force_hide():
+        if env.get('XONSH_STORE_STDOUT') and hasattr(shell, '_force_hide'):
+            orig, shell._force_hide = shell._force_hide, False
+            yield
+            shell._force_hide = orig
+        else:
+            yield
+    with force_hide(), env.swap(tempenv):
         try:
             pv.visit()
         except (KeyboardInterrupt, Exception):
