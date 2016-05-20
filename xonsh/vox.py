@@ -1,10 +1,11 @@
-import builtins
+import os
 from os.path import join, basename, exists, expanduser
-from shutil import rmtree
 import venv
+import builtins
+from shutil import rmtree
 
-from xonsh.platform import scandir, ON_POSIX, ON_WINDOWS
 import xonsh.tools
+from xonsh.platform import ON_POSIX, ON_WINDOWS
 
 
 class Vox:
@@ -138,7 +139,7 @@ class Vox:
 
         venv_home = builtins.__xonsh_env__['VIRTUALENV_HOME']
         try:
-            env_dirs = (x.name for x in scandir(venv_home) if x.is_dir())
+            env_dirs = os.listdir(builtins.__xonsh_env__['VIRTUALENV_HOME'])
         except PermissionError:
             print('No permissions on {}'.format(venv_home))
             return None

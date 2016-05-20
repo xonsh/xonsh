@@ -35,21 +35,6 @@ ON_POSIX = (os.name == 'posix')
 #
 
 PYTHON_VERSION_INFO = sys.version_info[:3]
-
-if PYTHON_VERSION_INFO < (3, 5, 0):
-    from pathlib import Path
-
-    def _path(self):
-        return str(self)
-    Path.path = property(_path)
-
-    def scandir(path):
-        """ Compatibility wrapper for os.scandir from Python 3.5+ """
-        return (Path(path) / x for x in os.listdir(path))
-else:
-    from os import scandir
-
-
 ON_ANACONDA = any(s in sys.version for s in {'Anaconda', 'Continuum'})
 
 try:

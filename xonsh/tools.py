@@ -17,22 +17,22 @@ Implementations:
 * indent()
 
 """
-import builtins
-from collections import OrderedDict, Sequence, Set
-from contextlib import contextmanager
-import ctypes
 import os
 import re
-import string
-import subprocess
 import sys
+import string
+import ctypes
+import builtins
+import subprocess
 import threading
 import traceback
 from warnings import warn
+from contextlib import contextmanager
+from collections import OrderedDict, Sequence, Set
 
 # adding further imports from xonsh modules is discouraged to avoid cirular
 # dependencies
-from xonsh.platform import (has_prompt_toolkit, scandir, win_unicode_console,
+from xonsh.platform import (has_prompt_toolkit, win_unicode_console,
                             DEFAULT_ENCODING, ON_LINUX, ON_WINDOWS)
 
 if has_prompt_toolkit():
@@ -319,7 +319,7 @@ def suggest_commands(cmd, env, aliases):
                 suggested[a] = 'Alias'
 
     for d in filter(os.path.isdir, env.get('PATH')):
-        for f in (x.name for x in scandir(d)):
+        for f in os.listdir(d):
             if f not in suggested:
                 if levenshtein(f.lower(), cmd, thresh) < thresh:
                     fname = os.path.join(d, f)
@@ -1074,8 +1074,8 @@ class CommandsCache(Set):
             return self._cmds_cache
         allcmds = set()
         for path in paths:
-            allcmds |= set(x.name for x in scandir(path)
-                           if x.is_file() and os.access(x.path, os.X_OK))
+            allcmds |= set(x for x in os.listdir(path)
+                           if os.path.isfile(x) and os.access(x, os.X_OK))
             allcmds |= set(builtins.aliases)
         self._cmds_cache = frozenset(allcmds)
         return self._cmds_cache
