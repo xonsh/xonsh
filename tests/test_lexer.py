@@ -176,6 +176,11 @@ def test_double_unicode_literal():
 def test_single_bytes_literal():
     yield check_token, "b'yo'", ['STRING', "b'yo'", 0]
 
+def test_regex_globs():
+    for i in ('.*', r'\d*', '.*#{1,2}'):
+        c = '`{}`'.format(i)
+        yield check_token, c, ['REGEXPATH', c, 0]
+
 def test_float_literals():
     cases = ['0.0', '.0', '0.', '1e10', '1.e42', '0.1e42', '0.5e-42',
              '5E10', '5e+42']

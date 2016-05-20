@@ -59,6 +59,9 @@ Current Developments
   recommended.
 * Provide better user feedback when running ``which`` in a platform that doesn't
   provide it (e.g. Windows).
+* The lexer now uses a custom tokenizer that handles regex globs in the proper
+  way.
+
 
 **Deprecated:** None
 
