@@ -280,9 +280,9 @@ def make_wizard(default_file=None, confirm=False):
              "1. Yes\n2. No, but ask me later.\n3. No, and don't ask me again."
              "\n\n1, 2, or 3 [default: 2]? ")
         passer = Pass()
-        saver = Save(check=False, ask=False, default_file=default_file)
+        saver = Save(check=False, ask_filename=False, default_file=default_file)
         wiz = Question(q, {1: wiz, 2: passer, 3: saver},
-                       converter=lambda x: int(x.strip()) if x !='' else 2)
+                       converter=lambda x: int(x) if x != '' else 2)
     return wiz
 
 

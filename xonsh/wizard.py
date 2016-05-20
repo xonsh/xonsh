@@ -212,9 +212,9 @@ class StateFile(Input):
     given file name. This node type is likely not useful on its own.
     """
 
-    attrs = ('default_file', 'check')
+    attrs = ('default_file', 'check', 'ask_filename')
 
-    def __init__(self, default_file=None, check=True, ask=True):
+    def __init__(self, default_file=None, check=True, ask_filename=True):
         """
         Parameters
         ----------
@@ -231,7 +231,7 @@ class StateFile(Input):
         self._df = None
         super().__init__(prompt='filename: ', converter=None,
                          confirm=False, path=None)
-        self.ask_filename = ask
+        self.ask_filename = ask_filename
         self.default_file = default_file
         self.check = check
 
@@ -388,8 +388,8 @@ class PrettyFormatter(Visitor):
         return s
 
     def visit_statefile(self, node):
-        s = '{0}(default_file={1!r}, check={2})'
-        s = s.format(node.__class__.__name__, node.default_file, node.check)
+        s = '{0}(default_file={1!r}, check={2}, ask_filename={3})'
+        s = s.format(node.__class__.__name__, node.default_file, node.check, node.ask_filename)
         return s
 
     def visit_while(self, node):
