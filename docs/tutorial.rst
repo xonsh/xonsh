@@ -1073,7 +1073,7 @@ functions of no arguments (which will be called each time the prompt is
 generated, and the results of those calls will be inserted into the prompt).
 For example:
 
-.. code-block:: xonshcon
+.. code-block:: console
 
     snail@home ~ $ $FORMATTER_DICT['test'] = "hey"
     snail@home ~ $ $PROMPT = "{test} {cwd} $ "
@@ -1091,7 +1091,7 @@ interpreted as an empty string.
 Environment variables and functions are also available with the ``$``
 prefix.  For example:
 
-.. code-block:: xonshcon
+.. code-block:: console
 
     snail@home ~ $ $PROMPT = "{$LANG} >"
     en_US.utf8 >
@@ -1124,7 +1124,7 @@ script, stored in ``test.xsh``:
     print('adding files')
     # This is a comment
     for i, x in enumerate("xonsh"):
-        echo @(x) > @("file%d.txt" % i)
+        echo @(x) > @("file{0}.txt".format(i))
 
     print($(ls).replace('\n', ' '))
 
@@ -1178,7 +1178,7 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
     print('adding files')
     # This is a comment
     for i, x in enumerate($ARG1):
-        echo @(x) > @("file%d.txt" % i)
+        echo @(x) > @("file{0}.txt".format(i))
 
     print($(ls).replace('\n', ' '))
     print()
