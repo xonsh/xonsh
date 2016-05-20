@@ -83,10 +83,6 @@ def test_bad_indent():
             'x = 1\n')
     assert_raises(SyntaxError, check_parse, code)
 
-def test_bad_rhs_subproc():
-    code = 'str().split() | grep exit\n'
-    assert_raises(SyntaxError, check_parse, code)
-
 def test_good_rhs_subproc():
     # nonsense but parsebale
     code = 'str().split() | ![grep exit]\n'
