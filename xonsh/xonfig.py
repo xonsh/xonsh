@@ -1,4 +1,5 @@
 """The xonsh configuration (xonfig) utility."""
+import os
 import ast
 import json
 import shutil
@@ -20,7 +21,8 @@ from xonsh.environ import is_template_string
 from xonsh.shell import (is_readline_available, is_prompt_toolkit_available,
     prompt_toolkit_version)
 from xonsh.wizard import (Wizard, Pass, Message, Save, Load, YesNo, Input,
-    PromptVisitor, While, StoreNonEmpty, create_truefalse_cond, YN, Unstorable)
+    PromptVisitor, While, StoreNonEmpty, create_truefalse_cond, YN, Unstorable,
+    Question)
 from xonsh.xontribs import xontrib_metadata, find_xontrib
 
 
@@ -274,8 +276,13 @@ def make_wizard(default_file=None, confirm=False):
             Message(message=WIZARD_TAIL),
             ])
     if confirm:
-        q = 'Would you like to run the xonsh configuration wizard now, ' + YN
-        wiz = YesNo(question=q, yes=wiz, no=Pass())
+        q = ("Would you like to run the xonsh configuration wizard now?\n\n"
+             "1. Yes\n2. No, but ask me later.\n3. No, and don't ask me again."
+             "\n\n1, 2, or 3 [default: 2]? ")
+        passer = Pass()
+        saver = Save(check=False, ask_filename=False, default_file=default_file)
+        wiz = Question(q, {1: wiz, 2: passer, 3: saver},
+                       converter=lambda x: int(x) if x != '' else 2)
     return wiz
 
 
