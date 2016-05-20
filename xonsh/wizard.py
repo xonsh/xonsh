@@ -557,6 +557,8 @@ class PromptVisitor(StateVisitor):
             if callable(node.converter):
                 try:
                     x = node.converter(raw)
+                except KeyboardInterrupt:
+                    raise
                 except Exception:
                     if node.retry:
                         msg = ('{{BOLD_RED}}Invalid{{NO_COLOR}} input {0!r}, '
@@ -569,6 +571,8 @@ class PromptVisitor(StateVisitor):
                                         and str(x) != raw:
                     msg = '{{BOLD_PURPLE}}Converted{{NO_COLOR}} input {0!r} to {1!r}.'
                     print_color(msg.format(raw, x))
+            else:
+                x = raw
             if node.confirm:
                 msg = 'Would you like to keep the input: {0}'
                 print(msg.format(pformat(x)))
@@ -580,7 +584,6 @@ class PromptVisitor(StateVisitor):
                 else:
                     need_input = not status
             else:
-                x = raw
                 need_input = False
         return x
 
