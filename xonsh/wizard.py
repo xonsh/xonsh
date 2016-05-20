@@ -580,6 +580,7 @@ class PromptVisitor(StateVisitor):
                 else:
                     need_input = not status
             else:
+                x = raw
                 need_input = False
         return x
 
