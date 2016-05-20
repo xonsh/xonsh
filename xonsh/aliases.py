@@ -357,15 +357,18 @@ def which(args, stdin=None, stdout=None, stderr=None):
                         help='Show all matches in $PATH and xonsh.aliases')
     parser.add_argument('-s', '--skip-alias', action='store_true',
                         help='Do not search in xonsh.aliases', dest='skip')
-    parser.add_argument('-V', '-v', '--version', action='version',
+    parser.add_argument('-V', '--version', action='version',
                         version='{}'.format(_which.__version__),
                         help='Display the version of the python which module '
                         'used by xonsh')
-    parser.add_argument('--verbose', action='store_true', dest='verbose',
-                        help='Show extra information on for example near misses')
+    parser.add_argument('-v', '--verbose', action='store_true', dest='verbose',
+                        help='Print out how matches were located and show '
+                        'near misses on stderr')
     parser.add_argument('-p', '--plain', action='store_true', dest='plain',
                         help='Do not display alias expansions or location of '
-                             'where binaries are found.')
+                             'where binaries are found. This is the '
+                             'default behavior, but the option can be used to '
+                             'override the --verbose option')
     parser.add_argument('--very-small-rocks', action=AWitchAWitch)
     if ON_WINDOWS:
         parser.add_argument('-e', '--exts', nargs='*', type=str,
@@ -381,7 +384,10 @@ def which(args, stdin=None, stdout=None, stderr=None):
         parser.print_usage(file=stderr)
         return -1
     pargs = parser.parse_args(args)
-
+    
+    if pargs.all:
+        pargs.verbose = True
+        
     if ON_WINDOWS:
         if pargs.exts:
             exts = pargs.exts
@@ -395,10 +401,13 @@ def which(args, stdin=None, stdout=None, stderr=None):
         nmatches = 0
         # skip alias check if user asks to skip
         if (arg in builtins.aliases and not pargs.skip):
-            if pargs.plain:
-                print(arg, file=stdout)
+            if pargs.plain or not pargs.verbose:
+                if isinstance(builtins.aliases[arg], list):
+                    print(' '.join(builtins.aliases[arg]), file=stdout)
+                else:
+                    print(arg, file=stdout)
             else:
-                print('{} -> {}'.format(arg, builtins.aliases[arg]), file=stdout)
+                print("aliases['{}'] = {}".format(arg, builtins.aliases[arg]), file=stdout)
             nmatches += 1
             if not pargs.all:
                 continue
@@ -413,10 +422,12 @@ def which(args, stdin=None, stdout=None, stderr=None):
                 abs_name = os.path.join(p, f)
                 if builtins.__xonsh_env__.get('FORCE_POSIX_PATHS', False):
                     abs_name.replace(os.sep, os.altsep)
-            if not pargs.plain:
-                print('{} -> ({})'.format(abs_name, from_where), file=stdout)
-            else:
+            if pargs.plain or not pargs.verbose:
                 print(abs_name, file=stdout)
+            else:
+                if 'given path element' in from_where:
+                    from_where = from_where.replace('given path', '$PATH')
+                print('{} ({})'.format(abs_name, from_where), file=stdout)
             nmatches += 1
             if not pargs.all:
                 break
