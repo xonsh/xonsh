@@ -156,6 +156,7 @@ def _make_special_handler(token_type, extra_check=lambda x: True):
 handle_number = _make_special_handler('NUMBER')
 """Function for handling number tokens"""
 
+
 def handle_ampersands(state, token):
     """Function for generating PLY tokens for single and double ampersands."""
     n = next(state['stream'], None)
@@ -239,7 +240,6 @@ def handle_atdollar(state, token):
         yield from handle_token(state, n)
 
 
-
 def handle_at(state, token):
     """
     Function for generating PLY tokens associated with ``@``.
@@ -283,13 +283,13 @@ def handle_bang(state, token):
     Function for generating PLY tokens starting with !
     """
     n = next(state['stream'], None)
-    if (n is not None and n.type == tokenize.OP
-            and n.string == '(' and n.start == token.end):
+    if (n is not None and n.type == tokenize.OP and
+            n.string == '(' and n.start == token.end):
         state['pymode'].append((False, '!(', ')', token.start))
         state['last'] = n
         yield _new_token('BANG_LPAREN', '!(', token.start)
-    elif (n is not None and n.type == tokenize.OP
-            and n.string == '[' and n.start == token.end):
+    elif (n is not None and n.type == tokenize.OP and
+            n.string == '[' and n.start == token.end):
         state['pymode'].append((False, '![', ']', token.start))
         state['last'] = n
         yield _new_token('BANG_LBRACKET', '![', token.start)
