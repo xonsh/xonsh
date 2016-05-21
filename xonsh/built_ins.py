@@ -610,7 +610,7 @@ def run_subproc(cmds, captured=False):
                 errout = errout.replace('\r\n', '\n')
                 procinfo['stderr'] = errout
 
-    if prev_proc.signal:
+    if getattr(prev_proc, 'signal', None):
         sig, core = prev_proc.signal
         try:
             sig_str = SIGNAL_STRINGS[sig]
