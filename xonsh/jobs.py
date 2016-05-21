@@ -29,7 +29,6 @@ if ON_WINDOWS:
     def _set_pgrp(info):
         pass
 
-
     def wait_for_active_job(signal_to_send=None):
         """
         Wait for the active job to finish, to be killed by SIGINT, or to be
@@ -43,10 +42,7 @@ if ON_WINDOWS:
         if active_task is None:
             return
 
-        pgrp = active_task['pgrp']
         obj = active_task['obj']
-        # give the terminal over to the fg process
-        _give_terminal_to(pgrp)
 
         _continue(active_task)
 
@@ -107,7 +103,6 @@ else:
         Wait for the active job to finish, to be killed by SIGINT, or to be
         suspended by ctrl-z.
         """
-
         _clear_dead_jobs()
 
         active_task = get_next_task()
@@ -137,6 +132,7 @@ else:
             obj.signal = None
 
         return wait_for_active_job()
+
 
 def get_next_task():
     """ Get the next active task and put it on top of the queue"""
@@ -179,7 +175,7 @@ def print_one_job(num):
     cmd = ' '.join(cmd)
     pid = job['pids'][-1]
     bg = ' &' if job['bg'] else ''
-    print('{}[{}] {}: {}{} ({})'.format(act, num, status, cmd, bg, pid))
+    print('[{}] {}: {}{} ({})'.format(num, status, cmd, bg, pid))
 
 
 def get_next_job_number():
