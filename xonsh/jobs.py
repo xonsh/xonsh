@@ -5,7 +5,7 @@ import sys
 import time
 import signal
 import builtins
-from subprocess import TimeoutExpired
+from subprocess import TimeoutExpired, check_output
 from io import BytesIO
 from collections import deque
 
@@ -21,7 +21,7 @@ if ON_WINDOWS:
         job['status'] = RUNNING
 
     def _kill(obj):
-        return obj.kill()
+        check_output(['taskkill', '/F', '/T', '/PID', str(obj.pid)])
 
     def ignore_sigtstp():
         pass
@@ -52,7 +52,7 @@ if ON_WINDOWS:
             except TimeoutExpired:
                 pass
             except KeyboardInterrupt:
-                obj.kill()
+                _kill(obj)
 
         return wait_for_active_job()
 
