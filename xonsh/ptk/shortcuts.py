@@ -1,12 +1,14 @@
 """A prompt-toolkit inspired shortcut collection."""
+import builtins
+import textwrap
+
 from prompt_toolkit.interface import CommandLineInterface
 from prompt_toolkit.utils import DummyContext
 from prompt_toolkit.shortcuts import (create_prompt_application,
     create_eventloop, create_asyncio_eventloop, create_output)
 
-from xonsh.shell import prompt_toolkit_version_info
+from xonsh.platform import ptk_version_info
 
-import builtins
 
 class Prompter(object):
 
@@ -22,7 +24,7 @@ class Prompter(object):
             will be created when the prompt() method is called.
         """
         self.cli = cli
-        self.major_minor = prompt_toolkit_version_info()[:2]
+        self.major_minor = ptk_version_info()[:2]
 
     def __enter__(self):
         self.reset()
@@ -78,8 +80,8 @@ class Prompter(object):
                     editing_mode = EditingMode.VI
                 else:
                     editing_mode = EditingMode.EMACS
-
                 kwargs['editing_mode'] = editing_mode
+                kwargs['vi_mode'] = builtins.__xonsh_env__.get('VI_MODE')
             cli = CommandLineInterface(
                 application=create_prompt_application(message, **kwargs),
                 eventloop=eventloop,
@@ -95,7 +97,7 @@ class Prompter(object):
         if return_asyncio_coroutine:
             # Create an asyncio coroutine and call it.
             exec_context = {'patch_context': patch_context, 'cli': cli}
-            exec_(textwrap.dedent('''
+            exec(textwrap.dedent('''
             import asyncio
             @asyncio.coroutine
             def prompt_coro():

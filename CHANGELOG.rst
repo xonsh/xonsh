@@ -6,6 +6,23 @@ Current Developments
 ====================
 **Added:**
 
+* When a subprocess exits with a signal (e.g. SIGSEGV), a message is printed,
+  similar to Bash.
+
+**Changed:** None
+
+**Deprecated:** None
+
+**Removed:** None
+
+**Fixed:** None
+
+**Security:** None
+
+v0.3.0
+====================
+**Added:**
+
 * ``and``, ``or``, ``&&``, ``||`` have been added as subprocess logical operators,
   by popular demand!
 * Subprocesses may be negated with ``not`` and grouped together with parentheses.
@@ -37,8 +54,6 @@ Current Developments
   ``--cache-everything`` when starting xonsh.
 * Added a workaround to allow ctrl-c to interrupt reverse incremental search in
   the readline shell
-* When a subprocess exits with a signal (e.g. SIGSEGV), a message is printed,
-  similar to Bash.
 
 **Changed:**
 
@@ -65,9 +80,9 @@ Current Developments
   way.
 
 
-**Deprecated:** None
 
-**Removed:** None
+
+
 
 **Fixed:**
 
@@ -91,7 +106,7 @@ Current Developments
 * Fixed xonsh.exe launcher on Windows, when Python install directory has a space in it
 * Fixed `$CDPATH` to support `~` and environments variables in its items
 
-**Security:** None
+
 
 
 v0.2.7

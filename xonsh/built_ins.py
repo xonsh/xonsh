@@ -4,34 +4,35 @@
 Note that this module is named 'built_ins' so as not to be confused with the
 special Python builtins module.
 """
+import atexit
+import builtins
+from collections import Sequence
+from contextlib import contextmanager
+import inspect
+from glob import iglob
 import os
 import re
-import sys
-import time
 import shlex
-import atexit
 import signal
-import inspect
-import builtins
-import tempfile
-from glob import glob, iglob
 from subprocess import Popen, PIPE, STDOUT, CalledProcessError
-from contextlib import contextmanager
-from collections import Sequence, Iterable
+import sys
+import tempfile
+import time
 
-from xonsh.tools import (
-    suggest_commands, XonshError, ON_POSIX, ON_WINDOWS, string_types,
-    expandvars, CommandsCache
-)
-from xonsh.inspectors import Inspector
+from xonsh.aliases import Aliases, make_default_aliases
 from xonsh.environ import Env, default_env, locate_binary
+from xonsh.foreign_shells import load_foreign_aliases
+from xonsh.history import History
+from xonsh.inspectors import Inspector
 from xonsh.jobs import add_job, wait_for_active_job
+from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
                         SimpleForegroundProcProxy, TeePTYProc,
                         CompletedCommand, HiddenCompletedCommand)
-from xonsh.aliases import Aliases, make_default_aliases
-from xonsh.history import History
-from xonsh.foreign_shells import load_foreign_aliases
+from xonsh.tools import (
+    suggest_commands, XonshError, expandvars, CommandsCache
+)
+
 
 ENV = None
 BUILTINS_LOADED = False
@@ -412,7 +413,7 @@ def run_subproc(cmds, captured=False):
         procinfo['args'] = list(cmd)
         stdin = None
         stderr = None
-        if isinstance(cmd, string_types):
+        if isinstance(cmd, str):
             continue
         streams = {}
         while True:
@@ -671,10 +672,10 @@ def subproc_uncaptured(*cmds):
 
 def ensure_list_of_strs(x):
     """Ensures that x is a list of strings."""
-    if isinstance(x, string_types):
+    if isinstance(x, str):
         rtn = [x]
     elif isinstance(x, Sequence):
-        rtn = [i if isinstance(i, string_types) else str(i) for i in x]
+        rtn = [i if isinstance(i, str) else str(i) for i in x]
     else:
         rtn = [str(x)]
     return rtn

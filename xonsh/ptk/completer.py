@@ -2,10 +2,11 @@
 """Completer implementation to use with prompt_toolkit."""
 import os
 import builtins
-import xonsh.shell
 
 from prompt_toolkit.layout.dimension import LayoutDimension
 from prompt_toolkit.completion import Completer, Completion
+
+from xonsh.platform import ptk_version
 
 
 class PromptToolkitCompleter(Completer):
@@ -42,7 +43,7 @@ class PromptToolkitCompleter(Completer):
 
     def reserve_space(self):
         cli = builtins.__xonsh_shell__.shell.prompter.cli
-        if xonsh.shell.prompt_toolkit_version().startswith("1.0"):
+        if ptk_version().startswith("1.0"):
             # This is the layout for ptk 1.0
             window = cli.application.layout.children[0].content.children[1]
         else:

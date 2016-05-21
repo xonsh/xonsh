@@ -50,7 +50,7 @@ dictionaries have the following structure:
     ``default=false``
 :envcmd: *str, optional* - The command to generate environment output with.
     ``default="env"``
-:aliascmd: *str, optional* - The command to generate alais output with.
+:aliascmd: *str, optional* - The command to generate alias output with.
     ``default="alias"``
 :extra_args: *list of str, optional* - Addtional command line options to pass
     into the shell. ``default=[]``
