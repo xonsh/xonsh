@@ -17,6 +17,7 @@ import sys
 from warnings import warn
 
 from xonsh import __version__ as XONSH_VERSION
+from xonsh.jobs import get_next_task
 from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
@@ -1012,9 +1013,8 @@ def _collapsed_pwd():
 
 
 def _current_job():
-    j = builtins.__xonsh_active_job__
+    j = get_next_task()
     if j is not None:
-        j = builtins.__xonsh_all_jobs__[j]
         if not j['bg']:
             cmd = j['cmds'][-1]
             s = cmd[0]

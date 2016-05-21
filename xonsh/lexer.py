@@ -159,17 +159,49 @@ handle_number = _make_special_handler('NUMBER')
 
 def handle_ampersands(state, token):
     """Function for generating PLY tokens for single and double ampersands."""
+    state['last'] = token
     n = next(state['stream'], None)
     if n is not None and n.type == tokenize.OP and \
             n.string == '&' and n.start == token.end:
         state['last'] = n
         yield _new_token('AND', 'and', token.start)
-    else:
-        state['last'] = token
-        if state['pymode'][-1][0]:
-            yield _new_token('AMPERSAND', token.string, token.start)
+    elif state['pymode'][-1][0]:
+        yield _new_token("AMPERSAND", token.string, token.start)
         if n is not None:
             yield from handle_token(state, n)
+    else:
+        # subprocess mode
+        string = token.string
+        if (n is not None and
+                n.string in {'<', '>', '>>'} and
+                n.start == token.end):
+            e = n.end
+            string += n.string
+            n2 = next(state['stream'], None)
+            if n2 is not None and n2.string == '&' and n2.start == n.end:
+                state['last'] = n2
+                string += n2.string
+                e = n2.end
+                n2 = next(state['stream'], None)
+            if n2 is not None:
+                if (n2.start == e and
+                        (n2.type == tokenize.NUMBER or
+                            (n2.type == tokenize.NAME and
+                             n2.string in _REDIRECT_NAMES))):
+                    string += n2.string
+                    state['last'] = n2
+                    yield _new_token('IOREDIRECT', string, token.start)
+                else:
+                    state['last'] = n
+                    yield _new_token('IOREDIRECT', string, token.start)
+                    yield from handle_token(state, n2)
+            else:
+                state['last'] = n
+                yield _new_token('IOREDIRECT', string, token.start)
+        else:
+            yield _new_token("AMPERSAND", token.string, token.start)
+            if n is not None:
+                yield from handle_token(state, n)
 
 
 def handle_pipes(state, token):

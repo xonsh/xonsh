@@ -17,7 +17,11 @@ Current Developments
 
 **Removed:** None
 
-**Fixed:** None
+**Fixed:**
+
+* Numerous improvements to job control via a nearly-complete rewrite
+* Fixed a parsing bug whereby a trailing ``&`` on a line was being ignored
+  (processes were unable to be started in the background)
 
 **Security:** None
 

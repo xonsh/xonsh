@@ -720,7 +720,6 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.__xonsh_execer__ = execer
     builtins.__xonsh_commands_cache__ = CommandsCache()
     builtins.__xonsh_all_jobs__ = {}
-    builtins.__xonsh_active_job__ = None
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     # public built-ins
     builtins.evalx = None if execer is None else execer.eval
@@ -784,7 +783,6 @@ def unload_builtins():
              'compilex',
              'default_aliases',
              '__xonsh_all_jobs__',
-             '__xonsh_active_job__',
              '__xonsh_ensure_list_of_strs__',
              '__xonsh_history__',
              ]
