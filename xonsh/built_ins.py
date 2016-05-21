@@ -41,7 +41,7 @@ AT_EXIT_SIGNALS = (signal.SIGABRT, signal.SIGFPE, signal.SIGILL, signal.SIGSEGV,
 if ON_POSIX:
     AT_EXIT_SIGNALS += (signal.SIGTSTP, signal.SIGQUIT, signal.SIGHUP)
 
-SIGNAL_STRINGS = {
+SIGNAL_MESSAGES = {
     signal.SIGABRT: 'Aborted',
     signal.SIGFPE: 'Floating point exception',
     signal.SIGILL: 'Illegal instructions',
@@ -612,14 +612,11 @@ def run_subproc(cmds, captured=False):
 
     if getattr(prev_proc, 'signal', None):
         sig, core = prev_proc.signal
-        try:
-            sig_str = SIGNAL_STRINGS[sig]
-        except KeyError:
-            pass
-        else:
+        sig_str = SIGNAL_MESSAGES.get(sig)
+        if sig_str:
             if core:
                 sig_str += ' (core dumped)'
-            print(sig_str)
+            print(sig_str, file=sys.stderr)
     if (not prev_is_proxy and
             hist.last_cmd_rtn is not None and
             hist.last_cmd_rtn > 0 and
