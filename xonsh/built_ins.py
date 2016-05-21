@@ -39,20 +39,22 @@ BUILTINS_LOADED = False
 INSPECTOR = Inspector()
 AT_EXIT_SIGNALS = (signal.SIGABRT, signal.SIGFPE, signal.SIGILL, signal.SIGSEGV,
                    signal.SIGTERM)
-if ON_POSIX:
-    AT_EXIT_SIGNALS += (signal.SIGTSTP, signal.SIGQUIT, signal.SIGHUP)
 
 SIGNAL_MESSAGES = {
     signal.SIGABRT: 'Aborted',
     signal.SIGFPE: 'Floating point exception',
     signal.SIGILL: 'Illegal instructions',
     signal.SIGTERM: 'Terminated',
-    signal.SIGSEGV: 'Segmentation fault',
-    signal.SIGQUIT: 'Quit',
-    signal.SIGHUP: 'Hangup',
-    signal.SIGKILL: 'Killed'
+    signal.SIGSEGV: 'Segmentation fault'
 }
 
+if ON_POSIX:
+    AT_EXIT_SIGNALS += (signal.SIGTSTP, signal.SIGQUIT, signal.SIGHUP)
+    SIGNAL_MESSAGES.update({
+        signal.SIGQUIT: 'Quit',
+        signal.SIGHUP: 'Hangup',
+        signal.SIGKILL: 'Killed'
+    })
 
 def resetting_signal_handle(sig, f):
     """Sets a new signal handle that will automatically restore the old value
