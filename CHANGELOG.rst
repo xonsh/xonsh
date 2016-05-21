@@ -37,6 +37,8 @@ Current Developments
   ``--cache-everything`` when starting xonsh.
 * Added a workaround to allow ctrl-c to interrupt reverse incremental search in
   the readline shell
+* When a subprocess exits with a signal (e.g. SIGSEGV), a message is printed,
+  similar to Bash.
 
 **Changed:**
 
