@@ -20,14 +20,11 @@ if ON_WINDOWS:
     def _continue(job):
         job['status'] = 'running'
 
-
     def _kill(obj):
         return obj.kill()
 
-
     def ignore_sigtstp():
         pass
-
 
     def _set_pgrp(info):
         pass
@@ -57,19 +54,16 @@ if ON_WINDOWS:
 
 else:
     def _continue(job):
-        _sendSignal(job, signal.SIGCONT)
-
+        _send_signal(job, signal.SIGCONT)
 
     def _kill(job):
-        _sendSignal(job, signal.SIGKILL)
+        _send_signal(job, signal.SIGKILL)
 
-    def _sendSignal(job, signal):
+    def _send_signal(job, signal):
         os.killpg(job['pgrp'], signal)
-
 
     def ignore_sigtstp():
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)
-
 
     def _set_pgrp(info):
         try:
@@ -77,21 +71,19 @@ else:
         except ProcessLookupError:
             pass
 
-
     _shell_pgrp = os.getpgrp()
 
     _block_when_giving = (signal.SIGTTOU, signal.SIGTTIN, signal.SIGTSTP)
-
 
     def _give_terminal_to(pgid):
         # over-simplified version of:
         #    give_terminal_to from bash 4.3 source, jobs.c, line 4030
         # this will give the terminal to the process group pgid
         if _shell_tty is not None and os.isatty(_shell_tty):
-            oldmask = signal.pthread_sigmask(signal.SIG_BLOCK, _block_when_giving)
+            oldmask = signal.pthread_sigmask(signal.SIG_BLOCK,
+                                             _block_when_giving)
             os.tcsetpgrp(_shell_tty, pgid)
             signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
-
 
     # check for shell tty
     try:
@@ -110,12 +102,11 @@ else:
             if not task['bg'] and task['status'] == RUNNING:
                 selected_task = tid
                 break
-        if selected_task == None:
+        if selected_task is None:
             return
         tasks.remove(selected_task)
         tasks.appendleft(selected_task)
         return get_task(selected_task)
-
 
     def wait_for_active_job():
         """
@@ -242,7 +233,7 @@ def fg(args, stdin=None):
         return '', 'Cannot bring nonexistent job to foreground.\n'
 
     if len(args) == 0:
-        act = tasks[0] # take the last manipulated task by default
+        act = tasks[0]  # take the last manipulated task by default
     elif len(args) == 1:
         try:
             act = int(args[0])
@@ -271,7 +262,7 @@ def bg(args, stdin=None):
     single number is given as an argument, resume that job in the background.
     """
     res = fg(args, stdin)
-    if res == None:
+    if res is None:
         curTask = get_task(tasks[0])
         curTask['bg'] = True
         _continue(curTask)
