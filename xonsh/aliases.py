@@ -12,7 +12,7 @@ from xonsh.environ import locate_binary
 from xonsh.foreign_shells import foreign_shell_data
 from xonsh.jobs import jobs, fg, bg, kill_all_jobs
 from xonsh.history import main as history_alias
-from xonsh.platform import ON_ANACONDA, ON_DARWIN, ON_WINDOWS
+from xonsh.platform import ON_ANACONDA, ON_DARWIN, ON_WINDOWS, scandir
 from xonsh.proc import foreground
 from xonsh.replay import main as replay_main
 from xonsh.timings import timeit_alias
@@ -412,9 +412,9 @@ def which(args, stdin=None, stdout=None, stderr=None):
         for abs_name, from_where in matches:
             if ON_WINDOWS:
                 # Use list dir to get correct case for the filename
-                # i.e. windows is case insesitive but case preserving
+                # i.e. windows is case insensitive but case preserving
                 p, f = os.path.split(abs_name)
-                f = next(s for s in os.listdir(p) if s.lower() == f.lower())
+                f = next(s.name for s in scandir(p) if s.name.lower() == f.lower())
                 abs_name = os.path.join(p, f)
                 if builtins.__xonsh_env__.get('FORCE_POSIX_PATHS', False):
                     abs_name.replace(os.sep, os.altsep)
