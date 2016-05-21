@@ -4,7 +4,8 @@ This file is a modified version of tokenize.py form the Python 3.5 standard
 library (licensed under the Python Software Foundation License, version 2),
 which provides tokenization help for Python programs.
 
-It is modified to properly tokenize xonsh's backtick operator.
+It is modified to properly tokenize xonsh's backtick operator and to support
+the @$ operator.
 
 Original file credits:
    __author__ = 'Ka-Ping Yee <ping@lfw.org>'
@@ -28,7 +29,7 @@ blank_re = re.compile(br'^[ \t\f]*(?:[#\r\n]|$)', re.ASCII)
 import token
 __all__ = token.__all__ + ["COMMENT", "tokenize", "detect_encoding",
                            "NL", "untokenize", "ENCODING", "TokenInfo",
-                           "REGEXPATH", "TokenError"]
+                           "REGEXPATH", "ATDOLLAR", "TokenError"]
 del token
 
 COMMENT = N_TOKENS
@@ -40,6 +41,9 @@ tok_name[ENCODING] = 'ENCODING'
 N_TOKENS += 3
 REGEXPATH = N_TOKENS
 tok_name[REGEXPATH] = 'REGEXPATH'
+N_TOKENS += 1
+ATDOLLAR = N_TOKENS
+tok_name[ATDOLLAR] = 'ATDOLLAR'
 N_TOKENS += 1
 EXACT_TOKEN_TYPES = {
     '(':   LPAR,
@@ -86,6 +90,7 @@ EXACT_TOKEN_TYPES = {
     '//=': DOUBLESLASHEQUAL,
     '@':   AT,
     '@=':  ATEQUAL,
+    '@$':  ATDOLLAR,
 }
 
 class TokenInfo(collections.namedtuple('TokenInfo', 'type string start end line')):
@@ -146,7 +151,7 @@ RegexPath = r"`[^\n`\\]*(?:\\.[^\n`\\]*)*`"
 # longest operators first (e.g., if = came before ==, == would get
 # recognized as two instances of =).
 Operator = group(r"\*\*=?", r">>=?", r"<<=?", r"!=",
-                 r"//=?", r"->",
+                 r"//=?", r"->", r"@\$",
                  r"[+\-*/%&@|^=<>]=?",
                  r"~")
 

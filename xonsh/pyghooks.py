@@ -33,6 +33,7 @@ ROOT_TOKENS = [(r'\?', Keyword),
                (r'\$\{', Keyword, ('pymode', )),
                (r'[\!\$]\(', Keyword, ('subproc', )),
                (r'[\!\$]\[', Keyword, ('subproc', )),
+               (r'@\$\(', Keyword, ('subproc', )),
                (r'@\(', Keyword, ('pymode', )),
                inherit, ]
 

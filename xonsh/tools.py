@@ -56,7 +56,7 @@ DefaultNotGiven = DefaultNotGivenType()
 
 BEG_TOK_SKIPS = frozenset(['WS', 'INDENT', 'NOT', 'LPAREN'])
 END_TOK_TYPES = frozenset(['SEMI', 'AND', 'OR', 'RPAREN'])
-LPARENS = frozenset(['LPAREN', 'AT_LPAREN', 'BANG_LPAREN', 'DOLLAR_LPAREN'])
+LPARENS = frozenset(['LPAREN', 'AT_LPAREN', 'BANG_LPAREN', 'DOLLAR_LPAREN', 'ATDOLLAR_LPAREN'])
 
 def _is_not_lparen_and_rparen(lparens, rtok):
     """Tests if an RPAREN token is matched with something other than a plain old

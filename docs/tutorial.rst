@@ -459,6 +459,10 @@ feed them to a subprocess as needed.  For example:
     for i in range(20):
         $[touch @('file%02d' % i)]
 
+.. note:: A common use of the ``@()`` operator is allowing the output of a
+          command to replace the command itself (command substitution):
+          ``@([i.strip() for i in $(cmd).split()])``.  Xonsh offers a
+          short-hand syntax for this operation: ``@$(cmd)``.
 
 Nesting Subprocesses
 =====================================

@@ -2174,7 +2174,7 @@ class BaseParser(object):
         p1 = p[1]
         p0 = xonsh_call('__xonsh_subproc_captured_stdout__', args=p[2],
                         lineno=p1.lineno, col=p1.lexpos)
-        p0._cliarg_action = 'splitlines'
+        p0._cliarg_action = 'append'
         p[0] = p0
 
     def p_subproc_atom_pyenv_lookup(self, p):
@@ -2194,6 +2194,13 @@ class BaseParser(object):
     def p_subproc_atom_pyeval(self, p):
         """subproc_atom : AT_LPAREN test RPAREN"""
         p0 = xonsh_call('__xonsh_ensure_list_of_strs__', [p[2]],
+                        lineno=self.lineno, col=self.col)
+        p0._cliarg_action = 'extend'
+        p[0] = p0
+
+    def p_subproc_atom_subproc_inject(self, p):
+        """subproc_atom : ATDOLLAR_LPAREN subproc RPAREN"""
+        p0 = xonsh_call('__xonsh_subproc_captured_inject__', p[2],
                         lineno=self.lineno, col=self.col)
         p0._cliarg_action = 'extend'
         p[0] = p0
@@ -2265,6 +2272,7 @@ class BaseParser(object):
                             | PLUS
                             | COLON
                             | AT
+                            | ATDOLLAR
                             | EQUALS
                             | TIMES
                             | POW
@@ -2277,6 +2285,8 @@ class BaseParser(object):
                             | FALSE
                             | NUMBER
                             | STRING
+                            | QUESTION
+                            | COMMA
         """
         # Many tokens cannot be part of this list, such as $, ', ", ()
         # Use a string atom instead.

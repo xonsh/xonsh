@@ -19,11 +19,10 @@ will help you put a finger on how to do the equivelent task in xonsh.
       - Look up an environment variable via another variable name. In xonsh,
         this may be any valid expression.
     * - ``$(cmd args)`` or ```cmd args```
-      - ``$(cmd args)``
-      - Use the ``$()`` operator to capture subprocesses as strings. Bash's
-        version of (now-deprecated) backticks is not supported. Note that
-        Bash will automatically tokenize the string, while xonsh just returns
-        a str of stdout.
+      - ``@$(cmd args)``
+      - Command substitution (allow the output of a command to replace the
+        command itself).  Tokenizes and executes the output of a subprocess
+        command as another subprocess.
     * - ``set -e``
       - ``$RAISE_SUBPROC_ERROR = True``
       - Cause a failure after a non-zero return code. Xonsh will raise a

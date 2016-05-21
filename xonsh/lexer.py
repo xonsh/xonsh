@@ -156,6 +156,7 @@ def _make_special_handler(token_type, extra_check=lambda x: True):
 handle_number = _make_special_handler('NUMBER')
 """Function for handling number tokens"""
 
+
 def handle_ampersands(state, token):
     """Function for generating PLY tokens for single and double ampersands."""
     n = next(state['stream'], None)
@@ -218,6 +219,27 @@ def handle_dollar(state, token):
         yield _new_token("ERRORTOKEN", m, token.start)
 
 
+def handle_atdollar(state, token):
+    """
+    Function for generating PLY tokens associated with ``@$``.
+    """
+    n = next(state['stream'], None)
+
+    if n is None:
+        state['last'] = token
+        m = "missing token after @$"
+        yield _new_token("ERRORTOKEN", m, token.start)
+    elif n.type == tokenize.OP and n.string == '(' and \
+            n.start == token.end:
+        state['pymode'].append((False, '@$(', ')', token.start))
+        state['last'] = n
+        yield _new_token('ATDOLLAR_LPAREN', '@$(', token.start)
+    else:
+        state['last'] = token
+        yield _new_token('ATDOLLAR', '@$', token.start)
+        yield from handle_token(state, n)
+
+
 def handle_at(state, token):
     """
     Function for generating PLY tokens associated with ``@``.
@@ -261,13 +283,13 @@ def handle_bang(state, token):
     Function for generating PLY tokens starting with !
     """
     n = next(state['stream'], None)
-    if (n is not None and n.type == tokenize.OP
-            and n.string == '(' and n.start == token.end):
+    if (n is not None and n.type == tokenize.OP and
+            n.string == '(' and n.start == token.end):
         state['pymode'].append((False, '!(', ')', token.start))
         state['last'] = n
         yield _new_token('BANG_LPAREN', '!(', token.start)
-    elif (n is not None and n.type == tokenize.OP
-            and n.string == '[' and n.start == token.end):
+    elif (n is not None and n.type == tokenize.OP and
+            n.string == '[' and n.start == token.end):
         state['pymode'].append((False, '![', ']', token.start))
         state['last'] = n
         yield _new_token('BANG_LBRACKET', '![', token.start)
@@ -401,6 +423,7 @@ special_handlers = {
     (tokenize.OP, '}'): handle_rbrace,
     (tokenize.OP, '['): handle_lbracket,
     (tokenize.OP, ']'): handle_rbracket,
+    (tokenize.OP, '@$'): handle_atdollar,
     (tokenize.ERRORTOKEN, '$'): handle_dollar,
     (tokenize.ERRORTOKEN, '?'): handle_question,
     (tokenize.ERRORTOKEN, '!'): handle_bang,
@@ -556,4 +579,6 @@ class Lexer(object):
         'DOLLAR_LPAREN',         # $(
         'DOLLAR_LBRACE',         # ${
         'DOLLAR_LBRACKET',       # $[
+        'ATDOLLAR',              # @$
+        'ATDOLLAR_LPAREN',       # @$(
     ) + tuple(i.upper() for i in kwlist)
