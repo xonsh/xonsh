@@ -1,6 +1,7 @@
 """ Module for platform-specific constants and implementations, as well as
     compatibility layers to make use of the 'best' implementation available
-    on a platform. """
+    on a platform.
+"""
 
 from functools import lru_cache
 import os
@@ -115,6 +116,43 @@ def is_readline_available():
 
 DEFAULT_ENCODING = sys.getdefaultencoding()
 """ Default string encoding. """
+
+
+if PYTHON_VERSION_INFO < (3, 5, 0):
+    from pathlib import Path
+
+    class DirEntry:
+        def __init__(self, directory, name):
+            self.__path__ = Path(directory) / name
+            self.name = name
+            self.path = str(self.__path__)
+            self.is_symlink = self.__path__.is_symlink
+
+        def inode(self):
+            return os.stat(self.path, follow_symlinks=False).st_ino
+
+        def is_dir(self, *, follow_symlinks=True):
+            if follow_symlinks:
+                return self.__path__.is_dir()
+            else:
+                return not self.__path__.is_symlink() \
+                       and self.__path__.is_dir()
+
+        def is_file(self, *, follow_symlinks=True):
+            if follow_symlinks:
+                return self.__path__.is_file()
+            else:
+                return not self.__path__.is_symlink() \
+                       and self.__path__.is_file()
+
+        def stat(self, *, follow_symlinks=True):
+            return os.stat(self.path, follow_symlinks=follow_symlinks)
+
+    def scandir(path):
+        """ Compatibility layer for  `os.scandir` from Python 3.5+. """
+        return (DirEntry(path, x) for x in os.listdir(path))
+else:
+    scandir = os.scandir
 
 
 #
