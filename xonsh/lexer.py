@@ -166,8 +166,7 @@ def handle_ampersands(state, token):
         yield _new_token('AND', 'and', token.start)
     else:
         state['last'] = token
-        if state['pymode'][-1][0]:
-            yield _new_token('AMPERSAND', token.string, token.start)
+        yield _new_token('AMPERSAND', token.string, token.start)
         if n is not None:
             yield from handle_token(state, n)
 
