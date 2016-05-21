@@ -18,7 +18,7 @@ tasks = deque()
 
 if ON_WINDOWS:
     def _continue(job):
-        job['status'] = 'running'
+        job['status'] = RUNNING
 
     def _kill(obj):
         return obj.kill()
@@ -29,19 +29,27 @@ if ON_WINDOWS:
     def _set_pgrp(info):
         pass
 
+
     def wait_for_active_job(signal_to_send=None):
         """
         Wait for the active job to finish, to be killed by SIGINT, or to be
         suspended by ctrl-z.
         """
         _clear_dead_jobs()
-        act = builtins.__xonsh_active_job__
-        if act is None:
+
+        active_task = get_next_task()
+
+        # Return when there are no foreground active task
+        if active_task is None:
             return
-        job = builtins.__xonsh_all_jobs__[act]
-        obj = job['obj']
-        if job['bg']:
-            return
+
+        pgrp = active_task['pgrp']
+        obj = active_task['obj']
+        # give the terminal over to the fg process
+        _give_terminal_to(pgrp)
+
+        _continue(active_task)
+
         while obj.returncode is None:
             try:
                 obj.wait(0.01)
@@ -49,8 +57,8 @@ if ON_WINDOWS:
                 pass
             except KeyboardInterrupt:
                 obj.kill()
-        if obj.poll() is not None:
-            builtins.__xonsh_active_job__ = None
+
+        return wait_for_active_job()
 
 else:
     def _continue(job):
@@ -94,20 +102,6 @@ else:
     except OSError:
         _shell_tty = None
 
-    def _get_next_task():
-        """ Get the next active task and put it on top of the queue"""
-        selected_task = None
-        for tid in tasks:
-            task = get_task(tid)
-            if not task['bg'] and task['status'] == RUNNING:
-                selected_task = tid
-                break
-        if selected_task is None:
-            return
-        tasks.remove(selected_task)
-        tasks.appendleft(selected_task)
-        return get_task(selected_task)
-
     def wait_for_active_job():
         """
         Wait for the active job to finish, to be killed by SIGINT, or to be
@@ -116,7 +110,7 @@ else:
 
         _clear_dead_jobs()
 
-        active_task = _get_next_task()
+        active_task = get_next_task()
 
         # Return when there are no foreground active task
         if active_task is None:
@@ -144,6 +138,20 @@ else:
 
         return wait_for_active_job()
 
+def get_next_task():
+    """ Get the next active task and put it on top of the queue"""
+    selected_task = None
+    for tid in tasks:
+        task = get_task(tid)
+        if not task['bg'] and task['status'] == RUNNING:
+            selected_task = tid
+            break
+    if selected_task == None:
+        return
+    tasks.remove(selected_task)
+    tasks.appendleft(selected_task)
+    return get_task(selected_task)
+
 
 def get_task(tid):
     return builtins.__xonsh_all_jobs__[tid]
@@ -166,7 +174,6 @@ def print_one_job(num):
         job = builtins.__xonsh_all_jobs__[num]
     except KeyError:
         return
-    act = '*' if num == builtins.__xonsh_active_job__ else ' '
     status = "running" if job['status'] == RUNNING else "stopped"
     cmd = [' '.join(i) if isinstance(i, list) else i for i in job['cmds']]
     cmd = ' '.join(cmd)
