@@ -220,7 +220,8 @@ DEFAULT_VALUES = {
 if hasattr(locale, 'LC_MESSAGES'):
     DEFAULT_VALUES['LC_MESSAGES'] = locale.setlocale(locale.LC_MESSAGES)
 
-VarDocs = namedtuple('VarDocs', ['docstr', 'configurable', 'default'])
+VarDocs = namedtuple('VarDocs', ['docstr', 'configurable', 'default',
+                                 'store_as_str'])
 VarDocs.__doc__ = """Named tuple for environment variable documentation
 
 Parameters
@@ -233,8 +234,14 @@ default : str, optional
     Custom docstring for the default value for complex defaults.
     Is this is DefaultNotGiven, then the default will be looked up
     from DEFAULT_VALUES and converted to a str.
+store_as_str : bool, optional
+    Flag for whether the environment variable should be stored as a
+    string. This is used when persisting a variable that is not JSON
+    serializable to the config file. For example, sets, frozensets, and
+    potentially other non-trivial data types. default, False.
 """
-VarDocs.__new__.__defaults__ = (True, DefaultNotGiven)  # iterates from back
+# iterates from back
+VarDocs.__new__.__defaults__ = (True, DefaultNotGiven, False)
 
 # Please keep the following in alphabetic order - scopatz
 DEFAULT_DOCS = {
@@ -309,7 +316,8 @@ DEFAULT_DOCS = {
         "default all commands are saved. The option 'ignoredups' will not "
         "save the command if it matches the previous command. The option "
         "'ignoreerr' will cause any commands that fail (i.e. return non-zero "
-        "exit status) to not be added to the history list."),
+        "exit status) to not be added to the history list.",
+        store_as_str=True),
     'IGNOREEOF': VarDocs('Prevents Ctrl-D from exiting the shell.'),
     'INDENT': VarDocs('Indentation string for multiline input'),
     'INTENSIFY_COLORS_ON_WIN': VarDocs('Enhance style colors for readability '

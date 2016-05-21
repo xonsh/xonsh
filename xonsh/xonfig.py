@@ -188,7 +188,8 @@ def make_envvar(name):
     ens = env.get_ensurer(name)
     path = '/env/' + name
     pnode = StoreNonEmpty(ENVVAR_PROMPT, converter=ens.convert,
-                          show_conversion=True, path=path, retry=True)
+                          show_conversion=True, path=path, retry=True,
+                          store_raw=vd.store_as_str)
     return mnode, pnode
 
 

@@ -262,6 +262,7 @@ def make_envvars():
            '{docstr}\n\n'
            '**configurable:** {configurable}\n\n'
            '**default:** {default}\n\n'
+           '**store_as_str:** {store_as_str}\n\n'
            '-------\n\n')
     for var in vars:
         title = '$' + var
@@ -269,7 +270,7 @@ def make_envvars():
         vd = env.get_docs(var)
         s += sec.format(low=var.lower(), title=title, under=under,
                         docstr=vd.docstr, configurable=vd.configurable,
-                        default=vd.default)
+                        default=vd.default, store_as_str=vd.store_as_str)
     s = s[:-9]
     fname = os.path.join(os.path.dirname(__file__), 'envvarsbody')
     with open(fname, 'w') as f:
