@@ -11,14 +11,11 @@ from collections import deque
 
 from xonsh.tools import ON_WINDOWS
 
-RUNNING = 1
-STOPPED = 0
-
 tasks = deque()
 
 if ON_WINDOWS:
     def _continue(job):
-        job['status'] = RUNNING
+        job['status'] = "running"
 
     def _kill(obj):
         check_output(['taskkill', '/F', '/T', '/PID', str(obj.pid)])
@@ -122,7 +119,7 @@ else:
         _, wcode = os.waitpid(obj.pid, os.WUNTRACED)
         if os.WIFSTOPPED(wcode):
             print()  # get a newline because ^Z will have been printed
-            active_task['status'] = STOPPED
+            active_task['status'] = "stopped"
         elif os.WIFSIGNALED(wcode):
             print()  # get a newline because ^C will have been printed
             obj.signal = (os.WTERMSIG(wcode), os.WCOREDUMP(wcode))
@@ -139,10 +136,10 @@ def get_next_task():
     selected_task = None
     for tid in tasks:
         task = get_task(tid)
-        if not task['bg'] and task['status'] == RUNNING:
+        if not task['bg'] and task['status'] == "running":
             selected_task = tid
             break
-    if selected_task == None:
+    if selected_task is None:
         return
     tasks.remove(selected_task)
     tasks.appendleft(selected_task)
@@ -170,7 +167,7 @@ def print_one_job(num):
         job = builtins.__xonsh_all_jobs__[num]
     except KeyError:
         return
-    status = "running" if job['status'] == RUNNING else "stopped"
+    status = job['status']
     cmd = [' '.join(i) if isinstance(i, list) else i for i in job['cmds']]
     cmd = ' '.join(cmd)
     pid = job['pids'][-1]
@@ -194,7 +191,7 @@ def add_job(info):
     """
     num = get_next_job_number()
     info['started'] = time.time()
-    info['status'] = RUNNING
+    info['status'] = "running"
     _set_pgrp(info)
     tasks.appendleft(num)
     builtins.__xonsh_all_jobs__[num] = info
@@ -253,7 +250,7 @@ def fg(args, stdin=None):
 
     job = get_task(act)
     job['bg'] = False
-    job['status'] = RUNNING
+    job['status'] = "running"
     print_one_job(act)
 
 
