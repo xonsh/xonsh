@@ -4,7 +4,10 @@ Xonsh Change Log
 
 Current Developments
 ====================
-**Added:** None
+**Added:**
+
+* When a subprocess exits with a signal (e.g. SIGSEGV), a message is printed,
+  similar to Bash.
 
 **Changed:** None
 

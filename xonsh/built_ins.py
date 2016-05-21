@@ -42,6 +42,17 @@ AT_EXIT_SIGNALS = (signal.SIGABRT, signal.SIGFPE, signal.SIGILL, signal.SIGSEGV,
 if ON_POSIX:
     AT_EXIT_SIGNALS += (signal.SIGTSTP, signal.SIGQUIT, signal.SIGHUP)
 
+SIGNAL_MESSAGES = {
+    signal.SIGABRT: 'Aborted',
+    signal.SIGFPE: 'Floating point exception',
+    signal.SIGILL: 'Illegal instructions',
+    signal.SIGTERM: 'Terminated',
+    signal.SIGSEGV: 'Segmentation fault',
+    signal.SIGQUIT: 'Quit',
+    signal.SIGHUP: 'Hangup',
+    signal.SIGKILL: 'Killed'
+}
+
 
 def resetting_signal_handle(sig, f):
     """Sets a new signal handle that will automatically restore the old value
@@ -600,6 +611,13 @@ def run_subproc(cmds, captured=False):
                 errout = errout.replace('\r\n', '\n')
                 procinfo['stderr'] = errout
 
+    if getattr(prev_proc, 'signal', None):
+        sig, core = prev_proc.signal
+        sig_str = SIGNAL_MESSAGES.get(sig)
+        if sig_str:
+            if core:
+                sig_str += ' (core dumped)'
+            print(sig_str, file=sys.stderr)
     if (not prev_is_proxy and
             hist.last_cmd_rtn is not None and
             hist.last_cmd_rtn > 0 and
