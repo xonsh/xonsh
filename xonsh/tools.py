@@ -32,7 +32,7 @@ from collections import OrderedDict, Sequence, Set
 
 # adding further imports from xonsh modules is discouraged to avoid cirular
 # dependencies
-from xonsh.platform import (has_prompt_toolkit, win_unicode_console,
+from xonsh.platform import (has_prompt_toolkit, scandir, win_unicode_console,
                             DEFAULT_ENCODING, ON_LINUX, ON_WINDOWS)
 
 if has_prompt_toolkit():
@@ -303,8 +303,7 @@ def command_not_found(cmd):
 
 def suggest_commands(cmd, env, aliases):
     """Suggests alternative commands given an environment and aliases."""
-    suggest_cmds = env.get('SUGGEST_COMMANDS')
-    if not suggest_cmds:
+    if not env.get('SUGGEST_COMMANDS'):
         return
     thresh = env.get('SUGGEST_THRESHOLD')
     max_sugg = env.get('SUGGEST_MAX_NUM')
@@ -320,10 +319,10 @@ def suggest_commands(cmd, env, aliases):
 
     for d in filter(os.path.isdir, env.get('PATH')):
         for f in os.listdir(d):
-            if f not in suggested:
-                if levenshtein(f.lower(), cmd, thresh) < thresh:
-                    fname = os.path.join(d, f)
-                    suggested[f] = 'Command ({0})'.format(fname)
+            if f not in suggested \
+                    and levenshtein(f.lower(), cmd, thresh) < thresh:
+                fname = os.path.join(d, f)
+                suggested[f] = 'Command ({0})'.format(fname)
     suggested = OrderedDict(
         sorted(suggested.items(),
                key=lambda x: suggestion_sort_helper(x[0].lower(), cmd)))
@@ -1074,14 +1073,8 @@ class CommandsCache(Set):
             return self._cmds_cache
         allcmds = set()
         for path in paths:
-            this_one = set()
-            for i in os.listdir(path):
-                name  = os.path.join(path, i)
-                if (os.path.exists(name) and
-                        os.access(name, os.X_OK) and
-                        (not os.path.isdir(name))):
-                    this_one.add(i)
-            allcmds |= this_one
-        allcmds |= set(builtins.aliases)
+            allcmds |= set(x.name for x in scandir(path)
+                           if x.is_file() and os.access(x.path, os.X_OK))
+            allcmds |= set(builtins.aliases)
         self._cmds_cache = frozenset(allcmds)
         return self._cmds_cache
