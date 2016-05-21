@@ -20,6 +20,9 @@ Current Developments
   directory.
 * Partial workaround for Cygwin where ``pthread_sigmask`` appears to be missing
   from the ``signal`` module.
+* Fixed regression on Windows with the locate_binary() function. 
+  The bug prevented `source-cmd` from working correctly and broke the 
+  ``activate``/``deactivate`` aliases for the conda environements. 
 
 **Security:** None
 

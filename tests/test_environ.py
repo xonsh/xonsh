@@ -4,12 +4,15 @@ from __future__ import unicode_literals, print_function
 import os
 import tempfile
 import builtins
+from tempfile import TemporaryDirectory
+from xonsh.tools import ON_WINDOWS
+
 
 import nose
 from nose.tools import (assert_equal, assert_true, assert_not_in,
     assert_is_instance, assert_in, assert_raises)
 
-from xonsh.environ import Env, format_prompt, load_static_config
+from xonsh.environ import Env, format_prompt, load_static_config, locate_binary
 
 from tools import mock_xonsh_env
 
@@ -126,6 +129,23 @@ def test_load_static_config_type_fail():
 def test_load_static_config_json_fail():
     s = b'{"best": "awash"'
     check_load_static_config(s, {}, False)
+
+if ON_WINDOWS:
+    def test_locate_binary_on_windows():
+        files = ('file1.exe', 'FILE2.BAT', 'file3.txt')
+        with TemporaryDirectory() as tmpdir:
+            for fname in files:
+                fpath = os.path.join(tmpdir, fname)
+                with open(fpath, 'w') as f:
+                    f.write(fpath)               
+            env = Env({'PATH': [tmpdir], 'PATHEXT': ['.COM', '.EXE', '.BAT']})
+            with mock_xonsh_env(env): 
+                assert_equal( locate_binary('file1'), os.path.join(tmpdir,'file1.exe'))
+                assert_equal( locate_binary('file1.exe'), os.path.join(tmpdir,'file1.exe'))
+                assert_equal( locate_binary('file2'), os.path.join(tmpdir,'FILE2.BAT'))
+                assert_equal( locate_binary('file2.bat'), os.path.join(tmpdir,'FILE2.BAT'))
+                assert_equal( locate_binary('file3'), None)
+
 
 
 if __name__ == '__main__':
