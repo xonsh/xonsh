@@ -59,10 +59,9 @@ class Shell(object):
         if shell_type == 'none':
             from xonsh.base_shell import BaseShell as shell_class
         elif shell_type == 'prompt_toolkit':
-            if ptk_version_info()[:2] < (0, 57) or \
-                    ptk_version() == '<0.57':  # TODO: remove in future
-                msg = ('prompt-toolkit version < v0.57 and may not work as '
-                       'expected. Please update.')
+            if ptk_version_info()[:2] < (1, 0):
+                msg = ('prompt-toolkit version < v1.0.0 is not supported, '
+                       'xonsh may not work as expected. Please update.')
                 warn(msg, RuntimeWarning)
             from xonsh.ptk.shell import PromptToolkitShell as shell_class
         elif shell_type == 'readline':

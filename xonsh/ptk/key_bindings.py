@@ -43,8 +43,8 @@ def carriage_return(b, cli):
     elif (not b.document.on_first_line and
             not current_line_blank):
         b.newline(copy_margin=True)
-    elif (b.document.char_before_cursor == '\\' and 
-            not (not builtins.__xonsh_env__.get('FORCE_POSIX_PATHS') 
+    elif (b.document.char_before_cursor == '\\' and
+            not (not builtins.__xonsh_env__.get('FORCE_POSIX_PATHS')
                 and ON_WINDOWS)):
         b.newline()
     elif (b.document.find_next_word_beginning() is not None and

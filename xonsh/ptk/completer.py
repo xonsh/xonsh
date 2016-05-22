@@ -43,17 +43,7 @@ class PromptToolkitCompleter(Completer):
 
     def reserve_space(self):
         cli = builtins.__xonsh_shell__.shell.prompter.cli
-        if ptk_version().startswith("1.0"):
-            # This is the layout for ptk 1.0
-            window = cli.application.layout.children[0].content.children[1]
-        else:
-            #TODO remove after next prompt_toolkit release
-            try:
-                #old layout to be removed at next ptk release
-                window = cli.application.layout.children[1].children[1].content
-            except AttributeError:
-                #new layout to become default
-                window = cli.application.layout.children[1].content
+        window = cli.application.layout.children[0].content.children[1]
 
         if window and window.render_info:
             h = window.render_info.content_height

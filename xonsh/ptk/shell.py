@@ -5,6 +5,7 @@ import builtins
 from prompt_toolkit.key_binding.manager import KeyBindingManager
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.layout.lexers import PygmentsLexer
+from prompt_toolkit.shortcuts import print_tokens
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.styles import PygmentsStyle
 from pygments.styles import get_all_styles
@@ -19,7 +20,7 @@ from xonsh.pyghooks import (XonshLexer, partial_color_tokenize,
 from xonsh.ptk.completer import PromptToolkitCompleter
 from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings
-from xonsh.ptk.shortcuts import Prompter, print_tokens
+from xonsh.ptk.shortcuts import Prompter
 
 
 class PromptToolkitShell(BaseShell):
@@ -37,12 +38,6 @@ class PromptToolkitShell(BaseShell):
                 'enable_abort_and_exit_bindings': True,
                 'enable_open_in_editor': True,
                 }
-        major, minor = ptk_version_info()[:2]
-        self.new_vi_mode_flag = (major, minor) >= (1, 0) \
-                                and ptk_version() != '<0.57'
-        if not self.new_vi_mode_flag:
-            # enable_vi_mode is deprecated acoording to prompt_toolset 1.0 document.
-            key_bindings_manager_args['enable_vi_mode'] = Condition(lambda cli: builtins.__xonsh_env__.get('VI_MODE'))
 
         self.key_bindings_manager = KeyBindingManager(**key_bindings_manager_args)
         load_xonsh_bindings(self.key_bindings_manager)
@@ -84,10 +79,8 @@ class PromptToolkitShell(BaseShell):
                     'enable_history_search': enable_history_search,
                     'reserve_space_for_menu': 0,
                     'key_bindings_registry': self.key_bindings_manager.registry,
-                    'display_completions_in_columns': multicolumn
+                    'display_completions_in_columns': multicolumn,
                     }
-            if self.new_vi_mode_flag:
-                prompt_args['vi_mode'] = env.get('VI_MODE')
             line = self.prompter.prompt(**prompt_args)
         return line
 
