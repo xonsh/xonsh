@@ -15,7 +15,8 @@ Current Developments
 
 **Deprecated:** None
 
-**Removed:** None
+**Removed:** 
+* Special cased code for handling version of prompt_toolkit < v1.0.0
 
 **Fixed:**
 
