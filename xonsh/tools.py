@@ -34,7 +34,6 @@ from collections import OrderedDict, Sequence, Set
 # dependencies
 from xonsh.platform import (has_prompt_toolkit, scandir, win_unicode_console,
                             DEFAULT_ENCODING, ON_LINUX, ON_WINDOWS)
-
 if has_prompt_toolkit():
     import prompt_toolkit
 else:
@@ -57,6 +56,7 @@ DefaultNotGiven = DefaultNotGivenType()
 BEG_TOK_SKIPS = frozenset(['WS', 'INDENT', 'NOT', 'LPAREN'])
 END_TOK_TYPES = frozenset(['SEMI', 'AND', 'OR', 'RPAREN'])
 LPARENS = frozenset(['LPAREN', 'AT_LPAREN', 'BANG_LPAREN', 'DOLLAR_LPAREN', 'ATDOLLAR_LPAREN'])
+
 
 def _is_not_lparen_and_rparen(lparens, rtok):
     """Tests if an RPAREN token is matched with something other than a plain old
@@ -222,6 +222,7 @@ def indent(instr, nspaces=4, ntabs=0, flatten=False):
     else:
         return outstr
 
+
 def get_sep():
     """ Returns the appropriate filepath separator char depending on OS and
     xonsh options set
@@ -229,7 +230,6 @@ def get_sep():
     return (os.altsep if ON_WINDOWS
             and builtins.__xonsh_env__.get('FORCE_POSIX_PATHS') else
             os.sep)
-
 
 
 def fallback(cond, backup):
@@ -285,6 +285,12 @@ class redirect_stderr(_RedirectStream):
     _stream = "stderr"
 
 
+def executables_in(path):
+    """Returns a generator of files in `path` that the user could execute. """
+    return (x.name for x in scandir(path)
+            if x.is_file() and os.access(x.path, os.X_OK))
+
+
 def command_not_found(cmd):
     """Uses the debian/ubuntu command-not-found utility to suggest packages for a
     command that cannot currently be found.
@@ -309,20 +315,20 @@ def suggest_commands(cmd, env, aliases):
     max_sugg = env.get('SUGGEST_MAX_NUM')
     if max_sugg < 0:
         max_sugg = float('inf')
-
     cmd = cmd.lower()
     suggested = {}
-    for a in builtins.aliases:
-        if a not in suggested:
-            if levenshtein(a.lower(), cmd, thresh) < thresh:
-                suggested[a] = 'Alias'
 
-    for d in filter(os.path.isdir, env.get('PATH')):
-        for f in os.listdir(d):
-            if f not in suggested \
-                    and levenshtein(f.lower(), cmd, thresh) < thresh:
-                fname = os.path.join(d, f)
-                suggested[f] = 'Command ({0})'.format(fname)
+    for alias in builtins.aliases:
+        if alias not in suggested:
+            if levenshtein(alias.lower(), cmd, thresh) < thresh:
+                suggested[alias] = 'Alias'
+
+    for path in filter(os.path.isdir, env.get('PATH')):
+        for _file in executables_in(path):
+            if _file not in suggested \
+                    and levenshtein(_file.lower(), cmd, thresh) < thresh:
+                suggested[_file] = 'Command ({0})'.format(os.path.join(path, _file))
+
     suggested = OrderedDict(
         sorted(suggested.items(),
                key=lambda x: suggestion_sort_helper(x[0].lower(), cmd)))
@@ -1073,8 +1079,7 @@ class CommandsCache(Set):
             return self._cmds_cache
         allcmds = set()
         for path in paths:
-            allcmds |= set(x.name for x in scandir(path)
-                           if x.is_file() and os.access(x.path, os.X_OK))
+            allcmds |= set(executables_in(path))
             allcmds |= set(builtins.aliases)
         self._cmds_cache = frozenset(allcmds)
         return self._cmds_cache
