@@ -459,21 +459,46 @@ feed them to a subprocess as needed.  For example:
     for i in range(20):
         $[touch @('file%02d' % i)]
 
-.. note:: A common use of the ``@()`` operator is allowing the output of a
-          command to replace the command itself (command substitution):
-          ``@([i.strip() for i in $(cmd).split()])``.  Xonsh offers a
-          short-hand syntax for this operation: ``@$(cmd)``.
+Command Substitution with ``@$()``
+==================================
+
+A common use of the ``@()`` and ``$()`` operators is allowing the output of a
+command to replace the command itself (command substitution):
+``@([i.strip() for i in $(cmd).split()])``.  Xonsh offers a
+short-hand syntax for this operation: ``@$(cmd)``.
+
+Consider the following example:
+
+.. code-block:: xonshcon
+
+    >>> # this returns a string representing stdout
+    >>> $(which ls)
+    'ls --color=auto\n'
+
+    >>> # this attempts to run the command, but as one argument
+    >>> # (looks for 'ls --color=auto\n' with spaces and newline)
+    >>> @($(which ls).strip())
+    xonsh: subprocess mode: command not found: ls --color=auto
+
+    >>> # this actually executes the intended command
+    >>> @([i.strip() for i in $(which ls).split()])
+    some_file  some_other_file
+
+    >>> # this does the same thing, but is much more concise
+    >>> @$(which ls)
+    some_file  some_other_file
+
 
 Nesting Subprocesses
 =====================================
 Though I am begging you not to abuse this, it is possible to nest the
 subprocess operators that we have seen so far (``$()``, ``$[]``, ``${}``,
-``@()``).  An instance of ``ls -l`` that is on the wrong side of the border of
-the absurd is shown below:
+``@()``, ``@$()``).  An instance of ``ls -l`` that is on the wrong side of the
+border of the absurd is shown below:
 
 .. code-block:: xonshcon
 
-    >>> $[$(echo ls) @('-' + $(echo l).strip())]
+    >>> $[@$(which @($(echo ls).strip())) @('-' + $(printf 'l'))]
     total 0
     -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
 
