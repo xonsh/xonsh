@@ -47,7 +47,7 @@ class Shell(object):
         if shell_type is not None:
             env['SHELL_TYPE'] = shell_type
         shell_type = env.get('SHELL_TYPE')
-        if shell_type == 'best':
+        if shell_type == 'best' or shell_type is None:
             shell_type = BEST_SHELL_TYPE
         elif shell_type == 'random':
             shell_type = random.choice(('readline', 'prompt_toolkit'))
@@ -89,7 +89,7 @@ class Shell(object):
             names = builtins.__xonsh_config__.get('xontribs', ())
             for name in names:
                 xontribs.update_context(name, ctx=self.ctx)
-            # load run contol files
+            # load run control files
             env = builtins.__xonsh_env__
             rc = env.get('XONSHRC') if rc is None else rc
             self.ctx.update(xonshrc_context(rcfiles=rc, execer=self.execer))
