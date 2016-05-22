@@ -186,8 +186,7 @@ def premain(argv=None):
         version = '/'.join(('xonsh', __version__)),
         print(version)
         exit()
-    shell_kwargs = {'shell_type': args.shell_type or
-                                  DEFAULT_VALUES.get('SHELL_TYPE'),
+    shell_kwargs = {'shell_type': args.shell_type,
                     'completer': False,
                     'login': False,
                     'scriptcache': args.scriptcache,
