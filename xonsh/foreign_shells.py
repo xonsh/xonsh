@@ -12,6 +12,7 @@ from tempfile import NamedTemporaryFile
 from collections import MutableMapping, Mapping, Sequence
 
 from xonsh.tools import to_bool, ensure_string
+from xonsh.platform import ON_WINDOWS
 
 
 COMMAND = """
