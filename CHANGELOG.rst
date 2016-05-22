@@ -20,6 +20,8 @@ Current Developments
 
 **Fixed:**
 
+* Fix bash completions (e.g git etc.) on windows when completions files have 
+  spaces in their path names
 * Numerous improvements to job control via a nearly-complete rewrite
 * Rectified install issue with Jupyter hook when installing with pyenv,
   Jupyter install hook now repects ``--prefix`` argument.
