@@ -73,7 +73,7 @@ if ON_WINDOWS:
 
 COMPLETION_SKIP_TOKENS = {'man', 'sudo', 'time', 'timeit', 'which'}
 
-BASH_COMPLETE_SCRIPT = """source {filename}
+BASH_COMPLETE_SCRIPT = """source "{filename}"
 COMP_WORDS=({line})
 COMP_LINE={comp_line}
 COMP_POINT=${{#COMP_LINE}}
@@ -450,10 +450,10 @@ class Completer(object):
                  builtins.__xonsh_env__.get('BASH_COMPLETIONS', ()))
         for path in paths:
             if path.is_file():
-                sources.append('source ' + str(path))
+                sources.append('source "{}"'.format(path.as_posix()))
             elif path.is_dir():
                 for _file in (x for x in path.glob('*') if x.is_file()):
-                    sources.append('source ' + str(_file))
+                    sources.append('source "{}"'.format(_file.as_posix))
         return sources
 
     def _load_bash_complete_funcs(self):
@@ -486,6 +486,8 @@ class Completer(object):
         func_files = {}
         for line in out.splitlines():
             parts = line.split()
+            if ON_WINDOWS:
+                parts = [parts[0], ' '.join(parts[2:])]
             func_files[parts[0]] = parts[-1]
         self.bash_complete_files = {
             cmd: func_files[func]
@@ -495,8 +497,8 @@ class Completer(object):
 
     def _source_completions(self, source):
         return subprocess.check_output(
-            ['bash'], input='\n'.join(source), universal_newlines=True,
-            env=builtins.__xonsh_env__.detype(), stderr=subprocess.DEVNULL)
+                ['bash'], input='\n'.join(source), universal_newlines=True,
+                env=builtins.__xonsh_env__.detype(), stderr=subprocess.DEVNULL)
 
     def attr_complete(self, prefix, ctx):
         """Complete attributes of an object."""
