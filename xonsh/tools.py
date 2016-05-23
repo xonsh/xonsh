@@ -1074,8 +1074,14 @@ class CommandsCache(Set):
             return self._cmds_cache
         allcmds = set()
         for path in paths:
-            allcmds |= set(x for x in os.listdir(path)
-                           if os.path.isfile(x) and os.access(x, os.X_OK))
-            allcmds |= set(builtins.aliases)
+            this_one = set()
+            for i in os.listdir(path):
+                name  = os.path.join(path, i)
+                if (os.path.exists(name) and
+                        os.access(name, os.X_OK) and
+                        (not os.path.isdir(name))):
+                    this_one.add(i)
+            allcmds |= this_one
+        allcmds |= set(builtins.aliases)
         self._cmds_cache = frozenset(allcmds)
         return self._cmds_cache
