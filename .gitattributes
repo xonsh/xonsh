@@ -21,6 +21,9 @@ LICENSE text
 Makefile text
 README text
 
+# Files in the lazyjson format require LF line endings
+tests/histories/*.json text eol=lf
+
 # Binary files
 *.ico binary
 *.gif binary
