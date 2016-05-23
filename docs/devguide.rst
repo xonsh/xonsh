@@ -75,6 +75,27 @@ If you want to lint the entire code base run::
 How to Test
 ================
 
+----------------------------------
+Docker
+----------------------------------
+
+If you want to run your "work in progress version" without installing 
+and in a fresh environment you can use Docker. If Docker is installed
+you just have to run this::
+
+  $ python docker.py
+
+This will build and run the current state of the repository in an isolated
+container (it may take a while the first time you run it). There are two
+additionals arguments you can pass this script.
+
+* The version of python
+* the version of ``prompt_toolkit``
+
+Example::
+
+  $ python docker.py 3.4 0.57
+
 Ensure your cwd is the root directory of the project (i.e., the one containing the
 .git directory).
 
