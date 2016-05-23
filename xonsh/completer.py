@@ -193,7 +193,7 @@ class Completer(object):
         elif cmd in self.bash_complete_funcs:
             # bash completions
             rtn = self.bash_complete(prefix, line, begidx, endidx)
-            #rtn |= self.path_complete(prefix, path_str_start, path_str_end)
+            rtn |= self.path_complete(prefix, path_str_start, path_str_end)
             return sorted(self._filter_repeats(rtn)), lprefix
         elif prefix.startswith('${') or prefix.startswith('@('):
             # python mode explicitly
