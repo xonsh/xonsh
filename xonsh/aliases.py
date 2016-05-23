@@ -514,6 +514,7 @@ def make_default_aliases():
             default_aliases[alias] = ['cmd', '/c', alias]
         default_aliases['call'] = ['source-cmd']
         default_aliases['source-bat'] = ['source-cmd']
+        default_aliases['clear'] = 'cls'
         # Add aliases specific to the Anaconda python distribution.
         if ON_ANACONDA:
             def source_cmd_keep_prompt(args, stdin=None):
