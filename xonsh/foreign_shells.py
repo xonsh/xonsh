@@ -12,6 +12,7 @@ from tempfile import NamedTemporaryFile
 from collections import MutableMapping, Mapping, Sequence
 
 from xonsh.tools import to_bool, ensure_string
+from xonsh.platform import ON_WINDOWS
 
 
 COMMAND = """
@@ -30,7 +31,7 @@ echo __XONSH_FUNCS_END__
 {seterrpostcmd}
 """.strip()
 
-DEFAULT_BASH_FUNCSCMD = """
+DEFAULT_BASH_FUNCSCMD = r"""
 # get function names from declare
 declstr=$(declare -F)
 read -r -a decls <<< $declstr
@@ -56,7 +57,7 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
   locfile=${line#*"$sep"}
   loc=${locfile%%"$sep"*}
   file=${locfile#*"$sep"}
-  namefile="${namefile}\\"${name}\\":\\"${file//\\/\\\\}\\","
+  namefile="${namefile}\"${name}\":\"${file//\\/\\\\}\","
 done <<< "$namelocfilestr"
 if [[ "{" == "${namefile}" ]]; then
   namefile="${namefile}}"
@@ -316,6 +317,8 @@ def parse_funcs(s, shell, sourcer=None):
     if m is None:
         return {}
     g1 = m.group(1)
+    if ON_WINDOWS:
+        g1 = g1.replace(os.sep, os.altsep)
     try:
         namefiles = json.loads(g1.strip())
     except json.decoder.JSONDecodeError as exc:
