@@ -204,6 +204,10 @@ _redir_names = ('out', 'all', 'err', 'e', '2', 'a', '&', '1', 'o')
 _e2o_map = ('err>out', 'err>&1', '2>out', 'err>o', 'err>1', 'e>out', 'e>&1',
             '2>&1', 'e>o', '2>o', 'e>1', '2>1')
 IORedirect = group(group(*_e2o_map), '{}>>?'.format(group(*_redir_names)))
+_redir_check = set(_e2o_map)
+_redir_check = {'{}>'.format(i) for i in _redir_names}.union(_redir_check)
+_redir_check = {'{}>>'.format(i) for i in _redir_names}.union(_redir_check)
+_redir_check = frozenset(_redir_check)
 Operator = group(r"\*\*=?", r">>=?", r"<<=?", r"!=", r"//=?", r"->",
                  r"@\$\(?", r'\|\|', '&&', r'@\(', r'!\(', r'!\[', r'\$\(',
                  r'\$\[', '\${', r'\?\?', r'\?', AUGASSIGN_OPS, r"~")
@@ -633,7 +637,7 @@ def _tokenize(readline, encoding):
                     continue
                 token, initial = line[start:end], line[start]
 
-                if re.match(IORedirect, token):
+                if token in _redir_check:
                     yield TokenInfo(IOREDIRECT, token, spos, epos, line)
                 elif (initial in numchars or                  # ordinary number
                     (initial == '.' and token != '.' and token != '...')):
