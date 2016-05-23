@@ -35,7 +35,6 @@ _op_map = {
     '~': 'TILDE', '^': 'XOR', '<<': 'LSHIFT', '>>': 'RSHIFT',
     '<': 'LT', '<=': 'LE', '>': 'GT', '>=': 'GE', '==': 'EQ',
     '!=': 'NE', '->': 'RARROW',
-    '&&': 'AND', '||': 'OR',
     # assignment operators
     '=': 'EQUALS', '+=': 'PLUSEQUAL', '-=': 'MINUSEQUAL',
     '*=': 'TIMESEQUAL', '@=': 'ATEQUAL', '/=': 'DIVEQUAL', '%=': 'MODEQUAL',
@@ -170,6 +169,14 @@ def handle_ignore(state, token):
     yield from []
 
 
+def handle_double_amps(state, token):
+    yield _new_token('AND', 'and', token.start)
+
+
+def handle_double_pipe(state, token):
+    yield _new_token('OR', 'or', token.start)
+
+
 special_handlers = {
     tokenize.NL: handle_ignore,
     tokenize.COMMENT: handle_ignore,
@@ -180,6 +187,8 @@ special_handlers = {
     (tokenize.OP, ')'): handle_rparen,
     (tokenize.OP, '}'): handle_rbrace,
     (tokenize.OP, ']'): handle_rbracket,
+    (tokenize.OP, '&&'): handle_double_amps,
+    (tokenize.OP, '||'): handle_double_pipe,
     (tokenize.ERRORTOKEN, ' '): handle_error_space,
 }
 """
@@ -189,7 +198,7 @@ functions may manipulate the Lexer's state.
 """
 
 _make_matcher_handler('(', 'LPAREN', True, ')')
-_make_matcher_handler('[', 'LBRACKET', False, ']')
+_make_matcher_handler('[', 'LBRACKET', True, ']')
 _make_matcher_handler('{', 'LBRACE', True, '}')
 _make_matcher_handler('$(', 'DOLLAR_LPAREN', False, ')')
 _make_matcher_handler('$[', 'DOLLAR_LBRACKET', False, ']')
@@ -325,22 +334,15 @@ class Lexer(object):
     #
     tokens = tuple(token_map.values()) + (
         'NAME',                  # name tokens
-        'NUMBER',                # numbers
         'WS',                    # whitespace in subprocess mode
-        'AMPERSAND',             # &
-        'REGEXPATH',             # regex escaped with backticks
-        'IOREDIRECT',            # subprocess io redirection token
         'LPAREN', 'RPAREN',      # ( )
         'LBRACKET', 'RBRACKET',  # [ ]
         'LBRACE', 'RBRACE',      # { }
-        'AT',                    # @
         'AT_LPAREN',             # @(
-        'DOLLAR_NAME',           # $NAME
         'BANG_LPAREN',           # !(
         'BANG_LBRACKET',         # ![
         'DOLLAR_LPAREN',         # $(
         'DOLLAR_LBRACE',         # ${
         'DOLLAR_LBRACKET',       # $[
-        'ATDOLLAR',              # @$
         'ATDOLLAR_LPAREN',       # @$(
     ) + tuple(i.upper() for i in kwlist)

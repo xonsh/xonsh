@@ -35,7 +35,7 @@ blank_re = re.compile(br'^[ \t\f]*(?:[#\r\n]|$)', re.ASCII)
 import token
 __all__ = token.__all__ + ["COMMENT", "tokenize", "detect_encoding",
                            "NL", "untokenize", "ENCODING", "TokenInfo",
-                           "TokenError", 'REGEXPATH', 'ATDOLLAR', 'ATEQUAL', '_tokenize']
+                           "TokenError", 'REGEXPATH', 'ATDOLLAR', 'ATEQUAL']
 del token
 
 PY35 = PYTHON_VERSION_INFO >= (3, 5, 0)
@@ -200,9 +200,9 @@ RegexPath = r"`[^\n`\\]*(?:\\.[^\n`\\]*)*`"
 # Because of leftmost-then-longest match semantics, be sure to put the
 # longest operators first (e.g., if = came before ==, == would get
 # recognized as two instances of =).
-_redir_names = ('out', 'all', 'err', 'e', '2', 'a', '&', '1', 'o', '')
-_e2o_map = ('err>&1', '2>out', 'err>o', 'err>1', 'e>out', 'e>&1', '2>&1',
-            'e>o', '2>o', 'e>1', '2>1')
+_redir_names = ('out', 'all', 'err', 'e', '2', 'a', '&', '1', 'o')
+_e2o_map = ('err>out', 'err>&1', '2>out', 'err>o', 'err>1', 'e>out', 'e>&1',
+            '2>&1', 'e>o', '2>o', 'e>1', '2>1')
 IORedirect = group(group(*_e2o_map), '{}>>?'.format(group(*_redir_names)))
 Operator = group(r"\*\*=?", r">>=?", r"<<=?", r"!=", r"//=?", r"->",
                  r"@\$\(?", r'\|\|', '&&', r'@\(', r'!\(', r'!\[', r'\$\(',
