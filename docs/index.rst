@@ -44,6 +44,7 @@ the xonsh shell
         "It is pronounced <i>コンチ</i>",
         "It is pronounced <i>コンッチ</i>",
         "It is pronounced <i>コンシュ</i>",
+        "The carcolh will catch you!",
         ];
     document.write(taglines[Math.floor(Math.random() * taglines.length)]);
     </script>
