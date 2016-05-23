@@ -105,11 +105,13 @@ def test_swap():
     assert 'VAR3' not in env
 
 def check_load_static_config(s, exp, loaded):
-    env = {'XONSH_SHOW_TRACEBACK': False}
-    with tempfile.NamedTemporaryFile() as f, mock_xonsh_env(env):
+    env = Env({'XONSH_SHOW_TRACEBACK': False})
+    f = tempfile.NamedTemporaryFile(delete=False)
+    with mock_xonsh_env(env):
         f.write(s)
-        f.flush()
+        f.close()
         conf = load_static_config(env, f.name)
+    os.unlink(f.name)
     assert_equal(exp, conf)
     assert_equal(env['LOADED_CONFIG'], loaded)
 
