@@ -190,7 +190,7 @@ class StoreNonEmpty(Input):
     """
 
     def __init__(self, prompt='>>> ', converter=None, show_conversion=False,
-                 confirm=False, retry=False, path=None):
+                 confirm=False, retry=False, path=None, store_raw=False):
         def nonempty_converter(x):
             """Converts non-empty values and converts empty inputs to
             Unstorable.
@@ -199,6 +199,8 @@ class StoreNonEmpty(Input):
                 x = Unstorable
             elif converter is None:
                 pass
+            elif store_raw:
+                converter(x)  # make sure str is valid, even if storing raw
             else:
                 x = converter(x)
             return x
