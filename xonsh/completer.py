@@ -453,7 +453,7 @@ class Completer(object):
                 sources.append('source "{}"'.format(path.as_posix()))
             elif path.is_dir():
                 for _file in (x for x in path.glob('*') if x.is_file()):
-                    sources.append('source "{}"'.format(_file.as_posix))
+                    sources.append('source "{}"'.format(_file.as_posix()))
         return sources
 
     def _load_bash_complete_funcs(self):
