@@ -1,11 +1,14 @@
 """Tokenization help for xonsh programs.
 
-This file is a modified version of tokenize.py form the Python 3.4 standard
-library (licensed under the Python Software Foundation License, version 2),
-which provides tokenization help for Python programs.
+This file is a modified version of tokenize.py form the Python 3.4 and 3.5
+standard libraries (licensed under the Python Software Foundation License,
+version 2), which provides tokenization help for Python programs.
 
-It is modified to properly tokenize xonsh's backtick operator and to support
-the @$ operator.
+It is modified to properly tokenize xonsh code, including backtick regex
+path and several xonsh-specific operators.
+
+A few pieces of this file are specific to the version of Python being used.
+To find these pieces, search the PY35.
 
 Original file credits:
    __author__ = 'Ka-Ping Yee <ping@lfw.org>'
@@ -14,6 +17,7 @@ Original file credits:
                   'Michael Foord')
 """
 
+from builtins import open as _builtin_open
 from codecs import lookup, BOM_UTF8
 import collections
 from io import TextIOWrapper
@@ -22,14 +26,26 @@ import re
 import sys
 from token import *
 
+from xonsh.platform import PYTHON_VERSION_INFO
+
+
 cookie_re = re.compile(r'^[ \t\f]*#.*coding[:=][ \t]*([-\w.]+)', re.ASCII)
 blank_re = re.compile(br'^[ \t\f]*(?:[#\r\n]|$)', re.ASCII)
 
 import token
 __all__ = token.__all__ + ["COMMENT", "tokenize", "detect_encoding",
                            "NL", "untokenize", "ENCODING", "TokenInfo",
-                           "REGEXPATH", "ATDOLLAR", "TokenError"]
+                           "TokenError", 'REGEXPATH', 'ATDOLLAR', 'ATEQUAL', '_tokenize']
 del token
+
+PY35 = PYTHON_VERSION_INFO >= (3, 5, 0)
+if PY35:
+    AUGASSIGN_OPS = r"[+\-*/%&@|^=<>]=?"
+    ADDSPACE_TOKS = (NAME, NUMBER, ASYNC, AWAIT)
+else:                 
+    AUGASSIGN_OPS = r"[+\-*/%&|^=<>]=?"
+    ADDSPACE_TOKS = (NAME, NUMBER)
+    
 
 COMMENT = N_TOKENS
 tok_name[COMMENT] = 'COMMENT'
@@ -39,10 +55,13 @@ ENCODING = N_TOKENS + 2
 tok_name[ENCODING] = 'ENCODING'
 N_TOKENS += 3
 REGEXPATH = N_TOKENS
-tok_name[REGEXPATH] = 'REGEXPATH'
+tok_name[N_TOKENS] = 'REGEXPATH'
 N_TOKENS += 1
 ATDOLLAR = N_TOKENS
-tok_name[ATDOLLAR] = 'ATDOLLAR'
+tok_name[N_TOKENS] = 'ATDOLLAR'
+N_TOKENS += 1
+ATEQUAL = N_TOKENS
+tok_name[N_TOKENS] = 'ATEQUAL'
 N_TOKENS += 1
 EXACT_TOKEN_TYPES = {
     '(':   LPAR,
@@ -88,6 +107,7 @@ EXACT_TOKEN_TYPES = {
     '//':  DOUBLESLASH,
     '//=': DOUBLESLASHEQUAL,
     '@':   AT,
+    '@=':  ATEQUAL,
     '@$':  ATDOLLAR,
 }
 
@@ -149,9 +169,9 @@ RegexPath = r"`[^\n`\\]*(?:\\.[^\n`\\]*)*`"
 # longest operators first (e.g., if = came before ==, == would get
 # recognized as two instances of =).
 Operator = group(r"\*\*=?", r">>=?", r"<<=?", r"!=",
-                 r"//=?", r"->",
-                 r"[+\-*/%&|^=<>]=?",
-                 r"~", r"@\$")
+                 r"//=?", r"->", r"@\$",
+                 AUGASSIGN_OPS,
+                 r"~")
 
 Bracket = '[][(){}]'
 Special = group(r'\r?\n', r'\.\.\.', r'[:;.,@]')
@@ -186,7 +206,6 @@ endpats = {"'": Single, '"': Double,
            "rB'''": Single3, 'rB"""': Double3,
            "RB'''": Single3, 'RB"""': Double3,
            "u'''": Single3, 'u"""': Double3,
-           "R'''": Single3, 'R"""': Double3,
            "U'''": Single3, 'U"""': Double3,
            'r': None, 'R': None, 'b': None, 'B': None,
            'u': None, 'U': None}
@@ -244,6 +263,8 @@ class Untokenizer:
 
     def untokenize(self, iterable):
         it = iter(iterable)
+        indents = []
+        startline = False
         for t in it:
             if len(t) == 2:
                 self.compat(t, it)
@@ -254,6 +275,21 @@ class Untokenizer:
                 continue
             if tok_type == ENDMARKER:
                 break
+            if tok_type == INDENT:
+                indents.append(token)
+                continue
+            elif tok_type == DEDENT:
+                indents.pop()
+                self.prev_row, self.prev_col = end
+                continue
+            elif tok_type in (NEWLINE, NL):
+                startline = True
+            elif startline and indents:
+                indent = indents[-1]
+                if start[1] >= len(indent):
+                    self.tokens.append(indent)
+                    self.prev_col = len(indent)
+                startline = False
             self.add_whitespace(start)
             self.tokens.append(token)
             self.prev_row, self.prev_col = end
@@ -274,7 +310,7 @@ class Untokenizer:
                 self.encoding = tokval
                 continue
 
-            if toknum in (NAME, NUMBER):
+            if toknum in ADDSPACE_TOKS:
                 tokval += ' '
 
             # Insert a space between two consecutive strings
@@ -430,46 +466,20 @@ def detect_encoding(readline):
     return default, [first, second]
 
 
-_builtin_open = open
-
 def open(filename):
     """Open a file in read only mode using the encoding detected by
     detect_encoding().
     """
     buffer = _builtin_open(filename, 'rb')
-    encoding, lines = detect_encoding(buffer.readline)
-    buffer.seek(0)
-    text = TextIOWrapper(buffer, encoding, line_buffering=True)
-    text.mode = 'r'
-    return text
-
-
-def tokenize(readline):
-    """
-    The tokenize() generator requires one argment, readline, which
-    must be a callable object which provides the same interface as the
-    readline() method of built-in file objects.  Each call to the function
-    should return one line of input as bytes.  Alternately, readline
-    can be a callable function terminating with StopIteration:
-        readline = open(myfile, 'rb').__next__  # Example of alternate readline
-
-    The generator produces 5-tuples with these members: the token type; the
-    token string; a 2-tuple (srow, scol) of ints specifying the row and
-    column where the token begins in the source; a 2-tuple (erow, ecol) of
-    ints specifying the row and column where the token ends in the source;
-    and the line on which the token was found.  The line passed is the
-    logical line; continuation lines are included.
-
-    The first token sequence will always be an ENCODING token
-    which tells you which encoding was used to decode the bytes stream.
-    """
-    # This import is here to avoid problems when the itertools module is not
-    # built yet and tokenize is imported.
-    from itertools import chain, repeat
-    encoding, consumed = detect_encoding(readline)
-    rl_gen = iter(readline, b"")
-    empty = repeat(b"")
-    return _tokenize(chain(consumed, rl_gen, empty).__next__, encoding)
+    try:
+        encoding, lines = detect_encoding(buffer.readline)
+        buffer.seek(0)
+        text = TextIOWrapper(buffer, encoding, line_buffering=True)
+        text.mode = 'r'
+        return text
+    except:
+        buffer.close()
+        raise
 
 
 def _tokenize(readline, encoding):
@@ -478,6 +488,12 @@ def _tokenize(readline, encoding):
     contstr, needcont = '', 0
     contline = None
     indents = [0]
+
+    # 'stashed' and 'async_*' are used for async/await parsing
+    stashed = None
+    async_def = False
+    async_def_indent = 0
+    async_def_nl = False
 
     if encoding is not None:
         if encoding == "utf-8-sig":
@@ -554,7 +570,18 @@ def _tokenize(readline, encoding):
                         "unindent does not match any outer indentation level",
                         ("<tokenize>", lnum, pos, line))
                 indents = indents[:-1]
+
+                if async_def and async_def_indent >= indents[-1]:
+                    async_def = False
+                    async_def_nl = False
+                    async_def_indent = 0
+
                 yield TokenInfo(DEDENT, '', (lnum, pos), (lnum, pos), line)
+
+            if async_def and async_def_nl and async_def_indent >= indents[-1]:
+                async_def = False
+                async_def_nl = False
+                async_def_indent = 0
 
         else:                                  # continued statement
             if not line:
@@ -574,13 +601,24 @@ def _tokenize(readline, encoding):
                     (initial == '.' and token != '.' and token != '...')):
                     yield TokenInfo(NUMBER, token, spos, epos, line)
                 elif initial in '\r\n':
-                    yield TokenInfo(NL if parenlev > 0 else NEWLINE,
-                           token, spos, epos, line)
+                    if stashed:
+                        yield stashed
+                        stashed = None
+                    if parenlev > 0:
+                        yield TokenInfo(NL, token, spos, epos, line)
+                    else:
+                        yield TokenInfo(NEWLINE, token, spos, epos, line)
+                        if async_def:
+                            async_def_nl = True
+
                 elif initial == '#':
                     assert not token.endswith("\n")
+                    if stashed:
+                        yield stashed
+                        stashed = None
                     yield TokenInfo(COMMENT, token, spos, epos, line)
+                # Xonsh-specific Regex Globbing
                 elif initial == '`':
-                    # Xonsh-specific Regex Globbing
                     yield TokenInfo(REGEXPATH, token, spos, epos, line)
                 elif token in triple_quoted:
                     endprog = _compile(endpats[token])
@@ -608,7 +646,36 @@ def _tokenize(readline, encoding):
                     else:                                  # ordinary string
                         yield TokenInfo(STRING, token, spos, epos, line)
                 elif initial.isidentifier():               # ordinary name
-                    yield TokenInfo(NAME, token, spos, epos, line)
+                    if token in ('async', 'await'):
+                        if async_def:
+                            yield TokenInfo(
+                                ASYNC if token == 'async' else AWAIT,
+                                token, spos, epos, line)
+                            continue
+
+                    tok = TokenInfo(NAME, token, spos, epos, line)
+                    if token == 'async' and not stashed:
+                        stashed = tok
+                        continue
+
+                    if token == 'def':
+                        if (stashed
+                                and stashed.type == NAME
+                                and stashed.string == 'async'):
+
+                            async_def = True
+                            async_def_indent = indents[-1]
+
+                            yield TokenInfo(ASYNC, stashed.string,
+                                            stashed.start, stashed.end,
+                                            stashed.line)
+                            stashed = None
+
+                    if stashed:
+                        yield stashed
+                        stashed = None
+
+                    yield tok
                 elif initial == '\\':                      # continued stmt
                     continued = 1
                 else:
@@ -616,15 +683,50 @@ def _tokenize(readline, encoding):
                         parenlev += 1
                     elif initial in ')]}':
                         parenlev -= 1
+                    if stashed:
+                        yield stashed
+                        stashed = None
                     yield TokenInfo(OP, token, spos, epos, line)
             else:
                 yield TokenInfo(ERRORTOKEN, line[pos],
                            (lnum, pos), (lnum, pos+1), line)
                 pos += 1
 
+    if stashed:
+        yield stashed
+        stashed = None
+
     for indent in indents[1:]:                 # pop remaining indent levels
         yield TokenInfo(DEDENT, '', (lnum, 0), (lnum, 0), '')
     yield TokenInfo(ENDMARKER, '', (lnum, 0), (lnum, 0), '')
+
+
+def tokenize(readline):
+    """
+    The tokenize() generator requires one argment, readline, which
+    must be a callable object which provides the same interface as the
+    readline() method of built-in file objects.  Each call to the function
+    should return one line of input as bytes.  Alternately, readline
+    can be a callable function terminating with StopIteration:
+        readline = open(myfile, 'rb').__next__  # Example of alternate readline
+
+    The generator produces 5-tuples with these members: the token type; the
+    token string; a 2-tuple (srow, scol) of ints specifying the row and
+    column where the token begins in the source; a 2-tuple (erow, ecol) of
+    ints specifying the row and column where the token ends in the source;
+    and the line on which the token was found.  The line passed is the
+    logical line; continuation lines are included.
+
+    The first token sequence will always be an ENCODING token
+    which tells you which encoding was used to decode the bytes stream.
+    """
+    # This import is here to avoid problems when the itertools module is not
+    # built yet and tokenize is imported.
+    from itertools import chain, repeat
+    encoding, consumed = detect_encoding(readline)
+    rl_gen = iter(readline, b"")
+    empty = repeat(b"")
+    return _tokenize(chain(consumed, rl_gen, empty).__next__, encoding)
 
 
 # An undocumented, backwards compatible, API for all the places in the standard
@@ -691,6 +793,3 @@ def main():
     except Exception as err:
         perror("unexpected error: %s" % err)
         raise
-
-if __name__ == "__main__":
-    main()
