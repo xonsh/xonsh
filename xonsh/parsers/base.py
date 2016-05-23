@@ -2285,8 +2285,6 @@ class BaseParser(object):
                             | FALSE
                             | NUMBER
                             | STRING
-                            | QUESTION
-                            | COMMA
         """
         # Many tokens cannot be part of this list, such as $, ', ", ()
         # Use a string atom instead.
