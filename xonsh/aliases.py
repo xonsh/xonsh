@@ -349,7 +349,7 @@ def which(args, stdin=None, stdout=None, stderr=None):
     parser = ArgumentParser('which', description=desc)
     parser.add_argument('args', type=str, nargs='+',
                         help='The executables or aliases to search for')
-    parser.add_argument('-a', action='store_true', dest='all',
+    parser.add_argument('-a','--all', action='store_true', dest='all',
                         help='Show all matches in $PATH and xonsh.aliases')
     parser.add_argument('-s', '--skip-alias', action='store_true',
                         help='Do not search in xonsh.aliases', dest='skip')
@@ -514,6 +514,7 @@ def make_default_aliases():
             default_aliases[alias] = ['cmd', '/c', alias]
         default_aliases['call'] = ['source-cmd']
         default_aliases['source-bat'] = ['source-cmd']
+        default_aliases['clear'] = 'cls'
         # Add aliases specific to the Anaconda python distribution.
         if ON_ANACONDA:
             def source_cmd_keep_prompt(args, stdin=None):
