@@ -42,21 +42,34 @@ _op_map = {
     '**=': 'POWEQUAL', '<<=': 'LSHIFTEQUAL', '>>=': 'RSHIFTEQUAL',
     '&=': 'AMPERSANDEQUAL', '^=': 'XOREQUAL', '|=': 'PIPEEQUAL',
     '//=': 'DOUBLEDIVEQUAL',
+    # extra xonsh operators
+    '?': 'QUESTION', '??': 'DOUBLE_QUESTION', '@$': 'ATDOLLAR', '!': 'BANG',
+    '&': 'AMPERSAND',
 }
 for (op, type) in _op_map.items():
     token_map[(tokenize.OP, op)] = type
 
 token_map[tokenize.STRING] = 'STRING'
+token_map[tokenize.DOLLARNAME] = 'DOLLAR_NAME'
+token_map[tokenize.NUMBER] = 'NUMBER'
 token_map[tokenize.REGEXPATH] = 'REGEXPATH'
 token_map[tokenize.NEWLINE] = 'NEWLINE'
 token_map[tokenize.INDENT] = 'INDENT'
+token_map[tokenize.DEDENT] = 'IOREDIRECT'
 token_map[tokenize.DEDENT] = 'DEDENT'
 if PYTHON_VERSION_INFO >= (3, 5, 0):
     token_map[tokenize.ASYNC] = 'ASYNC'
     token_map[tokenize.AWAIT] = 'AWAIT'
 
-_REDIRECT_NAMES = frozenset({'out', 'err', 'all', 'o', 'e', 'a'})
-
+def _make_matcher_handler(tok, typ, pymode, ender):
+    matcher = (')' if tok.endswith('(') else
+               '}' if tok.endswith('{') else
+               ']' if tok.endswith('[') else None)
+    def _inner_handler(state, token):
+        state['pymode'].append((pymode, tok, matcher, token.start))
+        state['last'] = token
+        yield _new_token(typ, tok, token.start)
+    special_handlers[(tokenize.OP, tok)] = _inner_handler
 
 def handle_name(state, token):
     """
@@ -69,292 +82,12 @@ def handle_name(state, token):
             typ = token.string.upper()
         yield _new_token(typ, token.string, token.start)
     else:
-        # subprocess mode
-        n = next(state['stream'], None)
-        string = token.string
-        if (n is not None and n.string in {'<', '>', '>>'} and
-                n.start == token.end and token.string in _REDIRECT_NAMES):
-            # looks like a redirect to me!
-            e = n.end
-            string += n.string
-            n2 = next(state['stream'], None)
-            if n2 is not None and n2.string == '&' and n2.start == n.end:
-                string += n2.string
-                e = n2.end
-                n2 = next(state['stream'], None)
-            if n2 is not None:
-                if (n2.start == e and
-                        (n2.type == tokenize.NUMBER or
-                            (n2.type == tokenize.NAME and
-                             n2.string in _REDIRECT_NAMES))):
-                    string += n2.string
-                    state['last'] = n2
-                    yield _new_token('IOREDIRECT', string, token.start)
-                else:
-                    state['last'] = n
-                    yield _new_token('IOREDIRECT', string, token.start)
-                    yield from handle_token(state, n2)
-            else:
-                state['last'] = n
-                yield _new_token('IOREDIRECT', string, token.start)
-        elif token.string == 'and':
+        if token.string == 'and':
             yield _new_token('AND', token.string, token.start)
-            if n is not None:
-                yield from handle_token(state, n)
         elif token.string == 'or':
             yield _new_token('OR', token.string, token.start)
-            if n is not None:
-                yield from handle_token(state, n)
         else:
             yield _new_token('NAME', token.string, token.start)
-            if n is not None:
-                yield from handle_token(state, n)
-
-
-def _make_special_handler(token_type, extra_check=lambda x: True):
-    def inner_handler(state, token):
-        state['last'] = token
-        if state['pymode'][-1][0]:
-            yield _new_token(token_type, token.string, token.start)
-        else:
-            # subprocess mode
-            n = next(state['stream'], None)
-            string = token.string
-            if (n is not None and
-                    n.string in {'<', '>', '>>'} and
-                    n.start == token.end):
-                e = n.end
-                string += n.string
-                n2 = next(state['stream'], None)
-                if n2 is not None and n2.string == '&' and n2.start == n.end:
-                    state['last'] = n2
-                    string += n2.string
-                    e = n2.end
-                    n2 = next(state['stream'], None)
-                if n2 is not None:
-                    if (n2.start == e and
-                            (n2.type == tokenize.NUMBER or
-                                (n2.type == tokenize.NAME and
-                                 n2.string in _REDIRECT_NAMES))):
-                        string += n2.string
-                        state['last'] = n2
-                        yield _new_token('IOREDIRECT', string, token.start)
-                    else:
-                        state['last'] = n
-                        yield _new_token('IOREDIRECT', string, token.start)
-                        yield from handle_token(state, n2)
-                else:
-                    state['last'] = n
-                    yield _new_token('IOREDIRECT', string, token.start)
-            else:
-                yield _new_token(token_type, token.string, token.start)
-                if n is not None:
-                    yield from handle_token(state, n)
-    return inner_handler
-
-
-handle_number = _make_special_handler('NUMBER')
-"""Function for handling number tokens"""
-
-
-def handle_ampersands(state, token):
-    """Function for generating PLY tokens for single and double ampersands."""
-    state['last'] = token
-    n = next(state['stream'], None)
-    if n is not None and n.type == tokenize.OP and \
-            n.string == '&' and n.start == token.end:
-        state['last'] = n
-        yield _new_token('AND', 'and', token.start)
-    elif state['pymode'][-1][0]:
-        yield _new_token("AMPERSAND", token.string, token.start)
-        if n is not None:
-            yield from handle_token(state, n)
-    else:
-        # subprocess mode
-        string = token.string
-        if (n is not None and
-                n.string in {'<', '>', '>>'} and
-                n.start == token.end):
-            e = n.end
-            string += n.string
-            n2 = next(state['stream'], None)
-            if n2 is not None and n2.string == '&' and n2.start == n.end:
-                state['last'] = n2
-                string += n2.string
-                e = n2.end
-                n2 = next(state['stream'], None)
-            if n2 is not None:
-                if (n2.start == e and
-                        (n2.type == tokenize.NUMBER or
-                            (n2.type == tokenize.NAME and
-                             n2.string in _REDIRECT_NAMES))):
-                    string += n2.string
-                    state['last'] = n2
-                    yield _new_token('IOREDIRECT', string, token.start)
-                else:
-                    state['last'] = n
-                    yield _new_token('IOREDIRECT', string, token.start)
-                    yield from handle_token(state, n2)
-            else:
-                state['last'] = n
-                yield _new_token('IOREDIRECT', string, token.start)
-        else:
-            yield _new_token("AMPERSAND", token.string, token.start)
-            if n is not None:
-                yield from handle_token(state, n)
-
-
-def handle_pipes(state, token):
-    """Function for generating PLY tokens for single and double pipes."""
-    n = next(state['stream'], None)
-    if n is not None and n.type == tokenize.OP and \
-            n.string == '|' and n.start == token.end:
-        state['last'] = n
-        yield _new_token('OR', 'or', token.start)
-    else:
-        state['last'] = token
-        yield _new_token('PIPE', token.string, token.start)
-        if n is not None:
-            yield from handle_token(state, n)
-
-
-def handle_dollar(state, token):
-    """
-    Function for generating PLY tokens associated with ``$``.
-    """
-    n = next(state['stream'], None)
-
-    if n is None:
-        m = "missing token after $"
-        yield _new_token("ERRORTOKEN", m, token.start)
-    elif n.start != token.end:
-        m = "unexpected whitespace after $"
-        yield _new_token("ERRORTOKEN", m, token.start)
-    elif n.type == tokenize.NAME:
-        state['last'] = n
-        yield _new_token('DOLLAR_NAME', '$' + n.string, token.start)
-    elif n.type == tokenize.OP and n.string == '(':
-        state['pymode'].append((False, '$(', ')', token.start))
-        state['last'] = n
-        yield _new_token('DOLLAR_LPAREN', '$(', token.start)
-    elif n.type == tokenize.OP and n.string == '[':
-        state['pymode'].append((False, '$[', ']', token.start))
-        state['last'] = n
-        yield _new_token('DOLLAR_LBRACKET', '$[', token.start)
-    elif n.type == tokenize.OP and n.string == '{':
-        state['pymode'].append((True, '${', '}', token.start))
-        state['last'] = n
-        yield _new_token('DOLLAR_LBRACE', '${', token.start)
-    else:
-        e = 'expected NAME, (, [, or {{ after $, but got {0}'
-        m = e.format(n)
-        yield _new_token("ERRORTOKEN", m, token.start)
-
-
-def handle_atdollar(state, token):
-    """
-    Function for generating PLY tokens associated with ``@$``.
-    """
-    n = next(state['stream'], None)
-
-    if n is None:
-        state['last'] = token
-        m = "missing token after @$"
-        yield _new_token("ERRORTOKEN", m, token.start)
-    elif n.type == tokenize.OP and n.string == '(' and \
-            n.start == token.end:
-        state['pymode'].append((False, '@$(', ')', token.start))
-        state['last'] = n
-        yield _new_token('ATDOLLAR_LPAREN', '@$(', token.start)
-    else:
-        state['last'] = token
-        yield _new_token('ATDOLLAR', '@$', token.start)
-        yield from handle_token(state, n)
-
-
-def handle_at(state, token):
-    """
-    Function for generating PLY tokens associated with ``@``.
-    """
-    n = next(state['stream'], None)
-
-    if n is None:
-        state['last'] = token
-        m = "missing token after @"
-        yield _new_token("ERRORTOKEN", m, token.start)
-    elif n.type == tokenize.OP and n.string == '(' and \
-            n.start == token.end:
-        state['pymode'].append((True, '@(', ')', token.start))
-        state['last'] = n
-        yield _new_token('AT_LPAREN', '@(', token.start)
-    else:
-        state['last'] = token
-        yield _new_token('AT', '@', token.start)
-        yield from handle_token(state, n)
-
-
-def handle_question(state, token):
-    """
-    Function for generating PLY tokens for help and superhelp
-    """
-    n = next(state['stream'], None)
-
-    if n is not None and n.type == tokenize.ERRORTOKEN and \
-            n.string == '?' and n.start == token.end:
-        state['last'] = n
-        yield _new_token('DOUBLE_QUESTION', '??', token.start)
-    else:
-        state['last'] = token
-        yield _new_token('QUESTION', '?', token.start)
-        if n is not None:
-            yield from handle_token(state, n)
-
-
-def handle_bang(state, token):
-    """
-    Function for generating PLY tokens starting with !
-    """
-    n = next(state['stream'], None)
-    if (n is not None and n.type == tokenize.OP and
-            n.string == '(' and n.start == token.end):
-        state['pymode'].append((False, '!(', ')', token.start))
-        state['last'] = n
-        yield _new_token('BANG_LPAREN', '!(', token.start)
-    elif (n is not None and n.type == tokenize.OP and
-            n.string == '[' and n.start == token.end):
-        state['pymode'].append((False, '![', ']', token.start))
-        state['last'] = n
-        yield _new_token('BANG_LBRACKET', '![', token.start)
-    else:
-        e = 'unexpected single token: !'
-        yield _new_token("ERRORTOKEN", e, token.start)
-
-
-def handle_lparen(state, token):
-    """
-    Function for handling ``(``
-    """
-    state['pymode'].append((True, '(', ')', token.start))
-    state['last'] = token
-    yield _new_token('LPAREN', '(', token.start)
-
-
-def handle_lbrace(state, token):
-    """
-    Function for handling ``{``
-    """
-    state['pymode'].append((True, '{', '}', token.start))
-    state['last'] = token
-    yield _new_token('LBRACE', '{', token.start)
-
-
-def handle_lbracket(state, token):
-    """
-    Function for handling ``[``
-    """
-    state['pymode'].append((True, '[', ']', token.start))
-    state['last'] = token
-    yield _new_token('LBRACKET', '[', token.start)
 
 
 def _end_delimiter(state, token):
@@ -442,23 +175,10 @@ special_handlers = {
     tokenize.ENCODING: handle_ignore,
     tokenize.ENDMARKER: handle_ignore,
     tokenize.NAME: handle_name,
-    tokenize.NUMBER: handle_number,
     tokenize.ERRORTOKEN: handle_error_token,
-    (tokenize.OP, '|'): handle_pipes,
-    (tokenize.OP, '||'): handle_pipes,
-    (tokenize.OP, '&'): handle_ampersands,
-    (tokenize.OP, '&&'): handle_ampersands,
-    (tokenize.OP, '@'): handle_at,
-    (tokenize.OP, '('): handle_lparen,
     (tokenize.OP, ')'): handle_rparen,
-    (tokenize.OP, '{'): handle_lbrace,
     (tokenize.OP, '}'): handle_rbrace,
-    (tokenize.OP, '['): handle_lbracket,
     (tokenize.OP, ']'): handle_rbracket,
-    (tokenize.OP, '@$'): handle_atdollar,
-    (tokenize.ERRORTOKEN, '$'): handle_dollar,
-    (tokenize.ERRORTOKEN, '?'): handle_question,
-    (tokenize.ERRORTOKEN, '!'): handle_bang,
     (tokenize.ERRORTOKEN, ' '): handle_error_space,
 }
 """
@@ -466,6 +186,17 @@ Mapping from ``tokenize`` tokens (or token types) to the proper function for
 generating PLY tokens from them.  In addition to yielding PLY tokens, these
 functions may manipulate the Lexer's state.
 """
+
+_make_matcher_handler('(', 'LPAREN', True, ')')
+_make_matcher_handler('[', 'LBRACKET', False, ']')
+_make_matcher_handler('{', 'LBRACE', True, '}')
+_make_matcher_handler('$(', 'DOLLAR_LPAREN', False, ')')
+_make_matcher_handler('$[', 'DOLLAR_LBRACKET', False, ']')
+_make_matcher_handler('${', 'DOLLAR_LBRACE', True, '}')
+_make_matcher_handler('!(', 'BANG_LPAREN', False, ')')
+_make_matcher_handler('![', 'BANG_LBRACKET', False, ']')
+_make_matcher_handler('@(', 'AT_LPAREN', True, ')')
+_make_matcher_handler('@$(', 'ATDOLLAR_LPAREN', False, ')')
 
 
 def handle_token(state, token):
@@ -602,8 +333,6 @@ class Lexer(object):
         'LBRACKET', 'RBRACKET',  # [ ]
         'LBRACE', 'RBRACE',      # { }
         'AT',                    # @
-        'QUESTION',              # ?
-        'DOUBLE_QUESTION',       # ??
         'AT_LPAREN',             # @(
         'DOLLAR_NAME',           # $NAME
         'BANG_LPAREN',           # !(

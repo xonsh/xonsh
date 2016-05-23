@@ -57,12 +57,49 @@ N_TOKENS += 3
 REGEXPATH = N_TOKENS
 tok_name[N_TOKENS] = 'REGEXPATH'
 N_TOKENS += 1
+DOLLARNAME = N_TOKENS
+tok_name[N_TOKENS] = 'DOLLARNAME'
+N_TOKENS += 1
 ATDOLLAR = N_TOKENS
 tok_name[N_TOKENS] = 'ATDOLLAR'
 N_TOKENS += 1
 ATEQUAL = N_TOKENS
 tok_name[N_TOKENS] = 'ATEQUAL'
 N_TOKENS += 1
+_xonsh_tokens = {
+    '?':   'QUESTION',
+    '@=':  'ATEQUAL',
+    '@$':  'ATDOLLAR',
+    '||':  'DOUBLEPIPE',
+    '&&':  'DOUBLEAMPER',
+    '@(':  'ATLPAREN',
+    '!(':  'BANGLPAREN',
+    '![':  'BANGLBRACKET',
+    '$(':  'DOLLARLPAREN',
+    '$[':  'DOLLARLBRACKET',
+    '${':  'DOLLARLBRACE',
+    '??':  'DOUBLEQUESTION',
+    '@$(': 'ATDOLLARLPAREN',
+}
+
+additional_parenlevs = frozenset({'@(', '!(', '![', '$(', '$[', '${', '@$('})
+
+_redir_names = {'e', 'err', '2', '', 'o', 'out', '1', 'a', 'all', '&'}
+_e2o_map = {'e>o', 'e>out', 'err>o', 'err>o', '2>1', 'e>1', 'err>1', '2>out',
+            '2>o', 'err>&1', 'e>&1', '2>&1'}
+for i in _redir_names:
+    _xonsh_tokens['{}>'.format(i)] = 'IOREDIRECT'
+    _xonsh_tokens['{}>>'.format(i)] = 'IOREDIRECT'
+for i in _e2o_map:
+    _xonsh_tokens[i] = 'IOREDIRECT'
+
+for k, v in _xonsh_tokens.items():
+    exec('%s = N_TOKENS' % v)
+    tok_name[N_TOKENS] = v
+    N_TOKENS += 1
+    __all__.append(v)
+    
+
 EXACT_TOKEN_TYPES = {
     '(':   LPAR,
     ')':   RPAR,
@@ -107,9 +144,10 @@ EXACT_TOKEN_TYPES = {
     '//':  DOUBLESLASH,
     '//=': DOUBLESLASHEQUAL,
     '@':   AT,
-    '@=':  ATEQUAL,
-    '@$':  ATDOLLAR,
 }
+
+EXACT_TOKEN_TYPES.update(_xonsh_tokens)
+
 
 class TokenInfo(collections.namedtuple('TokenInfo', 'type string start end line')):
     def __repr__(self):
@@ -133,7 +171,7 @@ def maybe(*choices): return group(*choices) + '?'
 Whitespace = r'[ \f\t]*'
 Comment = r'#[^\r\n]*'
 Ignore = Whitespace + any(r'\\\r?\n' + Whitespace) + maybe(Comment)
-Name = r'\w+'
+Name = r'\$?\w+'
 
 Hexnumber = r'0[xX][0-9a-fA-F]+'
 Binnumber = r'0[bB][01]+'
@@ -168,10 +206,10 @@ RegexPath = r"`[^\n`\\]*(?:\\.[^\n`\\]*)*`"
 # Because of leftmost-then-longest match semantics, be sure to put the
 # longest operators first (e.g., if = came before ==, == would get
 # recognized as two instances of =).
-Operator = group(r"\*\*=?", r">>=?", r"<<=?", r"!=",
-                 r"//=?", r"->", r"@\$",
-                 AUGASSIGN_OPS,
-                 r"~")
+Operator = group(r"\*\*=?", r">>=?", r"<<=?", r"!=", r"//=?", r"->",
+                 r"@\$\(?", r'\|\|', '&&', r'@\(', r'!\(', r'!\[', r'\$\(',
+                 r'\$\[', '\${', '{}>>?'.format(group(*_redir_names)),
+                 group(*_e2o_map), r'\?\?', r'\?', AUGASSIGN_OPS, r"~")
 
 Bracket = '[][(){}]'
 Special = group(r'\r?\n', r'\.\.\.', r'[:;.,@]')
@@ -645,6 +683,8 @@ def _tokenize(readline, encoding):
                         break
                     else:                                  # ordinary string
                         yield TokenInfo(STRING, token, spos, epos, line)
+                elif token.startswith('$') and token[1:].isidentifier():
+                    yield TokenInfo(DOLLARNAME, token, spos, epos, line)
                 elif initial.isidentifier():               # ordinary name
                     if token in ('async', 'await'):
                         if async_def:
@@ -683,6 +723,8 @@ def _tokenize(readline, encoding):
                         parenlev += 1
                     elif initial in ')]}':
                         parenlev -= 1
+                    elif token in additional_parenlevs: 
+                        parenlev += 1
                     if stashed:
                         yield stashed
                         stashed = None
