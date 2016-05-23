@@ -210,9 +210,9 @@ Operator = group(r"\*\*=?", r">>=?", r"<<=?", r"!=", r"//=?", r"->",
 
 Bracket = '[][(){}]'
 Special = group(r'\r?\n', r'\.\.\.', r'[:;.,@]')
-Funny = group(Operator, Bracket, Special, IORedirect)
+Funny = group(Operator, Bracket, Special)
 
-PlainToken = group(Number, Funny, String, Name, RegexPath)
+PlainToken = group(IORedirect, Number, Funny, String, Name, RegexPath)
 Token = Ignore + PlainToken
 
 # First (or only) line of ' or " string.
@@ -221,7 +221,8 @@ ContStr = group(StringPrefix + r"'[^\n'\\]*(?:\\.[^\n'\\]*)*" +
                 StringPrefix + r'"[^\n"\\]*(?:\\.[^\n"\\]*)*' +
                 group('"', r'\\\r?\n'))
 PseudoExtras = group(r'\\\r?\n|\Z', Comment, Triple, RegexPath)
-PseudoToken = Whitespace + group(PseudoExtras, Number, Funny, ContStr, Name)
+PseudoToken = Whitespace + group(PseudoExtras, IORedirect, Number, Funny,
+                                 ContStr, Name)
 
 def _compile(expr):
     return re.compile(expr, re.UNICODE)

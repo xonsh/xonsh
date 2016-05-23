@@ -399,7 +399,6 @@ def run_subproc(cmds, captured=False):
 
     Lastly, the captured argument affects only the last real command.
     """
-    print(cmds)
     global ENV
     background = False
     procinfo = {}
