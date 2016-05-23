@@ -15,12 +15,14 @@ Current Developments
 
 **Deprecated:** None
 
-**Removed:** 
+**Removed:**
 * Special cased code for handling version of prompt_toolkit < v1.0.0
 
 **Fixed:**
 
 * Numerous improvements to job control via a nearly-complete rewrite
+* Rectified install issue with Jupyter hook when installing with pyenv,
+  Jupyter install hook now repects ``--prefix`` argument.
 * Fixed a parsing bug whereby a trailing ``&`` on a line was being ignored
   (processes were unable to be started in the background)
 
