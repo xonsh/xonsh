@@ -11,7 +11,7 @@ from nose.tools import (assert_equal, assert_true, assert_not_in,
 
 from xonsh.environ import Env, format_prompt, load_static_config
 
-from tests.tools import mock_xonsh_env
+from tools import mock_xonsh_env
 
 def test_env_normal():
     env = Env(VAR='wakka')

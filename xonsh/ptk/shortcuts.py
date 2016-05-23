@@ -1,12 +1,15 @@
 """A prompt-toolkit inspired shortcut collection."""
+import builtins
+import textwrap
+
 from prompt_toolkit.interface import CommandLineInterface
+from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.utils import DummyContext
 from prompt_toolkit.shortcuts import (create_prompt_application,
     create_eventloop, create_asyncio_eventloop, create_output)
 
-from xonsh.shell import prompt_toolkit_version_info
+from xonsh.platform import ptk_version_info
 
-import builtins
 
 class Prompter(object):
 
@@ -22,7 +25,7 @@ class Prompter(object):
             will be created when the prompt() method is called.
         """
         self.cli = cli
-        self.major_minor = prompt_toolkit_version_info()[:2]
+        self.major_minor = ptk_version_info()[:2]
 
     def __enter__(self):
         self.reset()
@@ -66,20 +69,11 @@ class Prompter(object):
 
         # Create CommandLineInterface.
         if self.cli is None:
-            if self.major_minor < (0, 57):
-                kwargs.pop('reserve_space_for_menu', None)
-            if self.major_minor <= (0, 57):
-                kwargs.pop('get_rprompt_tokens', None)
-                kwargs.pop('get_continuation_tokens', None)
-            # VI_Mode handling changed in prompt_toolkit v1.0
-            if self.major_minor >= (1, 0):
-                from prompt_toolkit.enums import EditingMode
-                if builtins.__xonsh_env__.get('VI_MODE'):
-                    editing_mode = EditingMode.VI
-                else:
-                    editing_mode = EditingMode.EMACS
-
-                kwargs['editing_mode'] = editing_mode
+            if builtins.__xonsh_env__.get('VI_MODE'):
+                editing_mode = EditingMode.VI
+            else:
+                editing_mode = EditingMode.EMACS
+            kwargs['editing_mode'] = editing_mode
             cli = CommandLineInterface(
                 application=create_prompt_application(message, **kwargs),
                 eventloop=eventloop,
@@ -95,7 +89,7 @@ class Prompter(object):
         if return_asyncio_coroutine:
             # Create an asyncio coroutine and call it.
             exec_context = {'patch_context': patch_context, 'cli': cli}
-            exec_(textwrap.dedent('''
+            exec(textwrap.dedent('''
             import asyncio
             @asyncio.coroutine
             def prompt_coro():
@@ -122,78 +116,3 @@ class Prompter(object):
     def reset(self):
         """Resets the prompt and cli to a pristine state on this object."""
         self.cli = None
-
-
-try:
-    from prompt_toolkit.shortcuts import print_tokens
-except ImportError:
-    import os
-    import sys
-    from prompt_toolkit.renderer import print_tokens as renderer_print_tokens
-    from prompt_toolkit.filters import to_simple_filter
-    from prompt_toolkit.utils import is_conemu_ansi, is_windows
-    if is_windows():
-        from prompt_toolkit.terminal.win32_output import Win32Output
-        from prompt_toolkit.terminal.conemu_output import ConEmuOutput
-    else:
-        from prompt_toolkit.terminal.vt100_output import Vt100_Output
-    from pygments.style import Style
-    from prompt_toolkit.styles import Style
-    from six import PY2
-
-    def create_output(stdout=None, true_color=False):
-        """
-        Return an :class:`~prompt_toolkit.output.Output` instance for the command
-        line.
-        :param true_color: When True, use 24bit colors instead of 256 colors.
-            (`bool` or :class:`~prompt_toolkit.filters.SimpleFilter`.)
-
-        Notes
-        -----
-        This method was forked from the mainline prompt-toolkit repo.
-        Copyright (c) 2014, Jonathan Slenders, All rights reserved.
-        This is deprecated and slated for removal after a prompt-toolkit
-        v0.57+ release.
-        """
-        stdout = stdout or sys.__stdout__
-        true_color = to_simple_filter(true_color)
-
-        if is_windows():
-            if is_conemu_ansi():
-                return ConEmuOutput(stdout)
-            else:
-                return Win32Output(stdout)
-        else:
-            term = os.environ.get('TERM', '')
-            if PY2:
-                term = term.decode('utf-8')
-
-            return Vt100_Output.from_pty(stdout, true_color=true_color)#, term=term)
-
-    def print_tokens(tokens, style=None, true_color=False):
-        """
-        Print a list of (Token, text) tuples in the given style to the output.
-        E.g.::
-            style = PygmentsStyle.from_defaults(style_dict={
-                Token.Hello: '#ff0066',
-                Token.World: '#884444 italic',
-            })
-            tokens = [
-                (Token.Hello, 'Hello'),
-                (Token.World, 'World'),
-            ]
-            print_tokens(tokens, style=style)
-        :param tokens: List of ``(Token, text)`` tuples.
-        :param style: :class:`.Style` instance for the color scheme.
-        :param true_color: When True, use 24bit colors instead of 256 colors.
-
-        Notes
-        -----
-        This method was forked from the mainline prompt-toolkit repo.
-        Copyright (c) 2014, Jonathan Slenders, All rights reserved.
-        This is deprecated and slated for removal after a prompt-toolkit
-        v0.57+ release.
-        """
-        assert isinstance(style, Style)
-        output = create_output(true_color=true_color)
-        renderer_print_tokens(output, tokens, style)

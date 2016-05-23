@@ -190,7 +190,7 @@ class StoreNonEmpty(Input):
     """
 
     def __init__(self, prompt='>>> ', converter=None, show_conversion=False,
-                 confirm=False, retry=False, path=None):
+                 confirm=False, retry=False, path=None, store_raw=False):
         def nonempty_converter(x):
             """Converts non-empty values and converts empty inputs to
             Unstorable.
@@ -199,6 +199,8 @@ class StoreNonEmpty(Input):
                 x = Unstorable
             elif converter is None:
                 pass
+            elif store_raw:
+                converter(x)  # make sure str is valid, even if storing raw
             else:
                 x = converter(x)
             return x
@@ -212,9 +214,9 @@ class StateFile(Input):
     given file name. This node type is likely not useful on its own.
     """
 
-    attrs = ('default_file', 'check')
+    attrs = ('default_file', 'check', 'ask_filename')
 
-    def __init__(self, default_file=None, check=True):
+    def __init__(self, default_file=None, check=True, ask_filename=True):
         """
         Parameters
         ----------
@@ -224,10 +226,14 @@ class StateFile(Input):
             Whether to print the current state and ask if it should be
             saved/loaded prior to asking for the file name and saving the
             file, default=True.
+        ask_filename : bool, optional
+            Whether to ask for the filename (if ``False``, always use the
+            default filename)
         """
         self._df = None
         super().__init__(prompt='filename: ', converter=None,
                          confirm=False, path=None)
+        self.ask_filename = ask_filename
         self.default_file = default_file
         self.check = check
 
@@ -384,8 +390,8 @@ class PrettyFormatter(Visitor):
         return s
 
     def visit_statefile(self, node):
-        s = '{0}(default_file={1!r}, check={2})'
-        s = s.format(node.__class__.__name__, node.default_file, node.check)
+        s = '{0}(default_file={1!r}, check={2}, ask_filename={3})'
+        s = s.format(node.__class__.__name__, node.default_file, node.check, node.ask_filename)
         return s
 
     def visit_while(self, node):
@@ -553,6 +559,8 @@ class PromptVisitor(StateVisitor):
             if callable(node.converter):
                 try:
                     x = node.converter(raw)
+                except KeyboardInterrupt:
+                    raise
                 except Exception:
                     if node.retry:
                         msg = ('{{BOLD_RED}}Invalid{{NO_COLOR}} input {0!r}, '
@@ -565,6 +573,8 @@ class PromptVisitor(StateVisitor):
                                         and str(x) != raw:
                     msg = '{{BOLD_PURPLE}}Converted{{NO_COLOR}} input {0!r} to {1!r}.'
                     print_color(msg.format(raw, x))
+            else:
+                x = raw
             if node.confirm:
                 msg = 'Would you like to keep the input: {0}'
                 print(msg.format(pformat(x)))
@@ -604,7 +614,9 @@ class PromptVisitor(StateVisitor):
             do_save = self.visit(asker)
             if not do_save:
                 return Unstorable
-        fname = self.visit_input(node)
+        fname = None
+        if node.ask_filename:
+            fname = self.visit_input(node)
         if fname is None or len(fname) == 0:
             fname = node.default_file
         if os.path.isfile(fname):

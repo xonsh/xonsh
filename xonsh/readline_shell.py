@@ -12,9 +12,10 @@ from xonsh import lazyjson
 from xonsh.base_shell import BaseShell
 from xonsh.ansi_colors import partial_color_format, color_style_names, color_style
 from xonsh.environ import partial_format_prompt, multiline_prompt
-from xonsh.tools import ON_WINDOWS, print_exception, HAVE_PYGMENTS
+from xonsh.tools import print_exception
+from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 
-if HAVE_PYGMENTS:
+if HAS_PYGMENTS:
     from xonsh import pyghooks
     import pygments
     from pygments.formatters.terminal256 import Terminal256Formatter
@@ -156,6 +157,7 @@ class ReadlineShell(BaseShell, Cmd):
         setup_readline()
         self._current_indent = ''
         self._current_prompt = ''
+        self._force_hide = None
         self.cmdqueue = deque()
 
     def __del__(self):
@@ -344,8 +346,9 @@ class ReadlineShell(BaseShell, Cmd):
             p = partial_format_prompt(p)
         except Exception:  # pylint: disable=broad-except
             print_exception()
+        hide = True if self._force_hide is None else self._force_hide
         p = partial_color_format(p, style=env.get('XONSH_COLOR_STYLE'),
-                                 hide=True)
+                                 hide=hide)
         self._current_prompt = p
         self.settitle()
         return p
@@ -354,6 +357,7 @@ class ReadlineShell(BaseShell, Cmd):
         """Readline implementation of color formatting. This usesg ANSI color
         codes.
         """
+        hide = hide if self._force_hide is None else self._force_hide
         return partial_color_format(string, hide=hide,
                     style=builtins.__xonsh_env__.get('XONSH_COLOR_STYLE'))
 

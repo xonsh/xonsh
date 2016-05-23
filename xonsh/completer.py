@@ -1,21 +1,21 @@
 # -*- coding: utf-8 -*-
 """A (tab-)completer for xonsh."""
-import os
-import re
 import ast
-import sys
-import shlex
+import builtins
+import inspect
+import importlib
+import os
 from pathlib import Path
 import pickle
-import inspect
-import builtins
-import importlib
+import re
+import shlex
 import subprocess
+import sys
 
 from xonsh.built_ins import iglobpath, expand_path
+from xonsh.platform import ON_WINDOWS
 from xonsh.tools import (subexpr_from_unbalanced, get_sep,
                          check_for_partial_string, RE_STRING_START)
-from xonsh.tools import ON_WINDOWS
 
 
 RE_DASHF = re.compile(r'-F\s+(\w+)')
@@ -73,7 +73,7 @@ if ON_WINDOWS:
 
 COMPLETION_SKIP_TOKENS = {'man', 'sudo', 'time', 'timeit', 'which'}
 
-BASH_COMPLETE_SCRIPT = """source {filename}
+BASH_COMPLETE_SCRIPT = """source "{filename}"
 COMP_WORDS=({line})
 COMP_LINE={comp_line}
 COMP_POINT=${{#COMP_LINE}}
@@ -326,7 +326,7 @@ class Completer(object):
         env = builtins.__xonsh_env__
         csc = env.get('CASE_SENSITIVE_COMPLETIONS')
         for cdp in env.get('CDPATH'):
-            test_glob = os.path.join(cdp, prefix) + '*'
+            test_glob = os.path.join(builtins.__xonsh_expand_path__(cdp), prefix) + '*'
             for s in iglobpath(test_glob, ignore_case=(not csc)):
                 if os.path.isdir(s):
                     paths.add(os.path.basename(s))
@@ -378,11 +378,13 @@ class Completer(object):
                 _tail = space
             else:
                 _tail = ''
+            if start != '' and 'r' not in start and backslash in s:
+                start = 'r%s' % start
             s = s + _tail
             if end != '':
                 if "r" not in start.lower():
                     s = s.replace(backslash, double_backslash)
-                elif s.endswith(backslash):
+                if s.endswith(backslash) and not s.endswith(double_backslash):
                     s += backslash
             if end in s:
                 s = s.replace(end, ''.join('\\%s' % i for i in end))
@@ -445,13 +447,13 @@ class Completer(object):
     def _collect_completions_sources():
         sources = []
         paths = (Path(x) for x in
-                 builtins.__xonsh_env__.get('BASH_COMPLETIONS'))
+                 builtins.__xonsh_env__.get('BASH_COMPLETIONS', ()))
         for path in paths:
             if path.is_file():
-                sources.append('source ' + str(path))
+                sources.append('source "{}"'.format(path.as_posix()))
             elif path.is_dir():
                 for _file in (x for x in path.glob('*') if x.is_file()):
-                    sources.append('source ' + str(_file))
+                    sources.append('source "{}"'.format(_file.as_posix()))
         return sources
 
     def _load_bash_complete_funcs(self):
@@ -484,6 +486,8 @@ class Completer(object):
         func_files = {}
         for line in out.splitlines():
             parts = line.split()
+            if ON_WINDOWS:
+                parts = [parts[0], ' '.join(parts[2:])]
             func_files[parts[0]] = parts[-1]
         self.bash_complete_files = {
             cmd: func_files[func]
@@ -493,8 +497,8 @@ class Completer(object):
 
     def _source_completions(self, source):
         return subprocess.check_output(
-            ['bash'], input='\n'.join(source), universal_newlines=True,
-            env=builtins.__xonsh_env__.detype(), stderr=subprocess.DEVNULL)
+                ['bash'], input='\n'.join(source), universal_newlines=True,
+                env=builtins.__xonsh_env__.detype(), stderr=subprocess.DEVNULL)
 
     def attr_complete(self, prefix, ctx):
         """Complete attributes of an object."""

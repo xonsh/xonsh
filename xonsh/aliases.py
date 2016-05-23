@@ -1,28 +1,25 @@
 # -*- coding: utf-8 -*-
 """Aliases for the xonsh shell."""
 
+from argparse import ArgumentParser, Action
+import builtins
+from collections.abc import MutableMapping, Iterable, Sequence
 import os
 import shlex
-import builtins
-import sys
-import subprocess
-from functools import lru_cache
-from argparse import ArgumentParser, Action
-from collections.abc import MutableMapping, Iterable, Sequence
 
 from xonsh.dirstack import cd, pushd, popd, dirs, _get_cwd
-from xonsh.jobs import jobs, fg, bg, kill_all_jobs
-from xonsh.proc import foreground
-from xonsh.timings import timeit_alias
-from xonsh.tools import (ON_MAC, ON_WINDOWS, ON_ANACONDA,
-    XonshError, to_bool, string_types)
-from xonsh.history import main as history_alias
-from xonsh.replay import main as replay_main
-from xonsh.xontribs import main as xontribs_main
 from xonsh.environ import locate_binary
 from xonsh.foreign_shells import foreign_shell_data
+from xonsh.jobs import jobs, fg, bg, kill_all_jobs
+from xonsh.history import main as history_alias
+from xonsh.platform import ON_ANACONDA, ON_DARWIN, ON_WINDOWS
+from xonsh.proc import foreground
+from xonsh.replay import main as replay_main
+from xonsh.timings import timeit_alias
+from xonsh.tools import (XonshError, argvquote, escape_windows_cmd_string,
+                         to_bool)
 from xonsh.vox import Vox
-from xonsh.tools import argvquote, escape_windows_cmd_string
+from xonsh.xontribs import main as xontribs_main
 from xonsh.xoreutils import _which
 
 
@@ -106,7 +103,7 @@ class Aliases(MutableMapping):
         return self._raw[key]
 
     def __setitem__(self, key, val):
-        if isinstance(val, string_types):
+        if isinstance(val, str):
             self._raw[key] = shlex.split(val)
         else:
             self._raw[key] = val
@@ -330,7 +327,6 @@ def bang_bang(args, stdin=None):
 
 class AWitchAWitch(Action):
     SUPPRESS = '==SUPPRESS=='
-
     def __init__(self, option_strings, version=None, dest=SUPPRESS,
                  default=SUPPRESS, **kwargs):
         super().__init__(option_strings=option_strings, dest=dest,
@@ -358,10 +354,17 @@ def which(args, stdin=None, stdout=None, stderr=None):
     parser.add_argument('-s', '--skip-alias', action='store_true',
                         help='Do not search in xonsh.aliases', dest='skip')
     parser.add_argument('-V', '--version', action='version',
-                        version='{}'.format(_which.__version__))
-    parser.add_argument('-v', '--verbose', action='store_true', dest='verbose')
+                        version='{}'.format(_which.__version__),
+                        help='Display the version of the python which module '
+                        'used by xonsh')
+    parser.add_argument('-v', '--verbose', action='store_true', dest='verbose',
+                        help='Print out how matches were located and show '
+                        'near misses on stderr')
     parser.add_argument('-p', '--plain', action='store_true', dest='plain',
-                        help='Do not display alias expansions')
+                        help='Do not display alias expansions or location of '
+                             'where binaries are found. This is the '
+                             'default behavior, but the option can be used to '
+                             'override the --verbose option')
     parser.add_argument('--very-small-rocks', action=AWitchAWitch)
     if ON_WINDOWS:
         parser.add_argument('-e', '--exts', nargs='*', type=str,
@@ -377,7 +380,10 @@ def which(args, stdin=None, stdout=None, stderr=None):
         parser.print_usage(file=stderr)
         return -1
     pargs = parser.parse_args(args)
-    
+
+    if pargs.all:
+        pargs.verbose = True
+
     if ON_WINDOWS:
         if pargs.exts:
             exts = pargs.exts
@@ -391,16 +397,19 @@ def which(args, stdin=None, stdout=None, stderr=None):
         nmatches = 0
         # skip alias check if user asks to skip
         if (arg in builtins.aliases and not pargs.skip):
-            if pargs.plain:
-                print(arg, file=stdout)
+            if pargs.plain or not pargs.verbose:
+                if isinstance(builtins.aliases[arg], list):
+                    print(' '.join(builtins.aliases[arg]), file=stdout)
+                else:
+                    print(arg, file=stdout)
             else:
-                print('{} -> {}'.format(arg, builtins.aliases[arg]), file=stdout)
+                print("aliases['{}'] = {}".format(arg, builtins.aliases[arg]), file=stdout)
             nmatches += 1
             if not pargs.all:
                 continue
-        for match in _which.whichgen(arg, path=builtins.__xonsh_env__['PATH'],
-                                     exts=exts, verbose=pargs.verbose):
-            abs_name, from_where = match if pargs.verbose else (match, '')
+        matches = _which.whichgen(arg, exts=exts, verbose=pargs.verbose,
+                                  path=builtins.__xonsh_env__['PATH'])
+        for abs_name, from_where in matches:
             if ON_WINDOWS:
                 # Use list dir to get correct case for the filename
                 # i.e. windows is case insesitive but case preserving
@@ -409,10 +418,12 @@ def which(args, stdin=None, stdout=None, stderr=None):
                 abs_name = os.path.join(p, f)
                 if builtins.__xonsh_env__.get('FORCE_POSIX_PATHS', False):
                     abs_name.replace(os.sep, os.altsep)
-            if pargs.verbose:
-                print('{} ({})'.format(abs_name, from_where), file=stdout)
-            else:
+            if pargs.plain or not pargs.verbose:
                 print(abs_name, file=stdout)
+            else:
+                if 'given path element' in from_where:
+                    from_where = from_where.replace('given path', '$PATH')
+                print('{} ({})'.format(abs_name, from_where), file=stdout)
             nmatches += 1
             if not pargs.all:
                 break
@@ -533,10 +544,9 @@ def make_default_aliases():
                     print(msg.format(cmd))
 
             default_aliases['sudo'] = sudo
-    elif ON_MAC:
+    elif ON_DARWIN:
         default_aliases['ls'] = ['ls', '-G']
     else:
         default_aliases['grep'] = ['grep', '--color=auto']
         default_aliases['ls'] = ['ls', '--color=auto', '-v']
     return default_aliases
-

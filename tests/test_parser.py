@@ -1619,6 +1619,18 @@ def test_ls_regex():
 def test_backtick():
     yield check_xonsh_ast, {}, 'print(`.*`)', False
 
+def test_ls_regex_octothorpe():
+    yield check_xonsh_ast, {}, '$(ls `#[Ff]+i*LE` -l)', False
+
+def test_injection():
+    yield check_xonsh_ast, {}, '$[@$(which python)]', False
+
+def test_rhs_nested_injection():
+    yield check_xonsh_ast, {}, '$[ls @$(dirname @$(which python))]', False
+
+def test_backtick_octothorpe():
+    yield check_xonsh_ast, {}, 'print(`#.*`)', False
+
 def test_uncaptured_sub():
     yield check_xonsh_ast, {}, '$[ls]', False
 

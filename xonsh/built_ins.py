@@ -4,43 +4,57 @@
 Note that this module is named 'built_ins' so as not to be confused with the
 special Python builtins module.
 """
+import atexit
+import builtins
+from collections import Sequence
+from contextlib import contextmanager
+import inspect
+from glob import iglob
 import os
 import re
-import sys
-import time
 import shlex
-import atexit
 import signal
-import inspect
-import builtins
-import tempfile
-from glob import glob, iglob
 from subprocess import Popen, PIPE, STDOUT, CalledProcessError
-from contextlib import contextmanager
-from collections import Sequence, Iterable
+import sys
+import tempfile
+import time
 
-from xonsh.tools import (
-    suggest_commands, XonshError, ON_POSIX, ON_WINDOWS, string_types,
-    expandvars, CommandsCache
-)
-from xonsh.inspectors import Inspector
+from xonsh.aliases import Aliases, make_default_aliases
 from xonsh.environ import Env, default_env, locate_binary
+from xonsh.foreign_shells import load_foreign_aliases
+from xonsh.history import History
+from xonsh.inspectors import Inspector
 from xonsh.jobs import add_job, wait_for_active_job
+from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
                         SimpleForegroundProcProxy, TeePTYProc,
                         CompletedCommand, HiddenCompletedCommand)
-from xonsh.aliases import Aliases, make_default_aliases
-from xonsh.history import History
-from xonsh.foreign_shells import load_foreign_aliases
+from xonsh.tools import (
+    suggest_commands, XonshError, expandvars, CommandsCache
+)
+
 
 ENV = None
 BUILTINS_LOADED = False
 INSPECTOR = Inspector()
 AT_EXIT_SIGNALS = (signal.SIGABRT, signal.SIGFPE, signal.SIGILL, signal.SIGSEGV,
                    signal.SIGTERM)
+
+SIGNAL_MESSAGES = {
+    signal.SIGABRT: 'Aborted',
+    signal.SIGFPE: 'Floating point exception',
+    signal.SIGILL: 'Illegal instructions',
+    signal.SIGTERM: 'Terminated',
+    signal.SIGSEGV: 'Segmentation fault'
+}
+
 if ON_POSIX:
     AT_EXIT_SIGNALS += (signal.SIGTSTP, signal.SIGQUIT, signal.SIGHUP)
-
+    SIGNAL_MESSAGES.update({
+        signal.SIGQUIT: 'Quit',
+        signal.SIGHUP: 'Hangup',
+        signal.SIGKILL: 'Killed'
+    })
 
 def resetting_signal_handle(sig, f):
     """Sets a new signal handle that will automatically restore the old value
@@ -401,7 +415,7 @@ def run_subproc(cmds, captured=False):
         procinfo['args'] = list(cmd)
         stdin = None
         stderr = None
-        if isinstance(cmd, string_types):
+        if isinstance(cmd, str):
             continue
         streams = {}
         while True:
@@ -599,6 +613,13 @@ def run_subproc(cmds, captured=False):
                 errout = errout.replace('\r\n', '\n')
                 procinfo['stderr'] = errout
 
+    if getattr(prev_proc, 'signal', None):
+        sig, core = prev_proc.signal
+        sig_str = SIGNAL_MESSAGES.get(sig)
+        if sig_str:
+            if core:
+                sig_str += ' (core dumped)'
+            print(sig_str, file=sys.stderr)
     if (not prev_is_proxy and
             hist.last_cmd_rtn is not None and
             hist.last_cmd_rtn > 0 and
@@ -628,6 +649,12 @@ def subproc_captured_stdout(*cmds):
     return run_subproc(cmds, captured='stdout')
 
 
+def subproc_captured_inject(*cmds):
+    """Runs a subprocess, capturing the output. Returns a list of
+    whitespace-separated strings in the stdout that was produced."""
+    return [i.strip() for i in run_subproc(cmds, captured='stdout').split()]
+
+
 def subproc_captured_object(*cmds):
     """
     Runs a subprocess, capturing the output. Returns an instance of
@@ -653,10 +680,10 @@ def subproc_uncaptured(*cmds):
 
 def ensure_list_of_strs(x):
     """Ensures that x is a list of strings."""
-    if isinstance(x, string_types):
+    if isinstance(x, str):
         rtn = [x]
     elif isinstance(x, Sequence):
-        rtn = [i if isinstance(i, string_types) else str(i) for i in x]
+        rtn = [i if isinstance(i, str) else str(i) for i in x]
     else:
         rtn = [str(x)]
     return rtn
@@ -686,13 +713,13 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
         builtins.__xonsh_pyquit__ = builtins.quit
         del builtins.quit
     builtins.__xonsh_subproc_captured_stdout__ = subproc_captured_stdout
+    builtins.__xonsh_subproc_captured_inject__ = subproc_captured_inject
     builtins.__xonsh_subproc_captured_object__ = subproc_captured_object
     builtins.__xonsh_subproc_captured_hiddenobject__ = subproc_captured_hiddenobject
     builtins.__xonsh_subproc_uncaptured__ = subproc_uncaptured
     builtins.__xonsh_execer__ = execer
     builtins.__xonsh_commands_cache__ = CommandsCache()
     builtins.__xonsh_all_jobs__ = {}
-    builtins.__xonsh_active_job__ = None
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     # public built-ins
     builtins.evalx = None if execer is None else execer.eval
@@ -745,6 +772,7 @@ def unload_builtins():
              '__xonsh_pyexit__',
              '__xonsh_pyquit__',
              '__xonsh_subproc_captured_stdout__',
+             '__xonsh_subproc_captured_inject__',
              '__xonsh_subproc_captured_object__',
              '__xonsh_subproc_captured_hiddenobject__',
              '__xonsh_subproc_uncaptured__',
@@ -755,7 +783,6 @@ def unload_builtins():
              'compilex',
              'default_aliases',
              '__xonsh_all_jobs__',
-             '__xonsh_active_job__',
              '__xonsh_ensure_list_of_strs__',
              '__xonsh_history__',
              ]

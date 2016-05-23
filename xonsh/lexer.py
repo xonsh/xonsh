@@ -3,7 +3,6 @@
 
 Written using a hybrid of ``tokenize`` and PLY.
 """
-import tokenize
 
 from io import BytesIO
 from keyword import kwlist
@@ -13,7 +12,8 @@ try:
 except ImportError:
     from xonsh.ply.lex import LexToken
 
-from xonsh.tools import VER_3_5, VER_MAJOR_MINOR
+from xonsh.platform import PYTHON_VERSION_INFO
+import xonsh.tokenize as tokenize
 
 token_map = {}
 """
@@ -47,17 +47,18 @@ for (op, type) in _op_map.items():
     token_map[(tokenize.OP, op)] = type
 
 token_map[tokenize.STRING] = 'STRING'
+token_map[tokenize.REGEXPATH] = 'REGEXPATH'
 token_map[tokenize.NEWLINE] = 'NEWLINE'
 token_map[tokenize.INDENT] = 'INDENT'
 token_map[tokenize.DEDENT] = 'DEDENT'
-if VER_3_5 <= VER_MAJOR_MINOR:
+if PYTHON_VERSION_INFO >= (3, 5, 0):
     token_map[tokenize.ASYNC] = 'ASYNC'
     token_map[tokenize.AWAIT] = 'AWAIT'
 
 _REDIRECT_NAMES = frozenset({'out', 'err', 'all', 'o', 'e', 'a'})
 
 
-def handle_name(state, token, stream):
+def handle_name(state, token):
     """
     Function for handling name tokens
     """
@@ -69,18 +70,18 @@ def handle_name(state, token, stream):
         yield _new_token(typ, token.string, token.start)
     else:
         # subprocess mode
-        n = next(stream, None)
+        n = next(state['stream'], None)
         string = token.string
         if (n is not None and n.string in {'<', '>', '>>'} and
                 n.start == token.end and token.string in _REDIRECT_NAMES):
             # looks like a redirect to me!
             e = n.end
             string += n.string
-            n2 = next(stream, None)
+            n2 = next(state['stream'], None)
             if n2 is not None and n2.string == '&' and n2.start == n.end:
                 string += n2.string
                 e = n2.end
-                n2 = next(stream, None)
+                n2 = next(state['stream'], None)
             if n2 is not None:
                 if (n2.start == e and
                         (n2.type == tokenize.NUMBER or
@@ -92,44 +93,44 @@ def handle_name(state, token, stream):
                 else:
                     state['last'] = n
                     yield _new_token('IOREDIRECT', string, token.start)
-                    yield from handle_token(state, n2, stream)
+                    yield from handle_token(state, n2)
             else:
                 state['last'] = n
                 yield _new_token('IOREDIRECT', string, token.start)
         elif token.string == 'and':
             yield _new_token('AND', token.string, token.start)
             if n is not None:
-                yield from handle_token(state, n, stream)
+                yield from handle_token(state, n)
         elif token.string == 'or':
             yield _new_token('OR', token.string, token.start)
             if n is not None:
-                yield from handle_token(state, n, stream)
+                yield from handle_token(state, n)
         else:
             yield _new_token('NAME', token.string, token.start)
             if n is not None:
-                yield from handle_token(state, n, stream)
+                yield from handle_token(state, n)
 
 
 def _make_special_handler(token_type, extra_check=lambda x: True):
-    def inner_handler(state, token, stream):
+    def inner_handler(state, token):
         state['last'] = token
         if state['pymode'][-1][0]:
             yield _new_token(token_type, token.string, token.start)
         else:
             # subprocess mode
-            n = next(stream, None)
+            n = next(state['stream'], None)
             string = token.string
             if (n is not None and
                     n.string in {'<', '>', '>>'} and
                     n.start == token.end):
                 e = n.end
                 string += n.string
-                n2 = next(stream, None)
+                n2 = next(state['stream'], None)
                 if n2 is not None and n2.string == '&' and n2.start == n.end:
                     state['last'] = n2
                     string += n2.string
                     e = n2.end
-                    n2 = next(stream, None)
+                    n2 = next(state['stream'], None)
                 if n2 is not None:
                     if (n2.start == e and
                             (n2.type == tokenize.NUMBER or
@@ -141,38 +142,71 @@ def _make_special_handler(token_type, extra_check=lambda x: True):
                     else:
                         state['last'] = n
                         yield _new_token('IOREDIRECT', string, token.start)
-                        yield from handle_token(state, n2, stream)
+                        yield from handle_token(state, n2)
                 else:
                     state['last'] = n
                     yield _new_token('IOREDIRECT', string, token.start)
             else:
                 yield _new_token(token_type, token.string, token.start)
                 if n is not None:
-                    yield from handle_token(state, n, stream)
+                    yield from handle_token(state, n)
     return inner_handler
 
 
 handle_number = _make_special_handler('NUMBER')
 """Function for handling number tokens"""
 
-def handle_ampersands(state, token, stream):
+
+def handle_ampersands(state, token):
     """Function for generating PLY tokens for single and double ampersands."""
-    n = next(stream, None)
+    state['last'] = token
+    n = next(state['stream'], None)
     if n is not None and n.type == tokenize.OP and \
             n.string == '&' and n.start == token.end:
         state['last'] = n
         yield _new_token('AND', 'and', token.start)
-    else:
-        state['last'] = token
-        if state['pymode'][-1][0]:
-            yield _new_token('AMPERSAND', token.string, token.start)
+    elif state['pymode'][-1][0]:
+        yield _new_token("AMPERSAND", token.string, token.start)
         if n is not None:
-            yield from handle_token(state, n, stream)
+            yield from handle_token(state, n)
+    else:
+        # subprocess mode
+        string = token.string
+        if (n is not None and
+                n.string in {'<', '>', '>>'} and
+                n.start == token.end):
+            e = n.end
+            string += n.string
+            n2 = next(state['stream'], None)
+            if n2 is not None and n2.string == '&' and n2.start == n.end:
+                state['last'] = n2
+                string += n2.string
+                e = n2.end
+                n2 = next(state['stream'], None)
+            if n2 is not None:
+                if (n2.start == e and
+                        (n2.type == tokenize.NUMBER or
+                            (n2.type == tokenize.NAME and
+                             n2.string in _REDIRECT_NAMES))):
+                    string += n2.string
+                    state['last'] = n2
+                    yield _new_token('IOREDIRECT', string, token.start)
+                else:
+                    state['last'] = n
+                    yield _new_token('IOREDIRECT', string, token.start)
+                    yield from handle_token(state, n2)
+            else:
+                state['last'] = n
+                yield _new_token('IOREDIRECT', string, token.start)
+        else:
+            yield _new_token("AMPERSAND", token.string, token.start)
+            if n is not None:
+                yield from handle_token(state, n)
 
 
-def handle_pipes(state, token, stream):
+def handle_pipes(state, token):
     """Function for generating PLY tokens for single and double pipes."""
-    n = next(stream, None)
+    n = next(state['stream'], None)
     if n is not None and n.type == tokenize.OP and \
             n.string == '|' and n.start == token.end:
         state['last'] = n
@@ -181,14 +215,14 @@ def handle_pipes(state, token, stream):
         state['last'] = token
         yield _new_token('PIPE', token.string, token.start)
         if n is not None:
-            yield from handle_token(state, n, stream)
+            yield from handle_token(state, n)
 
 
-def handle_dollar(state, token, stream):
+def handle_dollar(state, token):
     """
     Function for generating PLY tokens associated with ``$``.
     """
-    n = next(stream, None)
+    n = next(state['stream'], None)
 
     if n is None:
         m = "missing token after $"
@@ -217,11 +251,32 @@ def handle_dollar(state, token, stream):
         yield _new_token("ERRORTOKEN", m, token.start)
 
 
-def handle_at(state, token, stream):
+def handle_atdollar(state, token):
+    """
+    Function for generating PLY tokens associated with ``@$``.
+    """
+    n = next(state['stream'], None)
+
+    if n is None:
+        state['last'] = token
+        m = "missing token after @$"
+        yield _new_token("ERRORTOKEN", m, token.start)
+    elif n.type == tokenize.OP and n.string == '(' and \
+            n.start == token.end:
+        state['pymode'].append((False, '@$(', ')', token.start))
+        state['last'] = n
+        yield _new_token('ATDOLLAR_LPAREN', '@$(', token.start)
+    else:
+        state['last'] = token
+        yield _new_token('ATDOLLAR', '@$', token.start)
+        yield from handle_token(state, n)
+
+
+def handle_at(state, token):
     """
     Function for generating PLY tokens associated with ``@``.
     """
-    n = next(stream, None)
+    n = next(state['stream'], None)
 
     if n is None:
         state['last'] = token
@@ -235,14 +290,14 @@ def handle_at(state, token, stream):
     else:
         state['last'] = token
         yield _new_token('AT', '@', token.start)
-        yield from handle_token(state, n, stream)
+        yield from handle_token(state, n)
 
 
-def handle_question(state, token, stream):
+def handle_question(state, token):
     """
     Function for generating PLY tokens for help and superhelp
     """
-    n = next(stream, None)
+    n = next(state['stream'], None)
 
     if n is not None and n.type == tokenize.ERRORTOKEN and \
             n.string == '?' and n.start == token.end:
@@ -252,21 +307,21 @@ def handle_question(state, token, stream):
         state['last'] = token
         yield _new_token('QUESTION', '?', token.start)
         if n is not None:
-            yield from handle_token(state, n, stream)
+            yield from handle_token(state, n)
 
 
-def handle_bang(state, token, stream):
+def handle_bang(state, token):
     """
     Function for generating PLY tokens starting with !
     """
-    n = next(stream, None)
-    if (n is not None and n.type == tokenize.OP
-            and n.string == '(' and n.start == token.end):
+    n = next(state['stream'], None)
+    if (n is not None and n.type == tokenize.OP and
+            n.string == '(' and n.start == token.end):
         state['pymode'].append((False, '!(', ')', token.start))
         state['last'] = n
         yield _new_token('BANG_LPAREN', '!(', token.start)
-    elif (n is not None and n.type == tokenize.OP
-            and n.string == '[' and n.start == token.end):
+    elif (n is not None and n.type == tokenize.OP and
+            n.string == '[' and n.start == token.end):
         state['pymode'].append((False, '![', ']', token.start))
         state['last'] = n
         yield _new_token('BANG_LBRACKET', '![', token.start)
@@ -275,33 +330,7 @@ def handle_bang(state, token, stream):
         yield _new_token("ERRORTOKEN", e, token.start)
 
 
-def handle_backtick(state, token, stream):
-    """
-    Function for generating PLY tokens representing regex globs.
-    """
-    n = next(stream, None)
-
-    found_match = False
-    sofar = '`'
-    while n is not None:
-        sofar += n.string
-        if n.type == tokenize.ERRORTOKEN and n.string == '`':
-            found_match = True
-            break
-        elif n.type == tokenize.NEWLINE or n.type == tokenize.NL:
-            break
-        n = next(stream, None)
-    if found_match:
-        state['last'] = n
-        yield _new_token('REGEXPATH', sofar, token.start)
-    else:
-        state['last'] = token
-        e = "Could not find matching backtick for regex on line {0}"
-        m = e.format(token.start[0])
-        yield _new_token("ERRORTOKEN", m, token.start)
-
-
-def handle_lparen(state, token, stream):
+def handle_lparen(state, token):
     """
     Function for handling ``(``
     """
@@ -310,7 +339,7 @@ def handle_lparen(state, token, stream):
     yield _new_token('LPAREN', '(', token.start)
 
 
-def handle_lbrace(state, token, stream):
+def handle_lbrace(state, token):
     """
     Function for handling ``{``
     """
@@ -319,7 +348,7 @@ def handle_lbrace(state, token, stream):
     yield _new_token('LBRACE', '{', token.start)
 
 
-def handle_lbracket(state, token, stream):
+def handle_lbracket(state, token):
     """
     Function for handling ``[``
     """
@@ -341,7 +370,7 @@ def _end_delimiter(state, token):
         return 'Unmatched "{}" at line {}, column {}'.format(s, l, c)
 
 
-def handle_rparen(state, token, stream):
+def handle_rparen(state, token):
     """
     Function for handling ``)``
     """
@@ -353,7 +382,7 @@ def handle_rparen(state, token, stream):
         yield _new_token('ERRORTOKEN', e, token.start)
 
 
-def handle_rbrace(state, token, stream):
+def handle_rbrace(state, token):
     """
     Function for handling ``}``
     """
@@ -365,7 +394,7 @@ def handle_rbrace(state, token, stream):
         yield _new_token('ERRORTOKEN', e, token.start)
 
 
-def handle_rbracket(state, token, stream):
+def handle_rbracket(state, token):
     """
     Function for handling ``]``
     """
@@ -377,7 +406,7 @@ def handle_rbracket(state, token, stream):
         yield _new_token('ERRORTOKEN', e, token.start)
 
 
-def handle_error_space(state, token, stream):
+def handle_error_space(state, token):
     """
     Function for handling special whitespace characters in subprocess mode
     """
@@ -388,7 +417,7 @@ def handle_error_space(state, token, stream):
         yield from []
 
 
-def handle_error_token(state, token, stream):
+def handle_error_token(state, token):
     """
     Function for handling error tokens
     """
@@ -400,7 +429,7 @@ def handle_error_token(state, token, stream):
     yield _new_token(typ, token.string, token.start)
 
 
-def handle_ignore(state, token, stream):
+def handle_ignore(state, token):
     """
     Function for handling tokens that should be ignored
     """
@@ -426,8 +455,8 @@ special_handlers = {
     (tokenize.OP, '}'): handle_rbrace,
     (tokenize.OP, '['): handle_lbracket,
     (tokenize.OP, ']'): handle_rbracket,
+    (tokenize.OP, '@$'): handle_atdollar,
     (tokenize.ERRORTOKEN, '$'): handle_dollar,
-    (tokenize.ERRORTOKEN, '`'): handle_backtick,
     (tokenize.ERRORTOKEN, '?'): handle_question,
     (tokenize.ERRORTOKEN, '!'): handle_bang,
     (tokenize.ERRORTOKEN, ' '): handle_error_space,
@@ -439,7 +468,7 @@ functions may manipulate the Lexer's state.
 """
 
 
-def handle_token(state, token, stream):
+def handle_token(state, token):
     """
     General-purpose token handler.  Makes use of ``token_map`` or
     ``special_map`` to yield one or more PLY tokens from the given input.
@@ -450,11 +479,9 @@ def handle_token(state, token, stream):
     state :
         The current state of the lexer, including information about whether
         we are in Python mode or subprocess mode, which changes the lexer's
-        behavior
+        behavior.  Also includes the stream of tokens yet to be considered.
     token :
         The token (from ``tokenize``) currently under consideration
-    stream :
-        A generator from which more tokens can be grabbed if necessary
     """
     typ = token.type
     st = token.string
@@ -466,12 +493,12 @@ def handle_token(state, token, stream):
             if cur[0] == old[0] and cur[1] > old[1]:
                 yield _new_token('WS', token.line[old[1]:cur[1]], old)
     if (typ, st) in special_handlers:
-        yield from special_handlers[(typ, st)](state, token, stream)
+        yield from special_handlers[(typ, st)](state, token)
     elif (typ, st) in token_map:
         state['last'] = token
         yield _new_token(token_map[(typ, st)], st, token.start)
     elif typ in special_handlers:
-        yield from special_handlers[typ](state, token, stream)
+        yield from special_handlers[typ](state, token)
     elif typ in token_map:
         state['last'] = token
         yield _new_token(token_map[typ], st, token.start)
@@ -485,12 +512,13 @@ def get_tokens(s):
     Given a string containing xonsh code, generates a stream of relevant PLY
     tokens using ``handle_token``.
     """
-    tokstream = tokenize.tokenize(BytesIO(s.encode('utf-8')).readline)
-    state = {'indents': [0], 'pymode': [(True, '', '', (0, 0))], 'last': None}
+    state = {'indents': [0], 'last': None,
+             'pymode': [(True, '', '', (0, 0))],
+             'stream': tokenize.tokenize(BytesIO(s.encode('utf-8')).readline)}
     while True:
         try:
-            token = next(tokstream)
-            yield from handle_token(state, token, tokstream)
+            token = next(state['stream'])
+            yield from handle_token(state, token)
         except StopIteration:
             if len(state['pymode']) > 1:
                 pm, o, m, p = state['pymode'][-1]
@@ -583,4 +611,6 @@ class Lexer(object):
         'DOLLAR_LPAREN',         # $(
         'DOLLAR_LBRACE',         # ${
         'DOLLAR_LBRACKET',       # $[
+        'ATDOLLAR',              # @$
+        'ATDOLLAR_LPAREN',       # @$(
     ) + tuple(i.upper() for i in kwlist)
