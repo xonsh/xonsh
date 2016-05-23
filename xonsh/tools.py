@@ -1077,7 +1077,9 @@ class CommandsCache(Set):
             this_one = set()
             for i in os.listdir(path):
                 name  = os.path.join(path, i)
-                if os.path.exists(name) and os.access(name, os.X_OK):
+                if (os.path.exists(name) and
+                        os.access(name, os.X_OK) and
+                        (not os.path.isdir(name))):
                     this_one.add(i)
             allcmds |= this_one
         allcmds |= set(builtins.aliases)
