@@ -57,6 +57,9 @@ N_TOKENS += 3
 REGEXPATH = N_TOKENS
 tok_name[N_TOKENS] = 'REGEXPATH'
 N_TOKENS += 1
+IOREDIRECT = N_TOKENS
+tok_name[N_TOKENS] = 'IOREDIRECT'
+N_TOKENS += 1
 DOLLARNAME = N_TOKENS
 tok_name[N_TOKENS] = 'DOLLARNAME'
 N_TOKENS += 1
@@ -83,15 +86,6 @@ _xonsh_tokens = {
 }
 
 additional_parenlevs = frozenset({'@(', '!(', '![', '$(', '$[', '${', '@$('})
-
-_redir_names = {'e', 'err', '2', '', 'o', 'out', '1', 'a', 'all', '&'}
-_e2o_map = {'e>o', 'e>out', 'err>o', 'err>o', '2>1', 'e>1', 'err>1', '2>out',
-            '2>o', 'err>&1', 'e>&1', '2>&1'}
-for i in _redir_names:
-    _xonsh_tokens['{}>'.format(i)] = 'IOREDIRECT'
-    _xonsh_tokens['{}>>'.format(i)] = 'IOREDIRECT'
-for i in _e2o_map:
-    _xonsh_tokens[i] = 'IOREDIRECT'
 
 for k, v in _xonsh_tokens.items():
     exec('%s = N_TOKENS' % v)
@@ -206,14 +200,17 @@ RegexPath = r"`[^\n`\\]*(?:\\.[^\n`\\]*)*`"
 # Because of leftmost-then-longest match semantics, be sure to put the
 # longest operators first (e.g., if = came before ==, == would get
 # recognized as two instances of =).
+_redir_names = ('out', 'all', 'err', 'e', '2', 'a', '&', '1', 'o', '')
+_e2o_map = ('err>&1', '2>out', 'err>o', 'err>1', 'e>out', 'e>&1', '2>&1',
+            'e>o', '2>o', 'e>1', '2>1')
+IORedirect = group(group(*_e2o_map), '{}>>?'.format(group(*_redir_names)))
 Operator = group(r"\*\*=?", r">>=?", r"<<=?", r"!=", r"//=?", r"->",
                  r"@\$\(?", r'\|\|', '&&', r'@\(', r'!\(', r'!\[', r'\$\(',
-                 r'\$\[', '\${', '{}>>?'.format(group(*_redir_names)),
-                 group(*_e2o_map), r'\?\?', r'\?', AUGASSIGN_OPS, r"~")
+                 r'\$\[', '\${', r'\?\?', r'\?', AUGASSIGN_OPS, r"~")
 
 Bracket = '[][(){}]'
 Special = group(r'\r?\n', r'\.\.\.', r'[:;.,@]')
-Funny = group(Operator, Bracket, Special)
+Funny = group(Operator, Bracket, Special, IORedirect)
 
 PlainToken = group(Number, Funny, String, Name, RegexPath)
 Token = Ignore + PlainToken
@@ -635,7 +632,9 @@ def _tokenize(readline, encoding):
                     continue
                 token, initial = line[start:end], line[start]
 
-                if (initial in numchars or                  # ordinary number
+                if re.match(IORedirect, token):
+                    yield TokenInfo(IOREDIRECT, token, spos, epos, line)
+                elif (initial in numchars or                  # ordinary number
                     (initial == '.' and token != '.' and token != '...')):
                     yield TokenInfo(NUMBER, token, spos, epos, line)
                 elif initial in '\r\n':
