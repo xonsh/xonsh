@@ -36,7 +36,7 @@ import token
 __all__ = token.__all__ + ["COMMENT", "tokenize", "detect_encoding",
                            "NL", "untokenize", "ENCODING", "TokenInfo",
                            "TokenError", 'REGEXPATH', 'ATDOLLAR', 'ATEQUAL',
-                           'DOLLARNAME']
+                           'DOLLARNAME', 'IOREDIRECT']
 del token
 
 PY35 = PYTHON_VERSION_INFO >= (3, 5, 0)
