@@ -213,7 +213,7 @@ DEFAULT_VALUES = {
     'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
     'XONSH_HISTORY_SIZE': (8128, 'commands'),
     'XONSH_LOGIN': False,
-    'XONSH_SHOW_TRACEBACK': True,
+    'XONSH_SHOW_TRACEBACK': False,
     'XONSH_STORE_STDIN': False,
     'XONSH_STORE_STDOUT': False,
 }
