@@ -55,7 +55,6 @@ token_map[tokenize.NUMBER] = 'NUMBER'
 token_map[tokenize.REGEXPATH] = 'REGEXPATH'
 token_map[tokenize.NEWLINE] = 'NEWLINE'
 token_map[tokenize.INDENT] = 'INDENT'
-token_map[tokenize.DEDENT] = 'IOREDIRECT'
 token_map[tokenize.DEDENT] = 'DEDENT'
 if PYTHON_VERSION_INFO >= (3, 5, 0):
     token_map[tokenize.ASYNC] = 'ASYNC'
