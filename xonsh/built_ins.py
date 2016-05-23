@@ -32,7 +32,7 @@ from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
 from xonsh.tools import (
     suggest_commands, XonshError, expandvars, CommandsCache
 )
-from xonsh.xoreutils import cat, tee
+from xonsh.xoreutils import all_builtin_commands
 
 ENV = None
 BUILTINS_LOADED = False
@@ -466,6 +466,9 @@ def run_subproc(cmds, captured=False):
             stderr = builtins.__xonsh_stderr_uncaptured__
         uninew = (ix == last_cmd) and (not _capture_streams)
         alias = builtins.aliases.get(cmd[0], None)
+        if alias is None: # check enabled built-in commands
+            if cmd[0] in builtins.__xonsh_enabled_builtin_commands__:
+                alias = all_builtin_commands[cmd[0]]
         procinfo['alias'] = alias
         if (alias is None and
                 builtins.__xonsh_env__.get('AUTO_CD') and
@@ -494,8 +497,8 @@ def run_subproc(cmds, captured=False):
                 ENV.get('XONSH_STORE_STDIN') and
                 captured in {'object', 'hiddenobject'}):
             _stdin_file = tempfile.NamedTemporaryFile()
-            cproc = ProcProxyController(cat, [], stdin=stdin, stdout=PIPE)
-            tproc = ProcProxyController(tee, [_stdin_file.name],
+            cproc = ProcProxyController(all_builtin_commands['cat'], [], stdin=stdin, stdout=PIPE)
+            tproc = ProcProxyController(all_builtin_commands['tee'], [_stdin_file.name],
                               stdin=cproc.stdout, stdout=PIPE)
             stdin = tproc.stdout
         if callable(aliased_cmd):
@@ -720,6 +723,11 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.__xonsh_execer__ = execer
     builtins.__xonsh_commands_cache__ = CommandsCache()
     builtins.__xonsh_all_jobs__ = {}
+<<<<<<< HEAD
+=======
+    builtins.__xonsh_active_job__ = None
+    builtins.__xonsh_enabled_builtin_commands__ = set(all_builtin_commands.keys())
+>>>>>>> add built-in commands, move which to xoreutils
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     # public built-ins
     builtins.evalx = None if execer is None else execer.eval
@@ -783,6 +791,11 @@ def unload_builtins():
              'compilex',
              'default_aliases',
              '__xonsh_all_jobs__',
+<<<<<<< HEAD
+=======
+             '__xonsh_active_job__',
+             '__xonsh_enabled_builtin_commands__',
+>>>>>>> add built-in commands, move which to xoreutils
              '__xonsh_ensure_list_of_strs__',
              '__xonsh_history__',
              ]
