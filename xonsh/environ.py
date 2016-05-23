@@ -1,35 +1,38 @@
 # -*- coding: utf-8 -*-
 """Environment for the xonsh shell."""
-import os
-import re
-import sys
+import builtins
+from collections import Mapping, MutableMapping, MutableSequence, MutableSet, namedtuple
+from contextlib import contextmanager
+from functools import wraps
+from itertools import chain
 import json
+import locale
+import os
+from pprint import pformat
+import re
 import socket
 import string
-import locale
-import builtins
 import subprocess
-from itertools import chain
+import sys
 from warnings import warn
-from pprint import pformat
-from functools import wraps
-from contextlib import contextmanager
-from collections import MutableMapping, MutableSequence, MutableSet, namedtuple
 
 from xonsh import __version__ as XONSH_VERSION
-from xonsh.tools import (
-    ON_WINDOWS, ON_MAC, ON_LINUX, ON_ARCH, IS_ROOT, ON_ANACONDA,
-    always_true, always_false, ensure_string, is_env_path, str_to_env_path,
-    env_path_to_str, is_bool, to_bool, bool_to_str, is_history_tuple, to_history_tuple,
-    history_tuple_to_str, is_float, string_types, is_string, DEFAULT_ENCODING,
-    is_completions_display_value, to_completions_display_value, is_string_set,
-    csv_to_set, set_to_csv, get_sep, is_int, is_bool_seq, csv_to_bool_seq,
-    bool_seq_to_csv, DefaultNotGiven, setup_win_unicode_console,
-    intensify_colors_on_win_setter
-)
+from xonsh.jobs import get_next_task
 from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
+from xonsh.platform import (BASH_COMPLETIONS_DEFAULT, ON_ANACONDA, ON_LINUX,
+                            ON_WINDOWS, DEFAULT_ENCODING)
+from xonsh.tools import (
+    IS_SUPERUSER, always_true, always_false, ensure_string, is_env_path,
+    str_to_env_path, env_path_to_str, is_bool, to_bool, bool_to_str,
+    is_history_tuple, to_history_tuple, history_tuple_to_str, is_float,
+    is_string, is_completions_display_value, to_completions_display_value,
+    is_string_set, csv_to_set, set_to_csv, get_sep, is_int, is_bool_seq,
+    csv_to_bool_seq, bool_seq_to_csv, DefaultNotGiven, print_exception,
+    setup_win_unicode_console, intensify_colors_on_win_setter
+)
+
 
 LOCALE_CATS = {
     'LC_CTYPE': locale.LC_CTYPE,
@@ -156,14 +159,7 @@ DEFAULT_VALUES = {
     'AUTO_CD': False,
     'AUTO_PUSHD': False,
     'AUTO_SUGGEST': True,
-    'BASH_COMPLETIONS': (('/usr/local/etc/bash_completion',
-                             '/opt/local/etc/profile.d/bash_completion.sh')
-                        if ON_MAC else
-                        ('/usr/share/bash-completion/bash_completion',
-                             '/usr/share/bash-completion/completions/git')
-                        if ON_ARCH else
-                        ('/etc/bash_completion',
-                             '/usr/share/bash-completion/completions/git')),
+    'BASH_COMPLETIONS': BASH_COMPLETIONS_DEFAULT,
     'CASE_SENSITIVE_COMPLETIONS': ON_LINUX,
     'CDPATH': (),
     'COMPLETIONS_DISPLAY': 'multi',
@@ -224,7 +220,8 @@ DEFAULT_VALUES = {
 if hasattr(locale, 'LC_MESSAGES'):
     DEFAULT_VALUES['LC_MESSAGES'] = locale.setlocale(locale.LC_MESSAGES)
 
-VarDocs = namedtuple('VarDocs', ['docstr', 'configurable', 'default'])
+VarDocs = namedtuple('VarDocs', ['docstr', 'configurable', 'default',
+                                 'store_as_str'])
 VarDocs.__doc__ = """Named tuple for environment variable documentation
 
 Parameters
@@ -237,8 +234,14 @@ default : str, optional
     Custom docstring for the default value for complex defaults.
     Is this is DefaultNotGiven, then the default will be looked up
     from DEFAULT_VALUES and converted to a str.
+store_as_str : bool, optional
+    Flag for whether the environment variable should be stored as a
+    string. This is used when persisting a variable that is not JSON
+    serializable to the config file. For example, sets, frozensets, and
+    potentially other non-trivial data types. default, False.
 """
-VarDocs.__new__.__defaults__ = (True, DefaultNotGiven)  # iterates from back
+# iterates from back
+VarDocs.__new__.__defaults__ = (True, DefaultNotGiven, False)
 
 # Please keep the following in alphabetic order - scopatz
 DEFAULT_DOCS = {
@@ -313,13 +316,15 @@ DEFAULT_DOCS = {
         "default all commands are saved. The option 'ignoredups' will not "
         "save the command if it matches the previous command. The option "
         "'ignoreerr' will cause any commands that fail (i.e. return non-zero "
-        "exit status) to not be added to the history list."),
+        "exit status) to not be added to the history list.",
+        store_as_str=True),
     'IGNOREEOF': VarDocs('Prevents Ctrl-D from exiting the shell.'),
     'INDENT': VarDocs('Indentation string for multiline input'),
     'INTENSIFY_COLORS_ON_WIN': VarDocs('Enhance style colors for readability '
         'when using the default terminal (cmd.exe) on winodws. Blue colors, '
         'which are hard to read, are replaced with cyan. Other colors are '
-        'generally replaced by their bright counter parts.'),
+        'generally replaced by their bright counter parts.',
+        configurable=ON_WINDOWS),
     'LOADED_CONFIG': VarDocs('Whether or not the xonsh config file was loaded',
         configurable=False),
     'LOADED_RC_FILES': VarDocs(
@@ -353,9 +358,9 @@ DEFAULT_DOCS = {
         'Whether or not to suppress directory stack manipulation output.'),
     'RAISE_SUBPROC_ERROR': VarDocs(
         'Whether or not to raise an error if a subprocess (captured or '
-        'uncaptured) returns a non-zero exit status, which indicates failure.'
+        'uncaptured) returns a non-zero exit status, which indicates failure. '
         'This is most useful in xonsh scripts or modules where failures '
-        'should cause an end to execution. This is less useful at a terminal.'
+        'should cause an end to execution. This is less useful at a terminal. '
         'The error that is raised is a subprocess.CalledProcessError.'),
     'RIGHT_PROMPT': VarDocs('Template string for right-aligned text '
         'at the prompt. This may be parameterized in the same way as '
@@ -390,11 +395,22 @@ DEFAULT_DOCS = {
         'used. This can be used to fix situations where a spawned process, '
         'such as piping into \'grep\', exits too quickly for the piping '
         'operation itself. TeePTY (and thus this variable) are currently '
-        'only used when $XONSH_STORE_STDOUT is True.', configurable=ON_LINUX),
+        'only used when $XONSH_STORE_STDOUT is True.',
+        configurable=ON_LINUX),
     'TERM': VarDocs(
         'TERM is sometimes set by the terminal emulator. This is used (when '
         "valid) to determine whether or not to set the title. Users shouldn't "
-        "need to set this themselves.", configurable=False),
+        "need to set this themselves. Note that this variable should be set as "
+        "early as possible in order to ensure it is effective. Here are a few "
+        "options:\n\n"
+        "* Set this from the program that launches xonsh. On posix systems, \n"
+        "  this can be performed by using env, e.g. \n"
+        "  '/usr/bin/env TERM=xterm-color xonsh' or similar.\n"
+        "* From the xonsh command line, namely 'xonsh -DTERM=xterm-color'.\n"
+        "* In the config file with '{\"env\": {\"TERM\": \"xterm-color\"}}'.\n"
+        "* Lastly, in xonshrc with '$TERM'\n\n"
+        "Ideally, your terminal emulator will set this correctly but that does "
+        "not always happen.", configurable=False),
     'TITLE': VarDocs(
         'The title text for the window in which xonsh is running. Formatted '
         "in the same manner as $PROMPT, see 'Customizing the Prompt' "
@@ -527,7 +543,7 @@ class Env(MutableMapping):
         for key, val in self._d.items():
             if not self.detypeable(val):
                 continue
-            if not isinstance(key, string_types):
+            if not isinstance(key, str):
                 key = str(key)
             ensurer = self.get_ensurer(key)
             val = ensurer.detype(val)
@@ -559,16 +575,14 @@ class Env(MutableMapping):
         if key in self.ensurers:
             return self.ensurers[key]
         for k, ensurer in self.ensurers.items():
-            if isinstance(k, string_types):
+            if isinstance(k, str):
                 continue
-            m = k.match(key)
-            if m is not None:
-                ens = ensurer
+            if k.match(key) is not None:
                 break
         else:
-            ens = default
-        self.ensurers[key] = ens
-        return ens
+            ensurer = default
+        self.ensurers[key] = ensurer
+        return ensurer
 
     def get_docs(self, key, default=VarDocs('<no documentation>')):
         """Gets the documentation for the environment variable."""
@@ -649,16 +663,14 @@ class Env(MutableMapping):
                 if self._orig_env is None:
                     self.replace_env()
                 else:
-                    dval = ensurer.detype(val)
-                    os.environ[key] = dval
+                    os.environ[key] = ensurer.detype(val)
 
     def __delitem__(self, key):
         val = self._d.pop(key)
         if self.detypeable(val):
             self._detyped = None
-            if self.get('UPDATE_OS_ENVIRON'):
-                if key in os.environ:
-                    del os.environ[key]
+            if self.get('UPDATE_OS_ENVIRON') and key in os.environ:
+                del os.environ[key]
 
     def get(self, key, default=None):
         """The environment will look up default values from its own defaults if a
@@ -726,7 +738,7 @@ def _is_executable_file(path):
 def yield_executables_windows(directory, name):
     normalized_name = os.path.normcase(name)
     extensions = builtins.__xonsh_env__.get('PATHEXT')
-    try: 
+    try:
         names = os.listdir(directory)
     except PermissionError:
         return
@@ -741,11 +753,11 @@ def yield_executables_windows(directory, name):
 
 
 def yield_executables_posix(directory, name):
-    try: 
+    try:
         names = os.listdir(directory)
     except PermissionError:
-        return 
-    if name in os.listdir(directory):
+        return
+    if name in names:
         path = os.path.join(directory, name)
         if _is_executable_file(path):
             yield path
@@ -1009,9 +1021,8 @@ def _collapsed_pwd():
 
 
 def _current_job():
-    j = builtins.__xonsh_active_job__
+    j = get_next_task()
     if j is not None:
-        j = builtins.__xonsh_all_jobs__[j]
         if not j['bg']:
             cmd = j['cmds'][-1]
             s = cmd[0]
@@ -1041,7 +1052,7 @@ else:
 
 FORMATTER_DICT = dict(
     user=os.environ.get(USER, '<user>'),
-    prompt_end='#' if IS_ROOT else '$',
+    prompt_end='#' if IS_SUPERUSER else '$',
     hostname=socket.gethostname().split('.', 1)[0],
     cwd=_replace_home_cwd,
     cwd_dir=lambda: os.path.dirname(_replace_home_cwd()),
@@ -1116,7 +1127,7 @@ def partial_format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
         if field is None:
             continue
         elif field.startswith('$'):
-            v = builtins.__xonsh_env__[name[1:]]
+            v = builtins.__xonsh_env__[name[1:]]  # FIXME `name` is an unresolved ref
             v = _FORMATTER.convert_field(v, conv)
             v = _FORMATTER.format_field(v, spec)
             toks.append(v)
@@ -1189,8 +1200,22 @@ def load_static_config(ctx, config=None):
                                 DEFAULT_VALUES.get('XONSH_ENCODING_ERRORS',
                                                    'surrogateescape'))
         with open(config, 'r', encoding=encoding, errors=errors) as f:
-            conf = json.load(f)
-        ctx['LOADED_CONFIG'] = True
+            try:
+                conf = json.load(f)
+                assert isinstance(conf, Mapping)
+                ctx['LOADED_CONFIG'] = True
+            except Exception as e:
+                conf = {}
+                ctx['LOADED_CONFIG'] = False
+                print_exception()
+                # JSONDecodeError was added in Python v3.5
+                jerr = json.JSONDecodeError \
+                       if hasattr(json, 'JSONDecodeError') else ValueError
+                if isinstance(e, jerr):
+                    msg = 'Xonsh config file is not valid JSON.'
+                else:
+                    msg = 'Could not load xonsh config.'
+                print(msg, file=sys.stderr)
     else:
         conf = {}
         ctx['LOADED_CONFIG'] = False
@@ -1201,7 +1226,7 @@ def load_static_config(ctx, config=None):
 def xonshrc_context(rcfiles=None, execer=None):
     """Attempts to read in xonshrc file, and return the contents."""
     loaded = builtins.__xonsh_env__['LOADED_RC_FILES'] = []
-    if (rcfiles is None or execer is None):
+    if rcfiles is None or execer is None:
         return {}
     env = {}
     for rcfile in rcfiles:

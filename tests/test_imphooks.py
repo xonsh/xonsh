@@ -10,7 +10,7 @@ from xonsh import built_ins
 from xonsh.execer import Execer
 from xonsh.built_ins import load_builtins, unload_builtins
 
-from tests.tools import mock_xonsh_env
+from tools import mock_xonsh_env
 LOADED_HERE = False
 
 def setup():

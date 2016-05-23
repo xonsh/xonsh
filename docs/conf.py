@@ -25,7 +25,7 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.pngmath',
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.imgmath',
               'sphinx.ext.inheritance_diagram', 'sphinx.ext.viewcode',
               #'sphinx.ext.autosummary',
               'numpydoc', 'cmdhelp',
@@ -262,6 +262,7 @@ def make_envvars():
            '{docstr}\n\n'
            '**configurable:** {configurable}\n\n'
            '**default:** {default}\n\n'
+           '**store_as_str:** {store_as_str}\n\n'
            '-------\n\n')
     for var in vars:
         title = '$' + var
@@ -269,7 +270,7 @@ def make_envvars():
         vd = env.get_docs(var)
         s += sec.format(low=var.lower(), title=title, under=under,
                         docstr=vd.docstr, configurable=vd.configurable,
-                        default=vd.default)
+                        default=vd.default, store_as_str=vd.store_as_str)
     s = s[:-9]
     fname = os.path.join(os.path.dirname(__file__), 'envvarsbody')
     with open(fname, 'w') as f:
@@ -340,4 +341,5 @@ def make_xontribs():
 make_envvars()
 make_xontribs()
 
-builtins.__xonsh_history__= None
+builtins.__xonsh_history__ = None
+builtins.__xonsh_env__ = {}

@@ -1,7 +1,7 @@
 Additional Setup
 ================
-
-If you want to use xonsh as your default shell, you will first have to add xonsh to `/etc/shells`.
+If you want to use xonsh as your default shell, you will first have
+to add xonsh to `/etc/shells`.
 
 First ensure that xonsh is on your ``$PATH``
 
@@ -21,4 +21,4 @@ To change shells, run
 
    $ chsh -s $(which xonsh)
 
-You will have to log out and log back in before the changes take effect.   
+You will have to log out and log back in before the changes take effect.

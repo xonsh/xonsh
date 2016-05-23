@@ -1,4 +1,32 @@
 # Set the default behavior, in case people don't have core.autocrlf set.
+# This should be first, because the git documentation says "When more
+# than one pattern matches the path, a later line overrides an earlier line."
 * text=auto
 
+# Text files
+*.bat text
+*.css_t text
+*.in text
+*.json text
+*.py text
+*.rst text
+*.sh text
+*.txt text
+*.xsh text
+*.yaml text
+*.yml text
+CONTRIBUTING text
+license text
+LICENSE text
+Makefile text
+README text
+
+# Files in the lazyjson format require LF line endings
 tests/histories/*.json text eol=lf
+
+# Binary files
+*.ico binary
+*.gif binary
+*.gz binary
+*.png binary
+*.webm binary

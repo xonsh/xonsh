@@ -32,7 +32,8 @@ def check_exec(input):
         EXECER.exec(input)
 
 def check_eval(input):
-    with mock_xonsh_env({'AUTO_CD': False}):
+    with mock_xonsh_env({'AUTO_CD': False, 'XONSH_ENCODING' :'utf-8',
+                         'XONSH_ENCODING_ERRORS': 'strict', 'PATH': []}):
         EXECER.debug_level = DEBUG_LEVEL
         EXECER.eval(input)
 
@@ -82,6 +83,16 @@ def test_bad_indent():
             'x = 1\n')
     assert_raises(SyntaxError, check_parse, code)
 
+def test_good_rhs_subproc():
+    # nonsense but parsebale
+    code = 'str().split() | ![grep exit]\n'
+    check_parse(code)
+
+def test_bad_rhs_subproc():
+    # nonsense but unparsebale
+    code = 'str().split() | grep exit\n'
+    assert_raises(SyntaxError, check_parse, code)
+
 def test_indent_with_empty_line():
     code = ('if True:\n'
             '\n'
@@ -96,6 +107,10 @@ def test_command_in_func():
 def test_command_in_func_with_comment():
     code = ('def f():\n'
             '    echo hello # comment\n')
+    yield check_parse, code
+
+def test_pyeval_redirect():
+    code = 'echo @("foo") > bar\n'
     yield check_parse, code
 
 

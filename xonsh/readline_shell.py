@@ -12,21 +12,25 @@ from xonsh import lazyjson
 from xonsh.base_shell import BaseShell
 from xonsh.ansi_colors import partial_color_format, color_style_names, color_style
 from xonsh.environ import partial_format_prompt, multiline_prompt
-from xonsh.tools import ON_WINDOWS, print_exception, HAVE_PYGMENTS
+from xonsh.tools import print_exception
+from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 
-if HAVE_PYGMENTS:
+if HAS_PYGMENTS:
     from xonsh import pyghooks
     import pygments
     from pygments.formatters.terminal256 import Terminal256Formatter
 
-RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = None
+readline = None
+RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = RL_STATE = None
 RL_CAN_RESIZE = False
 RL_DONE = None
-
+RL_VARIABLE_VALUE = None
+_RL_STATE_DONE = 0x1000000
+_RL_STATE_ISEARCH = 0x0000080
 
 def setup_readline():
     """Sets up the readline module and completion suppression, if available."""
-    global RL_COMPLETION_SUPPRESS_APPEND, RL_LIB, RL_CAN_RESIZE
+    global RL_COMPLETION_SUPPRESS_APPEND, RL_LIB, RL_CAN_RESIZE, RL_STATE, readline
     if RL_COMPLETION_SUPPRESS_APPEND is not None:
         return
     try:
@@ -44,6 +48,10 @@ def setup_readline():
         except ValueError:
             # not all versions of readline have this symbol, ie Macs sometimes
             RL_COMPLETION_SUPPRESS_APPEND = None
+        try:
+            RL_STATE = ctypes.c_int.in_dll(lib, 'rl_readline_state')
+        except:
+            pass
         RL_CAN_RESIZE = hasattr(lib, 'rl_reset_screen_size')
     env = builtins.__xonsh_env__
     # reads in history
@@ -61,6 +69,8 @@ def setup_readline():
         readline.parse_and_bind("bind ^I rl_complete")
     else:
         readline.parse_and_bind("tab: complete")
+    # load custom user settings
+    readline.read_init_file()
 
 
 def teardown_readline():
@@ -71,6 +81,29 @@ def teardown_readline():
         return
 
 
+def fix_readline_state_after_ctrl_c():
+    """
+    Fix to allow Ctrl-C to exit reverse-i-search.
+
+    Based on code from:
+        http://bugs.python.org/file39467/raw_input__workaround_demo.py
+    """
+    if ON_WINDOWS:
+        # hack to make pyreadline mimic the desired behavior
+        try:
+            _q = readline.rl.mode.process_keyevent_queue
+            if len(_q) > 1:
+                _q.pop()
+        except:
+            pass
+    if RL_STATE is None:
+        return
+    if RL_STATE.value & _RL_STATE_ISEARCH:
+        RL_STATE.value &= ~_RL_STATE_ISEARCH
+    if not RL_STATE.value & _RL_STATE_DONE:
+        RL_STATE.value |= _RL_STATE_DONE
+
+
 def rl_completion_suppress_append(val=1):
     """Sets the rl_completion_suppress_append varaiable, if possible.
     A value of 1 (default) means to suppress, a value of 0 means to enable.
@@ -78,6 +111,28 @@ def rl_completion_suppress_append(val=1):
     if RL_COMPLETION_SUPPRESS_APPEND is None:
         return
     RL_COMPLETION_SUPPRESS_APPEND.value = val
+
+
+def rl_variable_dumper(readable=True):
+    """Dumps the currently set readline variables. If readable is True, then this
+    output may be used in an inputrc file.
+    """
+    RL_LIB.rl_variable_dumper(int(readable))
+
+
+def rl_variable_value(variable):
+    """Returns the currently set value for a readline configuration variable."""
+    global RL_VARIABLE_VALUE
+    if RL_VARIABLE_VALUE is None:
+        import ctypes
+        RL_VARIABLE_VALUE = RL_LIB.rl_variable_value
+        RL_VARIABLE_VALUE.restype = ctypes.c_char_p
+    env = builtins.__xonsh_env__
+    enc, errors = env.get('XONSH_ENCODING'), env.get('XONSH_ENCODING_ERRORS')
+    if isinstance(variable, str):
+        variable = variable.encode(encoding=enc, errors=errors)
+    rtn = RL_VARIABLE_VALUE(variable)
+    return rtn.decode(encoding=enc, errors=errors)
 
 
 def _insert_text_func(s, readline):
@@ -102,6 +157,7 @@ class ReadlineShell(BaseShell, Cmd):
         setup_readline()
         self._current_indent = ''
         self._current_prompt = ''
+        self._force_hide = None
         self.cmdqueue = deque()
 
     def __del__(self):
@@ -263,6 +319,7 @@ class ReadlineShell(BaseShell, Cmd):
                 self._cmdloop(intro=intro)
             except KeyboardInterrupt:
                 print()  # Gives a newline
+                fix_readline_state_after_ctrl_c()
                 self.reset_buffer()
                 intro = None
 
@@ -289,8 +346,9 @@ class ReadlineShell(BaseShell, Cmd):
             p = partial_format_prompt(p)
         except Exception:  # pylint: disable=broad-except
             print_exception()
+        hide = True if self._force_hide is None else self._force_hide
         p = partial_color_format(p, style=env.get('XONSH_COLOR_STYLE'),
-                                 hide=True)
+                                 hide=hide)
         self._current_prompt = p
         self.settitle()
         return p
@@ -299,6 +357,7 @@ class ReadlineShell(BaseShell, Cmd):
         """Readline implementation of color formatting. This usesg ANSI color
         codes.
         """
+        hide = hide if self._force_hide is None else self._force_hide
         return partial_color_format(string, hide=hide,
                     style=builtins.__xonsh_env__.get('XONSH_COLOR_STYLE'))
 
@@ -322,6 +381,7 @@ class ReadlineShell(BaseShell, Cmd):
         """Returns the current color map."""
         style = style=builtins.__xonsh_env__.get('XONSH_COLOR_STYLE')
         return color_style(style=style)
+
 
 class ReadlineHistoryAdder(Thread):
 

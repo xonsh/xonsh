@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
 """A (tab-)completer for xonsh."""
-import os
-import re
 import ast
-import sys
-import shlex
-import pickle
-import inspect
 import builtins
+import inspect
 import importlib
+import os
+from pathlib import Path
+import pickle
+import re
+import shlex
 import subprocess
+import sys
 
 from xonsh.built_ins import iglobpath, expand_path
+from xonsh.platform import ON_WINDOWS
 from xonsh.tools import (subexpr_from_unbalanced, get_sep,
                          check_for_partial_string, RE_STRING_START)
-from xonsh.tools import ON_WINDOWS
 
 
 RE_DASHF = re.compile(r'-F\s+(\w+)')
@@ -40,7 +41,7 @@ def _path_from_partial_string(inp, pos=None):
             else:
                 return None
         string = partial[startix:endix]
-    end = re.sub(RE_STRING_START,'',quote)
+    end = re.sub(RE_STRING_START, '', quote)
     _string = string
     if not _string.endswith(end):
         _string = _string + end
@@ -72,7 +73,7 @@ if ON_WINDOWS:
 
 COMPLETION_SKIP_TOKENS = {'man', 'sudo', 'time', 'timeit', 'which'}
 
-BASH_COMPLETE_SCRIPT = """source {filename}
+BASH_COMPLETE_SCRIPT = """source "{filename}"
 COMP_WORDS=({line})
 COMP_LINE={comp_line}
 COMP_POINT=${{#COMP_LINE}}
@@ -83,6 +84,7 @@ for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 """
 
 WS = set(' \t\r\n')
+
 
 def startswithlow(x, start, startlow=None):
     """True if x starts with a string or its lowercase version. The lowercase
@@ -119,6 +121,7 @@ def _normpath(p):
         p = p.replace(os.sep, os.altsep)
 
     return p
+
 
 class Completer(object):
     """This provides a list of optional completions for the xonsh shell."""
@@ -268,8 +271,9 @@ class Completer(object):
         return {max(i, key=len) for i in reps.values()}
 
     def find_and_complete(self, line, idx, ctx=None):
-        """Finds the completions given only the full code line and a current cursor
-        position. This represents an easier alternative to the complete() method.
+        """Finds the completions given only the full code line and a current
+        cursor position. This represents an easier alternative to the
+        complete() method.
 
         Parameters
         ----------
@@ -308,8 +312,8 @@ class Completer(object):
             csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
             startswither = startswithnorm if csc else startswithlow
             key = prefix[1:]
-            keylow = key.lower()
-            paths.update({'$' + k for k in builtins.__xonsh_env__ if startswither(k, key, keylow)})
+            paths.update({'$' + k for k in builtins.__xonsh_env__
+                         if startswither(k, key, key.lower())})
 
     def _add_dots(self, paths, prefix):
         if prefix in {'', '.'}:
@@ -322,7 +326,7 @@ class Completer(object):
         env = builtins.__xonsh_env__
         csc = env.get('CASE_SENSITIVE_COMPLETIONS')
         for cdp in env.get('CDPATH'):
-            test_glob = os.path.join(cdp, prefix) + '*'
+            test_glob = os.path.join(builtins.__xonsh_expand_path__(cdp), prefix) + '*'
             for s in iglobpath(test_glob, ignore_case=(not csc)):
                 if os.path.isdir(s):
                     paths.add(os.path.basename(s))
@@ -353,7 +357,6 @@ class Completer(object):
         else:
             return single
 
-
     def _quote_paths(self, paths, start, end):
         out = set()
         space = ' '
@@ -375,17 +378,18 @@ class Completer(object):
                 _tail = space
             else:
                 _tail = ''
+            if start != '' and 'r' not in start and backslash in s:
+                start = 'r%s' % start
             s = s + _tail
             if end != '':
                 if "r" not in start.lower():
                     s = s.replace(backslash, double_backslash)
-                elif s.endswith(backslash):
+                if s.endswith(backslash) and not s.endswith(double_backslash):
                     s += backslash
             if end in s:
                 s = s.replace(end, ''.join('\\%s' % i for i in end))
             out.add(start + s + end)
         return out
-
 
     def path_complete(self, prefix, start, end, cdpath=False):
         """Completes based on a path name."""
@@ -425,38 +429,40 @@ class Completer(object):
         else:
             prefix = shlex.quote(prefix)
 
-        script = BASH_COMPLETE_SCRIPT.format(filename=fnme,
-                    line=' '.join(shlex.quote(p) for p in splt),
-                    comp_line=shlex.quote(line), n=n, func=func, cmd=cmd,
-                    end=endidx + 1, prefix=prefix, prev=shlex.quote(prev))
+        script = BASH_COMPLETE_SCRIPT.format(
+            filename=fnme, line=' '.join(shlex.quote(p) for p in splt),
+            comp_line=shlex.quote(line), n=n, func=func, cmd=cmd,
+            end=endidx + 1, prefix=prefix, prev=shlex.quote(prev))
         try:
-            out = subprocess.check_output(['bash'], input=script,
-                    universal_newlines=True, stderr=subprocess.PIPE,
-                    env=builtins.__xonsh_env__.detype())
+            out = subprocess.check_output(
+                ['bash'], input=script, universal_newlines=True,
+                stderr=subprocess.PIPE, env=builtins.__xonsh_env__.detype())
         except subprocess.CalledProcessError:
             out = ''
 
         rtn = set(out.splitlines())
         return rtn
 
-    def _source_completions(self):
-        srcs = []
-        for f in builtins.__xonsh_env__.get('BASH_COMPLETIONS'):
-            if os.path.isfile(f):
-                # We need to "Unixify" Windows paths for Bash to understand
-                if ON_WINDOWS:
-                    f = RE_WIN_DRIVE.sub(lambda m: '/{0}/'.format(m.group(1).lower()), f).replace('\\', '/')
-                srcs.append('source ' + f)
-        return srcs
+    @staticmethod
+    def _collect_completions_sources():
+        sources = []
+        paths = (Path(x) for x in
+                 builtins.__xonsh_env__.get('BASH_COMPLETIONS', ()))
+        for path in paths:
+            if path.is_file():
+                sources.append('source "{}"'.format(path.as_posix()))
+            elif path.is_dir():
+                for _file in (x for x in path.glob('*') if x.is_file()):
+                    sources.append('source "{}"'.format(_file.as_posix()))
+        return sources
 
     def _load_bash_complete_funcs(self):
         self.bash_complete_funcs = bcf = {}
-        inp = self._source_completions()
-        if len(inp) == 0:
+        inp = self._collect_completions_sources()
+        if not inp:
             return
         inp.append('complete -p\n')
-        out = subprocess.check_output(['bash'], input='\n'.join(inp),
-                env=builtins.__xonsh_env__.detype(), universal_newlines=True)
+        out = self._source_completions(inp)
         for line in out.splitlines():
             head, _, cmd = line.rpartition(' ')
             if len(cmd) == 0 or cmd == 'cd':
@@ -467,8 +473,8 @@ class Completer(object):
             bcf[cmd] = m.group(1)
 
     def _load_bash_complete_files(self):
-        inp = self._source_completions()
-        if len(inp) == 0:
+        inp = self._collect_completions_sources()
+        if not inp:
             self.bash_complete_files = {}
             return
         if self.bash_complete_funcs:
@@ -476,17 +482,23 @@ class Completer(object):
             bash_funcs = set(self.bash_complete_funcs.values())
             inp.append('declare -F ' + ' '.join([f for f in bash_funcs]))
             inp.append('shopt -u extdebug\n')
-        out = subprocess.check_output(['bash'], input='\n'.join(inp),
-                env=builtins.__xonsh_env__.detype(), universal_newlines=True)
+        out = self._source_completions(inp)
         func_files = {}
         for line in out.splitlines():
             parts = line.split()
+            if ON_WINDOWS:
+                parts = [parts[0], ' '.join(parts[2:])]
             func_files[parts[0]] = parts[-1]
         self.bash_complete_files = {
             cmd: func_files[func]
             for cmd, func in self.bash_complete_funcs.items()
             if func in func_files
         }
+
+    def _source_completions(self, source):
+        return subprocess.check_output(
+                ['bash'], input='\n'.join(source), universal_newlines=True,
+                env=builtins.__xonsh_env__.detype(), stderr=subprocess.DEVNULL)
 
     def attr_complete(self, prefix, ctx):
         """Complete attributes of an object."""
@@ -513,10 +525,11 @@ class Completer(object):
         opts = []
         for i in _opts:
             try:
-                v = eval('{0}.{1}'.format(expr, i), _ctx)
-                opts.append(i)
+                eval('{0}.{1}'.format(expr, i), _ctx)
             except:  # pylint:disable=bare-except
                 continue
+            else:
+                opts.append(i)
         if len(attr) == 0:
             opts = [o for o in opts if not o.startswith('_')]
         else:
@@ -558,11 +571,12 @@ class ManCompleter(object):
         startswither = startswithnorm if csc else startswithlow
         if cmd not in self._options.keys():
             try:
-                manpage = subprocess.Popen(["man", cmd],
-                            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+                manpage = subprocess.Popen(
+                    ["man", cmd], stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL)
                 # This is a trick to get rid of reverse line feeds
-                text = subprocess.check_output(["col", "-b"],
-                        stdin=manpage.stdout)
+                text = subprocess.check_output(
+                    ["col", "-b"], stdin=manpage.stdout)
                 text = text.decode('utf-8')
                 scraped_text = ' '.join(SCRAPE_RE.findall(text))
                 matches = INNER_OPTIONS_RE.findall(scraped_text)

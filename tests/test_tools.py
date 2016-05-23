@@ -244,6 +244,14 @@ def test_subproc_toks_capproc():
     obs = subproc_toks(s, lexer=LEXER, returnline=True)
     assert_equal(exp, obs)
 
+def test_subproc_toks_pyeval_redirect():
+    s = 'echo @("foo") > bar'
+    inp = '{0}'.format(s)
+    exp = '![{0}]'.format(s)
+    obs = subproc_toks(inp, lexer=LEXER, returnline=True)
+    assert_equal(exp, obs)
+
+
 
 def test_subexpr_from_unbalanced_parens():
     cases = [

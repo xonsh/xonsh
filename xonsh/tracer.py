@@ -7,27 +7,27 @@ import linecache
 from functools import lru_cache
 from argparse import ArgumentParser
 
-from xonsh.tools import (DefaultNotGiven, print_color, pygments_version,
-    format_color, normabspath, to_bool, HAVE_PYGMENTS)
+from xonsh.tools import DefaultNotGiven, print_color, normabspath, to_bool
+from xonsh.platform import HAS_PYGMENTS
 from xonsh import inspectors
 from xonsh.environ import _replace_home as replace_home
-if HAVE_PYGMENTS:
+
+if HAS_PYGMENTS:
     from xonsh import pyghooks
     import pygments
     import pygments.formatters.terminal
+
 
 class TracerType(object):
     """Represents a xonsh tracer object, which keeps track of all tracing
     state. This is a singleton.
     """
-
     _inst = None
     valid_events = frozenset(['line', 'call'])
 
     def __new__(cls, *args, **kwargs):
         if cls._inst is None:
-            cls._inst = super(TracerType, cls).__new__(cls, *args,
-                                                           **kwargs)
+            cls._inst = super(TracerType, cls).__new__(cls, *args, **kwargs)
         return cls._inst
 
     def __init__(self):
@@ -97,7 +97,7 @@ def format_line(fname, lineno, line, color=True, lexer=None, formatter=None):
     if not color:
         return COLORLESS_LINE.format(fname=fname, lineno=lineno, line=line)
     cline = COLOR_LINE.format(fname=fname, lineno=lineno)
-    if not HAVE_PYGMENTS:
+    if not HAS_PYGMENTS:
         return cline + line
     # OK, so we have pygments
     tokens = pyghooks.partial_color_tokenize(cline)
@@ -109,11 +109,12 @@ def format_line(fname, lineno, line, color=True, lexer=None, formatter=None):
 #
 # Command line interface
 #
+
 def _find_caller(args):
     """Somewhat hacky method of finding the __file__ based on the line executed."""
     re_line = re.compile(r'[^;\s|&<>]+\s+' + r'\s+'.join(args))
     curr = inspect.currentframe()
-    for _, fname, lineno, _, lines, _  in inspectors.getouterframes(curr, context=1)[3:]:
+    for _, fname, lineno, _, lines, _ in inspectors.getouterframes(curr, context=1)[3:]:
         if lines is not None and re_line.search(lines[0]) is not None:
             return fname
         elif lineno == 1 and re_line.search(linecache.getline(fname, lineno)) is not None:
@@ -186,6 +187,7 @@ _MAIN_ACTIONS = {
     'color': _color,
     }
 
+
 def main(args=None):
     """Main function for tracer command-line interface."""
     parser = _create_parser()
@@ -195,4 +197,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-

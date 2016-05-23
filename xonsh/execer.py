@@ -8,7 +8,8 @@ from collections import Mapping
 
 from xonsh import ast
 from xonsh.parser import Parser
-from xonsh.tools import subproc_toks, END_TOK_TYPES
+from xonsh.tools import (subproc_toks, END_TOK_TYPES, LPARENS,
+    _is_not_lparen_and_rparen)
 from xonsh.built_ins import load_builtins, unload_builtins
 
 
@@ -18,7 +19,7 @@ class Execer(object):
     """Executes xonsh code in a context."""
 
     def __init__(self, filename='<xonsh-code>', debug_level=0, parser_args=None,
-                 unload=True, config=None, login=True):
+                 unload=True, config=None, login=True, xonsh_ctx=None):
         """Parameters
         ----------
         filename : str, optional
@@ -31,6 +32,8 @@ class Execer(object):
             Whether or not to unload xonsh builtins upon deletion.
         config : str, optional
             Path to configuration file.
+        xonsh_ctx : dict or None, optional
+            Xonsh xontext to load as builtins.__xonsh_ctx__
         """
         parser_args = parser_args or {}
         self.parser = Parser(**parser_args)
@@ -38,7 +41,7 @@ class Execer(object):
         self.debug_level = debug_level
         self.unload = unload
         self.ctxtransformer = ast.CtxAwareTransformer(self.parser)
-        load_builtins(execer=self, config=config, login=login)
+        load_builtins(execer=self, config=config, login=login, ctx=xonsh_ctx)
 
     def __del__(self):
         if self.unload:
@@ -132,10 +135,18 @@ class Execer(object):
         if RE_END_TOKS.search(line) is None:
             return None
         maxcol = None
+        lparens = []
         self.parser.lexer.input(line)
         for tok in self.parser.lexer:
-            if tok.type in END_TOK_TYPES or \
-                    (tok.type == 'ERRORTOKEN' and ')' in tok.value):
+            if tok.type in LPARENS:
+                lparens.append(tok.type)
+            elif tok.type in END_TOK_TYPES:
+                if _is_not_lparen_and_rparen(lparens, tok):
+                    lparens.pop()
+                else:
+                    maxcol = tok.lexpos + mincol + 1
+                    break
+            elif tok.type == 'ERRORTOKEN' and ')' in tok.value:
                 maxcol = tok.lexpos + mincol + 1
                 break
         return maxcol
@@ -191,18 +202,23 @@ class Execer(object):
                                        returnline=True,
                                        maxcol=maxcol,
                                        lexer=self.parser.lexer)
-                if sbpline.lstrip().startswith('![!['):
+                if sbpline is None:
+                    # subprocess line had no valid tokens,
+                    if len(line.partition('#')[0].strip()) == 0:
+                        # likely because it only contained a comment.
+                        del lines[idx]
+                        last_error_line = last_error_col = -1
+                        input = '\n'.join(lines)
+                        continue
+                    else:
+                        # or for some other syntax error
+                        raise original_error
+                elif sbpline[last_error_col:].startswith('![![') or \
+                     sbpline.lstrip().startswith('![!['):
                     # if we have already wrapped this in subproc tokens
                     # and it still doesn't work, adding more won't help
                     # anything
                     raise original_error
-                if sbpline is None:
-                    # subprocess line had no valid tokens, likely because
-                    # it only contained a comment.
-                    del lines[idx]
-                    last_error_line = last_error_col = -1
-                    input = '\n'.join(lines)
-                    continue
                 else:
                     lines[idx] = sbpline
                 last_error_col += 3

@@ -13,11 +13,9 @@ This file was forked from the IPython project:
 * Copyright (c) 2001, Nathaniel Gray <n8gray@caltech.edu>
 """
 import io
-import re
 import os.path
-from io import TextIOWrapper, BytesIO
+import re
 
-from xonsh.tools import unicode_type
 
 cookie_re = re.compile(r"coding[:=]\s*([-\w.]+)", re.UNICODE)
 cookie_comment_re = re.compile(r"^\s*#.*coding[:=]\s*([-\w.]+)", re.UNICODE)
@@ -127,7 +125,7 @@ except ImportError:
         buf = io.open(filename, 'rb')  # Tweaked to use io.open for Python 2
         encoding, lines = detect_encoding(buf.readline)
         buf.seek(0)
-        text = TextIOWrapper(buf, encoding, line_buffering=True)
+        text = io.TextIOWrapper(buf, encoding, line_buffering=True)
         text.mode = 'r'
         return text
 
@@ -140,10 +138,10 @@ def source_to_unicode(txt, errors='replace', skip_encoding_cookie=True):
     txt can be either a bytes buffer or a string containing the source
     code.
     """
-    if isinstance(txt, unicode_type):
+    if isinstance(txt, str):
         return txt
     if isinstance(txt, bytes):
-        buf = BytesIO(txt)
+        buf = io.BytesIO(txt)
     else:
         buf = txt
     try:
@@ -151,7 +149,7 @@ def source_to_unicode(txt, errors='replace', skip_encoding_cookie=True):
     except SyntaxError:
         encoding = "ascii"
     buf.seek(0)
-    text = TextIOWrapper(buf, encoding, errors=errors, line_buffering=True)
+    text = io.TextIOWrapper(buf, encoding, errors=errors, line_buffering=True)
     text.mode = 'r'
     if skip_encoding_cookie:
         return u"".join(strip_encoding_cookie(text))

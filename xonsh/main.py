@@ -13,15 +13,16 @@ except ImportError:
     setproctitle = None
 
 from xonsh import __version__
+from xonsh.environ import DEFAULT_VALUES
 from xonsh.shell import Shell
 from xonsh.pretty import pprint, pretty
 from xonsh.proc import HiddenCompletedCommand
 from xonsh.jobs import ignore_sigtstp
-from xonsh.tools import (HAVE_PYGMENTS, setup_win_unicode_console, print_color,
-                         ON_WINDOWS)
-from xonsh.codecache import (run_script_with_cache, run_code_with_cache)
+from xonsh.tools import setup_win_unicode_console, print_color
+from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
+from xonsh.codecache import run_script_with_cache, run_code_with_cache
 
-if HAVE_PYGMENTS:
+if HAS_PYGMENTS:
     import pygments
     from xonsh import pyghooks
 
@@ -134,6 +135,7 @@ def arg_undoers():
 
     return au
 
+
 def undo_args(args):
     """Undoes missaligned args."""
     au = arg_undoers()
@@ -145,11 +147,12 @@ def undo_args(args):
                 if a.startswith(k):
                     au[k](args)
 
+
 def _pprint_displayhook(value):
     if value is None or isinstance(value, HiddenCompletedCommand):
         return
     builtins._ = None  # Set '_' to None to avoid recursion
-    if HAVE_PYGMENTS:
+    if HAS_PYGMENTS:
         s = pretty(value)  # color case
         lexer = pyghooks.XonshLexer()
         tokens = list(pygments.lex(s, lexer=lexer))
@@ -158,11 +161,13 @@ def _pprint_displayhook(value):
         pprint(value)  # black & white case
     builtins._ = value
 
+
 class XonshMode(enum.Enum):
     single_command = 0
     script_from_file = 1
     script_from_stdin = 2
     interactive = 3
+
 
 def premain(argv=None):
     """Setup for main xonsh entry point, returns parsed arguments."""
@@ -206,8 +211,8 @@ def premain(argv=None):
         args.mode = XonshMode.interactive
         shell_kwargs['completer'] = True
         shell_kwargs['login'] = True
-    shell = builtins.__xonsh_shell__ = Shell(**shell_kwargs)
     from xonsh import imphooks
+    shell = builtins.__xonsh_shell__ = Shell(**shell_kwargs)
     env = builtins.__xonsh_env__
     env['XONSH_LOGIN'] = shell_kwargs['login']
     if args.defines is not None:
@@ -266,7 +271,6 @@ def main_context(argv=None):
     args = premain(argv)
     yield builtins.__xonsh_shell__
     postmain(args)
-
 
 
 if __name__ == '__main__':

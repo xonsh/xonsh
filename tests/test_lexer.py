@@ -134,11 +134,23 @@ def test_multiline():
            ('NAME', 'y', 0),]
     yield check_tokens, inp, exp
 
+def test_atdollar_expression():
+    inp = '@$(which python)'
+    exp = [('ATDOLLAR_LPAREN', '@$(', 0),
+           ('NAME', 'which', 3),
+           ('WS', ' ', 8),
+           ('NAME', 'python', 9),
+           ('RPAREN', ')', 15)]
+    yield check_tokens, inp, exp
+
 def test_and():
     yield check_token, 'and', ['AND', 'and', 0]
 
 def test_ampersand():
     yield check_token, '&', ['AMPERSAND', '&', 0]
+
+def test_atdollar():
+    yield check_token, '@$', ['ATDOLLAR', '@$', 0]
 
 def test_doubleamp():
     yield check_token, '&&', ['AND', 'and', 0]
@@ -175,6 +187,11 @@ def test_double_unicode_literal():
 
 def test_single_bytes_literal():
     yield check_token, "b'yo'", ['STRING', "b'yo'", 0]
+
+def test_regex_globs():
+    for i in ('.*', r'\d*', '.*#{1,2}'):
+        c = '`{}`'.format(i)
+        yield check_token, c, ['REGEXPATH', c, 0]
 
 def test_float_literals():
     cases = ['0.0', '.0', '0.', '1e10', '1.e42', '0.1e42', '0.5e-42',

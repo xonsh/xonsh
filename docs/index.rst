@@ -75,12 +75,14 @@ Contents
 **Installation:**
 
 .. toctree::
-   :titlesonly:
-   :maxdepth: 1
+    :titlesonly:
+    :maxdepth: 1
 
-   linux
-   osx
-   windows
+    dependencies
+    linux
+    osx
+    windows
+    add_to_shell
 
 **Guides:**
 

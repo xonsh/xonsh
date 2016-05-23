@@ -6,6 +6,34 @@ Current Developments
 ====================
 **Added:**
 
+* When a subprocess exits with a signal (e.g. SIGSEGV), a message is printed,
+  similar to Bash.
+* ``@$(cmd)`` has been added as a subprocess-mode operator, which replaces in
+  the subprocess command itself with the result of running ``cmd``.
+
+**Changed:** None
+
+**Deprecated:** None
+
+**Removed:**
+* Special cased code for handling version of prompt_toolkit < v1.0.0
+
+**Fixed:**
+
+* Fix bash completions (e.g git etc.) on windows when completions files have 
+  spaces in their path names
+* Numerous improvements to job control via a nearly-complete rewrite
+* Rectified install issue with Jupyter hook when installing with pyenv,
+  Jupyter install hook now repects ``--prefix`` argument.
+* Fixed a parsing bug whereby a trailing ``&`` on a line was being ignored
+  (processes were unable to be started in the background)
+
+**Security:** None
+
+v0.3.0
+====================
+**Added:**
+
 * ``and``, ``or``, ``&&``, ``||`` have been added as subprocess logical operators,
   by popular demand!
 * Subprocesses may be negated with ``not`` and grouped together with parentheses.
@@ -28,12 +56,15 @@ Current Developments
   running the Anaconda python distribution on Windows.
 * Added a menu entry to launch xonsh when installing xonsh from a conda package
 * Added a new ``which`` alias that supports both regular ``which`` and also searches
-  through xonsh aliases
+  through xonsh aliases. A pure python implementation of ``which`` is used. Thanks
+  to Trent Mick. https://github.com/trentm/which/
 * Added support for prompt toolkit v1.0.0.
 * Added ``$XONSH_CACHE_SCRIPTS`` and ``$XONSH_CACHE_EVERYTHING`` environment
   variables to control caching of scripts and interactive commands.  These can
   also be controlled by command line options ``--no-script-cache`` and
   ``--cache-everything`` when starting xonsh.
+* Added a workaround to allow ctrl-c to interrupt reverse incremental search in
+  the readline shell
 
 **Changed:**
 
@@ -56,10 +87,13 @@ Current Developments
   recommended.
 * Provide better user feedback when running ``which`` in a platform that doesn't
   provide it (e.g. Windows).
+* The lexer now uses a custom tokenizer that handles regex globs in the proper
+  way.
 
-**Deprecated:** None
 
-**Removed:** None
+
+
+
 
 **Fixed:**
 
@@ -70,6 +104,7 @@ Current Developments
   at execution time rather than passing through a literal string.
 * Fixed environment variables from os.environ not beeing loaded when a running
   a script
+* The readline shell will now load the inputrc files.
 * Fixed bug that prevented `source-alias` from working.
 * Now able to ``^C`` the xonfig wizard on start up.
 * Fixed deadlock on Windows when runing subprocess that generates enough output
@@ -80,8 +115,9 @@ Current Developments
 * Prevent Windows fixups from overriding environment vars in static config
 * Fixed Optional Github project status to reflect added/removed files via git_dirty_working_directory()
 * Fixed xonsh.exe launcher on Windows, when Python install directory has a space in it
+* Fixed `$CDPATH` to support `~` and environments variables in its items
 
-**Security:** None
+
 
 
 v0.2.7
