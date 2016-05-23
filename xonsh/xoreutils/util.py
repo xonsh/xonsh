@@ -13,3 +13,5 @@ def arg_handler(args, out, short, key, val, long=None):
                 out[k] = val
         else:
             out[key] = val
+
+all_builtin_commands = {}

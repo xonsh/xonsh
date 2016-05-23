@@ -1,17 +1,11 @@
-from xonsh.xoreutils.pwd import pwd
-from xonsh.xoreutils.cat import cat
-from xonsh.xoreutils.tty import tty
-from xonsh.xoreutils.tee import tee
-from xonsh.xoreutils.yes import yes
-from xonsh.xoreutils.echo import echo
-from xonsh.xoreutils.which import which
+import importlib
 
-all_builtin_commands = {
-    'cat': cat,
-    'pwd': pwd,
-    'tee': tee,
-    'tty': tty,
-    'yes': yes,
-    'echo': echo,
-    'which': which,
-}
+from xonsh.xoreutils.util import all_builtin_commands
+
+cmd_names = {'cat', 'pwd', 'tee', 'tty', 'yes', 'echo', 'which',
+             'enable'}
+
+
+for i in cmd_names:
+    cmd = importlib.__import__('xonsh.xoreutils.%s' % i, globals(), locals(), [i], 0)
+    all_builtin_commands[i] = getattr(cmd, i)
