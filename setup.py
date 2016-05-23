@@ -171,7 +171,8 @@ def main():
         url='https://github.com/scopatz/xonsh',
         platforms='Cross Platform',
         classifiers=['Programming Language :: Python :: 3'],
-        packages=['xonsh', 'xonsh.ptk', 'xonsh.parsers', 'xonsh.xoreutils', 'xontrib'],
+        packages=['xonsh', 'xonsh.ply', 'xonsh.ptk', 'xonsh.parsers',
+                  'xonsh.xoreutils', 'xontrib'],
         package_dir={'xonsh': 'xonsh', 'xontrib': 'xontrib'},
         package_data={'xonsh': ['*.json'], 'xontrib': ['*.xsh']},
         cmdclass=cmdclass
