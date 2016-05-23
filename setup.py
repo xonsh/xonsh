@@ -172,7 +172,7 @@ def main():
         platforms='Cross Platform',
         classifiers=['Programming Language :: Python :: 3'],
         packages=['xonsh', 'xonsh.ply', 'xonsh.ptk', 'xonsh.parsers',
-                  'xonsh.xoreutils', 'xontrib', 'xonsh.tokenize'],
+                  'xonsh.xoreutils', 'xontrib'],
         package_dir={'xonsh': 'xonsh', 'xontrib': 'xontrib'},
         package_data={'xonsh': ['*.json'], 'xontrib': ['*.xsh']},
         cmdclass=cmdclass
