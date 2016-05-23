@@ -145,10 +145,11 @@ elif ON_DARWIN:
         '/usr/local/etc/bash_completion',
         '/opt/local/etc/profile.d/bash_completion.sh')
 elif ON_WINDOWS:
+    progamfiles = os.environ.get('PROGRAMFILES', 'C:/Program Files')
     BASH_COMPLETIONS_DEFAULT = (
-        'C:/Program Files/Git/usr/share/bash-completion',
-        'C:/Program Files/Git/usr/share/bash-completion/completions',
-        'C:/Program Files/Git/mingw64/share/git/completion/git-completion.bash')
+        progamfiles + '/Git/usr/share/bash-completion',
+        progamfiles + '/Git/usr/share/bash-completion/completions',
+        progamfiles + '/Git/mingw64/share/git/completion/git-completion.bash')
 
 else:
     BASH_COMPLETIONS_DEFAULT = ()
