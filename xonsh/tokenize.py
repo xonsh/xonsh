@@ -43,10 +43,10 @@ PY35 = PYTHON_VERSION_INFO >= (3, 5, 0)
 if PY35:
     AUGASSIGN_OPS = r"[+\-*/%&@|^=<>]=?"
     ADDSPACE_TOKS = (NAME, NUMBER, ASYNC, AWAIT)
-else:                 
+else:
     AUGASSIGN_OPS = r"[+\-*/%&|^=<>]=?"
     ADDSPACE_TOKS = (NAME, NUMBER)
-    
+
 
 COMMENT = N_TOKENS
 tok_name[COMMENT] = 'COMMENT'
@@ -93,7 +93,7 @@ for k, v in _xonsh_tokens.items():
     tok_name[N_TOKENS] = v
     N_TOKENS += 1
     __all__.append(v)
-    
+
 
 EXACT_TOKEN_TYPES = {
     '(':   LPAR,
@@ -728,7 +728,7 @@ def _tokenize(readline, encoding):
                         parenlev += 1
                     elif initial in ')]}':
                         parenlev -= 1
-                    elif token in additional_parenlevs: 
+                    elif token in additional_parenlevs:
                         parenlev += 1
                     if stashed:
                         yield stashed
