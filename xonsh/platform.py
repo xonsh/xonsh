@@ -93,13 +93,12 @@ def ptk_version_info():
         return None
 
 
-BEST_SHELL_TYPE = None
-""" The 'best' available shell type, either 'prompt_toollit' or 'readline'. """
-
-if ON_WINDOWS or has_prompt_toolkit():
-    BEST_SHELL_TYPE = 'prompt_toolkit'
-else:
-    BEST_SHELL_TYPE = 'readline'
+@lru_cache(1)
+def best_shell_type():
+    if ON_WINDOWS or has_prompt_toolkit():
+        return 'prompt_toolkit'
+    else:
+        return 'readline'
 
 
 @lru_cache(1)

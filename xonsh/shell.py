@@ -7,7 +7,7 @@ from warnings import warn
 from xonsh import xontribs
 from xonsh.environ import xonshrc_context
 from xonsh.execer import Execer
-from xonsh.platform import (BEST_SHELL_TYPE, has_prompt_toolkit, ptk_version,
+from xonsh.platform import (best_shell_type, has_prompt_toolkit, ptk_version,
                             ptk_version_info)
 from xonsh.tools import XonshError
 
@@ -48,7 +48,7 @@ class Shell(object):
             env['SHELL_TYPE'] = shell_type
         shell_type = env.get('SHELL_TYPE')
         if shell_type == 'best' or shell_type is None:
-            shell_type = BEST_SHELL_TYPE
+            shell_type = best_shell_type()
         elif shell_type == 'random':
             shell_type = random.choice(('readline', 'prompt_toolkit'))
         if shell_type == 'prompt_toolkit':
