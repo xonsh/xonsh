@@ -56,7 +56,7 @@ def build_tables():
     sys.path.pop(0)
 
 
-def install_jupyter_hook(root=None):
+def install_jupyter_hook(prefix=None, root=None):
     """Make xonsh available as a Jupyter kernel."""
     if not HAVE_JUPYTER:
         print('Could not install Jupyter kernel spec, please install '
@@ -76,13 +76,16 @@ def install_jupyter_hook(root=None):
         with open(os.path.join(d, 'kernel.json'), 'w') as f:
             json.dump(spec, f, sort_keys=True)
         if 'CONDA_BUILD' in os.environ:
-            root = sys.prefix
+            prefix = sys.prefix
             if sys.platform == 'win32':
-                root = root.replace(os.sep, os.altsep)
-        print('Installing Jupyter kernel spec...')
+                prefix = prefix.replace(os.sep, os.altsep)
+        user = ('--user' in sys.argv)
+        print('Installing Jupyter kernel spec:')
+        print('  root: {0!r}'.format(root))
+        print('  prefix: {0!r}'.format(prefix))
+        print('  as user: {0}'.format(user))
         KernelSpecManager().install_kernel_spec(
-            d, 'xonsh', user=('--user' in sys.argv), replace=True,
-            prefix=root)
+            d, 'xonsh', user=user, replace=True, prefix=prefix)
 
 
 class xinstall(install):
@@ -90,7 +93,15 @@ class xinstall(install):
     def run(self):
         clean_tables()
         build_tables()
-        install_jupyter_hook(self.root if self.root else None)
+        # install Jupyter hook
+        root = self.root if self.root else None
+        prefix = self.prefix if self.prefix else None
+        try:
+            install_jupyter_hook(prefix=prefix, root=root)
+        except Exception:
+            import traceback
+            traceback.print_exc()
+            print('Installing Jupyter hook failed.')
         install.run(self)
 
 
