@@ -12,7 +12,8 @@ parser = argparse.ArgumentParser(description=program_description)
 parser.add_argument('env', nargs='*', default=[], metavar='ENV=value')
 parser.add_argument('--python', '-p', default='3.4', metavar='python_version')
 parser.add_argument('--ptk', '-t', default='1.00', metavar='ptk_version')
-parser.add_argument('--rm', action='store_true')
+parser.add_argument('--keep', action='store_true')
+parser.add_argument('--build', action='store_true')
 parser.add_argument('--command', '-c', default='xonsh', 
                     metavar='command')
 
@@ -44,10 +45,11 @@ env_string = ' '.join(args.env)
 subprocess.call(['docker', 'build', '-t' , 'xonsh', '.'])
 os.remove('./Dockerfile')
 
-run_args = ['docker', 'run', '-ti']
-for e in args.env:
-    run_args += ['-e', e]
-if args.rm:
-    run_args.append('--rm')
-run_args += ['xonsh', args.command]
-subprocess.call(run_args)
+if not args.build:
+    run_args = ['docker', 'run', '-ti']
+    for e in args.env:
+        run_args += ['-e', e]
+    if not args.keep:
+        run_args.append('--rm')
+    run_args += ['xonsh', args.command]
+    subprocess.call(run_args)
