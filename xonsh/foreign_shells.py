@@ -318,7 +318,7 @@ def parse_funcs(s, shell, sourcer=None):
         return {}
     g1 = m.group(1)
     if ON_WINDOWS:
-        g1 = g1.replace(os.sep,os.altsep)
+        g1 = g1.replace(os.sep, os.altsep)
     try:
         namefiles = json.loads(g1.strip())
     except json.decoder.JSONDecodeError as exc:
