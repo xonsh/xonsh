@@ -61,15 +61,18 @@ if PYTHON_VERSION_INFO >= (3, 5, 0):
     token_map[tokenize.ASYNC] = 'ASYNC'
     token_map[tokenize.AWAIT] = 'AWAIT'
 
+
 def _make_matcher_handler(tok, typ, pymode, ender):
     matcher = (')' if tok.endswith('(') else
                '}' if tok.endswith('{') else
                ']' if tok.endswith('[') else None)
+
     def _inner_handler(state, token):
         state['pymode'].append((pymode, tok, matcher, token.start))
         state['last'] = token
         yield _new_token(typ, tok, token.start)
     special_handlers[(tokenize.OP, tok)] = _inner_handler
+
 
 def handle_name(state, token):
     """
