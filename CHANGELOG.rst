@@ -11,7 +11,10 @@ Current Developments
 * ``@$(cmd)`` has been added as a subprocess-mode operator, which replaces in
   the subprocess command itself with the result of running ``cmd``.
 
-**Changed:** None
+**Changed:** 
+
+* On Windows the default bash completions files ``$BASH_COMPLETIONS`` now points 
+  to the default location of the completions files used by 'Git for Windows'
 
 **Deprecated:** None
 

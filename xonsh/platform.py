@@ -144,6 +144,13 @@ elif ON_DARWIN:
     BASH_COMPLETIONS_DEFAULT = (
         '/usr/local/etc/bash_completion',
         '/opt/local/etc/profile.d/bash_completion.sh')
+elif ON_WINDOWS:
+    progamfiles = os.environ.get('PROGRAMFILES', 'C:/Program Files')
+    BASH_COMPLETIONS_DEFAULT = (
+        progamfiles + '/Git/usr/share/bash-completion',
+        progamfiles + '/Git/usr/share/bash-completion/completions',
+        progamfiles + '/Git/mingw64/share/git/completion/git-completion.bash')
+
 else:
     BASH_COMPLETIONS_DEFAULT = ()
 
