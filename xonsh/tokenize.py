@@ -35,7 +35,8 @@ blank_re = re.compile(br'^[ \t\f]*(?:[#\r\n]|$)', re.ASCII)
 import token
 __all__ = token.__all__ + ["COMMENT", "tokenize", "detect_encoding",
                            "NL", "untokenize", "ENCODING", "TokenInfo",
-                           "TokenError", 'REGEXPATH', 'ATDOLLAR', 'ATEQUAL']
+                           "TokenError", 'REGEXPATH', 'ATDOLLAR', 'ATEQUAL',
+                           'DOLLARNAME']
 del token
 
 PY35 = PYTHON_VERSION_INFO >= (3, 5, 0)
