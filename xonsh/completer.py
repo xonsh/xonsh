@@ -192,9 +192,9 @@ class Completer(object):
             rtn = self.cmd_complete(prefix)
         elif cmd in self.bash_complete_funcs:
             # bash completions
-            rtn = self.bash_complete(prefix, line, begidx, endidx)
-            rtn |= self.path_complete(prefix, path_str_start, path_str_end)
-            return sorted(self._filter_repeats(rtn)), lprefix
+            comps = self.bash_complete(prefix, line, begidx, endidx)
+            pathcomp =  self.path_complete(prefix, path_str_start, path_str_end)
+            return sorted(self._replace_canonical_rep(comps, pathcomp)), lprefix
         elif prefix.startswith('${') or prefix.startswith('@('):
             # python mode explicitly
             return self._python_mode_completions(prefix, ctx,
@@ -270,6 +270,20 @@ class Completer(object):
             reps[canon].append(comp)
         return {max(i, key=len) for i in reps.values()}
 
+    def _replace_canonical_rep(self, comps, replacements):
+        """ Replaces any entries in comps with its cononical duplicate
+            from replacements 
+        """
+        replacements = {self._canonical_rep(v):v for v in replacements}
+        rtn = set()
+        for comp in comps:
+            canon = self._canonical_rep(comp)
+            if canon in replacements:
+                rtn.add(replacements[canon])
+            else:
+                rtn.add(comp)
+        return rtn       
+        
     def find_and_complete(self, line, idx, ctx=None):
         """Finds the completions given only the full code line and a current
         cursor position. This represents an easier alternative to the
