@@ -272,9 +272,9 @@ class Completer(object):
 
     def _replace_canonical_rep(self, comps, replacements):
         """ Replaces any entries in comps with its cononical duplicate
-            from replacements 
+            from replacements
         """
-        replacements = {self._canonical_rep(v):v for v in replacements}
+        replacements = {self._canonical_rep(v): v for v in replacements}
         rtn = set()
         for comp in comps:
             canon = self._canonical_rep(comp)
@@ -282,8 +282,8 @@ class Completer(object):
                 rtn.add(replacements[canon])
             else:
                 rtn.add(comp)
-        return rtn       
-        
+        return rtn
+
     def find_and_complete(self, line, idx, ctx=None):
         """Finds the completions given only the full code line and a current
         cursor position. This represents an easier alternative to the
