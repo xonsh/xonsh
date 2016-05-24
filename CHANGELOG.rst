@@ -23,6 +23,7 @@ Current Developments
 
 **Fixed:**
 
+* Show sorted bash completions suggestions.
 * Fix bash completions (e.g git etc.) on windows when completions files have
   spaces in their path names
 * Fixed a bug preventing ``source-bash`` from working on Windows
