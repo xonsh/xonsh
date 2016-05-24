@@ -15,7 +15,7 @@
   "url": "https://github.com/scopatz/xo",
   "description": ["Adds an 'xo' alias to run the exofrills text editor in the ",
                   "current Python interpreter session. This shaves off a ",
-                  "bit of the startup time when running your favorite, minimal "
+                  "bit of the startup time when running your favorite, minimal ",
                   "text editor."]
   }
  ],
