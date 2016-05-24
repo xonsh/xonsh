@@ -9,9 +9,24 @@
   "package": "xontrib-prompt-ret-code",
   "url": "https://github.com/Siecje/xontrib-prompt-ret-code",
   "description": ["Adds return code info to the prompt"]
+  },
+ {"name": "xo",
+  "package": "exofrills",
+  "url": "https://github.com/scopatz/xo",
+  "description": ["Adds an 'xo' alias to run the exofrills text editor in the ",
+                  "current Python interpreter session. This shaves off a ",
+                  "bit of the startup time when running your favorite, minimal ",
+                  "text editor."]
   }
  ],
  "packages": {
+  "xo": {
+   "license": "WTFPL",
+   "url": "http://exofills.org",
+   "install": {
+    "conda": "conda install -c conda-forge xo",
+    "pip": "pip install exofrills"}
+   },
   "xonsh": {
    "license": "BSD 3-clause",
    "url": "http://xon.sh",
