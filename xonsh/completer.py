@@ -526,11 +526,11 @@ class Completer(object):
         expr = subexpr_from_unbalanced(expr, '{', '}')
         _ctx = None
         try:
-            val = eval(expr, ctx)
+            val = builtins.__xonsh_execer__.eval(expr, ctx)
             _ctx = ctx
         except:  # pylint:disable=bare-except
             try:
-                val = eval(expr, builtins.__dict__)
+                val = builtins.__xonsh_execer__.eval(expr, builtins.__dict__)
                 _ctx = builtins.__dict__
             except:  # pylint:disable=bare-except
                 return attrs  # anything could have gone wrong!
@@ -539,7 +539,7 @@ class Completer(object):
         opts = []
         for i in _opts:
             try:
-                eval('{0}.{1}'.format(expr, i), _ctx)
+                builtins.__xonsh_execer__.eval('{0}.{1}'.format(expr, i), _ctx)
             except:  # pylint:disable=bare-except
                 continue
             else:
