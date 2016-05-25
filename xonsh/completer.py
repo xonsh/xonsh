@@ -19,7 +19,7 @@ from xonsh.tools import (subexpr_from_unbalanced, get_sep,
 
 
 RE_DASHF = re.compile(r'-F\s+(\w+)')
-RE_ATTR = re.compile(r'([^\s\(\)]+(\..+)*)\.(\w*)$')
+RE_ATTR = re.compile(r'([^\s\(\)]+(\.[^\s\(\)]+)*)\.(\w*)$')
 RE_WIN_DRIVE = re.compile(r'^([a-zA-Z]):\\')
 
 
