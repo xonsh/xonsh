@@ -98,7 +98,7 @@ pygments_style = 'sphinx'
 #pygments_style = 'pastie'
 
 # A list of ignored prefixes for module index sorting.
-#modindex_common_prefix = []
+modindex_common_prefix = ['xonsh.']
 
 
 # -- Options for HTML output ---------------------------------------------------
