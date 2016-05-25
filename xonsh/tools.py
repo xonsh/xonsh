@@ -357,7 +357,7 @@ def suggest_commands(cmd, env, aliases):
     return rtn
 
 
-def print_exception():
+def print_exception(msg=None):
     """Print exceptions with/without traceback."""
     env = getattr(builtins, '__xonsh_env__', os.environ)
     if 'XONSH_SHOW_TRACEBACK' not in env:
@@ -369,6 +369,9 @@ def print_exception():
         exc_type, exc_value, exc_traceback = sys.exc_info()
         exception_only = traceback.format_exception_only(exc_type, exc_value)
         sys.stderr.write(''.join(exception_only))
+    if msg:
+        msg = msg if msg.endswith('\n') else msg + '\n'
+        sys.stderr.write(msg)
 
 
 # Modified from Public Domain code, by Magnus Lie Hetland
