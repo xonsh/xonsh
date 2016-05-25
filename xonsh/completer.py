@@ -197,9 +197,9 @@ class Completer(object):
             return sorted(self._replace_canonical_rep(comps, pathcomp)), lprefix
         elif prefix.startswith('${') or prefix.startswith('@('):
             # python mode explicitly
-            rtn = self._python_mode_completions(prefix, ctx,
+            return self._python_mode_completions(prefix, ctx,
                                                  prefixlow,
-                                                 startswither)
+                                                 startswither), lprefix
         elif prefix.startswith('-'):
             comps = self._man_completer.option_complete(prefix, cmd)
             return sorted(comps), lprefix
