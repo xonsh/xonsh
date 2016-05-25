@@ -52,6 +52,9 @@ def leftmostname(node):
     elif isinstance(node, (Str, Bytes)):
         # handles case of "./my executable"
         rtn = leftmostname(node.s)
+    elif isinstance(node, Tuple) and len(node.elts) > 0:
+        # handles case of echo ,1,2,3
+        rtn = leftmostname(node.elts[0])
     else:
         rtn = None
     return rtn
@@ -149,7 +152,8 @@ class CtxAwareTransformer(NodeTransformer):
             maxcol = None
         else:
             mincol = min_col(node)
-            maxcol = max_col(node) + 1
+            maxcol = max_col(node)
+            maxcol = None if maxcol == mincol else maxcol + 1
         spline = subproc_toks(line,
                               mincol=mincol,
                               maxcol=maxcol,

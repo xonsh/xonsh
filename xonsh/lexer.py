@@ -42,7 +42,7 @@ _op_map = {
     '&=': 'AMPERSANDEQUAL', '^=': 'XOREQUAL', '|=': 'PIPEEQUAL',
     '//=': 'DOUBLEDIVEQUAL',
     # extra xonsh operators
-    '?': 'QUESTION', '??': 'DOUBLE_QUESTION', '@$': 'ATDOLLAR', '!': 'BANG',
+    '?': 'QUESTION', '??': 'DOUBLE_QUESTION', '@$': 'ATDOLLAR',
     '&': 'AMPERSAND',
 }
 for (op, type) in _op_map.items():

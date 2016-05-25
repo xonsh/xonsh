@@ -1743,6 +1743,12 @@ def test_git_two_quotes_space_space():
 def test_ls_quotes_3_space():
     yield check_xonsh_ast, {}, '$[ls "wakka jawaka baraka"]', False
 
+def test_echo_comma():
+    yield check_xonsh_ast, {}, '![echo ,]', False
+
+def test_echo_internal_comma():
+    yield check_xonsh_ast, {}, '![echo 1,2]', False
+
 def test_comment_only():
     yield check_xonsh_ast, {}, '# hello'
 

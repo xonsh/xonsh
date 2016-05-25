@@ -8,6 +8,7 @@ Current Developments
 
 * When a subprocess exits with a signal (e.g. SIGSEGV), a message is printed,
   similar to Bash.
+* Added comma literals to subproc mode.
 * ``@$(cmd)`` has been added as a subprocess-mode operator, which replaces in
   the subprocess command itself with the result of running ``cmd``.
 
