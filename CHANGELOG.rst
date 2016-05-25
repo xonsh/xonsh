@@ -11,6 +11,8 @@ Current Developments
 * Added comma literals to subproc mode.
 * ``@$(cmd)`` has been added as a subprocess-mode operator, which replaces in
   the subprocess command itself with the result of running ``cmd``.
+* The ``${...}`` shortcut for ``__xonsh_env__`` now returns appropriate 
+  completion options
 
 **Changed:**
 
