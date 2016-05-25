@@ -19,7 +19,7 @@ from xonsh.tools import (subexpr_from_unbalanced, get_sep,
 
 
 RE_DASHF = re.compile(r'-F\s+(\w+)')
-RE_ATTR = re.compile(r'(\S+(\..+)*)\.(\w*)$')
+RE_ATTR = re.compile(r'([^\s\(\)]+(\..+)*)\.(\w*)$')
 RE_WIN_DRIVE = re.compile(r'^([a-zA-Z]):\\')
 
 
@@ -525,8 +525,6 @@ class Completer(object):
         expr = subexpr_from_unbalanced(expr, '[', ']')
         expr = subexpr_from_unbalanced(expr, '{', '}')
         _ctx = None
-        if expr.endswith('()'):
-            return attrs
         try:
             val = builtins.__xonsh_execer__.eval(expr, ctx)
             _ctx = ctx
