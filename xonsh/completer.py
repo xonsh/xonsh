@@ -525,6 +525,8 @@ class Completer(object):
         expr = subexpr_from_unbalanced(expr, '[', ']')
         expr = subexpr_from_unbalanced(expr, '{', '}')
         _ctx = None
+        if expr.endswith('()'):
+            return attrs
         try:
             val = builtins.__xonsh_execer__.eval(expr, ctx)
             _ctx = ctx
