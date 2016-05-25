@@ -402,7 +402,7 @@ class ReadlineHistoryAdder(Thread):
         hist = builtins.__xonsh_history__
         while self.wait_for_gc and hist.gc.is_alive():
             time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer
-        files = hist.gc.unlocked_files()
+        files = hist.gc.files()
         i = 1
         for _, _, f in files:
             try:

@@ -90,7 +90,7 @@ class HistoryGC(Thread):
             hsize, units = env.get('XONSH_HISTORY_SIZE')
         else:
             hsize, units = to_history_tuple(self.size)
-        files = self.unlocked_files()
+        files = self.files(only_unlocked=True)
         rmfiles_fn = self.gc_units_to_rmfiles.get(units)
         if rmfiles_fn is None:
             raise ValueError('Units type {0!r} not understood'.format(units))
@@ -101,7 +101,7 @@ class HistoryGC(Thread):
             except OSError:
                 pass
 
-    def unlocked_files(self):
+    def files(self, only_unlocked=False):
         """Find and return the history files that are unlocked.
 
         This is sorted by the last closed time. Returns a list of (timestamp,
@@ -115,14 +115,14 @@ class HistoryGC(Thread):
         for f in fs:
             try:
                 lj = lazyjson.LazyJSON(f, reopen=False)
-                if lj['locked']:
-                    continue
+                if only_unlocked:
+                    if lj['locked']:
+                        continue
                 # info: closing timestamp, number of commands, filename
                 files.append((lj['ts'][1], len(lj.sizes['cmds']) - 1, f))
                 lj.close()
             except (IOError, OSError, ValueError):
                 continue
-        files.sort()
         return files
 
 
