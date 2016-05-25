@@ -33,7 +33,8 @@ from collections import OrderedDict, Sequence, Set
 # adding further imports from xonsh modules is discouraged to avoid cirular
 # dependencies
 from xonsh.platform import (has_prompt_toolkit, scandir, win_unicode_console,
-                            DEFAULT_ENCODING, ON_LINUX, ON_WINDOWS)
+                            DEFAULT_ENCODING, ON_LINUX, ON_WINDOWS,
+                            PYTHON_VERSION_INFO)
 if has_prompt_toolkit():
     import prompt_toolkit
 else:
@@ -287,8 +288,15 @@ class redirect_stderr(_RedirectStream):
 
 def executables_in(path):
     """Returns a generator of files in `path` that the user could execute. """
-    return (x.name for x in scandir(path)
-            if x.is_file() and os.access(x.path, os.X_OK))
+    if PYTHON_VERSION_INFO < (3, 5, 0):
+        for i in os.listdir(path):
+            name  = os.path.join(path, i)
+            if (os.path.exists(name) and os.access(name, os.X_OK) and \
+                                    (not os.path.isdir(name))):
+                yield i
+    else:
+        return (x.name for x in scandir(path)
+                if x.is_file() and os.access(x.path, os.X_OK))
 
 
 def command_not_found(cmd):
