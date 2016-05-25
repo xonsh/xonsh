@@ -28,6 +28,8 @@ Current Developments
   spaces in their path names
 * Fixed a bug preventing ``source-bash`` from working on Windows
 * Numerous improvements to job control via a nearly-complete rewrite
+* Fixed issue with loading readline init files (inputrc) that seems to be
+  triggered by libedit.
 * Rectified install issue with Jupyter hook when installing with pyenv,
   Jupyter install hook now repects ``--prefix`` argument.
 * Fixed issue with the xonsh.ply subpackage not being installed.
