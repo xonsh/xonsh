@@ -10,6 +10,7 @@ import os
 import sys
 
 from xonsh.execer import Execer
+from xonsh.platform import scandir
 
 
 class XonshImportHook(MetaPathFinder, SourceLoader):
@@ -49,7 +50,7 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
                 continue
             if not os.path.isdir(p):
                 continue
-            if fname not in os.listdir(p):
+            if fname not in (x.name for x in scandir(p)):
                 continue
             spec = ModuleSpec(fullname, self)
             self._filenames[fullname] = os.path.join(p, fname)
