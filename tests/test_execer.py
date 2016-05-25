@@ -113,6 +113,18 @@ def test_pyeval_redirect():
     code = 'echo @("foo") > bar\n'
     yield check_parse, code
 
+def test_echo_comma():
+    code = 'echo ,\n'
+    yield check_parse, code
+
+def test_echo_comma_val():
+    code = 'echo ,1\n'
+    yield check_parse, code
+
+def test_echo_comma_2val():
+    code = 'echo 1,2\n'
+    yield check_parse, code
+
 
 
 if __name__ == '__main__':
