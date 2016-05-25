@@ -295,8 +295,8 @@ def executables_in(path):
                                     (not os.path.isdir(name))):
                 yield i
     else:
-        return (x.name for x in scandir(path)
-                if x.is_file() and os.access(x.path, os.X_OK))
+        yield from (x.name for x in scandir(path)
+                    if x.is_file() and os.access(x.path, os.X_OK))
 
 
 def command_not_found(cmd):
