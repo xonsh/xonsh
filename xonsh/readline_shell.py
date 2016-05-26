@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The readline based xonsh shell."""
 import os
+import sys
 import time
 import select
 import builtins
@@ -13,7 +14,7 @@ from xonsh.base_shell import BaseShell
 from xonsh.ansi_colors import partial_color_format, color_style_names, color_style
 from xonsh.environ import partial_format_prompt, multiline_prompt
 from xonsh.tools import print_exception
-from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
+from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS, ON_CYGWIN
 
 if HAS_PYGMENTS:
     from xonsh import pyghooks
@@ -40,7 +41,8 @@ def setup_readline():
     import ctypes
     import ctypes.util
     readline.set_completer_delims(' \t\n')
-    if not readline.__file__.endswith('.py'):
+    # Cygwin seems to hang indefinitely when querying the readline lib
+    if (not ON_CYGWIN) and (not readline.__file__.endswith('.py')):
         RL_LIB = lib = ctypes.cdll.LoadLibrary(readline.__file__)
         try:
             RL_COMPLETION_SUPPRESS_APPEND = ctypes.c_int.in_dll(

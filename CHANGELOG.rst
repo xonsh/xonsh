@@ -18,6 +18,8 @@ Current Developments
 
 * On Windows the default bash completions files ``$BASH_COMPLETIONS`` now points
   to the default location of the completions files used by 'Git for Windows'
+* On Cygwin, some tweaks are applied to foreign shell subprocess calls and the
+  readline import, in order to avoid hangs on launch.
 
 **Deprecated:** None
 
