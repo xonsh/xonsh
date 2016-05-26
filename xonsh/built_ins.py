@@ -720,14 +720,7 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.__xonsh_execer__ = execer
     builtins.__xonsh_commands_cache__ = CommandsCache()
     builtins.__xonsh_all_jobs__ = {}
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-    builtins.__xonsh_active_job__ = None
     builtins.__xonsh_enabled_builtin_commands__ = set(all_builtin_commands.keys())
->>>>>>> add built-in commands, move which to xoreutils
-=======
->>>>>>> reverting some choice files to old form
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     # public built-ins
     builtins.evalx = None if execer is None else execer.eval
@@ -791,14 +784,7 @@ def unload_builtins():
              'compilex',
              'default_aliases',
              '__xonsh_all_jobs__',
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-             '__xonsh_active_job__',
              '__xonsh_enabled_builtin_commands__',
->>>>>>> add built-in commands, move which to xoreutils
-=======
->>>>>>> reverting some choice files to old form
              '__xonsh_ensure_list_of_strs__',
              '__xonsh_history__',
              ]
