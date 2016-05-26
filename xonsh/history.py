@@ -102,7 +102,8 @@ class HistoryGC(Thread):
                 pass
 
     def files(self, only_unlocked=False):
-        """Find and return the history files that are unlocked.
+        """Find and return the history files. Optionally locked files may be
+        excluded.
 
         This is sorted by the last closed time. Returns a list of (timestamp,
         file) tuples.
@@ -115,14 +116,16 @@ class HistoryGC(Thread):
         for f in fs:
             try:
                 lj = lazyjson.LazyJSON(f, reopen=False)
-                if only_unlocked:
-                    if lj['locked']:
-                        continue
+                if only_unlocked and lj['locked']:
+                    continue
                 # info: closing timestamp, number of commands, filename
-                files.append((lj['ts'][1], len(lj.sizes['cmds']) - 1, f))
+                files.append((lj['ts'][1] or time.time(), 
+                              len(lj.sizes['cmds']) - 1, 
+                              f))
                 lj.close()
             except (IOError, OSError, ValueError):
                 continue
+        files.sort()
         return files
 
 
