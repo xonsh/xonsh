@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tools to help interface with foreign shells, such as Bash."""
 import os
+import sys
 import re
 import json
 import shlex
@@ -243,9 +244,10 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
     elif currenv is not None:
         currenv = dict(currenv)
     try:
+        # start new session to avoid hangs (doesn't work on Cygwin though)
+        newsess = not (sys.platform == "cygwin")
         s = subprocess.check_output(cmd, stderr=subprocess.PIPE, env=currenv,
-                                    # start new session to avoid hangs
-                                    start_new_session=True,
+                                    start_new_session=newsess,
                                     universal_newlines=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
         if not safe:
