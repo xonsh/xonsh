@@ -153,10 +153,31 @@ class PromptToolkitShell(BaseShell):
 
     def continuation_tokens(self, cli, width):
         """Displays dots in multiline prompt"""
+        width = width - 1
         dots = builtins.__xonsh_env__.get('MULTILINE_PROMPT')
-        _width = width - 1
-        dots = _width // len(dots) * dots + dots[:_width % len(dots)]
-        return [(Token, dots + ' ')]
+        #dots = _width // len(dots) * dots + dots[:_width % len(dots)]
+        #return [(Token, dots + ' ')]
+        basetoks = self.format_color(dots)
+        baselen = sum(len(t[1]) for t in basetoks)
+        if baselen == 0:
+            return [(Token, ' '*(width + 1))]
+        toks = basetoks * width // baselen
+        n = width % baselen
+        count = 0
+        for tok in basetoks:
+            slen = len(tok[1])
+            newcount = slen + count
+            if slen == 0:
+                continue
+            elif newcount <= n:
+                toks.append(tok)
+            else:
+                toks.append((tok[0], tok[1][:n-count]))
+            count = newcount
+            if n <= count:
+                break
+        toks.append((Token, ' '))  # final space
+        return toks
 
     def format_color(self, string, **kwargs):
         """Formats a color string using Pygments. This, therefore, returns
