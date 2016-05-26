@@ -14,6 +14,7 @@ import time
 import builtins
 from functools import wraps
 from threading import Thread
+from multiprocessing import Process
 from collections import Sequence, namedtuple
 from subprocess import Popen, PIPE, DEVNULL, STDOUT, TimeoutExpired
 
@@ -367,6 +368,113 @@ class SimpleProcProxy(ProcProxy):
                  universal_newlines=False):
         f = wrap_simple_command(f, args, stdin, stdout, stderr)
         super().__init__(f, args, stdin, stdout, stderr, universal_newlines)
+
+
+class ControllableProcProxy:
+    """
+    Class representing a function to be run as a subprocess-mode command.
+    """
+    def __init__(self, f, args,
+                 stdin=None,
+                 stdout=None,
+                 stderr=None,
+                 universal_newlines=False):
+        """Parameters
+        ----------
+        f : function
+            The function to be executed.
+        args : list
+            A (possibly empty) list containing the arguments that were given on
+            the command line
+        stdin : file-like, optional
+            A file-like object representing stdin (input can be read from
+            here).  If `stdin` is not provided or if it is explicitly set to
+            `None`, then an instance of `io.StringIO` representing an empty
+            file is used.
+        stdout : file-like, optional
+            A file-like object representing stdout (normal output can be
+            written here).  If `stdout` is not provided or if it is explicitly
+            set to `None`, then `sys.stdout` is used.
+        stderr : file-like, optional
+            A file-like object representing stderr (error output can be
+            written here).  If `stderr` is not provided or if it is explicitly
+            set to `None`, then `sys.stderr` is used.
+        """
+        self.f = f
+        """
+        The function to be executed.  It should be a function of four
+        arguments, described below.
+
+        Parameters
+        ----------
+        args : list
+            A (possibly empty) list containing the arguments that were given on
+            the command line
+        stdin : file-like
+            A file-like object representing stdin (input can be read from
+            here).
+        stdout : file-like
+            A file-like object representing stdout (normal output can be
+            written here).
+        stderr : file-like
+            A file-like object representing stderr (error output can be
+            written here).
+        """
+        self.args = args
+        self.pid = None
+        self.returncode = None
+
+        # these are my handles; need to make them "pass through" to the process
+        # we launch
+        handles = ProcProxy._get_handles(self, stdin, stdout, stderr)
+        (self.p2cread, self.p2cwrite,
+         self.c2pread, self.c2pwrite,
+         self.errread, self.errwrite) = handles
+
+        def wrapper(args, stdin, stdout, stderr, universal_newlines):
+            # try to close over f so that we don't have a problem with multiprocessing
+            p = ProcProxy(f, args, stdin, stdout, stderr, universal_newlines)
+            p.join()
+            return p.returncode
+
+        self.p = Process(target=wrapper, args=(args, self.p2cread, self.c2pwrite, self.errwrite, universal_newlines))
+        self.p.start()
+        self.pid = self.p.pid
+        os.setpgid(self.pid, 0)
+
+        # default values
+        self.stdin = stdin
+        self.stdout = None
+        self.stderr = None
+
+        if ON_WINDOWS:
+            if self.p2cwrite != -1:
+                self.p2cwrite = msvcrt.open_osfhandle(self.p2cwrite.Detach(), 0)
+            if self.c2pread != -1:
+                self.c2pread = msvcrt.open_osfhandle(self.c2pread.Detach(), 0)
+            if self.errread != -1:
+                self.errread = msvcrt.open_osfhandle(self.errread.Detach(), 0)
+
+        if self.p2cwrite != -1:
+            self.stdin = io.open(self.p2cwrite, 'wb', -1)
+            if universal_newlines:
+                self.stdin = io.TextIOWrapper(self.stdin, write_through=True,
+                                              line_buffering=False)
+        if self.c2pread != -1:
+            self.stdout = io.open(self.c2pread, 'rb', -1)
+            if universal_newlines:
+                self.stdout = io.TextIOWrapper(self.stdout)
+
+        if self.errread != -1:
+            self.stderr = io.open(self.errread, 'rb', -1)
+            if universal_newlines:
+                self.stderr = io.TextIOWrapper(self.stderr)
+
+    def wait(self):
+        return self.join()
+
+    def __getattr__(self, attr):
+        return getattr(self.p, attr)
 
 #
 # Foreground Process Proxies

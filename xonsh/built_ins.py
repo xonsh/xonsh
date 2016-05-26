@@ -28,6 +28,7 @@ from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
                         SimpleForegroundProcProxy, TeePTYProc,
+                        ControllableProcProxy,
                         CompletedCommand, HiddenCompletedCommand)
 from xonsh.tools import (
     suggest_commands, XonshError, expandvars, CommandsCache
@@ -466,6 +467,8 @@ def run_subproc(cmds, captured=False):
             stderr = builtins.__xonsh_stderr_uncaptured__
         uninew = (ix == last_cmd) and (not _capture_streams)
         alias = builtins.aliases.get(cmd[0], None)
+        if alias is None and cmd[0] in builtins.__xonsh_enabled_builtin_commands__:
+            alias = all_builtin_commands[cmd[0]]
         procinfo['alias'] = alias
         if (alias is None and
                 builtins.__xonsh_env__.get('AUTO_CD') and
@@ -510,7 +513,7 @@ def run_subproc(cmds, captured=False):
             if numargs == 2:
                 cls = SimpleProcProxy if bgable else SimpleForegroundProcProxy
             elif numargs == 4:
-                cls = ProcProxy if bgable else ForegroundProcProxy
+                cls = ControllableProcProxy if bgable else ForegroundProcProxy
             else:
                 e = 'Expected callable with 2 or 4 arguments, not {}'
                 raise XonshError(e.format(numargs))

@@ -2,7 +2,7 @@ import os
 import sys
 
 
-def yes(args, stdin, stdout, stderr, controller):
+def yes(args, stdin, stdout, stderr):
     if '--help' in args:
         print(HELP_STR, file=stdout)
         return 0
@@ -10,8 +10,6 @@ def yes(args, stdin, stdout, stderr, controller):
     to_print = ["y"] if len(args) == 0 else [str(i) for i in args]
 
     while True:
-        if controller.is_killed:
-            break
         print(*to_print, file=stdout)
 
     return 0
