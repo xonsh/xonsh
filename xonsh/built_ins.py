@@ -466,9 +466,6 @@ def run_subproc(cmds, captured=False):
             stderr = builtins.__xonsh_stderr_uncaptured__
         uninew = (ix == last_cmd) and (not _capture_streams)
         alias = builtins.aliases.get(cmd[0], None)
-        if alias is None: # check enabled built-in commands
-            if cmd[0] in builtins.__xonsh_enabled_builtin_commands__:
-                alias = all_builtin_commands[cmd[0]]
         procinfo['alias'] = alias
         if (alias is None and
                 builtins.__xonsh_env__.get('AUTO_CD') and
@@ -495,11 +492,16 @@ def run_subproc(cmds, captured=False):
         _stdin_file = None
         if (stdin is not None and
                 ENV.get('XONSH_STORE_STDIN') and
-                captured in {'object', 'hiddenobject'}):
+                captured == 'object' and
+                'cat' in __xonsh_commands_cache__ and
+                'tee' in __xonsh_commands_cache__):
             _stdin_file = tempfile.NamedTemporaryFile()
-            cproc = ProcProxyController(all_builtin_commands['cat'], [], stdin=stdin, stdout=PIPE)
-            tproc = ProcProxyController(all_builtin_commands['tee'], [_stdin_file.name],
-                              stdin=cproc.stdout, stdout=PIPE)
+            cproc = Popen(['cat'],
+                          stdin=stdin,
+                          stdout=PIPE)
+            tproc = Popen(['tee', _stdin_file.name],
+                          stdin=cproc.stdout,
+                          stdout=PIPE)
             stdin = tproc.stdout
         if callable(aliased_cmd):
             prev_is_proxy = True
@@ -507,14 +509,10 @@ def run_subproc(cmds, captured=False):
             numargs = len(inspect.signature(aliased_cmd).parameters)
             if numargs == 2:
                 cls = SimpleProcProxy if bgable else SimpleForegroundProcProxy
-            elif numargs == 3:
-                cls = SimpleProcProxyController if bgable else SimpleForegroundProcProxy
             elif numargs == 4:
                 cls = ProcProxy if bgable else ForegroundProcProxy
-            elif numargs == 5:
-                cls = ProcProxyController if bgable else ForegroundProcProxy
             else:
-                e = 'Expected callable with 2-5 arguments, not {}'
+                e = 'Expected callable with 2 or 4 arguments, not {}'
                 raise XonshError(e.format(numargs))
             proc = cls(aliased_cmd, cmd[1:],
                        stdin, stdout, stderr,
@@ -548,16 +546,18 @@ def run_subproc(cmds, captured=False):
                 raise XonshError(e)
         procs.append(proc)
         prev_proc = proc
-    if prev_is_proxy:
-        _p = 'pyfunc_{}'.format(id(prev_proc))
-    else:
-        _p = prev_proc.pid
-    add_job({
-        'cmds': cmds,
-        'pid': _p,
-        'obj': prev_proc,
-        'bg': background
-    })
+    for proc in procs[:-1]:
+        try:
+            proc.stdout.close()
+        except OSError:
+            pass
+    if not prev_is_proxy:
+        add_job({
+            'cmds': cmds,
+            'pids': [i.pid for i in procs],
+            'obj': prev_proc,
+            'bg': background
+        })
     if (ENV.get('XONSH_INTERACTIVE') and
             not ENV.get('XONSH_STORE_STDOUT') and
             not _capture_streams):
@@ -568,12 +568,9 @@ def run_subproc(cmds, captured=False):
             pass
     if background:
         return
+    if prev_is_proxy:
+        prev_proc.wait()
     wait_for_active_job()
-    for proc in procs[:-1]:
-        try:
-            proc.stdout.close()
-        except OSError:
-            pass
     hist = builtins.__xonsh_history__
     hist.last_cmd_rtn = prev_proc.returncode
     # get output
@@ -724,10 +721,13 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.__xonsh_commands_cache__ = CommandsCache()
     builtins.__xonsh_all_jobs__ = {}
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     builtins.__xonsh_active_job__ = None
     builtins.__xonsh_enabled_builtin_commands__ = set(all_builtin_commands.keys())
 >>>>>>> add built-in commands, move which to xoreutils
+=======
+>>>>>>> reverting some choice files to old form
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     # public built-ins
     builtins.evalx = None if execer is None else execer.eval
@@ -792,10 +792,13 @@ def unload_builtins():
              'default_aliases',
              '__xonsh_all_jobs__',
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
              '__xonsh_active_job__',
              '__xonsh_enabled_builtin_commands__',
 >>>>>>> add built-in commands, move which to xoreutils
+=======
+>>>>>>> reverting some choice files to old form
              '__xonsh_ensure_list_of_strs__',
              '__xonsh_history__',
              ]

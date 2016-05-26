@@ -13,7 +13,7 @@ import sys
 import time
 import builtins
 from functools import wraps
-from threading import Thread, Lock
+from threading import Thread
 from collections import Sequence, namedtuple
 from subprocess import Popen, PIPE, DEVNULL, STDOUT, TimeoutExpired
 
@@ -58,9 +58,7 @@ class ProcProxy(Thread):
                  stdin=None,
                  stdout=None,
                  stderr=None,
-                 universal_newlines=False,
-                 controller=None,
-                 wrap=True):
+                 universal_newlines=False):
         """Parameters
         ----------
         f : function
@@ -102,15 +100,10 @@ class ProcProxy(Thread):
             A file-like object representing stderr (error output can be
             written here).
         """
-        if wrap:
-            def _new_f(args, stdin, stdout, stderr, controller):
-                return f(args, stdin, stdout, stderr)
-            self.f = _new_f
         self.args = args
         self.pid = None
         self.returncode = None
         self.wait = self.join
-        self.controller = controller
 
         handles = self._get_handles(stdin, stdout, stderr)
         (self.p2cread, self.p2cwrite,
@@ -177,7 +170,7 @@ class ProcProxy(Thread):
         else:
             sp_stderr = sys.stderr
 
-        r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr, self.controller)
+        r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr)
         self.returncode = 0 if r is None else r
 
     def poll(self):
@@ -330,61 +323,7 @@ class ProcProxy(Thread):
                     errread, errwrite)
 
 
-class ProcProxyController(Thread):
-    def __init__(self, f, args, stdin=None, stdout=None, stderr=None, universal_newlines=False):
-        self.execution_lock = Lock()
-        self.is_killed = False
-        self.proc = ProcProxy(f, args, stdin, stdout, stderr, universal_newlines, self, wrap=False)
-        Thread.__init__(self)
-        self.start()
-
-    def run(self):
-        while self.proc.is_alive():
-            pass
-
-    def __getattr__(self, attr):
-        return getattr(self.proc, attr)
-
-
-class SimpleProcProxyController(ProcProxyController):
-    def __init__(self, f, args, stdin=None, stdout=None, stderr=None, universal_newlines=False):
-        f = wrap_simple_controlled_command(f)
-        super().__init__(f, args, stdin, stdout, stderr, universal_newlines)
-
-
-def wrap_simple_controlled_command(f):
-    """Decorator for creating 'simple' callable aliases."""
-    bgable = getattr(f, '__xonsh_backgroundable__', True)
-    @wraps(f)
-    def wrapped_simple_controlled_command(args, stdin, stdout, stderr, controller):
-        try:
-            i = stdin.read()
-            if bgable:
-                with redirect_stdout(stdout), redirect_stderr(stderr):
-                    r = f(args, i, controller)
-            else:
-                r = f(args, i, controller)
-
-            cmd_result = 0
-            if isinstance(r, str):
-                stdout.write(r)
-            elif isinstance(r, Sequence):
-                if r[0] is not None:
-                    stdout.write(r[0])
-                if r[1] is not None:
-                    stderr.write(r[1])
-                if len(r) > 2 and r[2] is not None:
-                    cmd_result = r[2]
-            elif r is not None:
-                stdout.write(str(r))
-            return cmd_result
-        except Exception:
-            print_exception()
-            return 1  # returncode for failure
-    return wrapped_simple_controlled_command
-
-
-def wrap_simple_command(f):
+def wrap_simple_command(f, args, stdin, stdout, stderr):
     """Decorator for creating 'simple' callable aliases."""
     bgable = getattr(f, '__xonsh_backgroundable__', True)
     @wraps(f)
@@ -426,7 +365,7 @@ class SimpleProcProxy(ProcProxy):
 
     def __init__(self, f, args, stdin=None, stdout=None, stderr=None,
                  universal_newlines=False):
-        f = wrap_simple_command(f)
+        f = wrap_simple_command(f, args, stdin, stdout, stderr)
         super().__init__(f, args, stdin, stdout, stderr, universal_newlines)
 
 #
