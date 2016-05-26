@@ -155,6 +155,9 @@ class PromptToolkitShell(BaseShell):
         """Displays dots in multiline prompt"""
         width = width - 1
         dots = builtins.__xonsh_env__.get('MULTILINE_PROMPT')
+        dots = dots() if callable(dots) else dots
+        if dots is None:
+            return [(Token, ' '*(width + 1))]
         basetoks = self.format_color(dots)
         baselen = sum(len(t[1]) for t in basetoks)
         if baselen == 0:

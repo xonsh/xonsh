@@ -30,7 +30,7 @@ from xonsh.tools import (
     is_string, is_completions_display_value, to_completions_display_value,
     is_string_set, csv_to_set, set_to_csv, get_sep, is_int, is_bool_seq,
     csv_to_bool_seq, bool_seq_to_csv, DefaultNotGiven, print_exception,
-    setup_win_unicode_console, intensify_colors_on_win_setter
+    setup_win_unicode_console, intensify_colors_on_win_setter, format_color
 )
 
 
@@ -1166,7 +1166,38 @@ def multiline_prompt(curr=''):
     dots = dots() if callable(dots) else dots
     if dots is None or len(dots) == 0:
         return ''
-    return (dots * (headlen // len(dots))) + dots[:headlen % len(dots)] + tail
+    #return (dots * (headlen // len(dots))) + dots[:headlen % len(dots)] + tail
+    tokstr = format_color(dots, hide=True)
+    baselen = 0
+    basetoks = []
+    for x in tokstr.split('\001'):
+        pre, sep, post = x.partition('\002')
+        if len(sep) == 0:
+            basetoks.append(('', pre))
+            baselen += len(pre)
+        else:
+            basetoks.append(('\001' + pre + '\002', post))
+            baselen += len(post)
+    if baselen == 0:
+        return format_color('{NO_COLOR}' + tail, hide=True)
+    toks = basetoks * (headlen // baselen)
+    n = headlen % baselen
+    count = 0
+    for tok in basetoks:
+        slen = len(tok[1])
+        newcount = slen + count
+        if slen == 0:
+            continue
+        elif newcount <= n:
+            toks.append(tok)
+        else:
+            toks.append((tok[0], tok[1][:n-count]))
+        count = newcount
+        if n <= count:
+            break
+    toks.append((format_color('{NO_COLOR}', hide=True), tail))
+    rtn = ''.join(chain.from_iterable(toks))
+    return rtn
 
 
 BASE_ENV = {
