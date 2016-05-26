@@ -33,7 +33,8 @@ from collections import OrderedDict, Sequence, Set
 # adding further imports from xonsh modules is discouraged to avoid cirular
 # dependencies
 from xonsh.platform import (has_prompt_toolkit, scandir, win_unicode_console,
-                            DEFAULT_ENCODING, ON_LINUX, ON_WINDOWS)
+                            DEFAULT_ENCODING, ON_LINUX, ON_WINDOWS,
+                            PYTHON_VERSION_INFO)
 if has_prompt_toolkit():
     import prompt_toolkit
 else:
@@ -287,8 +288,15 @@ class redirect_stderr(_RedirectStream):
 
 def executables_in(path):
     """Returns a generator of files in `path` that the user could execute. """
-    return (x.name for x in scandir(path)
-            if x.is_file() and os.access(x.path, os.X_OK))
+    if PYTHON_VERSION_INFO < (3, 5, 0):
+        for i in os.listdir(path):
+            name  = os.path.join(path, i)
+            if (os.path.exists(name) and os.access(name, os.X_OK) and \
+                                    (not os.path.isdir(name))):
+                yield i
+    else:
+        yield from (x.name for x in scandir(path)
+                    if x.is_file() and os.access(x.path, os.X_OK))
 
 
 def command_not_found(cmd):
@@ -349,7 +357,7 @@ def suggest_commands(cmd, env, aliases):
     return rtn
 
 
-def print_exception():
+def print_exception(msg=None):
     """Print exceptions with/without traceback."""
     env = getattr(builtins, '__xonsh_env__', os.environ)
     if 'XONSH_SHOW_TRACEBACK' not in env:
@@ -361,6 +369,9 @@ def print_exception():
         exc_type, exc_value, exc_traceback = sys.exc_info()
         exception_only = traceback.format_exception_only(exc_type, exc_value)
         sys.stderr.write(''.join(exception_only))
+    if msg:
+        msg = msg if msg.endswith('\n') else msg + '\n'
+        sys.stderr.write(msg)
 
 
 # Modified from Public Domain code, by Magnus Lie Hetland

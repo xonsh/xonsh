@@ -69,8 +69,12 @@ def setup_readline():
         readline.parse_and_bind("bind ^I rl_complete")
     else:
         readline.parse_and_bind("tab: complete")
-    # load custom user settings
-    readline.read_init_file()
+    # try to load custom user settings
+    try:
+        readline.read_init_file()
+    except Exception:
+        # this seems to fail with libedit
+        print_exception('xonsh: could not load readline default init file.')
 
 
 def teardown_readline():

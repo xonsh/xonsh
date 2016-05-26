@@ -19,7 +19,7 @@ from xonsh.tools import (subexpr_from_unbalanced, get_sep,
 
 
 RE_DASHF = re.compile(r'-F\s+(\w+)')
-RE_ATTR = re.compile(r'(\S+(\..+)*)\.(\w*)$')
+RE_ATTR = re.compile(r'([^\s\(\)]+(\.[^\s\(\)]+)*)\.(\w*)$')
 RE_WIN_DRIVE = re.compile(r'^([a-zA-Z]):\\')
 
 
@@ -199,7 +199,7 @@ class Completer(object):
             # python mode explicitly
             return self._python_mode_completions(prefix, ctx,
                                                  prefixlow,
-                                                 startswither)
+                                                 startswither), lprefix
         elif prefix.startswith('-'):
             comps = self._man_completer.option_complete(prefix, cmd)
             return sorted(comps), lprefix
@@ -526,33 +526,28 @@ class Completer(object):
         expr = subexpr_from_unbalanced(expr, '{', '}')
         _ctx = None
         try:
-            val = eval(expr, ctx)
+            val = builtins.__xonsh_execer__.eval(expr, ctx)
             _ctx = ctx
         except:  # pylint:disable=bare-except
             try:
-                val = eval(expr, builtins.__dict__)
+                val = builtins.__xonsh_execer__.eval(expr, builtins.__dict__)
                 _ctx = builtins.__dict__
             except:  # pylint:disable=bare-except
                 return attrs  # anything could have gone wrong!
-        _opts = dir(val)
-        # check whether these options actually work (e.g., disallow 7.imag)
-        opts = []
-        for i in _opts:
-            try:
-                eval('{0}.{1}'.format(expr, i), _ctx)
-            except:  # pylint:disable=bare-except
-                continue
-            else:
-                opts.append(i)
         if len(attr) == 0:
-            opts = [o for o in opts if not o.startswith('_')]
+            opts = [o for o in dir(val) if not o.startswith('_')]
         else:
             csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
             startswither = startswithnorm if csc else startswithlow
             attrlow = attr.lower()
-            opts = [o for o in opts if startswither(o, attr, attrlow)]
+            opts = [o for o in dir(val) if startswither(o, attr, attrlow)]
         prelen = len(prefix)
         for opt in opts:
+            # check whether these options actually work (e.g., disallow 7.imag)
+            try:
+                builtins.__xonsh_execer__.eval('{0}.{1}'.format(expr, opt), _ctx)
+            except:  # pylint:disable=bare-except
+                continue
             a = getattr(val, opt)
             rpl = opt + '(' if callable(a) else opt
             # note that prefix[:prelen-len(attr)] != prefix[:-len(attr)]

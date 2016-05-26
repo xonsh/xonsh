@@ -11,6 +11,8 @@ Current Developments
 * Added comma literals to subproc mode.
 * ``@$(cmd)`` has been added as a subprocess-mode operator, which replaces in
   the subprocess command itself with the result of running ``cmd``.
+* The ``${...}`` shortcut for ``__xonsh_env__`` now returns appropriate 
+  completion options
 
 **Changed:**
 
@@ -29,6 +31,8 @@ Current Developments
   spaces in their path names
 * Fixed a bug preventing ``source-bash`` from working on Windows
 * Numerous improvements to job control via a nearly-complete rewrite
+* Fixed issue with loading readline init files (inputrc) that seems to be
+  triggered by libedit.
 * Rectified install issue with Jupyter hook when installing with pyenv,
   Jupyter install hook now repects ``--prefix`` argument.
 * Fixed issue with the xonsh.ply subpackage not being installed.
