@@ -150,7 +150,9 @@ class ProcProxy(Thread):
         """
         if self.f is None:
             return
-        if self.stdin is not None:
+        if isinstance(self.stdin, int):
+            sp_stdin = io.TextIOWrapper(io.open(self.stdin, 'rb', -1))
+        elif self.stdin is not None:
             sp_stdin = io.TextIOWrapper(self.stdin)
         else:
             sp_stdin = io.StringIO("")
@@ -432,12 +434,22 @@ class ControllableProcProxy:
          self.c2pread, self.c2pwrite,
          self.errread, self.errwrite) = handles
 
+        self.stdin_passthrough = False
         self.stdout_passthrough = False
+        self.stderr_passthrough = False
 
+        if stdin == None or stdin == sys.stdin:
+            self.p2cread = os.dup(sys.stdin.fileno())
+            os.set_inheritable(self.p2cread, True)
+            self.stdin_passthrough = True
         if stdout == None or stdout == sys.stdout:
             self.c2pwrite = os.dup(sys.stdout.fileno())
             os.set_inheritable(self.c2pwrite, True)
             self.stdout_passthrough = True
+        if stderr == None or stderr == sys.stderr:
+            self.errwrite = os.dup(sys.stderr.fileno())
+            os.set_inheritable(self.errwrite, True)
+            self.stderr_passthrough = True
 
         def wrapper(args, stdin, stdout, stderr, universal_newlines):
             # try to close over f so that we don't have a problem with multiprocessing
@@ -449,11 +461,25 @@ class ControllableProcProxy:
                 except:
                     break
                 self.returncode = p.returncode
+                if self.stdin_passthrough:
+                    try:
+                        x = os.read(self.op2cread, 1024)
+                        if len(x) != 0:
+                            os.write(self.p2cwrite, x)
+                    except:
+                        pass
                 if self.stdout_passthrough:
                     try:
                         x = os.read(self.c2pread, 1024)
                         if len(x) != 0:
                             os.write(self.oc2pwrite, x)
+                    except:
+                        pass
+                if self.stderr_passthrough:
+                    try:
+                        x = os.read(self.errread, 1024)
+                        if len(x) != 0:
+                            os.write(self.oerrwrite, x)
                     except:
                         pass
                 if p.returncode is not None:
