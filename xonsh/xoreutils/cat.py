@@ -3,7 +3,7 @@ import sys
 
 from xonsh.xoreutils.util import arg_handler
 
-def _cat_single_file(opts, fname, stdin, out, err, line_count=1, controller=None):
+def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
     if fname == '-':
         f = stdin
     elif os.path.isdir(fname):
@@ -17,8 +17,6 @@ def _cat_single_file(opts, fname, stdin, out, err, line_count=1, controller=None
     sep = os.linesep.encode()
     last_was_blank = False
     while True:
-        if controller.is_killed:
-            return None
         _r = r = f.readline()
         if isinstance(_r, str):
             _r = r = _r.encode()
@@ -44,7 +42,7 @@ def _cat_single_file(opts, fname, stdin, out, err, line_count=1, controller=None
     return False, line_count
 
 
-def cat(args, stdin, stdout, stderr, controller):
+def cat(args, stdin, stdout, stderr):
     opts = _parse_args(args)
     if opts is None:
         print(HELP_STR, file=stdout)
@@ -55,7 +53,7 @@ def cat(args, stdin, stdout, stderr, controller):
     if len(args) == 0:
         args = ['-']
     for i in args:
-        o = _cat_single_file(opts, i, stdin, stdout, stderr, line_count, controller)
+        o = _cat_single_file(opts, i, stdin, stdout, stderr, line_count)
         if o is None:
             return -1
         _e, line_count = o

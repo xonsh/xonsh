@@ -4,7 +4,7 @@ import sys
 from xonsh.xoreutils.util import arg_handler
 
 
-def tee(args, stdin, stdout, stderr, controller):
+def tee(args, stdin, stdout, stderr):
     mode = 'w'
     if '-a' in args:
         args.remove('-a')
@@ -30,9 +30,6 @@ def tee(args, stdin, stdout, stderr, controller):
     files.append(stdout)
 
     while True:
-        if controller.is_killed:
-            errors = -1
-            break
         r = stdin.read(1024)
         if r == '':
             break
