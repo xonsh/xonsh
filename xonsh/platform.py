@@ -28,8 +28,9 @@ ON_DARWIN = platform.system() == 'Darwin'
 ON_LINUX = platform.system() == 'Linux'
 """ ``True`` if executed on a Linux platform, else ``False``. """
 ON_WINDOWS = platform.system() == 'Windows'
-""" ``True`` if executed on a Windows platform, else ``False``. """
-
+""" ``True`` if executed on a native Windows platform, else ``False``. """
+ON_CYGWIN = sys.platform == 'cygwin'
+""" ``True`` if executed on a Cygwin Windows platform, else ``False``. """
 ON_POSIX = (os.name == 'posix')
 """ ``True`` if executed on a POSIX-compliant platform, else ``False``. """
 
@@ -202,7 +203,7 @@ if LINUX_DISTRO == 'arch':
     BASH_COMPLETIONS_DEFAULT = (
         '/etc/bash_completion',
         '/usr/share/bash-completion/completions')
-elif ON_LINUX:
+elif ON_LINUX or ON_CYGWIN:
     BASH_COMPLETIONS_DEFAULT = (
         '/usr/share/bash-completion',
         '/usr/share/bash-completion/completions')

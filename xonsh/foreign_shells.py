@@ -13,7 +13,7 @@ from tempfile import NamedTemporaryFile
 from collections import MutableMapping, Mapping, Sequence
 
 from xonsh.tools import to_bool, ensure_string
-from xonsh.platform import ON_WINDOWS
+from xonsh.platform import ON_WINDOWS, ON_CYGWIN
 
 
 COMMAND = """
@@ -244,10 +244,9 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
     elif currenv is not None:
         currenv = dict(currenv)
     try:
-        # start new session to avoid hangs (doesn't work on Cygwin though)
-        newsess = not (sys.platform == "cygwin")
         s = subprocess.check_output(cmd, stderr=subprocess.PIPE, env=currenv,
-                                    start_new_session=newsess,
+                                    # start new session to avoid hangs (doesn't work on Cygwin though)
+                                    start_new_session=(not ON_CYGWIN),
                                     universal_newlines=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
         if not safe:
