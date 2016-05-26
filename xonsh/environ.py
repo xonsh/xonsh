@@ -1166,7 +1166,6 @@ def multiline_prompt(curr=''):
     dots = dots() if callable(dots) else dots
     if dots is None or len(dots) == 0:
         return ''
-    #return (dots * (headlen // len(dots))) + dots[:headlen % len(dots)] + tail
     tokstr = format_color(dots, hide=True)
     baselen = 0
     basetoks = []
