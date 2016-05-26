@@ -11,6 +11,7 @@ import io
 import os
 import sys
 import time
+import signal
 import builtins
 from functools import wraps
 from threading import Thread
@@ -431,10 +432,33 @@ class ControllableProcProxy:
          self.c2pread, self.c2pwrite,
          self.errread, self.errwrite) = handles
 
+        self.stdout_passthrough = False
+
+        if stdout == None or stdout == sys.stdout:
+            self.c2pwrite = os.dup(sys.stdout.fileno())
+            os.set_inheritable(self.c2pwrite, True)
+            self.stdout_passthrough = True
+
         def wrapper(args, stdin, stdout, stderr, universal_newlines):
             # try to close over f so that we don't have a problem with multiprocessing
+            signal.signal(signal.SIGTSTP, signal.SIG_DFL)
             p = ProcProxy(f, args, stdin, stdout, stderr, universal_newlines)
-            p.join()
+            while True:
+                try:
+                    p.join(0.01)
+                except:
+                    break
+                self.returncode = p.returncode
+                if self.stdout_passthrough:
+                    try:
+                        x = os.read(self.c2pread, 1024)
+                        if len(x) != 0:
+                            os.write(self.oc2pwrite, x)
+                    except:
+                        pass
+                if p.returncode is not None:
+                    return
+            signal.signal(signal.SIGTSTP, signal.SIG_IGN)
             return p.returncode
 
         self.p = Process(target=wrapper, args=(args, self.p2cread, self.c2pwrite, self.errwrite, universal_newlines))
@@ -470,11 +494,14 @@ class ControllableProcProxy:
             if universal_newlines:
                 self.stderr = io.TextIOWrapper(self.stderr)
 
-    def wait(self):
-        return self.join()
+    def wait(self, timeout=None):
+        self.p.join(timeout=timeout)
 
     def __getattr__(self, attr):
         return getattr(self.p, attr)
+
+    def poll(self):
+        return self.returncode
 
 #
 # Foreground Process Proxies

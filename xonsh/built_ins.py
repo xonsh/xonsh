@@ -507,13 +507,14 @@ def run_subproc(cmds, captured=False):
                           stdout=PIPE)
             stdin = tproc.stdout
         if callable(aliased_cmd):
-            prev_is_proxy = True
             bgable = getattr(aliased_cmd, '__xonsh_backgroundable__', True)
             numargs = len(inspect.signature(aliased_cmd).parameters)
             if numargs == 2:
                 cls = SimpleProcProxy if bgable else SimpleForegroundProcProxy
+                prev_is_proxy = True
             elif numargs == 4:
                 cls = ControllableProcProxy if bgable else ForegroundProcProxy
+                prev_is_proxy = False
             else:
                 e = 'Expected callable with 2 or 4 arguments, not {}'
                 raise XonshError(e.format(numargs))
