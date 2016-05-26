@@ -17,8 +17,8 @@ if ON_WINDOWS:
     def _continue(job):
         job['status'] = "running"
 
-    def _kill(obj):
-        check_output(['taskkill', '/F', '/T', '/PID', str(obj.pid)])
+    def _kill(job):
+        check_output(['taskkill', '/F', '/T', '/PID', str(job['obj'].pid)])
 
     def ignore_sigtstp():
         pass
@@ -49,7 +49,7 @@ if ON_WINDOWS:
             except TimeoutExpired:
                 pass
             except KeyboardInterrupt:
-                _kill(obj)
+                _kill(active_task)
 
         return wait_for_active_job()
 
