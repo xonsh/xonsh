@@ -330,6 +330,7 @@ class ProcProxy(Thread):
 def wrap_simple_command(f, args, stdin, stdout, stderr):
     """Decorator for creating 'simple' callable aliases."""
     bgable = getattr(f, '__xonsh_backgroundable__', True)
+
     @wraps(f)
     def wrapped_simple_command(args, stdin, stdout, stderr):
         try:
@@ -438,15 +439,15 @@ class ControllableProcProxy:
         self.stdout_passthrough = False
         self.stderr_passthrough = False
 
-        if stdin == None or stdin == sys.stdin:
+        if stdin in {None, sys.stdin}:
             self.p2cread = os.dup(sys.stdin.fileno())
             os.set_inheritable(self.p2cread, True)
             self.stdin_passthrough = True
-        if stdout == None or stdout == sys.stdout:
+        if stdout in {None, sys.stdout}:
             self.c2pwrite = os.dup(sys.stdout.fileno())
             os.set_inheritable(self.c2pwrite, True)
             self.stdout_passthrough = True
-        if stderr == None or stderr == sys.stderr:
+        if stderr in {None, sys.stderr}:
             self.errwrite = os.dup(sys.stderr.fileno())
             os.set_inheritable(self.errwrite, True)
             self.stderr_passthrough = True
@@ -487,7 +488,11 @@ class ControllableProcProxy:
             signal.signal(signal.SIGTSTP, signal.SIG_IGN)
             return p.returncode
 
-        self.p = Process(target=wrapper, args=(args, self.p2cread, self.c2pwrite, self.errwrite, universal_newlines))
+        self.p = Process(target=wrapper, args=(args,
+                                               self.p2cread,
+                                               self.c2pwrite,
+                                               self.errwrite,
+                                               universal_newlines))
         self.p.start()
         self.pid = self.p.pid
         os.setpgid(self.pid, 0)
@@ -529,10 +534,10 @@ class ControllableProcProxy:
     def poll(self):
         return self.returncode
 
+
 #
 # Foreground Process Proxies
 #
-
 class ForegroundProcProxy(object):
     """This is process proxy class that runs its alias functions on the
     same thread that it was called from, which is typically the main thread.
@@ -613,10 +618,10 @@ class TeePTYProc(object):
         self._stderr = stderr
         self.args = args
         self.universal_newlines = universal_newlines
-        xenv = builtins.__xonsh_env__ if hasattr(builtins, '__xonsh_env__') \
-                                      else {'XONSH_ENCODING': 'utf-8',
-                                            'XONSH_ENCODING_ERRORS': 'strict'}
-
+        xenv = getattr(builtins, '__xonsh_env__', None)
+        if xenv is None:
+            xenv = {'XONSH_ENCODING': 'utf-8',
+                    'XONSH_ENCODING_ERRORS': 'strict'}
         if not os.access(args[0], os.F_OK):
             raise FileNotFoundError('command {0!r} not found'.format(args[0]))
         elif not os.access(args[0], os.X_OK) or os.path.isdir(args[0]):
@@ -703,6 +708,7 @@ _CCTuple = namedtuple("_CCTuple", ["stdin",
                                    "stdout_redirect",
                                    "stderr_redirect",
                                    "timestamp"])
+
 
 class CompletedCommand(_CCTuple):
     """Represents a completed subprocess-mode command."""
