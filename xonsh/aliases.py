@@ -5,6 +5,7 @@ from argparse import ArgumentParser, Action
 import builtins
 from collections.abc import MutableMapping, Iterable, Sequence
 import os
+import sys
 import shlex
 
 from xonsh.dirstack import cd, pushd, popd, dirs, _get_cwd
@@ -458,6 +459,26 @@ def vox(args, stdin=None):
     return vox(args, stdin=stdin)
 
 
+def showcmd(args, stdin=None):
+    """usage: showcmd [-h|--help|cmd args]
+
+    Displays the command and arguments as a list of strings that xonsh would
+    run in subprocess mode. This is useful for determining how xonsh evaluates
+    your commands and arguments prior to running these commands.
+
+    optional arguments:
+      -h, --help            show this help message and exit
+
+    example:
+      >>> showcmd echo $USER can't hear "the sea"
+      ['echo', 'I', "can't", 'hear', 'the sea']
+    """
+    if len(args) == 0 or (len(args) == 1 and args[0] in {'-h', '--help'}):
+        print(showcmd.__doc__.rstrip().replace('\n    ', '\n'))
+    else:
+        sys.displayhook(args)
+
+
 def make_default_aliases():
     """Creates a new default aliases dictionary."""
     default_aliases = {
@@ -485,6 +506,7 @@ def make_default_aliases():
         'timeit': timeit_alias,
         'xonfig': xonfig,
         'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
+        'showcmd': showcmd,
         'ipynb': ['jupyter', 'notebook', '--no-browser'],
         'vox': vox,
         'which': which,

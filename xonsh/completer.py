@@ -71,7 +71,7 @@ CHARACTERS_NEED_QUOTES = ' `\t\r\n${}*()"\',?&'
 if ON_WINDOWS:
     CHARACTERS_NEED_QUOTES += '%'
 
-COMPLETION_SKIP_TOKENS = {'man', 'sudo', 'time', 'timeit', 'which'}
+COMPLETION_SKIP_TOKENS = {'man', 'sudo', 'time', 'timeit', 'which', 'showcmd'}
 
 BASH_COMPLETE_SCRIPT = """source "{filename}"
 COMP_WORDS=({line})
