@@ -185,7 +185,7 @@ DEFAULT_VALUES = {
     'COMPLETIONS_DISPLAY': 'multi',
     'COMPLETIONS_MENU_ROWS': 5,
     'DIRSTACK_SIZE': 20,
-    'DYNAMIC_CWD_WIDTH': 'inf',
+    'DYNAMIC_CWD_WIDTH': (float('inf'), 'c'),
     'EXPAND_ENV_VARS': True,
     'FORCE_POSIX_PATHS': False,
     'HISTCONTROL': set(),
@@ -1050,49 +1050,41 @@ def _collapsed_pwd():
     return leader + sep.join(base)
 
 def _dynamically_collapsed_pwd():
+    """Return the compact current working directory.  It respects the
+    environment variable DYNAMIC_CWD_WIDTH.
     """
-        Return the compact current working directory
-
-        It respects the environment variable DYNAMIC_CWD_WIDTH.
-    """
-
-    sep = get_sep()
     originial_path = _replace_home_cwd()
-    pwd = originial_path.split(sep)
-    cols, _ = shutil.get_terminal_size()
-    target_width_raw = builtins.__xonsh_env__['DYNAMIC_CWD_WIDTH']
-
-    if (target_width_raw[-1] == '%'):
-        target_width = (cols * float(target_width_raw[:-1])) // 100
-    else:
-        target_width = float(target_width_raw)
+    target_width, units = builtins.__xonsh_env__['DYNAMIC_CWD_WIDTH']
     if target_width == float('inf'):
         return originial_path
-    else:
-        last = pwd.pop()
-        remaining_space = target_width - len(last)
-        # Reserve space for separators
-        remaining_space_for_text = remaining_space - len(pwd)
+    if (units == '%'):
+        cols, _ = shutil.get_terminal_size()
+        target_width = (cols * target_width) // 100
+    sep = get_sep()
+    pwd = originial_path.split(sep)
+    last = pwd.pop()
+    remaining_space = target_width - len(last)
+    # Reserve space for separators
+    remaining_space_for_text = remaining_space - len(pwd)
+    parts = []
+    for i  in range(len(pwd)):
+        part = pwd[i]
+        part_len = int(min(len(part), max(1, remaining_space_for_text // (len(pwd) - i))))
+        remaining_space_for_text -= part_len
+        reduced_part = part[0:part_len]
+        parts.append(reduced_part)
+    parts.append(last)
+    full = sep.join(parts)
+    # If even if displaying one letter per dir we are too long
+    if (len(full) > target_width):
+        # We truncate the left most part
+        full = "..." + full[int(-target_width) + 3:]
+        # if there is not even a single separator we still
+        # want to display at least the beginning of the directory
+        if full.find(sep) == -1:
+            full = ("..." + sep + last)[0:int(target_width)]
+    return full
 
-        parts = []
-        for i  in range(len(pwd)):
-            part = pwd[i]
-            part_len = int(min(len(part), max(1, remaining_space_for_text // (len(pwd) - i))))
-            remaining_space_for_text -= part_len
-            reduced_part = part[0:part_len]
-            parts.append(reduced_part)
-
-        parts.append(last)
-        full = sep.join(parts)
-        # If even if displaying one letter per dir we are too long
-        if (len(full) > target_width):
-            # We truncate the left most part
-            full = "..." + full[int(-target_width) + 3:]
-            # if there is not even a single separator we still
-            # want to display at least the beginning of the directory
-            if full.find(sep) == -1:
-                full = ("..." + sep + last)[0:int(target_width)]
-        return full
 
 def _current_job():
     j = get_next_task()

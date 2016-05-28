@@ -507,6 +507,17 @@ def test_to_dynamic_cwd_tuple():
         yield assert_equal, exp, obs
 
 
+def test_dynamic_cwd_tuple_to_str():
+    cases = [
+        ((20.0, 'c'), '20.0'),
+        ((20.0, '%'), '20.0%'),
+        ((float('inf'), 'c'), 'inf'),
+        ]
+    for inp, exp in cases:
+        obs = dynamic_cwd_tuple_to_str(inp)
+        yield assert_equal, exp, obs
+
+
 def test_escape_windows_cmd_string():
     cases = [
         ('', ''),
