@@ -16,6 +16,7 @@ from xonsh.built_ins import iglobpath, expand_path
 from xonsh.platform import ON_WINDOWS
 from xonsh.tools import (subexpr_from_unbalanced, get_sep,
                          check_for_partial_string, RE_STRING_START)
+from xonsh.completers import (completers_enabled, completers)
 
 
 RE_DASHF = re.compile(r'-F\s+(\w+)')
@@ -66,10 +67,6 @@ XONSH_TOKENS = {
     '&=', '^=', '|=', '//=', ',', ';', ':', '?', '??', '$(', '${', '$[', '..',
     '...'
 }
-
-CHARACTERS_NEED_QUOTES = ' `\t\r\n${}*()"\',?&'
-if ON_WINDOWS:
-    CHARACTERS_NEED_QUOTES += '%'
 
 COMPLETION_SKIP_TOKENS = {'man', 'sudo', 'time', 'timeit', 'which', 'showcmd'}
 
@@ -165,80 +162,17 @@ class Completer(object):
         """
         space = ' '  # intern some strings for faster appending
         ctx = ctx or {}
-        prefixlow = prefix.lower()
-        _line = line
-        line = builtins.aliases.expand_alias(line)
-        # string stuff for automatic quoting
-        path_str_start = ''
-        path_str_end = ''
-        p = _path_from_partial_string(_line, endidx)
-        lprefix = len(prefix)
-        if p is not None:
-            lprefix = len(p[0])
-            prefix = p[1]
-            path_str_start = p[2]
-            path_str_end = p[3]
-        cmd = line.split(' ', 1)[0]
-        while cmd in COMPLETION_SKIP_TOKENS:
-            begidx -= len(cmd)+1
-            endidx -= len(cmd)+1
-            cmd = line.split(' ', 2)[1]
-            line = line.split(' ', 1)[1]
-        csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
-        startswither = startswithnorm if csc else startswithlow
-        if begidx == 0:
-            # the first thing we're typing; could be python or subprocess, so
-            # anything goes.
-            rtn = self.cmd_complete(prefix)
-        elif cmd in self.bash_complete_funcs:
-            # bash completions
-            comps = self.bash_complete(prefix, line, begidx, endidx)
-            pathcomp =  self.path_complete(prefix, path_str_start, path_str_end)
-            return sorted(self._replace_canonical_rep(comps, pathcomp)), lprefix
-        elif prefix.startswith('${') or prefix.startswith('@('):
-            # python mode explicitly
-            return self._python_mode_completions(prefix, ctx,
-                                                 prefixlow,
-                                                 startswither), lprefix
-        elif prefix.startswith('-'):
-            comps = self._man_completer.option_complete(prefix, cmd)
-            return sorted(comps), lprefix
-        elif cmd not in ctx:
-            ltoks = line.split()
-            if len(ltoks) > 2 and ltoks[0] == 'from' and ltoks[2] == 'import':
-                # complete thing inside a module
-                try:
-                    mod = importlib.import_module(ltoks[1])
-                except ImportError:
-                    return set(), lprefix
-                out = [i[0]
-                       for i in inspect.getmembers(mod)
-                       if i[0].startswith(prefix)]
-                return out, lprefix
-            if len(ltoks) == 2 and ltoks[0] == 'from':
-                comps = ('{} '.format(i) for i in self.module_complete(prefix))
-                return sorted(comps), lprefix
-            if cmd == 'import' and begidx == len('import '):
-                # completing module to import
-                return sorted(self.module_complete(prefix)), lprefix
-            if cmd in self._cmds_cache:
-                # subproc mode; do path completions
-                comps = self.path_complete(prefix, path_str_start,
-                                           path_str_end, cdpath=True)
-                return sorted(comps), lprefix
+        empty_set = set()
+        for i in completers_enabled:
+            o = completers[i](prefix, line, begidx, endidx, ctx)
+            if isinstance(o, tuple):
+                res, lprefix = o
             else:
-                # if we're here, could be anything
-                rtn = set()
-        else:
-            # if we're here, we're not a command, but could be anything else
-            rtn = set()
-        rtn |= self._python_mode_completions(prefix, ctx,
-                                             prefixlow,
-                                             startswither)
-        rtn |= {s + space for s in builtins.aliases
-                if startswither(s, prefix, prefixlow)}
-        rtn |= self.path_complete(prefix, path_str_start, path_str_end)
-        return sorted(rtn), lprefix
+                res = o
+                lprefix = len(prefix)
+            if res != empty_set:
+                return res, lprefix
+        return set()
 
     def _python_mode_completions(self, prefix, ctx, prefixlow, startswither):
         rtn = {s for s in XONSH_TOKENS if startswither(s, prefix, prefixlow)}
