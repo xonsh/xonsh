@@ -1,4 +1,6 @@
 import os
+import re
+import ast
 import builtins
 
 from xonsh.platform import ON_WINDOWS
@@ -166,7 +168,7 @@ def complete_path(prefix, line, start, end, ctx, cdpath=False):
         paths = {s.replace(home, tilde) for s in paths}
     if cdpath:
         _add_cdpaths(paths, prefix)
-    paths = _quote_paths({_normpath(s) for s in paths}, '', '')
+    paths = _quote_paths({_normpath(s) for s in paths}, path_str_start, path_str_end)
     _add_env(paths, prefix)
     _add_dots(paths, prefix)
     return paths, lprefix
