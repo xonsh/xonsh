@@ -13,6 +13,7 @@ from xonsh.tools import (
     subproc_toks, subexpr_from_unbalanced, is_int, always_true, always_false,
     ensure_string, is_env_path, str_to_env_path, env_path_to_str,
     escape_windows_cmd_string, is_bool, to_bool, bool_to_str,
+    is_bool_or_int, to_bool_or_int, bool_or_int_to_str,
     ensure_int_or_slice, is_float, is_string, check_for_partial_string,
     argvquote, executables_in)
 
@@ -399,6 +400,51 @@ def test_to_bool():
 def test_bool_to_str():
     yield assert_equal, '1', bool_to_str(True)
     yield assert_equal, '', bool_to_str(False)
+
+
+def test_is_bool_or_int():
+    cases = [
+        (True, True),
+        (False, True),
+        (1, True),
+        (0, True),
+        ('Yolo', False),
+        (1.0, False),
+        ]
+    for inp, exp in cases:
+        obs = is_bool_or_int(inp)
+        yield assert_equal, exp, obs
+
+
+def test_to_bool_or_int():
+    cases = [
+        (True, True),
+        (False, False),
+        (1, 1),
+        (0, 0),
+        ('', False),
+        (0.0, False),
+        (1.0, True),
+        ('T', True),
+        ('f', False),
+        ('0', 0),
+        ('10', 10),
+        ]
+    for inp, exp in cases:
+        obs = to_bool_or_int(inp)
+        yield assert_equal, exp, obs
+
+
+def test_bool_or_int_to_str():
+    cases = [
+        (True, '1'),
+        (False, ''),
+        (1, '1'),
+        (0, '0'),
+        ]
+    for inp, exp in cases:
+        obs = bool_or_int_to_str(inp)
+        yield assert_equal, exp, obs
 
 
 def test_ensure_int_or_slice():

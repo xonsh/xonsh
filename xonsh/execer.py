@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Implements the xonsh executer."""
 import re
+import sys
 import types
 import inspect
 import builtins
@@ -160,7 +161,7 @@ class Execer(object):
                 tree = self.parser.parse(input,
                                          filename=self.filename,
                                          mode=mode,
-                                         debug_level=self.debug_level)
+                                         debug_level=(self.debug_level > 1))
                 parsed = True
             except IndentationError as e:
                 if original_error is None:
@@ -220,6 +221,13 @@ class Execer(object):
                     # anything
                     raise original_error
                 else:
+                    if self.debug_level:
+                        msg = ('{0}:{1}:{2}{3} - {4}\n'
+                               '{0}:{1}:{2}{3} + {5}')
+                        mstr = '' if maxcol is None else ':' + str(maxcol)
+                        msg = msg.format(self.filename, last_error_line,
+                                         last_error_col, mstr, line, sbpline)
+                        print(msg, file=sys.stderr)
                     lines[idx] = sbpline
                 last_error_col += 3
                 input = '\n'.join(lines)

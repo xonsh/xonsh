@@ -20,6 +20,7 @@ Implementations:
 import os
 import re
 import sys
+import ast
 import string
 import ctypes
 import builtins
@@ -550,6 +551,26 @@ def to_bool_or_break(x):
         return 'break'
     else:
         return to_bool(x)
+
+
+def is_bool_or_int(x):
+    """Returns whether a value is a boolean or integer."""
+    return is_bool(x) or is_int(x)
+
+
+def to_bool_or_int(x):
+    """Converts a value to a boolean or an integer."""
+    if isinstance(x, str):
+        return int(x) if x.isdigit() else to_bool(x)
+    elif is_int(x):  # bools are ints too!
+        return x
+    else:
+        return bool(x)
+
+
+def bool_or_int_to_str(x):
+    """Converts a boolean or integer to a string."""
+    return bool_to_str(x) if is_bool(x) else str(x)
 
 
 def ensure_int_or_slice(x):
