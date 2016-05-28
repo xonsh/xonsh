@@ -7,6 +7,7 @@ import stat
 import nose
 from nose.tools import assert_equal, assert_true, assert_false
 
+from xonsh.platform import ON_WINDOWS
 from xonsh.lexer import Lexer
 from xonsh.tools import (
     subproc_toks, subexpr_from_unbalanced, is_int, always_true, always_false,
@@ -500,8 +501,11 @@ def test_executables_in():
                 continue
             executable = executables[i%len(executables)]
             if _type == 'file' and executable:
-                expected.add(str(i))
-            path = os.path.join(test_path, str(i))
+                ext = '.exe' if ON_WINDOWS else ''
+                expected.add(str(i) + ext)
+            else:
+                ext = ''
+            path = os.path.join(test_path, str(i) + ext)
             if _type == 'file':
                 with open(path, 'w') as f:
                     f.write(str(i))
