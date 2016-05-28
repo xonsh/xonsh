@@ -44,8 +44,6 @@ class Shell(object):
                            kwargs.get('cacheall', False))
         env = builtins.__xonsh_env__
         # pick a valid shell
-        if shell_type is not None:
-            env['SHELL_TYPE'] = shell_type
         shell_type = env.get('SHELL_TYPE')
         if shell_type == 'best' or shell_type is None:
             shell_type = best_shell_type()
@@ -54,7 +52,8 @@ class Shell(object):
         if shell_type == 'prompt_toolkit':
             if not has_prompt_toolkit():
                 warn('prompt_toolkit is not available, using readline instead.')
-                shell_type = env['SHELL_TYPE'] = 'readline'
+                shell_type = 'readline'
+        env['SHELL_TYPE'] = shell_type
         # actually make the shell
         if shell_type == 'none':
             from xonsh.base_shell import BaseShell as shell_class

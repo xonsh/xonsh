@@ -36,11 +36,6 @@ from collections import OrderedDict, Sequence, Set
 from xonsh.platform import (has_prompt_toolkit, scandir, win_unicode_console,
                             DEFAULT_ENCODING, ON_LINUX, ON_WINDOWS,
                             PYTHON_VERSION_INFO)
-if has_prompt_toolkit():
-    import prompt_toolkit
-else:
-    prompt_toolkit = None
-
 
 IS_SUPERUSER = ctypes.windll.shell32.IsUserAnAdmin() != 0 if ON_WINDOWS else os.getuid() == 0
 
@@ -882,7 +877,7 @@ def intensify_colors_for_cmd_exe(style_map, replace_colors=None):
        range used by the gray colors
     """
     modified_style = {}
-    if not ON_WINDOWS or prompt_toolkit is None:
+    if not ON_WINDOWS or builtins.__xonsh_shell__.stype != 'prompt_toolkit':
         return modified_style
     if replace_colors is None:
         replace_colors = {1: '#44ffff',  # subst blue with bright cyan
