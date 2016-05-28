@@ -35,7 +35,9 @@ Current Developments
 * Fix bash completions (e.g git etc.) on windows when completions files have
   spaces in their path names
 * Fixed a bug preventing ``source-bash`` from working on Windows
-* Numerous improvements to job control via a nearly-complete rewrite
+* Numerous improvements to job control via a nearly-complete rewrite.
+* Addressed issue with finding the next break in subproc mode in context
+  sensitive parsing.
 * Fixed issue with loading readline init files (inputrc) that seems to be
   triggered by libedit.
 * ``$MULTILINE_PROMPT`` now allows colors, as originally intended.
