@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Tests the xonsh lexer."""
 import os
-import random
 from tempfile import TemporaryDirectory
 import stat
 
@@ -492,12 +491,14 @@ def test_partial_string():
 
 def test_executables_in():
     expected = set()
+    types = ('none', 'file', 'file', 'directory')
+    executables = (True, True, False)
     with TemporaryDirectory() as test_path:
-        for i in range(random.randint(100, 200)):
-            _type = random.choice(('none', 'file', 'file', 'directory'))
+        for i in range(64):
+            _type = types[i%len(types)]
             if _type == 'none':
                 continue
-            executable = random.choice((True, True, False))
+            executable = executables[i%len(executables)]
             if _type == 'file' and executable:
                 expected.add(str(i))
             path = os.path.join(test_path, str(i))
