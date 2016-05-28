@@ -41,9 +41,10 @@ v0.3.1
   readline import, in order to avoid hangs on launch.
 
 
-
 **Removed:**
+
 * Special cased code for handling version of prompt_toolkit < v1.0.0
+
 
 **Fixed:**
 
