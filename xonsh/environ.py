@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Environment for the xonsh shell."""
 import builtins
-from collections import Mapping, MutableMapping, MutableSequence, MutableSet, namedtuple
 from contextlib import contextmanager
 from functools import wraps
 from itertools import chain
@@ -17,6 +16,8 @@ import shutil
 from itertools import chain
 import sys
 from warnings import warn
+from collections import (Mapping, MutableMapping, MutableSequence, MutableSet,
+    namedtuple)
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.jobs import get_next_task
@@ -31,6 +32,7 @@ from xonsh.tools import (
     is_history_tuple, to_history_tuple, history_tuple_to_str, is_float,
     is_string, is_completions_display_value, to_completions_display_value,
     is_string_set, csv_to_set, set_to_csv, get_sep, is_int, is_bool_seq,
+    is_bool_or_int, to_bool_or_int, bool_or_int_to_str,
     csv_to_bool_seq, bool_seq_to_csv, DefaultNotGiven, print_exception,
     setup_win_unicode_console, intensify_colors_on_win_setter, format_color,
     is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str
@@ -59,6 +61,15 @@ def locale_convert(key):
                  RuntimeWarning)
         return val
     return lc_converter
+
+
+def to_debug(x):
+    """Converts value using to_bool_or_int() and sets this value on as the
+    execer's debug level.
+    """
+    val = to_bool_or_int(x)
+    builtins.__xonsh_execer__.debug_level = val
+    return val
 
 Ensurer = namedtuple('Ensurer', ['validate', 'convert', 'detype'])
 Ensurer.__doc__ = """Named tuples whose elements are functions that
@@ -101,6 +112,7 @@ DEFAULT_ENSURERS = {
     'XONSH_CACHE_SCRIPTS': (is_bool, to_bool, bool_to_str),
     'XONSH_CACHE_EVERYTHING': (is_bool, to_bool, bool_to_str),
     'XONSH_COLOR_STYLE': (is_string, ensure_string, ensure_string),
+    'XONSH_DEBUG': (always_false, to_debug, bool_or_int_to_str),
     'XONSH_ENCODING': (is_string, ensure_string, ensure_string),
     'XONSH_ENCODING_ERRORS': (is_string, ensure_string, ensure_string),
     'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
@@ -217,6 +229,7 @@ DEFAULT_VALUES = {
     'XONSH_COLOR_STYLE': 'default',
     'XONSH_CONFIG_DIR': xonsh_config_dir,
     'XONSH_DATA_DIR': xonsh_data_dir,
+    'XONSH_DEBUG': False,
     'XONSH_ENCODING': DEFAULT_ENCODING,
     'XONSH_ENCODING_ERRORS': 'surrogateescape',
     'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
@@ -469,6 +482,10 @@ DEFAULT_DOCS = {
     'XONSH_CONFIG_DIR': VarDocs(
         'This is the location where xonsh configuration information is stored.',
         configurable=False, default="'$XDG_CONFIG_HOME/xonsh'"),
+    'XONSH_DEBUG': VarDocs(
+        'Sets the xonsh debugging level. This may be an integer or a boolean, '
+        'with higher values cooresponding to higher debuging levels and more '
+        'information presented.', configurable=False),
     'XONSH_DATA_DIR': VarDocs(
         'This is the location where xonsh data files are stored, such as '
         'history.', default="'$XDG_DATA_HOME/xonsh'"),

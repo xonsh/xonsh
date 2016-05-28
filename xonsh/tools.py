@@ -20,6 +20,7 @@ Implementations:
 import os
 import re
 import sys
+import ast
 import string
 import ctypes
 import builtins
@@ -56,7 +57,9 @@ DefaultNotGiven = DefaultNotGivenType()
 
 BEG_TOK_SKIPS = frozenset(['WS', 'INDENT', 'NOT', 'LPAREN'])
 END_TOK_TYPES = frozenset(['SEMI', 'AND', 'OR', 'RPAREN'])
-LPARENS = frozenset(['LPAREN', 'AT_LPAREN', 'BANG_LPAREN', 'DOLLAR_LPAREN', 'ATDOLLAR_LPAREN'])
+RE_END_TOKS = re.compile('(;|and|\&\&|or|\|\||\))')
+LPARENS = frozenset(['LPAREN', 'AT_LPAREN', 'BANG_LPAREN', 'DOLLAR_LPAREN',
+                     'ATDOLLAR_LPAREN'])
 
 
 def _is_not_lparen_and_rparen(lparens, rtok):
@@ -65,6 +68,34 @@ def _is_not_lparen_and_rparen(lparens, rtok):
     """
     # note that any([]) is False, so this covers len(lparens) == 0
     return rtok.type == 'RPAREN' and any(x != 'LPAREN' for x in lparens)
+
+
+def find_next_break(line, mincol=0, lexer=None):
+    """Returns the column number of the next logical break in subproc mode.
+    This function may be useful in finding the maxcol argument of subproc_toks().
+    """
+    if mincol >= 1:
+        line = line[mincol:]
+    if lexer is None:
+        lexer = builtins.__xonsh_execer__.parser.lexer
+    if RE_END_TOKS.search(line) is None:
+        return None
+    maxcol = None
+    lparens = []
+    lexer.input(line)
+    for tok in lexer:
+        if tok.type in LPARENS:
+            lparens.append(tok.type)
+        elif tok.type in END_TOK_TYPES:
+            if _is_not_lparen_and_rparen(lparens, tok):
+                lparens.pop()
+            else:
+                maxcol = tok.lexpos + mincol + 1
+                break
+        elif tok.type == 'ERRORTOKEN' and ')' in tok.value:
+            maxcol = tok.lexpos + mincol + 1
+            break
+    return maxcol
 
 
 def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
@@ -550,6 +581,26 @@ def to_bool_or_break(x):
         return 'break'
     else:
         return to_bool(x)
+
+
+def is_bool_or_int(x):
+    """Returns whether a value is a boolean or integer."""
+    return is_bool(x) or is_int(x)
+
+
+def to_bool_or_int(x):
+    """Converts a value to a boolean or an integer."""
+    if isinstance(x, str):
+        return int(x) if x.isdigit() else to_bool(x)
+    elif is_int(x):  # bools are ints too!
+        return x
+    else:
+        return bool(x)
+
+
+def bool_or_int_to_str(x):
+    """Converts a boolean or integer to a string."""
+    return bool_to_str(x) if is_bool(x) else str(x)
 
 
 def ensure_int_or_slice(x):
