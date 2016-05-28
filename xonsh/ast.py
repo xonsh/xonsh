@@ -18,7 +18,7 @@ from ast import Ellipsis  # pylint: disable=redefined-builtin
 import textwrap
 from itertools import repeat
 
-from xonsh.tools import subproc_toks
+from xonsh.tools import subproc_toks, find_next_break
 from xonsh.platform import PYTHON_VERSION_INFO
 
 if PYTHON_VERSION_INFO >= (3, 5, 0):
@@ -153,7 +153,11 @@ class CtxAwareTransformer(NodeTransformer):
         else:
             mincol = min_col(node)
             maxcol = max_col(node)
-            maxcol = None if maxcol == mincol else maxcol + 1
+            if mincol == maxcol:
+                maxcol = find_next_break(line, mincol=mincol,
+                                         lexer=self.parser.lexer)
+            else:
+                maxcol + 1
         spline = subproc_toks(line,
                               mincol=mincol,
                               maxcol=maxcol,

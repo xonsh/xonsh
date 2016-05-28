@@ -13,8 +13,10 @@ from xonsh.tools import (
     subproc_toks, subexpr_from_unbalanced, is_int, always_true, always_false,
     ensure_string, is_env_path, str_to_env_path, env_path_to_str,
     escape_windows_cmd_string, is_bool, to_bool, bool_to_str,
+    is_bool_or_int, to_bool_or_int, bool_or_int_to_str,
     ensure_int_or_slice, is_float, is_string, check_for_partial_string,
-    argvquote, executables_in)
+    is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str,
+    argvquote, executables_in, find_next_break)
 
 LEXER = Lexer()
 LEXER.build()
@@ -302,6 +304,19 @@ def test_subexpr_from_unbalanced_parens():
         obs = subexpr_from_unbalanced(expr, '(', ')')
         yield assert_equal, exp, obs
 
+def test_find_next_break():
+    cases = [
+        ('ls && echo a', 0, 4),
+        ('ls && echo a', 6, None),
+        ('ls && echo a || echo b', 6, 14),
+        ('(ls) && echo a', 1, 4),
+        ('not ls && echo a', 0, 8),
+        ('not (ls) && echo a', 0, 8),
+        ]
+    for line, mincol, exp in cases:
+        obs = find_next_break(line, mincol=mincol, lexer=LEXER)
+        yield assert_equal, exp, obs
+
 
 def test_is_int():
     yield assert_true, is_int(42)
@@ -401,6 +416,51 @@ def test_bool_to_str():
     yield assert_equal, '', bool_to_str(False)
 
 
+def test_is_bool_or_int():
+    cases = [
+        (True, True),
+        (False, True),
+        (1, True),
+        (0, True),
+        ('Yolo', False),
+        (1.0, False),
+        ]
+    for inp, exp in cases:
+        obs = is_bool_or_int(inp)
+        yield assert_equal, exp, obs
+
+
+def test_to_bool_or_int():
+    cases = [
+        (True, True),
+        (False, False),
+        (1, 1),
+        (0, 0),
+        ('', False),
+        (0.0, False),
+        (1.0, True),
+        ('T', True),
+        ('f', False),
+        ('0', 0),
+        ('10', 10),
+        ]
+    for inp, exp in cases:
+        obs = to_bool_or_int(inp)
+        yield assert_equal, exp, obs
+
+
+def test_bool_or_int_to_str():
+    cases = [
+        (True, '1'),
+        (False, ''),
+        (1, '1'),
+        (0, '0'),
+        ]
+    for inp, exp in cases:
+        obs = bool_or_int_to_str(inp)
+        yield assert_equal, exp, obs
+
+
 def test_ensure_int_or_slice():
     cases = [
         (42, 42),
@@ -415,6 +475,46 @@ def test_ensure_int_or_slice():
         ]
     for inp, exp in cases:
         obs = ensure_int_or_slice(inp)
+        yield assert_equal, exp, obs
+
+
+def test_is_dynamic_cwd_width():
+    cases = [
+        ('20', False),
+        ('20%', False),
+        ((20, 'c'), False),
+        ((20.0, 'm'), False),
+        ((20.0, 'c'), True),
+        ((20.0, '%'), True),
+        ]
+    for inp, exp in cases:
+        obs = is_dynamic_cwd_width(inp)
+        yield assert_equal, exp, obs
+
+
+def test_to_dynamic_cwd_tuple():
+    cases = [
+        ('20', (20.0, 'c')),
+        ('20%', (20.0, '%')),
+        ((20, 'c'), (20.0, 'c')),
+        ((20, '%'), (20.0, '%')),
+        ((20.0, 'c'), (20.0, 'c')),
+        ((20.0, '%'), (20.0, '%')),
+        ('inf', (float('inf'), 'c')),
+        ]
+    for inp, exp in cases:
+        obs = to_dynamic_cwd_tuple(inp)
+        yield assert_equal, exp, obs
+
+
+def test_dynamic_cwd_tuple_to_str():
+    cases = [
+        ((20.0, 'c'), '20.0'),
+        ((20.0, '%'), '20.0%'),
+        ((float('inf'), 'c'), 'inf'),
+        ]
+    for inp, exp in cases:
+        obs = dynamic_cwd_tuple_to_str(inp)
         yield assert_equal, exp, obs
 
 

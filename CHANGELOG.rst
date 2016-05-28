@@ -13,6 +13,9 @@ Current Developments
   the subprocess command itself with the result of running ``cmd``.
 * New ``showcmd`` alias for displaying how xonsh interprets subprocess mode
   commands and arguments.
+* Added ``$DYNAMIC_CWD_WIDTH`` to allow the adjusting of the current working
+  directory width in the prompt.
+* Added ``$XONSH_DEBUG`` environment variable to help with debuging.
 * The ``${...}`` shortcut for ``__xonsh_env__`` now returns appropriate
   completion options
 
@@ -34,7 +37,9 @@ Current Developments
 * Fix bash completions (e.g git etc.) on windows when completions files have
   spaces in their path names
 * Fixed a bug preventing ``source-bash`` from working on Windows
-* Numerous improvements to job control via a nearly-complete rewrite
+* Numerous improvements to job control via a nearly-complete rewrite.
+* Addressed issue with finding the next break in subproc mode in context
+  sensitive parsing.
 * Fixed issue with loading readline init files (inputrc) that seems to be
   triggered by libedit.
 * ``$MULTILINE_PROMPT`` now allows colors, as originally intended.

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Environment for the xonsh shell."""
 import builtins
-from collections import Mapping, MutableMapping, MutableSequence, MutableSet, namedtuple
 from contextlib import contextmanager
 from functools import wraps
 from itertools import chain
@@ -13,8 +12,12 @@ import re
 import socket
 import string
 import subprocess
+import shutil
+from itertools import chain
 import sys
 from warnings import warn
+from collections import (Mapping, MutableMapping, MutableSequence, MutableSet,
+    namedtuple)
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.jobs import get_next_task
@@ -29,8 +32,10 @@ from xonsh.tools import (
     is_history_tuple, to_history_tuple, history_tuple_to_str, is_float,
     is_string, is_completions_display_value, to_completions_display_value,
     is_string_set, csv_to_set, set_to_csv, get_sep, is_int, is_bool_seq,
+    is_bool_or_int, to_bool_or_int, bool_or_int_to_str,
     csv_to_bool_seq, bool_seq_to_csv, DefaultNotGiven, print_exception,
-    setup_win_unicode_console, intensify_colors_on_win_setter, format_color
+    setup_win_unicode_console, intensify_colors_on_win_setter, format_color,
+    is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str
 )
 
 
@@ -52,9 +57,19 @@ def locale_convert(key):
             locale.setlocale(LOCALE_CATS[key], val)
             val = locale.setlocale(LOCALE_CATS[key])
         except (locale.Error, KeyError):
-            warn('Failed to set locale {0!r} to {1!r}'.format(key, val), RuntimeWarning)
+            warn('Failed to set locale {0!r} to {1!r}'.format(key, val),
+                 RuntimeWarning)
         return val
     return lc_converter
+
+
+def to_debug(x):
+    """Converts value using to_bool_or_int() and sets this value on as the
+    execer's debug level.
+    """
+    val = to_bool_or_int(x)
+    builtins.__xonsh_execer__.debug_level = val
+    return val
 
 Ensurer = namedtuple('Ensurer', ['validate', 'convert', 'detype'])
 Ensurer.__doc__ = """Named tuples whose elements are functions that
@@ -68,12 +83,16 @@ DEFAULT_ENSURERS = {
     'BASH_COMPLETIONS': (is_env_path, str_to_env_path, env_path_to_str),
     'CASE_SENSITIVE_COMPLETIONS': (is_bool, to_bool, bool_to_str),
     re.compile('\w*DIRS$'): (is_env_path, str_to_env_path, env_path_to_str),
-    'COMPLETIONS_DISPLAY': (is_completions_display_value, to_completions_display_value, str),
+    'COMPLETIONS_DISPLAY': (is_completions_display_value,
+                            to_completions_display_value, str),
     'COMPLETIONS_MENU_ROWS': (is_int, int, str),
+    'DYNAMIC_CWD_WIDTH': (is_dynamic_cwd_width, to_dynamic_cwd_tuple,
+                          dynamic_cwd_tuple_to_str),
     'FORCE_POSIX_PATHS': (is_bool, to_bool, bool_to_str),
     'HISTCONTROL': (is_string_set, csv_to_set, set_to_csv),
     'IGNOREEOF': (is_bool, to_bool, bool_to_str),
-    'INTENSIFY_COLORS_ON_WIN':(always_false, intensify_colors_on_win_setter, bool_to_str),
+    'INTENSIFY_COLORS_ON_WIN':(always_false, intensify_colors_on_win_setter,
+                               bool_to_str),
     'LC_COLLATE': (always_false, locale_convert('LC_COLLATE'), ensure_string),
     'LC_CTYPE': (always_false, locale_convert('LC_CTYPE'), ensure_string),
     'LC_MESSAGES': (always_false, locale_convert('LC_MESSAGES'), ensure_string),
@@ -93,6 +112,7 @@ DEFAULT_ENSURERS = {
     'XONSH_CACHE_SCRIPTS': (is_bool, to_bool, bool_to_str),
     'XONSH_CACHE_EVERYTHING': (is_bool, to_bool, bool_to_str),
     'XONSH_COLOR_STYLE': (is_string, ensure_string, ensure_string),
+    'XONSH_DEBUG': (always_false, to_debug, bool_or_int_to_str),
     'XONSH_ENCODING': (is_string, ensure_string, ensure_string),
     'XONSH_ENCODING_ERRORS': (is_string, ensure_string, ensure_string),
     'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
@@ -165,6 +185,7 @@ DEFAULT_VALUES = {
     'COMPLETIONS_DISPLAY': 'multi',
     'COMPLETIONS_MENU_ROWS': 5,
     'DIRSTACK_SIZE': 20,
+    'DYNAMIC_CWD_WIDTH': (float('inf'), 'c'),
     'EXPAND_ENV_VARS': True,
     'FORCE_POSIX_PATHS': False,
     'HISTCONTROL': set(),
@@ -208,6 +229,7 @@ DEFAULT_VALUES = {
     'XONSH_COLOR_STYLE': 'default',
     'XONSH_CONFIG_DIR': xonsh_config_dir,
     'XONSH_DATA_DIR': xonsh_data_dir,
+    'XONSH_DEBUG': False,
     'XONSH_ENCODING': DEFAULT_ENCODING,
     'XONSH_ENCODING_ERRORS': 'surrogateescape',
     'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
@@ -299,6 +321,10 @@ DEFAULT_DOCS = {
         "$COMPLETIONS_DISPLAY is 'single' or 'multi'. This only affects the "
         'prompt-toolkit shell.'),
     'DIRSTACK_SIZE': VarDocs('Maximum size of the directory stack.'),
+    'DYNAMIC_CWD_WIDTH': VarDocs('Maximum length in number of characters '
+        'or as a percentage for the `cwd` prompt variable. For example, '
+        '"20" is a twenty character width and "10%" is ten percent of the '
+        'number of columns available.'),
     'EXPAND_ENV_VARS': VarDocs(
         'Toggles whether environment variables are expanded inside of strings '
         'in subprocess mode.'),
@@ -456,6 +482,10 @@ DEFAULT_DOCS = {
     'XONSH_CONFIG_DIR': VarDocs(
         'This is the location where xonsh configuration information is stored.',
         configurable=False, default="'$XDG_CONFIG_HOME/xonsh'"),
+    'XONSH_DEBUG': VarDocs(
+        'Sets the xonsh debugging level. This may be an integer or a boolean, '
+        'with higher values cooresponding to higher debuging levels and more '
+        'information presented.', configurable=False),
     'XONSH_DATA_DIR': VarDocs(
         'This is the location where xonsh data files are stored, such as '
         'history.', default="'$XDG_DATA_HOME/xonsh'"),
@@ -1019,6 +1049,42 @@ def _collapsed_pwd():
     base = [i[0] if ix != l-1 else i for ix,i in enumerate(pwd) if len(i) > 0]
     return leader + sep.join(base)
 
+def _dynamically_collapsed_pwd():
+    """Return the compact current working directory.  It respects the
+    environment variable DYNAMIC_CWD_WIDTH.
+    """
+    originial_path = _replace_home_cwd()
+    target_width, units = builtins.__xonsh_env__['DYNAMIC_CWD_WIDTH']
+    if target_width == float('inf'):
+        return originial_path
+    if (units == '%'):
+        cols, _ = shutil.get_terminal_size()
+        target_width = (cols * target_width) // 100
+    sep = get_sep()
+    pwd = originial_path.split(sep)
+    last = pwd.pop()
+    remaining_space = target_width - len(last)
+    # Reserve space for separators
+    remaining_space_for_text = remaining_space - len(pwd)
+    parts = []
+    for i  in range(len(pwd)):
+        part = pwd[i]
+        part_len = int(min(len(part), max(1, remaining_space_for_text // (len(pwd) - i))))
+        remaining_space_for_text -= part_len
+        reduced_part = part[0:part_len]
+        parts.append(reduced_part)
+    parts.append(last)
+    full = sep.join(parts)
+    # If even if displaying one letter per dir we are too long
+    if (len(full) > target_width):
+        # We truncate the left most part
+        full = "..." + full[int(-target_width) + 3:]
+        # if there is not even a single separator we still
+        # want to display at least the beginning of the directory
+        if full.find(sep) == -1:
+            full = ("..." + sep + last)[0:int(target_width)]
+    return full
+
 
 def _current_job():
     j = get_next_task()
@@ -1054,7 +1120,7 @@ FORMATTER_DICT = dict(
     user=os.environ.get(USER, '<user>'),
     prompt_end='#' if IS_SUPERUSER else '$',
     hostname=socket.gethostname().split('.', 1)[0],
-    cwd=_replace_home_cwd,
+    cwd=_dynamically_collapsed_pwd,
     cwd_dir=lambda: os.path.dirname(_replace_home_cwd()),
     cwd_base=lambda: os.path.basename(_replace_home_cwd()),
     short_cwd=_collapsed_pwd,

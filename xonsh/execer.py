@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Implements the xonsh executer."""
 import re
+import sys
 import types
 import inspect
 import builtins
@@ -8,12 +9,9 @@ from collections import Mapping
 
 from xonsh import ast
 from xonsh.parser import Parser
-from xonsh.tools import (subproc_toks, END_TOK_TYPES, LPARENS,
-    _is_not_lparen_and_rparen)
+from xonsh.tools import subproc_toks, find_next_break
 from xonsh.built_ins import load_builtins, unload_builtins
 
-
-RE_END_TOKS = re.compile('(;|and|\&\&|or|\|\||\))')
 
 class Execer(object):
     """Executes xonsh code in a context."""
@@ -129,28 +127,6 @@ class Execer(object):
             return None  # handles comment only input
         return exec(code, glbs, locs)
 
-    def _find_next_break(self, line, mincol):
-        if mincol >= 1:
-            line = line[mincol:]
-        if RE_END_TOKS.search(line) is None:
-            return None
-        maxcol = None
-        lparens = []
-        self.parser.lexer.input(line)
-        for tok in self.parser.lexer:
-            if tok.type in LPARENS:
-                lparens.append(tok.type)
-            elif tok.type in END_TOK_TYPES:
-                if _is_not_lparen_and_rparen(lparens, tok):
-                    lparens.pop()
-                else:
-                    maxcol = tok.lexpos + mincol + 1
-                    break
-            elif tok.type == 'ERRORTOKEN' and ')' in tok.value:
-                maxcol = tok.lexpos + mincol + 1
-                break
-        return maxcol
-
     def _parse_ctx_free(self, input, mode='exec'):
         last_error_line = last_error_col = -1
         parsed = False
@@ -160,7 +136,7 @@ class Execer(object):
                 tree = self.parser.parse(input,
                                          filename=self.filename,
                                          mode=mode,
-                                         debug_level=self.debug_level)
+                                         debug_level=(self.debug_level > 1))
                 parsed = True
             except IndentationError as e:
                 if original_error is None:
@@ -197,11 +173,11 @@ class Execer(object):
                     curr_indent = len(lines[idx]) - len(lines[idx].lstrip())
                     if prev_indent == curr_indent:
                         raise original_error
-                maxcol = self._find_next_break(line, last_error_col)
-                sbpline = subproc_toks(line,
-                                       returnline=True,
-                                       maxcol=maxcol,
-                                       lexer=self.parser.lexer)
+                lexer = self.parser.lexer
+                maxcol = find_next_break(line, mincol=last_error_col,
+                                         lexer=lexer)
+                sbpline = subproc_toks(line, returnline=True,
+                                       maxcol=maxcol, lexer=lexer)
                 if sbpline is None:
                     # subprocess line had no valid tokens,
                     if len(line.partition('#')[0].strip()) == 0:
@@ -220,6 +196,13 @@ class Execer(object):
                     # anything
                     raise original_error
                 else:
+                    if self.debug_level:
+                        msg = ('{0}:{1}:{2}{3} - {4}\n'
+                               '{0}:{1}:{2}{3} + {5}')
+                        mstr = '' if maxcol is None else ':' + str(maxcol)
+                        msg = msg.format(self.filename, last_error_line,
+                                         last_error_col, mstr, line, sbpline)
+                        print(msg, file=sys.stderr)
                     lines[idx] = sbpline
                 last_error_col += 3
                 input = '\n'.join(lines)
