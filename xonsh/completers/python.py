@@ -3,6 +3,7 @@ import builtins
 from xonsh.tools import (subexpr_from_unbalanced, get_sep,
                          check_for_partial_string, RE_STRING_START)
 
+
 def is_iterable(x):
     try:
         _ = iter(x)
@@ -23,12 +24,13 @@ XONSH_TOKENS = {
     '...'
 }
 
+
 def complete_python(prefix, line, start, end, ctx):
     csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
     if csc:
-        filt = lambda s, x: s.startswith(x)
+        def filt(s, x): return s.startswith(x)
     else:
-        filt = lambda s, x: s.lower().startswith(x.lower())
+        def filt(s, x): return s.lower().startswith(x.lower())
     rtn = {s for s in XONSH_TOKENS if filt(s, prefix)}
     if ctx is not None:
         if '.' in prefix:
@@ -37,7 +39,7 @@ def complete_python(prefix, line, start, end, ctx):
     rtn |= {s for s in dir(builtins) if filt(s, prefix)}
     return rtn
 
-    
+
 def attr_complete(prefix, ctx, filter_func):
     """Complete attributes of an object."""
     attrs = set()

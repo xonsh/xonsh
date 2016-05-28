@@ -12,6 +12,7 @@ CHARACTERS_NEED_QUOTES = ' `\t\r\n${}*()"\',?&'
 if ON_WINDOWS:
     CHARACTERS_NEED_QUOTES += '%'
 
+
 def _path_from_partial_string(inp, pos=None):
     if pos is None:
         pos = len(inp)
@@ -30,7 +31,7 @@ def _path_from_partial_string(inp, pos=None):
             else:
                 return None
         string = partial[startix:endix]
-    end = re.sub(RE_STRING_START,'',quote)
+    end = re.sub(RE_STRING_START, '', quote)
     _string = string
     if not _string.endswith(end):
         _string = _string + end
@@ -82,7 +83,10 @@ def _add_env(paths, prefix):
         startswither = _startswithnorm if csc else _startswithlow
         key = prefix[1:]
         keylow = key.lower()
-        paths.update({'$' + k for k in builtins.__xonsh_env__ if startswither(k, key, keylow)})
+        paths.update({'$' + k
+                      for k in builtins.__xonsh_env__
+                      if startswither(k, key, keylow)})
+
 
 def _add_dots(paths, prefix):
     if prefix in {'', '.'}:
@@ -109,6 +113,7 @@ def _quote_to_use(x):
         return double
     else:
         return single
+
 
 def _quote_paths(paths, start, end):
     out = set()
@@ -145,7 +150,6 @@ def _quote_paths(paths, start, end):
     return out
 
 
-
 def complete_path(prefix, line, start, end, ctx, cdpath=False):
     """Completes based on a path name."""
     # string stuff for automatic quoting
@@ -168,7 +172,9 @@ def complete_path(prefix, line, start, end, ctx, cdpath=False):
         paths = {s.replace(home, tilde) for s in paths}
     if cdpath:
         _add_cdpaths(paths, prefix)
-    paths = _quote_paths({_normpath(s) for s in paths}, path_str_start, path_str_end)
+    paths = _quote_paths({_normpath(s) for s in paths},
+                         path_str_start,
+                         path_str_end)
     _add_env(paths, prefix)
     _add_dots(paths, prefix)
     return paths, lprefix
