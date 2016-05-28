@@ -4,6 +4,20 @@ Xonsh Change Log
 
 Current Developments
 ====================
+**Added:** None
+
+**Changed:** None
+
+**Deprecated:** None
+
+**Removed:** None
+
+**Fixed:** None
+
+**Security:** None
+
+v0.3.1
+====================
 **Added:**
 
 * When a subprocess exits with a signal (e.g. SIGSEGV), a message is printed,
@@ -26,7 +40,7 @@ Current Developments
 * On Cygwin, some tweaks are applied to foreign shell subprocess calls and the
   readline import, in order to avoid hangs on launch.
 
-**Deprecated:** None
+
 
 **Removed:**
 * Special cased code for handling version of prompt_toolkit < v1.0.0
@@ -49,7 +63,7 @@ Current Developments
 * Fixed a parsing bug whereby a trailing ``&`` on a line was being ignored
   (processes were unable to be started in the background)
 
-**Security:** None
+
 
 v0.3.0
 ====================
