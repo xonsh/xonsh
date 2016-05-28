@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 """A (tab-)completer for xonsh."""
-import ast
-import builtins
-import inspect
-import importlib
 import os
-from pathlib import Path
-import pickle
 import re
-import shlex
-import subprocess
+import ast
 import sys
+import shlex
+import pickle
+import inspect
+import builtins
+import importlib
+import subprocess
+
+from pathlib import Path
+from collections import Sequence
 
 from xonsh.built_ins import iglobpath, expand_path
 from xonsh.platform import ON_WINDOWS
@@ -165,7 +167,7 @@ class Completer(object):
         empty_set = set()
         for i in completers_enabled:
             o = completers[i](prefix, line, begidx, endidx, ctx)
-            if isinstance(o, tuple):
+            if isinstance(o, Sequence):
                 res, lprefix = o
             else:
                 res = o
