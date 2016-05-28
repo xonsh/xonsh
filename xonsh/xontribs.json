@@ -20,7 +20,7 @@
   }
  ],
  "packages": {
-  "xo": {
+  "exofrills": {
    "license": "WTFPL",
    "url": "http://exofills.org",
    "install": {
