@@ -13,6 +13,8 @@ Current Developments
   the subprocess command itself with the result of running ``cmd``.
 * New ``showcmd`` alias for displaying how xonsh interprets subprocess mode
   commands and arguments.
+* Added ``$DYNAMIC_CWD_WIDTH`` to allow the adjusting of the current working
+  directory width in the prompt.
 * Added ``$XONSH_DEBUG`` environment variable to help with debuging.
 * The ``${...}`` shortcut for ``__xonsh_env__`` now returns appropriate
   completion options
