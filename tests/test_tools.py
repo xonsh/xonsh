@@ -14,6 +14,7 @@ from xonsh.tools import (
     ensure_string, is_env_path, str_to_env_path, env_path_to_str,
     escape_windows_cmd_string, is_bool, to_bool, bool_to_str,
     ensure_int_or_slice, is_float, is_string, check_for_partial_string,
+    is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str,
     argvquote, executables_in)
 
 LEXER = Lexer()
@@ -415,6 +416,20 @@ def test_ensure_int_or_slice():
         ]
     for inp, exp in cases:
         obs = ensure_int_or_slice(inp)
+        yield assert_equal, exp, obs
+
+
+def test_is_dynamic_cwd_width():
+    cases = [
+        ('20', False),
+        ('20%', False),
+        ((20, 'c'), False),
+        ((20.0, 'm'), False),
+        ((20.0, 'c'), True),
+        ((20.0, '%'), True),
+        ]
+    for inp, exp in cases:
+        obs = is_dynamic_cwd_width(inp)
         yield assert_equal, exp, obs
 
 

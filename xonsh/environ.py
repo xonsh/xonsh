@@ -32,7 +32,7 @@ from xonsh.tools import (
     is_string, is_completions_display_value, to_completions_display_value,
     is_string_set, csv_to_set, set_to_csv, get_sep, is_int, is_bool_seq,
     csv_to_bool_seq, bool_seq_to_csv, DefaultNotGiven, print_exception,
-    setup_win_unicode_console, intensify_colors_on_win_setter, format_color
+    setup_win_unicode_console, intensify_colors_on_win_setter, format_color,
     is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str
 )
 
@@ -55,7 +55,8 @@ def locale_convert(key):
             locale.setlocale(LOCALE_CATS[key], val)
             val = locale.setlocale(LOCALE_CATS[key])
         except (locale.Error, KeyError):
-            warn('Failed to set locale {0!r} to {1!r}'.format(key, val), RuntimeWarning)
+            warn('Failed to set locale {0!r} to {1!r}'.format(key, val),
+                 RuntimeWarning)
         return val
     return lc_converter
 
@@ -71,12 +72,16 @@ DEFAULT_ENSURERS = {
     'BASH_COMPLETIONS': (is_env_path, str_to_env_path, env_path_to_str),
     'CASE_SENSITIVE_COMPLETIONS': (is_bool, to_bool, bool_to_str),
     re.compile('\w*DIRS$'): (is_env_path, str_to_env_path, env_path_to_str),
-    'COMPLETIONS_DISPLAY': (is_completions_display_value, to_completions_display_value, str),
+    'COMPLETIONS_DISPLAY': (is_completions_display_value,
+                            to_completions_display_value, str),
     'COMPLETIONS_MENU_ROWS': (is_int, int, str),
+    'DYNAMIC_CWD_WIDTH': (is_dynamic_cwd_width, to_dynamic_cwd_tuple,
+                          dynamic_cwd_tuple_to_str),
     'FORCE_POSIX_PATHS': (is_bool, to_bool, bool_to_str),
     'HISTCONTROL': (is_string_set, csv_to_set, set_to_csv),
     'IGNOREEOF': (is_bool, to_bool, bool_to_str),
-    'INTENSIFY_COLORS_ON_WIN':(always_false, intensify_colors_on_win_setter, bool_to_str),
+    'INTENSIFY_COLORS_ON_WIN':(always_false, intensify_colors_on_win_setter,
+                               bool_to_str),
     'LC_COLLATE': (always_false, locale_convert('LC_COLLATE'), ensure_string),
     'LC_CTYPE': (always_false, locale_convert('LC_CTYPE'), ensure_string),
     'LC_MESSAGES': (always_false, locale_convert('LC_MESSAGES'), ensure_string),
@@ -90,7 +95,6 @@ DEFAULT_ENSURERS = {
     'PATHEXT': (is_env_path, str_to_env_path, env_path_to_str),
     'RAISE_SUBPROC_ERROR': (is_bool, to_bool, bool_to_str),
     'RIGHT_PROMPT': (is_string, ensure_string, ensure_string),
-    'DYNAMIC_CWD_WIDTH': (is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str),
     'TEEPTY_PIPE_DELAY': (is_float, float, str),
     'UPDATE_OS_ENVIRON': (is_bool, to_bool, bool_to_str),
     'XONSHRC': (is_env_path, str_to_env_path, env_path_to_str),
@@ -169,6 +173,7 @@ DEFAULT_VALUES = {
     'COMPLETIONS_DISPLAY': 'multi',
     'COMPLETIONS_MENU_ROWS': 5,
     'DIRSTACK_SIZE': 20,
+    'DYNAMIC_CWD_WIDTH': 'inf',
     'EXPAND_ENV_VARS': True,
     'FORCE_POSIX_PATHS': False,
     'HISTCONTROL': set(),
@@ -191,7 +196,6 @@ DEFAULT_VALUES = {
     'PUSHD_SILENT': False,
     'RAISE_SUBPROC_ERROR': False,
     'RIGHT_PROMPT': '',
-    'DYNAMIC_CWD_WIDTH': 'inf',
     'SHELL_TYPE': 'best',
     'SUGGEST_COMMANDS': True,
     'SUGGEST_MAX_NUM': 5,
@@ -304,6 +308,10 @@ DEFAULT_DOCS = {
         "$COMPLETIONS_DISPLAY is 'single' or 'multi'. This only affects the "
         'prompt-toolkit shell.'),
     'DIRSTACK_SIZE': VarDocs('Maximum size of the directory stack.'),
+    'DYNAMIC_CWD_WIDTH': VarDocs('Maximum length in number of characters '
+        'or as a percentage for the `cwd` prompt variable. For example, '
+        '"20" is a twenty character width and "10%" is ten percent of the '
+        'number of columns available.'),
     'EXPAND_ENV_VARS': VarDocs(
         'Toggles whether environment variables are expanded inside of strings '
         'in subprocess mode.'),
@@ -371,8 +379,6 @@ DEFAULT_DOCS = {
         'at the prompt. This may be parameterized in the same way as '
         'the $PROMPT variable. Currently, this is only available in the '
         'prompt-toolkit shell.'),
-    'DYNAMIC_CWD_WIDTH': VarDocs('Target length in number of characters '
-        'for the {dynamic_cwd} prompt var'),
     'SHELL_TYPE': VarDocs(
         'Which shell is used. Currently two base shell types are supported:\n\n'
         "    - 'readline' that is backed by Python's readline module\n"

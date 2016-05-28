@@ -1047,7 +1047,8 @@ By default, the following variables are available for use:
 
   * ``user``: The username of the current user
   * ``hostname``: The name of the host computer
-  * ``cwd``: The current working directory
+  * ``cwd``: The current working directory, you may use ``$DYNAMIC_CWD_WIDTH`` to
+    set a maximum width for this variable.
   * ``short_cwd``: A shortened form of the current working directory; e.g.,
     ``/path/to/xonsh`` becomes ``/p/t/xonsh``
   * ``cwd_dir``: The dirname of the current working directory, e.g. ``/path/to`` in
