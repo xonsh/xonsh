@@ -15,7 +15,7 @@ from xonsh.tools import (
     escape_windows_cmd_string, is_bool, to_bool, bool_to_str,
     is_bool_or_int, to_bool_or_int, bool_or_int_to_str,
     ensure_int_or_slice, is_float, is_string, check_for_partial_string,
-    argvquote, executables_in)
+    argvquote, executables_in, find_next_break)
 
 LEXER = Lexer()
 LEXER.build()
@@ -301,6 +301,19 @@ def test_subexpr_from_unbalanced_parens():
         ]
     for expr, exp in cases:
         obs = subexpr_from_unbalanced(expr, '(', ')')
+        yield assert_equal, exp, obs
+
+def test_find_next_break():
+    cases = [
+        ('ls && echo a', 0, 4),
+        ('ls && echo a', 6, None),
+        ('ls && echo a || echo b', 6, 14),
+        ('(ls) && echo a', 1, 4),
+        ('not ls && echo a', 0, 8),
+        ('not (ls) && echo a', 0, 8),
+        ]
+    for line, mincol, exp in cases:
+        obs = find_next_break(line, mincol=mincol, lexer=LEXER)
         yield assert_equal, exp, obs
 
 
