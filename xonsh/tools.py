@@ -856,6 +856,7 @@ def color_style():
 
 def _get_color_indexes(style_map):
     """ Generates the color and windows color index for a style """
+    import prompt_toolkit
     table = prompt_toolkit.terminal.win32_output.ColorLookupTable()
     pt_style = prompt_toolkit.styles.style_from_dict(style_map)
     for token in style_map:
