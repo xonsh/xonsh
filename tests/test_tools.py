@@ -503,14 +503,14 @@ def test_executables_in():
                 expected.add(str(i))
             path = os.path.join(test_path, str(i))
             if _type == 'file':
-                open(path, 'w').close()
+                with open(path, 'w') as f:
+                    f.write(str(i))
             elif _type == 'directory':
                 os.mkdir(path)
             if executable:
                 os.chmod(path, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
-
         result = set(executables_in(test_path))
-        assert_equal(expected, result)
+    assert_equal(expected, result)
 
 
 if __name__ == '__main__':
