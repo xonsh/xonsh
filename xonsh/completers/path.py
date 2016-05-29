@@ -8,7 +8,7 @@ from xonsh.built_ins import iglobpath, expand_path
 from xonsh.tools import (subexpr_from_unbalanced, get_sep,
                          check_for_partial_string, RE_STRING_START)
 
-from xonsh.completer.tools import get_filter_function
+from xonsh.completers.tools import get_filter_function
 
 CHARACTERS_NEED_QUOTES = ' `\t\r\n${}*()"\',?&'
 if ON_WINDOWS:
