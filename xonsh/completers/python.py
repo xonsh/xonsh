@@ -95,6 +95,7 @@ def complete_import(prefix, line, start, end, ctx):
                for i in inspect.getmembers(mod)
                if i[0].startswith(prefix)}
         return out
+    return set()
 
 
 def complete_module(prefix):
