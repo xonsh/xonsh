@@ -1,5 +1,8 @@
 import re
+import sys
+import inspect
 import builtins
+import importlib
 from xonsh.tools import (subexpr_from_unbalanced, get_sep,
                          check_for_partial_string, RE_STRING_START)
 from xonsh.completers.tools import get_filter_function, is_iterable
@@ -72,3 +75,27 @@ def attr_complete(prefix, ctx, filter_func):
         comp = prefix[:prelen - len(attr)] + rpl
         attrs.add(comp)
     return attrs
+
+
+def complete_import(prefix, line, start, end, ctx):
+    ltoks = line.split()
+    if len(ltoks) == 2 and ltoks[0] == 'from':
+        # completing module to import
+        return {'{} '.format(i) for i in complete_module(prefix)}
+    if ltoks[0] == 'import' and start == len('import '):
+        # completing module to import
+        return complete_module(prefix)
+    if len(ltoks) > 2 and ltoks[0] == 'from' and ltoks[2] == 'import':
+        # complete thing inside a module
+        try:
+            mod = importlib.import_module(ltoks[1])
+        except ImportError:
+            return set()
+        out = {i[0]
+               for i in inspect.getmembers(mod)
+               if i[0].startswith(prefix)}
+        return out
+
+
+def complete_module(prefix):
+    return {s for s in sys.modules if get_filter_function()(s, prefix)}
