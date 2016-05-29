@@ -10,11 +10,11 @@ from xonsh.completers.commands import complete_skipper
 
 completers = OrderedDict()
 completers['base'] = complete_base
-completers['bash'] = complete_from_bash
 completers['man'] = complete_from_man
 completers['skip'] = complete_skipper
 completers['cd'] = complete_cd
 completers['rmdir'] = complete_cd
+completers['bash'] = complete_from_bash
 completers['import'] = complete_import
 completers['python'] = complete_python
 completers['path'] = complete_path
