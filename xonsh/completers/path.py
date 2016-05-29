@@ -8,6 +8,8 @@ from xonsh.built_ins import iglobpath, expand_path
 from xonsh.tools import (subexpr_from_unbalanced, get_sep,
                          check_for_partial_string, RE_STRING_START)
 
+from xonsh.completer.tools import get_filter_function
+
 CHARACTERS_NEED_QUOTES = ' `\t\r\n${}*()"\',?&'
 if ON_WINDOWS:
     CHARACTERS_NEED_QUOTES += '%'
@@ -79,13 +81,10 @@ def _startswithnorm(x, start, startlow=None):
 
 def _add_env(paths, prefix):
     if prefix.startswith('$'):
-        csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
-        startswither = _startswithnorm if csc else _startswithlow
         key = prefix[1:]
-        keylow = key.lower()
         paths.update({'$' + k
                       for k in builtins.__xonsh_env__
-                      if startswither(k, key, keylow)})
+                      if get_filter_function()(k, key)})
 
 
 def _add_dots(paths, prefix):
