@@ -1,5 +1,6 @@
 from collections import OrderedDict
 
+from xonsh.completers.man import complete_from_man
 from xonsh.completers.base import complete_base
 from xonsh.completers.path import complete_path
 from xonsh.completers.dirs import complete_cd, complete_rmdir
@@ -8,6 +9,7 @@ from xonsh.completers.commands import complete_skipper
 
 completers = OrderedDict()
 completers['base'] = complete_base
+completers['man'] = complete_from_man
 completers['skip'] = complete_skipper
 completers['cd'] = complete_cd
 completers['rmdir'] = complete_cd

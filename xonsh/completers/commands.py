@@ -2,7 +2,7 @@ import builtins
 
 from xonsh.completers.tools import get_filter_function
 
-SKIP_TOKENS = {'sudo', 'time', 'timeit', 'which', 'showcmd'}
+SKIP_TOKENS = {'sudo', 'time', 'timeit', 'which', 'showcmd', 'man'}
 
 
 def complete_command(cmd, line, start, end, ctx):
