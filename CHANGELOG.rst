@@ -12,7 +12,9 @@ Current Developments
 
 **Removed:** None
 
-**Fixed:** None
+**Fixed:** 
+
+Fixed PermissionError when tabcompletions tries to lookup executables in directories without read permissions. 
 
 **Security:** None
 
