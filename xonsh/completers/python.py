@@ -2,14 +2,7 @@ import re
 import builtins
 from xonsh.tools import (subexpr_from_unbalanced, get_sep,
                          check_for_partial_string, RE_STRING_START)
-
-
-def is_iterable(x):
-    try:
-        _ = iter(x)
-        return True
-    except:
-        return False
+from xonsh.completers.tools import get_filter_function, is_iterable
 
 RE_ATTR = re.compile(r'([^\s\(\)]+(\.[^\s\(\)]+)*)\.(\w*)$')
 
@@ -26,11 +19,7 @@ XONSH_TOKENS = {
 
 
 def complete_python(prefix, line, start, end, ctx):
-    csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
-    if csc:
-        def filt(s, x): return s.startswith(x)
-    else:
-        def filt(s, x): return s.lower().startswith(x.lower())
+    filt = get_filter_function()
     rtn = {s for s in XONSH_TOKENS if filt(s, prefix)}
     if ctx is not None:
         if '.' in prefix:
