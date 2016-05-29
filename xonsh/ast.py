@@ -157,7 +157,7 @@ class CtxAwareTransformer(NodeTransformer):
                 maxcol = find_next_break(line, mincol=mincol,
                                          lexer=self.parser.lexer)
             else:
-                maxcol + 1
+                maxcol += 1
         spline = subproc_toks(line,
                               mincol=mincol,
                               maxcol=maxcol,

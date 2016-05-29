@@ -1,4 +1,3 @@
-============
 Dependencies
 ============
 Xonsh currently has the following external dependencies,

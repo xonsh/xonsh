@@ -496,7 +496,7 @@ subprocess operators that we have seen so far (``$()``, ``$[]``, ``${}``,
 ``@()``, ``@$()``).  An instance of ``ls -l`` that is on the wrong side of the
 border of the absurd is shown below:
 
-.. code-block:: xonshcon
+.. code-block:: console
 
     >>> $[@$(which @($(echo ls).strip())) @('-' + $(printf 'l'))]
     total 0
