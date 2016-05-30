@@ -16,16 +16,8 @@ Current Developments
 
 **Security:** None
 
-v3.2
+v0.3.2
 ====================
-
-
-
-
-
-
-
-
 **Fixed:**
 
 * Fixed PermissionError when tabcompletions tries to lookup executables in
