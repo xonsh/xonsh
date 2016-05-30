@@ -110,7 +110,8 @@ class HistoryGC(Thread):
         """
         _ = self  # this could be a function but is intimate to this class
         # pylint: disable=no-member
-        xdd = os.path.abspath(builtins.__xonsh_env__.get('XONSH_DATA_DIR'))
+        xdd = os.path.expanduser(builtins.__xonsh_env__.get('XONSH_DATA_DIR'))
+        xdd = os.path.abspath(xdd)
         fs = [f for f in iglob(os.path.join(xdd, 'xonsh-*.json'))]
         files = []
         for f in fs:
@@ -256,6 +257,7 @@ class History(object):
         if filename is None:
             # pylint: disable=no-member
             data_dir = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
+            data_dir = os.path.expanduser(data_dir)
             self.filename = os.path.join(data_dir, 'xonsh-{0}.json'.format(sid))
         else:
             self.filename = filename
