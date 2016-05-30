@@ -22,6 +22,7 @@ v0.3.2
 
 * Fixed PermissionError when tabcompletions tries to lookup executables in
   directories without read permissions.
+* fix incorrect parsing of command line flags
 
 
 
