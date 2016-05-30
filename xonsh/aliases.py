@@ -408,8 +408,13 @@ def which(args, stdin=None, stdout=None, stderr=None):
             nmatches += 1
             if not pargs.all:
                 continue
-        matches = _which.whichgen(arg, exts=exts, verbose=pargs.verbose,
-                                  path=builtins.__xonsh_env__['PATH'])
+        # which.whichgen gives the nicest 'verbose' output if PATH is taken
+        # from os.environ so we temporarily override it with
+        # __xosnh_env__['PATH']
+        original_os_path = os.envrion['PATH']
+        os.environ['PATH'] = builtins.__xonsh_env__['PATH']
+        matches = _which.whichgen(arg, exts=exts, verbose=pargs.verbose)
+        os.envrion['PATH'] = original_os_path
         for abs_name, from_where in matches:
             if ON_WINDOWS:
                 # Use list dir to get correct case for the filename
@@ -422,8 +427,6 @@ def which(args, stdin=None, stdout=None, stderr=None):
             if pargs.plain or not pargs.verbose:
                 print(abs_name, file=stdout)
             else:
-                if 'given path element' in from_where:
-                    from_where = from_where.replace('given path', '$PATH')
                 print('{} ({})'.format(abs_name, from_where), file=stdout)
             nmatches += 1
             if not pargs.all:
