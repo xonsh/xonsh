@@ -411,10 +411,10 @@ def which(args, stdin=None, stdout=None, stderr=None):
         # which.whichgen gives the nicest 'verbose' output if PATH is taken
         # from os.environ so we temporarily override it with
         # __xosnh_env__['PATH']
-        original_os_path = os.envrion['PATH']
-        os.environ['PATH'] = builtins.__xonsh_env__['PATH']
+        original_os_path = os.environ['PATH']
+        os.environ['PATH'] = builtins.__xonsh_env__.detype()['PATH']
         matches = _which.whichgen(arg, exts=exts, verbose=pargs.verbose)
-        os.envrion['PATH'] = original_os_path
+        os.environ['PATH'] = original_os_path
         for abs_name, from_where in matches:
             if ON_WINDOWS:
                 # Use list dir to get correct case for the filename
