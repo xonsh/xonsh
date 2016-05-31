@@ -32,6 +32,14 @@ def complete_python(prefix, line, start, end, ctx):
     return rtn
 
 
+def complete_python_mode(prefix, line, start, end, ctx):
+    if not (prefix.startswith('@(') or prefix.startswith('${')):
+        return set()
+    prefix_start = prefix[:2]
+    python_matches = complete_python(prefix[2:], line, start+2, end, ctx)
+    return set(prefix_start + i for i in python_matches)
+
+
 def attr_complete(prefix, ctx, filter_func):
     """Complete attributes of an object."""
     attrs = set()
