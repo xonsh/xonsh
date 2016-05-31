@@ -10,19 +10,19 @@ SKIP_TOKENS = {'sudo', 'time', 'timeit', 'which', 'showcmd', 'man'}
 
 def complete_command(cmd, line, start, end, ctx):
     space = ' '
-    from_cache = {s + space
-                  for s in builtins.__xonsh_commands_cache__
-                  if get_filter_function()(s, cmd)}
-    base = os.path.basename(cmd)
+    out = {s + space
+           for s in builtins.__xonsh_commands_cache__
+           if get_filter_function()(s, cmd)}
     if ON_WINDOWS:
-        return from_cache + {i
-                             for i in executables_in('.')
-                             if i.startswith(cmd)}
+        out |= {i
+                for i in executables_in('.')
+                if i.startswith(cmd)}
+    base = os.path.basename(cmd)
     if os.path.isdir(base):
-        return from_cache + {os.path.join(base, i)
-                             for i in executables_in(base)
-                             if i.startswith(cmd)}
-    return from_cache
+        out |= {os.path.join(base, i)
+                for i in executables_in(base)
+                if i.startswith(cmd)}
+    return out
 
 
 def complete_skipper(cmd, line, start, end, ctx):
