@@ -59,5 +59,5 @@ class Completer(object):
                 res = o
                 lprefix = len(prefix)
             if res is not None and res != empty_set:
-                return res, lprefix
+                return tuple(sorted(res)), lprefix
         return set(), lprefix
