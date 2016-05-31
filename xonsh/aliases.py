@@ -22,6 +22,7 @@ from xonsh.tools import (XonshError, argvquote, escape_windows_cmd_string,
 from xonsh.vox import Vox
 from xonsh.xontribs import main as xontribs_main
 from xonsh.xoreutils import _which
+from xonsh.completers import list_completers, register_completer
 
 
 class Aliases(MutableMapping):
@@ -511,6 +512,8 @@ def make_default_aliases():
         'vox': vox,
         'which': which,
         'xontrib': xontribs_main,
+        'list-completers': list_completers,
+        'register-completer': register_completer,
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.
