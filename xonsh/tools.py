@@ -27,6 +27,7 @@ import builtins
 import subprocess
 import threading
 import traceback
+from glob import iglob
 from warnings import warn
 from contextlib import contextmanager
 from collections import OrderedDict, Sequence, Set
@@ -1188,7 +1189,7 @@ def globpath(s, ignore_case=False):
 
 
 def _iglobpath(s, ignore_case=False):
-    s = expand_path(s)
+    s = builtins.__xonsh_expand_path__(s)
     if ignore_case:
         s = expand_case_matching(s)
     if sys.version_info > (3, 5):

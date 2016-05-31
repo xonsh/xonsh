@@ -32,8 +32,24 @@ def _add_one_completer(name, func, loc='end'):
 def list_completers(args, stdin=None):
     o = "Registered Completer Functions: \n"
     _comp = builtins.__xonsh_completers__
-    _strs = ('  %s' % (ix+1, c) for ix, c in enumerate(_comp))
+    _strs = ('  %s' % c for c in _comp)
     return o + '\n'.join(_strs) + '\n'
+
+
+def remove_completer(args, stdin=None):
+    err = None
+    if len(args) != 1:
+        err = "remove-completer takes exactly 1 argument."
+    else:
+        name = args[0]
+        if name not in builtins.__xonsh_completers__:
+            err = ("The name %s is not a registered "
+                   "completer function.") % name
+    if err is None:
+        del builtins.__xonsh_completers__[name]
+        return
+    else:
+        return None, err + '\n', 1
 
 
 def register_completer(args, stdin=None):
