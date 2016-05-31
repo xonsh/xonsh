@@ -60,4 +60,4 @@ class Completer(object):
                 lprefix = len(prefix)
             if res is not None and res != empty_set:
                 return res, lprefix
-        return set()
+        return set(), lprefix
