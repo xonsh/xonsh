@@ -185,7 +185,7 @@ def main():
             }
         skw['cmdclass']['develop'] = xdevelop
     else:
-        skw['scripts'] = ['scripts/xonsh'] if 'win' not in sys.platform else ['scripts/xonsh.bat'],
+        skw['scripts'] = 'scripts/xonsh' if 'win' not in sys.platform else 'scripts/xonsh.bat',
 
     setup(**skw)
 
