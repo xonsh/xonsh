@@ -22,7 +22,7 @@ from xonsh.tools import (XonshError, argvquote, escape_windows_cmd_string,
 from xonsh.vox import Vox
 from xonsh.xontribs import main as xontribs_main
 from xonsh.xoreutils import _which
-from xonsh.completers import list_completers, register_completer
+from xonsh.completers._aliases import list_completers, register_completer
 
 
 class Aliases(MutableMapping):

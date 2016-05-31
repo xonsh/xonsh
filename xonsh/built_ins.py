@@ -30,7 +30,8 @@ from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
                         SimpleForegroundProcProxy, TeePTYProc,
                         CompletedCommand, HiddenCompletedCommand)
 from xonsh.tools import (
-    suggest_commands, XonshError, expandvars, CommandsCache
+    suggest_commands, XonshError, expandvars, CommandsCache, globpath,
+    iglobpath
 )
 
 
@@ -177,31 +178,6 @@ def regexpath(s, pymode=False):
     o = reglob(s)
     no_match = [] if pymode else [s]
     return o if len(o) != 0 else no_match
-
-
-def globpath(s, ignore_case=False):
-    """Simple wrapper around glob that also expands home and env vars."""
-    o, s = _iglobpath(s, ignore_case=ignore_case)
-    o = list(o)
-    return o if len(o) != 0 else [s]
-
-
-def _iglobpath(s, ignore_case=False):
-    s = expand_path(s)
-    if ignore_case:
-        s = expand_case_matching(s)
-    if sys.version_info > (3, 5):
-        if '**' in s and '**/*' not in s:
-            s = s.replace('**', '**/*')
-        # `recursive` is only a 3.5+ kwarg.
-        return iglob(s, recursive=True), s
-    else:
-        return iglob(s), s
-
-def iglobpath(s, ignore_case=False):
-    """Simple wrapper around iglob that also expands home and env vars."""
-    return _iglobpath(s, ignore_case)[0]
-
 
 RE_SHEBANG = re.compile(r'#![ \t]*(.+?)$')
 

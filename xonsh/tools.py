@@ -1178,3 +1178,27 @@ class CommandsCache(Set):
             allcmds |= set(builtins.aliases)
         self._cmds_cache = frozenset(allcmds)
         return self._cmds_cache
+
+
+def globpath(s, ignore_case=False):
+    """Simple wrapper around glob that also expands home and env vars."""
+    o, s = _iglobpath(s, ignore_case=ignore_case)
+    o = list(o)
+    return o if len(o) != 0 else [s]
+
+
+def _iglobpath(s, ignore_case=False):
+    s = expand_path(s)
+    if ignore_case:
+        s = expand_case_matching(s)
+    if sys.version_info > (3, 5):
+        if '**' in s and '**/*' not in s:
+            s = s.replace('**', '**/*')
+        # `recursive` is only a 3.5+ kwarg.
+        return iglob(s, recursive=True), s
+    else:
+        return iglob(s), s
+
+def iglobpath(s, ignore_case=False):
+    """Simple wrapper around iglob that also expands home and env vars."""
+    return _iglobpath(s, ignore_case)[0]

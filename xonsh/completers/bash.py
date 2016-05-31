@@ -9,6 +9,7 @@ from xonsh.platform import ON_WINDOWS
 
 RE_DASHF = re.compile(r'-F\s+(\w+)')
 
+INITED = False
 BASH_COMPLETE_FUNCS = {}
 BASH_COMPLETE_FILES = {}
 BASH_COMPLETE_SCRIPT = """source "{filename}"
@@ -24,6 +25,9 @@ for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 
 def complete_from_bash(prefix, line, begidx, endidx, ctx):
     """Attempts BASH completion."""
+    if not INITED:
+        _load_bash_complete_funcs()
+        _load_bash_complete_files()
     splt = line.split()
     cmd = splt[0]
     func = BASH_COMPLETE_FUNCS.get(cmd, None)
@@ -59,7 +63,8 @@ def complete_from_bash(prefix, line, begidx, endidx, ctx):
 
 
 def _load_bash_complete_funcs():
-    global BASH_COMPLETE_FUNCS
+    global BASH_COMPLETE_FUNCS, INITED
+    INITED = True
     BASH_COMPLETE_FUNCS = bcf = {}
     inp = _collect_completions_sources()
     if not inp:
@@ -119,5 +124,3 @@ def _collect_completions_sources():
                 sources.append('source "{}"'.format(_file.as_posix()))
     return sources
 
-_load_bash_complete_funcs()
-_load_bash_complete_files()

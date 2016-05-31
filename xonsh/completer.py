@@ -18,7 +18,7 @@ from xonsh.built_ins import iglobpath, expand_path
 from xonsh.platform import ON_WINDOWS
 from xonsh.tools import (subexpr_from_unbalanced, get_sep,
                          check_for_partial_string, RE_STRING_START)
-from xonsh.completers import (completers_enabled, completers)
+from xonsh.completers import completers
 
 
 class Completer(object):
@@ -51,8 +51,8 @@ class Completer(object):
         space = ' '  # intern some strings for faster appending
         ctx = ctx or {}
         empty_set = set()
-        for i in completers_enabled:
-            o = completers[i](prefix, line, begidx, endidx, ctx)
+        for name, func in builtins.__xonsh_completers__.items():
+            o = func(prefix, line, begidx, endidx, ctx)
             if isinstance(o, Sequence):
                 res, lprefix = o
             else:
