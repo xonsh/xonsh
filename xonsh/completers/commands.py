@@ -1,5 +1,8 @@
+import os
 import builtins
 
+from xonsh.tools import executables_in
+from xonsh.platform import ON_WINDOWS
 from xonsh.completers.tools import get_filter_function
 
 SKIP_TOKENS = {'sudo', 'time', 'timeit', 'which', 'showcmd', 'man'}
@@ -7,9 +10,19 @@ SKIP_TOKENS = {'sudo', 'time', 'timeit', 'which', 'showcmd', 'man'}
 
 def complete_command(cmd, line, start, end, ctx):
     space = ' '
-    return {s + space
-            for s in builtins.__xonsh_commands_cache__
-            if get_filter_function()(s, cmd)}
+    from_cache = {s + space
+                  for s in builtins.__xonsh_commands_cache__
+                  if get_filter_function()(s, cmd)}
+    base = os.path.basename(cmd)
+    if ON_WINDOWS:
+        return from_cache + {i
+                             for i in executables_in('.')
+                             if i.startswith(cmd)}
+    if os.path.isdir(base):
+        return from_cache + {os.path.join(base, i)
+                             for i in executables_in(base)
+                             if i.startswith(cmd)}
+    return from_cache
 
 
 def complete_skipper(cmd, line, start, end, ctx):
