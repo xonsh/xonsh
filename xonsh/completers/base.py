@@ -8,7 +8,7 @@ def complete_base(prefix, line, start, end, ctx):
     if line.strip() == '':
         out = (complete_python(prefix, line, start, end, ctx) | 
                complete_command(prefix, line, start, end, ctx))
-        paths = complete_path(prefix, line, start, end, ctx)
+        paths = complete_path(prefix, line, start, end, ctx, False)
         return (out | paths[0]), paths[1]
     elif prefix == line:
         return (complete_python(prefix, line, start, end, ctx) | 

@@ -150,7 +150,7 @@ def _quote_paths(paths, start, end):
     return out
 
 
-def complete_path(prefix, line, start, end, ctx, cdpath=False):
+def complete_path(prefix, line, start, end, ctx, cdpath=True):
     """Completes based on a path name."""
     # string stuff for automatic quoting
     path_str_start = ''
