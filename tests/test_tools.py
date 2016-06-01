@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """Tests the xonsh lexer."""
 import os
-import random
 from tempfile import TemporaryDirectory
 import stat
 
 import nose
 from nose.tools import assert_equal, assert_true, assert_false
 
+from xonsh.platform import ON_WINDOWS
 from xonsh.lexer import Lexer
 from xonsh.tools import (
     subproc_toks, subexpr_from_unbalanced, is_int, always_true, always_false,
@@ -592,24 +592,29 @@ def test_partial_string():
 
 def test_executables_in():
     expected = set()
+    types = ('none', 'file', 'file', 'directory')
+    executables = (True, True, False)
     with TemporaryDirectory() as test_path:
-        for i in range(random.randint(100, 200)):
-            _type = random.choice(('none', 'file', 'file', 'directory'))
+        for i in range(64):
+            _type = types[i%len(types)]
             if _type == 'none':
                 continue
-            executable = random.choice((True, True, False))
+            executable = executables[i%len(executables)]
             if _type == 'file' and executable:
-                expected.add(str(i))
-            path = os.path.join(test_path, str(i))
+                ext = '.exe' if ON_WINDOWS else ''
+                expected.add(str(i) + ext)
+            else:
+                ext = ''
+            path = os.path.join(test_path, str(i) + ext)
             if _type == 'file':
-                open(path, 'w').close()
+                with open(path, 'w') as f:
+                    f.write(str(i))
             elif _type == 'directory':
                 os.mkdir(path)
             if executable:
                 os.chmod(path, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
-
         result = set(executables_in(test_path))
-        assert_equal(expected, result)
+    assert_equal(expected, result)
 
 
 if __name__ == '__main__':

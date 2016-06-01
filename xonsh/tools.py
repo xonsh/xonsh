@@ -317,18 +317,42 @@ class redirect_stderr(_RedirectStream):
     _stream = "stderr"
 
 
+def _executables_in_posix(path):
+    if PYTHON_VERSION_INFO < (3, 5, 0):
+        for fname in os.listdir(path):
+            fpath  = os.path.join(path, fname)
+            if (os.path.exists(fpath) and os.access(fpath, os.X_OK) and \
+                                    (not os.path.isdir(fpath))):
+                yield fname
+    else:
+        yield from (x.name for x in scandir(path)
+                    if x.is_file() and os.access(x.path, os.X_OK))
+
+
+def _executables_in_windows(path):
+    extensions = builtins.__xonsh_env__.get('PATHEXT',['.COM', '.EXE', '.BAT'])
+    if PYTHON_VERSION_INFO < (3, 5, 0):
+        for fname in os.listdir(path):
+            fpath = os.path.join(path, fname)
+            if (os.path.exists(fpath) and not os.path.isdir(fpath)):
+                base_name, ext = os.path.splitext(fname)
+                if ext.upper() in extensions:
+                    yield fname
+    else:
+        for fname in (x.name for x in scandir(path) if x.is_file()):
+            base_name, ext = os.path.splitext(fname)
+            if ext.upper() in extensions:
+                yield fname
+
+
 def executables_in(path):
     """Returns a generator of files in `path` that the user could execute. """
+    if ON_WINDOWS:
+        func = _executables_in_windows
+    else:
+        func = _executables_in_posix
     try:
-        if PYTHON_VERSION_INFO < (3, 5, 0):
-            for i in os.listdir(path):
-                name  = os.path.join(path, i)
-                if (os.path.exists(name) and os.access(name, os.X_OK) and \
-                                        (not os.path.isdir(name))):
-                    yield i
-        else:
-            yield from (x.name for x in scandir(path)
-                        if x.is_file() and os.access(x.path, os.X_OK))
+        yield from func(path)
     except PermissionError:
         return
 

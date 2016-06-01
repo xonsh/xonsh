@@ -12,7 +12,9 @@ Current Developments
 
 **Removed:** None
 
-**Fixed:** None
+**Fixed:** 
+
+ * Fixed bug on Windows where tab-completion for executables would return all files. 
 
 **Security:** None
 
