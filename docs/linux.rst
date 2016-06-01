@@ -29,7 +29,7 @@ the following from the source directory,
 
 .. code-block:: bash
 
-    $ python setup.py install
+    $ pip install .
 
 
 Arch Linux users can install xonsh from the Arch User Repository with e.g.

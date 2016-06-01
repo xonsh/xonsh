@@ -29,7 +29,7 @@ the following from the source directory,
 
 .. code-block:: bash
 
-    $ python setup.py install
+    $ pip install .
 
 
 .. include:: add_to_shell.rst
