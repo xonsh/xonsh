@@ -6,11 +6,15 @@ Current Developments
 ====================
 **Added:** None
 
-**Changed:** None
+**Changed:** 
+
+ * ``which`` now give a better verbose report of where the executables are found.  
 
 **Deprecated:** None
 
-**Removed:** None
+**Removed:** 
+
+ * Fixed bug on Windows where ``which`` did not include current directory
 
 **Fixed:** 
 
