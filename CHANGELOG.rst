@@ -6,13 +6,19 @@ Current Developments
 ====================
 **Added:** None
 
-**Changed:** None
+**Changed:** 
+
+ * ``which`` now give a better verbose report of where the executables are found.  
 
 **Deprecated:** None
 
-**Removed:** None
+**Removed:** 
 
-**Fixed:** None
+ * Fixed bug on Windows where ``which`` did not include current directory
+
+**Fixed:** 
+
+ * Fixed bug on Windows where tab-completion for executables would return all files. 
 
 **Security:** None
 
