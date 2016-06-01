@@ -1205,6 +1205,43 @@ class CommandsCache(Set):
         return self._cmds_cache
 
 
+def expand_case_matching(s):
+    """Expands a string to a case insenstive globable string."""
+    t = []
+    openers = {'[', '{'}
+    closers = {']', '}'}
+    nesting = 0
+
+    drive_part = WINDOWS_DRIVE_MATCHER.match(s) if ON_WINDOWS else None
+
+    if drive_part:
+        drive_part = drive_part.group(0)
+        t.append(drive_part)
+        s = s[len(drive_part):]
+
+    for c in s:
+        if c in openers:
+            nesting += 1
+        elif c in closers:
+            nesting -= 1
+        elif nesting > 0:
+            pass
+        elif c.isalpha():
+            folded = c.casefold()
+            if len(folded) == 1:
+                c = '[{0}{1}]'.format(c.upper(), c.lower())
+            else:
+                newc = ['[{0}{1}]?'.format(f.upper(), f.lower())
+                        for f in folded[:-1]]
+                newc = ''.join(newc)
+                newc += '[{0}{1}{2}]'.format(folded[-1].upper(),
+                                             folded[-1].lower(),
+                                             c)
+                c = newc
+        t.append(c)
+    return ''.join(t)
+
+
 def globpath(s, ignore_case=False):
     """Simple wrapper around glob that also expands home and env vars."""
     o, s = _iglobpath(s, ignore_case=ignore_case)
