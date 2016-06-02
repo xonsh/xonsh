@@ -40,11 +40,14 @@ the xonsh shell
         "Crustaceanly Yours",
         "With great shell comes great reproducibility",
         "None shell pass",
+        "You shell not pass!",
         "The x-on shell",
         "It is pronounced <i>コンチ</i>",
         "It is pronounced <i>コンッチ</i>",
         "It is pronounced <i>コンシュ</i>",
         "The carcolh will catch you!",
+        "WHAT...is your favorite shell?",
+        "Exploiting the workers and hanging on to outdated imperialist dogma since 2015."
         ];
     document.write(taglines[Math.floor(Math.random() * taglines.length)]);
     </script>
