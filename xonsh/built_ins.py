@@ -91,9 +91,6 @@ def expand_path(s):
     return os.path.expanduser(s)
 
 
-WINDOWS_DRIVE_MATCHER = re.compile(r'^\w:')
-
-
 def reglob(path, parts=None, i=None):
     """Regular expression-based globbing."""
     if parts is None:

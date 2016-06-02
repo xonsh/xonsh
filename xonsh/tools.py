@@ -1204,6 +1204,8 @@ class CommandsCache(Set):
         self._cmds_cache = frozenset(allcmds)
         return self._cmds_cache
 
+WINDOWS_DRIVE_MATCHER = re.compile(r'^\w:')
+
 
 def expand_case_matching(s):
     """Expands a string to a case insenstive globable string."""
