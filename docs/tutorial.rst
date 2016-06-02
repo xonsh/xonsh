@@ -1022,12 +1022,15 @@ Up, Down, Tab
 The up and down keys search history matching from the start of the line,
 much like they do in the IPython shell.
 
-Tab completion is present as well. In Python-mode you are able to complete
+Tab completion is present as well. By default Python-mode you are able to complete
 based on the variable names in the current builtins, globals, and locals,
 as well as xonsh languages keywords & operator, files & directories, and
 environment variable names. In subprocess-mode, you additionally complete
 on any file names on your ``$PATH``, alias keys, and full BASH completion
 for the commands themselves.
+
+xonsh also provides a means of modifying the behavior of the tab completer.  More
+detail is available on the `Tab Completion page <tutorial_completers.html>`_.
 
 Customizing the Prompt
 ======================
