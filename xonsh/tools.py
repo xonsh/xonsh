@@ -878,7 +878,10 @@ def intensify_colors_for_cmd_exe(style_map, replace_colors=None):
        range used by the gray colors
     """
     modified_style = {}
-    if not ON_WINDOWS or builtins.__xonsh_shell__.stype != 'prompt_toolkit':
+    stype = builtins.__xonsh_env__.get('SHELL_TYPE')
+    if (not ON_WINDOWS or
+            (stype not in ('prompt_toolkit', 'best')) or
+            (stype == 'best' and not has_prompt_toolkit())):
         return modified_style
     if replace_colors is None:
         replace_colors = {1: '#44ffff',  # subst blue with bright cyan
@@ -901,7 +904,10 @@ def expand_gray_colors_for_cmd_exe(style_map):
         in cmd.exe.
     """
     modified_style = {}
-    if not ON_WINDOWS or builtins.__xonsh_shell__.stype != 'prompt_toolkit':
+    stype = builtins.__xonsh_env__.get('SHELL_TYPE')
+    if (not ON_WINDOWS or
+            (stype not in ('prompt_toolkit', 'best')) or
+            (stype == 'best' and not has_prompt_toolkit())):
         return modified_style
     for token, idx, rgb in _get_color_indexes(style_map):
         if idx == 7 and rgb:
