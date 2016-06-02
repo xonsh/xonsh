@@ -2,6 +2,8 @@ import builtins
 
 from collections import OrderedDict
 
+from xonsh.completers.tools import justify
+
 
 def _add_one_completer(name, func, loc='end'):
     new = OrderedDict()
@@ -32,7 +34,13 @@ def _add_one_completer(name, func, loc='end'):
 def list_completers(args, stdin=None):
     o = "Registered Completer Functions: \n"
     _comp = builtins.__xonsh_completers__
-    _strs = ('  %s' % c for c in _comp)
+    ml = max(len(i) for i in _comp)
+    _strs = []
+    for c in _comp:
+        doc = _comp[c].__doc__ or 'No description provided'
+        doc = justify(doc, 80, 7 + ml)
+        padding = ' ' * (2 + ml - len(c))
+        _strs.append('%s%r : %s' % (padding, c, doc))
     return o + '\n'.join(_strs) + '\n'
 
 

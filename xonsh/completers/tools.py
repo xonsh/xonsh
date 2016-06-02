@@ -16,3 +16,17 @@ def is_iterable(x):
         return True
     except:
         return False
+
+def justify(s, max_length, left_pad=0):
+    toks = s.strip().split()
+    lines = [[]]
+    for tok in toks:
+        new_length = (sum(len(i) for i in lines[-1]) +
+                      len(lines[-1]) - 1 +
+                      len(tok) +
+                      left_pad)
+        if new_length > max_length:
+            lines.append([])
+        lines[-1].append(tok)
+    return "\n".join((((" " * left_pad) if ix != 0 else '') + " ".join(i))
+                     for ix, i in enumerate(lines))
