@@ -1752,6 +1752,10 @@ def test_echo_internal_comma():
 def test_comment_only():
     yield check_xonsh_ast, {}, '# hello'
 
+def test_echo_slash_question():
+    yield check_xonsh_ast, {}, '![echo /?]', False
+
+
 _error_names = {'e', 'err', '2'}
 _output_names = {'', 'o', 'out', '1'}
 _all_names = {'a', 'all', '&'}

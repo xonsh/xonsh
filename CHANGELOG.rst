@@ -4,21 +4,24 @@ Xonsh Change Log
 
 Current Developments
 ====================
-**Added:** None
+**Added:**
 
-**Changed:** 
+* Question mark literals, ``?``, are now allowed as part of
+  subprocess argument names.
 
- * ``which`` now give a better verbose report of where the executables are found.  
+**Changed:**
+
+ * ``which`` now give a better verbose report of where the executables are found.
 
 **Deprecated:** None
 
-**Removed:** 
+**Removed:**
 
  * Fixed bug on Windows where ``which`` did not include current directory
 
-**Fixed:** 
+**Fixed:**
 
- * Fixed bug on Windows where tab-completion for executables would return all files. 
+ * Fixed bug on Windows where tab-completion for executables would return all files.
 
 **Security:** None
 
