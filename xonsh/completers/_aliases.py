@@ -65,7 +65,8 @@ def register_completer(args, stdin=None):
     if '--help' in args or '-h' in args:
         return _register_help_str
     if len(args) not in {2, 3}:
-        err = "register-completer takes either 2 or 3 arguments."
+        err = ("register-completer takes either 2 or 3 arguments.\n"
+               "For help, run:  register-completer --help")
     else:
         name = args[0]
         func = args[1]
