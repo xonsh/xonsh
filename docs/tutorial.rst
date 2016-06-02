@@ -422,7 +422,7 @@ terminal, and the resulting object is not displayed.  For example
 Python Evaluation with ``@()``
 ===============================
 
-The ``@(<expr>)`` operator from will evaluate arbitrary Python code in
+The ``@(<expr>)`` operator form will evaluate arbitrary Python code in
 subprocess mode and the result will be appended to the subprocess command
 list. If the result is a string, it is appended to the argument list.
 If the result is a list or other non-string sequence, the contents are

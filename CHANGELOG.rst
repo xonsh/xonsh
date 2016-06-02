@@ -4,7 +4,10 @@ Xonsh Change Log
 
 Current Developments
 ====================
-**Added:** None
+**Added:**
+
+* Question mark literals, ``?``, are now allowed as part of
+  subprocess argument names.
 
 **Changed:**
 

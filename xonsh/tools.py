@@ -37,11 +37,6 @@ from collections import OrderedDict, Sequence, Set
 from xonsh.platform import (has_prompt_toolkit, scandir, win_unicode_console,
                             DEFAULT_ENCODING, ON_LINUX, ON_WINDOWS,
                             PYTHON_VERSION_INFO)
-if has_prompt_toolkit():
-    import prompt_toolkit
-else:
-    prompt_toolkit = None
-
 
 IS_SUPERUSER = ctypes.windll.shell32.IsUserAnAdmin() != 0 if ON_WINDOWS else os.getuid() == 0
 
@@ -862,6 +857,7 @@ def color_style():
 
 def _get_color_indexes(style_map):
     """ Generates the color and windows color index for a style """
+    import prompt_toolkit
     table = prompt_toolkit.terminal.win32_output.ColorLookupTable()
     pt_style = prompt_toolkit.styles.style_from_dict(style_map)
     for token in style_map:
@@ -883,7 +879,10 @@ def intensify_colors_for_cmd_exe(style_map, replace_colors=None):
        range used by the gray colors
     """
     modified_style = {}
-    if not ON_WINDOWS or prompt_toolkit is None:
+    stype = builtins.__xonsh_env__.get('SHELL_TYPE')
+    if (not ON_WINDOWS or
+            (stype not in ('prompt_toolkit', 'best')) or
+            (stype == 'best' and not has_prompt_toolkit())):
         return modified_style
     if replace_colors is None:
         replace_colors = {1: '#44ffff',  # subst blue with bright cyan
@@ -906,7 +905,10 @@ def expand_gray_colors_for_cmd_exe(style_map):
         in cmd.exe.
     """
     modified_style = {}
-    if not ON_WINDOWS or prompt_toolkit is None:
+    stype = builtins.__xonsh_env__.get('SHELL_TYPE')
+    if (not ON_WINDOWS or
+            (stype not in ('prompt_toolkit', 'best')) or
+            (stype == 'best' and not has_prompt_toolkit())):
         return modified_style
     for token, idx, rgb in _get_color_indexes(style_map):
         if idx == 7 and rgb:
