@@ -26,6 +26,10 @@ def complete_command(cmd, line, start, end, ctx):
 
 
 def complete_skipper(cmd, line, start, end, ctx):
+    """
+    Skip over several tokens (e.g., sudo) and complete based on the rest of the
+    line.
+    """
     res = line.split(' ', 1)
     if len(res) == 2:
         first, rest = res

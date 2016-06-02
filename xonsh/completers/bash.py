@@ -24,7 +24,7 @@ for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 
 
 def complete_from_bash(prefix, line, begidx, endidx, ctx):
-    """Attempts BASH completion."""
+    """Completes based on results from BASH completion."""
     if not INITED:
         _load_bash_complete_funcs()
         _load_bash_complete_files()

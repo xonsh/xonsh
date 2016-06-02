@@ -17,11 +17,15 @@ XONSH_TOKENS = {
     '/', '//', '%', '**', '|', '&', '~', '^', '>>', '<<', '<', '<=', '>', '>=',
     '==', '!=', '->', '=', '+=', '-=', '*=', '/=', '%=', '**=', '>>=', '<<=',
     '&=', '^=', '|=', '//=', ',', ';', ':', '?', '??', '$(', '${', '$[', '..',
-    '...'
+    '...', '![', '!(',
 }
 
 
 def complete_python(prefix, line, start, end, ctx):
+    """
+    Completes based on the contents of the current Python environment,
+    the Python built-ins, and xonsh operators.
+    """
     filt = get_filter_function()
     rtn = {s for s in XONSH_TOKENS if filt(s, prefix)}
     if ctx is not None:
@@ -33,6 +37,9 @@ def complete_python(prefix, line, start, end, ctx):
 
 
 def complete_python_mode(prefix, line, start, end, ctx):
+    """
+    Python-mode completions for @( and ${
+    """
     if not (prefix.startswith('@(') or prefix.startswith('${')):
         return set()
     prefix_start = prefix[:2]
@@ -88,6 +95,10 @@ def attr_complete(prefix, ctx, filter_func):
 
 
 def complete_import(prefix, line, start, end, ctx):
+    """
+    Completes module names and contents for "import ..." and "from ... import
+    ..."
+    """
     ltoks = line.split()
     if len(ltoks) == 2 and ltoks[0] == 'from':
         # completing module to import
