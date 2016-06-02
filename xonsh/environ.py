@@ -1272,12 +1272,15 @@ def load_static_config(ctx, config=None):
     return conf
 
 
-def xonshrc_context(rcfiles=None, execer=None):
+def xonshrc_context(rcfiles=None, execer=None, initial=None):
     """Attempts to read in xonshrc file, and return the contents."""
     loaded = builtins.__xonsh_env__['LOADED_RC_FILES'] = []
+    if initial is None:
+        env = {}
+    else:
+        env = initial
     if rcfiles is None or execer is None:
-        return {}
-    env = {}
+        return env
     for rcfile in rcfiles:
         if not os.path.isfile(rcfile):
             loaded.append(False)
