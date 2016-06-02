@@ -83,7 +83,7 @@ class Shell(object):
         self.execer = Execer(config=config, login=self.login, xonsh_ctx=self.ctx)
         self.execer.scriptcache = scriptcache
         self.execer.cacheall = cacheall
-        if ctx is None and (self.stype != 'none' or self.login):
+        if self.stype != 'none' or self.login:
             # load xontribs from config file
             names = builtins.__xonsh_config__.get('xontribs', ())
             for name in names:
@@ -91,5 +91,5 @@ class Shell(object):
             # load run control files
             env = builtins.__xonsh_env__
             rc = env.get('XONSHRC') if rc is None else rc
-            self.ctx.update(xonshrc_context(rcfiles=rc, execer=self.execer))
+            self.ctx.update(xonshrc_context(rcfiles=rc, execer=self.execer, initial=self.ctx))
         self.ctx['__name__'] = '__main__'
