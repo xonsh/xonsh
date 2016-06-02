@@ -11,10 +11,11 @@ As with many other shells, xonsh ships with the ability to complete
 partially-specified arguments upon hitting the "tab" key.
 
 In Python-mode, pressing the "tab" key will complete based on the variable
-names in the current builtins, globals, and locals, as well as xonsh languages
+names in the current builtins, globals, and locals, as well as xonsh language
 keywords & operators, files & directories, and environment variable names. In
-subprocess-mode, xonsh additionally completes based on any file names on your
-$PATH, alias keys, and full BASH completion for the commands themselves.
+subprocess-mode, xonsh additionally completes based on the names of any
+executable files on your $PATH, alias keys, and full BASH completion for the
+commands themselves.
 
 xonsh also provides a mechanism by which the results of a tab completion can be
 customized (i.e., new completions can be generated, or a subset of the built-in
