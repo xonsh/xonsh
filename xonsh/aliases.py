@@ -22,6 +22,8 @@ from xonsh.tools import (XonshError, argvquote, escape_windows_cmd_string,
 from xonsh.vox import Vox
 from xonsh.xontribs import main as xontribs_main
 from xonsh.xoreutils import _which
+from xonsh.completers._aliases import (list_completers, register_completer,
+                                       remove_completer)
 
 
 class Aliases(MutableMapping):
@@ -408,8 +410,13 @@ def which(args, stdin=None, stdout=None, stderr=None):
             nmatches += 1
             if not pargs.all:
                 continue
-        matches = _which.whichgen(arg, exts=exts, verbose=pargs.verbose,
-                                  path=builtins.__xonsh_env__['PATH'])
+        # which.whichgen gives the nicest 'verbose' output if PATH is taken
+        # from os.environ so we temporarily override it with
+        # __xosnh_env__['PATH']
+        original_os_path = os.environ['PATH']
+        os.environ['PATH'] = builtins.__xonsh_env__.detype()['PATH']
+        matches = _which.whichgen(arg, exts=exts, verbose=pargs.verbose)
+        os.environ['PATH'] = original_os_path
         for abs_name, from_where in matches:
             if ON_WINDOWS:
                 # Use list dir to get correct case for the filename
@@ -422,8 +429,6 @@ def which(args, stdin=None, stdout=None, stderr=None):
             if pargs.plain or not pargs.verbose:
                 print(abs_name, file=stdout)
             else:
-                if 'given path element' in from_where:
-                    from_where = from_where.replace('given path', '$PATH')
                 print('{} ({})'.format(abs_name, from_where), file=stdout)
             nmatches += 1
             if not pargs.all:
@@ -511,6 +516,9 @@ def make_default_aliases():
         'vox': vox,
         'which': which,
         'xontrib': xontribs_main,
+        'list-completers': list_completers,
+        'register-completer': register_completer,
+        'remove-completer': remove_completer,
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.

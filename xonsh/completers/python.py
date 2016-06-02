@@ -17,11 +17,15 @@ XONSH_TOKENS = {
     '/', '//', '%', '**', '|', '&', '~', '^', '>>', '<<', '<', '<=', '>', '>=',
     '==', '!=', '->', '=', '+=', '-=', '*=', '/=', '%=', '**=', '>>=', '<<=',
     '&=', '^=', '|=', '//=', ',', ';', ':', '?', '??', '$(', '${', '$[', '..',
-    '...'
+    '...', '![', '!(',
 }
 
 
 def complete_python(prefix, line, start, end, ctx):
+    """
+    Completes based on the contents of the current Python environment,
+    the Python built-ins, and xonsh operators.
+    """
     filt = get_filter_function()
     rtn = {s for s in XONSH_TOKENS if filt(s, prefix)}
     if ctx is not None:
@@ -30,6 +34,17 @@ def complete_python(prefix, line, start, end, ctx):
         rtn |= {s for s in ctx if filt(s, prefix)}
     rtn |= {s for s in dir(builtins) if filt(s, prefix)}
     return rtn
+
+
+def complete_python_mode(prefix, line, start, end, ctx):
+    """
+    Python-mode completions for @( and ${
+    """
+    if not (prefix.startswith('@(') or prefix.startswith('${')):
+        return set()
+    prefix_start = prefix[:2]
+    python_matches = complete_python(prefix[2:], line, start+2, end, ctx)
+    return set(prefix_start + i for i in python_matches)
 
 
 def attr_complete(prefix, ctx, filter_func):
@@ -43,12 +58,13 @@ def attr_complete(prefix, ctx, filter_func):
     expr = subexpr_from_unbalanced(expr, '[', ']')
     expr = subexpr_from_unbalanced(expr, '{', '}')
     _ctx = None
+    xonsh_safe_eval = builtins.__xonsh_execer__.eval
     try:
-        val = eval(expr, ctx)
+        val = xonsh_safe_eval(expr, ctx, wrap_subprocs=False)
         _ctx = ctx
     except:  # pylint:disable=bare-except
         try:
-            val = eval(expr, builtins.__dict__)
+            val = xonsh_safe_eval(expr, builtins.__dict__, wrap_subprocs=False)
             _ctx = builtins.__dict__
         except:  # pylint:disable=bare-except
             return attrs  # anything could have gone wrong!
@@ -60,7 +76,8 @@ def attr_complete(prefix, ctx, filter_func):
     for opt in opts:
         # check whether these options actually work (e.g., disallow 7.imag)
         try:
-            eval('{0}.{1}'.format(expr, opt), _ctx)
+            _val = '{0}.{1}'.format(expr, opt)
+            xonsh_safe_eval(_val, _ctx, wrap_subprocs=False)
         except:  # pylint:disable=bare-except
             continue
         a = getattr(val, opt)
@@ -78,6 +95,10 @@ def attr_complete(prefix, ctx, filter_func):
 
 
 def complete_import(prefix, line, start, end, ctx):
+    """
+    Completes module names and contents for "import ..." and "from ... import
+    ..."
+    """
     ltoks = line.split()
     if len(ltoks) == 2 and ltoks[0] == 'from':
         # completing module to import

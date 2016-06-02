@@ -10,7 +10,7 @@ from nose.tools import assert_equal, assert_true, assert_not_in
 
 from xonsh import built_ins
 from xonsh.built_ins import reglob, regexpath, helper, superhelper, \
-    ensure_list_of_strs, expand_case_matching
+    ensure_list_of_strs
 from xonsh.environ import Env
 from xonsh.tools import ON_WINDOWS
 
@@ -104,19 +104,6 @@ def test_ensure_list_of_strs():
     for exp, inp in cases:
         obs = ensure_list_of_strs(inp)
         yield assert_equal, exp, obs
-
-def test_expand_case_matching():
-    cases = {
-        'yo': '[Yy][Oo]',
-        '[a-f]123e': '[a-f]123[Ee]',
-        '${HOME}/yo': '${HOME}/[Yy][Oo]',
-        './yo/mom': './[Yy][Oo]/[Mm][Oo][Mm]',
-        'Eßen': '[Ee][Ss]?[Ssß][Ee][Nn]',
-        }
-    for inp, exp in cases.items():
-        obs = expand_case_matching(inp)
-        yield assert_equal, exp, obs
-
 
 if __name__ == '__main__':
     nose.runmodule()

@@ -94,6 +94,7 @@ Contents
     tutorial
     tutorial_hist
     tutorial_xontrib
+    tutorial_completers
     bash_to_xsh
     python_virtual_environments
 

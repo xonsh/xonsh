@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """Tests the xonsh lexer."""
 import os
-import random
 from tempfile import TemporaryDirectory
 import stat
 
 import nose
 from nose.tools import assert_equal, assert_true, assert_false
 
+from xonsh.platform import ON_WINDOWS
 from xonsh.lexer import Lexer
 from xonsh.tools import (
     subproc_toks, subexpr_from_unbalanced, is_int, always_true, always_false,
@@ -16,7 +16,7 @@ from xonsh.tools import (
     is_bool_or_int, to_bool_or_int, bool_or_int_to_str,
     ensure_int_or_slice, is_float, is_string, check_for_partial_string,
     is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str,
-    argvquote, executables_in, find_next_break)
+    argvquote, executables_in, find_next_break, expand_case_matching)
 
 LEXER = Lexer()
 LEXER.build()
@@ -592,25 +592,42 @@ def test_partial_string():
 
 def test_executables_in():
     expected = set()
+    types = ('none', 'file', 'file', 'directory')
+    executables = (True, True, False)
     with TemporaryDirectory() as test_path:
-        for i in range(random.randint(100, 200)):
-            _type = random.choice(('none', 'file', 'file', 'directory'))
+        for i in range(64):
+            _type = types[i%len(types)]
             if _type == 'none':
                 continue
-            executable = random.choice((True, True, False))
+            executable = executables[i%len(executables)]
             if _type == 'file' and executable:
-                expected.add(str(i))
-            path = os.path.join(test_path, str(i))
+                ext = '.exe' if ON_WINDOWS else ''
+                expected.add(str(i) + ext)
+            else:
+                ext = ''
+            path = os.path.join(test_path, str(i) + ext)
             if _type == 'file':
-                open(path, 'w').close()
+                with open(path, 'w') as f:
+                    f.write(str(i))
             elif _type == 'directory':
                 os.mkdir(path)
             if executable:
                 os.chmod(path, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
-
         result = set(executables_in(test_path))
-        assert_equal(expected, result)
+    assert_equal(expected, result)
 
+
+def test_expand_case_matching():
+    cases = {
+        'yo': '[Yy][Oo]',
+        '[a-f]123e': '[a-f]123[Ee]',
+        '${HOME}/yo': '${HOME}/[Yy][Oo]',
+        './yo/mom': './[Yy][Oo]/[Mm][Oo][Mm]',
+        'Eßen': '[Ee][Ss]?[Ssß][Ee][Nn]',
+        }
+    for inp, exp in cases.items():
+        obs = expand_case_matching(inp)
+        yield assert_equal, exp, obs
 
 if __name__ == '__main__':
     nose.runmodule()

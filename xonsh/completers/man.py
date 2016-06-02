@@ -22,7 +22,8 @@ INNER_OPTIONS_RE = re.compile(r'-\w|--[a-z0-9-]+')
 
 
 def complete_from_man(prefix, line, start, end, ctx):
-    """Completes an option name, basing on content of man page."""
+    """Completes an option name, based on the contents of the associated man
+    page."""
     global OPTIONS
     if not prefix.startswith('-'):
         return set()

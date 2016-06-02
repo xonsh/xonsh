@@ -4,9 +4,9 @@ import ast
 import builtins
 
 from xonsh.platform import ON_WINDOWS
-from xonsh.built_ins import iglobpath, expand_path
 from xonsh.tools import (subexpr_from_unbalanced, get_sep,
-                         check_for_partial_string, RE_STRING_START)
+                         check_for_partial_string, RE_STRING_START,
+                         iglobpath)
 
 from xonsh.completers.tools import get_filter_function
 
@@ -115,6 +115,7 @@ def _quote_to_use(x):
 
 
 def _quote_paths(paths, start, end):
+    expand_path = builtins.__xonsh_expand_path__
     out = set()
     space = ' '
     backslash = '\\'
@@ -149,7 +150,7 @@ def _quote_paths(paths, start, end):
     return out
 
 
-def complete_path(prefix, line, start, end, ctx, cdpath=False):
+def complete_path(prefix, line, start, end, ctx, cdpath=True):
     """Completes based on a path name."""
     # string stuff for automatic quoting
     path_str_start = ''

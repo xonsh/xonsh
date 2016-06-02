@@ -27,6 +27,7 @@ import builtins
 import subprocess
 import threading
 import traceback
+from glob import iglob
 from warnings import warn
 from contextlib import contextmanager
 from collections import OrderedDict, Sequence, Set
@@ -36,11 +37,6 @@ from collections import OrderedDict, Sequence, Set
 from xonsh.platform import (has_prompt_toolkit, scandir, win_unicode_console,
                             DEFAULT_ENCODING, ON_LINUX, ON_WINDOWS,
                             PYTHON_VERSION_INFO)
-if has_prompt_toolkit():
-    import prompt_toolkit
-else:
-    prompt_toolkit = None
-
 
 IS_SUPERUSER = ctypes.windll.shell32.IsUserAnAdmin() != 0 if ON_WINDOWS else os.getuid() == 0
 
@@ -317,17 +313,44 @@ class redirect_stderr(_RedirectStream):
     _stream = "stderr"
 
 
-def executables_in(path):
-    """Returns a generator of files in `path` that the user could execute. """
+def _executables_in_posix(path):
     if PYTHON_VERSION_INFO < (3, 5, 0):
-        for i in os.listdir(path):
-            name  = os.path.join(path, i)
-            if (os.path.exists(name) and os.access(name, os.X_OK) and \
-                                    (not os.path.isdir(name))):
-                yield i
+        for fname in os.listdir(path):
+            fpath  = os.path.join(path, fname)
+            if (os.path.exists(fpath) and os.access(fpath, os.X_OK) and \
+                                    (not os.path.isdir(fpath))):
+                yield fname
     else:
         yield from (x.name for x in scandir(path)
                     if x.is_file() and os.access(x.path, os.X_OK))
+
+
+def _executables_in_windows(path):
+    extensions = builtins.__xonsh_env__.get('PATHEXT',['.COM', '.EXE', '.BAT'])
+    if PYTHON_VERSION_INFO < (3, 5, 0):
+        for fname in os.listdir(path):
+            fpath = os.path.join(path, fname)
+            if (os.path.exists(fpath) and not os.path.isdir(fpath)):
+                base_name, ext = os.path.splitext(fname)
+                if ext.upper() in extensions:
+                    yield fname
+    else:
+        for fname in (x.name for x in scandir(path) if x.is_file()):
+            base_name, ext = os.path.splitext(fname)
+            if ext.upper() in extensions:
+                yield fname
+
+
+def executables_in(path):
+    """Returns a generator of files in `path` that the user could execute. """
+    if ON_WINDOWS:
+        func = _executables_in_windows
+    else:
+        func = _executables_in_posix
+    try:
+        yield from func(path)
+    except PermissionError:
+        return
 
 
 def command_not_found(cmd):
@@ -834,6 +857,7 @@ def color_style():
 
 def _get_color_indexes(style_map):
     """ Generates the color and windows color index for a style """
+    import prompt_toolkit
     table = prompt_toolkit.terminal.win32_output.ColorLookupTable()
     pt_style = prompt_toolkit.styles.style_from_dict(style_map)
     for token in style_map:
@@ -855,7 +879,10 @@ def intensify_colors_for_cmd_exe(style_map, replace_colors=None):
        range used by the gray colors
     """
     modified_style = {}
-    if not ON_WINDOWS or prompt_toolkit is None:
+    stype = builtins.__xonsh_env__.get('SHELL_TYPE')
+    if (not ON_WINDOWS or
+            (stype not in ('prompt_toolkit', 'best')) or
+            (stype == 'best' and not has_prompt_toolkit())):
         return modified_style
     if replace_colors is None:
         replace_colors = {1: '#44ffff',  # subst blue with bright cyan
@@ -878,7 +905,10 @@ def expand_gray_colors_for_cmd_exe(style_map):
         in cmd.exe.
     """
     modified_style = {}
-    if not ON_WINDOWS or prompt_toolkit is None:
+    stype = builtins.__xonsh_env__.get('SHELL_TYPE')
+    if (not ON_WINDOWS or
+            (stype not in ('prompt_toolkit', 'best')) or
+            (stype == 'best' and not has_prompt_toolkit())):
         return modified_style
     for token, idx, rgb in _get_color_indexes(style_map):
         if idx == 7 and rgb:
@@ -1175,3 +1205,66 @@ class CommandsCache(Set):
             allcmds |= set(builtins.aliases)
         self._cmds_cache = frozenset(allcmds)
         return self._cmds_cache
+
+WINDOWS_DRIVE_MATCHER = re.compile(r'^\w:')
+
+
+def expand_case_matching(s):
+    """Expands a string to a case insenstive globable string."""
+    t = []
+    openers = {'[', '{'}
+    closers = {']', '}'}
+    nesting = 0
+
+    drive_part = WINDOWS_DRIVE_MATCHER.match(s) if ON_WINDOWS else None
+
+    if drive_part:
+        drive_part = drive_part.group(0)
+        t.append(drive_part)
+        s = s[len(drive_part):]
+
+    for c in s:
+        if c in openers:
+            nesting += 1
+        elif c in closers:
+            nesting -= 1
+        elif nesting > 0:
+            pass
+        elif c.isalpha():
+            folded = c.casefold()
+            if len(folded) == 1:
+                c = '[{0}{1}]'.format(c.upper(), c.lower())
+            else:
+                newc = ['[{0}{1}]?'.format(f.upper(), f.lower())
+                        for f in folded[:-1]]
+                newc = ''.join(newc)
+                newc += '[{0}{1}{2}]'.format(folded[-1].upper(),
+                                             folded[-1].lower(),
+                                             c)
+                c = newc
+        t.append(c)
+    return ''.join(t)
+
+
+def globpath(s, ignore_case=False):
+    """Simple wrapper around glob that also expands home and env vars."""
+    o, s = _iglobpath(s, ignore_case=ignore_case)
+    o = list(o)
+    return o if len(o) != 0 else [s]
+
+
+def _iglobpath(s, ignore_case=False):
+    s = builtins.__xonsh_expand_path__(s)
+    if ignore_case:
+        s = expand_case_matching(s)
+    if sys.version_info > (3, 5):
+        if '**' in s and '**/*' not in s:
+            s = s.replace('**', '**/*')
+        # `recursive` is only a 3.5+ kwarg.
+        return iglob(s, recursive=True), s
+    else:
+        return iglob(s), s
+
+def iglobpath(s, ignore_case=False):
+    """Simple wrapper around iglob that also expands home and env vars."""
+    return _iglobpath(s, ignore_case)[0]

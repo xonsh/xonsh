@@ -422,7 +422,7 @@ terminal, and the resulting object is not displayed.  For example
 Python Evaluation with ``@()``
 ===============================
 
-The ``@(<expr>)`` operator from will evaluate arbitrary Python code in
+The ``@(<expr>)`` operator form will evaluate arbitrary Python code in
 subprocess mode and the result will be appended to the subprocess command
 list. If the result is a string, it is appended to the argument list.
 If the result is a list or other non-string sequence, the contents are
@@ -1022,12 +1022,15 @@ Up, Down, Tab
 The up and down keys search history matching from the start of the line,
 much like they do in the IPython shell.
 
-Tab completion is present as well. In Python-mode you are able to complete
-based on the variable names in the current builtins, globals, and locals,
-as well as xonsh languages keywords & operator, files & directories, and
-environment variable names. In subprocess-mode, you additionally complete
-on any file names on your ``$PATH``, alias keys, and full BASH completion
-for the commands themselves.
+Tab completion is present as well. By default, in Python-mode you are able to
+complete based on the variable names in the current builtins, globals, and
+locals, as well as xonsh languages keywords & operator, files & directories,
+and environment variable names. In subprocess-mode, you additionally complete
+on the names of executable files on your ``$PATH``, alias keys, and full BASH
+completion for the commands themselves.
+
+xonsh also provides a means of modifying the behavior of the tab completer.  More
+detail is available on the `Tab Completion page <tutorial_completers.html>`_.
 
 Customizing the Prompt
 ======================

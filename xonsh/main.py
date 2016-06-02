@@ -173,6 +173,7 @@ def premain(argv=None):
     """Setup for main xonsh entry point, returns parsed arguments."""
     if setproctitle is not None:
         setproctitle(' '.join(['xonsh'] + sys.argv[1:]))
+    builtins.__xonsh_ctx__ = {}
     args, other = parser.parse_known_args(argv)
     if args.file is not None:
         real_argv = (argv or sys.argv)
@@ -190,7 +191,8 @@ def premain(argv=None):
                     'completer': False,
                     'login': False,
                     'scriptcache': args.scriptcache,
-                    'cacheall': args.cacheall}
+                    'cacheall': args.cacheall,
+                    'ctx': builtins.__xonsh_ctx__}
     if args.login:
         shell_kwargs['login'] = True
     if args.config_path is None:

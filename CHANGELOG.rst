@@ -4,17 +4,46 @@ Xonsh Change Log
 
 Current Developments
 ====================
-**Added:** None
+**Added:**
 
-**Changed:** None
+* Question mark literals, ``?``, are now allowed as part of
+  subprocess argument names.
+
+**Changed:**
+
+ * ``which`` now gives a better verbose report of where the executables are
+   found.
+ * Tab completion now uses a different interface, which allows new completers
+   to be implemented in Python.
+ * Most functions in the ``Execer`` now take an extra argument
+   ``wrap_subprocs``, indicating whether the syntactially invalid expressions
+   should be wrapped in ``![]`` automatically
+ * ``prompt_toolkit`` is now loaded lazily, decreasing load times when using
+   the ``readline`` shell.
+ * RC files are now executed directly in the appropriate context.
 
 **Deprecated:** None
 
-**Removed:** None
+**Removed:**
 
-**Fixed:** None
+ * Fixed bug on Windows where ``which`` did not include current directory
+
+**Fixed:**
+
+ * Fixed bug on Windows where tab-completion for executables would return all
+   files.
 
 **Security:** None
+
+v0.3.2
+====================
+**Fixed:**
+
+* Fixed PermissionError when tab completions tries to lookup executables in
+  directories without read permissions.
+* Fixed incorrect parsing of command line flags
+
+
 
 v0.3.1
 ====================

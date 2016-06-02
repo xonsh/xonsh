@@ -35,7 +35,8 @@ from xonsh.tools import (
     is_bool_or_int, to_bool_or_int, bool_or_int_to_str,
     csv_to_bool_seq, bool_seq_to_csv, DefaultNotGiven, print_exception,
     setup_win_unicode_console, intensify_colors_on_win_setter, format_color,
-    is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str
+    is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str,
+    executables_in
 )
 
 
@@ -735,65 +736,17 @@ class Env(MutableMapping):
                 p.pretty(dict(self))
 
 
-def _is_executable_file(path):
-    """Checks that path is an executable regular file, or a symlink towards one.
-    This is roughly ``os.path isfile(path) and os.access(path, os.X_OK)``.
-
-    This function was forked from pexpect originally:
-
-    Copyright (c) 2013-2014, Pexpect development team
-    Copyright (c) 2012, Noah Spurrier <noah@noah.org>
-
-    PERMISSION TO USE, COPY, MODIFY, AND/OR DISTRIBUTE THIS SOFTWARE FOR ANY
-    PURPOSE WITH OR WITHOUT FEE IS HEREBY GRANTED, PROVIDED THAT THE ABOVE
-    COPYRIGHT NOTICE AND THIS PERMISSION NOTICE APPEAR IN ALL COPIES.
-    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-    MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-    """
-    # follow symlinks,
-    fpath = os.path.realpath(path)
-
-    if not os.path.isfile(fpath):
-        # non-files (directories, fifo, etc.)
-        return False
-
-    return os.access(fpath, os.X_OK)
-
-
-def yield_executables_windows(directory, name):
-    normalized_name = os.path.normcase(name)
-    extensions = builtins.__xonsh_env__.get('PATHEXT')
-    try:
-        names = os.listdir(directory)
-    except PermissionError:
-        return
-    for a_file in names:
-        normalized_file_name = os.path.normcase(a_file)
-        base_name, ext = os.path.splitext(normalized_file_name)
-
-        if (
-            normalized_name == base_name or normalized_name == normalized_file_name
-        ) and ext.upper() in extensions:
-            yield os.path.join(directory, a_file)
-
-
-def yield_executables_posix(directory, name):
-    try:
-        names = os.listdir(directory)
-    except PermissionError:
-        return
-    if name in names:
-        path = os.path.join(directory, name)
-        if _is_executable_file(path):
-            yield path
-
-
-yield_executables = yield_executables_windows if ON_WINDOWS else yield_executables_posix
+def _yield_executables(directory, name):
+    if ON_WINDOWS:
+        for fname in executables_in(directory):
+            base_name, ext = os.path.splitext(fname)
+            if name.lower() == base_name.lower():
+                yield os.path.join(directory, fname)
+    else:
+        for x in executables_in(directory):
+            if x == name:
+                yield os.path.join(directory, name)
+                return
 
 
 def locate_binary(name):
@@ -807,7 +760,7 @@ def locate_binary(name):
         directories = [_get_cwd()] + directories
 
     try:
-        return next(chain.from_iterable(yield_executables(directory, name) for
+        return next(chain.from_iterable(_yield_executables(directory, name) for
                     directory in directories if os.path.isdir(directory)))
     except StopIteration:
         return None
@@ -1319,12 +1272,15 @@ def load_static_config(ctx, config=None):
     return conf
 
 
-def xonshrc_context(rcfiles=None, execer=None):
+def xonshrc_context(rcfiles=None, execer=None, initial=None):
     """Attempts to read in xonshrc file, and return the contents."""
     loaded = builtins.__xonsh_env__['LOADED_RC_FILES'] = []
+    if initial is None:
+        env = {}
+    else:
+        env = initial
     if rcfiles is None or execer is None:
-        return {}
-    env = {}
+        return env
     for rcfile in rcfiles:
         if not os.path.isfile(rcfile):
             loaded.append(False)
