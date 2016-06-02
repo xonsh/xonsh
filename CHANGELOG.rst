@@ -15,6 +15,8 @@ Current Developments
  * Most functions in the ``Execer`` now take an extra argument
    ``wrap_subprocs``, indicating whether the syntactially invalid expressions
    should be wrapped in ``![]`` automatically
+ * ``prompt_toolkit`` is now loaded lazily, decreasing load times when using
+   the ``readline`` shell.
 
 **Deprecated:** None
 
