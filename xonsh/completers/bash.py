@@ -123,4 +123,3 @@ def _collect_completions_sources():
             for _file in (x for x in path.glob('*') if x.is_file()):
                 sources.append('source "{}"'.format(_file.as_posix()))
     return sources
-
