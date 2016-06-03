@@ -19,10 +19,13 @@ from xonsh.platform import ON_WINDOWS
 from xonsh.tools import (subexpr_from_unbalanced, get_sep,
                          check_for_partial_string, RE_STRING_START)
 from xonsh.completers import completers
+from xonsh.completers.bash import update_bash_completion
 
 
 class Completer(object):
     """This provides a list of optional completions for the xonsh shell."""
+    def __init__(self):
+        update_bash_completion()
 
     def complete(self, prefix, line, begidx, endidx, ctx=None):
         """Complete the string, given a possible execution context.

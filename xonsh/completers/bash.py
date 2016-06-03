@@ -1,7 +1,11 @@
+import os
 import re
 import shlex
+import pickle
 import builtins
 import subprocess
+
+import hashlib
 
 from pathlib import Path
 
@@ -10,8 +14,15 @@ from xonsh.platform import ON_WINDOWS
 RE_DASHF = re.compile(r'-F\s+(\w+)')
 
 INITED = False
+
+BASH_COMPLETE_HASH = None
 BASH_COMPLETE_FUNCS = {}
 BASH_COMPLETE_FILES = {}
+
+CACHED_HASH = None
+CACHED_FUNCS = None
+CACHED_FILES = None
+
 BASH_COMPLETE_SCRIPT = """source "{filename}"
 COMP_WORDS=({line})
 COMP_LINE={comp_line}
@@ -22,12 +33,56 @@ COMP_CWORD={n}
 for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 """
 
+import time
+
+def update_bash_completion():
+    global BASH_COMPLETE_FUNCS, BASH_COMPLETE_FILES, BASH_COMPLETE_HASH
+    global CACHED_FUNCS, CACHED_FILES, CACHED_HASH, INITED
+
+    t = time.time()
+    completers = builtins.__xonsh_env__.get('BASH_COMPLETIONS', ())
+    BASH_COMPLETE_HASH = hashlib.md5(repr(completers).encode()).hexdigest()
+
+    datadir = builtins.__xonsh_env__['XONSH_DATA_DIR']
+    cachefname = os.path.join(datadir, 'bash_completion_cache')
+
+    if not INITED:
+        if os.path.isfile(cachefname):
+            # load from cache
+            with open(cachefname, 'rb') as cache:
+                CACHED_HASH, CACHED_FUNCS, CACHED_FILES = pickle.load(cache)
+        else:
+            # create initial cache
+            _load_bash_complete_funcs()
+            _load_bash_complete_files()
+            CACHED_HASH = BASH_COMPLETE_HASH
+            CACHED_FUNCS = BASH_COMPLETE_FUNCS
+            CACHED_FILES = BASH_COMPLETE_FILES
+            with open(cachefname, 'wb') as cache:
+                val = (CACHED_HASH, CACHED_FUNCS, CACHED_FILES)
+                pickle.dump(val, cache)
+        INITED = True
+
+
+    invalid = ((not os.path.isfile(cachefname)) or
+               BASH_COMPLETE_HASH != CACHED_HASH or
+               _completions_time() > os.stat(cachefname).st_mtime)
+
+    if invalid:
+        # update the cache
+        _load_bash_complete_funcs()
+        _load_bash_complete_files()
+        CACHED_HASH = BASH_COMPLETE_HASH
+        CACHED_FUNCS = BASH_COMPLETE_FUNCS
+        CACHED_FILES = BASH_COMPLETE_FILES
+        with open(cachefname, 'wb') as cache:
+            val = (CACHED_HASH, BASH_COMPLETE_FUNCS, BASH_COMPLETE_FILES)
+            pickle.dump(val, cache)
+
 
 def complete_from_bash(prefix, line, begidx, endidx, ctx):
     """Completes based on results from BASH completion."""
-    if not INITED:
-        _load_bash_complete_funcs()
-        _load_bash_complete_files()
+    update_bash_completion()
     splt = line.split()
     cmd = splt[0]
     func = BASH_COMPLETE_FUNCS.get(cmd, None)
@@ -63,8 +118,7 @@ def complete_from_bash(prefix, line, begidx, endidx, ctx):
 
 
 def _load_bash_complete_funcs():
-    global BASH_COMPLETE_FUNCS, INITED
-    INITED = True
+    global BASH_COMPLETE_FUNCS
     BASH_COMPLETE_FUNCS = bcf = {}
     inp = _collect_completions_sources()
     if not inp:
@@ -114,8 +168,8 @@ def _source_completions(source):
 
 def _collect_completions_sources():
     sources = []
-    paths = (Path(x) for x in
-             builtins.__xonsh_env__.get('BASH_COMPLETIONS', ()))
+    completers = builtins.__xonsh_env__.get('BASH_COMPLETIONS', ())
+    paths = (Path(x) for x in completers)
     for path in paths:
         if path.is_file():
             sources.append('source "{}"'.format(path.as_posix()))
@@ -123,3 +177,8 @@ def _collect_completions_sources():
             for _file in (x for x in path.glob('*') if x.is_file()):
                 sources.append('source "{}"'.format(_file.as_posix()))
     return sources
+
+
+def _completions_time():
+    compfiles = builtins.__xonsh_env__.get('BASH_COMPLETIONS', ())
+    return max(os.stat(x).st_mtime for x in compfiles)
