@@ -22,6 +22,8 @@ Current Developments
 **Fixed:**
 
  * Fixed bug on Windows where tab-completion for executables would return all files.
+ * Fixed bug on Windows which caused the bash $PROMPT variable to be used when no 
+   no $PROMPT variable was set in .xonshrc 
 
 **Security:** None
 
