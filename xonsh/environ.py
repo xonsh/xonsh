@@ -1296,7 +1296,7 @@ def xonshrc_context(rcfiles=None, execer=None):
 def windows_foreign_env_fixes(ctx):
     """Environment fixes for Windows. Operates in-place."""
     # remove these bash variables which only cause problems.
-    for ev in ['HOME', 'OLDPWD']:
+    for ev in ['HOME', 'OLDPWD', 'PROMPT']:
         if ev in ctx:
             del ctx[ev]
     # Override path-related bash variables; on Windows bash uses
