@@ -2,6 +2,7 @@ language: python
 python:
   - 3.4
   - 3.5
+  - "nightly"
 install:
   - pip install -r requirements-tests.txt
 script:
