@@ -591,29 +591,37 @@ def test_partial_string():
 
 
 def test_executables_in():
+
+
     expected = set()
-    types = ('none', 'file', 'file', 'directory')
-    executables = (True, True, False)
+    types = ('file', 'directory', 'brokensymlink')
+    executables = (True, False)
     with TemporaryDirectory() as test_path:
-        for i in range(64):
-            _type = types[i%len(types)]
-            if _type == 'none':
-                continue
-            executable = executables[i%len(executables)]
-            if _type == 'file' and executable:
-                ext = '.exe' if ON_WINDOWS else ''
-                expected.add(str(i) + ext)
-            else:
-                ext = ''
-            path = os.path.join(test_path, str(i) + ext)
-            if _type == 'file':
-                with open(path, 'w') as f:
-                    f.write(str(i))
-            elif _type == 'directory':
-                os.mkdir(path)
-            if executable:
-                os.chmod(path, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
-        result = set(executables_in(test_path))
+        for _type in types:
+            for executable in executables:
+                fname = '%s_%s' % (_type, executable)
+                if _type == 'none':
+                    continue
+                if _type == 'file' and executable:
+                    ext = '.exe' if ON_WINDOWS else ''
+                    expected.add(fname + ext)
+                else:
+                    ext = ''
+                path = os.path.join(test_path, fname + ext)
+                if _type == 'file':
+                    with open(path, 'w') as f:
+                        f.write(fname)
+                elif _type == 'directory':
+                    os.mkdir(path)
+                elif _type == 'brokensymlink':
+                    tmp_path = os.path.join(test_path, 'i_wont_exist')
+                    with open(tmp_path,'w') as f:
+                        f.write('deleteme')
+                        os.symlink(tmp_path, path)
+                    os.remove(tmp_path)
+                if executable and not _type == 'brokensymlink' :
+                    os.chmod(path, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
+            result = set(executables_in(test_path))
     assert_equal(expected, result)
 
 
