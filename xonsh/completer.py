@@ -4,6 +4,8 @@ import builtins
 
 from collections import Sequence
 
+from xonsh.completers.bash import update_bash_completion
+
 
 class Completer(object):
     """This provides a list of optional completions for the xonsh shell."""
