@@ -33,13 +33,11 @@ COMP_CWORD={n}
 for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 """
 
-import time
 
 def update_bash_completion():
     global BASH_COMPLETE_FUNCS, BASH_COMPLETE_FILES, BASH_COMPLETE_HASH
     global CACHED_FUNCS, CACHED_FILES, CACHED_HASH, INITED
 
-    t = time.time()
     completers = builtins.__xonsh_env__.get('BASH_COMPLETIONS', ())
     BASH_COMPLETE_HASH = hashlib.md5(repr(completers).encode()).hexdigest()
 
@@ -62,7 +60,6 @@ def update_bash_completion():
                 val = (CACHED_HASH, CACHED_FUNCS, CACHED_FILES)
                 pickle.dump(val, cache)
         INITED = True
-
 
     invalid = ((not os.path.isfile(cachefname)) or
                BASH_COMPLETE_HASH != CACHED_HASH or
