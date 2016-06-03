@@ -16,7 +16,7 @@ from xonsh.tools import (
     is_bool_or_int, to_bool_or_int, bool_or_int_to_str,
     ensure_int_or_slice, is_float, is_string, check_for_partial_string,
     is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str,
-    argvquote, executables_in, find_next_break)
+    argvquote, executables_in, find_next_break, expand_case_matching)
 
 LEXER = Lexer()
 LEXER.build()
@@ -624,6 +624,18 @@ def test_executables_in():
             result = set(executables_in(test_path))
     assert_equal(expected, result)
 
+
+def test_expand_case_matching():
+    cases = {
+        'yo': '[Yy][Oo]',
+        '[a-f]123e': '[a-f]123[Ee]',
+        '${HOME}/yo': '${HOME}/[Yy][Oo]',
+        './yo/mom': './[Yy][Oo]/[Mm][Oo][Mm]',
+        'Eßen': '[Ee][Ss]?[Ssß][Ee][Nn]',
+        }
+    for inp, exp in cases.items():
+        obs = expand_case_matching(inp)
+        yield assert_equal, exp, obs
 
 if __name__ == '__main__':
     nose.runmodule()

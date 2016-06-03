@@ -27,6 +27,7 @@ import builtins
 import subprocess
 import threading
 import traceback
+from glob import iglob
 from warnings import warn
 from contextlib import contextmanager
 from collections import OrderedDict, Sequence, Set
@@ -1215,3 +1216,66 @@ class CommandsCache(Set):
             allcmds |= set(builtins.aliases)
         self._cmds_cache = frozenset(allcmds)
         return self._cmds_cache
+
+WINDOWS_DRIVE_MATCHER = re.compile(r'^\w:')
+
+
+def expand_case_matching(s):
+    """Expands a string to a case insenstive globable string."""
+    t = []
+    openers = {'[', '{'}
+    closers = {']', '}'}
+    nesting = 0
+
+    drive_part = WINDOWS_DRIVE_MATCHER.match(s) if ON_WINDOWS else None
+
+    if drive_part:
+        drive_part = drive_part.group(0)
+        t.append(drive_part)
+        s = s[len(drive_part):]
+
+    for c in s:
+        if c in openers:
+            nesting += 1
+        elif c in closers:
+            nesting -= 1
+        elif nesting > 0:
+            pass
+        elif c.isalpha():
+            folded = c.casefold()
+            if len(folded) == 1:
+                c = '[{0}{1}]'.format(c.upper(), c.lower())
+            else:
+                newc = ['[{0}{1}]?'.format(f.upper(), f.lower())
+                        for f in folded[:-1]]
+                newc = ''.join(newc)
+                newc += '[{0}{1}{2}]'.format(folded[-1].upper(),
+                                             folded[-1].lower(),
+                                             c)
+                c = newc
+        t.append(c)
+    return ''.join(t)
+
+
+def globpath(s, ignore_case=False):
+    """Simple wrapper around glob that also expands home and env vars."""
+    o, s = _iglobpath(s, ignore_case=ignore_case)
+    o = list(o)
+    return o if len(o) != 0 else [s]
+
+
+def _iglobpath(s, ignore_case=False):
+    s = builtins.__xonsh_expand_path__(s)
+    if ignore_case:
+        s = expand_case_matching(s)
+    if sys.version_info > (3, 5):
+        if '**' in s and '**/*' not in s:
+            s = s.replace('**', '**/*')
+        # `recursive` is only a 3.5+ kwarg.
+        return iglob(s, recursive=True), s
+    else:
+        return iglob(s), s
+
+def iglobpath(s, ignore_case=False):
+    """Simple wrapper around iglob that also expands home and env vars."""
+    return _iglobpath(s, ignore_case)[0]
