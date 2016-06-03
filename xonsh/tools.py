@@ -312,6 +312,18 @@ class redirect_stderr(_RedirectStream):
     _stream = "stderr"
 
 
+def _yield_accessible_unix_file_names(path):
+    "yield file names of executablel files in `path`"
+
+    for file_ in scandir(path):
+        try:
+            if file_.is_file() and os.access(file_.path, os.X_OK):
+                yield file_.name
+        except NotADirectoryError:
+            # broken Symlink are neither dir not files
+            pass
+
+
 def _executables_in_posix(path):
     if PYTHON_VERSION_INFO < (3, 5, 0):
         for fname in os.listdir(path):
@@ -320,8 +332,7 @@ def _executables_in_posix(path):
                                     (not os.path.isdir(fpath))):
                 yield fname
     else:
-        yield from (x.name for x in scandir(path)
-                    if x.is_file() and os.access(x.path, os.X_OK))
+        yield from _yield_accessible_unix_file_names(path)
 
 
 def _executables_in_windows(path):
