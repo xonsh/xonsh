@@ -194,10 +194,13 @@ class ReadlineShell(BaseShell, Cmd):
         rl_completion_suppress_append()  # this needs to be called each time
         mline = line.partition(' ')[2]
         offs = len(mline) - len(text)
-        x = [(i[offs:] if " " in i[:-1] else i)
-             for i in self.completer.complete(text, line,
-                                              begidx, endidx,
-                                              ctx=self.ctx)[0]]
+        if self.completer is None:
+            x = []
+        else:
+            x = [(i[offs:] if " " in i[:-1] else i)
+                 for i in self.completer.complete(text, line,
+                                                  begidx, endidx,
+                                                  ctx=self.ctx)[0]]
         return x
 
     # tab complete on first index too
