@@ -49,6 +49,9 @@ def update_bash_completion():
             # load from cache
             with open(cachefname, 'rb') as cache:
                 CACHED_HASH, CACHED_FUNCS, CACHED_FILES = pickle.load(cache)
+                BASH_COMPLETE_HASH = CACHED_HASH
+                BASH_COMPLETE_FUNCS = CACHED_FUNCS
+                BASH_COMPLETE_FILES = CACHED_FILES
         else:
             # create initial cache
             _load_bash_complete_funcs()
