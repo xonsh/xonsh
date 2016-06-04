@@ -3,8 +3,6 @@ import os
 from xonsh.completers.man import complete_from_man
 from xonsh.completers.path import complete_dir
 
-PREVENT_OTHERS = ['path']
-
 
 def complete_cd(prefix, line, start, end, ctx):
     """
