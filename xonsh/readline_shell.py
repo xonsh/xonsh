@@ -13,6 +13,7 @@ import sys
 import time
 import select
 import builtins
+import importlib
 from cmd import Cmd
 from threading import Thread
 from collections import deque
@@ -44,7 +45,7 @@ def setup_readline():
         return
     for _rlmod_name in ('gnureadline', 'readline'):
         try:
-            readline = __import__(_rlmod_name)
+            readline = importlib.import_module(_rlmod_name)
             sys.modules['readline'] = readline
         except ImportError:
             pass
