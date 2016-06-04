@@ -42,7 +42,7 @@ Listing Active Completers
 =========================
 
 A list of the active completers can be viewed by running the
-``list-completers`` command.  This command will display names and descriptions
+``completer list`` command.  This command will display names and descriptions
 of the currently-active completers, in the order in which they will be
 checked.
 
@@ -70,7 +70,7 @@ appropriate completions, and ``prefixlength`` is the number of characters in
 ``line`` that should be treated as part of the completion.
 
 The docstring of a completer should contain a brief description of its
-functionality, which will be displayed by ``list-completers``.
+functionality, which will be displayed by ``completer list``.
 
 Three examples follow.  For more examples, see the source code of the completers
 xonsh actually uses, in the ``xonsh.completers`` module.
@@ -103,10 +103,10 @@ Registering a Completer
 =======================
 
 Once you have created a completion function, you can add it to the list of
-active completers via the ``register-completer`` command::
+active completers via the ``completer add`` command::
 
     Usage:
-        register-completer NAME FUNC [POS]
+        completer add NAME FUNC [POS]
 
 ``NAME`` is a unique name to use in the listing
 
@@ -119,6 +119,8 @@ active completers via the ``register-completer`` command::
 * ``">KEY"``, where ``KEY`` is a pre-existing name, indicates that this should be added after the completer named ``KEY``
 * ``"<KEY"``, where ``KEY`` is a pre-existing name, indicates that this should be added before the completer named ``KEY``
 
+If ``POS`` is not provided, it defaults to ``"start"``.
+
 .. note:: It is also possible to manipulate ``__xonsh_completers__`` directly,
           but this is the preferred method.
 
@@ -126,5 +128,5 @@ Removing a Completer
 ====================
 
 To remove a completer from the list of active completers, run
-``remove-completer NAME``, where ``NAME`` is the unique identifier associated
+``completer remove NAME``, where ``NAME`` is the unique identifier associated
 with the completer you wish to remove.
