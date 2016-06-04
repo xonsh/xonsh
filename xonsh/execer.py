@@ -45,7 +45,7 @@ class Execer(object):
         if self.unload:
             unload_builtins()
 
-    def parse(self, input, ctx, mode='exec'):
+    def parse(self, input, ctx, mode='exec', wrap_subprocs=True):
         """Parses xonsh code in a context-aware fashion. For context-free
         parsing, please use the Parser class directly.
         """
@@ -68,7 +68,11 @@ class Execer(object):
         # tokens for all of the Python rules. The lazy way implemented here
         # is to parse a line a second time with a $() wrapper if it fails
         # the first time. This is a context-free phase.
-        tree, input = self._parse_ctx_free(input, mode=mode)
+        if wrap_subprocs:
+            tree, input = self._parse_ctx_free(input, mode=mode)
+        else:
+            return self.parser.parse(input, filename=self.filename, mode=mode,
+                                     debug_level=(self.debug_level > 1))
         if tree is None:
             return None
 
@@ -82,7 +86,7 @@ class Execer(object):
         return tree
 
     def compile(self, input, mode='exec', glbs=None, locs=None, stacklevel=2,
-                filename=None):
+                filename=None, wrap_subprocs=True):
         """Compiles xonsh code into a Python code object, which may then
         be execed or evaled.
         """
@@ -93,13 +97,14 @@ class Execer(object):
             glbs = frame.f_globals if glbs is None else glbs
             locs = frame.f_locals if locs is None else locs
         ctx = set(dir(builtins)) | set(glbs.keys()) | set(locs.keys())
-        tree = self.parse(input, ctx, mode=mode)
+        tree = self.parse(input, ctx, mode=mode, wrap_subprocs=wrap_subprocs)
         if tree is None:
             return None  # handles comment only input
         code = compile(tree, filename, mode)
         return code
 
-    def eval(self, input, glbs=None, locs=None, stacklevel=2):
+    def eval(self, input, glbs=None, locs=None, stacklevel=2,
+                wrap_subprocs=True):
         """Evaluates (and returns) xonsh code."""
         if isinstance(input, types.CodeType):
             code = input
@@ -108,12 +113,14 @@ class Execer(object):
                                 glbs=glbs,
                                 locs=locs,
                                 mode='eval',
-                                stacklevel=stacklevel)
+                                stacklevel=stacklevel,
+                                wrap_subprocs=wrap_subprocs)
         if code is None:
             return None  # handles comment only input
         return eval(code, glbs, locs)
 
-    def exec(self, input, mode='exec', glbs=None, locs=None, stacklevel=2):
+    def exec(self, input, mode='exec', glbs=None, locs=None, stacklevel=2,
+                wrap_subprocs=True):
         """Execute xonsh code."""
         if isinstance(input, types.CodeType):
             code = input
@@ -122,7 +129,8 @@ class Execer(object):
                                 glbs=glbs,
                                 locs=locs,
                                 mode=mode,
-                                stacklevel=stacklevel)
+                                stacklevel=stacklevel,
+                                wrap_subprocs=wrap_subprocs)
         if code is None:
             return None  # handles comment only input
         return exec(code, glbs, locs)
