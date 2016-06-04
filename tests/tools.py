@@ -12,6 +12,7 @@ from contextlib import contextmanager
 from nose.plugins.skip import SkipTest
 
 from xonsh.built_ins import ensure_list_of_strs
+builtins.__xonsh_env__ = {}
 from xonsh.base_shell import BaseShell
 
 
