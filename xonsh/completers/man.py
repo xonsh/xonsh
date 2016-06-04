@@ -1,21 +1,13 @@
 import os
 import re
 import pickle
+import builtins
 import subprocess
 
 from xonsh.completers.tools import get_filter_function
 
-OPTIONS_PATH = os.path.join(os.path.expanduser('~'), ".xonsh_man_completions")
-try:
-    with open(OPTIONS_PATH, 'rb') as f:
-        OPTIONS = pickle.load(f)
-except:
-    OPTIONS = {}
-
-
-def save_cached_options():
-    with open(OPTIONS_PATH, 'wb') as f:
-        pickle.dump(OPTIONS, f)
+OPTIONS = None
+OPTIONS_PATH = None
 
 SCRAPE_RE = re.compile(r'^(?:\s*(?:-\w|--[a-z0-9-]+)[\s,])+', re.M)
 INNER_OPTIONS_RE = re.compile(r'-\w|--[a-z0-9-]+')
@@ -24,7 +16,15 @@ INNER_OPTIONS_RE = re.compile(r'-\w|--[a-z0-9-]+')
 def complete_from_man(prefix, line, start, end, ctx):
     """Completes an option name, based on the contents of the associated man
     page."""
-    global OPTIONS
+    global OPTIONS, OPTIONS_PATH
+    if OPTIONS is None:
+        datadir = builtins.__xonsh_env__['XONSH_DATA_DIR']
+        OPTIONS_PATH = os.path.join(datadir, 'man_completions_cache')
+        try:
+            with open(OPTIONS_PATH, 'rb') as f:
+                OPTIONS = pickle.load(f)
+        except:
+            OPTIONS = {}
     if not prefix.startswith('-'):
         return set()
     cmd = line.split()[0]
@@ -40,7 +40,8 @@ def complete_from_man(prefix, line, start, end, ctx):
             scraped_text = ' '.join(SCRAPE_RE.findall(text))
             matches = INNER_OPTIONS_RE.findall(scraped_text)
             OPTIONS[cmd] = matches
-            save_cached_options()
+            with open(OPTIONS_PATH, 'wb') as f:
+                pickle.dump(OPTIONS, f)
         except:
             return set()
     return {s for s in OPTIONS[cmd]
