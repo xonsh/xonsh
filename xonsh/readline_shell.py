@@ -105,6 +105,8 @@ def setup_readline():
         else:
             inputrc_name = '.inputrc'
         inputrc_name = os.path.join(os.path.expanduser('~'), inputrc_name)
+    if (not ON_WINDOWS) and (not os.path.isfile(inputrc_name)):
+        inputrc_name = '/etc/inputrc'
     if os.path.isfile(inputrc_name):
         try:
             readline.read_init_file(inputrc_name)
