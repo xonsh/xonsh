@@ -284,6 +284,7 @@ class BaseParser(object):
         tree : AST
         """
         self.reset()
+        self.xonsh_code = s
         self.lexer.fname = filename
         tree = self.parser.parse(input=s, lexer=self.lexer, debug=debug_level)
         # hack for getting modes right
@@ -295,7 +296,7 @@ class BaseParser(object):
         return tree
 
     def _lexer_errfunc(self, msg, line, column):
-        self._parse_error(msg, self.currloc(line, column))
+        self._parse_error(msg, self.currloc(line, column), self.xonsh_code)
 
     def _yacc_lookahead_token(self):
         """Gets the next-to-last and last token seen by the lexer."""
@@ -377,8 +378,13 @@ class BaseParser(object):
             return self.token_col(t)
         return 0
 
-    def _parse_error(self, msg, loc):
-        err = SyntaxError('{0}: {1}'.format(loc, msg))
+    def _parse_error(self, msg, loc, line=None):
+        err_line_pointer = ('\n'
+                            '{}\n'
+                            '{: >{}}'.format(line.split('\n')[loc.lineno - 1],
+                                               '^',
+                                               loc.column + 1))
+        err = SyntaxError('{0}: {1} {2}'.format(loc, msg, err_line_pointer))
         err.loc = loc
         raise err
 
@@ -2307,9 +2313,13 @@ class BaseParser(object):
             if isinstance(p.value, BaseException):
                 raise p.value
             else:
-                self._parse_error(p.value, self.currloc(lineno=p.lineno,
-                                                        column=p.lexpos))
+                self._parse_error(p.value,
+                                  self.currloc(lineno=p.lineno,
+                                               column=p.lexpos),
+                                  self.xonsh_code)
         else:
             msg = 'code: {0}'.format(p.value),
-            self._parse_error(msg, self.currloc(lineno=p.lineno,
-                                                column=p.lexpos))
+            self._parse_error(msg,
+                              self.currloc(lineno=p.lineno,
+                                           column=p.lexpos),
+                              self.xonsh_code)
