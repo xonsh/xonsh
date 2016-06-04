@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """Tests the xonsh lexer."""
 import os
-import random
 from tempfile import TemporaryDirectory
 import stat
 
 import nose
 from nose.tools import assert_equal, assert_true, assert_false
 
+from xonsh.platform import ON_WINDOWS
 from xonsh.lexer import Lexer
 from xonsh.tools import (
     subproc_toks, subexpr_from_unbalanced, is_int, always_true, always_false,
@@ -591,25 +591,38 @@ def test_partial_string():
 
 
 def test_executables_in():
-    expected = set()
-    with TemporaryDirectory() as test_path:
-        for i in range(random.randint(100, 200)):
-            _type = random.choice(('none', 'file', 'file', 'directory'))
-            if _type == 'none':
-                continue
-            executable = random.choice((True, True, False))
-            if _type == 'file' and executable:
-                expected.add(str(i))
-            path = os.path.join(test_path, str(i))
-            if _type == 'file':
-                open(path, 'w').close()
-            elif _type == 'directory':
-                os.mkdir(path)
-            if executable:
-                os.chmod(path, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
 
-        result = set(executables_in(test_path))
-        assert_equal(expected, result)
+
+    expected = set()
+    types = ('file', 'directory', 'brokensymlink')
+    executables = (True, False)
+    with TemporaryDirectory() as test_path:
+        for _type in types:
+            for executable in executables:
+                fname = '%s_%s' % (_type, executable)
+                if _type == 'none':
+                    continue
+                if _type == 'file' and executable:
+                    ext = '.exe' if ON_WINDOWS else ''
+                    expected.add(fname + ext)
+                else:
+                    ext = ''
+                path = os.path.join(test_path, fname + ext)
+                if _type == 'file':
+                    with open(path, 'w') as f:
+                        f.write(fname)
+                elif _type == 'directory':
+                    os.mkdir(path)
+                elif _type == 'brokensymlink':
+                    tmp_path = os.path.join(test_path, 'i_wont_exist')
+                    with open(tmp_path,'w') as f:
+                        f.write('deleteme')
+                        os.symlink(tmp_path, path)
+                    os.remove(tmp_path)
+                if executable and not _type == 'brokensymlink' :
+                    os.chmod(path, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
+            result = set(executables_in(test_path))
+    assert_equal(expected, result)
 
 
 if __name__ == '__main__':

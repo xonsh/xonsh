@@ -36,11 +36,6 @@ from collections import OrderedDict, Sequence, Set
 from xonsh.platform import (has_prompt_toolkit, scandir, win_unicode_console,
                             DEFAULT_ENCODING, ON_LINUX, ON_WINDOWS,
                             PYTHON_VERSION_INFO)
-if has_prompt_toolkit():
-    import prompt_toolkit
-else:
-    prompt_toolkit = None
-
 
 IS_SUPERUSER = ctypes.windll.shell32.IsUserAnAdmin() != 0 if ON_WINDOWS else os.getuid() == 0
 
@@ -317,18 +312,53 @@ class redirect_stderr(_RedirectStream):
     _stream = "stderr"
 
 
+def _yield_accessible_unix_file_names(path):
+    "yield file names of executablel files in `path`"
+
+    for file_ in scandir(path):
+        try:
+            if file_.is_file() and os.access(file_.path, os.X_OK):
+                yield file_.name
+        except NotADirectoryError:
+            # broken Symlink are neither dir not files
+            pass
+
+
+def _executables_in_posix(path):
+    if PYTHON_VERSION_INFO < (3, 5, 0):
+        for fname in os.listdir(path):
+            fpath  = os.path.join(path, fname)
+            if (os.path.exists(fpath) and os.access(fpath, os.X_OK) and \
+                                    (not os.path.isdir(fpath))):
+                yield fname
+    else:
+        yield from _yield_accessible_unix_file_names(path)
+
+
+def _executables_in_windows(path):
+    extensions = builtins.__xonsh_env__.get('PATHEXT',['.COM', '.EXE', '.BAT'])
+    if PYTHON_VERSION_INFO < (3, 5, 0):
+        for fname in os.listdir(path):
+            fpath = os.path.join(path, fname)
+            if (os.path.exists(fpath) and not os.path.isdir(fpath)):
+                base_name, ext = os.path.splitext(fname)
+                if ext.upper() in extensions:
+                    yield fname
+    else:
+        for fname in (x.name for x in scandir(path) if x.is_file()):
+            base_name, ext = os.path.splitext(fname)
+            if ext.upper() in extensions:
+                yield fname
+
+
 def executables_in(path):
     """Returns a generator of files in `path` that the user could execute. """
+    if ON_WINDOWS:
+        func = _executables_in_windows
+    else:
+        func = _executables_in_posix
     try:
-        if PYTHON_VERSION_INFO < (3, 5, 0):
-            for i in os.listdir(path):
-                name  = os.path.join(path, i)
-                if (os.path.exists(name) and os.access(name, os.X_OK) and \
-                                        (not os.path.isdir(name))):
-                    yield i
-        else:
-            yield from (x.name for x in scandir(path)
-                        if x.is_file() and os.access(x.path, os.X_OK))
+        yield from func(path)
     except PermissionError:
         return
 
@@ -837,6 +867,7 @@ def color_style():
 
 def _get_color_indexes(style_map):
     """ Generates the color and windows color index for a style """
+    import prompt_toolkit
     table = prompt_toolkit.terminal.win32_output.ColorLookupTable()
     pt_style = prompt_toolkit.styles.style_from_dict(style_map)
     for token in style_map:
@@ -858,7 +889,10 @@ def intensify_colors_for_cmd_exe(style_map, replace_colors=None):
        range used by the gray colors
     """
     modified_style = {}
-    if not ON_WINDOWS or prompt_toolkit is None:
+    stype = builtins.__xonsh_env__.get('SHELL_TYPE')
+    if (not ON_WINDOWS or
+            (stype not in ('prompt_toolkit', 'best')) or
+            (stype == 'best' and not has_prompt_toolkit())):
         return modified_style
     if replace_colors is None:
         replace_colors = {1: '#44ffff',  # subst blue with bright cyan
@@ -881,7 +915,10 @@ def expand_gray_colors_for_cmd_exe(style_map):
         in cmd.exe.
     """
     modified_style = {}
-    if not ON_WINDOWS or prompt_toolkit is None:
+    stype = builtins.__xonsh_env__.get('SHELL_TYPE')
+    if (not ON_WINDOWS or
+            (stype not in ('prompt_toolkit', 'best')) or
+            (stype == 'best' and not has_prompt_toolkit())):
         return modified_style
     for token, idx, rgb in _get_color_indexes(style_map):
         if idx == 7 and rgb:
