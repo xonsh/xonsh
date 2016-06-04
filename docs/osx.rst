@@ -40,7 +40,7 @@ the following from the source directory,
 GNU Readline
 ============
 
-On Mac OSX, it is _strongly_ recommended to install the ``gnureadline`` library if using the readline shell (as opposed to prompt_toolkit).  ``gnureadline`` can be installed via pip:
+On Mac OSX, it is *strongly* recommended to install the ``gnureadline`` library if using the readline shell.  ``gnureadline`` can be installed via pip:
 
 .. code-block:: bash
 
