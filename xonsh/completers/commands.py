@@ -9,6 +9,9 @@ SKIP_TOKENS = {'sudo', 'time', 'timeit', 'which', 'showcmd', 'man'}
 
 
 def complete_command(cmd, line, start, end, ctx):
+    """
+    Returns a list of valid commands starting with the first argument
+    """
     space = ' '
     out = {s + space
            for s in builtins.__xonsh_commands_cache__
