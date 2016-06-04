@@ -28,7 +28,8 @@ def _add_one_completer(name, func, loc='end'):
                 found = True
         if not found:
             new[name] = func
-    builtins.__xonsh_completers__ = new
+    builtins.__xonsh_completers__.clear()
+    builtins.__xonsh_completers__.update(new)
 
 
 def list_completers(args, stdin=None):
