@@ -9,10 +9,10 @@ commands, manipulating the environment, and dealing with the file system
 easy.  The xonsh command prompt gives users interactive access to the xonsh
 language.
 
-While all Python code is also xonsh, not all BASH code can be used in xonsh.
+While all Python code is also xonsh, not all Bash code can be used in xonsh.
 That would defeat the purpose, and Python is better anyway! Still, xonsh is
-BASH-wards compatible in the ways that matter, such as for running commands,
-reading in the BASH environment, and utilizing BASH tab completion.
+Bash-wards compatible in the ways that matter, such as for running commands,
+reading in the Bash environment, and utilizing Bash tab completion.
 
 The purpose of this tutorial is to teach you xonsh. There are many excellent
 guides out there for learning Python, and this will not join their ranks.
@@ -200,7 +200,7 @@ variable you want to look up.  But what if you want to construct the name
 programmatically, or read it from another variable?  Enter the ``${}``
 operator.
 
-.. warning:: In BASH, ``$NAME`` and ``${NAME}`` are syntactically equivalent.
+.. warning:: In Bash, ``$NAME`` and ``${NAME}`` are syntactically equivalent.
              In xonsh, they have separate meanings.
 
 We can place any valid Python expression inside of the curly braces in
@@ -316,7 +316,7 @@ The ``$(<expr>)`` operator in xonsh executes a subprocess command and
 *captures* some information about that command.
 
 The ``$()`` syntax captures and returns the standard output stream of the
-command as a Python string.  This is similar to how ``$()`` performs in BASH.
+command as a Python string.  This is similar to how ``$()`` performs in Bash.
 For example,
 
 .. code-block:: xonshcon
@@ -829,8 +829,8 @@ globbing.
 For more information, please see the documentation for the ``re`` module in
 the Python standard library.
 
-.. warning:: This backtick syntax has very different from that of BASH.  In
-             BASH, backticks mean to run a captured subprocess ``$()``.
+.. warning:: This backtick syntax has very different from that of Bash.  In
+             Bash, backticks mean to run a captured subprocess ``$()``.
 
 
 Help & Superhelp with ``?`` & ``??``
@@ -916,7 +916,7 @@ Of course, for subprocess commands, you still want to use the ``man`` command.
 
 Compile, Evaluate, & Execute
 ================================
-Like Python and BASH, xonsh provides built-in hooks to compile, evaluate,
+Like Python and Bash, xonsh provides built-in hooks to compile, evaluate,
 and execute strings of xonsh code.  To prevent this functionality from having
 serious name collisions with the Python built-in ``compile()``, ``eval()``,
 and ``exec()`` functions, the xonsh equivalents all append an 'x'.  So for
@@ -928,7 +928,7 @@ Aliases
 ==============================
 Another important xonsh built-in is the ``aliases`` mapping.  This is
 like a dictionary that affects how subprocess commands are run.  If you are
-familiar with the BASH ``alias`` built-in, this is similar.  Alias command
+familiar with the Bash ``alias`` built-in, this is similar.  Alias command
 matching only occurs for the first element of a subprocess command.
 
 The keys of ``aliases`` are strings that act as commands in subprocess-mode.
@@ -1026,7 +1026,7 @@ Tab completion is present as well. By default, in Python-mode you are able to
 complete based on the variable names in the current builtins, globals, and
 locals, as well as xonsh languages keywords & operator, files & directories,
 and environment variable names. In subprocess-mode, you additionally complete
-on the names of executable files on your ``$PATH``, alias keys, and full BASH
+on the names of executable files on your ``$PATH``, alias keys, and full Bash
 completion for the commands themselves.
 
 xonsh also provides a means of modifying the behavior of the tab completer.  More

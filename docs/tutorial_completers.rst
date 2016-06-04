@@ -14,7 +14,7 @@ In Python-mode, pressing the "tab" key will complete based on the variable
 names in the current builtins, globals, and locals, as well as xonsh language
 keywords & operators, files & directories, and environment variable names. In
 subprocess-mode, xonsh additionally completes based on the names of any
-executable files on your $PATH, alias keys, and full BASH completion for the
+executable files on your $PATH, alias keys, and full Bash completion for the
 commands themselves.
 
 xonsh also provides a mechanism by which the results of a tab completion can be
