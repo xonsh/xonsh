@@ -3,9 +3,12 @@ import sys
 import inspect
 import builtins
 import importlib
+
+from collections.abc import Iterable
+
 from xonsh.tools import (subexpr_from_unbalanced, get_sep,
                          check_for_partial_string, RE_STRING_START)
-from xonsh.completers.tools import get_filter_function, is_iterable
+from xonsh.completers.tools import get_filter_function
 
 RE_ATTR = re.compile(r'([^\s\(\)]+(\.[^\s\(\)]+)*)\.(\w*)$')
 
@@ -86,7 +89,7 @@ def attr_complete(prefix, ctx, filter_func):
         a = getattr(val, opt)
         if callable(a):
             rpl = opt + '('
-        elif is_iterable(a):
+        elif isinstance(a, Iterable):
             rpl = opt + '['
         else:
             rpl = opt

@@ -10,14 +10,6 @@ def get_filter_function():
     return filt
 
 
-def is_iterable(x):
-    try:
-        _ = iter(x)
-        return True
-    except:
-        return False
-
-
 def justify(s, max_length, left_pad=0):
     toks = s.strip().split()
     lines = [[]]
