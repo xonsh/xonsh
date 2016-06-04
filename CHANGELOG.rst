@@ -8,6 +8,7 @@ Current Developments
 
 * Question mark literals, ``?``, are now allowed as part of
   subprocess argument names.
+* IPython style visual pointer to show where syntax error was detected
 
 **Changed:**
 
