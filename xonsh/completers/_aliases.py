@@ -17,14 +17,14 @@ def _add_one_completer(name, func, loc='end'):
             new[k] = v
         new[name] = func
     else:
-        dir, rel = loc[0], loc[1:]
+        direction, rel = loc[0], loc[1:]
         found = False
         for (k, v) in builtins.__xonsh_completers__.items():
-            if rel == k and dir == '<':
+            if rel == k and direction == '<':
                 new[name] = func
                 found = True
             new[k] = v
-            if rel == k and dir == '>':
+            if rel == k and direction == '>':
                 new[name] = func
                 found = True
         if not found:
