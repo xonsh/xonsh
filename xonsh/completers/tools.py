@@ -1,4 +1,5 @@
 import builtins
+import textwrap
 
 
 def _filter_normal(s, x):
@@ -27,15 +28,5 @@ def justify(s, max_length, left_pad=0):
     characters long, padding all lines but the first on the left with the
     string left_pad.
     """
-    toks = s.strip().split()
-    lines = [[]]
-    for tok in toks:
-        new_length = (sum(len(i) for i in lines[-1]) +
-                      len(lines[-1]) - 1 +
-                      len(tok) +
-                      left_pad)
-        if new_length > max_length:
-            lines.append([])
-        lines[-1].append(tok)
-    return "\n".join((((" " * left_pad) if ix != 0 else '') + " ".join(i))
-                     for ix, i in enumerate(lines))
+    txt = textwrap.wrap(s, width=max_length, subsequent_indent=' '*left_pad)
+    return '\n'.join(txt)
