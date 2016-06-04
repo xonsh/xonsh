@@ -49,8 +49,9 @@ def _path_from_partial_string(inp, pos=None):
 
 
 def _normpath(p):
-    """ Wraps os.normpath() to avoid removing './' at the beginning
-        and '/' at the end. On windows it does the same with backslases
+    """
+    Wraps os.normpath() to avoid removing './' at the beginning
+    and '/' at the end. On windows it does the same with backslashes
     """
     initial_dotslash = p.startswith(os.curdir + os.sep)
     initial_dotslash |= (ON_WINDOWS and p.startswith(os.curdir + os.altsep))

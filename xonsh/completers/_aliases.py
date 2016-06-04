@@ -39,10 +39,9 @@ def _list_completers(args, stdin=None):
     ml = max(len(i) for i in _comp)
     _strs = []
     for c in _comp:
-        doc = _comp[c].__doc__ or 'No description provided'
-        doc = justify(doc, 80, 7 + ml)
-        padding = ' ' * (2 + ml - len(c))
-        _strs.append('%s%r : %s' % (padding, c, doc))
+        doc = ' '.join(_comp[c].__doc__.split()) or 'No description provided'
+        doc = justify(doc, 80, ml + 3)
+        _strs.append('{: >{}} : {}'.format(c, ml, doc))
     return o + '\n'.join(_strs) + '\n'
 
 
