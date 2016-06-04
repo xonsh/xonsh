@@ -95,7 +95,7 @@ def setup_readline():
             "",
             "It is highly recommended that you install gnureadline, which is installable with:",
             "     pip install gnureadline",
-            "*"*78]))
+            "*"*78]), file=sys.stderr)
     else:
         readline.parse_and_bind("tab: complete")
     # try to load custom user settings
