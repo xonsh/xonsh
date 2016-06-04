@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import tempfile
 
 import nose
 from nose.tools import assert_true
@@ -29,10 +30,11 @@ def teardown():
 def test_man_completion():
     if ON_WINDOWS:
         raise SkipTest
-    with mock_xonsh_env({}):
-        completions = complete_from_man('--', 'yes --', 4, 6, __xonsh_env__)
-    assert_true('--version' in completions)
-    assert_true('--help' in completions)
+    with tempfile.TemporaryDirectory() as tempdir:
+        with mock_xonsh_env({'XONSH_DATA_DIR': tempdir}):
+            completions = complete_from_man('--', 'yes --', 4, 6, __xonsh_env__)
+        assert_true('--version' in completions)
+        assert_true('--help' in completions)
 
 
 if __name__ == '__main__':
