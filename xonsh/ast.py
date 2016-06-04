@@ -92,7 +92,7 @@ class CtxAwareTransformer(NodeTransformer):
     a subprocess.
     """
 
-    def __init__(self, parser, wrap_subprocs=True):
+    def __init__(self, parser):
         """Parameters
         ----------
         parser : xonsh.Parser
@@ -104,9 +104,8 @@ class CtxAwareTransformer(NodeTransformer):
         self.contexts = []
         self.lines = None
         self.mode = None
-        self.wrap_subprocs = wrap_subprocs
 
-    def ctxvisit(self, node, inp, ctx, mode='exec', wrap_subprocs=True):
+    def ctxvisit(self, node, inp, ctx, mode='exec'):
         """Transforms the node in a context-dependent way.
 
         Parameters
@@ -123,7 +122,6 @@ class CtxAwareTransformer(NodeTransformer):
         node : ast.AST
             The transformed node.
         """
-        self.wrap_subprocs = wrap_subprocs
         self.lines = inp.splitlines()
         self.contexts = [ctx, set()]
         self.mode = mode
@@ -148,8 +146,6 @@ class CtxAwareTransformer(NodeTransformer):
 
     def try_subproc_toks(self, node, strip_expr=False):
         """Tries to parse the line of the node as a subprocess."""
-        if not self.wrap_subprocs:
-            return node
         line = self.lines[node.lineno - 1]
         if self.mode == 'eval':
             mincol = len(line) - len(line.lstrip())

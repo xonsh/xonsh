@@ -68,8 +68,11 @@ class Execer(object):
         # tokens for all of the Python rules. The lazy way implemented here
         # is to parse a line a second time with a $() wrapper if it fails
         # the first time. This is a context-free phase.
-        tree, input = self._parse_ctx_free(input, mode=mode,
-                                           wrap_subprocs=wrap_subprocs)
+        if wrap_subprocs:
+            tree, input = self._parse_ctx_free(input, mode=mode)
+        else:
+            return self.parser.parse(input, filename=self.filename, mode=mode,
+                                     debug_level=(self.debug_level > 1))
         if tree is None:
             return None
 
@@ -79,8 +82,7 @@ class Execer(object):
         # (ls) is part of the execution context. If it isn't, then we will
         # assume that this line is supposed to be a subprocess line, assuming
         # it also is valid as a subprocess line.
-        tree = self.ctxtransformer.ctxvisit(tree, input, ctx, mode=mode,
-                                            wrap_subprocs=wrap_subprocs)
+        tree = self.ctxtransformer.ctxvisit(tree, input, ctx, mode=mode)
         return tree
 
     def compile(self, input, mode='exec', glbs=None, locs=None, stacklevel=2,
@@ -133,7 +135,7 @@ class Execer(object):
             return None  # handles comment only input
         return exec(code, glbs, locs)
 
-    def _parse_ctx_free(self, input, mode='exec', wrap_subprocs=True):
+    def _parse_ctx_free(self, input, mode='exec'):
         last_error_line = last_error_col = -1
         parsed = False
         original_error = None
@@ -150,8 +152,6 @@ class Execer(object):
                 else:
                     raise original_error
             except SyntaxError as e:
-                if not wrap_subprocs:
-                    raise e
                 if original_error is None:
                     original_error = e
                 if (e.loc is None) or (last_error_line == e.loc.lineno and
