@@ -35,3 +35,13 @@ the following from the source directory,
 .. include:: add_to_shell.rst
 
 .. include:: dependencies.rst
+
+
+GNU Readline
+============
+
+On Mac OSX, it is *strongly* recommended to install the ``gnureadline`` library if using the readline shell.  ``gnureadline`` can be installed via pip:
+
+.. code-block:: bash
+
+    $ pip install gnureadline
