@@ -11,19 +11,30 @@ Current Developments
 
 **Changed:**
 
- * ``which`` now give a better verbose report of where the executables are found.
+* ``which`` now gives a better verbose report of where the executables are
+  found.
+* Tab completion now uses a different interface, which allows new completers
+  to be implemented in Python.
+* Most functions in the ``Execer`` now take an extra argument
+  ``wrap_subprocs``, indicating whether the syntactially invalid expressions
+  should be wrapped in ``![]`` automatically
+* ``prompt_toolkit`` is now loaded lazily, decreasing load times when using
+  the ``readline`` shell.
+* RC files are now executed directly in the appropriate context.
 
 **Deprecated:** None
 
 **Removed:**
 
- * Fixed bug on Windows where ``which`` did not include current directory
+* Fixed bug on Windows where ``which`` did not include current directory
 
 **Fixed:**
 
- * Fixed bug on Windows where tab-completion for executables would return all files.
- * Fixed bug on Windows which caused the bash $PROMPT variable to be used when no 
-   no $PROMPT variable was set in .xonshrc 
+* Fixed bug on Windows where tab-completion for executables would return all files.
+* Fixed bug on Windows which caused the bash $PROMPT variable to be used when no 
+  no $PROMPT variable was set in .xonshrc 
+* Improved start-up times by caching information about bash completion
+  functions
 
 **Security:** None
 
@@ -31,9 +42,9 @@ v0.3.2
 ====================
 **Fixed:**
 
-* Fixed PermissionError when tabcompletions tries to lookup executables in
+* Fixed PermissionError when tab completions tries to lookup executables in
   directories without read permissions.
-* fix incorrect parsing of command line flags
+* Fixed incorrect parsing of command line flags
 
 
 

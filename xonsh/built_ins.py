@@ -30,7 +30,8 @@ from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
                         SimpleForegroundProcProxy, TeePTYProc,
                         CompletedCommand, HiddenCompletedCommand)
 from xonsh.tools import (
-    suggest_commands, XonshError, expandvars, CommandsCache
+    suggest_commands, XonshError, expandvars, CommandsCache, globpath,
+    iglobpath
 )
 
 
@@ -90,46 +91,6 @@ def expand_path(s):
     return os.path.expanduser(s)
 
 
-WINDOWS_DRIVE_MATCHER = re.compile(r'^\w:')
-
-
-def expand_case_matching(s):
-    """Expands a string to a case insenstive globable string."""
-    t = []
-    openers = {'[', '{'}
-    closers = {']', '}'}
-    nesting = 0
-
-    drive_part = WINDOWS_DRIVE_MATCHER.match(s) if ON_WINDOWS else None
-
-    if drive_part:
-        drive_part = drive_part.group(0)
-        t.append(drive_part)
-        s = s[len(drive_part):]
-
-    for c in s:
-        if c in openers:
-            nesting += 1
-        elif c in closers:
-            nesting -= 1
-        elif nesting > 0:
-            pass
-        elif c.isalpha():
-            folded = c.casefold()
-            if len(folded) == 1:
-                c = '[{0}{1}]'.format(c.upper(), c.lower())
-            else:
-                newc = ['[{0}{1}]?'.format(f.upper(), f.lower())
-                        for f in folded[:-1]]
-                newc = ''.join(newc)
-                newc += '[{0}{1}{2}]'.format(folded[-1].upper(),
-                                             folded[-1].lower(),
-                                             c)
-                c = newc
-        t.append(c)
-    return ''.join(t)
-
-
 def reglob(path, parts=None, i=None):
     """Regular expression-based globbing."""
     if parts is None:
@@ -177,31 +138,6 @@ def regexpath(s, pymode=False):
     o = reglob(s)
     no_match = [] if pymode else [s]
     return o if len(o) != 0 else no_match
-
-
-def globpath(s, ignore_case=False):
-    """Simple wrapper around glob that also expands home and env vars."""
-    o, s = _iglobpath(s, ignore_case=ignore_case)
-    o = list(o)
-    return o if len(o) != 0 else [s]
-
-
-def _iglobpath(s, ignore_case=False):
-    s = expand_path(s)
-    if ignore_case:
-        s = expand_case_matching(s)
-    if sys.version_info > (3, 5):
-        if '**' in s and '**/*' not in s:
-            s = s.replace('**', '**/*')
-        # `recursive` is only a 3.5+ kwarg.
-        return iglob(s, recursive=True), s
-    else:
-        return iglob(s), s
-
-def iglobpath(s, ignore_case=False):
-    """Simple wrapper around iglob that also expands home and env vars."""
-    return _iglobpath(s, ignore_case)[0]
-
 
 RE_SHEBANG = re.compile(r'#![ \t]*(.+?)$')
 
@@ -697,7 +633,6 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     # private built-ins
     builtins.__xonsh_config__ = {}
     builtins.__xonsh_env__ = ENV = Env(default_env(config=config, login=login))
-    builtins.__xonsh_ctx__ = {} if ctx is None else ctx
     builtins.__xonsh_help__ = helper
     builtins.__xonsh_superhelp__ = superhelper
     builtins.__xonsh_regexpath__ = regexpath
