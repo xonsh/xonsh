@@ -37,7 +37,6 @@ class Completer(object):
             (only used with prompt_toolkit)
         """
         ctx = ctx or {}
-        empty_set = set()
         for func in builtins.__xonsh_completers__.values():
             out = func(prefix, line, begidx, endidx, ctx)
             if isinstance(out, Sequence):
@@ -45,6 +44,6 @@ class Completer(object):
             else:
                 res = out
                 lprefix = len(prefix)
-            if res is not None and res != empty_set:
+            if res is not None and len(res) != 0:
                 return tuple(sorted(res)), lprefix
         return set(), lprefix
