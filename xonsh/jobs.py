@@ -10,7 +10,6 @@ from io import BytesIO
 from collections import deque
 
 from xonsh.platform import ON_DARWIN, ON_WINDOWS
-from xonsh.tools import print_exception
 
 tasks = deque()
 
