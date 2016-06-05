@@ -8,7 +8,7 @@ the ``xontrib`` command:
 
 .. code-block:: xonshcon
 
-    >>> xontrib mpl xomg ...
+    >>> xontrib mpl xo ...
 
 .. See the xontrib tutorial for more information.
 
