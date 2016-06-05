@@ -10,53 +10,24 @@ from nose.tools import assert_raises
 from xonsh.execer import Execer
 from xonsh.tools import ON_WINDOWS
 
-from tools import mock_xonsh_env
-
-DEBUG_LEVEL = 0
-EXECER = None
-
-#
-# Helpers
-#
+from tools import (mock_xonsh_env, execer_setup, check_exec, check_eval,
+    check_parse, skip_if)
 
 def setup():
-    # only setup one parser
-    global EXECER
-    EXECER = Execer(debug_level=DEBUG_LEVEL)
+    execer_setup()
 
-def check_exec(input):
-    with mock_xonsh_env(None):
-        if not input.endswith('\n'):
-            input += '\n'
-        EXECER.debug_level = DEBUG_LEVEL
-        EXECER.exec(input)
+@skip_if(not ON_WINDOWS)
+def test_win_ipconfig():
+    yield (check_eval,
+           os.environ['SYSTEMROOT'] + '\\System32\\ipconfig.exe /all')
 
-def check_eval(input):
-    with mock_xonsh_env({'AUTO_CD': False, 'XONSH_ENCODING' :'utf-8',
-                         'XONSH_ENCODING_ERRORS': 'strict', 'PATH': []}):
-        EXECER.debug_level = DEBUG_LEVEL
-        EXECER.eval(input)
+@skip_if(not ON_WINDOWS)
+def test_ipconfig():
+    yield check_eval, 'ipconfig /all'
 
-def check_parse(input):
-    with mock_xonsh_env(None):
-        EXECER.debug_level = DEBUG_LEVEL
-        EXECER.parse(input, ctx=None)
-
-#
-# Tests
-#
-
-if ON_WINDOWS:
-    def test_win_ipconfig():
-        yield (check_eval,
-               os.environ['SYSTEMROOT'] + '\\System32\\ipconfig.exe /all')
-
-    def test_ipconfig():
-        yield check_eval, 'ipconfig /all'
-
-else:
-    def test_bin_ls():
-        yield check_eval, '/bin/ls -l'
+@skip_if(ON_WINDOWS)
+def test_bin_ls():
+    yield check_eval, '/bin/ls -l'
 
 def test_ls_dashl():
     yield check_parse, 'ls -l'

@@ -250,6 +250,7 @@ class CtxAwareTransformer(NodeTransformer):
         targets = set()
         i = 0  # index of unassigned items
         def make_next_target():
+            nonlocal i
             targ = '__xonsh_with_target_{}_{}__'.format(nwith, i)
             n = Name(id=targ, ctx=Store(), lineno=lineno, col_offset=col)
             targets.add(targ)
