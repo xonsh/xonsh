@@ -111,6 +111,14 @@ def has_elts(x):
     return isinstance(x, AST) and hasattr(x, 'elts')
 
 
+def xonsh_call(name, args, lineno=None, col=None):
+    """Creates the AST node for calling a function of a given name."""
+    return Call(func=Name(id=name, ctx=ast.Load(),
+                          lineno=lineno, col_offset=col),
+                args=args, keywords=[], starargs=None, kwargs=None,
+                lineno=lineno, col_offset=col)
+
+
 def isdescendable(node):
     """Deteremines whether or not a node is worth visiting. Currently only
     UnaryOp and BoolOp nodes are visited.
@@ -227,6 +235,9 @@ class CtxAwareTransformer(NodeTransformer):
                 break
         return inscope
 
+    #
+    # With Transformers
+    #
     def insert_with_block_check(self, node):
         """Modifies a with statement node in-place to add an initial check
         for whether or not the block should be executed. If the block is
@@ -241,10 +252,10 @@ class CtxAwareTransformer(NodeTransformer):
         i = 0  # index of unassigned items
         def make_next_target():
             targ = '__xonsh_with_target_{}_{}__'.format(nwith, i)
-            node = Name(id=targ, ctx=Store(), lineno=lineno, col_offset=col)
+            n = Name(id=targ, ctx=Store(), lineno=lineno, col_offset=col)
             targets.add(targ)
             i += 1
-            return node
+            return n
         for item in node.items:
             if item.optional_vars is None:
                 if has_elts(item.context_expr):
@@ -262,7 +273,21 @@ class CtxAwareTransformer(NodeTransformer):
         #     if getattr(targ0, '__xonsh_block__', False) or \
         #        getattr(targ1, '__xonsh_block__', False) or ...:
         #         raise XonshBlockError("<lines>", globals(), locals())
-
+        tests = [_getblockattr(t, lineno, col) for t in sorted(targets)]
+        if len(tests) == 1:
+            test = tests[0]
+        else:
+            test = BoolOp(op=Or(), values=tests, lineno=lineno, col_offset=col)
+        lines = 'whoops'
+        check = If(test=test, body=[
+            Raise(exc=xonsh_call('XonshBlockError',
+                args=[Str(s=lines, lineno=lineno, col_offset=col),
+                      xonsh_call('globals', args=[], lineno=lineno, col=col),
+                      xonsh_call('locals', args=[], lineno=lineno, col=col)],
+                lineno=lineno, col=col)
+                cause=None, lineno=lineno, col_offset=col)],
+            orelse=[], lineno=lineno, col_offset=col)
+        node.body.insert(0, check)
 
     #
     # Replacement visitors
@@ -444,3 +469,14 @@ def pdump(s, **kwargs):
 def pprint(s, *, sep=None, end=None, file=None, flush=False, **kwargs):
     """Performs a pretty print of the AST nodes."""
     print(pdump(s, **kwargs), sep=sep, end=end, file=file, flush=flush)
+
+#
+# Private helpers
+#
+def _getblockattr(name, lineno, col):
+    """calls getattr(name, '__xonsh_block__', False)."""
+    return xonsh_call('getattr', args=[
+        Name(id=name, ctx=Load(), lineno=lineno, col_offset=col),
+        Str(s='__xonsh_block__', lineno=lineno, col_offset=col),
+        NameConstant(value=False, lineno=lineno, col_offset=col)],
+        lineno=lineno, col=col)
