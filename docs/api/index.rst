@@ -31,6 +31,7 @@ For those of you who want the gritty details.
     inspectors
     history
     completer
+    completers/index
     shell
     base_shell
     readline_shell

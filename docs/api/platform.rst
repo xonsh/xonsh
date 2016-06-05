@@ -26,9 +26,6 @@ Constants
 .. autodata:: BASH_COMPLETIONS_DEFAULT
     :annotation:
 
-.. autodata:: BEST_SHELL_TYPE
-    :annotation:
-
 .. autodata:: DEFAULT_ENCODING
     :annotation:
 
