@@ -181,4 +181,5 @@ def _collect_completions_sources():
 
 def _completions_time():
     compfiles = builtins.__xonsh_env__.get('BASH_COMPLETIONS', ())
-    return max(os.stat(x).st_mtime for x in compfiles)
+    compfiles = [os.stat(x).st_mtime for x in compfiles if os.path.exists(x)]
+    return max(compfiles) if compfiles else 0
