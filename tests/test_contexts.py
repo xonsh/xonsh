@@ -23,6 +23,9 @@ def block_checks_glb(name, glbs, body, obs):
     yield assert_is, glbs, block.glbs
     yield assert_is, None, block.locs
 
+X1_WITH = ('x = 1\n'
+           'with Block() as b:\n')
+
 #
 # tests
 #
@@ -37,20 +40,18 @@ def test_block_noexec():
 
 
 def test_block_oneline():
-    s = ('x = 1\n'
-         'with Block() as b:\n'
-         '    x += 42\n')
+    body = '    x += 42\n'
+    s = X1_WITH + body
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
-    yield from block_checks_glb('b', glbs, ['    x += 42'], {'x': 1})
+    yield from block_checks_glb('b', glbs, body, {'x': 1})
 
 
 def test_block_manylines():
     body = ('    ![echo wow mom]\n'
             '# bad place for a comment\n'
             '    x += 42')
-    s = ('x = 1\n'
-         'with Block() as b:\n' + body + '\n')
+    s = X1_WITH + body
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
     yield from block_checks_glb('b', glbs, body, {'x': 1})
@@ -58,10 +59,9 @@ def test_block_manylines():
 
 def test_block_leading_comment():
     # leading comments do not show up in block lines
-    s = ('x = 1\n'
-         'with Block() as b:\n'
-         '    # I am a leading comment\n'
-         '    x += 42\n')
+    body = ('    # I am a leading comment\n'
+            '    x += 42\n')
+    s = X1_WITH + body
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
     yield from block_checks_glb('b', glbs, ['    x += 42'], {'x': 1})
@@ -69,11 +69,28 @@ def test_block_leading_comment():
 
 def test_block_trailing_comment():
     # trailing comments do not show up in block lines
-    s = ('x = 1\n'
-         'with Block() as b:\n'
-         '    x += 42\n'
-         '    # I am a trailing comment\n')
+    body = ('    x += 42\n'
+            '    # I am a trailing comment\n')
+    s = X1_WITH + body
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
     yield from block_checks_glb('b', glbs, ['    x += 42'], {'x': 1})
+
+
+def test_block_trailing_line_continuation():
+    body = ('    x += \\\n'
+            '         42\n')
+    s = X1_WITH + body
+    glbs = {'Block': Block}
+    check_exec(s, glbs=glbs, locs=None)
+    yield from block_checks_glb('b', glbs, body, {'x': 1})
+
+
+def test_block_trailing_close_paren():
+    body = ('    x += int("42"\n'
+            '             )\n')
+    s = X1_WITH + body
+    glbs = {'Block': Block}
+    check_exec(s, glbs=glbs, locs=None)
+    yield from block_checks_glb('b', glbs, body, {'x': 1})
 

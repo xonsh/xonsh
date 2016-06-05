@@ -278,10 +278,9 @@ class CtxAwareTransformer(NodeTransformer):
             test = tests[0]
         else:
             test = BoolOp(op=Or(), values=tests, lineno=lineno, col_offset=col)
-        lline = min_line(node.body[0])
-        uline = max_line(node.body[-1])
+        ldx, udx = self._find_with_block_line_idx(node)
         lines = [Str(s=s, lineno=lineno, col_offset=col)
-                 for s in self.lines[lline-1:uline]]
+                 for s in self.lines[ldx:udx]]
         check = If(test=test, body=[
             Raise(exc=xonsh_call('XonshBlockError',
                 args=[List(elts=lines, ctx=Load(), lineno=lineno, col_offset=col),
@@ -291,6 +290,22 @@ class CtxAwareTransformer(NodeTransformer):
                 cause=None, lineno=lineno, col_offset=col)],
             orelse=[], lineno=lineno, col_offset=col)
         node.body.insert(0, check)
+
+    def _find_with_block_line_idx(self, node):
+        ldx = min_line(node.body[0]) - 1
+        udx = max_line(node.body[-1])
+        # now check if parsable, or add lines until it is or we run out of lines
+        nlines = len(self.lines)
+        lines = 'with __xonsh_dummy__:\n' + '\n'.join(self.lines[ldx:udx]) + '\n'
+        parsable = False
+        while not parsable and udx < nlines:
+            try:
+                self.parser.parse(lines, mode=self.mode)
+                parsable = True
+            except SyntaxError:
+                lines += self.lines[udx] + '\n'
+                udx += 1
+        return ldx, udx
 
     #
     # Replacement visitors
