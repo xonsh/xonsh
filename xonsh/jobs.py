@@ -15,9 +15,9 @@ tasks = deque()
 
 if ON_DARWIN:
     def _send_signal(job, signal):
-        # This is kind of workaround for OSX, since os.killpg() may
-        # cause PermissionError, we still need to figure out why.
-        # see Github issue #1012
+        # On OS X, os.killpg() may cause PermissionError when there are
+        # any zombie processes in the process group.
+        # See github issue #1012 for details
         for pid in job['pids']:
             os.kill(pid, signal)
 
