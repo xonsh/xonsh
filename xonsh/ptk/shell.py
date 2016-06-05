@@ -142,8 +142,6 @@ class PromptToolkitShell(BaseShell):
         prompt.
         """
         p = builtins.__xonsh_env__.get('RIGHT_PROMPT')
-        if len(p) == 0:
-            return []
         try:
             p = partial_format_prompt(p)
         except Exception:  # pylint: disable=broad-except
