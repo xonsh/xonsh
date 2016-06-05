@@ -160,3 +160,74 @@ def test_block_func_oneline():
     yield from block_checks_func('rtn', glbs, body, FUNC_OBSG, FUNC_OBSL)
 
 
+def test_block_func_manylines():
+    body = ('        ![echo wow mom]\n'
+            '# bad place for a comment\n'
+            '        x += 42\n')
+    s = FUNC_WITH.format(body=body)
+    glbs = {'Block': Block}
+    check_exec(s, glbs=glbs, locs=None)
+    yield from block_checks_func('rtn', glbs, body, FUNC_OBSG, FUNC_OBSL)
+
+
+def test_block_func_leading_comment():
+    # leading comments do not show up in block lines
+    body = ('        # I am a leading comment\n'
+            '        x += 42\n')
+    s = FUNC_WITH.format(body=body)
+    glbs = {'Block': Block}
+    check_exec(s, glbs=glbs, locs=None)
+    yield from block_checks_func('rtn', glbs, '        x += 42\n',
+                                 FUNC_OBSG, FUNC_OBSL)
+
+
+def test_block_func_trailing_comment():
+    # trailing comments do not show up in block lines
+    body = ('        x += 42\n'
+            '        # I am a trailing comment\n')
+    s = FUNC_WITH.format(body=body)
+    glbs = {'Block': Block}
+    check_exec(s, glbs=glbs, locs=None)
+    yield from block_checks_func('rtn', glbs, '        x += 42\n',
+                                 FUNC_OBSG, FUNC_OBSL)
+
+
+def test_blockfunc__trailing_line_continuation():
+    body = ('        x += \\\n'
+            '             42\n')
+    s = FUNC_WITH.format(body=body)
+    glbs = {'Block': Block}
+    check_exec(s, glbs=glbs, locs=None)
+    yield from block_checks_func('rtn', glbs, body, FUNC_OBSG, FUNC_OBSL)
+
+
+def test_block_func_trailing_close_paren():
+    body = ('        x += int("42"\n'
+            '                 )\n')
+    s = FUNC_WITH.format(body=body)
+    glbs = {'Block': Block}
+    check_exec(s, glbs=glbs, locs=None)
+    yield from block_checks_func('rtn', glbs, body, FUNC_OBSG, FUNC_OBSL)
+
+
+def test_block_func_trailing_close_many():
+    body = ('        x = {None: [int("42"\n'
+            '                        )\n'
+            '                    ]\n'
+            '             }\n')
+    s = FUNC_WITH.format(body=body)
+    glbs = {'Block': Block}
+    check_exec(s, glbs=glbs, locs=None)
+    yield from block_checks_func('rtn', glbs, body, FUNC_OBSG, FUNC_OBSL)
+
+
+def test_block_func_trailing_triple_string():
+    body = ('        x = """This\n'
+            'is\n'
+            '"probably"\n'
+            '\'not\' what I meant.\n'
+            '"""\n')
+    s = FUNC_WITH.format(body=body)
+    glbs = {'Block': Block}
+    check_exec(s, glbs=glbs, locs=None)
+    yield from block_checks_func('rtn', glbs, body, FUNC_OBSG, FUNC_OBSL)
