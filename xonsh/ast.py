@@ -272,7 +272,7 @@ class CtxAwareTransformer(NodeTransformer):
         #
         #     if getattr(targ0, '__xonsh_block__', False) or \
         #        getattr(targ1, '__xonsh_block__', False) or ...:
-        #         raise XonshBlockError("<lines>", globals(), locals())
+        #         raise XonshBlockError(lines, globals(), locals())
         tests = [_getblockattr(t, lineno, col) for t in sorted(targets)]
         if len(tests) == 1:
             test = tests[0]
@@ -280,10 +280,11 @@ class CtxAwareTransformer(NodeTransformer):
             test = BoolOp(op=Or(), values=tests, lineno=lineno, col_offset=col)
         lline = min_line(node.body[0])
         uline = max_line(node.body[-1])
-        lines = '\n'.join(self.lines[lline-1:uline])
+        lines = [Str(s=s, lineno=lineno, col_offset=col)
+                 for s in self.lines[lline-1:uline]]
         check = If(test=test, body=[
             Raise(exc=xonsh_call('XonshBlockError',
-                args=[Str(s=lines, lineno=lineno, col_offset=col),
+                args=[List(elts=lines, ctx=Load(), lineno=lineno, col_offset=col),
                       xonsh_call('globals', args=[], lineno=lineno, col=col),
                       xonsh_call('locals', args=[], lineno=lineno, col=col)],
                     lineno=lineno, col=col),

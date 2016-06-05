@@ -13,8 +13,8 @@ class Block(object):
         """
         Attributes
         ----------
-        lines : str or None
-            Block lines as a string, if available.
+        lines : list of str or None
+            Block lines as if split by str.splitlines(), if available.
         glbs : Mapping or None
             Global execution context, ie globals().
         locs : Mapping or None

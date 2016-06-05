@@ -52,8 +52,8 @@ class XonshBlockError(XonshError):
         """
         Parameters
         ----------
-        lines : str
-            Block lines.
+        lines : list f str
+            Block lines, as if split by str.splitlines().
         glbs : Mapping or None
             Global execution context for lines, ie globals() of calling frame.
         locs : Mapping or None
