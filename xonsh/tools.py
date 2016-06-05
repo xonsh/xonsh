@@ -48,9 +48,21 @@ class XonshError(Exception):
 class XonshBlockError(XonshError):
     """Special xonsh exception for communicating the liens of block bodies."""
 
-    def __init__(self, lines, *args, **kwargs):
+    def __init__(self, lines, glbs=None, locs=None, *args, **kwargs):
+        """
+        Parameters
+        ----------
+        lines : str
+            Block lines.
+        glbs : Mapping or None, optional
+            Global execution context for lines, ie globals() of calling frame.
+        locs : Mapping or None, optional
+            Local execution context for lines, ie locals() of calling frame.
+        """
         super().__init__(*args, **kwargs)
         self.lines = lines
+        self.glbs = glbs
+        self.locs = locs
 
 
 class DefaultNotGivenType(object):
