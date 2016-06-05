@@ -62,17 +62,14 @@ else:
         _send_signal(job, signal.SIGKILL)
 
     def _send_signal(job, signal):
-        try:
+        if ON_DARWIN:
+            # This is kind of workaround for OSX, since os.killpg() may
+            # cause PermissionError, we still need to figure out why.
+            # see Github issue #1012
+            for pid in job['pids']:
+                os.kill(pid, signal)
+        else:
             os.killpg(job['pgrp'], signal)
-        except PermissionError:
-            # see Github issue #1012 for details
-            if not ON_DARWIN:
-                raise
-            env = getattr(builtins, '__xonsh_env__', os.environ)
-            if env.get('DEBUG_LEVEL', 0) > 0:
-                print_exception('Just caught an error when calling '
-                                'killpg(), which should be harmless.')
-
 
     def ignore_sigtstp():
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)
