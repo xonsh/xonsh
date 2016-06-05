@@ -45,6 +45,14 @@ class XonshError(Exception):
     pass
 
 
+class XonshBlockError(XonshError):
+    """Special xonsh exception for communicating the liens of block bodies."""
+
+    def __init__(self, lines, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.lines = lines
+
+
 class DefaultNotGivenType(object):
     """Singleton for representing when no default value is given."""
 
