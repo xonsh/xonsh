@@ -379,12 +379,13 @@ class BaseParser(object):
         return 0
 
     def _parse_error(self, msg, loc, line=None):
-        err_line_pointer = ('\n'
-                            '{}\n'
-                            '{: >{}}'.format(line.split('\n')[loc.lineno - 1],
-                                               '^',
-                                               loc.column + 1))
-        err = SyntaxError('{0}: {1} {2}'.format(loc, msg, err_line_pointer))
+        if line is None:
+            err_line_pointer = ''
+        else:
+            col = loc.column + 1
+            err_line = line.splitlines()[loc.lineno - 1]
+            err_line_pointer = '\n{}\n{: >{}}'.format(err_line, '^', col)
+        err = SyntaxError('{0}: {1}{2}'.format(loc, msg, err_line_pointer))
         err.loc = loc
         raise err
 
