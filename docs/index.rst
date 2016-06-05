@@ -42,6 +42,7 @@ the xonsh shell
         "None shell pass",
         "You shell not pass!",
         "The x-on shell",
+        "Ever wonder why there isn't a Taco Shell? Because it is a corny idea.",
         "It is pronounced <i>コンチ</i>",
         "It is pronounced <i>コンッチ</i>",
         "It is pronounced <i>コンシュ</i>",
