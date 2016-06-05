@@ -278,7 +278,9 @@ class CtxAwareTransformer(NodeTransformer):
             test = tests[0]
         else:
             test = BoolOp(op=Or(), values=tests, lineno=lineno, col_offset=col)
-        lines = 'whoops'
+        lline = min_line(node.body[0])
+        uline = max_line(node.body[-1])
+        lines = '\n'.join(self.lines[lline-1:uline])
         check = If(test=test, body=[
             Raise(exc=xonsh_call('XonshBlockError',
                 args=[Str(s=lines, lineno=lineno, col_offset=col),
