@@ -56,7 +56,7 @@ Now install xonsh:
 .. code-block:: bat
 
    > cd xonsh-master
-   > python setup.py install
+   > pip install .
 
 Next, run xonsh:
 
