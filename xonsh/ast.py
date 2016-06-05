@@ -60,6 +60,22 @@ def leftmostname(node):
     return rtn
 
 
+def get_lineno(node, default=0):
+    """Gets the lineno of a node or returns the default."""
+    return getattr(node, 'lineno', default)
+
+
+def min_line(node):
+    """Computes the minimum lineno."""
+    node_line = get_lineno(node)
+    return min(map(get_lineno, walk(node), repeat(node_line)))
+
+
+def max_line(node):
+    """Computes the maximum lineno."""
+    return max(map(get_lineno, walk(node)))
+
+
 def get_col(node, default=-1):
     """Gets the col_offset of a node, or returns the default"""
     return getattr(node, 'col_offset', default)
@@ -76,6 +92,23 @@ def max_col(node):
     if col is None:
         col = max(map(get_col, walk(node)))
     return col
+
+
+def get_id(node, default=None):
+    """Gets the id attribute of a node, or returns a default."""
+    return getattr(node, 'id', default)
+
+
+def gather_names(node):
+    """Returns the set of all names present in the node's tree."""
+    rtn = set(map(get_id, walk(node)))
+    rtn.discard(None)
+    return rtn
+
+
+def has_elts(x):
+    """Tests if x is an AST node with elements."""
+    return isinstance(x, AST) and hasattr(x, 'elts')
 
 
 def isdescendable(node):
@@ -104,6 +137,7 @@ class CtxAwareTransformer(NodeTransformer):
         self.contexts = []
         self.lines = None
         self.mode = None
+        self._nwith = 0
 
     def ctxvisit(self, node, inp, ctx, mode='exec'):
         """Transforms the node in a context-dependent way.
@@ -125,8 +159,10 @@ class CtxAwareTransformer(NodeTransformer):
         self.lines = inp.splitlines()
         self.contexts = [ctx, set()]
         self.mode = mode
+        self._nwith = 0
         node = self.visit(node)
         del self.lines, self.contexts, self.mode
+        self._nwith = 0
         return node
 
     def ctxupdate(self, iterable):
@@ -190,6 +226,43 @@ class CtxAwareTransformer(NodeTransformer):
                 inscope = True
                 break
         return inscope
+
+    def insert_with_block_check(self, node):
+        """Modifies a with statement node in-place to add an initial check
+        for whether or not the block should be executed. If the block is
+        not executed it will raise a XonshBlockError containing the required
+        information.
+        """
+        nwith = self._nwith  # the nesting level of the current with-statement
+        lineno = get_lineno(node)
+        col = get_col(node, 0)
+        # Add or discover target names
+        targets = set()
+        i = 0  # index of unassigned items
+        def make_next_target():
+            targ = '__xonsh_with_target_{}_{}__'.format(nwith, i)
+            node = Name(id=targ, ctx=Store(), lineno=lineno, col_offset=col)
+            targets.add(targ)
+            i += 1
+            return node
+        for item in node.items:
+            if item.optional_vars is None:
+                if has_elts(item.context_expr):
+                    targs = [make_next_target() for _ in item.context_expr.elts]
+                    optvars = Tuple(elts=targs, ctx=Store(), lineno=lineno,
+                                    col_offset=col)
+                else:
+                    optvars = make_next_target()
+                item.optional_vars = optvars
+            else:
+                targets.update(gather_names(item.optional_vars))
+        # Ok, now that targets have been found / created, make the actual check
+        # to see if we are in a non-executing block. This is equivalent to writing
+        #
+        #     if getattr(targ0, '__xonsh_block__', False) or \
+        #        getattr(targ1, '__xonsh_block__', False) or ...:
+        #         raise XonshBlockError("<lines>", globals(), locals())
+
 
     #
     # Replacement visitors
@@ -286,8 +359,11 @@ class CtxAwareTransformer(NodeTransformer):
         """Handle visiting a with statement."""
         for item in node.items:
             if item.optional_vars is not None:
-                self.ctxadd(leftmostname(item.optional_vars))
+                self.ctxupdate(gather_names(item.optional_vars))
+        self._nwith += 1
         self.generic_visit(node)
+        self._nwith -= 1
+        #self.insert_with_block_check(node)
         return node
 
     def visit_For(self, node):
@@ -365,4 +441,6 @@ def pdump(s, **kwargs):
     return pre + mid + post
 
 
-
+def pprint(s, *, sep=None, end=None, file=None, flush=False, **kwargs):
+    """Performs a pretty print of the AST nodes."""
+    print(pdump(s, **kwargs), sep=sep, end=end, file=file, flush=flush)

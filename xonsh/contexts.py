@@ -31,5 +31,7 @@ class Block(object):
             return  # some other kind of error happened
         self.lines = exc_value.lines
         self.glbs = exc_value.glbs
-        self.locs = exc_value.locs
+        if exc_value.locs is not self.glbs:
+            # leave locals as None when it is the same as globals
+            self.locs = exc_value.locs
         return True
