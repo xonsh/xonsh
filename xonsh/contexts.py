@@ -3,9 +3,9 @@ import builtins
 
 from xonsh.tools import XonshBlockError
 
-class BlockOfLines(object):
+class Block(object):
     """This is a context manager for obtaining a block of lines without actually
-    executing this block. The lines are accessible as the 'lines' attribute.
+    executing the block. The lines are accessible as the 'lines' attribute.
     """
     __xonsh_block__ = True
 
