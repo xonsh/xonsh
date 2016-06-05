@@ -9,7 +9,8 @@ from subprocess import TimeoutExpired, check_output
 from io import BytesIO
 from collections import deque
 
-from xonsh.tools import ON_WINDOWS
+from xonsh.platform import ON_DARWIN, ON_WINDOWS
+from xonsh.tools import print_exception
 
 tasks = deque()
 
@@ -61,7 +62,17 @@ else:
         _send_signal(job, signal.SIGKILL)
 
     def _send_signal(job, signal):
-        os.killpg(job['pgrp'], signal)
+        try:
+            os.killpg(job['pgrp'], signal)
+        except PermissionError:
+            # see Github issue #1012 for details
+            if not ON_DARWIN:
+                raise
+            env = getattr(builtins, '__xonsh_env__', os.environ)
+            if env.get('DEBUG_LEVEL', 0) > 0:
+                print_exception('Just caught an error when calling '
+                                'killpg(), which should be harmless.')
+
 
     def ignore_sigtstp():
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)
