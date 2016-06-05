@@ -5,7 +5,14 @@ OSX Guide
 Installation
 ============
 
-You can install xonsh using conda, pip, or from source.
+You can install xonsh using homebrew, conda, pip, or from source.
+
+**homebrew:**
+
+.. code-block:: bash
+
+   $ brew install xonsh
+
 
 **conda:**
 
