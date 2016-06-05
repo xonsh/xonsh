@@ -286,7 +286,7 @@ class CtxAwareTransformer(NodeTransformer):
                 args=[Str(s=lines, lineno=lineno, col_offset=col),
                       xonsh_call('globals', args=[], lineno=lineno, col=col),
                       xonsh_call('locals', args=[], lineno=lineno, col=col)],
-                lineno=lineno, col=col)
+                    lineno=lineno, col=col),
                 cause=None, lineno=lineno, col_offset=col)],
             orelse=[], lineno=lineno, col_offset=col)
         node.body.insert(0, check)
@@ -390,7 +390,7 @@ class CtxAwareTransformer(NodeTransformer):
         self._nwith += 1
         self.generic_visit(node)
         self._nwith -= 1
-        #self.insert_with_block_check(node)
+        self.insert_with_block_check(node)
         return node
 
     def visit_For(self, node):
