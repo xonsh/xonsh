@@ -13,8 +13,9 @@ from xonsh.contexts import Block
 def setup():
     execer_setup()
 
-def block_checks_glb(name, glbs, body, obs):
+def block_checks_glb(name, glbs, body, obs=None):
     block = glbs[name]
+    obs = obs or {}
     for k, v in obs.items():
         yield assert_equal, v, glbs[k]
     if isinstance(body, str):
@@ -25,6 +26,8 @@ def block_checks_glb(name, glbs, body, obs):
 
 X1_WITH = ('x = 1\n'
            'with Block() as b:\n')
+SIMPLE_WITH = 'with Block() as b:\n'
+
 
 #
 # tests
@@ -93,4 +96,15 @@ def test_block_trailing_close_paren():
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
     yield from block_checks_glb('b', glbs, body, {'x': 1})
+
+
+def test_block_trailing_close_many():
+    body = ('    x = {None: [int("42"\n'
+            '                    )\n'
+            '                ]\n'
+            '         }\n')
+    s = SIMPLE_WITH + body
+    glbs = {'Block': Block}
+    check_exec(s, glbs=glbs, locs=None)
+    yield from block_checks_glb('b', glbs, body)
 
