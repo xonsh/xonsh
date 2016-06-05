@@ -43,8 +43,10 @@ class Shell(object):
                            kwargs.get('scriptcache', True),
                            kwargs.get('cacheall', False))
         env = builtins.__xonsh_env__
-        # pick a valid shell
-        shell_type = env.get('SHELL_TYPE')
+        # pick a valid shell -- if no shell is specified by the user,
+        # shell type is pulled from env
+        if shell_type is None:
+            shell_type = env.get('SHELL_TYPE')
         if shell_type == 'best' or shell_type is None:
             shell_type = best_shell_type()
         elif shell_type == 'random':
