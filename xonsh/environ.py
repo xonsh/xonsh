@@ -84,6 +84,7 @@ DEFAULT_ENSURERS = {
     'BASH_COMPLETIONS': (is_env_path, str_to_env_path, env_path_to_str),
     'CASE_SENSITIVE_COMPLETIONS': (is_bool, to_bool, bool_to_str),
     re.compile('\w*DIRS$'): (is_env_path, str_to_env_path, env_path_to_str),
+    'COLOR_INPUT': (is_bool, to_bool, bool_to_str),
     'COLOR_RESULTS': (is_bool, to_bool, bool_to_str),
     'COMPLETIONS_DISPLAY': (is_completions_display_value,
                             to_completions_display_value, str),
@@ -185,6 +186,7 @@ DEFAULT_VALUES = {
     'BASH_COMPLETIONS': BASH_COMPLETIONS_DEFAULT,
     'CASE_SENSITIVE_COMPLETIONS': ON_LINUX,
     'CDPATH': (),
+    'COLOR_INPUT': True,
     'COLOR_RESULTS': True,
     'COMPLETIONS_DISPLAY': 'multi',
     'COMPLETIONS_MENU_ROWS': 5,
@@ -305,6 +307,7 @@ DEFAULT_DOCS = {
     'CDPATH': VarDocs(
         'A list of paths to be used as roots for a cd, breaking compatibility '
         'with Bash, xonsh always prefer an existing relative path.'),
+    'COLOR_INPUT': VarDocs('Flag for syntax highlighting interactive input.'),
     'COLOR_RESULTS': VarDocs('Flag for syntax highlighting return values.'),
     'COMPLETIONS_DISPLAY': VarDocs(
         'Configure if and how Python completions are displayed by the '
