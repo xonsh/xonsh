@@ -36,6 +36,8 @@ Current Developments
   no $PROMPT variable was set in .xonshrc 
 * Improved start-up times by caching information about bash completion
   functions
+* The --shell-type CLI flag now takes precedence over $SHELL_TYPE specified in
+  .xonshrc
 
 **Security:** None
 
