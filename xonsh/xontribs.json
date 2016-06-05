@@ -5,8 +5,7 @@
   "description": [
     "The distributed parallel computing library hooks for xonsh. ",
     "Importantly this provides a subsitute 'dowrker' command which enables ",
-    "distributed workers to have access to xonsh builtins."
-    ]
+    "distributed workers to have access to xonsh builtins."]
   },
  {"name": "mpl",
   "package": "xonsh",

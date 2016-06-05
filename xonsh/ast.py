@@ -113,8 +113,7 @@ def has_elts(x):
 
 def xonsh_call(name, args, lineno=None, col=None):
     """Creates the AST node for calling a function of a given name."""
-    return Call(func=Name(id=name, ctx=ast.Load(),
-                          lineno=lineno, col_offset=col),
+    return Call(func=Name(id=name, ctx=Load(), lineno=lineno, col_offset=col),
                 args=args, keywords=[], starargs=None, kwargs=None,
                 lineno=lineno, col_offset=col)
 
