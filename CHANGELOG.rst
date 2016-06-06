@@ -6,6 +6,16 @@ Current Developments
 ====================
 **Added:**
 
+* New ``Block`` and ``Functor`` context managers are now available as
+  part of the ``xonsh.contexts`` module.
+* ``Block`` provides support for turning a context body into a non-executing
+  list of string lines. This is implmement via a syntax tree transformation.
+  This is useful for creating remote execution tools that seek to prevent
+  local execution.
+* ``Functor`` is a subclass of the ``Block`` context manager that turns the
+  block into a callable object.  The function object is available via the
+  ``func()`` attribute.  However, the ``Functor`` instance is itself callable
+  and will dispatch to ``func()``.
 * Question mark literals, ``?``, are now allowed as part of
   subprocess argument names.
 * IPython style visual pointer to show where syntax error was detected
@@ -17,8 +27,8 @@ Current Developments
 * Tab completion now uses a different interface, which allows new completers
   to be implemented in Python.
 * Most functions in the ``Execer`` now take an extra argument
-  ``wrap_subprocs``, indicating whether the syntactially invalid expressions
-  should be wrapped in ``![]`` automatically
+  ``transform``, indicating whether the syntax tree transformations should
+  be applied.
 * ``prompt_toolkit`` is now loaded lazily, decreasing load times when using
   the ``readline`` shell.
 * RC files are now executed directly in the appropriate context.
@@ -32,8 +42,8 @@ Current Developments
 **Fixed:**
 
 * Fixed bug on Windows where tab-completion for executables would return all files.
-* Fixed bug on Windows which caused the bash $PROMPT variable to be used when no 
-  no $PROMPT variable was set in .xonshrc 
+* Fixed bug on Windows which caused the bash $PROMPT variable to be used when no
+  no $PROMPT variable was set in .xonshrc
 * Improved start-up times by caching information about bash completion
   functions
 * The --shell-type CLI flag now takes precedence over $SHELL_TYPE specified in
