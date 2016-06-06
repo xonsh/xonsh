@@ -72,4 +72,3 @@ def dsubmit(*a, args=(), kwargs=None, rtn='', **kw):
 # some cleanup
 del dworker, Functor
 
-
