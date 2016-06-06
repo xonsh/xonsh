@@ -9,6 +9,9 @@ Current Developments
 * Question mark literals, ``?``, are now allowed as part of
   subprocess argument names.
 * IPython style visual pointer to show where syntax error was detected
+* Pretty printing of output and syntax highlighting of input and output can now
+  be controlled via new environment variables ``$COLOR_INPUT``,
+  ``$COLOR_RESULTS``, and ``$PRETTY_PRINT_RESULTS``.
 
 **Changed:**
 

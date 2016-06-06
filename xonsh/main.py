@@ -155,13 +155,16 @@ def _pprint_displayhook(value):
     if isinstance(value, HiddenCompletedCommand):
         builtins._ = value
         return
-    if HAS_PYGMENTS:
-        s = pretty(value)  # color case
-        lexer = pyghooks.XonshLexer()
-        tokens = list(pygments.lex(s, lexer=lexer))
+    env = builtins.__xonsh_env__
+    if env.get('PRETTY_PRINT_RESULTS'):
+        printed_val = pretty(value)
+    else:
+        printed_val = repr(value)
+    if HAS_PYGMENTS and env.get('COLOR_RESULTS'):
+        tokens = list(pygments.lex(printed_val, lexer=pyghooks.XonshLexer()))
         print_color(tokens)
     else:
-        pprint(value)  # black & white case
+        print(printed_val)  # black & white case
     builtins._ = value
 
 
