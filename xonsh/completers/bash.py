@@ -168,7 +168,6 @@ def _load_bash_complete_files():
 
 def _source_completions(source):
     try:
-        import pdb; pdb.set_trace()
         return subprocess.check_output(
             [BASH_COMMAND], input='\n'.join(source), universal_newlines=True,
             env=builtins.__xonsh_env__.detype(), stderr=subprocess.DEVNULL)

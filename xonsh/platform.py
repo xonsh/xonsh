@@ -198,7 +198,6 @@ if ON_WINDOWS:
         GIT_FOR_WINDOWS_PATH = None
 
 
-
 if ON_WINDOWS:
     # Check that bash in on path otherwise try the default bin directory 
     # used by Git for windows
