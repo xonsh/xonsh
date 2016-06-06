@@ -22,6 +22,8 @@ Current Developments
 * ``prompt_toolkit`` is now loaded lazily, decreasing load times when using
   the ``readline`` shell.
 * RC files are now executed directly in the appropriate context.
+* ``_`` is now updated by ``![]``, to contain the appropriate
+  ``CompletedCommand`` object.
 
 **Deprecated:** None
 
@@ -36,6 +38,8 @@ Current Developments
   no $PROMPT variable was set in .xonshrc 
 * Improved start-up times by caching information about bash completion
   functions
+* The --shell-type CLI flag now takes precedence over $SHELL_TYPE specified in
+  .xonshrc
 * Fixed an issue about `os.killpg()` on OS X which caused Xonsh crash with
   occasionlity
 
