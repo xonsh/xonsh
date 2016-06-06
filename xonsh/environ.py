@@ -13,7 +13,6 @@ import socket
 import string
 import subprocess
 import shutil
-from itertools import chain
 import sys
 from warnings import warn
 from collections import (Mapping, MutableMapping, MutableSequence, MutableSet,
@@ -356,7 +355,7 @@ DEFAULT_DOCS = {
     'IGNOREEOF': VarDocs('Prevents Ctrl-D from exiting the shell.'),
     'INDENT': VarDocs('Indentation string for multiline input'),
     'INTENSIFY_COLORS_ON_WIN': VarDocs('Enhance style colors for readability '
-        'when using the default terminal (cmd.exe) on winodws. Blue colors, '
+        'when using the default terminal (cmd.exe) on Windows. Blue colors, '
         'which are hard to read, are replaced with cyan. Other colors are '
         'generally replaced by their bright counter parts.',
         configurable=ON_WINDOWS),
@@ -440,7 +439,7 @@ DEFAULT_DOCS = {
         "need to set this themselves. Note that this variable should be set as "
         "early as possible in order to ensure it is effective. Here are a few "
         "options:\n\n"
-        "* Set this from the program that launches xonsh. On posix systems, \n"
+        "* Set this from the program that launches xonsh. On POSIX systems, \n"
         "  this can be performed by using env, e.g. \n"
         "  '/usr/bin/env TERM=xterm-color xonsh' or similar.\n"
         "* From the xonsh command line, namely 'xonsh -DTERM=xterm-color'.\n"
@@ -489,7 +488,7 @@ DEFAULT_DOCS = {
         ' prompt) will be cached.'),
     'XONSH_COLOR_STYLE': VarDocs(
         'Sets the color style for xonsh colors. This is a style name, not '
-        'a color map.'),
+        'a color map. Run ``xonfig styles`` to see the available styles.'),
     'XONSH_CONFIG_DIR': VarDocs(
         'This is the location where xonsh configuration information is stored.',
         configurable=False, default="'$XDG_CONFIG_HOME/xonsh'"),
