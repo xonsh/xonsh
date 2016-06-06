@@ -1,7 +1,4 @@
 """Hooks for the distributed parallel computing library."""
-from distributed import Executor as _Executor
-from distributed.cli import dworker as _dworker
-
 from xonsh.contexts import Functor
 
 
@@ -9,6 +6,7 @@ def dworker(args, stdin=None):
     """Programatic access to the dworker utility, to allow launching
     workers that also have access to xonsh builtins.
     """
+    from distributed.cli import dworker as _dworker
     _dworker.main.main(args=args, prog_name='dworker', standalone_mode=False)
 
 
@@ -44,7 +42,7 @@ class DSubmitter(Functor):
         return res
 
 
-def dsubmit(args=(), kwargs=None, rtn='', *a, **kw):
+def dsubmit(*a, args=(), kwargs=None, rtn='', **kw):
     """Returns a distributed submission context manager, DSubmitter(),
     with a new executor instance.
 
@@ -65,6 +63,7 @@ def dsubmit(args=(), kwargs=None, rtn='', *a, **kw):
     dsub : DSubmitter
         An instance of the DSubmitter context manager.
     """
+    from distributed import Executor
     e = Executor(*a, **kw)
     dsub = DSubmitter(e, args=args, kwargs=kwargs, rtn=rtn)
     return dsub
