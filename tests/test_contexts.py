@@ -274,3 +274,67 @@ def test_functor_oneline_onecall_both():
     yield from block_checks_glb('f', glbs, body, {'x': 86})
 
 
+XA_WITH = ('x = [1]\n'
+           'with Functor() as f:\n'
+           '{body}'
+           'x.append(2)\n'
+           '{calls}\n'
+           )
+
+def test_functor_oneline_append():
+    body = '    x.append(3)\n'
+    calls = 'f()\n'
+    s = XA_WITH.format(body=body, calls=calls)
+    glbs = {'Functor': Functor}
+    check_exec(s, glbs=glbs, locs=None)
+    yield from block_checks_glb('f', glbs, body, {'x': [1, 2, 3]})
+
+
+def test_functor_return():
+    body = '    x = 42\n'
+    t = ('res = 0\n'
+         'with Functor(rtn="x") as f:\n'
+         '{body}\n'
+         'res = f()\n')
+    s = t.format(body=body)
+    glbs = {'Functor': Functor}
+    check_exec(s, glbs=glbs, locs=None)
+    yield from block_checks_glb('f', glbs, body, {'res': 42})
+
+
+def test_functor_args():
+    body = '    x = 42 + a\n'
+    t = ('res = 0\n'
+         'with Functor(args=("a",), rtn="x") as f:\n'
+         '{body}\n'
+         'res = f(2)\n')
+    s = t.format(body=body)
+    glbs = {'Functor': Functor}
+    check_exec(s, glbs=glbs, locs=None)
+    yield from block_checks_glb('f', glbs, body, {'res': 44})
+
+
+def test_functor_kwargs():
+    body = '    x = 42 + a + b\n'
+    t = ('res = 0\n'
+         'with Functor(kwargs={{"a": 1, "b": 12}}, rtn="x") as f:\n'
+         '{body}\n'
+         'res = f(b=6)\n')
+    s = t.format(body=body)
+    glbs = {'Functor': Functor}
+    check_exec(s, glbs=glbs, locs=None)
+    yield from block_checks_glb('f', glbs, body, {'res': 49})
+
+
+def test_functor_fullsig():
+    body = '    x = 42 + a + b + c\n'
+    t = ('res = 0\n'
+         'with Functor(args=("c",), kwargs={{"a": 1, "b": 12}}, rtn="x") as f:\n'
+         '{body}\n'
+         'res = f(55)\n')
+    s = t.format(body=body)
+    glbs = {'Functor': Functor}
+    check_exec(s, glbs=glbs, locs=None)
+    yield from block_checks_glb('f', glbs, body, {'res': 110})
+
+

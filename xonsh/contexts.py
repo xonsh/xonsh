@@ -1,6 +1,7 @@
 """Context management tools for xonsh."""
 import sys
 import builtins
+from collections.abc import Mapping
 
 from xonsh.tools import XonshBlockError
 
@@ -43,8 +44,17 @@ class Functor(Block):
     object, bound to the execution context it was created in.
     """
 
-    def __init__(self):
+    def __init__(self, args=(), kwargs=None, rtn=''):
         """
+        Parameters
+        ----------
+        args : Sequence of str, optional
+            A tuple of argument names for the functor.
+        kwargs : Mapping of str to values or list of item tuples, optional
+            Keyword argument names and values, if available.
+        rtn : str, optional
+            Name of object to return, if available.
+
         Attributes
         ----------
         func : function
@@ -53,6 +63,14 @@ class Functor(Block):
         """
         super().__init__()
         self.func = None
+        self.args = args
+        if kwargs is None:
+            self.kwargs = []
+        elif isinstance(kwargs, Mapping):
+            self.kwargs = sorted(kwargs.items())
+        else:
+            self.kwargs = kwargs
+        self.rtn = rtn
 
     def __enter__(self):
         super().__enter__()
@@ -60,14 +78,27 @@ class Functor(Block):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        rtn = super().__exit__(exc_type, exc_value, traceback)
-        if not rtn:
-            return rtn
+        res = super().__exit__(exc_type, exc_value, traceback)
+        if not res:
+            return res
         body = '\n'.join(self.lines)
         uid = hash(body) + sys.maxsize  # should always be a positive int
         name = '__xonsh_functor_{uid}__'.format(uid=uid)
-        fstr = 'def {name}():\n{body}\n'
-        fstr = fstr.format(name=name, body=body)
+        # construct signature string
+        sig = rtn = ''
+        sig = ', '.join(self.args)
+        kwstr = ', '.join([k + '=None' for k, _ in self.kwargs])
+        if len(kwstr) > 0:
+            sig = kwstr if len(sig) == 0 else sig + ', ' + kwstr
+        # construct return string
+        rtn = str(self.rtn)
+        if len(rtn) > 0:
+            line0 = self.lines[0]
+            ws = line0[:-len(line0.lstrip())]
+            rtn = ws + 'return ' + rtn + '\n'
+        # construct function string
+        fstr = 'def {name}({sig}):\n{body}\n{rtn}'
+        fstr = fstr.format(name=name, sig=sig, body=body, rtn=rtn)
         glbs = self.glbs
         locs = self.locs
         #locs = glbs if self.locs is None else self.locs
@@ -79,8 +110,10 @@ class Functor(Block):
             func = glbs[name]
         else:
             raise exc_value
+        if len(self.kwargs) > 0:
+            func.__defaults__ = tuple(v for _, v in self.kwargs)
         self.func = func
-        return rtn
+        return res
 
     def __call__(self, *args, **kwargs):
         """Dispatches to func."""
