@@ -36,6 +36,8 @@ Current Developments
   no $PROMPT variable was set in .xonshrc 
 * Improved start-up times by caching information about bash completion
   functions
+* Fixed an issue about `os.killpg()` on OS X which caused Xonsh crash with
+  occasionlity
 
 **Security:** None
 
