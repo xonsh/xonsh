@@ -25,6 +25,8 @@ Current Developments
 * ``prompt_toolkit`` is now loaded lazily, decreasing load times when using
   the ``readline`` shell.
 * RC files are now executed directly in the appropriate context.
+* ``_`` is now updated by ``![]``, to contain the appropriate
+  ``CompletedCommand`` object.
 
 **Deprecated:** None
 
