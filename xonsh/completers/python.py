@@ -29,9 +29,10 @@ def complete_python(prefix, line, start, end, ctx):
     Completes based on the contents of the current Python environment,
     the Python built-ins, and xonsh operators.
     """
-    first = line.split()[0]
-    if first in builtins.__xonsh_commands_cache__ and first not in ctx:
-        return set()
+    if line != '':
+        first = line.split()[0]
+        if first in builtins.__xonsh_commands_cache__ and first not in ctx:
+            return set()
     filt = get_filter_function()
     rtn = {s for s in XONSH_TOKENS if filt(s, prefix)}
     if ctx is not None:
