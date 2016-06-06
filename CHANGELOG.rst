@@ -21,6 +21,7 @@ Current Developments
   should be wrapped in ``![]`` automatically
 * ``prompt_toolkit`` is now loaded lazily, decreasing load times when using
   the ``readline`` shell.
+* Removed version control information from the default prompt.
 * RC files are now executed directly in the appropriate context.
 
 **Deprecated:** None
