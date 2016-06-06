@@ -5,6 +5,7 @@ import sys
 import types
 import inspect
 import builtins
+import warnings
 from collections import Mapping
 
 from xonsh import ast
@@ -100,7 +101,13 @@ class Execer(object):
         tree = self.parse(input, ctx, mode=mode, transform=transform)
         if tree is None:
             return None  # handles comment only input
-        code = compile(tree, filename, mode)
+        if transform:
+            with warnings.catch_warnings():
+                # we do some funky things with blocks that cause warnings
+                warnings.simplefilter('ignore', SyntaxWarning)
+                code = compile(tree, filename, mode)
+        else:
+            code = compile(tree, filename, mode)
         return code
 
     def eval(self, input, glbs=None, locs=None, stacklevel=2,

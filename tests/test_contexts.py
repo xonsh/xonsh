@@ -4,7 +4,7 @@ from nose.tools import assert_equal, assert_is, assert_is_not
 from tools import (mock_xonsh_env, execer_setup, check_exec, check_eval,
     check_parse, skip_if)
 
-from xonsh.contexts import Block
+from xonsh.contexts import Block, Functor
 
 #
 # helpers
@@ -61,7 +61,7 @@ def block_checks_func(name, glbs, body, obsg=None, obsl=None):
 
 
 #
-# tests
+# Block tests
 #
 
 def test_block_noexec():
@@ -231,3 +231,46 @@ def test_block_func_trailing_triple_string():
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
     yield from block_checks_func('rtn', glbs, body, FUNC_OBSG, FUNC_OBSL)
+
+
+#
+# Functor tests
+#
+
+X2_WITH = ('x = 1\n'
+           'with Functor() as f:\n'
+           '{body}'
+           'x += 1\n'
+           '{calls}\n'
+           )
+
+def test_functor_oneline_onecall_class():
+    body = ('    global x\n'
+            '    x += 42\n')
+    calls = 'f()'
+    s = X2_WITH.format(body=body, calls=calls)
+    glbs = {'Functor': Functor}
+    check_exec(s, glbs=glbs, locs=None)
+    yield from block_checks_glb('f', glbs, body, {'x': 44})
+
+
+def test_functor_oneline_onecall_func():
+    body = ('    global x\n'
+            '    x += 42\n')
+    calls = 'f.func()'
+    s = X2_WITH.format(body=body, calls=calls)
+    glbs = {'Functor': Functor}
+    check_exec(s, glbs=glbs, locs=None)
+    yield from block_checks_glb('f', glbs, body, {'x': 44})
+
+
+def test_functor_oneline_onecall_both():
+    body = ('    global x\n'
+            '    x += 42\n')
+    calls = 'f()\nf.func()'
+    s = X2_WITH.format(body=body, calls=calls)
+    glbs = {'Functor': Functor}
+    check_exec(s, glbs=glbs, locs=None)
+    yield from block_checks_glb('f', glbs, body, {'x': 86})
+
+
