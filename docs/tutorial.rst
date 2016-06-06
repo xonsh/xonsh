@@ -956,7 +956,7 @@ must have the following signature:
 
 .. code-block:: python
 
-    def mycmd(args, stdin=None):
+    def _mycmd(args, stdin=None):
         """args will be a list of strings representing the arguments to this
         command. stdin will be a string, if present. This is used to pipe
         the output of the previous command into this one.
@@ -996,9 +996,17 @@ built-in mapping.  Here is an example using a function value:
 
 .. code-block:: xonshcon
 
-    >>> aliases['banana'] = lambda args, stdin=None: ('My spoon is tooo big!', None)
+    >>> def _banana(args, stdin=None):
+    ...     return ('My spoon is tooo big!', None)
+    >>> aliases['banana'] = _banana
     >>> banana
     'My spoon is tooo big!'
+
+.. note::
+
+   Alias functions should generally be defined with a leading underscore.
+   Otherwise, they may shadow the alias itself, as Python variables take
+   precedence over aliases when xonsh executes commands.
 
 Usually, callable alias commands will be run in a separate thread so that
 users may background them interactively. However, some aliases may need to be
@@ -1011,8 +1019,10 @@ with the ``xonsh.proc.foreground`` decorator.
     from xonsh.proc import foreground
 
     @foreground
-    def mycmd(args, stdin=None):
+    def _mycmd(args, stdin=None):
         return 'In your face!'
+
+    aliases['mycmd'] = _mycmd
 
 Aliasing is a powerful way that xonsh allows you to seamlessly interact to
 with Python and subprocess.
