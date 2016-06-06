@@ -21,6 +21,9 @@ if ON_DARWIN:
         for pid in job['pids']:
             os.kill(pid, signal)
 
+elif ON_WINDOWS:
+    pass
+
 else:
     def _send_signal(job, signal):
         os.killpg(job['pgrp'], signal)
