@@ -6,12 +6,28 @@ import time
 import signal
 import builtins
 from subprocess import TimeoutExpired, check_output
-from io import BytesIO
 from collections import deque
 
-from xonsh.tools import ON_WINDOWS
+from xonsh.platform import ON_DARWIN, ON_WINDOWS
 
 tasks = deque()
+
+
+if ON_DARWIN:
+    def _send_signal(job, signal):
+        # On OS X, os.killpg() may cause PermissionError when there are
+        # any zombie processes in the process group.
+        # See github issue #1012 for details
+        for pid in job['pids']:
+            os.kill(pid, signal)
+
+elif ON_WINDOWS:
+    pass
+
+else:
+    def _send_signal(job, signal):
+        os.killpg(job['pgrp'], signal)
+
 
 if ON_WINDOWS:
     def _continue(job):
@@ -59,9 +75,6 @@ else:
 
     def _kill(job):
         _send_signal(job, signal.SIGKILL)
-
-    def _send_signal(job, signal):
-        os.killpg(job['pgrp'], signal)
 
     def ignore_sigtstp():
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)

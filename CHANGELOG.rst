@@ -4,6 +4,20 @@ Xonsh Change Log
 
 Current Developments
 ====================
+**Added:** None
+
+**Changed:** None
+
+**Deprecated:** None
+
+**Removed:** None
+
+**Fixed:** None
+
+**Security:** None
+
+v0.3.3
+====================
 **Added:**
 
 * New ``Block`` and ``Functor`` context managers are now available as
@@ -19,6 +33,9 @@ Current Developments
 * Question mark literals, ``?``, are now allowed as part of
   subprocess argument names.
 * IPython style visual pointer to show where syntax error was detected
+* Pretty printing of output and syntax highlighting of input and output can now
+  be controlled via new environment variables ``$COLOR_INPUT``,
+  ``$COLOR_RESULTS``, and ``$PRETTY_PRINT_RESULTS``.
 
 **Changed:**
 
@@ -32,8 +49,10 @@ Current Developments
 * ``prompt_toolkit`` is now loaded lazily, decreasing load times when using
   the ``readline`` shell.
 * RC files are now executed directly in the appropriate context.
+* ``_`` is now updated by ``![]``, to contain the appropriate
+  ``CompletedCommand`` object.
 
-**Deprecated:** None
+
 
 **Removed:**
 
@@ -48,8 +67,10 @@ Current Developments
   functions
 * The --shell-type CLI flag now takes precedence over $SHELL_TYPE specified in
   .xonshrc
+* Fixed an issue about ``os.killpg()`` on OS X which caused xonsh crash with
+  occasionality
 
-**Security:** None
+
 
 v0.3.2
 ====================

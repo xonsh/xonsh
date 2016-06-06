@@ -13,7 +13,6 @@ import socket
 import string
 import subprocess
 import shutil
-from itertools import chain
 import sys
 from warnings import warn
 from collections import (Mapping, MutableMapping, MutableSequence, MutableSet,
@@ -84,6 +83,8 @@ DEFAULT_ENSURERS = {
     'BASH_COMPLETIONS': (is_env_path, str_to_env_path, env_path_to_str),
     'CASE_SENSITIVE_COMPLETIONS': (is_bool, to_bool, bool_to_str),
     re.compile('\w*DIRS$'): (is_env_path, str_to_env_path, env_path_to_str),
+    'COLOR_INPUT': (is_bool, to_bool, bool_to_str),
+    'COLOR_RESULTS': (is_bool, to_bool, bool_to_str),
     'COMPLETIONS_DISPLAY': (is_completions_display_value,
                             to_completions_display_value, str),
     'COMPLETIONS_MENU_ROWS': (is_int, int, str),
@@ -105,6 +106,7 @@ DEFAULT_ENSURERS = {
     'MOUSE_SUPPORT': (is_bool, to_bool, bool_to_str),
     re.compile('\w*PATH$'): (is_env_path, str_to_env_path, env_path_to_str),
     'PATHEXT': (is_env_path, str_to_env_path, env_path_to_str),
+    'PRETTY_PRINT_RESULTS': (is_bool, to_bool, bool_to_str),
     'RAISE_SUBPROC_ERROR': (is_bool, to_bool, bool_to_str),
     'RIGHT_PROMPT': (is_string, ensure_string, ensure_string),
     'TEEPTY_PIPE_DELAY': (is_float, float, str),
@@ -183,6 +185,8 @@ DEFAULT_VALUES = {
     'BASH_COMPLETIONS': BASH_COMPLETIONS_DEFAULT,
     'CASE_SENSITIVE_COMPLETIONS': ON_LINUX,
     'CDPATH': (),
+    'COLOR_INPUT': True,
+    'COLOR_RESULTS': True,
     'COMPLETIONS_DISPLAY': 'multi',
     'COMPLETIONS_MENU_ROWS': 5,
     'DIRSTACK_SIZE': 20,
@@ -204,6 +208,7 @@ DEFAULT_VALUES = {
     'MULTILINE_PROMPT': '.',
     'PATH': (),
     'PATHEXT': (),
+    'PRETTY_PRINT_RESULTS': True,
     'PROMPT': DEFAULT_PROMPT,
     'PUSHD_MINUS': False,
     'PUSHD_SILENT': False,
@@ -301,6 +306,8 @@ DEFAULT_DOCS = {
     'CDPATH': VarDocs(
         'A list of paths to be used as roots for a cd, breaking compatibility '
         'with Bash, xonsh always prefer an existing relative path.'),
+    'COLOR_INPUT': VarDocs('Flag for syntax highlighting interactive input.'),
+    'COLOR_RESULTS': VarDocs('Flag for syntax highlighting return values.'),
     'COMPLETIONS_DISPLAY': VarDocs(
         'Configure if and how Python completions are displayed by the '
         'prompt_toolkit shell.\n\nThis option does not affect Bash '
@@ -348,7 +355,7 @@ DEFAULT_DOCS = {
     'IGNOREEOF': VarDocs('Prevents Ctrl-D from exiting the shell.'),
     'INDENT': VarDocs('Indentation string for multiline input'),
     'INTENSIFY_COLORS_ON_WIN': VarDocs('Enhance style colors for readability '
-        'when using the default terminal (cmd.exe) on winodws. Blue colors, '
+        'when using the default terminal (cmd.exe) on Windows. Blue colors, '
         'which are hard to read, are replaced with cyan. Other colors are '
         'generally replaced by their bright counter parts.',
         configurable=ON_WINDOWS),
@@ -373,6 +380,8 @@ DEFAULT_DOCS = {
     'PATH': VarDocs(
         'List of strings representing where to look for executables.'),
     'PATHEXT': VarDocs('List of strings for filtering valid executables by.'),
+    'PRETTY_PRINT_RESULTS': VarDocs(
+            'Flag for "pretty printing" return values.'),
     'PROMPT': VarDocs(
         'The prompt text. May contain keyword arguments which are '
         "auto-formatted, see 'Customizing the Prompt' at "
@@ -430,7 +439,7 @@ DEFAULT_DOCS = {
         "need to set this themselves. Note that this variable should be set as "
         "early as possible in order to ensure it is effective. Here are a few "
         "options:\n\n"
-        "* Set this from the program that launches xonsh. On posix systems, \n"
+        "* Set this from the program that launches xonsh. On POSIX systems, \n"
         "  this can be performed by using env, e.g. \n"
         "  '/usr/bin/env TERM=xterm-color xonsh' or similar.\n"
         "* From the xonsh command line, namely 'xonsh -DTERM=xterm-color'.\n"
@@ -479,7 +488,7 @@ DEFAULT_DOCS = {
         ' prompt) will be cached.'),
     'XONSH_COLOR_STYLE': VarDocs(
         'Sets the color style for xonsh colors. This is a style name, not '
-        'a color map.'),
+        'a color map. Run ``xonfig styles`` to see the available styles.'),
     'XONSH_CONFIG_DIR': VarDocs(
         'This is the location where xonsh configuration information is stored.',
         configurable=False, default="'$XDG_CONFIG_HOME/xonsh'"),
