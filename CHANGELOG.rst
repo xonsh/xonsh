@@ -4,6 +4,20 @@ Xonsh Change Log
 
 Current Developments
 ====================
+**Added:** None
+
+**Changed:** None
+
+**Deprecated:** None
+
+**Removed:** None
+
+**Fixed:** None
+
+**Security:** None
+
+v0.3.3
+====================
 **Added:**
 
 * Question mark literals, ``?``, are now allowed as part of
@@ -28,7 +42,7 @@ Current Developments
 * ``_`` is now updated by ``![]``, to contain the appropriate
   ``CompletedCommand`` object.
 
-**Deprecated:** None
+
 
 **Removed:**
 
@@ -46,7 +60,7 @@ Current Developments
 * Fixed an issue about ``os.killpg()`` on OS X which caused xonsh crash with
   occasionality
 
-**Security:** None
+
 
 v0.3.2
 ====================
