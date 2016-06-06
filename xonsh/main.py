@@ -149,9 +149,12 @@ def undo_args(args):
 
 
 def _pprint_displayhook(value):
-    if value is None or isinstance(value, HiddenCompletedCommand):
+    if value is None:
         return
     builtins._ = None  # Set '_' to None to avoid recursion
+    if isinstance(value, HiddenCompletedCommand):
+        builtins._ = value
+        return
     if HAS_PYGMENTS:
         s = pretty(value)  # color case
         lexer = pyghooks.XonshLexer()
