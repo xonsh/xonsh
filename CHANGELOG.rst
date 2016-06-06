@@ -4,9 +4,23 @@ Xonsh Change Log
 
 Current Developments
 ====================
-**Added:** None
+**Added:**
 
-**Changed:** None
+* New ``Block`` and ``Functor`` context managers are now available as
+  part of the ``xonsh.contexts`` module.
+* ``Block`` provides support for turning a context body into a non-executing
+  list of string lines. This is implmement via a syntax tree transformation.
+  This is useful for creating remote execution tools that seek to prevent
+  local execution.
+* ``Functor`` is a subclass of the ``Block`` context manager that turns the
+  block into a callable object.  The function object is available via the
+  ``func()`` attribute.  However, the ``Functor`` instance is itself callable
+  and will dispatch to ``func()``.
+
+**Changed:**
+
+* Functions in ``Execer`` now take ``transform`` kwarg instead of
+  ``wrap_subproc``.
 
 **Deprecated:** None
 
@@ -20,16 +34,6 @@ v0.3.3
 ====================
 **Added:**
 
-* New ``Block`` and ``Functor`` context managers are now available as
-  part of the ``xonsh.contexts`` module.
-* ``Block`` provides support for turning a context body into a non-executing
-  list of string lines. This is implmement via a syntax tree transformation.
-  This is useful for creating remote execution tools that seek to prevent
-  local execution.
-* ``Functor`` is a subclass of the ``Block`` context manager that turns the
-  block into a callable object.  The function object is available via the
-  ``func()`` attribute.  However, the ``Functor`` instance is itself callable
-  and will dispatch to ``func()``.
 * Question mark literals, ``?``, are now allowed as part of
   subprocess argument names.
 * IPython style visual pointer to show where syntax error was detected
