@@ -34,6 +34,12 @@ for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 """
 
 
+if ON_WINDOWS:
+    from xonsh.platform import WINDOWS_BASH_COMMAND as BASH_COMMAND
+else: 
+    BASH_COMMAND = 'bash'
+
+
 def update_bash_completion():
     global BASH_COMPLETE_FUNCS, BASH_COMPLETE_FILES, BASH_COMPLETE_HASH
     global CACHED_FUNCS, CACHED_FILES, CACHED_HASH, INITED
@@ -108,9 +114,9 @@ def complete_from_bash(prefix, line, begidx, endidx, ctx):
         end=endidx + 1, prefix=prefix, prev=shlex.quote(prev))
     try:
         out = subprocess.check_output(
-            ['bash'], input=script, universal_newlines=True,
+            [BASH_COMMAND], input=script, universal_newlines=True,
             stderr=subprocess.PIPE, env=builtins.__xonsh_env__.detype())
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         out = ''
 
     rtn = set(out.splitlines())
@@ -161,11 +167,15 @@ def _load_bash_complete_files():
 
 
 def _source_completions(source):
-    return subprocess.check_output(
-            ['bash'], input='\n'.join(source), universal_newlines=True,
+    try:
+        import pdb; pdb.set_trace()
+        return subprocess.check_output(
+            [BASH_COMMAND], input='\n'.join(source), universal_newlines=True,
             env=builtins.__xonsh_env__.detype(), stderr=subprocess.DEVNULL)
+    except FileNotFoundError:
+        return ''
 
-
+        
 def _collect_completions_sources():
     sources = []
     completers = builtins.__xonsh_env__.get('BASH_COMPLETIONS', ())
