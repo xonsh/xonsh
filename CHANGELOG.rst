@@ -12,7 +12,10 @@ Current Developments
 
 **Removed:** None
 
-**Fixed:** None
+**Fixed:**
+
+* Fixed an issue whereby attempting to delete a literal value (e.g., ``del 7``)
+  in the prompt_toolkit shell would cause xonsh to crash.
 
 **Security:** None
 
