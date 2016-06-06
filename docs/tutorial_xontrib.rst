@@ -1,7 +1,7 @@
 .. _tutorial_xontrib:
 
 ************************************
-Tutorial: Extensions
+Tutorial: Extensions (Xontribs)
 ************************************
 Take a deep breath and prepare for some serious Show & Tell; it's time to
 learn about xonsh extensions!
