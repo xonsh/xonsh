@@ -72,7 +72,6 @@ class PromptToolkitShell(BaseShell):
                     'get_rprompt_tokens': get_rprompt_tokens,
                     'style': PygmentsStyle(xonsh_style_proxy(self.styler)),
                     'completer': completer,
-                    'lexer': PygmentsLexer(XonshLexer),
                     'multiline': multiline,
                     'get_continuation_tokens': self.continuation_tokens,
                     'history': history,
@@ -81,6 +80,8 @@ class PromptToolkitShell(BaseShell):
                     'key_bindings_registry': self.key_bindings_manager.registry,
                     'display_completions_in_columns': multicolumn,
                     }
+            if builtins.__xonsh_env__.get('COLOR_INPUT'):
+                prompt_args['lexer'] = PygmentsLexer(XonshLexer)
             line = self.prompter.prompt(**prompt_args)
         return line
 
