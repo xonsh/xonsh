@@ -415,7 +415,6 @@ def which(args, stdin=None, stdout=None, stderr=None):
         original_os_path = os.environ['PATH']
         os.environ['PATH'] = builtins.__xonsh_env__.detype()['PATH']
         matches = _which.whichgen(arg, exts=exts, verbose=pargs.verbose)
-        os.environ['PATH'] = original_os_path
         for abs_name, from_where in matches:
             if ON_WINDOWS:
                 # Use list dir to get correct case for the filename
@@ -432,6 +431,7 @@ def which(args, stdin=None, stdout=None, stderr=None):
             nmatches += 1
             if not pargs.all:
                 break
+        os.environ['PATH'] = original_os_path
         if not nmatches:
             failures.append(arg)
     if len(failures) == 0:
