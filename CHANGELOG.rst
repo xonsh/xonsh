@@ -43,8 +43,8 @@ Current Developments
   functions
 * The --shell-type CLI flag now takes precedence over $SHELL_TYPE specified in
   .xonshrc
-* Fixed an issue about ``os.killpg()`` on OS X which caused Xonsh crash with
-  occasionlity
+* Fixed an issue about ``os.killpg()`` on OS X which caused xonsh crash with
+  occasionality
 
 **Security:** None
 
