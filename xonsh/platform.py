@@ -35,7 +35,6 @@ ON_POSIX = (os.name == 'posix')
 """ ``True`` if executed on a POSIX-compliant platform, else ``False``. """
 
 
-
 #
 # Python & packages
 #
@@ -188,30 +187,30 @@ if ON_WINDOWS:
 else:
     win_unicode_console = None
 
-    
+
 if ON_WINDOWS:
     import winreg
-    try: 
+    try:
         key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, 'SOFTWARE\\GitForWindows')
         GIT_FOR_WINDOWS_PATH, type = winreg.QueryValueEx(key, "InstallPath")
-    except FileNotFoundError:    
+    except FileNotFoundError:
         GIT_FOR_WINDOWS_PATH = None
 
 
 if ON_WINDOWS:
-    # Check that bash in on path otherwise try the default bin directory 
+    # Check that bash in on path otherwise try the default bin directory
     # used by Git for windows
     import subprocess
     WINDOWS_BASH_COMMAND = 'bash'
-    try: 
-        subprocess.check_call([WINDOWS_BASH_COMMAND,'--version'])
+    try:
+        subprocess.check_call([WINDOWS_BASH_COMMAND, '--version'])
     except FileNotFoundError:
-        if GIT_FOR_WINDOWS_PATH: 
+        if GIT_FOR_WINDOWS_PATH:
             bashcmd = os.path.join(GIT_FOR_WINDOWS_PATH, 'bin\\bash.exe')
             if os.path.isfile(bashcmd):
                 WINDOWS_BASH_COMMAND = bashcmd
 
-            
+
 #
 # Bash completions defaults
 #

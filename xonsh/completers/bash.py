@@ -36,7 +36,7 @@ for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 
 if ON_WINDOWS:
     from xonsh.platform import WINDOWS_BASH_COMMAND as BASH_COMMAND
-else: 
+else:
     BASH_COMMAND = 'bash'
 
 
@@ -174,7 +174,7 @@ def _source_completions(source):
     except FileNotFoundError:
         return ''
 
-        
+
 def _collect_completions_sources():
     sources = []
     completers = builtins.__xonsh_env__.get('BASH_COMPLETIONS', ())
