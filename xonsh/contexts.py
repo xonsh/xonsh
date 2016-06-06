@@ -5,6 +5,7 @@ from collections.abc import Mapping
 
 from xonsh.tools import XonshBlockError
 
+
 class Block(object):
     """This is a context manager for obtaining a block of lines without actually
     executing the block. The lines are accessible as the 'lines' attribute.
@@ -101,7 +102,6 @@ class Functor(Block):
         fstr = fstr.format(name=name, sig=sig, body=body, rtn=rtn)
         glbs = self.glbs
         locs = self.locs
-        #locs = glbs if self.locs is None else self.locs
         execer = builtins.__xonsh_execer__
         execer.exec(fstr, glbs=glbs, locs=locs)
         if locs is not None and name in locs:
