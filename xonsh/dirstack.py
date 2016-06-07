@@ -5,8 +5,11 @@ import builtins
 from glob import iglob
 from argparse import ArgumentParser
 
+from xonsh.tools import get_sep
+
 DIRSTACK = []
 """A list containing the currently remembered directories."""
+
 
 def _get_cwd():
     try:
@@ -15,18 +18,32 @@ def _get_cwd():
         return None
 
 
+def _splitpath(path, sofar=tuple()):
+    folder, path = os.path.split(path)
+    if path == "":
+        return sofar[::-1]
+    elif folder == "":
+        return (sofar + (path, ))[::-1]
+    else:
+        return _splitpath(folder, sofar + (path, ))
+
+
 def _change_working_directory(newdir):
     env = builtins.__xonsh_env__
-    old = _get_cwd()
+    old = env['PWD']
+    new = os.path.join(old, newdir)
     try:
-        os.chdir(newdir)
+        os.chdir(os.path.abspath(new))
     except (OSError, FileNotFoundError):
+        if new.endswith(get_sep()):
+            new = new[:-1]
+        if os.path.basename(new) == '..':
+            env['PWD'] = new
         return
-    new = _get_cwd()
     if old is not None:
         env['OLDPWD'] = old
     if new is not None:
-        env['PWD'] = new
+        env['PWD'] = os.path.abspath(new)
 
 
 def _try_cdpath(apath):
@@ -41,7 +58,8 @@ def _try_cdpath(apath):
     env = builtins.__xonsh_env__
     cdpaths = env.get('CDPATH')
     for cdp in cdpaths:
-        for cdpath_prefixed_path in iglob(builtins.__xonsh_expand_path__(os.path.join(cdp, apath))):
+        globber = builtins.__xonsh_expand_path__(os.path.join(cdp, apath))
+        for cdpath_prefixed_path in iglob(globber):
             return cdpath_prefixed_path
     return apath
 
@@ -54,7 +72,7 @@ def cd(args, stdin=None):
     """
     env = builtins.__xonsh_env__
     oldpwd = env.get('OLDPWD', None)
-    cwd = _get_cwd()
+    cwd = env['PWD']
 
     if len(args) == 0:
         d = os.path.expanduser('~')
@@ -93,7 +111,7 @@ def cd(args, stdin=None):
     # now, push the directory onto the dirstack if AUTO_PUSHD is set
     if cwd is not None and env.get('AUTO_PUSHD'):
         pushd(['-n', '-q', cwd])
-    _change_working_directory(os.path.abspath(d))
+    _change_working_directory(d)
     return None, None, 0
 
 
@@ -159,9 +177,9 @@ def pushd(args, stdin=None):
     if new_pwd is not None:
         if args.cd:
             DIRSTACK.insert(0, os.path.expanduser(pwd))
-            _change_working_directory(os.path.abspath(new_pwd))
+            _change_working_directory(new_pwd)
         else:
-            DIRSTACK.insert(0, os.path.expanduser(os.path.abspath(new_pwd)))
+            DIRSTACK.insert(0, os.path.expanduser(new_pwd))
 
     maxsize = env.get('DIRSTACK_SIZE')
     if len(DIRSTACK) > maxsize:
@@ -234,7 +252,7 @@ def popd(args, stdin=None):
     if new_pwd is not None:
         e = None
         if args.cd:
-            _change_working_directory(os.path.abspath(new_pwd))
+            _change_working_directory(new_pwd)
 
     if not args.quiet and not env.get('PUSHD_SILENT'):
         return dirs([], None)
