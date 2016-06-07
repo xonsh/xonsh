@@ -18,16 +18,6 @@ def _get_cwd():
         return None
 
 
-def _splitpath(path, sofar=tuple()):
-    folder, path = os.path.split(path)
-    if path == "":
-        return sofar[::-1]
-    elif folder == "":
-        return (sofar + (path, ))[::-1]
-    else:
-        return _splitpath(folder, sofar + (path, ))
-
-
 def _change_working_directory(newdir):
     env = builtins.__xonsh_env__
     old = env['PWD']
