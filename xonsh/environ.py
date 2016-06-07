@@ -1153,32 +1153,35 @@ def partial_format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
     colon = ':'
     expl = '!'
     toks = []
-    for literal, field, spec, conv in _FORMATTER.parse(template):
-        toks.append(literal)
-        if field is None:
-            continue
-        elif field.startswith('$'):
-            v = builtins.__xonsh_env__[name[1:]]  # FIXME `name` is an unresolved ref
-            v = _FORMATTER.convert_field(v, conv)
-            v = _FORMATTER.format_field(v, spec)
-            toks.append(v)
-            continue
-        elif field in fmtter:
-            v = fmtter[field]
-            val = v() if callable(v) else v
-            val = '' if val is None else val
-            toks.append(val)
-        else:
-            toks.append(bopen)
-            toks.append(field)
-            if conv is not None and len(conv) > 0:
-                toks.append(expl)
-                toks.append(conv)
-            if spec is not None and len(spec) > 0:
-                toks.append(colon)
-                toks.append(spec)
-            toks.append(bclose)
-    return ''.join(toks)
+    try:
+        for literal, field, spec, conv in _FORMATTER.parse(template):
+            toks.append(literal)
+            if field is None:
+                continue
+            elif field.startswith('$'):
+                v = builtins.__xonsh_env__[name[1:]]  # FIXME `name` is an unresolved ref
+                v = _FORMATTER.convert_field(v, conv)
+                v = _FORMATTER.format_field(v, spec)
+                toks.append(v)
+                continue
+            elif field in fmtter:
+                v = fmtter[field]
+                val = v() if callable(v) else v
+                val = '' if val is None else val
+                toks.append(val)
+            else:
+                toks.append(bopen)
+                toks.append(field)
+                if conv is not None and len(conv) > 0:
+                    toks.append(expl)
+                    toks.append(conv)
+                if spec is not None and len(spec) > 0:
+                    toks.append(colon)
+                    toks.append(spec)
+                toks.append(bclose)
+        return ''.join(toks)
+    except:
+        return template
 
 
 RE_HIDDEN = re.compile('\001.*?\002')
@@ -1311,7 +1314,7 @@ def xonshrc_context(rcfiles=None, execer=None, initial=None):
 def windows_foreign_env_fixes(ctx):
     """Environment fixes for Windows. Operates in-place."""
     # remove these bash variables which only cause problems.
-    for ev in ['HOME', 'OLDPWD', 'PROMPT']:
+    for ev in ['HOME', 'OLDPWD']:
         if ev in ctx:
             del ctx[ev]
     # Override path-related bash variables; on Windows bash uses
@@ -1325,17 +1328,22 @@ def windows_foreign_env_fixes(ctx):
     ctx['PWD'] = _get_cwd()
 
 
+def foreign_env_fixes(ctx):
+    """Environment fixes for all operating systems"""
+    if 'PROMPT' in ctx:
+        del ctx['PROMPT']
+
+
 def default_env(env=None, config=None, login=True):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence
     ctx = dict(BASE_ENV)
     ctx.update(os.environ)
-    if ON_WINDOWS:
-        # Windows style PROMPT definitions don't work in XONSH:
-        try:
-            del ctx['PROMPT']
-        except KeyError:
-            pass
+    # other shells' PROMPT definitions generally don't work in XONSH:
+    try:
+        del ctx['PROMPT']
+    except KeyError:
+        pass
 
     if login:
         conf = load_static_config(ctx, config=config)
@@ -1344,6 +1352,7 @@ def default_env(env=None, config=None, login=True):
                                         issue_warning=False)
         if ON_WINDOWS:
             windows_foreign_env_fixes(foreign_env)
+        foreign_env_fixes(foreign_env)
 
         ctx.update(foreign_env)
 
