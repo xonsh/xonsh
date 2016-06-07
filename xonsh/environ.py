@@ -389,7 +389,7 @@ DEFAULT_DOCS = {
         'The prompt text. May contain keyword arguments which are '
         "auto-formatted, see 'Customizing the Prompt' at "
         'http://xon.sh/tutorial.html#customizing-the-prompt. '
-        'This value is never inherited from parent processes.'),
+        'This value is never inherited from parent processes.',
         default='xonsh.environ.DEFAULT_PROMPT'),
     'PUSHD_MINUS': VarDocs(
         'Flag for directory pushing functionality. False is the normal '
