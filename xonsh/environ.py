@@ -1339,12 +1339,11 @@ def default_env(env=None, config=None, login=True):
     # in order of increasing precedence
     ctx = dict(BASE_ENV)
     ctx.update(os.environ)
-    if ON_WINDOWS:
-        # Windows style PROMPT definitions don't work in XONSH:
-        try:
-            del ctx['PROMPT']
-        except KeyError:
-            pass
+    # other shells' PROMPT definitions generally don't work in XONSH:
+    try:
+        del ctx['PROMPT']
+    except KeyError:
+        pass
 
     if login:
         conf = load_static_config(ctx, config=config)
