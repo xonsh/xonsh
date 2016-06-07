@@ -1153,32 +1153,35 @@ def partial_format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
     colon = ':'
     expl = '!'
     toks = []
-    for literal, field, spec, conv in _FORMATTER.parse(template):
-        toks.append(literal)
-        if field is None:
-            continue
-        elif field.startswith('$'):
-            v = builtins.__xonsh_env__[name[1:]]  # FIXME `name` is an unresolved ref
-            v = _FORMATTER.convert_field(v, conv)
-            v = _FORMATTER.format_field(v, spec)
-            toks.append(v)
-            continue
-        elif field in fmtter:
-            v = fmtter[field]
-            val = v() if callable(v) else v
-            val = '' if val is None else val
-            toks.append(val)
-        else:
-            toks.append(bopen)
-            toks.append(field)
-            if conv is not None and len(conv) > 0:
-                toks.append(expl)
-                toks.append(conv)
-            if spec is not None and len(spec) > 0:
-                toks.append(colon)
-                toks.append(spec)
-            toks.append(bclose)
-    return ''.join(toks)
+    try:
+        for literal, field, spec, conv in _FORMATTER.parse(template):
+            toks.append(literal)
+            if field is None:
+                continue
+            elif field.startswith('$'):
+                v = builtins.__xonsh_env__[name[1:]]  # FIXME `name` is an unresolved ref
+                v = _FORMATTER.convert_field(v, conv)
+                v = _FORMATTER.format_field(v, spec)
+                toks.append(v)
+                continue
+            elif field in fmtter:
+                v = fmtter[field]
+                val = v() if callable(v) else v
+                val = '' if val is None else val
+                toks.append(val)
+            else:
+                toks.append(bopen)
+                toks.append(field)
+                if conv is not None and len(conv) > 0:
+                    toks.append(expl)
+                    toks.append(conv)
+                if spec is not None and len(spec) > 0:
+                    toks.append(colon)
+                    toks.append(spec)
+                toks.append(bclose)
+        return ''.join(toks)
+    except:
+        return template
 
 
 RE_HIDDEN = re.compile('\001.*?\002')
