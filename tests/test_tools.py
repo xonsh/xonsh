@@ -16,7 +16,8 @@ from xonsh.tools import (
     is_bool_or_int, to_bool_or_int, bool_or_int_to_str,
     ensure_int_or_slice, is_float, is_string, check_for_partial_string,
     is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str,
-    argvquote, executables_in, find_next_break, expand_case_matching)
+    is_tb_opt, to_tb_tuple, tb_tuple_to_str, argvquote, executables_in,
+    find_next_break, expand_case_matching)
 
 LEXER = Lexer()
 LEXER.build()
@@ -491,6 +492,41 @@ def test_is_dynamic_cwd_width():
         obs = is_dynamic_cwd_width(inp)
         yield assert_equal, exp, obs
 
+def test_is_tb_opt():
+    cases = [
+        (True, True),
+        (False, True),
+        ('/dev/null', True),
+        ('throwback.log', True),
+        (42, False),
+        ([1, 2, 3], False),
+        (("wrong", "parameter"), False)
+    ]
+    for inp, exp in cases:
+        obs = is_tb_opt(inp)
+        yield assert_equal, exp, obs
+
+def test_to_tb_tuple():
+    cases = [
+        (True, (True, None)),
+        (False, (False, None)),
+        ('/dev/null', (True, '/dev/null')),
+        ('  throwback.log', (True, 'throwback.log')),
+        (' throwback.log ', (True, 'throwback.log'))
+    ]
+    for inp, exp in cases:
+        obs = to_tb_tuple(inp)
+        yield assert_equal, exp, obs
+
+def test_tb_tuple_to_str():
+    cases = [
+        ((True, None), 'True None'),
+        ((False, None), 'False None'),
+        ((True, 'throwback.log'), 'True throwback.log')
+    ]
+    for inp, exp in cases:
+        obs = tb_tuple_to_str(inp)
+        yield assert_equal, exp, obs
 
 def test_to_dynamic_cwd_tuple():
     cases = [

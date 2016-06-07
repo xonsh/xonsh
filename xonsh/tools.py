@@ -427,9 +427,20 @@ def print_exception(msg=None):
     env = getattr(builtins, '__xonsh_env__', os.environ)
     if 'XONSH_SHOW_TRACEBACK' not in env:
         sys.stderr.write('xonsh: For full traceback set: '
-                         '$XONSH_SHOW_TRACEBACK = True\n')
-    if env.get('XONSH_SHOW_TRACEBACK', False):
-        traceback.print_exc()
+                         '$XONSH_SHOW_TRACEBACK = True or '
+                         '$XONSH_SHOW_TRACEBACK = \'<filename>\'\n')
+    # get env option for traceback and convert it to a tuple
+    traceback_opt = env.get('XONSH_SHOW_TRACEBACK', False)
+    show_trace, out_file = to_tb_tuple(traceback_opt)
+    if show_trace:
+        if not out_file:
+            # if the user has not specified a file, output to stderr
+            traceback.print_exc()
+        else:
+            # if the user has specified a file, open it in append mode
+            # and output traceback info there, as well as to stderr
+            traceback.print_exc()
+            traceback.print_exc(file = open(out_file, 'a'))
     else:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         exception_only = traceback.format_exception_only(exc_type, exc_value)
@@ -589,6 +600,38 @@ def is_bool(x):
     """Tests if something is a boolean."""
     return isinstance(x, bool)
 
+def is_tb_opt(x):
+    """
+    Tests if something is a valid XONSH_SHOW_TRACEBACK option, which can
+    be either a bool or a string containing a file path.
+    """
+    return isinstance(x, bool) or isinstance(x, str)
+
+def to_tb_tuple(x):
+    """
+    Converts a XONSH_SHOW_TRACEBACK option to a tuple containing:
+    -- a boolean indicating if traceback should be logged
+    -- a string option indicating the file it should be logged out to,
+       or None if no such option was provided.
+    """
+    if isinstance(x, bool):
+        return (x, None)
+    elif isinstance(x, str):
+        return (True, x.strip())
+    else:
+        raise ValueError('$XONSH_SHOW_TRACEBACK must either be a boolean '
+                         'or a string containing a file path.')
+
+def tb_tuple_to_str(x):
+    """Handles throwback opt detyping to a string."""
+    if isinstance(x, bool):
+        return str(x)
+    elif isinstance(x, str):
+        return '\'' + str(x) + '\''
+    elif isinstance(x, tuple):
+        return '{0} {1}'.format(*x)
+    else:
+        return str(x)
 
 _FALSES = frozenset(['', '0', 'n', 'f', 'no', 'none', 'false'])
 
