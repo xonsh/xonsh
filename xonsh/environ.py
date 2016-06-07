@@ -768,9 +768,10 @@ def locate_binary(name):
 
     directories = builtins.__xonsh_env__.get('PATH')
 
-    # Windows users expect t obe able to execute files in the same directory without `./`
-    #if ON_WINDOWS:
-    #    directories = [_get_cwd()] + directories
+    # Windows users expect t obe able to execute files in the same directory
+    # without `./`
+    if ON_WINDOWS:
+        directories = [_get_cwd()] + directories
 
     try:
         return next(chain.from_iterable(_yield_executables(directory, name) for
