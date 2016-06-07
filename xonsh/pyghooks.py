@@ -231,7 +231,7 @@ def partial_color_tokenize(template):
                 value += literal
         toks.append((color, value))
     except:
-        toks = [(color.NO_COLOR, template)]
+        toks = [(Color.NO_COLOR, template)]
     if styles is not None:
         styles[color]  # ensure color is available
     return toks
