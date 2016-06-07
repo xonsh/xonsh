@@ -4,6 +4,23 @@ Xonsh Change Log
 
 Current Developments
 ====================
+**Added:** None
+
+**Changed:** None
+
+**Deprecated:** None
+
+**Removed:** None
+
+**Fixed:**
+
+* Fixed an issue whereby attempting to delete a literal value (e.g., ``del 7``)
+  in the prompt_toolkit shell would cause xonsh to crash.
+
+**Security:** None
+
+v0.3.3
+====================
 **Added:**
 
 * Question mark literals, ``?``, are now allowed as part of
@@ -28,7 +45,7 @@ Current Developments
 * ``_`` is now updated by ``![]``, to contain the appropriate
   ``CompletedCommand`` object.
 
-**Deprecated:** None
+
 
 **Removed:**
 
@@ -43,10 +60,10 @@ Current Developments
   functions
 * The --shell-type CLI flag now takes precedence over $SHELL_TYPE specified in
   .xonshrc
-* Fixed an issue about ``os.killpg()`` on OS X which caused Xonsh crash with
-  occasionlity
+* Fixed an issue about ``os.killpg()`` on OS X which caused xonsh crash with
+  occasionality
 
-**Security:** None
+
 
 v0.3.2
 ====================
