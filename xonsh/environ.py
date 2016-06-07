@@ -1148,6 +1148,14 @@ def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
 
 def partial_format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
     """Formats a xonsh prompt template string."""
+    try:
+        return _partial_format_prompt_main(template=template,
+                                           formatter_dict=formatter_dict)
+    except:
+        return template
+
+
+def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
     template = template() if callable(template) else template
     fmtter = _get_fmtter(formatter_dict)
     bopen = '{'
@@ -1155,35 +1163,32 @@ def partial_format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
     colon = ':'
     expl = '!'
     toks = []
-    try:
-        for literal, field, spec, conv in _FORMATTER.parse(template):
-            toks.append(literal)
-            if field is None:
-                continue
-            elif field.startswith('$'):
-                v = builtins.__xonsh_env__[name[1:]]  # FIXME `name` is an unresolved ref
-                v = _FORMATTER.convert_field(v, conv)
-                v = _FORMATTER.format_field(v, spec)
-                toks.append(v)
-                continue
-            elif field in fmtter:
-                v = fmtter[field]
-                val = v() if callable(v) else v
-                val = '' if val is None else val
-                toks.append(val)
-            else:
-                toks.append(bopen)
-                toks.append(field)
-                if conv is not None and len(conv) > 0:
-                    toks.append(expl)
-                    toks.append(conv)
-                if spec is not None and len(spec) > 0:
-                    toks.append(colon)
-                    toks.append(spec)
-                toks.append(bclose)
-        return ''.join(toks)
-    except:
-        return template
+    for literal, field, spec, conv in _FORMATTER.parse(template):
+        toks.append(literal)
+        if field is None:
+            continue
+        elif field.startswith('$'):
+            v = builtins.__xonsh_env__[field[1:]]
+            v = _FORMATTER.convert_field(v, conv)
+            v = _FORMATTER.format_field(v, spec)
+            toks.append(v)
+            continue
+        elif field in fmtter:
+            v = fmtter[field]
+            val = v() if callable(v) else v
+            val = '' if val is None else val
+            toks.append(val)
+        else:
+            toks.append(bopen)
+            toks.append(field)
+            if conv is not None and len(conv) > 0:
+                toks.append(expl)
+                toks.append(conv)
+            if spec is not None and len(spec) > 0:
+                toks.append(colon)
+                toks.append(spec)
+            toks.append(bclose)
+    return ''.join(toks)
 
 
 RE_HIDDEN = re.compile('\001.*?\002')

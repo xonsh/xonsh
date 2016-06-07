@@ -186,15 +186,26 @@ def code_by_name(name, styles):
 
 
 def partial_color_tokenize(template):
-    """Toeknizes a template string containing colors. Will return a list
+    """Tokenizes a template string containing colors. Will return a list
     of tuples mapping the token to the string which has that color.
     These sub-strings maybe templates themselves.
     """
-    formatter = string.Formatter()
     if hasattr(builtins, '__xonsh_shell__'):
         styles = __xonsh_shell__.shell.styler.styles
     else:
         styles = None
+    color = Color.NO_COLOR
+    try:
+        toks, color = _partial_color_tokenize_main(template)
+    except:
+        toks = [(Color.NO_COLOR, template)]
+    if styles is not None:
+        styles[color]  # ensure color is available
+    return toks
+
+
+def _partial_color_tokenize_main(template):
+    formatter = string.Formatter()
     bopen = '{'
     bclose = '}'
     colon = ':'
@@ -203,38 +214,33 @@ def partial_color_tokenize(template):
     fg = bg = None
     value = ''
     toks = []
-    try:
-        for literal, field, spec, conv in formatter.parse(template):
-            if field is None:
-                value += literal
-            elif field in KNOWN_COLORS or '#' in field:
-                value += literal
-                next_color, fg, bg = color_by_name(field, fg, bg)
-                if next_color is not color:
-                    if len(value) > 0:
-                        toks.append((color, value))
-                        if styles is not None:
-                            styles[color]  # ensure color is available
-                    color = next_color
-                    value = ''
-            elif field is not None:
-                parts = [literal, bopen, field]
-                if conv is not None and len(conv) > 0:
-                    parts.append(expl)
-                    parts.append(conv)
-                if spec is not None and len(spec) > 0:
-                    parts.append(colon)
-                    parts.append(spec)
-                parts.append(bclose)
-                value += ''.join(parts)
-            else:
-                value += literal
-        toks.append((color, value))
-    except:
-        toks = [(Color.NO_COLOR, template)]
-    if styles is not None:
-        styles[color]  # ensure color is available
-    return toks
+    for literal, field, spec, conv in formatter.parse(template):
+        if field is None:
+            value += literal
+        elif field in KNOWN_COLORS or '#' in field:
+            value += literal
+            next_color, fg, bg = color_by_name(field, fg, bg)
+            if next_color is not color:
+                if len(value) > 0:
+                    toks.append((color, value))
+                    if styles is not None:
+                        styles[color]  # ensure color is available
+                color = next_color
+                value = ''
+        elif field is not None:
+            parts = [literal, bopen, field]
+            if conv is not None and len(conv) > 0:
+                parts.append(expl)
+                parts.append(conv)
+            if spec is not None and len(spec) > 0:
+                parts.append(colon)
+                parts.append(spec)
+            parts.append(bclose)
+            value += ''.join(parts)
+        else:
+            value += literal
+    toks.append((color, value))
+    return toks, color
 
 
 class CompoundColorMap(MutableMapping):

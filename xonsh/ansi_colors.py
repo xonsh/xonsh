@@ -5,6 +5,7 @@ from warnings import warn
 
 RE_BACKGROUND = re.compile('(bg|bg#|bghex|background)')
 
+
 def partial_color_format(template, style='default', cmap=None, hide=False):
     """Formats a template string but only with respect to the colors.
     Another template string is returned, with the color values filled in.
@@ -27,6 +28,13 @@ def partial_color_format(template, style='default', cmap=None, hide=False):
     -------
     A template string with the color values filled in.
     """
+    try:
+        return _partial_color_format_main(template, style=style, cmap=cmap, hide=hide)
+    except:
+        return template
+
+
+def _partial_color_format_main(template, style='default', cmap=None, hide=False):
     if cmap is not None:
         pass
     elif style in STYLES:
@@ -43,39 +51,36 @@ def partial_color_format(template, style='default', cmap=None, hide=False):
     colon = ':'
     expl = '!'
     toks = []
-    try:
-        for literal, field, spec, conv in formatter.parse(template):
-            toks.append(literal)
-            if field is None:
-                pass
-            elif field in cmap:
-                toks.extend([esc, cmap[field], m])
-            elif '#' in field:
-                field = field.lower()
-                pre, _, post = field.partition('#')
-                f_or_b = '38' if RE_BACKGROUND.search(pre) is None else '48'
-                rgb, _, post = post.partition('_')
-                c256, _ = rgb_to_256(rgb)
-                color = f_or_b + ';5;' + c256
-                mods = pre + '_' + post
-                if 'underline' in mods:
-                    color = '4;' + color
-                if 'bold' in mods:
-                    color = '1;' + color
-                toks.extend([esc, color, m])
-            elif field is not None:
-                toks.append(bopen)
-                toks.append(field)
-                if conv is not None and len(conv) > 0:
-                    toks.append(expl)
-                    toks.append(conv)
-                if spec is not None and len(spec) > 0:
-                    toks.append(colon)
-                    toks.append(spec)
-                toks.append(bclose)
-        return ''.join(toks)
-    except:
-        return template
+    for literal, field, spec, conv in formatter.parse(template):
+        toks.append(literal)
+        if field is None:
+            pass
+        elif field in cmap:
+            toks.extend([esc, cmap[field], m])
+        elif '#' in field:
+            field = field.lower()
+            pre, _, post = field.partition('#')
+            f_or_b = '38' if RE_BACKGROUND.search(pre) is None else '48'
+            rgb, _, post = post.partition('_')
+            c256, _ = rgb_to_256(rgb)
+            color = f_or_b + ';5;' + c256
+            mods = pre + '_' + post
+            if 'underline' in mods:
+                color = '4;' + color
+            if 'bold' in mods:
+                color = '1;' + color
+            toks.extend([esc, color, m])
+        elif field is not None:
+            toks.append(bopen)
+            toks.append(field)
+            if conv is not None and len(conv) > 0:
+                toks.append(expl)
+                toks.append(conv)
+            if spec is not None and len(spec) > 0:
+                toks.append(colon)
+                toks.append(spec)
+            toks.append(bclose)
+    return ''.join(toks)
 
 
 RGB_256 = {
