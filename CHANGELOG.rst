@@ -6,7 +6,9 @@ Current Developments
 ====================
 **Added:** None
 
-**Changed:** None
+**Changed:**
+
+* ``$PROMPT`` from foreign shells is now ignored.
 
 **Deprecated:** None
 
@@ -18,6 +20,7 @@ Current Developments
   in the prompt_toolkit shell would cause xonsh to crash.
 * Fixed broken behavior when using ``cd ..`` to move into a nonexistent
   directory.
+* Fixed crash resulting from malformed ``$PROMPT``.
 
 **Security:** None
 
