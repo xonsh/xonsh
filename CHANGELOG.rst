@@ -16,6 +16,8 @@ Current Developments
 
 * Fixed an issue whereby attempting to delete a literal value (e.g., ``del 7``)
   in the prompt_toolkit shell would cause xonsh to crash.
+* Fixed broken behavior when using ``cd ..`` to move into a nonexistent
+  directory.
 
 **Security:** None
 
