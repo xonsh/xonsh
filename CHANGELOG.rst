@@ -18,6 +18,8 @@ Current Developments
   in the prompt_toolkit shell would cause xonsh to crash.
 * Fixed broken behavior when using ``cd ..`` to move into a nonexistent
   directory.
+* Partial workaround for Cygwin where ``pthread_sigmask`` appears to be missing
+  from the ``signal`` module.
 
 **Security:** None
 
