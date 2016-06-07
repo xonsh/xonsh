@@ -125,3 +125,15 @@ The packages ``win_unicode_console`` can be installed using pip or conda.
 .. code-block:: bat
 
   > conda install --channel xonsh win_unicode_console
+
+Running Under Cygwin
+--------------------
+
+Cygwin support in xonsh is a work in progress.  Currently, there are some
+issues.  Most noticeably, running xonsh by running the ``xonsh`` command from
+within Cygwin bash will cause xonsh to background itself after every command
+that is run.  This should be addressed in a future version, but in the
+meantime, invoking xonsh via ``exec xonsh`` should work.
+
+It is possible to use xonsh as your default shell in Cygwin by adding ``exec
+xonsh`` to your ``.bash_profile`` file.
