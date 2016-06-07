@@ -196,9 +196,7 @@ if ON_WINDOWS:
     except FileNotFoundError:
         GIT_FOR_WINDOWS_PATH = None
 
-
-if ON_WINDOWS:
-    # Check that bash in on path otherwise try the default bin directory
+    # Check that bash is on path otherwise try the default directory
     # used by Git for windows
     import subprocess
     WINDOWS_BASH_COMMAND = 'bash'
