@@ -228,6 +228,108 @@ the ``${}`` operator:
    >>> 'HOME' in ${...}
    True
 
+Customizing the Prompt
+======================
+Customizing the prompt is probably the most common reason for altering an
+environment variable.  The ``PROMPT`` variable can be a string, or it can be a
+function (of no arguments) that returns a string. It can contain keyword
+arguments, which will be replaced automatically:
+
+.. code-block:: xonshcon
+
+    >>> $PROMPT = '{user}@{hostname}:{cwd} > '
+    snail@home:~ > # it works!
+    snail@home:~ > $PROMPT = lambda: '{user}@{hostname}:{cwd} >> '
+    snail@home:~ >> # so does that!
+
+By default, the following variables are available for use:
+
+  * ``user``: The username of the current user
+  * ``hostname``: The name of the host computer
+  * ``cwd``: The current working directory, you may use ``$DYNAMIC_CWD_WIDTH`` to
+    set a maximum width for this variable.
+  * ``short_cwd``: A shortened form of the current working directory; e.g.,
+    ``/path/to/xonsh`` becomes ``/p/t/xonsh``
+  * ``cwd_dir``: The dirname of the current working directory, e.g. ``/path/to`` in
+    ``/path/to/xonsh``.
+  * ``cwd_base``: The basename of the current working directory, e.g. ``xonsh`` in
+    ``/path/to/xonsh``.
+  * ``curr_branch``: The name of the current git branch (preceded by space),
+    if any.
+  * ``branch_color``: ``{BOLD_GREEN}`` if the current git branch is clean,
+    otherwise ``{BOLD_RED}``
+  * ``prompt_end``: `#` if the user has root/admin permissions `$` otherwise
+  * ``current_job``: The name of the command currently running in the
+    foreground, if any.
+
+Note that the version control related variables like ``curr_branch``,
+``branch_color``, may slow the shell when you work on big repositories,
+you can remove them from ``$PROMPT`` to fix it.
+
+You can also color your prompt easily by inserting keywords such as ``{GREEN}``
+or ``{BOLD_BLUE}``.  Colors have the form shown below:
+
+* ``NO_COLOR``: Resets any previously used color codes
+* ``COLORNAME``: Inserts a color code for the following basic colors,
+  which come in regular (dark) and intense (light) forms:
+
+    - ``BLACK`` or ``INTENSE_BLACK``
+    - ``RED`` or ``INTENSE_RED``
+    - ``GREEN`` or ``INTENSE_GREEN``
+    - ``YELLOW`` or ``INTENSE_YELLOW``
+    - ``BLUE`` or ``INTENSE_BLUE``
+    - ``PURPLE`` or ``INTENSE_PURPLE``
+    - ``CYAN`` or ``INTENSE_CYAN``
+    - ``WHITE`` or ``INTENSE_WHITE``
+
+* ``#HEX``: A ``#`` before a len-3 or len-6 hex code will use that
+  hex color, or the nearest approximation that that is supported by
+  the shell and terminal.  For example, ``#fff`` and ``#fafad2`` are
+  both valid.
+* ``BACKGROUND_`` may be added to the begining of a color name or hex
+  color to set a background color.  For example, ``BACKGROUND_INTENSE_RED``
+  and ``BACKGROUND_#123456`` can both be used.
+* ``bg#HEX`` or ``BG#HEX`` are shortcuts for setting a background hex color.
+  Thus you can set ``bg#0012ab`` or the uppercase version.
+* ``BOLD_`` is a prefix qualifier that may be used with any foreground color.
+  For example, ``BOLD_RED`` and ``BOLD_#112233`` are OK!
+* ``UNDERLINE_`` is a prefix qualifier that also may be used with any
+  foreground color. For example, ``UNDERLINE_GREEN``.
+* Or any other combination of qualifiers, such as
+  ``BOLD_UNDERLINE_INTENSE_BLACK``,   which is the most metal color you
+  can use!
+
+You can make use of additional variables beyond these by adding them to the
+``FORMATTER_DICT`` environment variable.  The values in this dictionary
+should be strings (which will be inserted into the prompt verbatim), or
+functions of no arguments (which will be called each time the prompt is
+generated, and the results of those calls will be inserted into the prompt).
+For example:
+
+.. code-block:: console
+
+    snail@home ~ $ $FORMATTER_DICT['test'] = "hey"
+    snail@home ~ $ $PROMPT = "{test} {cwd} $ "
+    hey ~ $
+    hey ~ $ import random
+    hey ~ $ $FORMATTER_DICT['test'] = lambda: random.randint(1,9)
+    3 ~ $
+    5 ~ $
+    2 ~ $
+    8 ~ $
+
+If a function in ``$FORMATTER_DICT`` returns ``None``, the ``None`` will be
+interpreted as an empty string.
+
+Environment variables and functions are also available with the ``$``
+prefix.  For example:
+
+.. code-block:: console
+
+    snail@home ~ $ $PROMPT = "{$LANG} >"
+    en_US.utf8 >
+
+
 Running Commands
 ==============================
 As a shell, xonsh is meant to make running commands easy and fun.
@@ -1042,102 +1144,6 @@ completion for the commands themselves.
 xonsh also provides a means of modifying the behavior of the tab completer.  More
 detail is available on the `Tab Completion page <tutorial_completers.html>`_.
 
-Customizing the Prompt
-======================
-Customizing the prompt is probably the most common reason for altering an
-environment variable.  The ``PROMPT`` variable can be a string, or it can be a
-function (of no arguments) that returns a string.  The result can contain
-keyword arguments, which will be replaced automatically:
-
-.. code-block:: xonshcon
-
-    >>> $PROMPT = '{user}@{hostname}:{cwd} > '
-    snail@home:~ > # it works!
-    snail@home:~ > $PROMPT = lambda: '{user}@{hostname}:{cwd} >> '
-    snail@home:~ >> # so does that!
-
-By default, the following variables are available for use:
-
-  * ``user``: The username of the current user
-  * ``hostname``: The name of the host computer
-  * ``cwd``: The current working directory, you may use ``$DYNAMIC_CWD_WIDTH`` to
-    set a maximum width for this variable.
-  * ``short_cwd``: A shortened form of the current working directory; e.g.,
-    ``/path/to/xonsh`` becomes ``/p/t/xonsh``
-  * ``cwd_dir``: The dirname of the current working directory, e.g. ``/path/to`` in
-    ``/path/to/xonsh``.
-  * ``cwd_base``: The basename of the current working directory, e.g. ``xonsh`` in
-    ``/path/to/xonsh``.
-  * ``curr_branch``: The name of the current git branch (preceded by space),
-    if any.
-  * ``branch_color``: ``{BOLD_GREEN}`` if the current git branch is clean,
-    otherwise ``{BOLD_RED}``
-  * ``prompt_end``: `#` if the user has root/admin permissions `$` otherwise
-  * ``current_job``: The name of the command currently running in the
-    foreground, if any.
-
-You can also color your prompt easily by inserting keywords such as ``{GREEN}``
-or ``{BOLD_BLUE}``.  Colors have the form shown below:
-
-* ``NO_COLOR``: Resets any previously used color codes
-* ``COLORNAME``: Inserts a color code for the following basic colors,
-  which come in regular (dark) and intense (light) forms:
-
-    - ``BLACK`` or ``INTENSE_BLACK``
-    - ``RED`` or ``INTENSE_RED``
-    - ``GREEN`` or ``INTENSE_GREEN``
-    - ``YELLOW`` or ``INTENSE_YELLOW``
-    - ``BLUE`` or ``INTENSE_BLUE``
-    - ``PURPLE`` or ``INTENSE_PURPLE``
-    - ``CYAN`` or ``INTENSE_CYAN``
-    - ``WHITE`` or ``INTENSE_WHITE``
-
-* ``#HEX``: A ``#`` before a len-3 or len-6 hex code will use that
-  hex color, or the nearest approximation that that is supported by
-  the shell and terminal.  For example, ``#fff`` and ``#fafad2`` are
-  both valid.
-* ``BACKGROUND_`` may be added to the begining of a color name or hex
-  color to set a background color.  For example, ``BACKGROUND_INTENSE_RED``
-  and ``BACKGROUND_#123456`` can both be used.
-* ``bg#HEX`` or ``BG#HEX`` are shortcuts for setting a background hex color.
-  Thus you can set ``bg#0012ab`` or the uppercase version.
-* ``BOLD_`` is a prefix qualifier that may be used with any foreground color.
-  For example, ``BOLD_RED`` and ``BOLD_#112233`` are OK!
-* ``UNDERLINE_`` is a prefix qualifier that also may be used with any
-  foreground color. For example, ``UNDERLINE_GREEN``.
-* Or any other combination of qualifiers, such as
-  ``BOLD_UNDERLINE_INTENSE_BLACK``,   which is the most metal color you
-  can use!
-
-You can make use of additional variables beyond these by adding them to the
-``FORMATTER_DICT`` environment variable.  The values in this dictionary
-should be strings (which will be inserted into the prompt verbatim), or
-functions of no arguments (which will be called each time the prompt is
-generated, and the results of those calls will be inserted into the prompt).
-For example:
-
-.. code-block:: console
-
-    snail@home ~ $ $FORMATTER_DICT['test'] = "hey"
-    snail@home ~ $ $PROMPT = "{test} {cwd} $ "
-    hey ~ $
-    hey ~ $ import random
-    hey ~ $ $FORMATTER_DICT['test'] = lambda: random.randint(1,9)
-    3 ~ $
-    5 ~ $
-    2 ~ $
-    8 ~ $
-
-If a function in ``$FORMATTER_DICT`` returns ``None``, the ``None`` will be
-interpreted as an empty string.
-
-Environment variables and functions are also available with the ``$``
-prefix.  For example:
-
-.. code-block:: console
-
-    snail@home ~ $ $PROMPT = "{$LANG} >"
-    en_US.utf8 >
 
 Executing Commands and Scripts
 ==============================
