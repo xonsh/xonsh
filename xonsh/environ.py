@@ -750,9 +750,10 @@ class Env(MutableMapping):
 
 def _yield_executables(directory, name):
     if ON_WINDOWS:
+        base_name, ext = os.path.splitext(name.lower())
         for fname in executables_in(directory):
-            base_name, ext = os.path.splitext(fname)
-            if name.lower() == base_name.lower():
+            fbase, fext = os.path.splitext(fname.lower())
+            if base_name == fbase and (len(ext) == 0 or ext == fext):
                 yield os.path.join(directory, fname)
     else:
         for x in executables_in(directory):
@@ -767,7 +768,8 @@ def locate_binary(name):
 
     directories = builtins.__xonsh_env__.get('PATH')
 
-    # Windows users expect t obe able to execute files in the same directory without `./`
+    # Windows users expect t obe able to execute files in the same directory
+    # without `./`
     if ON_WINDOWS:
         directories = [_get_cwd()] + directories
 
