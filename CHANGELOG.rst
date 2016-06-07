@@ -18,6 +18,9 @@ Current Developments
   in the prompt_toolkit shell would cause xonsh to crash.
 * Fixed broken behavior when using ``cd ..`` to move into a nonexistent
   directory.
+* Fixed regression on Windows with the locate_binary() function. 
+  The bug prevented `source-cmd` from working correctly and broke the 
+  ``activate``/``deactivate`` aliases for the conda environements. 
 
 **Security:** None
 
