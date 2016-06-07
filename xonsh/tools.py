@@ -549,6 +549,16 @@ def is_string(x):
     return isinstance(x, str)
 
 
+def is_callable(x):
+    """Tests if something is callable"""
+    return callable(x)
+
+
+def is_string_or_callable(x):
+    """Tests if something is a string or callable"""
+    return is_string(x) or is_callable(x)
+
+
 def always_true(x):
     """Returns True"""
     return True

@@ -143,7 +143,10 @@ class PromptToolkitShell(BaseShell):
         prompt.
         """
         p = builtins.__xonsh_env__.get('RIGHT_PROMPT')
-        if len(p) == 0:
+        # partial_format_prompt does handle empty strings properly,
+        # but this avoids descending into it in the common case of
+        # $RIGHT_PROMPT == ''.
+        if isinstance(p, str) and len(p) == 0:
             return []
         try:
             p = partial_format_prompt(p)
