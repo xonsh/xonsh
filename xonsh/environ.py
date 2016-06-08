@@ -948,7 +948,7 @@ def dirty_working_directory(cwd=None):
     cmds = builtins.__xonsh_commands_cache__
     if cmds.lazyin('git') or cmds.lazylen() == 0:
         dwd = git_dirty_working_directory()
-    if (cmds.lazyin('hg') or cmds.lazylen() == 0) and not dwd:
+    if (cmds.lazyin('hg') or cmds.lazylen() == 0) and (dwd is None):
         dwd = hg_dirty_working_directory()
     return dwd
 
