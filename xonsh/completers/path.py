@@ -154,9 +154,9 @@ def _quote_paths(paths, start, end):
 def joinpath(path):
     if path is None:
         return ''
-    if len(path) == 0:
+    elif len(path) == 0:
         return ''
-    if path == ('',):
+    elif path == ('',):
         return get_sep()
     elif path[0] == '':
         return get_sep() + _normpath(os.path.join(*path))
@@ -197,7 +197,8 @@ def expanded_match(ref, typed):
 def _expand_one(sofar, nextone):
     out = set()
     for i in sofar:
-        for j in iglobpath(os.path.join(joinpath(i), '*') if i is not None else '*'):
+        _glob = os.path.join(joinpath(i), '*') if i is not None else '*'
+        for j in iglobpath(_glob):
             j = os.path.basename(j)
             if expanded_match(j, nextone):
                 out.add((i or ()) + (j, ))
@@ -223,7 +224,7 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True):
     for s in iglobpath(prefix + '*', ignore_case=(not csc)):
         paths.add(s)
     if env.get('FUZZY_PATH_COMPLETION'):
-        p = splitpath(prefix)
+        p = splitpath(os.path.expanduser(prefix))
         if len(p) != 0:
             if p[0] == '':
                 basedir = ('', )
