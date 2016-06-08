@@ -237,7 +237,7 @@ def main(argv=None):
     shell = builtins.__xonsh_shell__
     if args.mode == XonshMode.single_command:
         # run a single command and exit
-        run_code_with_cache(args.command, shell.execer, mode='single')
+        run_code_with_cache(args.command.lstrip(), shell.execer, mode='single')
     elif args.mode == XonshMode.script_from_file:
         # run a script contained in a file
         path = os.path.abspath(os.path.expanduser(args.file))
