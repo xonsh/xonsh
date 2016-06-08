@@ -13,6 +13,8 @@ Current Developments
   attempted to load.
 * Only show the prompt for the wizard if we did not attempt to load any run
   control files (as opposed to if none were successfully loaded).
+* Tab completion of paths now includes zsh-style path expansion (subsequence
+  matching)
 
 **Deprecated:** None
 

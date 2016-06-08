@@ -151,9 +151,57 @@ def _quote_paths(paths, start, end):
     return out
 
 
-def fuzzy_match(ref, typed):
-    thresh = builtins.__xonsh_env__['SUGGEST_THRESHOLD']
-    return levenshtein(ref, typed, thresh) <= thresh
+def joinpath(path):
+    if path is None:
+        return ''
+    if len(path) == 0:
+        return ''
+    if path == ('',):
+        return get_sep()
+    elif path[0] == '':
+        return get_sep() + _normpath(os.path.join(*path))
+    else:
+        return _normpath(os.path.join(*path))
+
+
+def splitpath(path):
+    path = _normpath(path)
+    if path.startswith(get_sep()):
+        pre = ('', )
+    else:
+        pre = ()
+    return pre + _splitpath(path, ())
+
+
+def _splitpath(path, sofar=()):
+    folder, path = os.path.split(path)
+    if path == "":
+        return sofar[::-1]
+    elif folder == "":
+        return (sofar + (path, ))[::-1]
+    else:
+        return _splitpath(folder, sofar + (path, ))
+
+
+def expanded_match(ref, typed):
+    if len(typed) == 0:
+        return True
+    elif len(ref) == 0:
+        return False
+    elif ref[0] == typed[0]:
+        return expanded_match(ref[1:], typed[1:])
+    else:
+        return expanded_match(ref[1:], typed)
+
+
+def _expand_one(sofar, nextone):
+    out = set()
+    for i in sofar:
+        for j in iglobpath(os.path.join(joinpath(i), '*') if i is not None else '*'):
+            j = os.path.basename(j)
+            if expanded_match(j, nextone):
+                out.add((i or ()) + (j, ))
+    return out
 
 
 def complete_path(prefix, line, start, end, ctx, cdpath=True):
@@ -174,15 +222,18 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True):
     csc = env.get('CASE_SENSITIVE_COMPLETIONS')
     for s in iglobpath(prefix + '*', ignore_case=(not csc)):
         paths.add(s)
-    if len(paths) == 0:
-        for s in iglobpath(os.path.join(os.path.dirname(prefix), '*'),
-                           ignore_case=(not csc)):
-            bname = os.path.basename(prefix)
-            lenb = len(bname)
-            if csc and fuzzy_match(s, bname):
-                paths.add(os.path.join(os.path.dirname(prefix), s))
-            if (not csc) and fuzzy_match(s.lower(), prefix.lower()):
-                paths.add(os.path.join(os.path.dirname(prefix), s))
+    if env.get('FUZZY_PATH_COMPLETION'):
+        p = splitpath(prefix)
+        if len(p) != 0:
+            if p[0] == '':
+                basedir = ('', )
+                p = p[1:]
+            else:
+                basedir = None
+            matches_so_far = {basedir}
+            for i in p:
+                matches_so_far = _expand_one(matches_so_far, i)
+            paths |= {joinpath(i) for i in matches_so_far}
     if tilde in prefix:
         home = os.path.expanduser(tilde)
         paths = {s.replace(home, tilde) for s in paths}
