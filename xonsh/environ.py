@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """Environment for the xonsh shell."""
+import os
+import time
+import json
+import locale
 import builtins
 from contextlib import contextmanager
 from functools import wraps
 from itertools import chain
-import json
-import locale
-import os
 from pprint import pformat
 import re
 import socket
@@ -769,14 +770,11 @@ def _yield_executables(directory, name):
 def locate_binary(name):
     if os.path.isfile(name) and name != os.path.basename(name):
         return name
-
     directories = builtins.__xonsh_env__.get('PATH')
-
-    # Windows users expect t obe able to execute files in the same directory
+    # Windows users expect to be able to execute files in the same directory
     # without `./`
     if ON_WINDOWS:
         directories = [_get_cwd()] + directories
-
     try:
         return next(chain.from_iterable(_yield_executables(directory, name) for
                     directory in directories if os.path.isdir(directory)))
@@ -790,10 +788,8 @@ def _get_parent_dir_for(path, dir_name):
     while path != previous_path:
         if os.path.isdir(os.path.join(path, dir_name)):
             return path
-
         previous_path = path
         path, _ = os.path.split(path)
-
     return False
 
 
@@ -842,28 +838,26 @@ def ensure_hg(func):
     return wrapper
 
 
-@ensure_git
+#@ensure_git
 def get_git_branch(cwd=None):
     branch = None
-
     if not ON_WINDOWS:
         prompt_scripts = ['/usr/lib/git-core/git-sh-prompt',
                           '/usr/local/etc/bash_completion.d/git-prompt.sh']
-
         for script in prompt_scripts:
             # note that this is about 10x faster than bash -i "__git_ps1"
             _input = ('source {}; __git_ps1 "${{1:-%s}}"'.format(script))
             try:
-                branch = subprocess.check_output(['bash', ],
+                branch = subprocess.check_output(['bash'],
                                                  cwd=cwd,
                                                  input=_input,
                                                  stderr=subprocess.PIPE,
                                                  universal_newlines=True)
                 if len(branch) == 0:
                     branch = None
+                break
             except (subprocess.CalledProcessError, FileNotFoundError):
                 continue
-
     # fall back to using the git binary if the above failed
     if branch is None:
         try:
@@ -883,7 +877,6 @@ def get_git_branch(cwd=None):
                 branch = s
         except (subprocess.CalledProcessError, FileNotFoundError):
             pass
-
     return branch
 
 
@@ -905,7 +898,7 @@ def call_hg_command(command, cwd):
     return s
 
 
-@ensure_hg
+#@ensure_hg
 def get_hg_branch(cwd=None, root=None):
     branch = None
     active_bookmark = None
@@ -937,10 +930,8 @@ def current_branch(pad=True):
     and should be extended in the future.
     """
     branch = get_git_branch() or get_hg_branch()
-
     if pad and branch is not None:
         branch = ' ' + branch
-
     return branch or ''
 
 
@@ -966,7 +957,7 @@ def git_dirty_working_directory(cwd=None, include_untracked=False):
         return False
 
 
-@ensure_hg
+#@ensure_hg
 def hg_dirty_working_directory(cwd=None, root=None):
     id = call_hg_command(['identify', '--id'], cwd)
     if id is None:
@@ -1140,6 +1131,7 @@ def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
     for name in included_names:
         if name is None:
             continue
+        #t0 = time.time()
         if name.startswith('$'):
             v = builtins.__xonsh_env__[name[1:]]
         else:
@@ -1147,6 +1139,8 @@ def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
         val = v() if callable(v) else v
         val = '' if val is None else val
         fmt[name] = val
+        #t1 = time.time()
+        #print(name, t1 - t0)
     return template.format(**fmt)
 
 
@@ -1178,10 +1172,13 @@ def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
             toks.append(v)
             continue
         elif field in fmtter:
+            t0 = time.time()
             v = fmtter[field]
             val = v() if callable(v) else v
             val = '' if val is None else val
             toks.append(val)
+            t1 = time.time()
+            print(field, t1 - t0)
         else:
             toks.append(bopen)
             toks.append(field)
