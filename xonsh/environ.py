@@ -143,14 +143,12 @@ def is_callable_default(x):
     return callable(x) and getattr(x, '_xonsh_callable_default', False)
 if ON_WINDOWS:
     DEFAULT_PROMPT = ('{env_name}'
-                      '{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} '
-                      '{cwd}{branch_color}{curr_branch}{NO_COLOR} '
-                      '{BOLD_INTENSE_CYAN}{prompt_end}{NO_COLOR} ')
+                      '{BOLD_INTENSE_GREEN}{user}@{hostname} '
+                      '{BOLD_INTENSE_CYAN}{cwd} {prompt_end}{NO_COLOR} ')
 else:
     DEFAULT_PROMPT = ('{env_name}'
-                      '{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
-                      '{cwd}{branch_color}{curr_branch}{NO_COLOR} '
-                      '{BOLD_BLUE}{prompt_end}{NO_COLOR} ')
+                      '{BOLD_GREEN}{user}@{hostname} '
+                      '{BOLD_BLUE}{cwd} {prompt_end}{NO_COLOR} ')
 
 DEFAULT_TITLE = '{current_job}{user}@{hostname}: {cwd} | xonsh'
 
