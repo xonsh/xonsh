@@ -120,7 +120,6 @@ def arg_undoers():
         '-c': (lambda args: setattr(args, 'command', None)),
         '-i': (lambda args: setattr(args, 'force_interactive', False)),
         '-l': (lambda args: setattr(args, 'login', False)),
-        '-c': (lambda args: setattr(args, 'command', None)),
         '--no-script-cache': (lambda args: setattr(args, 'scriptcache', True)),
         '--cache-everything': (lambda args: setattr(args, 'cacheall', False)),
         '--config-path': (lambda args: delattr(args, 'config_path')),
