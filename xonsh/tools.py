@@ -1171,7 +1171,8 @@ def backup_file(fname):
     import shutil
     from datetime import datetime
     base, ext = os.path.splitext(fname)
-    newfname = '%s.%s%s' % (base, datetime.now().isoformat().replace(':', '-'), ext)
+    timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
+    newfname = '%s.%s%s' % (base, timestamp, ext)
     shutil.move(fname, newfname)
 
 

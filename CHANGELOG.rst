@@ -12,7 +12,9 @@ Current Developments
 
 **Removed:** None
 
-**Fixed:** None
+**Fixed:**
+
+* Fixed xonfig wizard failing on Windows due to colon in created filename.
 
 **Security:** None
 
@@ -46,7 +48,6 @@ v0.3.4
   ``activate``/``deactivate`` aliases for the conda environements. 
 * Fixed crash resulting from errors other than syntax errors in run control
   file.
-* Fixed xonfig wizard failing on Windows due to colon in created filename.
 
 
 v0.3.3
