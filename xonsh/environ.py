@@ -962,9 +962,9 @@ def branch_color():
     if dwd is None:
         color = '{BOLD_INTENSE_YELLOW}'
     elif dwd:
-        color = '{BOLD_INTENSE_GREEN}'
-    else:
         color = '{BOLD_INTENSE_RED}'
+    else:
+        color = '{BOLD_INTENSE_GREEN}'
     return color
 
 
@@ -976,9 +976,9 @@ def branch_bg_color():
     if dwd is None:
         color = '{BACKGROUND_YELLOW}'
     elif dwd:
-        color = '{BACKGROUND_GREEN}'
-    else:
         color = '{BACKGROUND_RED}'
+    else:
+        color = '{BACKGROUND_GREEN}'
     return color
 
 
