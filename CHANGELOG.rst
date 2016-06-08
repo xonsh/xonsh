@@ -9,6 +9,10 @@ Current Developments
 **Changed:**
 
 * ``$PROMPT`` from foreign shells is now ignored.
+* ``$RC_FILES`` environment variable now stores the run control files we
+  attempted to load.
+* Only show the prompt for the wizard if we did not attempt to load any run
+  control files (as opposed to if none were successfully loaded).
 
 **Deprecated:** None
 
@@ -26,6 +30,8 @@ Current Developments
 * Fixed regression on Windows with the locate_binary() function. 
   The bug prevented `source-cmd` from working correctly and broke the 
   ``activate``/``deactivate`` aliases for the conda environements. 
+* Fixed crash resulting from errors other than syntax errors in run control
+  file.
 
 **Security:** None
 
