@@ -255,7 +255,7 @@ def main(argv=None):
         # otherwise, enter the shell
         env['XONSH_INTERACTIVE'] = True
         ignore_sigtstp()
-        if not env['LOADED_CONFIG'] and not any(env['LOADED_RC_FILES']):
+        if not env['LOADED_CONFIG'] and not any(env['RC_FILES']):
             print('Could not find xonsh configuration or run control files.')
             from xonsh import xonfig  # lazy import
             xonfig.main(['wizard', '--confirm'])

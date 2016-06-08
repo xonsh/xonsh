@@ -216,6 +216,7 @@ DEFAULT_VALUES = {
     'PUSHD_MINUS': False,
     'PUSHD_SILENT': False,
     'RAISE_SUBPROC_ERROR': False,
+    'RC_FILES': (),
     'RIGHT_PROMPT': '',
     'SHELL_TYPE': 'best',
     'SUGGEST_COMMANDS': True,
@@ -402,6 +403,9 @@ DEFAULT_DOCS = {
         'This is most useful in xonsh scripts or modules where failures '
         'should cause an end to execution. This is less useful at a terminal. '
         'The error that is raised is a subprocess.CalledProcessError.'),
+    'RC_FILES': VarDocs(
+        'List of strings representing filenames of run control files we '
+        'attempted to load.'),
     'RIGHT_PROMPT': VarDocs('Template string for right-aligned text '
         'at the prompt. This may be parameterized in the same way as '
         'the $PROMPT variable. Currently, this is only available in the '
@@ -1297,6 +1301,7 @@ def load_static_config(ctx, config=None):
 
 def xonshrc_context(rcfiles=None, execer=None, initial=None):
     """Attempts to read in xonshrc file, and return the contents."""
+    builtins.__xonsh_env__['RC_FILES'] = tuple(rcfiles)
     loaded = builtins.__xonsh_env__['LOADED_RC_FILES'] = []
     if initial is None:
         env = {}
@@ -1314,6 +1319,11 @@ def xonshrc_context(rcfiles=None, execer=None, initial=None):
         except SyntaxError as err:
             loaded.append(False)
             msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
+            warn(msg.format(rcfile, err), RuntimeWarning)
+            continue
+        except Exception as err:
+            loaded.append(False)
+            msg = 'error running xonsh run control file {0!r}: {1!s}'
             warn(msg.format(rcfile, err), RuntimeWarning)
             continue
     return env
