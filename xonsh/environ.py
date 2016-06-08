@@ -1123,7 +1123,6 @@ def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
     for name in included_names:
         if name is None:
             continue
-        #t0 = time.time()
         if name.startswith('$'):
             v = builtins.__xonsh_env__[name[1:]]
         else:
@@ -1131,8 +1130,6 @@ def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
         val = v() if callable(v) else v
         val = '' if val is None else val
         fmt[name] = val
-        #t1 = time.time()
-        #print(name, t1 - t0)
     return template.format(**fmt)
 
 
@@ -1164,13 +1161,10 @@ def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
             toks.append(v)
             continue
         elif field in fmtter:
-            t0 = time.time()
             v = fmtter[field]
             val = v() if callable(v) else v
             val = '' if val is None else val
             toks.append(val)
-            t1 = time.time()
-            print(field, t1 - t0)
         else:
             toks.append(bopen)
             toks.append(field)

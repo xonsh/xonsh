@@ -4,7 +4,14 @@ Xonsh Change Log
 
 Current Developments
 ====================
-**Added:** None
+**Added:**
+
+* New ``$VC_BRANCH_TIMEOUT`` environment variable is the time (in seconds)
+  of how long to spend attempting each individual version control branch
+  information command during ``$PROMPT`` formatting.  This allows for faster
+  prompt resolution and faster startup times.
+* New lazy methods added to CommandsCache allowing for testing and inspection
+  without the possibility of recomputing the cache.
 
 **Changed:**
 
@@ -13,10 +20,14 @@ Current Developments
   attempted to load.
 * Only show the prompt for the wizard if we did not attempt to load any run
   control files (as opposed to if none were successfully loaded).
+* Git and mercurial branch and dirty function refactor to imporve run times.
 
 **Deprecated:** None
 
-**Removed:** None
+**Removed:**
+
+* ``ensure_git()`` and ``ensure_hg()`` decorators removed.
+* ``call_hg_command()`` function removed.
 
 **Fixed:**
 
@@ -27,9 +38,9 @@ Current Developments
 * Partial workaround for Cygwin where ``pthread_sigmask`` appears to be missing
   from the ``signal`` module.
 * Fixed crash resulting from malformed ``$PROMPT``.
-* Fixed regression on Windows with the locate_binary() function. 
-  The bug prevented `source-cmd` from working correctly and broke the 
-  ``activate``/``deactivate`` aliases for the conda environements. 
+* Fixed regression on Windows with the locate_binary() function.
+  The bug prevented `source-cmd` from working correctly and broke the
+  ``activate``/``deactivate`` aliases for the conda environements.
 * Fixed crash resulting from errors other than syntax errors in run control
   file.
 
@@ -70,8 +81,8 @@ v0.3.3
 **Fixed:**
 
 * Fixed bug on Windows where tab-completion for executables would return all files.
-* Fixed bug on Windows which caused the bash $PROMPT variable to be used when no 
-  no $PROMPT variable was set in .xonshrc 
+* Fixed bug on Windows which caused the bash $PROMPT variable to be used when no
+  no $PROMPT variable was set in .xonshrc
 * Improved start-up times by caching information about bash completion
   functions
 * The --shell-type CLI flag now takes precedence over $SHELL_TYPE specified in
