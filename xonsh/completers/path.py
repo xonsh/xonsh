@@ -186,32 +186,41 @@ def _splitpath_helper(path, sofar=()):
         return _splitpath_helper(folder, sofar + (path, ))
 
 
-def fuzzy_match(ref, typed):
+def fuzzy_match(ref, typed, csc):
     """
     Detects whether typed is a subsequence of ref.
 
     Returns ``True`` if the characters in ``typed`` appear (in order) in
-    ``ref``, regardless of exactly where in ``ref`` they occur.
+    ``ref``, regardless of exactly where in ``ref`` they occur.  If ``csc`` is
+    ``False``, ignore the case of ``ref`` and ``typed``.
 
-    Used in "fuzzy" path completion (e.g., ~/u/ro expands to ~/lou/carcohl)
+    Used in "fuzzy" path completion (e.g., ``~/u/ro`` expands to
+    ``~/lou/carcohl``)
     """
+    if csc:
+        return _fuzzy_match_iter(ref, typed)
+    else:
+        return _fuzzy_match_iter(ref.lower(), typed.lower())
+
+
+def _fuzzy_match_iter(ref, typed):
     if len(typed) == 0:
         return True
     elif len(ref) == 0:
         return False
     elif ref[0] == typed[0]:
-        return fuzzy_match(ref[1:], typed[1:])
+        return _fuzzy_match_iter(ref[1:], typed[1:])
     else:
-        return fuzzy_match(ref[1:], typed)
+        return _fuzzy_match_iter(ref[1:], typed)
 
 
-def _expand_one(sofar, nextone):
+def _expand_one(sofar, nextone, csc):
     out = set()
     for i in sofar:
         _glob = os.path.join(_joinpath(i), '*') if i is not None else '*'
         for j in iglobpath(_glob):
             j = os.path.basename(j)
-            if fuzzy_match(j, nextone):
+            if fuzzy_match(j, nextone, csc):
                 out.add((i or ()) + (j, ))
     return out
 
@@ -248,7 +257,7 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True):
                 basedir = None
             matches_so_far = {basedir}
             for i in p:
-                matches_so_far = _expand_one(matches_so_far, i)
+                matches_so_far = _expand_one(matches_so_far, i, csc)
             paths |= {_joinpath(i) for i in matches_so_far}
     if tilde in prefix:
         home = os.path.expanduser(tilde)
