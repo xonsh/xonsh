@@ -6,7 +6,7 @@ import builtins
 from xonsh.platform import ON_WINDOWS
 from xonsh.tools import (subexpr_from_unbalanced, get_sep,
                          check_for_partial_string, RE_STRING_START,
-                         iglobpath)
+                         iglobpath, levenshtein)
 
 from xonsh.completers.tools import get_filter_function
 
@@ -151,6 +151,11 @@ def _quote_paths(paths, start, end):
     return out
 
 
+def fuzzy_match(ref, typed):
+    thresh = builtins.__xonsh_env__['SUGGEST_THRESHOLD']
+    return levenshtein(ref, typed, thresh) <= thresh
+
+
 def complete_path(prefix, line, start, end, ctx, cdpath=True):
     """Completes based on a path name."""
     # string stuff for automatic quoting
@@ -165,9 +170,19 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True):
         path_str_end = p[3]
     tilde = '~'
     paths = set()
-    csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
+    env = builtins.__xonsh_env__
+    csc = env.get('CASE_SENSITIVE_COMPLETIONS')
     for s in iglobpath(prefix + '*', ignore_case=(not csc)):
         paths.add(s)
+    if len(paths) == 0:
+        for s in iglobpath(os.path.join(os.path.dirname(prefix), '*'),
+                           ignore_case=(not csc)):
+            bname = os.path.basename(prefix)
+            lenb = len(bname)
+            if csc and fuzzy_match(s, bname):
+                paths.add(os.path.join(os.path.dirname(prefix), s))
+            if (not csc) and fuzzy_match(s.lower(), prefix.lower()):
+                paths.add(os.path.join(os.path.dirname(prefix), s))
     if tilde in prefix:
         home = os.path.expanduser(tilde)
         paths = {s.replace(home, tilde) for s in paths}
