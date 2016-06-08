@@ -177,6 +177,12 @@ def xonshconfig(env):
     xc = os.path.join(xcd, 'config.json')
     return xc
 
+if ON_WINDOWS:
+    DEFAULT_XONSHRC = (os.path.join(os.environ['ALLUSERSPROFILE'],
+                                     'xonsh', 'xonshrc'),
+                       os.path.expanduser('~/.xonshrc'))
+else:
+    DEFAULT_XONSHRC = ('/etc/xonshrc', os.path.expanduser('~/.xonshrc'))
 
 # Default values should generally be immutable, that way if a user wants
 # to set them they have to do a copy and write them to the environment.
@@ -216,7 +222,6 @@ DEFAULT_VALUES = {
     'PUSHD_MINUS': False,
     'PUSHD_SILENT': False,
     'RAISE_SUBPROC_ERROR': False,
-    'RC_FILES': (),
     'RIGHT_PROMPT': '',
     'SHELL_TYPE': 'best',
     'SUGGEST_COMMANDS': True,
@@ -230,10 +235,7 @@ DEFAULT_VALUES = {
     'XDG_CONFIG_HOME': os.path.expanduser(os.path.join('~', '.config')),
     'XDG_DATA_HOME': os.path.expanduser(os.path.join('~', '.local', 'share')),
     'XONSHCONFIG': xonshconfig,
-    'XONSHRC': ((os.path.join(os.environ['ALLUSERSPROFILE'],
-                              'xonsh', 'xonshrc'),
-                os.path.expanduser('~/.xonshrc')) if ON_WINDOWS
-               else ('/etc/xonshrc', os.path.expanduser('~/.xonshrc'))),
+    'XONSHRC': DEFAULT_XONSHRC,
     'XONSH_CACHE_SCRIPTS': True,
     'XONSH_CACHE_EVERYTHING': False,
     'XONSH_COLOR_STYLE': 'default',
@@ -403,9 +405,6 @@ DEFAULT_DOCS = {
         'This is most useful in xonsh scripts or modules where failures '
         'should cause an end to execution. This is less useful at a terminal. '
         'The error that is raised is a subprocess.CalledProcessError.'),
-    'RC_FILES': VarDocs(
-        'List of strings representing filenames of run control files we '
-        'attempted to load.'),
     'RIGHT_PROMPT': VarDocs('Template string for right-aligned text '
         'at the prompt. This may be parameterized in the same way as '
         'the $PROMPT variable. Currently, this is only available in the '
@@ -1301,7 +1300,6 @@ def load_static_config(ctx, config=None):
 
 def xonshrc_context(rcfiles=None, execer=None, initial=None):
     """Attempts to read in xonshrc file, and return the contents."""
-    builtins.__xonsh_env__['RC_FILES'] = tuple(rcfiles)
     loaded = builtins.__xonsh_env__['LOADED_RC_FILES'] = []
     if initial is None:
         env = {}
@@ -1309,6 +1307,7 @@ def xonshrc_context(rcfiles=None, execer=None, initial=None):
         env = initial
     if rcfiles is None or execer is None:
         return env
+    env['XONSHRC'] = tuple(rcfiles)
     for rcfile in rcfiles:
         if not os.path.isfile(rcfile):
             loaded.append(False)
