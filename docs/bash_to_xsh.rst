@@ -15,7 +15,7 @@ will help you put a finger on how to do the equivelent task in xonsh.
       - ``$NAME``
       - Look up an environment variable by name.
     * - ``something/$SOME_VAR/$(some_command)``
-      - ``@('something/' + $SOME_VAR + $(some_command).strip())``
+      - ``'something/' + $SOME_VAR + $(some_command).strip()``
       - Concatenate a variable or text with the result of running a command.
     * - ``${${VAR}}``
       - ``${var or expr}``
