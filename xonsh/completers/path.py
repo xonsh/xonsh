@@ -151,7 +151,8 @@ def _quote_paths(paths, start, end):
     return out
 
 
-def joinpath(path):
+def _joinpath(path):
+    # convert our tuple representation back into a string representing a path
     if path is None:
         return ''
     elif len(path) == 0:
@@ -164,16 +165,18 @@ def joinpath(path):
         return _normpath(os.path.join(*path))
 
 
-def splitpath(path):
+def _splitpath(path):
+    # convert a path into an intermediate tuple representation
+    # if this tuple starts with '', it means that the path was an absolute path
     path = _normpath(path)
     if path.startswith(get_sep()):
         pre = ('', )
     else:
         pre = ()
-    return pre + _splitpath(path, ())
+    return pre + _splitpath_helper(path, ())
 
 
-def _splitpath(path, sofar=()):
+def _splitpath_helper(path, sofar=()):
     folder, path = os.path.split(path)
     if path == "":
         return sofar[::-1]
@@ -183,15 +186,23 @@ def _splitpath(path, sofar=()):
         return _splitpath(folder, sofar + (path, ))
 
 
-def expanded_match(ref, typed):
+def fuzzy_match(ref, typed):
+    """
+    Detects whether typed is a subsequence of ref.
+
+    Returns ``True`` if the characters in ``typed`` appear (in order) in
+    ``ref``, regardless of exactly where in ``ref`` they occur.
+
+    Used in "fuzzy" path completion (e.g., ~/u/ro expands to ~/lou/carcohl)
+    """
     if len(typed) == 0:
         return True
     elif len(ref) == 0:
         return False
     elif ref[0] == typed[0]:
-        return expanded_match(ref[1:], typed[1:])
+        return fuzzy_match(ref[1:], typed[1:])
     else:
-        return expanded_match(ref[1:], typed)
+        return fuzzy_match(ref[1:], typed)
 
 
 def _expand_one(sofar, nextone):
@@ -200,7 +211,7 @@ def _expand_one(sofar, nextone):
         _glob = os.path.join(joinpath(i), '*') if i is not None else '*'
         for j in iglobpath(_glob):
             j = os.path.basename(j)
-            if expanded_match(j, nextone):
+            if fuzzy_match(j, nextone):
                 out.add((i or ()) + (j, ))
     return out
 
@@ -224,6 +235,10 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True):
     for s in iglobpath(prefix + '*', ignore_case=(not csc)):
         paths.add(s)
     if env.get('FUZZY_PATH_COMPLETION'):
+        # this block implements 'fuzzy' matching, similar to fish and zsh.
+        # matches are based on subsequences, not substrings.
+        # e.g., ~/u/ro completes to ~/lou/carcolh
+        # see above functions for details.
         p = splitpath(os.path.expanduser(prefix))
         if len(p) != 0:
             if p[0] == '':
