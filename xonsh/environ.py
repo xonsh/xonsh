@@ -831,23 +831,29 @@ def get_git_branch():
     return branch
 
 
-def _get_parent_dir_for(path, dir_name):
+def _get_parent_dir_for(path, dir_name, timeout):
     # walk up the directory tree to see if we are inside an hg repo
+    # the timeout makes sure that we don't thrash the file system
     previous_path = ''
-    while path != previous_path:
+    t0 = time.time()
+    while path != previous_path and ((time.time() - t0) < timeout):
         if os.path.isdir(os.path.join(path, dir_name)):
             return path
         previous_path = path
         path, _ = os.path.split(path)
-    return False
+    return (path == previous_path)
 
 
 def get_hg_branch(cwd=None, root=None):
     env = builtins.__xonsh_env__
     cwd = env['PWD']
-    root = _get_parent_dir_for(cwd, '.hg')
-    if not root:
-        return ''  # Bail if we're not in a repo
+    root = _get_parent_dir_for(cwd, '.hg', env['VC_BRANCH_TIMEOUT'])
+    if not isinstance(root, str):
+        # Bail if we are not in a repo or we timed out
+        if root:
+            return ''
+        else:
+            return subprocess.TimeoutExpired(['hg'], env['VC_BRANCH_TIMEOUT'])
     # get branch name
     branch_path = os.path.sep.join([root, '.hg', 'branch'])
     if os.path.exists(branch_path):
