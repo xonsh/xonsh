@@ -8,6 +8,7 @@ Current Developments
 
 * Tab completers can now raise ``StopIteration`` to prevent consideration of
   remaining completers.
+* Added tab completer for the ``completer`` alias.
 
 **Changed:**
 
