@@ -46,7 +46,7 @@ v0.3.4
   ``activate``/``deactivate`` aliases for the conda environements. 
 * Fixed crash resulting from errors other than syntax errors in run control
   file.
-
+* Strip leading space in commands passed using the "-c" switch
 
 
 v0.3.3
