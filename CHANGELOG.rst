@@ -4,7 +4,10 @@ Xonsh Change Log
 
 Current Developments
 ====================
-**Added:** None
+**Added:**
+
+* Tab completers can now raise ``StopIteration`` to prevent consideration of
+  remaining completers.
 
 **Changed:**
 
