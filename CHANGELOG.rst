@@ -6,6 +6,20 @@ Current Developments
 ====================
 **Added:** None
 
+**Changed:** None
+
+**Deprecated:** None
+
+**Removed:** None
+
+**Fixed:** None
+
+**Security:** None
+
+v0.3.4
+====================
+
+
 **Changed:**
 
 * ``$PROMPT`` from foreign shells is now ignored.
@@ -14,9 +28,9 @@ Current Developments
 * Only show the prompt for the wizard if we did not attempt to load any run
   control files (as opposed to if none were successfully loaded).
 
-**Deprecated:** None
 
-**Removed:** None
+
+
 
 **Fixed:**
 
@@ -33,7 +47,7 @@ Current Developments
 * Fixed crash resulting from errors other than syntax errors in run control
   file.
 
-**Security:** None
+
 
 v0.3.3
 ====================
