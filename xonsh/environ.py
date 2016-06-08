@@ -799,6 +799,10 @@ def _get_parent_dir_for(path, dir_name):
 
 
 def get_git_branch(cwd=None):
+    """Attempts to find the current git branch.  If no branch is found, then
+    an empty string is returned. If a timeout occured, the timeout exception
+    (subprocess.TimeoutExpired) is returned.
+    """
     branch = None
     vcbt = builtins.__xonsh_env__['VC_BRANCH_TIMEOUT']
     if not ON_WINDOWS:
@@ -878,9 +882,10 @@ def get_hg_branch(cwd=None, root=None):
 
 
 def current_branch(pad=True):
-    """Gets the branch for a current working directory. Returns None
+    """Gets the branch for a current working directory. Returns an empty string
     if the cwd is not a repository.  This currently only works for git and hg
-    and should be extended in the future.
+    and should be extended in the future.  If a timeout occured, the string
+    '<branch-timeout>' is returned.
     """
     branch = ''
     cmds = builtins.__xonsh_commands_cache__
@@ -896,25 +901,26 @@ def current_branch(pad=True):
 
 
 def git_dirty_working_directory(cwd=None, include_untracked=False):
+    """Returns whether or not the git directory is dirty. If this could not
+    be determined (timeout, file not sound, etc.) then this returns None.
+    """
+    cmd = ['git', 'status', '--porcelain']
+    if include_untracked:
+        cmd.append('--untracked-files=normal')
+    else:
+        cmd.append('--untracked-files=no')
+    vcbt = builtins.__xonsh_env__['VC_BRANCH_TIMEOUT']
     try:
-        cmd = ['git', 'status', '--porcelain']
-        if include_untracked:
-            cmd.append('--untracked-files=normal')
-        else:
-            cmd.append('--untracked-files=no')
-        s = subprocess.check_output(cmd,
-                                    stderr=subprocess.PIPE,
-                                    cwd=cwd,
-                                    universal_newlines=True)
-        if len(s) == 0:
-            # Workaround for a bug in ConEMU/cmder
-            # retry without redirection
-            s = subprocess.check_output(cmd,
-                                        cwd=cwd,
+        s = subprocess.check_output(cmd, stderr=subprocess.PIPE, cwd=cwd,
+                                    timeout=vcbt, universal_newlines=True)
+        if ON_WINDOWS and len(s) == 0:
+            # Workaround for a bug in ConEMU/cmder, retry without redirection
+            s = subprocess.check_output(cmd, cwd=cwd, timeout=vcbt,
                                         universal_newlines=True)
         return bool(s)
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return False
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired,
+            FileNotFoundError):
+        return None
 
 
 #@ensure_hg
@@ -927,21 +933,45 @@ def hg_dirty_working_directory(cwd=None, root=None):
 
 def dirty_working_directory(cwd=None):
     """Returns a boolean as to whether there are uncommitted files in version
-    control repository we are inside. Currently supports git and hg.
+    control repository we are inside. If this cannot be determined, returns
+    None. Currently supports git and hg.
     """
-    return git_dirty_working_directory() or hg_dirty_working_directory()
+    dwd = None
+    cmds = builtins.__xonsh_commands_cache__
+    if cmds.lazyin('git') or cmds.lazylen() == 0:
+        dwd = git_dirty_working_directory()
+    if (cmds.lazyin('hg') or cmds.lazylen() == 0) and not dwd:
+        dwd = hg_dirty_working_directory()
+    return dwd
 
 
 def branch_color():
-    """Return red if the current branch is dirty, otherwise green"""
-    return ('{BOLD_INTENSE_RED}' if dirty_working_directory() else
-            '{BOLD_INTENSE_GREEN}')
+    """Return red if the current branch is dirty, yellow if the dirtiness can
+    not be determined, and green if it clean. Thes are bold, intesnse colors
+    for the foreground.
+    """
+    dwd = dirty_working_directory()
+    if dwd is None:
+        color = '{BOLD_INTENSE_YELLOW}'
+    elif dwd:
+        color = '{BOLD_INTENSE_GREEN}'
+    else:
+        color = '{BOLD_INTENSE_RED}'
+    return color
 
 
 def branch_bg_color():
-    """Return red if the current branch is dirty, otherwise green"""
-    return ('{BACKGROUND_RED}' if dirty_working_directory() else
-            '{BACKGROUND_GREEN}')
+    """Return red if the current branch is dirty, yellow if the dirtiness can
+    not be determined, and green if it clean. These are bacground colors.
+    """
+    dwd = dirty_working_directory()
+    if dwd is None:
+        color = '{BACKGROUND_YELLOW}'
+    elif dwd:
+        color = '{BACKGROUND_GREEN}'
+    else:
+        color = '{BACKGROUND_RED}'
+    return color
 
 
 def _replace_home(x):
