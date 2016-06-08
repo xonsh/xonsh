@@ -196,7 +196,7 @@ def partial_color_tokenize(template):
         styles = None
     color = Color.NO_COLOR
     try:
-        toks, color = _partial_color_tokenize_main(template)
+        toks, color = _partial_color_tokenize_main(template, styles)
     except:
         toks = [(Color.NO_COLOR, template)]
     if styles is not None:
@@ -204,7 +204,7 @@ def partial_color_tokenize(template):
     return toks
 
 
-def _partial_color_tokenize_main(template):
+def _partial_color_tokenize_main(template, styles):
     formatter = string.Formatter()
     bopen = '{'
     bclose = '}'
