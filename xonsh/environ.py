@@ -177,6 +177,12 @@ def xonshconfig(env):
     xc = os.path.join(xcd, 'config.json')
     return xc
 
+if ON_WINDOWS:
+    DEFAULT_XONSHRC = (os.path.join(os.environ['ALLUSERSPROFILE'],
+                                     'xonsh', 'xonshrc'),
+                       os.path.expanduser('~/.xonshrc'))
+else:
+    DEFAULT_XONSHRC = ('/etc/xonshrc', os.path.expanduser('~/.xonshrc'))
 
 # Default values should generally be immutable, that way if a user wants
 # to set them they have to do a copy and write them to the environment.
@@ -229,10 +235,7 @@ DEFAULT_VALUES = {
     'XDG_CONFIG_HOME': os.path.expanduser(os.path.join('~', '.config')),
     'XDG_DATA_HOME': os.path.expanduser(os.path.join('~', '.local', 'share')),
     'XONSHCONFIG': xonshconfig,
-    'XONSHRC': ((os.path.join(os.environ['ALLUSERSPROFILE'],
-                              'xonsh', 'xonshrc'),
-                os.path.expanduser('~/.xonshrc')) if ON_WINDOWS
-               else ('/etc/xonshrc', os.path.expanduser('~/.xonshrc'))),
+    'XONSHRC': DEFAULT_XONSHRC,
     'XONSH_CACHE_SCRIPTS': True,
     'XONSH_CACHE_EVERYTHING': False,
     'XONSH_COLOR_STYLE': 'default',
@@ -1304,6 +1307,7 @@ def xonshrc_context(rcfiles=None, execer=None, initial=None):
         env = initial
     if rcfiles is None or execer is None:
         return env
+    env['XONSHRC'] = tuple(rcfiles)
     for rcfile in rcfiles:
         if not os.path.isfile(rcfile):
             loaded.append(False)
@@ -1314,6 +1318,11 @@ def xonshrc_context(rcfiles=None, execer=None, initial=None):
         except SyntaxError as err:
             loaded.append(False)
             msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
+            warn(msg.format(rcfile, err), RuntimeWarning)
+            continue
+        except Exception as err:
+            loaded.append(False)
+            msg = 'error running xonsh run control file {0!r}: {1!s}'
             warn(msg.format(rcfile, err), RuntimeWarning)
             continue
     return env
