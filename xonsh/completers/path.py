@@ -183,7 +183,7 @@ def _splitpath_helper(path, sofar=()):
     elif folder == "":
         return (sofar + (path, ))[::-1]
     else:
-        return _splitpath(folder, sofar + (path, ))
+        return _splitpath_helper(folder, sofar + (path, ))
 
 
 def fuzzy_match(ref, typed):
@@ -208,7 +208,7 @@ def fuzzy_match(ref, typed):
 def _expand_one(sofar, nextone):
     out = set()
     for i in sofar:
-        _glob = os.path.join(joinpath(i), '*') if i is not None else '*'
+        _glob = os.path.join(_joinpath(i), '*') if i is not None else '*'
         for j in iglobpath(_glob):
             j = os.path.basename(j)
             if fuzzy_match(j, nextone):
@@ -239,7 +239,7 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True):
         # matches are based on subsequences, not substrings.
         # e.g., ~/u/ro completes to ~/lou/carcolh
         # see above functions for details.
-        p = splitpath(os.path.expanduser(prefix))
+        p = _splitpath(os.path.expanduser(prefix))
         if len(p) != 0:
             if p[0] == '':
                 basedir = ('', )
@@ -249,7 +249,7 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True):
             matches_so_far = {basedir}
             for i in p:
                 matches_so_far = _expand_one(matches_so_far, i)
-            paths |= {joinpath(i) for i in matches_so_far}
+            paths |= {_joinpath(i) for i in matches_so_far}
     if tilde in prefix:
         home = os.path.expanduser(tilde)
         paths = {s.replace(home, tilde) for s in paths}
