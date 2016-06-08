@@ -388,7 +388,8 @@ DEFAULT_DOCS = {
     'PROMPT': VarDocs(
         'The prompt text. May contain keyword arguments which are '
         "auto-formatted, see 'Customizing the Prompt' at "
-        'http://xon.sh/tutorial.html#customizing-the-prompt.',
+        'http://xon.sh/tutorial.html#customizing-the-prompt. '
+        'This value is never inherited from parent processes.',
         default='xonsh.environ.DEFAULT_PROMPT'),
     'PUSHD_MINUS': VarDocs(
         'Flag for directory pushing functionality. False is the normal '
@@ -1148,6 +1149,14 @@ def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
 
 def partial_format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
     """Formats a xonsh prompt template string."""
+    try:
+        return _partial_format_prompt_main(template=template,
+                                           formatter_dict=formatter_dict)
+    except:
+        return template
+
+
+def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
     template = template() if callable(template) else template
     fmtter = _get_fmtter(formatter_dict)
     bopen = '{'
@@ -1160,7 +1169,7 @@ def partial_format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
         if field is None:
             continue
         elif field.startswith('$'):
-            v = builtins.__xonsh_env__[name[1:]]  # FIXME `name` is an unresolved ref
+            v = builtins.__xonsh_env__[field[1:]]
             v = _FORMATTER.convert_field(v, conv)
             v = _FORMATTER.format_field(v, spec)
             toks.append(v)
@@ -1313,7 +1322,7 @@ def xonshrc_context(rcfiles=None, execer=None, initial=None):
 def windows_foreign_env_fixes(ctx):
     """Environment fixes for Windows. Operates in-place."""
     # remove these bash variables which only cause problems.
-    for ev in ['HOME', 'OLDPWD', 'PROMPT']:
+    for ev in ['HOME', 'OLDPWD']:
         if ev in ctx:
             del ctx[ev]
     # Override path-related bash variables; on Windows bash uses
@@ -1327,17 +1336,22 @@ def windows_foreign_env_fixes(ctx):
     ctx['PWD'] = _get_cwd()
 
 
+def foreign_env_fixes(ctx):
+    """Environment fixes for all operating systems"""
+    if 'PROMPT' in ctx:
+        del ctx['PROMPT']
+
+
 def default_env(env=None, config=None, login=True):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence
     ctx = dict(BASE_ENV)
     ctx.update(os.environ)
-    if ON_WINDOWS:
-        # Windows style PROMPT definitions don't work in XONSH:
-        try:
-            del ctx['PROMPT']
-        except KeyError:
-            pass
+    # other shells' PROMPT definitions generally don't work in XONSH:
+    try:
+        del ctx['PROMPT']
+    except KeyError:
+        pass
 
     if login:
         conf = load_static_config(ctx, config=config)
@@ -1346,6 +1360,7 @@ def default_env(env=None, config=None, login=True):
                                         issue_warning=False)
         if ON_WINDOWS:
             windows_foreign_env_fixes(foreign_env)
+        foreign_env_fixes(foreign_env)
 
         ctx.update(foreign_env)
 

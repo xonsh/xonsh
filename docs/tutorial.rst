@@ -1044,10 +1044,16 @@ detail is available on the `Tab Completion page <tutorial_completers.html>`_.
 
 Customizing the Prompt
 ======================
-Customizing the prompt is probably the most common reason for altering an
-environment variable.  The ``PROMPT`` variable can be a string, or it can be a
-function (of no arguments) that returns a string.  The result can contain
-keyword arguments, which will be replaced automatically:
+Customizing the prompt by modifying ``$PROMPT`` is probably the most common
+reason for altering an environment variable.
+
+.. note:: Note that the ``$PROMPT`` variable will never be inherited from a
+          parent process (regardless of whether that parent is a foreign shell
+          or an instance of xonsh).
+
+The ``$PROMPT`` variable can be a string, or it can be a function (of no
+arguments) that returns a string.  The result can contain keyword arguments,
+which will be replaced automatically:
 
 .. code-block:: xonshcon
 
