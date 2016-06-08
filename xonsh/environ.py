@@ -787,24 +787,16 @@ def locate_binary(name):
         return None
 
 
-def _get_parent_dir_for(path, dir_name):
-    # walk up the directory tree to see if we are inside an hg repo
-    previous_path = ''
-    while path != previous_path:
-        if os.path.isdir(os.path.join(path, dir_name)):
-            return path
-        previous_path = path
-        path, _ = os.path.split(path)
-    return False
-
-
-def get_git_branch(cwd=None):
+def get_git_branch():
     """Attempts to find the current git branch.  If no branch is found, then
     an empty string is returned. If a timeout occured, the timeout exception
     (subprocess.TimeoutExpired) is returned.
     """
     branch = None
-    vcbt = builtins.__xonsh_env__['VC_BRANCH_TIMEOUT']
+    env = builtins.__xonsh_env__
+    cwd = env['PWD']
+    denv = env.detype()
+    vcbt = env['VC_BRANCH_TIMEOUT']
     if not ON_WINDOWS:
         prompt_scripts = ['/usr/lib/git-core/git-sh-prompt',
                           '/usr/local/etc/bash_completion.d/git-prompt.sh']
@@ -813,7 +805,7 @@ def get_git_branch(cwd=None):
             inp = 'source {}; __git_ps1 "${{1:-%s}}"'.format(script)
             try:
                 branch = subprocess.check_output(['bash'], cwd=cwd, input=inp,
-                            stderr=subprocess.PIPE, timeout=vcbt,
+                            stderr=subprocess.PIPE, timeout=vcbt, env=denv,
                             universal_newlines=True)
                 break
             except subprocess.TimeoutExpired as e:
@@ -825,12 +817,12 @@ def get_git_branch(cwd=None):
     if branch is None:
         cmd = ['git', 'rev-parse', '--abbrev-ref', 'HEAD']
         try:
-            s = subprocess.check_output(cmd, cwd=cwd, timeout=vcbt,
+            s = subprocess.check_output(cmd, cwd=cwd, timeout=vcbt, env=denv,
                     stderr=subprocess.PIPE, universal_newlines=True)
             if ON_WINDOWS and len(s) == 0:
                 # Workaround for a bug in ConEMU/cmder, retry without redirection
                 s = subprocess.check_output(cmd, cwd=cwd, timeout=vcbt,
-                                            universal_newlines=True)
+                                            env=denv, universal_newlines=True)
             branch = s.strip()
         except subprocess.TimeoutExpired as e:
             branch = e
@@ -839,46 +831,40 @@ def get_git_branch(cwd=None):
     return branch
 
 
-def call_hg_command(command, cwd):
-    # Override user configurations settings and aliases
-    hg_env = builtins.__xonsh_env__.detype()
-    hg_env['HGRCPATH'] = ""
-    s = None
-    try:
-        s = subprocess.check_output(['hg'] + command,
-                                    stderr=subprocess.PIPE,
-                                    cwd=cwd,
-                                    universal_newlines=True,
-                                    env=hg_env)
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        pass
-    return s
+def _get_parent_dir_for(path, dir_name):
+    # walk up the directory tree to see if we are inside an hg repo
+    previous_path = ''
+    while path != previous_path:
+        if os.path.isdir(os.path.join(path, dir_name)):
+            return path
+        previous_path = path
+        path, _ = os.path.split(path)
+    return False
 
 
-#@ensure_hg
 def get_hg_branch(cwd=None, root=None):
-    branch = None
-    active_bookmark = None
-
-    if root is not None:
-        branch_path = os.path.sep.join([root, '.hg', 'branch'])
-        bookmark_path = os.path.sep.join([root, '.hg', 'bookmarks.current'])
-
-        if os.path.exists(branch_path):
-            with open(branch_path, 'r') as branch_file:
-                branch = branch_file.read()
-        else:
-            branch = 'default'
-
-        if os.path.exists(bookmark_path):
-            with open(bookmark_path, 'r') as bookmark_file:
-                active_bookmark = bookmark_file.read()
-
-    if active_bookmark is not None:
-        return "{0}, {1}".format(
-            *(b.strip(os.linesep) for b in (branch, active_bookmark)))
-
-    return branch.strip(os.linesep) if branch else None
+    env = builtins.__xonsh_env__
+    cwd = env['PWD']
+    root = _get_parent_dir_for(cwd, '.hg')
+    if not root:
+        return ''  # Bail if we're not in a repo
+    # get branch name
+    branch_path = os.path.sep.join([root, '.hg', 'branch'])
+    if os.path.exists(branch_path):
+        with open(branch_path, 'r') as branch_file:
+            branch = branch_file.read()
+    else:
+        branch = 'default'
+    # add bookmark, if we can
+    bookmark_path = os.path.sep.join([root, '.hg', 'bookmarks.current'])
+    if os.path.exists(bookmark_path):
+        with open(bookmark_path, 'r') as bookmark_file:
+            active_bookmark = bookmark_file.read()
+        branch = "{0}, {1}".format(*(b.strip(os.linesep) for b in
+                                   (branch, active_bookmark)))
+    else:
+        branch = branch.strip(os.linesep)
+    return branch
 
 
 def current_branch(pad=True):
@@ -909,26 +895,42 @@ def git_dirty_working_directory(cwd=None, include_untracked=False):
         cmd.append('--untracked-files=normal')
     else:
         cmd.append('--untracked-files=no')
-    vcbt = builtins.__xonsh_env__['VC_BRANCH_TIMEOUT']
+    env = builtins.__xonsh_env__
+    cwd = env['PWD']
+    denv = env.detype()
+    vcbt = env['VC_BRANCH_TIMEOUT']
     try:
         s = subprocess.check_output(cmd, stderr=subprocess.PIPE, cwd=cwd,
-                                    timeout=vcbt, universal_newlines=True)
+                                    timeout=vcbt, universal_newlines=True,
+                                    env=denv)
         if ON_WINDOWS and len(s) == 0:
             # Workaround for a bug in ConEMU/cmder, retry without redirection
             s = subprocess.check_output(cmd, cwd=cwd, timeout=vcbt,
-                                        universal_newlines=True)
+                                        env=denv, universal_newlines=True)
         return bool(s)
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired,
             FileNotFoundError):
         return None
 
 
-#@ensure_hg
-def hg_dirty_working_directory(cwd=None, root=None):
-    id = call_hg_command(['identify', '--id'], cwd)
-    if id is None:
-        return False
-    return id.strip(os.linesep).endswith('+')
+def hg_dirty_working_directory():
+    """Computes whether or not the mercurial working directory is dirty or not.
+    If this cannot be deterimined, None is returned.
+    """
+    env = builtins.__xonsh_env__
+    cwd = env['PWD']
+    denv = env.detype()
+    vcbt = env['VC_BRANCH_TIMEOUT']
+    # Override user configurations settings and aliases
+    denv['HGRCPATH'] = ''
+    try:
+        s = subprocess.check_output(['hg', 'identify', '--id'],
+                stderr=subprocess.PIPE, cwd=cwd, timeout=vcbt,
+                universal_newlines=True, env=denv)
+        return s.strip(os.linesep).endswith('+')
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired,
+            FileNotFoundError):
+        return None
 
 
 def dirty_working_directory(cwd=None):
