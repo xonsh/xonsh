@@ -15,7 +15,7 @@ import builtins
 from functools import wraps
 from threading import Thread
 from collections import Sequence, namedtuple
-from subprocess import Popen, PIPE, DEVNULL, STDOUT, TimeoutExpired
+from subprocess import Popen, PIPE, DEVNULL, STDOUT, TimeoutExpired, CalledProcessError
 
 from xonsh.tools import (redirect_stdout, redirect_stderr, ON_WINDOWS, ON_LINUX,
                          fallback, print_exception)
@@ -549,6 +549,23 @@ class CompletedCommand(_CCTuple):
     def __bool__(self):
         return self.returncode == 0
 
+    def __iter__(self):
+        start = 0;
+        end = self.stdout.find('\n')
+        while end != -1:
+            yield self.stdout[start:end + 1]
+            start = end + 1
+            end = self.stdout.find('\n', start)
+        yield self.stdout[start:end]
+        if self.rtn:
+            error = CalledProcessError(
+                self.returncode, 
+                self.alias, 
+                self.out, 
+                self)
+            error.completed_command = self
+            raise error
+            
     @property
     def inp(self):
         """Creates normalized input string from args."""
