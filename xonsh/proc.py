@@ -541,7 +541,8 @@ _CCTuple = namedtuple("_CCTuple", ["stdin",
                                    "stdin_redirect",
                                    "stdout_redirect",
                                    "stderr_redirect",
-                                   "timestamp"])
+                                   "timestamp",
+                                   "executed_cmd"])
 
 class CompletedCommand(_CCTuple):
     """Represents a completed subprocess-mode command."""
@@ -564,15 +565,11 @@ class CompletedCommand(_CCTuple):
             if snippet or not (end == -1):
                 yield snippet
             start = end + 1    # to the other side of \n
-        # No \n was found.  ..if a \r is present, it's without \n -- so it
-        # doesn't count as a line ending. ..return all text on the tail.
-        #yield repr(stdout[start:])
         if self.returncode:
-            error = CalledProcessError(
-                self.returncode, 
-                self.args,
-                stdout,
-                self)
+            # I included self, as providing access to stderr and other details
+            # useful when instance isn't assigned to a variable in the shell.
+            cmd = self.executed_cmd
+            error = CalledProcessError(self.returncode, cmd, stdout, self)
             error.completed_command = self
             raise error
             
