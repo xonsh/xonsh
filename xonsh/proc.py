@@ -566,6 +566,9 @@ class CompletedCommand(_CCTuple):
             yield pre
             pre = post
 
+
+    def itercheck(self):
+        yield from self
         if self.returncode:
             # I included self, as providing access to stderr and other details
             # useful when instance isn't assigned to a variable in the shell.
