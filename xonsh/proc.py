@@ -550,18 +550,28 @@ class CompletedCommand(_CCTuple):
         return self.returncode == 0
 
     def __iter__(self):
+        stdout = self.stdout
         start = 0;
-        end = self.stdout.find('\n')
+        end = 0
         while end != -1:
-            yield self.stdout[start:end + 1]
-            start = end + 1
-            end = self.stdout.find('\n', start)
-        yield self.stdout[start:end]
-        if self.rtn:
+            end = stdout.find('\n', start)
+            if end == -1:                # no newlines, but possibly more text
+                snippet = stdout[start:]
+            elif stdout[end-1] == '\r':  # newline, check for CR
+                snippet = stdout[start:end-1]
+            else:                        # newline, no CR
+                snippet = stdout[start:end]
+            if snippet or not (end == -1):
+                yield snippet
+            start = end + 1    # to the other side of \n
+        # No \n was found.  ..if a \r is present, it's without \n -- so it
+        # doesn't count as a line ending. ..return all text on the tail.
+        #yield repr(stdout[start:])
+        if self.returncode:
             error = CalledProcessError(
                 self.returncode, 
-                self.alias, 
-                self.out, 
+                self.args,
+                stdout,
                 self)
             error.completed_command = self
             raise error
