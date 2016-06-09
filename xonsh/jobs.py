@@ -87,18 +87,39 @@ else:
 
     _shell_pgrp = os.getpgrp()
 
-    _block_when_giving = (signal.SIGTTOU, signal.SIGTTIN, signal.SIGTSTP)
+    _block_when_giving = (signal.SIGTTOU, signal.SIGTTIN,
+                          signal.SIGTSTP, signal.SIGCHLD)
 
-    def _give_terminal_to(pgid):
-        # over-simplified version of:
-        #    give_terminal_to from bash 4.3 source, jobs.c, line 4030
-        # this will give the terminal to the process group pgid
-        if _shell_tty is not None and os.isatty(_shell_tty):
-            if not ON_CYGWIN:
+    if ON_CYGWIN:
+        import ctypes
+        _libc = ctypes.CDLL('cygwin1.dll')
+
+        def _give_terminal_to(pgid):
+            # over-simplified version of:
+            #    give_terminal_to from bash 4.3 source, jobs.c, line 4030
+            # this will give the terminal to the process group pgid
+            if _shell_tty is not None and os.isatty(_shell_tty):
+                omask = ctypes.c_ulong()
+                mask = ctypes.c_ulong()
+                _libc.sigemptyset(ctypes.byref(mask))
+                for i in _block_when_giving:
+                    _libc.sigaddset(ctypes.byref(mask), ctypes.c_int(i))
+                _libc.sigemptyset(ctypes.byref(omask))
+                _libc.sigprocmask(ctypes.c_int(signal.SIG_BLOCK),
+                                  ctypes.byref(mask),
+                                  ctypes.byref(omask))
+                _libc.tcsetpgrp(ctypes.c_int(_shell_tty), ctypes.c_int(pgid))
+                _libc.sigprocmask(ctypes.c_int(signal.SIG_SETMASK),
+                                  ctypes.byref(omask), None)
+    else:
+        def _give_terminal_to(pgid):
+            # over-simplified version of:
+            #    give_terminal_to from bash 4.3 source, jobs.c, line 4030
+            # this will give the terminal to the process group pgid
+            if _shell_tty is not None and os.isatty(_shell_tty):
                 oldmask = signal.pthread_sigmask(signal.SIG_BLOCK,
                                                  _block_when_giving)
-            os.tcsetpgrp(_shell_tty, pgid)
-            if not ON_CYGWIN:
+                os.tcsetpgrp(_shell_tty, pgid)
                 signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
 
     # check for shell tty
