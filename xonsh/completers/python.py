@@ -67,11 +67,11 @@ def attr_complete(prefix, ctx, filter_func):
     _ctx = None
     xonsh_safe_eval = builtins.__xonsh_execer__.eval
     try:
-        val = xonsh_safe_eval(expr, ctx, wrap_subprocs=False)
+        val = xonsh_safe_eval(expr, ctx, transform=False)
         _ctx = ctx
     except:  # pylint:disable=bare-except
         try:
-            val = xonsh_safe_eval(expr, builtins.__dict__, wrap_subprocs=False)
+            val = xonsh_safe_eval(expr, builtins.__dict__, transform=False)
             _ctx = builtins.__dict__
         except:  # pylint:disable=bare-except
             return attrs  # anything could have gone wrong!
@@ -84,7 +84,7 @@ def attr_complete(prefix, ctx, filter_func):
         # check whether these options actually work (e.g., disallow 7.imag)
         try:
             _val = '{0}.{1}'.format(expr, opt)
-            xonsh_safe_eval(_val, _ctx, wrap_subprocs=False)
+            xonsh_safe_eval(_val, _ctx, transform=False)
         except:  # pylint:disable=bare-except
             continue
         a = getattr(val, opt)
