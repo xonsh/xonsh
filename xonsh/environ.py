@@ -1141,7 +1141,7 @@ def _failover_template_format(template):
             # Exceptions raises from function of producing $PROMPT
             # in user's xonshrc should not crash xonsh
             return template()
-        except:
+        except Exception:
             print_exception()
             return '$ '
     return template
