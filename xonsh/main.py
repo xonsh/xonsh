@@ -245,13 +245,15 @@ def main(argv=None):
             sys.argv = args.args
             env['ARGS'] = [args.file] + args.args
             env['XONSH_SOURCE'] = path
-            run_script_with_cache(args.file, shell.execer, glb=shell.ctx, loc=None, mode='exec')
+            run_script_with_cache(args.file, shell.execer, glb=shell.ctx,
+                                  loc=None, mode='exec')
         else:
             print('xonsh: {0}: No such file or directory.'.format(args.file))
     elif args.mode == XonshMode.script_from_stdin:
         # run a script given on stdin
         code = sys.stdin.read()
-        run_code_with_cache(code, shell.execer, glb=shell.ctx, loc=None, mode='exec')
+        run_code_with_cache(code, shell.execer, glb=shell.ctx, loc=None,
+                            mode='exec')
     else:
         # otherwise, enter the shell
         env['XONSH_INTERACTIVE'] = True

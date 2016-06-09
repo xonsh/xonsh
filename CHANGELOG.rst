@@ -4,16 +4,29 @@ Xonsh Change Log
 
 Current Developments
 ====================
-**Added:** 
+**Added:**
 
-* Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
-  the currently running script's path
+* New ``Block`` and ``Functor`` context managers are now available as
+  part of the ``xonsh.contexts`` module.
+* ``Block`` provides support for turning a context body into a non-executing
+  list of string lines. This is implmement via a syntax tree transformation.
+  This is useful for creating remote execution tools that seek to prevent
+  local execution.
+* ``Functor`` is a subclass of the ``Block`` context manager that turns the
+  block into a callable object.  The function object is available via the
+  ``func()`` attribute.  However, the ``Functor`` instance is itself callable
+  and will dispatch to ``func()``.
 * Tab completion of paths now includes zsh-style path expansion (subsequence
   matching), toggleable with ``$SUBSEQUENCE_PATH_COMPLETION``
 * Tab completion of paths now includes "fuzzy" matches that are accurate to
   within a few characters, toggleable with ``$FUZZY_PATH_COMPLETION``
+* Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
+  the currently running script's path
 
-**Changed:** None
+**Changed:**
+
+* Functions in ``Execer`` now take ``transform`` kwarg instead of
+  ``wrap_subproc``.
 
 **Deprecated:** None
 
@@ -23,6 +36,7 @@ Current Developments
 
 * Strip leading space in commands passed using the "-c" switch
 * Fixed xonfig wizard failing on Windows due to colon in created filename.
+* Fixed crash resulting from malformed ``$PROMPT`` or ``$TITLE``.
 
 **Security:** None
 
@@ -48,9 +62,9 @@ v0.3.4
 * Partial workaround for Cygwin where ``pthread_sigmask`` appears to be missing
   from the ``signal`` module.
 * Fixed crash resulting from malformed ``$PROMPT``.
-* Fixed regression on Windows with the locate_binary() function. 
-  The bug prevented `source-cmd` from working correctly and broke the 
-  ``activate``/``deactivate`` aliases for the conda environements. 
+* Fixed regression on Windows with the locate_binary() function.
+  The bug prevented `source-cmd` from working correctly and broke the
+  ``activate``/``deactivate`` aliases for the conda environements.
 * Fixed crash resulting from errors other than syntax errors in run control
   file.
 
@@ -73,15 +87,15 @@ v0.3.3
 * Tab completion now uses a different interface, which allows new completers
   to be implemented in Python.
 * Most functions in the ``Execer`` now take an extra argument
-  ``wrap_subprocs``, indicating whether the syntactially invalid expressions
-  should be wrapped in ``![]`` automatically
+  ``transform``, indicating whether the syntax tree transformations should
+  be applied.
 * ``prompt_toolkit`` is now loaded lazily, decreasing load times when using
   the ``readline`` shell.
 * RC files are now executed directly in the appropriate context.
 * ``_`` is now updated by ``![]``, to contain the appropriate
   ``CompletedCommand`` object.
 * On Windows if bash is not on the path look in the registry for the defaults
-  install directory for GitForWindows. 
+  install directory for GitForWindows.
 
 
 
@@ -93,8 +107,8 @@ v0.3.3
 
 * Fixed crashed bash-completer when bash is not avaiable on Windows
 * Fixed bug on Windows where tab-completion for executables would return all files.
-* Fixed bug on Windows which caused the bash $PROMPT variable to be used when no 
-  no $PROMPT variable was set in .xonshrc 
+* Fixed bug on Windows which caused the bash $PROMPT variable to be used when no
+  no $PROMPT variable was set in .xonshrc
 * Improved start-up times by caching information about bash completion
   functions
 * The --shell-type CLI flag now takes precedence over $SHELL_TYPE specified in
