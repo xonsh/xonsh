@@ -327,7 +327,7 @@ For example,
 The ``!()`` syntax captured more information about the command, as an instance
 of a class called ``CompletedCommand``.  This object contains more information
 about the result of the given command, including the return code, the process
-id, the stdanard output and standard error streams, and information about how
+id, the standard output and standard error streams, and information about how
 input and output were redirected.  For example:
 
 .. code-block:: xonshcon

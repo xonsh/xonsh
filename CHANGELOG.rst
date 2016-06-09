@@ -9,9 +9,24 @@ Current Developments
 * ``!(command)`` is now usefully iterable, yielding lines of stdout
 * Added XonshCalledProcessError, which includes the relevant CompletedCommand.
   Also handles differences between Py3.4 and 3.5 in CalledProcessError
+* XonshError and XonshCalledProcessError are now in builtins
+* New ``Block`` and ``Functor`` context managers are now available as
+  part of the ``xonsh.contexts`` module.
+* ``Block`` provides support for turning a context body into a non-executing
+  list of string lines. This is implmement via a syntax tree transformation.
+  This is useful for creating remote execution tools that seek to prevent
+  local execution.
+* ``Functor`` is a subclass of the ``Block`` context manager that turns the
+  block into a callable object.  The function object is available via the
+  ``func()`` attribute.  However, the ``Functor`` instance is itself callable
+  and will dispatch to ``func()``.
 * Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
   the currently running script's path
-* XonshError and XonshCalledProcessError are now in builtins
+
+**Changed:**
+
+* Functions in ``Execer`` now take ``transform`` kwarg instead of
+  ``wrap_subproc``.
 
 **Deprecated:** None
 
@@ -21,6 +36,7 @@ Current Developments
 
 * Strip leading space in commands passed using the "-c" switch
 * Fixed xonfig wizard failing on Windows due to colon in created filename.
+* Fixed crash resulting from malformed ``$PROMPT`` or ``$TITLE``.
 
 **Security:** None
 
@@ -71,8 +87,8 @@ v0.3.3
 * Tab completion now uses a different interface, which allows new completers
   to be implemented in Python.
 * Most functions in the ``Execer`` now take an extra argument
-  ``wrap_subprocs``, indicating whether the syntactially invalid expressions
-  should be wrapped in ``![]`` automatically
+  ``transform``, indicating whether the syntax tree transformations should
+  be applied.
 * ``prompt_toolkit`` is now loaded lazily, decreasing load times when using
   the ``readline`` shell.
 * RC files are now executed directly in the appropriate context.

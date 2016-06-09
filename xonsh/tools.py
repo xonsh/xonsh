@@ -72,6 +72,26 @@ class XonshCalledProcessError(XonshError, CalledProcessError):
         self.completed_command = completed_command
 
 
+class XonshBlockError(XonshError):
+    """Special xonsh exception for communicating the liens of block bodies."""
+
+    def __init__(self, lines, glbs, locs, *args, **kwargs):
+        """
+        Parameters
+        ----------
+        lines : list f str
+            Block lines, as if split by str.splitlines().
+        glbs : Mapping or None
+            Global execution context for lines, ie globals() of calling frame.
+        locs : Mapping or None
+            Local execution context for lines, ie locals() of calling frame.
+        """
+        super().__init__(*args, **kwargs)
+        self.lines = lines
+        self.glbs = glbs
+        self.locs = locs
+
+
 class DefaultNotGivenType(object):
     """Singleton for representing when no default value is given."""
 

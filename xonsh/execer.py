@@ -5,6 +5,7 @@ import sys
 import types
 import inspect
 import builtins
+import warnings
 from collections import Mapping
 
 from xonsh import ast
@@ -45,14 +46,14 @@ class Execer(object):
         if self.unload:
             unload_builtins()
 
-    def parse(self, input, ctx, mode='exec', wrap_subprocs=True):
+    def parse(self, input, ctx, mode='exec', transform=True):
         """Parses xonsh code in a context-aware fashion. For context-free
-        parsing, please use the Parser class directly.
+        parsing, please use the Parser class directly or pass in
+        transform=False.
         """
-        if ctx is None:
-            ctx = set()
-        elif isinstance(ctx, Mapping):
-            ctx = set(ctx.keys())
+        if not transform:
+            return self.parser.parse(input, filename=self.filename, mode=mode,
+                                     debug_level=(self.debug_level > 1))
 
         # Parsing actually happens in a couple of phases. The first is a
         # shortcut for a context-free parser. Normally, all subprocess
@@ -68,11 +69,7 @@ class Execer(object):
         # tokens for all of the Python rules. The lazy way implemented here
         # is to parse a line a second time with a $() wrapper if it fails
         # the first time. This is a context-free phase.
-        if wrap_subprocs:
-            tree, input = self._parse_ctx_free(input, mode=mode)
-        else:
-            return self.parser.parse(input, filename=self.filename, mode=mode,
-                                     debug_level=(self.debug_level > 1))
+        tree, input = self._parse_ctx_free(input, mode=mode)
         if tree is None:
             return None
 
@@ -82,11 +79,15 @@ class Execer(object):
         # (ls) is part of the execution context. If it isn't, then we will
         # assume that this line is supposed to be a subprocess line, assuming
         # it also is valid as a subprocess line.
+        if ctx is None:
+            ctx = set()
+        elif isinstance(ctx, Mapping):
+            ctx = set(ctx.keys())
         tree = self.ctxtransformer.ctxvisit(tree, input, ctx, mode=mode)
         return tree
 
     def compile(self, input, mode='exec', glbs=None, locs=None, stacklevel=2,
-                filename=None, wrap_subprocs=True):
+                filename=None, transform=True):
         """Compiles xonsh code into a Python code object, which may then
         be execed or evaled.
         """
@@ -97,14 +98,20 @@ class Execer(object):
             glbs = frame.f_globals if glbs is None else glbs
             locs = frame.f_locals if locs is None else locs
         ctx = set(dir(builtins)) | set(glbs.keys()) | set(locs.keys())
-        tree = self.parse(input, ctx, mode=mode, wrap_subprocs=wrap_subprocs)
+        tree = self.parse(input, ctx, mode=mode, transform=transform)
         if tree is None:
             return None  # handles comment only input
-        code = compile(tree, filename, mode)
+        if transform:
+            with warnings.catch_warnings():
+                # we do some funky things with blocks that cause warnings
+                warnings.simplefilter('ignore', SyntaxWarning)
+                code = compile(tree, filename, mode)
+        else:
+            code = compile(tree, filename, mode)
         return code
 
     def eval(self, input, glbs=None, locs=None, stacklevel=2,
-                wrap_subprocs=True):
+                transform=True):
         """Evaluates (and returns) xonsh code."""
         if isinstance(input, types.CodeType):
             code = input
@@ -114,13 +121,13 @@ class Execer(object):
                                 locs=locs,
                                 mode='eval',
                                 stacklevel=stacklevel,
-                                wrap_subprocs=wrap_subprocs)
+                                transform=transform)
         if code is None:
             return None  # handles comment only input
         return eval(code, glbs, locs)
 
     def exec(self, input, mode='exec', glbs=None, locs=None, stacklevel=2,
-                wrap_subprocs=True):
+                transform=True):
         """Execute xonsh code."""
         if isinstance(input, types.CodeType):
             code = input
@@ -130,7 +137,7 @@ class Execer(object):
                                 locs=locs,
                                 mode=mode,
                                 stacklevel=stacklevel,
-                                wrap_subprocs=wrap_subprocs)
+                                transform=transform)
         if code is None:
             return None  # handles comment only input
         return exec(code, glbs, locs)
