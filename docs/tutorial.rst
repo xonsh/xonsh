@@ -356,6 +356,44 @@ example:
             sleep 1
 
 
+If you iterate over the CompletedCommand object, it will yield lines of its
+output.  Using this, you can quickly and cleanly process output from commands
+you know will not fail.  If a failure does occur, a XonshCalledProcessError is
+raised *after* all lines of stdout have been read, and you can process stderr
+output in an except clause.  Examples of each:
+
+.. code-block:: xonshcon
+
+    def get_wireless_interface():
+        """Returns devicename of first connected wifi, None otherwise"""
+        for line in !(nmcli device):
+            dev, typ, state, conn_name = line.split(None, 3)
+            if typ == 'wifi' and state == 'connected':
+                return dev
+
+    def grep_path(path, regexp):
+        """Recursively greps `path` for perl `regexp`
+
+        Returns a dict of 'matches' and 'failures'.
+        Matches are files that contain the given regexp.
+        Failures are files that couldn't be scanned.
+        """
+        matches = []
+        failures = []
+
+        try:
+            for match in !(grep -RPl @(regexp) @(str(path))):
+                matches.append(match)
+        except XonshCalledProcessError as error:
+            for line in error.stderr.split('\n'):
+                if not line.strip():
+                    continue
+                filename = line.split('grep: ', 1)[1].rsplit(':', 1)[0]
+                print(filename)
+                failures.append(filename)
+        return {'matches': matches, 'failures': failures}
+
+
 The ``$()`` and ``!()`` operators are expressions themselves. This means that
 we can assign the results to a variable or perform any other manipulations we
 want.
