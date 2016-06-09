@@ -553,25 +553,24 @@ class CompletedCommand(_CCTuple):
         return self.returncode == 0
 
     def __iter__(self):
-        stdout = self.stdout
-        start = 0
-        end = 0
-        while end != -1:
-            end = stdout.find('\n', start)
-            if end == -1:                # no newlines, but possibly more text
-                snippet = stdout[start:]
-            elif stdout[end-1] == '\r':  # newline, check for CR
-                snippet = stdout[start:end-1]
-            else:                        # newline, no CR
-                snippet = stdout[start:end]
-            if snippet or not (end == -1):
-                yield snippet
-            start = end + 1    # to the other side of \n
+        if not self.stdout:
+            raise StopIteration()
+
+        pre = self.stdout
+        post = None
+
+        while post != '':
+            pre, sep, post = pre.partition('\n')
+            # this line may be optional since we use universal newlines.
+            pre = pre[:-1] if pre and pre[-1] == '\r' else pre
+            yield pre
+            pre = post
+
         if self.returncode:
             # I included self, as providing access to stderr and other details
             # useful when instance isn't assigned to a variable in the shell.
             raise XonshCalledProcessError(self.returncode, self.executed_cmd,
-                                          stdout, self.stderr, self)
+                                          self.stdout, self.stderr, self)
 
     @property
     def inp(self):
