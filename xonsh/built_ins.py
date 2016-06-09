@@ -30,8 +30,8 @@ from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
                         SimpleForegroundProcProxy, TeePTYProc,
                         CompletedCommand, HiddenCompletedCommand)
 from xonsh.tools import (
-    suggest_commands, XonshError, expandvars, CommandsCache, globpath,
-    iglobpath, XonshError, XonshCalledProcessError
+    suggest_commands, XonshError, XonshBlockError, XonshCalledProcessError, 
+    expandvars, CommandsCache, globpath, iglobpath
 )
 
 
@@ -564,7 +564,6 @@ def run_subproc(cmds, captured=False):
     if captured == 'stdout':
         return output
     elif captured is not False:
-        procinfo['executed_cmd'] = aliased_cmd
         procinfo['pid'] = prev_proc.pid
         procinfo['returncode'] = prev_proc.returncode
         procinfo['timestamp'] = (starttime, time.time())
@@ -661,8 +660,6 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.evalx = None if execer is None else execer.eval
     builtins.execx = None if execer is None else execer.exec
     builtins.compilex = None if execer is None else execer.compile
-    builtins.XonshError = XonshError
-    builtins.XonshCalledProcessError = XonshCalledProcessError
 
     # Need this inline/lazy import here since we use locate_binary that relies on __xonsh_env__ in default aliases
     builtins.default_aliases = builtins.aliases = Aliases(make_default_aliases())
@@ -720,8 +717,6 @@ def unload_builtins():
              'execx',
              'compilex',
              'default_aliases',
-             'XonshError',
-             'XonshCalledProcessError',
              '__xonsh_all_jobs__',
              '__xonsh_ensure_list_of_strs__',
              '__xonsh_history__',
