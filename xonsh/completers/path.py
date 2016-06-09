@@ -259,6 +259,11 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True):
             for i in p:
                 matches_so_far = _expand_one(matches_so_far, i, csc)
             paths |= {_joinpath(i) for i in matches_so_far}
+    if len(paths) == 0 and env.get('FUZZY_PATH_COMPLETION'):
+        threshold = env.get('SUGGEST_THRESHOLD')
+        for s in iglobpath(os.path.dirname(prefix) + '*', ignore_case=(not csc)):
+            if levenshtein(prefix, s, threshold) < threshold:
+                paths.add(s)
     if tilde in prefix:
         home = os.path.expanduser(tilde)
         paths = {s.replace(home, tilde) for s in paths}
