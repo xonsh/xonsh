@@ -12,6 +12,37 @@ Current Developments
   prompt resolution and faster startup times.
 * New lazy methods added to CommandsCache allowing for testing and inspection
   without the possibility of recomputing the cache.
+* New ``Block`` and ``Functor`` context managers are now available as
+  part of the ``xonsh.contexts`` module.
+* ``Block`` provides support for turning a context body into a non-executing
+  list of string lines. This is implmement via a syntax tree transformation.
+  This is useful for creating remote execution tools that seek to prevent
+  local execution.
+* ``Functor`` is a subclass of the ``Block`` context manager that turns the
+  block into a callable object.  The function object is available via the
+  ``func()`` attribute.  However, the ``Functor`` instance is itself callable
+  and will dispatch to ``func()``.
+
+**Changed:**
+
+* Functions in ``Execer`` now take ``transform`` kwarg instead of
+  ``wrap_subproc``.
+* Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
+  the currently running script's path
+
+**Deprecated:** None
+
+**Removed:** None
+
+**Fixed:**
+
+* Strip leading space in commands passed using the "-c" switch
+* Fixed xonfig wizard failing on Windows due to colon in created filename.
+
+**Security:** None
+
+v0.3.4
+====================
 
 **Changed:**
 
@@ -22,12 +53,15 @@ Current Developments
   control files (as opposed to if none were successfully loaded).
 * Git and mercurial branch and dirty function refactor to imporve run times.
 
+<<<<<<< HEAD
 **Deprecated:** None
 
 **Removed:**
 
 * ``ensure_git()`` and ``ensure_hg()`` decorators removed.
 * ``call_hg_command()`` function removed.
+=======
+>>>>>>> master
 
 **Fixed:**
 
@@ -44,7 +78,6 @@ Current Developments
 * Fixed crash resulting from errors other than syntax errors in run control
   file.
 
-**Security:** None
 
 v0.3.3
 ====================
@@ -64,15 +97,15 @@ v0.3.3
 * Tab completion now uses a different interface, which allows new completers
   to be implemented in Python.
 * Most functions in the ``Execer`` now take an extra argument
-  ``wrap_subprocs``, indicating whether the syntactially invalid expressions
-  should be wrapped in ``![]`` automatically
+  ``transform``, indicating whether the syntax tree transformations should
+  be applied.
 * ``prompt_toolkit`` is now loaded lazily, decreasing load times when using
   the ``readline`` shell.
 * RC files are now executed directly in the appropriate context.
 * ``_`` is now updated by ``![]``, to contain the appropriate
   ``CompletedCommand`` object.
 * On Windows if bash is not on the path look in the registry for the defaults
-  install directory for GitForWindows. 
+  install directory for GitForWindows.
 
 
 
