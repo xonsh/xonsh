@@ -4,7 +4,9 @@ Xonsh Change Log
 
 Current Developments
 ====================
-**Added:** None
+**Added:**
+
+* Arguments '+' and '-' for fg [job control]
 
 **Changed:**
 
