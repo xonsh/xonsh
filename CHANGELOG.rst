@@ -5,8 +5,12 @@ Xonsh Change Log
 Current Developments
 ====================
 **Added:** None
+* ``!(command)`` is now usefully iterable, yielding lines of stdout
+* Added XonshCalledProcessError, which includes the relevant CompletedCommand.
+  Also handles differences between Py3.4 and 3.5 in CalledProcessError
 
 **Changed:** None
+* XonshError and XonshCalledProcessError are now in builtins
 
 **Deprecated:** None
 
@@ -41,9 +45,9 @@ v0.3.4
 * Partial workaround for Cygwin where ``pthread_sigmask`` appears to be missing
   from the ``signal`` module.
 * Fixed crash resulting from malformed ``$PROMPT``.
-* Fixed regression on Windows with the locate_binary() function. 
-  The bug prevented `source-cmd` from working correctly and broke the 
-  ``activate``/``deactivate`` aliases for the conda environements. 
+* Fixed regression on Windows with the locate_binary() function.
+  The bug prevented `source-cmd` from working correctly and broke the
+  ``activate``/``deactivate`` aliases for the conda environements.
 * Fixed crash resulting from errors other than syntax errors in run control
   file.
 
@@ -75,7 +79,7 @@ v0.3.3
 * ``_`` is now updated by ``![]``, to contain the appropriate
   ``CompletedCommand`` object.
 * On Windows if bash is not on the path look in the registry for the defaults
-  install directory for GitForWindows. 
+  install directory for GitForWindows.
 
 
 
@@ -87,8 +91,8 @@ v0.3.3
 
 * Fixed crashed bash-completer when bash is not avaiable on Windows
 * Fixed bug on Windows where tab-completion for executables would return all files.
-* Fixed bug on Windows which caused the bash $PROMPT variable to be used when no 
-  no $PROMPT variable was set in .xonshrc 
+* Fixed bug on Windows which caused the bash $PROMPT variable to be used when no
+  no $PROMPT variable was set in .xonshrc
 * Improved start-up times by caching information about bash completion
   functions
 * The --shell-type CLI flag now takes precedence over $SHELL_TYPE specified in
