@@ -15,6 +15,7 @@ Current Developments
 **Fixed:**
 
 * Strip leading space in commands passed using the "-c" switch
+* Fixed xonfig wizard failing on Windows due to colon in created filename.
 
 **Security:** None
 
