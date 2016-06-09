@@ -19,6 +19,8 @@ Current Developments
 
 * Strip leading space in commands passed using the "-c" switch
 * Fixed xonfig wizard failing on Windows due to colon in created filename.
+* Ensured that the prompt_toolkit shell functions, even without a ``completer``
+  attribute.
 
 **Security:** None
 
