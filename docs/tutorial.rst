@@ -389,7 +389,6 @@ output in an except clause.  Examples of each:
                 if not line.strip():
                     continue
                 filename = line.split('grep: ', 1)[1].rsplit(':', 1)[0]
-                print(filename)
                 failures.append(filename)
         return {'matches': matches, 'failures': failures}
 
