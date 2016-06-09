@@ -408,6 +408,10 @@ DEFAULT_DOCS = {
     'PATH': VarDocs(
         'List of strings representing where to look for executables.'),
     'PATHEXT': VarDocs('List of strings for filtering valid executables by.'),
+    'PATH_SEARCH_FUNCS': VarDocs(
+        'Dictionary mapping names to functions, for use with path '
+        'searching (backtick syntax).  See '
+        'http://xon.sh/tutorial_pathsearch.html.'),
     'PRETTY_PRINT_RESULTS': VarDocs(
             'Flag for "pretty printing" return values.'),
     'PROMPT': VarDocs(
