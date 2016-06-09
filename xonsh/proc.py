@@ -15,10 +15,11 @@ import builtins
 from functools import wraps
 from threading import Thread
 from collections import Sequence, namedtuple
-from subprocess import Popen, PIPE, DEVNULL, STDOUT, TimeoutExpired, CalledProcessError
+from subprocess import (Popen, PIPE, DEVNULL, STDOUT, TimeoutExpired,
+                        CalledProcessError)
 
 from xonsh.tools import (redirect_stdout, redirect_stderr, ON_WINDOWS, ON_LINUX,
-                         fallback, print_exception)
+                         fallback, print_exception, XonshCalledProcessError)
 
 if ON_LINUX:
     from xonsh.teepty import TeePTY
@@ -544,6 +545,7 @@ _CCTuple = namedtuple("_CCTuple", ["stdin",
                                    "timestamp",
                                    "executed_cmd"])
 
+
 class CompletedCommand(_CCTuple):
     """Represents a completed subprocess-mode command."""
 
@@ -552,7 +554,7 @@ class CompletedCommand(_CCTuple):
 
     def __iter__(self):
         stdout = self.stdout
-        start = 0;
+        start = 0
         end = 0
         while end != -1:
             end = stdout.find('\n', start)
@@ -568,11 +570,9 @@ class CompletedCommand(_CCTuple):
         if self.returncode:
             # I included self, as providing access to stderr and other details
             # useful when instance isn't assigned to a variable in the shell.
-            cmd = self.executed_cmd
-            error = CalledProcessError(self.returncode, cmd, stdout, self)
-            error.completed_command = self
-            raise error
-            
+            raise XonshCalledProcessError(self.returncode, self.executed_cmd,
+                                          stdout, self.stderr, self)
+
     @property
     def inp(self):
         """Creates normalized input string from args."""

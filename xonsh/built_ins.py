@@ -31,7 +31,7 @@ from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
                         CompletedCommand, HiddenCompletedCommand)
 from xonsh.tools import (
     suggest_commands, XonshError, expandvars, CommandsCache, globpath,
-    iglobpath
+    iglobpath, XonshError, XonshCalledProcessError
 )
 
 
@@ -661,6 +661,8 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.evalx = None if execer is None else execer.eval
     builtins.execx = None if execer is None else execer.exec
     builtins.compilex = None if execer is None else execer.compile
+    builtins.XonshError = XonshError
+    builtins.XonshCalledProcessError = XonshCalledProcessError
 
     # Need this inline/lazy import here since we use locate_binary that relies on __xonsh_env__ in default aliases
     builtins.default_aliases = builtins.aliases = Aliases(make_default_aliases())
@@ -718,6 +720,8 @@ def unload_builtins():
              'execx',
              'compilex',
              'default_aliases',
+             'XonshError',
+             'XonshCalledProcessError',
              '__xonsh_all_jobs__',
              '__xonsh_ensure_list_of_strs__',
              '__xonsh_history__',
