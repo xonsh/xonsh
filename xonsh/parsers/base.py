@@ -8,6 +8,7 @@ except ImportError:
     from xonsh.ply import yacc
 
 from xonsh import ast
+from xonsh.ast import has_elts, xonsh_call
 from xonsh.lexer import Lexer, LexToken
 from xonsh.platform import PYTHON_VERSION_INFO
 
@@ -26,11 +27,6 @@ class Location(object):
         if self.column is not None:
             s += ':{0}'.format(self.column)
         return s
-
-
-def has_elts(x):
-    """Tests if x is an AST node with elements."""
-    return isinstance(x, ast.AST) and hasattr(x, 'elts')
 
 
 def ensure_has_elts(x, lineno=None, col_offset=None):
@@ -103,20 +99,6 @@ def ensure_list_from_str_or_list(x, lineno=None, col=None):
                      orelse=x,
                      lineno=lineno,
                      col_offset=col)
-
-
-def xonsh_call(name, args, lineno=None, col=None):
-    """Creates the AST node for calling a function of a given name."""
-    return ast.Call(func=ast.Name(id=name,
-                                  ctx=ast.Load(),
-                                  lineno=lineno,
-                                  col_offset=col),
-                    args=args,
-                    keywords=[],
-                    starargs=None,
-                    kwargs=None,
-                    lineno=lineno,
-                    col_offset=col)
 
 
 def xonsh_help(x, lineno=None, col=None):
