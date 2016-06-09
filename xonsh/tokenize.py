@@ -196,7 +196,7 @@ String = group(StringPrefix + r"'[^\n'\\]*(?:\\.[^\n'\\]*)*'",
                StringPrefix + r'"[^\n"\\]*(?:\\.[^\n"\\]*)*"')
 
 # Xonsh-specific Syntax
-SearchPath = r"([^\s]*)`([^\n`\\]*(?:\\.[^\n`\\]*)*)`"
+SearchPath = r"(\w*)`([^\n`\\]*(?:\\.[^\n`\\]*)*)`"
 
 # Because of leftmost-then-longest match semantics, be sure to put the
 # longest operators first (e.g., if = came before ==, == would get
