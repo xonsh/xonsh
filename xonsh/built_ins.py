@@ -131,14 +131,28 @@ def reglob(path, parts=None, i=None):
     return paths
 
 
+def regexsearch(s):
+    s = expand_path(s)
+    return reglob(s)
+
+
+PATH_SEARCHERS = {
+    '': regexsearch,
+    'r' : regexsearch,
+    'regex' : regexsearch,
+    'g': globpath,
+    'glob': globpath,
+}
+
 def pathsearch(s, pymode=False):
     """Takes a regular expression string and returns a list of file
     paths that match the regex.
     """
-    s = s.strip("`")
-    s = expand_path(s)
-    o = reglob(s)
-    no_match = [] if pymode else [s]
+    searchfunc, pattern = re.match(SearchPath, s).groups()
+    if searchfunc not in PATH_SEARCHERS:
+        raise XonshError("%r is not a known path search function" % searchfunc)
+    o = PATH_SEARCHERS[searchfunc](pattern)
+    no_match = [] if pymode else [pattern]
     return o if len(o) != 0 else no_match
 
 RE_SHEBANG = re.compile(r'#![ \t]*(.+?)$')
