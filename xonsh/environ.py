@@ -92,7 +92,7 @@ DEFAULT_ENSURERS = {
     'DYNAMIC_CWD_WIDTH': (is_dynamic_cwd_width, to_dynamic_cwd_tuple,
                           dynamic_cwd_tuple_to_str),
     'FORCE_POSIX_PATHS': (is_bool, to_bool, bool_to_str),
-    'FUZZY_PATH_COMPLETION': (is_bool, to_bool, bool_to_str),
+    'SUBSEQUENCE_PATH_COMPLETION': (is_bool, to_bool, bool_to_str),
     'HISTCONTROL': (is_string_set, csv_to_set, set_to_csv),
     'IGNOREEOF': (is_bool, to_bool, bool_to_str),
     'INTENSIFY_COLORS_ON_WIN':(always_false, intensify_colors_on_win_setter,
@@ -203,7 +203,7 @@ DEFAULT_VALUES = {
     'DYNAMIC_CWD_WIDTH': (float('inf'), 'c'),
     'EXPAND_ENV_VARS': True,
     'FORCE_POSIX_PATHS': False,
-    'FUZZY_PATH_COMPLETION': True,
+    'SUBSEQUENCE_PATH_COMPLETION': True,
     'HISTCONTROL': set(),
     'IGNOREEOF': False,
     'INDENT': '    ',
@@ -352,9 +352,9 @@ DEFAULT_DOCS = {
         "and $TITLE. See 'Customizing the Prompt' "
         'http://xon.sh/tutorial.html#customizing-the-prompt',
         configurable=False, default='xonsh.environ.FORMATTER_DICT'),
-    'FUZZY_PATH_COMPLETION': VarDocs(
-        "Causes path completion to use subsequence matching rather than "
-        "substring matching."),
+    'SUBSEQUENCE_PATH_COMPLETION': VarDocs(
+        "Toggles subsequence matching of paths for tab completion. "
+        "If ``True``, then, e.g., ``~/u/ro`` can match ``~/lou/carcolh``."),
     'HISTCONTROL': VarDocs(
         'A set of strings (comma-separated list in string form) of options '
         'that determine what commands are saved to the history list. By '

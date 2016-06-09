@@ -186,7 +186,7 @@ def _splitpath_helper(path, sofar=()):
         return _splitpath_helper(folder, sofar + (path, ))
 
 
-def fuzzy_match(ref, typed, csc):
+def subsequence_match(ref, typed, csc):
     """
     Detects whether typed is a subsequence of ref.
 
@@ -194,24 +194,24 @@ def fuzzy_match(ref, typed, csc):
     ``ref``, regardless of exactly where in ``ref`` they occur.  If ``csc`` is
     ``False``, ignore the case of ``ref`` and ``typed``.
 
-    Used in "fuzzy" path completion (e.g., ``~/u/ro`` expands to
+    Used in "subsequence" path completion (e.g., ``~/u/ro`` expands to
     ``~/lou/carcohl``)
     """
     if csc:
-        return _fuzzy_match_iter(ref, typed)
+        return _subsequence_match_iter(ref, typed)
     else:
-        return _fuzzy_match_iter(ref.lower(), typed.lower())
+        return _subsequence_match_iter(ref.lower(), typed.lower())
 
 
-def _fuzzy_match_iter(ref, typed):
+def _subsequence_match_iter(ref, typed):
     if len(typed) == 0:
         return True
     elif len(ref) == 0:
         return False
     elif ref[0] == typed[0]:
-        return _fuzzy_match_iter(ref[1:], typed[1:])
+        return _subsequence_match_iter(ref[1:], typed[1:])
     else:
-        return _fuzzy_match_iter(ref[1:], typed)
+        return _subsequence_match_iter(ref[1:], typed)
 
 
 def _expand_one(sofar, nextone, csc):
@@ -220,7 +220,7 @@ def _expand_one(sofar, nextone, csc):
         _glob = os.path.join(_joinpath(i), '*') if i is not None else '*'
         for j in iglobpath(_glob):
             j = os.path.basename(j)
-            if fuzzy_match(j, nextone, csc):
+            if subsequence_match(j, nextone, csc):
                 out.add((i or ()) + (j, ))
     return out
 
@@ -243,8 +243,8 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True):
     csc = env.get('CASE_SENSITIVE_COMPLETIONS')
     for s in iglobpath(prefix + '*', ignore_case=(not csc)):
         paths.add(s)
-    if env.get('FUZZY_PATH_COMPLETION'):
-        # this block implements 'fuzzy' matching, similar to fish and zsh.
+    if env.get('SUBSEQUENCE_PATH_COMPLETION'):
+        # this block implements 'subsequence' matching, similar to fish and zsh.
         # matches are based on subsequences, not substrings.
         # e.g., ~/u/ro completes to ~/lou/carcolh
         # see above functions for details.
