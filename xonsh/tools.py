@@ -46,7 +46,7 @@ class XonshError(Exception):
     pass
 
 
-class XonshCalledProcessError(XonshError, CalledProcessError):
+class XonshCalledProcessError(CalledProcessError):
     """Raised when there's an error with a called process
 
     Inherits from XonshError and subprocess.CalledProcessError, catching
