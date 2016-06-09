@@ -520,7 +520,7 @@ DEFAULT_DOCS = {
         'This is the location where xonsh data files are stored, such as '
         'history.', default="'$XDG_DATA_HOME/xonsh'"),
     'XONSH_ENCODING': VarDocs(
-        'This is the encoding that xonsh should use for subrpocess operations.',
+        'This is the encoding that xonsh should use for subprocess operations.',
         default='sys.getdefaultencoding()'),
     'XONSH_ENCODING_ERRORS': VarDocs(
         'The flag for how to handle encoding errors should they happen. '
@@ -551,6 +551,10 @@ DEFAULT_DOCS = {
         'Set to True to always show traceback or False to always hide. '
         'If undefined then the traceback is hidden but a notice is shown on how '
         'to enable the full traceback.'),
+    'XONSH_SOURCE': VarDocs(
+        "When running a xonsh script, this variable contains the absolute path "
+        "to the currently executing script's file.",
+        configurable=False),
     'XONSH_STORE_STDIN': VarDocs(
         'Whether or not to store the stdin that is supplied to the !() and ![] '
         'operators.'),

@@ -8,6 +8,26 @@ Current Developments
 
 **Changed:**
 
+* Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
+  the currently running script's path
+
+**Deprecated:** None
+
+**Removed:** None
+
+**Fixed:**
+
+* Strip leading space in commands passed using the "-c" switch
+* Fixed xonfig wizard failing on Windows due to colon in created filename.
+
+**Security:** None
+
+v0.3.4
+====================
+
+
+**Changed:**
+
 * ``$PROMPT`` from foreign shells is now ignored.
 * ``$RC_FILES`` environment variable now stores the run control files we
   attempted to load.
@@ -16,9 +36,6 @@ Current Developments
 * Tab completion of paths now includes zsh-style path expansion (subsequence
   matching)
 
-**Deprecated:** None
-
-**Removed:** None
 
 **Fixed:**
 
@@ -35,7 +52,6 @@ Current Developments
 * Fixed crash resulting from errors other than syntax errors in run control
   file.
 
-**Security:** None
 
 v0.3.3
 ====================
