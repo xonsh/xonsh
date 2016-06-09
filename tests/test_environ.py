@@ -84,6 +84,13 @@ def test_format_prompt_with_broken_template_in_func():
         assert_in('user', partial_format_prompt(p))
         assert_in('user', format_prompt(p))
 
+def test_format_prompt_with_invalid_func():
+    def p():
+        foo = bar  # raises exception
+        return '{user}'
+    assert_is_instance(partial_format_prompt(p), str)
+    assert_is_instance(format_prompt(p), str)
+
 def test_HISTCONTROL():
     env = Env(HISTCONTROL=None)
     assert_is_instance(env['HISTCONTROL'], set)
