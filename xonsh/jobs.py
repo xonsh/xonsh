@@ -252,15 +252,16 @@ def fg(args, stdin=None):
     if len(args) == 0:
         act = tasks[0]  # take the last manipulated task by default
     elif len(args) == 1:
-        if args[0] == '+': # take the last manipulated task
-             act = tasks[0]
-        elif args[0] == '-': # take the second to last manipulated task
-            act = tasks[1]
-        else:
-            try:
+        try:
+            if args[0] == '+': # take the last manipulated task
+                 act = tasks[0]
+            elif args[0] == '-': # take the second to last manipulated task
+                act = tasks[1]
+            else:
                 act = int(args[0])
-            except ValueError:
-                return '', 'Invalid job: {}\n'.format(args[0])
+        except (ValueError, IndexError):
+            return '', 'Invalid job: {}\n'.format(args[0])
+
         if act not in builtins.__xonsh_all_jobs__:
             return '', 'Invalid job: {}\n'.format(args[0])
     else:
