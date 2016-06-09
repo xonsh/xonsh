@@ -136,12 +136,17 @@ def regexsearch(s):
     return reglob(s)
 
 
+def globsearch(s):
+    csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
+    return globpath(s, ignore_case=(not csc), return_empty=True)
+
+
 PATH_SEARCHERS = {
     '': regexsearch,
     'r' : regexsearch,
     'regex' : regexsearch,
-    'g': globpath,
-    'glob': globpath,
+    'g': globsearch,
+    'glob': globsearch,
 }
 
 def pathsearch(s, pymode=False):

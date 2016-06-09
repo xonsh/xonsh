@@ -1430,11 +1430,11 @@ def expand_case_matching(s):
     return ''.join(t)
 
 
-def globpath(s, ignore_case=False, pymode=False):
+def globpath(s, ignore_case=False, return_empty=False):
     """Simple wrapper around glob that also expands home and env vars."""
     o, s = _iglobpath(s, ignore_case=ignore_case)
     o = list(o)
-    no_match = [] if pymode else [s]
+    no_match = [] if return_empty else [s]
     return o if len(o) != 0 else no_match
 
 
