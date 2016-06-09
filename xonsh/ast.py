@@ -249,6 +249,7 @@ class CtxAwareTransformer(NodeTransformer):
         # Add or discover target names
         targets = set()
         i = 0  # index of unassigned items
+
         def make_next_target():
             nonlocal i
             targ = '__xonsh_with_target_{}_{}__'.format(nwith, i)
@@ -268,7 +269,8 @@ class CtxAwareTransformer(NodeTransformer):
             else:
                 targets.update(gather_names(item.optional_vars))
         # Ok, now that targets have been found / created, make the actual check
-        # to see if we are in a non-executing block. This is equivalent to writing
+        # to see if we are in a non-executing block. This is equivalent to
+        # writing the following condition:
         #
         #     if getattr(targ0, '__xonsh_block__', False) or \
         #        getattr(targ1, '__xonsh_block__', False) or ...:
@@ -283,12 +285,15 @@ class CtxAwareTransformer(NodeTransformer):
                  for s in self.lines[ldx:udx]]
         check = If(test=test, body=[
             Raise(exc=xonsh_call('XonshBlockError',
-                args=[List(elts=lines, ctx=Load(), lineno=lineno, col_offset=col),
-                      xonsh_call('globals', args=[], lineno=lineno, col=col),
-                      xonsh_call('locals', args=[], lineno=lineno, col=col)],
-                    lineno=lineno, col=col),
-                cause=None, lineno=lineno, col_offset=col)],
-            orelse=[], lineno=lineno, col_offset=col)
+                                 args=[List(elts=lines, ctx=Load(),
+                                            lineno=lineno, col_offset=col),
+                                       xonsh_call('globals', args=[],
+                                                  lineno=lineno, col=col),
+                                       xonsh_call('locals', args=[],
+                                                  lineno=lineno, col=col)],
+                                 lineno=lineno, col=col),
+                  cause=None, lineno=lineno, col_offset=col)],
+                orelse=[], lineno=lineno, col_offset=col)
         node.body.insert(0, check)
 
     def _find_with_block_line_idx(self, node):
@@ -296,7 +301,8 @@ class CtxAwareTransformer(NodeTransformer):
         udx = max_line(node.body[-1])
         # now check if parsable, or add lines until it is or we run out of lines
         nlines = len(self.lines)
-        lines = 'with __xonsh_dummy__:\n' + '\n'.join(self.lines[ldx:udx]) + '\n'
+        lines = 'with __xonsh_dummy__:\n' + '\n'.join(self.lines[ldx:udx])
+        lines += '\n'
         parsable = False
         while not parsable and udx < nlines:
             try:
@@ -488,9 +494,11 @@ def pprint(s, *, sep=None, end=None, file=None, flush=False, **kwargs):
     """Performs a pretty print of the AST nodes."""
     print(pdump(s, **kwargs), sep=sep, end=end, file=file, flush=flush)
 
+
 #
 # Private helpers
 #
+
 def _getblockattr(name, lineno, col):
     """calls getattr(name, '__xonsh_block__', False)."""
     return xonsh_call('getattr', args=[
