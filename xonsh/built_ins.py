@@ -564,6 +564,7 @@ def run_subproc(cmds, captured=False):
     if captured == 'stdout':
         return output
     elif captured is not False:
+        procinfo['executed_cmd'] = aliased_cmd
         procinfo['pid'] = prev_proc.pid
         procinfo['returncode'] = prev_proc.returncode
         procinfo['timestamp'] = (starttime, time.time())

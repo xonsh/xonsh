@@ -15,7 +15,7 @@ import builtins
 from functools import wraps
 from threading import Thread
 from collections import Sequence, namedtuple
-from subprocess import Popen, PIPE, DEVNULL, STDOUT, TimeoutExpired
+from subprocess import Popen, PIPE, DEVNULL, STDOUT, TimeoutExpired, CalledProcessError
 
 from xonsh.tools import (redirect_stdout, redirect_stderr, ON_WINDOWS, ON_LINUX,
                          fallback, print_exception)
@@ -541,7 +541,8 @@ _CCTuple = namedtuple("_CCTuple", ["stdin",
                                    "stdin_redirect",
                                    "stdout_redirect",
                                    "stderr_redirect",
-                                   "timestamp"])
+                                   "timestamp",
+                                   "executed_cmd"])
 
 class CompletedCommand(_CCTuple):
     """Represents a completed subprocess-mode command."""
@@ -549,6 +550,29 @@ class CompletedCommand(_CCTuple):
     def __bool__(self):
         return self.returncode == 0
 
+    def __iter__(self):
+        stdout = self.stdout
+        start = 0;
+        end = 0
+        while end != -1:
+            end = stdout.find('\n', start)
+            if end == -1:                # no newlines, but possibly more text
+                snippet = stdout[start:]
+            elif stdout[end-1] == '\r':  # newline, check for CR
+                snippet = stdout[start:end-1]
+            else:                        # newline, no CR
+                snippet = stdout[start:end]
+            if snippet or not (end == -1):
+                yield snippet
+            start = end + 1    # to the other side of \n
+        if self.returncode:
+            # I included self, as providing access to stderr and other details
+            # useful when instance isn't assigned to a variable in the shell.
+            cmd = self.executed_cmd
+            error = CalledProcessError(self.returncode, cmd, stdout, self)
+            error.completed_command = self
+            raise error
+            
     @property
     def inp(self):
         """Creates normalized input string from args."""
