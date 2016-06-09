@@ -19,6 +19,7 @@ Current Developments
 
 * Strip leading space in commands passed using the "-c" switch
 * Fixed xonfig wizard failing on Windows due to colon in created filename.
+* Fixed crash resulting from malformed ``$PROMPT`` or ``$TITLE``.
 
 **Security:** None
 

@@ -12,7 +12,8 @@ import nose
 from nose.tools import (assert_equal, assert_true, assert_not_in,
     assert_is_instance, assert_in, assert_raises)
 
-from xonsh.environ import Env, format_prompt, load_static_config, locate_binary
+from xonsh.environ import (Env, format_prompt, load_static_config,
+    locate_binary, partial_format_prompt)
 
 from tools import mock_xonsh_env
 
@@ -58,6 +59,30 @@ def test_format_prompt():
     for p, exp in cases.items():
         obs = format_prompt(template=p, formatter_dict=formatter_dict)
         yield assert_equal, exp, obs
+    for p, exp in cases.items():
+        obs = partial_format_prompt(template=p, formatter_dict=formatter_dict)
+        yield assert_equal, exp, obs
+
+def test_format_prompt_with_broken_template():
+    for p in ('{user', '{user}{hostname'):
+        assert_equal(partial_format_prompt(p), p)
+        assert_equal(format_prompt(p), p)
+
+    # '{{user' will be parsed to '{user'
+    for p in ('{{user}', '{{user'):
+        assert_in('user', partial_format_prompt(p))
+        assert_in('user', format_prompt(p))
+
+def test_format_prompt_with_broken_template_in_func():
+    for p in (
+        lambda: '{user',
+        lambda: '{{user',
+        lambda: '{{user}',
+        lambda: '{user}{hostname',
+    ):
+        # '{{user' will be parsed to '{user'
+        assert_in('user', partial_format_prompt(p))
+        assert_in('user', format_prompt(p))
 
 def test_HISTCONTROL():
     env = Env(HISTCONTROL=None)

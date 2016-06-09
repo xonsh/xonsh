@@ -1136,6 +1136,13 @@ def _get_fmtter(formatter_dict=None):
 
 
 def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
+    try:
+        return _format_prompt_main(template, formatter_dict)
+    except:
+        return template() if callable(template) else template
+
+
+def _format_prompt_main(template, formatter_dict):
     """Formats a xonsh prompt template string."""
     template = template() if callable(template) else template
     fmtter = _get_fmtter(formatter_dict)
@@ -1160,7 +1167,7 @@ def partial_format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
         return _partial_format_prompt_main(template=template,
                                            formatter_dict=formatter_dict)
     except:
-        return template
+        return template() if callable(template) else template
 
 
 def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
