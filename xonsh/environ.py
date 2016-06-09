@@ -411,7 +411,7 @@ DEFAULT_DOCS = {
     'PATH_SEARCH_FUNCS': VarDocs(
         'Dictionary mapping names to functions, for use with path '
         'searching (backtick syntax).  See '
-        'http://xon.sh/tutorial_pathsearch.html.'),
+        'http://xon.sh/tutorial.html#custom-path-searches.'),
     'PRETTY_PRINT_RESULTS': VarDocs(
             'Flag for "pretty printing" return values.'),
     'PROMPT': VarDocs(

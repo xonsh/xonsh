@@ -935,9 +935,9 @@ shows the form of these functions:
 
 .. code-block:: xonshcon
 
-    >>> $PATH_SEARCH_FUNCS['b'] = lambda s: ['snail', 'shell']
+    >>> $PATH_SEARCH_FUNCS['b'] = lambda s: [s, 'snail', 'shell']
     >>> print(b`test`)
-    ['snail', 'shell']
+    ['test', 'snail', 'shell']
 
 
 Help & Superhelp with ``?`` & ``??``
