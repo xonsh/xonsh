@@ -90,14 +90,17 @@ else:
     _block_when_giving = (signal.SIGTTOU, signal.SIGTTIN,
                           signal.SIGTSTP, signal.SIGCHLD)
 
+    # _give_terminal_to is a simplified version of:
+    #    give_terminal_to from bash 4.3 source, jobs.c, line 4030
+    # this will give the terminal to the process group pgid
     if ON_CYGWIN:
         import ctypes
         _libc = ctypes.CDLL('cygwin1.dll')
 
+        # on cygwin, signal.pthread_sigmask does not exist in Python, even
+        # though pthread_sigmask is defined in the kernel.  thus, we use
+        # ctypes to mimic the calls in the "normal" version below.
         def _give_terminal_to(pgid):
-            # over-simplified version of:
-            #    give_terminal_to from bash 4.3 source, jobs.c, line 4030
-            # this will give the terminal to the process group pgid
             if _shell_tty is not None and os.isatty(_shell_tty):
                 omask = ctypes.c_ulong()
                 mask = ctypes.c_ulong()
@@ -113,9 +116,6 @@ else:
                                   ctypes.byref(omask), None)
     else:
         def _give_terminal_to(pgid):
-            # over-simplified version of:
-            #    give_terminal_to from bash 4.3 source, jobs.c, line 4030
-            # this will give the terminal to the process group pgid
             if _shell_tty is not None and os.isatty(_shell_tty):
                 oldmask = signal.pthread_sigmask(signal.SIG_BLOCK,
                                                  _block_when_giving)
