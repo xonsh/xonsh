@@ -4,12 +4,16 @@ Xonsh Change Log
 
 Current Developments
 ====================
-**Added:** None
-
-**Changed:**
+**Added:** 
 
 * Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
   the currently running script's path
+* Tab completion of paths now includes zsh-style path expansion (subsequence
+  matching), toggleable with ``$SUBSEQUENCE_PATH_COMPLETION``
+* Tab completion of paths now includes "fuzzy" matches that are accurate to
+  within a few characters, toggleable with ``$FUZZY_PATH_COMPLETION``
+
+**Changed:** None
 
 **Deprecated:** None
 
@@ -33,8 +37,6 @@ v0.3.4
   attempted to load.
 * Only show the prompt for the wizard if we did not attempt to load any run
   control files (as opposed to if none were successfully loaded).
-* Tab completion of paths now includes zsh-style path expansion (subsequence
-  matching)
 
 
 **Fixed:**
