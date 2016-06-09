@@ -182,12 +182,13 @@ def print_one_job(num):
         job = builtins.__xonsh_all_jobs__[num]
     except KeyError:
         return
+    pos = '+' if tasks[0] == num else '-' if tasks[1] == num else ' '
     status = job['status']
     cmd = [' '.join(i) if isinstance(i, list) else i for i in job['cmds']]
     cmd = ' '.join(cmd)
     pid = job['pids'][-1]
     bg = ' &' if job['bg'] else ''
-    print('[{}] {}: {}{} ({})'.format(num, status, cmd, bg, pid))
+    print('[{}]{} {}: {}{} ({})'.format(num, pos, status, cmd, bg, pid))
 
 
 def get_next_job_number():
