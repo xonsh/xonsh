@@ -253,9 +253,9 @@ def fg(args, stdin=None):
         act = tasks[0]  # take the last manipulated task by default
     elif len(args) == 1:
         try:
-            if args[0] == '+': # take the last manipulated task
-                 act = tasks[0]
-            elif args[0] == '-': # take the second to last manipulated task
+            if args[0] == '+':  # take the last manipulated task
+                act = tasks[0]
+            elif args[0] == '-':  # take the second to last manipulated task
                 act = tasks[1]
             else:
                 act = int(args[0])
