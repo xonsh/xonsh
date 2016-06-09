@@ -29,7 +29,8 @@ from xonsh.tools import (
     IS_SUPERUSER, always_true, always_false, ensure_string, is_env_path,
     str_to_env_path, env_path_to_str, is_bool, to_bool, bool_to_str,
     is_history_tuple, to_history_tuple, history_tuple_to_str, is_float,
-    is_string, is_completions_display_value, to_completions_display_value,
+    is_string, is_callable, is_string_or_callable,
+    is_completions_display_value, to_completions_display_value,
     is_string_set, csv_to_set, set_to_csv, get_sep, is_int, is_bool_seq,
     is_bool_or_int, to_bool_or_int, bool_or_int_to_str,
     csv_to_bool_seq, bool_seq_to_csv, DefaultNotGiven, print_exception,
@@ -104,11 +105,13 @@ DEFAULT_ENSURERS = {
     'LOADED_CONFIG': (is_bool, to_bool, bool_to_str),
     'LOADED_RC_FILES': (is_bool_seq, csv_to_bool_seq, bool_seq_to_csv),
     'MOUSE_SUPPORT': (is_bool, to_bool, bool_to_str),
+    'MULTILINE_PROMPT': (is_string_or_callable, ensure_string, ensure_string),
     re.compile('\w*PATH$'): (is_env_path, str_to_env_path, env_path_to_str),
     'PATHEXT': (is_env_path, str_to_env_path, env_path_to_str),
     'PRETTY_PRINT_RESULTS': (is_bool, to_bool, bool_to_str),
+    'PROMPT': (is_string_or_callable, ensure_string, ensure_string),
     'RAISE_SUBPROC_ERROR': (is_bool, to_bool, bool_to_str),
-    'RIGHT_PROMPT': (is_string, ensure_string, ensure_string),
+    'RIGHT_PROMPT': (is_string_or_callable, ensure_string, ensure_string),
     'TEEPTY_PIPE_DELAY': (is_float, float, str),
     'UPDATE_OS_ENVIRON': (is_bool, to_bool, bool_to_str),
     'XONSHRC': (is_env_path, str_to_env_path, env_path_to_str),
@@ -174,6 +177,12 @@ def xonshconfig(env):
     xc = os.path.join(xcd, 'config.json')
     return xc
 
+if ON_WINDOWS:
+    DEFAULT_XONSHRC = (os.path.join(os.environ['ALLUSERSPROFILE'],
+                                     'xonsh', 'xonshrc'),
+                       os.path.expanduser('~/.xonshrc'))
+else:
+    DEFAULT_XONSHRC = ('/etc/xonshrc', os.path.expanduser('~/.xonshrc'))
 
 # Default values should generally be immutable, that way if a user wants
 # to set them they have to do a copy and write them to the environment.
@@ -226,10 +235,7 @@ DEFAULT_VALUES = {
     'XDG_CONFIG_HOME': os.path.expanduser(os.path.join('~', '.config')),
     'XDG_DATA_HOME': os.path.expanduser(os.path.join('~', '.local', 'share')),
     'XONSHCONFIG': xonshconfig,
-    'XONSHRC': ((os.path.join(os.environ['ALLUSERSPROFILE'],
-                              'xonsh', 'xonshrc'),
-                os.path.expanduser('~/.xonshrc')) if ON_WINDOWS
-               else ('/etc/xonshrc', os.path.expanduser('~/.xonshrc'))),
+    'XONSHRC': DEFAULT_XONSHRC,
     'XONSH_CACHE_SCRIPTS': True,
     'XONSH_CACHE_EVERYTHING': False,
     'XONSH_COLOR_STYLE': 'default',
@@ -385,7 +391,8 @@ DEFAULT_DOCS = {
     'PROMPT': VarDocs(
         'The prompt text. May contain keyword arguments which are '
         "auto-formatted, see 'Customizing the Prompt' at "
-        'http://xon.sh/tutorial.html#customizing-the-prompt.',
+        'http://xon.sh/tutorial.html#customizing-the-prompt. '
+        'This value is never inherited from parent processes.',
         default='xonsh.environ.DEFAULT_PROMPT'),
     'PUSHD_MINUS': VarDocs(
         'Flag for directory pushing functionality. False is the normal '
@@ -500,7 +507,7 @@ DEFAULT_DOCS = {
         'This is the location where xonsh data files are stored, such as '
         'history.', default="'$XDG_DATA_HOME/xonsh'"),
     'XONSH_ENCODING': VarDocs(
-        'This is the encoding that xonsh should use for subrpocess operations.',
+        'This is the encoding that xonsh should use for subprocess operations.',
         default='sys.getdefaultencoding()'),
     'XONSH_ENCODING_ERRORS': VarDocs(
         'The flag for how to handle encoding errors should they happen. '
@@ -531,6 +538,10 @@ DEFAULT_DOCS = {
         'Set to True to always show traceback or False to always hide. '
         'If undefined then the traceback is hidden but a notice is shown on how '
         'to enable the full traceback.'),
+    'XONSH_SOURCE': VarDocs(
+        "When running a xonsh script, this variable contains the absolute path "
+        "to the currently executing script's file.",
+        configurable=False),
     'XONSH_STORE_STDIN': VarDocs(
         'Whether or not to store the stdin that is supplied to the !() and ![] '
         'operators.'),
@@ -747,9 +758,10 @@ class Env(MutableMapping):
 
 def _yield_executables(directory, name):
     if ON_WINDOWS:
+        base_name, ext = os.path.splitext(name.lower())
         for fname in executables_in(directory):
-            base_name, ext = os.path.splitext(fname)
-            if name.lower() == base_name.lower():
+            fbase, fext = os.path.splitext(fname.lower())
+            if base_name == fbase and (len(ext) == 0 or ext == fext):
                 yield os.path.join(directory, fname)
     else:
         for x in executables_in(directory):
@@ -764,7 +776,8 @@ def locate_binary(name):
 
     directories = builtins.__xonsh_env__.get('PATH')
 
-    # Windows users expect t obe able to execute files in the same directory without `./`
+    # Windows users expect t obe able to execute files in the same directory
+    # without `./`
     if ON_WINDOWS:
         directories = [_get_cwd()] + directories
 
@@ -1143,6 +1156,14 @@ def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
 
 def partial_format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
     """Formats a xonsh prompt template string."""
+    try:
+        return _partial_format_prompt_main(template=template,
+                                           formatter_dict=formatter_dict)
+    except:
+        return template
+
+
+def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
     template = template() if callable(template) else template
     fmtter = _get_fmtter(formatter_dict)
     bopen = '{'
@@ -1155,7 +1176,7 @@ def partial_format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
         if field is None:
             continue
         elif field.startswith('$'):
-            v = builtins.__xonsh_env__[name[1:]]  # FIXME `name` is an unresolved ref
+            v = builtins.__xonsh_env__[field[1:]]
             v = _FORMATTER.convert_field(v, conv)
             v = _FORMATTER.format_field(v, spec)
             toks.append(v)
@@ -1290,6 +1311,7 @@ def xonshrc_context(rcfiles=None, execer=None, initial=None):
         env = initial
     if rcfiles is None or execer is None:
         return env
+    env['XONSHRC'] = tuple(rcfiles)
     for rcfile in rcfiles:
         if not os.path.isfile(rcfile):
             loaded.append(False)
@@ -1302,13 +1324,18 @@ def xonshrc_context(rcfiles=None, execer=None, initial=None):
             msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
             warn(msg.format(rcfile, err), RuntimeWarning)
             continue
+        except Exception as err:
+            loaded.append(False)
+            msg = 'error running xonsh run control file {0!r}: {1!s}'
+            warn(msg.format(rcfile, err), RuntimeWarning)
+            continue
     return env
 
 
 def windows_foreign_env_fixes(ctx):
     """Environment fixes for Windows. Operates in-place."""
     # remove these bash variables which only cause problems.
-    for ev in ['HOME', 'OLDPWD', 'PROMPT']:
+    for ev in ['HOME', 'OLDPWD']:
         if ev in ctx:
             del ctx[ev]
     # Override path-related bash variables; on Windows bash uses
@@ -1322,17 +1349,22 @@ def windows_foreign_env_fixes(ctx):
     ctx['PWD'] = _get_cwd()
 
 
+def foreign_env_fixes(ctx):
+    """Environment fixes for all operating systems"""
+    if 'PROMPT' in ctx:
+        del ctx['PROMPT']
+
+
 def default_env(env=None, config=None, login=True):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence
     ctx = dict(BASE_ENV)
     ctx.update(os.environ)
-    if ON_WINDOWS:
-        # Windows style PROMPT definitions don't work in XONSH:
-        try:
-            del ctx['PROMPT']
-        except KeyError:
-            pass
+    # other shells' PROMPT definitions generally don't work in XONSH:
+    try:
+        del ctx['PROMPT']
+    except KeyError:
+        pass
 
     if login:
         conf = load_static_config(ctx, config=config)
@@ -1341,6 +1373,7 @@ def default_env(env=None, config=None, login=True):
                                         issue_warning=False)
         if ON_WINDOWS:
             windows_foreign_env_fixes(foreign_env)
+        foreign_env_fixes(foreign_env)
 
         ctx.update(foreign_env)
 

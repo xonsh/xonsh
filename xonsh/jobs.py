@@ -8,7 +8,7 @@ import builtins
 from subprocess import TimeoutExpired, check_output
 from collections import deque
 
-from xonsh.platform import ON_DARWIN, ON_WINDOWS
+from xonsh.platform import ON_DARWIN, ON_WINDOWS, ON_CYGWIN
 
 tasks = deque()
 
@@ -94,10 +94,12 @@ else:
         #    give_terminal_to from bash 4.3 source, jobs.c, line 4030
         # this will give the terminal to the process group pgid
         if _shell_tty is not None and os.isatty(_shell_tty):
-            oldmask = signal.pthread_sigmask(signal.SIG_BLOCK,
-                                             _block_when_giving)
+            if not ON_CYGWIN:
+                oldmask = signal.pthread_sigmask(signal.SIG_BLOCK,
+                                                 _block_when_giving)
             os.tcsetpgrp(_shell_tty, pgid)
-            signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
+            if not ON_CYGWIN:
+                signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
 
     # check for shell tty
     try:

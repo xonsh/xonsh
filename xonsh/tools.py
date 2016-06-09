@@ -569,6 +569,16 @@ def is_string(x):
     return isinstance(x, str)
 
 
+def is_callable(x):
+    """Tests if something is callable"""
+    return callable(x)
+
+
+def is_string_or_callable(x):
+    """Tests if something is a string or callable"""
+    return is_string(x) or is_callable(x)
+
+
 def always_true(x):
     """Returns True"""
     return True
@@ -1181,7 +1191,8 @@ def backup_file(fname):
     import shutil
     from datetime import datetime
     base, ext = os.path.splitext(fname)
-    newfname = base + '.' + datetime.now().isoformat() + ext
+    timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
+    newfname = '%s.%s%s' % (base, timestamp, ext)
     shutil.move(fname, newfname)
 
 

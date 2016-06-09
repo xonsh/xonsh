@@ -103,6 +103,8 @@ def can_compile(src):
         rtn = True
     except SyntaxError:
         rtn = False
+    except Exception:
+        rtn = True
     return rtn
 
 

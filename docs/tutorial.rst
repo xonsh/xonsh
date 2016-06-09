@@ -327,7 +327,7 @@ For example,
 The ``!()`` syntax captured more information about the command, as an instance
 of a class called ``CompletedCommand``.  This object contains more information
 about the result of the given command, including the return code, the process
-id, the stdanard output and standard error streams, and information about how
+id, the standard output and standard error streams, and information about how
 input and output were redirected.  For example:
 
 .. code-block:: xonshcon
@@ -956,7 +956,7 @@ must have the following signature:
 
 .. code-block:: python
 
-    def mycmd(args, stdin=None):
+    def _mycmd(args, stdin=None):
         """args will be a list of strings representing the arguments to this
         command. stdin will be a string, if present. This is used to pipe
         the output of the previous command into this one.
@@ -996,9 +996,17 @@ built-in mapping.  Here is an example using a function value:
 
 .. code-block:: xonshcon
 
-    >>> aliases['banana'] = lambda args, stdin=None: ('My spoon is tooo big!', None)
+    >>> def _banana(args, stdin=None):
+    ...     return ('My spoon is tooo big!', None)
+    >>> aliases['banana'] = _banana
     >>> banana
     'My spoon is tooo big!'
+
+.. note::
+
+   Alias functions should generally be defined with a leading underscore.
+   Otherwise, they may shadow the alias itself, as Python variables take
+   precedence over aliases when xonsh executes commands.
 
 Usually, callable alias commands will be run in a separate thread so that
 users may background them interactively. However, some aliases may need to be
@@ -1011,8 +1019,10 @@ with the ``xonsh.proc.foreground`` decorator.
     from xonsh.proc import foreground
 
     @foreground
-    def mycmd(args, stdin=None):
+    def _mycmd(args, stdin=None):
         return 'In your face!'
+
+    aliases['mycmd'] = _mycmd
 
 Aliasing is a powerful way that xonsh allows you to seamlessly interact to
 with Python and subprocess.
@@ -1034,10 +1044,16 @@ detail is available on the `Tab Completion page <tutorial_completers.html>`_.
 
 Customizing the Prompt
 ======================
-Customizing the prompt is probably the most common reason for altering an
-environment variable.  The ``PROMPT`` variable can be a string, or it can be a
-function (of no arguments) that returns a string.  The result can contain
-keyword arguments, which will be replaced automatically:
+Customizing the prompt by modifying ``$PROMPT`` is probably the most common
+reason for altering an environment variable.
+
+.. note:: Note that the ``$PROMPT`` variable will never be inherited from a
+          parent process (regardless of whether that parent is a foreign shell
+          or an instance of xonsh).
+
+The ``$PROMPT`` variable can be a string, or it can be a function (of no
+arguments) that returns a string.  The result can contain keyword arguments,
+which will be replaced automatically:
 
 .. code-block:: xonshcon
 

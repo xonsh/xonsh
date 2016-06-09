@@ -14,10 +14,13 @@ will help you put a finger on how to do the equivelent task in xonsh.
     * - ``$NAME`` or ``${NAME}``
       - ``$NAME``
       - Look up an environment variable by name.
+    * - ``echo "$HOME/hello"``
+      - ``echo "$HOME/hello"``
+      - Construct an argument using an environment variable.
     * - ``something/$SOME_VAR/$(some_command)``
       - ``@('something/' + $SOME_VAR + $(some_command).strip())``
       - Concatenate a variable or text with the result of running a command.
-    * - ``${${VAR}}``
+    * - ``${!VAR}``
       - ``${var or expr}``
       - Look up an environment variable via another variable name. In xonsh,
         this may be any valid expression.
