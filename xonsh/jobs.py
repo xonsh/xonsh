@@ -182,12 +182,13 @@ def print_one_job(num):
         job = builtins.__xonsh_all_jobs__[num]
     except KeyError:
         return
+    pos = '+' if tasks[0] == num else '-' if tasks[1] == num else ' '
     status = job['status']
     cmd = [' '.join(i) if isinstance(i, list) else i for i in job['cmds']]
     cmd = ' '.join(cmd)
     pid = job['pids'][-1]
     bg = ' &' if job['bg'] else ''
-    print('[{}] {}: {}{} ({})'.format(num, status, cmd, bg, pid))
+    print('[{}]{} {}: {}{} ({})'.format(num, pos, status, cmd, bg, pid))
 
 
 def get_next_job_number():
@@ -240,7 +241,8 @@ def fg(args, stdin=None):
     xonsh command: fg
 
     Bring the currently active job to the foreground, or, if a single number is
-    given as an argument, bring that job to the foreground.
+    given as an argument, bring that job to the foreground. Additionally,
+    specify "+" for the most recent job and "-" for the second most recent job.
     """
 
     _clear_dead_jobs()
@@ -251,9 +253,15 @@ def fg(args, stdin=None):
         act = tasks[0]  # take the last manipulated task by default
     elif len(args) == 1:
         try:
-            act = int(args[0])
-        except ValueError:
+            if args[0] == '+':  # take the last manipulated task
+                act = tasks[0]
+            elif args[0] == '-':  # take the second to last manipulated task
+                act = tasks[1]
+            else:
+                act = int(args[0])
+        except (ValueError, IndexError):
             return '', 'Invalid job: {}\n'.format(args[0])
+
         if act not in builtins.__xonsh_all_jobs__:
             return '', 'Invalid job: {}\n'.format(args[0])
     else:

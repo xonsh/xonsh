@@ -16,6 +16,7 @@ Current Developments
   block into a callable object.  The function object is available via the
   ``func()`` attribute.  However, the ``Functor`` instance is itself callable
   and will dispatch to ``func()``.
+* Arguments '+' and '-' for the ``fg`` command (job control)
 
 **Changed:**
 
