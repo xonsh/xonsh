@@ -843,8 +843,15 @@ This is not available in Python-mode because multiplication is pretty
 important.
 
 
-Regular Expression Filename Globbing with Backticks
-=====================================================
+Advanced Path Search with Backticks
+===================================
+
+xonsh offers additional ways to find path names beyond regular globbing, both
+in Python mode and in subprocess mode.
+
+Regular Expression Globbing
+---------------------------
+
 If you have ever felt that normal globbing could use some more octane,
 then regex globbing is the tool for you! Any string that uses backticks
 (`````) instead of quotes (``'``, ``"``) is interpreted as a regular
@@ -866,13 +873,71 @@ Let's see a demonstration with some simple filenames:
     >>> len(`a(a+|b+)a`)
     3
 
+This same kind of search is performed if the backticks are prefaced with ``r``
+or ``regex``.  So the following expresions are equivalent: ```test```,
+``r`test```, and ``regex`test```.
+
 Other than the regex matching, this functions in the same way as normal
-globbing.
-For more information, please see the documentation for the ``re`` module in
-the Python standard library.
+globbing.  For more information, please see the documentation for the ``re``
+module in the Python standard library.
 
 .. warning:: This backtick syntax has very different from that of Bash.  In
              Bash, backticks mean to run a captured subprocess ``$()``.
+
+
+Normal Globbing
+---------------
+
+In subprocess mode, normal globbing happens without any special syntax.
+However, the backtick syntax has an additional feature: it is available inside
+of Python mode as well as subprocess mode.
+
+Similarly, normal globbing can be performed (either in Python mode or
+subprocess mode) by using the ``g```` or ``glob```` syntax:
+
+.. code-block:: xonshcon
+
+    >>> touch a aa aaa aba abba aab aabb abcba
+    >>> ls a*b*
+    aab  aabb  aba  abba  abcba
+    >>> ls g`a*b*`
+    aab  aabb  aba  abba  abcba
+    >>> print(g`a*b*`)
+    ['aab', 'aabb', 'abba', 'abcba', 'aba']
+    >>> len(g`a*b*`)
+    5
+
+
+Custom Path Searches
+--------------------
+
+In addition, if normal globbing and regular expression globbing are not enough,
+xonsh allows you to specify your own search functions, through the
+``$PATH_SEARCH_FUNCS`` environment variable.  This variable is a dictionary
+that maps prefix strings to functions to use for searching.  By default, this
+variable contains the following mapping:
+
+.. code-block:: xonshcon
+
+    {'': <function xonsh.built_ins.regexsearch>,
+     'g': <function xonsh.tools.globpath>,
+     'glob': <function xonsh.tools.globpath>,
+     'r': <function xonsh.built_ins.regexsearch>,
+     'regex': <function xonsh.built_ins.regexsearch>}
+
+Notice that ``''``, ``'r'``, and ``'regex'`` are mapped to a function that
+performs a regular expression search, and ``'g'`` and ``'glob'`` are mapped to
+a function that performs normal globbing.
+
+All of the functions in this dictionary should take in a single argument (a
+string) and return a list of possible matches to that string.  A silly example
+shows the form of these functions:
+
+.. code-block:: xonshcon
+
+    >>> $PATH_SEARCH_FUNCS['b'] = lambda s: ['snail', 'shell']
+    >>> print(b`test`)
+    ['snail', 'shell']
 
 
 Help & Superhelp with ``?`` & ``??``
