@@ -45,6 +45,26 @@ class XonshError(Exception):
     pass
 
 
+class XonshBlockError(XonshError):
+    """Special xonsh exception for communicating the liens of block bodies."""
+
+    def __init__(self, lines, glbs, locs, *args, **kwargs):
+        """
+        Parameters
+        ----------
+        lines : list f str
+            Block lines, as if split by str.splitlines().
+        glbs : Mapping or None
+            Global execution context for lines, ie globals() of calling frame.
+        locs : Mapping or None
+            Local execution context for lines, ie locals() of calling frame.
+        """
+        super().__init__(*args, **kwargs)
+        self.lines = lines
+        self.glbs = glbs
+        self.locs = locs
+
+
 class DefaultNotGivenType(object):
     """Singleton for representing when no default value is given."""
 
@@ -1171,7 +1191,8 @@ def backup_file(fname):
     import shutil
     from datetime import datetime
     base, ext = os.path.splitext(fname)
-    newfname = base + '.' + datetime.now().isoformat() + ext
+    timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
+    newfname = '%s.%s%s' % (base, timestamp, ext)
     shutil.move(fname, newfname)
 
 
