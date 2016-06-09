@@ -232,7 +232,7 @@ DEFAULT_VALUES = {
     'TEEPTY_PIPE_DELAY': 0.01,
     'TITLE': DEFAULT_TITLE,
     'UPDATE_OS_ENVIRON': False,
-    'VC_BRANCH_TIMEOUT': 0.01,
+    'VC_BRANCH_TIMEOUT': 0.2 if ON_WINDOWS else 0.1,
     'VI_MODE': False,
     'WIN_UNICODE_CONSOLE': True,
     'XDG_CONFIG_HOME': os.path.expanduser(os.path.join('~', '.config')),
