@@ -6,7 +6,10 @@ Current Developments
 ====================
 **Added:** None
 
-**Changed:** None
+**Changed:**
+
+* Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
+  the currently running script's path
 
 **Deprecated:** None
 
@@ -30,9 +33,6 @@ v0.3.4
   attempted to load.
 * Only show the prompt for the wizard if we did not attempt to load any run
   control files (as opposed to if none were successfully loaded).
-
-
-
 
 
 **Fixed:**

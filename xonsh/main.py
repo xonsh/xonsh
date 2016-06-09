@@ -120,7 +120,6 @@ def arg_undoers():
         '-c': (lambda args: setattr(args, 'command', None)),
         '-i': (lambda args: setattr(args, 'force_interactive', False)),
         '-l': (lambda args: setattr(args, 'login', False)),
-        '-c': (lambda args: setattr(args, 'command', None)),
         '--no-script-cache': (lambda args: setattr(args, 'scriptcache', True)),
         '--cache-everything': (lambda args: setattr(args, 'cacheall', False)),
         '--config-path': (lambda args: delattr(args, 'config_path')),
@@ -241,9 +240,11 @@ def main(argv=None):
         run_code_with_cache(args.command.lstrip(), shell.execer, mode='single')
     elif args.mode == XonshMode.script_from_file:
         # run a script contained in a file
-        if os.path.isfile(args.file):
+        path = os.path.abspath(os.path.expanduser(args.file))
+        if os.path.isfile(path):
             sys.argv = args.args
             env['ARGS'] = [args.file] + args.args
+            env['XONSH_SOURCE'] = path
             run_script_with_cache(args.file, shell.execer, glb=shell.ctx, loc=None, mode='exec')
         else:
             print('xonsh: {0}: No such file or directory.'.format(args.file))
