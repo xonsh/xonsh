@@ -255,7 +255,6 @@ def clean_jobs():
                 job_types.add('stopped')
 
         if job_types:
-            jobs_clean = False
             if 'background' in job_types and 'stopped' in job_types:
                 type_str = 'background and stopped'
             else:
@@ -271,6 +270,14 @@ def clean_jobs():
             print('xonsh: you have {art}{typ} {job}'.format(art=article,
                                                             typ=type_str,
                                                             job=job_str))
+            print('-'*5)
+            jobs([])
+            print('-'*5)
+            resp = input('Kill running jobs [y/n]? ')
+            if 'yes'.startswith(resp.lower()):
+                kill_all_jobs()
+            else:
+                jobs_clean = False
     else:
         kill_all_jobs()
 
