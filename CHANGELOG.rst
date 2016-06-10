@@ -66,6 +66,7 @@ v0.3.4
   ``activate``/``deactivate`` aliases for the conda environements.
 * Fixed crash resulting from errors other than syntax errors in run control
   file.
+* xonsh no longer backgrounds itself after every command on Cygwin.
 
 
 v0.3.3
