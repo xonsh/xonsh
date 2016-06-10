@@ -93,6 +93,7 @@ DEFAULT_ENSURERS = {
     'DYNAMIC_CWD_WIDTH': (is_dynamic_cwd_width, to_dynamic_cwd_tuple,
                           dynamic_cwd_tuple_to_str),
     'FORCE_POSIX_PATHS': (is_bool, to_bool, bool_to_str),
+    'FUZZY_PATH_COMPLETION': (is_bool, to_bool, bool_to_str),
     'HISTCONTROL': (is_string_set, csv_to_set, set_to_csv),
     'IGNOREEOF': (is_bool, to_bool, bool_to_str),
     'INTENSIFY_COLORS_ON_WIN':(always_false, intensify_colors_on_win_setter,
@@ -113,6 +114,7 @@ DEFAULT_ENSURERS = {
     'PROMPT': (is_string_or_callable, ensure_string, ensure_string),
     'RAISE_SUBPROC_ERROR': (is_bool, to_bool, bool_to_str),
     'RIGHT_PROMPT': (is_string_or_callable, ensure_string, ensure_string),
+    'SUBSEQUENCE_PATH_COMPLETION': (is_bool, to_bool, bool_to_str),
     'TEEPTY_PIPE_DELAY': (is_float, float, str),
     'UPDATE_OS_ENVIRON': (is_bool, to_bool, bool_to_str),
     'VC_BRANCH_TIMEOUT': (is_float, float, str),
@@ -210,6 +212,7 @@ DEFAULT_VALUES = {
     'DYNAMIC_CWD_WIDTH': (float('inf'), 'c'),
     'EXPAND_ENV_VARS': True,
     'FORCE_POSIX_PATHS': False,
+    'FUZZY_PATH_COMPLETION': True,
     'HISTCONTROL': set(),
     'IGNOREEOF': False,
     'INDENT': '    ',
@@ -232,6 +235,7 @@ DEFAULT_VALUES = {
     'RAISE_SUBPROC_ERROR': False,
     'RIGHT_PROMPT': '',
     'SHELL_TYPE': 'best',
+    'SUBSEQUENCE_PATH_COMPLETION': True,
     'SUGGEST_COMMANDS': True,
     'SUGGEST_MAX_NUM': 5,
     'SUGGEST_THRESHOLD': 3,
@@ -359,6 +363,11 @@ DEFAULT_DOCS = {
         "and $TITLE. See 'Customizing the Prompt' "
         'http://xon.sh/tutorial.html#customizing-the-prompt',
         configurable=False, default='xonsh.environ.FORMATTER_DICT'),
+    'FUZZY_PATH_COMPLETION': VarDocs(
+        "Toggles 'fuzzy' matching of paths for tab completion, which is only "
+        "used as a fallback if no other completions succeed but can be used "
+        "as a way to adjust for typographical errors. If ``True``, then, e.g.,"
+        " ``xonhs`` will match ``xonsh``."),
     'HISTCONTROL': VarDocs(
         'A set of strings (comma-separated list in string form) of options '
         'that determine what commands are saved to the history list. By '
@@ -429,6 +438,9 @@ DEFAULT_DOCS = {
         '(https://github.com/jonathanslenders/python-prompt-toolkit) '
         'library installed. To specify which shell should be used, do so in '
         'the run control file.'),
+    'SUBSEQUENCE_PATH_COMPLETION': VarDocs(
+        "Toggles subsequence matching of paths for tab completion. "
+        "If ``True``, then, e.g., ``~/u/ro`` can match ``~/lou/carcolh``."),
     'SUGGEST_COMMANDS': VarDocs(
         'When a user types an invalid command, xonsh will try to offer '
         'suggestions of similar valid commands if this is True.'),
@@ -439,7 +451,8 @@ DEFAULT_DOCS = {
     'SUGGEST_THRESHOLD': VarDocs(
         'An error threshold. If the Levenshtein distance between the entered '
         'command and a valid command is less than this value, the valid '
-        'command will be offered as a suggestion.'),
+        'command will be offered as a suggestion.  Also used for "fuzzy" '
+        'tab completion of paths.'),
     'TEEPTY_PIPE_DELAY': VarDocs(
         'The number of [seconds] to delay a spawned process if it has '
         'information being piped in via stdin. This value must be a float. '

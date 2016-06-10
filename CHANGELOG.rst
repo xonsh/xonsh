@@ -26,6 +26,12 @@ Current Developments
 * Added XonshCalledProcessError, which includes the relevant CompletedCommand.
   Also handles differences between Py3.4 and 3.5 in CalledProcessError
 * XonshError and XonshCalledProcessError are now in builtins
+* Tab completion of paths now includes zsh-style path expansion (subsequence
+  matching), toggleable with ``$SUBSEQUENCE_PATH_COMPLETION``
+* Tab completion of paths now includes "fuzzy" matches that are accurate to
+  within a few characters, toggleable with ``$FUZZY_PATH_COMPLETION``
+* Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
+  the currently running script's path
 * Arguments '+' and '-' for the ``fg`` command (job control)
 * Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
   the currently running script's path
@@ -43,7 +49,10 @@ Current Developments
 
 **Deprecated:** None
 
-**Removed:** None
+**Removed:**
+
+* ``ensure_git()`` and ``ensure_hg()`` decorators removed.
+* ``call_hg_command()`` function removed.
 
 **Fixed:**
 
@@ -67,15 +76,6 @@ v0.3.4
   control files (as opposed to if none were successfully loaded).
 * Git and mercurial branch and dirty function refactor to imporve run times.
 
-<<<<<<< HEAD
-**Deprecated:** None
-
-**Removed:**
-
-* ``ensure_git()`` and ``ensure_hg()`` decorators removed.
-* ``call_hg_command()`` function removed.
-=======
->>>>>>> master
 
 **Fixed:**
 
