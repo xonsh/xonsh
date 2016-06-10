@@ -11,7 +11,7 @@ import shlex
 from xonsh.dirstack import cd, pushd, popd, dirs, _get_cwd
 from xonsh.environ import locate_binary
 from xonsh.foreign_shells import foreign_shell_data
-from xonsh.jobs import jobs, fg, bg, kill_all_jobs
+from xonsh.jobs import jobs, fg, bg, clean_jobs
 from xonsh.history import main as history_alias
 from xonsh.platform import ON_ANACONDA, ON_DARWIN, ON_WINDOWS, scandir
 from xonsh.proc import foreground
@@ -144,8 +144,11 @@ class Aliases(MutableMapping):
 
 def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
     """Sends signal to exit shell."""
+    if not clean_jobs():
+        # Do not exit if jobs not cleaned up
+        return None, None
+
     builtins.__xonsh_exit__ = True
-    kill_all_jobs()
     print()  # gimme a newline
     return None, None
 
