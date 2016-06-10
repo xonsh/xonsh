@@ -83,7 +83,7 @@ If you want to run your "work in progress version" without installing
 and in a fresh environment you can use Docker. If Docker is installed
 you just have to run this::
 
-  $ python docker.py
+  $ python xonsh-in-docker.py
 
 This will build and run the current state of the repository in an isolated
 container (it may take a while the first time you run it). There are two

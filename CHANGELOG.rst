@@ -6,12 +6,6 @@ Current Developments
 ====================
 **Added:**
 
-* New ``$VC_BRANCH_TIMEOUT`` environment variable is the time (in seconds)
-  of how long to spend attempting each individual version control branch
-  information command during ``$PROMPT`` formatting.  This allows for faster
-  prompt resolution and faster startup times.
-* New lazy methods added to CommandsCache allowing for testing and inspection
-  without the possibility of recomputing the cache.
 * New ``Block`` and ``Functor`` context managers are now available as
   part of the ``xonsh.contexts`` module.
 * ``Block`` provides support for turning a context body into a non-executing
@@ -22,6 +16,22 @@ Current Developments
   block into a callable object.  The function object is available via the
   ``func()`` attribute.  However, the ``Functor`` instance is itself callable
   and will dispatch to ``func()``.
+* New ``$VC_BRANCH_TIMEOUT`` environment variable is the time (in seconds)
+  of how long to spend attempting each individual version control branch
+  information command during ``$PROMPT`` formatting.  This allows for faster
+  prompt resolution and faster startup times.
+* New lazy methods added to CommandsCache allowing for testing and inspection
+  without the possibility of recomputing the cache.
+* ``!(command)`` is now usefully iterable, yielding lines of stdout
+* Added XonshCalledProcessError, which includes the relevant CompletedCommand.
+  Also handles differences between Py3.4 and 3.5 in CalledProcessError
+* XonshError and XonshCalledProcessError are now in builtins
+* Arguments '+' and '-' for the ``fg`` command (job control)
+* Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
+  the currently running script's path
+* ``!(command)`` is now usefully iterable, yielding lines of stdout
+* Added XonshCalledProcessError, which includes the relevant CompletedCommand.
+  Also handles differences between Py3.4 and 3.5 in CalledProcessError
 
 **Changed:**
 
@@ -29,6 +39,7 @@ Current Developments
   ``wrap_subproc``.
 * Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
   the currently running script's path
+* XonshError and XonshCalledProcessError are now in builtins
 
 **Deprecated:** None
 
@@ -38,6 +49,9 @@ Current Developments
 
 * Strip leading space in commands passed using the "-c" switch
 * Fixed xonfig wizard failing on Windows due to colon in created filename.
+* Ensured that the prompt_toolkit shell functions, even without a ``completer``
+  attribute.
+* Fixed crash resulting from malformed ``$PROMPT`` or ``$TITLE``.
 
 **Security:** None
 
@@ -77,6 +91,7 @@ v0.3.4
   ``activate``/``deactivate`` aliases for the conda environements.
 * Fixed crash resulting from errors other than syntax errors in run control
   file.
+* xonsh no longer backgrounds itself after every command on Cygwin.
 
 
 v0.3.3
