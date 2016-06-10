@@ -130,5 +130,6 @@ def check_eval(input):
 def check_parse(input):
     with mock_xonsh_env(None):
         EXECER.debug_level = DEBUG_LEVEL
-        EXECER.parse(input, ctx=None)
+        tree = EXECER.parse(input, ctx=None)
+    return tree
 

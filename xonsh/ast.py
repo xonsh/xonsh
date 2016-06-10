@@ -12,7 +12,7 @@ from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
     YieldFrom, Return, IfExp, Lambda, arguments, arg, Call, keyword, \
     Attribute, Global, Nonlocal, If, While, For, withitem, With, Try, \
     ExceptHandler, FunctionDef, ClassDef, Starred, NodeTransformer, \
-    Interactive, Expression, Index, literal_eval, dump, walk
+    Interactive, Expression, Index, literal_eval, dump, walk, increment_lineno
 from ast import Ellipsis  # pylint: disable=redefined-builtin
 # pylint: enable=unused-import
 import textwrap
@@ -214,7 +214,7 @@ class CtxAwareTransformer(NodeTransformer):
             if not isinstance(newnode, AST):
                 # take the first (and only) Expr
                 newnode = newnode[0]
-            newnode.lineno = node.lineno
+            increment_lineno(newnode, n=node.lineno - 1)
             newnode.col_offset = node.col_offset
         except SyntaxError:
             newnode = node
