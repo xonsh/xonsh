@@ -63,6 +63,8 @@ v0.3.4
   attempted to load.
 * Only show the prompt for the wizard if we did not attempt to load any run
   control files (as opposed to if none were successfully loaded).
+* On Windows if bash is not on the path look in the registry for the defaults
+  install directory for GitForWindows.
 
 
 **Fixed:**
@@ -107,8 +109,6 @@ v0.3.3
 * RC files are now executed directly in the appropriate context.
 * ``_`` is now updated by ``![]``, to contain the appropriate
   ``CompletedCommand`` object.
-* On Windows if bash is not on the path look in the registry for the defaults
-  install directory for GitForWindows.
 
 
 
