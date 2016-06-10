@@ -20,6 +20,12 @@ Current Developments
   block into a callable object.  The function object is available via the
   ``func()`` attribute.  However, the ``Functor`` instance is itself callable
   and will dispatch to ``func()``.
+* Tab completion of paths now includes zsh-style path expansion (subsequence
+  matching), toggleable with ``$SUBSEQUENCE_PATH_COMPLETION``
+* Tab completion of paths now includes "fuzzy" matches that are accurate to
+  within a few characters, toggleable with ``$FUZZY_PATH_COMPLETION``
+* Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
+  the currently running script's path
 * Arguments '+' and '-' for the ``fg`` command (job control)
 * Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
   the currently running script's path
