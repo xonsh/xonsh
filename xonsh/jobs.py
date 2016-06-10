@@ -8,7 +8,7 @@ import builtins
 from subprocess import TimeoutExpired, check_output
 from collections import deque
 
-from xonsh.platform import ON_DARWIN, ON_WINDOWS
+from xonsh.platform import ON_DARWIN, ON_WINDOWS, ON_CYGWIN
 
 tasks = deque()
 
@@ -87,17 +87,40 @@ else:
 
     _shell_pgrp = os.getpgrp()
 
-    _block_when_giving = (signal.SIGTTOU, signal.SIGTTIN, signal.SIGTSTP)
+    _block_when_giving = (signal.SIGTTOU, signal.SIGTTIN,
+                          signal.SIGTSTP, signal.SIGCHLD)
 
-    def _give_terminal_to(pgid):
-        # over-simplified version of:
-        #    give_terminal_to from bash 4.3 source, jobs.c, line 4030
-        # this will give the terminal to the process group pgid
-        if _shell_tty is not None and os.isatty(_shell_tty):
-            oldmask = signal.pthread_sigmask(signal.SIG_BLOCK,
-                                             _block_when_giving)
-            os.tcsetpgrp(_shell_tty, pgid)
-            signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
+    # _give_terminal_to is a simplified version of:
+    #    give_terminal_to from bash 4.3 source, jobs.c, line 4030
+    # this will give the terminal to the process group pgid
+    if ON_CYGWIN:
+        import ctypes
+        _libc = ctypes.CDLL('cygwin1.dll')
+
+        # on cygwin, signal.pthread_sigmask does not exist in Python, even
+        # though pthread_sigmask is defined in the kernel.  thus, we use
+        # ctypes to mimic the calls in the "normal" version below.
+        def _give_terminal_to(pgid):
+            if _shell_tty is not None and os.isatty(_shell_tty):
+                omask = ctypes.c_ulong()
+                mask = ctypes.c_ulong()
+                _libc.sigemptyset(ctypes.byref(mask))
+                for i in _block_when_giving:
+                    _libc.sigaddset(ctypes.byref(mask), ctypes.c_int(i))
+                _libc.sigemptyset(ctypes.byref(omask))
+                _libc.sigprocmask(ctypes.c_int(signal.SIG_BLOCK),
+                                  ctypes.byref(mask),
+                                  ctypes.byref(omask))
+                _libc.tcsetpgrp(ctypes.c_int(_shell_tty), ctypes.c_int(pgid))
+                _libc.sigprocmask(ctypes.c_int(signal.SIG_SETMASK),
+                                  ctypes.byref(omask), None)
+    else:
+        def _give_terminal_to(pgid):
+            if _shell_tty is not None and os.isatty(_shell_tty):
+                oldmask = signal.pthread_sigmask(signal.SIG_BLOCK,
+                                                 _block_when_giving)
+                os.tcsetpgrp(_shell_tty, pgid)
+                signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
 
     # check for shell tty
     try:
@@ -180,12 +203,13 @@ def print_one_job(num):
         job = builtins.__xonsh_all_jobs__[num]
     except KeyError:
         return
+    pos = '+' if tasks[0] == num else '-' if tasks[1] == num else ' '
     status = job['status']
     cmd = [' '.join(i) if isinstance(i, list) else i for i in job['cmds']]
     cmd = ' '.join(cmd)
     pid = job['pids'][-1]
     bg = ' &' if job['bg'] else ''
-    print('[{}] {}: {}{} ({})'.format(num, status, cmd, bg, pid))
+    print('[{}]{} {}: {}{} ({})'.format(num, pos, status, cmd, bg, pid))
 
 
 def get_next_job_number():
@@ -238,7 +262,8 @@ def fg(args, stdin=None):
     xonsh command: fg
 
     Bring the currently active job to the foreground, or, if a single number is
-    given as an argument, bring that job to the foreground.
+    given as an argument, bring that job to the foreground. Additionally,
+    specify "+" for the most recent job and "-" for the second most recent job.
     """
 
     _clear_dead_jobs()
@@ -249,9 +274,15 @@ def fg(args, stdin=None):
         act = tasks[0]  # take the last manipulated task by default
     elif len(args) == 1:
         try:
-            act = int(args[0])
-        except ValueError:
+            if args[0] == '+':  # take the last manipulated task
+                act = tasks[0]
+            elif args[0] == '-':  # take the second to last manipulated task
+                act = tasks[1]
+            else:
+                act = int(args[0])
+        except (ValueError, IndexError):
             return '', 'Invalid job: {}\n'.format(args[0])
+
         if act not in builtins.__xonsh_all_jobs__:
             return '', 'Invalid job: {}\n'.format(args[0])
     else:

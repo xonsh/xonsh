@@ -1,19 +1,20 @@
 # -*- coding: utf-8 -*-
 """Environment for the xonsh shell."""
+import os
+import sys
+import time
+import json
+import locale
 import builtins
 from contextlib import contextmanager
 from functools import wraps
 from itertools import chain
-import json
-import locale
-import os
 from pprint import pformat
 import re
 import socket
 import string
 import subprocess
 import shutil
-import sys
 from warnings import warn
 from collections import (Mapping, MutableMapping, MutableSequence, MutableSet,
     namedtuple)
@@ -24,12 +25,13 @@ from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
 from xonsh.platform import (BASH_COMPLETIONS_DEFAULT, ON_ANACONDA, ON_LINUX,
-                            ON_WINDOWS, DEFAULT_ENCODING)
+                            ON_WINDOWS, DEFAULT_ENCODING, ON_CYGWIN)
 from xonsh.tools import (
     IS_SUPERUSER, always_true, always_false, ensure_string, is_env_path,
     str_to_env_path, env_path_to_str, is_bool, to_bool, bool_to_str,
     is_history_tuple, to_history_tuple, history_tuple_to_str, is_float,
-    is_string, is_completions_display_value, to_completions_display_value,
+    is_string, is_callable, is_string_or_callable,
+    is_completions_display_value, to_completions_display_value,
     is_string_set, csv_to_set, set_to_csv, get_sep, is_int, is_bool_seq,
     is_bool_or_int, to_bool_or_int, bool_or_int_to_str,
     csv_to_bool_seq, bool_seq_to_csv, DefaultNotGiven, print_exception,
@@ -91,6 +93,7 @@ DEFAULT_ENSURERS = {
     'DYNAMIC_CWD_WIDTH': (is_dynamic_cwd_width, to_dynamic_cwd_tuple,
                           dynamic_cwd_tuple_to_str),
     'FORCE_POSIX_PATHS': (is_bool, to_bool, bool_to_str),
+    'FUZZY_PATH_COMPLETION': (is_bool, to_bool, bool_to_str),
     'HISTCONTROL': (is_string_set, csv_to_set, set_to_csv),
     'IGNOREEOF': (is_bool, to_bool, bool_to_str),
     'INTENSIFY_COLORS_ON_WIN':(always_false, intensify_colors_on_win_setter,
@@ -104,13 +107,21 @@ DEFAULT_ENSURERS = {
     'LOADED_CONFIG': (is_bool, to_bool, bool_to_str),
     'LOADED_RC_FILES': (is_bool_seq, csv_to_bool_seq, bool_seq_to_csv),
     'MOUSE_SUPPORT': (is_bool, to_bool, bool_to_str),
+    'MULTILINE_PROMPT': (is_string_or_callable, ensure_string, ensure_string),
     re.compile('\w*PATH$'): (is_env_path, str_to_env_path, env_path_to_str),
     'PATHEXT': (is_env_path, str_to_env_path, env_path_to_str),
     'PRETTY_PRINT_RESULTS': (is_bool, to_bool, bool_to_str),
+    'PROMPT': (is_string_or_callable, ensure_string, ensure_string),
     'RAISE_SUBPROC_ERROR': (is_bool, to_bool, bool_to_str),
-    'RIGHT_PROMPT': (is_string, ensure_string, ensure_string),
+    'RIGHT_PROMPT': (is_string_or_callable, ensure_string, ensure_string),
+    'SUBSEQUENCE_PATH_COMPLETION': (is_bool, to_bool, bool_to_str),
+    'SUPPRESS_BRANCH_TIMEOUT_MESSAGE': (is_bool, to_bool, bool_to_str),
     'TEEPTY_PIPE_DELAY': (is_float, float, str),
     'UPDATE_OS_ENVIRON': (is_bool, to_bool, bool_to_str),
+    'VC_BRANCH_TIMEOUT': (is_float, float, str),
+    'VI_MODE': (is_bool, to_bool, bool_to_str),
+    'VIRTUAL_ENV': (is_string, ensure_string, ensure_string),
+    'WIN_UNICODE_CONSOLE': (always_false, setup_win_unicode_console, bool_to_str),
     'XONSHRC': (is_env_path, str_to_env_path, env_path_to_str),
     'XONSH_CACHE_SCRIPTS': (is_bool, to_bool, bool_to_str),
     'XONSH_CACHE_EVERYTHING': (is_bool, to_bool, bool_to_str),
@@ -124,10 +135,7 @@ DEFAULT_ENSURERS = {
     'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
     'XONSH_STORE_STDIN': (is_bool, to_bool, bool_to_str),
     'XONSH_TRACEBACK_LOGFILE': (is_logfile_opt, to_logfile_opt,
-                                logfile_opt_to_str),
-    'VI_MODE': (is_bool, to_bool, bool_to_str),
-    'VIRTUAL_ENV': (is_string, ensure_string, ensure_string),
-    'WIN_UNICODE_CONSOLE': (always_false, setup_win_unicode_console, bool_to_str),
+                                logfile_opt_to_str)
 }
 
 #
@@ -141,7 +149,11 @@ def default_value(f):
 def is_callable_default(x):
     """Checks if a value is a callable default."""
     return callable(x) and getattr(x, '_xonsh_callable_default', False)
-if ON_WINDOWS:
+
+if ON_CYGWIN:
+    DEFAULT_PROMPT = ('{env_name}{BOLD_GREEN}{user}@{hostname}'
+                      '{BOLD_BLUE} {cwd} {prompt_end}{NO_COLOR} ')
+elif ON_WINDOWS:
     DEFAULT_PROMPT = ('{env_name}'
                       '{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} '
                       '{cwd}{branch_color}{curr_branch}{NO_COLOR} '
@@ -177,6 +189,12 @@ def xonshconfig(env):
     xc = os.path.join(xcd, 'config.json')
     return xc
 
+if ON_WINDOWS:
+    DEFAULT_XONSHRC = (os.path.join(os.environ['ALLUSERSPROFILE'],
+                                     'xonsh', 'xonshrc'),
+                       os.path.expanduser('~/.xonshrc'))
+else:
+    DEFAULT_XONSHRC = ('/etc/xonshrc', os.path.expanduser('~/.xonshrc'))
 
 # Default values should generally be immutable, that way if a user wants
 # to set them they have to do a copy and write them to the environment.
@@ -196,6 +214,7 @@ DEFAULT_VALUES = {
     'DYNAMIC_CWD_WIDTH': (float('inf'), 'c'),
     'EXPAND_ENV_VARS': True,
     'FORCE_POSIX_PATHS': False,
+    'FUZZY_PATH_COMPLETION': True,
     'HISTCONTROL': set(),
     'IGNOREEOF': False,
     'INDENT': '    ',
@@ -218,21 +237,21 @@ DEFAULT_VALUES = {
     'RAISE_SUBPROC_ERROR': False,
     'RIGHT_PROMPT': '',
     'SHELL_TYPE': 'best',
+    'SUBSEQUENCE_PATH_COMPLETION': True,
+    'SUPPRESS_BRANCH_TIMEOUT_MESSAGE': False,
     'SUGGEST_COMMANDS': True,
     'SUGGEST_MAX_NUM': 5,
     'SUGGEST_THRESHOLD': 3,
     'TEEPTY_PIPE_DELAY': 0.01,
     'TITLE': DEFAULT_TITLE,
     'UPDATE_OS_ENVIRON': False,
+    'VC_BRANCH_TIMEOUT': 0.2 if ON_WINDOWS else 0.1,
     'VI_MODE': False,
     'WIN_UNICODE_CONSOLE': True,
     'XDG_CONFIG_HOME': os.path.expanduser(os.path.join('~', '.config')),
     'XDG_DATA_HOME': os.path.expanduser(os.path.join('~', '.local', 'share')),
     'XONSHCONFIG': xonshconfig,
-    'XONSHRC': ((os.path.join(os.environ['ALLUSERSPROFILE'],
-                              'xonsh', 'xonshrc'),
-                os.path.expanduser('~/.xonshrc')) if ON_WINDOWS
-               else ('/etc/xonshrc', os.path.expanduser('~/.xonshrc'))),
+    'XONSHRC': DEFAULT_XONSHRC,
     'XONSH_CACHE_SCRIPTS': True,
     'XONSH_CACHE_EVERYTHING': False,
     'XONSH_COLOR_STYLE': 'default',
@@ -348,6 +367,11 @@ DEFAULT_DOCS = {
         "and $TITLE. See 'Customizing the Prompt' "
         'http://xon.sh/tutorial.html#customizing-the-prompt',
         configurable=False, default='xonsh.environ.FORMATTER_DICT'),
+    'FUZZY_PATH_COMPLETION': VarDocs(
+        "Toggles 'fuzzy' matching of paths for tab completion, which is only "
+        "used as a fallback if no other completions succeed but can be used "
+        "as a way to adjust for typographical errors. If ``True``, then, e.g.,"
+        " ``xonhs`` will match ``xonsh``."),
     'HISTCONTROL': VarDocs(
         'A set of strings (comma-separated list in string form) of options '
         'that determine what commands are saved to the history list. By '
@@ -389,7 +413,8 @@ DEFAULT_DOCS = {
     'PROMPT': VarDocs(
         'The prompt text. May contain keyword arguments which are '
         "auto-formatted, see 'Customizing the Prompt' at "
-        'http://xon.sh/tutorial.html#customizing-the-prompt.',
+        'http://xon.sh/tutorial.html#customizing-the-prompt. '
+        'This value is never inherited from parent processes.',
         default='xonsh.environ.DEFAULT_PROMPT'),
     'PUSHD_MINUS': VarDocs(
         'Flag for directory pushing functionality. False is the normal '
@@ -417,6 +442,9 @@ DEFAULT_DOCS = {
         '(https://github.com/jonathanslenders/python-prompt-toolkit) '
         'library installed. To specify which shell should be used, do so in '
         'the run control file.'),
+    'SUBSEQUENCE_PATH_COMPLETION': VarDocs(
+        "Toggles subsequence matching of paths for tab completion. "
+        "If ``True``, then, e.g., ``~/u/ro`` can match ``~/lou/carcolh``."),
     'SUGGEST_COMMANDS': VarDocs(
         'When a user types an invalid command, xonsh will try to offer '
         'suggestions of similar valid commands if this is True.'),
@@ -427,7 +455,10 @@ DEFAULT_DOCS = {
     'SUGGEST_THRESHOLD': VarDocs(
         'An error threshold. If the Levenshtein distance between the entered '
         'command and a valid command is less than this value, the valid '
-        'command will be offered as a suggestion.'),
+        'command will be offered as a suggestion.  Also used for "fuzzy" '
+        'tab completion of paths.'),
+    'SUPPRESS_BRANCH_TIMEOUT_MESSAGE': VarDocs(
+        'Whether or not to supress branch timeout warning messages.'),
     'TEEPTY_PIPE_DELAY': VarDocs(
         'The number of [seconds] to delay a spawned process if it has '
         'information being piped in via stdin. This value must be a float. '
@@ -459,6 +490,9 @@ DEFAULT_DOCS = {
     'UPDATE_OS_ENVIRON': VarDocs("If True os.environ will always be updated "
         "when the xonsh environment changes. The environment can be reset to "
         "the default value by calling '__xonsh_env__.undo_replace_env()'"),
+    'VC_BRANCH_TIMEOUT': VarDocs('The timeout (in seconds) for version control '
+        'branch computations. This is a timeout per subprocess call, so the '
+        'total time to compute will be larger than this in many cases.'),
     'VI_MODE': VarDocs(
         "Flag to enable 'vi_mode' in the 'prompt_toolkit' shell."),
     'VIRTUAL_ENV': VarDocs(
@@ -504,7 +538,7 @@ DEFAULT_DOCS = {
         'This is the location where xonsh data files are stored, such as '
         'history.', default="'$XDG_DATA_HOME/xonsh'"),
     'XONSH_ENCODING': VarDocs(
-        'This is the encoding that xonsh should use for subrpocess operations.',
+        'This is the encoding that xonsh should use for subprocess operations.',
         default='sys.getdefaultencoding()'),
     'XONSH_ENCODING_ERRORS': VarDocs(
         'The flag for how to handle encoding errors should they happen. '
@@ -535,6 +569,10 @@ DEFAULT_DOCS = {
         'Set to True to always show traceback or False to always hide. '
         'If undefined then the traceback is hidden but a notice is shown on how '
         'to enable the full traceback.'),
+    'XONSH_SOURCE': VarDocs(
+        "When running a xonsh script, this variable contains the absolute path "
+        "to the currently executing script's file.",
+        configurable=False),
     'XONSH_STORE_STDIN': VarDocs(
         'Whether or not to store the stdin that is supplied to the !() and ![] '
         'operators.'),
@@ -763,9 +801,10 @@ class Env(MutableMapping):
 
 def _yield_executables(directory, name):
     if ON_WINDOWS:
+        base_name, ext = os.path.splitext(name.lower())
         for fname in executables_in(directory):
-            base_name, ext = os.path.splitext(fname)
-            if name.lower() == base_name.lower():
+            fbase, fext = os.path.splitext(fname.lower())
+            if base_name == fbase and (len(ext) == 0 or ext == fext):
                 yield os.path.join(directory, fname)
     else:
         for x in executables_in(directory):
@@ -777,13 +816,11 @@ def _yield_executables(directory, name):
 def locate_binary(name):
     if os.path.isfile(name) and name != os.path.basename(name):
         return name
-
     directories = builtins.__xonsh_env__.get('PATH')
-
-    # Windows users expect t obe able to execute files in the same directory without `./`
+    # Windows users expect to be able to execute files in the same directory
+    # without `./`
     if ON_WINDOWS:
         directories = [_get_cwd()] + directories
-
     try:
         return next(chain.from_iterable(_yield_executables(directory, name) for
                     directory in directories if os.path.isdir(directory)))
@@ -791,213 +828,218 @@ def locate_binary(name):
         return None
 
 
-def _get_parent_dir_for(path, dir_name):
-    # walk up the directory tree to see if we are inside an hg repo
-    previous_path = ''
-    while path != previous_path:
-        if os.path.isdir(os.path.join(path, dir_name)):
-            return path
-
-        previous_path = path
-        path, _ = os.path.split(path)
-
-    return False
-
-
-def ensure_git(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        cwd = kwargs.get('cwd', _get_cwd())
-        if cwd is None:
-            return
-
-        # step out completely if git is not installed
-        if locate_binary('git') is None:
-            return
-
-        root_path = _get_parent_dir_for(cwd, '.git')
-        # Bail if we're not in a repo
-        if not root_path:
-            return
-
-        kwargs['cwd'] = cwd
-
-        return func(*args, **kwargs)
-    return wrapper
-
-
-def ensure_hg(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        cwd = kwargs.get('cwd', _get_cwd())
-        if cwd is None:
-            return
-
-        # step out completely if hg is not installed
-        if locate_binary('hg') is None:
-            return
-
-        root_path = _get_parent_dir_for(cwd, '.hg')
-        # Bail if we're not in a repo
-        if not root_path:
-            return
-
-        kwargs['cwd'] = cwd
-        kwargs['root'] = root_path
-
-        return func(*args, **kwargs)
-    return wrapper
-
-
-@ensure_git
-def get_git_branch(cwd=None):
+def get_git_branch():
+    """Attempts to find the current git branch.  If no branch is found, then
+    an empty string is returned. If a timeout occured, the timeout exception
+    (subprocess.TimeoutExpired) is returned.
+    """
     branch = None
-
+    env = builtins.__xonsh_env__
+    cwd = env['PWD']
+    denv = env.detype()
+    vcbt = env['VC_BRANCH_TIMEOUT']
     if not ON_WINDOWS:
         prompt_scripts = ['/usr/lib/git-core/git-sh-prompt',
                           '/usr/local/etc/bash_completion.d/git-prompt.sh']
-
         for script in prompt_scripts:
             # note that this is about 10x faster than bash -i "__git_ps1"
-            _input = ('source {}; __git_ps1 "${{1:-%s}}"'.format(script))
+            inp = 'source {}; __git_ps1 "${{1:-%s}}"'.format(script)
             try:
-                branch = subprocess.check_output(['bash', ],
-                                                 cwd=cwd,
-                                                 input=_input,
-                                                 stderr=subprocess.PIPE,
-                                                 universal_newlines=True)
-                if len(branch) == 0:
-                    branch = None
+                branch = subprocess.check_output(['bash'], cwd=cwd, input=inp,
+                            stderr=subprocess.PIPE, timeout=vcbt, env=denv,
+                            universal_newlines=True)
+                break
+            except subprocess.TimeoutExpired as e:
+                branch = e
+                break
             except (subprocess.CalledProcessError, FileNotFoundError):
                 continue
-
     # fall back to using the git binary if the above failed
     if branch is None:
+        cmd = ['git', 'rev-parse', '--abbrev-ref', 'HEAD']
         try:
-            cmd = ['git', 'rev-parse', '--abbrev-ref', 'HEAD']
-            s = subprocess.check_output(cmd,
-                                        stderr=subprocess.PIPE,
-                                        cwd=cwd,
-                                        universal_newlines=True)
-            if len(s) == 0:
-                # Workaround for a bug in ConEMU/cmder
-                # retry without redirection
-                s = subprocess.check_output(cmd,
-                                            cwd=cwd,
-                                            universal_newlines=True)
-            s = s.strip()
-            if len(s) > 0:
-                branch = s
+            s = subprocess.check_output(cmd, cwd=cwd, timeout=vcbt, env=denv,
+                    stderr=subprocess.PIPE, universal_newlines=True)
+            if ON_WINDOWS and len(s) == 0:
+                # Workaround for a bug in ConEMU/cmder, retry without redirection
+                s = subprocess.check_output(cmd, cwd=cwd, timeout=vcbt,
+                                            env=denv, universal_newlines=True)
+            branch = s.strip()
+        except subprocess.TimeoutExpired as e:
+            branch = e
         except (subprocess.CalledProcessError, FileNotFoundError):
-            pass
-
+            branch = ''
     return branch
 
 
-def call_hg_command(command, cwd):
-    # Override user configurations settings and aliases
-    hg_env = builtins.__xonsh_env__.detype()
-    hg_env['HGRCPATH'] = ""
-
-    s = None
-    try:
-        s = subprocess.check_output(['hg'] + command,
-                                    stderr=subprocess.PIPE,
-                                    cwd=cwd,
-                                    universal_newlines=True,
-                                    env=hg_env)
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        pass
-
-    return s
+def _get_parent_dir_for(path, dir_name, timeout):
+    # walk up the directory tree to see if we are inside an hg repo
+    # the timeout makes sure that we don't thrash the file system
+    previous_path = ''
+    t0 = time.time()
+    while path != previous_path and ((time.time() - t0) < timeout):
+        if os.path.isdir(os.path.join(path, dir_name)):
+            return path
+        previous_path = path
+        path, _ = os.path.split(path)
+    return (path == previous_path)
 
 
-@ensure_hg
 def get_hg_branch(cwd=None, root=None):
-    branch = None
-    active_bookmark = None
-
-    if root is not None:
-        branch_path = os.path.sep.join([root, '.hg', 'branch'])
-        bookmark_path = os.path.sep.join([root, '.hg', 'bookmarks.current'])
-
-        if os.path.exists(branch_path):
-            with open(branch_path, 'r') as branch_file:
-                branch = branch_file.read()
+    env = builtins.__xonsh_env__
+    cwd = env['PWD']
+    root = _get_parent_dir_for(cwd, '.hg', env['VC_BRANCH_TIMEOUT'])
+    if not isinstance(root, str):
+        # Bail if we are not in a repo or we timed out
+        if root:
+            return ''
         else:
-            branch = 'default'
+            return subprocess.TimeoutExpired(['hg'], env['VC_BRANCH_TIMEOUT'])
+    # get branch name
+    branch_path = os.path.sep.join([root, '.hg', 'branch'])
+    if os.path.exists(branch_path):
+        with open(branch_path, 'r') as branch_file:
+            branch = branch_file.read()
+    else:
+        branch = 'default'
+    # add bookmark, if we can
+    bookmark_path = os.path.sep.join([root, '.hg', 'bookmarks.current'])
+    if os.path.exists(bookmark_path):
+        with open(bookmark_path, 'r') as bookmark_file:
+            active_bookmark = bookmark_file.read()
+        branch = "{0}, {1}".format(*(b.strip(os.linesep) for b in
+                                   (branch, active_bookmark)))
+    else:
+        branch = branch.strip(os.linesep)
+    return branch
 
-        if os.path.exists(bookmark_path):
-            with open(bookmark_path, 'r') as bookmark_file:
-                active_bookmark = bookmark_file.read()
 
-    if active_bookmark is not None:
-        return "{0}, {1}".format(
-            *(b.strip(os.linesep) for b in (branch, active_bookmark)))
+_FIRST_BRANCH_TIMEOUT = True
 
-    return branch.strip(os.linesep) if branch else None
+def _first_branch_timeout_message():
+    global _FIRST_BRANCH_TIMEOUT
+    sbtm = builtins.__xonsh_env__['SUPPRESS_BRANCH_TIMEOUT_MESSAGE']
+    if not _FIRST_BRANCH_TIMEOUT or sbtm:
+        return
+    _FIRST_BRANCH_TIMEOUT = False
+    print('xonsh: branch timeout: computing the branch name, color, or both '
+          'timed out while formatting the prompt. You may avoid this by '
+          'increaing the value of $VC_BRANCH_TIMEOUT or by removing branch '
+          'fields, like {curr_branch}, from your $PROMPT. See the FAQ '
+          'for more details. This message will be suppressed for the remainder '
+          'of this session. To suppress this message permanently, set '
+          '$SUPPRESS_BRANCH_TIMEOUT_MESSAGE = True in your xonshrc file.',
+          file=sys.stderr)
 
 
 def current_branch(pad=True):
-    """Gets the branch for a current working directory. Returns None
+    """Gets the branch for a current working directory. Returns an empty string
     if the cwd is not a repository.  This currently only works for git and hg
-    and should be extended in the future.
+    and should be extended in the future.  If a timeout occured, the string
+    '<branch-timeout>' is returned.
     """
-    branch = get_git_branch() or get_hg_branch()
-
-    if pad and branch is not None:
+    branch = ''
+    cmds = builtins.__xonsh_commands_cache__
+    if cmds.lazyin('git') or cmds.lazylen() == 0:
+        branch = get_git_branch()
+    if (cmds.lazyin('hg') or cmds.lazylen() == 0) and not branch:
+        branch = get_hg_branch()
+    if isinstance(branch, subprocess.TimeoutExpired):
+        branch = '<branch-timeout>'
+        _first_branch_timeout_message()
+    if pad and branch:
         branch = ' ' + branch
-
-    return branch or ''
+    return branch
 
 
 def git_dirty_working_directory(cwd=None, include_untracked=False):
+    """Returns whether or not the git directory is dirty. If this could not
+    be determined (timeout, file not sound, etc.) then this returns None.
+    """
+    cmd = ['git', 'status', '--porcelain']
+    if include_untracked:
+        cmd.append('--untracked-files=normal')
+    else:
+        cmd.append('--untracked-files=no')
+    env = builtins.__xonsh_env__
+    cwd = env['PWD']
+    denv = env.detype()
+    vcbt = env['VC_BRANCH_TIMEOUT']
     try:
-        cmd = ['git', 'status', '--porcelain']
-        if include_untracked:
-            cmd.append('--untracked-files=normal')
-        else:
-            cmd.append('--untracked-files=no')
-        s = subprocess.check_output(cmd,
-                                    stderr=subprocess.PIPE,
-                                    cwd=cwd,
-                                    universal_newlines=True)
-        if len(s) == 0:
-            # Workaround for a bug in ConEMU/cmder
-            # retry without redirection
-            s = subprocess.check_output(cmd,
-                                        cwd=cwd,
-                                        universal_newlines=True)
+        s = subprocess.check_output(cmd, stderr=subprocess.PIPE, cwd=cwd,
+                                    timeout=vcbt, universal_newlines=True,
+                                    env=denv)
+        if ON_WINDOWS and len(s) == 0:
+            # Workaround for a bug in ConEMU/cmder, retry without redirection
+            s = subprocess.check_output(cmd, cwd=cwd, timeout=vcbt,
+                                        env=denv, universal_newlines=True)
         return bool(s)
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return False
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired,
+            FileNotFoundError):
+        return None
 
 
-@ensure_hg
-def hg_dirty_working_directory(cwd=None, root=None):
-    id = call_hg_command(['identify', '--id'], cwd)
-    if id is None:
-        return False
-    return id.strip(os.linesep).endswith('+')
+def hg_dirty_working_directory():
+    """Computes whether or not the mercurial working directory is dirty or not.
+    If this cannot be deterimined, None is returned.
+    """
+    env = builtins.__xonsh_env__
+    cwd = env['PWD']
+    denv = env.detype()
+    vcbt = env['VC_BRANCH_TIMEOUT']
+    # Override user configurations settings and aliases
+    denv['HGRCPATH'] = ''
+    try:
+        s = subprocess.check_output(['hg', 'identify', '--id'],
+                stderr=subprocess.PIPE, cwd=cwd, timeout=vcbt,
+                universal_newlines=True, env=denv)
+        return s.strip(os.linesep).endswith('+')
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired,
+            FileNotFoundError):
+        return None
 
 
 def dirty_working_directory(cwd=None):
     """Returns a boolean as to whether there are uncommitted files in version
-    control repository we are inside. Currently supports git and hg.
+    control repository we are inside. If this cannot be determined, returns
+    None. Currently supports git and hg.
     """
-    return git_dirty_working_directory() or hg_dirty_working_directory()
+    dwd = None
+    cmds = builtins.__xonsh_commands_cache__
+    if cmds.lazyin('git') or cmds.lazylen() == 0:
+        dwd = git_dirty_working_directory()
+    if (cmds.lazyin('hg') or cmds.lazylen() == 0) and (dwd is None):
+        dwd = hg_dirty_working_directory()
+    return dwd
 
 
 def branch_color():
-    """Return red if the current branch is dirty, otherwise green"""
-    return ('{BOLD_INTENSE_RED}' if dirty_working_directory() else
-            '{BOLD_INTENSE_GREEN}')
+    """Return red if the current branch is dirty, yellow if the dirtiness can
+    not be determined, and green if it clean. Thes are bold, intesnse colors
+    for the foreground.
+    """
+    dwd = dirty_working_directory()
+    if dwd is None:
+        color = '{BOLD_INTENSE_YELLOW}'
+    elif dwd:
+        color = '{BOLD_INTENSE_RED}'
+    else:
+        color = '{BOLD_INTENSE_GREEN}'
+    return color
 
 
 def branch_bg_color():
-    """Return red if the current branch is dirty, otherwise green"""
-    return ('{BACKGROUND_RED}' if dirty_working_directory() else
-            '{BACKGROUND_GREEN}')
+    """Return red if the current branch is dirty, yellow if the dirtiness can
+    not be determined, and green if it clean. These are bacground colors.
+    """
+    dwd = dirty_working_directory()
+    if dwd is None:
+        color = '{BACKGROUND_YELLOW}'
+    elif dwd:
+        color = '{BACKGROUND_RED}'
+    else:
+        color = '{BACKGROUND_GREEN}'
+    return color
 
 
 def _replace_home(x):
@@ -1138,7 +1180,26 @@ def _get_fmtter(formatter_dict=None):
     return fmtter
 
 
+def _failover_template_format(template):
+    if callable(template):
+        try:
+            # Exceptions raises from function of producing $PROMPT
+            # in user's xonshrc should not crash xonsh
+            return template()
+        except Exception:
+            print_exception()
+            return '$ '
+    return template
+
+
 def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
+    try:
+        return _format_prompt_main(template, formatter_dict)
+    except:
+        return _failover_template_format(template)
+
+
+def _format_prompt_main(template, formatter_dict):
     """Formats a xonsh prompt template string."""
     template = template() if callable(template) else template
     fmtter = _get_fmtter(formatter_dict)
@@ -1159,6 +1220,14 @@ def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
 
 def partial_format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
     """Formats a xonsh prompt template string."""
+    try:
+        return _partial_format_prompt_main(template=template,
+                                           formatter_dict=formatter_dict)
+    except:
+        return _failover_template_format(template)
+
+
+def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
     template = template() if callable(template) else template
     fmtter = _get_fmtter(formatter_dict)
     bopen = '{'
@@ -1171,7 +1240,7 @@ def partial_format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
         if field is None:
             continue
         elif field.startswith('$'):
-            v = builtins.__xonsh_env__[name[1:]]  # FIXME `name` is an unresolved ref
+            v = builtins.__xonsh_env__[field[1:]]
             v = _FORMATTER.convert_field(v, conv)
             v = _FORMATTER.format_field(v, spec)
             toks.append(v)
@@ -1306,6 +1375,7 @@ def xonshrc_context(rcfiles=None, execer=None, initial=None):
         env = initial
     if rcfiles is None or execer is None:
         return env
+    env['XONSHRC'] = tuple(rcfiles)
     for rcfile in rcfiles:
         if not os.path.isfile(rcfile):
             loaded.append(False)
@@ -1318,13 +1388,18 @@ def xonshrc_context(rcfiles=None, execer=None, initial=None):
             msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
             warn(msg.format(rcfile, err), RuntimeWarning)
             continue
+        except Exception as err:
+            loaded.append(False)
+            msg = 'error running xonsh run control file {0!r}: {1!s}'
+            warn(msg.format(rcfile, err), RuntimeWarning)
+            continue
     return env
 
 
 def windows_foreign_env_fixes(ctx):
     """Environment fixes for Windows. Operates in-place."""
     # remove these bash variables which only cause problems.
-    for ev in ['HOME', 'OLDPWD', 'PROMPT']:
+    for ev in ['HOME', 'OLDPWD']:
         if ev in ctx:
             del ctx[ev]
     # Override path-related bash variables; on Windows bash uses
@@ -1338,17 +1413,22 @@ def windows_foreign_env_fixes(ctx):
     ctx['PWD'] = _get_cwd()
 
 
+def foreign_env_fixes(ctx):
+    """Environment fixes for all operating systems"""
+    if 'PROMPT' in ctx:
+        del ctx['PROMPT']
+
+
 def default_env(env=None, config=None, login=True):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence
     ctx = dict(BASE_ENV)
     ctx.update(os.environ)
-    if ON_WINDOWS:
-        # Windows style PROMPT definitions don't work in XONSH:
-        try:
-            del ctx['PROMPT']
-        except KeyError:
-            pass
+    # other shells' PROMPT definitions generally don't work in XONSH:
+    try:
+        del ctx['PROMPT']
+    except KeyError:
+        pass
 
     if login:
         conf = load_static_config(ctx, config=config)
@@ -1357,6 +1437,7 @@ def default_env(env=None, config=None, login=True):
                                         issue_warning=False)
         if ON_WINDOWS:
             windows_foreign_env_fixes(foreign_env)
+        foreign_env_fixes(foreign_env)
 
         ctx.update(foreign_env)
 

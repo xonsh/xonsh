@@ -18,7 +18,8 @@ You can install xonsh using homebrew, conda, pip, or from source.
 
 .. code-block:: bash
 
-    $ conda install -c conda-forge xonsh
+    $ conda config --add channels conda-forge
+    $ conda install xonsh
 
 .. note:: For the bleeding edge development version use ``conda install -c xonsh/channel/dev xonsh``
     

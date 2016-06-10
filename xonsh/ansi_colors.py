@@ -5,6 +5,7 @@ from warnings import warn
 
 RE_BACKGROUND = re.compile('(bg|bg#|bghex|background)')
 
+
 def partial_color_format(template, style='default', cmap=None, hide=False):
     """Formats a template string but only with respect to the colors.
     Another template string is returned, with the color values filled in.
@@ -27,6 +28,13 @@ def partial_color_format(template, style='default', cmap=None, hide=False):
     -------
     A template string with the color values filled in.
     """
+    try:
+        return _partial_color_format_main(template, style=style, cmap=cmap, hide=hide)
+    except:
+        return template
+
+
+def _partial_color_format_main(template, style='default', cmap=None, hide=False):
     if cmap is not None:
         pass
     elif style in STYLES:

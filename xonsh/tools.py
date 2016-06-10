@@ -30,6 +30,7 @@ import traceback
 from glob import iglob
 from warnings import warn
 from contextlib import contextmanager
+from subprocess import CalledProcessError
 from collections import OrderedDict, Sequence, Set
 
 # adding further imports from xonsh modules is discouraged to avoid cirular
@@ -43,6 +44,52 @@ IS_SUPERUSER = ctypes.windll.shell32.IsUserAnAdmin() != 0 if ON_WINDOWS else os.
 
 class XonshError(Exception):
     pass
+
+
+class XonshBlockError(XonshError):
+    """Special xonsh exception for communicating the lines of block bodies."""
+
+    def __init__(self, lines, glbs, locs, *args, **kwargs):
+        """
+        Parameters
+        ----------
+        lines : list f str
+            Block lines, as if split by str.splitlines().
+        glbs : Mapping or None
+            Global execution context for lines, ie globals() of calling frame.
+        locs : Mapping or None
+            Local execution context for lines, ie locals() of calling frame.
+        """
+        super().__init__(*args, **kwargs)
+        self.lines = lines
+        self.glbs = glbs
+        self.locs = locs
+
+
+class XonshCalledProcessError(XonshError, CalledProcessError):
+    """Raised when there's an error with a called process
+
+    Inherits from XonshError and subprocess.CalledProcessError, catching
+    either will also catch this error.
+
+    Raised *after* iterating over stdout of a captured command, if the
+    returncode of the command is nonzero.
+
+    Example:
+        try:
+            for line in !(ls):
+                print(line)
+        except CalledProcessError as error:
+            print("Error in process: {}.format(error.completed_command.pid))
+
+    This also handles differences between Python3.4 and 3.5 where
+    CalledProcessError is concerned.
+    """
+    def __init__(self, returncode, command, output=None, stderr=None,
+                 completed_command=None):
+        super().__init__(returncode, command, output)
+        self.stderr = stderr
+        self.completed_command = completed_command
 
 
 class DefaultNotGivenType(object):
@@ -593,6 +640,16 @@ def is_float(x):
 def is_string(x):
     """Tests if something is a string"""
     return isinstance(x, str)
+
+
+def is_callable(x):
+    """Tests if something is callable"""
+    return callable(x)
+
+
+def is_string_or_callable(x):
+    """Tests if something is a string or callable"""
+    return is_string(x) or is_callable(x)
 
 
 def always_true(x):
@@ -1248,7 +1305,8 @@ def backup_file(fname):
     import shutil
     from datetime import datetime
     base, ext = os.path.splitext(fname)
-    newfname = base + '.' + datetime.now().isoformat() + ext
+    timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
+    newfname = '%s.%s%s' % (base, timestamp, ext)
     shutil.move(fname, newfname)
 
 
@@ -1303,6 +1361,28 @@ class CommandsCache(Set):
             allcmds |= set(builtins.aliases)
         self._cmds_cache = frozenset(allcmds)
         return self._cmds_cache
+
+    def lazyin(self, value):
+        """Checks if the value is in the current cache without the potential to
+        update the cache. It just says whether the value is known *now*. This
+        may not reflect precisely what is on the $PATH.
+        """
+        return value in self._cmds_cache
+
+    def lazyiter(self):
+        """Returns an iterator over the current cache contents without the
+        potential to update the cache. This may not reflect what is on the
+        $PATH.
+        """
+        return iter(self._cmds_cache)
+
+    def lazylen(self):
+        """Returns the length of the current cache contents without the
+        potential to update the cache. This may not reflect precicesly
+        what is on the $PATH.
+        """
+        return len(self._cmds_cache)
+
 
 WINDOWS_DRIVE_MATCHER = re.compile(r'^\w:')
 

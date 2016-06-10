@@ -14,7 +14,8 @@ from xonsh.tools import (
     ensure_string, is_env_path, str_to_env_path, env_path_to_str,
     escape_windows_cmd_string, is_bool, to_bool, bool_to_str,
     is_bool_or_int, to_bool_or_int, bool_or_int_to_str,
-    ensure_int_or_slice, is_float, is_string, check_for_partial_string,
+    ensure_int_or_slice, is_float, is_string, is_callable,
+    is_string_or_callable, check_for_partial_string, CommandsCache,
     is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str,
     is_logfile_opt, to_logfile_opt, logfile_opt_to_str, argvquote,
     executables_in, find_next_break, expand_case_matching)
@@ -331,6 +332,17 @@ def test_is_float():
 
 def test_is_string():
     yield assert_true, is_string('42.0')
+    yield assert_false, is_string(42.0)
+
+
+def test_is_callable():
+    yield assert_true, is_callable(lambda: 42.0)
+    yield assert_false, is_callable(42.0)
+
+
+def test_is_string_or_callable():
+    yield assert_true, is_string_or_callable('42.0')
+    yield assert_true, is_string_or_callable(lambda: 42.0)
     yield assert_false, is_string(42.0)
 
 
@@ -678,6 +690,14 @@ def test_expand_case_matching():
     for inp, exp in cases.items():
         obs = expand_case_matching(inp)
         yield assert_equal, exp, obs
+
+
+def test_commands_cache_lazy():
+    cc = CommandsCache()
+    yield assert_false, cc.lazyin('xonsh')
+    yield assert_equal, 0, len(list(cc.lazyiter()))
+    yield assert_equal, 0, cc.lazylen()
+
 
 if __name__ == '__main__':
     nose.runmodule()

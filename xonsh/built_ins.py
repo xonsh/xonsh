@@ -30,8 +30,8 @@ from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
                         SimpleForegroundProcProxy, TeePTYProc,
                         CompletedCommand, HiddenCompletedCommand)
 from xonsh.tools import (
-    suggest_commands, XonshError, expandvars, CommandsCache, globpath,
-    iglobpath
+    suggest_commands, expandvars, CommandsCache, globpath, XonshError,
+    XonshCalledProcessError, XonshBlockError
 )
 
 
@@ -564,6 +564,7 @@ def run_subproc(cmds, captured=False):
     if captured == 'stdout':
         return output
     elif captured is not False:
+        procinfo['executed_cmd'] = aliased_cmd
         procinfo['pid'] = prev_proc.pid
         procinfo['returncode'] = prev_proc.returncode
         procinfo['timestamp'] = (starttime, time.time())
@@ -657,6 +658,9 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.__xonsh_all_jobs__ = {}
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     # public built-ins
+    builtins.XonshError = XonshError
+    builtins.XonshBlockError = XonshBlockError
+    builtins.XonshCalledProcessError = XonshCalledProcessError
     builtins.evalx = None if execer is None else execer.eval
     builtins.execx = None if execer is None else execer.exec
     builtins.compilex = None if execer is None else execer.compile
@@ -713,6 +717,9 @@ def unload_builtins():
              '__xonsh_subproc_uncaptured__',
              '__xonsh_execer__',
              '__xonsh_commands_cache__',
+             'XonshError',
+             'XonshBlockError',
+             'XonshCalledProcessError',
              'evalx',
              'execx',
              'compilex',

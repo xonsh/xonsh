@@ -4,12 +4,16 @@ from __future__ import unicode_literals, print_function
 import os
 import tempfile
 import builtins
+from tempfile import TemporaryDirectory
+from xonsh.tools import ON_WINDOWS
+
 
 import nose
 from nose.tools import (assert_equal, assert_true, assert_not_in,
     assert_is_instance, assert_in, assert_raises)
 
-from xonsh.environ import Env, format_prompt, load_static_config
+from xonsh.environ import (Env, format_prompt, load_static_config,
+    locate_binary, partial_format_prompt)
 
 from tools import mock_xonsh_env
 
@@ -55,6 +59,37 @@ def test_format_prompt():
     for p, exp in cases.items():
         obs = format_prompt(template=p, formatter_dict=formatter_dict)
         yield assert_equal, exp, obs
+    for p, exp in cases.items():
+        obs = partial_format_prompt(template=p, formatter_dict=formatter_dict)
+        yield assert_equal, exp, obs
+
+def test_format_prompt_with_broken_template():
+    for p in ('{user', '{user}{hostname'):
+        assert_equal(partial_format_prompt(p), p)
+        assert_equal(format_prompt(p), p)
+
+    # '{{user' will be parsed to '{user'
+    for p in ('{{user}', '{{user'):
+        assert_in('user', partial_format_prompt(p))
+        assert_in('user', format_prompt(p))
+
+def test_format_prompt_with_broken_template_in_func():
+    for p in (
+        lambda: '{user',
+        lambda: '{{user',
+        lambda: '{{user}',
+        lambda: '{user}{hostname',
+    ):
+        # '{{user' will be parsed to '{user'
+        assert_in('user', partial_format_prompt(p))
+        assert_in('user', format_prompt(p))
+
+def test_format_prompt_with_invalid_func():
+    def p():
+        foo = bar  # raises exception
+        return '{user}'
+    assert_is_instance(partial_format_prompt(p), str)
+    assert_is_instance(format_prompt(p), str)
 
 def test_HISTCONTROL():
     env = Env(HISTCONTROL=None)
@@ -126,6 +161,23 @@ def test_load_static_config_type_fail():
 def test_load_static_config_json_fail():
     s = b'{"best": "awash"'
     check_load_static_config(s, {}, False)
+
+if ON_WINDOWS:
+    def test_locate_binary_on_windows():
+        files = ('file1.exe', 'FILE2.BAT', 'file3.txt')
+        with TemporaryDirectory() as tmpdir:
+            for fname in files:
+                fpath = os.path.join(tmpdir, fname)
+                with open(fpath, 'w') as f:
+                    f.write(fpath)               
+            env = Env({'PATH': [tmpdir], 'PATHEXT': ['.COM', '.EXE', '.BAT']})
+            with mock_xonsh_env(env): 
+                assert_equal( locate_binary('file1'), os.path.join(tmpdir,'file1.exe'))
+                assert_equal( locate_binary('file1.exe'), os.path.join(tmpdir,'file1.exe'))
+                assert_equal( locate_binary('file2'), os.path.join(tmpdir,'FILE2.BAT'))
+                assert_equal( locate_binary('file2.bat'), os.path.join(tmpdir,'FILE2.BAT'))
+                assert_equal( locate_binary('file3'), None)
+
 
 
 if __name__ == '__main__':

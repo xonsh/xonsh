@@ -327,7 +327,7 @@ For example,
 The ``!()`` syntax captured more information about the command, as an instance
 of a class called ``CompletedCommand``.  This object contains more information
 about the result of the given command, including the return code, the process
-id, the stdanard output and standard error streams, and information about how
+id, the standard output and standard error streams, and information about how
 input and output were redirected.  For example:
 
 .. code-block:: xonshcon
@@ -354,6 +354,43 @@ example:
     def wait_until_google_responds():
         while not !(ping -c 1 google.com):
             sleep 1
+
+
+If you iterate over the ``CompletedCommand`` object, it will yield lines of its
+output.  Using this, you can quickly and cleanly process output from commands.
+Additionally, these objects expose a method ``itercheck``, which behaves the same
+as the built-in iterator but raises ``XonshCalledProcessError`` if the process
+had a nonzero return code.
+
+.. code-block:: xonshcon
+
+    def get_wireless_interface():
+        """Returns devicename of first connected wifi, None otherwise"""
+        for line in !(nmcli device):
+            dev, typ, state, conn_name = line.split(None, 3)
+            if typ == 'wifi' and state == 'connected':
+                return dev
+
+    def grep_path(path, regexp):
+        """Recursively greps `path` for perl `regexp`
+
+        Returns a dict of 'matches' and 'failures'.
+        Matches are files that contain the given regexp.
+        Failures are files that couldn't be scanned.
+        """
+        matches = []
+        failures = []
+
+        try:
+            for match in !(grep -RPl @(regexp) @(str(path))).itercheck():
+                matches.append(match)
+        except XonshCalledProcessError as error:
+            for line in error.stderr.split('\n'):
+                if not line.strip():
+                    continue
+                filename = line.split('grep: ', 1)[1].rsplit(':', 1)[0]
+                failures.append(filename)
+        return {'matches': matches, 'failures': failures}
 
 
 The ``$()`` and ``!()`` operators are expressions themselves. This means that
@@ -736,7 +773,8 @@ Each job has a unique identifier (starting with 1 and counting upward).  By
 default, the ``fg`` and ``bg`` commands operate on the job that was started
 most recently.  You can bring older jobs to the foreground or background by
 specifying the appropriate ID; for example, ``fg 1`` brings the job with ID 1
-to the foreground.
+to the foreground. Additionally, specify "+" for the most recent job and "-"
+for the second most recent job.
 
 String Literals in Subprocess-mode
 ====================================
@@ -1044,10 +1082,16 @@ detail is available on the `Tab Completion page <tutorial_completers.html>`_.
 
 Customizing the Prompt
 ======================
-Customizing the prompt is probably the most common reason for altering an
-environment variable.  The ``PROMPT`` variable can be a string, or it can be a
-function (of no arguments) that returns a string.  The result can contain
-keyword arguments, which will be replaced automatically:
+Customizing the prompt by modifying ``$PROMPT`` is probably the most common
+reason for altering an environment variable.
+
+.. note:: Note that the ``$PROMPT`` variable will never be inherited from a
+          parent process (regardless of whether that parent is a foreign shell
+          or an instance of xonsh).
+
+The ``$PROMPT`` variable can be a string, or it can be a function (of no
+arguments) that returns a string.  The result can contain keyword arguments,
+which will be replaced automatically:
 
 .. code-block:: xonshcon
 
@@ -1071,7 +1115,10 @@ By default, the following variables are available for use:
   * ``curr_branch``: The name of the current git branch (preceded by space),
     if any.
   * ``branch_color``: ``{BOLD_GREEN}`` if the current git branch is clean,
-    otherwise ``{BOLD_RED}``
+    otherwise ``{BOLD_RED}``. This is yellow if the branch color could not be
+    determined.
+  * ``branch_bg_color``: Like, ``{branch_color}``, but sets a background color
+    instead.
   * ``prompt_end``: `#` if the user has root/admin permissions `$` otherwise
   * ``current_job``: The name of the command currently running in the
     foreground, if any.

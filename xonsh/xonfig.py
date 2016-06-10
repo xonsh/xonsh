@@ -345,6 +345,7 @@ def _info(ns):
     data.extend([
         ('on darwin', platform.ON_DARWIN),
         ('on windows', platform.ON_WINDOWS),
+        ('on cygwin', platform.ON_CYGWIN),
         ('is superuser', tools.IS_SUPERUSER),
         ('default encoding', platform.DEFAULT_ENCODING),
         ])
