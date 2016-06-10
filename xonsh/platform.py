@@ -28,11 +28,11 @@ ON_DARWIN = platform.system() == 'Darwin'
 ON_LINUX = platform.system() == 'Linux'
 """ ``True`` if executed on a Linux platform, else ``False``. """
 ON_WINDOWS = platform.system() == 'Windows'
-""" ``True`` if executed on a Windows platform, else ``False``. """
-
+""" ``True`` if executed on a native Windows platform, else ``False``. """
+ON_CYGWIN = sys.platform == 'cygwin'
+""" ``True`` if executed on a Cygwin Windows platform, else ``False``. """
 ON_POSIX = (os.name == 'posix')
 """ ``True`` if executed on a POSIX-compliant platform, else ``False``. """
-
 
 
 #
@@ -92,13 +92,12 @@ def ptk_version_info():
         return None
 
 
-BEST_SHELL_TYPE = None
-""" The 'best' available shell type, either 'prompt_toollit' or 'readline'. """
-
-if ON_WINDOWS or has_prompt_toolkit():
-    BEST_SHELL_TYPE = 'prompt_toolkit'
-else:
-    BEST_SHELL_TYPE = 'readline'
+@lru_cache(1)
+def best_shell_type():
+    if ON_WINDOWS or has_prompt_toolkit():
+        return 'prompt_toolkit'
+    else:
+        return 'readline'
 
 
 @lru_cache(1)
@@ -189,6 +188,30 @@ else:
     win_unicode_console = None
 
 
+if ON_WINDOWS:
+    import winreg
+    try:
+        key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
+                             'SOFTWARE\\GitForWindows')
+        GIT_FOR_WINDOWS_PATH, type = winreg.QueryValueEx(key, "InstallPath")
+    except FileNotFoundError:
+        GIT_FOR_WINDOWS_PATH = None
+
+    # Check that bash is on path otherwise try the default directory
+    # used by Git for windows
+    import subprocess
+    WINDOWS_BASH_COMMAND = 'bash'
+    try:
+        subprocess.check_call([WINDOWS_BASH_COMMAND, '--version'],
+                              stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE)
+    except FileNotFoundError:
+        if GIT_FOR_WINDOWS_PATH:
+            bashcmd = os.path.join(GIT_FOR_WINDOWS_PATH, 'bin\\bash.exe')
+            if os.path.isfile(bashcmd):
+                WINDOWS_BASH_COMMAND = bashcmd
+
+
 #
 # Bash completions defaults
 #
@@ -202,7 +225,7 @@ if LINUX_DISTRO == 'arch':
     BASH_COMPLETIONS_DEFAULT = (
         '/etc/bash_completion',
         '/usr/share/bash-completion/completions')
-elif ON_LINUX:
+elif ON_LINUX or ON_CYGWIN:
     BASH_COMPLETIONS_DEFAULT = (
         '/usr/share/bash-completion',
         '/usr/share/bash-completion/completions')
@@ -210,12 +233,15 @@ elif ON_DARWIN:
     BASH_COMPLETIONS_DEFAULT = (
         '/usr/local/etc/bash_completion',
         '/opt/local/etc/profile.d/bash_completion.sh')
-elif ON_WINDOWS:
-    progamfiles = os.environ.get('PROGRAMFILES', 'C:/Program Files')
+elif ON_WINDOWS and GIT_FOR_WINDOWS_PATH:
     BASH_COMPLETIONS_DEFAULT = (
-        progamfiles + '/Git/usr/share/bash-completion',
-        progamfiles + '/Git/usr/share/bash-completion/completions',
-        progamfiles + '/Git/mingw64/share/git/completion/git-completion.bash')
+        os.path.join(GIT_FOR_WINDOWS_PATH,
+                     'usr\\share\\bash-completion'),
+        os.path.join(GIT_FOR_WINDOWS_PATH,
+                     'usr\\share\\bash-completion\\completions'),
+        os.path.join(GIT_FOR_WINDOWS_PATH,
+                     'mingw64\\share\\git\\completion\\git-completion.bash'))
+
 
 #
 # All constants as a dict

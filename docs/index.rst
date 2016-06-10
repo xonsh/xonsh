@@ -36,15 +36,20 @@ the xonsh shell
         "This is Major Tom to Ground Xonshtrol",
         "Sally sells csh and keeps xonsh to herself",
         "Nice indeed. Everything's accounted for, except your old shell.",
-        "I wanna thank you for putting me back in my snail shell.",
+        "I wanna thank you for putting me back in my snail shell",
         "Crustaceanly Yours",
         "With great shell comes great reproducibility",
         "None shell pass",
+        "You shell not pass!",
         "The x-on shell",
+        "Ever wonder why there isn't a Taco Shell? Because it is a corny idea.",
         "It is pronounced <i>コンチ</i>",
         "It is pronounced <i>コンッチ</i>",
         "It is pronounced <i>コンシュ</i>",
         "The carcolh will catch you!",
+        "People xonshtantly mispronounce these things",
+        "WHAT...is your favorite shell?",
+        "Exploiting the workers and hanging on to outdated imperialist dogma since 2015."
         ];
     document.write(taglines[Math.floor(Math.random() * taglines.length)]);
     </script>
@@ -94,6 +99,7 @@ Contents
     tutorial
     tutorial_hist
     tutorial_xontrib
+    tutorial_completers
     bash_to_xsh
     python_virtual_environments
 
@@ -243,9 +249,10 @@ Helpful Links
 =============
 
 * `Documentation <http://xon.sh>`_
+* `Gitter <https://gitter.im/scopatz/xonsh>`_
 * `Mailing list <https://groups.google.com/forum/#!forum/xonsh>`_
-* `GitHub Repository <https://github.com/scopatz/xonsh>`_
 * `IRC: channel #xonsh on OFTC <http://www.oftc.net/>`_
+* `GitHub Repository <https://github.com/scopatz/xonsh>`_
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`

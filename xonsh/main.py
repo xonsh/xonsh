@@ -120,7 +120,6 @@ def arg_undoers():
         '-c': (lambda args: setattr(args, 'command', None)),
         '-i': (lambda args: setattr(args, 'force_interactive', False)),
         '-l': (lambda args: setattr(args, 'login', False)),
-        '-c': (lambda args: setattr(args, 'command', None)),
         '--no-script-cache': (lambda args: setattr(args, 'scriptcache', True)),
         '--cache-everything': (lambda args: setattr(args, 'cacheall', False)),
         '--config-path': (lambda args: delattr(args, 'config_path')),
@@ -149,16 +148,22 @@ def undo_args(args):
 
 
 def _pprint_displayhook(value):
-    if value is None or isinstance(value, HiddenCompletedCommand):
+    if value is None:
         return
     builtins._ = None  # Set '_' to None to avoid recursion
-    if HAS_PYGMENTS:
-        s = pretty(value)  # color case
-        lexer = pyghooks.XonshLexer()
-        tokens = list(pygments.lex(s, lexer=lexer))
+    if isinstance(value, HiddenCompletedCommand):
+        builtins._ = value
+        return
+    env = builtins.__xonsh_env__
+    if env.get('PRETTY_PRINT_RESULTS'):
+        printed_val = pretty(value)
+    else:
+        printed_val = repr(value)
+    if HAS_PYGMENTS and env.get('COLOR_RESULTS'):
+        tokens = list(pygments.lex(printed_val, lexer=pyghooks.XonshLexer()))
         print_color(tokens)
     else:
-        pprint(value)  # black & white case
+        print(printed_val)  # black & white case
     builtins._ = value
 
 
@@ -173,6 +178,7 @@ def premain(argv=None):
     """Setup for main xonsh entry point, returns parsed arguments."""
     if setproctitle is not None:
         setproctitle(' '.join(['xonsh'] + sys.argv[1:]))
+    builtins.__xonsh_ctx__ = {}
     args, other = parser.parse_known_args(argv)
     if args.file is not None:
         real_argv = (argv or sys.argv)
@@ -190,7 +196,8 @@ def premain(argv=None):
                     'completer': False,
                     'login': False,
                     'scriptcache': args.scriptcache,
-                    'cacheall': args.cacheall}
+                    'cacheall': args.cacheall,
+                    'ctx': builtins.__xonsh_ctx__}
     if args.login:
         shell_kwargs['login'] = True
     if args.config_path is None:
@@ -230,24 +237,30 @@ def main(argv=None):
     shell = builtins.__xonsh_shell__
     if args.mode == XonshMode.single_command:
         # run a single command and exit
-        run_code_with_cache(args.command, shell.execer, mode='single')
+        run_code_with_cache(args.command.lstrip(), shell.execer, mode='single')
     elif args.mode == XonshMode.script_from_file:
         # run a script contained in a file
-        if os.path.isfile(args.file):
+        path = os.path.abspath(os.path.expanduser(args.file))
+        if os.path.isfile(path):
             sys.argv = args.args
             env['ARGS'] = [args.file] + args.args
-            run_script_with_cache(args.file, shell.execer, glb=shell.ctx, loc=None, mode='exec')
+            env['XONSH_SOURCE'] = path
+            run_script_with_cache(args.file, shell.execer, glb=shell.ctx,
+                                  loc=None, mode='exec')
         else:
             print('xonsh: {0}: No such file or directory.'.format(args.file))
     elif args.mode == XonshMode.script_from_stdin:
         # run a script given on stdin
         code = sys.stdin.read()
-        run_code_with_cache(code, shell.execer, glb=shell.ctx, loc=None, mode='exec')
+        run_code_with_cache(code, shell.execer, glb=shell.ctx, loc=None,
+                            mode='exec')
     else:
         # otherwise, enter the shell
         env['XONSH_INTERACTIVE'] = True
         ignore_sigtstp()
-        if not env['LOADED_CONFIG'] and not any(env['LOADED_RC_FILES']):
+        if (env['XONSH_INTERACTIVE'] and
+                not env['LOADED_CONFIG'] and
+                not any(os.path.isfile(i) for i in env['XONSHRC'])):
             print('Could not find xonsh configuration or run control files.')
             from xonsh import xonfig  # lazy import
             xonfig.main(['wizard', '--confirm'])

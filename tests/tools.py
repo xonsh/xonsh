@@ -12,7 +12,10 @@ from contextlib import contextmanager
 from nose.plugins.skip import SkipTest
 
 from xonsh.built_ins import ensure_list_of_strs
+builtins.__xonsh_env__ = {}
 from xonsh.base_shell import BaseShell
+from xonsh.execer import Execer
+from xonsh.tools import XonshBlockError
 
 
 VER_3_4 = (3, 4)
@@ -60,6 +63,7 @@ def mock_xonsh_env(xenv):
     builtins.__xonsh_subproc_captured__ = sp
     builtins.__xonsh_subproc_uncaptured__ = sp
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
+    builtins.XonshBlockError = XonshBlockError
     builtins.evalx = eval
     builtins.execx = None
     builtins.compilex = None
@@ -77,6 +81,7 @@ def mock_xonsh_env(xenv):
     del builtins.__xonsh_subproc_captured__
     del builtins.__xonsh_subproc_uncaptured__
     del builtins.__xonsh_ensure_list_of_strs__
+    del builtins.XonshBlockError
     del builtins.evalx
     del builtins.execx
     del builtins.compilex
@@ -95,3 +100,35 @@ def skip_if(cond):
         else:
             return f
     return dec
+
+#
+# Execer tools
+#
+
+DEBUG_LEVEL = 0
+EXECER = None
+
+def execer_setup():
+    # only setup one parser
+    global EXECER
+    if EXECER is None:
+        EXECER = Execer(debug_level=DEBUG_LEVEL, login=False)
+
+def check_exec(input, **kwargs):
+    with mock_xonsh_env(None):
+        if not input.endswith('\n'):
+            input += '\n'
+        EXECER.debug_level = DEBUG_LEVEL
+        EXECER.exec(input, **kwargs)
+
+def check_eval(input):
+    with mock_xonsh_env({'AUTO_CD': False, 'XONSH_ENCODING' :'utf-8',
+                         'XONSH_ENCODING_ERRORS': 'strict', 'PATH': []}):
+        EXECER.debug_level = DEBUG_LEVEL
+        EXECER.eval(input)
+
+def check_parse(input):
+    with mock_xonsh_env(None):
+        EXECER.debug_level = DEBUG_LEVEL
+        EXECER.parse(input, ctx=None)
+

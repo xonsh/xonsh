@@ -1,19 +1,18 @@
 # -*- coding: utf-8 -*-
 """Implements the xonsh executer."""
 import re
+import sys
 import types
 import inspect
 import builtins
+import warnings
 from collections import Mapping
 
 from xonsh import ast
 from xonsh.parser import Parser
-from xonsh.tools import (subproc_toks, END_TOK_TYPES, LPARENS,
-    _is_not_lparen_and_rparen)
+from xonsh.tools import subproc_toks, find_next_break
 from xonsh.built_ins import load_builtins, unload_builtins
 
-
-RE_END_TOKS = re.compile('(;|and|\&\&|or|\|\||\))')
 
 class Execer(object):
     """Executes xonsh code in a context."""
@@ -47,14 +46,14 @@ class Execer(object):
         if self.unload:
             unload_builtins()
 
-    def parse(self, input, ctx, mode='exec'):
+    def parse(self, input, ctx, mode='exec', transform=True):
         """Parses xonsh code in a context-aware fashion. For context-free
-        parsing, please use the Parser class directly.
+        parsing, please use the Parser class directly or pass in
+        transform=False.
         """
-        if ctx is None:
-            ctx = set()
-        elif isinstance(ctx, Mapping):
-            ctx = set(ctx.keys())
+        if not transform:
+            return self.parser.parse(input, filename=self.filename, mode=mode,
+                                     debug_level=(self.debug_level > 1))
 
         # Parsing actually happens in a couple of phases. The first is a
         # shortcut for a context-free parser. Normally, all subprocess
@@ -80,11 +79,15 @@ class Execer(object):
         # (ls) is part of the execution context. If it isn't, then we will
         # assume that this line is supposed to be a subprocess line, assuming
         # it also is valid as a subprocess line.
+        if ctx is None:
+            ctx = set()
+        elif isinstance(ctx, Mapping):
+            ctx = set(ctx.keys())
         tree = self.ctxtransformer.ctxvisit(tree, input, ctx, mode=mode)
         return tree
 
     def compile(self, input, mode='exec', glbs=None, locs=None, stacklevel=2,
-                filename=None):
+                filename=None, transform=True):
         """Compiles xonsh code into a Python code object, which may then
         be execed or evaled.
         """
@@ -95,13 +98,20 @@ class Execer(object):
             glbs = frame.f_globals if glbs is None else glbs
             locs = frame.f_locals if locs is None else locs
         ctx = set(dir(builtins)) | set(glbs.keys()) | set(locs.keys())
-        tree = self.parse(input, ctx, mode=mode)
+        tree = self.parse(input, ctx, mode=mode, transform=transform)
         if tree is None:
             return None  # handles comment only input
-        code = compile(tree, filename, mode)
+        if transform:
+            with warnings.catch_warnings():
+                # we do some funky things with blocks that cause warnings
+                warnings.simplefilter('ignore', SyntaxWarning)
+                code = compile(tree, filename, mode)
+        else:
+            code = compile(tree, filename, mode)
         return code
 
-    def eval(self, input, glbs=None, locs=None, stacklevel=2):
+    def eval(self, input, glbs=None, locs=None, stacklevel=2,
+                transform=True):
         """Evaluates (and returns) xonsh code."""
         if isinstance(input, types.CodeType):
             code = input
@@ -110,12 +120,14 @@ class Execer(object):
                                 glbs=glbs,
                                 locs=locs,
                                 mode='eval',
-                                stacklevel=stacklevel)
+                                stacklevel=stacklevel,
+                                transform=transform)
         if code is None:
             return None  # handles comment only input
         return eval(code, glbs, locs)
 
-    def exec(self, input, mode='exec', glbs=None, locs=None, stacklevel=2):
+    def exec(self, input, mode='exec', glbs=None, locs=None, stacklevel=2,
+                transform=True):
         """Execute xonsh code."""
         if isinstance(input, types.CodeType):
             code = input
@@ -124,32 +136,11 @@ class Execer(object):
                                 glbs=glbs,
                                 locs=locs,
                                 mode=mode,
-                                stacklevel=stacklevel)
+                                stacklevel=stacklevel,
+                                transform=transform)
         if code is None:
             return None  # handles comment only input
         return exec(code, glbs, locs)
-
-    def _find_next_break(self, line, mincol):
-        if mincol >= 1:
-            line = line[mincol:]
-        if RE_END_TOKS.search(line) is None:
-            return None
-        maxcol = None
-        lparens = []
-        self.parser.lexer.input(line)
-        for tok in self.parser.lexer:
-            if tok.type in LPARENS:
-                lparens.append(tok.type)
-            elif tok.type in END_TOK_TYPES:
-                if _is_not_lparen_and_rparen(lparens, tok):
-                    lparens.pop()
-                else:
-                    maxcol = tok.lexpos + mincol + 1
-                    break
-            elif tok.type == 'ERRORTOKEN' and ')' in tok.value:
-                maxcol = tok.lexpos + mincol + 1
-                break
-        return maxcol
 
     def _parse_ctx_free(self, input, mode='exec'):
         last_error_line = last_error_col = -1
@@ -160,7 +151,7 @@ class Execer(object):
                 tree = self.parser.parse(input,
                                          filename=self.filename,
                                          mode=mode,
-                                         debug_level=self.debug_level)
+                                         debug_level=(self.debug_level > 1))
                 parsed = True
             except IndentationError as e:
                 if original_error is None:
@@ -197,11 +188,11 @@ class Execer(object):
                     curr_indent = len(lines[idx]) - len(lines[idx].lstrip())
                     if prev_indent == curr_indent:
                         raise original_error
-                maxcol = self._find_next_break(line, last_error_col)
-                sbpline = subproc_toks(line,
-                                       returnline=True,
-                                       maxcol=maxcol,
-                                       lexer=self.parser.lexer)
+                lexer = self.parser.lexer
+                maxcol = find_next_break(line, mincol=last_error_col,
+                                         lexer=lexer)
+                sbpline = subproc_toks(line, returnline=True,
+                                       maxcol=maxcol, lexer=lexer)
                 if sbpline is None:
                     # subprocess line had no valid tokens,
                     if len(line.partition('#')[0].strip()) == 0:
@@ -220,6 +211,13 @@ class Execer(object):
                     # anything
                     raise original_error
                 else:
+                    if self.debug_level:
+                        msg = ('{0}:{1}:{2}{3} - {4}\n'
+                               '{0}:{1}:{2}{3} + {5}')
+                        mstr = '' if maxcol is None else ':' + str(maxcol)
+                        msg = msg.format(self.filename, last_error_line,
+                                         last_error_col, mstr, line, sbpline)
+                        print(msg, file=sys.stderr)
                     lines[idx] = sbpline
                 last_error_col += 3
                 input = '\n'.join(lines)

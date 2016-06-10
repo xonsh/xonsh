@@ -172,7 +172,7 @@ def main():
         platforms='Cross Platform',
         classifiers=['Programming Language :: Python :: 3'],
         packages=['xonsh', 'xonsh.ply', 'xonsh.ptk', 'xonsh.parsers',
-                  'xonsh.xoreutils', 'xontrib'],
+                  'xonsh.xoreutils', 'xontrib', 'xonsh.completers'],
         package_dir={'xonsh': 'xonsh', 'xontrib': 'xontrib'},
         package_data={'xonsh': ['*.json'], 'xontrib': ['*.xsh']},
         cmdclass=cmdclass
@@ -185,7 +185,7 @@ def main():
             }
         skw['cmdclass']['develop'] = xdevelop
     else:
-        skw['scripts'] = ['scripts/xonsh'] if 'win' not in sys.platform else ['scripts/xonsh.bat'],
+        skw['scripts'] = ['scripts/xonsh'] if 'win' not in sys.platform else ['scripts/xonsh.bat']
 
     setup(**skw)
 

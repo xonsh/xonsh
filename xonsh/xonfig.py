@@ -336,6 +336,7 @@ def _info(ns):
         ('PLY', ply.__version__),
         ('have readline', is_readline_available()),
         ('prompt toolkit', ptk_version() or None),
+        ('shell type', builtins.__xonsh_env__.get('SHELL_TYPE')),
         ('pygments', platform.PYGMENTS_VERSION),
         ('on posix', platform.ON_POSIX),
         ('on linux', platform.ON_LINUX)]
@@ -344,6 +345,7 @@ def _info(ns):
     data.extend([
         ('on darwin', platform.ON_DARWIN),
         ('on windows', platform.ON_WINDOWS),
+        ('on cygwin', platform.ON_CYGWIN),
         ('is superuser', tools.IS_SUPERUSER),
         ('default encoding', platform.DEFAULT_ENCODING),
         ])

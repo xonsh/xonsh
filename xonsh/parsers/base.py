@@ -8,6 +8,7 @@ except ImportError:
     from xonsh.ply import yacc
 
 from xonsh import ast
+from xonsh.ast import has_elts, xonsh_call
 from xonsh.lexer import Lexer, LexToken
 from xonsh.platform import PYTHON_VERSION_INFO
 
@@ -26,11 +27,6 @@ class Location(object):
         if self.column is not None:
             s += ':{0}'.format(self.column)
         return s
-
-
-def has_elts(x):
-    """Tests if x is an AST node with elements."""
-    return isinstance(x, ast.AST) and hasattr(x, 'elts')
 
 
 def ensure_has_elts(x, lineno=None, col_offset=None):
@@ -103,20 +99,6 @@ def ensure_list_from_str_or_list(x, lineno=None, col=None):
                      orelse=x,
                      lineno=lineno,
                      col_offset=col)
-
-
-def xonsh_call(name, args, lineno=None, col=None):
-    """Creates the AST node for calling a function of a given name."""
-    return ast.Call(func=ast.Name(id=name,
-                                  ctx=ast.Load(),
-                                  lineno=lineno,
-                                  col_offset=col),
-                    args=args,
-                    keywords=[],
-                    starargs=None,
-                    kwargs=None,
-                    lineno=lineno,
-                    col_offset=col)
 
 
 def xonsh_help(x, lineno=None, col=None):
@@ -284,6 +266,7 @@ class BaseParser(object):
         tree : AST
         """
         self.reset()
+        self.xonsh_code = s
         self.lexer.fname = filename
         tree = self.parser.parse(input=s, lexer=self.lexer, debug=debug_level)
         # hack for getting modes right
@@ -295,7 +278,7 @@ class BaseParser(object):
         return tree
 
     def _lexer_errfunc(self, msg, line, column):
-        self._parse_error(msg, self.currloc(line, column))
+        self._parse_error(msg, self.currloc(line, column), self.xonsh_code)
 
     def _yacc_lookahead_token(self):
         """Gets the next-to-last and last token seen by the lexer."""
@@ -377,8 +360,14 @@ class BaseParser(object):
             return self.token_col(t)
         return 0
 
-    def _parse_error(self, msg, loc):
-        err = SyntaxError('{0}: {1}'.format(loc, msg))
+    def _parse_error(self, msg, loc, line=None):
+        if line is None:
+            err_line_pointer = ''
+        else:
+            col = loc.column + 1
+            err_line = line.splitlines()[loc.lineno - 1]
+            err_line_pointer = '\n{}\n{: >{}}'.format(err_line, '^', col)
+        err = SyntaxError('{0}: {1}{2}'.format(loc, msg, err_line_pointer))
         err.loc = loc
         raise err
 
@@ -2286,6 +2275,7 @@ class BaseParser(object):
                             | NUMBER
                             | STRING
                             | COMMA
+                            | QUESTION
         """
         # Many tokens cannot be part of this list, such as $, ', ", ()
         # Use a string atom instead.
@@ -2306,9 +2296,13 @@ class BaseParser(object):
             if isinstance(p.value, BaseException):
                 raise p.value
             else:
-                self._parse_error(p.value, self.currloc(lineno=p.lineno,
-                                                        column=p.lexpos))
+                self._parse_error(p.value,
+                                  self.currloc(lineno=p.lineno,
+                                               column=p.lexpos),
+                                  self.xonsh_code)
         else:
             msg = 'code: {0}'.format(p.value),
-            self._parse_error(msg, self.currloc(lineno=p.lineno,
-                                                column=p.lexpos))
+            self._parse_error(msg,
+                              self.currloc(lineno=p.lineno,
+                                           column=p.lexpos),
+                              self.xonsh_code)

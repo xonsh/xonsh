@@ -72,7 +72,6 @@ class PromptToolkitShell(BaseShell):
                     'get_rprompt_tokens': get_rprompt_tokens,
                     'style': PygmentsStyle(xonsh_style_proxy(self.styler)),
                     'completer': completer,
-                    'lexer': PygmentsLexer(XonshLexer),
                     'multiline': multiline,
                     'get_continuation_tokens': self.continuation_tokens,
                     'history': history,
@@ -81,6 +80,8 @@ class PromptToolkitShell(BaseShell):
                     'key_bindings_registry': self.key_bindings_manager.registry,
                     'display_completions_in_columns': multicolumn,
                     }
+            if builtins.__xonsh_env__.get('COLOR_INPUT'):
+                prompt_args['lexer'] = PygmentsLexer(XonshLexer)
             line = self.prompter.prompt(**prompt_args)
         return line
 
@@ -142,7 +143,10 @@ class PromptToolkitShell(BaseShell):
         prompt.
         """
         p = builtins.__xonsh_env__.get('RIGHT_PROMPT')
-        if len(p) == 0:
+        # partial_format_prompt does handle empty strings properly,
+        # but this avoids descending into it in the common case of
+        # $RIGHT_PROMPT == ''.
+        if isinstance(p, str) and len(p) == 0:
             return []
         try:
             p = partial_format_prompt(p)
@@ -153,10 +157,32 @@ class PromptToolkitShell(BaseShell):
 
     def continuation_tokens(self, cli, width):
         """Displays dots in multiline prompt"""
+        width = width - 1
         dots = builtins.__xonsh_env__.get('MULTILINE_PROMPT')
-        _width = width - 1
-        dots = _width // len(dots) * dots + dots[:_width % len(dots)]
-        return [(Token, dots + ' ')]
+        dots = dots() if callable(dots) else dots
+        if dots is None:
+            return [(Token, ' '*(width + 1))]
+        basetoks = self.format_color(dots)
+        baselen = sum(len(t[1]) for t in basetoks)
+        if baselen == 0:
+            return [(Token, ' '*(width + 1))]
+        toks = basetoks * (width // baselen)
+        n = width % baselen
+        count = 0
+        for tok in basetoks:
+            slen = len(tok[1])
+            newcount = slen + count
+            if slen == 0:
+                continue
+            elif newcount <= n:
+                toks.append(tok)
+            else:
+                toks.append((tok[0], tok[1][:n-count]))
+            count = newcount
+            if n <= count:
+                break
+        toks.append((Token, ' '))  # final space
+        return toks
 
     def format_color(self, string, **kwargs):
         """Formats a color string using Pygments. This, therefore, returns

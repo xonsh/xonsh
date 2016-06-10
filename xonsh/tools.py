@@ -20,14 +20,17 @@ Implementations:
 import os
 import re
 import sys
+import ast
 import string
 import ctypes
 import builtins
 import subprocess
 import threading
 import traceback
+from glob import iglob
 from warnings import warn
 from contextlib import contextmanager
+from subprocess import CalledProcessError
 from collections import OrderedDict, Sequence, Set
 
 # adding further imports from xonsh modules is discouraged to avoid cirular
@@ -35,17 +38,58 @@ from collections import OrderedDict, Sequence, Set
 from xonsh.platform import (has_prompt_toolkit, scandir, win_unicode_console,
                             DEFAULT_ENCODING, ON_LINUX, ON_WINDOWS,
                             PYTHON_VERSION_INFO)
-if has_prompt_toolkit():
-    import prompt_toolkit
-else:
-    prompt_toolkit = None
-
 
 IS_SUPERUSER = ctypes.windll.shell32.IsUserAnAdmin() != 0 if ON_WINDOWS else os.getuid() == 0
 
 
 class XonshError(Exception):
     pass
+
+
+class XonshBlockError(XonshError):
+    """Special xonsh exception for communicating the lines of block bodies."""
+
+    def __init__(self, lines, glbs, locs, *args, **kwargs):
+        """
+        Parameters
+        ----------
+        lines : list f str
+            Block lines, as if split by str.splitlines().
+        glbs : Mapping or None
+            Global execution context for lines, ie globals() of calling frame.
+        locs : Mapping or None
+            Local execution context for lines, ie locals() of calling frame.
+        """
+        super().__init__(*args, **kwargs)
+        self.lines = lines
+        self.glbs = glbs
+        self.locs = locs
+
+
+class XonshCalledProcessError(XonshError, CalledProcessError):
+    """Raised when there's an error with a called process
+
+    Inherits from XonshError and subprocess.CalledProcessError, catching
+    either will also catch this error.
+
+    Raised *after* iterating over stdout of a captured command, if the
+    returncode of the command is nonzero.
+
+    Example:
+        try:
+            for line in !(ls):
+                print(line)
+        except CalledProcessError as error:
+            print("Error in process: {}.format(error.completed_command.pid))
+
+    This also handles differences between Python3.4 and 3.5 where
+    CalledProcessError is concerned.
+    """
+    def __init__(self, returncode, command, output=None, stderr=None,
+                 completed_command=None):
+        super().__init__(returncode, command, output)
+        self.stderr = stderr
+        self.completed_command = completed_command
 
 
 class DefaultNotGivenType(object):
@@ -56,7 +100,9 @@ DefaultNotGiven = DefaultNotGivenType()
 
 BEG_TOK_SKIPS = frozenset(['WS', 'INDENT', 'NOT', 'LPAREN'])
 END_TOK_TYPES = frozenset(['SEMI', 'AND', 'OR', 'RPAREN'])
-LPARENS = frozenset(['LPAREN', 'AT_LPAREN', 'BANG_LPAREN', 'DOLLAR_LPAREN', 'ATDOLLAR_LPAREN'])
+RE_END_TOKS = re.compile('(;|and|\&\&|or|\|\||\))')
+LPARENS = frozenset(['LPAREN', 'AT_LPAREN', 'BANG_LPAREN', 'DOLLAR_LPAREN',
+                     'ATDOLLAR_LPAREN'])
 
 
 def _is_not_lparen_and_rparen(lparens, rtok):
@@ -65,6 +111,34 @@ def _is_not_lparen_and_rparen(lparens, rtok):
     """
     # note that any([]) is False, so this covers len(lparens) == 0
     return rtok.type == 'RPAREN' and any(x != 'LPAREN' for x in lparens)
+
+
+def find_next_break(line, mincol=0, lexer=None):
+    """Returns the column number of the next logical break in subproc mode.
+    This function may be useful in finding the maxcol argument of subproc_toks().
+    """
+    if mincol >= 1:
+        line = line[mincol:]
+    if lexer is None:
+        lexer = builtins.__xonsh_execer__.parser.lexer
+    if RE_END_TOKS.search(line) is None:
+        return None
+    maxcol = None
+    lparens = []
+    lexer.input(line)
+    for tok in lexer:
+        if tok.type in LPARENS:
+            lparens.append(tok.type)
+        elif tok.type in END_TOK_TYPES:
+            if _is_not_lparen_and_rparen(lparens, tok):
+                lparens.pop()
+            else:
+                maxcol = tok.lexpos + mincol + 1
+                break
+        elif tok.type == 'ERRORTOKEN' and ')' in tok.value:
+            maxcol = tok.lexpos + mincol + 1
+            break
+    return maxcol
 
 
 def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
@@ -286,17 +360,55 @@ class redirect_stderr(_RedirectStream):
     _stream = "stderr"
 
 
+def _yield_accessible_unix_file_names(path):
+    "yield file names of executablel files in `path`"
+
+    for file_ in scandir(path):
+        try:
+            if file_.is_file() and os.access(file_.path, os.X_OK):
+                yield file_.name
+        except NotADirectoryError:
+            # broken Symlink are neither dir not files
+            pass
+
+
+def _executables_in_posix(path):
+    if PYTHON_VERSION_INFO < (3, 5, 0):
+        for fname in os.listdir(path):
+            fpath  = os.path.join(path, fname)
+            if (os.path.exists(fpath) and os.access(fpath, os.X_OK) and \
+                                    (not os.path.isdir(fpath))):
+                yield fname
+    else:
+        yield from _yield_accessible_unix_file_names(path)
+
+
+def _executables_in_windows(path):
+    extensions = builtins.__xonsh_env__.get('PATHEXT',['.COM', '.EXE', '.BAT'])
+    if PYTHON_VERSION_INFO < (3, 5, 0):
+        for fname in os.listdir(path):
+            fpath = os.path.join(path, fname)
+            if (os.path.exists(fpath) and not os.path.isdir(fpath)):
+                base_name, ext = os.path.splitext(fname)
+                if ext.upper() in extensions:
+                    yield fname
+    else:
+        for fname in (x.name for x in scandir(path) if x.is_file()):
+            base_name, ext = os.path.splitext(fname)
+            if ext.upper() in extensions:
+                yield fname
+
+
 def executables_in(path):
     """Returns a generator of files in `path` that the user could execute. """
-    if PYTHON_VERSION_INFO < (3, 5, 0):
-        for i in os.listdir(path):
-            name  = os.path.join(path, i)
-            if (os.path.exists(name) and os.access(name, os.X_OK) and \
-                                    (not os.path.isdir(name))):
-                yield i
+    if ON_WINDOWS:
+        func = _executables_in_windows
     else:
-        yield from (x.name for x in scandir(path)
-                    if x.is_file() and os.access(x.path, os.X_OK))
+        func = _executables_in_posix
+    try:
+        yield from func(path)
+    except PermissionError:
+        return
 
 
 def command_not_found(cmd):
@@ -484,6 +596,16 @@ def is_string(x):
     return isinstance(x, str)
 
 
+def is_callable(x):
+    """Tests if something is callable"""
+    return callable(x)
+
+
+def is_string_or_callable(x):
+    """Tests if something is a string or callable"""
+    return is_string(x) or is_callable(x)
+
+
 def always_true(x):
     """Returns True"""
     return True
@@ -550,6 +672,26 @@ def to_bool_or_break(x):
         return 'break'
     else:
         return to_bool(x)
+
+
+def is_bool_or_int(x):
+    """Returns whether a value is a boolean or integer."""
+    return is_bool(x) or is_int(x)
+
+
+def to_bool_or_int(x):
+    """Converts a value to a boolean or an integer."""
+    if isinstance(x, str):
+        return int(x) if x.isdigit() else to_bool(x)
+    elif is_int(x):  # bools are ints too!
+        return x
+    else:
+        return bool(x)
+
+
+def bool_or_int_to_str(x):
+    """Converts a boolean or integer to a string."""
+    return bool_to_str(x) if is_bool(x) else str(x)
 
 
 def ensure_int_or_slice(x):
@@ -704,6 +846,36 @@ def is_history_tuple(x):
     return False
 
 
+def is_dynamic_cwd_width(x):
+    """ Determine if the input is a valid input for the DYNAMIC_CWD_WIDTH
+    environement variable.
+    """
+    return isinstance(x, tuple) and len(x) == 2 and isinstance(x[0], float) and \
+           (x[1] in set('c%'))
+
+
+def to_dynamic_cwd_tuple(x):
+    """Convert to a canonical cwd_width tuple."""
+    unit = 'c'
+    if isinstance(x, str):
+        if x[-1] == '%':
+            x = x[:-1]
+            unit = '%'
+        else:
+            unit = 'c'
+        return (float(x), unit)
+    else:
+        return (float(x[0]), x[1])
+
+
+def dynamic_cwd_tuple_to_str(x):
+    """Convert a canonical cwd_width tuple to a string."""
+    if x[1] == '%':
+        return str(x[0]) + '%'
+    else:
+        return str(x[0])
+
+
 RE_HISTORY_TUPLE = re.compile('([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)\s*([A-Za-z]*)')
 
 def to_history_tuple(x):
@@ -753,6 +925,7 @@ def color_style():
 
 def _get_color_indexes(style_map):
     """ Generates the color and windows color index for a style """
+    import prompt_toolkit
     table = prompt_toolkit.terminal.win32_output.ColorLookupTable()
     pt_style = prompt_toolkit.styles.style_from_dict(style_map)
     for token in style_map:
@@ -774,7 +947,10 @@ def intensify_colors_for_cmd_exe(style_map, replace_colors=None):
        range used by the gray colors
     """
     modified_style = {}
-    if not ON_WINDOWS or prompt_toolkit is None:
+    stype = builtins.__xonsh_env__.get('SHELL_TYPE')
+    if (not ON_WINDOWS or
+            (stype not in ('prompt_toolkit', 'best')) or
+            (stype == 'best' and not has_prompt_toolkit())):
         return modified_style
     if replace_colors is None:
         replace_colors = {1: '#44ffff',  # subst blue with bright cyan
@@ -797,7 +973,10 @@ def expand_gray_colors_for_cmd_exe(style_map):
         in cmd.exe.
     """
     modified_style = {}
-    if not ON_WINDOWS or prompt_toolkit is None:
+    stype = builtins.__xonsh_env__.get('SHELL_TYPE')
+    if (not ON_WINDOWS or
+            (stype not in ('prompt_toolkit', 'best')) or
+            (stype == 'best' and not has_prompt_toolkit())):
         return modified_style
     for token, idx, rgb in _get_color_indexes(style_map):
         if idx == 7 and rgb:
@@ -1039,7 +1218,8 @@ def backup_file(fname):
     import shutil
     from datetime import datetime
     base, ext = os.path.splitext(fname)
-    newfname = base + '.' + datetime.now().isoformat() + ext
+    timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
+    newfname = '%s.%s%s' % (base, timestamp, ext)
     shutil.move(fname, newfname)
 
 
@@ -1094,3 +1274,88 @@ class CommandsCache(Set):
             allcmds |= set(builtins.aliases)
         self._cmds_cache = frozenset(allcmds)
         return self._cmds_cache
+
+    def lazyin(self, value):
+        """Checks if the value is in the current cache without the potential to
+        update the cache. It just says whether the value is known *now*. This
+        may not reflect precisely what is on the $PATH.
+        """
+        return value in self._cmds_cache
+
+    def lazyiter(self):
+        """Returns an iterator over the current cache contents without the
+        potential to update the cache. This may not reflect what is on the
+        $PATH.
+        """
+        return iter(self._cmds_cache)
+
+    def lazylen(self):
+        """Returns the length of the current cache contents without the
+        potential to update the cache. This may not reflect precicesly
+        what is on the $PATH.
+        """
+        return len(self._cmds_cache)
+
+
+WINDOWS_DRIVE_MATCHER = re.compile(r'^\w:')
+
+
+def expand_case_matching(s):
+    """Expands a string to a case insenstive globable string."""
+    t = []
+    openers = {'[', '{'}
+    closers = {']', '}'}
+    nesting = 0
+
+    drive_part = WINDOWS_DRIVE_MATCHER.match(s) if ON_WINDOWS else None
+
+    if drive_part:
+        drive_part = drive_part.group(0)
+        t.append(drive_part)
+        s = s[len(drive_part):]
+
+    for c in s:
+        if c in openers:
+            nesting += 1
+        elif c in closers:
+            nesting -= 1
+        elif nesting > 0:
+            pass
+        elif c.isalpha():
+            folded = c.casefold()
+            if len(folded) == 1:
+                c = '[{0}{1}]'.format(c.upper(), c.lower())
+            else:
+                newc = ['[{0}{1}]?'.format(f.upper(), f.lower())
+                        for f in folded[:-1]]
+                newc = ''.join(newc)
+                newc += '[{0}{1}{2}]'.format(folded[-1].upper(),
+                                             folded[-1].lower(),
+                                             c)
+                c = newc
+        t.append(c)
+    return ''.join(t)
+
+
+def globpath(s, ignore_case=False):
+    """Simple wrapper around glob that also expands home and env vars."""
+    o, s = _iglobpath(s, ignore_case=ignore_case)
+    o = list(o)
+    return o if len(o) != 0 else [s]
+
+
+def _iglobpath(s, ignore_case=False):
+    s = builtins.__xonsh_expand_path__(s)
+    if ignore_case:
+        s = expand_case_matching(s)
+    if sys.version_info > (3, 5):
+        if '**' in s and '**/*' not in s:
+            s = s.replace('**', '**/*')
+        # `recursive` is only a 3.5+ kwarg.
+        return iglob(s, recursive=True), s
+    else:
+        return iglob(s), s
+
+def iglobpath(s, ignore_case=False):
+    """Simple wrapper around iglob that also expands home and env vars."""
+    return _iglobpath(s, ignore_case)[0]

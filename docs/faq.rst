@@ -5,12 +5,12 @@ Ok, so, maybe no one actually asked them.
 
 1. Why xonsh?
 -------------
-The idea for xonsh first struck while I was reviewing the BASH chapter
+The idea for xonsh first struck while I was reviewing the Bash chapter
 (written by my co-author `Katy Huff <http://katyhuff.github.io/>`_)
 of `Effective Computation in Physics <http://physics.codes/>`_. In the book,
 we spend a bunch of time describing important, but complex ideas, such
-as piping. However, we don't even touch on more 'basic' aspects of the BASH
-language, such as if-statements or loops. Even though I have been using BASH
+as piping. However, we don't even touch on more 'basic' aspects of the Bash
+language, such as if-statements or loops. Even though I have been using Bash
 for well over a decade, I am not even sure I *know how*
 to add two numbers together in it or consistently create an array. This is
 normal.
@@ -93,13 +93,35 @@ manually use the ``![]``, ``!()``, ``$[]`` or ``$()`` operators on your code.
 
 5. Context-sensitive parsing is gross
 --------------------------------------
-Yes, context-sensitive parsing is gross. But the point of xonsh is that it uses xontext-sensitive parsing and
-is ultimately a lot less gross than other shell languages, such as BASH.
+Yes, context-sensitive parsing is gross. But the point of xonsh is that it uses
+xontext-sensitive parsing and
+is ultimately a lot less gross than other shell languages, such as Bash.
 Furthermore, its use is heavily limited here.
 
 
+6. My Branches are Timing Out?!
+-------------------------------
+Depending on you system, setup, and repository sizes, computing branch names
+and colors (i.e. if the branch is dirty or not), can be a pretty slow operation.
+This is bad news because xonsh can try to compute these each time it formats
+the ``$PROMPT``.
 
-6. Gotchas
+In order to keep xonsh snappy, we have implemented branch computation timeouts.
+This is set to a nominal value (usually 0.1 sec) via the ``$VC_BRANCH_TIMEOUT``
+environment variable.
+
+Feel free to set this to any limit that you feel comfortable with. So if you
+don't mind a potentially slow prompt, set it to 1, 5, 20, 100 seconds! However,
+if you never want to deal with a slow prompt or seeing this timeout message,
+you can remove the ``{curr_branch}``, ``{branch_color}`` and ``{branch_bg_color}``
+portions of your ``$PROMPT``, and these values will never be computed.
+
+It is also worth noting that ``{branch_color}`` is usually the slow poke.
+Just removing the color lookup from the ``$PROMPT`` can still provide the branch
+name while being fast enough.
+
+
+7. Gotchas
 ----------
 
 There are a few gotchas when using xonsh across multiple versions of Python,

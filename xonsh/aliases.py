@@ -5,12 +5,13 @@ from argparse import ArgumentParser, Action
 import builtins
 from collections.abc import MutableMapping, Iterable, Sequence
 import os
+import sys
 import shlex
 
 from xonsh.dirstack import cd, pushd, popd, dirs, _get_cwd
 from xonsh.environ import locate_binary
 from xonsh.foreign_shells import foreign_shell_data
-from xonsh.jobs import jobs, fg, bg, kill_all_jobs
+from xonsh.jobs import jobs, fg, bg, clean_jobs
 from xonsh.history import main as history_alias
 from xonsh.platform import ON_ANACONDA, ON_DARWIN, ON_WINDOWS, scandir
 from xonsh.proc import foreground
@@ -21,6 +22,7 @@ from xonsh.tools import (XonshError, argvquote, escape_windows_cmd_string,
 from xonsh.vox import Vox
 from xonsh.xontribs import main as xontribs_main
 from xonsh.xoreutils import _which
+from xonsh.completers._aliases import completer_alias 
 
 
 class Aliases(MutableMapping):
@@ -142,8 +144,11 @@ class Aliases(MutableMapping):
 
 def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
     """Sends signal to exit shell."""
+    if not clean_jobs():
+        # Do not exit if jobs not cleaned up
+        return None, None
+
     builtins.__xonsh_exit__ = True
-    kill_all_jobs()
     print()  # gimme a newline
     return None, None
 
@@ -407,8 +412,12 @@ def which(args, stdin=None, stdout=None, stderr=None):
             nmatches += 1
             if not pargs.all:
                 continue
-        matches = _which.whichgen(arg, exts=exts, verbose=pargs.verbose,
-                                  path=builtins.__xonsh_env__['PATH'])
+        # which.whichgen gives the nicest 'verbose' output if PATH is taken
+        # from os.environ so we temporarily override it with
+        # __xosnh_env__['PATH']
+        original_os_path = os.environ['PATH']
+        os.environ['PATH'] = builtins.__xonsh_env__.detype()['PATH']
+        matches = _which.whichgen(arg, exts=exts, verbose=pargs.verbose)
         for abs_name, from_where in matches:
             if ON_WINDOWS:
                 # Use list dir to get correct case for the filename
@@ -421,12 +430,11 @@ def which(args, stdin=None, stdout=None, stderr=None):
             if pargs.plain or not pargs.verbose:
                 print(abs_name, file=stdout)
             else:
-                if 'given path element' in from_where:
-                    from_where = from_where.replace('given path', '$PATH')
                 print('{} ({})'.format(abs_name, from_where), file=stdout)
             nmatches += 1
             if not pargs.all:
                 break
+        os.environ['PATH'] = original_os_path
         if not nmatches:
             failures.append(arg)
     if len(failures) == 0:
@@ -458,6 +466,26 @@ def vox(args, stdin=None):
     return vox(args, stdin=stdin)
 
 
+def showcmd(args, stdin=None):
+    """usage: showcmd [-h|--help|cmd args]
+
+    Displays the command and arguments as a list of strings that xonsh would
+    run in subprocess mode. This is useful for determining how xonsh evaluates
+    your commands and arguments prior to running these commands.
+
+    optional arguments:
+      -h, --help            show this help message and exit
+
+    example:
+      >>> showcmd echo $USER can't hear "the sea"
+      ['echo', 'I', "can't", 'hear', 'the sea']
+    """
+    if len(args) == 0 or (len(args) == 1 and args[0] in {'-h', '--help'}):
+        print(showcmd.__doc__.rstrip().replace('\n    ', '\n'))
+    else:
+        sys.displayhook(args)
+
+
 def make_default_aliases():
     """Creates a new default aliases dictionary."""
     default_aliases = {
@@ -485,10 +513,12 @@ def make_default_aliases():
         'timeit': timeit_alias,
         'xonfig': xonfig,
         'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
+        'showcmd': showcmd,
         'ipynb': ['jupyter', 'notebook', '--no-browser'],
         'vox': vox,
         'which': which,
         'xontrib': xontribs_main,
+        'completer': completer_alias
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.

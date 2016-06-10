@@ -128,6 +128,10 @@ Runs timing study on arguments. Similar to IPython's ``%timeit`` magic.
 =================
 Simple alias defined as ``['rsync', '--partial', '-h', '--progress', '--rsh=ssh']``.
 
+``showcmd``
+============
+Displays how comands and arguments are evaluated.
+
 
 ``ipynb``
 =================

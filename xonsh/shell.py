@@ -7,7 +7,7 @@ from warnings import warn
 from xonsh import xontribs
 from xonsh.environ import xonshrc_context
 from xonsh.execer import Execer
-from xonsh.platform import (BEST_SHELL_TYPE, has_prompt_toolkit, ptk_version,
+from xonsh.platform import (best_shell_type, has_prompt_toolkit, ptk_version,
                             ptk_version_info)
 from xonsh.tools import XonshError
 
@@ -43,18 +43,19 @@ class Shell(object):
                            kwargs.get('scriptcache', True),
                            kwargs.get('cacheall', False))
         env = builtins.__xonsh_env__
-        # pick a valid shell
-        if shell_type is not None:
-            env['SHELL_TYPE'] = shell_type
-        shell_type = env.get('SHELL_TYPE')
+        # pick a valid shell -- if no shell is specified by the user,
+        # shell type is pulled from env
+        if shell_type is None:
+            shell_type = env.get('SHELL_TYPE')
         if shell_type == 'best' or shell_type is None:
-            shell_type = BEST_SHELL_TYPE
+            shell_type = best_shell_type()
         elif shell_type == 'random':
             shell_type = random.choice(('readline', 'prompt_toolkit'))
         if shell_type == 'prompt_toolkit':
             if not has_prompt_toolkit():
                 warn('prompt_toolkit is not available, using readline instead.')
-                shell_type = env['SHELL_TYPE'] = 'readline'
+                shell_type = 'readline'
+        env['SHELL_TYPE'] = shell_type
         # actually make the shell
         if shell_type == 'none':
             from xonsh.base_shell import BaseShell as shell_class
@@ -83,7 +84,7 @@ class Shell(object):
         self.execer = Execer(config=config, login=self.login, xonsh_ctx=self.ctx)
         self.execer.scriptcache = scriptcache
         self.execer.cacheall = cacheall
-        if ctx is None and (self.stype != 'none' or self.login):
+        if self.stype != 'none' or self.login:
             # load xontribs from config file
             names = builtins.__xonsh_config__.get('xontribs', ())
             for name in names:
@@ -91,5 +92,5 @@ class Shell(object):
             # load run control files
             env = builtins.__xonsh_env__
             rc = env.get('XONSHRC') if rc is None else rc
-            self.ctx.update(xonshrc_context(rcfiles=rc, execer=self.execer))
+            self.ctx.update(xonshrc_context(rcfiles=rc, execer=self.execer, initial=self.ctx))
         self.ctx['__name__'] = '__main__'

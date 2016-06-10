@@ -5,13 +5,21 @@ OSX Guide
 Installation
 ============
 
-You can install xonsh using conda, pip, or from source.
+You can install xonsh using homebrew, conda, pip, or from source.
+
+**homebrew:**
+
+.. code-block:: bash
+
+   $ brew install xonsh
+
 
 **conda:**
 
 .. code-block:: bash
 
-    $ conda install -c conda-forge xonsh
+    $ conda config --add channels conda-forge
+    $ conda install xonsh
 
 .. note:: For the bleeding edge development version use ``conda install -c xonsh/channel/dev xonsh``
     
@@ -35,3 +43,13 @@ the following from the source directory,
 .. include:: add_to_shell.rst
 
 .. include:: dependencies.rst
+
+
+GNU Readline
+============
+
+On Mac OSX, it is *strongly* recommended to install the ``gnureadline`` library if using the readline shell.  ``gnureadline`` can be installed via pip:
+
+.. code-block:: bash
+
+    $ pip install gnureadline

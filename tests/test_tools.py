@@ -1,20 +1,23 @@
 # -*- coding: utf-8 -*-
 """Tests the xonsh lexer."""
 import os
-import random
 from tempfile import TemporaryDirectory
 import stat
 
 import nose
 from nose.tools import assert_equal, assert_true, assert_false
 
+from xonsh.platform import ON_WINDOWS
 from xonsh.lexer import Lexer
 from xonsh.tools import (
     subproc_toks, subexpr_from_unbalanced, is_int, always_true, always_false,
     ensure_string, is_env_path, str_to_env_path, env_path_to_str,
     escape_windows_cmd_string, is_bool, to_bool, bool_to_str,
-    ensure_int_or_slice, is_float, is_string, check_for_partial_string,
-    argvquote, executables_in)
+    is_bool_or_int, to_bool_or_int, bool_or_int_to_str,
+    ensure_int_or_slice, is_float, is_string, is_callable,
+    is_string_or_callable, check_for_partial_string, CommandsCache,
+    is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str,
+    argvquote, executables_in, find_next_break, expand_case_matching)
 
 LEXER = Lexer()
 LEXER.build()
@@ -302,6 +305,19 @@ def test_subexpr_from_unbalanced_parens():
         obs = subexpr_from_unbalanced(expr, '(', ')')
         yield assert_equal, exp, obs
 
+def test_find_next_break():
+    cases = [
+        ('ls && echo a', 0, 4),
+        ('ls && echo a', 6, None),
+        ('ls && echo a || echo b', 6, 14),
+        ('(ls) && echo a', 1, 4),
+        ('not ls && echo a', 0, 8),
+        ('not (ls) && echo a', 0, 8),
+        ]
+    for line, mincol, exp in cases:
+        obs = find_next_break(line, mincol=mincol, lexer=LEXER)
+        yield assert_equal, exp, obs
+
 
 def test_is_int():
     yield assert_true, is_int(42)
@@ -315,6 +331,17 @@ def test_is_float():
 
 def test_is_string():
     yield assert_true, is_string('42.0')
+    yield assert_false, is_string(42.0)
+
+
+def test_is_callable():
+    yield assert_true, is_callable(lambda: 42.0)
+    yield assert_false, is_callable(42.0)
+
+
+def test_is_string_or_callable():
+    yield assert_true, is_string_or_callable('42.0')
+    yield assert_true, is_string_or_callable(lambda: 42.0)
     yield assert_false, is_string(42.0)
 
 
@@ -401,6 +428,51 @@ def test_bool_to_str():
     yield assert_equal, '', bool_to_str(False)
 
 
+def test_is_bool_or_int():
+    cases = [
+        (True, True),
+        (False, True),
+        (1, True),
+        (0, True),
+        ('Yolo', False),
+        (1.0, False),
+        ]
+    for inp, exp in cases:
+        obs = is_bool_or_int(inp)
+        yield assert_equal, exp, obs
+
+
+def test_to_bool_or_int():
+    cases = [
+        (True, True),
+        (False, False),
+        (1, 1),
+        (0, 0),
+        ('', False),
+        (0.0, False),
+        (1.0, True),
+        ('T', True),
+        ('f', False),
+        ('0', 0),
+        ('10', 10),
+        ]
+    for inp, exp in cases:
+        obs = to_bool_or_int(inp)
+        yield assert_equal, exp, obs
+
+
+def test_bool_or_int_to_str():
+    cases = [
+        (True, '1'),
+        (False, ''),
+        (1, '1'),
+        (0, '0'),
+        ]
+    for inp, exp in cases:
+        obs = bool_or_int_to_str(inp)
+        yield assert_equal, exp, obs
+
+
 def test_ensure_int_or_slice():
     cases = [
         (42, 42),
@@ -415,6 +487,46 @@ def test_ensure_int_or_slice():
         ]
     for inp, exp in cases:
         obs = ensure_int_or_slice(inp)
+        yield assert_equal, exp, obs
+
+
+def test_is_dynamic_cwd_width():
+    cases = [
+        ('20', False),
+        ('20%', False),
+        ((20, 'c'), False),
+        ((20.0, 'm'), False),
+        ((20.0, 'c'), True),
+        ((20.0, '%'), True),
+        ]
+    for inp, exp in cases:
+        obs = is_dynamic_cwd_width(inp)
+        yield assert_equal, exp, obs
+
+
+def test_to_dynamic_cwd_tuple():
+    cases = [
+        ('20', (20.0, 'c')),
+        ('20%', (20.0, '%')),
+        ((20, 'c'), (20.0, 'c')),
+        ((20, '%'), (20.0, '%')),
+        ((20.0, 'c'), (20.0, 'c')),
+        ((20.0, '%'), (20.0, '%')),
+        ('inf', (float('inf'), 'c')),
+        ]
+    for inp, exp in cases:
+        obs = to_dynamic_cwd_tuple(inp)
+        yield assert_equal, exp, obs
+
+
+def test_dynamic_cwd_tuple_to_str():
+    cases = [
+        ((20.0, 'c'), '20.0'),
+        ((20.0, '%'), '20.0%'),
+        ((float('inf'), 'c'), 'inf'),
+        ]
+    for inp, exp in cases:
+        obs = dynamic_cwd_tuple_to_str(inp)
         yield assert_equal, exp, obs
 
 
@@ -491,25 +603,58 @@ def test_partial_string():
 
 
 def test_executables_in():
-    expected = set()
-    with TemporaryDirectory() as test_path:
-        for i in range(random.randint(100, 200)):
-            _type = random.choice(('none', 'file', 'file', 'directory'))
-            if _type == 'none':
-                continue
-            executable = random.choice((True, True, False))
-            if _type == 'file' and executable:
-                expected.add(str(i))
-            path = os.path.join(test_path, str(i))
-            if _type == 'file':
-                open(path, 'w').close()
-            elif _type == 'directory':
-                os.mkdir(path)
-            if executable:
-                os.chmod(path, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
 
-        result = set(executables_in(test_path))
-        assert_equal(expected, result)
+
+    expected = set()
+    types = ('file', 'directory', 'brokensymlink')
+    executables = (True, False)
+    with TemporaryDirectory() as test_path:
+        for _type in types:
+            for executable in executables:
+                fname = '%s_%s' % (_type, executable)
+                if _type == 'none':
+                    continue
+                if _type == 'file' and executable:
+                    ext = '.exe' if ON_WINDOWS else ''
+                    expected.add(fname + ext)
+                else:
+                    ext = ''
+                path = os.path.join(test_path, fname + ext)
+                if _type == 'file':
+                    with open(path, 'w') as f:
+                        f.write(fname)
+                elif _type == 'directory':
+                    os.mkdir(path)
+                elif _type == 'brokensymlink':
+                    tmp_path = os.path.join(test_path, 'i_wont_exist')
+                    with open(tmp_path,'w') as f:
+                        f.write('deleteme')
+                        os.symlink(tmp_path, path)
+                    os.remove(tmp_path)
+                if executable and not _type == 'brokensymlink' :
+                    os.chmod(path, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
+            result = set(executables_in(test_path))
+    assert_equal(expected, result)
+
+
+def test_expand_case_matching():
+    cases = {
+        'yo': '[Yy][Oo]',
+        '[a-f]123e': '[a-f]123[Ee]',
+        '${HOME}/yo': '${HOME}/[Yy][Oo]',
+        './yo/mom': './[Yy][Oo]/[Mm][Oo][Mm]',
+        'Eßen': '[Ee][Ss]?[Ssß][Ee][Nn]',
+        }
+    for inp, exp in cases.items():
+        obs = expand_case_matching(inp)
+        yield assert_equal, exp, obs
+
+
+def test_commands_cache_lazy():
+    cc = CommandsCache()
+    yield assert_false, cc.lazyin('xonsh')
+    yield assert_equal, 0, len(list(cc.lazyiter()))
+    yield assert_equal, 0, cc.lazylen()
 
 
 if __name__ == '__main__':

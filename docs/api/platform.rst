@@ -5,12 +5,9 @@ Platform-specific constants and implementations (``xonsh.platform``)
 
 Functions
 ---------
-
 .. automodule:: xonsh.platform
     :members: has_prompt_toolkit, is_readline_available, ptk_version,
               ptk_version_info
-
-.. py:module:: xonsh.platform
 
 .. py:function:: scandir
 
@@ -26,11 +23,7 @@ Functions
 
 Constants
 ---------
-
 .. autodata:: BASH_COMPLETIONS_DEFAULT
-    :annotation:
-
-.. autodata:: BEST_SHELL_TYPE
     :annotation:
 
 .. autodata:: DEFAULT_ENCODING
