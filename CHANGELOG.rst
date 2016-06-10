@@ -46,6 +46,9 @@ Current Developments
 * Ensured that the prompt_toolkit shell functions, even without a ``completer``
   attribute.
 * Fixed crash resulting from malformed ``$PROMPT`` or ``$TITLE``.
+* xonsh no longer backgrounds itself after every command on Cygwin.
+* Fixed an issue about ``os.killpg()`` on Cygwin which caused xonsh to crash
+  occasionally
 
 **Security:** None
 
@@ -76,7 +79,6 @@ v0.3.4
   ``activate``/``deactivate`` aliases for the conda environements.
 * Fixed crash resulting from errors other than syntax errors in run control
   file.
-* xonsh no longer backgrounds itself after every command on Cygwin.
 
 
 v0.3.3
