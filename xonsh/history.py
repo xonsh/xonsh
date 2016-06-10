@@ -3,8 +3,11 @@
 import argparse
 import functools
 import os
+from os import listdir
+from operator import itemgetter
 import uuid
 import time
+from datetime import datetime
 import builtins
 from glob import iglob
 from collections import deque, Sequence, OrderedDict
@@ -350,6 +353,11 @@ def _create_parser():
                       help='display n\'th history entry if n is a simple int, '
                            'or range of entries if it is Python slice notation')
     # 'id' subcommand
+    show_all = subp.add_parser('all', help='displays history from all sessions')
+    # 'id' subcommand
+    show_all.add_argument('-l', dest='return_list', default=False,
+                          action='store_true', 
+                          help='returns history as a list instead of printing')
     subp.add_parser('id', help='displays the current session id')
     # 'file' subcommand
     subp.add_parser('file', help='displays the current history filename')
@@ -404,6 +412,53 @@ def _show(ns, hist):
         print('\n'.join(lines))
 
 
+def _all(ns, hist):
+    """Show the requested portion of the shell history."""
+    """
+    get ALL history!
+    """
+    hist_dir = os.path.abspath(builtins.__xonsh_env__.get('XONSH_DATA_DIR'))
+    
+    firstComm = None
+    lastComm = None
+    firstTime=None
+    lastTime=None 
+    returnList = ns.return_list
+    grep = None
+    
+    files = [os.path.join(hist_dir,f) for f in listdir(hist_dir) 
+             if f.startswith('xonsh-') and f.endswith('.json')]
+    fileHist = [lazyjson.LazyJSON(f, reopen=False).load()['cmds'] 
+                for f in files]
+    commands = [(c['inp'].replace('\n', ''), c['ts'][0])
+                for commands in fileHist for c in commands if c]
+    commands.sort(key=itemgetter(1))
+    commands = [(c,t,ind) for ind,(c,t) in enumerate(commands)]
+    numOfCommands = len(commands)
+    digits = len(str(numOfCommands))
+    if grep:
+        commands = [c for c in commands if grep in c[0]]
+    if firstTime is not None:
+        if isinstance(firstTime,datetime):
+            firstTime = firstTime.timestamp()
+        if isinstance(firstTime,float):
+            commands = [c for c in commands if c[1] >= firstTime]
+    if lastTime is not None:
+        if isinstance(lastTime,datetime):
+            lastTime = lastTime.timestamp()
+        if isinstance(lastTime,float):
+            commands = [c for c in commands if c[1] <= lastTime]
+
+    if firstComm != None or lastComm != None and firstTime == None and lastTime == None:
+        commands = commands[firstComm:lastComm]
+
+    if returnList:
+        return [(c, datetime.fromtimestamp(t), i) for c,t,i in commands]
+    else:    
+        for c,t,i in commands:
+            print('{:>{width}}: {}'.format(i,c, width=digits+1))
+
+
 def _info(ns, hist):
     """Display information about the shell history."""
     data = OrderedDict()
@@ -431,11 +486,12 @@ def _gc(ns, hist):
 
 _MAIN_ACTIONS = {
     'show': _show,
+    'all': _all,
     'id': lambda ns, hist: print(hist.sessionid),
     'file': lambda ns, hist: print(hist.filename),
     'info': _info,
     'diff': diff_history._main_action,
-    'gc': _gc,
+    'gc': _gc
     }
 
 
