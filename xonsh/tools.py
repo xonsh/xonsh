@@ -47,7 +47,7 @@ class XonshError(Exception):
 
 
 class XonshBlockError(XonshError):
-    """Special xonsh exception for communicating the liens of block bodies."""
+    """Special xonsh exception for communicating the lines of block bodies."""
 
     def __init__(self, lines, glbs, locs, *args, **kwargs):
         """
