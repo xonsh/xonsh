@@ -24,6 +24,19 @@ if ON_DARWIN:
 elif ON_WINDOWS:
     pass
 
+elif ON_CYGWIN:
+    # Similar to what happened on OSX, more issues on Cygwin
+    # (see Github issue #514).
+    def _send_signal(job, signal):
+        try:
+            os.killpg(job['pgrp'], signal)
+        except (PermissionError, ProcessLookupError):
+            for pid in job['pids']:
+                try:
+                    os.kill(pid, signal)
+                except:
+                    pass
+
 else:
     def _send_signal(job, signal):
         os.killpg(job['pgrp'], signal)
