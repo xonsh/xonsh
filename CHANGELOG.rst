@@ -26,6 +26,11 @@ Current Developments
 * ``!(command)`` is now usefully iterable, yielding lines of stdout
 * Added XonshCalledProcessError, which includes the relevant CompletedCommand.
   Also handles differences between Py3.4 and 3.5 in CalledProcessError
+* Functions are now allowed in subprocess mode arg lists if ``$BARE_ALIASES``
+  is ``True``.  This allows for aliases to be invoked without having been
+  explicitly added to the ``aliases`` mapping.
+* ``@()`` now passes through functions as well as strings, which allows for
+  the use of anonymous aliases.
 
 **Changed:**
 
