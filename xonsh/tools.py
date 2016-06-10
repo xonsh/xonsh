@@ -30,6 +30,7 @@ import traceback
 from glob import iglob
 from warnings import warn
 from contextlib import contextmanager
+from subprocess import CalledProcessError
 from collections import OrderedDict, Sequence, Set
 
 # adding further imports from xonsh modules is discouraged to avoid cirular
@@ -63,6 +64,32 @@ class XonshBlockError(XonshError):
         self.lines = lines
         self.glbs = glbs
         self.locs = locs
+
+
+class XonshCalledProcessError(XonshError, CalledProcessError):
+    """Raised when there's an error with a called process
+
+    Inherits from XonshError and subprocess.CalledProcessError, catching
+    either will also catch this error.
+
+    Raised *after* iterating over stdout of a captured command, if the
+    returncode of the command is nonzero.
+
+    Example:
+        try:
+            for line in !(ls):
+                print(line)
+        except CalledProcessError as error:
+            print("Error in process: {}.format(error.completed_command.pid))
+
+    This also handles differences between Python3.4 and 3.5 where
+    CalledProcessError is concerned.
+    """
+    def __init__(self, returncode, command, output=None, stderr=None,
+                 completed_command=None):
+        super().__init__(returncode, command, output)
+        self.stderr = stderr
+        self.completed_command = completed_command
 
 
 class DefaultNotGivenType(object):

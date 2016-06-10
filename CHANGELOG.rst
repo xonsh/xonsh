@@ -6,6 +6,10 @@ Current Developments
 ====================
 **Added:**
 
+* ``!(command)`` is now usefully iterable, yielding lines of stdout
+* Added XonshCalledProcessError, which includes the relevant CompletedCommand.
+  Also handles differences between Py3.4 and 3.5 in CalledProcessError
+* XonshError and XonshCalledProcessError are now in builtins
 * New ``Block`` and ``Functor`` context managers are now available as
   part of the ``xonsh.contexts`` module.
 * ``Block`` provides support for turning a context body into a non-executing
@@ -23,11 +27,19 @@ Current Developments
 * Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
   the currently running script's path
 * Arguments '+' and '-' for the ``fg`` command (job control)
+* Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
+  the currently running script's path
+* ``!(command)`` is now usefully iterable, yielding lines of stdout
+* Added XonshCalledProcessError, which includes the relevant CompletedCommand.
+  Also handles differences between Py3.4 and 3.5 in CalledProcessError
 
 **Changed:**
 
 * Functions in ``Execer`` now take ``transform`` kwarg instead of
   ``wrap_subproc``.
+* Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
+  the currently running script's path
+* XonshError and XonshCalledProcessError are now in builtins
 
 **Deprecated:** None
 
