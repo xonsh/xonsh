@@ -30,7 +30,7 @@ elif ON_CYGWIN:
     def _send_signal(job, signal):
         try:
             os.killpg(job['pgrp'], signal)
-        except (PermissionError, ProcessLookupError):
+        except Exception:
             for pid in job['pids']:
                 try:
                     os.kill(pid, signal)
