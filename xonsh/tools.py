@@ -47,7 +47,7 @@ class XonshError(Exception):
 
 
 class XonshBlockError(XonshError):
-    """Special xonsh exception for communicating the liens of block bodies."""
+    """Special xonsh exception for communicating the lines of block bodies."""
 
     def __init__(self, lines, glbs, locs, *args, **kwargs):
         """
@@ -1274,6 +1274,28 @@ class CommandsCache(Set):
             allcmds |= set(builtins.aliases)
         self._cmds_cache = frozenset(allcmds)
         return self._cmds_cache
+
+    def lazyin(self, value):
+        """Checks if the value is in the current cache without the potential to
+        update the cache. It just says whether the value is known *now*. This
+        may not reflect precisely what is on the $PATH.
+        """
+        return value in self._cmds_cache
+
+    def lazyiter(self):
+        """Returns an iterator over the current cache contents without the
+        potential to update the cache. This may not reflect what is on the
+        $PATH.
+        """
+        return iter(self._cmds_cache)
+
+    def lazylen(self):
+        """Returns the length of the current cache contents without the
+        potential to update the cache. This may not reflect precicesly
+        what is on the $PATH.
+        """
+        return len(self._cmds_cache)
+
 
 WINDOWS_DRIVE_MATCHER = re.compile(r'^\w:')
 
