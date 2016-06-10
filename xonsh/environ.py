@@ -643,6 +643,12 @@ class Env(MutableMapping):
             self.docs[key] = vd
         return vd
 
+    def is_manually_set(self, varname):
+        """
+        Checks if an environment variable has been manually set.
+        """
+        return varname in self._d
+
     @contextmanager
     def swap(self, other=None, **kwargs):
         """Provides a context manager for temporarily swapping out certain
