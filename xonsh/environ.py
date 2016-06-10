@@ -123,7 +123,8 @@ DEFAULT_ENSURERS = {
     'XONSH_SHOW_TRACEBACK': (is_bool, to_bool, bool_to_str),
     'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
     'XONSH_STORE_STDIN': (is_bool, to_bool, bool_to_str),
-    'XONSH_TRACEBACK_LOGFILE': (is_logfile_opt, to_logfile_opt, logfile_opt_to_str),
+    'XONSH_TRACEBACK_LOGFILE': (is_logfile_opt, to_logfile_opt,
+                                logfile_opt_to_str),
     'VI_MODE': (is_bool, to_bool, bool_to_str),
     'VIRTUAL_ENV': (is_string, ensure_string, ensure_string),
     'WIN_UNICODE_CONSOLE': (always_false, setup_win_unicode_console, bool_to_str),
@@ -246,6 +247,7 @@ DEFAULT_VALUES = {
     'XONSH_SHOW_TRACEBACK': False,
     'XONSH_STORE_STDIN': False,
     'XONSH_STORE_STDOUT': False,
+    'XONSH_TRACEBACK_LOGFILE': None
 }
 if hasattr(locale, 'LC_MESSAGES'):
     DEFAULT_VALUES['LC_MESSAGES'] = locale.setlocale(locale.LC_MESSAGES)

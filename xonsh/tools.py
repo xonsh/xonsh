@@ -439,7 +439,7 @@ def print_exception(msg=None):
     # info to stderr.
     if show_trace:
         traceback.print_exc()
-    
+
     # additionally, check if a file for traceback logging has been
     # specified and convert to a proper option if needed
     log_file = env.get('XONSH_TRACEBACK_LOGFILE', None)
@@ -458,6 +458,7 @@ def print_exception(msg=None):
         msg = msg if msg.endswith('\n') else msg + '\n'
         sys.stderr.write(msg)
 
+
 def display_error_message():
     """
     Prints the error message of the current exception on stderr.
@@ -465,6 +466,7 @@ def display_error_message():
     exc_type, exc_value, exc_traceback = sys.exc_info()
     exception_only = traceback.format_exception_only(exc_type, exc_value)
     sys.stderr.write(''.join(exception_only))
+
 
 def is_writable_file(filepath):
     """
@@ -633,6 +635,7 @@ def is_bool(x):
     """Tests if something is a boolean."""
     return isinstance(x, bool)
 
+
 def is_logfile_opt(x):
     """
     Checks if x is a valid $XONSH_TRACEBACK_LOGFILE option. Returns False
@@ -642,6 +645,7 @@ def is_logfile_opt(x):
         return True
     return False if not isinstance(x, str) else \
            (is_writable_file(x) or x == '')
+
 
 def to_logfile_opt(x):
     """
@@ -659,6 +663,7 @@ def to_logfile_opt(x):
                          'and is writable or that can be created.\n')
         return None
 
+
 def logfile_opt_to_str(x):
     """
     Detypes a $XONSH_TRACEBACK_LOGFILE option.
@@ -670,7 +675,9 @@ def logfile_opt_to_str(x):
         return ''
     return str(x)
 
+
 _FALSES = frozenset(['', '0', 'n', 'f', 'no', 'none', 'false'])
+
 
 def to_bool(x):
     """"Converts to a boolean in a semantically meaningful way."""
