@@ -402,24 +402,18 @@ def run_subproc(cmds, captured=False):
             stderr = builtins.__xonsh_stderr_uncaptured__
         uninew = (ix == last_cmd) and (not _capture_streams)
 
-        alias = builtins.aliases.get(cmd[0], None)
-        if builtins.__xonsh_env__.get('BARE_ALIASES'):
-            if callable(cmd[0]):
-                alias = cmd[0]
-            if alias is None:
-                val = builtins.__xonsh_ctx__.get(cmd[0], None)
-                if callable(val):
-                    numargs = len(inspect.signature(val).parameters)
-                    if numargs in {2, 4}:
-                        # this looks like it could be an alias.  try it
-                        alias = val
+        if callable(cmd[0]):
+            alias = cmd[0]
+        else:
+            alias = builtins.aliases.get(cmd[0], None)
+            n = locate_binary(cmd[0])
 
         procinfo['alias'] = alias
         if (alias is None and
                 builtins.__xonsh_env__.get('AUTO_CD') and
                 len(cmd) == 1 and
                 os.path.isdir(cmd[0]) and
-                locate_binary(cmd[0]) is None):
+                n is None):
             cmd.insert(0, 'cd')
             alias = builtins.aliases.get('cd', None)
 
@@ -428,7 +422,6 @@ def run_subproc(cmds, captured=False):
         else:
             if alias is not None:
                 cmd = alias + cmd[1:]
-            n = locate_binary(cmd[0])
             if n is None:
                 aliased_cmd = cmd
             else:
