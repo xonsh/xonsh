@@ -205,7 +205,7 @@ if ON_WINDOWS:
         subprocess.check_call([WINDOWS_BASH_COMMAND, '--version'],
                               stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE)
-    except (FileNotFoundError, CalledProcessError):
+    except (FileNotFoundError, subprocess.CalledProcessError):
         if GIT_FOR_WINDOWS_PATH:
             bashcmd = os.path.join(GIT_FOR_WINDOWS_PATH, 'bin\\bash.exe')
             if os.path.isfile(bashcmd):
