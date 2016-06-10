@@ -143,8 +143,8 @@ def load_xonsh_bindings(key_bindings_manager):
     def call_exit_alias(event):
         """Use xonsh exit function"""
         b = event.cli.current_buffer
-        b.text = 'EOF'
         b.accept_action.validate_and_handle(event.cli, b)
+        exit([])
 
     @handle(Keys.ControlJ, filter=IsMultiline())
     def multiline_carriage_return(event):

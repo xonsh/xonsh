@@ -272,7 +272,10 @@ def clean_jobs():
                 else:
                     msg = 'there is an unfinished job'
 
-                print()
+                if builtins.__xonsh_env__['SHELL_TYPE'] != 'prompt_toolkit':
+                    # The Ctrl+D binding for prompt_toolkit already inserts a
+                    # newline
+                    print()
                 print('xonsh: {}'.format(msg), file=sys.stderr)
                 print('-'*5, file=sys.stderr)
                 jobs([], stdout=sys.stderr)
