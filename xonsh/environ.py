@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Environment for the xonsh shell."""
 import os
+import sys
 import time
 import json
 import locale
@@ -14,7 +15,6 @@ import socket
 import string
 import subprocess
 import shutil
-import sys
 from warnings import warn
 from collections import (Mapping, MutableMapping, MutableSequence, MutableSet,
     namedtuple)
@@ -25,7 +25,7 @@ from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
 from xonsh.platform import (BASH_COMPLETIONS_DEFAULT, ON_ANACONDA, ON_LINUX,
-                            ON_WINDOWS, DEFAULT_ENCODING)
+                            ON_WINDOWS, DEFAULT_ENCODING, ON_CYGWIN)
 from xonsh.tools import (
     IS_SUPERUSER, always_true, always_false, ensure_string, is_env_path,
     str_to_env_path, env_path_to_str, is_bool, to_bool, bool_to_str,
@@ -143,7 +143,13 @@ def default_value(f):
 def is_callable_default(x):
     """Checks if a value is a callable default."""
     return callable(x) and getattr(x, '_xonsh_callable_default', False)
-if ON_WINDOWS:
+
+if ON_CYGWIN:
+    DEFAULT_PROMPT = ('{env_name}'
+                      '{BOLD_INTENSE_GREEN}{user}@{hostname}'
+                      '{BOLD_INTENSE_CYAN} {cwd}{NO_COLOR}'
+                      ' {BOLD_INTENSE_CYAN}{prompt_end}{NO_COLOR} ')
+elif ON_WINDOWS:
     DEFAULT_PROMPT = ('{env_name}'
                       '{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} '
                       '{cwd}{branch_color}{curr_branch}{NO_COLOR} '
@@ -877,6 +883,21 @@ def get_hg_branch(cwd=None, root=None):
     return branch
 
 
+_FIRST_BRANCH_TIMEOUT = True
+
+def _first_branch_timeout_message():
+    global _FIRST_BRANCH_TIMEOUT
+    if not _FIRST_BRANCH_TIMEOUT:
+        return
+    _FIRST_BRANCH_TIMEOUT = False
+    print('xonsh: branch timeout: computing the branch name, color, or both '
+          'timed out while formatting the prompt. You may avoid this by '
+          'increaing the value of $VC_BRANCH_TIMEOUT or by removing branch '
+          'fields, like {curr_branch}, from your $PROMPT. See the FAQ '
+          'for more details. This message will be suppressed in the future.',
+          file=sys.stderr)
+
+
 def current_branch(pad=True):
     """Gets the branch for a current working directory. Returns an empty string
     if the cwd is not a repository.  This currently only works for git and hg
@@ -891,6 +912,7 @@ def current_branch(pad=True):
         branch = get_hg_branch()
     if isinstance(branch, subprocess.TimeoutExpired):
         branch = '<branch-timeout>'
+        _first_branch_timeout_message()
     if pad and branch:
         branch = ' ' + branch
     return branch

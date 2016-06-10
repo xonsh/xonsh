@@ -1115,7 +1115,10 @@ By default, the following variables are available for use:
   * ``curr_branch``: The name of the current git branch (preceded by space),
     if any.
   * ``branch_color``: ``{BOLD_GREEN}`` if the current git branch is clean,
-    otherwise ``{BOLD_RED}``
+    otherwise ``{BOLD_RED}``. This is yellow if the branch color could not be
+    determined.
+  * ``branch_bg_color``: Like, ``{branch_color}``, but sets a background color
+    instead.
   * ``prompt_end``: `#` if the user has root/admin permissions `$` otherwise
   * ``current_job``: The name of the command currently running in the
     foreground, if any.
