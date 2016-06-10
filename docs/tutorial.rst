@@ -736,7 +736,8 @@ Each job has a unique identifier (starting with 1 and counting upward).  By
 default, the ``fg`` and ``bg`` commands operate on the job that was started
 most recently.  You can bring older jobs to the foreground or background by
 specifying the appropriate ID; for example, ``fg 1`` brings the job with ID 1
-to the foreground.
+to the foreground. Additionally, specify "+" for the most recent job and "-"
+for the second most recent job.
 
 String Literals in Subprocess-mode
 ====================================
