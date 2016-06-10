@@ -251,14 +251,8 @@ def clean_jobs():
     jobs_clean = True
     if builtins.__xonsh_env__['XONSH_INTERACTIVE']:
         _clear_dead_jobs()
-        job_types = set()
-        for job in builtins.__xonsh_all_jobs__.values():
-            if job['bg']:
-                job_types.add('background')
-            elif job['status'] == 'stopped':
-                job_types.add('stopped')
 
-        if job_types:
+        if builtins.__xonsh_all_jobs__:
             global _last_exit_time
             if builtins.__xonsh_history__.buffer:
                 last_cmd_start = builtins.__xonsh_history__.buffer[-1]['ts'][0]
@@ -273,23 +267,13 @@ def clean_jobs():
                 # unfinished jobs in this case.
                 kill_all_jobs()
             else:
-                if 'background' in job_types and 'stopped' in job_types:
-                    type_str = 'background and stopped'
-                else:
-                    type_str = job_types.pop()
-
                 if len(builtins.__xonsh_all_jobs__) > 1:
-                    num = 'are'
-                    job_str = 'jobs'
+                    msg = 'there are unfinished jobs'
                 else:
-                    num = 'is a'
-                    job_str = 'job'
+                    msg = 'there is an unfinished job'
 
                 print()
-                print('xonsh: there {num} {typ} {job}'.format(num=num,
-                                                              typ=type_str,
-                                                              job=job_str),
-                      file=sys.stderr)
+                print('xonsh: {}'.format(msg), file=sys.stderr)
                 print('-'*5, file=sys.stderr)
                 jobs([], outfile=sys.stderr)
                 print('-'*5, file=sys.stderr)
