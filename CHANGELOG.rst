@@ -22,11 +22,17 @@ Current Developments
   and will dispatch to ``func()``.
 * Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
   the currently running script's path
+* ``!(command)`` is now usefully iterable, yielding lines of stdout
+* Added XonshCalledProcessError, which includes the relevant CompletedCommand.
+  Also handles differences between Py3.4 and 3.5 in CalledProcessError
 
 **Changed:**
 
 * Functions in ``Execer`` now take ``transform`` kwarg instead of
   ``wrap_subproc``.
+* Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
+  the currently running script's path
+* XonshError and XonshCalledProcessError are now in builtins
 
 **Deprecated:** None
 
@@ -36,6 +42,8 @@ Current Developments
 
 * Strip leading space in commands passed using the "-c" switch
 * Fixed xonfig wizard failing on Windows due to colon in created filename.
+* Ensured that the prompt_toolkit shell functions, even without a ``completer``
+  attribute.
 * Fixed crash resulting from malformed ``$PROMPT`` or ``$TITLE``.
 
 **Security:** None

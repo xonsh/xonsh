@@ -658,12 +658,12 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.__xonsh_all_jobs__ = {}
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     # public built-ins
+    builtins.XonshError = XonshError
     builtins.XonshBlockError = XonshBlockError
+    builtins.XonshCalledProcessError = XonshCalledProcessError
     builtins.evalx = None if execer is None else execer.eval
     builtins.execx = None if execer is None else execer.exec
     builtins.compilex = None if execer is None else execer.compile
-    builtins.XonshError = XonshError
-    builtins.XonshCalledProcessError = XonshCalledProcessError
 
     # Need this inline/lazy import here since we use locate_binary that relies on __xonsh_env__ in default aliases
     builtins.default_aliases = builtins.aliases = Aliases(make_default_aliases())
@@ -717,13 +717,13 @@ def unload_builtins():
              '__xonsh_subproc_uncaptured__',
              '__xonsh_execer__',
              '__xonsh_commands_cache__',
+             'XonshError',
              'XonshBlockError',
+             'XonshCalledProcessError',
              'evalx',
              'execx',
              'compilex',
              'default_aliases',
-             'XonshError',
-             'XonshCalledProcessError',
              '__xonsh_all_jobs__',
              '__xonsh_ensure_list_of_strs__',
              '__xonsh_history__',
