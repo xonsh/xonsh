@@ -1,19 +1,20 @@
 # -*- coding: utf-8 -*-
 """Environment for the xonsh shell."""
+import os
+import sys
+import time
+import json
+import locale
 import builtins
 from contextlib import contextmanager
 from functools import wraps
 from itertools import chain
-import json
-import locale
-import os
 from pprint import pformat
 import re
 import socket
 import string
 import subprocess
 import shutil
-import sys
 from warnings import warn
 from collections import (Mapping, MutableMapping, MutableSequence, MutableSet,
     namedtuple)
@@ -24,7 +25,7 @@ from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
 from xonsh.platform import (BASH_COMPLETIONS_DEFAULT, ON_ANACONDA, ON_LINUX,
-                            ON_WINDOWS, DEFAULT_ENCODING)
+                            ON_WINDOWS, DEFAULT_ENCODING, ON_CYGWIN)
 from xonsh.tools import (
     IS_SUPERUSER, always_true, always_false, ensure_string, is_env_path,
     str_to_env_path, env_path_to_str, is_bool, to_bool, bool_to_str,
@@ -114,8 +115,13 @@ DEFAULT_ENSURERS = {
     'RAISE_SUBPROC_ERROR': (is_bool, to_bool, bool_to_str),
     'RIGHT_PROMPT': (is_string_or_callable, ensure_string, ensure_string),
     'SUBSEQUENCE_PATH_COMPLETION': (is_bool, to_bool, bool_to_str),
+    'SUPPRESS_BRANCH_TIMEOUT_MESSAGE': (is_bool, to_bool, bool_to_str),
     'TEEPTY_PIPE_DELAY': (is_float, float, str),
     'UPDATE_OS_ENVIRON': (is_bool, to_bool, bool_to_str),
+    'VC_BRANCH_TIMEOUT': (is_float, float, str),
+    'VI_MODE': (is_bool, to_bool, bool_to_str),
+    'VIRTUAL_ENV': (is_string, ensure_string, ensure_string),
+    'WIN_UNICODE_CONSOLE': (always_false, setup_win_unicode_console, bool_to_str),
     'XONSHRC': (is_env_path, str_to_env_path, env_path_to_str),
     'XONSH_CACHE_SCRIPTS': (is_bool, to_bool, bool_to_str),
     'XONSH_CACHE_EVERYTHING': (is_bool, to_bool, bool_to_str),
@@ -127,9 +133,6 @@ DEFAULT_ENSURERS = {
     'XONSH_LOGIN': (is_bool, to_bool, bool_to_str),
     'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
     'XONSH_STORE_STDIN': (is_bool, to_bool, bool_to_str),
-    'VI_MODE': (is_bool, to_bool, bool_to_str),
-    'VIRTUAL_ENV': (is_string, ensure_string, ensure_string),
-    'WIN_UNICODE_CONSOLE': (always_false, setup_win_unicode_console, bool_to_str),
 }
 
 #
@@ -143,7 +146,11 @@ def default_value(f):
 def is_callable_default(x):
     """Checks if a value is a callable default."""
     return callable(x) and getattr(x, '_xonsh_callable_default', False)
-if ON_WINDOWS:
+
+if ON_CYGWIN:
+    DEFAULT_PROMPT = ('{env_name}{BOLD_GREEN}{user}@{hostname}'
+                      '{BOLD_BLUE} {cwd} {prompt_end}{NO_COLOR} ')
+elif ON_WINDOWS:
     DEFAULT_PROMPT = ('{env_name}'
                       '{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} '
                       '{cwd}{branch_color}{curr_branch}{NO_COLOR} '
@@ -228,12 +235,14 @@ DEFAULT_VALUES = {
     'RIGHT_PROMPT': '',
     'SHELL_TYPE': 'best',
     'SUBSEQUENCE_PATH_COMPLETION': True,
+    'SUPPRESS_BRANCH_TIMEOUT_MESSAGE': False,
     'SUGGEST_COMMANDS': True,
     'SUGGEST_MAX_NUM': 5,
     'SUGGEST_THRESHOLD': 3,
     'TEEPTY_PIPE_DELAY': 0.01,
     'TITLE': DEFAULT_TITLE,
     'UPDATE_OS_ENVIRON': False,
+    'VC_BRANCH_TIMEOUT': 0.2 if ON_WINDOWS else 0.1,
     'VI_MODE': False,
     'WIN_UNICODE_CONSOLE': True,
     'XDG_CONFIG_HOME': os.path.expanduser(os.path.join('~', '.config')),
@@ -444,6 +453,8 @@ DEFAULT_DOCS = {
         'command and a valid command is less than this value, the valid '
         'command will be offered as a suggestion.  Also used for "fuzzy" '
         'tab completion of paths.'),
+    'SUPPRESS_BRANCH_TIMEOUT_MESSAGE': VarDocs(
+        'Whether or not to supress branch timeout warning messages.'),
     'TEEPTY_PIPE_DELAY': VarDocs(
         'The number of [seconds] to delay a spawned process if it has '
         'information being piped in via stdin. This value must be a float. '
@@ -475,6 +486,9 @@ DEFAULT_DOCS = {
     'UPDATE_OS_ENVIRON': VarDocs("If True os.environ will always be updated "
         "when the xonsh environment changes. The environment can be reset to "
         "the default value by calling '__xonsh_env__.undo_replace_env()'"),
+    'VC_BRANCH_TIMEOUT': VarDocs('The timeout (in seconds) for version control '
+        'branch computations. This is a timeout per subprocess call, so the '
+        'total time to compute will be larger than this in many cases.'),
     'VI_MODE': VarDocs(
         "Flag to enable 'vi_mode' in the 'prompt_toolkit' shell."),
     'VIRTUAL_ENV': VarDocs(
@@ -786,14 +800,11 @@ def _yield_executables(directory, name):
 def locate_binary(name):
     if os.path.isfile(name) and name != os.path.basename(name):
         return name
-
     directories = builtins.__xonsh_env__.get('PATH')
-
-    # Windows users expect t obe able to execute files in the same directory
+    # Windows users expect to be able to execute files in the same directory
     # without `./`
     if ON_WINDOWS:
         directories = [_get_cwd()] + directories
-
     try:
         return next(chain.from_iterable(_yield_executables(directory, name) for
                     directory in directories if os.path.isdir(directory)))
@@ -801,213 +812,218 @@ def locate_binary(name):
         return None
 
 
-def _get_parent_dir_for(path, dir_name):
-    # walk up the directory tree to see if we are inside an hg repo
-    previous_path = ''
-    while path != previous_path:
-        if os.path.isdir(os.path.join(path, dir_name)):
-            return path
-
-        previous_path = path
-        path, _ = os.path.split(path)
-
-    return False
-
-
-def ensure_git(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        cwd = kwargs.get('cwd', _get_cwd())
-        if cwd is None:
-            return
-
-        # step out completely if git is not installed
-        if locate_binary('git') is None:
-            return
-
-        root_path = _get_parent_dir_for(cwd, '.git')
-        # Bail if we're not in a repo
-        if not root_path:
-            return
-
-        kwargs['cwd'] = cwd
-
-        return func(*args, **kwargs)
-    return wrapper
-
-
-def ensure_hg(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        cwd = kwargs.get('cwd', _get_cwd())
-        if cwd is None:
-            return
-
-        # step out completely if hg is not installed
-        if locate_binary('hg') is None:
-            return
-
-        root_path = _get_parent_dir_for(cwd, '.hg')
-        # Bail if we're not in a repo
-        if not root_path:
-            return
-
-        kwargs['cwd'] = cwd
-        kwargs['root'] = root_path
-
-        return func(*args, **kwargs)
-    return wrapper
-
-
-@ensure_git
-def get_git_branch(cwd=None):
+def get_git_branch():
+    """Attempts to find the current git branch.  If no branch is found, then
+    an empty string is returned. If a timeout occured, the timeout exception
+    (subprocess.TimeoutExpired) is returned.
+    """
     branch = None
-
+    env = builtins.__xonsh_env__
+    cwd = env['PWD']
+    denv = env.detype()
+    vcbt = env['VC_BRANCH_TIMEOUT']
     if not ON_WINDOWS:
         prompt_scripts = ['/usr/lib/git-core/git-sh-prompt',
                           '/usr/local/etc/bash_completion.d/git-prompt.sh']
-
         for script in prompt_scripts:
             # note that this is about 10x faster than bash -i "__git_ps1"
-            _input = ('source {}; __git_ps1 "${{1:-%s}}"'.format(script))
+            inp = 'source {}; __git_ps1 "${{1:-%s}}"'.format(script)
             try:
-                branch = subprocess.check_output(['bash', ],
-                                                 cwd=cwd,
-                                                 input=_input,
-                                                 stderr=subprocess.PIPE,
-                                                 universal_newlines=True)
-                if len(branch) == 0:
-                    branch = None
+                branch = subprocess.check_output(['bash'], cwd=cwd, input=inp,
+                            stderr=subprocess.PIPE, timeout=vcbt, env=denv,
+                            universal_newlines=True)
+                break
+            except subprocess.TimeoutExpired as e:
+                branch = e
+                break
             except (subprocess.CalledProcessError, FileNotFoundError):
                 continue
-
     # fall back to using the git binary if the above failed
     if branch is None:
+        cmd = ['git', 'rev-parse', '--abbrev-ref', 'HEAD']
         try:
-            cmd = ['git', 'rev-parse', '--abbrev-ref', 'HEAD']
-            s = subprocess.check_output(cmd,
-                                        stderr=subprocess.PIPE,
-                                        cwd=cwd,
-                                        universal_newlines=True)
-            if len(s) == 0:
-                # Workaround for a bug in ConEMU/cmder
-                # retry without redirection
-                s = subprocess.check_output(cmd,
-                                            cwd=cwd,
-                                            universal_newlines=True)
-            s = s.strip()
-            if len(s) > 0:
-                branch = s
+            s = subprocess.check_output(cmd, cwd=cwd, timeout=vcbt, env=denv,
+                    stderr=subprocess.PIPE, universal_newlines=True)
+            if ON_WINDOWS and len(s) == 0:
+                # Workaround for a bug in ConEMU/cmder, retry without redirection
+                s = subprocess.check_output(cmd, cwd=cwd, timeout=vcbt,
+                                            env=denv, universal_newlines=True)
+            branch = s.strip()
+        except subprocess.TimeoutExpired as e:
+            branch = e
         except (subprocess.CalledProcessError, FileNotFoundError):
-            pass
-
+            branch = ''
     return branch
 
 
-def call_hg_command(command, cwd):
-    # Override user configurations settings and aliases
-    hg_env = builtins.__xonsh_env__.detype()
-    hg_env['HGRCPATH'] = ""
-
-    s = None
-    try:
-        s = subprocess.check_output(['hg'] + command,
-                                    stderr=subprocess.PIPE,
-                                    cwd=cwd,
-                                    universal_newlines=True,
-                                    env=hg_env)
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        pass
-
-    return s
+def _get_parent_dir_for(path, dir_name, timeout):
+    # walk up the directory tree to see if we are inside an hg repo
+    # the timeout makes sure that we don't thrash the file system
+    previous_path = ''
+    t0 = time.time()
+    while path != previous_path and ((time.time() - t0) < timeout):
+        if os.path.isdir(os.path.join(path, dir_name)):
+            return path
+        previous_path = path
+        path, _ = os.path.split(path)
+    return (path == previous_path)
 
 
-@ensure_hg
 def get_hg_branch(cwd=None, root=None):
-    branch = None
-    active_bookmark = None
-
-    if root is not None:
-        branch_path = os.path.sep.join([root, '.hg', 'branch'])
-        bookmark_path = os.path.sep.join([root, '.hg', 'bookmarks.current'])
-
-        if os.path.exists(branch_path):
-            with open(branch_path, 'r') as branch_file:
-                branch = branch_file.read()
+    env = builtins.__xonsh_env__
+    cwd = env['PWD']
+    root = _get_parent_dir_for(cwd, '.hg', env['VC_BRANCH_TIMEOUT'])
+    if not isinstance(root, str):
+        # Bail if we are not in a repo or we timed out
+        if root:
+            return ''
         else:
-            branch = 'default'
+            return subprocess.TimeoutExpired(['hg'], env['VC_BRANCH_TIMEOUT'])
+    # get branch name
+    branch_path = os.path.sep.join([root, '.hg', 'branch'])
+    if os.path.exists(branch_path):
+        with open(branch_path, 'r') as branch_file:
+            branch = branch_file.read()
+    else:
+        branch = 'default'
+    # add bookmark, if we can
+    bookmark_path = os.path.sep.join([root, '.hg', 'bookmarks.current'])
+    if os.path.exists(bookmark_path):
+        with open(bookmark_path, 'r') as bookmark_file:
+            active_bookmark = bookmark_file.read()
+        branch = "{0}, {1}".format(*(b.strip(os.linesep) for b in
+                                   (branch, active_bookmark)))
+    else:
+        branch = branch.strip(os.linesep)
+    return branch
 
-        if os.path.exists(bookmark_path):
-            with open(bookmark_path, 'r') as bookmark_file:
-                active_bookmark = bookmark_file.read()
 
-    if active_bookmark is not None:
-        return "{0}, {1}".format(
-            *(b.strip(os.linesep) for b in (branch, active_bookmark)))
+_FIRST_BRANCH_TIMEOUT = True
 
-    return branch.strip(os.linesep) if branch else None
+def _first_branch_timeout_message():
+    global _FIRST_BRANCH_TIMEOUT
+    sbtm = builtins.__xonsh_env__['SUPPRESS_BRANCH_TIMEOUT_MESSAGE']
+    if not _FIRST_BRANCH_TIMEOUT or sbtm:
+        return
+    _FIRST_BRANCH_TIMEOUT = False
+    print('xonsh: branch timeout: computing the branch name, color, or both '
+          'timed out while formatting the prompt. You may avoid this by '
+          'increaing the value of $VC_BRANCH_TIMEOUT or by removing branch '
+          'fields, like {curr_branch}, from your $PROMPT. See the FAQ '
+          'for more details. This message will be suppressed for the remainder '
+          'of this session. To suppress this message permanently, set '
+          '$SUPPRESS_BRANCH_TIMEOUT_MESSAGE = True in your xonshrc file.',
+          file=sys.stderr)
 
 
 def current_branch(pad=True):
-    """Gets the branch for a current working directory. Returns None
+    """Gets the branch for a current working directory. Returns an empty string
     if the cwd is not a repository.  This currently only works for git and hg
-    and should be extended in the future.
+    and should be extended in the future.  If a timeout occured, the string
+    '<branch-timeout>' is returned.
     """
-    branch = get_git_branch() or get_hg_branch()
-
-    if pad and branch is not None:
+    branch = ''
+    cmds = builtins.__xonsh_commands_cache__
+    if cmds.lazyin('git') or cmds.lazylen() == 0:
+        branch = get_git_branch()
+    if (cmds.lazyin('hg') or cmds.lazylen() == 0) and not branch:
+        branch = get_hg_branch()
+    if isinstance(branch, subprocess.TimeoutExpired):
+        branch = '<branch-timeout>'
+        _first_branch_timeout_message()
+    if pad and branch:
         branch = ' ' + branch
-
-    return branch or ''
+    return branch
 
 
 def git_dirty_working_directory(cwd=None, include_untracked=False):
+    """Returns whether or not the git directory is dirty. If this could not
+    be determined (timeout, file not sound, etc.) then this returns None.
+    """
+    cmd = ['git', 'status', '--porcelain']
+    if include_untracked:
+        cmd.append('--untracked-files=normal')
+    else:
+        cmd.append('--untracked-files=no')
+    env = builtins.__xonsh_env__
+    cwd = env['PWD']
+    denv = env.detype()
+    vcbt = env['VC_BRANCH_TIMEOUT']
     try:
-        cmd = ['git', 'status', '--porcelain']
-        if include_untracked:
-            cmd.append('--untracked-files=normal')
-        else:
-            cmd.append('--untracked-files=no')
-        s = subprocess.check_output(cmd,
-                                    stderr=subprocess.PIPE,
-                                    cwd=cwd,
-                                    universal_newlines=True)
-        if len(s) == 0:
-            # Workaround for a bug in ConEMU/cmder
-            # retry without redirection
-            s = subprocess.check_output(cmd,
-                                        cwd=cwd,
-                                        universal_newlines=True)
+        s = subprocess.check_output(cmd, stderr=subprocess.PIPE, cwd=cwd,
+                                    timeout=vcbt, universal_newlines=True,
+                                    env=denv)
+        if ON_WINDOWS and len(s) == 0:
+            # Workaround for a bug in ConEMU/cmder, retry without redirection
+            s = subprocess.check_output(cmd, cwd=cwd, timeout=vcbt,
+                                        env=denv, universal_newlines=True)
         return bool(s)
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return False
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired,
+            FileNotFoundError):
+        return None
 
 
-@ensure_hg
-def hg_dirty_working_directory(cwd=None, root=None):
-    id = call_hg_command(['identify', '--id'], cwd)
-    if id is None:
-        return False
-    return id.strip(os.linesep).endswith('+')
+def hg_dirty_working_directory():
+    """Computes whether or not the mercurial working directory is dirty or not.
+    If this cannot be deterimined, None is returned.
+    """
+    env = builtins.__xonsh_env__
+    cwd = env['PWD']
+    denv = env.detype()
+    vcbt = env['VC_BRANCH_TIMEOUT']
+    # Override user configurations settings and aliases
+    denv['HGRCPATH'] = ''
+    try:
+        s = subprocess.check_output(['hg', 'identify', '--id'],
+                stderr=subprocess.PIPE, cwd=cwd, timeout=vcbt,
+                universal_newlines=True, env=denv)
+        return s.strip(os.linesep).endswith('+')
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired,
+            FileNotFoundError):
+        return None
 
 
 def dirty_working_directory(cwd=None):
     """Returns a boolean as to whether there are uncommitted files in version
-    control repository we are inside. Currently supports git and hg.
+    control repository we are inside. If this cannot be determined, returns
+    None. Currently supports git and hg.
     """
-    return git_dirty_working_directory() or hg_dirty_working_directory()
+    dwd = None
+    cmds = builtins.__xonsh_commands_cache__
+    if cmds.lazyin('git') or cmds.lazylen() == 0:
+        dwd = git_dirty_working_directory()
+    if (cmds.lazyin('hg') or cmds.lazylen() == 0) and (dwd is None):
+        dwd = hg_dirty_working_directory()
+    return dwd
 
 
 def branch_color():
-    """Return red if the current branch is dirty, otherwise green"""
-    return ('{BOLD_INTENSE_RED}' if dirty_working_directory() else
-            '{BOLD_INTENSE_GREEN}')
+    """Return red if the current branch is dirty, yellow if the dirtiness can
+    not be determined, and green if it clean. Thes are bold, intesnse colors
+    for the foreground.
+    """
+    dwd = dirty_working_directory()
+    if dwd is None:
+        color = '{BOLD_INTENSE_YELLOW}'
+    elif dwd:
+        color = '{BOLD_INTENSE_RED}'
+    else:
+        color = '{BOLD_INTENSE_GREEN}'
+    return color
 
 
 def branch_bg_color():
-    """Return red if the current branch is dirty, otherwise green"""
-    return ('{BACKGROUND_RED}' if dirty_working_directory() else
-            '{BACKGROUND_GREEN}')
+    """Return red if the current branch is dirty, yellow if the dirtiness can
+    not be determined, and green if it clean. These are bacground colors.
+    """
+    dwd = dirty_working_directory()
+    if dwd is None:
+        color = '{BACKGROUND_YELLOW}'
+    elif dwd:
+        color = '{BACKGROUND_RED}'
+    else:
+        color = '{BACKGROUND_GREEN}'
+    return color
 
 
 def _replace_home(x):

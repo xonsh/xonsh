@@ -6,10 +6,6 @@ Current Developments
 ====================
 **Added:**
 
-* ``!(command)`` is now usefully iterable, yielding lines of stdout
-* Added XonshCalledProcessError, which includes the relevant CompletedCommand.
-  Also handles differences between Py3.4 and 3.5 in CalledProcessError
-* XonshError and XonshCalledProcessError are now in builtins
 * New ``Block`` and ``Functor`` context managers are now available as
   part of the ``xonsh.contexts`` module.
 * ``Block`` provides support for turning a context body into a non-executing
@@ -20,6 +16,16 @@ Current Developments
   block into a callable object.  The function object is available via the
   ``func()`` attribute.  However, the ``Functor`` instance is itself callable
   and will dispatch to ``func()``.
+* New ``$VC_BRANCH_TIMEOUT`` environment variable is the time (in seconds)
+  of how long to spend attempting each individual version control branch
+  information command during ``$PROMPT`` formatting.  This allows for faster
+  prompt resolution and faster startup times.
+* New lazy methods added to CommandsCache allowing for testing and inspection
+  without the possibility of recomputing the cache.
+* ``!(command)`` is now usefully iterable, yielding lines of stdout
+* Added XonshCalledProcessError, which includes the relevant CompletedCommand.
+  Also handles differences between Py3.4 and 3.5 in CalledProcessError
+* XonshError and XonshCalledProcessError are now in builtins
 * Tab completion of paths now includes zsh-style path expansion (subsequence
   matching), toggleable with ``$SUBSEQUENCE_PATH_COMPLETION``
 * Tab completion of paths now includes "fuzzy" matches that are accurate to
@@ -43,7 +49,10 @@ Current Developments
 
 **Deprecated:** None
 
-**Removed:** None
+**Removed:**
+
+* ``ensure_git()`` and ``ensure_hg()`` decorators removed.
+* ``call_hg_command()`` function removed.
 
 **Fixed:**
 
@@ -58,7 +67,6 @@ Current Developments
 v0.3.4
 ====================
 
-
 **Changed:**
 
 * ``$PROMPT`` from foreign shells is now ignored.
@@ -66,6 +74,7 @@ v0.3.4
   attempted to load.
 * Only show the prompt for the wizard if we did not attempt to load any run
   control files (as opposed to if none were successfully loaded).
+* Git and mercurial branch and dirty function refactor to imporve run times.
 
 
 **Fixed:**
