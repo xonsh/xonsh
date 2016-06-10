@@ -11,6 +11,9 @@ from collections import deque
 from xonsh.platform import ON_DARWIN, ON_WINDOWS, ON_CYGWIN
 
 tasks = deque()
+# Track time stamp of last exit command, so that two consecutive attempts to
+# exit can kill all jobs and exit.
+_last_exit_time = None
 
 
 if ON_DARWIN:
@@ -197,7 +200,7 @@ def _clear_dead_jobs():
         del builtins.__xonsh_all_jobs__[job]
 
 
-def print_one_job(num):
+def print_one_job(num, outfile=sys.stdout):
     """Print a line describing job number ``num``."""
     try:
         job = builtins.__xonsh_all_jobs__[num]
@@ -209,7 +212,8 @@ def print_one_job(num):
     cmd = ' '.join(cmd)
     pid = job['pids'][-1]
     bg = ' &' if job['bg'] else ''
-    print('[{}]{} {}: {}{} ({})'.format(num, pos, status, cmd, bg, pid))
+    print('[{}]{} {}: {}{} ({})'.format(num, pos, status, cmd, bg, pid),
+          file=outfile)
 
 
 def get_next_job_number():
@@ -255,30 +259,44 @@ def clean_jobs():
                 job_types.add('stopped')
 
         if job_types:
-            if 'background' in job_types and 'stopped' in job_types:
-                type_str = 'background and stopped'
+            global _last_exit_time
+            if builtins.__xonsh_history__.buffer:
+                last_cmd_start = builtins.__xonsh_history__.buffer[-1]['ts'][0]
             else:
-                type_str = job_types.pop()
+                last_cmd_start = None
 
-            if len(builtins.__xonsh_all_jobs__) > 1:
-                num = 'are'
-                job_str = 'jobs'
-            else:
-                num = 'is a'
-                job_str = 'job'
-
-            print()
-            print('xonsh: there {num} {typ} {job}'.format(num=num,
-                                                          typ=type_str,
-                                                          job=job_str))
-            print('-'*5)
-            jobs([])
-            print('-'*5)
-            resp = input('Enter "exit" or "e" to kill all jobs and exit ')
-            if resp in ('e', 'exit'):
+            if (_last_exit_time and last_cmd_start and
+                    _last_exit_time > last_cmd_start):
+                # Exit occurred after last command started, so it was called as
+                # part of the last command and is now being called again
+                # immediately. Kill jobs and exit without reminder about
+                # unfinished jobs in this case.
                 kill_all_jobs()
             else:
+                if 'background' in job_types and 'stopped' in job_types:
+                    type_str = 'background and stopped'
+                else:
+                    type_str = job_types.pop()
+
+                if len(builtins.__xonsh_all_jobs__) > 1:
+                    num = 'are'
+                    job_str = 'jobs'
+                else:
+                    num = 'is a'
+                    job_str = 'job'
+
+                print()
+                print('xonsh: there {num} {typ} {job}'.format(num=num,
+                                                              typ=type_str,
+                                                              job=job_str),
+                      file=sys.stderr)
+                print('-'*5, file=sys.stderr)
+                jobs([], outfile=sys.stderr)
+                print('-'*5, file=sys.stderr)
+                print(('Attempt to exit again immediately to kill all jobs '
+                       'and exit'), file=sys.stderr)
                 jobs_clean = False
+                _last_exit_time = time.time()
     else:
         kill_all_jobs()
 
@@ -294,7 +312,7 @@ def kill_all_jobs():
         _kill(job)
 
 
-def jobs(args, stdin=None):
+def jobs(args, stdin=None, outfile=sys.stdout):
     """
     xonsh command: jobs
 
@@ -302,7 +320,7 @@ def jobs(args, stdin=None):
     """
     _clear_dead_jobs()
     for j in tasks:
-        print_one_job(j)
+        print_one_job(j, outfile=outfile)
     return None, None
 
 

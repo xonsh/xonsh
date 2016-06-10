@@ -2,8 +2,10 @@
 """Key bindings for prompt_toolkit xonsh shell."""
 import builtins
 
-from prompt_toolkit.filters import Filter, IsMultiline
+from prompt_toolkit.enums import DEFAULT_BUFFER
+from prompt_toolkit.filters import Condition, Filter, IsMultiline
 from prompt_toolkit.keys import Keys
+from xonsh.aliases import exit
 from xonsh.tools import ON_WINDOWS
 
 env = builtins.__xonsh_env__
@@ -93,6 +95,16 @@ class EndOfLine(Filter):
 
         return bool(at_end and not last_line)
 
+
+# Copied from prompt-toolkit's key_binding/bindings/basic.py
+@Condition
+def ctrl_d_condition(cli):
+    """ Ctrl-D binding is only active when the default buffer is selected
+    and empty. """
+    return (cli.current_buffer_name == DEFAULT_BUFFER and
+            not cli.current_buffer.text)
+
+
 def can_compile(src):
     """Returns whether the code can be compiled, i.e. it is valid xonsh."""
     src = src if src.endswith('\n') else src + '\n'
@@ -126,6 +138,13 @@ def load_xonsh_bindings(key_bindings_manager):
     def insert_literal_tab(event):
         """ Insert literal tab on Shift+Tab instead of autocompleting """
         event.cli.current_buffer.insert_text(env.get('INDENT'))
+
+    @handle(Keys.ControlD, filter=ctrl_d_condition)
+    def call_exit_alias(event):
+        """Use xonsh exit function"""
+        b = event.cli.current_buffer
+        b.text = 'EOF'
+        b.accept_action.validate_and_handle(event.cli, b)
 
     @handle(Keys.ControlJ, filter=IsMultiline())
     def multiline_carriage_return(event):
