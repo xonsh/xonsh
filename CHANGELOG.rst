@@ -6,10 +6,6 @@ Current Developments
 ====================
 **Added:**
 
-* ``!(command)`` is now usefully iterable, yielding lines of stdout
-* Added XonshCalledProcessError, which includes the relevant CompletedCommand.
-  Also handles differences between Py3.4 and 3.5 in CalledProcessError
-* XonshError and XonshCalledProcessError are now in builtins
 * New ``Block`` and ``Functor`` context managers are now available as
   part of the ``xonsh.contexts`` module.
 * ``Block`` provides support for turning a context body into a non-executing
@@ -20,6 +16,22 @@ Current Developments
   block into a callable object.  The function object is available via the
   ``func()`` attribute.  However, the ``Functor`` instance is itself callable
   and will dispatch to ``func()``.
+* New ``$VC_BRANCH_TIMEOUT`` environment variable is the time (in seconds)
+  of how long to spend attempting each individual version control branch
+  information command during ``$PROMPT`` formatting.  This allows for faster
+  prompt resolution and faster startup times.
+* New lazy methods added to CommandsCache allowing for testing and inspection
+  without the possibility of recomputing the cache.
+* ``!(command)`` is now usefully iterable, yielding lines of stdout
+* Added XonshCalledProcessError, which includes the relevant CompletedCommand.
+  Also handles differences between Py3.4 and 3.5 in CalledProcessError
+* XonshError and XonshCalledProcessError are now in builtins
+* Tab completion of paths now includes zsh-style path expansion (subsequence
+  matching), toggleable with ``$SUBSEQUENCE_PATH_COMPLETION``
+* Tab completion of paths now includes "fuzzy" matches that are accurate to
+  within a few characters, toggleable with ``$FUZZY_PATH_COMPLETION``
+* Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
+  the currently running script's path
 * Arguments '+' and '-' for the ``fg`` command (job control)
 * Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
   the currently running script's path
@@ -40,7 +52,10 @@ Current Developments
 
 **Deprecated:** None
 
-**Removed:** None
+**Removed:**
+
+* ``ensure_git()`` and ``ensure_hg()`` decorators removed.
+* ``call_hg_command()`` function removed.
 
 **Fixed:**
 
@@ -49,12 +64,12 @@ Current Developments
 * Ensured that the prompt_toolkit shell functions, even without a ``completer``
   attribute.
 * Fixed crash resulting from malformed ``$PROMPT`` or ``$TITLE``.
+* Fix crash on startup when Bash Windows Subsystem for Linux is on the Path. 
 
 **Security:** None
 
 v0.3.4
 ====================
-
 
 **Changed:**
 
@@ -63,8 +78,7 @@ v0.3.4
   attempted to load.
 * Only show the prompt for the wizard if we did not attempt to load any run
   control files (as opposed to if none were successfully loaded).
-* On Windows if bash is not on the path look in the registry for the defaults
-  install directory for GitForWindows.
+* Git and mercurial branch and dirty function refactor to imporve run times.
 
 
 **Fixed:**
@@ -94,6 +108,9 @@ v0.3.3
 * Pretty printing of output and syntax highlighting of input and output can now
   be controlled via new environment variables ``$COLOR_INPUT``,
   ``$COLOR_RESULTS``, and ``$PRETTY_PRINT_RESULTS``.
+
+* In interactive mode, if there are stopped or background jobs, Xonsh prompts
+  for confirmations rather than just killing all jobs and exiting.
 
 **Changed:**
 
