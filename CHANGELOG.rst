@@ -4,8 +4,12 @@ Xonsh Change Log
 
 Current Developments
 ====================
+
 **Added:**
 
+* Tab completers can now raise ``StopIteration`` to prevent consideration of
+  remaining completers.
+* Added tab completer for the ``completer`` alias.
 * New ``Block`` and ``Functor`` context managers are now available as
   part of the ``xonsh.contexts`` module.
 * ``Block`` provides support for turning a context body into a non-executing
@@ -25,7 +29,6 @@ Current Developments
 * ``!(command)`` is now usefully iterable, yielding lines of stdout
 * Added XonshCalledProcessError, which includes the relevant CompletedCommand.
   Also handles differences between Py3.4 and 3.5 in CalledProcessError
-* XonshError and XonshCalledProcessError are now in builtins
 * Tab completion of paths now includes zsh-style path expansion (subsequence
   matching), toggleable with ``$SUBSEQUENCE_PATH_COMPLETION``
 * Tab completion of paths now includes "fuzzy" matches that are accurate to
@@ -38,6 +41,7 @@ Current Developments
 * ``!(command)`` is now usefully iterable, yielding lines of stdout
 * Added XonshCalledProcessError, which includes the relevant CompletedCommand.
   Also handles differences between Py3.4 and 3.5 in CalledProcessError
+* XonshError and XonshCalledProcessError are now in builtins
 
 **Changed:**
 
