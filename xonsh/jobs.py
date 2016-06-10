@@ -280,8 +280,8 @@ def clean_jobs():
                 print('-'*5, file=sys.stderr)
                 jobs([], stdout=sys.stderr)
                 print('-'*5, file=sys.stderr)
-                print(('Attempt to exit again immediately to kill all jobs '
-                       'and exit'), file=sys.stderr)
+                print('Type "exit" or press "ctrl-d" again to force quit.',
+                      file=sys.stderr)
                 jobs_clean = False
                 _last_exit_time = time.time()
     else:
