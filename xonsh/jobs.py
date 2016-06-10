@@ -236,6 +236,47 @@ def add_job(info):
         print_one_job(num)
 
 
+def clean_jobs():
+    """Clean up jobs for exiting shell
+
+    In non-interactive mode, kill all jobs.
+
+    In interactive mode, check for suspended or background jobs, print a
+    warning if any exist, and return False. Otherwise, return True.
+    """
+    jobs_clean = True
+    if builtins.__xonsh_env__['XONSH_INTERACTIVE']:
+        _clear_dead_jobs()
+        job_types = set()
+        for job in builtins.__xonsh_all_jobs__.values():
+            if job['bg']:
+                job_types.add('background')
+            elif job['status'] == 'stopped':
+                job_types.add('stopped')
+
+        if job_types:
+            jobs_clean = False
+            if 'background' in job_types and 'stopped' in job_types:
+                type_str = 'background and stopped'
+            else:
+                type_str = job_types.pop()
+
+            if len(builtins.__xonsh_all_jobs__) > 1:
+                article = ''
+                job_str = 'jobs'
+            else:
+                article = 'a '
+                job_str = 'job'
+
+            print('xonsh: you have {art}{typ} {job}'.format(art=article,
+                                                            typ=type_str,
+                                                            job=job_str))
+    else:
+        kill_all_jobs()
+
+    return jobs_clean
+
+
 def kill_all_jobs():
     """
     Send SIGKILL to all child processes (called when exiting xonsh).
