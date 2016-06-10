@@ -61,6 +61,7 @@ Current Developments
 * Ensured that the prompt_toolkit shell functions, even without a ``completer``
   attribute.
 * Fixed crash resulting from malformed ``$PROMPT`` or ``$TITLE``.
+* Fix crash on startup when Bash Windows Subsystem for Linux is on the Path. 
 
 **Security:** None
 
