@@ -356,11 +356,11 @@ example:
             sleep 1
 
 
-If you iterate over the CompletedCommand object, it will yield lines of its
-output.  Using this, you can quickly and cleanly process output from commands
-you know will not fail.  If a failure does occur, a XonshCalledProcessError is
-raised *after* all lines of stdout have been read, and you can process stderr
-output in an except clause.  Examples of each:
+If you iterate over the ``CompletedCommand`` object, it will yield lines of its
+output.  Using this, you can quickly and cleanly process output from commands.
+Additionally, these objects expose a method ``itercheck``, which behaves the same
+as the built-in iterator but raises ``XonshCalledProcessError`` if the process
+had a nonzero return code.
 
 .. code-block:: xonshcon
 
@@ -382,7 +382,7 @@ output in an except clause.  Examples of each:
         failures = []
 
         try:
-            for match in !(grep -RPl @(regexp) @(str(path))):
+            for match in !(grep -RPl @(regexp) @(str(path))).itercheck():
                 matches.append(match)
         except XonshCalledProcessError as error:
             for line in error.stderr.split('\n'):
