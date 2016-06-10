@@ -433,25 +433,24 @@ def print_exception(msg=None):
     if not is_bool(show_trace):
         show_trace = to_bool(show_trace)
 
+    # if the trace option has been set, print all traceback
+    # info to stderr.
     if show_trace:
-        # if the trace option has been set, check if a file for
-        # traceback logging has been specified and convert to a
-        # proper option if needed
-        log_file = env.get('XONSH_TRACEBACK_LOGFILE', None)
-        log_file = to_logfile_opt(log_file)
+        traceback.print_exc()
+    
+    # additionally, check if a file for traceback logging has been
+    # specified and convert to a proper option if needed
+    log_file = env.get('XONSH_TRACEBACK_LOGFILE', None)
+    log_file = to_logfile_opt(log_file)
+    if log_file:
+        # if log_file <> '' or log_file <> None, append
+        # traceback log there as well
+        with open(os.path.abspath(log_file), 'a') as f:
+            traceback.print_exc(file=f)
 
-        if not log_file:
-            # if a log file is not specified, print traceback info
-            # to stderr only
-            traceback.print_exc()
-        else:
-            # otherwise, append traceback info to the log file and
-            # show the error message of the exception on stderr as well
-            with open(os.path.abspath(log_file), 'a') as f:
-                traceback.print_exc(file=f)
-            display_error_message()
-    else:
-        # if traceback output is disabled, show only error message
+    if not show_trace:
+        # if traceback output is disabled, print the exception's
+        # error message on stderr.
         display_error_message()
     if msg:
         msg = msg if msg.endswith('\n') else msg + '\n'

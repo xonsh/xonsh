@@ -539,6 +539,12 @@ DEFAULT_DOCS = {
     'XONSH_STORE_STDOUT': VarDocs(
         'Whether or not to store the stdout and stderr streams in the '
         'history files.'),
+    'XONSH_TRACEBACK_LOGFILE': VarDocs(
+        'Specifies a file to store the traceback log to, regardless of whether '
+        'XONSH_SHOW_TRACEBACK has been set. Its value must be a writable file '
+        'or None / the empty string if traceback logging is not desired. '
+        'Logging to a file is not enabled by default.'
+    )
     }
 
 #
