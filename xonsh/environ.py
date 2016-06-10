@@ -115,6 +115,7 @@ DEFAULT_ENSURERS = {
     'RAISE_SUBPROC_ERROR': (is_bool, to_bool, bool_to_str),
     'RIGHT_PROMPT': (is_string_or_callable, ensure_string, ensure_string),
     'SUBSEQUENCE_PATH_COMPLETION': (is_bool, to_bool, bool_to_str),
+    'SUPPRESS_BRANCH_TIMEOUT_MESSAGE': (is_bool, to_bool, bool_to_str),
     'TEEPTY_PIPE_DELAY': (is_float, float, str),
     'UPDATE_OS_ENVIRON': (is_bool, to_bool, bool_to_str),
     'VC_BRANCH_TIMEOUT': (is_float, float, str),
@@ -147,10 +148,8 @@ def is_callable_default(x):
     return callable(x) and getattr(x, '_xonsh_callable_default', False)
 
 if ON_CYGWIN:
-    DEFAULT_PROMPT = ('{env_name}'
-                      '{BOLD_INTENSE_GREEN}{user}@{hostname}'
-                      '{BOLD_INTENSE_CYAN} {cwd}{NO_COLOR}'
-                      ' {BOLD_INTENSE_CYAN}{prompt_end}{NO_COLOR} ')
+    DEFAULT_PROMPT = ('{env_name}{BOLD_GREEN}{user}@{hostname}'
+                      '{BOLD_BLUE} {cwd} {prompt_end}{NO_COLOR} ')
 elif ON_WINDOWS:
     DEFAULT_PROMPT = ('{env_name}'
                       '{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} '
@@ -236,6 +235,7 @@ DEFAULT_VALUES = {
     'RIGHT_PROMPT': '',
     'SHELL_TYPE': 'best',
     'SUBSEQUENCE_PATH_COMPLETION': True,
+    'SUPPRESS_BRANCH_TIMEOUT_MESSAGE': False,
     'SUGGEST_COMMANDS': True,
     'SUGGEST_MAX_NUM': 5,
     'SUGGEST_THRESHOLD': 3,
@@ -453,6 +453,8 @@ DEFAULT_DOCS = {
         'command and a valid command is less than this value, the valid '
         'command will be offered as a suggestion.  Also used for "fuzzy" '
         'tab completion of paths.'),
+    'SUPPRESS_BRANCH_TIMEOUT_MESSAGE': VarDocs(
+        'Whether or not to supress branch timeout warning messages.'),
     'TEEPTY_PIPE_DELAY': VarDocs(
         'The number of [seconds] to delay a spawned process if it has '
         'information being piped in via stdin. This value must be a float. '
@@ -900,14 +902,17 @@ _FIRST_BRANCH_TIMEOUT = True
 
 def _first_branch_timeout_message():
     global _FIRST_BRANCH_TIMEOUT
-    if not _FIRST_BRANCH_TIMEOUT:
+    sbtm = builtins.__xonsh_env__['SUPPRESS_BRANCH_TIMEOUT_MESSAGE']
+    if not _FIRST_BRANCH_TIMEOUT or sbtm:
         return
     _FIRST_BRANCH_TIMEOUT = False
     print('xonsh: branch timeout: computing the branch name, color, or both '
           'timed out while formatting the prompt. You may avoid this by '
           'increaing the value of $VC_BRANCH_TIMEOUT or by removing branch '
           'fields, like {curr_branch}, from your $PROMPT. See the FAQ '
-          'for more details. This message will be suppressed in the future.',
+          'for more details. This message will be suppressed for the remainder '
+          'of this session. To suppress this message permanently, set '
+          '$SUPPRESS_BRANCH_TIMEOUT_MESSAGE = True in your xonshrc file.',
           file=sys.stderr)
 
 
