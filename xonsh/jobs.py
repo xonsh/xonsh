@@ -275,7 +275,7 @@ def clean_jobs():
                 print()
                 print('xonsh: {}'.format(msg), file=sys.stderr)
                 print('-'*5, file=sys.stderr)
-                jobs([], outfile=sys.stderr)
+                jobs([], stdout=sys.stderr)
                 print('-'*5, file=sys.stderr)
                 print(('Attempt to exit again immediately to kill all jobs '
                        'and exit'), file=sys.stderr)
@@ -296,7 +296,7 @@ def kill_all_jobs():
         _kill(job)
 
 
-def jobs(args, stdin=None, outfile=sys.stdout):
+def jobs(args, stdin=None, stdout=sys.stdout, stderr=None):
     """
     xonsh command: jobs
 
@@ -304,7 +304,7 @@ def jobs(args, stdin=None, outfile=sys.stdout):
     """
     _clear_dead_jobs()
     for j in tasks:
-        print_one_job(j, outfile=outfile)
+        print_one_job(j, outfile=stdout)
     return None, None
 
 
