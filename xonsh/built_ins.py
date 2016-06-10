@@ -401,14 +401,19 @@ def run_subproc(cmds, captured=False):
         elif builtins.__xonsh_stderr_uncaptured__ is not None:
             stderr = builtins.__xonsh_stderr_uncaptured__
         uninew = (ix == last_cmd) and (not _capture_streams)
+
         alias = builtins.aliases.get(cmd[0], None)
-        if builtins.__xonsh_env__.get('BARE_ALIASES') and alias is None:
-            val = builtins.__xonsh_ctx__.get(cmd[0], None)
-            if callable(val):
-                numargs = len(inspect.signature(val).parameters)
-                if numargs in {2, 4}:
-                    # this looks like it could be an alias.  try it
-                    alias = val
+        if builtins.__xonsh_env__.get('BARE_ALIASES'):
+            if callable(cmd[0]):
+                alias = cmd[0]
+            if alias is None:
+                val = builtins.__xonsh_ctx__.get(cmd[0], None)
+                if callable(val):
+                    numargs = len(inspect.signature(val).parameters)
+                    if numargs in {2, 4}:
+                        # this looks like it could be an alias.  try it
+                        alias = val
+
         procinfo['alias'] = alias
         if (alias is None and
                 builtins.__xonsh_env__.get('AUTO_CD') and
@@ -633,6 +638,17 @@ def ensure_list_of_strs(x):
     return rtn
 
 
+def list_of_strs_or_callables(x):
+    """Ensures that x is a list of strings or functions"""
+    if isinstance(x, str) or callable(x):
+        rtn = [x]
+    elif isinstance(x, Sequence):
+        rtn = [i if isinstance(i, str) or callable(i) else str(i) for i in x]
+    else:
+        rtn = [str(x)]
+    return rtn
+
+
 def load_builtins(execer=None, config=None, login=False, ctx=None):
     """Loads the xonsh builtins into the Python builtins. Sets the
     BUILTINS_LOADED variable to True.
@@ -664,6 +680,7 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.__xonsh_commands_cache__ = CommandsCache()
     builtins.__xonsh_all_jobs__ = {}
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
+    builtins.__xonsh_list_of_strs_or_callables__ = list_of_strs_or_callables
     # public built-ins
     builtins.XonshError = XonshError
     builtins.XonshBlockError = XonshBlockError
@@ -733,6 +750,7 @@ def unload_builtins():
              'default_aliases',
              '__xonsh_all_jobs__',
              '__xonsh_ensure_list_of_strs__',
+             '__xonsh_list_of_strs_or_callables__',
              '__xonsh_history__',
              ]
     for name in names:

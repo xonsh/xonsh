@@ -2182,7 +2182,7 @@ class BaseParser(object):
 
     def p_subproc_atom_pyeval(self, p):
         """subproc_atom : AT_LPAREN test RPAREN"""
-        p0 = xonsh_call('__xonsh_ensure_list_of_strs__', [p[2]],
+        p0 = xonsh_call('__xonsh_ensure_list_of_strs_or_callables__', [p[2]],
                         lineno=self.lineno, col=self.col)
         p0._cliarg_action = 'extend'
         p[0] = p0
