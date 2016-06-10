@@ -35,8 +35,7 @@ from xonsh.tools import (
     csv_to_bool_seq, bool_seq_to_csv, DefaultNotGiven, print_exception,
     setup_win_unicode_console, intensify_colors_on_win_setter, format_color,
     is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str,
-    is_tb_opt, to_tb_tuple, tb_tuple_to_str,
-    executables_in
+    is_logfile_opt, to_logfile_opt, logfile_opt_to_str, executables_in
 )
 
 
@@ -121,9 +120,10 @@ DEFAULT_ENSURERS = {
     'XONSH_ENCODING_ERRORS': (is_string, ensure_string, ensure_string),
     'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
     'XONSH_LOGIN': (is_bool, to_bool, bool_to_str),
-    'XONSH_SHOW_TRACEBACK': (is_tb_opt, to_tb_tuple, tb_tuple_to_str),
+    'XONSH_SHOW_TRACEBACK': (is_bool, to_bool, bool_to_str),
     'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
     'XONSH_STORE_STDIN': (is_bool, to_bool, bool_to_str),
+    'XONSH_TRACEBACK_LOGFILE': (is_logfile_opt, to_logfile_opt, logfile_opt_to_str),
     'VI_MODE': (is_bool, to_bool, bool_to_str),
     'VIRTUAL_ENV': (is_string, ensure_string, ensure_string),
     'WIN_UNICODE_CONSOLE': (always_false, setup_win_unicode_console, bool_to_str),
