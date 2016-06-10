@@ -261,20 +261,21 @@ def clean_jobs():
                 type_str = job_types.pop()
 
             if len(builtins.__xonsh_all_jobs__) > 1:
-                article = ''
+                num = 'are'
                 job_str = 'jobs'
             else:
-                article = 'a '
+                num = 'is a'
                 job_str = 'job'
 
-            print('xonsh: you have {art}{typ} {job}'.format(art=article,
-                                                            typ=type_str,
-                                                            job=job_str))
+            print()
+            print('xonsh: there {num} {typ} {job}'.format(num=num,
+                                                          typ=type_str,
+                                                          job=job_str))
             print('-'*5)
             jobs([])
             print('-'*5)
-            resp = input('Kill running jobs [y/n]? ')
-            if 'yes'.startswith(resp.lower()):
+            resp = input('Enter "exit" or "e" to kill all jobs and exit ')
+            if resp in ('e', 'exit'):
                 kill_all_jobs()
             else:
                 jobs_clean = False

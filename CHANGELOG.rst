@@ -105,6 +105,9 @@ v0.3.3
   be controlled via new environment variables ``$COLOR_INPUT``,
   ``$COLOR_RESULTS``, and ``$PRETTY_PRINT_RESULTS``.
 
+* In interactive mode, if there are stopped or background jobs, Xonsh prompts
+  for confirmations rather than just killing all jobs and exiting.
+
 **Changed:**
 
 * ``which`` now gives a better verbose report of where the executables are
