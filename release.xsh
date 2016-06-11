@@ -18,6 +18,39 @@ def replace_in_file(pattern, new, fname):
     with open(fname, 'w') as f:
         f.write(upd)
 
+
+NEWS = [os.path.join('news', f) for f in os.listdir('news')
+        if f != 'TEMPLATE.rst']
+NEWS_CATEGORIES = ['Added', 'Changed', 'Deprecated', 'Removed', 'Fixed',
+                   'Security']
+NEWS_RE = re.compile('\*\*({0}):\*\*(.*)'.format('|'.join(NEWS_CATEGORIES)),
+                     flags=re.DOTALL)
+
+def merge_news():
+    """Reads news files and merges them."""
+    cats = {c: '' for c in NEWS_CATEGORIES}
+    for news in NEWS:
+        with open(f) as f:
+            raw = f.read()
+      raw = raw.strip()
+      parts = NEWS_RE.split(raw)
+      while len(parts) > 0 and parts[0] not in NEWS_CATEGORIES:
+         parts = parts[1:]
+      for key, val = zip(parts[::2], parts[1::2]):
+          val = val.strip()
+          if val == 'None':
+            continue
+          cats[key] += val + '\n'
+    for news in NEWS:
+        os.remove(news)
+    s = ''
+    for c in NEWS_CATEGORIES:
+        val = cats[c]:
+        if len(val) == 0:
+            continue
+        s += '**' + c + '**:\n\n' + val + '\n\n'
+    return s
+
 def version_update(ver):
     """Updates version strings in relevant files."""
     pnfs = [
