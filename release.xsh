@@ -53,8 +53,7 @@ def merge_news():
 
 def version_update(ver):
     """Updates version strings in relevant files."""
-    fnews = ('Xonsh Change Log\n'
-             '====================\n\n'
+    fnews = ('.. current developments\n\n'
              'v{0}\n'
              '====================\n\n'
              '{1}')
@@ -64,7 +63,7 @@ def version_update(ver):
         ('__version__\s*=.*', "__version__ = '{0}'".format(ver),
          ['xonsh', '__init__.py']),
         ('version:\s*', 'version: {0}.{{build}}'.format(ver), ['.appveyor.yml']),
-        ('Xonsh Change Log\n====================', news, ['CHANGELOG.rst'], re.M),
+        ('.. current developments', news, ['CHANGELOG.rst']),
       ]
     for p, n, f in pnfs:
         replace_in_file(p, n, os.path.join(*f))

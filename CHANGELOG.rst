@@ -2,6 +2,8 @@
 Xonsh Change Log
 ====================
 
+.. current developments
+
 v0.3.4
 ====================
 
