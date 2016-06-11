@@ -22,6 +22,8 @@ if ON_DARWIN:
         # any zombie processes in the process group.
         # See github issue #1012 for details
         for pid in job['pids']:
+            if pid is None:  # the pid of an aliased proc is None
+                continue
             os.kill(pid, signal)
 
 elif ON_WINDOWS:
