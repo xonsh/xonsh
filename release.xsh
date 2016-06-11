@@ -5,12 +5,12 @@ import re
 import sys
 from argparse import ArgumentParser, Action
 
-def replace_in_file(pattern, new, fname, flags=None):
+def replace_in_file(pattern, new, fname):
     """Replaces a given pattern in a file"""
     with open(fname, 'r') as f:
         raw = f.read()
     lines = raw.splitlines()
-    ptn = re.compile(pattern, flags=flags)
+    ptn = re.compile(pattern)
     for i, line in enumerate(lines):
         if ptn.match(line):
             lines[i] = new
