@@ -113,40 +113,6 @@ parser.add_argument('args',
                     default=[])
 
 
-def arg_undoers():
-    au = {
-        '-h': (lambda args: setattr(args, 'help', False)),
-        '-V': (lambda args: setattr(args, 'version', False)),
-        '-c': (lambda args: setattr(args, 'command', None)),
-        '-i': (lambda args: setattr(args, 'force_interactive', False)),
-        '-l': (lambda args: setattr(args, 'login', False)),
-        '--no-script-cache': (lambda args: setattr(args, 'scriptcache', True)),
-        '--cache-everything': (lambda args: setattr(args, 'cacheall', False)),
-        '--config-path': (lambda args: delattr(args, 'config_path')),
-        '--no-rc': (lambda args: setattr(args, 'norc', False)),
-        '-D': (lambda args: setattr(args, 'defines', None)),
-        '--shell-type': (lambda args: setattr(args, 'shell_type', None)),
-        }
-    au['--help'] = au['-h']
-    au['--version'] = au['-V']
-    au['--interactive'] = au['-i']
-    au['--login'] = au['-l']
-
-    return au
-
-
-def undo_args(args):
-    """Undoes missaligned args."""
-    au = arg_undoers()
-    for a in args.args:
-        if a in au:
-            au[a](args)
-        else:
-            for k in au:
-                if a.startswith(k):
-                    au[k](args)
-
-
 def _pprint_displayhook(value):
     if value is None:
         return
@@ -178,13 +144,24 @@ def premain(argv=None):
     """Setup for main xonsh entry point, returns parsed arguments."""
     if setproctitle is not None:
         setproctitle(' '.join(['xonsh'] + sys.argv[1:]))
+
     builtins.__xonsh_ctx__ = {}
     args, other = parser.parse_known_args(argv)
     if args.file is not None:
-        real_argv = (argv or sys.argv)
-        i = real_argv.index(args.file)
-        args.args = real_argv[i+1:]
-        undo_args(args)
+        arguments = (argv or sys.argv)
+        file_index = arguments.index(args.file)
+
+        # A script-file was passed and is to be executed. The argument parser
+        # might have parsed switches intended for the script, so reset the
+        # parsed switches to their default values
+        old_args = args
+        args = parser.parse_known_args('')[0]
+        args.file = old_args.file
+
+        # Save the arguments that are intended for the script-file. Switches
+        # and positional arguments passed before the path to the script-file are
+        # ignored.
+        args.args = arguments[file_index+1:]
     if args.help:
         parser.print_help()
         exit()
@@ -192,6 +169,7 @@ def premain(argv=None):
         version = '/'.join(('xonsh', __version__)),
         print(version)
         exit()
+
     shell_kwargs = {'shell_type': args.shell_type,
                     'completer': False,
                     'login': False,
@@ -204,6 +182,7 @@ def premain(argv=None):
         shell_kwargs['config'] = args.config_path
     if args.norc:
         shell_kwargs['rc'] = ()
+
     setattr(sys, 'displayhook', _pprint_displayhook)
     if args.command is not None:
         args.mode = XonshMode.single_command
@@ -218,15 +197,19 @@ def premain(argv=None):
         args.mode = XonshMode.interactive
         shell_kwargs['completer'] = True
         shell_kwargs['login'] = True
+
     from xonsh import imphooks
     shell = builtins.__xonsh_shell__ = Shell(**shell_kwargs)
     env = builtins.__xonsh_env__
     env['XONSH_LOGIN'] = shell_kwargs['login']
+
     if args.defines is not None:
         env.update([x.split('=', 1) for x in args.defines])
+
     env['XONSH_INTERACTIVE'] = False
     if ON_WINDOWS:
         setup_win_unicode_console(env.get('WIN_UNICODE_CONSOLE', True))
+
     return args
 
 
