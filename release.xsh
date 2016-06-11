@@ -23,7 +23,7 @@ NEWS = [os.path.join('news', f) for f in os.listdir('news')
         if f != 'TEMPLATE.rst']
 NEWS_CATEGORIES = ['Added', 'Changed', 'Deprecated', 'Removed', 'Fixed',
                    'Security']
-NEWS_RE = re.compile('\*\*({0}):\*\*(.*)'.format('|'.join(NEWS_CATEGORIES)),
+NEWS_RE = re.compile('\*\*({0}):\*\*'.format('|'.join(NEWS_CATEGORIES)),
                      flags=re.DOTALL)
 
 def merge_news():
