@@ -48,7 +48,7 @@ def merge_news():
         val = cats[c]
         if len(val) == 0:
             continue
-        s += '**' + c + '**:\n\n' + val + '\n\n'
+        s += '**' + c + ':**\n\n' + val + '\n\n'
     return s
 
 def version_update(ver):
