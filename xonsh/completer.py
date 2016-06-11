@@ -38,7 +38,10 @@ class Completer(object):
         """
         ctx = ctx or {}
         for func in builtins.__xonsh_completers__.values():
-            out = func(prefix, line, begidx, endidx, ctx)
+            try:
+                out = func(prefix, line, begidx, endidx, ctx)
+            except StopIteration:
+                return set(), len(prefix)
             if isinstance(out, Sequence):
                 res, lprefix = out
             else:

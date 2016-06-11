@@ -4,8 +4,12 @@ Xonsh Change Log
 
 Current Developments
 ====================
+
 **Added:**
 
+* Tab completers can now raise ``StopIteration`` to prevent consideration of
+  remaining completers.
+* Added tab completer for the ``completer`` alias.
 * New ``Block`` and ``Functor`` context managers are now available as
   part of the ``xonsh.contexts`` module.
 * ``Block`` provides support for turning a context body into a non-executing
@@ -25,7 +29,6 @@ Current Developments
 * ``!(command)`` is now usefully iterable, yielding lines of stdout
 * Added XonshCalledProcessError, which includes the relevant CompletedCommand.
   Also handles differences between Py3.4 and 3.5 in CalledProcessError
-* XonshError and XonshCalledProcessError are now in builtins
 * Tab completion of paths now includes zsh-style path expansion (subsequence
   matching), toggleable with ``$SUBSEQUENCE_PATH_COMPLETION``
 * Tab completion of paths now includes "fuzzy" matches that are accurate to
@@ -41,6 +44,7 @@ Current Developments
 * ``@()`` now passes through functions as well as strings, which allows for the
   use of anonymous aliases and aliases not explicitly added to the ``aliases``
   mapping.
+* XonshError and XonshCalledProcessError are now in builtins
 
 **Changed:**
 
@@ -48,7 +52,6 @@ Current Developments
   ``wrap_subproc``.
 * Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
   the currently running script's path
-* XonshError and XonshCalledProcessError are now in builtins
 
 **Deprecated:** None
 
@@ -64,6 +67,9 @@ Current Developments
 * Ensured that the prompt_toolkit shell functions, even without a ``completer``
   attribute.
 * Fixed crash resulting from malformed ``$PROMPT`` or ``$TITLE``.
+* xonsh no longer backgrounds itself after every command on Cygwin.
+* Fixed an issue about ``os.killpg()`` on Cygwin which caused xonsh to crash
+  occasionally
 * Fix crash on startup when Bash Windows Subsystem for Linux is on the Path. 
 
 **Security:** None
@@ -95,7 +101,6 @@ v0.3.4
   ``activate``/``deactivate`` aliases for the conda environements.
 * Fixed crash resulting from errors other than syntax errors in run control
   file.
-* xonsh no longer backgrounds itself after every command on Cygwin.
 
 
 v0.3.3
