@@ -406,14 +406,14 @@ def run_subproc(cmds, captured=False):
             alias = cmd[0]
         else:
             alias = builtins.aliases.get(cmd[0], None)
-            n = locate_binary(cmd[0])
+            binary_loc = locate_binary(cmd[0])
 
         procinfo['alias'] = alias
         if (alias is None and
                 builtins.__xonsh_env__.get('AUTO_CD') and
                 len(cmd) == 1 and
                 os.path.isdir(cmd[0]) and
-                n is None):
+                binary_loc is None):
             cmd.insert(0, 'cd')
             alias = builtins.aliases.get('cd', None)
 
@@ -422,11 +422,12 @@ def run_subproc(cmds, captured=False):
         else:
             if alias is not None:
                 cmd = alias + cmd[1:]
-            if n is None:
+            if binary_loc is None:
                 aliased_cmd = cmd
             else:
                 try:
-                    aliased_cmd = get_script_subproc_command(n, cmd[1:])
+                    aliased_cmd = get_script_subproc_command(binary_loc,
+                                                             cmd[1:])
                 except PermissionError:
                     e = 'xonsh: subprocess mode: permission denied: {0}'
                     raise XonshError(e.format(cmd[0]))
