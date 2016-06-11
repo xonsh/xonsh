@@ -5,12 +5,12 @@ import re
 import sys
 from argparse import ArgumentParser, Action
 
-def replace_in_file(pattern, new, fname):
+def replace_in_file(pattern, new, fname, flags=None):
     """Replaces a given pattern in a file"""
     with open(fname, 'r') as f:
         raw = f.read()
     lines = raw.splitlines()
-    ptn = re.compile(pattern)
+    ptn = re.compile(pattern, flags=flags)
     for i, line in enumerate(lines):
         if ptn.match(line):
             lines[i] = new
@@ -64,7 +64,7 @@ def version_update(ver):
         ('__version__\s*=.*', "__version__ = '{0}'".format(ver),
          ['xonsh', '__init__.py']),
         ('version:\s*', 'version: {0}.{{build}}'.format(ver), ['.appveyor.yml']),
-        ('Xonsh Change Log\n====================', news, ['CHANGELOG.rst']),
+        ('Xonsh Change Log\n====================', news, ['CHANGELOG.rst'], re.M),
       ]
     for p, n, f in pnfs:
         replace_in_file(p, n, os.path.join(*f))
