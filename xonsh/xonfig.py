@@ -95,7 +95,7 @@ extensions are called {{BOLD_GREEN}}xontribs{{NO_COLOR}}, or xonsh contributions
 Xontribs are dynamically loadable, either by importing them directly or by
 using the 'xontrib' command. However, you can also configure xonsh to load
 xontribs automatically on startup prior to loading the run control files.
-This allows the xontrib to be used immediately your xonshrc files.
+This allows the xontrib to be used immediately in your xonshrc files.
 
 The following describes all xontribs that have been registered with xonsh.
 These come from users, 3rd party developers, or xonsh itself!
