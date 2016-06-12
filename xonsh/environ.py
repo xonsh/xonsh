@@ -23,7 +23,7 @@ from xonsh import __version__ as XONSH_VERSION
 from xonsh.jobs import get_next_task
 from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
-from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
+from xonsh.foreign_shells import load_foreign_envs
 from xonsh.platform import (BASH_COMPLETIONS_DEFAULT, ON_ANACONDA, ON_LINUX,
                             ON_WINDOWS, DEFAULT_ENCODING, ON_CYGWIN)
 from xonsh.tools import (
@@ -1432,7 +1432,7 @@ def default_env(env=None, config=None, login=True):
     if login:
         conf = load_static_config(ctx, config=config)
 
-        foreign_env = load_foreign_envs(shells=conf.get('foreign_shells', DEFAULT_SHELLS),
+        foreign_env = load_foreign_envs(shells=conf.get('foreign_shells', ()),
                                         issue_warning=False)
         if ON_WINDOWS:
             windows_foreign_env_fixes(foreign_env)

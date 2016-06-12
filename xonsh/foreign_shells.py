@@ -461,8 +461,6 @@ def ensure_shell(shell):
     return shell
 
 
-DEFAULT_SHELLS = ({'shell': 'bash'},)
-
 def _get_shells(shells=None, config=None, issue_warning=True):
     if shells is not None and config is not None:
         raise RuntimeError('Only one of shells and config may be non-None.')
@@ -475,7 +473,7 @@ def _get_shells(shells=None, config=None, issue_warning=True):
         else:
             from xonsh.environ import load_static_config
             conf = load_static_config(env, config)
-        shells = conf.get('foreign_shells', DEFAULT_SHELLS)
+        shells = conf.get('foreign_shells', ())
     return shells
 
 
