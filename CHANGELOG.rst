@@ -31,6 +31,8 @@ v0.3.4
   ``activate``/``deactivate`` aliases for the conda environements.
 * Fixed crash resulting from errors other than syntax errors in run control
   file.
+* On Windows if bash is not on the path look in the registry for the defaults
+  install directory for GitForWindows.
 
 
 v0.3.3
@@ -61,8 +63,6 @@ v0.3.3
 * RC files are now executed directly in the appropriate context.
 * ``_`` is now updated by ``![]``, to contain the appropriate
   ``CompletedCommand`` object.
-* On Windows if bash is not on the path look in the registry for the defaults
-  install directory for GitForWindows.
 
 
 

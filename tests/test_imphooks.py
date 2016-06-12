@@ -25,23 +25,23 @@ def teardown():
         unload_builtins()
 
 def test_import():
-    with mock_xonsh_env({}):
+    with mock_xonsh_env({'PATH': []}):
         import sample
         assert_equal('hello mom jawaka\n', sample.x)
 
 def test_absolute_import():
-    with mock_xonsh_env({}):
+    with mock_xonsh_env({'PATH': []}):
         from xpack import sample
         assert_equal('hello mom jawaka\n', sample.x)
 
 def test_relative_import():
-    with mock_xonsh_env({}):
+    with mock_xonsh_env({'PATH': []}):
         from xpack import relimp
         assert_equal('hello mom jawaka\n', relimp.sample.x)
         assert_equal('hello mom jawaka\ndark chest of wonders', relimp.y)
 
 def test_sub_import():
-    with mock_xonsh_env({}):
+    with mock_xonsh_env({'PATH': []}):
         from xpack.sub import sample
         assert_equal('hello mom jawaka\n', sample.x)
 

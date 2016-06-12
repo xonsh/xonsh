@@ -401,13 +401,19 @@ def run_subproc(cmds, captured=False):
         elif builtins.__xonsh_stderr_uncaptured__ is not None:
             stderr = builtins.__xonsh_stderr_uncaptured__
         uninew = (ix == last_cmd) and (not _capture_streams)
-        alias = builtins.aliases.get(cmd[0], None)
+
+        if callable(cmd[0]):
+            alias = cmd[0]
+        else:
+            alias = builtins.aliases.get(cmd[0], None)
+            binary_loc = locate_binary(cmd[0])
+
         procinfo['alias'] = alias
         if (alias is None and
                 builtins.__xonsh_env__.get('AUTO_CD') and
                 len(cmd) == 1 and
                 os.path.isdir(cmd[0]) and
-                locate_binary(cmd[0]) is None):
+                binary_loc is None):
             cmd.insert(0, 'cd')
             alias = builtins.aliases.get('cd', None)
 
@@ -416,12 +422,12 @@ def run_subproc(cmds, captured=False):
         else:
             if alias is not None:
                 cmd = alias + cmd[1:]
-            n = locate_binary(cmd[0])
-            if n is None:
+            if binary_loc is None:
                 aliased_cmd = cmd
             else:
                 try:
-                    aliased_cmd = get_script_subproc_command(n, cmd[1:])
+                    aliased_cmd = get_script_subproc_command(binary_loc,
+                                                             cmd[1:])
                 except PermissionError:
                     e = 'xonsh: subprocess mode: permission denied: {0}'
                     raise XonshError(e.format(cmd[0]))
@@ -482,11 +488,6 @@ def run_subproc(cmds, captured=False):
                 raise XonshError(e)
         procs.append(proc)
         prev_proc = proc
-    for proc in procs[:-1]:
-        try:
-            proc.stdout.close()
-        except OSError:
-            pass
     if not prev_is_proxy:
         add_job({
             'cmds': cmds,
@@ -507,6 +508,11 @@ def run_subproc(cmds, captured=False):
     if prev_is_proxy:
         prev_proc.wait()
     wait_for_active_job()
+    for proc in procs[:-1]:
+        try:
+            proc.stdout.close()
+        except OSError:
+            pass
     hist = builtins.__xonsh_history__
     hist.last_cmd_rtn = prev_proc.returncode
     # get output
@@ -626,6 +632,17 @@ def ensure_list_of_strs(x):
     return rtn
 
 
+def list_of_strs_or_callables(x):
+    """Ensures that x is a list of strings or functions"""
+    if isinstance(x, str) or callable(x):
+        rtn = [x]
+    elif isinstance(x, Sequence):
+        rtn = [i if isinstance(i, str) or callable(i) else str(i) for i in x]
+    else:
+        rtn = [str(x)]
+    return rtn
+
+
 def load_builtins(execer=None, config=None, login=False, ctx=None):
     """Loads the xonsh builtins into the Python builtins. Sets the
     BUILTINS_LOADED variable to True.
@@ -657,6 +674,7 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.__xonsh_commands_cache__ = CommandsCache()
     builtins.__xonsh_all_jobs__ = {}
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
+    builtins.__xonsh_list_of_strs_or_callables__ = list_of_strs_or_callables
     # public built-ins
     builtins.XonshError = XonshError
     builtins.XonshBlockError = XonshBlockError
@@ -726,6 +744,7 @@ def unload_builtins():
              'default_aliases',
              '__xonsh_all_jobs__',
              '__xonsh_ensure_list_of_strs__',
+             '__xonsh_list_of_strs_or_callables__',
              '__xonsh_history__',
              ]
     for name in names:
