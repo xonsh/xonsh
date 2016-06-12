@@ -701,11 +701,15 @@ def ensure_int_or_slice(x):
     elif is_int(x):
         return x
     # must have a string from here on
-    if ':' in x:
-        x = x.strip('[]()')
-        return slice(*(int(x) if len(x) > 0 else None for x in x.split(':')))
-    else:
-        return int(x)
+    try:
+        if ':' in x:
+            x = x.strip('[]()')
+            return slice(*(int(x) if len(x) > 0 else None for x in x.split(':')))
+        else:
+            return int(x)
+    except ValueError:
+        print("Could not convert index or slice to int.")
+        return False
 
 
 def is_string_set(x):

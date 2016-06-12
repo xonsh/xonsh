@@ -484,6 +484,8 @@ def test_ensure_int_or_slice():
         ('1:', slice(1, None, None)),
         ('[1:2:3]', slice(1, 2, 3)),
         ('(1:2:3)', slice(1, 2, 3)),
+        ('r', False),
+        ('r:11', False),
         ]
     for inp, exp in cases:
         obs = ensure_int_or_slice(inp)
