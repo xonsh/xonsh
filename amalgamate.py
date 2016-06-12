@@ -75,7 +75,7 @@ def make_node(name, pkg, allowed):
 
 
 
-def make_graph(pkg):
+def make_graph(pkg, exclude=None):
     """Create a graph (dict) of module dependencies."""
     graph = {}
     pkgdir = pkg.replace('.', os.sep)
@@ -86,6 +86,8 @@ def make_graph(pkg):
         if base.startswith('__') or ext != '.py':
             continue
         allowed.add(base)
+    if exclude:
+        allowed -= exclude
     for base in allowed:
         graph[base] = make_node(base, pkg, allowed)
     return graph
