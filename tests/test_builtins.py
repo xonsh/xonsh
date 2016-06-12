@@ -10,7 +10,7 @@ from nose.tools import assert_equal, assert_true, assert_not_in
 
 from xonsh import built_ins
 from xonsh.built_ins import reglob, regexpath, helper, superhelper, \
-    ensure_list_of_strs
+    ensure_list_of_strs, list_of_strs_or_callables
 from xonsh.environ import Env
 from xonsh.tools import ON_WINDOWS
 
@@ -103,6 +103,14 @@ def test_ensure_list_of_strs():
     cases = [(['yo'], 'yo'), (['yo'], ['yo']), (['42'], 42), (['42'], [42])]
     for exp, inp in cases:
         obs = ensure_list_of_strs(inp)
+        yield assert_equal, exp, obs
+
+def test_list_of_strs_or_callables():
+    f = lambda x: 20
+    cases = [(['yo'], 'yo'), (['yo'], ['yo']), (['42'], 42), (['42'], [42]),
+             ([f], f), ([f], [f])]
+    for exp, inp in cases:
+        obs = list_of_strs_or_callables(inp)
         yield assert_equal, exp, obs
 
 if __name__ == '__main__':

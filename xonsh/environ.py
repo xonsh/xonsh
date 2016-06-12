@@ -37,7 +37,7 @@ from xonsh.tools import (
     csv_to_bool_seq, bool_seq_to_csv, DefaultNotGiven, print_exception,
     setup_win_unicode_console, intensify_colors_on_win_setter, format_color,
     is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str,
-    executables_in
+    is_logfile_opt, to_logfile_opt, logfile_opt_to_str, executables_in
 )
 
 
@@ -131,8 +131,11 @@ DEFAULT_ENSURERS = {
     'XONSH_ENCODING_ERRORS': (is_string, ensure_string, ensure_string),
     'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
     'XONSH_LOGIN': (is_bool, to_bool, bool_to_str),
+    'XONSH_SHOW_TRACEBACK': (is_bool, to_bool, bool_to_str),
     'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
     'XONSH_STORE_STDIN': (is_bool, to_bool, bool_to_str),
+    'XONSH_TRACEBACK_LOGFILE': (is_logfile_opt, to_logfile_opt,
+                                logfile_opt_to_str)
 }
 
 #
@@ -263,6 +266,7 @@ DEFAULT_VALUES = {
     'XONSH_SHOW_TRACEBACK': False,
     'XONSH_STORE_STDIN': False,
     'XONSH_STORE_STDOUT': False,
+    'XONSH_TRACEBACK_LOGFILE': None
 }
 if hasattr(locale, 'LC_MESSAGES'):
     DEFAULT_VALUES['LC_MESSAGES'] = locale.setlocale(locale.LC_MESSAGES)
@@ -575,7 +579,12 @@ DEFAULT_DOCS = {
     'XONSH_STORE_STDOUT': VarDocs(
         'Whether or not to store the stdout and stderr streams in the '
         'history files.'),
-    }
+    'XONSH_TRACEBACK_LOGFILE': VarDocs(
+        'Specifies a file to store the traceback log to, regardless of whether '
+        'XONSH_SHOW_TRACEBACK has been set. Its value must be a writable file '
+        'or None / the empty string if traceback logging is not desired. '
+        'Logging to a file is not enabled by default.'),
+}
 
 #
 # actual environment
@@ -672,6 +681,12 @@ class Env(MutableMapping):
             vd = vd._replace(default=dval)
             self.docs[key] = vd
         return vd
+
+    def is_manually_set(self, varname):
+        """
+        Checks if an environment variable has been manually set.
+        """
+        return varname in self._d
 
     @contextmanager
     def swap(self, other=None, **kwargs):

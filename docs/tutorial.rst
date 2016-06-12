@@ -460,11 +460,13 @@ Python Evaluation with ``@()``
 ===============================
 
 The ``@(<expr>)`` operator form works in subprocess mode, and will evaluate
-arbitrary Python code. The result is appended to the subprocess command
-list. If the result is a string, it is appended to the argument list. If the
-result is a list or other non-string sequence, the contents are converted to
-strings and appended to the argument list in order. Otherwise, the result is
-automatically converted to a string. For example,
+arbitrary Python code. The result is appended to the subprocess command list.
+If the result is a string, it is appended to the argument list. If the result
+is a list or other non-string sequence, the contents are converted to strings
+and appended to the argument list in order. If the result in the first position
+is a function, it is treated as an alias (see the section on `Aliases`_ below),
+even if it was not explicitly added to the ``aliases`` mapping.  Otherwise, the
+result is automatically converted to a string. For example,
 
 .. code-block:: xonshcon
 
@@ -476,6 +478,8 @@ automatically converted to a string. For example,
     4
     >>> echo @([42, 'yo'])
     42 yo
+    >>> echo "hello" | @(lambda a, s=None: s.strip + " world")
+    hello world
 
 This syntax can be used inside of a captured or uncaptured subprocess, and can
 be used to generate any of the tokens in the subprocess command list.
@@ -988,9 +992,12 @@ If you were to run ``gco feature-fabulous`` with the above aliases in effect,
 the command would reduce to ``['git', 'checkout', 'feature-fabulous']`` before
 being executed.
 
+
+Callable Aliases
+----------------
 Lastly, if an alias value is a function (or other callable), then this
 function is called *instead* of going to a subprocess command. Such functions
-must have the following signature:
+must have one of the following two signatures
 
 .. code-block:: python
 
@@ -1029,6 +1036,28 @@ must have the following signature:
         # examples the return code would be 0/success.
         return (None, "I failed", 2)
 
+
+.. code-block:: python
+
+    def _mycmd2(args, stdin, stdout, stderr):
+        """args will be a list of strings representing the arguments to this
+        command.  stdin is a read-only file-like object, and stdout and stderr
+        are write-only file-like objects
+        """
+        # This form allows "streaming" data to stdout and stderr
+        import time
+        for i in range(5):
+            time.sleep(i)
+            print(i, file=stdout)
+
+        # In this form, the return value should be a single integer
+        # representing the "return code" of the alias (zero if successful,
+        # non-zero otherwise)
+        return 0
+
+
+Adding and Removing Aliases
+---------------------------
 We can dynamically alter the aliases present simply by modifying the
 built-in mapping.  Here is an example using a function value:
 
@@ -1046,11 +1075,27 @@ built-in mapping.  Here is an example using a function value:
    Otherwise, they may shadow the alias itself, as Python variables take
    precedence over aliases when xonsh executes commands.
 
-Usually, callable alias commands will be run in a separate thread so that
-users may background them interactively. However, some aliases may need to be
-executed on the thread that they were called from. This is mostly useful for debuggers
-and profilers. To make an alias run in the foreground, decorate its function
-with the ``xonsh.proc.foreground`` decorator.
+
+Anonymous Aliases
+-----------------
+As mentioned above, it is also possible to treat functions outside this mapping
+as aliases, by wrapping them in ``@()``.  For example:
+
+.. code-block:: xonshcon
+
+    >>> @(_banana)
+    'My spoon is tooo big!'
+    >>> echo "hello" | @(lambda args, stdin=None: stdin.strip() + args[0]) world
+    hello world
+
+
+Foreground-only Aliases
+-----------------------
+Usually, callable alias commands will be run in a separate thread so that users
+they may be run in the background.  However, some aliases may need to be
+executed on the thread that they were called from. This is mostly useful for
+debuggers and profilers. To make an alias run in the foreground, decorate its
+function with the ``xonsh.proc.foreground`` decorator.
 
 .. code-block:: python
 

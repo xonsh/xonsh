@@ -1,68 +1,8 @@
-================
-Xonsh Change Log
-================
-
-Current Developments
 ====================
-**Added:**
+Xonsh Change Log
+====================
 
-* New ``Block`` and ``Functor`` context managers are now available as
-  part of the ``xonsh.contexts`` module.
-* ``Block`` provides support for turning a context body into a non-executing
-  list of string lines. This is implmement via a syntax tree transformation.
-  This is useful for creating remote execution tools that seek to prevent
-  local execution.
-* ``Functor`` is a subclass of the ``Block`` context manager that turns the
-  block into a callable object.  The function object is available via the
-  ``func()`` attribute.  However, the ``Functor`` instance is itself callable
-  and will dispatch to ``func()``.
-* New ``$VC_BRANCH_TIMEOUT`` environment variable is the time (in seconds)
-  of how long to spend attempting each individual version control branch
-  information command during ``$PROMPT`` formatting.  This allows for faster
-  prompt resolution and faster startup times.
-* New lazy methods added to CommandsCache allowing for testing and inspection
-  without the possibility of recomputing the cache.
-* ``!(command)`` is now usefully iterable, yielding lines of stdout
-* Added XonshCalledProcessError, which includes the relevant CompletedCommand.
-  Also handles differences between Py3.4 and 3.5 in CalledProcessError
-* XonshError and XonshCalledProcessError are now in builtins
-* Tab completion of paths now includes zsh-style path expansion (subsequence
-  matching), toggleable with ``$SUBSEQUENCE_PATH_COMPLETION``
-* Tab completion of paths now includes "fuzzy" matches that are accurate to
-  within a few characters, toggleable with ``$FUZZY_PATH_COMPLETION``
-* Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
-  the currently running script's path
-* Arguments '+' and '-' for the ``fg`` command (job control)
-* Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
-  the currently running script's path
-* ``!(command)`` is now usefully iterable, yielding lines of stdout
-* Added XonshCalledProcessError, which includes the relevant CompletedCommand.
-  Also handles differences between Py3.4 and 3.5 in CalledProcessError
-
-**Changed:**
-
-* Functions in ``Execer`` now take ``transform`` kwarg instead of
-  ``wrap_subproc``.
-* Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
-  the currently running script's path
-* XonshError and XonshCalledProcessError are now in builtins
-
-**Deprecated:** None
-
-**Removed:**
-
-* ``ensure_git()`` and ``ensure_hg()`` decorators removed.
-* ``call_hg_command()`` function removed.
-
-**Fixed:**
-
-* Strip leading space in commands passed using the "-c" switch
-* Fixed xonfig wizard failing on Windows due to colon in created filename.
-* Ensured that the prompt_toolkit shell functions, even without a ``completer``
-  attribute.
-* Fixed crash resulting from malformed ``$PROMPT`` or ``$TITLE``.
-
-**Security:** None
+.. current developments
 
 v0.3.4
 ====================
@@ -91,7 +31,8 @@ v0.3.4
   ``activate``/``deactivate`` aliases for the conda environements.
 * Fixed crash resulting from errors other than syntax errors in run control
   file.
-* xonsh no longer backgrounds itself after every command on Cygwin.
+* On Windows if bash is not on the path look in the registry for the defaults
+  install directory for GitForWindows.
 
 
 v0.3.3
@@ -122,8 +63,6 @@ v0.3.3
 * RC files are now executed directly in the appropriate context.
 * ``_`` is now updated by ``![]``, to contain the appropriate
   ``CompletedCommand`` object.
-* On Windows if bash is not on the path look in the registry for the defaults
-  install directory for GitForWindows.
 
 
 

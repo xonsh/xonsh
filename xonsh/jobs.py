@@ -22,10 +22,25 @@ if ON_DARWIN:
         # any zombie processes in the process group.
         # See github issue #1012 for details
         for pid in job['pids']:
+            if pid is None:  # the pid of an aliased proc is None
+                continue
             os.kill(pid, signal)
 
 elif ON_WINDOWS:
     pass
+
+elif ON_CYGWIN:
+    # Similar to what happened on OSX, more issues on Cygwin
+    # (see Github issue #514).
+    def _send_signal(job, signal):
+        try:
+            os.killpg(job['pgrp'], signal)
+        except Exception:
+            for pid in job['pids']:
+                try:
+                    os.kill(pid, signal)
+                except:
+                    pass
 
 else:
     def _send_signal(job, signal):

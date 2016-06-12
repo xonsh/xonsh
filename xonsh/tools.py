@@ -472,19 +472,71 @@ def suggest_commands(cmd, env, aliases):
 def print_exception(msg=None):
     """Print exceptions with/without traceback."""
     env = getattr(builtins, '__xonsh_env__', os.environ)
-    if 'XONSH_SHOW_TRACEBACK' not in env:
+    # flags indicating whether the traceback options have been manually set
+    manually_set_trace = env.is_manually_set('XONSH_SHOW_TRACEBACK')
+    manually_set_logfile = env.is_manually_set('XONSH_TRACEBACK_LOGFILE')
+    if (not manually_set_trace) and (not manually_set_logfile):
+        # Notify about the traceback output possibility if neither of
+        # the two options have been manually set
         sys.stderr.write('xonsh: For full traceback set: '
                          '$XONSH_SHOW_TRACEBACK = True\n')
-    if env.get('XONSH_SHOW_TRACEBACK', False):
+    # get env option for traceback and convert it if necessary
+    show_trace = env.get('XONSH_SHOW_TRACEBACK', False)
+    if not is_bool(show_trace):
+        show_trace = to_bool(show_trace)
+    # if the trace option has been set, print all traceback info to stderr
+    if show_trace:
+        # notify user about XONSH_TRACEBACK_LOGFILE if it has
+        # not been set manually
+        if not manually_set_logfile:
+            sys.stderr.write('xonsh: To log full traceback to a file set: '
+                             '$XONSH_TRACEBACK_LOGFILE = <filename>\n')
         traceback.print_exc()
-    else:
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        exception_only = traceback.format_exception_only(exc_type, exc_value)
-        sys.stderr.write(''.join(exception_only))
+
+    # additionally, check if a file for traceback logging has been
+    # specified and convert to a proper option if needed
+    log_file = env.get('XONSH_TRACEBACK_LOGFILE', None)
+    log_file = to_logfile_opt(log_file)
+    if log_file:
+        # if log_file <> '' or log_file <> None, append
+        # traceback log there as well
+        with open(os.path.abspath(log_file), 'a') as f:
+            traceback.print_exc(file=f)
+
+    if not show_trace:
+        # if traceback output is disabled, print the exception's
+        # error message on stderr.
+        display_error_message()
     if msg:
         msg = msg if msg.endswith('\n') else msg + '\n'
         sys.stderr.write(msg)
 
+
+def display_error_message():
+    """
+    Prints the error message of the current exception on stderr.
+    """
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    exception_only = traceback.format_exception_only(exc_type, exc_value)
+    sys.stderr.write(''.join(exception_only))
+
+
+def is_writable_file(filepath):
+    """
+    Checks if a filepath is valid for writing.
+    """
+    # convert to absolute path if needed
+    if not os.path.isabs(filepath):
+        filepath = os.path.abspath(filepath)
+    # cannot write to directories
+    if os.path.isdir(filepath):
+        return False
+    # if the file exists and is writable, we're fine
+    if os.path.exists(filepath):
+        return True if os.access(filepath, os.W_OK) else False
+    # if the path doesn't exist, isolate its directory component
+    # and ensure that directory is writable instead
+    return os.access(os.path.dirname(filepath), os.W_OK)
 
 # Modified from Public Domain code, by Magnus Lie Hetland
 # from http://hetland.org/coding/python/levenshtein.py
@@ -647,7 +699,48 @@ def is_bool(x):
     return isinstance(x, bool)
 
 
+def is_logfile_opt(x):
+    """
+    Checks if x is a valid $XONSH_TRACEBACK_LOGFILE option. Returns False
+    if x is not a writable/creatable file or an empty string or None.
+    """
+    if x is None:
+        return True
+    return False if not isinstance(x, str) else \
+           (is_writable_file(x) or x == '')
+
+
+def to_logfile_opt(x):
+    """
+    Converts a $XONSH_TRACEBACK_LOGFILE option to either a str containing
+    the filepath if it is a writable file or None if the filepath is not
+    valid, informing the user on stderr about the invalid choice.
+    """
+    if is_logfile_opt(x):
+        return x
+    else:
+        # if option is not valid, return a proper
+        # option and inform the user on stderr
+        sys.stderr.write('xonsh: $XONSH_TRACEBACK_LOGFILE must be a '
+                         'filepath pointing to a file that either exists '
+                         'and is writable or that can be created.\n')
+        return None
+
+
+def logfile_opt_to_str(x):
+    """
+    Detypes a $XONSH_TRACEBACK_LOGFILE option.
+    """
+    if x is None:
+        # None should not be detyped to 'None', as 'None' constitutes
+        # a perfectly valid filename and retyping it would introduce
+        # ambiguity. Detype to the empty string instead.
+        return ''
+    return str(x)
+
+
 _FALSES = frozenset(['', '0', 'n', 'f', 'no', 'none', 'false'])
+
 
 def to_bool(x):
     """"Converts to a boolean in a semantically meaningful way."""
