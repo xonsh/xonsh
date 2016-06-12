@@ -92,6 +92,44 @@ class XonshCalledProcessError(XonshError, CalledProcessError):
         self.completed_command = completed_command
 
 
+class EnvPath(list):
+    """
+    A class that implements an environment path, which is a list of
+    strings. Provides a custom method that expands all paths if the
+    relevant env variable has been set.
+    """
+    @staticmethod
+    def _expandpath(path):
+        """
+        Performs environment variable / user expansion on a given path.
+        """
+        # if __xonsh_env__ has not been initialized, expandvars will
+        # raise an AttributeError because it uses __xonsh_env__ internally
+        if hasattr(builtins, '__xonsh_env__'):
+            env = getattr(builtins, '__xonsh_env__', os.environ)
+            if env.get('EXPAND_ENV_VARS', False):
+                return os.path.expanduser(expandvars(path))
+            else:
+                # if the flag has not been set, do not perform any expansion
+                return path
+        else:
+            # use os.path.expandvars instead if env is not yet available
+            return os.path.expanduser(os.path.expandvars(path))
+
+    def __init__(self, items):
+        items = map(EnvPath._expandpath, items)
+        super(EnvPath, self).__init__(items)
+
+    def append(self, item):
+        super(EnvPath, self).append(EnvPath._expandpath(item))
+
+    def __getitem__(self, item):
+        super(EnvPath, self).__getitem__(EnvPath._expandpath(item))
+
+    def __setitem__(self, index, item):
+        super(EnvPath, self).__setitem__(index, EnvPath._expandpath(item))
+
+
 class DefaultNotGivenType(object):
     """Singleton for representing when no default value is given."""
 
@@ -686,7 +724,7 @@ def str_to_env_path(x):
     """Converts a string to an environment path, ie a list of strings,
     splitting on the OS separator.
     """
-    return x.split(os.pathsep)
+    return EnvPath(x.split(os.pathsep))
 
 
 def env_path_to_str(x):
