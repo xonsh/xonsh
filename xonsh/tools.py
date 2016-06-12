@@ -123,6 +123,12 @@ class EnvPath(list):
     def append(self, item):
         super(EnvPath, self).append(EnvPath._expandpath(item))
 
+    def insert(self, index, item):
+        super(EnvPath, self).insert(index, EnvPath._expandpath(item))
+
+    def extend(self, iterable):
+        super(EnvPath, self).extend(map(EnvPath._expandpath, iterable))
+
     def __getitem__(self, item):
         super(EnvPath, self).__getitem__(EnvPath._expandpath(item))
 
