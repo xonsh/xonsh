@@ -31,7 +31,7 @@ from glob import iglob
 from warnings import warn
 from contextlib import contextmanager
 from subprocess import CalledProcessError
-from collections import OrderedDict, Sequence, Set
+from collections import OrderedDict, Sequence, Set, MutableSequence
 
 # adding further imports from xonsh modules is discouraged to avoid cirular
 # dependencies
@@ -92,7 +92,7 @@ class XonshCalledProcessError(XonshError, CalledProcessError):
         self.completed_command = completed_command
 
 
-class EnvPath(list):
+class EnvPath(MutableSequence):
     """
     A class that implements an environment path, which is a list of
     strings. Provides a custom method that expands all paths if the
@@ -116,24 +116,46 @@ class EnvPath(list):
             # use os.path.expandvars instead if env is not yet available
             return os.path.expanduser(os.path.expandvars(path))
 
-    def __init__(self, items):
-        items = map(EnvPath._expandpath, items)
-        super(EnvPath, self).__init__(items)
-
-    def append(self, item):
-        super(EnvPath, self).append(EnvPath._expandpath(item))
-
-    def insert(self, index, item):
-        super(EnvPath, self).insert(index, EnvPath._expandpath(item))
-
-    def extend(self, iterable):
-        super(EnvPath, self).extend(map(EnvPath._expandpath, iterable))
+    def __init__(self, *args):
+        self._d = []
+        if len(args) > 0:
+            if isinstance(args[0], str):
+                self._d = args[0].split(os.pathsep)
+            elif isinstance(args[0], list):
+                self._d = list(args[0])
 
     def __getitem__(self, item):
-        super(EnvPath, self).__getitem__(EnvPath._expandpath(item))
+        return EnvPath._expandpath(self._d[item])
 
     def __setitem__(self, index, item):
-        super(EnvPath, self).__setitem__(index, EnvPath._expandpath(item))
+        self._d.__setitem__(index, item)
+
+    def __len__(self):
+        return len(self._d)
+
+    def __delitem__(self, key):
+        self._d.__delitem__(key)
+
+    def insert(self, index, value):
+        self._d.insert(index, value)
+
+    def get_paths(self):
+        """
+        Returns the list of directories that this EnvPath contains.
+        """
+        return list(self._d)
+
+    def __repr__(self):
+        return repr(self._d)
+
+    def __eq__(self, other):
+        if isinstance(other, list):
+            return self._d == other
+        elif isinstance(other, EnvPath):
+            return self._d == other.get_paths()
+        else:
+            return False
+
 
 
 class DefaultNotGivenType(object):

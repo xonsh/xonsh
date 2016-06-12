@@ -18,7 +18,7 @@ from xonsh.tools import (
     is_string_or_callable, check_for_partial_string, CommandsCache,
     is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str,
     is_logfile_opt, to_logfile_opt, logfile_opt_to_str, argvquote,
-    executables_in, find_next_break, expand_case_matching)
+    executables_in, find_next_break, expand_case_matching, EnvPath)
 
 LEXER = Lexer()
 LEXER.build()
