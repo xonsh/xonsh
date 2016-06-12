@@ -2,11 +2,10 @@
     compatibility layers to make use of the 'best' implementation available
     on a platform.
 """
-
-from functools import lru_cache
 import os
-import platform
 import sys
+import platform
+from functools import lru_cache
 
 try:
     import distro
@@ -212,26 +211,33 @@ if ON_WINDOWS:
                 WINDOWS_BASH_COMMAND = bashcmd
 
 #
-# Bash completions defaults
+# Environment variables defaults
 #
 
 BASH_COMPLETIONS_DEFAULT = ()
-""" A possibly empty tuple with default paths to Bash completions known for
-    the current platform.
+"""A possibly empty tuple with default paths to Bash completions known for
+the current platform.
 """
 
 if LINUX_DISTRO == 'arch':
     BASH_COMPLETIONS_DEFAULT = (
         '/etc/bash_completion',
         '/usr/share/bash-completion/completions')
+    PATH_DEFAULT = (os.path.expanduser('~/bin'), '/usr/local/sbin',
+                    '/usr/local/bin', '/usr/bin', '/usr/bin/site_perl',
+                    '/usr/bin/vendor_perl', '/usr/bin/core_perl')
 elif ON_LINUX or ON_CYGWIN:
     BASH_COMPLETIONS_DEFAULT = (
         '/usr/share/bash-completion',
         '/usr/share/bash-completion/completions')
+    PATH_DEFAULT = (os.path.expanduser('~/bin'), '/usr/local/sbin',
+                    '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin',
+                    '/usr/games', '/usr/local/games')
 elif ON_DARWIN:
     BASH_COMPLETIONS_DEFAULT = (
         '/usr/local/etc/bash_completion',
         '/opt/local/etc/profile.d/bash_completion.sh')
+    PATH_DEFAULT = ('/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin')
 elif ON_WINDOWS and GIT_FOR_WINDOWS_PATH:
     BASH_COMPLETIONS_DEFAULT = (
         os.path.join(GIT_FOR_WINDOWS_PATH,
@@ -240,7 +246,12 @@ elif ON_WINDOWS and GIT_FOR_WINDOWS_PATH:
                      'usr\\share\\bash-completion\\completions'),
         os.path.join(GIT_FOR_WINDOWS_PATH,
                      'mingw64\\share\\git\\completion\\git-completion.bash'))
-
+    PATH_DEFAULT = tuple(winreg.QueryValueEx(winreg.OpenKey(
+            winreg.HKEY_LOCAL_MACHINE,
+            r'SYSTEM\CurrentControlSet\Control\Session Manager\Environment'),
+        'Path')[0].split(os.pathsep))
+else:
+    PATH_DEFAULT = ()
 
 #
 # All constants as a dict
