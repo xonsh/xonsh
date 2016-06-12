@@ -9,7 +9,7 @@ from nose.plugins.skip import SkipTest
 from nose.tools import assert_equal, assert_true, assert_not_in
 
 from xonsh import built_ins
-from xonsh.built_ins import reglob, regexpath, helper, superhelper, \
+from xonsh.built_ins import reglob, pathsearch, helper, superhelper, \
     ensure_list_of_strs, list_of_strs_or_callables
 from xonsh.environ import Env
 from xonsh.tools import ON_WINDOWS
