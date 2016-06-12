@@ -873,9 +873,8 @@ Let's see a demonstration with some simple filenames:
     >>> len(`a(a+|b+)a`)
     3
 
-This same kind of search is performed if the backticks are prefaced with ``r``
-or ``regex``.  So the following expresions are equivalent: ```test```,
-``r`test```, and ``regex`test```.
+This same kind of search is performed if the backticks are prefaced with ``r``.
+So the following expresions are equivalent: ```test``` and ``r`test```.
 
 Other than the regex matching, this functions in the same way as normal
 globbing.  For more information, please see the documentation for the ``re``
@@ -892,8 +891,8 @@ In subprocess mode, normal globbing happens without any special syntax.
 However, the backtick syntax has an additional feature: it is available inside
 of Python mode as well as subprocess mode.
 
-Similarly, normal globbing can be performed (either in Python mode or
-subprocess mode) by using the ``g```` or ``glob```` syntax:
+Similarly to regex globbing, normal globbing can be performed (either in Python
+mode or subprocess mode) by using the ``g````:
 
 .. code-block:: xonshcon
 
@@ -912,31 +911,19 @@ Custom Path Searches
 --------------------
 
 In addition, if normal globbing and regular expression globbing are not enough,
-xonsh allows you to specify your own search functions, through the
-``$PATH_SEARCH_FUNCS`` environment variable.  This variable is a dictionary
-that maps prefix strings to functions to use for searching.  By default, this
-variable contains the following mapping:
+xonsh allows you to specify your own search functions.
+
+A search function is defined as a function of a single argument (a string) that
+returns a list of possible matches to that string.  Search functions can then
+be used with backticks with the following syntax: ``@<name>`test```
+
+A silly example shows the form of these functions:
 
 .. code-block:: xonshcon
 
-    {'': <function xonsh.built_ins.regexsearch>,
-     'g': <function xonsh.tools.globpath>,
-     'glob': <function xonsh.tools.globpath>,
-     'r': <function xonsh.built_ins.regexsearch>,
-     'regex': <function xonsh.built_ins.regexsearch>}
-
-Notice that ``''``, ``'r'``, and ``'regex'`` are mapped to a function that
-performs a regular expression search, and ``'g'`` and ``'glob'`` are mapped to
-a function that performs normal globbing.
-
-All of the functions in this dictionary should take in a single argument (a
-string) and return a list of possible matches to that string.  A silly example
-shows the form of these functions:
-
-.. code-block:: xonshcon
-
-    >>> $PATH_SEARCH_FUNCS['b'] = lambda s: [s, 'snail', 'shell']
-    >>> print(b`test`)
+    >>> def foo(s):
+    ...     return [s, 'snail', 'shell']
+    >>> @foo`test`
     ['test', 'snail', 'shell']
 
 
