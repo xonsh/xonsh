@@ -43,6 +43,17 @@ def test_simple_func():
             "    return '{user}'.format(user='me')\n")
     yield check_parse, code
 
+def test_lookup_alias():
+    code = (
+        'def foo(a,  s=None):\n'
+        '    return "bar"\n'
+        '@(foo)\n')
+    yield check_parse, code
+
+def test_lookup_anon_alias():
+    code = ('echo "hi" | @(lambda a, s=None: a[0]) foo bar baz\n')
+    yield check_parse, code
+
 def test_simple_func_broken():
     code = ('def prompt():\n'
             "    return '{user}'.format(\n"

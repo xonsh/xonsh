@@ -1553,6 +1553,12 @@ def test_dollar_sub_space():
 def test_ls_dot():
     yield check_xonsh_ast, {}, '$(ls .)', False
 
+def test_lambda_in_atparens():
+    yield check_xonsh_ast, {}, '$(echo hello | @(lambda a, s=None: "hey!") foo bar baz)', False
+
+def test_nested_madness():
+    yield check_xonsh_ast, {}, '$(@$(which echo) ls | @(lambda a, s=None: $(@(s.strip()) @(a[1]))) foo -la baz)', False
+
 def test_ls_dot_nesting():
     yield check_xonsh_ast, {}, '$(ls @(None or "."))', False
 
