@@ -1,6 +1,7 @@
 """A package-based, source code amalgamater."""
 import os
 import sys
+import pprint
 from collections import namedtuple
 from collections.abc import Mapping
 from ast import parse, walk, literal_eval, Import, ImportFrom
@@ -21,7 +22,7 @@ extdeps : frozenset of str
 class SourceCache(Mapping):
     """Stores / loads source code for files based on package and module names."""
 
-    def __init__(self, *args, **kwarg):
+    def __init__(self, *args, **kwargs):
         self._d = dict(*args, **kwargs)
 
     def __getitem__(self, key):
@@ -45,7 +46,7 @@ class SourceCache(Mapping):
 
 SOURCES = SourceCache()
 
-def make_node(name, pkg):
+def make_node(name, pkg, allowed):
     """Makes a node by parsing a file and traversing its AST."""
     raw = SOURCES[pkg, name]
     tree = parse(raw, filename=name)
@@ -56,16 +57,17 @@ def make_node(name, pkg):
     for a in tree.body:
         if isinstance(a, Import):
             for n in a.names:
-                if n.name.startswith(pkgdot):
-                    pkgdeps.add(n.name.rpartition('.')[-1])
+                p, dot, m = n.name.rpartition('.')
+                if p == pkg and m in allowed:
+                    pkgdeps.add(m)
                 else:
                     extdeps.add(n.name)
         elif isinstance(a, ImportFrom):
             if a.module == pkg:
-                pkgdeps.update(n.name for n in a.names)
+                pkgdeps.update(n.name for n in a.names if n.name in allowed)
             elif a.module.startswith(pkgdot):
                 p, dot, m = a.module.rpartition('.')
-                if p == pkg:
+                if p == pkg and m in allowed:
                     pkgdeps.add(m)
                 else:
                     extdeps.add(a.module)
@@ -77,13 +79,34 @@ def make_graph(pkg):
     """Create a graph (dict) of module dependencies."""
     graph = {}
     pkgdir = pkg.replace('.', os.sep)
-    for fname in os.listdir(pkgdir):
+    allowed = set()
+    files = os.listdir(pkgdir)
+    for fname in files:
         base, ext = os.path.splitext(fname)
         if base.startswith('__') or ext != '.py':
             continue
-        graph[base] = make_node(base, pkg)
+        allowed.add(base)
+    for base in allowed:
+        graph[base] = make_node(base, pkg, allowed)
     return graph
 
+
+def depsort(graph):
+    """Sort modules by dependency."""
+    remaining = set(graph.keys())
+    seder = []
+    solved = set()
+    while 0 < len(remaining):
+        nodeps = {m for m in remaining if len(graph[m].pkgdeps - solved) == 0}
+        if len(nodeps) == 0:
+            msg = ('\nsolved order = {0}\nremaining = {1}\nCycle detected in '
+                   'module graph!').format(pprint.pformat(seder),
+                                           pprint.pformat(remaining))
+            raise RuntimeError(msg)
+        solved |= nodeps
+        remaining -= nodeps
+        seder += sorted(nodeps)
+    return seder
 
 
 def main(args=None):
@@ -91,7 +114,8 @@ def main(args=None):
         args = sys.argv
     for pkg in args:
         graph = make_graph(pkg)
-        print(graph)
+        seder = depsort(graph)
+        pprint.pprint(seder)
 
 
 if __name__ == '__main__':
