@@ -221,9 +221,9 @@ the current platform.
 
 if LINUX_DISTRO == 'arch':
     BASH_COMPLETIONS_DEFAULT = (
-        '/etc/bash_completion',
+        '/usr/share/bash-completion/bash_completion',
         '/usr/share/bash-completion/completions')
-    PATH_DEFAULT = (os.path.expanduser('~/bin'), '/usr/local/sbin',
+    PATH_DEFAULT = ('/usr/local/sbin',
                     '/usr/local/bin', '/usr/bin', '/usr/bin/site_perl',
                     '/usr/bin/vendor_perl', '/usr/bin/core_perl')
 elif ON_LINUX or ON_CYGWIN:
