@@ -10,6 +10,28 @@ develop xonsh.
 
 .. note:: All code changes must go through the pull request review procedure.
 
+Changelog
+=========
+Pull requests will often have CHANGELOG entries associated with. However,
+to avoid excessive merge conflicts, please follow the following procedure:
+
+1. Go into the ``news/`` directory,
+2. Copy the ``TEMPLATE.rst`` file to another file in the ``news/`` directory.
+   We suggest using the branchname::
+
+        $ cp TEMPLATE.rst branch.rst
+
+3. Add your entries as a bullet pointed lists in your ``branch.rst`` file in
+   the appropriate category. It is OK to leave the ``None`` entries for later
+   use.
+4. Commit your ``branch.rst``.
+
+Feel free to update this file whenever you want! Please don't use someone
+else's file name. All of the files in this ``news/`` directory will be merged
+automatically at release time.  The ``None`` entries will be automatically
+filtered out too!
+
+
 Style Guide
 ===========
 xonsh is a pure Python project, and so we use PEP8 (with some additions) to
@@ -79,7 +101,7 @@ How to Test
 Docker
 ----------------------------------
 
-If you want to run your "work in progress version" without installing 
+If you want to run your "work in progress version" without installing
 and in a fresh environment you can use Docker. If Docker is installed
 you just have to run this::
 

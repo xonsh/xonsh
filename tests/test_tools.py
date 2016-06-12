@@ -17,7 +17,8 @@ from xonsh.tools import (
     ensure_int_or_slice, is_float, is_string, is_callable,
     is_string_or_callable, check_for_partial_string, CommandsCache,
     is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str,
-    argvquote, executables_in, find_next_break, expand_case_matching)
+    is_logfile_opt, to_logfile_opt, logfile_opt_to_str, argvquote,
+    executables_in, find_next_break, expand_case_matching)
 
 LEXER = Lexer()
 LEXER.build()
@@ -503,6 +504,47 @@ def test_is_dynamic_cwd_width():
         obs = is_dynamic_cwd_width(inp)
         yield assert_equal, exp, obs
 
+def test_is_logfile_opt():
+    cases = [
+        ('/dev/null', True),
+        ('throwback.log', True),
+        ('', True),
+        (None, True),
+        (True, False),
+        (False, False),
+        (42, False),
+        ([1, 2, 3], False),
+        ((1, 2), False),
+        (("wrong", "parameter"), False)
+    ]
+    for inp, exp in cases:
+        obs = is_logfile_opt(inp)
+        yield assert_equal, exp, obs
+
+def test_to_logfile_opt():
+    cases = [
+        (True, None),
+        (False, None),
+        (1, None),
+        (None, None),
+        ('/dev/null', '/dev/null'),
+        ('throwback.log', 'throwback.log'),
+        ('/dev/nonexistent_dev', None),
+    ]
+    for inp, exp in cases:
+        obs = to_logfile_opt(inp)
+        yield assert_equal, exp, obs
+
+def test_logfile_opt_to_str():
+    cases = [
+        (None, ''),
+        ('', ''),
+        ('throwback.log', 'throwback.log'),
+        ('/dev/null', '/dev/null')
+    ]
+    for inp, exp in cases:
+        obs = logfile_opt_to_str(inp)
+        yield assert_equal, exp, obs
 
 def test_to_dynamic_cwd_tuple():
     cases = [
