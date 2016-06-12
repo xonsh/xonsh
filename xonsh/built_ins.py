@@ -141,24 +141,30 @@ def globsearch(s):
     return globpath(s, ignore_case=(not csc), return_empty=True)
 
 
-PATH_SEARCHERS = {
-    '': regexsearch,
-    'r' : regexsearch,
-    'regex' : regexsearch,
-    'g': globsearch,
-    'glob': globsearch,
-}
-
 def pathsearch(s, pymode=False):
-    """Takes a regular expression string and returns a list of file
-    paths that match the regex.
+    """
+    Takes a string and returns a list of file paths that match (regex, glob,
+    or arbitrary search function).
     """
     searchfunc, pattern = re.match(SearchPath, s).groups()
-    if searchfunc not in PATH_SEARCHERS:
-        raise XonshError("%r is not a known path search function" % searchfunc)
-    o = PATH_SEARCHERS[searchfunc](pattern)
-    no_match = [] if pymode else [pattern]
-    return o if len(o) != 0 else no_match
+    if searchfunc == 'r' or searchfunc == '':
+        o = regexsearch(s)
+    elif searchfunc == 'g':
+        o = globsearch(s)
+    else:
+        ctx = builtins.__xonsh_ctx__
+        searchfunc = searchfunc[1:]
+        if (searchfunc not in ctx or
+                not callable(ctx[searchfunc]) or
+                len(inspect.signature(aliased_cmd).parameters) != 1):
+            error = "%r is not a known path search function"
+            raise XonshError(error % searchfunc)
+        try:
+            o = ctx[searchfunc](pattern)
+        except Exception:
+            o = []
+        no_match = [] if pymode else [pattern]
+        return o if len(o) != 0 else no_match
 
 RE_SHEBANG = re.compile(r'#![ \t]*(.+?)$')
 
