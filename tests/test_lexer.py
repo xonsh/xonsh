@@ -190,7 +190,7 @@ def test_single_bytes_literal():
 
 def test_regex_globs():
     for i in ('.*', r'\d*', '.*#{1,2}'):
-        for p in ('', 'r', 'regex', 'g', 'glob', 'somethingelse'):
+        for p in ('', 'r', 'g', '@somethingelse'):
             c = '{}`{}`'.format(p,i)
             yield check_token, c, ['SEARCHPATH', c, 0]
 
