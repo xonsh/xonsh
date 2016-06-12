@@ -43,7 +43,7 @@ def clean_tables():
     for f in TABLES:
         if os.path.isfile(f):
             os.remove(f)
-            print('Remove ' + f)
+            print('Removed ' + f)
 
 
 def build_tables():
