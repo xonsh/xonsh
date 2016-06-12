@@ -144,20 +144,17 @@ def premain(argv=None):
     """Setup for main xonsh entry point, returns parsed arguments."""
     if setproctitle is not None:
         setproctitle(' '.join(['xonsh'] + sys.argv[1:]))
-
     builtins.__xonsh_ctx__ = {}
     args, other = parser.parse_known_args(argv)
     if args.file is not None:
         arguments = (argv or sys.argv)
         file_index = arguments.index(args.file)
-
         # A script-file was passed and is to be executed. The argument parser
         # might have parsed switches intended for the script, so reset the
         # parsed switches to their default values
         old_args = args
         args = parser.parse_known_args('')[0]
         args.file = old_args.file
-
         # Save the arguments that are intended for the script-file. Switches
         # and positional arguments passed before the path to the script-file are
         # ignored.
@@ -169,7 +166,6 @@ def premain(argv=None):
         version = '/'.join(('xonsh', __version__)),
         print(version)
         exit()
-
     shell_kwargs = {'shell_type': args.shell_type,
                     'completer': False,
                     'login': False,
@@ -182,7 +178,6 @@ def premain(argv=None):
         shell_kwargs['config'] = args.config_path
     if args.norc:
         shell_kwargs['rc'] = ()
-
     setattr(sys, 'displayhook', _pprint_displayhook)
     if args.command is not None:
         args.mode = XonshMode.single_command
@@ -197,19 +192,15 @@ def premain(argv=None):
         args.mode = XonshMode.interactive
         shell_kwargs['completer'] = True
         shell_kwargs['login'] = True
-
     from xonsh import imphooks
     shell = builtins.__xonsh_shell__ = Shell(**shell_kwargs)
     env = builtins.__xonsh_env__
     env['XONSH_LOGIN'] = shell_kwargs['login']
-
     if args.defines is not None:
         env.update([x.split('=', 1) for x in args.defines])
-
     env['XONSH_INTERACTIVE'] = False
     if ON_WINDOWS:
         setup_win_unicode_console(env.get('WIN_UNICODE_CONSOLE', True))
-
     return args
 
 
