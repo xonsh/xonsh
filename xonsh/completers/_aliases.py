@@ -37,7 +37,7 @@ def _add_one_completer(name, func, loc='end'):
 def _list_completers(args, stdin=None):
     o = "Registered Completer Functions: \n"
     _comp = builtins.__xonsh_completers__
-    ml = max(len(i) for i in _comp)
+    ml = max(len(i) for i in _comp, default=0)
     _strs = []
     for c in _comp:
         if _comp[c].__doc__ is None:
