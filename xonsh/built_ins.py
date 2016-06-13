@@ -421,8 +421,8 @@ def run_subproc(cmds, captured=False):
             aliased_cmd = alias
         else:
             if alias is not None:
-                cmd = alias + cmd[1:]
-            if binary_loc is None:
+                aliased_cmd = alias + cmd[1:]
+            elif binary_loc is None:
                 aliased_cmd = cmd
             else:
                 try:
