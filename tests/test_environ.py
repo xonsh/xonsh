@@ -22,23 +22,41 @@ def test_env_normal():
     assert_equal('wakka', env['VAR'])
 
 def test_env_path_list():
+    env = Env(MYPATH=['/home/wakka'])
+    assert_equal(['/home/wakka'], env['MYPATH'].paths)
     env = Env(MYPATH=['wakka'])
-    assert_equal(['wakka'], env['MYPATH'])
+    assert_equal([os.path.abspath('wakka')], env['MYPATH'].paths)
 
 def test_env_path_str():
+    env = Env(MYPATH='/home/wakka' + os.pathsep + '/home/jawaka')
+    assert_equal(['/home/wakka', '/home/jawaka'], env['MYPATH'].paths)
     env = Env(MYPATH='wakka' + os.pathsep + 'jawaka')
-    assert_equal(['wakka', 'jawaka'], env['MYPATH'])
+    assert_equal([os.path.abspath('wakka'), os.path.abspath('jawaka')],
+                 env['MYPATH'].paths)
 
 def test_env_detype():
     env = Env(MYPATH=['wakka', 'jawaka'])
-    assert_equal({'MYPATH': 'wakka' + os.pathsep + 'jawaka'}, env.detype())
+    assert_equal({'MYPATH': os.path.abspath('wakka') + os.pathsep + \
+                            os.path.abspath('jawaka')},
+                 env.detype())
 
 def test_env_detype_mutable_access_clear():
-    env = Env(MYPATH=['wakka', 'jawaka'])
-    assert_equal({'MYPATH': 'wakka' + os.pathsep + 'jawaka'}, env.detype())
-    env['MYPATH'][0] = 'woah'
+    env = Env(MYPATH=['/home/wakka', '/home/jawaka'])
+    assert_equal({'MYPATH': '/home/wakka' + os.pathsep + '/home/jawaka'},
+                 env.detype())
+    env['MYPATH'][0] = '/home/woah'
     assert_equal(None, env._detyped)
-    assert_equal({'MYPATH': 'woah' + os.pathsep + 'jawaka'}, env.detype())
+    assert_equal({'MYPATH': '/home/woah' + os.pathsep + '/home/jawaka'},
+                 env.detype())
+
+    env = Env(MYPATH=['wakka', 'jawaka'])
+    assert_equal({'MYPATH': os.path.abspath('wakka') + os.pathsep + \
+                            os.path.abspath('jawaka')},
+                 env.detype())
+    env['MYPATH'][0] = 'woah'
+    assert_equal({'MYPATH': os.path.abspath('woah') + os.pathsep + \
+                            os.path.abspath('jawaka')},
+                 env.detype())
 
 def test_env_detype_no_dict():
     env = Env(YO={'hey': 42})

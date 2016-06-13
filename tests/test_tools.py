@@ -370,7 +370,10 @@ def test_ensure_string():
 def test_is_env_path():
     cases = [
         ('/home/wakka', False),
-        (['/home/jawaka'], True),
+        (['/home/jawaka'], False),
+        (EnvPath(['/home/jawaka']), True),
+        (EnvPath(['jawaka']), True),
+        (EnvPath(b'jawaka:wakka'), True),
         ]
     for inp, exp in cases:
         obs = is_env_path(inp)

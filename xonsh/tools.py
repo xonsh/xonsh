@@ -100,10 +100,10 @@ def expandpath(path):
     """
     env = getattr(builtins, '__xonsh_env__', os.environ)
     if env.get('EXPAND_ENV_VARS', False):
-        # expand variables and use os.path.realpath to handle cases
+        # expand variables and use os.path.abspath to handle cases
         # with relative paths like ../ or ./
         path = os.path.expanduser(expandvars(path))
-    return os.path.realpath(path)
+    return os.path.abspath(path)
 
 
 def decode_bytes(path):
@@ -112,7 +112,7 @@ def decode_bytes(path):
     otherwise using sys.getdefaultencoding().
     """
     env = getattr(builtins, '__xonsh_env__', os.environ)
-    enc = env.get('XONSH_ENCODING', sys.getdefaultencoding())
+    enc = env.get('XONSH_ENCODING', DEFAULT_ENCODING)
     return path.decode(encoding=enc,
                        errors=env.get('XONSH_ENCODING_ERRORS'))
 
@@ -123,28 +123,30 @@ class EnvPath(MutableSequence):
     strings. Provides a custom method that expands all paths if the
     relevant env variable has been set.
     """
-    def __init__(self, *args):
-        if len(args) > 0:
-            if isinstance(args[0], str):
-                self._l = args[0].split(os.pathsep)
-            elif isinstance(args[0], pathlib.Path):
-                self._l = [args[0]]
-            elif isinstance(args[0], bytes):
+    def __init__(self, args=None):
+        if not args:
+            self._l = []
+        else:
+            if isinstance(args, str):
+                self._l = args.split(os.pathsep)
+            elif isinstance(args, pathlib.Path):
+                self._l = [args]
+            elif isinstance(args, bytes):
                 # decode bytes to a string and then split based on
                 # the default path separator
-                self._l = decode_bytes(args[0]).split(os.pathsep)
-            elif isinstance(args[0], Sequence):
+                self._l = decode_bytes(args).split(os.pathsep)
+            elif isinstance(args, Sequence):
                 if not all(isinstance(i, (str, bytes, pathlib.Path)) \
-                                      for i in args[0]):
+                                      for i in args):
                     # make TypeError's message as informative as possible
                     # when given an invalid initialization sequence
                     raise TypeError(
                             "EnvPath's initialization sequence should only "
                             "contain str, bytes and pathlib.Path entries")
-                self._l = list(args[0])
+                self._l = list(args)
             else:
                 raise TypeError('EnvPath cannot be initialized with items '
-                                'of type %s' % type(args[0]))
+                                'of type %s' % type(args))
 
     def __getitem__(self, item):
         return expandpath(self._l[item])
@@ -755,11 +757,7 @@ def ensure_string(x):
 
 def is_env_path(x):
     """This tests if something is an environment path, ie a list of strings."""
-    if isinstance(x, (str, bytes)):
-        return False
-    else:
-        return (isinstance(x, Sequence) and
-                all(isinstance(a, str) for a in x))
+    return False if isinstance(x, (str, bytes)) else isinstance(x, EnvPath)
 
 
 def str_to_env_path(x):
