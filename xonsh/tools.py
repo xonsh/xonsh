@@ -102,23 +102,15 @@ class EnvPath(MutableSequence):
     @staticmethod
     def _expandpath(path):
         """
-        Performs environment variable / user expansion on a given path.
+        Performs environment variable / user expansion on a given path
+        if the relevant flag has been set.
         """
-        # if __xonsh_env__ has not been initialized, expandvars will
-        # raise an AttributeError because it uses __xonsh_env__ internally
-        if hasattr(builtins, '__xonsh_env__'):
-            env = getattr(builtins, '__xonsh_env__', os.environ)
-            if env.get('EXPAND_ENV_VARS', False):
-                path = os.path.expanduser(expandvars(path))
-        else:
-            # use os.path.expandvars instead if env is not yet available
-            if isinstance(path, pathlib.Path):
-                # os.path.expandvars doesn't handle pathlib.Path
-                # objects by default!
-                path = str(path)
-            path = os.path.expanduser(os.path.expandvars(path))
-        # finally use realpath to handle cases like "../folder/"
-        return os.path.realpath(path)
+        env = getattr(builtins, '__xonsh_env__', os.environ)
+        if env.get('EXPAND_ENV_VARS', False):
+            # expand variables and use os.path.realpath to handle cases
+            # with relative paths like ../ or ./
+            path = os.path.realpath(os.path.expanduser(expandvars(path)))
+        return path
 
     @staticmethod
     def _decode_bytes(path):
@@ -126,12 +118,9 @@ class EnvPath(MutableSequence):
         Tries to decode a path in bytes using XONSH_ENCODING if available,
         otherwise using sys.getdefaultencoding().
         """
-        if hasattr(builtins, '__xonsh_env__'):
-            env = getattr(builtins, '__xonsh_env__', os.environ)
-            enc = env.get('XONSH_ENCODING', sys.getdefaultencoding())
-            return path.decode(encoding=enc)
-        else:
-            return path.decode(sys.getdefaultencoding())
+        env = getattr(builtins, '__xonsh_env__', os.environ)
+        enc = env.get('XONSH_ENCODING', sys.getdefaultencoding())
+        return path.decode(encoding=enc)
 
     def __init__(self, *args):
         self._d = []
@@ -166,16 +155,19 @@ class EnvPath(MutableSequence):
         """
         Returns the list of directories that this EnvPath contains.
         """
-        return list(self._d)
+        return list(self)
 
     def __repr__(self):
         return repr(self._d)
 
     def __eq__(self, other):
+        # Compare using sets to account for different
+        # order in items as well as unorderable lists
+        # (e.g. containing Path() and str())
         if isinstance(other, list):
-            return self._d == other
+            return set(self._d) == set(other)
         elif isinstance(other, EnvPath):
-            return self._d == other.get_paths()
+            return set(self) == set(other)
         else:
             return False
 
