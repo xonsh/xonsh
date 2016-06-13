@@ -237,14 +237,70 @@ def write_amalgam(src, pkg):
         f.write(src)
 
 
+def _init_name_lines(pkg):
+    pkgdir = pkg.replace('.', os.sep)
+    fname = os.path.join(pkgdir, '__init__.py')
+    with open(fname) as f:
+        raw = f.read()
+    lines = raw.splitlines()
+    return fname, lines
+
+
+def read_exclude(pkg):
+    """reads in modules to exclude from __init__.py"""
+    _, lines = _init_name_lines(pkg)
+    exclude = set()
+    for line in lines:
+        if line.startswith('# amalgamate exclude'):
+            exclude.update(line.split()[3:])
+    return exclude
+
+
+FAKE_LOAD = """
+import sys as _sys
+try:
+    from {pkg} import __amalgam__
+    {load}
+    del __amalgam__
+except ImportError:
+    pass
+del _sys
+""".strip()
+
+
+def rewrite_init(pkg, order):
+    """Rewrites the init file to insert modules."""
+    fname, lines = _init_name_lines(pkg)
+    for i, line in enumerate(lines):
+        if line.startswith('# amalgamate end'):
+            stop = i
+        elif line.startswith('# amalgamate'):
+            start = i
+    t = "_sys.modules['{0}.{1}'] = __amalgam__"
+    load = '\n    '.join(t.format(pkg, m) for m in order)
+    s = FAKE_LOAD.format(pkg=pkg, load=load)
+    if start + 1 == stop:
+        lines.insert(stop, s)
+    else:
+        lines[start+1] = s
+        lines = lines[:start+2] + lines[stop:]
+    init = '\n'.join(lines)
+    with open(fname, 'w') as f:
+        f.write(init)
+
+
 def main(args=None):
     if args is None:
         args = sys.argv
     for pkg in args[1:]:
-        graph = make_graph(pkg)
+        print('amalgamating ' + pkg)
+        exclude = read_exclude(pkg)
+        print('  excluding {}'.format(pprint.pformat(exclude)))
+        graph = make_graph(pkg, exclude=exclude)
         order = depsort(graph)
         src = amalgamate(order, graph, pkg)
         write_amalgam(src, pkg)
+        rewrite_init(pkg, order)
 
 
 if __name__ == '__main__':
