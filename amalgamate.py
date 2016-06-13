@@ -187,7 +187,7 @@ def rewrite_imports(name, pkg, order, imps):
             if a.module == pkg:
                 for n in a.names:
                     if n.name in order:
-                        msg = ('Cannot amalgamate almagate import of '
+                        msg = ('Cannot amalgamate import of '
                                'amalgamated module:\n\n  from {0} import {1}\n'
                                '\nin {0}/{2}.py').format(pkg, n.name, name)
                         raise RuntimeError(msg)

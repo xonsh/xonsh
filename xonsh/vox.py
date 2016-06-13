@@ -4,7 +4,6 @@ import venv
 import builtins
 from shutil import rmtree
 
-import xonsh.tools
 from xonsh.platform import ON_POSIX, ON_WINDOWS, scandir
 
 
@@ -114,7 +113,7 @@ class Vox:
 
         env_name = basename(env_path)
 
-        if xonsh.tools.ON_WINDOWS:
+        if ON_WINDOWS:
             bin_dir = 'Scripts'
 
         elif ON_POSIX:

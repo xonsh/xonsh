@@ -10,7 +10,7 @@ from glob import iglob
 from collections import deque, Sequence, OrderedDict
 from threading import Thread, Condition
 
-from xonsh import lazyjson
+from xonsh.lazyjson import LazyJSON, dump, Node
 from xonsh.tools import ensure_int_or_slice, to_history_tuple
 from xonsh import diff_history
 
@@ -116,12 +116,12 @@ class HistoryGC(Thread):
         files = []
         for f in fs:
             try:
-                lj = lazyjson.LazyJSON(f, reopen=False)
+                lj = LazyJSON(f, reopen=False)
                 if only_unlocked and lj['locked']:
                     continue
                 # info: closing timestamp, number of commands, filename
-                files.append((lj['ts'][1] or time.time(), 
-                              len(lj.sizes['cmds']) - 1, 
+                files.append((lj['ts'][1] or time.time(),
+                              len(lj.sizes['cmds']) - 1,
                               f))
                 lj.close()
             except (IOError, OSError, ValueError):
@@ -162,13 +162,13 @@ class HistoryFlusher(Thread):
     def dump(self):
         """Write the cached history to external storage."""
         with open(self.filename, 'r', newline='\n') as f:
-            hist = lazyjson.LazyJSON(f).load()
+            hist = LazyJSON(f).load()
         hist['cmds'].extend(self.buffer)
         if self.at_exit:
             hist['ts'][1] = time.time()  # apply end time
             hist['locked'] = False
         with open(self.filename, 'w', newline='\n') as f:
-            lazyjson.dump(hist, f, sort_keys=True)
+            dump(hist, f, sort_keys=True)
 
 
 class CommandField(Sequence):
@@ -217,9 +217,9 @@ class CommandField(Sequence):
         with self.hist._cond:
             self.hist._cond.wait_for(self.i_am_at_the_front)
             with open(self.hist.filename, 'r', newline='\n') as f:
-                lj = lazyjson.LazyJSON(f, reopen=False)
+                lj = LazyJSON(f, reopen=False)
                 rtn = lj['cmds'][key].get(self.field, self.default)
-                if isinstance(rtn, lazyjson.Node):
+                if isinstance(rtn, Node):
                     rtn = rtn.load()
             queue.popleft()
         return rtn
@@ -271,7 +271,7 @@ class History(object):
         meta['cmds'] = []
         meta['sessionid'] = str(sid)
         with open(self.filename, 'w', newline='\n') as f:
-            lazyjson.dump(meta, f, sort_keys=True)
+            dump(meta, f, sort_keys=True)
         self.gc = HistoryGC() if gc else None
         # command fields that are known
         self.tss = CommandField('ts', self)
