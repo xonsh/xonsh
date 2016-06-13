@@ -301,6 +301,7 @@ def main(args=None):
         src = amalgamate(order, graph, pkg)
         write_amalgam(src, pkg)
         rewrite_init(pkg, order)
+        print('  collapsed {} modules'.format(len(order)))
 
 
 if __name__ == '__main__':
