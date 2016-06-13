@@ -166,7 +166,7 @@ def maybe(*choices): return group(*choices) + '?'
 Whitespace = r'[ \f\t]*'
 Comment = r'#[^\r\n]*'
 Ignore = Whitespace + any(r'\\\r?\n' + Whitespace) + maybe(Comment)
-Name = r'\$?\w+'
+Name_RE = r'\$?\w+'
 
 Hexnumber = r'0[xX][0-9a-fA-F]+'
 Binnumber = r'0[bB][01]+'
@@ -217,7 +217,7 @@ Bracket = '[][(){}]'
 Special = group(r'\r?\n', r'\.\.\.', r'[:;.,@]')
 Funny = group(Operator, Bracket, Special)
 
-PlainToken = group(IORedirect, Number, Funny, String, Name, RegexPath)
+PlainToken = group(IORedirect, Number, Funny, String, Name_RE, RegexPath)
 Token = Ignore + PlainToken
 
 # First (or only) line of ' or " string.
@@ -227,7 +227,7 @@ ContStr = group(StringPrefix + r"'[^\n'\\]*(?:\\.[^\n'\\]*)*" +
                 group('"', r'\\\r?\n'))
 PseudoExtras = group(r'\\\r?\n|\Z', Comment, Triple, RegexPath)
 PseudoToken = Whitespace + group(PseudoExtras, IORedirect, Number, Funny,
-                                 ContStr, Name)
+                                 ContStr, Name_RE)
 
 def _compile(expr):
     return re.compile(expr, re.UNICODE)

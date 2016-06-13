@@ -1,6 +1,6 @@
 __version__ = '0.3.4'
 
-# amalgamate exclude jupyter_kernel parser_table parser_test_table winutils
+# amalgamate exclude jupyter_kernel parser_table parser_test_table pyghooks winutils
 import sys as _sys
 try:
     from xonsh import __amalgam__
@@ -26,7 +26,6 @@ try:
     _sys.modules['xonsh.inspectors'] = __amalgam__
     _sys.modules['xonsh.lexer'] = __amalgam__
     _sys.modules['xonsh.proc'] = __amalgam__
-    _sys.modules['xonsh.pyghooks'] = __amalgam__
     _sys.modules['xonsh.wizard'] = __amalgam__
     _sys.modules['xonsh.xontribs'] = __amalgam__
     _sys.modules['xonsh.environ'] = __amalgam__

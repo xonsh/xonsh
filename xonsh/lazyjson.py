@@ -90,13 +90,13 @@ def dumps(obj, sort_keys=False):
     return s
 
 
-def dump(obj, fp, sort_keys=False):
+def ljdump(obj, fp, sort_keys=False):
     """Dumps an object to JSON file."""
     s = dumps(obj, sort_keys=sort_keys)
     fp.write(s)
 
 
-class Node(Mapping, Sequence):
+class LJNode(Mapping, Sequence):
     """A proxy node for JSON nodes. Acts as both sequence and mapping."""
 
     def __init__(self, offsets, sizes, root):
@@ -140,7 +140,7 @@ class Node(Mapping, Sequence):
                 s = f.read(size)
             val = json.loads(s)
         elif isinstance(offset, (Mapping, Sequence)):
-            val = Node(offset, size, self.root)
+            val = LJNode(offset, size, self.root)
         else:
             raise TypeError('incorrect types for offset node')
         return val
@@ -187,7 +187,7 @@ class Node(Mapping, Sequence):
             raise NotImplementedError
 
 
-class LazyJSON(Node):
+class LazyJSON(LJNode):
     """Represents a lazy json file. Can be used like a normal Python
     dict or list.
     """

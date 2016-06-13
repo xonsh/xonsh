@@ -10,7 +10,7 @@ from glob import iglob
 from collections import deque, Sequence, OrderedDict
 from threading import Thread, Condition
 
-from xonsh.lazyjson import LazyJSON, dump, Node
+from xonsh.lazyjson import LazyJSON, ljdump, LJNode
 from xonsh.tools import ensure_int_or_slice, to_history_tuple
 from xonsh.diff_history import _create_parser, _main_action
 
@@ -168,7 +168,7 @@ class HistoryFlusher(Thread):
             hist['ts'][1] = time.time()  # apply end time
             hist['locked'] = False
         with open(self.filename, 'w', newline='\n') as f:
-            dump(hist, f, sort_keys=True)
+            ljdump(hist, f, sort_keys=True)
 
 
 class CommandField(Sequence):
@@ -219,7 +219,7 @@ class CommandField(Sequence):
             with open(self.hist.filename, 'r', newline='\n') as f:
                 lj = LazyJSON(f, reopen=False)
                 rtn = lj['cmds'][key].get(self.field, self.default)
-                if isinstance(rtn, Node):
+                if isinstance(rtn, LJNode):
                     rtn = rtn.load()
             queue.popleft()
         return rtn
@@ -271,7 +271,7 @@ class History(object):
         meta['cmds'] = []
         meta['sessionid'] = str(sid)
         with open(self.filename, 'w', newline='\n') as f:
-            dump(meta, f, sort_keys=True)
+            ljdump(meta, f, sort_keys=True)
         self.gc = HistoryGC() if gc else None
         # command fields that are known
         self.tss = CommandField('ts', self)
