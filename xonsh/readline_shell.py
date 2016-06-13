@@ -18,7 +18,7 @@ from cmd import Cmd
 from threading import Thread
 from collections import deque
 
-from xonsh import lazyjson
+from xonsh.lazyjson import LazyJSON
 from xonsh.base_shell import BaseShell
 from xonsh.ansi_colors import partial_color_format, color_style_names, color_style
 from xonsh.environ import partial_format_prompt, multiline_prompt
@@ -452,7 +452,7 @@ class ReadlineHistoryAdder(Thread):
         i = 1
         for _, _, f in files:
             try:
-                lj = lazyjson.LazyJSON(f, reopen=False)
+                lj = LazyJSON(f, reopen=False)
                 for cmd in lj['cmds']:
                     inp = cmd['inp'].splitlines()
                     for line in inp:

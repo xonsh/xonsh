@@ -8,7 +8,7 @@ import builtins
 import warnings
 from collections import Mapping
 
-from xonsh import ast
+from xonsh.ast import CtxAwareTransformer
 from xonsh.parser import Parser
 from xonsh.tools import subproc_toks, find_next_break
 from xonsh.built_ins import load_builtins, unload_builtins

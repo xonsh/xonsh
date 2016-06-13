@@ -4,7 +4,7 @@ import builtins
 import random
 from warnings import warn
 
-from xonsh import xontribs
+from xonsh.xontribs import update_context
 from xonsh.environ import xonshrc_context
 from xonsh.execer import Execer
 from xonsh.platform import (best_shell_type, has_prompt_toolkit, ptk_version,

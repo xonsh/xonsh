@@ -9,7 +9,7 @@ from argparse import ArgumentParser
 
 from xonsh.tools import DefaultNotGiven, print_color, normabspath, to_bool
 from xonsh.platform import HAS_PYGMENTS
-from xonsh import inspectors
+from xonsh.inspectors import find_file, getouterframes
 from xonsh.environ import _replace_home as replace_home
 
 if HAS_PYGMENTS:
@@ -50,7 +50,7 @@ class TracerType(object):
         files.add(normabspath(filename))
         sys.settrace(self.trace)
         curr = inspect.currentframe()
-        for frame, fname, *_ in inspectors.getouterframes(curr, context=0):
+        for frame, fname, *_ in getouterframes(curr, context=0):
             if normabspath(fname) in files:
                 frame.f_trace = self.trace
 
@@ -61,7 +61,7 @@ class TracerType(object):
         if len(self.files) == 0:
             sys.settrace(self.prev_tracer)
             curr = inspect.currentframe()
-            for frame, fname, *_ in inspectors.getouterframes(curr, context=0):
+            for frame, fname, *_ in getouterframes(curr, context=0):
                 if normabspath(fname) == filename:
                     frame.f_trace = self.prev_tracer
             self.prev_tracer = DefaultNotGiven
@@ -70,7 +70,7 @@ class TracerType(object):
         """Implements a line tracing function."""
         if event not in self.valid_events:
             return self.trace
-        fname = inspectors.find_file(frame)
+        fname = find_file(frame)
         if fname in self.files:
             lineno = frame.f_lineno
             curr = (fname, lineno)
@@ -114,11 +114,11 @@ def _find_caller(args):
     """Somewhat hacky method of finding the __file__ based on the line executed."""
     re_line = re.compile(r'[^;\s|&<>]+\s+' + r'\s+'.join(args))
     curr = inspect.currentframe()
-    for _, fname, lineno, _, lines, _ in inspectors.getouterframes(curr, context=1)[3:]:
+    for _, fname, lineno, _, lines, _ in getouterframes(curr, context=1)[3:]:
         if lines is not None and re_line.search(lines[0]) is not None:
             return fname
         elif lineno == 1 and re_line.search(linecache.getline(fname, lineno)) is not None:
-            # There is a bug in CPython such that inspectors.getouterframes(curr, context=1)
+            # There is a bug in CPython such that getouterframes(curr, context=1)
             # will actually return the 2nd line in the code_context field, even though
             # line number is itself correct. We manually fix that in this branch.
             return fname

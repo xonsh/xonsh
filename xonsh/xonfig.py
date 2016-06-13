@@ -17,9 +17,11 @@ except ImportError:
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.environ import is_template_string
-from xonsh import platform
-from xonsh.platform import is_readline_available, ptk_version
-from xonsh import tools
+from xonsh.platform import (is_readline_available, ptk_version,
+    PYTHON_VERSION_INFO, PYGMENTS_VERSION, ON_POSIX, ON_LINUX, LINUX_DISTRO,
+    ON_DARWIN, ON_WINDOWS, ON_CYGWIN, DEFAULT_ENCODING)
+from xonsh.tools import (to_bool, is_string, print_exception, IS_SUPERUSER,
+    color_style_names, print_color, color_style)
 from xonsh.wizard import (Wizard, Pass, Message, Save, Load, YesNo, Input,
     PromptVisitor, While, StoreNonEmpty, create_truefalse_cond, YN, Unstorable,
     Question)
@@ -115,11 +117,11 @@ def make_fs():
     fs = While(cond=cond, body=[
         Input('shell name (e.g. bash): ', path='/foreign_shells/{idx}/shell'),
         StoreNonEmpty('interactive shell [bool, default=True]: ',
-                      converter=tools.to_bool,
+                      converter=to_bool,
                       show_conversion=True,
                       path='/foreign_shells/{idx}/interactive'),
         StoreNonEmpty('login shell [bool, default=False]: ',
-                      converter=tools.to_bool,
+                      converter=to_bool,
                       show_conversion=True,
                       path='/foreign_shells/{idx}/login'),
         StoreNonEmpty("env command [str, default='env']: ",
@@ -136,7 +138,7 @@ def make_fs():
                       show_conversion=True,
                       path='/foreign_shells/{idx}/currenv'),
         StoreNonEmpty('safely handle exceptions [bool, default=True]: ',
-                      converter=tools.to_bool,
+                      converter=to_bool,
                       show_conversion=True,
                       path='/foreign_shells/{idx}/safe'),
         StoreNonEmpty("pre-command [str, default='']: ",
@@ -177,7 +179,7 @@ def make_envvar(name):
     if '\n' in default:
         default = '\n' + _wrap_paragraphs(default, width=69)
     curr = env.get(name)
-    if tools.is_string(curr) and is_template_string(curr):
+    if is_string(curr) and is_template_string(curr):
         curr = curr.replace('{', '{{').replace('}', '}}')
     curr = pformat(curr, width=69)
     if '\n' in curr:
@@ -239,7 +241,7 @@ def make_xontrib(xontrib, package):
     if msg.endswith('\n'):
         msg = msg[:-1]
     mnode = Message(message=msg)
-    convert = lambda x: name if tools.to_bool(x) else Unstorable
+    convert = lambda x: name if to_bool(x) else Unstorable
     pnode = StoreNonEmpty(XONTRIB_PROMPT, converter=convert,
                           path=_xontrib_path)
     return mnode, pnode
@@ -306,7 +308,7 @@ def _wizard(ns):
         try:
             pv.visit()
         except (KeyboardInterrupt, Exception):
-            tools.print_exception()
+            print_exception()
 
 
 def _format_human(data):
@@ -332,22 +334,22 @@ def _format_json(data):
 def _info(ns):
     data = [
         ('xonsh', XONSH_VERSION),
-        ('Python', '{}.{}.{}'.format(*platform.PYTHON_VERSION_INFO)),
+        ('Python', '{}.{}.{}'.format(*PYTHON_VERSION_INFO)),
         ('PLY', ply.__version__),
         ('have readline', is_readline_available()),
         ('prompt toolkit', ptk_version() or None),
         ('shell type', builtins.__xonsh_env__.get('SHELL_TYPE')),
-        ('pygments', platform.PYGMENTS_VERSION),
-        ('on posix', platform.ON_POSIX),
-        ('on linux', platform.ON_LINUX)]
-    if platform.ON_LINUX:
-        data.append(('distro', platform.LINUX_DISTRO))
+        ('pygments', PYGMENTS_VERSION),
+        ('on posix', ON_POSIX),
+        ('on linux', ON_LINUX)]
+    if ON_LINUX:
+        data.append(('distro', LINUX_DISTRO))
     data.extend([
-        ('on darwin', platform.ON_DARWIN),
-        ('on windows', platform.ON_WINDOWS),
-        ('on cygwin', platform.ON_CYGWIN),
-        ('is superuser', tools.IS_SUPERUSER),
-        ('default encoding', platform.DEFAULT_ENCODING),
+        ('on darwin', ON_DARWIN),
+        ('on windows', ON_WINDOWS),
+        ('on cygwin', ON_CYGWIN),
+        ('is superuser', IS_SUPERUSER),
+        ('default encoding', DEFAULT_ENCODING),
         ])
     formatter = _format_json if ns.json else _format_human
     s = formatter(data)
@@ -357,7 +359,7 @@ def _info(ns):
 def _styles(ns):
     env = builtins.__xonsh_env__
     curr = env.get('XONSH_COLOR_STYLE')
-    styles = sorted(tools.color_style_names())
+    styles = sorted(color_style_names())
     if ns.json:
         s = json.dumps(styles, sort_keys=True, indent=1)
         print(s)
@@ -369,7 +371,7 @@ def _styles(ns):
         else:
             lines.append('  ' + style)
     s = '\n'.join(lines)
-    tools.print_color(s)
+    print_color(s)
 
 
 def _str_colors(cmap, cols):
@@ -415,15 +417,15 @@ def _tok_colors(cmap, cols):
 
 def _colors(ns):
     cols, _ = shutil.get_terminal_size()
-    if tools.ON_WINDOWS:
+    if ON_WINDOWS:
         cols -= 1
-    cmap = tools.color_style()
+    cmap = color_style()
     akey = next(iter(cmap))
     if isinstance(akey, str):
         s = _str_colors(cmap, cols)
     else:
         s = _tok_colors(cmap, cols)
-    tools.print_color(s)
+    print_color(s)
 
 
 @functools.lru_cache()

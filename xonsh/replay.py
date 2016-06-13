@@ -5,7 +5,7 @@ import builtins
 from collections.abc import Mapping
 
 from xonsh.tools import swap
-from xonsh import lazyjson
+from xonsh.lazyjson import LazyJSON
 from xonsh.environ import Env
 from xonsh.history import History
 from xonsh.history import _info as history_info
@@ -26,7 +26,7 @@ class Replayer(object):
             Whether new file handle should be opened for each load, passed directly into
             LazyJSON class.
         """
-        self._lj = lazyjson.LazyJSON(f, reopen=reopen)
+        self._lj = LazyJSON(f, reopen=reopen)
 
     def __del__(self):
         self._lj.close()
