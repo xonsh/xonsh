@@ -293,7 +293,7 @@ def main(args=None):
     if args is None:
         args = sys.argv
     for pkg in args[1:]:
-        print('amalgamating ' + pkg)
+        print('Amalgamating ' + pkg)
         exclude = read_exclude(pkg)
         print('  excluding {}'.format(pprint.pformat(exclude)))
         graph = make_graph(pkg, exclude=exclude)

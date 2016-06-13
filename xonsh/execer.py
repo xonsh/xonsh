@@ -39,7 +39,7 @@ class Execer(object):
         self.filename = filename
         self.debug_level = debug_level
         self.unload = unload
-        self.ctxtransformer = ast.CtxAwareTransformer(self.parser)
+        self.ctxtransformer = CtxAwareTransformer(self.parser)
         load_builtins(execer=self, config=config, login=login, ctx=xonsh_ctx)
 
     def __del__(self):

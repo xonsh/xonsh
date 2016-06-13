@@ -129,7 +129,7 @@ _MAIN_ACTIONS = {
     'list': _list,
     }
 
-def main(args=None, stdin=None):
+def xontribs_main(args=None, stdin=None):
     """Alias that loads xontribs"""
     if not args or (args[0] not in _MAIN_ACTIONS and
                     args[0] not in {'-h', '--help'}):

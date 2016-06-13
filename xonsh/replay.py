@@ -113,7 +113,7 @@ def _main_action(ns, h=None):
     history_info(ns, hist)
 
 
-def main(args, stdin=None):
+def replay_main(args, stdin=None):
     """Acts as main function for replaying a xonsh history file."""
     parser = _create_parser()
     ns = parser.parse_args(args)

@@ -35,7 +35,7 @@ except ImportError:
 
 from xonsh import __version__ as XONSH_VERSION
 
-TABLES = ['xonsh/lexer_table.py', 'xonsh/parser_table.py']
+TABLES = ['xonsh/lexer_table.py', 'xonsh/parser_table.py', 'xonsh/__amalgam__.py']
 
 
 def clean_tables():
@@ -53,6 +53,8 @@ def build_tables():
     from xonsh.parser import Parser
     Parser(lexer_table='lexer_table', yacc_table='parser_table',
            outputdir='xonsh')
+    import amalgamate
+    amalgamate.main(['amalgamate', 'xonsh'])
     sys.path.pop(0)
 
 

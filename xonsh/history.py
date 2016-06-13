@@ -455,7 +455,7 @@ def _main(hist, args):
     _MAIN_ACTIONS[ns.action](ns, hist)
 
 
-def main(args=None, stdin=None):
+def history_main(args=None, stdin=None):
     """This is the history command entry point."""
     _ = stdin
     _main(builtins.__xonsh_history__, args)  # pylint: disable=no-member
