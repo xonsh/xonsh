@@ -240,7 +240,8 @@ def _all_xonsh_formatter(*args):
     """
     data_dir = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
     data_dir = os.path.expanduser(data_dir)
-
+    data_dir = os.path.abspath(data_dir)
+    
     files = [os.path.join(data_dir, f) for f in listdir(data_dir)
              if f.startswith('xonsh-') and f.endswith('.json')]
     file_hist = list()
@@ -279,9 +280,8 @@ def _zsh_hist_formatter(location=None):
     z_hist_formatted = list()
     z_path = os.path.expanduser(location)
     if os.path.isfile(z_path):
-        with open(z_path, 'r') as z_file:
-            z_txt = z_file.read()
-            z_txt = z_txt.encode('utf-8', 'replace').decode('utf-8')
+        with open(z_path, 'rb') as z_file:
+            z_txt = z_file.read().decode('utf-8', 'replace')
             z_hist = z_txt.splitlines()
             try:
                 if z_hist:
