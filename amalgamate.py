@@ -135,8 +135,22 @@ def format_import(names):
     return line
 
 
+def format_from_import(names):
+    """Format a from import line"""
+    parts = []
+    for _, module, name, asname in names:
+        if asname is None:
+            parts.append(name)
+        else:
+            parts.append(name + ' as ' + asname)
+    line = 'from ' + module
+    line += ' import ' + ', '.join(parts) + '\n'
+    return line
+
+
 def rewrite_imports(name, pkg, order, imps):
     """Rewrite the global imports in the file given the amalgamation."""
+    pkgdot = pkg + '.'
     raw = SOURCES[pkg, name]
     tree = parse(raw, filename=name)
     replacements = []  # list of (startline, stopline, str) tuples
@@ -149,23 +163,51 @@ def rewrite_imports(name, pkg, order, imps):
         if isinstance(a, Import):
             keep = []
             for n in a.names:
+                p, dot, m = n.name.rpartition('.')
+                if p == pkg and m in order:
+                    msg = ('Cannot amalgamate almagate import of '
+                           'amalgamated module:\n\n  import {0}.{1}\n'
+                           '\nin {0}/{2}.py').format(pkg, n.name, name)
+                    raise RuntimeError(msg)
                 imp = (Import, n.name, n.asname)
                 if imp not in imps:
                     imps.add(imp)
                     keep.append(imp)
             if len(keep) == len(a.names):
                 continue  # all new imports
-            s = format_import(keep)
+            elif len(keep) == 0:
+                s = ', '.join(n.name for n in  a.names)
+                s = '# amalgamated ' + s + '\n'
+            else:
+                s = format_import(keep)
             replacements.append((start, stop, s))
         elif isinstance(a, ImportFrom):
+            p, dot, m = a.module.rpartition('.')
             if a.module == pkg:
-                pkgdeps.update(n.name for n in a.names if n.name in allowed)
-            elif a.module.startswith(pkgdot):
-                p, dot, m = a.module.rpartition('.')
-                if p == pkg and m in allowed:
-                    pkgdeps.add(m)
+                for n in a.names:
+                    if n.name in order:
+                        msg = ('Cannot amalgamate almagate import of '
+                               'amalgamated module:\n\n  from {0} import {1}\n'
+                               '\nin {0}/{2}.py').format(pkg, n.name, name)
+                        raise RuntimeError(msg)
+            elif a.module.startswith(pkgdot) and p == pkg and m in order:
+                replacements.append((start, stop,
+                                     '# amalgamated ' + a.module + '\n'))
+            else:
+                keep = []
+                for n in a.names:
+                    imp = (ImportFrom, a.module, n.name, n.asname)
+                    if imp not in imps:
+                        imps.add(imp)
+                        keep.append(imp)
+                if len(keep) == len(a.names):
+                    continue  # all new imports
+                elif len(keep) == 0:
+                    s = ', '.join(n.name for n in  a.names)
+                    s = '# amalgamated from ' a.module + ' import ' + s + '\n'
                 else:
-                    extdeps.add(a.module)
+                    s = format_from_import(keep)
+                replacements.append((start, stop, s))
     # apply replacements in reverse
     lines = raw.splitlines(keepends=True)
     for start, stop, s in replacements[::-1]:
