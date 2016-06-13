@@ -4,7 +4,7 @@ from datetime import datetime
 from itertools import zip_longest
 from difflib import SequenceMatcher
 
-from xonsh import lazyjson
+from xonsh.lazyjson import LazyJSON
 from xonsh.tools import print_color
 
 NO_COLOR = '{NO_COLOR}'
@@ -97,8 +97,8 @@ class HistoryDiffer(object):
         verbose : bool, optional
             Whether to print a verbose amount of information.
         """
-        self.a = lazyjson.LazyJSON(afile, reopen=reopen)
-        self.b = lazyjson.LazyJSON(bfile, reopen=reopen)
+        self.a = LazyJSON(afile, reopen=reopen)
+        self.b = LazyJSON(bfile, reopen=reopen)
         self.verbose = verbose
         self.sm = SequenceMatcher(autojunk=False)
 

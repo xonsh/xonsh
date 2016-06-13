@@ -17,7 +17,7 @@ import os
 import sys
 import types
 
-from xonsh import openpy
+from xonsh.openpy import detect_encoding, read_py_file
 from xonsh.tools import (cast_unicode, safe_hasattr, indent,
                          print_color, format_color)
 from xonsh.platform import HAS_PYGMENTS, PYTHON_VERSION_INFO
@@ -76,7 +76,7 @@ def get_encoding(obj):
         # getsourcelines returns lineno with 1-offset and page() uses
         # 0-offset, so we must adjust.
         with stdlib_io.open(ofile, 'rb') as buf:  # Tweaked to use io.open for Python 2
-            encoding, _ = openpy.detect_encoding(buf.readline)
+            encoding, _ = detect_encoding(buf.readline)
         return encoding
 
 
@@ -414,7 +414,7 @@ class Inspector(object):
             # Print only text files, not extension binaries.  Note that
             # getsourcelines returns lineno with 1-offset and page() uses
             # 0-offset, so we must adjust.
-            o = openpy.read_py_file(ofile, skip_encoding_cookie=False)
+            o = read_py_file(ofile, skip_encoding_cookie=False)
             print(o, lineno - 1)
 
     def _format_fields_str(self, fields, title_width=0):
