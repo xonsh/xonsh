@@ -386,7 +386,7 @@ def test_str_to_env_path():
         ]
     for inp, exp in cases:
         obs = str_to_env_path(inp)
-        yield assert_equal, exp, obs
+        yield assert_equal, exp, obs.paths
 
 
 def test_env_path_to_str():

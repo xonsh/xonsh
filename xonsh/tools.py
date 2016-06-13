@@ -93,83 +93,83 @@ class XonshCalledProcessError(XonshError, CalledProcessError):
         self.completed_command = completed_command
 
 
+def expandpath(path):
+    """
+    Performs environment variable / user expansion on a given path
+    if the relevant flag has been set.
+    """
+    env = getattr(builtins, '__xonsh_env__', os.environ)
+    if env.get('EXPAND_ENV_VARS', False):
+        # expand variables and use os.path.realpath to handle cases
+        # with relative paths like ../ or ./
+        path = os.path.expanduser(expandvars(path))
+    return os.path.realpath(path)
+
+
+def decode_bytes(path):
+    """
+    Tries to decode a path in bytes using XONSH_ENCODING if available,
+    otherwise using sys.getdefaultencoding().
+    """
+    env = getattr(builtins, '__xonsh_env__', os.environ)
+    enc = env.get('XONSH_ENCODING', sys.getdefaultencoding())
+    return path.decode(encoding=enc,
+                       errors=env.get('XONSH_ENCODING_ERRORS'))
+
+
 class EnvPath(MutableSequence):
     """
     A class that implements an environment path, which is a list of
     strings. Provides a custom method that expands all paths if the
     relevant env variable has been set.
     """
-    @staticmethod
-    def _expandpath(path):
-        """
-        Performs environment variable / user expansion on a given path
-        if the relevant flag has been set.
-        """
-        env = getattr(builtins, '__xonsh_env__', os.environ)
-        if env.get('EXPAND_ENV_VARS', False):
-            # expand variables and use os.path.realpath to handle cases
-            # with relative paths like ../ or ./
-            path = os.path.realpath(os.path.expanduser(expandvars(path)))
-        return path
-
-    @staticmethod
-    def _decode_bytes(path):
-        """
-        Tries to decode a path in bytes using XONSH_ENCODING if available,
-        otherwise using sys.getdefaultencoding().
-        """
-        env = getattr(builtins, '__xonsh_env__', os.environ)
-        enc = env.get('XONSH_ENCODING', sys.getdefaultencoding())
-        return path.decode(encoding=enc)
-
     def __init__(self, *args):
-        self._d = []
         if len(args) > 0:
             if isinstance(args[0], str):
-                self._d = args[0].split(os.pathsep)
+                self._l = args[0].split(os.pathsep)
             elif isinstance(args[0], pathlib.Path):
-                self._d = [args[0]]
+                self._l = [args[0]]
             elif isinstance(args[0], bytes):
                 # decode bytes to a string and then split based on
                 # the default path separator
-                self._d = EnvPath._decode_bytes(args[0]).split(os.pathsep)
-            elif isinstance(args[0], list):
-                self._d = list(args[0])
+                self._l = decode_bytes(args[0]).split(os.pathsep)
+            elif isinstance(args[0], Sequence):
+                if not all(isinstance(i, (str, bytes, pathlib.Path)) \
+                                      for i in args[0]):
+                    # make TypeError's message as informative as possible
+                    # when given an invalid initialization sequence
+                    raise TypeError(
+                            "EnvPath's initialization sequence should only "
+                            "contain str, bytes and pathlib.Path entries")
+                self._l = list(args[0])
+            else:
+                raise TypeError('EnvPath cannot be initialized with items '
+                                'of type %s' % type(args[0]))
 
     def __getitem__(self, item):
-        return EnvPath._expandpath(self._d[item])
+        return expandpath(self._l[item])
 
     def __setitem__(self, index, item):
-        self._d.__setitem__(index, item)
+        self._l.__setitem__(index, item)
 
     def __len__(self):
-        return len(self._d)
+        return len(self._l)
 
     def __delitem__(self, key):
-        self._d.__delitem__(key)
+        self._l.__delitem__(key)
 
     def insert(self, index, value):
-        self._d.insert(index, value)
+        self._l.insert(index, value)
 
-    def get_paths(self):
+    @property
+    def paths(self):
         """
         Returns the list of directories that this EnvPath contains.
         """
         return list(self)
 
     def __repr__(self):
-        return repr(self._d)
-
-    def __eq__(self, other):
-        # Compare using sets to account for different
-        # order in items as well as unorderable lists
-        # (e.g. containing Path() and str())
-        if isinstance(other, list):
-            return set(self._d) == set(other)
-        elif isinstance(other, EnvPath):
-            return set(self) == set(other)
-        else:
-            return False
+        return repr(self._l)
 
 
 class DefaultNotGivenType(object):
