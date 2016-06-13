@@ -193,7 +193,7 @@ if ON_WINDOWS:
     try:
         key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
                              'SOFTWARE\\GitForWindows')
-        GIT_FOR_WINDOWS_PATH, type = winreg.QueryValueEx(key, "InstallPath")
+        GIT_FOR_WINDOWS_PATH, typ = winreg.QueryValueEx(key, "InstallPath")
     except FileNotFoundError:
         GIT_FOR_WINDOWS_PATH = None
 

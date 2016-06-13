@@ -47,8 +47,8 @@ _op_map = {
     '?': 'QUESTION', '??': 'DOUBLE_QUESTION', '@$': 'ATDOLLAR',
     '&': 'AMPERSAND',
 }
-for (op, type) in _op_map.items():
-    token_map[(OP, op)] = type
+for (op, typ) in _op_map.items():
+    token_map[(OP, op)] = typ
 
 token_map[IOREDIRECT] = 'IOREDIRECT'
 token_map[STRING] = 'STRING'

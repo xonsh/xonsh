@@ -276,7 +276,8 @@ def rewrite_init(pkg, order):
             stop = i
         elif line.startswith('# amalgamate'):
             start = i
-    t = "_sys.modules['{0}.{1}'] = __amalgam__"
+    t = ("{1} = __amalgam__\n    "
+         "_sys.modules['{0}.{1}'] = __amalgam__")
     load = '\n    '.join(t.format(pkg, m) for m in order)
     s = FAKE_LOAD.format(pkg=pkg, load=load)
     if start + 1 == stop:
