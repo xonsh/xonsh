@@ -249,7 +249,7 @@ def _all_xonsh_formatter(*args):
         try:
             json_file = lazyjson.LazyJSON(f, reopen=False)
             file_hist.append(json_file.load()['cmds'])
-        except JSONDecodeError:
+        except ValueError:
             # Invalid json file
             pass
     commands = [(c['inp'].replace('\n', ''), c['ts'][0])
