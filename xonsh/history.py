@@ -332,7 +332,7 @@ def _create_parser():
     p = argparse.ArgumentParser(prog='history',
                                 description='Tools for dealing with history')
     subp = p.add_subparsers(title='action', dest='action')
-    # show action
+    # session action
     session = subp.add_parser('session',
                               help='displays session history, default action')
     session.add_argument('-r', dest='reverse', default=False,
@@ -342,7 +342,7 @@ def _create_parser():
                          help='display n\'th history entry if n is a simple '
                               'int, or range of entries if it is Python '
                               'slice notation')
-    # 'id' subcommand
+    # all action
     show_all = subp.add_parser('all',
                                help='displays history from all sessions')
     show_all.add_argument('-r', dest='reverse', default=False,
@@ -352,6 +352,7 @@ def _create_parser():
                           help='display n\'th history entry if n is a '
                                'simple int, or range of entries if it '
                                'is Python slice notation')
+    # zsh action
     zsh = subp.add_parser('zsh', help='displays history from zsh sessions')
     zsh.add_argument('-r', dest='reverse', default=False,
                      action='store_true',
@@ -360,6 +361,7 @@ def _create_parser():
                      help='display n\'th history entry if n is a '
                      'simple int, or range of entries if it '
                      'is Python slice notation')
+    # bash action
     bash = subp.add_parser('bash', help='displays history from bash sessions')
     bash.add_argument('-r', dest='reverse', default=False,
                       action='store_true',
@@ -368,6 +370,7 @@ def _create_parser():
                       help='display n\'th history entry if n is a '
                       'simple int, or range of entries if it '
                       'is Python slice notation')
+    # 'id' subcommand
     subp.add_parser('id', help='displays the current session id')
     # 'file' subcommand
     subp.add_parser('file', help='displays the current history filename')
