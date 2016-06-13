@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """A package-based, source code amalgamater."""
 import os
 import sys
@@ -156,7 +157,7 @@ def rewrite_imports(name, pkg, order, imps):
     replacements = []  # list of (startline, stopline, str) tuples
     # collect replacements in forward direction
     for a, b in zip(tree.body, tree.body[1:] + [None]):
-        if not isinstance(a, (Import, FromImport)):
+        if not isinstance(a, (Import, ImportFrom)):
             continue
         start = min_line(a) - 1
         stop = len(tree.body) if b is None else min_line(b) - 1
@@ -204,7 +205,7 @@ def rewrite_imports(name, pkg, order, imps):
                     continue  # all new imports
                 elif len(keep) == 0:
                     s = ', '.join(n.name for n in  a.names)
-                    s = '# amalgamated from ' a.module + ' import ' + s + '\n'
+                    s = '# amalgamated from ' + a.module + ' import ' + s + '\n'
                 else:
                     s = format_from_import(keep)
                 replacements.append((start, stop, s))
@@ -239,10 +240,10 @@ def write_amalgam(src, pkg):
 def main(args=None):
     if args is None:
         args = sys.argv
-    for pkg in args:
+    for pkg in args[1:]:
         graph = make_graph(pkg)
         order = depsort(graph)
-        src = amalgam(order, graph, pkg)
+        src = amalgamate(order, graph, pkg)
         write_amalgam(src, pkg)
 
 
