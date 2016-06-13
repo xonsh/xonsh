@@ -2,6 +2,7 @@
 import os
 import sys
 import pprint
+from itertools import repeat
 from collections import namedtuple
 from collections.abc import Mapping
 from ast import parse, walk, literal_eval, Import, ImportFrom
@@ -111,13 +112,96 @@ def depsort(graph):
     return seder
 
 
+def get_lineno(node, default=0):
+    """Gets the lineno of a node or returns the default."""
+    return getattr(node, 'lineno', default)
+
+
+def min_line(node):
+    """Computes the minimum lineno."""
+    node_line = get_lineno(node)
+    return min(map(get_lineno, walk(node), repeat(node_line)))
+
+
+def format_import(names):
+    """Format an import line"""
+    parts = []
+    for _, name, asname in names:
+        if asname is None:
+            parts.append(name)
+        else:
+            parts.append(name + ' as ' + asname)
+    line = 'import ' + ', '.join(parts) + '\n'
+    return line
+
+
+def rewrite_imports(name, pkg, order, imps):
+    """Rewrite the global imports in the file given the amalgamation."""
+    raw = SOURCES[pkg, name]
+    tree = parse(raw, filename=name)
+    replacements = []  # list of (startline, stopline, str) tuples
+    # collect replacements in forward direction
+    for a, b in zip(tree.body, tree.body[1:] + [None]):
+        if not isinstance(a, (Import, FromImport)):
+            continue
+        start = min_line(a) - 1
+        stop = len(tree.body) if b is None else min_line(b) - 1
+        if isinstance(a, Import):
+            keep = []
+            for n in a.names:
+                imp = (Import, n.name, n.asname)
+                if imp not in imps:
+                    imps.add(imp)
+                    keep.append(imp)
+            if len(keep) == len(a.names):
+                continue  # all new imports
+            s = format_import(keep)
+            replacements.append((start, stop, s))
+        elif isinstance(a, ImportFrom):
+            if a.module == pkg:
+                pkgdeps.update(n.name for n in a.names if n.name in allowed)
+            elif a.module.startswith(pkgdot):
+                p, dot, m = a.module.rpartition('.')
+                if p == pkg and m in allowed:
+                    pkgdeps.add(m)
+                else:
+                    extdeps.add(a.module)
+    # apply replacements in reverse
+    lines = raw.splitlines(keepends=True)
+    for start, stop, s in replacements[::-1]:
+        lines[start] = s
+        for i in range(stop - start - 1):
+            del lines[start+1]
+    return ''.join(lines)
+
+
+
+def amalgamate(order, graph, pkg):
+    """Create amalgamated source."""
+    src = ''
+    imps = set()
+    for name in order:
+        lines = rewrite_imports(name, pkg, order, imps)
+        src += '#\n# ' + name + '\n#\n' + lines + '\n'
+    return src
+
+
+def write_amalgam(src, pkg):
+    """Write out __amalgam__.py file"""
+    pkgdir = pkg.replace('.', os.sep)
+    fname = os.path.join(pkgdir, '__amalgam__.py')
+    with open(fname, 'w') as f:
+        f.write(src)
+
+
 def main(args=None):
     if args is None:
         args = sys.argv
     for pkg in args:
         graph = make_graph(pkg)
-        seder = depsort(graph)
-        pprint.pprint(seder)
+        order = depsort(graph)
+        src = amalgam(order, graph, pkg)
+        write_amalgam(src, pkg)
 
 
 if __name__ == '__main__':
