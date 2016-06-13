@@ -12,6 +12,7 @@ import builtins
 from glob import iglob
 from collections import deque, Sequence, OrderedDict
 from threading import Thread, Condition
+from json.decoder import JSONDecodeError
 
 from xonsh import lazyjson
 from xonsh.tools import ensure_int_or_slice, to_history_tuple
@@ -73,7 +74,7 @@ class HistoryGC(Thread):
     def __init__(self, wait_for_shell=True, size=None, *args, **kwargs):
         """Thread responsible for garbage collecting old history.
 
-        May wait for shell (and thus xonshrc to have been loaded) to start work.
+        May wait for shell (and for xonshrc to have been loaded) to start work.
         """
         super().__init__(*args, **kwargs)
         self.daemon = True
@@ -123,8 +124,8 @@ class HistoryGC(Thread):
                 if only_unlocked and lj['locked']:
                     continue
                 # info: closing timestamp, number of commands, filename
-                files.append((lj['ts'][1] or time.time(), 
-                              len(lj.sizes['cmds']) - 1, 
+                files.append((lj['ts'][1] or time.time(),
+                              len(lj.sizes['cmds']) - 1,
                               f))
                 lj.close()
             except (IOError, OSError, ValueError):
@@ -235,20 +236,27 @@ class CommandField(Sequence):
 def _all_xonsh_formatter(*args):
     """
     Returns all history as found in XONSH_DATA_DIR.
-    
+
     return format: (name, start_time, index)
     """
     data_dir = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
     data_dir = os.path.expanduser(data_dir)
 
-    files = [os.path.join(data_dir,f) for f in listdir(data_dir) 
+    files = [os.path.join(data_dir, f) for f in listdir(data_dir)
              if f.startswith('xonsh-') and f.endswith('.json')]
-    file_hist = [lazyjson.LazyJSON(f, reopen=False).load()['cmds'] 
-                for f in files]
+    file_hist = list()
+    for f in files:
+        try:
+            json_file = lazyjson.LazyJSON(f, reopen=False)
+            file_hist.append(json_file.load()['cmds'])
+        except JSONDecodeError:
+            # Invalid json file
+            pass
     commands = [(c['inp'].replace('\n', ''), c['ts'][0])
                 for commands in file_hist for c in commands if c]
     commands.sort(key=itemgetter(1))
-    return [(c,t,ind) for ind,(c,t) in enumerate(commands)]
+    return [(c, t, ind) for ind, (c, t) in enumerate(commands)]
+
 
 def _curr_session_formatter(hist):
     """
@@ -257,18 +265,25 @@ def _curr_session_formatter(hist):
     """
     if not hist:
         hist = builtins.__xonsh_history__
-    start_times= [start for start,end in hist.tss]
-    names = [name[:-1] for name in hist.inps]
+    if not hist:
+        return None
+    start_times = [start for start, end in hist.tss]
+    names = [name[:-1] if name.endswith('\n') else name
+             for name in hist.inps]
     commands = enumerate(zip(names, start_times))
-    return [(c,t,ind) for ind,(c,t) in commands]
-def _zsh_hist_formatter(location = None):
-    if not location: 
-        location = os.path.join('~','.zsh_history')
+    return [(c, t, ind) for ind, (c, t) in commands]
+
+
+def _zsh_hist_formatter(location=None):
+    if not location:
+        location = os.path.join('~', '.zsh_history')
     z_hist_formatted = list()
     z_path = os.path.expanduser(location)
     if os.path.isfile(z_path):
         with open(z_path, 'r') as z_file:
-            z_hist = z_file.read().splitlines()
+            z_txt = z_file.read()
+            z_txt = z_txt.encode('utf-8', 'replace').decode('utf-8')
+            z_hist = z_txt.splitlines()
             try:
                 if z_hist:
                     for ind, line in enumerate(z_hist):
@@ -279,37 +294,39 @@ def _zsh_hist_formatter(location = None):
                             start_time = -1
                         z_hist_formatted.append((command, start_time, ind))
                     return z_hist_formatted
-            except:
-                print("There was a problem parsing {}.".format(bash_path))
+            except Exception as e:
+                print("There was a problem parsing {}.".format(z_path))
+                raise e
                 return None
-                    
+
     else:
         print("No zsh history file found at: {}".format(z_path))
         return None
-    
-def _bash_hist_formatter(location = None):
-    if not location: 
-        location = os.path.join('~','.bash_history')
+
+
+def _bash_hist_formatter(location=None):
+    if not location:
+        location = os.path.join('~', '.bash_history')
     bash_hist_formatted = list()
-    bash_path = os.path.expanduser(location)
-    if os.path.isfile(bash_path):
+    b_path = os.path.expanduser(location)
+    if os.path.isfile(b_path):
         try:
-            with open(bash_path, 'r') as bash_file:
-                bash_hist = bash_file.read().splitlines()
+            with open(b_path, 'r') as bash_file:
+                b_txt = bash_file.read()
+                b_txt = b_txt.encode('utf-8', 'replace').decode('utf-8')
+                bash_hist = b_txt.splitlines()
                 if bash_hist:
                     for ind, command in enumerate(bash_hist):
                         bash_hist_formatted.append((command, 0.0, ind))
                     return bash_hist_formatted
-        except Exception as e:
-            print("There was a problem parsing {}.".format(bash_path))
+        except:
+            print("There was a problem parsing {}.".format(b_path))
             return None
     else:
-        print("No bash history file found at: {}".format(bash_path))
+        print("No bash history file found at: {}".format(b_path))
         return None
-    
-#
-# Interface to History
-#
+
+
 @lru_cache()
 def _create_parser():
     """Create a parser for the "history" command."""
@@ -319,7 +336,7 @@ def _create_parser():
     # show action
     session = subp.add_parser('session',
                               help='displays session history, default action')
-    session.add_argument('-r', dest='reverse', default=False, 
+    session.add_argument('-r', dest='reverse', default=False,
                          action='store_true',
                          help='reverses the direction')
     session.add_argument('n', nargs='?', default=None,
@@ -327,9 +344,9 @@ def _create_parser():
                               'int, or range of entries if it is Python '
                               'slice notation')
     # 'id' subcommand
-    show_all = subp.add_parser('all', 
+    show_all = subp.add_parser('all',
                                help='displays history from all sessions')
-    show_all.add_argument('-r', dest='reverse', default=False, 
+    show_all.add_argument('-r', dest='reverse', default=False,
                           action='store_true',
                           help='reverses the direction')
     show_all.add_argument('n', nargs='?', default=None,
@@ -337,29 +354,29 @@ def _create_parser():
                                'simple int, or range of entries if it '
                                'is Python slice notation')
     zsh = subp.add_parser('zsh', help='displays history from zsh sessions')
-    zsh.add_argument('-r', dest='reverse', default=False, 
-                          action='store_true',
-                          help='reverses the direction')
+    zsh.add_argument('-r', dest='reverse', default=False,
+                     action='store_true',
+                     help='reverses the direction')
     zsh.add_argument('n', nargs='?', default=None,
-                          help='display n\'th history entry if n is a '
-                               'simple int, or range of entries if it '
-                               'is Python slice notation')
+                     help='display n\'th history entry if n is a '
+                     'simple int, or range of entries if it '
+                     'is Python slice notation')
     bash = subp.add_parser('bash', help='displays history from bash sessions')
-    bash.add_argument('-r', dest='reverse', default=False, 
-                          action='store_true',
-                          help='reverses the direction')
+    bash.add_argument('-r', dest='reverse', default=False,
+                      action='store_true',
+                      help='reverses the direction')
     bash.add_argument('n', nargs='?', default=None,
-                          help='display n\'th history entry if n is a '
-                               'simple int, or range of entries if it '
-                               'is Python slice notation')
+                      help='display n\'th history entry if n is a '
+                      'simple int, or range of entries if it '
+                      'is Python slice notation')
     subp.add_parser('id', help='displays the current session id')
     # 'file' subcommand
     subp.add_parser('file', help='displays the current history filename')
     # 'info' subcommand
     info = subp.add_parser('info', help=('displays information about the '
                                          'current history'))
-    info.add_argument('--json', dest='json', default=False, action='store_true',
-                      help='print in JSON format')
+    info.add_argument('--json', dest='json', default=False,
+                      action='store_true', help='print in JSON format')
     # diff
     diff = subp.add_parser('diff', help='diffs two xonsh history files')
     diff_history._create_parser(p=diff)
@@ -369,7 +386,8 @@ def _create_parser():
     replay._create_parser(p=rp)
     _MAIN_ACTIONS['replay'] = replay._main_action
     # gc
-    gcp = subp.add_parser('gc', help='launches a new history garbage collector')
+    gcp = subp.add_parser(
+        'gc', help='launches a new history garbage collector')
     gcp.add_argument('--size', nargs=2, dest='size', default=None,
                      help=('next two arguments represent the history size and '
                            'units; e.g. "--size 8128 commands"'))
@@ -383,6 +401,9 @@ def _create_parser():
     return p
 
 
+#
+# Interface to History
+#
 class History(object):
     """Xonsh session history."""
 
@@ -412,7 +433,8 @@ class History(object):
             # pylint: disable=no-member
             data_dir = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
             data_dir = os.path.expanduser(data_dir)
-            self.filename = os.path.join(data_dir, 'xonsh-{0}.json'.format(sid))
+            self.filename = os.path.join(
+                data_dir, 'xonsh-{0}.json'.format(sid))
         else:
             self.filename = filename
         self.buffer = []
@@ -450,8 +472,8 @@ class History(object):
             The thread that was spawned to flush history
         """
         opts = builtins.__xonsh_env__.get('HISTCONTROL')
-        if ('ignoredups' in opts and len(self) > 0
-                and cmd['inp'] == self.inps[-1]):
+        if ('ignoredups' in opts and len(self) > 0 and
+                cmd['inp'] == self.inps[-1]):
             # Skipping dup cmd
             return None
         elif 'ignoreerr' in opts and cmd['rtn'] != 0:
@@ -472,8 +494,8 @@ class History(object):
         Parameters
         ----------
         at_exit : bool, optional
-            Whether the HistoryFlusher should act as a thread in the background,
-            or execute immeadiately and block.
+            Whether the HistoryFlusher should act as a thread in the
+            background, or execute immeadiately and block.
 
         Returns
         -------
@@ -487,26 +509,32 @@ class History(object):
         self.buffer.clear()
         return hf
 
-
     @staticmethod
-    def show(ns = None, hist = None, start_index = None, end_index = None,
-            start_time=None, end_time=None, location = None):
+    def show(ns=None, hist=None, start_index=None, end_index=None,
+             start_time=None, end_time=None, location=None):
         """
         Show the requested portion of shell history.
         Accepts multiple history sources (xonsh, bash, zsh)
-        
-        May be invoked as an alias with `history all` which will
-        provide history as stdout or with `__xonsh_history__.show()` 
+
+        May be invoked as an alias with `history all/bash/zsh` which will
+        provide history as stdout or with `__xonsh_history__.show()`
         which will return the history as a list with each item
         in the tuple form (name, start_time, index).
+
+        If invoked via __xonsh_history__.show() then the ns parameter
+        can be supplied as a str with the follow options:
+            `all`     - returns xonsh history from all sessions
+            `session` - returns xonsh history from current session
+            `zsh`     - returns all zsh history
+            `bash`    - returns all bash history
         """
-        # Check if ns is a string, meaning it was invoked from 
+        # Check if ns is a string, meaning it was invoked from
         # __xonsh_history__
         alias = True
-        valid_formats = {'all':     _all_xonsh_formatter, 
-                         'session': partial(_curr_session_formatter, hist), 
-                         'zsh':     partial(_zsh_hist_formatter, location), 
-                         'bash':    partial(_bash_hist_formatter, location)}
+        valid_formats = {'all': _all_xonsh_formatter,
+                         'session': partial(_curr_session_formatter, hist),
+                         'zsh': partial(_zsh_hist_formatter, location),
+                         'bash': partial(_bash_hist_formatter, location)}
         if isinstance(ns, str) and ns in valid_formats.keys():
             ns = _create_parser().parse_args([ns])
             alias = False
@@ -523,19 +551,19 @@ class History(object):
         num_of_commands = len(commands)
         digits = len(str(num_of_commands))
         if start_time:
-            if isinstance(start_time,datetime):
+            if isinstance(start_time, datetime):
                 start_time = start_time.timestamp()
-            if isinstance(start_time,float):
+            if isinstance(start_time, float):
                 commands = [c for c in commands if c[1] >= start_time]
             else:
                 print("Invalid start time, must be float or datetime.")
         if end_time:
-            if isinstance(end_time,datetime):
+            if isinstance(end_time, datetime):
                 end_time = end_time.timestamp()
-            if isinstance(end_time,float):
+            if isinstance(end_time, float):
                 commands = [c for c in commands if c[1] <= end_time]
             else:
-                print("Invalid end time, must be float or datetime.")    
+                print("Invalid end time, must be float or datetime.")
         idx = None
         if ns:
             idx = ensure_int_or_slice(ns.n)
@@ -549,18 +577,18 @@ class History(object):
                     print(err.format(len(commands)))
                     return None
         else:
-            idx = slice(start_index,end_index)
-        
-        if (isinstance(idx, slice) and 
-            start_time is None and end_time is None):
+            idx = slice(start_index, end_index)
+
+        if (isinstance(idx, slice) and
+                start_time is None and end_time is None):
             commands = commands[idx]
 
         if ns and ns.reverse:
             commands = reversed(commands)
 
         if alias:
-            for c,t,i in commands:
-                print('{:>{width}}: {}'.format(i,c, width=digits+1))
+            for c, t, i in commands:
+                print('{:>{width}}: {}'.format(i, c, width=digits + 1))
         else:
             return commands
 
@@ -593,14 +621,14 @@ def _gc(ns, hist):
 _MAIN_ACTIONS = {
     'session': History.show,
     'all': History.show,
-    'zsh': History.show,    
-    'bash': History.show,    
+    'zsh': History.show,
+    'bash': History.show,
     'id': lambda ns, hist: print(hist.sessionid),
     'file': lambda ns, hist: print(hist.filename),
     'info': _info,
     'diff': diff_history._main_action,
     'gc': _gc
-    }
+}
 
 
 def _main(hist, args):
@@ -608,9 +636,9 @@ def _main(hist, args):
     if not args or (args[0] not in _MAIN_ACTIONS and
                     args[0] not in {'-h', '--help'}):
         args.insert(0, 'session')
-    if (args[0] in ['session', 'all', 'zsh', 'bash'] 
-        and len(args) > 1 and args[-1].startswith('-') and
-        args[-1][1].isdigit()):
+    if (args[0] in ['session', 'all', 'zsh', 'bash'] and
+        len(args) > 1 and args[-1].startswith('-') and
+            args[-1][1].isdigit()):
         args.insert(-1, '--')  # ensure parsing stops before a negative int
     ns = _create_parser().parse_args(args)
     if ns.action is None:  # apply default action
