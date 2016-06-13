@@ -286,7 +286,11 @@ def _zsh_hist_formatter(location=None):
             try:
                 if z_hist:
                     for ind, line in enumerate(z_hist):
-                        start_time, command = line.split(';')
+                        try:
+                            start_time, command = line.split(';',1)
+                        except ValueError:
+                            #Invalid history entry
+                            continue
                         try:
                             start_time = float(start_time.split(':')[1])
                         except ValueError:
@@ -310,9 +314,8 @@ def _bash_hist_formatter(location=None):
     b_path = os.path.expanduser(location)
     if os.path.isfile(b_path):
         try:
-            with open(b_path, 'r') as bash_file:
-                b_txt = bash_file.read()
-                b_txt = b_txt.encode('utf-8', 'replace').decode('utf-8')
+            with open(b_path, 'rb') as bash_file:
+                b_txt = bash_file.read().decode('utf-8', 'replace')
                 bash_hist = b_txt.splitlines()
                 if bash_hist:
                     for ind, command in enumerate(bash_hist):
