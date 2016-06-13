@@ -24,6 +24,7 @@ import ast
 import string
 import ctypes
 import builtins
+import pathlib
 import subprocess
 import threading
 import traceback
@@ -108,19 +109,41 @@ class EnvPath(MutableSequence):
         if hasattr(builtins, '__xonsh_env__'):
             env = getattr(builtins, '__xonsh_env__', os.environ)
             if env.get('EXPAND_ENV_VARS', False):
-                return os.path.expanduser(expandvars(path))
-            else:
-                # if the flag has not been set, do not perform any expansion
-                return path
+                path = os.path.expanduser(expandvars(path))
         else:
             # use os.path.expandvars instead if env is not yet available
-            return os.path.expanduser(os.path.expandvars(path))
+            if isinstance(path, pathlib.Path):
+                # os.path.expandvars doesn't handle pathlib.Path
+                # objects by default!
+                path = str(path)
+            path = os.path.expanduser(os.path.expandvars(path))
+        # finally use realpath to handle cases like "../folder/"
+        return os.path.realpath(path)
+
+    @staticmethod
+    def _decode_bytes(path):
+        """
+        Tries to decode a path in bytes using XONSH_ENCODING if available,
+        otherwise using sys.getdefaultencoding().
+        """
+        if hasattr(builtins, '__xonsh_env__'):
+            env = getattr(builtins, '__xonsh_env__', os.environ)
+            enc = env.get('XONSH_ENCODING', sys.getdefaultencoding())
+            return path.decode(encoding=enc)
+        else:
+            return path.decode(sys.getdefaultencoding())
 
     def __init__(self, *args):
         self._d = []
         if len(args) > 0:
             if isinstance(args[0], str):
                 self._d = args[0].split(os.pathsep)
+            elif isinstance(args[0], pathlib.Path):
+                self._d = [args[0]]
+            elif isinstance(args[0], bytes):
+                # decode bytes to a string and then split based on
+                # the default path separator
+                self._d = EnvPath._decode_bytes(args[0]).split(os.pathsep)
             elif isinstance(args[0], list):
                 self._d = list(args[0])
 
@@ -155,7 +178,6 @@ class EnvPath(MutableSequence):
             return self._d == other.get_paths()
         else:
             return False
-
 
 
 class DefaultNotGivenType(object):
@@ -741,7 +763,7 @@ def ensure_string(x):
 
 def is_env_path(x):
     """This tests if something is an environment path, ie a list of strings."""
-    if isinstance(x, str):
+    if isinstance(x, (str, bytes)):
         return False
     else:
         return (isinstance(x, Sequence) and
@@ -752,7 +774,8 @@ def str_to_env_path(x):
     """Converts a string to an environment path, ie a list of strings,
     splitting on the OS separator.
     """
-    return EnvPath(x.split(os.pathsep))
+    # splitting will be done implicitly in EnvPath's __init__
+    return EnvPath(x)
 
 
 def env_path_to_str(x):
@@ -1279,6 +1302,9 @@ def expandvars(path):
     if isinstance(path, bytes):
         path = path.decode(encoding=ENV.get('XONSH_ENCODING'),
                            errors=ENV.get('XONSH_ENCODING_ERRORS'))
+    elif isinstance(path, pathlib.Path):
+        # get the path's string representation
+        path = str(path)
     if '$' not in path and (not ON_WINDOWS or '%' not in path):
         return path
     varchars = string.ascii_letters + string.digits + '_-'

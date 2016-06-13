@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tests the xonsh lexer."""
 import os
+import pathlib
 from tempfile import TemporaryDirectory
 import stat
 
@@ -381,6 +382,7 @@ def test_str_to_env_path():
         ('/home/wakka', ['/home/wakka']),
         ('/home/wakka' + os.pathsep + '/home/jawaka',
          ['/home/wakka', '/home/jawaka']),
+        (b'/home/wakka', ['/home/wakka']),
         ]
     for inp, exp in cases:
         obs = str_to_env_path(inp)
@@ -396,6 +398,54 @@ def test_env_path_to_str():
     for inp, exp in cases:
         obs = env_path_to_str(inp)
         yield assert_equal, exp, obs
+
+
+def test_env_path():
+    """
+    Test the EnvPath class.
+    """
+    # lambda to expand the expected paths
+    expand = lambda path: \
+            os.path.realpath(os.path.expanduser(os.path.expandvars(path)))
+    getitem_cases = [
+        ('xonsh_dir', 'xonsh_dir'),
+        ('.', '.'),
+        ('../', '../'),
+        ('~/', '~/'),
+        (b'~/../', '~/../'),
+    ]
+    for inp, exp in getitem_cases:
+        obs = EnvPath(inp)[0] # call to __getitem__
+        yield assert_equal, expand(exp), obs
+
+    # cases that involve path-separated strings
+    multipath_cases = [
+        (os.pathsep.join(['xonsh_dir', '../', './', '~/']),
+         ['xonsh_dir', '../', '.', '~/']),
+        ('/home/wakka' + os.pathsep + '/home/jakka' + os.pathsep + '~/',
+         ['/home/wakka', '/home/jakka', '~/'])
+    ]
+    for inp, exp in multipath_cases:
+        obs = [i for i in EnvPath(inp)]
+        yield assert_equal, [expand(i) for i in exp], obs
+
+    # cases that involve pathlib.Path objects
+    pathlib_cases = [
+        (pathlib.Path('/home/wakka'), ['/home/wakka']),
+        (pathlib.Path('~/'), ['~/']),
+        (pathlib.Path('.'), ['.']),
+        (['/home/wakka', pathlib.Path('/home/jakka'), '~/'],
+         ['/home/wakka', '/home/jakka', '~/']),
+        (['/home/wakka', pathlib.Path('../'), '../'],
+         ['/home/wakka', '../', '../']),
+        (['/home/wakka', pathlib.Path('~/'), '~/'],
+         ['/home/wakka', '~/', '~/']),
+    ]
+
+    for inp, exp in pathlib_cases:
+        # iterate over EnvPath to acquire all expanded paths
+        obs = [i for i in EnvPath(inp)]
+        yield assert_equal, [expand(i) for i in exp], obs
 
 
 def test_is_bool():
