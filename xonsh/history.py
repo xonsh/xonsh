@@ -12,7 +12,6 @@ import builtins
 from glob import iglob
 from collections import deque, Sequence, OrderedDict
 from threading import Thread, Condition
-from json.decoder import JSONDecodeError
 
 from xonsh import lazyjson
 from xonsh.tools import ensure_int_or_slice, to_history_tuple
