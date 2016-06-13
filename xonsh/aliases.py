@@ -457,7 +457,10 @@ def xonfig(args, stdin=None):
 def trace(args, stdin=None):
     """Runs the xonsh tracer utility."""
     from xonsh.tracer import main  # lazy import
-    return main(args)
+    try:
+        return main(args)
+    except SystemExit:
+        pass
 
 
 def vox(args, stdin=None):
