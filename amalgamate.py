@@ -116,17 +116,18 @@ def depsort(graph):
 LAZY_IMPORTS = """
 from sys import modules as _modules
 from types import ModuleType as _ModuleType
-#from importlib import import_module as _import_module
+from importlib import import_module as _import_module
 
 
 class _LazyModule(_ModuleType):
 
     def __init__(self, pkg, mod, asname=None):
         '''Lazy module 'pkg.mod' in package 'pkg'.'''
-        self.__dict__['loaded'] = False
-        self.__dict__['pkg'] = pkg  # pkg
-        self.__dict__['mod'] = mod  # pkg.mod
-        self.__dict__['asname'] = asname  # alias
+        self.__dct__ = {}
+        self.__dct__['loaded'] = False
+        self.__dct__['pkg'] = pkg  # pkg
+        self.__dct__['mod'] = mod  # pkg.mod
+        self.__dct__['asname'] = asname  # alias
 
     @classmethod
     def load(cls, pkg, mod, asname=None):
@@ -136,9 +137,9 @@ class _LazyModule(_ModuleType):
             return cls(pkg, mod, asname)
 
     def __getattribute__(self, name):
-        #if name == '__dict__':
-        #    return
-        dct = self.__dict__
+        if name == '__dct__':
+            return super().__getattribute__(name)
+        dct = self.__dct__
         mod = dct['mod']
         if dct['loaded']:
             m = _modules[mod]
