@@ -1449,6 +1449,17 @@ def _iglobpath(s, ignore_case=False):
     else:
         return iglob(s), s
 
+
 def iglobpath(s, ignore_case=False):
     """Simple wrapper around iglob that also expands home and env vars."""
     return _iglobpath(s, ignore_case)[0]
+
+
+def color_stderr_red(args, stdin, stdout, stderr):
+    x = None
+    while x is None or x != '':
+        x = stdin.readline()
+        stderr.write('\033[0;31m') # red escape
+        stderr.write(x)
+        stderr.write('\033[0m') # no color
+    return 0
