@@ -83,7 +83,12 @@ class TracerType(object):
         return self.trace
 
 
-tracer = TracerType()
+_tracer = None #TracerType()
+def tracer():
+    global _tracer
+    if _tracer is None:
+        _tracer = TracerType()
+    return _tracer
 
 COLORLESS_LINE = '{fname}:{lineno}:{line}'
 COLOR_LINE = ('{{PURPLE}}{fname}{{BLUE}}:'
@@ -136,7 +141,7 @@ def _on(ns, args):
             f = _find_caller(args)
         if f is None:
             continue
-        tracer.start(f)
+        tracer().start(f)
 
 
 def _off(ns, args):
@@ -146,12 +151,12 @@ def _off(ns, args):
             f = _find_caller(args)
         if f is None:
             continue
-        tracer.stop(f)
+        tracer().stop(f)
 
 
 def _color(ns, args):
     """Manages color action for tracer CLI."""
-    tracer.usecolor = ns.toggle
+    tracer().usecolor = ns.toggle
 
 
 @lru_cache()
@@ -188,12 +193,12 @@ _MAIN_ACTIONS = {
     }
 
 
-def main(args=None):
+def tracermain(args=None):
     """Main function for tracer command-line interface."""
     parser = _create_parser()
     ns = parser.parse_args(args)
     return _MAIN_ACTIONS[ns.action](ns, args)
 
 
-if __name__ == '__main__':
-    main()
+#if __name__ == '__main__':
+#    main()
