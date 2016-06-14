@@ -22,7 +22,7 @@ from xonsh.tools import (XonshError, argvquote, escape_windows_cmd_string,
 from xonsh.vox import Vox
 from xonsh.xontribs import main as xontribs_main
 from xonsh.xoreutils import _which
-from xonsh.completers._aliases import completer_alias 
+from xonsh.completers._aliases import completer_alias
 
 
 class Aliases(MutableMapping):
@@ -282,7 +282,8 @@ def source_cmd(args, stdin=None):
     args.append('--envcmd=set')
     args.append('--seterrpostcmd=if errorlevel 1 exit 1')
     args.append('--use-tmpfile=1')
-    return source_foreign(args, stdin=stdin)
+    with builtins.__xonsh_env__.swap(PROMPT='$P$G'):
+        return source_foreign(args, stdin=stdin)
 
 
 def xexec(args, stdin=None):
@@ -548,17 +549,10 @@ def make_default_aliases():
         default_aliases['call'] = ['source-cmd']
         default_aliases['source-bat'] = ['source-cmd']
         default_aliases['clear'] = 'cls'
-        # Add aliases specific to the Anaconda python distribution.
         if ON_ANACONDA:
-            def source_cmd_keep_prompt(args, stdin=None):
-                p = builtins.__xonsh_env__.get('PROMPT')
-                source_cmd(args, stdin=stdin)
-                builtins.__xonsh_env__['PROMPT'] = p
-            default_aliases['source-cmd-keep-promt'] = source_cmd_keep_prompt
-            default_aliases['activate'] = ['source-cmd-keep-promt',
-                                           'activate.bat']
-            default_aliases['deactivate'] = ['source-cmd-keep-promt',
-                                             'deactivate.bat']
+            # Add aliases specific to the Anaconda python distribution.
+            default_aliases['activate'] = ['source-cmd', 'activate.bat']
+            default_aliases['deactivate'] = ['source-cmd', 'deactivate.bat']
         if not locate_binary('sudo'):
             import xonsh.winutils as winutils
 
