@@ -253,13 +253,14 @@ def _all_xonsh_parser(*args):
         except ValueError:
             # Invalid json file
             pass
-    commands = [(c['inp'].replace('\n', ''), c['ts'][0])
+    commands = [(c['inp'][:-1] if c['inp'].endswith('\n') else c['inp'], 
+                 c['ts'][0])
                 for commands in file_hist for c in commands if c]
     commands.sort(key=itemgetter(1))
     return [(c, t, ind) for ind, (c, t) in enumerate(commands)]
 
 
-def _curr_session_parser(hist=None):
+def _curr_session_parser(hist = None):
     """
     Take in History object and return command list tuple with
     format: (name, start_time, index)
@@ -399,7 +400,7 @@ def _create_parser():
 
 
 def _show(ns=None, hist=None, start_index=None, end_index=None,
-          start_time=None, end_time=None, location=None):
+         start_time=None, end_time=None, location=None):
     """
     Show the requested portion of shell history.
     Accepts multiple history sources (xonsh, bash, zsh)
@@ -480,7 +481,13 @@ def _show(ns=None, hist=None, start_index=None, end_index=None,
 
     if alias:
         for c, t, i in commands:
-            print('{:>{width}}: {}'.format(i, c, width=digits + 1))
+            for line_ind, line in enumerate(c.split('\n')):
+                if line_ind == 0:
+                    print('{:>{width}}: {}'.format(i, line,
+                                                   width = digits + 1))
+                else:
+                    print(' {:>>{width}} {}'.format('', line,
+                                                  width = digits + 1))
     else:
         return commands
 
@@ -596,7 +603,7 @@ class History(object):
     def show(self, *args, **kwargs):
         """
         Returns shell history as a list
-
+        
         Valid options:
             `session` - returns xonsh history from current session
             `all`     - returns xonsh history from all sessions
@@ -604,8 +611,6 @@ class History(object):
             `bash`    - returns all bash history
         """
         return _show(*args, **kwargs)
-
-
 def _info(ns, hist):
     """Display information about the shell history."""
     data = OrderedDict()
