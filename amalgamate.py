@@ -113,6 +113,41 @@ def depsort(graph):
     return seder
 
 
+LAZY_IMPORTS = """
+from sys import modules as _modules
+from types import ModuleType as _ModuleType
+#from importlib import import_module as _import_module
+
+
+class _LazyModule(_ModuleType):
+
+    def __init__(self, pkg, mod):
+        '''Lazy module 'pkg.mod' in package 'pkg'.'''
+        self.__dict__['loaded'] = False
+        self.__dict__['pkg'] = pkg  # pkg
+        self.__dict__['mod'] = mod  # pkg.mod
+
+    @classmethod
+    def load(cls, pkg, mod):
+        if mod in _modules:
+            return _modules[pkg]
+        else:
+            return cls(pkg, mod)
+
+    def __getattribute__(self, name):
+        glbs = globals()
+        pkg = self.__dict__['pkg']
+        mod = self.__dict__['mod']
+        if self.__dict__['loaded']:
+            m = _modules[mod]
+        else:
+            m = _import_module(mod)
+            glbs[pkg] = _modules[pkg]
+            self.__dict__['loaded'] = True
+        return getattr(m, name)
+
+"""
+
 def get_lineno(node, default=0):
     """Gets the lineno of a node or returns the default."""
     return getattr(node, 'lineno', default)
@@ -221,7 +256,11 @@ def rewrite_imports(name, pkg, order, imps):
 
 def amalgamate(order, graph, pkg):
     """Create amalgamated source."""
-    src = ''
+    src = ('\"\"\"Amalgamation of {0} package, made up of the following '
+           'modules, in order:\n\n* ').format(pkg)
+    src += '\n* '.join(order)
+    src += '\n\n\"\"\"\n'
+    src += LAZY_IMPORTS
     imps = set()
     for name in order:
         lines = rewrite_imports(name, pkg, order, imps)
