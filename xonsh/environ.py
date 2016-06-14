@@ -784,7 +784,7 @@ class Env(MutableMapping):
         return str(self._d)
 
     def __repr__(self):
-        return '{0}.{1}({2})'.format(self.__class__.__module__,
+        return '{0}.{1}(...)'.format(self.__class__.__module__,
                                      self.__class__.__name__, self._d)
 
     def _repr_pretty_(self, p, cycle):
