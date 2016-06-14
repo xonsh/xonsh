@@ -421,8 +421,8 @@ def run_subproc(cmds, captured=False):
             aliased_cmd = alias
         else:
             if alias is not None:
-                cmd = alias + cmd[1:]
-            if binary_loc is None:
+                aliased_cmd = alias + cmd[1:]
+            elif binary_loc is None:
                 aliased_cmd = cmd
             else:
                 try:
@@ -468,10 +468,15 @@ def run_subproc(cmds, captured=False):
             subproc_kwargs = {}
             if ON_POSIX and cls is Popen:
                 subproc_kwargs['preexec_fn'] = _subproc_pre
+            env = ENV.detype()
+            if ON_WINDOWS:
+                # Over write prompt variable as xonsh's $PROMPT does
+                # not make much sense for other subprocs
+                env['PROMPT'] = '$P$G'
             try:
                 proc = cls(aliased_cmd,
                            universal_newlines=uninew,
-                           env=ENV.detype(),
+                           env=env,
                            stdin=stdin,
                            stdout=stdout,
                            stderr=stderr,

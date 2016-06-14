@@ -6,6 +6,7 @@ from xonsh.completers.tools import justify
 
 VALID_ACTIONS = frozenset({'add', 'remove', 'list'})
 
+
 def _add_one_completer(name, func, loc='end'):
     new = OrderedDict()
     if loc == 'start':
@@ -36,10 +37,13 @@ def _add_one_completer(name, func, loc='end'):
 def _list_completers(args, stdin=None):
     o = "Registered Completer Functions: \n"
     _comp = builtins.__xonsh_completers__
-    ml = max(len(i) for i in _comp)
+    ml = max((len(i) for i in _comp), default=0)
     _strs = []
     for c in _comp:
-        doc = ' '.join(_comp[c].__doc__.split()) or 'No description provided'
+        if _comp[c].__doc__ is None:
+            doc = 'No description provided'
+        else:
+            doc = ' '.join(_comp[c].__doc__.split())
         doc = justify(doc, 80, ml + 3)
         _strs.append('{: >{}} : {}'.format(c, ml, doc))
     return o + '\n'.join(_strs) + '\n'
