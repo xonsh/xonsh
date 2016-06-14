@@ -819,7 +819,7 @@ def locate_binary(name):
     # Windows users expect to be able to execute files in the same directory
     # without `./`
     if ON_WINDOWS:
-        directories = [_get_cwd()] + directories
+        directories = [_get_cwd()] + list(directories)
     try:
         return next(chain.from_iterable(_yield_executables(directory, name) for
                     directory in directories if os.path.isdir(directory)))
