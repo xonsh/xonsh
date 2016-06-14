@@ -32,7 +32,7 @@ from glob import iglob
 from warnings import warn
 from contextlib import contextmanager
 from subprocess import CalledProcessError
-from collections import OrderedDict, Sequence, Set, MutableSequence
+from collections import OrderedDict, Iterable, Sequence, Set, MutableSequence
 
 # adding further imports from xonsh modules is discouraged to avoid cirular
 # dependencies
@@ -135,7 +135,11 @@ class EnvPath(MutableSequence):
                 # decode bytes to a string and then split based on
                 # the default path separator
                 self._l = decode_bytes(args).split(os.pathsep)
-            elif isinstance(args, Sequence):
+            elif isinstance(args, Iterable):
+                # put everything in a list -before- performing the type check
+                # in order to be able to retrieve it later, for cases such as
+                # when a generator expression was passed as an argument
+                args = list(args)
                 if not all(isinstance(i, (str, bytes, pathlib.Path)) \
                                       for i in args):
                     # make TypeError's message as informative as possible
@@ -143,7 +147,7 @@ class EnvPath(MutableSequence):
                     raise TypeError(
                             "EnvPath's initialization sequence should only "
                             "contain str, bytes and pathlib.Path entries")
-                self._l = list(args)
+                self._l = args
             else:
                 raise TypeError('EnvPath cannot be initialized with items '
                                 'of type %s' % type(args))
@@ -757,7 +761,7 @@ def ensure_string(x):
 
 def is_env_path(x):
     """This tests if something is an environment path, ie a list of strings."""
-    return False if isinstance(x, (str, bytes)) else isinstance(x, EnvPath)
+    return isinstance(x, EnvPath)
 
 
 def str_to_env_path(x):
