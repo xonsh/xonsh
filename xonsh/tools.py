@@ -629,13 +629,22 @@ def swap(namespace, name, value, default=NotImplemented):
         setattr(namespace, name, old)
 
 #
-# Validators and contervers
+# Validators and converters
 #
 
 
 def is_int(x):
     """Tests if something is an integer"""
     return isinstance(x, int)
+
+def is_str_as_int(x):
+    """Tests if something is an integer"""
+    if isinstance(x, str):
+        try:
+            int(x)
+        except ValueError:
+            return False
+    return True
 
 
 def is_float(x):
@@ -647,6 +656,23 @@ def is_string(x):
     """Tests if something is a string"""
     return isinstance(x, str)
 
+def is_slice(x):
+    """Tests if something is a slice"""
+    return isinstance(x, slice)
+        
+def is_str_as_slice(x):
+    """Tests if a str is a slice"""
+    if isinstance(x, str): 
+        if ':' in x:
+            x = x.strip('[]()')
+            try:
+                slice(*(int(x) if len(x) > 0 else None
+                        for x in x.split(':')))
+            except ValueError:
+                return False
+        else: 
+            return False    
+    return True
 
 def is_callable(x):
     """Tests if something is callable"""
@@ -791,18 +817,15 @@ def ensure_int_or_slice(x):
     """Makes sure that x is list-indexable."""
     if x is None:
         return slice(None)
-    elif is_int(x):
+    elif is_int(x) or is_slice(x):
         return x
     # must have a string from here on
-    try:
-        if ':' in x:
-            x = x.strip('[]()')
-            return slice(*(int(x) if len(x) > 0 else None for x in x.split(':')))
-        else:
-            return int(x)
-    except ValueError:
-        print("Could not convert index or slice to int.")
-        return False
+    if is_str_as_slice(x):
+        x = x.strip('[]()')
+        return slice(*(int(x) if len(x) > 0 else None for x in x.split(':')))
+    elif is_str_as_int(x):
+        return int(x)
+    return False
 
 
 def is_string_set(x):

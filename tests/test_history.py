@@ -86,17 +86,17 @@ def test_cmd_field():
     os.remove(FNAME)
 
 
-def test_session_cmd():
+def test_show_cmd():
     """Verify that CLI history commands work."""
     FNAME = 'xonsh-SESSIONID.json'
-    FNAME += '.session_cmd'
+    FNAME += '.show_cmd'
     cmds = ['ls', 'cat hello kitty', 'abc', 'def', 'touch me', 'grep from me']
 
     def format_hist_line(idx, cmd):
         """Construct a history output line."""
         return ' {:d}: {:s}\n'.format(idx, cmd)
 
-    def run_session_cmd(hist_args, commands, base_idx=0, step=1):
+    def run_show_cmd(hist_args, commands, base_idx=0, step=1):
         """Run and evaluate the output of the given show command."""
         stdout.seek(0, io.SEEK_SET)
         stdout.truncate()
@@ -117,48 +117,48 @@ def test_session_cmd():
         for ts,cmd in enumerate(cmds):  # populate the shell history
             hist.append({'inp': cmd, 'rtn': 0, 'ts':(ts+1, ts+1.5)})
 
-        # Verify an implicit "session" emits session history
-        for x in run_session_cmd([], cmds):
+        # Verify an implicit "show" emits show history
+        for x in run_show_cmd([], cmds):
             yield x
 
-        # Verify an explicit "session" with no qualifiers emits
-        # session history.
-        for x in run_session_cmd(['session'], cmds):
+        # Verify an explicit "show" with no qualifiers emits
+        # show history.
+        for x in run_show_cmd(['show'], cmds):
             yield x
 
-        # Verify an explicit "session" with a reversed qualifier
-        # emits session history in reverse order.
-        for x in run_session_cmd(['session', '-r'], list(reversed(cmds)),
+        # Verify an explicit "show" with a reversed qualifier
+        # emits show history in reverse order.
+        for x in run_show_cmd(['show', '-r'], list(reversed(cmds)),
                                  len(cmds) - 1, -1):
             yield x
 
         # Verify that showing a specific history entry relative to
         # the start of the history works.
-        for x in run_session_cmd(['session', '0'], [cmds[0]], 0):
+        for x in run_show_cmd(['show', '0'], [cmds[0]], 0):
             yield x
-        for x in run_session_cmd(['session', '1'], [cmds[1]], 1):
+        for x in run_show_cmd(['show', '1'], [cmds[1]], 1):
             yield x
 
         # Verify that showing a specific history entry relative to
         # the end of the history works.
-        for x in run_session_cmd(['session', '-2'], [cmds[-2]],
-                                 len(cmds) - 2):
+        for x in run_show_cmd(['show', '-2'], [cmds[-2]],
+                               len(cmds) - 2):
             yield x
 
         # Verify that showing a history range relative to the start of the
         # history works.
-        for x in run_session_cmd(['session', '0:2'], cmds[0:2], 0):
+        for x in run_show_cmd(['show', '0:2'], cmds[0:2], 0):
             yield x
-        for x in run_session_cmd(['session', '1::2'], cmds[1::2], 1, 2):
+        for x in run_show_cmd(['show', '1::2'], cmds[1::2], 1, 2):
             yield x
 
         # Verify that showing a history range relative to the end of the
         # history works.
-        for x in run_session_cmd(['session', '-2:'], 
-                                 cmds[-2:], len(cmds) - 2):
+        for x in run_show_cmd(['show', '-2:'], 
+                               cmds[-2:], len(cmds) - 2):
             yield x
-        for x in run_session_cmd(['session', '-4:-2'], 
-                                 cmds[-4:-2], len(cmds) - 4):
+        for x in run_show_cmd(['show', '-4:-2'], 
+                               cmds[-4:-2], len(cmds) - 4):
             yield x
 
     sys.stdout = saved_stdout
