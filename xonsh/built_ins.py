@@ -446,7 +446,7 @@ def run_subproc(cmds, captured=False):
                           stdout=PIPE)
             stdin = tproc.stdout
 
-        if stderr is None:
+        if stderr is None and ENV.get('COLOR_STDERR'):
             color_proc = ProcProxy(color_stderr_red, [], stdin=PIPE)
             stderr = color_proc.stdin
 
