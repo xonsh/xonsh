@@ -121,29 +121,37 @@ from types import ModuleType as _ModuleType
 
 class _LazyModule(_ModuleType):
 
-    def __init__(self, pkg, mod):
+    def __init__(self, pkg, mod, asname=None):
         '''Lazy module 'pkg.mod' in package 'pkg'.'''
         self.__dict__['loaded'] = False
         self.__dict__['pkg'] = pkg  # pkg
         self.__dict__['mod'] = mod  # pkg.mod
+        self.__dict__['asname'] = asname  # alias
 
     @classmethod
-    def load(cls, pkg, mod):
+    def load(cls, pkg, mod, asname=None):
         if mod in _modules:
             return _modules[pkg]
         else:
-            return cls(pkg, mod)
+            return cls(pkg, mod, asname)
 
     def __getattribute__(self, name):
-        glbs = globals()
-        pkg = self.__dict__['pkg']
-        mod = self.__dict__['mod']
-        if self.__dict__['loaded']:
+        #if name == '__dict__':
+        #    return
+        dct = self.__dict__
+        mod = dct['mod']
+        if dct['loaded']:
             m = _modules[mod]
         else:
             m = _import_module(mod)
-            glbs[pkg] = _modules[pkg]
-            self.__dict__['loaded'] = True
+            glbs = globals()
+            pkg = dct['pkg']
+            asname = dct['asname']
+            if asname is None:
+                glbs[pkg] = _modules[pkg]
+            else:
+                glbs[asname] = m
+            dct['loaded'] = True
         return getattr(m, name)
 
 """
@@ -169,6 +177,20 @@ def format_import(names):
             parts.append(name + ' as ' + asname)
     line = 'import ' + ', '.join(parts) + '\n'
     return line
+
+
+def format_lazy_import(names):
+    """Formats lazy import lines"""
+    lines = ''
+    for _, name, asname in names:
+        pkg, _, _ = name.partition('.')
+        target = asname or pkg
+        if asname is None:
+            line = '{pkg} = _LazyModule.load({pkg!r}, {mod!r})\n'
+        else:
+            line = '{asname} = _LazyModule.load({pkg!r}, {mod!r}, {asname!r})\n'
+        lines += line.format(pkg=pkg, mod=name, asname=asname)
+    return lines
 
 
 def format_from_import(names):
@@ -210,12 +232,15 @@ def rewrite_imports(name, pkg, order, imps):
                     imps.add(imp)
                     keep.append(imp)
             if len(keep) == len(a.names):
-                continue  # all new imports
+                #continue  # all new imports
+                # all new imports
+                s = format_lazy_import(keep)
             elif len(keep) == 0:
                 s = ', '.join(n.name for n in  a.names)
                 s = '# amalgamated ' + s + '\n'
             else:
-                s = format_import(keep)
+                #s = format_import(keep)
+                s = format_lazy_import(keep)
             replacements.append((start, stop, s))
         elif isinstance(a, ImportFrom):
             p, dot, m = a.module.rpartition('.')
