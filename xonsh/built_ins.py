@@ -446,16 +446,18 @@ def run_subproc(cmds, captured=False):
                           stdout=PIPE)
             stdin = tproc.stdout
 
-        _out_line = ENV.get('TRANSFORM_STDOUT_LINE')
         _err_line = ENV.get('TRANSFORM_STDERR_LINE')
-        if stdout is None and callable(_out_line):
-            _func = make_stream_line_transformer(_out_line)
-            color_proc = ProcProxy(_func, [], stdin=PIPE)
-            stdout = color_proc.stdin
+        stderr_color_proc = None
         if stderr is None and callable(_err_line):
             _func = make_stream_line_transformer(_err_line)
-            color_proc = ProcProxy(_func, [], stdin=PIPE)
-            stderr = color_proc.stdin
+            stderr_color_proc = ProcProxy(_func, [], stdin=PIPE)
+            stderr = stderr_color_proc.stdin
+        _out_line = ENV.get('TRANSFORM_STDOUT_LINE')
+        stdout_color_proc = None
+        if stdout is None and callable(_out_line):
+            _func = make_stream_line_transformer(_out_line)
+            stdout_color_proc = ProcProxy(_func, [], stdin=PIPE)
+            stdout = stdout_color_proc.stdin
 
         if callable(aliased_cmd):
             prev_is_proxy = True
@@ -524,7 +526,13 @@ def run_subproc(cmds, captured=False):
         return
     if prev_is_proxy:
         prev_proc.wait()
+    print('hmmm')
     wait_for_active_job()
+    if stderr_color_proc is not None:
+        os.close(stderr.fileno())
+    if stdout_color_proc is not None:
+        os.close(stdout.fileno())
+    print('foine')
     for proc in procs[:-1]:
         try:
             proc.stdout.close()
@@ -564,7 +572,8 @@ def run_subproc(cmds, captured=False):
                 except:
                     pass
                 os.unlink(_stderr_name)
-            elif unnamed:
+            elif unnamed and stderr_color_proc is None:
+                print('HEY')
                 errout = prev_proc.stderr.read()
             if named or unnamed:
                 errout = errout.decode(encoding=ENV.get('XONSH_ENCODING'),
@@ -587,6 +596,7 @@ def run_subproc(cmds, captured=False):
     if captured == 'stdout':
         return output
     elif captured is not False:
+        print('???')
         procinfo['executed_cmd'] = aliased_cmd
         procinfo['pid'] = prev_proc.pid
         procinfo['returncode'] = prev_proc.returncode
@@ -597,9 +607,13 @@ def run_subproc(cmds, captured=False):
                 _stdin_file.seek(0)
                 procinfo['stdin'] = _stdin_file.read().decode()
                 _stdin_file.close()
+            print('RETURNING')
             return CompletedCommand(**procinfo)
         else:
-            return HiddenCompletedCommand(**procinfo)
+            print('RETURNING2')
+            o = HiddenCompletedCommand(**procinfo)
+            print('GOT IT')
+            return o
 
 
 def subproc_captured_stdout(*cmds):
