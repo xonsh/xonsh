@@ -279,4 +279,4 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True):
 
 def complete_dir(prefix, line, start, end, ctx, cdpath=False):
     o, lp = complete_path(prefix, line, start, end, cdpath)
-    return {i for i in o if os.path.isdir(i)}, lp
+    return {i for i in o if os.path.isdir(i.strip(''''"'''))}, lp
