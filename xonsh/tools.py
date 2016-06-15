@@ -1192,7 +1192,7 @@ def check_for_partial_string(x):
 
 def _is_in_env(name):
     ENV = builtins.__xonsh_env__
-    return name in ENV._d or name in ENV.defaults
+    return name in ENV._d or name in ENV._defaults
 
 def _get_env_string(name):
     ENV = builtins.__xonsh_env__
