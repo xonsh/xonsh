@@ -16,7 +16,7 @@ def _splitpath(path, sofar=[]):
         return _splitpath(folder, sofar + [path])
 
 
-def _character_map()
+def _character_map():
     cmap = {chr(o): '_%s' % chr(o+32) for o in range(65, 91)}
     cmap.update({'.': '_.', '_': '__'})
     return cmap

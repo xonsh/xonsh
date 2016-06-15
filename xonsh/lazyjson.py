@@ -2,10 +2,9 @@
 """Implements a lazy JSON file class that wraps around json data."""
 import io
 import json
-from collections import Mapping, Sequence
-from contextlib import contextmanager
+import collections.abc as abc
+import contextlib
 import weakref
-
 
 
 def _to_json_with_size(obj, offset=0, sort_keys=False):
@@ -13,7 +12,7 @@ def _to_json_with_size(obj, offset=0, sort_keys=False):
         s = json.dumps(obj)
         o = offset
         n = size = len(s.encode())  # size in bytes
-    elif isinstance(obj, Mapping):
+    elif isinstance(obj, abc.Mapping):
         s = '{'
         j = offset + 1
         o = {}
@@ -36,7 +35,7 @@ def _to_json_with_size(obj, offset=0, sort_keys=False):
         n = len(s)
         o['__total__'] = offset
         size['__total__'] = n
-    elif isinstance(obj, Sequence):
+    elif isinstance(obj, abc.Sequence):
         s = '['
         j = offset + 1
         o = []
@@ -96,7 +95,7 @@ def ljdump(obj, fp, sort_keys=False):
     fp.write(s)
 
 
-class LJNode(Mapping, Sequence):
+class LJNode(abc.Mapping, abc.Sequence):
     """A proxy node for JSON nodes. Acts as both sequence and mapping."""
 
     def __init__(self, offsets, sizes, root):
@@ -112,8 +111,8 @@ class LJNode(Mapping, Sequence):
         self.offsets = offsets
         self.sizes = sizes
         self.root = root
-        self.is_mapping = isinstance(self.offsets, Mapping)
-        self.is_sequence = isinstance(self.offsets, Sequence)
+        self.is_mapping = isinstance(self.offsets, abc.Mapping)
+        self.is_sequence = isinstance(self.offsets, abc.Sequence)
 
     def __len__(self):
         # recall that for maps, the '__total__' key is added and for
@@ -139,7 +138,7 @@ class LJNode(Mapping, Sequence):
                 f.seek(self.root.dloc + offset)
                 s = f.read(size)
             val = json.loads(s)
-        elif isinstance(offset, (Mapping, Sequence)):
+        elif isinstance(offset, (abc.Mapping, abc.Sequence)):
             val = LJNode(offset, size, self.root)
         else:
             raise TypeError('incorrect types for offset node')
@@ -206,8 +205,8 @@ class LazyJSON(LJNode):
             self._f = open(f, 'r', newline='\n')
         self._load_index()
         self.root = weakref.proxy(self)
-        self.is_mapping = isinstance(self.offsets, Mapping)
-        self.is_sequence = isinstance(self.offsets, Sequence)
+        self.is_mapping = isinstance(self.offsets, abc.Mapping)
+        self.is_sequence = isinstance(self.offsets, abc.Sequence)
 
     def __del__(self):
         self.close()
@@ -217,7 +216,7 @@ class LazyJSON(LJNode):
         if not self.reopen and isinstance(self._f, io.IOBase):
             self._f.close()
 
-    @contextmanager
+    @contextlib.contextmanager
     def _open(self, *args, **kwargs):
         if self.reopen and isinstance(self._f, str):
             f = open(self._f, *args, **kwargs)

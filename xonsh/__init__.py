@@ -4,8 +4,6 @@ __version__ = '0.3.4'
 import sys as _sys
 try:
     from xonsh import __amalgam__
-    codecache = __amalgam__
-    _sys.modules['xonsh.codecache'] = __amalgam__
     completer = __amalgam__
     _sys.modules['xonsh.completer'] = __amalgam__
     lazyasd = __amalgam__
@@ -24,6 +22,8 @@ try:
     _sys.modules['xonsh.timings'] = __amalgam__
     ansi_colors = __amalgam__
     _sys.modules['xonsh.ansi_colors'] = __amalgam__
+    codecache = __amalgam__
+    _sys.modules['xonsh.codecache'] = __amalgam__
     jobs = __amalgam__
     _sys.modules['xonsh.jobs'] = __amalgam__
     parser = __amalgam__
