@@ -208,7 +208,7 @@ def _make_flat_wiz(kidfunc, *args):
 
 def make_env():
     """Makes an environment variable wizard."""
-    w = _make_flat_wiz(make_envvar, sorted(builtins.__xonsh_env__.docs.keys()))
+    w = _make_flat_wiz(make_envvar, sorted(builtins.__xonsh_env__._docs.keys()))
     return w
 
 
