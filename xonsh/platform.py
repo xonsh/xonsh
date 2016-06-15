@@ -1,20 +1,28 @@
-""" Module for platform-specific constants and implementations, as well as
-    compatibility layers to make use of the 'best' implementation available
-    on a platform.
+"""Module for platform-specific constants and implementations, as well as
+compatibility layers to make use of the 'best' implementation available
+on a platform.
 """
-
-from functools import lru_cache
 import os
-import platform
 import sys
+import pathlib
+import platform
+import functools
 
-try:
-    import distro
-except ImportError:
-    distro = None
-except:
-    raise
 
+from xonsh.lazyasd import LazyObject, LazyBool
+
+def _distro():
+    try:
+        import distro as d
+    except ImportError:
+        d = None
+    except:
+        raise
+    return d
+
+
+distro = LazyObject(_distro, globals(), 'distro')
+del _distro
 
 # do not import any xonsh-modules here to avoid circular dependencies
 
@@ -22,16 +30,18 @@ except:
 #
 # OS
 #
-
-ON_DARWIN = platform.system() == 'Darwin'
+ON_DARWIN = LazyBool(lambda: platform.system() == 'Darwin',
+                     globals(), 'ON_DARWIN')
 """ ``True`` if executed on a Darwin platform, else ``False``. """
-ON_LINUX = platform.system() == 'Linux'
+ON_LINUX = LazyBool(lambda: platform.system() == 'Linux',
+                    globals(), 'ON_LINUX')
 """ ``True`` if executed on a Linux platform, else ``False``. """
-ON_WINDOWS = platform.system() == 'Windows'
+ON_WINDOWS = LazyBool(lambda: platform.system() == 'Windows',
+                      globals(), 'ON_WINDOWS')
 """ ``True`` if executed on a native Windows platform, else ``False``. """
-ON_CYGWIN = sys.platform == 'cygwin'
+ON_CYGWIN = LazyBool(lambda: sys.platform == 'cygwin', globals(), 'ON_CYGWIN')
 """ ``True`` if executed on a Cygwin Windows platform, else ``False``. """
-ON_POSIX = (os.name == 'posix')
+ON_POSIX = LazyBool(lambda: (os.name == 'posix'), globals(), 'ON_POSIX')
 """ ``True`` if executed on a POSIX-compliant platform, else ``False``. """
 
 
@@ -41,26 +51,36 @@ ON_POSIX = (os.name == 'posix')
 
 PYTHON_VERSION_INFO = sys.version_info[:3]
 """ Version of Python interpreter as three-value tuple. """
-ON_ANACONDA = any(s in sys.version for s in {'Anaconda', 'Continuum'})
+ON_ANACONDA = LazyBool(
+    lambda: any(s in sys.version for s in {'Anaconda', 'Continuum'}),
+    globals(), 'ON_ANACONDA')
 """ ``True`` if executed in an Anaconda instance, else ``False``. """
 
+def _has_pygments():
+    try:
+        import pygments
+        rtn = True
+    except ImportError:
+        rtn = False
+    return rtn
 
-HAS_PYGMENTS = False
+
+HAS_PYGMENTS = LazyBool(_has_pygments, globals(), 'HAS_PYGMENTS')
 """ ``True`` if `pygments` is available, else ``False``. """
-PYGMENTS_VERSION = None
-""" `pygments.__version__` version if available, else ``Ǹone``. """
-
-try:
-    import pygments
-except ImportError:
-    pass
-except:
-    raise
-else:
-    HAS_PYGMENTS, PYGMENTS_VERSION = True, pygments.__version__
+del _has_pygments
 
 
-@lru_cache(1)
+def pygments_version():
+    """pygments.__version__ version if available, else Ǹone."""
+    if HAS_PYGMENTS:
+        import pygments
+        v = pygments.__version__
+    else:
+        v = None
+    return v
+
+
+@functools.lru_cache(1)
 def has_prompt_toolkit():
     """ Tests if the `prompt_toolkit` is available. """
     try:
@@ -73,7 +93,7 @@ def has_prompt_toolkit():
         return True
 
 
-@lru_cache(1)
+@functools.lru_cache(1)
 def ptk_version():
     """ Returns `prompt_toolkit.__version__` if available, else ``None``. """
     if has_prompt_toolkit():
@@ -83,7 +103,7 @@ def ptk_version():
         return None
 
 
-@lru_cache(1)
+@functools.lru_cache(1)
 def ptk_version_info():
     """ Returns `prompt_toolkit`'s version as tuple of integers. """
     if has_prompt_toolkit():
@@ -92,7 +112,7 @@ def ptk_version_info():
         return None
 
 
-@lru_cache(1)
+@functools.lru_cache(1)
 def best_shell_type():
     if ON_WINDOWS or has_prompt_toolkit():
         return 'prompt_toolkit'
@@ -100,7 +120,7 @@ def best_shell_type():
         return 'readline'
 
 
-@lru_cache(1)
+@functools.lru_cache(1)
 def is_readline_available():
     """Checks if readline is available to import."""
     try:
@@ -118,11 +138,9 @@ DEFAULT_ENCODING = sys.getdefaultencoding()
 
 
 if PYTHON_VERSION_INFO < (3, 5, 0):
-    from pathlib import Path
-
     class DirEntry:
         def __init__(self, directory, name):
-            self.__path__ = Path(directory) / name
+            self.__path__ = pathlib.Path(directory) / name
             self.name = name
             self.path = str(self.__path__)
             self.is_symlink = self.__path__.is_symlink
@@ -241,11 +259,3 @@ elif ON_WINDOWS and GIT_FOR_WINDOWS_PATH:
         os.path.join(GIT_FOR_WINDOWS_PATH,
                      'mingw64\\share\\git\\completion\\git-completion.bash'))
 
-
-#
-# All constants as a dict
-#
-
-PLATFORM_INFO = {name: obj for name, obj in globals().items()
-                 if name.isupper()}
-""" The constants of this module as dictionary. """

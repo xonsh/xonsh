@@ -32,9 +32,7 @@ class LazyObject(object):
             'name': name,
             }
 
-    def __getattribute__(self, name):
-        if name == '_lasdo':
-            return super().__getattribute__(name)
+    def _lazy_obj(self):
         d = self._lasdo
         if d['loaded']:
             obj = d['obj']
@@ -42,7 +40,17 @@ class LazyObject(object):
             obj = d['load']()
             d['ctx'][d['name']] = d['obj'] = obj
             d['loaded'] = True
+        return obj
+
+    def __getattribute__(self, name):
+        if name == '_lasdo' or name == '_lazy_obj':
+            return super().__getattribute__(name)
+        obj = self._lazy_obj()
         return getattr(obj, name)
+
+    def __bool__(self):
+        obj = self._lazy_obj()
+        return bool(obj)
 
 
 class LazyDict(abc.MutableMapping):
@@ -114,3 +122,39 @@ class LazyDict(abc.MutableMapping):
     def __len__(self):
         return len(self._d) + len(self._loaders)
 
+
+class LazyBool(object):
+
+    def __init__(self, load, ctx, name):
+        """Boolean like object that lazily computes it boolean value when it is
+        first asked. Once loaded, this result will replace itself
+        in the provided context (typically the globals of the call site) with
+        the given name.
+
+        For example, you can prevent the complex boolean until it is actually
+        used::
+
+            ALIVE = LazyDict(lambda: not DEAD, globals(), 'ALIVE')
+
+        Parameters
+        ----------
+        load : function with no arguments
+            A loader function that performs the actual boolean evaluation.
+        ctx : Mapping
+            Context to replace the LazyAndSelfDestructiveDict instance in
+            with the the fully loaded mapping.
+        name : str
+            Name in the context to give the loaded mapping. This *should*
+            be the name on the LHS of the assignment.
+        """
+        self._load = load
+        self._ctx = ctx
+        self._name = name
+        self._result = None
+
+    def __bool__(self):
+        if self._result is None:
+            res = self._ctx[self._name] = self._result = self._load()
+        else:
+            res = self._result
+        return res
