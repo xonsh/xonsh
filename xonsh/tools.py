@@ -1455,11 +1455,16 @@ def iglobpath(s, ignore_case=False):
     return _iglobpath(s, ignore_case)[0]
 
 
-def color_stderr_red(args, stdin, stdout, stderr):
-    x = None
-    while x is None or x != '':
-        x = stdin.readline()
-        stderr.write('\033[0;31m') # red escape
-        stderr.write(x)
-        stderr.write('\033[0m') # no color
-    return 0
+def make_stream_line_transformer(mapfunc, which='stdout'):
+    """
+    Create and return a callable alias that applies mapfunc to every line of
+    stdin and writes it to the designated output.
+    """
+    def _transform_func(args, stdin, stdout, stderr):
+        to_write = stdout if which == 'stdout' else stderr
+        x = None
+        while x is None or x != '':
+            x = stdin.readline()
+            to_write.write(format_color(mapfunc(x)))
+        return 0
+    return _transform_func
