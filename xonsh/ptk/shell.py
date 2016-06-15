@@ -36,7 +36,6 @@ class PromptToolkitShell(BaseShell):
                 'enable_auto_suggest_bindings': True,
                 'enable_search': True,
                 'enable_abort_and_exit_bindings': True,
-                'enable_open_in_editor': True,
                 }
 
         self.key_bindings_manager = KeyBindingManager(**key_bindings_manager_args)
