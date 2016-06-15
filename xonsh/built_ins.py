@@ -338,6 +338,7 @@ def run_subproc(cmds, captured=False):
     global ENV
     background = False
     procinfo = {}
+    _extra_fds = []
     if cmds[-1] == '&':
         background = True
         cmds = cmds[:-1]
@@ -452,6 +453,7 @@ def run_subproc(cmds, captured=False):
             _func = make_stream_line_transformer(_err_line)
             stderr_color_proc = ProcProxy(_func, [], stdin=PIPE)
             stderr = stderr_color_proc.stdin
+            _extra_fds.append(stderr_color_proc.stdin.fileno())
 
         if callable(aliased_cmd):
             prev_is_proxy = True
@@ -506,7 +508,8 @@ def run_subproc(cmds, captured=False):
             'cmds': cmds,
             'pids': [i.pid for i in procs],
             'obj': prev_proc,
-            'bg': background
+            'bg': background,
+            'extra_fds': _extra_fds,
         })
     if (ENV.get('XONSH_INTERACTIVE') and
             not ENV.get('XONSH_STORE_STDOUT') and
@@ -521,11 +524,6 @@ def run_subproc(cmds, captured=False):
     if prev_is_proxy:
         prev_proc.wait()
     wait_for_active_job()
-    if stderr_color_proc is not None:
-        try:
-            os.close(stderr.fileno())
-        except OSError:
-            pass
     for proc in procs[:-1]:
         try:
             proc.stdout.close()

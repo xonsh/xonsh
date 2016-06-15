@@ -47,12 +47,21 @@ else:
         os.killpg(job['pgrp'], signal)
 
 
+def _close_extra_fds(job):
+    for fd in job['extra_fds']:
+        try:
+            os.close(fd)
+        except OSError:
+            pass
+
+
 if ON_WINDOWS:
     def _continue(job):
         job['status'] = "running"
 
     def _kill(job):
         check_output(['taskkill', '/F', '/T', '/PID', str(job['obj'].pid)])
+        _close_extra_fds(active_task)
 
     def ignore_sigtstp():
         pass
@@ -85,6 +94,7 @@ if ON_WINDOWS:
             except KeyboardInterrupt:
                 _kill(active_task)
 
+        _close_extra_fds(active_task)
         return wait_for_active_job()
 
 else:
@@ -93,6 +103,7 @@ else:
 
     def _kill(job):
         _send_signal(job, signal.SIGKILL)
+        _close_extra_fds(job)
 
     def ignore_sigtstp():
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)
@@ -178,9 +189,11 @@ else:
             print()  # get a newline because ^C will have been printed
             obj.signal = (os.WTERMSIG(wcode), os.WCOREDUMP(wcode))
             obj.returncode = None
+            _close_extra_fds(active_task)
         else:
             obj.returncode = os.WEXITSTATUS(wcode)
             obj.signal = None
+            _close_extra_fds(active_task)
 
         return wait_for_active_job()
 
@@ -211,6 +224,7 @@ def _clear_dead_jobs():
         if obj.poll() is not None:
             to_remove.add(tid)
     for job in to_remove:
+        _close_extra_fds(get_task(job))
         tasks.remove(job)
         del builtins.__xonsh_all_jobs__[job]
 
