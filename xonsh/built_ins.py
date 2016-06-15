@@ -31,7 +31,7 @@ from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
                         CompletedCommand, HiddenCompletedCommand)
 from xonsh.tools import (
     suggest_commands, expandvars, CommandsCache, globpath, XonshError,
-    XonshCalledProcessError, XonshBlockError, color_stderr_red
+    XonshCalledProcessError, XonshBlockError, make_stream_line_transformer
 )
 
 
@@ -446,8 +446,15 @@ def run_subproc(cmds, captured=False):
                           stdout=PIPE)
             stdin = tproc.stdout
 
-        if stderr is None and ENV.get('COLOR_STDERR'):
-            color_proc = ProcProxy(color_stderr_red, [], stdin=PIPE)
+        _out_line = ENV.get('TRANSFORM_STDOUT_LINE')
+        _err_line = ENV.get('TRANSFORM_STDERR_LINE')
+        if stdout is None and callable(_out_line):
+            _func = make_stream_line_transformer(_out_line)
+            color_proc = ProcProxy(_func, [], stdin=PIPE)
+            stdout = color_proc.stdin
+        if stderr is None and callable(_err_line):
+            _func = make_stream_line_transformer(_err_line)
+            color_proc = ProcProxy(_func, [], stdin=PIPE)
             stderr = color_proc.stdin
 
         if callable(aliased_cmd):

@@ -87,7 +87,6 @@ DEFAULT_ENSURERS = {
     re.compile('\w*DIRS$'): (is_env_path, str_to_env_path, env_path_to_str),
     'COLOR_INPUT': (is_bool, to_bool, bool_to_str),
     'COLOR_RESULTS': (is_bool, to_bool, bool_to_str),
-    'COLOR_STDERR': (is_bool, to_bool, bool_to_str),
     'COMPLETIONS_DISPLAY': (is_completions_display_value,
                             to_completions_display_value, str),
     'COMPLETIONS_MENU_ROWS': (is_int, int, str),
@@ -165,7 +164,17 @@ else:
                       '{cwd}{branch_color}{curr_branch}{NO_COLOR} '
                       '{BOLD_BLUE}{prompt_end}{NO_COLOR} ')
 
+if ON_WINDOWS:
+    _red_color = "INTENSE_RED"
+else:
+    _red_color = "RED"
+
+
+def _color_line_red(x):
+    return "{%s}%s{NO_COLOR}" % (_red_color, x)
+
 DEFAULT_TITLE = '{current_job}{user}@{hostname}: {cwd} | xonsh'
+
 
 @default_value
 def xonsh_data_dir(env):
@@ -209,7 +218,6 @@ DEFAULT_VALUES = {
     'CDPATH': (),
     'COLOR_INPUT': True,
     'COLOR_RESULTS': True,
-    'COLOR_STDERR': True,
     'COMPLETIONS_DISPLAY': 'multi',
     'COMPLETIONS_MENU_ROWS': 5,
     'DIRSTACK_SIZE': 20,
@@ -246,6 +254,8 @@ DEFAULT_VALUES = {
     'SUGGEST_THRESHOLD': 3,
     'TEEPTY_PIPE_DELAY': 0.01,
     'TITLE': DEFAULT_TITLE,
+    'TRANSFORM_STDOUT_LINE': lambda x: x,
+    'TRANSFORM_STDERR_LINE': _color_line_red,
     'UPDATE_OS_ENVIRON': False,
     'VC_BRANCH_TIMEOUT': 0.2 if ON_WINDOWS else 0.1,
     'VI_MODE': False,
@@ -333,7 +343,6 @@ DEFAULT_DOCS = {
         'with Bash, xonsh always prefer an existing relative path.'),
     'COLOR_INPUT': VarDocs('Flag for syntax highlighting interactive input.'),
     'COLOR_RESULTS': VarDocs('Flag for syntax highlighting return values.'),
-    'COLOR_STDERR': VarDocs('Flag for coloring stderr in red.'),
     'COMPLETIONS_DISPLAY': VarDocs(
         'Configure if and how Python completions are displayed by the '
         'prompt_toolkit shell.\n\nThis option does not affect Bash '
