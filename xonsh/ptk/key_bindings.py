@@ -3,7 +3,8 @@
 import builtins
 
 from prompt_toolkit.enums import DEFAULT_BUFFER
-from prompt_toolkit.filters import Condition, Filter, IsMultiline
+from prompt_toolkit.filters import (Condition, Filter, IsMultiline,
+                                    HasSelection)
 from prompt_toolkit.keys import Keys
 from xonsh.aliases import exit
 from xonsh.tools import ON_WINDOWS
@@ -125,6 +126,7 @@ def load_xonsh_bindings(key_bindings_manager):
     Load custom key bindings.
     """
     handle = key_bindings_manager.registry.add_binding
+    has_selection = HasSelection()
 
     @handle(Keys.Tab, filter=TabShouldInsertIndentFilter())
     def _(event):
@@ -133,6 +135,11 @@ def load_xonsh_bindings(key_bindings_manager):
         indent instead of autocompleting.
         """
         event.cli.current_buffer.insert_text(env.get('INDENT'))
+
+    @handle(Keys.ControlX, Keys.ControlE, filter= ~has_selection)
+    def open_editor(event):
+        """ Open current buffer in editor """
+        event.current_buffer.open_in_editor(event.cli)
 
     @handle(Keys.BackTab)
     def insert_literal_tab(event):
