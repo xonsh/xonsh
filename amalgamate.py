@@ -123,11 +123,12 @@ class _LazyModule(_ModuleType):
 
     def __init__(self, pkg, mod, asname=None):
         '''Lazy module 'pkg.mod' in package 'pkg'.'''
-        self.__dct__ = {}
-        self.__dct__['loaded'] = False
-        self.__dct__['pkg'] = pkg  # pkg
-        self.__dct__['mod'] = mod  # pkg.mod
-        self.__dct__['asname'] = asname  # alias
+        self.__dct__ = {
+            'loaded': False,
+            'pkg': pkg,  # pkg
+            'mod': mod  # pkg.mod
+            'asname': asname  # alias
+            }
 
     @classmethod
     def load(cls, pkg, mod, asname=None):
