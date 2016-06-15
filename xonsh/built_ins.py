@@ -452,12 +452,6 @@ def run_subproc(cmds, captured=False):
             _func = make_stream_line_transformer(_err_line)
             stderr_color_proc = ProcProxy(_func, [], stdin=PIPE)
             stderr = stderr_color_proc.stdin
-        _out_line = ENV.get('TRANSFORM_STDOUT_LINE')
-        stdout_color_proc = None
-        if stdout is None and callable(_out_line):
-            _func = make_stream_line_transformer(_out_line)
-            stdout_color_proc = ProcProxy(_func, [], stdin=PIPE)
-            stdout = stdout_color_proc.stdin
 
         if callable(aliased_cmd):
             prev_is_proxy = True
@@ -530,11 +524,6 @@ def run_subproc(cmds, captured=False):
     if stderr_color_proc is not None:
         try:
             os.close(stderr.fileno())
-        except OSError:
-            pass
-    if stdout_color_proc is not None:
-        try:
-            os.close(stdout.fileno())
         except OSError:
             pass
     for proc in procs[:-1]:
