@@ -126,8 +126,8 @@ class _LazyModule(_ModuleType):
         self.__dct__ = {
             'loaded': False,
             'pkg': pkg,  # pkg
-            'mod': mod  # pkg.mod
-            'asname': asname  # alias
+            'mod': mod,  # pkg.mod
+            'asname': asname,  # alias
             }
 
     @classmethod

@@ -1,7 +1,7 @@
 """Lazy and self destrctive containers for speeding up module import."""
 import collections.abc as abc
 
-class LazyAndSelfDestructiveObject(object):
+class LazyObject(object):
 
     def __init__(self, load, ctx, name):
         """Lazily loads an object via the load function the first time an
@@ -12,8 +12,7 @@ class LazyAndSelfDestructiveObject(object):
         For example, you can prevent the compilation of a regular expreession
         until it is actually used::
 
-            DOT = LazyAndSelfDestructiveObject((lambda: re.compile('.')),
-                                               globals(), 'DOT')
+            DOT = LazyObject((lambda: re.compile('.')), globals(), 'DOT')
 
         Parameters
         ----------
@@ -34,7 +33,7 @@ class LazyAndSelfDestructiveObject(object):
             }
 
     def __getattribute__(self, name):
-        if name == '_lasdo:
+        if name == '_lasdo':
             return super().__getattribute__(name)
         d = self._lasdo
         if d['loaded']:
@@ -46,7 +45,7 @@ class LazyAndSelfDestructiveObject(object):
         return getattr(obj, name)
 
 
-class LazyAndSelfDestructiveDict(abc.MutableMapping):
+class LazyDict(abc.MutableMapping):
 
     def __init__(self, loaders, ctx, name):
         """Dictionary like object that lazily loads its values from an initial
@@ -58,7 +57,7 @@ class LazyAndSelfDestructiveDict(abc.MutableMapping):
         For example, you can prevent the compilation of a bunch of regular
         expressions until they are actually used::
 
-            RES = LazyAndSelfDestructiveDict({
+            RES = LazyDict({
                     'dot': lambda: re.compile('.'),
                     'all': lambda: re.compile('.*'),
                     'two': lambda: re.compile('..'),

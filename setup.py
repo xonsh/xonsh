@@ -33,7 +33,6 @@ try:
 except ImportError:
     HAVE_JUPYTER = False
 
-from xonsh import __version__ as XONSH_VERSION
 
 TABLES = ['xonsh/lexer_table.py', 'xonsh/parser_table.py', 'xonsh/__amalgam__.py']
 
@@ -45,6 +44,8 @@ def clean_tables():
             os.remove(f)
             print('Removed ' + f)
 
+
+from xonsh import __version__ as XONSH_VERSION
 
 def build_tables():
     """Build the lexer/parser modules."""
