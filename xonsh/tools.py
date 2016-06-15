@@ -35,9 +35,8 @@ from collections import OrderedDict, Sequence, Set
 
 # adding further imports from xonsh modules is discouraged to avoid cirular
 # dependencies
-from xonsh.platform import (has_prompt_toolkit, scandir, win_unicode_console,
-                            DEFAULT_ENCODING, ON_LINUX, ON_WINDOWS,
-                            PYTHON_VERSION_INFO)
+from xonsh.platform import (has_prompt_toolkit, scandir,
+    DEFAULT_ENCODING, ON_LINUX, ON_WINDOWS, PYTHON_VERSION_INFO)
 
 IS_SUPERUSER = ctypes.windll.shell32.IsUserAnAdmin() != 0 if ON_WINDOWS else os.getuid() == 0
 
@@ -856,6 +855,10 @@ def to_completions_display_value(x):
 
 def setup_win_unicode_console(enable):
     """"Enables or disables unicode display on windows."""
+    try:
+        import win_unicode_console
+    except ImportError:
+        win_unicode_console = False
     enable = to_bool(enable)
     if ON_WINDOWS and win_unicode_console:
         if enable:

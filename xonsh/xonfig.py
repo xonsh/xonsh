@@ -18,7 +18,7 @@ except ImportError:
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.environ import is_template_string
 from xonsh.platform import (is_readline_available, ptk_version,
-    PYTHON_VERSION_INFO, pygments_version, ON_POSIX, ON_LINUX, LINUX_DISTRO,
+    PYTHON_VERSION_INFO, pygments_version, ON_POSIX, ON_LINUX, linux_distro,
     ON_DARWIN, ON_WINDOWS, ON_CYGWIN, DEFAULT_ENCODING)
 from xonsh.tools import (to_bool, is_string, print_exception, IS_SUPERUSER,
     color_style_names, print_color, color_style)
@@ -343,7 +343,7 @@ def _info(ns):
         ('on posix', ON_POSIX),
         ('on linux', ON_LINUX)]
     if ON_LINUX:
-        data.append(('distro', LINUX_DISTRO))
+        data.append(('distro', linux_distro()))
     data.extend([
         ('on darwin', ON_DARWIN),
         ('on windows', ON_WINDOWS),

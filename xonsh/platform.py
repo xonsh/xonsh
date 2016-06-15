@@ -7,7 +7,7 @@ import sys
 import pathlib
 import platform
 import functools
-
+import subprocess
 
 from xonsh.lazyasd import LazyObject, LazyBool
 
@@ -176,86 +176,92 @@ else:
 # Linux distro
 #
 
-LINUX_DISTRO = None
-""" The id of the Linux distribution running on, possibly 'unknown'.
-    ``Ǹone`` on non-Linux platforms.
-"""
-
-
-if ON_LINUX:
-    if distro:
-        LINUX_DISTRO = distro.id()
-    elif PYTHON_VERSION_INFO < (3, 7, 0):
-        LINUX_DISTRO = platform.linux_distribution()[0] or 'unknown'
-    elif '-ARCH-' in platform.platform():
-        LINUX_DISTRO = 'arch'  # that's the only one we need to know for now
+@functools.lru_cache(1)
+def linux_distro():
+    """The id of the Linux distribution running on, possibly 'unknown'.
+    None on non-Linux platforms.
+    """
+    if ON_LINUX:
+        if distro:
+            ld = distro.id()
+        elif PYTHON_VERSION_INFO < (3, 7, 0):
+            ld = platform.linux_distribution()[0] or 'unknown'
+        elif '-ARCH-' in platform.platform():
+            ld = 'arch'  # that's the only one we need to know for now
+        else:
+            ld = 'unknown'
     else:
-        LINUX_DISTRO = 'unknown'
+        ld = None
+    return ld
 
 
 #
 # Windows
 #
 
-if ON_WINDOWS:
-    try:
-        import win_unicode_console
-    except ImportError:
-        win_unicode_console = None
-else:
-    win_unicode_console = None
-
-
-if ON_WINDOWS:
+@functools.lru_cache(1)
+def git_for_windows_path():
+    """Returns the path to git for windows, if available and None otherwise."""
     import winreg
     try:
         key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
                              'SOFTWARE\\GitForWindows')
-        GIT_FOR_WINDOWS_PATH, typ = winreg.QueryValueEx(key, "InstallPath")
+        gfwp, _ = winreg.QueryValueEx(key, "InstallPath")
     except FileNotFoundError:
-        GIT_FOR_WINDOWS_PATH = None
+        gfwp = None
+    return gfwp
 
+
+@functools.lru_cache(1)
+def windows_bash_command():
+    """Determines teh command for Bash on windows."""
+    import winreg
     # Check that bash is on path otherwise try the default directory
     # used by Git for windows
-    import subprocess
-    WINDOWS_BASH_COMMAND = 'bash'
+    wbc = 'bash'
     try:
-        subprocess.check_call([WINDOWS_BASH_COMMAND, '--version'],
+        subprocess.check_call([wbc, '--version'],
                               stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE)
     except (FileNotFoundError, subprocess.CalledProcessError):
-        if GIT_FOR_WINDOWS_PATH:
-            bashcmd = os.path.join(GIT_FOR_WINDOWS_PATH, 'bin\\bash.exe')
+        gfwp = git_for_windows_path()
+        if gfwp:
+            bashcmd = os.path.join(gfwp, 'bin\\bash.exe')
             if os.path.isfile(bashcmd):
-                WINDOWS_BASH_COMMAND = bashcmd
+                wbc = bashcmd
+    return wbc
 
 #
 # Bash completions defaults
 #
 
-BASH_COMPLETIONS_DEFAULT = ()
-""" A possibly empty tuple with default paths to Bash completions known for
+def _bcd():
+    """A possibly empty tuple with default paths to Bash completions known for
     the current platform.
-"""
-
-if LINUX_DISTRO == 'arch':
-    BASH_COMPLETIONS_DEFAULT = (
-        '/etc/bash_completion',
-        '/usr/share/bash-completion/completions')
-elif ON_LINUX or ON_CYGWIN:
-    BASH_COMPLETIONS_DEFAULT = (
-        '/usr/share/bash-completion',
-        '/usr/share/bash-completion/completions')
-elif ON_DARWIN:
-    BASH_COMPLETIONS_DEFAULT = (
-        '/usr/local/etc/bash_completion',
-        '/opt/local/etc/profile.d/bash_completion.sh')
-elif ON_WINDOWS and GIT_FOR_WINDOWS_PATH:
-    BASH_COMPLETIONS_DEFAULT = (
-        os.path.join(GIT_FOR_WINDOWS_PATH,
-                     'usr\\share\\bash-completion'),
-        os.path.join(GIT_FOR_WINDOWS_PATH,
-                     'usr\\share\\bash-completion\\completions'),
-        os.path.join(GIT_FOR_WINDOWS_PATH,
+    """
+    if ON_LINUX or ON_CYGWIN:
+        if linux_distro() == 'arch':
+            BASH_COMPLETIONS_DEFAULT = (
+                '/etc/bash_completion',
+                '/usr/share/bash-completion/completions')
+        else:
+            bcd = ('/usr/share/bash-completion',
+                   '/usr/share/bash-completion/completions')
+    elif ON_DARWIN:
+        bcd = ('/usr/local/etc/bash_completion',
+               '/opt/local/etc/profile.d/bash_completion.sh')
+    elif ON_WINDOWS and git_for_windows_path():
+        bcd = (os.path.join(git_for_windows_path(),
+                    'usr\\share\\bash-completion'),
+               os.path.join(git_for_windows_path(),
+                    'usr\\share\\bash-completion\\completions'),
+               os.path.join(git_for_windows_path(),
                      'mingw64\\share\\git\\completion\\git-completion.bash'))
+    else:
+        bcd = ()
+    return bcd
 
+
+BASH_COMPLETIONS_DEFAULT = LazyObject(_bcd, globals(),
+                                      'BASH_COMPLETIONS_DEFAULT')
+del _bcd
