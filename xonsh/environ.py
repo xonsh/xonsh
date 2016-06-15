@@ -610,9 +610,9 @@ class Env(MutableMapping):
         """If no initial environment is given, os.environ is used."""
         self._d = {}
         self._orig_env = None
-        self.ensurers = {k: Ensurer(*v) for k, v in DEFAULT_ENSURERS.items()}
-        self.defaults = DEFAULT_VALUES
-        self.docs = DEFAULT_DOCS
+        self._ensurers = {k: Ensurer(*v) for k, v in DEFAULT_ENSURERS.items()}
+        self._defaults = DEFAULT_VALUES
+        self._docs = DEFAULT_DOCS
         if len(args) == 0 and len(kwargs) == 0:
             args = (os.environ, )
         for key, val in dict(*args, **kwargs).items():
@@ -659,27 +659,27 @@ class Env(MutableMapping):
     def get_ensurer(self, key,
                     default=Ensurer(always_true, None, ensure_string)):
         """Gets an ensurer for the given key."""
-        if key in self.ensurers:
-            return self.ensurers[key]
-        for k, ensurer in self.ensurers.items():
+        if key in self._ensurers:
+            return self._ensurers[key]
+        for k, ensurer in self._ensurers.items():
             if isinstance(k, str):
                 continue
             if k.match(key) is not None:
                 break
         else:
             ensurer = default
-        self.ensurers[key] = ensurer
+        self._ensurers[key] = ensurer
         return ensurer
 
     def get_docs(self, key, default=VarDocs('<no documentation>')):
         """Gets the documentation for the environment variable."""
-        vd = self.docs.get(key, None)
+        vd = self._docs.get(key, None)
         if vd is None:
             return default
         if vd.default is DefaultNotGiven:
-            dval = pformat(self.defaults.get(key, '<default not set>'))
+            dval = pformat(self._defaults.get(key, '<default not set>'))
             vd = vd._replace(default=dval)
-            self.docs[key] = vd
+            self._docs[key] = vd
         return vd
 
     def is_manually_set(self, varname):
@@ -734,8 +734,8 @@ class Env(MutableMapping):
             val = self._d['ARGS'][ix]
         elif key in self._d:
             val = self._d[key]
-        elif key in self.defaults:
-            val = self.defaults[key]
+        elif key in self._defaults:
+            val = self._defaults[key]
             if is_callable_default(val):
                 val = val(self)
         else:
@@ -775,7 +775,7 @@ class Env(MutableMapping):
             return default
 
     def __iter__(self):
-        yield from (set(self._d) | set(self.defaults))
+        yield from (set(self._d) | set(self._defaults))
 
     def __len__(self):
         return len(self._d)
