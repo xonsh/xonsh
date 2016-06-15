@@ -144,15 +144,12 @@ class Aliases(MutableMapping):
 
 def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
     """Sends signal to exit shell."""
-    print('TRYING')
     if not clean_jobs():
         # Do not exit if jobs not cleaned up
         return None, None
 
-    print('DONE')
     builtins.__xonsh_exit__ = True
     print()  # gimme a newline
-    print('huh?')
     return None, None
 
 
