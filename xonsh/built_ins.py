@@ -529,9 +529,15 @@ def run_subproc(cmds, captured=False):
     print('hmmm')
     wait_for_active_job()
     if stderr_color_proc is not None:
-        os.close(stderr.fileno())
+        try:
+            os.close(stderr.fileno())
+        except OSError:
+            pass
     if stdout_color_proc is not None:
-        os.close(stdout.fileno())
+        try:
+            os.close(stdout.fileno())
+        except OSError:
+            pass
     print('foine')
     for proc in procs[:-1]:
         try:
