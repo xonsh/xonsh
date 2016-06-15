@@ -15,7 +15,8 @@ from collections import deque, Sequence, OrderedDict
 from threading import Thread, Condition
 
 from xonsh import lazyjson
-from xonsh.tools import ensure_int_or_slice, to_history_tuple
+from xonsh.tools import (ensure_int_or_slice, to_history_tuple,
+    expanduser_abs_path)
 from xonsh import diff_history
 
 
@@ -114,8 +115,9 @@ class HistoryGC(Thread):
         """
         _ = self  # this could be a function but is intimate to this class
         # pylint: disable=no-member
-        xdd = os.path.expanduser(builtins.__xonsh_env__.get('XONSH_DATA_DIR'))
-        xdd = os.path.abspath(xdd)
+        xdd = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
+        xdd = expanduser_abs_path(xdd)
+
         fs = [f for f in iglob(os.path.join(xdd, 'xonsh-*.json'))]
         files = []
         for f in fs:
@@ -233,6 +235,35 @@ class CommandField(Sequence):
         return self is self.hist._queue[0]
 
 
+def _find_histfile_var(file_list = None, default = None):
+    if file_list is None:
+        return None
+    hist_file = None
+    found_hist = False
+    for f in file_list:
+        f = expanduser_abs_path(f)
+        if not os.path.isfile(f):
+            continue
+        with open(f , 'r') as rc_file:
+            for line in rc_file:
+                if "HISTFILE=" in line:
+                    evar = line.split(' ',1)[-1]
+                    hist_file = evar.split('=',1)[-1]
+                    for char in ['"',"'",'\n']:
+                        hist_file = hist_file.replace(char, '')
+                    hist_file = expanduser_abs_path(hist_file)
+                    if os.path.isfile(hist_file):
+                        found_hist = True
+                        break
+        if found_hist:
+            break
+                        
+    if hist_file is None:
+        default = expanduser_abs_path(default)
+        if os.path.isfile(default):
+            hist_file = default
+    
+    return hist_file
 def _all_xonsh_parser(*args):
     """
     Returns all history as found in XONSH_DATA_DIR.
@@ -240,8 +271,7 @@ def _all_xonsh_parser(*args):
     return format: (name, start_time, index)
     """
     data_dir = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
-    data_dir = os.path.expanduser(data_dir)
-    data_dir = os.path.abspath(data_dir)
+    data_dir = expanduser_abs_path(data_dir)
 
     files = [os.path.join(data_dir, f) for f in listdir(data_dir)
              if f.startswith('xonsh-') and f.endswith('.json')]
@@ -277,12 +307,14 @@ def _curr_session_parser(hist=None):
 
 
 def _zsh_hist_parser(location=None):
+    default_location = os.path.join('~', '.zsh_history')
+    location_list = [os.path.join('~', '.zshrc'),
+                     os.path.join('~', '.zprofile')]
     if location is None:
-        location = os.path.join('~', '.zsh_history')
+        location = _find_histfile_var(location_list, default_location)
     z_hist_formatted = []
-    z_path = os.path.expanduser(location)
-    if os.path.isfile(z_path):
-        with open(z_path, 'r', errors='backslashreplace') as z_file:
+    if os.path.isfile(location):
+        with open(location, 'r', errors='backslashreplace') as z_file:
             z_txt = z_file.read()
             z_hist = z_txt.splitlines()
             if z_hist:
@@ -300,17 +332,19 @@ def _zsh_hist_parser(location=None):
                 return z_hist_formatted
 
     else:
-        print("No zsh history file found at: {}".format(z_path),
+        print("No zsh history file found at: {}".format(location),
               file=sys.stderr)
 
 
 def _bash_hist_parser(location=None):
+    default_location = os.path.join('~', '.bash_history')
+    location_list = [os.path.join('~', '.bashrc'),
+                     os.path.join('~', '.bash_profile')]
     if location is None:
-        location = os.path.join('~', '.bash_history')
+        location = _find_histfile_var(location_list, default_location)
     bash_hist_formatted = []
-    b_path = os.path.expanduser(location)
-    if os.path.isfile(b_path):
-        with open(b_path, 'r', errors='backslashreplace') as bash_file:
+    if os.path.isfile(location):
+        with open(location, 'r', errors='backslashreplace') as bash_file:
             b_txt = bash_file.read()
             bash_hist = b_txt.splitlines()
             if bash_hist:
@@ -318,7 +352,8 @@ def _bash_hist_parser(location=None):
                     bash_hist_formatted.append((command, 0.0, ind))
                 return bash_hist_formatted
     else:
-        print("No bash history file found at: {}".format(b_path),
+        import ipdb; ipdb.set_trace()
+        print("No bash history file found at: {}".format(location),
               file=sys.stderr)
 
 

@@ -1348,6 +1348,11 @@ def normabspath(p):
     return os.path.normcase(os.path.abspath(p))
 
 
+def expanduser_abs_path(inp):
+    """ Provides user expanded absolute path """
+    return os.path.abspath(os.path.expanduser(inp))
+
+
 class CommandsCache(Set):
     """A lazy cache representing the commands available on the file system."""
 
