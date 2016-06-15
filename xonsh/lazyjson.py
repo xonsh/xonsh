@@ -2,9 +2,9 @@
 """Implements a lazy JSON file class that wraps around json data."""
 import io
 import json
-import collections.abc as abc
-import contextlib
 import weakref
+import contextlib
+import collections.abc as abc
 
 
 def _to_json_with_size(obj, offset=0, sort_keys=False):

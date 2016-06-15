@@ -10,8 +10,6 @@ try:
     _sys.modules['xonsh.lazyasd'] = __amalgam__
     lazyjson = __amalgam__
     _sys.modules['xonsh.lazyjson'] = __amalgam__
-    openpy = __amalgam__
-    _sys.modules['xonsh.openpy'] = __amalgam__
     platform = __amalgam__
     _sys.modules['xonsh.platform'] = __amalgam__
     pretty = __amalgam__
@@ -26,6 +24,8 @@ try:
     _sys.modules['xonsh.codecache'] = __amalgam__
     jobs = __amalgam__
     _sys.modules['xonsh.jobs'] = __amalgam__
+    openpy = __amalgam__
+    _sys.modules['xonsh.openpy'] = __amalgam__
     parser = __amalgam__
     _sys.modules['xonsh.parser'] = __amalgam__
     tokenize = __amalgam__
