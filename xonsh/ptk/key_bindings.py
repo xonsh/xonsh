@@ -136,7 +136,7 @@ def load_xonsh_bindings(key_bindings_manager):
         """
         event.cli.current_buffer.insert_text(env.get('INDENT'))
 
-    @handle(Keys.ControlX, Keys.ControlE, filter= ~has_selection)
+    @handle(Keys.ControlX, Keys.ControlE, filter=~has_selection)
     def open_editor(event):
         """ Open current buffer in editor """
         event.current_buffer.open_in_editor(event.cli)
