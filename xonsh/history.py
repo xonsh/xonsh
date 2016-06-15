@@ -16,7 +16,7 @@ from threading import Thread, Condition
 
 from xonsh import lazyjson
 from xonsh.tools import (ensure_int_or_slice, to_history_tuple,
-    expanduser_abs_path)
+                         expanduser_abs_path)
 from xonsh import diff_history
 
 
@@ -235,7 +235,7 @@ class CommandField(Sequence):
         return self is self.hist._queue[0]
 
 
-def _find_histfile_var(file_list = None, default = None):
+def _find_histfile_var(file_list=None, default=None):
     if file_list is None:
         return None
     hist_file = None
@@ -244,12 +244,12 @@ def _find_histfile_var(file_list = None, default = None):
         f = expanduser_abs_path(f)
         if not os.path.isfile(f):
             continue
-        with open(f , 'r') as rc_file:
+        with open(f, 'r') as rc_file:
             for line in rc_file:
                 if "HISTFILE=" in line:
-                    evar = line.split(' ',1)[-1]
-                    hist_file = evar.split('=',1)[-1]
-                    for char in ['"',"'",'\n']:
+                    evar = line.split(' ', 1)[-1]
+                    hist_file = evar.split('=', 1)[-1]
+                    for char in ['"', "'", '\n']:
                         hist_file = hist_file.replace(char, '')
                     hist_file = expanduser_abs_path(hist_file)
                     if os.path.isfile(hist_file):
@@ -257,13 +257,15 @@ def _find_histfile_var(file_list = None, default = None):
                         break
         if found_hist:
             break
-                        
+
     if hist_file is None:
         default = expanduser_abs_path(default)
         if os.path.isfile(default):
             hist_file = default
-    
+
     return hist_file
+
+
 def _all_xonsh_parser(*args):
     """
     Returns all history as found in XONSH_DATA_DIR.
@@ -352,7 +354,8 @@ def _bash_hist_parser(location=None):
                     bash_hist_formatted.append((command, 0.0, ind))
                 return bash_hist_formatted
     else:
-        import ipdb; ipdb.set_trace()
+        import ipdb
+        ipdb.set_trace()
         print("No bash history file found at: {}".format(location),
               file=sys.stderr)
 
