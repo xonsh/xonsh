@@ -1133,3 +1133,9 @@ STYLES = LazyDict({
     'xcode': _xcode_style,
     }, globals(), 'STYLES')
 
+del (_algol_style, _algol_nu_style, _autumn_style, _borland_style, _bw_style,
+     _colorful_style, _default_style, _emacs_style, _friendly_style,
+     _fruity_style, _igor_style, _lovelace_style, _manni_style,
+     _monokai_style, _murphy_style, _native_style, _paraiso_dark_style,
+     _paraiso_light_style, _pastie_style, _perldoc_style,  _rrt_style,
+     _tango_style, _trac_style, _vim_style, _vs_style, _xcode_style)
