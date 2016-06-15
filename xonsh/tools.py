@@ -1465,6 +1465,6 @@ def make_stream_line_transformer(mapfunc, which='stdout'):
         x = None
         while x is None or x != '':
             x = stdin.readline()
-            to_write.write(format_color(mapfunc(x)))
+            print_color(mapfunc(x), file=to_write, end='')
         return 0
     return _transform_func

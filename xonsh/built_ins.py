@@ -450,7 +450,7 @@ def run_subproc(cmds, captured=False):
         _err_line = ENV.get('TRANSFORM_STDERR_LINE')
         stderr_color_proc = None
         if stderr is None and callable(_err_line):
-            _func = make_stream_line_transformer(_err_line)
+            _func = make_stream_line_transformer(_err_line, 'stderr')
             stderr_color_proc = ProcProxy(_func, [], stdin=PIPE)
             stderr = stderr_color_proc.stdin
             _extra_fds.append(stderr_color_proc.stdin.fileno())
