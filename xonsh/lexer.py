@@ -3,7 +3,6 @@
 
 Written using a hybrid of ``tokenize`` and PLY.
 """
-
 from io import BytesIO
 from keyword import kwlist
 
@@ -12,12 +11,54 @@ try:
 except ImportError:
     from xonsh.ply.lex import LexToken
 
+from xonsh.lazyasd import LazyObject
 from xonsh.platform import PYTHON_VERSION_INFO
 from xonsh.tokenize import (OP, IOREDIRECT, STRING, DOLLARNAME, NUMBER,
-    REGEXPATH, NEWLINE, INDENT, DEDENT, ASYNC, AWAIT, NL, COMMENT, ENCODING,
+    REGEXPATH, NEWLINE, INDENT, DEDENT, NL, COMMENT, ENCODING,
     ENDMARKER, NAME, ERRORTOKEN, tokenize, TokenError)
 
-token_map = {}
+
+def _token_map():
+    tm = {}
+    # operators
+    _op_map = {
+        # punctuation
+        ',': 'COMMA', '.': 'PERIOD', ';': 'SEMI', ':': 'COLON',
+        '...': 'ELLIPSIS',
+        # basic operators
+        '+': 'PLUS', '-': 'MINUS', '*': 'TIMES', '@': 'AT', '/': 'DIVIDE',
+        '//': 'DOUBLEDIV', '%': 'MOD', '**': 'POW', '|': 'PIPE',
+        '~': 'TILDE', '^': 'XOR', '<<': 'LSHIFT', '>>': 'RSHIFT',
+        '<': 'LT', '<=': 'LE', '>': 'GT', '>=': 'GE', '==': 'EQ',
+        '!=': 'NE', '->': 'RARROW',
+        # assignment operators
+        '=': 'EQUALS', '+=': 'PLUSEQUAL', '-=': 'MINUSEQUAL',
+        '*=': 'TIMESEQUAL', '@=': 'ATEQUAL', '/=': 'DIVEQUAL', '%=': 'MODEQUAL',
+        '**=': 'POWEQUAL', '<<=': 'LSHIFTEQUAL', '>>=': 'RSHIFTEQUAL',
+        '&=': 'AMPERSANDEQUAL', '^=': 'XOREQUAL', '|=': 'PIPEEQUAL',
+        '//=': 'DOUBLEDIVEQUAL',
+        # extra xonsh operators
+        '?': 'QUESTION', '??': 'DOUBLE_QUESTION', '@$': 'ATDOLLAR',
+        '&': 'AMPERSAND',
+    }
+    for (op, typ) in _op_map.items():
+        tm[(OP, op)] = typ
+    tm[IOREDIRECT] = 'IOREDIRECT'
+    tm[STRING] = 'STRING'
+    tm[DOLLARNAME] = 'DOLLAR_NAME'
+    tm[NUMBER] = 'NUMBER'
+    tm[REGEXPATH] = 'REGEXPATH'
+    tm[NEWLINE] = 'NEWLINE'
+    tm[INDENT] = 'INDENT'
+    tm[DEDENT] = 'DEDENT'
+    if PYTHON_VERSION_INFO >= (3, 5, 0):
+        from xonsh.tokenize import ASYNC, AWAIT
+        tm[ASYNC] = 'ASYNC'
+        tm[AWAIT] = 'AWAIT'
+    return tm
+
+
+token_map = LazyObject(_token_map, globals(), 'token_map')
 """
 Mapping from ``tokenize`` tokens (or token types) to PLY token types.  If a
 simple one-to-one mapping from ``tokenize`` to PLY exists, the lexer will look
@@ -25,42 +66,7 @@ it up here and generate a single PLY token of the given type.  Otherwise, it
 will fall back to handling that token using one of the handlers in
 ``special_handlers``.
 """
-
-# operators
-_op_map = {
-    # punctuation
-    ',': 'COMMA', '.': 'PERIOD', ';': 'SEMI', ':': 'COLON',
-    '...': 'ELLIPSIS',
-    # basic operators
-    '+': 'PLUS', '-': 'MINUS', '*': 'TIMES', '@': 'AT', '/': 'DIVIDE',
-    '//': 'DOUBLEDIV', '%': 'MOD', '**': 'POW', '|': 'PIPE',
-    '~': 'TILDE', '^': 'XOR', '<<': 'LSHIFT', '>>': 'RSHIFT',
-    '<': 'LT', '<=': 'LE', '>': 'GT', '>=': 'GE', '==': 'EQ',
-    '!=': 'NE', '->': 'RARROW',
-    # assignment operators
-    '=': 'EQUALS', '+=': 'PLUSEQUAL', '-=': 'MINUSEQUAL',
-    '*=': 'TIMESEQUAL', '@=': 'ATEQUAL', '/=': 'DIVEQUAL', '%=': 'MODEQUAL',
-    '**=': 'POWEQUAL', '<<=': 'LSHIFTEQUAL', '>>=': 'RSHIFTEQUAL',
-    '&=': 'AMPERSANDEQUAL', '^=': 'XOREQUAL', '|=': 'PIPEEQUAL',
-    '//=': 'DOUBLEDIVEQUAL',
-    # extra xonsh operators
-    '?': 'QUESTION', '??': 'DOUBLE_QUESTION', '@$': 'ATDOLLAR',
-    '&': 'AMPERSAND',
-}
-for (op, typ) in _op_map.items():
-    token_map[(OP, op)] = typ
-
-token_map[IOREDIRECT] = 'IOREDIRECT'
-token_map[STRING] = 'STRING'
-token_map[DOLLARNAME] = 'DOLLAR_NAME'
-token_map[NUMBER] = 'NUMBER'
-token_map[REGEXPATH] = 'REGEXPATH'
-token_map[NEWLINE] = 'NEWLINE'
-token_map[INDENT] = 'INDENT'
-token_map[DEDENT] = 'DEDENT'
-if PYTHON_VERSION_INFO >= (3, 5, 0):
-    token_map[ASYNC] = 'ASYNC'
-    token_map[AWAIT] = 'AWAIT'
+del _token_map
 
 
 def _make_matcher_handler(tok, typ, pymode, ender):
