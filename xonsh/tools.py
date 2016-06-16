@@ -637,14 +637,18 @@ def is_int(x):
     """Tests if something is an integer"""
     return isinstance(x, int)
 
-def is_str_as_int(x):
-    """Tests if something is an integer"""
+def is_int_as_str(x):
+    """
+    Tests if something is an integer
+    If not a string to begin with is automatically false
+    """
     if isinstance(x, str):
         try:
             int(x)
         except ValueError:
             return False
-    return True
+        return True
+    return False
 
 
 def is_float(x):
@@ -660,8 +664,11 @@ def is_slice(x):
     """Tests if something is a slice"""
     return isinstance(x, slice)
         
-def is_str_as_slice(x):
-    """Tests if a str is a slice"""
+def is_slice_as_str(x):
+    """
+    Tests if a str is a slice
+    If not a string to begin with is automatically false
+    """
     if isinstance(x, str): 
         if ':' in x:
             x = x.strip('[]()')
@@ -671,8 +678,9 @@ def is_str_as_slice(x):
             except ValueError:
                 return False
         else: 
-            return False    
-    return True
+            return False
+        return True  
+    return False
 
 def is_callable(x):
     """Tests if something is callable"""
@@ -820,10 +828,10 @@ def ensure_int_or_slice(x):
     elif is_int(x) or is_slice(x):
         return x
     # must have a string from here on
-    if is_str_as_slice(x):
+    if is_slice_as_str(x):
         x = x.strip('[]()')
         return slice(*(int(x) if len(x) > 0 else None for x in x.split(':')))
-    elif is_str_as_int(x):
+    elif is_int_as_str(x):
         return int(x)
     return False
 

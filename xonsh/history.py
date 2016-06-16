@@ -239,6 +239,7 @@ def _find_histfile_var(file_list=None, default=None):
     if file_list is None:
         return None
     hist_file = None
+
     found_hist = False
     for f in file_list:
         f = expanduser_abs_path(f)
@@ -478,7 +479,6 @@ def _show(ns=None, hist=None, start_index=None, end_index=None,
     if not commands:
         return None
     num_of_commands = len(commands)
-    digits = len(str(num_of_commands))
     if start_time:
         if isinstance(start_time, datetime):
             start_time = start_time.timestamp()
@@ -517,6 +517,7 @@ def _show(ns=None, hist=None, start_index=None, end_index=None,
     if ns and ns.reverse:
         commands = reversed(commands)
 
+    digits = len(str(max([i for c, t, i in commands])))
     if alias:
         for c, t, i in commands:
             for line_ind, line in enumerate(c.split('\n')):
