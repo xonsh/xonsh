@@ -533,7 +533,8 @@ DEFAULT_DOCS = {
     'XONSH_DEBUG': VarDocs(
         'Sets the xonsh debugging level. This may be an integer or a boolean, '
         'with higher values cooresponding to higher debuging levels and more '
-        'information presented.', configurable=False),
+        'information presented. Setting this variable prior to stating xonsh '
+        'will supress amalgamated imports.', configurable=False),
     'XONSH_DATA_DIR': VarDocs(
         'This is the location where xonsh data files are stored, such as '
         'history.', default="'$XDG_DATA_HOME/xonsh'"),
