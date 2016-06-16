@@ -277,7 +277,9 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True):
     return paths, lprefix
 
 
-RE_UNQUOTE = re.compile("""(?:[rub](?P<q1>["'])|(?P<q2>["']?))(.+)(?:(?P=q1)|(?P=q2))$""")
+RE_UNQUOTE = re.compile("""(?:[r](?P<raw>(?P<quotes>"[^"]|'[^']|\"""|'''))|"""
+                        """(?P<normal>(?P=quotes)?))"""
+                        """(?P<unquoted>.+)(?:(?P=raw)|(?P=normal))$""")
 
 
 def complete_dir(prefix, line, start, end, ctx, cdpath=False):
