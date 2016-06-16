@@ -324,7 +324,7 @@ def read_exclude(pkg):
 
 FAKE_LOAD = """
 import os as _os
-if _os.getenv('DEBUG', ''):
+if _os.getenv('{debug}', ''):
     pass
 else:
     import sys as _sys
@@ -339,7 +339,7 @@ del _os
 """.strip()
 
 
-def rewrite_init(pkg, order):
+def rewrite_init(pkg, order, debug='DEBUG'):
     """Rewrites the init file to insert modules."""
     fname, lines = _init_name_lines(pkg)
     for i, line in enumerate(lines):
@@ -350,7 +350,7 @@ def rewrite_init(pkg, order):
     t = ("{1} = __amalgam__\n        "
          "_sys.modules['{0}.{1}'] = __amalgam__")
     load = '\n        '.join(t.format(pkg, m) for m in order)
-    s = FAKE_LOAD.format(pkg=pkg, load=load)
+    s = FAKE_LOAD.format(pkg=pkg, load=load, debug=debug)
     if start + 1 == stop:
         lines.insert(stop, s)
     else:
@@ -364,7 +364,11 @@ def rewrite_init(pkg, order):
 def main(args=None):
     if args is None:
         args = sys.argv
+    debug = 'DEBUG'
     for pkg in args[1:]:
+        if pkg.startswith('--debug='):
+            debug = pkg[8:]
+            continue
         print('Amalgamating ' + pkg)
         exclude = read_exclude(pkg)
         print('  excluding {}'.format(pprint.pformat(exclude)))
@@ -372,7 +376,7 @@ def main(args=None):
         order = depsort(graph)
         src = amalgamate(order, graph, pkg)
         write_amalgam(src, pkg)
-        rewrite_init(pkg, order)
+        rewrite_init(pkg, order, debug=debug)
         print('  collapsed {} modules'.format(len(order)))
 
 
