@@ -20,7 +20,7 @@ from xonsh.environ import is_template_string
 from xonsh.platform import (is_readline_available, ptk_version,
     PYTHON_VERSION_INFO, pygments_version, ON_POSIX, ON_LINUX, linux_distro,
     ON_DARWIN, ON_WINDOWS, ON_CYGWIN, DEFAULT_ENCODING)
-from xonsh.tools import (to_bool, is_string, print_exception, IS_SUPERUSER,
+from xonsh.tools import (to_bool, is_string, print_exception, is_superuser,
     color_style_names, print_color, color_style)
 from xonsh.wizard import (Wizard, Pass, Message, Save, Load, YesNo, Input,
     PromptVisitor, While, StoreNonEmpty, create_truefalse_cond, YN, Unstorable,
@@ -348,7 +348,7 @@ def _info(ns):
         ('on darwin', ON_DARWIN),
         ('on windows', ON_WINDOWS),
         ('on cygwin', ON_CYGWIN),
-        ('is superuser', IS_SUPERUSER),
+        ('is superuser', is_superuser()),
         ('default encoding', DEFAULT_ENCODING),
         ])
     formatter = _format_json if ns.json else _format_human

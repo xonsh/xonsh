@@ -26,11 +26,15 @@ import re
 import sys
 from token import *
 
+from xonsh.lazyasd import LazyObject
 from xonsh.platform import PYTHON_VERSION_INFO
 
 
-cookie_re = re.compile(r'^[ \t\f]*#.*coding[:=][ \t]*([-\w.]+)', re.ASCII)
-blank_re = re.compile(br'^[ \t\f]*(?:[#\r\n]|$)', re.ASCII)
+cookie_re = LazyObject(
+    lambda: re.compile(r'^[ \t\f]*#.*coding[:=][ \t]*([-\w.]+)', re.ASCII),
+    globals(), 'cookie_re')
+blank_re = LazyObject(lambda: re.compile(br'^[ \t\f]*(?:[#\r\n]|$)', re.ASCII),
+                      globals(), 'blank_re')
 
 import token
 __all__ = token.__all__ + ["COMMENT", "tokenize", "detect_encoding",
@@ -781,7 +785,7 @@ def tokenize(readline):
 def generate_tokens(readline):
     return _tokenize(readline, None)
 
-def main():
+def tokenize_main():
     import argparse
 
     # Helper error handling routines

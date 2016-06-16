@@ -27,7 +27,7 @@ from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
 from xonsh.platform import (BASH_COMPLETIONS_DEFAULT, ON_ANACONDA, ON_LINUX,
                             ON_WINDOWS, DEFAULT_ENCODING, ON_CYGWIN)
 from xonsh.tools import (
-    IS_SUPERUSER, always_true, always_false, ensure_string, is_env_path,
+    is_superuser, always_true, always_false, ensure_string, is_env_path,
     str_to_env_path, env_path_to_str, is_bool, to_bool, bool_to_str,
     is_history_tuple, to_history_tuple, history_tuple_to_str, is_float,
     is_string, is_callable, is_string_or_callable,
@@ -1137,7 +1137,7 @@ else:
 
 FORMATTER_DICT = dict(
     user=os.environ.get(USER, '<user>'),
-    prompt_end='#' if IS_SUPERUSER else '$',
+    prompt_end='#' if is_superuser() else '$',
     hostname=socket.gethostname().split('.', 1)[0],
     cwd=_dynamically_collapsed_pwd,
     cwd_dir=lambda: os.path.dirname(_replace_home_cwd()),

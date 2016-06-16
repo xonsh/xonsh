@@ -21,24 +21,32 @@ import os
 import re
 import sys
 import ast
+import glob
 import string
 import ctypes
 import builtins
-import subprocess
+import warnings
+import functools
 import threading
 import traceback
-from glob import iglob
-from warnings import warn
+import subprocess
+import collections.abc as abc
 from contextlib import contextmanager
 from subprocess import CalledProcessError
-from collections import OrderedDict, Sequence, Set
 
 # adding further imports from xonsh modules is discouraged to avoid cirular
 # dependencies
+from xonsh.lazyasd import LazyObject, LazyDict
 from xonsh.platform import (has_prompt_toolkit, scandir,
     DEFAULT_ENCODING, ON_LINUX, ON_WINDOWS, PYTHON_VERSION_INFO)
 
-IS_SUPERUSER = ctypes.windll.shell32.IsUserAnAdmin() != 0 if ON_WINDOWS else os.getuid() == 0
+@functools.lru_cache(1)
+def is_superuser():
+    if ON_WINDOWS:
+        rtn = (ctypes.windll.shell32.IsUserAnAdmin() != 0)
+    else:
+        rtn = (os.getuid() == 0)
+    return rtn
 
 
 class XonshError(Exception):
@@ -94,14 +102,26 @@ class XonshCalledProcessError(XonshError, CalledProcessError):
 class DefaultNotGivenType(object):
     """Singleton for representing when no default value is given."""
 
+    __inst = None
+
+    def __new__(cls):
+        if DefaultNotGivenType.__inst is None:
+            DefaultNotGivenType.__inst = object.__new__(cls)
+        return DefaultNotGivenType.__inst
+
 
 DefaultNotGiven = DefaultNotGivenType()
 
-BEG_TOK_SKIPS = frozenset(['WS', 'INDENT', 'NOT', 'LPAREN'])
-END_TOK_TYPES = frozenset(['SEMI', 'AND', 'OR', 'RPAREN'])
-RE_END_TOKS = re.compile('(;|and|\&\&|or|\|\||\))')
-LPARENS = frozenset(['LPAREN', 'AT_LPAREN', 'BANG_LPAREN', 'DOLLAR_LPAREN',
-                     'ATDOLLAR_LPAREN'])
+BEG_TOK_SKIPS = LazyObject(
+                    lambda: frozenset(['WS', 'INDENT', 'NOT', 'LPAREN']),
+                    globals(), 'BEG_TOK_SKIPS')
+END_TOK_TYPES = LazyObject(lambda: frozenset(['SEMI', 'AND', 'OR', 'RPAREN']),
+                           globals(), 'END_TOK_TYPES')
+RE_END_TOKS = LazyObject(lambda: re.compile('(;|and|\&\&|or|\|\||\))'),
+                         globals(), 'RE_END_TOKS')
+LPARENS = LazyObject(lambda: frozenset(['LPAREN', 'AT_LPAREN', 'BANG_LPAREN',
+                                        'DOLLAR_LPAREN', 'ATDOLLAR_LPAREN']),
+                     globals(), 'LPARENS')
 
 
 def _is_not_lparen_and_rparen(lparens, rtok):
@@ -448,7 +468,7 @@ def suggest_commands(cmd, env, aliases):
                     and levenshtein(_file.lower(), cmd, thresh) < thresh:
                 suggested[_file] = 'Command ({0})'.format(os.path.join(path, _file))
 
-    suggested = OrderedDict(
+    suggested = abc.OrderedDict(
         sorted(suggested.items(),
                key=lambda x: suggestion_sort_helper(x[0].lower(), cmd)))
     num = min(len(suggested), max_sugg)
@@ -677,7 +697,7 @@ def is_env_path(x):
     if isinstance(x, str):
         return False
     else:
-        return (isinstance(x, Sequence) and
+        return (isinstance(x, abc.Sequence) and
                 all(isinstance(a, str) for a in x))
 
 
@@ -738,7 +758,8 @@ def logfile_opt_to_str(x):
     return str(x)
 
 
-_FALSES = frozenset(['', '0', 'n', 'f', 'no', 'none', 'false'])
+_FALSES = LazyObject(lambda: frozenset(['', '0', 'n', 'f', 'no', 'none',
+                                        'false']), globals(), '_FALSES')
 
 
 def to_bool(x):
@@ -802,7 +823,7 @@ def ensure_int_or_slice(x):
 
 def is_string_set(x):
     """Tests if something is a set"""
-    return (isinstance(x, Set) and
+    return (isinstance(x, abc.Set) and
             all(isinstance(a, str) for a in x))
 
 
@@ -821,7 +842,7 @@ def set_to_csv(x):
 
 def is_bool_seq(x):
     """Tests if an object is a sequence of bools."""
-    return isinstance(x, Sequence) and all(isinstance(y, bool) for y in x)
+    return isinstance(x, abc.Sequence) and all(isinstance(y, bool) for y in x)
 
 
 def csv_to_bool_seq(x):
@@ -847,8 +868,9 @@ def to_completions_display_value(x):
     elif x == 'single':
         pass
     else:
-        warn('"{}" is not a valid value for $COMPLETIONS_DISPLAY. '.format(x) +
-             'Using "multi".', RuntimeWarning)
+        msg = '"{}" is not a valid value for $COMPLETIONS_DISPLAY. '.format(x)
+        msg += 'Using "multi".'
+        warnings.warn(msg, RuntimeWarning)
         x = 'multi'
     return x
 
@@ -879,9 +901,11 @@ _mb_to_b = lambda x: 1024 * _kb_to_b(x)
 _gb_to_b = lambda x: 1024 * _mb_to_b(x)
 _tb_to_b = lambda x: 1024 * _tb_to_b(x)
 
-CANON_HISTORY_UNITS = frozenset(['commands', 'files', 's', 'b'])
+CANON_HISTORY_UNITS = LazyObject(
+    lambda: frozenset(['commands', 'files', 's', 'b']),
+    globals(), 'CANON_HISTORY_UNITS')
 
-HISTORY_UNITS = {
+HISTORY_UNITS = LazyObject(lambda: {
     '': ('commands', int),
     'c': ('commands', int),
     'cmd': ('commands', int),
@@ -931,13 +955,14 @@ HISTORY_UNITS = {
     'tb': ('b', _tb_to_b),
     'terabyte': ('b', _tb_to_b),
     'terabytes': ('b', _tb_to_b),
-    }
+    }, globals(), 'HISTORY_UNITS')
 """Maps lowercase unit names to canonical name and conversion utilities."""
 
 def is_history_tuple(x):
     """Tests if something is a proper history value, units tuple."""
-    if isinstance(x, Sequence) and len(x) == 2 and isinstance(x[0], (int, float)) \
-                               and x[1].lower() in CANON_HISTORY_UNITS:
+    if isinstance(x, abc.Sequence) and len(x) == 2 and \
+                     isinstance(x[0], (int, float)) and \
+                     x[1].lower() in CANON_HISTORY_UNITS:
          return True
     return False
 
@@ -972,11 +997,13 @@ def dynamic_cwd_tuple_to_str(x):
         return str(x[0])
 
 
-RE_HISTORY_TUPLE = re.compile('([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)\s*([A-Za-z]*)')
+RE_HISTORY_TUPLE = LazyObject(
+    lambda: re.compile('([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)\s*([A-Za-z]*)'),
+    globals(), 'RE_HISTORY_TUPLE')
 
 def to_history_tuple(x):
     """Converts to a canonincal history tuple."""
-    if not isinstance(x, (Sequence, float, int)):
+    if not isinstance(x, (abc.Sequence, float, int)):
         raise ValueError('history size must be given as a sequence or number')
     if isinstance(x, str):
         m = RE_HISTORY_TUPLE.match(x.strip().lower())
@@ -1086,8 +1113,9 @@ def expand_gray_colors_for_cmd_exe(style_map):
 
 
 def intensify_colors_on_win_setter(enable):
-    """ Resets the style when setting the INTENSIFY_COLORS_ON_WIN
-        environment variable. """
+    """Resets the style when setting the INTENSIFY_COLORS_ON_WIN
+    environment variable.
+    """
     enable = to_bool(enable)
     delattr(builtins.__xonsh_shell__.shell.styler, 'style_name')
     return enable
@@ -1102,22 +1130,24 @@ _STRINGS = (_RE_STRING_TRIPLE_DOUBLE,
             _RE_STRING_TRIPLE_SINGLE,
             _RE_STRING_DOUBLE,
             _RE_STRING_SINGLE)
-RE_BEGIN_STRING = re.compile("(" + _RE_STRING_START +
-                             '(' + "|".join(_STRINGS) +
-                             '))')
+RE_BEGIN_STRING = LazyObject(
+    lambda: re.compile("(" + _RE_STRING_START + \
+                       '(' + "|".join(_STRINGS) + '))'),
+    globals(), 'RE_BEGIN_STRING')
 """Regular expression matching the start of a string, including quotes and
 leading characters (r, b, or u)"""
 
-RE_STRING_START = re.compile(_RE_STRING_START)
+RE_STRING_START = LazyObject(lambda: re.compile(_RE_STRING_START),
+                             globals(), 'RE_STRING_START')
 """Regular expression matching the characters before the quotes when starting a
 string (r, b, or u, case insensitive)"""
 
-RE_STRING_CONT = {k: re.compile(v) for k,v in {
-    '"': r'((\\(.|\n))|([^"\\]))*',
-    "'": r"((\\(.|\n))|([^'\\]))*",
-    '"""': r'((\\(.|\n))|([^"\\])|("(?!""))|\n)*',
-    "'''": r"((\\(.|\n))|([^'\\])|('(?!''))|\n)*",
-}.items()}
+RE_STRING_CONT = LazyDict({
+    '"': lambda: re.compile(r'((\\(.|\n))|([^"\\]))*'),
+    "'": lambda: re.compile(r"((\\(.|\n))|([^'\\]))*"),
+    '"""': lambda: re.compile(r'((\\(.|\n))|([^"\\])|("(?!""))|\n)*'),
+    "'''": lambda: re.compile(r"((\\(.|\n))|([^'\\])|('(?!''))|\n)*"),
+    }, globals(), 'RE_STRING_CONT')
 """Dictionary mapping starting quote sequences to regular expressions that
 match the contents of a string beginning with those quotes (not including the
 terminating quotes)"""
@@ -1324,7 +1354,7 @@ def normabspath(p):
     return os.path.normcase(os.path.abspath(p))
 
 
-class CommandsCache(Set):
+class CommandsCache(abc.Set):
     """A lazy cache representing the commands available on the file system."""
 
     def __init__(self):
@@ -1393,7 +1423,8 @@ class CommandsCache(Set):
         return len(self._cmds_cache)
 
 
-WINDOWS_DRIVE_MATCHER = re.compile(r'^\w:')
+WINDOWS_DRIVE_MATCHER = LazyObject(lambda: re.compile(r'^\w:'),
+                                   globals(), 'WINDOWS_DRIVE_MATCHER')
 
 
 def expand_case_matching(s):
@@ -1448,9 +1479,9 @@ def _iglobpath(s, ignore_case=False):
         if '**' in s and '**/*' not in s:
             s = s.replace('**', '**/*')
         # `recursive` is only a 3.5+ kwarg.
-        return iglob(s, recursive=True), s
+        return glob.iglob(s, recursive=True), s
     else:
-        return iglob(s), s
+        return glob.iglob(s), s
 
 def iglobpath(s, ignore_case=False):
     """Simple wrapper around iglob that also expands home and env vars."""
