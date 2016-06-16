@@ -8,6 +8,7 @@ import pathlib
 import platform
 import functools
 import subprocess
+import importlib.util
 
 from xonsh.lazyasd import LazyObject, LazyBool
 
@@ -57,12 +58,8 @@ ON_ANACONDA = LazyBool(
 """ ``True`` if executed in an Anaconda instance, else ``False``. """
 
 def _has_pygments():
-    try:
-        import pygments
-        rtn = True
-    except ImportError:
-        rtn = False
-    return rtn
+    spec = importlib.util.find_spec('pygments')
+    return (spec is not None)
 
 
 HAS_PYGMENTS = LazyBool(_has_pygments, globals(), 'HAS_PYGMENTS')
@@ -70,6 +67,7 @@ HAS_PYGMENTS = LazyBool(_has_pygments, globals(), 'HAS_PYGMENTS')
 del _has_pygments
 
 
+@functools.lru_cache(1)
 def pygments_version():
     """pygments.__version__ version if available, else Ǹone."""
     if HAS_PYGMENTS:
@@ -83,14 +81,8 @@ def pygments_version():
 @functools.lru_cache(1)
 def has_prompt_toolkit():
     """ Tests if the `prompt_toolkit` is available. """
-    try:
-        import prompt_toolkit
-    except ImportError:
-        return False
-    except:
-        raise
-    else:
-        return True
+    spec = importlib.util.find_spec('pygments')
+    return (spec is not None)
 
 
 @functools.lru_cache(1)
@@ -123,12 +115,15 @@ def best_shell_type():
 @functools.lru_cache(1)
 def is_readline_available():
     """Checks if readline is available to import."""
-    try:
-        import readline
-    except:  # pyreadline will sometimes fail in strange ways
-        return False
-    else:
-        return True
+    spec = importlib.util.find_spec('readline')
+    return (spec is not None)
+    # might need to return to this at some point.
+    #try:
+    #    import readline
+    #except:  # pyreadline will sometimes fail in strange ways
+    #    return False
+    #else:
+    #    return True
 #
 # Encoding
 #
@@ -241,7 +236,7 @@ def _bcd():
     """
     if ON_LINUX or ON_CYGWIN:
         if linux_distro() == 'arch':
-            BASH_COMPLETIONS_DEFAULT = (
+            bcd = (
                 '/usr/share/bash-completion/bash_completion',
                 '/usr/share/bash-completion/completions')
         else:

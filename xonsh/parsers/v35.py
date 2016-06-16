@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Implements the xonsh parser for Python v3.5."""
-from xonsh import ast
+import xonsh.ast as ast
 from xonsh.parsers.base import BaseParser
 
 

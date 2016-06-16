@@ -17,8 +17,6 @@ else:
         _sys.modules['xonsh.lazyjson'] = __amalgam__
         pretty = __amalgam__
         _sys.modules['xonsh.pretty'] = __amalgam__
-        teepty = __amalgam__
-        _sys.modules['xonsh.teepty'] = __amalgam__
         timings = __amalgam__
         _sys.modules['xonsh.timings'] = __amalgam__
         ansi_colors = __amalgam__
@@ -29,6 +27,8 @@ else:
         _sys.modules['xonsh.openpy'] = __amalgam__
         platform = __amalgam__
         _sys.modules['xonsh.platform'] = __amalgam__
+        teepty = __amalgam__
+        _sys.modules['xonsh.teepty'] = __amalgam__
         jobs = __amalgam__
         _sys.modules['xonsh.jobs'] = __amalgam__
         parser = __amalgam__

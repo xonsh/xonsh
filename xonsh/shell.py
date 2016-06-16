@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """The xonsh shell"""
-import builtins
 import random
+import builtins
 from warnings import warn
 
 from xonsh.xontribs import update_context
