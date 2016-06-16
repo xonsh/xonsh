@@ -277,6 +277,14 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True):
     return paths, lprefix
 
 
+RE_UNQUOTE = re.compile("""(?:[rub](?P<q1>["'])|(?P<q2>["']?))(.+)(?:(?P=q1)|(?P=q2))$""")
+
+
 def complete_dir(prefix, line, start, end, ctx, cdpath=False):
-    o, lp = complete_path(prefix, line, start, end, cdpath)
-    return {i for i in o if os.path.isdir(i.strip(''''"'''))}, lp
+    paths, lp = complete_path(prefix, line, start, end, cdpath)
+    dirs = set()
+    for path in paths:
+        m = RE_UNQUOTE.match(path)
+        if m and os.path.isdir(m.group(2)):
+            dirs.add(path)
+    return dirs, lp
