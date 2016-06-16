@@ -19,7 +19,8 @@ import types
 import importlib
 
 from xonsh.lazyasd import LazyObject
-from xonsh.openpy import detect_encoding, read_py_file
+from xonsh.tokenize import detect_encoding
+from xonsh.openpy import read_py_file
 from xonsh.tools import (cast_unicode, safe_hasattr, indent,
                          print_color, format_color)
 from xonsh.platform import HAS_PYGMENTS, PYTHON_VERSION_INFO

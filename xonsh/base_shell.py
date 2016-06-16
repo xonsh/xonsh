@@ -6,15 +6,14 @@ import sys
 import time
 import builtins
 
-from xonsh.tools import XonshError, escape_windows_cmd_string, print_exception
+from xonsh.tools import (XonshError, escape_windows_cmd_string, print_exception,
+    DefaultNotSet)
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.codecache import (should_use_cache, code_cache_name,
                              code_cache_check, get_cache_filename,
                              update_cache, run_compiled_code)
 from xonsh.completer import Completer
 from xonsh.environ import multiline_prompt, format_prompt, partial_format_prompt
-if HAS_PYGMENTS:
-    from xonsh.pyghooks import XonshStyle
 
 
 class _TeeOut(object):
@@ -118,11 +117,26 @@ class BaseShell(object):
         self.buffer = []
         self.need_more_lines = False
         self.mlprompt = None
-        if HAS_PYGMENTS:
-            env = builtins.__xonsh_env__
-            self.styler = XonshStyle(env.get('XONSH_COLOR_STYLE'))
-        else:
-            self.styler = None
+        self._styler = DefaultNotGiven
+
+    @property
+    def styler(self):
+        if self._styler is DefaultNotGiven:
+            if HAS_PYGMENTS:
+                from xonsh.pyghooks import XonshStyle
+                env = builtins.__xonsh_env__
+                self._styler = XonshStyle(env.get('XONSH_COLOR_STYLE'))
+            else:
+                self._styler = None
+        return self._styler
+
+    @styler.setter
+    def styler(self, value):
+        self._styler = value
+
+    @styler.deleter
+    def styler(self):
+        self._styler = DefaultNotGiven
 
     def emptyline(self):
         """Called when an empty line has been entered."""
