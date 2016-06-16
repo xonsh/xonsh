@@ -478,7 +478,6 @@ def _show(ns=None, hist=None, start_index=None, end_index=None,
         return None
     if not commands:
         return None
-    num_of_commands = len(commands)
     if start_time:
         if isinstance(start_time, datetime):
             start_time = start_time.timestamp()
@@ -515,20 +514,21 @@ def _show(ns=None, hist=None, start_index=None, end_index=None,
         commands = commands[idx]
 
     if ns and ns.reverse:
-        commands = reversed(commands)
+        commands = list(reversed(commands))
 
-    digits = len(str(max([i for c, t, i in commands])))
-    if alias:
-        for c, t, i in commands:
-            for line_ind, line in enumerate(c.split('\n')):
-                if line_ind == 0:
-                    print('{:>{width}}: {}'.format(i, line,
-                                                   width=digits + 1))
-                else:
-                    print(' {:>>{width}} {}'.format('', line,
-                                                    width=digits + 1))
-    else:
-        return commands
+    if commands:
+        digits = len(str(max([i for c, t, i in commands])))
+        if alias:
+            for c, t, i in commands:
+                for line_ind, line in enumerate(c.split('\n')):
+                    if line_ind == 0:
+                        print('{:>{width}}: {}'.format(i, line,
+                                                       width=digits + 1))
+                    else:
+                        print(' {:>>{width}} {}'.format('', line,
+                                                        width=digits + 1))
+        else:
+            return commands
 
 
 #
@@ -694,7 +694,7 @@ _MAIN_ACTIONS = {
 
 def _main(hist, args):
     """This implements the history CLI."""
-    if not args or ensure_int_or_slice(args[0]):
+    if not args or args[0] in ['-r'] or ensure_int_or_slice(args[0]):
         args.insert(0, 'show')
     elif args[0] not in list(_MAIN_ACTIONS) + ['-h', '--help']:
         print("{} is not a valid input.".format(args[0]),
