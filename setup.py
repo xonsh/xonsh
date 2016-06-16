@@ -163,6 +163,11 @@ def main():
         pass
     with open(os.path.join(os.path.dirname(__file__), 'README.rst'), 'r') as f:
         readme = f.read()
+    scripts = ['scripts/xon.sh']
+    if 'win' in sys.platform:
+        scripts.append('scripts/xonsh.bat')
+    else:
+        scripts.append('scripts/xonsh')
     skw = dict(
         name='xonsh',
         description='A general purpose, Python-ish shell',
@@ -179,18 +184,25 @@ def main():
                   'xonsh.xoreutils', 'xontrib', 'xonsh.completers'],
         package_dir={'xonsh': 'xonsh', 'xontrib': 'xontrib'},
         package_data={'xonsh': ['*.json'], 'xontrib': ['*.xsh']},
-        cmdclass=cmdclass
+        cmdclass=cmdclass,
+        scripts=scripts,
         )
     if HAVE_SETUPTOOLS:
+        # WARNING!!! Do not use setuptools 'console_scripts'
+        # It validates the depenendcies (of which we have none) everytime the
+        # 'xonsh' command is run. This validation adds ~0.2 sec. to the startup
+        # time of xonsh - for every single xonsh run.  This prevents us from
+        # reaching the goal of a startup time of < 0.1 sec.  So never ever write
+        # the following:
+        #
+        #     'console_scripts': ['xonsh = xonsh.main:main'],
+        #
+        # END WARNING
         skw['entry_points'] = {
             'pygments.lexers': ['xonsh = xonsh.pyghooks:XonshLexer',
                                 'xonshcon = xonsh.pyghooks:XonshConsoleLexer'],
-            'console_scripts': ['xonsh = xonsh.main:main'],
             }
         skw['cmdclass']['develop'] = xdevelop
-    else:
-        skw['scripts'] = ['scripts/xonsh'] if 'win' not in sys.platform else ['scripts/xonsh.bat']
-
     setup(**skw)
 
 
