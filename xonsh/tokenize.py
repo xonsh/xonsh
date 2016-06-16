@@ -162,14 +162,14 @@ class TokenInfo(collections.namedtuple('TokenInfo', 'type string start end line'
             return self.type
 
 def group(*choices): return '(' + '|'.join(choices) + ')'
-def any(*choices): return group(*choices) + '*'
+def tokany(*choices): return group(*choices) + '*'
 def maybe(*choices): return group(*choices) + '?'
 
 # Note: we use unicode matching for names ("\w") but ascii matching for
 # number literals.
 Whitespace = r'[ \f\t]*'
 Comment = r'#[^\r\n]*'
-Ignore = Whitespace + any(r'\\\r?\n' + Whitespace) + maybe(Comment)
+Ignore = Whitespace + tokany(r'\\\r?\n' + Whitespace) + maybe(Comment)
 Name_RE = r'\$?\w+'
 
 Hexnumber = r'0[xX][0-9a-fA-F]+'

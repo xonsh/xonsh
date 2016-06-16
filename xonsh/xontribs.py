@@ -12,7 +12,9 @@ from importlib.util import find_spec
 from xonsh.tools import print_color
 
 
-XONTRIBS_JSON = os.path.splitext(__file__)[0] + '.json'
+@functools.lru_cache(1)
+def xontribs_json():
+    return os.path.join(os.path.dirname(__file__), 'xontribs.json')
 
 def find_xontrib(name):
     """Finds a xontribution from its name."""
@@ -49,7 +51,7 @@ def update_context(name, ctx=None):
 @functools.lru_cache()
 def xontrib_metadata():
     """Loads and returns the xontribs.json file."""
-    with open(XONTRIBS_JSON, 'r') as f:
+    with open(xontribs_json(), 'r') as f:
         md = json.load(f)
     return md
 
