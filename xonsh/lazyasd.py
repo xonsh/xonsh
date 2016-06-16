@@ -94,7 +94,7 @@ class LazyDict(abc.MutableMapping):
 
     def _destruct(self):
         if len(self._loaders) == 0:
-            self._ctx[self._name] = d
+            self._ctx[self._name] = self._d
 
     def __getitem__(self, key):
         d = self._d

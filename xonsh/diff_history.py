@@ -279,7 +279,7 @@ class HistoryDiffer(object):
 
 _HD_PARSER = None
 
-def _create_parser(p=None):
+def _dh_create_parser(p=None):
     global _HD_PARSER
     p_was_none = (p is None)
     if _HD_PARSER is not None and p_was_none:
@@ -298,17 +298,17 @@ def _create_parser(p=None):
     return p
 
 
-def _main_action(ns, hist=None):
+def _dh_main_action(ns, hist=None):
     hd = HistoryDiffer(ns.a, ns.b, reopen=ns.reopen, verbose=ns.verbose)
     print_color(hd.format())
 
 
-def main(args=None, stdin=None):
+def diff_history_main(args=None, stdin=None):
     """Main entry point for history diff'ing"""
     parser = _create_parser()
     ns = parser.parse_args(args)
-    _main_action(ns)
+    _dh_main_action(ns)
 
 
 if __name__ == '__main__':
-    main()
+    diff_history_main()

@@ -12,7 +12,7 @@ from threading import Thread, Condition
 
 from xonsh.lazyjson import LazyJSON, ljdump, LJNode
 from xonsh.tools import ensure_int_or_slice, to_history_tuple
-from xonsh.diff_history import _create_parser, _main_action
+from xonsh.diff_history import _dh_create_parser, _dh_main_action
 
 
 def _gc_commands_to_rmfiles(hsize, files):
@@ -362,7 +362,7 @@ def _create_parser():
                       help='print in JSON format')
     # diff
     diff = subp.add_parser('diff', help='diffs two xonsh history files')
-    _create_parser(p=diff)
+    _dh_create_parser(p=diff)
     # replay, dynamically
     from xonsh import replay
     rp = subp.add_parser('replay', help='replays a xonsh history file')
@@ -436,7 +436,7 @@ _MAIN_ACTIONS = {
     'id': lambda ns, hist: print(hist.sessionid),
     'file': lambda ns, hist: print(hist.filename),
     'info': _info,
-    'diff': _main_action,
+    'diff': _dh_main_action,
     'gc': _gc,
     }
 

@@ -45,6 +45,7 @@ def clean_tables():
             print('Removed ' + f)
 
 
+os.environ['DEBUG'] = '1'
 from xonsh import __version__ as XONSH_VERSION
 
 def build_tables():
@@ -55,9 +56,7 @@ def build_tables():
     Parser(lexer_table='lexer_table', yacc_table='parser_table',
            outputdir='xonsh')
     import amalgamate
-    os.environ['DEBUG'] = '1'
     amalgamate.main(['amalgamate', 'xonsh'])
-    del os.environ['DEBUG']
     sys.path.pop(0)
 
 

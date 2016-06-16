@@ -30,6 +30,7 @@ import functools
 import threading
 import traceback
 import subprocess
+import collections
 import collections.abc as abc
 from contextlib import contextmanager
 from subprocess import CalledProcessError
@@ -468,7 +469,7 @@ def suggest_commands(cmd, env, aliases):
                     and levenshtein(_file.lower(), cmd, thresh) < thresh:
                 suggested[_file] = 'Command ({0})'.format(os.path.join(path, _file))
 
-    suggested = abc.OrderedDict(
+    suggested = collections.OrderedDict(
         sorted(suggested.items(),
                key=lambda x: suggestion_sort_helper(x[0].lower(), cmd)))
     num = min(len(suggested), max_sugg)
