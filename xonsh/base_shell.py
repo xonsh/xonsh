@@ -7,7 +7,7 @@ import time
 import builtins
 
 from xonsh.tools import (XonshError, escape_windows_cmd_string, print_exception,
-    DefaultNotSet)
+    DefaultNotGiven)
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.codecache import (should_use_cache, code_cache_name,
                              code_cache_check, get_cache_filename,
