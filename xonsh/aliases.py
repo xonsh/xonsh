@@ -576,5 +576,7 @@ def make_default_aliases():
         default_aliases['ls'] = ['ls', '-G']
     else:
         default_aliases['grep'] = ['grep', '--color=auto']
+        default_aliases['egrep'] = ['egrep', '--color=auto']
+        default_aliases['fgrep'] = ['fgrep', '--color=auto']
         default_aliases['ls'] = ['ls', '--color=auto', '-v']
     return default_aliases
