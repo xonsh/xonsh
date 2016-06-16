@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Implements the base xonsh parser."""
+import re
 from collections import Iterable, Sequence, Mapping
 
 try:
@@ -11,7 +12,7 @@ from xonsh import ast
 from xonsh.ast import has_elts, xonsh_call
 from xonsh.lexer import Lexer, LexToken
 from xonsh.platform import PYTHON_VERSION_INFO
-
+from xonsh.tokenize import SearchPath
 
 class Location(object):
     """Location in a file."""
@@ -111,11 +112,11 @@ def xonsh_superhelp(x, lineno=None, col=None):
     return xonsh_call('__xonsh_superhelp__', [x], lineno=lineno, col=col)
 
 
-def xonsh_pathsearch(x, pymode=False, lineno=None, col=None):
+def xonsh_pathsearch(func, s, pymode=False, lineno=None, col=None):
     """Creates the AST node for calling the __xonsh_pathsearch__() function.
     The pymode argument indicate if it is called from subproc or python mode"""
     pymode = ast.NameConstant(value=pymode, lineno=lineno, col_offset=col)
-    return xonsh_call('__xonsh_pathsearch__', args=[x, pymode], lineno=lineno,
+    return xonsh_call('__xonsh_pathsearch__', args=[func, s, pymode], lineno=lineno,
                       col=col)
 
 
@@ -1711,12 +1712,21 @@ class BaseParser(object):
         p[0] = ast.NameConstant(value=False, lineno=p1.lineno,
                                 col_offset=p1.lexpos)
 
-    def p_atom_re(self, p):
+    def p_atom_pathsearch(self, p):
         """atom : SEARCHPATH"""
-        p1 = ast.Str(s=p[1], lineno=self.lineno,
-                     col_offset=self.col)
-        p[0] = xonsh_pathsearch(p1, pymode=True, lineno=self.lineno,
-                                col=self.col)
+        searchfunc, pattern = re.match(SearchPath, p[1]).groups()
+        pattern = ast.Str(s=pattern, lineno=self.lineno,
+                          col_offset=self.col)
+        if searchfunc in {'r', ''}:
+            func = '__xonsh_regexsearch__'
+        elif searchfunc == 'g':
+            func = '__xonsh_globsearch__'
+        else:
+            func = searchfunc[1:]  # remove the '@' character
+        func = ast.Name(id=func, ctx=ast.Load(), lineno=self.lineno,
+                        col_offset=self.col)
+        p[0] = xonsh_pathsearch(func, pattern, pymode=True,
+                                lineno=self.lineno, col=self.col)
 
     def p_atom_dname(self, p):
         """atom : DOLLAR_NAME"""
