@@ -232,7 +232,7 @@ def windows_bash_command():
     return wbc
 
 #
-# Bash completions defaults
+# Environment variables defaults
 #
 
 def _bcd():
@@ -242,7 +242,7 @@ def _bcd():
     if ON_LINUX or ON_CYGWIN:
         if linux_distro() == 'arch':
             BASH_COMPLETIONS_DEFAULT = (
-                '/etc/bash_completion',
+                '/usr/share/bash-completion/bash_completion',
                 '/usr/share/bash-completion/completions')
         else:
             bcd = ('/usr/share/bash-completion',
@@ -265,3 +265,28 @@ def _bcd():
 BASH_COMPLETIONS_DEFAULT = LazyObject(_bcd, globals(),
                                       'BASH_COMPLETIONS_DEFAULT')
 del _bcd
+
+
+def _pd():
+    if ON_LINUX or ON_CYGWIN:
+        if linux_distro() == 'arch':
+            pd = ('/usr/local/sbin',
+                  '/usr/local/bin', '/usr/bin', '/usr/bin/site_perl',
+                  '/usr/bin/vendor_perl', '/usr/bin/core_perl')
+        else:
+            pd = (os.path.expanduser('~/bin'), '/usr/local/sbin',
+                  '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin',
+                  '/usr/games', '/usr/local/games')
+    elif ON_DARWIN:
+        pd = ('/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin')
+    elif ON_WINDOWS:
+        import winreg
+        key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
+                r'SYSTEM\CurrentControlSet\Control\Session Manager\Environment')
+        pd = tuple(winreg.QueryValueEx(key, 'Path')[0].split(os.pathsep))
+    else:
+        pd = ()
+    return pd
+
+PATH_DEFAULT = LazyObject(_pd, globals(), 'PATH_DEFAULT')
+del _pd

@@ -23,9 +23,9 @@ from xonsh import __version__ as XONSH_VERSION
 from xonsh.jobs import get_next_task
 from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
-from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
+from xonsh.foreign_shells import load_foreign_envs
 from xonsh.platform import (BASH_COMPLETIONS_DEFAULT, ON_ANACONDA, ON_LINUX,
-                            ON_WINDOWS, DEFAULT_ENCODING, ON_CYGWIN)
+    ON_WINDOWS, DEFAULT_ENCODING, ON_CYGWIN, PATH_DEFAULT)
 from xonsh.tools import (
     is_superuser, always_true, always_false, ensure_string, is_env_path,
     str_to_env_path, env_path_to_str, is_bool, to_bool, bool_to_str,
@@ -228,7 +228,7 @@ DEFAULT_VALUES = {
     'LOADED_RC_FILES': (),
     'MOUSE_SUPPORT': False,
     'MULTILINE_PROMPT': '.',
-    'PATH': (),
+    'PATH': PATH_DEFAULT,
     'PATHEXT': (),
     'PRETTY_PRINT_RESULTS': True,
     'PROMPT': DEFAULT_PROMPT,
@@ -617,6 +617,10 @@ class Env(MutableMapping):
             args = (os.environ, )
         for key, val in dict(*args, **kwargs).items():
             self[key] = val
+        if 'PATH' not in self._d:
+            # this is here so the PATH is accessible to subprocs and so that
+            # it can be modified in-place in the xonshrc file
+            self._d['PATH'] = list(PATH_DEFAULT)
         self._detyped = None
 
     @staticmethod
@@ -695,20 +699,17 @@ class Env(MutableMapping):
         manager, the original values are restored.
         """
         old = {}
-
         # single positional argument should be a dict-like object
         if other is not None:
             for k, v in other.items():
                 old[k] = self.get(k, NotImplemented)
                 self[k] = v
-
         # kwargs could also have been sent in
         for k, v in kwargs.items():
             old[k] = self.get(k, NotImplemented)
             self[k] = v
 
         yield self
-
         # restore the values
         for k, v in old.items():
             if v is NotImplemented:
@@ -1431,7 +1432,7 @@ def default_env(env=None, config=None, login=True):
     if login:
         conf = load_static_config(ctx, config=config)
 
-        foreign_env = load_foreign_envs(shells=conf.get('foreign_shells', DEFAULT_SHELLS),
+        foreign_env = load_foreign_envs(shells=conf.get('foreign_shells', ()),
                                         issue_warning=False)
         if ON_WINDOWS:
             windows_foreign_env_fixes(foreign_env)
