@@ -18,8 +18,8 @@ import sys
 import enum
 import builtins
 import importlib
-from argparse import ArgumentParser, ArgumentTypeError
 from contextlib import contextmanager
+from argparse import ArgumentParser, ArgumentTypeError
 
 try:
     from setproctitle import setproctitle

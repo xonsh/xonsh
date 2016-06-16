@@ -4,27 +4,28 @@ import os
 import re
 import string
 import builtins
+import importlib
 from warnings import warn
 from collections import ChainMap
 from collections.abc import MutableMapping
 
-from pygments.lexer import inherit, bygroups, using, this
 from pygments.token import (Keyword, Name, Comment, String, Error, Number,
                             Operator, Generic, Whitespace, Token)
-from pygments.lexers.shell import BashLexer
-from pygments.lexers.agile import PythonLexer
 from pygments.style import Style
 from pygments.styles import get_style_by_name
 import pygments.util
+from pygments.lexer import inherit, bygroups, using, this
+from pygments.lexers.shell import BashLexer
+from pygments.lexers.agile import PythonLexer
 
+from xonsh.lazyasd import LazyObject
 from xonsh.tools import (ON_WINDOWS, intensify_colors_for_cmd_exe,
                          expand_gray_colors_for_cmd_exe)
 
+
 class XonshSubprocLexer(BashLexer):
     """Lexer for xonsh subproc mode."""
-
     name = 'Xonsh subprocess lexer'
-
     tokens = {'root': [(r'`[^`]*?`', String.Backtick), inherit, ]}
 
 
@@ -89,7 +90,9 @@ XonshSubprocLexer.tokens['root'] = [
 
 Color = Token.Color  # alias to new color token namespace
 
-RE_BACKGROUND = re.compile('(BG#|BGHEX|BACKGROUND)')
+RE_BACKGROUND = LazyObject(re.compile('(BG#|BGHEX|BACKGROUND)'),
+                           globals(), 'RE_BACKGROUND')
+
 
 def norm_name(name):
     """Normalizes a color name."""

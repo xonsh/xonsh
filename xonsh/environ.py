@@ -1417,7 +1417,6 @@ def foreign_env_fixes(ctx):
     if 'PROMPT' in ctx:
         del ctx['PROMPT']
 
-
 def default_env(env=None, config=None, login=True):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence

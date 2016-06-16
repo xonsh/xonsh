@@ -54,7 +54,6 @@ def build_tables():
     from xonsh.parser import Parser
     Parser(lexer_table='lexer_table', yacc_table='parser_table',
            outputdir='xonsh')
-
     import amalgamate
     os.environ['DEBUG'] = '1'
     amalgamate.main(['amalgamate', 'xonsh'])
