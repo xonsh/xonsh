@@ -3,14 +3,17 @@
 import os
 import sys
 import time
+import ctypes
 import signal
 import builtins
-from subprocess import TimeoutExpired, check_output
-from collections import deque
+import functools
+import subprocess
+import collections
 
+from xonsh.lazyasd import LazyObject
 from xonsh.platform import ON_DARWIN, ON_WINDOWS, ON_CYGWIN
 
-tasks = deque()
+tasks = LazyObject(collections.deque, globals(), 'tasks')
 # Track time stamp of last exit command, so that two consecutive attempts to
 # exit can kill all jobs and exit.
 _last_exit_time = None
@@ -25,10 +28,8 @@ if ON_DARWIN:
             if pid is None:  # the pid of an aliased proc is None
                 continue
             os.kill(pid, signal)
-
 elif ON_WINDOWS:
     pass
-
 elif ON_CYGWIN:
     # Similar to what happened on OSX, more issues on Cygwin
     # (see Github issue #514).
@@ -41,7 +42,6 @@ elif ON_CYGWIN:
                     os.kill(pid, signal)
                 except:
                     pass
-
 else:
     def _send_signal(job, signal):
         os.killpg(job['pgrp'], signal)
@@ -52,7 +52,8 @@ if ON_WINDOWS:
         job['status'] = "running"
 
     def _kill(job):
-        check_output(['taskkill', '/F', '/T', '/PID', str(job['obj'].pid)])
+        subprocess.check_output(['taskkill', '/F', '/T', '/PID',
+                                 str(job['obj'].pid)])
 
     def ignore_sigtstp():
         pass
@@ -80,7 +81,7 @@ if ON_WINDOWS:
         while obj.returncode is None:
             try:
                 obj.wait(0.01)
-            except TimeoutExpired:
+            except subprocess.TimeoutExpired:
                 pass
             except KeyboardInterrupt:
                 _kill(active_task)
@@ -105,21 +106,36 @@ else:
 
     _shell_pgrp = os.getpgrp()
 
-    _block_when_giving = (signal.SIGTTOU, signal.SIGTTIN,
-                          signal.SIGTSTP, signal.SIGCHLD)
+    _block_when_giving = LazyObject(lambda: (signal.SIGTTOU, signal.SIGTTIN,
+                                             signal.SIGTSTP, signal.SIGCHLD),
+                                    globals(), '_block_when_giving')
+
+    # check for shell tty
+    @functools.lru_cache(1)
+    def _shell_tty():
+        try:
+            _shtty = sys.stderr.fileno()
+            if os.tcgetpgrp(_shtty) != os.getpgid(os.getpid()):
+                # we don't own it
+                _shtty = None
+        except OSError:
+            _shtty = None
+        return _shtty
+
 
     # _give_terminal_to is a simplified version of:
     #    give_terminal_to from bash 4.3 source, jobs.c, line 4030
     # this will give the terminal to the process group pgid
     if ON_CYGWIN:
-        import ctypes
-        _libc = ctypes.CDLL('cygwin1.dll')
+        _libc = LazyObject(lambda: ctypes.CDLL('cygwin1.dll'),
+                           globals(), '_libc')
 
         # on cygwin, signal.pthread_sigmask does not exist in Python, even
         # though pthread_sigmask is defined in the kernel.  thus, we use
         # ctypes to mimic the calls in the "normal" version below.
         def _give_terminal_to(pgid):
-            if _shell_tty is not None and os.isatty(_shell_tty):
+            shtty = _shell_tty()
+            if shtty is not None and os.isatty(shtty):
                 omask = ctypes.c_ulong()
                 mask = ctypes.c_ulong()
                 _libc.sigemptyset(ctypes.byref(mask))
@@ -129,25 +145,18 @@ else:
                 _libc.sigprocmask(ctypes.c_int(signal.SIG_BLOCK),
                                   ctypes.byref(mask),
                                   ctypes.byref(omask))
-                _libc.tcsetpgrp(ctypes.c_int(_shell_tty), ctypes.c_int(pgid))
+                _libc.tcsetpgrp(ctypes.c_int(shtty), ctypes.c_int(pgid))
                 _libc.sigprocmask(ctypes.c_int(signal.SIG_SETMASK),
                                   ctypes.byref(omask), None)
     else:
         def _give_terminal_to(pgid):
-            if _shell_tty is not None and os.isatty(_shell_tty):
+            shtty = _shell_tty()
+            if shtty is not None and os.isatty(shtty):
                 oldmask = signal.pthread_sigmask(signal.SIG_BLOCK,
                                                  _block_when_giving)
-                os.tcsetpgrp(_shell_tty, pgid)
+                os.tcsetpgrp(shtty, pgid)
                 signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
 
-    # check for shell tty
-    try:
-        _shell_tty = sys.stderr.fileno()
-        if os.tcgetpgrp(_shell_tty) != os.getpgid(os.getpid()):
-            # we don't own it
-            _shell_tty = None
-    except OSError:
-        _shell_tty = None
 
     def wait_for_active_job():
         """
