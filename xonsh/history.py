@@ -338,7 +338,7 @@ class History(object):
 # Interface to History
 #
 @functools.lru_cache()
-def _create_parser():
+def _hist_create_parser():
     """Create a parser for the "history" command."""
     p = argparse.ArgumentParser(prog='history',
                                 description='Tools for dealing with history')
@@ -366,8 +366,8 @@ def _create_parser():
     # replay, dynamically
     from xonsh import replay
     rp = subp.add_parser('replay', help='replays a xonsh history file')
-    replay._create_parser(p=rp)
-    _MAIN_ACTIONS['replay'] = replay._main_action
+    replay._rp_create_parser(p=rp)
+    _HIST_MAIN_ACTIONS['replay'] = replay._rp_main_action
     # gc
     gcp = subp.add_parser('gc', help='launches a new history garbage collector')
     gcp.add_argument('--size', nargs=2, dest='size', default=None,
@@ -431,7 +431,7 @@ def _gc(ns, hist):
             continue
 
 
-_MAIN_ACTIONS = {
+_HIST_MAIN_ACTIONS = {
     'show': _show,
     'id': lambda ns, hist: print(hist.sessionid),
     'file': lambda ns, hist: print(hist.filename),
@@ -441,21 +441,21 @@ _MAIN_ACTIONS = {
     }
 
 
-def _main(hist, args):
+def _hist_main(hist, args):
     """This implements the history CLI."""
-    if not args or (args[0] not in _MAIN_ACTIONS and
+    if not args or (args[0] not in _HIST_MAIN_ACTIONS and
                     args[0] not in {'-h', '--help'}):
         args.insert(0, 'show')
     if (args[0] == 'show' and len(args) > 1 and args[-1].startswith('-') and
             args[-1][1].isdigit()):
         args.insert(-1, '--')  # ensure parsing stops before a negative int
-    ns = _create_parser().parse_args(args)
+    ns = _hist_create_parser().parse_args(args)
     if ns.action is None:  # apply default action
-        ns = _create_parser().parse_args(['show'] + args)
-    _MAIN_ACTIONS[ns.action](ns, hist)
+        ns = _hist_create_parser().parse_args(['show'] + args)
+    _HIST_MAIN_ACTIONS[ns.action](ns, hist)
 
 
 def history_main(args=None, stdin=None):
     """This is the history command entry point."""
     _ = stdin
-    _main(builtins.__xonsh_history__, args)  # pylint: disable=no-member
+    _hist_main(builtins.__xonsh_history__, args)  # pylint: disable=no-member
