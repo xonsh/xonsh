@@ -917,14 +917,14 @@ A search function is defined as a function of a single argument (a string) that
 returns a list of possible matches to that string.  Search functions can then
 be used with backticks with the following syntax: ``@<name>`test```
 
-A silly example shows the form of these functions:
+The following example shows the form of these functions:
 
 .. code-block:: xonshcon
 
     >>> def foo(s):
-    ...     return [s, 'snail', 'shell']
-    >>> @foo`test`
-    ['test', 'snail', 'shell']
+    ...     return [i for i in os.listdir('.') if i.startswith(s)]
+    >>> @foo`aa`
+    ['aa', 'aaa', 'aab', 'aabb']
 
 
 Help & Superhelp with ``?`` & ``??``
