@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """Implements the base xonsh parser."""
+import time
+from threading import Thread
 from collections import Iterable, Sequence, Mapping
 
 try:
@@ -156,6 +158,20 @@ def lopen_loc(x):
     return lineno, col
 
 
+class YaccLoader(Thread):
+    """Thread to load (but not shave) the yacc parser."""
+
+    def __init__(self, parser, yacc_kwargs, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.daemon = True
+        self.parser = parser
+        self.yacc_kwargs = yacc_kwargs
+        self.start()
+
+    def run(self):
+        self.parser.parser = yacc.yacc(**self.yacc_kwargs)
+
+
 class BaseParser(object):
     """A base class that parses the xonsh language."""
 
@@ -237,7 +253,8 @@ class BaseParser(object):
             yacc_kwargs['errorlog'] = yacc.NullLogger()
         if outputdir is not None:
             yacc_kwargs['outputdir'] = outputdir
-        self.parser = yacc.yacc(**yacc_kwargs)
+        self.parser = None
+        YaccLoader(self, yacc_kwargs)
 
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None
@@ -268,6 +285,8 @@ class BaseParser(object):
         self.reset()
         self.xonsh_code = s
         self.lexer.fname = filename
+        while self.parser is None:
+            time.sleep(0.01)  # block until the parser is ready
         tree = self.parser.parse(input=s, lexer=self.lexer, debug=debug_level)
         # hack for getting modes right
         if mode == 'single':
