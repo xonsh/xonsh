@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Tools for diff'ing two xonsh history files in a meaningful fashion."""
-from datetime import datetime
-from itertools import zip_longest
-from difflib import SequenceMatcher
+import difflib
+import datetime
+import itertools
 
 from xonsh.lazyjson import LazyJSON
 from xonsh.tools import print_color
@@ -22,7 +22,7 @@ EQUAL = 'equal'
 
 def bold_str_diff(a, b, sm=None):
     if sm is None:
-        sm = SequenceMatcher()
+        sm = difflib.SequenceMatcher()
     aline = RED + '- '
     bline = GREEN + '+ '
     sm.set_seqs(a, b)
@@ -53,12 +53,12 @@ def greenline(line):
 def highlighted_ndiff(a, b):
     """Returns a highlited string, with bold charaters where different."""
     s = ''
-    sm = SequenceMatcher()
+    sm = difflib.SequenceMatcher()
     sm.set_seqs(a, b)
-    linesm = SequenceMatcher()
+    linesm = difflib.SequenceMatcher()
     for tag, i1, i2, j1, j2 in sm.get_opcodes():
         if tag == REPLACE:
-            for aline, bline in zip_longest(a[i1:i2], b[j1:j2]):
+            for aline, bline in itertools.zip_longest(a[i1:i2], b[j1:j2]):
                 if bline is None:
                     s += redline(aline)
                 elif aline is None:
@@ -100,7 +100,7 @@ class HistoryDiffer(object):
         self.a = LazyJSON(afile, reopen=reopen)
         self.b = LazyJSON(bfile, reopen=reopen)
         self.verbose = verbose
-        self.sm = SequenceMatcher(autojunk=False)
+        self.sm = difflib.SequenceMatcher(autojunk=False)
 
     def __del__(self):
         self.a.close()
@@ -114,10 +114,10 @@ class HistoryDiffer(object):
         s += ' (' + lj['sessionid'] + ')'
         s += ' [locked]' if lj['locked'] else ' [unlocked]'
         ts = lj['ts'].load()
-        ts0 = datetime.fromtimestamp(ts[0])
+        ts0 = datetime.datetime.fromtimestamp(ts[0])
         s += ' started: ' + ts0.isoformat(' ')
         if ts[1] is not None:
-            ts1 = datetime.fromtimestamp(ts[1])
+            ts1 = datetime.datetime.fromtimestamp(ts[1])
             s += ' stopped: ' + ts1.isoformat(' ') + ' runtime: ' + str(ts1 - ts0)
         return s
 
@@ -235,8 +235,9 @@ class HistoryDiffer(object):
         s = ''
         for tag, i1, i2, j1, j2 in sm.get_opcodes():
             if tag == REPLACE:
-                for i, ainp, j, binp in zip_longest(range(i1, i2), ainps[i1:i2],
-                                                    range(j1, j2), binps[j1:j2]):
+                zipper = itertools.zip_longest
+                for i, ainp, j, binp in zipper(range(i1, i2), ainps[i1:i2],
+                                               range(j1, j2), binps[j1:j2]):
                     if j is None:
                         s += self._cmd_in_one_diff(ainp, i, self.a, aid, RED)
                     elif i is None:
