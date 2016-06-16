@@ -146,13 +146,12 @@ def pathsearch(func, s, pymode=False):
     Takes a string and returns a list of file paths that match (regex, glob,
     or arbitrary search function).
     """
-    searchfunc = searchfunc[1:]
     if (not callable(func) or
             len(inspect.signature(func).parameters) != 1):
         error = "%r is not a known path search function"
         raise XonshError(error % searchfunc)
-    o = func(pattern)
-    no_match = [] if pymode else [pattern]
+    o = func(s)
+    no_match = [] if pymode else [s]
     return o if len(o) != 0 else no_match
 
 RE_SHEBANG = re.compile(r'#![ \t]*(.+?)$')
