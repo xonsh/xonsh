@@ -1,6 +1,7 @@
 __version__ = '0.3.4'
 
-# amalgamate exclude jupyter_kernel parser_table parser_test_table pyghooks winutils
+# amalgamate exclude jupyter_kernel parser_table parser_test_table pyghooks
+# amalgamate exclude winutils wizard
 import os as _os
 if _os.getenv('DEBUG', ''):
     pass
@@ -54,8 +55,6 @@ else:
         _sys.modules['xonsh.lexer'] = __amalgam__
         proc = __amalgam__
         _sys.modules['xonsh.proc'] = __amalgam__
-        wizard = __amalgam__
-        _sys.modules['xonsh.wizard'] = __amalgam__
         xontribs = __amalgam__
         _sys.modules['xonsh.xontribs'] = __amalgam__
         environ = __amalgam__

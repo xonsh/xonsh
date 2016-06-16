@@ -15,6 +15,7 @@ try:
 except ImportError:
     from xonsh import ply
 
+import xonsh.wizard as wiz
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.environ import is_template_string
 from xonsh.platform import (is_readline_available, ptk_version,
@@ -22,9 +23,6 @@ from xonsh.platform import (is_readline_available, ptk_version,
     ON_DARWIN, ON_WINDOWS, ON_CYGWIN, DEFAULT_ENCODING)
 from xonsh.tools import (to_bool, is_string, print_exception, is_superuser,
     color_style_names, print_color, color_style)
-from xonsh.wizard import (Wizard, Pass, Message, Save, Load, YesNo, Input,
-    PromptVisitor, While, StoreNonEmpty, create_truefalse_cond, YN, Unstorable,
-    Question)
 from xonsh.xontribs import xontrib_metadata, find_xontrib
 
 
@@ -85,7 +83,7 @@ values are presented as pretty repr strings of their Python types.
 will accept the default value for that entry.
 """.format(hr=HR)
 
-WIZARD_ENV_QUESTION = "Would you like to set env vars now, " + YN
+WIZARD_ENV_QUESTION = "Would you like to set env vars now, " + wiz.YN
 
 WIZARD_XONTRIB = """
 {hr}
@@ -103,7 +101,7 @@ The following describes all xontribs that have been registered with xonsh.
 These come from users, 3rd party developers, or xonsh itself!
 """.format(hr=HR)
 
-WIZARD_XONTRIB_QUESTION = "Would you like to enable xontribs now, " + YN
+WIZARD_XONTRIB_QUESTION = "Would you like to enable xontribs now, " + wiz.YN
 
 
 WIZARD_TAIL = """
@@ -111,45 +109,46 @@ Thanks for using the xonsh configuration wizard!"""
 
 
 
-def make_fs():
+def make_fs_wiz():
     """Makes the foreign shell part of the wizard."""
-    cond = create_truefalse_cond(prompt='Add a foreign shell, ' + YN)
-    fs = While(cond=cond, body=[
-        Input('shell name (e.g. bash): ', path='/foreign_shells/{idx}/shell'),
-        StoreNonEmpty('interactive shell [bool, default=True]: ',
-                      converter=to_bool,
-                      show_conversion=True,
-                      path='/foreign_shells/{idx}/interactive'),
-        StoreNonEmpty('login shell [bool, default=False]: ',
-                      converter=to_bool,
-                      show_conversion=True,
-                      path='/foreign_shells/{idx}/login'),
-        StoreNonEmpty("env command [str, default='env']: ",
-                      path='/foreign_shells/{idx}/envcmd'),
-        StoreNonEmpty("alias command [str, default='alias']: ",
-                      path='/foreign_shells/{idx}/aliascmd'),
-        StoreNonEmpty(("extra command line arguments [list of str, "
-                       "default=[]]: "),
-                      converter=ast.literal_eval,
-                      show_conversion=True,
-                      path='/foreign_shells/{idx}/extra_args'),
-        StoreNonEmpty('current environment [dict, default=None]: ',
-                      converter=ast.literal_eval,
-                      show_conversion=True,
-                      path='/foreign_shells/{idx}/currenv'),
-        StoreNonEmpty('safely handle exceptions [bool, default=True]: ',
-                      converter=to_bool,
-                      show_conversion=True,
-                      path='/foreign_shells/{idx}/safe'),
-        StoreNonEmpty("pre-command [str, default='']: ",
-                      path='/foreign_shells/{idx}/prevcmd'),
-        StoreNonEmpty("post-command [str, default='']: ",
-                      path='/foreign_shells/{idx}/postcmd'),
-        StoreNonEmpty("foreign function command [str, default=None]: ",
-                      path='/foreign_shells/{idx}/funcscmd'),
-        StoreNonEmpty("source command [str, default=None]: ",
-                      path='/foreign_shells/{idx}/sourcer'),
-        Message(message='')  # inserts a newline
+    cond = wiz.create_truefalse_cond(prompt='Add a foreign shell, ' + wiz.YN)
+    fs = wiz.While(cond=cond, body=[
+        wiz.Input('shell name (e.g. bash): ',
+                  path='/foreign_shells/{idx}/shell'),
+        wiz.StoreNonEmpty('interactive shell [bool, default=True]: ',
+                          converter=to_bool,
+                          show_conversion=True,
+                          path='/foreign_shells/{idx}/interactive'),
+        wiz.StoreNonEmpty('login shell [bool, default=False]: ',
+                          converter=to_bool,
+                          show_conversion=True,
+                          path='/foreign_shells/{idx}/login'),
+        wiz.StoreNonEmpty("env command [str, default='env']: ",
+                          path='/foreign_shells/{idx}/envcmd'),
+        wiz.StoreNonEmpty("alias command [str, default='alias']: ",
+                          path='/foreign_shells/{idx}/aliascmd'),
+        wiz.StoreNonEmpty(("extra command line arguments [list of str, "
+                           "default=[]]: "),
+                          converter=ast.literal_eval,
+                          show_conversion=True,
+                          path='/foreign_shells/{idx}/extra_args'),
+        wiz.StoreNonEmpty('current environment [dict, default=None]: ',
+                          converter=ast.literal_eval,
+                          show_conversion=True,
+                          path='/foreign_shells/{idx}/currenv'),
+        wiz.StoreNonEmpty('safely handle exceptions [bool, default=True]: ',
+                          converter=to_bool,
+                          show_conversion=True,
+                          path='/foreign_shells/{idx}/safe'),
+        wiz.StoreNonEmpty("pre-command [str, default='']: ",
+                          path='/foreign_shells/{idx}/prevcmd'),
+        wiz.StoreNonEmpty("post-command [str, default='']: ",
+                          path='/foreign_shells/{idx}/postcmd'),
+        wiz.StoreNonEmpty("foreign function command [str, default=None]: ",
+                          path='/foreign_shells/{idx}/funcscmd'),
+        wiz.StoreNonEmpty("source command [str, default=None]: ",
+                          path='/foreign_shells/{idx}/sourcer'),
+        wiz.Message(message='')  # inserts a newline
         ])
     return fs
 
@@ -186,12 +185,12 @@ def make_envvar(name):
         curr = '\n' + curr
     msg = ENVVAR_MESSAGE.format(name=name, default=default, current=curr,
                                 docstr=_wrap_paragraphs(vd.docstr, width=69))
-    mnode = Message(message=msg)
+    mnode = wiz.Message(message=msg)
     ens = env.get_ensurer(name)
     path = '/env/' + name
-    pnode = StoreNonEmpty(ENVVAR_PROMPT, converter=ens.convert,
-                          show_conversion=True, path=path, retry=True,
-                          store_raw=vd.store_as_str)
+    pnode = wiz.StoreNonEmpty(ENVVAR_PROMPT, converter=ens.convert,
+                              show_conversion=True, path=path, retry=True,
+                              store_raw=vd.store_as_str)
     return mnode, pnode
 
 
@@ -202,17 +201,17 @@ def _make_flat_wiz(kidfunc, *args):
         if k is None:
             continue
         flatkids.extend(k)
-    wiz = Wizard(children=flatkids)
+    wiz = wiz.Wizard(children=flatkids)
     return wiz
 
 
-def make_env():
+def make_env_wiz():
     """Makes an environment variable wizard."""
     w = _make_flat_wiz(make_envvar, sorted(builtins.__xonsh_env__._docs.keys()))
     return w
 
 
-XONTRIB_PROMPT = '{BOLD_GREEN}Add this xontrib{NO_COLOR}, ' + YN
+XONTRIB_PROMPT = '{BOLD_GREEN}Add this xontrib{NO_COLOR}, ' + wiz.YN
 
 def _xontrib_path(visitor=None, node=None, val=None):
     # need this to append only based on user-selected size
@@ -240,14 +239,14 @@ def make_xontrib(xontrib, package):
     msg += _wrap_paragraphs(desc, width=69)
     if msg.endswith('\n'):
         msg = msg[:-1]
-    mnode = Message(message=msg)
+    mnode = wiz.Message(message=msg)
     convert = lambda x: name if to_bool(x) else Unstorable
-    pnode = StoreNonEmpty(XONTRIB_PROMPT, converter=convert,
-                          path=_xontrib_path)
+    pnode = wiz.StoreNonEmpty(XONTRIB_PROMPT, converter=convert,
+                              path=_xontrib_path)
     return mnode, pnode
 
 
-def make_xontribs():
+def make_xontribs_wiz():
     """Makes a xontrib wizard."""
     md = xontrib_metadata()
     pkgs = [md['packages'].get(d.get('package', None), {}) for d in md['xontribs']]
@@ -255,7 +254,7 @@ def make_xontribs():
     return w
 
 
-def make_wizard(default_file=None, confirm=False):
+def make_xonfig_wizard(default_file=None, confirm=False):
     """Makes a configuration wizard for xonsh config file.
 
     Parameters
@@ -265,37 +264,40 @@ def make_wizard(default_file=None, confirm=False):
     confirm : bool, optional
         Confirm that the main part of the wizard should be run.
     """
-    wiz = Wizard(children=[
-            Message(message=WIZARD_HEAD),
-            Load(default_file=default_file, check=True),
-            Message(message=WIZARD_FS),
-            make_fs(),
-            Message(message=WIZARD_ENV),
-            YesNo(question=WIZARD_ENV_QUESTION, yes=make_env(), no=Pass()),
-            Message(message=WIZARD_XONTRIB),
-            YesNo(question=WIZARD_XONTRIB_QUESTION, yes=make_xontribs(), no=Pass()),
-            Message(message='\n' + HR + '\n'),
-            Save(default_file=default_file, check=True),
-            Message(message=WIZARD_TAIL),
+    w = wiz.Wizard(children=[
+            wiz.Message(message=WIZARD_HEAD),
+            wiz.Load(default_file=default_file, check=True),
+            wiz.Message(message=WIZARD_FS),
+            make_fs_wiz(),
+            wiz.Message(message=WIZARD_ENV),
+            wiz.YesNo(question=WIZARD_ENV_QUESTION, yes=make_env_wiz(),
+                      no=wiz.Pass()),
+            wiz.Message(message=WIZARD_XONTRIB),
+            wiz.YesNo(question=WIZARD_XONTRIB_QUESTION, yes=make_xontribs_wiz(),
+                      no=wiz.Pass()),
+            wiz.Message(message='\n' + HR + '\n'),
+            wiz.Save(default_file=default_file, check=True),
+            wiz.Message(message=WIZARD_TAIL),
             ])
     if confirm:
         q = ("Would you like to run the xonsh configuration wizard now?\n\n"
              "1. Yes\n2. No, but ask me later.\n3. No, and don't ask me again."
              "\n\n1, 2, or 3 [default: 2]? ")
-        passer = Pass()
-        saver = Save(check=False, ask_filename=False, default_file=default_file)
-        wiz = Question(q, {1: wiz, 2: passer, 3: saver},
-                       converter=lambda x: int(x) if x != '' else 2)
-    return wiz
+        passer = wiz.Pass()
+        saver = wiz.Save(check=False, ask_filename=False,
+                         default_file=default_file)
+        w = wiz.Question(q, {1: wiz, 2: passer, 3: saver},
+                         converter=lambda x: int(x) if x != '' else 2)
+    return w
 
 
 def _wizard(ns):
     env = builtins.__xonsh_env__
     shell = builtins.__xonsh_shell__.shell
     fname = env.get('XONSHCONFIG') if ns.file is None else ns.file
-    wiz = make_wizard(default_file=fname, confirm=ns.confirm)
+    w = make_xonfig_wizard(default_file=fname, confirm=ns.confirm)
     tempenv = {'PROMPT': '', 'XONSH_STORE_STDOUT': False}
-    pv = PromptVisitor(wiz, store_in_history=False, multiline=False)
+    pv = wiz.PromptVisitor(w, store_in_history=False, multiline=False)
     @contextmanager
     def force_hide():
         if env.get('XONSH_STORE_STDOUT') and hasattr(shell, '_force_hide'):
@@ -311,7 +313,7 @@ def _wizard(ns):
             print_exception()
 
 
-def _format_human(data):
+def _xonfig_format_human(data):
     wcol1 = wcol2 = 0
     for key, val in data:
         wcol1 = max(wcol1, len(key))
@@ -325,7 +327,7 @@ def _format_human(data):
     return s
 
 
-def _format_json(data):
+def _xonfig_format_json(data):
     data = {k.replace(' ', '_'): v for k, v in data}
     s = json.dumps(data, sort_keys=True, indent=1) + '\n'
     return s
@@ -351,7 +353,7 @@ def _info(ns):
         ('is superuser', is_superuser()),
         ('default encoding', DEFAULT_ENCODING),
         ])
-    formatter = _format_json if ns.json else _format_human
+    formatter = _xonfig_format_json if ns.json else __xonfig_format_human
     s = formatter(data)
     return s
 
@@ -428,8 +430,8 @@ def _colors(ns):
     print_color(s)
 
 
-@functools.lru_cache()
-def _create_parser():
+@functools.lru_cache(1)
+def _xonfig_create_parser():
     p = ArgumentParser(prog='xonfig',
                        description='Manages xonsh configuration.')
     subp = p.add_subparsers(title='action', dest='action')
@@ -451,24 +453,24 @@ def _create_parser():
     return p
 
 
-_MAIN_ACTIONS = {
+_XONFIG_MAIN_ACTIONS = {
     'info': _info,
     'wizard': _wizard,
     'styles': _styles,
     'colors': _colors,
     }
 
-def main(args=None):
+def xonfig_main(args=None):
     """Main xonfig entry point."""
     if not args or (args[0] not in _MAIN_ACTIONS and
                     args[0] not in {'-h', '--help'}):
         args.insert(0, 'info')
-    parser = _create_parser()
+    parser = _xonfig_create_parser()
     ns = parser.parse_args(args)
     if ns.action is None:  # apply default action
         ns = parser.parse_args(['info'] + args)
-    return _MAIN_ACTIONS[ns.action](ns)
+    return _XONFIG_MAIN_ACTIONS[ns.action](ns)
 
 
 if __name__ == '__main__':
-    main()
+    xonfig_main()
