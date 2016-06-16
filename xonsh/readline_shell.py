@@ -19,16 +19,20 @@ from threading import Thread
 from collections import deque
 
 from xonsh.lazyjson import LazyJSON
+from xonsh.lazyasd import LazyObject
 from xonsh.base_shell import BaseShell
 from xonsh.ansi_colors import partial_color_format, color_style_names, color_style
 from xonsh.environ import partial_format_prompt, multiline_prompt
 from xonsh.tools import print_exception
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS, ON_CYGWIN, ON_DARWIN
 
-if HAS_PYGMENTS:
-    from xonsh import pyghooks
-    import pygments
-    from pygments.formatters.terminal256 import Terminal256Formatter
+pygments = LazyObject(lambda: importlib.import_module('pygments'),
+                      globals(), 'pygments')
+terminal256 = LazyObject(lambda: importlib.import_module(
+                                    'pygments.formatters.terminal256'),
+                      globals(), 'terminal')
+pyghooks = LazyObject(lambda: importlib.import_module('xonsh.pyghooks'),
+                      globals(), 'pyghooks')
 
 readline = None
 RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = RL_STATE = None
@@ -415,7 +419,7 @@ class ReadlineShell(BaseShell, Cmd):
             env = builtins.__xonsh_env__
             self.styler.style_name = env.get('XONSH_COLOR_STYLE')
             style_proxy = pyghooks.xonsh_style_proxy(self.styler)
-            formatter = Terminal256Formatter(style=style_proxy)
+            formatter = terminal256.Terminal256Formatter(style=style_proxy)
             s = pygments.format(string, formatter).rstrip()
         print(s, **kwargs)
 

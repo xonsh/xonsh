@@ -4,19 +4,24 @@ import re
 import sys
 import inspect
 import linecache
+import importlib
 from functools import lru_cache
 from argparse import ArgumentParser
 
-from xonsh.tools import DefaultNotGiven, print_color, normabspath, to_bool
+from xonsh.lazyasd import LazyObject
 from xonsh.platform import HAS_PYGMENTS
+from xonsh.tools import DefaultNotGiven, print_color, normabspath, to_bool
 from xonsh.inspectors import find_file, getouterframes
 from xonsh.environ import _replace_home as replace_home
 
-if HAS_PYGMENTS:
-    from xonsh import pyghooks
-    import pygments
-    import pygments.formatters.terminal
 
+pygments = LazyObject(lambda: importlib.import_module('pygments'),
+                      globals(), 'pygments')
+terminal = LazyObject(lambda: importlib.import_module(
+                                'pygments.formatters.terminal'),
+                      globals(), 'terminal')
+pyghooks = LazyObject(lambda: importlib.import_module('xonsh.pyghooks'),
+                      globals(), 'pyghooks')
 
 class TracerType(object):
     """Represents a xonsh tracer object, which keeps track of all tracing
@@ -35,7 +40,7 @@ class TracerType(object):
         self.files = set()
         self.usecolor = True
         self.lexer = pyghooks.XonshLexer()
-        self.formatter = pygments.formatters.terminal.TerminalFormatter()
+        self.formatter = terminal.TerminalFormatter()
         self._last = ('', -1)  # filename, lineno tuple
 
     def __del__(self):
