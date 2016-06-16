@@ -52,6 +52,10 @@ class LazyObject(object):
         obj = self._lazy_obj()
         return bool(obj)
 
+    def __iter__(self):
+        obj = self._lazy_obj()
+        yield from obj
+
 
 class LazyDict(abc.MutableMapping):
 
