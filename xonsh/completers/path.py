@@ -287,6 +287,6 @@ def complete_dir(prefix, line, start, end, ctx, cdpath=False):
     dirs = set()
     for path in paths:
         m = RE_UNQUOTE.match(path)
-        if m and os.path.isdir(m.group(2)):
+        if m and os.path.isdir(m.group(3)):
             dirs.add(path)
     return dirs, lp
