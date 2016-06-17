@@ -6,7 +6,7 @@ from prompt_toolkit.enums import DEFAULT_BUFFER
 from prompt_toolkit.filters import (Condition, Filter, IsMultiline,
                                     HasSelection)
 from prompt_toolkit.keys import Keys
-from xonsh.aliases import exit
+from xonsh.aliases import xonsh_exit
 from xonsh.tools import ON_WINDOWS
 
 env = builtins.__xonsh_env__
@@ -151,7 +151,7 @@ def load_xonsh_bindings(key_bindings_manager):
         """Use xonsh exit function"""
         b = event.cli.current_buffer
         b.accept_action.validate_and_handle(event.cli, b)
-        exit([])
+        xonsh_exit([])
 
     @handle(Keys.ControlJ, filter=IsMultiline())
     def multiline_carriage_return(event):
