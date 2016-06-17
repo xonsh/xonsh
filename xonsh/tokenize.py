@@ -82,7 +82,7 @@ _xonsh_tokens = {
     '&&':  'DOUBLEAMPER',
     '@(':  'ATLPAREN',
     '!{':  'BANGLBRACE',
-    '}!':  'RBRANCEBANG',
+    '}!':  'RBRACEBANG',
     '!(':  'BANGLPAREN',
     '![':  'BANGLBRACKET',
     '$(':  'DOLLARLPAREN',
@@ -736,6 +736,8 @@ def _tokenize(readline, encoding):
                         parenlev -= 1
                     elif token in additional_parenlevs:
                         parenlev += 1
+                    elif token == '}!':
+                        parenlev -= 1
                     if stashed:
                         yield stashed
                         stashed = None

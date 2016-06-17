@@ -187,6 +187,18 @@ def handle_double_pipe(state, token):
     yield _new_token('OR', 'or', token.start)
 
 
+def handle_banglbrace(state, token):
+    sl, sc = token.start
+    yield _new_token('NEWLINE', '\n', token.start)
+    yield _new_token('INDENT', ' ', (sl, sc+1))
+
+
+def handle_rbracebang(state, token):
+    sl, sc = token.start
+    if state['lexer'].last.type != 'DEDENT':
+        yield _new_token('NEWLINE', '\n', token.start)
+    yield _new_token('DEDENT', '', (sl, sc+1))
+
 special_handlers = {
     NL: handle_ignore,
     COMMENT: handle_ignore,
@@ -199,6 +211,8 @@ special_handlers = {
     (OP, ']'): handle_rbracket,
     (OP, '&&'): handle_double_amps,
     (OP, '||'): handle_double_pipe,
+    (OP, '!{'): handle_banglbrace,
+    (OP, '}!'): handle_rbracebang,
     (ERRORTOKEN, ' '): handle_error_space,
 }
 """
@@ -258,14 +272,15 @@ def handle_token(state, token):
         yield _new_token("ERRORTOKEN", m, token.start)
 
 
-def get_tokens(s):
+def get_tokens(s, lexer):
     """
     Given a string containing xonsh code, generates a stream of relevant PLY
     tokens using ``handle_token``.
     """
     state = {'indents': [0], 'last': None,
              'pymode': [(True, '', '', (0, 0))],
-             'stream': tokenize(BytesIO(s.encode('utf-8')).readline)}
+             'stream': tokenize(BytesIO(s.encode('utf-8')).readline),
+             'lexer': lexer}
     while True:
         try:
             token = next(state['stream'])
@@ -325,12 +340,14 @@ class Lexer(object):
 
     def input(self, s):
         """Calls the lexer on the string s."""
-        self.token_stream = get_tokens(s)
+        print('HEY', repr(s))
+        self.token_stream = get_tokens(s, self)
 
     def token(self):
         """Retrieves the next token."""
         self.beforelast = self.last
         self.last = next(self.token_stream, None)
+        print(self.last)
         return self.last
 
     def __iter__(self):
