@@ -1,8 +1,13 @@
 .. _tutorial_hist:
 
+************************************
+Tutorial: History
+************************************
 Import your best Leonard Nimoy documentary voice and get ready for the xonsh tutorial
 on ``history``.
 
+How is xonsh history different?
+================================
 Most shells - bash foremost among them - think of history as a linear sequence of
 past commands that have been entered into *the* terminal. This is saved when *the*
 shell exits, and loaded when *the* new shell starts. But this is no longer
@@ -38,6 +43,8 @@ history constantly. Of course, an external process deleting a history file can s
 cause problems. But hey, the world and the file system are messy places to be!
 
 
+Why have rich history?
+=======================
 Often by the time you know that you need a historical artifact, it is already too
 late. You can't remember:
 
@@ -64,50 +71,49 @@ Of course, nothing has ever stopped anyone from pulling Unix tools like ``env``,
 ``diff``, and others together to deliver the same kind of capability. However, in practice,
 no one does this. With xonsh, rich and useful history come batteries included.
 
-Xonsh history inspection and manipulation goes through the top-level ``history``
-alias. If you run this without an ``action`` argument, it will default to
-the ``show`` action, see below. History accessed through the ``history`` alias
-is sorted by command start time.
-
-Many ``history`` actions are available which should help meet various needs and ease
-the transition to xonsh from other shells.
+``history`` command
+====================
+All xonsh history inspection and manipulation goes through the top-level ``history``
+alias or command.  If you run this without an ``action`` argument, it will default to
+the ``show`` action, see below.
 
 .. code-block:: xonshcon
 
     >>> history
 
+Also note that the history object itself can be accessed through the xonsh built-in variable
+``__xonsh_history__``.
 
-The ``show`` action for the history command displays the past inputs along with the
-index of these inputs. This operates on the current session only and is the default
-action for the ``history`` command. For example,
+
+``show`` action
+================
+The ``show`` action for the history command mimics what the ``history`` command does
+in other shells.  Namely, it displays the past inputs along with the index of these
+inputs. This operates on the current session only and is the default action for
+the ``history`` command. For example,
 
 .. code-block:: xonshcon
 
     >>> 1 + 1
     2
     >>> history show
-     0:  1 + 1
+     0  1 + 1
     >>> history
-     0:  1 + 1
-     1:  history show
+     0  1 + 1
+     1  history show
 
 
 .. note:: History is zero-indexed; this is still Python.
 
-The ``session`` action is an alias for ``show``.
-
-The show command can also optionally take a ``-r`` argument which reverses the
-order in which the history is displayed.
-
 The show command can also optionally take as an argument any integer (to just display
-that history index) or a Python slice (to display a range of history indices). 
-To display only the even indices from above, you could write:
+that history index) or a slice (to display a range of history indices). To display
+only the even indices from above, you could write:
 
 .. code-block:: xonshcon
 
     >>> history show ::2
-     0:  1 + 1
-     2:  history
+     0  1 + 1
+     2  history
 
 The ``xonsh`` action displays the past inputs along with the index from all
 valid json files found in ``XONSH_DATA_DIR``. As such, this operates on all
@@ -117,27 +123,30 @@ The ``all`` action is an alias for ``xonsh``.
 
 The ``xonsh`` action accepts the same arguments as ``show``.
 
-.. note:: ``history xonsh`` most closely mimics the default ``history`` behavior
-in zsh.
-
 The ``zsh`` action will display all history from the history file specified
 by the ``HISTFILE`` environmental variable in zsh.
-
 By default this is ``~/.zsh_history``. However, they can also be respectively
 specified in both ``~/.zshrc`` and ``~/.zprofile``. Xonsh will parse these files
 (rc file first) to check if ``HISTFILE`` has been set.
 
-Beyond minor formatting differences match the output of ``history`` while in zsh.
 
 The ``bash`` action will display all history from the history file specified
 by the ``HISTFILE`` environmental variable in bash.
-
 By default this is ``~/.bash_history``. However, they can also be respectively
 specified in both ``~/.bashrc`` and ``~/.bash_profile``. Xonsh will parse these
 files (rc file first) to check if ``HISTFILE`` has been set.
 
-Beyond minor formatting differences match the output of ``history`` while in bash.
+The ``__xonsh_history__.show(action)`` method can be returns history a list
+with each item in the format: (name, start_time, index). The action parameter
+can be a string of the following types: ``session``, ``show``, ``all``,
+``xonsh``,``zsh``, ``bash``, where ``session`` is an alias of ``show`` and
+``all`` is an alias of ``xonsh``.
 
+In the future, ``show`` may also be used to display outputs, return values, and time stamps.
+But the default behavior will remain as shown here.
+
+``id`` action
+================
 Each xonsh history has its own universally unique ``sessionid``. The ``id`` action is how you
 display this identified. For instance,
 
@@ -146,6 +155,8 @@ display this identified. For instance,
     >>> history id
     ace97177-f8dd-4a8d-8a91-a98ffd0b3d17
 
+``file`` action
+================
 Similarly, each xonsh history has its own file associated with it. The ``file`` action is
 how you display the path to this file. For example,
 
@@ -160,6 +171,8 @@ is, by default, set to the ``xonsh`` dir inside of the free desktop standards
 `this page <http://standards.freedesktop.org/basedir-spec/latest/ar01s03.html>`_ for
 more details.
 
+``info`` action
+===============
 The info action combines the ``id`` and ``file`` actions as well as adds some additional
 information about the current state of the history. By default, this prints a key-value
 series of lines. However, it can also return a JSON formatted string.
@@ -180,6 +193,8 @@ series of lines. However, it can also return a JSON formatted string.
      "filename": "/home/scopatz/.local/share/xonsh/xonsh-ace97177-f8dd-4a8d-8a91-a98ffd0b3d17.json",
      "length": 7, "buffersize": 100, "bufferlength": 7}
 
+``replay`` action
+==================
 The ``replay`` action allows for history files to be rerun, as scripts or in an existing xonsh
 session.
 
@@ -252,6 +267,8 @@ xonsh itself to execute the replay command.
 Currently history does not handle alias storage and reloading, but such a feature may be coming in
 the future.
 
+``diff`` action
+===============
 Between any two history files, we can run the ``diff`` action. This does more that a simple line
 diff that you might generate with the unix ``diff`` command. (If you want a line diff, just
 use the unix command!) Instead this takes advantage of the fact that we know we have xonsh
@@ -313,6 +330,8 @@ For the commands, the input sequences are diff'd first, prior to the outputs
 being compared. In a terminal, this will appear in color, with the first history
 in red and the second one in green.
 
+``gc`` action
+===============
 Last, but certainly not least, the ``gc`` action is a manual hook into executing
 history garbage control. Since history has the potential for a lot of information
 to be stored, it is necessary to be able to clean out the cache every once in a
@@ -363,17 +382,8 @@ you could run the following command:
 
     >>> history gc --size 1 month
 
-The history object itself can be accessed through the xonsh built-in variable
-``__xonsh_history__``.
-
-The ``__xonsh_history__.show(action)`` method can be returns history a list
-with each item in the format: (name, start_time, index). The action parameter
-can be a string of the following types: ``session``, ``show``, ``all``,
-``xonsh``,``zsh``, ``bash``, where ``session`` is an alias of ``show`` and
-``all`` is an alias of ``xonsh``.
-
-History accessed through ``__xonsh_history__.show()`` is sorted by command
-start time.
+Exciting Technical Detail: Lazy JSON
+=====================================
 So now you know how to inspect, run, and remove history. But what *is* a history file exactly?
 While xonsh history files are JSON formatted, and they do have the structure indicated at the
 top of the page, that isn't their top-level structure.  If you open one up, you'll see a bunch
@@ -391,6 +401,8 @@ yourself for things other than xonsh history! Of course, if you want to read in 
 you should probably use the module.
 
 
+Exciting Technical Detail: Teeing and Pseudo Terminals
+========================================================
 Xonsh is able to capture all stdout and stderr transparently and responsively. For aliases,
 Python code, or xonsh code, this isn't a big deal. It is easy to redirect information
 flowing through ``sys.stdout`` and ``sys.stderr``.  For subprocess commands, this is
@@ -403,6 +415,8 @@ can find this class in the ``xonsh.teepty`` module. Like with lazy JSON, this is
 from other parts of xonsh and can be used on its own.  If you find this useful in other areas,
 please let us know!
 
+Fun ideas for history data
+==========================
 Now that we have all of this history data, it seems like what we have here is just the tip
 of the iceberg! Here are some hopefully fun ideas that I think would be great to see
 implemented:
@@ -413,6 +427,3 @@ implemented:
 * and many more!
 
 Let us know if you'd be interested in working on any of these, inside or outside of xonsh.
-
-.. Warning: this node is ignored when writing this file.
-.. However, @ @rst-options are recognized in this node.

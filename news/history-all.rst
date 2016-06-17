@@ -16,6 +16,3 @@
 **Fixed:** None
 
 **Security:** None
-
-.. Warning: this node is ignored when writing this file.
-.. However, @ @rst-options are recognized in this node.
