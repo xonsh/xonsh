@@ -34,7 +34,12 @@
                   "current Python interpreter session. This shaves off a ",
                   "bit of the startup time when running your favorite, minimal ",
                   "text editor."]
-  }
+  },
+ {"name": "xonsh-apt-tabcomplete",
+  "package": "xonsh-apt-tabcomplete",
+  "url": "https://github.com/DangerOnTheRanger/xonsh-apt-tabcomplete",
+  "description": ["Adds tabcomplete functionality to apt-get/apt-cache inside of xonsh."]
+ }
  ],
  "packages": {
   "exofrills": {
@@ -58,6 +63,13 @@
    "url": "https://github.com/Siecje/xontrib-prompt-ret-code",
    "install": {
     "pip": "pip install xontrib-prompt-ret-code"
+   }
+  },
+  "xonsh-apt-tabcomplete": {
+   "license": "BSD 2-clause",
+   "url": "https://github.com/DangerOnTheRanger/xonsh-apt-tabcomplete",
+   "install": {
+    "pip": "pip install xonsh-apt-tabcomplete"
    }
   }
  }
