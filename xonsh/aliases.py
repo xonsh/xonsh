@@ -457,9 +457,9 @@ def xonfig(args, stdin=None):
 @foreground
 def trace(args, stdin=None):
     """Runs the xonsh tracer utility."""
-    from xonsh.tracer import main  # lazy import
+    from xonsh.tracer import tracermain  # lazy import
     try:
-        return main(args)
+        return tracermain(args)
     except SystemExit:
         pass
 

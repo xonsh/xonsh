@@ -704,7 +704,8 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
 
 
 def _lastflush(s=None, f=None):
-    builtins.__xonsh_history__.flush(at_exit=True)
+    if hasattr(builtins, '__xonsh_history__'):
+        builtins.__xonsh_history__.flush(at_exit=True)
 
 
 def unload_builtins():

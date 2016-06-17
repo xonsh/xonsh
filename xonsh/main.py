@@ -250,7 +250,8 @@ def postmain(args=None):
     """Teardown for main xonsh entry point, accepts parsed arguments."""
     if ON_WINDOWS:
         setup_win_unicode_console(enable=False)
-    del builtins.__xonsh_shell__
+    if hasattr(builtins, '__xonsh_shell__'):
+        del builtins.__xonsh_shell__
 
 
 @contextmanager

@@ -12,7 +12,7 @@ from xonsh.lazyasd import LazyObject
 from xonsh.platform import HAS_PYGMENTS
 from xonsh.tools import DefaultNotGiven, print_color, normabspath, to_bool
 from xonsh.inspectors import find_file, getouterframes
-from xonsh.environ import _replace_home as replace_home
+from xonsh.environ import _replace_home
 
 
 pygments = LazyObject(lambda: importlib.import_module('pygments'),
@@ -81,19 +81,16 @@ class TracerType(object):
             curr = (fname, lineno)
             if curr != self._last:
                 line = linecache.getline(fname, lineno).rstrip()
-                s = format_line(fname, lineno, line, color=self.usecolor,
-                                lexer=self.lexer, formatter=self.formatter)
+                s = tracer_format_line(fname, lineno, line,
+                                       color=self.usecolor,
+                                       lexer=self.lexer,
+                                       formatter=self.formatter)
                 print_color(s)
                 self._last = curr
         return self.trace
 
 
-_tracer = None #TracerType()
-def tracer():
-    global _tracer
-    if _tracer is None:
-        _tracer = TracerType()
-    return _tracer
+tracer = LazyObject(TracerType, globals(), 'tracer')
 
 COLORLESS_LINE = '{fname}:{lineno}:{line}'
 COLOR_LINE = ('{{PURPLE}}{fname}{{BLUE}}:'
@@ -101,9 +98,9 @@ COLOR_LINE = ('{{PURPLE}}{fname}{{BLUE}}:'
               '{{NO_COLOR}}')
 
 
-def format_line(fname, lineno, line, color=True, lexer=None, formatter=None):
+def tracer_format_line(fname, lineno, line, color=True, lexer=None, formatter=None):
     """Formats a trace line suitable for printing."""
-    fname = min(fname, replace_home(fname), os.path.relpath(fname), key=len)
+    fname = min(fname, _replace_home(fname), os.path.relpath(fname), key=len)
     if not color:
         return COLORLESS_LINE.format(fname=fname, lineno=lineno, line=line)
     cline = COLOR_LINE.format(fname=fname, lineno=lineno)
@@ -146,7 +143,7 @@ def _on(ns, args):
             f = _find_caller(args)
         if f is None:
             continue
-        tracer().start(f)
+        tracer.start(f)
 
 
 def _off(ns, args):
@@ -156,16 +153,16 @@ def _off(ns, args):
             f = _find_caller(args)
         if f is None:
             continue
-        tracer().stop(f)
+        tracer.stop(f)
 
 
 def _color(ns, args):
     """Manages color action for tracer CLI."""
-    tracer().usecolor = ns.toggle
+    tracer.usecolor = ns.toggle
 
 
-@lru_cache()
-def _create_parser():
+@lru_cache(1)
+def _tracer_create_parser():
     """Creates tracer argument parser"""
     p = ArgumentParser(prog='trace',
                        description='tool for tracing xonsh code as it runs.')
@@ -186,7 +183,7 @@ def _create_parser():
     return p
 
 
-_MAIN_ACTIONS = {
+_TRACER_MAIN_ACTIONS = {
     'on': _on,
     'add': _on,
     'start': _on,
@@ -200,9 +197,9 @@ _MAIN_ACTIONS = {
 
 def tracermain(args=None):
     """Main function for tracer command-line interface."""
-    parser = _create_parser()
+    parser = _tracer_create_parser()
     ns = parser.parse_args(args)
-    return _MAIN_ACTIONS[ns.action](ns, args)
+    return _TRACER_MAIN_ACTIONS[ns.action](ns, args)
 
 
 if __name__ == '__main__':
