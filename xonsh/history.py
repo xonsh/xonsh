@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 """Implements the xonsh history object."""
-import argparse
 import os
 import sys
-from functools import lru_cache, partial
-from os import listdir
-from operator import itemgetter
+import argparse
+import functools
+import operator
 import uuid
 import time
-from datetime import datetime
+import datetime
 import builtins
 from glob import iglob
 from collections import deque, Sequence, OrderedDict
@@ -276,7 +275,7 @@ def _all_xonsh_parser(*args):
     data_dir = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
     data_dir = expanduser_abs_path(data_dir)
 
-    files = [os.path.join(data_dir, f) for f in listdir(data_dir)
+    files = [os.path.join(data_dir, f) for f in os.listdir(data_dir)
              if f.startswith('xonsh-') and f.endswith('.json')]
     file_hist = []
     for f in files:
@@ -289,7 +288,7 @@ def _all_xonsh_parser(*args):
     commands = [(c['inp'][:-1] if c['inp'].endswith('\n') else c['inp'],
                  c['ts'][0])
                 for commands in file_hist for c in commands if c]
-    commands.sort(key=itemgetter(1))
+    commands.sort(key=operator.itemgetter(1))
     return [(c, t, ind) for ind, (c, t) in enumerate(commands)]
 
 
@@ -361,7 +360,7 @@ def _bash_hist_parser(location=None):
               file=sys.stderr)
 
 
-@lru_cache()
+@functools.lru_cache()
 def _hist_create_parser():
     """Create a parser for the "history" command."""
     p = argparse.ArgumentParser(prog='history',
@@ -459,12 +458,12 @@ def _show(ns=None, hist=None, start_index=None, end_index=None,
     # Check if ns is a string, meaning it was invoked from
     # __xonsh_history__
     alias = True
-    valid_formats = {'session': partial(_curr_session_parser, hist),
-                     'show': partial(_curr_session_parser, hist),
+    valid_formats = {'session': functools.partial(_curr_session_parser, hist),
+                     'show': functools.partial(_curr_session_parser, hist),
                      'all': _all_xonsh_parser,
                      'xonsh': _all_xonsh_parser,
-                     'zsh': partial(_zsh_hist_parser, location),
-                     'bash': partial(_bash_hist_parser, location)}
+                     'zsh': functools.partial(_zsh_hist_parser, location),
+                     'bash': functools.partial(_bash_hist_parser, location)}
     if isinstance(ns, str) and ns in valid_formats.keys():
         ns = _hist_create_parser().parse_args([ns])
         alias = False
@@ -479,14 +478,14 @@ def _show(ns=None, hist=None, start_index=None, end_index=None,
     if not commands:
         return None
     if start_time:
-        if isinstance(start_time, datetime):
+        if isinstance(start_time, datetime.datetime):
             start_time = start_time.timestamp()
         if isinstance(start_time, float):
             commands = [c for c in commands if c[1] >= start_time]
         else:
             print("Invalid start time, must be float or datetime.")
     if end_time:
-        if isinstance(end_time, datetime):
+        if isinstance(end_time, datetime.datetime):
             end_time = end_time.timestamp()
         if isinstance(end_time, float):
             commands = [c for c in commands if c[1] <= end_time]
@@ -645,7 +644,9 @@ class History(object):
 
         Valid options:
             `session` - returns xonsh history from current session
+            `show`    - alias of `session`
             `all`     - returns xonsh history from all sessions
+            `xonsh`   - alias of `all`
             `zsh`     - returns all zsh history
             `bash`    - returns all bash history
         """
