@@ -66,7 +66,46 @@ it up here and generate a single PLY token of the given type.  Otherwise, it
 will fall back to handling that token using one of the handlers in
 ``special_handlers``.
 """
+<<<<<<< HEAD
 del _token_map
+=======
+
+# operators
+_op_map = {
+    # punctuation
+    ',': 'COMMA', '.': 'PERIOD', ':': 'COLON',
+    '...': 'ELLIPSIS',
+    # basic operators
+    '+': 'PLUS', '-': 'MINUS', '*': 'TIMES', '@': 'AT', '/': 'DIVIDE',
+    '//': 'DOUBLEDIV', '%': 'MOD', '**': 'POW', '|': 'PIPE',
+    '~': 'TILDE', '^': 'XOR', '<<': 'LSHIFT', '>>': 'RSHIFT',
+    '<': 'LT', '<=': 'LE', '>': 'GT', '>=': 'GE', '==': 'EQ',
+    '!=': 'NE', '->': 'RARROW',
+    # assignment operators
+    '=': 'EQUALS', '+=': 'PLUSEQUAL', '-=': 'MINUSEQUAL',
+    '*=': 'TIMESEQUAL', '@=': 'ATEQUAL', '/=': 'DIVEQUAL', '%=': 'MODEQUAL',
+    '**=': 'POWEQUAL', '<<=': 'LSHIFTEQUAL', '>>=': 'RSHIFTEQUAL',
+    '&=': 'AMPERSANDEQUAL', '^=': 'XOREQUAL', '|=': 'PIPEEQUAL',
+    '//=': 'DOUBLEDIVEQUAL',
+    # extra xonsh operators
+    '?': 'QUESTION', '??': 'DOUBLE_QUESTION', '@$': 'ATDOLLAR',
+    '&': 'AMPERSAND',
+}
+for (op, type) in _op_map.items():
+    token_map[(OP, op)] = type
+
+token_map[IOREDIRECT] = 'IOREDIRECT'
+token_map[STRING] = 'STRING'
+token_map[DOLLARNAME] = 'DOLLAR_NAME'
+token_map[NUMBER] = 'NUMBER'
+token_map[REGEXPATH] = 'REGEXPATH'
+token_map[NEWLINE] = 'NEWLINE'
+token_map[INDENT] = 'INDENT'
+token_map[DEDENT] = 'DEDENT'
+if PYTHON_VERSION_INFO >= (3, 5, 0):
+    token_map[ASYNC] = 'ASYNC'
+    token_map[AWAIT] = 'AWAIT'
+>>>>>>> new handling of semicolons inside of inline block
 
 
 def _make_matcher_handler(tok, typ, pymode, ender):
@@ -188,16 +227,30 @@ def handle_double_pipe(state, token):
 
 
 def handle_banglbrace(state, token):
+    state['inline_suite_level'] += 1
     sl, sc = token.start
     yield _new_token('NEWLINE', '\n', token.start)
     yield _new_token('INDENT', ' ', (sl, sc+1))
 
 
 def handle_rbracebang(state, token):
+    state['inline_suite_level'] -= 1
+    if state['inline_suite_level'] < 0:
+        e = "}! used outside of inline suite."
+        yield _new_token('ERRORTOKEN', e, token.start)
+        return
     sl, sc = token.start
     if state['lexer'].last.type != 'DEDENT':
         yield _new_token('NEWLINE', '\n', token.start)
     yield _new_token('DEDENT', '', (sl, sc+1))
+
+
+def handle_semicolon(state, token):
+    if state['inline_suite_level'] > 0:
+        yield _new_token('NEWLINE', '\n', token.start)
+        return
+    yield _new_token('SEMI', ';', token.start)
+
 
 special_handlers = {
     NL: handle_ignore,
@@ -206,6 +259,7 @@ special_handlers = {
     ENDMARKER: handle_ignore,
     NAME: handle_name,
     ERRORTOKEN: handle_error_token,
+    (OP, ';'): handle_semicolon,
     (OP, ')'): handle_rparen,
     (OP, '}'): handle_rbrace,
     (OP, ']'): handle_rbracket,
@@ -279,6 +333,7 @@ def get_tokens(s, lexer):
     """
     state = {'indents': [0], 'last': None,
              'pymode': [(True, '', '', (0, 0))],
+             'inline_suite_level': 0,
              'stream': tokenize(BytesIO(s.encode('utf-8')).readline),
              'lexer': lexer}
     while True:
@@ -362,6 +417,7 @@ class Lexer(object):
     tokens = tuple(token_map.values()) + (
         'NAME',                  # name tokens
         'WS',                    # whitespace in subprocess mode
+        'SEMI',                  # ;
         'LPAREN', 'RPAREN',      # ( )
         'LBRACKET', 'RBRACKET',  # [ ]
         'LBRACE', 'RBRACE',      # { }
