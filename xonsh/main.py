@@ -192,6 +192,10 @@ def premain(argv=None):
     elif not sys.stdin.isatty() and not args.force_interactive:
         args.mode = XonshMode.script_from_stdin
         shell_kwargs['shell_type'] = 'none'
+    elif not args and other and other[0].startswith('-'):
+        print('xonsh: error: invalid argument {!r}'.format(other[0]))
+        parser.print_help()
+        exit()
     else:
         args.mode = XonshMode.interactive
         shell_kwargs['completer'] = True
