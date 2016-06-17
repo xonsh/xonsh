@@ -334,9 +334,8 @@ def test_is_int():
     for inp, exp in cases:
         obs = is_int(inp)
         yield assert_equal, exp, obs
-        
-        
-        
+
+
 def test_is_int_as_str():
     cases = [
         ('42', True),
@@ -352,9 +351,8 @@ def test_is_int_as_str():
     for inp, exp in cases:
         obs = is_int_as_str(inp)
         yield assert_equal, exp, obs
-        
-        
-        
+
+
 def test_is_float():
     cases = [
         (42.0, True),
