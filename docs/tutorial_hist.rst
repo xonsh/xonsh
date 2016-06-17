@@ -115,6 +115,33 @@ only the even indices from above, you could write:
      0  1 + 1
      2  history
 
+The ``xonsh`` action displays the past inputs along with the index from all
+valid json files found in ``XONSH_DATA_DIR``. As such, this operates on all
+past and present xonsh sessions.
+
+The ``all`` action is an alias for ``xonsh``.
+
+The ``xonsh`` action accepts the same arguments as ``show``.
+
+The ``zsh`` action will display all history from the history file specified
+by the ``HISTFILE`` environmental variable in zsh.
+By default this is ``~/.zsh_history``. However, they can also be respectively
+specified in both ``~/.zshrc`` and ``~/.zprofile``. Xonsh will parse these files
+(rc file first) to check if ``HISTFILE`` has been set.
+
+
+The ``bash`` action will display all history from the history file specified
+by the ``HISTFILE`` environmental variable in bash.
+By default this is ``~/.bash_history``. However, they can also be respectively
+specified in both ``~/.bashrc`` and ``~/.bash_profile``. Xonsh will parse these
+files (rc file first) to check if ``HISTFILE`` has been set.
+
+The ``__xonsh_history__.show(action)`` method can be returns history a list
+with each item in the format: (name, start_time, index). The action parameter
+can be a string of the following types: ``session``, ``show``, ``all``,
+``xonsh``,``zsh``, ``bash``, where ``session`` is an alias of ``show`` and
+``all`` is an alias of ``xonsh``.
+
 In the future, ``show`` may also be used to display outputs, return values, and time stamps.
 But the default behavior will remain as shown here.
 
