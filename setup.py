@@ -164,7 +164,7 @@ def main():
     with open(os.path.join(os.path.dirname(__file__), 'README.rst'), 'r') as f:
         readme = f.read()
     scripts = ['scripts/xon.sh']
-    if 'win' in sys.platform:
+    if sys.platform == 'win32':
         scripts.append('scripts/xonsh.bat')
     else:
         scripts.append('scripts/xonsh')
