@@ -117,13 +117,8 @@ def is_readline_available():
     """Checks if readline is available to import."""
     spec = importlib.util.find_spec('readline')
     return (spec is not None)
-    # might need to return to this at some point.
-    #try:
-    #    import readline
-    #except:  # pyreadline will sometimes fail in strange ways
-    #    return False
-    #else:
-    #    return True
+
+
 #
 # Encoding
 #

@@ -114,13 +114,13 @@ else:
     @functools.lru_cache(1)
     def _shell_tty():
         try:
-            _shtty = sys.stderr.fileno()
-            if os.tcgetpgrp(_shtty) != os.getpgid(os.getpid()):
+            _st = sys.stderr.fileno()
+            if os.tcgetpgrp(_st) != os.getpgid(os.getpid()):
                 # we don't own it
-                _shtty = None
+                _st = None
         except OSError:
-            _shtty = None
-        return _shtty
+            _st = None
+        return _st
 
 
     # _give_terminal_to is a simplified version of:
@@ -134,8 +134,8 @@ else:
         # though pthread_sigmask is defined in the kernel.  thus, we use
         # ctypes to mimic the calls in the "normal" version below.
         def _give_terminal_to(pgid):
-            shtty = _shell_tty()
-            if shtty is not None and os.isatty(shtty):
+            st = _shell_tty()
+            if st is not None and os.isatty(st):
                 omask = ctypes.c_ulong()
                 mask = ctypes.c_ulong()
                 _libc.sigemptyset(ctypes.byref(mask))
@@ -150,11 +150,11 @@ else:
                                   ctypes.byref(omask), None)
     else:
         def _give_terminal_to(pgid):
-            shtty = _shell_tty()
-            if shtty is not None and os.isatty(shtty):
+            st = _shell_tty()
+            if st is not None and os.isatty(st):
                 oldmask = signal.pthread_sigmask(signal.SIG_BLOCK,
                                                  _block_when_giving)
-                os.tcsetpgrp(shtty, pgid)
+                os.tcsetpgrp(st, pgid)
                 signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
 
 

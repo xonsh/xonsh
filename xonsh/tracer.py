@@ -205,5 +205,5 @@ def tracermain(args=None):
     return _MAIN_ACTIONS[ns.action](ns, args)
 
 
-#if __name__ == '__main__':
-#    main()
+if __name__ == '__main__':
+    tracermain()

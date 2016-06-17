@@ -11,8 +11,8 @@ from ast import parse, walk, literal_eval, Import, ImportFrom
 ModNode = namedtuple('ModNode', ['name', 'pkgdeps', 'extdeps'])
 ModNode.__doc__ = """Module node for dependency graph.
 
-Attrributes
------------
+Attributes
+----------
 name : str
     Module name.
 pkgdeps : frozenset of str
@@ -20,6 +20,7 @@ pkgdeps : frozenset of str
 extdeps : frozenset of str
     External module dependencies from outside of the package.
 """
+
 
 class SourceCache(Mapping):
     """Stores / loads source code for files based on package and module names."""
@@ -74,7 +75,6 @@ def make_node(name, pkg, allowed):
                 else:
                     extdeps.add(a.module)
     return ModNode(name, frozenset(pkgdeps), frozenset(extdeps))
-
 
 
 def make_graph(pkg, exclude=None):
@@ -233,15 +233,10 @@ def rewrite_imports(name, pkg, order, imps):
                 if imp not in imps:
                     imps.add(imp)
                     keep.append(imp)
-            if len(keep) == len(a.names):
-                #continue  # all new imports
-                # all new imports
-                s = format_lazy_import(keep)
-            elif len(keep) == 0:
+            if len(keep) == 0:
                 s = ', '.join(n.name for n in  a.names)
                 s = '# amalgamated ' + s + '\n'
             else:
-                #s = format_import(keep)
                 s = format_lazy_import(keep)
             replacements.append((start, stop, s))
         elif isinstance(a, ImportFrom):
@@ -266,7 +261,7 @@ def rewrite_imports(name, pkg, order, imps):
                 if len(keep) == len(a.names):
                     continue  # all new imports
                 elif len(keep) == 0:
-                    s = ', '.join(n.name for n in  a.names)
+                    s = ', '.join(n.name for n in a.names)
                     s = '# amalgamated from ' + a.module + ' import ' + s + '\n'
                 else:
                     s = format_from_import(keep)
@@ -278,7 +273,6 @@ def rewrite_imports(name, pkg, order, imps):
         for i in range(stop - start - 1):
             del lines[start+1]
     return ''.join(lines)
-
 
 
 def amalgamate(order, graph, pkg):

@@ -1,18 +1,5 @@
 # -*- coding: utf-8 -*-
 """The main xonsh script."""
-import time
-import builtins
-
-#_oi = __import__
-#def timp(name, globals=None, locals=None, fromlist=(), level=0):
-#    t0 = time.time()
-#    mod = _oi(name, globals=globals, locals=locals, fromlist=fromlist, level=level)
-#    t1 = time.time()
-#    print('{0} {1} {2}'.format(t1- t0, name, fromlist))
-#    return mod
-
-#builtins.__import__ = timp
-
 import os
 import sys
 import enum
