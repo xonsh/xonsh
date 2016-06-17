@@ -80,12 +80,13 @@ def _startswithnorm(x, start, startlow=None):
     return x.startswith(start)
 
 
-def _add_env(paths, prefix):
+def _env(prefix):
     if prefix.startswith('$'):
         key = prefix[1:]
-        paths.update({'$' + k
-                      for k in builtins.__xonsh_env__
-                      if get_filter_function()(k, key)})
+        return {'$' + k
+                for k in builtins.__xonsh_env__
+                if get_filter_function()(k, key)}
+    return ()
 
 
 def _add_dots(paths, prefix):
@@ -132,7 +133,7 @@ def _quote_paths(paths, start, end):
                  (backslash in s and slash != backslash))):
             start = end = _quote_to_use(s)
         if os.path.isdir(expand_path(s)):
-            _tail = slash
+            _tail = '' if s.endswith('/') else slash
         elif end == '':
             _tail = space
         else:
@@ -269,13 +270,12 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
         paths = {s.replace(home, tilde) for s in paths}
     if cdpath:
         _add_cdpaths(paths, prefix)
-    _add_env(paths, prefix)
     _add_dots(paths, prefix)
-    if filtfunc is not None:
-        paths = {p for p in paths if filtfunc(p)}
+    paths = set(filter(filtfunc, paths))
     paths = _quote_paths({_normpath(s) for s in paths},
                          path_str_start,
                          path_str_end)
+    paths.update(filter(filtfunc, _env(prefix)))
     return paths, lprefix
 
 
