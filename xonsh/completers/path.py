@@ -89,11 +89,16 @@ def _env(prefix):
     return ()
 
 
-def _add_dots(paths, prefix):
+def _dots(prefix):
+    slash = get_sep()
+    if slash == '\\':
+        slash = ''
     if prefix in {'', '.'}:
-        paths.update({'./', '../'})
-    if prefix == '..':
-        paths.add('../')
+        return ('.'+slash, '..'+slash)
+    elif prefix == '..':
+        return ('..'+slash,)
+    else:
+        return ()
 
 
 def _add_cdpaths(paths, prefix):
@@ -133,7 +138,7 @@ def _quote_paths(paths, start, end):
                  (backslash in s and slash != backslash))):
             start = end = _quote_to_use(s)
         if os.path.isdir(expand_path(s)):
-            _tail = '' if s.endswith('/') else slash
+            _tail = slash
         elif end == '':
             _tail = space
         else:
@@ -270,11 +275,11 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
         paths = {s.replace(home, tilde) for s in paths}
     if cdpath:
         _add_cdpaths(paths, prefix)
-    _add_dots(paths, prefix)
     paths = set(filter(filtfunc, paths))
     paths = _quote_paths({_normpath(s) for s in paths},
                          path_str_start,
                          path_str_end)
+    paths.update(filter(filtfunc, _dots(prefix)))
     paths.update(filter(filtfunc, _env(prefix)))
     return paths, lprefix
 
