@@ -111,7 +111,7 @@ Thanks for using the xonsh configuration wizard!"""
 
 def make_fs_wiz():
     """Makes the foreign shell part of the wizard."""
-    cond = wiz.create_truefalse_cond(prompt='Add a foreign shell, ' + wiz.YN)
+    cond = wiz.create_truefalse_cond(prompt='Add a new foreign shell, ' + wiz.YN)
     fs = wiz.While(cond=cond, body=[
         wiz.Input('shell name (e.g. bash): ',
                   path='/foreign_shells/{idx}/shell'),
@@ -148,7 +148,7 @@ def make_fs_wiz():
                           path='/foreign_shells/{idx}/funcscmd'),
         wiz.StoreNonEmpty("source command [str, default=None]: ",
                           path='/foreign_shells/{idx}/sourcer'),
-        wiz.Message(message='')  # inserts a newline
+        wiz.Message(message='Foreign shell added.\n')
         ])
     return fs
 
