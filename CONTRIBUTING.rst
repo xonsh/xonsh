@@ -94,6 +94,32 @@ If you want to lint the entire code base run::
 
     $ pylint $(find tests xonsh -name \*.py | sort)
 
+**********
+Imports
+**********
+Xonsh source code may be amalgamated into a single file (``__amalgam__.py``)
+to speed up imports. The way the code amalgamater works is that other modules
+that are in the same package (and amalgamated) should be imported with::
+
+    from pkg.x import a, c, d
+
+This is because the amalgamater puts all such modules in the same globals(),
+which is effectively what the from-imports do. For example, ``xonsh.ast`` and
+``xonsh.execer`` are both in the same package (``xonsh``). Thus they should use
+the above from from-import syntax.
+
+Alternatively, for modules outside of the current package (or modules that are
+not amalgamated) the import statement should be either ``import pkg.x`` or
+``import pkg.x as name``. This is because these are the only cases where the
+amalgamater is able to automatically insert lazy imports in way that is guarantted
+to be safe. This is due to the ambiguity that ``from pkg.x import name`` may
+import a variable that cannot be lazily constructed or may import a module.
+So the simple rules to follow are that:
+
+1. Import objects from modules in the same package directly in using from-import,
+2. Import objects from moudules outside of the package via a direct import
+   or import-as statement.
+
 How to Test
 ================
 

@@ -190,8 +190,9 @@ def test_single_bytes_literal():
 
 def test_regex_globs():
     for i in ('.*', r'\d*', '.*#{1,2}'):
-        c = '`{}`'.format(i)
-        yield check_token, c, ['REGEXPATH', c, 0]
+        for p in ('', 'r', 'g', '@somethingelse'):
+            c = '{}`{}`'.format(p,i)
+            yield check_token, c, ['SEARCHPATH', c, 0]
 
 def test_float_literals():
     cases = ['0.0', '.0', '0.', '1e10', '1.e42', '0.1e42', '0.5e-42',

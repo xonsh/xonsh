@@ -36,27 +36,28 @@ def test_env_path_str():
 
 def test_env_detype():
     env = Env(MYPATH=['wakka', 'jawaka'])
-    assert_equal({'MYPATH': os.path.abspath('wakka') + os.pathsep + \
-                            os.path.abspath('jawaka')},
-                 env.detype())
+    assert_equal(os.path.abspath('wakka') + os.pathsep + \
+                 os.path.abspath('jawaka'),
+                 env.detype()['MYPATH'])
 
 def test_env_detype_mutable_access_clear():
     env = Env(MYPATH=['/home/wakka', '/home/jawaka'])
-    assert_equal({'MYPATH': '/home/wakka' + os.pathsep + '/home/jawaka'},
-                 env.detype())
+    assert_equal('/home/wakka' + os.pathsep + '/home/jawaka',
+                 env.detype()['MYPATH'])
     env['MYPATH'][0] = '/home/woah'
     assert_equal(None, env._detyped)
-    assert_equal({'MYPATH': '/home/woah' + os.pathsep + '/home/jawaka'},
-                 env.detype())
+    assert_equal('/home/woah' + os.pathsep + '/home/jawaka',
+                 env.detype()['MYPATH'])
 
     env = Env(MYPATH=['wakka', 'jawaka'])
-    assert_equal({'MYPATH': os.path.abspath('wakka') + os.pathsep + \
-                            os.path.abspath('jawaka')},
-                 env.detype())
+    assert_equal(os.path.abspath('wakka') + os.pathsep + \
+                 os.path.abspath('jawaka'),
+                 env.detype()['MYPATH'])
     env['MYPATH'][0] = 'woah'
-    assert_equal({'MYPATH': os.path.abspath('woah') + os.pathsep + \
-                            os.path.abspath('jawaka')},
-                 env.detype())
+    assert_equal(None, env._detyped)
+    assert_equal(os.path.abspath('woah') + os.pathsep + \
+                 os.path.abspath('jawaka'),
+                 env.detype()['MYPATH'])
 
 def test_env_detype_no_dict():
     env = Env(YO={'hey': 42})
@@ -187,9 +188,9 @@ if ON_WINDOWS:
             for fname in files:
                 fpath = os.path.join(tmpdir, fname)
                 with open(fpath, 'w') as f:
-                    f.write(fpath)               
+                    f.write(fpath)
             env = Env({'PATH': [tmpdir], 'PATHEXT': ['.COM', '.EXE', '.BAT']})
-            with mock_xonsh_env(env): 
+            with mock_xonsh_env(env):
                 assert_equal( locate_binary('file1'), os.path.join(tmpdir,'file1.exe'))
                 assert_equal( locate_binary('file1.exe'), os.path.join(tmpdir,'file1.exe'))
                 assert_equal( locate_binary('file2'), os.path.join(tmpdir,'FILE2.BAT'))

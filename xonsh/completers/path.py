@@ -243,7 +243,7 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True):
     csc = env.get('CASE_SENSITIVE_COMPLETIONS')
     for s in iglobpath(prefix + '*', ignore_case=(not csc)):
         paths.add(s)
-    if env.get('SUBSEQUENCE_PATH_COMPLETION'):
+    if len(paths) == 0 and env.get('SUBSEQUENCE_PATH_COMPLETION'):
         # this block implements 'subsequence' matching, similar to fish and zsh.
         # matches are based on subsequences, not substrings.
         # e.g., ~/u/ro completes to ~/lou/carcolh

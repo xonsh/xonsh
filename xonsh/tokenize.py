@@ -26,16 +26,20 @@ import re
 import sys
 from token import *
 
+from xonsh.lazyasd import LazyObject
 from xonsh.platform import PYTHON_VERSION_INFO
 
 
-cookie_re = re.compile(r'^[ \t\f]*#.*coding[:=][ \t]*([-\w.]+)', re.ASCII)
-blank_re = re.compile(br'^[ \t\f]*(?:[#\r\n]|$)', re.ASCII)
+cookie_re = LazyObject(
+    lambda: re.compile(r'^[ \t\f]*#.*coding[:=][ \t]*([-\w.]+)', re.ASCII),
+    globals(), 'cookie_re')
+blank_re = LazyObject(lambda: re.compile(br'^[ \t\f]*(?:[#\r\n]|$)', re.ASCII),
+                      globals(), 'blank_re')
 
 import token
 __all__ = token.__all__ + ["COMMENT", "tokenize", "detect_encoding",
                            "NL", "untokenize", "ENCODING", "TokenInfo",
-                           "TokenError", 'REGEXPATH', 'ATDOLLAR', 'ATEQUAL',
+                           "TokenError", 'SEARCHPATH', 'ATDOLLAR', 'ATEQUAL',
                            'DOLLARNAME', 'IOREDIRECT']
 del token
 
@@ -55,8 +59,8 @@ tok_name[NL] = 'NL'
 ENCODING = N_TOKENS + 2
 tok_name[ENCODING] = 'ENCODING'
 N_TOKENS += 3
-REGEXPATH = N_TOKENS
-tok_name[N_TOKENS] = 'REGEXPATH'
+SEARCHPATH = N_TOKENS
+tok_name[N_TOKENS] = 'SEARCHPATH'
 N_TOKENS += 1
 IOREDIRECT = N_TOKENS
 tok_name[N_TOKENS] = 'IOREDIRECT'
@@ -158,15 +162,15 @@ class TokenInfo(collections.namedtuple('TokenInfo', 'type string start end line'
             return self.type
 
 def group(*choices): return '(' + '|'.join(choices) + ')'
-def any(*choices): return group(*choices) + '*'
+def tokany(*choices): return group(*choices) + '*'
 def maybe(*choices): return group(*choices) + '?'
 
 # Note: we use unicode matching for names ("\w") but ascii matching for
 # number literals.
 Whitespace = r'[ \f\t]*'
 Comment = r'#[^\r\n]*'
-Ignore = Whitespace + any(r'\\\r?\n' + Whitespace) + maybe(Comment)
-Name = r'\$?\w+'
+Ignore = Whitespace + tokany(r'\\\r?\n' + Whitespace) + maybe(Comment)
+Name_RE = r'\$?\w+'
 
 Hexnumber = r'0[xX][0-9a-fA-F]+'
 Binnumber = r'0[bB][01]+'
@@ -195,8 +199,8 @@ Triple = group(StringPrefix + "'''", StringPrefix + '"""')
 String = group(StringPrefix + r"'[^\n'\\]*(?:\\.[^\n'\\]*)*'",
                StringPrefix + r'"[^\n"\\]*(?:\\.[^\n"\\]*)*"')
 
-# Xonsh-specific Regular Expression Glob Syntax
-RegexPath = r"`[^\n`\\]*(?:\\.[^\n`\\]*)*`"
+# Xonsh-specific Syntax
+SearchPath = r"((?:[rg]|@\w*)?)`([^\n`\\]*(?:\\.[^\n`\\]*)*)`"
 
 # Because of leftmost-then-longest match semantics, be sure to put the
 # longest operators first (e.g., if = came before ==, == would get
@@ -217,7 +221,7 @@ Bracket = '[][(){}]'
 Special = group(r'\r?\n', r'\.\.\.', r'[:;.,@]')
 Funny = group(Operator, Bracket, Special)
 
-PlainToken = group(IORedirect, Number, Funny, String, Name, RegexPath)
+PlainToken = group(IORedirect, Number, Funny, String, Name_RE, SearchPath)
 Token = Ignore + PlainToken
 
 # First (or only) line of ' or " string.
@@ -225,9 +229,9 @@ ContStr = group(StringPrefix + r"'[^\n'\\]*(?:\\.[^\n'\\]*)*" +
                 group("'", r'\\\r?\n'),
                 StringPrefix + r'"[^\n"\\]*(?:\\.[^\n"\\]*)*' +
                 group('"', r'\\\r?\n'))
-PseudoExtras = group(r'\\\r?\n|\Z', Comment, Triple, RegexPath)
+PseudoExtras = group(r'\\\r?\n|\Z', Comment, Triple, SearchPath)
 PseudoToken = Whitespace + group(PseudoExtras, IORedirect, Number, Funny,
-                                 ContStr, Name)
+                                 ContStr, Name_RE)
 
 def _compile(expr):
     return re.compile(expr, re.UNICODE)
@@ -507,7 +511,7 @@ def detect_encoding(readline):
     return default, [first, second]
 
 
-def open(filename):
+def _tokopen(filename):
     """Open a file in read only mode using the encoding detected by
     detect_encoding().
     """
@@ -661,8 +665,8 @@ def _tokenize(readline, encoding):
                         stashed = None
                     yield TokenInfo(COMMENT, token, spos, epos, line)
                 # Xonsh-specific Regex Globbing
-                elif initial == '`':
-                    yield TokenInfo(REGEXPATH, token, spos, epos, line)
+                elif re.match(SearchPath, token):
+                    yield TokenInfo(SEARCHPATH, token, spos, epos, line)
                 elif token in triple_quoted:
                     endprog = _compile(endpats[token])
                     endmatch = endprog.match(line, pos)
@@ -781,7 +785,7 @@ def tokenize(readline):
 def generate_tokens(readline):
     return _tokenize(readline, None)
 
-def main():
+def tokenize_main():
     import argparse
 
     # Helper error handling routines
