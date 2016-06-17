@@ -438,12 +438,12 @@ def run_subproc(cmds, captured=False):
         else:
             if alias is not None:
                 aliased_cmd = alias + cmd[1:]
-            elif binary_loc is None:
-                aliased_cmd = cmd
             else:
+                aliased_cmd = cmd
+            if binary_loc is not None:
                 try:
                     aliased_cmd = get_script_subproc_command(binary_loc,
-                                                             cmd[1:])
+                                                             aliased_cmd[1:])
                 except PermissionError:
                     e = 'xonsh: subprocess mode: permission denied: {0}'
                     raise XonshError(e.format(cmd[0]))
