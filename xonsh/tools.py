@@ -25,6 +25,7 @@ import glob
 import string
 import ctypes
 import builtins
+import pathlib
 import warnings
 import functools
 import threading
@@ -98,6 +99,91 @@ class XonshCalledProcessError(XonshError, CalledProcessError):
         super().__init__(returncode, command, output)
         self.stderr = stderr
         self.completed_command = completed_command
+
+
+def expandpath(path):
+    """
+    Performs environment variable / user expansion on a given path
+    if the relevant flag has been set.
+    """
+    env = getattr(builtins, '__xonsh_env__', os.environ)
+    if env.get('EXPAND_ENV_VARS', False):
+        # expand variables and use os.path.abspath to handle cases
+        # with relative paths like ../ or ./
+        path = os.path.expanduser(expandvars(path))
+    return os.path.abspath(path)
+
+
+def decode_bytes(path):
+    """
+    Tries to decode a path in bytes using XONSH_ENCODING if available,
+    otherwise using sys.getdefaultencoding().
+    """
+    env = getattr(builtins, '__xonsh_env__', os.environ)
+    enc = env.get('XONSH_ENCODING', DEFAULT_ENCODING)
+    return path.decode(encoding=enc,
+                       errors=env.get('XONSH_ENCODING_ERRORS'))
+
+
+class EnvPath(collections.MutableSequence):
+    """
+    A class that implements an environment path, which is a list of
+    strings. Provides a custom method that expands all paths if the
+    relevant env variable has been set.
+    """
+    def __init__(self, args=None):
+        if not args:
+            self._l = []
+        else:
+            if isinstance(args, str):
+                self._l = args.split(os.pathsep)
+            elif isinstance(args, pathlib.Path):
+                self._l = [args]
+            elif isinstance(args, bytes):
+                # decode bytes to a string and then split based on
+                # the default path separator
+                self._l = decode_bytes(args).split(os.pathsep)
+            elif isinstance(args, collections.Iterable):
+                # put everything in a list -before- performing the type check
+                # in order to be able to retrieve it later, for cases such as
+                # when a generator expression was passed as an argument
+                args = list(args)
+                if not all(isinstance(i, (str, bytes, pathlib.Path)) \
+                                      for i in args):
+                    # make TypeError's message as informative as possible
+                    # when given an invalid initialization sequence
+                    raise TypeError(
+                            "EnvPath's initialization sequence should only "
+                            "contain str, bytes and pathlib.Path entries")
+                self._l = args
+            else:
+                raise TypeError('EnvPath cannot be initialized with items '
+                                'of type %s' % type(args))
+
+    def __getitem__(self, item):
+        return expandpath(self._l[item])
+
+    def __setitem__(self, index, item):
+        self._l.__setitem__(index, item)
+
+    def __len__(self):
+        return len(self._l)
+
+    def __delitem__(self, key):
+        self._l.__delitem__(key)
+
+    def insert(self, index, value):
+        self._l.insert(index, value)
+
+    @property
+    def paths(self):
+        """
+        Returns the list of directories that this EnvPath contains.
+        """
+        return list(self)
+
+    def __repr__(self):
+        return repr(self._l)
 
 
 class DefaultNotGivenType(object):
@@ -695,18 +781,15 @@ def ensure_string(x):
 
 def is_env_path(x):
     """This tests if something is an environment path, ie a list of strings."""
-    if isinstance(x, str):
-        return False
-    else:
-        return (isinstance(x, abc.Sequence) and
-                all(isinstance(a, str) for a in x))
+    return isinstance(x, EnvPath)
 
 
 def str_to_env_path(x):
     """Converts a string to an environment path, ie a list of strings,
     splitting on the OS separator.
     """
-    return x.split(os.pathsep)
+    # splitting will be done implicitly in EnvPath's __init__
+    return EnvPath(x)
 
 
 def env_path_to_str(x):
@@ -1247,6 +1330,9 @@ def expandvars(path):
     if isinstance(path, bytes):
         path = path.decode(encoding=ENV.get('XONSH_ENCODING'),
                            errors=ENV.get('XONSH_ENCODING_ERRORS'))
+    elif isinstance(path, pathlib.Path):
+        # get the path's string representation
+        path = str(path)
     if '$' not in path and (not ON_WINDOWS or '%' not in path):
         return path
     varchars = string.ascii_letters + string.digits + '_-'
