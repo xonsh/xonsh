@@ -142,12 +142,11 @@ class Aliases(MutableMapping):
 
 
 
-def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
+def xonsh_exit(args, stdin=None):
     """Sends signal to exit shell."""
     if not clean_jobs():
         # Do not exit if jobs not cleaned up
         return None, None
-
     builtins.__xonsh_exit__ = True
     print()  # gimme a newline
     return None, None
@@ -500,9 +499,9 @@ def make_default_aliases():
         'jobs': jobs,
         'fg': fg,
         'bg': bg,
-        'EOF': exit,
-        'exit': exit,
-        'quit': exit,
+        'EOF': xonsh_exit,
+        'exit': xonsh_exit,
+        'quit': xonsh_exit,
         'xexec': xexec,
         'source': source_alias,
         'source-zsh': ['source-foreign', 'zsh', '--sourcer=source'],
