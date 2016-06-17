@@ -255,6 +255,7 @@ class BaseParser(object):
             yacc_kwargs['outputdir'] = outputdir
         self.parser = None
         YaccLoader(self, yacc_kwargs)
+        #self.parser = yacc.yacc(**yacc_kwargs)
 
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None
@@ -1710,7 +1711,7 @@ class BaseParser(object):
     def p_atom_ellip(self, p):
         """atom : ellipsis_tok"""
         p1 = p[1]
-        p[0] = ast.Ellipsis(lineno=p1.lineno, col_offset=p1.lexpos)
+        p[0] = ast.EllipsisNode(lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_atom_none(self, p):
         """atom : none_tok"""

@@ -13,7 +13,7 @@ from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
     Attribute, Global, Nonlocal, If, While, For, withitem, With, Try, \
     ExceptHandler, FunctionDef, ClassDef, Starred, NodeTransformer, \
     Interactive, Expression, Index, literal_eval, dump, walk, increment_lineno
-from ast import Ellipsis  # pylint: disable=redefined-builtin
+from ast import Ellipsis as EllipsisNode
 # pylint: enable=unused-import
 import textwrap
 import itertools
