@@ -15,6 +15,10 @@ from xonsh.ast import has_elts, xonsh_call
 from xonsh.lexer import Lexer, LexToken
 from xonsh.platform import PYTHON_VERSION_INFO
 from xonsh.tokenize import SearchPath
+from xonsh.lazyasd import LazyObject
+
+RE_SEARCHPATH = LazyObject(lambda: re.compile(SearchPath), globals(),
+                           'RE_SEARCHPATH')
 
 class Location(object):
     """Location in a file."""
@@ -118,7 +122,7 @@ def xonsh_pathsearch(pattern, pymode=False, lineno=None, col=None):
     """Creates the AST node for calling the __xonsh_pathsearch__() function.
     The pymode argument indicate if it is called from subproc or python mode"""
     pymode = ast.NameConstant(value=pymode, lineno=lineno, col_offset=col)
-    searchfunc, pattern = re.match(SearchPath, pattern).groups()
+    searchfunc, pattern = RE_SEARCHPATH.match(pattern).groups()
     pattern = ast.Str(s=pattern, lineno=lineno,
                       col_offset=col)
     if searchfunc in {'r', ''}:

@@ -14,7 +14,7 @@ except ImportError:
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import PYTHON_VERSION_INFO
 from xonsh.tokenize import (OP, IOREDIRECT, STRING, DOLLARNAME, NUMBER,
-    REGEXPATH, NEWLINE, INDENT, DEDENT, NL, COMMENT, ENCODING,
+    SEARCHPATH, NEWLINE, INDENT, DEDENT, NL, COMMENT, ENCODING,
     ENDMARKER, NAME, ERRORTOKEN, tokenize, TokenError)
 
 
