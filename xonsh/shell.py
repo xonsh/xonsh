@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """The xonsh shell"""
+import os
 import random
 import builtins
 from warnings import warn
@@ -9,7 +10,7 @@ from xonsh.environ import xonshrc_context
 from xonsh.execer import Execer
 from xonsh.platform import (best_shell_type, has_prompt_toolkit, ptk_version,
                             ptk_version_info)
-from xonsh.tools import XonshError
+from xonsh.tools import XonshError, to_bool_or_int
 
 
 class Shell(object):
@@ -81,7 +82,9 @@ class Shell(object):
 
     def _init_environ(self, ctx, config, rc, scriptcache, cacheall):
         self.ctx = {} if ctx is None else ctx
-        self.execer = Execer(config=config, login=self.login, xonsh_ctx=self.ctx)
+        debug = to_bool_or_int(os.getenv('XONSH_DEBUG', '0'))
+        self.execer = Execer(config=config, login=self.login, xonsh_ctx=self.ctx,
+                             debug_level=debug)
         self.execer.scriptcache = scriptcache
         self.execer.cacheall = cacheall
         if self.stype != 'none' or self.login:

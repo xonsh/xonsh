@@ -70,7 +70,8 @@ def to_debug(x):
     execer's debug level.
     """
     val = to_bool_or_int(x)
-    builtins.__xonsh_execer__.debug_level = val
+    if hasattr(builtins, '__xonsh_execer__'):
+        builtins.__xonsh_execer__.debug_level = val
     return val
 
 Ensurer = namedtuple('Ensurer', ['validate', 'convert', 'detype'])
