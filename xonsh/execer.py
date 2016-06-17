@@ -8,7 +8,7 @@ import builtins
 import warnings
 from collections import Mapping
 
-from xonsh import ast
+from xonsh.ast import CtxAwareTransformer
 from xonsh.parser import Parser
 from xonsh.tools import subproc_toks, find_next_break
 from xonsh.built_ins import load_builtins, unload_builtins
@@ -39,7 +39,7 @@ class Execer(object):
         self.filename = filename
         self.debug_level = debug_level
         self.unload = unload
-        self.ctxtransformer = ast.CtxAwareTransformer(self.parser)
+        self.ctxtransformer = CtxAwareTransformer(self.parser)
         load_builtins(execer=self, config=config, login=login, ctx=xonsh_ctx)
 
     def __del__(self):

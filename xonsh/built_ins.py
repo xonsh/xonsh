@@ -19,11 +19,13 @@ import sys
 import tempfile
 import time
 
+from xonsh.lazyasd import LazyObject
+from xonsh.history import History
+from xonsh.tokenize import SearchPath
+from xonsh.inspectors import Inspector
 from xonsh.aliases import Aliases, make_default_aliases
 from xonsh.environ import Env, default_env, locate_binary
 from xonsh.foreign_shells import load_foreign_aliases
-from xonsh.history import History
-from xonsh.inspectors import Inspector
 from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
@@ -37,7 +39,7 @@ from xonsh.tools import (
 
 ENV = None
 BUILTINS_LOADED = False
-INSPECTOR = Inspector()
+INSPECTOR = LazyObject(Inspector, globals(), 'INSPECTOR')
 AT_EXIT_SIGNALS = (signal.SIGABRT, signal.SIGFPE, signal.SIGILL, signal.SIGSEGV,
                    signal.SIGTERM)
 
@@ -130,12 +132,26 @@ def reglob(path, parts=None, i=None):
     return paths
 
 
-def regexpath(s, pymode=False):
-    """Takes a regular expression string and returns a list of file
-    paths that match the regex.
-    """
+def regexsearch(s):
     s = expand_path(s)
-    o = reglob(s)
+    return reglob(s)
+
+
+def globsearch(s):
+    csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
+    return globpath(s, ignore_case=(not csc), return_empty=True)
+
+
+def pathsearch(func, s, pymode=False):
+    """
+    Takes a string and returns a list of file paths that match (regex, glob,
+    or arbitrary search function).
+    """
+    if (not callable(func) or
+            len(inspect.signature(func).parameters) != 1):
+        error = "%r is not a known path search function"
+        raise XonshError(error % searchfunc)
+    o = func(s)
     no_match = [] if pymode else [s]
     return o if len(o) != 0 else no_match
 
@@ -658,7 +674,9 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.__xonsh_env__ = ENV = Env(default_env(config=config, login=login))
     builtins.__xonsh_help__ = helper
     builtins.__xonsh_superhelp__ = superhelper
-    builtins.__xonsh_regexpath__ = regexpath
+    builtins.__xonsh_pathsearch__ = pathsearch
+    builtins.__xonsh_globsearch__ = globsearch
+    builtins.__xonsh_regexsearch__ = regexsearch
     builtins.__xonsh_glob__ = globpath
     builtins.__xonsh_expand_path__ = expand_path
     builtins.__xonsh_exit__ = False
@@ -688,6 +706,7 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.execx = None if execer is None else execer.exec
     builtins.compilex = None if execer is None else execer.compile
 
+    # sneak the path search functions into the aliases
     # Need this inline/lazy import here since we use locate_binary that relies on __xonsh_env__ in default aliases
     builtins.default_aliases = builtins.aliases = Aliases(make_default_aliases())
     if login:
@@ -703,7 +722,8 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
 
 
 def _lastflush(s=None, f=None):
-    builtins.__xonsh_history__.flush(at_exit=True)
+    if hasattr(builtins, '__xonsh_history__'):
+        builtins.__xonsh_history__.flush(at_exit=True)
 
 
 def unload_builtins():
@@ -725,7 +745,9 @@ def unload_builtins():
              '__xonsh_ctx__',
              '__xonsh_help__',
              '__xonsh_superhelp__',
-             '__xonsh_regexpath__',
+             '__xonsh_pathsearch__',
+             '__xonsh_globsearch__',
+             '__xonsh_regexsearch__',
              '__xonsh_glob__',
              '__xonsh_expand_path__',
              '__xonsh_exit__',

@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 """Implements the base xonsh parser."""
+import re
+import time
+from threading import Thread
 from collections import Iterable, Sequence, Mapping
 
 try:
@@ -11,7 +14,11 @@ from xonsh import ast
 from xonsh.ast import has_elts, xonsh_call
 from xonsh.lexer import Lexer, LexToken
 from xonsh.platform import PYTHON_VERSION_INFO
+from xonsh.tokenize import SearchPath
+from xonsh.lazyasd import LazyObject
 
+RE_SEARCHPATH = LazyObject(lambda: re.compile(SearchPath), globals(),
+                           'RE_SEARCHPATH')
 
 class Location(object):
     """Location in a file."""
@@ -111,12 +118,23 @@ def xonsh_superhelp(x, lineno=None, col=None):
     return xonsh_call('__xonsh_superhelp__', [x], lineno=lineno, col=col)
 
 
-def xonsh_regexpath(x, pymode=False, lineno=None, col=None):
-    """Creates the AST node for calling the __xonsh_regexpath__() function.
+def xonsh_pathsearch(pattern, pymode=False, lineno=None, col=None):
+    """Creates the AST node for calling the __xonsh_pathsearch__() function.
     The pymode argument indicate if it is called from subproc or python mode"""
     pymode = ast.NameConstant(value=pymode, lineno=lineno, col_offset=col)
-    return xonsh_call('__xonsh_regexpath__', args=[x, pymode], lineno=lineno,
-                      col=col)
+    searchfunc, pattern = RE_SEARCHPATH.match(pattern).groups()
+    pattern = ast.Str(s=pattern, lineno=lineno,
+                      col_offset=col)
+    if searchfunc in {'r', ''}:
+        func = '__xonsh_regexsearch__'
+    elif searchfunc == 'g':
+        func = '__xonsh_globsearch__'
+    else:
+        func = searchfunc[1:]  # remove the '@' character
+    func = ast.Name(id=func, ctx=ast.Load(), lineno=lineno,
+                    col_offset=col)
+    return xonsh_call('__xonsh_pathsearch__', args=[func, pattern, pymode],
+                      lineno=lineno, col=col)
 
 
 def load_ctx(x):
@@ -154,6 +172,20 @@ def lopen_loc(x):
     lineno = x._lopen_lineno if hasattr(x, '_lopen_lineno') else x.lineno
     col = x._lopen_col if hasattr(x, '_lopen_col') else x.col_offset
     return lineno, col
+
+
+class YaccLoader(Thread):
+    """Thread to load (but not shave) the yacc parser."""
+
+    def __init__(self, parser, yacc_kwargs, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.daemon = True
+        self.parser = parser
+        self.yacc_kwargs = yacc_kwargs
+        self.start()
+
+    def run(self):
+        self.parser.parser = yacc.yacc(**self.yacc_kwargs)
 
 
 class BaseParser(object):
@@ -237,7 +269,9 @@ class BaseParser(object):
             yacc_kwargs['errorlog'] = yacc.NullLogger()
         if outputdir is not None:
             yacc_kwargs['outputdir'] = outputdir
-        self.parser = yacc.yacc(**yacc_kwargs)
+        self.parser = None
+        YaccLoader(self, yacc_kwargs)
+        #self.parser = yacc.yacc(**yacc_kwargs)
 
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None
@@ -268,6 +302,8 @@ class BaseParser(object):
         self.reset()
         self.xonsh_code = s
         self.lexer.fname = filename
+        while self.parser is None:
+            time.sleep(0.01)  # block until the parser is ready
         tree = self.parser.parse(input=s, lexer=self.lexer, debug=debug_level)
         # hack for getting modes right
         if mode == 'single':
@@ -1691,7 +1727,7 @@ class BaseParser(object):
     def p_atom_ellip(self, p):
         """atom : ellipsis_tok"""
         p1 = p[1]
-        p[0] = ast.Ellipsis(lineno=p1.lineno, col_offset=p1.lexpos)
+        p[0] = ast.EllipsisNode(lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_atom_none(self, p):
         """atom : none_tok"""
@@ -1711,12 +1747,10 @@ class BaseParser(object):
         p[0] = ast.NameConstant(value=False, lineno=p1.lineno,
                                 col_offset=p1.lexpos)
 
-    def p_atom_re(self, p):
-        """atom : REGEXPATH"""
-        p1 = ast.Str(s=p[1].strip('`'), lineno=self.lineno,
-                     col_offset=self.col)
-        p[0] = xonsh_regexpath(p1, pymode=True, lineno=self.lineno,
-                               col=self.col)
+    def p_atom_pathsearch(self, p):
+        """atom : SEARCHPATH"""
+        p[0] = xonsh_pathsearch(p[1], pymode=True, lineno=self.lineno,
+                                col=self.col)
 
     def p_atom_dname(self, p):
         """atom : DOLLAR_NAME"""
@@ -2214,11 +2248,9 @@ class BaseParser(object):
         p[0] = p0
 
     def p_subproc_atom_re(self, p):
-        """subproc_atom : REGEXPATH"""
-        p1 = ast.Str(s=p[1].strip('`'), lineno=self.lineno,
-                     col_offset=self.col)
-        p0 = xonsh_regexpath(p1, pymode=False, lineno=self.lineno,
-                             col=self.col)
+        """subproc_atom : SEARCHPATH"""
+        p0 = xonsh_pathsearch(p[1], pymode=False, lineno=self.lineno,
+                              col=self.col)
         p0._cliarg_action = 'extend'
         p[0] = p0
 

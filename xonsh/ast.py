@@ -13,10 +13,10 @@ from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
     Attribute, Global, Nonlocal, If, While, For, withitem, With, Try, \
     ExceptHandler, FunctionDef, ClassDef, Starred, NodeTransformer, \
     Interactive, Expression, Index, literal_eval, dump, walk, increment_lineno
-from ast import Ellipsis  # pylint: disable=redefined-builtin
+from ast import Ellipsis as EllipsisNode
 # pylint: enable=unused-import
 import textwrap
-from itertools import repeat
+import itertools
 
 from xonsh.tools import subproc_toks, find_next_break
 from xonsh.platform import PYTHON_VERSION_INFO
@@ -68,7 +68,7 @@ def get_lineno(node, default=0):
 def min_line(node):
     """Computes the minimum lineno."""
     node_line = get_lineno(node)
-    return min(map(get_lineno, walk(node), repeat(node_line)))
+    return min(map(get_lineno, walk(node), itertools.repeat(node_line)))
 
 
 def max_line(node):
@@ -83,7 +83,7 @@ def get_col(node, default=-1):
 
 def min_col(node):
     """Computes the minimum col_offset."""
-    return min(map(get_col, walk(node), repeat(node.col_offset)))
+    return min(map(get_col, walk(node), itertools.repeat(node.col_offset)))
 
 
 def max_col(node):

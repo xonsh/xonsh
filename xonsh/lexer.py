@@ -3,7 +3,6 @@
 
 Written using a hybrid of ``tokenize`` and PLY.
 """
-
 from io import BytesIO
 from keyword import kwlist
 
@@ -12,10 +11,54 @@ try:
 except ImportError:
     from xonsh.ply.lex import LexToken
 
+from xonsh.lazyasd import LazyObject
 from xonsh.platform import PYTHON_VERSION_INFO
-import xonsh.tokenize as tokenize
+from xonsh.tokenize import (OP, IOREDIRECT, STRING, DOLLARNAME, NUMBER,
+    SEARCHPATH, NEWLINE, INDENT, DEDENT, NL, COMMENT, ENCODING,
+    ENDMARKER, NAME, ERRORTOKEN, tokenize, TokenError)
 
-token_map = {}
+
+def _token_map():
+    tm = {}
+    # operators
+    _op_map = {
+        # punctuation
+        ',': 'COMMA', '.': 'PERIOD', ';': 'SEMI', ':': 'COLON',
+        '...': 'ELLIPSIS',
+        # basic operators
+        '+': 'PLUS', '-': 'MINUS', '*': 'TIMES', '@': 'AT', '/': 'DIVIDE',
+        '//': 'DOUBLEDIV', '%': 'MOD', '**': 'POW', '|': 'PIPE',
+        '~': 'TILDE', '^': 'XOR', '<<': 'LSHIFT', '>>': 'RSHIFT',
+        '<': 'LT', '<=': 'LE', '>': 'GT', '>=': 'GE', '==': 'EQ',
+        '!=': 'NE', '->': 'RARROW',
+        # assignment operators
+        '=': 'EQUALS', '+=': 'PLUSEQUAL', '-=': 'MINUSEQUAL',
+        '*=': 'TIMESEQUAL', '@=': 'ATEQUAL', '/=': 'DIVEQUAL', '%=': 'MODEQUAL',
+        '**=': 'POWEQUAL', '<<=': 'LSHIFTEQUAL', '>>=': 'RSHIFTEQUAL',
+        '&=': 'AMPERSANDEQUAL', '^=': 'XOREQUAL', '|=': 'PIPEEQUAL',
+        '//=': 'DOUBLEDIVEQUAL',
+        # extra xonsh operators
+        '?': 'QUESTION', '??': 'DOUBLE_QUESTION', '@$': 'ATDOLLAR',
+        '&': 'AMPERSAND',
+    }
+    for (op, typ) in _op_map.items():
+        tm[(OP, op)] = typ
+    tm[IOREDIRECT] = 'IOREDIRECT'
+    tm[STRING] = 'STRING'
+    tm[DOLLARNAME] = 'DOLLAR_NAME'
+    tm[NUMBER] = 'NUMBER'
+    tm[SEARCHPATH] = 'SEARCHPATH'
+    tm[NEWLINE] = 'NEWLINE'
+    tm[INDENT] = 'INDENT'
+    tm[DEDENT] = 'DEDENT'
+    if PYTHON_VERSION_INFO >= (3, 5, 0):
+        from xonsh.tokenize import ASYNC, AWAIT
+        tm[ASYNC] = 'ASYNC'
+        tm[AWAIT] = 'AWAIT'
+    return tm
+
+
+token_map = LazyObject(_token_map, globals(), 'token_map')
 """
 Mapping from ``tokenize`` tokens (or token types) to PLY token types.  If a
 simple one-to-one mapping from ``tokenize`` to PLY exists, the lexer will look
@@ -23,42 +66,7 @@ it up here and generate a single PLY token of the given type.  Otherwise, it
 will fall back to handling that token using one of the handlers in
 ``special_handlers``.
 """
-
-# operators
-_op_map = {
-    # punctuation
-    ',': 'COMMA', '.': 'PERIOD', ';': 'SEMI', ':': 'COLON',
-    '...': 'ELLIPSIS',
-    # basic operators
-    '+': 'PLUS', '-': 'MINUS', '*': 'TIMES', '@': 'AT', '/': 'DIVIDE',
-    '//': 'DOUBLEDIV', '%': 'MOD', '**': 'POW', '|': 'PIPE',
-    '~': 'TILDE', '^': 'XOR', '<<': 'LSHIFT', '>>': 'RSHIFT',
-    '<': 'LT', '<=': 'LE', '>': 'GT', '>=': 'GE', '==': 'EQ',
-    '!=': 'NE', '->': 'RARROW',
-    # assignment operators
-    '=': 'EQUALS', '+=': 'PLUSEQUAL', '-=': 'MINUSEQUAL',
-    '*=': 'TIMESEQUAL', '@=': 'ATEQUAL', '/=': 'DIVEQUAL', '%=': 'MODEQUAL',
-    '**=': 'POWEQUAL', '<<=': 'LSHIFTEQUAL', '>>=': 'RSHIFTEQUAL',
-    '&=': 'AMPERSANDEQUAL', '^=': 'XOREQUAL', '|=': 'PIPEEQUAL',
-    '//=': 'DOUBLEDIVEQUAL',
-    # extra xonsh operators
-    '?': 'QUESTION', '??': 'DOUBLE_QUESTION', '@$': 'ATDOLLAR',
-    '&': 'AMPERSAND',
-}
-for (op, type) in _op_map.items():
-    token_map[(tokenize.OP, op)] = type
-
-token_map[tokenize.IOREDIRECT] = 'IOREDIRECT'
-token_map[tokenize.STRING] = 'STRING'
-token_map[tokenize.DOLLARNAME] = 'DOLLAR_NAME'
-token_map[tokenize.NUMBER] = 'NUMBER'
-token_map[tokenize.REGEXPATH] = 'REGEXPATH'
-token_map[tokenize.NEWLINE] = 'NEWLINE'
-token_map[tokenize.INDENT] = 'INDENT'
-token_map[tokenize.DEDENT] = 'DEDENT'
-if PYTHON_VERSION_INFO >= (3, 5, 0):
-    token_map[tokenize.ASYNC] = 'ASYNC'
-    token_map[tokenize.AWAIT] = 'AWAIT'
+del _token_map
 
 
 def _make_matcher_handler(tok, typ, pymode, ender):
@@ -70,7 +78,7 @@ def _make_matcher_handler(tok, typ, pymode, ender):
         state['pymode'].append((pymode, tok, matcher, token.start))
         state['last'] = token
         yield _new_token(typ, tok, token.start)
-    special_handlers[(tokenize.OP, tok)] = _inner_handler
+    special_handlers[(OP, tok)] = _inner_handler
 
 
 def handle_name(state, token):
@@ -180,18 +188,18 @@ def handle_double_pipe(state, token):
 
 
 special_handlers = {
-    tokenize.NL: handle_ignore,
-    tokenize.COMMENT: handle_ignore,
-    tokenize.ENCODING: handle_ignore,
-    tokenize.ENDMARKER: handle_ignore,
-    tokenize.NAME: handle_name,
-    tokenize.ERRORTOKEN: handle_error_token,
-    (tokenize.OP, ')'): handle_rparen,
-    (tokenize.OP, '}'): handle_rbrace,
-    (tokenize.OP, ']'): handle_rbracket,
-    (tokenize.OP, '&&'): handle_double_amps,
-    (tokenize.OP, '||'): handle_double_pipe,
-    (tokenize.ERRORTOKEN, ' '): handle_error_space,
+    NL: handle_ignore,
+    COMMENT: handle_ignore,
+    ENCODING: handle_ignore,
+    ENDMARKER: handle_ignore,
+    NAME: handle_name,
+    ERRORTOKEN: handle_error_token,
+    (OP, ')'): handle_rparen,
+    (OP, '}'): handle_rbrace,
+    (OP, ']'): handle_rbracket,
+    (OP, '&&'): handle_double_amps,
+    (OP, '||'): handle_double_pipe,
+    (ERRORTOKEN, ' '): handle_error_space,
 }
 """
 Mapping from ``tokenize`` tokens (or token types) to the proper function for
@@ -257,7 +265,7 @@ def get_tokens(s):
     """
     state = {'indents': [0], 'last': None,
              'pymode': [(True, '', '', (0, 0))],
-             'stream': tokenize.tokenize(BytesIO(s.encode('utf-8')).readline)}
+             'stream': tokenize(BytesIO(s.encode('utf-8')).readline)}
     while True:
         try:
             token = next(state['stream'])
@@ -269,7 +277,7 @@ def get_tokens(s):
                 e = 'Unmatched "{}" at line {}, column {}'
                 yield _new_token('ERRORTOKEN', e.format(o, l, c), (0, 0))
             break
-        except tokenize.TokenError as e:
+        except TokenError as e:
             # this is recoverable in single-line mode (from the shell)
             # (e.g., EOF while scanning string literal)
             yield _new_token('ERRORTOKEN', e.args[0], (0, 0))

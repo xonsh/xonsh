@@ -23,11 +23,11 @@ from xonsh import __version__ as XONSH_VERSION
 from xonsh.jobs import get_next_task
 from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
-from xonsh.foreign_shells import DEFAULT_SHELLS, load_foreign_envs
+from xonsh.foreign_shells import load_foreign_envs
 from xonsh.platform import (BASH_COMPLETIONS_DEFAULT, ON_ANACONDA, ON_LINUX,
-                            ON_WINDOWS, DEFAULT_ENCODING, ON_CYGWIN)
+    ON_WINDOWS, DEFAULT_ENCODING, ON_CYGWIN, PATH_DEFAULT)
 from xonsh.tools import (
-    IS_SUPERUSER, always_true, always_false, ensure_string, is_env_path,
+    is_superuser, always_true, always_false, ensure_string, is_env_path,
     str_to_env_path, env_path_to_str, is_bool, to_bool, bool_to_str,
     is_history_tuple, to_history_tuple, history_tuple_to_str, is_float,
     is_string, is_callable, is_string_or_callable,
@@ -70,7 +70,8 @@ def to_debug(x):
     execer's debug level.
     """
     val = to_bool_or_int(x)
-    builtins.__xonsh_execer__.debug_level = val
+    if hasattr(builtins, '__xonsh_execer__'):
+        builtins.__xonsh_execer__.debug_level = val
     return val
 
 Ensurer = namedtuple('Ensurer', ['validate', 'convert', 'detype'])
@@ -228,7 +229,7 @@ DEFAULT_VALUES = {
     'LOADED_RC_FILES': (),
     'MOUSE_SUPPORT': False,
     'MULTILINE_PROMPT': '.',
-    'PATH': (),
+    'PATH': PATH_DEFAULT,
     'PATHEXT': (),
     'PRETTY_PRINT_RESULTS': True,
     'PROMPT': DEFAULT_PROMPT,
@@ -533,7 +534,8 @@ DEFAULT_DOCS = {
     'XONSH_DEBUG': VarDocs(
         'Sets the xonsh debugging level. This may be an integer or a boolean, '
         'with higher values cooresponding to higher debuging levels and more '
-        'information presented.', configurable=False),
+        'information presented. Setting this variable prior to stating xonsh '
+        'will supress amalgamated imports.', configurable=False),
     'XONSH_DATA_DIR': VarDocs(
         'This is the location where xonsh data files are stored, such as '
         'history.', default="'$XDG_DATA_HOME/xonsh'"),
@@ -610,13 +612,17 @@ class Env(MutableMapping):
         """If no initial environment is given, os.environ is used."""
         self._d = {}
         self._orig_env = None
-        self.ensurers = {k: Ensurer(*v) for k, v in DEFAULT_ENSURERS.items()}
-        self.defaults = DEFAULT_VALUES
-        self.docs = DEFAULT_DOCS
+        self._ensurers = {k: Ensurer(*v) for k, v in DEFAULT_ENSURERS.items()}
+        self._defaults = DEFAULT_VALUES
+        self._docs = DEFAULT_DOCS
         if len(args) == 0 and len(kwargs) == 0:
             args = (os.environ, )
         for key, val in dict(*args, **kwargs).items():
             self[key] = val
+        if 'PATH' not in self._d:
+            # this is here so the PATH is accessible to subprocs and so that
+            # it can be modified in-place in the xonshrc file
+            self._d['PATH'] = list(PATH_DEFAULT)
         self._detyped = None
 
     @staticmethod
@@ -659,27 +665,27 @@ class Env(MutableMapping):
     def get_ensurer(self, key,
                     default=Ensurer(always_true, None, ensure_string)):
         """Gets an ensurer for the given key."""
-        if key in self.ensurers:
-            return self.ensurers[key]
-        for k, ensurer in self.ensurers.items():
+        if key in self._ensurers:
+            return self._ensurers[key]
+        for k, ensurer in self._ensurers.items():
             if isinstance(k, str):
                 continue
             if k.match(key) is not None:
                 break
         else:
             ensurer = default
-        self.ensurers[key] = ensurer
+        self._ensurers[key] = ensurer
         return ensurer
 
     def get_docs(self, key, default=VarDocs('<no documentation>')):
         """Gets the documentation for the environment variable."""
-        vd = self.docs.get(key, None)
+        vd = self._docs.get(key, None)
         if vd is None:
             return default
         if vd.default is DefaultNotGiven:
-            dval = pformat(self.defaults.get(key, '<default not set>'))
+            dval = pformat(self._defaults.get(key, '<default not set>'))
             vd = vd._replace(default=dval)
-            self.docs[key] = vd
+            self._docs[key] = vd
         return vd
 
     def is_manually_set(self, varname):
@@ -695,20 +701,17 @@ class Env(MutableMapping):
         manager, the original values are restored.
         """
         old = {}
-
         # single positional argument should be a dict-like object
         if other is not None:
             for k, v in other.items():
                 old[k] = self.get(k, NotImplemented)
                 self[k] = v
-
         # kwargs could also have been sent in
         for k, v in kwargs.items():
             old[k] = self.get(k, NotImplemented)
             self[k] = v
 
         yield self
-
         # restore the values
         for k, v in old.items():
             if v is NotImplemented:
@@ -734,8 +737,8 @@ class Env(MutableMapping):
             val = self._d['ARGS'][ix]
         elif key in self._d:
             val = self._d[key]
-        elif key in self.defaults:
-            val = self.defaults[key]
+        elif key in self._defaults:
+            val = self._defaults[key]
             if is_callable_default(val):
                 val = val(self)
         else:
@@ -775,7 +778,7 @@ class Env(MutableMapping):
             return default
 
     def __iter__(self):
-        yield from (set(self._d) | set(self.defaults))
+        yield from (set(self._d) | set(self._defaults))
 
     def __len__(self):
         return len(self._d)
@@ -784,7 +787,7 @@ class Env(MutableMapping):
         return str(self._d)
 
     def __repr__(self):
-        return '{0}.{1}({2})'.format(self.__class__.__module__,
+        return '{0}.{1}(...)'.format(self.__class__.__module__,
                                      self.__class__.__name__, self._d)
 
     def _repr_pretty_(self, p, cycle):
@@ -1137,7 +1140,7 @@ else:
 
 FORMATTER_DICT = dict(
     user=os.environ.get(USER, '<user>'),
-    prompt_end='#' if IS_SUPERUSER else '$',
+    prompt_end='#' if is_superuser() else '$',
     hostname=socket.gethostname().split('.', 1)[0],
     cwd=_dynamically_collapsed_pwd,
     cwd_dir=lambda: os.path.dirname(_replace_home_cwd()),
@@ -1417,7 +1420,6 @@ def foreign_env_fixes(ctx):
     if 'PROMPT' in ctx:
         del ctx['PROMPT']
 
-
 def default_env(env=None, config=None, login=True):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence
@@ -1432,7 +1434,7 @@ def default_env(env=None, config=None, login=True):
     if login:
         conf = load_static_config(ctx, config=config)
 
-        foreign_env = load_foreign_envs(shells=conf.get('foreign_shells', DEFAULT_SHELLS),
+        foreign_env = load_foreign_envs(shells=conf.get('foreign_shells', ()),
                                         issue_warning=False)
         if ON_WINDOWS:
             windows_foreign_env_fixes(foreign_env)

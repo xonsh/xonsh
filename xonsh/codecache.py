@@ -4,6 +4,8 @@ import hashlib
 import marshal
 import builtins
 
+from xonsh.lazyasd import LazyObject
+
 def _splitpath(path, sofar=[]):
     folder, path = os.path.split(path)
     if path == "":
@@ -13,8 +15,15 @@ def _splitpath(path, sofar=[]):
     else:
         return _splitpath(folder, sofar + [path])
 
-_CHARACTER_MAP = {chr(o): '_%s' % chr(o+32) for o in range(65, 91)}
-_CHARACTER_MAP.update({'.': '_.', '_': '__'})
+
+def _character_map():
+    cmap = {chr(o): '_%s' % chr(o+32) for o in range(65, 91)}
+    cmap.update({'.': '_.', '_': '__'})
+    return cmap
+
+
+_CHARACTER_MAP = LazyObject(_character_map, globals(), '_CHARACTER_MAP')
+del _character_map
 
 
 def _cache_renamer(path, code=False):
@@ -133,7 +142,7 @@ def run_script_with_cache(filename, execer, glb=None, loc=None, mode='exec'):
         with open(filename, 'r') as f:
             code = f.read()
         ccode = compile_code(filename, code, execer, glb, loc, mode)
-        update_cache(ccode, cachefname) 
+        update_cache(ccode, cachefname)
     run_compiled_code(ccode, glb, loc, mode)
 
 
@@ -162,7 +171,7 @@ def code_cache_check(cachefname):
         with open(cachefname, 'rb') as cfile:
             ccode = marshal.load(cfile)
             run_cached = True
-    return run_cached, ccode 
+    return run_cached, ccode
 
 
 def run_code_with_cache(code, execer, glb=None, loc=None, mode='exec'):
@@ -178,5 +187,5 @@ def run_code_with_cache(code, execer, glb=None, loc=None, mode='exec'):
         run_cached, ccode = code_cache_check(cachefname)
     if not run_cached:
         ccode = compile_code(filename, code, execer, glb, loc, mode)
-        update_cache(ccode, cachefname) 
+        update_cache(ccode, cachefname)
     run_compiled_code(ccode, glb, loc, mode)

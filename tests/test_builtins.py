@@ -9,8 +9,9 @@ from nose.plugins.skip import SkipTest
 from nose.tools import assert_equal, assert_true, assert_not_in
 
 from xonsh import built_ins
-from xonsh.built_ins import reglob, regexpath, helper, superhelper, \
-    ensure_list_of_strs, list_of_strs_or_callables
+from xonsh.built_ins import reglob, pathsearch, helper, superhelper, \
+    ensure_list_of_strs, list_of_strs_or_callables, regexsearch, \
+    globsearch
 from xonsh.environ import Env
 from xonsh.tools import ON_WINDOWS
 
@@ -31,7 +32,7 @@ def test_repath_backslash():
         exp = os.listdir(home)
         exp = {p for p in exp if re.match(r'\w\w.*', p)}
         exp = {os.path.join(home, p) for p in exp}
-        obs = set(regexpath(r'~/\w\w.*'))
+        obs = set(pathsearch(regexsearch, r'~/\w\w.*'))
         assert_equal(exp, obs)
 
 def test_repath_home_itself():
@@ -40,7 +41,7 @@ def test_repath_home_itself():
     exp = os.path.expanduser('~')
     built_ins.ENV = Env(HOME=exp)
     with mock_xonsh_env(built_ins.ENV):
-        obs = regexpath('~')
+        obs = pathsearch(regexsearch, '~')
         assert_equal(1, len(obs))
         assert_equal(exp, obs[0])
 
@@ -52,7 +53,7 @@ def test_repath_home_contents():
     with mock_xonsh_env(built_ins.ENV):
         exp = os.listdir(home)
         exp = {os.path.join(home, p) for p in exp}
-        obs = set(regexpath('~/.*'))
+        obs = set(pathsearch(regexsearch, '~/.*'))
         assert_equal(exp, obs)
 
 def test_repath_home_var():
@@ -61,7 +62,7 @@ def test_repath_home_var():
     exp = os.path.expanduser('~')
     built_ins.ENV = Env(HOME=exp)
     with mock_xonsh_env(built_ins.ENV):
-        obs = regexpath('$HOME')
+        obs = pathsearch(regexsearch, '$HOME')
         assert_equal(1, len(obs))
         assert_equal(exp, obs[0])
 
@@ -71,7 +72,7 @@ def test_repath_home_var_brace():
     exp = os.path.expanduser('~')
     built_ins.ENV = Env(HOME=exp)
     with mock_xonsh_env(built_ins.ENV):
-        obs = regexpath('${"HOME"}')
+        obs = pathsearch(regexsearch, '${"HOME"}')
         assert_equal(1, len(obs))
         assert_equal(exp, obs[0])
 

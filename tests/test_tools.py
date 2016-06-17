@@ -9,42 +9,16 @@ from nose.tools import assert_equal, assert_true, assert_false
 
 from xonsh.platform import ON_WINDOWS
 from xonsh.lexer import Lexer
-from xonsh.tools import (
-    CommandsCache,
-    always_false,
-    always_true,
-    argvquote,
-    bool_or_int_to_str,
-    bool_to_str,
-    check_for_partial_string,
-    dynamic_cwd_tuple_to_str,
-    ensure_int_or_slice,
-    ensure_string,
-    env_path_to_str,
-    escape_windows_cmd_string,
-    executables_in,
-    expand_case_matching,
-    find_next_break,
-    is_bool,
-    is_bool_or_int,
-    is_callable,
-    is_dynamic_cwd_width,
-    is_env_path,
-    is_float,
-    is_int,
-    is_int_as_str,
-    is_logfile_opt,
-    is_slice_as_str,
-    is_string,
-    is_string_or_callable,
-    logfile_opt_to_str,
-    str_to_env_path,
-    subexpr_from_unbalanced,
-    subproc_toks,
-    to_bool,
-    to_bool_or_int,
-    to_dynamic_cwd_tuple,
-    to_logfile_opt)
+from xonsh.tools import (CommandsCache, always_false, always_true, argvquote,
+    bool_or_int_to_str, bool_to_str, check_for_partial_string,
+    dynamic_cwd_tuple_to_str, ensure_int_or_slice, ensure_string,
+    env_path_to_str, escape_windows_cmd_string, executables_in,
+    expand_case_matching, find_next_break, is_bool, is_bool_or_int,
+    is_callable, is_dynamic_cwd_width, is_env_path, is_float, is_int,
+    is_int_as_str, is_logfile_opt, is_slice_as_str, is_string,
+    is_string_or_callable, logfile_opt_to_str, str_to_env_path,
+    subexpr_from_unbalanced, subproc_toks, to_bool, to_bool_or_int,
+    to_dynamic_cwd_tuple, to_logfile_opt)
 
 LEXER = Lexer()
 LEXER.build()
@@ -360,6 +334,9 @@ def test_is_int():
     for inp, exp in cases:
         obs = is_int(inp)
         yield assert_equal, exp, obs
+        
+        
+        
 def test_is_int_as_str():
     cases = [
         ('42', True),
@@ -375,6 +352,9 @@ def test_is_int_as_str():
     for inp, exp in cases:
         obs = is_int_as_str(inp)
         yield assert_equal, exp, obs
+        
+        
+        
 def test_is_float():
     cases = [
         (42.0, True),

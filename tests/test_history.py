@@ -100,7 +100,7 @@ def test_show_cmd():
         """Run and evaluate the output of the given show command."""
         stdout.seek(0, io.SEEK_SET)
         stdout.truncate()
-        history._main(hist, hist_args)
+        history._hist_main(hist, hist_args)
         stdout.seek(0, io.SEEK_SET)
         hist_lines = stdout.readlines()
         yield assert_equal, len(commands), len(hist_lines)

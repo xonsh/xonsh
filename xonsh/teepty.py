@@ -21,6 +21,8 @@ import termios
 import tempfile
 import threading
 
+from xonsh.lazyasd import LazyObject
+
 # The following escape codes are xterm codes.
 # See http://rtfm.etla.org/xterm/ctlseq.html for more.
 MODE_NUMS = ('1049', '47', '1047')
@@ -28,8 +30,10 @@ START_ALTERNATE_MODE = frozenset('\x1b[?{0}h'.format(i).encode() for i in MODE_N
 END_ALTERNATE_MODE = frozenset('\x1b[?{0}l'.format(i).encode() for i in MODE_NUMS)
 ALTERNATE_MODE_FLAGS = tuple(START_ALTERNATE_MODE) + tuple(END_ALTERNATE_MODE)
 
-RE_HIDDEN = re.compile(b'(\001.*?\002)')
-RE_COLOR = re.compile(b'\033\[\d+;?\d*m')
+RE_HIDDEN = LazyObject(lambda: re.compile(b'(\001.*?\002)'),
+                       globals(), 'RE_HIDDEN')
+RE_COLOR = LazyObject(lambda: re.compile(b'\033\[\d+;?\d*m'),
+                      globals(), 'RE_COLOR')
 
 def _findfirst(s, substrs):
     """Finds whichever of the given substrings occurs first in the given string
@@ -89,7 +93,7 @@ class TeePTY(object):
         self.encoding = encoding
         self.errors = errors
         self.buffer = io.BytesIO()
-        self.wcode = None  # os.wait encoded retval 
+        self.wcode = None  # os.wait encoded retval
         self._temp_stdin = None
 
     def __str__(self):
@@ -320,8 +324,7 @@ class TeePTY(object):
         if 0.0 < delay:
             time.sleep(delay)
 
-
-if __name__ == '__main__':
+def _teepty_main():
     tpty = TeePTY()
     tpty.spawn(sys.argv[1:])
     print('-=-'*10)
@@ -330,3 +333,6 @@ if __name__ == '__main__':
     print(tpty)
     print('-=-'*10)
     print('Returned with status {0}'.format(tpty.wcode))
+
+if __name__ == '__main__':
+    _teepty_main()
