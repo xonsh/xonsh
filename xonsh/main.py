@@ -178,7 +178,7 @@ def premain(argv=None):
                     'ctx': builtins.__xonsh_ctx__}
     if args.login:
         shell_kwargs['login'] = True
-    if args.config_path is None:
+    if args.config_path is not None:
         shell_kwargs['config'] = args.config_path
     if args.norc:
         shell_kwargs['rc'] = ()
