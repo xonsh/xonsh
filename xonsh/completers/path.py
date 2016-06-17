@@ -80,19 +80,25 @@ def _startswithnorm(x, start, startlow=None):
     return x.startswith(start)
 
 
-def _add_env(paths, prefix):
+def _env(prefix):
     if prefix.startswith('$'):
         key = prefix[1:]
-        paths.update({'$' + k
-                      for k in builtins.__xonsh_env__
-                      if get_filter_function()(k, key)})
+        return {'$' + k
+                for k in builtins.__xonsh_env__
+                if get_filter_function()(k, key)}
+    return ()
 
 
-def _add_dots(paths, prefix):
+def _dots(prefix):
+    slash = get_sep()
+    if slash == '\\':
+        slash = ''
     if prefix in {'', '.'}:
-        paths.update({'./', '../'})
-    if prefix == '..':
-        paths.add('../')
+        return ('.'+slash, '..'+slash)
+    elif prefix == '..':
+        return ('..'+slash,)
+    else:
+        return ()
 
 
 def _add_cdpaths(paths, prefix):
@@ -225,7 +231,7 @@ def _expand_one(sofar, nextone, csc):
     return out
 
 
-def complete_path(prefix, line, start, end, ctx, cdpath=True):
+def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
     """Completes based on a path name."""
     # string stuff for automatic quoting
     path_str_start = ''
@@ -269,14 +275,15 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True):
         paths = {s.replace(home, tilde) for s in paths}
     if cdpath:
         _add_cdpaths(paths, prefix)
+    paths = set(filter(filtfunc, paths))
     paths = _quote_paths({_normpath(s) for s in paths},
                          path_str_start,
                          path_str_end)
-    _add_env(paths, prefix)
-    _add_dots(paths, prefix)
+    paths.update(filter(filtfunc, _dots(prefix)))
+    paths.update(filter(filtfunc, _env(prefix)))
     return paths, lprefix
 
 
 def complete_dir(prefix, line, start, end, ctx, cdpath=False):
-    o, lp = complete_path(prefix, line, start, end, cdpath)
-    return {i for i in o if os.path.isdir(i)}, lp
+    return complete_path(prefix, line, start, end, cdpath,
+                         filtfunc=os.path.isdir)
