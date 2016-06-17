@@ -395,14 +395,12 @@ class Lexer(object):
 
     def input(self, s):
         """Calls the lexer on the string s."""
-        print('HEY', repr(s))
         self.token_stream = get_tokens(s, self)
 
     def token(self):
         """Retrieves the next token."""
         self.beforelast = self.last
         self.last = next(self.token_stream, None)
-        print(self.last)
         return self.last
 
     def __iter__(self):
