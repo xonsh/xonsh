@@ -225,7 +225,7 @@ def _expand_one(sofar, nextone, csc):
     return out
 
 
-def complete_path(prefix, line, start, end, ctx, cdpath=True):
+def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
     """Completes based on a path name."""
     # string stuff for automatic quoting
     path_str_start = ''
@@ -269,24 +269,16 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True):
         paths = {s.replace(home, tilde) for s in paths}
     if cdpath:
         _add_cdpaths(paths, prefix)
+    _add_env(paths, prefix)
+    _add_dots(paths, prefix)
+    if filtfunc is not None:
+        paths = {p for p in paths if filtfunc(p)}
     paths = _quote_paths({_normpath(s) for s in paths},
                          path_str_start,
                          path_str_end)
-    _add_env(paths, prefix)
-    _add_dots(paths, prefix)
     return paths, lprefix
 
 
-RE_UNQUOTE = re.compile("""(?:[r](?P<raw>(?P<quotes>"[^"]|'[^']|\"""|'''))|"""
-                        """(?P<normal>(?P=quotes)?))"""
-                        """(?P<unquoted>.+)(?:(?P=raw)|(?P=normal))$""")
-
-
 def complete_dir(prefix, line, start, end, ctx, cdpath=False):
-    paths, lp = complete_path(prefix, line, start, end, cdpath)
-    dirs = set()
-    for path in paths:
-        m = RE_UNQUOTE.match(path)
-        if m and os.path.isdir(m.group(3)):
-            dirs.add(path)
-    return dirs, lp
+    return complete_path(prefix, line, start, end, cdpath,
+                         filtfunc=os.path.isdir)
