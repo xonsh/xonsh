@@ -69,7 +69,7 @@ del _has_pygments
 
 @functools.lru_cache(1)
 def pygments_version():
-    """pygments.__version__ version if available, else Ǹone."""
+    """pygments.__version__ version if available, else None."""
     if HAS_PYGMENTS:
         import pygments
         v = pygments.__version__
