@@ -27,7 +27,7 @@ from xonsh.foreign_shells import load_foreign_envs
 from xonsh.platform import (BASH_COMPLETIONS_DEFAULT, ON_ANACONDA, ON_LINUX,
     ON_WINDOWS, DEFAULT_ENCODING, ON_CYGWIN, PATH_DEFAULT)
 from xonsh.tools import (
-    IS_SUPERUSER, always_true, always_false, ensure_string, is_env_path,
+    is_superuser, always_true, always_false, ensure_string, is_env_path,
     str_to_env_path, env_path_to_str, is_bool, to_bool, bool_to_str,
     is_history_tuple, to_history_tuple, history_tuple_to_str, is_float,
     is_string, is_callable, is_string_or_callable,
@@ -70,7 +70,8 @@ def to_debug(x):
     execer's debug level.
     """
     val = to_bool_or_int(x)
-    builtins.__xonsh_execer__.debug_level = val
+    if hasattr(builtins, '__xonsh_execer__'):
+        builtins.__xonsh_execer__.debug_level = val
     return val
 
 Ensurer = namedtuple('Ensurer', ['validate', 'convert', 'detype'])
@@ -533,7 +534,8 @@ DEFAULT_DOCS = {
     'XONSH_DEBUG': VarDocs(
         'Sets the xonsh debugging level. This may be an integer or a boolean, '
         'with higher values cooresponding to higher debuging levels and more '
-        'information presented.', configurable=False),
+        'information presented. Setting this variable prior to stating xonsh '
+        'will supress amalgamated imports.', configurable=False),
     'XONSH_DATA_DIR': VarDocs(
         'This is the location where xonsh data files are stored, such as '
         'history.', default="'$XDG_DATA_HOME/xonsh'"),
@@ -1138,7 +1140,7 @@ else:
 
 FORMATTER_DICT = dict(
     user=os.environ.get(USER, '<user>'),
-    prompt_end='#' if IS_SUPERUSER else '$',
+    prompt_end='#' if is_superuser() else '$',
     hostname=socket.gethostname().split('.', 1)[0],
     cwd=_dynamically_collapsed_pwd,
     cwd_dir=lambda: os.path.dirname(_replace_home_cwd()),
@@ -1417,7 +1419,6 @@ def foreign_env_fixes(ctx):
     """Environment fixes for all operating systems"""
     if 'PROMPT' in ctx:
         del ctx['PROMPT']
-
 
 def default_env(env=None, config=None, login=True):
     """Constructs a default xonsh environment."""

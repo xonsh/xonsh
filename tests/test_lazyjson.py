@@ -7,7 +7,7 @@ import nose
 from nose.tools import assert_equal, assert_is_instance
 assert_equal.__self__.maxDiff = None
 
-from xonsh.lazyjson import index, dump, LazyJSON, Node
+from xonsh.lazyjson import index, ljdump, LazyJSON, LJNode
 
 def test_index_int():
     exp = {'offsets': 0, 'sizes': 2}
@@ -63,7 +63,7 @@ def test_index_dict_dict_int():
 
 def test_lazy_load_index():
     f = StringIO()
-    dump({'wakka': 42}, f)
+    ljdump({'wakka': 42}, f)
     f.seek(0)
     lj = LazyJSON(f)
     assert_equal({'wakka': 10, '__total__': 0}, lj.offsets)
@@ -71,14 +71,14 @@ def test_lazy_load_index():
 
 def test_lazy_int():
     f = StringIO()
-    dump(42, f)
+    ljdump(42, f)
     f.seek(0)
     lj = LazyJSON(f)
     assert_equal(42, lj.load())
 
 def test_lazy_str():
     f = StringIO()
-    dump('wakka', f)
+    ljdump('wakka', f)
     f.seek(0)
     lj = LazyJSON(f)
     assert_equal('wakka', lj.load())
@@ -86,7 +86,7 @@ def test_lazy_str():
 def test_lazy_list_empty():
     x = []
     f = StringIO()
-    dump(x, f)
+    ljdump(x, f)
     f.seek(0)
     lj = LazyJSON(f)
     assert_equal(0, len(lj))
@@ -95,7 +95,7 @@ def test_lazy_list_empty():
 def test_lazy_list_ints():
     x = [0, 1, 6, 28, 496, 8128]
     f = StringIO()
-    dump(x, f)
+    ljdump(x, f)
     f.seek(0)
     lj = LazyJSON(f)
     assert_equal(28, lj[3])
@@ -106,7 +106,7 @@ def test_lazy_list_ints():
 def test_lazy_list_ints():
     x = [0, 1, 6, 28, 496, 8128]
     f = StringIO()
-    dump(x, f)
+    ljdump(x, f)
     f.seek(0)
     lj = LazyJSON(f)
     assert_equal(28, lj[3])
@@ -117,7 +117,7 @@ def test_lazy_list_ints():
 def test_lazy_list_str():
     x = ['I', 'have', 'seen', 'the', 'wind', 'blow']
     f = StringIO()
-    dump(x, f)
+    ljdump(x, f)
     f.seek(0)
     lj = LazyJSON(f)
     assert_equal('the', lj[3])
@@ -128,7 +128,7 @@ def test_lazy_list_str():
 def test_lazy_list_ints():
     x = [0, 1, 6, 28, 496, 8128]
     f = StringIO()
-    dump(x, f)
+    ljdump(x, f)
     f.seek(0)
     lj = LazyJSON(f)
     assert_equal(28, lj[3])
@@ -139,10 +139,10 @@ def test_lazy_list_ints():
 def test_lazy_list_list_ints():
     x = [[0, 1], [6, 28], [496, 8128]]
     f = StringIO()
-    dump(x, f)
+    ljdump(x, f)
     f.seek(0)
     lj = LazyJSON(f)
-    assert_is_instance(lj[1], Node)
+    assert_is_instance(lj[1], LJNode)
     assert_equal(28, lj[1][1])
     assert_equal([6, 28], lj[1].load())
     assert_equal(x, lj.load())
@@ -150,7 +150,7 @@ def test_lazy_list_list_ints():
 def test_lazy_dict_empty():
     x = {}
     f = StringIO()
-    dump(x, f)
+    ljdump(x, f)
     f.seek(0)
     lj = LazyJSON(f)
     assert_equal(0, len(lj))
@@ -158,7 +158,7 @@ def test_lazy_dict_empty():
 
 def test_lazy_dict():
     f = StringIO()
-    dump({'wakka': 42}, f)
+    ljdump({'wakka': 42}, f)
     f.seek(0)
     lj = LazyJSON(f)
     assert_equal(['wakka'], list(lj.keys()))
@@ -169,11 +169,11 @@ def test_lazy_dict():
 def test_lazy_dict_dict_int():
     x = {'wakka': {'jawaka': 42}}
     f = StringIO()
-    dump(x, f)
+    ljdump(x, f)
     f.seek(0)
     lj = LazyJSON(f)
     assert_equal(['wakka'], list(lj.keys()))
-    assert_is_instance(lj['wakka'], Node)
+    assert_is_instance(lj['wakka'], LJNode)
     assert_equal(42, lj['wakka']['jawaka'])
     assert_equal(1, len(lj))
     assert_equal(x, lj.load())

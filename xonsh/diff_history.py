@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """Tools for diff'ing two xonsh history files in a meaningful fashion."""
-from datetime import datetime
-from itertools import zip_longest
-from difflib import SequenceMatcher
+import difflib
+import datetime
+import itertools
 
-from xonsh import lazyjson
+from xonsh.lazyjson import LazyJSON
 from xonsh.tools import print_color
 
 NO_COLOR = '{NO_COLOR}'
@@ -22,7 +22,7 @@ EQUAL = 'equal'
 
 def bold_str_diff(a, b, sm=None):
     if sm is None:
-        sm = SequenceMatcher()
+        sm = difflib.SequenceMatcher()
     aline = RED + '- '
     bline = GREEN + '+ '
     sm.set_seqs(a, b)
@@ -53,12 +53,12 @@ def greenline(line):
 def highlighted_ndiff(a, b):
     """Returns a highlited string, with bold charaters where different."""
     s = ''
-    sm = SequenceMatcher()
+    sm = difflib.SequenceMatcher()
     sm.set_seqs(a, b)
-    linesm = SequenceMatcher()
+    linesm = difflib.SequenceMatcher()
     for tag, i1, i2, j1, j2 in sm.get_opcodes():
         if tag == REPLACE:
-            for aline, bline in zip_longest(a[i1:i2], b[j1:j2]):
+            for aline, bline in itertools.zip_longest(a[i1:i2], b[j1:j2]):
                 if bline is None:
                     s += redline(aline)
                 elif aline is None:
@@ -97,10 +97,10 @@ class HistoryDiffer(object):
         verbose : bool, optional
             Whether to print a verbose amount of information.
         """
-        self.a = lazyjson.LazyJSON(afile, reopen=reopen)
-        self.b = lazyjson.LazyJSON(bfile, reopen=reopen)
+        self.a = LazyJSON(afile, reopen=reopen)
+        self.b = LazyJSON(bfile, reopen=reopen)
         self.verbose = verbose
-        self.sm = SequenceMatcher(autojunk=False)
+        self.sm = difflib.SequenceMatcher(autojunk=False)
 
     def __del__(self):
         self.a.close()
@@ -114,10 +114,10 @@ class HistoryDiffer(object):
         s += ' (' + lj['sessionid'] + ')'
         s += ' [locked]' if lj['locked'] else ' [unlocked]'
         ts = lj['ts'].load()
-        ts0 = datetime.fromtimestamp(ts[0])
+        ts0 = datetime.datetime.fromtimestamp(ts[0])
         s += ' started: ' + ts0.isoformat(' ')
         if ts[1] is not None:
-            ts1 = datetime.fromtimestamp(ts[1])
+            ts1 = datetime.datetime.fromtimestamp(ts[1])
             s += ' stopped: ' + ts1.isoformat(' ') + ' runtime: ' + str(ts1 - ts0)
         return s
 
@@ -235,8 +235,9 @@ class HistoryDiffer(object):
         s = ''
         for tag, i1, i2, j1, j2 in sm.get_opcodes():
             if tag == REPLACE:
-                for i, ainp, j, binp in zip_longest(range(i1, i2), ainps[i1:i2],
-                                                    range(j1, j2), binps[j1:j2]):
+                zipper = itertools.zip_longest
+                for i, ainp, j, binp in zipper(range(i1, i2), ainps[i1:i2],
+                                               range(j1, j2), binps[j1:j2]):
                     if j is None:
                         s += self._cmd_in_one_diff(ainp, i, self.a, aid, RED)
                     elif i is None:
@@ -278,7 +279,7 @@ class HistoryDiffer(object):
 
 _HD_PARSER = None
 
-def _create_parser(p=None):
+def _dh_create_parser(p=None):
     global _HD_PARSER
     p_was_none = (p is None)
     if _HD_PARSER is not None and p_was_none:
@@ -297,17 +298,17 @@ def _create_parser(p=None):
     return p
 
 
-def _main_action(ns, hist=None):
+def _dh_main_action(ns, hist=None):
     hd = HistoryDiffer(ns.a, ns.b, reopen=ns.reopen, verbose=ns.verbose)
     print_color(hd.format())
 
 
-def main(args=None, stdin=None):
+def diff_history_main(args=None, stdin=None):
     """Main entry point for history diff'ing"""
     parser = _create_parser()
     ns = parser.parse_args(args)
-    _main_action(ns)
+    _dh_main_action(ns)
 
 
 if __name__ == '__main__':
-    main()
+    diff_history_main()

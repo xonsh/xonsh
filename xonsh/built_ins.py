@@ -19,12 +19,13 @@ import sys
 import tempfile
 import time
 
+from xonsh.lazyasd import LazyObject
+from xonsh.history import History
+from xonsh.tokenize import SearchPath
+from xonsh.inspectors import Inspector
 from xonsh.aliases import Aliases, make_default_aliases
 from xonsh.environ import Env, default_env, locate_binary
 from xonsh.foreign_shells import load_foreign_aliases
-from xonsh.history import History
-from xonsh.inspectors import Inspector
-from xonsh.tokenize import SearchPath
 from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
@@ -38,7 +39,7 @@ from xonsh.tools import (
 
 ENV = None
 BUILTINS_LOADED = False
-INSPECTOR = Inspector()
+INSPECTOR = LazyObject(Inspector, globals(), 'INSPECTOR')
 AT_EXIT_SIGNALS = (signal.SIGABRT, signal.SIGFPE, signal.SIGILL, signal.SIGSEGV,
                    signal.SIGTERM)
 
@@ -721,7 +722,8 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
 
 
 def _lastflush(s=None, f=None):
-    builtins.__xonsh_history__.flush(at_exit=True)
+    if hasattr(builtins, '__xonsh_history__'):
+        builtins.__xonsh_history__.flush(at_exit=True)
 
 
 def unload_builtins():

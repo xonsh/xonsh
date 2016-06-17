@@ -12,15 +12,15 @@ from xonsh.dirstack import cd, pushd, popd, dirs, _get_cwd
 from xonsh.environ import locate_binary
 from xonsh.foreign_shells import foreign_shell_data
 from xonsh.jobs import jobs, fg, bg, clean_jobs
-from xonsh.history import main as history_alias
+from xonsh.history import history_main
 from xonsh.platform import ON_ANACONDA, ON_DARWIN, ON_WINDOWS, scandir
 from xonsh.proc import foreground
-from xonsh.replay import main as replay_main
+from xonsh.replay import replay_main
 from xonsh.timings import timeit_alias
 from xonsh.tools import (XonshError, argvquote, escape_windows_cmd_string,
                          to_bool)
 from xonsh.vox import Vox
-from xonsh.xontribs import main as xontribs_main
+from xonsh.xontribs import xontribs_main
 from xonsh.xoreutils import _which
 from xonsh.completers._aliases import completer_alias
 
@@ -457,9 +457,9 @@ def xonfig(args, stdin=None):
 @foreground
 def trace(args, stdin=None):
     """Runs the xonsh tracer utility."""
-    from xonsh.tracer import main  # lazy import
+    from xonsh.tracer import tracermain  # lazy import
     try:
-        return main(args)
+        return tracermain(args)
     except SystemExit:
         pass
 
@@ -509,7 +509,7 @@ def make_default_aliases():
         'source-bash':  ['source-foreign', 'bash', '--sourcer=source'],
         'source-cmd': source_cmd,
         'source-foreign': source_foreign,
-        'history': history_alias,
+        'history': history_main,
         'replay': replay_main,
         '!!': bang_bang,
         '!n': bang_n,

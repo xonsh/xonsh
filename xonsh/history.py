@@ -10,9 +10,9 @@ from glob import iglob
 from collections import deque, Sequence, OrderedDict
 from threading import Thread, Condition
 
-from xonsh import lazyjson
+from xonsh.lazyjson import LazyJSON, ljdump, LJNode
 from xonsh.tools import ensure_int_or_slice, to_history_tuple
-from xonsh import diff_history
+from xonsh.diff_history import _dh_create_parser, _dh_main_action
 
 
 def _gc_commands_to_rmfiles(hsize, files):
@@ -116,12 +116,12 @@ class HistoryGC(Thread):
         files = []
         for f in fs:
             try:
-                lj = lazyjson.LazyJSON(f, reopen=False)
+                lj = LazyJSON(f, reopen=False)
                 if only_unlocked and lj['locked']:
                     continue
                 # info: closing timestamp, number of commands, filename
-                files.append((lj['ts'][1] or time.time(), 
-                              len(lj.sizes['cmds']) - 1, 
+                files.append((lj['ts'][1] or time.time(),
+                              len(lj.sizes['cmds']) - 1,
                               f))
                 lj.close()
             except (IOError, OSError, ValueError):
@@ -162,13 +162,13 @@ class HistoryFlusher(Thread):
     def dump(self):
         """Write the cached history to external storage."""
         with open(self.filename, 'r', newline='\n') as f:
-            hist = lazyjson.LazyJSON(f).load()
+            hist = LazyJSON(f).load()
         hist['cmds'].extend(self.buffer)
         if self.at_exit:
             hist['ts'][1] = time.time()  # apply end time
             hist['locked'] = False
         with open(self.filename, 'w', newline='\n') as f:
-            lazyjson.dump(hist, f, sort_keys=True)
+            ljdump(hist, f, sort_keys=True)
 
 
 class CommandField(Sequence):
@@ -217,9 +217,9 @@ class CommandField(Sequence):
         with self.hist._cond:
             self.hist._cond.wait_for(self.i_am_at_the_front)
             with open(self.hist.filename, 'r', newline='\n') as f:
-                lj = lazyjson.LazyJSON(f, reopen=False)
+                lj = LazyJSON(f, reopen=False)
                 rtn = lj['cmds'][key].get(self.field, self.default)
-                if isinstance(rtn, lazyjson.Node):
+                if isinstance(rtn, LJNode):
                     rtn = rtn.load()
             queue.popleft()
         return rtn
@@ -271,7 +271,7 @@ class History(object):
         meta['cmds'] = []
         meta['sessionid'] = str(sid)
         with open(self.filename, 'w', newline='\n') as f:
-            lazyjson.dump(meta, f, sort_keys=True)
+            ljdump(meta, f, sort_keys=True)
         self.gc = HistoryGC() if gc else None
         # command fields that are known
         self.tss = CommandField('ts', self)
@@ -338,7 +338,7 @@ class History(object):
 # Interface to History
 #
 @functools.lru_cache()
-def _create_parser():
+def _hist_create_parser():
     """Create a parser for the "history" command."""
     p = argparse.ArgumentParser(prog='history',
                                 description='Tools for dealing with history')
@@ -362,12 +362,12 @@ def _create_parser():
                       help='print in JSON format')
     # diff
     diff = subp.add_parser('diff', help='diffs two xonsh history files')
-    diff_history._create_parser(p=diff)
+    _dh_create_parser(p=diff)
     # replay, dynamically
     from xonsh import replay
     rp = subp.add_parser('replay', help='replays a xonsh history file')
-    replay._create_parser(p=rp)
-    _MAIN_ACTIONS['replay'] = replay._main_action
+    replay._rp_create_parser(p=rp)
+    _HIST_MAIN_ACTIONS['replay'] = replay._rp_main_action
     # gc
     gcp = subp.add_parser('gc', help='launches a new history garbage collector')
     gcp.add_argument('--size', nargs=2, dest='size', default=None,
@@ -431,31 +431,31 @@ def _gc(ns, hist):
             continue
 
 
-_MAIN_ACTIONS = {
+_HIST_MAIN_ACTIONS = {
     'show': _show,
     'id': lambda ns, hist: print(hist.sessionid),
     'file': lambda ns, hist: print(hist.filename),
     'info': _info,
-    'diff': diff_history._main_action,
+    'diff': _dh_main_action,
     'gc': _gc,
     }
 
 
-def _main(hist, args):
+def _hist_main(hist, args):
     """This implements the history CLI."""
-    if not args or (args[0] not in _MAIN_ACTIONS and
+    if not args or (args[0] not in _HIST_MAIN_ACTIONS and
                     args[0] not in {'-h', '--help'}):
         args.insert(0, 'show')
     if (args[0] == 'show' and len(args) > 1 and args[-1].startswith('-') and
             args[-1][1].isdigit()):
         args.insert(-1, '--')  # ensure parsing stops before a negative int
-    ns = _create_parser().parse_args(args)
+    ns = _hist_create_parser().parse_args(args)
     if ns.action is None:  # apply default action
-        ns = _create_parser().parse_args(['show'] + args)
-    _MAIN_ACTIONS[ns.action](ns, hist)
+        ns = _hist_create_parser().parse_args(['show'] + args)
+    _HIST_MAIN_ACTIONS[ns.action](ns, hist)
 
 
-def main(args=None, stdin=None):
+def history_main(args=None, stdin=None):
     """This is the history command entry point."""
     _ = stdin
-    _main(builtins.__xonsh_history__, args)  # pylint: disable=no-member
+    _hist_main(builtins.__xonsh_history__, args)  # pylint: disable=no-member

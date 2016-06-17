@@ -5,11 +5,11 @@ import sys
 import re
 import json
 import shlex
+import tempfile
 import builtins
 import subprocess
 from warnings import warn
 from functools import lru_cache
-from tempfile import NamedTemporaryFile
 from collections import MutableMapping, Mapping, Sequence
 
 from xonsh.tools import to_bool, ensure_string
@@ -234,7 +234,7 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
     if not use_tmpfile:
         cmd.append(command)
     else:
-        tmpfile = NamedTemporaryFile(suffix=tmpfile_ext, delete=False)
+        tmpfile = tempfile.NamedTemporaryFile(suffix=tmpfile_ext, delete=False)
         tmpfile.write(command.encode('utf8'))
         tmpfile.close()
         cmd.append(tmpfile.name)

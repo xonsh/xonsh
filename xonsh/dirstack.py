@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """Directory stack and associated utilities for the xonsh shell."""
 import os
+import glob
+import argparse
 import builtins
-from glob import iglob
-from argparse import ArgumentParser
 
+from xonsh.lazyasd import LazyObject
 from xonsh.tools import get_sep
 
 DIRSTACK = []
@@ -49,7 +50,7 @@ def _try_cdpath(apath):
     cdpaths = env.get('CDPATH')
     for cdp in cdpaths:
         globber = builtins.__xonsh_expand_path__(os.path.join(cdp, apath))
-        for cdpath_prefixed_path in iglob(globber):
+        for cdpath_prefixed_path in glob.iglob(globber):
             return cdpath_prefixed_path
     return apath
 
@@ -104,6 +105,25 @@ def cd(args, stdin=None):
     _change_working_directory(d)
     return None, None, 0
 
+
+def _pushd_parser():
+    parser = argparse.ArgumentParser(prog="pushd")
+    parser.add_argument('dir', nargs='?')
+    parser.add_argument('-n',
+                        dest='cd',
+                        help='Suppresses the normal change of directory when'
+                        ' adding directories to the stack, so that only the'
+                        ' stack is manipulated.',
+                        action='store_false')
+    parser.add_argument('-q',
+                        dest='quiet',
+                        help='Do not call dirs, regardless of $PUSHD_SILENT',
+                        action='store_true')
+    return parser
+
+
+pushd_parser = LazyObject(_pushd_parser, globals(), 'pushd_parser')
+del _pushd_parser
 
 def pushd(args, stdin=None):
     """xonsh command: pushd
@@ -181,6 +201,26 @@ def pushd(args, stdin=None):
     return None, None, 0
 
 
+
+def _popd_parser():
+    parser = argparse.ArgumentParser(prog="popd")
+    parser.add_argument('dir', nargs='?')
+    parser.add_argument('-n',
+                        dest='cd',
+                        help='Suppresses the normal change of directory when'
+                        ' adding directories to the stack, so that only the'
+                        ' stack is manipulated.',
+                        action='store_false')
+    parser.add_argument('-q',
+                        dest='quiet',
+                        help='Do not call dirs, regardless of $PUSHD_SILENT',
+                        action='store_true')
+    return parser
+
+
+popd_parser = LazyObject(_popd_parser, globals(), 'popd_parser')
+del _popd_parser
+
 def popd(args, stdin=None):
     """
     xonsh command: popd
@@ -249,6 +289,36 @@ def popd(args, stdin=None):
 
     return None, None, 0
 
+
+def _dirs_parser():
+    parser = argparse.ArgumentParser(prog="dirs")
+    parser.add_argument('N', nargs='?')
+    parser.add_argument('-c',
+                        dest='clear',
+                        help='Clears the directory stack by deleting all of'
+                        ' the entries.',
+                        action='store_true')
+    parser.add_argument('-p',
+                        dest='print_long',
+                        help='Print the directory stack with one entry per'
+                        ' line.',
+                        action='store_true')
+    parser.add_argument('-v',
+                        dest='verbose',
+                        help='Print the directory stack with one entry per'
+                        ' line, prefixing each entry with its index in the'
+                        ' stack.',
+                        action='store_true')
+    parser.add_argument('-l',
+                        dest='long',
+                        help='Produces a longer listing; the default listing'
+                        ' format uses a tilde to denote the home directory.',
+                        action='store_true')
+    return parsers
+
+
+dirs_parser = LazyObject(_dirs_parser, globals(), 'dirs_parser')
+del _dirs_parser
 
 def dirs(args, stdin=None):
     """xonsh command: dirs
@@ -321,54 +391,3 @@ def dirs(args, stdin=None):
         out = o[idx]
 
     return out + '\n', None, 0
-
-
-pushd_parser = ArgumentParser(prog="pushd")
-pushd_parser.add_argument('dir', nargs='?')
-pushd_parser.add_argument('-n',
-                          dest='cd',
-                          help='Suppresses the normal change of directory when'
-                          ' adding directories to the stack, so that only the'
-                          ' stack is manipulated.',
-                          action='store_false')
-pushd_parser.add_argument('-q',
-                          dest='quiet',
-                          help='Do not call dirs, regardless of $PUSHD_SILENT',
-                          action='store_true')
-
-popd_parser = ArgumentParser(prog="popd")
-popd_parser.add_argument('dir', nargs='?')
-popd_parser.add_argument('-n',
-                         dest='cd',
-                         help='Suppresses the normal change of directory when'
-                         ' adding directories to the stack, so that only the'
-                         ' stack is manipulated.',
-                         action='store_false')
-popd_parser.add_argument('-q',
-                         dest='quiet',
-                         help='Do not call dirs, regardless of $PUSHD_SILENT',
-                         action='store_true')
-
-dirs_parser = ArgumentParser(prog="dirs")
-dirs_parser.add_argument('N', nargs='?')
-dirs_parser.add_argument('-c',
-                         dest='clear',
-                         help='Clears the directory stack by deleting all of'
-                         ' the entries.',
-                         action='store_true')
-dirs_parser.add_argument('-p',
-                         dest='print_long',
-                         help='Print the directory stack with one entry per'
-                         ' line.',
-                         action='store_true')
-dirs_parser.add_argument('-v',
-                         dest='verbose',
-                         help='Print the directory stack with one entry per'
-                         ' line, prefixing each entry with its index in the'
-                         ' stack.',
-                         action='store_true')
-dirs_parser.add_argument('-l',
-                         dest='long',
-                         help='Produces a longer listing; the default listing'
-                         ' format uses a tilde to denote the home directory.',
-                         action='store_true')

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Implements the base xonsh parser."""
 import re
+import time
+from threading import Thread
 from collections import Iterable, Sequence, Mapping
 
 try:
@@ -13,6 +15,10 @@ from xonsh.ast import has_elts, xonsh_call
 from xonsh.lexer import Lexer, LexToken
 from xonsh.platform import PYTHON_VERSION_INFO
 from xonsh.tokenize import SearchPath
+from xonsh.lazyasd import LazyObject
+
+RE_SEARCHPATH = LazyObject(lambda: re.compile(SearchPath), globals(),
+                           'RE_SEARCHPATH')
 
 class Location(object):
     """Location in a file."""
@@ -116,7 +122,7 @@ def xonsh_pathsearch(pattern, pymode=False, lineno=None, col=None):
     """Creates the AST node for calling the __xonsh_pathsearch__() function.
     The pymode argument indicate if it is called from subproc or python mode"""
     pymode = ast.NameConstant(value=pymode, lineno=lineno, col_offset=col)
-    searchfunc, pattern = re.match(SearchPath, pattern).groups()
+    searchfunc, pattern = RE_SEARCHPATH.match(pattern).groups()
     pattern = ast.Str(s=pattern, lineno=lineno,
                       col_offset=col)
     if searchfunc in {'r', ''}:
@@ -166,6 +172,20 @@ def lopen_loc(x):
     lineno = x._lopen_lineno if hasattr(x, '_lopen_lineno') else x.lineno
     col = x._lopen_col if hasattr(x, '_lopen_col') else x.col_offset
     return lineno, col
+
+
+class YaccLoader(Thread):
+    """Thread to load (but not shave) the yacc parser."""
+
+    def __init__(self, parser, yacc_kwargs, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.daemon = True
+        self.parser = parser
+        self.yacc_kwargs = yacc_kwargs
+        self.start()
+
+    def run(self):
+        self.parser.parser = yacc.yacc(**self.yacc_kwargs)
 
 
 class BaseParser(object):
@@ -249,7 +269,9 @@ class BaseParser(object):
             yacc_kwargs['errorlog'] = yacc.NullLogger()
         if outputdir is not None:
             yacc_kwargs['outputdir'] = outputdir
-        self.parser = yacc.yacc(**yacc_kwargs)
+        self.parser = None
+        YaccLoader(self, yacc_kwargs)
+        #self.parser = yacc.yacc(**yacc_kwargs)
 
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None
@@ -280,6 +302,8 @@ class BaseParser(object):
         self.reset()
         self.xonsh_code = s
         self.lexer.fname = filename
+        while self.parser is None:
+            time.sleep(0.01)  # block until the parser is ready
         tree = self.parser.parse(input=s, lexer=self.lexer, debug=debug_level)
         # hack for getting modes right
         if mode == 'single':
@@ -1703,7 +1727,7 @@ class BaseParser(object):
     def p_atom_ellip(self, p):
         """atom : ellipsis_tok"""
         p1 = p[1]
-        p[0] = ast.Ellipsis(lineno=p1.lineno, col_offset=p1.lexpos)
+        p[0] = ast.EllipsisNode(lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_atom_none(self, p):
         """atom : none_tok"""
