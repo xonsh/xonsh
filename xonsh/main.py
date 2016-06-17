@@ -241,7 +241,7 @@ def main(argv=None):
                 not any(os.path.isfile(i) for i in env['XONSHRC'])):
             print('Could not find xonsh configuration or run control files.')
             from xonsh import xonfig  # lazy import
-            xonfig.main(['wizard', '--confirm'])
+            xonfig.xonfig_main(['wizard', '--confirm'])
         shell.cmdloop()
     postmain(args)
 
