@@ -150,7 +150,7 @@ class ProcProxy(Thread):
         if self.f is None:
             return
         if self.stdin is not None:
-            sp_stdin = io.TextIOWrapper(self.stdin)
+            sp_stdin = io.TextIOWrapper(io.open(self.p2cread, 'rb', -1))
         else:
             sp_stdin = io.StringIO("")
 

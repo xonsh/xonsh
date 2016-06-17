@@ -1450,6 +1450,22 @@ def _iglobpath(s, ignore_case=False):
     else:
         return iglob(s), s
 
+
 def iglobpath(s, ignore_case=False):
     """Simple wrapper around iglob that also expands home and env vars."""
     return _iglobpath(s, ignore_case)[0]
+
+
+def make_stream_line_transformer(mapfunc, which='stdout'):
+    """
+    Create and return a callable alias that applies mapfunc to every line of
+    stdin and writes it to the designated output.
+    """
+    def _transform_func(args, stdin, stdout, stderr):
+        to_write = stdout if which == 'stdout' else stderr
+        x = None
+        while x is None or x != '':
+            x = stdin.readline()
+            print_color(mapfunc(x), file=to_write, end='')
+        return 0
+    return _transform_func

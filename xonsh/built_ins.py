@@ -32,7 +32,7 @@ from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
                         CompletedCommand, HiddenCompletedCommand)
 from xonsh.tools import (
     suggest_commands, expandvars, CommandsCache, globpath, XonshError,
-    XonshCalledProcessError, XonshBlockError
+    XonshCalledProcessError, XonshBlockError, make_stream_line_transformer
 )
 
 
@@ -353,6 +353,7 @@ def run_subproc(cmds, captured=False):
     global ENV
     background = False
     procinfo = {}
+    _extra_fds = []
     if cmds[-1] == '&':
         background = True
         cmds = cmds[:-1]
@@ -460,6 +461,15 @@ def run_subproc(cmds, captured=False):
                           stdin=cproc.stdout,
                           stdout=PIPE)
             stdin = tproc.stdout
+
+        _err_line = ENV.get('TRANSFORM_STDERR_LINE')
+        stderr_color_proc = None
+        if stderr is None and callable(_err_line):
+            _func = make_stream_line_transformer(_err_line, 'stderr')
+            stderr_color_proc = ProcProxy(_func, [], stdin=PIPE)
+            stderr = stderr_color_proc.stdin
+            _extra_fds.append(stderr_color_proc.stdin.fileno())
+
         if callable(aliased_cmd):
             prev_is_proxy = True
             bgable = getattr(aliased_cmd, '__xonsh_backgroundable__', True)
@@ -513,7 +523,8 @@ def run_subproc(cmds, captured=False):
             'cmds': cmds,
             'pids': [i.pid for i in procs],
             'obj': prev_proc,
-            'bg': background
+            'bg': background,
+            'extra_fds': _extra_fds,
         })
     if (ENV.get('XONSH_INTERACTIVE') and
             not ENV.get('XONSH_STORE_STDOUT') and
@@ -567,7 +578,7 @@ def run_subproc(cmds, captured=False):
                 except:
                     pass
                 os.unlink(_stderr_name)
-            elif unnamed:
+            elif unnamed and stderr_color_proc is None:
                 errout = prev_proc.stderr.read()
             if named or unnamed:
                 errout = errout.decode(encoding=ENV.get('XONSH_ENCODING'),

@@ -164,7 +164,17 @@ else:
                       '{cwd}{branch_color}{curr_branch}{NO_COLOR} '
                       '{BOLD_BLUE}{prompt_end}{NO_COLOR} ')
 
+if ON_WINDOWS:
+    _red_color = "INTENSE_RED"
+else:
+    _red_color = "RED"
+
+
+def _color_line_red(x):
+    return "{%s}%s{NO_COLOR}" % (_red_color, x)
+
 DEFAULT_TITLE = '{current_job}{user}@{hostname}: {cwd} | xonsh'
+
 
 @default_value
 def xonsh_data_dir(env):
@@ -244,6 +254,7 @@ DEFAULT_VALUES = {
     'SUGGEST_THRESHOLD': 3,
     'TEEPTY_PIPE_DELAY': 0.01,
     'TITLE': DEFAULT_TITLE,
+    'TRANSFORM_STDERR_LINE': _color_line_red,
     'UPDATE_OS_ENVIRON': False,
     'VC_BRANCH_TIMEOUT': 0.2 if ON_WINDOWS else 0.1,
     'VI_MODE': False,
