@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Implements the base xonsh parser."""
+import re
 import time
 from threading import Thread
 from collections import Iterable, Sequence, Mapping
@@ -13,7 +14,7 @@ from xonsh import ast
 from xonsh.ast import has_elts, xonsh_call
 from xonsh.lexer import Lexer, LexToken
 from xonsh.platform import PYTHON_VERSION_INFO
-
+from xonsh.tokenize import SearchPath
 
 class Location(object):
     """Location in a file."""
@@ -113,12 +114,23 @@ def xonsh_superhelp(x, lineno=None, col=None):
     return xonsh_call('__xonsh_superhelp__', [x], lineno=lineno, col=col)
 
 
-def xonsh_regexpath(x, pymode=False, lineno=None, col=None):
-    """Creates the AST node for calling the __xonsh_regexpath__() function.
+def xonsh_pathsearch(pattern, pymode=False, lineno=None, col=None):
+    """Creates the AST node for calling the __xonsh_pathsearch__() function.
     The pymode argument indicate if it is called from subproc or python mode"""
     pymode = ast.NameConstant(value=pymode, lineno=lineno, col_offset=col)
-    return xonsh_call('__xonsh_regexpath__', args=[x, pymode], lineno=lineno,
-                      col=col)
+    searchfunc, pattern = re.match(SearchPath, pattern).groups()
+    pattern = ast.Str(s=pattern, lineno=lineno,
+                      col_offset=col)
+    if searchfunc in {'r', ''}:
+        func = '__xonsh_regexsearch__'
+    elif searchfunc == 'g':
+        func = '__xonsh_globsearch__'
+    else:
+        func = searchfunc[1:]  # remove the '@' character
+    func = ast.Name(id=func, ctx=ast.Load(), lineno=lineno,
+                    col_offset=col)
+    return xonsh_call('__xonsh_pathsearch__', args=[func, pattern, pymode],
+                      lineno=lineno, col=col)
 
 
 def load_ctx(x):
@@ -1731,12 +1743,10 @@ class BaseParser(object):
         p[0] = ast.NameConstant(value=False, lineno=p1.lineno,
                                 col_offset=p1.lexpos)
 
-    def p_atom_re(self, p):
-        """atom : REGEXPATH"""
-        p1 = ast.Str(s=p[1].strip('`'), lineno=self.lineno,
-                     col_offset=self.col)
-        p[0] = xonsh_regexpath(p1, pymode=True, lineno=self.lineno,
-                               col=self.col)
+    def p_atom_pathsearch(self, p):
+        """atom : SEARCHPATH"""
+        p[0] = xonsh_pathsearch(p[1], pymode=True, lineno=self.lineno,
+                                col=self.col)
 
     def p_atom_dname(self, p):
         """atom : DOLLAR_NAME"""
@@ -2234,11 +2244,9 @@ class BaseParser(object):
         p[0] = p0
 
     def p_subproc_atom_re(self, p):
-        """subproc_atom : REGEXPATH"""
-        p1 = ast.Str(s=p[1].strip('`'), lineno=self.lineno,
-                     col_offset=self.col)
-        p0 = xonsh_regexpath(p1, pymode=False, lineno=self.lineno,
-                             col=self.col)
+        """subproc_atom : SEARCHPATH"""
+        p0 = xonsh_pathsearch(p[1], pymode=False, lineno=self.lineno,
+                              col=self.col)
         p0._cliarg_action = 'extend'
         p[0] = p0
 

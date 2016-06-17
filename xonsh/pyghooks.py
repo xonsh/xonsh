@@ -21,12 +21,13 @@ import pygments.util
 from xonsh.lazyasd import LazyObject
 from xonsh.tools import (ON_WINDOWS, intensify_colors_for_cmd_exe,
                          expand_gray_colors_for_cmd_exe)
+from xonsh.tokenize import SearchPath
 
 
 class XonshSubprocLexer(BashLexer):
     """Lexer for xonsh subproc mode."""
     name = 'Xonsh subprocess lexer'
-    tokens = {'root': [(r'`[^`]*?`', String.Backtick), inherit, ]}
+    tokens = {'root': [(SearchPath, String.Backtick), inherit, ]}
 
 
 ROOT_TOKENS = [(r'\?', Keyword),

@@ -39,7 +39,7 @@ blank_re = LazyObject(lambda: re.compile(br'^[ \t\f]*(?:[#\r\n]|$)', re.ASCII),
 import token
 __all__ = token.__all__ + ["COMMENT", "tokenize", "detect_encoding",
                            "NL", "untokenize", "ENCODING", "TokenInfo",
-                           "TokenError", 'REGEXPATH', 'ATDOLLAR', 'ATEQUAL',
+                           "TokenError", 'SEARCHPATH', 'ATDOLLAR', 'ATEQUAL',
                            'DOLLARNAME', 'IOREDIRECT']
 del token
 
@@ -59,8 +59,8 @@ tok_name[NL] = 'NL'
 ENCODING = N_TOKENS + 2
 tok_name[ENCODING] = 'ENCODING'
 N_TOKENS += 3
-REGEXPATH = N_TOKENS
-tok_name[N_TOKENS] = 'REGEXPATH'
+SEARCHPATH = N_TOKENS
+tok_name[N_TOKENS] = 'SEARCHPATH'
 N_TOKENS += 1
 IOREDIRECT = N_TOKENS
 tok_name[N_TOKENS] = 'IOREDIRECT'
@@ -199,8 +199,8 @@ Triple = group(StringPrefix + "'''", StringPrefix + '"""')
 String = group(StringPrefix + r"'[^\n'\\]*(?:\\.[^\n'\\]*)*'",
                StringPrefix + r'"[^\n"\\]*(?:\\.[^\n"\\]*)*"')
 
-# Xonsh-specific Regular Expression Glob Syntax
-RegexPath = r"`[^\n`\\]*(?:\\.[^\n`\\]*)*`"
+# Xonsh-specific Syntax
+SearchPath = r"((?:[rg]|@\w*)?)`([^\n`\\]*(?:\\.[^\n`\\]*)*)`"
 
 # Because of leftmost-then-longest match semantics, be sure to put the
 # longest operators first (e.g., if = came before ==, == would get
@@ -221,7 +221,7 @@ Bracket = '[][(){}]'
 Special = group(r'\r?\n', r'\.\.\.', r'[:;.,@]')
 Funny = group(Operator, Bracket, Special)
 
-PlainToken = group(IORedirect, Number, Funny, String, Name_RE, RegexPath)
+PlainToken = group(IORedirect, Number, Funny, String, Name_RE, SearchPath)
 Token = Ignore + PlainToken
 
 # First (or only) line of ' or " string.
@@ -229,7 +229,7 @@ ContStr = group(StringPrefix + r"'[^\n'\\]*(?:\\.[^\n'\\]*)*" +
                 group("'", r'\\\r?\n'),
                 StringPrefix + r'"[^\n"\\]*(?:\\.[^\n"\\]*)*' +
                 group('"', r'\\\r?\n'))
-PseudoExtras = group(r'\\\r?\n|\Z', Comment, Triple, RegexPath)
+PseudoExtras = group(r'\\\r?\n|\Z', Comment, Triple, SearchPath)
 PseudoToken = Whitespace + group(PseudoExtras, IORedirect, Number, Funny,
                                  ContStr, Name_RE)
 
@@ -665,8 +665,8 @@ def _tokenize(readline, encoding):
                         stashed = None
                     yield TokenInfo(COMMENT, token, spos, epos, line)
                 # Xonsh-specific Regex Globbing
-                elif initial == '`':
-                    yield TokenInfo(REGEXPATH, token, spos, epos, line)
+                elif re.match(SearchPath, token):
+                    yield TokenInfo(SEARCHPATH, token, spos, epos, line)
                 elif token in triple_quoted:
                     endprog = _compile(endpats[token])
                     endmatch = endprog.match(line, pos)

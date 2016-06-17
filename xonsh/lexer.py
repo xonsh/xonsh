@@ -47,7 +47,7 @@ def _token_map():
     tm[STRING] = 'STRING'
     tm[DOLLARNAME] = 'DOLLAR_NAME'
     tm[NUMBER] = 'NUMBER'
-    tm[REGEXPATH] = 'REGEXPATH'
+    tm[SEARCHPATH] = 'SEARCHPATH'
     tm[NEWLINE] = 'NEWLINE'
     tm[INDENT] = 'INDENT'
     tm[DEDENT] = 'DEDENT'

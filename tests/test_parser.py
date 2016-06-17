@@ -1628,6 +1628,33 @@ def test_backtick():
 def test_ls_regex_octothorpe():
     yield check_xonsh_ast, {}, '$(ls `#[Ff]+i*LE` -l)', False
 
+def test_ls_explicitregex():
+    yield check_xonsh_ast, {}, '$(ls r`[Ff]+i*LE` -l)', False
+
+def test_rbacktick():
+    yield check_xonsh_ast, {}, 'print(r`.*`)', False
+
+def test_ls_explicitregex_octothorpe():
+    yield check_xonsh_ast, {}, '$(ls r`#[Ff]+i*LE` -l)', False
+
+def test_ls_glob():
+    yield check_xonsh_ast, {}, '$(ls g`[Ff]+i*LE` -l)', False
+
+def test_gbacktick():
+    yield check_xonsh_ast, {}, 'print(g`.*`)', False
+
+def test_ls_glob_octothorpe():
+    yield check_xonsh_ast, {}, '$(ls g`#[Ff]+i*LE` -l)', False
+
+def test_ls_customsearch():
+    yield check_xonsh_ast, {}, '$(ls @foo`[Ff]+i*LE` -l)', False
+
+def test_custombacktick():
+    yield check_xonsh_ast, {}, 'print(@foo`.*`)', False
+
+def test_ls_customsearch_octothorpe():
+    yield check_xonsh_ast, {}, '$(ls @foo`#[Ff]+i*LE` -l)', False
+
 def test_injection():
     yield check_xonsh_ast, {}, '$[@$(which python)]', False
 
