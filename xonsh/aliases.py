@@ -449,8 +449,8 @@ def which(args, stdin=None, stdout=None, stderr=None):
 
 def xonfig(args, stdin=None):
     """Runs the xonsh configuration utility."""
-    from xonsh.xonfig import main  # lazy import
-    return main(args)
+    from xonsh.xonfig import xonfig_main  # lazy import
+    return xonfig_main(args)
 
 
 @foreground
