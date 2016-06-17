@@ -26,11 +26,15 @@ import re
 import sys
 from token import *
 
+from xonsh.lazyasd import LazyObject
 from xonsh.platform import PYTHON_VERSION_INFO
 
 
-cookie_re = re.compile(r'^[ \t\f]*#.*coding[:=][ \t]*([-\w.]+)', re.ASCII)
-blank_re = re.compile(br'^[ \t\f]*(?:[#\r\n]|$)', re.ASCII)
+cookie_re = LazyObject(
+    lambda: re.compile(r'^[ \t\f]*#.*coding[:=][ \t]*([-\w.]+)', re.ASCII),
+    globals(), 'cookie_re')
+blank_re = LazyObject(lambda: re.compile(br'^[ \t\f]*(?:[#\r\n]|$)', re.ASCII),
+                      globals(), 'blank_re')
 
 import token
 __all__ = token.__all__ + ["COMMENT", "tokenize", "detect_encoding",
@@ -158,15 +162,15 @@ class TokenInfo(collections.namedtuple('TokenInfo', 'type string start end line'
             return self.type
 
 def group(*choices): return '(' + '|'.join(choices) + ')'
-def any(*choices): return group(*choices) + '*'
+def tokany(*choices): return group(*choices) + '*'
 def maybe(*choices): return group(*choices) + '?'
 
 # Note: we use unicode matching for names ("\w") but ascii matching for
 # number literals.
 Whitespace = r'[ \f\t]*'
 Comment = r'#[^\r\n]*'
-Ignore = Whitespace + any(r'\\\r?\n' + Whitespace) + maybe(Comment)
-Name = r'\$?\w+'
+Ignore = Whitespace + tokany(r'\\\r?\n' + Whitespace) + maybe(Comment)
+Name_RE = r'\$?\w+'
 
 Hexnumber = r'0[xX][0-9a-fA-F]+'
 Binnumber = r'0[bB][01]+'
@@ -217,7 +221,7 @@ Bracket = '[][(){}]'
 Special = group(r'\r?\n', r'\.\.\.', r'[:;.,@]')
 Funny = group(Operator, Bracket, Special)
 
-PlainToken = group(IORedirect, Number, Funny, String, Name, SearchPath)
+PlainToken = group(IORedirect, Number, Funny, String, Name_RE, SearchPath)
 Token = Ignore + PlainToken
 
 # First (or only) line of ' or " string.
@@ -227,7 +231,7 @@ ContStr = group(StringPrefix + r"'[^\n'\\]*(?:\\.[^\n'\\]*)*" +
                 group('"', r'\\\r?\n'))
 PseudoExtras = group(r'\\\r?\n|\Z', Comment, Triple, SearchPath)
 PseudoToken = Whitespace + group(PseudoExtras, IORedirect, Number, Funny,
-                                 ContStr, Name)
+                                 ContStr, Name_RE)
 
 def _compile(expr):
     return re.compile(expr, re.UNICODE)
@@ -507,7 +511,7 @@ def detect_encoding(readline):
     return default, [first, second]
 
 
-def open(filename):
+def _tokopen(filename):
     """Open a file in read only mode using the encoding detected by
     detect_encoding().
     """
@@ -781,7 +785,7 @@ def tokenize(readline):
 def generate_tokens(readline):
     return _tokenize(readline, None)
 
-def main():
+def tokenize_main():
     import argparse
 
     # Helper error handling routines

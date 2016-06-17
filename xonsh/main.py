@@ -4,8 +4,9 @@ import os
 import sys
 import enum
 import builtins
-from argparse import ArgumentParser, ArgumentTypeError
+import importlib
 from contextlib import contextmanager
+from argparse import ArgumentParser, ArgumentTypeError
 
 try:
     from setproctitle import setproctitle
@@ -13,6 +14,7 @@ except ImportError:
     setproctitle = None
 
 from xonsh import __version__
+from xonsh.lazyasd import LazyObject
 from xonsh.environ import DEFAULT_VALUES
 from xonsh.shell import Shell
 from xonsh.pretty import pprint, pretty
@@ -22,9 +24,11 @@ from xonsh.tools import setup_win_unicode_console, print_color
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.codecache import run_script_with_cache, run_code_with_cache
 
-if HAS_PYGMENTS:
-    import pygments
-    from xonsh import pyghooks
+
+pygments = LazyObject(lambda: importlib.import_module('pygments'),
+                      globals(), 'pygments')
+pyghooks = LazyObject(lambda: importlib.import_module('xonsh.pyghooks'),
+                      globals(), 'pyghooks')
 
 
 def path_argument(s):
@@ -246,7 +250,8 @@ def postmain(args=None):
     """Teardown for main xonsh entry point, accepts parsed arguments."""
     if ON_WINDOWS:
         setup_win_unicode_console(enable=False)
-    del builtins.__xonsh_shell__
+    if hasattr(builtins, '__xonsh_shell__'):
+        del builtins.__xonsh_shell__
 
 
 @contextmanager

@@ -35,7 +35,8 @@ for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 
 
 if ON_WINDOWS:
-    from xonsh.platform import WINDOWS_BASH_COMMAND as BASH_COMMAND
+    from xonsh.platform import windows_bash_command
+    BASH_COMMAND = windows_bash_command()
 else:
     BASH_COMMAND = 'bash'
 

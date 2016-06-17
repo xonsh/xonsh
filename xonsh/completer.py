@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 """A (tab-)completer for xonsh."""
 import builtins
+import collections.abc as abc
 
-from collections import Sequence
-
-from xonsh.completers.bash import update_bash_completion
+import xonsh.completers.bash as compbash
 
 
 class Completer(object):
     """This provides a list of optional completions for the xonsh shell."""
     def __init__(self):
-        update_bash_completion()
+        compbash.update_bash_completion()
 
     def complete(self, prefix, line, begidx, endidx, ctx=None):
         """Complete the string, given a possible execution context.
@@ -42,7 +41,7 @@ class Completer(object):
                 out = func(prefix, line, begidx, endidx, ctx)
             except StopIteration:
                 return set(), len(prefix)
-            if isinstance(out, Sequence):
+            if isinstance(out, abc.Sequence):
                 res, lprefix = out
             else:
                 res = out

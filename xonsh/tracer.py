@@ -4,19 +4,24 @@ import re
 import sys
 import inspect
 import linecache
+import importlib
 from functools import lru_cache
 from argparse import ArgumentParser
 
-from xonsh.tools import DefaultNotGiven, print_color, normabspath, to_bool
+from xonsh.lazyasd import LazyObject
 from xonsh.platform import HAS_PYGMENTS
-from xonsh import inspectors
-from xonsh.environ import _replace_home as replace_home
+from xonsh.tools import DefaultNotGiven, print_color, normabspath, to_bool
+from xonsh.inspectors import find_file, getouterframes
+from xonsh.environ import _replace_home
 
-if HAS_PYGMENTS:
-    from xonsh import pyghooks
-    import pygments
-    import pygments.formatters.terminal
 
+pygments = LazyObject(lambda: importlib.import_module('pygments'),
+                      globals(), 'pygments')
+terminal = LazyObject(lambda: importlib.import_module(
+                                'pygments.formatters.terminal'),
+                      globals(), 'terminal')
+pyghooks = LazyObject(lambda: importlib.import_module('xonsh.pyghooks'),
+                      globals(), 'pyghooks')
 
 class TracerType(object):
     """Represents a xonsh tracer object, which keeps track of all tracing
@@ -35,7 +40,7 @@ class TracerType(object):
         self.files = set()
         self.usecolor = True
         self.lexer = pyghooks.XonshLexer()
-        self.formatter = pygments.formatters.terminal.TerminalFormatter()
+        self.formatter = terminal.TerminalFormatter()
         self._last = ('', -1)  # filename, lineno tuple
 
     def __del__(self):
@@ -50,7 +55,7 @@ class TracerType(object):
         files.add(normabspath(filename))
         sys.settrace(self.trace)
         curr = inspect.currentframe()
-        for frame, fname, *_ in inspectors.getouterframes(curr, context=0):
+        for frame, fname, *_ in getouterframes(curr, context=0):
             if normabspath(fname) in files:
                 frame.f_trace = self.trace
 
@@ -61,7 +66,7 @@ class TracerType(object):
         if len(self.files) == 0:
             sys.settrace(self.prev_tracer)
             curr = inspect.currentframe()
-            for frame, fname, *_ in inspectors.getouterframes(curr, context=0):
+            for frame, fname, *_ in getouterframes(curr, context=0):
                 if normabspath(fname) == filename:
                     frame.f_trace = self.prev_tracer
             self.prev_tracer = DefaultNotGiven
@@ -70,20 +75,22 @@ class TracerType(object):
         """Implements a line tracing function."""
         if event not in self.valid_events:
             return self.trace
-        fname = inspectors.find_file(frame)
+        fname = find_file(frame)
         if fname in self.files:
             lineno = frame.f_lineno
             curr = (fname, lineno)
             if curr != self._last:
                 line = linecache.getline(fname, lineno).rstrip()
-                s = format_line(fname, lineno, line, color=self.usecolor,
-                                lexer=self.lexer, formatter=self.formatter)
+                s = tracer_format_line(fname, lineno, line,
+                                       color=self.usecolor,
+                                       lexer=self.lexer,
+                                       formatter=self.formatter)
                 print_color(s)
                 self._last = curr
         return self.trace
 
 
-tracer = TracerType()
+tracer = LazyObject(TracerType, globals(), 'tracer')
 
 COLORLESS_LINE = '{fname}:{lineno}:{line}'
 COLOR_LINE = ('{{PURPLE}}{fname}{{BLUE}}:'
@@ -91,9 +98,9 @@ COLOR_LINE = ('{{PURPLE}}{fname}{{BLUE}}:'
               '{{NO_COLOR}}')
 
 
-def format_line(fname, lineno, line, color=True, lexer=None, formatter=None):
+def tracer_format_line(fname, lineno, line, color=True, lexer=None, formatter=None):
     """Formats a trace line suitable for printing."""
-    fname = min(fname, replace_home(fname), os.path.relpath(fname), key=len)
+    fname = min(fname, _replace_home(fname), os.path.relpath(fname), key=len)
     if not color:
         return COLORLESS_LINE.format(fname=fname, lineno=lineno, line=line)
     cline = COLOR_LINE.format(fname=fname, lineno=lineno)
@@ -114,11 +121,11 @@ def _find_caller(args):
     """Somewhat hacky method of finding the __file__ based on the line executed."""
     re_line = re.compile(r'[^;\s|&<>]+\s+' + r'\s+'.join(args))
     curr = inspect.currentframe()
-    for _, fname, lineno, _, lines, _ in inspectors.getouterframes(curr, context=1)[3:]:
+    for _, fname, lineno, _, lines, _ in getouterframes(curr, context=1)[3:]:
         if lines is not None and re_line.search(lines[0]) is not None:
             return fname
         elif lineno == 1 and re_line.search(linecache.getline(fname, lineno)) is not None:
-            # There is a bug in CPython such that inspectors.getouterframes(curr, context=1)
+            # There is a bug in CPython such that getouterframes(curr, context=1)
             # will actually return the 2nd line in the code_context field, even though
             # line number is itself correct. We manually fix that in this branch.
             return fname
@@ -154,8 +161,8 @@ def _color(ns, args):
     tracer.usecolor = ns.toggle
 
 
-@lru_cache()
-def _create_parser():
+@lru_cache(1)
+def _tracer_create_parser():
     """Creates tracer argument parser"""
     p = ArgumentParser(prog='trace',
                        description='tool for tracing xonsh code as it runs.')
@@ -176,7 +183,7 @@ def _create_parser():
     return p
 
 
-_MAIN_ACTIONS = {
+_TRACER_MAIN_ACTIONS = {
     'on': _on,
     'add': _on,
     'start': _on,
@@ -188,12 +195,12 @@ _MAIN_ACTIONS = {
     }
 
 
-def main(args=None):
+def tracermain(args=None):
     """Main function for tracer command-line interface."""
-    parser = _create_parser()
+    parser = _tracer_create_parser()
     ns = parser.parse_args(args)
-    return _MAIN_ACTIONS[ns.action](ns, args)
+    return _TRACER_MAIN_ACTIONS[ns.action](ns, args)
 
 
 if __name__ == '__main__':
-    main()
+    tracermain()
