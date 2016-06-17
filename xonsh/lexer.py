@@ -66,47 +66,7 @@ it up here and generate a single PLY token of the given type.  Otherwise, it
 will fall back to handling that token using one of the handlers in
 ``special_handlers``.
 """
-<<<<<<< HEAD
 del _token_map
-=======
-
-# operators
-_op_map = {
-    # punctuation
-    ',': 'COMMA', '.': 'PERIOD', ':': 'COLON',
-    '...': 'ELLIPSIS',
-    # basic operators
-    '+': 'PLUS', '-': 'MINUS', '*': 'TIMES', '@': 'AT', '/': 'DIVIDE',
-    '//': 'DOUBLEDIV', '%': 'MOD', '**': 'POW', '|': 'PIPE',
-    '~': 'TILDE', '^': 'XOR', '<<': 'LSHIFT', '>>': 'RSHIFT',
-    '<': 'LT', '<=': 'LE', '>': 'GT', '>=': 'GE', '==': 'EQ',
-    '!=': 'NE', '->': 'RARROW',
-    # assignment operators
-    '=': 'EQUALS', '+=': 'PLUSEQUAL', '-=': 'MINUSEQUAL',
-    '*=': 'TIMESEQUAL', '@=': 'ATEQUAL', '/=': 'DIVEQUAL', '%=': 'MODEQUAL',
-    '**=': 'POWEQUAL', '<<=': 'LSHIFTEQUAL', '>>=': 'RSHIFTEQUAL',
-    '&=': 'AMPERSANDEQUAL', '^=': 'XOREQUAL', '|=': 'PIPEEQUAL',
-    '//=': 'DOUBLEDIVEQUAL',
-    # extra xonsh operators
-    '?': 'QUESTION', '??': 'DOUBLE_QUESTION', '@$': 'ATDOLLAR',
-    '&': 'AMPERSAND',
-}
-for (op, type) in _op_map.items():
-    token_map[(OP, op)] = type
-
-token_map[IOREDIRECT] = 'IOREDIRECT'
-token_map[STRING] = 'STRING'
-token_map[DOLLARNAME] = 'DOLLAR_NAME'
-token_map[NUMBER] = 'NUMBER'
-token_map[REGEXPATH] = 'REGEXPATH'
-token_map[NEWLINE] = 'NEWLINE'
-token_map[INDENT] = 'INDENT'
-token_map[DEDENT] = 'DEDENT'
-if PYTHON_VERSION_INFO >= (3, 5, 0):
-    token_map[ASYNC] = 'ASYNC'
-    token_map[AWAIT] = 'AWAIT'
->>>>>>> new handling of semicolons inside of inline block
-
 
 def _make_matcher_handler(tok, typ, pymode, ender):
     matcher = (')' if tok.endswith('(') else
