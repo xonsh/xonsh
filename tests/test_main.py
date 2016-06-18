@@ -37,6 +37,17 @@ def test_login_shell():
         assert_true(builtins.__xonsh_env__.get('XONSH_LOGIN'))
 
 
+def test_login_shell_with_file_argument():
+    with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
+        xonsh.main.premain(['tests/sample.xsh'])
+        assert_false(builtins.__xonsh_env__.get('XONSH_INTERACTIVE'))
+
+    for case in ('TTTT', '-TT', '--TTT'):
+        with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
+            xonsh.main.premain(['tests/sample.xsh', case])
+            assert_false(builtins.__xonsh_env__.get('XONSH_INTERACTIVE'))
+
+
 def test_login_shell_invalid_arguments():
     # pytest transition
     # TODO: check for proper error msg in stdout (howto nose?)

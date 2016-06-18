@@ -150,10 +150,6 @@ def premain(argv=None):
         setproctitle(' '.join(['xonsh'] + sys.argv[1:]))
     builtins.__xonsh_ctx__ = {}
     args, other = parser.parse_known_args(argv)
-    if not args.args and other and other[0].startswith('-'):
-        print('xonsh: error: invalid argument {!r}'.format(other[0]))
-        parser.print_help()
-        exit()
     if args.file is not None:
         arguments = (argv or sys.argv)
         file_index = arguments.index(args.file)
@@ -167,6 +163,10 @@ def premain(argv=None):
         # and positional arguments passed before the path to the script-file are
         # ignored.
         args.args = arguments[file_index+1:]
+    elif not args.args and other and other[0].startswith('-'):
+        print('xonsh: error: invalid argument {!r}'.format(other[0]))
+        parser.print_help()
+        exit()
     if args.help:
         parser.print_help()
         exit()
