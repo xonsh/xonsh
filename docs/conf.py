@@ -11,6 +11,8 @@ import os
 import sys
 import builtins
 
+os.environ['XONSH_DEBUG'] = '1'
+
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.environ import DEFAULT_DOCS, Env
 from xonsh.xontribs import xontrib_metadata
