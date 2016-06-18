@@ -293,14 +293,14 @@ def write_amalgam(src, pkg):
     """Write out __amalgam__.py file"""
     pkgdir = pkg.replace('.', os.sep)
     fname = os.path.join(pkgdir, '__amalgam__.py')
-    with open(fname, 'w') as f:
+    with open(fname, 'w', encoding='utf-8', errors='surrogateescape') as f:
         f.write(src)
 
 
 def _init_name_lines(pkg):
     pkgdir = pkg.replace('.', os.sep)
     fname = os.path.join(pkgdir, '__init__.py')
-    with open(fname) as f:
+    with open(fname, encoding='utf-8', errors='surrogateescape') as f:
         raw = f.read()
     lines = raw.splitlines()
     return fname, lines
@@ -351,7 +351,7 @@ def rewrite_init(pkg, order, debug='DEBUG'):
         lines[start+1] = s
         lines = lines[:start+2] + lines[stop:]
     init = '\n'.join(lines)
-    with open(fname, 'w') as f:
+    with open(fname, 'w', encoding='utf-8', errors='surrogateescape') as f:
         f.write(init)
 
 
