@@ -201,8 +201,8 @@ def _make_flat_wiz(kidfunc, *args):
         if k is None:
             continue
         flatkids.extend(k)
-    wiz = wiz.Wizard(children=flatkids)
-    return wiz
+    wizard = wiz.Wizard(children=flatkids)
+    return wizard
 
 
 def make_env_wiz():
@@ -286,7 +286,7 @@ def make_xonfig_wizard(default_file=None, confirm=False):
         passer = wiz.Pass()
         saver = wiz.Save(check=False, ask_filename=False,
                          default_file=default_file)
-        w = wiz.Question(q, {1: wiz, 2: passer, 3: saver},
+        w = wiz.Question(q, {1: w, 2: passer, 3: saver},
                          converter=lambda x: int(x) if x != '' else 2)
     return w
 
@@ -462,7 +462,7 @@ _XONFIG_MAIN_ACTIONS = {
 
 def xonfig_main(args=None):
     """Main xonfig entry point."""
-    if not args or (args[0] not in _MAIN_ACTIONS and
+    if not args or (args[0] not in _XONFIG_MAIN_ACTIONS and
                     args[0] not in {'-h', '--help'}):
         args.insert(0, 'info')
     parser = _xonfig_create_parser()
