@@ -13,9 +13,12 @@ import xonsh.main
 from tools import mock_xonsh_env
 
 
+
+def Shell(*args, **kwargs):
+    pass
+
+
 def test_login_shell():
-    def Shell(*args, **kwargs):
-        pass
 
     with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
         xonsh.main.premain([])
@@ -32,6 +35,30 @@ def test_login_shell():
     with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
         xonsh.main.premain(['-l'])
         assert_true(builtins.__xonsh_env__.get('XONSH_LOGIN'))
+
+
+def test_login_shell_invalid_arguments():
+    # pytest transition
+    # TODO: check for proper error msg in stdout (howto nose?)
+    with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
+        try:
+            xonsh.main.premain(['----'])
+            assert False
+        except SystemExit:
+            pass
+    with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
+        try:
+            xonsh.main.premain(['--hep'])
+            assert False
+        except SystemExit:
+            pass
+    with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
+        try:
+            xonsh.main.premain(['-TT'])
+            assert False
+        except SystemExit:
+           pass
+
 
 if __name__ == '__main__':
     nose.runmodule()
