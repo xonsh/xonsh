@@ -472,12 +472,9 @@ def test_env_path_to_str():
 
 
 def test_env_path():
-    """
-    Test the EnvPath class.
-    """
+    """Test the EnvPath class."""
     # lambda to expand the expected paths
-    expand = lambda path: \
-            os.path.realpath(os.path.expanduser(os.path.expandvars(path)))
+    expand = lambda path: os.path.expanduser(os.path.expandvars(path))
     getitem_cases = [
         ('xonsh_dir', 'xonsh_dir'),
         ('.', '.'),
@@ -486,12 +483,12 @@ def test_env_path():
         (b'~/../', '~/../'),
     ]
     for inp, exp in getitem_cases:
-        obs = EnvPath(inp)[0] # call to __getitem__
+        obs = EnvPath(inp)[0]  # call to __getitem__
         yield assert_equal, expand(exp), obs
 
     # cases that involve path-separated strings
     multipath_cases = [
-        (os.pathsep.join(['xonsh_dir', '../', './', '~/']),
+        (os.pathsep.join(['xonsh_dir', '../', '.', '~/']),
          ['xonsh_dir', '../', '.', '~/']),
         ('/home/wakka' + os.pathsep + '/home/jakka' + os.pathsep + '~/',
          ['/home/wakka', '/home/jakka', '~/'])
@@ -503,14 +500,14 @@ def test_env_path():
     # cases that involve pathlib.Path objects
     pathlib_cases = [
         (pathlib.Path('/home/wakka'), ['/home/wakka']),
-        (pathlib.Path('~/'), ['~/']),
+        (pathlib.Path('~/'), ['~']),
         (pathlib.Path('.'), ['.']),
         (['/home/wakka', pathlib.Path('/home/jakka'), '~/'],
          ['/home/wakka', '/home/jakka', '~/']),
         (['/home/wakka', pathlib.Path('../'), '../'],
-         ['/home/wakka', '../', '../']),
+         ['/home/wakka', '..', '../']),
         (['/home/wakka', pathlib.Path('~/'), '~/'],
-         ['/home/wakka', '~/', '~/']),
+         ['/home/wakka', '~', '~/']),
     ]
 
     for inp, exp in pathlib_cases:
