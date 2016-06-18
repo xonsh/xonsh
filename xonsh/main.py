@@ -164,7 +164,8 @@ def premain(argv=None):
         # ignored.
         args.args = arguments[file_index+1:]
     elif not args.args and other and other[0].startswith('-'):
-        print('xonsh: error: invalid argument {!r}'.format(other[0]))
+        err_msg = 'xonsh: error: invalid argument {!r}'.format(other[0])
+        print(err_msg, file=sys.stderr)
         parser.print_help()
         exit()
     if args.help:
