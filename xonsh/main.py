@@ -150,8 +150,6 @@ def premain(argv=None):
         setproctitle(' '.join(['xonsh'] + sys.argv[1:]))
     builtins.__xonsh_ctx__ = {}
     args, other = parser.parse_known_args(argv)
-    print('args, other:', args, other)
-    print("SKATA")
     if args.file is not None:
         arguments = (argv or sys.argv)
         file_index = arguments.index(args.file)
