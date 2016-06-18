@@ -102,21 +102,17 @@ class XonshCalledProcessError(XonshError, CalledProcessError):
 
 
 def expandpath(path):
-    """
-    Performs environment variable / user expansion on a given path
+    """Performs environment variable / user expansion on a given path
     if the relevant flag has been set.
     """
     env = getattr(builtins, '__xonsh_env__', os.environ)
     if env.get('EXPAND_ENV_VARS', False):
-        # expand variables and use os.path.abspath to handle cases
-        # with relative paths like ../ or ./
         path = os.path.expanduser(expandvars(path))
-    return os.path.abspath(path)
+    return path
 
 
 def decode_bytes(path):
-    """
-    Tries to decode a path in bytes using XONSH_ENCODING if available,
+    """Tries to decode a path in bytes using XONSH_ENCODING if available,
     otherwise using sys.getdefaultencoding().
     """
     env = getattr(builtins, '__xonsh_env__', os.environ)
@@ -126,8 +122,7 @@ def decode_bytes(path):
 
 
 class EnvPath(collections.MutableSequence):
-    """
-    A class that implements an environment path, which is a list of
+    """A class that implements an environment path, which is a list of
     strings. Provides a custom method that expands all paths if the
     relevant env variable has been set.
     """
@@ -769,13 +764,13 @@ def is_string(x):
 def is_slice(x):
     """Tests if something is a slice"""
     return isinstance(x, slice)
-        
+
 def is_slice_as_str(x):
     """
     Tests if a str is a slice
     If not a string to begin with is automatically false
     """
-    if isinstance(x, str): 
+    if isinstance(x, str):
         if ':' in x:
             x = x.strip('[]()')
             try:
@@ -783,9 +778,9 @@ def is_slice_as_str(x):
                         for x in x.split(':')))
             except ValueError:
                 return False
-        else: 
+        else:
             return False
-        return True  
+        return True
     return False
 
 def is_callable(x):
