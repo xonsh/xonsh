@@ -353,7 +353,7 @@ def _info(ns):
         ('is superuser', is_superuser()),
         ('default encoding', DEFAULT_ENCODING),
         ])
-    formatter = _xonfig_format_json if ns.json else __xonfig_format_human
+    formatter = _xonfig_format_json if ns.json else _xonfig_format_human
     s = formatter(data)
     return s
 

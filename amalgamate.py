@@ -35,7 +35,7 @@ class SourceCache(Mapping):
         pkg, name = key
         pkgdir = pkg.replace('.', os.sep)
         fname = pkgdir + os.sep + name + '.py'
-        with open(fname) as f:
+        with open(fname, encoding='utf-8', errors='surrogateescape') as f:
             raw = f.read()
         d[key] = raw
         return raw
