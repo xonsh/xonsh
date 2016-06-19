@@ -440,7 +440,7 @@ def run_subproc(cmds, captured=False):
                 aliased_cmd = alias + cmd[1:]
             else:
                 aliased_cmd = cmd
-            if binary_loc is not None:
+            if binary_loc is not None and alias is None:
                 try:
                     aliased_cmd = get_script_subproc_command(binary_loc,
                                                              aliased_cmd[1:])
