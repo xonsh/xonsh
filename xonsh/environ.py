@@ -1412,7 +1412,7 @@ def windows_foreign_env_fixes(ctx):
             ctx[ev] = os.environ[ev]
         elif ev in ctx:
             del ctx[ev]
-    ctx['PWD'] = _get_cwd()
+    ctx['PWD'] = _get_cwd() or ''
 
 
 def foreign_env_fixes(ctx):
@@ -1425,6 +1425,7 @@ def default_env(env=None, config=None, login=True):
     # in order of increasing precedence
     ctx = dict(BASE_ENV)
     ctx.update(os.environ)
+    ctx['PWD'] = _get_cwd() or ''
     # other shells' PROMPT definitions generally don't work in XONSH:
     try:
         del ctx['PROMPT']

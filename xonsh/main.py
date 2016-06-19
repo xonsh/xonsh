@@ -178,7 +178,7 @@ def premain(argv=None):
                     'ctx': builtins.__xonsh_ctx__}
     if args.login:
         shell_kwargs['login'] = True
-    if args.config_path is None:
+    if args.config_path is not None:
         shell_kwargs['config'] = args.config_path
     if args.norc:
         shell_kwargs['rc'] = ()
@@ -241,7 +241,7 @@ def main(argv=None):
                 not any(os.path.isfile(i) for i in env['XONSHRC'])):
             print('Could not find xonsh configuration or run control files.')
             from xonsh import xonfig  # lazy import
-            xonfig.main(['wizard', '--confirm'])
+            xonfig.xonfig_main(['wizard', '--confirm'])
         shell.cmdloop()
     else:
         print('xonsh: error: invalid argument {!r}'.format(sys.argv[1]))
