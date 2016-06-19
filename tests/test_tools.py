@@ -472,7 +472,6 @@ def test_env_path_to_str():
 
 
 def test_env_path():
-    """Test the EnvPath class."""
     # lambda to expand the expected paths
     expand = lambda path: os.path.expanduser(os.path.expandvars(path))
     getitem_cases = [
@@ -499,11 +498,11 @@ def test_env_path():
 
     # cases that involve pathlib.Path objects
     pathlib_cases = [
-        (pathlib.Path('/home/wakka'), ['/home/wakka']),
+        (pathlib.Path('/home/wakka'), ['/home/wakka'.replace('/',os.sep)]),
         (pathlib.Path('~/'), ['~']),
         (pathlib.Path('.'), ['.']),
         (['/home/wakka', pathlib.Path('/home/jakka'), '~/'],
-         ['/home/wakka', '/home/jakka', '~/']),
+         ['/home/wakka', '/home/jakka'.replace('/',os.sep), '~/']),
         (['/home/wakka', pathlib.Path('../'), '../'],
          ['/home/wakka', '..', '../']),
         (['/home/wakka', pathlib.Path('~/'), '~/'],
@@ -766,10 +765,11 @@ def test_partial_string():
 
 
 def test_executables_in():
-
-
     expected = set()
     types = ('file', 'directory', 'brokensymlink')
+    if ON_WINDOWS:
+        # Don't test symlinks on windows since it requires admin
+        types = ('file', 'directory')
     executables = (True, False)
     with TemporaryDirectory() as test_path:
         for _type in types:
@@ -790,11 +790,11 @@ def test_executables_in():
                     os.mkdir(path)
                 elif _type == 'brokensymlink':
                     tmp_path = os.path.join(test_path, 'i_wont_exist')
-                    with open(tmp_path,'w') as f:
+                    with open(tmp_path, 'w') as f:
                         f.write('deleteme')
                         os.symlink(tmp_path, path)
                     os.remove(tmp_path)
-                if executable and not _type == 'brokensymlink' :
+                if executable and not _type == 'brokensymlink':
                     os.chmod(path, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
             result = set(executables_in(test_path))
     assert_equal(expected, result)
