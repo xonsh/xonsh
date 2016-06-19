@@ -115,6 +115,16 @@ Contents
     aliases
     xontribs
 
+**News & Media:**
+
+.. toctree::
+    :titlesonly:
+    :maxdepth: 1
+
+    talks_and_articles
+    quotes
+
+
 **Development Spiral:**
 
 .. toctree::

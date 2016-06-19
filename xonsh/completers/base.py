@@ -1,3 +1,4 @@
+"""Base completer for xonsh."""
 from collections import Sequence
 
 from xonsh.completers.path import complete_path
@@ -6,8 +7,7 @@ from xonsh.completers.commands import complete_command
 
 
 def complete_base(prefix, line, start, end, ctx):
-    """
-    If the line is empty, complete based on valid commands, python names,
+    """If the line is empty, complete based on valid commands, python names,
     and paths.  If we are completing the first argument, complete based on
     valid commands and python names.
     """

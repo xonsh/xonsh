@@ -96,7 +96,7 @@ It will pick up the environment and any aliases.
 Tools for dealing with xonsh history. See `the history tutorial <tutorial_hist.html>`_
 for more information all the history command and all of its sub-commands.
 
-.. command-help:: xonsh.history.main
+.. command-help:: xonsh.history.history_main
 
 
 ``replay``
@@ -104,7 +104,7 @@ for more information all the history command and all of its sub-commands.
 Replays a xonsh history file.  See `the replay section of the history tutorial
 <tutorial_hist.html#replay-action>`_ for more information about this command.
 
-.. command-help:: xonsh.replay.main
+.. command-help:: xonsh.replay.replay_main
 
 
 ``!n``
@@ -142,14 +142,14 @@ Simple alias defined as ``['ipython', 'notebook', '--no-browser']``.
 =================
 Provides an interface to printing lines of source code prior to their execution.
 
-.. command-help:: xonsh.tracer.main
+.. command-help:: xonsh.tracer.tracermain
 
 
 ``xonfig``
 =================
 Manages xonsh configuration information.
 
-.. command-help:: xonsh.xonfig.main
+.. command-help:: xonsh.xonfig.xonfig_main
 
 
 Windows cmd Aliases
