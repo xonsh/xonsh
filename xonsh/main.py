@@ -113,7 +113,7 @@ parser.add_argument('args',
                     metavar='args',
                     help='Additional arguments to the script specified '
                          'by script-file',
-                    nargs='*',
+                    nargs=argparse.REMAINDER,
                     default=[])
 
 
@@ -150,24 +150,19 @@ def premain(argv=None):
         setproctitle(' '.join(['xonsh'] + sys.argv[1:]))
     builtins.__xonsh_ctx__ = {}
     args, other = parser.parse_known_args(argv)
-    if args.file is not None:
+    file = args.file
+    if file is not None:
         arguments = (argv or sys.argv)
-        file_index = arguments.index(args.file)
+        index = arguments.index(file)
         # A script-file was passed and is to be executed. The argument parser
         # might have parsed switches intended for the script, so reset the
         # parsed switches to their default values
-        old_args = args
-        args = parser.parse_known_args('')[0]
-        args.file = old_args.file
+        args = parser.parse_args(arguments[1:index])
+        args.file = file
         # Save the arguments that are intended for the script-file. Switches
         # and positional arguments passed before the path to the script-file are
         # ignored.
-        args.args = arguments[file_index+1:]
-    elif not args.args and other and other[0].startswith('-'):
-        err_msg = 'xonsh: error: invalid argument {!r}'.format(other[0])
-        print(err_msg, file=sys.stderr)
-        parser.print_help()
-        exit()
+        args.args = arguments[index+1:]
     if args.help:
         parser.print_help()
         exit()
@@ -237,7 +232,7 @@ def main(argv=None):
         code = sys.stdin.read()
         run_code_with_cache(code, shell.execer, glb=shell.ctx, loc=None,
                             mode='exec')
-    else:
+    elif len(sys.argv) <= 1:
         # otherwise, enter the shell
         env['XONSH_INTERACTIVE'] = True
         ignore_sigtstp()
@@ -248,6 +243,10 @@ def main(argv=None):
             from xonsh import xonfig  # lazy import
             xonfig.main(['wizard', '--confirm'])
         shell.cmdloop()
+    else:
+        print('xonsh: error: invalid argument {!r}'.format(sys.argv[1]))
+        parser.print_usage()
+        parser.exit(1)
     postmain(args)
 
 
