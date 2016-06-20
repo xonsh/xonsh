@@ -91,7 +91,7 @@ class Shell(object):
             # load xontribs from config file
             names = builtins.__xonsh_config__.get('xontribs', ())
             for name in names:
-                xontribs.update_context(name, ctx=self.ctx)
+                update_context(name, ctx=self.ctx)
             # load run control files
             env = builtins.__xonsh_env__
             rc = env.get('XONSHRC') if rc is None else rc

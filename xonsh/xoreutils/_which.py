@@ -93,7 +93,7 @@ import sys
 import stat
 import getopt
 import builtins
-
+import collections.abc as abc
 
 #---- exceptions
 
@@ -200,8 +200,8 @@ def whichgen(command, path=None, verbose=0, exts=None):
                     break
             else:
                 exts = {'.com', '.exe', '.bat'}
-        elif not isinstance(exts, list):
-            raise TypeError("'exts' argument must be a list or None")
+        elif not isinstance(exts, abc.Set):
+            raise TypeError("'exts' argument must be a set or None")
     else:
         if exts is not None:
             raise WhichError("'exts' argument is not supported on "\

@@ -23,6 +23,7 @@ from xonsh.jobs import ignore_sigtstp
 from xonsh.tools import setup_win_unicode_console, print_color
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.codecache import run_script_with_cache, run_code_with_cache
+from xonsh.xonfig import xonfig_main
 
 
 pygments = LazyObject(lambda: importlib.import_module('pygments'),
@@ -239,10 +240,10 @@ def main(argv=None):
         if (env['XONSH_INTERACTIVE'] and
                 not env['LOADED_CONFIG'] and
                 not any(os.path.isfile(i) for i in env['XONSHRC'])):
-            print('Could not find xonsh configuration or run control files.')
-            from xonsh import xonfig  # lazy import
-            xonfig.xonfig_main(['wizard', '--confirm'])
-        shell.cmdloop()
+            print('Could not find xonsh configuration or run control files.',
+                  file=sys.stderr)
+            xonfig_main(['wizard', '--confirm'])
+        shell.shell.cmdloop()
     postmain(args)
 
 
