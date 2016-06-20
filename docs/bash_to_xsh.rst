@@ -45,8 +45,8 @@ will help you put a finger on how to do the equivelent task in xonsh.
     * - ``$?``
       - ``_.rtn``
       - Returns the exit code, or status, of the previous command.
-    * - ``NAME=VALUE command``
-      - ``with ${...}.swap(NAME=VALUE): command``
+    * - ``NAME=VAL command``
+      - ``with ${...}.swap(NAME=VAL): command``
       - Set temporary environment variable(s) and execute for command.
         Use an indented block to execute many commands in the same context.
 
