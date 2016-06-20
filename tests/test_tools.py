@@ -485,7 +485,7 @@ def test_seq_to_pathsep():
         (['a', 'b', 'c'], os.pathsep.join(['a', 'b', 'c'])),
         ]
     for inp, exp in cases:
-        obs = seq_to_pathsep(inp, sort=(len(inp) > 1))
+        obs = seq_to_pathsep(inp)
         yield assert_equal, exp, obs
 
 
