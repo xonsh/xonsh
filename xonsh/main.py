@@ -150,16 +150,17 @@ def premain(argv=None):
     if setproctitle is not None:
         setproctitle(' '.join(['xonsh'] + sys.argv[1:]))
     builtins.__xonsh_ctx__ = {}
-    args, other = parser.parse_known_args(argv)
-    file = args.file
-    if file is not None:
+    # args, other = parser.parse_known_args(argv)
+    args = parser.parse_args(argv)
+    fname = args.file
+    if fname is not None:
         arguments = (argv or sys.argv)
-        index = arguments.index(file)
+        index = arguments.index(fname)
         # A script-file was passed and is to be executed. The argument parser
         # might have parsed switches intended for the script, so reset the
         # parsed switches to their default values
         args = parser.parse_args(arguments[1:index])
-        args.file = file
+        args.file = fname
         # Save the arguments that are intended for the script-file. Switches
         # and positional arguments passed before the path to the script-file are
         # ignored.
@@ -234,6 +235,7 @@ def main(argv=None):
         run_code_with_cache(code, shell.execer, glb=shell.ctx, loc=None,
                             mode='exec')
     elif len(sys.argv) <= 1:
+        print('sys.argv', sys.argv)
         # otherwise, enter the shell
         env['XONSH_INTERACTIVE'] = True
         ignore_sigtstp()
@@ -244,6 +246,9 @@ def main(argv=None):
                   file=sys.stderr)
             xonfig_main(['wizard', '--confirm'])
         shell.shell.cmdloop()
+    else:
+        print('xonsh: error: invalid argument {}'.format(sys.argv[1]),
+              file=sys.stdout)
     postmain(args)
 
 
