@@ -462,7 +462,7 @@ class redirect_stderr(_RedirectStream):
 
 
 def _yield_accessible_unix_file_names(path):
-    """yield file names of executablel files in path."""
+    """yield file names of executable files in path."""
     if not os.path.exists(path):
         return
     for file_ in scandir(path):
@@ -486,6 +486,8 @@ def _executables_in_posix(path):
 
 
 def _executables_in_windows(path):
+    if not os.path.isdir(path):
+        return
     extensions = builtins.__xonsh_env__['PATHEXT']
     if PYTHON_VERSION_INFO < (3, 5, 0):
         for fname in os.listdir(path):
@@ -495,14 +497,18 @@ def _executables_in_windows(path):
                 if ext.lower() in extensions:
                     yield fname
     else:
-        for fname in (x.name for x in scandir(path) if x.is_file()):
+        for x in scandir(path):
+            if x.is_file():
+                fname = x.name
+            else:
+                continue
             base_name, ext = os.path.splitext(fname)
             if ext.lower() in extensions:
                 yield fname
 
 
 def executables_in(path):
-    """Returns a generator of files in `path` that the user could execute. """
+    """Returns a generator of files in path that the user could execute. """
     if ON_WINDOWS:
         func = _executables_in_windows
     else:
