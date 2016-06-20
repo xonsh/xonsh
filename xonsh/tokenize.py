@@ -24,7 +24,15 @@ from io import TextIOWrapper
 from itertools import chain
 import re
 import sys
-from token import *
+from token import (AMPER, AMPEREQUAL, AT, CIRCUMFLEX,
+        CIRCUMFLEXEQUAL, COLON, COMMA, DEDENT, DOT, DOUBLESLASH,
+        DOUBLESLASHEQUAL, DOUBLESTAR, DOUBLESTAREQUAL, ENDMARKER, EQEQUAL,
+        EQUAL, ERRORTOKEN, GREATER, GREATEREQUAL, INDENT, LBRACE, LEFTSHIFT,
+        LEFTSHIFTEQUAL, LESS, LESSEQUAL, LPAR, LSQB, MINEQUAL, MINUS, NAME,
+        NEWLINE, NOTEQUAL, NUMBER, N_TOKENS, OP, PERCENT, PERCENTEQUAL, PLUS,
+        PLUSEQUAL, RBRACE, RIGHTSHIFT, RIGHTSHIFTEQUAL, RPAR, RSQB, SEMI,
+        SLASH, SLASHEQUAL, STAR, STAREQUAL, STRING, TILDE, VBAR, VBAREQUAL,
+        tok_name)
 
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import PYTHON_VERSION_INFO
@@ -45,6 +53,7 @@ del token
 
 PY35 = PYTHON_VERSION_INFO >= (3, 5, 0)
 if PY35:
+    from token import ASYNC, AWAIT
     AUGASSIGN_OPS = r"[+\-*/%&@|^=<>]=?"
     ADDSPACE_TOKS = (NAME, NUMBER, ASYNC, AWAIT)
 else:
