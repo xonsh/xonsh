@@ -1548,7 +1548,7 @@ class CommandsCache(abc.Mapping):
         cache_valid = path_hash == self._path_checksum
         self._path_checksum = path_hash
         # did aliases change?
-        alss = builtins.aliases
+        alss = getattr(builtins, 'aliases', set())
         al_hash = hash(frozenset(alss))
         cache_valid = cache_valid and al_hash == self._alias_checksum
         self._alias_checksum = al_hash
