@@ -820,13 +820,19 @@ def _yield_executables(directory, name):
 
 def locate_binary(name):
     """Locates an executable on the file system."""
-    if os.path.isfile(name):
-        if ON_WINDOWS:
-            # Windows users expect to be able to execute files in the same
-            # directory without `./`
-            return os.path.abspath(os.path.relpath(name, _get_cwd()))
-        elif name != os.path.basename(name):
-            return name
+    if ON_WINDOWS:
+        # Windows users expect to be able to execute files in the same
+        # directory without `./`
+        cwd = _get_cwd()
+        if os.path.isfile(name):
+            return os.path.abspath(os.path.relpath(name, cwd))
+        exts = builtins.__xonsh_env__['PATHEXT']
+        for ext in exts:
+            namext = name + ext
+            if os.path.isfile(namext):
+                return os.path.abspath(os.path.relpath(namext, cwd))
+    elif os.path.isfile(name) and name != os.path.basename(name):
+        return name
     cc = builtins.__xonsh_commands_cache__
     if name in cc:
         # can be lazy here since we know name is already available
