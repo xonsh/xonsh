@@ -964,11 +964,30 @@ def pathsep_to_set(x):
 
 
 def set_to_pathsep(x, sort=False):
-    """Converts a set to an os.pathsep separated list. The sort kwarg specifies
-    whether to sort the set prior to str conversion.
+    """Converts a set to an os.pathsep separated string. The sort kwarg
+    specifies whether to sort the set prior to str conversion.
     """
     if sort:
         x = sorted(x)
+    return os.pathsep.join(x)
+
+
+def is_string_seq(x):
+    """Tests if something is a sequence of strings"""
+    return (isinstance(x, abc.Sequence) and
+            all(isinstance(a, str) for a in x))
+
+
+def pathsep_to_seq(x):
+    """Converts a os.pathsep separated string to a sequence of strings."""
+    if not x:
+        return []
+    else:
+        return x.split(os.pathsep)
+
+
+def seq_to_pathsep(x):
+    """Converts a sequence to an os.pathsep separated string."""
     return os.pathsep.join(x)
 
 
