@@ -45,8 +45,7 @@ class _TeeOut(object):
 
     def fileno(self):
         """Tunnel fileno() calls."""
-        _ = self
-        return sys.stdout.fileno()
+        return self.stdout.fileno()
 
 
 class _TeeErr(object):
@@ -78,8 +77,7 @@ class _TeeErr(object):
 
     def fileno(self):
         """Tunnel fileno() calls."""
-        _ = self
-        return sys.stderr.fileno()
+        return self.stderr.fileno()
 
 
 class Tee(io.StringIO):
