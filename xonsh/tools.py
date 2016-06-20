@@ -937,7 +937,7 @@ def ensure_int_or_slice(x):
 
 
 def is_string_set(x):
-    """Tests if something is a set"""
+    """Tests if something is a set of strings"""
     return (isinstance(x, abc.Set) and
             all(isinstance(a, str) for a in x))
 
@@ -953,6 +953,23 @@ def csv_to_set(x):
 def set_to_csv(x):
     """Convert a set of strings to a comma-separated list of strings."""
     return ','.join(x)
+
+
+def pathsep_to_set(x):
+    """Converts a os.pathsep separated string to a set of strings."""
+    if not x:
+        return set()
+    else:
+        return set(x.split(os.pathsep))
+
+
+def set_to_pathsep(x, sort=False):
+    """Converts a set to an os.pathsep separated list. The sort kwarg specifies
+    whether to sort the set prior to str conversion.
+    """
+    if sort:
+        x = sorted(x)
+    return os.pathsep.join(x)
 
 
 def is_bool_seq(x):

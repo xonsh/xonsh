@@ -37,7 +37,8 @@ from xonsh.tools import (
     csv_to_bool_seq, bool_seq_to_csv, DefaultNotGiven, print_exception,
     setup_win_unicode_console, intensify_colors_on_win_setter, format_color,
     is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str,
-    is_logfile_opt, to_logfile_opt, logfile_opt_to_str, executables_in
+    is_logfile_opt, to_logfile_opt, logfile_opt_to_str, executables_in,
+    pathsep_to_set, set_to_pathsep,
 )
 
 
@@ -110,7 +111,7 @@ DEFAULT_ENSURERS = {
     'MOUSE_SUPPORT': (is_bool, to_bool, bool_to_str),
     'MULTILINE_PROMPT': (is_string_or_callable, ensure_string, ensure_string),
     re.compile('\w*PATH$'): (is_env_path, str_to_env_path, env_path_to_str),
-    'PATHEXT': (is_string_set, csv_to_set, set_to_csv),
+    'PATHEXT': (is_string_set, pathsep_to_set, set_to_pathsep),
     'PRETTY_PRINT_RESULTS': (is_bool, to_bool, bool_to_str),
     'PROMPT': (is_string_or_callable, ensure_string, ensure_string),
     'RAISE_SUBPROC_ERROR': (is_bool, to_bool, bool_to_str),
