@@ -3,10 +3,12 @@
 
 Portions of this code related to initializing the readline library
 are included from the IPython project.  The IPython project is:
-    * Copyright (c) 2008-2014, IPython Development Team
-    * Copyright (c) 2001-2007, Fernando Perez <fernando.perez@colorado.edu>
-    * Copyright (c) 2001, Janko Hauser <jhauser@zscout.de>
-    * Copyright (c) 2001, Nathaniel Gray <n8gray@caltech.edu>
+
+* Copyright (c) 2008-2014, IPython Development Team
+* Copyright (c) 2001-2007, Fernando Perez <fernando.perez@colorado.edu>
+* Copyright (c) 2001, Janko Hauser <jhauser@zscout.de>
+* Copyright (c) 2001, Nathaniel Gray <n8gray@caltech.edu>
+
 """
 import os
 import sys

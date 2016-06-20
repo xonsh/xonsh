@@ -314,7 +314,7 @@ def _dirs_parser():
                         help='Produces a longer listing; the default listing'
                         ' format uses a tilde to denote the home directory.',
                         action='store_true')
-    return parsers
+    return parser
 
 
 dirs_parser = LazyObject(_dirs_parser, globals(), 'dirs_parser')

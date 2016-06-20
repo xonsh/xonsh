@@ -3,11 +3,10 @@
 Platform-specific constants and implementations (``xonsh.platform``)
 ====================================================================
 
-Functions
----------
 .. automodule:: xonsh.platform
-    :members: has_prompt_toolkit, is_readline_available, ptk_version,
-              ptk_version_info
+    :members:
+    :undoc-members:
+
 
 .. py:function:: scandir
 
@@ -20,41 +19,3 @@ Functions
    :param str path: The path to scan for entries.
    :return: A generator yielding `DirEntry` instances.
 
-
-Constants
----------
-.. autodata:: BASH_COMPLETIONS_DEFAULT
-    :annotation:
-
-.. autodata:: DEFAULT_ENCODING
-    :annotation:
-
-.. autodata:: HAS_PYGMENTS
-    :annotation:
-
-.. autodata:: LINUX_DISTRO
-    :annotation:
-
-.. autodata:: ON_ANACONDA
-    :annotation:
-
-.. autodata:: ON_DARWIN
-    :annotation:
-
-.. autodata:: ON_LINUX
-    :annotation:
-
-.. autodata:: ON_POSIX
-    :annotation:
-
-.. autodata:: ON_WINDOWS
-    :annotation:
-
-.. autodata:: PLATFORM_INFO
-    :annotation:
-
-.. autodata:: PYGMENTS_VERSION
-    :annotation:
-
-.. autodata:: PYTHON_VERSION_INFO
-    :annotation:

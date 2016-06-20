@@ -1,18 +1,18 @@
-"""This module adds a reST directive to sphinx that generates alias 
+"""This module adds a reST directive to sphinx that generates alias
 documentation. For example::
 
     .. command-help:: xonsh.aliases.source_foreign
 
-    .. command-help:: xonsh.aliases.source_foreign -h 
+    .. command-help:: xonsh.aliases.source_foreign -h
 
-will create help for aliases. 
+will create help for aliases.
 """
 import io
 import textwrap
 import importlib
 from docutils import nodes, statemachine, utils
 try:
-    from docutils.utils.error_reporting import ErrorString  # the new way 
+    from docutils.utils.error_reporting import ErrorString  # the new way
 except ImportError:
     from docutils.error_reporting import ErrorString        # the old way
 from docutils.parsers.rst import Directive, convert_directive_function
@@ -27,7 +27,7 @@ from xonsh.tools import redirect_stdout, redirect_stderr
 
 
 class CommandHelp(Directive):
-    """The command-help directive, which is based on constructing a list of 
+    """The command-help directive, which is based on constructing a list of
     of string lines of restructured text and then parsing it into its own node.
     Note that this will add the '--help' flag automatically.
     """
