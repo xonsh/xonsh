@@ -680,7 +680,6 @@ def test_is_dynamic_cwd_width():
 
 def test_is_logfile_opt():
     cases = [
-        ('/dev/null', True),
         ('throwback.log', True),
         ('', True),
         (None, True),
@@ -691,6 +690,8 @@ def test_is_logfile_opt():
         ((1, 2), False),
         (("wrong", "parameter"), False)
     ]
+    if not ON_WINDOWS:
+        cases.append(('/dev/null', True))
     for inp, exp in cases:
         obs = is_logfile_opt(inp)
         yield assert_equal, exp, obs
@@ -701,10 +702,11 @@ def test_to_logfile_opt():
         (False, None),
         (1, None),
         (None, None),
-        ('/dev/null', '/dev/null'),
         ('throwback.log', 'throwback.log'),
-        ('/dev/nonexistent_dev', None),
     ]
+    if not ON_WINDOWS:
+        cases.append(('/dev/null', '/dev/null'))
+        cases.append(('/dev/nonexistent_dev', None))
     for inp, exp in cases:
         obs = to_logfile_opt(inp)
         yield assert_equal, exp, obs
