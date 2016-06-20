@@ -48,9 +48,9 @@ def test_login_shell_with_file_argument():
             assert_false(builtins.__xonsh_env__.get('XONSH_INTERACTIVE'))
 
     # interactive
-    # with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
-    #     xonsh.main.premain(['-i', 'tests/sample.xsh'])
-    #     assert_true(builtins.__xonsh_env__.get('XONSH_INTERACTIVE'))
+    with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
+        xonsh.main.premain(['-i', 'tests/sample.xsh'])
+        assert_true(builtins.__xonsh_env__.get('XONSH_INTERACTIVE'))
 
 
 
@@ -58,23 +58,12 @@ def test_login_shell_invalid_arguments():
     # pytest transition
     # TODO: check for proper error msg in stdout (howto nose?)
     with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
-        try:
-            xonsh.main.premain(['----'])
-            # assert False
-        except SystemExit:
-            pass
-    with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
-        try:
-            xonsh.main.premain(['--hep'])
-            assert False
-        except SystemExit:
-            pass
-    with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
-        try:
-            xonsh.main.premain(['-TT'])
-            assert False
-        except SystemExit:
-           pass
+        for case in ('----', '--hep', '-TT', '--TTTT'):
+            try:
+                xonsh.main.premain([case])
+                assert False
+            except:
+                pass
 
 
 if __name__ == '__main__':
