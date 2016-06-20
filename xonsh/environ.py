@@ -816,17 +816,19 @@ def _yield_executables(directory, name):
 
 
 def locate_binary(name):
-    if os.path.isfile(name) and name != os.path.basename(name):
-        return name
-    directories = builtins.__xonsh_env__.get('PATH')
-    # Windows users expect to be able to execute files in the same directory
-    # without `./`
-    if ON_WINDOWS:
-        directories = [_get_cwd()] + list(directories)
-    try:
-        return next(chain.from_iterable(_yield_executables(directory, name) for
-                    directory in directories if os.path.isdir(directory)))
-    except StopIteration:
+    """Locates an executable on the file system."""
+    if os.path.isfile(name):
+        if ON_WINDOWS:
+            # Windows users expect to be able to execute files in the same
+            # directory without `./`
+            return os.path.abspath(os.path.relpath(name, _get_cwd()))
+        elif name != os.path.basename(name):
+            return name
+    cc = builtins.__xonsh_commands_cache__
+    if name in cc:
+        # can be lazy here since we know name is already available
+        return cc.lazyget(name)[0]
+    else:
         return None
 
 

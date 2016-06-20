@@ -1476,17 +1476,22 @@ def expanduser_abs_path(inp):
     return os.path.abspath(os.path.expanduser(inp))
 
 
-class CommandsCache(abc.Set):
-    """A lazy cache representing the commands available on the file system."""
+class CommandsCache(abc.Mapping):
+    """A lazy cache representing the commands available on the file system.
+    The keys are the command names and the values a tuple of (loc, has_alias)
+    where loc is either a str pointing to the executable on the file system or
+    None (if no executable exists) and has_alias is a boolean flag for whether
+    the command has an alias.
+    """
 
     def __init__(self):
-        self._cmds_cache = frozenset()
+        self._cmds_cache = {}
         self._path_checksum = None
         self._alias_checksum = None
         self._path_mtime = -1
 
-    def __contains__(self, item):
-        return item in self.all_commands
+    def __contains__(self, key):
+        return key in self.all_commands
 
     def __iter__(self):
         return iter(self.all_commands)
@@ -1494,21 +1499,25 @@ class CommandsCache(abc.Set):
     def __len__(self):
         return len(self.all_commands)
 
+    def __getitem__(self, key):
+        return self.all_commands[key]
+
     @property
     def all_commands(self):
         paths = builtins.__xonsh_env__.get('PATH', [])
-        paths = frozenset(x for x in paths if os.path.isdir(x))
+        pathset = frozenset(x for x in paths if os.path.isdir(x))
         # did PATH change?
-        path_hash = hash(paths)
+        path_hash = hash(pathset)
         cache_valid = path_hash == self._path_checksum
         self._path_checksum = path_hash
         # did aliases change?
-        al_hash = hash(frozenset(builtins.aliases))
+        alss = builtins.aliases
+        al_hash = hash(frozenset(alss))
         cache_valid = cache_valid and al_hash == self._alias_checksum
         self._alias_checksum = al_hash
         # did the contents of any directory in PATH change?
         max_mtime = 0
-        for path in paths:
+        for path in pathset:
             mtime = os.stat(path).st_mtime
             if mtime > max_mtime:
                 max_mtime = mtime
@@ -1516,12 +1525,18 @@ class CommandsCache(abc.Set):
         self._path_mtime = max_mtime
         if cache_valid:
             return self._cmds_cache
-        allcmds = set()
-        for path in paths:
-            allcmds |= set(executables_in(path))
-            allcmds |= set(builtins.aliases)
-        self._cmds_cache = frozenset(allcmds)
-        return self._cmds_cache
+        allcmds = {}
+        for path in reversed(paths):
+            # iterate backwards so that entries at the front of PATH overwrite
+            # entries at the back.
+            for cmd in executables_in(path):
+                allcmds[cmd] = (os.path.join(path, cmd), cmd in alss)
+        only_alias = (None, True)
+        for cmd in alss:
+            if cmd not in allcmds:
+                allcmds[cmd] = only_alias
+        self._cmds_cache = allcmds
+        return allcmds
 
     def lazyin(self, value):
         """Checks if the value is in the current cache without the potential to
@@ -1543,6 +1558,10 @@ class CommandsCache(abc.Set):
         what is on the $PATH.
         """
         return len(self._cmds_cache)
+
+    def lazyget(self, key, default=None):
+        """A lazy value getter."""
+        return self._cmd_cache.get(key, default)
 
 
 WINDOWS_DRIVE_MATCHER = LazyObject(lambda: re.compile(r'^\w:'),
