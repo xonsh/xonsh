@@ -462,13 +462,14 @@ class redirect_stderr(_RedirectStream):
 
 
 def _yield_accessible_unix_file_names(path):
-    "yield file names of executablel files in `path`"
-
+    """yield file names of executablel files in path."""
+    if not os.path.exists(path):
+        return
     for file_ in scandir(path):
         try:
             if file_.is_file() and os.access(file_.path, os.X_OK):
                 yield file_.name
-        except NotADirectoryError:
+        except (FileNotFoundError, NotADirectoryError):
             # broken Symlink are neither dir not files
             pass
 
@@ -485,18 +486,18 @@ def _executables_in_posix(path):
 
 
 def _executables_in_windows(path):
-    extensions = builtins.__xonsh_env__.get('PATHEXT',['.COM', '.EXE', '.BAT'])
+    extensions = builtins.__xonsh_env__['PATHEXT']
     if PYTHON_VERSION_INFO < (3, 5, 0):
         for fname in os.listdir(path):
             fpath = os.path.join(path, fname)
             if (os.path.exists(fpath) and not os.path.isdir(fpath)):
                 base_name, ext = os.path.splitext(fname)
-                if ext.upper() in extensions:
+                if ext.lower() in extensions:
                     yield fname
     else:
         for fname in (x.name for x in scandir(path) if x.is_file()):
             base_name, ext = os.path.splitext(fname)
-            if ext.upper() in extensions:
+            if ext.lower() in extensions:
                 yield fname
 
 
@@ -1561,7 +1562,7 @@ class CommandsCache(abc.Mapping):
 
     def lazyget(self, key, default=None):
         """A lazy value getter."""
-        return self._cmd_cache.get(key, default)
+        return self._cmds_cache.get(key, default)
 
 
 WINDOWS_DRIVE_MATCHER = LazyObject(lambda: re.compile(r'^\w:'),
