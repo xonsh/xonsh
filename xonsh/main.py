@@ -6,6 +6,7 @@ import enum
 import builtins
 import importlib
 from contextlib import contextmanager
+import argparse
 from argparse import ArgumentParser, ArgumentTypeError
 
 try:
@@ -229,8 +230,7 @@ def main(argv=None):
         code = sys.stdin.read()
         run_code_with_cache(code, shell.execer, glb=shell.ctx, loc=None,
                             mode='exec')
-    elif len(sys.argv) <= 1:
-        print('sys.argv', sys.argv)
+    elif len(sys.argv) == 1:
         # otherwise, enter the shell
         env['XONSH_INTERACTIVE'] = True
         ignore_sigtstp()
