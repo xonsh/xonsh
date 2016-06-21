@@ -156,7 +156,11 @@ class EnvPath(collections.MutableSequence):
                                 'of type %s' % type(args))
 
     def __getitem__(self, item):
-        return expandpath(self._l[item])
+        # handle slices separately
+        if isinstance(item, slice):
+            return [expandpath(i) for i in self._l[item]]
+        else:
+            return expandpath(self._l[item])
 
     def __setitem__(self, index, item):
         self._l.__setitem__(index, item)
