@@ -149,8 +149,7 @@ operator.
 
 We can place any valid Python expression inside of the curly braces in
 ``${<expr>}``. This result of this expression will then be used to look up a
-value in the environment. Here are a couple of
-examples in action:
+value in the environment. Here are a couple of examples in action:
 
 .. code-block:: xonshcon
 
