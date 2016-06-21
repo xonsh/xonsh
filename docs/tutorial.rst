@@ -136,6 +136,27 @@ variable in Python.  The same is true for deleting them too.
 
 Very nice.
 
+The Environment ``${...}``
+--------------
+
+All environment variables live in the built-in ``${...}`` (aka ``__xonsh_env__``) mapping.
+You can access this mapping directly, but in most situations, you shouldn’t need to.
+
+One helpful method on the ``${...}`` is :func:`~xonsh.environ.Env.swap`.  It can be used to temporarily set an
+environment variable:
+
+
+.. code-block:: xonshcon
+
+    >>> with ${...}.swap(SOMEVAR='foo'):
+    ...     echo $SOMEVAR
+    ...
+    ...
+    foo
+    >>> echo $SOMEVAR
+
+    >>>
+
 Environment Lookup with ``${}``
 --------------
 
@@ -169,27 +190,6 @@ the ``${}`` operator:
 
    >>> 'HOME' in ${...}
    True
-
-The Environment ``${...}``
---------------
-
-All environment variables live in the built-in ``${...}`` (aka ``__xonsh_env__``) mapping.
-You can access this mapping directly, but in most situations, you shouldn’t need to.
-
-One helpful method on the ``${...}`` is :func:`~xonsh.environ.Env.swap`.  It can be used to temporarily set an
-environment variable:
-
-
-.. code-block:: xonshcon
-
-    >>> with ${...}.swap(SOMEVAR='foo'):
-    ...     echo $SOMEVAR
-    ...
-    ...
-    foo
-    >>> echo $SOMEVAR
-
-    >>>
 
 Environment Types
 -----------------
