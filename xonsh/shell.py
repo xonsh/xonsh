@@ -62,9 +62,7 @@ class Shell(object):
                      'Please update prompt-toolkit. Using readline instead.')
                 shell_type = 'readline'
             elif not HAS_PYGMENTS:
-                warn('prompt_toolkit is available but requires pygments.  '
-                     'Please install pygments. Using readline shell')
-                shell_type = 'readline'
+                warn('pygments not found. syntax highlighting disabled.')
         env['SHELL_TYPE'] = shell_type
         # actually make the shell
         if shell_type == 'none':
