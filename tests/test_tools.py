@@ -22,7 +22,9 @@ from xonsh.tools import (
     is_string_or_callable, logfile_opt_to_str, str_to_env_path,
     subexpr_from_unbalanced, subproc_toks, to_bool, to_bool_or_int,
     to_dynamic_cwd_tuple, to_logfile_opt, pathsep_to_set, set_to_pathsep,
-    is_string_seq, pathsep_to_seq, seq_to_pathsep, )
+    is_string_seq, pathsep_to_seq, seq_to_pathsep, is_nonstring_seq_of_strings,
+    pathsep_to_upper_seq, seq_to_upper_pathsep,
+    )
 
 LEXER = Lexer()
 LEXER.build()
@@ -461,8 +463,15 @@ def test_set_to_pathsep():
 
 
 def test_is_string_seq():
+    yield assert_true, is_string_seq('42.0')
     yield assert_true, is_string_seq(['42.0'])
     yield assert_false, is_string_seq([42.0])
+
+
+def test_is_nonstring_seq_of_strings():
+    yield assert_false, is_nonstring_seq_of_strings('42.0')
+    yield assert_true, is_nonstring_seq_of_strings(['42.0'])
+    yield assert_false, is_nonstring_seq_of_strings([42.0])
 
 
 def test_pathsep_to_seq():
@@ -487,6 +496,32 @@ def test_seq_to_pathsep():
     for inp, exp in cases:
         obs = seq_to_pathsep(inp)
         yield assert_equal, exp, obs
+
+
+def test_pathsep_to_upper_seq():
+    cases = [
+        ('', []),
+        ('a', ['A']),
+        (os.pathsep.join(['a', 'B']), ['A', 'B']),
+        (os.pathsep.join(['A', 'b', 'c']), ['A', 'B', 'C']),
+        ]
+    for inp, exp in cases:
+        obs = pathsep_to_upper_seq(inp)
+        yield assert_equal, exp, obs
+
+
+def test_seq_to_upper_pathsep():
+    cases = [
+        ([], ''),
+        (['a'], 'A'),
+        (['a', 'b'], os.pathsep.join(['A', 'B'])),
+        (['a', 'B', 'c'], os.pathsep.join(['A', 'B', 'C'])),
+        ]
+    for inp, exp in cases:
+        obs = seq_to_upper_pathsep(inp)
+        yield assert_equal, exp, obs
+
+
 
 
 def test_is_env_path():

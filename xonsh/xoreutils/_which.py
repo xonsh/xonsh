@@ -199,9 +199,9 @@ def whichgen(command, path=None, verbose=0, exts=None):
                 if ext.lower() == ".exe":
                     break
             else:
-                exts = ['.com', '.exe', '.bat', '.cmd']
+                exts = ['.COM', '.EXE', '.BAT', '.CMD']
         elif not isinstance(exts, abc.Sequence):
-            raise TypeError("'exts' argument must be a set or None")
+            raise TypeError("'exts' argument must be a sequence or None")
     else:
         if exts is not None:
             raise WhichError("'exts' argument is not supported on "\

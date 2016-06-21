@@ -494,7 +494,7 @@ def _executables_in_windows(path):
             fpath = os.path.join(path, fname)
             if (os.path.exists(fpath) and not os.path.isdir(fpath)):
                 base_name, ext = os.path.splitext(fname)
-                if ext.lower() in extensions:
+                if ext.upper() in extensions:
                     yield fname
     else:
         for x in scandir(path):
@@ -503,7 +503,7 @@ def _executables_in_windows(path):
             else:
                 continue
             base_name, ext = os.path.splitext(fname)
-            if ext.lower() in extensions:
+            if ext.upper() in extensions:
                 yield fname
 
 
@@ -984,6 +984,14 @@ def is_string_seq(x):
             all(isinstance(a, str) for a in x))
 
 
+def is_nonstring_seq_of_strings(x):
+    """Tests if something is a sequence of strings, where the top-level
+    sequence is not a string itself.
+    """
+    return (isinstance(x, abc.Sequence) and not isinstance(x, str) and
+            all(isinstance(a, str) for a in x))
+
+
 def pathsep_to_seq(x):
     """Converts a os.pathsep separated string to a sequence of strings."""
     if not x:
@@ -995,6 +1003,21 @@ def pathsep_to_seq(x):
 def seq_to_pathsep(x):
     """Converts a sequence to an os.pathsep separated string."""
     return os.pathsep.join(x)
+
+
+def pathsep_to_upper_seq(x):
+    """Converts a os.pathsep separated string to a sequence of
+    uppercase strings.
+    """
+    if not x:
+        return []
+    else:
+        return x.upper().split(os.pathsep)
+
+
+def seq_to_upper_pathsep(x):
+    """Converts a sequence to an uppercase os.pathsep separated string."""
+    return os.pathsep.join(x).upper()
 
 
 def is_bool_seq(x):

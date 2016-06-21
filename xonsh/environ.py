@@ -39,7 +39,8 @@ from xonsh.tools import (
     is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str,
     is_logfile_opt, to_logfile_opt, logfile_opt_to_str, executables_in,
     pathsep_to_set, set_to_pathsep, pathsep_to_seq, seq_to_pathsep,
-    is_string_seq,
+    is_string_seq, is_nonstring_seq_of_strings, pathsep_to_upper_seq,
+    seq_to_upper_pathsep,
 )
 
 
@@ -112,7 +113,8 @@ DEFAULT_ENSURERS = {
     'MOUSE_SUPPORT': (is_bool, to_bool, bool_to_str),
     'MULTILINE_PROMPT': (is_string_or_callable, ensure_string, ensure_string),
     re.compile('\w*PATH$'): (is_env_path, str_to_env_path, env_path_to_str),
-    'PATHEXT': (is_string_seq, pathsep_to_seq, seq_to_pathsep),
+    'PATHEXT': (is_nonstring_seq_of_strings, pathsep_to_upper_seq,
+                seq_to_upper_pathsep),
     'PRETTY_PRINT_RESULTS': (is_bool, to_bool, bool_to_str),
     'PROMPT': (is_string_or_callable, ensure_string, ensure_string),
     'RAISE_SUBPROC_ERROR': (is_bool, to_bool, bool_to_str),
@@ -232,7 +234,7 @@ DEFAULT_VALUES = {
     'MOUSE_SUPPORT': False,
     'MULTILINE_PROMPT': '.',
     'PATH': PATH_DEFAULT,
-    'PATHEXT': ['.com', '.exe', '.bat', '.cmd'] if ON_WINDOWS else [],
+    'PATHEXT': ['.COM', '.EXE', '.BAT', '.CMD'] if ON_WINDOWS else [],
     'PRETTY_PRINT_RESULTS': True,
     'PROMPT': DEFAULT_PROMPT,
     'PUSHD_MINUS': False,
@@ -410,8 +412,9 @@ DEFAULT_DOCS = {
         configurable=False),
     'PATH': VarDocs(
         'List of strings representing where to look for executables.'),
-    'PATHEXT': VarDocs('Sequence of extention strings (eg, ".exe") for '
-                       'filtering valid executables by.'),
+    'PATHEXT': VarDocs('Sequence of extention strings (eg, ".EXE") for '
+                       'filtering valid executables by. Each element must be '
+                       'uppercase.'),
     'PRETTY_PRINT_RESULTS': VarDocs(
             'Flag for "pretty printing" return values.'),
     'PROMPT': VarDocs(
