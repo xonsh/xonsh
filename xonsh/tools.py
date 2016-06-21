@@ -1600,7 +1600,8 @@ class CommandsCache(abc.Mapping):
             # iterate backwards so that entries at the front of PATH overwrite
             # entries at the back.
             for cmd in executables_in(path):
-                allcmds[cmd] = (os.path.join(path, cmd), cmd in alss)
+                key = cmd.upper() if ON_WINDOWS else cmd
+                allcmds[key] = (os.path.join(path, cmd), cmd in alss)
         only_alias = (None, True)
         for cmd in alss:
             if cmd not in allcmds:

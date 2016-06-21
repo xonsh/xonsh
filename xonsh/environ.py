@@ -837,11 +837,17 @@ def locate_binary(name):
     elif os.path.isfile(name) and name != os.path.basename(name):
         return name
     cc = builtins.__xonsh_commands_cache__
-    if name in cc:
+    if ON_WINDOWS:
+        upname = name.upper()
+        if upname in cc:
+            return cc.lazyget(upname)[0]
+        for ext in exts:
+            upnamext = upname + ext
+            if cc.lazyin(upnamext):
+                return cc.lazyget(upnamext)[0]
+    elif name in cc:
         # can be lazy here since we know name is already available
         return cc.lazyget(name)[0]
-    else:
-        return None
 
 
 def get_git_branch():
