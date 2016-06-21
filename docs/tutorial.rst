@@ -164,7 +164,7 @@ It can be used to temporarily set an environment variable:
     >>>
 
 Environment Lookup with ``${<expr>}``
--------------------------------
+-------------------------------------
 
 The ``$NAME`` is great as long as you know the name of the environment
 variable you want to look up.  But what if you want to construct the name
