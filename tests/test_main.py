@@ -18,8 +18,8 @@ def Shell(*args, **kwargs):
     pass
 
 
-# xonsh master fails to the commented tests
-# (so this branch too atm)
+# commented test for future refactor
+# failing atm
 def test_premain():
     with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
         xonsh.main.premain([])
@@ -46,7 +46,7 @@ def test_premain():
         # assert_true(builtins.__xonsh_env__.get('XONSH_INTERACTIVE'))
 
 
-def test_login_premain_with_file_argument():
+def test_premain_with_file_argument():
     with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
         xonsh.main.premain(['tests/sample.xsh'])
         assert_false(builtins.__xonsh_env__.get('XONSH_INTERACTIVE'))
