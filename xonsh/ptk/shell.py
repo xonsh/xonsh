@@ -21,9 +21,6 @@ from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings
 from xonsh.ptk.shortcuts import Prompter
 
-pyghooks = LazyObject(lambda: importlib.import_module('xonsh.pyghooks'),
-                      globals(), 'pyghooks')
-
 try:
     from pygments.styles import get_all_styles
     from pygments.token import Token
@@ -32,7 +29,6 @@ try:
 
 except ImportError:
     from prompt_toolkit.token import Token
-    lambda get_all_styles: DEFAULT_STYLE
     Color = Token.Color
     def partial_color_tokenize(p):
         return [(Color.NO_COLOR, p)]
@@ -96,10 +92,10 @@ class PromptToolkitShell(BaseShell):
                     'display_completions_in_columns': multicolumn,
                     }
             if builtins.__xonsh_env__.get('COLOR_INPUT') and HAS_PYGMENTS:
-                prompt_args['lexer'] = PygmentsLexer(pyghooks.XonshLexer)
+                prompt_args['lexer'] = PygmentsLexer(XonshLexer)
 
             if HAS_PYGMENTS:
-                prompt_args['style'] = style_from_pygments(pyghooks.xonsh_style_proxy(self.styler))
+                prompt_args['style'] = style_from_pygments(xonsh_style_proxy(self.styler))
             line = self.prompter.prompt(**prompt_args)
         return line
 
