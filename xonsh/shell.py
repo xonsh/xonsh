@@ -8,8 +8,8 @@ from warnings import warn
 from xonsh.xontribs import update_context
 from xonsh.environ import xonshrc_context
 from xonsh.execer import Execer
-from xonsh.platform import (best_shell_type, has_prompt_toolkit, ptk_version,
-                            ptk_version_info)
+from xonsh.platform import (best_shell_type, has_prompt_toolkit,
+                            ptk_version_is_supported, ptk_version_info)
 from xonsh.tools import XonshError, to_bool_or_int
 
 
@@ -56,15 +56,15 @@ class Shell(object):
             if not has_prompt_toolkit():
                 warn('prompt_toolkit is not available, using readline instead.')
                 shell_type = 'readline'
+            elif not ptk_version_is_supported():
+                warn('prompt-toolkit version < v1.0.0 is not supported. '
+                     'Please update prompt-toolkit. Using readline instead.')
+                shell_type = 'readline'
         env['SHELL_TYPE'] = shell_type
         # actually make the shell
         if shell_type == 'none':
             from xonsh.base_shell import BaseShell as shell_class
         elif shell_type == 'prompt_toolkit':
-            if ptk_version_info()[:2] < (1, 0):
-                msg = ('prompt-toolkit version < v1.0.0 is not supported, '
-                       'xonsh may not work as expected. Please update.')
-                warn(msg, RuntimeWarning)
             from xonsh.ptk.shell import PromptToolkitShell as shell_class
         elif shell_type == 'readline':
             from xonsh.readline_shell import ReadlineShell as shell_class
