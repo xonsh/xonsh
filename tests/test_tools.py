@@ -604,6 +604,66 @@ def test_env_path():
         yield assert_equal, [expand(i) for i in exp], obs
 
 
+def test_env_path_slices():
+    # build os-dependent paths properly
+    mkpath = lambda *paths: os.sep + os.sep.join(paths)
+
+    # get all except the last element in a slice
+    slice_last = [
+        ([mkpath('home', 'wakka'),
+          mkpath('home', 'jakka'),
+          mkpath('home', 'yakka')],
+         [mkpath('home', 'wakka'),
+          mkpath('home', 'jakka')])]
+
+    for inp, exp in slice_last:
+        obs = EnvPath(inp)[:-1]
+        yield assert_equal, exp, obs
+
+    # get all except the first element in a slice
+    slice_first = [
+        ([mkpath('home', 'wakka'),
+          mkpath('home', 'jakka'),
+          mkpath('home', 'yakka')],
+         [mkpath('home', 'jakka'),
+          mkpath('home', 'yakka')])]
+
+    for inp, exp in slice_first:
+        obs = EnvPath(inp)[1:]
+        yield assert_equal, exp, obs
+
+    # slice paths with a step
+    slice_step = [
+        ([mkpath('home', 'wakka'),
+          mkpath('home', 'jakka'),
+          mkpath('home', 'yakka'),
+          mkpath('home', 'takka')],
+         [mkpath('home', 'wakka'),
+          mkpath('home', 'yakka')],
+         [mkpath('home', 'jakka'),
+          mkpath('home', 'takka')])]
+
+    for inp, exp_a, exp_b in slice_step:
+        obs_a = EnvPath(inp)[0::2]
+        yield assert_equal, exp_a, obs_a
+        obs_b = EnvPath(inp)[1::2]
+        yield assert_equal, exp_b, obs_b
+
+    # keep only non-home paths
+    slice_normal = [
+        ([mkpath('home', 'wakka'),
+          mkpath('home', 'xakka'),
+          mkpath('other', 'zakka'),
+          mkpath('another', 'akka'),
+          mkpath('home', 'bakka')],
+         [mkpath('other', 'zakka'),
+          mkpath('another', 'akka')])]
+
+    for inp, exp in slice_normal:
+        obs = EnvPath(inp)[2:4]
+        yield assert_equal, exp, obs
+
+
 def test_is_bool():
     yield assert_equal, True, is_bool(True)
     yield assert_equal, True, is_bool(False)
