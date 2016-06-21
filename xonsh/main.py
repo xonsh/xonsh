@@ -147,20 +147,21 @@ class XonshMode(enum.Enum):
 
 
 def premain(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
     """Setup for main xonsh entry point, returns parsed arguments."""
     if setproctitle is not None:
-        setproctitle(' '.join(['xonsh'] + sys.argv[1:]))
+        setproctitle(' '.join(['xonsh'] + argv))
     builtins.__xonsh_ctx__ = {}
     args = parser.parse_args(argv)
     fname = args.file
     if fname is not None:
         # if a file is passed split the arguments at file
         # and pass the first part to xonsh and rest to script-file
-        arguments = (argv or sys.argv)
-        index = arguments.index(fname)
-        args = parser.parse_args(arguments[1:index])
+        index = argv.index(fname)
+        args = parser.parse_args(argv[1:index])
         args.file = fname
-        args.args = arguments[index+1:]
+        args.args = argv[index+1:]
     if args.help:
         parser.print_help()
         exit()
@@ -208,10 +209,23 @@ def premain(argv=None):
 
 def main(argv=None):
     """Main entry point for xonsh cli."""
+    if argv is None:
+        argv = sys.argv[1:]
     args = premain(argv)
     env = builtins.__xonsh_env__
     shell = builtins.__xonsh_shell__
-    if args.mode == XonshMode.single_command:
+    if not argv:
+        # enter the shell
+        env['XONSH_INTERACTIVE'] = True
+        ignore_sigtstp()
+        if (env['XONSH_INTERACTIVE'] and
+                not env['LOADED_CONFIG'] and
+                not any(os.path.isfile(i) for i in env['XONSHRC'])):
+            print('Could not find xonsh configuration or run control files.',
+                  file=sys.stderr)
+            xonfig_main(['wizard', '--confirm'])
+        shell.shell.cmdloop()
+    elif args.mode == XonshMode.single_command:
         # run a single command and exit
         run_code_with_cache(args.command.lstrip(), shell.execer, mode='single')
     elif args.mode == XonshMode.script_from_file:
@@ -230,17 +244,6 @@ def main(argv=None):
         code = sys.stdin.read()
         run_code_with_cache(code, shell.execer, glb=shell.ctx, loc=None,
                             mode='exec')
-    elif len(sys.argv) == 1:
-        # otherwise, enter the shell
-        env['XONSH_INTERACTIVE'] = True
-        ignore_sigtstp()
-        if (env['XONSH_INTERACTIVE'] and
-                not env['LOADED_CONFIG'] and
-                not any(os.path.isfile(i) for i in env['XONSHRC'])):
-            print('Could not find xonsh configuration or run control files.',
-                  file=sys.stderr)
-            xonfig_main(['wizard', '--confirm'])
-        shell.shell.cmdloop()
     postmain(args)
 
 
