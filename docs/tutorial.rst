@@ -142,6 +142,14 @@ The Environment Itself ``${...}``
 All environment variables live in the built-in ``${...}`` (aka ``__xonsh_env__``) mapping.
 You can access this mapping directly, but in most situations, you shouldn’t need to.
 
+If you want for example to check if an environment variable is present in your current
+session (say, in your awesome new ``xonsh`` script) you can use the membership operator:
+.. code-block:: xonshcon
+
+   >>> 'HOME' in ${...}
+   True
+
+
 One helpful method on the ``${...}`` is :func:`~xonsh.environ.Env.swap`.
 It can be used to temporarily set an environment variable:
 
@@ -181,15 +189,6 @@ value in the environment. Here are a couple of examples in action:
     '/home/snail'
 
 Not bad, xonsh, not bad.
-
-If you want to check if an environment variable is present in your current
-session (say, in your awesome new ``xonsh`` script) you can pass an Ellipsis to
-the ``${}`` operator:
-
-.. code-block:: xonshcon
-
-   >>> 'HOME' in ${...}
-   True
 
 Environment Types
 -----------------
