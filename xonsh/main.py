@@ -164,11 +164,11 @@ def premain(argv=None):
         args.args = argv[index+1:]
     if args.help:
         parser.print_help()
-        exit()
+        parser.exit()
     if args.version:
         version = '/'.join(('xonsh', __version__)),
         print(version)
-        exit()
+        parser.exit()
     shell_kwargs = {'shell_type': args.shell_type,
                     'completer': False,
                     'login': False,
