@@ -47,10 +47,10 @@ def test_login_shell_with_file_argument():
             xonsh.main.premain(['tests/sample.xsh', case])
             assert_false(builtins.__xonsh_env__.get('XONSH_INTERACTIVE'))
 
-    # interactive
-    with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
-        xonsh.main.premain(['-i', 'tests/sample.xsh'])
-        assert_true(builtins.__xonsh_env__.get('XONSH_INTERACTIVE'))
+    # # interactive
+    # with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
+    #     xonsh.main.premain(['-i', 'tests/sample.xsh'])
+    #     assert_true(builtins.__xonsh_env__.get('XONSH_INTERACTIVE'))
 
 
 
@@ -62,7 +62,7 @@ def test_login_shell_invalid_arguments():
             try:
                 xonsh.main.premain([case])
                 assert False
-            except:
+            except SystemError:
                 pass
 
 
