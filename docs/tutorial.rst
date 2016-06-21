@@ -136,19 +136,54 @@ variable in Python.  The same is true for deleting them too.
 
 Very nice.
 
-__xonsh_env__
+Environment Lookup with ``${}``
 --------------
 
-All environment variables live in the built-in ``__xonsh_env__`` mapping. You can access this
-mapping directly, but in most situations, you shouldn't need to.
+The ``$NAME`` is great as long as you know the name of the environment
+variable you want to look up.  But what if you want to construct the name
+programmatically, or read it from another variable?  Enter the ``${}``
+operator.
 
-One helpful method on the __xonsh_env__ is :func:`~xonsh.environ.Env.swap`.  It can be used to temporarily set an
+.. warning:: In Bash, ``$NAME`` and ``${NAME}`` are syntactically equivalent.
+             In xonsh, they have separate meanings.
+
+We can place any valid Python expression inside of the curly braces in
+``${<expr>}``. This result of this expression will then be used to look up a
+value in the environment. Here are a couple of
+examples in action:
+
+.. code-block:: xonshcon
+
+    >>> x = 'USER'
+    >>> ${x}
+    'snail'
+    >>> ${'HO' + 'ME'}
+    '/home/snail'
+
+Not bad, xonsh, not bad.
+
+If you want to check if an environment variable is present in your current
+session (say, in your awesome new ``xonsh`` script) you can pass an Ellipsis to
+the ``${}`` operator:
+
+.. code-block:: xonshcon
+
+   >>> 'HOME' in ${...}
+   True
+
+The Environment ``${...}``
+--------------
+
+All environment variables live in the built-in ``${...}`` (aka ``__xonsh_env__``) mapping.
+You can access this mapping directly, but in most situations, you shouldn’t need to.
+
+One helpful method on the ``${...}`` is :func:`~xonsh.environ.Env.swap`.  It can be used to temporarily set an
 environment variable:
 
 
 .. code-block:: xonshcon
 
-    >>> with __xonsh_env__.swap(SOMEVAR='foo'):
+    >>> with ${...}.swap(SOMEVAR='foo'):
     ...     echo $SOMEVAR
     ...
     ...
@@ -192,41 +227,6 @@ They can be seen on the `Environment Variables page <envvars.html>`_.
           will produce an empty string.  In Python mode, however, a
           ``KeyError`` will be raised if the variable does not exist in the
           environment.
-
-Environment Lookup with ``${}``
-================================
-The ``$NAME`` is great as long as you know the name of the environment
-variable you want to look up.  But what if you want to construct the name
-programmatically, or read it from another variable?  Enter the ``${}``
-operator.
-
-.. warning:: In Bash, ``$NAME`` and ``${NAME}`` are syntactically equivalent.
-             In xonsh, they have separate meanings.
-
-We can place any valid Python expression inside of the curly braces in
-``${<expr>}``. This result of this expression will then be used to look up a
-value in the environment.  In fact, ``${<expr>}`` is the same as doing
-``__xonsh_env__[<expr>]``, but much nicer to look at. Here are a couple of
-examples in action:
-
-.. code-block:: xonshcon
-
-    >>> x = 'USER'
-    >>> ${x}
-    'snail'
-    >>> ${'HO' + 'ME'}
-    '/home/snail'
-
-Not bad, xonsh, not bad.
-
-If you want to check if an environment variable is present in your current
-session (say, in your awesome new ``xonsh`` script) you can pass an Ellipsis to
-the ``${}`` operator:
-
-.. code-block:: xonshcon
-
-   >>> 'HOME' in ${...}
-   True
 
 Running Commands
 ==============================
