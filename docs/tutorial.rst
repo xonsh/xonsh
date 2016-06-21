@@ -136,14 +136,14 @@ variable in Python.  The same is true for deleting them too.
 
 Very nice.
 
-The Environment ``${...}``
---------------
+The Environment Itself ``${...}``
+---------------------------------
 
 All environment variables live in the built-in ``${...}`` (aka ``__xonsh_env__``) mapping.
 You can access this mapping directly, but in most situations, you shouldn’t need to.
 
-One helpful method on the ``${...}`` is :func:`~xonsh.environ.Env.swap`.  It can be used to temporarily set an
-environment variable:
+One helpful method on the ``${...}`` is :func:`~xonsh.environ.Env.swap`.
+It can be used to temporarily set an environment variable:
 
 
 .. code-block:: xonshcon
@@ -158,7 +158,7 @@ environment variable:
     >>>
 
 Environment Lookup with ``${}``
---------------
+-------------------------------
 
 The ``$NAME`` is great as long as you know the name of the environment
 variable you want to look up.  But what if you want to construct the name
