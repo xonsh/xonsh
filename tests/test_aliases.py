@@ -119,7 +119,7 @@ class TestWhich:
         def test_whichgen_ext_failure(self):
             testdir = self.testdirs[0].name
             arg = 'whichtestapp2'
-            matches = list(_which.whichgen(arg, path=[testdir]), exts=self.exts)
+            matches = list(_which.whichgen(arg, path=[testdir], exts=self.exts))
             assert len(matches) == 0
 
         def test_whichgen_ext_success(self):
