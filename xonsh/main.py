@@ -147,9 +147,9 @@ class XonshMode(enum.Enum):
 
 
 def premain(argv=None):
+    """Setup for main xonsh entry point, returns parsed arguments."""
     if argv is None:
         argv = sys.argv[1:]
-    """Setup for main xonsh entry point, returns parsed arguments."""
     if setproctitle is not None:
         setproctitle(' '.join(['xonsh'] + argv))
     builtins.__xonsh_ctx__ = {}
@@ -159,7 +159,7 @@ def premain(argv=None):
         # if a file is passed split the arguments at file
         # and pass the first part to xonsh and rest to script-file
         index = argv.index(fname)
-        args = parser.parse_args(argv[1:index])
+        args = parser.parse_args(argv[:index])
         args.file = fname
         args.args = argv[index+1:]
     if args.help:
@@ -201,7 +201,7 @@ def premain(argv=None):
     env['XONSH_LOGIN'] = shell_kwargs['login']
     if args.defines is not None:
         env.update([x.split('=', 1) for x in args.defines])
-    env['XONSH_INTERACTIVE'] = False
+    env['XONSH_INTERACTIVE'] = args.force_interactive
     if ON_WINDOWS:
         setup_win_unicode_console(env.get('WIN_UNICODE_CONSOLE', True))
     return args
