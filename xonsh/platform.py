@@ -105,6 +105,12 @@ def ptk_version_info():
 
 
 @functools.lru_cache(1)
+def ptk_version_is_supported():
+    minimum_required_ptk_version = (1, 0)
+    return ptk_version_info()[:2] >= minimum_required_ptk_version
+
+
+@functools.lru_cache(1)
 def best_shell_type():
     if ON_WINDOWS or has_prompt_toolkit():
         return 'prompt_toolkit'
