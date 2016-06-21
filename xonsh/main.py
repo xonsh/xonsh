@@ -96,7 +96,7 @@ parser.add_argument('-D',
                     help='define an environment variable, in the form of '
                          '-DNAME=VAL. May be used many times.',
                     metavar='ITEM',
-                    nargs='*',
+                    action='append',
                     default=None)
 parser.add_argument('--shell-type',
                     help='What kind of shell should be used. '
