@@ -9,7 +9,8 @@ from xonsh.xontribs import update_context
 from xonsh.environ import xonshrc_context
 from xonsh.execer import Execer
 from xonsh.platform import (best_shell_type, has_prompt_toolkit,
-                            ptk_version_is_supported, ptk_version_info)
+                            ptk_version_is_supported, ptk_version_info,
+                            HAS_PYGMENTS)
 from xonsh.tools import XonshError, to_bool_or_int
 
 
@@ -59,6 +60,10 @@ class Shell(object):
             elif not ptk_version_is_supported():
                 warn('prompt-toolkit version < v1.0.0 is not supported. '
                      'Please update prompt-toolkit. Using readline instead.')
+                shell_type = 'readline'
+            elif not HAS_PYGMENTS:
+                warn('prompt_toolkit is available but requires pygments.  '
+                     'Please install pygments. Using readline shell')
                 shell_type = 'readline'
         env['SHELL_TYPE'] = shell_type
         # actually make the shell
