@@ -1591,7 +1591,7 @@ class CommandsCache(abc.Mapping):
             mtime = os.stat(path).st_mtime
             if mtime > max_mtime:
                 max_mtime = mtime
-        cache_valid = cache_valid and max_mtime > self._path_mtime
+        cache_valid = cache_valid and (max_mtime <= self._path_mtime)
         self._path_mtime = max_mtime
         if cache_valid:
             return self._cmds_cache
