@@ -149,10 +149,8 @@ session (say, in your awesome new ``xonsh`` script) you can use the membership o
    >>> 'HOME' in ${...}
    True
 
-
 One helpful method on the ``${...}`` is :func:`~xonsh.environ.Env.swap`.
 It can be used to temporarily set an environment variable:
-
 
 .. code-block:: xonshcon
 
