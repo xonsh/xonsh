@@ -44,7 +44,15 @@ elif ON_CYGWIN:
                     pass
 else:
     def _send_signal(job, signal):
-        os.killpg(job['pgrp'], signal)
+        pgrp = job['pgrp']
+        if pgrp is None:
+            for pid in job['pids']:
+                try:
+                    os.kill(pid, signal)
+                except:
+                    pass
+        else:
+            os.killpg(job['pgrp'], signal)
 
 
 if ON_WINDOWS:
@@ -67,17 +75,12 @@ if ON_WINDOWS:
         suspended by ctrl-z.
         """
         _clear_dead_jobs()
-
         active_task = get_next_task()
-
         # Return when there are no foreground active task
         if active_task is None:
             return
-
         obj = active_task['obj']
-
         _continue(active_task)
-
         while obj.returncode is None:
             try:
                 obj.wait(0.01)
@@ -85,7 +88,6 @@ if ON_WINDOWS:
                 pass
             except KeyboardInterrupt:
                 _kill(active_task)
-
         return wait_for_active_job()
 
 else:
@@ -99,10 +101,15 @@ else:
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)
 
     def _set_pgrp(info):
+        pid = info['pids'][0]
+        if pid is None:
+            # occurs if first process is an alias
+            info['pgrp'] = None
+            return
         try:
-            info['pgrp'] = os.getpgid(info['pids'][0])
+            info['pgrp'] = os.getpgid(pid)
         except ProcessLookupError:
-            pass
+            info['pgrp'] = None
 
     _shell_pgrp = os.getpgrp()
 
@@ -164,21 +171,17 @@ else:
         suspended by ctrl-z.
         """
         _clear_dead_jobs()
-
         active_task = get_next_task()
-
         # Return when there are no foreground active task
         if active_task is None:
             _give_terminal_to(_shell_pgrp)  # give terminal back to the shell
             return
-
-        pgrp = active_task['pgrp']
+        pgrp = active_task.get('pgrp', None)
         obj = active_task['obj']
         # give the terminal over to the fg process
-        _give_terminal_to(pgrp)
-
+        if pgrp is not None:
+            _give_terminal_to(pgrp)
         _continue(active_task)
-
         _, wcode = os.waitpid(obj.pid, os.WUNTRACED)
         if os.WIFSTOPPED(wcode):
             print()  # get a newline because ^Z will have been printed
@@ -190,7 +193,6 @@ else:
         else:
             obj.returncode = os.WEXITSTATUS(wcode)
             obj.signal = None
-
         return wait_for_active_job()
 
 
