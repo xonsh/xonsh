@@ -214,7 +214,7 @@ def main(argv=None):
     args = premain(argv)
     env = builtins.__xonsh_env__
     shell = builtins.__xonsh_shell__
-    if not argv:
+    if args.mode == XonshMode.interactive:
         # enter the shell
         env['XONSH_INTERACTIVE'] = True
         ignore_sigtstp()

@@ -18,11 +18,19 @@ def Shell(*args, **kwargs):
     pass
 
 
-def test_login_shell():
-
+# xonsh master fails to the commented tests
+# (so this branch too atm)
+def test_premain():
     with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
         xonsh.main.premain([])
         assert_true(builtins.__xonsh_env__.get('XONSH_LOGIN'))
+        # assert_true(builtins.__xonsh_env__.get('XONSH_INTERACTIVE'))
+
+    # with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
+    #     for case in ('-i', '-i', '-il' ):
+    #         xonsh.main.premain([])
+    #         assert_true(builtins.__xonsh_env__.get('XONSH_LOGIN'))
+    #         assert_true(builtins.__xonsh_env__.get('XONSH_INTERACTIVE'))
 
     with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
         xonsh.main.premain(['-l', '-c', 'echo "hi"'])
@@ -35,9 +43,10 @@ def test_login_shell():
     with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
         xonsh.main.premain(['-l'])
         assert_true(builtins.__xonsh_env__.get('XONSH_LOGIN'))
+        # assert_true(builtins.__xonsh_env__.get('XONSH_INTERACTIVE'))
 
 
-def test_login_shell_with_file_argument():
+def test_login_premain_with_file_argument():
     with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
         xonsh.main.premain(['tests/sample.xsh'])
         assert_false(builtins.__xonsh_env__.get('XONSH_INTERACTIVE'))
@@ -54,7 +63,7 @@ def test_login_shell_with_file_argument():
 
 
 
-def test_login_shell_invalid_arguments():
+def test_premain_invalid_arguments():
     # pytest transition
     # TODO: check for proper error msg in stdout (howto nose?)
     with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
