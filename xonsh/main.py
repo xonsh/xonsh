@@ -154,13 +154,11 @@ def premain(argv=None):
         setproctitle(' '.join(['xonsh'] + argv))
     builtins.__xonsh_ctx__ = {}
     args = parser.parse_args(argv)
-    fname = args.file
-    if fname is not None:
+    if args.file is not None:
         # if a file is passed split the arguments at file
         # and pass the first part to xonsh and rest to script-file
-        index = argv.index(fname)
-        args = parser.parse_args(argv[:index])
-        args.file = fname
+        index = argv.index(args.file)
+        args = parser.parse_args(argv[:index+1])
         args.args = argv[index+1:]
     if args.help:
         parser.print_help()
