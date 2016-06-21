@@ -163,7 +163,7 @@ It can be used to temporarily set an environment variable:
 
     >>>
 
-Environment Lookup with ``${}``
+Environment Lookup with ``${<expr>}``
 -------------------------------
 
 The ``$NAME`` is great as long as you know the name of the environment
