@@ -62,7 +62,7 @@ def test_login_shell_invalid_arguments():
             try:
                 xonsh.main.premain([case])
                 assert False
-            except SystemError:
+            except SystemExit:
                 pass
 
 
