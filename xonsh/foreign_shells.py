@@ -277,6 +277,7 @@ def parse_env(s):
     if m is None:
         return {}
     g1 = m.group(1)
+    g1 = g1[:-1] if g1.endswith('\n') else g1
     env = dict(ENV_SPLIT_RE.findall(g1))
     return env
 

@@ -41,7 +41,7 @@ def test_parse_env_equals():
     s = ('some garbage\n'
          '__XONSH_ENV_BEG__\n'
          'Y=NO\n'
-         'PROMPT=*.tar=5\n'
+         'LS_COLORS=*.tar=5\n'
          'X=YES\n'
          '__XONSH_ENV_END__\n'
          'more filth')
