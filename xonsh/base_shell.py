@@ -6,15 +6,14 @@ import sys
 import time
 import builtins
 
-from xonsh.tools import XonshError, escape_windows_cmd_string, ON_WINDOWS, \
-    print_exception, HAVE_PYGMENTS
+from xonsh.tools import (XonshError, escape_windows_cmd_string, print_exception,
+    DefaultNotGiven)
+from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.codecache import (should_use_cache, code_cache_name,
                              code_cache_check, get_cache_filename,
                              update_cache, run_compiled_code)
 from xonsh.completer import Completer
 from xonsh.environ import multiline_prompt, format_prompt, partial_format_prompt
-if HAVE_PYGMENTS:
-    from xonsh.pyghooks import XonshStyle
 
 
 class _TeeOut(object):
@@ -46,8 +45,7 @@ class _TeeOut(object):
 
     def fileno(self):
         """Tunnel fileno() calls."""
-        _ = self
-        return sys.stdout.fileno()
+        return self.stdout.fileno()
 
 
 class _TeeErr(object):
@@ -79,8 +77,7 @@ class _TeeErr(object):
 
     def fileno(self):
         """Tunnel fileno() calls."""
-        _ = self
-        return sys.stderr.fileno()
+        return self.stderr.fileno()
 
 
 class Tee(io.StringIO):
@@ -114,16 +111,30 @@ class BaseShell(object):
         super().__init__()
         self.execer = execer
         self.ctx = ctx
-        if kwargs.get('completer', True):
-            self.completer = Completer()
+        self.completer = Completer() if kwargs.get('completer', True) else None
         self.buffer = []
         self.need_more_lines = False
         self.mlprompt = None
-        if HAVE_PYGMENTS:
-            env = builtins.__xonsh_env__
-            self.styler = XonshStyle(env.get('XONSH_COLOR_STYLE'))
-        else:
-            self.styler = None
+        self._styler = DefaultNotGiven
+
+    @property
+    def styler(self):
+        if self._styler is DefaultNotGiven:
+            if HAS_PYGMENTS:
+                from xonsh.pyghooks import XonshStyle
+                env = builtins.__xonsh_env__
+                self._styler = XonshStyle(env.get('XONSH_COLOR_STYLE'))
+            else:
+                self._styler = None
+        return self._styler
+
+    @styler.setter
+    def styler(self, value):
+        self._styler = value
+
+    @styler.deleter
+    def styler(self):
+        self._styler = DefaultNotGiven
 
     def emptyline(self):
         """Called when an empty line has been entered."""

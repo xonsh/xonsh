@@ -20,85 +20,195 @@ Implementations:
 import os
 import re
 import sys
+import ast
+import glob
+import string
 import ctypes
 import builtins
-import platform
-import traceback
+import pathlib
+import warnings
+import functools
 import threading
+import traceback
 import subprocess
+import collections
+import collections.abc as abc
 from contextlib import contextmanager
-from collections import OrderedDict, Sequence, Set
-from warnings import warn
+from subprocess import CalledProcessError
 
-#
-# Check pygments
-#
+# adding further imports from xonsh modules is discouraged to avoid cirular
+# dependencies
+from xonsh.lazyasd import LazyObject, LazyDict
+from xonsh.platform import (has_prompt_toolkit, scandir,
+    DEFAULT_ENCODING, ON_LINUX, ON_WINDOWS, PYTHON_VERSION_INFO)
 
-def pygments_version():
-    """Returns the Pygments version or False."""
-    try:
-        import pygments
-        v = pygments.__version__
-    except ImportError:
-        v = False
-    return v
-
-if sys.version_info[0] >= 3:
-    string_types = (str, bytes)
-    unicode_type = str
-else:
-    string_types = (str, unicode)
-    unicode_type = unicode
-
-try:
-    import win_unicode_console
-except ImportError:
-    win_unicode_console = None
-
-
-DEFAULT_ENCODING = sys.getdefaultencoding()
-
-ON_ANACONDA = any(s in sys.version for s in ['Anaconda','Continuum'])
-ON_WINDOWS = (platform.system() == 'Windows')
-ON_MAC = (platform.system() == 'Darwin')
-ON_LINUX = (platform.system() == 'Linux')
-ON_ARCH = (platform.linux_distribution()[0] == 'arch')
-ON_POSIX = (os.name == 'posix')
-IS_ROOT = ctypes.windll.shell32.IsUserAnAdmin() != 0 if ON_WINDOWS else os.getuid() == 0
-HAVE_PYGMENTS = bool(pygments_version())
-
-VER_3_4 = (3, 4)
-VER_3_5 = (3, 5)
-VER_3_5_1 = (3, 5, 1)
-VER_FULL = sys.version_info[:3]
-VER_MAJOR_MINOR = sys.version_info[:2]
-V_MAJOR_MINOR = 'v{0}{1}'.format(*sys.version_info[:2])
-
-
-def docstring_by_version(**kwargs):
-    """Sets a docstring by the python version."""
-    doc = kwargs.get(V_MAJOR_MINOR, None)
-    if V_MAJOR_MINOR is None:
-        raise RuntimeError('unrecognized version ' + V_MAJOR_MINOR)
-    def dec(f):
-        f.__doc__ = doc
-        return f
-    return dec
+@functools.lru_cache(1)
+def is_superuser():
+    if ON_WINDOWS:
+        rtn = (ctypes.windll.shell32.IsUserAnAdmin() != 0)
+    else:
+        rtn = (os.getuid() == 0)
+    return rtn
 
 
 class XonshError(Exception):
     pass
 
 
+class XonshBlockError(XonshError):
+    """Special xonsh exception for communicating the lines of block bodies."""
+
+    def __init__(self, lines, glbs, locs, *args, **kwargs):
+        """
+        Parameters
+        ----------
+        lines : list f str
+            Block lines, as if split by str.splitlines().
+        glbs : Mapping or None
+            Global execution context for lines, ie globals() of calling frame.
+        locs : Mapping or None
+            Local execution context for lines, ie locals() of calling frame.
+        """
+        super().__init__(*args, **kwargs)
+        self.lines = lines
+        self.glbs = glbs
+        self.locs = locs
+
+
+class XonshCalledProcessError(XonshError, CalledProcessError):
+    """Raised when there's an error with a called process
+
+    Inherits from XonshError and subprocess.CalledProcessError, catching
+    either will also catch this error.
+
+    Raised *after* iterating over stdout of a captured command, if the
+    returncode of the command is nonzero.
+
+    Example:
+        try:
+            for line in !(ls):
+                print(line)
+        except CalledProcessError as error:
+            print("Error in process: {}.format(error.completed_command.pid))
+
+    This also handles differences between Python3.4 and 3.5 where
+    CalledProcessError is concerned.
+    """
+    def __init__(self, returncode, command, output=None, stderr=None,
+                 completed_command=None):
+        super().__init__(returncode, command, output)
+        self.stderr = stderr
+        self.completed_command = completed_command
+
+
+def expandpath(path):
+    """Performs environment variable / user expansion on a given path
+    if the relevant flag has been set.
+    """
+    env = getattr(builtins, '__xonsh_env__', os.environ)
+    if env.get('EXPAND_ENV_VARS', False):
+        path = os.path.expanduser(expandvars(path))
+    return path
+
+
+def decode_bytes(path):
+    """Tries to decode a path in bytes using XONSH_ENCODING if available,
+    otherwise using sys.getdefaultencoding().
+    """
+    env = getattr(builtins, '__xonsh_env__', os.environ)
+    enc = env.get('XONSH_ENCODING', DEFAULT_ENCODING)
+    return path.decode(encoding=enc,
+                       errors=env.get('XONSH_ENCODING_ERRORS'))
+
+
+class EnvPath(collections.MutableSequence):
+    """A class that implements an environment path, which is a list of
+    strings. Provides a custom method that expands all paths if the
+    relevant env variable has been set.
+    """
+    def __init__(self, args=None):
+        if not args:
+            self._l = []
+        else:
+            if isinstance(args, str):
+                self._l = args.split(os.pathsep)
+            elif isinstance(args, pathlib.Path):
+                self._l = [args]
+            elif isinstance(args, bytes):
+                # decode bytes to a string and then split based on
+                # the default path separator
+                self._l = decode_bytes(args).split(os.pathsep)
+            elif isinstance(args, collections.Iterable):
+                # put everything in a list -before- performing the type check
+                # in order to be able to retrieve it later, for cases such as
+                # when a generator expression was passed as an argument
+                args = list(args)
+                if not all(isinstance(i, (str, bytes, pathlib.Path)) \
+                                      for i in args):
+                    # make TypeError's message as informative as possible
+                    # when given an invalid initialization sequence
+                    raise TypeError(
+                            "EnvPath's initialization sequence should only "
+                            "contain str, bytes and pathlib.Path entries")
+                self._l = args
+            else:
+                raise TypeError('EnvPath cannot be initialized with items '
+                                'of type %s' % type(args))
+
+    def __getitem__(self, item):
+        # handle slices separately
+        if isinstance(item, slice):
+            return [expandpath(i) for i in self._l[item]]
+        else:
+            return expandpath(self._l[item])
+
+    def __setitem__(self, index, item):
+        self._l.__setitem__(index, item)
+
+    def __len__(self):
+        return len(self._l)
+
+    def __delitem__(self, key):
+        self._l.__delitem__(key)
+
+    def insert(self, index, value):
+        self._l.insert(index, value)
+
+    @property
+    def paths(self):
+        """
+        Returns the list of directories that this EnvPath contains.
+        """
+        return list(self)
+
+    def __repr__(self):
+        return repr(self._l)
+
+
 class DefaultNotGivenType(object):
     """Singleton for representing when no default value is given."""
+
+    __inst = None
+
+    def __new__(cls):
+        if DefaultNotGivenType.__inst is None:
+            DefaultNotGivenType.__inst = object.__new__(cls)
+        return DefaultNotGivenType.__inst
 
 
 DefaultNotGiven = DefaultNotGivenType()
 
-BEG_TOK_SKIPS = frozenset(['WS', 'INDENT', 'NOT', 'LPAREN'])
-END_TOK_TYPES = frozenset(['SEMI', 'AND', 'OR', 'RPAREN'])
-LPARENS = frozenset(['LPAREN', 'AT_LPAREN', 'BANG_LPAREN', 'DOLLAR_LPAREN'])
+BEG_TOK_SKIPS = LazyObject(
+                    lambda: frozenset(['WS', 'INDENT', 'NOT', 'LPAREN']),
+                    globals(), 'BEG_TOK_SKIPS')
+END_TOK_TYPES = LazyObject(lambda: frozenset(['SEMI', 'AND', 'OR', 'RPAREN']),
+                           globals(), 'END_TOK_TYPES')
+RE_END_TOKS = LazyObject(lambda: re.compile('(;|and|\&\&|or|\|\||\))'),
+                         globals(), 'RE_END_TOKS')
+LPARENS = LazyObject(lambda: frozenset(['LPAREN', 'AT_LPAREN', 'BANG_LPAREN',
+                                        'DOLLAR_LPAREN', 'ATDOLLAR_LPAREN']),
+                     globals(), 'LPARENS')
+
 
 def _is_not_lparen_and_rparen(lparens, rtok):
     """Tests if an RPAREN token is matched with something other than a plain old
@@ -106,6 +216,34 @@ def _is_not_lparen_and_rparen(lparens, rtok):
     """
     # note that any([]) is False, so this covers len(lparens) == 0
     return rtok.type == 'RPAREN' and any(x != 'LPAREN' for x in lparens)
+
+
+def find_next_break(line, mincol=0, lexer=None):
+    """Returns the column number of the next logical break in subproc mode.
+    This function may be useful in finding the maxcol argument of subproc_toks().
+    """
+    if mincol >= 1:
+        line = line[mincol:]
+    if lexer is None:
+        lexer = builtins.__xonsh_execer__.parser.lexer
+    if RE_END_TOKS.search(line) is None:
+        return None
+    maxcol = None
+    lparens = []
+    lexer.input(line)
+    for tok in lexer:
+        if tok.type in LPARENS:
+            lparens.append(tok.type)
+        elif tok.type in END_TOK_TYPES:
+            if _is_not_lparen_and_rparen(lparens, tok):
+                lparens.pop()
+            else:
+                maxcol = tok.lexpos + mincol + 1
+                break
+        elif tok.type == 'ERRORTOKEN' and ')' in tok.value:
+            maxcol = tok.lexpos + mincol + 1
+            break
+    return maxcol
 
 
 def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
@@ -168,7 +306,7 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
             return  # handle comment lines
         tok = toks[-1]
         pos = tok.lexpos
-        if isinstance(tok.value, string_types):
+        if isinstance(tok.value, str):
             end_offset = len(tok.value.rstrip())
         else:
             el = line[pos:].split('#')[0].rstrip()
@@ -264,6 +402,7 @@ def indent(instr, nspaces=4, ntabs=0, flatten=False):
     else:
         return outstr
 
+
 def get_sep():
     """ Returns the appropriate filepath separator char depending on OS and
     xonsh options set
@@ -271,7 +410,6 @@ def get_sep():
     return (os.altsep if ON_WINDOWS
             and builtins.__xonsh_env__.get('FORCE_POSIX_PATHS') else
             os.sep)
-
 
 
 def fallback(cond, backup):
@@ -327,6 +465,57 @@ class redirect_stderr(_RedirectStream):
     _stream = "stderr"
 
 
+def _yield_accessible_unix_file_names(path):
+    "yield file names of executablel files in `path`"
+
+    for file_ in scandir(path):
+        try:
+            if file_.is_file() and os.access(file_.path, os.X_OK):
+                yield file_.name
+        except NotADirectoryError:
+            # broken Symlink are neither dir not files
+            pass
+
+
+def _executables_in_posix(path):
+    if PYTHON_VERSION_INFO < (3, 5, 0):
+        for fname in os.listdir(path):
+            fpath  = os.path.join(path, fname)
+            if (os.path.exists(fpath) and os.access(fpath, os.X_OK) and \
+                                    (not os.path.isdir(fpath))):
+                yield fname
+    else:
+        yield from _yield_accessible_unix_file_names(path)
+
+
+def _executables_in_windows(path):
+    extensions = builtins.__xonsh_env__.get('PATHEXT',['.COM', '.EXE', '.BAT'])
+    if PYTHON_VERSION_INFO < (3, 5, 0):
+        for fname in os.listdir(path):
+            fpath = os.path.join(path, fname)
+            if (os.path.exists(fpath) and not os.path.isdir(fpath)):
+                base_name, ext = os.path.splitext(fname)
+                if ext.upper() in extensions:
+                    yield fname
+    else:
+        for fname in (x.name for x in scandir(path) if x.is_file()):
+            base_name, ext = os.path.splitext(fname)
+            if ext.upper() in extensions:
+                yield fname
+
+
+def executables_in(path):
+    """Returns a generator of files in `path` that the user could execute. """
+    if ON_WINDOWS:
+        func = _executables_in_windows
+    else:
+        func = _executables_in_posix
+    try:
+        yield from func(path)
+    except PermissionError:
+        return
+
+
 def command_not_found(cmd):
     """Uses the debian/ubuntu command-not-found utility to suggest packages for a
     command that cannot currently be found.
@@ -345,28 +534,27 @@ def command_not_found(cmd):
 
 def suggest_commands(cmd, env, aliases):
     """Suggests alternative commands given an environment and aliases."""
-    suggest_cmds = env.get('SUGGEST_COMMANDS')
-    if not suggest_cmds:
+    if not env.get('SUGGEST_COMMANDS'):
         return
     thresh = env.get('SUGGEST_THRESHOLD')
     max_sugg = env.get('SUGGEST_MAX_NUM')
     if max_sugg < 0:
         max_sugg = float('inf')
-
     cmd = cmd.lower()
     suggested = {}
-    for a in builtins.aliases:
-        if a not in suggested:
-            if levenshtein(a.lower(), cmd, thresh) < thresh:
-                suggested[a] = 'Alias'
 
-    for d in filter(os.path.isdir, env.get('PATH')):
-        for f in os.listdir(d):
-            if f not in suggested:
-                if levenshtein(f.lower(), cmd, thresh) < thresh:
-                    fname = os.path.join(d, f)
-                    suggested[f] = 'Command ({0})'.format(fname)
-    suggested = OrderedDict(
+    for alias in builtins.aliases:
+        if alias not in suggested:
+            if levenshtein(alias.lower(), cmd, thresh) < thresh:
+                suggested[alias] = 'Alias'
+
+    for path in filter(os.path.isdir, env.get('PATH')):
+        for _file in executables_in(path):
+            if _file not in suggested \
+                    and levenshtein(_file.lower(), cmd, thresh) < thresh:
+                suggested[_file] = 'Command ({0})'.format(os.path.join(path, _file))
+
+    suggested = collections.OrderedDict(
         sorted(suggested.items(),
                key=lambda x: suggestion_sort_helper(x[0].lower(), cmd)))
     num = min(len(suggested), max_sugg)
@@ -386,19 +574,74 @@ def suggest_commands(cmd, env, aliases):
     return rtn
 
 
-def print_exception():
+def print_exception(msg=None):
     """Print exceptions with/without traceback."""
     env = getattr(builtins, '__xonsh_env__', os.environ)
-    if 'XONSH_SHOW_TRACEBACK' not in env:
+    # flags indicating whether the traceback options have been manually set
+    manually_set_trace = env.is_manually_set('XONSH_SHOW_TRACEBACK')
+    manually_set_logfile = env.is_manually_set('XONSH_TRACEBACK_LOGFILE')
+    if (not manually_set_trace) and (not manually_set_logfile):
+        # Notify about the traceback output possibility if neither of
+        # the two options have been manually set
         sys.stderr.write('xonsh: For full traceback set: '
                          '$XONSH_SHOW_TRACEBACK = True\n')
-    if env.get('XONSH_SHOW_TRACEBACK', False):
+    # get env option for traceback and convert it if necessary
+    show_trace = env.get('XONSH_SHOW_TRACEBACK', False)
+    if not is_bool(show_trace):
+        show_trace = to_bool(show_trace)
+    # if the trace option has been set, print all traceback info to stderr
+    if show_trace:
+        # notify user about XONSH_TRACEBACK_LOGFILE if it has
+        # not been set manually
+        if not manually_set_logfile:
+            sys.stderr.write('xonsh: To log full traceback to a file set: '
+                             '$XONSH_TRACEBACK_LOGFILE = <filename>\n')
         traceback.print_exc()
-    else:
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        exception_only = traceback.format_exception_only(exc_type, exc_value)
-        sys.stderr.write(''.join(exception_only))
 
+    # additionally, check if a file for traceback logging has been
+    # specified and convert to a proper option if needed
+    log_file = env.get('XONSH_TRACEBACK_LOGFILE', None)
+    log_file = to_logfile_opt(log_file)
+    if log_file:
+        # if log_file <> '' or log_file <> None, append
+        # traceback log there as well
+        with open(os.path.abspath(log_file), 'a') as f:
+            traceback.print_exc(file=f)
+
+    if not show_trace:
+        # if traceback output is disabled, print the exception's
+        # error message on stderr.
+        display_error_message()
+    if msg:
+        msg = msg if msg.endswith('\n') else msg + '\n'
+        sys.stderr.write(msg)
+
+
+def display_error_message():
+    """
+    Prints the error message of the current exception on stderr.
+    """
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    exception_only = traceback.format_exception_only(exc_type, exc_value)
+    sys.stderr.write(''.join(exception_only))
+
+
+def is_writable_file(filepath):
+    """
+    Checks if a filepath is valid for writing.
+    """
+    # convert to absolute path if needed
+    if not os.path.isabs(filepath):
+        filepath = os.path.abspath(filepath)
+    # cannot write to directories
+    if os.path.isdir(filepath):
+        return False
+    # if the file exists and is writable, we're fine
+    if os.path.exists(filepath):
+        return True if os.access(filepath, os.W_OK) else False
+    # if the path doesn't exist, isolate its directory component
+    # and ensure that directory is writable instead
+    return os.access(os.path.dirname(filepath), os.W_OK)
 
 # Modified from Public Domain code, by Magnus Lie Hetland
 # from http://hetland.org/coding/python/levenshtein.py
@@ -491,13 +734,26 @@ def swap(namespace, name, value, default=NotImplemented):
         setattr(namespace, name, old)
 
 #
-# Validators and contervers
+# Validators and converters
 #
 
 
 def is_int(x):
     """Tests if something is an integer"""
     return isinstance(x, int)
+
+def is_int_as_str(x):
+    """
+    Tests if something is an integer
+    If not a string to begin with is automatically false
+    """
+    if isinstance(x, str):
+        try:
+            int(x)
+        except ValueError:
+            return False
+        return True
+    return False
 
 
 def is_float(x):
@@ -507,7 +763,38 @@ def is_float(x):
 
 def is_string(x):
     """Tests if something is a string"""
-    return isinstance(x, string_types)
+    return isinstance(x, str)
+
+def is_slice(x):
+    """Tests if something is a slice"""
+    return isinstance(x, slice)
+
+def is_slice_as_str(x):
+    """
+    Tests if a str is a slice
+    If not a string to begin with is automatically false
+    """
+    if isinstance(x, str):
+        if ':' in x:
+            x = x.strip('[]()')
+            try:
+                slice(*(int(x) if len(x) > 0 else None
+                        for x in x.split(':')))
+            except ValueError:
+                return False
+        else:
+            return False
+        return True
+    return False
+
+def is_callable(x):
+    """Tests if something is callable"""
+    return callable(x)
+
+
+def is_string_or_callable(x):
+    """Tests if something is a string or callable"""
+    return is_string(x) or is_callable(x)
 
 
 def always_true(x):
@@ -522,26 +809,20 @@ def always_false(x):
 
 def ensure_string(x):
     """Returns a string if x is not a string, and x if it already is."""
-    if isinstance(x, string_types):
-        return x
-    else:
-        return str(x)
+    return str(x)
 
 
 def is_env_path(x):
     """This tests if something is an environment path, ie a list of strings."""
-    if isinstance(x, string_types):
-        return False
-    else:
-        return (isinstance(x, Sequence) and
-                all([isinstance(a, string_types) for a in x]))
+    return isinstance(x, EnvPath)
 
 
 def str_to_env_path(x):
     """Converts a string to an environment path, ie a list of strings,
     splitting on the OS separator.
     """
-    return x.split(os.pathsep)
+    # splitting will be done implicitly in EnvPath's __init__
+    return EnvPath(x)
 
 
 def env_path_to_str(x):
@@ -554,13 +835,55 @@ def is_bool(x):
     return isinstance(x, bool)
 
 
-_FALSES = frozenset(['', '0', 'n', 'f', 'no', 'none', 'false'])
+def is_logfile_opt(x):
+    """
+    Checks if x is a valid $XONSH_TRACEBACK_LOGFILE option. Returns False
+    if x is not a writable/creatable file or an empty string or None.
+    """
+    if x is None:
+        return True
+    return False if not isinstance(x, str) else \
+           (is_writable_file(x) or x == '')
+
+
+def to_logfile_opt(x):
+    """
+    Converts a $XONSH_TRACEBACK_LOGFILE option to either a str containing
+    the filepath if it is a writable file or None if the filepath is not
+    valid, informing the user on stderr about the invalid choice.
+    """
+    if is_logfile_opt(x):
+        return x
+    else:
+        # if option is not valid, return a proper
+        # option and inform the user on stderr
+        sys.stderr.write('xonsh: $XONSH_TRACEBACK_LOGFILE must be a '
+                         'filepath pointing to a file that either exists '
+                         'and is writable or that can be created.\n')
+        return None
+
+
+def logfile_opt_to_str(x):
+    """
+    Detypes a $XONSH_TRACEBACK_LOGFILE option.
+    """
+    if x is None:
+        # None should not be detyped to 'None', as 'None' constitutes
+        # a perfectly valid filename and retyping it would introduce
+        # ambiguity. Detype to the empty string instead.
+        return ''
+    return str(x)
+
+
+_FALSES = LazyObject(lambda: frozenset(['', '0', 'n', 'f', 'no', 'none',
+                                        'false']), globals(), '_FALSES')
+
 
 def to_bool(x):
     """"Converts to a boolean in a semantically meaningful way."""
     if isinstance(x, bool):
         return x
-    elif isinstance(x, string_types):
+    elif isinstance(x, str):
         return False if x.lower() in _FALSES else True
     else:
         return bool(x)
@@ -573,34 +896,53 @@ def bool_to_str(x):
 
 _BREAKS = frozenset(['b', 'break', 's', 'skip', 'q', 'quit'])
 
+
 def to_bool_or_break(x):
-    if isinstance(x, string_types) and x.lower() in _BREAKS:
+    if isinstance(x, str) and x.lower() in _BREAKS:
         return 'break'
     else:
         return to_bool(x)
+
+
+def is_bool_or_int(x):
+    """Returns whether a value is a boolean or integer."""
+    return is_bool(x) or is_int(x)
+
+
+def to_bool_or_int(x):
+    """Converts a value to a boolean or an integer."""
+    if isinstance(x, str):
+        return int(x) if x.isdigit() else to_bool(x)
+    elif is_int(x):  # bools are ints too!
+        return x
+    else:
+        return bool(x)
+
+
+def bool_or_int_to_str(x):
+    """Converts a boolean or integer to a string."""
+    return bool_to_str(x) if is_bool(x) else str(x)
 
 
 def ensure_int_or_slice(x):
     """Makes sure that x is list-indexable."""
     if x is None:
         return slice(None)
-    elif is_int(x):
+    elif is_int(x) or is_slice(x):
         return x
     # must have a string from here on
-    if ':' in x:
+    if is_slice_as_str(x):
         x = x.strip('[]()')
         return slice(*(int(x) if len(x) > 0 else None for x in x.split(':')))
-    else:
+    elif is_int_as_str(x):
         return int(x)
+    return False
 
 
 def is_string_set(x):
     """Tests if something is a set"""
-    if isinstance(x, string_types):
-        return False
-    else:
-        return (isinstance(x, Set) and
-                all([isinstance(a, string_types) for a in x]))
+    return (isinstance(x, abc.Set) and
+            all(isinstance(a, str) for a in x))
 
 
 def csv_to_set(x):
@@ -618,14 +960,12 @@ def set_to_csv(x):
 
 def is_bool_seq(x):
     """Tests if an object is a sequence of bools."""
-    return isinstance(x, Sequence) and all(map(isinstance, x, [bool]*len(x)))
+    return isinstance(x, abc.Sequence) and all(isinstance(y, bool) for y in x)
 
 
 def csv_to_bool_seq(x):
     """Takes a comma-separated string and converts it into a list of bools."""
-    if len(x) == 0:
-        return []
-    return list(map(to_bool, x.split(',')))
+    return [to_bool(y) for y in csv_to_set(x)]
 
 
 def bool_seq_to_csv(x):
@@ -643,17 +983,22 @@ def to_completions_display_value(x):
         x = 'none'
     elif x in {'multi', 'true'}:
         x = 'multi'
-    elif x in {'single'}:
-        x = 'single'
+    elif x == 'single':
+        pass
     else:
-        warn('"{}" is not a valid value for $COMPLETIONS_DISPLAY. '.format(x) +
-             'Using "multi".', RuntimeWarning)
+        msg = '"{}" is not a valid value for $COMPLETIONS_DISPLAY. '.format(x)
+        msg += 'Using "multi".'
+        warnings.warn(msg, RuntimeWarning)
         x = 'multi'
     return x
 
 
 def setup_win_unicode_console(enable):
     """"Enables or disables unicode display on windows."""
+    try:
+        import win_unicode_console
+    except ImportError:
+        win_unicode_console = False
     enable = to_bool(enable)
     if ON_WINDOWS and win_unicode_console:
         if enable:
@@ -674,9 +1019,11 @@ _mb_to_b = lambda x: 1024 * _kb_to_b(x)
 _gb_to_b = lambda x: 1024 * _mb_to_b(x)
 _tb_to_b = lambda x: 1024 * _tb_to_b(x)
 
-CANON_HISTORY_UNITS = frozenset(['commands', 'files', 's', 'b'])
+CANON_HISTORY_UNITS = LazyObject(
+    lambda: frozenset(['commands', 'files', 's', 'b']),
+    globals(), 'CANON_HISTORY_UNITS')
 
-HISTORY_UNITS = {
+HISTORY_UNITS = LazyObject(lambda: {
     '': ('commands', int),
     'c': ('commands', int),
     'cmd': ('commands', int),
@@ -726,22 +1073,55 @@ HISTORY_UNITS = {
     'tb': ('b', _tb_to_b),
     'terabyte': ('b', _tb_to_b),
     'terabytes': ('b', _tb_to_b),
-    }
+    }, globals(), 'HISTORY_UNITS')
 """Maps lowercase unit names to canonical name and conversion utilities."""
 
 def is_history_tuple(x):
     """Tests if something is a proper history value, units tuple."""
-    if isinstance(x, Sequence) and len(x) == 2 and isinstance(x[0], (int, float)) \
-                               and x[1].lower() in CANON_HISTORY_UNITS:
+    if isinstance(x, abc.Sequence) and len(x) == 2 and \
+                     isinstance(x[0], (int, float)) and \
+                     x[1].lower() in CANON_HISTORY_UNITS:
          return True
     return False
 
 
-RE_HISTORY_TUPLE = re.compile('([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)\s*([A-Za-z]*)')
+def is_dynamic_cwd_width(x):
+    """ Determine if the input is a valid input for the DYNAMIC_CWD_WIDTH
+    environement variable.
+    """
+    return isinstance(x, tuple) and len(x) == 2 and isinstance(x[0], float) and \
+           (x[1] in set('c%'))
+
+
+def to_dynamic_cwd_tuple(x):
+    """Convert to a canonical cwd_width tuple."""
+    unit = 'c'
+    if isinstance(x, str):
+        if x[-1] == '%':
+            x = x[:-1]
+            unit = '%'
+        else:
+            unit = 'c'
+        return (float(x), unit)
+    else:
+        return (float(x[0]), x[1])
+
+
+def dynamic_cwd_tuple_to_str(x):
+    """Convert a canonical cwd_width tuple to a string."""
+    if x[1] == '%':
+        return str(x[0]) + '%'
+    else:
+        return str(x[0])
+
+
+RE_HISTORY_TUPLE = LazyObject(
+    lambda: re.compile('([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)\s*([A-Za-z]*)'),
+    globals(), 'RE_HISTORY_TUPLE')
 
 def to_history_tuple(x):
     """Converts to a canonincal history tuple."""
-    if not isinstance(x, (Sequence, float, int)):
+    if not isinstance(x, (abc.Sequence, float, int)):
         raise ValueError('history size must be given as a sequence or number')
     if isinstance(x, str):
         m = RE_HISTORY_TUPLE.match(x.strip().lower())
@@ -784,14 +1164,9 @@ def color_style():
     return builtins.__xonsh_shell__.shell.color_style()
 
 
-try:
-    import prompt_toolkit
-except ImportError:
-    prompt_toolkit = None
-
-
 def _get_color_indexes(style_map):
     """ Generates the color and windows color index for a style """
+    import prompt_toolkit
     table = prompt_toolkit.terminal.win32_output.ColorLookupTable()
     pt_style = prompt_toolkit.styles.style_from_dict(style_map)
     for token in style_map:
@@ -813,7 +1188,10 @@ def intensify_colors_for_cmd_exe(style_map, replace_colors=None):
        range used by the gray colors
     """
     modified_style = {}
-    if not ON_WINDOWS or prompt_toolkit is None:
+    stype = builtins.__xonsh_env__.get('SHELL_TYPE')
+    if (not ON_WINDOWS or
+            (stype not in ('prompt_toolkit', 'best')) or
+            (stype == 'best' and not has_prompt_toolkit())):
         return modified_style
     if replace_colors is None:
         replace_colors = {1: '#44ffff',  # subst blue with bright cyan
@@ -836,7 +1214,10 @@ def expand_gray_colors_for_cmd_exe(style_map):
         in cmd.exe.
     """
     modified_style = {}
-    if not ON_WINDOWS or prompt_toolkit is None:
+    stype = builtins.__xonsh_env__.get('SHELL_TYPE')
+    if (not ON_WINDOWS or
+            (stype not in ('prompt_toolkit', 'best')) or
+            (stype == 'best' and not has_prompt_toolkit())):
         return modified_style
     for token, idx, rgb in _get_color_indexes(style_map):
         if idx == 7 and rgb:
@@ -850,8 +1231,9 @@ def expand_gray_colors_for_cmd_exe(style_map):
 
 
 def intensify_colors_on_win_setter(enable):
-    """ Resets the style when setting the INTENSIFY_COLORS_ON_WIN
-        environment variable. """
+    """Resets the style when setting the INTENSIFY_COLORS_ON_WIN
+    environment variable.
+    """
     enable = to_bool(enable)
     delattr(builtins.__xonsh_shell__.shell.styler, 'style_name')
     return enable
@@ -866,22 +1248,24 @@ _STRINGS = (_RE_STRING_TRIPLE_DOUBLE,
             _RE_STRING_TRIPLE_SINGLE,
             _RE_STRING_DOUBLE,
             _RE_STRING_SINGLE)
-RE_BEGIN_STRING = re.compile("(" + _RE_STRING_START +
-                             '(' + "|".join(_STRINGS) +
-                             '))')
+RE_BEGIN_STRING = LazyObject(
+    lambda: re.compile("(" + _RE_STRING_START + \
+                       '(' + "|".join(_STRINGS) + '))'),
+    globals(), 'RE_BEGIN_STRING')
 """Regular expression matching the start of a string, including quotes and
 leading characters (r, b, or u)"""
 
-RE_STRING_START = re.compile(_RE_STRING_START)
+RE_STRING_START = LazyObject(lambda: re.compile(_RE_STRING_START),
+                             globals(), 'RE_STRING_START')
 """Regular expression matching the characters before the quotes when starting a
 string (r, b, or u, case insensitive)"""
 
-RE_STRING_CONT = {k: re.compile(v) for k,v in {
-    '"': r'((\\(.|\n))|([^"\\]))*',
-    "'": r"((\\(.|\n))|([^'\\]))*",
-    '"""': r'((\\(.|\n))|([^"\\])|("(?!""))|\n)*',
-    "'''": r"((\\(.|\n))|([^'\\])|('(?!''))|\n)*",
-}.items()}
+RE_STRING_CONT = LazyDict({
+    '"': lambda: re.compile(r'((\\(.|\n))|([^"\\]))*'),
+    "'": lambda: re.compile(r"((\\(.|\n))|([^'\\]))*"),
+    '"""': lambda: re.compile(r'((\\(.|\n))|([^"\\])|("(?!""))|\n)*'),
+    "'''": lambda: re.compile(r"((\\(.|\n))|([^'\\])|('(?!''))|\n)*"),
+    }, globals(), 'RE_STRING_CONT')
 """Dictionary mapping starting quote sequences to regular expressions that
 match the contents of a string beginning with those quotes (not including the
 terminating quotes)"""
@@ -959,7 +1343,7 @@ def check_for_partial_string(x):
 
 def _is_in_env(name):
     ENV = builtins.__xonsh_env__
-    return name in ENV._d or name in ENV.defaults
+    return name in ENV._d or name in ENV._defaults
 
 def _get_env_string(name):
     ENV = builtins.__xonsh_env__
@@ -980,9 +1364,11 @@ def expandvars(path):
     if isinstance(path, bytes):
         path = path.decode(encoding=ENV.get('XONSH_ENCODING'),
                            errors=ENV.get('XONSH_ENCODING_ERRORS'))
-    if '$' not in path and ((not ON_WINDOWS) or ('%' not in path)):
+    elif isinstance(path, pathlib.Path):
+        # get the path's string representation
+        path = str(path)
+    if '$' not in path and (not ON_WINDOWS or '%' not in path):
         return path
-    import string
     varchars = string.ascii_letters + string.digits + '_-'
     quote = '\''
     percent = '%'
@@ -1079,7 +1465,8 @@ def backup_file(fname):
     import shutil
     from datetime import datetime
     base, ext = os.path.splitext(fname)
-    newfname = base + '.' + datetime.now().isoformat() + ext
+    timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
+    newfname = '%s.%s%s' % (base, timestamp, ext)
     shutil.move(fname, newfname)
 
 
@@ -1088,7 +1475,12 @@ def normabspath(p):
     return os.path.normcase(os.path.abspath(p))
 
 
-class CommandsCache(Set):
+def expanduser_abs_path(inp):
+    """ Provides user expanded absolute path """
+    return os.path.abspath(os.path.expanduser(inp))
+
+
+class CommandsCache(abc.Set):
     """A lazy cache representing the commands available on the file system."""
 
     def __init__(self):
@@ -1108,28 +1500,116 @@ class CommandsCache(Set):
 
     @property
     def all_commands(self):
-        path = builtins.__xonsh_env__.get('PATH', [])
+        paths = builtins.__xonsh_env__.get('PATH', [])
+        paths = frozenset(x for x in paths if os.path.isdir(x))
         # did PATH change?
-        path_hash = hash(frozenset(path))
+        path_hash = hash(paths)
         cache_valid = path_hash == self._path_checksum
         self._path_checksum = path_hash
         # did aliases change?
-        al_hash = hash(frozenset(builtins.aliases.keys()))
+        al_hash = hash(frozenset(builtins.aliases))
         cache_valid = cache_valid and al_hash == self._alias_checksum
         self._alias_checksum = al_hash
-        pm = self._path_mtime
         # did the contents of any directory in PATH change?
-        for d in filter(os.path.isdir, path):
-            m = os.stat(d).st_mtime
-            if m > pm:
-                pm = m
-                cache_valid = False
-        self._path_mtime = pm
+        max_mtime = 0
+        for path in paths:
+            mtime = os.stat(path).st_mtime
+            if mtime > max_mtime:
+                max_mtime = mtime
+        cache_valid = cache_valid and max_mtime > self._path_mtime
+        self._path_mtime = max_mtime
         if cache_valid:
             return self._cmds_cache
         allcmds = set()
-        for d in filter(os.path.isdir, path):
-            allcmds |= set(os.listdir(d))
-        allcmds |= set(builtins.aliases.keys())
+        for path in paths:
+            allcmds |= set(executables_in(path))
+            allcmds |= set(builtins.aliases)
         self._cmds_cache = frozenset(allcmds)
         return self._cmds_cache
+
+    def lazyin(self, value):
+        """Checks if the value is in the current cache without the potential to
+        update the cache. It just says whether the value is known *now*. This
+        may not reflect precisely what is on the $PATH.
+        """
+        return value in self._cmds_cache
+
+    def lazyiter(self):
+        """Returns an iterator over the current cache contents without the
+        potential to update the cache. This may not reflect what is on the
+        $PATH.
+        """
+        return iter(self._cmds_cache)
+
+    def lazylen(self):
+        """Returns the length of the current cache contents without the
+        potential to update the cache. This may not reflect precicesly
+        what is on the $PATH.
+        """
+        return len(self._cmds_cache)
+
+
+WINDOWS_DRIVE_MATCHER = LazyObject(lambda: re.compile(r'^\w:'),
+                                   globals(), 'WINDOWS_DRIVE_MATCHER')
+
+
+def expand_case_matching(s):
+    """Expands a string to a case insenstive globable string."""
+    t = []
+    openers = {'[', '{'}
+    closers = {']', '}'}
+    nesting = 0
+
+    drive_part = WINDOWS_DRIVE_MATCHER.match(s) if ON_WINDOWS else None
+
+    if drive_part:
+        drive_part = drive_part.group(0)
+        t.append(drive_part)
+        s = s[len(drive_part):]
+
+    for c in s:
+        if c in openers:
+            nesting += 1
+        elif c in closers:
+            nesting -= 1
+        elif nesting > 0:
+            pass
+        elif c.isalpha():
+            folded = c.casefold()
+            if len(folded) == 1:
+                c = '[{0}{1}]'.format(c.upper(), c.lower())
+            else:
+                newc = ['[{0}{1}]?'.format(f.upper(), f.lower())
+                        for f in folded[:-1]]
+                newc = ''.join(newc)
+                newc += '[{0}{1}{2}]'.format(folded[-1].upper(),
+                                             folded[-1].lower(),
+                                             c)
+                c = newc
+        t.append(c)
+    return ''.join(t)
+
+
+def globpath(s, ignore_case=False, return_empty=False):
+    """Simple wrapper around glob that also expands home and env vars."""
+    o, s = _iglobpath(s, ignore_case=ignore_case)
+    o = list(o)
+    no_match = [] if return_empty else [s]
+    return o if len(o) != 0 else no_match
+
+
+def _iglobpath(s, ignore_case=False):
+    s = builtins.__xonsh_expand_path__(s)
+    if ignore_case:
+        s = expand_case_matching(s)
+    if sys.version_info > (3, 5):
+        if '**' in s and '**/*' not in s:
+            s = s.replace('**', '**/*')
+        # `recursive` is only a 3.5+ kwarg.
+        return glob.iglob(s, recursive=True), s
+    else:
+        return glob.iglob(s), s
+
+def iglobpath(s, ignore_case=False):
+    """Simple wrapper around iglob that also expands home and env vars."""
+    return _iglobpath(s, ignore_case)[0]

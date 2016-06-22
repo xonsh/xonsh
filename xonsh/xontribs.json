@@ -1,4 +1,21 @@
 {"xontribs": [
+ {"name": "distributed",
+  "package": "xonsh",
+  "url": "http://xon.sh",
+  "description": [
+    "The distributed parallel computing library hooks for xonsh. ",
+    "Importantly this provides a subsitute 'dworker' command which enables ",
+    "distributed workers to have access to xonsh builtins.\n\n",
+    "Furthermore, this xontrib adds a 'DSubmitter' context manager for ",
+    "executing a block remotely. Moroever, this also adds a convienece ",
+    "function 'dsubmit()' for creating DSubmitter and Executor instances ",
+    "at the same time. Thus users may submit distributed jobs with::\n\n",
+    "    with dsubmit('127.0.0.1:8786', rtn='x') as dsub:\n",
+    "        x = $(echo I am elsewhere)\n\n",
+    "    res = dsub.future.result()\n",
+    "    print(res)\n\n",
+    "This is useful for long running or non-blocking jobs."]
+  },
  {"name": "mpl",
   "package": "xonsh",
   "url": "http://xon.sh",
@@ -9,9 +26,29 @@
   "package": "xontrib-prompt-ret-code",
   "url": "https://github.com/Siecje/xontrib-prompt-ret-code",
   "description": ["Adds return code info to the prompt"]
-  }
+  },
+ {"name": "xo",
+  "package": "exofrills",
+  "url": "https://github.com/scopatz/xo",
+  "description": ["Adds an 'xo' alias to run the exofrills text editor in the ",
+                  "current Python interpreter session. This shaves off a ",
+                  "bit of the startup time when running your favorite, minimal ",
+                  "text editor."]
+  },
+ {"name": "xonsh-apt-tabcomplete",
+  "package": "xonsh-apt-tabcomplete",
+  "url": "https://github.com/DangerOnTheRanger/xonsh-apt-tabcomplete",
+  "description": ["Adds tabcomplete functionality to apt-get/apt-cache inside of xonsh."]
+ }
  ],
  "packages": {
+  "exofrills": {
+   "license": "WTFPL",
+   "url": "http://exofills.org",
+   "install": {
+    "conda": "conda install -c conda-forge xo",
+    "pip": "pip install exofrills"}
+   },
   "xonsh": {
    "license": "BSD 3-clause",
    "url": "http://xon.sh",
@@ -26,6 +63,13 @@
    "url": "https://github.com/Siecje/xontrib-prompt-ret-code",
    "install": {
     "pip": "pip install xontrib-prompt-ret-code"
+   }
+  },
+  "xonsh-apt-tabcomplete": {
+   "license": "BSD 2-clause",
+   "url": "https://github.com/DangerOnTheRanger/xonsh-apt-tabcomplete",
+   "install": {
+    "pip": "pip install xonsh-apt-tabcomplete"
    }
   }
  }

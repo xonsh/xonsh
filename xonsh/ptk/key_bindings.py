@@ -2,8 +2,11 @@
 """Key bindings for prompt_toolkit xonsh shell."""
 import builtins
 
-from prompt_toolkit.filters import Filter, IsMultiline
+from prompt_toolkit.enums import DEFAULT_BUFFER
+from prompt_toolkit.filters import (Condition, Filter, IsMultiline,
+                                    HasSelection)
 from prompt_toolkit.keys import Keys
+from xonsh.aliases import xonsh_exit
 from xonsh.tools import ON_WINDOWS
 
 env = builtins.__xonsh_env__
@@ -43,8 +46,8 @@ def carriage_return(b, cli):
     elif (not b.document.on_first_line and
             not current_line_blank):
         b.newline(copy_margin=True)
-    elif (b.document.char_before_cursor == '\\' and 
-            not (not builtins.__xonsh_env__.get('FORCE_POSIX_PATHS') 
+    elif (b.document.char_before_cursor == '\\' and
+            not (not builtins.__xonsh_env__.get('FORCE_POSIX_PATHS')
                 and ON_WINDOWS)):
         b.newline()
     elif (b.document.find_next_word_beginning() is not None and
@@ -93,6 +96,16 @@ class EndOfLine(Filter):
 
         return bool(at_end and not last_line)
 
+
+# Copied from prompt-toolkit's key_binding/bindings/basic.py
+@Condition
+def ctrl_d_condition(cli):
+    """ Ctrl-D binding is only active when the default buffer is selected
+    and empty. """
+    return (cli.current_buffer_name == DEFAULT_BUFFER and
+            not cli.current_buffer.text)
+
+
 def can_compile(src):
     """Returns whether the code can be compiled, i.e. it is valid xonsh."""
     src = src if src.endswith('\n') else src + '\n'
@@ -103,6 +116,8 @@ def can_compile(src):
         rtn = True
     except SyntaxError:
         rtn = False
+    except Exception:
+        rtn = True
     return rtn
 
 
@@ -111,6 +126,7 @@ def load_xonsh_bindings(key_bindings_manager):
     Load custom key bindings.
     """
     handle = key_bindings_manager.registry.add_binding
+    has_selection = HasSelection()
 
     @handle(Keys.Tab, filter=TabShouldInsertIndentFilter())
     def _(event):
@@ -120,10 +136,22 @@ def load_xonsh_bindings(key_bindings_manager):
         """
         event.cli.current_buffer.insert_text(env.get('INDENT'))
 
+    @handle(Keys.ControlX, Keys.ControlE, filter=~has_selection)
+    def open_editor(event):
+        """ Open current buffer in editor """
+        event.current_buffer.open_in_editor(event.cli)
+
     @handle(Keys.BackTab)
     def insert_literal_tab(event):
         """ Insert literal tab on Shift+Tab instead of autocompleting """
         event.cli.current_buffer.insert_text(env.get('INDENT'))
+
+    @handle(Keys.ControlD, filter=ctrl_d_condition)
+    def call_exit_alias(event):
+        """Use xonsh exit function"""
+        b = event.cli.current_buffer
+        b.accept_action.validate_and_handle(event.cli, b)
+        xonsh_exit([])
 
     @handle(Keys.ControlJ, filter=IsMultiline())
     def multiline_carriage_return(event):

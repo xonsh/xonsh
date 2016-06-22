@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
 """Tools to help interface with foreign shells, such as Bash."""
 import os
+import sys
 import re
 import json
 import shlex
+import tempfile
 import builtins
 import subprocess
 from warnings import warn
 from functools import lru_cache
-from tempfile import NamedTemporaryFile
 from collections import MutableMapping, Mapping, Sequence
 
 from xonsh.tools import to_bool, ensure_string
+from xonsh.platform import ON_WINDOWS, ON_CYGWIN
 
 
 COMMAND = """
@@ -30,7 +32,7 @@ echo __XONSH_FUNCS_END__
 {seterrpostcmd}
 """.strip()
 
-DEFAULT_BASH_FUNCSCMD = """
+DEFAULT_BASH_FUNCSCMD = r"""
 # get function names from declare
 declstr=$(declare -F)
 read -r -a decls <<< $declstr
@@ -56,7 +58,7 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
   locfile=${line#*"$sep"}
   loc=${locfile%%"$sep"*}
   file=${locfile#*"$sep"}
-  namefile="${namefile}\\"${name}\\":\\"${file//\\/\\\\}\\","
+  namefile="${namefile}\"${name}\":\"${file//\\/\\\\}\","
 done <<< "$namelocfilestr"
 if [[ "{" == "${namefile}" ]]; then
   namefile="${namefile}}"
@@ -232,7 +234,7 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
     if not use_tmpfile:
         cmd.append(command)
     else:
-        tmpfile = NamedTemporaryFile(suffix=tmpfile_ext, delete=False)
+        tmpfile = tempfile.NamedTemporaryFile(suffix=tmpfile_ext, delete=False)
         tmpfile.write(command.encode('utf8'))
         tmpfile.close()
         cmd.append(tmpfile.name)
@@ -243,8 +245,8 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
         currenv = dict(currenv)
     try:
         s = subprocess.check_output(cmd, stderr=subprocess.PIPE, env=currenv,
-                                    # start new session to avoid hangs
-                                    start_new_session=True,
+                                    # start new session to avoid hangs (doesn't work on Cygwin though)
+                                    start_new_session=(not ON_CYGWIN),
                                     universal_newlines=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
         if not safe:
@@ -316,6 +318,8 @@ def parse_funcs(s, shell, sourcer=None):
     if m is None:
         return {}
     g1 = m.group(1)
+    if ON_WINDOWS:
+        g1 = g1.replace(os.sep, os.altsep)
     try:
         namefiles = json.loads(g1.strip())
     except json.decoder.JSONDecodeError as exc:
@@ -457,8 +461,6 @@ def ensure_shell(shell):
     return shell
 
 
-DEFAULT_SHELLS = ({'shell': 'bash'},)
-
 def _get_shells(shells=None, config=None, issue_warning=True):
     if shells is not None and config is not None:
         raise RuntimeError('Only one of shells and config may be non-None.')
@@ -471,7 +473,7 @@ def _get_shells(shells=None, config=None, issue_warning=True):
         else:
             from xonsh.environ import load_static_config
             conf = load_static_config(env, config)
-        shells = conf.get('foreign_shells', DEFAULT_SHELLS)
+        shells = conf.get('foreign_shells', ())
     return shells
 
 

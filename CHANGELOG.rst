@@ -1,8 +1,151 @@
-================
+====================
 Xonsh Change Log
-================
+====================
 
-Current Developments
+.. current developments
+
+v0.3.4
+====================
+
+**Changed:**
+
+* ``$PROMPT`` from foreign shells is now ignored.
+* ``$RC_FILES`` environment variable now stores the run control files we
+  attempted to load.
+* Only show the prompt for the wizard if we did not attempt to load any run
+  control files (as opposed to if none were successfully loaded).
+* Git and mercurial branch and dirty function refactor to imporve run times.
+
+
+**Fixed:**
+
+* Fixed an issue whereby attempting to delete a literal value (e.g., ``del 7``)
+  in the prompt_toolkit shell would cause xonsh to crash.
+* Fixed broken behavior when using ``cd ..`` to move into a nonexistent
+  directory.
+* Partial workaround for Cygwin where ``pthread_sigmask`` appears to be missing
+  from the ``signal`` module.
+* Fixed crash resulting from malformed ``$PROMPT``.
+* Fixed regression on Windows with the locate_binary() function.
+  The bug prevented `source-cmd` from working correctly and broke the
+  ``activate``/``deactivate`` aliases for the conda environements.
+* Fixed crash resulting from errors other than syntax errors in run control
+  file.
+* On Windows if bash is not on the path look in the registry for the defaults
+  install directory for GitForWindows.
+
+
+v0.3.3
+====================
+**Added:**
+
+* Question mark literals, ``?``, are now allowed as part of
+  subprocess argument names.
+* IPython style visual pointer to show where syntax error was detected
+* Pretty printing of output and syntax highlighting of input and output can now
+  be controlled via new environment variables ``$COLOR_INPUT``,
+  ``$COLOR_RESULTS``, and ``$PRETTY_PRINT_RESULTS``.
+
+* In interactive mode, if there are stopped or background jobs, Xonsh prompts
+  for confirmations rather than just killing all jobs and exiting.
+
+**Changed:**
+
+* ``which`` now gives a better verbose report of where the executables are
+  found.
+* Tab completion now uses a different interface, which allows new completers
+  to be implemented in Python.
+* Most functions in the ``Execer`` now take an extra argument
+  ``transform``, indicating whether the syntax tree transformations should
+  be applied.
+* ``prompt_toolkit`` is now loaded lazily, decreasing load times when using
+  the ``readline`` shell.
+* RC files are now executed directly in the appropriate context.
+* ``_`` is now updated by ``![]``, to contain the appropriate
+  ``CompletedCommand`` object.
+
+
+
+**Removed:**
+
+* Fixed bug on Windows where ``which`` did not include current directory
+
+**Fixed:**
+
+* Fixed crashed bash-completer when bash is not avaiable on Windows
+* Fixed bug on Windows where tab-completion for executables would return all files.
+* Fixed bug on Windows which caused the bash $PROMPT variable to be used when no
+  no $PROMPT variable was set in .xonshrc
+* Improved start-up times by caching information about bash completion
+  functions
+* The --shell-type CLI flag now takes precedence over $SHELL_TYPE specified in
+  .xonshrc
+* Fixed an issue about ``os.killpg()`` on OS X which caused xonsh crash with
+  occasionality
+
+
+
+v0.3.2
+====================
+**Fixed:**
+
+* Fixed PermissionError when tab completions tries to lookup executables in
+  directories without read permissions.
+* Fixed incorrect parsing of command line flags
+
+
+
+v0.3.1
+====================
+**Added:**
+
+* When a subprocess exits with a signal (e.g. SIGSEGV), a message is printed,
+  similar to Bash.
+* Added comma literals to subproc mode.
+* ``@$(cmd)`` has been added as a subprocess-mode operator, which replaces in
+  the subprocess command itself with the result of running ``cmd``.
+* New ``showcmd`` alias for displaying how xonsh interprets subprocess mode
+  commands and arguments.
+* Added ``$DYNAMIC_CWD_WIDTH`` to allow the adjusting of the current working
+  directory width in the prompt.
+* Added ``$XONSH_DEBUG`` environment variable to help with debuging.
+* The ``${...}`` shortcut for ``__xonsh_env__`` now returns appropriate
+  completion options
+
+**Changed:**
+
+* On Windows the default bash completions files ``$BASH_COMPLETIONS`` now points
+  to the default location of the completions files used by 'Git for Windows'
+* On Cygwin, some tweaks are applied to foreign shell subprocess calls and the
+  readline import, in order to avoid hangs on launch.
+
+
+**Removed:**
+
+* Special cased code for handling version of prompt_toolkit < v1.0.0
+
+
+**Fixed:**
+
+* Show sorted bash completions suggestions.
+* Fix bash completions (e.g git etc.) on windows when completions files have
+  spaces in their path names
+* Fixed a bug preventing ``source-bash`` from working on Windows
+* Numerous improvements to job control via a nearly-complete rewrite.
+* Addressed issue with finding the next break in subproc mode in context
+  sensitive parsing.
+* Fixed issue with loading readline init files (inputrc) that seems to be
+  triggered by libedit.
+* ``$MULTILINE_PROMPT`` now allows colors, as originally intended.
+* Rectified install issue with Jupyter hook when installing with pyenv,
+  Jupyter install hook now repects ``--prefix`` argument.
+* Fixed issue with the xonsh.ply subpackage not being installed.
+* Fixed a parsing bug whereby a trailing ``&`` on a line was being ignored
+  (processes were unable to be started in the background)
+
+
+
+v0.3.0
 ====================
 **Added:**
 
@@ -59,10 +202,13 @@ Current Developments
   recommended.
 * Provide better user feedback when running ``which`` in a platform that doesn't
   provide it (e.g. Windows).
+* The lexer now uses a custom tokenizer that handles regex globs in the proper
+  way.
 
-**Deprecated:** None
 
-**Removed:** None
+
+
+
 
 **Fixed:**
 
@@ -86,7 +232,7 @@ Current Developments
 * Fixed xonsh.exe launcher on Windows, when Python install directory has a space in it
 * Fixed `$CDPATH` to support `~` and environments variables in its items
 
-**Security:** None
+
 
 
 v0.2.7

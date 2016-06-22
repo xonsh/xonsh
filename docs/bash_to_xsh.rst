@@ -14,16 +14,21 @@ will help you put a finger on how to do the equivelent task in xonsh.
     * - ``$NAME`` or ``${NAME}``
       - ``$NAME``
       - Look up an environment variable by name.
-    * - ``${${VAR}}``
+    * - ``echo "$HOME/hello"``
+      - ``echo "$HOME/hello"``
+      - Construct an argument using an environment variable.
+    * - ``something/$SOME_VAR/$(some_command)``
+      - ``@('something/' + $SOME_VAR + $(some_command).strip())``
+      - Concatenate a variable or text with the result of running a command.
+    * - ``${!VAR}``
       - ``${var or expr}``
       - Look up an environment variable via another variable name. In xonsh,
         this may be any valid expression.
     * - ``$(cmd args)`` or ```cmd args```
-      - ``$(cmd args)``
-      - Use the ``$()`` operator to capture subprocesses as strings. Bash's
-        version of (now-deprecated) backticks is not supported. Note that
-        Bash will automatically tokenize the string, while xonsh just returns
-        a str of stdout.
+      - ``@$(cmd args)``
+      - Command substitution (allow the output of a command to replace the
+        command itself).  Tokenizes and executes the output of a subprocess
+        command as another subprocess.
     * - ``set -e``
       - ``$RAISE_SUBPROC_ERROR = True``
       - Cause a failure after a non-zero return code. Xonsh will raise a
@@ -38,5 +43,10 @@ will help you put a finger on how to do the equivelent task in xonsh.
       - ``or`` as well as ``||``
       - Logical-or operator for subprocesses.
     * - ``$?``
-      - ``__xonsh_history__.rtns[-1]``
+      - ``_.rtn``
       - Returns the exit code, or status, of the previous command.
+    * - ``N=V command``
+      - ``with ${...}.swap(N=V): command``
+      - Set temporary environment variable(s) and execute for command.
+        Use an indented block to execute many commands in the same context.
+

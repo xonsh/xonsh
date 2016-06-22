@@ -1,29 +1,28 @@
 # -*- coding: utf-8 -*-
 """Aliases for the xonsh shell."""
 
-import os
-import shlex
-import builtins
-import sys
-import subprocess
-from functools import lru_cache
 from argparse import ArgumentParser, Action
+import builtins
 from collections.abc import MutableMapping, Iterable, Sequence
+import os
+import sys
+import shlex
 
 from xonsh.dirstack import cd, pushd, popd, dirs, _get_cwd
-from xonsh.jobs import jobs, fg, bg, kill_all_jobs
-from xonsh.proc import foreground
-from xonsh.timings import timeit_alias
-from xonsh.tools import (ON_MAC, ON_WINDOWS, ON_ANACONDA,
-    XonshError, to_bool, string_types)
-from xonsh.history import main as history_alias
-from xonsh.replay import main as replay_main
-from xonsh.xontribs import main as xontribs_main
 from xonsh.environ import locate_binary
 from xonsh.foreign_shells import foreign_shell_data
+from xonsh.jobs import jobs, fg, bg, clean_jobs
+from xonsh.history import history_main
+from xonsh.platform import ON_ANACONDA, ON_DARWIN, ON_WINDOWS, scandir
+from xonsh.proc import foreground
+from xonsh.replay import replay_main
+from xonsh.timings import timeit_alias
+from xonsh.tools import (XonshError, argvquote, escape_windows_cmd_string,
+                         to_bool)
 from xonsh.vox import Vox
-from xonsh.tools import argvquote, escape_windows_cmd_string
+from xonsh.xontribs import xontribs_main
 from xonsh.xoreutils import _which
+from xonsh.completers._aliases import completer_alias
 
 
 class Aliases(MutableMapping):
@@ -106,7 +105,7 @@ class Aliases(MutableMapping):
         return self._raw[key]
 
     def __setitem__(self, key, val):
-        if isinstance(val, string_types):
+        if isinstance(val, str):
             self._raw[key] = shlex.split(val)
         else:
             self._raw[key] = val
@@ -143,10 +142,12 @@ class Aliases(MutableMapping):
 
 
 
-def exit(args, stdin=None):  # pylint:disable=redefined-builtin,W0622
+def xonsh_exit(args, stdin=None):
     """Sends signal to exit shell."""
+    if not clean_jobs():
+        # Do not exit if jobs not cleaned up
+        return None, None
     builtins.__xonsh_exit__ = True
-    kill_all_jobs()
     print()  # gimme a newline
     return None, None
 
@@ -280,7 +281,8 @@ def source_cmd(args, stdin=None):
     args.append('--envcmd=set')
     args.append('--seterrpostcmd=if errorlevel 1 exit 1')
     args.append('--use-tmpfile=1')
-    return source_foreign(args, stdin=stdin)
+    with builtins.__xonsh_env__.swap(PROMPT='$P$G'):
+        return source_foreign(args, stdin=stdin)
 
 
 def xexec(args, stdin=None):
@@ -330,7 +332,6 @@ def bang_bang(args, stdin=None):
 
 class AWitchAWitch(Action):
     SUPPRESS = '==SUPPRESS=='
-
     def __init__(self, option_strings, version=None, dest=SUPPRESS,
                  default=SUPPRESS, **kwargs):
         super().__init__(option_strings=option_strings, dest=dest,
@@ -353,15 +354,22 @@ def which(args, stdin=None, stdout=None, stderr=None):
     parser = ArgumentParser('which', description=desc)
     parser.add_argument('args', type=str, nargs='+',
                         help='The executables or aliases to search for')
-    parser.add_argument('-a', action='store_true', dest='all',
+    parser.add_argument('-a','--all', action='store_true', dest='all',
                         help='Show all matches in $PATH and xonsh.aliases')
     parser.add_argument('-s', '--skip-alias', action='store_true',
                         help='Do not search in xonsh.aliases', dest='skip')
     parser.add_argument('-V', '--version', action='version',
-                        version='{}'.format(_which.__version__))
-    parser.add_argument('-v', '--verbose', action='store_true', dest='verbose')
+                        version='{}'.format(_which.__version__),
+                        help='Display the version of the python which module '
+                        'used by xonsh')
+    parser.add_argument('-v', '--verbose', action='store_true', dest='verbose',
+                        help='Print out how matches were located and show '
+                        'near misses on stderr')
     parser.add_argument('-p', '--plain', action='store_true', dest='plain',
-                        help='Do not display alias expansions')
+                        help='Do not display alias expansions or location of '
+                             'where binaries are found. This is the '
+                             'default behavior, but the option can be used to '
+                             'override the --verbose option')
     parser.add_argument('--very-small-rocks', action=AWitchAWitch)
     if ON_WINDOWS:
         parser.add_argument('-e', '--exts', nargs='*', type=str,
@@ -377,7 +385,10 @@ def which(args, stdin=None, stdout=None, stderr=None):
         parser.print_usage(file=stderr)
         return -1
     pargs = parser.parse_args(args)
-    
+
+    if pargs.all:
+        pargs.verbose = True
+
     if ON_WINDOWS:
         if pargs.exts:
             exts = pargs.exts
@@ -391,31 +402,39 @@ def which(args, stdin=None, stdout=None, stderr=None):
         nmatches = 0
         # skip alias check if user asks to skip
         if (arg in builtins.aliases and not pargs.skip):
-            if pargs.plain:
-                print(arg, file=stdout)
+            if pargs.plain or not pargs.verbose:
+                if isinstance(builtins.aliases[arg], list):
+                    print(' '.join(builtins.aliases[arg]), file=stdout)
+                else:
+                    print(arg, file=stdout)
             else:
-                print('{} -> {}'.format(arg, builtins.aliases[arg]), file=stdout)
+                print("aliases['{}'] = {}".format(arg, builtins.aliases[arg]), file=stdout)
             nmatches += 1
             if not pargs.all:
                 continue
-        for match in _which.whichgen(arg, path=builtins.__xonsh_env__['PATH'],
-                                     exts=exts, verbose=pargs.verbose):
-            abs_name, from_where = match if pargs.verbose else (match, '')
+        # which.whichgen gives the nicest 'verbose' output if PATH is taken
+        # from os.environ so we temporarily override it with
+        # __xosnh_env__['PATH']
+        original_os_path = os.environ['PATH']
+        os.environ['PATH'] = builtins.__xonsh_env__.detype()['PATH']
+        matches = _which.whichgen(arg, exts=exts, verbose=pargs.verbose)
+        for abs_name, from_where in matches:
             if ON_WINDOWS:
                 # Use list dir to get correct case for the filename
-                # i.e. windows is case insesitive but case preserving
+                # i.e. windows is case insensitive but case preserving
                 p, f = os.path.split(abs_name)
-                f = next(s for s in os.listdir(p) if s.lower() == f.lower())
+                f = next(s.name for s in scandir(p) if s.name.lower() == f.lower())
                 abs_name = os.path.join(p, f)
                 if builtins.__xonsh_env__.get('FORCE_POSIX_PATHS', False):
                     abs_name.replace(os.sep, os.altsep)
-            if pargs.verbose:
-                print('{} ({})'.format(abs_name, from_where), file=stdout)
-            else:
+            if pargs.plain or not pargs.verbose:
                 print(abs_name, file=stdout)
+            else:
+                print('{} ({})'.format(abs_name, from_where), file=stdout)
             nmatches += 1
             if not pargs.all:
                 break
+        os.environ['PATH'] = original_os_path
         if not nmatches:
             failures.append(arg)
     if len(failures) == 0:
@@ -430,21 +449,44 @@ def which(args, stdin=None, stdout=None, stderr=None):
 
 def xonfig(args, stdin=None):
     """Runs the xonsh configuration utility."""
-    from xonsh.xonfig import main  # lazy import
-    return main(args)
+    from xonsh.xonfig import xonfig_main  # lazy import
+    return xonfig_main(args)
 
 
 @foreground
 def trace(args, stdin=None):
     """Runs the xonsh tracer utility."""
-    from xonsh.tracer import main  # lazy import
-    return main(args)
+    from xonsh.tracer import tracermain  # lazy import
+    try:
+        return tracermain(args)
+    except SystemExit:
+        pass
 
 
 def vox(args, stdin=None):
     """Runs Vox environment manager."""
     vox = Vox()
     return vox(args, stdin=stdin)
+
+
+def showcmd(args, stdin=None):
+    """usage: showcmd [-h|--help|cmd args]
+
+    Displays the command and arguments as a list of strings that xonsh would
+    run in subprocess mode. This is useful for determining how xonsh evaluates
+    your commands and arguments prior to running these commands.
+
+    optional arguments:
+      -h, --help            show this help message and exit
+
+    example:
+      >>> showcmd echo $USER can't hear "the sea"
+      ['echo', 'I', "can't", 'hear', 'the sea']
+    """
+    if len(args) == 0 or (len(args) == 1 and args[0] in {'-h', '--help'}):
+        print(showcmd.__doc__.rstrip().replace('\n    ', '\n'))
+    else:
+        sys.displayhook(args)
 
 
 def make_default_aliases():
@@ -457,16 +499,16 @@ def make_default_aliases():
         'jobs': jobs,
         'fg': fg,
         'bg': bg,
-        'EOF': exit,
-        'exit': exit,
-        'quit': exit,
+        'EOF': xonsh_exit,
+        'exit': xonsh_exit,
+        'quit': xonsh_exit,
         'xexec': xexec,
         'source': source_alias,
         'source-zsh': ['source-foreign', 'zsh', '--sourcer=source'],
         'source-bash':  ['source-foreign', 'bash', '--sourcer=source'],
         'source-cmd': source_cmd,
         'source-foreign': source_foreign,
-        'history': history_alias,
+        'history': history_main,
         'replay': replay_main,
         '!!': bang_bang,
         '!n': bang_n,
@@ -474,10 +516,12 @@ def make_default_aliases():
         'timeit': timeit_alias,
         'xonfig': xonfig,
         'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
+        'showcmd': showcmd,
         'ipynb': ['jupyter', 'notebook', '--no-browser'],
         'vox': vox,
         'which': which,
         'xontrib': xontribs_main,
+        'completer': completer_alias
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.
@@ -503,17 +547,11 @@ def make_default_aliases():
             default_aliases[alias] = ['cmd', '/c', alias]
         default_aliases['call'] = ['source-cmd']
         default_aliases['source-bat'] = ['source-cmd']
-        # Add aliases specific to the Anaconda python distribution.
+        default_aliases['clear'] = 'cls'
         if ON_ANACONDA:
-            def source_cmd_keep_prompt(args, stdin=None):
-                p = builtins.__xonsh_env__.get('PROMPT')
-                source_cmd(args, stdin=stdin)
-                builtins.__xonsh_env__['PROMPT'] = p
-            default_aliases['source-cmd-keep-promt'] = source_cmd_keep_prompt
-            default_aliases['activate'] = ['source-cmd-keep-promt',
-                                           'activate.bat']
-            default_aliases['deactivate'] = ['source-cmd-keep-promt',
-                                             'deactivate.bat']
+            # Add aliases specific to the Anaconda python distribution.
+            default_aliases['activate'] = ['source-cmd', 'activate.bat']
+            default_aliases['deactivate'] = ['source-cmd', 'deactivate.bat']
         if not locate_binary('sudo'):
             import xonsh.winutils as winutils
 
@@ -533,10 +571,11 @@ def make_default_aliases():
                     print(msg.format(cmd))
 
             default_aliases['sudo'] = sudo
-    elif ON_MAC:
+    elif ON_DARWIN:
         default_aliases['ls'] = ['ls', '-G']
     else:
         default_aliases['grep'] = ['grep', '--color=auto']
+        default_aliases['egrep'] = ['egrep', '--color=auto']
+        default_aliases['fgrep'] = ['fgrep', '--color=auto']
         default_aliases['ls'] = ['ls', '--color=auto', '-v']
     return default_aliases
-

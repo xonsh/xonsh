@@ -5,24 +5,23 @@ import builtins
 from prompt_toolkit.key_binding.manager import KeyBindingManager
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.layout.lexers import PygmentsLexer
+from prompt_toolkit.shortcuts import print_tokens
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.styles import PygmentsStyle
-from pygments.style import Style
 from pygments.styles import get_all_styles
-from pygments.styles.default import DefaultStyle
-from pygments.token import (Keyword, Name, Comment, String, Error, Number,
-                            Operator, Generic, Whitespace, Token)
+from pygments.token import Token
 
 from xonsh.base_shell import BaseShell
 from xonsh.tools import print_exception
 from xonsh.environ import partial_format_prompt
-from xonsh.pyghooks import XonshLexer, XonshStyle, partial_color_tokenize, \
-    xonsh_style_proxy
+from xonsh.platform import ptk_version, ptk_version_info
+from xonsh.pyghooks import (XonshLexer, partial_color_tokenize,
+                            xonsh_style_proxy)
 from xonsh.ptk.completer import PromptToolkitCompleter
 from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings
-from xonsh.ptk.shortcuts import Prompter, print_tokens
-from xonsh.shell import prompt_toolkit_version
+from xonsh.ptk.shortcuts import Prompter
+
 
 class PromptToolkitShell(BaseShell):
     """The xonsh shell."""
@@ -37,14 +36,7 @@ class PromptToolkitShell(BaseShell):
                 'enable_auto_suggest_bindings': True,
                 'enable_search': True,
                 'enable_abort_and_exit_bindings': True,
-                'enable_open_in_editor': True
                 }
-        vptk = prompt_toolkit_version()
-        major, minor = [int(x) for x in vptk.split('.')[:2]]
-        self.new_vi_mode_flag = ((major, minor) >= (1, 0)) and (vptk != '<0.57')
-        if not(self.new_vi_mode_flag):
-            # enable_vi_mode is deprecated acoording to prompt_toolset 1.0 document.
-            key_bindings_manager_args['enable_vi_mode'] = Condition(lambda cli: builtins.__xonsh_env__.get('VI_MODE'))
 
         self.key_bindings_manager = KeyBindingManager(**key_bindings_manager_args)
         load_xonsh_bindings(self.key_bindings_manager)
@@ -79,17 +71,16 @@ class PromptToolkitShell(BaseShell):
                     'get_rprompt_tokens': get_rprompt_tokens,
                     'style': PygmentsStyle(xonsh_style_proxy(self.styler)),
                     'completer': completer,
-                    'lexer': PygmentsLexer(XonshLexer),
                     'multiline': multiline,
                     'get_continuation_tokens': self.continuation_tokens,
                     'history': history,
                     'enable_history_search': enable_history_search,
                     'reserve_space_for_menu': 0,
                     'key_bindings_registry': self.key_bindings_manager.registry,
-                    'display_completions_in_columns': multicolumn
+                    'display_completions_in_columns': multicolumn,
                     }
-            if self.new_vi_mode_flag:
-                prompt_args['vi_mode'] = env.get('VI_MODE')
+            if builtins.__xonsh_env__.get('COLOR_INPUT'):
+                prompt_args['lexer'] = PygmentsLexer(XonshLexer)
             line = self.prompter.prompt(**prompt_args)
         return line
 
@@ -151,7 +142,10 @@ class PromptToolkitShell(BaseShell):
         prompt.
         """
         p = builtins.__xonsh_env__.get('RIGHT_PROMPT')
-        if len(p) == 0:
+        # partial_format_prompt does handle empty strings properly,
+        # but this avoids descending into it in the common case of
+        # $RIGHT_PROMPT == ''.
+        if isinstance(p, str) and len(p) == 0:
             return []
         try:
             p = partial_format_prompt(p)
@@ -162,10 +156,32 @@ class PromptToolkitShell(BaseShell):
 
     def continuation_tokens(self, cli, width):
         """Displays dots in multiline prompt"""
+        width = width - 1
         dots = builtins.__xonsh_env__.get('MULTILINE_PROMPT')
-        _width = width - 1
-        dots = _width // len(dots) * dots + dots[:_width % len(dots)]
-        return [(Token, dots + ' ')]
+        dots = dots() if callable(dots) else dots
+        if dots is None:
+            return [(Token, ' '*(width + 1))]
+        basetoks = self.format_color(dots)
+        baselen = sum(len(t[1]) for t in basetoks)
+        if baselen == 0:
+            return [(Token, ' '*(width + 1))]
+        toks = basetoks * (width // baselen)
+        n = width % baselen
+        count = 0
+        for tok in basetoks:
+            slen = len(tok[1])
+            newcount = slen + count
+            if slen == 0:
+                continue
+            elif newcount <= n:
+                toks.append(tok)
+            else:
+                toks.append((tok[0], tok[1][:n-count]))
+            count = newcount
+            if n <= count:
+                break
+        toks.append((Token, ' '))  # final space
+        return toks
 
     def format_color(self, string, **kwargs):
         """Formats a color string using Pygments. This, therefore, returns

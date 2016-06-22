@@ -2,7 +2,10 @@ language: python
 python:
   - 3.4
   - 3.5
+  - "nightly"
 install:
   - pip install -r requirements-tests.txt
 script:
-  - nosetests -q
+  - nosetests -q --with-coverage --cover-package=xonsh
+after_success:
+  - codecov

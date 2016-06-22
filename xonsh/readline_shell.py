@@ -1,23 +1,40 @@
 # -*- coding: utf-8 -*-
-"""The readline based xonsh shell."""
+"""The readline based xonsh shell.
+
+Portions of this code related to initializing the readline library
+are included from the IPython project.  The IPython project is:
+
+* Copyright (c) 2008-2014, IPython Development Team
+* Copyright (c) 2001-2007, Fernando Perez <fernando.perez@colorado.edu>
+* Copyright (c) 2001, Janko Hauser <jhauser@zscout.de>
+* Copyright (c) 2001, Nathaniel Gray <n8gray@caltech.edu>
+
+"""
 import os
+import sys
 import time
 import select
 import builtins
+import importlib
 from cmd import Cmd
 from threading import Thread
 from collections import deque
 
-from xonsh import lazyjson
+from xonsh.lazyjson import LazyJSON
+from xonsh.lazyasd import LazyObject
 from xonsh.base_shell import BaseShell
 from xonsh.ansi_colors import partial_color_format, color_style_names, color_style
 from xonsh.environ import partial_format_prompt, multiline_prompt
-from xonsh.tools import ON_WINDOWS, print_exception, HAVE_PYGMENTS
+from xonsh.tools import print_exception
+from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS, ON_CYGWIN, ON_DARWIN
 
-if HAVE_PYGMENTS:
-    from xonsh import pyghooks
-    import pygments
-    from pygments.formatters.terminal256 import Terminal256Formatter
+pygments = LazyObject(lambda: importlib.import_module('pygments'),
+                      globals(), 'pygments')
+terminal256 = LazyObject(lambda: importlib.import_module(
+                                    'pygments.formatters.terminal256'),
+                      globals(), 'terminal')
+pyghooks = LazyObject(lambda: importlib.import_module('xonsh.pyghooks'),
+                      globals(), 'pyghooks')
 
 readline = None
 RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = RL_STATE = None
@@ -32,14 +49,23 @@ def setup_readline():
     global RL_COMPLETION_SUPPRESS_APPEND, RL_LIB, RL_CAN_RESIZE, RL_STATE, readline
     if RL_COMPLETION_SUPPRESS_APPEND is not None:
         return
-    try:
-        import readline
-    except ImportError:
+    for _rlmod_name in ('gnureadline', 'readline'):
+        try:
+            readline = importlib.import_module(_rlmod_name)
+            sys.modules['readline'] = readline
+        except ImportError:
+            pass
+        else:
+            break
+    if readline is None:
+        print("No readline implementation available.  Skipping setup.")
         return
     import ctypes
     import ctypes.util
+    uses_libedit = readline.__doc__ and 'libedit' in readline.__doc__
     readline.set_completer_delims(' \t\n')
-    if not readline.__file__.endswith('.py'):
+    # Cygwin seems to hang indefinitely when querying the readline lib
+    if (not ON_CYGWIN) and (not readline.__file__.endswith('.py')):
         RL_LIB = lib = ctypes.cdll.LoadLibrary(readline.__file__)
         try:
             RL_COMPLETION_SUPPRESS_APPEND = ctypes.c_int.in_dll(
@@ -64,12 +90,36 @@ def setup_readline():
 
     # handle tab completion differences found in libedit readline compatibility
     # as discussed at http://stackoverflow.com/a/7116997
-    if readline.__doc__ and 'libedit' in readline.__doc__:
+    if uses_libedit and ON_DARWIN:
         readline.parse_and_bind("bind ^I rl_complete")
+        print('\n'.join(['', "*"*78,
+            "libedit detected - readline will not be well behaved, including but not limited to:",
+            "   * crashes on tab completion",
+            "   * incorrect history navigation",
+            "   * corrupting long-lines",
+            "   * failure to wrap or indent lines properly",
+            "",
+            "It is highly recommended that you install gnureadline, which is installable with:",
+            "     pip install gnureadline",
+            "*"*78]), file=sys.stderr)
     else:
         readline.parse_and_bind("tab: complete")
-    # load custom user settings
-    readline.read_init_file()
+    # try to load custom user settings
+    inputrc_name = os.environ.get('INPUTRC')
+    if inputrc_name is None:
+        if uses_libedit:
+            inputrc_name = '.editrc'
+        else:
+            inputrc_name = '.inputrc'
+        inputrc_name = os.path.join(os.path.expanduser('~'), inputrc_name)
+    if (not ON_WINDOWS) and (not os.path.isfile(inputrc_name)):
+        inputrc_name = '/etc/inputrc'
+    if os.path.isfile(inputrc_name):
+        try:
+            readline.read_init_file(inputrc_name)
+        except Exception:
+            # this seems to fail with libedit
+            print_exception('xonsh: could not load readline default init file.')
 
 
 def teardown_readline():
@@ -156,6 +206,7 @@ class ReadlineShell(BaseShell, Cmd):
         setup_readline()
         self._current_indent = ''
         self._current_prompt = ''
+        self._force_hide = None
         self.cmdqueue = deque()
 
     def __del__(self):
@@ -186,10 +237,13 @@ class ReadlineShell(BaseShell, Cmd):
         rl_completion_suppress_append()  # this needs to be called each time
         mline = line.partition(' ')[2]
         offs = len(mline) - len(text)
-        x = [(i[offs:] if " " in i[:-1] else i)
-             for i in self.completer.complete(text, line,
-                                              begidx, endidx,
-                                              ctx=self.ctx)[0]]
+        if self.completer is None:
+            x = []
+        else:
+            x = [(i[offs:] if " " in i[:-1] else i)
+                 for i in self.completer.complete(text, line,
+                                                  begidx, endidx,
+                                                  ctx=self.ctx)[0]]
         return x
 
     # tab complete on first index too
@@ -344,8 +398,9 @@ class ReadlineShell(BaseShell, Cmd):
             p = partial_format_prompt(p)
         except Exception:  # pylint: disable=broad-except
             print_exception()
+        hide = True if self._force_hide is None else self._force_hide
         p = partial_color_format(p, style=env.get('XONSH_COLOR_STYLE'),
-                                 hide=True)
+                                 hide=hide)
         self._current_prompt = p
         self.settitle()
         return p
@@ -354,6 +409,7 @@ class ReadlineShell(BaseShell, Cmd):
         """Readline implementation of color formatting. This usesg ANSI color
         codes.
         """
+        hide = hide if self._force_hide is None else self._force_hide
         return partial_color_format(string, hide=hide,
                     style=builtins.__xonsh_env__.get('XONSH_COLOR_STYLE'))
 
@@ -365,7 +421,7 @@ class ReadlineShell(BaseShell, Cmd):
             env = builtins.__xonsh_env__
             self.styler.style_name = env.get('XONSH_COLOR_STYLE')
             style_proxy = pyghooks.xonsh_style_proxy(self.styler)
-            formatter = Terminal256Formatter(style=style_proxy)
+            formatter = terminal256.Terminal256Formatter(style=style_proxy)
             s = pygments.format(string, formatter).rstrip()
         print(s, **kwargs)
 
@@ -398,11 +454,11 @@ class ReadlineHistoryAdder(Thread):
         hist = builtins.__xonsh_history__
         while self.wait_for_gc and hist.gc.is_alive():
             time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer
-        files = hist.gc.unlocked_files()
+        files = hist.gc.files()
         i = 1
         for _, _, f in files:
             try:
-                lj = lazyjson.LazyJSON(f, reopen=False)
+                lj = LazyJSON(f, reopen=False)
                 for cmd in lj['cmds']:
                     inp = cmd['inp'].splitlines()
                     for line in inp:

@@ -37,8 +37,8 @@ class PromptToolkitHistory(prompt_toolkit.history.History):
 class PromptToolkitHistoryAdder(Thread):
 
     def __init__(self, ptkhist, wait_for_gc=True, *args, **kwargs):
-        """Thread responsible for adding inputs from history to the current 
-        prompt-toolkit history instance. May wait for the history garbage 
+        """Thread responsible for adding inputs from history to the current
+        prompt-toolkit history instance. May wait for the history garbage
         collector to finish.
         """
         super(PromptToolkitHistoryAdder, self).__init__(*args, **kwargs)
@@ -53,7 +53,7 @@ class PromptToolkitHistoryAdder(Thread):
         ptkhist = self.ptkhist
         while self.wait_for_gc and hist.gc.is_alive():
             time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer
-        files = hist.gc.unlocked_files()
+        files = hist.gc.files()
         for _, _, f in files:
             try:
                 lj = lazyjson.LazyJSON(f, reopen=False)
@@ -75,7 +75,7 @@ class PromptToolkitHistoryAdder(Thread):
     def _buf(self):
         # Thread-safe version of
         # buf = builtins.__xonsh_shell__.shell.prompter.cli.application.buffer
-        path = ['__xonsh_shell__', 'shell', 'prompter', 'cli', 'application', 
+        path = ['__xonsh_shell__', 'shell', 'prompter', 'cli', 'application',
                 'buffer']
         buf = builtins
         for a in path:
@@ -83,4 +83,3 @@ class PromptToolkitHistoryAdder(Thread):
             if buf is None:
                 break
         return buf
-        

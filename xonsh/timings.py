@@ -79,7 +79,7 @@ def format_time(timespan, precision=3):
     # certain terminals.
     # See bug: https://bugs.launchpad.net/ipython/+bug/348466
     # Try to prevent crashes by being more secure than it needs to
-    # E.g. eclipse is able to print a µ, but has no sys.stdout.encoding set.
+    # E.g. eclipse is able to print a mu, but has no sys.stdout.encoding set.
     units = ["s", "ms", 'us', "ns"]  # the save value
     if hasattr(sys.stdout, 'encoding') and sys.stdout.encoding:
         try:

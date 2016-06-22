@@ -3,14 +3,14 @@
 
 This module registers the hooks it defines when it is imported.
 """
+import builtins
+from importlib.abc import MetaPathFinder, SourceLoader
+from importlib.machinery import ModuleSpec
 import os
 import sys
-import builtins
-from importlib.machinery import ModuleSpec
-from importlib.abc import MetaPathFinder, SourceLoader
 
-from xonsh.tools import string_types
 from xonsh.execer import Execer
+from xonsh.platform import scandir
 
 
 class XonshImportHook(MetaPathFinder, SourceLoader):
@@ -46,11 +46,11 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
         name = fullname.rsplit(dot, 1)[-1]
         fname = name + '.xsh'
         for p in path:
-            if not isinstance(p, string_types):
+            if not isinstance(p, str):
                 continue
             if not os.path.isdir(p):
                 continue
-            if fname not in os.listdir(p):
+            if fname not in (x.name for x in scandir(p)):
                 continue
             spec = ModuleSpec(fullname, self)
             self._filenames[fullname] = os.path.join(p, fname)

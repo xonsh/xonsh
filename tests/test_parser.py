@@ -1553,6 +1553,12 @@ def test_dollar_sub_space():
 def test_ls_dot():
     yield check_xonsh_ast, {}, '$(ls .)', False
 
+def test_lambda_in_atparens():
+    yield check_xonsh_ast, {}, '$(echo hello | @(lambda a, s=None: "hey!") foo bar baz)', False
+
+def test_nested_madness():
+    yield check_xonsh_ast, {}, '$(@$(which echo) ls | @(lambda a, s=None: $(@(s.strip()) @(a[1]))) foo -la baz)', False
+
 def test_ls_dot_nesting():
     yield check_xonsh_ast, {}, '$(ls @(None or "."))', False
 
@@ -1618,6 +1624,45 @@ def test_ls_regex():
 
 def test_backtick():
     yield check_xonsh_ast, {}, 'print(`.*`)', False
+
+def test_ls_regex_octothorpe():
+    yield check_xonsh_ast, {}, '$(ls `#[Ff]+i*LE` -l)', False
+
+def test_ls_explicitregex():
+    yield check_xonsh_ast, {}, '$(ls r`[Ff]+i*LE` -l)', False
+
+def test_rbacktick():
+    yield check_xonsh_ast, {}, 'print(r`.*`)', False
+
+def test_ls_explicitregex_octothorpe():
+    yield check_xonsh_ast, {}, '$(ls r`#[Ff]+i*LE` -l)', False
+
+def test_ls_glob():
+    yield check_xonsh_ast, {}, '$(ls g`[Ff]+i*LE` -l)', False
+
+def test_gbacktick():
+    yield check_xonsh_ast, {}, 'print(g`.*`)', False
+
+def test_ls_glob_octothorpe():
+    yield check_xonsh_ast, {}, '$(ls g`#[Ff]+i*LE` -l)', False
+
+def test_ls_customsearch():
+    yield check_xonsh_ast, {}, '$(ls @foo`[Ff]+i*LE` -l)', False
+
+def test_custombacktick():
+    yield check_xonsh_ast, {}, 'print(@foo`.*`)', False
+
+def test_ls_customsearch_octothorpe():
+    yield check_xonsh_ast, {}, '$(ls @foo`#[Ff]+i*LE` -l)', False
+
+def test_injection():
+    yield check_xonsh_ast, {}, '$[@$(which python)]', False
+
+def test_rhs_nested_injection():
+    yield check_xonsh_ast, {}, '$[ls @$(dirname @$(which python))]', False
+
+def test_backtick_octothorpe():
+    yield check_xonsh_ast, {}, 'print(`#.*`)', False
 
 def test_uncaptured_sub():
     yield check_xonsh_ast, {}, '$[ls]', False
@@ -1731,8 +1776,18 @@ def test_git_two_quotes_space_space():
 def test_ls_quotes_3_space():
     yield check_xonsh_ast, {}, '$[ls "wakka jawaka baraka"]', False
 
+def test_echo_comma():
+    yield check_xonsh_ast, {}, '![echo ,]', False
+
+def test_echo_internal_comma():
+    yield check_xonsh_ast, {}, '![echo 1,2]', False
+
 def test_comment_only():
     yield check_xonsh_ast, {}, '# hello'
+
+def test_echo_slash_question():
+    yield check_xonsh_ast, {}, '![echo /?]', False
+
 
 _error_names = {'e', 'err', '2'}
 _output_names = {'', 'o', 'out', '1'}

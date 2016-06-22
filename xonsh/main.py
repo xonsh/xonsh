@@ -4,8 +4,9 @@ import os
 import sys
 import enum
 import builtins
-from argparse import ArgumentParser, ArgumentTypeError
+import importlib
 from contextlib import contextmanager
+from argparse import ArgumentParser, ArgumentTypeError
 
 try:
     from setproctitle import setproctitle
@@ -13,17 +14,22 @@ except ImportError:
     setproctitle = None
 
 from xonsh import __version__
+from xonsh.lazyasd import LazyObject
+from xonsh.environ import DEFAULT_VALUES
 from xonsh.shell import Shell
 from xonsh.pretty import pprint, pretty
 from xonsh.proc import HiddenCompletedCommand
 from xonsh.jobs import ignore_sigtstp
-from xonsh.tools import (HAVE_PYGMENTS, setup_win_unicode_console, print_color,
-                         ON_WINDOWS)
-from xonsh.codecache import (run_script_with_cache, run_code_with_cache)
+from xonsh.tools import setup_win_unicode_console, print_color
+from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
+from xonsh.codecache import run_script_with_cache, run_code_with_cache
+from xonsh.xonfig import xonfig_main
 
-if HAVE_PYGMENTS:
-    import pygments
-    from xonsh import pyghooks
+
+pygments = LazyObject(lambda: importlib.import_module('pygments'),
+                      globals(), 'pygments')
+pyghooks = LazyObject(lambda: importlib.import_module('xonsh.pyghooks'),
+                      globals(), 'pyghooks')
 
 
 def path_argument(s):
@@ -112,51 +118,25 @@ parser.add_argument('args',
                     default=[])
 
 
-def arg_undoers():
-    au = {
-        '-h': (lambda args: setattr(args, 'help', False)),
-        '-V': (lambda args: setattr(args, 'version', False)),
-        '-c': (lambda args: setattr(args, 'command', None)),
-        '-i': (lambda args: setattr(args, 'force_interactive', False)),
-        '-l': (lambda args: setattr(args, 'login', False)),
-        '-c': (lambda args: setattr(args, 'command', None)),
-        '--no-script-cache': (lambda args: setattr(args, 'scriptcache', True)),
-        '--cache-everything': (lambda args: setattr(args, 'cacheall', False)),
-        '--config-path': (lambda args: delattr(args, 'config_path')),
-        '--no-rc': (lambda args: setattr(args, 'norc', False)),
-        '-D': (lambda args: setattr(args, 'defines', None)),
-        '--shell-type': (lambda args: setattr(args, 'shell_type', None)),
-        }
-    au['--help'] = au['-h']
-    au['--version'] = au['-V']
-    au['--interactive'] = au['-i']
-    au['--login'] = au['-l']
-
-    return au
-
-def undo_args(args):
-    """Undoes missaligned args."""
-    au = arg_undoers()
-    for a in args.args:
-        if a in au:
-            au[a](args)
-        else:
-            for k in au:
-                if a.startswith(k):
-                    au[k](args)
-
 def _pprint_displayhook(value):
-    if value is None or isinstance(value, HiddenCompletedCommand):
+    if value is None:
         return
     builtins._ = None  # Set '_' to None to avoid recursion
-    if HAVE_PYGMENTS:
-        s = pretty(value)  # color case
-        lexer = pyghooks.XonshLexer()
-        tokens = list(pygments.lex(s, lexer=lexer))
+    if isinstance(value, HiddenCompletedCommand):
+        builtins._ = value
+        return
+    env = builtins.__xonsh_env__
+    if env.get('PRETTY_PRINT_RESULTS'):
+        printed_val = pretty(value)
+    else:
+        printed_val = repr(value)
+    if HAS_PYGMENTS and env.get('COLOR_RESULTS'):
+        tokens = list(pygments.lex(printed_val, lexer=pyghooks.XonshLexer()))
         print_color(tokens)
     else:
-        pprint(value)  # black & white case
+        print(printed_val)  # black & white case
     builtins._ = value
+
 
 class XonshMode(enum.Enum):
     single_command = 0
@@ -164,16 +144,26 @@ class XonshMode(enum.Enum):
     script_from_stdin = 2
     interactive = 3
 
+
 def premain(argv=None):
     """Setup for main xonsh entry point, returns parsed arguments."""
     if setproctitle is not None:
         setproctitle(' '.join(['xonsh'] + sys.argv[1:]))
+    builtins.__xonsh_ctx__ = {}
     args, other = parser.parse_known_args(argv)
     if args.file is not None:
-        real_argv = (argv or sys.argv)
-        i = real_argv.index(args.file)
-        args.args = real_argv[i+1:]
-        undo_args(args)
+        arguments = (argv or sys.argv)
+        file_index = arguments.index(args.file)
+        # A script-file was passed and is to be executed. The argument parser
+        # might have parsed switches intended for the script, so reset the
+        # parsed switches to their default values
+        old_args = args
+        args = parser.parse_known_args('')[0]
+        args.file = old_args.file
+        # Save the arguments that are intended for the script-file. Switches
+        # and positional arguments passed before the path to the script-file are
+        # ignored.
+        args.args = arguments[file_index+1:]
     if args.help:
         parser.print_help()
         exit()
@@ -185,10 +175,11 @@ def premain(argv=None):
                     'completer': False,
                     'login': False,
                     'scriptcache': args.scriptcache,
-                    'cacheall': args.cacheall}
+                    'cacheall': args.cacheall,
+                    'ctx': builtins.__xonsh_ctx__}
     if args.login:
         shell_kwargs['login'] = True
-    if args.config_path is None:
+    if args.config_path is not None:
         shell_kwargs['config'] = args.config_path
     if args.norc:
         shell_kwargs['rc'] = ()
@@ -225,28 +216,34 @@ def main(argv=None):
     shell = builtins.__xonsh_shell__
     if args.mode == XonshMode.single_command:
         # run a single command and exit
-        run_code_with_cache(args.command, shell.execer, mode='single')
+        run_code_with_cache(args.command.lstrip(), shell.execer, mode='single')
     elif args.mode == XonshMode.script_from_file:
         # run a script contained in a file
-        if os.path.isfile(args.file):
+        path = os.path.abspath(os.path.expanduser(args.file))
+        if os.path.isfile(path):
             sys.argv = args.args
             env['ARGS'] = [args.file] + args.args
-            run_script_with_cache(args.file, shell.execer, glb=shell.ctx, loc=None, mode='exec')
+            env['XONSH_SOURCE'] = path
+            run_script_with_cache(args.file, shell.execer, glb=shell.ctx,
+                                  loc=None, mode='exec')
         else:
             print('xonsh: {0}: No such file or directory.'.format(args.file))
     elif args.mode == XonshMode.script_from_stdin:
         # run a script given on stdin
         code = sys.stdin.read()
-        run_code_with_cache(code, shell.execer, glb=shell.ctx, loc=None, mode='exec')
+        run_code_with_cache(code, shell.execer, glb=shell.ctx, loc=None,
+                            mode='exec')
     else:
         # otherwise, enter the shell
         env['XONSH_INTERACTIVE'] = True
         ignore_sigtstp()
-        if not env['LOADED_CONFIG'] and not any(env['LOADED_RC_FILES']):
-            print('Could not find xonsh configuration or run control files.')
-            from xonsh import xonfig  # lazy import
-            xonfig.main(['wizard', '--confirm'])
-        shell.cmdloop()
+        if (env['XONSH_INTERACTIVE'] and
+                not env['LOADED_CONFIG'] and
+                not any(os.path.isfile(i) for i in env['XONSHRC'])):
+            print('Could not find xonsh configuration or run control files.',
+                  file=sys.stderr)
+            xonfig_main(['wizard', '--confirm'])
+        shell.shell.cmdloop()
     postmain(args)
 
 
@@ -254,7 +251,8 @@ def postmain(args=None):
     """Teardown for main xonsh entry point, accepts parsed arguments."""
     if ON_WINDOWS:
         setup_win_unicode_console(enable=False)
-    del builtins.__xonsh_shell__
+    if hasattr(builtins, '__xonsh_shell__'):
+        del builtins.__xonsh_shell__
 
 
 @contextmanager
@@ -266,7 +264,6 @@ def main_context(argv=None):
     args = premain(argv)
     yield builtins.__xonsh_shell__
     postmain(args)
-
 
 
 if __name__ == '__main__':

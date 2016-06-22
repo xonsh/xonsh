@@ -2,10 +2,11 @@
 """Completer implementation to use with prompt_toolkit."""
 import os
 import builtins
-import xonsh.shell
 
 from prompt_toolkit.layout.dimension import LayoutDimension
 from prompt_toolkit.completion import Completer, Completion
+
+from xonsh.platform import ptk_version
 
 
 class PromptToolkitCompleter(Completer):
@@ -24,35 +25,28 @@ class PromptToolkitCompleter(Completer):
 
         #  Only generate completions when the user hits tab.
         if complete_event.completion_requested:
-            line = document.current_line.lstrip()
-            endidx = document.cursor_position_col
-            begidx = line[:endidx].rfind(' ') + 1 if line[:endidx].rfind(' ') >= 0 else 0
-            prefix = line[begidx:endidx]
-            completions, l = self.completer.complete(prefix,
-                                                     line,
-                                                     begidx,
-                                                     endidx,
-                                                     self.ctx)
-            if len(completions) <= 1:
-                pass
-            elif len(os.path.commonprefix(completions)) <= len(prefix):
-                self.reserve_space()
-            for comp in completions:
-                yield Completion(comp, -l)
+            if self.completer is None:
+                yield from []
+            else:
+                line = document.current_line.lstrip()
+                endidx = document.cursor_position_col
+                begidx = line[:endidx].rfind(' ') + 1 if line[:endidx].rfind(' ') >= 0 else 0
+                prefix = line[begidx:endidx]
+                completions, l = self.completer.complete(prefix,
+                                                         line,
+                                                         begidx,
+                                                         endidx,
+                                                         self.ctx)
+                if len(completions) <= 1:
+                    pass
+                elif len(os.path.commonprefix(completions)) <= len(prefix):
+                    self.reserve_space()
+                for comp in completions:
+                    yield Completion(comp, -l)
 
     def reserve_space(self):
         cli = builtins.__xonsh_shell__.shell.prompter.cli
-        if xonsh.shell.prompt_toolkit_version().startswith("1.0"):
-            # This is the layout for ptk 1.0
-            window = cli.application.layout.children[0].content.children[1]
-        else:
-            #TODO remove after next prompt_toolkit release
-            try:
-                #old layout to be removed at next ptk release
-                window = cli.application.layout.children[1].children[1].content
-            except AttributeError:
-                #new layout to become default
-                window = cli.application.layout.children[1].content
+        window = cli.application.layout.children[0].content.children[1]
 
         if window and window.render_info:
             h = window.render_info.content_height

@@ -11,6 +11,8 @@ import os
 import sys
 import builtins
 
+os.environ['XONSH_DEBUG'] = '1'
+
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.environ import DEFAULT_DOCS, Env
 from xonsh.xontribs import xontrib_metadata
@@ -25,7 +27,7 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.pngmath',
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.imgmath',
               'sphinx.ext.inheritance_diagram', 'sphinx.ext.viewcode',
               #'sphinx.ext.autosummary',
               'numpydoc', 'cmdhelp',
@@ -68,7 +70,7 @@ release = XONSH_VERSION
 #today_fmt = '%B %d, %Y'
 
 # List of documents that shouldn't be included in the build.
-#unused_docs = []
+exclude_patterns = ['api/blank.rst']
 
 # List of directories, relative to source directory, that shouldn't be searched
 # for source files.
@@ -78,7 +80,7 @@ exclude_trees = []
 #default_role = None
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
-#add_function_parentheses = True
+add_function_parentheses = True
 
 # If true, the current module name will be prepended to all description
 # unit titles (such as .. function::).
@@ -98,7 +100,7 @@ pygments_style = 'sphinx'
 #pygments_style = 'pastie'
 
 # A list of ignored prefixes for module index sorting.
-#modindex_common_prefix = []
+modindex_common_prefix = ['xonsh.']
 
 
 # -- Options for HTML output ---------------------------------------------------
@@ -262,6 +264,7 @@ def make_envvars():
            '{docstr}\n\n'
            '**configurable:** {configurable}\n\n'
            '**default:** {default}\n\n'
+           '**store_as_str:** {store_as_str}\n\n'
            '-------\n\n')
     for var in vars:
         title = '$' + var
@@ -269,7 +272,7 @@ def make_envvars():
         vd = env.get_docs(var)
         s += sec.format(low=var.lower(), title=title, under=under,
                         docstr=vd.docstr, configurable=vd.configurable,
-                        default=vd.default)
+                        default=vd.default, store_as_str=vd.store_as_str)
     s = s[:-9]
     fname = os.path.join(os.path.dirname(__file__), 'envvarsbody')
     with open(fname, 'w') as f:
@@ -340,4 +343,5 @@ def make_xontribs():
 make_envvars()
 make_xontribs()
 
-builtins.__xonsh_history__= None
+builtins.__xonsh_history__ = None
+builtins.__xonsh_env__ = {}

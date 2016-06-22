@@ -10,53 +10,24 @@ from nose.tools import assert_raises
 from xonsh.execer import Execer
 from xonsh.tools import ON_WINDOWS
 
-from tools import mock_xonsh_env
-
-DEBUG_LEVEL = 0
-EXECER = None
-
-#
-# Helpers
-#
+from tools import (mock_xonsh_env, execer_setup, check_exec, check_eval,
+    check_parse, skip_if)
 
 def setup_module():
-    # only setup one parser
-    global EXECER
-    EXECER = Execer(debug_level=DEBUG_LEVEL)
+    execer_setup()
 
-def check_exec(input):
-    with mock_xonsh_env(None):
-        if not input.endswith('\n'):
-            input += '\n'
-        EXECER.debug_level = DEBUG_LEVEL
-        EXECER.exec(input)
+@skip_if(not ON_WINDOWS)
+def test_win_ipconfig():
+    yield (check_eval,
+           os.environ['SYSTEMROOT'] + '\\System32\\ipconfig.exe /all')
 
-def check_eval(input):
-    with mock_xonsh_env({'AUTO_CD': False, 'XONSH_ENCODING' :'utf-8',
-                         'XONSH_ENCODING_ERRORS': 'strict', 'PATH': []}):
-        EXECER.debug_level = DEBUG_LEVEL
-        EXECER.eval(input)
+@skip_if(not ON_WINDOWS)
+def test_ipconfig():
+    yield check_eval, 'ipconfig /all'
 
-def check_parse(input):
-    with mock_xonsh_env(None):
-        EXECER.debug_level = DEBUG_LEVEL
-        EXECER.parse(input, ctx=None)
-
-#
-# Tests
-#
-
-if ON_WINDOWS:
-    def test_win_ipconfig():
-        yield (check_eval,
-               os.environ['SYSTEMROOT'] + '\\System32\\ipconfig.exe /all')
-
-    def test_ipconfig():
-        yield check_eval, 'ipconfig /all'
-
-else:
-    def test_bin_ls():
-        yield check_eval, '/bin/ls -l'
+@skip_if(ON_WINDOWS)
+def test_bin_ls():
+    yield check_eval, '/bin/ls -l'
 
 def test_ls_dashl():
     yield check_parse, 'ls -l'
@@ -72,6 +43,17 @@ def test_simple_func():
             "    return '{user}'.format(user='me')\n")
     yield check_parse, code
 
+def test_lookup_alias():
+    code = (
+        'def foo(a,  s=None):\n'
+        '    return "bar"\n'
+        '@(foo)\n')
+    yield check_parse, code
+
+def test_lookup_anon_alias():
+    code = ('echo "hi" | @(lambda a, s=None: a[0]) foo bar baz\n')
+    yield check_parse, code
+
 def test_simple_func_broken():
     code = ('def prompt():\n'
             "    return '{user}'.format(\n"
@@ -81,6 +63,16 @@ def test_simple_func_broken():
 def test_bad_indent():
     code = ('if True:\n'
             'x = 1\n')
+    assert_raises(SyntaxError, check_parse, code)
+
+def test_good_rhs_subproc():
+    # nonsense but parsebale
+    code = 'str().split() | ![grep exit]\n'
+    check_parse(code)
+
+def test_bad_rhs_subproc():
+    # nonsense but unparsebale
+    code = 'str().split() | grep exit\n'
     assert_raises(SyntaxError, check_parse, code)
 
 def test_indent_with_empty_line():
@@ -97,6 +89,22 @@ def test_command_in_func():
 def test_command_in_func_with_comment():
     code = ('def f():\n'
             '    echo hello # comment\n')
+    yield check_parse, code
+
+def test_pyeval_redirect():
+    code = 'echo @("foo") > bar\n'
+    yield check_parse, code
+
+def test_echo_comma():
+    code = 'echo ,\n'
+    yield check_parse, code
+
+def test_echo_comma_val():
+    code = 'echo ,1\n'
+    yield check_parse, code
+
+def test_echo_comma_2val():
+    code = 'echo 1,2\n'
     yield check_parse, code
 
 

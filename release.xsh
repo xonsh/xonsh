@@ -1,4 +1,4 @@
-#!/usr/bin/env xonsh 
+#!/usr/bin/env xonsh
 """Release helper script for xonsh."""
 import os
 import re
@@ -18,30 +18,52 @@ def replace_in_file(pattern, new, fname):
     with open(fname, 'w') as f:
         f.write(upd)
 
-NEW_DEV = """
-Current Developments
-====================
-**Added:** None
 
-**Changed:** None
+NEWS = [os.path.join('news', f) for f in os.listdir('news')
+        if f != 'TEMPLATE.rst']
+NEWS_CATEGORIES = ['Added', 'Changed', 'Deprecated', 'Removed', 'Fixed',
+                   'Security']
+NEWS_RE = re.compile('\*\*({0}):\*\*'.format('|'.join(NEWS_CATEGORIES)),
+                     flags=re.DOTALL)
 
-**Deprecated:** None
-
-**Removed:** None
-
-**Fixed:** None
-
-**Security:** None
-""".strip()
+def merge_news():
+    """Reads news files and merges them."""
+    cats = {c: '' for c in NEWS_CATEGORIES}
+    for news in NEWS:
+        with open(news) as f:
+            raw = f.read()
+        raw = raw.strip()
+        parts = NEWS_RE.split(raw)
+        while len(parts) > 0 and parts[0] not in NEWS_CATEGORIES:
+            parts = parts[1:]
+        for key, val in zip(parts[::2], parts[1::2]):
+            val = val.strip()
+            if val == 'None':
+                continue
+            cats[key] += val + '\n'
+    for news in NEWS:
+        os.remove(news)
+    s = ''
+    for c in NEWS_CATEGORIES:
+        val = cats[c]
+        if len(val) == 0:
+            continue
+        s += '**' + c + ':**\n\n' + val + '\n\n'
+    return s
 
 def version_update(ver):
     """Updates version strings in relevant files."""
+    fnews = ('.. current developments\n\n'
+             'v{0}\n'
+             '====================\n\n'
+             '{1}')
+    news = merge_news()
+    news = fnews.format(ver, news)
     pnfs = [
-        ('__version__\s*=.*', "__version__ = '{0}'".format(ver), 
+        ('__version__\s*=.*', "__version__ = '{0}'".format(ver),
          ['xonsh', '__init__.py']),
         ('version:\s*', 'version: {0}.{{build}}'.format(ver), ['.appveyor.yml']),
-        ('\*\*\w+:\*\* None', '', ['CHANGELOG.rst']),
-        ('Current Developments', NEW_DEV + '\n\nv' + ver, ['CHANGELOG.rst']),
+        ('.. current developments', news, ['CHANGELOG.rst']),
       ]
     for p, n, f in pnfs:
         replace_in_file(p, n, os.path.join(*f))
@@ -97,10 +119,10 @@ class OnlyAction(Action):
 
 def main(args=None):
     parser = ArgumentParser('release')
-    parser.add_argument('--upstream', 
-                        default='git@github.com:scopatz/xonsh.git', 
+    parser.add_argument('--upstream',
+                        default='git@github.com:scopatz/xonsh.git',
                         help='upstream repo')
-    parser.add_argument('-b', '--branch', default='master', 
+    parser.add_argument('-b', '--branch', default='master',
                          help='branch to commit / push to.')
     for doer in DOERS:
         base = doer[3:].replace('_', '-')

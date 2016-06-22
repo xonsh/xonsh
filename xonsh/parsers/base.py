@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 """Implements the base xonsh parser."""
+import re
+import time
+from threading import Thread
 from collections import Iterable, Sequence, Mapping
 
 try:
@@ -8,9 +11,14 @@ except ImportError:
     from xonsh.ply import yacc
 
 from xonsh import ast
+from xonsh.ast import has_elts, xonsh_call
 from xonsh.lexer import Lexer, LexToken
-from xonsh.tools import VER_3_5_1, VER_FULL
+from xonsh.platform import PYTHON_VERSION_INFO
+from xonsh.tokenize import SearchPath
+from xonsh.lazyasd import LazyObject
 
+RE_SEARCHPATH = LazyObject(lambda: re.compile(SearchPath), globals(),
+                           'RE_SEARCHPATH')
 
 class Location(object):
     """Location in a file."""
@@ -26,11 +34,6 @@ class Location(object):
         if self.column is not None:
             s += ':{0}'.format(self.column)
         return s
-
-
-def has_elts(x):
-    """Tests if x is an AST node with elements."""
-    return isinstance(x, ast.AST) and hasattr(x, 'elts')
 
 
 def ensure_has_elts(x, lineno=None, col_offset=None):
@@ -105,20 +108,6 @@ def ensure_list_from_str_or_list(x, lineno=None, col=None):
                      col_offset=col)
 
 
-def xonsh_call(name, args, lineno=None, col=None):
-    """Creates the AST node for calling a function of a given name."""
-    return ast.Call(func=ast.Name(id=name,
-                                  ctx=ast.Load(),
-                                  lineno=lineno,
-                                  col_offset=col),
-                    args=args,
-                    keywords=[],
-                    starargs=None,
-                    kwargs=None,
-                    lineno=lineno,
-                    col_offset=col)
-
-
 def xonsh_help(x, lineno=None, col=None):
     """Creates the AST node for calling the __xonsh_help__() function."""
     return xonsh_call('__xonsh_help__', [x], lineno=lineno, col=col)
@@ -129,12 +118,23 @@ def xonsh_superhelp(x, lineno=None, col=None):
     return xonsh_call('__xonsh_superhelp__', [x], lineno=lineno, col=col)
 
 
-def xonsh_regexpath(x, pymode=False, lineno=None, col=None):
-    """Creates the AST node for calling the __xonsh_regexpath__() function.
+def xonsh_pathsearch(pattern, pymode=False, lineno=None, col=None):
+    """Creates the AST node for calling the __xonsh_pathsearch__() function.
     The pymode argument indicate if it is called from subproc or python mode"""
     pymode = ast.NameConstant(value=pymode, lineno=lineno, col_offset=col)
-    return xonsh_call('__xonsh_regexpath__', args=[x, pymode], lineno=lineno,
-                      col=col)
+    searchfunc, pattern = RE_SEARCHPATH.match(pattern).groups()
+    pattern = ast.Str(s=pattern, lineno=lineno,
+                      col_offset=col)
+    if searchfunc in {'r', ''}:
+        func = '__xonsh_regexsearch__'
+    elif searchfunc == 'g':
+        func = '__xonsh_globsearch__'
+    else:
+        func = searchfunc[1:]  # remove the '@' character
+    func = ast.Name(id=func, ctx=ast.Load(), lineno=lineno,
+                    col_offset=col)
+    return xonsh_call('__xonsh_pathsearch__', args=[func, pattern, pymode],
+                      lineno=lineno, col=col)
 
 
 def load_ctx(x):
@@ -172,6 +172,20 @@ def lopen_loc(x):
     lineno = x._lopen_lineno if hasattr(x, '_lopen_lineno') else x.lineno
     col = x._lopen_col if hasattr(x, '_lopen_col') else x.col_offset
     return lineno, col
+
+
+class YaccLoader(Thread):
+    """Thread to load (but not shave) the yacc parser."""
+
+    def __init__(self, parser, yacc_kwargs, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.daemon = True
+        self.parser = parser
+        self.yacc_kwargs = yacc_kwargs
+        self.start()
+
+    def run(self):
+        self.parser.parser = yacc.yacc(**self.yacc_kwargs)
 
 
 class BaseParser(object):
@@ -255,7 +269,9 @@ class BaseParser(object):
             yacc_kwargs['errorlog'] = yacc.NullLogger()
         if outputdir is not None:
             yacc_kwargs['outputdir'] = outputdir
-        self.parser = yacc.yacc(**yacc_kwargs)
+        self.parser = None
+        YaccLoader(self, yacc_kwargs)
+        #self.parser = yacc.yacc(**yacc_kwargs)
 
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None
@@ -284,7 +300,10 @@ class BaseParser(object):
         tree : AST
         """
         self.reset()
+        self.xonsh_code = s
         self.lexer.fname = filename
+        while self.parser is None:
+            time.sleep(0.01)  # block until the parser is ready
         tree = self.parser.parse(input=s, lexer=self.lexer, debug=debug_level)
         # hack for getting modes right
         if mode == 'single':
@@ -295,7 +314,7 @@ class BaseParser(object):
         return tree
 
     def _lexer_errfunc(self, msg, line, column):
-        self._parse_error(msg, self.currloc(line, column))
+        self._parse_error(msg, self.currloc(line, column), self.xonsh_code)
 
     def _yacc_lookahead_token(self):
         """Gets the next-to-last and last token seen by the lexer."""
@@ -377,8 +396,14 @@ class BaseParser(object):
             return self.token_col(t)
         return 0
 
-    def _parse_error(self, msg, loc):
-        err = SyntaxError('{0}: {1}'.format(loc, msg))
+    def _parse_error(self, msg, loc, line=None):
+        if line is None:
+            err_line_pointer = ''
+        else:
+            col = loc.column + 1
+            err_line = line.splitlines()[loc.lineno - 1]
+            err_line_pointer = '\n{}\n{: >{}}'.format(err_line, '^', col)
+        err = SyntaxError('{0}: {1}{2}'.format(loc, msg, err_line_pointer))
         err.loc = loc
         raise err
 
@@ -610,7 +635,7 @@ class BaseParser(object):
         """tfpdef : name_tok colon_test_opt"""
         p1 = p[1]
         kwargs = {'arg': p1.value, 'annotation': p[2]}
-        if VER_FULL >= VER_3_5_1:
+        if PYTHON_VERSION_INFO >= (3, 5, 1):
             kwargs.update({
                 'lineno': p1.lineno,
                 'col_offset': p1.lexpos,
@@ -736,7 +761,7 @@ class BaseParser(object):
         """vfpdef : name_tok"""
         p1 = p[1]
         kwargs = {'arg': p1.value, 'annotation': None}
-        if VER_FULL >= VER_3_5_1:
+        if PYTHON_VERSION_INFO >= (3, 5, 1):
             kwargs.update({
                 'lineno': p1.lineno,
                 'col_offset': p1.lexpos,
@@ -1702,7 +1727,7 @@ class BaseParser(object):
     def p_atom_ellip(self, p):
         """atom : ellipsis_tok"""
         p1 = p[1]
-        p[0] = ast.Ellipsis(lineno=p1.lineno, col_offset=p1.lexpos)
+        p[0] = ast.EllipsisNode(lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_atom_none(self, p):
         """atom : none_tok"""
@@ -1722,12 +1747,10 @@ class BaseParser(object):
         p[0] = ast.NameConstant(value=False, lineno=p1.lineno,
                                 col_offset=p1.lexpos)
 
-    def p_atom_re(self, p):
-        """atom : REGEXPATH"""
-        p1 = ast.Str(s=p[1].strip('`'), lineno=self.lineno,
-                     col_offset=self.col)
-        p[0] = xonsh_regexpath(p1, pymode=True, lineno=self.lineno,
-                               col=self.col)
+    def p_atom_pathsearch(self, p):
+        """atom : SEARCHPATH"""
+        p[0] = xonsh_pathsearch(p[1], pymode=True, lineno=self.lineno,
+                                col=self.col)
 
     def p_atom_dname(self, p):
         """atom : DOLLAR_NAME"""
@@ -2174,7 +2197,7 @@ class BaseParser(object):
         p1 = p[1]
         p0 = xonsh_call('__xonsh_subproc_captured_stdout__', args=p[2],
                         lineno=p1.lineno, col=p1.lexpos)
-        p0._cliarg_action = 'splitlines'
+        p0._cliarg_action = 'append'
         p[0] = p0
 
     def p_subproc_atom_pyenv_lookup(self, p):
@@ -2193,7 +2216,14 @@ class BaseParser(object):
 
     def p_subproc_atom_pyeval(self, p):
         """subproc_atom : AT_LPAREN test RPAREN"""
-        p0 = xonsh_call('__xonsh_ensure_list_of_strs__', [p[2]],
+        p0 = xonsh_call('__xonsh_list_of_strs_or_callables__', [p[2]],
+                        lineno=self.lineno, col=self.col)
+        p0._cliarg_action = 'extend'
+        p[0] = p0
+
+    def p_subproc_atom_subproc_inject(self, p):
+        """subproc_atom : ATDOLLAR_LPAREN subproc RPAREN"""
+        p0 = xonsh_call('__xonsh_subproc_captured_inject__', p[2],
                         lineno=self.lineno, col=self.col)
         p0._cliarg_action = 'extend'
         p[0] = p0
@@ -2218,11 +2248,9 @@ class BaseParser(object):
         p[0] = p0
 
     def p_subproc_atom_re(self, p):
-        """subproc_atom : REGEXPATH"""
-        p1 = ast.Str(s=p[1].strip('`'), lineno=self.lineno,
-                     col_offset=self.col)
-        p0 = xonsh_regexpath(p1, pymode=False, lineno=self.lineno,
-                             col=self.col)
+        """subproc_atom : SEARCHPATH"""
+        p0 = xonsh_pathsearch(p[1], pymode=False, lineno=self.lineno,
+                              col=self.col)
         p0._cliarg_action = 'extend'
         p[0] = p0
 
@@ -2265,6 +2293,7 @@ class BaseParser(object):
                             | PLUS
                             | COLON
                             | AT
+                            | ATDOLLAR
                             | EQUALS
                             | TIMES
                             | POW
@@ -2277,6 +2306,8 @@ class BaseParser(object):
                             | FALSE
                             | NUMBER
                             | STRING
+                            | COMMA
+                            | QUESTION
         """
         # Many tokens cannot be part of this list, such as $, ', ", ()
         # Use a string atom instead.
@@ -2297,9 +2328,13 @@ class BaseParser(object):
             if isinstance(p.value, BaseException):
                 raise p.value
             else:
-                self._parse_error(p.value, self.currloc(lineno=p.lineno,
-                                                        column=p.lexpos))
+                self._parse_error(p.value,
+                                  self.currloc(lineno=p.lineno,
+                                               column=p.lexpos),
+                                  self.xonsh_code)
         else:
             msg = 'code: {0}'.format(p.value),
-            self._parse_error(msg, self.currloc(lineno=p.lineno,
-                                                column=p.lexpos))
+            self._parse_error(msg,
+                              self.currloc(lineno=p.lineno,
+                                           column=p.lexpos),
+                              self.xonsh_code)

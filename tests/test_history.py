@@ -94,13 +94,13 @@ def test_show_cmd():
 
     def format_hist_line(idx, cmd):
         """Construct a history output line."""
-        return ' {:d}  {:s}\n'.format(idx, cmd)
+        return ' {:d}: {:s}\n'.format(idx, cmd)
 
     def run_show_cmd(hist_args, commands, base_idx=0, step=1):
         """Run and evaluate the output of the given show command."""
         stdout.seek(0, io.SEEK_SET)
         stdout.truncate()
-        history._main(hist, hist_args)
+        history._hist_main(hist, hist_args)
         stdout.seek(0, io.SEEK_SET)
         hist_lines = stdout.readlines()
         yield assert_equal, len(commands), len(hist_lines)
@@ -114,33 +114,35 @@ def test_show_cmd():
     sys.stdout = stdout
 
     with mock_xonsh_env({'HISTCONTROL': set()}):
-        for cmd in cmds:  # populate the shell history
-            hist.append({'inp': cmd, 'rtn': 0})
+        for ts,cmd in enumerate(cmds):  # populate the shell history
+            hist.append({'inp': cmd, 'rtn': 0, 'ts':(ts+1, ts+1.5)})
 
-        # Verify an implicit "show" emits the entire history.
+        # Verify an implicit "show" emits show history
         for x in run_show_cmd([], cmds):
             yield x
 
-        # Verify an explicit "show" with no qualifiers emits the entire history.
+        # Verify an explicit "show" with no qualifiers emits
+        # show history.
         for x in run_show_cmd(['show'], cmds):
             yield x
 
-        # Verify an explicit "show" with a reversed qualifier emits the entire
-        # history in reverse order.
+        # Verify an explicit "show" with a reversed qualifier
+        # emits show history in reverse order.
         for x in run_show_cmd(['show', '-r'], list(reversed(cmds)),
-                              len(cmds) - 1, -1):
+                                 len(cmds) - 1, -1):
             yield x
 
-        # Verify that showing a specific history entry relative to the start of the
-        # history works.
+        # Verify that showing a specific history entry relative to
+        # the start of the history works.
         for x in run_show_cmd(['show', '0'], [cmds[0]], 0):
             yield x
         for x in run_show_cmd(['show', '1'], [cmds[1]], 1):
             yield x
 
-        # Verify that showing a specific history entry relative to the end of the
-        # history works.
-        for x in run_show_cmd(['show', '-2'], [cmds[-2]], len(cmds) - 2):
+        # Verify that showing a specific history entry relative to
+        # the end of the history works.
+        for x in run_show_cmd(['show', '-2'], [cmds[-2]],
+                               len(cmds) - 2):
             yield x
 
         # Verify that showing a history range relative to the start of the
@@ -152,9 +154,11 @@ def test_show_cmd():
 
         # Verify that showing a history range relative to the end of the
         # history works.
-        for x in run_show_cmd(['show', '-2:'], cmds[-2:], len(cmds) - 2):
+        for x in run_show_cmd(['show', '-2:'], 
+                               cmds[-2:], len(cmds) - 2):
             yield x
-        for x in run_show_cmd(['show', '-4:-2'], cmds[-4:-2], len(cmds) - 4):
+        for x in run_show_cmd(['show', '-4:-2'], 
+                               cmds[-4:-2], len(cmds) - 4):
             yield x
 
     sys.stdout = saved_stdout

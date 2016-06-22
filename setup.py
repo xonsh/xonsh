@@ -33,9 +33,8 @@ try:
 except ImportError:
     HAVE_JUPYTER = False
 
-from xonsh import __version__ as XONSH_VERSION
 
-TABLES = ['xonsh/lexer_table.py', 'xonsh/parser_table.py']
+TABLES = ['xonsh/lexer_table.py', 'xonsh/parser_table.py', 'xonsh/__amalgam__.py']
 
 
 def clean_tables():
@@ -43,8 +42,11 @@ def clean_tables():
     for f in TABLES:
         if os.path.isfile(f):
             os.remove(f)
-            print('Remove ' + f)
+            print('Removed ' + f)
 
+
+os.environ['XONSH_DEBUG'] = '1'
+from xonsh import __version__ as XONSH_VERSION
 
 def build_tables():
     """Build the lexer/parser modules."""
@@ -53,10 +55,12 @@ def build_tables():
     from xonsh.parser import Parser
     Parser(lexer_table='lexer_table', yacc_table='parser_table',
            outputdir='xonsh')
+    import amalgamate
+    amalgamate.main(['amalgamate', '--debug=XONSH_DEBUG', 'xonsh'])
     sys.path.pop(0)
 
 
-def install_jupyter_hook(root=None):
+def install_jupyter_hook(prefix=None, root=None):
     """Make xonsh available as a Jupyter kernel."""
     if not HAVE_JUPYTER:
         print('Could not install Jupyter kernel spec, please install '
@@ -76,13 +80,16 @@ def install_jupyter_hook(root=None):
         with open(os.path.join(d, 'kernel.json'), 'w') as f:
             json.dump(spec, f, sort_keys=True)
         if 'CONDA_BUILD' in os.environ:
-            root = sys.prefix
+            prefix = sys.prefix
             if sys.platform == 'win32':
-                root = root.replace(os.sep, os.altsep)
-        print('Installing Jupyter kernel spec...')
+                prefix = prefix.replace(os.sep, os.altsep)
+        user = ('--user' in sys.argv)
+        print('Installing Jupyter kernel spec:')
+        print('  root: {0!r}'.format(root))
+        print('  prefix: {0!r}'.format(prefix))
+        print('  as user: {0}'.format(user))
         KernelSpecManager().install_kernel_spec(
-            d, 'xonsh', user=('--user' in sys.argv), replace=True,
-            prefix=root)
+            d, 'xonsh', user=user, replace=True, prefix=prefix)
 
 
 class xinstall(install):
@@ -90,7 +97,15 @@ class xinstall(install):
     def run(self):
         clean_tables()
         build_tables()
-        install_jupyter_hook(self.root if self.root else None)
+        # install Jupyter hook
+        root = self.root if self.root else None
+        prefix = self.prefix if self.prefix else None
+        try:
+            install_jupyter_hook(prefix=prefix, root=root)
+        except Exception:
+            import traceback
+            traceback.print_exc()
+            print('Installing Jupyter hook failed.')
         install.run(self)
 
 
@@ -136,7 +151,7 @@ if HAVE_SETUPTOOLS:
 
 def main():
     """The main entry point."""
-    if sys.version_info[0] < 3:
+    if sys.version_info[:2] < (3, 4):
         sys.exit('xonsh currently requires Python 3.4+')
     try:
         if '--name' not in sys.argv:
@@ -148,6 +163,11 @@ def main():
         pass
     with open(os.path.join(os.path.dirname(__file__), 'README.rst'), 'r') as f:
         readme = f.read()
+    scripts = ['scripts/xon.sh']
+    if sys.platform == 'win32':
+        scripts.append('scripts/xonsh.bat')
+    else:
+        scripts.append('scripts/xonsh')
     skw = dict(
         name='xonsh',
         description='A general purpose, Python-ish shell',
@@ -160,22 +180,29 @@ def main():
         url='https://github.com/scopatz/xonsh',
         platforms='Cross Platform',
         classifiers=['Programming Language :: Python :: 3'],
-        packages=['xonsh', 'xonsh.ptk', 'xonsh.parsers', 'xonsh.xoreutils', 'xontrib'],
+        packages=['xonsh', 'xonsh.ply', 'xonsh.ptk', 'xonsh.parsers',
+                  'xonsh.xoreutils', 'xontrib', 'xonsh.completers'],
         package_dir={'xonsh': 'xonsh', 'xontrib': 'xontrib'},
         package_data={'xonsh': ['*.json'], 'xontrib': ['*.xsh']},
-        cmdclass=cmdclass
+        cmdclass=cmdclass,
+        scripts=scripts,
         )
     if HAVE_SETUPTOOLS:
+        # WARNING!!! Do not use setuptools 'console_scripts'
+        # It validates the depenendcies (of which we have none) everytime the
+        # 'xonsh' command is run. This validation adds ~0.2 sec. to the startup
+        # time of xonsh - for every single xonsh run.  This prevents us from
+        # reaching the goal of a startup time of < 0.1 sec.  So never ever write
+        # the following:
+        #
+        #     'console_scripts': ['xonsh = xonsh.main:main'],
+        #
+        # END WARNING
         skw['entry_points'] = {
             'pygments.lexers': ['xonsh = xonsh.pyghooks:XonshLexer',
-                                'xonshcon = xonsh.pyghooks:XonshConsoleLexer',
-                               ],
-            'console_scripts': ['xonsh = xonsh.main:main'],
+                                'xonshcon = xonsh.pyghooks:XonshConsoleLexer'],
             }
         skw['cmdclass']['develop'] = xdevelop
-    else:
-        skw['scripts'] = ['scripts/xonsh'] if 'win' not in sys.platform else ['scripts/xonsh.bat'],
-
     setup(**skw)
 
 
