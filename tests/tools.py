@@ -48,9 +48,14 @@ class DummyShell:
         return self._shell
 
 
+class FakeEnv(dict):
+    pass
+
 @contextmanager
 def mock_xonsh_env(xenv):
-    builtins.__xonsh_env__ = xenv
+    fenv = FakeEnv(xenv)
+    fenv.detype = lambda: {}
+    builtins.__xonsh_env__ = fenv
     builtins.__xonsh_ctx__ = {}
     builtins.__xonsh_shell__ = DummyShell()
     builtins.__xonsh_help__ = lambda x: x
