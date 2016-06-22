@@ -10,7 +10,7 @@ from xonsh.contexts import Block, Functor
 # helpers
 #
 
-def setup():
+def setup_module():
     execer_setup()
 
 
