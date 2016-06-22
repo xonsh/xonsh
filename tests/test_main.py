@@ -14,8 +14,10 @@ def test_login_shell():
         pass
 
     with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
-        xonsh.main.premain([])
-        assert not (builtins.__xonsh_env__.get('XONSH_LOGIN'))
+        with patch('sys.stdin.isatty') as faketty:
+            faketty.return_value = True
+            xonsh.main.premain([])
+            assert builtins.__xonsh_env__.get('XONSH_LOGIN')
 
     with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
         xonsh.main.premain(['-i'])
