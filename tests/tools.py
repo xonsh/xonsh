@@ -23,6 +23,7 @@ VER_3_5 = (3, 5)
 VER_MAJOR_MINOR = sys.version_info[:2]
 VER_FULL = sys.version_info[:3]
 ON_MAC = (platform.system() == 'Darwin')
+ON_WINDOWS = (platform.system() == 'Windows')
 
 def sp(cmd):
     return subprocess.check_output(cmd, universal_newlines=True)
@@ -122,8 +123,11 @@ def check_exec(input, **kwargs):
         EXECER.exec(input, **kwargs)
 
 def check_eval(input):
-    with mock_xonsh_env({'AUTO_CD': False, 'XONSH_ENCODING' :'utf-8',
-                         'XONSH_ENCODING_ERRORS': 'strict', 'PATH': []}):
+    env = {'AUTO_CD': False, 'XONSH_ENCODING' :'utf-8',
+           'XONSH_ENCODING_ERRORS': 'strict', 'PATH': []}
+    if ON_WINDOWS:
+        env['PATHEXT'] = ['.COM', '.EXE', '.BAT', '.CMD']
+    with mock_xonsh_env(env):
         EXECER.debug_level = DEBUG_LEVEL
         EXECER.eval(input)
 

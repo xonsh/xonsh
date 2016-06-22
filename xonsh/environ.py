@@ -37,7 +37,10 @@ from xonsh.tools import (
     csv_to_bool_seq, bool_seq_to_csv, DefaultNotGiven, print_exception,
     setup_win_unicode_console, intensify_colors_on_win_setter, format_color,
     is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str,
-    is_logfile_opt, to_logfile_opt, logfile_opt_to_str, executables_in
+    is_logfile_opt, to_logfile_opt, logfile_opt_to_str, executables_in,
+    pathsep_to_set, set_to_pathsep, pathsep_to_seq, seq_to_pathsep,
+    is_string_seq, is_nonstring_seq_of_strings, pathsep_to_upper_seq,
+    seq_to_upper_pathsep,
 )
 
 
@@ -110,7 +113,8 @@ DEFAULT_ENSURERS = {
     'MOUSE_SUPPORT': (is_bool, to_bool, bool_to_str),
     'MULTILINE_PROMPT': (is_string_or_callable, ensure_string, ensure_string),
     re.compile('\w*PATH$'): (is_env_path, str_to_env_path, env_path_to_str),
-    'PATHEXT': (is_env_path, str_to_env_path, env_path_to_str),
+    'PATHEXT': (is_nonstring_seq_of_strings, pathsep_to_upper_seq,
+                seq_to_upper_pathsep),
     'PRETTY_PRINT_RESULTS': (is_bool, to_bool, bool_to_str),
     'PROMPT': (is_string_or_callable, ensure_string, ensure_string),
     'RAISE_SUBPROC_ERROR': (is_bool, to_bool, bool_to_str),
@@ -230,7 +234,7 @@ DEFAULT_VALUES = {
     'MOUSE_SUPPORT': False,
     'MULTILINE_PROMPT': '.',
     'PATH': PATH_DEFAULT,
-    'PATHEXT': (),
+    'PATHEXT': ['.COM', '.EXE', '.BAT', '.CMD'] if ON_WINDOWS else [],
     'PRETTY_PRINT_RESULTS': True,
     'PROMPT': DEFAULT_PROMPT,
     'PUSHD_MINUS': False,
@@ -408,7 +412,9 @@ DEFAULT_DOCS = {
         configurable=False),
     'PATH': VarDocs(
         'List of strings representing where to look for executables.'),
-    'PATHEXT': VarDocs('List of strings for filtering valid executables by.'),
+    'PATHEXT': VarDocs('Sequence of extention strings (eg, ".EXE") for '
+                       'filtering valid executables by. Each element must be '
+                       'uppercase.'),
     'PRETTY_PRINT_RESULTS': VarDocs(
             'Flag for "pretty printing" return values.'),
     'PROMPT': VarDocs(
@@ -816,18 +822,32 @@ def _yield_executables(directory, name):
 
 
 def locate_binary(name):
-    if os.path.isfile(name) and name != os.path.basename(name):
-        return name
-    directories = builtins.__xonsh_env__.get('PATH')
-    # Windows users expect to be able to execute files in the same directory
-    # without `./`
+    """Locates an executable on the file system."""
     if ON_WINDOWS:
-        directories = [_get_cwd()] + list(directories)
-    try:
-        return next(chain.from_iterable(_yield_executables(directory, name) for
-                    directory in directories if os.path.isdir(directory)))
-    except StopIteration:
-        return None
+        # Windows users expect to be able to execute files in the same
+        # directory without `./`
+        cwd = _get_cwd()
+        if os.path.isfile(name):
+            return os.path.abspath(os.path.relpath(name, cwd))
+        exts = builtins.__xonsh_env__['PATHEXT']
+        for ext in exts:
+            namext = name + ext
+            if os.path.isfile(namext):
+                return os.path.abspath(os.path.relpath(namext, cwd))
+    elif os.path.isfile(name) and name != os.path.basename(name):
+        return name
+    cc = builtins.__xonsh_commands_cache__
+    if ON_WINDOWS:
+        upname = name.upper()
+        if upname in cc:
+            return cc.lazyget(upname)[0]
+        for ext in exts:
+            upnamext = upname + ext
+            if cc.lazyin(upnamext):
+                return cc.lazyget(upnamext)[0]
+    elif name in cc:
+        # can be lazy here since we know name is already available
+        return cc.lazyget(name)[0]
 
 
 def get_git_branch():
