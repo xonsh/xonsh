@@ -1686,15 +1686,24 @@ def globpath(s, ignore_case=False, return_empty=False):
 
 def _iglobpath(s, ignore_case=False):
     s = builtins.__xonsh_expand_path__(s)
+    glob_sorted = builtins.__xonsh_env__.get('GLOB_SORTED')
     if ignore_case:
         s = expand_case_matching(s)
     if sys.version_info > (3, 5):
         if '**' in s and '**/*' not in s:
             s = s.replace('**', '**/*')
         # `recursive` is only a 3.5+ kwarg.
-        return sorted(glob.glob(s, recursive=True)), s
+        if glob_sorted:
+            paths = sorted(glob.glob(s, recursive=True))
+        else:
+            paths = glob.iglob(s, recursive=True)
+        return paths, s
     else:
-        return sorted(glob.glob(s)), s
+        if glob_sorted:
+            paths = sorted(glob.glob(s))
+        else:
+            paths = glob.iglob(s)
+        return paths, s
 
 def iglobpath(s, ignore_case=False):
     """Simple wrapper around iglob that also expands home and env vars."""
