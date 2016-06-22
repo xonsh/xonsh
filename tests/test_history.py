@@ -115,48 +115,38 @@ def test_show_cmd():
             hist.append({'inp': cmd, 'rtn': 0, 'ts':(ts+1, ts+1.5)})
 
         # Verify an implicit "show" emits show history
-        for x in run_show_cmd([], cmds):
-            yield x
+        run_show_cmd([], cmds)
 
         # Verify an explicit "show" with no qualifiers emits
         # show history.
-        for x in run_show_cmd(['show'], cmds):
-            yield x
+        run_show_cmd(['show'], cmds)
 
         # Verify an explicit "show" with a reversed qualifier
         # emits show history in reverse order.
-        for x in run_show_cmd(['show', '-r'], list(reversed(cmds)),
-                                 len(cmds) - 1, -1):
-            yield x
+        run_show_cmd(['show', '-r'], list(reversed(cmds)),
+                                 len(cmds) - 1, -1)
 
         # Verify that showing a specific history entry relative to
         # the start of the history works.
-        for x in run_show_cmd(['show', '0'], [cmds[0]], 0):
-            yield x
-        for x in run_show_cmd(['show', '1'], [cmds[1]], 1):
-            yield x
+        run_show_cmd(['show', '0'], [cmds[0]], 0)
+        run_show_cmd(['show', '1'], [cmds[1]], 1)
 
         # Verify that showing a specific history entry relative to
         # the end of the history works.
-        for x in run_show_cmd(['show', '-2'], [cmds[-2]],
-                               len(cmds) - 2):
-            yield x
+        run_show_cmd(['show', '-2'], [cmds[-2]],
+                               len(cmds) - 2)
 
         # Verify that showing a history range relative to the start of the
         # history works.
-        for x in run_show_cmd(['show', '0:2'], cmds[0:2], 0):
-            yield x
-        for x in run_show_cmd(['show', '1::2'], cmds[1::2], 1, 2):
-            yield x
+        run_show_cmd(['show', '0:2'], cmds[0:2], 0)
+        run_show_cmd(['show', '1::2'], cmds[1::2], 1, 2)
 
         # Verify that showing a history range relative to the end of the
         # history works.
-        for x in run_show_cmd(['show', '-2:'], 
-                               cmds[-2:], len(cmds) - 2):
-            yield x
-        for x in run_show_cmd(['show', '-4:-2'], 
-                               cmds[-4:-2], len(cmds) - 4):
-            yield x
+        run_show_cmd(['show', '-2:'],
+                               cmds[-2:], len(cmds) - 2)
+        run_show_cmd(['show', '-4:-2'],
+                               cmds[-4:-2], len(cmds) - 4)
 
     sys.stdout = saved_stdout
     os.remove(FNAME)
