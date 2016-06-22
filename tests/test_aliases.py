@@ -76,7 +76,7 @@ class TestWhich:
                 open(path, 'wb').write(b'')
                 os.chmod(path, 0o755)
 
-    def teardown(self):
+    def teardown_module(self):
         for d in self.testdirs:
             d.cleanup()
 

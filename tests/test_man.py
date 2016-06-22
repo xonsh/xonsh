@@ -13,13 +13,13 @@ from tools import mock_xonsh_env
 
 _OLD_MANPATH = None
 
-def setup():
+def setup_module():
     global _OLD_MANPATH
     _OLD_MANPATH = os.environ.get('MANPATH', None)
     os.environ['MANPATH'] = os.path.dirname(os.path.abspath(__file__))
 
 
-def teardown():
+def teardown_module():
     global _OLD_MANPATH
     if _OLD_MANPATH is None:
         del os.environ['MANPATH']

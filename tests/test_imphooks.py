@@ -20,7 +20,7 @@ def setup_module():
         load_builtins(execer=Execer())
         LOADED_HERE = True
 
-def teardown():
+def teardown_module():
     if LOADED_HERE:
         unload_builtins()
 

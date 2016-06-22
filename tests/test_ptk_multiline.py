@@ -10,7 +10,7 @@ from prompt_toolkit.buffer import Buffer, AcceptAction
 from xonsh.environ import Env
 from xonsh.tools import ON_WINDOWS
 
-def setup():
+def setup_module():
     global indent_
     global buffer
     global bufaccept
@@ -31,7 +31,7 @@ def setup():
     cli = MagicMock(name='cli', spec=CommandLineInterface)
     buffer.accept_action = bufaccept
 
-def teardown():
+def teardown_module():
     global indent_
     global buffer
     global bufaccept
