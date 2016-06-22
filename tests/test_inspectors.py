@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 """Testing inspectors"""
 import inspect
-
-import pytest
-
 from xonsh.inspectors import getouterframes
 
 
