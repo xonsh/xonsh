@@ -6,7 +6,7 @@ import builtins
 from unittest.mock import patch
 
 import nose
-from nose.tools import assert_true, assert_false
+from nose.tools import assert_true, assert_false, assert_equal
 
 import xonsh.main
 
@@ -24,6 +24,10 @@ def test_premain():
         assert_true(builtins.__xonsh_env__.get('XONSH_LOGIN'))
 
     with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
+        xonsh.main.premain(['-i'])
+        assert_true(builtins.__xonsh_env__.get('XONSH_INTERACTIVE'))
+
+    with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
         xonsh.main.premain(['-l', '-c', 'echo "hi"'])
         assert_true(builtins.__xonsh_env__.get('XONSH_LOGIN'))
 
@@ -34,6 +38,11 @@ def test_premain():
     with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
         xonsh.main.premain(['-l'])
         assert_true(builtins.__xonsh_env__.get('XONSH_LOGIN'))
+
+    with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
+        xonsh.main.premain(['-DTEST1=1616', '-DTEST2=LOL'])
+        assert_equal(builtins.__xonsh_env__.get('TEST1'), '1616')
+        assert_equal(builtins.__xonsh_env__.get('TEST2'), 'LOL')
 
 
 def test_premain_with_file_argument():
