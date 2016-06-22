@@ -2,9 +2,6 @@
 """Testing xonsh import hooks"""
 from __future__ import unicode_literals, print_function
 
-import nose
-from nose.tools import assert_equal
-
 from xonsh import imphooks  # noqa
 from xonsh import built_ins
 from xonsh.execer import Execer
@@ -27,24 +24,20 @@ def teardown_module():
 def test_import():
     with mock_xonsh_env({'PATH': []}):
         import sample
-        assert_equal('hello mom jawaka\n', sample.x)
+        assert ('hello mom jawaka\n' == sample.x)
 
 def test_absolute_import():
     with mock_xonsh_env({'PATH': []}):
         from xpack import sample
-        assert_equal('hello mom jawaka\n', sample.x)
+        assert ('hello mom jawaka\n' == sample.x)
 
 def test_relative_import():
     with mock_xonsh_env({'PATH': []}):
         from xpack import relimp
-        assert_equal('hello mom jawaka\n', relimp.sample.x)
-        assert_equal('hello mom jawaka\ndark chest of wonders', relimp.y)
+        assert ('hello mom jawaka\n' == relimp.sample.x)
+        assert ('hello mom jawaka\ndark chest of wonders' == relimp.y)
 
 def test_sub_import():
     with mock_xonsh_env({'PATH': []}):
         from xpack.sub import sample
-        assert_equal('hello mom jawaka\n', sample.x)
-
-
-if __name__ == '__main__':
-    nose.runmodule()
+        assert ('hello mom jawaka\n' == sample.x)
