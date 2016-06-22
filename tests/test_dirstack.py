@@ -7,8 +7,7 @@ from functools import wraps
 import os
 import builtins
 
-from nose.tools import assert_equal, assert_not_equal
-import nose
+import pytest
 
 from xonsh import dirstack
 from xonsh.environ import Env
@@ -37,16 +36,16 @@ def test_simple():
     load_builtins()
     with xonsh_env(Env(CDPATH=PARENT, PWD=PARENT)):
         with chdir(PARENT):
-            assert_not_equal(os.getcwd(), HERE)
+            assert os.getcwd() !=  HERE
             dirstack.cd(["tests"])
-            assert_equal(os.getcwd(), HERE)
+            assert os.getcwd() ==  HERE
 
 def test_cdpath_simple():
     with xonsh_env(Env(CDPATH=PARENT, PWD=HERE)):
         with chdir(os.path.normpath("/")):
-            assert_not_equal(os.getcwd(), HERE)
+            assert os.getcwd() !=  HERE
             dirstack.cd(["tests"])
-            assert_equal(os.getcwd(), HERE)
+            assert os.getcwd() ==  HERE
 
 def test_cdpath_collision():
     with xonsh_env(Env(CDPATH=PARENT, PWD=HERE)):
@@ -54,9 +53,9 @@ def test_cdpath_collision():
         if not os.path.exists(sub_tests):
             os.mkdir(sub_tests)
         with chdir(HERE):
-            assert_equal(os.getcwd(), HERE)
+            assert os.getcwd() ==  HERE
             dirstack.cd(["tests"])
-            assert_equal(os.getcwd(), os.path.join(HERE, "tests"))
+            assert os.getcwd() ==  os.path.join(HERE, "tests")
 
 def test_cdpath_expansion():
     with xonsh_env(Env(HERE=HERE, CDPATH=("~", "$HERE"))):
@@ -72,6 +71,3 @@ def test_cdpath_expansion():
         except Exception as e:
             tuple(os.rmdir(_) for _ in test_dirs if os.path.exists(_))
             raise e
-
-if __name__ == '__main__':
-    nose.runmodule()

@@ -3,8 +3,7 @@
 from __future__ import unicode_literals, print_function
 import os
 
-import nose
-from nose.tools import assert_equal, assert_true, assert_false
+import pytest
 
 from xonsh.wizard import (Node, Wizard, Pass, PrettyFormatter, 
     Message, Question, StateVisitor)
@@ -19,9 +18,9 @@ def test_pretty_format_tree0():
            " Message('yo')\n"
            '])')
     obs = PrettyFormatter(TREE0).visit()
-    yield assert_equal, exp, obs
-    yield assert_equal, exp, str(TREE0)
-    yield assert_equal, exp.replace('\n', ''), repr(TREE0)
+    assert exp == obs
+    assert exp == str(TREE0)
+    assert exp.replace('\n', '') == repr(TREE0)
 
 
 def test_pretty_format_tree1():
@@ -32,9 +31,9 @@ def test_pretty_format_tree1():
            ' }\n'
            ')')
     obs = PrettyFormatter(TREE1).visit()
-    yield assert_equal, exp, obs
-    yield assert_equal, exp, str(TREE1)
-    yield assert_equal, exp.replace('\n', ''), repr(TREE1)
+    assert exp == obs
+    assert exp == str(TREE1)
+    assert exp.replace('\n', '') == repr(TREE1)
 
 
 def test_state_visitor_store():
@@ -42,12 +41,8 @@ def test_state_visitor_store():
     sv = StateVisitor()
     sv.store('/rick/2/and', 'morty')
     obs = sv.state
-    yield assert_equal, exp, obs
+    assert exp == obs
 
     exp['rick'][1]['mr'] = 'meeseeks'
     sv.store('/rick/-2/mr', 'meeseeks')
-    yield assert_equal, exp, obs
-
-
-if __name__ == '__main__':
-    nose.runmodule()
+    assert exp == obs
