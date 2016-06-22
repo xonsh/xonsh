@@ -9,8 +9,6 @@ import subprocess
 from collections import defaultdict
 from contextlib import contextmanager
 
-from nose.plugins.skip import SkipTest
-
 from xonsh.built_ins import ensure_list_of_strs
 from xonsh.environ import Env
 builtins.__xonsh_env__ = Env()
@@ -88,19 +86,6 @@ def mock_xonsh_env(xenv):
     del builtins.compilex
     del builtins.aliases
 
-
-def skipper():
-    """Raises SkipTest"""
-    raise SkipTest
-
-def skip_if(cond):
-    """Skips a test under a given condition."""
-    def dec(f):
-        if cond:
-            return skipper
-        else:
-            return f
-    return dec
 
 #
 # Execer tools
