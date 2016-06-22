@@ -6,6 +6,6 @@ python:
 install:
   - pip install -r requirements-tests.txt
 script:
-  - coverage run --source xonsh -m py.test
+  - coverage run --source xonsh -m py.test -q
 after_success:
   - codecov
