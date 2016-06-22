@@ -176,8 +176,3 @@ def test_lazy_dict_dict_int():
     assert 42 ==  lj['wakka']['jawaka']
     assert 1 ==  len(lj)
     assert x ==  lj.load()
-
-
-
-if __name__ == '__main__':
-    nose.runmodule()
