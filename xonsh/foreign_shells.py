@@ -12,6 +12,7 @@ from warnings import warn
 from functools import lru_cache
 from collections import MutableMapping, Mapping, Sequence
 
+from xonsh.lazyasd import LazyObject
 from xonsh.tools import to_bool, ensure_string
 from xonsh.platform import ON_WINDOWS, ON_CYGWIN
 
@@ -262,7 +263,12 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
     return env, aliases
 
 
-ENV_RE = re.compile('__XONSH_ENV_BEG__\n(.*)__XONSH_ENV_END__', flags=re.DOTALL)
+ENV_RE = LazyObject(lambda: re.compile('__XONSH_ENV_BEG__\n(.*)'
+                                       '__XONSH_ENV_END__', flags=re.DOTALL),
+                    globals(), 'ENV_RE')
+ENV_SPLIT_RE = LazyObject(lambda: re.compile('^([^=]+)=([^=]*|[^\n]*)$',
+                                             flags=re.DOTALL|re.MULTILINE),
+                          globals(), 'ENV_SPLIT_RE')
 
 
 def parse_env(s):
@@ -271,8 +277,7 @@ def parse_env(s):
     if m is None:
         return {}
     g1 = m.group(1)
-    items = [line.split('=', 1) for line in g1.splitlines() if '=' in line]
-    env = dict(items)
+    env = dict(ENV_SPLIT_RE.findall(g1))
     return env
 
 
