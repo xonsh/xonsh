@@ -13,7 +13,7 @@ from xonsh.built_ins import load_builtins, unload_builtins
 from tools import mock_xonsh_env
 LOADED_HERE = False
 
-def setup():
+def setup_module():
     global LOADED_HERE
     if built_ins.BUILTINS_LOADED:
         unload_builtins()  # make sure we have a clean env from other tests.
