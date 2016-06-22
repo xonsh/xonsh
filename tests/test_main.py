@@ -18,6 +18,10 @@ def test_login_shell():
         assert (builtins.__xonsh_env__.get('XONSH_LOGIN'))
 
     with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
+        xonsh.main.premain(['-i'])
+        assert (builtins.__xonsh_env__.get('XONSH_LOGIN'))
+
+    with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
         xonsh.main.premain(['-l', '-c', 'echo "hi"'])
         assert (builtins.__xonsh_env__.get('XONSH_LOGIN'))
 

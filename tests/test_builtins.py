@@ -19,7 +19,7 @@ from tools import mock_xonsh_env
 def test_reglob_tests():
     testfiles = reglob('test_.*')
     for f in testfiles:
-        assert_true(f.startswith('test_'))
+        assert (f.startswith('test_'))
 
 @pytest.mark.skipif(ON_WINDOWS, reason='Unix stuff')
 def test_repath_backslash():

@@ -56,7 +56,7 @@ def test_hist_flush():
         pass
     with LazyJSON(FNAME) as lj:
         obs = lj['cmds'][0]['joco']
-    assert 'still alive' == ob
+    assert 'still alive' == obs
     os.remove(FNAME)
 
 

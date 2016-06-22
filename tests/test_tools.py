@@ -874,6 +874,6 @@ def test_expand_case_matching():
 
 def test_commands_cache_lazy():
     cc = CommandsCache()
-    assertfalse == cc.lazyin('xonsh')
+    assert not cc.lazyin('xonsh')
     assert 0 == len(list(cc.lazyiter()))
     assert 0 == cc.lazylen()
