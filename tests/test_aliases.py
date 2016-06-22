@@ -130,7 +130,3 @@ class TestWhich:
             return path1 == path2
         else:
             return os.path.samefile(path1, path2)
-
-
-if __name__ == '__main__':
-    nose.runmodule()
