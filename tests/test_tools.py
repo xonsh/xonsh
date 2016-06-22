@@ -5,9 +5,6 @@ import pathlib
 from tempfile import TemporaryDirectory
 import stat
 
-import nose
-from nose.tools import assert_equal, assert_true, assert_false
-
 from xonsh.platform import ON_WINDOWS
 from xonsh.lexer import Lexer
 
@@ -32,34 +29,34 @@ INDENT = '    '
 def test_subproc_toks_x():
     exp = '![x]'
     obs = subproc_toks('x', lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_ls_l():
     exp = '![ls -l]'
     obs = subproc_toks('ls -l', lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_git():
     s = 'git commit -am "hello doc"'
     exp = '![{0}]'.format(s)
     obs = subproc_toks(s, lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_git_semi():
     s = 'git commit -am "hello doc"'
     exp = '![{0}];'.format(s)
     obs = subproc_toks(s + ';', lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_git_nl():
     s = 'git commit -am "hello doc"'
     exp = '![{0}]\n'.format(s)
     obs = subproc_toks(s + '\n', lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_indent_ls():
@@ -67,7 +64,7 @@ def test_subproc_toks_indent_ls():
     exp = INDENT + '![{0}]'.format(s)
     obs = subproc_toks(INDENT + s, mincol=len(INDENT), lexer=LEXER,
                        returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_indent_ls_nl():
@@ -75,35 +72,35 @@ def test_subproc_toks_indent_ls_nl():
     exp = INDENT + '![{0}]\n'.format(s)
     obs = subproc_toks(INDENT + s + '\n', mincol=len(INDENT), lexer=LEXER,
                        returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_indent_ls_no_min():
     s = 'ls -l'
     exp = INDENT + '![{0}]'.format(s)
     obs = subproc_toks(INDENT + s, lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_indent_ls_no_min_nl():
     s = 'ls -l'
     exp = INDENT + '![{0}]\n'.format(s)
     obs = subproc_toks(INDENT + s + '\n', lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_indent_ls_no_min_semi():
     s = 'ls'
     exp = INDENT + '![{0}];'.format(s)
     obs = subproc_toks(INDENT + s + ';', lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_indent_ls_no_min_semi_nl():
     s = 'ls'
     exp = INDENT + '![{0}];\n'.format(s)
     obs = subproc_toks(INDENT + s + ';\n', lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_ls_comment():
@@ -111,7 +108,7 @@ def test_subproc_toks_ls_comment():
     com = '  # lets list'
     exp = '![{0}]{1}'.format(s, com)
     obs = subproc_toks(s + com, lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_ls_42_comment():
@@ -119,7 +116,7 @@ def test_subproc_toks_ls_42_comment():
     com = '  # lets list'
     exp = '![{0}]{1}'.format(s, com)
     obs = subproc_toks(s + com, lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_ls_str_comment():
@@ -127,7 +124,7 @@ def test_subproc_toks_ls_str_comment():
     com = '  # lets list'
     exp = '![{0}]{1}'.format(s, com)
     obs = subproc_toks(s + com, lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_indent_ls_comment():
@@ -136,7 +133,7 @@ def test_subproc_toks_indent_ls_comment():
     com = '  # lets list'
     exp = '{0}![{1}]{2}'.format(ind, s, com)
     obs = subproc_toks(ind + s + com, lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_indent_ls_str():
@@ -145,7 +142,7 @@ def test_subproc_toks_indent_ls_str():
     com = '  # lets list'
     exp = '{0}![{1}]{2}'.format(ind, s, com)
     obs = subproc_toks(ind + s + com, lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_ls_l_semi_ls_first():
@@ -154,7 +151,7 @@ def test_subproc_toks_ls_l_semi_ls_first():
     s = '{0}; {1}'.format(lsdl, ls)
     exp = '![{0}]; {1}'.format(lsdl, ls)
     obs = subproc_toks(s, lexer=LEXER, maxcol=6, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_ls_l_semi_ls_second():
@@ -163,7 +160,7 @@ def test_subproc_toks_ls_l_semi_ls_second():
     s = '{0}; {1}'.format(lsdl, ls)
     exp = '{0}; ![{1}]'.format(lsdl, ls)
     obs = subproc_toks(s, lexer=LEXER, mincol=7, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_hello_mom_first():
@@ -172,7 +169,7 @@ def test_subproc_toks_hello_mom_first():
     s = '{0}; {1}'.format(fst, sec)
     exp = '![{0}]; {1}'.format(fst, sec)
     obs = subproc_toks(s, lexer=LEXER, maxcol=len(fst)+1, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_hello_mom_second():
@@ -181,69 +178,69 @@ def test_subproc_toks_hello_mom_second():
     s = '{0}; {1}'.format(fst, sec)
     exp = '{0}; ![{1}]'.format(fst, sec)
     obs = subproc_toks(s, lexer=LEXER, mincol=len(fst), returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_comment():
     exp = None
     obs = subproc_toks('# I am a comment', lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_not():
     exp = 'not ![echo mom]'
     obs = subproc_toks('not echo mom', lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_paren():
     exp = '(![echo mom])'
     obs = subproc_toks('(echo mom)', lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_paren_ws():
     exp = '(![echo mom])  '
     obs = subproc_toks('(echo mom)  ', lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_not_paren():
     exp = 'not (![echo mom])'
     obs = subproc_toks('not (echo mom)', lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_and_paren():
     exp = 'True and (![echo mom])'
     obs = subproc_toks('True and (echo mom)', lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_paren_and_paren():
     exp = '(![echo a]) and (echo b)'
     obs = subproc_toks('(echo a) and (echo b)', maxcol=9, lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_semicolon_only():
     exp = None
     obs = subproc_toks(';', lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_pyeval():
     s = 'echo @(1+1)'
     exp = '![{0}]'.format(s)
     obs = subproc_toks(s, lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_twopyeval():
     s = 'echo @(1+1) @(40 + 2)'
     exp = '![{0}]'.format(s)
     obs = subproc_toks(s, lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_pyeval_parens():
@@ -251,7 +248,7 @@ def test_subproc_toks_pyeval_parens():
     inp = '({0})'.format(s)
     exp = '(![{0}])'.format(s)
     obs = subproc_toks(inp, lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_twopyeval_parens():
@@ -259,14 +256,14 @@ def test_subproc_toks_twopyeval_parens():
     inp = '({0})'.format(s)
     exp = '(![{0}])'.format(s)
     obs = subproc_toks(inp, lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_pyeval_nested():
     s = 'echo @(min(1, 42))'
     exp = '![{0}]'.format(s)
     obs = subproc_toks(s, lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_pyeval_nested_parens():
@@ -274,21 +271,21 @@ def test_subproc_toks_pyeval_nested_parens():
     inp = '({0})'.format(s)
     exp = '(![{0}])'.format(s)
     obs = subproc_toks(inp, lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_capstdout():
     s = 'echo $(echo bat)'
     exp = '![{0}]'.format(s)
     obs = subproc_toks(s, lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_capproc():
     s = 'echo !(echo bat)'
     exp = '![{0}]'.format(s)
     obs = subproc_toks(s, lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subproc_toks_pyeval_redirect():
@@ -296,7 +293,7 @@ def test_subproc_toks_pyeval_redirect():
     inp = '{0}'.format(s)
     exp = '![{0}]'.format(s)
     obs = subproc_toks(inp, lexer=LEXER, returnline=True)
-    assert_equal(exp, obs)
+    assert (exp == obs)
 
 
 def test_subexpr_from_unbalanced_parens():
@@ -307,7 +304,7 @@ def test_subexpr_from_unbalanced_parens():
         ]
     for expr, exp in cases:
         obs = subexpr_from_unbalanced(expr, '(', ')')
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 def test_find_next_break():
     cases = [
@@ -320,7 +317,7 @@ def test_find_next_break():
         ]
     for line, mincol, exp in cases:
         obs = find_next_break(line, mincol=mincol, lexer=LEXER)
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 
 def test_is_int():
@@ -336,7 +333,7 @@ def test_is_int():
         ]
     for inp, exp in cases:
         obs = is_int(inp)
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 
 def test_is_int_as_str():
@@ -353,7 +350,7 @@ def test_is_int_as_str():
         ]
     for inp, exp in cases:
         obs = is_int_as_str(inp)
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 
 def test_is_float():
@@ -372,7 +369,7 @@ def test_is_float():
         ]
     for inp, exp in cases:
         obs = is_float(inp)
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 
 def test_is_slice_as_str():
@@ -396,33 +393,33 @@ def test_is_slice_as_str():
         ]
     for inp, exp in cases:
         obs = is_slice_as_str(inp)
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 
 def test_is_string():
-    yield assert_true, is_string('42.0')
-    yield assert_false, is_string(42.0)
+    assert is_string('42.0')
+    assert not is_string(42.0)
 
 
 def test_is_callable():
-    yield assert_true, is_callable(lambda: 42.0)
-    yield assert_false, is_callable(42.0)
+    assert is_callable(lambda: 42.0)
+    assert not is_callable(42.0)
 
 
 def test_is_string_or_callable():
-    yield assert_true, is_string_or_callable('42.0')
-    yield assert_true, is_string_or_callable(lambda: 42.0)
-    yield assert_false, is_string(42.0)
+    assert is_string_or_callable('42.0')
+    assert is_string_or_callable(lambda: 42.0)
+    assert not is_string(42.0)
 
 
 def test_always_true():
-    yield assert_true, always_true(42)
-    yield assert_true, always_true('42')
+    assert always_true(42)
+    assert always_true('42')
 
 
 def test_always_false():
-    yield assert_false, always_false(42)
-    yield assert_false, always_false('42')
+    assert not always_false(42)
+    assert not always_false('42')
 
 
 def test_ensure_string():
@@ -432,7 +429,7 @@ def test_ensure_string():
         ]
     for inp, exp in cases:
         obs = ensure_string(inp)
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 
 def test_is_env_path():
@@ -441,11 +438,11 @@ def test_is_env_path():
         (['/home/jawaka'], False),
         (EnvPath(['/home/jawaka']), True),
         (EnvPath(['jawaka']), True),
-        (EnvPath(b'jawaka:wakka'), True),
+        #(EnvPath(b'jawaka:wakka'), True),
         ]
     for inp, exp in cases:
         obs = is_env_path(inp)
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 
 def test_str_to_env_path():
@@ -453,11 +450,11 @@ def test_str_to_env_path():
         ('/home/wakka', ['/home/wakka']),
         ('/home/wakka' + os.pathsep + '/home/jawaka',
          ['/home/wakka', '/home/jawaka']),
-        (b'/home/wakka', ['/home/wakka']),
+        #(b'/home/wakka', ['/home/wakka']),
         ]
     for inp, exp in cases:
         obs = str_to_env_path(inp)
-        yield assert_equal, exp, obs.paths
+        assert exp == obs.paths
 
 
 def test_env_path_to_str():
@@ -468,7 +465,7 @@ def test_env_path_to_str():
         ]
     for inp, exp in cases:
         obs = env_path_to_str(inp)
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 
 def test_env_path():
@@ -483,7 +480,7 @@ def test_env_path():
     ]
     for inp, exp in getitem_cases:
         obs = EnvPath(inp)[0]  # call to __getitem__
-        yield assert_equal, expand(exp), obs
+        assert expand(exp) == obs
 
     # cases that involve path-separated strings
     multipath_cases = [
@@ -494,7 +491,7 @@ def test_env_path():
     ]
     for inp, exp in multipath_cases:
         obs = [i for i in EnvPath(inp)]
-        yield assert_equal, [expand(i) for i in exp], obs
+        assert [expand(i) for i in exp] == obs
 
     # cases that involve pathlib.Path objects
     pathlib_cases = [
@@ -512,7 +509,7 @@ def test_env_path():
     for inp, exp in pathlib_cases:
         # iterate over EnvPath to acquire all expanded paths
         obs = [i for i in EnvPath(inp)]
-        yield assert_equal, [expand(i) for i in exp], obs
+        assert [expand(i) for i in exp] == obs
 
 
 def test_env_path_slices():
@@ -529,7 +526,7 @@ def test_env_path_slices():
 
     for inp, exp in slice_last:
         obs = EnvPath(inp)[:-1]
-        yield assert_equal, exp, obs
+        assert exp == obs
 
     # get all except the first element in a slice
     slice_first = [
@@ -541,7 +538,7 @@ def test_env_path_slices():
 
     for inp, exp in slice_first:
         obs = EnvPath(inp)[1:]
-        yield assert_equal, exp, obs
+        assert exp == obs
 
     # slice paths with a step
     slice_step = [
@@ -556,9 +553,9 @@ def test_env_path_slices():
 
     for inp, exp_a, exp_b in slice_step:
         obs_a = EnvPath(inp)[0::2]
-        yield assert_equal, exp_a, obs_a
+        assert exp_a == obs_a
         obs_b = EnvPath(inp)[1::2]
-        yield assert_equal, exp_b, obs_b
+        assert exp_b == obs_b
 
     # keep only non-home paths
     slice_normal = [
@@ -572,14 +569,14 @@ def test_env_path_slices():
 
     for inp, exp in slice_normal:
         obs = EnvPath(inp)[2:4]
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 
 def test_is_bool():
-    yield assert_equal, True, is_bool(True)
-    yield assert_equal, True, is_bool(False)
-    yield assert_equal, False, is_bool(1)
-    yield assert_equal, False, is_bool('yooo hooo!')
+    assert True == is_bool(True)
+    assert True == is_bool(False)
+    assert False == is_bool(1)
+    assert False == is_bool('yooo hooo!')
 
 
 def test_to_bool():
@@ -598,12 +595,12 @@ def test_to_bool():
         ]
     for inp, exp in cases:
         obs = to_bool(inp)
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 
 def test_bool_to_str():
-    yield assert_equal, '1', bool_to_str(True)
-    yield assert_equal, '', bool_to_str(False)
+    assert '1' == bool_to_str(True)
+    assert '' == bool_to_str(False)
 
 
 def test_is_bool_or_int():
@@ -617,7 +614,7 @@ def test_is_bool_or_int():
         ]
     for inp, exp in cases:
         obs = is_bool_or_int(inp)
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 
 def test_to_bool_or_int():
@@ -636,7 +633,7 @@ def test_to_bool_or_int():
         ]
     for inp, exp in cases:
         obs = to_bool_or_int(inp)
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 
 def test_bool_or_int_to_str():
@@ -648,7 +645,7 @@ def test_bool_or_int_to_str():
         ]
     for inp, exp in cases:
         obs = bool_or_int_to_str(inp)
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 
 def test_ensure_int_or_slice():
@@ -668,7 +665,7 @@ def test_ensure_int_or_slice():
         ]
     for inp, exp in cases:
         obs = ensure_int_or_slice(inp)
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 
 def test_is_dynamic_cwd_width():
@@ -682,7 +679,7 @@ def test_is_dynamic_cwd_width():
         ]
     for inp, exp in cases:
         obs = is_dynamic_cwd_width(inp)
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 def test_is_logfile_opt():
     cases = [
@@ -700,7 +697,7 @@ def test_is_logfile_opt():
         cases.append(('/dev/null', True))
     for inp, exp in cases:
         obs = is_logfile_opt(inp)
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 def test_to_logfile_opt():
     cases = [
@@ -715,7 +712,7 @@ def test_to_logfile_opt():
         cases.append(('/dev/nonexistent_dev', None))
     for inp, exp in cases:
         obs = to_logfile_opt(inp)
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 def test_logfile_opt_to_str():
     cases = [
@@ -726,7 +723,7 @@ def test_logfile_opt_to_str():
     ]
     for inp, exp in cases:
         obs = logfile_opt_to_str(inp)
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 def test_to_dynamic_cwd_tuple():
     cases = [
@@ -740,7 +737,7 @@ def test_to_dynamic_cwd_tuple():
         ]
     for inp, exp in cases:
         obs = to_dynamic_cwd_tuple(inp)
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 
 def test_dynamic_cwd_tuple_to_str():
@@ -751,7 +748,7 @@ def test_dynamic_cwd_tuple_to_str():
         ]
     for inp, exp in cases:
         obs = dynamic_cwd_tuple_to_str(inp)
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 
 def test_escape_windows_cmd_string():
@@ -765,7 +762,7 @@ def test_escape_windows_cmd_string():
         ]
     for st, esc in cases:
         obs = escape_windows_cmd_string(st)
-        yield assert_equal, esc, obs
+        assert esc == obs
 
 
 def test_argvquote():
@@ -781,7 +778,7 @@ def test_argvquote():
         ]
     for st, esc in cases:
         obs = argvquote(st)
-        yield assert_equal, esc, obs
+        assert esc == obs
 
 
 _leaders = ('', 'not empty')
@@ -802,28 +799,28 @@ inners = "this is a string"
 
 def test_partial_string():
     # single string at start
-    yield assert_equal, check_for_partial_string('no strings here'), (None, None, None)
-    yield assert_equal, check_for_partial_string(''), (None, None, None)
+    assert check_for_partial_string('no strings here') == (None, None, None)
+    assert check_for_partial_string('') == (None, None, None)
     for s, e in _startend.items():
         _test = s + inners + e
         for l in _leaders:
             for f in _leaders:
                 # single string
                 _res = check_for_partial_string(l + _test + f)
-                yield assert_equal, _res, (len(l), len(l) + len(_test), s)
+                assert _res == (len(l), len(l) + len(_test), s)
                 # single partial
                 _res = check_for_partial_string(l + f + s + inners)
-                yield assert_equal, _res, (len(l+f), None, s)
+                assert _res == (len(l+f), None, s)
                 for s2, e2 in _startend.items():
                     _test2 = s2 + inners + e2
                     for l2 in _leaders:
                         for f2 in _leaders:
                             # two strings
                             _res = check_for_partial_string(l + _test + f + l2 + _test2 + f2)
-                            yield assert_equal, _res, (len(l+_test+f+l2), len(l+_test+f+l2+_test2), s2)
+                            assert _res == (len(l+_test+f+l2), len(l+_test+f+l2+_test2), s2)
                             # one string, one partial
                             _res = check_for_partial_string(l + _test + f + l2 + s2 + inners)
-                            yield assert_equal, _res, (len(l+_test+f+l2), None, s2)
+                            assert _res == (len(l+_test+f+l2), None, s2)
 
 
 def test_executables_in():
@@ -859,7 +856,7 @@ def test_executables_in():
                 if executable and not _type == 'brokensymlink':
                     os.chmod(path, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
             result = set(executables_in(test_path))
-    assert_equal(expected, result)
+    assert (expected == result)
 
 
 def test_expand_case_matching():
@@ -872,15 +869,11 @@ def test_expand_case_matching():
         }
     for inp, exp in cases.items():
         obs = expand_case_matching(inp)
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 
 def test_commands_cache_lazy():
     cc = CommandsCache()
-    yield assert_false, cc.lazyin('xonsh')
-    yield assert_equal, 0, len(list(cc.lazyiter()))
-    yield assert_equal, 0, cc.lazylen()
-
-
-if __name__ == '__main__':
-    nose.runmodule()
+    assertfalse == cc.lazyin('xonsh')
+    assert 0 == len(list(cc.lazyiter()))
+    assert 0 == cc.lazylen()

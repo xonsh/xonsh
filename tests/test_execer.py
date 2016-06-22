@@ -108,8 +108,3 @@ def test_echo_comma_val():
 def test_echo_comma_2val():
     code = 'echo 1,2\n'
     yield check_parse, code
-
-
-
-if __name__ == '__main__':
-    nose.runmodule()

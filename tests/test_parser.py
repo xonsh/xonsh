@@ -1816,6 +1816,3 @@ def test_redirect():
 
 #DEBUG_LEVEL = 1
 #DEBUG_LEVEL = 100
-
-if __name__ == '__main__':
-    nose.runmodule()

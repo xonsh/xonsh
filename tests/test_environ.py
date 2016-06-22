@@ -7,11 +7,6 @@ import builtins
 from tempfile import TemporaryDirectory
 from xonsh.tools import ON_WINDOWS
 
-
-import nose
-from nose.tools import (assert_equal, assert_true, assert_not_in,
-    assert_is_instance, assert_in, assert_raises)
-
 from xonsh.environ import (Env, format_prompt, load_static_config,
     locate_binary, partial_format_prompt)
 
