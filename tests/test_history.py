@@ -9,9 +9,6 @@ import io
 import os
 import sys
 
-import nose
-from nose.tools import assert_equal, assert_is_none, assert_is_not_none
-
 from xonsh.lazyjson import LazyJSON
 from xonsh.history import History
 from xonsh import history
@@ -28,7 +25,7 @@ def test_hist_init():
     History(filename=FNAME, here='yup', **HIST_TEST_KWARGS)
     with LazyJSON(FNAME) as lj:
         obs = lj['here']
-    assert_equal('yup', obs)
+    assert 'yup' == obs
     os.remove(FNAME)
 
 
@@ -39,8 +36,8 @@ def test_hist_append():
     hist = History(filename=FNAME, here='yup', **HIST_TEST_KWARGS)
     with mock_xonsh_env({'HISTCONTROL': set()}):
         hf = hist.append({'joco': 'still alive'})
-    yield assert_is_none, hf
-    yield assert_equal, 'still alive', hist.buffer[0]['joco']
+    assert hf is None
+    assert 'still alive' == hist.buffer[0]['joco']
     os.remove(FNAME)
 
 
@@ -50,16 +47,16 @@ def test_hist_flush():
     FNAME += '.flush'
     hist = History(filename=FNAME, here='yup', **HIST_TEST_KWARGS)
     hf = hist.flush()
-    yield assert_is_none, hf
+    assert hf is None
     with mock_xonsh_env({'HISTCONTROL': set()}):
         hist.append({'joco': 'still alive'})
     hf = hist.flush()
-    yield assert_is_not_none, hf
+    assert hf is not None
     while hf.is_alive():
         pass
     with LazyJSON(FNAME) as lj:
         obs = lj['cmds'][0]['joco']
-    yield assert_equal, 'still alive', obs
+    assert 'still alive' == ob
     os.remove(FNAME)
 
 
@@ -71,18 +68,18 @@ def test_cmd_field():
     # in-memory
     with mock_xonsh_env({'HISTCONTROL': set()}):
         hf = hist.append({'rtn': 1})
-    yield assert_is_none, hf
-    yield assert_equal, 1, hist.rtns[0]
-    yield assert_equal, 1, hist.rtns[-1]
-    yield assert_equal, None, hist.outs[-1]
+    assert hf is None
+    assert 1 == hist.rtns[0]
+    assert 1 == hist.rtns[-1]
+    assert None == hist.outs[-1]
     # slice
-    yield assert_equal, [1], hist.rtns[:]
+    assert [1] == hist.rtns[:]
     # on disk
     hf = hist.flush()
-    yield assert_is_not_none, hf
-    yield assert_equal, 1, hist.rtns[0]
-    yield assert_equal, 1, hist.rtns[-1]
-    yield assert_equal, None, hist.outs[-1]
+    assert hf is not None
+    assert 1 == hist.rtns[0]
+    assert 1 == hist.rtns[-1]
+    assert None == hist.outs[-1]
     os.remove(FNAME)
 
 
@@ -103,10 +100,10 @@ def test_show_cmd():
         history._hist_main(hist, hist_args)
         stdout.seek(0, io.SEEK_SET)
         hist_lines = stdout.readlines()
-        yield assert_equal, len(commands), len(hist_lines)
+        assert len(commands) == len(hist_lines)
         for idx, (cmd, actual) in enumerate(zip(commands, hist_lines)):
             expected = format_hist_line(base_idx + idx * step, cmd)
-            yield assert_equal, expected, actual
+            assert expected == actual
 
     hist = History(filename=FNAME, here='yup', **HIST_TEST_KWARGS)
     stdout = io.StringIO()
@@ -171,60 +168,56 @@ def test_histcontrol():
     hist = History(filename=FNAME, here='yup', **HIST_TEST_KWARGS)
 
     with mock_xonsh_env({'HISTCONTROL': 'ignoredups,ignoreerr'}):
-        yield assert_equal, len(hist.buffer), 0
+        assert len(hist.buffer) == 0
 
         # An error, buffer remains empty
         hist.append({'inp': 'ls foo', 'rtn': 2})
-        yield assert_equal, len(hist.buffer), 0
+        assert len(hist.buffer) == 0
 
         # Success
         hist.append({'inp': 'ls foobazz', 'rtn': 0})
-        yield assert_equal, len(hist.buffer), 1
-        yield assert_equal, 'ls foobazz', hist.buffer[-1]['inp']
-        yield assert_equal, 0, hist.buffer[-1]['rtn']
+        assert len(hist.buffer) == 1
+        assert 'ls foobazz' == hist.buffer[-1]['inp']
+        assert 0 == hist.buffer[-1]['rtn']
 
         # Error
         hist.append({'inp': 'ls foo', 'rtn': 2})
-        yield assert_equal, len(hist.buffer), 1
-        yield assert_equal, 'ls foobazz', hist.buffer[-1]['inp']
-        yield assert_equal, 0, hist.buffer[-1]['rtn']
+        assert len(hist.buffer) == 1
+        assert 'ls foobazz' == hist.buffer[-1]['inp']
+        assert 0 == hist.buffer[-1]['rtn']
 
         # File now exists, success
         hist.append({'inp': 'ls foo', 'rtn': 0})
-        yield assert_equal, len(hist.buffer), 2
-        yield assert_equal, 'ls foo', hist.buffer[-1]['inp']
-        yield assert_equal, 0, hist.buffer[-1]['rtn']
+        assert len(hist.buffer) == 2
+        assert 'ls foo' == hist.buffer[-1]['inp']
+        assert 0 == hist.buffer[-1]['rtn']
 
         # Success
         hist.append({'inp': 'ls', 'rtn': 0})
-        yield assert_equal, len(hist.buffer), 3
-        yield assert_equal, 'ls', hist.buffer[-1]['inp']
-        yield assert_equal, 0, hist.buffer[-1]['rtn']
+        assert len(hist.buffer) == 3
+        assert 'ls' == hist.buffer[-1]['inp']
+        assert 0 == hist.buffer[-1]['rtn']
 
         # Dup
         hist.append({'inp': 'ls', 'rtn': 0})
-        yield assert_equal, len(hist.buffer), 3
+        assert len(hist.buffer) == 3
 
         # Success
         hist.append({'inp': '/bin/ls', 'rtn': 0})
-        yield assert_equal, len(hist.buffer), 4
-        yield assert_equal, '/bin/ls', hist.buffer[-1]['inp']
-        yield assert_equal, 0, hist.buffer[-1]['rtn']
+        assert len(hist.buffer) == 4
+        assert '/bin/ls' == hist.buffer[-1]['inp']
+        assert 0 == hist.buffer[-1]['rtn']
 
         # Error
         hist.append({'inp': 'ls bazz', 'rtn': 1})
-        yield assert_equal, len(hist.buffer), 4
-        yield assert_equal, '/bin/ls', hist.buffer[-1]['inp']
-        yield assert_equal, 0, hist.buffer[-1]['rtn']
+        assert len(hist.buffer) == 4
+        assert '/bin/ls' == hist.buffer[-1]['inp']
+        assert 0 == hist.buffer[-1]['rtn']
 
         # Error
         hist.append({'inp': 'ls bazz', 'rtn': -1})
-        yield assert_equal, len(hist.buffer), 4
-        yield assert_equal, '/bin/ls', hist.buffer[-1]['inp']
-        yield assert_equal, 0, hist.buffer[-1]['rtn']
+        assert len(hist.buffer) == 4
+        assert '/bin/ls' == hist.buffer[-1]['inp']
+        assert 0 == hist.buffer[-1]['rtn']
 
     os.remove(FNAME)
-
-
-if __name__ == '__main__':
-    nose.runmodule()
