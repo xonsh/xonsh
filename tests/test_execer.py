@@ -27,7 +27,7 @@ def test_ipconfig():
 
 @pytest.mark.skipif(ON_WINDOWS, reason='dont expect ls on windows')
 def test_bin_ls():
-    yield check_eval, '/bin/ls -l'
+    check_eval('/bin/ls -l')
 
 def test_ls_dashl():
     yield check_parse, 'ls -l'
