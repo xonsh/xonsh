@@ -34,7 +34,7 @@ LEXER.build()
 
 INDENT = '    '
 
-TOOLS_ENV = {'EXPAND_ENV_VARS': True}
+TOOLS_ENV = {'EXPAND_ENV_VARS': True, 'XONSH_ENCODING_ERRORS':'strict'}
 PATHEXT_ENV = {'PATHEXT': ['.COM', '.EXE', '.BAT']}
 
 def test_subproc_toks_x():
