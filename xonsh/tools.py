@@ -583,10 +583,15 @@ def suggest_commands(cmd, env, aliases):
 
 def print_exception(msg=None):
     """Print exceptions with/without traceback."""
-    env = getattr(builtins, '__xonsh_env__', os.environ)
+    env = getattr(builtins, '__xonsh_env__', None)
     # flags indicating whether the traceback options have been manually set
-    manually_set_trace = env.is_manually_set('XONSH_SHOW_TRACEBACK')
-    manually_set_logfile = env.is_manually_set('XONSH_TRACEBACK_LOGFILE')
+    if env is None:
+        env = os.environ
+        manually_set_trace = 'XONSH_SHOW_TRACEBACK' in env
+        manually_set_logfile ='XONSH_TRACEBACK_LOGFILE' in env
+    else:
+        manually_set_trace = env.is_manually_set('XONSH_SHOW_TRACEBACK')
+        manually_set_logfile = env.is_manually_set('XONSH_TRACEBACK_LOGFILE')
     if (not manually_set_trace) and (not manually_set_logfile):
         # Notify about the traceback output possibility if neither of
         # the two options have been manually set
@@ -604,7 +609,6 @@ def print_exception(msg=None):
             sys.stderr.write('xonsh: To log full traceback to a file set: '
                              '$XONSH_TRACEBACK_LOGFILE = <filename>\n')
         traceback.print_exc()
-
     # additionally, check if a file for traceback logging has been
     # specified and convert to a proper option if needed
     log_file = env.get('XONSH_TRACEBACK_LOGFILE', None)
