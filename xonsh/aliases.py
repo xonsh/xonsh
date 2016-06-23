@@ -393,7 +393,7 @@ def which(args, stdin=None, stdout=None, stderr=None):
         if pargs.exts:
             exts = pargs.exts
         else:
-            exts = builtins.__xonsh_env__.get('PATHEXT', ['.COM', '.EXE', '.BAT'])
+            exts = builtins.__xonsh_env__['PATHEXT']
     else:
         exts = None
 

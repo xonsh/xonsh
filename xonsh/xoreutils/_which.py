@@ -90,9 +90,10 @@ __all__ = ["which", "whichall", "whichgen", "WhichError"]
 
 import os
 import sys
-import getopt
 import stat
-from collections import MutableSequence
+import getopt
+import builtins
+import collections.abc as abc
 
 #---- exceptions
 
@@ -191,16 +192,16 @@ def whichgen(command, path=None, verbose=0, exts=None):
     # Windows has the concept of a list of extensions (PATHEXT env var).
     if sys.platform.startswith("win"):
         if exts is None:
-            exts = os.environ.get("PATHEXT", "").split(os.pathsep)
+            exts = builtins.__xonsh_env__['PATHEXT']
             # If '.exe' is not in exts then obviously this is Win9x and
             # or a bogus PATHEXT, then use a reasonable default.
             for ext in exts:
                 if ext.lower() == ".exe":
                     break
             else:
-                exts = ['.COM', '.EXE', '.BAT']
-        elif not isinstance(exts, MutableSequence):
-            raise TypeError("'exts' argument must be a list or None")
+                exts = ['.COM', '.EXE', '.BAT', '.CMD']
+        elif not isinstance(exts, abc.Sequence):
+            raise TypeError("'exts' argument must be a sequence or None")
     else:
         if exts is not None:
             raise WhichError("'exts' argument is not supported on "\
@@ -220,7 +221,7 @@ def whichgen(command, path=None, verbose=0, exts=None):
             if sys.platform.startswith("win") and len(dirName) >= 2\
                and dirName[0] == '"' and dirName[-1] == '"':
                 dirName = dirName[1:-1]
-            for ext in ['']+exts:
+            for ext in ([''] + exts):
                 absName = os.path.abspath(
                     os.path.normpath(os.path.join(dirName, command+ext)))
                 if os.path.isfile(absName):
