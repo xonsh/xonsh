@@ -455,8 +455,8 @@ def run_subproc(cmds, captured=False):
         if (stdin is not None and
                 ENV.get('XONSH_STORE_STDIN') and
                 captured == 'object' and
-                __xonsh_commands_cache__.locate_binary('cat') and
-                __xonsh_commands_cache__.locate_binary('tee')):
+                __xonsh_commands_cache__.lazy_locate_binary('cat') and
+                __xonsh_commands_cache__.lazy_locate_binary('tee')):
             _stdin_file = tempfile.NamedTemporaryFile()
             cproc = Popen(['cat'],
                           stdin=stdin,

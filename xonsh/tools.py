@@ -20,7 +20,6 @@ Implementations:
 import os
 import re
 import sys
-import ast
 import glob
 import string
 import ctypes
@@ -36,11 +35,14 @@ import collections.abc as abc
 from contextlib import contextmanager
 from subprocess import CalledProcessError
 
-# adding further imports from xonsh modules is discouraged to avoid cirular
+# adding further imports from xonsh modules is discouraged to avoid circular
 # dependencies
 from xonsh.lazyasd import LazyObject, LazyDict
-from xonsh.platform import (has_prompt_toolkit, scandir,
-    DEFAULT_ENCODING, ON_LINUX, ON_WINDOWS, PYTHON_VERSION_INFO)
+from xonsh.platform import (
+    has_prompt_toolkit, scandir,
+    DEFAULT_ENCODING, ON_LINUX, ON_WINDOWS, PYTHON_VERSION_INFO,
+)
+
 
 @functools.lru_cache(1)
 def is_superuser():
@@ -1568,12 +1570,12 @@ class CommandsCache(abc.Mapping):
     def get_possible_names(key):
         if ON_WINDOWS:
             key = key.upper()
-            return {
+            return [
                 key + ext
                 for ext in ([''] + builtins.__xonsh_env__['PATHEXT'])
-            }
+            ]
         else:
-            return {key}
+            return [key]
 
     def __contains__(self, key):
         return key in self.all_commands
@@ -1652,34 +1654,36 @@ class CommandsCache(abc.Mapping):
         return self._cmds_cache.get(key, default)
 
     def locate_binary(self, name):
-        """Locates an executable on the file system."""
+        """Locates an executable on the file system using the cache."""
+        possibilities = self.get_possible_names(name)
 
         if ON_WINDOWS:
+            from xonsh.dirstack import _get_cwd  # circular dependency
             # Windows users expect to be able to execute files in the same
             # directory without `./`
             cwd = _get_cwd()
 
-            local_bins = [full_name for full_name in self.get_possible_names(name)
-                          if os.path.isfile(full_name)]
-            if local_bins:
-                return os.path.abspath(os.path.relpath(local_bins[0], cwd))
+            local_bin = next((
+                full_name for full_name in possibilities
+                if os.path.isfile(full_name)
+            ), None)
 
-        possibilities = self.get_possible_names(name)
-        matches = possibilities & self.all_commands.keys()
+            if local_bin:
+                return os.path.abspath(os.path.relpath(local_bin, cwd))
 
-        if matches:
-            return self.all_commands[matches.pop()][0]
+        cmds = self.all_commands
+        cached = next((cmd for cmd in possibilities if cmd in cmds), None)
+        if cached:
+            return cmds[cached][0]
         elif os.path.isfile(name) and name != os.path.basename(name):
             return name
 
     def lazy_locate_binary(self, name):
-        """Locates an executable in the cache."""
-
+        """Locates an executable in the cache, without invalidating it."""
         possibilities = self.get_possible_names(name)
-        matches = possibilities & self._cmds_cache.keys()
-
-        if matches:
-            return self._cmds_cache[matches.pop()][0]
+        cached = next((cmd for cmd in possibilities if cmd in self._cmds_cache), None)
+        if cached:
+            return self._cmds_cache[cached][0]
         elif os.path.isfile(name) and name != os.path.basename(name):
             return name
 

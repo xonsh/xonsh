@@ -7,7 +7,6 @@ import json
 import locale
 import builtins
 from contextlib import contextmanager
-from functools import wraps
 from itertools import chain
 from pprint import pformat
 import re
@@ -16,30 +15,33 @@ import string
 import subprocess
 import shutil
 from warnings import warn
-from collections import (Mapping, MutableMapping, MutableSequence, MutableSet,
-    namedtuple)
+from collections import (
+    Mapping, MutableMapping, MutableSequence, MutableSet,
+    namedtuple
+)
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.jobs import get_next_task
 from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import load_foreign_envs
-from xonsh.platform import (BASH_COMPLETIONS_DEFAULT, ON_ANACONDA, ON_LINUX,
-    ON_WINDOWS, DEFAULT_ENCODING, ON_CYGWIN, PATH_DEFAULT)
+from xonsh.platform import (
+    BASH_COMPLETIONS_DEFAULT, DEFAULT_ENCODING, PATH_DEFAULT,
+    ON_WINDOWS, ON_ANACONDA, ON_LINUX, ON_CYGWIN,
+)
 from xonsh.tools import (
     is_superuser, always_true, always_false, ensure_string, is_env_path,
     str_to_env_path, env_path_to_str, is_bool, to_bool, bool_to_str,
     is_history_tuple, to_history_tuple, history_tuple_to_str, is_float,
-    is_string, is_callable, is_string_or_callable,
+    is_string, is_string_or_callable,
     is_completions_display_value, to_completions_display_value,
     is_string_set, csv_to_set, set_to_csv, get_sep, is_int, is_bool_seq,
-    is_bool_or_int, to_bool_or_int, bool_or_int_to_str,
+    to_bool_or_int, bool_or_int_to_str,
     csv_to_bool_seq, bool_seq_to_csv, DefaultNotGiven, print_exception,
     setup_win_unicode_console, intensify_colors_on_win_setter, format_color,
     is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str,
     is_logfile_opt, to_logfile_opt, logfile_opt_to_str, executables_in,
-    pathsep_to_set, set_to_pathsep, pathsep_to_seq, seq_to_pathsep,
-    is_string_seq, is_nonstring_seq_of_strings, pathsep_to_upper_seq,
+    is_nonstring_seq_of_strings, pathsep_to_upper_seq,
     seq_to_upper_pathsep,
 )
 
