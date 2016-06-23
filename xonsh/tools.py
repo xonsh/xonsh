@@ -1567,10 +1567,10 @@ class CommandsCache(abc.Mapping):
     @staticmethod
     def get_possible_names(key):
         if ON_WINDOWS:
+            key = key.upper()
             return {
-                name + ext
+                key + ext
                 for ext in ([''] + builtins.__xonsh_env__['PATHEXT'])
-                for name in (key, key.upper())
             }
         else:
             return {key}
@@ -1586,7 +1586,8 @@ class CommandsCache(abc.Mapping):
 
     def __getitem__(self, key):
         possibilities = self.get_possible_names(key)
-        return self.all_commands[next(possibilities & self.all_commands.keys())]
+        matches = possibilities & self.all_commands.keys()
+        return self.all_commands[matches.pop()]
 
     @property
     def all_commands(self):

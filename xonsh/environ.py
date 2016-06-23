@@ -824,26 +824,23 @@ def _yield_executables(directory, name):
 def locate_binary(name):
     """Locates an executable on the file system."""
 
-    cc = builtins.__xonsh_commands_cache__
+    cache = builtins.__xonsh_commands_cache__
 
     if ON_WINDOWS:
         # Windows users expect to be able to execute files in the same
         # directory without `./`
         cwd = _get_cwd()
-        if os.path.isfile(name):
-            return os.path.abspath(os.path.relpath(name, cwd))
 
-        exts = builtins.__xonsh_env__['PATHEXT']
-        for ext in exts:
-            namext = name + ext
-            if os.path.isfile(namext):
-                return os.path.abspath(os.path.relpath(namext, cwd))
+        local_bins = [full_name for full_name in cache.get_possible_names(name)
+                      if os.path.isfile(full_name)]
+        if local_bins:
+            return os.path.abspath(os.path.relpath(local_bins[0], cwd))
 
-    if name in cc:
-        # can be lazy here since we know name is already available
-        return cc.lazyget(name)[0]
-    elif os.path.isfile(name) and name != os.path.basename(name):
-        return name
+    return builtins.__xonsh_commands_cache__.get(
+        name,
+        (name, False) if os.path.isfile(name) and name != os.path.basename(name)
+        else (None, None)
+    )[0]
 
 
 def get_git_branch():
