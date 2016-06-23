@@ -1576,7 +1576,7 @@ class CommandsCache(abc.Mapping):
             return {key}
 
     def __contains__(self, key):
-        return bool(self.get_possible_names(key) & self.all_commands.keys())
+        return key in self.all_commands
 
     def __iter__(self):
         return iter(self.all_commands)
@@ -1585,9 +1585,7 @@ class CommandsCache(abc.Mapping):
         return len(self.all_commands)
 
     def __getitem__(self, key):
-        possibilities = self.get_possible_names(key)
-        matches = possibilities & self.all_commands.keys()
-        return self.all_commands[matches.pop()]
+        return self.all_commands[key]
 
     @property
     def all_commands(self):
@@ -1633,8 +1631,7 @@ class CommandsCache(abc.Mapping):
         update the cache. It just says whether the value is known *now*. This
         may not reflect precisely what is on the $PATH.
         """
-
-        return bool(self.get_possible_names(key) & self._cmds_cache.keys())
+        return key in self._cmds_cache
 
     def lazyiter(self):
         """Returns an iterator over the current cache contents without the
@@ -1652,9 +1649,39 @@ class CommandsCache(abc.Mapping):
 
     def lazyget(self, key, default=None):
         """A lazy value getter."""
-        possibilities = self.get_possible_names(key)
+        return self._cmds_cache.get(key, default)
+
+    def locate_binary(self, name):
+        """Locates an executable on the file system."""
+
+        if ON_WINDOWS:
+            # Windows users expect to be able to execute files in the same
+            # directory without `./`
+            cwd = _get_cwd()
+
+            local_bins = [full_name for full_name in self.get_possible_names(name)
+                          if os.path.isfile(full_name)]
+            if local_bins:
+                return os.path.abspath(os.path.relpath(local_bins[0], cwd))
+
+        possibilities = self.get_possible_names(name)
+        matches = possibilities & self.all_commands.keys()
+
+        if matches:
+            return self.all_commands[matches.pop()][0]
+        elif os.path.isfile(name) and name != os.path.basename(name):
+            return name
+
+    def lazy_locate_binary(self, name):
+        """Locates an executable in the cache."""
+
+        possibilities = self.get_possible_names(name)
         matches = possibilities & self._cmds_cache.keys()
-        return self._cmds_cache[matches.pop()] if matches else default
+
+        if matches:
+            return self._cmds_cache[matches.pop()][0]
+        elif os.path.isfile(name) and name != os.path.basename(name):
+            return name
 
 
 WINDOWS_DRIVE_MATCHER = LazyObject(lambda: re.compile(r'^\w:'),

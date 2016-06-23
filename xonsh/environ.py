@@ -823,24 +823,7 @@ def _yield_executables(directory, name):
 
 def locate_binary(name):
     """Locates an executable on the file system."""
-
-    cache = builtins.__xonsh_commands_cache__
-
-    if ON_WINDOWS:
-        # Windows users expect to be able to execute files in the same
-        # directory without `./`
-        cwd = _get_cwd()
-
-        local_bins = [full_name for full_name in cache.get_possible_names(name)
-                      if os.path.isfile(full_name)]
-        if local_bins:
-            return os.path.abspath(os.path.relpath(local_bins[0], cwd))
-
-    return builtins.__xonsh_commands_cache__.get(
-        name,
-        (name, False) if os.path.isfile(name) and name != os.path.basename(name)
-        else (None, None)
-    )[0]
+    return builtins.__xonsh_commands_cache__.locate_binary(name)
 
 
 def get_git_branch():
@@ -955,9 +938,9 @@ def current_branch(pad=True):
     """
     branch = ''
     cmds = builtins.__xonsh_commands_cache__
-    if cmds.lazyin('git') or cmds.lazylen() == 0:
+    if cmds.lazy_locate_binary('git') or cmds.lazylen() == 0:
         branch = get_git_branch()
-    if (cmds.lazyin('hg') or cmds.lazylen() == 0) and not branch:
+    if (cmds.lazy_locate_binary('hg') or cmds.lazylen() == 0) and not branch:
         branch = get_hg_branch()
     if isinstance(branch, subprocess.TimeoutExpired):
         branch = '<branch-timeout>'
@@ -1021,9 +1004,9 @@ def dirty_working_directory(cwd=None):
     """
     dwd = None
     cmds = builtins.__xonsh_commands_cache__
-    if cmds.lazyin('git') or cmds.lazylen() == 0:
+    if cmds.lazy_locate_binary('git') or cmds.lazylen() == 0:
         dwd = git_dirty_working_directory()
-    if (cmds.lazyin('hg') or cmds.lazylen() == 0) and (dwd is None):
+    if (cmds.lazy_locate_binary('hg') or cmds.lazylen() == 0) and (dwd is None):
         dwd = hg_dirty_working_directory()
     return dwd
 
