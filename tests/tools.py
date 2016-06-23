@@ -21,8 +21,8 @@ VER_3_4 = (3, 4)
 VER_3_5 = (3, 5)
 VER_MAJOR_MINOR = sys.version_info[:2]
 VER_FULL = sys.version_info[:3]
-ON_MAC = (platform.system() == 'Darwin')
-ON_WINDOWS = (platform.system() == 'Windows')
+ON_DARWIN = platform.ON_DARWIN
+ON_WINDOWS = platform.ON_WINDOWS
 
 def sp(cmd):
     return subprocess.check_output(cmd, universal_newlines=True)
