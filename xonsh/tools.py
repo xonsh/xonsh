@@ -118,7 +118,7 @@ def decode_bytes(path):
     env = getattr(builtins, '__xonsh_env__', os.environ)
     enc = env.get('XONSH_ENCODING', DEFAULT_ENCODING)
     return path.decode(encoding=enc,
-                       errors=env.get('XONSH_ENCODING_ERRORS'))
+                       errors=env.get('XONSH_ENCODING_ERRORS') or 'strict')
 
 
 class EnvPath(collections.MutableSequence):
