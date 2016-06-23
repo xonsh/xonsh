@@ -25,11 +25,14 @@ from xonsh.tools import (
     pathsep_to_upper_seq, seq_to_upper_pathsep,
     )
 
+from tools import mock_xonsh_env
+
 LEXER = Lexer()
 LEXER.build()
 
 INDENT = '    '
 
+TOOLS_ENV = {'EXPAND_ENV_VARS': True}
 
 def test_subproc_toks_x():
     exp = '![x]'
@@ -559,7 +562,6 @@ def test_env_path_to_str():
         assert exp == obs
 
 
-@pytest.mark.skip(reason='EnvPath bug')
 def test_env_path():
     # lambda to expand the expected paths
     expand = lambda path: os.path.expanduser(os.path.expandvars(path))
@@ -570,9 +572,10 @@ def test_env_path():
         ('~/', '~/'),
         (b'~/../', '~/../'),
     ]
-    for inp, exp in getitem_cases:
-        obs = EnvPath(inp)[0]  # call to __getitem__
-        assert expand(exp) == obs
+    with mock_xonsh_env(TOOLS_ENV):
+        for inp, exp in getitem_cases:
+            obs = EnvPath(inp)[0] # call to __getitem__
+            assert expand(exp) == obs
 
     # cases that involve path-separated strings
     multipath_cases = [
@@ -581,9 +584,10 @@ def test_env_path():
         ('/home/wakka' + os.pathsep + '/home/jakka' + os.pathsep + '~/',
          ['/home/wakka', '/home/jakka', '~/'])
     ]
-    for inp, exp in multipath_cases:
-        obs = [i for i in EnvPath(inp)]
-        assert [expand(i) for i in exp] == obs
+    with mock_xonsh_env(TOOLS_ENV):
+        for inp, exp in multipath_cases:
+            obs = [i for i in EnvPath(inp)]
+            assert [expand(i) for i in exp] == obs
 
     # cases that involve pathlib.Path objects
     pathlib_cases = [
@@ -598,10 +602,11 @@ def test_env_path():
          ['/home/wakka', '~', '~/']),
     ]
 
-    for inp, exp in pathlib_cases:
-        # iterate over EnvPath to acquire all expanded paths
-        obs = [i for i in EnvPath(inp)]
-        assert [expand(i) for i in exp] == obs
+    with mock_xonsh_env(TOOLS_ENV):
+        for inp, exp in pathlib_cases:
+            # iterate over EnvPath to acquire all expanded paths
+            obs = [i for i in EnvPath(inp)]
+            assert [expand(i) for i in exp] == obs
 
 
 def test_env_path_slices():
