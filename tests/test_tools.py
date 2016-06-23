@@ -16,7 +16,7 @@ from xonsh.tools import (
     bool_or_int_to_str, bool_to_str, check_for_partial_string,
     dynamic_cwd_tuple_to_str, ensure_int_or_slice, ensure_string,
     env_path_to_str, escape_windows_cmd_string, executables_in,
-    expand_case_matching, find_next_break, is_bool, is_bool_or_int,
+    expand_case_matching, find_next_break, iglobpath, is_bool, is_bool_or_int,
     is_callable, is_dynamic_cwd_width, is_env_path, is_float, is_int,
     is_int_as_str, is_logfile_opt, is_slice_as_str, is_string,
     is_string_or_callable, logfile_opt_to_str, str_to_env_path,
@@ -25,6 +25,8 @@ from xonsh.tools import (
     is_string_seq, pathsep_to_seq, seq_to_pathsep, is_nonstring_seq_of_strings,
     pathsep_to_upper_seq, seq_to_upper_pathsep,
     )
+
+from tools import mock_xonsh_env
 
 LEXER = Lexer()
 LEXER.build()
@@ -324,6 +326,35 @@ def test_find_next_break():
     for line, mincol, exp in cases:
         obs = find_next_break(line, mincol=mincol, lexer=LEXER)
         yield assert_equal, exp, obs
+
+
+def test_iglobpath():
+    with TemporaryDirectory() as test_dir:
+        # Create files 00.test to 99.test in unsorted order
+        num = 18
+        for _ in range(100):
+            s = str(num).zfill(2)
+            path = os.path.join(test_dir, s + '.test')
+            with open(path, 'w') as file:
+                file.write(s + '\n')
+            num = (num + 37) % 100
+
+        # Create one file not matching the '*.test'
+        with open(os.path.join(test_dir, '07'), 'w') as file:
+            file.write('test\n')
+
+        with  mock_xonsh_env({'GLOB_SORTED': False}):
+            paths = list(iglobpath(os.path.join(test_dir, '*.test'), False))
+            yield assert_equal, len(paths), 100
+            paths = list(iglobpath(os.path.join(test_dir, '*'), True))
+            yield assert_equal, len(paths), 101
+        with  mock_xonsh_env({'GLOB_SORTED': True}):
+            paths = list(iglobpath(os.path.join(test_dir, '*.test'), False))
+            yield assert_equal, len(paths), 100
+            yield assert_equal, paths, sorted(paths)
+            paths = list(iglobpath(os.path.join(test_dir, '*'), True))
+            yield assert_equal, len(paths), 101
+            yield assert_equal, paths, sorted(paths)
 
 
 def test_is_int():
