@@ -27,12 +27,15 @@ from xonsh.tools import (
 
 from tools import mock_xonsh_env
 
+from tools import mock_xonsh_env
+
 LEXER = Lexer()
 LEXER.build()
 
 INDENT = '    '
 
 TOOLS_ENV = {'EXPAND_ENV_VARS': True}
+PATHEXT_ENV = {'PATHEXT': ['.COM', '.EXE', '.BAT']}
 
 def test_subproc_toks_x():
     exp = '![x]'
@@ -952,7 +955,11 @@ def test_executables_in():
                     os.remove(tmp_path)
                 if executable and not _type == 'brokensymlink':
                     os.chmod(path, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
-            result = set(executables_in(test_path))
+            if ON_WINDOWS:
+                with mock_xonsh_env(PATHEXT_ENV):
+                    result = set(executables_in(test_path))
+            else:
+                result = set(executables_in(test_path))
     assert (expected == result)
 
 
