@@ -5,9 +5,7 @@ from __future__ import unicode_literals, print_function
 import os
 import tempfile
 
-import nose
-from nose.plugins.skip import SkipTest
-from nose.tools import assert_equal
+import pytest
 
 import xonsh.built_ins as built_ins
 from xonsh.aliases import Aliases
@@ -29,34 +27,32 @@ ALIASES = Aliases({'o': ['omg', 'lala']},
 RAW = ALIASES._raw
 
 def test_imports():
-    assert_equal(RAW, {
+    expected = {
         'o': ['omg', 'lala'],
         'ls': ['ls', '-  -'],
         'color_ls': ['ls', '--color=true'],
         'cd': cd,
         'indirect_cd': ['cd', '..']
-    })
+    }
+    assert RAW == expected
 
 def test_eval_normal():
     with mock_xonsh_env({}):
-        assert_equal(ALIASES.get('o'), ['omg', 'lala'])
+        assert ALIASES.get('o') ==  ['omg', 'lala']
 
 def test_eval_self_reference():
     with mock_xonsh_env({}):
-        assert_equal(ALIASES.get('ls'), ['ls', '-  -'])
+        assert ALIASES.get('ls') ==  ['ls', '-  -']
 
 def test_eval_recursive():
     with mock_xonsh_env({}):
-        assert_equal(ALIASES.get('color_ls'), ['ls', '-  -', '--color=true'])
+        assert ALIASES.get('color_ls') ==  ['ls', '-  -', '--color=true']
 
+@pytest.mark.skipif(ON_WINDOWS, reason='Unix stuff')
 def test_eval_recursive_callable_partial():
-    if ON_WINDOWS:
-        raise SkipTest
     built_ins.ENV = Env(HOME=os.path.expanduser('~'))
     with mock_xonsh_env(built_ins.ENV):
-        assert_equal(ALIASES.get('indirect_cd')(['arg2', 'arg3']),
-                     ['..', 'arg2', 'arg3'])
-
+        assert ALIASES.get('indirect_cd')(['arg2', 'arg3']) == ['..', 'arg2', 'arg3']
 
 class TestWhich:
     # Tests for the _whichgen function which is the only thing we
@@ -78,7 +74,7 @@ class TestWhich:
                 open(path, 'wb').write(b'')
                 os.chmod(path, 0o755)
 
-    def teardown(self):
+    def teardown_module(self):
         for d in self.testdirs:
             d.cleanup()
 
@@ -138,7 +134,3 @@ class TestWhich:
             return path1 == path2
         else:
             return os.path.samefile(path1, path2)
-
-
-if __name__ == '__main__':
-    nose.runmodule()

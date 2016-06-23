@@ -6,6 +6,6 @@ python:
 install:
   - pip install -r requirements-tests.txt
 script:
-  - nosetests -q --with-coverage --cover-package=xonsh
+  - coverage run --source xonsh -m py.test -q
 after_success:
   - codecov

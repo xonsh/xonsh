@@ -5,22 +5,22 @@ import os
 import builtins
 from contextlib import contextmanager
 
-import nose
-from nose.tools import assert_equal, assert_true
+import pytest
 
 from xonsh.tools import swap
 from xonsh.shell import Shell
 from xonsh.replay import Replayer
 
-from tools import ON_MAC, skip_if
+from tools import ON_DARWIN
 
 SHELL = Shell({'PATH': []})
 HISTDIR = os.path.join(os.path.dirname(__file__), 'histories')
 
 def run_replay(re_file):
     with swap(builtins, '__xonsh_shell__', SHELL):
-        r = Replayer(re_file)
-        hist = r.replay()
+        with swap(builtins, '__xonsh_exit__', False):
+            r = Replayer(re_file)
+            hist = r.replay()
     return hist
 
 
@@ -38,27 +38,22 @@ def a_replay(re_file):
     cleanup_replay(hist)
 
 
-@skip_if(ON_MAC)
+@pytest.mark.skipif(ON_DARWIN, reason='Not mac friendly')
 def test_echo():
     f = os.path.join(HISTDIR, 'echo.json')
     with a_replay(f) as hist:
-        yield assert_equal, 2, len(hist)
+        assert 2 == len(hist)
 
 
-@skip_if(ON_MAC)
+@pytest.mark.skipif(ON_DARWIN, reason='also not mac friendly')
 def test_reecho():
     f = os.path.join(HISTDIR, 'echo.json')
     with a_replay(f) as hist:
-        yield assert_equal, 2, len(hist)
+        assert 2 == len(hist)
 
-
-@skip_if(ON_MAC)
+@pytest.mark.skipif(ON_DARWIN, reason='also not mac friendly')
 def test_simple_python():
     f = os.path.join(HISTDIR, 'simple-python.json')
     with a_replay(f) as hist:
-        yield assert_equal, 4, len(hist)
-        yield assert_equal, "print('The Turtles')", hist.inps[0].strip()
-
-
-if __name__ == '__main__':
-    nose.runmodule()
+        assert 4 == len(hist)
+        assert "print('The Turtles')" == hist.inps[0].strip()
