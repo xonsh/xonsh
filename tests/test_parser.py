@@ -823,7 +823,7 @@ def test_call_list_many_starstar_args():
 
 @skip_if_py34
 def test_call_list_many_star_and_starstar_args():
-    yield check_ast, 'x(*[("a", 2)], *[("v", 3)], **{"c": 5})', False
+    check_ast('x(*[("a", 2)], *[("v", 3)], **{"c": 5})', False)
 
 def test_call_alot():
     yield check_ast, 'x(1, *args, **kwargs)', False
