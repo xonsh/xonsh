@@ -35,6 +35,7 @@ LEXER.build()
 INDENT = '    '
 
 TOOLS_ENV = {'EXPAND_ENV_VARS': True, 'XONSH_ENCODING_ERRORS':'strict'}
+ENCODE_ENV_ONLY = {'XONSH_ENCODING_ERRORS': 'strict'}
 PATHEXT_ENV = {'PATHEXT': ['.COM', '.EXE', '.BAT']}
 
 def test_subproc_toks_x():
@@ -535,7 +536,7 @@ def test_is_env_path():
         (['/home/jawaka'], False),
         (EnvPath(['/home/jawaka']), True),
         (EnvPath(['jawaka']), True),
-        #(EnvPath(b'jawaka:wakka'), True),
+        (EnvPath(b'jawaka:wakka'), True),
         ]
     for inp, exp in cases:
         obs = is_env_path(inp)
@@ -547,7 +548,7 @@ def test_str_to_env_path():
         ('/home/wakka', ['/home/wakka']),
         ('/home/wakka' + os.pathsep + '/home/jawaka',
          ['/home/wakka', '/home/jawaka']),
-        #(b'/home/wakka', ['/home/wakka']),
+        (b'/home/wakka', ['/home/wakka']),
         ]
     for inp, exp in cases:
         obs = str_to_env_path(inp)
@@ -580,6 +581,11 @@ def test_env_path():
             obs = EnvPath(inp)[0] # call to __getitem__
             assert expand(exp) == obs
 
+    with mock_xonsh_env(ENCODE_ENV_ONLY):
+        for inp, exp in getitem_cases:
+            obs = EnvPath(inp)[0] # call to __getitem__
+            assert exp == obs
+
     # cases that involve path-separated strings
     multipath_cases = [
         (os.pathsep.join(['xonsh_dir', '../', '.', '~/']),
@@ -591,6 +597,11 @@ def test_env_path():
         for inp, exp in multipath_cases:
             obs = [i for i in EnvPath(inp)]
             assert [expand(i) for i in exp] == obs
+
+    with mock_xonsh_env(ENCODE_ENV_ONLY):
+        for inp, exp in multipath_cases:
+            obs = [i for i in EnvPath(inp)]
+            assert [i for i in exp] == obs
 
     # cases that involve pathlib.Path objects
     pathlib_cases = [
@@ -610,7 +621,6 @@ def test_env_path():
             # iterate over EnvPath to acquire all expanded paths
             obs = [i for i in EnvPath(inp)]
             assert [expand(i) for i in exp] == obs
-
 
 def test_env_path_slices():
     # build os-dependent paths properly
