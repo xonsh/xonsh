@@ -1564,8 +1564,18 @@ class CommandsCache(abc.Mapping):
         self._alias_checksum = None
         self._path_mtime = -1
 
+    def __get_possible_names(self, key):
+        if ON_WINDOWS:
+            return {
+                name + ext
+                for ext in ([''] + builtins.__xonsh_env__['PATHEXT'])
+                for name in (key, key.upper())
+            }
+        else:
+            return { key, }
+
     def __contains__(self, key):
-        return key in self.all_commands
+        return bool(self.__get_possible_names(key) & self.all_commands.keys())
 
     def __iter__(self):
         return iter(self.all_commands)
@@ -1574,7 +1584,8 @@ class CommandsCache(abc.Mapping):
         return len(self.all_commands)
 
     def __getitem__(self, key):
-        return self.all_commands[key]
+        possibilities = self.__get_possible_names(key)
+        return self.all_commands[next(possibilities & self.all_commands.keys())]
 
     @property
     def all_commands(self):
@@ -1599,6 +1610,7 @@ class CommandsCache(abc.Mapping):
         self._path_mtime = max_mtime
         if cache_valid:
             return self._cmds_cache
+
         allcmds = {}
         for path in reversed(paths):
             # iterate backwards so that entries at the front of PATH overwrite
@@ -1606,6 +1618,7 @@ class CommandsCache(abc.Mapping):
             for cmd in executables_in(path):
                 key = cmd.upper() if ON_WINDOWS else cmd
                 allcmds[key] = (os.path.join(path, cmd), cmd in alss)
+
         only_alias = (None, True)
         for cmd in alss:
             if cmd not in allcmds:
@@ -1613,12 +1626,13 @@ class CommandsCache(abc.Mapping):
         self._cmds_cache = allcmds
         return allcmds
 
-    def lazyin(self, value):
+    def lazyin(self, key):
         """Checks if the value is in the current cache without the potential to
         update the cache. It just says whether the value is known *now*. This
         may not reflect precisely what is on the $PATH.
         """
-        return value in self._cmds_cache
+
+        return bool(self.__get_possible_names(key) & self._cmds_cache.keys())
 
     def lazyiter(self):
         """Returns an iterator over the current cache contents without the
@@ -1636,7 +1650,9 @@ class CommandsCache(abc.Mapping):
 
     def lazyget(self, key, default=None):
         """A lazy value getter."""
-        return self._cmds_cache.get(key, default)
+        possibilities = self.__get_possible_names(key)
+        matches = possibilities & self._cmds_cache.keys()
+        return self._cmds_cache[matches.pop()] if matches else default
 
 
 WINDOWS_DRIVE_MATCHER = LazyObject(lambda: re.compile(r'^\w:'),

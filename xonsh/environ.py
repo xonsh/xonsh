@@ -823,31 +823,27 @@ def _yield_executables(directory, name):
 
 def locate_binary(name):
     """Locates an executable on the file system."""
+
+    cc = builtins.__xonsh_commands_cache__
+
     if ON_WINDOWS:
         # Windows users expect to be able to execute files in the same
         # directory without `./`
         cwd = _get_cwd()
         if os.path.isfile(name):
             return os.path.abspath(os.path.relpath(name, cwd))
+
         exts = builtins.__xonsh_env__['PATHEXT']
         for ext in exts:
             namext = name + ext
             if os.path.isfile(namext):
                 return os.path.abspath(os.path.relpath(namext, cwd))
-    elif os.path.isfile(name) and name != os.path.basename(name):
-        return name
-    cc = builtins.__xonsh_commands_cache__
-    if ON_WINDOWS:
-        upname = name.upper()
-        if upname in cc:
-            return cc.lazyget(upname)[0]
-        for ext in exts:
-            upnamext = upname + ext
-            if cc.lazyin(upnamext):
-                return cc.lazyget(upnamext)[0]
-    elif name in cc:
+
+    if name in cc:
         # can be lazy here since we know name is already available
         return cc.lazyget(name)[0]
+    elif os.path.isfile(name) and name != os.path.basename(name):
+        return name
 
 
 def get_git_branch():
@@ -1037,7 +1033,7 @@ def dirty_working_directory(cwd=None):
 
 def branch_color():
     """Return red if the current branch is dirty, yellow if the dirtiness can
-    not be determined, and green if it clean. Thes are bold, intesnse colors
+    not be determined, and green if it clean. These are bold, intense colors
     for the foreground.
     """
     dwd = dirty_working_directory()
