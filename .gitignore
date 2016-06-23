@@ -38,3 +38,5 @@ include/
 
 # Editor project files
 *.komodo*
+
+.coverage
