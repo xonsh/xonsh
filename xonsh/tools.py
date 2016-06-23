@@ -1564,7 +1564,8 @@ class CommandsCache(abc.Mapping):
         self._alias_checksum = None
         self._path_mtime = -1
 
-    def __get_possible_names(self, key):
+    @staticmethod
+    def get_possible_names(key):
         if ON_WINDOWS:
             return {
                 name + ext
@@ -1572,10 +1573,10 @@ class CommandsCache(abc.Mapping):
                 for name in (key, key.upper())
             }
         else:
-            return { key, }
+            return {key}
 
     def __contains__(self, key):
-        return bool(self.__get_possible_names(key) & self.all_commands.keys())
+        return bool(self.get_possible_names(key) & self.all_commands.keys())
 
     def __iter__(self):
         return iter(self.all_commands)
@@ -1584,7 +1585,7 @@ class CommandsCache(abc.Mapping):
         return len(self.all_commands)
 
     def __getitem__(self, key):
-        possibilities = self.__get_possible_names(key)
+        possibilities = self.get_possible_names(key)
         return self.all_commands[next(possibilities & self.all_commands.keys())]
 
     @property
@@ -1632,7 +1633,7 @@ class CommandsCache(abc.Mapping):
         may not reflect precisely what is on the $PATH.
         """
 
-        return bool(self.__get_possible_names(key) & self._cmds_cache.keys())
+        return bool(self.get_possible_names(key) & self._cmds_cache.keys())
 
     def lazyiter(self):
         """Returns an iterator over the current cache contents without the
@@ -1650,7 +1651,7 @@ class CommandsCache(abc.Mapping):
 
     def lazyget(self, key, default=None):
         """A lazy value getter."""
-        possibilities = self.__get_possible_names(key)
+        possibilities = self.get_possible_names(key)
         matches = possibilities & self._cmds_cache.keys()
         return self._cmds_cache[matches.pop()] if matches else default
 
