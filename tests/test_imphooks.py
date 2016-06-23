@@ -12,7 +12,7 @@ LOADED_HERE = False
 
 IMP_ENV = {'PATH': [], 'PATHEXT': []}
 
-def setup():
+def setup_module():
     global LOADED_HERE
     if built_ins.BUILTINS_LOADED:
         unload_builtins()  # make sure we have a clean env from other tests.
