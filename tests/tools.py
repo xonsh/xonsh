@@ -9,6 +9,8 @@ import subprocess
 from collections import defaultdict
 from contextlib import contextmanager
 
+import pytest
+
 from xonsh.built_ins import ensure_list_of_strs
 from xonsh.environ import Env
 builtins.__xonsh_env__ = Env()
@@ -23,6 +25,14 @@ VER_MAJOR_MINOR = sys.version_info[:2]
 VER_FULL = sys.version_info[:3]
 ON_DARWIN = (platform.system() == 'Darwin')
 ON_WINDOWS = (platform.system() == 'Windows')
+
+
+skip_if_py34 = pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5,
+                                   reason="Py3.5+ only test")
+
+skip_if_py35plus = pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5,
+                               reason="Py3.5+ only test")
+
 
 
 def sp(cmd):

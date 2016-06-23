@@ -11,8 +11,7 @@ import pytest
 from xonsh.ast import pdump
 from xonsh.parser import Parser
 
-from tools import (mock_xonsh_env, VER_3_4, VER_3_5, VER_MAJOR_MINOR,
-                   VER_FULL)
+from tools import (mock_xonsh_env, VER_FULL, skip_if_py34)
 
 PARSER = None
 DEBUG_LEVEL = 0
@@ -136,7 +135,7 @@ def test_binop_minus():
 def test_binop_times():
     yield check_ast, '42 * 65'
 
-@pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5, reason='Py3.5 only test')
+@skip_if_py34
 def test_binop_matmult():
     check_ast('x @ y', False)
 
@@ -500,47 +499,47 @@ def test_dict_two_comma():
 def test_dict_three():
     yield check_ast, '{42: 65, 6: 28, 1: 2}'
 
-@pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5, reason='Py3.5 only test')
+@skip_if_py34
 def test_dict_from_dict_two_xy():
     check_ast('{"x": 1, **{"y": 2}}')
 
-@pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5, reason='Py3.5 only test')
+@skip_if_py34
 def test_dict_from_dict_two_x_first():
     check_ast('{"x": 1, **{"x": 2}}')
 
-@pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5, reason='Py3.5 only test')
+@skip_if_py34
 def test_dict_from_dict_two_x_second():
     check_ast('{**{"x": 2}, "x": 1}')
 
-@pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5, reason='Py3.5 only test')
+@skip_if_py34
 def test_unpack_range_tuple():
     check_stmts('*range(4),')
 
-@pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5, reason='Py3.5 only test')
+@skip_if_py34
 def test_unpack_range_tuple_4():
     check_stmts('*range(4), 4')
 
-@pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5, reason='Py3.5 only test')
+@skip_if_py34
 def test_unpack_range_tuple_parens():
     check_ast('(*range(4),)')
 
-@pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5, reason='Py3.5 only test')
+@skip_if_py34
 def test_unpack_range_tuple_parens_4():
     check_ast('(*range(4), 4)')
 
-@pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5, reason='Py3.5 only test')
+@skip_if_py34
 def test_unpack_range_list():
     check_ast('[*range(4)]')
 
-@pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5, reason='Py3.5 only test')
+@skip_if_py34
 def test_unpack_range_list_4():
     check_ast('[*range(4), 4]')
 
-@pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5, reason='Py3.5 only test')
+@skip_if_py34
 def test_unpack_range_set():
     check_ast('{*range(4)}')
 
-@pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5, reason='Py3.5 only test')
+@skip_if_py34
 def test_unpack_range_set_4():
     check_ast('{*range(4), 4}')
 
@@ -814,15 +813,17 @@ def test_call_int_base_dict():
 def test_call_dict_kwargs():
     yield check_ast, 'dict(**{"base": 8})'
 
-if VER_MAJOR_MINOR >= VER_3_5:
-    def test_call_list_many_star_args():
-        check_ast('min(*[1, 2], 3, *[4, 5])')
+@skip_if_py34
+def test_call_list_many_star_args():
+    check_ast('min(*[1, 2], 3, *[4, 5])')
 
-    def test_call_list_many_starstar_args():
-        check_ast('dict(**{"a": 2}, v=3, **{"c": 5})')
+@skip_if_py34
+def test_call_list_many_starstar_args():
+    check_ast('dict(**{"a": 2}, v=3, **{"c": 5})')
 
-    def test_call_list_many_star_and_starstar_args():
-        yield check_ast, 'x(*[("a", 2)], *[("v", 3)], **{"c": 5})', False
+@skip_if_py34
+def test_call_list_many_star_and_starstar_args():
+    yield check_ast, 'x(*[("a", 2)], *[("v", 3)], **{"c": 5})', False
 
 def test_call_alot():
     yield check_ast, 'x(1, *args, **kwargs)', False
@@ -936,7 +937,7 @@ def test_sub_eq():
 def test_times_eq():
     yield check_stmts, 'x = 42; x *= 2'
 
-@pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5, reason='Py3.5 only test')
+@skip_if_py34
 def test_matmult_eq():
     check_stmts('x @= y', False)
 
@@ -1222,7 +1223,7 @@ def test_for_zip_attr():
 def test_for_else():
     yield check_stmts, 'for x in range(6):\n  pass\nelse:  pass'
 
-@pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5, reason='Py3.5 only test')
+@skip_if_py34
 def test_async_for():
     check_stmts("async def f():\n    async for x in y:\n        pass\n", False)
 
@@ -1244,7 +1245,7 @@ def test_with_x_as_y_a_as_b():
 def test_with_in_func():
     yield check_stmts, "def f():\n    with x:\n        pass\n"
 
-@pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5, reason='Py3.5 only test')
+@skip_if_py34
 def test_async_with():
     check_stmts("async def f():\n    async with x as y:\n        pass\n", False)
 
@@ -1497,15 +1498,15 @@ def test_function_blank_line():
     yield check_stmts, code, False
 
 
-@pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5, reason='Py3.5 only test')
+@skip_if_py34
 def test_async_func():
     check_stmts('async def f():\n  pass\n')
 
-@pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5, reason='Py3.5 only test')
+@skip_if_py34
 def test_async_decorator():
     check_stmts('@g\nasync def f():\n  pass', False)
 
-@pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5, reason='Py3.5 only test')
+@skip_if_py34
 def test_async_await():
     check_stmts("async def f():\n    await fut\n", False)
 
