@@ -444,7 +444,7 @@ def test_pathsep_to_set():
         ]
     for inp, exp in cases:
         obs = pathsep_to_set(inp)
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 
 def test_set_to_pathsep():
@@ -456,19 +456,19 @@ def test_set_to_pathsep():
         ]
     for inp, exp in cases:
         obs = set_to_pathsep(inp, sort=(len(inp) > 1))
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 
 def test_is_string_seq():
-    yield assert_true, is_string_seq('42.0')
-    yield assert_true, is_string_seq(['42.0'])
-    yield assert_false, is_string_seq([42.0])
+    assert is_string_seq('42.0')
+    assert is_string_seq(['42.0'])
+    assert not is_string_seq([42.0])
 
 
 def test_is_nonstring_seq_of_strings():
-    yield assert_false, is_nonstring_seq_of_strings('42.0')
-    yield assert_true, is_nonstring_seq_of_strings(['42.0'])
-    yield assert_false, is_nonstring_seq_of_strings([42.0])
+    assert not is_nonstring_seq_of_strings('42.0')
+    assert is_nonstring_seq_of_strings(['42.0'])
+    assert not is_nonstring_seq_of_strings([42.0])
 
 
 def test_pathsep_to_seq():
@@ -480,7 +480,7 @@ def test_pathsep_to_seq():
         ]
     for inp, exp in cases:
         obs = pathsep_to_seq(inp)
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 
 def test_seq_to_pathsep():
@@ -492,7 +492,7 @@ def test_seq_to_pathsep():
         ]
     for inp, exp in cases:
         obs = seq_to_pathsep(inp)
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 
 def test_pathsep_to_upper_seq():
@@ -504,7 +504,7 @@ def test_pathsep_to_upper_seq():
         ]
     for inp, exp in cases:
         obs = pathsep_to_upper_seq(inp)
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 
 def test_seq_to_upper_pathsep():
@@ -516,7 +516,7 @@ def test_seq_to_upper_pathsep():
         ]
     for inp, exp in cases:
         obs = seq_to_upper_pathsep(inp)
-        yield assert_equal, exp, obs
+        assert exp == obs
 
 
 
