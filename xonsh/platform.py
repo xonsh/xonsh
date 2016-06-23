@@ -81,7 +81,7 @@ def pygments_version():
 @functools.lru_cache(1)
 def has_prompt_toolkit():
     """ Tests if the `prompt_toolkit` is available. """
-    spec = importlib.util.find_spec('pygments')
+    spec = importlib.util.find_spec('prompt_toolkit')
     return (spec is not None)
 
 
