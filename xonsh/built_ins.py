@@ -417,14 +417,18 @@ def run_subproc(cmds, captured=False):
         elif builtins.__xonsh_stderr_uncaptured__ is not None:
             stderr = builtins.__xonsh_stderr_uncaptured__
         uninew = (ix == last_cmd) and (not _capture_streams)
-
+        # find alias
         if callable(cmd[0]):
             alias = cmd[0]
         else:
             alias = builtins.aliases.get(cmd[0], None)
-            binary_loc = locate_binary(cmd[0])
-
         procinfo['alias'] = alias
+        # find binary location, if not callable
+        if alias is None:
+            binary_loc = locate_binary(cmd[0])
+        elif not callable(alias):
+            binary_loc = locate_binary(alias[0])
+        # implement AUTO_CD
         if (alias is None and
                 builtins.__xonsh_env__.get('AUTO_CD') and
                 len(cmd) == 1 and

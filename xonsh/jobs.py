@@ -152,7 +152,7 @@ else:
                 _libc.sigprocmask(ctypes.c_int(signal.SIG_BLOCK),
                                   ctypes.byref(mask),
                                   ctypes.byref(omask))
-                _libc.tcsetpgrp(ctypes.c_int(shtty), ctypes.c_int(pgid))
+                _libc.tcsetpgrp(ctypes.c_int(st), ctypes.c_int(pgid))
                 _libc.sigprocmask(ctypes.c_int(signal.SIG_SETMASK),
                                   ctypes.byref(omask), None)
     else:
