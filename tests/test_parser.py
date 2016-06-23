@@ -814,7 +814,7 @@ def test_call_int_base_dict():
 def test_call_dict_kwargs():
     yield check_ast, 'dict(**{"base": 8})'
 
-@.mark.(ipif(VER_MAJOR_MINOR < VER_3_5, reason='Py3.5 only test'))
+@pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5, reason='Py3.5 only test')
 def test_call_list_many_star_args():
     check_ast('min(*[1, 2], 3, *[4, 5])')
 

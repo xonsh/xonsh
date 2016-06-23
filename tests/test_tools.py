@@ -18,7 +18,10 @@ from xonsh.tools import (
     is_int_as_str, is_logfile_opt, is_slice_as_str, is_string,
     is_string_or_callable, logfile_opt_to_str, str_to_env_path,
     subexpr_from_unbalanced, subproc_toks, to_bool, to_bool_or_int,
-    to_dynamic_cwd_tuple, to_logfile_opt)
+    to_dynamic_cwd_tuple, to_logfile_opt, pathsep_to_set, set_to_pathsep,
+    is_string_seq, pathsep_to_seq, seq_to_pathsep, is_nonstring_seq_of_strings,
+    pathsep_to_upper_seq, seq_to_upper_pathsep,
+    )
 
 LEXER = Lexer()
 LEXER.build()
@@ -430,6 +433,92 @@ def test_ensure_string():
     for inp, exp in cases:
         obs = ensure_string(inp)
         assert exp == obs
+
+
+def test_pathsep_to_set():
+    cases = [
+        ('', set()),
+        ('a', {'a'}),
+        (os.pathsep.join(['a', 'b']), {'a', 'b'}),
+        (os.pathsep.join(['a', 'b', 'c']), {'a', 'b', 'c'}),
+        ]
+    for inp, exp in cases:
+        obs = pathsep_to_set(inp)
+        assert exp == obs
+
+
+def test_set_to_pathsep():
+    cases = [
+        (set(), ''),
+        ({'a'}, 'a'),
+        ({'a', 'b'}, os.pathsep.join(['a', 'b'])),
+        ({'a', 'b', 'c'}, os.pathsep.join(['a', 'b', 'c'])),
+        ]
+    for inp, exp in cases:
+        obs = set_to_pathsep(inp, sort=(len(inp) > 1))
+        assert exp == obs
+
+
+def test_is_string_seq():
+    assert is_string_seq('42.0')
+    assert is_string_seq(['42.0'])
+    assert not is_string_seq([42.0])
+
+
+def test_is_nonstring_seq_of_strings():
+    assert not is_nonstring_seq_of_strings('42.0')
+    assert is_nonstring_seq_of_strings(['42.0'])
+    assert not is_nonstring_seq_of_strings([42.0])
+
+
+def test_pathsep_to_seq():
+    cases = [
+        ('', []),
+        ('a', ['a']),
+        (os.pathsep.join(['a', 'b']), ['a', 'b']),
+        (os.pathsep.join(['a', 'b', 'c']), ['a', 'b', 'c']),
+        ]
+    for inp, exp in cases:
+        obs = pathsep_to_seq(inp)
+        assert exp == obs
+
+
+def test_seq_to_pathsep():
+    cases = [
+        ([], ''),
+        (['a'], 'a'),
+        (['a', 'b'], os.pathsep.join(['a', 'b'])),
+        (['a', 'b', 'c'], os.pathsep.join(['a', 'b', 'c'])),
+        ]
+    for inp, exp in cases:
+        obs = seq_to_pathsep(inp)
+        assert exp == obs
+
+
+def test_pathsep_to_upper_seq():
+    cases = [
+        ('', []),
+        ('a', ['A']),
+        (os.pathsep.join(['a', 'B']), ['A', 'B']),
+        (os.pathsep.join(['A', 'b', 'c']), ['A', 'B', 'C']),
+        ]
+    for inp, exp in cases:
+        obs = pathsep_to_upper_seq(inp)
+        assert exp == obs
+
+
+def test_seq_to_upper_pathsep():
+    cases = [
+        ([], ''),
+        (['a'], 'A'),
+        (['a', 'b'], os.pathsep.join(['A', 'B'])),
+        (['a', 'B', 'c'], os.pathsep.join(['A', 'B', 'C'])),
+        ]
+    for inp, exp in cases:
+        obs = seq_to_upper_pathsep(inp)
+        assert exp == obs
+
+
 
 
 def test_is_env_path():
