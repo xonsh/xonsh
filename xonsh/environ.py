@@ -935,14 +935,14 @@ def _first_branch_timeout_message():
 def current_branch(pad=True):
     """Gets the branch for a current working directory. Returns an empty string
     if the cwd is not a repository.  This currently only works for git and hg
-    and should be extended in the future.  If a timeout occured, the string
+    and should be extended in the future.  If a timeout occurred, the string
     '<branch-timeout>' is returned.
     """
     branch = ''
     cmds = builtins.__xonsh_commands_cache__
-    if cmds.lazy_locate_binary('git') or cmds.lazylen() == 0:
+    if cmds.lazy_locate_binary('git') or cmds.is_empty():
         branch = get_git_branch()
-    if (cmds.lazy_locate_binary('hg') or cmds.lazylen() == 0) and not branch:
+    if (cmds.lazy_locate_binary('hg') or cmds.is_empty()) and not branch:
         branch = get_hg_branch()
     if isinstance(branch, subprocess.TimeoutExpired):
         branch = '<branch-timeout>'
@@ -1006,9 +1006,9 @@ def dirty_working_directory(cwd=None):
     """
     dwd = None
     cmds = builtins.__xonsh_commands_cache__
-    if cmds.lazy_locate_binary('git') or cmds.lazylen() == 0:
+    if cmds.lazy_locate_binary('git') or cmds.is_empty():
         dwd = git_dirty_working_directory()
-    if (cmds.lazy_locate_binary('hg') or cmds.lazylen() == 0) and (dwd is None):
+    if (cmds.lazy_locate_binary('hg') or cmds.is_empty()) and (dwd is None):
         dwd = hg_dirty_working_directory()
     return dwd
 
