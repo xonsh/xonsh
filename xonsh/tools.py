@@ -1694,16 +1694,21 @@ def _iglobpath(s, ignore_case=False):
             s = s.replace('**', '**/*')
         # `recursive` is only a 3.5+ kwarg.
         if glob_sorted:
-            paths = sorted(glob.glob(s, recursive=True))
+            paths = glob.glob(s, recursive=True)
+            paths.sort()
+            paths = iter(paths)
         else:
             paths = glob.iglob(s, recursive=True)
         return paths, s
     else:
         if glob_sorted:
-            paths = sorted(glob.glob(s))
+            paths = glob.glob(s)
+            paths.sort()
+            paths = iter(paths)
         else:
             paths = glob.iglob(s)
         return paths, s
+
 
 def iglobpath(s, ignore_case=False):
     """Simple wrapper around iglob that also expands home and env vars."""
