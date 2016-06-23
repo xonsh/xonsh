@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Tests the xonsh lexer."""
+"""Tests xonsh tools."""
 import os
 import pathlib
 from tempfile import TemporaryDirectory
@@ -314,6 +314,7 @@ def test_subexpr_from_unbalanced_parens():
         obs = subexpr_from_unbalanced(expr, '(', ')')
         yield assert_equal, exp, obs
 
+
 def test_find_next_break():
     cases = [
         ('ls && echo a', 0, 4),
@@ -343,12 +344,12 @@ def test_iglobpath():
         with open(os.path.join(test_dir, '07'), 'w') as file:
             file.write('test\n')
 
-        with  mock_xonsh_env({'GLOB_SORTED': False}):
+        with mock_xonsh_env({'GLOB_SORTED': False}):
             paths = list(iglobpath(os.path.join(test_dir, '*.test'), False))
             yield assert_equal, len(paths), 100
             paths = list(iglobpath(os.path.join(test_dir, '*'), True))
             yield assert_equal, len(paths), 101
-        with  mock_xonsh_env({'GLOB_SORTED': True}):
+        with mock_xonsh_env({'GLOB_SORTED': True}):
             paths = list(iglobpath(os.path.join(test_dir, '*.test'), False))
             yield assert_equal, len(paths), 100
             yield assert_equal, paths, sorted(paths)
@@ -415,7 +416,7 @@ def test_is_slice_as_str():
         (None, False),
         ('42', False),
         ('-42', False),
-        (slice(1,2,3), False),
+        (slice(1, 2, 3), False),
         ([], False),
         (False, False),
         (True, False),
@@ -553,8 +554,6 @@ def test_seq_to_upper_pathsep():
         yield assert_equal, exp, obs
 
 
-
-
 def test_is_env_path():
     cases = [
         ('/home/wakka', False),
@@ -592,8 +591,9 @@ def test_env_path_to_str():
 
 
 def test_env_path():
-    # lambda to expand the expected paths
-    expand = lambda path: os.path.expanduser(os.path.expandvars(path))
+    def expand(path):
+        return os.path.expanduser(os.path.expandvars(path))
+
     getitem_cases = [
         ('xonsh_dir', 'xonsh_dir'),
         ('.', '.'),
@@ -618,11 +618,11 @@ def test_env_path():
 
     # cases that involve pathlib.Path objects
     pathlib_cases = [
-        (pathlib.Path('/home/wakka'), ['/home/wakka'.replace('/',os.sep)]),
+        (pathlib.Path('/home/wakka'), ['/home/wakka'.replace('/', os.sep)]),
         (pathlib.Path('~/'), ['~']),
         (pathlib.Path('.'), ['.']),
         (['/home/wakka', pathlib.Path('/home/jakka'), '~/'],
-         ['/home/wakka', '/home/jakka'.replace('/',os.sep), '~/']),
+         ['/home/wakka', '/home/jakka'.replace('/', os.sep), '~/']),
         (['/home/wakka', pathlib.Path('../'), '../'],
          ['/home/wakka', '..', '../']),
         (['/home/wakka', pathlib.Path('~/'), '~/'],
@@ -637,7 +637,8 @@ def test_env_path():
 
 def test_env_path_slices():
     # build os-dependent paths properly
-    mkpath = lambda *paths: os.sep + os.sep.join(paths)
+    def mkpath(*paths):
+        return os.sep + os.sep.join(paths)
 
     # get all except the last element in a slice
     slice_last = [
@@ -804,6 +805,7 @@ def test_is_dynamic_cwd_width():
         obs = is_dynamic_cwd_width(inp)
         yield assert_equal, exp, obs
 
+
 def test_is_logfile_opt():
     cases = [
         ('throwback.log', True),
@@ -822,6 +824,7 @@ def test_is_logfile_opt():
         obs = is_logfile_opt(inp)
         yield assert_equal, exp, obs
 
+
 def test_to_logfile_opt():
     cases = [
         (True, None),
@@ -837,6 +840,7 @@ def test_to_logfile_opt():
         obs = to_logfile_opt(inp)
         yield assert_equal, exp, obs
 
+
 def test_logfile_opt_to_str():
     cases = [
         (None, ''),
@@ -847,6 +851,7 @@ def test_logfile_opt_to_str():
     for inp, exp in cases:
         obs = logfile_opt_to_str(inp)
         yield assert_equal, exp, obs
+
 
 def test_to_dynamic_cwd_tuple():
     cases = [
