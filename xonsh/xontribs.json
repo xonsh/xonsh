@@ -35,7 +35,7 @@
                   "bit of the startup time when running your favorite, minimal ",
                   "text editor."]
   },
- {"name": "xonsh-apt-tabcomplete",
+ {"name": "apt_tabcomplete",
   "package": "xonsh-apt-tabcomplete",
   "url": "https://github.com/DangerOnTheRanger/xonsh-apt-tabcomplete",
   "description": ["Adds tabcomplete functionality to apt-get/apt-cache inside of xonsh."]
