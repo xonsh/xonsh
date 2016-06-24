@@ -73,13 +73,15 @@ v0.4.0
 * ``!(command)`` is now usefully iterable, yielding lines of stdout
 * Added XonshCalledProcessError, which includes the relevant CompletedCommand.
   Also handles differences between Py3.4 and 3.5 in CalledProcessError
-* XonshError and XonshCalledProcessError are now in builtins
-- ``history session``
-- ``history xonsh``
-  ``history all``
-- ``history zsh``
-- ``history bash``
-- ``__xonsh_history__.show()``
+* XonshError and XonshCalledProcessError are now in builtins:
+
+  - ``history session``
+  - ``history xonsh``
+  - ``history all``
+  - ``history zsh``
+  - ``history bash``
+  - ``__xonsh_history__.show()``
+
 * New ``pathsep_to_set()`` and ``set_to_pathsep()`` functions convert to/from
   ``os.pathsep`` separated strings to a set of strings.
 
@@ -105,7 +107,7 @@ v0.4.0
 * ``Env`` now guarantees that the ``$PATH`` is available and mutable when
   initialized.
 * On Windows the ``PROMPT`` environment variable is reset to `$P$G` before
-  sourcing *.bat files.
+  sourcing ``*.bat`` files.
 * On Windows the ``PROMPT`` environment variable is reset to `$P$G` before starting
   subprocesses. This prevents the unformatted xonsh ``PROMPT`` tempalte from showing up
   when running batch files with ``ECHO ON```
