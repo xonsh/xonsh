@@ -306,212 +306,207 @@ def test_subproc_toks_pyeval_redirect():
     assert (exp == obs)
 
 
-def test_subexpr_from_unbalanced_parens():
-    cases = [
-        ('f(x.', 'x.'),
-        ('f(1,x.', 'x.'),
-        ('f((1,10),x.y', 'x.y'),
-        ]
-    for expr, exp in cases:
-        obs = subexpr_from_unbalanced(expr, '(', ')')
-        assert exp == obs
-
-def test_find_next_break():
-    cases = [
-        ('ls && echo a', 0, 4),
-        ('ls && echo a', 6, None),
-        ('ls && echo a || echo b', 6, 14),
-        ('(ls) && echo a', 1, 4),
-        ('not ls && echo a', 0, 8),
-        ('not (ls) && echo a', 0, 8),
-        ]
-    for line, mincol, exp in cases:
-        obs = find_next_break(line, mincol=mincol, lexer=LEXER)
-        assert exp == obs
+@pytest.mark.parametrize('inp, exp', [
+    ('f(x.', 'x.'),
+    ('f(1,x.', 'x.'),
+    ('f((1,10),x.y', 'x.y'),
+])
+def test_subexpr_from_unbalanced_parens(inp, exp):
+    obs = subexpr_from_unbalanced(inp, '(', ')')
+    assert exp == obs
 
 
-def test_is_int():
-    cases = [
-        (42, True),
-        (42.0, False),
-        ('42', False),
-        ('42.0', False),
-        ([42], False),
-        ([], False),
-        (None, False),
-        ('', False)
-        ]
-    for inp, exp in cases:
-        obs = is_int(inp)
-        assert exp == obs
+@pytest.mark.parametrize('line, mincol, exp', [
+    ('ls && echo a', 0, 4),
+    ('ls && echo a', 6, None),
+    ('ls && echo a || echo b', 6, 14),
+    ('(ls) && echo a', 1, 4),
+    ('not ls && echo a', 0, 8),
+    ('not (ls) && echo a', 0, 8),
+])
+def test_find_next_break(line, mincol, exp):
+    obs = find_next_break(line, mincol=mincol, lexer=LEXER)
+    assert exp == obs
 
 
-def test_is_int_as_str():
-    cases = [
-        ('42', True),
-        ('42.0', False),
-        (42, False),
-        ([42], False),
-        ([], False),
-        (None, False),
-        ('', False),
-        (False, False),
-        (True, False),
-        ]
-    for inp, exp in cases:
-        obs = is_int_as_str(inp)
-        assert exp == obs
+@pytest.mark.parametrize('inp, exp', [
+    (42, True),
+    (42.0, False),
+    ('42', False),
+    ('42.0', False),
+    ([42], False),
+    ([], False),
+    (None, False),
+    ('', False)
+])
+def test_is_int(inp, exp):
+    obs = is_int(inp)
+    assert exp == obs
 
 
-def test_is_float():
-    cases = [
-        (42.0, True),
-        (42.000101010010101010101001010101010001011100001101101011100, True),
-        (42, False),
-        ('42', False),
-        ('42.0', False),
-        ([42], False),
-        ([], False),
-        (None, False),
-        ('', False),
-        (False, False),
-        (True, False),
-        ]
-    for inp, exp in cases:
-        obs = is_float(inp)
-        assert exp == obs
+@pytest.mark.parametrize('inp, exp', [
+    ('42', True),
+    ('42.0', False),
+    (42, False),
+    ([42], False),
+    ([], False),
+    (None, False),
+    ('', False),
+    (False, False),
+    (True, False),
+])
+def test_is_int_as_str(inp, exp):
+    obs = is_int_as_str(inp)
+    assert exp == obs
 
 
-def test_is_slice_as_str():
-    cases = [
-        (42, False),
-        (None, False),
-        ('42', False),
-        ('-42', False),
-        (slice(1,2,3), False),
-        ([], False),
-        (False, False),
-        (True, False),
-        ('1:2:3', True),
-        ('1::3', True),
-        ('1:', True),
-        (':', True),
-        ('[1:2:3]', True),
-        ('(1:2:3)', True),
-        ('r', False),
-        ('r:11', False),
-        ]
-    for inp, exp in cases:
-        obs = is_slice_as_str(inp)
-        assert exp == obs
+@pytest.mark.parametrize('inp, exp', [
+    (42.0, True),
+    (42.000101010010101010101001010101010001011100001101101011100, True),
+    (42, False),
+    ('42', False),
+    ('42.0', False),
+    ([42], False),
+    ([], False),
+    (None, False),
+    ('', False),
+    (False, False),
+    (True, False),
+])
+def test_is_float(inp, exp):
+    obs = is_float(inp)
+    assert exp == obs
 
 
-def test_is_string():
+@pytest.mark.parametrize('inp, exp', [
+    (42, False),
+    (None, False),
+    ('42', False),
+    ('-42', False),
+    (slice(1,2,3), False),
+    ([], False),
+    (False, False),
+    (True, False),
+    ('1:2:3', True),
+    ('1::3', True),
+    ('1:', True),
+    (':', True),
+    ('[1:2:3]', True),
+    ('(1:2:3)', True),
+    ('r', False),
+    ('r:11', False),
+])
+def test_is_slice_as_str(inp, exp):
+    obs = is_slice_as_str(inp)
+    assert exp == obs
+
+
+def test_is_string_true():
     assert is_string('42.0')
+
+def test_is_string_false():
     assert not is_string(42.0)
 
 
-def test_is_callable():
+def test_is_callable_true():
     assert is_callable(lambda: 42.0)
+
+def test_is_callable_false():
     assert not is_callable(42.0)
 
 
-def test_is_string_or_callable():
-    assert is_string_or_callable('42.0')
-    assert is_string_or_callable(lambda: 42.0)
+@pytest.mark.parametrize('inp', ['42.0', lambda: 42.0])
+def test_is_string_or_callable_true(inp):
+    assert is_string_or_callable(inp)
+
+def test_is_string_or_callable_false():
     assert not is_string(42.0)
 
 
-def test_always_true():
-    assert always_true(42)
-    assert always_true('42')
+@pytest.mark.parametrize('inp', [42, '42'])
+def test_always_true(inp):
+    assert always_true(inp)
 
 
-def test_always_false():
-    assert not always_false(42)
-    assert not always_false('42')
+@pytest.mark.parametrize('inp', [42, '42'])
+def test_always_false(inp):
+    assert not always_false(inp)
 
 
-def test_ensure_string():
-    cases = [
-        (42, '42'),
-        ('42', '42'),
-        ]
-    for inp, exp in cases:
-        obs = ensure_string(inp)
-        assert exp == obs
+@pytest.mark.parametrize('inp, exp', [(42, '42'), ('42', '42'),])
+def test_ensure_string(inp, exp):
+    obs = ensure_string(inp)
+    assert exp == obs
+
+@pytest.mark.parametrize('inp, exp', [
+    ('', set()),
+    ('a', {'a'}),
+    (os.pathsep.join(['a', 'b']), {'a', 'b'}),
+    (os.pathsep.join(['a', 'b', 'c']), {'a', 'b', 'c'}),
+])
+def test_pathsep_to_set(inp, exp):
+    obs = pathsep_to_set(inp)
+    assert exp == obs
 
 
-def test_pathsep_to_set():
-    cases = [
-        ('', set()),
-        ('a', {'a'}),
-        (os.pathsep.join(['a', 'b']), {'a', 'b'}),
-        (os.pathsep.join(['a', 'b', 'c']), {'a', 'b', 'c'}),
-        ]
-    for inp, exp in cases:
-        obs = pathsep_to_set(inp)
-        assert exp == obs
+@pytest.mark.parametrize('inp, exp', [
+    (set(), ''),
+    ({'a'}, 'a'),
+    ({'a', 'b'}, os.pathsep.join(['a', 'b'])),
+    ({'a', 'b', 'c'}, os.pathsep.join(['a', 'b', 'c'])),
+])
+def test_set_to_pathsep(inp, exp):
+    obs = set_to_pathsep(inp, sort=(len(inp) > 1))
+    assert exp == obs
 
 
-def test_set_to_pathsep():
-    cases = [
-        (set(), ''),
-        ({'a'}, 'a'),
-        ({'a', 'b'}, os.pathsep.join(['a', 'b'])),
-        ({'a', 'b', 'c'}, os.pathsep.join(['a', 'b', 'c'])),
-        ]
-    for inp, exp in cases:
-        obs = set_to_pathsep(inp, sort=(len(inp) > 1))
-        assert exp == obs
+@pytest.mark.parametrize('inp', ['42.0', ['42.0']])
+def test_is_string_seq_true(inp):
+    assert is_string_seq(inp)
 
-
-def test_is_string_seq():
-    assert is_string_seq('42.0')
-    assert is_string_seq(['42.0'])
+def test_is_string_seq_false():
     assert not is_string_seq([42.0])
 
 
-def test_is_nonstring_seq_of_strings():
-    assert not is_nonstring_seq_of_strings('42.0')
+def test_is_nonstring_seq_of_strings_true():
     assert is_nonstring_seq_of_strings(['42.0'])
-    assert not is_nonstring_seq_of_strings([42.0])
+
+@pytest.mark.parametrize('inp', ['42.0', [42.0]] )
+def test_is_nonstring_seq_of_strings_false(inp):
+    assert not is_nonstring_seq_of_strings(inp)
 
 
-def test_pathsep_to_seq():
-    cases = [
-        ('', []),
-        ('a', ['a']),
-        (os.pathsep.join(['a', 'b']), ['a', 'b']),
-        (os.pathsep.join(['a', 'b', 'c']), ['a', 'b', 'c']),
-        ]
-    for inp, exp in cases:
-        obs = pathsep_to_seq(inp)
-        assert exp == obs
+@pytest.mark.parametrize('inp, exp', [
+    ('', []),
+    ('a', ['a']),
+    (os.pathsep.join(['a', 'b']), ['a', 'b']),
+    (os.pathsep.join(['a', 'b', 'c']), ['a', 'b', 'c']),
+])
+def test_pathsep_to_seq(inp, exp):
+    obs = pathsep_to_seq(inp)
+    assert exp == obs
 
 
-def test_seq_to_pathsep():
-    cases = [
-        ([], ''),
-        (['a'], 'a'),
-        (['a', 'b'], os.pathsep.join(['a', 'b'])),
-        (['a', 'b', 'c'], os.pathsep.join(['a', 'b', 'c'])),
-        ]
-    for inp, exp in cases:
-        obs = seq_to_pathsep(inp)
-        assert exp == obs
+@pytest.mark.parametrize('inp, exp', [
+    ([], ''),
+    (['a'], 'a'),
+    (['a', 'b'], os.pathsep.join(['a', 'b'])),
+    (['a', 'b', 'c'], os.pathsep.join(['a', 'b', 'c'])),
+])
+def test_seq_to_pathsep(inp, exp):
+    obs = seq_to_pathsep(inp)
+    assert exp == obs
 
 
-def test_pathsep_to_upper_seq():
-    cases = [
-        ('', []),
-        ('a', ['A']),
-        (os.pathsep.join(['a', 'B']), ['A', 'B']),
-        (os.pathsep.join(['A', 'b', 'c']), ['A', 'B', 'C']),
-        ]
-    for inp, exp in cases:
-        obs = pathsep_to_upper_seq(inp)
-        assert exp == obs
+@pytest.mark.parametrize('inp, exp', [
+    ('', []),
+    ('a', ['A']),
+    (os.pathsep.join(['a', 'B']), ['A', 'B']),
+    (os.pathsep.join(['A', 'b', 'c']), ['A', 'B', 'C']),
+])
+def test_pathsep_to_upper_seq(inp, exp):
+    obs = pathsep_to_upper_seq(inp)
+    assert exp == obs
 
 
 def test_seq_to_upper_pathsep():
