@@ -1660,6 +1660,12 @@ class CommandsCache(abc.Mapping):
 
     def locate_binary(self, name):
         """Locates an executable on the file system using the cache."""
+        # invalidate the cache by accessing this property
+        _ = self.all_commands
+        return self.lazy_locate_binary(name)
+
+    def lazy_locate_binary(self, name):
+        """Locates an executable in the cache, without invalidating it."""
         possibilities = self.get_possible_names(name)
 
         if ON_WINDOWS:
@@ -1674,16 +1680,6 @@ class CommandsCache(abc.Mapping):
             if local_bin:
                 return os.path.abspath(os.path.relpath(local_bin, cwd))
 
-        cmds = self.all_commands
-        cached = next((cmd for cmd in possibilities if cmd in cmds), None)
-        if cached:
-            return cmds[cached][0]
-        elif os.path.isfile(name) and name != os.path.basename(name):
-            return name
-
-    def lazy_locate_binary(self, name):
-        """Locates an executable in the cache, without invalidating it."""
-        possibilities = self.get_possible_names(name)
         cached = next((cmd for cmd in possibilities if cmd in self._cmds_cache), None)
         if cached:
             return self._cmds_cache[cached][0]
