@@ -1,7 +1,7 @@
 .. _xonsh_commands_cache:
 
 ******************************************************
-CommandsCache (``xonsh.commands_cache``)
+Commands Cache (``xonsh.commands_cache``)
 ******************************************************
 
 .. automodule:: xonsh.commands_cache
