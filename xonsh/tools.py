@@ -1579,7 +1579,7 @@ class CommandsCache(abc.Mapping):
         return self.all_commands[key]
 
     def is_empty(self):
-        """Returns whether the cache is populated or not. Does not invalidate."""
+        """Returns whether the cache is populated or not. Does not check cache validity."""
         return len(self._cmds_cache) == 0
 
     @staticmethod
@@ -1660,12 +1660,12 @@ class CommandsCache(abc.Mapping):
 
     def locate_binary(self, name):
         """Locates an executable on the file system using the cache."""
-        # invalidate the cache by accessing this property
+        # make sure the cache is up to date by accessing the property
         _ = self.all_commands
         return self.lazy_locate_binary(name)
 
     def lazy_locate_binary(self, name):
-        """Locates an executable in the cache, without invalidating it."""
+        """Locates an executable in the cache, without checking its validity."""
         possibilities = self.get_possible_names(name)
 
         if ON_WINDOWS:
