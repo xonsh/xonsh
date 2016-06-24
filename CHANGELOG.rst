@@ -4,6 +4,17 @@ Xonsh Change Log
 
 .. current developments
 
+v0.4.1
+====================
+
+**Fixed:**
+
+* ``setup.py`` will only amalgamate source files if ``amalgamate.py`` is
+  available. This fixes issues with installing from pip.
+
+
+
+
 v0.4.0
 ====================
 
