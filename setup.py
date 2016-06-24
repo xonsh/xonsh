@@ -53,6 +53,7 @@ def amalagamate_source():
     try:
         import amalgamate
     except ImportError:
+        print('Could not import amalgamate, skipping.', file=sys.stderr)
         return
     amalgamate.main(['amalgamate', '--debug=XONSH_DEBUG', 'xonsh'])
 
