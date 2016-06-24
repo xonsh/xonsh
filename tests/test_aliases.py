@@ -13,7 +13,7 @@ from xonsh.aliases import _which
 from xonsh.environ import Env
 from xonsh.tools import ON_WINDOWS
 
-from tools import mock_xonsh_env
+from tools import skip_if_on_windows
 
 
 def cd(args, stdin=None):
@@ -26,6 +26,7 @@ ALIASES = Aliases({'o': ['omg', 'lala']},
                   indirect_cd='cd ..')
 RAW = ALIASES._raw
 
+
 def test_imports():
     expected = {
         'o': ['omg', 'lala'],
@@ -36,23 +37,24 @@ def test_imports():
     }
     assert RAW == expected
 
-def test_eval_normal():
-    with mock_xonsh_env({}):
-        assert ALIASES.get('o') ==  ['omg', 'lala']
 
-def test_eval_self_reference():
-    with mock_xonsh_env({}):
-        assert ALIASES.get('ls') ==  ['ls', '-  -']
+def test_eval_normal(xonsh_env):
+    assert ALIASES.get('o') ==  ['omg', 'lala']
 
-def test_eval_recursive():
-    with mock_xonsh_env({}):
-        assert ALIASES.get('color_ls') ==  ['ls', '-  -', '--color=true']
 
-@pytest.mark.skipif(ON_WINDOWS, reason='Unix stuff')
-def test_eval_recursive_callable_partial():
-    built_ins.ENV = Env(HOME=os.path.expanduser('~'))
-    with mock_xonsh_env(built_ins.ENV):
-        assert ALIASES.get('indirect_cd')(['arg2', 'arg3']) == ['..', 'arg2', 'arg3']
+def test_eval_self_reference(xonsh_env):
+    assert ALIASES.get('ls') ==  ['ls', '-  -']
+
+
+def test_eval_recursive(xonsh_env):
+    assert ALIASES.get('color_ls') ==  ['ls', '-  -', '--color=true']
+
+
+@skip_if_on_windows
+@pytest.mark.parametrize('xenv', [Env(HOME=os.path.expanduser('~'))])
+def test_eval_recursive_callable_partial(xonsh_env):
+    assert ALIASES.get('indirect_cd')(['arg2', 'arg3']) == ['..', 'arg2', 'arg3']
+
 
 class TestWhich:
     # Tests for the _whichgen function which is the only thing we
