@@ -9,7 +9,6 @@ import builtins
 from collections import Sequence
 from contextlib import contextmanager
 import inspect
-from glob import iglob
 import os
 import re
 import shlex
@@ -21,7 +20,6 @@ import time
 
 from xonsh.lazyasd import LazyObject
 from xonsh.history import History
-from xonsh.tokenize import SearchPath
 from xonsh.inspectors import Inspector
 from xonsh.aliases import Aliases, make_default_aliases
 from xonsh.environ import Env, default_env, locate_binary
@@ -32,9 +30,10 @@ from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
                         SimpleForegroundProcProxy, TeePTYProc,
                         CompletedCommand, HiddenCompletedCommand)
 from xonsh.tools import (
-    suggest_commands, expandvars, CommandsCache, globpath, XonshError,
+    suggest_commands, expandvars, globpath, XonshError,
     XonshCalledProcessError, XonshBlockError
 )
+from xonsh.commands_cache import CommandsCache
 
 
 ENV = None
@@ -455,8 +454,8 @@ def run_subproc(cmds, captured=False):
         if (stdin is not None and
                 ENV.get('XONSH_STORE_STDIN') and
                 captured == 'object' and
-                'cat' in __xonsh_commands_cache__ and
-                'tee' in __xonsh_commands_cache__):
+                __xonsh_commands_cache__.lazy_locate_binary('cat') and
+                __xonsh_commands_cache__.lazy_locate_binary('tee')):
             _stdin_file = tempfile.NamedTemporaryFile()
             cproc = Popen(['cat'],
                           stdin=stdin,
