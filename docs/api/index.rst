@@ -55,6 +55,7 @@ For those of you who want the gritty details.
     teepty
     openpy
     foreign_shells
+    commands_cache
     tracer
     main
     pyghooks
