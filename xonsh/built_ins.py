@@ -9,7 +9,6 @@ import builtins
 from collections import Sequence
 from contextlib import contextmanager
 import inspect
-from glob import iglob
 import os
 import re
 import shlex
@@ -21,7 +20,6 @@ import time
 
 from xonsh.lazyasd import LazyObject
 from xonsh.history import History
-from xonsh.tokenize import SearchPath
 from xonsh.inspectors import Inspector
 from xonsh.aliases import Aliases, make_default_aliases
 from xonsh.environ import Env, default_env, locate_binary

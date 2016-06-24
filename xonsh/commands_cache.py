@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import builtins
 import os
-from collections import abc as abc
+import collections.abc as abc
 
 from xonsh.dirstack import _get_cwd
 from xonsh.platform import ON_WINDOWS
