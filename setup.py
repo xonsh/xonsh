@@ -48,6 +48,15 @@ def clean_tables():
 os.environ['XONSH_DEBUG'] = '1'
 from xonsh import __version__ as XONSH_VERSION
 
+def amalagamate_source():
+    """Amalgamtes source files."""
+    try:
+        import amalgamate
+    except ImportError:
+        return
+    amalgamate.main(['amalgamate', '--debug=XONSH_DEBUG', 'xonsh'])
+
+
 def build_tables():
     """Build the lexer/parser modules."""
     print('Building lexer and parser tables.')
@@ -55,8 +64,7 @@ def build_tables():
     from xonsh.parser import Parser
     Parser(lexer_table='lexer_table', yacc_table='parser_table',
            outputdir='xonsh')
-    import amalgamate
-    amalgamate.main(['amalgamate', '--debug=XONSH_DEBUG', 'xonsh'])
+    amalagamate_source()
     sys.path.pop(0)
 
 
