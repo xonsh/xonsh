@@ -33,6 +33,8 @@ skip_if_py34 = pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5,
 skip_if_py35plus = pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5,
                                reason="Py3.5+ only test")
 
+skip_if_on_windows = pytest.mark.skipif(ON_WINDOWS, reason='Unix stuff')
+
 
 
 def sp(cmd):
@@ -83,7 +85,7 @@ def xonsh_env(xenv):
     builtins.execx = None
     builtins.compilex = None
     builtins.aliases = {}
-    yield
+    yield xenv
     del builtins.__xonsh_env__
     del builtins.__xonsh_ctx__
     del builtins.__xonsh_shell__
