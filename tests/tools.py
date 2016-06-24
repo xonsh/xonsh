@@ -60,8 +60,12 @@ class DummyShell:
         return self._shell
 
 
-@contextmanager
-def mock_xonsh_env(xenv):
+@pytest.fixture
+def xenv():
+    return {}
+
+@pytest.yield_fixture
+def xonsh_env(xenv):
     builtins.__xonsh_env__ = xenv
     builtins.__xonsh_ctx__ = {}
     builtins.__xonsh_shell__ = DummyShell()

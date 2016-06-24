@@ -25,9 +25,7 @@ from xonsh.tools import (
     pathsep_to_upper_seq, seq_to_upper_pathsep,
     )
 
-from tools import mock_xonsh_env
-
-from tools import mock_xonsh_env
+from tools import xonsh_env
 
 LEXER = Lexer()
 LEXER.build()
@@ -566,61 +564,57 @@ def test_env_path_to_str():
         assert exp == obs
 
 
-def test_env_path():
+getitem_cases = [
+    ('xonsh_dir', 'xonsh_dir'),
+    ('.', '.'),
+    ('../', '../'),
+    ('~/', '~/'),
+    (b'~/../', '~/../'),
+]
+@pytest.mark.parametrize('xenv', [TOOLS_ENV, ENCODE_ENV_ONLY])
+@pytest.mark.parametrize('inp, exp', getitem_cases)
+def test_env_path(inp, exp, xonsh_env):
     # lambda to expand the expected paths
     expand = lambda path: os.path.expanduser(os.path.expandvars(path))
-    getitem_cases = [
-        ('xonsh_dir', 'xonsh_dir'),
-        ('.', '.'),
-        ('../', '../'),
-        ('~/', '~/'),
-        (b'~/../', '~/../'),
-    ]
-    with mock_xonsh_env(TOOLS_ENV):
-        for inp, exp in getitem_cases:
-            obs = EnvPath(inp)[0] # call to __getitem__
-            assert expand(exp) == obs
+    obs = EnvPath(inp)[0] # call to __getitem__
+    assert expand(exp) == obs
 
-    with mock_xonsh_env(ENCODE_ENV_ONLY):
-        for inp, exp in getitem_cases:
-            obs = EnvPath(inp)[0] # call to __getitem__
-            assert exp == obs
 
-    # cases that involve path-separated strings
-    multipath_cases = [
-        (os.pathsep.join(['xonsh_dir', '../', '.', '~/']),
-         ['xonsh_dir', '../', '.', '~/']),
-        ('/home/wakka' + os.pathsep + '/home/jakka' + os.pathsep + '~/',
-         ['/home/wakka', '/home/jakka', '~/'])
-    ]
-    with mock_xonsh_env(TOOLS_ENV):
-        for inp, exp in multipath_cases:
-            obs = [i for i in EnvPath(inp)]
-            assert [expand(i) for i in exp] == obs
+#     # cases that involve path-separated strings
+#     multipath_cases = [
+#         (os.pathsep.join(['xonsh_dir', '../', '.', '~/']),
+#          ['xonsh_dir', '../', '.', '~/']),
+#         ('/home/wakka' + os.pathsep + '/home/jakka' + os.pathsep + '~/',
+#          ['/home/wakka', '/home/jakka', '~/'])
+#     ]
+#     with mock_xonsh_env(TOOLS_ENV):
+#         for inp, exp in multipath_cases:
+#             obs = [i for i in EnvPath(inp)]
+#             assert [expand(i) for i in exp] == obs
 
-    with mock_xonsh_env(ENCODE_ENV_ONLY):
-        for inp, exp in multipath_cases:
-            obs = [i for i in EnvPath(inp)]
-            assert [i for i in exp] == obs
+#     with mock_xonsh_env(ENCODE_ENV_ONLY):
+#         for inp, exp in multipath_cases:
+#             obs = [i for i in EnvPath(inp)]
+#             assert [i for i in exp] == obs
 
-    # cases that involve pathlib.Path objects
-    pathlib_cases = [
-        (pathlib.Path('/home/wakka'), ['/home/wakka'.replace('/',os.sep)]),
-        (pathlib.Path('~/'), ['~']),
-        (pathlib.Path('.'), ['.']),
-        (['/home/wakka', pathlib.Path('/home/jakka'), '~/'],
-         ['/home/wakka', '/home/jakka'.replace('/',os.sep), '~/']),
-        (['/home/wakka', pathlib.Path('../'), '../'],
-         ['/home/wakka', '..', '../']),
-        (['/home/wakka', pathlib.Path('~/'), '~/'],
-         ['/home/wakka', '~', '~/']),
-    ]
+#     # cases that involve pathlib.Path objects
+#     pathlib_cases = [
+#         (pathlib.Path('/home/wakka'), ['/home/wakka'.replace('/',os.sep)]),
+#         (pathlib.Path('~/'), ['~']),
+#         (pathlib.Path('.'), ['.']),
+#         (['/home/wakka', pathlib.Path('/home/jakka'), '~/'],
+#          ['/home/wakka', '/home/jakka'.replace('/',os.sep), '~/']),
+#         (['/home/wakka', pathlib.Path('../'), '../'],
+#          ['/home/wakka', '..', '../']),
+#         (['/home/wakka', pathlib.Path('~/'), '~/'],
+#          ['/home/wakka', '~', '~/']),
+#     ]
 
-    with mock_xonsh_env(TOOLS_ENV):
-        for inp, exp in pathlib_cases:
-            # iterate over EnvPath to acquire all expanded paths
-            obs = [i for i in EnvPath(inp)]
-            assert [expand(i) for i in exp] == obs
+#     with mock_xonsh_env(TOOLS_ENV):
+#         for inp, exp in pathlib_cases:
+#             # iterate over EnvPath to acquire all expanded paths
+#             obs = [i for i in EnvPath(inp)]
+#             assert [expand(i) for i in exp] == obs
 
 def test_env_path_slices():
     # build os-dependent paths properly
