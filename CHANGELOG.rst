@@ -101,14 +101,13 @@ v0.4.0
 * Yacc parser is now loaded in a background thread.
 * Cleaned up argument parsing in ``xonsh.main.premain`` by removing the
   ``undo_args`` hack.
-
 * Now complains on invalid arguments.
 * ``Env`` now guarantees that the ``$PATH`` is available and mutable when
   initialized.
 * On Windows the ``PROMPT`` environment variable is reset to `$P$G` before
   sourcing *.bat files.
 * On Windows the ``PROMPT`` environment variable is reset to `$P$G` before starting
-  subprocesses. This prevents the unformatted xonsh ``PROMPT`` tempalte from showing up 
+  subprocesses. This prevents the unformatted xonsh ``PROMPT`` tempalte from showing up
   when running batch files with ``ECHO ON```
 * ``@()`` now passes through functions as well as strings, which allows for the
   use of anonymous aliases and aliases not explicitly added to the ``aliases``
@@ -118,7 +117,7 @@ v0.4.0
 * Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
   the currently running script's path
 * XonshError and XonshCalledProcessError are now in builtins
-* ``__repr__`` on the environment only shows a short representation of the 
+* ``__repr__`` on the environment only shows a short representation of the
   object instead of printing the whole environment dictionary
 * More informative prompt when configuring foreign shells in the wizard.
 * ``CommandsCache`` is now a mapping from command names to a tuple of
@@ -130,8 +129,6 @@ v0.4.0
 
 
 **Removed:**
-
-None
 
 * The ``'console_scripts'`` option to setuptools has been removed. It was found
   to cause slowdowns of over 150 ms on every startup.
@@ -153,10 +150,8 @@ None
   rather than the first.
 * Bug where xonfig wizard can't find ENV docs
 * Fixed ``xonsh.environ.locate_binary()`` to handle PATH variable are given as a tuple.
-* Fixed missing completions for ``cd`` and ```rmdir`` when directories had spaces 
+* Fixed missing completions for ``cd`` and ```rmdir`` when directories had spaces
   in their names.
-None
-
 * Bug preventing `xonsh` executable being installed on macOS.
 * Strip leading space in commands passed using the "-c" switch
 * Fixed xonfig wizard failing on Windows due to colon in created filename.
@@ -169,17 +164,10 @@ None
 * Fix crash on startup when Bash Windows Subsystem for Linux is on the Path.
 * Fixed issue with setting and signaling process groups on Linux when the first
   process is a function alias and has no pid.
-None
 * Fixed ``_list_completers`` such that it does not throw a ValueError if no completer is registered.
 * Fixed ``_list_completers`` such that it does not throw an AttributeError if a completer has no docstring.
-None
-
 * Bug that caused command line argument ``--config-path`` to be ignored.
-None
-
 * Bug that caused xonsh to break on startup when prompt-toolkit < 1.0.0.
-
-
 
 
 v0.3.4
