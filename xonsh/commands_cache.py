@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+import builtins
 import os
 from collections import abc as abc
 
@@ -33,7 +35,7 @@ class CommandsCache(abc.Mapping):
         return self.all_commands[key]
 
     def is_empty(self):
-        """Returns whether the cache is populated or not. Does not check cache validity."""
+        """Returns whether the cache is populated or not."""
         return len(self._cmds_cache) == 0
 
     @staticmethod
