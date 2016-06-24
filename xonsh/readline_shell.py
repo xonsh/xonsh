@@ -469,5 +469,5 @@ class ReadlineHistoryAdder(Thread):
                             RL_LIB.history_set_pos(i)
                         i += 1
                 lj.close()
-            except (IOError, OSError):
+            except (IOError, OSError, ValueError):
                 continue
