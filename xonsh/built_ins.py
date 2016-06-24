@@ -32,9 +32,10 @@ from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
                         SimpleForegroundProcProxy, TeePTYProc,
                         CompletedCommand, HiddenCompletedCommand)
 from xonsh.tools import (
-    suggest_commands, expandvars, CommandsCache, globpath, XonshError,
+    suggest_commands, expandvars, globpath, XonshError,
     XonshCalledProcessError, XonshBlockError
 )
+from xonsh.commands_cache import CommandsCache
 
 
 ENV = None

@@ -11,7 +11,7 @@ from xonsh.platform import ON_WINDOWS
 from xonsh.lexer import Lexer
 
 from xonsh.tools import (
-    CommandsCache, EnvPath, always_false, always_true, argvquote,
+    EnvPath, always_false, always_true, argvquote,
     bool_or_int_to_str, bool_to_str, check_for_partial_string,
     dynamic_cwd_tuple_to_str, ensure_int_or_slice, ensure_string,
     env_path_to_str, escape_windows_cmd_string, executables_in,
@@ -24,8 +24,7 @@ from xonsh.tools import (
     is_string_seq, pathsep_to_seq, seq_to_pathsep, is_nonstring_seq_of_strings,
     pathsep_to_upper_seq, seq_to_upper_pathsep,
     )
-
-from tools import mock_xonsh_env
+from xonsh.commands_cache import CommandsCache
 
 from tools import mock_xonsh_env
 
