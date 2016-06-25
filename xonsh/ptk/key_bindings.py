@@ -183,6 +183,11 @@ def load_xonsh_bindings(key_bindings_manager):
         """
         Tab-completion: where the first tab completes the common suffix and the
         second tab lists all the completions.
+
+        Notes
+        -----
+        This method was forked from the mainline prompt-toolkit repo.
+        Copyright (c) 2014, Jonathan Slenders, All rights reserved.
         """
         b = event.current_buffer
 
