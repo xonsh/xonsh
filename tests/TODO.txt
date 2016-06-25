@@ -2,6 +2,7 @@ tools.py
 --------
 - maybe make stub Execer a fixture
   for (text_execer, test_ast, test_context)
+- decouple check_exec, check_eval, check_parse from xonsh_env
 
 test_tools.py
 -------------

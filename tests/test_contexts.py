@@ -1,7 +1,5 @@
 """Tests xonsh contexts."""
-from tools import (mock_xonsh_env, execer_setup, check_exec, check_eval,
-    check_parse)
-
+from tools import (execer_setup, check_exec, check_eval, check_parse)
 from xonsh.contexts import Block, Functor
 
 #

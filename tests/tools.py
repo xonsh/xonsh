@@ -75,12 +75,12 @@ def execer_setup():
     if EXECER is None:
         EXECER = Execer(debug_level=DEBUG_LEVEL, login=False)
 
-def check_exec(input, **kwargs):
-    with mock_xonsh_env(None):
-        if not input.endswith('\n'):
-            input += '\n'
-        EXECER.debug_level = DEBUG_LEVEL
-        EXECER.exec(input, **kwargs)
+def check_exec(input, xonsh_env, **kwargs):
+    # with mock_xonsh_env(None):
+    if not input.endswith('\n'):
+        input += '\n'
+    EXECER.debug_level = DEBUG_LEVEL
+    EXECER.exec(input, **kwargs)
 
 def check_eval(input):
     env = {'AUTO_CD': False, 'XONSH_ENCODING' :'utf-8',
