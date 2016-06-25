@@ -5,29 +5,29 @@ import os
 import sys
 import ast
 
-from nose.tools import assert_raises
-
 from xonsh.execer import Execer
 from xonsh.tools import ON_WINDOWS
 
 from tools import (mock_xonsh_env, execer_setup, check_exec, check_eval,
-    check_parse, skip_if)
+    check_parse)
 
-def setup():
+import pytest
+
+def setup_module():
     execer_setup()
 
-@skip_if(not ON_WINDOWS)
+
+@pytest.mark.skipif(not ON_WINDOWS, reason='Windows only stuff')
 def test_win_ipconfig():
-    yield (check_eval,
-           os.environ['SYSTEMROOT'] + '\\System32\\ipconfig.exe /all')
+    check_eval(os.environ['SYSTEMROOT'] + '\\System32\\ipconfig.exe /all')
 
-@skip_if(not ON_WINDOWS)
+@pytest.mark.skipif(not ON_WINDOWS, reason='Windows only bin')
 def test_ipconfig():
-    yield check_eval, 'ipconfig /all'
+    check_eval('ipconfig /all')
 
-@skip_if(ON_WINDOWS)
+@pytest.mark.skipif(ON_WINDOWS, reason='dont expect ls on windows')
 def test_bin_ls():
-    yield check_eval, '/bin/ls -l'
+    check_eval('/bin/ls -l')
 
 def test_ls_dashl():
     yield check_parse, 'ls -l'
@@ -63,7 +63,8 @@ def test_simple_func_broken():
 def test_bad_indent():
     code = ('if True:\n'
             'x = 1\n')
-    assert_raises(SyntaxError, check_parse, code)
+    with pytest.raises(SyntaxError):
+        check_parse(code)
 
 def test_good_rhs_subproc():
     # nonsense but parsebale
@@ -73,7 +74,8 @@ def test_good_rhs_subproc():
 def test_bad_rhs_subproc():
     # nonsense but unparsebale
     code = 'str().split() | grep exit\n'
-    assert_raises(SyntaxError, check_parse, code)
+    with pytest.raises(SyntaxError):
+        check_parse(code)
 
 def test_indent_with_empty_line():
     code = ('if True:\n'
@@ -106,8 +108,3 @@ def test_echo_comma_val():
 def test_echo_comma_2val():
     code = 'echo 1,2\n'
     yield check_parse, code
-
-
-
-if __name__ == '__main__':
-    nose.runmodule()

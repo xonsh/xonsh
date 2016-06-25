@@ -1,8 +1,6 @@
 """Tests xonsh contexts."""
-from nose.tools import assert_equal, assert_is, assert_is_not
-
 from tools import (mock_xonsh_env, execer_setup, check_exec, check_eval,
-    check_parse, skip_if)
+    check_parse)
 
 from xonsh.contexts import Block, Functor
 
@@ -10,7 +8,7 @@ from xonsh.contexts import Block, Functor
 # helpers
 #
 
-def setup():
+def setup_module():
     execer_setup()
 
 
@@ -35,29 +33,29 @@ def block_checks_glb(name, glbs, body, obs=None):
     block = glbs[name]
     obs = obs or {}
     for k, v in obs.items():
-        yield assert_equal, v, glbs[k]
+        assert v == glbs[k]
     if isinstance(body, str):
         body = body.splitlines()
-    yield assert_equal, body, block.lines
-    yield assert_is, glbs, block.glbs
-    yield assert_is, None, block.locs
+    assert body == block.lines
+    assert glbs is block.glbs
+    assert block.locs is None
 
 
 def block_checks_func(name, glbs, body, obsg=None, obsl=None):
     block = glbs[name]
     obsg = obsg or {}
     for k, v in obsg.items():
-        yield assert_equal, v, glbs[k]
+        assert v == glbs[k]
     if isinstance(body, str):
         body = body.splitlines()
-    yield assert_equal, body, block.lines
-    yield assert_is, glbs, block.glbs
+    assert body == block.lines
+    assert glbs is block.glbs
     # local context tests
     locs = block.locs
-    yield assert_is_not, None, locs
+    assert locs is not None
     obsl = obsl or {}
     for k, v in obsl.items():
-        yield assert_equal, v, locs[k]
+        assert v == locs[k]
 
 
 #
@@ -70,7 +68,7 @@ def test_block_noexec():
          '    x += 42\n')
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
-    assert_equal(1, glbs['x'])
+    assert 1 == glbs['x']
 
 
 def test_block_oneline():
@@ -78,7 +76,7 @@ def test_block_oneline():
     s = X1_WITH + body
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
-    yield from block_checks_glb('b', glbs, body, {'x': 1})
+    block_checks_glb('b', glbs, body, {'x': 1})
 
 
 def test_block_manylines():
@@ -88,7 +86,7 @@ def test_block_manylines():
     s = X1_WITH + body
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
-    yield from block_checks_glb('b', glbs, body, {'x': 1})
+    block_checks_glb('b', glbs, body, {'x': 1})
 
 
 def test_block_leading_comment():
@@ -98,7 +96,7 @@ def test_block_leading_comment():
     s = X1_WITH + body
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
-    yield from block_checks_glb('b', glbs, ['    x += 42'], {'x': 1})
+    block_checks_glb('b', glbs, ['    x += 42'], {'x': 1})
 
 
 def test_block_trailing_comment():
@@ -108,7 +106,7 @@ def test_block_trailing_comment():
     s = X1_WITH + body
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
-    yield from block_checks_glb('b', glbs, ['    x += 42'], {'x': 1})
+    block_checks_glb('b', glbs, ['    x += 42'], {'x': 1})
 
 
 def test_block_trailing_line_continuation():
@@ -117,7 +115,7 @@ def test_block_trailing_line_continuation():
     s = X1_WITH + body
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
-    yield from block_checks_glb('b', glbs, body, {'x': 1})
+    block_checks_glb('b', glbs, body, {'x': 1})
 
 
 def test_block_trailing_close_paren():
@@ -126,7 +124,7 @@ def test_block_trailing_close_paren():
     s = X1_WITH + body
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
-    yield from block_checks_glb('b', glbs, body, {'x': 1})
+    block_checks_glb('b', glbs, body, {'x': 1})
 
 
 def test_block_trailing_close_many():
@@ -137,7 +135,7 @@ def test_block_trailing_close_many():
     s = SIMPLE_WITH + body
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
-    yield from block_checks_glb('b', glbs, body)
+    block_checks_glb('b', glbs, body)
 
 
 def test_block_trailing_triple_string():
@@ -149,7 +147,7 @@ def test_block_trailing_triple_string():
     s = SIMPLE_WITH + body
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
-    yield from block_checks_glb('b', glbs, body)
+    block_checks_glb('b', glbs, body)
 
 
 def test_block_func_oneline():
@@ -157,7 +155,7 @@ def test_block_func_oneline():
     s = FUNC_WITH.format(body=body)
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
-    yield from block_checks_func('rtn', glbs, body, FUNC_OBSG, FUNC_OBSL)
+    block_checks_func('rtn', glbs, body, FUNC_OBSG, FUNC_OBSL)
 
 
 def test_block_func_manylines():
@@ -167,7 +165,7 @@ def test_block_func_manylines():
     s = FUNC_WITH.format(body=body)
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
-    yield from block_checks_func('rtn', glbs, body, FUNC_OBSG, FUNC_OBSL)
+    block_checks_func('rtn', glbs, body, FUNC_OBSG, FUNC_OBSL)
 
 
 def test_block_func_leading_comment():
@@ -177,7 +175,7 @@ def test_block_func_leading_comment():
     s = FUNC_WITH.format(body=body)
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
-    yield from block_checks_func('rtn', glbs, '        x += 42\n',
+    block_checks_func('rtn', glbs, '        x += 42\n',
                                  FUNC_OBSG, FUNC_OBSL)
 
 
@@ -188,7 +186,7 @@ def test_block_func_trailing_comment():
     s = FUNC_WITH.format(body=body)
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
-    yield from block_checks_func('rtn', glbs, '        x += 42\n',
+    block_checks_func('rtn', glbs, '        x += 42\n',
                                  FUNC_OBSG, FUNC_OBSL)
 
 
@@ -198,7 +196,7 @@ def test_blockfunc__trailing_line_continuation():
     s = FUNC_WITH.format(body=body)
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
-    yield from block_checks_func('rtn', glbs, body, FUNC_OBSG, FUNC_OBSL)
+    block_checks_func('rtn', glbs, body, FUNC_OBSG, FUNC_OBSL)
 
 
 def test_block_func_trailing_close_paren():
@@ -207,7 +205,7 @@ def test_block_func_trailing_close_paren():
     s = FUNC_WITH.format(body=body)
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
-    yield from block_checks_func('rtn', glbs, body, FUNC_OBSG, FUNC_OBSL)
+    block_checks_func('rtn', glbs, body, FUNC_OBSG, FUNC_OBSL)
 
 
 def test_block_func_trailing_close_many():
@@ -218,7 +216,7 @@ def test_block_func_trailing_close_many():
     s = FUNC_WITH.format(body=body)
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
-    yield from block_checks_func('rtn', glbs, body, FUNC_OBSG, FUNC_OBSL)
+    block_checks_func('rtn', glbs, body, FUNC_OBSG, FUNC_OBSL)
 
 
 def test_block_func_trailing_triple_string():
@@ -230,7 +228,7 @@ def test_block_func_trailing_triple_string():
     s = FUNC_WITH.format(body=body)
     glbs = {'Block': Block}
     check_exec(s, glbs=glbs, locs=None)
-    yield from block_checks_func('rtn', glbs, body, FUNC_OBSG, FUNC_OBSL)
+    block_checks_func('rtn', glbs, body, FUNC_OBSG, FUNC_OBSL)
 
 
 #
@@ -251,7 +249,7 @@ def test_functor_oneline_onecall_class():
     s = X2_WITH.format(body=body, calls=calls)
     glbs = {'Functor': Functor}
     check_exec(s, glbs=glbs, locs=None)
-    yield from block_checks_glb('f', glbs, body, {'x': 44})
+    block_checks_glb('f', glbs, body, {'x': 44})
 
 
 def test_functor_oneline_onecall_func():
@@ -261,7 +259,7 @@ def test_functor_oneline_onecall_func():
     s = X2_WITH.format(body=body, calls=calls)
     glbs = {'Functor': Functor}
     check_exec(s, glbs=glbs, locs=None)
-    yield from block_checks_glb('f', glbs, body, {'x': 44})
+    block_checks_glb('f', glbs, body, {'x': 44})
 
 
 def test_functor_oneline_onecall_both():
@@ -271,7 +269,7 @@ def test_functor_oneline_onecall_both():
     s = X2_WITH.format(body=body, calls=calls)
     glbs = {'Functor': Functor}
     check_exec(s, glbs=glbs, locs=None)
-    yield from block_checks_glb('f', glbs, body, {'x': 86})
+    block_checks_glb('f', glbs, body, {'x': 86})
 
 
 XA_WITH = ('x = [1]\n'
@@ -287,7 +285,7 @@ def test_functor_oneline_append():
     s = XA_WITH.format(body=body, calls=calls)
     glbs = {'Functor': Functor}
     check_exec(s, glbs=glbs, locs=None)
-    yield from block_checks_glb('f', glbs, body, {'x': [1, 2, 3]})
+    block_checks_glb('f', glbs, body, {'x': [1, 2, 3]})
 
 
 def test_functor_return():
@@ -299,7 +297,7 @@ def test_functor_return():
     s = t.format(body=body)
     glbs = {'Functor': Functor}
     check_exec(s, glbs=glbs, locs=None)
-    yield from block_checks_glb('f', glbs, body, {'res': 42})
+    block_checks_glb('f', glbs, body, {'res': 42})
 
 
 def test_functor_args():
@@ -311,7 +309,7 @@ def test_functor_args():
     s = t.format(body=body)
     glbs = {'Functor': Functor}
     check_exec(s, glbs=glbs, locs=None)
-    yield from block_checks_glb('f', glbs, body, {'res': 44})
+    block_checks_glb('f', glbs, body, {'res': 44})
 
 
 def test_functor_kwargs():
@@ -323,7 +321,7 @@ def test_functor_kwargs():
     s = t.format(body=body)
     glbs = {'Functor': Functor}
     check_exec(s, glbs=glbs, locs=None)
-    yield from block_checks_glb('f', glbs, body, {'res': 49})
+    block_checks_glb('f', glbs, body, {'res': 49})
 
 
 def test_functor_fullsig():
@@ -335,6 +333,6 @@ def test_functor_fullsig():
     s = t.format(body=body)
     glbs = {'Functor': Functor}
     check_exec(s, glbs=glbs, locs=None)
-    yield from block_checks_glb('f', glbs, body, {'res': 110})
+    block_checks_glb('f', glbs, body, {'res': 110})
 
 

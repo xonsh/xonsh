@@ -9,7 +9,6 @@ import builtins
 from collections import Sequence
 from contextlib import contextmanager
 import inspect
-from glob import iglob
 import os
 import re
 import shlex
@@ -21,7 +20,6 @@ import time
 
 from xonsh.lazyasd import LazyObject
 from xonsh.history import History
-from xonsh.tokenize import SearchPath
 from xonsh.inspectors import Inspector
 from xonsh.aliases import Aliases, make_default_aliases
 from xonsh.environ import Env, default_env, locate_binary
@@ -32,9 +30,10 @@ from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
                         SimpleForegroundProcProxy, TeePTYProc,
                         CompletedCommand, HiddenCompletedCommand)
 from xonsh.tools import (
-    suggest_commands, expandvars, CommandsCache, globpath, XonshError,
+    suggest_commands, expandvars, globpath, XonshError,
     XonshCalledProcessError, XonshBlockError
 )
+from xonsh.commands_cache import CommandsCache
 
 
 ENV = None
@@ -417,14 +416,18 @@ def run_subproc(cmds, captured=False):
         elif builtins.__xonsh_stderr_uncaptured__ is not None:
             stderr = builtins.__xonsh_stderr_uncaptured__
         uninew = (ix == last_cmd) and (not _capture_streams)
-
+        # find alias
         if callable(cmd[0]):
             alias = cmd[0]
         else:
             alias = builtins.aliases.get(cmd[0], None)
-            binary_loc = locate_binary(cmd[0])
-
         procinfo['alias'] = alias
+        # find binary location, if not callable
+        if alias is None:
+            binary_loc = locate_binary(cmd[0])
+        elif not callable(alias):
+            binary_loc = locate_binary(alias[0])
+        # implement AUTO_CD
         if (alias is None and
                 builtins.__xonsh_env__.get('AUTO_CD') and
                 len(cmd) == 1 and
@@ -451,8 +454,8 @@ def run_subproc(cmds, captured=False):
         if (stdin is not None and
                 ENV.get('XONSH_STORE_STDIN') and
                 captured == 'object' and
-                'cat' in __xonsh_commands_cache__ and
-                'tee' in __xonsh_commands_cache__):
+                __xonsh_commands_cache__.lazy_locate_binary('cat') and
+                __xonsh_commands_cache__.lazy_locate_binary('tee')):
             _stdin_file = tempfile.NamedTemporaryFile()
             cproc = Popen(['cat'],
                           stdin=stdin,

@@ -84,7 +84,7 @@ is open to interpretation.
   recommendations from PEP8 are not required here.
 * All Python code should be compliant with Python 3.4+.  At some
   unforeseen date in the future, Python 2.7 support *may* be supported.
-* Tests should be written with nose using a procedural style. Do not use
+* Tests should be written with pytest using a procedural style. Do not use
   unittest directly or write tests in an object-oriented style.
 * Test generators make more dots and the dots must flow!
 
@@ -165,12 +165,11 @@ Prep your environment for running the tests::
 Running the Tests - Basic
 ----------------------------------
 
-Run all the tests using Nose::
+Run all the tests using pytest::
 
-    $ nosetests -q
+    $ py.test -q
 
-Use "-q" to keep nose from outputing a dot for every test.  There are A LOT of tests
-and you will waste time waiting for all the dots to get pushed through stdout.
+Use "-q" to keep pytest from outputting a bunch of info for every test.  
 
 ----------------------------------
 Running the Tests - Advanced
@@ -178,35 +177,16 @@ Running the Tests - Advanced
 
 To perform all unit tests::
 
-    $ scripts/run_tests.xsh all
-
-If you're working on a change and haven't yet committed it you can run the
-tests associated with the change. This does not require that the change
-include the unit test module. This will execute any unit tests that are
-part of the change as well as the unit tests for xonsh source modules in
-the change::
-
-    $ scripts/run_tests.xsh
+    $ py.test
 
 If you want to run specific tests you can specify the test names to
 execute. For example to run test_aliases::
 
-    $ scripts/run_tests.xsh aliases
-
-The test name can be the bare test name (e.g., ``aliases``), include
-the ``test_`` prefix and ``.py`` suffix without the directory
-(e.g., ``test_aliases.py``), or the complete relative path (e.g.,
-``tests/test_aliases.py``). For example:
+    $ py.test test_aliases.py
 
 Note that you can pass multiple test names in the above examples::
 
-    $ scripts/run_tests.xsh aliases environ
-
-As before, if you want to test the xonsh code that is installed on your
-system first cd into the `tests` directory then run the tests::
-
-    $ cd tests
-    $ env XONSHRC='' nosetests test_aliases.py test_environ.py
+    $ py.test test_aliases.py test_environ.py
 
 Happy testing!
 

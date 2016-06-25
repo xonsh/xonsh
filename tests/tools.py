@@ -9,10 +9,11 @@ import subprocess
 from collections import defaultdict
 from contextlib import contextmanager
 
-from nose.plugins.skip import SkipTest
+import pytest
 
 from xonsh.built_ins import ensure_list_of_strs
-builtins.__xonsh_env__ = {}
+from xonsh.environ import Env
+builtins.__xonsh_env__ = Env()
 from xonsh.base_shell import BaseShell
 from xonsh.execer import Execer
 from xonsh.tools import XonshBlockError
@@ -22,8 +23,17 @@ VER_3_4 = (3, 4)
 VER_3_5 = (3, 5)
 VER_MAJOR_MINOR = sys.version_info[:2]
 VER_FULL = sys.version_info[:3]
-ON_MAC = (platform.system() == 'Darwin')
+ON_DARWIN = (platform.system() == 'Darwin')
 ON_WINDOWS = (platform.system() == 'Windows')
+
+
+skip_if_py34 = pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5,
+                                   reason="Py3.5+ only test")
+
+skip_if_py35plus = pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5,
+                               reason="Py3.5+ only test")
+
+
 
 def sp(cmd):
     return subprocess.check_output(cmd, universal_newlines=True)
@@ -88,19 +98,6 @@ def mock_xonsh_env(xenv):
     del builtins.compilex
     del builtins.aliases
 
-
-def skipper():
-    """Raises SkipTest"""
-    raise SkipTest
-
-def skip_if(cond):
-    """Skips a test under a given condition."""
-    def dec(f):
-        if cond:
-            return skipper
-        else:
-            return f
-    return dec
 
 #
 # Execer tools
