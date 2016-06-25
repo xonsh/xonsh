@@ -572,7 +572,6 @@ def expand(path):
     (b'~/../', '~/../'),
 ])
 def test_env_path_getitem(inp, exp, xonsh_env):
-    # lambda to expand the expected paths
     obs = EnvPath(inp)[0] # call to __getitem__
     assert expand(exp) == obs
 
