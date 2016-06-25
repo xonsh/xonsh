@@ -38,21 +38,21 @@ def test_imports():
     assert RAW == expected
 
 
-def test_eval_normal(xonsh_env):
+def test_eval_normal(xonsh_builtins):
     assert ALIASES.get('o') ==  ['omg', 'lala']
 
 
-def test_eval_self_reference(xonsh_env):
+def test_eval_self_reference(xonsh_builtins):
     assert ALIASES.get('ls') ==  ['ls', '-  -']
 
 
-def test_eval_recursive(xonsh_env):
+def test_eval_recursive(xonsh_builtins):
     assert ALIASES.get('color_ls') ==  ['ls', '-  -', '--color=true']
 
 
 @skip_if_on_windows
-@pytest.mark.parametrize('xenv', [Env(HOME=os.path.expanduser('~'))])
-def test_eval_recursive_callable_partial(xonsh_env):
+def test_eval_recursive_callable_partial(xonsh_builtins):
+    xonsh_builtins.__xonsh_env__ = Env(HOME=os.path.expanduser('~'))
     assert ALIASES.get('indirect_cd')(['arg2', 'arg3']) == ['..', 'arg2', 'arg3']
 
 

@@ -22,8 +22,13 @@ test_builtins.py
 - Env fixture
 
 
-test_contexts.py
 test_dirstack.py
+----------------
+- better way for chdir contextmanager?
+
+
+
+test_contexts.py
 test_environ.py
 test_execer.py
 test_foreign_shells.py
