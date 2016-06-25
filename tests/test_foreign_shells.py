@@ -21,6 +21,32 @@ def test_parse_env():
     assert exp ==  obs
 
 
+def test_parse_env_newline():
+    exp = {'X': 'YES', 'Y': 'NO', 'PROMPT': 'why\nme '}
+    s = ('some garbage\n'
+         '__XONSH_ENV_BEG__\n'
+         'Y=NO\n'
+         'PROMPT=why\nme \n'
+         'X=YES\n'
+         '__XONSH_ENV_END__\n'
+         'more filth')
+    obs = parse_env(s)
+    assert exp == obs
+
+
+def test_parse_env_equals():
+    exp = {'X': 'YES', 'Y': 'NO', 'LS_COLORS': '*.tar=5'}
+    s = ('some garbage\n'
+         '__XONSH_ENV_BEG__\n'
+         'Y=NO\n'
+         'LS_COLORS=*.tar=5\n'
+         'X=YES\n'
+         '__XONSH_ENV_END__\n'
+         'more filth')
+    obs = parse_env(s)
+    assert exp == obs
+
+
 def test_parse_aliases():
     exp = {'x': ['yes', '-1'], 'y': ['echo', 'no']}
     s = ('some garbage\n'
@@ -59,7 +85,7 @@ def test_foreign_cmd_data():
     batchfile = os.path.join(os.path.dirname(__file__), 'batch.bat')
     source_cmd ='call "{}"\necho off'.format(batchfile)
     try:
-        obsenv, _ = foreign_shell_data('cmd',prevcmd=source_cmd, 
+        obsenv, _ = foreign_shell_data('cmd',prevcmd=source_cmd,
                                         currenv=env,
                                         interactive =False,
                                         sourcer='call',envcmd='set',
@@ -67,7 +93,6 @@ def test_foreign_cmd_data():
                                         safe=False)
     except (subprocess.CalledProcessError, FileNotFoundError):
         return
-
-    assert 'ENV_TO_BE_ADDED' in obsenv 
+    assert 'ENV_TO_BE_ADDED' in obsenv
     assert obsenv['ENV_TO_BE_ADDED']=='Hallo world'
     assert 'ENV_TO_BE_REMOVED' not in obsenv

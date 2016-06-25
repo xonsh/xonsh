@@ -350,7 +350,7 @@ def rewrite_init(pkg, order, debug='DEBUG'):
     else:
         lines[start+1] = s
         lines = lines[:start+2] + lines[stop:]
-    init = '\n'.join(lines)
+    init = '\n'.join(lines) + '\n'
     with open(fname, 'w', encoding='utf-8', errors='surrogateescape') as f:
         f.write(init)
 
