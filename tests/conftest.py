@@ -5,14 +5,10 @@ from xonsh.tools import ensure_list_of_strs
 import glob
 
 
-@pytest.fixture
-def xenv():
-    return {}
-
 
 @pytest.yield_fixture
-def xonsh_env(xenv):
-    builtins.__xonsh_env__ = xenv
+def xonsh_builtins():
+    builtins.__xonsh_env__ = {}
     builtins.__xonsh_ctx__ = {}
     builtins.__xonsh_shell__ = DummyShell()
     builtins.__xonsh_help__ = lambda x: x
@@ -29,7 +25,7 @@ def xonsh_env(xenv):
     builtins.execx = None
     builtins.compilex = None
     builtins.aliases = {}
-    yield xenv
+    yield builtins
     del builtins.__xonsh_env__
     del builtins.__xonsh_ctx__
     del builtins.__xonsh_shell__

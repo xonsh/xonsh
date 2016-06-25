@@ -26,7 +26,7 @@ from xonsh.tools import (
     )
 from xonsh.commands_cache import CommandsCache
 
-from tools import xonsh_env, skip_if_on_windows
+from tools import skip_if_on_windows
 
 LEXER = Lexer()
 LEXER.build()
@@ -563,7 +563,7 @@ def test_env_path_to_str(inp, exp):
 def expand(path):
     return os.path.expanduser(os.path.expandvars(path))
 
-@pytest.mark.parametrize('xenv', [TOOLS_ENV, ENCODE_ENV_ONLY])
+@pytest.mark.parametrize('env', [TOOLS_ENV, ENCODE_ENV_ONLY])
 @pytest.mark.parametrize('inp, exp', [
     ('xonsh_dir', 'xonsh_dir'),
     ('.', '.'),
@@ -571,21 +571,24 @@ def expand(path):
     ('~/', '~/'),
     (b'~/../', '~/../'),
 ])
-def test_env_path_getitem(inp, exp, xonsh_env):
+def test_env_path_getitem(inp, exp, xonsh_builtins, env):
+    print("ENV:",  env)
+    xonsh_builtins.__xonsh_env__ = env
     obs = EnvPath(inp)[0] # call to __getitem__
     assert expand(exp) == obs
 
 
-@pytest.mark.parametrize('xenv', [TOOLS_ENV, ENCODE_ENV_ONLY])
+@pytest.mark.parametrize('env', [TOOLS_ENV, ENCODE_ENV_ONLY])
 @pytest.mark.parametrize('inp, exp', [
     (os.pathsep.join(['xonsh_dir', '../', '.', '~/']),
      ['xonsh_dir', '../', '.', '~/']),
     ('/home/wakka' + os.pathsep + '/home/jakka' + os.pathsep + '~/',
      ['/home/wakka', '/home/jakka', '~/'])
 ])
-def test_env_path_multipath(inp, exp, xonsh_env):
+def test_env_path_multipath(inp, exp, xonsh_builtins, env):
     # cases that involve path-separated strings
-    if xonsh_env == TOOLS_ENV:
+    xonsh_builtins.__xonsh_env__ = env
+    if env == TOOLS_ENV:
         obs = [i for i in EnvPath(inp)]
         assert [expand(i) for i in exp] == obs
     else:
@@ -593,7 +596,6 @@ def test_env_path_multipath(inp, exp, xonsh_env):
         assert [i for i in exp] == obs
 
 
-@pytest.mark.parametrize('xenv', [TOOLS_ENV])
 @pytest.mark.parametrize('inp, exp', [
     (pathlib.Path('/home/wakka'), ['/home/wakka'.replace('/',os.sep)]),
     (pathlib.Path('~/'), ['~']),
@@ -605,7 +607,8 @@ def test_env_path_multipath(inp, exp, xonsh_env):
     (['/home/wakka', pathlib.Path('~/'), '~/'],
      ['/home/wakka', '~', '~/']),
 ])
-def test_env_path_with_pathlib_path_objects(inp, exp, xonsh_env):
+def test_env_path_with_pathlib_path_objects(inp, exp, xonsh_builtins):
+    xonsh_builtins.__xonsh_env__ = TOOLS_ENV
     # iterate over EnvPath to acquire all expanded paths
     obs = [i for i in EnvPath(inp)]
     assert [expand(i) for i in exp] == obs
@@ -950,7 +953,7 @@ def test_executables_in():
                 if executable and not _type == 'brokensymlink':
                     os.chmod(path, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
             if ON_WINDOWS:
-                with mock_xonsh_env(PATHEXT_ENV):
+                with mock_xonsh_builtins(PATHEXT_ENV):
                     result = set(executables_in(test_path))
             else:
                 result = set(executables_in(test_path))
