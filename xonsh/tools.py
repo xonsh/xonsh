@@ -1614,15 +1614,18 @@ def expand_case_matching(s):
     return ''.join(t)
 
 
-def globpath(s, ignore_case=False, return_empty=False, sort_result=True):
+def globpath(s, ignore_case=False, return_empty=False, sort_result=None):
     """Simple wrapper around glob that also expands home and env vars."""
+    if sort_result is None:
+        sort_result = builtins.__xonsh_env__.get('GLOB_SORTED')
+
     o, s = _iglobpath(s, ignore_case=ignore_case, sort_result=sort_result)
     o = list(o)
     no_match = [] if return_empty else [s]
     return o if len(o) != 0 else no_match
 
 
-def _iglobpath(s, ignore_case=False, sort_result=True):
+def _iglobpath(s, sort_result, ignore_case=False):
     s = builtins.__xonsh_expand_path__(s)
 
     if ignore_case:
@@ -1652,6 +1655,9 @@ def _iglobpath(s, ignore_case=False, sort_result=True):
         return paths, s
 
 
-def iglobpath(s, ignore_case=False, sort_result=True):
+def iglobpath(s, ignore_case=False, sort_result=None):
     """Simple wrapper around iglob that also expands home and env vars."""
+    if sort_result is None:
+        sort_result = builtins.__xonsh_env__.get('GLOB_SORTED')
+
     return _iglobpath(s, ignore_case=ignore_case, sort_result=sort_result)[0]
