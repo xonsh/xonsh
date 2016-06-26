@@ -7,6 +7,17 @@ import threading
 import importlib
 
 
+class PkgResourcesProxy(object):
+    """Proxy object for pkg_resources module that throws an ImportError
+    whenever an attribut is accessed.
+    """
+
+    def __getattr__(self, name):
+        raise ImportError('cannot access ' + name + 'on PkgResourcesProxy, '
+                          'please wait for pkg_resources module to be fully '
+                          'loaded.')
+
+
 class PkgResourcesLoader(threading.Thread):
     """Thread to load the pkg_resources module."""
 
@@ -25,7 +36,7 @@ class PkgResourcesLoader(threading.Thread):
             last = hist[i%5] = len(sys.modules)
             i += 1
         # now import pkg_resources properly
-        if sys.modules['pkg_resources'] is None:
+        if isinstance(sys.modules['pkg_resources'], PkgResourcesProxy):
             del sys.modules['pkg_resources']
         pr = importlib.import_module('pkg_resources')
         if 'pygments.plugin' in sys.modules:
@@ -40,5 +51,5 @@ def load_pkg_resources_in_background():
     if env.get('XONSH_DEBUG', None):
         import pkg_resources
         return
-    sys.modules['pkg_resources'] = None
+    sys.modules['pkg_resources'] = PkgResourcesProxy()
     PkgResourcesLoader()
