@@ -20,7 +20,7 @@ from xonsh import __version__ as XONSH_VERSION
 from xonsh.environ import is_template_string
 from xonsh.platform import (is_readline_available, ptk_version,
     PYTHON_VERSION_INFO, pygments_version, ON_POSIX, ON_LINUX, linux_distro,
-    ON_DARWIN, ON_WINDOWS, ON_CYGWIN, DEFAULT_ENCODING)
+    ON_DARWIN, ON_WINDOWS, ON_CYGWIN, DEFAULT_ENCODING, githash)
 from xonsh.tools import (to_bool, is_string, print_exception, is_superuser,
     color_style_names, print_color, color_style)
 from xonsh.xontribs import xontrib_metadata, find_xontrib
@@ -353,6 +353,8 @@ def _info(ns):
         ('is superuser', is_superuser()),
         ('default encoding', DEFAULT_ENCODING),
         ])
+    if githash():
+        data.append(('git SHA', githash()))
     formatter = _xonfig_format_json if ns.json else _xonfig_format_human
     s = formatter(data)
     return s
