@@ -39,8 +39,9 @@ from subprocess import CalledProcessError
 # adding further imports from xonsh modules is discouraged to avoid cirular
 # dependencies
 from xonsh.lazyasd import LazyObject, LazyDict
-from xonsh.platform import (has_prompt_toolkit, scandir,
-    DEFAULT_ENCODING, ON_LINUX, ON_WINDOWS, PYTHON_VERSION_INFO)
+from xonsh.platform import (has_prompt_toolkit, scandir, DEFAULT_ENCODING,
+                            ON_LINUX, ON_WINDOWS, PYTHON_VERSION_INFO)
+
 
 @functools.lru_cache(1)
 def is_superuser():
@@ -143,8 +144,8 @@ class EnvPath(collections.MutableSequence):
                 # in order to be able to retrieve it later, for cases such as
                 # when a generator expression was passed as an argument
                 args = list(args)
-                if not all(isinstance(i, (str, bytes, pathlib.Path)) \
-                                      for i in args):
+                if not all(isinstance(i, (str, bytes, pathlib.Path))
+                           for i in args):
                     # make TypeError's message as informative as possible
                     # when given an invalid initialization sequence
                     raise TypeError(
@@ -220,7 +221,8 @@ def _is_not_lparen_and_rparen(lparens, rtok):
 
 def find_next_break(line, mincol=0, lexer=None):
     """Returns the column number of the next logical break in subproc mode.
-    This function may be useful in finding the maxcol argument of subproc_toks().
+    This function may be useful in finding the maxcol argument of
+    subproc_toks().
     """
     if mincol >= 1:
         line = line[mincol:]
@@ -407,13 +409,15 @@ def get_sep():
     """ Returns the appropriate filepath separator char depending on OS and
     xonsh options set
     """
-    return (os.altsep if ON_WINDOWS
-            and builtins.__xonsh_env__.get('FORCE_POSIX_PATHS') else
-            os.sep)
+    if ON_WINDOWS and builtins.__xonsh_env__.get('FORCE_POSIX_PATHS'):
+        return os.altsep
+    else:
+        return os.sep
 
 
 def fallback(cond, backup):
-    """Decorator for returning the object if cond is true and a backup if cond is false.
+    """Decorator for returning the object if cond is true and a backup if cond
+    is false.
     """
     def dec(obj):
         return obj if cond else backup
@@ -481,9 +485,10 @@ def _yield_accessible_unix_file_names(path):
 def _executables_in_posix(path):
     if PYTHON_VERSION_INFO < (3, 5, 0):
         for fname in os.listdir(path):
-            fpath  = os.path.join(path, fname)
-            if (os.path.exists(fpath) and os.access(fpath, os.X_OK) and \
-                                    (not os.path.isdir(fpath))):
+            fpath = os.path.join(path, fname)
+            if (os.path.exists(fpath) and
+                    os.access(fpath, os.X_OK) and
+                    (not os.path.isdir(fpath))):
                 yield fname
     else:
         yield from _yield_accessible_unix_file_names(path)
@@ -557,9 +562,10 @@ def suggest_commands(cmd, env, aliases):
 
     for path in filter(os.path.isdir, env.get('PATH')):
         for _file in executables_in(path):
-            if _file not in suggested \
-                    and levenshtein(_file.lower(), cmd, thresh) < thresh:
-                suggested[_file] = 'Command ({0})'.format(os.path.join(path, _file))
+            if (_file not in suggested and
+                    levenshtein(_file.lower(), cmd, thresh) < thresh):
+                suggested[_file] = \
+                    'Command ({0})'.format(os.path.join(path, _file))
 
     suggested = collections.OrderedDict(
         sorted(suggested.items(),
@@ -649,6 +655,7 @@ def is_writable_file(filepath):
     # if the path doesn't exist, isolate its directory component
     # and ensure that directory is writable instead
     return os.access(os.path.dirname(filepath), os.W_OK)
+
 
 # Modified from Public Domain code, by Magnus Lie Hetland
 # from http://hetland.org/coding/python/levenshtein.py
@@ -749,6 +756,7 @@ def is_int(x):
     """Tests if something is an integer"""
     return isinstance(x, int)
 
+
 def is_int_as_str(x):
     """
     Tests if something is an integer
@@ -772,9 +780,11 @@ def is_string(x):
     """Tests if something is a string"""
     return isinstance(x, str)
 
+
 def is_slice(x):
     """Tests if something is a slice"""
     return isinstance(x, slice)
+
 
 def is_slice_as_str(x):
     """
@@ -793,6 +803,7 @@ def is_slice_as_str(x):
             return False
         return True
     return False
+
 
 def is_callable(x):
     """Tests if something is callable"""
@@ -833,7 +844,9 @@ def str_to_env_path(x):
 
 
 def env_path_to_str(x):
-    """Converts an environment path to a string by joining on the OS separator."""
+    """Converts an environment path to a string by joining on the OS
+    separator.
+    """
     return os.pathsep.join(x)
 
 
@@ -849,8 +862,10 @@ def is_logfile_opt(x):
     """
     if x is None:
         return True
-    return False if not isinstance(x, str) else \
-           (is_writable_file(x) or x == '')
+    if not isinstance(x, str):
+        return False
+    else:
+        return (is_writable_file(x) or x == '')
 
 
 def to_logfile_opt(x):
@@ -897,7 +912,9 @@ def to_bool(x):
 
 
 def bool_to_str(x):
-    """Converts a bool to an empty string if False and the string '1' if True."""
+    """Converts a bool to an empty string if False and the string '1' if
+    True.
+    """
     return '1' if x else ''
 
 
@@ -1142,12 +1159,14 @@ HISTORY_UNITS = LazyObject(lambda: {
     }, globals(), 'HISTORY_UNITS')
 """Maps lowercase unit names to canonical name and conversion utilities."""
 
+
 def is_history_tuple(x):
     """Tests if something is a proper history value, units tuple."""
-    if isinstance(x, abc.Sequence) and len(x) == 2 and \
-                     isinstance(x[0], (int, float)) and \
-                     x[1].lower() in CANON_HISTORY_UNITS:
-         return True
+    if (isinstance(x, abc.Sequence) and
+            len(x) == 2 and
+            isinstance(x[0], (int, float)) and
+            x[1].lower() in CANON_HISTORY_UNITS):
+        return True
     return False
 
 
@@ -1155,8 +1174,10 @@ def is_dynamic_cwd_width(x):
     """ Determine if the input is a valid input for the DYNAMIC_CWD_WIDTH
     environement variable.
     """
-    return isinstance(x, tuple) and len(x) == 2 and isinstance(x[0], float) and \
-           (x[1] in set('c%'))
+    return (isinstance(x, tuple) and
+            len(x) == 2 and
+            isinstance(x[0], float) and
+            x[1] in set('c%'))
 
 
 def to_dynamic_cwd_tuple(x):
@@ -1184,6 +1205,7 @@ def dynamic_cwd_tuple_to_str(x):
 RE_HISTORY_TUPLE = LazyObject(
     lambda: re.compile('([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)\s*([A-Za-z]*)'),
     globals(), 'RE_HISTORY_TUPLE')
+
 
 def to_history_tuple(x):
     """Converts to a canonincal history tuple."""
@@ -1315,7 +1337,7 @@ _STRINGS = (_RE_STRING_TRIPLE_DOUBLE,
             _RE_STRING_DOUBLE,
             _RE_STRING_SINGLE)
 RE_BEGIN_STRING = LazyObject(
-    lambda: re.compile("(" + _RE_STRING_START + \
+    lambda: re.compile("(" + _RE_STRING_START +
                        '(' + "|".join(_STRINGS) + '))'),
     globals(), 'RE_BEGIN_STRING')
 """Regular expression matching the start of a string, including quotes and
@@ -1410,6 +1432,7 @@ def check_for_partial_string(x):
 def _is_in_env(name):
     ENV = builtins.__xonsh_env__
     return name in ENV._d or name in ENV._defaults
+
 
 def _get_env_string(name):
     ENV = builtins.__xonsh_env__
@@ -1522,6 +1545,7 @@ def expandvars(path):
 #
 # File handling tools
 #
+
 
 def backup_file(fname):
     """Moves an existing file to a new name that has the current time right
