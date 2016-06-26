@@ -350,16 +350,16 @@ def test_iglobpath():
             file.write('test\n')
 
         paths = list(iglobpath(os.path.join(test_dir, '*.test'), ignore_case=False))
-        yield assert_equal, len(paths), 100
+        assert len(paths) == 100
         paths = list(iglobpath(os.path.join(test_dir, '*'), ignore_case=True))
-        yield assert_equal, len(paths), 101
+        assert len(paths) == 101
 
         paths = list(iglobpath(os.path.join(test_dir, '*.test'), ignore_case=False))
-        yield assert_equal, len(paths), 100
-        yield assert_equal, paths, sorted(paths)
+        assert len(paths) == 100
+        assert paths == sorted(paths)
         paths = list(iglobpath(os.path.join(test_dir, '*'), ignore_case=True))
-        yield assert_equal, len(paths), 101
-        yield assert_equal, paths, sorted(paths)
+        assert len(paths) == 101
+        assert paths == sorted(paths)
 
 
 def test_is_int():
