@@ -116,13 +116,15 @@ def dirty_version():
             base, N, sha = _version.strip().split('-')
         except ValueError: #on base release
             open('xonsh/dev.githash', 'w').close()
-            return
+            return False
     except subprocess.CalledProcessError:
-        return
+        return False
 
     replace_version(base, N)
     with open('xonsh/dev.githash', 'w') as f:
         f.write(sha)
+
+    return True
 
 
 def replace_version(base, N):
@@ -136,13 +138,24 @@ def replace_version(base, N):
         f.write(upd)
 
 
+def discard_changes():
+    """If we touch ``__init__.py``, discard changes after install"""
+    try:
+        _ = subprocess.check_output(['git',
+                                     'checkout',
+                                     '--',
+                                     'xonsh/__init__.py'])
+    except subprocess.CalledProcessError:
+        pass
+
+
 class xinstall(install):
     """Xonsh specialization of setuptools install class."""
     def run(self):
         clean_tables()
         build_tables()
         # add dirty version number
-        dirty_version()
+        dirty = dirty_version()
         # install Jupyter hook
         root = self.root if self.root else None
         prefix = self.prefix if self.prefix else None
@@ -153,6 +166,9 @@ class xinstall(install):
             traceback.print_exc()
             print('Installing Jupyter hook failed.')
         install.run(self)
+        if dirty:
+            discard_changes()
+
 
 
 class xsdist(sdist):
@@ -160,9 +176,10 @@ class xsdist(sdist):
     def make_release_tree(self, basedir, files):
         clean_tables()
         build_tables()
-        dirty_version()
+        dirty = dirty_version()
         sdist.make_release_tree(self, basedir, files)
-
+        if dirty:
+            discard_changes()
 
 
 #-----------------------------------------------------------------------------
@@ -194,8 +211,10 @@ if HAVE_SETUPTOOLS:
         def run(self):
             clean_tables()
             build_tables()
-            dirty_version()
+            dirty = dirty_version()
             develop.run(self)
+            if dirty:
+                discard_changes()
 
 
 def main():
