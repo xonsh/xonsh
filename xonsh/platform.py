@@ -131,18 +131,15 @@ def is_readline_available():
 
 @functools.lru_cache(1)
 def githash():
-    from xonsh import main
-    install_base = main.__file__.rsplit('/', 1)[0]
+    install_base = os.path.dirname(__file__)
     try:
         with open('{}/dev.githash'.format(install_base), 'r') as f:
-            hash = f.readlines()
-        if not hash:
-            hash = None
-        else:
-            hash = hash.pop()
+            sha = f.read().strip()
+        if not sha:
+            sha = None
     except FileNotFoundError:
-        hash = None
-    return hash
+        sha = None
+    return sha
 
 
 #

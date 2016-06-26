@@ -352,9 +352,8 @@ def _info(ns):
         ('on cygwin', ON_CYGWIN),
         ('is superuser', is_superuser()),
         ('default encoding', DEFAULT_ENCODING),
+        ('git SHA', githash())
         ])
-    if githash():
-        data.append(('git SHA', githash()))
     formatter = _xonfig_format_json if ns.json else _xonfig_format_human
     s = formatter(data)
     return s

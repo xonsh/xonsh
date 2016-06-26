@@ -112,12 +112,13 @@ def dirty_version():
     try:
         _version = subprocess.check_output(['git', 'describe', '--tags'])
         _version = _version.decode('ascii')
-        try:
-            base, N, sha = _version.strip().split('-')
-        except ValueError: #on base release
-            open('xonsh/dev.githash', 'w').close()
-            return False
     except subprocess.CalledProcessError:
+        return False
+
+    try:
+        base, N, sha = _version.strip().split('-')
+    except ValueError: #on base release
+        open('xonsh/dev.githash', 'w').close()
         return False
 
     replace_version(base, N)
