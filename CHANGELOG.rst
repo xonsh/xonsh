@@ -4,6 +4,208 @@ Xonsh Change Log
 
 .. current developments
 
+v0.4.2
+====================
+
+**Added:**
+
+* dev versions now display a ``devN`` counter at the end and ``xonfig info``
+  also displays the git sha of the current build
+
+
+**Changed:**
+
+* `prompt_toolkit` completion no longer automatically selects the first entry on first tab-press when completing multiple directories at once
+
+
+**Fixed:**
+
+* Sourcing foreign shells now allow fully capture environment variables that
+  contain newlines as long as they also don't contain equal signs.
+* Added scripts directory to MANIFEST.in
+
+
+
+
+v0.4.1
+====================
+
+**Fixed:**
+
+* ``setup.py`` will only amalgamate source files if ``amalgamate.py`` is
+  available. This fixes issues with installing from pip.
+
+
+
+
+v0.4.0
+====================
+
+**Added:**
+
+* A new class, ``xonsh.tools.EnvPath`` has been added. This class implements a
+  ``MutableSequence`` object and overrides the ``__getitem__`` method so that
+  when its entries are requested (either explicitly or implicitly), variable
+  and user expansion is performed, and relative paths are resolved.
+  ``EnvPath`` accepts objects (or lists of objects) of ``str``, ``bytes`` or
+  ``pathlib.Path`` types.
+* New amalgamate tool collapses modules inside of a package into a single
+  ``__amalgam__.py`` module. This tool glues together all of the code from the
+  modules in a package, finds and removes intra-package imports, makes all
+  non-package imports lazy, and adds hooks into the ``__init__.py``.
+  This helps makes initial imports of modules fast and decreases startup time.
+  Packages and sub-packages must be amalgamated separately.
+* New lazy and self-destructive module ``xonsh.lazyasd`` adds a suite of
+  classes for delayed creation of objects.
+
+    - A ``LazyObject`` won't be created until it has an attribute accessed.
+    - A ``LazyDict`` will load each value only when a key is accessed.
+    - A ``LazyBool`` will only be created when ``__bool__()`` is called.
+
+  Additionally, when fully loaded, the above objects will replace themselves
+  by name in the context that they were handed, thus derefenceing themselves.
+  This is useful for global variables that may be expensive to create,
+  should only be created once, and may not be used in any particular session.
+* New ``xon.sh`` script added for launching xonsh from a sh environment.
+  This should be used if the normal ``xonsh`` script does not work for
+  some reason.
+* Normal globbing is now available in Python mode via ``g````
+* Backticks were expanded to allow searching using arbitrary functions, via
+  ``@<func>````
+* ``xonsh.platform`` now has a new ``PATH_DEFAULT`` variable.
+* Tab completers can now raise ``StopIteration`` to prevent consideration of
+  remaining completers.
+* Added tab completer for the ``completer`` alias.
+* New ``Block`` and ``Functor`` context managers are now available as
+  part of the ``xonsh.contexts`` module.
+* ``Block`` provides support for turning a context body into a non-executing
+  list of string lines. This is implmement via a syntax tree transformation.
+  This is useful for creating remote execution tools that seek to prevent
+  local execution.
+* ``Functor`` is a subclass of the ``Block`` context manager that turns the
+  block into a callable object.  The function object is available via the
+  ``func()`` attribute.  However, the ``Functor`` instance is itself callable
+  and will dispatch to ``func()``.
+* New ``$VC_BRANCH_TIMEOUT`` environment variable is the time (in seconds)
+  of how long to spend attempting each individual version control branch
+  information command during ``$PROMPT`` formatting.  This allows for faster
+  prompt resolution and faster startup times.
+* New lazy methods added to CommandsCache allowing for testing and inspection
+  without the possibility of recomputing the cache.
+* ``!(command)`` is now usefully iterable, yielding lines of stdout
+* Added XonshCalledProcessError, which includes the relevant CompletedCommand.
+  Also handles differences between Py3.4 and 3.5 in CalledProcessError
+* Tab completion of paths now includes zsh-style path expansion (subsequence
+  matching), toggleable with ``$SUBSEQUENCE_PATH_COMPLETION``
+* Tab completion of paths now includes "fuzzy" matches that are accurate to
+  within a few characters, toggleable with ``$FUZZY_PATH_COMPLETION``
+* Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
+  the currently running script's path
+* Arguments '+' and '-' for the ``fg`` command (job control)
+* Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
+  the currently running script's path
+* ``!(command)`` is now usefully iterable, yielding lines of stdout
+* Added XonshCalledProcessError, which includes the relevant CompletedCommand.
+  Also handles differences between Py3.4 and 3.5 in CalledProcessError
+* XonshError and XonshCalledProcessError are now in builtins:
+
+  - ``history session``
+  - ``history xonsh``
+  - ``history all``
+  - ``history zsh``
+  - ``history bash``
+  - ``__xonsh_history__.show()``
+
+* New ``pathsep_to_set()`` and ``set_to_pathsep()`` functions convert to/from
+  ``os.pathsep`` separated strings to a set of strings.
+
+
+**Changed:**
+
+* Changed testing framework from nose to pytest
+* All ``PATH``-like environment variables are now stored in an ``EnvPath``
+  object, so that non-absolute paths or paths containing environment variables
+  can be resolved properly.
+* In ``VI_MODE``, the ``v`` key will enter character selection mode, not open
+  the editor.  ``Ctrl-X Ctrl-E`` will still open an editor in any mode
+* ``$XONSH_DEBUG`` will now supress amalgamted imports. This usually needs to be
+  set in the calling environment or prior to *any* xonsh imports.
+* Restuctured ``xonsh.platform`` to be fully lazy.
+* Restuctured ``xonsh.ansi_colors`` to be fully lazy.
+* Ensured the ``pygments`` and ``xonsh.pyghooks`` are not imported until
+  actually needed.
+* Yacc parser is now loaded in a background thread.
+* Cleaned up argument parsing in ``xonsh.main.premain`` by removing the
+  ``undo_args`` hack.
+* Now complains on invalid arguments.
+* ``Env`` now guarantees that the ``$PATH`` is available and mutable when
+  initialized.
+* On Windows the ``PROMPT`` environment variable is reset to `$P$G` before
+  sourcing ``*.bat`` files.
+* On Windows the ``PROMPT`` environment variable is reset to `$P$G` before starting
+  subprocesses. This prevents the unformatted xonsh ``PROMPT`` tempalte from showing up
+  when running batch files with ``ECHO ON```
+* ``@()`` now passes through functions as well as strings, which allows for the
+  use of anonymous aliases and aliases not explicitly added to the ``aliases``
+  mapping.
+* Functions in ``Execer`` now take ``transform`` kwarg instead of
+  ``wrap_subproc``.
+* Provide ``$XONSH_SOURCE`` for scripts in the environment variables pointing to
+  the currently running script's path
+* XonshError and XonshCalledProcessError are now in builtins
+* ``__repr__`` on the environment only shows a short representation of the
+  object instead of printing the whole environment dictionary
+* More informative prompt when configuring foreign shells in the wizard.
+* ``CommandsCache`` is now a mapping from command names to a tuple of
+  (executable locations, has alias flags). This enables faster lookup times.
+* ``locate_bin()`` now uses the ``CommandsCache``, rather than scanning the
+  ``$PATH`` itself.
+* ``$PATHEXT`` is now a set, rather than a list.
+* Ignore case and leading a quotes when sorting completions
+
+
+**Removed:**
+
+* The ``'console_scripts'`` option to setuptools has been removed. It was found
+  to cause slowdowns of over 150 ms on every startup.
+* Bash is no longer loaded by default as a foreign shell for initial
+  configuration. This was done to increase stock startup times. This
+  behaviour can be recovered by adding ``{"shell": "bash"}`` to your
+  ``"foreign_shells"`` in your config.json file. For more details,
+  see http://xon.sh/xonshconfig.html#foreign-shells
+* ``ensure_git()`` and ``ensure_hg()`` decorators removed.
+* ``call_hg_command()`` function removed.
+
+
+**Fixed:**
+
+* Issue where ``xonsh`` did not expand user and environment variables in
+  ``$PATH``, forcing the user to add absolute paths.
+* Fixed a problem with aliases not always beeing found.
+* Fixed issue where input was directed to the last process in a pipeline,
+  rather than the first.
+* Bug where xonfig wizard can't find ENV docs
+* Fixed ``xonsh.environ.locate_binary()`` to handle PATH variable are given as a tuple.
+* Fixed missing completions for ``cd`` and ```rmdir`` when directories had spaces
+  in their names.
+* Bug preventing `xonsh` executable being installed on macOS.
+* Strip leading space in commands passed using the "-c" switch
+* Fixed xonfig wizard failing on Windows due to colon in created filename.
+* Ensured that the prompt_toolkit shell functions, even without a ``completer``
+  attribute.
+* Fixed crash resulting from malformed ``$PROMPT`` or ``$TITLE``.
+* xonsh no longer backgrounds itself after every command on Cygwin.
+* Fixed an issue about ``os.killpg()`` on Cygwin which caused xonsh to crash
+  occasionally
+* Fix crash on startup when Bash Windows Subsystem for Linux is on the Path.
+* Fixed issue with setting and signaling process groups on Linux when the first
+  process is a function alias and has no pid.
+* Fixed ``_list_completers`` such that it does not throw a ValueError if no completer is registered.
+* Fixed ``_list_completers`` such that it does not throw an AttributeError if a completer has no docstring.
+* Bug that caused command line argument ``--config-path`` to be ignored.
+* Bug that caused xonsh to break on startup when prompt-toolkit < 1.0.0.
+
+
 v0.3.4
 ====================
 

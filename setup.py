@@ -7,6 +7,7 @@ from __future__ import print_function, unicode_literals
 import os
 import sys
 import json
+import subprocess
 
 try:
     from tempfile import TemporaryDirectory
@@ -48,6 +49,16 @@ def clean_tables():
 os.environ['XONSH_DEBUG'] = '1'
 from xonsh import __version__ as XONSH_VERSION
 
+def amalagamate_source():
+    """Amalgamtes source files."""
+    try:
+        import amalgamate
+    except ImportError:
+        print('Could not import amalgamate, skipping.', file=sys.stderr)
+        return
+    amalgamate.main(['amalgamate', '--debug=XONSH_DEBUG', 'xonsh'])
+
+
 def build_tables():
     """Build the lexer/parser modules."""
     print('Building lexer and parser tables.')
@@ -55,8 +66,7 @@ def build_tables():
     from xonsh.parser import Parser
     Parser(lexer_table='lexer_table', yacc_table='parser_table',
            outputdir='xonsh')
-    import amalgamate
-    amalgamate.main(['amalgamate', '--debug=XONSH_DEBUG', 'xonsh'])
+    amalagamate_source()
     sys.path.pop(0)
 
 
@@ -92,11 +102,61 @@ def install_jupyter_hook(prefix=None, root=None):
             d, 'xonsh', user=user, replace=True, prefix=prefix)
 
 
+def dirty_version():
+    """
+    If install/sdist is run from a git directory (not a conda install), add
+    a devN suffix to reported version number and write a gitignored file
+    that holds the git hash of the current state of the repo to be queried
+    by ``xonfig``
+    """
+    try:
+        _version = subprocess.check_output(['git', 'describe', '--tags'])
+        _version = _version.decode('ascii')
+    except subprocess.CalledProcessError:
+        return False
+
+    try:
+        base, N, sha = _version.strip().split('-')
+    except ValueError: #on base release
+        open('xonsh/dev.githash', 'w').close()
+        return False
+
+    replace_version(base, N)
+    with open('xonsh/dev.githash', 'w') as f:
+        f.write(sha)
+
+    return True
+
+
+def replace_version(base, N):
+    """Replace version in `__init__.py` with devN suffix"""
+    with open('xonsh/__init__.py', 'r') as f:
+        raw = f.read()
+    lines = raw.splitlines()
+    lines[0] = "__version__ = '{}.dev{}'".format(base, N)
+    upd = '\n'.join(lines) + '\n'
+    with open('xonsh/__init__.py', 'w') as f:
+        f.write(upd)
+
+
+def discard_changes():
+    """If we touch ``__init__.py``, discard changes after install"""
+    try:
+        _ = subprocess.check_output(['git',
+                                     'checkout',
+                                     '--',
+                                     'xonsh/__init__.py'])
+    except subprocess.CalledProcessError:
+        pass
+
+
 class xinstall(install):
     """Xonsh specialization of setuptools install class."""
     def run(self):
         clean_tables()
         build_tables()
+        # add dirty version number
+        dirty = dirty_version()
         # install Jupyter hook
         root = self.root if self.root else None
         prefix = self.prefix if self.prefix else None
@@ -107,6 +167,9 @@ class xinstall(install):
             traceback.print_exc()
             print('Installing Jupyter hook failed.')
         install.run(self)
+        if dirty:
+            discard_changes()
+
 
 
 class xsdist(sdist):
@@ -114,7 +177,10 @@ class xsdist(sdist):
     def make_release_tree(self, basedir, files):
         clean_tables()
         build_tables()
+        dirty = dirty_version()
         sdist.make_release_tree(self, basedir, files)
+        if dirty:
+            discard_changes()
 
 
 #-----------------------------------------------------------------------------
@@ -146,7 +212,10 @@ if HAVE_SETUPTOOLS:
         def run(self):
             clean_tables()
             build_tables()
+            dirty = dirty_version()
             develop.run(self)
+            if dirty:
+                discard_changes()
 
 
 def main():
@@ -183,7 +252,7 @@ def main():
         packages=['xonsh', 'xonsh.ply', 'xonsh.ptk', 'xonsh.parsers',
                   'xonsh.xoreutils', 'xontrib', 'xonsh.completers'],
         package_dir={'xonsh': 'xonsh', 'xontrib': 'xontrib'},
-        package_data={'xonsh': ['*.json'], 'xontrib': ['*.xsh']},
+        package_data={'xonsh': ['*.json', '*.githash'], 'xontrib': ['*.xsh']},
         cmdclass=cmdclass,
         scripts=scripts,
         )

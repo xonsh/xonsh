@@ -1,9 +1,9 @@
-version: 0.3.4.{build}
+version: 0.4.2.{build}
 os: Windows Server 2012 R2
 install:
-- C:\Python35\Scripts\pip install ply pyreadline nose pygments prompt_toolkit
+- C:\Python35\Scripts\pip install ply pyreadline pytest pygments prompt_toolkit
 build_script:
 - C:\Python35\python setup.py install
 test_script:
-- C:\Python35\Scripts\nosetests -q
+- C:\Python35\Scripts\py.test
 

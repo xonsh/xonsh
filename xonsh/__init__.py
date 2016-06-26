@@ -1,4 +1,4 @@
-__version__ = '0.3.4'
+__version__ = '0.4.2'
 
 # amalgamate exclude jupyter_kernel parser_table parser_test_table pyghooks
 # amalgamate exclude winutils wizard
@@ -57,6 +57,8 @@ else:
         _sys.modules['xonsh.proc'] = __amalgam__
         xontribs = __amalgam__
         _sys.modules['xonsh.xontribs'] = __amalgam__
+        commands_cache = __amalgam__
+        _sys.modules['xonsh.commands_cache'] = __amalgam__
         environ = __amalgam__
         _sys.modules['xonsh.environ'] = __amalgam__
         history = __amalgam__

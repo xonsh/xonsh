@@ -81,7 +81,7 @@ def pygments_version():
 @functools.lru_cache(1)
 def has_prompt_toolkit():
     """ Tests if the `prompt_toolkit` is available. """
-    spec = importlib.util.find_spec('pygments')
+    spec = importlib.util.find_spec('prompt_toolkit')
     return (spec is not None)
 
 
@@ -123,6 +123,23 @@ def is_readline_available():
     """Checks if readline is available to import."""
     spec = importlib.util.find_spec('readline')
     return (spec is not None)
+
+
+#
+# Dev release info
+#
+
+@functools.lru_cache(1)
+def githash():
+    install_base = os.path.dirname(__file__)
+    try:
+        with open('{}/dev.githash'.format(install_base), 'r') as f:
+            sha = f.read().strip()
+        if not sha:
+            sha = None
+    except FileNotFoundError:
+        sha = None
+    return sha
 
 
 #
