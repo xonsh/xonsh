@@ -126,6 +126,23 @@ def is_readline_available():
 
 
 #
+# Dev release info
+#
+
+@functools.lru_cache(1)
+def githash():
+    install_base = os.path.dirname(__file__)
+    try:
+        with open('{}/dev.githash'.format(install_base), 'r') as f:
+            sha = f.read().strip()
+        if not sha:
+            sha = None
+    except FileNotFoundError:
+        sha = None
+    return sha
+
+
+#
 # Encoding
 #
 
