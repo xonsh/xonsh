@@ -1676,40 +1676,44 @@ def expand_case_matching(s):
     return ''.join(t)
 
 
-def globpath(s, ignore_case=False, return_empty=False):
+def globpath(s, ignore_case=False, return_empty=False, sort_result=True):
     """Simple wrapper around glob that also expands home and env vars."""
-    o, s = _iglobpath(s, ignore_case=ignore_case)
+    o, s = _iglobpath(s, ignore_case=ignore_case, sort_result=sort_result)
     o = list(o)
     no_match = [] if return_empty else [s]
     return o if len(o) != 0 else no_match
 
 
-def _iglobpath(s, ignore_case=False):
+def _iglobpath(s, ignore_case=False, sort_result=True):
     s = builtins.__xonsh_expand_path__(s)
-    glob_sorted = builtins.__xonsh_env__.get('GLOB_SORTED')
+
     if ignore_case:
         s = expand_case_matching(s)
+
     if sys.version_info > (3, 5):
         if '**' in s and '**/*' not in s:
             s = s.replace('**', '**/*')
+
         # `recursive` is only a 3.5+ kwarg.
-        if glob_sorted:
+        if sort_result:
             paths = glob.glob(s, recursive=True)
             paths.sort()
             paths = iter(paths)
         else:
             paths = glob.iglob(s, recursive=True)
+
         return paths, s
     else:
-        if glob_sorted:
+        if sort_result:
             paths = glob.glob(s)
             paths.sort()
             paths = iter(paths)
         else:
             paths = glob.iglob(s)
+
         return paths, s
 
 
-def iglobpath(s, ignore_case=False):
+def iglobpath(s, ignore_case=False, sort_result=True):
     """Simple wrapper around iglob that also expands home and env vars."""
-    return _iglobpath(s, ignore_case)[0]
+    return _iglobpath(s, ignore_case=ignore_case, sort_result=sort_result)[0]

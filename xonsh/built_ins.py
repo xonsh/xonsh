@@ -139,7 +139,8 @@ def regexsearch(s):
 
 def globsearch(s):
     csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
-    return globpath(s, ignore_case=(not csc), return_empty=True)
+    glob_sorted = builtins.__xonsh_env__.get('GLOB_SORTED')
+    return globpath(s, ignore_case=(not csc), return_empty=True, sort_result=glob_sorted)
 
 
 def pathsearch(func, s, pymode=False):

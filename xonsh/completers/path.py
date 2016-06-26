@@ -105,6 +105,7 @@ def _add_cdpaths(paths, prefix):
     """Completes current prefix using CDPATH"""
     env = builtins.__xonsh_env__
     csc = env.get('CASE_SENSITIVE_COMPLETIONS')
+    glob_sorted = builtins.__xonsh_env__.get('GLOB_SORTED')
     for cdp in env.get('CDPATH'):
         test_glob = os.path.join(cdp, prefix) + '*'
         for s in iglobpath(test_glob, ignore_case=(not csc)):
@@ -222,6 +223,7 @@ def _subsequence_match_iter(ref, typed):
 
 def _expand_one(sofar, nextone, csc):
     out = set()
+    glob_sorted = builtins.__xonsh_env__.get('GLOB_SORTED')
     for i in sofar:
         _glob = os.path.join(_joinpath(i), '*') if i is not None else '*'
         for j in iglobpath(_glob):
@@ -247,6 +249,7 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
     paths = set()
     env = builtins.__xonsh_env__
     csc = env.get('CASE_SENSITIVE_COMPLETIONS')
+    glob_sorted = builtins.__xonsh_env__.get('GLOB_SORTED')
     for s in iglobpath(prefix + '*', ignore_case=(not csc)):
         paths.add(s)
     if len(paths) == 0 and env.get('SUBSEQUENCE_PATH_COMPLETION'):
