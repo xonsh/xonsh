@@ -17,30 +17,32 @@ Implementations:
 * indent()
 
 """
-import os
-import re
-import sys
-import ast
-import glob
-import string
-import ctypes
 import builtins
-import pathlib
-import warnings
-import functools
-import threading
-import traceback
-import subprocess
 import collections
 import collections.abc as abc
+import ctypes
+import functools
+import glob
+import os
+import pathlib
+import re
+import string
+import subprocess
+import sys
+import threading
+import traceback
+import warnings
 from contextlib import contextmanager
 from subprocess import CalledProcessError
 
-# adding further imports from xonsh modules is discouraged to avoid cirular
+# adding further imports from xonsh modules is discouraged to avoid circular
 # dependencies
 from xonsh.lazyasd import LazyObject, LazyDict
-from xonsh.platform import (has_prompt_toolkit, scandir,
-    DEFAULT_ENCODING, ON_LINUX, ON_WINDOWS, PYTHON_VERSION_INFO)
+from xonsh.platform import (
+    has_prompt_toolkit, scandir,
+    DEFAULT_ENCODING, ON_LINUX, ON_WINDOWS, PYTHON_VERSION_INFO,
+)
+
 
 @functools.lru_cache(1)
 def is_superuser():
@@ -118,7 +120,7 @@ def decode_bytes(path):
     env = getattr(builtins, '__xonsh_env__', os.environ)
     enc = env.get('XONSH_ENCODING', DEFAULT_ENCODING)
     return path.decode(encoding=enc,
-                       errors=env.get('XONSH_ENCODING_ERRORS'))
+                       errors=env.get('XONSH_ENCODING_ERRORS') or 'strict')
 
 
 class EnvPath(collections.MutableSequence):
@@ -583,10 +585,15 @@ def suggest_commands(cmd, env, aliases):
 
 def print_exception(msg=None):
     """Print exceptions with/without traceback."""
-    env = getattr(builtins, '__xonsh_env__', os.environ)
+    env = getattr(builtins, '__xonsh_env__', None)
     # flags indicating whether the traceback options have been manually set
-    manually_set_trace = env.is_manually_set('XONSH_SHOW_TRACEBACK')
-    manually_set_logfile = env.is_manually_set('XONSH_TRACEBACK_LOGFILE')
+    if env is None:
+        env = os.environ
+        manually_set_trace = 'XONSH_SHOW_TRACEBACK' in env
+        manually_set_logfile ='XONSH_TRACEBACK_LOGFILE' in env
+    else:
+        manually_set_trace = env.is_manually_set('XONSH_SHOW_TRACEBACK')
+        manually_set_logfile = env.is_manually_set('XONSH_TRACEBACK_LOGFILE')
     if (not manually_set_trace) and (not manually_set_logfile):
         # Notify about the traceback output possibility if neither of
         # the two options have been manually set
@@ -604,7 +611,6 @@ def print_exception(msg=None):
             sys.stderr.write('xonsh: To log full traceback to a file set: '
                              '$XONSH_TRACEBACK_LOGFILE = <filename>\n')
         traceback.print_exc()
-
     # additionally, check if a file for traceback logging has been
     # specified and convert to a proper option if needed
     log_file = env.get('XONSH_TRACEBACK_LOGFILE', None)
@@ -1546,101 +1552,12 @@ def expanduser_abs_path(inp):
     return os.path.abspath(os.path.expanduser(inp))
 
 
-class CommandsCache(abc.Mapping):
-    """A lazy cache representing the commands available on the file system.
-    The keys are the command names and the values a tuple of (loc, has_alias)
-    where loc is either a str pointing to the executable on the file system or
-    None (if no executable exists) and has_alias is a boolean flag for whether
-    the command has an alias.
-    """
-
-    def __init__(self):
-        self._cmds_cache = {}
-        self._path_checksum = None
-        self._alias_checksum = None
-        self._path_mtime = -1
-
-    def __contains__(self, key):
-        return key in self.all_commands
-
-    def __iter__(self):
-        return iter(self.all_commands)
-
-    def __len__(self):
-        return len(self.all_commands)
-
-    def __getitem__(self, key):
-        return self.all_commands[key]
-
-    @property
-    def all_commands(self):
-        paths = builtins.__xonsh_env__.get('PATH', [])
-        pathset = frozenset(x for x in paths if os.path.isdir(x))
-        # did PATH change?
-        path_hash = hash(pathset)
-        cache_valid = path_hash == self._path_checksum
-        self._path_checksum = path_hash
-        # did aliases change?
-        alss = getattr(builtins, 'aliases', set())
-        al_hash = hash(frozenset(alss))
-        cache_valid = cache_valid and al_hash == self._alias_checksum
-        self._alias_checksum = al_hash
-        # did the contents of any directory in PATH change?
-        max_mtime = 0
-        for path in pathset:
-            mtime = os.stat(path).st_mtime
-            if mtime > max_mtime:
-                max_mtime = mtime
-        cache_valid = cache_valid and (max_mtime <= self._path_mtime)
-        self._path_mtime = max_mtime
-        if cache_valid:
-            return self._cmds_cache
-        allcmds = {}
-        for path in reversed(paths):
-            # iterate backwards so that entries at the front of PATH overwrite
-            # entries at the back.
-            for cmd in executables_in(path):
-                key = cmd.upper() if ON_WINDOWS else cmd
-                allcmds[key] = (os.path.join(path, cmd), cmd in alss)
-        only_alias = (None, True)
-        for cmd in alss:
-            if cmd not in allcmds:
-                allcmds[cmd] = only_alias
-        self._cmds_cache = allcmds
-        return allcmds
-
-    def lazyin(self, value):
-        """Checks if the value is in the current cache without the potential to
-        update the cache. It just says whether the value is known *now*. This
-        may not reflect precisely what is on the $PATH.
-        """
-        return value in self._cmds_cache
-
-    def lazyiter(self):
-        """Returns an iterator over the current cache contents without the
-        potential to update the cache. This may not reflect what is on the
-        $PATH.
-        """
-        return iter(self._cmds_cache)
-
-    def lazylen(self):
-        """Returns the length of the current cache contents without the
-        potential to update the cache. This may not reflect precicesly
-        what is on the $PATH.
-        """
-        return len(self._cmds_cache)
-
-    def lazyget(self, key, default=None):
-        """A lazy value getter."""
-        return self._cmds_cache.get(key, default)
-
-
 WINDOWS_DRIVE_MATCHER = LazyObject(lambda: re.compile(r'^\w:'),
                                    globals(), 'WINDOWS_DRIVE_MATCHER')
 
 
 def expand_case_matching(s):
-    """Expands a string to a case insenstive globable string."""
+    """Expands a string to a case insensitive globable string."""
     t = []
     openers = {'[', '{'}
     closers = {']', '}'}

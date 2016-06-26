@@ -52,9 +52,11 @@ For those of you who want the gritty details.
     tools
     platform
     lazyjson
+    lazyasd
     teepty
     openpy
     foreign_shells
+    commands_cache
     tracer
     main
     pyghooks
