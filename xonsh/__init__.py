@@ -83,6 +83,8 @@ else:
         _sys.modules['xonsh.shell'] = __amalgam__
         main = __amalgam__
         _sys.modules['xonsh.main'] = __amalgam__
+        debugmain = __amalgam__
+        _sys.modules['xonsh.debugmain'] = __amalgam__
         del __amalgam__
     except ImportError:
         pass
