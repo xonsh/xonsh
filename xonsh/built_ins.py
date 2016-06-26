@@ -233,11 +233,6 @@ def get_script_subproc_command(fname, args):
     return interp + [fname] + args
 
 
-def _subproc_pre():
-    os.setpgrp()
-    signal.signal(signal.SIGTSTP, lambda n, f: signal.pause())
-
-
 _REDIR_NAME = "(o(?:ut)?|e(?:rr)?|a(?:ll)?|&?\d?)"
 _REDIR_REGEX = re.compile("{r}(>?>|<){r}$".format(r=_REDIR_NAME))
 _MODES = {'>>': 'a', '>': 'w', '<': 'r'}
@@ -356,6 +351,7 @@ def run_subproc(cmds, captured=False):
     if cmds[-1] == '&':
         background = True
         cmds = cmds[:-1]
+    _pipeline_group = None
     write_target = None
     last_cmd = len(cmds) - 1
     procs = []
@@ -486,6 +482,12 @@ def run_subproc(cmds, captured=False):
             cls = TeePTYProc if usetee else Popen
             subproc_kwargs = {}
             if ON_POSIX and cls is Popen:
+                def _subproc_pre():
+                    if _pipeline_group is None:
+                        os.setpgrp()
+                    else:
+                        os.setpgid(0, _pipeline_group)
+                    signal.signal(signal.SIGTSTP, lambda n, f: signal.pause())
                 subproc_kwargs['preexec_fn'] = _subproc_pre
             env = ENV.detype()
             if ON_WINDOWS:
@@ -512,6 +514,8 @@ def run_subproc(cmds, captured=False):
                 raise XonshError(e)
         procs.append(proc)
         prev_proc = proc
+        if ON_POSIX and cls is Popen and _pipeline_group is None:
+            _pipeline_group = prev_proc.pid
     if not prev_is_proxy:
         add_job({
             'cmds': cmds,
