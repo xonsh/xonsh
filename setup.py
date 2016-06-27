@@ -112,7 +112,7 @@ def dirty_version():
     try:
         _version = subprocess.check_output(['git', 'describe', '--tags'])
         _version = _version.decode('ascii')
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         return False
 
     try:
