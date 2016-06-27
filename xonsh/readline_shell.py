@@ -43,7 +43,9 @@ RL_DONE = None
 RL_VARIABLE_VALUE = None
 _RL_STATE_DONE = 0x1000000
 _RL_STATE_ISEARCH = 0x0000080
-_RL_PREV_CASE_SENSITIVE_COMPLETIONS = None
+
+_RL_PREV_CASE_SENSITIVE_COMPLETIONS = 'to-be-set'
+
 
 def setup_readline():
     """Sets up the readline module and completion suppression, if available."""
