@@ -19,6 +19,7 @@ xonsh.egg-info/
 docs/_build/
 docs/envvarsbody
 docs/xontribsbody
+xonsh/dev.githash
 
 # temporary files from vim and emacs
 *~

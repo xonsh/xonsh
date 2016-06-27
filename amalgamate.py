@@ -150,7 +150,7 @@ class _LazyModule(_ModuleType):
             pkg = dct['pkg']
             asname = dct['asname']
             if asname is None:
-                glbs[pkg] = _modules[pkg]
+                glbs[pkg] = m = _modules[pkg]
             else:
                 glbs[asname] = m
             dct['loaded'] = True

@@ -4,6 +4,29 @@ Xonsh Change Log
 
 .. current developments
 
+v0.4.2
+====================
+
+**Added:**
+
+* dev versions now display a ``devN`` counter at the end and ``xonfig info``
+  also displays the git sha of the current build
+
+
+**Changed:**
+
+* `prompt_toolkit` completion no longer automatically selects the first entry on first tab-press when completing multiple directories at once
+
+
+**Fixed:**
+
+* Sourcing foreign shells now allow fully capture environment variables that
+  contain newlines as long as they also don't contain equal signs.
+* Added scripts directory to MANIFEST.in
+
+
+
+
 v0.4.1
 ====================
 
