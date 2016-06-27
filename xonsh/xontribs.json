@@ -83,6 +83,12 @@
    "install": {
     "pip": "pip install xonsh-pacman-tabcomplete"
    }
+  "xonsh-autoxsh": {
+   "license": "GPLv3",
+   "url": "https://github.com/Granitas/xonsh-autoxsh",
+   "install": {
+    "pip": "pip install xonsh-autoxsh"
+   }
   }
  }
 }
