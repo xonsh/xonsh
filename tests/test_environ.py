@@ -7,10 +7,12 @@ import builtins
 from tempfile import TemporaryDirectory
 from xonsh.tools import ON_WINDOWS
 
+import pytest
+
 from xonsh.environ import (Env, format_prompt, load_static_config,
     locate_binary, partial_format_prompt)
 
-from tools import mock_xonsh_env
+from tools import skip_if_on_unix
 
 def test_env_normal():
     env = Env(VAR='wakka')
@@ -143,41 +145,34 @@ def test_swap():
     assert 'VAR2' not in env
     assert 'VAR3' not in env
 
-def check_load_static_config(s, exp, loaded):
+
+@pytest.mark.parametrize('s, exp, loaded',[
+    (b'{"best": "awash"}', {'best': 'awash'}, True), # works
+    (b'["best", "awash"]', {}, False), # fail
+    (b'{"best": "awash"', {}, False) # json fail
+])
+def test_load_static_config(s, exp, loaded, tmpdir, xonsh_builtins):
     env = Env({'XONSH_SHOW_TRACEBACK': False})
-    f = tempfile.NamedTemporaryFile(delete=False)
-    with mock_xonsh_env(env):
-        f.write(s)
-        f.close()
-        conf = load_static_config(env, f.name)
-    os.unlink(f.name)
+    xonsh_builtins.__xonsh_env__ = env
+    f = tmpdir.join('test_static_config')
+    f.write(s)
+    conf = load_static_config(env, str(f))
     assert exp == conf
     assert env['LOADED_CONFIG'] == loaded
 
-def test_load_static_config_works():
-    s = b'{"best": "awash"}'
-    check_load_static_config(s, {'best': 'awash'}, True)
 
-def test_load_static_config_type_fail():
-    s = b'["best", "awash"]'
-    check_load_static_config(s, {}, False)
-
-def test_load_static_config_json_fail():
-    s = b'{"best": "awash"'
-    check_load_static_config(s, {}, False)
-
-if ON_WINDOWS:
-    def test_locate_binary_on_windows():
-        files = ('file1.exe', 'FILE2.BAT', 'file3.txt')
-        with TemporaryDirectory() as tmpdir:
-            for fname in files:
-                fpath = os.path.join(tmpdir, fname)
-                with open(fpath, 'w') as f:
-                    f.write(fpath)
-            env = Env({'PATH': [tmpdir], 'PATHEXT': ['.COM', '.EXE', '.BAT']})
-            with mock_xonsh_env(env):
-                assert ( locate_binary('file1') == os.path.join(tmpdir,'file1.exe'))
-                assert ( locate_binary('file1.exe') == os.path.join(tmpdir,'file1.exe'))
-                assert ( locate_binary('file2') == os.path.join(tmpdir,'FILE2.BAT'))
-                assert ( locate_binary('file2.bat') == os.path.join(tmpdir,'FILE2.BAT'))
-                assert ( locate_binary('file3') is None)
+@skip_if_on_unix
+def test_locate_binary_on_windows():
+    files = ('file1.exe', 'FILE2.BAT', 'file3.txt')
+    with TemporaryDirectory() as tmpdir:
+        for fname in files:
+            fpath = os.path.join(tmpdir, fname)
+            with open(fpath, 'w') as f:
+                f.write(fpath)
+        env = Env({'PATH': [tmpdir], 'PATHEXT': ['.COM', '.EXE', '.BAT']})
+        with mock_xonsh_env(env):
+            assert ( locate_binary('file1') == os.path.join(tmpdir,'file1.exe'))
+            assert ( locate_binary('file1.exe') == os.path.join(tmpdir,'file1.exe'))
+            assert ( locate_binary('file2') == os.path.join(tmpdir,'FILE2.BAT'))
+            assert ( locate_binary('file2.bat') == os.path.join(tmpdir,'FILE2.BAT'))
+            assert ( locate_binary('file3') is None)

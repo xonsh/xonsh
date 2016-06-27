@@ -30,11 +30,11 @@ ON_WINDOWS = (platform.system() == 'Windows')
 skip_if_py34 = pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5,
                                    reason="Py3.5+ only test")
 
-skip_if_py35plus = pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5,
-                               reason="Py3.5+ only test")
 
 skip_if_on_windows = pytest.mark.skipif(ON_WINDOWS, reason='Unix stuff')
 
+
+skip_if_on_unix = pytest.mark.skipif(not ON_WINDOWS, reason='Windows stuff')
 
 
 def sp(cmd):
