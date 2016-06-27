@@ -121,6 +121,12 @@ def setup_readline():
             # this seems to fail with libedit
             print_exception('xonsh: could not load readline default init file.')
 
+    # handle case sensitive, see Github issue #1342 for details
+    if env.get('CASE_SENSITIVE_COMPLETIONS'):
+        readline.parse_and_bind("set completion-ignore-case off")
+    else:
+        readline.parse_and_bind("set completion-ignore-case on")
+
 
 def teardown_readline():
     """Tears down up the readline module, if available."""
