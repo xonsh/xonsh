@@ -3,7 +3,7 @@ package:
   version: {{ GIT_DESCRIBE_TAG + '.dev' + GIT_DESCRIBE_NUMBER }}
 
 source:
-   path: ../
+   git_url: ../
 
 build:
   script: python setup.py install --single-version-externally-managed --record=record.txt
