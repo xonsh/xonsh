@@ -26,7 +26,7 @@ from xonsh.base_shell import BaseShell
 from xonsh.ansi_colors import partial_color_format, color_style_names, color_style
 from xonsh.environ import partial_format_prompt, multiline_prompt
 from xonsh.tools import print_exception
-from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS, ON_CYGWIN, ON_DARWIN
+from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_DARWIN
 
 pygments = LazyObject(lambda: importlib.import_module('pygments'),
                       globals(), 'pygments')
@@ -43,6 +43,9 @@ RL_DONE = None
 RL_VARIABLE_VALUE = None
 _RL_STATE_DONE = 0x1000000
 _RL_STATE_ISEARCH = 0x0000080
+
+_RL_PREV_CASE_SENSITIVE_COMPLETIONS = 'to-be-set'
+
 
 def setup_readline():
     """Sets up the readline module and completion suppression, if available."""
@@ -128,6 +131,20 @@ def teardown_readline():
         import readline
     except (ImportError, TypeError):
         return
+
+
+def _rebind_case_sensitive_completions():
+    # handle case sensitive, see Github issue #1342 for details
+    global _RL_PREV_CASE_SENSITIVE_COMPLETIONS
+    env = builtins.__xonsh_env__
+    case_sensitive = env.get('CASE_SENSITIVE_COMPLETIONS')
+    if case_sensitive is _RL_PREV_CASE_SENSITIVE_COMPLETIONS:
+        return
+    if case_sensitive:
+        readline.parse_and_bind("set completion-ignore-case off")
+    else:
+        readline.parse_and_bind("set completion-ignore-case on")
+    _RL_PREV_CASE_SENSITIVE_COMPLETIONS = case_sensitive
 
 
 def fix_readline_state_after_ctrl_c():
@@ -235,6 +252,8 @@ class ReadlineShell(BaseShell, Cmd):
     def completedefault(self, text, line, begidx, endidx):
         """Implements tab-completion for text."""
         rl_completion_suppress_append()  # this needs to be called each time
+        _rebind_case_sensitive_completions()
+
         mline = line.partition(' ')[2]
         offs = len(mline) - len(text)
         if self.completer is None:
