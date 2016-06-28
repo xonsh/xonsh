@@ -339,7 +339,7 @@ class AWitchAWitch(Action):
 
     def __call__(self, parser, namespace, values, option_string=None):
         import webbrowser
-        webbrowser.open('https://github.com/scopatz/xonsh/commit/f49b400')
+        webbrowser.open('https://github.com/xonsh/xonsh/commit/f49b400')
         parser.exit()
 
 
