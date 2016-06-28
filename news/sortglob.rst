@@ -1,8 +1,10 @@
-**Added:** None
-* The results of glob expressions are sorted if `$GLOB_SORTED` is set.
+**Added:**
 
-**Changed:** None
-* `GLOB_SORTED` is enabled by default.
+* The results of glob expressions are sorted if ``$GLOB_SORTED`` is set.
+
+**Changed:**
+
+* ``GLOB_SORTED`` is enabled by default.
 
 **Deprecated:** None
 

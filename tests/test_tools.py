@@ -28,8 +28,6 @@ from xonsh.commands_cache import CommandsCache
 
 from tools import mock_xonsh_env
 
-from tools import mock_xonsh_env
-
 LEXER = Lexer()
 LEXER.build()
 

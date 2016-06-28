@@ -105,10 +105,10 @@ def _add_cdpaths(paths, prefix):
     """Completes current prefix using CDPATH"""
     env = builtins.__xonsh_env__
     csc = env.get('CASE_SENSITIVE_COMPLETIONS')
-    glob_sorted = builtins.__xonsh_env__.get('GLOB_SORTED')
+    glob_sorted = env.get('GLOB_SORTED')
     for cdp in env.get('CDPATH'):
         test_glob = os.path.join(cdp, prefix) + '*'
-        for s in iglobpath(test_glob, ignore_case=(not csc)):
+        for s in iglobpath(test_glob, sort_result=glob_sorted, ignore_case=(not csc)):
             if os.path.isdir(s):
                 paths.add(os.path.basename(s))
 
