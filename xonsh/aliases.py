@@ -348,7 +348,10 @@ def exec_(args, stdin=None):
     if not args:
         return None, None, 0
     from xonsh.built_ins import subproc_captured_object
-    cc = subproc_captured_object(args)
+    try:
+        cc = subproc_captured_object(args)
+    except XonshError as e:
+        return '', '{}\n'.format(e), 1
     return cc.stdout, cc.stderr, cc.returncode
 
 
