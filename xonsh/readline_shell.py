@@ -133,6 +133,20 @@ def teardown_readline():
         return
 
 
+def _rebind_case_sensitive_completions():
+    # handle case sensitive, see Github issue #1342 for details
+    global _RL_PREV_CASE_SENSITIVE_COMPLETIONS
+    env = builtins.__xonsh_env__
+    case_sensitive = env.get('CASE_SENSITIVE_COMPLETIONS')
+    if case_sensitive is _RL_PREV_CASE_SENSITIVE_COMPLETIONS:
+        return
+    if case_sensitive:
+        readline.parse_and_bind("set completion-ignore-case off")
+    else:
+        readline.parse_and_bind("set completion-ignore-case on")
+    _RL_PREV_CASE_SENSITIVE_COMPLETIONS = case_sensitive
+
+
 def fix_readline_state_after_ctrl_c():
     """
     Fix to allow Ctrl-C to exit reverse-i-search.
@@ -235,23 +249,10 @@ class ReadlineShell(BaseShell, Cmd):
         """Overridden to no-op."""
         return '', line, line
 
-    def _rebind_case_sensitive_completions(self):
-        # handle case sensitive, see Github issue #1342 for details
-        global _RL_PREV_CASE_SENSITIVE_COMPLETIONS
-        env = builtins.__xonsh_env__
-        case_sensitive = env.get('CASE_SENSITIVE_COMPLETIONS')
-        if case_sensitive == _RL_PREV_CASE_SENSITIVE_COMPLETIONS:
-            return
-        if case_sensitive:
-            readline.parse_and_bind("set completion-ignore-case off")
-        else:
-            readline.parse_and_bind("set completion-ignore-case on")
-        _RL_PREV_CASE_SENSITIVE_COMPLETIONS = case_sensitive
-
     def completedefault(self, text, line, begidx, endidx):
         """Implements tab-completion for text."""
         rl_completion_suppress_append()  # this needs to be called each time
-        self._rebind_case_sensitive_completions()
+        _rebind_case_sensitive_completions()
 
         mline = line.partition(' ')[2]
         offs = len(mline) - len(text)
