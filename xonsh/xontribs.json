@@ -45,6 +45,11 @@
   "url": "https://github.com/gforsyth/xonsh-pacman-tabcomplete",
   "description": ["Adds tabcomplete functionality to pacman inside of xonsh."]
  },
+ {"name": "scrapy_tabcomplete",
+  "package": "xonsh-scrapy-tabcomplete",
+  "url": "https://github.com/Granitas/xonsh-scrapy-tabcomplete",
+  "description": ["Adds tabcomplete functionality to scrapy inside of xonsh."]
+ },
  {"name": "autoxsh",
   "package": "xonsh-autoxsh",
   "url": "https://github.com/Granitas/xonsh-autoxsh",
@@ -89,6 +94,13 @@
    "install": {
     "pip": "pip install xonsh-pacman-tabcomplete"
    }
+   },
+  "xonsh-scrapy-tabcomplete": {
+   "license": "GPLv3",
+   "url": "https://github.com/Granitas/xonsh-scrapy-tabcomplete",
+   "install": {
+    "pip": "pip install xonsh-scrapy-tabcomplete"
+    }
    },
   "xonsh-autoxsh": {
    "license": "GPLv3",
