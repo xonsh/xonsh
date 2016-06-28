@@ -44,6 +44,12 @@
   "package": "xonsh-pacman-tabcomplete",
   "url": "https://github.com/gforsyth/xonsh-pacman-tabcomplete",
   "description": ["Adds tabcomplete functionality to pacman inside of xonsh."]
+ },
+ {"name": "autoxsh",
+  "package": "xonsh-autoxsh",
+  "url": "https://github.com/Granitas/xonsh-autoxsh",
+  "description": ["Adds automatic execution of xonsh script files called",
+	          "`.autoxsh` when enterting a directory with `cd` function"]
  }
  ],
  "packages": {
@@ -82,7 +88,7 @@
    "url": "https://github.com/gforsyth/xonsh-pacman-tabcomplete",
    "install": {
     "pip": "pip install xonsh-pacman-tabcomplete"
-   }
+   },
   "xonsh-autoxsh": {
    "license": "GPLv3",
    "url": "https://github.com/Granitas/xonsh-autoxsh",
