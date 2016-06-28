@@ -187,7 +187,8 @@ class BackgroundModuleProxy(types.ModuleType):
             }
 
     def __getattribute__(self, name):
-        if name == '__dct__':
+        passthrough = frozenset({'__dct__','__class__', '__spec__'})
+        if name in passthrough:
             return super().__getattribute__(name)
         dct = self.__dct__
         modname = dct['modname']
@@ -224,7 +225,7 @@ class BackgroundModuleLoader(threading.Thread):
             i += 1
         # now import pkg_resources properly
         modname = importlib.util.resolve_name(self.name, self.package)
-        if isinstance(sys.modules[modname], PkgResourcesProxy):
+        if isinstance(sys.modules[modname], BackgroundModuleProxy):
             del sys.modules[modname]
         mod = importlib.import_module(self.name, package=self.package)
         for targname, varname in self.replacements.items():

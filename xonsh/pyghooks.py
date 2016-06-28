@@ -10,8 +10,9 @@ from collections import ChainMap
 from collections.abc import MutableMapping
 
 # must come before pygments imports
-from xonsh.bg_pkg_resources import load_pkg_resources_in_background
-load_pkg_resources_in_background()
+from xonsh.lazyasd import load_module_in_background
+load_module_in_background('pkg_resources', debug='XONSH_DEBUG',
+    replacements={'pygments.plugin': 'pkg_resources'})
 
 from pygments.lexer import inherit, bygroups, using, this
 from pygments.lexers.shell import BashLexer
