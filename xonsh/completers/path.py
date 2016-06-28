@@ -249,7 +249,7 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
     paths = set()
     env = builtins.__xonsh_env__
     csc = env.get('CASE_SENSITIVE_COMPLETIONS')
-    glob_sorted = builtins.__xonsh_env__.get('GLOB_SORTED')
+    glob_sorted = env.get('GLOB_SORTED')
     for s in iglobpath(prefix + '*', ignore_case=(not csc)):
         paths.add(s)
     if len(paths) == 0 and env.get('SUBSEQUENCE_PATH_COMPLETION'):
