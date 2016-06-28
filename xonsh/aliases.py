@@ -343,6 +343,15 @@ class AWitchAWitch(Action):
         parser.exit()
 
 
+def exec_(args, stdin=None):
+    """Bypass bash built-in command exec."""
+    if not args:
+        return None, None, 0
+    from xonsh.built_ins import subproc_captured_object
+    cc = subproc_captured_object(args)
+    return cc.stdout, cc.stderr, cc.returncode
+
+
 def which(args, stdin=None, stdout=None, stderr=None):
     """
     Checks if each arguments is a xonsh aliases, then if it's an executable,
@@ -493,6 +502,7 @@ def make_default_aliases():
     """Creates a new default aliases dictionary."""
     default_aliases = {
         'cd': cd,
+        'exec': exec_,
         'pushd': pushd,
         'popd': popd,
         'dirs': dirs,

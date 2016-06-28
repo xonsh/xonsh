@@ -345,12 +345,6 @@ def run_subproc(cmds, captured=False):
 
     Lastly, the captured argument affects only the last real command.
     """
-    # exec is a bash built-in command and cannot be called by xonsh
-    if cmds and cmds[0] and cmds[0][0] == 'exec':
-        _cmds = list(cmds)
-        _cmds[0] = cmds[0][1:]
-        cmds = tuple(_cmds)
-
     global ENV
     background = False
     procinfo = {}
