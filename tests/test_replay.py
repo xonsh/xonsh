@@ -11,49 +11,78 @@ from xonsh.tools import swap
 from xonsh.shell import Shell
 from xonsh.replay import Replayer
 
-from tools import ON_DARWIN
+from tools import skip_if_on_darwin
 
-SHELL = Shell({'PATH': []})
-HISTDIR = os.path.join(os.path.dirname(__file__), 'histories')
-
-def run_replay(re_file):
-    with swap(builtins, '__xonsh_shell__', SHELL):
-        with swap(builtins, '__xonsh_exit__', False):
-            r = Replayer(re_file)
-            hist = r.replay()
-    return hist
+# SHELL = Shell({'PATH': []})
+# HISTDIR = os.path.join(os.path.dirname(__file__), 'histories')
 
 
-def cleanup_replay(hist):
+@pytest.fixture
+def re_file():
+    return 'tt.json'
+
+
+@pytest.yield_fixture
+def hist(re_file, xonsh_builtins):
+    xonsh_builtins.__xonsh_env__['__xonsh_shell__'] = Shell({'PATH': []})
+    xonsh_builtins.__xonsh_env__['__xonsh_exit__'] = False
+    f = os.path.join(os.path.dirname(__file__), 'histories', re_file)
+    r = Replayer(f)
+    hist = r.replay()
+    yield hist
     fname = hist.filename
     del hist
     if os.path.isfile(fname):
         os.remove(fname)
 
 
-@contextmanager
-def a_replay(re_file):
-    hist = run_replay(re_file)
-    yield hist
-    cleanup_replay(hist)
+@pytest.mark.parametrize('re_file, expected_len', [
+    ('echo.json', 2),
+    ('simple-python.json', 2),
+])
+def test_replay(expected_len, hist, xonsh_builtins):
+    assert len(hist) == expected_len
 
 
-@pytest.mark.skipif(ON_DARWIN, reason='Not mac friendly')
-def test_echo():
-    f = os.path.join(HISTDIR, 'echo.json')
-    with a_replay(f) as hist:
-        assert 2 == len(hist)
+# def run_replay(re_file):
+#     with swap(builtins, '__xonsh_shell__', SHELL):
+#         with swap(builtins, '__xonsh_exit__', False):
+#             r = Replayer(re_file)
+#             hist = r.replay()
+#     return hist
 
 
-@pytest.mark.skipif(ON_DARWIN, reason='also not mac friendly')
-def test_reecho():
-    f = os.path.join(HISTDIR, 'echo.json')
-    with a_replay(f) as hist:
-        assert 2 == len(hist)
+# def cleanup_replay(hist):
+#     fname = hist.filename
+#     del hist
+#     if os.path.isfile(fname):
+#         os.remove(fname)
 
-@pytest.mark.skipif(ON_DARWIN, reason='also not mac friendly')
-def test_simple_python():
-    f = os.path.join(HISTDIR, 'simple-python.json')
-    with a_replay(f) as hist:
-        assert 4 == len(hist)
-        assert "print('The Turtles')" == hist.inps[0].strip()
+
+# @contextmanager
+# def a_replay(re_file):
+#     hist = run_replay(re_file)
+#     yield hist
+#     cleanup_replay(hist)
+
+
+# @skip_if_on_darwin
+# def test_echo():
+#     f = os.path.join(HISTDIR, 'echo.json')
+#     with a_replay(f) as hist:
+#         assert 2 == len(hist)
+
+
+# @skip_if_on_darwin
+# def test_reecho():
+#     f = os.path.join(HISTDIR, 'echo.json')
+#     with a_replay(f) as hist:
+#         assert 2 == len(hist)
+
+
+# @skip_if_on_darwin
+# def test_simple_python():
+#     f = os.path.join(HISTDIR, 'simple-python.json')
+#     with a_replay(f) as hist:
+#         assert 4 == len(hist)
+#         assert "print('The Turtles')" == hist.inps[0].strip()
