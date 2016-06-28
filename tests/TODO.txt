@@ -27,18 +27,24 @@ test_dirstack.py
 - better way for chdir contextmanager?
 
 
+test_replay.py
+--------------
+- incomplete/bug : TypeError: 'LazyObject' object is not subscriptable
+
+test_history.py
+---------------
+- could be refactored
+
 
 test_contexts.py
 test_environ.py
 test_execer.py
 test_foreign_shells.py
-test_history.py
 test_imphooks.py
 test_lazyjson.py
 test_lexer.py
 test_main.py
 test_parser.py
 test_ptk_multiline.py
-test_replay.py
 test_tools.py
 test_wizard.py

@@ -13,22 +13,25 @@ from xonsh.replay import Replayer
 
 from tools import skip_if_on_darwin
 
-# SHELL = Shell({'PATH': []})
-# HISTDIR = os.path.join(os.path.dirname(__file__), 'histories')
+SHELL = Shell({'PATH': []})
+HISTDIR = os.path.join(os.path.dirname(__file__), 'histories')
 
 
 @pytest.fixture
 def re_file():
-    return 'tt.json'
+    return 'echo.json'
 
 
 @pytest.yield_fixture
-def hist(re_file, xonsh_builtins):
-    xonsh_builtins.__xonsh_env__['__xonsh_shell__'] = Shell({'PATH': []})
+def replay(re_file, xonsh_builtins):
+    xonsh_builtins.__xonsh_env__['__xonsh_shell__'] = SHELL
     xonsh_builtins.__xonsh_env__['__xonsh_exit__'] = False
-    f = os.path.join(os.path.dirname(__file__), 'histories', re_file)
+    f = os.path.join(HISTDIR, re_file)
     r = Replayer(f)
+    print("file:", f)
+    print('replayer:', r)
     hist = r.replay()
+    print('hist:', hist)
     yield hist
     fname = hist.filename
     del hist
@@ -38,10 +41,10 @@ def hist(re_file, xonsh_builtins):
 
 @pytest.mark.parametrize('re_file, expected_len', [
     ('echo.json', 2),
-    ('simple-python.json', 2),
+    ('simple-python.json', 4),
 ])
-def test_replay(expected_len, hist, xonsh_builtins):
-    assert len(hist) == expected_len
+def test_replay(expected_len, replay, xonsh_builtins):
+    assert len(replay) == expected_len
 
 
 # def run_replay(re_file):
