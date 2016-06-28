@@ -24,8 +24,8 @@ You can install xonsh using ``conda``, ``pip``, or from source.
     $ pip install xonsh
 
 
-**source:** Download the source `from github <https://github.com/scopatz/xonsh>`_
-(`zip file <https://github.com/scopatz/xonsh/archive/master.zip>`_), then run
+**source:** Download the source `from github <https://github.com/xonsh/xonsh>`_
+(`zip file <https://github.com/xonsh/xonsh/archive/master.zip>`_), then run
 the following from the source directory,
 
 .. code-block:: bash

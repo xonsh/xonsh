@@ -19,8 +19,8 @@ Version Date       Zip            Tar
 0.1.0   2015-03-09 `zip 0.1`_     `tar 0.1`_
 ======= ========== ============== ==============
 
-.. _zip 0.2: https://github.com/scopatz/xonsh/zipball/0.2
-.. _tar 0.2: https://github.com/scopatz/xonsh/tarball/0.2
-.. _zip 0.1: https://github.com/scopatz/xonsh/zipball/0.1
-.. _tar 0.1: https://github.com/scopatz/xonsh/tarball/0.1
+.. _zip 0.2: https://github.com/xonsh/xonsh/zipball/0.2
+.. _tar 0.2: https://github.com/xonsh/xonsh/tarball/0.2
+.. _zip 0.1: https://github.com/xonsh/xonsh/zipball/0.1
+.. _tar 0.1: https://github.com/xonsh/xonsh/tarball/0.1
 

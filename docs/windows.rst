@@ -67,7 +67,7 @@ Next, run xonsh:
   snail@home ~ $
 
 .. _Python v3.4+: https://www.python.org/downloads/windows/
-.. _xonsh-master.zip: https://github.com/scopatz/xonsh/archive/master.zip
+.. _xonsh-master.zip: https://github.com/xonsh/xonsh/archive/master.zip
 .. _cmder: http://cmder.net/
 .. _conemu: https://conemu.github.io/
 

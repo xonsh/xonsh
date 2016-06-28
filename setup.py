@@ -2,7 +2,7 @@
 # -*- coding: ascii -*-
 """The xonsh installer."""
 # Note: Do not embed any non-ASCII characters in this file until pip has been
-# fixed. See https://github.com/scopatz/xonsh/issues/487.
+# fixed. See https://github.com/xonsh/xonsh/issues/487.
 from __future__ import print_function, unicode_literals
 import os
 import sys
@@ -246,7 +246,7 @@ def main():
         author='Anthony Scopatz',
         maintainer='Anthony Scopatz',
         author_email='scopatz@gmail.com',
-        url='https://github.com/scopatz/xonsh',
+        url='https://github.com/xonsh/xonsh',
         platforms='Cross Platform',
         classifiers=['Programming Language :: Python :: 3'],
         packages=['xonsh', 'xonsh.ply', 'xonsh.ptk', 'xonsh.parsers',
