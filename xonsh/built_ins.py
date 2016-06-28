@@ -86,8 +86,7 @@ def superhelper(x, name=''):
 
 def expand_path(s):
     """Takes a string path and expands ~ to home and environment vars."""
-    global ENV
-    if ENV.get('EXPAND_ENV_VARS'):
+    if builtins.__xonsh_env__.get('EXPAND_ENV_VARS'):
         s = expandvars(s)
     return os.path.expanduser(s)
 
@@ -138,7 +137,9 @@ def regexsearch(s):
 
 def globsearch(s):
     csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
-    return globpath(s, ignore_case=(not csc), return_empty=True)
+    glob_sorted = builtins.__xonsh_env__.get('GLOB_SORTED')
+    return globpath(s, ignore_case=(not csc), return_empty=True,
+                    sort_result=glob_sorted)
 
 
 def pathsearch(func, s, pymode=False):

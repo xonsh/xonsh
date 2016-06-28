@@ -38,8 +38,10 @@ skip_if_py35plus = pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5,
 def sp(cmd):
     return subprocess.check_output(cmd, universal_newlines=True)
 
+
 class DummyStyler():
     styles = defaultdict(None.__class__)
+
 
 class DummyBaseShell(BaseShell):
 
@@ -106,11 +108,13 @@ def mock_xonsh_env(xenv):
 DEBUG_LEVEL = 0
 EXECER = None
 
+
 def execer_setup():
     # only setup one parser
     global EXECER
     if EXECER is None:
         EXECER = Execer(debug_level=DEBUG_LEVEL, login=False)
+
 
 def check_exec(input, **kwargs):
     with mock_xonsh_env(None):
@@ -119,14 +123,16 @@ def check_exec(input, **kwargs):
         EXECER.debug_level = DEBUG_LEVEL
         EXECER.exec(input, **kwargs)
 
+
 def check_eval(input):
-    env = {'AUTO_CD': False, 'XONSH_ENCODING' :'utf-8',
+    env = {'AUTO_CD': False, 'XONSH_ENCODING': 'utf-8',
            'XONSH_ENCODING_ERRORS': 'strict', 'PATH': []}
     if ON_WINDOWS:
         env['PATHEXT'] = ['.COM', '.EXE', '.BAT', '.CMD']
     with mock_xonsh_env(env):
         EXECER.debug_level = DEBUG_LEVEL
         EXECER.eval(input)
+
 
 def check_parse(input):
     with mock_xonsh_env(None):
