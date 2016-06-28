@@ -4,6 +4,7 @@ import os
 import pathlib
 from tempfile import TemporaryDirectory
 import stat
+import builtins
 
 import pytest
 
@@ -25,6 +26,8 @@ from xonsh.tools import (
     pathsep_to_upper_seq, seq_to_upper_pathsep,
     )
 from xonsh.commands_cache import CommandsCache
+from xonsh.built_ins import expand_path
+from xonsh.environ import Env
 
 from tools import mock_xonsh_env
 
@@ -347,17 +350,24 @@ def test_iglobpath():
         with open(os.path.join(test_dir, '07'), 'w') as file:
             file.write('test\n')
 
-        paths = list(iglobpath(os.path.join(test_dir, '*.test'), ignore_case=False))
-        assert len(paths) == 100
-        paths = list(iglobpath(os.path.join(test_dir, '*'), ignore_case=True))
-        assert len(paths) == 101
+        with mock_xonsh_env(Env(EXPAND_ENV_VARS=False)):
+            builtins.__xonsh_expand_path__ = expand_path
 
-        paths = list(iglobpath(os.path.join(test_dir, '*.test'), ignore_case=False))
-        assert len(paths) == 100
-        assert paths == sorted(paths)
-        paths = list(iglobpath(os.path.join(test_dir, '*'), ignore_case=True))
-        assert len(paths) == 101
-        assert paths == sorted(paths)
+            paths = list(iglobpath(os.path.join(test_dir, '*.test'),
+                                   ignore_case=False, sort_result=False))
+            assert len(paths) == 100
+            paths = list(iglobpath(os.path.join(test_dir, '*'),
+                                   ignore_case=True, sort_result=False))
+            assert len(paths) == 101
+
+            paths = list(iglobpath(os.path.join(test_dir, '*.test'),
+                                   ignore_case=False, sort_result=True))
+            assert len(paths) == 100
+            assert paths == sorted(paths)
+            paths = list(iglobpath(os.path.join(test_dir, '*'),
+                                   ignore_case=True, sort_result=True))
+            assert len(paths) == 101
+            assert paths == sorted(paths)
 
 
 def test_is_int():
