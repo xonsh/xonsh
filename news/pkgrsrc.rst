@@ -1,7 +1,7 @@
 **Added:**
 
-* New ``xonsh.bg_pkg_resources`` module for loading the ``pkg_resources``
-  module in a background thread.
+* New tools in ``xonsh.lazyasd`` module for loading modules in background
+  threads.
 
 **Changed:**
 
