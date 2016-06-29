@@ -50,8 +50,8 @@ def test_eval_recursive():
 
 @pytest.mark.skipif(ON_WINDOWS, reason='Unix stuff')
 def test_eval_recursive_callable_partial():
-    built_ins.ENV = Env(HOME=os.path.expanduser('~'))
-    with mock_xonsh_env(built_ins.ENV):
+    env = Env(HOME=os.path.expanduser('~'))
+    with mock_xonsh_env(env):
         assert ALIASES.get('indirect_cd')(['arg2', 'arg3']) == ['..', 'arg2', 'arg3']
 
 class TestWhich:
