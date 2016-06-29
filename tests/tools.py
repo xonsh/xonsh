@@ -26,9 +26,8 @@ ON_DARWIN = (platform.system() == 'Darwin')
 ON_WINDOWS = (platform.system() == 'Windows')
 
 
-skip_if_py34 = pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5,
-                                   reason="Py3.5+ only test")
-
+# pytest skip decorators
+skip_if_py34 = pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5, reason="Py3.5+ only test")
 
 skip_if_on_windows = pytest.mark.skipif(ON_WINDOWS, reason='Unix stuff')
 
@@ -79,7 +78,7 @@ def execer_setup():
         EXECER = Execer(debug_level=DEBUG_LEVEL, login=False)
 
 
-def check_exec(input, xonsh_env, **kwargs):
+def check_exec(input, **kwargs):
     # with mock_xonsh_env(None):
     if not input.endswith('\n'):
         input += '\n'
@@ -102,4 +101,3 @@ def check_parse(input):
         EXECER.debug_level = DEBUG_LEVEL
         tree = EXECER.parse(input, ctx=None)
     return tree
-
