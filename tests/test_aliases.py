@@ -55,7 +55,6 @@ def test_eval_recursive_callable_partial(xonsh_builtins):
     xonsh_builtins.__xonsh_env__ = Env(HOME=os.path.expanduser('~'))
     assert ALIASES.get('indirect_cd')(['arg2', 'arg3']) == ['..', 'arg2', 'arg3']
 
-
 class TestWhich:
     # Tests for the _whichgen function which is the only thing we
     # use from the _which.py module.

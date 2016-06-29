@@ -23,11 +23,11 @@ def test_reglob_tests():
     for f in testfiles:
         assert (f.startswith('test_'))
 
-@pytest.fixture
-def env():
-    e = Env(HOME=os.path.expanduser('~'))
-    built_ins.ENV = e
-    return e
+# @pytest.fixture
+# def env():
+#     e = Env(HOME=os.path.expanduser('~'))
+#     built_ins.ENV = e
+#     return e
 
 
 @skip_if_on_windows
