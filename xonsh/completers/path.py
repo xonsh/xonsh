@@ -105,9 +105,11 @@ def _add_cdpaths(paths, prefix):
     """Completes current prefix using CDPATH"""
     env = builtins.__xonsh_env__
     csc = env.get('CASE_SENSITIVE_COMPLETIONS')
+    glob_sorted = env.get('GLOB_SORTED')
     for cdp in env.get('CDPATH'):
         test_glob = os.path.join(cdp, prefix) + '*'
-        for s in iglobpath(test_glob, ignore_case=(not csc)):
+        for s in iglobpath(test_glob, ignore_case=(not csc),
+                           sort_result=glob_sorted):
             if os.path.isdir(s):
                 paths.add(os.path.basename(s))
 
@@ -222,9 +224,10 @@ def _subsequence_match_iter(ref, typed):
 
 def _expand_one(sofar, nextone, csc):
     out = set()
+    glob_sorted = builtins.__xonsh_env__.get('GLOB_SORTED')
     for i in sofar:
         _glob = os.path.join(_joinpath(i), '*') if i is not None else '*'
-        for j in iglobpath(_glob):
+        for j in iglobpath(_glob, sort_result=glob_sorted):
             j = os.path.basename(j)
             if subsequence_match(j, nextone, csc):
                 out.add((i or ()) + (j, ))
@@ -247,7 +250,9 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
     paths = set()
     env = builtins.__xonsh_env__
     csc = env.get('CASE_SENSITIVE_COMPLETIONS')
-    for s in iglobpath(prefix + '*', ignore_case=(not csc)):
+    glob_sorted = env.get('GLOB_SORTED')
+    for s in iglobpath(prefix + '*', ignore_case=(not csc),
+                       sort_result=glob_sorted):
         paths.add(s)
     if len(paths) == 0 and env.get('SUBSEQUENCE_PATH_COMPLETION'):
         # this block implements 'subsequence' matching, similar to fish and zsh.
@@ -267,7 +272,8 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
             paths |= {_joinpath(i) for i in matches_so_far}
     if len(paths) == 0 and env.get('FUZZY_PATH_COMPLETION'):
         threshold = env.get('SUGGEST_THRESHOLD')
-        for s in iglobpath(os.path.dirname(prefix) + '*', ignore_case=(not csc)):
+        for s in iglobpath(os.path.dirname(prefix) + '*', ignore_case=(not csc),
+                           sort_result=glob_sorted):
             if levenshtein(prefix, s, threshold) < threshold:
                 paths.add(s)
     if tilde in prefix:

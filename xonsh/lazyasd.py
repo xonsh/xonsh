@@ -27,7 +27,7 @@ class LazyObject(object):
         load : function with no arguments
             A loader function that performs the actual object construction.
         ctx : Mapping
-            Context to replace the LazyAndSelfDestructiveObject instance in
+            Context to replace the LazyObject instance in
             with the object returned by load().
         name : str
             Name in the context to give the loaded object. This *should*
@@ -64,6 +64,10 @@ class LazyObject(object):
         obj = self._lazy_obj()
         yield from obj
 
+    def __getitem__(self, item):
+        obj = self._lazy_obj()
+        return obj[item]
+
 
 class LazyDict(abc.MutableMapping):
 
@@ -89,7 +93,7 @@ class LazyDict(abc.MutableMapping):
             A mapping of loader function that performs the actual value
             construction upon acces.
         ctx : Mapping
-            Context to replace the LazyAndSelfDestructiveDict instance in
+            Context to replace the LazyDict instance in
             with the the fully loaded mapping.
         name : str
             Name in the context to give the loaded mapping. This *should*
@@ -153,7 +157,7 @@ class LazyBool(object):
         load : function with no arguments
             A loader function that performs the actual boolean evaluation.
         ctx : Mapping
-            Context to replace the LazyAndSelfDestructiveDict instance in
+            Context to replace the LazyBool instance in
             with the the fully loaded mapping.
         name : str
             Name in the context to give the loaded mapping. This *should*
