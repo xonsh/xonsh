@@ -64,6 +64,26 @@ def test_format_prompt():
         obs = partial_format_prompt(template=p, formatter_dict=formatter_dict)
         assert exp == obs
 
+def test_format_prompt_with_format_spec():
+    formatter_dict = {
+        'a_string': 'cats',
+        'a_number': 7,
+        'empty': '',
+        'current_job': (lambda: 'sleep'),
+        'none': (lambda: None),
+        }
+    cases = {
+        '{a_number:{0:^3}}cats': ' 7 cats',
+        '{current_job:{} | }xonsh': 'sleep | xonsh',
+        '{none:{} | }{a_string}{empty:!}': 'cats!',
+        '{none:{}}': '',
+        '{{{a_string:{{{}}}}}}': '{{cats}}',
+        '{{{none:{{{}}}}}}': '{}',
+        }
+    for p, exp in cases.items():
+        obs = partial_format_prompt(template=p, formatter_dict=formatter_dict)
+        assert exp == obs
+
 def test_format_prompt_with_broken_template():
     for p in ('{user', '{user}{hostname'):
         assert partial_format_prompt(p) == p
