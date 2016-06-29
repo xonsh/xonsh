@@ -1,6 +1,6 @@
 **Added:**
 
-* Added a new alias: ``exec``.
+* Added a new alias: ``exec``, which is same as ``xexec``.
 
 **Changed:** None
 
