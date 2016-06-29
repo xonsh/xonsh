@@ -1219,15 +1219,13 @@ def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
         if field is None:
             continue
         elif field.startswith('$'):
-            v = builtins.__xonsh_env__[field[1:]]
-            v = _FORMATTER.convert_field(v, conv)
-            v = _FORMATTER.format_field(v, spec)
-            toks.append(v)
-            continue
+            val = builtins.__xonsh_env__[field[1:]]
+            val = _format_value(val, spec, conv)
+            toks.append(val)
         elif field in fmtter:
             v = fmtter[field]
             val = v() if callable(v) else v
-            val = '' if val is None else val
+            val = _format_value(val, spec, conv)
             toks.append(val)
         else:
             toks.append(bopen)
@@ -1240,6 +1238,22 @@ def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
                 toks.append(spec)
             toks.append(bclose)
     return ''.join(toks)
+
+
+def _format_value(val, spec, conv):
+    """Formats a value from a template string {val!conv:spec}. The spec is
+    applied as a format string itself, but if the value is None, the result
+    will be empty. The purpose of this is to allow optional parts in a
+    prompt string. For example, if the prompt contains '{current_job:{} | }',
+    and 'current_job' returns 'sleep', the result is 'sleep | ', and if
+    'current_job' returns None, the result is ''.
+    """
+    if val is None:
+        return ''
+    val = _FORMATTER.convert_field(val, conv)
+    if spec:
+        val = _FORMATTER.format(spec, val)
+    return val
 
 
 RE_HIDDEN = re.compile('\001.*?\002')
