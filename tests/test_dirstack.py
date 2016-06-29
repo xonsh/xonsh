@@ -25,10 +25,7 @@ def chdir(adir):
     os.chdir(old_dir)
 
 
-# @pytest.mark.skip(reason='BUG')
 def test_simple(xonsh_builtins):
-    # load_builtins()
-    # with xonsh_env(Env(CDPATH=PARENT, PWD=PARENT)):
     xonsh_builtins.__xonsh_env__ = Env(CDPATH=PARENT, PWD=PARENT)
     with chdir(PARENT):
         assert os.getcwd() !=  HERE

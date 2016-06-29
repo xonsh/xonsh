@@ -17,11 +17,6 @@ test_aliases.py
 - migrate TestWhich
 
 
-test_builtins.py
-----------------
-- Env fixture
-
-
 test_dirstack.py
 ----------------
 - better way for chdir contextmanager?
