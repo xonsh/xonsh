@@ -13,7 +13,6 @@ import pytest
 
 from xonsh.built_ins import ensure_list_of_strs
 from xonsh.environ import Env
-builtins.__xonsh_env__ = Env()
 from xonsh.base_shell import BaseShell
 from xonsh.execer import Execer
 from xonsh.tools import XonshBlockError
@@ -125,8 +124,8 @@ def check_exec(input, **kwargs):
 
 
 def check_eval(input):
-    env = {'AUTO_CD': False, 'XONSH_ENCODING': 'utf-8',
-           'XONSH_ENCODING_ERRORS': 'strict', 'PATH': []}
+    env = Env({'AUTO_CD': False, 'XONSH_ENCODING': 'utf-8',
+               'XONSH_ENCODING_ERRORS': 'strict', 'PATH': []})
     if ON_WINDOWS:
         env['PATHEXT'] = ['.COM', '.EXE', '.BAT', '.CMD']
     with mock_xonsh_env(env):

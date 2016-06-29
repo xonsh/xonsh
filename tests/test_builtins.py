@@ -24,8 +24,8 @@ def test_reglob_tests():
 @pytest.mark.skipif(ON_WINDOWS, reason='Unix stuff')
 def test_repath_backslash():
     home = os.path.expanduser('~')
-    built_ins.ENV = Env(HOME=home)
-    with mock_xonsh_env(built_ins.ENV):
+    env = Env(HOME=home)
+    with mock_xonsh_env(env):
         exp = os.listdir(home)
         exp = {p for p in exp if re.match(r'\w\w.*', p)}
         exp = {os.path.join(home, p) for p in exp}
@@ -35,8 +35,8 @@ def test_repath_backslash():
 @pytest.mark.skipif(ON_WINDOWS, reason='Unix stuff')
 def test_repath_home_itself():
     exp = os.path.expanduser('~')
-    built_ins.ENV = Env(HOME=exp)
-    with mock_xonsh_env(built_ins.ENV):
+    env = Env(HOME=exp)
+    with mock_xonsh_env(env):
         obs = pathsearch(regexsearch, '~')
         assert 1 ==  len(obs)
         assert exp ==  obs[0]
@@ -44,8 +44,8 @@ def test_repath_home_itself():
 @pytest.mark.skipif(ON_WINDOWS, reason='Unix stuff')
 def test_repath_home_contents():
     home = os.path.expanduser('~')
-    built_ins.ENV = Env(HOME=home)
-    with mock_xonsh_env(built_ins.ENV):
+    env = Env(HOME=home)
+    with mock_xonsh_env(env):
         exp = os.listdir(home)
         exp = {os.path.join(home, p) for p in exp}
         obs = set(pathsearch(regexsearch, '~/.*'))
@@ -54,8 +54,8 @@ def test_repath_home_contents():
 @pytest.mark.skipif(ON_WINDOWS, reason='Unix stuff')
 def test_repath_home_var():
     exp = os.path.expanduser('~')
-    built_ins.ENV = Env(HOME=exp)
-    with mock_xonsh_env(built_ins.ENV):
+    env = Env(HOME=exp)
+    with mock_xonsh_env(env):
         obs = pathsearch(regexsearch, '$HOME')
         assert 1 ==  len(obs)
         assert exp ==  obs[0]
@@ -63,8 +63,8 @@ def test_repath_home_var():
 @pytest.mark.skipif(ON_WINDOWS, reason='Unix stuff')
 def test_repath_home_var_brace():
     exp = os.path.expanduser('~')
-    built_ins.ENV = Env(HOME=exp)
-    with mock_xonsh_env(built_ins.ENV):
+    env = Env(HOME=exp)
+    with mock_xonsh_env(env):
         obs = pathsearch(regexsearch, '${"HOME"}')
         assert 1 ==  len(obs)
         assert exp ==  obs[0]

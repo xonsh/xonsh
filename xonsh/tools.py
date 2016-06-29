@@ -1433,14 +1433,14 @@ def check_for_partial_string(x):
 # source code (root/Lib/ntpath.py, line 353)
 
 def _is_in_env(name):
-    ENV = builtins.__xonsh_env__
-    return name in ENV._d or name in ENV._defaults
+    env = builtins.__xonsh_env__
+    return name in env._d or name in env._defaults
 
 
 def _get_env_string(name):
-    ENV = builtins.__xonsh_env__
-    value = ENV.get(name)
-    ensurer = ENV.get_ensurer(name)
+    env = builtins.__xonsh_env__
+    value = env.get(name)
+    ensurer = env.get_ensurer(name)
     if ensurer.detype is bool_to_str:
         value = ensure_string(value)
     else:
@@ -1450,12 +1450,12 @@ def _get_env_string(name):
 
 def expandvars(path):
     """Expand shell variables of the forms $var, ${var} and %var%.
-
-    Unknown variables are left unchanged."""
-    ENV = builtins.__xonsh_env__
+    Unknown variables are left unchanged.
+    """
+    env = builtins.__xonsh_env__
     if isinstance(path, bytes):
-        path = path.decode(encoding=ENV.get('XONSH_ENCODING'),
-                           errors=ENV.get('XONSH_ENCODING_ERRORS'))
+        path = path.decode(encoding=env.get('XONSH_ENCODING'),
+                           errors=env.get('XONSH_ENCODING_ERRORS'))
     elif isinstance(path, pathlib.Path):
         # get the path's string representation
         path = str(path)
