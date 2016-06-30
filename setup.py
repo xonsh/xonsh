@@ -111,17 +111,20 @@ def dirty_version():
     """
     try:
         _version = subprocess.check_output(['git', 'describe', '--tags'])
-        _version = _version.decode('ascii')
-    except (subprocess.CalledProcessError, FileNotFoundError):
+    except Exception:
+        print('failed to find git tags', file=sys.stderr)
         return False
+    _version = _version.decode('ascii')
     try:
         base, N, sha = _version.strip().split('-')
-    except ValueError: #on base release
+    except ValueError: # on base release
         open('xonsh/dev.githash', 'w').close()
+        print('failed to parse git version', file=sys.stderr)
         return False
     replace_version(base, N)
     with open('xonsh/dev.githash', 'w') as f:
         f.write(sha)
+    print('wrote git version: ' + sha, file=sys.stderr)
     return True
 
 
