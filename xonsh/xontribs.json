@@ -50,6 +50,11 @@
   "url": "https://github.com/Granitas/xonsh-scrapy-tabcomplete",
   "description": ["Adds tabcomplete functionality to scrapy inside of xonsh."]
  },
+ {"name": "vox_tabcomplete",
+  "package": "xonsh-vox-tabcomplete",
+  "url": "https://github.com/Granitas/xonsh-vox-tabcomplete",
+  "description": ["Adds tabcomplete functionality to vox inside of xonsh."]
+ },
  {"name": "autoxsh",
   "package": "xonsh-autoxsh",
   "url": "https://github.com/Granitas/xonsh-autoxsh",
@@ -102,6 +107,13 @@
     "pip": "pip install xonsh-scrapy-tabcomplete"
     }
    },
+  "xonsh-vox-tabcomplete": {
+   "license": "GPLv3",
+   "url": "https://github.com/Granitas/xonsh-vox-tabcomplete",
+   "install": {
+    "pip": "pip install xonsh-vox-tabcomplete"
+   }
+  },
   "xonsh-autoxsh": {
    "license": "GPLv3",
    "url": "https://github.com/Granitas/xonsh-autoxsh",
