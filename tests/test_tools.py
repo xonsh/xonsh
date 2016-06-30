@@ -310,7 +310,6 @@ def test_subproc_toks_pyeval_redirect():
     assert (exp == obs)
 
 
-<<<<<<< HEAD
 @pytest.mark.parametrize('inp, exp', [
     ('f(x.', 'x.'),
     ('f(1,x.', 'x.'),
@@ -479,170 +478,141 @@ def test_is_string_seq_false():
 
 def test_is_nonstring_seq_of_strings_true():
     assert is_nonstring_seq_of_strings(['42.0'])
-<<<<<<< HEAD
 
-=======
+
+def test_is_nonstring_seq_of_strings_true():
     assert not is_nonstring_seq_of_strings([42.0])
 
 
+@pytest.mark.parametrize('inp, exp', [
+    ('', []),
+    ('a', ['a']),
+    (os.pathsep.join(['a', 'b']), ['a', 'b']),
+    (os.pathsep.join(['a', 'b', 'c']), ['a', 'b', 'c']),
+])
 def test_pathsep_to_seq():
-    cases = [
-        ('', []),
-        ('a', ['a']),
-        (os.pathsep.join(['a', 'b']), ['a', 'b']),
-        (os.pathsep.join(['a', 'b', 'c']), ['a', 'b', 'c']),
-        ]
-    for inp, exp in cases:
-        obs = pathsep_to_seq(inp)
-        assert exp == obs
+    obs = pathsep_to_seq(inp)
+    assert exp == obs
 
-
+@pytest.mark.parametrize('inp, exp', [
+    ([], ''),
+    (['a'], 'a'),
+    (['a', 'b'], os.pathsep.join(['a', 'b'])),
+    (['a', 'b', 'c'], os.pathsep.join(['a', 'b', 'c'])),
+])
 def test_seq_to_pathsep():
-    cases = [
-        ([], ''),
-        (['a'], 'a'),
-        (['a', 'b'], os.pathsep.join(['a', 'b'])),
-        (['a', 'b', 'c'], os.pathsep.join(['a', 'b', 'c'])),
-        ]
-    for inp, exp in cases:
-        obs = seq_to_pathsep(inp)
-        assert exp == obs
+    obs = seq_to_pathsep(inp)
+    assert exp == obs
 
 
+@pytest.mark.parametrize('inp, exp', [
+    ('', []),
+    ('a', ['A']),
+    (os.pathsep.join(['a', 'B']), ['A', 'B']),
+    (os.pathsep.join(['A', 'b', 'c']), ['A', 'B', 'C']),
+])
 def test_pathsep_to_upper_seq():
-    cases = [
-        ('', []),
-        ('a', ['A']),
-        (os.pathsep.join(['a', 'B']), ['A', 'B']),
-        (os.pathsep.join(['A', 'b', 'c']), ['A', 'B', 'C']),
-        ]
-    for inp, exp in cases:
-        obs = pathsep_to_upper_seq(inp)
-        assert exp == obs
+    obs = pathsep_to_upper_seq(inp)
+    assert exp == obs
 
 
-def test_seq_to_upper_pathsep():
-    cases = [
+@pytest.mark.parametrize('inp, exp', [
         ([], ''),
         (['a'], 'A'),
         (['a', 'b'], os.pathsep.join(['A', 'B'])),
         (['a', 'B', 'c'], os.pathsep.join(['A', 'B', 'C'])),
-        ]
-    for inp, exp in cases:
-        obs = seq_to_upper_pathsep(inp)
-        assert exp == obs
+        ])
+def test_seq_to_upper_pathsep():
+    obs = seq_to_upper_pathsep(inp)
+    assert exp == obs
 
 
+@pytest.mark.parametrize('inp, exp', [
+    ('/home/wakka', False),
+    (['/home/jawaka'], False),
+    (EnvPath(['/home/jawaka']), True),
+    (EnvPath(['jawaka']), True),
+    (EnvPath(b'jawaka:wakka'), True),
+])
 def test_is_env_path():
-    cases = [
-        ('/home/wakka', False),
-        (['/home/jawaka'], False),
-        (EnvPath(['/home/jawaka']), True),
-        (EnvPath(['jawaka']), True),
-        (EnvPath(b'jawaka:wakka'), True),
-        ]
-    for inp, exp in cases:
-        obs = is_env_path(inp)
-        assert exp == obs
+    obs = is_env_path(inp)
+    assert exp == obs
 
 
-def test_str_to_env_path():
-    cases = [
-        ('/home/wakka', ['/home/wakka']),
-        ('/home/wakka' + os.pathsep + '/home/jawaka',
-         ['/home/wakka', '/home/jawaka']),
-        (b'/home/wakka', ['/home/wakka']),
-        ]
-    for inp, exp in cases:
-        obs = str_to_env_path(inp)
-        assert exp == obs.paths
+@pytest.mark.parametrize('inp, exp', [
+    ('/home/wakka', ['/home/wakka']),
+    ('/home/wakka' + os.pathsep + '/home/jawaka',
+     ['/home/wakka', '/home/jawaka']),
+    (b'/home/wakka', ['/home/wakka']),
+])
+def test_str_to_env_path(inp, exp):
+    obs = str_to_env_path(inp)
+    assert exp == obs.paths
 
 
-def test_env_path_to_str():
-    cases = [
-        (['/home/wakka'], '/home/wakka'),
-        (['/home/wakka', '/home/jawaka'],
-         '/home/wakka' + os.pathsep + '/home/jawaka'),
-        ]
-    for inp, exp in cases:
-        obs = env_path_to_str(inp)
-        assert exp == obs
+@pytest.mark.parametrize('inp, exp', [
+    (['/home/wakka'], '/home/wakka'),
+    (['/home/wakka', '/home/jawaka'],
+     '/home/wakka' + os.pathsep + '/home/jawaka'),
+])
+def test_env_path_to_str(inp, exp):
+    obs = env_path_to_str(inp)
+    assert exp == obs
 
 
-def test_env_path():
-    def expand(path):
-        return os.path.expanduser(os.path.expandvars(path))
+# helper
+def expand(path):
+    return os.path.expanduser(os.path.expandvars(path))
 
-    getitem_cases = [
-        ('xonsh_dir', 'xonsh_dir'),
-        ('.', '.'),
-        ('../', '../'),
-        ('~/', '~/'),
-        (b'~/../', '~/../'),
-    ]
-    with mock_xonsh_env(TOOLS_ENV):
-        for inp, exp in getitem_cases:
-            obs = EnvPath(inp)[0] # call to __getitem__
-            assert expand(exp) == obs
+@pytest.mark.parametrize('env', [TOOLS_ENV, ENCODE_ENV_ONLY])
+@pytest.mark.parametrize('inp, exp', [
+    ('xonsh_dir', 'xonsh_dir'),
+    ('.', '.'),
+    ('../', '../'),
+    ('~/', '~/'),
+    (b'~/../', '~/../'),
+])
+def test_env_path_getitem(inp, exp, xonsh_builtins, env):
+    print("ENV:",  env)
+    xonsh_builtins.__xonsh_env__ = env
+    obs = EnvPath(inp)[0] # call to __getitem__
+    assert expand(exp) == obs
 
-    with mock_xonsh_env(ENCODE_ENV_ONLY):
-        for inp, exp in getitem_cases:
-            obs = EnvPath(inp)[0] # call to __getitem__
-            assert exp == obs
 
+@pytest.mark.parametrize('env', [TOOLS_ENV, ENCODE_ENV_ONLY])
+@pytest.mark.parametrize('inp, exp', [
+    (os.pathsep.join(['xonsh_dir', '../', '.', '~/']),
+     ['xonsh_dir', '../', '.', '~/']),
+    ('/home/wakka' + os.pathsep + '/home/jakka' + os.pathsep + '~/',
+     ['/home/wakka', '/home/jakka', '~/'])
+])
+def test_env_path_multipath(inp, exp, xonsh_builtins, env):
     # cases that involve path-separated strings
-    multipath_cases = [
-        (os.pathsep.join(['xonsh_dir', '../', '.', '~/']),
-         ['xonsh_dir', '../', '.', '~/']),
-        ('/home/wakka' + os.pathsep + '/home/jakka' + os.pathsep + '~/',
-         ['/home/wakka', '/home/jakka', '~/'])
-    ]
-    with mock_xonsh_env(TOOLS_ENV):
-        for inp, exp in multipath_cases:
-            obs = [i for i in EnvPath(inp)]
-            assert [expand(i) for i in exp] == obs
+    xonsh_builtins.__xonsh_env__ = env
+    if env == TOOLS_ENV:
+        obs = [i for i in EnvPath(inp)]
+        assert [expand(i) for i in exp] == obs
+    else:
+        obs = [i for i in EnvPath(inp)]
+        assert [i for i in exp] == obs
 
-    with mock_xonsh_env(ENCODE_ENV_ONLY):
-        for inp, exp in multipath_cases:
-            obs = [i for i in EnvPath(inp)]
-            assert [i for i in exp] == obs
 
-    # cases that involve pathlib.Path objects
-    pathlib_cases = [
-        (pathlib.Path('/home/wakka'), ['/home/wakka'.replace('/', os.sep)]),
-        (pathlib.Path('~/'), ['~']),
-        (pathlib.Path('.'), ['.']),
-        (['/home/wakka', pathlib.Path('/home/jakka'), '~/'],
-         ['/home/wakka', '/home/jakka'.replace('/', os.sep), '~/']),
-        (['/home/wakka', pathlib.Path('../'), '../'],
-         ['/home/wakka', '..', '../']),
-        (['/home/wakka', pathlib.Path('~/'), '~/'],
-         ['/home/wakka', '~', '~/']),
-    ]
-
-    with mock_xonsh_env(TOOLS_ENV):
-        for inp, exp in pathlib_cases:
-            # iterate over EnvPath to acquire all expanded paths
-            obs = [i for i in EnvPath(inp)]
-            assert [expand(i) for i in exp] == obs
-
-def test_env_path_slices():
-    # build os-dependent paths properly
-    def mkpath(*paths):
-        return os.sep + os.sep.join(paths)
-
-    # get all except the last element in a slice
-    slice_last = [
-        ([mkpath('home', 'wakka'),
-          mkpath('home', 'jakka'),
-          mkpath('home', 'yakka')],
-         [mkpath('home', 'wakka'),
-          mkpath('home', 'jakka')])]
-
-    for inp, exp in slice_last:
-        obs = EnvPath(inp)[:-1]
-        assert exp == obs
->>>>>>> master
+@pytest.mark.parametrize('inp, exp', [
+    (pathlib.Path('/home/wakka'), ['/home/wakka'.replace('/',os.sep)]),
+    (pathlib.Path('~/'), ['~']),
+    (pathlib.Path('.'), ['.']),
+    (['/home/wakka', pathlib.Path('/home/jakka'), '~/'],
+     ['/home/wakka', '/home/jakka'.replace('/',os.sep), '~/']),
+    (['/home/wakka', pathlib.Path('../'), '../'],
+     ['/home/wakka', '..', '../']),
+    (['/home/wakka', pathlib.Path('~/'), '~/'],
+     ['/home/wakka', '~', '~/']),
+])
+def test_env_path_with_pathlib_path_objects(inp, exp, xonsh_builtins):
+    xonsh_builtins.__xonsh_env__ = TOOLS_ENV
+    # iterate over EnvPath to acquire all expanded paths
+    obs = [i for i in EnvPath(inp)]
+    assert [expand(i) for i in exp] == obs
 
 @pytest.mark.parametrize('inp', ['42.0', [42.0]] )
 def test_is_nonstring_seq_of_strings_false(inp):
@@ -794,7 +764,7 @@ def mkpath(*paths):
      [mkpath('home', 'wakka'),
       mkpath('home', 'jakka')])
 ])
-def test_env_path_slice_get_all_except_last_element(inp, exp):
+def test_env_path_slice_get_all_except_klast_element(inp, exp):
     obs = EnvPath(inp)[:-1]
     assert exp == obs
 
@@ -930,7 +900,6 @@ def test_bool_or_int_to_str(inp, exp):
         ('(1:2:3)', slice(1, 2, 3)),
         ('r', False),
         ('r:11', False),
-<<<<<<< HEAD
         ])
 def test_ensure_int_or_slice(inp, exp):
     obs = ensure_int_or_slice(inp)
@@ -963,62 +932,16 @@ def test_is_dynamic_cwd_width(inp, exp):
     skip_if_on_windows(('/dev/null', True))
 ])
 def test_is_logfile_opt(inp, exp):
-    if ON_WINDOWS and inp == '/dev/null/':
-        pytest.skip(msg='Unix stuff')
     obs = is_logfile_opt(inp)
     assert exp == obs
 
 
 @pytest.mark.parametrize('inp, exp', [
-=======
-        ]
-    for inp, exp in cases:
-        obs = ensure_int_or_slice(inp)
-        assert exp == obs
-
-
-def test_is_dynamic_cwd_width():
-    cases = [
-        ('20', False),
-        ('20%', False),
-        ((20, 'c'), False),
-        ((20.0, 'm'), False),
-        ((20.0, 'c'), True),
-        ((20.0, '%'), True),
-        ]
-    for inp, exp in cases:
-        obs = is_dynamic_cwd_width(inp)
-        assert exp == obs
-
-
-def test_is_logfile_opt():
-    cases = [
-        ('throwback.log', True),
-        ('', True),
-        (None, True),
-        (True, False),
-        (False, False),
-        (42, False),
-        ([1, 2, 3], False),
-        ((1, 2), False),
-        (("wrong", "parameter"), False)
-    ]
-    if not ON_WINDOWS:
-        cases.append(('/dev/null', True))
-    for inp, exp in cases:
-        obs = is_logfile_opt(inp)
-        assert exp == obs
-
-
-def test_to_logfile_opt():
-    cases = [
->>>>>>> master
         (True, None),
         (False, None),
         (1, None),
         (None, None),
         ('throwback.log', 'throwback.log'),
-<<<<<<< HEAD
         skip_if_on_windows(('/dev/null', '/dev/null')),
         skip_if_on_windows(('/dev/nonexistent_dev', None))
     ])
@@ -1088,83 +1011,6 @@ def test_escape_windows_cmd_string(st, esc):
 def test_argvquote(st, esc):
     obs = argvquote(st)
     assert esc == obs
-=======
-    ]
-    if not ON_WINDOWS:
-        cases.append(('/dev/null', '/dev/null'))
-        cases.append(('/dev/nonexistent_dev', None))
-    for inp, exp in cases:
-        obs = to_logfile_opt(inp)
-        assert exp == obs
-
-
-def test_logfile_opt_to_str():
-    cases = [
-        (None, ''),
-        ('', ''),
-        ('throwback.log', 'throwback.log'),
-        ('/dev/null', '/dev/null')
-    ]
-    for inp, exp in cases:
-        obs = logfile_opt_to_str(inp)
-        assert exp == obs
-
-
-def test_to_dynamic_cwd_tuple():
-    cases = [
-        ('20', (20.0, 'c')),
-        ('20%', (20.0, '%')),
-        ((20, 'c'), (20.0, 'c')),
-        ((20, '%'), (20.0, '%')),
-        ((20.0, 'c'), (20.0, 'c')),
-        ((20.0, '%'), (20.0, '%')),
-        ('inf', (float('inf'), 'c')),
-        ]
-    for inp, exp in cases:
-        obs = to_dynamic_cwd_tuple(inp)
-        assert exp == obs
-
-
-def test_dynamic_cwd_tuple_to_str():
-    cases = [
-        ((20.0, 'c'), '20.0'),
-        ((20.0, '%'), '20.0%'),
-        ((float('inf'), 'c'), 'inf'),
-        ]
-    for inp, exp in cases:
-        obs = dynamic_cwd_tuple_to_str(inp)
-        assert exp == obs
-
-
-def test_escape_windows_cmd_string():
-    cases = [
-        ('', ''),
-        ('foo', 'foo'),
-        ('foo&bar', 'foo^&bar'),
-        ('foo$?-/_"\\', 'foo$?-/_^"\\'),
-        ('^&<>|', '^^^&^<^>^|'),
-        ('this /?', 'this /.')
-        ]
-    for st, esc in cases:
-        obs = escape_windows_cmd_string(st)
-        assert esc == obs
-
-
-def test_argvquote():
-    cases = [
-        ('', '""'),
-        ('foo', 'foo'),
-        (r'arg1 "hallo, "world""  "\some\path with\spaces")',
-         r'"arg1 \"hallo, \"world\"\"  \"\some\path with\spaces\")"'),
-        (r'"argument"2" argument3 argument4',
-         r'"\"argument\"2\" argument3 argument4"'),
-        (r'"\foo\bar bar\foo\" arg',
-         r'"\"\foo\bar bar\foo\\\" arg"')
-        ]
-    for st, esc in cases:
-        obs = argvquote(st)
-        assert esc == obs
->>>>>>> master
 
 
 _leaders = ('', 'not empty')
