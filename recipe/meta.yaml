@@ -1,13 +1,14 @@
 package:
   name: xonsh
-  version: {{ environ.get('GIT_DESCRIBE_TAG', '0.0.0') }}
+  version: {{ GIT_DESCRIBE_TAG + '.dev' + GIT_DESCRIBE_NUMBER }}
 
 source:
    git_url: ../
 
 build:
   script: python setup.py install --single-version-externally-managed --record=record.txt
-  number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
+  number: 0
+  string: {{'py' + CONDA_PY + '_' + GIT_DESCRIBE_HASH }}
   skip: True  # [py2k]
   entry_points:
     - xonsh = xonsh.main:main

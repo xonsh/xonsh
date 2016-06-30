@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Tests the xonsh lexer."""
+"""Tests xonsh tools."""
 import os
 import pathlib
 from tempfile import TemporaryDirectory
 import stat
+import builtins
 
 import pytest
 
@@ -15,7 +16,7 @@ from xonsh.tools import (
     bool_or_int_to_str, bool_to_str, check_for_partial_string,
     dynamic_cwd_tuple_to_str, ensure_int_or_slice, ensure_string,
     env_path_to_str, escape_windows_cmd_string, executables_in,
-    expand_case_matching, find_next_break, is_bool, is_bool_or_int,
+    expand_case_matching, find_next_break, iglobpath, is_bool, is_bool_or_int,
     is_callable, is_dynamic_cwd_width, is_env_path, is_float, is_int,
     is_int_as_str, is_logfile_opt, is_slice_as_str, is_string,
     is_string_or_callable, logfile_opt_to_str, str_to_env_path,
@@ -25,6 +26,8 @@ from xonsh.tools import (
     pathsep_to_upper_seq, seq_to_upper_pathsep,
     )
 from xonsh.commands_cache import CommandsCache
+from xonsh.built_ins import expand_path
+from xonsh.environ import Env
 
 from tools import mock_xonsh_env
 
@@ -317,6 +320,7 @@ def test_subexpr_from_unbalanced_parens():
         obs = subexpr_from_unbalanced(expr, '(', ')')
         assert exp == obs
 
+
 def test_find_next_break():
     cases = [
         ('ls && echo a', 0, 4),
@@ -329,6 +333,41 @@ def test_find_next_break():
     for line, mincol, exp in cases:
         obs = find_next_break(line, mincol=mincol, lexer=LEXER)
         assert exp == obs
+
+
+def test_iglobpath():
+    with TemporaryDirectory() as test_dir:
+        # Create files 00.test to 99.test in unsorted order
+        num = 18
+        for _ in range(100):
+            s = str(num).zfill(2)
+            path = os.path.join(test_dir, s + '.test')
+            with open(path, 'w') as file:
+                file.write(s + '\n')
+            num = (num + 37) % 100
+
+        # Create one file not matching the '*.test'
+        with open(os.path.join(test_dir, '07'), 'w') as file:
+            file.write('test\n')
+
+        with mock_xonsh_env(Env(EXPAND_ENV_VARS=False)):
+            builtins.__xonsh_expand_path__ = expand_path
+
+            paths = list(iglobpath(os.path.join(test_dir, '*.test'),
+                                   ignore_case=False, sort_result=False))
+            assert len(paths) == 100
+            paths = list(iglobpath(os.path.join(test_dir, '*'),
+                                   ignore_case=True, sort_result=False))
+            assert len(paths) == 101
+
+            paths = list(iglobpath(os.path.join(test_dir, '*.test'),
+                                   ignore_case=False, sort_result=True))
+            assert len(paths) == 100
+            assert paths == sorted(paths)
+            paths = list(iglobpath(os.path.join(test_dir, '*'),
+                                   ignore_case=True, sort_result=True))
+            assert len(paths) == 101
+            assert paths == sorted(paths)
 
 
 def test_is_int():
@@ -389,7 +428,7 @@ def test_is_slice_as_str():
         (None, False),
         ('42', False),
         ('-42', False),
-        (slice(1,2,3), False),
+        (slice(1, 2, 3), False),
         ([], False),
         (False, False),
         (True, False),
@@ -527,8 +566,6 @@ def test_seq_to_upper_pathsep():
         assert exp == obs
 
 
-
-
 def test_is_env_path():
     cases = [
         ('/home/wakka', False),
@@ -566,8 +603,9 @@ def test_env_path_to_str():
 
 
 def test_env_path():
-    # lambda to expand the expected paths
-    expand = lambda path: os.path.expanduser(os.path.expandvars(path))
+    def expand(path):
+        return os.path.expanduser(os.path.expandvars(path))
+
     getitem_cases = [
         ('xonsh_dir', 'xonsh_dir'),
         ('.', '.'),
@@ -604,11 +642,11 @@ def test_env_path():
 
     # cases that involve pathlib.Path objects
     pathlib_cases = [
-        (pathlib.Path('/home/wakka'), ['/home/wakka'.replace('/',os.sep)]),
+        (pathlib.Path('/home/wakka'), ['/home/wakka'.replace('/', os.sep)]),
         (pathlib.Path('~/'), ['~']),
         (pathlib.Path('.'), ['.']),
         (['/home/wakka', pathlib.Path('/home/jakka'), '~/'],
-         ['/home/wakka', '/home/jakka'.replace('/',os.sep), '~/']),
+         ['/home/wakka', '/home/jakka'.replace('/', os.sep), '~/']),
         (['/home/wakka', pathlib.Path('../'), '../'],
          ['/home/wakka', '..', '../']),
         (['/home/wakka', pathlib.Path('~/'), '~/'],
@@ -623,7 +661,8 @@ def test_env_path():
 
 def test_env_path_slices():
     # build os-dependent paths properly
-    mkpath = lambda *paths: os.sep + os.sep.join(paths)
+    def mkpath(*paths):
+        return os.sep + os.sep.join(paths)
 
     # get all except the last element in a slice
     slice_last = [
@@ -790,6 +829,7 @@ def test_is_dynamic_cwd_width():
         obs = is_dynamic_cwd_width(inp)
         assert exp == obs
 
+
 def test_is_logfile_opt():
     cases = [
         ('throwback.log', True),
@@ -808,6 +848,7 @@ def test_is_logfile_opt():
         obs = is_logfile_opt(inp)
         assert exp == obs
 
+
 def test_to_logfile_opt():
     cases = [
         (True, None),
@@ -823,6 +864,7 @@ def test_to_logfile_opt():
         obs = to_logfile_opt(inp)
         assert exp == obs
 
+
 def test_logfile_opt_to_str():
     cases = [
         (None, ''),
@@ -833,6 +875,7 @@ def test_logfile_opt_to_str():
     for inp, exp in cases:
         obs = logfile_opt_to_str(inp)
         assert exp == obs
+
 
 def test_to_dynamic_cwd_tuple():
     cases = [

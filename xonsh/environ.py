@@ -100,6 +100,7 @@ DEFAULT_ENSURERS = {
                           dynamic_cwd_tuple_to_str),
     'FORCE_POSIX_PATHS': (is_bool, to_bool, bool_to_str),
     'FUZZY_PATH_COMPLETION': (is_bool, to_bool, bool_to_str),
+    'GLOB_SORTED': (is_bool, to_bool, bool_to_str),
     'HISTCONTROL': (is_string_set, csv_to_set, set_to_csv),
     'IGNOREEOF': (is_bool, to_bool, bool_to_str),
     'INTENSIFY_COLORS_ON_WIN':(always_false, intensify_colors_on_win_setter,
@@ -222,6 +223,7 @@ DEFAULT_VALUES = {
     'EXPAND_ENV_VARS': True,
     'FORCE_POSIX_PATHS': False,
     'FUZZY_PATH_COMPLETION': True,
+    'GLOB_SORTED': True,
     'HISTCONTROL': set(),
     'IGNOREEOF': False,
     'INDENT': '    ',
@@ -379,6 +381,9 @@ DEFAULT_DOCS = {
         "used as a fallback if no other completions succeed but can be used "
         "as a way to adjust for typographical errors. If ``True``, then, e.g.,"
         " ``xonhs`` will match ``xonsh``."),
+    'GLOB_SORTED': VarDocs(
+        "Toggles whether globbing results are manually sorted. If ``False``, "
+        "the results are returned in arbitrary order."),
     'HISTCONTROL': VarDocs(
         'A set of strings (comma-separated list in string form) of options '
         'that determine what commands are saved to the history list. By '

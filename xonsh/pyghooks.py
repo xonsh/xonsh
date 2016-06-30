@@ -9,6 +9,10 @@ from warnings import warn
 from collections import ChainMap
 from collections.abc import MutableMapping
 
+# must come before pygments imports
+from xonsh.bg_pkg_resources import load_pkg_resources_in_background
+load_pkg_resources_in_background()
+
 from pygments.lexer import inherit, bygroups, using, this
 from pygments.lexers.shell import BashLexer
 from pygments.lexers.agile import PythonLexer

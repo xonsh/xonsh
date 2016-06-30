@@ -36,7 +36,6 @@ from xonsh.tools import (
 from xonsh.commands_cache import CommandsCache
 
 
-ENV = None
 BUILTINS_LOADED = False
 INSPECTOR = LazyObject(Inspector, globals(), 'INSPECTOR')
 AT_EXIT_SIGNALS = (signal.SIGABRT, signal.SIGFPE, signal.SIGILL, signal.SIGSEGV,
@@ -86,8 +85,7 @@ def superhelper(x, name=''):
 
 def expand_path(s):
     """Takes a string path and expands ~ to home and environment vars."""
-    global ENV
-    if ENV.get('EXPAND_ENV_VARS'):
+    if builtins.__xonsh_env__.get('EXPAND_ENV_VARS'):
         s = expandvars(s)
     return os.path.expanduser(s)
 
@@ -138,7 +136,9 @@ def regexsearch(s):
 
 def globsearch(s):
     csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
-    return globpath(s, ignore_case=(not csc), return_empty=True)
+    glob_sorted = builtins.__xonsh_env__.get('GLOB_SORTED')
+    return globpath(s, ignore_case=(not csc), return_empty=True,
+                    sort_result=glob_sorted)
 
 
 def pathsearch(func, s, pymode=False):
@@ -231,11 +231,6 @@ def get_script_subproc_command(fname, args):
         interp = o
 
     return interp + [fname] + args
-
-
-def _subproc_pre():
-    os.setpgrp()
-    signal.signal(signal.SIGTSTP, lambda n, f: signal.pause())
 
 
 _REDIR_NAME = "(o(?:ut)?|e(?:rr)?|a(?:ll)?|&?\d?)"
@@ -350,12 +345,13 @@ def run_subproc(cmds, captured=False):
 
     Lastly, the captured argument affects only the last real command.
     """
-    global ENV
+    env = builtins.__xonsh_env__
     background = False
     procinfo = {}
     if cmds[-1] == '&':
         background = True
         cmds = cmds[:-1]
+    _pipeline_group = None
     write_target = None
     last_cmd = len(cmds) - 1
     procs = []
@@ -452,7 +448,7 @@ def run_subproc(cmds, captured=False):
                     raise XonshError(e.format(cmd[0]))
         _stdin_file = None
         if (stdin is not None and
-                ENV.get('XONSH_STORE_STDIN') and
+                env.get('XONSH_STORE_STDIN') and
                 captured == 'object' and
                 __xonsh_commands_cache__.lazy_locate_binary('cat') and
                 __xonsh_commands_cache__.lazy_locate_binary('tee')):
@@ -482,20 +478,26 @@ def run_subproc(cmds, captured=False):
             prev_is_proxy = False
             usetee = ((stdout is None) and
                       (not background) and
-                      ENV.get('XONSH_STORE_STDOUT', False))
+                      env.get('XONSH_STORE_STDOUT', False))
             cls = TeePTYProc if usetee else Popen
             subproc_kwargs = {}
             if ON_POSIX and cls is Popen:
+                def _subproc_pre():
+                    if _pipeline_group is None:
+                        os.setpgrp()
+                    else:
+                        os.setpgid(0, _pipeline_group)
+                    signal.signal(signal.SIGTSTP, lambda n, f: signal.pause())
                 subproc_kwargs['preexec_fn'] = _subproc_pre
-            env = ENV.detype()
+            denv = env.detype()
             if ON_WINDOWS:
                 # Over write prompt variable as xonsh's $PROMPT does
                 # not make much sense for other subprocs
-                env['PROMPT'] = '$P$G'
+                denv['PROMPT'] = '$P$G'
             try:
                 proc = cls(aliased_cmd,
                            universal_newlines=uninew,
-                           env=env,
+                           env=denv,
                            stdin=stdin,
                            stdout=stdout,
                            stderr=stderr,
@@ -506,12 +508,14 @@ def run_subproc(cmds, captured=False):
             except FileNotFoundError:
                 cmd = aliased_cmd[0]
                 e = 'xonsh: subprocess mode: command not found: {0}'.format(cmd)
-                sug = suggest_commands(cmd, ENV, builtins.aliases)
+                sug = suggest_commands(cmd, env, builtins.aliases)
                 if len(sug.strip()) > 0:
-                    e += '\n' + suggest_commands(cmd, ENV, builtins.aliases)
+                    e += '\n' + suggest_commands(cmd, env, builtins.aliases)
                 raise XonshError(e)
         procs.append(proc)
         prev_proc = proc
+        if ON_POSIX and cls is Popen and _pipeline_group is None:
+            _pipeline_group = prev_proc.pid
     if not prev_is_proxy:
         add_job({
             'cmds': cmds,
@@ -519,8 +523,8 @@ def run_subproc(cmds, captured=False):
             'obj': prev_proc,
             'bg': background
         })
-    if (ENV.get('XONSH_INTERACTIVE') and
-            not ENV.get('XONSH_STORE_STDOUT') and
+    if (env.get('XONSH_INTERACTIVE') and
+            not env.get('XONSH_STORE_STDOUT') and
             not _capture_streams):
         # set title here to get current command running
         try:
@@ -555,8 +559,8 @@ def run_subproc(cmds, captured=False):
         if _capture_streams:
             # to get proper encoding from Popen, we have to
             # use a byte stream and then implement universal_newlines here
-            output = output.decode(encoding=ENV.get('XONSH_ENCODING'),
-                                   errors=ENV.get('XONSH_ENCODING_ERRORS'))
+            output = output.decode(encoding=env.get('XONSH_ENCODING'),
+                                   errors=env.get('XONSH_ENCODING_ERRORS'))
             output = output.replace('\r\n', '\n')
         else:
             hist.last_cmd_out = output
@@ -574,8 +578,8 @@ def run_subproc(cmds, captured=False):
             elif unnamed:
                 errout = prev_proc.stderr.read()
             if named or unnamed:
-                errout = errout.decode(encoding=ENV.get('XONSH_ENCODING'),
-                                       errors=ENV.get('XONSH_ENCODING_ERRORS'))
+                errout = errout.decode(encoding=env.get('XONSH_ENCODING'),
+                                       errors=env.get('XONSH_ENCODING_ERRORS'))
                 errout = errout.replace('\r\n', '\n')
                 procinfo['stderr'] = errout
 
@@ -589,7 +593,7 @@ def run_subproc(cmds, captured=False):
     if (not prev_is_proxy and
             hist.last_cmd_rtn is not None and
             hist.last_cmd_rtn > 0 and
-            ENV.get('RAISE_SUBPROC_ERROR')):
+            env.get('RAISE_SUBPROC_ERROR')):
         raise CalledProcessError(hist.last_cmd_rtn, aliased_cmd, output=output)
     if captured == 'stdout':
         return output
@@ -671,10 +675,10 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     """Loads the xonsh builtins into the Python builtins. Sets the
     BUILTINS_LOADED variable to True.
     """
-    global BUILTINS_LOADED, ENV
+    global BUILTINS_LOADED
     # private built-ins
     builtins.__xonsh_config__ = {}
-    builtins.__xonsh_env__ = ENV = Env(default_env(config=config, login=login))
+    builtins.__xonsh_env__ = env = Env(default_env(config=config, login=login))
     builtins.__xonsh_help__ = helper
     builtins.__xonsh_superhelp__ = superhelper
     builtins.__xonsh_pathsearch__ = pathsearch
@@ -716,7 +720,7 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
         builtins.aliases.update(load_foreign_aliases(issue_warning=False))
     # history needs to be started after env and aliases
     # would be nice to actually include non-detyped versions.
-    builtins.__xonsh_history__ = History(env=ENV.detype(),
+    builtins.__xonsh_history__ = History(env=env.detype(),
                                          ts=[time.time(), None], locked=True)
     atexit.register(_lastflush)
     for sig in AT_EXIT_SIGNALS:
@@ -733,10 +737,10 @@ def unload_builtins():
     """Removes the xonsh builtins from the Python builtins, if the
     BUILTINS_LOADED is True, sets BUILTINS_LOADED to False, and returns.
     """
-    global BUILTINS_LOADED, ENV
-    if ENV is not None:
-        ENV.undo_replace_env()
-        ENV = None
+    global BUILTINS_LOADED
+    env = getattr(builtins, '__xonsh_env__', None)
+    if isinstance(env, Env):
+        env.undo_replace_env()
     if hasattr(builtins, '__xonsh_pyexit__'):
         builtins.exit = builtins.__xonsh_pyexit__
     if hasattr(builtins, '__xonsh_pyquit__'):
