@@ -111,9 +111,9 @@ def dirty_version():
     """
     try:
         _version = subprocess.check_output(['git', 'describe', '--tags'])
-        _version = _version.decode('ascii')
-    except (subprocess.CalledProcessError, FileNotFoundError):
+    except Exception:
         return False
+    _version = _version.decode('ascii')
     try:
         base, N, sha = _version.strip().split('-')
     except ValueError: #on base release
