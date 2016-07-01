@@ -1197,32 +1197,6 @@ def _failover_template_format(template):
     return template
 
 
-def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
-    try:
-        return _format_prompt_main(template, formatter_dict)
-    except Exception:
-        return _failover_template_format(template)
-
-
-def _format_prompt_main(template, formatter_dict):
-    """Formats a xonsh prompt template string."""
-    template = template() if callable(template) else template
-    fmtter = _get_fmtter(formatter_dict)
-    included_names = set(i[1] for i in _FORMATTER.parse(template))
-    fmt = {}
-    for name in included_names:
-        if name is None:
-            continue
-        if name.startswith('$'):
-            v = builtins.__xonsh_env__[name[1:]]
-        else:
-            v = fmtter[name]
-        val = v() if callable(v) else v
-        val = '' if val is None else val
-        fmt[name] = val
-    return template.format(**fmt)
-
-
 def partial_format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
     """Formats a xonsh prompt template string."""
     try:
