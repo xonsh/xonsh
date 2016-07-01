@@ -10,7 +10,7 @@ import pytest
 from xonsh.ast import pdump
 from xonsh.parser import Parser
 
-from tools import VER_FULL, skip_if_py34
+from tools import (mock_xonsh_env, VER_FULL, skip_if_py34)
 
 PARSER = None
 DEBUG_LEVEL = 0
@@ -1518,43 +1518,30 @@ def test_async_await():
 # Xonsh specific syntax
 #
 
-@pytest.mark.parametrize('env, inp', [
-    # dollar
-    ({'WAKKA': 42}, '$WAKKA'), # name
-    ({'WAKKA': 42}, '${None or "WAKKA"}'), # py test
-    ({'WAKKA': 42, 'JAWAKA': 'WAKKA'}, '${$JAWAKA}'), # py recursive name
-    ({'WAKKA': 42, 'JAWAKA': 'WAKKA'}, '${None or $JAWAKA}'), # py test recursive name
-    ({'WAKKA': 42, 'JAWAKA': 'WAKKA'}, '${${"JAWA" + $JAWAKA[-2:]}}'), #  py test recursive test
-])
-def test_xonsh_ast(env, inp, xonsh_builtins, run=True, mode='eval'):
-    __tracebackhide__ = True
-    xonsh_builtins.__xonsh_env__ = env
-    obs = PARSER.parse(inp, debug_level=DEBUG_LEVEL)
-    if obs is None:
-        return  # comment only
-    bytecode = compile(obs, '<test-xonsh-ast>', mode)
-    if run:
-        exec(bytecode)
-
-def test_question():
-    check_xonsh_ast({}, 'range?')
-
-def test_dobquestion():
-    check_xonsh_ast({}, 'range??')
-
-def test_question_chain():
-    check_xonsh_ast({}, 'range?.index?')
-
+def test_dollar_name():
+    check_xonsh_ast({'WAKKA': 42}, '$WAKKA')
 
 def test_dollar_py():
     check_xonsh({'WAKKA': 42}, 'x = "WAKKA"; y = ${x}')
+
+def test_dollar_py_test():
+    check_xonsh_ast({'WAKKA': 42}, '${None or "WAKKA"}')
+
+def test_dollar_py_recursive_name():
+    check_xonsh_ast({'WAKKA': 42, 'JAWAKA': 'WAKKA'}, '${$JAWAKA}')
+
+def test_dollar_py_test_recursive_name():
+    check_xonsh_ast({'WAKKA': 42, 'JAWAKA': 'WAKKA'}, '${None or $JAWAKA}')
+
+def test_dollar_py_test_recursive_test():
+    check_xonsh_ast({'WAKKA': 42, 'JAWAKA': 'WAKKA'},
+                    '${${"JAWA" + $JAWAKA[-2:]}}')
 
 def test_dollar_name_set():
     check_xonsh({'WAKKA': 42}, '$WAKKA = 42')
 
 def test_dollar_py_set():
     check_xonsh({'WAKKA': 42}, 'x = "WAKKA"; ${x} = 65')
-
 
 def test_dollar_sub():
     check_xonsh_ast({}, '$(ls)', False)
@@ -1573,6 +1560,9 @@ def test_nested_madness():
 
 def test_ls_dot_nesting():
     check_xonsh_ast({}, '$(ls @(None or "."))', False)
+
+def test_ls_dot_nesting_var():
+    check_xonsh({}, 'x = "."; $(ls @(None or x))', False)
 
 def test_ls_dot_str():
     check_xonsh_ast({}, '$(ls ".")', False)
@@ -1601,6 +1591,9 @@ def test_bang_ls_dot():
 def test_bang_ls_dot_nesting():
     check_xonsh_ast({}, '!(ls @(None or "."))', False)
 
+def test_bang_ls_dot_nesting_var():
+    check_xonsh({}, 'x = "."; !(ls @(None or x))', False)
+
 def test_bang_ls_dot_str():
     check_xonsh_ast({}, '!(ls ".")', False)
 
@@ -1615,6 +1608,15 @@ def test_bang_ls_envvar_strval():
 
 def test_bang_ls_envvar_listval():
     check_xonsh_ast({'WAKKA': ['.', '.']}, '!(ls $WAKKA)', False)
+
+def test_question():
+    check_xonsh_ast({}, 'range?')
+
+def test_dobquestion():
+    check_xonsh_ast({}, 'range??')
+
+def test_question_chain():
+    check_xonsh_ast({}, 'range?.index?')
 
 def test_ls_regex():
     check_xonsh_ast({}, '$(ls `[Ff]+i*LE` -l)', False)
@@ -1697,6 +1699,14 @@ def test_bang_git_quotes_no_space():
 def test_bang_git_quotes_space():
     check_xonsh_ast({}, '![git commit -am "wakka jawaka"]', False)
 
+def test_bang_git_two_quotes_space():
+    check_xonsh({}, '![git commit -am "wakka jawaka"]\n'
+                    '![git commit -am "flock jawaka"]\n', False)
+
+def test_bang_git_two_quotes_space_space():
+    check_xonsh({}, '![git commit -am "wakka jawaka" ]\n'
+                    '![git commit -am "flock jawaka milwaka" ]\n', False)
+
 def test_bang_ls_quotes_3_space():
     check_xonsh_ast({}, '![ls "wakka jawaka baraka"]', False)
 
@@ -1754,6 +1764,14 @@ def test_git_quotes_no_space():
 def test_git_quotes_space():
     check_xonsh_ast({}, '$[git commit -am "wakka jawaka"]', False)
 
+def test_git_two_quotes_space():
+    check_xonsh({}, '$[git commit -am "wakka jawaka"]\n'
+                    '$[git commit -am "flock jawaka"]\n', False)
+
+def test_git_two_quotes_space_space():
+    check_xonsh({}, '$[git commit -am "wakka jawaka" ]\n'
+                    '$[git commit -am "flock jawaka milwaka" ]\n', False)
+
 def test_ls_quotes_3_space():
     check_xonsh_ast({}, '$[ls "wakka jawaka baraka"]', False)
 
@@ -1768,28 +1786,6 @@ def test_comment_only():
 
 def test_echo_slash_question():
     check_xonsh_ast({}, '![echo /?]', False)
-
-def test_git_two_quotes_space():
-    check_xonsh({}, '$[git commit -am "wakka jawaka"]\n'
-                    '$[git commit -am "flock jawaka"]\n', False)
-
-def test_git_two_quotes_space_space():
-    check_xonsh({}, '$[git commit -am "wakka jawaka" ]\n'
-                    '$[git commit -am "flock jawaka milwaka" ]\n', False)
-
-def test_bang_ls_dot_nesting_var():
-    check_xonsh({}, 'x = "."; !(ls @(None or x))', False)
-
-def test_ls_dot_nesting_var():
-    check_xonsh({}, 'x = "."; $(ls @(None or x))', False)
-
-def test_bang_git_two_quotes_space():
-    check_xonsh({}, '![git commit -am "wakka jawaka"]\n'
-                    '![git commit -am "flock jawaka"]\n', False)
-
-def test_bang_git_two_quotes_space_space():
-    check_xonsh({}, '![git commit -am "wakka jawaka" ]\n'
-                    '![git commit -am "flock jawaka milwaka" ]\n', False)
 
 
 _error_names = {'e', 'err', '2'}
