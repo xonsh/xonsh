@@ -1,14 +1,17 @@
 """Tests xonsh contexts."""
-from tools import (execer_setup, check_exec, check_eval, check_parse)
+from tools import check_exec
 from xonsh.contexts import Block, Functor
+
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def xonsh_execer_autouse(xonsh_builtins, xonsh_execer):
+    return xonsh_execer
 
 #
 # helpers
 #
-
-def setup_module():
-    execer_setup()
-
 
 X1_WITH = ('x = 1\n'
            'with Block() as b:\n')

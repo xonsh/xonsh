@@ -9,7 +9,7 @@ import glob
 
 @pytest.fixture
 def xonsh_execer(monkeypatch):
-    monkeypatch.setattr(xonsh.built_ins, 'load_builtins', lambda: None)
+    monkeypatch.setattr(xonsh.built_ins, 'load_builtins', lambda *args, **kwargs: None)
     execer = Execer(login=False, unload=False)
     builtins.__xonsh_execer__ = execer
     return execer
@@ -30,6 +30,7 @@ def xonsh_builtins():
     builtins.__xonsh_subproc_uncaptured__ = sp
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     builtins.XonshBlockError = XonshBlockError
+    builtins.__xonsh_subproc_captured_hiddenobject__ = sp
     builtins.evalx = eval
     builtins.execx = None
     builtins.compilex = None

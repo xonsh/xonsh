@@ -9,9 +9,8 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
-def xonsh_execer_autouse(xonsh_execer):
+def xonsh_execer_autouse(xonsh_builtins, xonsh_execer):
     return xonsh_execer
-
 
 
 @skip_if_on_unix

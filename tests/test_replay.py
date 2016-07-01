@@ -15,77 +15,44 @@ from tools import skip_if_on_darwin
 
 SHELL = Shell({'PATH': []})
 HISTDIR = os.path.join(os.path.dirname(__file__), 'histories')
+def run_replay(re_file):
+    with swap(builtins, '__xonsh_shell__', SHELL):
+        with swap(builtins, '__xonsh_exit__', False):
+            r = Replayer(re_file)
+            hist = r.replay()
+    return hist
 
 
-@pytest.fixture
-def re_file():
-    return 'echo.json'
-
-
-@pytest.yield_fixture
-def replay(re_file, xonsh_builtins):
-    xonsh_builtins.__xonsh_env__['__xonsh_shell__'] = SHELL
-    xonsh_builtins.__xonsh_env__['__xonsh_exit__'] = False
-    f = os.path.join(HISTDIR, re_file)
-    r = Replayer(f)
-    print("file:", f)
-    print('replayer:', r)
-    hist = r.replay()
-    print('hist:', hist)
-    yield hist
+def cleanup_replay(hist):
     fname = hist.filename
     del hist
     if os.path.isfile(fname):
         os.remove(fname)
 
 
-@pytest.mark.parametrize('re_file, expected_len', [
-    ('echo.json', 2),
-    ('simple-python.json', 4),
-])
-def test_replay(expected_len, replay, xonsh_builtins):
-    assert len(replay) == expected_len
+@contextmanager
+def a_replay(re_file):
+    hist = run_replay(re_file)
+    yield hist
+    cleanup_replay(hist)
 
 
-# def run_replay(re_file):
-#     with swap(builtins, '__xonsh_shell__', SHELL):
-#         with swap(builtins, '__xonsh_exit__', False):
-#             r = Replayer(re_file)
-#             hist = r.replay()
-#     return hist
+@skip_if_on_darwin
+def test_echo():
+    f = os.path.join(HISTDIR, 'echo.json')
+    with a_replay(f) as hist:
+        assert 2 == len(hist)
 
 
-# def cleanup_replay(hist):
-#     fname = hist.filename
-#     del hist
-#     if os.path.isfile(fname):
-#         os.remove(fname)
+@skip_if_on_darwin
+def test_reecho():
+    f = os.path.join(HISTDIR, 'echo.json')
+    with a_replay(f) as hist:
+        assert 2 == len(hist)
 
-
-# @contextmanager
-# def a_replay(re_file):
-#     hist = run_replay(re_file)
-#     yield hist
-#     cleanup_replay(hist)
-
-
-# @skip_if_on_darwin
-# def test_echo():
-#     f = os.path.join(HISTDIR, 'echo.json')
-#     with a_replay(f) as hist:
-#         assert 2 == len(hist)
-
-
-# @skip_if_on_darwin
-# def test_reecho():
-#     f = os.path.join(HISTDIR, 'echo.json')
-#     with a_replay(f) as hist:
-#         assert 2 == len(hist)
-
-
-# @skip_if_on_darwin
-# def test_simple_python():
-#     f = os.path.join(HISTDIR, 'simple-python.json')
-#     with a_replay(f) as hist:
-#         assert 4 == len(hist)
-#         assert "print('The Turtles')" == hist.inps[0].strip()
+@skip_if_on_darwin
+def test_simple_python():
+    f = os.path.join(HISTDIR, 'simple-python.json')
+    with a_replay(f) as hist:
+        assert 4 == len(hist)
+        assert "print('The Turtles')" == hist.inps[0].strip()

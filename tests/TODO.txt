@@ -1,35 +1,8 @@
-tools.py
---------
-- maybe make stub Execer a fixture
-  for (text_execer, test_ast, test_context)
-- decouple check_exec, check_eval, check_parse from xonsh_builtins
-
 test_tools.py
 -------------
-- refactor test_partial_string
-- refactor test_executable
-- maybe split test_commands_cache_lazy
+- test_env_path_getitem fails
 
 
-test_aliases.py
----------------
-- migrate TestWhich
-
-
-test_dirstack.py
-----------------
-- better way for chdir contextmanager?
-
-
-test_replay.py
+test_parser.py
 --------------
-- incomplete/bug : TypeError: 'LazyObject' object is not subscriptable
-
-test_history.py
----------------
-- could be refactored
-
-
-test_contexts.py
-test_execer.py
-test_ptk_multiline.py
+- test bug

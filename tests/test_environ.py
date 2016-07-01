@@ -103,19 +103,19 @@ def test_HISTCONTROL_none():
     assert len(env['HISTCONTROL']) == 0
 
 def test_HISTCONTROL_empty():
-    env['HISTCONTROL'] = ''
+    env = Env(HISTCONTROL='')
     assert isinstance(env['HISTCONTROL'], set)
     assert len(env['HISTCONTROL']) == 0
 
 def test_HISTCONTROL_ignoredups():
-    env['HISTCONTROL'] = 'ignoredups'
+    env = Env(HISTCONTROL='ignoredups')
     assert isinstance(env['HISTCONTROL'], set)
     assert len(env['HISTCONTROL']) == 1
     assert ('ignoredups' in env['HISTCONTROL'])
     assert ('ignoreerr' not in env['HISTCONTROL'])
 
 def test_HISTCONTROL_ignoreerr_ignoredups():
-    env['HISTCONTROL'] = 'ignoreerr,ignoredups,ignoreerr'
+    env = Env(HISTCONTROL='ignoreerr,ignoredups,ignoreerr')
     assert len(env['HISTCONTROL']) == 2
     assert ('ignoreerr' in env['HISTCONTROL'])
     assert ('ignoredups' in env['HISTCONTROL'])

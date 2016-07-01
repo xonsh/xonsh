@@ -18,7 +18,7 @@ from tools import skip_if_on_windows
 HOME_PATH = os.path.expanduser('~')
 
 
-@pytest.mark.parametrize('testfile', [*reglob('test_.*')])
+@pytest.mark.parametrize('testfile', reglob('test_.*'))
 def test_reglob_tests(testfile):
     assert (testfile.startswith('test_'))
 

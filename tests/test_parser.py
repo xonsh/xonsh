@@ -19,9 +19,6 @@ INC_ATTRS = (3, 5, 1) <= VER_FULL
 def xonsh_builtins_autouse(xonsh_builtins):
     return xonsh_builtins
 
-# def setup_module():
-#     # only setup one parser
-#     global PARSER
 PARSER = Parser(lexer_optimize=False, yacc_optimize=False, yacc_debug=True,
                 lexer_table='lexer_test_table',
                 yacc_table='parser_test_table')
@@ -56,11 +53,12 @@ def nodes_equal(x, y):
     for (xname, xval), (yname, yval) in zip(ast.iter_fields(x),
                                             ast.iter_fields(y)):
         assert xname == yname
-        assert xval == yval
-    return True
+        if not isinstance(xval, ast.AST):
+            assert xval == yval
     for xchild, ychild in zip(ast.iter_child_nodes(x),
                               ast.iter_child_nodes(y)):
         assert nodes_equal(xchild, ychild)
+    return True
 
 # def assert_nodes_equal(x, y, include_attributes=True):
 #     __tracebackhide__ = True
@@ -79,7 +77,6 @@ def check_ast(inp, run=True, mode='eval'):
     obs = PARSER.parse(inp, debug_level=0)
     # Check that they are equal
     assert nodes_equal(exp, obs)
-    return True
     # round trip by running xonsh AST via Python
     source = compile(obs, '<test-ast>', mode)
     if run:
