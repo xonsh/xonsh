@@ -1205,8 +1205,7 @@ By default, the following variables are available for use:
     ``/path/to/xonsh``.
   * ``cwd_base``: The basename of the current working directory, e.g. ``xonsh`` in
     ``/path/to/xonsh``.
-  * ``curr_branch``: The name of the current git branch (preceded by space),
-    if any.
+  * ``curr_branch``: The name of the current git branch, if any.
   * ``branch_color``: ``{BOLD_GREEN}`` if the current git branch is clean,
     otherwise ``{BOLD_RED}``. This is yellow if the branch color could not be
     determined.
@@ -1268,9 +1267,6 @@ For example:
     2 ~ $
     8 ~ $
 
-If a function in ``$FORMATTER_DICT`` returns ``None``, the ``None`` will be
-interpreted as an empty string.
-
 Environment variables and functions are also available with the ``$``
 prefix.  For example:
 
@@ -1278,6 +1274,36 @@ prefix.  For example:
 
     snail@home ~ $ $PROMPT = "{$LANG} >"
     en_US.utf8 >
+
+Note that some entries of the ``$FORMATTER_DICT`` are not always applicable, for
+example, ``curr_branch`` returns ``None`` if the current directory is not in a
+repository. The ``None`` will be interpreted as an empty string.
+
+But let's consider a problem:
+
+.. code-block:: console
+
+    snail@home ~/xonsh $ $PROMPT = "{cwd_base} [{curr_branch}] $ "
+    xonsh [master] $ cd ..
+    ~ [] $
+
+We want the branch to be displayed in square brackets, but we also don't want
+the brackets (and the extra space) to be displayed when there is no branch. The
+solution is to add a nested format string (separated with a colon) that will be
+invoked only if the value is not ``None``:
+
+.. code-block:: console
+
+    snail@home ~/xonsh $ $PROMPT = "{cwd_base}{curr_branch: [{}]} $ "
+    xonsh [master] $ cd ..
+    ~ $
+
+The curly brackets act as a placeholder, because the additional part is an
+ordinary format string. What we're doing here is equivalent to this expression:
+
+.. code-block:: python
+    " [{}]".format(curr_branch()) if curr_branch() is not None else ""
+
 
 Executing Commands and Scripts
 ==============================

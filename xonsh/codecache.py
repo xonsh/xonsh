@@ -103,7 +103,7 @@ def compile_code(filename, code, execer, glb, loc, mode):
         old_filename = execer.filename
         execer.filename = filename
         ccode = execer.compile(code, glbs=glb, locs=loc, mode=mode)
-    except:
+    except Exception:
         raise
     finally:
         execer.filename = old_filename

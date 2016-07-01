@@ -4,6 +4,46 @@ Xonsh Change Log
 
 .. current developments
 
+v0.4.3
+====================
+
+**Added:**
+
+* The results of glob expressions are sorted if ``$GLOB_SORTED`` is set.
+* LazyObjects will now load themselves on ``__getitem__()``
+* New tools in ``xonsh.lazyasd`` module for loading modules in background
+  threads.
+
+
+**Changed:**
+
+* ``GLOB_SORTED`` is enabled by default.
+* Sped up loading of pygments by ~100x by loading ``pkg_resources`` in
+  background.
+* Sped up loading of prompt-toolkit by ~2x-3x by loading ``pkg_resources``
+  in background.
+* ``setup.py`` will no longer git checkout to replace the version number.
+  Now it simply stores and reuses the original version line.
+
+
+**Removed:**
+
+* Removed the ``xonsh.built_ins.ENV`` global instance of the Env class.
+
+
+**Fixed:**
+
+* Bug with setting hist size not being settable due to lazy object loading
+  has been resolved.
+* Minor amalgamate bug with ``import pkg.mod`` amalgamated imports.
+* No longer raises an error if a directory in ``$PATH`` does not exist on
+  Python v3.4.
+* Fixed a readline shell completion issue that caused by inconsistence between
+  ``$CASE_SENSITIVE_COMPLETIONS`` and readline's inputrc setting.
+
+
+
+
 v0.4.2
 ====================
 

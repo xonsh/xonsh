@@ -1270,7 +1270,7 @@ def _get_color_indexes(style_map):
                 rgb = (int(attr.color[0:2], 16),
                        int(attr.color[2:4], 16),
                        int(attr.color[4:6], 16))
-            except:
+            except Exception:
                 rgb = None
             yield token, index, rgb
 
@@ -1524,7 +1524,7 @@ def expandvars(path):
                             value = dollar + brace + '...' + rbrace
                         else:
                             value = dollar + brace + var + rbrace
-                    except:
+                    except Exception:
                         value = dollar + brace + var + rbrace
                     res += value
             else:

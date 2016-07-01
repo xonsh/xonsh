@@ -1,4 +1,4 @@
-__version__ = '0.4.2'
+__version__ = '0.4.3'
 
 # amalgamate exclude jupyter_kernel parser_table parser_test_table pyghooks
 # amalgamate exclude winutils wizard
@@ -9,8 +9,6 @@ else:
     import sys as _sys
     try:
         from xonsh import __amalgam__
-        bg_pkg_resources = __amalgam__
-        _sys.modules['xonsh.bg_pkg_resources'] = __amalgam__
         completer = __amalgam__
         _sys.modules['xonsh.completer'] = __amalgam__
         lazyasd = __amalgam__
