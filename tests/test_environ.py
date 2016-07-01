@@ -7,8 +7,8 @@ import builtins
 from tempfile import TemporaryDirectory
 from xonsh.tools import ON_WINDOWS
 
-from xonsh.environ import (Env, format_prompt, load_static_config,
-    locate_binary, partial_format_prompt)
+from xonsh.environ import (Env, load_static_config, locate_binary,
+    partial_format_prompt)
 
 from tools import mock_xonsh_env
 
@@ -61,8 +61,25 @@ def test_format_prompt():
         '{f} jawaka': 'wakka jawaka',
         }
     for p, exp in cases.items():
-        obs = format_prompt(template=p, formatter_dict=formatter_dict)
+        obs = partial_format_prompt(template=p, formatter_dict=formatter_dict)
         assert exp == obs
+
+def test_format_prompt_with_format_spec():
+    formatter_dict = {
+        'a_string': 'cats',
+        'a_number': 7,
+        'empty': '',
+        'current_job': (lambda: 'sleep'),
+        'none': (lambda: None),
+        }
+    cases = {
+        '{a_number:{0:^3}}cats': ' 7 cats',
+        '{current_job:{} | }xonsh': 'sleep | xonsh',
+        '{none:{} | }{a_string}{empty:!}': 'cats!',
+        '{none:{}}': '',
+        '{{{a_string:{{{}}}}}}': '{{cats}}',
+        '{{{none:{{{}}}}}}': '{}',
+        }
     for p, exp in cases.items():
         obs = partial_format_prompt(template=p, formatter_dict=formatter_dict)
         assert exp == obs
@@ -70,12 +87,10 @@ def test_format_prompt():
 def test_format_prompt_with_broken_template():
     for p in ('{user', '{user}{hostname'):
         assert partial_format_prompt(p) == p
-        assert format_prompt(p) == p
 
     # '{{user' will be parsed to '{user'
     for p in ('{{user}', '{{user'):
         assert 'user' in partial_format_prompt(p)
-        assert 'user' in format_prompt(p)
 
 def test_format_prompt_with_broken_template_in_func():
     for p in (
@@ -86,14 +101,12 @@ def test_format_prompt_with_broken_template_in_func():
     ):
         # '{{user' will be parsed to '{user'
         assert 'user' in partial_format_prompt(p)
-        assert 'user' in format_prompt(p)
 
 def test_format_prompt_with_invalid_func():
     def p():
         foo = bar  # raises exception
         return '{user}'
     assert isinstance(partial_format_prompt(p), str)
-    assert isinstance(format_prompt(p), str)
 
 def test_HISTCONTROL():
     env = Env(HISTCONTROL=None)

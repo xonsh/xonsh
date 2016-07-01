@@ -159,20 +159,20 @@ def is_callable_default(x):
     return callable(x) and getattr(x, '_xonsh_callable_default', False)
 
 if ON_CYGWIN:
-    DEFAULT_PROMPT = ('{env_name}{BOLD_GREEN}{user}@{hostname}'
+    DEFAULT_PROMPT = ('{env_name:{} }{BOLD_GREEN}{user}@{hostname}'
                       '{BOLD_BLUE} {cwd} {prompt_end}{NO_COLOR} ')
 elif ON_WINDOWS:
-    DEFAULT_PROMPT = ('{env_name}'
+    DEFAULT_PROMPT = ('{env_name:{} }'
                       '{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} '
-                      '{cwd}{branch_color}{curr_branch}{NO_COLOR} '
+                      '{cwd}{branch_color}{curr_branch: {}}{NO_COLOR} '
                       '{BOLD_INTENSE_CYAN}{prompt_end}{NO_COLOR} ')
 else:
-    DEFAULT_PROMPT = ('{env_name}'
+    DEFAULT_PROMPT = ('{env_name:{} }'
                       '{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
-                      '{cwd}{branch_color}{curr_branch}{NO_COLOR} '
+                      '{cwd}{branch_color}{curr_branch: {}}{NO_COLOR} '
                       '{BOLD_BLUE}{prompt_end}{NO_COLOR} ')
 
-DEFAULT_TITLE = '{current_job}{user}@{hostname}: {cwd} | xonsh'
+DEFAULT_TITLE = '{current_job:{} | }{user}@{hostname}: {cwd} | xonsh'
 
 @default_value
 def xonsh_data_dir(env):
@@ -873,7 +873,7 @@ def get_git_branch():
         except subprocess.TimeoutExpired as e:
             branch = e
         except (subprocess.CalledProcessError, FileNotFoundError):
-            branch = ''
+            branch = None
     return branch
 
 
@@ -897,7 +897,7 @@ def get_hg_branch(cwd=None, root=None):
     if not isinstance(root, str):
         # Bail if we are not in a repo or we timed out
         if root:
-            return ''
+            return None
         else:
             return subprocess.TimeoutExpired(['hg'], env['VC_BRANCH_TIMEOUT'])
     # get branch name
@@ -937,13 +937,16 @@ def _first_branch_timeout_message():
           file=sys.stderr)
 
 
-def current_branch(pad=True):
+def current_branch(pad=NotImplemented):
     """Gets the branch for a current working directory. Returns an empty string
     if the cwd is not a repository.  This currently only works for git and hg
     and should be extended in the future.  If a timeout occurred, the string
     '<branch-timeout>' is returned.
     """
-    branch = ''
+    if pad is not NotImplemented:
+        warn("The `pad` argument of `current_branch` has no effect now and "
+             "will be removed in the future")
+    branch = None
     cmds = builtins.__xonsh_commands_cache__
     if cmds.lazy_locate_binary('git') or cmds.is_empty():
         branch = get_git_branch()
@@ -952,8 +955,6 @@ def current_branch(pad=True):
     if isinstance(branch, subprocess.TimeoutExpired):
         branch = '<branch-timeout>'
         _first_branch_timeout_message()
-    if pad and branch:
-        branch = ' ' + branch
     return branch
 
 
@@ -1119,20 +1120,20 @@ def _current_job():
             s = cmd[0]
             if s == 'sudo' and len(cmd) > 1:
                 s = cmd[1]
-            return '{} | '.format(s)
-    return ''
+            return s
 
 
-def env_name(pre_chars='(', post_chars=') '):
+def env_name(pre_chars='(', post_chars=')'):
     """Extract the current environment name from $VIRTUAL_ENV or
     $CONDA_DEFAULT_ENV if that is set
     """
     env_path = builtins.__xonsh_env__.get('VIRTUAL_ENV', '')
     if len(env_path) == 0 and ON_ANACONDA:
-        pre_chars, post_chars = '[', '] '
+        pre_chars, post_chars = '[', ']'
         env_path = builtins.__xonsh_env__.get('CONDA_DEFAULT_ENV', '')
     env_name = os.path.basename(env_path)
-    return pre_chars + env_name + post_chars if env_name else ''
+    if env_name:
+        return pre_chars + env_name + post_chars
 
 
 if ON_WINDOWS:
@@ -1197,32 +1198,6 @@ def _failover_template_format(template):
     return template
 
 
-def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
-    try:
-        return _format_prompt_main(template, formatter_dict)
-    except Exception:
-        return _failover_template_format(template)
-
-
-def _format_prompt_main(template, formatter_dict):
-    """Formats a xonsh prompt template string."""
-    template = template() if callable(template) else template
-    fmtter = _get_fmtter(formatter_dict)
-    included_names = set(i[1] for i in _FORMATTER.parse(template))
-    fmt = {}
-    for name in included_names:
-        if name is None:
-            continue
-        if name.startswith('$'):
-            v = builtins.__xonsh_env__[name[1:]]
-        else:
-            v = fmtter[name]
-        val = v() if callable(v) else v
-        val = '' if val is None else val
-        fmt[name] = val
-    return template.format(**fmt)
-
-
 def partial_format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
     """Formats a xonsh prompt template string."""
     try:
@@ -1245,15 +1220,13 @@ def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
         if field is None:
             continue
         elif field.startswith('$'):
-            v = builtins.__xonsh_env__[field[1:]]
-            v = _FORMATTER.convert_field(v, conv)
-            v = _FORMATTER.format_field(v, spec)
-            toks.append(v)
-            continue
+            val = builtins.__xonsh_env__[field[1:]]
+            val = _format_value(val, spec, conv)
+            toks.append(val)
         elif field in fmtter:
             v = fmtter[field]
             val = v() if callable(v) else v
-            val = '' if val is None else val
+            val = _format_value(val, spec, conv)
             toks.append(val)
         else:
             toks.append(bopen)
@@ -1266,6 +1239,22 @@ def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
                 toks.append(spec)
             toks.append(bclose)
     return ''.join(toks)
+
+
+def _format_value(val, spec, conv):
+    """Formats a value from a template string {val!conv:spec}. The spec is
+    applied as a format string itself, but if the value is None, the result
+    will be empty. The purpose of this is to allow optional parts in a
+    prompt string. For example, if the prompt contains '{current_job:{} | }',
+    and 'current_job' returns 'sleep', the result is 'sleep | ', and if
+    'current_job' returns None, the result is ''.
+    """
+    if val is None:
+        return ''
+    val = _FORMATTER.convert_field(val, conv)
+    if spec:
+        val = _FORMATTER.format(spec, val)
+    return val
 
 
 RE_HIDDEN = re.compile('\001.*?\002')
