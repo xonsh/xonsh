@@ -1,74 +1,89 @@
 # -*- coding: utf-8 -*-
 """Tests the xonsh parser."""
-from __future__ import unicode_literals, print_function
 import os
 import sys
 import ast
+import builtins
 
 import pytest
 
 from xonsh.ast import pdump
 from xonsh.parser import Parser
 
-from tools import (mock_xonsh_env, VER_FULL, skip_if_py34)
-
-PARSER = None
-DEBUG_LEVEL = 0
-#DEBUG_LEVEL = 100
+from tools import VER_FULL, skip_if_py34
 
 # a lot of col_offset data changed from Py v3.5.0 -> v3.5.1
 INC_ATTRS = (3, 5, 1) <= VER_FULL
 
-def setup_module():
-    # only setup one parser
-    global PARSER
-    PARSER = Parser(lexer_optimize=False, yacc_optimize=False, yacc_debug=True,
-                    lexer_table='lexer_test_table',
-                    yacc_table='parser_test_table')
+@pytest.fixture(autouse=True)
+def xonsh_builtins_autouse(xonsh_builtins):
+    return xonsh_builtins
+
+# def setup_module():
+#     # only setup one parser
+#     global PARSER
+PARSER = Parser(lexer_optimize=False, yacc_optimize=False, yacc_debug=True,
+                lexer_table='lexer_test_table',
+                yacc_table='parser_test_table')
+
+# def nodes_equal(x, y):
+#     __tracebackhide__ = True
+#     if type(x) != type(y):
+#         return False
+#     if isinstance(x, (ast.Expr, ast.FunctionDef, ast.ClassDef)):
+#         if x.lineno != y.lineno:
+#             return False
+#         if x.col_offset != y.col_offset:
+#             return False
+#     for (xname, xval), (yname, yval) in zip(ast.iter_fields(x),
+#                                             ast.iter_fields(y)):
+#         if xname != yname:
+#             return False
+#         if xval != yval:
+#             return False
+#     for xchild, ychild in zip(ast.iter_child_nodes(x),
+#                               ast.iter_child_nodes(y)):
+#         if not nodes_equal(xchild, ychild):
+#             return False
+#     return True
 
 def nodes_equal(x, y):
     __tracebackhide__ = True
-    if type(x) != type(y):
-        return False
+    assert type(x) == type(y)
     if isinstance(x, (ast.Expr, ast.FunctionDef, ast.ClassDef)):
-        if x.lineno != y.lineno:
-            return False
-        if x.col_offset != y.col_offset:
-            return False
+        assert x.lineno == y.lineno
+        assert x.col_offset == y.col_offset
     for (xname, xval), (yname, yval) in zip(ast.iter_fields(x),
                                             ast.iter_fields(y)):
-        if xname != yname:
-            return False
-        if xval != yval:
-            return False
+        assert xname == yname
+        assert xval == yval
+    return True
     for xchild, ychild in zip(ast.iter_child_nodes(x),
                               ast.iter_child_nodes(y)):
-        if not nodes_equal(xchild, ychild):
-            return False
-    return True
+        assert nodes_equal(xchild, ychild)
 
-def assert_nodes_equal(x, y, include_attributes=True):
-    __tracebackhide__ = True
-    if nodes_equal(x, y):
-        return True
-    error_msg = 'x:\n=={}\ny:\n=={}\n'.format(
-        pdump(x, include_attributes=include_attributes),
-        pdump(y, include_attributes=include_attributes))
-    if DEBUG_LEVEL > 0:
-        print(error_msg, file=sys.stderr)
-        pytest.fail(error_msg)
+# def assert_nodes_equal(x, y, include_attributes=True):
+#     __tracebackhide__ = True
+#     if nodes_equal(x, y):
+#         return True
+#     error_msg = 'x:\n=={}\ny:\n=={}\n'.format(
+#         pdump(x, include_attributes=include_attributes),
+#         pdump(y, include_attributes=include_attributes))
+#     pytest.fail(error_msg)
 
 def check_ast(inp, run=True, mode='eval'):
     __tracebackhide__ = True
     # expect a Python AST
     exp = ast.parse(inp, mode=mode)
     # observe something from xonsh
-    obs = PARSER.parse(inp, debug_level=DEBUG_LEVEL)
+    obs = PARSER.parse(inp, debug_level=0)
     # Check that they are equal
-    assert_nodes_equal(exp, obs, include_attributes=INC_ATTRS)
+    assert nodes_equal(exp, obs)
+    return True
     # round trip by running xonsh AST via Python
+    source = compile(obs, '<test-ast>', mode)
     if run:
-        exec(compile(obs, '<test-ast>', mode))
+        exec(source)
 
 def check_stmts(inp, run=True, mode='exec'):
     __tracebackhide__ = True
@@ -78,13 +93,14 @@ def check_stmts(inp, run=True, mode='exec'):
 
 def check_xonsh_ast(xenv, inp, run=True, mode='eval'):
     __tracebackhide__ = True
-    with mock_xonsh_env(xenv):
-        obs = PARSER.parse(inp, debug_level=DEBUG_LEVEL)
-        if obs is None:
-            return  # comment only
-        bytecode = compile(obs, '<test-xonsh-ast>', mode)
-        if run:
-            exec(bytecode)
+    builtins.__xonsh_env__ = xenv
+    obs = PARSER.parse(inp)
+    if obs is None:
+        return  # comment only
+    bytecode = compile(obs, '<test-xonsh-ast>', mode)
+    if run:
+        exec(bytecode)
+    return True
 
 def check_xonsh(xenv, inp, run=True, mode='exec'):
     __tracebackhide__ = True
@@ -900,11 +916,6 @@ def test_rshift_op_two():
 
 def test_rshift_op_three():
     check_ast('42 >> 65 >> 1 >> 7')
-
-
-#DEBUG_LEVEL = 1
-
-
 
 
 #
@@ -1788,32 +1799,35 @@ def test_echo_slash_question():
     check_xonsh_ast({}, '![echo /?]', False)
 
 
-_error_names = {'e', 'err', '2'}
-_output_names = {'', 'o', 'out', '1'}
-_all_names = {'a', 'all', '&'}
-_e2o_map = {'e>o', 'e>out', 'err>o', 'err>o', '2>1', 'e>1', 'err>1', '2>out',
-            '2>o', 'err>&1', 'e>&1', '2>&1'}
-
 def test_redirect():
-    yield check_xonsh_ast, {}, '$[cat < input.txt]', False
-    yield check_xonsh_ast, {}, '$[< input.txt cat]', False
-    for o in _output_names:
-        yield check_xonsh_ast, {}, '$[echo "test" {}> test.txt]'.format(o), False
-        yield check_xonsh_ast, {}, '$[< input.txt echo "test" {}> test.txt]'.format(o), False
-        yield check_xonsh_ast, {}, '$[echo "test" {}> test.txt < input.txt]'.format(o), False
-    for e in _error_names:
-        yield check_xonsh_ast, {}, '$[echo "test" {}> test.txt]'.format(e), False
-        yield check_xonsh_ast, {}, '$[< input.txt echo "test" {}> test.txt]'.format(e), False
-        yield check_xonsh_ast, {}, '$[echo "test" {}> test.txt < input.txt]'.format(e), False
-    for a in _all_names:
-        yield check_xonsh_ast, {}, '$[echo "test" {}> test.txt]'.format(a), False
-        yield check_xonsh_ast, {}, '$[< input.txt echo "test" {}> test.txt]'.format(a), False
-        yield check_xonsh_ast, {}, '$[echo "test" {}> test.txt < input.txt]'.format(a), False
-    for r in _e2o_map:
-        for o in _output_names:
-            yield check_xonsh_ast, {}, '$[echo "test" {} {}> test.txt]'.format(r, o), False
-            yield check_xonsh_ast, {}, '$[< input.txt echo "test" {} {}> test.txt]'.format(r, o), False
-            yield check_xonsh_ast, {}, '$[echo "test" {} {}> test.txt < input.txt]'.format(r, o), False
+    assert check_xonsh_ast({}, '$[cat < input.txt]', False)
+    assert check_xonsh_ast({}, '$[< input.txt cat]', False)
 
-#DEBUG_LEVEL = 1
-#DEBUG_LEVEL = 100
+@pytest.mark.parametrize('case', ['', 'o', 'out', '1'])
+def test_redirect_output(case):
+    assert check_xonsh_ast({}, '$[echo "test" {}> test.txt]'.format(case), False)
+    assert check_xonsh_ast({}, '$[< input.txt echo "test" {}> test.txt]'.format(case), False)
+    assert check_xonsh_ast({}, '$[echo "test" {}> test.txt < input.txt]'.format(case), False)
+
+@pytest.mark.parametrize('case', ['e', 'err', '2'])
+def test_redirect_error(case):
+    assert check_xonsh_ast({}, '$[echo "test" {}> test.txt]'.format(case), False)
+    assert check_xonsh_ast({}, '$[< input.txt echo "test" {}> test.txt]'.format(case), False)
+    assert check_xonsh_ast({}, '$[echo "test" {}> test.txt < input.txt]'.format(case), False)
+
+@pytest.mark.parametrize('case', ['a', 'all', '&'])
+def test_redirect_all(case):
+    assert check_xonsh_ast({}, '$[echo "test" {}> test.txt]'.format(case), False)
+    assert check_xonsh_ast({}, '$[< input.txt echo "test" {}> test.txt]'.format(case), False)
+    assert check_xonsh_ast({}, '$[echo "test" {}> test.txt < input.txt]'.format(case), False)
+
+@pytest.mark.parametrize('r',
+    ['e>o', 'e>out', 'err>o', 'err>o',
+     ' 2>1', 'e>1', 'err>1', '2>out',
+     '2>o', 'err>&1', 'e>&1', '2>&1'
+])
+@pytest.mark.parametrize('o', ['', 'o', 'out', '1'])
+def test_redirect_error_to_output(r, o):
+    assert check_xonsh_ast({}, '$[echo "test" {} {}> test.txt]'.format(r, o), False)
+    assert check_xonsh_ast({}, '$[< input.txt echo "test" {} {}> test.txt]'.format(r, o), False)
+    assert check_xonsh_ast({}, '$[echo "test" {} {}> test.txt < input.txt]'.format(r, o), False)
