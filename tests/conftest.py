@@ -1,9 +1,18 @@
 import builtins
 import pytest
 from tools import DummyShell, sp, XonshBlockError
+import xonsh.built_ins
 from xonsh.built_ins import ensure_list_of_strs
+from xonsh.execer import Execer
 import glob
 
+
+@pytest.fixture
+def xonsh_execer(monkeypatch):
+    monkeypatch.setattr(xonsh.built_ins, 'load_builtins', lambda: None)
+    execer = Execer(login=False, unload=False)
+    builtins.__xonsh_execer__ = execer
+    return execer
 
 
 @pytest.yield_fixture

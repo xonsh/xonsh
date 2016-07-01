@@ -172,8 +172,10 @@ def test_locate_binary_on_windows(xonsh_builtins):
             fpath = os.path.join(tmpdir, fname)
             with open(fpath, 'w') as f:
                 f.write(fpath)
-        env = Env({'PATH': [tmpdir], 'PATHEXT': ['.COM', '.EXE', '.BAT']})
-        xonsh_builtins.__xonsh_env__ = env
+        xonsh_builtins.__xonsh_env__.update({
+            'PATH': [tmpdir],
+            'PATHEXT': ['.COM', '.EXE', '.BAT'],
+        })
         assert ( locate_binary('file1') == os.path.join(tmpdir,'file1.exe'))
         assert ( locate_binary('file1.exe') == os.path.join(tmpdir,'file1.exe'))
         assert ( locate_binary('file2') == os.path.join(tmpdir,'FILE2.BAT'))

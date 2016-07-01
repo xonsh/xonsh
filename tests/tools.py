@@ -14,7 +14,6 @@ import pytest
 from xonsh.built_ins import ensure_list_of_strs
 from xonsh.environ import Env
 from xonsh.base_shell import BaseShell
-from xonsh.execer import Execer
 from xonsh.tools import XonshBlockError
 
 
@@ -67,37 +66,22 @@ class DummyShell:
 # Execer tools
 #
 
-DEBUG_LEVEL = 0
-EXECER = None
-
-
-def execer_setup():
-    # only setup one parser
-    global EXECER
-    if EXECER is None:
-        EXECER = Execer(debug_level=DEBUG_LEVEL, login=False)
-
-
 def check_exec(input, **kwargs):
-    # with mock_xonsh_env(None):
     if not input.endswith('\n'):
         input += '\n'
-    EXECER.debug_level = DEBUG_LEVEL
-    EXECER.exec(input, **kwargs)
+    builtins.__xonsh_execer__.exec(input, **kwargs)
+    return True
 
 
 def check_eval(input):
-    env = Env({'AUTO_CD': False, 'XONSH_ENCODING': 'utf-8',
-               'XONSH_ENCODING_ERRORS': 'strict', 'PATH': []})
+    builtins.__xonsh_env__ = Env({'AUTO_CD': False, 'XONSH_ENCODING': 'utf-8',
+                                  'XONSH_ENCODING_ERRORS': 'strict', 'PATH': []})
     if ON_WINDOWS:
-        env['PATHEXT'] = ['.COM', '.EXE', '.BAT', '.CMD']
-    with mock_xonsh_env(env):
-        EXECER.debug_level = DEBUG_LEVEL
-        EXECER.eval(input)
+        builtins.__xonsh_env__['PATHEXT'] = ['.COM', '.EXE', '.BAT', '.CMD']
+    builtins.__xonsh_execer__.eval(input)
+    return True
 
 
 def check_parse(input):
-    with mock_xonsh_env(None):
-        EXECER.debug_level = DEBUG_LEVEL
-        tree = EXECER.parse(input, ctx=None)
+    tree = builtins.__xonsh_execer__.parse(input, ctx=None)
     return tree
