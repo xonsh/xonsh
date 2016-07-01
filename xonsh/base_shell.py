@@ -13,7 +13,7 @@ from xonsh.codecache import (should_use_cache, code_cache_name,
                              code_cache_check, get_cache_filename,
                              update_cache, run_compiled_code)
 from xonsh.completer import Completer
-from xonsh.environ import multiline_prompt, format_prompt, partial_format_prompt
+from xonsh.environ import multiline_prompt, partial_format_prompt
 
 
 class _TeeOut(object):
@@ -236,7 +236,7 @@ class BaseShell(object):
         t = env.get('TITLE')
         if t is None:
             return
-        t = format_prompt(t)
+        t = partial_format_prompt(t)
         if ON_WINDOWS and 'ANSICON' not in env:
             t = escape_windows_cmd_string(t)
             os.system('title {}'.format(t))

@@ -68,8 +68,11 @@ def make_node(name, pkg, allowed):
         elif isinstance(a, ImportFrom):
             if a.module == pkg:
                 pkgdeps.update(n.name for n in a.names if n.name in allowed)
-            elif a.module.startswith(pkgdot):
-                p, dot, m = a.module.rpartition('.')
+            elif not a.module or a.module.startswith(pkgdot):
+                if a.module is None:
+                    p, dot, m = pkg, ".", a.names[0].name
+                else:
+                    p, dot, m = a.module.rpartition('.')
                 if p == pkg and m in allowed:
                     pkgdeps.add(m)
                 else:
@@ -139,7 +142,7 @@ class _LazyModule(_ModuleType):
 
     def __getattribute__(self, name):
         if name == '__dct__':
-            return super().__getattribute__(name)
+            return super(_LazyModule, self).__getattribute__(name)
         dct = self.__dct__
         mod = dct['mod']
         if dct['loaded']:
@@ -240,7 +243,11 @@ def rewrite_imports(name, pkg, order, imps):
                 s = format_lazy_import(keep)
             replacements.append((start, stop, s))
         elif isinstance(a, ImportFrom):
-            p, dot, m = a.module.rpartition('.')
+            if not a.module:
+                a.module = pkg
+                p, dot, m = pkg, ".", ""
+            else:
+                p, dot, m = a.module.rpartition('.')
             if a.module == pkg:
                 for n in a.names:
                     if n.name in order:
@@ -336,6 +343,7 @@ del _os
 def rewrite_init(pkg, order, debug='DEBUG'):
     """Rewrites the init file to insert modules."""
     fname, lines = _init_name_lines(pkg)
+    start, stop = -1, -1
     for i, line in enumerate(lines):
         if line.startswith('# amalgamate end'):
             stop = i

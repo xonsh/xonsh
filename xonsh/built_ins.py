@@ -551,7 +551,7 @@ def run_subproc(cmds, captured=False):
                 output = stdoutfile.read()
             try:
                 _nstdout.close()
-            except:
+            except Exception:
                 pass
             os.unlink(_stdout_name)
         elif prev_proc.stdout not in (None, sys.stdout):
@@ -572,7 +572,7 @@ def run_subproc(cmds, captured=False):
                     errout = stderrfile.read()
                 try:
                     _nstderr.close()
-                except:
+                except Exception:
                     pass
                 os.unlink(_stderr_name)
             elif unnamed:
