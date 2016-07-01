@@ -34,7 +34,7 @@ def partial_color_format(template, style='default', cmap=None, hide=False):
     """
     try:
         return _partial_color_format_main(template, style=style, cmap=cmap, hide=hide)
-    except:
+    except Exception:
         return template
 
 

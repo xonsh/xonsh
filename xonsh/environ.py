@@ -1200,7 +1200,7 @@ def _failover_template_format(template):
 def format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
     try:
         return _format_prompt_main(template, formatter_dict)
-    except:
+    except Exception:
         return _failover_template_format(template)
 
 
@@ -1228,7 +1228,7 @@ def partial_format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
     try:
         return _partial_format_prompt_main(template=template,
                                            formatter_dict=formatter_dict)
-    except:
+    except Exception:
         return _failover_template_format(template)
 
 
