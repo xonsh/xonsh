@@ -32,9 +32,5 @@ test_history.py
 
 test_contexts.py
 test_execer.py
-test_foreign_shells.py
 test_imphooks.py
-test_lazyjson.py
-test_main.py
 test_ptk_multiline.py
-test_wizard.py

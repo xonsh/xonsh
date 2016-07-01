@@ -3,75 +3,64 @@
 from __future__ import unicode_literals, print_function
 
 import builtins
+import sys
 from unittest.mock import patch
+
 import xonsh.main
 
-from tools import mock_xonsh_env
-
+import pytest
 
 
 def Shell(*args, **kwargs):
     pass
 
 
-def test_premain():
-    with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
-        with patch('sys.stdin.isatty') as faketty:
-            faketty.return_value = True
-            xonsh.main.premain([])
-            assert builtins.__xonsh_env__.get('XONSH_LOGIN')
-
-    with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
-        xonsh.main.premain(['-i'])
-        assert (builtins.__xonsh_env__.get('XONSH_LOGIN'))
-
-    with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
-        xonsh.main.premain(['-i'])
-        assert (builtins.__xonsh_env__.get('XONSH_INTERACTIVE'))
-
-    with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
-        xonsh.main.premain(['-l', '-c', 'echo "hi"'])
-        assert (builtins.__xonsh_env__.get('XONSH_LOGIN'))
-
-    with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
-        xonsh.main.premain(['-c', 'echo "hi"'])
-        assert not (builtins.__xonsh_env__.get('XONSH_LOGIN'))
-
-    with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
-        xonsh.main.premain(['-l'])
-        assert (builtins.__xonsh_env__.get('XONSH_LOGIN'))
-
-    with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
-        xonsh.main.premain(['-DTEST1=1616', '-DTEST2=LOL'])
-        assert (builtins.__xonsh_env__.get('TEST1') == '1616')
-        assert (builtins.__xonsh_env__.get('TEST2') == 'LOL')
+@pytest.fixture
+def shell(xonsh_builtins, monkeypatch):
+    monkeypatch.setattr(xonsh.main, 'Shell', Shell)
 
 
-def test_premain_with_file_argument():
-    with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
-        xonsh.main.premain(['tests/sample.xsh'])
-        assert not (builtins.__xonsh_env__.get('XONSH_INTERACTIVE'))
-
-    for case in ('-i', '-vERSION', '-hAALP','TTTT', '-TT', '--TTT'):
-        with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
-            xonsh.main.premain(['tests/sample.xsh', case])
-            assert not (builtins.__xonsh_env__.get('XONSH_INTERACTIVE'))
-
-    # interactive
-    with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
-        xonsh.main.premain(['-i', 'tests/sample.xsh'])
-        assert (builtins.__xonsh_env__.get('XONSH_INTERACTIVE'))
+def test_premain_no_arg(shell, monkeypatch):
+    monkeypatch.setattr(sys.stdin, 'isatty', lambda: True)
+    xonsh.main.premain([])
+    assert builtins.__xonsh_env__.get('XONSH_LOGIN')
 
 
+def test_premain_interactive(shell):
+    xonsh.main.premain(['-i'])
+    assert (builtins.__xonsh_env__.get('XONSH_INTERACTIVE'))
 
-def test_premain_invalid_arguments():
-    # pytest transition
-    # TODO: check for proper error msg in stdout (howto nose?)
-    with patch('xonsh.main.Shell', Shell), mock_xonsh_env({}):
-        for case in ('----', '--hep', '-TT', '--TTTT'):
-            try:
-                xonsh.main.premain([case])
-            except SystemExit:
-                pass
-            else:
-                assert False
+
+def test_premain_login_command(shell):
+    xonsh.main.premain(['-l', '-c', 'echo "hi"'])
+    assert (builtins.__xonsh_env__.get('XONSH_LOGIN'))
+
+
+def test_premain_login(shell):
+    xonsh.main.premain(['-l'])
+    assert (builtins.__xonsh_env__.get('XONSH_LOGIN'))
+
+
+def test_premain_D(shell):
+    xonsh.main.premain(['-DTEST1=1616', '-DTEST2=LOL'])
+    assert (builtins.__xonsh_env__.get('TEST1') == '1616')
+    assert (builtins.__xonsh_env__.get('TEST2') == 'LOL')
+
+
+@pytest.mark.parametrize('arg',
+    ['', '-i', '-vERSION', '-hAALP','TTTT', '-TT', '--TTT'] )
+def test_premain_with_file_argument(arg, shell):
+    xonsh.main.premain(['tests/sample.xsh', arg])
+    assert not (builtins.__xonsh_env__.get('XONSH_INTERACTIVE'))
+
+
+def test_premain_interactive__with_file_argument(shell):
+    xonsh.main.premain(['-i', 'tests/sample.xsh'])
+    assert (builtins.__xonsh_env__.get('XONSH_INTERACTIVE'))
+
+
+@pytest.mark.parametrize('case', ['----', '--hep', '-TT', '--TTTT'])
+def test_premain_invalid_arguments(case, shell, capsys):
+    with pytest.raises(SystemExit):
+        xonsh.main.premain([case])
+    assert 'unrecognized argument' in capsys.readouterr()[1]
