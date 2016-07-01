@@ -1,7 +1,7 @@
 import builtins
 import pytest
 from tools import DummyShell, sp, XonshBlockError
-from xonsh.tools import ensure_list_of_strs
+from xonsh.built_ins import ensure_list_of_strs
 import glob
 
 

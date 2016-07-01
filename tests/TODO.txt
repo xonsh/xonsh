@@ -32,5 +32,4 @@ test_history.py
 
 test_contexts.py
 test_execer.py
-test_imphooks.py
 test_ptk_multiline.py
