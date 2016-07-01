@@ -2,11 +2,10 @@ tools.py
 --------
 - maybe make stub Execer a fixture
   for (text_execer, test_ast, test_context)
-- decouple check_exec, check_eval, check_parse from xonsh_env
+- decouple check_exec, check_eval, check_parse from xonsh_builtins
 
 test_tools.py
 -------------
-- EnvPath bug
 - refactor test_partial_string
 - refactor test_executable
 - maybe split test_commands_cache_lazy
@@ -32,14 +31,10 @@ test_history.py
 
 
 test_contexts.py
-test_environ.py
 test_execer.py
 test_foreign_shells.py
 test_imphooks.py
 test_lazyjson.py
-test_lexer.py
 test_main.py
-test_parser.py
 test_ptk_multiline.py
-test_tools.py
 test_wizard.py
