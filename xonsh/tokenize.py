@@ -531,7 +531,7 @@ def _tokopen(filename):
         text = TextIOWrapper(buffer, encoding, line_buffering=True)
         text.mode = 'r'
         return text
-    except:
+    except Exception:
         buffer.close()
         raise
 

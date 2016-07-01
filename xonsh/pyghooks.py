@@ -206,7 +206,7 @@ def partial_color_tokenize(template):
     color = Color.NO_COLOR
     try:
         toks, color = _partial_color_tokenize_main(template, styles)
-    except:
+    except Exception:
         toks = [(Color.NO_COLOR, template)]
     if styles is not None:
         styles[color]  # ensure color is available
