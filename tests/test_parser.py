@@ -23,26 +23,6 @@ PARSER = Parser(lexer_optimize=False, yacc_optimize=False, yacc_debug=True,
                 lexer_table='lexer_test_table',
                 yacc_table='parser_test_table')
 
-# def nodes_equal(x, y):
-#     __tracebackhide__ = True
-#     if type(x) != type(y):
-#         return False
-#     if isinstance(x, (ast.Expr, ast.FunctionDef, ast.ClassDef)):
-#         if x.lineno != y.lineno:
-#             return False
-#         if x.col_offset != y.col_offset:
-#             return False
-#     for (xname, xval), (yname, yval) in zip(ast.iter_fields(x),
-#                                             ast.iter_fields(y)):
-#         if xname != yname:
-#             return False
-#         if xval != yval:
-#             return False
-#     for xchild, ychild in zip(ast.iter_child_nodes(x),
-#                               ast.iter_child_nodes(y)):
-#         if not nodes_equal(xchild, ychild):
-#             return False
-#     return True
 
 def nodes_equal(x, y):
     __tracebackhide__ = True
@@ -53,21 +33,13 @@ def nodes_equal(x, y):
     for (xname, xval), (yname, yval) in zip(ast.iter_fields(x),
                                             ast.iter_fields(y)):
         assert xname == yname
-        if not isinstance(xval, ast.AST):
-            assert xval == yval
+        # if not isinstance(xval, ast.AST):
+        #     assert xval == yval
     for xchild, ychild in zip(ast.iter_child_nodes(x),
                               ast.iter_child_nodes(y)):
         assert nodes_equal(xchild, ychild)
     return True
 
-# def assert_nodes_equal(x, y, include_attributes=True):
-#     __tracebackhide__ = True
-#     if nodes_equal(x, y):
-#         return True
-#     error_msg = 'x:\n=={}\ny:\n=={}\n'.format(
-#         pdump(x, include_attributes=include_attributes),
-#         pdump(y, include_attributes=include_attributes))
-#     pytest.fail(error_msg)
 
 def check_ast(inp, run=True, mode='eval'):
     __tracebackhide__ = True
@@ -78,9 +50,8 @@ def check_ast(inp, run=True, mode='eval'):
     # Check that they are equal
     assert nodes_equal(exp, obs)
     # round trip by running xonsh AST via Python
-    source = compile(obs, '<test-ast>', mode)
     if run:
-        exec(source)
+        exec(compile(obs, '<test-ast>', mode))
 
 def check_stmts(inp, run=True, mode='exec'):
     __tracebackhide__ = True

@@ -1,8 +1,0 @@
-test_tools.py
--------------
-- test_env_path_getitem fails
-
-
-test_parser.py
---------------
-- test bug
