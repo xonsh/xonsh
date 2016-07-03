@@ -1,3 +1,4 @@
+import pytest
 
 try:
     import prompt_toolkit

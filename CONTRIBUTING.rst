@@ -188,8 +188,6 @@ Note that you can pass multiple test names in the above examples::
 
     $ py.test test_aliases.py test_environ.py
 
-Happy testing!
-
 ----------------------------------
 Writing the Tests - Advanced
 ----------------------------------
@@ -216,13 +214,15 @@ when writting tests it's best to use pytest features i.e parametrization::
         ...
 
 this will run the test two times each time with the respective `test_env`.
-This can be done with for loop too but the test will run
+This can be done with a for loop too but the test will run
 only once for the different test cases and you get less isolation.
 
 With that in mind, each test should have the least `assert` statements,
 preferably one.
 
 At the moment, xonsh doesn't support any pytest plugins.
+
+Happy Testing!
 
 
 How to Document
