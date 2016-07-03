@@ -11,8 +11,8 @@ from contextlib import contextmanager
 
 import pytest
 
-from xonsh.built_ins import ensure_list_of_strs
 from xonsh.environ import Env
+from xonsh.built_ins import ensure_list_of_strs
 from xonsh.base_shell import BaseShell
 from xonsh.tools import XonshBlockError
 

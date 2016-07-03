@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""Tests for the PromptToolkitHistory class."""
-import os
-import sys
-
-import pytest
 
 try:
     import prompt_toolkit
@@ -15,6 +9,7 @@ from xonsh.ptk.history import PromptToolkitHistory
 
 @pytest.fixture
 def history_obj():
+    """Instatiate `PromptToolkitHistory` and append a line string"""
     hist = PromptToolkitHistory(load_prev=False)
     hist.append('line10')
     return hist

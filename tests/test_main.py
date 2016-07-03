@@ -17,6 +17,7 @@ def Shell(*args, **kwargs):
 
 @pytest.fixture
 def shell(xonsh_builtins, monkeypatch):
+    """Xonsh Shell Mock"""
     monkeypatch.setattr(xonsh.main, 'Shell', Shell)
 
 

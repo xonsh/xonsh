@@ -9,6 +9,7 @@ import glob
 
 @pytest.fixture
 def xonsh_execer(monkeypatch):
+    """Initiate the Execer with a mocked nop `load_builtins`"""
     monkeypatch.setattr(xonsh.built_ins, 'load_builtins', lambda *args, **kwargs: None)
     execer = Execer(login=False, unload=False)
     builtins.__xonsh_execer__ = execer
@@ -17,6 +18,7 @@ def xonsh_execer(monkeypatch):
 
 @pytest.yield_fixture
 def xonsh_builtins():
+    """Mock out most of the builtins xonsh attributes."""
     builtins.__xonsh_env__ = {}
     builtins.__xonsh_ctx__ = {}
     builtins.__xonsh_shell__ = DummyShell()
@@ -53,4 +55,3 @@ def xonsh_builtins():
     del builtins.execx
     del builtins.compilex
     del builtins.aliases
-
