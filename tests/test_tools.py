@@ -1019,7 +1019,7 @@ def test_partial_string():
                             assert _res == (len(l+_test+f+l2), None, s2)
 
 
-def test_executables_in():
+def test_executables_in(xonsh_builtins):
     expected = set()
     types = ('file', 'directory', 'brokensymlink')
     if ON_WINDOWS:
@@ -1052,8 +1052,8 @@ def test_executables_in():
                 if executable and not _type == 'brokensymlink':
                     os.chmod(path, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
             if ON_WINDOWS:
-                with mock_xonsh_builtins(PATHEXT_ENV):
-                    result = set(executables_in(test_path))
+                xonsh_builtins.__xonsh_env__ = PATHEXT_ENV
+                result = set(executables_in(test_path))
             else:
                 result = set(executables_in(test_path))
     assert (expected == result)
