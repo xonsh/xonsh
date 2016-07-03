@@ -195,8 +195,8 @@ Writing the Tests - Advanced
 (refer to pytest documentation)
 
 With the Pytest framework you can use bare `assert` statements on
-anything you're trying to test, note that the name of the test functions
-has to be prefixed with 'test_'::
+anything you're trying to test, note that the name of the test function
+has to be prefixed with `test_`::
 
     def test_whatever():
         assert is_true_or_false
