@@ -109,7 +109,7 @@ def test_format_prompt_with_invalid_func():
         return '{user}'
     assert isinstance(partial_format_prompt(p), str)
 
-def test_HISTCONTROL_none():
+def test_histcontrol_none():
     env = Env(HISTCONTROL=None)
     assert isinstance(env['HISTCONTROL'], set)
     assert len(env['HISTCONTROL']) == 0
@@ -119,14 +119,14 @@ def test_HISTCONTROL_empty():
     assert isinstance(env['HISTCONTROL'], set)
     assert len(env['HISTCONTROL']) == 0
 
-def test_HISTCONTROL_ignoredups():
+def test_histcontrol_ignoredups():
     env = Env(HISTCONTROL='ignoredups')
     assert isinstance(env['HISTCONTROL'], set)
     assert len(env['HISTCONTROL']) == 1
     assert ('ignoredups' in env['HISTCONTROL'])
     assert ('ignoreerr' not in env['HISTCONTROL'])
 
-def test_HISTCONTROL_ignoreerr_ignoredups():
+def test_histcontrol_ignoreerr_ignoredups():
     env = Env(HISTCONTROL='ignoreerr,ignoredups,ignoreerr')
     assert len(env['HISTCONTROL']) == 2
     assert ('ignoreerr' in env['HISTCONTROL'])
@@ -188,8 +188,8 @@ def test_locate_binary_on_windows(xonsh_builtins):
             'PATH': [tmpdir],
             'PATHEXT': ['.COM', '.EXE', '.BAT'],
         })
-        assert ( locate_binary('file1') == os.path.join(tmpdir,'file1.exe'))
-        assert ( locate_binary('file1.exe') == os.path.join(tmpdir,'file1.exe'))
-        assert ( locate_binary('file2') == os.path.join(tmpdir,'FILE2.BAT'))
-        assert ( locate_binary('file2.bat') == os.path.join(tmpdir,'FILE2.BAT'))
-        assert ( locate_binary('file3') is None)
+        assert locate_binary('file1') == os.path.join(tmpdir,'file1.exe')
+        assert locate_binary('file1.exe') == os.path.join(tmpdir,'file1.exe')
+        assert locate_binary('file2') == os.path.join(tmpdir,'FILE2.BAT')
+        assert locate_binary('file2.bat') == os.path.join(tmpdir,'FILE2.BAT')
+        assert locate_binary('file3') is None
