@@ -22,7 +22,6 @@ UNC paths are not supported.  Defaulting to Windows directory.
 import argparse
 
 from xonsh.lazyasd import LazyObject
-from xonsh.dirstack import DIRSTACK, pushd, popd
 from xonsh.built_ins import subproc_captured_object
 from xonsh.platform import ON_WINDOWS
 
@@ -70,12 +69,60 @@ def uncpushd(args=None, stdin=None):
     pass
 aliases['uncpushd'] = uncpushd
 
+import builtins
+import os
+from xonsh.dirstack import DIRSTACK, pushd, popd
 
 def unc_pushd( args, stdin=None):
     """Handle pushd when argument is a UNC path. (\\<server>\<share>...)
-    Currently, a no-op, till I figure out what exactly to do.
+    If so, do like CMD.EXE pushd: create a temporary drive letter mapping, then pushd (via built-in) to that.
+    For this to work nicely, user must already have access to the UNC path
+    (e.g, via prior ```NET USE \\<server>\<share> /USER: ... /PASS:...```)
 
+    Author considers this behavior intrusive, so the extension does not create an alias for this function automatically.
+    If you want it, you must explicitly ask for it.
     """
-    return 'Welcome to the Monkey House', None, 0
-    pass
-aliases['unc_pushd'] = unc_pushd
+    if ON_WINDOWS and args is not None and args[0] is not None and args[0][0] in (os.sep, os.altsep):
+        share, relPath = os.path.splitdrive( args[0])
+        if share[0] in (os.sep, os.altsep):
+            tempDrive = 'z:'
+            co = subproc_captured_object( ['net', 'use', tempDrive, share])
+            if co.returncode != 0:
+                return co.stdout, co.stderr, co.returncode
+            else:
+
+                return pushd( [os.path.join( tempDrive, relPath )], stdin)
+    return pushd( args, stdin)
+
+def unc_popd( args, stdin=None):
+    """Handle popd from a temporary drive letter mapping established by `unc_pushd`
+     If current working directory is one of the temporary mappings we created, and if it's not used further up in `DIRSTACK`,
+     then unmap the drive letter (after returning from built-in popd with some other directory as PWD).
+    """
+
+    extraOutput = ''
+    extraStderr = ''
+
+    if not ON_WINDOWS:
+        return popd(args, stdin)
+    else:
+        env = builtins.__xonsh_env__
+
+        if env['PWD'] != os.getcwd():
+            extraOutput += 'Warning: $PWD ({}) different from os.getcwd() ({})\n'.format( env['PWD'], os.getcwd()) + '  -- but proceeding anyway.\n'
+
+        share, relPath = os.path.splitdrive( env['PWD'])
+        tmpDrive = 'z:'
+
+        pdResult = popd( args, stdin)       # pop first
+
+        if share.lower() == tmpDrive:       # then delete the temp drive if needed
+            co = subproc_captured_object(['net', 'use', tmpDrive, '/delete'])
+            if co.returncode != 0:
+                extraOutput += co.stdout
+                extraStderr += co.stderr + '  -- but proceeding anyway\n'
+
+        return ((pdResult[0] if pdResult[0] is not None else '') + extraOutput \
+                , (pdResult[1] if pdResult[1] is not None else '') + extraStderr \
+               , pdResult[2])
+
