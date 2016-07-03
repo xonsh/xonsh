@@ -11,9 +11,9 @@ import builtins
 
 
 @pytest.yield_fixture(autouse=True)
-def imp_env():
+def imp_env(xonsh_execer):
     """Call `load_builtins with `xonsh_execer`"""
-    load_builtins(execer=Execer())
+    load_builtins(execer=xonsh_execer)
     builtins.__xonsh_env__ = Env({'PATH': [], 'PATHEXT': []})
     yield
     unload_builtins()
