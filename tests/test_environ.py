@@ -18,6 +18,10 @@ def test_env_normal():
     env = Env(VAR='wakka')
     assert 'wakka' == env['VAR']
 
+def test_env_contains():
+    env = Env(VAR='wakka')
+    assert 'VAR' in env
+
 @pytest.mark.parametrize('path', [['/home/wakka'], ['wakka']])
 def test_env_path_list(path):
     env = Env(MYPATH=path)
