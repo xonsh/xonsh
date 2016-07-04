@@ -23,13 +23,13 @@ from xonsh.tools import (
     subexpr_from_unbalanced, subproc_toks, to_bool, to_bool_or_int,
     to_dynamic_cwd_tuple, to_logfile_opt, pathsep_to_set, set_to_pathsep,
     is_string_seq, pathsep_to_seq, seq_to_pathsep, is_nonstring_seq_of_strings,
-    pathsep_to_upper_seq, seq_to_upper_pathsep,
+    pathsep_to_upper_seq, seq_to_upper_pathsep, expandvars
     )
 from xonsh.commands_cache import CommandsCache
 from xonsh.built_ins import expand_path
 from xonsh.environ import Env
 
-from tools import skip_if_on_windows
+from tools import skip_if_on_windows, skip_if_on_unix
 
 LEXER = Lexer()
 LEXER.build()
@@ -1077,3 +1077,34 @@ def test_commands_cache_lazy():
     assert not cc.lazyin('xonsh')
     assert 0 == len(list(cc.lazyiter()))
     assert 0 == cc.lazylen()
+
+
+@pytest.mark.parametrize('inp, exp', [ ("foo", "foo"), ("$foo bar", "bar bar"), ("$foobar", "$foobar"), ("$foo/bar", "bar/bar"), ("bar$foo$foo", "barbarbar"), ("${'foo'} bar", "bar bar"),
+		("${'foo'}bar", "barbar"),
+		("${'foo'}/bar", "bar/bar"),
+		("$[foo]bar", "$[foo]bar"),
+		("$bar bar", "$bar bar"),
+		("$?bar", "$?bar"),
+		("$foo}bar", "bar}bar"),
+		("${foo", "${foo"),
+		("$foo$foo", "barbar"),
+		("$bar$bar", "$bar$bar"),
+        skip_if_on_unix(("%foo%bar", "barbar")),
+        skip_if_on_unix(("%foo%bar", "barbar")),
+		(b"foo", "foo"),
+		(b"$foo bar", "bar bar"),
+		(b"${'foo'}bar", "barbar"),
+		(b"$[foo]bar", "$[foo]bar"),
+		(b"$bar bar", "$bar bar"),
+		(b"$?bar", "$?bar"),
+		(b"$foo}bar", "bar}bar"),
+		(b"${foo", "${foo"),
+		(b"$foo$foo", "barbar"),
+		(b"$bar$bar", "$bar$bar"),
+        skip_if_on_unix((b"%foo%bar", "barbar")),
+    ])
+def test_expandvars(inp, exp, xonsh_builtins):
+    """Tweaked for xonsh cases from CPython `test_genericpath.py`"""
+    env = Env({'foo':'bar'})
+    xonsh_builtins.__xonsh_env__ = env
+    assert expandvars(inp) == exp
