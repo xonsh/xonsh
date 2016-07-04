@@ -1,9 +1,9 @@
 import os
-from xonsh.__amalgam__ import builtins
+import builtins
 from xonsh.platform import scandir
 from xonsh.vox import Vox
 
-DEFAULT_ENV_HOME = os.path.expanduser('~/.virtualenvs')
+DEFAULT_ENV_HOME = builtins.__xonsh_expand_path__('~/.virtualenvs')
 
 
 def complete_vox(prefix, line, begidx, endidx, ctx):
