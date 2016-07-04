@@ -1,4 +1,4 @@
-**Added:** 
+**Added:**
 
 * xonsh_builtins, xonsh_execer fixtures in conftest.py
 
@@ -6,15 +6,15 @@
 
 * many test cases to use fixtures and parametrization
 
-**Deprecated:** 
+**Deprecated:**
 
 * yield statements (nose style) and for loops in tests
 
-**Removed:** 
+**Removed:**
 
 * for loops and yield statements in test cases, unused imports
 
-**Fixed:** 
+**Fixed:**
 
 * redundant and 'leaky' tests in nose
 
