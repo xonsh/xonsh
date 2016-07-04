@@ -33,8 +33,7 @@ def nodes_equal(x, y):
     for (xname, xval), (yname, yval) in zip(ast.iter_fields(x),
                                             ast.iter_fields(y)):
         assert xname == yname
-        # if not isinstance(xval, ast.AST):
-        #     assert xval == yval
+        assert type(xval) == type(yval)
     for xchild, ychild in zip(ast.iter_child_nodes(x),
                               ast.iter_child_nodes(y)):
         assert nodes_equal(xchild, ychild)
