@@ -564,7 +564,6 @@ def test_env_path_to_str(inp, exp):
 def expand(path):
     return os.path.expanduser(os.path.expandvars(path))
 
-@pytest.mark.xfail(reason='EnvPath BUG')
 @pytest.mark.parametrize('env', [TOOLS_ENV, ENCODE_ENV_ONLY])
 @pytest.mark.parametrize('inp, exp', [
     ('xonsh_dir', 'xonsh_dir'),
@@ -574,10 +573,12 @@ def expand(path):
     (b'~/../', '~/../'),
 ])
 def test_env_path_getitem(inp, exp, xonsh_builtins, env):
-    print("ENV:",  env)
     xonsh_builtins.__xonsh_env__ = env
     obs = EnvPath(inp)[0] # call to __getitem__
-    assert expand(exp) == obs
+    if env.get('EXPAND_ENV_VARS'):
+        assert expand(exp) == obs
+    else:
+        assert exp == obs
 
 
 @pytest.mark.parametrize('env', [TOOLS_ENV, ENCODE_ENV_ONLY])
