@@ -172,7 +172,7 @@ def _source_completions(source):
         return subprocess.check_output(
             [BASH_COMMAND], input='\n'.join(source), universal_newlines=True,
             env=builtins.__xonsh_env__.detype(), stderr=subprocess.DEVNULL)
-    except FileNotFoundError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         return ''
 
 
