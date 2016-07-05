@@ -1082,10 +1082,13 @@ def test_commands_cache_lazy():
 @pytest.mark.parametrize('inp, exp', [
     ("foo", "foo"),
     ("$foo bar", "bar bar"),
+    ("$foo $spam", "bar eggs"),
+    ("$foo$spam$foo", "bareggsbar"),
     ("$foobar", "$foobar"),
     ("$foo/bar", "bar/bar"),
     ("bar$foo$foo", "barbarbar"),
     ("${'foo'} bar", "bar bar"),
+    ("${'foo'} ${'spam'}", "bar eggs"),
     ("${'foo'}bar", "barbar"),
     ("${'foo'}/bar", "bar/bar"),
     ("${\"foo\'}", "${\"foo\'}"),
@@ -1098,6 +1101,8 @@ def test_commands_cache_lazy():
     ("$bar$bar", "$bar$bar"),
     skip_if_on_unix(("%foo%bar", "barbar")),
     skip_if_on_unix(("%foo%bar", "barbar")),
+    skip_if_on_unix(("%foo% %spam%"), "bar eggs"),
+    skip_if_on_unix(("%foo%%spam%"), "bareggs"),
     (b"foo", "foo"),
     (b"$foo bar", "bar bar"),
     (b"${'foo'}bar", "barbar"),
@@ -1112,6 +1117,6 @@ def test_commands_cache_lazy():
 ])
 def test_expandvars(inp, exp, xonsh_builtins):
     """Tweaked for xonsh cases from CPython `test_genericpath.py`"""
-    env = Env({'foo':'bar'})
+    env = Env({'foo':'bar', 'spam': 'eggs'})
     xonsh_builtins.__xonsh_env__ = env
     assert expandvars(inp) == exp

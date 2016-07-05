@@ -44,10 +44,10 @@ from xonsh.platform import (has_prompt_toolkit, scandir, DEFAULT_ENCODING,
 
 # regular expressions for matching enviroment variables
 # i.e $FOO, ${'FOO'}
-posix_envvar_regex = re.compile(r'\$({(?P<quote>[\'\"])|)(?P<envvar>\w+)((?P=quote)}|(?:\1\b))')
+POSIX_ENVVAR_REGEX = re.compile(r'\$({(?P<quote>[\'\"])|)(?P<envvar>\w+)((?P=quote)}|(?:\1\b))')
 if ON_WINDOWS:
     # i.e %FOO%
-    windows_envvar_regex = re.compile(r"%(?P<envvar>\w+)%")
+    WINDOWS_ENVVAR_REGEX = re.compile(r"%(?P<envvar>\w+)%")
 
 @functools.lru_cache(1)
 def is_superuser():
@@ -1465,13 +1465,15 @@ def expandvars(path):
         # get the path's string representation
         path = str(path)
     if ON_WINDOWS and '%' in path:
-        match = windows_envvar_regex.search(path)
-        envvar = env.get(match.group('envvar')) if match else None
-        path = windows_envvar_regex.sub(envvar, path) if envvar else path
+        for match in WINDOWS_ENVVAR_REGEX.finditer(path):
+            envvar = env.get(match.group('envvar')) if match else None
+            if envvar:
+                path = WINDOWS_ENVVAR_REGEX.sub(envvar, path, count=1)
     if '$' in path:
-        match = posix_envvar_regex.search(path)
-        envvar = env.get(match.group('envvar')) if match else None
-        path = posix_envvar_regex.sub(envvar, path) if envvar else path
+        for match in POSIX_ENVVAR_REGEX.finditer(path):
+            envvar = env.get(match.group('envvar')) if match else None
+            if envvar:
+                path = POSIX_ENVVAR_REGEX.sub(envvar, path, count=1)
     return path
 
 #
