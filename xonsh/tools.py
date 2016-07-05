@@ -42,12 +42,6 @@ from xonsh.platform import (has_prompt_toolkit, scandir, DEFAULT_ENCODING,
                             ON_LINUX, ON_WINDOWS, PYTHON_VERSION_INFO)
 
 
-# regular expressions for matching enviroment variables
-# i.e $FOO, ${'FOO'}
-POSIX_ENVVAR_REGEX = re.compile(r'\$({(?P<quote>[\'\"])|)(?P<envvar>\w+)((?P=quote)}|(?:\1\b))')
-if ON_WINDOWS:
-    # i.e %FOO%
-    WINDOWS_ENVVAR_REGEX = re.compile(r"%(?P<envvar>\w+)%")
 
 @functools.lru_cache(1)
 def is_superuser():
@@ -1453,6 +1447,15 @@ def _get_env_string(name):
     return value
 
 
+# regular expressions for matching enviroment variables
+# i.e $FOO, ${'FOO'}
+_POSIX_ENVVAR_REGEX = r"""\$({(?P<quote>['"])|)(?P<envvar>\w+)((?P=quote)}|(?:\1\b))"""
+POSIX_ENVVAR_REGEX = LazyObject(lambda: re.compile(_POSIX_ENVVAR_REGEX),
+                                globals(), 'POSIX_ENVVAR_REGEX')
+if ON_WINDOWS:
+    # i.e %FOO%
+    WINDOWS_ENVVAR_REGEX = LazyObject(re.compile(r"%(?P<envvar>\w+)%"),
+                                      globals(), 'WINDOWS_ENVVAR_REGEX')
 
 def expandvars(path):
     """Expand shell variables of the forms $var, ${var} and %var%.
