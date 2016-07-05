@@ -7,6 +7,8 @@ Talks
 ============
 **PyCon 2016:** presented by Anthony Scopatz
 
+**Python Nordeste 2016:** presented by Lucas Inojosa <http://lucasicf.github.io/talks/shell_python/>
+
 .. raw:: html
 
     <div style="text-align:center;">
