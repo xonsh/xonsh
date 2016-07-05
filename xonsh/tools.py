@@ -1432,21 +1432,6 @@ def check_for_partial_string(x):
         return (string_indices[-2], string_indices[-1], starting_quote[-1])
 
 
-# expandvars is a modified version of os.path.expandvars from the Python 3.5.1
-# source code (root/Lib/ntpath.py, line 353)
-
-
-def _get_env_string(name):
-    env = builtins.__xonsh_env__
-    value = env.get(name)
-    ensurer = env.get_ensurer(name)
-    if ensurer.detype is bool_to_str:
-        value = ensure_string(value)
-    else:
-        value = ensurer.detype(value)
-    return value
-
-
 # regular expressions for matching enviroment variables
 # i.e $FOO, ${'FOO'}
 _POSIX_ENVVAR_REGEX = r"""\$({(?P<quote>['"])|)(?P<envvar>\w+)((?P=quote)}|(?:\1\b))"""
@@ -1471,12 +1456,12 @@ def expandvars(path):
         for match in WINDOWS_ENVVAR_REGEX.finditer(path):
             envvar = env.get(match.group('envvar')) if match else None
             if envvar:
-                path = WINDOWS_ENVVAR_REGEX.sub(envvar, path, count=1)
+                path = WINDOWS_ENVVAR_REGEX.sub(str(envvar), path, count=1)
     if '$' in path:
         for match in POSIX_ENVVAR_REGEX.finditer(path):
             envvar = env.get(match.group('envvar')) if match else None
             if envvar:
-                path = POSIX_ENVVAR_REGEX.sub(envvar, path, count=1)
+                path = POSIX_ENVVAR_REGEX.sub(str(envvar), path, count=1)
     return path
 
 #

@@ -1084,7 +1084,8 @@ def test_commands_cache_lazy():
     ("$foo $bar", "bar $bar"),
     ("$foobar", "$foobar"),
     ("$foo $spam", "bar eggs"),
-    ("bar$foo$spam$foo", "barbareggsbar"),
+    ("$an_int$spam$a_bool", "42eggsTrue"),
+    ("bar$foo$spam$foo $an_int", "barbareggsbar 42"),
     ("$foo/bar", "bar/bar"),
     ("${'foo'} ${'spam'}", "bar eggs"),
     ("${'foo'}bar", "barbar"),
@@ -1094,8 +1095,8 @@ def test_commands_cache_lazy():
     ("$foo}bar", "bar}bar"),
     ("${'foo", "${'foo"),
     skip_if_on_unix(("%foo%bar", "barbar")),
-    skip_if_on_unix(("%foo% %spam%", "bar eggs")),
-    skip_if_on_unix(("%foo%%spam%", "bareggs")),
+    skip_if_on_unix(("%foo% %a_bool%", "bar True")),
+    skip_if_on_unix(("%foo%%an_int%", "bar42")),
     (b"foo", "foo"),
     (b"$foo bar", "bar bar"),
     (b"${'foo'}bar", "barbar"),
@@ -1103,6 +1104,6 @@ def test_commands_cache_lazy():
 ])
 def test_expandvars(inp, exp, xonsh_builtins):
     """Tweaked for xonsh cases from CPython `test_genericpath.py`"""
-    env = Env({'foo':'bar', 'spam': 'eggs', 'a_bool': True})
+    env = Env({'foo':'bar', 'spam': 'eggs', 'a_bool': True, 'an_int': 42})
     xonsh_builtins.__xonsh_env__ = env
     assert expandvars(inp) == exp
