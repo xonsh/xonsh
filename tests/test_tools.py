@@ -1085,7 +1085,7 @@ def test_commands_cache_lazy():
     ("$foobar", "$foobar"),
     ("$foo $spam", "bar eggs"),
     ("$an_int$spam$a_bool", "42eggsTrue"),
-    ("bar$foo$spam$foo $an_int", "barbareggsbar 42"),
+    ("bar$foo$spam$foo $an_int $none", "barbareggsbar 42 None"),
     ("$foo/bar", "bar/bar"),
     ("${'foo'} ${'a_bool'}", "bar True"),
     ("${'foo'}bar", "barbar"),
@@ -1104,6 +1104,6 @@ def test_commands_cache_lazy():
 ])
 def test_expandvars(inp, exp, xonsh_builtins):
     """Tweaked for xonsh cases from CPython `test_genericpath.py`"""
-    env = Env({'foo':'bar', 'spam': 'eggs', 'a_bool': True, 'an_int': 42})
+    env = Env({'foo':'bar', 'spam': 'eggs', 'a_bool': True, 'an_int': 42, 'none': None})
     xonsh_builtins.__xonsh_env__ = env
     assert expandvars(inp) == exp

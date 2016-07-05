@@ -1454,19 +1454,17 @@ def expandvars(path):
         path = str(path)
     if ON_WINDOWS and '%' in path:
         for match in WINDOWS_ENVVAR_REGEX.finditer(path):
-            name = match.group('envvar') if match else None
-            value = env.get(name) if name else None
-            if value:
+            name = match.group('envvar')
+            if name in env:
                 ensurer = env.get_ensurer(name)
-                value = ensurer.detype(name)
+                value = ensurer.detype(env[name])
                 path = WINDOWS_ENVVAR_REGEX.sub(value, path, count=1)
     if '$' in path:
         for match in POSIX_ENVVAR_REGEX.finditer(path):
-            name = match.group('envvar') if match else None
-            value = env.get(name) if name else None
-            if value:
+            name = match.group('envvar')
+            if name in env:
                 ensurer = env.get_ensurer(name)
-                value = ensurer.detype(value)
+                value = ensurer.detype(env[name])
                 path = POSIX_ENVVAR_REGEX.sub(value, path, count=1)
     return path
 
