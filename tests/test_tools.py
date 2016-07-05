@@ -1081,42 +1081,28 @@ def test_commands_cache_lazy():
 
 @pytest.mark.parametrize('inp, exp', [
     ("foo", "foo"),
-    ("$foo bar", "bar bar"),
-    ("$foo $spam", "bar eggs"),
-    ("$foo$spam$foo", "bareggsbar"),
+    ("$foo $bar", "bar $bar"),
     ("$foobar", "$foobar"),
+    ("$foo $spam", "bar eggs"),
+    ("bar$foo$spam$foo", "barbareggsbar"),
     ("$foo/bar", "bar/bar"),
-    ("bar$foo$foo", "barbarbar"),
-    ("${'foo'} bar", "bar bar"),
     ("${'foo'} ${'spam'}", "bar eggs"),
     ("${'foo'}bar", "barbar"),
     ("${'foo'}/bar", "bar/bar"),
     ("${\"foo\'}", "${\"foo\'}"),
-    ("$[foo]bar", "$[foo]bar"),
-    ("$bar bar", "$bar bar"),
     ("$?bar", "$?bar"),
     ("$foo}bar", "bar}bar"),
-    ("${foo", "${foo"),
-    ("$foo$foo", "barbar"),
-    ("$bar$bar", "$bar$bar"),
-    skip_if_on_unix(("%foo%bar", "barbar")),
+    ("${'foo", "${'foo"),
     skip_if_on_unix(("%foo%bar", "barbar")),
     skip_if_on_unix(("%foo% %spam%", "bar eggs")),
     skip_if_on_unix(("%foo%%spam%", "bareggs")),
     (b"foo", "foo"),
     (b"$foo bar", "bar bar"),
     (b"${'foo'}bar", "barbar"),
-    (b"$[foo]bar", "$[foo]bar"),
-    (b"$bar bar", "$bar bar"),
-    (b"$?bar", "$?bar"),
-    (b"$foo}bar", "bar}bar"),
-    (b"${foo", "${foo"),
-    (b"$foo$foo", "barbar"),
-    (b"$bar$bar", "$bar$bar"),
     skip_if_on_unix((b"%foo%bar", "barbar")),
 ])
 def test_expandvars(inp, exp, xonsh_builtins):
     """Tweaked for xonsh cases from CPython `test_genericpath.py`"""
-    env = Env({'foo':'bar', 'spam': 'eggs'})
+    env = Env({'foo':'bar', 'spam': 'eggs', 'a_bool': True})
     xonsh_builtins.__xonsh_env__ = env
     assert expandvars(inp) == exp
