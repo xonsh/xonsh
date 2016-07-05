@@ -1,4 +1,7 @@
+import glob
 import builtins
+from traceback import format_list, extract_tb
+
 import pytest
 from tools import DummyShell, sp
 import xonsh.built_ins
@@ -7,6 +10,44 @@ from xonsh.execer import Execer
 from xonsh.tools import XonshBlockError
 from xonsh.events import events
 import glob
+
+
+
+def _limited_traceback(excinfo):
+    """ Return a formatted traceback with all the stack
+        from this frame (i.e __file__) up removed
+    """
+    tb = extract_tb(excinfo.tb)
+    try:
+        idx = [__file__ in e for e in tb].index(True)
+        return format_list(tb[idx+1:])
+    except ValueError:
+        return format_list(tb)
+
+def pytest_collect_file(parent, path):
+    if path.ext == ".xsh" and path.basename.startswith("test"):
+        return XshFile(path, parent)
+
+class XshFile(pytest.File):
+    def collect(self):
+        name = self.fspath.basename
+        yield XshItem(name, self)
+
+class XshItem(pytest.Item):
+    def __init__(self, name, parent):
+        super().__init__(name, parent)
+
+    def runtest(self):
+        xonsh_main([str(self.parent.fspath), '--no-script-cache', '--no-rc'])
+
+    def repr_failure(self, excinfo):
+        """ called when self.runtest() raises an exception. """
+        formatted_tb = _limited_traceback(excinfo)
+        formatted_tb.insert(0, "Xonsh execution failed\n")
+        return "".join(formatted_tb)
+
+    def reportinfo(self):
+        return self.fspath, 0, "usecase: %s" % self.name
 
 
 @pytest.fixture
