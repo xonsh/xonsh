@@ -1328,7 +1328,8 @@ def intensify_colors_on_win_setter(enable):
     environment variable.
     """
     enable = to_bool(enable)
-    delattr(builtins.__xonsh_shell__.shell.styler, 'style_name')
+    if hasattr(builtins, '__xonsh_shell__'):
+        delattr(builtins.__xonsh_shell__.shell.styler, 'style_name')
     return enable
 
 
