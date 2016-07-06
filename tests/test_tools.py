@@ -1087,6 +1087,7 @@ def test_commands_cache_lazy():
     ("$an_int$spam$a_bool", "42eggsTrue"),
     ("bar$foo$spam$foo $an_int $none", "barbareggsbar 42 None"),
     ("$foo/bar", "bar/bar"),
+    ("${'foo'} $spam", "bar eggs"),
     ("${'foo'} ${'a_bool'}", "bar True"),
     ("${'foo'}bar", "barbar"),
     ("${'foo'}/bar", "bar/bar"),
