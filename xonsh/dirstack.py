@@ -5,7 +5,7 @@ import glob
 import argparse
 import builtins
 
-from xonsh.lazyasd import LazyObject, lazyobject
+from xonsh.lazyasd import lazyobject
 from xonsh.tools import get_sep
 
 DIRSTACK = []
