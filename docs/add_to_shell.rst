@@ -13,7 +13,7 @@ Then, as root, add xonsh to the shell list
 
 .. code-block:: bash
 
-   # echo $(which xonsh) >> /etc/shells
+   # which xonsh >> /etc/shells
 
 To change shells, run
 
