@@ -133,7 +133,12 @@ class CommandsCache(abc.Mapping):
                 if os.path.isfile(full_name)
             ), None)
             if local_bin:
-                return os.path.abspath(os.path.relpath(local_bin, cwd))
+                lbp = ''
+                try:
+                    lbp = os.path.relpath(local_bin, cwd)
+                except ValueError:      # drive letter for local_bin is present and is different from that of cwd, even Windows can't compute a relative path for that.
+                    lbp = local_bin
+                return os.path.abspath(lbp)
 
         cached = next((cmd for cmd in possibilities if cmd in self._cmds_cache), None)
         if cached:
