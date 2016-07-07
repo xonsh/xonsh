@@ -1,0 +1,47 @@
+Windows Registry Editor Version 5.00
+
+; Registry file that maps the solarized palette to the 16 avaliable colors
+; in a Windows command prompt. Note, hex values in the table are RGB but byte
+; ordering of a DWORD is BGR, e.g. "ColorTable<##>"=dword:00<B><G><R>
+;
+;                   OLD                   MODIFY
+; NR  cmd.exe       HEX     DWORD         HEX      DWORD
+; --  -------       ------  ---------     -------  --------
+; 00  Black         000000  00000000      #323232  00323232
+; 01  Blue          000080  00800000      #4080D6  00D68040
+; 02  Green         008000  00008000      #008000  00008000
+; 03  Aqua          008080  00808000      #008080  00808000
+; 04  Red           800000  00000080      #800000  00000080
+; 05  Purple        800080  00800080      #800080  00800080
+; 06  Yellow        808000  00008080      #808000  00008080
+; 07  White         C0C0C0  00C0C0C0      #C0C0C0  00C0C0C0
+; 08  Gray          808080  00808080      #808080  00808080
+; 09  LightBlue     0000FF  00FF0000      #40A0FF  00FFA040
+; 10  LightGreen    00FF00  0000FF00      #55FF55  0055FF55
+; 11  LightAqua     00FFFF  00FFFF00      #55FFFF  00FFFF55
+; 12  LightRed      FF0000  000000FF      #FF5555  005555FF
+; 13  LightPurple   FF00FF  00FF00FF      #FF55FF  00FF55FF
+; 14  LightYellow   FFFF00  0000FFFF      #FFFF55  0055FFFF
+; 15  BrightWhite   FFFFFF  00FFFFFF      #FFFFFF  00FFFFFF
+
+
+
+[HKEY_CURRENT_USER\Console]
+"ColorTable00"=dword:00323232
+"ColorTable01"=dword:00D68040
+"ColorTable02"=dword:00008000
+"ColorTable03"=dword:00808000
+"ColorTable04"=dword:00000080
+"ColorTable05"=dword:00800080
+"ColorTable06"=dword:00008080
+"ColorTable07"=dword:00C0C0C0
+"ColorTable08"=dword:00808080
+"ColorTable09"=dword:00FFA040
+"ColorTable10"=dword:0055FF55
+"ColorTable11"=dword:00FFFF55
+"ColorTable12"=dword:005555FF
+"ColorTable13"=dword:00FF55FF
+"ColorTable14"=dword:0055FFFF
+"ColorTable15"=dword:00FFFFFF
+"ScreenColors"=dword:00000007
+"PopupColors"=dword: 000000f8
