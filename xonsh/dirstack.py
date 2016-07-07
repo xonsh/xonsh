@@ -5,7 +5,7 @@ import glob
 import argparse
 import builtins
 
-from xonsh.lazyasd import LazyObject
+from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.tools import get_sep
 
 DIRSTACK = []
@@ -106,7 +106,8 @@ def cd(args, stdin=None):
     return None, None, 0
 
 
-def _pushd_parser():
+@lazyobject
+def pushd_parser():
     parser = argparse.ArgumentParser(prog="pushd")
     parser.add_argument('dir', nargs='?')
     parser.add_argument('-n',
@@ -121,9 +122,6 @@ def _pushd_parser():
                         action='store_true')
     return parser
 
-
-pushd_parser = LazyObject(_pushd_parser, globals(), 'pushd_parser')
-del _pushd_parser
 
 def pushd(args, stdin=None):
     """xonsh command: pushd
@@ -201,8 +199,8 @@ def pushd(args, stdin=None):
     return None, None, 0
 
 
-
-def _popd_parser():
+@lazyobject
+def popd_parser():
     parser = argparse.ArgumentParser(prog="popd")
     parser.add_argument('dir', nargs='?')
     parser.add_argument('-n',
@@ -217,9 +215,6 @@ def _popd_parser():
                         action='store_true')
     return parser
 
-
-popd_parser = LazyObject(_popd_parser, globals(), 'popd_parser')
-del _popd_parser
 
 def popd(args, stdin=None):
     """
@@ -290,7 +285,8 @@ def popd(args, stdin=None):
     return None, None, 0
 
 
-def _dirs_parser():
+@lazyobject
+def dirs_parser():
     parser = argparse.ArgumentParser(prog="dirs")
     parser.add_argument('N', nargs='?')
     parser.add_argument('-c',
@@ -316,9 +312,6 @@ def _dirs_parser():
                         action='store_true')
     return parser
 
-
-dirs_parser = LazyObject(_dirs_parser, globals(), 'dirs_parser')
-del _dirs_parser
 
 def dirs(args, stdin=None):
     """xonsh command: dirs
