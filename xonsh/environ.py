@@ -5,20 +5,18 @@ import re
 import sys
 import time
 import json
+import socket
+import shutil
+import string
 import pprint
 import locale
 import builtins
 import itertools
 import contextlib
-import socket
-import string
 import subprocess
-import shutil
-from warnings import warn
-from collections import (
-    Mapping, MutableMapping, MutableSequence, MutableSet,
-    namedtuple
-)
+import warnings
+import collections
+import collections.abc as abc
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.jobs import get_next_task
@@ -64,8 +62,8 @@ def locale_convert(key):
             locale.setlocale(LOCALE_CATS[key], val)
             val = locale.setlocale(LOCALE_CATS[key])
         except (locale.Error, KeyError):
-            warn('Failed to set locale {0!r} to {1!r}'.format(key, val),
-                 RuntimeWarning)
+            msg = 'Failed to set locale {0!r} to {1!r}'.format(key, val)
+            warnings.warn(msg, RuntimeWarning)
         return val
     return lc_converter
 
@@ -79,7 +77,7 @@ def to_debug(x):
         builtins.__xonsh_execer__.debug_level = val
     return val
 
-Ensurer = namedtuple('Ensurer', ['validate', 'convert', 'detype'])
+Ensurer = collections.namedtuple('Ensurer', ['validate', 'convert', 'detype'])
 Ensurer.__doc__ = """Named tuples whose elements are functions that
 represent environment variable validation, conversion, detyping.
 """
@@ -280,8 +278,8 @@ DEFAULT_VALUES = {
 if hasattr(locale, 'LC_MESSAGES'):
     DEFAULT_VALUES['LC_MESSAGES'] = locale.setlocale(locale.LC_MESSAGES)
 
-VarDocs = namedtuple('VarDocs', ['docstr', 'configurable', 'default',
-                                 'store_as_str'])
+VarDocs = collections.namedtuple('VarDocs', ['docstr', 'configurable',
+                                             'default', 'store_as_str'])
 VarDocs.__doc__ = """Named tuple for environment variable documentation
 
 Parameters
@@ -605,7 +603,7 @@ DEFAULT_DOCS = {
 # actual environment
 #
 
-class Env(MutableMapping):
+class Env(abc.MutableMapping):
     """A xonsh environment, whose variables have limited typing
     (unlike BASH). Most variables are, by default, strings (like BASH).
     However, the following rules also apply based on variable-name:
@@ -640,7 +638,7 @@ class Env(MutableMapping):
 
     @staticmethod
     def detypeable(val):
-        return not (callable(val) or isinstance(val, MutableMapping))
+        return not (callable(val) or isinstance(val, abc.MutableMapping))
 
     def detype(self):
         if self._detyped is not None:
@@ -757,7 +755,8 @@ class Env(MutableMapping):
         else:
             e = "Unknown environment variable: ${}"
             raise KeyError(e.format(key))
-        if isinstance(val, (MutableSet, MutableSequence, MutableMapping)):
+        if isinstance(val, (abc.MutableSet, abc.MutableSequence,
+                            abc.MutableMapping)):
             self._detyped = None
         return val
 
@@ -944,8 +943,8 @@ def current_branch(pad=NotImplemented):
     '<branch-timeout>' is returned.
     """
     if pad is not NotImplemented:
-        warn("The `pad` argument of `current_branch` has no effect now and "
-             "will be removed in the future")
+        warnings.warn("The pad argument of current_branch has no effect now "
+                      "and will be removed in the future")
     branch = None
     cmds = builtins.__xonsh_commands_cache__
     if cmds.lazy_locate_binary('git') or cmds.is_empty():
@@ -1339,7 +1338,7 @@ def load_static_config(ctx, config=None):
         with open(config, 'r', encoding=encoding, errors=errors) as f:
             try:
                 conf = json.load(f)
-                assert isinstance(conf, Mapping)
+                assert isinstance(conf, abc.Mapping)
                 ctx['LOADED_CONFIG'] = True
             except Exception as e:
                 conf = {}
@@ -1380,12 +1379,12 @@ def xonshrc_context(rcfiles=None, execer=None, initial=None):
         except SyntaxError as err:
             loaded.append(False)
             msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
-            warn(msg.format(rcfile, err), RuntimeWarning)
+            warnings.warn(msg.format(rcfile, err), RuntimeWarning)
             continue
         except Exception as err:
             loaded.append(False)
             msg = 'error running xonsh run control file {0!r}: {1!s}'
-            warn(msg.format(rcfile, err), RuntimeWarning)
+            warnings.warn(msg.format(rcfile, err), RuntimeWarning)
             continue
     return env
 
