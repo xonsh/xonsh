@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 """Environment for the xonsh shell."""
 import os
+import re
 import sys
 import time
 import json
+import pprint
 import locale
 import builtins
-from contextlib import contextmanager
-from itertools import chain
-from pprint import pformat
-import re
+import itertools
+import contextlib
 import socket
 import string
 import subprocess
@@ -696,7 +696,7 @@ class Env(MutableMapping):
         if vd is None:
             return default
         if vd.default is DefaultNotGiven:
-            dval = pformat(self._defaults.get(key, '<default not set>'))
+            dval = pprint.pformat(self._defaults.get(key, '<default not set>'))
             vd = vd._replace(default=dval)
             self._docs[key] = vd
         return vd
@@ -707,7 +707,7 @@ class Env(MutableMapping):
         """
         return varname in self._d
 
-    @contextmanager
+    @contextlib.contextmanager
     def swap(self, other=None, **kwargs):
         """Provides a context manager for temporarily swapping out certain
         environment variables with other values. On exit from the context
@@ -1302,7 +1302,7 @@ def multiline_prompt(curr=''):
         if n <= count:
             break
     toks.append((format_color('{NO_COLOR}', hide=True), tail))
-    rtn = ''.join(chain.from_iterable(toks))
+    rtn = ''.join(itertools.chain.from_iterable(toks))
     return rtn
 
 
