@@ -8,40 +8,40 @@ Windows Registry Editor Version 5.00
 ; NR  cmd.exe       HEX     DWORD         HEX      DWORD
 ; --  -------       ------  ---------     -------  --------
 ; 00  Black         000000  00000000      #323232  00323232
-; 01  Blue          000080  00800000      #4080D6  00D68040
-; 02  Green         008000  00008000      #008000  00008000
-; 03  Aqua          008080  00808000      #008080  00808000
-; 04  Red           800000  00000080      #800000  00000080
-; 05  Purple        800080  00800080      #800080  00800080
-; 06  Yellow        808000  00008080      #808000  00008080
-; 07  White         C0C0C0  00C0C0C0      #C0C0C0  00C0C0C0
-; 08  Gray          808080  00808080      #808080  00808080
-; 09  LightBlue     0000FF  00FF0000      #40A0FF  00FFA040
-; 10  LightGreen    00FF00  0000FF00      #55FF55  0055FF55
-; 11  LightAqua     00FFFF  00FFFF00      #55FFFF  00FFFF55
-; 12  LightRed      FF0000  000000FF      #FF5555  005555FF
-; 13  LightPurple   FF00FF  00FF00FF      #FF55FF  00FF55FF
-; 14  LightYellow   FFFF00  0000FFFF      #FFFF55  0055FFFF
-; 15  BrightWhite   FFFFFF  00FFFFFF      #FFFFFF  00FFFFFF
+; 01  Blue          000080  00800000      #CD0000  000000CD
+; 02  Green         008000  00008000      #00CD00  0000CD00
+; 03  Aqua          008080  00808000      #CDCD00  0000CDCD
+; 04  Red           800000  00000080      #4080D6  00D68040
+; 05  Purple        800080  00800080      #CD00CD  00CD00CD
+; 06  Yellow        808000  00008080      #00CDCD  00CDCD00
+; 07  White         C0C0C0  00C0C0C0      #E5E5E5  00E5E5E5
+; 08  Gray          808080  00808080      #7F7F7F  007F7F7F
+; 09  LightBlue     0000FF  00FF0000      #FF0000  000000FF
+; 10  LightGreen    00FF00  0000FF00      #00FF00  0000FF00                     
+; 11  LightAqua     00FFFF  00FFFF00      #FFFF00  0000FFFF
+; 12  LightRed      FF0000  000000FF      #40A0FF  00FFA040
+; 13  LightPurple   FF00FF  00FF00FF      #FF00FF  00FF00FF
+; 14  LightYellow   FFFF00  0000FFFF      #00FFFF  00FFFF00
+; 15  BrightWhite   FFFFFF  00FFFFFF      #FFFFFF  00FFFFFF              
 
 
 
 [HKEY_CURRENT_USER\Console]
 "ColorTable00"=dword:00323232
-"ColorTable01"=dword:00D68040
-"ColorTable02"=dword:00008000
-"ColorTable03"=dword:00808000
-"ColorTable04"=dword:00000080
-"ColorTable05"=dword:00800080
-"ColorTable06"=dword:00008080
-"ColorTable07"=dword:00C0C0C0
-"ColorTable08"=dword:00808080
-"ColorTable09"=dword:00FFA040
-"ColorTable10"=dword:0055FF55
-"ColorTable11"=dword:00FFFF55
-"ColorTable12"=dword:005555FF
-"ColorTable13"=dword:00FF55FF
-"ColorTable14"=dword:0055FFFF
+"ColorTable01"=dword:000000CD
+"ColorTable02"=dword:0000CD00
+"ColorTable03"=dword:0000CDCD
+"ColorTable04"=dword:00D68040
+"ColorTable05"=dword:00CD00CD
+"ColorTable06"=dword:00CDCD00
+"ColorTable07"=dword:00E5E5E5
+"ColorTable08"=dword:007F7F7F
+"ColorTable09"=dword:000000FF
+"ColorTable10"=dword:0000FF00
+"ColorTable11"=dword:0000FFFF
+"ColorTable12"=dword:00FFA040
+"ColorTable13"=dword:00FF00FF
+"ColorTable14"=dword:00FFFF00
 "ColorTable15"=dword:00FFFFFF
 "ScreenColors"=dword:00000007
-"PopupColors"=dword: 000000f8
+"PopupColors"=dword: 000000f8 

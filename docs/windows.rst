@@ -77,14 +77,14 @@ Usage
 
 Color style
 --------------------------------
-The default dark red and blue colors are complete unreadable in Windows' default
-terminal. To give new a the best experience Xonsh automatically 
+The dark red and blue colors are complete unreadable in Windows' default
+terminal. To give new users the best experience Xonsh automatically 
 replaces some of the dark colors with more readable alternatives (e.g. blue 
 becomes cyan). The behaviour is controlled with the ``$INTENSIFY_COLORS_ON_WIN``
 environment variable.
 
 It is possible to configure the Windows console with readable default colors. 
-This following `xterm_colors.reg`_ registry file will configure the colors to
+This following `console_colors.reg`_ registry file will configure the colors to
 more reable defaults. 
 
 With better colors configured, ``$INTENSIFY_COLORS_ON_WIN`` can be disabled and
@@ -98,7 +98,7 @@ follwing to the xonsh run control file ``.xonshrc``:
 
 
 
-.. _xterm_colors.reg: http://xon.sh/_static/xterm_colors.reg
+.. _console_colors.reg: http://xon.sh/_static/xterm_colors.reg
 
 
 Name space conflicts
