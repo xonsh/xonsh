@@ -22,7 +22,7 @@ UNC paths are not supported.  Defaulting to Windows directory.
 import argparse
 
 from xonsh.lazyasd import LazyObject
-from xonsh.built_ins import subproc_captured_object
+from xonsh.built_ins import subproc_captured_object, subproc_uncaptured
 from xonsh.platform import ON_WINDOWS
 
 _uncpushd_choices = dict(enable=1, disable=0, show=None)
@@ -67,11 +67,24 @@ def uncpushd(args=None, stdin=None):
              '-d', '1' if _uncpushd_choices[args.action] else '0', '-f'])
         return None if co.returncode == 0 else co.stdout, None if co.returncode == 0 else co.stderr, co.returncode
     pass
-aliases['uncpushd'] = uncpushd
 
 import builtins
 import os
-from xonsh.dirstack import DIRSTACK, pushd, popd
+from xonsh.dirstack import pushd, popd, DIRSTACK
+import subprocess
+
+def do_subproc( args, msg=''):
+    """Because `subproc_captured_object` fails with error `Workstation Service not started` on a `NET USE dd: \\localhost\share`..."""
+    co = subprocess.run(args, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if co.returncode != 0:
+        print('subproc returncode {}'.format(co.returncode, msg))
+        print(' '.join(co.args))
+        print(co.stdout)
+        print(co.stderr)
+        ##assert co.returncode==0, 'NET SHARE failed'
+    return co.stdout, co.stderr, co.returncode
+
+_unc_tempDrives = {}  # drivePart: tempDriveLetter for temp drive letters we create
 
 def unc_pushd( args, stdin=None):
     """Handle pushd when argument is a UNC path. (\\<server>\<share>...)
@@ -80,19 +93,25 @@ def unc_pushd( args, stdin=None):
     (e.g, via prior ```NET USE \\<server>\<share> /USER: ... /PASS:...```)
 
     Author considers this behavior intrusive, so the extension does not create an alias for this function automatically.
-    If you want it, you must explicitly ask for it.
+    If you want it, you must explicitly ask for it, e.g ```aliases['pushd']=unc_pushd; aliases['popd']=unc_popd```.
     """
-    if ON_WINDOWS and args is not None and args[0] is not None and args[0][0] in (os.sep, os.altsep):
+    if not ON_WINDOWS or args is None or args[0] is None or args[0][0] not in (os.sep, os.altsep):
+        return pushd(args, stdin)
+    else:
         share, relPath = os.path.splitdrive( args[0])
-        if share[0] in (os.sep, os.altsep):
-            tempDrive = 'z:'
-            co = subproc_captured_object( ['net', 'use', tempDrive, share])
-            if co.returncode != 0:
-                return co.stdout, co.stderr, co.returncode
-            else:
-
-                return pushd( [os.path.join( tempDrive, relPath )], stdin)
-    return pushd( args, stdin)
+        if share[0] not in (os.sep, os.altsep):
+            return pushd(args, stdin)
+        else:                                                # path begins \\ or //...
+            for dord in range(ord('z'), ord('a'), -1):
+                dpath = chr(dord) + ':'
+                if not os.path.isdir(dpath):                # find unused drive letter starting from z:
+                    co = do_subproc( ['net', 'use', dpath, share], msg='unc_pushd')
+                    if co[2] != 0:
+                        do_subproc( ['whoami', '/all'])
+                        return co
+                    else:
+                        _unc_tempDrives[dpath] = share
+                        return pushd( [os.path.join( dpath, relPath )], stdin)
 
 def unc_popd( args, stdin=None):
     """Handle popd from a temporary drive letter mapping established by `unc_pushd`
@@ -100,29 +119,34 @@ def unc_popd( args, stdin=None):
      then unmap the drive letter (after returning from built-in popd with some other directory as PWD).
     """
 
-    extraOutput = ''
-    extraStderr = ''
-
     if not ON_WINDOWS:
         return popd(args, stdin)
     else:
+        stdout = ''
+        stderr = ''
+
         env = builtins.__xonsh_env__
-
-        if env['PWD'] != os.getcwd():
-            extraOutput += 'Warning: $PWD ({}) different from os.getcwd() ({})\n'.format( env['PWD'], os.getcwd()) + '  -- but proceeding anyway.\n'
-
         share, relPath = os.path.splitdrive( env['PWD'])
-        tmpDrive = 'z:'
 
         pdResult = popd( args, stdin)       # pop first
 
-        if share.lower() == tmpDrive:       # then delete the temp drive if needed
-            co = subproc_captured_object(['net', 'use', tmpDrive, '/delete'])
-            if co.returncode != 0:
-                extraOutput += co.stdout
-                extraStderr += co.stderr + '  -- but proceeding anyway\n'
+        if share in _unc_tempDrives:
+            dpath = share
+            for p in DIRSTACK:
+                if share == os.path.splitdrive(p)[0]:
+                    dpath = None
+            if dpath is not None:
+                _unc_tempDrives.pop(dpath)
+                co = subproc_captured_object(['net', 'use', dpath, '/delete'])
+                if co.returncode != 0:
+                    stdout += co.stdout
+                    stderr += co.stderr
 
-        return ((pdResult[0] if pdResult[0] is not None else '') + extraOutput \
-                , (pdResult[1] if pdResult[1] is not None else '') + extraStderr \
+        return ((pdResult[0] if pdResult[0] is not None else '') + stdout \
+                , (pdResult[1] if pdResult[1] is not None else '') + stderr \
                , pdResult[2])
 
+
+
+#todo: cleanup is not removing uses, should loop through _unc_tempDrives (or we need unc_dirstack -c
+#todo: why doesn't popd clean up??
