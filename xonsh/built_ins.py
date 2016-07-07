@@ -249,12 +249,14 @@ _WRITE_MODES = LazyObject(lambda: frozenset({'w', 'a'}), globals(),
                           '_WRITE_MODES')
 _REDIR_ALL = LazyObject(lambda: frozenset({'&', 'a', 'all'}),
                         globals(), '_REDIR_ALL')
-_REDIR_ERR = frozenset({'2', 'e', 'err'})
-_REDIR_OUT = frozenset({'', '1', 'o', 'out'})
-_E2O_MAP = frozenset({'{}>{}'.format(e, o)
-                      for e in _REDIR_ERR
-                      for o in _REDIR_OUT
-                      if o != ''})
+_REDIR_ERR = LazyObject(lambda: frozenset({'2', 'e', 'err'}), globals(),
+                        '_REDIR_ERR')
+_REDIR_OUT = LazyObject(lambda: frozenset({'', '1', 'o', 'out'}), globals(),
+                        '_REDIR_OUT')
+_E2O_MAP = LazyObject(lambda: frozenset({'{}>{}'.format(e, o)
+                                         for e in _REDIR_ERR
+                                         for o in _REDIR_OUT
+                                         if o != ''}), globals(), '_E2O_MAP')
 
 
 def _is_redirect(x):
@@ -282,9 +284,7 @@ def _redirect_io(streams, r, loc=None):
             raise XonshError('Multiple redirects for stderr')
         streams['stderr'] = ('<stdout>', 'a', subprocess.STDOUT)
         return
-
     orig, mode, dest = _REDIR_REGEX.match(r).groups()
-
     # redirect to fd
     if dest.startswith('&'):
         try:
@@ -298,9 +298,7 @@ def _redirect_io(streams, r, loc=None):
             raise
         except Exception:
             pass
-
     mode = _MODES.get(mode, None)
-
     if mode == 'r':
         if len(orig) > 0 or len(dest) > 0:
             raise XonshError('Unrecognized redirection command: {}'.format(r))
@@ -334,11 +332,9 @@ def _redirect_io(streams, r, loc=None):
             targets = ['stdout']
         else:
             raise XonshError('Unrecognized redirection command: {}'.format(r))
-
         f = _open(loc, mode)
         for t in targets:
             streams[t] = (loc, mode, f)
-
     else:
         raise XonshError('Unrecognized redirection command: {}'.format(r))
 
