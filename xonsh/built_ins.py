@@ -18,7 +18,7 @@ import subprocess
 import contextlib
 import collections.abc as abc
 
-from xonsh.lazyasd import LazyObject
+from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.history import History
 from xonsh.inspectors import Inspector
 from xonsh.aliases import Aliases, make_default_aliases
@@ -39,8 +39,8 @@ from xonsh.commands_cache import CommandsCache
 BUILTINS_LOADED = False
 INSPECTOR = LazyObject(Inspector, globals(), 'INSPECTOR')
 
-
-def _at_exit_signals():
+@lazyobject
+def AT_EXIT_SIGNALS():
     sigs = (signal.SIGABRT, signal.SIGFPE, signal.SIGILL, signal.SIGSEGV,
             signal.SIGTERM)
     if ON_POSIX:
@@ -48,11 +48,8 @@ def _at_exit_signals():
     return sigs
 
 
-AT_EXIT_SIGNALS = LazyObject(_at_exit_signals, globals(), 'AT_EXIT_SIGNALS')
-del _at_exit_signals
-
-
-def _signal_messages():
+@lazyobject
+def SIGNAL_MESSAGES():
     sm = {
         signal.SIGABRT: 'Aborted',
         signal.SIGFPE: 'Floating point exception',
@@ -67,10 +64,6 @@ def _signal_messages():
             signal.SIGKILL: 'Killed',
             })
     return sm
-
-
-SIGNAL_MESSAGES = LazyObject(_signal_messages, globals(), 'SIGNAL_MESSAGES')
-del _signal_messages
 
 
 def resetting_signal_handle(sig, f):
@@ -244,13 +237,12 @@ def get_script_subproc_command(fname, args):
     return interp + [fname] + args
 
 
-def _redir_regex():
+@lazyobject
+def _REDIR_REGEX():
     name = "(o(?:ut)?|e(?:rr)?|a(?:ll)?|&?\d?)"
     return re.compile("{r}(>?>|<){r}$".format(r=name))
 
 
-_REDIR_REGEX = LazyObject(_redir_regex, globals(), '_REDIR_REGEX')
-del _redir_regex
 _MODES = LazyObject(lambda: {'>>': 'a', '>': 'w', '<': 'r'}, globals(),
                     '_MODES')
 _WRITE_MODES = LazyObject(lambda: frozenset({'w', 'a'}), globals(),
