@@ -348,8 +348,8 @@ class XonshStyle(Style):
             # Auto suggest needs to be a darker shade to be distinguishable
             # from the default color
             self.styles[Token.AutoSuggestion] = '#444444'
+            self._smap.update(expand_gray_colors_for_cmd_exe(self._smap))
             if env.get('INTENSIFY_COLORS_ON_WIN', False):
-                self._smap.update(expand_gray_colors_for_cmd_exe(self._smap))
                 self._smap.update(intensify_colors_for_cmd_exe(self._smap))
 
 
