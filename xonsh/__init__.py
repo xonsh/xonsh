@@ -15,8 +15,6 @@ else:
         _sys.modules['xonsh.lazyasd'] = __amalgam__
         lazyjson = __amalgam__
         _sys.modules['xonsh.lazyjson'] = __amalgam__
-        timings = __amalgam__
-        _sys.modules['xonsh.timings'] = __amalgam__
         ansi_colors = __amalgam__
         _sys.modules['xonsh.ansi_colors'] = __amalgam__
         codecache = __amalgam__
@@ -29,6 +27,8 @@ else:
         _sys.modules['xonsh.pretty'] = __amalgam__
         teepty = __amalgam__
         _sys.modules['xonsh.teepty'] = __amalgam__
+        timings = __amalgam__
+        _sys.modules['xonsh.timings'] = __amalgam__
         jobs = __amalgam__
         _sys.modules['xonsh.jobs'] = __amalgam__
         parser = __amalgam__
