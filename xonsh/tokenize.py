@@ -44,21 +44,24 @@ cookie_re = LazyObject(
 blank_re = LazyObject(lambda: re.compile(br'^[ \t\f]*(?:[#\r\n]|$)', re.ASCII),
                       globals(), 'blank_re')
 
+#
+# token modifications
+#
 import token
 __all__ = token.__all__ + ["COMMENT", "tokenize", "detect_encoding",
                            "NL", "untokenize", "ENCODING", "TokenInfo",
                            "TokenError", 'SEARCHPATH', 'ATDOLLAR', 'ATEQUAL',
                            'DOLLARNAME', 'IOREDIRECT']
-del token
-
 PY35 = PYTHON_VERSION_INFO >= (3, 5, 0)
 if PY35:
-    from token import ASYNC, AWAIT
+    ASYNC = token.ASYNC
+    AWAIT = token.AWAIT
     AUGASSIGN_OPS = r"[+\-*/%&@|^=<>]=?"
     ADDSPACE_TOKS = (NAME, NUMBER, ASYNC, AWAIT)
 else:
     AUGASSIGN_OPS = r"[+\-*/%&|^=<>]=?"
     ADDSPACE_TOKS = (NAME, NUMBER)
+del token  # must clean up token
 
 
 COMMENT = N_TOKENS
@@ -101,11 +104,13 @@ _xonsh_tokens = {
 
 additional_parenlevs = frozenset({'@(', '!(', '![', '$(', '$[', '${', '@$('})
 
-for k, v in _xonsh_tokens.items():
-    exec('%s = N_TOKENS' % v)
+_glbs = globals()
+for v in _xonsh_tokens.values():
+    _glbs[v] = N_TOKENS
     tok_name[N_TOKENS] = v
     N_TOKENS += 1
     __all__.append(v)
+del _glbs, v
 
 
 EXACT_TOKEN_TYPES = {
@@ -170,9 +175,16 @@ class TokenInfo(collections.namedtuple('TokenInfo', 'type string start end line'
         else:
             return self.type
 
-def group(*choices): return '(' + '|'.join(choices) + ')'
-def tokany(*choices): return group(*choices) + '*'
-def maybe(*choices): return group(*choices) + '?'
+def group(*choices):
+    return '(' + '|'.join(choices) + ')'
+
+
+def tokany(*choices):
+    return group(*choices) + '*'
+
+
+def maybe(*choices):
+    return group(*choices) + '?'
 
 # Note: we use unicode matching for names ("\w") but ascii matching for
 # number literals.
@@ -426,6 +438,7 @@ def _get_normal_name(orig_enc):
        enc.startswith(("latin-1-", "iso-8859-1-", "iso-latin-1-")):
         return "iso-8859-1"
     return orig_enc
+
 
 def detect_encoding(readline):
     """

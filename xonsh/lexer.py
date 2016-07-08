@@ -4,7 +4,8 @@
 Written using a hybrid of ``tokenize`` and PLY.
 """
 import io
-import keyword
+# 'keyword' interferes with ast.keyword
+import keyword as kwmod
 try:
     from ply.lex import LexToken
 except ImportError:
@@ -69,7 +70,7 @@ def handle_name(state, token):
     typ = 'NAME'
     state['last'] = token
     if state['pymode'][-1][0]:
-        if token.string in keyword.kwlist:
+        if token.string in kwmod.kwlist:
             typ = token.string.upper()
         yield _new_token(typ, token.string, token.start)
     else:
@@ -349,6 +350,6 @@ class Lexer(object):
                 'DOLLAR_LBRACE',         # ${
                 'DOLLAR_LBRACKET',       # $[
                 'ATDOLLAR_LPAREN',       # @$(
-                ) + tuple(i.upper() for i in keyword.kwlist)
+                ) + tuple(i.upper() for i in kwmod.kwlist)
             self._tokens = t
         return self._tokens
