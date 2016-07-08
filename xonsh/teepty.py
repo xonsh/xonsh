@@ -26,10 +26,15 @@ from xonsh.lazyasd import LazyObject
 # The following escape codes are xterm codes.
 # See http://rtfm.etla.org/xterm/ctlseq.html for more.
 MODE_NUMS = ('1049', '47', '1047')
-START_ALTERNATE_MODE = frozenset('\x1b[?{0}h'.format(i).encode() for i in MODE_NUMS)
-END_ALTERNATE_MODE = frozenset('\x1b[?{0}l'.format(i).encode() for i in MODE_NUMS)
-ALTERNATE_MODE_FLAGS = tuple(START_ALTERNATE_MODE) + tuple(END_ALTERNATE_MODE)
-
+START_ALTERNATE_MODE = LazyObject(
+    lambda: frozenset('\x1b[?{0}h'.format(i).encode() for i in MODE_NUMS),
+    globals(), 'START_ALTERNATE_MODE')
+END_ALTERNATE_MODE = LazyObject(
+    lambda: frozenset('\x1b[?{0}l'.format(i).encode() for i in MODE_NUMS),
+    globals(), 'END_ALTERNATE_MODE')
+ALTERNATE_MODE_FLAGS = LazyObject(
+    lambda: tuple(START_ALTERNATE_MODE) + tuple(END_ALTERNATE_MODE),
+    globals(), 'ALTERNATE_MODE_FLAGS')
 RE_HIDDEN_BYTES = LazyObject(lambda: re.compile(b'(\001.*?\002)'),
                              globals(), 'RE_HIDDEN')
 RE_COLOR = LazyObject(lambda: re.compile(b'\033\[\d+;?\d*m'),
@@ -334,5 +339,3 @@ def _teepty_main():
     print('-=-'*10)
     print('Returned with status {0}'.format(tpty.wcode))
 
-if __name__ == '__main__':
-    _teepty_main()
