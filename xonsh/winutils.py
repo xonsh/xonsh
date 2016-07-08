@@ -37,7 +37,7 @@ def CloseHandle():
     return ch
 
 
-@lazyobbject
+@lazyobject
 def GetActiveWindow():
     gaw = ctypes.windll.user32.GetActiveWindow
     gaw.argtypes = ()
