@@ -22,6 +22,7 @@ import collections.abc as abc
 from xonsh.tools import (redirect_stdout, redirect_stderr, ON_WINDOWS, ON_LINUX,
                          fallback, print_exception, XonshCalledProcessError)
 from xonsh.teepty import TeePTY
+from xonsh.lazyasd import LazyObject
 
 
 # force some lazy imports so we don't have errors on non-windows platforms
