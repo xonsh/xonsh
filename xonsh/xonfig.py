@@ -2,13 +2,13 @@
 import ast
 import json
 import shutil
+import pprint
 import textwrap
 import builtins
+import argparse
 import functools
 import itertools
-from pprint import pformat
-from argparse import ArgumentParser
-from contextlib import contextmanager
+import contextlib
 
 try:
     import ply
@@ -160,6 +160,7 @@ def _wrap_paragraphs(text, width=70, **kwargs):
     s = '\n'.join(pars)
     return s
 
+
 ENVVAR_MESSAGE = """
 {{BOLD_CYAN}}${name}{{NO_COLOR}}
 {docstr}
@@ -180,7 +181,7 @@ def make_envvar(name):
     curr = env.get(name)
     if is_string(curr) and is_template_string(curr):
         curr = curr.replace('{', '{{').replace('}', '}}')
-    curr = pformat(curr, width=69)
+    curr = pprint.pformat(curr, width=69)
     if '\n' in curr:
         curr = '\n' + curr
     msg = ENVVAR_MESSAGE.format(name=name, default=default, current=curr,
@@ -298,7 +299,7 @@ def _wizard(ns):
     w = make_xonfig_wizard(default_file=fname, confirm=ns.confirm)
     tempenv = {'PROMPT': '', 'XONSH_STORE_STDOUT': False}
     pv = wiz.PromptVisitor(w, store_in_history=False, multiline=False)
-    @contextmanager
+    @contextlib.contextmanager
     def force_hide():
         if env.get('XONSH_STORE_STDOUT') and hasattr(shell, '_force_hide'):
             orig, shell._force_hide = shell._force_hide, False
@@ -336,6 +337,7 @@ def _xonfig_format_json(data):
 def _info(ns):
     data = [
         ('xonsh', XONSH_VERSION),
+        ('Git SHA', githash()),
         ('Python', '{}.{}.{}'.format(*PYTHON_VERSION_INFO)),
         ('PLY', ply.__version__),
         ('have readline', is_readline_available()),
@@ -352,7 +354,6 @@ def _info(ns):
         ('on cygwin', ON_CYGWIN),
         ('is superuser', is_superuser()),
         ('default encoding', DEFAULT_ENCODING),
-        ('git SHA', githash())
         ])
     formatter = _xonfig_format_json if ns.json else _xonfig_format_human
     s = formatter(data)
@@ -433,7 +434,7 @@ def _colors(ns):
 
 @functools.lru_cache(1)
 def _xonfig_create_parser():
-    p = ArgumentParser(prog='xonfig',
+    p = argparse.ArgumentParser(prog='xonfig',
                        description='Manages xonsh configuration.')
     subp = p.add_subparsers(title='action', dest='action')
     info = subp.add_parser('info', help=('displays configuration information, '
@@ -473,5 +474,3 @@ def xonfig_main(args=None):
     return _XONFIG_MAIN_ACTIONS[ns.action](ns)
 
 
-if __name__ == '__main__':
-    xonfig_main()
