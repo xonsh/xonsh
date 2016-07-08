@@ -69,6 +69,14 @@ class LazyObject(object):
         obj = self._lazy_obj()
         return obj[item]
 
+    def __setitem__(self, key, value):
+        obj = self._lazy_obj()
+        obj[key] = value
+
+    def __delitem__(self, item):
+        obj = self._lazy_obj()
+        del obj[item]
+
 
 def lazyobject(f):
     """Decorator for constructing lazy objects from a function."""
