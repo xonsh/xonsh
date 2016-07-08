@@ -23,7 +23,7 @@ from pygments.style import Style
 from pygments.styles import get_style_by_name
 import pygments.util
 
-from xonsh.lazyasd import LazyObject
+from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.tools import (ON_WINDOWS, intensify_colors_for_cmd_exe,
                          expand_gray_colors_for_cmd_exe)
 from xonsh.tokenize import SearchPath
@@ -376,7 +376,7 @@ PTK_STYLE = {
     Token.Aborted: '#888888',
 }
 
-XONSH_BASE_STYLE = {
+XONSH_BASE_STYLE = LazyObject(lambda: {
     Whitespace: '#008080',
     Comment: 'underline',
     Comment.Preproc: 'underline',
@@ -415,9 +415,9 @@ XONSH_BASE_STYLE = {
     Generic.Output: '#008080',
     Generic.Traceback: '#800000',
     Error: '#800000',
-}
+    }, globals(), 'XONSH_BASE_STYLE')
 
-KNOWN_COLORS = frozenset([
+KNOWN_COLORS = LazyObject(lambda: frozenset([
     'BACKGROUND_BLACK',
     'BACKGROUND_BLUE',
     'BACKGROUND_CYAN',
@@ -499,7 +499,7 @@ KNOWN_COLORS = frozenset([
     'UNDERLINE_YELLOW',
     'WHITE',
     'YELLOW',
-])
+    ]), globals(), 'KNOWN_COLORS')
 
 
 def _expand_style(cmap):
