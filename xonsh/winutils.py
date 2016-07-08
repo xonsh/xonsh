@@ -20,24 +20,30 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-
 import sys
 import subprocess
-
 import ctypes
-from ctypes.wintypes import HANDLE, BOOL, DWORD, HWND, HINSTANCE, HKEY
 from ctypes import c_ulong, c_char_p, c_int, c_void_p
+from ctypes.wintypes import HANDLE, BOOL, DWORD, HWND, HINSTANCE, HKEY
 
-P_HANDLE = ctypes.POINTER(HANDLE)
-P_WORD = ctypes.POINTER(DWORD)
+from xonsh.lazyasd import lazyobject
 
-CloseHandle = ctypes.windll.kernel32.CloseHandle
-CloseHandle.argtypes = (HANDLE, )
-CloseHandle.restype = BOOL
 
-GetActiveWindow = ctypes.windll.user32.GetActiveWindow
-GetActiveWindow.argtypes = ()
-GetActiveWindow.restype = HANDLE
+@lazyobject
+def CloseHandle():
+    ch = ctypes.windll.kernel32.CloseHandle
+    ch.argtypes = (HANDLE,)
+    ch.restype = BOOL
+    return ch
+
+
+@lazyobbject
+def GetActiveWindow():
+    gaw = ctypes.windll.user32.GetActiveWindow
+    gaw.argtypes = ()
+    gaw.restype = HANDLE
+    return gaw
+
 
 TOKEN_READ = 0x20008
 
@@ -67,15 +73,24 @@ class ShellExecuteInfo(ctypes.Structure):
         for field_name, field_value in kw.items():
             setattr(self, field_name, field_value)
 
-PShellExecuteInfo = ctypes.POINTER(ShellExecuteInfo)
 
-ShellExecuteEx = ctypes.windll.Shell32.ShellExecuteExA
-ShellExecuteEx.argtypes = (PShellExecuteInfo, )
-ShellExecuteEx.restype = BOOL
 
-WaitForSingleObject = ctypes.windll.kernel32.WaitForSingleObject
-WaitForSingleObject.argtypes = (HANDLE, DWORD)
-WaitForSingleObject.restype = DWORD
+@lazyobject
+def ShellExecuteEx():
+    see = ctypes.windll.Shell32.ShellExecuteExA
+    PShellExecuteInfo = ctypes.POINTER(ShellExecuteInfo)
+    see.argtypes = (PShellExecuteInfo, )
+    see.restype = BOOL
+    return see
+
+
+@lazyobject
+def WaitForSingleObject():
+    wfso = ctypes.windll.kernel32.WaitForSingleObject
+    wfso.argtypes = (HANDLE, DWORD)
+    wfso.restype = DWORD
+    return wfso
+
 
 # SW_HIDE = 0
 SW_SHOW = 5
