@@ -15,6 +15,7 @@ import threading
 import collections
 import collections.abc as abc
 
+from xonsh.lazyasd import LazyObject
 from xonsh.lazyjson import LazyJSON, ljdump, LJNode
 from xonsh.tools import (ensure_int_or_slice, to_history_tuple,
                          expanduser_abs_path)
