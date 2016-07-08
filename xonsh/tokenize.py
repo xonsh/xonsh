@@ -90,6 +90,8 @@ _xonsh_tokens = {
     '||':  'DOUBLEPIPE',
     '&&':  'DOUBLEAMPER',
     '@(':  'ATLPAREN',
+    '!{':  'BANGLBRACE',
+    '}!':  'RBRACEBANG',
     '!(':  'BANGLPAREN',
     '![':  'BANGLBRACKET',
     '$(':  'DOLLARLPAREN',
@@ -99,7 +101,7 @@ _xonsh_tokens = {
     '@$(': 'ATDOLLARLPAREN',
 }
 
-additional_parenlevs = frozenset({'@(', '!(', '![', '$(', '$[', '${', '@$('})
+additional_parenlevs = frozenset({'@(', '!(', '![', '$(', '$[', '${', '@$(', '!{'})
 
 for k, v in _xonsh_tokens.items():
     exec('%s = N_TOKENS' % v)
@@ -223,8 +225,8 @@ _redir_check = {'{}>'.format(i) for i in _redir_names}.union(_redir_check)
 _redir_check = {'{}>>'.format(i) for i in _redir_names}.union(_redir_check)
 _redir_check = frozenset(_redir_check)
 Operator = group(r"\*\*=?", r">>=?", r"<<=?", r"!=", r"//=?", r"->",
-                 r"@\$\(?", r'\|\|', '&&', r'@\(', r'!\(', r'!\[', r'\$\(',
-                 r'\$\[', '\${', r'\?\?', r'\?', AUGASSIGN_OPS, r"~")
+                 r"@\$\(?", r'\|\|', '&&', r'@\(', r'!\(', r'!\[', r'!{', r'}!',
+                 r'\$\(', r'\$\[', '\${', r'\?\?', r'\?', AUGASSIGN_OPS, r"~")
 
 Bracket = '[][(){}]'
 Special = group(r'\r?\n', r'\.\.\.', r'[:;.,@]')
@@ -743,6 +745,8 @@ def _tokenize(readline, encoding):
                         parenlev -= 1
                     elif token in additional_parenlevs:
                         parenlev += 1
+                    elif token == '}!':
+                        parenlev -= 1
                     if stashed:
                         yield stashed
                         stashed = None

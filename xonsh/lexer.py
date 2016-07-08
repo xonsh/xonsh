@@ -68,7 +68,6 @@ will fall back to handling that token using one of the handlers in
 """
 del _token_map
 
-
 def _make_matcher_handler(tok, typ, pymode, ender):
     matcher = (')' if tok.endswith('(') else
                '}' if tok.endswith('{') else
@@ -187,6 +186,32 @@ def handle_double_pipe(state, token):
     yield _new_token('OR', 'or', token.start)
 
 
+def handle_banglbrace(state, token):
+    state['inline_suite_level'] += 1
+    sl, sc = token.start
+    yield _new_token('NEWLINE', '\n', token.start)
+    yield _new_token('INDENT', ' ', (sl, sc+1))
+
+
+def handle_rbracebang(state, token):
+    state['inline_suite_level'] -= 1
+    if state['inline_suite_level'] < 0:
+        e = "}! used outside of inline suite."
+        yield _new_token('ERRORTOKEN', e, token.start)
+        return
+    sl, sc = token.start
+    if state['lexer'].last.type != 'DEDENT':
+        yield _new_token('NEWLINE', '\n', token.start)
+    yield _new_token('DEDENT', '', (sl, sc+1))
+
+
+def handle_semicolon(state, token):
+    if state['inline_suite_level'] > 0:
+        yield _new_token('NEWLINE', '\n', token.start)
+        return
+    yield _new_token('SEMI', ';', token.start)
+
+
 special_handlers = {
     NL: handle_ignore,
     COMMENT: handle_ignore,
@@ -194,11 +219,14 @@ special_handlers = {
     ENDMARKER: handle_ignore,
     NAME: handle_name,
     ERRORTOKEN: handle_error_token,
+    (OP, ';'): handle_semicolon,
     (OP, ')'): handle_rparen,
     (OP, '}'): handle_rbrace,
     (OP, ']'): handle_rbracket,
     (OP, '&&'): handle_double_amps,
     (OP, '||'): handle_double_pipe,
+    (OP, '!{'): handle_banglbrace,
+    (OP, '}!'): handle_rbracebang,
     (ERRORTOKEN, ' '): handle_error_space,
 }
 """
@@ -258,14 +286,16 @@ def handle_token(state, token):
         yield _new_token("ERRORTOKEN", m, token.start)
 
 
-def get_tokens(s):
+def get_tokens(s, lexer):
     """
     Given a string containing xonsh code, generates a stream of relevant PLY
     tokens using ``handle_token``.
     """
     state = {'indents': [0], 'last': None,
              'pymode': [(True, '', '', (0, 0))],
-             'stream': tokenize(BytesIO(s.encode('utf-8')).readline)}
+             'inline_suite_level': 0,
+             'stream': tokenize(BytesIO(s.encode('utf-8')).readline),
+             'lexer': lexer}
     while True:
         try:
             token = next(state['stream'])
@@ -325,7 +355,7 @@ class Lexer(object):
 
     def input(self, s):
         """Calls the lexer on the string s."""
-        self.token_stream = get_tokens(s)
+        self.token_stream = get_tokens(s, self)
 
     def token(self):
         """Retrieves the next token."""
@@ -345,6 +375,7 @@ class Lexer(object):
     tokens = tuple(token_map.values()) + (
         'NAME',                  # name tokens
         'WS',                    # whitespace in subprocess mode
+        'SEMI',                  # ;
         'LPAREN', 'RPAREN',      # ( )
         'LBRACKET', 'RBRACKET',  # [ ]
         'LBRACE', 'RBRACE',      # { }
