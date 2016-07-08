@@ -17,13 +17,13 @@ Original file credits:
                   'Michael Foord')
 """
 
-from builtins import open as _builtin_open
-from codecs import lookup, BOM_UTF8
-import collections
-from io import TextIOWrapper
-from itertools import chain
 import re
+import io
 import sys
+import codecs
+import builtins
+import itertools
+import collections
 from token import (AMPER, AMPEREQUAL, AT, CIRCUMFLEX,
         CIRCUMFLEXEQUAL, COLON, COMMA, DEDENT, DOT, DOUBLESLASH,
         DOUBLESLASHEQUAL, DOUBLESTAR, DOUBLESTAREQUAL, ENDMARKER, EQEQUAL,
@@ -370,7 +370,7 @@ class Untokenizer:
         startline = token[0] in (NEWLINE, NL)
         prevstring = False
 
-        for tok in chain([token], iterable):
+        for tok in itertools.chain([token], iterable):
             toknum, tokval = tok[:2]
             if toknum == ENCODING:
                 self.encoding = tokval
@@ -487,7 +487,7 @@ def detect_encoding(readline):
             return None
         encoding = _get_normal_name(match.group(1))
         try:
-            codec = lookup(encoding)
+            codec = codecs.lookup(encoding)
         except LookupError:
             # This behaviour mimics the Python interpreter
             if filename is None:
@@ -509,7 +509,7 @@ def detect_encoding(readline):
         return encoding
 
     first = read_or_stop()
-    if first.startswith(BOM_UTF8):
+    if first.startswith(codecs.BOM_UTF8):
         bom_found = True
         first = first[3:]
         default = 'utf-8-sig'
@@ -537,11 +537,11 @@ def _tokopen(filename):
     """Open a file in read only mode using the encoding detected by
     detect_encoding().
     """
-    buffer = _builtin_open(filename, 'rb')
+    buffer = builtins.open(filename, 'rb')
     try:
         encoding, lines = detect_encoding(buffer.readline)
         buffer.seek(0)
-        text = TextIOWrapper(buffer, encoding, line_buffering=True)
+        text = io.TextIOWrapper(buffer, encoding, line_buffering=True)
         text.mode = 'r'
         return text
     except Exception:
@@ -793,13 +793,10 @@ def tokenize(readline):
     The first token sequence will always be an ENCODING token
     which tells you which encoding was used to decode the bytes stream.
     """
-    # This import is here to avoid problems when the itertools module is not
-    # built yet and tokenize is imported.
-    from itertools import chain, repeat
     encoding, consumed = detect_encoding(readline)
     rl_gen = iter(readline, b"")
-    empty = repeat(b"")
-    return _tokenize(chain(consumed, rl_gen, empty).__next__, encoding)
+    empty = itertools.repeat(b"")
+    return _tokenize(itertools.chain(consumed, rl_gen, empty).__next__, encoding)
 
 
 # An undocumented, backwards compatible, API for all the places in the standard
@@ -837,7 +834,7 @@ def tokenize_main():
         # Tokenize the input
         if args.filename:
             filename = args.filename
-            with _builtin_open(filename, 'rb') as f:
+            with builtins.open(filename, 'rb') as f:
                 tokens = list(tokenize(f.readline))
         else:
             filename = "<stdin>"
