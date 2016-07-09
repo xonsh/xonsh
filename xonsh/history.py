@@ -2,17 +2,20 @@
 """Implements the xonsh history object."""
 import os
 import sys
-import argparse
-import functools
-import operator
 import uuid
 import time
+import json
+import glob
+import argparse
+import operator
 import datetime
 import builtins
-from glob import iglob
-from collections import deque, Sequence, OrderedDict
-from threading import Thread, Condition
+import functools
+import threading
+import collections
+import collections.abc as abc
 
+from xonsh.lazyasd import LazyObject
 from xonsh.lazyjson import LazyJSON, ljdump, LJNode
 from xonsh.tools import (ensure_int_or_slice, to_history_tuple,
                          expanduser_abs_path)
@@ -68,7 +71,7 @@ def _gc_bytes_to_rmfiles(hsize, files):
     return rmfiles
 
 
-class HistoryGC(Thread):
+class HistoryGC(threading.Thread):
     """Shell history garbage collection."""
 
     def __init__(self, wait_for_shell=True, size=None, *args, **kwargs):
@@ -117,7 +120,7 @@ class HistoryGC(Thread):
         xdd = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
         xdd = expanduser_abs_path(xdd)
 
-        fs = [f for f in iglob(os.path.join(xdd, 'xonsh-*.json'))]
+        fs = [f for f in glob.iglob(os.path.join(xdd, 'xonsh-*.json'))]
         files = []
         for f in fs:
             try:
@@ -135,7 +138,7 @@ class HistoryGC(Thread):
         return files
 
 
-class HistoryFlusher(Thread):
+class HistoryFlusher(threading.Thread):
     """Flush shell history to disk periodically."""
 
     def __init__(self, filename, buffer, queue, cond, at_exit=False, *args,
@@ -176,7 +179,7 @@ class HistoryFlusher(Thread):
             ljdump(hist, f, sort_keys=True)
 
 
-class CommandField(Sequence):
+class CommandField(abc.Sequence):
     """A field in the 'cmds' portion of history."""
 
     def __init__(self, field, hist, default=None):
@@ -437,23 +440,23 @@ def _hist_create_parser():
     return p
 
 
-def _show(ns=None, hist=None, start_index=None, end_index=None,
+def _hist_show(ns=None, hist=None, start_index=None, end_index=None,
           start_time=None, end_time=None, location=None):
-    """
-    Show the requested portion of shell history.
+    """Show the requested portion of shell history.
     Accepts multiple history sources (xonsh, bash, zsh)
 
-    May be invoked as an alias with `history all/bash/zsh` which will
-    provide history as stdout or with `__xonsh_history__.show()`
+    May be invoked as an alias with history all/bash/zsh which will
+    provide history as stdout or with __xonsh_history__.show()
     which will return the history as a list with each item
     in the tuple form (name, start_time, index).
 
     If invoked via __xonsh_history__.show() then the ns parameter
-    can be supplied as a str with the follow options:
-        `session` - returns xonsh history from current session
-        `all`     - returns xonsh history from all sessions
-        `zsh`     - returns all zsh history
-        `bash`    - returns all bash history
+    can be supplied as a str with the follow options::
+
+        session - returns xonsh history from current session
+        all     - returns xonsh history from all sessions
+        zsh     - returns all zsh history
+        bash    - returns all bash history
     """
     # Check if ns is a string, meaning it was invoked from
     # __xonsh_history__
@@ -568,8 +571,8 @@ class History(object):
             self.filename = filename
         self.buffer = []
         self.buffersize = buffersize
-        self._queue = deque()
-        self._cond = Condition()
+        self._queue = collections.deque()
+        self._cond = threading.Condition()
         self._len = 0
         self.last_cmd_out = None
         self.last_cmd_rtn = None
@@ -650,19 +653,18 @@ class History(object):
             `zsh`     - returns all zsh history
             `bash`    - returns all bash history
         """
-        return _show(*args, **kwargs)
+        return _hist_show(*args, **kwargs)
 
 
-def _info(ns, hist):
+def _hist_info(ns, hist):
     """Display information about the shell history."""
-    data = OrderedDict()
+    data = collections.OrderedDict()
     data['sessionid'] = str(hist.sessionid)
     data['filename'] = hist.filename
     data['length'] = len(hist)
     data['buffersize'] = hist.buffersize
     data['bufferlength'] = len(hist.buffer)
     if ns.json:
-        import json
         s = json.dumps(data)
         print(s)
     else:
@@ -670,7 +672,7 @@ def _info(ns, hist):
         print('\n'.join(lines))
 
 
-def _gc(ns, hist):
+def _hist_gc(ns, hist):
     """Start and monitor garbage collection of the shell history."""
     hist.gc = gc = HistoryGC(wait_for_shell=False, size=ns.size)
     if ns.blocking:
@@ -678,19 +680,19 @@ def _gc(ns, hist):
             continue
 
 
-_HIST_MAIN_ACTIONS = {
-    'show': _show,
-    'xonsh': _show,
-    'zsh': _show,
-    'bash': _show,
-    'session': _show,
-    'all': _show,
+_HIST_MAIN_ACTIONS = LazyObject(lambda: {
+    'show': _hist_show,
+    'xonsh': _hist_show,
+    'zsh': _hist_show,
+    'bash': _hist_show,
+    'session': _hist_show,
+    'all': _hist_show,
     'id': lambda ns, hist: print(hist.sessionid),
     'file': lambda ns, hist: print(hist.filename),
-    'info': _info,
+    'info': _hist_info,
     'diff': _dh_main_action,
-    'gc': _gc,
-    }
+    'gc': _hist_gc,
+    }, globals(), '_HIST_MAIN_ACTIONS')
 
 
 def _hist_main(hist, args):
@@ -713,5 +715,4 @@ def _hist_main(hist, args):
 
 def history_main(args=None, stdin=None):
     """This is the history command entry point."""
-    _ = stdin
     _hist_main(builtins.__xonsh_history__, args)  # pylint: disable=no-member

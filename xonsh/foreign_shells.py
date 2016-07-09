@@ -8,17 +8,16 @@ import shlex
 import tempfile
 import builtins
 import subprocess
-from warnings import warn
-from functools import lru_cache
-from collections import MutableMapping, Mapping, Sequence
+import warnings
+import functools
+import collections.abc as abc
 
 from xonsh.lazyasd import LazyObject
 from xonsh.tools import to_bool, ensure_string
 from xonsh.platform import ON_WINDOWS, ON_CYGWIN
 
 
-COMMAND = """
-{seterrprevcmd}
+COMMAND = """{seterrprevcmd}
 {prevcmd}
 echo __XONSH_ENV_BEG__
 {envcmd}
@@ -30,11 +29,9 @@ echo __XONSH_FUNCS_BEG__
 {funcscmd}
 echo __XONSH_FUNCS_END__
 {postcmd}
-{seterrpostcmd}
-""".strip()
+{seterrpostcmd}"""
 
-DEFAULT_BASH_FUNCSCMD = r"""
-# get function names from declare
+DEFAULT_BASH_FUNCSCMD = r"""# get function names from declare
 declstr=$(declare -F)
 read -r -a decls <<< $declstr
 funcnames=""
@@ -66,10 +63,9 @@ if [[ "{" == "${namefile}" ]]; then
 else
   namefile="${namefile%?}}"
 fi
-echo $namefile
-""".strip()
+echo $namefile"""
 
-DEFAULT_ZSH_FUNCSCMD = """
+DEFAULT_ZSH_FUNCSCMD = """# get function names
 namefile="{"
 for name in ${(ok)functions}; do
   loc=$(whence -v $name)
@@ -82,11 +78,10 @@ if [[ "{" == "${namefile}" ]]; then
 else
   namefile="${namefile%?}}"
 fi
-echo ${namefile}
-""".strip()
+echo ${namefile}"""
 
 # mapping of shell name alises to keys in other lookup dictionaries.
-CANON_SHELL_NAMES = {
+CANON_SHELL_NAMES = LazyObject(lambda: {
     'bash': 'bash',
     '/bin/bash': 'bash',
     'zsh': 'zsh',
@@ -94,51 +89,58 @@ CANON_SHELL_NAMES = {
     '/usr/bin/zsh': 'zsh',
     'cmd': 'cmd',
     'cmd.exe': 'cmd',
-}
+    }, globals(), 'CANON_SHELL_NAMES')
 
-DEFAULT_ENVCMDS = {
+DEFAULT_ENVCMDS = LazyObject(lambda: {
     'bash': 'env',
     'zsh': 'env',
     'cmd': 'set',
-}
-DEFAULT_ALIASCMDS = {
+    }, globals(), 'DEFAULT_ENVCMDS')
+
+DEFAULT_ALIASCMDS = LazyObject(lambda: {
     'bash': 'alias',
     'zsh': 'alias -L',
     'cmd': '',
-}
-DEFAULT_FUNCSCMDS = {
+    }, globals(), 'DEFAULT_ALIASCMDS')
+
+DEFAULT_FUNCSCMDS = LazyObject(lambda: {
     'bash': DEFAULT_BASH_FUNCSCMD,
     'zsh': DEFAULT_ZSH_FUNCSCMD,
     'cmd': '',
-}
-DEFAULT_SOURCERS = {
+    }, globals(), 'DEFAULT_FUNCSCMDS')
+
+DEFAULT_SOURCERS = LazyObject(lambda: {
     'bash': 'source',
     'zsh': 'source',
     'cmd': 'call',
-}
-DEFAULT_TMPFILE_EXT = {
+    }, globals(), 'DEFAULT_SOURCERS')
+
+DEFAULT_TMPFILE_EXT = LazyObject(lambda: {
     'bash': '.sh',
     'zsh': '.zsh',
     'cmd': '.bat',
-}
-DEFAULT_RUNCMD = {
+    }, globals(), 'DEFAULT_TMPFILE_EXT')
+
+DEFAULT_RUNCMD = LazyObject(lambda: {
     'bash': '-c',
     'zsh': '-c',
     'cmd': '/C',
-}
-DEFAULT_SETERRPREVCMD = {
+    }, globals(), 'DEFAULT_RUNCMD')
+
+DEFAULT_SETERRPREVCMD = LazyObject(lambda: {
     'bash': 'set -e',
     'zsh': 'set -e',
     'cmd': '@echo off',
-}
-DEFAULT_SETERRPOSTCMD = {
+    }, globals(), 'DEFAULT_SETERRPREVCMD')
+
+DEFAULT_SETERRPOSTCMD = LazyObject(lambda: {
     'bash': '',
     'zsh': '',
     'cmd': 'if errorlevel 1 exit 1',
-}
+    }, globals(), 'DEFAULT_SETERRPOSTCMD')
 
 
-@lru_cache()
+@functools.lru_cache()
 def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
                        aliascmd=None, extra_args=(), currenv=None,
                        safe=True, prevcmd='', postcmd='', funcscmd=None,
@@ -229,9 +231,7 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
                              postcmd=postcmd, funcscmd=funcscmd,
                              seterrprevcmd=seterrprevcmd,
                              seterrpostcmd=seterrpostcmd).strip()
-
     cmd.append(runcmd)
-
     if not use_tmpfile:
         cmd.append(command)
     else:
@@ -239,14 +239,14 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
         tmpfile.write(command.encode('utf8'))
         tmpfile.close()
         cmd.append(tmpfile.name)
-
     if currenv is None and hasattr(builtins, '__xonsh_env__'):
         currenv = builtins.__xonsh_env__.detype()
     elif currenv is not None:
         currenv = dict(currenv)
     try:
         s = subprocess.check_output(cmd, stderr=subprocess.PIPE, env=currenv,
-                                    # start new session to avoid hangs (doesn't work on Cygwin though)
+                                    # start new session to avoid hangs
+                                    #(doesn't work on Cygwin though)
                                     start_new_session=(not ON_CYGWIN),
                                     universal_newlines=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
@@ -282,8 +282,10 @@ def parse_env(s):
     return env
 
 
-ALIAS_RE = re.compile('__XONSH_ALIAS_BEG__\n(.*)__XONSH_ALIAS_END__',
-                      flags=re.DOTALL)
+ALIAS_RE = LazyObject(lambda: re.compile('__XONSH_ALIAS_BEG__\n(.*)'
+                                         '__XONSH_ALIAS_END__',
+                                         flags=re.DOTALL),
+                      globals(), 'ALIAS_RE')
 
 
 def parse_aliases(s):
@@ -305,15 +307,17 @@ def parse_aliases(s):
                 value = value[1:-1]
             value = shlex.split(value)
         except ValueError as exc:
-            warn('could not parse alias "{0}": {1!r}'.format(key, exc),
-                 RuntimeWarning)
+            warnings.warn('could not parse alias "{0}": {1!r}'.format(key, exc),
+                          RuntimeWarning)
             continue
         aliases[key] = value
     return aliases
 
 
-FUNCS_RE = re.compile('__XONSH_FUNCS_BEG__\n(.+)\n__XONSH_FUNCS_END__',
-                      flags=re.DOTALL)
+FUNCS_RE = LazyObject(lambda: re.compile('__XONSH_FUNCS_BEG__\n(.+)\n'
+                                         '__XONSH_FUNCS_END__',
+                                         flags=re.DOTALL),
+                      globals(), 'FUNCS_RE')
 
 
 def parse_funcs(s, shell, sourcer=None):
@@ -335,7 +339,7 @@ def parse_funcs(s, shell, sourcer=None):
                'Note: you may be seeing this error if you use zsh with '
                'prezto. Prezto overwrites GNU coreutils functions (like echo) '
                'with its own zsh functions. Please try disabling prezto.')
-        warn(msg.format(exc, shell, s, g1), RuntimeWarning)
+        warnings.warn(msg.format(exc, shell, s, g1), RuntimeWarning)
         return {}
     sourcer = DEFAULT_SOURCERS.get(shell, 'source') if sourcer is None \
                                                     else sourcer
@@ -412,13 +416,15 @@ class ForeignShellFunctionAlias(object):
         return args, True
 
 
-VALID_SHELL_PARAMS = frozenset(['shell', 'interactive', 'login', 'envcmd',
-                                'aliascmd', 'extra_args', 'currenv', 'safe',
-                                'prevcmd', 'postcmd', 'funcscmd', 'sourcer'])
+VALID_SHELL_PARAMS = LazyObject(lambda: frozenset([
+                                    'shell', 'interactive', 'login', 'envcmd',
+                                    'aliascmd', 'extra_args', 'currenv', 'safe',
+                                    'prevcmd', 'postcmd', 'funcscmd', 'sourcer',
+                                    ]), globals(), 'VALID_SHELL_PARAMS')
 
 def ensure_shell(shell):
     """Ensures that a mapping follows the shell specification."""
-    if not isinstance(shell, MutableMapping):
+    if not isinstance(shell, abc.MutableMapping):
         shell = dict(shell)
     shell_keys = set(shell.keys())
     if not (shell_keys <= VALID_SHELL_PARAMS):
@@ -439,7 +445,7 @@ def ensure_shell(shell):
         shell['extra_args'] = tuple(map(ensure_string, shell['extra_args']))
     if 'currenv' in shell_keys and not isinstance(shell['currenv'], tuple):
         ce = shell['currenv']
-        if isinstance(ce, Mapping):
+        if isinstance(ce, abc.Mapping):
             ce = tuple([(ensure_string(k), v) for k, v in ce.items()])
         elif isinstance(ce, Sequence):
             ce = tuple([(ensure_string(k), v) for k, v in ce])

@@ -18,7 +18,7 @@ import subprocess
 import contextlib
 import collections.abc as abc
 
-from xonsh.lazyasd import LazyObject
+from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.history import History
 from xonsh.inspectors import Inspector
 from xonsh.aliases import Aliases, make_default_aliases
@@ -39,8 +39,8 @@ from xonsh.commands_cache import CommandsCache
 BUILTINS_LOADED = False
 INSPECTOR = LazyObject(Inspector, globals(), 'INSPECTOR')
 
-
-def _at_exit_signals():
+@lazyobject
+def AT_EXIT_SIGNALS():
     sigs = (signal.SIGABRT, signal.SIGFPE, signal.SIGILL, signal.SIGSEGV,
             signal.SIGTERM)
     if ON_POSIX:
@@ -48,11 +48,8 @@ def _at_exit_signals():
     return sigs
 
 
-AT_EXIT_SIGNALS = LazyObject(_at_exit_signals, globals(), 'AT_EXIT_SIGNALS')
-del _at_exit_signals
-
-
-def _signal_messages():
+@lazyobject
+def SIGNAL_MESSAGES():
     sm = {
         signal.SIGABRT: 'Aborted',
         signal.SIGFPE: 'Floating point exception',
@@ -67,10 +64,6 @@ def _signal_messages():
             signal.SIGKILL: 'Killed',
             })
     return sm
-
-
-SIGNAL_MESSAGES = LazyObject(_signal_messages, globals(), 'SIGNAL_MESSAGES')
-del _signal_messages
 
 
 def resetting_signal_handle(sig, f):
@@ -244,25 +237,26 @@ def get_script_subproc_command(fname, args):
     return interp + [fname] + args
 
 
-def _redir_regex():
+@lazyobject
+def _REDIR_REGEX():
     name = "(o(?:ut)?|e(?:rr)?|a(?:ll)?|&?\d?)"
     return re.compile("{r}(>?>|<){r}$".format(r=name))
 
 
-_REDIR_REGEX = LazyObject(_redir_regex, globals(), '_REDIR_REGEX')
-del _redir_regex
 _MODES = LazyObject(lambda: {'>>': 'a', '>': 'w', '<': 'r'}, globals(),
                     '_MODES')
 _WRITE_MODES = LazyObject(lambda: frozenset({'w', 'a'}), globals(),
                           '_WRITE_MODES')
 _REDIR_ALL = LazyObject(lambda: frozenset({'&', 'a', 'all'}),
                         globals(), '_REDIR_ALL')
-_REDIR_ERR = frozenset({'2', 'e', 'err'})
-_REDIR_OUT = frozenset({'', '1', 'o', 'out'})
-_E2O_MAP = frozenset({'{}>{}'.format(e, o)
-                      for e in _REDIR_ERR
-                      for o in _REDIR_OUT
-                      if o != ''})
+_REDIR_ERR = LazyObject(lambda: frozenset({'2', 'e', 'err'}), globals(),
+                        '_REDIR_ERR')
+_REDIR_OUT = LazyObject(lambda: frozenset({'', '1', 'o', 'out'}), globals(),
+                        '_REDIR_OUT')
+_E2O_MAP = LazyObject(lambda: frozenset({'{}>{}'.format(e, o)
+                                         for e in _REDIR_ERR
+                                         for o in _REDIR_OUT
+                                         if o != ''}), globals(), '_E2O_MAP')
 
 
 def _is_redirect(x):
@@ -290,9 +284,7 @@ def _redirect_io(streams, r, loc=None):
             raise XonshError('Multiple redirects for stderr')
         streams['stderr'] = ('<stdout>', 'a', subprocess.STDOUT)
         return
-
     orig, mode, dest = _REDIR_REGEX.match(r).groups()
-
     # redirect to fd
     if dest.startswith('&'):
         try:
@@ -306,9 +298,7 @@ def _redirect_io(streams, r, loc=None):
             raise
         except Exception:
             pass
-
     mode = _MODES.get(mode, None)
-
     if mode == 'r':
         if len(orig) > 0 or len(dest) > 0:
             raise XonshError('Unrecognized redirection command: {}'.format(r))
@@ -342,11 +332,9 @@ def _redirect_io(streams, r, loc=None):
             targets = ['stdout']
         else:
             raise XonshError('Unrecognized redirection command: {}'.format(r))
-
         f = _open(loc, mode)
         for t in targets:
             streams[t] = (loc, mode, f)
-
     else:
         raise XonshError('Unrecognized redirection command: {}'.format(r))
 

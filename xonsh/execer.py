@@ -6,7 +6,7 @@ import types
 import inspect
 import builtins
 import warnings
-from collections import Mapping
+import collections.abc as abc
 
 from xonsh.ast import CtxAwareTransformer
 from xonsh.parser import Parser
@@ -81,7 +81,7 @@ class Execer(object):
         # it also is valid as a subprocess line.
         if ctx is None:
             ctx = set()
-        elif isinstance(ctx, Mapping):
+        elif isinstance(ctx, abc.Mapping):
             ctx = set(ctx.keys())
         tree = self.ctxtransformer.ctxvisit(tree, input, ctx, mode=mode)
         return tree

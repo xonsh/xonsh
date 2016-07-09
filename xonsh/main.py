@@ -3,19 +3,13 @@
 import os
 import sys
 import enum
+import argparse
 import builtins
 import importlib
-from contextlib import contextmanager
-import argparse
-from argparse import ArgumentParser, ArgumentTypeError
-
-try:
-    from setproctitle import setproctitle
-except ImportError:
-    setproctitle = None
+import contextlib
 
 from xonsh import __version__
-from xonsh.lazyasd import LazyObject
+from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.environ import DEFAULT_VALUES
 from xonsh.shell import Shell
 from xonsh.pretty import pprint, pretty
@@ -33,6 +27,15 @@ pyghooks = LazyObject(lambda: importlib.import_module('xonsh.pyghooks'),
                       globals(), 'pyghooks')
 
 
+def get_setproctitle():
+    """Proxy function for loading process title"""
+    try:
+        from setproctitle import setproctitle as spt
+    except ImportError:
+        return
+    return spt
+
+
 def path_argument(s):
     """Return a path only if the path is actually legal
 
@@ -41,82 +44,86 @@ def path_argument(s):
 
     s = os.path.abspath(os.path.expanduser(s))
     if not os.path.isfile(s):
-        raise ArgumentTypeError('"%s" must be a valid path to a file' % s)
+        msg = '{0!r} must be a valid path to a file'.format(s)
+        raise argparse.ArgumentTypeError(msg)
     return s
 
 
-parser = ArgumentParser(description='xonsh', add_help=False)
-parser.add_argument('-h', '--help',
-                    dest='help',
-                    action='store_true',
-                    default=False,
-                    help='show help and exit')
-parser.add_argument('-V', '--version',
-                    dest='version',
-                    action='store_true',
-                    default=False,
-                    help='show version information and exit')
-parser.add_argument('-c',
-                    help="Run a single command and exit",
-                    dest='command',
-                    required=False,
-                    default=None)
-parser.add_argument('-i', '--interactive',
-                    help='force running in interactive mode',
-                    dest='force_interactive',
-                    action='store_true',
-                    default=False)
-parser.add_argument('-l', '--login',
-                    help='run as a login shell',
-                    dest='login',
-                    action='store_true',
-                    default=False)
-parser.add_argument('--config-path',
-                    help='specify a custom static configuration file',
-                    dest='config_path',
-                    default=None,
-                    type=path_argument)
-parser.add_argument('--no-rc',
-                    help="Do not load the .xonshrc files",
-                    dest='norc',
-                    action='store_true',
-                    default=False)
-parser.add_argument('--no-script-cache',
-                    help="Do not cache scripts as they are run",
-                    dest='scriptcache',
-                    action='store_false',
-                    default=True)
-parser.add_argument('--cache-everything',
-                    help="Use a cache, even for interactive commands",
-                    dest='cacheall',
-                    action='store_true',
-                    default=False)
-parser.add_argument('-D',
-                    dest='defines',
-                    help='define an environment variable, in the form of '
-                         '-DNAME=VAL. May be used many times.',
-                    metavar='ITEM',
-                    action='append',
-                    default=None)
-parser.add_argument('--shell-type',
-                    help='What kind of shell should be used. '
-                         'Possible options: readline, prompt_toolkit, random. '
-                         'Warning! If set this overrides $SHELL_TYPE variable.',
-                    dest='shell_type',
-                    choices=('readline', 'prompt_toolkit', 'best', 'random'),
-                    default=None)
-parser.add_argument('file',
-                    metavar='script-file',
-                    help='If present, execute the script in script-file'
-                         ' and exit',
-                    nargs='?',
-                    default=None)
-parser.add_argument('args',
-                    metavar='args',
-                    help='Additional arguments to the script specified '
-                         'by script-file',
-                    nargs=argparse.REMAINDER,
-                    default=[])
+@lazyobject
+def parser():
+    p = argparse.ArgumentParser(description='xonsh', add_help=False)
+    p.add_argument('-h', '--help',
+                   dest='help',
+                   action='store_true',
+                   default=False,
+                   help='show help and exit')
+    p.add_argument('-V', '--version',
+                   dest='version',
+                   action='store_true',
+                   default=False,
+                   help='show version information and exit')
+    p.add_argument('-c',
+                   help="Run a single command and exit",
+                   dest='command',
+                   required=False,
+                   default=None)
+    p.add_argument('-i', '--interactive',
+                   help='force running in interactive mode',
+                   dest='force_interactive',
+                   action='store_true',
+                   default=False)
+    p.add_argument('-l', '--login',
+                   help='run as a login shell',
+                   dest='login',
+                   action='store_true',
+                   default=False)
+    p.add_argument('--config-path',
+                   help='specify a custom static configuration file',
+                   dest='config_path',
+                   default=None,
+                   type=path_argument)
+    p.add_argument('--no-rc',
+                   help="Do not load the .xonshrc files",
+                   dest='norc',
+                   action='store_true',
+                   default=False)
+    p.add_argument('--no-script-cache',
+                   help="Do not cache scripts as they are run",
+                   dest='scriptcache',
+                   action='store_false',
+                   default=True)
+    p.add_argument('--cache-everything',
+                   help="Use a cache, even for interactive commands",
+                   dest='cacheall',
+                   action='store_true',
+                   default=False)
+    p.add_argument('-D',
+                   dest='defines',
+                   help='define an environment variable, in the form of '
+                        '-DNAME=VAL. May be used many times.',
+                   metavar='ITEM',
+                   action='append',
+                   default=None)
+    p.add_argument('--shell-type',
+                   help='What kind of shell should be used. '
+                        'Possible options: readline, prompt_toolkit, random. '
+                        'Warning! If set this overrides $SHELL_TYPE variable.',
+                   dest='shell_type',
+                   choices=('readline', 'prompt_toolkit', 'best', 'random'),
+                   default=None)
+    p.add_argument('file',
+                   metavar='script-file',
+                   help='If present, execute the script in script-file'
+                        ' and exit',
+                   nargs='?',
+                   default=None)
+    p.add_argument('args',
+                   metavar='args',
+                   help='Additional arguments to the script specified '
+                        'by script-file',
+                   nargs=argparse.REMAINDER,
+                   default=[])
+    return p
 
 
 def _pprint_displayhook(value):
@@ -150,6 +157,7 @@ def premain(argv=None):
     """Setup for main xonsh entry point, returns parsed arguments."""
     if argv is None:
         argv = sys.argv[1:]
+    setproctitle = get_setproctitle()
     if setproctitle is not None:
         setproctitle(' '.join(['xonsh'] + argv))
     builtins.__xonsh_ctx__ = {}
@@ -247,7 +255,7 @@ def postmain(args=None):
         del builtins.__xonsh_shell__
 
 
-@contextmanager
+@contextlib.contextmanager
 def main_context(argv=None):
     """Generator that runs pre- and post-main() functions. This has two iterations.
     The first yields the shell. The second returns None but cleans

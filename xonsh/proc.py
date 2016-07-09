@@ -12,46 +12,49 @@ import os
 import sys
 import time
 import builtins
-from functools import wraps
-from threading import Thread
-from collections import Sequence, namedtuple
-from subprocess import (Popen, PIPE, DEVNULL, STDOUT, TimeoutExpired,
-                        CalledProcessError)
+import functools
+import threading
+import importlib
+import subprocess
+import collections
+import collections.abc as abc
 
 from xonsh.tools import (redirect_stdout, redirect_stderr, ON_WINDOWS, ON_LINUX,
                          fallback, print_exception, XonshCalledProcessError)
-
-if ON_LINUX:
-    from xonsh.teepty import TeePTY
-else:
-    TeePTY = None
-
-if ON_WINDOWS:
-    import _winapi
-    import msvcrt
-
-    class Handle(int):
-        closed = False
-
-        def Close(self, CloseHandle=_winapi.CloseHandle):
-            if not self.closed:
-                self.closed = True
-                CloseHandle(self)
-
-        def Detach(self):
-            if not self.closed:
-                self.closed = True
-                return int(self)
-            raise ValueError("already closed")
-
-        def __repr__(self):
-            return "Handle(%d)" % int(self)
-
-        __del__ = Close
-        __str__ = __repr__
+from xonsh.teepty import TeePTY
+from xonsh.lazyasd import LazyObject
 
 
-class ProcProxy(Thread):
+# force some lazy imports so we don't have errors on non-windows platforms
+_winapi = LazyObject(lambda: importlib.import_module('_winapi'),
+                     globals(), '_winapi')
+msvcrt = LazyObject(lambda: importlib.import_module('msvcrt'),
+                    globals(), 'msvcrt')
+
+
+class Handle(int):
+    closed = False
+
+    def Close(self, CloseHandle=None):
+        CloseHandle = CloseHandle or _winapi.CloseHandle
+        if not self.closed:
+            self.closed = True
+            CloseHandle(self)
+
+    def Detach(self):
+        if not self.closed:
+            self.closed = True
+            return int(self)
+        raise ValueError("already closed")
+
+    def __repr__(self):
+        return "Handle(%d)" % int(self)
+
+    __del__ = Close
+    __str__ = __repr__
+
+
+class ProcProxy(threading.Thread):
     """
     Class representing a function to be run as a subprocess-mode command.
     """
@@ -139,7 +142,7 @@ class ProcProxy(Thread):
             if universal_newlines:
                 self.stderr = io.TextIOWrapper(self.stderr)
 
-        Thread.__init__(self)
+        super().__init__()
         self.start()
 
     def run(self):
@@ -217,10 +220,10 @@ class ProcProxy(Thread):
                     p2cread, _ = _winapi.CreatePipe(None, 0)
                     p2cread = Handle(p2cread)
                     _winapi.CloseHandle(_)
-            elif stdin == PIPE:
+            elif stdin == subprocess.PIPE:
                 p2cread, p2cwrite = _winapi.CreatePipe(None, 0)
                 p2cread, p2cwrite = Handle(p2cread), Handle(p2cwrite)
-            elif stdin == DEVNULL:
+            elif stdin == subprocess.DEVNULL:
                 p2cread = msvcrt.get_osfhandle(self._get_devnull())
             elif isinstance(stdin, int):
                 p2cread = msvcrt.get_osfhandle(stdin)
@@ -235,10 +238,10 @@ class ProcProxy(Thread):
                     _, c2pwrite = _winapi.CreatePipe(None, 0)
                     c2pwrite = Handle(c2pwrite)
                     _winapi.CloseHandle(_)
-            elif stdout == PIPE:
+            elif stdout == subprocess.PIPE:
                 c2pread, c2pwrite = _winapi.CreatePipe(None, 0)
                 c2pread, c2pwrite = Handle(c2pread), Handle(c2pwrite)
-            elif stdout == DEVNULL:
+            elif stdout == subprocess.DEVNULL:
                 c2pwrite = msvcrt.get_osfhandle(self._get_devnull())
             elif isinstance(stdout, int):
                 c2pwrite = msvcrt.get_osfhandle(stdout)
@@ -253,12 +256,12 @@ class ProcProxy(Thread):
                     _, errwrite = _winapi.CreatePipe(None, 0)
                     errwrite = Handle(errwrite)
                     _winapi.CloseHandle(_)
-            elif stderr == PIPE:
+            elif stderr == subprocess.PIPE:
                 errread, errwrite = _winapi.CreatePipe(None, 0)
                 errread, errwrite = Handle(errread), Handle(errwrite)
-            elif stderr == STDOUT:
+            elif stderr == subprocess.STDOUT:
                 errwrite = c2pwrite
-            elif stderr == DEVNULL:
+            elif stderr == subprocess.DEVNULL:
                 errwrite = msvcrt.get_osfhandle(self._get_devnull())
             elif isinstance(stderr, int):
                 errwrite = msvcrt.get_osfhandle(stderr)
@@ -283,9 +286,9 @@ class ProcProxy(Thread):
 
             if stdin is None:
                 pass
-            elif stdin == PIPE:
+            elif stdin == subprocess.PIPE:
                 p2cread, p2cwrite = os.pipe()
-            elif stdin == DEVNULL:
+            elif stdin == subprocess.DEVNULL:
                 p2cread = self._get_devnull()
             elif isinstance(stdin, int):
                 p2cread = stdin
@@ -295,9 +298,9 @@ class ProcProxy(Thread):
 
             if stdout is None:
                 pass
-            elif stdout == PIPE:
+            elif stdout == subprocess.PIPE:
                 c2pread, c2pwrite = os.pipe()
-            elif stdout == DEVNULL:
+            elif stdout == subprocess.DEVNULL:
                 c2pwrite = self._get_devnull()
             elif isinstance(stdout, int):
                 c2pwrite = stdout
@@ -307,11 +310,11 @@ class ProcProxy(Thread):
 
             if stderr is None:
                 pass
-            elif stderr == PIPE:
+            elif stderr == subprocess.PIPE:
                 errread, errwrite = os.pipe()
-            elif stderr == STDOUT:
+            elif stderr == subprocess.STDOUT:
                 errwrite = c2pwrite
-            elif stderr == DEVNULL:
+            elif stderr == subprocess.DEVNULL:
                 errwrite = self._get_devnull()
             elif isinstance(stderr, int):
                 errwrite = stderr
@@ -327,7 +330,7 @@ class ProcProxy(Thread):
 def wrap_simple_command(f, args, stdin, stdout, stderr):
     """Decorator for creating 'simple' callable aliases."""
     bgable = getattr(f, '__xonsh_backgroundable__', True)
-    @wraps(f)
+    @functools.wraps(f)
     def wrapped_simple_command(args, stdin, stdout, stderr):
         try:
             i = stdin.read()
@@ -340,7 +343,7 @@ def wrap_simple_command(f, args, stdin, stdout, stderr):
             cmd_result = 0
             if isinstance(r, str):
                 stdout.write(r)
-            elif isinstance(r, Sequence):
+            elif isinstance(r, abc.Sequence):
                 if r[0] is not None:
                     stdout.write(r[0])
                 if r[1] is not None:
@@ -439,7 +442,7 @@ def foreground(f):
 #
 
 
-@fallback(ON_LINUX, Popen)
+@fallback(ON_LINUX, subprocess.Popen)
 class TeePTYProc(object):
 
     def __init__(self, args, stdin=None, stdout=None, stderr=None, preexec_fn=None,
@@ -504,7 +507,7 @@ class TeePTYProc(object):
         t0 = time.time()
         while tpty.wcode is None:
             if timeout is not None and timeout < (time.time() - t0):
-                raise TimeoutExpired
+                raise subprocess.TimeoutExpired
         return _wcode_to_popen(tpty.wcode)
 
     @property
@@ -532,18 +535,10 @@ def _wcode_to_popen(code):
         raise ValueError("Invalid os.wait code: {}".format(code))
 
 
-_CCTuple = namedtuple("_CCTuple", ["stdin",
-                                   "stdout",
-                                   "stderr",
-                                   "pid",
-                                   "returncode",
-                                   "args",
-                                   "alias",
-                                   "stdin_redirect",
-                                   "stdout_redirect",
-                                   "stderr_redirect",
-                                   "timestamp",
-                                   "executed_cmd"])
+_CCTuple = collections.namedtuple("_CCTuple", ["stdin", "stdout", "stderr",
+                "pid", "returncode", "args", "alias", "stdin_redirect",
+                "stdout_redirect", "stderr_redirect", "timestamp",
+                "executed_cmd"])
 
 
 class CompletedCommand(_CCTuple):

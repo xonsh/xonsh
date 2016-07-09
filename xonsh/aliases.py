@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 """Aliases for the xonsh shell."""
-
-from argparse import ArgumentParser, Action
-import builtins
-from collections.abc import MutableMapping, Iterable, Sequence
 import os
 import sys
 import shlex
+import argparse
+import builtins
+import collections.abc as abc
 
-from xonsh.lazyasd import LazyObject
+from xonsh.lazyasd import lazyobject
 from xonsh.dirstack import cd, pushd, popd, dirs, _get_cwd
 from xonsh.environ import locate_binary
 from xonsh.foreign_shells import foreign_shell_data
@@ -26,7 +25,7 @@ from xonsh.xoreutils import _which
 from xonsh.completers._aliases import completer_alias
 
 
-class Aliases(MutableMapping):
+class Aliases(abc.MutableMapping):
     """Represents a location to hold and look up aliases."""
 
     def __init__(self, *args, **kwargs):
@@ -44,7 +43,7 @@ class Aliases(MutableMapping):
         val = self._raw.get(key)
         if val is None:
             return default
-        elif isinstance(val, Iterable) or callable(val):
+        elif isinstance(val, abc.Iterable) or callable(val):
             return self.eval_alias(val, seen_tokens={key})
         else:
             msg = 'alias of {!r} has an inappropriate type: {!r}'
@@ -92,7 +91,8 @@ class Aliases(MutableMapping):
         builtin function and if alias is only a single command.
         """
         word = line.split(' ', 1)[0]
-        if word in builtins.aliases and isinstance(self.get(word), Sequence):
+        if word in builtins.aliases and isinstance(self.get(word),
+                                                   abc.Sequence):
             word_idx = line.find(word)
             expansion = ' '.join(self.get(word))
             line = line[:word_idx] + expansion + line[word_idx+len(word):]
@@ -153,10 +153,10 @@ def xonsh_exit(args, stdin=None):
     return None, None
 
 
-
-def _source_foreign_parser():
+@lazyobject
+def _SOURCE_FOREIGN_PARSER():
     desc = "Sources a file written in a foreign shell language."
-    parser = ArgumentParser('source-foreign', description=desc)
+    parser = argparse.ArgumentParser('source-foreign', description=desc)
     parser.add_argument('shell', help='Name or path to the foreign shell')
     parser.add_argument('files_or_code', nargs='+',
                         help='file paths to source or code in the target '
@@ -200,12 +200,6 @@ def _source_foreign_parser():
                         help='command(s) to set exit-on-error after all'
                              'other commands.')
     return parser
-
-
-_SOURCE_FOREIGN_PARSER = LazyObject(_source_foreign_parser, globals(),
-                                    '_SOURCE_FOREIGN_PARSER')
-del _source_foreign_parser
-
 
 
 def source_foreign(args, stdin=None):
@@ -301,17 +295,14 @@ def xexec(args, stdin=None):
         return (None, 'xonsh: exec: no args specified\n', 1)
 
 
-def _bang_n_parser():
-    parser = ArgumentParser('!n', usage='!n <n>',
+@lazyobject
+def _BANG_N_PARSER():
+    parser = argparse.ArgumentParser('!n', usage='!n <n>',
                 description="Re-runs the nth command as specified in the "
                             "argument.")
     parser.add_argument('n', type=int, help='the command to rerun, may be '
                                             'negative')
     return parser
-
-
-_BANG_N_PARSER = LazyObject(_bang_n_parser, globals(), '_BANG_N_PARSER')
-del _bang_n_parser
 
 
 def bang_n(args, stdin=None):
@@ -333,7 +324,7 @@ def bang_bang(args, stdin=None):
     return bang_n(['-1'])
 
 
-class AWitchAWitch(Action):
+class AWitchAWitch(argparse.Action):
     SUPPRESS = '==SUPPRESS=='
     def __init__(self, option_strings, version=None, dest=SUPPRESS,
                  default=SUPPRESS, **kwargs):
@@ -354,7 +345,7 @@ def which(args, stdin=None, stdout=None, stderr=None):
     `which` match.
     """
     desc = "Parses arguments to which wrapper"
-    parser = ArgumentParser('which', description=desc)
+    parser = argparse.ArgumentParser('which', description=desc)
     parser.add_argument('args', type=str, nargs='+',
                         help='The executables or aliases to search for')
     parser.add_argument('-a','--all', action='store_true', dest='all',
