@@ -241,7 +241,7 @@ def make_xontrib(xontrib, package):
     if msg.endswith('\n'):
         msg = msg[:-1]
     mnode = wiz.Message(message=msg)
-    convert = lambda x: name if to_bool(x) else Unstorable
+    convert = lambda x: name if to_bool(x) else wiz.Unstorable
     pnode = wiz.StoreNonEmpty(XONTRIB_PROMPT, converter=convert,
                               path=_xontrib_path)
     return mnode, pnode
