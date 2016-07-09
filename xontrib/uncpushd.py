@@ -8,7 +8,7 @@ UNC paths are not supported.  Defaulting to Windows directory.
 
     Apparently, MS is still worried about child processes created by such a shell which continue running after the shell closes.
 
-    This module contains 2 ways to deal with it, because neither is a 100% complete solution.
+    This module contains 2 ways to deal with it, because neither is perfect.
 
     Background: see https://support.microsoft.com/en-us/kb/156276
 """
@@ -22,7 +22,7 @@ UNC paths are not supported.  Defaulting to Windows directory.
 import argparse
 
 from xonsh.lazyasd import LazyObject
-from xonsh.built_ins import subproc_captured_object, subproc_uncaptured
+from xonsh.built_ins import subproc_captured_object
 from xonsh.platform import ON_WINDOWS
 
 _uncpushd_choices = dict(enable=1, disable=0, show=None)
@@ -37,7 +37,7 @@ uncpushd_parser = LazyObject(_uncpushd_parser, globals(), 'uncpushd_parser')
 del _uncpushd_parser
 
 def uncpushd(args=None, stdin=None):
-    """Set, Clear or display current value for DisableUNCCheck in registry, controls
+    """Set, Clear or display current value for DisableUNCCheck in registry, which controls
     whether CMD.EXE complains when working directory set to a UNC path.
 
     In new windows install, value is not set, so if we cannot query the current value, assume check is enabled
@@ -73,16 +73,16 @@ import os
 from xonsh.dirstack import pushd, popd, DIRSTACK
 import subprocess
 
-def do_subproc( args, msg=''):
+def _do_subproc(args, msg=''):
     """Because `subproc_captured_object` fails with error `Workstation Service not started` on a `NET USE dd: \\localhost\share`..."""
     co = subprocess.run(args, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if co.returncode != 0:
-        print('subproc returncode {}'.format(co.returncode, msg))
-        print(' '.join(co.args))
-        print(co.stdout)
-        print(co.stderr)
-        ##assert co.returncode==0, 'NET SHARE failed'
-    return co.stdout, co.stderr, co.returncode
+    # if co.returncode != 0:
+    #     print('subproc returncode {}, msg: {}'.format(co.returncode, msg))
+    #     print(' '.join(co.args))
+    #     print(co.stdout)
+    #     print(co.stderr)
+    #     ##assert co.returncode==0, 'NET SHARE failed'
+    return co
 
 _unc_tempDrives = {}  # drivePart: tempDriveLetter for temp drive letters we create
 
@@ -105,48 +105,42 @@ def unc_pushd( args, stdin=None):
             for dord in range(ord('z'), ord('a'), -1):
                 dpath = chr(dord) + ':'
                 if not os.path.isdir(dpath):                # find unused drive letter starting from z:
-                    co = do_subproc( ['net', 'use', dpath, share], msg='unc_pushd')
-                    if co[2] != 0:
-                        do_subproc( ['whoami', '/all'])
-                        return co
+                    co = _do_subproc(['net', 'use', dpath, share], msg='unc_pushd')
+                    if co.returncode != 0:
+                        return co.stdout, co.stderr, co.returncode
                     else:
                         _unc_tempDrives[dpath] = share
                         return pushd( [os.path.join( dpath, relPath )], stdin)
+def _coalesce( *args):
+    retVal = ''
+    for a in args:
+        if a is not None:
+            retVal += str(a)
+    return retVal if retVal != '' else None
 
 def unc_popd( args, stdin=None):
     """Handle popd from a temporary drive letter mapping established by `unc_pushd`
-     If current working directory is one of the temporary mappings we created, and if it's not used further up in `DIRSTACK`,
+     If current working directory is one of the temporary mappings we created, and if it's not used in the remaining directory stack (which is [PWD] + `DIRSTACK`),
      then unmap the drive letter (after returning from built-in popd with some other directory as PWD).
     """
-
     if not ON_WINDOWS:
         return popd(args, stdin)
     else:
-        stdout = ''
-        stderr = ''
+        co = subprocess.CompletedProcess('',0)
 
         env = builtins.__xonsh_env__
-        share, relPath = os.path.splitdrive( env['PWD'])
+        drive, relPath = os.path.splitdrive( env['PWD'].casefold())     ## os.getcwd() uppercases drive letters on Windows?!
 
         pdResult = popd( args, stdin)       # pop first
 
-        if share in _unc_tempDrives:
-            dpath = share
-            for p in DIRSTACK:
-                if share == os.path.splitdrive(p)[0]:
-                    dpath = None
-            if dpath is not None:
-                _unc_tempDrives.pop(dpath)
-                co = subproc_captured_object(['net', 'use', dpath, '/delete'])
-                if co.returncode != 0:
-                    stdout += co.stdout
-                    stderr += co.stderr
+        if drive in _unc_tempDrives:
+            for p in [os.getcwd().casefold()] + DIRSTACK:                          #hard_won: what dirs command shows is wd + contents of DIRSTACK
+                if drive == os.path.splitdrive(p)[0].casefold():
+                    drive = None
+            if drive is not None:
+                _unc_tempDrives.pop(drive)
+                co = _do_subproc(['net', 'use', drive, '/delete'])
 
-        return ((pdResult[0] if pdResult[0] is not None else '') + stdout \
-                , (pdResult[1] if pdResult[1] is not None else '') + stderr \
-               , pdResult[2])
-
-
-
-#todo: cleanup is not removing uses, should loop through _unc_tempDrives (or we need unc_dirstack -c
-#todo: why doesn't popd clean up??
+        return _coalesce( pdResult[0], co.stdout)\
+            , _coalesce( pdResult[1], co.stderr)\
+            , pdResult[2]
