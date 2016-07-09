@@ -1270,7 +1270,7 @@ def _get_color_indexes(style_map):
                 rgb = (int(attr.color[0:2], 16),
                        int(attr.color[2:4], 16),
                        int(attr.color[4:6], 16))
-            except:
+            except Exception:
                 rgb = None
             yield token, index, rgb
 
@@ -1328,7 +1328,8 @@ def intensify_colors_on_win_setter(enable):
     environment variable.
     """
     enable = to_bool(enable)
-    delattr(builtins.__xonsh_shell__.shell.styler, 'style_name')
+    if hasattr(builtins, '__xonsh_shell__'):
+        delattr(builtins.__xonsh_shell__.shell.styler, 'style_name')
     return enable
 
 
@@ -1524,7 +1525,7 @@ def expandvars(path):
                             value = dollar + brace + '...' + rbrace
                         else:
                             value = dollar + brace + var + rbrace
-                    except:
+                    except Exception:
                         value = dollar + brace + var + rbrace
                     res += value
             else:

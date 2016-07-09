@@ -1,27 +1,22 @@
-# -*- coding: utf-8 -*-
-"""Tests for the PromptToolkitHistory class."""
-import os
-import sys
-
 import pytest
 
-def is_prompt_toolkit_available():
-    try:
-        import prompt_toolkit
-        return True
-    except ImportError:
-        return False
-
-if not is_prompt_toolkit_available():
+try:
+    import prompt_toolkit
+except ImportError:
     pytest.skip(msg='prompt_toolkit is not available')
-
 
 from xonsh.ptk.history import PromptToolkitHistory
 
 
-def test_obj():
-    history_obj = PromptToolkitHistory(load_prev=False)
-    history_obj.append('line10')
+@pytest.fixture
+def history_obj():
+    """Instatiate `PromptToolkitHistory` and append a line string"""
+    hist = PromptToolkitHistory(load_prev=False)
+    hist.append('line10')
+    return hist
+
+
+def test_obj(history_obj):
     assert ['line10'] == history_obj.strings
     assert len(history_obj) == 1
     assert ['line10'] == [x for x in history_obj]

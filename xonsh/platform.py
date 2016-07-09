@@ -17,7 +17,7 @@ def _distro():
         import distro as d
     except ImportError:
         d = None
-    except:
+    except Exception:
         raise
     return d
 

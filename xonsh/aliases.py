@@ -8,6 +8,7 @@ import os
 import sys
 import shlex
 
+from xonsh.lazyasd import LazyObject
 from xonsh.dirstack import cd, pushd, popd, dirs, _get_cwd
 from xonsh.environ import locate_binary
 from xonsh.foreign_shells import foreign_shell_data
@@ -152,13 +153,8 @@ def xonsh_exit(args, stdin=None):
     return None, None
 
 
-_SOURCE_FOREIGN_PARSER = None
 
-
-def _ensure_source_foreign_parser():
-    global _SOURCE_FOREIGN_PARSER
-    if _SOURCE_FOREIGN_PARSER is not None:
-        return _SOURCE_FOREIGN_PARSER
+def _source_foreign_parser():
     desc = "Sources a file written in a foreign shell language."
     parser = ArgumentParser('source-foreign', description=desc)
     parser.add_argument('shell', help='Name or path to the foreign shell')
@@ -203,14 +199,18 @@ def _ensure_source_foreign_parser():
     parser.add_argument('--seterrpostcmd', default=None, dest='seterrpostcmd',
                         help='command(s) to set exit-on-error after all'
                              'other commands.')
-    _SOURCE_FOREIGN_PARSER = parser
     return parser
+
+
+_SOURCE_FOREIGN_PARSER = LazyObject(_source_foreign_parser, globals(),
+                                    '_SOURCE_FOREIGN_PARSER')
+del _source_foreign_parser
+
 
 
 def source_foreign(args, stdin=None):
     """Sources a file written in a foreign shell language."""
-    parser = _ensure_source_foreign_parser()
-    ns = parser.parse_args(args)
+    ns = _SOURCE_FOREIGN_PARSER.parse_args(args)
     if ns.prevcmd is not None:
         pass  # don't change prevcmd if given explicitly
     elif os.path.isfile(ns.files_or_code[0]):
@@ -301,19 +301,22 @@ def xexec(args, stdin=None):
         return (None, 'xonsh: exec: no args specified\n', 1)
 
 
-_BANG_N_PARSER = None
+def _bang_n_parser():
+    parser = ArgumentParser('!n', usage='!n <n>',
+                description="Re-runs the nth command as specified in the "
+                            "argument.")
+    parser.add_argument('n', type=int, help='the command to rerun, may be '
+                                            'negative')
+    return parser
+
+
+_BANG_N_PARSER = LazyObject(_bang_n_parser, globals(), '_BANG_N_PARSER')
+del _bang_n_parser
 
 
 def bang_n(args, stdin=None):
     """Re-runs the nth command as specified in the argument."""
-    global _BANG_N_PARSER
-    if _BANG_N_PARSER is None:
-        parser = _BANG_N_PARSER = ArgumentParser('!n', usage='!n <n>',
-                    description="Re-runs the nth command as specified in the argument.")
-        parser.add_argument('n', type=int, help='the command to rerun, may be negative')
-    else:
-        parser = _BANG_N_PARSER
-    ns = parser.parse_args(args)
+    ns = _BANG_N_PARSER.parse_args(args)
     hist = builtins.__xonsh_history__
     nhist = len(hist)
     n = nhist + ns.n if ns.n < 0 else ns.n

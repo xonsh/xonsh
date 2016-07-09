@@ -10,8 +10,9 @@ from collections import ChainMap
 from collections.abc import MutableMapping
 
 # must come before pygments imports
-from xonsh.bg_pkg_resources import load_pkg_resources_in_background
-load_pkg_resources_in_background()
+from xonsh.lazyasd import load_module_in_background
+load_module_in_background('pkg_resources', debug='XONSH_DEBUG',
+    replacements={'pygments.plugin': 'pkg_resources'})
 
 from pygments.lexer import inherit, bygroups, using, this
 from pygments.lexers.shell import BashLexer
@@ -205,7 +206,7 @@ def partial_color_tokenize(template):
     color = Color.NO_COLOR
     try:
         toks, color = _partial_color_tokenize_main(template, styles)
-    except:
+    except Exception:
         toks = [(Color.NO_COLOR, template)]
     if styles is not None:
         styles[color]  # ensure color is available
@@ -347,8 +348,8 @@ class XonshStyle(Style):
             # Auto suggest needs to be a darker shade to be distinguishable
             # from the default color
             self.styles[Token.AutoSuggestion] = '#444444'
+            self._smap.update(expand_gray_colors_for_cmd_exe(self._smap))
             if env.get('INTENSIFY_COLORS_ON_WIN', False):
-                self._smap.update(expand_gray_colors_for_cmd_exe(self._smap))
                 self._smap.update(intensify_colors_for_cmd_exe(self._smap))
 
 

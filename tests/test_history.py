@@ -13,7 +13,6 @@ from xonsh.lazyjson import LazyJSON
 from xonsh.history import History
 from xonsh import history
 
-from tools import mock_xonsh_env
 
 HIST_TEST_KWARGS = dict(sessionid='SESSIONID', gc=False)
 
@@ -29,27 +28,27 @@ def test_hist_init():
     os.remove(FNAME)
 
 
-def test_hist_append():
+def test_hist_append(xonsh_builtins):
     """Verify appending to the history works."""
     FNAME = 'xonsh-SESSIONID.json'
     FNAME += '.append'
     hist = History(filename=FNAME, here='yup', **HIST_TEST_KWARGS)
-    with mock_xonsh_env({'HISTCONTROL': set()}):
-        hf = hist.append({'joco': 'still alive'})
+    xonsh_builtins.__xonsh_env__['HISTCONTROL'] = set()
+    hf = hist.append({'joco': 'still alive'})
     assert hf is None
     assert 'still alive' == hist.buffer[0]['joco']
     os.remove(FNAME)
 
 
-def test_hist_flush():
+def test_hist_flush(xonsh_builtins):
     """Verify explicit flushing of the history works."""
     FNAME = 'xonsh-SESSIONID.json'
     FNAME += '.flush'
     hist = History(filename=FNAME, here='yup', **HIST_TEST_KWARGS)
     hf = hist.flush()
     assert hf is None
-    with mock_xonsh_env({'HISTCONTROL': set()}):
-        hist.append({'joco': 'still alive'})
+    xonsh_builtins.__xonsh_env__['HISTCONTROL'] = set()
+    hist.append({'joco': 'still alive'})
     hf = hist.flush()
     assert hf is not None
     while hf.is_alive():
@@ -60,14 +59,14 @@ def test_hist_flush():
     os.remove(FNAME)
 
 
-def test_cmd_field():
+def test_cmd_field(xonsh_builtins):
     """Test basic history behavior."""
     FNAME = 'xonsh-SESSIONID.json'
     FNAME += '.cmdfield'
     hist = History(filename=FNAME, here='yup', **HIST_TEST_KWARGS)
     # in-memory
-    with mock_xonsh_env({'HISTCONTROL': set()}):
-        hf = hist.append({'rtn': 1})
+    xonsh_builtins.__xonsh_env__['HISTCONTROL'] = set()
+    hf = hist.append({'rtn': 1})
     assert hf is None
     assert 1 == hist.rtns[0]
     assert 1 == hist.rtns[-1]
@@ -83,7 +82,7 @@ def test_cmd_field():
     os.remove(FNAME)
 
 
-def test_show_cmd():
+def test_show_cmd(xonsh_builtins):
     """Verify that CLI history commands work."""
     FNAME = 'xonsh-SESSIONID.json'
     FNAME += '.show_cmd'
@@ -110,104 +109,104 @@ def test_show_cmd():
     saved_stdout = sys.stdout
     sys.stdout = stdout
 
-    with mock_xonsh_env({'HISTCONTROL': set()}):
-        for ts,cmd in enumerate(cmds):  # populate the shell history
-            hist.append({'inp': cmd, 'rtn': 0, 'ts':(ts+1, ts+1.5)})
+    xonsh_builtins.__xonsh_env__['HISTCONTROL'] = set()
+    for ts,cmd in enumerate(cmds):  # populate the shell history
+        hist.append({'inp': cmd, 'rtn': 0, 'ts':(ts+1, ts+1.5)})
 
-        # Verify an implicit "show" emits show history
-        run_show_cmd([], cmds)
+    # Verify an implicit "show" emits show history
+    run_show_cmd([], cmds)
 
-        # Verify an explicit "show" with no qualifiers emits
-        # show history.
-        run_show_cmd(['show'], cmds)
+    # Verify an explicit "show" with no qualifiers emits
+    # show history.
+    run_show_cmd(['show'], cmds)
 
-        # Verify an explicit "show" with a reversed qualifier
-        # emits show history in reverse order.
-        run_show_cmd(['show', '-r'], list(reversed(cmds)),
-                                 len(cmds) - 1, -1)
+    # Verify an explicit "show" with a reversed qualifier
+    # emits show history in reverse order.
+    run_show_cmd(['show', '-r'], list(reversed(cmds)),
+                             len(cmds) - 1, -1)
 
-        # Verify that showing a specific history entry relative to
-        # the start of the history works.
-        run_show_cmd(['show', '0'], [cmds[0]], 0)
-        run_show_cmd(['show', '1'], [cmds[1]], 1)
+    # Verify that showing a specific history entry relative to
+    # the start of the history works.
+    run_show_cmd(['show', '0'], [cmds[0]], 0)
+    run_show_cmd(['show', '1'], [cmds[1]], 1)
 
-        # Verify that showing a specific history entry relative to
-        # the end of the history works.
-        run_show_cmd(['show', '-2'], [cmds[-2]],
-                               len(cmds) - 2)
+    # Verify that showing a specific history entry relative to
+    # the end of the history works.
+    run_show_cmd(['show', '-2'], [cmds[-2]],
+                           len(cmds) - 2)
 
-        # Verify that showing a history range relative to the start of the
-        # history works.
-        run_show_cmd(['show', '0:2'], cmds[0:2], 0)
-        run_show_cmd(['show', '1::2'], cmds[1::2], 1, 2)
+    # Verify that showing a history range relative to the start of the
+    # history works.
+    run_show_cmd(['show', '0:2'], cmds[0:2], 0)
+    run_show_cmd(['show', '1::2'], cmds[1::2], 1, 2)
 
-        # Verify that showing a history range relative to the end of the
-        # history works.
-        run_show_cmd(['show', '-2:'],
-                               cmds[-2:], len(cmds) - 2)
-        run_show_cmd(['show', '-4:-2'],
-                               cmds[-4:-2], len(cmds) - 4)
+    # Verify that showing a history range relative to the end of the
+    # history works.
+    run_show_cmd(['show', '-2:'],
+                           cmds[-2:], len(cmds) - 2)
+    run_show_cmd(['show', '-4:-2'],
+                           cmds[-4:-2], len(cmds) - 4)
 
     sys.stdout = saved_stdout
     os.remove(FNAME)
 
-def test_histcontrol():
+def test_histcontrol(xonsh_builtins):
     """Test HISTCONTROL=ignoredups,ignoreerr"""
     FNAME = 'xonsh-SESSIONID.json'
     FNAME += '.append'
     hist = History(filename=FNAME, here='yup', **HIST_TEST_KWARGS)
 
-    with mock_xonsh_env({'HISTCONTROL': 'ignoredups,ignoreerr'}):
-        assert len(hist.buffer) == 0
+    xonsh_builtins.__xonsh_env__['HISTCONTROL'] = 'ignoredups,ignoreerr'
+    assert len(hist.buffer) == 0
 
-        # An error, buffer remains empty
-        hist.append({'inp': 'ls foo', 'rtn': 2})
-        assert len(hist.buffer) == 0
+    # An error, buffer remains empty
+    hist.append({'inp': 'ls foo', 'rtn': 2})
+    assert len(hist.buffer) == 0
 
-        # Success
-        hist.append({'inp': 'ls foobazz', 'rtn': 0})
-        assert len(hist.buffer) == 1
-        assert 'ls foobazz' == hist.buffer[-1]['inp']
-        assert 0 == hist.buffer[-1]['rtn']
+    # Success
+    hist.append({'inp': 'ls foobazz', 'rtn': 0})
+    assert len(hist.buffer) == 1
+    assert 'ls foobazz' == hist.buffer[-1]['inp']
+    assert 0 == hist.buffer[-1]['rtn']
 
-        # Error
-        hist.append({'inp': 'ls foo', 'rtn': 2})
-        assert len(hist.buffer) == 1
-        assert 'ls foobazz' == hist.buffer[-1]['inp']
-        assert 0 == hist.buffer[-1]['rtn']
+    # Error
+    hist.append({'inp': 'ls foo', 'rtn': 2})
+    assert len(hist.buffer) == 1
+    assert 'ls foobazz' == hist.buffer[-1]['inp']
+    assert 0 == hist.buffer[-1]['rtn']
 
-        # File now exists, success
-        hist.append({'inp': 'ls foo', 'rtn': 0})
-        assert len(hist.buffer) == 2
-        assert 'ls foo' == hist.buffer[-1]['inp']
-        assert 0 == hist.buffer[-1]['rtn']
+    # File now exists, success
+    hist.append({'inp': 'ls foo', 'rtn': 0})
+    assert len(hist.buffer) == 2
+    assert 'ls foo' == hist.buffer[-1]['inp']
+    assert 0 == hist.buffer[-1]['rtn']
 
-        # Success
-        hist.append({'inp': 'ls', 'rtn': 0})
-        assert len(hist.buffer) == 3
-        assert 'ls' == hist.buffer[-1]['inp']
-        assert 0 == hist.buffer[-1]['rtn']
+    # Success
+    hist.append({'inp': 'ls', 'rtn': 0})
+    assert len(hist.buffer) == 3
+    assert 'ls' == hist.buffer[-1]['inp']
+    assert 0 == hist.buffer[-1]['rtn']
 
-        # Dup
-        hist.append({'inp': 'ls', 'rtn': 0})
-        assert len(hist.buffer) == 3
+    # Dup
+    hist.append({'inp': 'ls', 'rtn': 0})
+    assert len(hist.buffer) == 3
 
-        # Success
-        hist.append({'inp': '/bin/ls', 'rtn': 0})
-        assert len(hist.buffer) == 4
-        assert '/bin/ls' == hist.buffer[-1]['inp']
-        assert 0 == hist.buffer[-1]['rtn']
+    # Success
+    hist.append({'inp': '/bin/ls', 'rtn': 0})
+    assert len(hist.buffer) == 4
+    assert '/bin/ls' == hist.buffer[-1]['inp']
+    assert 0 == hist.buffer[-1]['rtn']
 
-        # Error
-        hist.append({'inp': 'ls bazz', 'rtn': 1})
-        assert len(hist.buffer) == 4
-        assert '/bin/ls' == hist.buffer[-1]['inp']
-        assert 0 == hist.buffer[-1]['rtn']
+    # Error
+    hist.append({'inp': 'ls bazz', 'rtn': 1})
+    assert len(hist.buffer) == 4
+    assert '/bin/ls' == hist.buffer[-1]['inp']
+    assert 0 == hist.buffer[-1]['rtn']
 
-        # Error
-        hist.append({'inp': 'ls bazz', 'rtn': -1})
-        assert len(hist.buffer) == 4
-        assert '/bin/ls' == hist.buffer[-1]['inp']
-        assert 0 == hist.buffer[-1]['rtn']
+    # Error
+    hist.append({'inp': 'ls bazz', 'rtn': -1})
+    assert len(hist.buffer) == 4
+    assert '/bin/ls' == hist.buffer[-1]['inp']
+    assert 0 == hist.buffer[-1]['rtn']
 
     os.remove(FNAME)

@@ -78,7 +78,7 @@ def setup_readline():
             RL_COMPLETION_SUPPRESS_APPEND = None
         try:
             RL_STATE = ctypes.c_int.in_dll(lib, 'rl_readline_state')
-        except:
+        except Exception:
             pass
         RL_CAN_RESIZE = hasattr(lib, 'rl_reset_screen_size')
     env = builtins.__xonsh_env__
@@ -160,7 +160,7 @@ def fix_readline_state_after_ctrl_c():
             _q = readline.rl.mode.process_keyevent_queue
             if len(_q) > 1:
                 _q.pop()
-        except:
+        except Exception:
             pass
     if RL_STATE is None:
         return

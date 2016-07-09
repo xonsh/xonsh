@@ -11,11 +11,10 @@ from xonsh.tools import swap
 from xonsh.shell import Shell
 from xonsh.replay import Replayer
 
-from tools import ON_DARWIN
+from tools import skip_if_on_darwin
 
 SHELL = Shell({'PATH': []})
 HISTDIR = os.path.join(os.path.dirname(__file__), 'histories')
-
 def run_replay(re_file):
     with swap(builtins, '__xonsh_shell__', SHELL):
         with swap(builtins, '__xonsh_exit__', False):
@@ -38,20 +37,20 @@ def a_replay(re_file):
     cleanup_replay(hist)
 
 
-@pytest.mark.skipif(ON_DARWIN, reason='Not mac friendly')
+@skip_if_on_darwin
 def test_echo():
     f = os.path.join(HISTDIR, 'echo.json')
     with a_replay(f) as hist:
         assert 2 == len(hist)
 
 
-@pytest.mark.skipif(ON_DARWIN, reason='also not mac friendly')
+@skip_if_on_darwin
 def test_reecho():
     f = os.path.join(HISTDIR, 'echo.json')
     with a_replay(f) as hist:
         assert 2 == len(hist)
 
-@pytest.mark.skipif(ON_DARWIN, reason='also not mac friendly')
+@skip_if_on_darwin
 def test_simple_python():
     f = os.path.join(HISTDIR, 'simple-python.json')
     with a_replay(f) as hist:
