@@ -7,6 +7,8 @@ from collections import Sequence
 sys.path.insert(0, os.path.abspath('..'))  # FIXME
 from pprint import pformat
 
+import pytest
+
 try:
     from ply.lex import LexToken
 except ImportError:
@@ -40,7 +42,7 @@ def assert_token_equal(x, y):
     """Asserts that two tokens are equal."""
     if not tokens_equal(x, y):
         msg = 'The tokens differ: {0!r} != {1!r}'.format(x, y)
-        raise AssertionError(msg)
+        pytest.fail(msg)
     return True
 
 def assert_tokens_equal(x, y):
@@ -48,15 +50,14 @@ def assert_tokens_equal(x, y):
     if len(x) != len(y):
         msg = 'The tokens sequences have different lengths: {0!r} != {1!r}\n'
         msg += '# x\n{2}\n\n# y\n{3}'
-        raise AssertionError(msg.format(len(x), len(y), pformat(x), pformat(y)))
-    diffs = []
+        pytest.fail(msg.format(len(x), len(y), pformat(x), pformat(y)))
     diffs = [(a, b) for a, b in zip(x, y) if not tokens_equal(a, b)]
     if len(diffs) > 0:
         msg = ['The token sequences differ: ']
         for a, b in diffs:
             msg += ['', '- ' + repr(a), '+ ' + repr(b)]
         msg = '\n'.join(msg)
-        raise AssertionError(msg)
+        pytest.fail(msg)
     return True
 
 def check_token(inp, exp):
@@ -66,7 +67,7 @@ def check_token(inp, exp):
     if len(obs) != 1:
         msg = 'The observed sequence does not have length-1: {0!r} != 1\n'
         msg += '# obs\n{1}'
-        raise AssertionError(msg.format(len(obs), pformat(obs)))
+        pytest.fail(msg.format(len(obs), pformat(obs)))
     return assert_token_equal(exp, obs[0])
 
 def check_tokens(inp, exp):
@@ -194,11 +195,10 @@ def test_regex_globs():
             c = '{}`{}`'.format(p,i)
             assert check_token(c, ['SEARCHPATH', c, 0])
 
-def test_float_literals():
-    cases = ['0.0', '.0', '0.', '1e10', '1.e42', '0.1e42', '0.5e-42',
-             '5E10', '5e+42']
-    for s in cases:
-        assert check_token(s, ['NUMBER', s, 0])
+@pytest.mark.parametrize('case', [
+    '0.0', '.0', '0.', '1e10', '1.e42', '0.1e42', '0.5e-42', '5E10', '5e+42'])
+def test_float_literals(case):
+    assert check_token(case, ['NUMBER', case, 0])
 
 def test_ioredir():
     cases = ['2>1', 'err>out', 'o>', 'all>', 'e>o', 'e>', 'out>', '2>&1']

@@ -128,7 +128,7 @@ class LazyDict(abc.MutableMapping):
 
     def __delitem__(self, key):
         if key in self._d:
-            del self._d[lkey]
+            del self._d[key]
         else:
             del self._loaders[key]
             self._destruct()

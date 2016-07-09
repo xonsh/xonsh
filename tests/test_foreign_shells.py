@@ -5,9 +5,10 @@ import os
 import subprocess
 
 import pytest
+from tools import skip_if_on_windows, skip_if_on_unix
 
-from xonsh.tools import ON_WINDOWS
 from xonsh.foreign_shells import foreign_shell_data, parse_env, parse_aliases
+
 
 def test_parse_env():
     exp = {'X': 'YES', 'Y': 'NO'}
@@ -59,7 +60,7 @@ def test_parse_aliases():
     assert exp ==  obs
 
 
-@pytest.mark.skipif(ON_WINDOWS, reason='Unix stuff')
+@skip_if_on_windows
 def test_foreign_bash_data():
     expenv = {"EMERALD": "SWORD", 'MIGHTY': 'WARRIOR'}
     expaliases = {
@@ -80,6 +81,7 @@ def test_foreign_bash_data():
         assert expval == obsaliases.get(key, False)
 
 
+@skip_if_on_unix
 def test_foreign_cmd_data():
     env = (('ENV_TO_BE_REMOVED','test'),)
     batchfile = os.path.join(os.path.dirname(__file__), 'batch.bat')

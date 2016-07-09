@@ -4,19 +4,19 @@
 Note that this module is named 'built_ins' so as not to be confused with the
 special Python builtins module.
 """
-import atexit
-import builtins
-from collections import Sequence
-from contextlib import contextmanager
-import inspect
 import os
 import re
+import sys
+import time
 import shlex
 import signal
-from subprocess import Popen, PIPE, STDOUT, CalledProcessError
-import sys
+import atexit
+import inspect
 import tempfile
-import time
+import builtins
+import subprocess
+import contextlib
+import collections.abc as abc
 
 from xonsh.lazyasd import LazyObject
 from xonsh.history import History
@@ -38,31 +38,46 @@ from xonsh.commands_cache import CommandsCache
 
 BUILTINS_LOADED = False
 INSPECTOR = LazyObject(Inspector, globals(), 'INSPECTOR')
-AT_EXIT_SIGNALS = (signal.SIGABRT, signal.SIGFPE, signal.SIGILL, signal.SIGSEGV,
-                   signal.SIGTERM)
 
-SIGNAL_MESSAGES = {
-    signal.SIGABRT: 'Aborted',
-    signal.SIGFPE: 'Floating point exception',
-    signal.SIGILL: 'Illegal instructions',
-    signal.SIGTERM: 'Terminated',
-    signal.SIGSEGV: 'Segmentation fault'
-}
 
-if ON_POSIX:
-    AT_EXIT_SIGNALS += (signal.SIGTSTP, signal.SIGQUIT, signal.SIGHUP)
-    SIGNAL_MESSAGES.update({
-        signal.SIGQUIT: 'Quit',
-        signal.SIGHUP: 'Hangup',
-        signal.SIGKILL: 'Killed'
-    })
+def _at_exit_signals():
+    sigs = (signal.SIGABRT, signal.SIGFPE, signal.SIGILL, signal.SIGSEGV,
+            signal.SIGTERM)
+    if ON_POSIX:
+        sigs += (signal.SIGTSTP, signal.SIGQUIT, signal.SIGHUP)
+    return sigs
+
+
+AT_EXIT_SIGNALS = LazyObject(_at_exit_signals, globals(), 'AT_EXIT_SIGNALS')
+del _at_exit_signals
+
+
+def _signal_messages():
+    sm = {
+        signal.SIGABRT: 'Aborted',
+        signal.SIGFPE: 'Floating point exception',
+        signal.SIGILL: 'Illegal instructions',
+        signal.SIGTERM: 'Terminated',
+        signal.SIGSEGV: 'Segmentation fault',
+        }
+    if ON_POSIX:
+        sm.update({
+            signal.SIGQUIT: 'Quit',
+            signal.SIGHUP: 'Hangup',
+            signal.SIGKILL: 'Killed',
+            })
+    return sm
+
+
+SIGNAL_MESSAGES = LazyObject(_signal_messages, globals(), 'SIGNAL_MESSAGES')
+del _signal_messages
+
 
 def resetting_signal_handle(sig, f):
     """Sets a new signal handle that will automatically restore the old value
     once the new handle is finished.
     """
     oldh = signal.getsignal(sig)
-
     def newh(s=None, frame=None):
         f(s, frame)
         signal.signal(sig, oldh)
@@ -154,7 +169,9 @@ def pathsearch(func, s, pymode=False):
     no_match = [] if pymode else [s]
     return o if len(o) != 0 else no_match
 
-RE_SHEBANG = re.compile(r'#![ \t]*(.+?)$')
+
+RE_SHEBANG = LazyObject(lambda: re.compile(r'#![ \t]*(.+?)$'),
+                        globals(), 'RE_SHEBANG')
 
 
 def _is_binary(fname, limit=80):
@@ -191,7 +208,6 @@ def get_script_subproc_command(fname, args):
     # make sure file is executable
     if not os.access(fname, os.X_OK):
         raise PermissionError
-
     if ON_POSIX and not os.access(fname, os.R_OK):
         # on some systems, some importnat programs (e.g. sudo) will have
         # execute permissions but not read/write permisions. This enables
@@ -201,19 +217,16 @@ def get_script_subproc_command(fname, args):
     elif _is_binary(fname):
         # if the file is a binary, we should call it directly
         return [fname] + args
-
     if ON_WINDOWS:
         # Windows can execute various filetypes directly
         # as given in PATHEXT
         _, ext = os.path.splitext(fname)
         if ext.upper() in builtins.__xonsh_env__.get('PATHEXT'):
             return [fname] + args
-
     # find interpreter
     with open(fname, 'rb') as f:
         first_line = f.readline().decode().strip()
     m = RE_SHEBANG.match(first_line)
-
     # xonsh is the default interpreter
     if m is None:
         interp = ['xonsh']
@@ -223,21 +236,27 @@ def get_script_subproc_command(fname, args):
             interp = shlex.split(interp)
         else:
             interp = ['xonsh']
-
     if ON_WINDOWS:
         o = []
         for i in interp:
             o.extend(_un_shebang(i))
         interp = o
-
     return interp + [fname] + args
 
 
-_REDIR_NAME = "(o(?:ut)?|e(?:rr)?|a(?:ll)?|&?\d?)"
-_REDIR_REGEX = re.compile("{r}(>?>|<){r}$".format(r=_REDIR_NAME))
-_MODES = {'>>': 'a', '>': 'w', '<': 'r'}
-_WRITE_MODES = frozenset({'w', 'a'})
-_REDIR_ALL = frozenset({'&', 'a', 'all'})
+def _redir_regex():
+    name = "(o(?:ut)?|e(?:rr)?|a(?:ll)?|&?\d?)"
+    return re.compile("{r}(>?>|<){r}$".format(r=name))
+
+
+_REDIR_REGEX = LazyObject(_redir_regex, globals(), '_REDIR_REGEX')
+del _redir_regex
+_MODES = LazyObject(lambda: {'>>': 'a', '>': 'w', '<': 'r'}, globals(),
+                    '_MODES')
+_WRITE_MODES = LazyObject(lambda: frozenset({'w', 'a'}), globals(),
+                          '_WRITE_MODES')
+_REDIR_ALL = LazyObject(lambda: frozenset({'&', 'a', 'all'}),
+                        globals(), '_REDIR_ALL')
 _REDIR_ERR = frozenset({'2', 'e', 'err'})
 _REDIR_OUT = frozenset({'', '1', 'o', 'out'})
 _E2O_MAP = frozenset({'{}>{}'.format(e, o)
@@ -269,7 +288,7 @@ def _redirect_io(streams, r, loc=None):
     if r.replace('&', '') in _E2O_MAP:
         if 'stderr' in streams:
             raise XonshError('Multiple redirects for stderr')
-        streams['stderr'] = ('<stdout>', 'a', STDOUT)
+        streams['stderr'] = ('<stdout>', 'a', subprocess.STDOUT)
         return
 
     orig, mode, dest = _REDIR_REGEX.match(r).groups()
@@ -394,7 +413,7 @@ def run_subproc(cmds, captured=False):
             stdout = streams['stdout'][-1]
             procinfo['stdout_redirect'] = streams['stdout'][:-1]
         elif ix != last_cmd:
-            stdout = PIPE
+            stdout = subprocess.PIPE
         elif _capture_streams:
             _nstdout = stdout = tempfile.NamedTemporaryFile(delete=False)
             _stdout_name = stdout.name
@@ -453,12 +472,10 @@ def run_subproc(cmds, captured=False):
                 __xonsh_commands_cache__.lazy_locate_binary('cat') and
                 __xonsh_commands_cache__.lazy_locate_binary('tee')):
             _stdin_file = tempfile.NamedTemporaryFile()
-            cproc = Popen(['cat'],
-                          stdin=stdin,
-                          stdout=PIPE)
-            tproc = Popen(['tee', _stdin_file.name],
-                          stdin=cproc.stdout,
-                          stdout=PIPE)
+            cproc = subprocess.Popen(['cat'], stdin=stdin,
+                                     stdout=subprocess.PIPE)
+            tproc = subprocess.Popen(['tee', _stdin_file.name],
+                                     stdin=cproc.stdout, stdout=subprocess.PIPE)
             stdin = tproc.stdout
         if callable(aliased_cmd):
             prev_is_proxy = True
@@ -479,9 +496,9 @@ def run_subproc(cmds, captured=False):
             usetee = ((stdout is None) and
                       (not background) and
                       env.get('XONSH_STORE_STDOUT', False))
-            cls = TeePTYProc if usetee else Popen
+            cls = TeePTYProc if usetee else subprocess.Popen
             subproc_kwargs = {}
-            if ON_POSIX and cls is Popen:
+            if ON_POSIX and cls is subprocess.Popen:
                 def _subproc_pre():
                     if _pipeline_group is None:
                         os.setpgrp()
@@ -514,7 +531,7 @@ def run_subproc(cmds, captured=False):
                 raise XonshError(e)
         procs.append(proc)
         prev_proc = proc
-        if ON_POSIX and cls is Popen and _pipeline_group is None:
+        if ON_POSIX and cls is subprocess.Popen and _pipeline_group is None:
             _pipeline_group = prev_proc.pid
     if not prev_is_proxy:
         add_job({
@@ -594,7 +611,8 @@ def run_subproc(cmds, captured=False):
             hist.last_cmd_rtn is not None and
             hist.last_cmd_rtn > 0 and
             env.get('RAISE_SUBPROC_ERROR')):
-        raise CalledProcessError(hist.last_cmd_rtn, aliased_cmd, output=output)
+        raise subprocess.CalledProcessError(hist.last_cmd_rtn, aliased_cmd,
+                                            output=output)
     if captured == 'stdout':
         return output
     elif captured is not False:
@@ -653,7 +671,7 @@ def ensure_list_of_strs(x):
     """Ensures that x is a list of strings."""
     if isinstance(x, str):
         rtn = [x]
-    elif isinstance(x, Sequence):
+    elif isinstance(x, abc.Sequence):
         rtn = [i if isinstance(i, str) else str(i) for i in x]
     else:
         rtn = [str(x)]
@@ -664,7 +682,7 @@ def list_of_strs_or_callables(x):
     """Ensures that x is a list of strings or functions"""
     if isinstance(x, str) or callable(x):
         rtn = [x]
-    elif isinstance(x, Sequence):
+    elif isinstance(x, abc.Sequence):
         rtn = [i if isinstance(i, str) or callable(i) else str(i) for i in x]
     else:
         rtn = [str(x)]
@@ -787,7 +805,7 @@ def unload_builtins():
     BUILTINS_LOADED = False
 
 
-@contextmanager
+@contextlib.contextmanager
 def xonsh_builtins(execer=None):
     """A context manager for using the xonsh builtins only in a limited
     scope. Likely useful in testing.
