@@ -26,12 +26,17 @@ from xonsh.lazyasd import LazyObject
 # The following escape codes are xterm codes.
 # See http://rtfm.etla.org/xterm/ctlseq.html for more.
 MODE_NUMS = ('1049', '47', '1047')
-START_ALTERNATE_MODE = frozenset('\x1b[?{0}h'.format(i).encode() for i in MODE_NUMS)
-END_ALTERNATE_MODE = frozenset('\x1b[?{0}l'.format(i).encode() for i in MODE_NUMS)
-ALTERNATE_MODE_FLAGS = tuple(START_ALTERNATE_MODE) + tuple(END_ALTERNATE_MODE)
-
-RE_HIDDEN = LazyObject(lambda: re.compile(b'(\001.*?\002)'),
-                       globals(), 'RE_HIDDEN')
+START_ALTERNATE_MODE = LazyObject(
+    lambda: frozenset('\x1b[?{0}h'.format(i).encode() for i in MODE_NUMS),
+    globals(), 'START_ALTERNATE_MODE')
+END_ALTERNATE_MODE = LazyObject(
+    lambda: frozenset('\x1b[?{0}l'.format(i).encode() for i in MODE_NUMS),
+    globals(), 'END_ALTERNATE_MODE')
+ALTERNATE_MODE_FLAGS = LazyObject(
+    lambda: tuple(START_ALTERNATE_MODE) + tuple(END_ALTERNATE_MODE),
+    globals(), 'ALTERNATE_MODE_FLAGS')
+RE_HIDDEN_BYTES = LazyObject(lambda: re.compile(b'(\001.*?\002)'),
+                             globals(), 'RE_HIDDEN')
 RE_COLOR = LazyObject(lambda: re.compile(b'\033\[\d+;?\d*m'),
                       globals(), 'RE_COLOR')
 
@@ -232,7 +237,7 @@ class TeePTY(object):
                 # returned to the command prompt.
                 self._in_alt_mode = False
                 data = self._sanatize_data(data[i+len(flag):])
-        data = RE_HIDDEN.sub(b'', data)
+        data = RE_HIDDEN_BYTES.sub(b'', data)
         if self.remove_color:
             data = RE_COLOR.sub(b'', data)
         return data
@@ -334,5 +339,3 @@ def _teepty_main():
     print('-=-'*10)
     print('Returned with status {0}'.format(tpty.wcode))
 
-if __name__ == '__main__':
-    _teepty_main()

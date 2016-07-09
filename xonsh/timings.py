@@ -15,49 +15,82 @@ import timeit
 import builtins
 import itertools
 
-try:
-    import resource
-    _HAVE_RESOURCE = True
-except ImportError:
-    # There is no distinction of user/system time under windows, so we
-    # just use time.clock() for everything...
-    resource = None
-    _HAVE_RESOURCE = False
+from xonsh.lazyasd import lazyobject, lazybool
 
-if _HAVE_RESOURCE:
-    def clocku():
-        """clocku() -> floating point number
-        Return the *USER* CPU time in seconds since the start of the process.
-        This is done via a call to resource.getrusage, so it avoids the
-        wraparound problems in time.clock()."""
-        return resource.getrusage(resource.RUSAGE_SELF)[0]
+@lazybool
+def _HAVE_RESOURCE():
+    try:
+        import resource as r
+        have = True
+    except ImportError:
+        # There is no distinction of user/system time under windows, so we
+        # just use time.clock() for everything...
+        have = False
+    return have
 
-    def clocks():
-        """clocks() -> floating point number
-        Return the *SYSTEM* CPU time in seconds since the start of the process.
-        This is done via a call to resource.getrusage, so it avoids the
-        wraparound problems in time.clock()."""
-        return resource.getrusage(resource.RUSAGE_SELF)[1]
 
-    def clock():
-        """clock() -> floating point number
-        Return the *TOTAL USER+SYSTEM* CPU time in seconds since the start of
-        the process.  This is done via a call to resource.getrusage, so it
-        avoids the wraparound problems in time.clock()."""
-        u, s = resource.getrusage(resource.RUSAGE_SELF)[:2]
-        return u + s
+@lazyobject
+def resource():
+    import resource as r
+    return r
 
-    def clock2():
-        """clock2() -> (t_user,t_system)
-        Similar to clock(), but return a tuple of user/system times."""
-        return resource.getrusage(resource.RUSAGE_SELF)[:2]
-else:
-    clocku = clocks = clock = time.clock
 
-    def clock2():
-        """Under windows, system CPU time can't be measured.
-        This just returns clock() and zero."""
-        return time.clock(), 0.0
+@lazyobject
+def clocku():
+    if _HAVE_RESOURCE:
+        def clocku():
+            """clocku() -> floating point number
+            Return the *USER* CPU time in seconds since the start of the process.
+            This is done via a call to resource.getrusage, so it avoids the
+            wraparound problems in time.clock()."""
+            return resource.getrusage(resource.RUSAGE_SELF)[0]
+    else:
+        clocku = time.clock
+    return clocku
+
+
+@lazyobject
+def clocks():
+    if _HAVE_RESOURCE:
+        def clocks():
+            """clocks() -> floating point number
+            Return the *SYSTEM* CPU time in seconds since the start of the process.
+            This is done via a call to resource.getrusage, so it avoids the
+            wraparound problems in time.clock()."""
+            return resource.getrusage(resource.RUSAGE_SELF)[1]
+    else:
+        clocks = time.clock
+    return clocks
+
+
+@lazyobject
+def clock():
+    if _HAVE_RESOURCE:
+        def clock():
+            """clock() -> floating point number
+            Return the *TOTAL USER+SYSTEM* CPU time in seconds since the start of
+            the process.  This is done via a call to resource.getrusage, so it
+            avoids the wraparound problems in time.clock()."""
+            u, s = resource.getrusage(resource.RUSAGE_SELF)[:2]
+            return u + s
+    else:
+        clock = time.clock
+    return clock
+
+
+@lazyobject
+def clock2():
+    if _HAVE_RESOURCE:
+        def clock2():
+            """clock2() -> (t_user,t_system)
+            Similar to clock(), but return a tuple of user/system times."""
+            return resource.getrusage(resource.RUSAGE_SELF)[:2]
+    else:
+        def clock2():
+            """Under windows, system CPU time can't be measured.
+            This just returns clock() and zero."""
+            return time.clock(), 0.0
+    return clock2
 
 
 def format_time(timespan, precision=3):

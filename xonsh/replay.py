@@ -2,13 +2,14 @@
 """Tools to replay xonsh history files."""
 import time
 import builtins
-from collections.abc import Mapping
+import collections.abc as abc
 
 from xonsh.tools import swap
 from xonsh.lazyjson import LazyJSON
 from xonsh.environ import Env
 from xonsh.history import History
-from xonsh.history import _info as history_info
+from xonsh.history import _hist_info
+
 
 DEFAULT_MERGE_ENVS = ('replay', 'native')
 
@@ -68,7 +69,7 @@ class Replayer(object):
                 new_env.update(re_env)
             elif e == 'native':
                 new_env.update(builtins.__xonsh_env__)
-            elif isinstance(e, Mapping):
+            elif isinstance(e, abc.Mapping):
                 new_env.update(e)
             else:
                 raise TypeError('Type of env not understood: {0!r}'.format(e))
@@ -110,7 +111,7 @@ def _rp_main_action(ns, h=None):
     print('----------------------------------------------------------------')
     print('Just replayed history, new history has the following information')
     print('----------------------------------------------------------------')
-    history_info(ns, hist)
+    _hist_info(ns, hist)
 
 
 def replay_main(args, stdin=None):
