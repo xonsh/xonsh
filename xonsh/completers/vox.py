@@ -1,9 +1,13 @@
 import os
 import builtins
+
+from xonsh.lazyasd import LazyObject
+
 from xonsh.platform import scandir
 from xonsh.vox import Vox
 
-DEFAULT_ENV_HOME = builtins.__xonsh_expand_path__('~/.virtualenvs')
+DEFAULT_ENV_HOME = LazyObject(lambda: builtins.__xonsh_expand_path__('~/.virtualenvs'),
+                              globals(), 'DEFAULT_ENV_HOME')
 
 
 def complete_vox(prefix, line, begidx, endidx, ctx):
