@@ -3,7 +3,7 @@
 import os
 import random
 import builtins
-from warnings import warn
+import warnings
 
 from xonsh.xontribs import update_context
 from xonsh.environ import xonshrc_context
@@ -54,11 +54,13 @@ class Shell(object):
             shell_type = random.choice(('readline', 'prompt_toolkit'))
         if shell_type == 'prompt_toolkit':
             if not has_prompt_toolkit():
-                warn('prompt_toolkit is not available, using readline instead.')
+                warnings.warn('prompt_toolkit is not available, using '
+                              'readline instead.')
                 shell_type = 'readline'
             elif not ptk_version_is_supported():
-                warn('prompt-toolkit version < v1.0.0 is not supported. '
-                     'Please update prompt-toolkit. Using readline instead.')
+                warnings.warn('prompt-toolkit version < v1.0.0 is not '
+                              'supported. Please update prompt-toolkit. Using '
+                              'readline instead.')
                 shell_type = 'readline'
         env['SHELL_TYPE'] = shell_type
         # actually make the shell

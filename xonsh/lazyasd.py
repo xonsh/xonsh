@@ -69,6 +69,25 @@ class LazyObject(object):
         obj = self._lazy_obj()
         return obj[item]
 
+    def __setitem__(self, key, value):
+        obj = self._lazy_obj()
+        obj[key] = value
+
+    def __delitem__(self, item):
+        obj = self._lazy_obj()
+        del obj[item]
+
+    def __call__(self, *args, **kwargs):
+        obj = self._lazy_obj()
+        return obj(*args, **kwargs)
+
+
+
+def lazyobject(f):
+    """Decorator for constructing lazy objects from a function."""
+    return LazyObject(f, f.__globals__, f.__name__)
+
+
 
 class LazyDict(abc.MutableMapping):
 
@@ -140,6 +159,11 @@ class LazyDict(abc.MutableMapping):
         return len(self._d) + len(self._loaders)
 
 
+def lazydict(f):
+    """Decorator for constructing lazy dicts from a function."""
+    return LazyDict(f, f.__globals__, f.__name__)
+
+
 class LazyBool(object):
 
     def __init__(self, load, ctx, name):
@@ -175,6 +199,12 @@ class LazyBool(object):
         else:
             res = self._result
         return res
+
+
+def lazybool(f):
+    """Decorator for constructing lazy booleans from a function."""
+    return LazyBool(f, f.__globals__, f.__name__)
+
 
 #
 # Background module loaders

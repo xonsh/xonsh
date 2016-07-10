@@ -3,10 +3,9 @@
 import os
 import ast
 import json
+import pprint
 import builtins
 import textwrap
-from pprint import pformat
-from collections.abc import Mapping, Sequence
 
 from xonsh.tools import to_bool, to_bool_or_break, backup_file, print_color
 
@@ -326,7 +325,7 @@ class PrettyFormatter(Visitor):
         t = []
         for aname in node.attrs:
             a = getattr(node, aname)
-            t.append(self.visit(a) if isinstance(a, Node) else pformat(a))
+            t.append(self.visit(a) if isinstance(a, Node) else pprint.pformat(a))
         t = ['{0}={1}'.format(n, x) for n, x in zip(node.attrs, t)]
         s += textwrap.indent(',\n'.join(t), self.indent)
         self.level -= 1
@@ -577,7 +576,7 @@ class PromptVisitor(StateVisitor):
                 x = raw
             if node.confirm:
                 msg = 'Would you like to keep the input: {0}'
-                print(msg.format(pformat(x)))
+                print(msg.format(pprint.pformat(x)))
                 confirmer = TrueFalseBreak(prompt=YNB)
                 status = self.visit(confirmer)
                 if isinstance(status, str) and status == 'break':

@@ -8,15 +8,15 @@ This file was forked from the IPython project:
 * Copyright (c) 2001, Janko Hauser <jhauser@zscout.de>
 * Copyright (c) 2001, Nathaniel Gray <n8gray@caltech.edu>
 """
-from collections import namedtuple
-import inspect
-import io as stdlib_io
-from itertools import zip_longest
-import linecache
 import os
+import io
 import sys
 import types
+import inspect
+import itertools
+import linecache
 import importlib
+import collections
 
 from xonsh.lazyasd import LazyObject
 from xonsh.tokenize import detect_encoding
@@ -32,30 +32,34 @@ pyghooks = LazyObject(lambda: importlib.import_module('xonsh.pyghooks'),
 
 
 # builtin docstrings to ignore
-_func_call_docstring = types.FunctionType.__call__.__doc__
-_object_init_docstring = object.__init__.__doc__
-_builtin_type_docstrings = {
+_func_call_docstring = LazyObject(lambda: types.FunctionType.__call__.__doc__,
+                                  globals(), '_func_call_docstring')
+_object_init_docstring = LazyObject(lambda: object.__init__.__doc__,
+                                    globals(), '_object_init_docstring')
+_builtin_type_docstrings = LazyObject(lambda: {
     t.__doc__
     for t in (types.ModuleType, types.MethodType, types.FunctionType)
-}
+    }, globals(), '_builtin_type_docstrings')
 
-_builtin_func_type = type(all)
-_builtin_meth_type = type(
-    str.upper)  # Bound methods have the same type as builtin functions
+_builtin_func_type = LazyObject(lambda: type(all), globals(),
+                                '_builtin_func_type')
+# Bound methods have the same type as builtin functions
+_builtin_meth_type = LazyObject(lambda: type(str.upper), globals(),
+                                '_builtin_meth_type')
 
-info_fields = [
+info_fields = LazyObject(lambda: [
     'type_name', 'base_class', 'string_form', 'namespace', 'length', 'file',
     'definition', 'docstring', 'source', 'init_definition', 'class_docstring',
     'init_docstring', 'call_def', 'call_docstring',
     # These won't be printed but will be used to determine how to
     # format the object
     'ismagic', 'isalias', 'isclass', 'argspec', 'found', 'name'
-]
+    ], globals(), 'info_fields')
 
 
 def object_info(**kw):
     """Make an object info dict with all fields present."""
-    infodict = dict(zip_longest(info_fields, [None]))
+    infodict = dict(itertools.zip_longest(info_fields, [None]))
     infodict.update(kw)
     return infodict
 
@@ -79,7 +83,7 @@ def get_encoding(obj):
         # Print only text files, not extension binaries.  Note that
         # getsourcelines returns lineno with 1-offset and page() uses
         # 0-offset, so we must adjust.
-        with stdlib_io.open(ofile, 'rb') as buf:  # Tweaked to use io.open for Python 2
+        with io.open(ofile, 'rb') as buf:  # Tweaked to use io.open for Python 2
             encoding, _ = detect_encoding(buf.readline)
         return encoding
 
@@ -300,8 +304,9 @@ def find_source_lines(obj):
 
 
 if PYTHON_VERSION_INFO < (3, 5, 0):
-    FrameInfo = namedtuple('FrameInfo', ['frame', 'filename', 'lineno', 'function',
-                                         'code_context', 'index'])
+    FrameInfo = collections.namedtuple('FrameInfo', ['frame', 'filename',
+                                                     'lineno', 'function',
+                                                     'code_context', 'index'])
     def getouterframes(frame, context=1):
         """Wrapper for getouterframes so that it acts like the Python v3.5 version."""
         return [FrameInfo(*f) for f in inspect.getouterframes(frame, context=context)]

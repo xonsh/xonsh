@@ -1,7 +1,8 @@
+"""Python virtual environment manager for xonsh."""
 import os
 import venv
-import builtins
 import shutil
+import builtins
 
 from xonsh.platform import ON_POSIX, ON_WINDOWS, scandir
 

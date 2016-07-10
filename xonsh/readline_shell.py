@@ -12,13 +12,13 @@ are included from the IPython project.  The IPython project is:
 """
 import os
 import sys
+import cmd
 import time
 import select
 import builtins
 import importlib
-from cmd import Cmd
-from threading import Thread
-from collections import deque
+import threading
+import collections
 
 from xonsh.lazyjson import LazyJSON
 from xonsh.lazyasd import LazyObject
@@ -209,10 +209,12 @@ def _insert_text_func(s, readline):
     return inserter
 
 
-DEDENT_TOKENS = frozenset(['raise', 'return', 'pass', 'break', 'continue'])
+DEDENT_TOKENS = LazyObject(lambda: frozenset(['raise', 'return', 'pass',
+                                              'break', 'continue']),
+                           globals(), 'DEDENT_TOKENS')
 
 
-class ReadlineShell(BaseShell, Cmd):
+class ReadlineShell(BaseShell, cmd.Cmd):
     """The readline based xonsh shell."""
 
     def __init__(self, completekey='tab', stdin=None, stdout=None, **kwargs):
@@ -224,7 +226,7 @@ class ReadlineShell(BaseShell, Cmd):
         self._current_indent = ''
         self._current_prompt = ''
         self._force_hide = None
-        self.cmdqueue = deque()
+        self.cmdqueue = collections.deque()
 
     def __del__(self):
         teardown_readline()
@@ -454,7 +456,7 @@ class ReadlineShell(BaseShell, Cmd):
         return color_style(style=style)
 
 
-class ReadlineHistoryAdder(Thread):
+class ReadlineHistoryAdder(threading.Thread):
 
     def __init__(self, wait_for_gc=True, *args, **kwargs):
         """Thread responsible for adding inputs from history to the current readline

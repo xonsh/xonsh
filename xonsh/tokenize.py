@@ -17,13 +17,13 @@ Original file credits:
                   'Michael Foord')
 """
 
-from builtins import open as _builtin_open
-from codecs import lookup, BOM_UTF8
-import collections
-from io import TextIOWrapper
-from itertools import chain
 import re
+import io
 import sys
+import codecs
+import builtins
+import itertools
+import collections
 from token import (AMPER, AMPEREQUAL, AT, CIRCUMFLEX,
         CIRCUMFLEXEQUAL, COLON, COMMA, DEDENT, DOT, DOUBLESLASH,
         DOUBLESLASHEQUAL, DOUBLESTAR, DOUBLESTAREQUAL, ENDMARKER, EQEQUAL,
@@ -44,21 +44,24 @@ cookie_re = LazyObject(
 blank_re = LazyObject(lambda: re.compile(br'^[ \t\f]*(?:[#\r\n]|$)', re.ASCII),
                       globals(), 'blank_re')
 
+#
+# token modifications
+#
 import token
 __all__ = token.__all__ + ["COMMENT", "tokenize", "detect_encoding",
                            "NL", "untokenize", "ENCODING", "TokenInfo",
                            "TokenError", 'SEARCHPATH', 'ATDOLLAR', 'ATEQUAL',
                            'DOLLARNAME', 'IOREDIRECT']
-del token
-
 PY35 = PYTHON_VERSION_INFO >= (3, 5, 0)
 if PY35:
-    from token import ASYNC, AWAIT
+    ASYNC = token.ASYNC
+    AWAIT = token.AWAIT
     AUGASSIGN_OPS = r"[+\-*/%&@|^=<>]=?"
     ADDSPACE_TOKS = (NAME, NUMBER, ASYNC, AWAIT)
 else:
     AUGASSIGN_OPS = r"[+\-*/%&|^=<>]=?"
     ADDSPACE_TOKS = (NAME, NUMBER)
+del token  # must clean up token
 
 
 COMMENT = N_TOKENS
@@ -101,11 +104,13 @@ _xonsh_tokens = {
 
 additional_parenlevs = frozenset({'@(', '!(', '![', '$(', '$[', '${', '@$('})
 
-for k, v in _xonsh_tokens.items():
-    exec('%s = N_TOKENS' % v)
+_glbs = globals()
+for v in _xonsh_tokens.values():
+    _glbs[v] = N_TOKENS
     tok_name[N_TOKENS] = v
     N_TOKENS += 1
     __all__.append(v)
+del _glbs, v
 
 
 EXACT_TOKEN_TYPES = {
@@ -170,9 +175,16 @@ class TokenInfo(collections.namedtuple('TokenInfo', 'type string start end line'
         else:
             return self.type
 
-def group(*choices): return '(' + '|'.join(choices) + ')'
-def tokany(*choices): return group(*choices) + '*'
-def maybe(*choices): return group(*choices) + '?'
+def group(*choices):
+    return '(' + '|'.join(choices) + ')'
+
+
+def tokany(*choices):
+    return group(*choices) + '*'
+
+
+def maybe(*choices):
+    return group(*choices) + '?'
 
 # Note: we use unicode matching for names ("\w") but ascii matching for
 # number literals.
@@ -358,7 +370,7 @@ class Untokenizer:
         startline = token[0] in (NEWLINE, NL)
         prevstring = False
 
-        for tok in chain([token], iterable):
+        for tok in itertools.chain([token], iterable):
             toknum, tokval = tok[:2]
             if toknum == ENCODING:
                 self.encoding = tokval
@@ -427,6 +439,7 @@ def _get_normal_name(orig_enc):
         return "iso-8859-1"
     return orig_enc
 
+
 def detect_encoding(readline):
     """
     The detect_encoding() function is used to detect the encoding that should
@@ -474,7 +487,7 @@ def detect_encoding(readline):
             return None
         encoding = _get_normal_name(match.group(1))
         try:
-            codec = lookup(encoding)
+            codec = codecs.lookup(encoding)
         except LookupError:
             # This behaviour mimics the Python interpreter
             if filename is None:
@@ -496,7 +509,7 @@ def detect_encoding(readline):
         return encoding
 
     first = read_or_stop()
-    if first.startswith(BOM_UTF8):
+    if first.startswith(codecs.BOM_UTF8):
         bom_found = True
         first = first[3:]
         default = 'utf-8-sig'
@@ -524,11 +537,11 @@ def _tokopen(filename):
     """Open a file in read only mode using the encoding detected by
     detect_encoding().
     """
-    buffer = _builtin_open(filename, 'rb')
+    buffer = builtins.open(filename, 'rb')
     try:
         encoding, lines = detect_encoding(buffer.readline)
         buffer.seek(0)
-        text = TextIOWrapper(buffer, encoding, line_buffering=True)
+        text = io.TextIOWrapper(buffer, encoding, line_buffering=True)
         text.mode = 'r'
         return text
     except Exception:
@@ -780,13 +793,10 @@ def tokenize(readline):
     The first token sequence will always be an ENCODING token
     which tells you which encoding was used to decode the bytes stream.
     """
-    # This import is here to avoid problems when the itertools module is not
-    # built yet and tokenize is imported.
-    from itertools import chain, repeat
     encoding, consumed = detect_encoding(readline)
     rl_gen = iter(readline, b"")
-    empty = repeat(b"")
-    return _tokenize(chain(consumed, rl_gen, empty).__next__, encoding)
+    empty = itertools.repeat(b"")
+    return _tokenize(itertools.chain(consumed, rl_gen, empty).__next__, encoding)
 
 
 # An undocumented, backwards compatible, API for all the places in the standard
@@ -824,7 +834,7 @@ def tokenize_main():
         # Tokenize the input
         if args.filename:
             filename = args.filename
-            with _builtin_open(filename, 'rb') as f:
+            with builtins.open(filename, 'rb') as f:
                 tokens = list(tokenize(f.readline))
         else:
             filename = "<stdin>"
