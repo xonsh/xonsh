@@ -10,18 +10,43 @@ import io
 import re
 import os
 import sys
-import tty
-import pty
 import time
 import array
 import fcntl
 import select
 import signal
-import termios
 import tempfile
+import importlib
 import threading
 
-from xonsh.lazyasd import LazyObject
+from xonsh.lazyasd import LazyObject, lazyobject
+from xonsh.platform import ON_WINDOWS
+
+#
+# Explicit lazy imports for windows
+#
+@lazyobject
+def tty():
+    if ON_WINDOWS:
+        return
+    else:
+        return importlib.import_module('tty')
+
+
+@lazyobject
+def pty():
+    if ON_WINDOWS:
+        return
+    else:
+        return importlib.import_module('pty')
+
+
+@lazyobject
+def termios():
+    if ON_WINDOWS:
+        return
+    else:
+        return importlib.import_module('termios')
 
 # The following escape codes are xterm codes.
 # See http://rtfm.etla.org/xterm/ctlseq.html for more.
