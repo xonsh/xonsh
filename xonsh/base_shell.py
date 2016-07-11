@@ -231,7 +231,8 @@ class BaseShell(object):
         term = env.get('TERM', None)
         # Shells running in emacs sets TERM to "dumb" or "eterm-color".
         # Do not set title for these to avoid garbled prompt.
-        if term is None or term in ['dumb', 'eterm-color', 'linux']:
+        if (term is None and not ON_WINDOWS) or term in ['dumb', 'eterm-color',
+                                                         'linux']:
             return
         t = env.get('TITLE')
         if t is None:
