@@ -1,18 +1,17 @@
-import os
 import builtins
 
 from xonsh.lazyasd import LazyObject
 
 from xonsh.platform import scandir
 from xonsh.vox import Vox
+import os
 
-DEFAULT_ENV_HOME = LazyObject(lambda: builtins.__xonsh_expand_path__('~/.virtualenvs'),
-                              globals(), 'DEFAULT_ENV_HOME')
+DEFAULT_ENV_HOME = os.path.expanduser('~/.virtualenvs')
 
 
 def complete_vox(prefix, line, begidx, endidx, ctx):
     """
-    Completes xonsh's `vox` virtual environment manager
+    Completes Xonsh's Vox virtual environment manager
     """
     if not line.startswith('vox'):
         return
@@ -32,5 +31,10 @@ def complete_vox(prefix, line, begidx, endidx, ctx):
         return all_commands, len(prefix)
     elif prefix:
         # "vox n" -> suggest "new"
-        return [c for c in all_commands if c.startswith(prefix)], len(prefix)
+        suggestions = [c for c in all_commands if c.startswith(prefix)]
+        if suggestions:
+            return suggestions, len(prefix)
+        # or "vox x" -> suggest replace with any command
+        else:
+            return all_commands, len(prefix)
     return set(all_commands)
