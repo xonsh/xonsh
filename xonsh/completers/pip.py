@@ -22,7 +22,12 @@ def complete_pip(prefix, line, begidx, endidx, ctx):
     """
     Completes python's package manager pip
     """
-    if not PIP_RE.search(line):
+    case = [
+        not PIP_RE.search(line),
+        len(line.split()) > 3,
+        len(line.split()) > 2 and line.endswith(' '),
+    ]
+    if any(case):
         return
     if PIP_LIST_RE.search(line):
         items = subprocess.check_output(['pip', 'list'], stderr=subprocess.DEVNULL)
@@ -33,11 +38,7 @@ def complete_pip(prefix, line, begidx, endidx, ctx):
         # "pip show " -> no complete (note space)
         return
 
-    if prefix in ALL_COMMANDS:
-        # "pip show" -> suggest replacing new with other command (note no space)
-        return ALL_COMMANDS, len(prefix)
-    elif prefix:
-        # "pip sh" -> suggest "show"
+    if prefix not in ALL_COMMANDS:
         suggestions = [c for c in ALL_COMMANDS if c.startswith(prefix)]
         if suggestions:
             return suggestions, len(prefix)
