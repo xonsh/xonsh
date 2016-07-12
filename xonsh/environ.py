@@ -1170,6 +1170,13 @@ else:
     USER = 'USER'
 
 
+def new_vte_cwd():
+    env = builtins.__xonsh_env__
+    t = '\033]7;file://{}{}\007'
+    s = t.format(env.get('HOSTNAME'), env.get('PWD'))
+    print(s, end='', flush=True)
+
+
 FORMATTER_DICT = LazyObject(lambda: dict(
     user=os.environ.get(USER, '<user>'),
     prompt_end='#' if is_superuser() else '$',
@@ -1183,6 +1190,7 @@ FORMATTER_DICT = LazyObject(lambda: dict(
     branch_bg_color=branch_bg_color,
     current_job=_current_job,
     env_name=env_name,
+    new_vte_cwd=new_vte_cwd,
     ), globals(), 'FORMATTER_DICT')
 
 
