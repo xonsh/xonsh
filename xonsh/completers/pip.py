@@ -38,5 +38,7 @@ def complete_pip(prefix, line, begidx, endidx, ctx):
         return ALL_COMMANDS, len(prefix)
     elif prefix:
         # "pip sh" -> suggest "show"
-        return [c for c in ALL_COMMANDS if c.startswith(prefix)], len(prefix)
-    return set(ALL_COMMANDS)
+        suggestions = [c for c in ALL_COMMANDS if c.startswith(prefix)]
+        if suggestions:
+            return suggestions, len(prefix)
+    return ALL_COMMANDS, len(prefix)
