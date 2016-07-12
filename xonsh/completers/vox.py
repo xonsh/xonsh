@@ -34,7 +34,4 @@ def complete_vox(prefix, line, begidx, endidx, ctx):
         suggestions = [c for c in all_commands if c.startswith(prefix)]
         if suggestions:
             return suggestions, len(prefix)
-        # or "vox x" -> suggest replace with any command
-        else:
-            return all_commands, len(prefix)
-    return set(all_commands)
+    return all_commands, len(prefix)
