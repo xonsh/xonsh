@@ -13,11 +13,11 @@ UNC paths are not supported.  Defaulting to Windows directory.
     Background: see https://support.microsoft.com/en-us/kb/156276
 """
 
-# (of all the brain-dead things to do! It doesn't fail, it warns and proceeds with a dangerous default, C:\windows.
+# (of all the brain-dead things to do! CMD.EXE doesn't fail, it warns and proceeds with a dangerous default, C:\windows.
 # It would be much better to fail if they really mean it, and really can't fix the problem (which they don't describe, and may have been fixed long since....)
 # And, if you must proceed , %WINDIR% is probably the worst fallback to use!
 # Either (ordinary) user will fail reading or trying and failing to write a file, or (privileged) user may succeed in writing, possibly clobbering something important.
-# -- there.  I feel much better.  To proceed...)
+# -- there.  I feel much better now.  To proceed...)
 
 import argparse
 
@@ -37,7 +37,8 @@ uncpushd_parser = LazyObject(_uncpushd_parser, globals(), 'uncpushd_parser')
 del _uncpushd_parser
 
 def uncpushd(args=None, stdin=None):
-    """Set, Clear or display current value for DisableUNCCheck in registry, which controls
+    """Fix alternative 1: configure CMD.EXE to bypass the chech for UNC path.
+	Set, Clear or display current value for DisableUNCCheck in registry, which controls
     whether CMD.EXE complains when working directory set to a UNC path.
 
     In new windows install, value is not set, so if we cannot query the current value, assume check is enabled
@@ -74,26 +75,18 @@ from xonsh.dirstack import pushd, popd, DIRSTACK
 import subprocess
 
 def _do_subproc(args, msg=''):
-    """Because `subproc_captured_object` fails with error `Workstation Service not started` on a `NET USE dd: \\localhost\share`..."""
+    #Because `subproc_captured_object` fails with error `Workstation Service not started` on a `NET USE dd: \\localhost\share`...
     co = subprocess.run(args, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    # if co.returncode != 0:
-    #     print('subproc returncode {}, msg: {}'.format(co.returncode, msg))
-    #     print(' '.join(co.args))
-    #     print(co.stdout)
-    #     print(co.stderr)
-    #     ##assert co.returncode==0, 'NET SHARE failed'
     return co
 
 _unc_tempDrives = {}  # drivePart: tempDriveLetter for temp drive letters we create
 
 def unc_pushd( args, stdin=None):
-    """Handle pushd when argument is a UNC path. (\\<server>\<share>...)
-    If so, do like CMD.EXE pushd: create a temporary drive letter mapping, then pushd (via built-in) to that.
+    """Fix 2: Handle pushd when argument is a UNC path (\\<server>\<share>...) the same way CMD.EXE does.
+    Create a temporary drive letter mapping, then pushd (via built-in) to that path.
     For this to work nicely, user must already have access to the UNC path
     (e.g, via prior ```NET USE \\<server>\<share> /USER: ... /PASS:...```)
 
-    Author considers this behavior intrusive, so the extension does not create an alias for this function automatically.
-    If you want it, you must explicitly ask for it, e.g ```aliases['pushd']=unc_pushd; aliases['popd']=unc_popd```.
     """
     if not ON_WINDOWS or args is None or args[0] is None or args[0][0] not in (os.sep, os.altsep):
         return pushd(args, stdin)
@@ -134,7 +127,7 @@ def unc_popd( args, stdin=None):
         pdResult = popd( args, stdin)       # pop first
 
         if drive in _unc_tempDrives:
-            for p in [os.getcwd().casefold()] + DIRSTACK:                          #hard_won: what dirs command shows is wd + contents of DIRSTACK
+            for p in [os.getcwd().casefold()] + DIRSTACK:               #hard_won: what dirs command shows is wd + contents of DIRSTACK
                 if drive == os.path.splitdrive(p)[0].casefold():
                     drive = None
             if drive is not None:
