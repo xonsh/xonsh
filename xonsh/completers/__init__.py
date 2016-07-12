@@ -13,11 +13,11 @@ from xonsh.completers.commands import complete_skipper
 from xonsh.completers.completer import complete_completer
 
 completers = OrderedDict([
-    ('pip', complete_pip),
     ('python_mode', complete_python_mode),
     ('base', complete_base),
     ('completer', complete_completer),
     ('skip', complete_skipper),
+    ('pip', complete_pip),
     ('cd', complete_cd),
     ('rmdir', complete_rmdir),
     ('bash', complete_from_bash),
