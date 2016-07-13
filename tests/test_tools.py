@@ -1098,6 +1098,7 @@ def test_commands_cache_lazy():
     skip_if_on_unix(("%foo%bar", "barbar")),
     skip_if_on_unix(("%foo% %a_bool%", "bar True")),
     skip_if_on_unix(("%foo%%an_int%", "bar42")),
+    skip_if_on_unix(("%foo% $spam ${'a_bool'}", "bar eggs True")),
     (b"foo", "foo"),
     (b"$foo bar", "bar bar"),
     (b"${'foo'}bar", "barbar"),
