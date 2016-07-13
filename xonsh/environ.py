@@ -1157,7 +1157,6 @@ def env_name(pre_chars='(', post_chars=')'):
     """
     env_path = builtins.__xonsh_env__.get('VIRTUAL_ENV', '')
     if len(env_path) == 0 and ON_ANACONDA:
-        pre_chars, post_chars = '[', ']'
         env_path = builtins.__xonsh_env__.get('CONDA_DEFAULT_ENV', '')
     env_name = os.path.basename(env_path)
     if env_name:
