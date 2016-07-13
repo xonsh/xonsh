@@ -20,8 +20,8 @@ def ALL_COMMANDS():
 def complete_pip(prefix, line, begidx, endidx, ctx):
     """Completes python's package manager pip"""
     line_len = len(line.split())
-    if not PIP_RE.search(line) or line_len > 3 or (line_len > 2 and
-                                                   line.endswith(' ')):
+    if (line_len > 3) or (line_len > 2 and line.endswith(' ')) or \
+                         (not PIP_RE.search(line)):
         return
     if PIP_LIST_RE.search(line):
         items = subprocess.check_output(['pip', 'list'], stderr=subprocess.DEVNULL)
