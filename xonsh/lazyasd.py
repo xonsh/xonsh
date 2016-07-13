@@ -81,6 +81,30 @@ class LazyObject(object):
         obj = self._lazy_obj()
         return obj(*args, **kwargs)
 
+    def __lt__(self, other):
+        obj = self._lazy_obj()
+        return obj < other
+
+    def __le__(self, other):
+        obj = self._lazy_obj()
+        return obj <= other
+
+    def __eq__(self, other):
+        obj = self._lazy_obj()
+        return obj == other
+
+    def __ne__(self, other):
+        obj = self._lazy_obj()
+        return obj != other
+
+    def __gt__(self, other):
+        obj = self._lazy_obj()
+        return obj > other
+
+    def __ge__(self, other):
+        obj = self._lazy_obj()
+        return obj >= other
+
 
 
 def lazyobject(f):
