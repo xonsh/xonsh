@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Implements the base xonsh parser."""
+import os
 import re
 import time
 from threading import Thread
@@ -211,7 +212,8 @@ class BaseParser(object):
         yacc_debug : debug, optional
             Dumps extra debug info.
         outputdir : str or None, optional
-            The directory to place generated tables within.
+            The directory to place generated tables within. Defaults to the root
+            xonsh dir.
         """
         self.lexer = lexer = Lexer()
         self.tokens = lexer.tokens
@@ -267,8 +269,9 @@ class BaseParser(object):
                            tabmodule=yacc_table)
         if not yacc_debug:
             yacc_kwargs['errorlog'] = yacc.NullLogger()
-        if outputdir is not None:
-            yacc_kwargs['outputdir'] = outputdir
+        if outputdir is None:
+            outputdir = os.path.dirname(os.path.dirname(__file__))
+        yacc_kwargs['outputdir'] = outputdir
         self.parser = None
         YaccLoader(self, yacc_kwargs)
         #self.parser = yacc.yacc(**yacc_kwargs)
