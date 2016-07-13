@@ -92,7 +92,6 @@ lines to your ``~/.bashrc file``:
 
 Default Ubuntu .bashrc breaks Foreign Shell Functions
 =====================================================
-
 Xonsh supports importing functions from foreign shells using the
 `ForeignShellFunctionAlias` class, which calls functions as if they were
 aliases. This is implemented by executing a command that sources the file
@@ -103,7 +102,7 @@ The default user `~/.bashrc` file in Ubuntu 15.10 has the following snippet at
 the top, which causes the script to exit immediately if not run interactively.
 
 .. code-block:: bash
-                
+
     # If not running interactively, don't do anything
     case $- in
         *i*) ;;
@@ -114,3 +113,17 @@ This means that any function you have added to the file after this point will be
 registered as a xonsh alias but will fail on execution. Previous versions of
 Ubuntu have a different test for interactivity at the top of the file that
 yields the same problem.
+
+
+New Terminal Tabs Do Not Start in Correct Directory
+===================================================
+If you use Gnome Terminal or another VTE terminal and it doesn't start new tabs
+in the CWD of the original TAB, this is because of a custom VTE interface. To
+fix this, please add ``{vte_new_tab_cwd}`` somewhere to you prompt:
+
+.. code-block:: xonsh
+
+    $PROMPT = '{vte_new_tab_cwd}' + $PROMPT
+
+This will issue the proper escape sequence to the terminal without otherwise
+affecting the displayed prompt.
