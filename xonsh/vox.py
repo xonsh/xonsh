@@ -3,6 +3,9 @@ import sys
 import venv
 import shutil
 import builtins
+import shutil
+
+import sys
 
 from xonsh.platform import ON_POSIX, ON_WINDOWS, scandir
 
