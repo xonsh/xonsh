@@ -105,6 +105,9 @@ class LazyObject(object):
         obj = self._lazy_obj()
         return obj >= other
 
+    def __hash__(self):
+        obj = self._lazy_obj()
+        return hash(obj)
 
 
 def lazyobject(f):
