@@ -269,8 +269,9 @@ class BaseParser(object):
                            tabmodule=yacc_table)
         if not yacc_debug:
             yacc_kwargs['errorlog'] = yacc.NullLogger()
-        if outputdir is None:
-            outputdir = os.path.dirname(os.path.dirname(__file__))
+        xonshdir = os.path.dirname(os.path.dirname(__file__))
+        if outputdir is None and not os.path.exists(os.path.join(xonshdir, 'parser_table.py')):
+            outputdir = xonshdir
         yacc_kwargs['outputdir'] = outputdir
         self.parser = None
         YaccLoader(self, yacc_kwargs)
