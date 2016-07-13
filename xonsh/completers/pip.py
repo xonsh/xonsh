@@ -22,10 +22,11 @@ def complete_pip(prefix, line, begidx, endidx, ctx):
     """
     Completes python's package manager pip
     """
+    line_len = len(line.split())
     case = [
         not PIP_RE.search(line),
-        len(line.split()) > 3,
-        len(line.split()) > 2 and line.endswith(' '),
+        line_len > 3,
+        line_len > 2 and line.endswith(' '),
     ]
     if any(case):
         return
@@ -34,7 +35,7 @@ def complete_pip(prefix, line, begidx, endidx, ctx):
         items = items.decode('utf-8').splitlines()
         return set(i.split()[0] for i in items)
 
-    if (len(line.split()) > 1 and line.endswith(' ')) or len(line.split()) > 2:
+    if (line_len > 1 and line.endswith(' ')) or line_len > 2:
         # "pip show " -> no complete (note space)
         return
 
