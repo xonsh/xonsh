@@ -15,10 +15,11 @@ def complete_vox(prefix, line, begidx, endidx, ctx):
     """
     Completes Xonsh's Vox virtual environment manager
     """
+    line_len = len(line.split())
     cases = [
         not line.startswith('vox'),
-        len(line.split()) > 3,
-        len(line.split()) > 2 and line.endswith(' '),
+        line_len > 3,
+        line_len > 2 and line.endswith(' '),
     ]
     if any(cases):
         return
@@ -29,7 +30,7 @@ def complete_vox(prefix, line, begidx, endidx, ctx):
         env_dirs = list(x.name for x in scandir(venv_home) if x.is_dir())
         return env_dirs, len(prefix)
 
-    if len(line.split()) > 1 and line.endswith(' '):  # "vox new "
+    if (line_len > 1 and line.endswith(' ')) or line_len > 2:  # "vox new "
         return
 
     if prefix not in ALL_COMMANDS:
