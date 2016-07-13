@@ -214,7 +214,10 @@ class LazyJSON(LJNode):
     def close(self):
         """Close the file handle, if appropriate."""
         if not self.reopen and isinstance(self._f, io.IOBase):
-            self._f.close()
+            try:
+                self._f.close()
+            except OSError:
+                pass
 
     @contextlib.contextmanager
     def _open(self, *args, **kwargs):
