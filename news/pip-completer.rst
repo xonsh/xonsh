@@ -1,4 +1,4 @@
-**Added:** None
+**Added:**
 
 * Tab completion for pip python package manager.
 
