@@ -32,8 +32,8 @@ import sys
 import threading
 import traceback
 import warnings
-from contextlib import contextmanager
-from subprocess import CalledProcessError
+import contextlib
+import subprocess
 
 # adding further imports from xonsh modules is discouraged to avoid circular
 # dependencies
@@ -76,7 +76,7 @@ class XonshBlockError(XonshError):
         self.locs = locs
 
 
-class XonshCalledProcessError(XonshError, CalledProcessError):
+class XonshCalledProcessError(XonshError, subprocess.CalledProcessError):
     """Raised when there's an error with a called process
 
     Inherits from XonshError and subprocess.CalledProcessError, catching
@@ -89,7 +89,7 @@ class XonshCalledProcessError(XonshError, CalledProcessError):
         try:
             for line in !(ls):
                 print(line)
-        except CalledProcessError as error:
+        except subprocess.CalledProcessError as error:
             print("Error in process: {}.format(error.completed_command.pid))
 
     This also handles differences between Python3.4 and 3.5 where
@@ -740,7 +740,7 @@ def on_main_thread():
     return threading.current_thread() is threading.main_thread()
 
 
-@contextmanager
+@contextlib.contextmanager
 def swap(namespace, name, value, default=NotImplemented):
     """Swaps a current variable name in a namespace for another value, and then
     replaces it when the context is exited.
@@ -924,7 +924,9 @@ def bool_to_str(x):
     return '1' if x else ''
 
 
-_BREAKS = frozenset(['b', 'break', 's', 'skip', 'q', 'quit'])
+_BREAKS = LazyObject(lambda: frozenset(['b', 'break', 's', 'skip',
+                                        'q', 'quit']),
+                     globals(), '_BREAKS')
 
 
 def to_bool_or_break(x):
@@ -1329,7 +1331,8 @@ def intensify_colors_on_win_setter(enable):
     environment variable.
     """
     enable = to_bool(enable)
-    delattr(builtins.__xonsh_shell__.shell.styler, 'style_name')
+    if hasattr(builtins, '__xonsh_shell__'):
+        delattr(builtins.__xonsh_shell__.shell.styler, 'style_name')
     return enable
 
 

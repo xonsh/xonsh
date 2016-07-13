@@ -12,18 +12,18 @@ are included from the IPython project.  The IPython project is:
 """
 import os
 import sys
+import cmd
 import time
 import select
 import builtins
 import importlib
-from cmd import Cmd
-from threading import Thread
-from collections import deque
+import threading
+import collections
 
 from xonsh.lazyjson import LazyJSON
 from xonsh.lazyasd import LazyObject
 from xonsh.base_shell import BaseShell
-from xonsh.ansi_colors import partial_color_format, color_style_names, color_style
+from xonsh.ansi_colors import ansi_partial_color_format, ansi_color_style_names, ansi_color_style
 from xonsh.environ import partial_format_prompt, multiline_prompt
 from xonsh.tools import print_exception
 from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_DARWIN
@@ -209,10 +209,12 @@ def _insert_text_func(s, readline):
     return inserter
 
 
-DEDENT_TOKENS = frozenset(['raise', 'return', 'pass', 'break', 'continue'])
+DEDENT_TOKENS = LazyObject(lambda: frozenset(['raise', 'return', 'pass',
+                                              'break', 'continue']),
+                           globals(), 'DEDENT_TOKENS')
 
 
-class ReadlineShell(BaseShell, Cmd):
+class ReadlineShell(BaseShell, cmd.Cmd):
     """The readline based xonsh shell."""
 
     def __init__(self, completekey='tab', stdin=None, stdout=None, **kwargs):
@@ -224,7 +226,7 @@ class ReadlineShell(BaseShell, Cmd):
         self._current_indent = ''
         self._current_prompt = ''
         self._force_hide = None
-        self.cmdqueue = deque()
+        self.cmdqueue = collections.deque()
 
     def __del__(self):
         teardown_readline()
@@ -418,8 +420,8 @@ class ReadlineShell(BaseShell, Cmd):
         except Exception:  # pylint: disable=broad-except
             print_exception()
         hide = True if self._force_hide is None else self._force_hide
-        p = partial_color_format(p, style=env.get('XONSH_COLOR_STYLE'),
-                                 hide=hide)
+        p = ansi_partial_color_format(p, style=env.get('XONSH_COLOR_STYLE'),
+                                      hide=hide)
         self._current_prompt = p
         self.settitle()
         return p
@@ -429,7 +431,7 @@ class ReadlineShell(BaseShell, Cmd):
         codes.
         """
         hide = hide if self._force_hide is None else self._force_hide
-        return partial_color_format(string, hide=hide,
+        return ansi_partial_color_format(string, hide=hide,
                     style=builtins.__xonsh_env__.get('XONSH_COLOR_STYLE'))
 
     def print_color(self, string, hide=False, **kwargs):
@@ -446,15 +448,15 @@ class ReadlineShell(BaseShell, Cmd):
 
     def color_style_names(self):
         """Returns an iterable of all available style names."""
-        return color_style_names()
+        return ansi_color_style_names()
 
     def color_style(self):
         """Returns the current color map."""
         style = style=builtins.__xonsh_env__.get('XONSH_COLOR_STYLE')
-        return color_style(style=style)
+        return ansi_color_style(style=style)
 
 
-class ReadlineHistoryAdder(Thread):
+class ReadlineHistoryAdder(threading.Thread):
 
     def __init__(self, wait_for_gc=True, *args, **kwargs):
         """Thread responsible for adding inputs from history to the current readline

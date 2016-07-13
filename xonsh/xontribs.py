@@ -2,12 +2,12 @@
 import os
 import sys
 import json
+import warnings
 import builtins
+import argparse
 import functools
-from warnings import warn, catch_warnings, simplefilter
-from argparse import ArgumentParser
-from importlib import import_module
-from importlib.util import find_spec
+import importlib
+import importlib.util
 
 from xonsh.tools import print_color
 
@@ -16,24 +16,26 @@ from xonsh.tools import print_color
 def xontribs_json():
     return os.path.join(os.path.dirname(__file__), 'xontribs.json')
 
+
 def find_xontrib(name):
     """Finds a xontribution from its name."""
     if name.startswith('.'):
-        spec = find_spec(name, package='xontrib')
+        spec = importlib.util.find_spec(name, package='xontrib')
     else:
-        spec = find_spec('.' + name, package='xontrib')
-    return spec or find_spec(name)
+        spec = importlib.util.find_spec('.' + name, package='xontrib')
+    return spec or importlib.util.find_spec(name)
 
 
 def xontrib_context(name):
     """Return a context dictionary for a xontrib of a given name."""
     spec = find_xontrib(name)
     if spec is None:
-        with catch_warnings():
-            simplefilter('default', ImportWarning)
-            warn('could not find xontrib module {0!r}'.format(name), ImportWarning)
+        with warnings.catch_warnings():
+            warnings.simplefilter('default', ImportWarning)
+            warnings.warn('could not find xontrib module {0!r}'.format(name),
+                          ImportWarning)
         return {}
-    m = import_module(spec.name)
+    m = importlib.import_module(spec.name)
     ctx = {k: getattr(m, k) for k in dir(m) if not k.startswith('_')}
     return ctx
 
@@ -107,9 +109,9 @@ def _list(ns):
 
 
 @functools.lru_cache()
-def _create_parser():
+def _create_xontrib_parser():
     # parse command line args
-    parser = ArgumentParser(prog='xontrib',
+    parser = argparse.ArgumentParser(prog='xontrib',
                             description='Manages xonsh extensions')
     subp = parser.add_subparsers(title='action', dest='action')
     load = subp.add_parser('load', help='loads xontribs')
@@ -126,22 +128,19 @@ def _create_parser():
     return parser
 
 
-_MAIN_ACTIONS = {
+_MAIN_XONTRIB_ACTIONS = {
     'load': _load,
     'list': _list,
     }
 
 def xontribs_main(args=None, stdin=None):
     """Alias that loads xontribs"""
-    if not args or (args[0] not in _MAIN_ACTIONS and
+    if not args or (args[0] not in _MAIN_XONTRIB_ACTIONS and
                     args[0] not in {'-h', '--help'}):
         args.insert(0, 'load')
-    parser = _create_parser()
+    parser = _create_xontrib_parser()
     ns = parser.parse_args(args)
     if ns.action is None:  # apply default action
         ns = parser.parse_args(['load'] + args)
-    return _MAIN_ACTIONS[ns.action](ns)
+    return _MAIN_XONTRIB_ACTIONS[ns.action](ns)
 
-
-if __name__ == '__main__':
-    main()

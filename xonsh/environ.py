@@ -1,27 +1,26 @@
 # -*- coding: utf-8 -*-
 """Environment for the xonsh shell."""
 import os
+import re
 import sys
 import time
 import json
+import socket
+import shutil
+import string
+import pprint
 import locale
 import builtins
-from contextlib import contextmanager
-from itertools import chain
-from pprint import pformat
-import re
-import socket
-import string
+import itertools
+import contextlib
 import subprocess
-import shutil
-from warnings import warn
-from collections import (
-    Mapping, MutableMapping, MutableSequence, MutableSet,
-    namedtuple
-)
+import warnings
+import collections
+import collections.abc as abc
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.jobs import get_next_task
+from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import load_foreign_envs
@@ -46,15 +45,17 @@ from xonsh.tools import (
 )
 
 
-LOCALE_CATS = {
-    'LC_CTYPE': locale.LC_CTYPE,
-    'LC_COLLATE': locale.LC_COLLATE,
-    'LC_NUMERIC': locale.LC_NUMERIC,
-    'LC_MONETARY': locale.LC_MONETARY,
-    'LC_TIME': locale.LC_TIME,
-}
-if hasattr(locale, 'LC_MESSAGES'):
-    LOCALE_CATS['LC_MESSAGES'] = locale.LC_MESSAGES
+@lazyobject
+def LOCALE_CATS():
+    lc = {'LC_CTYPE': locale.LC_CTYPE,
+          'LC_COLLATE': locale.LC_COLLATE,
+          'LC_NUMERIC': locale.LC_NUMERIC,
+          'LC_MONETARY': locale.LC_MONETARY,
+          'LC_TIME': locale.LC_TIME,
+          }
+    if hasattr(locale, 'LC_MESSAGES'):
+        lc['LC_MESSAGES'] = locale.LC_MESSAGES
+    return lc
 
 
 def locale_convert(key):
@@ -64,8 +65,8 @@ def locale_convert(key):
             locale.setlocale(LOCALE_CATS[key], val)
             val = locale.setlocale(LOCALE_CATS[key])
         except (locale.Error, KeyError):
-            warn('Failed to set locale {0!r} to {1!r}'.format(key, val),
-                 RuntimeWarning)
+            msg = 'Failed to set locale {0!r} to {1!r}'.format(key, val)
+            warnings.warn(msg, RuntimeWarning)
         return val
     return lc_converter
 
@@ -79,12 +80,12 @@ def to_debug(x):
         builtins.__xonsh_execer__.debug_level = val
     return val
 
-Ensurer = namedtuple('Ensurer', ['validate', 'convert', 'detype'])
+Ensurer = collections.namedtuple('Ensurer', ['validate', 'convert', 'detype'])
 Ensurer.__doc__ = """Named tuples whose elements are functions that
 represent environment variable validation, conversion, detyping.
 """
 
-DEFAULT_ENSURERS = {
+DEFAULT_ENSURERS = LazyObject(lambda: {
     'AUTO_CD': (is_bool, to_bool, bool_to_str),
     'AUTO_PUSHD': (is_bool, to_bool, bool_to_str),
     'AUTO_SUGGEST': (is_bool, to_bool, bool_to_str),
@@ -144,7 +145,7 @@ DEFAULT_ENSURERS = {
     'XONSH_STORE_STDIN': (is_bool, to_bool, bool_to_str),
     'XONSH_TRACEBACK_LOGFILE': (is_logfile_opt, to_logfile_opt,
                                 logfile_opt_to_str)
-}
+    }, globals(), 'DEFAULT_ENSURERS')
 
 #
 # Defaults
@@ -158,20 +159,26 @@ def is_callable_default(x):
     """Checks if a value is a callable default."""
     return callable(x) and getattr(x, '_xonsh_callable_default', False)
 
-if ON_CYGWIN:
-    DEFAULT_PROMPT = ('{env_name:{} }{BOLD_GREEN}{user}@{hostname}'
-                      '{BOLD_BLUE} {cwd} {prompt_end}{NO_COLOR} ')
-elif ON_WINDOWS:
-    DEFAULT_PROMPT = ('{env_name:{} }'
-                      '{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} '
-                      '{cwd}{branch_color}{curr_branch: {}}{NO_COLOR} '
-                      '{BOLD_INTENSE_CYAN}{prompt_end}{NO_COLOR} ')
-else:
-    DEFAULT_PROMPT = ('{env_name:{} }'
-                      '{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
-                      '{cwd}{branch_color}{curr_branch: {}}{NO_COLOR} '
-                      '{BOLD_BLUE}{prompt_end}{NO_COLOR} ')
 
+def default_prompt():
+    """Creates a new instance of the default prompt."""
+    if ON_CYGWIN:
+        dp = ('{env_name:{} }{BOLD_GREEN}{user}@{hostname}'
+              '{BOLD_BLUE} {cwd} {prompt_end}{NO_COLOR} ')
+    elif ON_WINDOWS:
+        dp = ('{env_name:{} }'
+              '{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} '
+              '{cwd}{branch_color}{curr_branch: {}}{NO_COLOR} '
+              '{BOLD_INTENSE_CYAN}{prompt_end}{NO_COLOR} ')
+    else:
+        dp = ('{env_name:{} }'
+              '{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
+              '{cwd}{branch_color}{curr_branch: {}}{NO_COLOR} '
+              '{BOLD_BLUE}{prompt_end}{NO_COLOR} ')
+    return dp
+
+
+DEFAULT_PROMPT = LazyObject(default_prompt, globals(), 'DEFAULT_PROMPT')
 DEFAULT_TITLE = '{current_job:{} | }{user}@{hostname}: {cwd} | xonsh'
 
 @default_value
@@ -197,91 +204,104 @@ def xonshconfig(env):
     xc = os.path.join(xcd, 'config.json')
     return xc
 
-if ON_WINDOWS:
-    DEFAULT_XONSHRC = (os.path.join(os.environ['ALLUSERSPROFILE'],
-                                     'xonsh', 'xonshrc'),
-                       os.path.expanduser('~/.xonshrc'))
-else:
-    DEFAULT_XONSHRC = ('/etc/xonshrc', os.path.expanduser('~/.xonshrc'))
+
+def default_xonshrc():
+    """Creates a new instance of the default xonshrc tuple."""
+    if ON_WINDOWS:
+        dxrc = (os.path.join(os.environ['ALLUSERSPROFILE'],
+                             'xonsh', 'xonshrc'),
+                os.path.expanduser('~/.xonshrc'))
+    else:
+        dxrc = ('/etc/xonshrc', os.path.expanduser('~/.xonshrc'))
+    return dxrc
+
+
+DEFAULT_XONSHRC = LazyObject(default_xonshrc, globals(), 'DEFAULT_XONSHRC')
 
 # Default values should generally be immutable, that way if a user wants
 # to set them they have to do a copy and write them to the environment.
 # try to keep this sorted.
-DEFAULT_VALUES = {
-    'AUTO_CD': False,
-    'AUTO_PUSHD': False,
-    'AUTO_SUGGEST': True,
-    'BASH_COMPLETIONS': BASH_COMPLETIONS_DEFAULT,
-    'CASE_SENSITIVE_COMPLETIONS': ON_LINUX,
-    'CDPATH': (),
-    'COLOR_INPUT': True,
-    'COLOR_RESULTS': True,
-    'COMPLETIONS_DISPLAY': 'multi',
-    'COMPLETIONS_MENU_ROWS': 5,
-    'DIRSTACK_SIZE': 20,
-    'DYNAMIC_CWD_WIDTH': (float('inf'), 'c'),
-    'EXPAND_ENV_VARS': True,
-    'FORCE_POSIX_PATHS': False,
-    'FUZZY_PATH_COMPLETION': True,
-    'GLOB_SORTED': True,
-    'HISTCONTROL': set(),
-    'IGNOREEOF': False,
-    'INDENT': '    ',
-    'INTENSIFY_COLORS_ON_WIN': True,
-    'LC_CTYPE': locale.setlocale(locale.LC_CTYPE),
-    'LC_COLLATE': locale.setlocale(locale.LC_COLLATE),
-    'LC_TIME': locale.setlocale(locale.LC_TIME),
-    'LC_MONETARY': locale.setlocale(locale.LC_MONETARY),
-    'LC_NUMERIC': locale.setlocale(locale.LC_NUMERIC),
-    'LOADED_CONFIG': False,
-    'LOADED_RC_FILES': (),
-    'MOUSE_SUPPORT': False,
-    'MULTILINE_PROMPT': '.',
-    'PATH': PATH_DEFAULT,
-    'PATHEXT': ['.COM', '.EXE', '.BAT', '.CMD'] if ON_WINDOWS else [],
-    'PRETTY_PRINT_RESULTS': True,
-    'PROMPT': DEFAULT_PROMPT,
-    'PUSHD_MINUS': False,
-    'PUSHD_SILENT': False,
-    'RAISE_SUBPROC_ERROR': False,
-    'RIGHT_PROMPT': '',
-    'SHELL_TYPE': 'best',
-    'SUBSEQUENCE_PATH_COMPLETION': True,
-    'SUPPRESS_BRANCH_TIMEOUT_MESSAGE': False,
-    'SUGGEST_COMMANDS': True,
-    'SUGGEST_MAX_NUM': 5,
-    'SUGGEST_THRESHOLD': 3,
-    'TEEPTY_PIPE_DELAY': 0.01,
-    'TITLE': DEFAULT_TITLE,
-    'UPDATE_OS_ENVIRON': False,
-    'VC_BRANCH_TIMEOUT': 0.2 if ON_WINDOWS else 0.1,
-    'VI_MODE': False,
-    'WIN_UNICODE_CONSOLE': True,
-    'XDG_CONFIG_HOME': os.path.expanduser(os.path.join('~', '.config')),
-    'XDG_DATA_HOME': os.path.expanduser(os.path.join('~', '.local', 'share')),
-    'XONSHCONFIG': xonshconfig,
-    'XONSHRC': DEFAULT_XONSHRC,
-    'XONSH_CACHE_SCRIPTS': True,
-    'XONSH_CACHE_EVERYTHING': False,
-    'XONSH_COLOR_STYLE': 'default',
-    'XONSH_CONFIG_DIR': xonsh_config_dir,
-    'XONSH_DATA_DIR': xonsh_data_dir,
-    'XONSH_DEBUG': False,
-    'XONSH_ENCODING': DEFAULT_ENCODING,
-    'XONSH_ENCODING_ERRORS': 'surrogateescape',
-    'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
-    'XONSH_HISTORY_SIZE': (8128, 'commands'),
-    'XONSH_LOGIN': False,
-    'XONSH_SHOW_TRACEBACK': False,
-    'XONSH_STORE_STDIN': False,
-    'XONSH_STORE_STDOUT': False,
-    'XONSH_TRACEBACK_LOGFILE': None
-}
-if hasattr(locale, 'LC_MESSAGES'):
-    DEFAULT_VALUES['LC_MESSAGES'] = locale.setlocale(locale.LC_MESSAGES)
+@lazyobject
+def DEFAULT_VALUES():
+    dv = {
+        'AUTO_CD': False,
+        'AUTO_PUSHD': False,
+        'AUTO_SUGGEST': True,
+        'BASH_COMPLETIONS': BASH_COMPLETIONS_DEFAULT,
+        'CASE_SENSITIVE_COMPLETIONS': ON_LINUX,
+        'CDPATH': (),
+        'COLOR_INPUT': True,
+        'COLOR_RESULTS': True,
+        'COMPLETIONS_DISPLAY': 'multi',
+        'COMPLETIONS_MENU_ROWS': 5,
+        'DIRSTACK_SIZE': 20,
+        'DYNAMIC_CWD_WIDTH': (float('inf'), 'c'),
+        'EXPAND_ENV_VARS': True,
+        'FORCE_POSIX_PATHS': False,
+        'FORMATTER_DICT': dict(FORMATTER_DICT),
+        'FUZZY_PATH_COMPLETION': True,
+        'GLOB_SORTED': True,
+        'HISTCONTROL': set(),
+        'IGNOREEOF': False,
+        'INDENT': '    ',
+        'INTENSIFY_COLORS_ON_WIN': True,
+        'LC_CTYPE': locale.setlocale(locale.LC_CTYPE),
+        'LC_COLLATE': locale.setlocale(locale.LC_COLLATE),
+        'LC_TIME': locale.setlocale(locale.LC_TIME),
+        'LC_MONETARY': locale.setlocale(locale.LC_MONETARY),
+        'LC_NUMERIC': locale.setlocale(locale.LC_NUMERIC),
+        'LOADED_CONFIG': False,
+        'LOADED_RC_FILES': (),
+        'MOUSE_SUPPORT': False,
+        'MULTILINE_PROMPT': '.',
+        'PATH': PATH_DEFAULT,
+        'PATHEXT': ['.COM', '.EXE', '.BAT', '.CMD'] if ON_WINDOWS else [],
+        'PRETTY_PRINT_RESULTS': True,
+        'PROMPT': default_prompt(),
+        'PUSHD_MINUS': False,
+        'PUSHD_SILENT': False,
+        'RAISE_SUBPROC_ERROR': False,
+        'RIGHT_PROMPT': '',
+        'SHELL_TYPE': 'best',
+        'SUBSEQUENCE_PATH_COMPLETION': True,
+        'SUPPRESS_BRANCH_TIMEOUT_MESSAGE': False,
+        'SUGGEST_COMMANDS': True,
+        'SUGGEST_MAX_NUM': 5,
+        'SUGGEST_THRESHOLD': 3,
+        'TEEPTY_PIPE_DELAY': 0.01,
+        'TITLE': DEFAULT_TITLE,
+        'UPDATE_OS_ENVIRON': False,
+        'VC_BRANCH_TIMEOUT': 0.2 if ON_WINDOWS else 0.1,
+        'VI_MODE': False,
+        'WIN_UNICODE_CONSOLE': True,
+        'XDG_CONFIG_HOME': os.path.expanduser(os.path.join('~', '.config')),
+        'XDG_DATA_HOME': os.path.expanduser(os.path.join('~', '.local',
+                                                         'share')),
+        'XONSHCONFIG': xonshconfig,
+        'XONSHRC': default_xonshrc(),
+        'XONSH_CACHE_SCRIPTS': True,
+        'XONSH_CACHE_EVERYTHING': False,
+        'XONSH_COLOR_STYLE': 'default',
+        'XONSH_CONFIG_DIR': xonsh_config_dir,
+        'XONSH_DATA_DIR': xonsh_data_dir,
+        'XONSH_DEBUG': False,
+        'XONSH_ENCODING': DEFAULT_ENCODING,
+        'XONSH_ENCODING_ERRORS': 'surrogateescape',
+        'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
+        'XONSH_HISTORY_SIZE': (8128, 'commands'),
+        'XONSH_LOGIN': False,
+        'XONSH_SHOW_TRACEBACK': False,
+        'XONSH_STORE_STDIN': False,
+        'XONSH_STORE_STDOUT': False,
+        'XONSH_TRACEBACK_LOGFILE': None
+        }
+    if hasattr(locale, 'LC_MESSAGES'):
+        dv['LC_MESSAGES'] = locale.setlocale(locale.LC_MESSAGES)
+    return dv
 
-VarDocs = namedtuple('VarDocs', ['docstr', 'configurable', 'default',
-                                 'store_as_str'])
+
+VarDocs = collections.namedtuple('VarDocs', ['docstr', 'configurable',
+                                             'default', 'store_as_str'])
 VarDocs.__doc__ = """Named tuple for environment variable documentation
 
 Parameters
@@ -304,7 +324,7 @@ store_as_str : bool, optional
 VarDocs.__new__.__defaults__ = (True, DefaultNotGiven, False)
 
 # Please keep the following in alphabetic order - scopatz
-DEFAULT_DOCS = {
+DEFAULT_DOCS = LazyObject(lambda: {
     'ANSICON': VarDocs('This is used on Windows to set the title, '
                        'if available.', configurable=False),
     'AUTO_CD': VarDocs(
@@ -599,13 +619,13 @@ DEFAULT_DOCS = {
         'XONSH_SHOW_TRACEBACK has been set. Its value must be a writable file '
         'or None / the empty string if traceback logging is not desired. '
         'Logging to a file is not enabled by default.'),
-}
+    }, globals(), 'DEFAULT_DOCS')
 
 #
 # actual environment
 #
 
-class Env(MutableMapping):
+class Env(abc.MutableMapping):
     """A xonsh environment, whose variables have limited typing
     (unlike BASH). Most variables are, by default, strings (like BASH).
     However, the following rules also apply based on variable-name:
@@ -619,7 +639,7 @@ class Env(MutableMapping):
     use in a subprocess.
     """
 
-    _arg_regex = re.compile(r'ARG(\d+)')
+    _arg_regex = None
 
     def __init__(self, *args, **kwargs):
         """If no initial environment is given, os.environ is used."""
@@ -638,9 +658,15 @@ class Env(MutableMapping):
             self._d['PATH'] = list(PATH_DEFAULT)
         self._detyped = None
 
+    @property
+    def arg_regex(self):
+        if self._arg_regex is None:
+            self._arg_regex = re.compile(r'ARG(\d+)')
+        return self._arg_regex
+
     @staticmethod
     def detypeable(val):
-        return not (callable(val) or isinstance(val, MutableMapping))
+        return not (callable(val) or isinstance(val, abc.MutableMapping))
 
     def detype(self):
         if self._detyped is not None:
@@ -696,7 +722,7 @@ class Env(MutableMapping):
         if vd is None:
             return default
         if vd.default is DefaultNotGiven:
-            dval = pformat(self._defaults.get(key, '<default not set>'))
+            dval = pprint.pformat(self._defaults.get(key, '<default not set>'))
             vd = vd._replace(default=dval)
             self._docs[key] = vd
         return vd
@@ -707,7 +733,7 @@ class Env(MutableMapping):
         """
         return varname in self._d
 
-    @contextmanager
+    @contextlib.contextmanager
     def swap(self, other=None, **kwargs):
         """Provides a context manager for temporarily swapping out certain
         environment variables with other values. On exit from the context
@@ -732,7 +758,6 @@ class Env(MutableMapping):
             else:
                 self[k] = v
 
-
     #
     # Mutable mapping interface
     #
@@ -740,7 +765,7 @@ class Env(MutableMapping):
     def __getitem__(self, key):
         if key is Ellipsis:
             return self
-        m = self._arg_regex.match(key)
+        m = self.arg_regex.match(key)
         if (m is not None) and (key not in self._d) and ('ARGS' in self._d):
             args = self._d['ARGS']
             ix = int(m.group(1))
@@ -757,7 +782,8 @@ class Env(MutableMapping):
         else:
             e = "Unknown environment variable: ${}"
             raise KeyError(e.format(key))
-        if isinstance(val, (MutableSet, MutableSequence, MutableMapping)):
+        if isinstance(val, (abc.MutableSet, abc.MutableSequence,
+                            abc.MutableMapping)):
             self._detyped = None
         return val
 
@@ -947,8 +973,8 @@ def current_branch(pad=NotImplemented):
     '<branch-timeout>' is returned.
     """
     if pad is not NotImplemented:
-        warn("The `pad` argument of `current_branch` has no effect now and "
-             "will be removed in the future")
+        warnings.warn("The pad argument of current_branch has no effect now "
+                      "and will be removed in the future")
     branch = None
     cmds = builtins.__xonsh_commands_cache__
     if cmds.lazy_locate_binary('git') or cmds.is_empty():
@@ -1068,6 +1094,7 @@ def _replace_home(x):
             x = x.replace(home, '~', 1)
         return x
 
+
 _replace_home_cwd = lambda: _replace_home(builtins.__xonsh_env__['PWD'])
 
 def _collapsed_pwd():
@@ -1077,6 +1104,7 @@ def _collapsed_pwd():
     leader = sep if l>0 and len(pwd[0])==0 else ''
     base = [i[0] if ix != l-1 else i for ix,i in enumerate(pwd) if len(i) > 0]
     return leader + sep.join(base)
+
 
 def _dynamically_collapsed_pwd():
     """Return the compact current working directory.  It respects the
@@ -1132,7 +1160,6 @@ def env_name(pre_chars='(', post_chars=')'):
     """
     env_path = builtins.__xonsh_env__.get('VIRTUAL_ENV', '')
     if len(env_path) == 0 and ON_ANACONDA:
-        pre_chars, post_chars = '[', ']'
         env_path = builtins.__xonsh_env__.get('CONDA_DEFAULT_ENV', '')
     env_name = os.path.basename(env_path)
     if env_name:
@@ -1145,7 +1172,7 @@ else:
     USER = 'USER'
 
 
-FORMATTER_DICT = dict(
+FORMATTER_DICT = LazyObject(lambda: dict(
     user=os.environ.get(USER, '<user>'),
     prompt_end='#' if is_superuser() else '$',
     hostname=socket.gethostname().split('.', 1)[0],
@@ -1158,11 +1185,10 @@ FORMATTER_DICT = dict(
     branch_bg_color=branch_bg_color,
     current_job=_current_job,
     env_name=env_name,
-    )
+    ), globals(), 'FORMATTER_DICT')
 
-DEFAULT_VALUES['FORMATTER_DICT'] = dict(FORMATTER_DICT)
 
-_FORMATTER = string.Formatter()
+_FORMATTER = LazyObject(string.Formatter, globals(), '_FORMATTER')
 
 
 def is_template_string(template, formatter_dict=None):
@@ -1260,7 +1286,8 @@ def _format_value(val, spec, conv):
     return val
 
 
-RE_HIDDEN = re.compile('\001.*?\002')
+RE_HIDDEN = LazyObject(lambda: re.compile('\001.*?\002'), globals(),
+                       'RE_HIDDEN')
 
 def multiline_prompt(curr=''):
     """Returns the filler text for the prompt in multiline scenarios."""
@@ -1305,15 +1332,15 @@ def multiline_prompt(curr=''):
         if n <= count:
             break
     toks.append((format_color('{NO_COLOR}', hide=True), tail))
-    rtn = ''.join(chain.from_iterable(toks))
+    rtn = ''.join(itertools.chain.from_iterable(toks))
     return rtn
 
 
-BASE_ENV = {
+BASE_ENV = LazyObject(lambda: {
     'BASH_COMPLETIONS': list(DEFAULT_VALUES['BASH_COMPLETIONS']),
     'FORMATTER_DICT': dict(DEFAULT_VALUES['FORMATTER_DICT']),
     'XONSH_VERSION': XONSH_VERSION,
-}
+    }, globals(), 'BASE_ENV')
 
 def load_static_config(ctx, config=None):
     """Loads a static configuration file from a given context, rather than the
@@ -1342,7 +1369,7 @@ def load_static_config(ctx, config=None):
         with open(config, 'r', encoding=encoding, errors=errors) as f:
             try:
                 conf = json.load(f)
-                assert isinstance(conf, Mapping)
+                assert isinstance(conf, abc.Mapping)
                 ctx['LOADED_CONFIG'] = True
             except Exception as e:
                 conf = {}
@@ -1383,12 +1410,12 @@ def xonshrc_context(rcfiles=None, execer=None, initial=None):
         except SyntaxError as err:
             loaded.append(False)
             msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
-            warn(msg.format(rcfile, err), RuntimeWarning)
+            warnings.warn(msg.format(rcfile, err), RuntimeWarning)
             continue
         except Exception as err:
             loaded.append(False)
             msg = 'error running xonsh run control file {0!r}: {1!s}'
-            warn(msg.format(rcfile, err), RuntimeWarning)
+            warnings.warn(msg.format(rcfile, err), RuntimeWarning)
             continue
     return env
 
@@ -1415,6 +1442,7 @@ def foreign_env_fixes(ctx):
     if 'PROMPT' in ctx:
         del ctx['PROMPT']
 
+
 def default_env(env=None, config=None, login=True):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence
@@ -1426,22 +1454,17 @@ def default_env(env=None, config=None, login=True):
         del ctx['PROMPT']
     except KeyError:
         pass
-
     if login:
         conf = load_static_config(ctx, config=config)
-
         foreign_env = load_foreign_envs(shells=conf.get('foreign_shells', ()),
                                         issue_warning=False)
         if ON_WINDOWS:
             windows_foreign_env_fixes(foreign_env)
         foreign_env_fixes(foreign_env)
-
         ctx.update(foreign_env)
-
         # Do static config environment last, to allow user to override any of
         # our environment choices
         ctx.update(conf.get('env', ()))
-
     # finalize env
     if env is not None:
         ctx.update(env)

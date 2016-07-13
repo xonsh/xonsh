@@ -3,22 +3,29 @@
 
 Written using a hybrid of ``tokenize`` and PLY.
 """
-from io import BytesIO
-from keyword import kwlist
-
+import io
+# 'keyword' interferes with ast.keyword
+import keyword as kwmod
 try:
     from ply.lex import LexToken
 except ImportError:
     from xonsh.ply.lex import LexToken
 
-from xonsh.lazyasd import LazyObject
+from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.platform import PYTHON_VERSION_INFO
 from xonsh.tokenize import (OP, IOREDIRECT, STRING, DOLLARNAME, NUMBER,
     SEARCHPATH, NEWLINE, INDENT, DEDENT, NL, COMMENT, ENCODING,
     ENDMARKER, NAME, ERRORTOKEN, tokenize, TokenError)
 
 
-def _token_map():
+@lazyobject
+def token_map():
+    """Mapping from ``tokenize`` tokens (or token types) to PLY token types. If
+    a simple one-to-one mapping from ``tokenize`` to PLY exists, the lexer will
+    look it up here and generate a single PLY token of the given type.
+    Otherwise, it will fall back to handling that token using one of the
+    handlers in``special_handlers``.
+    """
     tm = {}
     # operators
     _op_map = {
@@ -58,37 +65,12 @@ def _token_map():
     return tm
 
 
-token_map = LazyObject(_token_map, globals(), 'token_map')
-"""
-Mapping from ``tokenize`` tokens (or token types) to PLY token types.  If a
-simple one-to-one mapping from ``tokenize`` to PLY exists, the lexer will look
-it up here and generate a single PLY token of the given type.  Otherwise, it
-will fall back to handling that token using one of the handlers in
-``special_handlers``.
-"""
-del _token_map
-
-
-def _make_matcher_handler(tok, typ, pymode, ender):
-    matcher = (')' if tok.endswith('(') else
-               '}' if tok.endswith('{') else
-               ']' if tok.endswith('[') else None)
-
-    def _inner_handler(state, token):
-        state['pymode'].append((pymode, tok, matcher, token.start))
-        state['last'] = token
-        yield _new_token(typ, tok, token.start)
-    special_handlers[(OP, tok)] = _inner_handler
-
-
 def handle_name(state, token):
-    """
-    Function for handling name tokens
-    """
+    """Function for handling name tokens"""
     typ = 'NAME'
     state['last'] = token
     if state['pymode'][-1][0]:
-        if token.string in kwlist:
+        if token.string in kwmod.kwlist:
             typ = token.string.upper()
         yield _new_token(typ, token.string, token.start)
     else:
@@ -126,9 +108,7 @@ def handle_rparen(state, token):
 
 
 def handle_rbrace(state, token):
-    """
-    Function for handling ``}``
-    """
+    """Function for handling ``}``"""
     e = _end_delimiter(state, token)
     if e is None:
         state['last'] = token
@@ -173,9 +153,7 @@ def handle_error_token(state, token):
 
 
 def handle_ignore(state, token):
-    """
-    Function for handling tokens that should be ignored
-    """
+    """Function for handling tokens that should be ignored"""
     yield from []
 
 
@@ -187,36 +165,48 @@ def handle_double_pipe(state, token):
     yield _new_token('OR', 'or', token.start)
 
 
-special_handlers = {
-    NL: handle_ignore,
-    COMMENT: handle_ignore,
-    ENCODING: handle_ignore,
-    ENDMARKER: handle_ignore,
-    NAME: handle_name,
-    ERRORTOKEN: handle_error_token,
-    (OP, ')'): handle_rparen,
-    (OP, '}'): handle_rbrace,
-    (OP, ']'): handle_rbracket,
-    (OP, '&&'): handle_double_amps,
-    (OP, '||'): handle_double_pipe,
-    (ERRORTOKEN, ' '): handle_error_space,
-}
-"""
-Mapping from ``tokenize`` tokens (or token types) to the proper function for
-generating PLY tokens from them.  In addition to yielding PLY tokens, these
-functions may manipulate the Lexer's state.
-"""
+def _make_matcher_handler(tok, typ, pymode, ender, handlers):
+    matcher = (')' if tok.endswith('(') else
+               '}' if tok.endswith('{') else
+               ']' if tok.endswith('[') else None)
+    def _inner_handler(state, token):
+        state['pymode'].append((pymode, tok, matcher, token.start))
+        state['last'] = token
+        yield _new_token(typ, tok, token.start)
+    handlers[(OP, tok)] = _inner_handler
 
-_make_matcher_handler('(', 'LPAREN', True, ')')
-_make_matcher_handler('[', 'LBRACKET', True, ']')
-_make_matcher_handler('{', 'LBRACE', True, '}')
-_make_matcher_handler('$(', 'DOLLAR_LPAREN', False, ')')
-_make_matcher_handler('$[', 'DOLLAR_LBRACKET', False, ']')
-_make_matcher_handler('${', 'DOLLAR_LBRACE', True, '}')
-_make_matcher_handler('!(', 'BANG_LPAREN', False, ')')
-_make_matcher_handler('![', 'BANG_LBRACKET', False, ']')
-_make_matcher_handler('@(', 'AT_LPAREN', True, ')')
-_make_matcher_handler('@$(', 'ATDOLLAR_LPAREN', False, ')')
+
+@lazyobject
+def special_handlers():
+    """Mapping from ``tokenize`` tokens (or token types) to the proper
+    function for generating PLY tokens from them.  In addition to
+    yielding PLY tokens, these functions may manipulate the Lexer's state.
+    """
+    sh = {
+        NL: handle_ignore,
+        COMMENT: handle_ignore,
+        ENCODING: handle_ignore,
+        ENDMARKER: handle_ignore,
+        NAME: handle_name,
+        ERRORTOKEN: handle_error_token,
+        (OP, ')'): handle_rparen,
+        (OP, '}'): handle_rbrace,
+        (OP, ']'): handle_rbracket,
+        (OP, '&&'): handle_double_amps,
+        (OP, '||'): handle_double_pipe,
+        (ERRORTOKEN, ' '): handle_error_space,
+        }
+    _make_matcher_handler('(', 'LPAREN', True, ')', sh)
+    _make_matcher_handler('[', 'LBRACKET', True, ']', sh)
+    _make_matcher_handler('{', 'LBRACE', True, '}', sh)
+    _make_matcher_handler('$(', 'DOLLAR_LPAREN', False, ')', sh)
+    _make_matcher_handler('$[', 'DOLLAR_LBRACKET', False, ']', sh)
+    _make_matcher_handler('${', 'DOLLAR_LBRACE', True, '}', sh)
+    _make_matcher_handler('!(', 'BANG_LPAREN', False, ')', sh)
+    _make_matcher_handler('![', 'BANG_LBRACKET', False, ']', sh)
+    _make_matcher_handler('@(', 'AT_LPAREN', True, ')', sh)
+    _make_matcher_handler('@$(', 'ATDOLLAR_LPAREN', False, ')', sh)
+    return sh
 
 
 def handle_token(state, token):
@@ -265,7 +255,7 @@ def get_tokens(s):
     """
     state = {'indents': [0], 'last': None,
              'pymode': [(True, '', '', (0, 0))],
-             'stream': tokenize(BytesIO(s.encode('utf-8')).readline)}
+             'stream': tokenize(io.BytesIO(s.encode('utf-8')).readline)}
     while True:
         try:
             token = next(state['stream'])
@@ -299,6 +289,8 @@ def _new_token(type, value, pos):
 
 class Lexer(object):
     """Implements a lexer for the xonsh language."""
+
+    _tokens = None
 
     def __init__(self):
         """
@@ -342,17 +334,22 @@ class Lexer(object):
     #
     # All the tokens recognized by the lexer
     #
-    tokens = tuple(token_map.values()) + (
-        'NAME',                  # name tokens
-        'WS',                    # whitespace in subprocess mode
-        'LPAREN', 'RPAREN',      # ( )
-        'LBRACKET', 'RBRACKET',  # [ ]
-        'LBRACE', 'RBRACE',      # { }
-        'AT_LPAREN',             # @(
-        'BANG_LPAREN',           # !(
-        'BANG_LBRACKET',         # ![
-        'DOLLAR_LPAREN',         # $(
-        'DOLLAR_LBRACE',         # ${
-        'DOLLAR_LBRACKET',       # $[
-        'ATDOLLAR_LPAREN',       # @$(
-    ) + tuple(i.upper() for i in kwlist)
+    @property
+    def tokens(self):
+        if self._tokens is None:
+            t = tuple(token_map.values()) + (
+                'NAME',                  # name tokens
+                'WS',                    # whitespace in subprocess mode
+                'LPAREN', 'RPAREN',      # ( )
+                'LBRACKET', 'RBRACKET',  # [ ]
+                'LBRACE', 'RBRACE',      # { }
+                'AT_LPAREN',             # @(
+                'BANG_LPAREN',           # !(
+                'BANG_LBRACKET',         # ![
+                'DOLLAR_LPAREN',         # $(
+                'DOLLAR_LBRACE',         # ${
+                'DOLLAR_LBRACKET',       # $[
+                'ATDOLLAR_LPAREN',       # @$(
+                ) + tuple(i.upper() for i in kwmod.kwlist)
+            self._tokens = t
+        return self._tokens

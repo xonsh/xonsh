@@ -3,6 +3,7 @@
 import difflib
 import datetime
 import itertools
+import argparse
 
 from xonsh.lazyjson import LazyJSON
 from xonsh.tools import print_color
@@ -285,8 +286,8 @@ def _dh_create_parser(p=None):
     if _HD_PARSER is not None and p_was_none:
         return _HD_PARSER
     if p_was_none:
-        from argparse import ArgumentParser
-        p = ArgumentParser('diff-history', description='diffs two xonsh history files')
+        p = argparse.ArgumentParser('diff-history',
+                                    description='diffs two xonsh history files')
     p.add_argument('--reopen', dest='reopen', default=False, action='store_true',
                    help='make lazy file loading reopen files each time')
     p.add_argument('-v', '--verbose', dest='verbose', default=False, action='store_true',
@@ -305,10 +306,7 @@ def _dh_main_action(ns, hist=None):
 
 def diff_history_main(args=None, stdin=None):
     """Main entry point for history diff'ing"""
-    parser = _create_parser()
+    parser = _dh_create_parser()
     ns = parser.parse_args(args)
     _dh_main_action(ns)
 
-
-if __name__ == '__main__':
-    diff_history_main()
