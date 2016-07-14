@@ -37,9 +37,10 @@ import subprocess
 
 # adding further imports from xonsh modules is discouraged to avoid circular
 # dependencies
-from xonsh.lazyasd import LazyObject, LazyDict
+from xonsh.lazyasd import LazyObject, LazyDict, lazyobject
 from xonsh.platform import (has_prompt_toolkit, scandir, DEFAULT_ENCODING,
                             ON_LINUX, ON_WINDOWS, PYTHON_VERSION_INFO)
+
 
 
 @functools.lru_cache(1)
@@ -1434,29 +1435,22 @@ def check_for_partial_string(x):
         return (string_indices[-2], string_indices[-1], starting_quote[-1])
 
 
-# expandvars is a modified version of os.path.expandvars from the Python 3.5.1
-# source code (root/Lib/ntpath.py, line 353)
+# regular expressions for matching enviroment variables
+# i.e $FOO, ${'FOO'}
+@lazyobject
+def POSIX_ENVVAR_REGEX():
+    pat = r"""\$({(?P<quote>['"])|)(?P<envvar>\w+)((?P=quote)}|(?:\1\b))"""
+    return re.compile(pat)
 
-def _is_in_env(name):
-    env = builtins.__xonsh_env__
-    return name in env._d or name in env._defaults
-
-
-def _get_env_string(name):
-    env = builtins.__xonsh_env__
-    value = env.get(name)
-    ensurer = env.get_ensurer(name)
-    if ensurer.detype is bool_to_str:
-        value = ensure_string(value)
-    else:
-        value = ensurer.detype(value)
-    return value
-
+if ON_WINDOWS:
+    # i.e %FOO%
+    @lazyobject
+    def WINDOWS_ENVVAR_REGEX():
+        return re.compile(r"%(?P<envvar>\w+)%")
 
 def expandvars(path):
     """Expand shell variables of the forms $var, ${var} and %var%.
-    Unknown variables are left unchanged.
-    """
+    Unknown variables are left unchanged."""
     env = builtins.__xonsh_env__
     if isinstance(path, bytes):
         path = path.decode(encoding=env.get('XONSH_ENCODING'),
@@ -1464,91 +1458,21 @@ def expandvars(path):
     elif isinstance(path, pathlib.Path):
         # get the path's string representation
         path = str(path)
-    if '$' not in path and (not ON_WINDOWS or '%' not in path):
-        return path
-    varchars = string.ascii_letters + string.digits + '_-'
-    quote = '\''
-    percent = '%'
-    brace = '{'
-    rbrace = '}'
-    dollar = '$'
-    res = path[:0]
-    index = 0
-    pathlen = len(path)
-    while index < pathlen:
-        c = path[index:index+1]
-        if c == quote:   # no expansion within single quotes
-            path = path[index + 1:]
-            pathlen = len(path)
-            try:
-                index = path.index(c)
-                res += c + path[:index + 1]
-            except ValueError:
-                res += c + path
-                index = pathlen - 1
-        elif c == percent and ON_WINDOWS:  # variable or '%'
-            if path[index + 1:index + 2] == percent:
-                res += c
-                index += 1
-            else:
-                path = path[index+1:]
-                pathlen = len(path)
-                try:
-                    index = path.index(percent)
-                except ValueError:
-                    res += percent + path
-                    index = pathlen - 1
-                else:
-                    var = path[:index]
-                    if _is_in_env(var):
-                        value = _get_env_string(var)
-                    else:
-                        value = percent + var + percent
-                    res += value
-        elif c == dollar:  # variable or '$$'
-            if path[index + 1:index + 2] == dollar:
-                res += c
-                index += 1
-            elif path[index + 1:index + 2] == brace:
-                path = path[index+2:]
-                pathlen = len(path)
-                try:
-                    index = path.index(rbrace)
-                except ValueError:
-                    res += dollar + brace + path
-                    index = pathlen - 1
-                else:
-                    var = path[:index]
-                    try:
-                        var = eval(var, builtins.__xonsh_ctx__)
-                        if _is_in_env(var):
-                            value = _get_env_string(var)
-                        elif var is Ellipsis:
-                            value = dollar + brace + '...' + rbrace
-                        else:
-                            value = dollar + brace + var + rbrace
-                    except Exception:
-                        value = dollar + brace + var + rbrace
-                    res += value
-            else:
-                var = path[:0]
-                index += 1
-                c = path[index:index + 1]
-                while c and c in varchars:
-                    var += c
-                    index += 1
-                    c = path[index:index + 1]
-                if _is_in_env(var):
-                    value = _get_env_string(var)
-                else:
-                    value = dollar + var
-                res += value
-                if c:
-                    index -= 1
-        else:
-            res += c
-        index += 1
-    return res
+    if ON_WINDOWS and '%' in path:
+        for match in WINDOWS_ENVVAR_REGEX.finditer(path):
+            name = match.group('envvar')
+            if name in env:
+                ensurer = env.get_ensurer(name)
+                value = ensurer.detype(env[name])
+                path = WINDOWS_ENVVAR_REGEX.sub(value, path, count=1)
+    if '$' in path:
+        for match in POSIX_ENVVAR_REGEX.finditer(path):
+            name = match.group('envvar')
+            if name in env:
+                ensurer = env.get_ensurer(name)
+                value = ensurer.detype(env[name])
+                path = POSIX_ENVVAR_REGEX.sub(value, path, count=1)
+    return path
 
 #
 # File handling tools

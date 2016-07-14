@@ -819,6 +819,9 @@ class Env(abc.MutableMapping):
     def __iter__(self):
         yield from (set(self._d) | set(self._defaults))
 
+    def __contains__(self, item):
+        return item in self._d or item in self._defaults
+
     def __len__(self):
         return len(self._d)
 
