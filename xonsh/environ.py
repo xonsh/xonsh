@@ -1172,6 +1172,19 @@ else:
     USER = 'USER'
 
 
+def vte_new_tab_cwd():
+    """This prints an escape squence that tells VTE terminals the hostname
+    and pwd. This should not be needed in most cases, but sometimes is for
+    certain Linux terminals that do not read the PWD from the environment
+    on startup. Note that this does not return a string, it simply prints
+    and flushes the escape sequence to stdout directly.
+    """
+    env = builtins.__xonsh_env__
+    t = '\033]7;file://{}{}\007'
+    s = t.format(env.get('HOSTNAME'), env.get('PWD'))
+    print(s, end='', flush=True)
+
+
 FORMATTER_DICT = LazyObject(lambda: dict(
     user=os.environ.get(USER, '<user>'),
     prompt_end='#' if is_superuser() else '$',
@@ -1185,6 +1198,7 @@ FORMATTER_DICT = LazyObject(lambda: dict(
     branch_bg_color=branch_bg_color,
     current_job=_current_job,
     env_name=env_name,
+    vte_new_tab_cwd=vte_new_tab_cwd,
     ), globals(), 'FORMATTER_DICT')
 
 
