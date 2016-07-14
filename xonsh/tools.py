@@ -37,7 +37,7 @@ import subprocess
 
 # adding further imports from xonsh modules is discouraged to avoid circular
 # dependencies
-from xonsh.lazyasd import LazyObject, LazyDict
+from xonsh.lazyasd import LazyObject, LazyDict, lazyobject
 from xonsh.platform import (has_prompt_toolkit, scandir, DEFAULT_ENCODING,
                             ON_LINUX, ON_WINDOWS, PYTHON_VERSION_INFO)
 
@@ -1437,13 +1437,16 @@ def check_for_partial_string(x):
 
 # regular expressions for matching enviroment variables
 # i.e $FOO, ${'FOO'}
-_POSIX_ENVVAR_REGEX = r"""\$({(?P<quote>['"])|)(?P<envvar>\w+)((?P=quote)}|(?:\1\b))"""
-POSIX_ENVVAR_REGEX = LazyObject(lambda: re.compile(_POSIX_ENVVAR_REGEX),
-                                globals(), 'POSIX_ENVVAR_REGEX')
+@lazyobject
+def POSIX_ENVVAR_REGEX():
+    pat = r"""\$({(?P<quote>['"])|)(?P<envvar>\w+)((?P=quote)}|(?:\1\b))"""
+    return re.compile(pat)
+
 if ON_WINDOWS:
     # i.e %FOO%
-    WINDOWS_ENVVAR_REGEX = LazyObject(re.compile(r"%(?P<envvar>\w+)%"),
-                                      globals(), 'WINDOWS_ENVVAR_REGEX')
+    @lazyobject
+    def WINDOWS_ENVVAR_REGEX():
+        return re.compile(r"%(?P<envvar>\w+)%")
 
 def expandvars(path):
     """Expand shell variables of the forms $var, ${var} and %var%.
