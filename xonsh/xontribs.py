@@ -135,7 +135,7 @@ _MAIN_XONTRIB_ACTIONS = {
 
 def xontribs_main(args=None, stdin=None):
     """Alias that loads xontribs"""
-    if not args or (args[0] not in _MAIN_ACTIONS and
+    if not args or (args[0] not in _MAIN_XONTRIB_ACTIONS and
                     args[0] not in {'-h', '--help'}):
         args.insert(0, 'load')
     parser = _create_xontrib_parser()

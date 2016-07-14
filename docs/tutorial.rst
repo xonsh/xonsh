@@ -1211,9 +1211,11 @@ By default, the following variables are available for use:
     determined.
   * ``branch_bg_color``: Like, ``{branch_color}``, but sets a background color
     instead.
-  * ``prompt_end``: `#` if the user has root/admin permissions `$` otherwise
+  * ``prompt_end``: ``#`` if the user has root/admin permissions ``$`` otherwise
   * ``current_job``: The name of the command currently running in the
     foreground, if any.
+  * ``vte_new_tab_cwd``: Issues VTE escape sequence for opening new tabs in the
+    current working directory on some linux terminals. This is not usually needed.
 
 You can also color your prompt easily by inserting keywords such as ``{GREEN}``
 or ``{BOLD_BLUE}``.  Colors have the form shown below:
