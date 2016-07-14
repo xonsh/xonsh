@@ -357,8 +357,6 @@ def _bash_hist_parser(location=None):
                     bash_hist_formatted.append((command, 0.0, ind))
                 return bash_hist_formatted
     else:
-        import ipdb
-        ipdb.set_trace()
         print("No bash history file found at: {}".format(location),
               file=sys.stderr)
 
