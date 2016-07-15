@@ -6,6 +6,6 @@ python:
 install:
   - pip install -r requirements-tests.txt
 script:
-  - coverage run --source xonsh -m py.test -q
+  - py.test --flake8 --cov=. --cov-report=term -q
 after_success:
   - codecov
