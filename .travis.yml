@@ -4,7 +4,7 @@ python:
   - 3.5
   - "nightly"
 install:
-  - pip install -r requirements-tests.txt
+  - pip install --upgrade -r requirements-tests.txt
 script:
   - py.test --flake8 --cov=. --cov-report=term -q
 after_success:
