@@ -23,7 +23,7 @@ class Vox:
             ('activate', 'workon', 'enter'): self.activate_env,
             ('deactivate', 'exit'): self.deactivate_env,
             ('list', 'ls'): self.list_envs,
-            ('remove', 'rm', 'delete', 'del'): self.remove_env,
+            ('remove', 'rm', 'delete', 'del'): self.remove_envs,
             ('help', '-h', '--help'): self.show_help
         }
 
@@ -141,20 +141,22 @@ class Vox:
 
 
     @staticmethod
-    def remove_env(name):
-        """Remove virtual environment.
+    def remove_envs(*names):
+        """Remove virtual environments.
 
         Parameters
         ----------
-        name : str
-            virtual environment name
+        names : list
+            list of virtual environment names
         """
-        if 'VIRTUAL_ENV' in __xonsh_env__:
-            print('This environment is currently active. If you really want to remove it, deactivate it first with "vox deactivate %s".\n' % name)
-            return None
-        env_path = os.path.join(builtins.__xonsh_env__['VIRTUALENV_HOME'], name)
-        shutil.rmtree(env_path)
-        print('Environment "%s" removed.\n' % name)
+        for name in names:
+            env_path = os.path.join(builtins.__xonsh_env__['VIRTUALENV_HOME'], name)
+            if __xonsh_env__.get('VIRTUAL_ENV') == env_path:
+                print('The "%s" environment is currently active. In order to remove it, deactivate it first with "vox deactivate %s".\n' % (name, name))
+                return
+            shutil.rmtree(env_path)
+            print('Environment "%s" removed.' % name)
+        print()
 
     def show_help(self):
         """Show help."""
@@ -179,8 +181,8 @@ class Vox:
     vox list (ls)
         List all available environments
 
-    vox remove (rm, delete, del) <env>
-        Remove virtual environment
+    vox remove (rm, delete, del) <env> <env2> ...
+        Remove virtual environments
 
     vox help (-h, --help)
         Show help
