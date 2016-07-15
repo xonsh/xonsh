@@ -9,6 +9,6 @@ install:
   - pip install --upgrade -r requirements-tests.txt
 script:
   - python setup.py develop
-  - XONSH_DEBUG=1 py.test --flake8 --cov=. --cov-report=term
+  - py.test --flake8 --cov=. --cov-report=term
 after_success:
   - codecov
