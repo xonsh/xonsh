@@ -12,7 +12,27 @@ from xonsh.environ import Env
 from xonsh.dirstack import DIRSTACK
 from xonsh.platform import ON_WINDOWS
 
+def _do_subprocess( *args)->tuple:
+    """
+    Invoke `args`, outputs and return code
+    Args:
+        *args: sequence of strings, as for `subprocess.check_output`
 
+    Returns:
+        tuple of:
+            return_code:int - return code from subprocess
+            stdout:str      - stdout+stderr from subprocess (if it worked), or None
+            stderr:str      - stdout+stderr from subprocess (if it didn't), or None
+    """
+    try:
+        return 0 \
+                , subprocess.check_output( *args, universal_newlines=True, stderr=subprocess.STDOUT) \
+                , None
+    except subprocess.CalledProcessError as e:
+        print('Subproc error {}, text: {}'.format( e.returncode, e.output))
+        return e.returncode \
+                , None \
+                , e.output
 
 TEST_WORK_DIR='uncpushd'
 
@@ -89,8 +109,9 @@ def shares_setup( tmpdir_factory):
               , [r'uncpushd_test_cd1', 'w:', temp_dir.join('cdtest1').strpath]]
 
     for s,d,l in shares:      # set up some shares on local machine.  dirs already exist (test case must invoke wd_setup)
-        subprocess.run(['net', 'share', s + '=' + l])
-        subprocess.run(['net', 'use', d, r"\\localhost" + '\\' + s])
+        _do_subprocess(['net', 'share', s + '=' + l])
+        co = _do_subprocess(['net', 'use', d, r"\\localhost" + '\\' + s])
+        pass
 
     yield [ [ r"\\localhost" +'\\'+ s[0], s[1] , s[2]] for s in shares]
 
@@ -98,10 +119,10 @@ def shares_setup( tmpdir_factory):
     # (left over from assert fail aborted test)
     os.chdir( temp_dir.strpath)
     for dl in _unc_tempDrives:
-        subprocess.run(['net', 'use', dl, '/delete'])
+        _do_subprocess(['net', 'use', dl, '/delete'])
     for s,d,l in shares:
-        subprocess.run(['net', 'use', d, '/delete'])
-        subprocess.run(['net', 'share', s, '/delete'])
+        _do_subprocess(['net', 'use', d, '/delete'])
+        _do_subprocess(['net', 'share', s, '/delete'])
 
 
 def test_unc_pushdpopd( xonsh_builtins, wd_setup):
@@ -115,7 +136,6 @@ def test_unc_pushdpopd( xonsh_builtins, wd_setup):
     unc_popd([])
     assert wd_setup == os.getcwd(), "popd returned cwd to expected dir"
 
-@pytest.mark.skipif( not ON_WINDOWS, reason="Windows-only UNC functionality")
 def push_and_check( unc_path, drive_letter):
     o, e, c = unc_pushd( [unc_path])
     assert c == 0
@@ -148,7 +168,7 @@ def test_unc_repush_to_temp_driveletter( wd_setup, shares_setup):
     push_and_check( shares_setup[0][0], 'z:')
     assert len(_unc_tempDrives) == 1
     assert len(DIRSTACK) == dsd+1
-    in_use = subprocess.run(['net', 'use']).stdout
+    in_use = _do_subprocess(['net', 'use'])
 
     unc_pushd( [r'z:\cdtest1'])
     assert len(_unc_tempDrives) == 1
@@ -159,7 +179,7 @@ def test_unc_repush_to_temp_driveletter( wd_setup, shares_setup):
     assert len(_unc_tempDrives) == 1,"should still leave one"
     assert len(DIRSTACK) == dsd + 1
     assert os.getcwd().casefold() == 'z:\\'
-    assert in_use == subprocess.run(['net', 'use']).stdout
+    assert in_use == _do_subprocess(['net', 'use'])
 
     unc_popd([])
     assert len(_unc_tempDrives) == 0

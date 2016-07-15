@@ -20,21 +20,22 @@ UNC paths are not supported.  Defaulting to Windows directory.
 # -- there.  I feel much better now.  To proceed...)
 
 import argparse
+import builtins
+import os
+import subprocess
+import winreg
 
-from xonsh.lazyasd import LazyObject
-from xonsh.built_ins import subproc_captured_object
+from xonsh.lazyasd import lazyobject
 from xonsh.platform import ON_WINDOWS
+from xonsh.dirstack import pushd, popd, DIRSTACK
 
 _uncpushd_choices = dict(enable=1, disable=0, show=None)
 
-def _uncpushd_parser():
+@lazyobject
+def uncpushd_parser():
     parser = argparse.ArgumentParser(prog="uncpushd", description='Enable or disable CMD.EXE check for UNC path.')
     parser.add_argument('action', choices=_uncpushd_choices, default='show')
     return parser
-
-uncpushd_parser = LazyObject(_uncpushd_parser, globals(), 'uncpushd_parser')
-
-del _uncpushd_parser
 
 def uncpushd(args=None, stdin=None):
     """Fix alternative 1: configure CMD.EXE to bypass the chech for UNC path.
@@ -46,6 +47,7 @@ def uncpushd(args=None, stdin=None):
 
     Does nothing on non-Windows platforms.
     """
+
     if not ON_WINDOWS:
         return None, None, 0
 
@@ -55,29 +57,43 @@ def uncpushd(args=None, stdin=None):
         return None, None
 
     if _uncpushd_choices[args.action] is None:             # show current value
-        co = subproc_captured_object(
-            ['reg', 'query', '"hkcu\software\microsoft\command processor"', '-v', 'DisableUNCCheck'])
-        if co.returncode == 0:
-            return 'enabled\n' if co.stdout[-3:-2] == '1' else 'disabled\n'\
-                , None, 0-int(co.stdout[-3:-2])
-        else:
-            return 'disabled\n', None, 0
+        try:
+            key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'software\microsoft\command processor')
+            wval, wtype = winreg.QueryValueEx(key, 'DisableUNCCheck')
+            winreg.CloseKey(key)
+            if wtype == winreg.REG_DWORD and wval:
+                return 'enabled', None, 0
+        except OSError as e:
+            pass
+        return 'disabled', None, 0
     else:                               # set to 1 or 0
-        co = subproc_captured_object(
-            ['reg', 'add', '"hkcu\software\microsoft\command processor"', '-v', 'DisableUNCCheck', '-t', 'REG_DWORD',
-             '-d', '1' if _uncpushd_choices[args.action] else '0', '-f'])
-        return None if co.returncode == 0 else co.stdout, None if co.returncode == 0 else co.stderr, co.returncode
-    pass
+        try:
+            key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'software\microsoft\command processor')
+            winreg.SetValueEx( key, 'DisableUNCCheck', 0, winreg.REG_DWORD, 1 if _uncpushd_choices[args.action] else 0)
+            winreg.CloseKey( key)
+            return None, None, 0
+        except OSError as e:
+            return None, str(OSError), 1
 
-import builtins
-import os
-from xonsh.dirstack import pushd, popd, DIRSTACK
-import subprocess
+def _do_subprocess( *args)->tuple:
+    """
+    Invoke `args`, outputs and return code
+    Args:
+        *args: sequence of strings, as for `subprocess.check_output`
 
-def _do_subproc(args, msg=''):
-    #Because `subproc_captured_object` fails with error `Workstation Service not started` on a `NET USE dd: \\localhost\share`...
-    co = subprocess.run(args, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    return co
+    Returns:
+        tuple of:
+            stdout:str      - stdout+stderr from subprocess (if it worked), or None
+            stderr:str      - stdout+stderr from subprocess (if it didn't), or None
+            return_code:int - return code from subprocess
+    """
+    try:
+        return  subprocess.check_output( *args, universal_newlines=True, stderr=subprocess.STDOUT) \
+                , None \
+                , 0
+    except subprocess.CalledProcessError as e:
+        return  None, e.output, e.returncode
+
 
 _unc_tempDrives = {}  # drivePart: tempDriveLetter for temp drive letters we create
 
@@ -98,29 +114,34 @@ def unc_pushd( args, stdin=None):
             for dord in range(ord('z'), ord('a'), -1):
                 dpath = chr(dord) + ':'
                 if not os.path.isdir(dpath):                # find unused drive letter starting from z:
-                    co = _do_subproc(['net', 'use', dpath, share], msg='unc_pushd')
-                    if co.returncode != 0:
-                        return co.stdout, co.stderr, co.returncode
+                    co = _do_subprocess(['net', 'use', dpath, share])
+                    if co[2] != 0:
+                        return co
                     else:
                         _unc_tempDrives[dpath] = share
                         return pushd( [os.path.join( dpath, relPath )], stdin)
-def _coalesce( *args):
+def _coalesce( a1, a2):
+    """ return a1 + a2, treating None as ''.  But return None if both a1 and a2 are None."""
     retVal = ''
-    for a in args:
-        if a is not None:
-            retVal += str(a)
+    if a1 is not None:
+        retVal = a1
+    if a2 is not None:
+        retVal += a2
+
     return retVal if retVal != '' else None
 
 def unc_popd( args, stdin=None):
     """Handle popd from a temporary drive letter mapping established by `unc_pushd`
      If current working directory is one of the temporary mappings we created, and if it's not used in the remaining directory stack (which is [PWD] + `DIRSTACK`),
      then unmap the drive letter (after returning from built-in popd with some other directory as PWD).
+
+     Don't muck with popd semantics.  Return code is whatever `dirstack.popd` provides even if unmap operation fails.
+     And *last* line of stdout and stderr are whatever came from popd.
     """
     if not ON_WINDOWS:
         return popd(args, stdin)
     else:
-        co = subprocess.CompletedProcess('',0)
-
+        co = None, None, 0
         env = builtins.__xonsh_env__
         drive, relPath = os.path.splitdrive( env['PWD'].casefold())     ## os.getcwd() uppercases drive letters on Windows?!
 
@@ -132,8 +153,8 @@ def unc_popd( args, stdin=None):
                     drive = None
             if drive is not None:
                 _unc_tempDrives.pop(drive)
-                co = _do_subproc(['net', 'use', drive, '/delete'])
+                co = _do_subprocess(['net', 'use', drive, '/delete'])
 
-        return _coalesce( pdResult[0], co.stdout)\
-            , _coalesce( pdResult[1], co.stderr)\
+        return _coalesce( pdResult[0], co[0])\
+            , _coalesce( pdResult[1], co[1])\
             , pdResult[2]
