@@ -1,6 +1,6 @@
-**Added:** 
+**Added:**
 
-* `vox remove` command can remove multiple environments at once.
+* ``vox remove`` command can remove multiple environments at once.
 
 **Changed:** None
 
