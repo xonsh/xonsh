@@ -3,6 +3,7 @@ from collections import OrderedDict
 
 from xonsh.completers.man import complete_from_man
 from xonsh.completers.vox import complete_vox
+from xonsh.completers.pip import complete_pip
 from xonsh.completers.bash import complete_from_bash
 from xonsh.completers.base import complete_base
 from xonsh.completers.path import complete_path
