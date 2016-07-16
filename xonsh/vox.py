@@ -21,8 +21,8 @@ class Vox:
          "Deactivate current virtual environment"),
         ("vox list (ls)",
          "List all available environments"),
-        ("vox remove (rm, delete, del) <env>",
-         "Remove virtual environment"),
+        ("vox remove (rm, delete, del) <env>, <env2>...",
+         "Remove virtual environments"),
         ("vox help (-h, --help)",
          "Show help"),
     ]
