@@ -96,7 +96,7 @@ def test_show_cmd(xonsh_builtins):
         """Run and evaluate the output of the given show command."""
         stdout.seek(0, io.SEEK_SET)
         stdout.truncate()
-        history._hist_main(hist, hist_args)
+        history.history_main(hist_args)
         stdout.seek(0, io.SEEK_SET)
         hist_lines = stdout.readlines()
         assert len(commands) == len(hist_lines)
@@ -104,7 +104,7 @@ def test_show_cmd(xonsh_builtins):
             expected = format_hist_line(base_idx + idx * step, cmd)
             assert expected == actual
 
-    hist = History(filename=FNAME, here='yup', **HIST_TEST_KWARGS)
+    xonsh_builtins.__xonsh_history__ = hist = History(filename=FNAME, here='yup', **HIST_TEST_KWARGS)
     stdout = io.StringIO()
     saved_stdout = sys.stdout
     sys.stdout = stdout
