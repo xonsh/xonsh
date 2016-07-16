@@ -13,38 +13,37 @@ from xonsh.lazyjson import LazyJSON
 from xonsh.history import History
 from xonsh import history
 
+import pytest
+
 
 HIST_TEST_KWARGS = dict(sessionid='SESSIONID', gc=False)
 
 
-def test_hist_init():
+@pytest.yield_fixture
+def hist():
+    h = History(filename='xonsh-HISTORY-TEST.json', here='yup', **HIST_TEST_KWARGS)
+    yield h
+    os.remove(h.filename)
+
+
+
+def test_hist_init(hist):
     """Test initialization of the shell history."""
-    FNAME = 'xonsh-SESSIONID.json'
-    FNAME += '.init'
-    History(filename=FNAME, here='yup', **HIST_TEST_KWARGS)
-    with LazyJSON(FNAME) as lj:
+    with LazyJSON(hist.filename) as lj:
         obs = lj['here']
     assert 'yup' == obs
-    os.remove(FNAME)
 
 
-def test_hist_append(xonsh_builtins):
+def test_hist_append(hist, xonsh_builtins):
     """Verify appending to the history works."""
-    FNAME = 'xonsh-SESSIONID.json'
-    FNAME += '.append'
-    hist = History(filename=FNAME, here='yup', **HIST_TEST_KWARGS)
     xonsh_builtins.__xonsh_env__['HISTCONTROL'] = set()
     hf = hist.append({'joco': 'still alive'})
     assert hf is None
     assert 'still alive' == hist.buffer[0]['joco']
-    os.remove(FNAME)
 
 
-def test_hist_flush(xonsh_builtins):
+def test_hist_flush(hist, xonsh_builtins):
     """Verify explicit flushing of the history works."""
-    FNAME = 'xonsh-SESSIONID.json'
-    FNAME += '.flush'
-    hist = History(filename=FNAME, here='yup', **HIST_TEST_KWARGS)
     hf = hist.flush()
     assert hf is None
     xonsh_builtins.__xonsh_env__['HISTCONTROL'] = set()
@@ -53,17 +52,12 @@ def test_hist_flush(xonsh_builtins):
     assert hf is not None
     while hf.is_alive():
         pass
-    with LazyJSON(FNAME) as lj:
+    with LazyJSON(hist.filename) as lj:
         obs = lj['cmds'][0]['joco']
     assert 'still alive' == obs
-    os.remove(FNAME)
 
 
-def test_cmd_field(xonsh_builtins):
-    """Test basic history behavior."""
-    FNAME = 'xonsh-SESSIONID.json'
-    FNAME += '.cmdfield'
-    hist = History(filename=FNAME, here='yup', **HIST_TEST_KWARGS)
+def test_cmd_field(hist, xonsh_builtins):
     # in-memory
     xonsh_builtins.__xonsh_env__['HISTCONTROL'] = set()
     hf = hist.append({'rtn': 1})
@@ -79,13 +73,10 @@ def test_cmd_field(xonsh_builtins):
     assert 1 == hist.rtns[0]
     assert 1 == hist.rtns[-1]
     assert None == hist.outs[-1]
-    os.remove(FNAME)
 
 
-def test_show_cmd(xonsh_builtins):
+def test_show_cmd(hist, xonsh_builtins):
     """Verify that CLI history commands work."""
-    FNAME = 'xonsh-SESSIONID.json'
-    FNAME += '.show_cmd'
     cmds = ['ls', 'cat hello kitty', 'abc', 'def', 'touch me', 'grep from me']
 
     def format_hist_line(idx, cmd):
@@ -104,7 +95,7 @@ def test_show_cmd(xonsh_builtins):
             expected = format_hist_line(base_idx + idx * step, cmd)
             assert expected == actual
 
-    xonsh_builtins.__xonsh_history__ = hist = History(filename=FNAME, here='yup', **HIST_TEST_KWARGS)
+    xonsh_builtins.__xonsh_history__ = hist
     stdout = io.StringIO()
     saved_stdout = sys.stdout
     sys.stdout = stdout
@@ -148,13 +139,10 @@ def test_show_cmd(xonsh_builtins):
                            cmds[-4:-2], len(cmds) - 4)
 
     sys.stdout = saved_stdout
-    os.remove(FNAME)
 
-def test_histcontrol(xonsh_builtins):
+
+def test_histcontrol(hist, xonsh_builtins):
     """Test HISTCONTROL=ignoredups,ignoreerr"""
-    FNAME = 'xonsh-SESSIONID.json'
-    FNAME += '.append'
-    hist = History(filename=FNAME, here='yup', **HIST_TEST_KWARGS)
 
     xonsh_builtins.__xonsh_env__['HISTCONTROL'] = 'ignoredups,ignoreerr'
     assert len(hist.buffer) == 0
@@ -208,5 +196,3 @@ def test_histcontrol(xonsh_builtins):
     assert len(hist.buffer) == 4
     assert '/bin/ls' == hist.buffer[-1]['inp']
     assert 0 == hist.buffer[-1]['rtn']
-
-    os.remove(FNAME)
