@@ -321,6 +321,7 @@ class XonshStyle(Style):
             warn('Could not find style {0!r}, using default'.format(value),
                  RuntimeWarning)
             value = 'default'
+            builtins.__xonsh_env__['XONSH_COLOR_STYLE'] = value
         cmap = STYLES[value]
         try:
             self._smap = get_style_by_name(value)().styles.copy()
