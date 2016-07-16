@@ -123,7 +123,9 @@ def expand_braces(s):
                 [prefix + middle + suffix for middle in middles] +
                 suffixes
             )
-    return ' '.join(_split_braces(s))
+    if regex.fullmatch(s):
+        return ' '.join(_split_braces(s))
+    return s
 
 
 def reglob(path, parts=None, i=None):
