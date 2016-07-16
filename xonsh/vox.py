@@ -1,4 +1,3 @@
-"""Python virtual environment manager for xonsh."""
 import os
 import sys
 import venv
@@ -10,6 +9,20 @@ from xonsh.platform import ON_POSIX, ON_WINDOWS, scandir
 
 class Vox:
     """Vox is a virtual environment manager for xonsh."""
+    help_commands = [  # command, explanation
+        ("vox new <env>",
+         "Create new virtual environment in $VIRTUALENV_HOME"),
+        ("vox activate (workon, enter) <env>",
+         "Activate virtual environment"),
+        ("vox deactivate (exit)",
+         "Deactivate current virtual environment"),
+        ("vox list (ls)",
+         "List all available environments"),
+        ("vox remove (rm, delete, del) <env>",
+         "Remove virtual environment"),
+        ("vox help (-h, --help)",
+         "Show help"),
+    ]
 
     def __init__(self):
         """Ensure that $VIRTUALENV_HOME is defined and declare the available vox commands"""
@@ -153,7 +166,8 @@ class Vox:
         for name in names:
             env_path = os.path.join(builtins.__xonsh_env__['VIRTUALENV_HOME'], name)
             if __xonsh_env__.get('VIRTUAL_ENV') == env_path:
-                print('The "%s" environment is currently active. In order to remove it, deactivate it first with "vox deactivate %s".\n' % (name, name),
+                print('The "%s" environment is currently active. In order to remove it, '
+                      'deactivate it first with "vox deactivate %s".\n' % (name, name),
                       file=sys.stderr)
                 return
             shutil.rmtree(env_path)
@@ -169,23 +183,5 @@ class Vox:
     @staticmethod
     def print_commands():
         """Print available vox commands."""
-
-        print("""Available commands:
-    vox new <env>
-        Create new virtual environment in $VIRTUALENV_HOME
-
-    vox activate (workon, enter) <env>
-        Activate virtual environment
-
-    vox deactivate (exit)
-        Deactivate current virtual environment
-
-    vox list (ls)
-        List all available environments
-
-    vox remove (rm, delete, del) <env> <env2> ...
-        Remove virtual environments
-
-    vox help (-h, --help)
-        Show help
-""")
+        commands_text = "\n".join('\n    '.join(c) for c in Vox.help_commands)
+        print("Available commands:\n{}".format(commands_text))
