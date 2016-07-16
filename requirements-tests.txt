@@ -1,5 +1,6 @@
 ply
-pytest
+pytest==2.9.1
+pytest-timeout
 prompt-toolkit
 pygments
 coverage
