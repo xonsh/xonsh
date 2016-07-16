@@ -1552,6 +1552,7 @@ def globpath(s, ignore_case=False, return_empty=False, sort_result=None):
 
 
 def _iglobpath(s, ignore_case=False, sort_result=None):
+    s = builtins.__xonsh_expand_braces__(s)
     s = builtins.__xonsh_expand_path__(s)
     if sort_result is None:
         sort_result = builtins.__xonsh_env__.get('GLOB_SORTED')
