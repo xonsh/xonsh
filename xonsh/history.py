@@ -678,7 +678,9 @@ def _hist_gc(ns, hist):
             continue
 
 
-_HIST_MAIN_ACTIONS = LazyObject(lambda: {
+@lazyobject
+def _HIST_MAIN_ACTIONS():
+    return {
     'show': _hist_show,
     'xonsh': _hist_show,
     'zsh': _hist_show,
@@ -690,11 +692,12 @@ _HIST_MAIN_ACTIONS = LazyObject(lambda: {
     'info': _hist_info,
     'diff': _dh_main_action,
     'gc': _hist_gc,
-    }, globals(), '_HIST_MAIN_ACTIONS')
+    }
 
 
-def _hist_main(hist, args):
-    """This implements the history CLI."""
+def history_main(args=None, stdin=None):
+    """This is the history command entry point."""
+    hist = builtins.__xonsh_history__
     if not args or args[0] in ['-r'] or ensure_int_or_slice(args[0]):
         args.insert(0, 'show')
     elif args[0] not in list(_HIST_MAIN_ACTIONS) + ['-h', '--help']:
@@ -709,8 +712,3 @@ def _hist_main(hist, args):
     if ns.action is None:  # apply default action
         ns = _hist_create_parser().parse_args(['show'] + args)
     _HIST_MAIN_ACTIONS[ns.action](ns, hist)
-
-
-def history_main(args=None, stdin=None):
-    """This is the history command entry point."""
-    _hist_main(builtins.__xonsh_history__, args)  # pylint: disable=no-member
