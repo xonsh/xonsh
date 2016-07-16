@@ -1,5 +1,6 @@
 """Python virtual environment manager for xonsh."""
 import os
+import sys
 import venv
 import shutil
 import builtins
@@ -152,7 +153,8 @@ class Vox:
         for name in names:
             env_path = os.path.join(builtins.__xonsh_env__['VIRTUALENV_HOME'], name)
             if __xonsh_env__.get('VIRTUAL_ENV') == env_path:
-                print('The "%s" environment is currently active. In order to remove it, deactivate it first with "vox deactivate %s".\n' % (name, name))
+                print('The "%s" environment is currently active. In order to remove it, deactivate it first with "vox deactivate %s".\n' % (name, name),
+                      file=sys.stderr)
                 return
             shutil.rmtree(env_path)
             print('Environment "%s" removed.' % name)
