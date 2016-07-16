@@ -1,10 +1,9 @@
 import builtins
+import os
 
 from xonsh.lazyasd import LazyObject
-
 from xonsh.platform import scandir
 from xonsh.vox import Vox
-import os
 
 DEFAULT_ENV_HOME = os.path.expanduser('~/.virtualenvs')
 ALL_COMMANDS = LazyObject(lambda: [c[0].split()[1] for c in Vox.help_commands],
