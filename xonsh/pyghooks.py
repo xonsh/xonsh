@@ -27,6 +27,7 @@ from xonsh.lazyasd import LazyObject, lazyobject, LazyDict
 from xonsh.tools import (ON_WINDOWS, intensify_colors_for_cmd_exe,
                          expand_gray_colors_for_cmd_exe)
 from xonsh.tokenize import SearchPath
+from xonsh.style import PTK_STYLE, Color
 
 class XonshSubprocLexer(BashLexer):
     """Lexer for xonsh subproc mode."""
@@ -93,13 +94,6 @@ XonshSubprocLexer.tokens['root'] = [
 # Colors and Styles
 #
 
-Color = Token.Color  # alias to new color token namespace
-
-
-
-
-
-
 def code_by_name(name, styles):
     """Converts a token name into a pygments-style color code.
 
@@ -144,11 +138,6 @@ def code_by_name(name, styles):
             codes.append(bg.replace('background_', 'bg:'))
     code = ' '.join(codes)
     return code
-
-
-
-
-
 
 class CompoundColorMap(MutableMapping):
     """Looks up color tokes by name, potentailly generating the value

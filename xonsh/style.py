@@ -1,5 +1,5 @@
 import re
-
+import builtins
 
 from xonsh.lazyasd import load_module_in_background
 
@@ -23,6 +23,9 @@ except ImportError:
                                                       Token.Whitespace)
 
 from xonsh.lazyasd import LazyObject
+
+
+Color = Token.Color  # alias to new color token namespace
 
 RE_BACKGROUND = LazyObject(lambda: re.compile('(BG#|BGHEX|BACKGROUND)'),
                            globals(), 'RE_BACKGROUND')

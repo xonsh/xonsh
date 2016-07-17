@@ -19,6 +19,7 @@ from xonsh.ptk.completer import PromptToolkitCompleter
 from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings
 from xonsh.ptk.shortcuts import Prompter
+from xonsh.style import partial_color_tokenize
 
 if HAS_PYGMENTS:
     from pygments.styles import get_all_styles
@@ -26,7 +27,7 @@ if HAS_PYGMENTS:
 else:
     warnings.warn('Pygments is required for syntax highlighting')
     from prompt_toolkit.styles import style_from_dict
-    from xonsh.style import partial_color_tokenize, XONSH_BASE_STYLE
+    from xonsh.style import XONSH_BASE_STYLE
 
 class PromptToolkitShell(BaseShell):
     """The xonsh shell."""
@@ -75,7 +76,8 @@ class PromptToolkitShell(BaseShell):
                     'auto_suggest': auto_suggest,
                     'get_prompt_tokens': get_prompt_tokens,
                     'get_rprompt_tokens': get_rprompt_tokens,
-                    'style': style_from_dict(XONSH_BASE_STYLE),
+#                    'style': style_from_dict(XONSH_BASE_STYLE),
+                    'style': PygmentsStyle(xonsh_style_proxy(self.styler)),
                     'completer': completer,
                     'multiline': multiline,
                     'get_continuation_tokens': self.continuation_tokens,
