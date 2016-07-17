@@ -8,6 +8,6 @@
 
 **Fixed:**
 
-* Unrecognized ``$XONSH_COLOR_SCHEME`` values don't crash terminal.
+* Unrecognized ``$XONSH_COLOR_STYLE`` values don't crash terminal.
 
 **Security:** None
