@@ -71,13 +71,16 @@ class PromptToolkitShell(BaseShell):
         rprompt_tokens = self.rprompt_tokens(None)
         get_rprompt_tokens = lambda cli: rprompt_tokens
         with self.prompter:
+            if HAS_PYGMENTS:
+                styleformat = PygmentsStyle(xonsh_style_proxy(self.styler))
+            else:
+                styleformat = style_from_dict(XONSH_BASE_STYLE)
             prompt_args = {
                     'mouse_support': mouse_support,
                     'auto_suggest': auto_suggest,
                     'get_prompt_tokens': get_prompt_tokens,
                     'get_rprompt_tokens': get_rprompt_tokens,
-#                    'style': style_from_dict(XONSH_BASE_STYLE),
-                    'style': PygmentsStyle(xonsh_style_proxy(self.styler)),
+                    'style': styleformat,
                     'completer': completer,
                     'multiline': multiline,
                     'get_continuation_tokens': self.continuation_tokens,

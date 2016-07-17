@@ -1,4 +1,5 @@
 import re
+import string
 import builtins
 
 from xonsh.lazyasd import load_module_in_background
@@ -213,7 +214,7 @@ def partial_color_tokenize(template):
     of tuples mapping the token to the string which has that color.
     These sub-strings maybe templates themselves.
     """
-    if hasattr(builtins, '__xonsh_shell__'):
+    if hasattr(builtins, '__xonsh_shell__.shell.styler'):
         styles = __xonsh_shell__.shell.styler.styles
     else:
         styles = None
@@ -221,6 +222,7 @@ def partial_color_tokenize(template):
     try:
         toks, color = _partial_color_tokenize_main(template, styles)
     except Exception:
+        print('hi!')
         toks = [(Color.NO_COLOR, template)]
     if styles is not None:
         styles[color]  # ensure color is available
