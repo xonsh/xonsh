@@ -1205,6 +1205,7 @@ By default, the following variables are available for use:
     ``/path/to/xonsh``.
   * ``cwd_base``: The basename of the current working directory, e.g. ``xonsh`` in
     ``/path/to/xonsh``.
+  * ``env_name``: The name of active virtual environment, if any.
   * ``curr_branch``: The name of the current git branch, if any.
   * ``branch_color``: ``{BOLD_GREEN}`` if the current git branch is clean,
     otherwise ``{BOLD_RED}``. This is yellow if the branch color could not be
