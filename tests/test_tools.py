@@ -14,7 +14,7 @@ from xonsh.lexer import Lexer
 from xonsh.tools import (
     EnvPath, always_false, always_true, argvquote,
     bool_or_int_to_str, bool_to_str, check_for_partial_string,
-    dynamic_cwd_tuple_to_str, ensure_int_or_slice, ensure_string,
+    dynamic_cwd_tuple_to_str, ensure_slice, ensure_string,
     env_path_to_str, escape_windows_cmd_string, executables_in,
     expand_case_matching, find_next_break, iglobpath, is_bool, is_bool_or_int,
     is_callable, is_dynamic_cwd_width, is_env_path, is_float, is_int,
@@ -853,22 +853,35 @@ def test_bool_or_int_to_str(inp, exp):
 
 
 @pytest.mark.parametrize('inp, exp', [
-        (42, 42),
+        (42, slice(42, 43)),
         (None, slice(None, None, None)),
-        ('42', 42),
-        ('-42', -42),
+        ('42', slice(42, 43)),
+        ('-42', slice(-42, -41)),
         ('1:2:3', slice(1, 2, 3)),
         ('1::3', slice(1, None, 3)),
         (':', slice(None, None, None)),
         ('1:', slice(1, None, None)),
         ('[1:2:3]', slice(1, 2, 3)),
         ('(1:2:3)', slice(1, 2, 3)),
-        ('r', False),
-        ('r:11', False),
         ])
-def test_ensure_int_or_slice(inp, exp):
-    obs = ensure_int_or_slice(inp)
+def test_ensure_slice(inp, exp):
+    obs = ensure_slice(inp)
     assert exp == obs
+
+
+@pytest.mark.parametrize('inp', [
+    '42.3',
+    '3:asd5:1',
+    'test',
+    '6.53:100:5',
+    '4:-',
+    '2:15-:3',
+    '50:-:666',
+    object(),
+    ])
+def test_ensure_slice_invalid(inp):
+    obs = ensure_slice(inp)
+    assert obs is None
 
 
 @pytest.mark.parametrize('inp, exp', [
