@@ -157,7 +157,7 @@ def pathsearch(func, s, pymode=False):
     if (not callable(func) or
             len(inspect.signature(func).parameters) != 1):
         error = "%r is not a known path search function"
-        raise XonshError(error % searchfunc)
+        raise XonshError(error % func)
     o = func(s)
     no_match = [] if pymode else [s]
     return o if len(o) != 0 else no_match
