@@ -375,7 +375,7 @@ def _hist_create_parser():
                       help='reverses the direction')
     show.add_argument('session', nargs='?', choices=HIST_SESSIONS, default='session',
                       help='Choose a history session, defaults to current session')
-    show.add_argument('slices', nargs='*', default=[],
+    show.add_argument('slices', nargs=argparse.REMAINDER, default=[],
                       help='display history entries or range of entries')
     # 'id' subcommand
     subp.add_parser('id', help='displays the current session id')
@@ -466,18 +466,19 @@ def _hist_show(ns=None, hist=None, start_index=None, end_index=None,
             print("Invalid end time, must be float or datetime.")
     idx = None
     if ns:
-        idx = ensure_slice(ns.n)
-        if idx is False:
-            print("{} is not a valid input.".format(ns.n),
-                  file=sys.stderr)
-            return
-        elif isinstance(idx, int):
-            try:
-                commands = [commands[idx]]
-            except IndexError:
-                err = "Index likely not in range. Only {} commands."
-                print(err.format(len(commands)))
-                return
+        _commands = []
+        for s in ns.slices:
+            s = ensure_slice(s)
+            if s:
+                try:
+                    _commands.extend(commands[s])
+                except IndexError:
+                    err = "Index likely not in range. Only {} commands."
+                    print(err.format(len(commands)), file=sys.stderr)
+                    return
+        else:
+            if _commands:
+                commands = _commands
     else:
         idx = slice(start_index, end_index)
 
