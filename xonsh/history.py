@@ -424,7 +424,7 @@ def _hist_show(ns=None, hist=None, start_index=None, end_index=None,
     can be supplied as a str with the follow options::
 
         session - returns xonsh history from current session
-        all     - returns xonsh history from all sessions
+        xonsh   - returns xonsh history from all sessions
         zsh     - returns all zsh history
         bash    - returns all bash history
     """
@@ -432,8 +432,6 @@ def _hist_show(ns=None, hist=None, start_index=None, end_index=None,
     # __xonsh_history__
     alias = True
     valid_formats = {'session': functools.partial(_curr_session_parser, hist),
-                     'show': functools.partial(_curr_session_parser, hist),
-                     'all': _all_xonsh_parser,
                      'xonsh': _all_xonsh_parser,
                      'zsh': functools.partial(_zsh_hist_parser, location),
                      'bash': functools.partial(_bash_hist_parser, location)}
@@ -441,10 +439,10 @@ def _hist_show(ns=None, hist=None, start_index=None, end_index=None,
         ns = _hist_create_parser().parse_args([ns])
         alias = False
     if not ns:
-        ns = _hist_create_parser().parse_args(['all'])
+        ns = _hist_create_parser().parse_args(['show', 'xonsh'])
         alias = False
     try:
-        commands = valid_formats[ns.action]()
+        commands = valid_formats[ns.session]()
     except KeyError:
         print("{} is not a valid history format".format(ns.action))
         return None
@@ -619,8 +617,7 @@ class History(object):
         Valid options:
             `session` - returns xonsh history from current session
             `show`    - alias of `session`
-            `all`     - returns xonsh history from all sessions
-            `xonsh`   - alias of `all`
+            `xonsh`   - returns xonsh history from all sessions
             `zsh`     - returns all zsh history
             `bash`    - returns all bash history
         """
@@ -653,7 +650,7 @@ def _hist_gc(ns, hist):
 
 @lazyobject
 def HIST_SESSIONS():
-    return ('session', 'all', 'bash', 'zsh')
+    return ('session', 'xonsh', 'bash', 'zsh')
 
 @lazyobject
 def _HIST_MAIN_ACTIONS():
@@ -663,7 +660,6 @@ def _HIST_MAIN_ACTIONS():
     'zsh': _hist_show,
     'bash': _hist_show,
     'session': _hist_show,
-    'all': _hist_show,
     'id': lambda ns, hist: print(hist.sessionid),
     'file': lambda ns, hist: print(hist.filename),
     'info': _hist_info,
