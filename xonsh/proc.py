@@ -24,7 +24,6 @@ from xonsh.tools import (redirect_stdout, redirect_stderr, ON_WINDOWS, ON_LINUX,
 from xonsh.teepty import TeePTY
 from xonsh.lazyasd import LazyObject
 
-
 # force some lazy imports so we don't have errors on non-windows platforms
 _winapi = LazyObject(lambda: importlib.import_module('_winapi'),
                      globals(), '_winapi')
@@ -58,6 +57,7 @@ class ProcProxy(threading.Thread):
     """
     Class representing a function to be run as a subprocess-mode command.
     """
+
     def __init__(self, f, args,
                  stdin=None,
                  stdout=None,
@@ -330,6 +330,7 @@ class ProcProxy(threading.Thread):
 def wrap_simple_command(f, args, stdin, stdout, stderr):
     """Decorator for creating 'simple' callable aliases."""
     bgable = getattr(f, '__xonsh_backgroundable__', True)
+
     @functools.wraps(f)
     def wrapped_simple_command(args, stdin, stdout, stderr):
         try:
@@ -356,6 +357,7 @@ def wrap_simple_command(f, args, stdin, stdout, stderr):
         except Exception:
             print_exception()
             return 1  # returncode for failure
+
     return wrapped_simple_command
 
 
@@ -371,6 +373,7 @@ class SimpleProcProxy(ProcProxy):
                  universal_newlines=False):
         f = wrap_simple_command(f, args, stdin, stdout, stderr)
         super().__init__(f, args, stdin, stdout, stderr, universal_newlines)
+
 
 #
 # Foreground Process Proxies
@@ -437,6 +440,7 @@ def foreground(f):
     f.__xonsh_backgroundable__ = False
     return f
 
+
 #
 # Pseudo-terminal Proxies
 #
@@ -444,7 +448,6 @@ def foreground(f):
 
 @fallback(ON_LINUX, subprocess.Popen)
 class TeePTYProc(object):
-
     def __init__(self, args, stdin=None, stdout=None, stderr=None, preexec_fn=None,
                  env=None, universal_newlines=False):
         """Popen replacement for running commands in teed psuedo-terminal. This
@@ -457,8 +460,8 @@ class TeePTYProc(object):
         self.args = args
         self.universal_newlines = universal_newlines
         xenv = builtins.__xonsh_env__ if hasattr(builtins, '__xonsh_env__') \
-                                      else {'XONSH_ENCODING': 'utf-8',
-                                            'XONSH_ENCODING_ERRORS': 'strict'}
+            else {'XONSH_ENCODING': 'utf-8',
+                  'XONSH_ENCODING_ERRORS': 'strict'}
 
         if not os.access(args[0], os.F_OK):
             raise FileNotFoundError('command {0!r} not found'.format(args[0]))
@@ -536,9 +539,9 @@ def _wcode_to_popen(code):
 
 
 _CCTuple = collections.namedtuple("_CCTuple", ["stdin", "stdout", "stderr",
-                "pid", "returncode", "args", "alias", "stdin_redirect",
-                "stdout_redirect", "stderr_redirect", "timestamp",
-                "executed_cmd"])
+                                               "pid", "returncode", "args", "alias", "stdin_redirect",
+                                               "stdout_redirect", "stderr_redirect", "timestamp",
+                                               "executed_cmd"])
 
 
 class CompletedCommand(_CCTuple):
@@ -560,7 +563,6 @@ class CompletedCommand(_CCTuple):
             pre = pre[:-1] if pre and pre[-1] == '\r' else pre
             yield pre
             pre = post
-
 
     def itercheck(self):
         yield from self
@@ -589,6 +591,7 @@ class CompletedCommand(_CCTuple):
     def rtn(self):
         """Alias to return code."""
         return self.returncode
+
 
 CompletedCommand.__new__.__defaults__ = (None,) * len(CompletedCommand._fields)
 

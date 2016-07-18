@@ -31,8 +31,8 @@ from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_DARWIN
 pygments = LazyObject(lambda: importlib.import_module('pygments'),
                       globals(), 'pygments')
 terminal256 = LazyObject(lambda: importlib.import_module(
-                                    'pygments.formatters.terminal256'),
-                      globals(), 'terminal')
+    'pygments.formatters.terminal256'),
+                         globals(), 'terminal')
 pyghooks = LazyObject(lambda: importlib.import_module('xonsh.pyghooks'),
                       globals(), 'pyghooks')
 
@@ -95,16 +95,16 @@ def setup_readline():
     # as discussed at http://stackoverflow.com/a/7116997
     if uses_libedit and ON_DARWIN:
         readline.parse_and_bind("bind ^I rl_complete")
-        print('\n'.join(['', "*"*78,
-            "libedit detected - readline will not be well behaved, including but not limited to:",
-            "   * crashes on tab completion",
-            "   * incorrect history navigation",
-            "   * corrupting long-lines",
-            "   * failure to wrap or indent lines properly",
-            "",
-            "It is highly recommended that you install gnureadline, which is installable with:",
-            "     pip install gnureadline",
-            "*"*78]), file=sys.stderr)
+        print('\n'.join(['', "*" * 78,
+                         "libedit detected - readline will not be well behaved, including but not limited to:",
+                         "   * crashes on tab completion",
+                         "   * incorrect history navigation",
+                         "   * corrupting long-lines",
+                         "   * failure to wrap or indent lines properly",
+                         "",
+                         "It is highly recommended that you install gnureadline, which is installable with:",
+                         "     pip install gnureadline",
+                         "*" * 78]), file=sys.stderr)
     else:
         readline.parse_and_bind("tab: complete")
     # try to load custom user settings
@@ -203,9 +203,11 @@ def rl_variable_value(variable):
 
 def _insert_text_func(s, readline):
     """Creates a function to insert text via readline."""
+
     def inserter():
         readline.insert_text(s)
         readline.redisplay()
+
     return inserter
 
 
@@ -335,7 +337,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             if intro is not None:
                 self.intro = intro
             if self.intro:
-                self.stdout.write(str(self.intro)+"\n")
+                self.stdout.write(str(self.intro) + "\n")
             stop = None
             while not stop:
                 line = None
@@ -345,7 +347,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                     exec_now = line.endswith('\n')
                 if self.use_rawinput and not exec_now:
                     inserter = None if line is None \
-                                    else _insert_text_func(line, readline)
+                        else _insert_text_func(line, readline)
                     if inserter is not None:
                         readline.set_pre_input_hook(inserter)
                     try:
@@ -404,7 +406,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             # This is needed to support some system where line-wrapping doesn't
             # work. This is a bug in upstream Python, or possibly readline.
             RL_LIB.rl_reset_screen_size()
-        #return super().prompt
+        # return super().prompt
         if self.need_more_lines:
             if self.mlprompt is None:
                 try:
@@ -432,7 +434,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         """
         hide = hide if self._force_hide is None else self._force_hide
         return ansi_partial_color_format(string, hide=hide,
-                    style=builtins.__xonsh_env__.get('XONSH_COLOR_STYLE'))
+                                         style=builtins.__xonsh_env__.get('XONSH_COLOR_STYLE'))
 
     def print_color(self, string, hide=False, **kwargs):
         if isinstance(string, str):
@@ -452,12 +454,11 @@ class ReadlineShell(BaseShell, cmd.Cmd):
 
     def color_style(self):
         """Returns the current color map."""
-        style = style=builtins.__xonsh_env__.get('XONSH_COLOR_STYLE')
+        style = style = builtins.__xonsh_env__.get('XONSH_COLOR_STYLE')
         return ansi_color_style(style=style)
 
 
 class ReadlineHistoryAdder(threading.Thread):
-
     def __init__(self, wait_for_gc=True, *args, **kwargs):
         """Thread responsible for adding inputs from history to the current readline
         instance. May wait for the history garbage collector to finish.

@@ -52,8 +52,7 @@ class Replayer(object):
         new_env = self._merge_envs(merge_envs, re_env)
         new_hist = History(env=new_env.detype(), locked=True, ts=[time.time(), None],
                            gc=False, filename=target)
-        with swap(builtins, '__xonsh_env__', new_env), \
-             swap(builtins, '__xonsh_history__', new_hist):
+        with swap(builtins, '__xonsh_env__', new_env), swap(builtins, '__xonsh_history__', new_hist):
             for cmd in self._lj['cmds']:
                 inp = cmd['inp']
                 shell.default(inp)
