@@ -10,9 +10,8 @@ import contextlib
 
 from xonsh import __version__
 from xonsh.lazyasd import LazyObject, lazyobject
-from xonsh.environ import DEFAULT_VALUES
 from xonsh.shell import Shell
-from xonsh.pretty import pprint, pretty
+from xonsh.pretty import pretty
 from xonsh.proc import HiddenCompletedCommand
 from xonsh.jobs import ignore_sigtstp
 from xonsh.tools import setup_win_unicode_console, print_color
@@ -195,8 +194,7 @@ def premain(argv=None):
         args.mode = XonshMode.interactive
         shell_kwargs['completer'] = True
         shell_kwargs['login'] = True
-    from xonsh import imphooks
-    shell = builtins.__xonsh_shell__ = Shell(**shell_kwargs)
+    builtins.__xonsh_shell__ = Shell(**shell_kwargs)
     env = builtins.__xonsh_env__
     env['XONSH_LOGIN'] = shell_kwargs['login']
     if args.defines is not None:

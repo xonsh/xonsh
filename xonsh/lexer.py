@@ -11,7 +11,7 @@ try:
 except ImportError:
     from xonsh.ply.lex import LexToken
 
-from xonsh.lazyasd import LazyObject, lazyobject
+from xonsh.lazyasd import lazyobject
 from xonsh.platform import PYTHON_VERSION_INFO
 from xonsh.tokenize import (OP, IOREDIRECT, STRING, DOLLARNAME, NUMBER,
     SEARCHPATH, NEWLINE, INDENT, DEDENT, NL, COMMENT, ENCODING,

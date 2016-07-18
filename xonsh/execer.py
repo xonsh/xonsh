@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Implements the xonsh executer."""
-import re
 import sys
 import types
 import inspect

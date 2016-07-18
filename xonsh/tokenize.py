@@ -487,7 +487,7 @@ def detect_encoding(readline):
             return None
         encoding = _get_normal_name(match.group(1))
         try:
-            codec = codecs.lookup(encoding)
+            codecs.lookup(encoding)
         except LookupError:
             # This behaviour mimics the Python interpreter
             if filename is None:
@@ -580,17 +580,17 @@ def _tokenize(readline, encoding):
 
         if contstr:                            # continued string
             if not line:
-                raise TokenError("EOF in multi-line string", strstart)
-            endmatch = endprog.match(line)
+                raise TokenError("EOF in multi-line string", strstart)  # noqa: F821
+            endmatch = endprog.match(line)  # noqa: F821
             if endmatch:
                 pos = end = endmatch.end(0)
                 yield TokenInfo(STRING, contstr + line[:end],
-                       strstart, (lnum, end), contline + line)
+                       strstart, (lnum, end), contline + line)  # noqa: F821
                 contstr, needcont = '', 0
                 contline = None
             elif needcont and line[-2:] != '\\\n' and line[-3:] != '\\\r\n':
                 yield TokenInfo(ERRORTOKEN, contstr + line,
-                           strstart, (lnum, len(line)), contline)
+                           strstart, (lnum, len(line)), contline)  # noqa: F821
                 contstr = ''
                 contline = None
                 continue
@@ -705,7 +705,7 @@ def _tokenize(readline, encoding):
                     token[:2] in single_quoted or \
                     token[:3] in single_quoted:
                     if token[-1] == '\n':                  # continued string
-                        strstart = (lnum, start)
+                        strstart = (lnum, start)  # noqa: F821
                         endprog = _compile(endpats[initial] or
                                            endpats[token[1]] or
                                            endpats[token[2]])

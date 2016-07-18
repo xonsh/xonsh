@@ -1,5 +1,5 @@
 """Base completer for xonsh."""
-from collections import Sequence
+from collections import Sequence  # noqa: F401
 
 from xonsh.completers.path import complete_path
 from xonsh.completers.python import complete_python

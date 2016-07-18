@@ -6,8 +6,7 @@ import importlib
 
 from collections.abc import Iterable
 
-from xonsh.tools import (subexpr_from_unbalanced, get_sep,
-                         check_for_partial_string, RE_STRING_START)
+from xonsh.tools import subexpr_from_unbalanced
 from xonsh.completers.tools import get_filter_function
 
 RE_ATTR = re.compile(r'([^\s\(\)]+(\.[^\s\(\)]+)*)\.(\w*)$')

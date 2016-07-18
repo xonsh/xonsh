@@ -6,8 +6,6 @@ import builtins
 from prompt_toolkit.layout.dimension import LayoutDimension
 from prompt_toolkit.completion import Completer, Completion
 
-from xonsh.platform import ptk_version
-
 
 class PromptToolkitCompleter(Completer):
     """Simple prompt_toolkit Completer object.

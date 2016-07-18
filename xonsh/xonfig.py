@@ -450,8 +450,8 @@ def _xonfig_create_parser():
     sty = subp.add_parser('styles', help='prints available xonsh color styles')
     sty.add_argument('--json', action='store_true', default=False,
                      help='reports results as json')
-    clrs = subp.add_parser('colors', help=('displays the color palette for '
-                                           'the current xonsh color style'))
+    subp.add_parser('colors', help=('displays the color palette for '
+                                    'the current xonsh color style'))
     return p
 
 

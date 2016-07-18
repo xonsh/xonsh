@@ -26,14 +26,12 @@ import glob
 import os
 import pathlib
 import re
-import string
 import subprocess
 import sys
 import threading
 import traceback
 import warnings
 import contextlib
-import subprocess
 
 # adding further imports from xonsh modules is discouraged to avoid circular
 # dependencies

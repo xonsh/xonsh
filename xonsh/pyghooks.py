@@ -4,7 +4,6 @@ import os
 import re
 import string
 import builtins
-import importlib
 from warnings import warn
 from collections import ChainMap
 from collections.abc import MutableMapping
@@ -23,7 +22,7 @@ from pygments.style import Style
 from pygments.styles import get_style_by_name
 import pygments.util
 
-from xonsh.lazyasd import LazyObject, lazyobject, LazyDict
+from xonsh.lazyasd import LazyObject, LazyDict
 from xonsh.tools import (ON_WINDOWS, intensify_colors_for_cmd_exe,
                          expand_gray_colors_for_cmd_exe)
 from xonsh.tokenize import SearchPath
@@ -200,7 +199,7 @@ def partial_color_tokenize(template):
     These sub-strings maybe templates themselves.
     """
     if hasattr(builtins, '__xonsh_shell__'):
-        styles = __xonsh_shell__.shell.styler.styles
+        styles = __xonsh_shell__.shell.styler.styles  # noqa: F821
     else:
         styles = None
     color = Color.NO_COLOR

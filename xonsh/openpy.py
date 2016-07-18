@@ -13,7 +13,6 @@ This file was forked from the IPython project:
 * Copyright (c) 2001, Nathaniel Gray <n8gray@caltech.edu>
 """
 import io
-import os
 import re
 import tokenize
 

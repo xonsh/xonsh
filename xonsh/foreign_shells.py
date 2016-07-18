@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Tools to help interface with foreign shells, such as Bash."""
 import os
-import sys
 import re
 import json
 import shlex
@@ -11,6 +10,8 @@ import subprocess
 import warnings
 import functools
 import collections.abc as abc
+from collections import Sequence
+
 
 from xonsh.lazyasd import LazyObject
 from xonsh.tools import to_bool, ensure_string

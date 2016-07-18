@@ -128,7 +128,7 @@ def setup_readline():
 def teardown_readline():
     """Tears down up the readline module, if available."""
     try:
-        import readline
+        import readline  # noqa: F401
     except (ImportError, TypeError):
         return
 
@@ -480,7 +480,7 @@ class ReadlineHistoryAdder(threading.Thread):
         for _, _, f in files:
             try:
                 lj = LazyJSON(f, reopen=False)
-                for cmd in lj['cmds']:
+                for cmd in lj['cmds']:  # noqa: F402
                     inp = cmd['inp'].splitlines()
                     for line in inp:
                         if line == 'EOF':

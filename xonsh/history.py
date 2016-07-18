@@ -115,7 +115,7 @@ class HistoryGC(threading.Thread):
         This is sorted by the last closed time. Returns a list of (timestamp,
         file) tuples.
         """
-        _ = self  # this could be a function but is intimate to this class
+        _ = self  # noqa: F841 this could be a function but is intimate to this class
         # pylint: disable=no-member
         xdd = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
         xdd = expanduser_abs_path(xdd)

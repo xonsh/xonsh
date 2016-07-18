@@ -117,7 +117,7 @@ class CommandsCache(abc.Mapping):
     def locate_binary(self, name):
         """Locates an executable on the file system using the cache."""
         # make sure the cache is up to date by accessing the property
-        _ = self.all_commands
+        _ = self.all_commands  # noqa: F841
         return self.lazy_locate_binary(name)
 
     def lazy_locate_binary(self, name):
