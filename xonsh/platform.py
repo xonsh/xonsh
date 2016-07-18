@@ -131,7 +131,7 @@ def githash():
     install_base = os.path.dirname(__file__)
     try:
         with open('{}/dev.githash'.format(install_base), 'r') as f:
-            sha = f.read().strip()
+            sha = f.read().strip(' g\n')
         if not sha:
             sha = None
     except FileNotFoundError:
