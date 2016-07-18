@@ -11,7 +11,7 @@ import sys
 import shlex
 
 from xonsh.lazyjson import LazyJSON
-from xonsh.history import History, _hist_create_parser
+from xonsh.history import History, _hist_create_parser, parse_args
 from xonsh import history
 
 import pytest
@@ -187,6 +187,13 @@ def test_histcontrol(hist, xonsh_builtins):
     assert 0 == hist.buffer[-1]['rtn']
 
 
+@pytest.mark.parametrize('args', [ '-h', '--help', 'show -h', 'show --help'])
+def test_parse_args_help(args, capsys):
+    with pytest.raises(SystemExit):
+        args = parse_args(shlex.split(args))
+    assert 'show this help message and exit' in capsys.readouterr()[0]
+
+
 @pytest.mark.parametrize('args, exp', [
     ('', ('show', 'session', [])),
     ('show', ('show', 'session', [])),
@@ -196,9 +203,7 @@ def test_histcontrol(hist, xonsh_builtins):
     ('show zsh 3 5:6 16 9:3', ('show', 'zsh', ['3', '5:6', '16', '9:3'])),
     ])
 def test_parser_show(args, exp):
-    parser = _hist_create_parser()
-    args = shlex.split(args)
-    args = parser.parse_args(args)
+    args = parse_args(shlex.split(args))
     action, session, slices = exp
     assert args.action == action
     assert args.session == session

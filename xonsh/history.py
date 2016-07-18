@@ -679,6 +679,10 @@ def _hist_gc(ns, hist):
 
 
 @lazyobject
+def HIST_SESSIONS():
+    return ('session', 'all', 'bash', 'zsh')
+
+@lazyobject
 def _HIST_MAIN_ACTIONS():
     return {
     'show': _hist_show,
@@ -693,6 +697,20 @@ def _HIST_MAIN_ACTIONS():
     'diff': _dh_main_action,
     'gc': _hist_gc,
     }
+
+
+def parse_args(args):
+    parser = _hist_create_parser()
+    if not args:
+        args = ['show']
+    elif args[0] not in ['-h', '--help'] and args[0] not in _HIST_MAIN_ACTIONS:
+        args.insert(0, 'show')
+    if (args[0] == 'show'
+        and len(args) > 1
+        and args[1] not in ['-h', '--help', '-r']
+        and args[1] not in HIST_SESSIONS):
+            args.insert(1, 'session')
+    return parser.parse_args(args)
 
 
 def history_main(args=None, stdin=None):
