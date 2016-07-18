@@ -373,38 +373,10 @@ def _hist_create_parser():
     show.add_argument('-r', dest='reverse', default=False,
                       action='store_true',
                       help='reverses the direction')
-    show.add_argument('n', nargs='?', default=None,
-                      help='display n\'th history entry if n is a simple '
-                           'int, or range of entries if it is Python '
-                           'slice notation')
-    # all action
-    xonsh = subp.add_parser('xonsh', aliases=['all'],
-                            help='displays history from all sessions')
-    xonsh.add_argument('-r', dest='reverse', default=False,
-                       action='store_true',
-                       help='reverses the direction')
-    xonsh.add_argument('n', nargs='?', default=None,
-                       help='display n\'th history entry if n is a '
-                            'simple int, or range of entries if it '
-                            'is Python slice notation')
-    # zsh action
-    zsh = subp.add_parser('zsh', help='displays history from zsh sessions')
-    zsh.add_argument('-r', dest='reverse', default=False,
-                     action='store_true',
-                     help='reverses the direction')
-    zsh.add_argument('n', nargs='?', default=None,
-                     help='display n\'th history entry if n is a '
-                     'simple int, or range of entries if it '
-                     'is Python slice notation')
-    # bash action
-    bash = subp.add_parser('bash', help='displays history from bash sessions')
-    bash.add_argument('-r', dest='reverse', default=False,
-                      action='store_true',
-                      help='reverses the direction')
-    bash.add_argument('n', nargs='?', default=None,
-                      help='display n\'th history entry if n is a '
-                      'simple int, or range of entries if it '
-                      'is Python slice notation')
+    show.add_argument('session', nargs='?', choices=HIST_SESSIONS, default='session',
+                      help='Choose a history session, defaults to current session')
+    show.add_argument('slices', nargs='*', default=[],
+                      help='display history entries or range of entries')
     # 'id' subcommand
     subp.add_parser('id', help='displays the current session id')
     # 'file' subcommand
@@ -716,17 +688,5 @@ def parse_args(args):
 def history_main(args=None, stdin=None):
     """This is the history command entry point."""
     hist = builtins.__xonsh_history__
-    if not args or args[0] in ['-r'] or ensure_int_or_slice(args[0]):
-        args.insert(0, 'show')
-    elif args[0] not in list(_HIST_MAIN_ACTIONS) + ['-h', '--help']:
-        print("{} is not a valid input.".format(args[0]),
-              file=sys.stderr)
-        return
-    if (args[0] in ['show', 'xonsh', 'zsh', 'bash', 'session', 'all'] and
-        len(args) > 1 and args[-1].startswith('-') and
-            args[-1][1].isdigit()):
-        args.insert(-1, '--')  # ensure parsing stops before a negative int
-    ns = _hist_create_parser().parse_args(args)
-    if ns.action is None:  # apply default action
-        ns = _hist_create_parser().parse_args(['show'] + args)
+    ns = parse_args(args)
     _HIST_MAIN_ACTIONS[ns.action](ns, hist)
