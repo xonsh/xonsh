@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 """Hooks for pygments syntax highlighting."""
 import os
-import re
-import string
 import builtins
-import importlib
 from warnings import warn
 from collections import ChainMap
 from collections.abc import MutableMapping
@@ -17,22 +14,16 @@ replacements={'pygments.plugin': 'pkg_resources'})
 from pygments.lexer import inherit, bygroups, using, this
 from pygments.lexers.shell import BashLexer
 from pygments.lexers.agile import PythonLexer
-from pygments.token import (Keyword, Name, Comment, String, Error, Number,
-                            Operator, Generic, Whitespace, Token)
+from pygments.token import Keyword, Name, String, Generic, Token
 from pygments.style import Style
 from pygments.styles import get_style_by_name
 import pygments.util
 
-from xonsh.lazyasd import LazyObject, lazyobject, LazyDict
+from xonsh.lazyasd import LazyObject, LazyDict
 from xonsh.tools import (ON_WINDOWS, intensify_colors_for_cmd_exe,
                          expand_gray_colors_for_cmd_exe)
 from xonsh.tokenize import SearchPath
-from xonsh.style import PTK_STYLE, Color
-
-class XonshSubprocLexer(BashLexer):
-    """Lexer for xonsh subproc mode."""
-    name = 'Xonsh subprocess lexer'
-    tokens = {'root': [(SearchPath, String.Backtick), inherit, ]}
+from xonsh.style import PTK_STYLE, XONSH_BASE_STYLE, Color
 
 
 ROOT_TOKENS = [(r'\?', Keyword),
@@ -47,15 +38,19 @@ ROOT_TOKENS = [(r'\?', Keyword),
 PYMODE_TOKENS = [(r'(.+)(\))', bygroups(using(this), Keyword), '#pop'),
                  (r'(.+)(\})', bygroups(using(this), Keyword), '#pop'), ]
 
-SUBPROC_TOKENS = [
+SUBPROC_TOKENS = LazyObject(lambda: list([
     (r'(.+)(\))', bygroups(using(XonshSubprocLexer), Keyword), '#pop'),
-    (r'(.+)(\])', bygroups(using(XonshSubprocLexer), Keyword), '#pop'),
-]
+    (r'(.+)(\])', bygroups(using(XonshSubprocLexer), Keyword), '#pop')]), globals(), 'SUBPROC_TOKENS')
+
+
+class XonshSubprocLexer(BashLexer):
+    """Lexer for xonsh subproc mode."""
+    name = 'Xonsh subprocess lexer'
+    tokens = {'root': [(SearchPath, String.Backtick), inherit, ]}
 
 
 class XonshLexer(PythonLexer):
     """Xonsh console lexer for pygments."""
-
     name = 'Xonsh lexer'
     aliases = ['xonsh', 'xsh']
     filenames = ['*.xsh', '*xonshrc']
@@ -139,8 +134,9 @@ def code_by_name(name, styles):
     code = ' '.join(codes)
     return code
 
+
 class CompoundColorMap(MutableMapping):
-    """Looks up color tokes by name, potentailly generating the value
+    """Looks up color tokens by name, potentially generating the value
     from the lookup.
     """
 
@@ -252,9 +248,6 @@ def xonsh_style_proxy(styler):
             return cls.target
 
     return XonshStyleProxy
-
-
-
 
 
 def _expand_style(cmap):
