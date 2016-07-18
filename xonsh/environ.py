@@ -984,7 +984,7 @@ def current_branch(pad=NotImplemented):
     if isinstance(branch, subprocess.TimeoutExpired):
         branch = '<branch-timeout>'
         _first_branch_timeout_message()
-    return branch
+    return branch or None
 
 
 def git_dirty_working_directory(cwd=None, include_untracked=False):

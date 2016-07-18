@@ -951,46 +951,42 @@ def test_argvquote(st, esc):
     assert esc == obs
 
 
-_leaders = ('', 'not empty')
-_r = ('r', '')
-_b = ('b', '')
-_u = ('u', '')
-_chars = set(i+j+k for i in _r for j in _b for k in _u)
-_chars |= set(i+j+k for i in _r for j in _u for k in _b)
-_chars |= set(i+j+k for i in _b for j in _u for k in _r)
-_chars |= set(i+j+k for i in _b for j in _r for k in _u)
-_chars |= set(i+j+k for i in _u for j in _r for k in _b)
-_chars |= set(i+j+k for i in _u for j in _b for k in _r)
-_squote = ('"""', '"', "'''", "'")
-_startend = {c+s: s for c in _chars for s in _squote}
-
-inners = "this is a string"
+@pytest.mark.parametrize('inp', ['no string here', ''])
+def test_partial_string_none(inp):
+    assert check_for_partial_string(inp) == (None, None, None)
 
 
-def test_partial_string():
-    # single string at start
-    assert check_for_partial_string('no strings here') == (None, None, None)
-    assert check_for_partial_string('') == (None, None, None)
-    for s, e in _startend.items():
-        _test = s + inners + e
-        for l in _leaders:
-            for f in _leaders:
-                # single string
-                _res = check_for_partial_string(l + _test + f)
-                assert _res == (len(l), len(l) + len(_test), s)
-                # single partial
-                _res = check_for_partial_string(l + f + s + inners)
-                assert _res == (len(l+f), None, s)
-                for s2, e2 in _startend.items():
-                    _test2 = s2 + inners + e2
-                    for l2 in _leaders:
-                        for f2 in _leaders:
-                            # two strings
-                            _res = check_for_partial_string(l + _test + f + l2 + _test2 + f2)
-                            assert _res == (len(l+_test+f+l2), len(l+_test+f+l2+_test2), s2)
-                            # one string, one partial
-                            _res = check_for_partial_string(l + _test + f + l2 + s2 + inners)
-                            assert _res == (len(l+_test+f+l2), None, s2)
+@pytest.mark.parametrize('leaders', [
+    (('', 0), ('not empty', 9)),
+    (('not empty', 9), ('', 0))
+])
+@pytest.mark.parametrize('prefix', ['b', 'rb', 'r' ])
+@pytest.mark.parametrize('quote', ['"', '"""'])
+def test_partial_string(leaders, prefix, quote):
+    (l, l_len), (f, f_len) = leaders
+    s = prefix + quote
+    t = s + 'test string' + quote
+    t_len = len(t)
+    # single string
+    test_string = l + t + f
+    obs = check_for_partial_string(test_string)
+    exp = l_len, l_len + t_len, s
+    assert obs == exp
+    # single partial
+    test_string = l + f + s + 'test string'
+    obs = check_for_partial_string(test_string)
+    exp = l_len + f_len, None, s
+    assert obs == exp
+    # two strings
+    test_string = l + t + f + l + t + f
+    obs = check_for_partial_string(test_string)
+    exp = (l_len + t_len + f_len + l_len), (l_len + t_len + f_len + l_len + t_len), s
+    assert obs == exp
+    # one string, one partial
+    test_string = l + t + f + l + s + 'test string'
+    obs = check_for_partial_string(test_string)
+    exp = l_len + t_len + f_len + l_len , None, s
+    assert obs == exp
 
 
 def test_executables_in(xonsh_builtins):
