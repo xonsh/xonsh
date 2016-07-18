@@ -226,7 +226,7 @@ class BaseShell(object):
 
     def settitle(self):
         """Sets terminal title."""
-        _ = self
+        _ = self  # noqa: F841
         env = builtins.__xonsh_env__  # pylint: disable=no-member
         term = env.get('TERM', None)
         # Shells running in emacs sets TERM to "dumb" or "eterm-color".
@@ -266,7 +266,7 @@ class BaseShell(object):
 
     def _append_history(self, tee_out=None, **info):
         """Append information about the command to the history."""
-        _ = self
+        _ = self  # noqa: F841
         hist = builtins.__xonsh_history__  # pylint: disable=no-member
         info['rtn'] = hist.last_cmd_rtn
         tee_out = tee_out or None
