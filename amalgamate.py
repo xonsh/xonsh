@@ -6,7 +6,7 @@ import pprint
 from itertools import repeat
 from collections import namedtuple
 from collections.abc import Mapping
-from ast import parse, walk, literal_eval, Import, ImportFrom
+from ast import parse, walk, Import, ImportFrom
 
 ModNode = namedtuple('ModNode', ['name', 'pkgdeps', 'extdeps'])
 ModNode.__doc__ = """Module node for dependency graph.
@@ -189,7 +189,6 @@ def format_lazy_import(names):
     lines = ''
     for _, name, asname in names:
         pkg, _, _ = name.partition('.')
-        target = asname or pkg
         if asname is None:
             line = '{pkg} = _LazyModule.load({pkg!r}, {mod!r})\n'
         else:
