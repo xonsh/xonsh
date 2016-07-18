@@ -123,7 +123,7 @@ def dirty_version():
         return False
     replace_version(base, N)
     with open('xonsh/dev.githash', 'w') as f:
-        f.write(sha)
+        f.write(sha.strip('g'))
     print('wrote git version: ' + sha, file=sys.stderr)
     return True
 
