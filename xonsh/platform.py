@@ -245,6 +245,7 @@ def windows_bash_command():
 # Environment variables defaults
 #
 
+
 @lazyobject
 def BASH_COMPLETIONS_DEFAULT():
     """A possibly empty tuple with default paths to Bash completions known for
@@ -263,11 +264,11 @@ def BASH_COMPLETIONS_DEFAULT():
                '/opt/local/etc/profile.d/bash_completion.sh')
     elif ON_WINDOWS and git_for_windows_path():
         bcd = (os.path.join(git_for_windows_path(),
-                    'usr\\share\\bash-completion'),
+                            'usr\\share\\bash-completion'),
                os.path.join(git_for_windows_path(),
-                    'usr\\share\\bash-completion\\completions'),
+                            'usr\\share\\bash-completion\\completions'),
                os.path.join(git_for_windows_path(),
-                     'mingw64\\share\\git\\completion\\git-completion.bash'))
+                            'mingw64\\share\\git\\completion\\git-completion.bash'))
     else:
         bcd = ()
     return bcd
@@ -289,7 +290,7 @@ def PATH_DEFAULT():
     elif ON_WINDOWS:
         import winreg
         key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
-                r'SYSTEM\CurrentControlSet\Control\Session Manager\Environment')
+                             r'SYSTEM\CurrentControlSet\Control\Session Manager\Environment')
         pd = tuple(winreg.QueryValueEx(key, 'Path')[0].split(os.pathsep))
     else:
         pd = ()

@@ -441,7 +441,7 @@ def _hist_create_parser():
 
 
 def _hist_show(ns=None, hist=None, start_index=None, end_index=None,
-          start_time=None, end_time=None, location=None):
+               start_time=None, end_time=None, location=None):
     """Show the requested portion of shell history.
     Accepts multiple history sources (xonsh, bash, zsh)
 

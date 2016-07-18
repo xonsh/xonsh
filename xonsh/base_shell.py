@@ -7,7 +7,7 @@ import time
 import builtins
 
 from xonsh.tools import (XonshError, escape_windows_cmd_string, print_exception,
-    DefaultNotGiven)
+                         DefaultNotGiven)
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.codecache import (should_use_cache, code_cache_name,
                              code_cache_check, get_cache_filename,
@@ -34,7 +34,7 @@ class _TeeOut(object):
 
     def write(self, data):
         """Writes data to the original stdout and the buffer."""
-        #data = data.replace('\001', '').replace('\002', '')
+        # data = data.replace('\001', '').replace('\002', '')
         self.stdout.write(data)
         self.buffer.write(data)
 
@@ -66,7 +66,7 @@ class _TeeErr(object):
 
     def write(self, data):
         """Writes data to the original stderr and the buffer."""
-        #data = data.replace('\001', '').replace('\002', '')
+        # data = data.replace('\001', '').replace('\002', '')
         self.stderr.write(data)
         self.buffer.write(data)
 

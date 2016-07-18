@@ -49,6 +49,7 @@ class SourceCache(Mapping):
 
 SOURCES = SourceCache()
 
+
 def make_node(name, pkg, allowed):
     """Makes a node by parsing a file and traversing its AST."""
     raw = SOURCES[pkg, name]
@@ -161,6 +162,7 @@ class _LazyModule(_ModuleType):
 
 """
 
+
 def get_lineno(node, default=0):
     """Gets the lineno of a node or returns the default."""
     return getattr(node, 'lineno', default)
@@ -236,7 +238,7 @@ def rewrite_imports(name, pkg, order, imps):
                     imps.add(imp)
                     keep.append(imp)
             if len(keep) == 0:
-                s = ', '.join(n.name for n in  a.names)
+                s = ', '.join(n.name for n in a.names)
                 s = '# amalgamated ' + s + '\n'
             else:
                 s = format_lazy_import(keep)

@@ -50,6 +50,7 @@ class PromptToolkitCompleter(Completer):
             h = window.render_info.content_height
             r = builtins.__xonsh_env__.get('COMPLETIONS_MENU_ROWS')
             size = h + r
+
             def comp_height(cli):
                 # If there is an autocompletion menu to be shown, make sure that o
                 # layout has at least a minimal height in order to display it.

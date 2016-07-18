@@ -39,6 +39,7 @@ from xonsh.commands_cache import CommandsCache
 BUILTINS_LOADED = False
 INSPECTOR = LazyObject(Inspector, globals(), 'INSPECTOR')
 
+
 @lazyobject
 def AT_EXIT_SIGNALS():
     sigs = (signal.SIGABRT, signal.SIGFPE, signal.SIGILL, signal.SIGSEGV,
@@ -71,6 +72,7 @@ def resetting_signal_handle(sig, f):
     once the new handle is finished.
     """
     oldh = signal.getsignal(sig)
+
     def newh(s=None, frame=None):
         f(s, frame)
         signal.signal(sig, oldh)
@@ -569,7 +571,7 @@ def run_subproc(cmds, captured=False):
             output = output.replace('\r\n', '\n')
         else:
             hist.last_cmd_out = output
-        if captured == 'object': # get stderr as well
+        if captured == 'object':  # get stderr as well
             named = _stderr_name is not None
             unnamed = prev_proc.stderr not in {None, sys.stderr}
             if named:

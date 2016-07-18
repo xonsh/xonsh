@@ -58,9 +58,9 @@ class PromptToolkitShell(BaseShell):
         self.styler.style_name = env.get('XONSH_COLOR_STYLE')
         completer = None if completions_display == 'none' else self.pt_completer
         prompt_tokens = self.prompt_tokens(None)
-        get_prompt_tokens = lambda cli: prompt_tokens
+        get_prompt_tokens = lambda cli: prompt_tokens  # noqa: E731
         rprompt_tokens = self.rprompt_tokens(None)
-        get_rprompt_tokens = lambda cli: rprompt_tokens
+        get_rprompt_tokens = lambda cli: rprompt_tokens  # noqa: E731
         with self.prompter:
             prompt_args = {
                     'mouse_support': mouse_support,

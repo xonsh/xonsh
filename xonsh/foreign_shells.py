@@ -12,11 +12,9 @@ import functools
 import collections.abc as abc
 from collections import Sequence
 
-
 from xonsh.lazyasd import LazyObject
 from xonsh.tools import to_bool, ensure_string
 from xonsh.platform import ON_WINDOWS, ON_CYGWIN
-
 
 COMMAND = """{seterrprevcmd}
 {prevcmd}
@@ -90,55 +88,55 @@ CANON_SHELL_NAMES = LazyObject(lambda: {
     '/usr/bin/zsh': 'zsh',
     'cmd': 'cmd',
     'cmd.exe': 'cmd',
-    }, globals(), 'CANON_SHELL_NAMES')
+}, globals(), 'CANON_SHELL_NAMES')
 
 DEFAULT_ENVCMDS = LazyObject(lambda: {
     'bash': 'env',
     'zsh': 'env',
     'cmd': 'set',
-    }, globals(), 'DEFAULT_ENVCMDS')
+}, globals(), 'DEFAULT_ENVCMDS')
 
 DEFAULT_ALIASCMDS = LazyObject(lambda: {
     'bash': 'alias',
     'zsh': 'alias -L',
     'cmd': '',
-    }, globals(), 'DEFAULT_ALIASCMDS')
+}, globals(), 'DEFAULT_ALIASCMDS')
 
 DEFAULT_FUNCSCMDS = LazyObject(lambda: {
     'bash': DEFAULT_BASH_FUNCSCMD,
     'zsh': DEFAULT_ZSH_FUNCSCMD,
     'cmd': '',
-    }, globals(), 'DEFAULT_FUNCSCMDS')
+}, globals(), 'DEFAULT_FUNCSCMDS')
 
 DEFAULT_SOURCERS = LazyObject(lambda: {
     'bash': 'source',
     'zsh': 'source',
     'cmd': 'call',
-    }, globals(), 'DEFAULT_SOURCERS')
+}, globals(), 'DEFAULT_SOURCERS')
 
 DEFAULT_TMPFILE_EXT = LazyObject(lambda: {
     'bash': '.sh',
     'zsh': '.zsh',
     'cmd': '.bat',
-    }, globals(), 'DEFAULT_TMPFILE_EXT')
+}, globals(), 'DEFAULT_TMPFILE_EXT')
 
 DEFAULT_RUNCMD = LazyObject(lambda: {
     'bash': '-c',
     'zsh': '-c',
     'cmd': '/C',
-    }, globals(), 'DEFAULT_RUNCMD')
+}, globals(), 'DEFAULT_RUNCMD')
 
 DEFAULT_SETERRPREVCMD = LazyObject(lambda: {
     'bash': 'set -e',
     'zsh': 'set -e',
     'cmd': '@echo off',
-    }, globals(), 'DEFAULT_SETERRPREVCMD')
+}, globals(), 'DEFAULT_SETERRPREVCMD')
 
 DEFAULT_SETERRPOSTCMD = LazyObject(lambda: {
     'bash': '',
     'zsh': '',
     'cmd': 'if errorlevel 1 exit 1',
-    }, globals(), 'DEFAULT_SETERRPOSTCMD')
+}, globals(), 'DEFAULT_SETERRPOSTCMD')
 
 
 @functools.lru_cache()
@@ -225,9 +223,9 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
     tmpfile_ext = DEFAULT_TMPFILE_EXT.get(shkey, 'sh') if tmpfile_ext is None else tmpfile_ext
     runcmd = DEFAULT_RUNCMD.get(shkey, '-c') if runcmd is None else runcmd
     seterrprevcmd = DEFAULT_SETERRPREVCMD.get(shkey, '') \
-                        if seterrprevcmd is None else seterrprevcmd
+        if seterrprevcmd is None else seterrprevcmd
     seterrpostcmd = DEFAULT_SETERRPOSTCMD.get(shkey, '') \
-                        if seterrpostcmd is None else seterrpostcmd
+        if seterrpostcmd is None else seterrpostcmd
     command = COMMAND.format(envcmd=envcmd, aliascmd=aliascmd, prevcmd=prevcmd,
                              postcmd=postcmd, funcscmd=funcscmd,
                              seterrprevcmd=seterrprevcmd,
@@ -247,7 +245,7 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
     try:
         s = subprocess.check_output(cmd, stderr=subprocess.PIPE, env=currenv,
                                     # start new session to avoid hangs
-                                    #(doesn't work on Cygwin though)
+                                    # (doesn't work on Cygwin though)
                                     start_new_session=(not ON_CYGWIN),
                                     universal_newlines=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
@@ -268,7 +266,7 @@ ENV_RE = LazyObject(lambda: re.compile('__XONSH_ENV_BEG__\n(.*)'
                                        '__XONSH_ENV_END__', flags=re.DOTALL),
                     globals(), 'ENV_RE')
 ENV_SPLIT_RE = LazyObject(lambda: re.compile('^([^=]+)=([^=]*|[^\n]*)$',
-                                             flags=re.DOTALL|re.MULTILINE),
+                                             flags=re.DOTALL | re.MULTILINE),
                           globals(), 'ENV_SPLIT_RE')
 
 
@@ -343,7 +341,7 @@ def parse_funcs(s, shell, sourcer=None):
         warnings.warn(msg.format(exc, shell, s, g1), RuntimeWarning)
         return {}
     sourcer = DEFAULT_SOURCERS.get(shell, 'source') if sourcer is None \
-                                                    else sourcer
+        else sourcer
     funcs = {}
     for funcname, filename in namefiles.items():
         if funcname.startswith('_'):
@@ -378,7 +376,7 @@ class ForeignShellFunctionAlias(object):
             Command to source foreing files with.
         """
         sourcer = DEFAULT_SOURCERS.get(shell, 'source') if sourcer is None \
-                                                        else sourcer
+            else sourcer
         self.name = name
         self.shell = shell
         self.filename = filename
@@ -386,7 +384,7 @@ class ForeignShellFunctionAlias(object):
 
     def __eq__(self, other):
         if not hasattr(other, 'name') or not hasattr(other, 'shell') or \
-           not hasattr(other, 'filename') or not hasattr(other, 'sourcer'):
+                not hasattr(other, 'filename') or not hasattr(other, 'sourcer'):
             return NotImplemented
         return (self.name == other.name) and (self.shell == other.shell) and \
                (self.filename == other.filename) and (self.sourcer == other.sourcer)
@@ -418,10 +416,11 @@ class ForeignShellFunctionAlias(object):
 
 
 VALID_SHELL_PARAMS = LazyObject(lambda: frozenset([
-                                    'shell', 'interactive', 'login', 'envcmd',
-                                    'aliascmd', 'extra_args', 'currenv', 'safe',
-                                    'prevcmd', 'postcmd', 'funcscmd', 'sourcer',
-                                    ]), globals(), 'VALID_SHELL_PARAMS')
+    'shell', 'interactive', 'login', 'envcmd',
+    'aliascmd', 'extra_args', 'currenv', 'safe',
+    'prevcmd', 'postcmd', 'funcscmd', 'sourcer',
+]), globals(), 'VALID_SHELL_PARAMS')
+
 
 def ensure_shell(shell):
     """Ensures that a mapping follows the shell specification."""
@@ -438,10 +437,10 @@ def ensure_shell(shell):
         shell['login'] = to_bool(shell['login'])
     if 'envcmd' in shell_keys:
         shell['envcmd'] = None if shell['envcmd'] is None \
-                               else ensure_string(shell['envcmd'])
+            else ensure_string(shell['envcmd'])
     if 'aliascmd' in shell_keys:
         shell['aliascmd'] = None if shell['aliascmd'] is None \
-                                 else ensure_string(shell['aliascmd'])
+            else ensure_string(shell['aliascmd'])
     if 'extra_args' in shell_keys and not isinstance(shell['extra_args'], tuple):
         shell['extra_args'] = tuple(map(ensure_string, shell['extra_args']))
     if 'currenv' in shell_keys and not isinstance(shell['currenv'], tuple):
@@ -461,16 +460,16 @@ def ensure_shell(shell):
         shell['postcmd'] = ensure_string(shell['postcmd'])
     if 'funcscmd' in shell_keys:
         shell['funcscmd'] = None if shell['funcscmd'] is None \
-                                 else ensure_string(shell['funcscmd'])
+            else ensure_string(shell['funcscmd'])
     if 'sourcer' in shell_keys:
         shell['sourcer'] = None if shell['sourcer'] is None \
-                                 else ensure_string(shell['sourcer'])
+            else ensure_string(shell['sourcer'])
     if 'seterrprevcmd' in shell_keys:
         shell['seterrprevcmd'] = None if shell['seterrprevcmd'] is None \
-                                 else ensure_string(shell['seterrprevcmd'])
+            else ensure_string(shell['seterrprevcmd'])
     if 'seterrpostcmd' in shell_keys:
         shell['seterrpostcmd'] = None if shell['seterrpostcmd'] is None \
-                                 else ensure_string(shell['seterrpostcmd'])
+            else ensure_string(shell['seterrpostcmd'])
     return shell
 
 

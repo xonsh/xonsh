@@ -23,6 +23,7 @@ cookie_comment_re = LazyObject(
     lambda: re.compile(r"^\s*#.*coding[:=]\s*([-\w.]+)", re.UNICODE),
     globals(), 'cookie_comment_re')
 
+
 def source_to_unicode(txt, errors='replace', skip_encoding_cookie=True):
     """Converts a bytes string with python source code to unicode.
 

@@ -307,6 +307,7 @@ if PYTHON_VERSION_INFO < (3, 5, 0):
     FrameInfo = collections.namedtuple('FrameInfo', ['frame', 'filename',
                                                      'lineno', 'function',
                                                      'code_context', 'index'])
+
     def getouterframes(frame, context=1):
         """Wrapper for getouterframes so that it acts like the Python v3.5 version."""
         return [FrameInfo(*f) for f in inspect.getouterframes(frame, context=context)]
@@ -634,8 +635,8 @@ class Inspector(object):
                 str_head = 'string_form'
                 if not detail_level and len(ostr) > string_max:
                     ostr = ostr[:shalf] + ' <...> ' + ostr[-shalf:]
-                    ostr = ("\n" + " " * len(str_head.expandtabs())).\
-                           join(q.strip() for q in ostr.split("\n"))
+                    ostr = ("\n" + " " * len(str_head.expandtabs())). \
+                        join(q.strip() for q in ostr.split("\n"))
                 out[str_head] = ostr
             except:  # pylint:disable=bare-except
                 pass

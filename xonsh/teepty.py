@@ -22,6 +22,7 @@ import threading
 from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.platform import ON_WINDOWS
 
+
 #
 # Explicit lazy imports for windows
 #
@@ -64,6 +65,7 @@ RE_HIDDEN_BYTES = LazyObject(lambda: re.compile(b'(\001.*?\002)'),
                              globals(), 'RE_HIDDEN')
 RE_COLOR = LazyObject(lambda: re.compile(b'\033\[\d+;?\d*m'),
                       globals(), 'RE_COLOR')
+
 
 def _findfirst(s, substrs):
     """Finds whichever of the given substrings occurs first in the given string
@@ -246,7 +248,7 @@ class TeePTY(object):
     def _sanatize_data(self, data):
         i, flag = _findfirst(data, ALTERNATE_MODE_FLAGS)
         if flag is None and self._in_alt_mode:
-            return  b''
+            return b''
         elif flag is not None:
             if flag in START_ALTERNATE_MODE:
                 # This code is executed when the child process switches the terminal into
@@ -354,6 +356,7 @@ class TeePTY(object):
         if 0.0 < delay:
             time.sleep(delay)
 
+
 def _teepty_main():
     tpty = TeePTY()
     tpty.spawn(sys.argv[1:])
@@ -363,4 +366,3 @@ def _teepty_main():
     print(tpty)
     print('-=-'*10)
     print('Returned with status {0}'.format(tpty.wcode))
-

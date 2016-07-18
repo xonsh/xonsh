@@ -79,6 +79,7 @@ class Replayer(object):
 
 _REPLAY_PARSER = None
 
+
 def _rp_create_parser(p=None):
     global _REPLAY_PARSER
     p_was_none = (p is None)

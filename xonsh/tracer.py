@@ -23,6 +23,7 @@ terminal = LazyObject(lambda: importlib.import_module(
 pyghooks = LazyObject(lambda: importlib.import_module('xonsh.pyghooks'),
                       globals(), 'pyghooks')
 
+
 class TracerType(object):
     """Represents a xonsh tracer object, which keeps track of all tracing
     state. This is a singleton.
@@ -165,7 +166,7 @@ def _color(ns, args):
 def _tracer_create_parser():
     """Creates tracer argument parser"""
     p = argparse.ArgumentParser(prog='trace',
-                       description='tool for tracing xonsh code as it runs.')
+                                description='tool for tracing xonsh code as it runs.')
     subp = p.add_subparsers(title='action', dest='action')
     onp = subp.add_parser('on', aliases=['start', 'add'],
                           help='begins tracing selected files.')
@@ -200,4 +201,3 @@ def tracermain(args=None):
     parser = _tracer_create_parser()
     ns = parser.parse_args(args)
     return _TRACER_MAIN_ACTIONS[ns.action](ns, args)
-

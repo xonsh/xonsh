@@ -140,7 +140,6 @@ class Vox:
         print('Available environments:')
         print('\n'.join(env_dirs))
 
-
     @staticmethod
     def remove_envs(*names):
         """Remove virtual environments.

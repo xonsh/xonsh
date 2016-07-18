@@ -6,7 +6,7 @@ from prompt_toolkit.interface import CommandLineInterface
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.utils import DummyContext
 from prompt_toolkit.shortcuts import (create_prompt_application,
-    create_eventloop, create_asyncio_eventloop, create_output)
+                                      create_eventloop, create_asyncio_eventloop, create_output)
 
 from xonsh.platform import ptk_version_info
 
@@ -32,7 +32,7 @@ class Prompter(object):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        #self.reset()
+        # self.reset()
         pass
 
     def prompt(self, message='', **kwargs):
