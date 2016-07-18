@@ -8,23 +8,20 @@ from __future__ import unicode_literals, print_function
 import io
 import os
 import sys
+import shlex
 
 from xonsh.lazyjson import LazyJSON
-from xonsh.history import History
+from xonsh.history import History, _hist_create_parser
 from xonsh import history
 
 import pytest
 
 
-HIST_TEST_KWARGS = dict(sessionid='SESSIONID', gc=False)
-
-
 @pytest.yield_fixture
 def hist():
-    h = History(filename='xonsh-HISTORY-TEST.json', here='yup', **HIST_TEST_KWARGS)
+    h = History(filename='xonsh-HISTORY-TEST.json', here='yup', sessionid='SESSIONID', gc=False)
     yield h
     os.remove(h.filename)
-
 
 
 def test_hist_init(hist):
@@ -74,32 +71,24 @@ def test_cmd_field(hist, xonsh_builtins):
     assert 1 == hist.rtns[-1]
     assert None == hist.outs[-1]
 
+def run_show_cmd(hist_args, commands, base_idx=0, step=1):
+    """Run and evaluate the output of the given show command."""
+    stdout = sys.stdout
+    stdout.seek(0, io.SEEK_SET)
+    stdout.truncate()
+    history.history_main(hist_args)
+    stdout.seek(0, io.SEEK_SET)
+    hist_lines = stdout.readlines()
+    assert len(commands) == len(hist_lines)
+    for idx, (cmd, actual) in enumerate(zip(commands, hist_lines)):
+        expected = ' {:d}: {:s}\n'.format(base_idx + idx * step, cmd)
+        assert expected == actual
 
 def test_show_cmd(hist, xonsh_builtins):
     """Verify that CLI history commands work."""
     cmds = ['ls', 'cat hello kitty', 'abc', 'def', 'touch me', 'grep from me']
-
-    def format_hist_line(idx, cmd):
-        """Construct a history output line."""
-        return ' {:d}: {:s}\n'.format(idx, cmd)
-
-    def run_show_cmd(hist_args, commands, base_idx=0, step=1):
-        """Run and evaluate the output of the given show command."""
-        stdout.seek(0, io.SEEK_SET)
-        stdout.truncate()
-        history.history_main(hist_args)
-        stdout.seek(0, io.SEEK_SET)
-        hist_lines = stdout.readlines()
-        assert len(commands) == len(hist_lines)
-        for idx, (cmd, actual) in enumerate(zip(commands, hist_lines)):
-            expected = format_hist_line(base_idx + idx * step, cmd)
-            assert expected == actual
-
+    sys.stdout = io.StringIO()
     xonsh_builtins.__xonsh_history__ = hist
-    stdout = io.StringIO()
-    saved_stdout = sys.stdout
-    sys.stdout = stdout
-
     xonsh_builtins.__xonsh_env__['HISTCONTROL'] = set()
     for ts,cmd in enumerate(cmds):  # populate the shell history
         hist.append({'inp': cmd, 'rtn': 0, 'ts':(ts+1, ts+1.5)})
@@ -138,7 +127,7 @@ def test_show_cmd(hist, xonsh_builtins):
     run_show_cmd(['show', '-4:-2'],
                            cmds[-4:-2], len(cmds) - 4)
 
-    sys.stdout = saved_stdout
+    sys.stdout = sys.__stdout__
 
 
 def test_histcontrol(hist, xonsh_builtins):
@@ -196,3 +185,21 @@ def test_histcontrol(hist, xonsh_builtins):
     assert len(hist.buffer) == 4
     assert '/bin/ls' == hist.buffer[-1]['inp']
     assert 0 == hist.buffer[-1]['rtn']
+
+
+@pytest.mark.parametrize('args, exp', [
+    ('', ('show', 'session', [])),
+    ('show', ('show', 'session', [])),
+    ('show session', ('show', 'session', [])),
+    ('show session 15', ('show', 'session', ['15'])),
+    ('show bash 3:5 15:66', ('show', 'bash', ['3:5', '15:66'])),
+    ('show zsh 3 5:6 16 9:3', ('show', 'zsh', ['3', '5:6', '16', '9:3'])),
+    ])
+def test_parser_show(args, exp):
+    parser = _hist_create_parser()
+    args = shlex.split(args)
+    args = parser.parse_args(args)
+    action, session, slices = exp
+    assert args.action == action
+    assert args.session == session
+    assert args.slices == slices
