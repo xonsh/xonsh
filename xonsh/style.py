@@ -3,13 +3,11 @@ import string
 import builtins
 
 from xonsh.lazyasd import load_module_in_background
-
 try:
     load_module_in_background('pkg_resources', debug='XONSH_DEBUG',
     replacements={'pygments.plugin': 'pkg_resources'})
     from pygments.token import (Keyword, Name, Comment, String, Error, Number,
                                 Operator, Generic, Whitespace, Token)
-
 except ImportError:
     from prompt_toolkit.token import Token
     (Keyword, Name, Comment, String,
@@ -164,6 +162,7 @@ XONSH_BASE_STYLE = LazyObject(lambda: {
     Generic.Traceback: '#800000',
     Error: '#800000',
     }, globals(), 'XONSH_BASE_STYLE')
+
 
 def color_by_name(name, fg=None, bg=None):
     """Converts a color name to a color token, foreground name,

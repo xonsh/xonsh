@@ -205,7 +205,7 @@ class XonshStyle(Style):
         else:
             warn('Could not find style {0!r}, using default'.format(value),
                  RuntimeWarning)
-            cmap = DEFAULT_STYLE
+            cmap = XONSH_BASE_STYLE
         try:
             self._smap = get_style_by_name(value)().styles.copy()
         except (ImportError, pygments.util.ClassNotFound):
