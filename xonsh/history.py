@@ -17,7 +17,7 @@ import collections.abc as abc
 
 from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.lazyjson import LazyJSON, ljdump, LJNode
-from xonsh.tools import (ensure_int_or_slice, to_history_tuple,
+from xonsh.tools import (ensure_slice, to_history_tuple,
                          expanduser_abs_path)
 from xonsh.diff_history import _dh_create_parser, _dh_main_action
 
@@ -466,7 +466,7 @@ def _hist_show(ns=None, hist=None, start_index=None, end_index=None,
             print("Invalid end time, must be float or datetime.")
     idx = None
     if ns:
-        idx = ensure_int_or_slice(ns.n)
+        idx = ensure_slice(ns.n)
         if idx is False:
             print("{} is not a valid input.".format(ns.n),
                   file=sys.stderr)
