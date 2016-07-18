@@ -678,7 +678,7 @@ def parse_args(args):
         and len(args) > 1
         and args[1] not in ['-h', '--help', '-r']
         and args[1] not in HIST_SESSIONS):
-            args.insert(1, 'session')
+        args.insert(1, 'session')
     return parser.parse_args(args)
 
 
