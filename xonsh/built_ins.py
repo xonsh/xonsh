@@ -27,8 +27,8 @@ from xonsh.foreign_shells import load_foreign_aliases
 from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
-                        SimpleForegroundProcProxy, TeePTYProc,
-                        CompletedCommand, HiddenCompletedCommand)
+    SimpleForegroundProcProxy, TeePTYProc, pause_call_resume, CompletedCommand,
+    HiddenCompletedCommand)
 from xonsh.tools import (
     suggest_commands, expandvars, globpath, XonshError,
     XonshCalledProcessError, XonshBlockError
@@ -532,10 +532,7 @@ def run_subproc(cmds, captured=False):
             not env.get('XONSH_STORE_STDOUT') and
             not _capture_streams):
         # set title here to get current command running
-        try:
-            builtins.__xonsh_shell__.settitle()
-        except AttributeError:
-            pass
+        pause_call_resume(prev_proc, builtins.__xonsh_shell__.settitle)
     if background:
         return
     if prev_is_proxy:
