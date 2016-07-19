@@ -27,3 +27,5 @@ completers = OrderedDict([
     ('python', complete_python),
     ('path', complete_path),
 ])
+
+builtins.__xonsh_completers__ = completers

@@ -3,7 +3,7 @@ __version__ = '0.4.3'
 # amalgamate exclude jupyter_kernel parser_table parser_test_table pyghooks
 # amalgamate exclude winutils wizard
 import os as _os
-if _os.getenv('XONSH_DEGUB', ''):
+if _os.getenv('XONSH_DEBUG', ''):
     pass
 else:
     import sys as _sys

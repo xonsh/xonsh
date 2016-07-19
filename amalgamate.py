@@ -492,7 +492,7 @@ def main(args=None):
             continue
         print('Amalgamating ' + pkg)
         exclude = read_exclude(pkg)
-        print('  excluding {}'.format(pprint.pformat(exclude)))
+        print('  excluding {}'.format(pprint.pformat(exclude or None)))
         graph = make_graph(pkg, exclude=exclude)
         order = depsort(graph)
         src = amalgamate(order, graph, pkg)
