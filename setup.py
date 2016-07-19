@@ -123,6 +123,7 @@ def dirty_version():
         open('xonsh/dev.githash', 'w').close()
         print('failed to parse git version', file=sys.stderr)
         return False
+    sha = sha.strip('g')
     replace_version(base, N)
     with open('xonsh/dev.githash', 'w') as f:
         f.write(sha)
