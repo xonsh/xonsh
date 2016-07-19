@@ -68,18 +68,20 @@ class GlobalNames(object):
             if len(val) < 2:
                 continue
             val = sorted(val)
-            s += key + ' defined in multiple locations:\n'
+            s += 'WARNING: {0!r} defined in multiple locations:\n'.format(key)
             for loc in val:
-                s += '  {} {} {}\n'.format(*loc)
+                s += '  {}:{} ({})\n'.format(*loc)
         if len(s) > 0:
             print(s, end='', flush=True, file=sys.stderr)
 
     def entry(self, name, lineno):
+        if name.startswith('__'):
+            return
         topnode = self.topnode
         e = (self.pkg + '.' + self.module, lineno, topnode)
         if name in self.cache:
-            if topnode in impnodes and all([topnode == x[2]
-                                            for x in self.cache[name]]):
+            if topnode in self.impnodes and \
+                    all([topnode == x[2] for x in self.cache[name]]):
                 return
             self.cache[name].add(e)
         else:
@@ -121,6 +123,9 @@ class GlobalNames(object):
             self.entry(name, lineno)
 
     def _add_importfrom(self, node):
+        pkg, _, _ = node.module.rpartition('.')
+        if pkg == self.pkg:
+            return
         lineno = node.lineno
         for target in node.names:
             if target.asname is None:
@@ -149,8 +154,6 @@ class GlobalNames(object):
     def _add_if(self, node):
         for child in node.body:
             self.add(child, istopnode=True)
-        for child in node.orelse:
-            self.add(child, istopnode=True)
 
     def _add_try(self, node):
         for child in node.body:
@@ -167,7 +170,7 @@ def make_node(name, pkg, allowed, glbnames):
     extdeps = set()
     glbnames.module = name
     for a in tree.body:
-        glbnames.add(a)
+        glbnames.add(a, istopnode=True)
         if isinstance(a, Import):
             for n in a.names:
                 p, dot, m = n.name.rpartition('.')
