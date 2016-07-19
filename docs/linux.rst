@@ -127,3 +127,17 @@ fix this, please add ``{vte_new_tab_cwd}`` somewhere to you prompt:
 
 This will issue the proper escape sequence to the terminal without otherwise
 affecting the displayed prompt.
+
+
+"Open Terminal Here" Action Does Not Work in Thunar
+===================================================
+
+If you use Thunar and "Open Terminal Here" action does not work,
+you can try to replace a command for this action by the following:
+
+.. code-block:: sh
+
+    exo-open --working-directory %f --launch TerminalEmulator xonsh --shell-type=best
+
+In order to do this, go to ``Edit > Configure custom actions...``,
+then choose ``Open Terminal Here`` and click on ``Edit currently selected action`` button.
