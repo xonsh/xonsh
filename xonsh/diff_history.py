@@ -8,47 +8,47 @@ import argparse
 from xonsh.lazyjson import LazyJSON
 from xonsh.tools import print_color
 
-NO_COLOR = '{NO_COLOR}'
-RED = '{RED}'
-GREEN = '{GREEN}'
-BOLD_RED = '{BOLD_RED}'
-BOLD_GREEN = '{BOLD_GREEN}'
+NO_COLOR_S = '{NO_COLOR}'
+RED_S = '{RED}'
+GREEN_S = '{GREEN}'
+BOLD_RED_S = '{BOLD_RED}'
+BOLD_GREEN_S = '{BOLD_GREEN}'
 
 # intern some strings
-REPLACE = 'replace'
-DELETE = 'delete'
-INSERT = 'insert'
-EQUAL = 'equal'
+REPLACE_S = 'replace'
+DELETE_S = 'delete'
+INSERT_S = 'insert'
+EQUAL_S = 'equal'
 
 
 def bold_str_diff(a, b, sm=None):
     if sm is None:
         sm = difflib.SequenceMatcher()
-    aline = RED + '- '
-    bline = GREEN + '+ '
+    aline = RED_S + '- '
+    bline = GREEN_S + '+ '
     sm.set_seqs(a, b)
     for tag, i1, i2, j1, j2 in sm.get_opcodes():
-        if tag == REPLACE:
-            aline += BOLD_RED + a[i1:i2] + RED
-            bline += BOLD_GREEN + b[j1:j2] + GREEN
-        elif tag == DELETE:
-            aline += BOLD_RED + a[i1:i2] + RED
-        elif tag == INSERT:
-            bline += BOLD_GREEN + b[j1:j2] + GREEN
-        elif tag == EQUAL:
+        if tag == REPLACE_S:
+            aline += BOLD_RED_S + a[i1:i2] + RED_S
+            bline += BOLD_GREEN_S + b[j1:j2] + GREEN_S
+        elif tag == DELETE_S:
+            aline += BOLD_RED_S + a[i1:i2] + RED_S
+        elif tag == INSERT_S:
+            bline += BOLD_GREEN_S + b[j1:j2] + GREEN_S
+        elif tag == EQUAL_S:
             aline += a[i1:i2]
             bline += b[j1:j2]
         else:
             raise RuntimeError('tag not understood')
-    return aline + NO_COLOR + '\n' + bline + NO_COLOR +'\n'
+    return aline + NO_COLOR_S + '\n' + bline + NO_COLOR_S +'\n'
 
 
 def redline(line):
-   return '{red}- {line}{no_color}\n'.format(red=RED, line=line, no_color=NO_COLOR)
+   return '{red}- {line}{no_color}\n'.format(red=RED_S, line=line, no_color=NO_COLOR_S)
 
 
 def greenline(line):
-   return '{green}+ {line}{no_color}\n'.format(green=GREEN, line=line, no_color=NO_COLOR)
+   return '{green}+ {line}{no_color}\n'.format(green=GREEN_S, line=line, no_color=NO_COLOR_S)
 
 
 def highlighted_ndiff(a, b):
@@ -58,7 +58,7 @@ def highlighted_ndiff(a, b):
     sm.set_seqs(a, b)
     linesm = difflib.SequenceMatcher()
     for tag, i1, i2, j1, j2 in sm.get_opcodes():
-        if tag == REPLACE:
+        if tag == REPLACE_S:
             for aline, bline in itertools.zip_longest(a[i1:i2], b[j1:j2]):
                 if bline is None:
                     s += redline(aline)
@@ -66,13 +66,13 @@ def highlighted_ndiff(a, b):
                     s += greenline(bline)
                 else:
                     s += bold_str_diff(aline, bline, sm=linesm)
-        elif tag == DELETE:
+        elif tag == DELETE_S:
             for aline in a[i1:i2]:
                 s += redline(aline)
-        elif tag == INSERT:
+        elif tag == INSERT_S:
             for bline in b[j1:j2]:
                 s += greenline(bline)
-        elif tag == EQUAL:
+        elif tag == EQUAL_S:
             for aline in a[i1:i2]:
                 s += '  ' + aline + '\n'
         else:
@@ -127,7 +127,7 @@ class HistoryDiffer(object):
         s = ('{red}--- {aline}{no_color}\n'
              '{green}+++ {bline}{no_color}')
         s = s.format(aline=self._header_line(self.a), bline=self._header_line(self.b),
-                     red=RED, green=GREEN, no_color=NO_COLOR)
+                     red=RED_S, green=GREEN_S, no_color=NO_COLOR_S)
         return s
 
     def _env_both_diff(self, in_both, aenv, benv):
@@ -153,7 +153,7 @@ class HistoryDiffer(object):
         else:
             xstr = ', '.join(['{0!r}'.format(key) for key in only_x])
         in_x = 'These vars are only in {color}{xid}{no_color}: {{{xstr}}}\n\n'
-        return in_x.format(xid=xid, color=color, no_color=NO_COLOR, xstr=xstr)
+        return in_x.format(xid=xid, color=color, no_color=NO_COLOR_S, xstr=xstr)
 
     def envdiff(self):
         """Computes the difference between the environments."""
@@ -169,19 +169,19 @@ class HistoryDiffer(object):
             in_a = in_b = ''
         else:
             keydiff = self._env_both_diff(in_both, aenv, benv)
-            in_a = self._env_in_one_diff(akeys, bkeys, RED, self.a['sessionid'], aenv)
-            in_b = self._env_in_one_diff(bkeys, akeys, GREEN, self.b['sessionid'], benv)
+            in_a = self._env_in_one_diff(akeys, bkeys, RED_S, self.a['sessionid'], aenv)
+            in_b = self._env_in_one_diff(bkeys, akeys, GREEN_S, self.b['sessionid'], benv)
         s = 'Environment\n-----------\n' + in_a + keydiff + in_b
         return s
 
     def _cmd_in_one_diff(self, inp, i, xlj, xid, color):
         s = 'cmd #{i} only in {color}{xid}{no_color}:\n'
-        s = s.format(i=i, color=color, xid=xid, no_color=NO_COLOR)
+        s = s.format(i=i, color=color, xid=xid, no_color=NO_COLOR_S)
         lines = inp.splitlines()
         lt = '{color}{pre}{no_color} {line}\n'
-        s += lt.format(color=color, no_color=NO_COLOR, line=lines[0], pre='>>>')
+        s += lt.format(color=color, no_color=NO_COLOR_S, line=lines[0], pre='>>>')
         for line in lines[1:]:
-            s += lt.format(color=color, no_color=NO_COLOR, line=line, pre='...')
+            s += lt.format(color=color, no_color=NO_COLOR_S, line=line, pre='...')
         if not self.verbose:
             return s + '\n'
         out = xlj['cmds'][0].get('out', 'Note: no output stored')
@@ -197,12 +197,12 @@ class HistoryDiffer(object):
             pass
         elif bout is None:
             aid = self.a['sessionid']
-            s += 'Note: only {red}{aid}{no_color} output stored\n'.format(red=RED,
-                                                            aid=aid, no_color=NO_COLOR)
+            s += 'Note: only {red}{aid}{no_color} output stored\n'.format(red=RED_S,
+                                                            aid=aid, no_color=NO_COLOR_S)
         elif aout is None:
             bid = self.b['sessionid']
-            s += 'Note: only {green}{bid}{no_color} output stored\n'.format(green=GREEN,
-                                                            bid=bid, no_color=NO_COLOR)
+            s += 'Note: only {green}{bid}{no_color} output stored\n'.format(green=GREEN_S,
+                                                            bid=bid, no_color=NO_COLOR_S)
         elif aout != bout:
             s += 'Outputs differ\n'
             s += highlighted_ndiff(aout.splitlines(), bout.splitlines())
@@ -212,13 +212,14 @@ class HistoryDiffer(object):
         brtn = self.b['cmds'][j]['rtn']
         if artn != brtn:
             s += ('Return vals {red}{artn}{no_color} & {green}{brtn}{no_color} differ\n'
-                  ).format(red=RED, green=GREEN, no_color=NO_COLOR, artn=artn, brtn=brtn)
+                  ).format(red=RED_S, green=GREEN_S, no_color=NO_COLOR_S, artn=artn, brtn=brtn)
         return s
 
     def _cmd_replace_diff(self, i, ainp, aid, j, binp, bid):
         s = ('cmd #{i} in {red}{aid}{no_color} is replaced by \n'
              'cmd #{j} in {green}{bid}{no_color}:\n')
-        s = s.format(i=i, aid=aid, j=j, bid=bid, red=RED, green=GREEN, no_color=NO_COLOR)
+        s = s.format(i=i, aid=aid, j=j, bid=bid, red=RED_S, green=GREEN_S,
+                     no_color=NO_COLOR_S)
         s += highlighted_ndiff(ainp.splitlines(), binp.splitlines())
         if not self.verbose:
             return s + '\n'
@@ -235,30 +236,30 @@ class HistoryDiffer(object):
         sm.set_seqs(ainps, binps)
         s = ''
         for tag, i1, i2, j1, j2 in sm.get_opcodes():
-            if tag == REPLACE:
+            if tag == REPLACE_S:
                 zipper = itertools.zip_longest
                 for i, ainp, j, binp in zipper(range(i1, i2), ainps[i1:i2],
                                                range(j1, j2), binps[j1:j2]):
                     if j is None:
-                        s += self._cmd_in_one_diff(ainp, i, self.a, aid, RED)
+                        s += self._cmd_in_one_diff(ainp, i, self.a, aid, RED_S)
                     elif i is None:
-                        s += self._cmd_in_one_diff(binp, j, self.b, bid, GREEN)
+                        s += self._cmd_in_one_diff(binp, j, self.b, bid, GREEN_S)
                     else:
                         self._cmd_replace_diff(i, ainp, aid, j, binp, bid)
-            elif tag == DELETE:
+            elif tag == DELETE_S:
                 for i, inp in enumerate(ainps[i1:i2], i1):
-                    s += self._cmd_in_one_diff(inp, i, self.a, aid, RED)
-            elif tag == INSERT:
+                    s += self._cmd_in_one_diff(inp, i, self.a, aid, RED_S)
+            elif tag == INSERT_S:
                 for j, inp in enumerate(binps[j1:j2], j1):
-                    s += self._cmd_in_one_diff(inp, j, self.b, bid, GREEN)
-            elif tag == EQUAL:
+                    s += self._cmd_in_one_diff(inp, j, self.b, bid, GREEN_S)
+            elif tag == EQUAL_S:
                 for i, j, in zip(range(i1, i2), range(j1, j2)):
                     odiff = self._cmd_out_and_rtn_diff(i, j)
                     if len(odiff) > 0:
                         h = ('cmd #{i} in {red}{aid}{no_color} input is the same as \n'
                              'cmd #{j} in {green}{bid}{no_color}, but output differs:\n')
-                        s += h.format(i=i, aid=aid, j=j, bid=bid, red=RED, green=GREEN,
-                                      no_color=NO_COLOR)
+                        s += h.format(i=i, aid=aid, j=j, bid=bid, red=RED_S, green=GREEN_S,
+                                      no_color=NO_COLOR_S)
                         s += odiff + '\n'
             else:
                 raise RuntimeError('tag not understood')
