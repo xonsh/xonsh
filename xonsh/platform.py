@@ -32,17 +32,20 @@ def distro():
 #
 ON_DARWIN = LazyBool(lambda: platform.system() == 'Darwin',
                      globals(), 'ON_DARWIN')
-""" ``True`` if executed on a Darwin platform, else ``False``. """
+"""``True`` if executed on a Darwin platform, else ``False``. """
 ON_LINUX = LazyBool(lambda: platform.system() == 'Linux',
                     globals(), 'ON_LINUX')
-""" ``True`` if executed on a Linux platform, else ``False``. """
+"""``True`` if executed on a Linux platform, else ``False``. """
 ON_WINDOWS = LazyBool(lambda: platform.system() == 'Windows',
                       globals(), 'ON_WINDOWS')
-""" ``True`` if executed on a native Windows platform, else ``False``. """
+"""``True`` if executed on a native Windows platform, else ``False``. """
 ON_CYGWIN = LazyBool(lambda: sys.platform == 'cygwin', globals(), 'ON_CYGWIN')
-""" ``True`` if executed on a Cygwin Windows platform, else ``False``. """
+"""``True`` if executed on a Cygwin Windows platform, else ``False``. """
 ON_POSIX = LazyBool(lambda: (os.name == 'posix'), globals(), 'ON_POSIX')
-""" ``True`` if executed on a POSIX-compliant platform, else ``False``. """
+"""``True`` if executed on a POSIX-compliant platform, else ``False``. """
+ON_FREEBSD = LazyBool(lambda: (sys.platform.startswith('freebsd')),
+                      globals(), 'ON_FREEBSD')
+"""``True`` if on a FreeBSD operating system, else ``False``."""
 
 
 #
