@@ -68,6 +68,8 @@ class GlobalNames(object):
             if len(val) < 2:
                 continue
             val = sorted(val)
+            if all([val[0][0] == x[0] for x in val[1:]]):
+                continue
             s += 'WARNING: {0!r} defined in multiple locations:\n'.format(key)
             for loc in val:
                 s += '  {}:{} ({})\n'.format(*loc)
@@ -153,6 +155,8 @@ class GlobalNames(object):
 
     def _add_if(self, node):
         for child in node.body:
+            self.add(child, istopnode=True)
+        for child in node.orelse:
             self.add(child, istopnode=True)
 
     def _add_try(self, node):
