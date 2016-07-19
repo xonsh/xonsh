@@ -12,7 +12,7 @@ from xonsh import __version__
 from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.environ import DEFAULT_VALUES
 from xonsh.shell import Shell
-from xonsh.pretty import pprint, pretty
+from xonsh.pretty import pretty
 from xonsh.proc import HiddenCompletedCommand
 from xonsh.jobs import ignore_sigtstp
 from xonsh.tools import setup_win_unicode_console, print_color
