@@ -17,8 +17,8 @@ Example Usage
 
 To directly print the representation of an object use `pprint`::
 
-    from pretty import pprint
-    pprint(complex_object)
+    from pretty import pretty_print
+    pretty_pprint(complex_object)
 
 To get a string of the output use `pretty`::
 
@@ -89,7 +89,7 @@ import collections
 from xonsh.lazyasd import LazyObject, lazyobject
 
 
-__all__ = ['pretty', 'pprint', 'PrettyPrinter', 'RepresentationPrinter',
+__all__ = ['pretty', 'pretty_print', 'PrettyPrinter', 'RepresentationPrinter',
     'for_type', 'for_type_by_name']
 
 
@@ -121,9 +121,9 @@ def pretty(obj, verbose=False, max_width=79, newline='\n', max_seq_length=MAX_SE
     return stream.getvalue()
 
 
-def pprint(obj, verbose=False, max_width=79, newline='\n', max_seq_length=MAX_SEQ_LENGTH):
+def pretty_print(obj, verbose=False, max_width=79, newline='\n', max_seq_length=MAX_SEQ_LENGTH):
     """
-    Like `pretty` but print to stdout.
+    Like pretty() but print to stdout.
     """
     printer = RepresentationPrinter(sys.stdout, verbose, max_width, newline, max_seq_length=max_seq_length)
     printer.pretty(obj)
