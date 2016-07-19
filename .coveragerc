@@ -1,0 +1,7 @@
+[run]
+branch = true
+omit =
+  tests/*
+  xonsh/__amalgam__.py
+  */parser*_table.py
+  setup.py

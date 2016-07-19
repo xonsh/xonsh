@@ -317,12 +317,12 @@ class XonshStyle(Style):
     def style_name(self, value):
         if self._style_name == value:
             return
-        if value in STYLES:
-            cmap = STYLES[value]
-        else:
+        if value not in STYLES:
             warn('Could not find style {0!r}, using default'.format(value),
                  RuntimeWarning)
-            cmap = DEFAULT_STYLE
+            value = 'default'
+            builtins.__xonsh_env__['XONSH_COLOR_STYLE'] = value
+        cmap = STYLES[value]
         try:
             self._smap = get_style_by_name(value)().styles.copy()
         except (ImportError, pygments.util.ClassNotFound):
