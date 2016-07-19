@@ -650,16 +650,12 @@ def _hist_gc(ns, hist):
 
 @lazyobject
 def HIST_SESSIONS():
-    return ('session', 'xonsh', 'bash', 'zsh')
+    return frozenset(['session', 'xonsh', 'all', 'bash', 'zsh'])
 
 @lazyobject
 def _HIST_MAIN_ACTIONS():
     return {
     'show': _hist_show,
-    'xonsh': _hist_show,
-    'zsh': _hist_show,
-    'bash': _hist_show,
-    'session': _hist_show,
     'id': lambda ns, hist: print(hist.sessionid),
     'file': lambda ns, hist: print(hist.filename),
     'info': _hist_info,
@@ -668,7 +664,8 @@ def _HIST_MAIN_ACTIONS():
     }
 
 
-def parse_args(args):
+def _hist_parse_args(args):
+    """Parse arguments using the history argument parser."""
     parser = _hist_create_parser()
     if not args:
         args = ['show']
@@ -685,5 +682,5 @@ def parse_args(args):
 def history_main(args=None, stdin=None):
     """This is the history command entry point."""
     hist = builtins.__xonsh_history__
-    ns = parse_args(args)
+    ns = _hist_parse_args(args)
     _HIST_MAIN_ACTIONS[ns.action](ns, hist)
