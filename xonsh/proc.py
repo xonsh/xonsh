@@ -20,9 +20,9 @@ import subprocess
 import collections
 import collections.abc as abc
 
-from xonsh.tools import (redirect_stdout, redirect_stderr, ON_WINDOWS, ON_LINUX,
-                         fallback, print_exception, XonshCalledProcessError,
-                         ON_POSIX)
+from xonsh.platform import ON_WINDOWS, ON_LINUX, ON_POSIX
+from xonsh.tools import (redirect_stdout, redirect_stderr, fallback,
+                         print_exception, XonshCalledProcessError)
 from xonsh.teepty import TeePTY
 from xonsh.lazyasd import LazyObject
 
