@@ -1,8 +1,9 @@
 import builtins
 from collections import OrderedDict
 
-from xonsh.completers.pip import complete_pip
 from xonsh.completers.man import complete_from_man
+from xonsh.completers.vox import complete_vox
+from xonsh.completers.pip import complete_pip
 from xonsh.completers.bash import complete_from_bash
 from xonsh.completers.base import complete_base
 from xonsh.completers.path import complete_path
@@ -17,6 +18,7 @@ completers = OrderedDict([
     ('base', complete_base),
     ('completer', complete_completer),
     ('skip', complete_skipper),
+    ('vox', complete_vox),
     ('pip', complete_pip),
     ('cd', complete_cd),
     ('rmdir', complete_rmdir),
