@@ -25,6 +25,8 @@ else:
         _sys.modules['xonsh.platform'] = __amalgam__
         pretty = __amalgam__
         _sys.modules['xonsh.pretty'] = __amalgam__
+        style = __amalgam__
+        _sys.modules['xonsh.style'] = __amalgam__
         timings = __amalgam__
         _sys.modules['xonsh.timings'] = __amalgam__
         jobs = __amalgam__

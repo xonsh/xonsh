@@ -29,6 +29,8 @@ pygments = LazyObject(lambda: importlib.import_module('pygments'),
                       globals(), 'pygments')
 pyghooks = LazyObject(lambda: importlib.import_module('xonsh.pyghooks'),
                       globals(), 'pyghooks')
+style = LazyObject(lambda: importlib.import_module('xonsh.style'),
+                      globals(), 'style')
 
 
 # builtin docstrings to ignore
@@ -470,7 +472,7 @@ class Inspector(object):
                 title += '\n'
             else:
                 title += " ".ljust(title_width - title_len)
-            out += pyghooks.partial_color_tokenize(title)
+            out += style.partial_color_tokenize(title)
             if isinstance(content, str):
                 out[-1] = (out[-1][0], out[-1][1] + content + '\n')
             else:

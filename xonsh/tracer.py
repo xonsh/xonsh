@@ -22,6 +22,8 @@ terminal = LazyObject(lambda: importlib.import_module(
                       globals(), 'terminal')
 pyghooks = LazyObject(lambda: importlib.import_module('xonsh.pyghooks'),
                       globals(), 'pyghooks')
+style = LazyObject(lambda: importlib.import_module('xonsh.style'),
+                      globals(), 'style')
 
 class TracerType(object):
     """Represents a xonsh tracer object, which keeps track of all tracing
@@ -107,7 +109,7 @@ def tracer_format_line(fname, lineno, line, color=True, lexer=None, formatter=No
     if not HAS_PYGMENTS:
         return cline + line
     # OK, so we have pygments
-    tokens = pyghooks.partial_color_tokenize(cline)
+    tokens = style.partial_color_tokenize(cline)
     lexer = lexer or pyghooks.XonshLexer()
     tokens += pygments.lex(line, lexer=lexer)
     return tokens

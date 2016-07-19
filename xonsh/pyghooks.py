@@ -1,38 +1,29 @@
 # -*- coding: utf-8 -*-
 """Hooks for pygments syntax highlighting."""
 import os
-import re
-import string
 import builtins
-import importlib
 from warnings import warn
 from collections import ChainMap
 from collections.abc import MutableMapping
 
 # must come before pygments imports
 from xonsh.lazyasd import load_module_in_background
-load_module_in_background('pkg_resources', debug='XONSH_DEBUG',
-    replacements={'pygments.plugin': 'pkg_resources'})
 
+load_module_in_background('pkg_resources', debug='XONSH_DEBUG',
+replacements={'pygments.plugin': 'pkg_resources'})
 from pygments.lexer import inherit, bygroups, using, this
 from pygments.lexers.shell import BashLexer
 from pygments.lexers.agile import PythonLexer
-from pygments.token import (Keyword, Name, Comment, String, Error, Number,
-                            Operator, Generic, Whitespace, Token)
+from pygments.token import Keyword, Name, String, Generic, Token
 from pygments.style import Style
 from pygments.styles import get_style_by_name
 import pygments.util
 
-from xonsh.lazyasd import LazyObject, lazyobject, LazyDict
+from xonsh.lazyasd import LazyObject, LazyDict
 from xonsh.tools import (ON_WINDOWS, intensify_colors_for_cmd_exe,
                          expand_gray_colors_for_cmd_exe)
 from xonsh.tokenize import SearchPath
-
-
-class XonshSubprocLexer(BashLexer):
-    """Lexer for xonsh subproc mode."""
-    name = 'Xonsh subprocess lexer'
-    tokens = {'root': [(SearchPath, String.Backtick), inherit, ]}
+from xonsh.style import PTK_STYLE, XONSH_BASE_STYLE, Color
 
 
 ROOT_TOKENS = [(r'\?', Keyword),
@@ -47,15 +38,19 @@ ROOT_TOKENS = [(r'\?', Keyword),
 PYMODE_TOKENS = [(r'(.+)(\))', bygroups(using(this), Keyword), '#pop'),
                  (r'(.+)(\})', bygroups(using(this), Keyword), '#pop'), ]
 
-SUBPROC_TOKENS = [
+SUBPROC_TOKENS = LazyObject(lambda: list([
     (r'(.+)(\))', bygroups(using(XonshSubprocLexer), Keyword), '#pop'),
-    (r'(.+)(\])', bygroups(using(XonshSubprocLexer), Keyword), '#pop'),
-]
+    (r'(.+)(\])', bygroups(using(XonshSubprocLexer), Keyword), '#pop')]), globals(), 'SUBPROC_TOKENS')
+
+
+class XonshSubprocLexer(BashLexer):
+    """Lexer for xonsh subproc mode."""
+    name = 'Xonsh subprocess lexer'
+    tokens = {'root': [(SearchPath, String.Backtick), inherit, ]}
 
 
 class XonshLexer(PythonLexer):
     """Xonsh console lexer for pygments."""
-
     name = 'Xonsh lexer'
     aliases = ['xonsh', 'xsh']
     filenames = ['*.xsh', '*xonshrc']
@@ -93,60 +88,6 @@ XonshSubprocLexer.tokens['root'] = [
 #
 # Colors and Styles
 #
-
-Color = Token.Color  # alias to new color token namespace
-
-RE_BACKGROUND = LazyObject(lambda: re.compile('(BG#|BGHEX|BACKGROUND)'),
-                           globals(), 'RE_BACKGROUND')
-
-
-def norm_name(name):
-    """Normalizes a color name."""
-    return name.replace('#', 'HEX').replace('BGHEX', 'BACKGROUND_HEX')
-
-def color_by_name(name, fg=None, bg=None):
-    """Converts a color name to a color token, foreground name,
-    and background name.  Will take into consideration current foreground
-    and background colors, if provided.
-
-    Parameters
-    ----------
-    name : str
-        Color name.
-    fg : str, optional
-        Foreground color name.
-    bg : str, optional
-        Background color name.
-
-    Returns
-    -------
-    tok : Token
-        Pygments Token.Color subclass
-    fg : str or None
-        New computed foreground color name.
-    bg : str or None
-        New computed background color name.
-    """
-    name = name.upper()
-    if name == 'NO_COLOR':
-        return Color.NO_COLOR, None, None
-    m = RE_BACKGROUND.search(name)
-    if m is None:  # must be foreground color
-        fg = norm_name(name)
-    else:
-        bg = norm_name(name)
-    # assmble token
-    if fg is None and bg is None:
-        tokname = 'NO_COLOR'
-    elif fg is None:
-        tokname = bg
-    elif bg is None:
-        tokname = fg
-    else:
-        tokname = fg + '__' + bg
-    tok = getattr(Color, tokname)
-    return tok, fg, bg
-
 
 def code_by_name(name, styles):
     """Converts a token name into a pygments-style color code.
@@ -194,66 +135,8 @@ def code_by_name(name, styles):
     return code
 
 
-def partial_color_tokenize(template):
-    """Tokenizes a template string containing colors. Will return a list
-    of tuples mapping the token to the string which has that color.
-    These sub-strings maybe templates themselves.
-    """
-    if hasattr(builtins, '__xonsh_shell__'):
-        styles = __xonsh_shell__.shell.styler.styles
-    else:
-        styles = None
-    color = Color.NO_COLOR
-    try:
-        toks, color = _partial_color_tokenize_main(template, styles)
-    except Exception:
-        toks = [(Color.NO_COLOR, template)]
-    if styles is not None:
-        styles[color]  # ensure color is available
-    return toks
-
-
-def _partial_color_tokenize_main(template, styles):
-    formatter = string.Formatter()
-    bopen = '{'
-    bclose = '}'
-    colon = ':'
-    expl = '!'
-    color = Color.NO_COLOR
-    fg = bg = None
-    value = ''
-    toks = []
-    for literal, field, spec, conv in formatter.parse(template):
-        if field is None:
-            value += literal
-        elif field in KNOWN_COLORS or '#' in field:
-            value += literal
-            next_color, fg, bg = color_by_name(field, fg, bg)
-            if next_color is not color:
-                if len(value) > 0:
-                    toks.append((color, value))
-                    if styles is not None:
-                        styles[color]  # ensure color is available
-                color = next_color
-                value = ''
-        elif field is not None:
-            parts = [literal, bopen, field]
-            if conv is not None and len(conv) > 0:
-                parts.append(expl)
-                parts.append(conv)
-            if spec is not None and len(spec) > 0:
-                parts.append(colon)
-                parts.append(spec)
-            parts.append(bclose)
-            value += ''.join(parts)
-        else:
-            value += literal
-    toks.append((color, value))
-    return toks, color
-
-
 class CompoundColorMap(MutableMapping):
-    """Looks up color tokes by name, potentailly generating the value
+    """Looks up color tokens by name, potentially generating the value
     from the lookup.
     """
 
@@ -365,141 +248,6 @@ def xonsh_style_proxy(styler):
             return cls.target
 
     return XonshStyleProxy
-
-
-PTK_STYLE = {
-    Token.Menu.Completions.Completion.Current: 'bg:#00aaaa #000000',
-    Token.Menu.Completions.Completion: 'bg:#008888 #ffffff',
-    Token.Menu.Completions.ProgressButton: 'bg:#003333',
-    Token.Menu.Completions.ProgressBar: 'bg:#00aaaa',
-    Token.AutoSuggestion: '#666666',
-    Token.Aborted: '#888888',
-}
-
-XONSH_BASE_STYLE = LazyObject(lambda: {
-    Whitespace: '#008080',
-    Comment: 'underline',
-    Comment.Preproc: 'underline',
-    Keyword: 'bold',
-    Keyword.Pseudo: '#008000',
-    Keyword.Type: '',
-    Operator: '#008080',
-    Operator.Word: 'bold',
-    Name.Builtin: '',
-    Name.Function: '#000080',
-    Name.Class: 'bold',
-    Name.Namespace: 'bold',
-    Name.Exception: 'bold',
-    Name.Variable: '#008080',
-    Name.Constant: '#800000',
-    Name.Label: '#808000',
-    Name.Entity: 'bold',
-    Name.Attribute: '#008080',
-    Name.Tag: 'bold',
-    Name.Decorator: '#008080',
-    String: '',
-    String.Doc: 'underline',
-    String.Interpol: 'bold',
-    String.Escape: 'bold',
-    String.Regex: '',
-    String.Symbol: '',
-    String.Other: '#008000',
-    Number: '#800000',
-    Generic.Heading: 'bold',
-    Generic.Subheading: 'bold',
-    Generic.Deleted: '#800000',
-    Generic.Inserted: '#008000',
-    Generic.Error: 'bold',
-    Generic.Emph: 'underline',
-    Generic.Prompt: 'bold',
-    Generic.Output: '#008080',
-    Generic.Traceback: '#800000',
-    Error: '#800000',
-    }, globals(), 'XONSH_BASE_STYLE')
-
-KNOWN_COLORS = LazyObject(lambda: frozenset([
-    'BACKGROUND_BLACK',
-    'BACKGROUND_BLUE',
-    'BACKGROUND_CYAN',
-    'BACKGROUND_GREEN',
-    'BACKGROUND_INTENSE_BLACK',
-    'BACKGROUND_INTENSE_BLUE',
-    'BACKGROUND_INTENSE_CYAN',
-    'BACKGROUND_INTENSE_GREEN',
-    'BACKGROUND_INTENSE_PURPLE',
-    'BACKGROUND_INTENSE_RED',
-    'BACKGROUND_INTENSE_WHITE',
-    'BACKGROUND_INTENSE_YELLOW',
-    'BACKGROUND_PURPLE',
-    'BACKGROUND_RED',
-    'BACKGROUND_WHITE',
-    'BACKGROUND_YELLOW',
-    'BLACK',
-    'BLUE',
-    'BOLD_BLACK',
-    'BOLD_BLUE',
-    'BOLD_CYAN',
-    'BOLD_GREEN',
-    'BOLD_INTENSE_BLACK',
-    'BOLD_INTENSE_BLUE',
-    'BOLD_INTENSE_CYAN',
-    'BOLD_INTENSE_GREEN',
-    'BOLD_INTENSE_PURPLE',
-    'BOLD_INTENSE_RED',
-    'BOLD_INTENSE_WHITE',
-    'BOLD_INTENSE_YELLOW',
-    'BOLD_PURPLE',
-    'BOLD_RED',
-    'BOLD_UNDERLINE_BLACK',
-    'BOLD_UNDERLINE_BLUE',
-    'BOLD_UNDERLINE_CYAN',
-    'BOLD_UNDERLINE_GREEN',
-    'BOLD_UNDERLINE_INTENSE_BLACK',
-    'BOLD_UNDERLINE_INTENSE_BLUE',
-    'BOLD_UNDERLINE_INTENSE_CYAN',
-    'BOLD_UNDERLINE_INTENSE_GREEN',
-    'BOLD_UNDERLINE_INTENSE_PURPLE',
-    'BOLD_UNDERLINE_INTENSE_RED',
-    'BOLD_UNDERLINE_INTENSE_WHITE',
-    'BOLD_UNDERLINE_INTENSE_YELLOW',
-    'BOLD_UNDERLINE_PURPLE',
-    'BOLD_UNDERLINE_RED',
-    'BOLD_UNDERLINE_WHITE',
-    'BOLD_UNDERLINE_YELLOW',
-    'BOLD_WHITE',
-    'BOLD_YELLOW',
-    'CYAN',
-    'GREEN',
-    'INTENSE_BLACK',
-    'INTENSE_BLUE',
-    'INTENSE_CYAN',
-    'INTENSE_GREEN',
-    'INTENSE_PURPLE',
-    'INTENSE_RED',
-    'INTENSE_WHITE',
-    'INTENSE_YELLOW',
-    'NO_COLOR',
-    'PURPLE',
-    'RED',
-    'UNDERLINE_BLACK',
-    'UNDERLINE_BLUE',
-    'UNDERLINE_CYAN',
-    'UNDERLINE_GREEN',
-    'UNDERLINE_INTENSE_BLACK',
-    'UNDERLINE_INTENSE_BLUE',
-    'UNDERLINE_INTENSE_CYAN',
-    'UNDERLINE_INTENSE_GREEN',
-    'UNDERLINE_INTENSE_PURPLE',
-    'UNDERLINE_INTENSE_RED',
-    'UNDERLINE_INTENSE_WHITE',
-    'UNDERLINE_INTENSE_YELLOW',
-    'UNDERLINE_PURPLE',
-    'UNDERLINE_RED',
-    'UNDERLINE_WHITE',
-    'UNDERLINE_YELLOW',
-    'WHITE',
-    'YELLOW',
-    ]), globals(), 'KNOWN_COLORS')
 
 
 def _expand_style(cmap):
