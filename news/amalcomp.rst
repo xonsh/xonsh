@@ -10,6 +10,12 @@
 
 **Removed:** None
 
-**Fixed:** None
+**Fixed:**
+
+* Fixed multiple definition of ``EQUAL``.
+* Fixed multiple definition of ``pprint``.
+* Fixed multiple definition of ``pyghooks``.
+* Fixed multiple definition of ``pygments``.
+* Fixed multiple definition of ``tokenize``.
 
 **Security:** None
