@@ -242,7 +242,11 @@ class BaseShell(object):
             t = escape_windows_cmd_string(t)
             os.system('title {}'.format(t))
         else:
-            os.write(1, "\x1b]2;{0}\x07".format(t).encode())
+            with open(1, 'wb', closefd=False) as f:
+                # prevent xonsh from answering interative questions
+                # on the next command by writing the title
+                f.write("\x1b]2;{0}\x07".format(t).encode())
+                f.flush()
 
     @property
     def prompt(self):
