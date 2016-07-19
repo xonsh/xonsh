@@ -12,11 +12,12 @@ from xonsh.environ import Env
 from xonsh.dirstack import DIRSTACK
 from xonsh.platform import ON_WINDOWS
 
-def _do_subprocess( *args)->tuple:
+def _do_subprocess( *args, check:bool=True)->tuple:
     """
     Invoke `args`, outputs and return code
     Args:
         *args: sequence of strings, as for `subprocess.check_output`
+        check: True to raise an assertion (and abort py.test) if command fails.
 
     Returns:
         tuple of:
@@ -29,7 +30,10 @@ def _do_subprocess( *args)->tuple:
                 , subprocess.check_output( *args, universal_newlines=True, stderr=subprocess.STDOUT) \
                 , None
     except subprocess.CalledProcessError as e:
-        print('Subproc error {}, text: {}'.format( e.returncode, e.output))
+        if check:
+            print('Subproc error {}, text: {}'.format( e.returncode, e.output))
+            assert e.output is None
+
         return e.returncode \
                 , None \
                 , e.output
@@ -109,9 +113,10 @@ def shares_setup( tmpdir_factory):
               , [r'uncpushd_test_cd1', 'w:', temp_dir.join('cdtest1').strpath]]
 
     for s,d,l in shares:      # set up some shares on local machine.  dirs already exist (test case must invoke wd_setup)
+        _do_subprocess( ['net', 'share', s, '/delete'], check=False) # clean up from previous run after good, long wait.
+
         _do_subprocess(['net', 'share', s + '=' + l])
-        co = _do_subprocess(['net', 'use', d, r"\\localhost" + '\\' + s])
-        pass
+        _do_subprocess(['net', 'use', d, r"\\localhost" + '\\' + s])
 
     yield [ [ r"\\localhost" +'\\'+ s[0], s[1] , s[2]] for s in shares]
 
@@ -122,8 +127,8 @@ def shares_setup( tmpdir_factory):
         _do_subprocess(['net', 'use', dl, '/delete'])
     for s,d,l in shares:
         _do_subprocess(['net', 'use', d, '/delete'])
-        _do_subprocess(['net', 'share', s, '/delete'])
-
+        #_do_subprocess(['net', 'share', s, '/delete']) # fails with access denied, unless I wait > 10 sec
+                        # see http://stackoverflow.com/questions/38448413/access-denied-in-net-share-delete
 
 def test_unc_pushdpopd( xonsh_builtins, wd_setup):
     """verify extension doesn't break unix experience if someone where so benighted as to declare these aliases not on WINDOWS
