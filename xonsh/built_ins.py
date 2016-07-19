@@ -35,6 +35,7 @@ from xonsh.tools import (
 )
 from xonsh.commands_cache import CommandsCache
 
+import xonsh.completers.init
 
 BUILTINS_LOADED = False
 INSPECTOR = LazyObject(Inspector, globals(), 'INSPECTOR')
@@ -708,6 +709,7 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.__xonsh_all_jobs__ = {}
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     builtins.__xonsh_list_of_strs_or_callables__ = list_of_strs_or_callables
+    builtins.__xonsh_completers__ = xonsh.completers.init.default_completers()
     # public built-ins
     builtins.XonshError = XonshError
     builtins.XonshBlockError = XonshBlockError
@@ -772,6 +774,7 @@ def unload_builtins():
              '__xonsh_subproc_uncaptured__',
              '__xonsh_execer__',
              '__xonsh_commands_cache__',
+             '__xonsh_completers__',
              'XonshError',
              'XonshBlockError',
              'XonshCalledProcessError',
