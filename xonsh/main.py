@@ -19,12 +19,7 @@ from xonsh.tools import setup_win_unicode_console, print_color
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.codecache import run_script_with_cache, run_code_with_cache
 from xonsh.xonfig import xonfig_main
-
-
-pygments = LazyObject(lambda: importlib.import_module('pygments'),
-                      globals(), 'pygments')
-pyghooks = LazyObject(lambda: importlib.import_module('xonsh.pyghooks'),
-                      globals(), 'pyghooks')
+from xonsh.lazyimps import pygments, pyghooks
 
 
 def get_setproctitle():

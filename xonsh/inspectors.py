@@ -24,11 +24,7 @@ from xonsh.openpy import read_py_file
 from xonsh.tools import (cast_unicode, safe_hasattr, indent,
                          print_color, format_color)
 from xonsh.platform import HAS_PYGMENTS, PYTHON_VERSION_INFO
-
-pygments = LazyObject(lambda: importlib.import_module('pygments'),
-                      globals(), 'pygments')
-pyghooks = LazyObject(lambda: importlib.import_module('xonsh.pyghooks'),
-                      globals(), 'pyghooks')
+from xonsh.lazyimps import pygments, pyghooks
 
 
 # builtin docstrings to ignore

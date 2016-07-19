@@ -27,14 +27,11 @@ from xonsh.ansi_colors import ansi_partial_color_format, ansi_color_style_names,
 from xonsh.environ import partial_format_prompt, multiline_prompt
 from xonsh.tools import print_exception
 from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_DARWIN
+from xonsh.lazyimps import pygments, pyghooks
 
-pygments = LazyObject(lambda: importlib.import_module('pygments'),
-                      globals(), 'pygments')
 terminal256 = LazyObject(lambda: importlib.import_module(
                                     'pygments.formatters.terminal256'),
                       globals(), 'terminal')
-pyghooks = LazyObject(lambda: importlib.import_module('xonsh.pyghooks'),
-                      globals(), 'pyghooks')
 
 readline = None
 RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = RL_STATE = None

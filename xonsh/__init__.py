@@ -19,6 +19,8 @@ else:
         _sys.modules['xonsh.ansi_colors'] = __amalgam__
         codecache = __amalgam__
         _sys.modules['xonsh.codecache'] = __amalgam__
+        lazyimps = __amalgam__
+        _sys.modules['xonsh.lazyimps'] = __amalgam__
         openpy = __amalgam__
         _sys.modules['xonsh.openpy'] = __amalgam__
         platform = __amalgam__
