@@ -531,7 +531,8 @@ def run_subproc(cmds, captured=False):
         })
     if (env.get('XONSH_INTERACTIVE') and
             not env.get('XONSH_STORE_STDOUT') and
-            not _capture_streams):
+            not _capture_streams and
+            hasattr(builtins, '__xonsh_shell__')):
         # set title here to get current command running
         pause_call_resume(prev_proc, builtins.__xonsh_shell__.settitle)
     if background:
