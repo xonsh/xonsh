@@ -4,6 +4,7 @@ import sys
 import venv
 import shutil
 import builtins
+import collections
 import collections.abc
 
 from xonsh.platform import ON_POSIX, ON_WINDOWS, scandir
@@ -18,6 +19,7 @@ class Vox(collections.abc.Mapping):
     """API access to Vox and virtual environments, in a dict-like format.
 
     Makes use of the VirtualEnvironment namedtuple:
+
     1. ``env``: The full path to the environment
     2. ``bin``: The full path to the bin/Scripts directory of the environment
     """
