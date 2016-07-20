@@ -148,7 +148,8 @@
    "url": "https://github.com/gforsyth/xonda",
    "install": {
     "pip": "pip install xonda"
-   },
+   }
+  },
   "xontrib-avox": {
    "license": "GPLv3",
    "url": "https://github.com/astronouth7303/xontrib-avox",
