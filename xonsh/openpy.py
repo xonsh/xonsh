@@ -14,9 +14,9 @@ This file was forked from the IPython project:
 """
 import io
 import re
-import tokenize
 
 from xonsh.lazyasd import LazyObject
+from xonsh.tokenize import detect_encoding, tokopen
 
 
 cookie_comment_re = LazyObject(
@@ -39,7 +39,7 @@ def source_to_unicode(txt, errors='replace', skip_encoding_cookie=True):
     else:
         buf = txt
     try:
-        encoding, _ = tokenize.detect_encoding(buf.readline)
+        encoding, _ = detect_encoding(buf.readline)
     except SyntaxError:
         encoding = "ascii"
     buf.seek(0)
@@ -65,7 +65,6 @@ def strip_encoding_cookie(filelike):
             yield second
     except StopIteration:
         return
-
     for line in it:
         yield line
 
@@ -86,7 +85,7 @@ def read_py_file(filename, skip_encoding_cookie=True):
     -------
     A unicode string containing the contents of the file.
     """
-    with tokenize.tokopen(filename) as f:  # the open function defined in this module.
+    with tokopen(filename) as f:  # the open function defined in this module.
         if skip_encoding_cookie:
             return "".join(strip_encoding_cookie(f))
         else:

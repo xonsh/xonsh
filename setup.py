@@ -35,7 +35,8 @@ except ImportError:
     HAVE_JUPYTER = False
 
 
-TABLES = ['xonsh/lexer_table.py', 'xonsh/parser_table.py', 'xonsh/__amalgam__.py']
+TABLES = ['xonsh/lexer_table.py', 'xonsh/parser_table.py',
+          'xonsh/__amalgam__.py', 'xonsh/completers/__amalgam__.py']
 
 
 def clean_tables():
@@ -57,7 +58,8 @@ def amalagamate_source():
     except ImportError:
         print('Could not import amalgamate, skipping.', file=sys.stderr)
         return
-    amalgamate.main(['amalgamate', '--debug=XONSH_DEBUG', 'xonsh'])
+    amalgamate.main(['amalgamate', '--debug=XONSH_DEBUG', 'xonsh',
+                     'xonsh.completers'])
 
 
 def build_tables():
@@ -122,6 +124,7 @@ def dirty_version():
         open('xonsh/dev.githash', 'w').close()
         print('failed to parse git version', file=sys.stderr)
         return False
+    sha = sha.strip('g')
     replace_version(base, N)
     with open('xonsh/dev.githash', 'w') as f:
         f.write(sha)

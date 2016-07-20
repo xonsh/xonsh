@@ -491,7 +491,7 @@ def pdump(s, **kwargs):
     return pre + mid + post
 
 
-def pprint(s, *, sep=None, end=None, file=None, flush=False, **kwargs):
+def pprint_ast(s, *, sep=None, end=None, file=None, flush=False, **kwargs):
     """Performs a pretty print of the AST nodes."""
     print(pdump(s, **kwargs), sep=sep, end=end, file=file, flush=flush)
 

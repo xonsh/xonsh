@@ -27,14 +27,15 @@ from xonsh.foreign_shells import load_foreign_aliases
 from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
-                        SimpleForegroundProcProxy, TeePTYProc,
-                        CompletedCommand, HiddenCompletedCommand)
+    SimpleForegroundProcProxy, TeePTYProc, pause_call_resume, CompletedCommand,
+    HiddenCompletedCommand)
 from xonsh.tools import (
     suggest_commands, expandvars, globpath, XonshError,
     XonshCalledProcessError, XonshBlockError
 )
 from xonsh.commands_cache import CommandsCache
 
+import xonsh.completers.init
 
 BUILTINS_LOADED = False
 INSPECTOR = LazyObject(Inspector, globals(), 'INSPECTOR')
@@ -532,12 +533,10 @@ def run_subproc(cmds, captured=False):
         })
     if (env.get('XONSH_INTERACTIVE') and
             not env.get('XONSH_STORE_STDOUT') and
-            not _capture_streams):
+            not _capture_streams and
+            hasattr(builtins, '__xonsh_shell__')):
         # set title here to get current command running
-        try:
-            builtins.__xonsh_shell__.settitle()
-        except AttributeError:
-            pass
+        pause_call_resume(prev_proc, builtins.__xonsh_shell__.settitle)
     if background:
         return
     if prev_is_proxy:
@@ -713,6 +712,7 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.__xonsh_all_jobs__ = {}
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     builtins.__xonsh_list_of_strs_or_callables__ = list_of_strs_or_callables
+    builtins.__xonsh_completers__ = xonsh.completers.init.default_completers()
     # public built-ins
     builtins.XonshError = XonshError
     builtins.XonshBlockError = XonshBlockError
@@ -777,6 +777,7 @@ def unload_builtins():
              '__xonsh_subproc_uncaptured__',
              '__xonsh_execer__',
              '__xonsh_commands_cache__',
+             '__xonsh_completers__',
              'XonshError',
              'XonshBlockError',
              'XonshCalledProcessError',

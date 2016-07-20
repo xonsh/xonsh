@@ -13,15 +13,12 @@ from xonsh.platform import HAS_PYGMENTS
 from xonsh.tools import DefaultNotGiven, print_color, normabspath, to_bool
 from xonsh.inspectors import find_file, getouterframes
 from xonsh.environ import _replace_home
+from xonsh.lazyimps import pygments, pyghooks
 
 
-pygments = LazyObject(lambda: importlib.import_module('pygments'),
-                      globals(), 'pygments')
 terminal = LazyObject(lambda: importlib.import_module(
                                 'pygments.formatters.terminal'),
                       globals(), 'terminal')
-pyghooks = LazyObject(lambda: importlib.import_module('xonsh.pyghooks'),
-                      globals(), 'pyghooks')
 
 
 class TracerType(object):

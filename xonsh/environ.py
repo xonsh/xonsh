@@ -11,10 +11,11 @@ import string
 import pprint
 import locale
 import builtins
+import warnings
+import traceback
 import itertools
 import contextlib
 import subprocess
-import warnings
 import collections
 import collections.abc as abc
 
@@ -1442,13 +1443,15 @@ def xonshrc_context(rcfiles=None, execer=None, initial=None):
             loaded.append(True)
         except SyntaxError as err:
             loaded.append(False)
-            msg = 'syntax error in xonsh run control file {0!r}: {1!s}'
-            warnings.warn(msg.format(rcfile, err), RuntimeWarning)
+            exc = traceback.format_exc()
+            msg = '{0}\nsyntax error in xonsh run control file {1!r}: {2!s}'
+            warnings.warn(msg.format(exc, rcfile, err), RuntimeWarning)
             continue
         except Exception as err:
             loaded.append(False)
-            msg = 'error running xonsh run control file {0!r}: {1!s}'
-            warnings.warn(msg.format(rcfile, err), RuntimeWarning)
+            exc = traceback.format_exc()
+            msg = '{0}\nerror running xonsh run control file {1!r}: {2!s}'
+            warnings.warn(msg.format(exc, rcfile, err), RuntimeWarning)
             continue
     return env
 

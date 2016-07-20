@@ -11,6 +11,7 @@ import io
 import os
 import sys
 import time
+import signal
 import builtins
 import functools
 import threading
@@ -19,8 +20,9 @@ import subprocess
 import collections
 import collections.abc as abc
 
-from xonsh.tools import (redirect_stdout, redirect_stderr, ON_WINDOWS, ON_LINUX,
-                         fallback, print_exception, XonshCalledProcessError)
+from xonsh.platform import ON_WINDOWS, ON_LINUX, ON_POSIX
+from xonsh.tools import (redirect_stdout, redirect_stderr, fallback,
+                         print_exception, XonshCalledProcessError)
 from xonsh.teepty import TeePTY
 from xonsh.lazyasd import LazyObject
 
@@ -599,3 +601,25 @@ CompletedCommand.__new__.__defaults__ = (None,) * len(CompletedCommand._fields)
 class HiddenCompletedCommand(CompletedCommand):
     def __repr__(self):
         return ''
+
+
+def pause_call_resume(p, f, *args, **kwargs):
+    """For a process p, this will call a function f with the remaining args and
+    and kwargs. If the process cannot accept signals, the function will be called.
+
+    Parameters
+    ----------
+    p : Popen object or similar
+    f : callable
+    args : remaining arguments
+    kwargs : keyword arguments
+    """
+    can_send_signal = hasattr(p, 'send_signal') and ON_POSIX
+    if can_send_signal:
+        p.send_signal(signal.SIGSTOP)
+    try:
+        f(*args, **kwargs)
+    except Exception:
+        pass
+    if can_send_signal:
+        p.send_signal(signal.SIGCONT)
