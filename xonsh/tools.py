@@ -929,6 +929,7 @@ def SLICE_REG():
     return re.compile(r'(?P<start>(?:-\d)?\d*):(?P<end>(?:-\d)?\d*):?(?P<step>(?:-\d)?\d*)')
 
 def ensure_slice(x):
+    """Covert a string or int to a slice."""
     if x is None:
         return slice(None)
     try:

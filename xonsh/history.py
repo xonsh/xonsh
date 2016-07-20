@@ -269,7 +269,7 @@ def _find_histfile_var(file_list=None, default=None):
     return hist_file
 
 
-def _all_xonsh_parser(*args):
+def _all_xonsh_parser(**kwargs):
     """
     Returns all history as found in XONSH_DATA_DIR.
 
@@ -295,7 +295,7 @@ def _all_xonsh_parser(*args):
     return [(c, t, ind) for ind, (c, t) in enumerate(commands)]
 
 
-def _curr_session_parser(hist=None):
+def _curr_session_parser(hist=None, **kwargs):
     """
     Take in History object and return command list tuple with
     format: (name, start_time, index)
@@ -311,7 +311,7 @@ def _curr_session_parser(hist=None):
     return [(c, t, ind) for ind, (c, t) in commands]
 
 
-def _zsh_hist_parser(location=None):
+def _zsh_hist_parser(location=None, **kwargs):
     default_location = os.path.join('~', '.zsh_history')
     location_list = [os.path.join('~', '.zshrc'),
                      os.path.join('~', '.zprofile')]
@@ -340,7 +340,7 @@ def _zsh_hist_parser(location=None):
         print("No zsh history file found", file=sys.stderr)
 
 
-def _bash_hist_parser(location=None):
+def _bash_hist_parser(location=None, **kwargs):
     default_location = os.path.join('~', '.bash_history')
     location_list = [os.path.join('~', '.bashrc'),
                      os.path.join('~', '.bash_profile')]
@@ -371,7 +371,7 @@ def _hist_create_parser():
     show.add_argument('-r', dest='reverse', default=False,
                       action='store_true',
                       help='reverses the direction')
-    show.add_argument('session', nargs='?', choices=HIST_SESSIONS, default='session',
+    show.add_argument('session', nargs='?', choices=_HIST_SESSIONS.keys(), default='session',
                       help='Choose a history session, defaults to current session')
     show.add_argument('slices', nargs=argparse.REMAINDER, default=[],
                       help='display history entries or range of entries')
@@ -423,27 +423,24 @@ def _hist_show(ns=None, hist=None, start_index=None, end_index=None,
 
         session - returns xonsh history from current session
         xonsh   - returns xonsh history from all sessions
+        all     - alias of xonsh
         zsh     - returns all zsh history
         bash    - returns all bash history
     """
     # Check if ns is a string, meaning it was invoked from
-    # __xonsh_history__
+    if hist is None:
+        hist = bultins.__xonsh_history__
     alias = True
-    valid_formats = {'session': functools.partial(_curr_session_parser, hist),
-                     'xonsh': _all_xonsh_parser,
-                     'all': _all_xonsh_parser,
-                     'zsh': functools.partial(_zsh_hist_parser, location),
-                     'bash': functools.partial(_bash_hist_parser, location)}
-    if isinstance(ns, str) and ns in valid_formats.keys():
+    if isinstance(ns, str) and ns in _HIST_SESSIONS:
         ns = _hist_create_parser().parse_args([ns])
         alias = False
     if not ns:
         ns = _hist_create_parser().parse_args(['show', 'xonsh'])
         alias = False
     try:
-        commands = valid_formats[ns.session]()
+        commands = _HIST_SESSIONS[ns.session](hist=hist, location=location)
     except KeyError:
-        print("{} is not a valid history format".format(ns.action))
+        print("{} is not a valid history session".format(ns.action))
         return None
     if not commands:
         return None
@@ -648,9 +645,12 @@ def _hist_gc(ns, hist):
 
 
 @lazyobject
-def HIST_SESSIONS():
-    return frozenset(['session', 'xonsh', 'all', 'bash', 'zsh'])
-
+def _HIST_SESSIONS():
+    return {'session': _curr_session_parser,
+            'xonsh': _all_xonsh_parser,
+            'all': _all_xonsh_parser,
+            'zsh': _zsh_hist_parser,
+            'bash': _bash_hist_parser}
 @lazyobject
 def _HIST_MAIN_ACTIONS():
     return {
@@ -673,7 +673,7 @@ def _hist_parse_args(args):
     if (args[0] == 'show'
        and len(args) > 1
        and args[1] not in ['-h', '--help', '-r']
-       and args[1] not in HIST_SESSIONS):
+       and args[1] not in _HIST_SESSIONS):
         args.insert(1, 'session')
     return parser.parse_args(args)
 
