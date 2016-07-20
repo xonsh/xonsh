@@ -14,16 +14,15 @@ from xonsh.lexer import Lexer
 from xonsh.tools import (
     EnvPath, always_false, always_true, argvquote,
     bool_or_int_to_str, bool_to_str, check_for_partial_string,
-    dynamic_cwd_tuple_to_str, ensure_int_or_slice, ensure_string,
+    dynamic_cwd_tuple_to_str, ensure_slice, ensure_string,
     env_path_to_str, escape_windows_cmd_string, executables_in,
     expand_case_matching, find_next_break, iglobpath, is_bool, is_bool_or_int,
-    is_callable, is_dynamic_cwd_width, is_env_path, is_float, is_int,
-    is_int_as_str, is_logfile_opt, is_slice_as_str, is_string,
-    is_string_or_callable, logfile_opt_to_str, str_to_env_path,
+    is_callable, is_dynamic_cwd_width, is_env_path, is_float, is_int, is_logfile_opt,
+    is_string_or_callable, logfile_opt_to_str, str_to_env_path, is_string,
     subexpr_from_unbalanced, subproc_toks, to_bool, to_bool_or_int,
     to_dynamic_cwd_tuple, to_logfile_opt, pathsep_to_set, set_to_pathsep,
     is_string_seq, pathsep_to_seq, seq_to_pathsep, is_nonstring_seq_of_strings,
-    pathsep_to_upper_seq, seq_to_upper_pathsep, expandvars
+    pathsep_to_upper_seq, seq_to_upper_pathsep, expandvars, is_int_as_str, is_slice_as_str
     )
 from xonsh.commands_cache import CommandsCache
 from xonsh.built_ins import expand_path
@@ -349,22 +348,6 @@ def test_is_int(inp, exp):
 
 
 @pytest.mark.parametrize('inp, exp', [
-    ('42', True),
-    ('42.0', False),
-    (42, False),
-    ([42], False),
-    ([], False),
-    (None, False),
-    ('', False),
-    (False, False),
-    (True, False),
-])
-def test_is_int_as_str(inp, exp):
-    obs = is_int_as_str(inp)
-    assert exp == obs
-
-
-@pytest.mark.parametrize('inp, exp', [
     (42.0, True),
     (42.000101010010101010101001010101010001011100001101101011100, True),
     (42, False),
@@ -379,29 +362,6 @@ def test_is_int_as_str(inp, exp):
 ])
 def test_is_float(inp, exp):
     obs = is_float(inp)
-    assert exp == obs
-
-
-@pytest.mark.parametrize('inp, exp', [
-    (42, False),
-    (None, False),
-    ('42', False),
-    ('-42', False),
-    (slice(1,2,3), False),
-    ([], False),
-    (False, False),
-    (True, False),
-    ('1:2:3', True),
-    ('1::3', True),
-    ('1:', True),
-    (':', True),
-    ('[1:2:3]', True),
-    ('(1:2:3)', True),
-    ('r', False),
-    ('r:11', False),
-])
-def test_is_slice_as_str(inp, exp):
-    obs = is_slice_as_str(inp)
     assert exp == obs
 
 
@@ -853,24 +813,52 @@ def test_bool_or_int_to_str(inp, exp):
 
 
 @pytest.mark.parametrize('inp, exp', [
-        (42, 42),
+        (42, slice(42, 43)),
         (None, slice(None, None, None)),
-        ('42', 42),
-        ('-42', -42),
+        ('42', slice(42, 43)),
+        ('-42', slice(-42, -41)),
         ('1:2:3', slice(1, 2, 3)),
         ('1::3', slice(1, None, 3)),
         (':', slice(None, None, None)),
         ('1:', slice(1, None, None)),
         ('[1:2:3]', slice(1, 2, 3)),
         ('(1:2:3)', slice(1, 2, 3)),
-        ('r', False),
-        ('r:11', False),
         ])
-def test_ensure_int_or_slice(inp, exp):
-    obs = ensure_int_or_slice(inp)
+def test_ensure_slice(inp, exp):
+    obs = ensure_slice(inp)
     assert exp == obs
 
 
+@pytest.mark.parametrize('inp, error', [
+    ('42.3', ValueError),
+    ('3:asd5:1', ValueError),
+    ('test' , ValueError),
+    ('6.53:100:5', ValueError),
+    ('4:-', ValueError),
+    ('2:15-:3', ValueError),
+    ('50:-:666', ValueError),
+    (object(), TypeError),
+    ([], TypeError)
+])
+def test_ensure_slice_invalid(inp, error):
+    with pytest.raises(error):
+        obs = ensure_slice(inp)
+
+
+@pytest.mark.parametrize('inp, exp', [
+    ('42', True),
+    ('42.0', False),
+    (42, False),
+    ([42], False),
+    ([], False),
+    (None, False),
+    ('', False),
+    (False, False),
+    (True, False),
+])
+def test_is_int_as_str(inp, exp):
+    obs = is_int_as_str(inp)
+    assert exp == obs
 @pytest.mark.parametrize('inp, exp', [
     ('20', False),
     ('20%', False),
@@ -881,6 +869,29 @@ def test_ensure_int_or_slice(inp, exp):
 ])
 def test_is_dynamic_cwd_width(inp, exp):
     obs = is_dynamic_cwd_width(inp)
+    assert exp == obs
+
+
+@pytest.mark.parametrize('inp, exp', [
+    (42, False),
+    (None, False),
+    ('42', False),
+    ('-42', False),
+    (slice(1,2,3), False),
+    ([], False),
+    (False, False),
+    (True, False),
+    ('1:2:3', True),
+    ('1::3', True),
+    ('1:', True),
+    (':', True),
+    ('[1:2:3]', True),
+    ('(1:2:3)', True),
+    ('r', False),
+    ('r:11', False),
+])
+def test_is_slice_as_str(inp, exp):
+    obs = is_slice_as_str(inp)
     assert exp == obs
 
 
