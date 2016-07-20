@@ -10,6 +10,10 @@ from xonsh.platform import ON_POSIX, ON_WINDOWS, scandir
 
 VirtualEnvironment = collections.namedtuple('VirtualEnvironment', ['env', 'bin'])
 
+class EnvironmentInUse(Exception): pass
+
+class NoEnvironmentActive(Exception): pass
+
 class Vox(collections.abc.Mapping):
     """Basically a clone of the Vox class, but usable from Python"""
 
@@ -101,14 +105,15 @@ class Vox(collections.abc.Mapping):
         """
         env = builtins.__xonsh_env__
         if 'VIRTUAL_ENV' not in env:
-            raise RuntimeError('No environment currently active.')
+            raise NoEnvironmentActive('No environment currently active.')
 
         env_path, bin_path = self[...]
         env_name = self.active()
 
-        for k,v in type(self).oldvars.items():
-            env[k] = v
-        del type(self).oldvars
+        if hasattr(type(self), 'oldvars'):
+            for k,v in type(self).oldvars.items():
+                env[k] = v
+            del type(self).oldvars
 
         env.pop('VIRTUAL_ENV')
 
@@ -121,7 +126,7 @@ class Vox(collections.abc.Mapping):
         env_path = self[name].env
         try:
             if self[...].env == env_path:
-                raise RuntimeError('The "%s" environment is currently active.' % name)
+                raise EnvironmentInUse('The "%s" environment is currently active.' % name)
         except KeyError:
             # No current venv, ... fails
             pass
@@ -134,10 +139,7 @@ class VoxHandler:
     def __init__(self):
         """Ensure that $VIRTUALENV_HOME is defined and declare the available vox commands"""
 
-        if not builtins.__xonsh_env__.get('VIRTUALENV_HOME'):
-            home_path = os.path.expanduser('~')
-            venvdir = os.path.join(home_path, '.virtualenvs')
-            builtins.__xonsh_env__['VIRTUALENV_HOME'] = venvdir
+        self.vox = Vox()
 
         self.commands = {
             ('new',): self.create_env,
@@ -169,8 +171,7 @@ class VoxHandler:
             print('Command "%s" doesn\'t exist.\n' % command_name)
             self.print_commands()
 
-    @staticmethod
-    def create_env(name):
+    def create_env(self, name):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
 
         Parameters
@@ -178,9 +179,8 @@ class VoxHandler:
         name : str
             Virtual environment name
         """
-        env_path = os.path.join(builtins.__xonsh_env__['VIRTUALENV_HOME'], name)
         print('Creating environment...')
-        venv.create(env_path, with_pip=True)
+        self.vox.create(name)
         msg = 'Environment {0!r} created. Activate it with "vox activate {0}".\n'
         print(msg.format(name))
 
@@ -192,77 +192,42 @@ class VoxHandler:
         name : str
             Virtual environment name
         """
-        env = builtins.__xonsh_env__
-        env_path = os.path.join(env['VIRTUALENV_HOME'], name)
-        if not os.path.exists(env_path):
+
+        try:
+            self.vox.activate(name)
+        except KeyError:
             print('This environment doesn\'t exist. Create it with "vox new %s".\n' % name)
             return None
-        if ON_WINDOWS:
-            bin_dir = 'Scripts'
-        elif ON_POSIX:
-            bin_dir = 'bin'
         else:
-            print('This OS is not supported.')
-            return None
-        bin_path = os.path.join(env_path, bin_dir)
-        if 'VIRTUAL_ENV' in env:
-            self.deactivate_env()
-        env['PATH'].insert(0, bin_path)
-        env['VIRTUAL_ENV'] = env_path
-        print('Activated "%s".\n' % name)
+            print('Activated "%s".\n' % name)
 
-    @staticmethod
-    def deactivate_env():
+    def deactivate_env(self):
         """Deactive the active virtual environment."""
 
-        if 'VIRTUAL_ENV' not in __xonsh_env__:
+        if self.vox.active() is None:
             print('No environment currently active. Activate one with "vox activate".\n')
             return None
-
-        env_path = __xonsh_env__['VIRTUAL_ENV']
-
-        env_name = os.path.basename(env_path)
-
-        if ON_WINDOWS:
-            bin_dir = 'Scripts'
-
-        elif ON_POSIX:
-            bin_dir = 'bin'
-
-        else:
-            print('This OS is not supported.')
-            return None
-
-        bin_path = os.path.join(env_path, bin_dir)
-
-        while bin_path in __xonsh_env__['PATH']:
-            __xonsh_env__['PATH'].remove(bin_path)
-
-        __xonsh_env__.pop('VIRTUAL_ENV')
-
+        env_name = self.vox.deactivate()
         print('Deactivated "%s".\n' % env_name)
 
-    @staticmethod
-    def list_envs():
+    def list_envs(self):
         """List available virtual environments."""
 
-        venv_home = builtins.__xonsh_env__['VIRTUALENV_HOME']
         try:
-            env_dirs = list(x.name for x in scandir(venv_home) if x.is_dir())
+            envs = list(self.vox.keys())
         except PermissionError:
-            print('No permissions on {}'.format(venv_home))
+            print('No permissions on VIRTUALENV_HOME'.format(venv_home))
             return None
 
-        if not env_dirs:
+        if not envs:
             print('No environments available. Create one with "vox new".\n')
             return None
 
         print('Available environments:')
-        print('\n'.join(env_dirs))
+        print('\n'.join(envs))
 
 
-    @staticmethod
-    def remove_envs(*names):
+    def remove_envs(self, *names):
         """Remove virtual environments.
 
         Parameters
@@ -271,13 +236,14 @@ class VoxHandler:
             list of virtual environment names
         """
         for name in names:
-            env_path = os.path.join(builtins.__xonsh_env__['VIRTUALENV_HOME'], name)
-            if __xonsh_env__.get('VIRTUAL_ENV') == env_path:
+            try:
+                del self.vox[name]
+            except EnvironmentInUse:
                 print('The "%s" environment is currently active. In order to remove it, deactivate it first with "vox deactivate %s".\n' % (name, name),
                       file=sys.stderr)
                 return
-            shutil.rmtree(env_path)
-            print('Environment "%s" removed.' % name)
+            else:
+                print('Environment "%s" removed.' % name)
         print()
 
     def show_help(self):
