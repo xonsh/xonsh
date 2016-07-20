@@ -5,11 +5,10 @@ import sys
 import enum
 import argparse
 import builtins
-import importlib
 import contextlib
 
 from xonsh import __version__
-from xonsh.lazyasd import LazyObject, lazyobject
+from xonsh.lazyasd import lazyobject
 from xonsh.shell import Shell
 from xonsh.pretty import pretty
 from xonsh.proc import HiddenCompletedCommand

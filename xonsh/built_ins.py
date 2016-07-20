@@ -26,7 +26,8 @@ from xonsh.environ import Env, default_env, locate_binary
 from xonsh.foreign_shells import load_foreign_aliases
 from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.platform import ON_POSIX, ON_WINDOWS
-from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
+from xonsh.proc import (
+    ProcProxy, SimpleProcProxy, ForegroundProcProxy,
     SimpleForegroundProcProxy, TeePTYProc, pause_call_resume, CompletedCommand,
     HiddenCompletedCommand)
 from xonsh.tools import (

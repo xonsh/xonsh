@@ -920,10 +920,10 @@ def bool_or_int_to_str(x):
     return bool_to_str(x) if is_bool(x) else str(x)
 
 
-
 @lazyobject
 def SLICE_REG():
     return re.compile(r'(?P<start>(?:-\d)?\d*):(?P<end>(?:-\d)?\d*):?(?P<step>(?:-\d)?\d*)')
+
 
 def ensure_slice(x):
     """Convert a string or int to a slice."""

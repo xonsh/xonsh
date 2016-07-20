@@ -1360,7 +1360,7 @@ def multiline_prompt(curr=''):
         elif newcount <= n:
             toks.append(tok)
         else:
-            toks.append((tok[0], tok[1][:n - count]))
+            toks.append((tok[0], tok[1][:n-count]))
         count = newcount
         if n <= count:
             break

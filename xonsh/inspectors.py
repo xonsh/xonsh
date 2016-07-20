@@ -15,7 +15,6 @@ import types
 import inspect
 import itertools
 import linecache
-import importlib
 import collections
 
 from xonsh.lazyasd import LazyObject

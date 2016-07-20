@@ -15,7 +15,7 @@ import threading
 import collections
 import collections.abc as abc
 
-from xonsh.lazyasd import LazyObject, lazyobject
+from xonsh.lazyasd import lazyobject
 from xonsh.lazyjson import LazyJSON, ljdump, LJNode
 from xonsh.tools import (ensure_slice, to_history_tuple,
                          expanduser_abs_path)
@@ -654,15 +654,17 @@ def _HIST_SESSIONS():
             'all': _all_xonsh_parser,
             'zsh': _zsh_hist_parser,
             'bash': _bash_hist_parser}
+
+
 @lazyobject
 def _HIST_MAIN_ACTIONS():
     return {
-    'show': _hist_show,
-    'id': lambda ns, hist: print(hist.sessionid),
-    'file': lambda ns, hist: print(hist.filename),
-    'info': _hist_info,
-    'diff': _dh_main_action,
-    'gc': _hist_gc,
+        'show': _hist_show,
+        'id': lambda ns, hist: print(hist.sessionid),
+        'file': lambda ns, hist: print(hist.filename),
+        'info': _hist_info,
+        'diff': _dh_main_action,
+        'gc': _hist_gc,
     }
 
 
