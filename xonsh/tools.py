@@ -942,7 +942,33 @@ def ensure_slice(x):
             s = slice(*groups)
         else:
             raise ValueError('cannot convert {} to slice'.format(x))
+    except TypeError:
+        raise TypeError('ensure_slice() argument must be a string or a number not {}'.format(type(x)))
     return s
+
+
+def is_slice_as_str(x):
+    """
+    Test if string x is a slice. If not a string return False.
+    """
+    try:
+        x = x.strip('[]()')
+        m = SLICE_REG.fullmatch(x)
+        if m:
+            return True
+    except AttributeError:
+        pass
+    return False
+
+
+def is_int_as_str(x):
+    """
+    Test if string x is an integer. If not a string return False.
+    """
+    try:
+        return x.isdecimal()
+    except AttributeError:
+        return False
 
 
 def is_string_set(x):
