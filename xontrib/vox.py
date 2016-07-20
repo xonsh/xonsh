@@ -1,11 +1,14 @@
+"""Python virtual environment manager for xonsh."""
+
+import xontrib.voxapi as _voxapi
+
 class _VoxHandler:
     """Vox is a virtual environment manager for xonsh."""
 
     def __init__(self):
         """Ensure that $VIRTUALENV_HOME is defined and declare the available vox commands"""
 
-        import xontrib.voxapi
-        self.vox = xontrib.voxapi.Vox()
+        self.vox = _voxapi.Vox()
 
         self.commands = {
             ('new',): self.create_env,
@@ -104,7 +107,7 @@ class _VoxHandler:
         for name in names:
             try:
                 del self.vox[name]
-            except self.vox.EnvironmentInUse:
+            except _voxapi.EnvironmentInUse:
                 print('The "%s" environment is currently active. In order to remove it, deactivate it first with "vox deactivate %s".\n' % (name, name),
                       file=sys.stderr)
                 return

@@ -1,4 +1,4 @@
-"""Python virtual environment manager for xonsh."""
+"""API for Vox, the Python virtual environment manager for xonsh."""
 import os
 import sys
 import venv
@@ -11,6 +11,10 @@ from xonsh.platform import ON_POSIX, ON_WINDOWS, scandir
 
 VirtualEnvironment = collections.namedtuple('VirtualEnvironment', ['env', 'bin'])
 
+class EnvironmentInUse(Exception): pass
+
+class NoEnvironmentActive(Exception): pass
+
 class Vox(collections.abc.Mapping):
     """API access to Vox and virtual environments, in a dict-like format.
 
@@ -19,10 +23,6 @@ class Vox(collections.abc.Mapping):
     1. ``env``: The full path to the environment
     2. ``bin``: The full path to the bin/Scripts directory of the environment
     """
-
-    class EnvironmentInUse(Exception): pass
-
-    class NoEnvironmentActive(Exception): pass
 
     def __init__(self):
         if not builtins.__xonsh_env__.get('VIRTUALENV_HOME'):
