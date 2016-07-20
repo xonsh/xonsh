@@ -20,7 +20,7 @@ from xonsh.replay import replay_main
 from xonsh.timings import timeit_alias
 from xonsh.tools import (XonshError, argvquote, escape_windows_cmd_string,
                          to_bool)
-from xonsh.vox import Vox
+from xonsh.vox import VoxHandler
 from xonsh.xontribs import xontribs_main
 from xonsh.xoreutils import _which
 from xonsh.completers._aliases import completer_alias
@@ -460,7 +460,7 @@ def trace(args, stdin=None):
 
 def vox(args, stdin=None):
     """Runs Vox environment manager."""
-    vox = Vox()
+    vox = VoxHandler()
     return vox(args, stdin=stdin)
 
 

@@ -8,7 +8,7 @@ import builtins
 from xonsh.platform import ON_POSIX, ON_WINDOWS, scandir
 
 
-class Vox:
+class VoxHandler:
     """Vox is a virtual environment manager for xonsh."""
 
     def __init__(self):
