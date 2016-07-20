@@ -40,7 +40,7 @@ elif ON_CYGWIN:
             for pid in job['pids']:
                 try:
                     os.kill(pid, signal)
-                except:
+                except Exception:
                     pass
 else:
     def _send_signal(job, signal):
@@ -49,7 +49,7 @@ else:
             for pid in job['pids']:
                 try:
                     os.kill(pid, signal)
-                except:
+                except Exception:
                     pass
         else:
             os.killpg(job['pgrp'], signal)

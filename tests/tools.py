@@ -11,11 +11,9 @@ from contextlib import contextmanager
 
 import pytest
 
-from xonsh.built_ins import ensure_list_of_strs
 from xonsh.environ import Env
-builtins.__xonsh_env__ = Env()
+from xonsh.built_ins import ensure_list_of_strs
 from xonsh.base_shell import BaseShell
-from xonsh.execer import Execer
 from xonsh.tools import XonshBlockError
 
 
@@ -27,19 +25,23 @@ ON_DARWIN = (platform.system() == 'Darwin')
 ON_WINDOWS = (platform.system() == 'Windows')
 
 
-skip_if_py34 = pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5,
-                                   reason="Py3.5+ only test")
+# pytest skip decorators
+skip_if_py34 = pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5, reason="Py3.5+ only test")
 
-skip_if_py35plus = pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5,
-                               reason="Py3.5+ only test")
+skip_if_on_windows = pytest.mark.skipif(ON_WINDOWS, reason='Unix stuff')
 
+skip_if_on_unix = pytest.mark.skipif(not ON_WINDOWS, reason='Windows stuff')
+
+skip_if_on_darwin = pytest.mark.skipif(ON_DARWIN, reason='not Mac friendly')
 
 
 def sp(cmd):
     return subprocess.check_output(cmd, universal_newlines=True)
 
+
 class DummyStyler():
     styles = defaultdict(None.__class__)
+
 
 class DummyBaseShell(BaseShell):
 
@@ -60,77 +62,26 @@ class DummyShell:
         return self._shell
 
 
-@contextmanager
-def mock_xonsh_env(xenv):
-    builtins.__xonsh_env__ = xenv
-    builtins.__xonsh_ctx__ = {}
-    builtins.__xonsh_shell__ = DummyShell()
-    builtins.__xonsh_help__ = lambda x: x
-    builtins.__xonsh_glob__ = glob.glob
-    builtins.__xonsh_exit__ = False
-    builtins.__xonsh_superhelp__ = lambda x: x
-    builtins.__xonsh_regexpath__ = lambda x: []
-    builtins.__xonsh_expand_path__ = lambda x: x
-    builtins.__xonsh_subproc_captured__ = sp
-    builtins.__xonsh_subproc_uncaptured__ = sp
-    builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
-    builtins.XonshBlockError = XonshBlockError
-    builtins.evalx = eval
-    builtins.execx = None
-    builtins.compilex = None
-    builtins.aliases = {}
-    yield
-    del builtins.__xonsh_env__
-    del builtins.__xonsh_ctx__
-    del builtins.__xonsh_shell__
-    del builtins.__xonsh_help__
-    del builtins.__xonsh_glob__
-    del builtins.__xonsh_exit__
-    del builtins.__xonsh_superhelp__
-    del builtins.__xonsh_regexpath__
-    del builtins.__xonsh_expand_path__
-    del builtins.__xonsh_subproc_captured__
-    del builtins.__xonsh_subproc_uncaptured__
-    del builtins.__xonsh_ensure_list_of_strs__
-    del builtins.XonshBlockError
-    del builtins.evalx
-    del builtins.execx
-    del builtins.compilex
-    del builtins.aliases
-
-
 #
 # Execer tools
 #
 
-DEBUG_LEVEL = 0
-EXECER = None
-
-def execer_setup():
-    # only setup one parser
-    global EXECER
-    if EXECER is None:
-        EXECER = Execer(debug_level=DEBUG_LEVEL, login=False)
-
 def check_exec(input, **kwargs):
-    with mock_xonsh_env(None):
-        if not input.endswith('\n'):
-            input += '\n'
-        EXECER.debug_level = DEBUG_LEVEL
-        EXECER.exec(input, **kwargs)
+    if not input.endswith('\n'):
+        input += '\n'
+    builtins.__xonsh_execer__.exec(input, **kwargs)
+    return True
+
 
 def check_eval(input):
-    env = {'AUTO_CD': False, 'XONSH_ENCODING' :'utf-8',
-           'XONSH_ENCODING_ERRORS': 'strict', 'PATH': []}
+    builtins.__xonsh_env__ = Env({'AUTO_CD': False, 'XONSH_ENCODING': 'utf-8',
+                                  'XONSH_ENCODING_ERRORS': 'strict', 'PATH': []})
     if ON_WINDOWS:
-        env['PATHEXT'] = ['.COM', '.EXE', '.BAT', '.CMD']
-    with mock_xonsh_env(env):
-        EXECER.debug_level = DEBUG_LEVEL
-        EXECER.eval(input)
+        builtins.__xonsh_env__['PATHEXT'] = ['.COM', '.EXE', '.BAT', '.CMD']
+    builtins.__xonsh_execer__.eval(input)
+    return True
+
 
 def check_parse(input):
-    with mock_xonsh_env(None):
-        EXECER.debug_level = DEBUG_LEVEL
-        tree = EXECER.parse(input, ctx=None)
+    tree = builtins.__xonsh_execer__.parse(input, ctx=None)
     return tree
-

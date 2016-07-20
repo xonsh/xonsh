@@ -1,4 +1,4 @@
-__version__ = '0.4.2'
+__version__ = '0.4.3'
 
 # amalgamate exclude jupyter_kernel parser_table parser_test_table pyghooks
 # amalgamate exclude winutils wizard
@@ -9,18 +9,12 @@ else:
     import sys as _sys
     try:
         from xonsh import __amalgam__
-        bg_pkg_resources = __amalgam__
-        _sys.modules['xonsh.bg_pkg_resources'] = __amalgam__
         completer = __amalgam__
         _sys.modules['xonsh.completer'] = __amalgam__
         lazyasd = __amalgam__
         _sys.modules['xonsh.lazyasd'] = __amalgam__
         lazyjson = __amalgam__
         _sys.modules['xonsh.lazyjson'] = __amalgam__
-        pretty = __amalgam__
-        _sys.modules['xonsh.pretty'] = __amalgam__
-        timings = __amalgam__
-        _sys.modules['xonsh.timings'] = __amalgam__
         ansi_colors = __amalgam__
         _sys.modules['xonsh.ansi_colors'] = __amalgam__
         codecache = __amalgam__
@@ -29,12 +23,16 @@ else:
         _sys.modules['xonsh.openpy'] = __amalgam__
         platform = __amalgam__
         _sys.modules['xonsh.platform'] = __amalgam__
-        teepty = __amalgam__
-        _sys.modules['xonsh.teepty'] = __amalgam__
+        pretty = __amalgam__
+        _sys.modules['xonsh.pretty'] = __amalgam__
+        timings = __amalgam__
+        _sys.modules['xonsh.timings'] = __amalgam__
         jobs = __amalgam__
         _sys.modules['xonsh.jobs'] = __amalgam__
         parser = __amalgam__
         _sys.modules['xonsh.parser'] = __amalgam__
+        teepty = __amalgam__
+        _sys.modules['xonsh.teepty'] = __amalgam__
         tokenize = __amalgam__
         _sys.modules['xonsh.tokenize'] = __amalgam__
         tools = __amalgam__

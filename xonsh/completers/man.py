@@ -25,7 +25,7 @@ def complete_from_man(prefix, line, start, end, ctx):
         try:
             with open(OPTIONS_PATH, 'rb') as f:
                 OPTIONS = pickle.load(f)
-        except:
+        except Exception:
             OPTIONS = {}
     if not prefix.startswith('-'):
         return set()
@@ -44,7 +44,7 @@ def complete_from_man(prefix, line, start, end, ctx):
             OPTIONS[cmd] = matches
             with open(OPTIONS_PATH, 'wb') as f:
                 pickle.dump(OPTIONS, f)
-        except:
+        except Exception:
             return set()
     return {s for s in OPTIONS[cmd]
             if get_filter_function()(s, prefix)}

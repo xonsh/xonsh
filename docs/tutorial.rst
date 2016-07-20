@@ -1205,16 +1205,18 @@ By default, the following variables are available for use:
     ``/path/to/xonsh``.
   * ``cwd_base``: The basename of the current working directory, e.g. ``xonsh`` in
     ``/path/to/xonsh``.
-  * ``curr_branch``: The name of the current git branch (preceded by space),
-    if any.
+  * ``env_name``: The name of active virtual environment, if any.
+  * ``curr_branch``: The name of the current git branch, if any.
   * ``branch_color``: ``{BOLD_GREEN}`` if the current git branch is clean,
     otherwise ``{BOLD_RED}``. This is yellow if the branch color could not be
     determined.
   * ``branch_bg_color``: Like, ``{branch_color}``, but sets a background color
     instead.
-  * ``prompt_end``: `#` if the user has root/admin permissions `$` otherwise
+  * ``prompt_end``: ``#`` if the user has root/admin permissions ``$`` otherwise
   * ``current_job``: The name of the command currently running in the
     foreground, if any.
+  * ``vte_new_tab_cwd``: Issues VTE escape sequence for opening new tabs in the
+    current working directory on some linux terminals. This is not usually needed.
 
 You can also color your prompt easily by inserting keywords such as ``{GREEN}``
 or ``{BOLD_BLUE}``.  Colors have the form shown below:
@@ -1268,9 +1270,6 @@ For example:
     2 ~ $
     8 ~ $
 
-If a function in ``$FORMATTER_DICT`` returns ``None``, the ``None`` will be
-interpreted as an empty string.
-
 Environment variables and functions are also available with the ``$``
 prefix.  For example:
 
@@ -1278,6 +1277,36 @@ prefix.  For example:
 
     snail@home ~ $ $PROMPT = "{$LANG} >"
     en_US.utf8 >
+
+Note that some entries of the ``$FORMATTER_DICT`` are not always applicable, for
+example, ``curr_branch`` returns ``None`` if the current directory is not in a
+repository. The ``None`` will be interpreted as an empty string.
+
+But let's consider a problem:
+
+.. code-block:: console
+
+    snail@home ~/xonsh $ $PROMPT = "{cwd_base} [{curr_branch}] $ "
+    xonsh [master] $ cd ..
+    ~ [] $
+
+We want the branch to be displayed in square brackets, but we also don't want
+the brackets (and the extra space) to be displayed when there is no branch. The
+solution is to add a nested format string (separated with a colon) that will be
+invoked only if the value is not ``None``:
+
+.. code-block:: console
+
+    snail@home ~/xonsh $ $PROMPT = "{cwd_base}{curr_branch: [{}]} $ "
+    xonsh [master] $ cd ..
+    ~ $
+
+The curly brackets act as a placeholder, because the additional part is an
+ordinary format string. What we're doing here is equivalent to this expression:
+
+.. code-block:: python
+    " [{}]".format(curr_branch()) if curr_branch() is not None else ""
+
 
 Executing Commands and Scripts
 ==============================

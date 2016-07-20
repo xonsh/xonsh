@@ -158,7 +158,7 @@ Dependencies
 
 Prep your environment for running the tests::
 
-    $ pip install requirements-tests.txt
+    $ pip install -r requirements-tests.txt
 
 
 ----------------------------------
@@ -188,7 +188,41 @@ Note that you can pass multiple test names in the above examples::
 
     $ py.test test_aliases.py test_environ.py
 
-Happy testing!
+----------------------------------
+Writing the Tests - Advanced
+----------------------------------
+
+(refer to pytest documentation)
+
+With the Pytest framework you can use bare `assert` statements on
+anything you're trying to test, note that the name of the test function
+has to be prefixed with `test_`::
+
+    def test_whatever():
+        assert is_true_or_false
+
+The conftest.py in tests directory defines fixtures for mocking various
+parts of xonsh for more test isolation. For a list of the various fixtures::
+
+    $ py.test --fixtures
+
+when writting tests it's best to use pytest features i.e parametrization::
+
+    @pytest.mark.parametrize('env', [test_env1, test_env2])
+    def test_one(env, xonsh_builtins):
+        xonsh_builtins.__xonsh_env__ = env
+        ...
+
+this will run the test two times each time with the respective `test_env`.
+This can be done with a for loop too but the test will run
+only once for the different test cases and you get less isolation.
+
+With that in mind, each test should have the least `assert` statements,
+preferably one.
+
+At the moment, xonsh doesn't support any pytest plugins.
+
+Happy Testing!
 
 
 How to Document

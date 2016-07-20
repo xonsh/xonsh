@@ -44,6 +44,27 @@
   "package": "xonsh-pacman-tabcomplete",
   "url": "https://github.com/gforsyth/xonsh-pacman-tabcomplete",
   "description": ["Adds tabcomplete functionality to pacman inside of xonsh."]
+ },
+ {"name": "scrapy_tabcomplete",
+  "package": "xonsh-scrapy-tabcomplete",
+  "url": "https://github.com/Granitas/xonsh-scrapy-tabcomplete",
+  "description": ["Adds tabcomplete functionality to scrapy inside of xonsh."]
+ },
+ {"name": "vox_tabcomplete",
+  "package": "xonsh-vox-tabcomplete",
+  "url": "https://github.com/Granitas/xonsh-vox-tabcomplete",
+  "description": ["Adds tabcomplete functionality to vox inside of xonsh."]
+ },
+ {"name": "autoxsh",
+  "package": "xonsh-autoxsh",
+  "url": "https://github.com/Granitas/xonsh-autoxsh",
+  "description": ["Adds automatic execution of xonsh script files called",
+	          "`.autoxsh` when enterting a directory with `cd` function"]
+ },
+ {"name": "xonda",
+  "package": "xonda",
+  "url": "https://github.com/gforsyth/xonda",
+  "description": ["A thin wrapper around conda with tab completion"]
  }
  ],
  "packages": {
@@ -82,6 +103,34 @@
    "url": "https://github.com/gforsyth/xonsh-pacman-tabcomplete",
    "install": {
     "pip": "pip install xonsh-pacman-tabcomplete"
+   }
+   },
+  "xonsh-scrapy-tabcomplete": {
+   "license": "GPLv3",
+   "url": "https://github.com/Granitas/xonsh-scrapy-tabcomplete",
+   "install": {
+    "pip": "pip install xonsh-scrapy-tabcomplete"
+    }
+   },
+  "xonsh-vox-tabcomplete": {
+   "license": "GPLv3",
+   "url": "https://github.com/Granitas/xonsh-vox-tabcomplete",
+   "install": {
+    "pip": "pip install xonsh-vox-tabcomplete"
+   }
+  },
+  "xonsh-autoxsh": {
+   "license": "GPLv3",
+   "url": "https://github.com/Granitas/xonsh-autoxsh",
+   "install": {
+    "pip": "pip install xonsh-autoxsh"
+   }
+  },
+  "xonda": {
+   "license": "MIT",
+   "url": "https://github.com/gforsyth/xonda",
+   "install": {
+    "pip": "pip install xonda"
    }
   }
  }

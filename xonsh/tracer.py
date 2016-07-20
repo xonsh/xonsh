@@ -3,10 +3,10 @@ import os
 import re
 import sys
 import inspect
+import argparse
 import linecache
 import importlib
-from functools import lru_cache
-from argparse import ArgumentParser
+import functools
 
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import HAS_PYGMENTS
@@ -161,10 +161,10 @@ def _color(ns, args):
     tracer.usecolor = ns.toggle
 
 
-@lru_cache(1)
+@functools.lru_cache(1)
 def _tracer_create_parser():
     """Creates tracer argument parser"""
-    p = ArgumentParser(prog='trace',
+    p = argparse.ArgumentParser(prog='trace',
                        description='tool for tracing xonsh code as it runs.')
     subp = p.add_subparsers(title='action', dest='action')
     onp = subp.add_parser('on', aliases=['start', 'add'],
@@ -201,6 +201,3 @@ def tracermain(args=None):
     ns = parser.parse_args(args)
     return _TRACER_MAIN_ACTIONS[ns.action](ns, args)
 
-
-if __name__ == '__main__':
-    tracermain()

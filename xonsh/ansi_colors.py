@@ -10,7 +10,7 @@ RE_BACKGROUND = LazyObject(lambda: re.compile('(bg|bg#|bghex|background)'),
                            globals(), 'RE_BACKGROUND')
 
 
-def partial_color_format(template, style='default', cmap=None, hide=False):
+def ansi_partial_color_format(template, style='default', cmap=None, hide=False):
     """Formats a template string but only with respect to the colors.
     Another template string is returned, with the color values filled in.
 
@@ -33,20 +33,20 @@ def partial_color_format(template, style='default', cmap=None, hide=False):
     A template string with the color values filled in.
     """
     try:
-        return _partial_color_format_main(template, style=style, cmap=cmap, hide=hide)
-    except:
+        return _ansi_partial_color_format_main(template, style=style, cmap=cmap, hide=hide)
+    except Exception:
         return template
 
 
-def _partial_color_format_main(template, style='default', cmap=None, hide=False):
+def _ansi_partial_color_format_main(template, style='default', cmap=None, hide=False):
     if cmap is not None:
         pass
-    elif style in STYLES:
-        cmap = STYLES[style]
+    elif style in ANSI_STYLES:
+        cmap = ANSI_STYLES[style]
     else:
         msg = 'Could not find color style {0!r}, using default.'.format(style)
         warnings.warn(msg, RuntimeWarning)
-        cmap = DEFAULT_STYLE
+        cmap = ANSI_STYLES['default']
     formatter = string.Formatter()
     esc = ('\001' if hide else '') + '\033['
     m = 'm' + ('\002' if hide else '')
@@ -376,23 +376,23 @@ def rgb_to_256(rgb):
     return equiv, res
 
 
-def color_style_names():
+def ansi_color_style_names():
     """Returns an iterable of all ANSI color style names."""
-    return STYLES.keys()
+    return ANSI_STYLES.keys()
 
 
-def color_style(style='default'):
+def ansi_color_style(style='default'):
     """Returns the current color map."""
-    if style in STYLES:
-        cmap = STYLES[style]
+    if style in ANSI_STYLES:
+        cmap = ANSI_STYLES[style]
     else:
         msg = 'Could not find color style {0!r}, using default.'.format(style)
         warnings.warn(msg, RuntimeWarning)
-        cmap = DEFAULT_STYLE
+        cmap = ANSI_STYLES['default']
     return cmap
 
 
-def _expand_style(cmap):
+def _ansi_expand_style(cmap):
     """Expands a style in order to more quickly make color map changes."""
     for key, val in list(cmap.items()):
         if key == 'NO_COLOR':
@@ -429,7 +429,7 @@ def _bw_style():
         'WHITE': '',
         'YELLOW': '',
         }
-    _expand_style(style)
+    _ansi_expand_style(style)
     return style
 
 
@@ -550,7 +550,7 @@ def _monokai_style():
         'INTENSE_WHITE': '38;5;15',
         'INTENSE_YELLOW': '38;5;186',
         }
-    _expand_style(style)
+    _ansi_expand_style(style)
     return style
 
 
@@ -578,7 +578,7 @@ def _algol_style():
         'WHITE': '38;5;102',
         'YELLOW': '38;5;09',
         }
-    _expand_style(style)
+    _ansi_expand_style(style)
     return style
 
 
@@ -602,7 +602,7 @@ def _algol_nu_style():
         'WHITE': '38;5;102',
         'YELLOW': '38;5;09',
         }
-    _expand_style(style)
+    _ansi_expand_style(style)
     return style
 
 def _autumn_style():
@@ -625,7 +625,7 @@ def _autumn_style():
         'WHITE': '38;5;145',
         'YELLOW': '38;5;130',
     }
-    _expand_style(style)
+    _ansi_expand_style(style)
     return style
 
 def _borland_style():
@@ -648,7 +648,7 @@ def _borland_style():
         'WHITE': '38;5;145',
         'YELLOW': '38;5;124',
         }
-    _expand_style(style)
+    _ansi_expand_style(style)
     return style
 
 
@@ -672,7 +672,7 @@ def _colorful_style():
         'WHITE': '38;5;145',
         'YELLOW': '38;5;130',
     }
-    _expand_style(style)
+    _ansi_expand_style(style)
     return style
 
 
@@ -696,7 +696,7 @@ def _emacs_style():
         'WHITE': '38;5;145',
         'YELLOW': '38;5;130',
     }
-    _expand_style(style)
+    _ansi_expand_style(style)
     return style
 
 
@@ -720,7 +720,7 @@ def _friendly_style():
         'WHITE': '38;5;145',
         'YELLOW': '38;5;166',
     }
-    _expand_style(style)
+    _ansi_expand_style(style)
     return style
 
 
@@ -744,7 +744,7 @@ def _fruity_style():
         'WHITE': '38;5;187',
         'YELLOW': '38;5;202',
         }
-    _expand_style(style)
+    _ansi_expand_style(style)
     return style
 
 
@@ -768,7 +768,7 @@ def _igor_style():
         'WHITE': '38;5;163',
         'YELLOW': '38;5;166',
         }
-    _expand_style(style)
+    _ansi_expand_style(style)
     return style
 
 def _lovelace_style():
@@ -791,7 +791,7 @@ def _lovelace_style():
         'WHITE': '38;5;102',
         'YELLOW': '38;5;130',
         }
-    _expand_style(style)
+    _ansi_expand_style(style)
     return style
 
 
@@ -815,7 +815,7 @@ def _manni_style():
         'WHITE': '38;5;145',
         'YELLOW': '38;5;166',
         }
-    _expand_style(style)
+    _ansi_expand_style(style)
     return style
 
 
@@ -839,7 +839,7 @@ def _murphy_style():
         'WHITE': '38;5;145',
         'YELLOW': '38;5;166',
         }
-    _expand_style(style)
+    _ansi_expand_style(style)
     return style
 
 
@@ -863,7 +863,7 @@ def _native_style():
         'WHITE': '38;5;145',
         'YELLOW': '38;5;124',
         }
-    _expand_style(style)
+    _ansi_expand_style(style)
     return style
 
 def _paraiso_dark_style():
@@ -886,7 +886,7 @@ def _paraiso_dark_style():
         'WHITE': '38;5;79',
         'YELLOW': '38;5;214',
         }
-    _expand_style(style)
+    _ansi_expand_style(style)
     return style
 
 
@@ -910,7 +910,7 @@ def _paraiso_light_style():
         'WHITE': '38;5;102',
         'YELLOW': '38;5;214',
         }
-    _expand_style(style)
+    _ansi_expand_style(style)
     return style
 
 def _pastie_style():
@@ -933,7 +933,7 @@ def _pastie_style():
         'WHITE': '38;5;145',
         'YELLOW': '38;5;130',
         }
-    _expand_style(style)
+    _ansi_expand_style(style)
     return style
 
 
@@ -957,7 +957,7 @@ def _perldoc_style():
         'WHITE': '38;5;145',
         'YELLOW': '38;5;166',
         }
-    _expand_style(style)
+    _ansi_expand_style(style)
     return style
 
 def _rrt_style():
@@ -980,7 +980,7 @@ def _rrt_style():
         'WHITE': '38;5;117',
         'YELLOW': '38;5;09',
         }
-    _expand_style(style)
+    _ansi_expand_style(style)
     return style
 
 
@@ -1004,7 +1004,7 @@ def _tango_style():
         'WHITE': '38;5;15',
         'YELLOW': '38;5;94',
         }
-    _expand_style(style)
+    _ansi_expand_style(style)
     return style
 
 
@@ -1028,7 +1028,7 @@ def _trac_style():
         'WHITE': '38;5;145',
         'YELLOW': '38;5;100',
         }
-    _expand_style(style)
+    _ansi_expand_style(style)
     return style
 
 
@@ -1052,7 +1052,7 @@ def _vim_style():
         'WHITE': '38;5;188',
         'YELLOW': '38;5;160',
         }
-    _expand_style(style)
+    _ansi_expand_style(style)
     return style
 
 
@@ -1076,7 +1076,7 @@ def _vs_style():
         'WHITE': '38;5;31',
         'YELLOW': '38;5;124',
         }
-    _expand_style(style)
+    _ansi_expand_style(style)
     return style
 
 
@@ -1100,11 +1100,11 @@ def _xcode_style():
         'WHITE': '38;5;60',
         'YELLOW': '38;5;94',
         }
-    _expand_style(style)
+    _ansi_expand_style(style)
     return style
 
 
-STYLES = LazyDict({
+ANSI_STYLES = LazyDict({
     'algol': _algol_style,
     'algol_nu': _algol_nu_style,
     'autumn': _autumn_style,
@@ -1131,7 +1131,7 @@ STYLES = LazyDict({
     'vim': _vim_style,
     'vs': _vs_style,
     'xcode': _xcode_style,
-    }, globals(), 'STYLES')
+    }, globals(), 'ANSI_STYLES')
 
 del (_algol_style, _algol_nu_style, _autumn_style, _borland_style, _bw_style,
      _colorful_style, _default_style, _emacs_style, _friendly_style,

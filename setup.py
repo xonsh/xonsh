@@ -111,43 +111,48 @@ def dirty_version():
     """
     try:
         _version = subprocess.check_output(['git', 'describe', '--tags'])
-        _version = _version.decode('ascii')
-    except (subprocess.CalledProcessError, FileNotFoundError):
+    except Exception:
+        print('failed to find git tags', file=sys.stderr)
         return False
-
+    _version = _version.decode('ascii')
     try:
         base, N, sha = _version.strip().split('-')
-    except ValueError: #on base release
+    except ValueError: # on base release
         open('xonsh/dev.githash', 'w').close()
+        print('failed to parse git version', file=sys.stderr)
         return False
-
+    sha = sha.strip('g')
     replace_version(base, N)
     with open('xonsh/dev.githash', 'w') as f:
         f.write(sha)
-
+    print('wrote git version: ' + sha, file=sys.stderr)
     return True
 
 
+ORIGINAL_VERSION_LINE = None
+
 def replace_version(base, N):
     """Replace version in `__init__.py` with devN suffix"""
+    global ORIGINAL_VERSION_LINE
     with open('xonsh/__init__.py', 'r') as f:
         raw = f.read()
     lines = raw.splitlines()
+    ORIGINAL_VERSION_LINE = lines[0]
     lines[0] = "__version__ = '{}.dev{}'".format(base, N)
     upd = '\n'.join(lines) + '\n'
     with open('xonsh/__init__.py', 'w') as f:
         f.write(upd)
 
 
-def discard_changes():
-    """If we touch ``__init__.py``, discard changes after install"""
-    try:
-        _ = subprocess.check_output(['git',
-                                     'checkout',
-                                     '--',
-                                     'xonsh/__init__.py'])
-    except subprocess.CalledProcessError:
-        pass
+def restore_version():
+    """If we touch the version in __init__.py discard changes after install."""
+    with open('xonsh/__init__.py', 'r') as f:
+        raw = f.read()
+    lines = raw.splitlines()
+    lines[0] = ORIGINAL_VERSION_LINE
+    upd = '\n'.join(lines) + '\n'
+    with open('xonsh/__init__.py', 'w') as f:
+        f.write(upd)
 
 
 class xinstall(install):
@@ -168,7 +173,7 @@ class xinstall(install):
             print('Installing Jupyter hook failed.')
         install.run(self)
         if dirty:
-            discard_changes()
+            restore_version()
 
 
 
@@ -180,7 +185,7 @@ class xsdist(sdist):
         dirty = dirty_version()
         sdist.make_release_tree(self, basedir, files)
         if dirty:
-            discard_changes()
+            restore_version()
 
 
 #-----------------------------------------------------------------------------
@@ -215,7 +220,7 @@ if HAVE_SETUPTOOLS:
             dirty = dirty_version()
             develop.run(self)
             if dirty:
-                discard_changes()
+                restore_version()
 
 
 def main():

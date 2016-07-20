@@ -10,20 +10,19 @@ import functools
 import subprocess
 import importlib.util
 
-from xonsh.lazyasd import LazyObject, LazyBool
+from xonsh.lazyasd import LazyObject, LazyBool, lazyobject, lazybool
 
-def _distro():
+
+@lazyobject
+def distro():
     try:
         import distro as d
     except ImportError:
         d = None
-    except:
+    except Exception:
         raise
     return d
 
-
-distro = LazyObject(_distro, globals(), 'distro')
-del _distro
 
 # do not import any xonsh-modules here to avoid circular dependencies
 
@@ -33,17 +32,20 @@ del _distro
 #
 ON_DARWIN = LazyBool(lambda: platform.system() == 'Darwin',
                      globals(), 'ON_DARWIN')
-""" ``True`` if executed on a Darwin platform, else ``False``. """
+"""``True`` if executed on a Darwin platform, else ``False``. """
 ON_LINUX = LazyBool(lambda: platform.system() == 'Linux',
                     globals(), 'ON_LINUX')
-""" ``True`` if executed on a Linux platform, else ``False``. """
+"""``True`` if executed on a Linux platform, else ``False``. """
 ON_WINDOWS = LazyBool(lambda: platform.system() == 'Windows',
                       globals(), 'ON_WINDOWS')
-""" ``True`` if executed on a native Windows platform, else ``False``. """
+"""``True`` if executed on a native Windows platform, else ``False``. """
 ON_CYGWIN = LazyBool(lambda: sys.platform == 'cygwin', globals(), 'ON_CYGWIN')
-""" ``True`` if executed on a Cygwin Windows platform, else ``False``. """
+"""``True`` if executed on a Cygwin Windows platform, else ``False``. """
 ON_POSIX = LazyBool(lambda: (os.name == 'posix'), globals(), 'ON_POSIX')
-""" ``True`` if executed on a POSIX-compliant platform, else ``False``. """
+"""``True`` if executed on a POSIX-compliant platform, else ``False``. """
+ON_FREEBSD = LazyBool(lambda: (sys.platform.startswith('freebsd')),
+                      globals(), 'ON_FREEBSD')
+"""``True`` if on a FreeBSD operating system, else ``False``."""
 
 
 #
@@ -57,14 +59,12 @@ ON_ANACONDA = LazyBool(
     globals(), 'ON_ANACONDA')
 """ ``True`` if executed in an Anaconda instance, else ``False``. """
 
-def _has_pygments():
+
+@lazybool
+def HAS_PYGMENTS():
+    """``True`` if `pygments` is available, else ``False``."""
     spec = importlib.util.find_spec('pygments')
     return (spec is not None)
-
-
-HAS_PYGMENTS = LazyBool(_has_pygments, globals(), 'HAS_PYGMENTS')
-""" ``True`` if `pygments` is available, else ``False``. """
-del _has_pygments
 
 
 @functools.lru_cache(1)
@@ -248,7 +248,8 @@ def windows_bash_command():
 # Environment variables defaults
 #
 
-def _bcd():
+@lazyobject
+def BASH_COMPLETIONS_DEFAULT():
     """A possibly empty tuple with default paths to Bash completions known for
     the current platform.
     """
@@ -275,12 +276,8 @@ def _bcd():
     return bcd
 
 
-BASH_COMPLETIONS_DEFAULT = LazyObject(_bcd, globals(),
-                                      'BASH_COMPLETIONS_DEFAULT')
-del _bcd
-
-
-def _pd():
+@lazyobject
+def PATH_DEFAULT():
     if ON_LINUX or ON_CYGWIN:
         if linux_distro() == 'arch':
             pd = ('/usr/local/sbin',
@@ -300,6 +297,3 @@ def _pd():
     else:
         pd = ()
     return pd
-
-PATH_DEFAULT = LazyObject(_pd, globals(), 'PATH_DEFAULT')
-del _pd

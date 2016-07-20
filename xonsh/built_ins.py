@@ -4,21 +4,21 @@
 Note that this module is named 'built_ins' so as not to be confused with the
 special Python builtins module.
 """
-import atexit
-import builtins
-from collections import Sequence
-from contextlib import contextmanager
-import inspect
 import os
 import re
+import sys
+import time
 import shlex
 import signal
-from subprocess import Popen, PIPE, STDOUT, CalledProcessError
-import sys
+import atexit
+import inspect
 import tempfile
-import time
+import builtins
+import subprocess
+import contextlib
+import collections.abc as abc
 
-from xonsh.lazyasd import LazyObject
+from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.history import History
 from xonsh.inspectors import Inspector
 from xonsh.aliases import Aliases, make_default_aliases
@@ -27,8 +27,8 @@ from xonsh.foreign_shells import load_foreign_aliases
 from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
-                        SimpleForegroundProcProxy, TeePTYProc,
-                        CompletedCommand, HiddenCompletedCommand)
+    SimpleForegroundProcProxy, TeePTYProc, pause_call_resume, CompletedCommand,
+    HiddenCompletedCommand)
 from xonsh.tools import (
     suggest_commands, expandvars, globpath, XonshError,
     XonshCalledProcessError, XonshBlockError
@@ -36,34 +36,41 @@ from xonsh.tools import (
 from xonsh.commands_cache import CommandsCache
 
 
-ENV = None
 BUILTINS_LOADED = False
 INSPECTOR = LazyObject(Inspector, globals(), 'INSPECTOR')
-AT_EXIT_SIGNALS = (signal.SIGABRT, signal.SIGFPE, signal.SIGILL, signal.SIGSEGV,
-                   signal.SIGTERM)
 
-SIGNAL_MESSAGES = {
-    signal.SIGABRT: 'Aborted',
-    signal.SIGFPE: 'Floating point exception',
-    signal.SIGILL: 'Illegal instructions',
-    signal.SIGTERM: 'Terminated',
-    signal.SIGSEGV: 'Segmentation fault'
-}
+@lazyobject
+def AT_EXIT_SIGNALS():
+    sigs = (signal.SIGABRT, signal.SIGFPE, signal.SIGILL, signal.SIGSEGV,
+            signal.SIGTERM)
+    if ON_POSIX:
+        sigs += (signal.SIGTSTP, signal.SIGQUIT, signal.SIGHUP)
+    return sigs
 
-if ON_POSIX:
-    AT_EXIT_SIGNALS += (signal.SIGTSTP, signal.SIGQUIT, signal.SIGHUP)
-    SIGNAL_MESSAGES.update({
-        signal.SIGQUIT: 'Quit',
-        signal.SIGHUP: 'Hangup',
-        signal.SIGKILL: 'Killed'
-    })
+
+@lazyobject
+def SIGNAL_MESSAGES():
+    sm = {
+        signal.SIGABRT: 'Aborted',
+        signal.SIGFPE: 'Floating point exception',
+        signal.SIGILL: 'Illegal instructions',
+        signal.SIGTERM: 'Terminated',
+        signal.SIGSEGV: 'Segmentation fault',
+        }
+    if ON_POSIX:
+        sm.update({
+            signal.SIGQUIT: 'Quit',
+            signal.SIGHUP: 'Hangup',
+            signal.SIGKILL: 'Killed',
+            })
+    return sm
+
 
 def resetting_signal_handle(sig, f):
     """Sets a new signal handle that will automatically restore the old value
     once the new handle is finished.
     """
     oldh = signal.getsignal(sig)
-
     def newh(s=None, frame=None):
         f(s, frame)
         signal.signal(sig, oldh)
@@ -86,8 +93,7 @@ def superhelper(x, name=''):
 
 def expand_path(s):
     """Takes a string path and expands ~ to home and environment vars."""
-    global ENV
-    if ENV.get('EXPAND_ENV_VARS'):
+    if builtins.__xonsh_env__.get('EXPAND_ENV_VARS'):
         s = expandvars(s)
     return os.path.expanduser(s)
 
@@ -138,7 +144,9 @@ def regexsearch(s):
 
 def globsearch(s):
     csc = builtins.__xonsh_env__.get('CASE_SENSITIVE_COMPLETIONS')
-    return globpath(s, ignore_case=(not csc), return_empty=True)
+    glob_sorted = builtins.__xonsh_env__.get('GLOB_SORTED')
+    return globpath(s, ignore_case=(not csc), return_empty=True,
+                    sort_result=glob_sorted)
 
 
 def pathsearch(func, s, pymode=False):
@@ -154,7 +162,9 @@ def pathsearch(func, s, pymode=False):
     no_match = [] if pymode else [s]
     return o if len(o) != 0 else no_match
 
-RE_SHEBANG = re.compile(r'#![ \t]*(.+?)$')
+
+RE_SHEBANG = LazyObject(lambda: re.compile(r'#![ \t]*(.+?)$'),
+                        globals(), 'RE_SHEBANG')
 
 
 def _is_binary(fname, limit=80):
@@ -191,7 +201,6 @@ def get_script_subproc_command(fname, args):
     # make sure file is executable
     if not os.access(fname, os.X_OK):
         raise PermissionError
-
     if ON_POSIX and not os.access(fname, os.R_OK):
         # on some systems, some importnat programs (e.g. sudo) will have
         # execute permissions but not read/write permisions. This enables
@@ -201,19 +210,16 @@ def get_script_subproc_command(fname, args):
     elif _is_binary(fname):
         # if the file is a binary, we should call it directly
         return [fname] + args
-
     if ON_WINDOWS:
         # Windows can execute various filetypes directly
         # as given in PATHEXT
         _, ext = os.path.splitext(fname)
         if ext.upper() in builtins.__xonsh_env__.get('PATHEXT'):
             return [fname] + args
-
     # find interpreter
     with open(fname, 'rb') as f:
         first_line = f.readline().decode().strip()
     m = RE_SHEBANG.match(first_line)
-
     # xonsh is the default interpreter
     if m is None:
         interp = ['xonsh']
@@ -223,27 +229,34 @@ def get_script_subproc_command(fname, args):
             interp = shlex.split(interp)
         else:
             interp = ['xonsh']
-
     if ON_WINDOWS:
         o = []
         for i in interp:
             o.extend(_un_shebang(i))
         interp = o
-
     return interp + [fname] + args
 
 
-_REDIR_NAME = "(o(?:ut)?|e(?:rr)?|a(?:ll)?|&?\d?)"
-_REDIR_REGEX = re.compile("{r}(>?>|<){r}$".format(r=_REDIR_NAME))
-_MODES = {'>>': 'a', '>': 'w', '<': 'r'}
-_WRITE_MODES = frozenset({'w', 'a'})
-_REDIR_ALL = frozenset({'&', 'a', 'all'})
-_REDIR_ERR = frozenset({'2', 'e', 'err'})
-_REDIR_OUT = frozenset({'', '1', 'o', 'out'})
-_E2O_MAP = frozenset({'{}>{}'.format(e, o)
-                      for e in _REDIR_ERR
-                      for o in _REDIR_OUT
-                      if o != ''})
+@lazyobject
+def _REDIR_REGEX():
+    name = "(o(?:ut)?|e(?:rr)?|a(?:ll)?|&?\d?)"
+    return re.compile("{r}(>?>|<){r}$".format(r=name))
+
+
+_MODES = LazyObject(lambda: {'>>': 'a', '>': 'w', '<': 'r'}, globals(),
+                    '_MODES')
+_WRITE_MODES = LazyObject(lambda: frozenset({'w', 'a'}), globals(),
+                          '_WRITE_MODES')
+_REDIR_ALL = LazyObject(lambda: frozenset({'&', 'a', 'all'}),
+                        globals(), '_REDIR_ALL')
+_REDIR_ERR = LazyObject(lambda: frozenset({'2', 'e', 'err'}), globals(),
+                        '_REDIR_ERR')
+_REDIR_OUT = LazyObject(lambda: frozenset({'', '1', 'o', 'out'}), globals(),
+                        '_REDIR_OUT')
+_E2O_MAP = LazyObject(lambda: frozenset({'{}>{}'.format(e, o)
+                                         for e in _REDIR_ERR
+                                         for o in _REDIR_OUT
+                                         if o != ''}), globals(), '_E2O_MAP')
 
 
 def _is_redirect(x):
@@ -269,11 +282,9 @@ def _redirect_io(streams, r, loc=None):
     if r.replace('&', '') in _E2O_MAP:
         if 'stderr' in streams:
             raise XonshError('Multiple redirects for stderr')
-        streams['stderr'] = ('<stdout>', 'a', STDOUT)
+        streams['stderr'] = ('<stdout>', 'a', subprocess.STDOUT)
         return
-
     orig, mode, dest = _REDIR_REGEX.match(r).groups()
-
     # redirect to fd
     if dest.startswith('&'):
         try:
@@ -287,9 +298,7 @@ def _redirect_io(streams, r, loc=None):
             raise
         except Exception:
             pass
-
     mode = _MODES.get(mode, None)
-
     if mode == 'r':
         if len(orig) > 0 or len(dest) > 0:
             raise XonshError('Unrecognized redirection command: {}'.format(r))
@@ -323,11 +332,9 @@ def _redirect_io(streams, r, loc=None):
             targets = ['stdout']
         else:
             raise XonshError('Unrecognized redirection command: {}'.format(r))
-
         f = _open(loc, mode)
         for t in targets:
             streams[t] = (loc, mode, f)
-
     else:
         raise XonshError('Unrecognized redirection command: {}'.format(r))
 
@@ -345,7 +352,7 @@ def run_subproc(cmds, captured=False):
 
     Lastly, the captured argument affects only the last real command.
     """
-    global ENV
+    env = builtins.__xonsh_env__
     background = False
     procinfo = {}
     if cmds[-1] == '&':
@@ -394,7 +401,7 @@ def run_subproc(cmds, captured=False):
             stdout = streams['stdout'][-1]
             procinfo['stdout_redirect'] = streams['stdout'][:-1]
         elif ix != last_cmd:
-            stdout = PIPE
+            stdout = subprocess.PIPE
         elif _capture_streams:
             _nstdout = stdout = tempfile.NamedTemporaryFile(delete=False)
             _stdout_name = stdout.name
@@ -448,17 +455,15 @@ def run_subproc(cmds, captured=False):
                     raise XonshError(e.format(cmd[0]))
         _stdin_file = None
         if (stdin is not None and
-                ENV.get('XONSH_STORE_STDIN') and
+                env.get('XONSH_STORE_STDIN') and
                 captured == 'object' and
                 __xonsh_commands_cache__.lazy_locate_binary('cat') and
                 __xonsh_commands_cache__.lazy_locate_binary('tee')):
             _stdin_file = tempfile.NamedTemporaryFile()
-            cproc = Popen(['cat'],
-                          stdin=stdin,
-                          stdout=PIPE)
-            tproc = Popen(['tee', _stdin_file.name],
-                          stdin=cproc.stdout,
-                          stdout=PIPE)
+            cproc = subprocess.Popen(['cat'], stdin=stdin,
+                                     stdout=subprocess.PIPE)
+            tproc = subprocess.Popen(['tee', _stdin_file.name],
+                                     stdin=cproc.stdout, stdout=subprocess.PIPE)
             stdin = tproc.stdout
         if callable(aliased_cmd):
             prev_is_proxy = True
@@ -478,10 +483,10 @@ def run_subproc(cmds, captured=False):
             prev_is_proxy = False
             usetee = ((stdout is None) and
                       (not background) and
-                      ENV.get('XONSH_STORE_STDOUT', False))
-            cls = TeePTYProc if usetee else Popen
+                      env.get('XONSH_STORE_STDOUT', False))
+            cls = TeePTYProc if usetee else subprocess.Popen
             subproc_kwargs = {}
-            if ON_POSIX and cls is Popen:
+            if ON_POSIX and cls is subprocess.Popen:
                 def _subproc_pre():
                     if _pipeline_group is None:
                         os.setpgrp()
@@ -489,15 +494,15 @@ def run_subproc(cmds, captured=False):
                         os.setpgid(0, _pipeline_group)
                     signal.signal(signal.SIGTSTP, lambda n, f: signal.pause())
                 subproc_kwargs['preexec_fn'] = _subproc_pre
-            env = ENV.detype()
+            denv = env.detype()
             if ON_WINDOWS:
                 # Over write prompt variable as xonsh's $PROMPT does
                 # not make much sense for other subprocs
-                env['PROMPT'] = '$P$G'
+                denv['PROMPT'] = '$P$G'
             try:
                 proc = cls(aliased_cmd,
                            universal_newlines=uninew,
-                           env=env,
+                           env=denv,
                            stdin=stdin,
                            stdout=stdout,
                            stderr=stderr,
@@ -508,13 +513,13 @@ def run_subproc(cmds, captured=False):
             except FileNotFoundError:
                 cmd = aliased_cmd[0]
                 e = 'xonsh: subprocess mode: command not found: {0}'.format(cmd)
-                sug = suggest_commands(cmd, ENV, builtins.aliases)
+                sug = suggest_commands(cmd, env, builtins.aliases)
                 if len(sug.strip()) > 0:
-                    e += '\n' + suggest_commands(cmd, ENV, builtins.aliases)
+                    e += '\n' + suggest_commands(cmd, env, builtins.aliases)
                 raise XonshError(e)
         procs.append(proc)
         prev_proc = proc
-        if ON_POSIX and cls is Popen and _pipeline_group is None:
+        if ON_POSIX and cls is subprocess.Popen and _pipeline_group is None:
             _pipeline_group = prev_proc.pid
     if not prev_is_proxy:
         add_job({
@@ -523,14 +528,11 @@ def run_subproc(cmds, captured=False):
             'obj': prev_proc,
             'bg': background
         })
-    if (ENV.get('XONSH_INTERACTIVE') and
-            not ENV.get('XONSH_STORE_STDOUT') and
+    if (env.get('XONSH_INTERACTIVE') and
+            not env.get('XONSH_STORE_STDOUT') and
             not _capture_streams):
         # set title here to get current command running
-        try:
-            builtins.__xonsh_shell__.settitle()
-        except AttributeError:
-            pass
+        pause_call_resume(prev_proc, builtins.__xonsh_shell__.settitle)
     if background:
         return
     if prev_is_proxy:
@@ -551,7 +553,7 @@ def run_subproc(cmds, captured=False):
                 output = stdoutfile.read()
             try:
                 _nstdout.close()
-            except:
+            except Exception:
                 pass
             os.unlink(_stdout_name)
         elif prev_proc.stdout not in (None, sys.stdout):
@@ -559,8 +561,8 @@ def run_subproc(cmds, captured=False):
         if _capture_streams:
             # to get proper encoding from Popen, we have to
             # use a byte stream and then implement universal_newlines here
-            output = output.decode(encoding=ENV.get('XONSH_ENCODING'),
-                                   errors=ENV.get('XONSH_ENCODING_ERRORS'))
+            output = output.decode(encoding=env.get('XONSH_ENCODING'),
+                                   errors=env.get('XONSH_ENCODING_ERRORS'))
             output = output.replace('\r\n', '\n')
         else:
             hist.last_cmd_out = output
@@ -572,14 +574,14 @@ def run_subproc(cmds, captured=False):
                     errout = stderrfile.read()
                 try:
                     _nstderr.close()
-                except:
+                except Exception:
                     pass
                 os.unlink(_stderr_name)
             elif unnamed:
                 errout = prev_proc.stderr.read()
             if named or unnamed:
-                errout = errout.decode(encoding=ENV.get('XONSH_ENCODING'),
-                                       errors=ENV.get('XONSH_ENCODING_ERRORS'))
+                errout = errout.decode(encoding=env.get('XONSH_ENCODING'),
+                                       errors=env.get('XONSH_ENCODING_ERRORS'))
                 errout = errout.replace('\r\n', '\n')
                 procinfo['stderr'] = errout
 
@@ -593,8 +595,9 @@ def run_subproc(cmds, captured=False):
     if (not prev_is_proxy and
             hist.last_cmd_rtn is not None and
             hist.last_cmd_rtn > 0 and
-            ENV.get('RAISE_SUBPROC_ERROR')):
-        raise CalledProcessError(hist.last_cmd_rtn, aliased_cmd, output=output)
+            env.get('RAISE_SUBPROC_ERROR')):
+        raise subprocess.CalledProcessError(hist.last_cmd_rtn, aliased_cmd,
+                                            output=output)
     if captured == 'stdout':
         return output
     elif captured is not False:
@@ -653,7 +656,7 @@ def ensure_list_of_strs(x):
     """Ensures that x is a list of strings."""
     if isinstance(x, str):
         rtn = [x]
-    elif isinstance(x, Sequence):
+    elif isinstance(x, abc.Sequence):
         rtn = [i if isinstance(i, str) else str(i) for i in x]
     else:
         rtn = [str(x)]
@@ -664,7 +667,7 @@ def list_of_strs_or_callables(x):
     """Ensures that x is a list of strings or functions"""
     if isinstance(x, str) or callable(x):
         rtn = [x]
-    elif isinstance(x, Sequence):
+    elif isinstance(x, abc.Sequence):
         rtn = [i if isinstance(i, str) or callable(i) else str(i) for i in x]
     else:
         rtn = [str(x)]
@@ -675,10 +678,10 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     """Loads the xonsh builtins into the Python builtins. Sets the
     BUILTINS_LOADED variable to True.
     """
-    global BUILTINS_LOADED, ENV
+    global BUILTINS_LOADED
     # private built-ins
     builtins.__xonsh_config__ = {}
-    builtins.__xonsh_env__ = ENV = Env(default_env(config=config, login=login))
+    builtins.__xonsh_env__ = env = Env(default_env(config=config, login=login))
     builtins.__xonsh_help__ = helper
     builtins.__xonsh_superhelp__ = superhelper
     builtins.__xonsh_pathsearch__ = pathsearch
@@ -720,7 +723,7 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
         builtins.aliases.update(load_foreign_aliases(issue_warning=False))
     # history needs to be started after env and aliases
     # would be nice to actually include non-detyped versions.
-    builtins.__xonsh_history__ = History(env=ENV.detype(),
+    builtins.__xonsh_history__ = History(env=env.detype(),
                                          ts=[time.time(), None], locked=True)
     atexit.register(_lastflush)
     for sig in AT_EXIT_SIGNALS:
@@ -737,10 +740,10 @@ def unload_builtins():
     """Removes the xonsh builtins from the Python builtins, if the
     BUILTINS_LOADED is True, sets BUILTINS_LOADED to False, and returns.
     """
-    global BUILTINS_LOADED, ENV
-    if ENV is not None:
-        ENV.undo_replace_env()
-        ENV = None
+    global BUILTINS_LOADED
+    env = getattr(builtins, '__xonsh_env__', None)
+    if isinstance(env, Env):
+        env.undo_replace_env()
     if hasattr(builtins, '__xonsh_pyexit__'):
         builtins.exit = builtins.__xonsh_pyexit__
     if hasattr(builtins, '__xonsh_pyquit__'):
@@ -787,7 +790,7 @@ def unload_builtins():
     BUILTINS_LOADED = False
 
 
-@contextmanager
+@contextlib.contextmanager
 def xonsh_builtins(execer=None):
     """A context manager for using the xonsh builtins only in a limited
     scope. Likely useful in testing.

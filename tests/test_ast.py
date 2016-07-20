@@ -2,12 +2,14 @@
 from xonsh import ast
 from xonsh.ast import Tuple, Name, Store, min_line
 
-from tools import execer_setup, check_parse
+import pytest
+
+from tools import  check_parse
 
 
-def setup():
-    execer_setup()
-
+@pytest.fixture(autouse=True)
+def xonsh_execer_autouse(xonsh_execer):
+    return xonsh_execer
 
 def test_gather_names_name():
     node = Name(id='y', ctx=Store())

@@ -4,7 +4,7 @@ import hashlib
 import marshal
 import builtins
 
-from xonsh.lazyasd import LazyObject
+from xonsh.lazyasd import lazyobject
 
 def _splitpath(path, sofar=[]):
     folder, path = os.path.split(path)
@@ -16,14 +16,11 @@ def _splitpath(path, sofar=[]):
         return _splitpath(folder, sofar + [path])
 
 
-def _character_map():
+@lazyobject
+def _CHARACTER_MAP():
     cmap = {chr(o): '_%s' % chr(o+32) for o in range(65, 91)}
     cmap.update({'.': '_.', '_': '__'})
     return cmap
-
-
-_CHARACTER_MAP = LazyObject(_character_map, globals(), '_CHARACTER_MAP')
-del _character_map
 
 
 def _cache_renamer(path, code=False):
@@ -103,7 +100,7 @@ def compile_code(filename, code, execer, glb, loc, mode):
         old_filename = execer.filename
         execer.filename = filename
         ccode = execer.compile(code, glbs=glb, locs=loc, mode=mode)
-    except:
+    except Exception:
         raise
     finally:
         execer.filename = old_filename

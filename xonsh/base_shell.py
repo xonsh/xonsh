@@ -13,7 +13,7 @@ from xonsh.codecache import (should_use_cache, code_cache_name,
                              code_cache_check, get_cache_filename,
                              update_cache, run_compiled_code)
 from xonsh.completer import Completer
-from xonsh.environ import multiline_prompt, format_prompt, partial_format_prompt
+from xonsh.environ import multiline_prompt, partial_format_prompt
 
 
 class _TeeOut(object):
@@ -231,17 +231,22 @@ class BaseShell(object):
         term = env.get('TERM', None)
         # Shells running in emacs sets TERM to "dumb" or "eterm-color".
         # Do not set title for these to avoid garbled prompt.
-        if term is None or term in ['dumb', 'eterm-color', 'linux']:
+        if (term is None and not ON_WINDOWS) or term in ['dumb', 'eterm-color',
+                                                         'linux']:
             return
         t = env.get('TITLE')
         if t is None:
             return
-        t = format_prompt(t)
+        t = partial_format_prompt(t)
         if ON_WINDOWS and 'ANSICON' not in env:
             t = escape_windows_cmd_string(t)
             os.system('title {}'.format(t))
         else:
-            os.write(1, "\x1b]2;{0}\x07".format(t).encode())
+            with open(1, 'wb', closefd=False) as f:
+                # prevent xonsh from answering interative questions
+                # on the next command by writing the title
+                f.write("\x1b]2;{0}\x07".format(t).encode())
+                f.flush()
 
     @property
     def prompt(self):
