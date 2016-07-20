@@ -318,7 +318,7 @@ def _zsh_hist_parser(location=None):
     if location is None:
         location = _find_histfile_var(location_list, default_location)
     z_hist_formatted = []
-    if os.path.isfile(location):
+    if location and os.path.isfile(location):
         with open(location, 'r', errors='backslashreplace') as z_file:
             z_txt = z_file.read()
             z_hist = z_txt.splitlines()
@@ -337,8 +337,7 @@ def _zsh_hist_parser(location=None):
                 return z_hist_formatted
 
     else:
-        print("No zsh history file found at: {}".format(location),
-              file=sys.stderr)
+        print("No zsh history file found", file=sys.stderr)
 
 
 def _bash_hist_parser(location=None):
@@ -348,7 +347,7 @@ def _bash_hist_parser(location=None):
     if location is None:
         location = _find_histfile_var(location_list, default_location)
     bash_hist_formatted = []
-    if os.path.isfile(location):
+    if location and os.path.isfile(location):
         with open(location, 'r', errors='backslashreplace') as bash_file:
             b_txt = bash_file.read()
             bash_hist = b_txt.splitlines()
@@ -357,8 +356,7 @@ def _bash_hist_parser(location=None):
                     bash_hist_formatted.append((command, 0.0, ind))
                 return bash_hist_formatted
     else:
-        print("No bash history file found at: {}".format(location),
-              file=sys.stderr)
+        print("No bash history file", file=sys.stderr)
 
 
 @functools.lru_cache()

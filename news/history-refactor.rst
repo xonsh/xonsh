@@ -14,6 +14,8 @@
 
 * is_int_or_slice
 
-**Fixed:** None
+**Fixed:**
+
+* Error messages when zsh or bash history file is not found
 
 **Security:** None
