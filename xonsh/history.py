@@ -673,9 +673,9 @@ def _hist_parse_args(args):
     elif args[0] not in ['-h', '--help'] and args[0] not in _HIST_MAIN_ACTIONS:
         args.insert(0, 'show')
     if (args[0] == 'show'
-        and len(args) > 1
-        and args[1] not in ['-h', '--help', '-r']
-        and args[1] not in HIST_SESSIONS):
+       and len(args) > 1
+       and args[1] not in ['-h', '--help', '-r']
+       and args[1] not in HIST_SESSIONS):
         args.insert(1, 'session')
     return parser.parse_args(args)
 

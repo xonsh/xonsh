@@ -1,16 +1,16 @@
-**Added:** None
+**Added:**
 
 * History now accepts multiple slices arguments separated by spaces
 
-**Changed:** None
+**Changed:**
 
 * is_int_as_str and is_slice_as_str are now reimplemented in EAFP style
 
-**Deprecated:** None
+**Deprecated:**
 
 * is_int_or_slice
 
-**Removed:** None
+**Removed:**
 
 * is_int_or_slice
 
