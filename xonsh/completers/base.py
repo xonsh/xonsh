@@ -1,6 +1,4 @@
 """Base completer for xonsh."""
-from collections import Sequence
-
 from xonsh.completers.path import complete_path
 from xonsh.completers.python import complete_python
 from xonsh.completers.commands import complete_command

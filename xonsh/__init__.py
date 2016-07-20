@@ -19,8 +19,8 @@ else:
         _sys.modules['xonsh.ansi_colors'] = __amalgam__
         codecache = __amalgam__
         _sys.modules['xonsh.codecache'] = __amalgam__
-        openpy = __amalgam__
-        _sys.modules['xonsh.openpy'] = __amalgam__
+        lazyimps = __amalgam__
+        _sys.modules['xonsh.lazyimps'] = __amalgam__
         platform = __amalgam__
         _sys.modules['xonsh.platform'] = __amalgam__
         pretty = __amalgam__
@@ -49,10 +49,10 @@ else:
         _sys.modules['xonsh.dirstack'] = __amalgam__
         foreign_shells = __amalgam__
         _sys.modules['xonsh.foreign_shells'] = __amalgam__
-        inspectors = __amalgam__
-        _sys.modules['xonsh.inspectors'] = __amalgam__
         lexer = __amalgam__
         _sys.modules['xonsh.lexer'] = __amalgam__
+        openpy = __amalgam__
+        _sys.modules['xonsh.openpy'] = __amalgam__
         proc = __amalgam__
         _sys.modules['xonsh.proc'] = __amalgam__
         xontribs = __amalgam__
@@ -63,6 +63,8 @@ else:
         _sys.modules['xonsh.environ'] = __amalgam__
         history = __amalgam__
         _sys.modules['xonsh.history'] = __amalgam__
+        inspectors = __amalgam__
+        _sys.modules['xonsh.inspectors'] = __amalgam__
         base_shell = __amalgam__
         _sys.modules['xonsh.base_shell'] = __amalgam__
         replay = __amalgam__

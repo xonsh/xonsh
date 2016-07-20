@@ -533,7 +533,7 @@ def detect_encoding(readline):
     return default, [first, second]
 
 
-def _tokopen(filename):
+def tokopen(filename):
     """Open a file in read only mode using the encoding detected by
     detect_encoding().
     """

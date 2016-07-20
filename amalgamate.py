@@ -49,7 +49,122 @@ class SourceCache(Mapping):
 
 SOURCES = SourceCache()
 
-def make_node(name, pkg, allowed):
+
+class GlobalNames(object):
+    """Stores globally defined names that have been seen on ast nodes."""
+
+    impnodes = frozenset(['import', 'importfrom'])
+
+    def __init__(self, pkg='<pkg>'):
+        self.cache = {}
+        self.pkg = pkg
+        self.module = '<mod>'
+        self.topnode = None
+
+    def warn_duplicates(self):
+        s = ''
+        for key in sorted(self.cache.keys()):
+            val = self.cache[key]
+            if len(val) < 2:
+                continue
+            val = sorted(val)
+            if all([val[0][0] == x[0] for x in val[1:]]):
+                continue
+            s += 'WARNING: {0!r} defined in multiple locations:\n'.format(key)
+            for loc in val:
+                s += '  {}:{} ({})\n'.format(*loc)
+        if len(s) > 0:
+            print(s, end='', flush=True, file=sys.stderr)
+
+    def entry(self, name, lineno):
+        if name.startswith('__'):
+            return
+        topnode = self.topnode
+        e = (self.pkg + '.' + self.module, lineno, topnode)
+        if name in self.cache:
+            if topnode in self.impnodes and \
+                    all([topnode == x[2] for x in self.cache[name]]):
+                return
+            self.cache[name].add(e)
+        else:
+            self.cache[name] = set([e])
+
+    def add(self, node, istopnode=False):
+        """Adds the names from the node to the cache."""
+        nodename = node.__class__.__name__.lower()
+        if istopnode:
+            self.topnode = nodename
+        meth = getattr(self, '_add_' + nodename, None)
+        if meth is not None:
+            meth(node)
+
+    def _add_name(self, node):
+        self.entry(node.id, node.lineno)
+
+    def _add_tuple(self, node):
+        for x in node.elts:
+            self.add(x)
+
+    def _add_assign(self, node):
+        for target in node.targets:
+            self.add(target)
+
+    def _add_functiondef(self, node):
+        self.entry(node.name, node.lineno)
+
+    def _add_classdef(self, node):
+        self.entry(node.name, node.lineno)
+
+    def _add_import(self, node):
+        lineno = node.lineno
+        for target in node.names:
+            if target.asname is None:
+                name, _, _ = target.name.partition('.')
+            else:
+                name = target.asname
+            self.entry(name, lineno)
+
+    def _add_importfrom(self, node):
+        pkg, _, _ = node.module.rpartition('.')
+        if pkg == self.pkg:
+            return
+        lineno = node.lineno
+        for target in node.names:
+            if target.asname is None:
+                name = target.name
+            else:
+                name = target.asname
+            self.entry(name, lineno)
+
+    def _add_with(self, node):
+        for item in node.items:
+            if item.optional_vars is None:
+                continue
+            self.add(item.optional_vars)
+        for child in node.body:
+            self.add(child, istopnode=True)
+
+    def _add_for(self, node):
+        self.add(node.target)
+        for child in node.body:
+            self.add(child, istopnode=True)
+
+    def _add_while(self, node):
+        for child in node.body:
+            self.add(child, istopnode=True)
+
+    def _add_if(self, node):
+        for child in node.body:
+            self.add(child, istopnode=True)
+        for child in node.orelse:
+            self.add(child, istopnode=True)
+
+    def _add_try(self, node):
+        for child in node.body:
+            self.add(child, istopnode=True)
+
+
+def make_node(name, pkg, allowed, glbnames):
     """Makes a node by parsing a file and traversing its AST."""
     raw = SOURCES[pkg, name]
     tree = parse(raw, filename=name)
@@ -57,7 +172,9 @@ def make_node(name, pkg, allowed):
     pkgdot = pkg + '.'
     pkgdeps = set()
     extdeps = set()
+    glbnames.module = name
     for a in tree.body:
+        glbnames.add(a, istopnode=True)
         if isinstance(a, Import):
             for n in a.names:
                 p, dot, m = n.name.rpartition('.')
@@ -93,8 +210,10 @@ def make_graph(pkg, exclude=None):
         allowed.add(base)
     if exclude:
         allowed -= exclude
+    glbnames = GlobalNames(pkg=pkg)
     for base in allowed:
-        graph[base] = make_node(base, pkg, allowed)
+        graph[base] = make_node(base, pkg, allowed, glbnames)
+    glbnames.warn_duplicates()
     return graph
 
 
@@ -373,7 +492,7 @@ def main(args=None):
             continue
         print('Amalgamating ' + pkg)
         exclude = read_exclude(pkg)
-        print('  excluding {}'.format(pprint.pformat(exclude)))
+        print('  excluding {}'.format(pprint.pformat(exclude or None)))
         graph = make_graph(pkg, exclude=exclude)
         order = depsort(graph)
         src = amalgamate(order, graph, pkg)
