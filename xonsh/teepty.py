@@ -12,7 +12,6 @@ import os
 import sys
 import time
 import array
-import fcntl
 import select
 import signal
 import tempfile
@@ -47,6 +46,15 @@ def termios():
         return
     else:
         return importlib.import_module('termios')
+
+
+@lazyobject
+def fcntl():
+    if ON_WINDOWS:
+        return
+    else:
+        return importlib.import_module('fcntl')
+
 
 # The following escape codes are xterm codes.
 # See http://rtfm.etla.org/xterm/ctlseq.html for more.
