@@ -929,7 +929,7 @@ def SLICE_REG():
     return re.compile(r'(?P<start>(?:-\d)?\d*):(?P<end>(?:-\d)?\d*):?(?P<step>(?:-\d)?\d*)')
 
 def ensure_slice(x):
-    """Covert a string or int to a slice."""
+    """Convert a string or int to a slice."""
     if x is None:
         return slice(None)
     try:
@@ -942,7 +942,7 @@ def ensure_slice(x):
             groups = (int(i) if i else None for i in m.groups())
             s = slice(*groups)
         else:
-            raise ValueError('cannot convert {} to slice'.format(x))
+            raise ValueError('cannot convert {!r} to slice'.format(x))
     except TypeError:
         raise TypeError('ensure_slice() argument must be a string or a number not {}'.format(type(x)))
     return s

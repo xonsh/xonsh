@@ -462,7 +462,11 @@ def _hist_show(ns=None, hist=None, start_index=None, end_index=None,
     if ns:
         _commands = []
         for s in ns.slices:
-            s = ensure_slice(s)
+            try:
+                s = ensure_slice(s)
+            except (ValueError, TypeError):
+                print('{!r} is not a valid slice format'.format(s), file=sys.stderr)
+                return
             if s:
                 try:
                     _commands.extend(commands[s])
