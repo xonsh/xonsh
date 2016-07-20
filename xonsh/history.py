@@ -433,6 +433,7 @@ def _hist_show(ns=None, hist=None, start_index=None, end_index=None,
     alias = True
     valid_formats = {'session': functools.partial(_curr_session_parser, hist),
                      'xonsh': _all_xonsh_parser,
+                     'all': _all_xonsh_parser,
                      'zsh': functools.partial(_zsh_hist_parser, location),
                      'bash': functools.partial(_bash_hist_parser, location)}
     if isinstance(ns, str) and ns in valid_formats.keys():
