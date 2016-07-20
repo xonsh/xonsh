@@ -40,6 +40,11 @@
   "url": "https://github.com/DangerOnTheRanger/xonsh-apt-tabcomplete",
   "description": ["Adds tabcomplete functionality to apt-get/apt-cache inside of xonsh."]
  },
+ {"name": "docker_tabcomplete",
+  "package": "xonsh-docker-tabcomplete",
+  "url": "https://github.com/xsteadfastx/xonsh-docker-tabcomplete",
+  "description": ["Adds tabcomplete functionality to docker inside of xonsh."]
+ },
  {"name": "pacman_tabcomplete",
   "package": "xonsh-pacman-tabcomplete",
   "url": "https://github.com/gforsyth/xonsh-pacman-tabcomplete",
@@ -96,6 +101,13 @@
    "url": "https://github.com/DangerOnTheRanger/xonsh-apt-tabcomplete",
    "install": {
     "pip": "pip install xonsh-apt-tabcomplete"
+   }
+  },
+  "xonsh-docker-tabcomplete": {
+   "license": "MIT",
+   "url": "https://github.com/xsteadfastx/xonsh-docker-tabcomplete",
+   "install": {
+    "pip": "pip install xonsh-docker-tabcomplete"
    }
   },
   "xonsh-pacman-tabcomplete": {
