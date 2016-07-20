@@ -37,8 +37,6 @@ else:
         _sys.modules['xonsh.tokenize'] = __amalgam__
         tools = __amalgam__
         _sys.modules['xonsh.tools'] = __amalgam__
-        vox = __amalgam__
-        _sys.modules['xonsh.vox'] = __amalgam__
         ast = __amalgam__
         _sys.modules['xonsh.ast'] = __amalgam__
         contexts = __amalgam__

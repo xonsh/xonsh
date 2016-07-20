@@ -3,7 +3,7 @@
 import builtins
 import stat
 import os
-from xonsh.vox import Vox
+from xontrib.vox import Vox
 
 def test_crud(xonsh_builtins, tmpdir):
     """

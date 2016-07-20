@@ -308,3 +308,11 @@ class VoxHandler:
     vox help (-h, --help)
         Show help
 """)
+
+
+def _vox(args, stdin=None):
+    """Runs Vox environment manager."""
+    vox = VoxHandler()
+    return vox(args, stdin=stdin)
+
+aliases['vox'] = _vox

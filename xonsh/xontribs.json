@@ -22,6 +22,11 @@
   "description": ["Matplotlib hooks for xonsh, including the new 'mpl' alias ",
                   "that displays the current figure on the screen."]
   },
+ {"name": "vox",
+  "package": "xonsh",
+  "url": "http://xon.sh",
+  "description": ["Python virtual environment manager for xonsh."]
+  },
  {"name": "prompt_ret_code",
   "package": "xontrib-prompt-ret-code",
   "url": "https://github.com/Siecje/xontrib-prompt-ret-code",
