@@ -4,8 +4,128 @@ import sys
 import venv
 import shutil
 import builtins
+import collections.abc
 
 from xonsh.platform import ON_POSIX, ON_WINDOWS, scandir
+
+VirtualEnvironment = collections.namedtuple('VirtualEnvironment', ['env', 'bin'])
+
+class Vox(collections.abc.Mapping):
+    """Basically a clone of the Vox class, but usable from Python"""
+
+    def __init__(self):
+        if not builtins.__xonsh_env__.get('VIRTUALENV_HOME'):
+            home_path = os.path.expanduser('~')
+            self.venvdir = os.path.join(home_path, '.virtualenvs')
+            builtins.__xonsh_env__['VIRTUALENV_HOME'] = self.venvdir
+        else:
+            self.venvdir = builtins.__xonsh_env__['VIRTUALENV_HOME']
+
+    def create(self, name):
+        """
+        Create a virtual environment in $VIRTUALENV_HOME with python3's `venv`.
+        """
+        env_path = os.path.join(self.venvdir, name)
+        venv.create(env_path, with_pip=True)
+
+    @staticmethod
+    def _binname():
+        if ON_WINDOWS:
+            return 'Scripts'
+        elif ON_POSIX:
+            return 'bin'
+        else:
+            raise OSError('This OS is not supported.')
+
+    def __getitem__(self, name):
+        if name is ...:
+            env_path = builtins.__xonsh_env__['VIRTUAL_ENV']
+        elif os.path.isabs(name):
+            env_path = name
+        else:
+            env_path = os.path.join(self.venvdir, name)
+        bin_dir = self._binname()
+        bin_path = os.path.join(env_path, bin_dir)
+        # Actually check if this is an actual venv or just a organizational directory
+        # eg, if 'spam/eggs' is a venv, reject 'spam'
+        if not os.path.exists(bin_path):
+            raise KeyError()
+        return VirtualEnvironment(env_path, bin_path)
+
+    def __iter__(self):
+        """List available virtual environments."""
+        # FIXME: Handle subdirs--this won't discover spam/eggs
+        for x in scandir(self.venvdir):
+            if x.is_dir():
+                yield x.name
+
+    def __len__(self):
+        l = 0
+        for _ in self:
+            l += 1
+        return l
+
+    def active(self):
+        """
+        Get the name of the active virtual environment
+        """
+        if 'VIRTUAL_ENV' not in builtins.__xonsh_env__:
+            return
+        env_path = builtins.__xonsh_env__['VIRTUAL_ENV']
+        if env_path.startswith(self.venvdir):
+            name = env_path[len(self.venvdir):]
+            if name[0] == '/':
+                name = name[1:]
+            return name
+        else:
+            return env_path
+
+    def activate(self, name):
+        """
+        Activate a virtual environment.
+        """
+        env = builtins.__xonsh_env__
+        env_path, bin_path = self[name]
+        if 'VIRTUAL_ENV' in env:
+            self.deactivate()
+
+        type(self).oldvars = {'PATH': env['PATH']}
+        env['PATH'].insert(0, bin_path)
+        env['VIRTUAL_ENV'] = env_path
+        if 'PYTHONHOME' in env:
+            type(self).oldvars['PYTHONHOME'] = env.pop('PYTHONHOME')
+
+    def deactivate(self):
+        """
+        Deactive the active virtual environment.
+        """
+        env = builtins.__xonsh_env__
+        if 'VIRTUAL_ENV' not in env:
+            raise RuntimeError('No environment currently active.')
+
+        env_path, bin_path = self[...]
+        env_name = self.active()
+
+        for k,v in type(self).oldvars.items():
+            env[k] = v
+        del type(self).oldvars
+
+        env.pop('VIRTUAL_ENV')
+
+        return env_name
+
+    def __delitem__(self, name):
+        """
+        Remove a virtual environment.
+        """
+        env_path = self[name].env
+        try:
+            if self[...].env == env_path:
+                raise RuntimeError('The "%s" environment is currently active.' % name)
+        except KeyError:
+            # No current venv, ... fails
+            pass
+        shutil.rmtree(env_path)
 
 
 class VoxHandler:
