@@ -20,7 +20,6 @@ from xonsh.replay import replay_main
 from xonsh.timings import timeit_alias
 from xonsh.tools import (XonshError, argvquote, escape_windows_cmd_string,
                          to_bool)
-from xonsh.vox import Vox
 from xonsh.xontribs import xontribs_main
 from xonsh.xoreutils import _which
 from xonsh.completers._aliases import completer_alias
@@ -458,12 +457,6 @@ def trace(args, stdin=None):
         pass
 
 
-def vox(args, stdin=None):
-    """Runs Vox environment manager."""
-    vox = Vox()
-    return vox(args, stdin=stdin)
-
-
 def showcmd(args, stdin=None):
     """usage: showcmd [-h|--help|cmd args]
 
@@ -513,7 +506,6 @@ def make_default_aliases():
         'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
         'showcmd': showcmd,
         'ipynb': ['jupyter', 'notebook', '--no-browser'],
-        'vox': vox,
         'which': which,
         'xontrib': xontribs_main,
         'completer': completer_alias
