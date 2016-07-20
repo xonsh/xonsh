@@ -70,6 +70,11 @@
   "package": "xonda",
   "url": "https://github.com/gforsyth/xonda",
   "description": ["A thin wrapper around conda with tab completion"]
+ },
+ {"name": "avox",
+  "package": "xontrib-avox",
+  "url": "https://github.com/astronouth7303/xontrib-avox",
+  "description": ["Automatic (de)activation of virtual environments as you cd around"]
  }
  ],
  "packages": {
@@ -143,6 +148,12 @@
    "url": "https://github.com/gforsyth/xonda",
    "install": {
     "pip": "pip install xonda"
+   },
+  "xontrib-avox": {
+   "license": "GPLv3",
+   "url": "https://github.com/astronouth7303/xontrib-avox",
+   "install": {
+    "pip": "pip install xontrib-avox"
    }
   }
  }
