@@ -296,9 +296,9 @@ def xexec(args, stdin=None):
 
 @lazyobject
 def _BANG_N_PARSER():
-    parser = argparse.ArgumentParser('!n', usage='!n <n>',
-                                     description="Re-runs the nth command as specified in the "
-                                                 "argument.")
+    parser = argparse.ArgumentParser(
+        '!n', usage='!n <n>',
+        description="Re-runs the nth command as specified in the argument.")
     parser.add_argument('n', type=int, help='the command to rerun, may be '
                                             'negative')
     return parser

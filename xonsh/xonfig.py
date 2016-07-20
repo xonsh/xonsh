@@ -407,7 +407,7 @@ def _tok_colors(cmap, cols):
             _, _, name = name.rpartition('.')
         names_toks[name] = t
     color_names = sorted(names_toks.keys(), key=(lambda s: (len(s), s)))
-    grper = lambda s: min(cols // (len(s) + 1), 8)  # noqa: E731
+    grper = lambda s: min(cols // (len(s) + 1), 8)
     toks = []
     for n, group in itertools.groupby(color_names, key=grper):
         width = cols // n

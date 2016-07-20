@@ -11,7 +11,6 @@ import pytest
 
 from xonsh.environ import Env
 from xonsh.base_shell import BaseShell
-from xonsh.tools import XonshBlockError  # noqa: F401
 
 
 VER_3_4 = (3, 4)

@@ -43,7 +43,7 @@ def carriage_return(b, cli):
             b.document.current_line.split(maxsplit=1)[0] in DEDENT_TOKENS and
             b.document.line_count > 1):
         b.newline(copy_margin=True)
-        _ = b.delete_before_cursor(count=len(indent_))  # noqa: F841
+        _ = b.delete_before_cursor(count=len(indent_))
     elif (not b.document.on_first_line and
             not current_line_blank):
         b.newline(copy_margin=True)

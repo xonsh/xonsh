@@ -201,7 +201,7 @@ def partial_color_tokenize(template):
     These sub-strings maybe templates themselves.
     """
     if hasattr(builtins, '__xonsh_shell__'):
-        styles = __xonsh_shell__.shell.styler.styles  # noqa: F821
+        styles = __xonsh_shell__.shell.styler.styles
     else:
         styles = None
     color = Color.NO_COLOR

@@ -388,10 +388,11 @@ DEFAULT_DOCS = LazyObject(lambda: {
         "$COMPLETIONS_DISPLAY is 'single' or 'multi'. This only affects the "
         'prompt-toolkit shell.'),
     'DIRSTACK_SIZE': VarDocs('Maximum size of the directory stack.'),
-    'DYNAMIC_CWD_WIDTH': VarDocs('Maximum length in number of characters '
-                                 'or as a percentage for the `cwd` prompt variable. For example, '
-                                 '"20" is a twenty character width and "10%" is ten percent of the '
-                                 'number of columns available.'),
+    'DYNAMIC_CWD_WIDTH': VarDocs(
+        'Maximum length in number of characters '
+        'or as a percentage for the `cwd` prompt variable. For example, '
+        '"20" is a twenty character width and "10%" is ten percent of the '
+        'number of columns available.'),
     'EXPAND_ENV_VARS': VarDocs(
         'Toggles whether environment variables are expanded inside of strings '
         'in subprocess mode.'),
@@ -421,13 +422,15 @@ DEFAULT_DOCS = LazyObject(lambda: {
         store_as_str=True),
     'IGNOREEOF': VarDocs('Prevents Ctrl-D from exiting the shell.'),
     'INDENT': VarDocs('Indentation string for multiline input'),
-    'INTENSIFY_COLORS_ON_WIN': VarDocs('Enhance style colors for readability '
-                                       'when using the default terminal (cmd.exe) on Windows. Blue colors, '
-                                       'which are hard to read, are replaced with cyan. Other colors are '
-                                       'generally replaced by their bright counter parts.',
-                                       configurable=ON_WINDOWS),
-    'LOADED_CONFIG': VarDocs('Whether or not the xonsh config file was loaded',
-                             configurable=False),
+    'INTENSIFY_COLORS_ON_WIN': VarDocs(
+        'Enhance style colors for readability '
+        'when using the default terminal (cmd.exe) on Windows. Blue colors, '
+        'which are hard to read, are replaced with cyan. Other colors are '
+        'generally replaced by their bright counter parts.',
+        configurable=ON_WINDOWS),
+    'LOADED_CONFIG': VarDocs(
+        'Whether or not the xonsh config file was loaded',
+        configurable=False),
     'LOADED_RC_FILES': VarDocs(
         'Whether or not any of the xonsh run control files were loaded at '
         'startup. This is a sequence of bools in Python that is converted '
@@ -468,10 +471,11 @@ DEFAULT_DOCS = LazyObject(lambda: {
         'This is most useful in xonsh scripts or modules where failures '
         'should cause an end to execution. This is less useful at a terminal. '
         'The error that is raised is a subprocess.CalledProcessError.'),
-    'RIGHT_PROMPT': VarDocs('Template string for right-aligned text '
-                            'at the prompt. This may be parameterized in the same way as '
-                            'the $PROMPT variable. Currently, this is only available in the '
-                            'prompt-toolkit shell.'),
+    'RIGHT_PROMPT': VarDocs(
+        'Template string for right-aligned text '
+        'at the prompt. This may be parameterized in the same way as '
+        'the $PROMPT variable. Currently, this is only available in the '
+        'prompt-toolkit shell.'),
     'SHELL_TYPE': VarDocs(
         'Which shell is used. Currently two base shell types are supported:\n\n'
         "    - 'readline' that is backed by Python's readline module\n"
@@ -528,12 +532,14 @@ DEFAULT_DOCS = LazyObject(lambda: {
         "in the same manner as $PROMPT, see 'Customizing the Prompt' "
         'http://xon.sh/tutorial.html#customizing-the-prompt.',
         default='xonsh.environ.DEFAULT_TITLE'),
-    'UPDATE_OS_ENVIRON': VarDocs("If True os.environ will always be updated "
-                                 "when the xonsh environment changes. The environment can be reset to "
-                                 "the default value by calling '__xonsh_env__.undo_replace_env()'"),
-    'VC_BRANCH_TIMEOUT': VarDocs('The timeout (in seconds) for version control '
-                                 'branch computations. This is a timeout per subprocess call, so the '
-                                 'total time to compute will be larger than this in many cases.'),
+    'UPDATE_OS_ENVIRON': VarDocs(
+        "If True os.environ will always be updated "
+        "when the xonsh environment changes. The environment can be reset to "
+        "the default value by calling '__xonsh_env__.undo_replace_env()'"),
+    'VC_BRANCH_TIMEOUT': VarDocs(
+        'The timeout (in seconds) for version control '
+        'branch computations. This is a timeout per subprocess call, so the '
+        'total time to compute will be larger than this in many cases.'),
     'VI_MODE': VarDocs(
         "Flag to enable 'vi_mode' in the 'prompt_toolkit' shell."),
     'VIRTUAL_ENV': VarDocs(
@@ -589,8 +595,9 @@ DEFAULT_DOCS = LazyObject(lambda: {
         "(https://docs.python.org/3/library/codecs.html#error-handlers) "
         'for more information and available options.',
         default="'surrogateescape'"),
-    'XONSH_HISTORY_FILE': VarDocs('Location of history file (deprecated).',
-                                  configurable=False, default="'~/.xonsh_history'"),
+    'XONSH_HISTORY_FILE': VarDocs(
+        'Location of history file (deprecated).',
+        configurable=False, default="'~/.xonsh_history'"),
     'XONSH_HISTORY_SIZE': VarDocs(
         'Value and units tuple that sets the size of history after garbage '
         'collection. Canonical units are:\n\n'

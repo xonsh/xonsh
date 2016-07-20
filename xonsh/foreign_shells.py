@@ -10,7 +10,6 @@ import subprocess
 import warnings
 import functools
 import collections.abc as abc
-from collections import Sequence
 
 from xonsh.lazyasd import LazyObject
 from xonsh.tools import to_bool, ensure_string
@@ -447,7 +446,7 @@ def ensure_shell(shell):
         ce = shell['currenv']
         if isinstance(ce, abc.Mapping):
             ce = tuple([(ensure_string(k), v) for k, v in ce.items()])
-        elif isinstance(ce, Sequence):
+        elif isinstance(ce, abc.Sequence):
             ce = tuple([(ensure_string(k), v) for k, v in ce])
         else:
             raise RuntimeError('unrecognized type for currenv')

@@ -47,7 +47,7 @@ def clean_tables():
 
 
 os.environ['XONSH_DEBUG'] = '1'
-from xonsh import __version__ as XONSH_VERSION  # noqa: E402
+from xonsh import __version__ as XONSH_VERSION
 
 
 def amalagamate_source():

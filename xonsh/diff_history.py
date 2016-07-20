@@ -197,12 +197,12 @@ class HistoryDiffer(object):
             pass
         elif bout is None:
             aid = self.a['sessionid']
-            s += 'Note: only {red}{aid}{no_color} output stored\n'.format(red=RED,
-                                                                          aid=aid, no_color=NO_COLOR)
+            s += 'Note: only {red}{aid}{no_color} output stored\n'.format(
+                red=RED, aid=aid, no_color=NO_COLOR)
         elif aout is None:
             bid = self.b['sessionid']
-            s += 'Note: only {green}{bid}{no_color} output stored\n'.format(green=GREEN,
-                                                                            bid=bid, no_color=NO_COLOR)
+            s += 'Note: only {green}{bid}{no_color} output stored\n'.format(
+                green=GREEN, bid=bid, no_color=NO_COLOR)
         elif aout != bout:
             s += 'Outputs differ\n'
             s += highlighted_ndiff(aout.splitlines(), bout.splitlines())

@@ -1,5 +1,3 @@
-import os  # noqa: F401
-
 from xonsh.completers.man import complete_from_man
 from xonsh.completers.path import complete_dir
 

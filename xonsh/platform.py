@@ -225,7 +225,6 @@ def git_for_windows_path():
 @functools.lru_cache(1)
 def windows_bash_command():
     """Determines teh command for Bash on windows."""
-    import winreg  # noqa: F401
     # Check that bash is on path otherwise try the default directory
     # used by Git for windows
     wbc = 'bash'

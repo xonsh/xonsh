@@ -21,7 +21,7 @@ from xonsh.lazyasd import lazyobject, lazybool
 @lazybool
 def _HAVE_RESOURCE():
     try:
-        import resource as _  # noqa: F401
+        import resource as r
         have = True
     except ImportError:
         # There is no distinction of user/system time under windows, so we

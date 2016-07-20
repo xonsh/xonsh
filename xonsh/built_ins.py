@@ -459,8 +459,8 @@ def run_subproc(cmds, captured=False):
         if (stdin is not None and
                 env.get('XONSH_STORE_STDIN') and
                 captured == 'object' and
-                __xonsh_commands_cache__.lazy_locate_binary('cat') and  # noqa: F821
-                __xonsh_commands_cache__.lazy_locate_binary('tee')):  # noqa: F821
+                __xonsh_commands_cache__.lazy_locate_binary('cat') and
+                __xonsh_commands_cache__.lazy_locate_binary('tee')):
             _stdin_file = tempfile.NamedTemporaryFile()
             cproc = subprocess.Popen(['cat'], stdin=stdin,
                                      stdout=subprocess.PIPE)

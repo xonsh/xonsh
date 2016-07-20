@@ -46,7 +46,7 @@ blank_re = LazyObject(lambda: re.compile(br'^[ \t\f]*(?:[#\r\n]|$)', re.ASCII),
 #
 # token modifications
 #
-import token  # noqa: 402
+import token
 
 __all__ = token.__all__ + ["COMMENT", "tokenize", "detect_encoding",
                            "NL", "untokenize", "ENCODING", "TokenInfo",
@@ -586,17 +586,17 @@ def _tokenize(readline, encoding):
 
         if contstr:  # continued string
             if not line:
-                raise TokenError("EOF in multi-line string", strstart)  # noqa: F821
-            endmatch = endprog.match(line)  # noqa: F821
+                raise TokenError("EOF in multi-line string", strstart)
+            endmatch = endprog.match(line)
             if endmatch:
                 pos = end = endmatch.end(0)
                 yield TokenInfo(STRING, contstr + line[:end],
-                                strstart, (lnum, end), contline + line)  # noqa: F821
+                                strstart, (lnum, end), contline + line)
                 contstr, needcont = '', 0
                 contline = None
             elif needcont and line[-2:] != '\\\n' and line[-3:] != '\\\r\n':
                 yield TokenInfo(ERRORTOKEN, contstr + line,
-                                strstart, (lnum, len(line)), contline)  # noqa: F821
+                                strstart, (lnum, len(line)), contline)
                 contstr = ''
                 contline = None
                 continue
@@ -712,7 +712,7 @@ def _tokenize(readline, encoding):
                         token[:2] in single_quoted or \
                         token[:3] in single_quoted:
                     if token[-1] == '\n':  # continued string
-                        strstart = (lnum, start)  # noqa: F821
+                        strstart = (lnum, start)
                         endprog = _compile(endpats[initial] or
                                            endpats[token[1]] or
                                            endpats[token[2]])
