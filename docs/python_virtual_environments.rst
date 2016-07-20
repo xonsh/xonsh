@@ -13,6 +13,10 @@ Luckily, xonsh ships with its own virtual environments manager called **Vox**.
 Vox
 ===
 
+First, load the vox xontrib::
+
+    $ xontrib load vox
+
 To create a new environment with vox, run ``vox new <envname>``::
 
     $ vox new myenv
