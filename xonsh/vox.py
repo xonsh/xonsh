@@ -15,7 +15,12 @@ class EnvironmentInUse(Exception): pass
 class NoEnvironmentActive(Exception): pass
 
 class Vox(collections.abc.Mapping):
-    """Basically a clone of the Vox class, but usable from Python"""
+    """API access to Vox and virtual environments, in a dict-like format.
+    
+    Makes use of the VirtualEnvironment namedtuple:
+    1. ``env``: The full path to the environment
+    2. ``bin``: The full path to the bin/Scripts directory of the environment
+    """
 
     def __init__(self):
         if not builtins.__xonsh_env__.get('VIRTUALENV_HOME'):
@@ -26,8 +31,12 @@ class Vox(collections.abc.Mapping):
             self.venvdir = builtins.__xonsh_env__['VIRTUALENV_HOME']
 
     def create(self, name):
-        """
-        Create a virtual environment in $VIRTUALENV_HOME with python3's `venv`.
+        """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
+
+        Parameters
+        ----------
+        name : str
+            Virtual environment name
         """
         env_path = os.path.join(self.venvdir, name)
         venv.create(env_path, with_pip=True)
@@ -42,6 +51,14 @@ class Vox(collections.abc.Mapping):
             raise OSError('This OS is not supported.')
 
     def __getitem__(self, name):
+        """Get information about a virtual environment.
+
+        Parameters
+        ----------
+        name : str or Ellipsis
+            Virtual environment name or absolute path. If ... is given, return 
+            the current one (throws a KeyError if there isn't one).
+        """
         if name is ...:
             env_path = builtins.__xonsh_env__['VIRTUAL_ENV']
         elif os.path.isabs(name):
@@ -57,21 +74,27 @@ class Vox(collections.abc.Mapping):
         return VirtualEnvironment(env_path, bin_path)
 
     def __iter__(self):
-        """List available virtual environments."""
-        # FIXME: Handle subdirs--this won't discover spam/eggs
+        """List available virtual environments found in $VIRTUALENV_HOME.
+        """
+        # FIXME: Handle subdirs--this won't discover eg ``spam/eggs``
         for x in scandir(self.venvdir):
             if x.is_dir():
                 yield x.name
 
     def __len__(self):
+        """Counts known virtual environments, using the same rules as iter().
+        """
         l = 0
         for _ in self:
             l += 1
         return l
 
     def active(self):
-        """
-        Get the name of the active virtual environment
+        """Get the name of the active virtual environment.
+
+        You can use this as a key to get further information.
+
+        Returns None if no environment is active.
         """
         if 'VIRTUAL_ENV' not in builtins.__xonsh_env__:
             return
@@ -87,6 +110,11 @@ class Vox(collections.abc.Mapping):
     def activate(self, name):
         """
         Activate a virtual environment.
+
+        Parameters
+        ----------
+        name : str
+            Virtual environment name or absolute path.
         """
         env = builtins.__xonsh_env__
         env_path, bin_path = self[name]
@@ -101,7 +129,7 @@ class Vox(collections.abc.Mapping):
 
     def deactivate(self):
         """
-        Deactive the active virtual environment.
+        Deactive the active virtual environment. Returns the name of it.
         """
         env = builtins.__xonsh_env__
         if 'VIRTUAL_ENV' not in env:
@@ -121,7 +149,12 @@ class Vox(collections.abc.Mapping):
 
     def __delitem__(self, name):
         """
-        Remove a virtual environment.
+        Permanently deletes a virtual environment.
+
+        Parameters
+        ----------
+        name : str
+            Virtual environment name or absolute path.
         """
         env_path = self[name].env
         try:
