@@ -1,6 +1,6 @@
 **Added:**
 
-* A new API class was added to Vox: ``xontrib.vox.Vox``. This allows programtic access to the virtual environment machinery for other xontribs. See the API documentation for details.
+* A new API class was added to Vox: ``xontrib.voxapi.Vox``. This allows programtic access to the virtual environment machinery for other xontribs. See the API documentation for details.
 
 **Changed:** 
 

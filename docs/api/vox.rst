@@ -1,10 +1,10 @@
 .. _xonsh_vox:
 
 ******************************************************
-Vox (``xontrib.vox``)
+Vox (``xontrib.voxapi``)
 ******************************************************
 
-.. automodule:: xontrib.vox
+.. automodule:: xontrib.voxapi
     :members:
     :undoc-members:
     :inherited-members:
