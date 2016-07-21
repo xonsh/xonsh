@@ -10,7 +10,7 @@ class _VoxHandler:
     subparsers = parser.add_subparsers(dest='command')
 
     create = subparsers.add_parser('new', help='Create a new virtual environment')
-    create.add_argument('envs', metavar='ENV',
+    create.add_argument('name', metavar='ENV',
                         help='The environments to create')
 
     create.add_argument('--system-site-packages', default=False,
@@ -40,15 +40,24 @@ class _VoxHandler:
                              'virtual environment (pip is bootstrapped '
                              'by default)')
 
-    group = create.add_mutually_exclusive_group()
     activate = subparsers.add_parser('activate', aliases=['workon', 'enter'], help='Activate virtual environment')
-    create.add_argument('name', metavar='ENV', 
+    activate.add_argument('name', metavar='ENV', 
                         help='The environment to activate')
     subparsers.add_parser('deactivate', aliases=['exit'], help='Deactivate current virtual environment')
     subparsers.add_parser('list', aliases=['ls'], help='List all available environments')
     remove = subparsers.add_parser('remove', aliases=['rm', 'delete', 'del'], help='Remove virtual environment')
-    create.add_argument('envs', metavar='ENV', nargs='+',
+    remove.add_argument('names', metavar='ENV', nargs='+',
                         help='The environments to remove')
+
+    aliases = {
+        'workon': 'activate',
+        'enter': 'activate',
+        'exit': 'deactivate',
+        'ls': 'list',
+        'rm': 'remove',
+        'delete': 'remove',
+        'del': 'remove',
+    }
 
     def __init__(self):
         self.vox = _voxapi.Vox()
@@ -57,7 +66,8 @@ class _VoxHandler:
         """Call the right handler method for a given command."""
 
         args = self.parser.parse_args(args)
-        getattr(self, 'cmd_'+args.command)(args, stdin)
+        cmd = self.aliases.get(args.command, args.command)
+        getattr(self, 'cmd_'+cmd)(args, stdin)
 
     def cmd_create(self, args, stdin=None):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
@@ -113,9 +123,9 @@ class _VoxHandler:
         names : list
             list of virtual environment names
         """
-        for name in names:
+        for name in args.names:
             try:
-                del self.vox[args.name]
+                del self.vox[name]
             except _voxapi.EnvironmentInUse:
                 print('The "%s" environment is currently active. In order to remove it, deactivate it first with "vox deactivate %s".\n' % (name, name),
                       file=_sys.stderr)
