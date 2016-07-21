@@ -11,11 +11,11 @@ try:
 except ImportError:
     from xonsh.ply.lex import LexToken
 
-from xonsh.lazyasd import LazyObject, lazyobject
+from xonsh.lazyasd import lazyobject
 from xonsh.platform import PYTHON_VERSION_INFO
 from xonsh.tokenize import (OP, IOREDIRECT, STRING, DOLLARNAME, NUMBER,
-    SEARCHPATH, NEWLINE, INDENT, DEDENT, NL, COMMENT, ENCODING,
-    ENDMARKER, NAME, ERRORTOKEN, tokenize, TokenError)
+                            SEARCHPATH, NEWLINE, INDENT, DEDENT, NL, COMMENT, ENCODING,
+                            ENDMARKER, NAME, ERRORTOKEN, tokenize, TokenError)
 
 
 @lazyobject
@@ -169,6 +169,7 @@ def _make_matcher_handler(tok, typ, pymode, ender, handlers):
     matcher = (')' if tok.endswith('(') else
                '}' if tok.endswith('{') else
                ']' if tok.endswith('[') else None)
+
     def _inner_handler(state, token):
         state['pymode'].append((pymode, tok, matcher, token.start))
         state['last'] = token

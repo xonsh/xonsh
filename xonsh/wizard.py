@@ -9,6 +9,7 @@ import textwrap
 
 from xonsh.tools import to_bool, to_bool_or_break, backup_file, print_color
 
+
 #
 # Nodes themselves
 #
@@ -167,6 +168,7 @@ class YesNo(Question):
         super().__init__(question, responses, converter=to_bool,
                          path=path)
 
+
 class TrueFalse(Input):
     """Input node the returns a True or False value."""
 
@@ -279,7 +281,10 @@ def create_truefalse_cond(prompt='yes or no [default: no]? ', path=None):
 # Tools for trees of nodes.
 #
 
-_lowername = lambda cls: cls.__name__.lower()
+
+def _lowername(cls):
+    return cls.__name__.lower()
+
 
 class Visitor(object):
     """Super-class for all classes that should walk over a tree of nodes.
@@ -512,6 +517,7 @@ YN = "{GREEN}yes{NO_COLOR} or {RED}no{NO_COLOR} [default: no]? "
 YNB = ('{GREEN}yes{NO_COLOR}, {RED}no{NO_COLOR}, or '
        '{YELLOW}break{NO_COLOR} [default: no]? ')
 
+
 class PromptVisitor(StateVisitor):
     """Visits the nodes in the tree via the a command-line prompt."""
 
@@ -569,7 +575,7 @@ class PromptVisitor(StateVisitor):
                     else:
                         raise
                 if node.show_conversion and x is not Unstorable \
-                                        and str(x) != raw:
+                        and str(x) != raw:
                     msg = '{{BOLD_PURPLE}}Converted{{NO_COLOR}} input {0!r} to {1!r}.'
                     print_color(msg.format(raw, x))
             else:

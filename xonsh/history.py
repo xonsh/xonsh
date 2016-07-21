@@ -15,7 +15,7 @@ import threading
 import collections
 import collections.abc as abc
 
-from xonsh.lazyasd import LazyObject, lazyobject
+from xonsh.lazyasd import lazyobject
 from xonsh.lazyjson import LazyJSON, ljdump, LJNode
 from xonsh.tools import (ensure_slice, to_history_tuple,
                          expanduser_abs_path)
@@ -115,7 +115,6 @@ class HistoryGC(threading.Thread):
         This is sorted by the last closed time. Returns a list of (timestamp,
         file) tuples.
         """
-        _ = self  # this could be a function but is intimate to this class
         # pylint: disable=no-member
         xdd = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
         xdd = expanduser_abs_path(xdd)
@@ -409,7 +408,7 @@ def _hist_create_parser():
 
 
 def _hist_show(ns=None, hist=None, start_index=None, end_index=None,
-          start_time=None, end_time=None, location=None):
+               start_time=None, end_time=None, location=None):
     """Show the requested portion of shell history.
     Accepts multiple history sources (xonsh, bash, zsh)
 
@@ -655,15 +654,17 @@ def _HIST_SESSIONS():
             'all': _all_xonsh_parser,
             'zsh': _zsh_hist_parser,
             'bash': _bash_hist_parser}
+
+
 @lazyobject
 def _HIST_MAIN_ACTIONS():
     return {
-    'show': _hist_show,
-    'id': lambda ns, hist: print(hist.sessionid),
-    'file': lambda ns, hist: print(hist.filename),
-    'info': _hist_info,
-    'diff': _dh_main_action,
-    'gc': _hist_gc,
+        'show': _hist_show,
+        'id': lambda ns, hist: print(hist.sessionid),
+        'file': lambda ns, hist: print(hist.filename),
+        'info': _hist_info,
+        'diff': _dh_main_action,
+        'gc': _hist_gc,
     }
 
 

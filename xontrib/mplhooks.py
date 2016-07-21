@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 
 from xonsh.tools import print_color, ON_WINDOWS
 
+
 def figure_to_rgb_array(fig, width, height):
     """Converts figure to a numpy array of rgb values
 
@@ -43,7 +44,7 @@ def buf_to_color_str(buf):
     for h in range(buf.shape[0]):
         last = None
         for w in range(buf.shape[1]):
-            rgb = buf[h,w]
+            rgb = buf[h, w]
             if last is not None and (last == rgb).all():
                 pixels.append(space)
             else:

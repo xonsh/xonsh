@@ -68,8 +68,7 @@ def index(obj, sort_keys=False):
     return s, idx
 
 
-JSON_FORMAT = \
-"""{{"locs": [{iloc:>10}, {ilen:>10}, {dloc:>10}, {dlen:>10}],
+JSON_FORMAT = """{{"locs": [{iloc:>10}, {ilen:>10}, {dloc:>10}, {dlen:>10}],
  "index": {index},
  "data": {data}
 }}
@@ -248,4 +247,3 @@ class LazyJSON(LJNode):
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.close()
-

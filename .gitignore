@@ -40,5 +40,6 @@ include/
 # Editor project files
 *.komodo*
 .cache
+.idea
 
 .coverage

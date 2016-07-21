@@ -25,18 +25,17 @@ import builtins
 import itertools
 import collections
 from token import (AMPER, AMPEREQUAL, AT, CIRCUMFLEX,
-        CIRCUMFLEXEQUAL, COLON, COMMA, DEDENT, DOT, DOUBLESLASH,
-        DOUBLESLASHEQUAL, DOUBLESTAR, DOUBLESTAREQUAL, ENDMARKER, EQEQUAL,
-        EQUAL, ERRORTOKEN, GREATER, GREATEREQUAL, INDENT, LBRACE, LEFTSHIFT,
-        LEFTSHIFTEQUAL, LESS, LESSEQUAL, LPAR, LSQB, MINEQUAL, MINUS, NAME,
-        NEWLINE, NOTEQUAL, NUMBER, N_TOKENS, OP, PERCENT, PERCENTEQUAL, PLUS,
-        PLUSEQUAL, RBRACE, RIGHTSHIFT, RIGHTSHIFTEQUAL, RPAR, RSQB, SEMI,
-        SLASH, SLASHEQUAL, STAR, STAREQUAL, STRING, TILDE, VBAR, VBAREQUAL,
-        tok_name)
+                   CIRCUMFLEXEQUAL, COLON, COMMA, DEDENT, DOT, DOUBLESLASH,
+                   DOUBLESLASHEQUAL, DOUBLESTAR, DOUBLESTAREQUAL, ENDMARKER, EQEQUAL,
+                   EQUAL, ERRORTOKEN, GREATER, GREATEREQUAL, INDENT, LBRACE, LEFTSHIFT,
+                   LEFTSHIFTEQUAL, LESS, LESSEQUAL, LPAR, LSQB, MINEQUAL, MINUS, NAME,
+                   NEWLINE, NOTEQUAL, NUMBER, N_TOKENS, OP, PERCENT, PERCENTEQUAL, PLUS,
+                   PLUSEQUAL, RBRACE, RIGHTSHIFT, RIGHTSHIFTEQUAL, RPAR, RSQB, SEMI,
+                   SLASH, SLASHEQUAL, STAR, STAREQUAL, STRING, TILDE, VBAR, VBAREQUAL,
+                   tok_name)
 
 from xonsh.lazyasd import LazyObject
 from xonsh.platform import PYTHON_VERSION_INFO
-
 
 cookie_re = LazyObject(
     lambda: re.compile(r'^[ \t\f]*#.*coding[:=][ \t]*([-\w.]+)', re.ASCII),
@@ -48,6 +47,7 @@ blank_re = LazyObject(lambda: re.compile(br'^[ \t\f]*(?:[#\r\n]|$)', re.ASCII),
 # token modifications
 #
 import token
+
 __all__ = token.__all__ + ["COMMENT", "tokenize", "detect_encoding",
                            "NL", "untokenize", "ENCODING", "TokenInfo",
                            "TokenError", 'SEARCHPATH', 'ATDOLLAR', 'ATEQUAL',
@@ -62,7 +62,6 @@ else:
     AUGASSIGN_OPS = r"[+\-*/%&|^=<>]=?"
     ADDSPACE_TOKS = (NAME, NUMBER)
 del token  # must clean up token
-
 
 COMMENT = N_TOKENS
 tok_name[COMMENT] = 'COMMENT'
@@ -87,18 +86,18 @@ ATEQUAL = N_TOKENS
 tok_name[N_TOKENS] = 'ATEQUAL'
 N_TOKENS += 1
 _xonsh_tokens = {
-    '?':   'QUESTION',
-    '@=':  'ATEQUAL',
-    '@$':  'ATDOLLAR',
-    '||':  'DOUBLEPIPE',
-    '&&':  'DOUBLEAMPER',
-    '@(':  'ATLPAREN',
-    '!(':  'BANGLPAREN',
-    '![':  'BANGLBRACKET',
-    '$(':  'DOLLARLPAREN',
-    '$[':  'DOLLARLBRACKET',
-    '${':  'DOLLARLBRACE',
-    '??':  'DOUBLEQUESTION',
+    '?': 'QUESTION',
+    '@=': 'ATEQUAL',
+    '@$': 'ATDOLLAR',
+    '||': 'DOUBLEPIPE',
+    '&&': 'DOUBLEAMPER',
+    '@(': 'ATLPAREN',
+    '!(': 'BANGLPAREN',
+    '![': 'BANGLBRACKET',
+    '$(': 'DOLLARLPAREN',
+    '$[': 'DOLLARLBRACKET',
+    '${': 'DOLLARLBRACE',
+    '??': 'DOUBLEQUESTION',
     '@$(': 'ATDOLLARLPAREN',
 }
 
@@ -112,51 +111,50 @@ for v in _xonsh_tokens.values():
     __all__.append(v)
 del _glbs, v
 
-
 EXACT_TOKEN_TYPES = {
-    '(':   LPAR,
-    ')':   RPAR,
-    '[':   LSQB,
-    ']':   RSQB,
-    ':':   COLON,
-    ',':   COMMA,
-    ';':   SEMI,
-    '+':   PLUS,
-    '-':   MINUS,
-    '*':   STAR,
-    '/':   SLASH,
-    '|':   VBAR,
-    '&':   AMPER,
-    '<':   LESS,
-    '>':   GREATER,
-    '=':   EQUAL,
-    '.':   DOT,
-    '%':   PERCENT,
-    '{':   LBRACE,
-    '}':   RBRACE,
-    '==':  EQEQUAL,
-    '!=':  NOTEQUAL,
-    '<=':  LESSEQUAL,
-    '>=':  GREATEREQUAL,
-    '~':   TILDE,
-    '^':   CIRCUMFLEX,
-    '<<':  LEFTSHIFT,
-    '>>':  RIGHTSHIFT,
-    '**':  DOUBLESTAR,
-    '+=':  PLUSEQUAL,
-    '-=':  MINEQUAL,
-    '*=':  STAREQUAL,
-    '/=':  SLASHEQUAL,
-    '%=':  PERCENTEQUAL,
-    '&=':  AMPEREQUAL,
-    '|=':  VBAREQUAL,
+    '(': LPAR,
+    ')': RPAR,
+    '[': LSQB,
+    ']': RSQB,
+    ':': COLON,
+    ',': COMMA,
+    ';': SEMI,
+    '+': PLUS,
+    '-': MINUS,
+    '*': STAR,
+    '/': SLASH,
+    '|': VBAR,
+    '&': AMPER,
+    '<': LESS,
+    '>': GREATER,
+    '=': EQUAL,
+    '.': DOT,
+    '%': PERCENT,
+    '{': LBRACE,
+    '}': RBRACE,
+    '==': EQEQUAL,
+    '!=': NOTEQUAL,
+    '<=': LESSEQUAL,
+    '>=': GREATEREQUAL,
+    '~': TILDE,
+    '^': CIRCUMFLEX,
+    '<<': LEFTSHIFT,
+    '>>': RIGHTSHIFT,
+    '**': DOUBLESTAR,
+    '+=': PLUSEQUAL,
+    '-=': MINEQUAL,
+    '*=': STAREQUAL,
+    '/=': SLASHEQUAL,
+    '%=': PERCENTEQUAL,
+    '&=': AMPEREQUAL,
+    '|=': VBAREQUAL,
     '^=': CIRCUMFLEXEQUAL,
     '<<=': LEFTSHIFTEQUAL,
     '>>=': RIGHTSHIFTEQUAL,
     '**=': DOUBLESTAREQUAL,
-    '//':  DOUBLESLASH,
+    '//': DOUBLESLASH,
     '//=': DOUBLESLASHEQUAL,
-    '@':   AT,
+    '@': AT,
 }
 
 EXACT_TOKEN_TYPES.update(_xonsh_tokens)
@@ -175,6 +173,7 @@ class TokenInfo(collections.namedtuple('TokenInfo', 'type string start end line'
         else:
             return self.type
 
+
 def group(*choices):
     return '(' + '|'.join(choices) + ')'
 
@@ -185,6 +184,7 @@ def tokany(*choices):
 
 def maybe(*choices):
     return group(*choices) + '?'
+
 
 # Note: we use unicode matching for names ("\w") but ascii matching for
 # number literals.
@@ -254,8 +254,10 @@ PseudoExtras = group(r'\\\r?\n|\Z', Comment, Triple, SearchPath)
 PseudoToken = Whitespace + group(PseudoExtras, IORedirect, Number, Funny,
                                  ContStr, Name_RE)
 
+
 def _compile(expr):
     return re.compile(expr, re.UNICODE)
+
 
 endpats = {"'": Single, '"': Double,
            "'''": Single3, '"""': Double3,
@@ -292,22 +294,25 @@ for t in ("'", '"',
           "r'", 'r"', "R'", 'R"',
           "b'", 'b"', "B'", 'B"',
           "br'", 'br"', "Br'", 'Br"',
-          "bR'", 'bR"', "BR'", 'BR"' ,
+          "bR'", 'bR"', "BR'", 'BR"',
           "rb'", 'rb"', "rB'", 'rB"',
-          "Rb'", 'Rb"', "RB'", 'RB"' ,
+          "Rb'", 'Rb"', "RB'", 'RB"',
           "u'", 'u"', "U'", 'U"',
           ):
     single_quoted[t] = t
 
 tabsize = 8
 
-class TokenError(Exception): pass
 
-class StopTokenizing(Exception): pass
+class TokenError(Exception):
+    pass
+
+
+class StopTokenizing(Exception):
+    pass
 
 
 class Untokenizer:
-
     def __init__(self):
         self.tokens = []
         self.prev_row = 1
@@ -435,7 +440,7 @@ def _get_normal_name(orig_enc):
     if enc == "utf-8" or enc.startswith("utf-8-"):
         return "utf-8"
     if enc in ("latin-1", "iso-8859-1", "iso-latin-1") or \
-       enc.startswith(("latin-1-", "iso-8859-1-", "iso-latin-1-")):
+            enc.startswith(("latin-1-", "iso-8859-1-", "iso-latin-1-")):
         return "iso-8859-1"
     return orig_enc
 
@@ -464,6 +469,7 @@ def detect_encoding(readline):
     bom_found = False
     encoding = None
     default = 'utf-8'
+
     def read_or_stop():
         try:
             return readline()
@@ -487,14 +493,14 @@ def detect_encoding(readline):
             return None
         encoding = _get_normal_name(match.group(1))
         try:
-            codec = codecs.lookup(encoding)
+            codecs.lookup(encoding)
         except LookupError:
             # This behaviour mimics the Python interpreter
             if filename is None:
                 msg = "unknown encoding: " + encoding
             else:
                 msg = "unknown encoding for {!r}: {}".format(filename,
-                        encoding)
+                                                             encoding)
             raise SyntaxError(msg)
 
         if bom_found:
@@ -567,7 +573,7 @@ def _tokenize(readline, encoding):
             # BOM will already have been stripped.
             encoding = "utf-8"
         yield TokenInfo(ENCODING, encoding, (0, 0), (0, 0), '')
-    while True:             # loop over lines in stream
+    while True:  # loop over lines in stream
         try:
             line = readline()
         except StopIteration:
@@ -578,19 +584,19 @@ def _tokenize(readline, encoding):
         lnum += 1
         pos, max = 0, len(line)
 
-        if contstr:                            # continued string
+        if contstr:  # continued string
             if not line:
                 raise TokenError("EOF in multi-line string", strstart)
             endmatch = endprog.match(line)
             if endmatch:
                 pos = end = endmatch.end(0)
                 yield TokenInfo(STRING, contstr + line[:end],
-                       strstart, (lnum, end), contline + line)
+                                strstart, (lnum, end), contline + line)
                 contstr, needcont = '', 0
                 contline = None
             elif needcont and line[-2:] != '\\\n' and line[-3:] != '\\\r\n':
                 yield TokenInfo(ERRORTOKEN, contstr + line,
-                           strstart, (lnum, len(line)), contline)
+                                strstart, (lnum, len(line)), contline)
                 contstr = ''
                 contline = None
                 continue
@@ -600,13 +606,14 @@ def _tokenize(readline, encoding):
                 continue
 
         elif parenlev == 0 and not continued:  # new statement
-            if not line: break
+            if not line:
+                break
             column = 0
-            while pos < max:                   # measure leading whitespace
+            while pos < max:  # measure leading whitespace
                 if line[pos] == ' ':
                     column += 1
                 elif line[pos] == '\t':
-                    column = (column//tabsize + 1)*tabsize
+                    column = (column // tabsize + 1) * tabsize
                 elif line[pos] == '\f':
                     column = 0
                 else:
@@ -615,20 +622,20 @@ def _tokenize(readline, encoding):
             if pos == max:
                 break
 
-            if line[pos] in '#\r\n':           # skip comments or blank lines
+            if line[pos] in '#\r\n':  # skip comments or blank lines
                 if line[pos] == '#':
                     comment_token = line[pos:].rstrip('\r\n')
                     nl_pos = pos + len(comment_token)
                     yield TokenInfo(COMMENT, comment_token,
-                           (lnum, pos), (lnum, pos + len(comment_token)), line)
+                                    (lnum, pos), (lnum, pos + len(comment_token)), line)
                     yield TokenInfo(NL, line[nl_pos:],
-                           (lnum, nl_pos), (lnum, len(line)), line)
+                                    (lnum, nl_pos), (lnum, len(line)), line)
                 else:
                     yield TokenInfo((NL, COMMENT)[line[pos] == '#'], line[pos:],
-                           (lnum, pos), (lnum, len(line)), line)
+                                    (lnum, pos), (lnum, len(line)), line)
                 continue
 
-            if column > indents[-1]:           # count indents or dedents
+            if column > indents[-1]:  # count indents or dedents
                 indents.append(column)
                 yield TokenInfo(INDENT, line[:pos], (lnum, 0), (lnum, pos), line)
             while column < indents[-1]:
@@ -650,14 +657,14 @@ def _tokenize(readline, encoding):
                 async_def_nl = False
                 async_def_indent = 0
 
-        else:                                  # continued statement
+        else:  # continued statement
             if not line:
                 raise TokenError("EOF in multi-line statement", (lnum, 0))
             continued = 0
 
         while pos < max:
             pseudomatch = _compile(PseudoToken).match(line, pos)
-            if pseudomatch:                                # scan for tokens
+            if pseudomatch:  # scan for tokens
                 start, end = pseudomatch.span(1)
                 spos, epos, pos = (lnum, start), (lnum, end), end
                 if start == end:
@@ -666,8 +673,8 @@ def _tokenize(readline, encoding):
 
                 if token in _redir_check:
                     yield TokenInfo(IOREDIRECT, token, spos, epos, line)
-                elif (initial in numchars or                  # ordinary number
-                    (initial == '.' and token != '.' and token != '...')):
+                elif (initial in numchars or  # ordinary number
+                        (initial == '.' and token != '.' and token != '...')):
                     yield TokenInfo(NUMBER, token, spos, epos, line)
                 elif initial in '\r\n':
                     if stashed:
@@ -692,19 +699,19 @@ def _tokenize(readline, encoding):
                 elif token in triple_quoted:
                     endprog = _compile(endpats[token])
                     endmatch = endprog.match(line, pos)
-                    if endmatch:                           # all on one line
+                    if endmatch:  # all on one line
                         pos = endmatch.end(0)
                         token = line[start:pos]
                         yield TokenInfo(STRING, token, spos, (lnum, pos), line)
                     else:
-                        strstart = (lnum, start)           # multiple lines
+                        strstart = (lnum, start)  # multiple lines
                         contstr = line[start:]
                         contline = line
                         break
                 elif initial in single_quoted or \
-                    token[:2] in single_quoted or \
-                    token[:3] in single_quoted:
-                    if token[-1] == '\n':                  # continued string
+                        token[:2] in single_quoted or \
+                        token[:3] in single_quoted:
+                    if token[-1] == '\n':  # continued string
                         strstart = (lnum, start)
                         endprog = _compile(endpats[initial] or
                                            endpats[token[1]] or
@@ -712,11 +719,11 @@ def _tokenize(readline, encoding):
                         contstr, needcont = line[start:], 1
                         contline = line
                         break
-                    else:                                  # ordinary string
+                    else:  # ordinary string
                         yield TokenInfo(STRING, token, spos, epos, line)
                 elif token.startswith('$') and token[1:].isidentifier():
                     yield TokenInfo(DOLLARNAME, token, spos, epos, line)
-                elif initial.isidentifier():               # ordinary name
+                elif initial.isidentifier():  # ordinary name
                     if token in ('async', 'await'):
                         if async_def:
                             yield TokenInfo(
@@ -729,25 +736,23 @@ def _tokenize(readline, encoding):
                         stashed = tok
                         continue
 
-                    if token == 'def':
-                        if (stashed
-                                and stashed.type == NAME
-                                and stashed.string == 'async'):
+                    if token == 'def' and (stashed
+                                           and stashed.type == NAME
+                                           and stashed.string == 'async'):
+                        async_def = True
+                        async_def_indent = indents[-1]
 
-                            async_def = True
-                            async_def_indent = indents[-1]
-
-                            yield TokenInfo(ASYNC, stashed.string,
-                                            stashed.start, stashed.end,
-                                            stashed.line)
-                            stashed = None
+                        yield TokenInfo(ASYNC, stashed.string,
+                                        stashed.start, stashed.end,
+                                        stashed.line)
+                        stashed = None
 
                     if stashed:
                         yield stashed
                         stashed = None
 
                     yield tok
-                elif initial == '\\':                      # continued stmt
+                elif initial == '\\':  # continued stmt
                     continued = 1
                 else:
                     if initial in '([{':
@@ -762,14 +767,14 @@ def _tokenize(readline, encoding):
                     yield TokenInfo(OP, token, spos, epos, line)
             else:
                 yield TokenInfo(ERRORTOKEN, line[pos],
-                           (lnum, pos), (lnum, pos+1), line)
+                                (lnum, pos), (lnum, pos + 1), line)
                 pos += 1
 
     if stashed:
         yield stashed
         stashed = None
 
-    for indent in indents[1:]:                 # pop remaining indent levels
+    for indent in indents[1:]:  # pop remaining indent levels
         yield TokenInfo(DEDENT, '', (lnum, 0), (lnum, 0), '')
     yield TokenInfo(ENDMARKER, '', (lnum, 0), (lnum, 0), '')
 
@@ -803,6 +808,7 @@ def tokenize(readline):
 # library that expect to be able to use tokenize with strings
 def generate_tokens(readline):
     return _tokenize(readline, None)
+
 
 def tokenize_main():
     import argparse

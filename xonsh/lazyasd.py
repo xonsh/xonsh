@@ -10,6 +10,7 @@ import importlib
 import importlib.util
 import collections.abc as abc
 
+
 class LazyObject(object):
 
     def __init__(self, load, ctx, name):
@@ -113,7 +114,6 @@ class LazyObject(object):
 def lazyobject(f):
     """Decorator for constructing lazy objects from a function."""
     return LazyObject(f, f.__globals__, f.__name__)
-
 
 
 class LazyDict(abc.MutableMapping):
@@ -249,7 +249,7 @@ class BackgroundModuleProxy(types.ModuleType):
             }
 
     def __getattribute__(self, name):
-        passthrough = frozenset({'__dct__','__class__', '__spec__'})
+        passthrough = frozenset({'__dct__', '__class__', '__spec__'})
         if name in passthrough:
             return super().__getattribute__(name)
         dct = self.__dct__
@@ -283,7 +283,7 @@ class BackgroundModuleLoader(threading.Thread):
         hist = [-5, -4, -3, -2, -1]
         while not all(last == x for x in hist):
             time.sleep(0.001)
-            last = hist[i%5] = len(sys.modules)
+            last = hist[i % 5] = len(sys.modules)
             i += 1
         # now import pkg_resources properly
         modname = importlib.util.resolve_name(self.name, self.package)

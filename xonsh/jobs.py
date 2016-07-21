@@ -129,7 +129,6 @@ else:
             _st = None
         return _st
 
-
     # _give_terminal_to is a simplified version of:
     #    give_terminal_to from bash 4.3 source, jobs.c, line 4030
     # this will give the terminal to the process group pgid
@@ -163,7 +162,6 @@ else:
                                                  _block_when_giving)
                 os.tcsetpgrp(st, pgid)
                 signal.pthread_sigmask(signal.SIG_SETMASK, oldmask)
-
 
     def wait_for_active_job():
         """

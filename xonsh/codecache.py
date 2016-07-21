@@ -6,6 +6,7 @@ import builtins
 
 from xonsh.lazyasd import lazyobject
 
+
 def _splitpath(path, sofar=[]):
     folder, path = os.path.split(path)
     if path == "":
@@ -35,6 +36,7 @@ def _make_if_not_exists(dirname):
     if not os.path.isdir(dirname):
         os.makedirs(dirname)
 
+
 def should_use_cache(execer, mode):
     """
     Return ``True`` if caching has been enabled for this mode (through command
@@ -42,7 +44,7 @@ def should_use_cache(execer, mode):
     """
     if mode == 'exec':
         return ((execer.scriptcache or
-                    execer.cacheall) and
+                 execer.cacheall) and
                 (builtins.__xonsh_env__['XONSH_CACHE_SCRIPTS'] or
                     builtins.__xonsh_env__['XONSH_CACHE_EVERYTHING']))
     else:

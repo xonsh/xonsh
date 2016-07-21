@@ -74,7 +74,6 @@ class ShellExecuteInfo(ctypes.Structure):
             setattr(self, field_name, field_value)
 
 
-
 @lazyobject
 def ShellExecuteEx():
     see = ctypes.windll.Shell32.ShellExecuteExA
