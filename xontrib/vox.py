@@ -55,6 +55,7 @@ class _VoxHandler:
         remove.add_argument('names', metavar='ENV', nargs='+',
                             help='The environments to remove')
         subparsers.add_parser('list', aliases=['help'], help='Show this help message')
+        return parser
 
     parser = _lazyasd.LazyObject(parser, locals(), 'parser')
 
