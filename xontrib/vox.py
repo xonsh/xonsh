@@ -1,56 +1,63 @@
 """Python virtual environment manager for xonsh."""
 
 import sys as _sys
-import argparse as _argparse
 import xontrib.voxapi as _voxapi
-
+import xonsh.lazyasd as _lazyasd
 
 class _VoxHandler:
     """Vox is a virtual environment manager for xonsh."""
-    parser = _argparse.ArgumentParser(prog='vox', description=__doc__)
-    subparsers = parser.add_subparsers(dest='command')
 
-    create = subparsers.add_parser('new', aliases=['create'],
-        help='Create a new virtual environment')
-    create.add_argument('name', metavar='ENV',
-                        help='The environments to create')
+    #@lazyobject will insert this into the module global space, not the class dict
+    def parser():
+        from argparse import ArgumentParser
+        parser = ArgumentParser(prog='vox', description=__doc__)
+        subparsers = parser.add_subparsers(dest='command')
 
-    create.add_argument('--system-site-packages', default=False,
-                        action='store_true', dest='system_site',
-                        help='Give the virtual environment access to the '
-                             'system site-packages dir.')
-    from xonsh.platform import ON_WINDOWS
-    if ON_WINDOWS:
-        use_symlinks = False
-    else:
-        use_symlinks = True
+        create = subparsers.add_parser(
+            'new', aliases=['create'],
+            help='Create a new virtual environment'
+            )
+        create.add_argument('name', metavar='ENV',
+                            help='The environments to create')
 
-    group = create.add_mutually_exclusive_group()
-    group.add_argument('--symlinks', default=use_symlinks,
-                       action='store_true', dest='symlinks',
-                       help='Try to use symlinks rather than copies, '
-                            'when symlinks are not the default for '
-                            'the platform.')
-    group.add_argument('--copies', default=not use_symlinks,
-                       action='store_false', dest='symlinks',
-                       help='Try to use copies rather than symlinks, '
-                            'even when symlinks are the default for '
-                            'the platform.')
-    create.add_argument('--without-pip', dest='with_pip',
-                        default=True, action='store_false',
-                        help='Skips installing or upgrading pip in the '
-                             'virtual environment (pip is bootstrapped '
-                             'by default)')
+        create.add_argument('--system-site-packages', default=False,
+                            action='store_true', dest='system_site',
+                            help='Give the virtual environment access to the '
+                                 'system site-packages dir.')
 
-    activate = subparsers.add_parser('activate', aliases=['workon', 'enter'], help='Activate virtual environment')
-    activate.add_argument('name', metavar='ENV', 
-                        help='The environment to activate')
-    subparsers.add_parser('deactivate', aliases=['exit'], help='Deactivate current virtual environment')
-    subparsers.add_parser('list', aliases=['ls'], help='List all available environments')
-    remove = subparsers.add_parser('remove', aliases=['rm', 'delete', 'del'], help='Remove virtual environment')
-    remove.add_argument('names', metavar='ENV', nargs='+',
-                        help='The environments to remove')
-    subparsers.add_parser('list', aliases=['help'], help='Show this help message')
+        from xonsh.platform import ON_WINDOWS
+        group = create.add_mutually_exclusive_group()
+        group.add_argument('--symlinks', default=not ON_WINDOWS,
+                           action='store_true', dest='symlinks',
+                           help='Try to use symlinks rather than copies, '
+                                'when symlinks are not the default for '
+                                'the platform.')
+        group.add_argument('--copies', default=not use_symlinks,
+                           action='store_false', dest='symlinks',
+                           help='Try to use copies rather than symlinks, '
+                                'even when symlinks are the default for '
+                                'the platform.')
+        create.add_argument('--without-pip', dest='with_pip',
+                            default=True, action='store_false',
+                            help='Skips installing or upgrading pip in the '
+                                 'virtual environment (pip is bootstrapped '
+                                 'by default)')
+
+        activate = subparsers.add_parser(
+            'activate', aliases=['workon', 'enter'],
+            help='Activate virtual environment'
+            )
+        activate.add_argument('name', metavar='ENV',
+                            help='The environment to activate')
+        subparsers.add_parser('deactivate', aliases=['exit'], help='Deactivate current virtual environment')
+        subparsers.add_parser('list', aliases=['ls'], help='List all available environments')
+        remove = subparsers.add_parser('remove', aliases=['rm', 'delete', 'del'], help='Remove virtual environment')
+        remove.add_argument('names', metavar='ENV', nargs='+',
+                            help='The environments to remove')
+        subparsers.add_parser('list', aliases=['help'], help='Show this help message')
+
+    parser = _lazyasd.LazyObject(parser, locals(), parser.__name__)
+
 
     aliases = {
         'create': 'new',
