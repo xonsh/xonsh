@@ -407,7 +407,55 @@ def _hist_create_parser():
     return p
 
 
-def _hist_get(ns=None, hist=None, start_index=None, end_index=None,
+def _hist_get_session(session='session', location=None):
+    "Yield commands from history."
+    yield from _HIST_SESSIONS[session](location=location)
+
+def _hist_get_portion(commands, slices=None):
+    """Yield from portions of history commands.
+
+    Parameters
+    ----------
+    commands : iterable
+        A list of history commands
+    slices : list of int, str, slice
+        The portions of history to yield.
+    """
+    if slices is None:
+        return commands
+    commands = list(commands)
+    for s in slices:
+        try:
+            s = ensure_slice(s)
+        except (ValueError, TypeError):
+            print('{!r} is not a valid slice format'.format(s), file=sys.stderr)
+            return
+        try:
+            yield from commands[s]
+        except IndexError:
+            err = "Index likely not in range. Only {} commands."
+            print(err.format(len(commands)), file=sys.stderr)
+            return
+
+
+def _hist_filter_ts(commands, start_time=None, end_time=None):
+    if start_time is None:
+        start_time = 0.0
+    if end_time is None:
+        end_time = float('inf')
+    for cmd in commands:
+        if end_time > cmd[1] > start_time:
+            yield cmd
+
+
+def _hist_get(session='session', slices=None,
+              start_time=None, end_time=None, location=None):
+    cmds = _hist_get_session(session, location)
+    cmds = _hist_get_portion(cmds, slices)
+    # cmds = _hist_filter_ts(cmds, start_time, end_time)
+    return list(cmds)
+
+def _hist_get1(ns=None, hist=None, start_index=None, end_index=None,
               start_time=None, end_time=None, location=None):
     r"""Get the requested portion of a history session.
 
@@ -497,7 +545,7 @@ def _hist_get(ns=None, hist=None, start_index=None, end_index=None,
 
 
 
-def _hist_show(*args, **kwargs):
+def _hist_show(ns, *args, **kwargs):
     """Show the requested portion of shell history.
     Accepts multiple history sources (xonsh, bash, zsh)
 
@@ -515,7 +563,8 @@ def _hist_show(*args, **kwargs):
         zsh     - returns all zsh history
         bash    - returns all bash history
     """
-    commands = _hist_get(*args, **kwargs)
+    commands = _hist_get(ns.session, **kwargs)
+    print("COMMANDS:", commands, file=sys.stderr)
     if commands:
         digits = len(str(max([i for c, t, i in commands])))
         for c, t, i in commands:

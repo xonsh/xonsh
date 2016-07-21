@@ -926,7 +926,7 @@ def SLICE_REG():
 
 
 def ensure_slice(x):
-    """Convert a string or int to a slice. If `x` is already a slice object return as is."""
+    """Convert `x` to a slice. If `x` is already a slice object return as is."""
     if x is None:
         return slice(None)
     elif isinstance(x, slice):
@@ -943,7 +943,7 @@ def ensure_slice(x):
         else:
             raise ValueError('cannot convert {!r} to slice'.format(x))
     except TypeError:
-        raise TypeError('ensure_slice() argument must be a string or a number not {}'.format(type(x)))
+        raise TypeError('ensure_slice() argument must be string, number or slice not {}'.format(type(x)))
     return s
 
 
