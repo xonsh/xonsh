@@ -403,7 +403,6 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             # This is needed to support some system where line-wrapping doesn't
             # work. This is a bug in upstream Python, or possibly readline.
             RL_LIB.rl_reset_screen_size()
-        # return super().prompt
         if self.need_more_lines:
             if self.mlprompt is None:
                 try:

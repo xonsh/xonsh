@@ -35,7 +35,7 @@ class Vox(collections.abc.Mapping):
         else:
             self.venvdir = builtins.__xonsh_env__['VIRTUALENV_HOME']
 
-    def create(self, name, *, system_site_packages=False, symlinks=False, 
+    def create(self, name, *, system_site_packages=False, symlinks=False,
                with_pip=True):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
 
@@ -44,10 +44,10 @@ class Vox(collections.abc.Mapping):
         name : str
             Virtual environment name
         system_site_packages : bool
-            If True, the system (global) site-packages dir is available to 
+            If True, the system (global) site-packages dir is available to
             created environments.
         symlinks : bool
-            If True, attempt to symlink rather than copy files into virtual 
+            If True, attempt to symlink rather than copy files into virtual
             environment.
         with_pip : bool
             If True, ensure pip is installed in the virtual environment. (Default is True)
@@ -55,14 +55,15 @@ class Vox(collections.abc.Mapping):
         # NOTE: clear=True is the same as delete then create.
         # NOTE: upgrade=True is its own method
         env_path = os.path.join(self.venvdir, name)
-        venv.create(env_path, 
-            system_site_packages=system_site_packages, symlinks=symlinks, 
+        venv.create(
+            env_path,
+            system_site_packages=system_site_packages, symlinks=symlinks,
             with_pip=with_pip)
 
     def upgrade(self, name, *, symlinks=False, with_pip=True):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
 
-        WARNING: If a virtual environment was created with symlinks or without PIP, you must 
+        WARNING: If a virtual environment was created with symlinks or without PIP, you must
         specify these options again on upgrade.
 
         Parameters
@@ -70,7 +71,7 @@ class Vox(collections.abc.Mapping):
         name : str
             Virtual environment name
         symlinks : bool
-            If True, attempt to symlink rather than copy files into virtual 
+            If True, attempt to symlink rather than copy files into virtual
             environment.
         with_pip : bool
             If True, ensure pip is installed in the virtual environment.
@@ -83,7 +84,8 @@ class Vox(collections.abc.Mapping):
         with open(cfgfile) as cfgfile:
             for l in cfgfile:
                 l = l.strip()
-                if '=' not in l: continue
+                if '=' not in l:
+                    continue
                 k, v = l.split('=', 1)
                 cfgops[k.strip()] = v.strip()
         flags = {

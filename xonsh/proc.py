@@ -30,6 +30,7 @@ from xonsh.lazyasd import LazyObject, lazyobject
 _winapi = LazyObject(lambda: importlib.import_module('_winapi'),
                      globals(), '_winapi')
 
+
 @lazyobject
 def msvcrt():
     if ON_WINDOWS:

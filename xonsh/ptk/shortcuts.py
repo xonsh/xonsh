@@ -32,7 +32,6 @@ class Prompter(object):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        # self.reset()
         pass
 
     def prompt(self, message='', **kwargs):
