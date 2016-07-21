@@ -1,5 +1,6 @@
 """Python virtual environment manager for xonsh."""
 
+import sys as _sys
 import xontrib.voxapi as _voxapi
 
 
@@ -66,7 +67,7 @@ class _VoxHandler:
         try:
             self.vox.activate(name)
         except KeyError:
-            print('This environment doesn\'t exist. Create it with "vox new %s".\n' % name)
+            print('This environment doesn\'t exist. Create it with "vox new %s".\n' % name, file=_sys.stderr)
             return None
         else:
             print('Activated "%s".\n' % name)
@@ -75,7 +76,7 @@ class _VoxHandler:
         """Deactive the active virtual environment."""
 
         if self.vox.active() is None:
-            print('No environment currently active. Activate one with "vox activate".\n')
+            print('No environment currently active. Activate one with "vox activate".\n', file=_sys.stderr)
             return None
         env_name = self.vox.deactivate()
         print('Deactivated "%s".\n' % env_name)
@@ -90,7 +91,7 @@ class _VoxHandler:
             return None
 
         if not envs:
-            print('No environments available. Create one with "vox new".\n')
+            print('No environments available. Create one with "vox new".\n', file=_sys.stderr)
             return None
 
         print('Available environments:')
@@ -109,7 +110,7 @@ class _VoxHandler:
                 del self.vox[name]
             except _voxapi.EnvironmentInUse:
                 print('The "%s" environment is currently active. In order to remove it, deactivate it first with "vox deactivate %s".\n' % (name, name),
-                      file=sys.stderr)
+                      file=_sys.stderr)
                 return
             else:
                 print('Environment "%s" removed.' % name)

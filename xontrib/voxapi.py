@@ -35,16 +35,66 @@ class Vox(collections.abc.Mapping):
         else:
             self.venvdir = builtins.__xonsh_env__['VIRTUALENV_HOME']
 
-    def create(self, name):
+    def create(self, name, *, system_site_packages=False, symlinks=False, 
+               with_pip=True):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
 
         Parameters
         ----------
         name : str
             Virtual environment name
+        system_site_packages : bool
+            If True, the system (global) site-packages dir is available to 
+            created environments.
+        symlinks : bool
+            If True, attempt to symlink rather than copy files into virtual 
+            environment.
+        with_pip : bool
+            If True, ensure pip is installed in the virtual environment. (Default is True)
         """
+        # NOTE: clear=True is the same as delete then create.
+        # NOTE: upgrade=True is its own method
         env_path = os.path.join(self.venvdir, name)
-        venv.create(env_path, with_pip=True)
+        venv.create(env_path, 
+            system_site_packages=system_site_packages, symlinks=symlinks, 
+            with_pip=with_pip)
+
+    def upgrade(self, name, *, symlinks=False, with_pip=True):
+        """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
+
+        WARNING: If a virtual environment was created with symlinks or without PIP, you must 
+        specify these options again on upgrade.
+
+        Parameters
+        ----------
+        name : str
+            Virtual environment name
+        symlinks : bool
+            If True, attempt to symlink rather than copy files into virtual 
+            environment.
+        with_pip : bool
+            If True, ensure pip is installed in the virtual environment.
+        """
+        # venv doesn't reload this, so we have to do it ourselves.
+        # Is there a bug for this in Python? There should be.
+        env_path, bin_path = self[name]
+        cfgfile = os.path.join(env_path, 'pyvenv.cfg')
+        cfgops = {}
+        with open(cfgfile) as cfgfile:
+            for l in cfgfile:
+                l = l.strip()
+                if '=' not in l: continue
+                k, v = l.split('=', 1)
+                cfgops[k.strip()] = v.strip()
+        flags = {
+            'system_site_packages': cfgops['include-system-site-packages'] == 'true',
+            'symlinks': symlinks,
+            'with_pip': with_pip,
+        }
+        # END things we shouldn't be doing.
+
+        # Ok, do what we came here to do.
+        venv.create(env_path, upgrade=True, **flags)
 
     @staticmethod
     def _binname():

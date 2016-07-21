@@ -4,6 +4,107 @@ Xonsh Change Log
 
 .. current developments
 
+v0.4.4
+====================
+
+**Added:**
+
+* New ``lazyobject()``, ``lazydict()``, and ``lazybool()`` decorators to turn
+  functions into lazy, global objects.
+* ``vox remove`` command can remove multiple environments at once.
+* Added FreeBSD support.
+* Tab completion for pip python package manager.
+* Regular expressions for enviroment variable matching
+
+* __contains__ method on Env
+* Added news tests to enforce changelog conformity.
+* A new way to add optional items to the prompt format string has been added.
+  Instead of relying on formatter dict items being padded with a space, now the
+  padding characters are specified in the format string itself, in place of the
+  format spec (after a ``:``).
+
+  For example, previously the prompt string ``{cwd}{curr_branch} $`` would rely
+  on ``curr_branch`` giving its output prepended with a space for separation,
+  or outputting nothing if it is not applicable. Now ``curr_branch`` just
+  outputs a value or ``None``, and the prompt string has to specify the
+  surrounding characters: ``{cwd}{curr_branch: {}} $``. Here the  value of
+  ``curr_branch`` will be prepended with a space (``{}`` is a placeholder for
+  the value itself). The format string after ``:`` is applied only if the value
+  is not ``None``.
+* ``xonsh.completers`` subpackage is now amalgamated.
+* amalgamate.py will now warn if the same name is defined across multiple
+  different files.
+* xonsh_builtins, xonsh_execer fixtures in conftest.py
+* Docs on how to tweak the Windows ConHost for a better color scheme.
+* Docs: how to fix Thunar's "Open Terminal Here" action.
+* A new API class was added to Vox: ``xontrib.voxapi.Vox``. This allows programtic access to the virtual environment machinery for other xontribs. See the API documentation for details.
+* History now accepts multiple slices arguments separated by spaces
+
+
+**Changed:**
+
+* amalgamate now works on Python 2 and allows relative imports.
+* Top-level xonsh package now more lazy.
+* Show conda environement name in prompt in parentheses similiar what conda does.
+* Implementation of expandvars now uses regex
+* Because of the addition of "optional items" to the prompt format string, the
+  functions ``xonsh.environ.current_branch``, ``xonsh.environ.env_name`` and
+  formatter dict items ``curr_branch``, ``current_job``, ``env_name`` are
+  no longer padded with a separator.
+* many test cases to use fixtures and parametrization
+* Public interface in ``xonsh.ansi_colors`` module now has ``ansi_``
+  prefix to prevent name conflicts with other parts of xonsh.
+* Vox was moved to xontrib. Behaves exactly the same as before, just need to add it to your xontribs.
+* is_int_as_str and is_slice_as_str are now reimplemented in EAFP style
+
+
+**Deprecated:**
+
+* yield statements (nose style) and for loops in tests
+* is_int_or_slice
+
+
+**Removed:**
+
+* _is_in_env, _get_env_string functions on tools
+* ``xonsh.environ.format_prompt`` has been dropped; ``partial_format_prompt``
+  can be used instead.
+* for loops and yield statements in test cases, unused imports
+* is_int_or_slice
+
+
+**Fixed:**
+
+* Fixed bug on Windows preventing xonsh from changing the console title.
+* Unrecognized ``$XONSH_COLOR_STYLE`` values don't crash terminal.
+* Writing the window title will no longer accidentally answer interactive
+  questions, eg ``rm -i`` now works as expected.
+* more matching cases for envvar reference
+* Certain linux VTE terminals would not start new tabs in the previous CWD.
+  This may now be rectified by adding ``{vte_new_tab_cwd}`` somewhere to the
+  prompt.
+* Unqualified usage of Unstorable in xonsh setup wizard that was causing the
+  wizard to crash and burn
+* Bare ``except:`` was replaced with ``except Exception`` to prevent
+  accidentally catching utility exceptions such as KeyboardInterrupt, which
+  caused unexpected problems like printing out the raw $PROMPT string.
+* Fixed multiple definition of ``EQUAL``.
+* Fixed multiple definition of ``pprint``.
+* Fixed multiple definition of ``pyghooks``.
+* Fixed multiple definition of ``pygments``.
+* Fixed multiple definition of ``tokenize``.
+* redundant and 'leaky' tests in nose
+* Fix bug that prevented disabling $INTENSIFY_COLORS_ON_WIN in ``xonshrc``
+* ``LazyJSON`` will now hide failures to close, and instead rely on reference
+  counting if something goes wrong.
+* Fixed maximum recurssion error with color styles.
+* Parser tables will no longer be generated in the current directory
+  by accident.
+* Error messages when zsh or bash history file is not found
+
+
+
+
 v0.4.3
 ====================
 

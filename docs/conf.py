@@ -285,7 +285,7 @@ def make_xontribs():
     s = ('.. list-table::\n'
          '    :header-rows: 0\n\n')
     table = []
-    ncol = 3
+    ncol = 5
     row = '    {0} - :ref:`{1} <{2}>`'
     for i, name in enumerate(names):
         star = '*' if i%ncol == 0 else ' '
@@ -319,7 +319,7 @@ def make_xontribs():
             pd = md['packages'].get(pkgname, {})
             pkg = pkgname
             if 'url' in pd:
-                pkg = '`{0} <{1}>`_'.format(pkg, pd['url'])
+                pkg = '`{0} website <{1}>`_'.format(pkg, pd['url'])
             if 'license' in pd:
                 pkg = pkg + ', ' + pd['license']
             inst = ''

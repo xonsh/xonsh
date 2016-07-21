@@ -1305,6 +1305,7 @@ The curly brackets act as a placeholder, because the additional part is an
 ordinary format string. What we're doing here is equivalent to this expression:
 
 .. code-block:: python
+
     " [{}]".format(curr_branch()) if curr_branch() is not None else ""
 
 
