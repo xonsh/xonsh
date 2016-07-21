@@ -7,7 +7,6 @@ import xonsh.lazyasd as _lazyasd
 class _VoxHandler:
     """Vox is a virtual environment manager for xonsh."""
 
-    #@lazyobject will insert this into the module global space, not the class dict
     def parser():
         from argparse import ArgumentParser
         parser = ArgumentParser(prog='vox', description=__doc__)
@@ -56,7 +55,7 @@ class _VoxHandler:
                             help='The environments to remove')
         subparsers.add_parser('list', aliases=['help'], help='Show this help message')
 
-    parser = _lazyasd.LazyObject(parser, locals(), parser.__name__)
+    parser = _lazyasd.LazyObject(parser, locals(), 'parser')
 
 
     aliases = {
