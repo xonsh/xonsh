@@ -54,7 +54,7 @@ class _VoxHandler:
         remove = subparsers.add_parser('remove', aliases=['rm', 'delete', 'del'], help='Remove virtual environment')
         remove.add_argument('names', metavar='ENV', nargs='+',
                             help='The environments to remove')
-        subparsers.add_parser('list', aliases=['help'], help='Show this help message')
+        subparsers.add_parser('help', help='Show this help message')
         return parser
 
     parser = _lazyasd.LazyObject(parser, locals(), 'parser')
@@ -89,7 +89,7 @@ class _VoxHandler:
         print('Creating environment...')
         self.vox.create(args.name)
         msg = 'Environment {0!r} created. Activate it with "vox activate {0}".\n'
-        print(msg.format(name))
+        print(msg.format(args.name))
 
     def cmd_activate(self, args, stdin=None):
         """Activate a virtual environment.
@@ -101,7 +101,7 @@ class _VoxHandler:
             print('This environment doesn\'t exist. Create it with "vox new %s".\n' % name, file=_sys.stderr)
             return None
         else:
-            print('Activated "%s".\n' % name)
+            print('Activated "%s".\n' % args.name)
 
     def cmd_deactivate(self, args, stdin=None):
         """Deactive the active virtual environment."""
