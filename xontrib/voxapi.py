@@ -46,8 +46,6 @@ class Vox(collections.abc.Mapping):
         symlinks : bool
             If True, attempt to symlink rather than copy files into virtual 
             environment.
-        upgrade : bool
-            If True, upgrade an existing virtual environment.
         with_pip : bool
             If True, ensure pip is installed in the virtual environment. (Default is True)
         """
@@ -61,7 +59,7 @@ class Vox(collections.abc.Mapping):
     def upgrade(self, name, *, symlinks=False, with_pip=True):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
 
-        WARNING: If a virtual environment was with symlinks or without PIP, you must 
+        WARNING: If a virtual environment was created with symlinks or without PIP, you must 
         specify these options again on upgrade.
 
         Parameters
