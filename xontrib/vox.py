@@ -4,6 +4,7 @@ import sys as _sys
 import xontrib.voxapi as _voxapi
 import xonsh.lazyasd as _lazyasd
 
+
 class _VoxHandler:
     """Vox is a virtual environment manager for xonsh."""
 
@@ -47,7 +48,7 @@ class _VoxHandler:
             help='Activate virtual environment'
             )
         activate.add_argument('name', metavar='ENV',
-                            help='The environment to activate')
+                              help='The environment to activate')
         subparsers.add_parser('deactivate', aliases=['exit'], help='Deactivate current virtual environment')
         subparsers.add_parser('list', aliases=['ls'], help='List all available environments')
         remove = subparsers.add_parser('remove', aliases=['rm', 'delete', 'del'], help='Remove virtual environment')
@@ -56,7 +57,6 @@ class _VoxHandler:
         subparsers.add_parser('list', aliases=['help'], help='Show this help message')
 
     parser = _lazyasd.LazyObject(parser, locals(), 'parser')
-
 
     aliases = {
         'create': 'new',
