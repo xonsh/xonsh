@@ -4,7 +4,7 @@ import ast
 import builtins
 
 from xonsh.platform import ON_WINDOWS
-from xonsh.tools import (subexpr_from_unbalanced, get_sep,
+from xonsh.tools import (get_sep,
                          check_for_partial_string, RE_STRING_START,
                          iglobpath, levenshtein)
 

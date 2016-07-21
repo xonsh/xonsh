@@ -40,15 +40,15 @@ def bold_str_diff(a, b, sm=None):
             bline += b[j1:j2]
         else:
             raise RuntimeError('tag not understood')
-    return aline + NO_COLOR_S + '\n' + bline + NO_COLOR_S +'\n'
+    return aline + NO_COLOR_S + '\n' + bline + NO_COLOR_S + '\n'
 
 
 def redline(line):
-   return '{red}- {line}{no_color}\n'.format(red=RED_S, line=line, no_color=NO_COLOR_S)
+    return '{red}- {line}{no_color}\n'.format(red=RED_S, line=line, no_color=NO_COLOR_S)
 
 
 def greenline(line):
-   return '{green}+ {line}{no_color}\n'.format(green=GREEN_S, line=line, no_color=NO_COLOR_S)
+    return '{green}+ {line}{no_color}\n'.format(green=GREEN_S, line=line, no_color=NO_COLOR_S)
 
 
 def highlighted_ndiff(a, b):
@@ -147,7 +147,7 @@ class HistoryDiffer(object):
         if len(only_x) == 0:
                 return ''
         if self.verbose:
-            xstr = ',\n'.join(['    {0!r}: {1!r}'.format(key, xenv[key]) \
+            xstr = ',\n'.join(['    {0!r}: {1!r}'.format(key, xenv[key])
                                for key in only_x])
             xstr = '\n' + xstr
         else:
@@ -193,16 +193,16 @@ class HistoryDiffer(object):
         aout = self.a['cmds'][i].get('out', None)
         bout = self.b['cmds'][j].get('out', None)
         if aout is None and bout is None:
-            #s += 'Note: neither output stored\n'
+            # s += 'Note: neither output stored\n'
             pass
         elif bout is None:
             aid = self.a['sessionid']
-            s += 'Note: only {red}{aid}{no_color} output stored\n'.format(red=RED_S,
-                                                            aid=aid, no_color=NO_COLOR_S)
+            s += 'Note: only {red}{aid}{no_color} output stored\n'.format(
+                red=RED_S, aid=aid, no_color=NO_COLOR_S)
         elif aout is None:
             bid = self.b['sessionid']
-            s += 'Note: only {green}{bid}{no_color} output stored\n'.format(green=GREEN_S,
-                                                            bid=bid, no_color=NO_COLOR_S)
+            s += 'Note: only {green}{bid}{no_color} output stored\n'.format(
+                green=GREEN_S, bid=bid, no_color=NO_COLOR_S)
         elif aout != bout:
             s += 'Outputs differ\n'
             s += highlighted_ndiff(aout.splitlines(), bout.splitlines())
@@ -281,6 +281,7 @@ class HistoryDiffer(object):
 
 _HD_PARSER = None
 
+
 def _dh_create_parser(p=None):
     global _HD_PARSER
     p_was_none = (p is None)
@@ -310,4 +311,3 @@ def diff_history_main(args=None, stdin=None):
     parser = _dh_create_parser()
     ns = parser.parse_args(args)
     _dh_main_action(ns)
-

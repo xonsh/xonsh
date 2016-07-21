@@ -12,6 +12,7 @@ from xonsh.completers.python import (complete_python, complete_import,
 from xonsh.completers.commands import complete_skipper
 from xonsh.completers.completer import complete_completer
 
+
 def default_completers():
     """Creates a copy of the default completers.    """
     return OrderedDict([

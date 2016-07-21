@@ -3,6 +3,7 @@
 from xonsh.lazyasd import lazyobject
 from xonsh.platform import PYTHON_VERSION_INFO
 
+
 @lazyobject
 def Parser():
     if PYTHON_VERSION_INFO < (3, 5, 0):

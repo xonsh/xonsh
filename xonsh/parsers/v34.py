@@ -101,7 +101,6 @@ class Parser(BaseParser):
                     self._set_arg(p0, arg)
             self._set_arg(p0, p[6], ensure_kw=True)
         elif lenp == 8:
-            kwkey = 'kwargs'
             p0['starargs'], p4 = p[3], p[4]
             if p1 is not None:
                 for arg in p1:

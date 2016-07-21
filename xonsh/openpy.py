@@ -13,7 +13,6 @@ This file was forked from the IPython project:
 * Copyright (c) 2001, Nathaniel Gray <n8gray@caltech.edu>
 """
 import io
-import os
 import re
 
 from xonsh.lazyasd import LazyObject
@@ -23,6 +22,7 @@ from xonsh.tokenize import detect_encoding, tokopen
 cookie_comment_re = LazyObject(
     lambda: re.compile(r"^\s*#.*coding[:=]\s*([-\w.]+)", re.UNICODE),
     globals(), 'cookie_comment_re')
+
 
 def source_to_unicode(txt, errors='replace', skip_encoding_cookie=True):
     """Converts a bytes string with python source code to unicode.

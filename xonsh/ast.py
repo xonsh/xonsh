@@ -2,17 +2,19 @@
 """The xonsh abstract syntax tree node."""
 # These are imported into our module namespace for the benefit of parser.py.
 # pylint: disable=unused-import
-from ast import Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert, \
-    BinOp, Add, Sub, Mult, Div, FloorDiv, Mod, Pow, Compare, Lt, Gt, \
-    LtE, GtE, Eq, NotEq, In, NotIn, Is, IsNot, Not, BoolOp, Or, And, \
-    Subscript, Load, Slice, ExtSlice, List, Tuple, Set, Dict, AST, NameConstant, \
-    Name, GeneratorExp, Store, comprehension, ListComp, SetComp, DictComp, \
-    Assign, AugAssign, BitXor, BitAnd, BitOr, LShift, RShift, Assert, Delete, \
-    Del, Pass, Raise, Import, alias, ImportFrom, Continue, Break, Yield, \
-    YieldFrom, Return, IfExp, Lambda, arguments, arg, Call, keyword, \
-    Attribute, Global, Nonlocal, If, While, For, withitem, With, Try, \
-    ExceptHandler, FunctionDef, ClassDef, Starred, NodeTransformer, \
+from ast import (
+    Module, Num, Expr, Str, Bytes, UnaryOp, UAdd, USub, Invert,
+    BinOp, Add, Sub, Mult, Div, FloorDiv, Mod, Pow, Compare, Lt, Gt,
+    LtE, GtE, Eq, NotEq, In, NotIn, Is, IsNot, Not, BoolOp, Or, And,
+    Subscript, Load, Slice, ExtSlice, List, Tuple, Set, Dict, AST, NameConstant,
+    Name, GeneratorExp, Store, comprehension, ListComp, SetComp, DictComp,
+    Assign, AugAssign, BitXor, BitAnd, BitOr, LShift, RShift, Assert, Delete,
+    Del, Pass, Raise, Import, alias, ImportFrom, Continue, Break, Yield,
+    YieldFrom, Return, IfExp, Lambda, arguments, arg, Call, keyword,
+    Attribute, Global, Nonlocal, If, While, For, withitem, With, Try,
+    ExceptHandler, FunctionDef, ClassDef, Starred, NodeTransformer,
     Interactive, Expression, Index, literal_eval, dump, walk, increment_lineno
+)
 from ast import Ellipsis as EllipsisNode
 # pylint: enable=unused-import
 import textwrap
@@ -464,7 +466,6 @@ class CtxAwareTransformer(NodeTransformer):
         return node
 
 
-
 def pdump(s, **kwargs):
     """performs a pretty dump of an AST node."""
     if isinstance(s, AST):
@@ -474,7 +475,7 @@ def pdump(s, **kwargs):
     lens = len(s) + 1
     if lens == 1:
         return s
-    i = min([s.find(o)%lens for o in openers])
+    i = min([s.find(o) % lens for o in openers])
     if i == lens - 1:
         return s
     closer = closers[openers.find(s[i])]

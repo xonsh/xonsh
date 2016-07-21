@@ -13,6 +13,7 @@ from xonsh.tools import redirect_stdout, redirect_stderr, swap
 
 MAX_SIZE = 8388608  # 8 Mb
 
+
 class XonshKernel(Kernel):
     """Xonsh xernal for Jupyter"""
     implementation = 'Xonsh ' + version
