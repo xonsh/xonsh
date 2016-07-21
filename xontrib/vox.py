@@ -32,7 +32,7 @@ class _VoxHandler:
                            help='Try to use symlinks rather than copies, '
                                 'when symlinks are not the default for '
                                 'the platform.')
-        group.add_argument('--copies', default=not use_symlinks,
+        group.add_argument('--copies', default=ON_WINDOWS,
                            action='store_false', dest='symlinks',
                            help='Try to use copies rather than symlinks, '
                                 'even when symlinks are the default for '
