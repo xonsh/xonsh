@@ -407,31 +407,39 @@ def _hist_create_parser():
     return p
 
 
-def _hist_show(ns=None, hist=None, start_index=None, end_index=None,
-               start_time=None, end_time=None, location=None):
-    """Show the requested portion of shell history.
-    Accepts multiple history sources (xonsh, bash, zsh)
+def _hist_get(ns=None, hist=None, start_index=None, end_index=None,
+              start_time=None, end_time=None, location=None):
+    r"""Get the requested portion of a history session.
 
-    May be invoked as an alias with history all/bash/zsh which will
-    provide history as stdout or with __xonsh_history__.show()
-    which will return the history as a list with each item
-    in the tuple form (name, start_time, index).
+    Parameters
+    ----------
+    ns : {'session', 'xonsh', 'all', 'zsh', 'bash'} or argparse.Namespace
+        If `ns` is a string use it as the requested history session, else
+        ``Namespace.session`` is used.
+    hist : history.History, optional
+    start_index : int, optional
+        The starting index of the history portion, inlcusive.
+    end_index : int, optional
+        The ending index of the history portion, exclusive.
+    start_time : float or datetime, optional
+        Get only commands that have a start time greater than `start_time`
+    end_time : float or datetime, optional
+        Get only commands that have an end time less than `end_time`
+    location: string or Path, optional
+        The path of the history file
 
-    If invoked via __xonsh_history__.show() then the ns parameter
-    can be supplied as a str with the follow options::
+    Returns
+    -------
+    commands : list of str
+        A list of the requested portion of history commands.
 
-        session - returns xonsh history from current session
-        xonsh   - returns xonsh history from all sessions
-        all     - alias of xonsh
-        zsh     - returns all zsh history
-        bash    - returns all bash history
     """
     # Check if ns is a string, meaning it was invoked from
     if hist is None:
-        hist = bultins.__xonsh_history__
+        hist = builtins.__xonsh_history__
     alias = True
     if isinstance(ns, str) and ns in _HIST_SESSIONS:
-        ns = _hist_create_parser().parse_args([ns])
+        ns = _hist_create_parser().parse_args(['show', ns])
         alias = False
     if not ns:
         ns = _hist_create_parser().parse_args(['show', 'xonsh'])
@@ -485,20 +493,39 @@ def _hist_show(ns=None, hist=None, start_index=None, end_index=None,
 
     if ns and ns.reverse:
         commands = list(reversed(commands))
+    return commands
 
+
+
+def _hist_show(*args, **kwargs):
+    """Show the requested portion of shell history.
+    Accepts multiple history sources (xonsh, bash, zsh)
+
+    May be invoked as an alias with history all/bash/zsh which will
+    provide history as stdout or with __xonsh_history__.show()
+    which will return the history as a list with each item
+    in the tuple form (name, start_time, index).
+
+    If invoked via __xonsh_history__.show() then the ns parameter
+    can be supplied as a str with the follow options::
+
+        session - returns xonsh history from current session
+        xonsh   - returns xonsh history from all sessions
+        all     - alias of xonsh
+        zsh     - returns all zsh history
+        bash    - returns all bash history
+    """
+    commands = _hist_get(*args, **kwargs)
     if commands:
         digits = len(str(max([i for c, t, i in commands])))
-        if alias:
-            for c, t, i in commands:
-                for line_ind, line in enumerate(c.split('\n')):
-                    if line_ind == 0:
-                        print('{:>{width}}: {}'.format(i, line,
-                                                       width=digits + 1))
-                    else:
-                        print(' {:>>{width}} {}'.format('', line,
+        for c, t, i in commands:
+            for line_ind, line in enumerate(c.split('\n')):
+                if line_ind == 0:
+                    print('{:>{width}}: {}'.format(i, line,
+                                                   width=digits + 1))
+                else:
+                    print(' {:>>{width}} {}'.format('', line,
                                                         width=digits + 1))
-        else:
-            return commands
 
 
 #
