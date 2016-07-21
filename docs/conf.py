@@ -319,7 +319,7 @@ def make_xontribs():
             pd = md['packages'].get(pkgname, {})
             pkg = pkgname
             if 'url' in pd:
-                pkg = '`{0} <{1}>`_'.format(pkg, pd['url'])
+                pkg = '`{0} website <{1}>`_'.format(pkg, pd['url'])
             if 'license' in pd:
                 pkg = pkg + ', ' + pd['license']
             inst = ''
