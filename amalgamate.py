@@ -8,7 +8,9 @@ from collections import namedtuple
 from collections.abc import Mapping
 from ast import parse, walk, Import, ImportFrom
 
-ModNode = namedtuple('ModNode', ['name', 'pkgdeps', 'extdeps'])
+__version__ = '0.1.2'
+
+ModNode = namedtuple('ModNode', ['name', 'pkgdeps', 'extdeps', 'futures'])
 ModNode.__doc__ = """Module node for dependency graph.
 
 Attributes
@@ -19,6 +21,8 @@ pkgdeps : frozenset of str
     Module dependencies in the same package.
 extdeps : frozenset of str
     External module dependencies from outside of the package.
+futures : frozenset of str
+    Import directive names antecedent to 'from __future__ import'
 """
 
 
@@ -172,6 +176,7 @@ def make_node(name, pkg, allowed, glbnames):
     pkgdot = pkg + '.'
     pkgdeps = set()
     extdeps = set()
+    futures = set()
     glbnames.module = name
     for a in tree.body:
         glbnames.add(a, istopnode=True)
@@ -194,7 +199,10 @@ def make_node(name, pkg, allowed, glbnames):
                     pkgdeps.add(m)
                 else:
                     extdeps.add(a.module)
-    return ModNode(name, frozenset(pkgdeps), frozenset(extdeps))
+            elif a.module == '__future__':
+                futures.update(n.name for n in a.names)
+    return ModNode(name, frozenset(pkgdeps), frozenset(extdeps),
+                   frozenset(futures))
 
 
 def make_graph(pkg, exclude=None):
@@ -377,6 +385,9 @@ def rewrite_imports(name, pkg, order, imps):
             elif a.module.startswith(pkgdot) and p == pkg and m in order:
                 replacements.append((start, stop,
                                      '# amalgamated ' + a.module + '\n'))
+            elif a.module == '__future__':
+                replacements.append((start, stop,
+                                     '# amalgamated __future__ directive\n'))
             else:
                 keep = []
                 for n in a.names:
@@ -401,12 +412,23 @@ def rewrite_imports(name, pkg, order, imps):
     return ''.join(lines)
 
 
+def sorted_futures(graph):
+    """Returns a sorted, unique list of future imports."""
+    f = set()
+    for value in graph.values():
+        f |= value.futures
+    return sorted(f)
+
+
 def amalgamate(order, graph, pkg):
     """Create amalgamated source."""
     src = ('\"\"\"Amalgamation of {0} package, made up of the following '
            'modules, in order:\n\n* ').format(pkg)
     src += '\n* '.join(order)
     src += '\n\n\"\"\"\n'
+    futures = sorted_futures(graph)
+    if len(futures) > 0:
+        src += 'from __future__ import ' + ', '.join(futures) + '\n'
     src += LAZY_IMPORTS
     imps = set()
     for name in order:
