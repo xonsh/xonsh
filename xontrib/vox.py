@@ -10,7 +10,8 @@ class _VoxHandler:
     parser = _argparse.ArgumentParser(prog='vox', description=__doc__)
     subparsers = parser.add_subparsers(dest='command')
 
-    create = subparsers.add_parser('new', help='Create a new virtual environment')
+    create = subparsers.add_parser('new', aliases=['create'],
+        help='Create a new virtual environment')
     create.add_argument('name', metavar='ENV',
                         help='The environments to create')
 
@@ -52,6 +53,7 @@ class _VoxHandler:
     subparsers.add_parser('list', aliases=['help'], help='Show this help message')
 
     aliases = {
+        'create': 'new',
         'workon': 'activate',
         'enter': 'activate',
         'exit': 'deactivate',
@@ -74,7 +76,7 @@ class _VoxHandler:
         else:
             getattr(self, 'cmd_'+cmd)(args, stdin)
 
-    def cmd_create(self, args, stdin=None):
+    def cmd_new(self, args, stdin=None):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
         """
         print('Creating environment...')
@@ -135,7 +137,6 @@ class _VoxHandler:
 
     def cmd_help(self, args, stdin=None):
         self.parser.print_help()
-
 
     @classmethod
     def handle(cls, args, stdin=None):
