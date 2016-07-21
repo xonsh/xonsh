@@ -46,8 +46,6 @@ class Vox(collections.abc.Mapping):
         symlinks : bool
             If True, attempt to symlink rather than copy files into virtual 
             environment.
-        upgrade : bool
-            If True, upgrade an existing virtual environment.
         with_pip : bool
             If True, ensure pip is installed in the virtual environment. (Default is True)
         """
