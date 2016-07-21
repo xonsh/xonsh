@@ -40,16 +40,16 @@ class Vox(collections.abc.Mapping):
         ----------
         name : str
             Virtual environment name
-        system_site_packages: bool
+        system_site_packages : bool
             If True, the system (global) site-packages dir is available to 
             created environments.
-        symlinks: 
+        symlinks : bool
             If True, attempt to symlink rather than copy files into virtual 
             environment.
-        upgrade: 
+        upgrade : bool
             If True, upgrade an existing virtual environment.
-        with_pip: 
-            If True, ensure pip is installed in the virtual environment.
+        with_pip : bool
+            If True, ensure pip is installed in the virtual environment. (Default is True)
         """
         # NOTE: clear=True is the same as delete then create.
         # NOTE: upgrade=True is its own method
@@ -68,10 +68,10 @@ class Vox(collections.abc.Mapping):
         ----------
         name : str
             Virtual environment name
-        symlinks: 
+        symlinks : bool
             If True, attempt to symlink rather than copy files into virtual 
             environment.
-        with_pip: 
+        with_pip : bool
             If True, ensure pip is installed in the virtual environment.
         """
         # venv doesn't reload this, so we have to do it ourselves.
