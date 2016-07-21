@@ -926,9 +926,11 @@ def SLICE_REG():
 
 
 def ensure_slice(x):
-    """Convert a string or int to a slice."""
+    """Convert a string or int to a slice. If `x` is already a slice object return as is."""
     if x is None:
         return slice(None)
+    elif isinstance(x, slice):
+        return x
     try:
         x = int(x)
         s = slice(x, x+1)
