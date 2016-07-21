@@ -48,6 +48,7 @@ class _VoxHandler:
     remove = subparsers.add_parser('remove', aliases=['rm', 'delete', 'del'], help='Remove virtual environment')
     remove.add_argument('names', metavar='ENV', nargs='+',
                         help='The environments to remove')
+    subparsers.add_parser('list', aliases=['help'], help='Show this help message')
 
     aliases = {
         'workon': 'activate',
@@ -67,7 +68,10 @@ class _VoxHandler:
 
         args = self.parser.parse_args(args)
         cmd = self.aliases.get(args.command, args.command)
-        getattr(self, 'cmd_'+cmd)(args, stdin)
+        if cmd is None:
+            self.parser.print_usage()
+        else:
+            getattr(self, 'cmd_'+cmd)(args, stdin)
 
     def cmd_create(self, args, stdin=None):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
@@ -117,11 +121,6 @@ class _VoxHandler:
 
     def cmd_remove(self, args, stdin=None):
         """Remove virtual environments.
-
-        Parameters
-        ----------
-        names : list
-            list of virtual environment names
         """
         for name in args.names:
             try:
@@ -133,6 +132,10 @@ class _VoxHandler:
             else:
                 print('Environment "%s" removed.' % name)
         print()
+
+    def cmd_help(self, args, stdin=None):
+        self.parser.print_help()
+
 
     @classmethod
     def handle(cls, args, stdin=None):
