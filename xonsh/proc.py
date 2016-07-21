@@ -24,14 +24,20 @@ from xonsh.platform import ON_WINDOWS, ON_LINUX, ON_POSIX
 from xonsh.tools import (redirect_stdout, redirect_stderr, fallback,
                          print_exception, XonshCalledProcessError)
 from xonsh.teepty import TeePTY
-from xonsh.lazyasd import LazyObject
+from xonsh.lazyasd import LazyObject, lazyobject
 
 
 # force some lazy imports so we don't have errors on non-windows platforms
 _winapi = LazyObject(lambda: importlib.import_module('_winapi'),
                      globals(), '_winapi')
-msvcrt = LazyObject(lambda: importlib.import_module('msvcrt'),
-                    globals(), 'msvcrt')
+
+@lazyobject
+def msvcrt():
+    if ON_WINDOWS:
+        import msvcrt as m
+    else:
+        m = None
+    return m
 
 
 class Handle(int):
