@@ -19,12 +19,11 @@ import xonsh.wizard as wiz
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.environ import is_template_string
 from xonsh.platform import (is_readline_available, ptk_version,
-    PYTHON_VERSION_INFO, pygments_version, ON_POSIX, ON_LINUX, linux_distro,
-    ON_DARWIN, ON_WINDOWS, ON_CYGWIN, DEFAULT_ENCODING, githash)
+                            PYTHON_VERSION_INFO, pygments_version, ON_POSIX, ON_LINUX, linux_distro,
+                            ON_DARWIN, ON_WINDOWS, ON_CYGWIN, DEFAULT_ENCODING, githash)
 from xonsh.tools import (to_bool, is_string, print_exception, is_superuser,
-    color_style_names, print_color, color_style)
+                         color_style_names, print_color, color_style)
 from xonsh.xontribs import xontrib_metadata, find_xontrib
-
 
 HR = "'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'"
 WIZARD_HEAD = """
@@ -103,10 +102,8 @@ These come from users, 3rd party developers, or xonsh itself!
 
 WIZARD_XONTRIB_QUESTION = "Would you like to enable xontribs now, " + wiz.YN
 
-
 WIZARD_TAIL = """
 Thanks for using the xonsh configuration wizard!"""
-
 
 
 def make_fs_wiz():
@@ -149,7 +146,7 @@ def make_fs_wiz():
         wiz.StoreNonEmpty("source command [str, default=None]: ",
                           path='/foreign_shells/{idx}/sourcer'),
         wiz.Message(message='Foreign shell added.\n')
-        ])
+    ])
     return fs
 
 
@@ -168,6 +165,7 @@ ENVVAR_MESSAGE = """
 {{RED}}current value:{{NO_COLOR}} {current}"""
 
 ENVVAR_PROMPT = "{BOLD_GREEN}>>>{NO_COLOR} "
+
 
 def make_envvar(name):
     """Makes a StoreNonEmpty node for an environment variable."""
@@ -213,6 +211,7 @@ def make_env_wiz():
 
 
 XONTRIB_PROMPT = '{BOLD_GREEN}Add this xontrib{NO_COLOR}, ' + wiz.YN
+
 
 def _xontrib_path(visitor=None, node=None, val=None):
     # need this to append only based on user-selected size
@@ -266,20 +265,20 @@ def make_xonfig_wizard(default_file=None, confirm=False):
         Confirm that the main part of the wizard should be run.
     """
     w = wiz.Wizard(children=[
-            wiz.Message(message=WIZARD_HEAD),
-            wiz.Load(default_file=default_file, check=True),
-            wiz.Message(message=WIZARD_FS),
-            make_fs_wiz(),
-            wiz.Message(message=WIZARD_ENV),
-            wiz.YesNo(question=WIZARD_ENV_QUESTION, yes=make_env_wiz(),
-                      no=wiz.Pass()),
-            wiz.Message(message=WIZARD_XONTRIB),
-            wiz.YesNo(question=WIZARD_XONTRIB_QUESTION, yes=make_xontribs_wiz(),
-                      no=wiz.Pass()),
-            wiz.Message(message='\n' + HR + '\n'),
-            wiz.Save(default_file=default_file, check=True),
-            wiz.Message(message=WIZARD_TAIL),
-            ])
+        wiz.Message(message=WIZARD_HEAD),
+        wiz.Load(default_file=default_file, check=True),
+        wiz.Message(message=WIZARD_FS),
+        make_fs_wiz(),
+        wiz.Message(message=WIZARD_ENV),
+        wiz.YesNo(question=WIZARD_ENV_QUESTION, yes=make_env_wiz(),
+                  no=wiz.Pass()),
+        wiz.Message(message=WIZARD_XONTRIB),
+        wiz.YesNo(question=WIZARD_XONTRIB_QUESTION, yes=make_xontribs_wiz(),
+                  no=wiz.Pass()),
+        wiz.Message(message='\n' + HR + '\n'),
+        wiz.Save(default_file=default_file, check=True),
+        wiz.Message(message=WIZARD_TAIL),
+    ])
     if confirm:
         q = ("Would you like to run the xonsh configuration wizard now?\n\n"
              "1. Yes\n2. No, but ask me later.\n3. No, and don't ask me again."
@@ -299,6 +298,7 @@ def _wizard(ns):
     w = make_xonfig_wizard(default_file=fname, confirm=ns.confirm)
     tempenv = {'PROMPT': '', 'XONSH_STORE_STDOUT': False}
     pv = wiz.PromptVisitor(w, store_in_history=False, multiline=False)
+
     @contextlib.contextmanager
     def force_hide():
         if env.get('XONSH_STORE_STDOUT') and hasattr(shell, '_force_hide'):
@@ -307,6 +307,7 @@ def _wizard(ns):
             shell._force_hide = orig
         else:
             yield
+
     with force_hide(), env.swap(tempenv):
         try:
             pv.visit()
@@ -319,7 +320,7 @@ def _xonfig_format_human(data):
     for key, val in data:
         wcol1 = max(wcol1, len(key))
         wcol2 = max(wcol2, len(str(val)))
-    hr = '+' + ('-'*(wcol1+2)) + '+' + ('-'*(wcol2+2)) + '+\n'
+    hr = '+' + ('-' * (wcol1 + 2)) + '+' + ('-' * (wcol2 + 2)) + '+\n'
     row = '| {key!s:<{wcol1}} | {val!s:<{wcol2}} |\n'
     s = hr
     for key, val in data:
@@ -354,7 +355,7 @@ def _info(ns):
         ('on cygwin', ON_CYGWIN),
         ('is superuser', is_superuser()),
         ('default encoding', DEFAULT_ENCODING),
-        ])
+    ])
     formatter = _xonfig_format_json if ns.json else _xonfig_format_human
     s = formatter(data)
     return s
@@ -388,12 +389,13 @@ def _str_colors(cmap, cols):
         for i, name in enumerate(group):
             buf = ' ' * (width - len(name))
             line += '{' + name + '}' + name + '{NO_COLOR}' + buf
-            if (i+1)%n == 0:
+            if (i + 1) % n == 0:
                 lines.append(line)
                 line = ''
         if len(line) != 0:
             lines.append(line)
     return '\n'.join(lines)
+
 
 def _tok_colors(cmap, cols):
     from xonsh.pyghooks import Color
@@ -412,12 +414,13 @@ def _tok_colors(cmap, cols):
         for i, name in enumerate(group):
             toks.append((names_toks[name], name))
             buf = ' ' * (width - len(name))
-            if (i+1)%n == 0:
+            if (i + 1) % n == 0:
                 buf += '\n'
             toks.append((nc, buf))
         if not toks[-1][1].endswith('\n'):
             toks[-1] = (nc, toks[-1][1] + '\n')
     return toks
+
 
 def _colors(ns):
     cols, _ = shutil.get_terminal_size()
@@ -435,23 +438,23 @@ def _colors(ns):
 @functools.lru_cache(1)
 def _xonfig_create_parser():
     p = argparse.ArgumentParser(prog='xonfig',
-                       description='Manages xonsh configuration.')
+                                description='Manages xonsh configuration.')
     subp = p.add_subparsers(title='action', dest='action')
     info = subp.add_parser('info', help=('displays configuration information, '
                                          'default action'))
     info.add_argument('--json', action='store_true', default=False,
                       help='reports results as json')
     wiz = subp.add_parser('wizard', help=('displays configuration information, '
-                                         'default action'))
+                                          'default action'))
     wiz.add_argument('--file', default=None,
                      help='config file location, default=$XONSHCONFIG')
     wiz.add_argument('--confirm', action='store_true', default=False,
-                      help='confirm that the wizard should be run.')
+                     help='confirm that the wizard should be run.')
     sty = subp.add_parser('styles', help='prints available xonsh color styles')
     sty.add_argument('--json', action='store_true', default=False,
                      help='reports results as json')
-    clrs = subp.add_parser('colors', help=('displays the color palette for '
-                                           'the current xonsh color style'))
+    subp.add_parser('colors', help=('displays the color palette for '
+                                    'the current xonsh color style'))
     return p
 
 
@@ -460,7 +463,8 @@ _XONFIG_MAIN_ACTIONS = {
     'wizard': _wizard,
     'styles': _styles,
     'colors': _colors,
-    }
+}
+
 
 def xonfig_main(args=None):
     """Main xonfig entry point."""
@@ -472,5 +476,3 @@ def xonfig_main(args=None):
     if ns.action is None:  # apply default action
         ns = parser.parse_args(['info'] + args)
     return _XONFIG_MAIN_ACTIONS[ns.action](ns)
-
-

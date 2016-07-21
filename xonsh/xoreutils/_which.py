@@ -24,6 +24,12 @@
 #   Trent Mick (TrentM@ActiveState.com)
 # Home:
 #   http://trentm.com/projects/which/
+import os
+import sys
+import stat
+import getopt
+import builtins
+import collections.abc as abc
 
 r"""Find the full path to commands.
 
@@ -88,21 +94,12 @@ __version_info__ = (1, 2, 0)
 __version__ = '.'.join(map(str, __version_info__))
 __all__ = ["which", "whichall", "whichgen", "WhichError"]
 
-import os
-import sys
-import stat
-import getopt
-import builtins
-import collections.abc as abc
-
-#---- exceptions
 
 class WhichError(Exception):
     pass
 
 
-
-#---- internal support stuff
+# internal support stuff
 
 def _getRegisteredExecutable(exeName):
     """Windows allow application paths to be registered in the registry."""
@@ -115,22 +112,24 @@ def _getRegisteredExecutable(exeName):
         except ImportError:
             import _winreg
         try:
-            key = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\" +\
+            key = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\" + \
                   exeName
             value = _winreg.QueryValue(_winreg.HKEY_LOCAL_MACHINE, key)
-            registered = (value, "from HKLM\\"+key)
+            registered = (value, "from HKLM\\" + key)
         except _winreg.error:
             pass
         if registered and not os.path.exists(registered[0]):
             registered = None
     return registered
 
+
 def _samefile(fname1, fname2):
     if sys.platform.startswith('win'):
-        return ( os.path.normpath(os.path.normcase(fname1)) ==\
-            os.path.normpath(os.path.normcase(fname2)) )
+        return (os.path.normpath(os.path.normcase(fname1)) ==
+                os.path.normpath(os.path.normcase(fname2)))
     else:
         return os.path.samefile(fname1, fname2)
+
 
 def _cull(potential, matches, verbose=0):
     """Cull inappropriate matches. Possible reasons:
@@ -150,16 +149,16 @@ def _cull(potential, matches, verbose=0):
             if verbose:
                 sys.stderr.write("not a regular file: %s (%s)\n" % potential)
         elif sys.platform != "win32" \
-             and not os.access(potential[0], os.X_OK):
+                and not os.access(potential[0], os.X_OK):
             if verbose:
-                sys.stderr.write("no executable access: %s (%s)\n"\
+                sys.stderr.write("no executable access: %s (%s)\n"
                                  % potential)
         else:
             matches.append(potential)
             return potential
 
 
-#---- module API
+# module API
 
 def whichgen(command, path=None, verbose=0, exts=None):
     """Return a generator of full paths to the given command.
@@ -204,7 +203,7 @@ def whichgen(command, path=None, verbose=0, exts=None):
             raise TypeError("'exts' argument must be a sequence or None")
     else:
         if exts is not None:
-            raise WhichError("'exts' argument is not supported on "\
+            raise WhichError("'exts' argument is not supported on "
                              "platform '%s'" % sys.platform)
         exts = []
 
@@ -218,12 +217,12 @@ def whichgen(command, path=None, verbose=0, exts=None):
         for i in range(len(path)):
             dirName = path[i]
             # On windows the dirName *could* be quoted, drop the quotes
-            if sys.platform.startswith("win") and len(dirName) >= 2\
-               and dirName[0] == '"' and dirName[-1] == '"':
+            if sys.platform.startswith("win") and len(dirName) >= 2 \
+                    and dirName[0] == '"' and dirName[-1] == '"':
                 dirName = dirName[1:-1]
             for ext in ([''] + exts):
                 absName = os.path.abspath(
-                    os.path.normpath(os.path.join(dirName, command+ext)))
+                    os.path.normpath(os.path.join(dirName, command + ext)))
                 if os.path.isfile(absName):
                     if usingGivenPath:
                         fromWhere = "from given path element %d" % i
@@ -232,7 +231,7 @@ def whichgen(command, path=None, verbose=0, exts=None):
                     elif i == 0:
                         fromWhere = "from current directory"
                     else:
-                        fromWhere = "from PATH element %d" % (i-1)
+                        fromWhere = "from PATH element %d" % (i - 1)
                     match = _cull((absName, fromWhere), matches, verbose)
                     if match:
                         yield match
@@ -289,13 +288,12 @@ def whichall(command, path=None, verbose=0, exts=None):
         is only supported on Windows.
     """
     if verbose:
-        return list( whichgen(command, path, verbose, exts) )
+        return list(whichgen(command, path, verbose, exts))
     else:
-        return list( absName for absName, _ in whichgen(command, path, verbose, exts))
+        return list(absName for absName, _ in whichgen(command, path, verbose, exts))
 
 
-
-#---- mainline
+# mainline
 
 def main(argv):
     all = 0
@@ -304,9 +302,9 @@ def main(argv):
     exts = None
     try:
         optlist, args = getopt.getopt(argv[1:], 'haVvqp:e:',
-            ['help', 'all', 'version', 'verbose', 'quiet', 'path=', 'exts='])
+                                      ['help', 'all', 'version', 'verbose', 'quiet', 'path=', 'exts='])
     except getopt.GetoptErrsor as msg:
-        sys.stderr.write("which: error: %s. Your invocation was: %s\n"\
+        sys.stderr.write("which: error: %s. Your invocation was: %s\n"
                          % (msg, argv))
         sys.stderr.write("Try 'which --help'.\n")
         return 1
@@ -315,7 +313,7 @@ def main(argv):
             print(_cmdlnUsage)
             return 0
         elif opt in ('-V', '--version'):
-            print( "which %s" % __version__)
+            print("which %s" % __version__)
             return 0
         elif opt in ('-a', '--all'):
             all = 1
@@ -339,11 +337,11 @@ def main(argv):
 
     failures = 0
     for arg in args:
-        #print "debug: search for %r" % arg
+        # print "debug: search for %r" % arg
         nmatches = 0
         for absName, fromWhere in whichgen(arg, path=altpath, verbose=verbose, exts=exts):
             if verbose:
-                print( "%s (%s)" % (absName, fromWhere))
+                print("%s (%s)" % (absName, fromWhere))
             else:
                 print(absName)
             nmatches += 1
@@ -355,6 +353,4 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    sys.exit( main(sys.argv) )
-
-
+    sys.exit(main(sys.argv))

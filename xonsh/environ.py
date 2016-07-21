@@ -61,6 +61,7 @@ def LOCALE_CATS():
 
 def locale_convert(key):
     """Creates a converter for a locale key."""
+
     def lc_converter(val):
         try:
             locale.setlocale(LOCALE_CATS[key], val)
@@ -69,6 +70,7 @@ def locale_convert(key):
             msg = 'Failed to set locale {0!r} to {1!r}'.format(key, val)
             warnings.warn(msg, RuntimeWarning)
         return val
+
     return lc_converter
 
 
@@ -80,6 +82,7 @@ def to_debug(x):
     if hasattr(builtins, '__xonsh_execer__'):
         builtins.__xonsh_execer__.debug_level = val
     return val
+
 
 Ensurer = collections.namedtuple('Ensurer', ['validate', 'convert', 'detype'])
 Ensurer.__doc__ = """Named tuples whose elements are functions that
@@ -105,8 +108,8 @@ DEFAULT_ENSURERS = LazyObject(lambda: {
     'GLOB_SORTED': (is_bool, to_bool, bool_to_str),
     'HISTCONTROL': (is_string_set, csv_to_set, set_to_csv),
     'IGNOREEOF': (is_bool, to_bool, bool_to_str),
-    'INTENSIFY_COLORS_ON_WIN':(always_false, intensify_colors_on_win_setter,
-                               bool_to_str),
+    'INTENSIFY_COLORS_ON_WIN': (always_false, intensify_colors_on_win_setter,
+                                bool_to_str),
     'LC_COLLATE': (always_false, locale_convert('LC_COLLATE'), ensure_string),
     'LC_CTYPE': (always_false, locale_convert('LC_CTYPE'), ensure_string),
     'LC_MESSAGES': (always_false, locale_convert('LC_MESSAGES'), ensure_string),
@@ -146,7 +149,8 @@ DEFAULT_ENSURERS = LazyObject(lambda: {
     'XONSH_STORE_STDIN': (is_bool, to_bool, bool_to_str),
     'XONSH_TRACEBACK_LOGFILE': (is_logfile_opt, to_logfile_opt,
                                 logfile_opt_to_str)
-    }, globals(), 'DEFAULT_ENSURERS')
+}, globals(), 'DEFAULT_ENSURERS')
+
 
 #
 # Defaults
@@ -155,6 +159,7 @@ def default_value(f):
     """Decorator for making callable default values."""
     f._xonsh_callable_default = True
     return f
+
 
 def is_callable_default(x):
     """Checks if a value is a callable default."""
@@ -181,6 +186,7 @@ def default_prompt():
 
 DEFAULT_PROMPT = LazyObject(default_prompt, globals(), 'DEFAULT_PROMPT')
 DEFAULT_TITLE = '{current_job:{} | }{user}@{hostname}: {cwd} | xonsh'
+
 
 @default_value
 def xonsh_data_dir(env):
@@ -218,6 +224,7 @@ def default_xonshrc():
 
 
 DEFAULT_XONSHRC = LazyObject(default_xonshrc, globals(), 'DEFAULT_XONSHRC')
+
 
 # Default values should generally be immutable, that way if a user wants
 # to set them they have to do a copy and write them to the environment.
@@ -295,7 +302,7 @@ def DEFAULT_VALUES():
         'XONSH_STORE_STDIN': False,
         'XONSH_STORE_STDOUT': False,
         'XONSH_TRACEBACK_LOGFILE': None
-        }
+    }
     if hasattr(locale, 'LC_MESSAGES'):
         dv['LC_MESSAGES'] = locale.setlocale(locale.LC_MESSAGES)
     return dv
@@ -333,7 +340,7 @@ DEFAULT_DOCS = LazyObject(lambda: {
         'full path only (without the cd command).'),
     'AUTO_PUSHD': VarDocs(
         'Flag for automatically pushing directories onto the directory stack.'
-        ),
+    ),
     'AUTO_SUGGEST': VarDocs(
         'Enable automatic command suggestions based on history, like in the fish '
         'shell.\n\nPressing the right arrow key inserts the currently '
@@ -343,16 +350,16 @@ DEFAULT_DOCS = LazyObject(lambda: {
         'completion files may be found. The default values are platform '
         'dependent, but sane. To specify an alternate list, do so in the run '
         'control file.', default=(
-        "Normally this is:\n\n"
-        "    ('/etc/bash_completion',\n"
-        "     '/usr/share/bash-completion/completions/git')\n\n"
-        "But, on Mac it is:\n\n"
-        "    ('/usr/local/etc/bash_completion',\n"
-        "     '/opt/local/etc/profile.d/bash_completion.sh')\n\n"
-        "And on Arch Linux it is:\n\n"
-        "    ('/usr/share/bash-completion/bash_completion',\n"
-        "     '/usr/share/bash-completion/completions/git')\n\n"
-        "Other OS-specific defaults may be added in the future.")),
+            "Normally this is:\n\n"
+            "    ('/etc/bash_completion',\n"
+            "     '/usr/share/bash-completion/completions/git')\n\n"
+            "But, on Mac it is:\n\n"
+            "    ('/usr/local/etc/bash_completion',\n"
+            "     '/opt/local/etc/profile.d/bash_completion.sh')\n\n"
+            "And on Arch Linux it is:\n\n"
+            "    ('/usr/share/bash-completion/bash_completion',\n"
+            "     '/usr/share/bash-completion/completions/git')\n\n"
+            "Other OS-specific defaults may be added in the future.")),
     'CASE_SENSITIVE_COMPLETIONS': VarDocs(
         'Sets whether completions should be case sensitive or case '
         'insensitive.', default='True on Linux, False otherwise.'),
@@ -382,7 +389,8 @@ DEFAULT_DOCS = LazyObject(lambda: {
         "$COMPLETIONS_DISPLAY is 'single' or 'multi'. This only affects the "
         'prompt-toolkit shell.'),
     'DIRSTACK_SIZE': VarDocs('Maximum size of the directory stack.'),
-    'DYNAMIC_CWD_WIDTH': VarDocs('Maximum length in number of characters '
+    'DYNAMIC_CWD_WIDTH': VarDocs(
+        'Maximum length in number of characters '
         'or as a percentage for the `cwd` prompt variable. For example, '
         '"20" is a twenty character width and "10%" is ten percent of the '
         'number of columns available.'),
@@ -415,12 +423,14 @@ DEFAULT_DOCS = LazyObject(lambda: {
         store_as_str=True),
     'IGNOREEOF': VarDocs('Prevents Ctrl-D from exiting the shell.'),
     'INDENT': VarDocs('Indentation string for multiline input'),
-    'INTENSIFY_COLORS_ON_WIN': VarDocs('Enhance style colors for readability '
+    'INTENSIFY_COLORS_ON_WIN': VarDocs(
+        'Enhance style colors for readability '
         'when using the default terminal (cmd.exe) on Windows. Blue colors, '
         'which are hard to read, are replaced with cyan. Other colors are '
         'generally replaced by their bright counter parts.',
         configurable=ON_WINDOWS),
-    'LOADED_CONFIG': VarDocs('Whether or not the xonsh config file was loaded',
+    'LOADED_CONFIG': VarDocs(
+        'Whether or not the xonsh config file was loaded',
         configurable=False),
     'LOADED_RC_FILES': VarDocs(
         'Whether or not any of the xonsh run control files were loaded at '
@@ -437,14 +447,14 @@ DEFAULT_DOCS = LazyObject(lambda: {
         'Prompt text for 2nd+ lines of input, may be str or function which '
         'returns a str.'),
     'OLDPWD': VarDocs('Used to represent a previous present working directory.',
-        configurable=False),
+                      configurable=False),
     'PATH': VarDocs(
         'List of strings representing where to look for executables.'),
     'PATHEXT': VarDocs('Sequence of extention strings (eg, ".EXE") for '
                        'filtering valid executables by. Each element must be '
                        'uppercase.'),
     'PRETTY_PRINT_RESULTS': VarDocs(
-            'Flag for "pretty printing" return values.'),
+        'Flag for "pretty printing" return values.'),
     'PROMPT': VarDocs(
         'The prompt text. May contain keyword arguments which are '
         "auto-formatted, see 'Customizing the Prompt' at "
@@ -462,7 +472,8 @@ DEFAULT_DOCS = LazyObject(lambda: {
         'This is most useful in xonsh scripts or modules where failures '
         'should cause an end to execution. This is less useful at a terminal. '
         'The error that is raised is a subprocess.CalledProcessError.'),
-    'RIGHT_PROMPT': VarDocs('Template string for right-aligned text '
+    'RIGHT_PROMPT': VarDocs(
+        'Template string for right-aligned text '
         'at the prompt. This may be parameterized in the same way as '
         'the $PROMPT variable. Currently, this is only available in the '
         'prompt-toolkit shell.'),
@@ -522,10 +533,12 @@ DEFAULT_DOCS = LazyObject(lambda: {
         "in the same manner as $PROMPT, see 'Customizing the Prompt' "
         'http://xon.sh/tutorial.html#customizing-the-prompt.',
         default='xonsh.environ.DEFAULT_TITLE'),
-    'UPDATE_OS_ENVIRON': VarDocs("If True os.environ will always be updated "
+    'UPDATE_OS_ENVIRON': VarDocs(
+        "If True os.environ will always be updated "
         "when the xonsh environment changes. The environment can be reset to "
         "the default value by calling '__xonsh_env__.undo_replace_env()'"),
-    'VC_BRANCH_TIMEOUT': VarDocs('The timeout (in seconds) for version control '
+    'VC_BRANCH_TIMEOUT': VarDocs(
+        'The timeout (in seconds) for version control '
         'branch computations. This is a timeout per subprocess call, so the '
         'total time to compute will be larger than this in many cases.'),
     'VI_MODE': VarDocs(
@@ -551,8 +564,8 @@ DEFAULT_DOCS = LazyObject(lambda: {
         'A tuple of the locations of run control files, if they exist.  User '
         'defined run control file will supersede values set in system-wide '
         'control file if there is a naming collision.', default=(
-        "On Linux & Mac OSX: ('/etc/xonshrc', '~/.xonshrc')\n"
-        "On Windows: ('%ALLUSERSPROFILE%\\xonsh\\xonshrc', '~/.xonshrc')")),
+            "On Linux & Mac OSX: ('/etc/xonshrc', '~/.xonshrc')\n"
+            "On Windows: ('%ALLUSERSPROFILE%\\xonsh\\xonshrc', '~/.xonshrc')")),
     'XONSH_CACHE_SCRIPTS': VarDocs(
         'Controls whether the code for scripts run from xonsh will be cached'
         ' (``True``) or re-compiled each time (``False``).'),
@@ -583,7 +596,8 @@ DEFAULT_DOCS = LazyObject(lambda: {
         "(https://docs.python.org/3/library/codecs.html#error-handlers) "
         'for more information and available options.',
         default="'surrogateescape'"),
-    'XONSH_HISTORY_FILE': VarDocs('Location of history file (deprecated).',
+    'XONSH_HISTORY_FILE': VarDocs(
+        'Location of history file (deprecated).',
         configurable=False, default="'~/.xonsh_history'"),
     'XONSH_HISTORY_SIZE': VarDocs(
         'Value and units tuple that sets the size of history after garbage '
@@ -620,7 +634,8 @@ DEFAULT_DOCS = LazyObject(lambda: {
         'XONSH_SHOW_TRACEBACK has been set. Its value must be a writable file '
         'or None / the empty string if traceback logging is not desired. '
         'Logging to a file is not enabled by default.'),
-    }, globals(), 'DEFAULT_DOCS')
+}, globals(), 'DEFAULT_DOCS')
+
 
 #
 # actual environment
@@ -650,7 +665,7 @@ class Env(abc.MutableMapping):
         self._defaults = DEFAULT_VALUES
         self._docs = DEFAULT_DOCS
         if len(args) == 0 and len(kwargs) == 0:
-            args = (os.environ, )
+            args = (os.environ,)
         for key, val in dict(*args, **kwargs).items():
             self[key] = val
         if 'PATH' not in self._d:
@@ -881,8 +896,8 @@ def get_git_branch():
             inp = 'source {}; __git_ps1 "${{1:-%s}}"'.format(script)
             try:
                 branch = subprocess.check_output(['bash'], cwd=cwd, input=inp,
-                            stderr=subprocess.PIPE, timeout=vcbt, env=denv,
-                            universal_newlines=True)
+                                                 stderr=subprocess.PIPE, timeout=vcbt, env=denv,
+                                                 universal_newlines=True)
                 break
             except subprocess.TimeoutExpired as e:
                 branch = e
@@ -894,7 +909,7 @@ def get_git_branch():
         cmd = ['git', 'rev-parse', '--abbrev-ref', 'HEAD']
         try:
             s = subprocess.check_output(cmd, cwd=cwd, timeout=vcbt, env=denv,
-                    stderr=subprocess.PIPE, universal_newlines=True)
+                                        stderr=subprocess.PIPE, universal_newlines=True)
             if ON_WINDOWS and len(s) == 0:
                 # Workaround for a bug in ConEMU/cmder, retry without redirection
                 s = subprocess.check_output(cmd, cwd=cwd, timeout=vcbt,
@@ -943,13 +958,14 @@ def get_hg_branch(cwd=None, root=None):
         with open(bookmark_path, 'r') as bookmark_file:
             active_bookmark = bookmark_file.read()
         branch = "{0}, {1}".format(*(b.strip(os.linesep) for b in
-                                   (branch, active_bookmark)))
+                                     (branch, active_bookmark)))
     else:
         branch = branch.strip(os.linesep)
     return branch
 
 
 _FIRST_BRANCH_TIMEOUT = True
+
 
 def _first_branch_timeout_message():
     global _FIRST_BRANCH_TIMEOUT
@@ -1027,8 +1043,8 @@ def hg_dirty_working_directory():
     denv['HGRCPATH'] = ''
     try:
         s = subprocess.check_output(['hg', 'identify', '--id'],
-                stderr=subprocess.PIPE, cwd=cwd, timeout=vcbt,
-                universal_newlines=True, env=denv)
+                                    stderr=subprocess.PIPE, cwd=cwd, timeout=vcbt,
+                                    universal_newlines=True, env=denv)
         return s.strip(os.linesep).endswith('+')
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired,
             FileNotFoundError):
@@ -1096,14 +1112,16 @@ def _replace_home(x):
         return x
 
 
-_replace_home_cwd = lambda: _replace_home(builtins.__xonsh_env__['PWD'])
+def _replace_home_cwd():
+    return _replace_home(builtins.__xonsh_env__['PWD'])
+
 
 def _collapsed_pwd():
     sep = get_sep()
     pwd = _replace_home_cwd().split(sep)
     l = len(pwd)
-    leader = sep if l>0 and len(pwd[0])==0 else ''
-    base = [i[0] if ix != l-1 else i for ix,i in enumerate(pwd) if len(i) > 0]
+    leader = sep if l > 0 and len(pwd[0]) == 0 else ''
+    base = [i[0] if ix != l - 1 else i for ix, i in enumerate(pwd) if len(i) > 0]
     return leader + sep.join(base)
 
 
@@ -1125,7 +1143,7 @@ def _dynamically_collapsed_pwd():
     # Reserve space for separators
     remaining_space_for_text = remaining_space - len(pwd)
     parts = []
-    for i  in range(len(pwd)):
+    for i in range(len(pwd)):
         part = pwd[i]
         part_len = int(min(len(part), max(1, remaining_space_for_text // (len(pwd) - i))))
         remaining_space_for_text -= part_len
@@ -1200,8 +1218,7 @@ FORMATTER_DICT = LazyObject(lambda: dict(
     current_job=_current_job,
     env_name=env_name,
     vte_new_tab_cwd=vte_new_tab_cwd,
-    ), globals(), 'FORMATTER_DICT')
-
+), globals(), 'FORMATTER_DICT')
 
 _FORMATTER = LazyObject(string.Formatter, globals(), '_FORMATTER')
 
@@ -1304,6 +1321,7 @@ def _format_value(val, spec, conv):
 RE_HIDDEN = LazyObject(lambda: re.compile('\001.*?\002'), globals(),
                        'RE_HIDDEN')
 
+
 def multiline_prompt(curr=''):
     """Returns the filler text for the prompt in multiline scenarios."""
     line = curr.rsplit('\n', 1)[1] if '\n' in curr else curr
@@ -1355,7 +1373,8 @@ BASE_ENV = LazyObject(lambda: {
     'BASH_COMPLETIONS': list(DEFAULT_VALUES['BASH_COMPLETIONS']),
     'FORMATTER_DICT': dict(DEFAULT_VALUES['FORMATTER_DICT']),
     'XONSH_VERSION': XONSH_VERSION,
-    }, globals(), 'BASE_ENV')
+}, globals(), 'BASE_ENV')
+
 
 def load_static_config(ctx, config=None):
     """Loads a static configuration file from a given context, rather than the
@@ -1365,7 +1384,7 @@ def load_static_config(ctx, config=None):
     env['XDG_CONFIG_HOME'] = ctx.get('XDG_CONFIG_HOME',
                                      DEFAULT_VALUES['XDG_CONFIG_HOME'])
     env['XONSH_CONFIG_DIR'] = ctx['XONSH_CONFIG_DIR'] if 'XONSH_CONFIG_DIR' in ctx \
-                              else xonsh_config_dir(env)
+        else xonsh_config_dir(env)
     if config is not None:
         env['XONSHCONFIG'] = ctx['XONSHCONFIG'] = config
     elif 'XONSHCONFIG' in ctx:
@@ -1392,7 +1411,7 @@ def load_static_config(ctx, config=None):
                 print_exception()
                 # JSONDecodeError was added in Python v3.5
                 jerr = json.JSONDecodeError \
-                       if hasattr(json, 'JSONDecodeError') else ValueError
+                    if hasattr(json, 'JSONDecodeError') else ValueError
                 if isinstance(e, jerr):
                     msg = 'Xonsh config file is not valid JSON.'
                 else:

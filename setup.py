@@ -50,6 +50,7 @@ def clean_tables():
 os.environ['XONSH_DEBUG'] = '1'
 from xonsh import __version__ as XONSH_VERSION
 
+
 def amalagamate_source():
     """Amalgamtes source files."""
     try:
@@ -83,7 +84,7 @@ def install_jupyter_hook(prefix=None, root=None):
             "display_name": "Xonsh",
             "language": "xonsh",
             "codemirror_mode": "shell",
-           }
+            }
     with TemporaryDirectory() as d:
         os.chmod(d, 0o755)  # Starts off as 700, not user readable
         if sys.platform == 'win32':
@@ -119,7 +120,7 @@ def dirty_version():
     _version = _version.decode('ascii')
     try:
         base, N, sha = _version.strip().split('-')
-    except ValueError: # on base release
+    except ValueError:  # on base release
         open('xonsh/dev.githash', 'w').close()
         print('failed to parse git version', file=sys.stderr)
         return False
@@ -132,6 +133,7 @@ def dirty_version():
 
 
 ORIGINAL_VERSION_LINE = None
+
 
 def replace_version(base, N):
     """Replace version in `__init__.py` with devN suffix"""
@@ -178,7 +180,6 @@ class xinstall(install):
             restore_version()
 
 
-
 class xsdist(sdist):
     """Xonsh specialization of setuptools sdist class."""
     def make_release_tree(self, basedir, files):
@@ -190,7 +191,6 @@ class xsdist(sdist):
             restore_version()
 
 
-#-----------------------------------------------------------------------------
 # Hack to overcome pip/setuptools problem on Win 10.  See:
 #   https://github.com/tomduck/pandoc-eqnos/issues/6
 #   https://github.com/pypa/pip/issues/2783
@@ -201,7 +201,7 @@ class install_scripts_quoted_shebang(install_scripts):
     def write_script(self, script_name, contents, mode="t", *ignored):
         shebang = str(contents.splitlines()[0])
         if shebang.startswith('#!') and ' ' in shebang[2:].strip() \
-          and '"' not in shebang:
+           and '"' not in shebang:
             quoted_shebang = '#!"%s"' % shebang[2:].strip()
             contents = contents.replace(shebang, quoted_shebang)
         super().write_script(script_name, contents, mode, *ignored)

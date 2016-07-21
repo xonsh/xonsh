@@ -26,21 +26,18 @@ import glob
 import os
 import pathlib
 import re
-import string
 import subprocess
 import sys
 import threading
 import traceback
 import warnings
 import contextlib
-import subprocess
 
 # adding further imports from xonsh modules is discouraged to avoid circular
 # dependencies
 from xonsh.lazyasd import LazyObject, LazyDict, lazyobject
 from xonsh.platform import (has_prompt_toolkit, scandir, DEFAULT_ENCODING,
                             ON_LINUX, ON_WINDOWS, PYTHON_VERSION_INFO)
-
 
 
 @functools.lru_cache(1)
@@ -596,7 +593,7 @@ def print_exception(msg=None):
     if env is None:
         env = os.environ
         manually_set_trace = 'XONSH_SHOW_TRACEBACK' in env
-        manually_set_logfile ='XONSH_TRACEBACK_LOGFILE' in env
+        manually_set_logfile = 'XONSH_TRACEBACK_LOGFILE' in env
     else:
         manually_set_trace = env.is_manually_set('XONSH_SHOW_TRACEBACK')
         manually_set_logfile = env.is_manually_set('XONSH_TRACEBACK_LOGFILE')
@@ -923,10 +920,10 @@ def bool_or_int_to_str(x):
     return bool_to_str(x) if is_bool(x) else str(x)
 
 
-
 @lazyobject
 def SLICE_REG():
     return re.compile(r'(?P<start>(?:-\d)?\d*):(?P<end>(?:-\d)?\d*):?(?P<step>(?:-\d)?\d*)')
+
 
 def ensure_slice(x):
     """Convert a string or int to a slice."""
@@ -1448,6 +1445,7 @@ if ON_WINDOWS:
     @lazyobject
     def WINDOWS_ENVVAR_REGEX():
         return re.compile(r"%(?P<envvar>\w+)%")
+
 
 def expandvars(path):
     """Expand shell variables of the forms $var, ${var} and %var%.

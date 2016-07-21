@@ -340,6 +340,7 @@ RGB_256 = LazyObject(lambda: {
 RE_RGB3 = LazyObject(lambda: re.compile(r'(.)(.)(.)'), globals(), 'RE_RGB3')
 RE_RGB6 = LazyObject(lambda: re.compile(r'(..)(..)(..)'), globals(), 'RE_RGB6')
 
+
 def rgb_to_ints(rgb):
     """Converts an RGB string into a tuple of ints."""
     if len(rgb) == 6:
@@ -366,8 +367,10 @@ def rgb_to_256(rgb):
             if s <= part <= b:
                 s1 = abs(s - part)
                 b1 = abs(b - part)
-                if s1 < b1: closest = s
-                else: closest = b
+                if s1 < b1:
+                    closest = s
+                else:
+                    closest = b
                 res.append(closest)
                 break
             i += 1
@@ -530,6 +533,7 @@ def _default_style():
         }
     return style
 
+
 def _monokai_style():
     style = {
         'NO_COLOR': '0',
@@ -554,9 +558,9 @@ def _monokai_style():
     return style
 
 
-#############################################################
-#############   Auto-generated below this line   ############
-#############################################################
+####################################
+# Auto-generated below this line   #
+####################################
 
 def _algol_style():
     style = {
@@ -605,6 +609,7 @@ def _algol_nu_style():
     _ansi_expand_style(style)
     return style
 
+
 def _autumn_style():
     style = {
         'BLACK': '38;5;18',
@@ -627,6 +632,7 @@ def _autumn_style():
     }
     _ansi_expand_style(style)
     return style
+
 
 def _borland_style():
     style = {
@@ -771,6 +777,7 @@ def _igor_style():
     _ansi_expand_style(style)
     return style
 
+
 def _lovelace_style():
     style = {
         'BLACK': '38;5;59',
@@ -866,6 +873,7 @@ def _native_style():
     _ansi_expand_style(style)
     return style
 
+
 def _paraiso_dark_style():
     style = {
         'BLACK': '38;5;95',
@@ -913,6 +921,7 @@ def _paraiso_light_style():
     _ansi_expand_style(style)
     return style
 
+
 def _pastie_style():
     style = {
         'BLACK': '38;5;16',
@@ -959,6 +968,7 @@ def _perldoc_style():
         }
     _ansi_expand_style(style)
     return style
+
 
 def _rrt_style():
     style = {

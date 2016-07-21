@@ -14,7 +14,7 @@ from xonsh.foreign_shells import foreign_shell_data
 from xonsh.jobs import jobs, fg, bg, clean_jobs
 from xonsh.history import history_main
 from xonsh.platform import (ON_ANACONDA, ON_DARWIN, ON_WINDOWS, ON_FREEBSD,
-    scandir)
+                            scandir)
 from xonsh.proc import foreground
 from xonsh.replay import replay_main
 from xonsh.timings import timeit_alias
@@ -140,7 +140,6 @@ class Aliases(abc.MutableMapping):
             elif len(self):
                 p.break_()
                 p.pretty(dict(self))
-
 
 
 def xonsh_exit(args, stdin=None):
@@ -297,9 +296,9 @@ def xexec(args, stdin=None):
 
 @lazyobject
 def _BANG_N_PARSER():
-    parser = argparse.ArgumentParser('!n', usage='!n <n>',
-                description="Re-runs the nth command as specified in the "
-                            "argument.")
+    parser = argparse.ArgumentParser(
+        '!n', usage='!n <n>',
+        description="Re-runs the nth command as specified in the argument.")
     parser.add_argument('n', type=int, help='the command to rerun, may be '
                                             'negative')
     return parser
@@ -326,6 +325,7 @@ def bang_bang(args, stdin=None):
 
 class AWitchAWitch(argparse.Action):
     SUPPRESS = '==SUPPRESS=='
+
     def __init__(self, option_strings, version=None, dest=SUPPRESS,
                  default=SUPPRESS, **kwargs):
         super().__init__(option_strings=option_strings, dest=dest,
@@ -348,7 +348,7 @@ def which(args, stdin=None, stdout=None, stderr=None):
     parser = argparse.ArgumentParser('which', description=desc)
     parser.add_argument('args', type=str, nargs='+',
                         help='The executables or aliases to search for')
-    parser.add_argument('-a','--all', action='store_true', dest='all',
+    parser.add_argument('-a', '--all', action='store_true', dest='all',
                         help='Show all matches in $PATH and xonsh.aliases')
     parser.add_argument('-s', '--skip-alias', action='store_true',
                         help='Do not search in xonsh.aliases', dest='skip')

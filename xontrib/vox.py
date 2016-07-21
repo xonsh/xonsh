@@ -3,6 +3,7 @@
 import sys as _sys
 import xontrib.voxapi as _voxapi
 
+
 class _VoxHandler:
     """Vox is a virtual environment manager for xonsh."""
 
@@ -86,7 +87,7 @@ class _VoxHandler:
         try:
             envs = list(self.vox.keys())
         except PermissionError:
-            print('No permissions on VIRTUALENV_HOME'.format(venv_home))
+            print('No permissions on VIRTUALENV_HOME')
             return None
 
         if not envs:
@@ -95,7 +96,6 @@ class _VoxHandler:
 
         print('Available environments:')
         print('\n'.join(envs))
-
 
     def remove_envs(self, *names):
         """Remove virtual environments.
@@ -151,5 +151,6 @@ class _VoxHandler:
         """Runs Vox environment manager."""
         vox = cls()
         return vox(args, stdin=stdin)
+
 
 aliases['vox'] = _VoxHandler.handle
