@@ -19,16 +19,27 @@ develop xonsh.
 Making Your First Change
 ========================
 
-First, install xonsh from source and open a xonsh shell in your favorite terminal application. See installation instructions for details.
+First, install xonsh from source and open a xonsh shell in your favorite
+terminal application. See installation instructions for details.
 
 Next, make a trivial change (e.g. ``print("hello!")`` in ``main.py``).
 
-Finally, run the following commands. You should see the effects of your change (e.g. ``hello!``)::
+Finally, run the following commands. You should see the effects of your change
+(e.g. ``hello!``)::
 
         $ $XONSH_DEBUG=1
         $ xonsh
 
-The xonsh build process collapses all Python source files into a single ``__amalgam__.py`` file. When xonsh is started with a falsy value for `$XONSH_DEBUG <envvars.html>`_, it imports Python modules straight from ``__amalgam__.py``, which decreases startup times by eliminating the cost of runtime imports. But setting ``$ $XONSH_DEBUG=1`` will suppress amalgamated imports. Reloading the xonsh shell (``$ xonsh``) won't simply import the stale ``__amalgam__.py`` file that doesn't contain your new change, but will instead import the unamalgamated source code which does contain your change. You can now load every subsequent change by reloading xonsh, and if your code changes don't seem to have any effect, make sure you check ``$XONSH_DEBUG`` first!
+The xonsh build process collapses all Python source files into a single
+``__amalgam__.py`` file. When xonsh is started with a falsy value for
+`$XONSH_DEBUG <envvars.html>`_, it imports Python modules straight from
+``__amalgam__.py``, which decreases startup times by eliminating the cost of
+runtime imports. But setting ``$ $XONSH_DEBUG=1`` will suppress amalgamated
+imports. Reloading the xonsh shell (``$ xonsh``) won't simply import the stale
+``__amalgam__.py`` file that doesn't contain your new change, but will instead
+import the unamalgamated source code which does contain your change. You can now
+load every subsequent change by reloading xonsh, and if your code changes don't
+seem to have any effect, make sure you check ``$XONSH_DEBUG`` first!
 
 
 Changelog
@@ -185,7 +196,7 @@ Run all the tests using pytest::
 
     $ py.test -q
 
-Use "-q" to keep pytest from outputting a bunch of info for every test.  
+Use "-q" to keep pytest from outputting a bunch of info for every test.
 
 ----------------------------------
 Running the Tests - Advanced
