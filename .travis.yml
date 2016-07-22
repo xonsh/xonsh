@@ -25,13 +25,11 @@ install:
     fi
 
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.4" ]]; then
-      conda create -q -n test_env python=3.4 pygments prompt_toolkit ply pytest pytest-cov pytest-timeout;
-      source activate test_env;
+      conda install -y python=3.4 pygments prompt_toolkit ply pytest pytest-cov pytest-timeout;
       pip install pytest-flake8 codecov;
       python setup.py install;
     elif [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]]; then
-      conda create -q -n test_env python=3.5 pygments prompt_toolkit ply pytest pytest-cov pytest-timeout;
-      source activate test_env;
+      conda install -y python=3.5 pygments prompt_toolkit ply pytest pytest-cov pytest-timeout;
       pip install pytest-flake8 codecov;
       python setup.py install;
     else
