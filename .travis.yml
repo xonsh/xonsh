@@ -11,11 +11,9 @@ matrix:
         - os: osx
           language: generic
 
-before install:
+install:
   - if [[ $TRAVIS_OS_NAME == 'osx' ]]; then brew update         ; fi
   - if [[ $TRAVIS_OS_NAME == 'osx' ]]; then brew install python3; fi
-
-install:
   - pip3 install --upgrade -r requirements-tests.txt
 
 script:
