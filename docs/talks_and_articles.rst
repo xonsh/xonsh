@@ -5,9 +5,9 @@ Here are some talks, articles, and other sundry about your favorite shell.
 
 Talks
 ============
-**PyCon 2016:** presented by Anthony Scopatz
+**Python Nordeste 2016:** presented by Lucas Inojosa http://lucasicf.github.io/talks/shell_python/
 
-**Python Nordeste 2016:** presented by Lucas Inojosa <http://lucasicf.github.io/talks/shell_python/>
+**PyCon 2016:** presented by Anthony Scopatz
 
 .. raw:: html
 
