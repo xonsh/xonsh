@@ -1,4 +1,5 @@
 #!/bin/bash
+set -o errexit
 
 if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
     case "${TOXENV}" in
