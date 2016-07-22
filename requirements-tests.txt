@@ -1,7 +1,8 @@
 ply
-pytest
+pytest>=2.9.1
 pytest-flake8
 pytest-cov
+pytest-timeout
 prompt-toolkit
 pygments
 codecov

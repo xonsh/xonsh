@@ -1,11 +1,25 @@
 language: python
-python:
-  - 3.4
-  - 3.5
-  - "nightly"
+
+matrix:
+    include:
+        - os: linux
+          python: "nightly"
+          env: TOXENV=py36
+        - os: linux
+          python: 3.5
+          env: TOXENV=py35
+        - os: linux
+          python: 3.4
+          env: TOXENV=py34
+        - os: osx
+          language: generic
+          env: TOXENV=py35
+        - os: osx
+          language: generic
+          env: TOXENV=py34
 install:
-  - pip install --upgrade -r requirements-tests.txt
+  - ./install.sh
 script:
-  - py.test --flake8 --cov=. --cov-report=term
+  - py.test --flake8 --cov=. --cov-report=term --timeout=10
 after_success:
   - codecov
