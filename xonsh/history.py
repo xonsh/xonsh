@@ -409,9 +409,13 @@ def _hist_create_parser():
 
 def _hist_get_session(session='session', location=None):
     "Yield commands from history."
-    yield from _HIST_SESSIONS[session](location=location)
+    cmds = _HIST_SESSIONS[session](location=location)
+    try:
+        yield from cmds
+    except TypeError:
+        pass
 
-def _hist_get_portion(commands, slices=None):
+def _hist_get_portion(commands, slices):
     """Yield from portions of history commands.
 
     Parameters
@@ -421,8 +425,6 @@ def _hist_get_portion(commands, slices=None):
     slices : list of int, str, slice
         The portions of history to yield.
     """
-    if slices is None:
-        return commands
     commands = list(commands)
     for s in slices:
         try:
@@ -451,98 +453,11 @@ def _hist_filter_ts(commands, start_time=None, end_time=None):
 def _hist_get(session='session', slices=None,
               start_time=None, end_time=None, location=None):
     cmds = _hist_get_session(session, location)
-    cmds = _hist_get_portion(cmds, slices)
-    # cmds = _hist_filter_ts(cmds, start_time, end_time)
+    if slices:
+        cmds = _hist_get_portion(cmds, slices)
+    if start_time or end_time:
+        cmds = _hist_filter_ts(cmds, start_time, end_time)
     return list(cmds)
-
-def _hist_get1(ns=None, hist=None, start_index=None, end_index=None,
-              start_time=None, end_time=None, location=None):
-    r"""Get the requested portion of a history session.
-
-    Parameters
-    ----------
-    ns : {'session', 'xonsh', 'all', 'zsh', 'bash'} or argparse.Namespace
-        If `ns` is a string use it as the requested history session, else
-        ``Namespace.session`` is used.
-    hist : history.History, optional
-    start_index : int, optional
-        The starting index of the history portion, inlcusive.
-    end_index : int, optional
-        The ending index of the history portion, exclusive.
-    start_time : float or datetime, optional
-        Get only commands that have a start time greater than `start_time`
-    end_time : float or datetime, optional
-        Get only commands that have an end time less than `end_time`
-    location: string or Path, optional
-        The path of the history file
-
-    Returns
-    -------
-    commands : list of str
-        A list of the requested portion of history commands.
-
-    """
-    # Check if ns is a string, meaning it was invoked from
-    if hist is None:
-        hist = builtins.__xonsh_history__
-    alias = True
-    if isinstance(ns, str) and ns in _HIST_SESSIONS:
-        ns = _hist_create_parser().parse_args(['show', ns])
-        alias = False
-    if not ns:
-        ns = _hist_create_parser().parse_args(['show', 'xonsh'])
-        alias = False
-    try:
-        commands = _HIST_SESSIONS[ns.session](hist=hist, location=location)
-    except KeyError:
-        print("{} is not a valid history session".format(ns.action))
-        return None
-    if not commands:
-        return None
-    if start_time:
-        if isinstance(start_time, datetime.datetime):
-            start_time = start_time.timestamp()
-        if isinstance(start_time, float):
-            commands = [c for c in commands if c[1] >= start_time]
-        else:
-            print("Invalid start time, must be float or datetime.")
-    if end_time:
-        if isinstance(end_time, datetime.datetime):
-            end_time = end_time.timestamp()
-        if isinstance(end_time, float):
-            commands = [c for c in commands if c[1] <= end_time]
-        else:
-            print("Invalid end time, must be float or datetime.")
-    idx = None
-    if ns:
-        _commands = []
-        for s in ns.slices:
-            try:
-                s = ensure_slice(s)
-            except (ValueError, TypeError):
-                print('{!r} is not a valid slice format'.format(s), file=sys.stderr)
-                return
-            if s:
-                try:
-                    _commands.extend(commands[s])
-                except IndexError:
-                    err = "Index likely not in range. Only {} commands."
-                    print(err.format(len(commands)), file=sys.stderr)
-                    return
-        else:
-            if _commands:
-                commands = _commands
-    else:
-        idx = slice(start_index, end_index)
-
-    if (isinstance(idx, slice) and
-            start_time is None and end_time is None):
-        commands = commands[idx]
-
-    if ns and ns.reverse:
-        commands = list(reversed(commands))
-    return commands
-
 
 
 def _hist_show(ns, *args, **kwargs):
@@ -563,18 +478,20 @@ def _hist_show(ns, *args, **kwargs):
         zsh     - returns all zsh history
         bash    - returns all bash history
     """
-    commands = _hist_get(ns.session, **kwargs)
-    print("COMMANDS:", commands, file=sys.stderr)
-    if commands:
-        digits = len(str(max([i for c, t, i in commands])))
-        for c, t, i in commands:
-            for line_ind, line in enumerate(c.split('\n')):
-                if line_ind == 0:
-                    print('{:>{width}}: {}'.format(i, line,
-                                                   width=digits + 1))
-                else:
-                    print(' {:>>{width}} {}'.format('', line,
-                                                        width=digits + 1))
+    commands = _hist_get(ns.session, ns.slices, **kwargs)
+    if not commands:
+        return
+    if ns.reverse:
+        commands = list(reversed(commands))
+    digits = len(str(max([i for c, t, i in commands])))
+    for c, t, i in commands:
+        for line_ind, line in enumerate(c.split('\n')):
+            if line_ind == 0:
+                print('{:>{width}}: {}'.format(i, line,
+                                               width=digits + 1))
+            else:
+                print(' {:>>{width}} {}'.format('', line,
+                                                    width=digits + 1))
 
 
 #
