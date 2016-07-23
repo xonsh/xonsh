@@ -185,7 +185,7 @@ def module_from_package(module, pkg, level):
     elif level == 1:
         return True
     else:
-       return False
+        return False
 
 
 def resolve_package_module(module, pkg, level, default=None):
@@ -207,7 +207,6 @@ def make_node(name, pkg, allowed, glbnames):
     raw = SOURCES[pkg, name]
     tree = parse(raw, filename=name)
     # we only want to deal with global import statements
-    pkgdot = pkg + '.'
     pkgdeps = set()
     extdeps = set()
     futures = set()
@@ -372,7 +371,6 @@ def format_from_import(names):
 
 def rewrite_imports(name, pkg, order, imps):
     """Rewrite the global imports in the file given the amalgamation."""
-    pkgdot = pkg + '.'
     raw = SOURCES[pkg, name]
     tree = parse(raw, filename=name)
     replacements = []  # list of (startline, stopline, str) tuples
