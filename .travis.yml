@@ -31,7 +31,8 @@ before_install:
 
 install:
   - if [[ ! "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then
-      conda install -y python=${PYTHON} pygments prompt_toolkit ply pytest pytest-cov pytest-timeout;
+      conda create -q -n test_env python=${PYTHON} pygments prompt_toolkit ply pytest pytest-cov pytest-timeout;
+      source activate test_env;
       pip install pytest-flake8 codecov;
       python setup.py install;
     else
