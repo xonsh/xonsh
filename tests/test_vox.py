@@ -5,6 +5,9 @@ import stat
 import os
 from xontrib.voxapi import Vox
 
+import pytest
+
+@pytest.mark.skip
 def test_crud(xonsh_builtins, tmpdir):
     """
     Creates a virtual environment, gets it, enumerates it, and then deletes it.
@@ -24,6 +27,7 @@ def test_crud(xonsh_builtins, tmpdir):
 
     assert not tmpdir.join('spam').check()
 
+@pytest.mark.skip
 def test_activate(xonsh_builtins, tmpdir):
     """
     Creates a virtual environment, gets it, enumerates it, and then deletes it.
