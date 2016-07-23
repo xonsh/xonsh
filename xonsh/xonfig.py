@@ -336,6 +336,7 @@ def _xonfig_format_json(data):
 
 
 def _info(ns):
+    env = builtins.__xonsh_env__
     data = [
         ('xonsh', XONSH_VERSION),
         ('Git SHA', githash()),
@@ -343,9 +344,9 @@ def _info(ns):
         ('PLY', ply.__version__),
         ('have readline', is_readline_available()),
         ('prompt toolkit', ptk_version() or None),
-        ('shell type', builtins.__xonsh_env__.get('SHELL_TYPE')),
+        ('shell type', env.get('SHELL_TYPE')),
         ('pygments', pygments_version()),
-        ('on posix', ON_POSIX),
+        ('on posix', bool(ON_POSIX)),
         ('on linux', ON_LINUX)]
     if ON_LINUX:
         data.append(('distro', linux_distro()))
@@ -355,6 +356,8 @@ def _info(ns):
         ('on cygwin', ON_CYGWIN),
         ('is superuser', is_superuser()),
         ('default encoding', DEFAULT_ENCODING),
+        ('xonsh encoding', env.get('XONSH_ENCODING')),
+        ('encoding errors', env.get('XONSH_ENCODING_ERRORS')),
     ])
     formatter = _xonfig_format_json if ns.json else _xonfig_format_human
     s = formatter(data)
