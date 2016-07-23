@@ -3,19 +3,24 @@ language: python
 matrix:
     include:
         - os: linux
-          python: "nightly"
+          language: generic
+          env: PYTHON="3.4" MINICONDA_OS="Linux"
         - os: linux
-          python: 3.4
-        - os: linux
-          python: 3.5
+          language: generic
+          env: PYTHON="3.5" MINICONDA_OS="Linux"
         - os: osx
-          python: 3.4
+          language: generic
+          env: PYTHON="3.4" MINICONDA_OS="MacOSX"
         - os: osx
-          python: 3.5
+          language: generic
+          env: PYTHON="3.5" MINICONDA_OS="MacOSX"
+#        - os: linux
+#          python: "nightly"
 
-install:
+before_install:
   - if [[ ! "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+      URL="https://repo.continuum.io/miniconda/Miniconda3-latest-${MINICONDA_OS}-x86_64.sh";
+      wget "${URL}" -O miniconda.sh;
       bash miniconda.sh -b -p $HOME/miniconda;
       export PATH="$HOME/miniconda/bin:$PATH";
       hash -r;
@@ -24,17 +29,13 @@ install:
       conda info -a;
     fi
 
-  - if [[ "$TRAVIS_PYTHON_VERSION" == 3.4 ]]; then
-      conda install -y python=3.4 pygments prompt_toolkit ply pytest pytest-cov pytest-timeout;
-      pip install pytest-flake8 codecov;
-      python setup.py install;
-    elif [[ "$TRAVIS_PYTHON_VERSION" == 3.5 ]]; then
-      conda install -y python=3.5 pygments prompt_toolkit ply pytest pytest-cov pytest-timeout;
-      pip install pytest-flake8 codecov;
-      python setup.py install;
-    else
-      pip install --upgrade -r requirements-tests.txt;
-    fi
+install:
+  - conda install -y python=${PYTHON} pygments prompt_toolkit ply pytest pytest-cov pytest-timeout;
+  - pip install pytest-flake8 codecov;
+  - python setup.py install;
+#    else
+#      pip install --upgrade -r requirements-tests.txt;
+#    fi
 
 script:
   - py.test --flake8 --cov=. --cov-report=term --timeout=10
