@@ -13,9 +13,9 @@ matrix:
           env: PYTHON="3.4" MINICONDA_OS="MacOSX"
         - os: osx
           language: generic
-          env: PYTHON="3.5" MINICONDA_OS="MacOSX"
-#        - os: linux
-#          python: "nightly"
+          env: PYTHON="3.5" MINICONDA_OS=MacOSX"
+        - os: linux
+          python: "nightly"
 
 before_install:
   - if [[ ! "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then
@@ -30,12 +30,13 @@ before_install:
     fi
 
 install:
-  - conda install -y python=${PYTHON} pygments prompt_toolkit ply pytest pytest-cov pytest-timeout;
-  - pip install pytest-flake8 codecov;
-  - python setup.py install;
-#    else
-#      pip install --upgrade -r requirements-tests.txt;
-#    fi
+  - if [[ ! "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then
+      conda install -y python=${PYTHON} pygments prompt_toolkit ply pytest pytest-cov pytest-timeout;
+      pip install pytest-flake8 codecov;
+      python setup.py install;
+    else
+      pip install --upgrade -r requirements-tests.txt;
+    fi
 
 script:
   - py.test --flake8 --cov=. --cov-report=term --timeout=10
