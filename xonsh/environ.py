@@ -110,6 +110,7 @@ DEFAULT_ENSURERS = LazyObject(lambda: {
     'IGNOREEOF': (is_bool, to_bool, bool_to_str),
     'INTENSIFY_COLORS_ON_WIN': (always_false, intensify_colors_on_win_setter,
                                 bool_to_str),
+    'LANG': (is_string, ensure_string, ensure_string),
     'LC_COLLATE': (always_false, locale_convert('LC_COLLATE'), ensure_string),
     'LC_CTYPE': (always_false, locale_convert('LC_CTYPE'), ensure_string),
     'LC_MESSAGES': (always_false, locale_convert('LC_MESSAGES'), ensure_string),
@@ -253,6 +254,7 @@ def DEFAULT_VALUES():
         'IGNOREEOF': False,
         'INDENT': '    ',
         'INTENSIFY_COLORS_ON_WIN': True,
+        'LANG': 'C.UTF-8',
         'LC_CTYPE': locale.setlocale(locale.LC_CTYPE),
         'LC_COLLATE': locale.setlocale(locale.LC_COLLATE),
         'LC_TIME': locale.setlocale(locale.LC_TIME),
@@ -429,6 +431,7 @@ DEFAULT_DOCS = LazyObject(lambda: {
         'which are hard to read, are replaced with cyan. Other colors are '
         'generally replaced by their bright counter parts.',
         configurable=ON_WINDOWS),
+    'LANG': VarDocs('Fallback locale setting for systems where it matters'),
     'LOADED_CONFIG': VarDocs(
         'Whether or not the xonsh config file was loaded',
         configurable=False),
