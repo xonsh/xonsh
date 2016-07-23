@@ -8,7 +8,6 @@ import os
 import sys
 import json
 import subprocess
-import contextlib
 
 try:
     from tempfile import TemporaryDirectory
