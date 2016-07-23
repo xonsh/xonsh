@@ -2,7 +2,7 @@
 
 **Changed:**
 
-* Moved `amalgamate_source` outside `build_tables`
+* Moved ``amalgamate_source`` outside `build_tables`
 
 * Disable amalgamation on setup develop
 
