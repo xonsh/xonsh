@@ -15,6 +15,7 @@ import sys
 import cmd
 import time
 import select
+import termios
 import builtins
 import importlib
 import threading
@@ -230,6 +231,14 @@ class ReadlineShell(BaseShell, cmd.Cmd):
     def __del__(self):
         teardown_readline()
 
+
+    def sttysane(self):
+        """Change settings of stdin to include ECHO so characters typed at the keyboard are echoed on screen"""
+        fd = sys.stdin.fileno()
+        si_attrs = termios.tcgetattr(fd)
+        si_attrs[3] = si_attrs[3] & termios.ECHO
+        termios.tcsetattr(fd, termios.TCSADRAIN, si_attrs)
+
     def singleline(self, store_in_history=True, **kwargs):
         """Reads a single line of input. The store_in_history kwarg
         flags whether the input should be stored in readline's in-memory
@@ -241,6 +250,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             except ImportError:
                 store_in_history = True
             pos = readline.get_current_history_length() - 1
+        self.sttysane()
         rtn = input(self.prompt)
         if not store_in_history and pos >= 0:
             readline.remove_history_item(pos)
