@@ -5,13 +5,13 @@ matrix:
         - os: linux
           python: "nightly"
         - os: linux
-          python: "3.4"
+          python: 3.4
         - os: linux
-          python: "3.5"
+          python: 3.5
         - os: osx
-          python: "3.4"
+          python: 3.4
         - os: osx
-          python: "3.5"
+          python: 3.5
 
 install:
   - if [[ ! "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then
@@ -24,11 +24,11 @@ install:
       conda info -a;
     fi
 
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.4" ]]; then
+  - if [[ "$TRAVIS_PYTHON_VERSION" == 3.4 ]]; then
       conda install -y python=3.4 pygments prompt_toolkit ply pytest pytest-cov pytest-timeout;
       pip install pytest-flake8 codecov;
       python setup.py install;
-    elif [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]]; then
+    elif [[ "$TRAVIS_PYTHON_VERSION" == 3.5 ]]; then
       conda install -y python=3.5 pygments prompt_toolkit ply pytest pytest-cov pytest-timeout;
       pip install pytest-flake8 codecov;
       python setup.py install;
