@@ -943,7 +943,10 @@ def ensure_slice(x):
         else:
             raise ValueError('cannot convert {!r} to slice'.format(x))
     except TypeError:
-        raise TypeError('ensure_slice() argument must be string, number or slice not {}'.format(type(x)))
+        try:
+            s = slice(*(int(i) for i in x))
+        except (TypeError, ValueError):
+            raise ValueError('cannot convert {!r} to slice'.format(x))
     return s
 
 

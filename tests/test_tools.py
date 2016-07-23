@@ -824,6 +824,8 @@ def test_bool_or_int_to_str(inp, exp):
         ('1:', slice(1, None, None)),
         ('[1:2:3]', slice(1, 2, 3)),
         ('(1:2:3)', slice(1, 2, 3)),
+        ((4, 8, 10), slice(4, 8, 10)),
+        ([10,20], slice(10,20))
         ])
 def test_ensure_slice(inp, exp):
     obs = ensure_slice(inp)

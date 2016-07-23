@@ -429,7 +429,7 @@ def _hist_get_portion(commands, slices):
     for s in slices:
         try:
             s = ensure_slice(s)
-        except (ValueError, TypeError):
+        except ValueError:
             print('{!r} is not a valid slice format'.format(s), file=sys.stderr)
             return
         try:
@@ -666,6 +666,9 @@ def _hist_parse_args(args):
     parser = _hist_create_parser()
     if not args:
         args = ['show']
+    elif args[0] in _HIST_SESSIONS:
+        print('Use the `show` subcommand to get history sessions.', file=sys.stderr)
+        raise SystemExit
     elif args[0] not in ['-h', '--help'] and args[0] not in _HIST_MAIN_ACTIONS:
         args.insert(0, 'show')
     if (args[0] == 'show'
