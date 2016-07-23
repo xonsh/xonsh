@@ -23,6 +23,7 @@ class _TeeOut(object):
         self.buffer = buf
         self.stdout = sys.stdout
         self.encoding = self.stdout.encoding
+        self.errors = self.stdout.errors
         sys.stdout = self
 
     def __del__(self):
@@ -55,6 +56,7 @@ class _TeeErr(object):
         self.buffer = buf
         self.stderr = sys.stderr
         self.encoding = self.stderr.encoding
+        self.errors = self.stderr.errors
         sys.stderr = self
 
     def __del__(self):
