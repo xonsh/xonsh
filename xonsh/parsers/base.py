@@ -21,6 +21,7 @@ from xonsh.lazyasd import LazyObject
 RE_SEARCHPATH = LazyObject(lambda: re.compile(SearchPath), globals(),
                            'RE_SEARCHPATH')
 
+
 class Location(object):
     """Location in a file."""
 
@@ -274,7 +275,7 @@ class BaseParser(object):
         yacc_kwargs['outputdir'] = outputdir
         self.parser = None
         YaccLoader(self, yacc_kwargs)
-        #self.parser = yacc.yacc(**yacc_kwargs)
+        # self.parser = yacc.yacc(**yacc_kwargs)
 
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None

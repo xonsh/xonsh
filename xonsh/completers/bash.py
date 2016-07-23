@@ -2,12 +2,10 @@ import os
 import re
 import shlex
 import pickle
+import hashlib
+import pathlib
 import builtins
 import subprocess
-
-import hashlib
-
-from pathlib import Path
 
 from xonsh.platform import ON_WINDOWS
 
@@ -179,7 +177,7 @@ def _source_completions(source):
 def _collect_completions_sources():
     sources = []
     completers = builtins.__xonsh_env__.get('BASH_COMPLETIONS', ())
-    paths = (Path(x) for x in completers)
+    paths = (pathlib.Path(x) for x in completers)
     for path in paths:
         if path.is_file():
             sources.append('source "{}"'.format(path.as_posix()))

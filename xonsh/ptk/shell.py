@@ -6,7 +6,6 @@ from prompt_toolkit.key_binding.manager import KeyBindingManager
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.layout.lexers import PygmentsLexer
 from prompt_toolkit.shortcuts import print_tokens
-from prompt_toolkit.filters import Condition
 from prompt_toolkit.styles import PygmentsStyle
 from pygments.styles import get_all_styles
 from pygments.token import Token
@@ -14,7 +13,6 @@ from pygments.token import Token
 from xonsh.base_shell import BaseShell
 from xonsh.tools import print_exception
 from xonsh.environ import partial_format_prompt
-from xonsh.platform import ptk_version, ptk_version_info
 from xonsh.pyghooks import (XonshLexer, partial_color_tokenize,
                             xonsh_style_proxy)
 from xonsh.ptk.completer import PromptToolkitCompleter

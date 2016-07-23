@@ -1,30 +1,38 @@
-import builtins
-from collections import OrderedDict
-
-from xonsh.completers.pip import complete_pip
-from xonsh.completers.man import complete_from_man
-from xonsh.completers.bash import complete_from_bash
-from xonsh.completers.base import complete_base
-from xonsh.completers.path import complete_path
-from xonsh.completers.dirs import complete_cd, complete_rmdir
-from xonsh.completers.python import (complete_python, complete_import,
-                                     complete_python_mode)
-from xonsh.completers.commands import complete_skipper
-from xonsh.completers.completer import complete_completer
-
-completers = OrderedDict([
-    ('python_mode', complete_python_mode),
-    ('base', complete_base),
-    ('completer', complete_completer),
-    ('skip', complete_skipper),
-    ('pip', complete_pip),
-    ('cd', complete_cd),
-    ('rmdir', complete_rmdir),
-    ('bash', complete_from_bash),
-    ('man', complete_from_man),
-    ('import', complete_import),
-    ('python', complete_python),
-    ('path', complete_path),
-])
-
-builtins.__xonsh_completers__ = completers
+# amalgamate exclude
+import os as _os
+if _os.getenv('XONSH_DEBUG', ''):
+    pass
+else:
+    import sys as _sys
+    try:
+        from xonsh.completers import __amalgam__
+        bash = __amalgam__
+        _sys.modules['xonsh.completers.bash'] = __amalgam__
+        completer = __amalgam__
+        _sys.modules['xonsh.completers.completer'] = __amalgam__
+        pip = __amalgam__
+        _sys.modules['xonsh.completers.pip'] = __amalgam__
+        tools = __amalgam__
+        _sys.modules['xonsh.completers.tools'] = __amalgam__
+        _aliases = __amalgam__
+        _sys.modules['xonsh.completers._aliases'] = __amalgam__
+        commands = __amalgam__
+        _sys.modules['xonsh.completers.commands'] = __amalgam__
+        man = __amalgam__
+        _sys.modules['xonsh.completers.man'] = __amalgam__
+        path = __amalgam__
+        _sys.modules['xonsh.completers.path'] = __amalgam__
+        python = __amalgam__
+        _sys.modules['xonsh.completers.python'] = __amalgam__
+        base = __amalgam__
+        _sys.modules['xonsh.completers.base'] = __amalgam__
+        dirs = __amalgam__
+        _sys.modules['xonsh.completers.dirs'] = __amalgam__
+        init = __amalgam__
+        _sys.modules['xonsh.completers.init'] = __amalgam__
+        del __amalgam__
+    except ImportError:
+        pass
+    del _sys
+del _os
+# amalgamate end

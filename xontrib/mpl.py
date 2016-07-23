@@ -2,6 +2,7 @@
 
 from xonsh.proc import foreground as _foreground
 
+
 @_foreground
 def _mpl(args, stdin=None):
     """Hooks to matplotlib"""

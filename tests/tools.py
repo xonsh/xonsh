@@ -2,19 +2,15 @@
 """Tests the xonsh lexer."""
 from __future__ import unicode_literals, print_function
 import sys
-import glob
 import builtins
 import platform
 import subprocess
 from collections import defaultdict
-from contextlib import contextmanager
 
 import pytest
 
 from xonsh.environ import Env
-from xonsh.built_ins import ensure_list_of_strs
 from xonsh.base_shell import BaseShell
-from xonsh.tools import XonshBlockError
 
 
 VER_3_4 = (3, 4)

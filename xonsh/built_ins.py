@@ -26,7 +26,8 @@ from xonsh.environ import Env, default_env, locate_binary
 from xonsh.foreign_shells import load_foreign_aliases
 from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.platform import ON_POSIX, ON_WINDOWS
-from xonsh.proc import (ProcProxy, SimpleProcProxy, ForegroundProcProxy,
+from xonsh.proc import (
+    ProcProxy, SimpleProcProxy, ForegroundProcProxy,
     SimpleForegroundProcProxy, TeePTYProc, pause_call_resume, CompletedCommand,
     HiddenCompletedCommand)
 from xonsh.tools import (
@@ -35,9 +36,11 @@ from xonsh.tools import (
 )
 from xonsh.commands_cache import CommandsCache
 
+import xonsh.completers.init
 
 BUILTINS_LOADED = False
 INSPECTOR = LazyObject(Inspector, globals(), 'INSPECTOR')
+
 
 @lazyobject
 def AT_EXIT_SIGNALS():
@@ -71,6 +74,7 @@ def resetting_signal_handle(sig, f):
     once the new handle is finished.
     """
     oldh = signal.getsignal(sig)
+
     def newh(s=None, frame=None):
         f(s, frame)
         signal.signal(sig, oldh)
@@ -157,7 +161,7 @@ def pathsearch(func, s, pymode=False):
     if (not callable(func) or
             len(inspect.signature(func).parameters) != 1):
         error = "%r is not a known path search function"
-        raise XonshError(error % searchfunc)
+        raise XonshError(error % func)
     o = func(s)
     no_match = [] if pymode else [s]
     return o if len(o) != 0 else no_match
@@ -530,7 +534,8 @@ def run_subproc(cmds, captured=False):
         })
     if (env.get('XONSH_INTERACTIVE') and
             not env.get('XONSH_STORE_STDOUT') and
-            not _capture_streams):
+            not _capture_streams and
+            hasattr(builtins, '__xonsh_shell__')):
         # set title here to get current command running
         pause_call_resume(prev_proc, builtins.__xonsh_shell__.settitle)
     if background:
@@ -566,7 +571,7 @@ def run_subproc(cmds, captured=False):
             output = output.replace('\r\n', '\n')
         else:
             hist.last_cmd_out = output
-        if captured == 'object': # get stderr as well
+        if captured == 'object':  # get stderr as well
             named = _stderr_name is not None
             unnamed = prev_proc.stderr not in {None, sys.stderr}
             if named:
@@ -708,6 +713,7 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.__xonsh_all_jobs__ = {}
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     builtins.__xonsh_list_of_strs_or_callables__ = list_of_strs_or_callables
+    builtins.__xonsh_completers__ = xonsh.completers.init.default_completers()
     # public built-ins
     builtins.XonshError = XonshError
     builtins.XonshBlockError = XonshBlockError
@@ -772,6 +778,7 @@ def unload_builtins():
              '__xonsh_subproc_uncaptured__',
              '__xonsh_execer__',
              '__xonsh_commands_cache__',
+             '__xonsh_completers__',
              'XonshError',
              'XonshBlockError',
              'XonshCalledProcessError',
