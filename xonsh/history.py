@@ -8,7 +8,6 @@ import time
 import uuid
 import argparse
 import builtins
-import datetime
 import functools
 import operator
 import threading
@@ -414,6 +413,7 @@ def _hist_get_session(session='session', location=None):
         yield from cmds
     except TypeError:
         pass
+
 
 def _hist_get_portion(commands, slices):
     "Yield from portions of history commands. "
