@@ -169,7 +169,7 @@ class xinstall(install):
         clean_tables()
         with set_path():
             build_tables()
-            amalagmate_source()
+            amalgamate_source()
         # add dirty version number
         dirty = dirty_version()
         # install Jupyter hook
@@ -192,7 +192,7 @@ class xsdist(sdist):
         clean_tables()
         with set_path():
             build_tables()
-            amalgmate_source()
+            amalgamate_source()
         dirty = dirty_version()
         sdist.make_release_tree(self, basedir, files)
         if dirty:
