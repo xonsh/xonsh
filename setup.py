@@ -8,6 +8,7 @@ import os
 import sys
 import json
 import subprocess
+import contextlib
 
 try:
     from tempfile import TemporaryDirectory
@@ -35,6 +36,12 @@ except ImportError:
     HAVE_JUPYTER = False
 
 
+@contextlib.contextmanager
+def set_path():
+    sys.path.insert(0, os.path.dirname(__file__))
+    yield
+    sys.path.pop(0)
+
 TABLES = ['xonsh/lexer_table.py', 'xonsh/parser_table.py',
           'xonsh/__amalgam__.py', 'xonsh/completers/__amalgam__.py']
 
@@ -51,7 +58,7 @@ os.environ['XONSH_DEBUG'] = '1'
 from xonsh import __version__ as XONSH_VERSION
 
 
-def amalagamate_source():
+def amalgamate_source():
     """Amalgamtes source files."""
     try:
         import amalgamate
@@ -65,12 +72,9 @@ def amalagamate_source():
 def build_tables():
     """Build the lexer/parser modules."""
     print('Building lexer and parser tables.')
-    sys.path.insert(0, os.path.dirname(__file__))
     from xonsh.parser import Parser
     Parser(lexer_table='lexer_table', yacc_table='parser_table',
            outputdir='xonsh')
-    amalagamate_source()
-    sys.path.pop(0)
 
 
 def install_jupyter_hook(prefix=None, root=None):
@@ -163,7 +167,9 @@ class xinstall(install):
     """Xonsh specialization of setuptools install class."""
     def run(self):
         clean_tables()
-        build_tables()
+        with set_path():
+            build_tables()
+            amalagmate_source()
         # add dirty version number
         dirty = dirty_version()
         # install Jupyter hook
@@ -184,7 +190,9 @@ class xsdist(sdist):
     """Xonsh specialization of setuptools sdist class."""
     def make_release_tree(self, basedir, files):
         clean_tables()
-        build_tables()
+        with set_path():
+            build_tables()
+            amalgmate_source()
         dirty = dirty_version()
         sdist.make_release_tree(self, basedir, files)
         if dirty:
@@ -218,7 +226,8 @@ if HAVE_SETUPTOOLS:
         """Xonsh specialization of setuptools develop class."""
         def run(self):
             clean_tables()
-            build_tables()
+            with set_path():
+                build_tables()
             dirty = dirty_version()
             develop.run(self)
             if dirty:
