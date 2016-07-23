@@ -71,63 +71,35 @@ def test_cmd_field(hist, xonsh_builtins):
     assert 1 == hist.rtns[-1]
     assert None == hist.outs[-1]
 
-def run_show_cmd(hist_args, commands, base_idx=0, step=1):
-    """Run and evaluate the output of the given show command."""
-    stdout = sys.stdout
-    stdout.seek(0, io.SEEK_SET)
-    stdout.truncate()
-    history.history_main(hist_args)
-    stdout.seek(0, io.SEEK_SET)
-    hist_lines = stdout.readlines()
-    assert len(commands) == len(hist_lines)
-    for idx, (cmd, actual) in enumerate(zip(commands, hist_lines)):
-        expected = ' {:d}: {:s}\n'.format(base_idx + idx * step, cmd)
-        assert expected == actual
 
-def test_show_cmd(hist, xonsh_builtins):
+cmds = ['ls', 'cat hello kitty', 'abc', 'def', 'touch me', 'grep from me']
+
+@pytest.mark.parametrize('inp, commands, offset', [
+    ('', cmds, (0, 1)),
+    ('show', cmds, (0, 1)),
+    ('show -r', list(reversed(cmds)), (len(cmds)- 1, -1)),
+    ('show 0', cmds[0:1], (0, 1)),
+    ('show 1', cmds[1:2], (1, 1)),
+    ('show -2', cmds[-2:-1], (len(cmds) -2 , 1)),
+    ('show 1:3', cmds[1:3], (1, 1)),
+    ('show 1::2', cmds[1::2], (1, 2)),
+    ('show -4:-2', cmds[-4:-2], (len(cmds) - 4, 1))
+    ])
+def test_show_cmd(inp, commands, offset, hist, xonsh_builtins, capsys):
     """Verify that CLI history commands work."""
-    cmds = ['ls', 'cat hello kitty', 'abc', 'def', 'touch me', 'grep from me']
-    sys.stdout = io.StringIO()
+    base_idx, step = offset
     xonsh_builtins.__xonsh_history__ = hist
     xonsh_builtins.__xonsh_env__['HISTCONTROL'] = set()
     for ts,cmd in enumerate(cmds):  # populate the shell history
         hist.append({'inp': cmd, 'rtn': 0, 'ts':(ts+1, ts+1.5)})
 
-    # Verify an implicit "show" emits show history
-    run_show_cmd([], cmds)
+    exp = ('{}: {}'.format(base_idx + idx * step, cmd)
+           for idx, cmd in enumerate(list(commands)))
+    exp = '\n'.join(exp)
 
-    # Verify an explicit "show" with no qualifiers emits
-    # show history.
-    run_show_cmd(['show'], cmds)
-
-    # Verify an explicit "show" with a reversed qualifier
-    # emits show history in reverse order.
-    run_show_cmd(['show', '-r'], list(reversed(cmds)),
-                             len(cmds) - 1, -1)
-
-    # Verify that showing a specific history entry relative to
-    # the start of the history works.
-    run_show_cmd(['show', '0'], [cmds[0]], 0)
-    run_show_cmd(['show', '1'], [cmds[1]], 1)
-
-    # Verify that showing a specific history entry relative to
-    # the end of the history works.
-    run_show_cmd(['show', '-2'], [cmds[-2]],
-                           len(cmds) - 2)
-
-    # Verify that showing a history range relative to the start of the
-    # history works.
-    run_show_cmd(['show', '0:2'], cmds[0:2], 0)
-    run_show_cmd(['show', '1::2'], cmds[1::2], 1, 2)
-
-    # Verify that showing a history range relative to the end of the
-    # history works.
-    run_show_cmd(['show', '-2:'],
-                           cmds[-2:], len(cmds) - 2)
-    run_show_cmd(['show', '-4:-2'],
-                           cmds[-4:-2], len(cmds) - 4)
-
-    sys.stdout = sys.__stdout__
+    history.history_main(shlex.split(inp))
+    out, err = capsys.readouterr()
+    assert out.rstrip() == exp
 
 
 def test_histcontrol(hist, xonsh_builtins):

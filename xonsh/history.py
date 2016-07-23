@@ -416,15 +416,7 @@ def _hist_get_session(session='session', location=None):
         pass
 
 def _hist_get_portion(commands, slices):
-    """Yield from portions of history commands.
-
-    Parameters
-    ----------
-    commands : iterable
-        A list of history commands
-    slices : list of int, str, slice
-        The portions of history to yield.
-    """
+    "Yield from portions of history commands. "
     commands = list(commands)
     for s in slices:
         try:
@@ -441,6 +433,7 @@ def _hist_get_portion(commands, slices):
 
 
 def _hist_filter_ts(commands, start_time=None, end_time=None):
+    """Yield only the commands between start and end time."""
     if start_time is None:
         start_time = 0.0
     if end_time is None:
@@ -452,6 +445,24 @@ def _hist_filter_ts(commands, start_time=None, end_time=None):
 
 def _hist_get(session='session', slices=None,
               start_time=None, end_time=None, location=None):
+    """Get the requested portion of shell history.
+
+    Parameters
+    ----------
+    session: {'session', 'all', 'xonsh', 'bash', 'zsh'}
+        The history session to get.
+    slices : list of slice-like objects, optional
+        The portions of history to yield.
+    start_time, end_time: float, optional
+        Filter commands by timestamp.
+    location: string, optional
+        The history file location (bash or zsh)
+
+    Returns
+    -------
+    list
+       A filtered list of commands
+    """
     cmds = _hist_get_session(session, location)
     if slices:
         cmds = _hist_get_portion(cmds, slices)
@@ -461,23 +472,8 @@ def _hist_get(session='session', slices=None,
 
 
 def _hist_show(ns, *args, **kwargs):
-    """Show the requested portion of shell history.
-    Accepts multiple history sources (xonsh, bash, zsh)
-
-    May be invoked as an alias with history all/bash/zsh which will
-    provide history as stdout or with __xonsh_history__.show()
-    which will return the history as a list with each item
-    in the tuple form (name, start_time, index).
-
-    If invoked via __xonsh_history__.show() then the ns parameter
-    can be supplied as a str with the follow options::
-
-        session - returns xonsh history from current session
-        xonsh   - returns xonsh history from all sessions
-        all     - alias of xonsh
-        zsh     - returns all zsh history
-        bash    - returns all bash history
-    """
+    """Show the requested portion of shell history. Accepts same parameters
+    with `_hist_get`."""
     commands = _hist_get(ns.session, ns.slices, **kwargs)
     if not commands:
         return
@@ -487,16 +483,12 @@ def _hist_show(ns, *args, **kwargs):
     for c, t, i in commands:
         for line_ind, line in enumerate(c.split('\n')):
             if line_ind == 0:
-                print('{:>{width}}: {}'.format(i, line,
-                                               width=digits + 1))
+                print('{:>{width}}: {}'.format(i, line, width=digits))
             else:
-                print(' {:>>{width}} {}'.format('', line,
-                                                    width=digits + 1))
+                print(' {:>>{width}} {}'.format('', line, width=digits))
 
 
-#
 # Interface to History
-#
 class History(object):
     """Xonsh session history."""
 
