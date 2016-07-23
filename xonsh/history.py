@@ -2,15 +2,16 @@
 """Implements the xonsh history object."""
 import os
 import sys
-import uuid
-import time
-import json
 import glob
+import json
+import time
+import uuid
 import argparse
-import operator
-import datetime
 import builtins
+import datetime
 import functools
+import itertools
+import operator
 import threading
 import collections
 import collections.abc as abc
@@ -417,19 +418,14 @@ def _hist_get_session(session='session', location=None):
 
 def _hist_get_portion(commands, slices):
     "Yield from portions of history commands. "
-    commands = list(commands)
-    for s in slices:
-        try:
+    if len(slices) == 1:
+        s = ensure_slice(slices[0])
+        yield from itertools.islice(commands, s.start, s.stop, s.step)
+    else:
+        commands = list(commands)
+        for s in slices:
             s = ensure_slice(s)
-        except ValueError:
-            print('{!r} is not a valid slice format'.format(s), file=sys.stderr)
-            return
-        try:
             yield from commands[s]
-        except IndexError:
-            err = "Index likely not in range. Only {} commands."
-            print(err.format(len(commands)), file=sys.stderr)
-            return
 
 
 def _hist_filter_ts(commands, start_time=None, end_time=None):
@@ -474,7 +470,11 @@ def _hist_get(session='session', slices=None,
 def _hist_show(ns, *args, **kwargs):
     """Show the requested portion of shell history. Accepts same parameters
     with `_hist_get`."""
-    commands = _hist_get(ns.session, ns.slices, **kwargs)
+    try:
+        commands = _hist_get(ns.session, ns.slices, **kwargs)
+    except ValueError:
+        print('Invalid slice format', file=sys.stderr)
+        return
     if not commands:
         return
     if ns.reverse:
