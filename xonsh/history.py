@@ -407,16 +407,14 @@ def _hist_create_parser():
 
 
 def _hist_get_session(session='session', location=None):
-    "Yield commands from history."
+    """Yield commands from history."""
     cmds = _HIST_SESSIONS[session](location=location)
-    try:
+    if cmds:
         yield from cmds
-    except TypeError:
-        pass
 
 
 def _hist_get_portion(commands, slices):
-    "Yield from portions of history commands. "
+    """Yield from portions of history commands. """
     commands = list(commands)
     for s in slices:
         s = ensure_slice(s)
@@ -443,7 +441,7 @@ def _hist_get(session='session', slices=None,
     session: {'session', 'all', 'xonsh', 'bash', 'zsh'}
         The history session to get.
     slices : list of slice-like objects, optional
-        The portions of history to yield.
+        Get only portions of history.
     start_time, end_time: float, optional
         Filter commands by timestamp.
     location: string, optional
@@ -654,7 +652,7 @@ def _hist_parse_args(args):
     if not args:
         args = ['show']
     elif args[0] in _HIST_SESSIONS:
-        print('Use the `show` subcommand to get history sessions.', file=sys.stderr)
+        print("Use the 'show' subcommand to get history sessions.", file=sys.stderr)
         raise SystemExit
     elif args[0] not in ['-h', '--help'] and args[0] not in _HIST_MAIN_ACTIONS:
         args.insert(0, 'show')
