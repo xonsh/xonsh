@@ -10,7 +10,6 @@ import argparse
 import builtins
 import datetime
 import functools
-import itertools
 import operator
 import threading
 import collections

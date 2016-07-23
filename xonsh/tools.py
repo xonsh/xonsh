@@ -927,7 +927,7 @@ def SLICE_REG():
 
 def ensure_slice(x):
     """Convert `x` to a slice. If `x` is already a slice object return as is."""
-    if x is None:
+    if not x:
         return slice(None)
     elif isinstance(x, slice):
         return x

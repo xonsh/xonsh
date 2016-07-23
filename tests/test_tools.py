@@ -832,19 +832,20 @@ def test_ensure_slice(inp, exp):
     assert exp == obs
 
 
-@pytest.mark.parametrize('inp, error', [
-    ('42.3', ValueError),
-    ('3:asd5:1', ValueError),
-    ('test' , ValueError),
-    ('6.53:100:5', ValueError),
-    ('4:-', ValueError),
-    ('2:15-:3', ValueError),
-    ('50:-:666', ValueError),
-    (object(), TypeError),
-    ([], TypeError)
+@pytest.mark.parametrize('inp', [
+    '42.3',
+    '3:asd5:1',
+    'test' ,
+    '6.53:100:5',
+    '4:-',
+    '2:15-:3',
+    '50:-:666',
+    object(),
+    [1,5,3,4],
+    ('foo')
 ])
-def test_ensure_slice_invalid(inp, error):
-    with pytest.raises(error):
+def test_ensure_slice_invalid(inp):
+    with pytest.raises(ValueError):
         obs = ensure_slice(inp)
 
 
