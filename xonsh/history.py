@@ -418,14 +418,10 @@ def _hist_get_session(session='session', location=None):
 
 def _hist_get_portion(commands, slices):
     "Yield from portions of history commands. "
-    if len(slices) == 1:
-        s = ensure_slice(slices[0])
-        yield from itertools.islice(commands, s.start, s.stop, s.step)
-    else:
-        commands = list(commands)
-        for s in slices:
-            s = ensure_slice(s)
-            yield from commands[s]
+    commands = list(commands)
+    for s in slices:
+        s = ensure_slice(s)
+        yield from commands[s]
 
 
 def _hist_filter_ts(commands, start_time=None, end_time=None):
@@ -472,8 +468,8 @@ def _hist_show(ns, *args, **kwargs):
     with `_hist_get`."""
     try:
         commands = _hist_get(ns.session, ns.slices, **kwargs)
-    except ValueError:
-        print('Invalid slice format', file=sys.stderr)
+    except ValueError as err:
+        print(err, file=sys.stderr)
         return
     if not commands:
         return
