@@ -106,7 +106,7 @@ class XonshKernel(Kernel):
         endidx = pos
         begidx = pos - len(prefix)
         rtn, _ = self.completer.complete(prefix, line, begidx,
-                                                endidx, shell.ctx)
+                                         endidx, shell.ctx)
         message = {'matches': rtn, 'cursor_start': begidx, 'cursor_end': endidx,
                    'metadata': {}, 'status': 'ok'}
         return message
