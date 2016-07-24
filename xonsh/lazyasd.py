@@ -10,6 +10,7 @@ import importlib
 import importlib.util
 import collections.abc as abc
 
+__version__ = '0.1.1'
 
 class LazyObject(object):
 
@@ -285,7 +286,7 @@ class BackgroundModuleLoader(threading.Thread):
             time.sleep(0.001)
             last = hist[i % 5] = len(sys.modules)
             i += 1
-        # now import pkg_resources properly
+        # now import module properly
         modname = importlib.util.resolve_name(self.name, self.package)
         if isinstance(sys.modules[modname], BackgroundModuleProxy):
             del sys.modules[modname]
