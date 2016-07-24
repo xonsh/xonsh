@@ -52,7 +52,7 @@ from xonsh import __version__ as XONSH_VERSION
 
 
 def amalgamate_source():
-    """Amalgamtes source files."""
+    """Amalgamates source files."""
     sys.path.insert(0, os.path.dirname(__file__))
     try:
         import amalgamate
