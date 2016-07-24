@@ -12,6 +12,7 @@ import collections.abc as abc
 
 __version__ = '0.1.1'
 
+
 class LazyObject(object):
 
     def __init__(self, load, ctx, name):
