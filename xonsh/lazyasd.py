@@ -280,13 +280,18 @@ class BackgroundModuleLoader(threading.Thread):
 
     def run(self):
         # wait for other modules to stop being imported
-        i = 0
-        last = -6
-        hist = [-5, -4, -3, -2, -1]
-        while not all(last == x for x in hist):
+        # We assume that module loading is finished when sys.modules doesn't
+        # get longer in 5 consecutive 1ms waiting steps
+        counter = 0
+        last = -1
+        while counter < 5:
+            new = len(sys.modules)
+            if new == last:
+                 counter += 1
+            else:
+                 last = new
+                 counter = 0
             time.sleep(0.001)
-            last = hist[i % 5] = len(sys.modules)
-            i += 1
         # now import module properly
         modname = importlib.util.resolve_name(self.name, self.package)
         if isinstance(sys.modules[modname], BackgroundModuleProxy):
