@@ -27,6 +27,11 @@
   "url": "http://xon.sh",
   "description": ["Python virtual environment manager for xonsh."]
   },
+ {"name": "sh",
+  "package": "xonsh",
+  "url": "http://xon.sh",
+  "description": ["compatibility for bash utilities."]
+  },
  {"name": "prompt_ret_code",
   "package": "xontrib-prompt-ret-code",
   "url": "https://github.com/Siecje/xontrib-prompt-ret-code",
