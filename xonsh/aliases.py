@@ -490,7 +490,6 @@ def make_default_aliases():
         'EOF': xonsh_exit,
         'exit': xonsh_exit,
         'quit': xonsh_exit,
-        'exec': xexec,
         'xexec': xexec,
         'source': source_alias,
         'source-zsh': ['source-foreign', 'zsh', '--sourcer=source'],

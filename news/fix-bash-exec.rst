@@ -1,6 +1,6 @@
 **Added:**
 
-* Added a new alias: ``exec``, which is the same as ``xexec``.
+* Added a new xontrib: ``sh`` for sh/bash compatibility.
 
 **Changed:** None
 
@@ -8,9 +8,6 @@
 
 **Removed:** None
 
-**Fixed:**
-
-* Fixed an issue that program crashes when attempt to call bash built-in
-  command ``exec``.
+**Fixed:** None
 
 **Security:** None
