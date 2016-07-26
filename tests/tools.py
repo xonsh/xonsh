@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tests the xonsh lexer."""
 from __future__ import unicode_literals, print_function
+import os
 import sys
 import builtins
 import platform
@@ -19,10 +20,14 @@ VER_MAJOR_MINOR = sys.version_info[:2]
 VER_FULL = sys.version_info[:3]
 ON_DARWIN = (platform.system() == 'Darwin')
 ON_WINDOWS = (platform.system() == 'Windows')
-
+ON_CONDA = True in [conda in pytest.__file__ for conda
+                    in ['anaconda', 'miniconda']]
 
 # pytest skip decorators
 skip_if_py34 = pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5, reason="Py3.5+ only test")
+
+skip_if_on_conda = pytest.mark.skipif(ON_CONDA,
+                        reason="Conda and virtualenv _really_ hate each other")
 
 skip_if_on_windows = pytest.mark.skipif(ON_WINDOWS, reason='Unix stuff')
 
