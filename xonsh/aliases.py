@@ -282,9 +282,8 @@ def xexec(args, stdin=None):
     """Replaces current process with command specified and passes in the
     current xonsh environment.
     """
-    env = builtins.__xonsh_env__
-    denv = env.detype()
     if len(args) > 0:
+        denv = builtins.__xonsh_env__.detype()
         try:
             os.execvpe(args[0], args, denv)
         except FileNotFoundError as e:
