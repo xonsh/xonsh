@@ -23,7 +23,7 @@ script:
   - if [ $COMPLETERUN = true ]; then
       py.test --flake8 --cov=. --cov-report=term --timeout=10;
     else
-      py.test --timeout=10
+      py.test --timeout=10;
     fi
 
 after_success:
