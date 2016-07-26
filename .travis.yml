@@ -40,13 +40,13 @@ install:
     fi
 
 script:
-  - if [ $RUN_COVERAGE = true]; then
+  - if [[ $RUN_COVERAGE = true ]]; then
       py.test --flake8 --cov=. --cov-report=term --timeout=10;
     else
       py.test --timeout=10;
     fi
 
 after_success:
-  - if [$RUN_COVERAGE = true]; then
+  - if [[ $RUN_COVERAGE = true ]]; then
       codecov;
     fi
