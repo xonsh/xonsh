@@ -287,10 +287,10 @@ class BackgroundModuleLoader(threading.Thread):
         while counter < 5:
             new = len(sys.modules)
             if new == last:
-                 counter += 1
+                counter += 1
             else:
-                 last = new
-                 counter = 0
+                last = new
+                counter = 0
             time.sleep(0.001)
         # now import module properly
         modname = importlib.util.resolve_name(self.name, self.package)
