@@ -120,8 +120,8 @@ def dirty_version():
         return False
     _version = _version.decode('ascii')
     try:
-        base, N, sha = _version.strip().split('-')
-    except ValueError:  # on base release
+        _, N, sha = _version.strip().split('-')
+    except ValueError:  # tag name may contains "-"
         open('xonsh/dev.githash', 'w').close()
         print('failed to parse git version', file=sys.stderr)
         return False
