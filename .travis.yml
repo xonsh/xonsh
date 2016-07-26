@@ -8,6 +8,7 @@ matrix:
           python: "nightly"
         - os: linux
           python: 3.5
+          env: COMPLETERUN=true
         - os: linux
           python: 3.4
         - os: osx
@@ -19,7 +20,11 @@ install:
   - pip3 install -r requirements-tests.txt
 
 script:
-  - py.test --flake8 --cov=. --cov-report=term --timeout=10
+  - if [ $COMPLETERUN = true ]; then
+      py.test --flake8 --cov=. --cov-report=term --timeout=10;
+    else
+      py.test --timeout=10
+    fi
 
 after_success:
-  - codecov
+  - if [ $COMPLETERUN = true ]; then codecov; fi
