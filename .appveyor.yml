@@ -1,7 +1,7 @@
 version: 0.4.4.{build}
 os: Windows Server 2012 R2
 install:
-- C:\Python35\Scripts\pip install --upgrade -r requirements-tests.txt
+- C:\Python35\Scripts\pip install -r requirements-tests.txt
 build: off
 test_script:
 - C:\Python35\Scripts\py.test
