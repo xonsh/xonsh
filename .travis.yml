@@ -36,7 +36,7 @@ install:
       pip install pytest-flake8 codecov;
       python setup.py install;
     else
-      pip install --upgrade -r requirements-tests.txt;
+      pip install -r requirements-tests.txt;
     fi
 
 script:

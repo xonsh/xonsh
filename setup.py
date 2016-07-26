@@ -51,8 +51,9 @@ os.environ['XONSH_DEBUG'] = '1'
 from xonsh import __version__ as XONSH_VERSION
 
 
-def amalagamate_source():
-    """Amalgamtes source files."""
+def amalgamate_source():
+    """Amalgamates source files."""
+    sys.path.insert(0, os.path.dirname(__file__))
     try:
         import amalgamate
     except ImportError:
@@ -60,6 +61,7 @@ def amalagamate_source():
         return
     amalgamate.main(['amalgamate', '--debug=XONSH_DEBUG', 'xonsh',
                      'xonsh.completers'])
+    sys.path.pop(0)
 
 
 def build_tables():
@@ -69,7 +71,6 @@ def build_tables():
     from xonsh.parser import Parser
     Parser(lexer_table='lexer_table', yacc_table='parser_table',
            outputdir='xonsh')
-    amalagamate_source()
     sys.path.pop(0)
 
 
@@ -164,6 +165,7 @@ class xinstall(install):
     def run(self):
         clean_tables()
         build_tables()
+        amalgamate_source()
         # add dirty version number
         dirty = dirty_version()
         # install Jupyter hook
@@ -185,6 +187,7 @@ class xsdist(sdist):
     def make_release_tree(self, basedir, files):
         clean_tables()
         build_tables()
+        amalgamate_source()
         dirty = dirty_version()
         sdist.make_release_tree(self, basedir, files)
         if dirty:
