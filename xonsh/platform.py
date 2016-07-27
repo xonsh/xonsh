@@ -227,7 +227,7 @@ def git_for_windows_path():
 
 @functools.lru_cache(1)
 def windows_bash_command():
-    """Determines teh command for Bash on windows."""
+    """Determines the command for Bash on windows."""
     # Check that bash is on path otherwise try the default directory
     # used by Git for windows
     wbc = 'bash'
@@ -246,6 +246,15 @@ def windows_bash_command():
 #
 # Environment variables defaults
 #
+
+@functools.lru_cache(1)
+def bash_command():
+    """Determines the command for Bash on the current plaform."""
+    if ON_WINDOWS:
+        bc = windows_bash_command()
+    else:
+        bc = 'bash'
+    return bc
 
 
 @lazyobject
