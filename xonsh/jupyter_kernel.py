@@ -102,6 +102,7 @@ class XonshKernel(Kernel):
         """Get completions."""
         shell = builtins.__xonsh_shell__
         line = code.split('\n')[-1]
+        line = builtins.aliases.expand_alias(line)
         prefix = line.split(' ')[-1]
         endidx = pos
         begidx = pos - len(prefix)
