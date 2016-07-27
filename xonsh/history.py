@@ -507,14 +507,14 @@ def _hist_show(ns=None, hist=None, start_index=None, end_index=None,
 class History(object):
     """Xonsh session history.
 
-    History is accessed through several sequence-like fields:
-
+    Attributes
+    ----------
     rtns : sequence of ints
         The return of the command (ie, 0 on success)
     inps : sequence of strings
         The command as typed by the user, including newlines
     tss : sequence of two-tuples of floats
-        The timestamps of when the command started and finished, including 
+        The timestamps of when the command started and finished, including
         fractions
     outs : sequence of strings
         The output of the command, if xonsh is configured to save it
