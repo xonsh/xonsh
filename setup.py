@@ -142,7 +142,8 @@ def replace_version(N):
     with open('xonsh/__init__.py', 'r') as f:
         raw = f.read()
     lines = raw.splitlines()
-    assert '__version__' in lines[0], 'version should define at the top'
+    msg_assert = '__version__ must be the first line of the __init__.py'
+    assert '__version__' in lines[0], msg_assert
     ORIGINAL_VERSION_LINE = lines[0]
     lines[0] = lines[0].rstrip(" '") + ".dev{}'".format(N)
     upd = '\n'.join(lines) + '\n'
