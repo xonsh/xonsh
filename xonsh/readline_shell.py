@@ -255,6 +255,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         rl_completion_suppress_append()  # this needs to be called each time
         _rebind_case_sensitive_completions()
 
+        line = builtins.aliases.expand_alias(line)
         mline = line.partition(' ')[2]
         offs = len(mline) - len(text)
         if self.completer is None:
