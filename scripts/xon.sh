@@ -7,4 +7,4 @@ if [ -z "${LC_ALL+x}" ] && [ -z "${LC_CTYPE+x}" ] && \
 fi
 
 # run python
-/usr/bin/env PYTHONUNBUFFERED=1 python3 -u -m xonsh $@
+exec /usr/bin/env PYTHONUNBUFFERED=1 python3 -u -m xonsh $@
