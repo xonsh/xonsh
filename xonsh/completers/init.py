@@ -1,5 +1,5 @@
 """Constructor for xonsh completer objects."""
-from collections import OrderedDict
+import collections
 
 from xonsh.completers.pip import complete_pip
 from xonsh.completers.man import complete_from_man
@@ -15,7 +15,7 @@ from xonsh.completers.completer import complete_completer
 
 def default_completers():
     """Creates a copy of the default completers.    """
-    return OrderedDict([
+    return collections.OrderedDict([
         ('python_mode', complete_python_mode),
         ('base', complete_base),
         ('completer', complete_completer),

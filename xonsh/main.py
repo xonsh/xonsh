@@ -257,6 +257,3 @@ def main_context(argv=None):
     yield builtins.__xonsh_shell__
     postmain(args)
 
-
-if __name__ == '__main__':
-    main()
