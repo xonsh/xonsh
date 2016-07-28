@@ -24,6 +24,7 @@ from xonsh.xontribs import xontribs_main
 from xonsh.xoreutils import _which
 from xonsh.completers._aliases import completer_alias
 
+
 class Aliases(abc.MutableMapping):
     """Represents a location to hold and look up aliases."""
 
