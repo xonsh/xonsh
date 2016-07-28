@@ -120,8 +120,7 @@ def completer_alias(args, stdin=None):
         func = _list_completers
     return func(args[1:], stdin=stdin)
 
-COMPLETER_LIST_HELP_STR = \
-"""completer list: list the active completers, in order
+COMPLETER_LIST_HELP_STR = """completer list: ordered list the active completers
 
 Usage:
     completer remove

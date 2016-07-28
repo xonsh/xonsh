@@ -247,6 +247,7 @@ def windows_bash_command():
 # Environment variables defaults
 #
 
+
 @functools.lru_cache(1)
 def bash_command():
     """Determines the command for Bash on the current plaform."""
