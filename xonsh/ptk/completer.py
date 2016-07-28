@@ -30,6 +30,7 @@ class PromptToolkitCompleter(Completer):
                 endidx = document.cursor_position_col
                 begidx = line[:endidx].rfind(' ') + 1 if line[:endidx].rfind(' ') >= 0 else 0
                 prefix = line[begidx:endidx]
+                line = builtins.aliases.expand_alias(line)
                 completions, l = self.completer.complete(prefix,
                                                          line,
                                                          begidx,
