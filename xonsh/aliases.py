@@ -401,7 +401,8 @@ def which(args, stdin=None, stdout=None, stderr=None):
                     print(arg, file=stdout)
             else:
                 print("aliases['{}'] = {}".format(arg, builtins.aliases[arg]), file=stdout)
-                builtins.__xonsh_superhelp__(builtins.aliases[arg])
+                if not isinstance(builtins.aliases[arg], list):
+                    builtins.__xonsh_superhelp__(builtins.aliases[arg])
             nmatches += 1
             if not pargs.all:
                 continue
