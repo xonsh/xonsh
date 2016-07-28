@@ -35,6 +35,7 @@ from xonsh.tools import (
     XonshCalledProcessError, XonshBlockError
 )
 from xonsh.commands_cache import CommandsCache
+from xonsh.events import Events
 
 import xonsh.completers.init
 
@@ -714,6 +715,7 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     builtins.__xonsh_list_of_strs_or_callables__ = list_of_strs_or_callables
     builtins.__xonsh_completers__ = xonsh.completers.init.default_completers()
+    builtins.__xonsh_events__ = Events()
     # public built-ins
     builtins.XonshError = XonshError
     builtins.XonshBlockError = XonshBlockError
