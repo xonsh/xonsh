@@ -151,7 +151,7 @@ def _load_bash_complete_files():
     func_files = {}
     for line in out.splitlines():
         parts = line.split()
-        if ON_WINDOWS:
+        if xp.ON_WINDOWS:
             parts = [parts[0], ' '.join(parts[2:])]
         func_files[parts[0]] = parts[-1]
     BASH_COMPLETE_FILES = {
