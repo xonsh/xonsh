@@ -8,6 +8,7 @@ The best way to "declare" an event is something like::
     __xonsh_events__.on_spam.__doc__ = "Comes with eggs"
 """
 
+
 class Event(set):
     """
     A given event that handlers can register against.
@@ -58,7 +59,7 @@ class Event(set):
         Returns that truthy value.
         """
         for rv in self.calleach(*pargs, **kwargs):
-            if rv: 
+            if rv:
                 return rv
 
     def untilFalse(self, *pargs, **kwargs):
@@ -95,6 +96,7 @@ class Event(set):
             return newvals
         else:
             return pargs
+
 
 class Events:
     """
