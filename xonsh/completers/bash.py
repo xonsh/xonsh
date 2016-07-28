@@ -7,9 +7,12 @@ import pathlib
 import builtins
 import subprocess
 
-from xonsh.platform import ON_WINDOWS
+import xonsh.lazyasd as xl
+import xonsh.platform as xp
 
-RE_DASHF = re.compile(r'-F\s+(\w+)')
+
+RE_DASHF = xl.LazyObject(lambda: re.compile(r'-F\s+(\w+)'),
+                         globals(), 'RE_DASHF')
 
 INITED = False
 
@@ -30,13 +33,6 @@ COMP_CWORD={n}
 {func} {cmd} {prefix} {prev}
 for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 """
-
-
-if ON_WINDOWS:
-    from xonsh.platform import windows_bash_command
-    BASH_COMMAND = windows_bash_command()
-else:
-    BASH_COMMAND = 'bash'
 
 
 def update_bash_completion():
@@ -113,7 +109,7 @@ def complete_from_bash(prefix, line, begidx, endidx, ctx):
         end=endidx + 1, prefix=prefix, prev=shlex.quote(prev))
     try:
         out = subprocess.check_output(
-            [BASH_COMMAND], input=script, universal_newlines=True,
+            [xp.bash_command()], input=script, universal_newlines=True,
             stderr=subprocess.PIPE, env=builtins.__xonsh_env__.detype())
     except (subprocess.CalledProcessError, FileNotFoundError):
         out = ''
@@ -155,7 +151,7 @@ def _load_bash_complete_files():
     func_files = {}
     for line in out.splitlines():
         parts = line.split()
-        if ON_WINDOWS:
+        if xp.ON_WINDOWS:
             parts = [parts[0], ' '.join(parts[2:])]
         func_files[parts[0]] = parts[-1]
     BASH_COMPLETE_FILES = {
@@ -168,8 +164,9 @@ def _load_bash_complete_files():
 def _source_completions(source):
     try:
         return subprocess.check_output(
-            [BASH_COMMAND], input='\n'.join(source), universal_newlines=True,
-            env=builtins.__xonsh_env__.detype(), stderr=subprocess.DEVNULL)
+            [xp.bash_command()], input='\n'.join(source),
+            universal_newlines=True, env=builtins.__xonsh_env__.detype(),
+            stderr=subprocess.DEVNULL)
     except FileNotFoundError:
         return ''
 

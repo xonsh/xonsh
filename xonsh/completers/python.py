@@ -1,26 +1,34 @@
+"""Completers for Python code"""
 import re
 import sys
 import inspect
 import builtins
 import importlib
+import collections.abc as abc
 
-from collections.abc import Iterable
+import xonsh.tools as xt
+import xonsh.lazyasd as xl
 
-from xonsh.tools import subexpr_from_unbalanced
 from xonsh.completers.tools import get_filter_function
 
-RE_ATTR = re.compile(r'([^\s\(\)]+(\.[^\s\(\)]+)*)\.(\w*)$')
 
-XONSH_TOKENS = {
-    'and ', 'as ', 'assert ', 'break', 'class ', 'continue', 'def ', 'del ',
-    'elif ', 'else', 'except ', 'finally:', 'for ', 'from ', 'global ',
-    'import ', 'if ', 'in ', 'is ', 'lambda ', 'nonlocal ', 'not ', 'or ',
-    'pass', 'raise ', 'return ', 'try:', 'while ', 'with ', 'yield ', '+', '-',
-    '/', '//', '%', '**', '|', '&', '~', '^', '>>', '<<', '<', '<=', '>', '>=',
-    '==', '!=', '->', '=', '+=', '-=', '*=', '/=', '%=', '**=', '>>=', '<<=',
-    '&=', '^=', '|=', '//=', ',', ';', ':', '?', '??', '$(', '${', '$[', '..',
-    '...', '![', '!(', '@(', '@$(', '@'
-}
+@xl.lazyobject
+def RE_ATTR():
+    return re.compile(r'([^\s\(\)]+(\.[^\s\(\)]+)*)\.(\w*)$')
+
+
+@xl.lazyobject
+def XONSH_TOKENS():
+    return {
+        'and ', 'as ', 'assert ', 'break', 'class ', 'continue', 'def ', 'del ',
+        'elif ', 'else', 'except ', 'finally:', 'for ', 'from ', 'global ',
+        'import ', 'if ', 'in ', 'is ', 'lambda ', 'nonlocal ', 'not ', 'or ',
+        'pass', 'raise ', 'return ', 'try:', 'while ', 'with ', 'yield ', '+',
+        '-', '/', '//', '%', '**', '|', '&', '~', '^', '>>', '<<', '<', '<=',
+        '>', '>=', '==', '!=', '->', '=', '+=', '-=', '*=', '/=', '%=', '**=',
+        '>>=', '<<=', '&=', '^=', '|=', '//=', ',', ';', ':', '?', '??', '$(',
+        '${', '$[', '..', '...', '![', '!(', '@(', '@$(', '@'
+        }
 
 
 def complete_python(prefix, line, start, end, ctx):
@@ -60,9 +68,9 @@ def attr_complete(prefix, ctx, filter_func):
     if m is None:
         return attrs
     expr, attr = m.group(1, 3)
-    expr = subexpr_from_unbalanced(expr, '(', ')')
-    expr = subexpr_from_unbalanced(expr, '[', ']')
-    expr = subexpr_from_unbalanced(expr, '{', '}')
+    expr = xt.subexpr_from_unbalanced(expr, '(', ')')
+    expr = xt.subexpr_from_unbalanced(expr, '[', ']')
+    expr = xt.subexpr_from_unbalanced(expr, '{', '}')
     _ctx = None
     xonsh_safe_eval = builtins.__xonsh_execer__.eval
     try:
@@ -89,7 +97,7 @@ def attr_complete(prefix, ctx, filter_func):
         a = getattr(val, opt)
         if callable(a):
             rpl = opt + '('
-        elif isinstance(a, Iterable):
+        elif isinstance(a, abc.Iterable):
             rpl = opt + '['
         else:
             rpl = opt

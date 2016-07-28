@@ -1,3 +1,4 @@
+"""Xonsh completer tools."""
 import builtins
 import textwrap
 
