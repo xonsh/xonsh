@@ -22,7 +22,8 @@ from xonsh.tools import (XonshError, argvquote, escape_windows_cmd_string,
                          to_bool)
 from xonsh.xontribs import xontribs_main
 from xonsh.xoreutils import _which
-from xonsh.completers._aliases import completer_alias
+
+import xonsh.completers._aliases as xca
 
 
 class Aliases(abc.MutableMapping):
@@ -507,7 +508,7 @@ def make_default_aliases():
         'ipynb': ['jupyter', 'notebook', '--no-browser'],
         'which': which,
         'xontrib': xontribs_main,
-        'completer': completer_alias
+        'completer': xca.completer_alias
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.
