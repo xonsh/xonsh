@@ -396,12 +396,14 @@ def which(args, stdin=None, stdout=None, stderr=None):
         # skip alias check if user asks to skip
         if (arg in builtins.aliases and not pargs.skip):
             if pargs.plain or not pargs.verbose:
-                if isinstance(builtins.aliases[arg], list):
+                if not callable(builtins.aliases[arg]):
                     print(' '.join(builtins.aliases[arg]), file=stdout)
                 else:
                     print(arg, file=stdout)
             else:
                 print("aliases['{}'] = {}".format(arg, builtins.aliases[arg]), file=stdout)
+                if callable(builtins.aliases[arg]):
+                    builtins.__xonsh_superhelp__(builtins.aliases[arg])
             nmatches += 1
             if not pargs.all:
                 continue
