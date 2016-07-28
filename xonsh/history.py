@@ -9,6 +9,7 @@ import uuid
 import argparse
 import builtins
 import functools
+import itertools
 import operator
 import threading
 import collections
@@ -414,6 +415,13 @@ def _hist_get_session(session='session', location=None):
 
 def _hist_get_portion(commands, slices):
     """Yield from portions of history commands. """
+    if len(slices) == 1:
+        s = ensure_slice(slices[0])
+        try:
+            yield from itertools.islice(commands, s.start, s.stop, s.step)
+            return
+        except ValueError: # islice failed
+            pass
     commands = list(commands)
     for s in slices:
         s = ensure_slice(s)
