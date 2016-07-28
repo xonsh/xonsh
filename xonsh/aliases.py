@@ -24,7 +24,6 @@ from xonsh.xontribs import xontribs_main
 from xonsh.xoreutils import _which
 from xonsh.completers._aliases import completer_alias
 
-
 class Aliases(abc.MutableMapping):
     """Represents a location to hold and look up aliases."""
 
@@ -402,6 +401,7 @@ def which(args, stdin=None, stdout=None, stderr=None):
                     print(arg, file=stdout)
             else:
                 print("aliases['{}'] = {}".format(arg, builtins.aliases[arg]), file=stdout)
+                builtins.__xonsh_superhelp__(builtins.aliases[arg])
             nmatches += 1
             if not pargs.all:
                 continue
