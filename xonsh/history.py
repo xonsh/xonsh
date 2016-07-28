@@ -302,11 +302,10 @@ def _curr_session_parser(hist=None, **kwargs):
         hist = builtins.__xonsh_history__
     if not hist:
         return None
-    start_times = [start for start, end in hist.tss]
-    names = [name[:-1] if name.endswith('\n') else name
-             for name in hist.inps]
-    commands = enumerate(zip(names, start_times))
-    return [(c, t, ind) for ind, (c, t) in commands]
+    start_times = (start for start, end in hist.tss)
+    names = (name.rstrip() for name in hist.inps)
+    for ind, (c, t) in enumerate(zip(names, start_times)):
+        yield (ind, c, t)
 
 
 def _zsh_hist_parser(location=None, **kwargs):
