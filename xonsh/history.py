@@ -306,10 +306,11 @@ def _curr_session_parser(hist=None, **kwargs):
     start_times = (start for start, end in hist.tss)
     names = (name.rstrip() for name in hist.inps)
     for ind, (c, t) in enumerate(zip(names, start_times)):
-        yield (ind, c, t)
+        yield (c, t, ind)
 
 
 def _zsh_hist_parser(location=None, **kwargs):
+    """Yield commands from zsh history file"""
     default_location = os.path.join('~', '.zsh_history')
     location_list = [os.path.join('~', '.zshrc'),
                      os.path.join('~', '.zprofile')]
@@ -317,28 +318,25 @@ def _zsh_hist_parser(location=None, **kwargs):
         location = _find_histfile_var(location_list, default_location)
     z_hist_formatted = []
     if location and os.path.isfile(location):
-        with open(location, 'r', errors='backslashreplace') as z_file:
-            z_txt = z_file.read()
-            z_hist = z_txt.splitlines()
-            if z_hist:
-                for ind, line in enumerate(z_hist):
-                    try:
-                        start_time, command = line.split(';', 1)
-                    except ValueError:
-                        # Invalid history entry
-                        continue
-                    try:
-                        start_time = float(start_time.split(':')[1])
-                    except ValueError:
-                        start_time = -1
-                    z_hist_formatted.append((command, start_time, ind))
-                return z_hist_formatted
+        with open(location, 'r', errors='backslashreplace') as zsh_hist:
+            for ind, line in enumerate(zsh_hist):
+                try:
+                    start_time, command = line.split(';', 1)
+                except ValueError:
+                    # Invalid history entry
+                    continue
+                try:
+                    start_time = float(start_time.split(':')[1])
+                except ValueError:
+                    start_time = -1
+                yield (command, start_time, ind)
 
     else:
         print("No zsh history file found", file=sys.stderr)
 
 
 def _bash_hist_parser(location=None, **kwargs):
+    """Yield commands from bash history file"""
     default_location = os.path.join('~', '.bash_history')
     location_list = [os.path.join('~', '.bashrc'),
                      os.path.join('~', '.bash_profile')]
@@ -346,13 +344,9 @@ def _bash_hist_parser(location=None, **kwargs):
         location = _find_histfile_var(location_list, default_location)
     bash_hist_formatted = []
     if location and os.path.isfile(location):
-        with open(location, 'r', errors='backslashreplace') as bash_file:
-            b_txt = bash_file.read()
-            bash_hist = b_txt.splitlines()
-            if bash_hist:
-                for ind, command in enumerate(bash_hist):
-                    bash_hist_formatted.append((command, 0.0, ind))
-                return bash_hist_formatted
+        with open(location, 'r', errors='backslashreplace') as bash_hist:
+            for ind, command in enumerate(bash_hist):
+                yield (command, 0.0, ind)
     else:
         print("No bash history file", file=sys.stderr)
 
@@ -409,8 +403,7 @@ def _hist_create_parser():
 def _hist_get_session(session='session', location=None):
     """Yield commands from history."""
     cmds = _HIST_SESSIONS[session](location=location)
-    if cmds:
-        yield from cmds
+    yield from cmds
 
 
 def _hist_get_portion(commands, slices):
@@ -464,19 +457,20 @@ def _hist_get(session='session', slices=None,
         cmds = _hist_get_portion(cmds, slices)
     if start_time or end_time:
         cmds = _hist_filter_ts(cmds, start_time, end_time)
-    return list(cmds)
+    return cmds
 
 
 def _hist_show(ns, *args, **kwargs):
     """Show the requested portion of shell history. Accepts same parameters
     with `_hist_get`."""
     try:
-        commands = _hist_get(ns.session, ns.slices, **kwargs)
+        commands = list(_hist_get(ns.session, ns.slices, **kwargs))
     except ValueError as err:
         print(err, file=sys.stderr)
         return
     if not commands:
         return
+    commands = list(commands)
     if ns.reverse:
         commands = list(reversed(commands))
     digits = len(str(max([i for c, t, i in commands])))
@@ -675,7 +669,7 @@ def _hist_parse_args(args):
         args = ['show']
     elif args[0] in _HIST_SESSIONS:
         print("Use the 'show' subcommand to get history sessions.", file=sys.stderr)
-        raise SystemExit
+        return
     elif args[0] not in ['-h', '--help'] and args[0] not in _HIST_MAIN_ACTIONS:
         args.insert(0, 'show')
     if (args[0] == 'show'
@@ -690,4 +684,5 @@ def history_main(args=None, stdin=None):
     """This is the history command entry point."""
     hist = builtins.__xonsh_history__
     ns = _hist_parse_args(args)
-    _HIST_MAIN_ACTIONS[ns.action](ns, hist)
+    if ns:
+        _HIST_MAIN_ACTIONS[ns.action](ns, hist)
