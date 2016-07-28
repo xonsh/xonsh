@@ -246,7 +246,7 @@ class BaseShell(object):
             with open(1, 'wb', closefd=False) as f:
                 # prevent xonsh from answering interative questions
                 # on the next command by writing the title
-                f.write("\x1b]2;{0}\x07".format(t).encode())
+                f.write("\x1b]0;{0}\x07".format(t).encode())
                 f.flush()
 
     @property

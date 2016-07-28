@@ -120,13 +120,13 @@ def dirty_version():
         return False
     _version = _version.decode('ascii')
     try:
-        base, N, sha = _version.strip().split('-')
-    except ValueError:  # on base release
+        _, N, sha = _version.strip().split('-')
+    except ValueError:  # tag name may contain "-"
         open('xonsh/dev.githash', 'w').close()
         print('failed to parse git version', file=sys.stderr)
         return False
     sha = sha.strip('g')
-    replace_version(base, N)
+    replace_version(N)
     with open('xonsh/dev.githash', 'w') as f:
         f.write(sha)
     print('wrote git version: ' + sha, file=sys.stderr)
@@ -136,14 +136,16 @@ def dirty_version():
 ORIGINAL_VERSION_LINE = None
 
 
-def replace_version(base, N):
+def replace_version(N):
     """Replace version in `__init__.py` with devN suffix"""
     global ORIGINAL_VERSION_LINE
     with open('xonsh/__init__.py', 'r') as f:
         raw = f.read()
     lines = raw.splitlines()
+    msg_assert = '__version__ must be the first line of the __init__.py'
+    assert '__version__' in lines[0], msg_assert
     ORIGINAL_VERSION_LINE = lines[0]
-    lines[0] = "__version__ = '{}.dev{}'".format(base, N)
+    lines[0] = lines[0].rstrip(" '") + ".dev{}'".format(N)
     upd = '\n'.join(lines) + '\n'
     with open('xonsh/__init__.py', 'w') as f:
         f.write(upd)
@@ -151,6 +153,8 @@ def replace_version(base, N):
 
 def restore_version():
     """If we touch the version in __init__.py discard changes after install."""
+    if ORIGINAL_VERSION_LINE is None:
+        return
     with open('xonsh/__init__.py', 'r') as f:
         raw = f.read()
     lines = raw.splitlines()

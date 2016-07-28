@@ -22,7 +22,8 @@ from xonsh.tools import (XonshError, argvquote, escape_windows_cmd_string,
                          to_bool)
 from xonsh.xontribs import xontribs_main
 from xonsh.xoreutils import _which
-from xonsh.completers._aliases import completer_alias
+
+import xonsh.completers._aliases as xca
 
 
 class Aliases(abc.MutableMapping):
@@ -282,9 +283,8 @@ def xexec(args, stdin=None):
     """Replaces current process with command specified and passes in the
     current xonsh environment.
     """
-    env = builtins.__xonsh_env__
-    denv = env.detype()
     if len(args) > 0:
+        denv = builtins.__xonsh_env__.detype()
         try:
             os.execvpe(args[0], args, denv)
         except FileNotFoundError as e:
@@ -397,12 +397,14 @@ def which(args, stdin=None, stdout=None, stderr=None):
         # skip alias check if user asks to skip
         if (arg in builtins.aliases and not pargs.skip):
             if pargs.plain or not pargs.verbose:
-                if isinstance(builtins.aliases[arg], list):
+                if not callable(builtins.aliases[arg]):
                     print(' '.join(builtins.aliases[arg]), file=stdout)
                 else:
                     print(arg, file=stdout)
             else:
                 print("aliases['{}'] = {}".format(arg, builtins.aliases[arg]), file=stdout)
+                if callable(builtins.aliases[arg]):
+                    builtins.__xonsh_superhelp__(builtins.aliases[arg])
             nmatches += 1
             if not pargs.all:
                 continue
@@ -508,7 +510,7 @@ def make_default_aliases():
         'ipynb': ['jupyter', 'notebook', '--no-browser'],
         'which': which,
         'xontrib': xontribs_main,
-        'completer': completer_alias
+        'completer': xca.completer_alias
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.

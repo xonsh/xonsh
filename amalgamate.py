@@ -129,7 +129,7 @@ class GlobalNames(object):
             self.entry(name, lineno)
 
     def _add_importfrom(self, node):
-        pkg, _, _ = node.module.rpartition('.')
+        pkg, _ = resolve_package_module(node.module, self.pkg, node.level)
         if pkg == self.pkg:
             return
         lineno = node.lineno
@@ -168,12 +168,45 @@ class GlobalNames(object):
             self.add(child, istopnode=True)
 
 
+def module_is_package(module, pkg, level):
+    """Returns whether or not the module name refers to the package."""
+    if level == 0:
+        return module == pkg
+    elif level == 1:
+        return module is None
+    else:
+        return False
+
+
+def module_from_package(module, pkg, level):
+    """Returns whether or not a module is from the package."""
+    if level == 0:
+        return module.startswith(pkg + '.')
+    elif level == 1:
+        return True
+    else:
+        return False
+
+
+def resolve_package_module(module, pkg, level, default=None):
+    """Returns a 2-tuple of package and module name, even for relative
+    imports
+    """
+    if level == 0:
+        p, _, m = module.rpartition('.')
+    elif level == 1:
+        p = pkg
+        m = module or default
+    else:
+        p = m = None
+    return p, m
+
+
 def make_node(name, pkg, allowed, glbnames):
     """Makes a node by parsing a file and traversing its AST."""
     raw = SOURCES[pkg, name]
     tree = parse(raw, filename=name)
     # we only want to deal with global import statements
-    pkgdot = pkg + '.'
     pkgdeps = set()
     extdeps = set()
     futures = set()
@@ -188,13 +221,11 @@ def make_node(name, pkg, allowed, glbnames):
                 else:
                     extdeps.add(n.name)
         elif isinstance(a, ImportFrom):
-            if a.module == pkg:
+            if module_is_package(a.module, pkg, a.level):
                 pkgdeps.update(n.name for n in a.names if n.name in allowed)
-            elif not a.module or a.module.startswith(pkgdot):
-                if a.module is None:
-                    p, dot, m = pkg, ".", a.names[0].name
-                else:
-                    p, dot, m = a.module.rpartition('.')
+            elif module_from_package(a.module, pkg, a.level):
+                p, m = resolve_package_module(a.module, pkg, a.level,
+                                              default=a.names[0].name)
                 if p == pkg and m in allowed:
                     pkgdeps.add(m)
                 else:
@@ -263,7 +294,8 @@ class _LazyModule(_ModuleType):
     @classmethod
     def load(cls, pkg, mod, asname=None):
         if mod in _modules:
-            return _modules[pkg]
+            key = pkg if asname is None else mod
+            return _modules[key]
         else:
             return cls(pkg, mod, asname)
 
@@ -340,7 +372,6 @@ def format_from_import(names):
 
 def rewrite_imports(name, pkg, order, imps):
     """Rewrite the global imports in the file given the amalgamation."""
-    pkgdot = pkg + '.'
     raw = SOURCES[pkg, name]
     tree = parse(raw, filename=name)
     replacements = []  # list of (startline, stopline, str) tuples
@@ -370,21 +401,17 @@ def rewrite_imports(name, pkg, order, imps):
                 s = format_lazy_import(keep)
             replacements.append((start, stop, s))
         elif isinstance(a, ImportFrom):
-            if not a.module:
-                a.module = pkg
-                p, dot, m = pkg, ".", ""
-            else:
-                p, dot, m = a.module.rpartition('.')
-            if a.module == pkg:
+            p, m = resolve_package_module(a.module, pkg, a.level, default='')
+            if module_is_package(a.module, pkg, a.level):
                 for n in a.names:
                     if n.name in order:
                         msg = ('Cannot amalgamate import of '
                                'amalgamated module:\n\n  from {0} import {1}\n'
                                '\nin {0}/{2}.py').format(pkg, n.name, name)
                         raise RuntimeError(msg)
-            elif a.module.startswith(pkgdot) and p == pkg and m in order:
+            elif p == pkg and m in order:
                 replacements.append((start, stop,
-                                     '# amalgamated ' + a.module + '\n'))
+                                     '# amalgamated ' + p + '.' + m + '\n'))
             elif a.module == '__future__':
                 replacements.append((start, stop,
                                      '# amalgamated __future__ directive\n'))

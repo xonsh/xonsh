@@ -482,7 +482,22 @@ def _hist_show(ns, *args, **kwargs):
 
 # Interface to History
 class History(object):
-    """Xonsh session history."""
+    """Xonsh session history.
+
+    Attributes
+    ----------
+    rtns : sequence of ints
+        The return of the command (ie, 0 on success)
+    inps : sequence of strings
+        The command as typed by the user, including newlines
+    tss : sequence of two-tuples of floats
+        The timestamps of when the command started and finished, including
+        fractions
+    outs : sequence of strings
+        The output of the command, if xonsh is configured to save it
+
+    In all of these sequences, index 0 is the oldest and -1 (the last item) is the newest.
+    """
 
     def __init__(self, filename=None, sessionid=None, buffersize=100, gc=True,
                  **meta):
