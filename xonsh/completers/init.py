@@ -14,7 +14,7 @@ from xonsh.completers.completer import complete_completer
 
 
 def default_completers():
-    """Creates a copy of the default completers.    """
+    """Creates a copy of the default completers."""
     return collections.OrderedDict([
         ('python_mode', complete_python_mode),
         ('base', complete_base),

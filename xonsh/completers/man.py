@@ -4,13 +4,22 @@ import pickle
 import builtins
 import subprocess
 
+import xonsh.lazyasd as xl
+
 from xonsh.completers.tools import get_filter_function
 
 OPTIONS = None
 OPTIONS_PATH = None
 
-SCRAPE_RE = re.compile(r'^(?:\s*(?:-\w|--[a-z0-9-]+)[\s,])+', re.M)
-INNER_OPTIONS_RE = re.compile(r'-\w|--[a-z0-9-]+')
+
+@xl.lazyobject
+def SCRAPE_RE():
+    return re.compile(r'^(?:\s*(?:-\w|--[a-z0-9-]+)[\s,])+', re.M)
+
+
+@xl.lazyobject
+def INNER_OPTIONS_RE():
+    return re.compile(r'-\w|--[a-z0-9-]+')
 
 
 def complete_from_man(prefix, line, start, end, ctx):
