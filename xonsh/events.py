@@ -13,10 +13,11 @@ class Event(set):
     A given event that handlers can register against.
 
     Acts as a ``set`` for registered handlers.
+
+    Note that ordering is never guarenteed.
     """
     def __init__(self, doc=None):
         self.__doc__ = doc
-        self._pman = parent
 
     def handler(self, callable):
         """
@@ -78,7 +79,7 @@ class Event(set):
         passed, or nothing at all.
         """
         calls = self.calleach(*pargs, **kwargs)
-        newvals = calls.next()
+        newvals = next(calls)
         while True:
             if newvals is not None:
                 if len(pargs) == 1:
@@ -95,7 +96,7 @@ class Event(set):
         else:
             return pargs
 
-def Events:
+class Events:
     """
     Container for all events in a system.
 
