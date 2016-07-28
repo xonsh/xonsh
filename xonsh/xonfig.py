@@ -337,6 +337,10 @@ def _xonfig_format_json(data):
 
 def _info(ns):
     env = builtins.__xonsh_env__
+    try:
+        ply.__version__ = ply.__version__
+    except AttributeError:
+        ply.__version__ = '3.8'
     data = [
         ('xonsh', XONSH_VERSION),
         ('Git SHA', githash()),
