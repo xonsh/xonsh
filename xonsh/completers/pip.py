@@ -1,15 +1,15 @@
 import re
 import subprocess
 
-from xonsh.lazyasd import LazyObject, lazyobject
+import xonsh.lazyasd as xl
 
-PIP_RE = LazyObject(lambda: re.compile("pip(?:\d|\.)*"),
-                    globals(), 'PIP_RE')
-PIP_LIST_RE = LazyObject(lambda: re.compile("pip(?:\d|\.)* (?:uninstall|show)"),
-                         globals(), 'PIP_LIST_RE')
+PIP_RE = xl.LazyObject(lambda: re.compile("pip(?:\d|\.)*"),
+                       globals(), 'PIP_RE')
+PIP_LIST_RE = xl.LazyObject(lambda: re.compile("pip(?:\d|\.)* (?:uninstall|show)"),
+                            globals(), 'PIP_LIST_RE')
 
 
-@lazyobject
+@xl.lazyobject
 def ALL_COMMANDS():
     help_text = str(subprocess.check_output(['pip', '--help'],
                                             stderr=subprocess.DEVNULL))
