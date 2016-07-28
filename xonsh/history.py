@@ -316,7 +316,6 @@ def _zsh_hist_parser(location=None, **kwargs):
                      os.path.join('~', '.zprofile')]
     if location is None:
         location = _find_histfile_var(location_list, default_location)
-    z_hist_formatted = []
     if location and os.path.isfile(location):
         with open(location, 'r', errors='backslashreplace') as zsh_hist:
             for ind, line in enumerate(zsh_hist):
@@ -342,7 +341,6 @@ def _bash_hist_parser(location=None, **kwargs):
                      os.path.join('~', '.bash_profile')]
     if location is None:
         location = _find_histfile_var(location_list, default_location)
-    bash_hist_formatted = []
     if location and os.path.isfile(location):
         with open(location, 'r', errors='backslashreplace') as bash_hist:
             for ind, command in enumerate(bash_hist):
@@ -413,7 +411,7 @@ def _hist_get_portion(commands, slices):
         try:
             yield from itertools.islice(commands, s.start, s.stop, s.step)
             return
-        except ValueError: # islice failed
+        except ValueError:  # islice failed
             pass
     commands = list(commands)
     for s in slices:
