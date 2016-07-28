@@ -294,7 +294,7 @@ class _LazyModule(_ModuleType):
     @classmethod
     def load(cls, pkg, mod, asname=None):
         if mod in _modules:
-            return _modules[pkg]
+            return _modules[mod]
         else:
             return cls(pkg, mod, asname)
 
