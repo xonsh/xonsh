@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 """Tests the xonsh history."""
 # pylint: disable=protected-access
-# TODO: Remove the following pylint directive when it correctly handles calls
-# to nose assert_xxx functions.
-# pylint: disable=no-value-for-parameter
-from __future__ import unicode_literals, print_function
 import io
 import os
 import sys
@@ -93,9 +89,9 @@ def test_show_cmd(inp, commands, offset, hist, xonsh_builtins, capsys):
     for ts,cmd in enumerate(cmds):  # populate the shell history
         hist.append({'inp': cmd, 'rtn': 0, 'ts':(ts+1, ts+1.5)})
 
-    exp = ('{}: {}'.format(base_idx + idx * step, cmd)
-           for idx, cmd in enumerate(list(commands)))
-    exp = '\n'.join(exp)
+    # exp = ('{}: {}'.format(base_idx + idx * step, cmd)
+    #        for idx, cmd in enumerate(list(commands)))
+    exp = '\n'.join(commands)
 
     history.history_main(shlex.split(inp))
     out, err = capsys.readouterr()
@@ -167,16 +163,21 @@ def test_parse_args_help(args, capsys):
 
 
 @pytest.mark.parametrize('args, exp', [
-    ('', ('show', 'session', [])),
-    ('show', ('show', 'session', [])),
-    ('show session', ('show', 'session', [])),
-    ('show session 15', ('show', 'session', ['15'])),
-    ('show bash 3:5 15:66', ('show', 'bash', ['3:5', '15:66'])),
-    ('show zsh 3 5:6 16 9:3', ('show', 'zsh', ['3', '5:6', '16', '9:3'])),
+    ('', ('show', 'session', [], False, False)),
+    ('show', ('show', 'session', [], False, False)),
+    ('show 15', ('show', 'session', ['15'], False, False)),
+    ('show bash 3:5 15:66', ('show', 'bash', ['3:5', '15:66'], False, False)),
+    ('show -r', ('show', 'session', [], False, True)),
+    ('show -rn bash', ('show', 'bash', [], True, True)),
+    ('show -n -r -30:20', ('show', 'session', ['-30:20'], True, True)),
+    ('show -n zsh 1:2:3', ('show', 'zsh', ['1:2:3'], True, False))
     ])
 def test_parser_show(args, exp):
-    args = _hist_parse_args(shlex.split(args))
-    action, session, slices = exp
-    assert args.action == action
-    assert args.session == session
-    assert args.slices == slices
+    # use dict instead of argparse.Namespace for pretty pytest diff
+    exp_ns = {'action': exp[0],
+              'session': exp[1],
+              'slices': exp[2],
+              'numerate': exp[3],
+              'reverse': exp[4]}
+    ns = _hist_parse_args(shlex.split(args))
+    assert ns.__dict__ == exp_ns
