@@ -1,7 +1,7 @@
 **Added:** 
 
 * Added xontribs: 
-  * `z (https://github.com/astronouth7303/xontrib-z) <https://github.com/astronouth7303/xontrib-z>`_
+  * `z (Tracks your most used directories, based on 'frecency'.) <https://github.com/astronouth7303/xontrib-z>`_
 
 **Changed:** None
 
