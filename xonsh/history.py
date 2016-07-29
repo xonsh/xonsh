@@ -426,7 +426,7 @@ def _hist_filter_ts(commands, start_time=None, end_time=None):
     if end_time is None:
         end_time = float('inf')
     for cmd in commands:
-        if end_time > cmd[1] > start_time:
+        if start_time <= cmd[1] < end_time:
             yield cmd
 
 
@@ -447,7 +447,7 @@ def _hist_get(session='session', slices=None,
 
     Returns
     -------
-    list
+    generator
        A filtered list of commands
     """
     cmds = _hist_get_session(session, location)
@@ -462,14 +462,14 @@ def _hist_show(ns, *args, **kwargs):
     """Show the requested portion of shell history. Accepts same parameters
     with `_hist_get`."""
     try:
-        commands = _hist_get(ns.session, ns.slices, **kwargs)
+        commands = list(_hist_get(ns.session, ns.slices, **kwargs))
     except ValueError as err:
         print("history: error: {}".format(err), file=sys.stderr)
         return
     if not commands:
         return
     if ns.reverse:
-        commands = reversed(list(commands))
+        commands = reversed(commands)
     if not ns.numerate:
         for c, _, _ in commands:
             print(c)
