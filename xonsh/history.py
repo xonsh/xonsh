@@ -359,6 +359,8 @@ def _hist_create_parser():
     show.add_argument('-r', dest='reverse', default=False,
                       action='store_true',
                       help='reverses the direction')
+    show.add_argument('-n', dest='numerate', default=False, action='store_true',
+                      help='numerate each command')
     show.add_argument('session', nargs='?', choices=_HIST_SESSIONS.keys(), default='session',
                       help='Choose a history session, defaults to current session')
     show.add_argument('slices', nargs=argparse.REMAINDER, default=[],
@@ -456,24 +458,24 @@ def _hist_get(session='session', slices=None,
     return cmds
 
 
-def _hist_show(ns, *args, numerate=True, **kwargs):
+def _hist_show(ns, *args, **kwargs):
     """Show the requested portion of shell history. Accepts same parameters
     with `_hist_get`."""
     try:
-        commands = list(_hist_get(ns.session, ns.slices, **kwargs))
+        commands = _hist_get(ns.session, ns.slices, **kwargs)
     except ValueError as err:
-        print("history: error: {}, try 'history -h'".format(err), file=sys.stderr)
+        print("history: error: {}".format(err), file=sys.stderr)
         return
     if not commands:
         return
-    commands = list(commands)
     if ns.reverse:
-        commands = list(reversed(commands))
-    # digits = len(str(max([i for c, t, i in commands])))
-    for c, t, i in commands:
-        if numerate:
-            print(i, end=': ')
-        print(c)
+        commands = reversed(list(commands))
+    if not ns.numerate:
+        for c, _, _ in commands:
+            print(c)
+    else:
+        for c, _, i in commands:
+            print('{}: {}'.format(i, c))
 
 
 # Interface to History
@@ -668,7 +670,7 @@ def _hist_parse_args(args):
         args.insert(0, 'show')
     if (args[0] == 'show'
        and len(args) > 1
-       and args[1] not in ['-h', '--help', '-r']
+       and args[1] not in ['-h', '--help', '-r', '-n']
        and args[1] not in _HIST_SESSIONS):
         args.insert(1, 'session')
     return parser.parse_args(args)
