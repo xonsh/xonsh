@@ -279,19 +279,15 @@ def _all_xonsh_parser(**kwargs):
 
     files = [os.path.join(data_dir, f) for f in os.listdir(data_dir)
              if f.startswith('xonsh-') and f.endswith('.json')]
-    file_hist = []
     for f in files:
         try:
             json_file = LazyJSON(f, reopen=False)
-            file_hist.append(json_file.load()['cmds'])
         except ValueError:
             # Invalid json file
             pass
-    commands = [(c['inp'][:-1] if c['inp'].endswith('\n') else c['inp'],
-                 c['ts'][0])
-                for commands in file_hist for c in commands if c]
-    commands.sort(key=operator.itemgetter(1))
-    return [(c, t, ind) for ind, (c, t) in enumerate(commands)]
+        commands = ((c['inp'].rstrip(), c['ts'][0]) for c in json_file.load()['cmds'])
+        for ind, (c, t) in enumerate(commands):
+            yield (c, t, ind)
 
 
 def _curr_session_parser(hist=None, **kwargs):
