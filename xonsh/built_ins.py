@@ -8,7 +8,6 @@ import os
 import re
 import sys
 import time
-import shlex
 import signal
 import atexit
 import inspect
