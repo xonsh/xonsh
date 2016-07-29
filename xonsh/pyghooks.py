@@ -4,15 +4,15 @@ import os
 import re
 import string
 import builtins
-import importlib
 from warnings import warn
 from collections import ChainMap
 from collections.abc import MutableMapping
 
 # must come before pygments imports
 from xonsh.lazyasd import load_module_in_background
+
 load_module_in_background('pkg_resources', debug='XONSH_DEBUG',
-    replacements={'pygments.plugin': 'pkg_resources'})
+                          replacements={'pygments.plugin': 'pkg_resources'})
 
 from pygments.lexer import inherit, bygroups, using, this
 from pygments.lexers.shell import BashLexer
@@ -23,7 +23,7 @@ from pygments.style import Style
 from pygments.styles import get_style_by_name
 import pygments.util
 
-from xonsh.lazyasd import LazyObject, lazyobject, LazyDict
+from xonsh.lazyasd import LazyObject, LazyDict
 from xonsh.tools import (ON_WINDOWS, intensify_colors_for_cmd_exe,
                          expand_gray_colors_for_cmd_exe)
 from xonsh.tokenize import SearchPath
@@ -103,6 +103,7 @@ RE_BACKGROUND = LazyObject(lambda: re.compile('(BG#|BGHEX|BACKGROUND)'),
 def norm_name(name):
     """Normalizes a color name."""
     return name.replace('#', 'HEX').replace('BGHEX', 'BACKGROUND_HEX')
+
 
 def color_by_name(name, fg=None, bg=None):
     """Converts a color name to a color token, foreground name,
@@ -633,9 +634,9 @@ def _monokai_style():
     return style
 
 
-#############################################################
-#############   Auto-generated below this line   ############
-#############################################################
+######################################
+#   Auto-generated below this line   #
+######################################
 def _algol_style():
     style = {
         Color.BLACK: '#666',
@@ -659,6 +660,7 @@ def _algol_style():
     _expand_style(style)
     return style
 
+
 def _algol_nu_style():
     style = {
         Color.BLACK: '#666',
@@ -681,6 +683,7 @@ def _algol_nu_style():
         }
     _expand_style(style)
     return style
+
 
 def _autumn_style():
     style = {

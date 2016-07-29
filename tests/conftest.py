@@ -4,6 +4,7 @@ from tests.tools import DummyShell, sp, XonshBlockError
 import xonsh.built_ins
 from xonsh.built_ins import ensure_list_of_strs
 from xonsh.execer import Execer
+from xonsh.tools import XonshBlockError
 import glob
 
 

@@ -10,6 +10,9 @@ import importlib
 import importlib.util
 import collections.abc as abc
 
+__version__ = '0.1.1'
+
+
 class LazyObject(object):
 
     def __init__(self, load, ctx, name):
@@ -113,7 +116,6 @@ class LazyObject(object):
 def lazyobject(f):
     """Decorator for constructing lazy objects from a function."""
     return LazyObject(f, f.__globals__, f.__name__)
-
 
 
 class LazyDict(abc.MutableMapping):
@@ -249,7 +251,7 @@ class BackgroundModuleProxy(types.ModuleType):
             }
 
     def __getattribute__(self, name):
-        passthrough = frozenset({'__dct__','__class__', '__spec__'})
+        passthrough = frozenset({'__dct__', '__class__', '__spec__'})
         if name in passthrough:
             return super().__getattribute__(name)
         dct = self.__dct__
@@ -278,14 +280,19 @@ class BackgroundModuleLoader(threading.Thread):
 
     def run(self):
         # wait for other modules to stop being imported
-        i = 0
-        last = -6
-        hist = [-5, -4, -3, -2, -1]
-        while not all(last == x for x in hist):
+        # We assume that module loading is finished when sys.modules doesn't
+        # get longer in 5 consecutive 1ms waiting steps
+        counter = 0
+        last = -1
+        while counter < 5:
+            new = len(sys.modules)
+            if new == last:
+                counter += 1
+            else:
+                last = new
+                counter = 0
             time.sleep(0.001)
-            last = hist[i%5] = len(sys.modules)
-            i += 1
-        # now import pkg_resources properly
+        # now import module properly
         modname = importlib.util.resolve_name(self.name, self.package)
         if isinstance(sys.modules[modname], BackgroundModuleProxy):
             del sys.modules[modname]

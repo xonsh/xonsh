@@ -1,6 +1,6 @@
 **Added:**
 
-* ``vox remove`` command can remove multiple environments at once.
+* amalgamate.py now properly handles ``from __future__`` imports.
 
 **Changed:** None
 

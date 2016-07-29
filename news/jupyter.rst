@@ -6,8 +6,8 @@
 
 **Removed:** None
 
-**Fixed:**
+**Fixed:** 
 
-* Unrecognized ``$XONSH_COLOR_STYLE`` values don't crash terminal.
+* Completions in ``jupyter_kernel.py`` now use updated completion framework
 
 **Security:** None

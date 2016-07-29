@@ -1,25 +1,27 @@
 import os
-import re
 import ast
 import builtins
 
-from xonsh.platform import ON_WINDOWS
-from xonsh.tools import (subexpr_from_unbalanced, get_sep,
-                         check_for_partial_string, RE_STRING_START,
-                         iglobpath, levenshtein)
+import xonsh.tools as xt
+import xonsh.platform as xp
+import xonsh.lazyasd as xl
 
 from xonsh.completers.tools import get_filter_function
 
-CHARACTERS_NEED_QUOTES = ' `\t\r\n${}*()"\',?&'
-if ON_WINDOWS:
-    CHARACTERS_NEED_QUOTES += '%'
+
+@xl.lazyobject
+def CHARACTERS_NEED_QUOTES():
+    cnq = ' `\t\r\n${}*()"\',?&'
+    if xp.ON_WINDOWS:
+        cnq += '%'
+    return cnq
 
 
 def _path_from_partial_string(inp, pos=None):
     if pos is None:
         pos = len(inp)
     partial = inp[:pos]
-    startix, endix, quote = check_for_partial_string(partial)
+    startix, endix, quote = xt.check_for_partial_string(partial)
     _post = ""
     if startix is None:
         return None
@@ -33,7 +35,7 @@ def _path_from_partial_string(inp, pos=None):
             else:
                 return None
         string = partial[startix:endix]
-    end = re.sub(RE_STRING_START, '', quote)
+    end = xt.RE_STRING_START.sub('', quote)
     _string = string
     if not _string.endswith(end):
         _string = _string + end
@@ -54,19 +56,17 @@ def _normpath(p):
     and '/' at the end. On windows it does the same with backslashes
     """
     initial_dotslash = p.startswith(os.curdir + os.sep)
-    initial_dotslash |= (ON_WINDOWS and p.startswith(os.curdir + os.altsep))
+    initial_dotslash |= (xp.ON_WINDOWS and p.startswith(os.curdir + os.altsep))
     p = p.rstrip()
     trailing_slash = p.endswith(os.sep)
-    trailing_slash |= (ON_WINDOWS and p.endswith(os.altsep))
+    trailing_slash |= (xp.ON_WINDOWS and p.endswith(os.altsep))
     p = os.path.normpath(p)
     if initial_dotslash and p != '.':
         p = os.path.join(os.curdir, p)
     if trailing_slash:
         p = os.path.join(p, '')
-
-    if ON_WINDOWS and builtins.__xonsh_env__.get('FORCE_POSIX_PATHS'):
+    if xp.ON_WINDOWS and builtins.__xonsh_env__.get('FORCE_POSIX_PATHS'):
         p = p.replace(os.sep, os.altsep)
-
     return p
 
 
@@ -90,7 +90,7 @@ def _env(prefix):
 
 
 def _dots(prefix):
-    slash = get_sep()
+    slash = xt.get_sep()
     if slash == '\\':
         slash = ''
     if prefix in {'', '.'}:
@@ -108,8 +108,8 @@ def _add_cdpaths(paths, prefix):
     glob_sorted = env.get('GLOB_SORTED')
     for cdp in env.get('CDPATH'):
         test_glob = os.path.join(cdp, prefix) + '*'
-        for s in iglobpath(test_glob, ignore_case=(not csc),
-                           sort_result=glob_sorted):
+        for s in xt.iglobpath(test_glob, ignore_case=(not csc),
+                              sort_result=glob_sorted):
             if os.path.isdir(s):
                 paths.add(os.path.basename(s))
 
@@ -129,7 +129,7 @@ def _quote_paths(paths, start, end):
     space = ' '
     backslash = '\\'
     double_backslash = '\\\\'
-    slash = get_sep()
+    slash = xt.get_sep()
     orig_start = start
     orig_end = end
     for s in paths:
@@ -166,9 +166,9 @@ def _joinpath(path):
     elif len(path) == 0:
         return ''
     elif path == ('',):
-        return get_sep()
+        return xt.get_sep()
     elif path[0] == '':
-        return get_sep() + _normpath(os.path.join(*path))
+        return xt.get_sep() + _normpath(os.path.join(*path))
     else:
         return _normpath(os.path.join(*path))
 
@@ -177,7 +177,7 @@ def _splitpath(path):
     # convert a path into an intermediate tuple representation
     # if this tuple starts with '', it means that the path was an absolute path
     path = _normpath(path)
-    if path.startswith(get_sep()):
+    if path.startswith(xt.get_sep()):
         pre = ('', )
     else:
         pre = ()
@@ -227,7 +227,7 @@ def _expand_one(sofar, nextone, csc):
     glob_sorted = builtins.__xonsh_env__.get('GLOB_SORTED')
     for i in sofar:
         _glob = os.path.join(_joinpath(i), '*') if i is not None else '*'
-        for j in iglobpath(_glob, sort_result=glob_sorted):
+        for j in xt.iglobpath(_glob, sort_result=glob_sorted):
             j = os.path.basename(j)
             if subsequence_match(j, nextone, csc):
                 out.add((i or ()) + (j, ))
@@ -251,8 +251,8 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
     env = builtins.__xonsh_env__
     csc = env.get('CASE_SENSITIVE_COMPLETIONS')
     glob_sorted = env.get('GLOB_SORTED')
-    for s in iglobpath(prefix + '*', ignore_case=(not csc),
-                       sort_result=glob_sorted):
+    for s in xt.iglobpath(prefix + '*', ignore_case=(not csc),
+                          sort_result=glob_sorted):
         paths.add(s)
     if len(paths) == 0 and env.get('SUBSEQUENCE_PATH_COMPLETION'):
         # this block implements 'subsequence' matching, similar to fish and zsh.
@@ -272,9 +272,10 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
             paths |= {_joinpath(i) for i in matches_so_far}
     if len(paths) == 0 and env.get('FUZZY_PATH_COMPLETION'):
         threshold = env.get('SUGGEST_THRESHOLD')
-        for s in iglobpath(os.path.dirname(prefix) + '*', ignore_case=(not csc),
-                           sort_result=glob_sorted):
-            if levenshtein(prefix, s, threshold) < threshold:
+        for s in xt.iglobpath(os.path.dirname(prefix) + '*',
+                              ignore_case=(not csc),
+                              sort_result=glob_sorted):
+            if xt.levenshtein(prefix, s, threshold) < threshold:
                 paths.add(s)
     if tilde in prefix:
         home = os.path.expanduser(tilde)

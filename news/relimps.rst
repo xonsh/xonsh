@@ -1,6 +1,6 @@
 **Added:**
 
-* Added FreeBSD support.
+* amalgamate.py now supports relative imports.
 
 **Changed:** None
 

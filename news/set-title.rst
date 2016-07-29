@@ -2,7 +2,7 @@
 
 **Changed:**
 
-* amalgamate now works on Python 2 and allows relative imports.
+* $TITLE now changes both icon (tab) and window title
 
 **Deprecated:** None
 

@@ -15,7 +15,6 @@ import types
 import inspect
 import itertools
 import linecache
-import importlib
 import collections
 
 from xonsh.lazyasd import LazyObject
@@ -24,11 +23,7 @@ from xonsh.openpy import read_py_file
 from xonsh.tools import (cast_unicode, safe_hasattr, indent,
                          print_color, format_color)
 from xonsh.platform import HAS_PYGMENTS, PYTHON_VERSION_INFO
-
-pygments = LazyObject(lambda: importlib.import_module('pygments'),
-                      globals(), 'pygments')
-pyghooks = LazyObject(lambda: importlib.import_module('xonsh.pyghooks'),
-                      globals(), 'pyghooks')
+from xonsh.lazyimps import pygments, pyghooks
 
 
 # builtin docstrings to ignore
@@ -307,6 +302,7 @@ if PYTHON_VERSION_INFO < (3, 5, 0):
     FrameInfo = collections.namedtuple('FrameInfo', ['frame', 'filename',
                                                      'lineno', 'function',
                                                      'code_context', 'index'])
+
     def getouterframes(frame, context=1):
         """Wrapper for getouterframes so that it acts like the Python v3.5 version."""
         return [FrameInfo(*f) for f in inspect.getouterframes(frame, context=context)]
@@ -634,8 +630,8 @@ class Inspector(object):
                 str_head = 'string_form'
                 if not detail_level and len(ostr) > string_max:
                     ostr = ostr[:shalf] + ' <...> ' + ostr[-shalf:]
-                    ostr = ("\n" + " " * len(str_head.expandtabs())).\
-                           join(q.strip() for q in ostr.split("\n"))
+                    ostr = ("\n" + " " * len(str_head.expandtabs())). \
+                        join(q.strip() for q in ostr.split("\n"))
                 out[str_head] = ostr
             except:  # pylint:disable=bare-except
                 pass

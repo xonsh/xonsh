@@ -1,6 +1,6 @@
-**Added:**
+**Added:** 
 
-* Tab completion for pip python package manager.
+* ``which -v`` now calls superhelp, which will print highlighted source.
 
 **Changed:** None
 

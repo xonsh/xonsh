@@ -10,7 +10,7 @@ import functools
 import subprocess
 import importlib.util
 
-from xonsh.lazyasd import LazyObject, LazyBool, lazyobject, lazybool
+from xonsh.lazyasd import LazyBool, lazyobject, lazybool
 
 
 @lazyobject
@@ -227,8 +227,7 @@ def git_for_windows_path():
 
 @functools.lru_cache(1)
 def windows_bash_command():
-    """Determines teh command for Bash on windows."""
-    import winreg
+    """Determines the command for Bash on windows."""
     # Check that bash is on path otherwise try the default directory
     # used by Git for windows
     wbc = 'bash'
@@ -248,6 +247,17 @@ def windows_bash_command():
 # Environment variables defaults
 #
 
+
+@functools.lru_cache(1)
+def bash_command():
+    """Determines the command for Bash on the current plaform."""
+    if ON_WINDOWS:
+        bc = windows_bash_command()
+    else:
+        bc = 'bash'
+    return bc
+
+
 @lazyobject
 def BASH_COMPLETIONS_DEFAULT():
     """A possibly empty tuple with default paths to Bash completions known for
@@ -266,11 +276,11 @@ def BASH_COMPLETIONS_DEFAULT():
                '/opt/local/etc/profile.d/bash_completion.sh')
     elif ON_WINDOWS and git_for_windows_path():
         bcd = (os.path.join(git_for_windows_path(),
-                    'usr\\share\\bash-completion'),
+                            'usr\\share\\bash-completion'),
                os.path.join(git_for_windows_path(),
-                    'usr\\share\\bash-completion\\completions'),
+                            'usr\\share\\bash-completion\\completions'),
                os.path.join(git_for_windows_path(),
-                     'mingw64\\share\\git\\completion\\git-completion.bash'))
+                            'mingw64\\share\\git\\completion\\git-completion.bash'))
     else:
         bcd = ()
     return bcd
@@ -292,7 +302,7 @@ def PATH_DEFAULT():
     elif ON_WINDOWS:
         import winreg
         key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
-                r'SYSTEM\CurrentControlSet\Control\Session Manager\Environment')
+                             r'SYSTEM\CurrentControlSet\Control\Session Manager\Environment')
         pd = tuple(winreg.QueryValueEx(key, 'Path')[0].split(os.pathsep))
     else:
         pd = ()
