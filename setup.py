@@ -35,7 +35,8 @@ except ImportError:
     HAVE_JUPYTER = False
 
 
-TABLES = ['xonsh/lexer_table.py', 'xonsh/parser_table.py', 'xonsh/__amalgam__.py']
+TABLES = ['xonsh/lexer_table.py', 'xonsh/parser_table.py',
+          'xonsh/__amalgam__.py', 'xonsh/completers/__amalgam__.py']
 
 
 def clean_tables():
@@ -49,14 +50,18 @@ def clean_tables():
 os.environ['XONSH_DEBUG'] = '1'
 from xonsh import __version__ as XONSH_VERSION
 
-def amalagamate_source():
-    """Amalgamtes source files."""
+
+def amalgamate_source():
+    """Amalgamates source files."""
+    sys.path.insert(0, os.path.dirname(__file__))
     try:
         import amalgamate
     except ImportError:
         print('Could not import amalgamate, skipping.', file=sys.stderr)
         return
-    amalgamate.main(['amalgamate', '--debug=XONSH_DEBUG', 'xonsh'])
+    amalgamate.main(['amalgamate', '--debug=XONSH_DEBUG', 'xonsh',
+                     'xonsh.completers'])
+    sys.path.pop(0)
 
 
 def build_tables():
@@ -66,7 +71,6 @@ def build_tables():
     from xonsh.parser import Parser
     Parser(lexer_table='lexer_table', yacc_table='parser_table',
            outputdir='xonsh')
-    amalagamate_source()
     sys.path.pop(0)
 
 
@@ -81,7 +85,7 @@ def install_jupyter_hook(prefix=None, root=None):
             "display_name": "Xonsh",
             "language": "xonsh",
             "codemirror_mode": "shell",
-           }
+            }
     with TemporaryDirectory() as d:
         os.chmod(d, 0o755)  # Starts off as 700, not user readable
         if sys.platform == 'win32':
@@ -116,13 +120,13 @@ def dirty_version():
         return False
     _version = _version.decode('ascii')
     try:
-        base, N, sha = _version.strip().split('-')
-    except ValueError: # on base release
+        _, N, sha = _version.strip().split('-')
+    except ValueError:  # tag name may contain "-"
         open('xonsh/dev.githash', 'w').close()
         print('failed to parse git version', file=sys.stderr)
         return False
     sha = sha.strip('g')
-    replace_version(base, N)
+    replace_version(N)
     with open('xonsh/dev.githash', 'w') as f:
         f.write(sha)
     print('wrote git version: ' + sha, file=sys.stderr)
@@ -131,14 +135,17 @@ def dirty_version():
 
 ORIGINAL_VERSION_LINE = None
 
-def replace_version(base, N):
+
+def replace_version(N):
     """Replace version in `__init__.py` with devN suffix"""
     global ORIGINAL_VERSION_LINE
     with open('xonsh/__init__.py', 'r') as f:
         raw = f.read()
     lines = raw.splitlines()
+    msg_assert = '__version__ must be the first line of the __init__.py'
+    assert '__version__' in lines[0], msg_assert
     ORIGINAL_VERSION_LINE = lines[0]
-    lines[0] = "__version__ = '{}.dev{}'".format(base, N)
+    lines[0] = lines[0].rstrip(" '") + ".dev{}'".format(N)
     upd = '\n'.join(lines) + '\n'
     with open('xonsh/__init__.py', 'w') as f:
         f.write(upd)
@@ -146,6 +153,8 @@ def replace_version(base, N):
 
 def restore_version():
     """If we touch the version in __init__.py discard changes after install."""
+    if ORIGINAL_VERSION_LINE is None:
+        return
     with open('xonsh/__init__.py', 'r') as f:
         raw = f.read()
     lines = raw.splitlines()
@@ -160,6 +169,7 @@ class xinstall(install):
     def run(self):
         clean_tables()
         build_tables()
+        amalgamate_source()
         # add dirty version number
         dirty = dirty_version()
         # install Jupyter hook
@@ -176,19 +186,18 @@ class xinstall(install):
             restore_version()
 
 
-
 class xsdist(sdist):
     """Xonsh specialization of setuptools sdist class."""
     def make_release_tree(self, basedir, files):
         clean_tables()
         build_tables()
+        amalgamate_source()
         dirty = dirty_version()
         sdist.make_release_tree(self, basedir, files)
         if dirty:
             restore_version()
 
 
-#-----------------------------------------------------------------------------
 # Hack to overcome pip/setuptools problem on Win 10.  See:
 #   https://github.com/tomduck/pandoc-eqnos/issues/6
 #   https://github.com/pypa/pip/issues/2783
@@ -199,7 +208,7 @@ class install_scripts_quoted_shebang(install_scripts):
     def write_script(self, script_name, contents, mode="t", *ignored):
         shebang = str(contents.splitlines()[0])
         if shebang.startswith('#!') and ' ' in shebang[2:].strip() \
-          and '"' not in shebang:
+           and '"' not in shebang:
             quoted_shebang = '#!"%s"' % shebang[2:].strip()
             contents = contents.replace(shebang, quoted_shebang)
         super().write_script(script_name, contents, mode, *ignored)

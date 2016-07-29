@@ -6,9 +6,8 @@
 
 **Removed:** None
 
-**Fixed:**
+**Fixed:** 
 
-* Parser tables will no longer be generated in the current directory
-  by accident.
+* Alias tab completion works again
 
 **Security:** None

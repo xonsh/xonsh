@@ -6,9 +6,11 @@ import pprint
 from itertools import repeat
 from collections import namedtuple
 from collections.abc import Mapping
-from ast import parse, walk, literal_eval, Import, ImportFrom
+from ast import parse, walk, Import, ImportFrom
 
-ModNode = namedtuple('ModNode', ['name', 'pkgdeps', 'extdeps'])
+__version__ = '0.1.2'
+
+ModNode = namedtuple('ModNode', ['name', 'pkgdeps', 'extdeps', 'futures'])
 ModNode.__doc__ = """Module node for dependency graph.
 
 Attributes
@@ -19,6 +21,8 @@ pkgdeps : frozenset of str
     Module dependencies in the same package.
 extdeps : frozenset of str
     External module dependencies from outside of the package.
+futures : frozenset of str
+    Import directive names antecedent to 'from __future__ import'
 """
 
 
@@ -49,15 +53,166 @@ class SourceCache(Mapping):
 
 SOURCES = SourceCache()
 
-def make_node(name, pkg, allowed):
+
+class GlobalNames(object):
+    """Stores globally defined names that have been seen on ast nodes."""
+
+    impnodes = frozenset(['import', 'importfrom'])
+
+    def __init__(self, pkg='<pkg>'):
+        self.cache = {}
+        self.pkg = pkg
+        self.module = '<mod>'
+        self.topnode = None
+
+    def warn_duplicates(self):
+        s = ''
+        for key in sorted(self.cache.keys()):
+            val = self.cache[key]
+            if len(val) < 2:
+                continue
+            val = sorted(val)
+            if all([val[0][0] == x[0] for x in val[1:]]):
+                continue
+            s += 'WARNING: {0!r} defined in multiple locations:\n'.format(key)
+            for loc in val:
+                s += '  {}:{} ({})\n'.format(*loc)
+        if len(s) > 0:
+            print(s, end='', flush=True, file=sys.stderr)
+
+    def entry(self, name, lineno):
+        if name.startswith('__'):
+            return
+        topnode = self.topnode
+        e = (self.pkg + '.' + self.module, lineno, topnode)
+        if name in self.cache:
+            if topnode in self.impnodes and \
+                    all([topnode == x[2] for x in self.cache[name]]):
+                return
+            self.cache[name].add(e)
+        else:
+            self.cache[name] = set([e])
+
+    def add(self, node, istopnode=False):
+        """Adds the names from the node to the cache."""
+        nodename = node.__class__.__name__.lower()
+        if istopnode:
+            self.topnode = nodename
+        meth = getattr(self, '_add_' + nodename, None)
+        if meth is not None:
+            meth(node)
+
+    def _add_name(self, node):
+        self.entry(node.id, node.lineno)
+
+    def _add_tuple(self, node):
+        for x in node.elts:
+            self.add(x)
+
+    def _add_assign(self, node):
+        for target in node.targets:
+            self.add(target)
+
+    def _add_functiondef(self, node):
+        self.entry(node.name, node.lineno)
+
+    def _add_classdef(self, node):
+        self.entry(node.name, node.lineno)
+
+    def _add_import(self, node):
+        lineno = node.lineno
+        for target in node.names:
+            if target.asname is None:
+                name, _, _ = target.name.partition('.')
+            else:
+                name = target.asname
+            self.entry(name, lineno)
+
+    def _add_importfrom(self, node):
+        pkg, _ = resolve_package_module(node.module, self.pkg, node.level)
+        if pkg == self.pkg:
+            return
+        lineno = node.lineno
+        for target in node.names:
+            if target.asname is None:
+                name = target.name
+            else:
+                name = target.asname
+            self.entry(name, lineno)
+
+    def _add_with(self, node):
+        for item in node.items:
+            if item.optional_vars is None:
+                continue
+            self.add(item.optional_vars)
+        for child in node.body:
+            self.add(child, istopnode=True)
+
+    def _add_for(self, node):
+        self.add(node.target)
+        for child in node.body:
+            self.add(child, istopnode=True)
+
+    def _add_while(self, node):
+        for child in node.body:
+            self.add(child, istopnode=True)
+
+    def _add_if(self, node):
+        for child in node.body:
+            self.add(child, istopnode=True)
+        for child in node.orelse:
+            self.add(child, istopnode=True)
+
+    def _add_try(self, node):
+        for child in node.body:
+            self.add(child, istopnode=True)
+
+
+def module_is_package(module, pkg, level):
+    """Returns whether or not the module name refers to the package."""
+    if level == 0:
+        return module == pkg
+    elif level == 1:
+        return module is None
+    else:
+        return False
+
+
+def module_from_package(module, pkg, level):
+    """Returns whether or not a module is from the package."""
+    if level == 0:
+        return module.startswith(pkg + '.')
+    elif level == 1:
+        return True
+    else:
+        return False
+
+
+def resolve_package_module(module, pkg, level, default=None):
+    """Returns a 2-tuple of package and module name, even for relative
+    imports
+    """
+    if level == 0:
+        p, _, m = module.rpartition('.')
+    elif level == 1:
+        p = pkg
+        m = module or default
+    else:
+        p = m = None
+    return p, m
+
+
+def make_node(name, pkg, allowed, glbnames):
     """Makes a node by parsing a file and traversing its AST."""
     raw = SOURCES[pkg, name]
     tree = parse(raw, filename=name)
     # we only want to deal with global import statements
-    pkgdot = pkg + '.'
     pkgdeps = set()
     extdeps = set()
+    futures = set()
+    glbnames.module = name
     for a in tree.body:
+        glbnames.add(a, istopnode=True)
         if isinstance(a, Import):
             for n in a.names:
                 p, dot, m = n.name.rpartition('.')
@@ -66,18 +221,19 @@ def make_node(name, pkg, allowed):
                 else:
                     extdeps.add(n.name)
         elif isinstance(a, ImportFrom):
-            if a.module == pkg:
+            if module_is_package(a.module, pkg, a.level):
                 pkgdeps.update(n.name for n in a.names if n.name in allowed)
-            elif not a.module or a.module.startswith(pkgdot):
-                if a.module is None:
-                    p, dot, m = pkg, ".", a.names[0].name
-                else:
-                    p, dot, m = a.module.rpartition('.')
+            elif module_from_package(a.module, pkg, a.level):
+                p, m = resolve_package_module(a.module, pkg, a.level,
+                                              default=a.names[0].name)
                 if p == pkg and m in allowed:
                     pkgdeps.add(m)
                 else:
                     extdeps.add(a.module)
-    return ModNode(name, frozenset(pkgdeps), frozenset(extdeps))
+            elif a.module == '__future__':
+                futures.update(n.name for n in a.names)
+    return ModNode(name, frozenset(pkgdeps), frozenset(extdeps),
+                   frozenset(futures))
 
 
 def make_graph(pkg, exclude=None):
@@ -93,8 +249,10 @@ def make_graph(pkg, exclude=None):
         allowed.add(base)
     if exclude:
         allowed -= exclude
+    glbnames = GlobalNames(pkg=pkg)
     for base in allowed:
-        graph[base] = make_node(base, pkg, allowed)
+        graph[base] = make_node(base, pkg, allowed, glbnames)
+    glbnames.warn_duplicates()
     return graph
 
 
@@ -136,7 +294,8 @@ class _LazyModule(_ModuleType):
     @classmethod
     def load(cls, pkg, mod, asname=None):
         if mod in _modules:
-            return _modules[pkg]
+            key = pkg if asname is None else mod
+            return _modules[key]
         else:
             return cls(pkg, mod, asname)
 
@@ -160,6 +319,7 @@ class _LazyModule(_ModuleType):
         return getattr(m, name)
 
 """
+
 
 def get_lineno(node, default=0):
     """Gets the lineno of a node or returns the default."""
@@ -189,7 +349,6 @@ def format_lazy_import(names):
     lines = ''
     for _, name, asname in names:
         pkg, _, _ = name.partition('.')
-        target = asname or pkg
         if asname is None:
             line = '{pkg} = _LazyModule.load({pkg!r}, {mod!r})\n'
         else:
@@ -213,7 +372,6 @@ def format_from_import(names):
 
 def rewrite_imports(name, pkg, order, imps):
     """Rewrite the global imports in the file given the amalgamation."""
-    pkgdot = pkg + '.'
     raw = SOURCES[pkg, name]
     tree = parse(raw, filename=name)
     replacements = []  # list of (startline, stopline, str) tuples
@@ -237,27 +395,26 @@ def rewrite_imports(name, pkg, order, imps):
                     imps.add(imp)
                     keep.append(imp)
             if len(keep) == 0:
-                s = ', '.join(n.name for n in  a.names)
+                s = ', '.join(n.name for n in a.names)
                 s = '# amalgamated ' + s + '\n'
             else:
                 s = format_lazy_import(keep)
             replacements.append((start, stop, s))
         elif isinstance(a, ImportFrom):
-            if not a.module:
-                a.module = pkg
-                p, dot, m = pkg, ".", ""
-            else:
-                p, dot, m = a.module.rpartition('.')
-            if a.module == pkg:
+            p, m = resolve_package_module(a.module, pkg, a.level, default='')
+            if module_is_package(a.module, pkg, a.level):
                 for n in a.names:
                     if n.name in order:
                         msg = ('Cannot amalgamate import of '
                                'amalgamated module:\n\n  from {0} import {1}\n'
                                '\nin {0}/{2}.py').format(pkg, n.name, name)
                         raise RuntimeError(msg)
-            elif a.module.startswith(pkgdot) and p == pkg and m in order:
+            elif p == pkg and m in order:
                 replacements.append((start, stop,
-                                     '# amalgamated ' + a.module + '\n'))
+                                     '# amalgamated ' + p + '.' + m + '\n'))
+            elif a.module == '__future__':
+                replacements.append((start, stop,
+                                     '# amalgamated __future__ directive\n'))
             else:
                 keep = []
                 for n in a.names:
@@ -282,12 +439,23 @@ def rewrite_imports(name, pkg, order, imps):
     return ''.join(lines)
 
 
+def sorted_futures(graph):
+    """Returns a sorted, unique list of future imports."""
+    f = set()
+    for value in graph.values():
+        f |= value.futures
+    return sorted(f)
+
+
 def amalgamate(order, graph, pkg):
     """Create amalgamated source."""
     src = ('\"\"\"Amalgamation of {0} package, made up of the following '
            'modules, in order:\n\n* ').format(pkg)
     src += '\n* '.join(order)
     src += '\n\n\"\"\"\n'
+    futures = sorted_futures(graph)
+    if len(futures) > 0:
+        src += 'from __future__ import ' + ', '.join(futures) + '\n'
     src += LAZY_IMPORTS
     imps = set()
     for name in order:
@@ -373,7 +541,7 @@ def main(args=None):
             continue
         print('Amalgamating ' + pkg)
         exclude = read_exclude(pkg)
-        print('  excluding {}'.format(pprint.pformat(exclude)))
+        print('  excluding {}'.format(pprint.pformat(exclude or None)))
         graph = make_graph(pkg, exclude=exclude)
         order = depsort(graph)
         src = amalgamate(order, graph, pkg)

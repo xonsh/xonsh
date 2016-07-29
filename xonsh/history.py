@@ -15,9 +15,9 @@ import threading
 import collections
 import collections.abc as abc
 
-from xonsh.lazyasd import LazyObject
+from xonsh.lazyasd import lazyobject
 from xonsh.lazyjson import LazyJSON, ljdump, LJNode
-from xonsh.tools import (ensure_int_or_slice, to_history_tuple,
+from xonsh.tools import (ensure_slice, to_history_tuple,
                          expanduser_abs_path)
 from xonsh.diff_history import _dh_create_parser, _dh_main_action
 
@@ -115,7 +115,6 @@ class HistoryGC(threading.Thread):
         This is sorted by the last closed time. Returns a list of (timestamp,
         file) tuples.
         """
-        _ = self  # this could be a function but is intimate to this class
         # pylint: disable=no-member
         xdd = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
         xdd = expanduser_abs_path(xdd)
@@ -269,7 +268,7 @@ def _find_histfile_var(file_list=None, default=None):
     return hist_file
 
 
-def _all_xonsh_parser(*args):
+def _all_xonsh_parser(**kwargs):
     """
     Returns all history as found in XONSH_DATA_DIR.
 
@@ -295,7 +294,7 @@ def _all_xonsh_parser(*args):
     return [(c, t, ind) for ind, (c, t) in enumerate(commands)]
 
 
-def _curr_session_parser(hist=None):
+def _curr_session_parser(hist=None, **kwargs):
     """
     Take in History object and return command list tuple with
     format: (name, start_time, index)
@@ -311,14 +310,14 @@ def _curr_session_parser(hist=None):
     return [(c, t, ind) for ind, (c, t) in commands]
 
 
-def _zsh_hist_parser(location=None):
+def _zsh_hist_parser(location=None, **kwargs):
     default_location = os.path.join('~', '.zsh_history')
     location_list = [os.path.join('~', '.zshrc'),
                      os.path.join('~', '.zprofile')]
     if location is None:
         location = _find_histfile_var(location_list, default_location)
     z_hist_formatted = []
-    if os.path.isfile(location):
+    if location and os.path.isfile(location):
         with open(location, 'r', errors='backslashreplace') as z_file:
             z_txt = z_file.read()
             z_hist = z_txt.splitlines()
@@ -337,18 +336,17 @@ def _zsh_hist_parser(location=None):
                 return z_hist_formatted
 
     else:
-        print("No zsh history file found at: {}".format(location),
-              file=sys.stderr)
+        print("No zsh history file found", file=sys.stderr)
 
 
-def _bash_hist_parser(location=None):
+def _bash_hist_parser(location=None, **kwargs):
     default_location = os.path.join('~', '.bash_history')
     location_list = [os.path.join('~', '.bashrc'),
                      os.path.join('~', '.bash_profile')]
     if location is None:
         location = _find_histfile_var(location_list, default_location)
     bash_hist_formatted = []
-    if os.path.isfile(location):
+    if location and os.path.isfile(location):
         with open(location, 'r', errors='backslashreplace') as bash_file:
             b_txt = bash_file.read()
             bash_hist = b_txt.splitlines()
@@ -357,10 +355,7 @@ def _bash_hist_parser(location=None):
                     bash_hist_formatted.append((command, 0.0, ind))
                 return bash_hist_formatted
     else:
-        import ipdb
-        ipdb.set_trace()
-        print("No bash history file found at: {}".format(location),
-              file=sys.stderr)
+        print("No bash history file", file=sys.stderr)
 
 
 @functools.lru_cache()
@@ -375,38 +370,10 @@ def _hist_create_parser():
     show.add_argument('-r', dest='reverse', default=False,
                       action='store_true',
                       help='reverses the direction')
-    show.add_argument('n', nargs='?', default=None,
-                      help='display n\'th history entry if n is a simple '
-                           'int, or range of entries if it is Python '
-                           'slice notation')
-    # all action
-    xonsh = subp.add_parser('xonsh', aliases=['all'],
-                            help='displays history from all sessions')
-    xonsh.add_argument('-r', dest='reverse', default=False,
-                       action='store_true',
-                       help='reverses the direction')
-    xonsh.add_argument('n', nargs='?', default=None,
-                       help='display n\'th history entry if n is a '
-                            'simple int, or range of entries if it '
-                            'is Python slice notation')
-    # zsh action
-    zsh = subp.add_parser('zsh', help='displays history from zsh sessions')
-    zsh.add_argument('-r', dest='reverse', default=False,
-                     action='store_true',
-                     help='reverses the direction')
-    zsh.add_argument('n', nargs='?', default=None,
-                     help='display n\'th history entry if n is a '
-                     'simple int, or range of entries if it '
-                     'is Python slice notation')
-    # bash action
-    bash = subp.add_parser('bash', help='displays history from bash sessions')
-    bash.add_argument('-r', dest='reverse', default=False,
-                      action='store_true',
-                      help='reverses the direction')
-    bash.add_argument('n', nargs='?', default=None,
-                      help='display n\'th history entry if n is a '
-                      'simple int, or range of entries if it '
-                      'is Python slice notation')
+    show.add_argument('session', nargs='?', choices=_HIST_SESSIONS.keys(), default='session',
+                      help='Choose a history session, defaults to current session')
+    show.add_argument('slices', nargs=argparse.REMAINDER, default=[],
+                      help='display history entries or range of entries')
     # 'id' subcommand
     subp.add_parser('id', help='displays the current session id')
     # 'file' subcommand
@@ -441,7 +408,7 @@ def _hist_create_parser():
 
 
 def _hist_show(ns=None, hist=None, start_index=None, end_index=None,
-          start_time=None, end_time=None, location=None):
+               start_time=None, end_time=None, location=None):
     """Show the requested portion of shell history.
     Accepts multiple history sources (xonsh, bash, zsh)
 
@@ -454,29 +421,25 @@ def _hist_show(ns=None, hist=None, start_index=None, end_index=None,
     can be supplied as a str with the follow options::
 
         session - returns xonsh history from current session
-        all     - returns xonsh history from all sessions
+        xonsh   - returns xonsh history from all sessions
+        all     - alias of xonsh
         zsh     - returns all zsh history
         bash    - returns all bash history
     """
     # Check if ns is a string, meaning it was invoked from
-    # __xonsh_history__
+    if hist is None:
+        hist = bultins.__xonsh_history__
     alias = True
-    valid_formats = {'session': functools.partial(_curr_session_parser, hist),
-                     'show': functools.partial(_curr_session_parser, hist),
-                     'all': _all_xonsh_parser,
-                     'xonsh': _all_xonsh_parser,
-                     'zsh': functools.partial(_zsh_hist_parser, location),
-                     'bash': functools.partial(_bash_hist_parser, location)}
-    if isinstance(ns, str) and ns in valid_formats.keys():
+    if isinstance(ns, str) and ns in _HIST_SESSIONS:
         ns = _hist_create_parser().parse_args([ns])
         alias = False
     if not ns:
-        ns = _hist_create_parser().parse_args(['all'])
+        ns = _hist_create_parser().parse_args(['show', 'xonsh'])
         alias = False
     try:
-        commands = valid_formats[ns.action]()
+        commands = _HIST_SESSIONS[ns.session](hist=hist, location=location)
     except KeyError:
-        print("{} is not a valid history format".format(ns.action))
+        print("{} is not a valid history session".format(ns.action))
         return None
     if not commands:
         return None
@@ -496,18 +459,23 @@ def _hist_show(ns=None, hist=None, start_index=None, end_index=None,
             print("Invalid end time, must be float or datetime.")
     idx = None
     if ns:
-        idx = ensure_int_or_slice(ns.n)
-        if idx is False:
-            print("{} is not a valid input.".format(ns.n),
-                  file=sys.stderr)
-            return
-        elif isinstance(idx, int):
+        _commands = []
+        for s in ns.slices:
             try:
-                commands = [commands[idx]]
-            except IndexError:
-                err = "Index likely not in range. Only {} commands."
-                print(err.format(len(commands)))
+                s = ensure_slice(s)
+            except (ValueError, TypeError):
+                print('{!r} is not a valid slice format'.format(s), file=sys.stderr)
                 return
+            if s:
+                try:
+                    _commands.extend(commands[s])
+                except IndexError:
+                    err = "Index likely not in range. Only {} commands."
+                    print(err.format(len(commands)), file=sys.stderr)
+                    return
+        else:
+            if _commands:
+                commands = _commands
     else:
         idx = slice(start_index, end_index)
 
@@ -537,7 +505,22 @@ def _hist_show(ns=None, hist=None, start_index=None, end_index=None,
 # Interface to History
 #
 class History(object):
-    """Xonsh session history."""
+    """Xonsh session history.
+
+    Attributes
+    ----------
+    rtns : sequence of ints
+        The return of the command (ie, 0 on success)
+    inps : sequence of strings
+        The command as typed by the user, including newlines
+    tss : sequence of two-tuples of floats
+        The timestamps of when the command started and finished, including
+        fractions
+    outs : sequence of strings
+        The output of the command, if xonsh is configured to save it
+
+    In all of these sequences, index 0 is the oldest and -1 (the last item) is the newest.
+    """
 
     def __init__(self, filename=None, sessionid=None, buffersize=100, gc=True,
                  **meta):
@@ -648,8 +631,7 @@ class History(object):
         Valid options:
             `session` - returns xonsh history from current session
             `show`    - alias of `session`
-            `all`     - returns xonsh history from all sessions
-            `xonsh`   - alias of `all`
+            `xonsh`   - returns xonsh history from all sessions
             `zsh`     - returns all zsh history
             `bash`    - returns all bash history
         """
@@ -680,39 +662,44 @@ def _hist_gc(ns, hist):
             continue
 
 
-_HIST_MAIN_ACTIONS = LazyObject(lambda: {
-    'show': _hist_show,
-    'xonsh': _hist_show,
-    'zsh': _hist_show,
-    'bash': _hist_show,
-    'session': _hist_show,
-    'all': _hist_show,
-    'id': lambda ns, hist: print(hist.sessionid),
-    'file': lambda ns, hist: print(hist.filename),
-    'info': _hist_info,
-    'diff': _dh_main_action,
-    'gc': _hist_gc,
-    }, globals(), '_HIST_MAIN_ACTIONS')
+@lazyobject
+def _HIST_SESSIONS():
+    return {'session': _curr_session_parser,
+            'xonsh': _all_xonsh_parser,
+            'all': _all_xonsh_parser,
+            'zsh': _zsh_hist_parser,
+            'bash': _bash_hist_parser}
 
 
-def _hist_main(hist, args):
-    """This implements the history CLI."""
-    if not args or args[0] in ['-r'] or ensure_int_or_slice(args[0]):
+@lazyobject
+def _HIST_MAIN_ACTIONS():
+    return {
+        'show': _hist_show,
+        'id': lambda ns, hist: print(hist.sessionid),
+        'file': lambda ns, hist: print(hist.filename),
+        'info': _hist_info,
+        'diff': _dh_main_action,
+        'gc': _hist_gc,
+    }
+
+
+def _hist_parse_args(args):
+    """Parse arguments using the history argument parser."""
+    parser = _hist_create_parser()
+    if not args:
+        args = ['show']
+    elif args[0] not in ['-h', '--help'] and args[0] not in _HIST_MAIN_ACTIONS:
         args.insert(0, 'show')
-    elif args[0] not in list(_HIST_MAIN_ACTIONS) + ['-h', '--help']:
-        print("{} is not a valid input.".format(args[0]),
-              file=sys.stderr)
-        return
-    if (args[0] in ['show', 'xonsh', 'zsh', 'bash', 'session', 'all'] and
-        len(args) > 1 and args[-1].startswith('-') and
-            args[-1][1].isdigit()):
-        args.insert(-1, '--')  # ensure parsing stops before a negative int
-    ns = _hist_create_parser().parse_args(args)
-    if ns.action is None:  # apply default action
-        ns = _hist_create_parser().parse_args(['show'] + args)
-    _HIST_MAIN_ACTIONS[ns.action](ns, hist)
+    if (args[0] == 'show'
+       and len(args) > 1
+       and args[1] not in ['-h', '--help', '-r']
+       and args[1] not in _HIST_SESSIONS):
+        args.insert(1, 'session')
+    return parser.parse_args(args)
 
 
 def history_main(args=None, stdin=None):
     """This is the history command entry point."""
-    _hist_main(builtins.__xonsh_history__, args)  # pylint: disable=no-member
+    hist = builtins.__xonsh_history__
+    ns = _hist_parse_args(args)
+    _HIST_MAIN_ACTIONS[ns.action](ns, hist)

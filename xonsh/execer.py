@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Implements the xonsh executer."""
-import re
 import sys
 import types
 import inspect
@@ -111,7 +110,7 @@ class Execer(object):
         return code
 
     def eval(self, input, glbs=None, locs=None, stacklevel=2,
-                transform=True):
+             transform=True):
         """Evaluates (and returns) xonsh code."""
         if isinstance(input, types.CodeType):
             code = input
@@ -127,7 +126,7 @@ class Execer(object):
         return eval(code, glbs, locs)
 
     def exec(self, input, mode='exec', glbs=None, locs=None, stacklevel=2,
-                transform=True):
+             transform=True):
         """Execute xonsh code."""
         if isinstance(input, types.CodeType):
             code = input
@@ -205,7 +204,7 @@ class Execer(object):
                         # or for some other syntax error
                         raise original_error
                 elif sbpline[last_error_col:].startswith('![![') or \
-                     sbpline.lstrip().startswith('![!['):
+                        sbpline.lstrip().startswith('![!['):
                     # if we have already wrapped this in subproc tokens
                     # and it still doesn't work, adding more won't help
                     # anything

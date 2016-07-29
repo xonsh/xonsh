@@ -49,7 +49,7 @@ def carriage_return(b, cli):
         b.newline(copy_margin=True)
     elif (b.document.char_before_cursor == '\\' and
             not (not builtins.__xonsh_env__.get('FORCE_POSIX_PATHS')
-                and ON_WINDOWS)):
+                 and ON_WINDOWS)):
         b.newline()
     elif (b.document.find_next_word_beginning() is not None and
             (any(not _is_blank(i)
@@ -74,6 +74,7 @@ class TabShouldInsertIndentFilter(Filter):
 
         return bool(before_cursor.isspace())
 
+
 class BeginningOfLine(Filter):
     """
     Check if cursor is at beginning of a line other than the first line
@@ -84,6 +85,7 @@ class BeginningOfLine(Filter):
 
         return bool(len(before_cursor) == 0
                     and not cli.current_buffer.document.on_first_line)
+
 
 class EndOfLine(Filter):
     """
@@ -177,7 +179,6 @@ def load_xonsh_bindings(key_bindings_manager):
         b.cursor_left(count=abs(relative_begin_index))
         b.cursor_down(count=1)
 
-
     @handle(Keys.ControlI, filter=insert_mode)
     def generate_completions(event):
         """
@@ -203,6 +204,8 @@ def load_xonsh_bindings(key_bindings_manager):
             second_tab()
         else:
             event.cli.start_completion(insert_common_part=True,
-                                    select_first=False)
+                                       select_first=False)
+
+
 def _is_blank(l):
     return len(l.strip()) == 0

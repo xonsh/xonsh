@@ -112,11 +112,11 @@ def _list(ns):
 def _create_xontrib_parser():
     # parse command line args
     parser = argparse.ArgumentParser(prog='xontrib',
-                            description='Manages xonsh extensions')
+                                     description='Manages xonsh extensions')
     subp = parser.add_subparsers(title='action', dest='action')
     load = subp.add_parser('load', help='loads xontribs')
     load.add_argument('-v', '--verbose', action='store_true', default=False,
-                        dest='verbose')
+                      dest='verbose')
     load.add_argument('names', nargs='+', default=(),
                       help='names of xontribs')
     lyst = subp.add_parser('list', help=('list xontribs, whether they are '
@@ -133,6 +133,7 @@ _MAIN_XONTRIB_ACTIONS = {
     'list': _list,
     }
 
+
 def xontribs_main(args=None, stdin=None):
     """Alias that loads xontribs"""
     if not args or (args[0] not in _MAIN_XONTRIB_ACTIONS and
@@ -143,4 +144,3 @@ def xontribs_main(args=None, stdin=None):
     if ns.action is None:  # apply default action
         ns = parser.parse_args(['load'] + args)
     return _MAIN_XONTRIB_ACTIONS[ns.action](ns)
-

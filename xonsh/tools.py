@@ -26,21 +26,18 @@ import glob
 import os
 import pathlib
 import re
-import string
 import subprocess
 import sys
 import threading
 import traceback
 import warnings
 import contextlib
-import subprocess
 
 # adding further imports from xonsh modules is discouraged to avoid circular
 # dependencies
 from xonsh.lazyasd import LazyObject, LazyDict, lazyobject
 from xonsh.platform import (has_prompt_toolkit, scandir, DEFAULT_ENCODING,
                             ON_LINUX, ON_WINDOWS, PYTHON_VERSION_INFO)
-
 
 
 @functools.lru_cache(1)
@@ -596,7 +593,7 @@ def print_exception(msg=None):
     if env is None:
         env = os.environ
         manually_set_trace = 'XONSH_SHOW_TRACEBACK' in env
-        manually_set_logfile ='XONSH_TRACEBACK_LOGFILE' in env
+        manually_set_logfile = 'XONSH_TRACEBACK_LOGFILE' in env
     else:
         manually_set_trace = env.is_manually_set('XONSH_SHOW_TRACEBACK')
         manually_set_logfile = env.is_manually_set('XONSH_TRACEBACK_LOGFILE')
@@ -763,20 +760,6 @@ def is_int(x):
     return isinstance(x, int)
 
 
-def is_int_as_str(x):
-    """
-    Tests if something is an integer
-    If not a string to begin with is automatically false
-    """
-    if isinstance(x, str):
-        try:
-            int(x)
-        except ValueError:
-            return False
-        return True
-    return False
-
-
 def is_float(x):
     """Tests if something is a float"""
     return isinstance(x, float)
@@ -790,25 +773,6 @@ def is_string(x):
 def is_slice(x):
     """Tests if something is a slice"""
     return isinstance(x, slice)
-
-
-def is_slice_as_str(x):
-    """
-    Tests if a str is a slice
-    If not a string to begin with is automatically false
-    """
-    if isinstance(x, str):
-        if ':' in x:
-            x = x.strip('[]()')
-            try:
-                slice(*(int(x) if len(x) > 0 else None
-                        for x in x.split(':')))
-            except ValueError:
-                return False
-        else:
-            return False
-        return True
-    return False
 
 
 def is_callable(x):
@@ -956,19 +920,53 @@ def bool_or_int_to_str(x):
     return bool_to_str(x) if is_bool(x) else str(x)
 
 
-def ensure_int_or_slice(x):
-    """Makes sure that x is list-indexable."""
+@lazyobject
+def SLICE_REG():
+    return re.compile(r'(?P<start>(?:-\d)?\d*):(?P<end>(?:-\d)?\d*):?(?P<step>(?:-\d)?\d*)')
+
+
+def ensure_slice(x):
+    """Convert a string or int to a slice."""
     if x is None:
         return slice(None)
-    elif is_int(x) or is_slice(x):
-        return x
-    # must have a string from here on
-    if is_slice_as_str(x):
+    try:
+        x = int(x)
+        s = slice(x, x+1)
+    except ValueError:
         x = x.strip('[]()')
-        return slice(*(int(x) if len(x) > 0 else None for x in x.split(':')))
-    elif is_int_as_str(x):
-        return int(x)
+        m = SLICE_REG.fullmatch(x)
+        if m:
+            groups = (int(i) if i else None for i in m.groups())
+            s = slice(*groups)
+        else:
+            raise ValueError('cannot convert {!r} to slice'.format(x))
+    except TypeError:
+        raise TypeError('ensure_slice() argument must be a string or a number not {}'.format(type(x)))
+    return s
+
+
+def is_slice_as_str(x):
+    """
+    Test if string x is a slice. If not a string return False.
+    """
+    try:
+        x = x.strip('[]()')
+        m = SLICE_REG.fullmatch(x)
+        if m:
+            return True
+    except AttributeError:
+        pass
     return False
+
+
+def is_int_as_str(x):
+    """
+    Test if string x is an integer. If not a string return False.
+    """
+    try:
+        return x.isdecimal()
+    except AttributeError:
+        return False
 
 
 def is_string_set(x):
@@ -1447,6 +1445,7 @@ if ON_WINDOWS:
     @lazyobject
     def WINDOWS_ENVVAR_REGEX():
         return re.compile(r"%(?P<envvar>\w+)%")
+
 
 def expandvars(path):
     """Expand shell variables of the forms $var, ${var} and %var%.

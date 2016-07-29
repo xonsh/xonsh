@@ -1,11 +1,51 @@
 language: python
-python:
-  - 3.4
-  - 3.5
-  - "nightly"
+matrix:
+    include:
+        - os: linux
+          python: "nightly"
+          env: RUN_COVERAGE=true
+        - os: linux
+          language: generic
+          env: PYTHON="3.4" MINICONDA_OS="Linux"
+        - os: linux
+          language: generic
+          env: PYTHON="3.5" MINICONDA_OS="Linux"
+        - os: osx
+          language: generic
+          env: PYTHON="3.4" MINICONDA_OS="MacOSX"
+        - os: osx
+          language: generic
+          env: PYTHON="3.5" MINICONDA_OS="MacOSX"
+
+before_install:
+  - if [[ ! "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then
+      URL="https://repo.continuum.io/miniconda/Miniconda3-latest-${MINICONDA_OS}-x86_64.sh";
+      wget "${URL}" -O miniconda.sh;
+      bash miniconda.sh -b -p $HOME/miniconda;
+      export PATH="$HOME/miniconda/bin:$PATH";
+      hash -r;
+      conda config --set always_yes yes --set changeps1 no;
+      conda update -q conda;
+      conda info -a;
+    fi
+
 install:
-  - pip install --upgrade -r requirements-tests.txt
+  - if [[ ! "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then
+      conda create -q -n test_env python=${PYTHON} pygments prompt_toolkit ply pytest pytest-timeout psutil;
+      source activate test_env;
+      python setup.py install;
+    else
+      pip install -r requirements-tests.txt;
+    fi
+
 script:
-  - py.test --flake8 --cov=. --cov-report=term
+  - if [[ $RUN_COVERAGE = true ]]; then
+      py.test --flake8 --cov=. --cov-report=term --timeout=10;
+    else
+      py.test --timeout=10;
+    fi
+
 after_success:
-  - codecov
+  - if [[ $RUN_COVERAGE = true ]]; then
+      codecov;
+    fi

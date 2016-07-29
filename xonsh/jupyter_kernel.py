@@ -9,9 +9,11 @@ from ipykernel.kernelbase import Kernel
 from xonsh import __version__ as version
 from xonsh.main import main_context
 from xonsh.tools import redirect_stdout, redirect_stderr, swap
+from xonsh.completer import Completer
 
 
 MAX_SIZE = 8388608  # 8 Mb
+
 
 class XonshKernel(Kernel):
     """Xonsh xernal for Jupyter"""
@@ -26,6 +28,10 @@ class XonshKernel(Kernel):
                      'mimetype': 'text/x-sh',
                      'file_extension': '.xsh',
                      }
+
+    def __init__(self, **kwargs):
+        self.completer = Completer()
+        super().__init__(**kwargs)
 
     def do_execute(self, code, silent, store_history=True, user_expressions=None,
                    allow_stdin=False):
@@ -95,8 +101,14 @@ class XonshKernel(Kernel):
     def do_complete(self, code, pos):
         """Get completions."""
         shell = builtins.__xonsh_shell__
-        comps, beg, end = shell.completer.find_and_complete(code, pos, shell.ctx)
-        message = {'matches': comps, 'cursor_start': beg, 'cursor_end': end+1,
+        line = code.split('\n')[-1]
+        line = builtins.aliases.expand_alias(line)
+        prefix = line.split(' ')[-1]
+        endidx = pos
+        begidx = pos - len(prefix)
+        rtn, _ = self.completer.complete(prefix, line, begidx,
+                                         endidx, shell.ctx)
+        message = {'matches': rtn, 'cursor_start': begidx, 'cursor_end': endidx,
                    'metadata': {}, 'status': 'ok'}
         return message
 

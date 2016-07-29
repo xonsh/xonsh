@@ -6,8 +6,6 @@ import builtins
 from prompt_toolkit.layout.dimension import LayoutDimension
 from prompt_toolkit.completion import Completer, Completion
 
-from xonsh.platform import ptk_version
-
 
 class PromptToolkitCompleter(Completer):
     """Simple prompt_toolkit Completer object.
@@ -32,6 +30,7 @@ class PromptToolkitCompleter(Completer):
                 endidx = document.cursor_position_col
                 begidx = line[:endidx].rfind(' ') + 1 if line[:endidx].rfind(' ') >= 0 else 0
                 prefix = line[begidx:endidx]
+                line = builtins.aliases.expand_alias(line)
                 completions, l = self.completer.complete(prefix,
                                                          line,
                                                          begidx,
@@ -52,6 +51,7 @@ class PromptToolkitCompleter(Completer):
             h = window.render_info.content_height
             r = builtins.__xonsh_env__.get('COMPLETIONS_MENU_ROWS')
             size = h + r
+
             def comp_height(cli):
                 # If there is an autocompletion menu to be shown, make sure that o
                 # layout has at least a minimal height in order to display it.

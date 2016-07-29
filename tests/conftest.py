@@ -1,9 +1,10 @@
 import builtins
 import pytest
-from tools import DummyShell, sp, XonshBlockError
+from tools import DummyShell, sp
 import xonsh.built_ins
 from xonsh.built_ins import ensure_list_of_strs
 from xonsh.execer import Execer
+from xonsh.tools import XonshBlockError
 import glob
 
 

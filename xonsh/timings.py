@@ -17,6 +17,7 @@ import itertools
 
 from xonsh.lazyasd import lazyobject, lazybool
 
+
 @lazybool
 def _HAVE_RESOURCE():
     try:
