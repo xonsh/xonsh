@@ -1,6 +1,8 @@
 **Added:** None
 
-**Changed:** Placeholder for PUSHD/POPD to UNC paths on Windows.
+**Changed:** 
+
+* Placeholder for PUSHD/POPD to UNC paths on Windows.
 
 **Deprecated:** None
 
