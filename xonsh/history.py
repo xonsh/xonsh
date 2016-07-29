@@ -279,15 +279,17 @@ def _all_xonsh_parser(**kwargs):
 
     files = [os.path.join(data_dir, f) for f in os.listdir(data_dir)
              if f.startswith('xonsh-') and f.endswith('.json')]
+    ind = 0
     for f in files:
         try:
             json_file = LazyJSON(f, reopen=False)
         except ValueError:
             # Invalid json file
             pass
-        commands = ((c['inp'].rstrip(), c['ts'][0]) for c in json_file.load()['cmds'])
-        for ind, (c, t) in enumerate(commands):
-            yield (c, t, ind)
+        commands = json_file.load()['cmds']
+        for c in commands:
+            yield (c['inp'].rstrip(), c['ts'][0], ind)
+            ind += 1
 
 
 def _curr_session_parser(hist=None, **kwargs):
@@ -324,7 +326,7 @@ def _zsh_hist_parser(location=None, **kwargs):
                     start_time = float(start_time.split(':')[1])
                 except ValueError:
                     start_time = -1
-                yield (command, start_time, ind)
+                yield (command.rstrip(), start_time, ind)
 
     else:
         print("No zsh history file found", file=sys.stderr)
@@ -339,8 +341,8 @@ def _bash_hist_parser(location=None, **kwargs):
         location = _find_histfile_var(location_list, default_location)
     if location and os.path.isfile(location):
         with open(location, 'r', errors='backslashreplace') as bash_hist:
-            for ind, command in enumerate(bash_hist):
-                yield (command, 0.0, ind)
+            for ind, line in enumerate(bash_hist):
+                yield (line.rstrip(), 0.0, ind)
     else:
         print("No bash history file", file=sys.stderr)
 
@@ -454,26 +456,24 @@ def _hist_get(session='session', slices=None,
     return cmds
 
 
-def _hist_show(ns, *args, **kwargs):
+def _hist_show(ns, *args, numerate=True, **kwargs):
     """Show the requested portion of shell history. Accepts same parameters
     with `_hist_get`."""
     try:
         commands = list(_hist_get(ns.session, ns.slices, **kwargs))
     except ValueError as err:
-        print(err, file=sys.stderr)
+        print("history: error: {}, try 'history -h'".format(err), file=sys.stderr)
         return
     if not commands:
         return
     commands = list(commands)
     if ns.reverse:
         commands = list(reversed(commands))
-    digits = len(str(max([i for c, t, i in commands])))
+    # digits = len(str(max([i for c, t, i in commands])))
     for c, t, i in commands:
-        for line_ind, line in enumerate(c.split('\n')):
-            if line_ind == 0:
-                print('{:>{width}}: {}'.format(i, line, width=digits))
-            else:
-                print(' {:>>{width}} {}'.format('', line, width=digits))
+        if numerate:
+            print(i, end=': ')
+        print(c)
 
 
 # Interface to History
