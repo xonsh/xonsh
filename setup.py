@@ -215,19 +215,20 @@ class install_scripts_quoted_shebang(install_scripts):
 
 
 class install_scripts_rewrite(install_scripts):
-    """Rewrite python3 to the current python executable"""
+    """Change default python3 to the concrete python binary used to install/develop inside xon.sh script"""
     def run(self):
         super().run()
-        if os.name == 'posix' and not self.dry_run:
+        if not self.dry_run:
             for file in self.get_outputs():
                 if file.endswith('xon.sh'):
+                    # this is the value distutils use on its shebang translation
                     bs_cmd = self.get_finalized_command('build_scripts')
                     exec_param = getattr(bs_cmd, 'executable', None)
 
                     with open(file, 'r') as f:
                         content = f.read()
 
-                    processed = content.replace(' python3 ', ' {} '.format(exec_param))
+                    processed = content.replace(' python3 ', ' "{}" '.format(exec_param))
 
                     with open(file, 'w') as f:
                         f.write(processed)
@@ -252,7 +253,8 @@ if HAVE_SETUPTOOLS:
 
         def install_script(self, dist, script_name, script_text, dev_path=None):
             if script_name == 'xon.sh':
-                script_text = script_text.replace(' python3 ', ' {} '.format(sys.executable))
+                # change default python3 to the concrete python binary used to install/develop inside xon.sh script
+                script_text = script_text.replace(' python3 ', ' "{}" '.format(sys.executable))
             super().install_script(dist, script_name, script_text, dev_path)
 
 
