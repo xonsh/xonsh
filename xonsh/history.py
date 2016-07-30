@@ -10,7 +10,6 @@ import argparse
 import builtins
 import functools
 import itertools
-import operator
 import threading
 import collections
 import collections.abc as abc
@@ -299,8 +298,6 @@ def _curr_session_parser(hist=None, **kwargs):
     """
     if hist is None:
         hist = builtins.__xonsh_history__
-    if not hist:
-        return None
     start_times = (start for start, end in hist.tss)
     names = (name.rstrip() for name in hist.inps)
     for ind, (c, t) in enumerate(zip(names, start_times)):
@@ -309,10 +306,10 @@ def _curr_session_parser(hist=None, **kwargs):
 
 def _zsh_hist_parser(location=None, **kwargs):
     """Yield commands from zsh history file"""
-    default_location = os.path.join('~', '.zsh_history')
-    location_list = [os.path.join('~', '.zshrc'),
-                     os.path.join('~', '.zprofile')]
     if location is None:
+        default_location = os.path.join('~', '.zsh_history')
+        location_list = [os.path.join('~', '.zshrc'),
+                         os.path.join('~', '.zprofile')]
         location = _find_histfile_var(location_list, default_location)
     if location and os.path.isfile(location):
         with open(location, 'r', errors='backslashreplace') as zsh_hist:
@@ -334,10 +331,10 @@ def _zsh_hist_parser(location=None, **kwargs):
 
 def _bash_hist_parser(location=None, **kwargs):
     """Yield commands from bash history file"""
-    default_location = os.path.join('~', '.bash_history')
-    location_list = [os.path.join('~', '.bashrc'),
-                     os.path.join('~', '.bash_profile')]
     if location is None:
+        default_location = os.path.join('~', '.bash_history')
+        location_list = [os.path.join('~', '.bashrc'),
+                         os.path.join('~', '.bash_profile')]
         location = _find_histfile_var(location_list, default_location)
     if location and os.path.isfile(location):
         with open(location, 'r', errors='backslashreplace') as bash_hist:
@@ -396,12 +393,6 @@ def _hist_create_parser():
     return p
 
 
-def _hist_get_session(session='session', location=None):
-    """Yield commands from history."""
-    cmds = _HIST_SESSIONS[session](location=location)
-    yield from cmds
-
-
 def _hist_get_portion(commands, slices):
     """Yield from portions of history commands. """
     if len(slices) == 1:
@@ -448,7 +439,7 @@ def _hist_get(session='session', slices=None,
     generator
        A filtered list of commands
     """
-    cmds = _hist_get_session(session, location)
+    cmds = _HIST_SESSIONS[session](location=location)
     if slices:
         cmds = _hist_get_portion(cmds, slices)
     if start_time or end_time:
@@ -459,21 +450,18 @@ def _hist_get(session='session', slices=None,
 def _hist_show(ns, *args, **kwargs):
     """Show the requested portion of shell history. Accepts same parameters
     with `_hist_get`."""
+    commands = _hist_get(ns.session, ns.slices, **kwargs)
     try:
-        commands = list(_hist_get(ns.session, ns.slices, **kwargs))
+        if ns.reverse:
+            commands = reversed(list(commands))
+        if not ns.numerate:
+            for c, _, _ in commands:
+                print(c)
+        else:
+            for c, _, i in commands:
+                print('{}: {}'.format(i, c))
     except ValueError as err:
         print("history: error: {}".format(err), file=sys.stderr)
-        return
-    if not commands:
-        return
-    if ns.reverse:
-        commands = reversed(commands)
-    if not ns.numerate:
-        for c, _, _ in commands:
-            print(c)
-    else:
-        for c, _, i in commands:
-            print('{}: {}'.format(i, c))
 
 
 # Interface to History
@@ -661,9 +649,11 @@ def _hist_parse_args(args):
     parser = _hist_create_parser()
     if not args:
         args = ['show', 'session']
+    elif args[0] not in _HIST_MAIN_ACTIONS and args[0] not in ('-h', '--help'):
+        args = ['show', 'session'] + args
     elif args[0] == 'show':
         slices_index = 0
-        for i, a in enumerate(args[:]):
+        for i, a in enumerate(args):
             if a in _HIST_SESSIONS:
                 break
             elif a.startswith('-') and a.lstrip('-').isalpha():

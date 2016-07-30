@@ -164,6 +164,7 @@ def test_parse_args_help(args, capsys):
 
 @pytest.mark.parametrize('args, exp', [
     ('', ('show', 'session', [], False, False)),
+    ('1:5', ('show', 'session', ['1:5'], False, False)),
     ('show', ('show', 'session', [], False, False)),
     ('show 15', ('show', 'session', ['15'], False, False)),
     ('show bash 3:5 15:66', ('show', 'bash', ['3:5', '15:66'], False, False)),
