@@ -159,7 +159,7 @@ def premain(argv=None):
         parser.print_help()
         parser.exit()
     if args.version:
-        version = '/'.join(('xonsh', __version__)),
+        version = '/'.join(('xonsh', __version__))
         print(version)
         parser.exit()
     shell_kwargs = {'shell_type': args.shell_type,
