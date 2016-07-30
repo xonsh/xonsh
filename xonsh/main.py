@@ -224,8 +224,8 @@ def main(argv=None):
         # run a script contained in a file
         path = os.path.abspath(os.path.expanduser(args.file))
         if os.path.isfile(path):
-            sys.argv = args.args
-            env['ARGS'] = [args.file] + args.args
+            sys.argv = [args.file] + args.args
+            env['ARGS'] = sys.argv[:] # $ARGS is not sys.argv
             env['XONSH_SOURCE'] = path
             run_script_with_cache(args.file, shell.execer, glb=shell.ctx,
                                   loc=None, mode='exec')
