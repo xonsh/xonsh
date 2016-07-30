@@ -299,16 +299,19 @@ def _zsh_hist_parser(location=None, **kwargs):
     if location:
         with open(location, 'r', errors='backslashreplace') as zsh_hist:
             for ind, line in enumerate(zsh_hist):
-                try:
-                    start_time, command = line.split(';', 1)
-                except ValueError:
-                    # Invalid history entry
-                    continue
-                try:
-                    start_time = float(start_time.split(':')[1])
-                except ValueError:
-                    start_time = -1
-                yield (command.rstrip(), start_time, ind)
+                if line.startswith(':'):
+                    try:
+                        start_time, command = line.split(';', 1)
+                    except ValueError:
+                        # Invalid history entry
+                        continue
+                    try:
+                        start_time = float(start_time.split(':')[1])
+                    except ValueError:
+                        start_time = 0.0
+                    yield (command.rstrip(), start_time, ind)
+                else:
+                    yield (line.rstrip(), 0.0, ind)
 
     else:
         print("No zsh history file found", file=sys.stderr)
@@ -394,8 +397,12 @@ def _hist_filter_ts(commands, start_time=None, end_time=None):
     """Yield only the commands between start and end time."""
     if start_time is None:
         start_time = 0.0
+    elif isinstance(start_time, datetime.datetime):
+        start_time = start_time.timestamp()
     if end_time is None:
         end_time = float('inf')
+    elif isinstance(end_time, datetime.datetime):
+        end_time = end_time.timestamp()
     for cmd in commands:
         if start_time <= cmd[1] < end_time:
             yield cmd
@@ -635,7 +642,7 @@ def _hist_parse_args(args):
         args = ['show', 'session'] + args
     elif args[0] == 'show':
         slices_index = 0
-        for i, a in enumerate(args):
+        for i, a in enumerate(args[1:], 1):
             if a in _HIST_SESSIONS:
                 break
             elif a.startswith('-') and a.lstrip('-').isalpha():
