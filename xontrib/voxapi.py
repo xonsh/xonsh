@@ -178,7 +178,7 @@ class Vox(collections.abc.Mapping):
         if 'VIRTUAL_ENV' in env:
             self.deactivate()
 
-        type(self).oldvars = {'PATH': env['PATH']}
+        type(self).oldvars = {'PATH': list(env['PATH'])}
         env['PATH'].insert(0, bin_path)
         env['VIRTUAL_ENV'] = env_path
         if 'PYTHONHOME' in env:
@@ -199,6 +199,8 @@ class Vox(collections.abc.Mapping):
             for k, v in type(self).oldvars.items():
                 env[k] = v
             del type(self).oldvars
+        else:
+            print("Warning: No oldvars found")
 
         env.pop('VIRTUAL_ENV')
 
