@@ -238,7 +238,8 @@ class CommandField(abc.Sequence):
 
 def _find_histfile_var(file_list, default):
     """Return the path of the history file
-    from the value of the envvar HISTFILE."""
+    from the value of the envvar HISTFILE.
+    """
     for f in file_list:
         f = expanduser_abs_path(f)
         if not os.path.isfile(f):
@@ -380,7 +381,7 @@ def _hist_create_parser():
 
 
 def _hist_get_portion(commands, slices):
-    """Yield from portions of history commands. """
+    """Yield from portions of history commands."""
     if len(slices) == 1:
         s = ensure_slice(slices[0])
         try:
@@ -438,8 +439,9 @@ def _hist_get(session='session', slices=None,
 
 
 def _hist_show(ns, *args, **kwargs):
-    """Show the requested portion of shell history. Accepts same parameters
-    with `_hist_get`."""
+    """Show the requested portion of shell history.
+    Accepts same parameters with `_hist_get`.
+    """
     commands = _hist_get(ns.session, ns.slices, **kwargs)
     try:
         if ns.reverse:

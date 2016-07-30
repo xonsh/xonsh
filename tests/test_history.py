@@ -72,16 +72,15 @@ cmds = ['ls', 'cat hello kitty', 'abc', 'def', 'touch me', 'grep from me']
 
 @pytest.mark.parametrize('inp, commands, offset', [
     ('', cmds, (0, 1)),
-    ('show', cmds, (0, 1)),
-    ('show -r', list(reversed(cmds)), (len(cmds)- 1, -1)),
-    ('show 0', cmds[0:1], (0, 1)),
-    ('show 1', cmds[1:2], (1, 1)),
-    ('show -2', cmds[-2:-1], (len(cmds) -2 , 1)),
-    ('show 1:3', cmds[1:3], (1, 1)),
-    ('show 1::2', cmds[1::2], (1, 2)),
-    ('show -4:-2', cmds[-4:-2], (len(cmds) - 4, 1))
+    ('-r', list(reversed(cmds)), (len(cmds)- 1, -1)),
+    ('0', cmds[0:1], (0, 1)),
+    ('1', cmds[1:2], (1, 1)),
+    ('-2', cmds[-2:-1], (len(cmds) -2 , 1)),
+    ('1:3', cmds[1:3], (1, 1)),
+    ('1::2', cmds[1::2], (1, 2)),
+    ('-4:-2', cmds[-4:-2], (len(cmds) - 4, 1))
     ])
-def test_show_cmd(inp, commands, offset, hist, xonsh_builtins, capsys):
+def test_show_cmd_numerate(inp, commands, offset, hist, xonsh_builtins, capsys):
     """Verify that CLI history commands work."""
     base_idx, step = offset
     xonsh_builtins.__xonsh_history__ = hist
@@ -89,11 +88,11 @@ def test_show_cmd(inp, commands, offset, hist, xonsh_builtins, capsys):
     for ts,cmd in enumerate(cmds):  # populate the shell history
         hist.append({'inp': cmd, 'rtn': 0, 'ts':(ts+1, ts+1.5)})
 
-    # exp = ('{}: {}'.format(base_idx + idx * step, cmd)
-    #        for idx, cmd in enumerate(list(commands)))
-    exp = '\n'.join(commands)
+    exp = ('{}: {}'.format(base_idx + idx * step, cmd)
+           for idx, cmd in enumerate(list(commands)))
+    exp = '\n'.join(exp)
 
-    history.history_main(shlex.split(inp))
+    history.history_main(['show', '-n'] + shlex.split(inp))
     out, err = capsys.readouterr()
     assert out.rstrip() == exp
 
