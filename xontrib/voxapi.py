@@ -199,8 +199,6 @@ class Vox(collections.abc.Mapping):
             for k, v in type(self).oldvars.items():
                 env[k] = v
             del type(self).oldvars
-        else:
-            print("Warning: No oldvars found")
 
         env.pop('VIRTUAL_ENV')
 
