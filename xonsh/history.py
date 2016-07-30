@@ -235,36 +235,24 @@ class CommandField(abc.Sequence):
         return self is self.hist._queue[0]
 
 
-def _find_histfile_var(file_list=None, default=None):
-    if file_list is None:
-        return None
-    hist_file = None
-
-    found_hist = False
+def _find_histfile_var(file_list, default):
+    """Return the path of the history file
+    from the value of the envvar HISTFILE."""
     for f in file_list:
         f = expanduser_abs_path(f)
         if not os.path.isfile(f):
             continue
         with open(f, 'r') as rc_file:
             for line in rc_file:
-                if "HISTFILE=" in line:
-                    evar = line.split(' ', 1)[-1]
-                    hist_file = evar.split('=', 1)[-1]
-                    for char in ['"', "'", '\n']:
-                        hist_file = hist_file.replace(char, '')
+                if line.startswith('HISTFILE='):
+                    hist_file = line.split('=', 1)[1].strip('\'"\n')
                     hist_file = expanduser_abs_path(hist_file)
                     if os.path.isfile(hist_file):
-                        found_hist = True
-                        break
-        if found_hist:
-            break
-
-    if hist_file is None:
+                        return hist_file
+    else:
         default = expanduser_abs_path(default)
         if os.path.isfile(default):
-            hist_file = default
-
-    return hist_file
+            return default
 
 
 def _all_xonsh_parser(**kwargs):
@@ -307,11 +295,8 @@ def _curr_session_parser(hist=None, **kwargs):
 def _zsh_hist_parser(location=None, **kwargs):
     """Yield commands from zsh history file"""
     if location is None:
-        default_location = os.path.join('~', '.zsh_history')
-        location_list = [os.path.join('~', '.zshrc'),
-                         os.path.join('~', '.zprofile')]
-        location = _find_histfile_var(location_list, default_location)
-    if location and os.path.isfile(location):
+        location = _find_histfile_var(['~/.zshrc', '~/.zprofile'], '~/.zsh_history')
+    if location:
         with open(location, 'r', errors='backslashreplace') as zsh_hist:
             for ind, line in enumerate(zsh_hist):
                 try:
@@ -332,11 +317,8 @@ def _zsh_hist_parser(location=None, **kwargs):
 def _bash_hist_parser(location=None, **kwargs):
     """Yield commands from bash history file"""
     if location is None:
-        default_location = os.path.join('~', '.bash_history')
-        location_list = [os.path.join('~', '.bashrc'),
-                         os.path.join('~', '.bash_profile')]
-        location = _find_histfile_var(location_list, default_location)
-    if location and os.path.isfile(location):
+        location = _find_histfile_var(['~/.bashrc', '~/.bash_profile'], '~/.bash_history')
+    if location:
         with open(location, 'r', errors='backslashreplace') as bash_hist:
             for ind, line in enumerate(bash_hist):
                 yield (line.rstrip(), 0.0, ind)
