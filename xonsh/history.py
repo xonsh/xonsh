@@ -8,6 +8,7 @@ import time
 import uuid
 import argparse
 import builtins
+import datetime
 import functools
 import itertools
 import threading
@@ -575,17 +576,15 @@ class History(object):
         return hf
 
     def show(self, *args, **kwargs):
-        """
-        Returns shell history as a list
+        """Return shell history as a list
 
         Valid options:
             `session` - returns xonsh history from current session
-            `show`    - alias of `session`
             `xonsh`   - returns xonsh history from all sessions
             `zsh`     - returns all zsh history
             `bash`    - returns all bash history
         """
-        return _hist_show(*args, **kwargs)
+        return list(_hist_get(*args, **kwargs))
 
 
 def _hist_info(ns, hist):
