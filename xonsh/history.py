@@ -354,11 +354,9 @@ def _hist_create_parser():
                                 description='Tools for dealing with history')
     subp = p.add_subparsers(title='action', dest='action')
     # session action
-    show = subp.add_parser('show', aliases=['session'],
-                           help='displays session history, default action')
+    show = subp.add_parser('show', help='displays session history, default action')
     show.add_argument('-r', dest='reverse', default=False,
-                      action='store_true',
-                      help='reverses the direction')
+                      action='store_true', help='reverses the direction')
     show.add_argument('-n', dest='numerate', default=False, action='store_true',
                       help='numerate each command')
     show.add_argument('session', nargs='?', choices=_HIST_SESSIONS.keys(), default='session',
@@ -662,17 +660,17 @@ def _hist_parse_args(args):
     """Parse arguments using the history argument parser."""
     parser = _hist_create_parser()
     if not args:
-        args = ['show']
-    elif args[0] in _HIST_SESSIONS:
-        print("Use the 'show' subcommand to get history sessions.", file=sys.stderr)
-        return
-    elif args[0] not in ['-h', '--help'] and args[0] not in _HIST_MAIN_ACTIONS:
-        args.insert(0, 'show')
-    if (args[0] == 'show'
-       and len(args) > 1
-       and args[1] not in ['-h', '--help', '-r', '-n']
-       and args[1] not in _HIST_SESSIONS):
-        args.insert(1, 'session')
+        args = ['show', 'session']
+    elif args[0] == 'show':
+        slices_index = 0
+        for i, a in enumerate(args[:]):
+            if a in _HIST_SESSIONS:
+                break
+            elif a.startswith('-') and a.lstrip('-').isalpha():
+                # get last optional arg, before slices
+                slices_index = i
+        else:  # no session arg found, insert before slices
+            args.insert(slices_index + 1, 'session')
     return parser.parse_args(args)
 
 
