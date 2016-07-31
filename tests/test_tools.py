@@ -815,6 +815,7 @@ def test_bool_or_int_to_str(inp, exp):
 @pytest.mark.parametrize('inp, exp', [
         (42, slice(42, 43)),
         (None, slice(None, None, None)),
+        (slice(1,2), slice(1,2)),
         ('42', slice(42, 43)),
         ('-42', slice(-42, -41)),
         ('1:2:3', slice(1, 2, 3)),
@@ -823,25 +824,28 @@ def test_bool_or_int_to_str(inp, exp):
         ('1:', slice(1, None, None)),
         ('[1:2:3]', slice(1, 2, 3)),
         ('(1:2:3)', slice(1, 2, 3)),
+        ((4, 8, 10), slice(4, 8, 10)),
+        ([10,20], slice(10,20))
         ])
 def test_ensure_slice(inp, exp):
     obs = ensure_slice(inp)
     assert exp == obs
 
 
-@pytest.mark.parametrize('inp, error', [
-    ('42.3', ValueError),
-    ('3:asd5:1', ValueError),
-    ('test' , ValueError),
-    ('6.53:100:5', ValueError),
-    ('4:-', ValueError),
-    ('2:15-:3', ValueError),
-    ('50:-:666', ValueError),
-    (object(), TypeError),
-    ([], TypeError)
+@pytest.mark.parametrize('inp', [
+    '42.3',
+    '3:asd5:1',
+    'test' ,
+    '6.53:100:5',
+    '4:-',
+    '2:15-:3',
+    '50:-:666',
+    object(),
+    [1,5,3,4],
+    ('foo')
 ])
-def test_ensure_slice_invalid(inp, error):
-    with pytest.raises(error):
+def test_ensure_slice_invalid(inp):
+    with pytest.raises(ValueError):
         obs = ensure_slice(inp)
 
 
