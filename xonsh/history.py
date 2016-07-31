@@ -236,7 +236,7 @@ class CommandField(abc.Sequence):
         return self is self.hist._queue[0]
 
 
-def _find_histfile_var(file_list, default):
+def _find_histfile_var(file_list, default=None):
     """Return the path of the history file
     from the value of the envvar HISTFILE.
     """
@@ -252,9 +252,10 @@ def _find_histfile_var(file_list, default):
                     if os.path.isfile(hist_file):
                         return hist_file
     else:
-        default = expanduser_abs_path(default)
-        if os.path.isfile(default):
-            return default
+        if default:
+            default = expanduser_abs_path(default)
+            if os.path.isfile(default):
+                return default
 
 
 def _all_xonsh_parser(**kwargs):
@@ -297,7 +298,9 @@ def _curr_session_parser(hist=None, **kwargs):
 def _zsh_hist_parser(location=None, **kwargs):
     """Yield commands from zsh history file"""
     if location is None:
-        location = _find_histfile_var(['~/.zshrc', '~/.zprofile'], '~/.zsh_history')
+        location = _find_histfile_var([os.path.join('~', '.zshrc'),
+                                       os.path.join('~', '.zprofile')],
+                                      os.path.join('~', '.zsh_history'))
     if location:
         with open(location, 'r', errors='backslashreplace') as zsh_hist:
             for ind, line in enumerate(zsh_hist):
@@ -322,7 +325,9 @@ def _zsh_hist_parser(location=None, **kwargs):
 def _bash_hist_parser(location=None, **kwargs):
     """Yield commands from bash history file"""
     if location is None:
-        location = _find_histfile_var(['~/.bashrc', '~/.bash_profile'], '~/.bash_history')
+        location = _find_histfile_var([os.path.join('~', '.bashrc'),
+                                       os.path.join('~', '.bash_profile')],
+                                      os.path.join('~', '.bash_history'))
     if location:
         with open(location, 'r', errors='backslashreplace') as bash_hist:
             for ind, line in enumerate(bash_hist):
