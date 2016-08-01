@@ -405,8 +405,13 @@ class BaseParser(object):
             err_line_pointer = ''
         else:
             col = loc.column + 1
-            err_line = line.splitlines()[loc.lineno - 1]
-            err_line_pointer = '\n{}\n{: >{}}'.format(err_line, '^', col)
+            lines = line.splitlines()
+            i = loc.lineno - 1
+            if 0 <= i < len(lines):
+                err_line = lines[i]
+                err_line_pointer = '\n{}\n{: >{}}'.format(err_line, '^', col)
+            else:
+                err_line_pointer = ''
         err = SyntaxError('{0}: {1}{2}'.format(loc, msg, err_line_pointer))
         err.loc = loc
         raise err
