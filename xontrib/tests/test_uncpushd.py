@@ -1,4 +1,4 @@
-'''Tests for xontrib.uncpushd'''
+"""Tests for xontrib.uncpushd"""
 
 import pytest
 import os
@@ -11,6 +11,7 @@ from xonsh.environ import Env
 
 from xonsh.dirstack import DIRSTACK
 from xonsh.platform import ON_WINDOWS
+
 
 def _do_subprocess( *args, check:bool=True)->tuple:
     """
@@ -31,16 +32,18 @@ def _do_subprocess( *args, check:bool=True)->tuple:
                 , None
     except subprocess.CalledProcessError as e:
         if check:
-            print('Subproc error {}, text: {}'.format( e.returncode, e.output))
+            print('Subproc error {}, text: {}'.format(e.returncode, e.output))
             assert e.output is None
 
         return e.returncode \
                 , None \
                 , e.output
 
-TEST_WORK_DIR='uncpushd'
+TEST_WORK_DIR = 'uncpushd'
 
-## seems like a lot of mocking needed to use xonsh functions in tests...
+# seems like a lot of mocking needed to use xonsh functions in tests...
+
+
 @pytest.yield_fixture(scope="module")
 def xonsh_builtins(tmpdir_factory):
     """Mock out most of the builtins xonsh attributes."""
@@ -48,18 +51,18 @@ def xonsh_builtins(tmpdir_factory):
 
     builtins.__xonsh_env__ = Env(PWD=temp_dir.strpath)
     builtins.__xonsh_ctx__ = {}
-    #builtins.__xonsh_shell__ = DummyShell()
+    # builtins.__xonsh_shell__ = DummyShell()
     builtins.__xonsh_help__ = lambda x: x
-    #builtins.__xonsh_glob__ = glob.glob
+    # builtins.__xonsh_glob__ = glob.glob
     builtins.__xonsh_exit__ = False
     builtins.__xonsh_superhelp__ = lambda x: x
     builtins.__xonsh_regexpath__ = lambda x: []
     builtins.__xonsh_expand_path__ = lambda x: x
-    #builtins.__xonsh_subproc_captured__ = sp
-    #builtins.__xonsh_subproc_uncaptured__ = sp
-    #builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
-    #builtins.XonshBlockError = XonshBlockError
-    #builtins.__xonsh_subproc_captured_hiddenobject__ = sp
+    # builtins.__xonsh_subproc_captured__ = sp
+    # builtins.__xonsh_subproc_uncaptured__ = sp
+    # builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
+    # builtins.XonshBlockError = XonshBlockError
+    # builtins.__xonsh_subproc_captured_hiddenobject__ = sp
     builtins.evalx = eval
     builtins.execx = None
     builtins.compilex = None
@@ -67,21 +70,22 @@ def xonsh_builtins(tmpdir_factory):
     yield builtins
     del builtins.__xonsh_env__
     del builtins.__xonsh_ctx__
-    #del builtins.__xonsh_shell__
+    # del builtins.__xonsh_shell__
     del builtins.__xonsh_help__
-    #del builtins.__xonsh_glob__
+    # del builtins.__xonsh_glob__
     del builtins.__xonsh_exit__
     del builtins.__xonsh_superhelp__
     del builtins.__xonsh_regexpath__
     del builtins.__xonsh_expand_path__
-    #del builtins.__xonsh_subproc_captured__
-    #del builtins.__xonsh_subproc_uncaptured__
-    #del builtins.__xonsh_ensure_list_of_strs__
-    #del builtins.XonshBlockError
+    # del builtins.__xonsh_subproc_captured__
+    # del builtins.__xonsh_subproc_uncaptured__
+    # del builtins.__xonsh_ensure_list_of_strs__
+    # del builtins.XonshBlockError
     del builtins.evalx
     del builtins.execx
     del builtins.compilex
     del builtins.aliases
+
 
 @pytest.fixture(scope="module")
 def wd_setup( tmpdir_factory):
@@ -97,7 +101,6 @@ def wd_setup( tmpdir_factory):
     return temp_dir
 
 
-
 @pytest.yield_fixture(scope="module")
 def shares_setup( tmpdir_factory):
     """create some shares to play with on current machine.
@@ -109,10 +112,10 @@ def shares_setup( tmpdir_factory):
         return []
 
     temp_dir = tmpdir_factory.getbasetemp().join(TEST_WORK_DIR)
-    shares = [[r'uncpushd_test_cwd', 'y:', temp_dir.strpath] \
+    shares = [[r'uncpushd_test_cwd', 'y:', temp_dir.strpath]
               , [r'uncpushd_test_cd1', 'w:', temp_dir.join('cdtest1').strpath]]
 
-    for s,d,l in shares:      # set up some shares on local machine.  dirs already exist (test case must invoke wd_setup)
+    for s,d,l in shares:      # set up some shares on local machine.  dirs already exist test case must invoke wd_setup.
         _do_subprocess( ['net', 'share', s, '/delete'], check=False) # clean up from previous run after good, long wait.
 
         _do_subprocess(['net', 'share', s + '=' + l])
@@ -125,13 +128,14 @@ def shares_setup( tmpdir_factory):
     os.chdir( temp_dir.strpath)
     for dl in _unc_tempDrives:
         _do_subprocess(['net', 'use', dl, '/delete'])
-    for s,d,l in shares:
+    for s, d, l in shares:
         _do_subprocess(['net', 'use', d, '/delete'])
-        #_do_subprocess(['net', 'share', s, '/delete']) # fails with access denied, unless I wait > 10 sec
-                        # see http://stackoverflow.com/questions/38448413/access-denied-in-net-share-delete
+        # _do_subprocess(['net', 'share', s, '/delete']) # fails with access denied, unless I wait > 10 sec
+        # see http://stackoverflow.com/questions/38448413/access-denied-in-net-share-delete
+
 
 def test_unc_pushdpopd( xonsh_builtins, wd_setup):
-    """verify extension doesn't break unix experience if someone where so benighted as to declare these aliases not on WINDOWS
+    """verify extension doesn't break unix experience if someone were so benighted as to declare these aliases on unix
     Also validates unc_pushd/popd work for non-unc cases
     """
     assert os.getcwd() == wd_setup
@@ -141,12 +145,14 @@ def test_unc_pushdpopd( xonsh_builtins, wd_setup):
     unc_popd([])
     assert wd_setup == os.getcwd(), "popd returned cwd to expected dir"
 
+
 def push_and_check( unc_path, drive_letter):
     o, e, c = unc_pushd( [unc_path])
     assert c == 0
-    ##is dirs assert o is None
+    # is dirs assert o is None
     assert e is None or len(e) == 0
     assert os.path.splitdrive( os.getcwd())[0].casefold() == drive_letter.casefold()
+
 
 @pytest.mark.skipif( not ON_WINDOWS, reason="Windows-only UNC functionality")
 def test_unc_cases( xonsh_builtins, wd_setup, shares_setup):
@@ -162,6 +168,7 @@ def test_unc_cases( xonsh_builtins, wd_setup, shares_setup):
 
     unc_popd([])
     assert os.getcwd() == old_cwd
+
 
 @pytest.mark.skipif( not ON_WINDOWS, reason="Windows-only UNC functionality")
 def test_unc_repush_to_temp_driveletter( wd_setup, shares_setup):

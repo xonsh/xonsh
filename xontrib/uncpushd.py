@@ -1,22 +1,31 @@
-"""Utilities for handling UNC (\\node\share\...) paths in PUSHD (on Windows)
+""" Handle UNC (\\node\share\...) paths in PUSHD (on Windows)
 
-    Current viersion of windows CMD.EXE enforce a check for working directory set to a UNC path
-     and by default issue the error:
-     >>>
-CMD.EXE was started with the above path as the current directory.
-UNC paths are not supported.  Defaulting to Windows directory.
+    This extension toggles a (Windows) registry entry `DisableUNCCheck` which, duh, disables the UNC check
+    in `CMD.EXE`. When you do so, `os.getwd` will report a natural looking path and most programs (including
+    `CMD.EXE` most of the time) will do the right thing.
 
-    Apparently, MS is still worried about child processes created by such a shell which continue running after the shell closes.
+    By default, `CMD.EXE` refuses to run with working directory set to a UNC path.  It issues this warning:
 
-    This module contains 2 ways to deal with it, because neither is perfect.
+    > CMD.EXE was started with the above path as the current directory.
+    > UNC paths are not supported.  Defaulting to Windows directory.
+
+    and proceeds to run with the working directory set to `%WINDIR%`. This is an arguably brain-dead
+    thing to do (%WINDIR% being either unwritable for the ordinary user or hazardous for the admin user to make
+    unexpected changes in), but it has been the behavior since 1994.  Instead, they hacked `PUSHD` to create
+    a temporary mapped drive (which behavior is now available in `xonsh.dirstack` too).
+
+    MS professes to be worried about child processes created by such a shell which might continue
+    to run after the shell closes.  I have never seen a problem, but have not tried to create it.
 
     Background: see https://support.microsoft.com/en-us/kb/156276
 """
 
 # (of all the brain-dead things to do! CMD.EXE doesn't fail, it warns and proceeds with a dangerous default, C:\windows.
-# It would be much better to fail if they really mean it, and really can't fix the problem (which they don't describe, and may have been fixed long since....)
+# It would be much better to fail if they really mean it, and really can't fix the problem
+# (which they don't describe, and may have been fixed long since....)
 # And, if you must proceed , %WINDIR% is probably the worst fallback to use!
-# Either (ordinary) user will fail reading or trying and failing to write a file, or (privileged) user may succeed in writing, possibly clobbering something important.
+# Either (ordinary) user will fail reading or trying and failing to write a file,
+# or (privileged) user may succeed in writing, possibly clobbering something important.
 # -- there.  I feel much better now.  To proceed...)
 
 import argparse
@@ -31,15 +40,17 @@ from xonsh.dirstack import pushd, popd, DIRSTACK
 
 _uncpushd_choices = dict(enable=1, disable=0, show=None)
 
+
 @lazyobject
 def uncpushd_parser():
     parser = argparse.ArgumentParser(prog="uncpushd", description='Enable or disable CMD.EXE check for UNC path.')
     parser.add_argument('action', choices=_uncpushd_choices, default='show')
     return parser
 
+
 def uncpushd(args=None, stdin=None):
     """Fix alternative 1: configure CMD.EXE to bypass the chech for UNC path.
-	Set, Clear or display current value for DisableUNCCheck in registry, which controls
+    Set, Clear or display current value for DisableUNCCheck in registry, which controls
     whether CMD.EXE complains when working directory set to a UNC path.
 
     In new windows install, value is not set, so if we cannot query the current value, assume check is enabled
@@ -69,11 +80,12 @@ def uncpushd(args=None, stdin=None):
     else:                               # set to 1 or 0
         try:
             key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'software\microsoft\command processor')
-            winreg.SetValueEx( key, 'DisableUNCCheck', 0, winreg.REG_DWORD, 1 if _uncpushd_choices[args.action] else 0)
-            winreg.CloseKey( key)
+            winreg.SetValueEx(key, 'DisableUNCCheck', 0, winreg.REG_DWORD, 1 if _uncpushd_choices[args.action] else 0)
+            winreg.CloseKey(key)
             return None, None, 0
         except OSError as e:
             return None, str(OSError), 1
+
 
 def _do_subprocess( *args)->tuple:
     """
@@ -88,7 +100,7 @@ def _do_subprocess( *args)->tuple:
             return_code:int - return code from subprocess
     """
     try:
-        return  subprocess.check_output( *args, universal_newlines=True, stderr=subprocess.STDOUT) \
+        return  subprocess.check_output(*args, universal_newlines=True, stderr=subprocess.STDOUT) \
                 , None \
                 , 0
     except subprocess.CalledProcessError as e:
@@ -96,6 +108,7 @@ def _do_subprocess( *args)->tuple:
 
 
 _unc_tempDrives = {}  # drivePart: tempDriveLetter for temp drive letters we create
+
 
 def unc_pushd( args, stdin=None):
     """Fix 2: Handle pushd when argument is a UNC path (\\<server>\<share>...) the same way CMD.EXE does.
@@ -107,7 +120,7 @@ def unc_pushd( args, stdin=None):
     if not ON_WINDOWS or args is None or args[0] is None or args[0][0] not in (os.sep, os.altsep):
         return pushd(args, stdin)
     else:
-        share, relPath = os.path.splitdrive( args[0])
+        share, rel_path = os.path.splitdrive(args[0])
         if share[0] not in (os.sep, os.altsep):
             return pushd(args, stdin)
         else:                                                # path begins \\ or //...
@@ -119,16 +132,19 @@ def unc_pushd( args, stdin=None):
                         return co
                     else:
                         _unc_tempDrives[dpath] = share
-                        return pushd( [os.path.join( dpath, relPath )], stdin)
+                        return pushd( [os.path.join( dpath, rel_path )], stdin)
+
+
 def _coalesce( a1, a2):
     """ return a1 + a2, treating None as ''.  But return None if both a1 and a2 are None."""
-    retVal = ''
+    ret_val = ''
     if a1 is not None:
-        retVal = a1
+        ret_val = a1
     if a2 is not None:
-        retVal += a2
+        ret_val += a2
 
-    return retVal if retVal != '' else None
+    return ret_val if ret_val != '' else None
+
 
 def unc_popd( args, stdin=None):
     """Handle popd from a temporary drive letter mapping established by `unc_pushd`
@@ -143,9 +159,9 @@ def unc_popd( args, stdin=None):
     else:
         co = None, None, 0
         env = builtins.__xonsh_env__
-        drive, relPath = os.path.splitdrive( env['PWD'].casefold())     ## os.getcwd() uppercases drive letters on Windows?!
+        drive, rel_path = os.path.splitdrive( env['PWD'].casefold())     ## os.getcwd() uppercases drive letters on Windows?!
 
-        pdResult = popd( args, stdin)       # pop first
+        pd_result = popd( args, stdin)       # pop first
 
         if drive in _unc_tempDrives:
             for p in [os.getcwd().casefold()] + DIRSTACK:               #hard_won: what dirs command shows is wd + contents of DIRSTACK
@@ -155,6 +171,6 @@ def unc_popd( args, stdin=None):
                 _unc_tempDrives.pop(drive)
                 co = _do_subprocess(['net', 'use', drive, '/delete'])
 
-        return _coalesce( pdResult[0], co[0])\
-            , _coalesce( pdResult[1], co[1])\
-            , pdResult[2]
+        return _coalesce(pd_result[0], co[0])\
+            , _coalesce(pd_result[1], co[1])\
+            , pd_result[2]
