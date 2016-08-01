@@ -22,7 +22,8 @@ from xonsh.tools import (
     subexpr_from_unbalanced, subproc_toks, to_bool, to_bool_or_int,
     to_dynamic_cwd_tuple, to_logfile_opt, pathsep_to_set, set_to_pathsep,
     is_string_seq, pathsep_to_seq, seq_to_pathsep, is_nonstring_seq_of_strings,
-    pathsep_to_upper_seq, seq_to_upper_pathsep, expandvars, is_int_as_str, is_slice_as_str
+    pathsep_to_upper_seq, seq_to_upper_pathsep, expandvars, is_int_as_str, is_slice_as_str,
+    ensure_timestamp,
     )
 from xonsh.commands_cache import CommandsCache
 from xonsh.built_ins import expand_path
@@ -1120,3 +1121,15 @@ def test_expandvars(inp, exp, xonsh_builtins):
     env = Env({'foo':'bar', 'spam': 'eggs', 'a_bool': True, 'an_int': 42, 'none': None})
     xonsh_builtins.__xonsh_env__ = env
     assert expandvars(inp) == exp
+
+
+import time
+
+
+@pytest.mark.parametrize('inp, exp',[
+    (572392800.0, 572392800.0),
+
+    ])
+def test_ensure_timestamp(inp, exp):
+    obs = ensure_timestamp(inp)
+    assert exp == obs
