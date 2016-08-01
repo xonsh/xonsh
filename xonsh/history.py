@@ -393,7 +393,7 @@ def _hist_create_parser():
 def _hist_get_portion(commands, slices):
     """Yield from portions of history commands."""
     if len(slices) == 1:
-        s = ensure_slice(slices[0])
+        s = slices[0]
         try:
             yield from itertools.islice(commands, s.start, s.stop, s.step)
             return
@@ -401,25 +401,11 @@ def _hist_get_portion(commands, slices):
             pass
     commands = list(commands)
     for s in slices:
-        s = ensure_slice(s)
         yield from commands[s]
 
 
-def _hist_filter_ts(commands, start_time=None, end_time=None):
+def _hist_filter_ts(commands, start_time, end_time):
     """Yield only the commands between start and end time."""
-    if start_time is None:
-        start_time = 0.0
-    # else:
-    #     try:
-    #         start_time = float(start_time)
-    #     except (ValueError, TypeError):
-
-    elif isinstance(start_time, datetime.datetime):
-        start_time = start_time.timestamp()
-    if end_time is None:
-        end_time = float('inf')
-    elif isinstance(end_time, datetime.datetime):
-        end_time = end_time.timestamp()
     for cmd in commands:
         if start_time <= cmd[1] < end_time:
             yield cmd
@@ -447,8 +433,18 @@ def _hist_get(session='session', *, slices=None,
     """
     cmds = _HIST_SESSIONS[session](location=location)
     if slices:
+        # transform/check all slices
+        slices = [ensure_slice(s) for s in slices]
         cmds = _hist_get_portion(cmds, slices)
     if start_time or end_time:
+        if start_time is None:
+            start_time = 0.0
+        else:
+            start_time = ensure_timestamp(start_time)
+        if end_time is None:
+            end_time = float('inf')
+        else:
+            end_time = ensure_timestamp(end_time)
         cmds = _hist_filter_ts(cmds, start_time, end_time)
     return cmds
 
@@ -654,7 +650,11 @@ def _HIST_MAIN_ACTIONS():
 
 
 def _hist_parse_args(args):
-    """Parse arguments using the history argument parser."""
+    """Prepare and parse arguments for the history command.
+
+    Add default action for ``history`` and
+    default session for ``history show``.
+    """
     parser = _hist_create_parser()
     if not args:
         args = ['show', 'session']
