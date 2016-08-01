@@ -343,11 +343,16 @@ def _hist_create_parser():
                                 description='Tools for dealing with history')
     subp = p.add_subparsers(title='action', dest='action')
     # session action
-    show = subp.add_parser('show', help='displays session history, default action')
+    show = subp.add_parser('show', prefix_chars='-+',
+                           help='displays session history, default action')
     show.add_argument('-r', dest='reverse', default=False,
                       action='store_true', help='reverses the direction')
     show.add_argument('-n', dest='numerate', default=False, action='store_true',
                       help='numerate each command')
+    show.add_argument('-t', dest='end_time', default=None,
+                      help='show only commands before timestamp')
+    show.add_argument('+t', dest='start_time', default=None,
+                      help='show only commands after timestamp')
     show.add_argument('session', nargs='?', choices=_HIST_SESSIONS.keys(), default='session',
                       help='Choose a history session, defaults to current session')
     show.add_argument('slices', nargs=argparse.REMAINDER, default=[],
@@ -404,6 +409,11 @@ def _hist_filter_ts(commands, start_time=None, end_time=None):
     """Yield only the commands between start and end time."""
     if start_time is None:
         start_time = 0.0
+    # else:
+    #     try:
+    #         start_time = float(start_time)
+    #     except (ValueError, TypeError):
+
     elif isinstance(start_time, datetime.datetime):
         start_time = start_time.timestamp()
     if end_time is None:
@@ -415,7 +425,7 @@ def _hist_filter_ts(commands, start_time=None, end_time=None):
             yield cmd
 
 
-def _hist_get(session='session', slices=None,
+def _hist_get(session='session', *, slices=None,
               start_time=None, end_time=None, location=None):
     """Get the requested portion of shell history.
 
@@ -447,7 +457,11 @@ def _hist_show(ns, *args, **kwargs):
     """Show the requested portion of shell history.
     Accepts same parameters with `_hist_get`.
     """
-    commands = _hist_get(ns.session, ns.slices, **kwargs)
+    commands = _hist_get(ns.session,
+                        slices=ns.slices,
+                        start_time=ns.start_time,
+                        end_time=ns.end_time,
+                        **kwargs)
     try:
         if ns.reverse:
             commands = reversed(list(commands))
@@ -647,15 +661,22 @@ def _hist_parse_args(args):
     elif args[0] not in _HIST_MAIN_ACTIONS and args[0] not in ('-h', '--help'):
         args = ['show', 'session'] + args
     elif args[0] == 'show':
-        slices_index = 0
+        opt_arg_index = 0
+        found_session = False
         for i, a in enumerate(args[1:], 1):
             if a in _HIST_SESSIONS:
+                found_session = True
                 break
-            elif a.startswith('-') and a.lstrip('-').isalpha():
-                # get last optional arg, before slices
-                slices_index = i
-        else:  # no session arg found, insert before slices
-            args.insert(slices_index + 1, 'session')
+            elif a.startswith(('-', '+')) and a.lstrip('-+').isalpha():
+                # get last optional arg index, before slices
+                if a in ('-t', '+t'):
+                    i += 1  # include timestamp value
+                opt_arg_index = i
+            else:
+                # everything else is considered a slice argument
+                break
+        if not found_session:  # insert after optional args
+            args.insert(opt_arg_index + 1, 'session')
     return parser.parse_args(args)
 
 
