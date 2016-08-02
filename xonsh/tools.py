@@ -1588,6 +1588,9 @@ def iglobpath(s, ignore_case=False, sort_result=None):
 
 
 def ensure_timestamp(t):
-    t = float(t)
+    try:
+        t = float(t)
+    except TypeError:
+        t = t.timestamp()
     return t
 

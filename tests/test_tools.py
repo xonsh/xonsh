@@ -1,10 +1,11 @@
   # -*- coding: utf-8 -*-
 """Tests xonsh tools."""
+import builtins
+import datetime as dt
 import os
 import pathlib
-from tempfile import TemporaryDirectory
 import stat
-import builtins
+from tempfile import TemporaryDirectory
 
 import pytest
 
@@ -1123,12 +1124,9 @@ def test_expandvars(inp, exp, xonsh_builtins):
     assert expandvars(inp) == exp
 
 
-import time
-
-
 @pytest.mark.parametrize('inp, exp',[
     (572392800.0, 572392800.0),
-
+    (dt.datetime(2016, 8, 2, 13, 24), dt.datetime(2016, 8, 2, 13, 24).timestamp()),
     ])
 def test_ensure_timestamp(inp, exp):
     obs = ensure_timestamp(inp)
