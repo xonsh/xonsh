@@ -10,13 +10,19 @@ def test_load_xontrib_metadata():
 @pytest.yield_fixture
 def tmpmod(tmpdir):
     """
-    Same as tmpdir but also adds/removes it to the front of sys.path
+    Same as tmpdir but also adds/removes it to the front of sys.path.
+
+    Also cleans out any modules loaded as part of the test.
     """
     sys.path.insert(0, str(tmpdir))
+    loadedmods = set(sys.modules.keys())
     try:
         yield tmpdir
     finally:
         del sys.path[0]
+        newmods = set(sys.modules.keys()) - loadedmods
+        for m in newmods:
+            del sys.modules[m]
 
 def test_noall(tmpmod):
     """
@@ -45,8 +51,6 @@ spam = 1
 eggs = 2
 _foobar = 3
 """)
-
-    print(xontrib_context)
 
     ctx = xontrib_context('spameggs')
     assert ctx == {'spam': 1, '_foobar': 3}
