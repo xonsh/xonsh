@@ -69,8 +69,8 @@ default, they cannot be unloaded (easily).
 .. note::
 
     When a xontrib is loaded from a config file or via the xontrib command,
-    its public variables are placed in the current execution context, just
-    like variables set in run control files.
+    its public variables are placed in the current execution context unless
+    `__all__` is defined, just like in regular Python modules.
 
 Loading xontribs in the config file is as simple as adding a list of string
 xontrib names to the top-level ``"xontribs"`` key. For example, the following
