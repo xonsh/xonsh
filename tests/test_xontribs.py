@@ -1,7 +1,7 @@
 """xontrib tests, such as they are"""
+import sys
 import pytest
 from xonsh.xontribs import xontrib_metadata, xontrib_context
-import sys
 
 def test_load_xontrib_metadata():
     # Simply tests that the xontribs JSON files isn't malformed.

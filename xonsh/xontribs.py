@@ -36,8 +36,9 @@ def xontrib_context(name):
                           ImportWarning)
         return {}
     m = importlib.import_module(spec.name)
-    if hasattr(m, '__all__'):
-        ctx = {k: getattr(m, k) for k in m.__all__}
+    pubnames = getattr(m, '__all__', None)
+    if pubnames is not None:
+        ctx = {k: getattr(m, k) for k in pubnames}
     else:
         ctx = {k: getattr(m, k) for k in dir(m) if not k.startswith('_')}
     return ctx
