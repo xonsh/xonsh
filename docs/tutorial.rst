@@ -474,7 +474,7 @@ result is automatically converted to a string. For example,
     4
     >>> echo @([42, 'yo'])
     42 yo
-    >>> echo "hello" | @(lambda a, s=None: s.strip + " world")
+    >>> echo "hello" | @(lambda a, s=None: s.strip() + " world\n")
     hello world
 
 This syntax can be used inside of a captured or uncaptured subprocess, and can
