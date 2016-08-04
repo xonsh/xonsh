@@ -1,11 +1,12 @@
 """Python virtual environment manager for xonsh."""
 
-import sys as _sys
-import xontrib.voxapi as _voxapi
-import xonsh.lazyasd as _lazyasd
+import sys
+import xontrib.voxapi as voxapi
+import xonsh.lazyasd as lazyasd
 
+__all__ = ()
 
-class _VoxHandler:
+class VoxHandler:
     """Vox is a virtual environment manager for xonsh."""
 
     def parser():
@@ -57,7 +58,7 @@ class _VoxHandler:
         subparsers.add_parser('help', help='Show this help message')
         return parser
 
-    parser = _lazyasd.LazyObject(parser, locals(), 'parser')
+    parser = lazyasd.LazyObject(parser, locals(), 'parser')
 
     aliases = {
         'create': 'new',
@@ -71,7 +72,7 @@ class _VoxHandler:
     }
 
     def __init__(self):
-        self.vox = _voxapi.Vox()
+        self.vox = voxapi.Vox()
 
     def __call__(self, args, stdin=None):
         """Call the right handler method for a given command."""
@@ -98,7 +99,7 @@ class _VoxHandler:
         try:
             self.vox.activate(args.name)
         except KeyError:
-            print('This environment doesn\'t exist. Create it with "vox new %s".\n' % name, file=_sys.stderr)
+            print('This environment doesn\'t exist. Create it with "vox new %s".\n' % name, file=sys.stderr)
             return None
         else:
             print('Activated "%s".\n' % args.name)
@@ -107,7 +108,7 @@ class _VoxHandler:
         """Deactive the active virtual environment."""
 
         if self.vox.active() is None:
-            print('No environment currently active. Activate one with "vox activate".\n', file=_sys.stderr)
+            print('No environment currently active. Activate one with "vox activate".\n', file=sys.stderr)
             return None
         env_name = self.vox.deactivate()
         print('Deactivated "%s".\n' % env_name)
@@ -122,7 +123,7 @@ class _VoxHandler:
             return None
 
         if not envs:
-            print('No environments available. Create one with "vox new".\n', file=_sys.stderr)
+            print('No environments available. Create one with "vox new".\n', file=sys.stderr)
             return None
 
         print('Available environments:')
@@ -134,9 +135,9 @@ class _VoxHandler:
         for name in args.names:
             try:
                 del self.vox[name]
-            except _voxapi.EnvironmentInUse:
+            except voxapi.EnvironmentInUse:
                 print('The "%s" environment is currently active. In order to remove it, deactivate it first with "vox deactivate %s".\n' % (name, name),
-                      file=_sys.stderr)
+                      file=sys.stderr)
                 return
             else:
                 print('Environment "%s" removed.' % name)
@@ -152,4 +153,4 @@ class _VoxHandler:
         return vox(args, stdin=stdin)
 
 
-aliases['vox'] = _VoxHandler.handle
+aliases['vox'] = VoxHandler.handle
