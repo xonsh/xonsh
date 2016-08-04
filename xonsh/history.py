@@ -355,7 +355,7 @@ def _hist_create_parser():
                       help='show only commands after timestamp')
     show.add_argument('session', nargs='?', choices=_HIST_SESSIONS.keys(), default='session',
                       help='Choose a history session, defaults to current session')
-    show.add_argument('slices', nargs=argparse.REMAINDER, default=[],
+    show.add_argument('slices', nargs='*', default=None,
                       help='display history entries or range of entries')
     # 'id' subcommand
     subp.add_parser('id', help='displays the current session id')
@@ -661,24 +661,18 @@ def _hist_parse_args(args):
         args = ['show', 'session']
     elif args[0] not in _HIST_MAIN_ACTIONS and args[0] not in ('-h', '--help'):
         args = ['show', 'session'] + args
-    elif args[0] == 'show':
-        opt_arg_index = 0
-        found_session = False
-        for i, a in enumerate(args[1:], 1):
-            if a in _HIST_SESSIONS:
-                found_session = True
-                break
-            elif a.startswith(('-', '+')) and a.lstrip('-+').isalpha():
-                # get last optional arg index, before slices
-                if a in ('-t', '+t'):
-                    i += 1  # include timestamp value
-                opt_arg_index = i
+    if args[0] == 'show':
+        if not any(a in _HIST_SESSIONS for a in args):
+            args.insert(1, 'session')
+        ns, slices = parser.parse_known_args(args)
+        if slices:
+            if not ns.slices:
+                ns.slices = slices
             else:
-                # everything else is considered a slice argument
-                break
-        if not found_session:  # insert after optional args
-            args.insert(opt_arg_index + 1, 'session')
-    return parser.parse_args(args)
+                ns.slices.extend(slices)
+    else:
+        ns = parser.parse_args(args)
+    return ns
 
 
 def history_main(args=None, stdin=None):
