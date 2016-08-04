@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 """Tests the xonsh history."""
 # pylint: disable=protected-access
-# TODO: Remove the following pylint directive when it correctly handles calls
-# to nose assert_xxx functions.
-# pylint: disable=no-value-for-parameter
-from __future__ import unicode_literals, print_function
 import io
 import os
 import sys
@@ -71,63 +67,34 @@ def test_cmd_field(hist, xonsh_builtins):
     assert 1 == hist.rtns[-1]
     assert None == hist.outs[-1]
 
-def run_show_cmd(hist_args, commands, base_idx=0, step=1):
-    """Run and evaluate the output of the given show command."""
-    stdout = sys.stdout
-    stdout.seek(0, io.SEEK_SET)
-    stdout.truncate()
-    history.history_main(hist_args)
-    stdout.seek(0, io.SEEK_SET)
-    hist_lines = stdout.readlines()
-    assert len(commands) == len(hist_lines)
-    for idx, (cmd, actual) in enumerate(zip(commands, hist_lines)):
-        expected = ' {:d}: {:s}\n'.format(base_idx + idx * step, cmd)
-        assert expected == actual
 
-def test_show_cmd(hist, xonsh_builtins):
+cmds = ['ls', 'cat hello kitty', 'abc', 'def', 'touch me', 'grep from me']
+
+@pytest.mark.parametrize('inp, commands, offset', [
+    ('', cmds, (0, 1)),
+    ('-r', list(reversed(cmds)), (len(cmds)- 1, -1)),
+    ('0', cmds[0:1], (0, 1)),
+    ('1', cmds[1:2], (1, 1)),
+    ('-2', cmds[-2:-1], (len(cmds) -2 , 1)),
+    ('1:3', cmds[1:3], (1, 1)),
+    ('1::2', cmds[1::2], (1, 2)),
+    ('-4:-2', cmds[-4:-2], (len(cmds) - 4, 1))
+    ])
+def test_show_cmd_numerate(inp, commands, offset, hist, xonsh_builtins, capsys):
     """Verify that CLI history commands work."""
-    cmds = ['ls', 'cat hello kitty', 'abc', 'def', 'touch me', 'grep from me']
-    sys.stdout = io.StringIO()
+    base_idx, step = offset
     xonsh_builtins.__xonsh_history__ = hist
     xonsh_builtins.__xonsh_env__['HISTCONTROL'] = set()
     for ts,cmd in enumerate(cmds):  # populate the shell history
         hist.append({'inp': cmd, 'rtn': 0, 'ts':(ts+1, ts+1.5)})
 
-    # Verify an implicit "show" emits show history
-    run_show_cmd([], cmds)
+    exp = ('{}: {}'.format(base_idx + idx * step, cmd)
+           for idx, cmd in enumerate(list(commands)))
+    exp = '\n'.join(exp)
 
-    # Verify an explicit "show" with no qualifiers emits
-    # show history.
-    run_show_cmd(['show'], cmds)
-
-    # Verify an explicit "show" with a reversed qualifier
-    # emits show history in reverse order.
-    run_show_cmd(['show', '-r'], list(reversed(cmds)),
-                             len(cmds) - 1, -1)
-
-    # Verify that showing a specific history entry relative to
-    # the start of the history works.
-    run_show_cmd(['show', '0'], [cmds[0]], 0)
-    run_show_cmd(['show', '1'], [cmds[1]], 1)
-
-    # Verify that showing a specific history entry relative to
-    # the end of the history works.
-    run_show_cmd(['show', '-2'], [cmds[-2]],
-                           len(cmds) - 2)
-
-    # Verify that showing a history range relative to the start of the
-    # history works.
-    run_show_cmd(['show', '0:2'], cmds[0:2], 0)
-    run_show_cmd(['show', '1::2'], cmds[1::2], 1, 2)
-
-    # Verify that showing a history range relative to the end of the
-    # history works.
-    run_show_cmd(['show', '-2:'],
-                           cmds[-2:], len(cmds) - 2)
-    run_show_cmd(['show', '-4:-2'],
-                           cmds[-4:-2], len(cmds) - 4)
-
-    sys.stdout = sys.__stdout__
+    history.history_main(['show', '-n'] + shlex.split(inp))
+    out, err = capsys.readouterr()
+    assert out.rstrip() == exp
 
 
 def test_histcontrol(hist, xonsh_builtins):
@@ -195,16 +162,22 @@ def test_parse_args_help(args, capsys):
 
 
 @pytest.mark.parametrize('args, exp', [
-    ('', ('show', 'session', [])),
-    ('show', ('show', 'session', [])),
-    ('show session', ('show', 'session', [])),
-    ('show session 15', ('show', 'session', ['15'])),
-    ('show bash 3:5 15:66', ('show', 'bash', ['3:5', '15:66'])),
-    ('show zsh 3 5:6 16 9:3', ('show', 'zsh', ['3', '5:6', '16', '9:3'])),
+    ('', ('show', 'session', [], False, False)),
+    ('1:5', ('show', 'session', ['1:5'], False, False)),
+    ('show', ('show', 'session', [], False, False)),
+    ('show 15', ('show', 'session', ['15'], False, False)),
+    ('show bash 3:5 15:66', ('show', 'bash', ['3:5', '15:66'], False, False)),
+    ('show -r', ('show', 'session', [], False, True)),
+    ('show -rn bash', ('show', 'bash', [], True, True)),
+    ('show -n -r -30:20', ('show', 'session', ['-30:20'], True, True)),
+    ('show -n zsh 1:2:3', ('show', 'zsh', ['1:2:3'], True, False))
     ])
 def test_parser_show(args, exp):
-    args = _hist_parse_args(shlex.split(args))
-    action, session, slices = exp
-    assert args.action == action
-    assert args.session == session
-    assert args.slices == slices
+    # use dict instead of argparse.Namespace for pretty pytest diff
+    exp_ns = {'action': exp[0],
+              'session': exp[1],
+              'slices': exp[2],
+              'numerate': exp[3],
+              'reverse': exp[4]}
+    ns = _hist_parse_args(shlex.split(args))
+    assert ns.__dict__ == exp_ns

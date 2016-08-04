@@ -1,14 +1,17 @@
 import builtins
+import collections
 
-from collections import OrderedDict
+import xonsh.lazyasd as xl
 
 from xonsh.completers.tools import justify
 
-VALID_ACTIONS = frozenset({'add', 'remove', 'list'})
+
+VALID_ACTIONS = xl.LazyObject(lambda: frozenset({'add', 'remove', 'list'}),
+                              globals(), 'VALID_ACTIONS')
 
 
 def _add_one_completer(name, func, loc='end'):
-    new = OrderedDict()
+    new = collections.OrderedDict()
     if loc == 'start':
         new[name] = func
         for (k, v) in builtins.__xonsh_completers__.items():
@@ -117,25 +120,22 @@ def completer_alias(args, stdin=None):
         func = _list_completers
     return func(args[1:], stdin=stdin)
 
-COMPLETER_LIST_HELP_STR = """
-completer list: list the active completers, in order
+COMPLETER_LIST_HELP_STR = """completer list: ordered list the active completers
 
 Usage:
     completer remove
-""".lstrip()
+"""
 
-COMPLETER_REMOVE_HELP_STR = """
-completer remove: removes a completer from xonsh
+COMPLETER_REMOVE_HELP_STR = """completer remove: removes a completer from xonsh
 
 Usage:
     completer remove NAME
 
 NAME is a unique name of a completer (run "completer list" to see the current
      completers in order)
-""".lstrip()
+"""
 
-COMPLETER_ADD_HELP_STR = """
-completer add: adds a new completer to xonsh
+COMPLETER_ADD_HELP_STR = """completer add: adds a new completer to xonsh
 
 Usage:
     completer add NAME FUNC [POS]
@@ -172,4 +172,4 @@ POS (optional) is a position into the list of completers at which the new
                  be added before the completer named KEY
 
      If POS is not provided, the default value is "start"
-""".lstrip()
+"""

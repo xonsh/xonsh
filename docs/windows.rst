@@ -23,8 +23,6 @@ Install xonsh with the following command:
    > conda config --add channels conda-forge
    > conda install xonsh
 
-.. note:: For the bleeding edge development version use ``conda install -c xonsh/channel/dev xonsh``
-
 This will install xonsh and all the recommended dependencies. Next, run xonsh:
 
 .. code-block:: bat
