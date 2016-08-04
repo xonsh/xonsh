@@ -933,7 +933,10 @@ def ensure_slice(x):
         return x
     try:
         x = int(x)
-        s = slice(x, x+1)
+        if x != -1:
+            s = slice(x, x+1)
+        else:
+            s = slice(-1, None, None)
     except ValueError:
         x = x.strip('[]()')
         m = SLICE_REG.fullmatch(x)
