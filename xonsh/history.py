@@ -353,6 +353,8 @@ def _hist_create_parser():
                       help='show only commands before timestamp')
     show.add_argument('+t', dest='start_time', default=None,
                       help='show only commands after timestamp')
+    show.add_argument('-f', dest='datetime_format', default=None,
+                      help='the datetime format to be used for filtering and printing')
     show.add_argument('session', nargs='?', choices=_HIST_SESSIONS.keys(), default='session',
                       help='Choose a history session, defaults to current session')
     show.add_argument('slices', nargs='*', default=None,
@@ -411,7 +413,7 @@ def _hist_filter_ts(commands, start_time, end_time):
             yield cmd
 
 
-def _hist_get(session='session', *, slices=None,
+def _hist_get(session='session', *, slices=None, datetime_format=None,
               start_time=None, end_time=None, location=None):
     """Get the requested portion of shell history.
 
@@ -440,11 +442,11 @@ def _hist_get(session='session', *, slices=None,
         if start_time is None:
             start_time = 0.0
         else:
-            start_time = ensure_timestamp(start_time)
+            start_time = ensure_timestamp(start_time, datetime_format)
         if end_time is None:
             end_time = float('inf')
         else:
-            end_time = ensure_timestamp(end_time)
+            end_time = ensure_timestamp(end_time, datetime_format)
         cmds = _hist_filter_ts(cmds, start_time, end_time)
     return cmds
 
@@ -458,7 +460,7 @@ def _hist_show(ns, *args, **kwargs):
                             slices=ns.slices,
                             start_time=ns.start_time,
                             end_time=ns.end_time,
-                            **kwargs)
+                            datetime_format=ns.datetime_format)
     except ValueError as err:
         print("history: error: {}".format(err), file=sys.stderr)
         return
