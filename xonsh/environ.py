@@ -89,7 +89,9 @@ Ensurer.__doc__ = """Named tuples whose elements are functions that
 represent environment variable validation, conversion, detyping.
 """
 
-DEFAULT_ENSURERS = LazyObject(lambda: {
+@lazyobject
+def DEFAULT_ENSURERS():
+    return {
     'AUTO_CD': (is_bool, to_bool, bool_to_str),
     'AUTO_PUSHD': (is_bool, to_bool, bool_to_str),
     'AUTO_SUGGEST': (is_bool, to_bool, bool_to_str),
@@ -148,9 +150,9 @@ DEFAULT_ENSURERS = LazyObject(lambda: {
     'XONSH_SHOW_TRACEBACK': (is_bool, to_bool, bool_to_str),
     'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
     'XONSH_STORE_STDIN': (is_bool, to_bool, bool_to_str),
-    'XONSH_TRACEBACK_LOGFILE': (is_logfile_opt, to_logfile_opt,
-                                logfile_opt_to_str)
-}, globals(), 'DEFAULT_ENSURERS')
+    'XONSH_TRACEBACK_LOGFILE': (is_logfile_opt, to_logfile_opt, logfile_opt_to_str),
+    'XONSH_DATETIME_FORMAT': (is_string, ensure_string, ensure_string),
+    }
 
 
 #
@@ -303,7 +305,8 @@ def DEFAULT_VALUES():
         'XONSH_SHOW_TRACEBACK': False,
         'XONSH_STORE_STDIN': False,
         'XONSH_STORE_STDOUT': False,
-        'XONSH_TRACEBACK_LOGFILE': None
+        'XONSH_TRACEBACK_LOGFILE': None,
+        'XONSH_DATETIME_FORMAT': '%Y-%m-%d %H:%M',
     }
     if hasattr(locale, 'LC_MESSAGES'):
         dv['LC_MESSAGES'] = locale.setlocale(locale.LC_MESSAGES)
@@ -334,7 +337,9 @@ store_as_str : bool, optional
 VarDocs.__new__.__defaults__ = (True, DefaultNotGiven, False)
 
 # Please keep the following in alphabetic order - scopatz
-DEFAULT_DOCS = LazyObject(lambda: {
+@lazyobject
+def DEFAULT_DOCS():
+    return {
     'ANSICON': VarDocs('This is used on Windows to set the title, '
                        'if available.', configurable=False),
     'AUTO_CD': VarDocs(
@@ -637,7 +642,10 @@ DEFAULT_DOCS = LazyObject(lambda: {
         'XONSH_SHOW_TRACEBACK has been set. Its value must be a writable file '
         'or None / the empty string if traceback logging is not desired. '
         'Logging to a file is not enabled by default.'),
-}, globals(), 'DEFAULT_DOCS')
+    'XONSH_DATETIME_FORMAT': VarDocs(
+        'The format that is used for ``datetime.strptime()`` in various places'
+        'i.e the history timestamp option'),
+    }
 
 
 #
