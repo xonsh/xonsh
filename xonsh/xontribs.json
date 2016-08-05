@@ -80,6 +80,11 @@
   "package": "xontrib-avox",
   "url": "https://github.com/astronouth7303/xontrib-avox",
   "description": ["Automatic (de)activation of virtual environments as you cd around"]
+ },
+ {"name": "z",
+  "package": "xontrib-z",
+  "url": "https://github.com/astronouth7303/xontrib-z",
+  "description": ["Tracks your most used directories, based on 'frecency'."]
  }
  ],
  "packages": {
@@ -160,6 +165,13 @@
    "url": "https://github.com/astronouth7303/xontrib-avox",
    "install": {
     "pip": "pip install xontrib-avox"
+   }
+  },
+  "xontrib-z": {
+   "license": "GPLv3",
+   "url": "https://github.com/astronouth7303/xontrib-z",
+   "install": {
+    "pip": "pip install xontrib-z"
    }
   }
  }
