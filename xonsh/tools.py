@@ -926,9 +926,11 @@ def SLICE_REG():
 
 
 def ensure_slice(x):
-    """Convert a string or int to a slice."""
-    if x is None:
+    """Try to convert an object into a slice, complain on failure"""
+    if not x:
         return slice(None)
+    elif isinstance(x, slice):
+        return x
     try:
         x = int(x)
         s = slice(x, x+1)
@@ -941,7 +943,10 @@ def ensure_slice(x):
         else:
             raise ValueError('cannot convert {!r} to slice'.format(x))
     except TypeError:
-        raise TypeError('ensure_slice() argument must be a string or a number not {}'.format(type(x)))
+        try:
+            s = slice(*(int(i) for i in x))
+        except (TypeError, ValueError):
+            raise ValueError('cannot convert {!r} to slice'.format(x))
     return s
 
 

@@ -8,8 +8,8 @@ xonsh
 .. image:: https://travis-ci.org/xonsh/xonsh.svg?branch=master
     :target: https://travis-ci.org/xonsh/xonsh
 
-.. image:: https://ci.appveyor.com/api/projects/status/ufqtigii8ma3rctt/branch/master?svg=true
-    :target: https://ci.appveyor.com/project/rbrewer123/xonsh-unq93
+.. image:: https://ci.appveyor.com/api/projects/status/github/xonsh/xonsh?svg=true
+    :target: https://ci.appveyor.com/project/xonsh/xonsh
 
 .. image:: https://landscape.io/github/xonsh/xonsh/master/landscape.svg?style=flat
     :target: https://landscape.io/github/xonsh/xonsh/master
