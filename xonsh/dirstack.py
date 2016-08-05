@@ -56,7 +56,7 @@ def _unc_map_temp_drive(unc_path)->str:
     global _unc_tempDrives
     assert unc_path[1] in (os.sep, os.altsep), "unc_path is UNC form of path"
 
-    if _unc_check_enabled():
+    if not _unc_check_enabled():
         return unc_path
     else:
         unc_share, rem_path = os.path.splitdrive( unc_path)
@@ -66,30 +66,35 @@ def _unc_map_temp_drive(unc_path)->str:
                 return os.path.join( d, rem_path)
 
         for dord in range(ord('z'), ord('a'), -1):
-            dpath = chr(dord) + ':'
-            if not os.path.isdir(dpath):  # find unused drive letter starting from z:
-                subprocess.check_output(['NET', 'USE', dpath, unc_share], universal_newlines=True)
-                _unc_tempDrives[dpath] = unc_share
-                return os.path.join(dpath, rem_path)
+            d = chr(dord) + ':'
+            if not os.path.isdir(d):  # find unused drive letter starting from z:
+                subprocess.check_output(['NET', 'USE', d, unc_share], universal_newlines=True)
+                _unc_tempDrives[d] = unc_share
+                return os.path.join(d, rem_path)
     pass
 
 
-def _unc_unmap_temp_drive(drive):
-    """Unmap a temporary drive letter if it is no longer on `DIRSTACK`.
+def _unc_unmap_temp_drive(left_drive, cwd):
+    """Unmap a temporary drive letter if it is no longer needed.
+    Called after popping `DIRSTACK` and changing to new working directory, so we need stack *and*
+    new current working directory to be sure drive letter no longer needed.
 
-    So `DIRSTACK` must be popped prior to calling this function..."""
+    Args:
+        left_drive: driveletter (and colon) of working directory we just left
+        cwd: full path of new current working directory
+"""
 
     global _unc_tempDrives
 
-    if drive not in _unc_tempDrives:    # if drive letter is not one we've mapped, don't unmap it
+    if left_drive not in _unc_tempDrives:   # if not one we've mapped, don't unmap it
         return
 
-    for p in DIRSTACK:                  # if drive letter still in use on dirstack, also don't aunmap it.
-        if p.startswith(drive):
+    for p in (DIRSTACK + cwd):              # if still in use , don't aunmap it.
+        if p.startswith(left_drive):
             return
 
-    _unc_tempDrives.pop(drive)
-    subprocess.check_output(['NET', 'USE', drive, '/delete'], universal_newlines=True)
+    _unc_tempDrives.pop(left_drive)
+    subprocess.check_output(['NET', 'USE', left_drive, '/delete'], universal_newlines=True)
 
 
 def _get_cwd():
@@ -370,7 +375,7 @@ def popd(args, stdin=None):
 
             if ON_WINDOWS:
                 drive, rem_path = os.path.splitdrive(pwd)
-                _unc_unmap_temp_drive(drive.casefold())
+                _unc_unmap_temp_drive(drive.casefold(), new_pwd)
 
     if not args.quiet and not env.get('PUSHD_SILENT'):
         return dirs([], None)
