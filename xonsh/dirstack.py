@@ -43,7 +43,8 @@ def _unc_check_enabled()->bool:
 
 def _unc_map_temp_drive(unc_path)->str:
 
-    """Map a new temporary drive letter for each distinct share, unless `CMD.EXE` is not insisting on non-UNC working directory.
+    """Map a new temporary drive letter for each distinct share,
+    unless `CMD.EXE` is not insisting on non-UNC working directory.
 
     Emulating behavior of `CMD.EXE` `pushd`, create a new mapped drive (starting from Z: towards A:, skipping existing
      drive letters) for each new UNC path user selects.
@@ -62,11 +63,11 @@ def _unc_map_temp_drive(unc_path)->str:
     if not _unc_check_enabled():
         return unc_path
     else:
-        unc_share, rem_path = os.path.splitdrive( unc_path)
+        unc_share, rem_path = os.path.splitdrive(unc_path)
         unc_share = unc_share.casefold()
         for d in _unc_tempDrives:
             if _unc_tempDrives[d] == unc_share:
-                return os.path.join( d, rem_path)
+                return os.path.join(d, rem_path)
 
         for dord in range(ord('z'), ord('a'), -1):
             d = chr(dord) + ':'
@@ -74,7 +75,6 @@ def _unc_map_temp_drive(unc_path)->str:
                 subprocess.check_output(['NET', 'USE', d, unc_share], universal_newlines=True)
                 _unc_tempDrives[d] = unc_share
                 return os.path.join(d, rem_path)
-    pass
 
 
 def _unc_unmap_temp_drive(left_drive, cwd):
