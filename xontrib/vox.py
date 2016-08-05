@@ -6,6 +6,7 @@ import xonsh.lazyasd as lazyasd
 
 __all__ = ()
 
+
 class VoxHandler:
     """Vox is a virtual environment manager for xonsh."""
 
