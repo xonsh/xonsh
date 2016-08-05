@@ -61,8 +61,8 @@ def _unc_map_temp_drive(unc_path)->str:
     else:
         unc_share, rem_path = os.path.splitdrive( unc_path)
         unc_share = unc_share.casefold()
-        for d, s in enumerate(_unc_tempDrives):
-            if s == unc_share:
+        for d in _unc_tempDrives:
+            if _unc_tempDrives[d] == unc_share:
                 return os.path.join( d, rem_path)
 
         for dord in range(ord('z'), ord('a'), -1):
@@ -89,8 +89,8 @@ def _unc_unmap_temp_drive(left_drive, cwd):
     if left_drive not in _unc_tempDrives:   # if not one we've mapped, don't unmap it
         return
 
-    for p in (DIRSTACK + cwd):              # if still in use , don't aunmap it.
-        if p.startswith(left_drive):
+    for p in DIRSTACK + [cwd]:              # if still in use , don't aunmap it.
+        if p.casefold().startswith(left_drive):
             return
 
     _unc_tempDrives.pop(left_drive)

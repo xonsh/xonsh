@@ -68,27 +68,3 @@ def test_cdpath_expansion(xonsh_builtins):
         raise e
 
 
-def test_uncpushd_no_map_when_no_unc_check(xonsh_builtins):
-    pass
-
-
-def test_uncpushd_simple_push_pop(xonsh_builtins):
-    pass
-
-
-def test_uncpushd_push_to_same_share(xonsh_builtins):
-    pass
-
-
-def test_uncpushd_push_twice_to_same(xonsh_builtins):
-    """push twice to same share, then pop twice.  Verify drive not unmapped till 2nd pop"""
-    pass
-
-
-def test_uncpushd_push_other_push_same(xonsh_builtins):
-    """push to a, then to b, then to a again. Pop (check a still mapped), pop, pop (check a is unmapped)"""
-    pass
-
-
-
-
