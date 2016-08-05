@@ -72,10 +72,7 @@ def test_pushdpopd(xonsh_builtins):
     assert owd.casefold() == os.getcwd().casefold(), "popd returned cwd to expected dir"
 
 
-def test_uncpushd_no_map_when_no_unc_check(xonsh_builtins):
-    pass
-
-
+@pytest.mark.skipif( not ON_WINDOWS, reason="Windows-only UNC functionality")
 def test_uncpushd_simple_push_pop(xonsh_builtins, shares_setup):
     xonsh_builtins.__xonsh_env__ = Env(CDPATH=PARENT, PWD=HERE)
 
@@ -91,6 +88,7 @@ def test_uncpushd_simple_push_pop(xonsh_builtins, shares_setup):
     assert len(_unc_tempDrives) == 0
 
 
+@pytest.mark.skipif( not ON_WINDOWS, reason="Windows-only UNC functionality")
 def test_uncpushd_push_to_same_share(xonsh_builtins):
     xonsh_builtins.__xonsh_env__ = Env(CDPATH=PARENT, PWD=HERE)
 
@@ -118,6 +116,7 @@ def test_uncpushd_push_to_same_share(xonsh_builtins):
     assert len(_unc_tempDrives) == 0
 
 
+@pytest.mark.skipif( not ON_WINDOWS, reason="Windows-only UNC functionality")
 def test_uncpushd_push_other_push_same(xonsh_builtins):
     """push to a, then to b. verify is w:, skipping already used y:
        Then push to a again. Pop (check b unmapped and a still mapped), pop, pop (check a is unmapped)"""
@@ -164,6 +163,7 @@ def test_uncpushd_push_other_push_same(xonsh_builtins):
     assert not os.path.isdir('z:\\')
 
 
+@pytest.mark.skipif( not ON_WINDOWS, reason="Windows-only UNC functionality")
 def test_uncpushd_push_base_push_rempath(xonsh_builtins):
     """push to subdir under share, verify  mapped path includes subdir"""
     pass

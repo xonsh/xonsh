@@ -5,7 +5,6 @@ import glob
 import argparse
 import builtins
 import subprocess
-import winreg
 
 from xonsh.lazyasd import lazyobject
 from xonsh.tools import get_sep
@@ -25,6 +24,10 @@ def _unc_check_enabled()->bool:
         True if `CMD.EXE` is enforcing the check (default Windows situation)
         False if check is explicitly disabled by registry entry.
     """
+    if not ON_WINDOWS:
+        return
+
+    import winreg
 
     ret_val = True
     try:
