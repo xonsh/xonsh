@@ -8,7 +8,6 @@ import time
 import uuid
 import argparse
 import builtins
-import datetime
 import functools
 import itertools
 import threading
@@ -18,7 +17,7 @@ import collections.abc as abc
 from xonsh.lazyasd import lazyobject
 from xonsh.lazyjson import LazyJSON, ljdump, LJNode
 from xonsh.tools import (ensure_slice, to_history_tuple,
-                         expanduser_abs_path)
+                         expanduser_abs_path, ensure_timestamp)
 from xonsh.diff_history import _dh_create_parser, _dh_main_action
 
 
@@ -457,10 +456,10 @@ def _hist_show(ns, *args, **kwargs):
     """
     try:
         commands = _hist_get(ns.session,
-                            slices=ns.slices,
-                            start_time=ns.start_time,
-                            end_time=ns.end_time,
-                            datetime_format=ns.datetime_format)
+                             slices=ns.slices,
+                             start_time=ns.start_time,
+                             end_time=ns.end_time,
+                             datetime_format=ns.datetime_format)
     except ValueError as err:
         print("history: error: {}".format(err), file=sys.stderr)
         return

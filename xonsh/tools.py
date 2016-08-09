@@ -20,7 +20,9 @@ Implementations:
 import builtins
 import collections
 import collections.abc as abc
+import contextlib
 import ctypes
+import datetime
 import functools
 import glob
 import os
@@ -31,7 +33,6 @@ import sys
 import threading
 import traceback
 import warnings
-import contextlib
 
 # adding further imports from xonsh modules is discouraged to avoid circular
 # dependencies
@@ -1590,10 +1591,13 @@ def iglobpath(s, ignore_case=False, sort_result=None):
     return _iglobpath(s, ignore_case=ignore_case, sort_result=sort_result)[0]
 
 
-def ensure_timestamp(t):
+def ensure_timestamp(t, datetime_format=None):
+    if datetime_format is None:
+        datetime_format = builtins.__xonsh_env__['XONSH_DATETIME_FORMAT']
+    if isinstance(t, datetime.datetime):
+        t = t.timepstamp()
     try:
         t = float(t)
     except TypeError:
         t = t.timestamp()
     return t
-
