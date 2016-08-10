@@ -181,6 +181,7 @@ def test_parser_show(args, exp):
               'reverse': exp[4],
               'start_time': None,
               'end_time': None,
-              'datetime_format': None}
+              'datetime_format': None,
+              'timestamp': False}
     ns = _hist_parse_args(shlex.split(args))
     assert ns.__dict__ == exp_ns

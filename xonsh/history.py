@@ -8,6 +8,7 @@ import time
 import uuid
 import argparse
 import builtins
+import datetime
 import functools
 import itertools
 import threading
@@ -348,9 +349,11 @@ def _hist_create_parser():
                       action='store_true', help='reverses the direction')
     show.add_argument('-n', dest='numerate', default=False, action='store_true',
                       help='numerate each command')
-    show.add_argument('-t', dest='end_time', default=None,
+    show.add_argument('-t', dest='timestamp', default=False,
+                      action='store_true', help='show command timestamps')
+    show.add_argument('-T', dest='end_time', default=None,
                       help='show only commands before timestamp')
-    show.add_argument('+t', dest='start_time', default=None,
+    show.add_argument('+T', dest='start_time', default=None,
                       help='show only commands after timestamp')
     show.add_argument('-f', dest='datetime_format', default=None,
                       help='the datetime format to be used for filtering and printing')
@@ -465,12 +468,20 @@ def _hist_show(ns, *args, **kwargs):
         return
     if ns.reverse:
         commands = reversed(list(commands))
-    if not ns.numerate:
+    if not ns.numerate and not ns.timestamp:
         for c, _, _ in commands:
             print(c)
-    else:
+    elif not ns.timestamp:
         for c, _, i in commands:
             print('{}: {}'.format(i, c))
+    elif not ns.numerate:
+        for c, ts, _ in commands:
+            dt = datetime.datetime.fromtimestamp(ts).ctime()
+            print('({}) {}'.format(dt, c))
+    else:
+        for c, ts, i in commands:
+            dt = datetime.datetime.fromtimestamp(ts).ctime()
+            print('{}:({}) {}'.format(i, dt, c))
 
 
 # Interface to History
