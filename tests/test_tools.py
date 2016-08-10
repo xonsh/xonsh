@@ -1125,10 +1125,14 @@ def test_expandvars(inp, exp, xonsh_builtins):
     assert expandvars(inp) == exp
 
 
-@pytest.mark.parametrize('inp, exp',[
-    (572392800.0, 572392800.0),
-    (dt.datetime(2016, 8, 2, 13, 24), dt.datetime(2016, 8, 2, 13, 24).timestamp()),
+@pytest.mark.parametrize('inp, fmt, exp',[
+    (572392800.0, None, 572392800.0),
+    ('42.1459', None, 42.1459),
+    (dt.datetime(2016, 8, 2, 13, 24), None, dt.datetime(2016, 8, 2, 13, 24).timestamp()),
+    ('2016-8-10 16:14', None, dt.datetime(2016, 8, 10, 16, 14).timestamp()),
+    ('2016/8/10 16:14:40', '%Y/%m/%d %H:%M:%S', dt.datetime(2016, 8, 10, 16, 14, 40).timestamp()),
     ])
-def test_ensure_timestamp(inp, exp):
-    obs = ensure_timestamp(inp)
+def test_ensure_timestamp(inp, fmt, exp, xonsh_builtins):
+    xonsh_builtins.__xonsh_env__['XONSH_DATETIME_FORMAT'] = '%Y-%m-%d %H:%M'
+    obs = ensure_timestamp(inp, fmt)
     assert exp == obs

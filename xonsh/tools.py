@@ -1592,12 +1592,16 @@ def iglobpath(s, ignore_case=False, sort_result=None):
 
 
 def ensure_timestamp(t, datetime_format=None):
+    if isinstance(t, (int, float)):
+        return t
+    try:
+        return float(t)
+    except (ValueError, TypeError):
+        pass
     if datetime_format is None:
         datetime_format = builtins.__xonsh_env__['XONSH_DATETIME_FORMAT']
     if isinstance(t, datetime.datetime):
-        t = t.timepstamp()
-    try:
-        t = float(t)
-    except TypeError:
         t = t.timestamp()
+    else:
+        t = datetime.datetime.strptime(t, datetime_format).timestamp()
     return t
