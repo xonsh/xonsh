@@ -89,6 +89,7 @@ Ensurer.__doc__ = """Named tuples whose elements are functions that
 represent environment variable validation, conversion, detyping.
 """
 
+
 @lazyobject
 def DEFAULT_ENSURERS():
     return {
@@ -335,6 +336,7 @@ store_as_str : bool, optional
 """
 # iterates from back
 VarDocs.__new__.__defaults__ = (True, DefaultNotGiven, False)
+
 
 # Please keep the following in alphabetic order - scopatz
 @lazyobject
