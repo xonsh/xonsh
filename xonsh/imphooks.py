@@ -84,4 +84,5 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
         return code
 
 
-sys.meta_path.append(XonshImportHook())
+def install_hook():
+    sys.meta_path.append(XonshImportHook())
