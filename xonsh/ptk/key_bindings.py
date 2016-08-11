@@ -36,7 +36,7 @@ def carriage_return(b, cli):
     # indent after a colon
     if (doc.current_line_before_cursor.strip().endswith(':') and
             at_end_of_line):
-        b.newline()
+        b.newline(copy_margin=True)
         b.insert_text(indent, fire_event=False)
     # if current line isn't blank, check dedent tokens
     elif (not current_line_blank and
@@ -50,14 +50,14 @@ def carriage_return(b, cli):
     elif (doc.char_before_cursor == '\\' and
             not (not builtins.__xonsh_env__.get('FORCE_POSIX_PATHS')
                  and ON_WINDOWS)):
-        b.newline()
+        b.newline(copy_margin=True)
     elif (doc.find_next_word_beginning() is not None and
             (any(not _is_blank(i)
                  for i
                  in doc.lines_from_current[1:]))):
         b.newline(copy_margin=True)
     elif not current_line_blank and not can_compile(doc.text):
-        b.newline()
+        b.newline(copy_margin=True)
     else:
         b.accept_action.validate_and_handle(cli, b)
 
