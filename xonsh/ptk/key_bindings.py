@@ -11,11 +11,10 @@ from xonsh.aliases import xonsh_exit
 from xonsh.tools import ON_WINDOWS
 
 env = builtins.__xonsh_env__
-indent_ = env.get('INDENT')
 DEDENT_TOKENS = frozenset(['raise', 'return', 'pass', 'break', 'continue'])
 
 
-def carriage_return(b, cli):
+def carriage_return(b, cli, *, autoindent=True):
     """
     Preliminary parser to determine if 'Enter' key should send command to
     the xonsh parser for execution or should insert a newline for continued
@@ -33,31 +32,33 @@ def carriage_return(b, cli):
     at_end_of_line = _is_blank(doc.current_line_after_cursor)
     current_line_blank = _is_blank(doc.current_line)
 
+    indent = env.get('INDENT') if autoindent else ''
+
     # indent after a colon
     if (doc.current_line_before_cursor.strip().endswith(':') and
             at_end_of_line):
-        b.newline(copy_margin=True)
+        b.newline(copy_margin=autoindent)
         b.insert_text(indent, fire_event=False)
     # if current line isn't blank, check dedent tokens
     elif (not current_line_blank and
             doc.current_line.split(maxsplit=1)[0] in DEDENT_TOKENS and
             doc.line_count > 1):
-        b.newline(copy_margin=True)
-        _ = b.delete_before_cursor(count=len(indent))
+        b.newline(copy_margin=autoindent)
+        b.delete_before_cursor(count=len(indent))
     elif (not doc.on_first_line and
             not current_line_blank):
-        b.newline(copy_margin=True)
+        b.newline(copy_margin=autoindent)
     elif (doc.char_before_cursor == '\\' and
             not (not builtins.__xonsh_env__.get('FORCE_POSIX_PATHS')
                  and ON_WINDOWS)):
-        b.newline(copy_margin=True)
+        b.newline(copy_margin=autoindent)
     elif (doc.find_next_word_beginning() is not None and
             (any(not _is_blank(i)
                  for i
                  in doc.lines_from_current[1:]))):
-        b.newline(copy_margin=True)
+        b.newline(copy_margin=autoindent)
     elif not current_line_blank and not can_compile(doc.text):
-        b.newline(copy_margin=True)
+        b.newline(copy_margin=autoindent)
     else:
         b.accept_action.validate_and_handle(cli, b)
 
