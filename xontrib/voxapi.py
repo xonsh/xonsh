@@ -7,6 +7,7 @@ import collections.abc
 
 from xonsh.platform import ON_POSIX, ON_WINDOWS, scandir
 
+
 VirtualEnvironment = collections.namedtuple('VirtualEnvironment', ['env', 'bin'])
 
 

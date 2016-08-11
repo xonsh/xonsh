@@ -1,13 +1,15 @@
 """Hooks for the distributed parallel computing library."""
 from xonsh.contexts import Functor
 
+__all__ = 'DSubmitter', 'dsubmit'
+
 
 def dworker(args, stdin=None):
     """Programatic access to the dworker utility, to allow launching
     workers that also have access to xonsh builtins.
     """
-    from distributed.cli import dworker as _dworker
-    _dworker.main.main(args=args, prog_name='dworker', standalone_mode=False)
+    from distributed.cli import dworker
+    dworker.main.main(args=args, prog_name='dworker', standalone_mode=False)
 
 
 aliases['dworker'] = dworker
@@ -67,7 +69,3 @@ def dsubmit(*a, args=(), kwargs=None, rtn='', **kw):
     e = Executor(*a, **kw)
     dsub = DSubmitter(e, args=args, kwargs=kwargs, rtn=rtn)
     return dsub
-
-
-# some cleanup
-del dworker, Functor
