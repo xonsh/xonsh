@@ -29,34 +29,34 @@ def carriage_return(b, cli):
     - Any text exists below cursor position (relevant when editing previous
     multiline blocks)
     """
-
-    at_end_of_line = _is_blank(b.document.current_line_after_cursor)
-    current_line_blank = _is_blank(b.document.current_line)
+    doc = b.document
+    at_end_of_line = _is_blank(doc.current_line_after_cursor)
+    current_line_blank = _is_blank(doc.current_line)
 
     # indent after a colon
-    if (b.document.current_line_before_cursor.strip().endswith(':') and
+    if (doc.current_line_before_cursor.strip().endswith(':') and
             at_end_of_line):
         b.newline()
-        b.insert_text(indent_, fire_event=False)
+        b.insert_text(indent, fire_event=False)
     # if current line isn't blank, check dedent tokens
     elif (not current_line_blank and
-            b.document.current_line.split(maxsplit=1)[0] in DEDENT_TOKENS and
-            b.document.line_count > 1):
+            doc.current_line.split(maxsplit=1)[0] in DEDENT_TOKENS and
+            doc.line_count > 1):
         b.newline(copy_margin=True)
-        _ = b.delete_before_cursor(count=len(indent_))
-    elif (not b.document.on_first_line and
+        _ = b.delete_before_cursor(count=len(indent))
+    elif (not doc.on_first_line and
             not current_line_blank):
         b.newline(copy_margin=True)
-    elif (b.document.char_before_cursor == '\\' and
+    elif (doc.char_before_cursor == '\\' and
             not (not builtins.__xonsh_env__.get('FORCE_POSIX_PATHS')
                  and ON_WINDOWS)):
         b.newline()
-    elif (b.document.find_next_word_beginning() is not None and
+    elif (doc.find_next_word_beginning() is not None and
             (any(not _is_blank(i)
                  for i
-                 in b.document.lines_from_current[1:]))):
+                 in doc.lines_from_current[1:]))):
         b.newline(copy_margin=True)
-    elif not current_line_blank and not can_compile(b.document.text):
+    elif not current_line_blank and not can_compile(doc.text):
         b.newline()
     else:
         b.accept_action.validate_and_handle(cli, b)
