@@ -41,7 +41,7 @@ def xontrib_context(name):
         ctx = {k: getattr(m, k) for k in pubnames}
     else:
         ctx = {k: getattr(m, k) for k in dir(m) if not k.startswith('_')}
-    return ctx
+    return ctx, m
 
 
 def update_context(name, ctx=None):
@@ -50,8 +50,8 @@ def update_context(name, ctx=None):
     """
     if ctx is None:
         ctx = builtins.__xonsh_ctx__
-    modctx = xontrib_context(name)
-    return ctx.update(modctx)
+    modctx, xontrib_mod = xontrib_context(name)
+    return ctx.update(modctx), xontrib_mod
 
 
 @functools.lru_cache()
@@ -68,7 +68,8 @@ def _load(ns):
     for name in ns.names:
         if ns.verbose:
             print('loading xontrib {0!r}'.format(name))
-        update_context(name, ctx=ctx)
+        ctx, mod = update_context(name, ctx=ctx)
+        getattr(mod, 'xontrib_init', lambda : None)()
 
 
 def _list(ns):

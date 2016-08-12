@@ -89,11 +89,13 @@ class Shell(object):
                              debug_level=debug)
         self.execer.scriptcache = scriptcache
         self.execer.cacheall = cacheall
+        self.xontribs = []
         if self.stype != 'none' or self.login:
             # load xontribs from config file
             names = builtins.__xonsh_config__.get('xontribs', ())
             for name in names:
-                update_context(name, ctx=self.ctx)
+                ctx, xontrib_mod = update_context(name, ctx=self.ctx)
+                self.xontribs .append(xontrib_mod)
             # load run control files
             env = builtins.__xonsh_env__
             rc = env.get('XONSHRC') if rc is None else rc

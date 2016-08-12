@@ -27,6 +27,7 @@ took inspiration from for xonsh:
 
 Structure
 ==========
+
 Xontribs are modules written in either xonsh (``*.xsh``) or Python (``*.py``).
 Normally, these are stored and found in an
 `implicit namespace package <https://www.python.org/dev/peps/pep-0420/>`_
@@ -59,8 +60,21 @@ Here is a sample file system layout and what the xontrib names would be::
           |- done.py     # "mypkg.subpkg.done", full module name
 
 
+Xontribs **may** define functions named ``xontrib_init``, that will be called
+at xontrib load time. ``xontrib_init`` is recommended to accept an arbitrary
+number of parameters, but for now, no parameter will be passed to the function. 
+
+That is to say::
+
+
+    def xontrib_init(*args, **kwargs):
+        # init my xontrib
+        print('my contrib is being loaded')
+
+
 Loading Xontribs
 ================
+
 Xontribs may be loaded in a few different ways: from the config file,
 dynamically at runtime with the ``xontrib`` command, or by importing the
 module normally. Since these extensions are just Python modules, by
@@ -105,6 +119,7 @@ Of course, you have to use the full module name to import a xontrib:
 
 Listing Known Xontribs
 ======================
+
 In addition to loading extensions, the ``xontrib`` command also allows you to
 list the known xontribs. This command will report whether known xontribs are
 installed and if they are loaded in the current session. To display this
