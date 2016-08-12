@@ -48,7 +48,7 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
         for p in path:
             if not isinstance(p, str):
                 continue
-            if not os.path.isdir(p) and not os.access(p, os.R_OK):
+            if not os.path.isdir(p) or not os.access(p, os.R_OK):
                 continue
             if fname not in (x.name for x in scandir(p)):
                 continue
