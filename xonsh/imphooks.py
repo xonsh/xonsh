@@ -84,4 +84,14 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
         return code
 
 
-sys.meta_path.append(XonshImportHook())
+def install_hook():
+    """
+    Install Xonsh import hook in `sys.metapath` in order for `.xsh` files to be
+    importable.
+
+    Can safely be called many times, will be no-op if a xonsh import hook is
+    already present.
+    """
+
+    if XonshImportHook not in {type(hook) for hook in sys.meta_path}:
+        sys.meta_path.append(XonshImportHook())

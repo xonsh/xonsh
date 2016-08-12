@@ -18,6 +18,7 @@ from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.codecache import run_script_with_cache, run_code_with_cache
 from xonsh.xonfig import xonfig_main
 from xonsh.lazyimps import pygments, pyghooks
+from xonsh.imphooks import install_hook
 
 
 def get_setproctitle():
@@ -188,6 +189,7 @@ def premain(argv=None):
         args.mode = XonshMode.interactive
         shell_kwargs['completer'] = True
         shell_kwargs['login'] = True
+    install_hook()
     builtins.__xonsh_shell__ = Shell(**shell_kwargs)
     env = builtins.__xonsh_env__
     env['XONSH_LOGIN'] = shell_kwargs['login']
