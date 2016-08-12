@@ -20,7 +20,9 @@ Implementations:
 import builtins
 import collections
 import collections.abc as abc
+import contextlib
 import ctypes
+import datetime
 import functools
 import glob
 import os
@@ -31,7 +33,6 @@ import sys
 import threading
 import traceback
 import warnings
-import contextlib
 
 # adding further imports from xonsh modules is discouraged to avoid circular
 # dependencies
@@ -933,7 +934,10 @@ def ensure_slice(x):
         return x
     try:
         x = int(x)
-        s = slice(x, x+1)
+        if x != -1:
+            s = slice(x, x+1)
+        else:
+            s = slice(-1, None, None)
     except ValueError:
         x = x.strip('[]()')
         m = SLICE_REG.fullmatch(x)
@@ -1588,3 +1592,19 @@ def _iglobpath(s, ignore_case=False, sort_result=None):
 def iglobpath(s, ignore_case=False, sort_result=None):
     """Simple wrapper around iglob that also expands home and env vars."""
     return _iglobpath(s, ignore_case=ignore_case, sort_result=sort_result)[0]
+
+
+def ensure_timestamp(t, datetime_format=None):
+    if isinstance(t, (int, float)):
+        return t
+    try:
+        return float(t)
+    except (ValueError, TypeError):
+        pass
+    if datetime_format is None:
+        datetime_format = builtins.__xonsh_env__['XONSH_DATETIME_FORMAT']
+    if isinstance(t, datetime.datetime):
+        t = t.timestamp()
+    else:
+        t = datetime.datetime.strptime(t, datetime_format).timestamp()
+    return t
