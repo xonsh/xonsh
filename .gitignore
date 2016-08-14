@@ -41,5 +41,3 @@ include/
 *.komodo*
 .cache
 .idea
-
-.coverage
