@@ -51,7 +51,7 @@ import token
 __all__ = token.__all__ + ["COMMENT", "tokenize", "detect_encoding",
                            "NL", "untokenize", "ENCODING", "TokenInfo",
                            "TokenError", 'SEARCHPATH', 'ATDOLLAR', 'ATEQUAL',
-                           'DOLLARNAME', 'IOREDIRECT']
+                           'DOLLARNAME', 'IOREDIRECT', 'NOCOMMA']
 PY35 = PYTHON_VERSION_INFO >= (3, 5, 0)
 if PY35:
     ASYNC = token.ASYNC
@@ -84,6 +84,9 @@ tok_name[N_TOKENS] = 'ATDOLLAR'
 N_TOKENS += 1
 ATEQUAL = N_TOKENS
 tok_name[N_TOKENS] = 'ATEQUAL'
+N_TOKENS += 1
+NOCOMMA = N_TOKENS
+tok_name[N_TOKENS] = 'NOCOMMA'
 N_TOKENS += 1
 _xonsh_tokens = {
     '?': 'QUESTION',
@@ -241,8 +244,10 @@ Operator = group(r"\*\*=?", r">>=?", r"<<=?", r"!=", r"//=?", r"->",
 Bracket = '[][(){}]'
 Special = group(r'\r?\n', r'\.\.\.', r'[:;.,@]')
 Funny = group(Operator, Bracket, Special)
+NoComma = r"('.*'|\".*\"|'''.*'''|\"\"\".*\"\"\"|\(.*\)|\[.*\]|{.*}|[^,]*)*"
 
-PlainToken = group(IORedirect, Number, Funny, String, Name_RE, SearchPath)
+PlainToken = group(IORedirect, Number, Funny, String, Name_RE, SearchPath,
+                   NoComma)
 Token = Ignore + PlainToken
 
 # First (or only) line of ' or " string.

@@ -233,7 +233,7 @@ class BaseParser(object):
             'op_factor_list', 'trailer_list', 'testlist_comp',
             'yield_expr_or_testlist_comp', 'dictorsetmaker',
             'comma_subscript_list', 'test', 'sliceop', 'comp_iter',
-            'yield_arg', 'test_comma_list']
+            'yield_arg', 'test_comma_list', 'comma_nocomma_list', 'macroarglist']
         for rule in opt_rules:
             self._opt_rule(rule)
 
@@ -247,7 +247,7 @@ class BaseParser(object):
             'pm_term', 'op_factor', 'trailer', 'comma_subscript',
             'comma_expr_or_star_expr', 'comma_test', 'comma_argument',
             'comma_item', 'attr_period_name', 'test_comma',
-            'equals_yield_expr_or_testlist']
+            'equals_yield_expr_or_testlist', 'comma_nocomma']
         for rule in list_rules:
             self._list_rule(rule)
 
@@ -1830,6 +1830,21 @@ class BaseParser(object):
                    | QUESTION
         """
         p[0] = [p[1]]
+
+    def p_comma_nocomma(self, p):
+        """comma_nocomma : COMMA NOCOMMA"""
+        p[0] = [p[2]]
+
+    def p_macroarglist(self, p):
+        """macroarglist : NOCOMMA comma_nocomma_list_opt comma_opt"""
+        p1, p2 = p[1], p[2]
+        if p2 is None:
+            elts = [p1]
+        else:
+            elts = [p1] + p2
+        p0 = ast.Tuple(elts=elts, ctx.load(), lineno=p1.lineno,
+                       col_offset=p1.col_offset)
+        p[0] = p0
 
     def p_subscriptlist(self, p):
         """subscriptlist : subscript comma_subscript_list_opt comma_opt"""

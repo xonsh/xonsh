@@ -15,7 +15,7 @@ from xonsh.lazyasd import lazyobject
 from xonsh.platform import PYTHON_VERSION_INFO
 from xonsh.tokenize import (OP, IOREDIRECT, STRING, DOLLARNAME, NUMBER,
                             SEARCHPATH, NEWLINE, INDENT, DEDENT, NL, COMMENT, ENCODING,
-                            ENDMARKER, NAME, ERRORTOKEN, tokenize, TokenError)
+                            ENDMARKER, NAME, ERRORTOKEN, tokenize, TokenError, NOCOMMA)
 
 
 @lazyobject
@@ -62,6 +62,7 @@ def token_map():
         from xonsh.tokenize import ASYNC, AWAIT
         tm[ASYNC] = 'ASYNC'
         tm[AWAIT] = 'AWAIT'
+    tm[NOCOMMA] = 'NOCOMMA'
     return tm
 
 
