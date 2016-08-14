@@ -58,10 +58,10 @@ def check_stmts(inp, run=True, mode='exec'):
         inp += '\n'
     check_ast(inp, run=run, mode=mode)
 
-def check_xonsh_ast(xenv, inp, run=True, mode='eval'):
+def check_xonsh_ast(xenv, inp, run=True, mode='eval', debug_level=0):
     __tracebackhide__ = True
     builtins.__xonsh_env__ = xenv
-    obs = PARSER.parse(inp)
+    obs = PARSER.parse(inp, debug_level=debug_level)
     if obs is None:
         return  # comment only
     bytecode = compile(obs, '<test-xonsh-ast>', mode)
@@ -1798,3 +1798,9 @@ def test_redirect_error_to_output(r, o):
     assert check_xonsh_ast({}, '$[echo "test" {} {}> test.txt]'.format(r, o), False)
     assert check_xonsh_ast({}, '$[< input.txt echo "test" {} {}> test.txt]'.format(r, o), False)
     assert check_xonsh_ast({}, '$[echo "test" {} {}> test.txt < input.txt]'.format(r, o), False)
+
+def test_macro_call_empty():
+    check_xonsh_ast({}, 'f!()', False)
+
+def test_macro_call_one_arg():
+    check_xonsh_ast({}, 'f!(x)', False, debug_level=100)
