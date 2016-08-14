@@ -6,4 +6,9 @@ coverage:
         threshold: null
     patch:
       default:
-        target: null
+        target: auto
+        threshold: null
+    changes:
+      default:
+        target: auto
+        threshold: null
