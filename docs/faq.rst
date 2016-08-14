@@ -144,7 +144,7 @@ syntax and don't share a namespace.  Therefore, in xonsh,
     >>> exec gdb
     (gdb)
 
-Yes, this is potentially confusing. This is particularly true since eariler
+Yes, this is potentially confusing. This is particularly true since earlier
 versions of Python *had* an exec statement whose syntax would have clashed
 with the sh-lang command form.
 
@@ -157,7 +157,7 @@ commands.
 
 All of the above being true, if the exec duality is causing you problems there
 a few operations that you can implement to mitigate the confusion. The first is
-that you can remove the ``exec`` alias and use the ``xexec`` aliase instead:
+that you can remove the ``exec`` alias and use the ``xexec`` alias instead:
 
 .. code-block:: xonshcon
 
@@ -171,14 +171,14 @@ subprocess mode with ``![]`` or ``!()``:
 
     >>> ![exec bash]
 
-Lastly, you can assign the restult of the exec() function to a throw away
+Lastly, you can assign the result of the exec() function to a throw away
 variable (since the return is always None):
 
 .. code-block:: xonshcon
 
     >>> _ = exec('x = 42')
 
-Hopefully, though, this tradeoff makes sense and you never have to worry about
+Hopefully, though, this trade-off makes sense and you never have to worry about
 it...unless chimera slaying is your bag.
 
 8. Gotchas
