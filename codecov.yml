@@ -1,14 +1,5 @@
 coverage:
   status:
-    project:
-      default:
-        target: auto
-        threshold: null
-    patch:
-      default:
-        target: auto
-        threshold: null
-    changes:
-      default:
-        target: auto
-        threshold: null
+    project: true
+    patch: true
+    changes: true
