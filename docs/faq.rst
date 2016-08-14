@@ -120,10 +120,69 @@ It is also worth noting that ``{branch_color}`` is usually the slow poke.
 Just removing the color lookup from the ``$PROMPT`` can still provide the branch
 name while being fast enough.
 
+7. exec
+-------
+The notion of ``exec`` is a bit of a tricky beast in xonsh. Both Python and
+basically every other shell language have an exec that perform radically
+different operations.
 
-7. Gotchas
+* In Python, ``exec`` is a builtin function that executes strings, ASTs, or
+  code objects in a provided namespace.
+* In sh-langs (and elsewhere), ``exec`` is a command the runs another command
+  directly in the current process.
+
+These two ideas are central to both languages - without which most programs
+cannot be run.  Luckily, even though they share a name, they have distinct
+syntax and don't share a namespace.  Therefore, in xonsh,
+
+.. code-block:: xonshcon
+
+    # exec() as a function is run as Python's exec
+    >>> exec('x = 41; x += 1', globals(), locals())
+
+    # while exec as a statement is like bash's exec
+    >>> exec gdb
+    (gdb)
+
+Yes, this is potentially confusing. This is particularly true since eariler
+versions of Python *had* an exec statement whose syntax would have clashed
+with the sh-lang command form.
+
+Yes, we are sorry. But the alternative is that import programs that use
+exec under the covers, such as SSH and gdb, would not be usable when xonsh
+is set as the default shell. (Note that we can't rename the exec() function
+since Python would fail.) As usability is the most important aspect of a shell,
+xonsh trades a small amount of potential confusion for large class of important
+commands.
+
+All of the above being true, if the exec duality is causing you problems there
+a few operations that you can implement to mitigate the confusion. The first is
+that you can remove the ``exec`` alias and use the ``xexec`` aliase instead:
+
+.. code-block:: xonshcon
+
+    >>> del aliases['exec']
+    >>> xexec ssh
+
+Alternatively, you can always be sure to run the exec command explicitly in
+subprocess mode with ``![]`` or ``!()``:
+
+.. code-block:: xonshcon
+
+    >>> ![exec bash]
+
+Lastly, you can assign the restult of the exec() function to a throw away
+variable (since the return is always None):
+
+.. code-block:: xonshcon
+
+    >>> _ = exec('x = 42')
+
+Hopefully, though, this tradeoff makes sense and you never have to worry about
+it...unless chimera slaying is your bag.
+
+8. Gotchas
 ----------
-
 There are a few gotchas when using xonsh across multiple versions of Python,
 where some behavior can differ, as the underlying Python might behave
 differently.
