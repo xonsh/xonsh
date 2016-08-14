@@ -1815,6 +1815,10 @@ class BaseParser(object):
         """trailer : LPAREN arglist_opt RPAREN"""
         p[0] = [p[2] or dict(args=[], keywords=[], starargs=None, kwargs=None)]
 
+    def p_trailer_bang_lparen(self, p):
+        """trailer : BANG_LPAREN macroarglist_opt RPAREN"""
+        p[0] = [p[2] or dict(args=[], keywords=[], starargs=None, kwargs=None)]
+
     def p_trailer_p3(self, p):
         """trailer : LBRACKET subscriptlist RBRACKET
                    | PERIOD NAME
