@@ -54,3 +54,15 @@ _foobar = 3
 
     ctx = xontrib_context('spameggs')
     assert ctx == {'spam': 1, '_foobar': 3}
+
+def test_xshxontrib(tmpmod):
+    """
+    Test that .xsh xontribs are loadable
+    """
+    with tmpmod.mkdir("xontrib").join("script.xsh").open('w') as x:
+        x.write("""
+hello = 'world'
+""")
+
+    ctx = xontrib_context('script')
+    assert ctx == {'hello': 'world'}

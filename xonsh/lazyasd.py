@@ -112,6 +112,10 @@ class LazyObject(object):
         obj = self._lazy_obj()
         return hash(obj)
 
+    def __or__(self, other):
+        obj = self._lazy_obj()
+        return obj | other
+
 
 def lazyobject(f):
     """Decorator for constructing lazy objects from a function."""
