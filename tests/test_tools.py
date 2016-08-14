@@ -1,10 +1,11 @@
   # -*- coding: utf-8 -*-
 """Tests xonsh tools."""
+import builtins
+import datetime as dt
 import os
 import pathlib
-from tempfile import TemporaryDirectory
 import stat
-import builtins
+from tempfile import TemporaryDirectory
 
 import pytest
 
@@ -22,7 +23,8 @@ from xonsh.tools import (
     subexpr_from_unbalanced, subproc_toks, to_bool, to_bool_or_int,
     to_dynamic_cwd_tuple, to_logfile_opt, pathsep_to_set, set_to_pathsep,
     is_string_seq, pathsep_to_seq, seq_to_pathsep, is_nonstring_seq_of_strings,
-    pathsep_to_upper_seq, seq_to_upper_pathsep, expandvars, is_int_as_str, is_slice_as_str
+    pathsep_to_upper_seq, seq_to_upper_pathsep, expandvars, is_int_as_str, is_slice_as_str,
+    ensure_timestamp,
     )
 from xonsh.commands_cache import CommandsCache
 from xonsh.built_ins import expand_path
@@ -816,6 +818,7 @@ def test_bool_or_int_to_str(inp, exp):
         (42, slice(42, 43)),
         (None, slice(None, None, None)),
         (slice(1,2), slice(1,2)),
+        ('-1', slice(-1, None, None)),
         ('42', slice(42, 43)),
         ('-42', slice(-42, -41)),
         ('1:2:3', slice(1, 2, 3)),
@@ -1120,3 +1123,16 @@ def test_expandvars(inp, exp, xonsh_builtins):
     env = Env({'foo':'bar', 'spam': 'eggs', 'a_bool': True, 'an_int': 42, 'none': None})
     xonsh_builtins.__xonsh_env__ = env
     assert expandvars(inp) == exp
+
+
+@pytest.mark.parametrize('inp, fmt, exp',[
+    (572392800.0, None, 572392800.0),
+    ('42.1459', None, 42.1459),
+    (dt.datetime(2016, 8, 2, 13, 24), None, dt.datetime(2016, 8, 2, 13, 24).timestamp()),
+    ('2016-8-10 16:14', None, dt.datetime(2016, 8, 10, 16, 14).timestamp()),
+    ('2016/8/10 16:14:40', '%Y/%m/%d %H:%M:%S', dt.datetime(2016, 8, 10, 16, 14, 40).timestamp()),
+    ])
+def test_ensure_timestamp(inp, fmt, exp, xonsh_builtins):
+    xonsh_builtins.__xonsh_env__['XONSH_DATETIME_FORMAT'] = '%Y-%m-%d %H:%M'
+    obs = ensure_timestamp(inp, fmt)
+    assert exp == obs

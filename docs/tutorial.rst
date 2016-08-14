@@ -474,7 +474,7 @@ result is automatically converted to a string. For example,
     4
     >>> echo @([42, 'yo'])
     42 yo
-    >>> echo "hello" | @(lambda a, s=None: s.strip + " world")
+    >>> echo "hello" | @(lambda a, s=None: s.strip() + " world\n")
     hello world
 
 This syntax can be used inside of a captured or uncaptured subprocess, and can
@@ -1104,8 +1104,9 @@ must have one of the following two signatures
         return 0
 
 
-Adding and Removing Aliases
----------------------------
+Adding, Modifying, and Removing Aliases
+---------------------------------------
+
 We can dynamically alter the aliases present simply by modifying the
 built-in mapping.  Here is an example using a function value:
 
@@ -1116,6 +1117,23 @@ built-in mapping.  Here is an example using a function value:
     >>> aliases['banana'] = _banana
     >>> banana
     'My spoon is tooo big!'
+
+
+To redefine an alias, simply assign a new function, here using a python lambda
+with keyword arguments:
+
+.. code-block:: xonshcon
+
+    >>> aliases['banana'] = lambda args,stdin=None: "Banana for scale.\n"
+    >>> banana
+    Banana for scale.
+
+
+Removing an alias is as easy as deleting the key from the alias dictionary:
+
+.. code-block:: xonshcon
+    
+    >>> del aliases['banana']
 
 .. note::
 

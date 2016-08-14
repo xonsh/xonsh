@@ -1,13 +1,15 @@
 """Matplotlib xontribution."""
 
-from xonsh.proc import foreground as _foreground
+from xonsh.proc import foreground as foreground
+
+__all__ = ()
 
 
-@_foreground
-def _mpl(args, stdin=None):
+@foreground
+def mpl(args, stdin=None):
     """Hooks to matplotlib"""
     from xontrib.mplhooks import show
     show()
 
 
-aliases['mpl'] = _mpl
+aliases['mpl'] = mpl
