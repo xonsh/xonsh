@@ -1842,7 +1842,7 @@ class BaseParser(object):
             elts = [p1]
         else:
             elts = [p1] + p2
-        p0 = ast.Tuple(elts=elts, ctx.load(), lineno=p1.lineno,
+        p0 = ast.Tuple(elts=elts, ctx=ast.Load(), lineno=p1.lineno,
                        col_offset=p1.col_offset)
         p[0] = p0
 
