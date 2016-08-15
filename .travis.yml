@@ -18,7 +18,7 @@ matrix:
           env: PYTHON="3.5" MINICONDA_OS="MacOSX"
 
 before_install:
-  - if [[ ! $TRAVIS_PYTHON_VERSION == "nightly" ]]; then
+  - if [[ ! "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then
       URL="https://repo.continuum.io/miniconda/Miniconda3-latest-${MINICONDA_OS}-x86_64.sh";
       wget "${URL}" -O miniconda.sh;
       bash miniconda.sh -b -p $HOME/miniconda;
@@ -30,7 +30,7 @@ before_install:
     fi
 
 install:
-  - if [[ ! $TRAVIS_PYTHON_VERSION == "nightly" ]]; then
+  - if [[ ! "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then
       conda create -q -n test_env python=${PYTHON} pygments prompt_toolkit ply pytest pytest-timeout psutil;
       source activate test_env;
     else
@@ -39,13 +39,13 @@ install:
     python setup.py install;
 
 script:
-  - if [[ $TRAVIS_PYTHON_VERSION = "nightly" ]]; then
+  - if [[ "$TRAVIS_PYTHON_VERSION" = "nightly" ]]; then
       XONSH_DEBUG=1 py.test --flake8 --cov=xonsh --timeout=10;
     else
       py.test --timeout=10;
     fi
 
 after_success:
-  - if [[ $TRAVIS_PYTHON_VERSION = "nightly" ]]; then
+  - if [[ "$TRAVIS_PYTHON_VERSION" = "nightly" ]]; then
       codecov;
     fi
