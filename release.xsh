@@ -82,17 +82,35 @@ def pipify():
     """Make and upload pip package."""
     ./setup.py sdist upload
 
+def shatar(user, repo, ):
+    oldpwd = $PWD
+    cd /tmp
+    curl -L -O @("https://github.com/{0}/{1}/archive/{2}.tar.gz".format(*args))
+    sha, _ = $(sha256sum @('{}.tar.gz'.format(args[2]))).split()
+    cd @(oldpwd)
+    return sha
 
-def condaify(ver):
+def condaify(ver, ghuser):
     """Make and upload conda packages."""
-    conda_dir = os.path.dirname(os.path.dirname($(which conda)))
-    conda_bld = os.path.join(conda_dir, 'conda-bld')
-    rm -f @(os.path.join(conda_bld, 'src_cache', 'xonsh.tar.gz'))
-    conda build --no-test recipe
-    pkgpath = os.path.join(conda_bld, '*', 'xonsh-{0}*.tar.bz2'.format(ver))
-    pkg = __xonsh_glob__(pkgpath)[0]
-    conda convert -p all -o @(conda_bld) @(pkg)
-    anaconda upload -u xonsh @(__xonsh_glob__(pkgpath))
+    origin = 'git@github.com:{ghuser}/xonsh-feedstock.git'.format(ghuser=ghuser)
+    upstream = 'git@github.com:conda-forge/xonsh-feedstock.git'
+    if not os.path.isdir('feedstock'):
+        git clone @(origin) feedstock
+    # make sure master feedstock is up to date
+    cd feedstock
+    git checkout master
+    git pull @(origin) master
+    git pull @(upstream) master
+    # make and modify version branch
+    git checkout -b @(ver) master
+    cd recipe
+    set_ver = '{% set version = "' + ver + '" %}'
+    replace_in_file('{% set version = ".*" %}', set_ver, 'meta.yaml')
+    set_sha = '  sha256: '
+    replace_in_file('\s+sha256:.*', set_sha, 'meta.yaml')
+    cd ..
+    git push --set-upstream @(origin) @(ver)
+    cd ..
 
 def docser():
     """Create docs"""
@@ -123,7 +141,9 @@ def main(args=None):
                         default='git@github.com:xonsh/xonsh.git',
                         help='upstream repo')
     parser.add_argument('-b', '--branch', default='master',
-                         help='branch to commit / push to.')
+                        help='branch to commit / push to.')
+    parser.add_argument('--github-user', default=$USER, dest='ghuser',
+                        help='GitHub username.')
     for doer in DOERS:
         base = doer[3:].replace('_', '-')
         parser.add_argument('--do-' + base, dest=doer, default=True,
@@ -148,7 +168,7 @@ def main(args=None):
     if ns.do_pip:
         pipify()
     if ns.do_conda:
-        condaify(ns.ver)
+        condaify(ns.ver, ns.ghuser)
     if ns.do_docs:
         docser()
 
