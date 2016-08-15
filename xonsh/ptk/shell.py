@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """The prompt_toolkit based xonsh shell."""
+import sys
 import builtins
 
 from prompt_toolkit.key_binding.manager import KeyBindingManager
@@ -116,11 +117,11 @@ class PromptToolkitShell(BaseShell):
                 else:
                     line = self.precmd(line)
                     self.default(line)
-            except KeyboardInterrupt:
+            except KeyboardInterrupt as e:
                 self.reset_buffer()
-            except EOFError:
+            except EOFError as e:
                 if builtins.__xonsh_env__.get("IGNOREEOF"):
-                    print('Use "exit" to leave the shell.')
+                    print('Use "exit" to leave the shell.', file=sys.stderr)
                 else:
                     break
 
