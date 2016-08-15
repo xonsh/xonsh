@@ -3,7 +3,7 @@ matrix:
     include:
         - os: linux
           python: "nightly"
-          env: RUN_COVERAGE=true
+          env: RUN_COVERAGE=true XONSH_DEBUG=1
         - os: linux
           language: generic
           env: PYTHON="3.4" MINICONDA_OS="Linux"
