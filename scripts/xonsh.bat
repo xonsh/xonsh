@@ -1,2 +1,2 @@
 @echo off
-python -m xonsh.main %*
+python -m xonsh %*
