@@ -82,13 +82,17 @@ def pipify():
     """Make and upload pip package."""
     ./setup.py sdist upload
 
-def shatar(user, repo, ):
+
+def shatar(user, repo, target):
     oldpwd = $PWD
     cd /tmp
-    curl -L -O @("https://github.com/{0}/{1}/archive/{2}.tar.gz".format(*args))
-    sha, _ = $(sha256sum @('{}.tar.gz'.format(args[2]))).split()
+    url = "https://github.com/{0}/{1}/archive/{2}.tar.gz"
+    url = url.format(user, repo, target)
+    curl -L -O @(url)
+    sha, _ = $(sha256sum @('{}.tar.gz'.format(target))).split()
     cd @(oldpwd)
     return sha
+
 
 def condaify(ver, ghuser):
     """Make and upload conda packages."""
@@ -102,15 +106,17 @@ def condaify(ver, ghuser):
     git pull @(origin) master
     git pull @(upstream) master
     # make and modify version branch
-    git checkout -b @(ver) master
+    git checkout -b @(ver) master or git checkout @(ver)
     cd recipe
     set_ver = '{% set version = "' + ver + '" %}'
+    set_sha = '  sha256: ' + shatar('xonsh', 'xonsh', ver)
     replace_in_file('{% set version = ".*" %}', set_ver, 'meta.yaml')
-    set_sha = '  sha256: '
     replace_in_file('\s+sha256:.*', set_sha, 'meta.yaml')
     cd ..
+    git commit -am @("updated v" + ver)
     git push --set-upstream @(origin) @(ver)
     cd ..
+
 
 def docser():
     """Create docs"""
