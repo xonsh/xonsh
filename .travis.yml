@@ -39,13 +39,7 @@ install:
     fi
 
 script:
-  - if [[ $RUN_COVERAGE = true ]]; then
-      XONSH_DEBUG=1 py.test --flake8 --cov=xonsh --timeout=10;
-    else
-      py.test --timeout=10;
-    fi
+  - XONSH_DEBUG=1 py.test --flake8 --cov=xonsh --timeout=10;
 
 after_success:
-  - if [[ $RUN_COVERAGE = true ]]; then
-      codecov;
-    fi
+  - codecov
