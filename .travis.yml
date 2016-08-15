@@ -35,7 +35,7 @@ install:
       source activate test_env;
     else
       pip install -r requirements-tests.txt;
-    fi
+    fi;
     python setup.py install;
 
 script:
