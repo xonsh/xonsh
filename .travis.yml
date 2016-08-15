@@ -40,7 +40,7 @@ install:
 
 script:
   - if [[ $RUN_COVERAGE = true ]]; then
-      XONSH_DEBUG=1 py.test --flake8 --cov=. --cov-report=term --timeout=10;
+      XONSH_DEBUG=1 py.test --flake8 --cov=xonsh --timeout=10;
     else
       py.test --timeout=10;
     fi
