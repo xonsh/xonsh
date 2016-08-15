@@ -3,18 +3,6 @@ matrix:
     include:
         - os: linux
           python: "nightly"
-        - os: linux
-          language: generic
-          env: PYTHON="3.4" MINICONDA_OS="Linux"
-        - os: linux
-          language: generic
-          env: PYTHON="3.5" MINICONDA_OS="Linux"
-        - os: osx
-          language: generic
-          env: PYTHON="3.4" MINICONDA_OS="MacOSX"
-        - os: osx
-          language: generic
-          env: PYTHON="3.5" MINICONDA_OS="MacOSX"
 
 install:
   - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then
