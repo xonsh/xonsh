@@ -20,13 +20,13 @@ install:
   - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then
       pip install -r requirements-tests.txt;
     fi;
-    python setup.py install;
+    python3 setup.py install;
 
 script:
   - if [[ "$TRAVIS_PYTHON_VERSION" = "nightly" ]]; then
-      XONSH_DEBUG=1 python -m pytest --flake8 --cov=xonsh --timeout=10;
+      XONSH_DEBUG=1 python3 -m pytest --flake8 --cov=xonsh --timeout=10;
     else
-      python -m pytest --timeout=10;
+      python3 -m pytest --timeout=10;
     fi
 
 after_success:
