@@ -148,7 +148,7 @@ Yes, this is potentially confusing. This is particularly true since earlier
 versions of Python *had* an exec statement whose syntax would have clashed
 with the sh-lang command form.
 
-Yes, we are sorry. But the alternative is that import programs that use
+Yes, we are sorry. But the alternative is that important programs that use
 exec under the covers, such as SSH and gdb, would not be usable when xonsh
 is set as the default shell. (Note that we can't rename the exec() function
 since Python would fail.) As usability is the most important aspect of a shell,
