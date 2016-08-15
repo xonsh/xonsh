@@ -698,8 +698,6 @@ def _tokenize(readline, encoding):
                         yield stashed
                         stashed = None
                     yield TokenInfo(COMMENT, token, spos, epos, line)
-                elif re.match(NoComma, token):
-                    yield TokenInfo(NOCOMMA, token, spos, epos, line)
                 # Xonsh-specific Regex Globbing
                 elif re.match(SearchPath, token):
                     yield TokenInfo(SEARCHPATH, token, spos, epos, line)
