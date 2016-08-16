@@ -239,7 +239,8 @@ class OnlyAction(Action):
 
 def main(args=None):
     default_upstream = 'git@github.com:{org}/{repo}.git'
-    default_upstream = default_upstream.format(org=UPSTREAM_ORG, UPSTREAM_REPO)
+    default_upstream = default_upstream.format(org=UPSTREAM_ORG,
+                                               repo=UPSTREAM_REPO)
     # make parser
     parser = ArgumentParser('release')
     parser.add_argument('--upstream', default=default_upstream,
@@ -250,20 +251,19 @@ def main(args=None):
                         help='GitHub username.')
     for doer in DOERS:
         base = doer[3:].replace('_', '-')
-        parser.add_argument('--do-' + base, dest=doer,
-                            default=WILL_DO.get(doer, True),
-                            action='store_true', help='runs ' + base)
+        wd = WILL_DO.get(doer, True)
+        parser.add_argument('--do-' + base, dest=doer, default=wd,
+                            action='store_true',
+                            help='runs {}, default: {}'.format(base, wd))
         parser.add_argument('--no-' + base, dest=doer, action='store_false',
                             help='does not run ' + base)
         parser.add_argument('--only-' + base, dest=doer, action=OnlyAction,
                             help='only runs ' + base, nargs=0)
     parser.add_argument('ver', help='target version string')
     ns = parser.parse_args(args or $ARGS[1:])
-
     # enable debugging
     $RAISE_SUBPROC_ERROR = True
     trace on
-
     # run commands
     if ns.do_version_bump:
         version_update(ns.ver)
@@ -275,7 +275,6 @@ def main(args=None):
         condaify(ns.ver, ns.ghuser)
     if ns.do_docs:
         docser()
-
     # disable debugging
     trace off
 
