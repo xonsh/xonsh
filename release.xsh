@@ -173,11 +173,22 @@ def create_ghuser_token(ghuser, credfile):
     note = 'github3.py release.xsh ' + PROJECT + ' ' + socket.gethostname()
     note_url = PROJECT_URL
     scopes = ['user', 'repo']
-    auth = github3.authorize(ghuser, password, scopes, note, note_url)
+    auth = github3.authorize(ghuser, password, scopes, note, note_url,
+                             two_factor_callback=two_factor)
     with open(credfile, 'w') as f:
         f.write(auth.token + '\n')
         f.write(auth.id)
     return auth.token
+
+
+def two_factor():
+    """2 Factor Authentication callback function, called by `github3.authorize`
+    as needed.
+    """
+    code = ''
+    while not code:
+        code = input('Enter 2FA code: ')
+    return code
 
 
 def read_ghuser_token(credfile):
