@@ -48,6 +48,10 @@ class Shell(object):
         # shell type is pulled from env
         if shell_type is None:
             shell_type = env.get('SHELL_TYPE')
+            if shell_type == 'none':
+                # This bricks interactive xonsh
+                # Can happen from the use of .xinitrc, .xsession, etc
+                shell_type = 'best'
         if shell_type == 'best' or shell_type is None:
             shell_type = best_shell_type()
         elif shell_type == 'random':
