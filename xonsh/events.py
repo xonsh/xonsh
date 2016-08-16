@@ -58,9 +58,7 @@ class Event(set):
         for handler in self:
             if handler.__validator is not None and not handler.__validator(*pargs, **kwargs):
                 continue
-            newargs = yield handler(*pargs, **kwargs)
-            if newargs is not None:
-                pargs = newargs
+            yield handler(*pargs, **kwargs)
 
     def __call__(self, *pargs, **kwargs):
         """
@@ -87,34 +85,6 @@ class Event(set):
         for rv in self.calleach(*pargs, **kwargs):
             if not rv:
                 return rv
-
-    def loopback(self, *pargs, **kwargs):
-        """
-        Calls each handler in turn. If it returns a value, the arguments are modified.
-
-        The final result is returned.
-
-        NOTE: Each handler must return the same number of values it was
-        passed, or nothing at all.
-        """
-        calls = self.calleach(*pargs, **kwargs)
-        newvals = next(calls)
-        while True:
-            if newvals is not None:
-                if len(pargs) == 1:
-                    pargs = (newvals,)
-                else:
-                    pargs = newvals
-            try:
-                newvals = calls.send(pargs)
-            except StopIteration:
-                break
-
-        if newvals is not None:
-            return newvals
-        else:
-            return pargs
-
 
 class Events:
     """

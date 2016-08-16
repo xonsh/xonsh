@@ -59,23 +59,6 @@ def test_until_false():
 
     assert called == 1
 
-def test_loopback():
-    e = Events()
-    e.test.__doc__ = "Test event"
-
-    @e.test.handler
-    def first(num):
-        return num + 1
-
-    @e.test.handler
-    def second(num):
-        return num + 1
-
-    rv = e.test.loopback(0)
-
-    assert rv == 2
-
-
 def test_validator():
     e = Events()
     e.test.__doc__ = "Test event"
