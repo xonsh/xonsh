@@ -69,7 +69,7 @@ def _load(ns):
         if ns.verbose:
             print('loading xontrib {0!r}'.format(name))
         ctx, mod = update_context(name, ctx=ctx)
-        getattr(mod, 'xontrib_init', lambda : None)()
+        getattr(mod, 'xontrib_init', lambda: None)()
 
 
 def _list(ns):
