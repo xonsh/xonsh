@@ -3,7 +3,35 @@
 import os
 import re
 import sys
+from getpass import getuser, getpass
 from argparse import ArgumentParser, Action
+
+try:
+  import github3
+except ImportError:
+  github3 = None
+
+# Configuration!
+PROJECT = 'xonsh'
+PROJECT_URL = 'http://xon.sh'
+
+# further possible customizations
+USER = getuser()
+ORG = PROJECT
+UPSTREAM_ORG = PROJECT
+UPSTREAM_REPO = PROJECT
+FEEDSTOCK_REPO = PROJECT + '-feedstock'
+WILL_DO = {
+  'do_version_bump': True,
+  'do_git': True,
+  'do_pip': True,
+  'do_conda': True,
+  'do_docs': True,
+}
+
+#
+# Implementation below!
+#
 
 def replace_in_file(pattern, new, fname):
     """Replaces a given pattern in a file"""
@@ -83,39 +111,101 @@ def pipify():
     ./setup.py sdist upload
 
 
-def shatar(user, repo, target):
+def shatar(org, repo, target):
+    """Returns the SHA-256 sum of the {ver}.tar.gz archive from github."""
     oldpwd = $PWD
     cd /tmp
     url = "https://github.com/{0}/{1}/archive/{2}.tar.gz"
-    url = url.format(user, repo, target)
+    url = url.format(org, repo, target)
     curl -L -O @(url)
     sha, _ = $(sha256sum @('{}.tar.gz'.format(target))).split()
     cd @(oldpwd)
     return sha
 
 
+def feedstok_repos(ghuser):
+    """Returns the origin and upstream repo URLs for the feedstock."""
+    origin = 'git@github.com:{ghuser}/{feedstock}.git'
+    origin = origin.format(ghuser=ghuser, feedstock=FEEDSTOCK_REPO)
+    upstream = 'git@github.com:conda-forge/{feedstock}.git'
+    upstream = upstream.format(feedstock=FEEDSTOCK_REPO)
+    return origin, upstream
+
+
 def condaify(ver, ghuser):
     """Make and upload conda packages."""
-    origin = 'git@github.com:{ghuser}/xonsh-feedstock.git'.format(ghuser=ghuser)
-    upstream = 'git@github.com:conda-forge/xonsh-feedstock.git'
+    origin, upstream = feedstock_repos(ghuser)
     if not os.path.isdir('feedstock'):
         git clone @(origin) feedstock
     # make sure master feedstock is up to date
     cd feedstock
     git checkout master
-    git pull @(origin) master
     git pull @(upstream) master
     # make and modify version branch
     git checkout -b @(ver) master or git checkout @(ver)
     cd recipe
     set_ver = '{% set version = "' + ver + '" %}'
-    set_sha = '  sha256: ' + shatar('xonsh', 'xonsh', ver)
+    set_sha = '  sha256: ' + shatar(UPSTREAM_ORG, UPSTREAM_REPO, ver)
     replace_in_file('{% set version = ".*" %}', set_ver, 'meta.yaml')
     replace_in_file('\s+sha256:.*', set_sha, 'meta.yaml')
     cd ..
     git commit -am @("updated v" + ver)
     git push --set-upstream @(origin) @(ver)
     cd ..
+    if github3 is not None:
+        open_feedstock_pr(ver, ghuser)
+
+
+def create_ghuser_token(ghuser, credfile):
+    """Acquires a github token, writes a credentials file, and returns
+    the token.
+    """
+    password = ''
+    while not password:
+        password = getpass('GitHub Password for {0}: '.format(ghuser))
+    note = 'github3.py release.xsh ' + PROJECT
+    note_url = PROJECT_URL
+    scopes = ['user', 'repo']
+    auth = github3.authorize(ghuser, password, scopes, note, note_url)
+    with open(credfile, 'w') as f:
+        f.write(auth.token + '\n')
+        f.write(auth.id)
+    return auth.token
+
+
+def read_ghuser_token(credfile):
+    """Reads in a github user token from the credentials file."""
+    with open(credfile, 'r') as f:
+        token = f.readline().strip()
+        ghid = f.readline().strip()
+    return token
+
+
+def ghlogin(ghuser):
+    """Returns a github object that is logged in."""
+    credfile = ghuser + '.cred'
+    if os.path.exists(credfile):
+        token = read_ghuser_token(credfile)
+    else:
+        token = create_ghuser_token(ghuser, credfile)
+    gh = github3.login(ghuser, token=token)
+    return gh
+
+
+def open_feedstock_pr(ver, ghuser):
+    """Opens a feedstock PR."""
+    origin, upstream = feedstock_repos(ghuser)
+    gh = ghlogin(ghuser)
+    repo = gh.repository('conda-forge', FEEDSTOCK_REPO)
+    print('Creating conda-forge feedstock pull request...')
+    title = PROJECT + ' v' + ver
+    head = ghuser + ':' + ver
+    body = 'Merge only after success.'
+    pr = repo.create_pull(title, 'master', head, body=body)
+    if pr is None:
+        print('!!!Failed to create pull request!!!')
+    else:
+        print('Pull request created at ' + pr.html_url)
 
 
 def docser():
@@ -148,13 +238,13 @@ def main(args=None):
                         help='upstream repo')
     parser.add_argument('-b', '--branch', default='master',
                         help='branch to commit / push to.')
-    parser.add_argument('--github-user', default=$USER, dest='ghuser',
+    parser.add_argument('--github-user', default=USER, dest='ghuser',
                         help='GitHub username.')
     for doer in DOERS:
         base = doer[3:].replace('_', '-')
-        parser.add_argument('--do-' + base, dest=doer, default=True,
-                            action='store_true',
-                            help='runs ' + base)
+        parser.add_argument('--do-' + base, dest=doer,
+                            default=WILL_DO.get(doer, True),
+                            action='store_true', help='runs ' + base)
         parser.add_argument('--no-' + base, dest=doer, action='store_false',
                             help='does not run ' + base)
         parser.add_argument('--only-' + base, dest=doer, action=OnlyAction,
