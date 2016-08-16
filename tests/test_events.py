@@ -3,7 +3,7 @@ from xonsh.events import Events
 
 def test_calling():
     e = Events()
-    e.on_test.__doc__ = "Test event"
+    e.on_test.doc("Test event")
 
     called = False
     @e.on_test
@@ -17,7 +17,7 @@ def test_calling():
 
 def test_until_true():
     e = Events()
-    e.on_test.__doc__ = "Test event"
+    e.on_test.doc("Test event")
 
     called = 0
 
@@ -39,7 +39,7 @@ def test_until_true():
 
 def test_until_false():
     e = Events()
-    e.on_test.__doc__ = "Test event"
+    e.on_test.doc("Test event")
 
     called = 0
 
@@ -61,7 +61,7 @@ def test_until_false():
 
 def test_validator():
     e = Events()
-    e.on_test.__doc__ = "Test event"
+    e.on_test.doc("Test event")
 
     called = 0
 
@@ -87,3 +87,11 @@ def test_validator():
     called = 0
     e.on_test.fire('spam')
     assert called == 2
+
+def test_eventdoc():
+    docstring = "Test event"
+    e = Events()
+    e.on_test.doc(docstring)
+
+    import inspect
+    assert inspect.getdoc(e.on_test) == docstring

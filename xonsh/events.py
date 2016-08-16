@@ -5,7 +5,7 @@ In all likelihood, you want builtins.__xonsh_events__
 
 The best way to "declare" an event is something like::
 
-    __xonsh_events__.on_spam.__doc__ = "Comes with eggs"
+    __xonsh_events__.on_spam.doc("Comes with eggs")
 """
 
 
@@ -17,8 +17,10 @@ class Event(set):
 
     Note that ordering is never guaranteed.
     """
-    def __init__(self, doc=None):
-        self.__doc__ = doc
+
+    @classmethod
+    def doc(cls, text):
+        cls.__doc__ = text
 
     def __call__(self, func):
         """
@@ -97,6 +99,6 @@ class Events:
     """
 
     def __getattr__(self, name):
-        e = Event()
+        e = type(name, (Event,), {'__doc__': None})()
         setattr(self, name, e)
         return e
