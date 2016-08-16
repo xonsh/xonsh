@@ -3,6 +3,7 @@
 import os
 import re
 import sys
+import socket
 from getpass import getuser, getpass
 from argparse import ArgumentParser, Action
 
@@ -169,7 +170,7 @@ def create_ghuser_token(ghuser, credfile):
     password = ''
     while not password:
         password = getpass('GitHub Password for {0}: '.format(ghuser))
-    note = 'github3.py release.xsh ' + PROJECT
+    note = 'github3.py release.xsh ' + PROJECT + ' ' + socket.gethostname()
     note_url = PROJECT_URL
     scopes = ['user', 'repo']
     auth = github3.authorize(ghuser, password, scopes, note, note_url)
