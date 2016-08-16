@@ -1,11 +1,16 @@
-**Added:** None
+**Added:**
   
-Xontrib loading mechanism has been slightly extended. If a xontrib define a function named ``xontrib_init``, this function will be called by ``xontrib load``, or at startup just after the main ``__xonsh_shell__`` has been instantiated. This allow ``xontrib`` s to not have side effects at import time, and common python module to define xonsh extensions more easily
+* Xontrib loading mechanism has been slightly extended. If a xontrib define a
+  function named ``xontrib_init``, this function will be called by ``xontrib
+  load``, or at startup just after the main ``__xonsh_shell__`` has been
+  instantiated. This allow ``xontrib`` s to not have side effects at import
+  time, and common python module to define xonsh extensions more easily.
 
-**Changed:** None
+**Changed:**
 
-`xonsh.xontribs:update_context` has been modified to both return both a
-modified context, as well as the xontrib module that was loaded.
+* ``xonsh.xontribs:update_context`` and ``xonsh.xontribs:xontrib_context`` have
+  been modified to return both a context, as well as the xontrib module that
+  was loaded.
 
 **Deprecated:** None
 

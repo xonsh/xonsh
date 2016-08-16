@@ -36,7 +36,7 @@ eggs = 2
 _foobar = 3
 """)
 
-    ctx = xontrib_context('spameggs')
+    ctx, xontrib_module = xontrib_context('spameggs')
     assert ctx == {'spam': 1, 'eggs': 2}
 
 def test_withall(tmpmod):
@@ -52,7 +52,7 @@ eggs = 2
 _foobar = 3
 """)
 
-    ctx = xontrib_context('spameggs')
+    ctx, xontrib_module = xontrib_context('spameggs')
     assert ctx == {'spam': 1, '_foobar': 3}
 
 def test_xshxontrib(tmpmod):
@@ -64,5 +64,5 @@ def test_xshxontrib(tmpmod):
 hello = 'world'
 """)
 
-    ctx = xontrib_context('script')
+    ctx, xontrib_module = xontrib_context('script')
     assert ctx == {'hello': 'world'}
