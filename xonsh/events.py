@@ -53,9 +53,6 @@ class Event(set):
         results are yielded.
 
         If the generator is interupted, no further handlers are called.
-
-        The caller may send() new positional arguments (eg, to implement
-        modifying semantics). Keyword arguments cannot be modified this way.
         """
         for handler in self:
             if handler.__validator is not None and not handler.__validator(*pargs, **kwargs):
