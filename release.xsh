@@ -120,7 +120,7 @@ class OnlyAction(Action):
 def main(args=None):
     parser = ArgumentParser('release')
     parser.add_argument('--upstream',
-                        default='git@github.com:scopatz/xonsh.git',
+                        default='git@github.com:xonsh/xonsh.git',
                         help='upstream repo')
     parser.add_argument('-b', '--branch', default='master',
                          help='branch to commit / push to.')

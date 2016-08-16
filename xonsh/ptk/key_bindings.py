@@ -106,8 +106,11 @@ class EndOfLine(Filter):
 def ctrl_d_condition(cli):
     """ Ctrl-D binding is only active when the default buffer is selected
     and empty. """
-    return (cli.current_buffer_name == DEFAULT_BUFFER and
-            not cli.current_buffer.text)
+    if builtins.__xonsh_env__.get("IGNOREEOF"):
+        raise EOFError
+    else:
+        return (cli.current_buffer_name == DEFAULT_BUFFER and
+                not cli.current_buffer.text)
 
 
 def can_compile(src):
