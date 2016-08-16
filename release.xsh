@@ -130,7 +130,7 @@ def shatar(org, repo, target):
     return sha
 
 
-def feedstok_repos(ghuser):
+def feedstock_repos(ghuser):
     """Returns the origin and upstream repo URLs for the feedstock."""
     origin = 'git@github.com:{ghuser}/{feedstock}.git'
     origin = origin.format(ghuser=ghuser, feedstock=FEEDSTOCK_REPO)
