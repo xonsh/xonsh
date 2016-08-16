@@ -18,6 +18,7 @@ PROJECT_URL = 'http://xon.sh'
 # further possible customizations
 USER = getuser()
 ORG = PROJECT
+BRANCH = 'master'
 UPSTREAM_ORG = PROJECT
 UPSTREAM_REPO = PROJECT
 FEEDSTOCK_REPO = PROJECT + '-feedstock'
@@ -28,6 +29,21 @@ WILL_DO = {
   'do_conda': True,
   'do_docs': True,
 }
+def ver_news(ver):
+    news = ('.. current developments\n\n'
+             'v{0}\n'
+             '====================\n\n')
+    news = news.format(ver)
+    news += merge_news()
+    return news
+VERSION_UPDATE_PATTERNS = [
+    ('__version__\s*=.*', (lambda ver: "__version__ = '{0}'".format(ver)),
+        [PROJECT, '__init__.py']),
+    ('version:\s*', (lambda ver: 'version: {0}.{{build}}'.format(ver)),
+        ['.appveyor.yml']),
+    ('.. current developments', ver_news, ['CHANGELOG.rst']),
+]
+
 
 #
 # Implementation below!
@@ -81,19 +97,9 @@ def merge_news():
 
 def version_update(ver):
     """Updates version strings in relevant files."""
-    fnews = ('.. current developments\n\n'
-             'v{0}\n'
-             '====================\n\n'
-             '{1}')
-    news = merge_news()
-    news = fnews.format(ver, news)
-    pnfs = [
-        ('__version__\s*=.*', "__version__ = '{0}'".format(ver),
-         ['xonsh', '__init__.py']),
-        ('version:\s*', 'version: {0}.{{build}}'.format(ver), ['.appveyor.yml']),
-        ('.. current developments', news, ['CHANGELOG.rst']),
-      ]
-    for p, n, f in pnfs:
+    for p, n, f in VERSION_UPDATE_PATTERNS:
+        if callable(n):
+            n = n(ver)
         replace_in_file(p, n, os.path.join(*f))
 
 
@@ -232,11 +238,13 @@ class OnlyAction(Action):
 
 
 def main(args=None):
+    default_upstream = 'git@github.com:{org}/{repo}.git'
+    default_upstream = default_upstream.format(org=UPSTREAM_ORG, UPSTREAM_REPO)
+    # make parser
     parser = ArgumentParser('release')
-    parser.add_argument('--upstream',
-                        default='git@github.com:xonsh/xonsh.git',
+    parser.add_argument('--upstream', default=default_upstream,
                         help='upstream repo')
-    parser.add_argument('-b', '--branch', default='master',
+    parser.add_argument('-b', '--branch', default=BRANCH,
                         help='branch to commit / push to.')
     parser.add_argument('--github-user', default=USER, dest='ghuser',
                         help='GitHub username.')
@@ -270,6 +278,7 @@ def main(args=None):
 
     # disable debugging
     trace off
+
 
 if __name__ == '__main__':
     main()
