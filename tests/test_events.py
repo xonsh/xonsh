@@ -15,7 +15,7 @@ def test_calling():
 
     assert called == "eggs"
 
-def test_untilTrue():
+def test_until_true():
     e = Events()
     e.test.__doc__ = "Test event"
 
@@ -33,11 +33,11 @@ def test_untilTrue():
         called += 1
         return True
 
-    e.test.untilTrue()
+    e.test.until_true()
 
     assert called == 1
 
-def test_untilFalse():
+def test_until_false():
     e = Events()
     e.test.__doc__ = "Test event"
 
@@ -55,7 +55,7 @@ def test_untilFalse():
         called += 1
         return False
 
-    e.test.untilFalse()
+    e.test.until_false()
 
     assert called == 1
 
@@ -75,3 +75,32 @@ def test_loopback():
 
     assert rv == 2
 
+
+def test_validator():
+    e = Events()
+    e.test.__doc__ = "Test event"
+
+    called = 0
+
+    @e.test.handler
+    def first(n):
+        nonlocal called
+        called += 1
+        return False
+
+    @first.validator
+    def v(n):
+        return n == 'spam'
+
+    @e.test.handler
+    def second(n):
+        nonlocal called
+        called += 1
+        return False
+
+    e.test('egg')
+    assert called == 1
+
+    called = 0
+    e.test('spam')
+    assert called == 2

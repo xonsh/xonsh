@@ -15,17 +15,33 @@ class Event(set):
 
     Acts as a ``set`` for registered handlers.
 
-    Note that ordering is never guarenteed.
+    Note that ordering is never guaranteed.
     """
     def __init__(self, doc=None):
         self.__doc__ = doc
 
-    def handler(self, callable):
+    def handler(self, func):
         """
         Registers a handler. It's suggested to use this as a decorator.
+
+        A decorator method is added to the handler, validator(). If a validator
+        function is added, it can filter if the handler will be considered. The
+        validator takes the same arguments as the handler. If it returns False,
+        the handler will not called or considered, as if it was not registered
+        at all.
         """
-        self.add(callable)
-        return callable
+        #  Using Pythons "private" munging to minimize hypothetical collisions
+        func.__validator = None
+        self.add(func)
+
+        def validator(vfunc):
+            """
+            Adds a validator function to a handler to limit when it is considered.
+            """
+            func.__validator = vfunc
+        func.validator = validator
+
+        return func
 
     def calleach(self, *pargs, **kwargs):
         """
@@ -40,6 +56,8 @@ class Event(set):
         modifying semantics). Keyword arguments cannot be modified this way.
         """
         for handler in self:
+            if handler.__validator is not None and not handler.__validator(*pargs, **kwargs):
+                continue
             newargs = yield handler(*pargs, **kwargs)
             if newargs is not None:
                 pargs = newargs
@@ -52,7 +70,7 @@ class Event(set):
         for _ in self.calleach(*pargs, **kwargs):
             pass
 
-    def untilTrue(self, *pargs, **kwargs):
+    def until_true(self, *pargs, **kwargs):
         """
         Calls each handler until one returns something truthy.
 
@@ -62,13 +80,13 @@ class Event(set):
             if rv:
                 return rv
 
-    def untilFalse(self, *pargs, **kwargs):
+    def until_false(self, *pargs, **kwargs):
         """
         Calls each handler until one returns something falsey.
         """
         for rv in self.calleach(*pargs, **kwargs):
             if not rv:
-                return
+                return rv
 
     def loopback(self, *pargs, **kwargs):
         """
@@ -84,7 +102,7 @@ class Event(set):
         while True:
             if newvals is not None:
                 if len(pargs) == 1:
-                    pargs = newvals,
+                    pargs = (newvals,)
                 else:
                     pargs = newvals
             try:
