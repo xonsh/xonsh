@@ -3,69 +3,69 @@ from xonsh.events import Events
 
 def test_calling():
     e = Events()
-    e.test.__doc__ = "Test event"
+    e.on_test.__doc__ = "Test event"
 
     called = False
-    @e.test.handler
+    @e.on_test
     def _(spam):
         nonlocal called
         called = spam
 
-    e.test("eggs")
+    e.on_test.fire("eggs")
 
     assert called == "eggs"
 
 def test_until_true():
     e = Events()
-    e.test.__doc__ = "Test event"
+    e.on_test.__doc__ = "Test event"
 
     called = 0
 
-    @e.test.handler
-    def first():
+    @e.test
+    def on_test():
         nonlocal called
         called += 1
         return True
 
-    @e.test.handler
+    @e.on_test
     def second():
         nonlocal called
         called += 1
         return True
 
-    e.test.until_true()
+    e.on_test.until_true()
 
     assert called == 1
 
 def test_until_false():
     e = Events()
-    e.test.__doc__ = "Test event"
+    e.on_test.__doc__ = "Test event"
 
     called = 0
 
-    @e.test.handler
+    @e.on_test
     def first():
         nonlocal called
         called += 1
         return False
 
-    @e.test.handler
+    @e.on_test
     def second():
         nonlocal called
         called += 1
         return False
 
-    e.test.until_false()
+    e.on_test.until_false()
 
     assert called == 1
 
 def test_validator():
     e = Events()
-    e.test.__doc__ = "Test event"
+    e.on_test.__doc__ = "Test event"
 
     called = 0
 
-    @e.test.handler
+    @e.on_test
     def first(n):
         nonlocal called
         called += 1
@@ -75,15 +75,15 @@ def test_validator():
     def v(n):
         return n == 'spam'
 
-    @e.test.handler
+    @e.on_test
     def second(n):
         nonlocal called
         called += 1
         return False
 
-    e.test('egg')
+    e.on_test.fire('egg')
     assert called == 1
 
     called = 0
-    e.test('spam')
+    e.on_test.fire('spam')
     assert called == 2

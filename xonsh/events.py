@@ -20,7 +20,7 @@ class Event(set):
     def __init__(self, doc=None):
         self.__doc__ = doc
 
-    def handler(self, func):
+    def __call__(self, func):
         """
         Registers a handler. It's suggested to use this as a decorator.
 
@@ -60,7 +60,7 @@ class Event(set):
                 continue
             yield handler(*pargs, **kwargs)
 
-    def __call__(self, *pargs, **kwargs):
+    def fire(self, *pargs, **kwargs):
         """
         The simplest use case: Calls each handler in turn with the provided
         arguments and ignore the return values.
@@ -85,6 +85,7 @@ class Event(set):
         for rv in self.calleach(*pargs, **kwargs):
             if not rv:
                 return rv
+
 
 class Events:
     """
