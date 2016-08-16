@@ -44,3 +44,4 @@ include/
 
 .coverage
 feedstock/
+*.cred
