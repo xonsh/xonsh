@@ -2,12 +2,12 @@
 """Testing xonsh import hooks"""
 import pytest
 
-from xonsh import imphooks  # noqa
-from xonsh import built_ins
+from xonsh import imphooks
 from xonsh.environ import Env
-from xonsh.execer import Execer
 from xonsh.built_ins import load_builtins, unload_builtins
 import builtins
+
+imphooks.install_hook()
 
 
 @pytest.yield_fixture(autouse=True)

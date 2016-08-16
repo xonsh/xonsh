@@ -18,7 +18,7 @@ import collections.abc as abc
 from xonsh.lazyasd import lazyobject
 from xonsh.lazyjson import LazyJSON, ljdump, LJNode
 from xonsh.tools import (ensure_slice, to_history_tuple,
-                         expanduser_abs_path)
+                         expanduser_abs_path, ensure_timestamp)
 from xonsh.diff_history import _dh_create_parser, _dh_main_action
 
 
@@ -343,14 +343,23 @@ def _hist_create_parser():
                                 description='Tools for dealing with history')
     subp = p.add_subparsers(title='action', dest='action')
     # session action
-    show = subp.add_parser('show', help='displays session history, default action')
+    show = subp.add_parser('show', prefix_chars='-+',
+                           help='displays session history, default action')
     show.add_argument('-r', dest='reverse', default=False,
                       action='store_true', help='reverses the direction')
     show.add_argument('-n', dest='numerate', default=False, action='store_true',
                       help='numerate each command')
+    show.add_argument('-t', dest='timestamp', default=False,
+                      action='store_true', help='show command timestamps')
+    show.add_argument('-T', dest='end_time', default=None,
+                      help='show only commands before timestamp')
+    show.add_argument('+T', dest='start_time', default=None,
+                      help='show only commands after timestamp')
+    show.add_argument('-f', dest='datetime_format', default=None,
+                      help='the datetime format to be used for filtering and printing')
     show.add_argument('session', nargs='?', choices=_HIST_SESSIONS.keys(), default='session',
                       help='Choose a history session, defaults to current session')
-    show.add_argument('slices', nargs=argparse.REMAINDER, default=[],
+    show.add_argument('slices', nargs='*', default=None,
                       help='display history entries or range of entries')
     # 'id' subcommand
     subp.add_parser('id', help='displays the current session id')
@@ -388,7 +397,7 @@ def _hist_create_parser():
 def _hist_get_portion(commands, slices):
     """Yield from portions of history commands."""
     if len(slices) == 1:
-        s = ensure_slice(slices[0])
+        s = slices[0]
         try:
             yield from itertools.islice(commands, s.start, s.stop, s.step)
             return
@@ -396,26 +405,17 @@ def _hist_get_portion(commands, slices):
             pass
     commands = list(commands)
     for s in slices:
-        s = ensure_slice(s)
         yield from commands[s]
 
 
-def _hist_filter_ts(commands, start_time=None, end_time=None):
+def _hist_filter_ts(commands, start_time, end_time):
     """Yield only the commands between start and end time."""
-    if start_time is None:
-        start_time = 0.0
-    elif isinstance(start_time, datetime.datetime):
-        start_time = start_time.timestamp()
-    if end_time is None:
-        end_time = float('inf')
-    elif isinstance(end_time, datetime.datetime):
-        end_time = end_time.timestamp()
     for cmd in commands:
         if start_time <= cmd[1] < end_time:
             yield cmd
 
 
-def _hist_get(session='session', slices=None,
+def _hist_get(session='session', *, slices=None, datetime_format=None,
               start_time=None, end_time=None, location=None):
     """Get the requested portion of shell history.
 
@@ -437,8 +437,18 @@ def _hist_get(session='session', slices=None,
     """
     cmds = _HIST_SESSIONS[session](location=location)
     if slices:
+        # transform/check all slices
+        slices = [ensure_slice(s) for s in slices]
         cmds = _hist_get_portion(cmds, slices)
     if start_time or end_time:
+        if start_time is None:
+            start_time = 0.0
+        else:
+            start_time = ensure_timestamp(start_time, datetime_format)
+        if end_time is None:
+            end_time = float('inf')
+        else:
+            end_time = ensure_timestamp(end_time, datetime_format)
         cmds = _hist_filter_ts(cmds, start_time, end_time)
     return cmds
 
@@ -447,18 +457,31 @@ def _hist_show(ns, *args, **kwargs):
     """Show the requested portion of shell history.
     Accepts same parameters with `_hist_get`.
     """
-    commands = _hist_get(ns.session, ns.slices, **kwargs)
     try:
-        if ns.reverse:
-            commands = reversed(list(commands))
-        if not ns.numerate:
-            for c, _, _ in commands:
-                print(c)
-        else:
-            for c, _, i in commands:
-                print('{}: {}'.format(i, c))
+        commands = _hist_get(ns.session,
+                             slices=ns.slices,
+                             start_time=ns.start_time,
+                             end_time=ns.end_time,
+                             datetime_format=ns.datetime_format)
     except ValueError as err:
         print("history: error: {}".format(err), file=sys.stderr)
+        return
+    if ns.reverse:
+        commands = reversed(list(commands))
+    if not ns.numerate and not ns.timestamp:
+        for c, _, _ in commands:
+            print(c)
+    elif not ns.timestamp:
+        for c, _, i in commands:
+            print('{}: {}'.format(i, c))
+    elif not ns.numerate:
+        for c, ts, _ in commands:
+            dt = datetime.datetime.fromtimestamp(ts).ctime()
+            print('({}) {}'.format(dt, c))
+    else:
+        for c, ts, i in commands:
+            dt = datetime.datetime.fromtimestamp(ts).ctime()
+            print('{}:({}) {}'.format(i, dt, c))
 
 
 # Interface to History
@@ -640,23 +663,28 @@ def _HIST_MAIN_ACTIONS():
 
 
 def _hist_parse_args(args):
-    """Parse arguments using the history argument parser."""
+    """Prepare and parse arguments for the history command.
+
+    Add default action for ``history`` and
+    default session for ``history show``.
+    """
     parser = _hist_create_parser()
     if not args:
         args = ['show', 'session']
     elif args[0] not in _HIST_MAIN_ACTIONS and args[0] not in ('-h', '--help'):
         args = ['show', 'session'] + args
-    elif args[0] == 'show':
-        slices_index = 0
-        for i, a in enumerate(args[1:], 1):
-            if a in _HIST_SESSIONS:
-                break
-            elif a.startswith('-') and a.lstrip('-').isalpha():
-                # get last optional arg, before slices
-                slices_index = i
-        else:  # no session arg found, insert before slices
-            args.insert(slices_index + 1, 'session')
-    return parser.parse_args(args)
+    if args[0] == 'show':
+        if not any(a in _HIST_SESSIONS for a in args):
+            args.insert(1, 'session')
+        ns, slices = parser.parse_known_args(args)
+        if slices:
+            if not ns.slices:
+                ns.slices = slices
+            else:
+                ns.slices.extend(slices)
+    else:
+        ns = parser.parse_args(args)
+    return ns
 
 
 def history_main(args=None, stdin=None):

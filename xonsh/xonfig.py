@@ -281,8 +281,10 @@ def make_xonfig_wizard(default_file=None, confirm=False):
     ])
     if confirm:
         q = ("Would you like to run the xonsh configuration wizard now?\n\n"
-             "1. Yes\n2. No, but ask me later.\n3. No, and don't ask me again."
-             "\n\n1, 2, or 3 [default: 2]? ")
+             "1. Yes (You can abort at any time)\n"
+             "2. No, but ask me next time.\n"
+             "3. No, and don't ask me again.\n\n"
+             "1, 2, or 3 [default: 2]? ")
         passer = wiz.Pass()
         saver = wiz.Save(check=False, ask_filename=False,
                          default_file=default_file)

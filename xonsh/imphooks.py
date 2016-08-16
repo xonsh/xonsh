@@ -3,11 +3,11 @@
 
 This module registers the hooks it defines when it is imported.
 """
-import builtins
-from importlib.abc import MetaPathFinder, SourceLoader
-from importlib.machinery import ModuleSpec
 import os
 import sys
+import builtins
+from importlib.machinery import ModuleSpec
+from importlib.abc import MetaPathFinder, SourceLoader
 
 from xonsh.execer import Execer
 from xonsh.platform import scandir
@@ -48,7 +48,7 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
         for p in path:
             if not isinstance(p, str):
                 continue
-            if not os.path.isdir(p):
+            if not os.path.isdir(p) or not os.access(p, os.R_OK):
                 continue
             if fname not in (x.name for x in scandir(p)):
                 continue
@@ -84,4 +84,14 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
         return code
 
 
-sys.meta_path.append(XonshImportHook())
+def install_hook():
+    """
+    Install Xonsh import hook in `sys.metapath` in order for `.xsh` files to be
+    importable.
+
+    Can safely be called many times, will be no-op if a xonsh import hook is
+    already present.
+    """
+
+    if XonshImportHook not in {type(hook) for hook in sys.meta_path}:
+        sys.meta_path.append(XonshImportHook())

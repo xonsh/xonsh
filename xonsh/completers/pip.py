@@ -11,8 +11,11 @@ PIP_LIST_RE = xl.LazyObject(lambda: re.compile("pip(?:\d|\.)* (?:uninstall|show)
 
 @xl.lazyobject
 def ALL_COMMANDS():
-    help_text = str(subprocess.check_output(['pip', '--help'],
-                                            stderr=subprocess.DEVNULL))
+    try:
+        help_text = str(subprocess.check_output(['pip', '--help'],
+                                                stderr=subprocess.DEVNULL))
+    except FileNotFoundError:
+        return []
     commands = re.findall("  (\w+)  ", help_text)
     return [c for c in commands if c not in ['completion', 'help']]
 
@@ -24,7 +27,11 @@ def complete_pip(prefix, line, begidx, endidx, ctx):
                          (not PIP_RE.search(line)):
         return
     if PIP_LIST_RE.search(line):
-        items = subprocess.check_output(['pip', 'list'], stderr=subprocess.DEVNULL)
+        try:
+            items = subprocess.check_output(['pip', 'list'],
+                                            stderr=subprocess.DEVNULL)
+        except FileNotFoundError:
+            return set()
         items = items.decode('utf-8').splitlines()
         return set(i.split()[0] for i in items)
 
