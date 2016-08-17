@@ -26,9 +26,15 @@ from xonsh.tools import (redirect_stdout, redirect_stderr, fallback,
 from xonsh.teepty import TeePTY
 from xonsh.lazyasd import LazyObject, lazyobject
 
+
 # force some lazy imports so we don't have errors on non-windows platforms
-_winapi = LazyObject(lambda: importlib.import_module('_winapi'),
-                     globals(), '_winapi')
+@lazyobject
+def _winapi():
+    if ON_WINDOWS:
+        import _winapi as m
+    else:
+        m = None
+    return m
 
 
 @lazyobject
