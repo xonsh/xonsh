@@ -4,6 +4,103 @@ Xonsh Change Log
 
 .. current developments
 
+v0.4.5
+====================
+
+**Added:**
+
+* ``_hist_get`` that uses generators to filter and fetch
+  the history commands of each session.
+
+* ``-n`` option to the show subcommand to choose
+  to numerate the commands.
+* The ``exec`` command is now a first class alias that acts the same way as in
+  sh-based languages. It replaces the current process with the command and
+  argument that follows it. This allows xonsh to be used as a default shell
+  while maintaining functionality with SSH, gdb, and other third party programs
+  that assume the default shell supports raw ``exec command [args]`` syntax.
+
+  This feature introduces some ambiguity between exec-as-a-subprocess and
+  exec-as-a-function (the inescapable Python builtin). Though the two pieces of
+  syntax do not overlap, they perform very different operations. Please see
+  the xonsh FAQ for more information on trade-offs and mitigation strategies.
+* ``which -v`` now calls superhelp, which will print highlighted source.
+* Added xontribs: 
+  * `z (Tracks your most used directories, based on 'frecency'.) <https://github.com/astronouth7303/xontrib-z>`_
+* amalgamate.py now supports relative imports.
+* ``history show`` args ``-t``, ``-f``, ``-T`` ``+T`` to filter commands by timestamp
+
+* ``ensure_timestamp`` in xonsh.tools to try and convert an object to a timestamp a.k.a float
+
+* ``$XONSH_DATETIME_FORMAT`` envvar, the default format to be used with ``datetime.datetime.strptime()``
+* ``xon.sh`` script now sets ``$LANG=C.UTF8`` in the event that no encoding
+  is detected.
+* amalgamate.py now properly handles ``from __future__`` imports.
+
+
+**Changed:**
+
+* ``_hist_show`` now uses ``_hist_get`` to print out the commands.
+* ``xonsh.completers`` sub-package is now fully lazy.
+* The vox xontrib now takes flags very similar to Python's venv tool. Use 
+  ``vox --help <command>`` to learn more.
+* Xontribs may now define ``__all__`` as a module top-level to limit what gets exported to the shell context
+* xon.sh uses the interpreter used to install instead of the default python3.
+* ``imphooks`` now checks directory access rights.
+* $TITLE now changes both icon (tab) and window title
+* Moved ``amalgamate_source`` outside ``build_tables``
+
+* Disable amalgamation on setup develop
+* ``_hist_parse_args`` implementation refactor
+
+* moved all parameter checking in ``_hist_get``
+
+* ``_hist_show`` to handle numeration and timestamp printing of commands
+* ``xonsh.imphooks`` does not install the import hooks automatically, you now
+  need to explicitly call the  `install_hook()` method defined in this module.
+  For example: ``from xonsh.imphooks import install_hook; install_hook()``. The
+  ``install_hook`` method can safely be called several times. If you need
+  compatibility with previous versions of Xonsh you can use the following::
+
+    from xonsh import imphooks
+    getattr(imphooks, 'install_hook', lambda:None)()
+* xonfig command now dumps more encoding related settings.
+
+
+**Removed:**
+
+* Anaconda Build is shutting down so we can no longer build conda development packages. 
+  All references to these packages are removed from the documentation. 
+* Removed conda build recipe since the it is no longer used for Anaconda Build. 
+  The recipe used to build xonsh on conda-forge can be found here: 
+  https://github.com/conda-forge/xonsh-feedstock/blob/master/recipe/meta.yaml
+
+
+**Fixed:**
+
+* ``_zsh_hist_parser`` not parsing history files without timestamps.
+* Fixed amalgamation of aliased imports that are already in ``sys.modules``.
+* Xonsh will no longer fail to start in directories where the user doesn't have
+  read access.
+* Fixed parser error line number exception from being raised while trying to
+  raise a SyntaxError.
+* Made pip completer more robust to when pip is not installed.
+* Fix a startup problem on windows caused by a refactor of Prompt_toolkit. 
+  https://github.com/jonathanslenders/python-prompt-toolkit/commit/a9df2a2
+* ``ensure_slice`` bugfix for -1 index/slice
+* Alias tab completion works again
+* Version number reported by bundled PLY
+* ``xonfig`` no longer breaks if PLY is externally installed and version 3.8
+* LazyObject supports set union
+* Fixed error with not sourcing files with ``$XONSH_ENCODING`` and
+  ``$XONSH_ENCODING_ERRORS``.
+* ``$IGNOREEOF`` envrionment variable now works properly in the
+  prompt-toolkit shell.
+* Completions in ``jupyter_kernel.py`` now use updated completion framework
+
+
+
+
 v0.4.4
 ====================
 
