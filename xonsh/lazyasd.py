@@ -116,6 +116,15 @@ class LazyObject(object):
         obj = self._lazy_obj()
         return obj | other
 
+    def __str__(self):
+        obj = self._lazy_obj()
+        return str(obj)
+
+    def __repr__(self):
+        obj = self._lazy_obj()
+        return repr(obj)
+
+
 
 def lazyobject(f):
     """Decorator for constructing lazy objects from a function."""
