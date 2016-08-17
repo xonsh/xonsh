@@ -30,6 +30,13 @@ WILL_DO = {
   'do_conda': True,
   'do_docs': True,
 }
+# Allow alternative SHA patterns for feedstock, uncomment the one you need
+# Option 0
+TAR_SHA_RE = '\s+sha256:.*'
+TAR_SHA_SUBS = '  sha256: {0}'
+# Option 1
+#TAR_SHA_RE = '{% set sha256 = ".*" %}'
+#TAR_SHA_SUBS = '{{% set sha256 = "{0}" %}}'
 def ver_news(ver):
     news = ('.. current developments\n\n'
              'v{0}\n'
@@ -64,8 +71,11 @@ def replace_in_file(pattern, new, fname):
         f.write(upd)
 
 
-NEWS = [os.path.join('news', f) for f in os.listdir('news')
-        if f != 'TEMPLATE.rst']
+if os.path.isdir('news'):
+    NEWS = [os.path.join('news', f) for f in os.listdir('news')
+            if f != 'TEMPLATE.rst']
+else:
+    NEWS = []
 NEWS_CATEGORIES = ['Added', 'Changed', 'Deprecated', 'Removed', 'Fixed',
                    'Security']
 NEWS_RE = re.compile('\*\*({0}):\*\*'.format('|'.join(NEWS_CATEGORIES)),
@@ -153,9 +163,9 @@ def condaify(ver, ghuser):
         git checkout -b @(ver) master or git checkout @(ver)
     cd recipe
     set_ver = '{% set version = "' + ver + '" %}'
-    set_sha = '  sha256: ' + shatar(UPSTREAM_ORG, UPSTREAM_REPO, ver)
+    set_sha = TAR_SHA_SUBS.format(shatar(UPSTREAM_ORG, UPSTREAM_REPO, ver))
     replace_in_file('{% set version = ".*" %}', set_ver, 'meta.yaml')
-    replace_in_file('\s+sha256:.*', set_sha, 'meta.yaml')
+    replace_in_file(TAR_SHA_RE, set_sha, 'meta.yaml')
     cd ..
     with ${...}.swap(RAISE_SUBPROC_ERROR=False):
         git commit -am @("updated v" + ver)
