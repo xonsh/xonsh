@@ -149,14 +149,16 @@ def condaify(ver, ghuser):
     git checkout master
     git pull @(upstream) master
     # make and modify version branch
-    git checkout -b @(ver) master or git checkout @(ver)
+    with ${...}.swap(RAISE_SUBPROC_ERROR=False):
+        git checkout -b @(ver) master or git checkout @(ver)
     cd recipe
     set_ver = '{% set version = "' + ver + '" %}'
     set_sha = '  sha256: ' + shatar(UPSTREAM_ORG, UPSTREAM_REPO, ver)
     replace_in_file('{% set version = ".*" %}', set_ver, 'meta.yaml')
     replace_in_file('\s+sha256:.*', set_sha, 'meta.yaml')
     cd ..
-    git commit -am @("updated v" + ver)
+    with ${...}.swap(RAISE_SUBPROC_ERROR=False):
+        git commit -am @("updated v" + ver)
     git push --set-upstream @(origin) @(ver)
     cd ..
     if github3 is not None:
@@ -173,11 +175,18 @@ def create_ghuser_token(ghuser, credfile):
     note = 'github3.py release.xsh ' + PROJECT + ' ' + socket.gethostname()
     note_url = PROJECT_URL
     scopes = ['user', 'repo']
-    auth = github3.authorize(ghuser, password, scopes, note, note_url,
-                             two_factor_callback=two_factor)
+    try:
+        auth = github3.authorize(ghuser, password, scopes, note, note_url,
+                                 two_factor_callback=two_factor)
+    except github3.exceptions.UnprocessableEntity:
+        msg = ('Could not create GitHub authentication token, probably because'
+               'it already exists. Try deleting the token titled:\n\n    ')
+        msg += note
+        msg += ('\n\nfrom https://github.com/settings/tokens')
+        raise RuntimeError(msg)
     with open(credfile, 'w') as f:
-        f.write(auth.token + '\n')
-        f.write(auth.id)
+        f.write(str(auth.token) + '\n')
+        f.write(str(auth.id))
     return auth.token
 
 
