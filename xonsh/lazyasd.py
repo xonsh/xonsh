@@ -125,7 +125,6 @@ class LazyObject(object):
         return repr(obj)
 
 
-
 def lazyobject(f):
     """Decorator for constructing lazy objects from a function."""
     return LazyObject(f, f.__globals__, f.__name__)
