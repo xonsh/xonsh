@@ -27,9 +27,9 @@ Assuming you have successfully installed xonsh (see http://xon.sh),
 you can start up the xonsh interpreter via the ``xonsh`` command. Suppose
 you are in a lesser terminal:
 
-.. code-block:: bash
+.. code-block:: console
 
-    bash $ xonsh
+    $ xonsh
     snail@home ~ $
 
 Now we are in a xonsh shell. Our username happens to be ``snail``, our
@@ -1332,9 +1332,9 @@ Executing Commands and Scripts
 When started with the ``-c`` flag and a command, xonsh will execute that command
 and exit, instead of entering the command loop.
 
-.. code-block:: bash
+.. code-block:: console
 
-    bash $ xonsh -c "echo @(7+3)"
+    $ xonsh -c "echo @(7+3)"
     10
 
 Longer scripts can be run either by specifying a filename containing the script,
@@ -1362,9 +1362,9 @@ script, stored in ``test.xsh``:
 
 This script could be run by piping its contents to xonsh:
 
-.. code-block:: bash
+.. code-block:: console
 
-    bash $ cat test.xsh | xonsh
+    $ cat test.xsh | xonsh
     file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  test_script.sh
     removing files
     test_script.sh
@@ -1373,9 +1373,9 @@ This script could be run by piping its contents to xonsh:
 
 or by invoking xonsh with its filename as an argument:
 
-.. code-block:: bash
+.. code-block:: console
 
-    bash $ xonsh test.xsh
+    $ xonsh test.xsh
     file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  test_script.sh
     removing files
     test_script.sh
@@ -1415,9 +1415,9 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
     print()
 
 
-.. code-block:: bash
+.. code-block:: console
 
-    bash $ xonsh test2.xsh snails
+    $ xonsh test2.xsh snails
     ['test_script.sh', 'snails']
     file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  file5.txt  test_script.sh
     removing files
@@ -1425,7 +1425,7 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
     adding files
     file0.txt file1.txt file2.txt file3.txt file4.txt file5.txt test_script.sh
 
-    bash $ echo @(' '.join($(cat @('file%d.txt' % i)).strip() for i in range(6)))
+    $ echo @(' '.join($(cat @('file%d.txt' % i)).strip() for i in range(6)))
     s n a i l s
 
 Additionally, if the script should exit if a command fails, set the

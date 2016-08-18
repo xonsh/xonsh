@@ -276,7 +276,7 @@ you can learn about from `the sphinx website <http://sphinx-doc.org/>`_.
 If you want to generate the documentation, first xonsh itself must be installed
 and then you may run the following command from the ``docs`` dir:
 
-.. code-block:: bash
+.. code-block:: console
 
     ~/xonsh/docs $ make html
 
@@ -434,14 +434,14 @@ To perform the release, run these commands for the following tasks:
 
 **pip upload:**
 
-.. code-block:: bash
+.. code-block:: console
 
     $ ./setup.py sdist upload
 
 
 **conda upload:**
 
-.. code-block:: bash
+.. code-block:: console
 
     $ rm -f /path/to/conda/conda-bld/src_cache/xonsh.tar.gz
     $ conda build --no-test recipe
@@ -450,7 +450,7 @@ To perform the release, run these commands for the following tasks:
 
 **website:**
 
-.. code-block:: bash
+.. code-block:: console
 
     $ cd docs
     $ make clean html push-root

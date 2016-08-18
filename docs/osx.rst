@@ -9,14 +9,14 @@ You can install xonsh using homebrew, conda, pip, or from source.
 
 **homebrew:**
 
-.. code-block:: bash
+.. code-block:: console
 
    $ brew install xonsh
 
 
 **conda:**
 
-.. code-block:: bash
+.. code-block:: console
 
     $ conda config --add channels conda-forge
     $ conda install xonsh
@@ -24,7 +24,7 @@ You can install xonsh using homebrew, conda, pip, or from source.
 
 **pip:**
 
-.. code-block:: bash
+.. code-block:: console
 
     $ pip3 install xonsh
 
@@ -33,7 +33,7 @@ You can install xonsh using homebrew, conda, pip, or from source.
 (`zip file <https://github.com/xonsh/xonsh/archive/master.zip>`_), then run
 the following from the source directory,
 
-.. code-block:: bash
+.. code-block:: console
 
     $ python3 setup.py install
 
@@ -43,13 +43,13 @@ Extras for OSX
 
 On Mac OSX, it is *strongly* recommended to install the ``gnureadline`` library if using the readline shell.  ``gnureadline`` can be installed via pip:
 
-.. code-block:: bash
+.. code-block:: console
 
     $ pip3 install gnureadline
 
 Xonsh has support for using bash completion files on the shell, to use it you need to install the bash-completion package
 
-.. code-block:: bash
+.. code-block:: console
 
     $ brew install bash-completion
 
