@@ -1,5 +1,6 @@
 **Added:** 
-* Added a local py.test framwork to collect and run `test_*.xsh` files. 
+
+* Added a py.test plugin to collect `test_*.xsh` files and run `test_*()` functions. 
 
 **Changed:** None
 
