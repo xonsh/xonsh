@@ -425,7 +425,7 @@ created by unit testing by running::
     $ rm -f xonsh/lexer_test_table.py xonsh/parser_test_table.py
     $ rm -f xonsh/*.pyc tests/*.pyc
     $ rm -f xonsh/*.rej tests/*.rej
-    $rm -fr build
+    $ rm -fr build
 
 -----------------------
 Performing the Release
