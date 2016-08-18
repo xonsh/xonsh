@@ -3,7 +3,6 @@ matrix:
     include:
         - os: linux
           python: "nightly"
-          env: RUN_COVERAGE=true
         - os: linux
           language: generic
           env: PYTHON="3.4" MINICONDA_OS="Linux"
@@ -33,19 +32,19 @@ install:
   - if [[ ! "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then
       conda create -q -n test_env python=${PYTHON} pygments prompt_toolkit ply pytest pytest-timeout psutil;
       source activate test_env;
-      python setup.py install;
     else
       pip install -r requirements-tests.txt;
-    fi
+    fi;
+    python setup.py install;
 
 script:
-  - if [[ $RUN_COVERAGE = true ]]; then
-      py.test --flake8 --cov=. --cov-report=term --timeout=10;
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then
+      XONSH_DEBUG=1 py.test --flake8 --cov=./xonsh --timeout=10;
     else
       py.test --timeout=10;
     fi
 
 after_success:
-  - if [[ $RUN_COVERAGE = true ]]; then
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then
       codecov;
     fi
