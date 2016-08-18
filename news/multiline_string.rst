@@ -6,7 +6,7 @@
 
 **Removed:** None
 
-**Fixed:** None
+**Fixed:**
 
 * The interactive prompt now correctly handles multiline strings.
 
