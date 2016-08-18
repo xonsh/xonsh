@@ -5,19 +5,19 @@ to add xonsh to `/etc/shells`.
 
 First ensure that xonsh is on your ``$PATH``
 
-.. code-block:: bash
+.. code-block:: console
 
     $ which xonsh
 
 Then, as root, add xonsh to the shell list
 
-.. code-block:: bash
+.. code-block:: console
 
    # which xonsh >> /etc/shells
 
 To change shells, run
 
-.. code-block:: bash
+.. code-block:: console
 
    $ chsh -s $(which xonsh)
 
