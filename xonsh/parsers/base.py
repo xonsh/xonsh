@@ -2130,22 +2130,15 @@ class BaseParser(object):
         return ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
                              lineno=lineno, col_offset=col)
 
-    # def _hist_getter_by_name(self, var, lineno=None, col=None):
-    #     xhist = self._xhist(lineno=lineno, col=col)
-    #     func = ast.Attribute(value=xhist, attr='get', ctx=ast.Load(),
-    #                          lineno=lineno, col_offset=col)
-    #     return ast.Call(func=func,
-    #                     args=[ast.Str(s=var, lineno=lineno, col_offset=col),
-    #                           ast.Str(s='', lineno=lineno, col_offset=col)],
-    #                     keywords=[], starargs=None, kwargs=None,
-    #                     lineno=lineno, col_offset=col)
-
-    # def _envvar_by_name(self, var, lineno=None, col=None):
-    #     """Looks up a xonsh variable by name."""
-    #     xhist = self._xhist(lineno=lineno, col=col)
-    #     idx = ast.Index(value=ast.Str(s=var, lineno=lineno, col_offset=col))
-    #     return ast.Subscript(value=xhist, slice=idx, ctx=ast.Load(),
-    #                          lineno=lineno, col_offset=col)
+    def _hist_getter_by_name(self, var, lineno=None, col=None):
+        xhist = self._xhist(lineno=lineno, col=col)
+        func = ast.Attribute(value=xhist, attr='get', ctx=ast.Load(),
+                             lineno=lineno, col_offset=col)
+        return ast.Call(func=func,
+                        args=[ast.Str(s=var, lineno=lineno, col_offset=col),
+                              ast.Str(s='', lineno=lineno, col_offset=col)],
+                        keywords=[], starargs=None, kwargs=None,
+                        lineno=lineno, col_offset=col)
 
     def _subproc_cliargs(self, args, lineno=None, col=None):
         """Creates an expression for subprocess CLI arguments."""
@@ -2251,19 +2244,19 @@ class BaseParser(object):
         p0._cliarg_action = 'append'
         p[0] = p0
 
-    # def p_subproc_atom_hist_lookup(self, p):
-    #     """subproc_atom : bang_lbrace_tok test RBRACE"""
-    #     p1 = p[1]
-    #     lineno, col = p1.lineno, p1.lexpos
-    #     xhist = self._xhist(lineno=lineno, col=col)
-    #     func = ast.Attribute(value=xhist, attr='get', ctx=ast.Load(),
-    #                          lineno=lineno, col_offset=col)
-    #     p0 = ast.Call(func=func, args=[p[2], ast.Str(s='', lineno=lineno,
-    #                                                  col_offset=col)],
-    #                   keywords=[], starargs=None, kwargs=None, lineno=lineno,
-    #                   col_offset=col)
-    #     p0._cliarg_action = 'append'
-    #     p[0] = p0
+    def p_subproc_atom_hist_lookup(self, p):
+        """subproc_atom : bang_lbrace_tok test RBRACE"""
+        p1 = p[1]
+        lineno, col = p1.lineno, p1.lexpos
+        xhist = self._xhist(lineno=lineno, col=col)
+        func = ast.Attribute(value=xhist, attr='get', ctx=ast.Load(),
+                             lineno=lineno, col_offset=col)
+        p0 = ast.Call(func=func, args=[p[2], ast.Str(s='', lineno=lineno,
+                                                     col_offset=col)],
+                      keywords=[], starargs=None, kwargs=None, lineno=lineno,
+                      col_offset=col)
+        p0._cliarg_action = 'append'
+        p[0] = p0
 
     def p_subproc_atom_pyeval(self, p):
         """subproc_atom : AT_LPAREN test RPAREN"""

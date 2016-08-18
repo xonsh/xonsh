@@ -552,7 +552,7 @@ class History(object):
         self.rtns = CommandField('rtn', self)
 
     def __getitem__(self, item):
-        print("GETTING HISTORY:", item)
+        return self.show(slices=item)
 
     def __len__(self):
         return self._len
@@ -609,15 +609,11 @@ class History(object):
         return hf
 
     def show(self, *args, **kwargs):
-        """Return shell history as a list
+        """Return session history."""
+        return list(c for c, *_ in _hist_get(*args, **kwargs))
 
-        Valid options:
-            `session` - returns xonsh history from current session
-            `xonsh`   - returns xonsh history from all sessions
-            `zsh`     - returns all zsh history
-            `bash`    - returns all bash history
-        """
-        return list(_hist_get(*args, **kwargs))
+    def get(self, index, *args, **kwargs):
+        return list(c for c, *_ in _hist_get(*args, **kwargs))[index]
 
 
 def _hist_info(ns, hist):
