@@ -258,7 +258,7 @@ class BaseParser(object):
                      'at', 'lshift', 'rshift', 'pipe', 'xor', 'ampersand',
                      'for', 'colon', 'import', 'except', 'nonlocal', 'global',
                      'yield', 'from', 'raise', 'with', 'dollar_lparen',
-                     'dollar_lbrace', 'dollar_lbracket', 'try',
+                     'dollar_lbrace', 'bang_lbrace', 'dollar_lbracket', 'try',
                      'bang_lparen', 'bang_lbracket']
         for rule in tok_rules:
             self._tok_rule(rule)
@@ -1767,6 +1767,7 @@ class BaseParser(object):
 
     def p_atom_fistful_of_dollars(self, p):
         """atom : dollar_lbrace_tok test RBRACE
+                | bang_lbrace_tok test RBRACE
                 | dollar_lparen_tok subproc RPAREN
                 | bang_lparen_tok subproc RPAREN
                 | bang_lbracket_tok subproc RBRACKET
@@ -2081,6 +2082,11 @@ class BaseParser(object):
             idx = ast.Index(value=p2)
             p0 = ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
                                lineno=lineno, col_offset=col)
+        elif p1 == '!{':
+            xhist = self._xhist(lineno=lineno, col=col)
+            idx = ast.Index(value=p2)
+            p0 = ast.Subscript(value=xhist, slice=idx, ctx=ast.Load(),
+                               lineno=lineno, col_offset=col)
         elif p1 == '$(':
             p0 = xonsh_call('__xonsh_subproc_captured_stdout__', p2,
                             lineno=lineno, col=col)
@@ -2102,6 +2108,11 @@ class BaseParser(object):
         return ast.Name(id='__xonsh_env__', ctx=ast.Load(),
                         lineno=lineno, col_offset=col)
 
+    def _xhist(self, lineno=lineno, col=col):
+        """Creates a new xonsh history reference."""
+        return ast.Name(id='__xonsh_history__', ctx=ast.Load(),
+                        lineno=lineno, col_offset=col)
+
     def _envvar_getter_by_name(self, var, lineno=None, col=None):
         xenv = self._xenv(lineno=lineno, col=col)
         func = ast.Attribute(value=xenv, attr='get', ctx=ast.Load(),
@@ -2118,6 +2129,23 @@ class BaseParser(object):
         idx = ast.Index(value=ast.Str(s=var, lineno=lineno, col_offset=col))
         return ast.Subscript(value=xenv, slice=idx, ctx=ast.Load(),
                              lineno=lineno, col_offset=col)
+
+    # def _hist_getter_by_name(self, var, lineno=None, col=None):
+    #     xhist = self._xhist(lineno=lineno, col=col)
+    #     func = ast.Attribute(value=xhist, attr='get', ctx=ast.Load(),
+    #                          lineno=lineno, col_offset=col)
+    #     return ast.Call(func=func,
+    #                     args=[ast.Str(s=var, lineno=lineno, col_offset=col),
+    #                           ast.Str(s='', lineno=lineno, col_offset=col)],
+    #                     keywords=[], starargs=None, kwargs=None,
+    #                     lineno=lineno, col_offset=col)
+
+    # def _envvar_by_name(self, var, lineno=None, col=None):
+    #     """Looks up a xonsh variable by name."""
+    #     xhist = self._xhist(lineno=lineno, col=col)
+    #     idx = ast.Index(value=ast.Str(s=var, lineno=lineno, col_offset=col))
+    #     return ast.Subscript(value=xhist, slice=idx, ctx=ast.Load(),
+    #                          lineno=lineno, col_offset=col)
 
     def _subproc_cliargs(self, args, lineno=None, col=None):
         """Creates an expression for subprocess CLI arguments."""
@@ -2222,6 +2250,20 @@ class BaseParser(object):
                       col_offset=col)
         p0._cliarg_action = 'append'
         p[0] = p0
+
+    # def p_subproc_atom_hist_lookup(self, p):
+    #     """subproc_atom : bang_lbrace_tok test RBRACE"""
+    #     p1 = p[1]
+    #     lineno, col = p1.lineno, p1.lexpos
+    #     xhist = self._xhist(lineno=lineno, col=col)
+    #     func = ast.Attribute(value=xhist, attr='get', ctx=ast.Load(),
+    #                          lineno=lineno, col_offset=col)
+    #     p0 = ast.Call(func=func, args=[p[2], ast.Str(s='', lineno=lineno,
+    #                                                  col_offset=col)],
+    #                   keywords=[], starargs=None, kwargs=None, lineno=lineno,
+    #                   col_offset=col)
+    #     p0._cliarg_action = 'append'
+    #     p[0] = p0
 
     def p_subproc_atom_pyeval(self, p):
         """subproc_atom : AT_LPAREN test RPAREN"""

@@ -551,6 +551,9 @@ class History(object):
         self.outs = CommandField('out', self)
         self.rtns = CommandField('rtn', self)
 
+    def __getitem__(self, item):
+        print("GETTING HISTORY:", item)
+
     def __len__(self):
         return self._len
 
