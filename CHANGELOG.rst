@@ -4,6 +4,10 @@ Xonsh Change Log
 
 .. current developments
 
+**Changed:**
+
+* ``xonsh.bat`` tries to use `pylauncher <https://www.python.org/dev/peps/pep-0397/>`_ when available.
+
 v0.4.5
 ====================
 
