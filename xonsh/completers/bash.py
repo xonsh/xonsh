@@ -10,6 +10,7 @@ import subprocess
 import xonsh.lazyasd as xl
 import xonsh.platform as xp
 
+from xonsh.completers.path import _quote_paths
 
 RE_DASHF = xl.LazyObject(lambda: re.compile(r'-F\s+(\w+)'),
                          globals(), 'RE_DASHF')
@@ -114,7 +115,7 @@ def complete_from_bash(prefix, line, begidx, endidx, ctx):
     except (subprocess.CalledProcessError, FileNotFoundError):
         out = ''
 
-    rtn = set(out.splitlines())
+    rtn = _quote_paths(set(out.splitlines()), '', '')
     return rtn
 
 
