@@ -540,7 +540,7 @@ def command_not_found(cmd):
     c = '/usr/lib/command-not-found {0}; exit 0'
     s = subprocess.check_output(c.format(cmd), universal_newlines=True,
                                 stderr=subprocess.STDOUT, shell=True)
-    s = '\n'.join(s.splitlines()[:-1]).strip()
+    s = '\n'.join(s.rstrip().splitlines()).strip()
     return s
 
 
