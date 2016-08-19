@@ -4,6 +4,7 @@ import collections
 
 _all_keywords = frozenset(keyword.kwlist)
 
+
 def _not_assignable(x, augassign=False):
     """
     If ``x`` represents a value that can be assigned to, return ``None``.
@@ -46,6 +47,7 @@ def _not_assignable(x, augassign=False):
 
 _loc = collections.namedtuple('_loc', ['lineno', 'column'])
 
+
 def check_contexts(tree):
     c = ContextCheckingVisitor()
     c.visit(tree)
@@ -53,6 +55,7 @@ def check_contexts(tree):
         e = SyntaxError(c.error[0])
         e.loc = _loc(c.error[1], c.error[2])
         raise e
+
 
 class ContextCheckingVisitor(ast.NodeVisitor):
     def __init__(self):
@@ -73,9 +76,9 @@ class ContextCheckingVisitor(ast.NodeVisitor):
                 msg = "can't assign to {}".format(err)
                 self.error = msg, i.lineno, i.col_offset
                 break
-    
+
     def visit_AugAssign(self, node):
-       err = _not_assignable(node.target, True)
-       if err is not None:
-           msg = "illegal target for augmented assignment: {}".format(err)
-           self.error = msg, node.target.lineno, node.target.col_offset
+        err = _not_assignable(node.target, True)
+        if err is not None:
+            msg = "illegal target for augmented assignment: {}".format(err)
+            self.error = msg, node.target.lineno, node.target.col_offset
