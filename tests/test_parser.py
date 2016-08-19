@@ -10,7 +10,7 @@ import pytest
 from xonsh.ast import pdump
 from xonsh.parser import Parser
 
-from tools import VER_FULL, skip_if_py34
+from tools import VER_FULL, skip_if_py34, nodes_equal
 
 # a lot of col_offset data changed from Py v3.5.0 -> v3.5.1
 INC_ATTRS = (3, 5, 1) <= VER_FULL
@@ -22,22 +22,6 @@ def xonsh_builtins_autouse(xonsh_builtins):
 PARSER = Parser(lexer_optimize=False, yacc_optimize=False, yacc_debug=True,
                 lexer_table='lexer_test_table',
                 yacc_table='parser_test_table')
-
-
-def nodes_equal(x, y):
-    __tracebackhide__ = True
-    assert type(x) == type(y)
-    if isinstance(x, (ast.Expr, ast.FunctionDef, ast.ClassDef)):
-        assert x.lineno == y.lineno
-        assert x.col_offset == y.col_offset
-    for (xname, xval), (yname, yval) in zip(ast.iter_fields(x),
-                                            ast.iter_fields(y)):
-        assert xname == yname
-        assert type(xval) == type(yval)
-    for xchild, ychild in zip(ast.iter_child_nodes(x),
-                              ast.iter_child_nodes(y)):
-        assert nodes_equal(xchild, ychild)
-    return True
 
 
 def check_ast(inp, run=True, mode='eval'):

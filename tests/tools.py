@@ -2,6 +2,7 @@
 """Tests the xonsh lexer."""
 from __future__ import unicode_literals, print_function
 import sys
+import ast
 import builtins
 import platform
 import subprocess
@@ -85,3 +86,22 @@ def check_eval(input):
 def check_parse(input):
     tree = builtins.__xonsh_execer__.parse(input, ctx=None)
     return tree
+
+#
+# Parser tools
+#
+
+def nodes_equal(x, y):
+    __tracebackhide__ = True
+    assert type(x) == type(y)
+    if isinstance(x, (ast.Expr, ast.FunctionDef, ast.ClassDef)):
+        assert x.lineno == y.lineno
+        assert x.col_offset == y.col_offset
+    for (xname, xval), (yname, yval) in zip(ast.iter_fields(x),
+                                            ast.iter_fields(y)):
+        assert xname == yname
+        assert type(xval) == type(yval)
+    for xchild, ychild in zip(ast.iter_child_nodes(x),
+                              ast.iter_child_nodes(y)):
+        assert nodes_equal(xchild, ychild)
+    return True
