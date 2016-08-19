@@ -91,6 +91,7 @@ def check_parse(input):
 # Parser tools
 #
 
+
 def nodes_equal(x, y):
     __tracebackhide__ = True
     assert type(x) == type(y)
