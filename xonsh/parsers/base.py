@@ -17,6 +17,7 @@ from xonsh.lexer import Lexer, LexToken
 from xonsh.platform import PYTHON_VERSION_INFO
 from xonsh.tokenize import SearchPath
 from xonsh.lazyasd import LazyObject
+from xonsh.parsers.context_check import check_contexts
 
 RE_SEARCHPATH = LazyObject(lambda: re.compile(SearchPath), globals(),
                            'RE_SEARCHPATH')
@@ -309,6 +310,8 @@ class BaseParser(object):
         while self.parser is None:
             time.sleep(0.01)  # block until the parser is ready
         tree = self.parser.parse(input=s, lexer=self.lexer, debug=debug_level)
+        if tree is not None:
+            check_contexts(tree)
         # hack for getting modes right
         if mode == 'single':
             if isinstance(tree, ast.Expression):
