@@ -1858,19 +1858,17 @@ class BaseParser(object):
     def p_trailer_bang_lparen(self, p):
         """trailer : bang_lparen_tok macroarglist_opt rparen_tok"""
         p1, p2, p3 = p[1], p[2], p[3]
-        begins = [(p1.lineno, p1.lexpos + 2, None)]
-        ends = [(p3.lineno, p3.lexpos, None)]
+        begins = [(p1.lineno, p1.lexpos + 2)]
+        ends = [(p3.lineno, p3.lexpos)]
         if p2:
             if p2[-1][-1] == 'trailing':  # handle trailing comma
-                begins.extend(p2[:-1])
-                ends = p2
+                begins.extend([(x[0], x[1] + 1) for x in p2[:-1]])
+                ends = [x[:2] for x in p2]
             else:
-                begins.extend(p2)
-                ends = p2 + ends
+                begins.extend([(x[0], x[1] + 1) for x in p2])
+                ends = [x[:2] for x in p2] + ends
         elts = []
         for beg, end in zip(begins, ends):
-            beg = beg[:2]
-            end = end[:2]
             s = self.source_slice(beg, end).strip()
             if not s:
                 if len(begins) == 1:
