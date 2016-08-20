@@ -238,7 +238,7 @@ class BaseParser(object):
             'yield_expr_or_testlist_comp', 'dictorsetmaker',
             'comma_subscript_list', 'test', 'sliceop', 'comp_iter',
             'yield_arg', 'test_comma_list', 'comma_nocomma_list',
-            'macroarglist', 'any_raw_toks']
+            'macroarglist', 'any_raw_toks', 'comma_tok']
         for rule in opt_rules:
             self._opt_rule(rule)
 
@@ -1962,7 +1962,9 @@ class BaseParser(object):
         p[0] = [(p1.lineno, p1.lexpos, None)]
 
     def p_comma_trailing_nocomma(self, p):
-        """comma_nocomma : comma_tok"""
+        """comma_nocomma : comma_tok
+                         | comma_tok WS
+        """
         p1 = p[1]
         p[0] = [(p1.lineno, p1.lexpos, 'trailing')]
 

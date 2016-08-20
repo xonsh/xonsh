@@ -175,6 +175,10 @@ argument:
     x = '42'
     y = '65'
 
+    >>> g!(42, 65,)
+    x = '42'
+    y = '65'
+
 
 Writing Function Macros
 =======================
