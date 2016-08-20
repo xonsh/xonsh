@@ -98,6 +98,7 @@ Contents
 
     tutorial
     tutorial_hist
+    tutorial_macros
     tutorial_xontrib
     tutorial_completers
     bash_to_xsh

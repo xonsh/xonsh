@@ -227,5 +227,3 @@ def test_call_macro_exec(arg):
         return x
     rtn = call_macro(f, [arg], {'x': 42, 'y': 0}, None)
     assert rtn is None
-
-
