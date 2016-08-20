@@ -679,6 +679,26 @@ def list_of_strs_or_callables(x):
     return rtn
 
 
+def call_macro(f, args, glbs, locs):
+    """Calls a function as a macro, returning its result.
+
+    Parameters
+    ----------
+    f : callable object
+        The function that is called as f(*args).
+    args : tuple of str
+        The str reprensetaion of arguments of that were passed into the
+        macro.  These strings will be parsed, compiled, evaled, or left as
+        a string dependending on the annotations of f.
+    glbs : Mapping
+        The globals from the call site.
+    locs : Mapping or None
+        The locals from the call site.
+    """
+    args = [eval(a, glbs, locs) for a in args]  # punt for the moment
+    return f(*args)
+
+
 def load_builtins(execer=None, config=None, login=False, ctx=None):
     """Loads the xonsh builtins into the Python builtins. Sets the
     BUILTINS_LOADED variable to True.
@@ -714,6 +734,7 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     builtins.__xonsh_list_of_strs_or_callables__ = list_of_strs_or_callables
     builtins.__xonsh_completers__ = xonsh.completers.init.default_completers()
+    builtins.__xonsh_call_macro__ = call_macro
     # public built-ins
     builtins.XonshError = XonshError
     builtins.XonshBlockError = XonshBlockError
@@ -779,6 +800,7 @@ def unload_builtins():
              '__xonsh_execer__',
              '__xonsh_commands_cache__',
              '__xonsh_completers__',
+             '__xonsh_call_macro__',
              'XonshError',
              'XonshBlockError',
              'XonshCalledProcessError',

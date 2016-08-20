@@ -476,7 +476,8 @@ class BaseParser(object):
     def p_eval_input(self, p):
         """eval_input : testlist newlines_opt
         """
-        p[0] = ast.Expression(body=p[1])
+        p1 = p[1]
+        p[0] = ast.Expression(body=p1, lineno=p1.lineno, col_offset=p1.col_offset)
 
     def p_func_call(self, p):
         """func_call : LPAREN arglist_opt RPAREN"""
@@ -1640,9 +1641,17 @@ class BaseParser(object):
                                    lineno=leader.lineno,
                                    col_offset=leader.col_offset)
             elif isinstance(trailer, Mapping):
+                # call normal functions
                 p0 = ast.Call(func=leader,
                               lineno=leader.lineno,
                               col_offset=leader.col_offset, **trailer)
+            elif isinstance(trailer, ast.Tuple):
+                # call macro functions
+                l, c = leader.lineno, leader.col_offset
+                gblcall = xonsh_call('globals', [], lineno=l, col=c)
+                loccall = xonsh_call('locals', [], lineno=l, col=c)
+                margs = [leader, trailer, gblcall, loccall]
+                p0 = xonsh_call('__xonsh_call_macro__', margs, lineno=l, col=c)
             elif isinstance(trailer, str):
                 if trailer == '?':
                     p0 = xonsh_help(leader, lineno=leader.lineno,
@@ -1895,8 +1904,10 @@ class BaseParser(object):
             elts = [p1]
         else:
             elts = [p1] + p2
-        p0 = ast.Tuple(elts=elts, ctx=ast.Load(), lineno=self.lineno,
-                       col_offset=self.col)
+        l = self.lineno
+        c = self.col
+        elts = [ast.Str(s=elt, lineno=l, col_offset=c) for elt in elts]
+        p0 = ast.Tuple(elts=elts, ctx=ast.Load(), lineno=l, col_offset=c)
         p[0] = p0
 
     def p_subscriptlist(self, p):
