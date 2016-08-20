@@ -781,10 +781,19 @@ def macro_context(f, glbs, locs):
     locs : Mapping or None
         The locals from the call site.
     """
+    prev_glbs = getattr(f, 'macro_globals', None)
+    prev_locs = getattr(f, 'macro_locals', None)
     f.macro_globals = glbs
     f.macro_locals = locs
     yield
-    del f.macro_globals, f.macro_locals
+    if prev_glbs is None:
+        del f.macro_globals
+    else:
+        f.macro_globals = prev_glbs
+    if prev_locs is None:
+        del f.macro_locals
+    else:
+        f.macro_locals = prev_locs
 
 
 def call_macro(f, raw_args, glbs, locs):

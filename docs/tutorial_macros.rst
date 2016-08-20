@@ -187,9 +187,12 @@ argument:
     x = "['x', 'y']"
     y = '{1: 1, 2: 3}'
 
-Hopefully now you see the big picture.
+Hopefully, now you see the big picture.
 
 Writing Function Macros
 =======================
 Though any function (or callable) can be used as a macro, this functionality
-is probably most useful if the function was designed to be used as a macro.
+is probably most useful if the function was *designed* as a macro. There
+are two aspects
+
+globals, locals
