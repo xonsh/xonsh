@@ -683,6 +683,7 @@ def _tokenize(readline, encoding):
                     if parenlev > 0:
                         yield TokenInfo(NL, token, spos, epos, line)
                     else:
+                        print(token)
                         yield TokenInfo(NEWLINE, token, spos, epos, line)
                         if async_def:
                             async_def_nl = True

@@ -425,7 +425,8 @@ class BaseParser(object):
                   ('left', 'EQ', 'NE'), ('left', 'GT', 'GE', 'LT', 'LE'),
                   ('left', 'RSHIFT', 'LSHIFT'), ('left', 'PLUS', 'MINUS'),
                   ('left', 'TIMES', 'DIVIDE', 'DOUBLEDIV', 'MOD'),
-                  ('left', 'POW'), )
+                  ('left', 'POW'),
+                  )
 
     #
     # Grammar as defined by BNF
@@ -1848,10 +1849,10 @@ class BaseParser(object):
         p[0] = [p[1]]
 
     def _attach_nocomma_tok_rules(self):
-        toks = sorted(self.tokens)
-        toks.remove('COMMA')
-        toks.remove('RPAREN')
-        ts = '\n             | '.join(toks)
+        toks = set(self.tokens)
+        toks -= {'COMMA', 'LPAREN', 'RPAREN', 'LBRACE', 'RBRACE', 'LBRACKET',
+                 'RBRACKET', 'AT_LPAREN', 'BANG_LPAREN'}
+        ts = '\n            | '.join(sorted(toks))
         doc = 'nocomma_tok : ' + ts + '\n'
         self.p_nocomma_tok.__func__.__doc__ = doc
 
@@ -1862,7 +1863,6 @@ class BaseParser(object):
     def p_any_raw_tok(self, p):
         """any_raw_tok : nocomma
                        | COMMA
-                       | RPAREN
         """
         p[0] = p[1]
 

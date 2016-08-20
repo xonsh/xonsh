@@ -1794,12 +1794,15 @@ def test_macro_call_empty():
     'f!(import os)',
     'f!(x=10)',
     'f!("oh no, mom")',
-    'f!(if True:\n  pass)',
+    'f!(...)',
+    'f!( ... )',
+    #'f!(if True:\n  pass)',
     #'f!({x: y})',
+    'f!((x,y))',
     #'f!((x, y))',
 ])
 def test_macro_call_one_arg(s):
-    tree = check_xonsh_ast({}, s, False, return_obs=True)#, debug_level=100)
+    tree = check_xonsh_ast({}, s, False, return_obs=True, debug_level=100)
     assert isinstance(tree, AST)
     args = tree.body.args[1].elts
     assert len(args) == 1
