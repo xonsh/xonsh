@@ -1831,3 +1831,13 @@ def test_macro_call_three_args(s, t, u):
     assert args[0].s == s.strip()
     assert args[1].s == t.strip()
     assert args[2].s == u.strip()
+
+
+@pytest.mark.parametrize('s', MACRO_ARGS)
+def test_macro_call_one_trailing(s):
+    f = 'f!({0},)'.format(s)
+    tree = check_xonsh_ast({}, f, False, return_obs=True)
+    assert isinstance(tree, AST)
+    args = tree.body.args[1].elts
+    assert len(args) == 1
+    assert args[0].s == s.strip()
