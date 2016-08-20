@@ -219,6 +219,8 @@ class BaseParser(object):
         self.lexer = lexer = Lexer()
         self.tokens = lexer.tokens
 
+        self._attach_nocomma_tok_rules()
+
         opt_rules = [
             'newlines', 'arglist', 'func_call', 'rarrow_test', 'typedargslist',
             'equals_test', 'colon_test', 'tfpdef', 'comma_tfpdef_list',
@@ -1836,19 +1838,65 @@ class BaseParser(object):
         """
         p[0] = [p[1]]
 
+    def _attach_nocomma_tok_rules(self):
+        toks = sorted(self.tokens)
+        toks.remove('COMMA')
+        toks.remove('RPAREN')
+        ts = '\n             | '.join(toks)
+        doc = 'nocomma_tok : ' + ts + '\n'
+        self.p_nocomma_tok.__func__.__doc__ = doc
+
+    def p_nocomma_tok(self, p):
+        # see attachement function above for docstring
+        p[0] = p[1]
+
+    def p_any_raw_tok(self, p):
+        """any_raw_tok : nocomma
+                       | COMMA
+                       | RPAREN
+        """
+        p[0] = p[1]
+
+    def p_any_raw_toks_one(self, p):
+        """any_raw_toks : any_raw_tok"""
+        p[0] = p[1]
+
+    def p_any_raw_toks_many(self, p):
+        """any_raw_toks : any_raw_toks any_raw_tok"""
+        p[0] = p[1] + p[2]
+
+    def p_nocomma_part_tok(self, p):
+        """nocomma_part : nocomma_tok"""
+        p[0] = p[1]
+
+    def p_nocomma_part_any(self, p):
+        """nocomma_part : LPAREN any_raw_toks RPAREN
+                        | AT_LPAREN any_raw_toks RPAREN
+                        | BANG_LPAREN any_raw_toks RPAREN
+        """
+        p[0] = p[1] + p[2]
+
+    def p_nocomma_base(self, p):
+        """nocomma : nocomma_part"""
+        p[0] = p[1]
+
+    def p_nocomma_append(self, p):
+        """nocomma : nocomma nocomma_part"""
+        p[0] = p[1] + p[2]
+
     def p_comma_nocomma(self, p):
-        """comma_nocomma : COMMA NOCOMMA"""
+        """comma_nocomma : COMMA nocomma"""
         p[0] = [p[2]]
 
     def p_macroarglist(self, p):
-        """macroarglist : NOCOMMA comma_nocomma_list_opt comma_opt"""
+        """macroarglist : nocomma comma_nocomma_list_opt comma_opt"""
         p1, p2 = p[1], p[2]
         if p2 is None:
             elts = [p1]
         else:
             elts = [p1] + p2
-        p0 = ast.Tuple(elts=elts, ctx=ast.Load(), lineno=p1.lineno,
-                       col_offset=p1.col_offset)
+        p0 = ast.Tuple(elts=elts, ctx=ast.Load(), lineno=self.lineno,
+                       col_offset=self.col)
         p[0] = p0
 
     def p_subscriptlist(self, p):
