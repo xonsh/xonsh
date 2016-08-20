@@ -3,13 +3,16 @@
 from __future__ import unicode_literals, print_function
 import os
 import re
+import builtins
+import types
+from ast import AST
 
 import pytest
 
 from xonsh import built_ins
 from xonsh.built_ins import reglob, pathsearch, helper, superhelper, \
     ensure_list_of_strs, list_of_strs_or_callables, regexsearch, \
-    globsearch
+    globsearch, convert_macro_arg
 from xonsh.environ import Env
 
 from tools import skip_if_on_windows
@@ -17,6 +20,10 @@ from tools import skip_if_on_windows
 
 HOME_PATH = os.path.expanduser('~')
 
+
+@pytest.fixture(autouse=True)
+def xonsh_execer_autouse(xonsh_execer):
+    return xonsh_execer
 
 @pytest.mark.parametrize('testfile', reglob('test_.*'))
 def test_reglob_tests(testfile):
@@ -113,3 +120,59 @@ f = lambda x: 20
 def test_list_of_strs_or_callables(exp, inp):
     obs = list_of_strs_or_callables(inp)
     assert exp == obs
+
+
+@pytest.mark.parametrize('kind', [str, 's', 'S', 'str', 'string'])
+def test_convert_macro_arg_str(kind):
+    raw_arg = 'value'
+    arg = convert_macro_arg(raw_arg, kind, None, None)
+    assert arg is raw_arg
+
+
+@pytest.mark.parametrize('kind', [AST, 'a', 'Ast'])
+def test_convert_macro_arg_ast(kind):
+    raw_arg = '42'
+    arg = convert_macro_arg(raw_arg, kind, {}, None)
+    assert isinstance(arg, AST)
+
+
+@pytest.mark.parametrize('kind', [types.CodeType, compile, 'c', 'code',
+                                  'compile'])
+def test_convert_macro_arg_code(kind):
+    raw_arg = '42'
+    arg = convert_macro_arg(raw_arg, kind, {}, None)
+    assert isinstance(arg, types.CodeType)
+
+
+@pytest.mark.parametrize('kind', [eval, 'v', 'eval'])
+def test_convert_macro_arg_eval(kind):
+    # literals
+    raw_arg = '42'
+    arg = convert_macro_arg(raw_arg, kind, {}, None)
+    assert arg == 42
+    # exprs
+    raw_arg = 'x + 41'
+    arg = convert_macro_arg(raw_arg, kind, {}, {'x': 1})
+    assert arg == 42
+
+
+@pytest.mark.parametrize('kind', [exec, 'x', 'exec'])
+def test_convert_macro_arg_eval(kind):
+    # at global scope
+    raw_arg = 'def f(x, y):\n    return x + y'
+    glbs = {}
+    arg = convert_macro_arg(raw_arg, kind, glbs, None)
+    assert arg is None
+    assert 'f' in glbs
+    assert glbs['f'](1, 41) == 42
+    # at local scope
+    raw_arg = 'def g(z):\n    return x + z\ny += 42'
+    glbs = {'x': 40}
+    locs = {'y': 1}
+    arg = convert_macro_arg(raw_arg, kind, glbs, locs)
+    assert arg is None
+    assert 'g' in locs
+    assert locs['g'](1) == 41
+    assert 'y' in locs
+    assert locs['y'] == 43
+

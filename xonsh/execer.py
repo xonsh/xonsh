@@ -144,7 +144,7 @@ class Execer(object):
                                 locs=locs,
                                 mode=mode,
                                 stacklevel=stacklevel,
-                                filename=filname,
+                                filename=filename,
                                 transform=transform)
         if code is None:
             return None  # handles comment only input

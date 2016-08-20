@@ -748,14 +748,16 @@ def convert_macro_arg(raw_arg, kind, glbs, locs, *, name='<arg>',
             ctx |= set(locs.keys())
         mode = mode or 'eval'
         arg = execer.parse(raw_arg, ctx, mode=mode, filename=filename)
-    elif kind is types.CodeType or kind is compile or kind is execer.compile:
+    elif kind is types.CodeType or kind is compile:
         mode = mode or 'eval'
         arg = execer.compile(raw_arg, mode=mode, glbs=glbs, locs=locs,
                              filename=filename)
-    elif kind is eval or kind is execer.eval:
+    elif kind is eval:
         arg = execer.eval(raw_arg, glbs=glbs, locs=locs, filename=filename)
-    elif kind is exec or kind is execer.exec:
+    elif kind is exec:
         mode = mode or 'exec'
+        if not raw_arg.endswith('\n'):
+            raw_arg += '\n'
         arg = execer.exec(raw_arg, mode=mode, glbs=glbs, locs=locs,
                           filename=filename)
     else:
