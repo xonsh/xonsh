@@ -47,6 +47,94 @@ Even restructured text (rST) directives could be considered macros.
 Haskell and other more purely functional languages do not need macros (since
 evaluation is lazy anyway), and so do not have them.
 
+If these seem unfamiliar to the Python world, note that Jupyter and IPython
+magics ``%`` and ``%%`` are macros!
+
 Function Macros
 ===============
-Xonsh supports Rust-like macros that are based on Python callables.
+Xonsh supports Rust-like macros that are based on normal Python callables.
+Macros do not require a special definition in xonsh. However, like in Rust,
+they must be called with an exclamation point ``!`` between the callable
+and the opening parentheses ``(``. Macro arguments are split on the top-level
+commas ``,``, like normal Python functions.  For example, say we have the
+functions ``f`` and ``g``. We could perform a macro call on these functions
+with the following:
+
+.. code-block:: xonsh
+
+    # No macro args
+    f!()
+
+    # Single arg
+    f!(x)
+    g!([y, 43, 44])
+
+    # Two args
+    f!(x, x + 42)
+    g!([y, 43, 44], f!(z))
+
+Not so bad, right?  So what actually happens when to the arguments when used
+in a macro call?  Well, that depends onthe defintion of the function. In
+particular, each argument in the macro call is matched up with the cooresponding
+parameter annotation in the callable's signature.  For example, say we have
+an ``identity()`` function that is annotates its sole argument as a string:
+
+.. code-block:: xonsh
+
+    def identity(x : str):
+        return x
+
+If we call this normally, we'll just get whatever object we put in back out,
+even if that object is not a string:
+
+.. code-block:: xonshcon
+
+    >>> identity('me')
+    'me'
+
+    >>> identity(42)
+    42
+
+    >>> identity(identity)
+    <function __main__.identity>
+
+However, if we perform macro calls instead we are now gauranteed to get a
+the string of the source code that is in the macro call:
+
+.. code-block:: xonshcon
+
+    >>> identity!('me')
+    "'me'"
+
+    >>> identity!(42)
+    '42'
+
+    >>> identity!(identity)
+    'identity'
+
+Also note that each macro argument is stripped prior to passing it to the
+macro itself. This is done for consistency.
+
+.. code-block:: xonshcon
+
+    >>> identity!(42)
+    '42'
+
+    >>> identity!(  42 )
+    '42'
+
+Importantly, because we are capturing and not evaluating the source code,
+a macro call can contain input that is beyond the usual syntax. In fact, that
+is sort of the whole point. Here are some cases to start your gears turning:
+
+.. code-block:: xonshcon
+
+    >>> identity!(import os)
+    'import os'
+
+    >>> identity!(if True:
+    >>>     pass)
+    'if True:\n    pass'
+
+
+
