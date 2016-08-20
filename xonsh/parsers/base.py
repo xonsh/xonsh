@@ -1882,8 +1882,9 @@ class BaseParser(object):
         """nocomma_part : LPAREN any_raw_toks RPAREN
                         | AT_LPAREN any_raw_toks RPAREN
                         | BANG_LPAREN any_raw_toks RPAREN
+                        | LBRACE any_raw_toks RBRACE
         """
-        p[0] = p[1] + p[2]
+        p[0] = p[1] + p[2] + p[3]
 
     def p_nocomma_base(self, p):
         """nocomma : nocomma_part"""
@@ -1906,7 +1907,7 @@ class BaseParser(object):
             elts = [p1] + p2
         l = self.lineno
         c = self.col
-        elts = [ast.Str(s=elt, lineno=l, col_offset=c) for elt in elts]
+        elts = [ast.Str(s=elt.strip(), lineno=l, col_offset=c) for elt in elts]
         p0 = ast.Tuple(elts=elts, ctx=ast.Load(), lineno=l, col_offset=c)
         p[0] = p0
 

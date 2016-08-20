@@ -7,7 +7,7 @@ import builtins
 
 import pytest
 
-from xonsh.ast import pdump
+from xonsh.ast import pdump, AST
 from xonsh.parser import Parser
 
 from tools import VER_FULL, skip_if_py34, nodes_equal
@@ -42,7 +42,8 @@ def check_stmts(inp, run=True, mode='exec'):
         inp += '\n'
     check_ast(inp, run=run, mode=mode)
 
-def check_xonsh_ast(xenv, inp, run=True, mode='eval', debug_level=0):
+def check_xonsh_ast(xenv, inp, run=True, mode='eval', debug_level=0,
+                    return_obs=False):
     __tracebackhide__ = True
     builtins.__xonsh_env__ = xenv
     obs = PARSER.parse(inp, debug_level=debug_level)
@@ -51,7 +52,7 @@ def check_xonsh_ast(xenv, inp, run=True, mode='eval', debug_level=0):
     bytecode = compile(obs, '<test-xonsh-ast>', mode)
     if run:
         exec(bytecode)
-    return True
+    return obs if return_obs else True
 
 def check_xonsh(xenv, inp, run=True, mode='exec'):
     __tracebackhide__ = True
@@ -1784,7 +1785,23 @@ def test_redirect_error_to_output(r, o):
     assert check_xonsh_ast({}, '$[echo "test" {} {}> test.txt < input.txt]'.format(r, o), False)
 
 def test_macro_call_empty():
-    check_xonsh_ast({}, 'f!()', False)
+    assert check_xonsh_ast({}, 'f!()', False)
 
-def test_macro_call_one_arg():
-    check_xonsh_ast({}, 'f!(x)', False, debug_level=100)
+@pytest.mark.parametrize('s', [
+    'f!(x)',
+    'f!(True)',
+    'f!(None)',
+    'f!(import os)',
+    'f!(x=10)',
+    'f!("oh no, mom")',
+    'f!(if True:\n  pass)',
+    #'f!({x: y})',
+    #'f!((x, y))',
+])
+def test_macro_call_one_arg(s):
+    tree = check_xonsh_ast({}, s, False, return_obs=True)#, debug_level=100)
+    assert isinstance(tree, AST)
+    args = tree.body.args[1].elts
+    assert len(args) == 1
+    assert args[0].s == s[3:-1].strip()
+
