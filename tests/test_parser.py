@@ -1788,44 +1788,6 @@ def test_redirect_error_to_output(r, o):
 def test_macro_call_empty():
     assert check_xonsh_ast({}, 'f!()', False)
 
-@pytest.mark.parametrize('s', [
-    'f!(x)',
-    'f!(True)',
-    'f!(None)',
-    'f!(import os)',
-    'f!(x=10)',
-    'f!("oh no, mom")',
-    'f!(...)',
-    'f!( ... )',
-    'f!(if True:\n  pass)',
-    'f!({x: y})',
-    'f!({x: y, 42: 5})',
-    'f!({1, 2, 3,})',
-    'f!((x,y))',
-    'f!((x, y))',
-    'f!(((x, y), z))',
-    'f!(g())',
-    'f!(range(10))',
-    'f!(range(1, 10, 2))',
-    'f!(())',
-    'f!({})',
-    'f!([])',
-    'f!([1, 2])',
-    'f!(@(x))',
-    'f!(!(ls -l))',
-    'f!(![ls -l])',
-    'f!($(ls -l))',
-    'f!(${x + y})',
-    'f!($[ls -l])',
-    'f!(@$(which xonsh))',
-])
-def test_macro_call_one_arg(s):
-    tree = check_xonsh_ast({}, s, False, return_obs=True)
-    assert isinstance(tree, AST)
-    args = tree.body.args[1].elts
-    assert len(args) == 1
-    assert args[0].s == s[3:-1].strip()
-
 
 MACRO_ARGS = [
     'x', 'True', 'None', 'import os', 'x=10', '"oh no, mom"', '...', ' ... ',
@@ -1834,6 +1796,16 @@ MACRO_ARGS = [
     '[]', '[1, 2]', '@(x)', '!(ls -l)', '![ls -l]', '$(ls -l)', '${x + y}',
     '$[ls -l]', '@$(which xonsh)',
 ]
+
+@pytest.mark.parametrize('s', MACRO_ARGS)
+def test_macro_call_one_arg(s):
+    f = 'f!({})'.format(s)
+    tree = check_xonsh_ast({}, f, False, return_obs=True)
+    assert isinstance(tree, AST)
+    args = tree.body.args[1].elts
+    assert len(args) == 1
+    assert args[0].s == s.strip()
+
 
 @pytest.mark.parametrize('s,t', itertools.product(MACRO_ARGS[::2],
                                                   MACRO_ARGS[1::2]))
@@ -1845,6 +1817,7 @@ def test_macro_call_two_args(s, t):
     assert len(args) == 2
     assert args[0].s == s.strip()
     assert args[1].s == t.strip()
+
 
 @pytest.mark.parametrize('s,t,u', itertools.product(MACRO_ARGS[::3],
                                                     MACRO_ARGS[1::3],
