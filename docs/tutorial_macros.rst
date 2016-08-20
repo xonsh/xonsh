@@ -179,6 +179,15 @@ argument:
     x = '42'
     y = '65'
 
+    >>> g!( 42, 65, )
+    x = '42'
+    y = '65'
+
+    >>> g!(['x', 'y'], {1: 1, 2: 3})
+    x = "['x', 'y']"
+    y = '{1: 1, 2: 3}'
+
+Hopefully now you see the big picture.
 
 Writing Function Macros
 =======================
