@@ -238,7 +238,7 @@ class BaseParser(object):
             'yield_expr_or_testlist_comp', 'dictorsetmaker',
             'comma_subscript_list', 'test', 'sliceop', 'comp_iter',
             'yield_arg', 'test_comma_list', 'comma_nocomma_list',
-            'macroarglist', 'comma_tok']
+            'macroarglist', 'comma_tok', 'any_raw_toks']
         for rule in opt_rules:
             self._opt_rule(rule)
 
@@ -1899,7 +1899,9 @@ class BaseParser(object):
     def _attach_nocomma_tok_rules(self):
         toks = set(self.tokens)
         toks -= {'COMMA', 'LPAREN', 'RPAREN', 'LBRACE', 'RBRACE', 'LBRACKET',
-                 'RBRACKET', 'AT_LPAREN', 'BANG_LPAREN'}
+                 'RBRACKET', 'AT_LPAREN', 'BANG_LPAREN', 'BANG_LBRACKET',
+                 'DOLLAR_LPAREN', 'DOLLAR_LBRACE', 'DOLLAR_LBRACKET',
+                 'ATDOLLAR_LPAREN'}
         ts = '\n            | '.join(sorted(toks))
         doc = 'nocomma_tok : ' + ts + '\n'
         self.p_nocomma_tok.__func__.__doc__ = doc
@@ -1935,10 +1937,16 @@ class BaseParser(object):
         pass
 
     def p_nocomma_part_any(self, p):
-        """nocomma_part : LPAREN any_raw_toks RPAREN
-                        | AT_LPAREN any_raw_toks RPAREN
-                        | BANG_LPAREN any_raw_toks RPAREN
-                        | LBRACE any_raw_toks RBRACE
+        """nocomma_part : LPAREN any_raw_toks_opt RPAREN
+                        | LBRACE any_raw_toks_opt RBRACE
+                        | LBRACKET any_raw_toks_opt RBRACKET
+                        | AT_LPAREN any_raw_toks_opt RPAREN
+                        | BANG_LPAREN any_raw_toks_opt RPAREN
+                        | BANG_LBRACKET any_raw_toks_opt RBRACKET
+                        | DOLLAR_LPAREN any_raw_toks_opt RPAREN
+                        | DOLLAR_LBRACE any_raw_toks_opt RBRACE
+                        | DOLLAR_LBRACKET any_raw_toks_opt RBRACKET
+                        | ATDOLLAR_LPAREN any_raw_toks_opt RPAREN
         """
         pass
 
