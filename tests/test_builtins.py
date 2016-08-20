@@ -196,9 +196,36 @@ def test_call_macro_str(arg):
 
 
 @pytest.mark.parametrize('arg', ['x', '42', 'x + y'])
+def test_call_macro_ast(arg):
+    def f(x : AST):
+        return x
+    rtn = call_macro(f, [arg], {}, None)
+    assert isinstance(rtn, AST)
+
+
+@pytest.mark.parametrize('arg', ['x', '42', 'x + y'])
 def test_call_macro_code(arg):
     def f(x : compile):
         return x
     rtn = call_macro(f, [arg], {}, None)
     assert isinstance(rtn, types.CodeType)
+
+
+@pytest.mark.parametrize('arg', ['x', '42', 'x + y'])
+def test_call_macro_eval(arg):
+    def f(x : eval):
+        return x
+    rtn = call_macro(f, [arg], {'x': 42, 'y': 0}, None)
+    assert rtn == 42
+
+
+@pytest.mark.parametrize('arg', ['if y:\n    pass',
+                                 'if 42:\n    pass',
+                                 'if x + y:\n    pass'])
+def test_call_macro_exec(arg):
+    def f(x : exec):
+        return x
+    rtn = call_macro(f, [arg], {'x': 42, 'y': 0}, None)
+    assert rtn is None
+
 
