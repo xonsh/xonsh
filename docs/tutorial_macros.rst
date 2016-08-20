@@ -136,5 +136,47 @@ is sort of the whole point. Here are some cases to start your gears turning:
     >>>     pass)
     'if True:\n    pass'
 
+    >>> identity!(std::vector<std::string> x = {"yoo", "hoo"})
+    'std::vector<std::string> x = {"yoo", "hoo"}'
+
+You do you, ``identity()``.
+
+Calling Function Macros
+=======================
+There are a couple of points to consider when calling macros. The first is
+that passing in arguments by name will not behave as expected. This is because
+the ``<name>=`` is captured by the macro itself. Using the ``identity()``
+function from above:
+
+.. code-block:: xonshcon
+
+    >>> identity!(x=42)
+    'x=42'
+
+Performing a macro call uses only argument order to pass in values.
+
+Additionally, macro calls split arguments only on the top-level commas.
+The top-level commas are not included in any argument.
+This behaves analogously to normal Python function calls. For instance,
+say we have the following ``g()`` function that accepts two arguments:
+
+.. code-block:: xonsh
+
+    def g(x : str, y : str):
+        print('x = ' + repr(x))
+        print('y = ' + repr(y))
+
+Then you can see the splitting and stripping behaviour on each macro
+argument:
+
+.. code-block:: xonshcon
+
+    >>> g!(42, 65)
+    x = '42'
+    y = '65'
 
 
+Writing Function Macros
+=======================
+Though any function (or callable) can be used as a macro, this functionality
+is probably most useful if the function was designed to be used as a macro.
