@@ -33,5 +33,5 @@ def test_news():
                            os.path.dirname(__file__)), 'news')
     for f in scandir(newsdir):
         base, ext = os.path.splitext(f.path)
-        assert '.rst' == ext
+        assert 'rst' in ext
         yield check_news_file, f.path

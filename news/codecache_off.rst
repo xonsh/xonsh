@@ -8,7 +8,6 @@
 
 **Fixed:**
 
-* Fixed parser error line number exception from being raised while trying to
-  raise a SyntaxError.
+* Fixed a bug that prevented xonsh from running scripts with code caching disabled.
 
 **Security:** None

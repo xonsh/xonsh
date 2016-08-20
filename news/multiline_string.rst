@@ -6,8 +6,8 @@
 
 **Removed:** None
 
-**Fixed:** 
+**Fixed:**
 
-* LazyObject supports set union
+* The interactive prompt now correctly handles multiline strings.
 
 **Security:** None

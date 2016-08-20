@@ -43,3 +43,5 @@ include/
 .idea
 
 .coverage
+feedstock/
+*.cred

@@ -2,7 +2,7 @@
 
 **Changed:**
 
-* xon.sh uses the interpreter used to install instead of the default python3.
+* Results of the ``bash`` tab completer are now properly escaped (quoted) when necessary.
 
 **Deprecated:** None
 

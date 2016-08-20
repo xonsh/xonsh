@@ -7,7 +7,7 @@ import time
 import builtins
 
 from xonsh.tools import (XonshError, escape_windows_cmd_string, print_exception,
-                         DefaultNotGiven)
+                         DefaultNotGiven, check_for_partial_string)
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.codecache import (should_use_cache, code_cache_name,
                              code_cache_check, get_cache_filename,
@@ -209,7 +209,10 @@ class BaseShell(object):
                 update_cache(code, cachefname)
             self.reset_buffer()
         except SyntaxError:
-            if line == '\n':
+            partial_string_info = check_for_partial_string(src)
+            in_partial_string = (partial_string_info[0] is not None and
+                                 partial_string_info[1] is None)
+            if ((line == '\n' and not in_partial_string)):
                 self.reset_buffer()
                 print_exception()
                 return src, None

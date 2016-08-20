@@ -1,2 +1,3 @@
 include logo.txt
 include scripts/*
+include tests/*
