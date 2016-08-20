@@ -1904,27 +1904,35 @@ class BaseParser(object):
         doc = 'nocomma_tok : ' + ts + '\n'
         self.p_nocomma_tok.__func__.__doc__ = doc
 
+    # The following grammar rules are no-ops because we don't need to glue the
+    # source code back together piece-by-piece. Instead, we simply look for
+    # top-level commas and record their positions. With these positions and
+    # the bounding parantheses !() positions we can use the source_slice()
+    # method. This does a much better job of capturing exactly the source code
+    # that was provided. The tokenizer & lexer can be a little lossy, especially
+    # with respect to whitespace.
+
     def p_nocomma_tok(self, p):
         # see attachement function above for docstring
-        p[0] = p[1]
+        pass
 
     def p_any_raw_tok(self, p):
         """any_raw_tok : nocomma
                        | COMMA
         """
-        p[0] = p[1]
+        pass
 
     def p_any_raw_toks_one(self, p):
         """any_raw_toks : any_raw_tok"""
-        p[0] = p[1]
+        pass
 
     def p_any_raw_toks_many(self, p):
         """any_raw_toks : any_raw_toks any_raw_tok"""
-        p[0] = p[1] + p[2]
+        pass
 
     def p_nocomma_part_tok(self, p):
         """nocomma_part : nocomma_tok"""
-        p[0] = p[1]
+        pass
 
     def p_nocomma_part_any(self, p):
         """nocomma_part : LPAREN any_raw_toks RPAREN
@@ -1932,15 +1940,15 @@ class BaseParser(object):
                         | BANG_LPAREN any_raw_toks RPAREN
                         | LBRACE any_raw_toks RBRACE
         """
-        p[0] = p[1] + p[2] + p[3]
+        pass
 
     def p_nocomma_base(self, p):
         """nocomma : nocomma_part"""
-        p[0] = p[1]
+        pass
 
     def p_nocomma_append(self, p):
         """nocomma : nocomma nocomma_part"""
-        p[0] = p[1] + p[2]
+        pass
 
     def p_comma_nocomma(self, p):
         """comma_nocomma : comma_tok nocomma"""
