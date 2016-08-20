@@ -8,6 +8,7 @@ import os
 import re
 import sys
 import time
+import types
 import shlex
 import signal
 import atexit
@@ -18,6 +19,7 @@ import subprocess
 import contextlib
 import collections.abc as abc
 
+from xonsh.ast import AST
 from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.history import History
 from xonsh.inspectors import Inspector
@@ -679,6 +681,110 @@ def list_of_strs_or_callables(x):
     return rtn
 
 
+@lazyobject
+def MACRO_FLAG_KINDS():
+    return {
+        's': str,
+        'str': str,
+        'string': str,
+        'a': AST,
+        'ast': AST,
+        'c': types.CodeType,
+        'code': types.CodeType,
+        'compile': types.CodeType,
+        'v': eval,
+        'eval': eval,
+        'x': exec,
+        'exec': exec,
+        }
+
+def _convert_kind_flag(x):
+    """Puts a kind flag (string) a canonical form."""
+    x = x.lower()
+    kind = MACRO_FLAG_KINDS.get(x, None)
+    if kind is None:
+        raise TypeError('{0!r} not a recognized macro type.'.format(x))
+    return kind
+
+
+def convert_macro_arg(raw_arg, kind, glbs, locs, *, name='<arg>',
+                      macroname='<macro>'):
+    """Converts a string macro argument based on the requested kind.
+
+    Parameters
+    ----------
+    raw_arg : str
+        The str reprensetaion of the macro argument.
+    kind : object
+        A flag or type representing how to convert the argument.
+    glbs : Mapping
+        The globals from the call site.
+    locs : Mapping or None
+        The locals from the call site.
+    name : str, optional
+        The macro argument name.
+    macroname : str, optional
+        The name of the macro itself.
+
+    Returns
+    -------
+    The converted argument.
+    """
+    # munge kind and mode to start
+    mode = None
+    if isinstance(kind, abc.Sequence) and not isinstance(kind, str):
+        # have (kind, mode) tuple
+        kind, mode = kind
+    if isinstance(kind, str):
+        kind = _convert_kind_flag(kind)
+    if kind is str:
+        return raw_arg  # short circut since there is nothing else to do
+    # select from kind and convert
+    execer = builtins.__xonsh_execer__
+    filename = macroname + '(' + name + ')'
+    if kind is AST:
+        ctx = set(dir(builtins)) | set(glbs.keys())
+        if locs is not None:
+            ctx |= set(locs.keys())
+        mode = mode or 'eval'
+        arg = execer.parse(raw_arg, ctx, mode=mode, filename=filename)
+    elif kind is types.CodeType or kind is compile or kind is execer.compile:
+        mode = mode or 'eval'
+        arg = execer.compile(raw_arg, mode=mode, glbs=glbs, locs=locs,
+                             filename=filename)
+    elif kind is eval or kind is execer.eval:
+        arg = execer.eval(raw_arg, glbs=glbs, locs=locs, filename=filename)
+    elif kind is exec or kind is execer.exec:
+        mode = mode or 'exec'
+        arg = execer.exec(raw_arg, mode=mode, glbs=glbs, locs=locs,
+                          filename=filename)
+    else:
+        msg = ('kind={0!r} and mode={1!r} was not recongnized for macro '
+               'argument {2!r}')
+        raise TypeError(msg.format(kind, mode, name))
+    return arg
+
+
+@contextlib.contextmanager
+def macro_context(f, glbs, locs):
+    """Attaches macro globals and locals temporarily to function as a
+    context manager.
+
+    Parameters
+    ----------
+    f : callable object
+        The function that is called as f(*args).
+    glbs : Mapping
+        The globals from the call site.
+    locs : Mapping or None
+        The locals from the call site.
+    """
+    f.macro_globals = glbs
+    f.macro_locals = locs
+    yield
+    del f.macro_globals, f.macro_locals
+
+
 def call_macro(f, args, glbs, locs):
     """Calls a function as a macro, returning its result.
 
@@ -686,9 +792,9 @@ def call_macro(f, args, glbs, locs):
     ----------
     f : callable object
         The function that is called as f(*args).
-    args : tuple of str
+    raw_args : tuple of str
         The str reprensetaion of arguments of that were passed into the
-        macro.  These strings will be parsed, compiled, evaled, or left as
+        macro. These strings will be parsed, compiled, evaled, or left as
         a string dependending on the annotations of f.
     glbs : Mapping
         The globals from the call site.
@@ -696,7 +802,20 @@ def call_macro(f, args, glbs, locs):
         The locals from the call site.
     """
     args = [eval(a, glbs, locs) for a in args]  # punt for the moment
-    return f(*args)
+    sig = inspect.signature(f)
+    empty = inspect.Parameter.empty
+    macroname = f.__name__
+    args = []
+    for (key, param), raw_arg in zip(sig.items(), raw_args):
+        kind = param.annotation
+        if kind is empty or kind is None:
+            kind = eval
+        arg = convert_macro_arg(raw_arg, kind, glbs, locs, name=key,
+                                macroname=macroname)
+        args.append(arg)
+    with macro_context(f, glbs, locs):
+        rtn = f(*args)
+    return rtn
 
 
 def load_builtins(execer=None, config=None, login=False, ctx=None):
