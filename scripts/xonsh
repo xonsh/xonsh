@@ -1,3 +1,3 @@
-#!/usr/bin/env python -u
+#!/usr/bin/env python3
 from xonsh.main import main
 main()
