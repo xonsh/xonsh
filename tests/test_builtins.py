@@ -12,7 +12,7 @@ import pytest
 from xonsh import built_ins
 from xonsh.built_ins import reglob, pathsearch, helper, superhelper, \
     ensure_list_of_strs, list_of_strs_or_callables, regexsearch, \
-    globsearch, convert_macro_arg
+    globsearch, convert_macro_arg, macro_context, call_macro
 from xonsh.environ import Env
 
 from tools import skip_if_on_windows
@@ -175,4 +175,30 @@ def test_convert_macro_arg_eval(kind):
     assert locs['g'](1) == 41
     assert 'y' in locs
     assert locs['y'] == 43
+
+
+def test_macro_context():
+    def f():
+        pass
+    with macro_context(f, True, True):
+        assert f.macro_globals
+        assert f.macro_locals
+    assert not hasattr(f, 'macro_globals')
+    assert not hasattr(f, 'macro_locals')
+
+
+@pytest.mark.parametrize('arg', ['x', '42', 'x + y'])
+def test_call_macro_str(arg):
+    def f(x : str):
+        return x
+    rtn = call_macro(f, [arg], None, None)
+    assert rtn is arg
+
+
+@pytest.mark.parametrize('arg', ['x', '42', 'x + y'])
+def test_call_macro_code(arg):
+    def f(x : compile):
+        return x
+    rtn = call_macro(f, [arg], {}, None)
+    assert isinstance(rtn, types.CodeType)
 

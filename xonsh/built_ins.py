@@ -787,7 +787,7 @@ def macro_context(f, glbs, locs):
     del f.macro_globals, f.macro_locals
 
 
-def call_macro(f, args, glbs, locs):
+def call_macro(f, raw_args, glbs, locs):
     """Calls a function as a macro, returning its result.
 
     Parameters
@@ -803,12 +803,11 @@ def call_macro(f, args, glbs, locs):
     locs : Mapping or None
         The locals from the call site.
     """
-    args = [eval(a, glbs, locs) for a in args]  # punt for the moment
     sig = inspect.signature(f)
     empty = inspect.Parameter.empty
     macroname = f.__name__
     args = []
-    for (key, param), raw_arg in zip(sig.items(), raw_args):
+    for (key, param), raw_arg in zip(sig.parameters.items(), raw_args):
         kind = param.annotation
         if kind is empty or kind is None:
             kind = eval
