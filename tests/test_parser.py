@@ -437,6 +437,15 @@ def test_tuple_three():
 def test_tuple_three_comma():
     check_ast('(1, 42, 65,)')
 
+def test_bare_tuple_of_tuples():
+    check_ast('(),')
+    check_ast('((),),(1,)')
+    check_ast('(),(),')
+    check_ast('[],')
+    check_ast('[],()')
+    check_ast('(),[],')
+    check_ast('((),[()],)')
+
 def test_set_one():
     check_ast('{42}')
 
