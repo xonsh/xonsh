@@ -18,27 +18,36 @@ _unc_tempDrives = {}
 
 def _unc_check_enabled()->bool:
     """Check whether CMD.EXE is enforcing no-UNC-as-working-directory check.
-    Oh noes! can the registry entry be defined in HKCU too?
+
+    Check can be disabled by setting {HKCU, HKLM}/SOFTWARE\Microsoft\Command Processor\DisableUNCCheck:REG_DWORD=1
 
     Returns:
         True if `CMD.EXE` is enforcing the check (default Windows situation)
-        False if check is explicitly disabled by registry entry.
+        False if check is explicitly disabled.
     """
     if not ON_WINDOWS:
         return
 
     import winreg
 
-    ret_val = True
+    wval = None
+
     try:
-        key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'software\microsoft\command processor')
+        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'software\microsoft\command processor')
         wval, wtype = winreg.QueryValueEx(key, 'DisableUNCCheck')
         winreg.CloseKey(key)
-        if wtype == winreg.REG_DWORD and wval:
-            ret_val = False
     except OSError as e:
         pass
-    return ret_val
+
+    if wval is None:
+        try:
+            key2 = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'software\microsoft\command processor')
+            wval, wtype = winreg.QueryValueEx(key2, 'DisableUNCCheck')
+            winreg.CloseKey(key2)
+        except OSError as e:
+            pass
+
+    return False if wval else True
 
 
 def _unc_map_temp_drive(unc_path)->str:
@@ -111,6 +120,7 @@ def _change_working_directory(newdir):
     env = builtins.__xonsh_env__
     old = env['PWD']
     new = os.path.join(old, newdir)
+
     try:
         os.chdir(os.path.abspath(new))
     except (OSError, FileNotFoundError):
@@ -187,9 +197,16 @@ def cd(args, stdin=None):
         return '', 'cd: {0} is not a directory\n'.format(d), 1
     if not os.access(d, os.X_OK):
         return '', 'cd: permission denied: {0}\n'.format(d), 1
+    if ON_WINDOWS and (d[0] == d[1]) and (d[0] in (os.sep, os.altsep)) \
+            and _unc_check_enabled() and (not env.get('AUTO_PUSHD')):
+        return '', "cd: can't cd to UNC path on Windows, unless $AUTO_PUSHD set or reg entry " \
+               + r'HKCU\SOFTWARE\MICROSOFT\Command Processor\DisableUNCCheck:DWORD = 1' + '\n', 1
+
     # now, push the directory onto the dirstack if AUTO_PUSHD is set
     if cwd is not None and env.get('AUTO_PUSHD'):
         pushd(['-n', '-q', cwd])
+        if ON_WINDOWS and (d[0] == d[1]) and (d[0] in (os.sep, os.altsep)):
+            d = _unc_map_temp_drive(d)
     _change_working_directory(d)
     return None, None, 0
 
@@ -275,10 +292,10 @@ def pushd(args, stdin=None):
             e = 'Invalid argument to pushd: {0}\n'
             return None, e.format(args.dir), 1
     if new_pwd is not None:
+        if ON_WINDOWS and (new_pwd[0] == new_pwd[1]) and (new_pwd[0] in (os.sep, os.altsep)):
+            new_pwd = _unc_map_temp_drive(new_pwd)
         if args.cd:
             DIRSTACK.insert(0, os.path.expanduser(pwd))
-            if ON_WINDOWS and (new_pwd[0] == new_pwd[1]) and (new_pwd[0] in (os.sep, os.altsep)):
-                new_pwd = _unc_map_temp_drive(new_pwd)
             _change_working_directory(new_pwd)
         else:
             DIRSTACK.insert(0, os.path.expanduser(new_pwd))

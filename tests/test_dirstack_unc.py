@@ -168,3 +168,90 @@ def test_uncpushd_push_base_push_rempath(xonsh_builtins):
     """push to subdir under share, verify  mapped path includes subdir"""
     pass
 
+
+#really?  Need to cut-and-paste 2 flavors of this? yield_fixture requires yield in defined function body, not callee
+@pytest.yield_fixture()
+def with_unc_check_enabled():
+    if not ON_WINDOWS:
+        return
+
+    import winreg
+
+    old_wval = 0
+    key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'software\microsoft\command processor', access=winreg.KEY_WRITE)
+    try:
+        wval, wtype = winreg.QueryValueEx(key, 'DisableUNCCheck')
+        old_wval = wval # if values was defined at all
+    except OSError as e:
+        pass
+    winreg.SetValueEx(key, 'DisableUNCCheck', None, winreg.REG_DWORD, 0)
+    winreg.CloseKey(key)
+
+    yield old_wval
+
+    key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'software\microsoft\command processor', access=winreg.KEY_WRITE)
+    winreg.SetValueEx(key, 'DisableUNCCheck', None, winreg.REG_DWORD, old_wval)
+    winreg.CloseKey(key)
+
+
+@pytest.yield_fixture()
+def with_unc_check_disabled():  # just like the above, but value is 1 to *disable* unc check
+    if not ON_WINDOWS:
+        return
+
+    import winreg
+
+    old_wval = 0
+    key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'software\microsoft\command processor', access=winreg.KEY_WRITE)
+    try:
+        wval, wtype = winreg.QueryValueEx(key, 'DisableUNCCheck')
+        old_wval = wval # if values was defined at all
+    except OSError as e:
+        pass
+    winreg.SetValueEx(key, 'DisableUNCCheck', None, winreg.REG_DWORD, 1)
+    winreg.CloseKey(key)
+
+    yield old_wval
+
+    key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'software\microsoft\command processor', access=winreg.KEY_WRITE)
+    winreg.SetValueEx(key, 'DisableUNCCheck', None, winreg.REG_DWORD, old_wval)
+    winreg.CloseKey(key)
+
+
+@pytest.fixture()
+def xonsh_builtins_cd(xonsh_builtins):
+    xonsh_builtins.__xonsh_env__['PWD'] = os.getcwd()
+    xonsh_builtins.__xonsh_env__['DIRSTACK_SIZE'] = 20
+    return xonsh_builtins
+
+
+@pytest.mark.skipif(not ON_WINDOWS, reason="Windows-only UNC functionality")
+def test_uncpushd_cd_unc_auto_pushd(xonsh_builtins_cd, with_unc_check_enabled):
+    xonsh_builtins_cd.__xonsh_env__['AUTO_PUSHD'] = True
+    so, se, rc = dirstack.cd([r'\\localhost\uncpushd_test_PARENT'])
+    assert rc == 0
+    assert os.getcwd().casefold() == 'z:\\'
+    assert len(DIRSTACK) == 1
+    assert os.path.isdir('z:\\')
+
+
+@pytest.mark.skipif(not ON_WINDOWS, reason="Windows-only UNC functionality")
+def test_uncpushd_cd_unc_nocheck(xonsh_builtins_cd, with_unc_check_disabled):
+    dirstack.cd([r'\\localhost\uncpushd_test_HERE'])
+    assert os.getcwd().casefold() == r'\\localhost\uncpushd_test_here'
+
+
+@pytest.mark.skipif(not ON_WINDOWS, reason="Windows-only UNC functionality")
+def test_uncpushd_cd_unc_no_auto_pushd(xonsh_builtins_cd, with_unc_check_enabled):
+    so, se, rc = dirstack.cd([r'\\localhost\uncpushd_test_PARENT'])
+    assert rc != 0
+    assert so is None or len(so) == 0
+    assert 'disableunccheck' in se.casefold() and 'auto_pushd' in se.casefold()
+
+
+@pytest.mark.skipif(not ON_WINDOWS, reason="Windows-only UNC functionality")
+def test_uncpushd_unc_check():
+    # emminently suited to mocking, but I don't know how
+    # need to verify unc_check_enabled correct whether values set in HKCU or HKLM
+    pass
+
