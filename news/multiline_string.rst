@@ -6,8 +6,8 @@
 
 **Removed:** None
 
-**Fixed:** 
+**Fixed:**
 
-* Alias tab completion works again
+* The interactive prompt now correctly handles multiline strings.
 
 **Security:** None

@@ -8,7 +8,7 @@ from prompt_toolkit.filters import (Condition, Filter, IsMultiline,
                                     ViInsertMode)
 from prompt_toolkit.keys import Keys
 from xonsh.aliases import xonsh_exit
-from xonsh.tools import ON_WINDOWS
+from xonsh.tools import ON_WINDOWS, check_for_partial_string
 
 env = builtins.__xonsh_env__
 DEDENT_TOKENS = frozenset(['raise', 'return', 'pass', 'break', 'continue'])
@@ -34,6 +34,10 @@ def carriage_return(b, cli, *, autoindent=True):
 
     indent = env.get('INDENT') if autoindent else ''
 
+    partial_string_info = check_for_partial_string(doc.text)
+    in_partial_string = (partial_string_info[0] is not None and
+                         partial_string_info[1] is None)
+
     # indent after a colon
     if (doc.current_line_before_cursor.strip().endswith(':') and
             at_end_of_line):
@@ -58,6 +62,8 @@ def carriage_return(b, cli, *, autoindent=True):
                  in doc.lines_from_current[1:]))):
         b.newline(copy_margin=autoindent)
     elif not current_line_blank and not can_compile(doc.text):
+        b.newline(copy_margin=autoindent)
+    elif current_line_blank and in_partial_string:
         b.newline(copy_margin=autoindent)
     else:
         b.accept_action.validate_and_handle(cli, b)
@@ -106,8 +112,11 @@ class EndOfLine(Filter):
 def ctrl_d_condition(cli):
     """ Ctrl-D binding is only active when the default buffer is selected
     and empty. """
-    return (cli.current_buffer_name == DEFAULT_BUFFER and
-            not cli.current_buffer.text)
+    if builtins.__xonsh_env__.get("IGNOREEOF"):
+        raise EOFError
+    else:
+        return (cli.current_buffer_name == DEFAULT_BUFFER and
+                not cli.current_buffer.text)
 
 
 def can_compile(src):
