@@ -113,8 +113,7 @@ def complete_from_bash(prefix, line, begidx, endidx, ctx):
         comp_line=shlex.quote(line), n=n, func=func, cmd=cmd,
         end=endidx + 1, prefix=prefix, prev=shlex.quote(prev))
     script = BASH_COMPLETE_SCRIPT_PRE + '\n' + \
-             '\n'.join(_collect_completions_sources()) + '\n' + \
-             script
+        '\n'.join(_collect_completions_sources()) + '\n' + script
     try:
         out = subprocess.check_output(
             [xp.bash_command()], input=script, universal_newlines=True,
