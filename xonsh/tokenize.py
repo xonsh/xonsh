@@ -97,11 +97,12 @@ _xonsh_tokens = {
     '$(': 'DOLLARLPAREN',
     '$[': 'DOLLARLBRACKET',
     '${': 'DOLLARLBRACE',
+    '!{': 'BANGLBRACE',
     '??': 'DOUBLEQUESTION',
     '@$(': 'ATDOLLARLPAREN',
 }
 
-additional_parenlevs = frozenset({'@(', '!(', '![', '$(', '$[', '${', '@$('})
+additional_parenlevs = frozenset({'@(', '!(', '![', '$(', '$[', '${', '!{', '@$('})
 
 _glbs = globals()
 for v in _xonsh_tokens.values():
@@ -236,7 +237,7 @@ _redir_check = {'{}>>'.format(i) for i in _redir_names}.union(_redir_check)
 _redir_check = frozenset(_redir_check)
 Operator = group(r"\*\*=?", r">>=?", r"<<=?", r"!=", r"//=?", r"->",
                  r"@\$\(?", r'\|\|', '&&', r'@\(', r'!\(', r'!\[', r'\$\(',
-                 r'\$\[', '\${', r'\?\?', r'\?', AUGASSIGN_OPS, r"~")
+                 r'\$\[', '\${', '!{', r'\?\?', r'\?', AUGASSIGN_OPS, r"~")
 
 Bracket = '[][(){}]'
 Special = group(r'\r?\n', r'\.\.\.', r'[:;.,@]')

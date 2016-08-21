@@ -203,6 +203,7 @@ def special_handlers():
     _make_matcher_handler('$(', 'DOLLAR_LPAREN', False, ')', sh)
     _make_matcher_handler('$[', 'DOLLAR_LBRACKET', False, ']', sh)
     _make_matcher_handler('${', 'DOLLAR_LBRACE', True, '}', sh)
+    _make_matcher_handler('!{', 'BANG_LBRACE', True, '}', sh)
     _make_matcher_handler('!(', 'BANG_LPAREN', False, ')', sh)
     _make_matcher_handler('![', 'BANG_LBRACKET', False, ']', sh)
     _make_matcher_handler('@(', 'AT_LPAREN', True, ')', sh)
@@ -349,6 +350,7 @@ class Lexer(object):
                 'BANG_LBRACKET',         # ![
                 'DOLLAR_LPAREN',         # $(
                 'DOLLAR_LBRACE',         # ${
+                'BANG_LBRACE',           # !{
                 'DOLLAR_LBRACKET',       # $[
                 'ATDOLLAR_LPAREN',       # @$(
                 ) + tuple(i.upper() for i in kwmod.kwlist)
