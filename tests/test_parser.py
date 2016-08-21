@@ -442,6 +442,7 @@ def test_bare_tuple_of_tuples():
     check_ast('((),),(1,)')
     check_ast('(),(),')
     check_ast('[],')
+    check_ast('[],[]')
     check_ast('[],()')
     check_ast('(),[],')
     check_ast('((),[()],)')
