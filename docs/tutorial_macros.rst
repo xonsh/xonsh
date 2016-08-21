@@ -199,7 +199,7 @@ call site execution context.
 
 Macro Function Argument Annotations
 -----------------------------------
-There are five kinds of annotations that macros are able to interpret:
+There are six kinds of annotations that macros are able to interpret:
 
 .. list-table:: Kinds of Annotation
    :header-rows: 1
@@ -234,6 +234,11 @@ There are five kinds of annotations that macros are able to interpret:
      - ``'x'`` or ``'exec'``
      - ``'exec'`` (default) or ``'single'``
      - Execs the argument and returns None.
+   * - Type
+     - ``type``
+     - ``'t'`` or ``'type'``
+     -
+     - The type of the argument after ithas been evaluated.
 
 These annotations allow you to hook into whichever stage of the compilation
 that you desire. It is important note that the string form of the arguments

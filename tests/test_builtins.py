@@ -157,7 +157,7 @@ def test_convert_macro_arg_eval(kind):
 
 
 @pytest.mark.parametrize('kind', [exec, 'x', 'exec'])
-def test_convert_macro_arg_eval(kind):
+def test_convert_macro_arg_exec(kind):
     # at global scope
     raw_arg = 'def f(x, y):\n    return x + y'
     glbs = {}
@@ -175,6 +175,18 @@ def test_convert_macro_arg_eval(kind):
     assert locs['g'](1) == 41
     assert 'y' in locs
     assert locs['y'] == 43
+
+
+@pytest.mark.parametrize('kind', [type, 't', 'type'])
+def test_convert_macro_arg_eval(kind):
+    # literals
+    raw_arg = '42'
+    arg = convert_macro_arg(raw_arg, kind, {}, None)
+    assert arg is int
+    # exprs
+    raw_arg = 'x + 41'
+    arg = convert_macro_arg(raw_arg, kind, {}, {'x': 1})
+    assert arg is int
 
 
 def test_macro_context():

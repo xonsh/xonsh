@@ -696,6 +696,8 @@ def MACRO_FLAG_KINDS():
         'eval': eval,
         'x': exec,
         'exec': exec,
+        't': type,
+        'type': type,
         }
 
 def _convert_kind_flag(x):
@@ -760,6 +762,9 @@ def convert_macro_arg(raw_arg, kind, glbs, locs, *, name='<arg>',
             raw_arg += '\n'
         arg = execer.exec(raw_arg, mode=mode, glbs=glbs, locs=locs,
                           filename=filename)
+    elif kind is type:
+        arg = type(execer.eval(raw_arg, glbs=glbs, locs=locs,
+                               filename=filename))
     else:
         msg = ('kind={0!r} and mode={1!r} was not recongnized for macro '
                'argument {2!r}')
