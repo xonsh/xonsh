@@ -193,6 +193,91 @@ Writing Function Macros
 =======================
 Though any function (or callable) can be used as a macro, this functionality
 is probably most useful if the function was *designed* as a macro. There
-are two aspects
+are two main aspects of macro design to consider: argument annotations and
+call site execution context.
 
+Macro Function Argument Annotations
+-----------------------------------
+There are five kinds of annotations that macros are able to interpret:
+
+.. list-table:: Kinds of Annotation
+   :header-rows: 1
+
+   * - Category
+     - Object
+     - Flags
+     - Modes
+     - Returns
+   * - String
+     - ``str``
+     - ``'s'``, ``'str'``, or ``'string'``
+     -
+     - Source code of argument as string.
+   * - AST
+     - ``ast.AST``
+     - ``'a'`` or ``'ast'``
+     - ``'eval'`` (default), ``'exec'``, or ``'single'``
+     - Abstract syntax tree of argument.
+   * - Code
+     - ``types.CodeType`` or ``compile``
+     - ``'c'``, ``'code'``, or ``'compile'``
+     - ``'eval'`` (default), ``'exec'``, or ``'single'``
+     - Compiled code object of argument.
+   * - Eval
+     - ``eval`` or ``None``
+     - ``'v'`` or ``'eval'``
+     -
+     - Evaluation of the argument, *default*.
+   * - Exec
+     - ``exec``
+     - ``'x'`` or ``'exec'``
+     - ``'exec'`` (default) or ``'single'``
+     - Execs the argument and returns None.
+
+These annotations allow you to hook into whichever stage of the compilation
+that you desire. It is important note that the string form of the arguments
+is split and stripped (as described above) prior to conversion to the
+annotation type.
+
+Each argument may be annotated with its own indivdual type. Annotations
+may be provided as either objects or as the string flags seen in the above
+table. String flags are case-insensitive.
+If an argument does not have an annotation, ``eval`` is selected.
+This makes the macro call behave like a normal function call for
+arguments whose annotations are unspecified.  For example,
+
+.. code-block:: xonsh
+
+    def func(a, b : 'AST', c : compile):
+        pass
+
+In a macro call of ``func!()``,
+
+* ``a`` will be evaluated with ``eval`` since no annotation was provided,
+* ``b`` will be parsed into a syntax tree node, and
+* ``c`` will be compiled into code object since the builtin ``compile()``
+  function was used as the annotation.
+
+Additionally, certain kinds of annotations have different modes that
+affect the parsing, compilation, and execution of its argument.  While a
+sensible default is provided, you may also supply your own. This is
+done by annotating with a (kind, mode) tuple.  The first element can
+be any valid object or flag. The sencond element must be a cooresponding
+mode as a string.  For instance,
+
+.. code-block:: xonsh
+
+    def gunc(d : (exec, 'single'), e : ('c', 'exec')):
+        pass
+
+Thus in a macro call of ``gunc!()``,
+
+* ``d`` will be exec'd in single-mode (rather than exec-mode), and
+* ``e`` will be compiled in exec-mode (rather than eval-mode).
+
+For more information on the differences between the exec, eval, and single
+modes please see the Python documentation.
+
+Macro Function Execution Context
+--------------------------------
 globals, locals
