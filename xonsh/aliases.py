@@ -14,7 +14,7 @@ from xonsh.environ import locate_binary
 from xonsh.foreign_shells import foreign_shell_data
 from xonsh.jobs import jobs, fg, bg, clean_jobs
 from xonsh.history import history_main
-from xonsh.platform import (ON_ANACONDA, ON_DARWIN, ON_WINDOWS, ON_FREEBSD,
+from xonsh.platform import (ON_ANACONDA, ON_DARWIN, ON_WINDOWS, ON_BSD,
                             scandir)
 from xonsh.proc import foreground
 from xonsh.replay import replay_main
@@ -588,7 +588,7 @@ def make_default_aliases():
             default_aliases['sudo'] = sudo
     elif ON_DARWIN:
         default_aliases['ls'] = ['ls', '-G']
-    elif ON_FREEBSD:
+    elif ON_BSD:
         default_aliases['grep'] = ['grep', '--color=auto']
         default_aliases['egrep'] = ['egrep', '--color=auto']
         default_aliases['fgrep'] = ['fgrep', '--color=auto']
