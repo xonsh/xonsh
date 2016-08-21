@@ -273,9 +273,12 @@ class BaseParser(object):
         if outputdir is None:
             outputdir = os.path.dirname(os.path.dirname(__file__))
         yacc_kwargs['outputdir'] = outputdir
-        self.parser = None
-        YaccLoader(self, yacc_kwargs)
-        # self.parser = yacc.yacc(**yacc_kwargs)
+        if yacc_debug:
+            # create parser on main thread
+            self.parser = yacc.yacc(**yacc_kwargs)
+        else:
+            self.parser = None
+            YaccLoader(self, yacc_kwargs)
 
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None
