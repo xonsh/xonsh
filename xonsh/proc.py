@@ -15,7 +15,6 @@ import signal
 import builtins
 import functools
 import threading
-import importlib
 import subprocess
 import collections
 import collections.abc as abc
@@ -24,11 +23,17 @@ from xonsh.platform import ON_WINDOWS, ON_LINUX, ON_POSIX
 from xonsh.tools import (redirect_stdout, redirect_stderr, fallback,
                          print_exception, XonshCalledProcessError)
 from xonsh.teepty import TeePTY
-from xonsh.lazyasd import LazyObject, lazyobject
+from xonsh.lazyasd import lazyobject
+
 
 # force some lazy imports so we don't have errors on non-windows platforms
-_winapi = LazyObject(lambda: importlib.import_module('_winapi'),
-                     globals(), '_winapi')
+@lazyobject
+def _winapi():
+    if ON_WINDOWS:
+        import _winapi as m
+    else:
+        m = None
+    return m
 
 
 @lazyobject
