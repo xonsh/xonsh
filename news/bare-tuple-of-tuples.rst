@@ -6,6 +6,8 @@
 
 **Removed:** None
 
-**Fixed:** fix parsing for tuple of tuples (like `(),()`)
+**Fixed:**
+
+* fix parsing for tuple of tuples (like `(),()`)
 
 **Security:** None
