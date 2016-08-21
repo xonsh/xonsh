@@ -196,6 +196,7 @@ is probably most useful if the function was *designed* as a macro. There
 are two main aspects of macro design to consider: argument annotations and
 call site execution context.
 
+
 Macro Function Argument Annotations
 -----------------------------------
 There are five kinds of annotations that macros are able to interpret:
@@ -278,6 +279,40 @@ Thus in a macro call of ``gunc!()``,
 For more information on the differences between the exec, eval, and single
 modes please see the Python documentation.
 
+
 Macro Function Execution Context
 --------------------------------
-globals, locals
+Equally important as having the macro arguments is knowing the execution
+context of the macro call itself. Rather than mucking around with frames,
+macros provide both the globals and locals of the call site.  These are
+accessible as the ``macro_globals`` and ``macro_locals`` attributes of
+the macro function itself while the macro is being executed.
+
+For example, consider a macro which replaces all literal ``1`` digits
+with the literal ``2``, evaluates the modification, and returns the results.
+To eval, the macro will need to pull off its globals and locals:
+
+.. code-block:: xonsh
+
+    def one_to_two(x : str):
+        s = x.replace('1', '2')
+        glbs = one_to_two.macro_globals
+        locs = one_to_two.macro_locals
+        return eval(s, glbs, locs)
+
+Running this with a few of different inputs, we see:
+
+.. code-block:: xonshcon
+
+    >>> one_to_two!(1 + 1)
+    4
+
+    >>> one_to_two!(11)
+    22
+
+    >>> x = 1
+    >>> one_to_two!(x + 1)
+    3
+
+Of course, many other more sophisticated options are available depending on the
+use case.
