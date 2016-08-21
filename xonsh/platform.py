@@ -46,6 +46,12 @@ ON_POSIX = LazyBool(lambda: (os.name == 'posix'), globals(), 'ON_POSIX')
 ON_FREEBSD = LazyBool(lambda: (sys.platform.startswith('freebsd')),
                       globals(), 'ON_FREEBSD')
 """``True`` if on a FreeBSD operating system, else ``False``."""
+ON_NETBSD = LazyBool(lambda: (sys.platform.startswith('netbsd')),
+                     globals(), 'ON_NETBSD')
+"""``True`` if on a NetBSD operating system, else ``False``."""
+ON_BSD = LazyBool(lambda: ON_FREEBSD or ON_NETBSD,
+                  globals(), 'ON_BSD')
+"""``True`` if on a BSD operating system, else ``False``."""
 
 
 #
