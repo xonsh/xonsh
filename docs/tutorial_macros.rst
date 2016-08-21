@@ -19,13 +19,13 @@ a complete inputs. Roughly, the algorithm executing a macro follows is:
 3. Evaluate macro with inputs
 4. Resume normal parsing and execution.
 
-Is this metaprogramming? You betcha!
+Is this meta-programming? You betcha!
 
 When and where are macros used?
 ===============================
 Macros are a practicality-beats-purity feature of many programing
 languages. Because they allow you break out of the normal parsing
-cycle, depending on the language, you acn do some truly wild things with
+cycle, depending on the language, you can do some truly wild things with
 them. However, macros are really there to reduce the amount of boiler plate
 code that users and developers have to write.
 
@@ -42,7 +42,7 @@ feel a lot like normal functions. Macros in Rust are capable of pulling off
 type information from their arguments and preventing their return values
 from being consumed.
 
-Other languages like Lisp, Forth, and Julia also provide thier macro systems.
+Other languages like Lisp, Forth, and Julia also provide their macro systems.
 Even restructured text (rST) directives could be considered macros.
 Haskell and other more purely functional languages do not need macros (since
 evaluation is lazy anyway), and so do not have them.
@@ -74,8 +74,8 @@ with the following:
     g!([y, 43, 44], f!(z))
 
 Not so bad, right?  So what actually happens when to the arguments when used
-in a macro call?  Well, that depends onthe defintion of the function. In
-particular, each argument in the macro call is matched up with the cooresponding
+in a macro call?  Well, that depends on the definition of the function. In
+particular, each argument in the macro call is matched up with the corresponding
 parameter annotation in the callable's signature.  For example, say we have
 an ``identity()`` function that is annotates its sole argument as a string:
 
@@ -98,7 +98,7 @@ even if that object is not a string:
     >>> identity(identity)
     <function __main__.identity>
 
-However, if we perform macro calls instead we are now gauranteed to get a
+However, if we perform macro calls instead we are now guaranteed to get a
 the string of the source code that is in the macro call:
 
 .. code-block:: xonshcon
@@ -166,7 +166,7 @@ say we have the following ``g()`` function that accepts two arguments:
         print('x = ' + repr(x))
         print('y = ' + repr(y))
 
-Then you can see the splitting and stripping behaviour on each macro
+Then you can see the splitting and stripping behavior on each macro
 argument:
 
 .. code-block:: xonshcon
@@ -238,14 +238,14 @@ There are six kinds of annotations that macros are able to interpret:
      - ``type``
      - ``'t'`` or ``'type'``
      -
-     - The type of the argument after ithas been evaluated.
+     - The type of the argument after it has been evaluated.
 
 These annotations allow you to hook into whichever stage of the compilation
 that you desire. It is important note that the string form of the arguments
 is split and stripped (as described above) prior to conversion to the
 annotation type.
 
-Each argument may be annotated with its own indivdual type. Annotations
+Each argument may be annotated with its own individual type. Annotations
 may be provided as either objects or as the string flags seen in the above
 table. String flags are case-insensitive.
 If an argument does not have an annotation, ``eval`` is selected.
@@ -268,7 +268,7 @@ Additionally, certain kinds of annotations have different modes that
 affect the parsing, compilation, and execution of its argument.  While a
 sensible default is provided, you may also supply your own. This is
 done by annotating with a (kind, mode) tuple.  The first element can
-be any valid object or flag. The sencond element must be a cooresponding
+be any valid object or flag. The second element must be a corresponding
 mode as a string.  For instance,
 
 .. code-block:: xonsh
@@ -321,3 +321,9 @@ Running this with a few of different inputs, we see:
 
 Of course, many other more sophisticated options are available depending on the
 use case.
+
+
+Take Away
+=========
+Hopefully, at this point, you see that a few well placed macros can be extremely
+convenient and valuable to any project.
