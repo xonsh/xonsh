@@ -343,8 +343,8 @@ def parse_funcs(s, shell, sourcer=None):
         else sourcer
     funcs = {}
     for funcname, filename in namefiles.items():
-        if funcname.startswith('_'):
-            continue  # skip private functions
+        if funcname.startswith('_') or not filename:
+            continue  # skip private functions and invalid files
         if not os.path.isabs(filename):
             filename = os.path.abspath(filename)
         wrapper = ForeignShellFunctionAlias(name=funcname, shell=shell,
