@@ -700,6 +700,7 @@ def MACRO_FLAG_KINDS():
         'type': type,
         }
 
+
 def _convert_kind_flag(x):
     """Puts a kind flag (string) a canonical form."""
     x = x.lower()
