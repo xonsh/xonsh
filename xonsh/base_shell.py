@@ -180,6 +180,9 @@ class BaseShell(object):
             ts1 = ts1 or time.time()
             self._append_history(inp=src, ts=[ts0, ts1], tee_out=tee.getvalue())
             tee.close()
+            real_wd = os.getcwd()
+            if builtins.__xonsh_env__.get('PWD') != real_wd:        # track any change in working directory
+                builtins.__xonsh_env__['PWD'] = real_wd
         if builtins.__xonsh_exit__:  # pylint: disable=no-member
             return True
 
