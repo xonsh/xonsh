@@ -25,11 +25,11 @@ CACHED_HASH = None
 CACHED_FUNCS = None
 CACHED_FILES = None
 
-BASH_COMPLETE_SCRIPT_PRE = """BASH_COMPLETION_DIR="nonexist"
+BASH_COMPLETE_SCRIPT = """
+BASH_COMPLETION_DIR="nonexist"
 BASH_COMPLETION_COMPAT_DIR="nonexist"
-"""
-
-BASH_COMPLETE_SCRIPT = """source "{filename}"
+{completions_sources}
+source "{filename}"
 COMP_WORDS=({line})
 COMP_LINE={comp_line}
 COMP_POINT=${{#COMP_LINE}}
@@ -111,9 +111,8 @@ def complete_from_bash(prefix, line, begidx, endidx, ctx):
     script = BASH_COMPLETE_SCRIPT.format(
         filename=fnme, line=' '.join(shlex.quote(p) for p in splt),
         comp_line=shlex.quote(line), n=n, func=func, cmd=cmd,
-        end=endidx + 1, prefix=prefix, prev=shlex.quote(prev))
-    script = BASH_COMPLETE_SCRIPT_PRE + '\n' + \
-        '\n'.join(_collect_completions_sources()) + '\n' + script
+        end=endidx + 1, prefix=prefix, prev=shlex.quote(prev),
+        completions_sources='\n'.join(_collect_completions_sources()))
     try:
         out = subprocess.check_output(
             [xp.bash_command()], input=script, universal_newlines=True,
