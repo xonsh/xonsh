@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Job control for the xonsh shell."""
+import re
 import os
 import sys
 import time
@@ -322,6 +323,28 @@ def kill_all_jobs():
     for job in builtins.__xonsh_all_jobs__.values():
         _kill(job)
 
+def kill(args, stdin=None):
+    """
+    xonsh command: kill
+    """
+    _clear_dead_jobs()
+    kill_args = []
+    for arg in args:
+        m = re.match('%(\d+)', arg)
+        if not m:
+            kill_args.append(arg)
+            continue
+
+        try:
+            pids = get_task(int(m.group(1)))['pids']
+        except KeyError:
+            return '', 'kill: unknown job {}\n'.format(arg)
+        else:
+            for pid in pids:
+                kill_args.append(str(pid))
+
+    subprocess.run(['kill'] + kill_args)
+
 
 def jobs(args, stdin=None, stdout=sys.stdout, stderr=None):
     """
@@ -356,6 +379,8 @@ def fg(args, stdin=None):
                 act = tasks[0]
             elif args[0] == '-':  # take the second to last manipulated task
                 act = tasks[1]
+            elif args[0].startswith('%'): # compatibility with zsh syntax
+                act = int(args[0][1:])
             else:
                 act = int(args[0])
         except (ValueError, IndexError):
