@@ -275,7 +275,7 @@ def BASH_COMPLETIONS_DEFAULT():
         else:
             bcd = ('/usr/share/bash-completion', )
     elif ON_DARWIN:
-        bcd = ('/usr/local/share/bash-completion/bash_completion', # v2.x
+        bcd = ('/usr/local/share/bash-completion/bash_completion',  # v2.x
                '/usr/local/etc/bash_completion')  # v1.x
     elif ON_WINDOWS and git_for_windows_path():
         bcd = (os.path.join(git_for_windows_path(),
