@@ -268,8 +268,8 @@ that ``ls -l`` is meant to be run in subprocess-mode?
 
 For any given line that only contains an expression statement (expr-stmt,
 see the Python AST docs for more information), if all the names cannot
-be found as current variables name xonsh will try to parse the line as a
-subprocess command instead.  In the above, if ``ls`` ans ``l`` are not a
+be found as current variables xonsh will try to parse the line as a
+subprocess command instead.  In the above, if ``ls`` and ``l`` are not 
 variables, then subprocess mode will be attempted. If parsing in subprocess
 mode fails, then the line is left in Python-mode.
 
