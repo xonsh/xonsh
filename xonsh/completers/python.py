@@ -95,10 +95,14 @@ def attr_complete(prefix, ctx, filter_func):
         except:  # pylint:disable=bare-except
             continue
         a = getattr(val, opt)
-        if callable(a):
-            rpl = opt + '('
-        elif isinstance(a, abc.Iterable):
-            rpl = opt + '['
+        if (builtins.__xonsh_env__['COMPLETIONS_BRACKETS'] and
+                        opt not in ['stdin', 'stdout', 'stderr']):
+            if callable(a):
+                rpl = opt + '('
+            elif isinstance(a, abc.Iterable):
+                rpl = opt + '['
+            else:
+                rpl = opt
         else:
             rpl = opt
         # note that prefix[:prelen-len(attr)] != prefix[:-len(attr)]
