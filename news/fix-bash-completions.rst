@@ -1,13 +1,13 @@
 **Added:** None
 
-**Changed:** None
+**Changed:**
+
+* New implementation of bash completer with better performance and compatibility.
 
 **Deprecated:** None
 
 **Removed:** None
 
-**Fixed:**
-
-* Source `bash_completion` at first on bash completion
+**Fixed:** None
 
 **Security:** None
