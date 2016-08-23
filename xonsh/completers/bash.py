@@ -30,6 +30,9 @@ def complete_from_bash(prefix, line, begidx, endidx, ctx):
     if not sources:
         return set()
 
+    if prefix.startswith('$'):  # do not complete env variables
+        return set()
+
     splt = line.split()
     cmd = splt[0]
     idx = n = 0
