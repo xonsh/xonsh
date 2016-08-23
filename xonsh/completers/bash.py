@@ -51,9 +51,6 @@ def complete_from_bash(prefix, line, begidx, endidx, ctx):
         end=endidx + 1, prefix=prefix, prev=shlex.quote(prev),
     )
 
-    with open('/tmp/tmp.log', 'w') as f:
-        f.write(script)
-
     try:
         out = subprocess.check_output(
             [xp.bash_command()], input=script, universal_newlines=True,
