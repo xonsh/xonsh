@@ -118,6 +118,9 @@ def ctrl_d_condition(cli):
         return (cli.current_buffer_name == DEFAULT_BUFFER and
                 not cli.current_buffer.text)
 
+@Condition
+def autopair_condition(cli):
+    return builtins.__xonsh_env__.get("XONSH_AUTOPAIR", False)
 
 def can_compile(src):
     """Returns whether the code can be compiled, i.e. it is valid xonsh."""
@@ -159,6 +162,16 @@ def load_xonsh_bindings(key_bindings_manager):
     def insert_literal_tab(event):
         """ Insert literal tab on Shift+Tab instead of autocompleting """
         event.cli.current_buffer.insert_text(env.get('INDENT'))
+
+    @handle('(', filter=autopair_condition)
+    def insert_right_parens(event):
+        event.cli.current_buffer.insert_text('(')
+        event.cli.current_buffer.insert_text(')', move_cursor=False)
+
+    @handle('[', filter=autopair_condition)
+    def insert_right_bracket(event):
+        event.cli.current_buffer.insert_text('[')
+        event.cli.current_buffer.insert_text(']', move_cursor=False)
 
     @handle(Keys.ControlD, filter=ctrl_d_condition)
     def call_exit_alias(event):
