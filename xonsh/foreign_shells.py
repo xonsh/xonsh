@@ -553,7 +553,7 @@ def load_foreign_aliases(shells=None, config=None, issue_warning=True):
             else:
                 del shaliases[alias]
                 print('aliases: alias {!r} of shell {!r} '
-                      'tries to override xonsh builtin alias, '
+                      'tries to override xonsh alias, '
                       'xonsh wins!'.format(alias, shell['shell']),
                       file=sys.stderr)
         aliases.update(shaliases)
