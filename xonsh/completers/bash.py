@@ -7,7 +7,7 @@ import xonsh.platform as xp
 
 from xonsh.completers.path import _quote_paths
 
-BASH_COMPLETE_SCRIPT = r'''
+BASH_COMPLETE_SCRIPT = r"""
 {sources}
 if (complete -p "{cmd}" 2> /dev/null || echo _minimal) | grep --quiet -e "_minimal"
 then
@@ -21,7 +21,7 @@ COMP_COUNT={end}
 COMP_CWORD={n}
 $_func {cmd} {prefix} {prev}
 for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
-'''
+"""
 
 
 def complete_from_bash(prefix, line, begidx, endidx, ctx):
