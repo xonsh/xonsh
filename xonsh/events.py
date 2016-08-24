@@ -37,11 +37,11 @@ class AbstractEvent(collections.abc.MutableSet, abc.ABC):
 
         return handler
 
-    def _filterhandlers(self, *pargs, **kwargs):
+    def _filterhandlers(self, handlers, *pargs, **kwargs):
         """
         Helper method for implementing classes. Generates the handlers that pass validation.
         """
-        for handler in self:
+        for handler in handlers:
             if handler.__validator is not None and not handler.__validator(*pargs, **kwargs):
                 continue
             yield handler
@@ -75,17 +75,17 @@ class Event(AbstractEvent):
         yield from self._handlers
 
     def add(self, item):
-        return self._handlers.add(item)
+        self._handlers.add(item)
 
     def discard(self, item):
-        return self._handlers.discard(item)
+        self._handlers.discard(item)
 
     def fire(self, *pargs, **kwargs):
         """
         Fires each event, returning a non-unique iterable of the results.
         """
         vals = []
-        for handler in self._filterhandlers(*pargs, **kwargs):
+        for handler in self._filterhandlers(self._handlers, *pargs, **kwargs):
             try:
                 rv = handler(*pargs, **kwargs)
             except Exception:
@@ -101,22 +101,26 @@ class LoadEvent(AbstractEvent):
     A kind of event in which each handler is called exactly once.
     """
     def __init__(self):
-        self._handlers = set()
+        self._fired = set()
+        self._unfired = set()
+        self._hasfired = False
 
     def __len__(self):
-        return len(self._handlers)
+        return len(self._fired) + len(self._unfired)
 
     def __contains__(self, item):
-        return item in self._handlers
+        return item in self._fired or item in self._unfired
 
     def __iter__(self):
-        yield from self._handlers
+        yield from self._fired
+        yield from self._unfired
 
     def add(self, item):
-        return self._handlers.add(item)
+        self._fired.add(item)
 
     def discard(self, item):
-        return self._handlers.discard(item)
+        self._fired.discard(item)
+        self._unfired.discard(item)
 
     def fire(self, *pargs, **kwargs):
         raise NotImplementedError("See #1550")
