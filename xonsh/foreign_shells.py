@@ -79,6 +79,7 @@ else
 fi
 echo ${namefile}"""
 
+
 # mapping of shell name alises to keys in other lookup dictionaries.
 @lazyobject
 def CANON_SHELL_NAMES():
@@ -92,6 +93,7 @@ def CANON_SHELL_NAMES():
     'cmd.exe': 'cmd',
     }
 
+
 @lazyobject
 def DEFAULT_ENVCMDS():
     return {
@@ -100,6 +102,7 @@ def DEFAULT_ENVCMDS():
     'cmd': 'set',
     }
 
+
 @lazyobject
 def DEFAULT_ALIASCMDS():
     return {
@@ -107,6 +110,7 @@ def DEFAULT_ALIASCMDS():
     'zsh': 'alias -L',
     'cmd': '',
     }
+
 
 @lazyobject
 def DEFAULT_FUNCSCMDS():
@@ -125,6 +129,7 @@ def DEFAULT_SOURCERS():
     'cmd': 'call',
     }
 
+
 @lazyobject
 def DEFAULT_TMPFILE_EXT():
     return {
@@ -132,6 +137,7 @@ def DEFAULT_TMPFILE_EXT():
     'zsh': '.zsh',
     'cmd': '.bat',
     }
+
 
 @lazyobject
 def DEFAULT_RUNCMD():
@@ -141,6 +147,7 @@ def DEFAULT_RUNCMD():
     'cmd': '/C',
     }
 
+
 @lazyobject
 def DEFAULT_SETERRPREVCMD():
     return {
@@ -148,6 +155,7 @@ def DEFAULT_SETERRPREVCMD():
     'zsh': 'set -e',
     'cmd': '@echo off',
     }
+
 
 @lazyobject
 def DEFAULT_SETERRPOSTCMD():
@@ -286,10 +294,11 @@ def ENV_RE():
     return re.compile('__XONSH_ENV_BEG__\n(.*)'
                       '__XONSH_ENV_END__', flags=re.DOTALL)
 
+
 @lazyobject
 def ENV_SPLIT_RE():
     return re.compile('^([^=]+)=([^=]*|[^\n]*)$',
-               flags=re.DOTALL | re.MULTILINE)
+                      flags=re.DOTALL | re.MULTILINE)
 
 
 def parse_env(s):
@@ -336,12 +345,11 @@ def parse_aliases(s):
     return aliases
 
 
-
 @lazyobject
 def FUNCS_RE():
-   return re.compile('__XONSH_FUNCS_BEG__\n(.+)\n'
-                     '__XONSH_FUNCS_END__',
-                     flags=re.DOTALL)
+    return re.compile('__XONSH_FUNCS_BEG__\n(.+)\n'
+                      '__XONSH_FUNCS_END__',
+                      flags=re.DOTALL)
 
 
 def parse_funcs(s, shell, sourcer=None):
@@ -438,7 +446,6 @@ class ForeignShellFunctionAlias(object):
         args = list(args)
         args.remove('--xonsh-stream')
         return args, True
-
 
 
 @lazyobject
