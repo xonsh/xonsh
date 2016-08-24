@@ -96,11 +96,29 @@ class Event(AbstractEvent):
         return vals
 
 
-class LoadEvent(Event):
+class LoadEvent(AbstractEvent):
     """
     A kind of event in which each handler is called exactly once.
     """
-    def __call__(self, *pargs, **kwargs):
+    def __init__(self):
+        self._handlers = set()
+
+    def __len__(self):
+        return len(self._handlers)
+
+    def __contains__(self, item):
+        return item in self._handlers
+
+    def __iter__(self):
+        yield from self._handlers
+
+    def add(self, item):
+        return self._handlers.add(item)
+
+    def discard(self, item):
+        return self._handlers.discard(item)
+
+    def fire(self, *pargs, **kwargs):
         raise NotImplementedError("See #1550")
 
 

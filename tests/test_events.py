@@ -1,6 +1,7 @@
 """Event tests"""
+import inspect
 import pytest
-from xonsh.events import EventManager
+from xonsh.events import EventManager, Event, LoadEvent
 
 @pytest.fixture
 def events():
@@ -70,5 +71,23 @@ def test_eventdoc(events):
     docstring = "Test event"
     events.doc('on_test', docstring)
 
-    import inspect
+    assert inspect.getdoc(events.on_test) == docstring
+
+
+def test_transmogrify(events):
+    docstring = "Test event"
+    events.doc('on_test', docstring)
+
+    @events.on_test
+    def func():
+        pass
+
+    assert isinstance(events.on_test, Event)
+    assert len(events.on_test) == 1
+    assert inspect.getdoc(events.on_test) == docstring
+
+    events.transmogrify('on_test', LoadEvent)
+
+    assert isinstance(events.on_test, LoadEvent)
+    assert len(events.on_test) == 1
     assert inspect.getdoc(events.on_test) == docstring
