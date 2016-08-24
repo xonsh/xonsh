@@ -1,0 +1,19 @@
+machine:
+    environment:
+        PATH: /home/ubuntu/miniconda/bin:$PATH
+
+dependencies:
+    pre:
+        - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+        - bash miniconda.sh -b -p $HOME/miniconda
+        - hash -r
+        - conda config --set always_yes yes --set changeps1 no
+        - conda update -q conda
+        - conda info -a
+        - conda create -q -n test_env python=3.5 pygments prompt_toolkit ply pytest pytest-timeout psutil
+        - source activate test_env
+        - python setup.py install
+
+test:
+    override:
+        - py.test --timeout=10
