@@ -149,7 +149,7 @@ def DEFAULT_SETERRPREVCMD():
     'cmd': '@echo off',
     }
 
-@lazyobjecet
+@lazyobject
 def DEFAULT_SETERRPOSTCMD():
     return {
     'bash': '',
