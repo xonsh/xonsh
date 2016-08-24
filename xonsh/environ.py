@@ -355,19 +355,20 @@ def DEFAULT_DOCS():
         'shell.\n\nPressing the right arrow key inserts the currently '
         'displayed suggestion. Only usable with $SHELL_TYPE=prompt_toolkit.'),
     'BASH_COMPLETIONS': VarDocs(
-        'This is a list (or tuple) of strings that specifies where the BASH '
-        'completion files may be found. The default values are platform '
+        'This is a list (or tuple) of strings that specifies where the '
+        '`bash_completion` script may be found. For better performance, '
+        'base-completion v2.x is recommended since it lazy-loads individual '
+        'completion scripts. Paths or directories of individual completion '
+        'scripts (like `.../completes/ssh`) do not need to be included here. '
+        'The default values are platform '
         'dependent, but sane. To specify an alternate list, do so in the run '
         'control file.', default=(
             "Normally this is:\n\n"
-            "    ('/etc/bash_completion',\n"
-            "     '/usr/share/bash-completion/completions/git')\n\n"
+            "    ('/etc/bash_completion', )\n\n"
             "But, on Mac it is:\n\n"
-            "    ('/usr/local/etc/bash_completion',\n"
-            "     '/opt/local/etc/profile.d/bash_completion.sh')\n\n"
+            "    ('/usr/local/etc/bash_completion', )\n\n"
             "And on Arch Linux it is:\n\n"
-            "    ('/usr/share/bash-completion/bash_completion',\n"
-            "     '/usr/share/bash-completion/completions/git')\n\n"
+            "    ('/usr/share/bash-completion/bash_completion', )\n\n"
             "Other OS-specific defaults may be added in the future.")),
     'CASE_SENSITIVE_COMPLETIONS': VarDocs(
         'Sets whether completions should be case sensitive or case '
