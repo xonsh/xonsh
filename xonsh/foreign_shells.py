@@ -12,7 +12,7 @@ import warnings
 import functools
 import collections.abc as abc
 
-from xonsh.lazyasd import LazyObject
+from xonsh.lazyasd import lazyobject
 from xonsh.tools import to_bool, ensure_string
 from xonsh.platform import ON_WINDOWS, ON_CYGWIN
 
@@ -80,7 +80,9 @@ fi
 echo ${namefile}"""
 
 # mapping of shell name alises to keys in other lookup dictionaries.
-CANON_SHELL_NAMES = LazyObject(lambda: {
+@lazyobject
+def CANON_SHELL_NAMES():
+    return {
     'bash': 'bash',
     '/bin/bash': 'bash',
     'zsh': 'zsh',
@@ -88,55 +90,72 @@ CANON_SHELL_NAMES = LazyObject(lambda: {
     '/usr/bin/zsh': 'zsh',
     'cmd': 'cmd',
     'cmd.exe': 'cmd',
-}, globals(), 'CANON_SHELL_NAMES')
+    }
 
-DEFAULT_ENVCMDS = LazyObject(lambda: {
+@lazyobject
+def DEFAULT_ENVCMDS():
+    return {
     'bash': 'env',
     'zsh': 'env',
     'cmd': 'set',
-}, globals(), 'DEFAULT_ENVCMDS')
+    }
 
-DEFAULT_ALIASCMDS = LazyObject(lambda: {
+@lazyobject
+def DEFAULT_ALIASCMDS():
+    return {
     'bash': 'alias',
     'zsh': 'alias -L',
     'cmd': '',
-}, globals(), 'DEFAULT_ALIASCMDS')
+    }
 
-DEFAULT_FUNCSCMDS = LazyObject(lambda: {
+@lazyobject
+def DEFAULT_FUNCSCMDS():
+    return {
     'bash': DEFAULT_BASH_FUNCSCMD,
     'zsh': DEFAULT_ZSH_FUNCSCMD,
     'cmd': '',
-}, globals(), 'DEFAULT_FUNCSCMDS')
+    }
 
-DEFAULT_SOURCERS = LazyObject(lambda: {
+
+@lazyobject
+def DEFAULT_SOURCERS():
+    return {
     'bash': 'source',
     'zsh': 'source',
     'cmd': 'call',
-}, globals(), 'DEFAULT_SOURCERS')
+    }
 
-DEFAULT_TMPFILE_EXT = LazyObject(lambda: {
+@lazyobject
+def DEFAULT_TMPFILE_EXT():
+    return {
     'bash': '.sh',
     'zsh': '.zsh',
     'cmd': '.bat',
-}, globals(), 'DEFAULT_TMPFILE_EXT')
+    }
 
-DEFAULT_RUNCMD = LazyObject(lambda: {
+@lazyobject
+def DEFAULT_RUNCMD():
+    return {
     'bash': '-c',
     'zsh': '-c',
     'cmd': '/C',
-}, globals(), 'DEFAULT_RUNCMD')
+    }
 
-DEFAULT_SETERRPREVCMD = LazyObject(lambda: {
+@lazyobject
+def DEFAULT_SETERRPREVCMD():
+    return {
     'bash': 'set -e',
     'zsh': 'set -e',
     'cmd': '@echo off',
-}, globals(), 'DEFAULT_SETERRPREVCMD')
+    }
 
-DEFAULT_SETERRPOSTCMD = LazyObject(lambda: {
+@lazyobjecet
+def DEFAULT_SETERRPOSTCMD():
+    return {
     'bash': '',
     'zsh': '',
     'cmd': 'if errorlevel 1 exit 1',
-}, globals(), 'DEFAULT_SETERRPOSTCMD')
+    }
 
 
 @functools.lru_cache()
@@ -262,12 +281,15 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
     return env, aliases
 
 
-ENV_RE = LazyObject(lambda: re.compile('__XONSH_ENV_BEG__\n(.*)'
-                                       '__XONSH_ENV_END__', flags=re.DOTALL),
-                    globals(), 'ENV_RE')
-ENV_SPLIT_RE = LazyObject(lambda: re.compile('^([^=]+)=([^=]*|[^\n]*)$',
-                                             flags=re.DOTALL | re.MULTILINE),
-                          globals(), 'ENV_SPLIT_RE')
+@lazyobject
+def ENV_RE():
+    return re.compile('__XONSH_ENV_BEG__\n(.*)'
+                      '__XONSH_ENV_END__', flags=re.DOTALL)
+
+@lazyobject
+def ENV_SPLIT_RE():
+    return re.compile('^([^=]+)=([^=]*|[^\n]*)$',
+               flags=re.DOTALL | re.MULTILINE)
 
 
 def parse_env(s):
@@ -281,10 +303,11 @@ def parse_env(s):
     return env
 
 
-ALIAS_RE = LazyObject(lambda: re.compile('__XONSH_ALIAS_BEG__\n(.*)'
-                                         '__XONSH_ALIAS_END__',
-                                         flags=re.DOTALL),
-                      globals(), 'ALIAS_RE')
+@lazyobject
+def ALIAS_RE():
+    return re.compile('__XONSH_ALIAS_BEG__\n(.*)'
+                      '__XONSH_ALIAS_END__',
+                      flags=re.DOTALL)
 
 
 def parse_aliases(s):
@@ -313,10 +336,12 @@ def parse_aliases(s):
     return aliases
 
 
-FUNCS_RE = LazyObject(lambda: re.compile('__XONSH_FUNCS_BEG__\n(.+)\n'
-                                         '__XONSH_FUNCS_END__',
-                                         flags=re.DOTALL),
-                      globals(), 'FUNCS_RE')
+
+@lazyobject
+def FUNCS_RE():
+   return re.compile('__XONSH_FUNCS_BEG__\n(.+)\n'
+                     '__XONSH_FUNCS_END__',
+                     flags=re.DOTALL)
 
 
 def parse_funcs(s, shell, sourcer=None):
@@ -415,11 +440,14 @@ class ForeignShellFunctionAlias(object):
         return args, True
 
 
-VALID_SHELL_PARAMS = LazyObject(lambda: frozenset([
+
+@lazyobject
+def VALID_SHELL_PARAMS():
+    return frozenset([
     'shell', 'interactive', 'login', 'envcmd',
     'aliascmd', 'extra_args', 'currenv', 'safe',
     'prevcmd', 'postcmd', 'funcscmd', 'sourcer',
-]), globals(), 'VALID_SHELL_PARAMS')
+    ])
 
 
 def ensure_shell(shell):
@@ -545,8 +573,6 @@ def load_foreign_aliases(shells=None, config=None, issue_warning=True):
     for shell in shells:
         shell = ensure_shell(shell)
         _, shaliases = foreign_shell_data(**shell)
-        if not shaliases:
-            continue
         for alias in set(shaliases) & set(xonsh_aliases):
             del shaliases[alias]
             print('aliases: alias {!r} of shell {!r} '
