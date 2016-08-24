@@ -118,9 +118,11 @@ def ctrl_d_condition(cli):
         return (cli.current_buffer_name == DEFAULT_BUFFER and
                 not cli.current_buffer.text)
 
+
 @Condition
 def autopair_condition(cli):
     return builtins.__xonsh_env__.get("XONSH_AUTOPAIR", False)
+
 
 def can_compile(src):
     """Returns whether the code can be compiled, i.e. it is valid xonsh."""
@@ -168,10 +170,50 @@ def load_xonsh_bindings(key_bindings_manager):
         event.cli.current_buffer.insert_text('(')
         event.cli.current_buffer.insert_text(')', move_cursor=False)
 
+    @handle(')', filter=autopair_condition)
+    def overwrite_right_parens(event):
+        buffer = event.cli.current_buffer
+        if buffer.document.current_char == ')':
+            buffer.cursor_position += 1
+        else:
+            buffer.insert_text(')')
+
     @handle('[', filter=autopair_condition)
     def insert_right_bracket(event):
         event.cli.current_buffer.insert_text('[')
         event.cli.current_buffer.insert_text(']', move_cursor=False)
+
+    @handle(']', filter=autopair_condition)
+    def overwrite_right_bracket(event):
+        buffer = event.cli.current_buffer
+
+        if buffer.document.current_char == ']':
+            buffer.cursor_position += 1
+        else:
+            buffer.insert_text(']')
+
+    @handle('\'', filter=autopair_condition)
+    def insert_right_quote(event):
+        buffer = event.cli.current_buffer
+
+        if buffer.document.current_char == '\'':
+            buffer.cursor_position += 1
+        else:
+            buffer.insert_text('\'')
+            buffer.insert_text('\'', move_cursor=False)
+
+    @handle('"', filter=autopair_condition)
+    def insert_right_double_quote(event):
+        buffer = event.cli.current_buffer
+        buffer = event.cli.current_buffer
+
+        if buffer.document.current_char == '"':
+            buffer.cursor_position += 1
+        else:
+            buffer.insert_text('"')
+            buffer.insert_text('"', move_cursor=False)
+
+        buffer.insert_text('"')
 
     @handle(Keys.ControlD, filter=ctrl_d_condition)
     def call_exit_alias(event):
