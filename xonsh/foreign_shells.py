@@ -547,14 +547,11 @@ def load_foreign_aliases(shells=None, config=None, issue_warning=True):
         _, shaliases = foreign_shell_data(**shell)
         if not shaliases:
             continue
-        for alias in list(shaliases.keys()):
-            if alias not in xonsh_aliases:
-                continue
-            else:
-                del shaliases[alias]
-                print('aliases: alias {!r} of shell {!r} '
-                      'tries to override xonsh alias, '
-                      'xonsh wins!'.format(alias, shell['shell']),
-                      file=sys.stderr)
+        for alias in set(shaliases) & set(xonsh_aliases):
+            del shaliases[alias]
+            print('aliases: alias {!r} of shell {!r} '
+                  'tries to override xonsh alias, '
+                  'xonsh wins!'.format(alias, shell['shell']),
+                  file=sys.stderr)
         aliases.update(shaliases)
     return aliases
