@@ -11,7 +11,8 @@ dependencies:
         - conda update -q conda
         - conda info -a
         - conda create -q -n test_env python=3.5 pygments prompt_toolkit ply pytest pytest-timeout psutil
-        - source activate test_env
+        - echo $(which python)
+    post:
         - python setup.py install
 
 test:
