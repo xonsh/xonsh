@@ -101,6 +101,7 @@ def DEFAULT_ENSURERS():
     re.compile('\w*DIRS$'): (is_env_path, str_to_env_path, env_path_to_str),
     'COLOR_INPUT': (is_bool, to_bool, bool_to_str),
     'COLOR_RESULTS': (is_bool, to_bool, bool_to_str),
+    'COMPLETION_CONFIRM': (is_bool, to_bool, bool_to_str),
     'COMPLETIONS_DISPLAY': (is_completions_display_value,
                             to_completions_display_value, str),
     'COMPLETIONS_MENU_ROWS': (is_int, int, str),
