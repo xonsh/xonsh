@@ -4,7 +4,7 @@ import sys
 import inspect
 import builtins
 import importlib
-import collections.abc as abc
+import collections.abc as cabc
 
 import xonsh.tools as xt
 import xonsh.lazyasd as xl
@@ -97,7 +97,7 @@ def attr_complete(prefix, ctx, filter_func):
         a = getattr(val, opt)
         if callable(a):
             rpl = opt + '('
-        elif isinstance(a, abc.Iterable):
+        elif isinstance(a, cabc.Iterable):
             rpl = opt + '['
         else:
             rpl = opt

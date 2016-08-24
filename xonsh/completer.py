@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """A (tab-)completer for xonsh."""
 import builtins
-import collections.abc as abc
+import collections.abc as cabc
 
 import xonsh.completers.bash as compbash
 
@@ -41,7 +41,7 @@ class Completer(object):
                 out = func(prefix, line, begidx, endidx, ctx)
             except StopIteration:
                 return set(), len(prefix)
-            if isinstance(out, abc.Sequence):
+            if isinstance(out, cabc.Sequence):
                 res, lprefix = out
             else:
                 res = out

@@ -19,7 +19,7 @@ Implementations:
 """
 import builtins
 import collections
-import collections.abc as abc
+import collections.abc as cabc
 import contextlib
 import ctypes
 import datetime
@@ -980,7 +980,7 @@ def is_int_as_str(x):
 
 def is_string_set(x):
     """Tests if something is a set of strings"""
-    return (isinstance(x, abc.Set) and
+    return (isinstance(x, cabc.Set) and
             all(isinstance(a, str) for a in x))
 
 
@@ -1016,7 +1016,7 @@ def set_to_pathsep(x, sort=False):
 
 def is_string_seq(x):
     """Tests if something is a sequence of strings"""
-    return (isinstance(x, abc.Sequence) and
+    return (isinstance(x, cabc.Sequence) and
             all(isinstance(a, str) for a in x))
 
 
@@ -1024,7 +1024,7 @@ def is_nonstring_seq_of_strings(x):
     """Tests if something is a sequence of strings, where the top-level
     sequence is not a string itself.
     """
-    return (isinstance(x, abc.Sequence) and not isinstance(x, str) and
+    return (isinstance(x, cabc.Sequence) and not isinstance(x, str) and
             all(isinstance(a, str) for a in x))
 
 
@@ -1058,7 +1058,7 @@ def seq_to_upper_pathsep(x):
 
 def is_bool_seq(x):
     """Tests if an object is a sequence of bools."""
-    return isinstance(x, abc.Sequence) and all(isinstance(y, bool) for y in x)
+    return isinstance(x, cabc.Sequence) and all(isinstance(y, bool) for y in x)
 
 
 def csv_to_bool_seq(x):
@@ -1177,7 +1177,7 @@ HISTORY_UNITS = LazyObject(lambda: {
 
 def is_history_tuple(x):
     """Tests if something is a proper history value, units tuple."""
-    if (isinstance(x, abc.Sequence) and
+    if (isinstance(x, cabc.Sequence) and
             len(x) == 2 and
             isinstance(x[0], (int, float)) and
             x[1].lower() in CANON_HISTORY_UNITS):
@@ -1224,7 +1224,7 @@ RE_HISTORY_TUPLE = LazyObject(
 
 def to_history_tuple(x):
     """Converts to a canonincal history tuple."""
-    if not isinstance(x, (abc.Sequence, float, int)):
+    if not isinstance(x, (cabc.Sequence, float, int)):
         raise ValueError('history size must be given as a sequence or number')
     if isinstance(x, str):
         m = RE_HISTORY_TUPLE.match(x.strip().lower())
