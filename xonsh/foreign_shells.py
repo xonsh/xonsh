@@ -540,9 +540,20 @@ def load_foreign_aliases(shells=None, config=None, issue_warning=True):
     """
     shells = _get_shells(shells=shells, config=config, issue_warning=issue_warning)
     aliases = {}
+    xonsh_aliases = builtins.aliases
     for shell in shells:
         shell = ensure_shell(shell)
         _, shaliases = foreign_shell_data(**shell)
-        if shaliases:
-            aliases.update(shaliases)
+        if not shaliases:
+            continue
+        for alias in list(shaliases.keys()):
+            if alias not in xonsh_aliases:
+                continue
+            else:
+                del shaliases[alias]
+                print('aliases: error: alias {!r} of shell {!r} '
+                      'tries to override xonsh builtin alias, '
+                      'xonsh wins!'.format(alias, shell['shell']),
+                      file=sys.stderr)
+        aliases.update(shaliases)
     return aliases
