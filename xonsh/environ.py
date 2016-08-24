@@ -244,6 +244,7 @@ def DEFAULT_VALUES():
         'CDPATH': (),
         'COLOR_INPUT': True,
         'COLOR_RESULTS': True,
+        'COMPLETION_CONFIRM': False,
         'COMPLETIONS_DISPLAY': 'multi',
         'COMPLETIONS_MENU_ROWS': 5,
         'DIRSTACK_SIZE': 20,
@@ -393,6 +394,10 @@ def DEFAULT_DOCS():
         "writing \"$COMPLETIONS_DISPLAY = None\" and \"$COMPLETIONS_DISPLAY "
         "= 'none'\" are equivalent. Only usable with "
         "$SHELL_TYPE=prompt_toolkit"),
+    'COMPLETION_CONFIRM': VarDocs(
+        'While tab-completions menu is displayed, press <Enter> to confirm '
+        'completion instead of running command. This only affects the '
+        'prompt-toolkit shell.'),
     'COMPLETIONS_MENU_ROWS': VarDocs(
         'Number of rows to reserve for tab-completions menu if '
         "$COMPLETIONS_DISPLAY is 'single' or 'multi'. This only affects the "
