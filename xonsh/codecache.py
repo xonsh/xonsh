@@ -134,8 +134,8 @@ def run_script_with_cache(filename, execer, glb=None, loc=None, mode='exec'):
     """
     run_cached = False
     use_cache = should_use_cache(execer, mode)
+    cachefname = get_cache_filename(filename, code=False)
     if use_cache:
-        cachefname = get_cache_filename(filename, code=False)
         run_cached, ccode = script_cache_check(filename, cachefname)
     if not run_cached:
         with open(filename, 'r') as f:

@@ -27,9 +27,9 @@ Assuming you have successfully installed xonsh (see http://xon.sh),
 you can start up the xonsh interpreter via the ``xonsh`` command. Suppose
 you are in a lesser terminal:
 
-.. code-block:: bash
+.. code-block:: console
 
-    bash $ xonsh
+    $ xonsh
     snail@home ~ $
 
 Now we are in a xonsh shell. Our username happens to be ``snail``, our
@@ -267,11 +267,11 @@ have also been written as ``ls - l`` or ``ls-l``.  So how does xonsh know
 that ``ls -l`` is meant to be run in subprocess-mode?
 
 For any given line that only contains an expression statement (expr-stmt,
-see the Python AST docs for more information), if the left-most name cannot
-be found as a current variable name xonsh will try to parse the line as a
-subprocess command instead.  In the above, if ``ls`` is not a variable,
-then subprocess mode will be attempted. If parsing in subprocess mode fails,
-then the line is left in Python-mode.
+see the Python AST docs for more information), if all the names cannot
+be found as current variables xonsh will try to parse the line as a
+subprocess command instead.  In the above, if ``ls`` and ``l`` are not 
+variables, then subprocess mode will be attempted. If parsing in subprocess
+mode fails, then the line is left in Python-mode.
 
 In the following example, we will list the contents of the directory
 with ``ls -l``. Then we'll make new variable names ``ls`` and ``l`` and then
@@ -284,7 +284,7 @@ the directories again.
     >>> ls -l
     total 0
     -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
-    >>> # set an ls variable to force python-mode
+    >>> # set ls and l variables to force python-mode
     >>> ls = 44
     >>> l = 2
     >>> ls -l
@@ -1132,7 +1132,7 @@ with keyword arguments:
 Removing an alias is as easy as deleting the key from the alias dictionary:
 
 .. code-block:: xonshcon
-    
+
     >>> del aliases['banana']
 
 .. note::
@@ -1332,9 +1332,9 @@ Executing Commands and Scripts
 When started with the ``-c`` flag and a command, xonsh will execute that command
 and exit, instead of entering the command loop.
 
-.. code-block:: bash
+.. code-block:: console
 
-    bash $ xonsh -c "echo @(7+3)"
+    $ xonsh -c "echo @(7+3)"
     10
 
 Longer scripts can be run either by specifying a filename containing the script,
@@ -1362,9 +1362,9 @@ script, stored in ``test.xsh``:
 
 This script could be run by piping its contents to xonsh:
 
-.. code-block:: bash
+.. code-block:: console
 
-    bash $ cat test.xsh | xonsh
+    $ cat test.xsh | xonsh
     file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  test_script.sh
     removing files
     test_script.sh
@@ -1373,9 +1373,9 @@ This script could be run by piping its contents to xonsh:
 
 or by invoking xonsh with its filename as an argument:
 
-.. code-block:: bash
+.. code-block:: console
 
-    bash $ xonsh test.xsh
+    $ xonsh test.xsh
     file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  test_script.sh
     removing files
     test_script.sh
@@ -1415,9 +1415,9 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
     print()
 
 
-.. code-block:: bash
+.. code-block:: console
 
-    bash $ xonsh test2.xsh snails
+    $ xonsh test2.xsh snails
     ['test_script.sh', 'snails']
     file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  file5.txt  test_script.sh
     removing files
@@ -1425,7 +1425,7 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
     adding files
     file0.txt file1.txt file2.txt file3.txt file4.txt file5.txt test_script.sh
 
-    bash $ echo @(' '.join($(cat @('file%d.txt' % i)).strip() for i in range(6)))
+    $ echo @(' '.join($(cat @('file%d.txt' % i)).strip() for i in range(6)))
     s n a i l s
 
 Additionally, if the script should exit if a command fails, set the

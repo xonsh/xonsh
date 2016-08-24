@@ -9,7 +9,7 @@ You can install xonsh using ``conda``, ``pip``, or from source.
 
 **conda:**
 
-.. code-block:: bash
+.. code-block:: console
 
     $ conda config --add channels conda-forge
     $ conda install xonsh
@@ -17,7 +17,7 @@ You can install xonsh using ``conda``, ``pip``, or from source.
 
 **pip:**
 
-.. code-block:: bash
+.. code-block:: console
 
     $ pip install xonsh
 
@@ -26,7 +26,7 @@ You can install xonsh using ``conda``, ``pip``, or from source.
 (`zip file <https://github.com/xonsh/xonsh/archive/master.zip>`_), then run
 the following from the source directory,
 
-.. code-block:: bash
+.. code-block:: console
 
     $ python setup.py install
 
@@ -36,19 +36,19 @@ Arch Linux users can install xonsh from the Arch User Repository with e.g.
 
 **yaourt:**
 
-.. code-block:: bash
+.. code-block:: console
 
     $ yaourt -Sa xonsh      # yaourt will call sudo when needed
 
 **aura:**
 
-.. code-block:: bash
+.. code-block:: console
 
     $ sudo aura -A xonsh
 
 **pacaur:**
 
-.. code-block:: bash
+.. code-block:: console
 
     $ pacaur -S xonsh
 
@@ -67,7 +67,7 @@ Depending on how your installation of Bash is configured, Xonsh may have trouble
 loading certain shell modules. Particularly if you see errors similar to this
 when launching Xonsh:
 
-.. code-block:: bash
+.. code-block:: console
 
     bash: module: line 1: syntax error: unexpected end of file
     bash: error importing function definition for `BASH_FUNC_module'
@@ -81,7 +81,7 @@ when launching Xonsh:
 ...You can correct the problem by unsetting the modules, by adding the following
 lines to your ``~/.bashrc file``:
 
-.. code-block:: bash
+.. code-block:: console
 
     unset module
     unset scl
@@ -99,7 +99,7 @@ any necessary arguments.
 The default user `~/.bashrc` file in Ubuntu 15.10 has the following snippet at
 the top, which causes the script to exit immediately if not run interactively.
 
-.. code-block:: bash
+.. code-block:: console
 
     # If not running interactively, don't do anything
     case $- in

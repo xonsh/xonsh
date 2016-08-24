@@ -8,6 +8,7 @@
 
 **Fixed:** 
 
-* Alias tab completion works again
+* Text of instructions to download missing program now does not get off and
+  appears in whole.
 
 **Security:** None

@@ -3,6 +3,7 @@
 import os
 import sys
 import shlex
+import inspect
 import argparse
 import builtins
 import collections.abc as abc
@@ -14,7 +15,7 @@ from xonsh.foreign_shells import foreign_shell_data
 from xonsh.jobs import jobs, fg, bg, clean_jobs
 from xonsh.history import history_main
 from xonsh.platform import (ON_ANACONDA, ON_DARWIN, ON_WINDOWS, ON_FREEBSD,
-                            scandir)
+                            ON_NETBSD, scandir)
 from xonsh.proc import foreground
 from xonsh.replay import replay_main
 from xonsh.timings import timeit_alias
@@ -284,18 +285,38 @@ def source_cmd(args, stdin=None):
 
 
 def xexec(args, stdin=None):
-    """Replaces current process with command specified and passes in the
-    current xonsh environment.
+    """exec [-h|--help] command [args...]
+
+    exec (also aliased as xexec) uses the os.execvpe() function to
+    replace the xonsh process with the specified program. This provides
+    the functionality of the bash 'exec' builtin::
+
+        >>> exec bash -l -i
+        bash $
+
+    The '-h' and '--help' options print this message and exit.
+
+    Notes
+    -----
+    This command **is not** the same as the Python builtin function
+    exec(). That function is for running Python code. This command,
+    which shares the same name as the sh-lang statement, is for launching
+    a command directly in the same process. In the event of a name conflict,
+    please use the xexec command directly or dive into subprocess mode
+    explicitly with ![exec command]. For more details, please see
+    http://xon.sh/faq.html#exec.
     """
-    if len(args) > 0:
+    if len(args) == 0:
+        return (None, 'xonsh: exec: no args specified\n', 1)
+    elif args[0] == '-h' or args[0] == '--help':
+        return inspect.getdoc(xexec)
+    else:
         denv = builtins.__xonsh_env__.detype()
         try:
             os.execvpe(args[0], args, denv)
         except FileNotFoundError as e:
             return (None, 'xonsh: exec: file not found: {}: {}'
                           '\n'.format(e.args[1], args[0]), 1)
-    else:
-        return (None, 'xonsh: exec: no args specified\n', 1)
 
 
 @lazyobject
@@ -496,6 +517,7 @@ def make_default_aliases():
         'EOF': xonsh_exit,
         'exit': xonsh_exit,
         'quit': xonsh_exit,
+        'exec': xexec,
         'xexec': xexec,
         'source': source_alias,
         'source-zsh': ['source-foreign', 'zsh', '--sourcer=source'],
@@ -571,6 +593,10 @@ def make_default_aliases():
         default_aliases['egrep'] = ['egrep', '--color=auto']
         default_aliases['fgrep'] = ['fgrep', '--color=auto']
         default_aliases['ls'] = ['ls', '-G']
+    elif ON_NETBSD:
+        default_aliases['grep'] = ['grep', '--color=auto']
+        default_aliases['egrep'] = ['egrep', '--color=auto']
+        default_aliases['fgrep'] = ['fgrep', '--color=auto']
     else:
         default_aliases['grep'] = ['grep', '--color=auto']
         default_aliases['egrep'] = ['egrep', '--color=auto']

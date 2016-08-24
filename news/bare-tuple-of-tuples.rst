@@ -6,8 +6,8 @@
 
 **Removed:** None
 
-**Fixed:** 
+**Fixed:**
 
-* Completions in ``jupyter_kernel.py`` now use updated completion framework
+* fix parsing for tuple of tuples (like `(),()`)
 
 **Security:** None
