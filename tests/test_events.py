@@ -91,3 +91,21 @@ def test_transmogrify(events):
     assert isinstance(events.on_test, LoadEvent)
     assert len(events.on_test) == 1
     assert inspect.getdoc(events.on_test) == docstring
+
+def test_transmogrify_by_string(events):
+    docstring = "Test event"
+    events.doc('on_test', docstring)
+
+    @events.on_test
+    def func():
+        pass
+
+    assert isinstance(events.on_test, Event)
+    assert len(events.on_test) == 1
+    assert inspect.getdoc(events.on_test) == docstring
+
+    events.transmogrify('on_test', 'LoadEvent')
+
+    assert isinstance(events.on_test, LoadEvent)
+    assert len(events.on_test) == 1
+    assert inspect.getdoc(events.on_test) == docstring
