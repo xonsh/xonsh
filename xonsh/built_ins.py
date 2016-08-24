@@ -8,7 +8,6 @@ import os
 import re
 import sys
 import time
-import shlex
 import signal
 import atexit
 import inspect
@@ -230,7 +229,7 @@ def get_script_subproc_command(fname, args):
     else:
         interp = m.group(1).strip()
         if len(interp) > 0:
-            interp = shlex.split(interp)
+            interp = interp.split(' ', 1)
         else:
             interp = ['xonsh']
     if ON_WINDOWS:
