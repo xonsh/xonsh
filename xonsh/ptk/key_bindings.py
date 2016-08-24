@@ -112,7 +112,7 @@ class ShouldConfirmCompletion(Filter):
     Check if completion needs confirmation
     """
     def __call__(self, cli):
-        return (builtins.__xonsh_env__.get('COMPLETION_CONFIRM', True)
+        return (builtins.__xonsh_env__.get('COMPLETION_CONFIRM', False)
                 and bool(cli.current_buffer.complete_state))
 
 
