@@ -14,8 +14,10 @@ dependencies:
         - rm -rf ~/.pyenv
         - rm -rf ~/virtualenvs
     post:
-        - python setup.py install
+        - case $CIRCLE_NODE_INDEX in 0) python setup.py install ;; 1) python setup.py install ;; esac:
+            parallel: true
 
 test:
     override:
-        - py.test --timeout=10
+        - case $CIRCLE_NODE_INDEX in 0) py.test --timeout=10 ;; 1) py.test --timeout=10 ;; esac:
+            parallel: true
