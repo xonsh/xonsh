@@ -10,7 +10,7 @@ dependencies:
         - bash miniconda.sh -b -p $HOME/miniconda
         - conda config --set always_yes yes --set changeps1 no
         - conda update -q conda
-        - conda create -q -n test_env python=3.5 pygments prompt_toolkit ply pytest pytest-timeout psutil
+        - ./.circle_miniconda.sh
         - rm -rf ~/.pyenv
         - rm -rf ~/virtualenvs
     post:
