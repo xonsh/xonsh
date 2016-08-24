@@ -213,7 +213,6 @@ def load_xonsh_bindings(key_bindings_manager):
             buffer.insert_text('"')
             buffer.insert_text('"', move_cursor=False)
 
-        buffer.insert_text('"')
 
     @handle(Keys.ControlD, filter=ctrl_d_condition)
     def call_exit_alias(event):
