@@ -10,7 +10,7 @@ dependencies:
         - bash miniconda.sh -b -p $HOME/miniconda
         - conda config --set always_yes yes --set changeps1 no
         - conda update -q conda
-        - ./.circle_miniconda.sh
+        - bash .circle_miniconda.sh
         - rm -rf ~/.pyenv
         - rm -rf ~/virtualenvs
     post:
