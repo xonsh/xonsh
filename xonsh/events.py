@@ -7,22 +7,14 @@ The best way to "declare" an event is something like::
 
     __xonsh_events__.on_spam.doc("Comes with eggs")
 """
+import abc
+import collections.abc
+import traceback
+import sys
 
 
-class Event(set):
-    """
-    A given event that handlers can register against.
-
-    Acts as a ``set`` for registered handlers.
-
-    Note that ordering is never guaranteed.
-    """
-
-    @classmethod
-    def doc(cls, text):
-        cls.__doc__ = text
-
-    def __call__(self, func):
+class AbstractEvent(collections.abc.MutableSet, abc.ABC):
+    def __call__(self, handler):
         """
         Registers a handler. It's suggested to use this as a decorator.
 
@@ -33,60 +25,86 @@ class Event(set):
         at all.
         """
         #  Using Pythons "private" munging to minimize hypothetical collisions
-        func.__validator = None
-        self.add(func)
+        handler.__validator = None
+        self.add(handler)
 
         def validator(vfunc):
             """
             Adds a validator function to a handler to limit when it is considered.
             """
-            func.__validator = vfunc
-        func.validator = validator
+            handler.__validator = vfunc
+        handler.validator = validator
 
-        return func
+        return handler
 
-    def calleach(self, *pargs, **kwargs):
+    def _filterhandlers(self, *pargs, **kwargs):
         """
-        The core handler caller that all others build on.
-
-        This works as a generator. Each handler is called in turn and its
-        results are yielded.
-
-        If the generator is interupted, no further handlers are called.
+        Helper method for implementing classes. Generates the handlers that pass validation.
         """
         for handler in self:
             if handler.__validator is not None and not handler.__validator(*pargs, **kwargs):
                 continue
-            yield handler(*pargs, **kwargs)
+            yield handler
+
+    @abc.abstractmethod
+    def fire(self, *pargs, **kwargs):
+        """
+        Fires an event, calling registered handlers with the given arguments.
+        """
+
+
+class Event(AbstractEvent):
+    """
+    A given event that handlers can register against.
+
+    Acts as a ``set`` for registered handlers.
+
+    Note that ordering is never guaranteed.
+    """
+    # Wish I could just pull from set...
+    def __init__(self):
+        self._handlers = set()
+
+    def __len__(self):
+        return len(self._handlers)
+
+    def __contains__(self, item):
+        return item in self._handlers
+
+    def __iter__(self):
+        yield from self._handlers
+
+    def add(self, item):
+        return self._handlers.add(item)
+
+    def discard(self, item):
+        return self._handlers.discard(item)
 
     def fire(self, *pargs, **kwargs):
         """
-        The simplest use case: Calls each handler in turn with the provided
-        arguments and ignore the return values.
+        Fires each event, returning a non-unique iterable of the results.
         """
-        for _ in self.calleach(*pargs, **kwargs):
-            pass
-
-    def until_true(self, *pargs, **kwargs):
-        """
-        Calls each handler until one returns something truthy.
-
-        Returns that truthy value.
-        """
-        for rv in self.calleach(*pargs, **kwargs):
-            if rv:
-                return rv
-
-    def until_false(self, *pargs, **kwargs):
-        """
-        Calls each handler until one returns something falsey.
-        """
-        for rv in self.calleach(*pargs, **kwargs):
-            if not rv:
-                return rv
+        vals = []
+        for handler in self._filterhandlers(*pargs, **kwargs):
+            try:
+                rv = handler(*pargs, **kwargs)
+            except Exception:
+                print("Exception raised in event handler; ignored.", file=sys.stderr)
+                traceback.print_exc()
+            else:
+                vals.append(rv)
+        return vals
 
 
-class Events:
+class LoadEvent(Event):
+    """
+    A kind of event in which each handler is called exactly once.
+    """
+    def __call__(self, *pargs, **kwargs):
+        raise NotImplementedError("See #1550")
+
+
+class EventManager:
     """
     Container for all events in a system.
 
@@ -95,7 +113,35 @@ class Events:
     Each event is just an attribute. They're created dynamically on first use.
     """
 
+    def doc(self, name, docstring):
+        """
+        Applies a docstring to an event.
+        """
+        type(getattr(self, name)).__doc__ = docstring
+
+    def transmogrify(self, name, klass):
+        """
+        Converts an event from one species to another.
+
+        Please note: Some species may do special things with handlers. This is lost.
+        """
+        if isinstance(klass, str):
+            klass = globals()[klass]
+
+        if not issubclass(klass, AbstractEvent):
+            raise ValueError("Invalid event class; must be a subclass of AbstractEvent")
+
+        oldevent = getattr(self, name)
+        newevent = type(name, (klass,), {'__doc__': type(oldevent).__doc__})()
+        setattr(self, name, newevent)
+
+        for handler in oldevent:
+            newevent.add(handler)
+
     def __getattr__(self, name):
         e = type(name, (Event,), {'__doc__': None})()
         setattr(self, name, e)
         return e
+
+
+events = EventManager()

@@ -1,71 +1,47 @@
 """Event tests"""
-from xonsh.events import Events
+import pytest
+from xonsh.events import EventManager
 
-def test_calling():
-    e = Events()
-    e.on_test.doc("Test event")
+@pytest.fixture
+def events():
+    return EventManager()
 
+def test_event_calling(events):
     called = False
-    @e.on_test
+
+    @events.on_test
     def _(spam):
         nonlocal called
         called = spam
 
-    e.on_test.fire("eggs")
+    events.on_test.fire("eggs")
 
     assert called == "eggs"
 
-def test_until_true():
-    e = Events()
-    e.on_test.doc("Test event")
-
+def test_event_returns(events):
     called = 0
 
-    @e.test
+    @events.on_test
     def on_test():
         nonlocal called
         called += 1
-        return True
+        return 1
 
-    @e.on_test
+    @events.on_test
     def second():
         nonlocal called
         called += 1
-        return True
+        return 2
 
-    e.on_test.until_true()
+    vals = events.on_test.fire()
 
-    assert called == 1
+    assert called == 2
+    assert set(vals) == {1, 2}
 
-def test_until_false():
-    e = Events()
-    e.on_test.doc("Test event")
+def test_validator(events):
+    called = None
 
-    called = 0
-
-    @e.on_test
-    def first():
-        nonlocal called
-        called += 1
-        return False
-
-    @e.on_test
-    def second():
-        nonlocal called
-        called += 1
-        return False
-
-    e.on_test.until_false()
-
-    assert called == 1
-
-def test_validator():
-    e = Events()
-    e.on_test.doc("Test event")
-
-    called = 0
-
-    @e.on_test
+    @events.on_test
     def first(n):
         nonlocal called
         called += 1
@@ -75,23 +51,24 @@ def test_validator():
     def v(n):
         return n == 'spam'
 
-    @e.on_test
+    @events.on_test
     def second(n):
         nonlocal called
         called += 1
         return False
 
-    e.on_test.fire('egg')
+    called = 0
+    events.on_test.fire('egg')
     assert called == 1
 
     called = 0
-    e.on_test.fire('spam')
+    events.on_test.fire('spam')
     assert called == 2
 
-def test_eventdoc():
+
+def test_eventdoc(events):
     docstring = "Test event"
-    e = Events()
-    e.on_test.doc(docstring)
+    events.doc('on_test', docstring)
 
     import inspect
-    assert inspect.getdoc(e.on_test) == docstring
+    assert inspect.getdoc(events.on_test) == docstring
