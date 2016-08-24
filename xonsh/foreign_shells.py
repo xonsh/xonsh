@@ -4,6 +4,7 @@ import os
 import re
 import json
 import shlex
+import sys
 import tempfile
 import builtins
 import subprocess
@@ -551,7 +552,7 @@ def load_foreign_aliases(shells=None, config=None, issue_warning=True):
                 continue
             else:
                 del shaliases[alias]
-                print('aliases: error: alias {!r} of shell {!r} '
+                print('aliases: alias {!r} of shell {!r} '
                       'tries to override xonsh builtin alias, '
                       'xonsh wins!'.format(alias, shell['shell']),
                       file=sys.stderr)
