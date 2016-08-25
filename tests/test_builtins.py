@@ -126,5 +126,7 @@ def test_list_of_strs_or_callables(exp, inp):
 def test_expand_path(s, home_env):
     if os.sep != '/':
         s = s.replace('/', os.sep)
+    if os.pathsep != ':':
+        s = s.replace(':', os.pathsep)
     assert expand_path(s) == s.replace('~', HOME_PATH)
 
