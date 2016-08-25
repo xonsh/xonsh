@@ -101,6 +101,7 @@ def DEFAULT_ENSURERS():
     re.compile('\w*DIRS$'): (is_env_path, str_to_env_path, env_path_to_str),
     'COLOR_INPUT': (is_bool, to_bool, bool_to_str),
     'COLOR_RESULTS': (is_bool, to_bool, bool_to_str),
+    'COMPLETIONS_BRACKETS': (is_bool, to_bool, bool_to_str),
     'COMPLETIONS_DISPLAY': (is_completions_display_value,
                             to_completions_display_value, str),
     'COMPLETIONS_MENU_ROWS': (is_int, int, str),
@@ -244,6 +245,7 @@ def DEFAULT_VALUES():
         'CDPATH': (),
         'COLOR_INPUT': True,
         'COLOR_RESULTS': True,
+        'COMPLETIONS_BRACKETS': True,
         'COMPLETIONS_DISPLAY': 'multi',
         'COMPLETIONS_MENU_ROWS': 5,
         'DIRSTACK_SIZE': 20,
@@ -378,6 +380,9 @@ def DEFAULT_DOCS():
         'with Bash, xonsh always prefer an existing relative path.'),
     'COLOR_INPUT': VarDocs('Flag for syntax highlighting interactive input.'),
     'COLOR_RESULTS': VarDocs('Flag for syntax highlighting return values.'),
+    'COMPLETIONS_BRACKETS': VarDocs(
+        'Flag to enable/disable inclusion of square brackets and parentheses '
+        'in Python attribute completions.', default='True'),
     'COMPLETIONS_DISPLAY': VarDocs(
         'Configure if and how Python completions are displayed by the '
         'prompt_toolkit shell.\n\nThis option does not affect Bash '
