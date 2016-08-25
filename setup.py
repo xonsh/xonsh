@@ -70,7 +70,7 @@ def build_tables():
     sys.path.insert(0, os.path.dirname(__file__))
     from xonsh.parser import Parser
     Parser(lexer_table='lexer_table', yacc_table='parser_table',
-           outputdir='xonsh')
+           outputdir='xonsh', yacc_debug=True)
     sys.path.pop(0)
 
 

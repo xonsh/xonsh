@@ -278,9 +278,12 @@ class BaseParser(object):
         if outputdir is None:
             outputdir = os.path.dirname(os.path.dirname(__file__))
         yacc_kwargs['outputdir'] = outputdir
-        self.parser = None
-        YaccLoader(self, yacc_kwargs)
-        # self.parser = yacc.yacc(**yacc_kwargs)
+        if yacc_debug:
+            # create parser on main thread
+            self.parser = yacc.yacc(**yacc_kwargs)
+        else:
+            self.parser = None
+            YaccLoader(self, yacc_kwargs)
 
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None
@@ -1710,6 +1713,7 @@ class BaseParser(object):
             # empty container atom
             p0 = ast.Tuple(elts=[], ctx=ast.Load(), lineno=self.lineno,
                            col_offset=self.col)
+            p0._real_tuple = True
         elif isinstance(p2, ast.AST):
             p0 = p2
             p0._lopen_lineno, p0._lopen_col = p1_tok.lineno, p1_tok.lexpos
@@ -2036,15 +2040,16 @@ class BaseParser(object):
         """testlist : test"""
         p1 = p[1]
         if isinstance(p1, ast.Tuple) and (hasattr(p1, '_real_tuple') and
-                                          p1._real_tuple):
+                                          p1._real_tuple and p1.elts):
             p1.lineno, p1.col_offset = lopen_loc(p1.elts[0])
         p[0] = p1
 
     def p_testlist_single(self, p):
         """testlist : test COMMA"""
         p1 = p[1]
-        if isinstance(p1, ast.Tuple) and (hasattr(p1, '_real_tuple') and
-                                          p1._real_tuple):
+        if isinstance(p1, ast.List) or (isinstance(p1, ast.Tuple) and
+                                        hasattr(p1, '_real_tuple') and
+                                        p1._real_tuple):
             lineno, col = lopen_loc(p1)
             p[0] = ast.Tuple(elts=[p1], ctx=ast.Load(),
                              lineno=p1.lineno, col_offset=p1.col_offset)
@@ -2056,8 +2061,9 @@ class BaseParser(object):
                     | test comma_test_list
         """
         p1 = p[1]
-        if isinstance(p1, ast.Tuple) and (hasattr(p1, '_real_tuple') and
-                                          p1._real_tuple):
+        if isinstance(p1, ast.List) or (isinstance(p1, ast.Tuple) and
+                                        hasattr(p1, '_real_tuple') and
+                                        p1._real_tuple):
             lineno, col = lopen_loc(p1)
             p1 = ast.Tuple(elts=[p1], ctx=ast.Load(),
                            lineno=p1.lineno, col_offset=p1.col_offset)
