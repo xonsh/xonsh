@@ -101,6 +101,7 @@ def DEFAULT_ENSURERS():
     re.compile('\w*DIRS$'): (is_env_path, str_to_env_path, env_path_to_str),
     'COLOR_INPUT': (is_bool, to_bool, bool_to_str),
     'COLOR_RESULTS': (is_bool, to_bool, bool_to_str),
+    'COMPLETIONS_BRACKETS': (is_bool, to_bool, bool_to_str),
     'COMPLETION_CONFIRM': (is_bool, to_bool, bool_to_str),
     'COMPLETIONS_DISPLAY': (is_completions_display_value,
                             to_completions_display_value, str),
@@ -245,6 +246,7 @@ def DEFAULT_VALUES():
         'CDPATH': (),
         'COLOR_INPUT': True,
         'COLOR_RESULTS': True,
+        'COMPLETIONS_BRACKETS': True,
         'COMPLETION_CONFIRM': False,
         'COMPLETIONS_DISPLAY': 'multi',
         'COMPLETIONS_MENU_ROWS': 5,
@@ -357,19 +359,20 @@ def DEFAULT_DOCS():
         'shell.\n\nPressing the right arrow key inserts the currently '
         'displayed suggestion. Only usable with $SHELL_TYPE=prompt_toolkit.'),
     'BASH_COMPLETIONS': VarDocs(
-        'This is a list (or tuple) of strings that specifies where the BASH '
-        'completion files may be found. The default values are platform '
+        'This is a list (or tuple) of strings that specifies where the '
+        '`bash_completion` script may be found. For better performance, '
+        'base-completion v2.x is recommended since it lazy-loads individual '
+        'completion scripts. Paths or directories of individual completion '
+        'scripts (like `.../completes/ssh`) do not need to be included here. '
+        'The default values are platform '
         'dependent, but sane. To specify an alternate list, do so in the run '
         'control file.', default=(
             "Normally this is:\n\n"
-            "    ('/etc/bash_completion',\n"
-            "     '/usr/share/bash-completion/completions/git')\n\n"
+            "    ('/etc/bash_completion', )\n\n"
             "But, on Mac it is:\n\n"
-            "    ('/usr/local/etc/bash_completion',\n"
-            "     '/opt/local/etc/profile.d/bash_completion.sh')\n\n"
+            "    ('/usr/local/etc/bash_completion', )\n\n"
             "And on Arch Linux it is:\n\n"
-            "    ('/usr/share/bash-completion/bash_completion',\n"
-            "     '/usr/share/bash-completion/completions/git')\n\n"
+            "    ('/usr/share/bash-completion/bash_completion', )\n\n"
             "Other OS-specific defaults may be added in the future.")),
     'CASE_SENSITIVE_COMPLETIONS': VarDocs(
         'Sets whether completions should be case sensitive or case '
@@ -379,6 +382,9 @@ def DEFAULT_DOCS():
         'with Bash, xonsh always prefer an existing relative path.'),
     'COLOR_INPUT': VarDocs('Flag for syntax highlighting interactive input.'),
     'COLOR_RESULTS': VarDocs('Flag for syntax highlighting return values.'),
+    'COMPLETIONS_BRACKETS': VarDocs(
+        'Flag to enable/disable inclusion of square brackets and parentheses '
+        'in Python attribute completions.', default='True'),
     'COMPLETIONS_DISPLAY': VarDocs(
         'Configure if and how Python completions are displayed by the '
         'prompt_toolkit shell.\n\nThis option does not affect Bash '

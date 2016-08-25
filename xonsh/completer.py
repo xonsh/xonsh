@@ -3,14 +3,9 @@
 import builtins
 import collections.abc as abc
 
-import xonsh.completers.bash as compbash
-
 
 class Completer(object):
     """This provides a list of optional completions for the xonsh shell."""
-    def __init__(self):
-        compbash.update_bash_completion()
-
     def complete(self, prefix, line, begidx, endidx, ctx=None):
         """Complete the string, given a possible execution context.
 
