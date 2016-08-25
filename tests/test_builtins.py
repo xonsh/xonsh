@@ -9,7 +9,7 @@ import pytest
 from xonsh import built_ins
 from xonsh.built_ins import reglob, pathsearch, helper, superhelper, \
     ensure_list_of_strs, list_of_strs_or_callables, regexsearch, \
-    globsearch
+    globsearch, expand_path
 from xonsh.environ import Env
 
 from tools import skip_if_on_windows
@@ -113,3 +113,16 @@ f = lambda x: 20
 def test_list_of_strs_or_callables(exp, inp):
     obs = list_of_strs_or_callables(inp)
     assert exp == obs
+
+
+@pytest.mark.parametrize('s', [
+    '~',
+    '~/',
+    'x=~/place',
+    'one:~/place',
+    'one:~/place:~/yo',
+    '~/one:~/place:~/yo',
+    ])
+def test_expand_path(s, home_env):
+    assert expand_path(s) == s.replace('~', HOME_PATH)
+
