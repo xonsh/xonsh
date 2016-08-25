@@ -2253,15 +2253,6 @@ class BaseParser(object):
         p0._cliarg_action = 'append'
         p[0] = p0
 
-    def p_subproc_atom_dollar_name(self, p):
-        """subproc_atom : DOLLAR_NAME"""
-        p0 = self._envvar_getter_by_name(p[1][1:], lineno=self.lineno,
-                                         col=self.col)
-        p0 = xonsh_call('__xonsh_ensure_list_of_strs__', [p0],
-                        lineno=self.lineno, col=self.col)
-        p0._cliarg_action = 'extend'
-        p[0] = p0
-
     def p_subproc_atom_re(self, p):
         """subproc_atom : SEARCHPATH"""
         p0 = xonsh_pathsearch(p[1], pymode=False, lineno=self.lineno,
@@ -2323,6 +2314,7 @@ class BaseParser(object):
                             | STRING
                             | COMMA
                             | QUESTION
+                            | DOLLAR_NAME
         """
         # Many tokens cannot be part of this list, such as $, ', ", ()
         # Use a string atom instead.
