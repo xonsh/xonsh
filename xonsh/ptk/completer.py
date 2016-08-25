@@ -41,6 +41,8 @@ class PromptToolkitCompleter(Completer):
                 elif len(os.path.commonprefix(completions)) <= len(prefix):
                     self.reserve_space()
                 for comp in completions:
+                    prefix = prefix.rsplit('.', 1)[-1]
+                    l = len(prefix) if prefix in comp else 0
                     yield Completion(comp, -l)
 
     def reserve_space(self):
