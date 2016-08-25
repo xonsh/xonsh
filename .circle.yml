@@ -1,0 +1,23 @@
+machine:
+    environment:
+        PATH: /home/ubuntu/miniconda/envs/test_env/bin:/home/ubuntu/miniconda/bin:$PATH
+    post:
+        - pyenv global 3.4.4 3.5.1
+
+dependencies:
+    pre:
+        - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+        - bash miniconda.sh -b -p $HOME/miniconda
+        - conda config --set always_yes yes --set changeps1 no
+        - conda update -q conda
+        - bash .circle_miniconda.sh
+        - rm -rf ~/.pyenv
+        - rm -rf ~/virtualenvs
+    post:
+        - case $CIRCLE_NODE_INDEX in 0) python setup.py install ;; 1) python setup.py install ;; esac:
+            parallel: true
+
+test:
+    override:
+        - case $CIRCLE_NODE_INDEX in 0) py.test --timeout=10 ;; 1) py.test --timeout=10 ;; esac:
+            parallel: true
