@@ -127,7 +127,7 @@ class Event(AbstractEvent):
         Returns
         -------
         vals : iterable
-            Return values of each handler. If multiple handlers return the same value, it will 
+            Return values of each handler. If multiple handlers return the same value, it will
             appear multiple times.
         """
         vals = []
