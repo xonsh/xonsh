@@ -27,9 +27,9 @@
   "url": "http://xon.sh",
   "description": ["Python virtual environment manager for xonsh."]
   },
- {"name": "prompt_ret_code",
-  "package": "xontrib-prompt-ret-code",
-  "url": "https://github.com/Siecje/xontrib-prompt-ret-code",
+{"name": "prompt_ret_code",
+  "package": "xonsh",
+  "url": "http://xon.sh",
   "description": ["Adds return code info to the prompt"]
   },
  {"name": "xo",
