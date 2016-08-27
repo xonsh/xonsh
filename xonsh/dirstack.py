@@ -23,18 +23,19 @@ def _change_working_directory(newdir):
     env = builtins.__xonsh_env__
     old = env['PWD']
     new = os.path.join(old, newdir)
+    absnew = os.path.abspath(new)
     try:
-        os.chdir(os.path.abspath(new))
+        os.chdir(absnew)
     except (OSError, FileNotFoundError):
         if new.endswith(get_sep()):
             new = new[:-1]
         if os.path.basename(new) == '..':
             env['PWD'] = new
-        return
-    if old is not None:
-        env['OLDPWD'] = old
-    if new is not None:
-        env['PWD'] = os.path.abspath(new)
+    else:
+        if old is not None:
+            env['OLDPWD'] = old
+        if new is not None:
+            env['PWD'] = absnew
 
 
 def _try_cdpath(apath):
