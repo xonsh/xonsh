@@ -102,6 +102,7 @@ def DEFAULT_ENSURERS():
     'COLOR_INPUT': (is_bool, to_bool, bool_to_str),
     'COLOR_RESULTS': (is_bool, to_bool, bool_to_str),
     'COMPLETIONS_BRACKETS': (is_bool, to_bool, bool_to_str),
+    'COMPLETIONS_CONFIRM': (is_bool, to_bool, bool_to_str),
     'COMPLETIONS_DISPLAY': (is_completions_display_value,
                             to_completions_display_value, str),
     'COMPLETIONS_MENU_ROWS': (is_int, int, str),
@@ -246,6 +247,7 @@ def DEFAULT_VALUES():
         'COLOR_INPUT': True,
         'COLOR_RESULTS': True,
         'COMPLETIONS_BRACKETS': True,
+        'COMPLETIONS_CONFIRM': False,
         'COMPLETIONS_DISPLAY': 'multi',
         'COMPLETIONS_MENU_ROWS': 5,
         'DIRSTACK_SIZE': 20,
@@ -399,6 +401,10 @@ def DEFAULT_DOCS():
         "writing \"$COMPLETIONS_DISPLAY = None\" and \"$COMPLETIONS_DISPLAY "
         "= 'none'\" are equivalent. Only usable with "
         "$SHELL_TYPE=prompt_toolkit"),
+    'COMPLETIONS_CONFIRM': VarDocs(
+        'While tab-completions menu is displayed, press <Enter> to confirm '
+        'completion instead of running command. This only affects the '
+        'prompt-toolkit shell.'),
     'COMPLETIONS_MENU_ROWS': VarDocs(
         'Number of rows to reserve for tab-completions menu if '
         "$COMPLETIONS_DISPLAY is 'single' or 'multi'. This only affects the "

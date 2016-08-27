@@ -1643,6 +1643,9 @@ def test_uncaptured_sub():
 def test_hiddenobj_sub():
     check_xonsh_ast({}, '![ls]', False)
 
+def test_slash_envarv_echo():
+    check_xonsh_ast({}, '![echo $HOME/place]', False)
+
 def test_bang_two_cmds_one_pipe():
     check_xonsh_ast({}, '!(ls | grep wakka)', False)
 
