@@ -1848,6 +1848,7 @@ class BaseParser(object):
                  'LBRACKET', 'RBRACKET', 'AT_LPAREN', 'BANG_LPAREN',
                  'BANG_LBRACKET', 'DOLLAR_LPAREN', 'DOLLAR_LBRACE',
                  'DOLLAR_LBRACKET', 'ATDOLLAR_LPAREN'}
+        #toks.add('ERRORTOKEN')
         ts = '\n       | '.join(sorted(toks))
         doc = 'nocloser : ' + ts + '\n'
         self.p_nocloser_base.__func__.__doc__ = doc
@@ -1855,22 +1856,14 @@ class BaseParser(object):
     def p_nocloser_base(self, p):
         # see above attachament function
         pass
-        print('base', repr(p[1]))
 
     def p_nocloser_any(self, p):
         """nocloser : any_nested_raw"""
         pass
-        print('any', repr(p[1]))
 
     def p_nocloser_many(self, p):
-        """nocloser : nocloser nocloser
-        """
-                    #| nocloser WS
-                    #| nocloser WS nocloser
-                    #| WS nocloser
-                    #| WS nocloser WS
+        """nocloser : nocloser nocloser"""
         pass
-        print('many', repr(p[1]), repr(p[2]))
 
     def p_string_literal(self, p):
         """string_literal : string_tok"""
