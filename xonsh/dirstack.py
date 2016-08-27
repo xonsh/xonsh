@@ -7,9 +7,17 @@ import builtins
 
 from xonsh.lazyasd import lazyobject
 from xonsh.tools import get_sep
+from xonsh.events import events
 
 DIRSTACK = []
 """A list containing the currently remembered directories."""
+
+
+events.doc('on_chdir', """
+on_chdir(olddir: str, newdir: str) -> None
+
+Fires when the current directory is changed for any reason.
+""")
 
 
 def _get_cwd():
@@ -36,6 +44,10 @@ def _change_working_directory(newdir):
             env['OLDPWD'] = old
         if new is not None:
             env['PWD'] = absnew
+
+    # Fire event if the path actually changed
+    if old != env['PWD']:
+        events.on_chdir.fire(old, env['PWD'])
 
 
 def _try_cdpath(apath):

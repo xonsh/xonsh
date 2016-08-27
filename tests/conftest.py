@@ -5,6 +5,7 @@ import xonsh.built_ins
 from xonsh.built_ins import ensure_list_of_strs
 from xonsh.execer import Execer
 from xonsh.tools import XonshBlockError
+from xonsh.events import EventManager
 import glob
 
 
@@ -38,6 +39,7 @@ def xonsh_builtins():
     builtins.execx = None
     builtins.compilex = None
     builtins.aliases = {}
+    builtins.events = EventManager()
     yield builtins
     del builtins.__xonsh_env__
     del builtins.__xonsh_ctx__
@@ -56,3 +58,4 @@ def xonsh_builtins():
     del builtins.execx
     del builtins.compilex
     del builtins.aliases
+    del builtins.events

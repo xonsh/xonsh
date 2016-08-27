@@ -66,3 +66,24 @@ def test_cdpath_expansion(xonsh_builtins):
     except Exception as e:
         tuple(os.rmdir(_) for _ in test_dirs if os.path.exists(_))
         raise e
+
+def test_cdpath_events(xonsh_builtins, tmpdir):
+    xonsh_builtins.__xonsh_env__ = Env(CDPATH=PARENT, PWD=HERE)
+    target = str(tmpdir)
+
+    ev = None
+    @xonsh_builtins.events.on_chdir
+    def handler(old, new):
+        nonlocal ev
+        ev = old, new
+
+    old_dir = os.getcwd()
+    try:
+        dirstack.cd([target])
+    except:
+        raise
+    else:
+        assert (old_dir, target) == ev
+    finally:
+        # Use os.chdir() here so dirstack.cd() doesn't fire events (or fail again)
+        os.chdir(old_dir)
