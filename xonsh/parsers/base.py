@@ -222,6 +222,7 @@ class BaseParser(object):
         self._lines = None
         self.xonsh_code = None
         self._attach_nocomma_tok_rules()
+        self._attach_nonamebang_base_rules()
 
         opt_rules = [
             'newlines', 'arglist', 'func_call', 'rarrow_test', 'typedargslist',
@@ -256,7 +257,7 @@ class BaseParser(object):
         for rule in list_rules:
             self._list_rule(rule)
 
-        tok_rules = ['def', 'class', 'return', 'number', 'name',
+        tok_rules = ['def', 'class', 'return', 'number', 'name', 'name_bang',
                      'none', 'true', 'false', 'ellipsis', 'if', 'del',
                      'assert', 'lparen', 'lbrace', 'lbracket', 'string',
                      'times', 'plus', 'minus', 'divide', 'doublediv', 'mod',
@@ -264,7 +265,8 @@ class BaseParser(object):
                      'for', 'colon', 'import', 'except', 'nonlocal', 'global',
                      'yield', 'from', 'raise', 'with', 'dollar_lparen',
                      'dollar_lbrace', 'dollar_lbracket', 'try',
-                     'bang_lparen', 'bang_lbracket', 'comma', 'rparen']
+                     'bang_lparen', 'bang_lbracket', 'comma', 'rparen',
+                     'rbracket']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -1815,6 +1817,34 @@ class BaseParser(object):
         """
         p[0] = self._dollar_rules(p)
 
+    def p_atom_bang_fistful_of_dollars(self, p):
+        """atom : bang_lbracket_tok name_bang_tok nonamebang rbracket_tok
+        """
+        assert False
+        p[0] = self._dollar_rules(p)
+
+    def _attach_nonamebang_base_rules(self):
+        toks = set(self.tokens)
+        toks -= {'NAME_BANG', 'LPAREN', 'RPAREN', 'LBRACE', 'RBRACE',
+                 'LBRACKET', 'RBRACKET', 'AT_LPAREN', 'BANG_LPAREN',
+                 'BANG_LBRACKET', 'DOLLAR_LPAREN', 'DOLLAR_LBRACE',
+                 'DOLLAR_LBRACKET', 'ATDOLLAR_LPAREN'}
+        ts = '\n           | '.join(sorted(toks))
+        doc = 'nonamebang : ' + ts + '\n'
+        self.p_nonamebang_base.__func__.__doc__ = doc
+
+    def p_nonamebang_base(self, p):
+        # see above attachament function
+        pass
+
+    def p_nonamebang_nocomma(self, p):
+        """nonamebang : any_nested_raw"""
+        pass
+
+    def p_nonamebang_many(self, p):
+        """nonamebang : nonamebang nonamebang"""
+        pass
+
     def p_string_literal(self, p):
         """string_literal : string_tok"""
         p1 = p[1]
@@ -1941,18 +1971,22 @@ class BaseParser(object):
         """nocomma_part : nocomma_tok"""
         pass
 
-    def p_nocomma_part_any(self, p):
-        """nocomma_part : LPAREN any_raw_toks_opt RPAREN
-                        | LBRACE any_raw_toks_opt RBRACE
-                        | LBRACKET any_raw_toks_opt RBRACKET
-                        | AT_LPAREN any_raw_toks_opt RPAREN
-                        | BANG_LPAREN any_raw_toks_opt RPAREN
-                        | BANG_LBRACKET any_raw_toks_opt RBRACKET
-                        | DOLLAR_LPAREN any_raw_toks_opt RPAREN
-                        | DOLLAR_LBRACE any_raw_toks_opt RBRACE
-                        | DOLLAR_LBRACKET any_raw_toks_opt RBRACKET
-                        | ATDOLLAR_LPAREN any_raw_toks_opt RPAREN
+    def p_any_nested_raw(self, p):
+        """any_nested_raw : LPAREN any_raw_toks_opt RPAREN
+                          | LBRACE any_raw_toks_opt RBRACE
+                          | LBRACKET any_raw_toks_opt RBRACKET
+                          | AT_LPAREN any_raw_toks_opt RPAREN
+                          | BANG_LPAREN any_raw_toks_opt RPAREN
+                          | BANG_LBRACKET any_raw_toks_opt RBRACKET
+                          | DOLLAR_LPAREN any_raw_toks_opt RPAREN
+                          | DOLLAR_LBRACE any_raw_toks_opt RBRACE
+                          | DOLLAR_LBRACKET any_raw_toks_opt RBRACKET
+                          | ATDOLLAR_LPAREN any_raw_toks_opt RPAREN
         """
+        pass
+
+    def p_nocomma_part_any(self, p):
+        """nocomma_part : any_nested_raw"""
         pass
 
     def p_nocomma_base(self, p):

@@ -146,7 +146,8 @@ def handle_error_token(state, token):
     """
     state['last'] = token
     if not state['pymode'][-1][0]:
-        typ = 'NAME'
+        #typ = 'NAME'
+        typ = 'NAME_BANG' if token.string.endswith('!') else 'NAME'
     else:
         typ = 'ERRORTOKEN'
     yield _new_token(typ, token.string, token.start)
@@ -340,6 +341,7 @@ class Lexer(object):
         if self._tokens is None:
             t = tuple(token_map.values()) + (
                 'NAME',                  # name tokens
+                'NAME_BANG',             # name! tokens
                 'WS',                    # whitespace in subprocess mode
                 'LPAREN', 'RPAREN',      # ( )
                 'LBRACKET', 'RBRACKET',  # [ ]
