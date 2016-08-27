@@ -1824,7 +1824,7 @@ class BaseParser(object):
                 | dollar_lbracket_tok subproc bang_tok RBRACKET
         """
         p3 = p[3]
-        node = ast.Str(s='', lineno=p3.lineno, col_offset=p3.lexpos)
+        node = ast.Str(s='', lineno=p3.lineno, col_offset=p3.lexpos + 1)
         p[2][-1].elts.append(node)
         p[0] = self._dollar_rules(p)
 
@@ -1835,7 +1835,7 @@ class BaseParser(object):
                 | dollar_lbracket_tok subproc bang_tok nocloser rbracket_tok
         """
         p3, p5 = p[3], p[5]
-        beg = (p3.lineno, p3.lexpos)
+        beg = (p3.lineno, p3.lexpos + 1)
         end = (p5.lineno, p5.lexpos)
         s = self.source_slice(beg, end).strip()
         node = ast.Str(s=s, lineno=beg[0], col_offset=beg[1])

@@ -1874,16 +1874,21 @@ SUBPROC_MACRO_OC = [
     ]
 
 @pytest.mark.parametrize('opener, closer', SUBPROC_MACRO_OC)
-def test_empty_subprocbang(opener, closer):
-    assert check_xonsh_ast({}, opener + 'echo!' + closer, False)
-    assert check_xonsh_ast({}, opener + 'echo !' + closer, False)
-    assert check_xonsh_ast({}, opener + 'echo ! ' + closer, False)
+@pytest.mark.parametrize('body', ['echo!', 'echo !', 'echo ! '])
+def test_empty_subprocbang(opener, closer, body):
+    tree = check_xonsh_ast({}, opener + body + closer, False, return_obs=True)
+    assert isinstance(tree, AST)
+    cmd = tree.body.args[0].elts
+    assert len(cmd) == 2
+    assert cmd[1].s == ''
 
 
 @pytest.mark.parametrize('opener, closer', SUBPROC_MACRO_OC)
-def test_single_subprocbang(opener, closer):
-    assert check_xonsh_ast({}, opener + 'echo!x' + closer, False)
-    assert check_xonsh_ast({}, opener + 'echo !x' + closer, False)
-    assert check_xonsh_ast({}, opener + 'echo! x' + closer, False)
-    assert check_xonsh_ast({}, opener + 'echo ! x' + closer, False)
+@pytest.mark.parametrize('body', ['echo!x', 'echo !x', 'echo !x', 'echo ! x'])
+def test_single_subprocbang(opener, closer, body):
+    tree = check_xonsh_ast({}, opener + body + closer, False, return_obs=True)
+    assert isinstance(tree, AST)
+    cmd = tree.body.args[0].elts
+    assert len(cmd) == 2
+    assert cmd[1].s == 'x'
 
