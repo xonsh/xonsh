@@ -9,8 +9,8 @@ The best way to "declare" an event is something like::
 """
 import abc
 import collections.abc
-import traceback
-import sys
+
+from xonsh.tools import print_exception
 
 
 class AbstractEvent(collections.abc.MutableSet, abc.ABC):
@@ -135,9 +135,7 @@ class Event(AbstractEvent):
             try:
                 rv = handler(*pargs, **kwargs)
             except Exception:
-                print("Exception raised in event handler; ignored.", file=sys.stderr)
-                traceback.print_exc()
-                # FIXME: Actually warn
+                print_exception("Exception raised in event handler; ignored.")
             else:
                 vals.append(rv)
         return vals
@@ -244,4 +242,7 @@ class EventManager:
         return e
 
 
+# Not lazy because:
+# 1. Initialization of EventManager can't be much cheaper
+# 2. It's expected to be used at load time, negating any benefits of using lazy object
 events = EventManager()
