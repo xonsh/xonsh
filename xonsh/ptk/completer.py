@@ -42,9 +42,10 @@ class PromptToolkitCompleter(Completer):
                     self.reserve_space()
                 # don't mess with envvar and path expansion comps
 #                if any(x in prefix for x in ['$', '/']):
-                common_prefix = _commonprefix([a.strip('\'') for a in completions])
+                c_prefix = _commonprefix([a.strip('\'/').rsplit('/', 1)[0] for a in completions])
                 for comp in completions:
-                    yield Completion(comp, -l, display=comp[len(common_prefix):])
+                    display = comp[len(c_prefix):].lstrip('/')
+                    yield Completion(comp, -l, display=display)
 #                else:  # don't show common prefixes in attr completions
 #                    prefix, _, compprefix = prefix.rpartition('.')
 #                    for comp in completions:
