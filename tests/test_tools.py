@@ -342,6 +342,8 @@ def test_subexpr_from_unbalanced_parens(inp, exp):
     ('(ls) && echo a', 1, 4),
     ('not ls && echo a', 0, 8),
     ('not (ls) && echo a', 0, 8),
+    ('bash -c ! export var=42; echo $var', 0, 35),
+    ('python -c ! import os; print(os.path.abspath("/"))', 0, 51),
 ])
 def test_find_next_break(line, mincol, exp):
     obs = find_next_break(line, mincol=mincol, lexer=LEXER)

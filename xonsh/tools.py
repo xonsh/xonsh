@@ -243,6 +243,9 @@ def find_next_break(line, mincol=0, lexer=None):
         elif tok.type == 'ERRORTOKEN' and ')' in tok.value:
             maxcol = tok.lexpos + mincol + 1
             break
+        elif tok.type == 'BANG':
+            maxcol = mincol + len(line) + 1
+            break
     return maxcol
 
 
@@ -320,7 +323,7 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     if len(toks) == 0:
         return  # handle comment lines
     elif saw_macro:
-        end_offset = len(toks[-1].value.rstrip())
+        end_offset = len(toks[-1].value.rstrip()) + 1
     beg, end = toks[0].lexpos, (toks[-1].lexpos + end_offset)
     end = len(line[:end].rstrip())
     rtn = '![' + line[beg:end] + ']'
