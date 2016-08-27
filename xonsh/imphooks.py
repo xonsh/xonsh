@@ -3,15 +3,19 @@
 
 This module registers the hooks it defines when it is imported.
 """
+import builtins
 import os
 import sys
-import builtins
+import types
 from importlib.machinery import ModuleSpec
 from importlib.abc import MetaPathFinder, SourceLoader
 
 from xonsh.execer import Execer
 from xonsh.platform import scandir
 
+
+class XonshModule(types.ModuleType):
+    pass
 
 class XonshImportHook(MetaPathFinder, SourceLoader):
     """Implements the import hook for xonsh source files."""
@@ -60,6 +64,16 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
     #
     # SourceLoader methods
     #
+    def create_module(self, spec):
+        """Create a xonsh module with the appropriate attributes."""
+        name = spec.name
+        parent = spec.parent
+        mod = XonshModule(name)
+        mod.__file__ = self.get_filename(name)
+        mod.__loader__ = self
+        mod.__package__ = parent or ''
+        return mod
+
     def get_filename(self, fullname):
         """Returns the filename for a module's fullname."""
         return self._filenames[fullname]
