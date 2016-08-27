@@ -68,7 +68,7 @@ def test_cdpath_expansion(xonsh_builtins):
         raise e
 
 def test_cdpath_events(xonsh_builtins, tmpdir):
-    xonsh_builtins.__xonsh_env__ = Env(CDPATH=PARENT, PWD=HERE)
+    xonsh_builtins.__xonsh_env__ = Env(CDPATH=PARENT, PWD=os.getcwd())
     target = str(tmpdir)
 
     ev = None
@@ -76,6 +76,7 @@ def test_cdpath_events(xonsh_builtins, tmpdir):
     def handler(old, new):
         nonlocal ev
         ev = old, new
+
 
     old_dir = os.getcwd()
     try:
