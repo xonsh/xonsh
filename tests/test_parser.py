@@ -1864,3 +1864,16 @@ def test_macro_call_one_trailing_space(s):
     args = tree.body.args[1].elts
     assert len(args) == 1
     assert args[0].s == s.strip()
+
+
+@pytest.mark.parametrize('opener, closer', [
+    ('!(', ')'),
+    ('$(', ')'),
+    ('![', ']'),
+    ('$[', ']'),
+    ])
+def test_simple_subprocbang(opener, closer):
+    assert check_xonsh_ast({}, opener + 'echo!' + closer, False)
+    assert check_xonsh_ast({}, opener + 'echo !' + closer, False)
+    assert check_xonsh_ast({}, opener + 'echo ! ' + closer, False)
+

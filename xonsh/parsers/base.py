@@ -222,7 +222,7 @@ class BaseParser(object):
         self._lines = None
         self.xonsh_code = None
         self._attach_nocomma_tok_rules()
-        self._attach_nonamebang_base_rules()
+        self._attach_nocloser_base_rules()
 
         opt_rules = [
             'newlines', 'arglist', 'func_call', 'rarrow_test', 'typedargslist',
@@ -257,7 +257,7 @@ class BaseParser(object):
         for rule in list_rules:
             self._list_rule(rule)
 
-        tok_rules = ['def', 'class', 'return', 'number', 'name', 'name_bang',
+        tok_rules = ['def', 'class', 'return', 'number', 'name', 'bang',
                      'none', 'true', 'false', 'ellipsis', 'if', 'del',
                      'assert', 'lparen', 'lbrace', 'lbracket', 'string',
                      'times', 'plus', 'minus', 'divide', 'doublediv', 'mod',
@@ -1810,39 +1810,45 @@ class BaseParser(object):
 
     def p_atom_fistful_of_dollars(self, p):
         """atom : dollar_lbrace_tok test RBRACE
-                | dollar_lparen_tok subproc RPAREN
                 | bang_lparen_tok subproc RPAREN
+                | dollar_lparen_tok subproc RPAREN
                 | bang_lbracket_tok subproc RBRACKET
                 | dollar_lbracket_tok subproc RBRACKET
         """
         p[0] = self._dollar_rules(p)
 
-    def p_atom_bang_fistful_of_dollars(self, p):
-        """atom : bang_lbracket_tok name_bang_tok nonamebang rbracket_tok
+    def p_atom_bang_empty_fistful_of_dollars(self, p):
+        """atom : bang_lparen_tok subproc BANG RPAREN
+                | bang_lparen_tok subproc BANG WS RPAREN
+                | dollar_lparen_tok subproc BANG RPAREN
+                | dollar_lparen_tok subproc BANG WS RPAREN
+                | bang_lbracket_tok subproc BANG RBRACKET
+                | bang_lbracket_tok subproc BANG WS RBRACKET
+                | dollar_lbracket_tok subproc BANG RBRACKET
+                | dollar_lbracket_tok subproc BANG WS RBRACKET
         """
-        assert False
         p[0] = self._dollar_rules(p)
 
-    def _attach_nonamebang_base_rules(self):
+    def _attach_nocloser_base_rules(self):
         toks = set(self.tokens)
-        toks -= {'NAME_BANG', 'LPAREN', 'RPAREN', 'LBRACE', 'RBRACE',
+        toks -= {'LPAREN', 'RPAREN', 'LBRACE', 'RBRACE',
                  'LBRACKET', 'RBRACKET', 'AT_LPAREN', 'BANG_LPAREN',
                  'BANG_LBRACKET', 'DOLLAR_LPAREN', 'DOLLAR_LBRACE',
                  'DOLLAR_LBRACKET', 'ATDOLLAR_LPAREN'}
-        ts = '\n           | '.join(sorted(toks))
-        doc = 'nonamebang : ' + ts + '\n'
-        self.p_nonamebang_base.__func__.__doc__ = doc
+        ts = '\n       | '.join(sorted(toks))
+        doc = 'nocloser : ' + ts + '\n'
+        self.p_nocloser_base.__func__.__doc__ = doc
 
-    def p_nonamebang_base(self, p):
+    def p_nocloser_base(self, p):
         # see above attachament function
         pass
 
-    def p_nonamebang_nocomma(self, p):
-        """nonamebang : any_nested_raw"""
+    def p_nocloser_any(self, p):
+        """nocloser : any_nested_raw"""
         pass
 
-    def p_nonamebang_many(self, p):
-        """nonamebang : nonamebang nonamebang"""
+    def p_nocloser_many(self, p):
+        """nocloser : nocloser nocloser"""
         pass
 
     def p_string_literal(self, p):
