@@ -15,6 +15,7 @@ import atexit
 import inspect
 import tempfile
 import builtins
+import itertools
 import subprocess
 import contextlib
 import collections.abc as cabc
@@ -822,18 +823,55 @@ def call_macro(f, raw_args, glbs, locs):
     sig = inspect.signature(f)
     empty = inspect.Parameter.empty
     macroname = f.__name__
+    i = 0
     args = []
-    print(raw_args)
     for (key, param), raw_arg in zip(sig.parameters.items(), raw_args):
+        i += 1
+        if raw_arg == '*':
+            break
         kind = param.annotation
         if kind is empty or kind is None:
             kind = eval
         arg = convert_macro_arg(raw_arg, kind, glbs, locs, name=key,
                                 macroname=macroname)
         args.append(arg)
+    reg_args, kwargs = _eval_regular_args(raw_args[i:], glbs, locs)
+    args += reg_args
     with macro_context(f, glbs, locs):
-        rtn = f(*args)
+        rtn = f(*args, **kwargs)
     return rtn
+
+
+@lazyobject
+def KWARG_RE():
+    return re.compile('[A-Za-z_]\w*=')
+
+
+def _starts_as_arg(s):
+    """Tests if a string starts as a non-kwarg string would."""
+    return KWARG_RE.match(s) is None
+
+
+def _eval_regular_args(raw_args, glbs, locs):
+    if not raw_args:
+        return [], {}
+    arglist = list(itertools.takewhile(_starts_as_arg, raw_args))
+    kwarglist = raw_args[len(arglist):]
+    execer = builtins.__xonsh_execer__
+    if not arglist:
+        args = arglist
+        kwargstr = 'dict({})'.format(', '.join(kwarglist))
+        kwargs = execer.eval(kwargstr, glbs=glbs, locs=locs)
+    elif not kwarglist:
+        argstr = '({},)'.format(', '.join(arglist))
+        args = execer.eval(argstr, glbs=glbs, locs=locs)
+        kwargs = {}
+    else:
+        argstr = '({},)'.format(', '.join(arglist))
+        kwargstr = 'dict({})'.format(', '.join(kwarglist))
+        both = '({}, {})'.format(argstr, kwargstr)
+        args, kwargs = execer.eval(both, glbs=glbs, locs=locs)
+    return args, kwargs
 
 
 def load_builtins(execer=None, config=None, login=False, ctx=None):
