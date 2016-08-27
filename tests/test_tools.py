@@ -74,6 +74,20 @@ def test_subproc_toks_git_nl():
     assert (exp == obs)
 
 
+def test_bash_macro():
+    s = 'bash -c ! export var=42; echo $var'
+    exp = '![{0}]\n'.format(s)
+    obs = subproc_toks(s + '\n', lexer=LEXER, returnline=True)
+    assert (exp == obs)
+
+
+def test_python_macro():
+    s = 'python -c ! import os; print(os.path.abspath("/"))'
+    exp = '![{0}]\n'.format(s)
+    obs = subproc_toks(s + '\n', lexer=LEXER, returnline=True)
+    assert (exp == obs)
+
+
 def test_subproc_toks_indent_ls():
     s = 'ls -l'
     exp = INDENT + '![{0}]'.format(s)
