@@ -1889,15 +1889,6 @@ class BaseParser(object):
                        col_offset=p1.lexpos)
         p[0] = [p0]
 
-    #def p_trailer_bang_lparen_star(self, p):
-    #    """trailer : bang_lparen_tok macroarglist comma_tok TIMES COMMA arglist rparen_tok"""
-    #    self.p_trailer_bang_lparen(p)
-    #    assert False
-        #if len(p) == 7:
-        #    p[0] = [(p0, p[6])]
-        #else:
-
-
     def p_trailer_p3(self, p):
         """trailer : LBRACKET subscriptlist RBRACKET
                    | PERIOD NAME
@@ -1915,7 +1906,7 @@ class BaseParser(object):
         toks -= {'COMMA', 'LPAREN', 'RPAREN', 'LBRACE', 'RBRACE', 'LBRACKET',
                  'RBRACKET', 'AT_LPAREN', 'BANG_LPAREN', 'BANG_LBRACKET',
                  'DOLLAR_LPAREN', 'DOLLAR_LBRACE', 'DOLLAR_LBRACKET',
-                 'ATDOLLAR_LPAREN', 'TIMES'}
+                 'ATDOLLAR_LPAREN'}
         ts = '\n            | '.join(sorted(toks))
         doc = 'nocomma_tok : ' + ts + '\n'
         self.p_nocomma_tok.__func__.__doc__ = doc
@@ -1948,12 +1939,6 @@ class BaseParser(object):
 
     def p_nocomma_part_tok(self, p):
         """nocomma_part : nocomma_tok"""
-        pass
-
-    def p_nocomma_part_times(self, p):
-        """nocomma_part : TIMES nocomma_part
-                        | nocomma_part TIMES
-        """
         pass
 
     def p_nocomma_part_any(self, p):
