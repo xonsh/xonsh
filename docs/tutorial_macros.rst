@@ -344,6 +344,71 @@ Of course, many other more sophisticated options are available depending on the
 use case.
 
 
+Subprocess Macros
+=================
+Like with function macros above, subprocess macros allow you to pause the parser
+for until you are ready to exit subprocess mode. Unlike function macros, there
+is only a single macro argument and its macro type is always a string.  This
+is because it (usually) doesn't make sense to pass non-string arguments to a
+command. And when it does, there is the ``@()`` syntax!
+
+In the simplest case, subprocess macros look like the equivalent of their
+function macro counterparts:
+
+.. code-block:: xonshcon
+
+    >>> echo! I'm Mr. Meeseeks.
+    I'm Mr. Meeseeks.
+
+Again, note that everything to the right of the ``!`` is passed down to the
+``echo`` command as the final, single argument. This is space preserving,
+like wrapping with quotes:
+
+.. code-block:: xonshcon
+
+    # normally, xonsh will split on whitespace,
+    # so each argument is passed in separately
+    >>> echo x  y       z
+    x y z
+
+    # usually space can be preserved with quotes
+    >>> echo "x  y       z"
+    x  y       z
+
+    # however, subproces macros will pause and then strip
+    # all input after the exclamation point
+    >>> echo! x  y       z
+    x  y       z
+
+However, the macro will pause everything, including path and environment variable
+expansion, that might be present even with quotes.  For example:
+
+.. code-block:: xonshcon
+
+    # without macros, envrioment variable are expanded
+    >>> echo $USER
+    lou
+
+    # inside of a macro, all additional munging is turned off.
+    >>> echo! $USER
+    $USER
+
+Everything to the right of the exclamation point, except the leading and trailing
+whitespace, is passed into the command directly as written. This allows certain
+commands to function in cases where quoting or piping might be more burdensome.
+The ``timeit`` command is a great example where simple syntax will often fail,
+but will be easily executable as a macro:
+
+.. code-block:: xonshcon
+
+    # fails normally
+    >>> timeit "hello mom " + "and dad"
+    xonsh: subprocess mode: command not found: hello
+
+    # macro success!
+    >>> timeit! "hello mom " + "and dad"
+    100000000 loops, best of 3: 8.24 ns per loop
+
 Take Away
 =========
 Hopefully, at this point, you see that a few well placed macros can be extremely
