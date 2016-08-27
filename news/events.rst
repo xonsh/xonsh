@@ -1,6 +1,6 @@
 **Added:** 
 
-* A new `event subsystem <>`_ has been added.
+* A new `event subsystem <http://xon.sh/tutorial_events.html>`_ has been added.
 
 **Changed:** None
 
