@@ -237,8 +237,8 @@ class BaseParser(object):
             'op_factor_list', 'trailer_list', 'testlist_comp',
             'yield_expr_or_testlist_comp', 'dictorsetmaker',
             'comma_subscript_list', 'test', 'sliceop', 'comp_iter',
-            'yield_arg', 'test_comma_list', 'comma_nocomma_list',
-            'macroarglist', 'any_raw_toks', 'comma_tok']
+            'yield_arg', 'test_comma_list',
+            'macroarglist', 'any_raw_toks']
         for rule in opt_rules:
             self._opt_rule(rule)
 
@@ -429,7 +429,7 @@ class BaseParser(object):
         return ''.join(lines)
 
     def _parse_error(self, msg, loc):
-        if self.xonsh_code is None:
+        if self.xonsh_code is None or loc is None:
             err_line_pointer = ''
         else:
             col = loc.column + 1
@@ -1672,11 +1672,13 @@ class BaseParser(object):
                 p0 = ast.Call(func=leader,
                               lineno=leader.lineno,
                               col_offset=leader.col_offset, **trailer)
-            elif isinstance(trailer, ast.Tuple):
+            elif isinstance(trailer, (ast.Tuple, tuple)):
                 # call macro functions
                 l, c = leader.lineno, leader.col_offset
                 gblcall = xonsh_call('globals', [], lineno=l, col=c)
                 loccall = xonsh_call('locals', [], lineno=l, col=c)
+                if isinstance(trailer, tuple):
+                    trailer, arglist = trailer
                 margs = [leader, trailer, gblcall, loccall]
                 p0 = xonsh_call('__xonsh_call_macro__', margs, lineno=l, col=c)
             elif isinstance(trailer, str):
@@ -1860,17 +1862,18 @@ class BaseParser(object):
         p[0] = [p[2] or dict(args=[], keywords=[], starargs=None, kwargs=None)]
 
     def p_trailer_bang_lparen(self, p):
-        """trailer : bang_lparen_tok macroarglist_opt rparen_tok"""
+        """trailer : bang_lparen_tok macroarglist_opt rparen_tok
+                   | bang_lparen_tok nocomma comma_tok rparen_tok
+                   | bang_lparen_tok nocomma comma_tok WS rparen_tok
+                   | bang_lparen_tok macroarglist comma_tok rparen_tok
+                   | bang_lparen_tok macroarglist comma_tok WS rparen_tok
+        """
         p1, p2, p3 = p[1], p[2], p[3]
         begins = [(p1.lineno, p1.lexpos + 2)]
         ends = [(p3.lineno, p3.lexpos)]
         if p2:
-            if p2[-1][-1] == 'trailing':  # handle trailing comma
-                begins.extend([(x[0], x[1] + 1) for x in p2[:-1]])
-                ends = [x[:2] for x in p2]
-            else:
-                begins.extend([(x[0], x[1] + 1) for x in p2])
-                ends = [x[:2] for x in p2] + ends
+            begins.extend([(x[0], x[1] + 1) for x in p2])
+            ends = p2 + ends
         elts = []
         for beg, end in zip(begins, ends):
             s = self.source_slice(beg, end).strip()
@@ -1963,20 +1966,15 @@ class BaseParser(object):
     def p_comma_nocomma(self, p):
         """comma_nocomma : comma_tok nocomma"""
         p1 = p[1]
-        p[0] = [(p1.lineno, p1.lexpos, None)]
+        p[0] = [(p1.lineno, p1.lexpos)]
 
-    def p_comma_trailing_nocomma(self, p):
-        """comma_nocomma : comma_tok
-                         | comma_tok WS
-        """
-        p1 = p[1]
-        p[0] = [(p1.lineno, p1.lexpos, 'trailing')]
+    def p_macroarglist_single(self, p):
+        """macroarglist : nocomma"""
+        p[0] = []
 
-    def p_macroarglist(self, p):
-        """macroarglist : nocomma comma_nocomma_list_opt"""
-        p2 = p[2]
-        pos = [] if p2 is None else p2
-        p[0] = pos
+    def p_macroarglist_many(self, p):
+        """macroarglist : nocomma comma_nocomma_list"""
+        p[0] = p[2]
 
     def p_subscriptlist(self, p):
         """subscriptlist : subscript comma_subscript_list_opt comma_opt"""

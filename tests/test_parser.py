@@ -1855,6 +1855,7 @@ def test_macro_call_one_trailing(s):
     assert len(args) == 1
     assert args[0].s == s.strip()
 
+
 @pytest.mark.parametrize('s', MACRO_ARGS)
 def test_macro_call_one_trailing_space(s):
     f = 'f!( {0}, )'.format(s)

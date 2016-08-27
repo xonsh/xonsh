@@ -736,7 +736,7 @@ def convert_macro_arg(raw_arg, kind, glbs, locs, *, name='<arg>',
     """
     # munge kind and mode to start
     mode = None
-    if isinstance(kind, abc.Sequence) and not isinstance(kind, str):
+    if isinstance(kind, cabc.Sequence) and not isinstance(kind, str):
         # have (kind, mode) tuple
         kind, mode = kind
     if isinstance(kind, str):
@@ -823,6 +823,7 @@ def call_macro(f, raw_args, glbs, locs):
     empty = inspect.Parameter.empty
     macroname = f.__name__
     args = []
+    print(raw_args)
     for (key, param), raw_arg in zip(sig.parameters.items(), raw_args):
         kind = param.annotation
         if kind is empty or kind is None:
