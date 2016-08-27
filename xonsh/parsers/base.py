@@ -1818,15 +1818,28 @@ class BaseParser(object):
         p[0] = self._dollar_rules(p)
 
     def p_atom_bang_empty_fistful_of_dollars(self, p):
-        """atom : bang_lparen_tok subproc BANG RPAREN
-                | bang_lparen_tok subproc BANG WS RPAREN
-                | dollar_lparen_tok subproc BANG RPAREN
-                | dollar_lparen_tok subproc BANG WS RPAREN
-                | bang_lbracket_tok subproc BANG RBRACKET
-                | bang_lbracket_tok subproc BANG WS RBRACKET
-                | dollar_lbracket_tok subproc BANG RBRACKET
-                | dollar_lbracket_tok subproc BANG WS RBRACKET
+        """atom : bang_lparen_tok subproc bang_tok RPAREN
+                | dollar_lparen_tok subproc bang_tok RPAREN
+                | bang_lbracket_tok subproc bang_tok RBRACKET
+                | dollar_lbracket_tok subproc bang_tok RBRACKET
         """
+        p3 = p[3]
+        node = ast.Str(s='', lineno=p3.lineno, col_offset=p3.lexpos)
+        p[2][-1].elts.append(node)
+        p[0] = self._dollar_rules(p)
+
+    def p_atom_bang_fistful_of_dollars(self, p):
+        """atom : bang_lparen_tok subproc bang_tok nocloser rparen_tok
+                | dollar_lparen_tok subproc bang_tok nocloser rparen_tok
+                | bang_lbracket_tok subproc bang_tok nocloser rbracket_tok
+                | dollar_lbracket_tok subproc bang_tok nocloser rbracket_tok
+        """
+        p3, p5 = p[3], p[5]
+        beg = (p3.lineno, p3.lexpos)
+        end = (p5.lineno, p5.lexpos)
+        s = self.source_slice(beg, end).strip()
+        node = ast.Str(s=s, lineno=beg[0], col_offset=beg[1])
+        p[2][-1].elts.append(node)
         p[0] = self._dollar_rules(p)
 
     def _attach_nocloser_base_rules(self):
@@ -1842,14 +1855,22 @@ class BaseParser(object):
     def p_nocloser_base(self, p):
         # see above attachament function
         pass
+        print('base', repr(p[1]))
 
     def p_nocloser_any(self, p):
         """nocloser : any_nested_raw"""
         pass
+        print('any', repr(p[1]))
 
     def p_nocloser_many(self, p):
-        """nocloser : nocloser nocloser"""
+        """nocloser : nocloser nocloser
+        """
+                    #| nocloser WS
+                    #| nocloser WS nocloser
+                    #| WS nocloser
+                    #| WS nocloser WS
         pass
+        print('many', repr(p[1]), repr(p[2]))
 
     def p_string_literal(self, p):
         """string_literal : string_tok"""

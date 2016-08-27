@@ -1866,14 +1866,24 @@ def test_macro_call_one_trailing_space(s):
     assert args[0].s == s.strip()
 
 
-@pytest.mark.parametrize('opener, closer', [
+SUBPROC_MACRO_OC = [
     ('!(', ')'),
     ('$(', ')'),
     ('![', ']'),
     ('$[', ']'),
-    ])
-def test_simple_subprocbang(opener, closer):
+    ]
+
+@pytest.mark.parametrize('opener, closer', SUBPROC_MACRO_OC)
+def test_empty_subprocbang(opener, closer):
     assert check_xonsh_ast({}, opener + 'echo!' + closer, False)
     assert check_xonsh_ast({}, opener + 'echo !' + closer, False)
     assert check_xonsh_ast({}, opener + 'echo ! ' + closer, False)
+
+
+@pytest.mark.parametrize('opener, closer', SUBPROC_MACRO_OC)
+def test_single_subprocbang(opener, closer):
+    assert check_xonsh_ast({}, opener + 'echo!x' + closer, False)
+    assert check_xonsh_ast({}, opener + 'echo !x' + closer, False)
+    assert check_xonsh_ast({}, opener + 'echo! x' + closer, False)
+    assert check_xonsh_ast({}, opener + 'echo ! x' + closer, False)
 
