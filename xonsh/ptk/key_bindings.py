@@ -205,7 +205,6 @@ def load_xonsh_bindings(key_bindings_manager):
     @handle('"', filter=autopair_condition)
     def insert_right_double_quote(event):
         buffer = event.cli.current_buffer
-        buffer = event.cli.current_buffer
 
         if buffer.document.current_char == '"':
             buffer.cursor_position += 1
