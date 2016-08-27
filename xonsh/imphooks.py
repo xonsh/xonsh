@@ -14,9 +14,6 @@ from xonsh.execer import Execer
 from xonsh.platform import scandir
 
 
-class XonshModule(types.ModuleType):
-    pass
-
 class XonshImportHook(MetaPathFinder, SourceLoader):
     """Implements the import hook for xonsh source files."""
 
@@ -66,12 +63,10 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
     #
     def create_module(self, spec):
         """Create a xonsh module with the appropriate attributes."""
-        name = spec.name
-        parent = spec.parent
-        mod = XonshModule(name)
-        mod.__file__ = self.get_filename(name)
+        mod = types.ModuleType(spec.name)
+        mod.__file__ = self.get_filename(spec.name)
         mod.__loader__ = self
-        mod.__package__ = parent or ''
+        mod.__package__ = spec.parent or ''
         return mod
 
     def get_filename(self, fullname):
@@ -84,7 +79,7 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
 
     def get_code(self, fullname):
         """Gets the code object for a xonsh file."""
-        filename = self._filenames.get(fullname, None)
+        filename = self.get_filename(fullname)
         if filename is None:
             msg = "xonsh file {0!r} could not be found".format(fullname)
             raise ImportError(msg)
@@ -106,6 +101,8 @@ def install_hook():
     Can safely be called many times, will be no-op if a xonsh import hook is
     already present.
     """
-
-    if XonshImportHook not in {type(hook) for hook in sys.meta_path}:
+    for hook in sys.meta_path:
+        if isinstance(hook, XonshImportHook):
+            break
+    else:
         sys.meta_path.append(XonshImportHook())
