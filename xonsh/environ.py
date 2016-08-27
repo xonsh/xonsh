@@ -17,7 +17,7 @@ import itertools
 import contextlib
 import subprocess
 import collections
-import collections.abc as abc
+import collections.abc as cabc
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.jobs import get_next_task
@@ -666,7 +666,7 @@ def DEFAULT_DOCS():
 # actual environment
 #
 
-class Env(abc.MutableMapping):
+class Env(cabc.MutableMapping):
     """A xonsh environment, whose variables have limited typing
     (unlike BASH). Most variables are, by default, strings (like BASH).
     However, the following rules also apply based on variable-name:
@@ -707,7 +707,7 @@ class Env(abc.MutableMapping):
 
     @staticmethod
     def detypeable(val):
-        return not (callable(val) or isinstance(val, abc.MutableMapping))
+        return not (callable(val) or isinstance(val, cabc.MutableMapping))
 
     def detype(self):
         if self._detyped is not None:
@@ -823,8 +823,8 @@ class Env(abc.MutableMapping):
         else:
             e = "Unknown environment variable: ${}"
             raise KeyError(e.format(key))
-        if isinstance(val, (abc.MutableSet, abc.MutableSequence,
-                            abc.MutableMapping)):
+        if isinstance(val, (cabc.MutableSet, cabc.MutableSequence,
+                            cabc.MutableMapping)):
             self._detyped = None
         return val
 
@@ -1428,7 +1428,7 @@ def load_static_config(ctx, config=None):
         with open(config, 'r', encoding=encoding, errors=errors) as f:
             try:
                 conf = json.load(f)
-                assert isinstance(conf, abc.Mapping)
+                assert isinstance(conf, cabc.Mapping)
                 ctx['LOADED_CONFIG'] = True
             except Exception as e:
                 conf = {}

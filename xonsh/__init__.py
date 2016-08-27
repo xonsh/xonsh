@@ -45,6 +45,8 @@ else:
         _sys.modules['xonsh.diff_history'] = __amalgam__
         dirstack = __amalgam__
         _sys.modules['xonsh.dirstack'] = __amalgam__
+        events = __amalgam__
+        _sys.modules['xonsh.events'] = __amalgam__
         foreign_shells = __amalgam__
         _sys.modules['xonsh.foreign_shells'] = __amalgam__
         lexer = __amalgam__

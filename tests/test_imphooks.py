@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Testing xonsh import hooks"""
+import os
 import pytest
 
 from xonsh import imphooks
@@ -38,3 +39,18 @@ def test_relative_import():
 def test_sub_import():
     from xpack.sub import sample
     assert ('hello mom jawaka\n' == sample.x)
+
+
+TEST_DIR = os.path.dirname(__file__)
+
+
+def test_module_dunder_file_attribute():
+    import sample
+    exp = os.path.join(TEST_DIR, 'sample.xsh')
+    assert sample.__file__ == exp
+
+
+def test_module_dunder_file_attribute_sub():
+    from xpack.sub import sample
+    exp = os.path.join(TEST_DIR, 'xpack', 'sub', 'sample.xsh')
+    assert sample.__file__ == exp

@@ -6,7 +6,7 @@ import shlex
 import inspect
 import argparse
 import builtins
-import collections.abc as abc
+import collections.abc as cabc
 
 from xonsh.lazyasd import lazyobject
 from xonsh.dirstack import cd, pushd, popd, dirs, _get_cwd
@@ -27,7 +27,7 @@ from xonsh.xoreutils import _which
 import xonsh.completers._aliases as xca
 
 
-class Aliases(abc.MutableMapping):
+class Aliases(cabc.MutableMapping):
     """Represents a location to hold and look up aliases."""
 
     def __init__(self, *args, **kwargs):
@@ -45,7 +45,7 @@ class Aliases(abc.MutableMapping):
         val = self._raw.get(key)
         if val is None:
             return default
-        elif isinstance(val, abc.Iterable) or callable(val):
+        elif isinstance(val, cabc.Iterable) or callable(val):
             return self.eval_alias(val, seen_tokens={key})
         else:
             msg = 'alias of {!r} has an inappropriate type: {!r}'
@@ -94,7 +94,7 @@ class Aliases(abc.MutableMapping):
         """
         word = line.split(' ', 1)[0]
         if word in builtins.aliases and isinstance(self.get(word),
-                                                   abc.Sequence):
+                                                   cabc.Sequence):
             word_idx = line.find(word)
             expansion = ' '.join(self.get(word))
             line = line[:word_idx] + expansion + line[word_idx+len(word):]

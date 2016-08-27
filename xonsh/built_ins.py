@@ -17,7 +17,7 @@ import tempfile
 import builtins
 import subprocess
 import contextlib
-import collections.abc as abc
+import collections.abc as cabc
 
 from xonsh.ast import AST
 from xonsh.lazyasd import LazyObject, lazyobject
@@ -37,6 +37,7 @@ from xonsh.tools import (
     XonshCalledProcessError, XonshBlockError
 )
 from xonsh.commands_cache import CommandsCache
+from xonsh.events import events
 
 import xonsh.completers.init
 
@@ -663,7 +664,7 @@ def ensure_list_of_strs(x):
     """Ensures that x is a list of strings."""
     if isinstance(x, str):
         rtn = [x]
-    elif isinstance(x, abc.Sequence):
+    elif isinstance(x, cabc.Sequence):
         rtn = [i if isinstance(i, str) else str(i) for i in x]
     else:
         rtn = [str(x)]
@@ -674,7 +675,7 @@ def list_of_strs_or_callables(x):
     """Ensures that x is a list of strings or functions"""
     if isinstance(x, str) or callable(x):
         rtn = [x]
-    elif isinstance(x, abc.Sequence):
+    elif isinstance(x, cabc.Sequence):
         rtn = [i if isinstance(i, str) or callable(i) else str(i) for i in x]
     else:
         rtn = [str(x)]
@@ -877,6 +878,7 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.evalx = None if execer is None else execer.eval
     builtins.execx = None if execer is None else execer.exec
     builtins.compilex = None if execer is None else execer.compile
+    builtins.events = events
 
     # sneak the path search functions into the aliases
     # Need this inline/lazy import here since we use locate_binary that relies on __xonsh_env__ in default aliases
