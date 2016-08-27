@@ -9,11 +9,13 @@ from xonsh.completers.path import _quote_paths
 
 BASH_COMPLETE_SCRIPT = r"""
 {sources}
-if (complete -p "{cmd}" 2> /dev/null || echo _minimal) | grep --quiet -e "_minimal"
+if (complete -p {cmd} 2> /dev/null || echo _minimal) | grep --quiet -e "_minimal"
 then
-    declare -f _completion_loader > /dev/null && _completion_loader "{cmd}"
+    declare -f _completion_loader > /dev/null && _completion_loader {cmd}
 fi
-_func=$(complete -p {cmd} | grep -o -e '-F \w\+' | cut -d ' ' -f 2)
+_complete_stmt=$(complete -p {cmd})
+echo "$_complete_stmt"
+_func=$(echo "$_complete_stmt" | grep -o -e '-F \w\+' | cut -d ' ' -f 2)
 COMP_WORDS=({line})
 COMP_LINE={comp_line}
 COMP_POINT=${{#COMP_LINE}}
@@ -22,7 +24,6 @@ COMP_CWORD={n}
 $_func {cmd} {prefix} {prev}
 for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 """
-
 
 def complete_from_bash(prefix, line, begidx, endidx, ctx):
     """Completes based on results from BASH completion."""
@@ -51,7 +52,7 @@ def complete_from_bash(prefix, line, begidx, endidx, ctx):
 
     script = BASH_COMPLETE_SCRIPT.format(
         sources='\n'.join(sources), line=' '.join(shlex.quote(p) for p in splt),
-        comp_line=shlex.quote(line), n=n, cmd=cmd,
+        comp_line=shlex.quote(line), n=n, cmd=shlex.quote(cmd),
         end=endidx + 1, prefix=prefix, prev=shlex.quote(prev),
     )
 
@@ -60,10 +61,18 @@ def complete_from_bash(prefix, line, begidx, endidx, ctx):
             [xp.bash_command()], input=script, universal_newlines=True,
             stderr=subprocess.PIPE, env=builtins.__xonsh_env__.detype())
     except (subprocess.CalledProcessError, FileNotFoundError):
-        out = ''
+        return set()
 
-    rtn = _quote_paths(set(out.splitlines()), '', '')
-    return rtn
+    out = out.splitlines()
+    complete_stmt = out[0]
+    out = set(out[1:])
+
+    if '-o noquote' not in complete_stmt:
+        out = _quote_paths(out, '', '')
+    if '-o nospace' in complete_stmt:
+        out = set([x.rstrip() for x in out])
+
+    return out
 
 
 def _collect_completions_sources():
