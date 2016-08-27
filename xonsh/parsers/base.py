@@ -237,8 +237,8 @@ class BaseParser(object):
             'op_factor_list', 'trailer_list', 'testlist_comp',
             'yield_expr_or_testlist_comp', 'dictorsetmaker',
             'comma_subscript_list', 'test', 'sliceop', 'comp_iter',
-            'yield_arg', 'test_comma_list', 'comma_nocomma_list',
-            'macroarglist', 'any_raw_toks', 'comma_tok']
+            'yield_arg', 'test_comma_list',
+            'macroarglist', 'any_raw_toks']
         for rule in opt_rules:
             self._opt_rule(rule)
 
