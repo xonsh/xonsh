@@ -8,6 +8,7 @@ import time
 import uuid
 import argparse
 import builtins
+import collections
 import datetime
 import functools
 import itertools
@@ -262,7 +263,7 @@ def _all_xonsh_parser(**kwargs):
     """
     Returns all history as found in XONSH_DATA_DIR.
 
-    return format: (name, start_time, index)
+    return format: (cmd, start_time, index)
     """
     data_dir = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
     data_dir = expanduser_abs_path(data_dir)
@@ -285,14 +286,11 @@ def _all_xonsh_parser(**kwargs):
 def _curr_session_parser(hist=None, **kwargs):
     """
     Take in History object and return command list tuple with
-    format: (name, start_time, index)
+    format: (cmd, start_time, index)
     """
     if hist is None:
         hist = builtins.__xonsh_history__
-    start_times = (start for start, end in hist.tss)
-    names = (name.rstrip() for name in hist.inps)
-    for ind, (c, t) in enumerate(zip(names, start_times)):
-        yield (c, t, ind)
+    return hist._get()
 
 
 def _zsh_hist_parser(location=None, **kwargs):
@@ -488,6 +486,18 @@ def _hist_show(ns, *args, **kwargs):
 class History(object):
     """Xonsh session history.
 
+    History object supports indexing with some rules for extra functionality:
+
+        - index must be one of string, int or tuple of length two
+        - if the index is an int the appropriate command in order is returned
+        - if the index is a string the last command that contains
+          the string is returned
+        - if the index is a tuple:
+
+            - the first item follows the previous
+              two rules.
+            - the second item is the slice of the arguments to be returned
+
     Attributes
     ----------
     rtns : sequence of ints
@@ -605,16 +615,43 @@ class History(object):
         self.buffer.clear()
         return hf
 
-    def show(self, *args, **kwargs):
-        """Return shell history as a list
+    def _get(self):
+        """Get current session history.
 
-        Valid options:
-            `session` - returns xonsh history from current session
-            `xonsh`   - returns xonsh history from all sessions
-            `zsh`     - returns all zsh history
-            `bash`    - returns all bash history
+        Yields
+        ------
+        tuple
+            ``tuple`` of the form (cmd, start_time, index).
         """
-        return list(_hist_get(*args, **kwargs))
+        start_times = (start for start, end in self.tss)
+        names = (name.rstrip() for name in self.inps)
+        for ind, (c, t) in enumerate(zip(names, start_times)):
+            yield (c, t, ind)
+
+    def __getitem__(self, item):
+        # accept only one of str, int, tuple of length two
+        if isinstance(item, tuple):
+            pattern, part = item
+        else:
+            pattern, part = item, None
+        # find command
+        hist = [c for c, *_ in self._get()]
+        command = None
+        if isinstance(pattern, str):
+            for command in reversed(hist):
+                if pattern in command:
+                    break
+        elif isinstance(pattern, int):
+            # catch index error?
+            command = hist[pattern]
+        else:
+            raise TypeError('history index must be of type '
+                            'str, int, tuple of length two')
+        # get command part
+        if command and part:
+            part = ensure_slice(part)
+            command = ' '.join(command.split()[part])
+        return command
 
 
 def _hist_info(ns, hist):

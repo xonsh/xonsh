@@ -68,24 +68,24 @@ def test_cmd_field(hist, xonsh_builtins):
     assert None == hist.outs[-1]
 
 
-cmds = ['ls', 'cat hello kitty', 'abc', 'def', 'touch me', 'grep from me']
+CMDS = ['ls', 'cat hello kitty', 'abc', 'def', 'touch me', 'grep from me']
 
 @pytest.mark.parametrize('inp, commands, offset', [
-    ('', cmds, (0, 1)),
-    ('-r', list(reversed(cmds)), (len(cmds)- 1, -1)),
-    ('0', cmds[0:1], (0, 1)),
-    ('1', cmds[1:2], (1, 1)),
-    ('-2', cmds[-2:-1], (len(cmds) -2 , 1)),
-    ('1:3', cmds[1:3], (1, 1)),
-    ('1::2', cmds[1::2], (1, 2)),
-    ('-4:-2', cmds[-4:-2], (len(cmds) - 4, 1))
+    ('', CMDS, (0, 1)),
+    ('-r', list(reversed(CMDS)), (len(CMDS)- 1, -1)),
+    ('0', CMDS[0:1], (0, 1)),
+    ('1', CMDS[1:2], (1, 1)),
+    ('-2', CMDS[-2:-1], (len(CMDS) -2 , 1)),
+    ('1:3', CMDS[1:3], (1, 1)),
+    ('1::2', CMDS[1::2], (1, 2)),
+    ('-4:-2', CMDS[-4:-2], (len(CMDS) - 4, 1))
     ])
 def test_show_cmd_numerate(inp, commands, offset, hist, xonsh_builtins, capsys):
     """Verify that CLI history commands work."""
     base_idx, step = offset
     xonsh_builtins.__xonsh_history__ = hist
     xonsh_builtins.__xonsh_env__['HISTCONTROL'] = set()
-    for ts,cmd in enumerate(cmds):  # populate the shell history
+    for ts,cmd in enumerate(CMDS):  # populate the shell history
         hist.append({'inp': cmd, 'rtn': 0, 'ts':(ts+1, ts+1.5)})
 
     exp = ('{}: {}'.format(base_idx + idx * step, cmd)
@@ -185,3 +185,19 @@ def test_parser_show(args, exp):
               'timestamp': False}
     ns = _hist_parse_args(shlex.split(args))
     assert ns.__dict__ == exp_ns
+
+
+# CMDS = ['ls', 'cat hello kitty', 'abc', 'def', 'touch me', 'grep from me']
+
+def test_history_getitem(hist, xonsh_builtins):
+    xonsh_builtins.__xonsh_env__['HISTCONTROL'] = set()
+    for ts,cmd in enumerate(CMDS):  # populate the shell history
+        hist.append({'inp': cmd, 'rtn': 0, 'ts':(ts+1, ts+1.5)})
+
+    # indexing
+    assert hist[-1] == 'grep from me'
+    assert hist['hello'] == 'cat hello kitty'
+
+    # word parts
+    assert hist[-1, -1] == 'me'
+    assert hist['hello', 1] == 'hello'
