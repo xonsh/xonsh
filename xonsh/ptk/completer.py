@@ -40,12 +40,17 @@ class PromptToolkitCompleter(Completer):
                     pass
                 elif len(os.path.commonprefix(completions)) <= len(prefix):
                     self.reserve_space()
-                prefix, _, compprefix = prefix.rpartition('.')
-                for comp in completions:
-                    if comp.rsplit('.', 1)[0] in prefix:
-                        comp = comp.rsplit('.', 1)[-1]
-                    l = len(compprefix) if compprefix in comp else 0
-                    yield Completion(comp, -l)
+                # don't mess with envvar and path expansion comps
+                if any(x in prefix for x in ['$', '/']):
+                    for comp in completions:
+                        yield Completion(comp, -l)
+                else:  # don't show common prefixes in attr completions
+                    prefix, _, compprefix = prefix.rpartition('.')
+                    for comp in completions:
+                        if comp.rsplit('.', 1)[0] in prefix:
+                            comp = comp.rsplit('.', 1)[-1]
+                        l = len(compprefix) if compprefix in comp else 0
+                        yield Completion(comp, -l)
 
     def reserve_space(self):
         cli = builtins.__xonsh_shell__.shell.prompter.cli
