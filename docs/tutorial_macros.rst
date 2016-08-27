@@ -187,6 +187,27 @@ argument:
     x = "['x', 'y']"
     y = '{1: 1, 2: 3}'
 
+Sometimes you may only want to pass in the first few arguments as macro
+arguments and you want the rest to be treated as normal Python arguments.
+By convention, xonsh's macro caller will look for a lone ``*`` argument
+in order to split the macro arguments and the regular arguments. So for
+example:
+
+.. code-block:: xonshcon
+
+    >>> g!(42, *, 65)
+    x = '42'
+    y = 65
+
+    >>> g!(42, *, y=65)
+    x = '42'
+    y = 65
+
+In the above, note that ``x`` is still captured as a macro argument. However,
+everything after the ``*``, namely ``y``, is evaluated is if it were passed
+in to a normal function call.  This can be useful for large interfaces where
+only a handful of args are expected as macro arguments.
+
 Hopefully, now you see the big picture.
 
 Writing Function Macros

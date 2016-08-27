@@ -255,3 +255,11 @@ def test_call_macro_raw_kwarg(arg):
         return x
     rtn = call_macro(f, ['*', 'x=' + arg], {'x': 42, 'y': 0}, None)
     assert rtn == 42
+
+
+@pytest.mark.parametrize('arg', ['x', '42', 'x + y'])
+def test_call_macro_raw_kwargs(arg):
+    def f(x : str):
+        return x
+    rtn = call_macro(f, ['*', '**{"x" :' + arg + '}'], {'x': 42, 'y': 0}, None)
+    assert rtn == 42

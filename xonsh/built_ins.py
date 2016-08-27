@@ -844,7 +844,7 @@ def call_macro(f, raw_args, glbs, locs):
 
 @lazyobject
 def KWARG_RE():
-    return re.compile('[A-Za-z_]\w*=')
+    return re.compile('([A-Za-z_]\w*=|\*\*)')
 
 
 def _starts_as_arg(s):
