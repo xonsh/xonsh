@@ -1848,7 +1848,6 @@ class BaseParser(object):
                  'LBRACKET', 'RBRACKET', 'AT_LPAREN', 'BANG_LPAREN',
                  'BANG_LBRACKET', 'DOLLAR_LPAREN', 'DOLLAR_LBRACE',
                  'DOLLAR_LBRACKET', 'ATDOLLAR_LPAREN'}
-        #toks.add('ERRORTOKEN')
         ts = '\n       | '.join(sorted(toks))
         doc = 'nocloser : ' + ts + '\n'
         self.p_nocloser_base.__func__.__doc__ = doc

@@ -149,7 +149,6 @@ def handle_error_token(state, token):
         typ = 'BANG'
     elif not state['pymode'][-1][0]:
         typ = 'NAME'
-        #typ = 'BANG' if token.string == '!' else 'NAME'
     else:
         typ = 'ERRORTOKEN'
     yield _new_token(typ, token.string, token.start)
