@@ -43,6 +43,8 @@ class PromptToolkitCompleter(Completer):
                 c_prefix = _commonprefix([a.strip('\'/').rsplit('/', 1)[0]
                                           for a in completions])
                 for comp in completions:
+                    if comp.endswith('/') and not c_prefix.startswith('/'):
+                        c_prefix = ''
                     display = comp[len(c_prefix):].lstrip('/')
                     yield Completion(comp, -l, display=display)
 
