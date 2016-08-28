@@ -73,11 +73,11 @@ with the following:
     f!(x, x + 42)
     g!([y, 43, 44], f!(z))
 
-Not so bad, right?  So what actually happens when to the arguments when used
+Not so bad, right?  So what actually happens to the arguments when used
 in a macro call?  Well, that depends on the definition of the function. In
 particular, each argument in the macro call is matched up with the corresponding
 parameter annotation in the callable's signature.  For example, say we have
-an ``identity()`` function that is annotates its sole argument as a string:
+an ``identity()`` function that annotates its sole argument as a string:
 
 .. code-block:: xonsh
 
@@ -98,7 +98,7 @@ even if that object is not a string:
     >>> identity(identity)
     <function __main__.identity>
 
-However, if we perform macro calls instead we are now guaranteed to get a
+However, if we perform macro calls instead we are now guaranteed to get
 the string of the source code that is in the macro call:
 
 .. code-block:: xonshcon
@@ -262,7 +262,7 @@ There are six kinds of annotations that macros are able to interpret:
      - The type of the argument after it has been evaluated.
 
 These annotations allow you to hook into whichever stage of the compilation
-that you desire. It is important note that the string form of the arguments
+that you desire. It is important to note that the string form of the arguments
 is split and stripped (as described above) prior to conversion to the
 annotation type.
 
