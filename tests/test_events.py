@@ -111,5 +111,7 @@ def test_transmogrify_by_string(events):
     assert inspect.getdoc(events.on_test) == docstring
 
 def test_typos(xonsh_builtins):
-    for ev in vars(xonsh_builtins.events).values():
+    for name, ev in vars(xonsh_builtins.events).items():
+        if 'pytest' in name:
+            continue
         assert inspect.getdoc(ev)
