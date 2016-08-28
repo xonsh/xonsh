@@ -100,6 +100,7 @@ Contents
     tutorial
     tutorial_hist
     tutorial_xontrib
+    tutorial_events
     tutorial_completers
     bash_to_xsh
     python_virtual_environments
@@ -115,6 +116,7 @@ Contents
     envvars
     aliases
     xontribs
+    events
 
 **News & Media:**
 
@@ -133,6 +135,7 @@ Contents
     :maxdepth: 1
 
     api/index
+    advanced_events
     devguide/
     previous/index
     faq
