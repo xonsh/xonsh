@@ -649,31 +649,49 @@ class History(object):
 
     def __getitem__(self, item):
         """Retrieve history parts based on filtering rules,
-        look at ``History`` docs for more info."""
-        # accept only one of str, int, tuple of length two
+        see ``History`` docs for more info. Accepts one of
+        int, string, slice or tuple of length two.
+        """
         if isinstance(item, tuple):
-            pattern, part = item
+            cmd_pat, arg_pat = item
         else:
-            pattern, part = item, None
-        # find command
-        hist = [c for c, *_ in self]
-        command = None
-        if isinstance(pattern, str):
-            for command in reversed(hist):
-                if pattern in command:
-                    break
-        elif isinstance(pattern, int):
-            # catch index error?
-            command = hist[pattern]
+            cmd_pat, arg_pat = item, None
+        cmds = (c for c, *_ in self)
+        cmds = self._cmd_filter(cmds, cmd_pat)
+        if arg_pat is not None:
+            cmds = self._args_filter(cmds, arg_pat)
+        cmds = list(cmds)
+        if len(cmds) == 1:
+            return cmds[0]
         else:
-            raise TypeError('history index must be of type '
-                            'str, int, tuple of length two')
-        # get command part
-        if command and part:
-            s = ensure_slice(part)
-            print('SLICE:', s)
-            command = ' '.join(command.split()[s])
-        return command
+            return cmds
+
+    def _cmd_filter(self, cmds, pat):
+        if isinstance(pat, (int, slice)):
+            s = [ensure_slice(pat)]
+            yield from _hist_get_portion(cmds, s)
+        elif isinstance(pat, str):
+            for command in reversed(list(cmds)):
+                if pat in command:
+                   yield command
+        else:
+            raise TypeError('Command filter must be '
+                            'string, int or slice')
+
+    def _args_filter(self, cmds, pat):
+        args = None
+        if isinstance(pat, (int, slice)):
+            s = ensure_slice(pat)
+            for command in cmds:
+                yield ' '.join(command.split()[s])
+        else:
+            raise TypeError('Argument filter must be of '
+                            'int or slice')
+        return args
+
+
+
+
 
     def __setitem__(self, *args):
         raise PermissionError('You cannot change history! '

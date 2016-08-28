@@ -816,7 +816,7 @@ def test_bool_or_int_to_str(inp, exp):
 
 @pytest.mark.parametrize('inp, exp', [
         (42, slice(42, 43)),
-        (0, slice(0,1)),
+        (0, slice(0, 1)),
         (None, slice(None, None, None)),
         (slice(1,2), slice(1,2)),
         ('-1', slice(-1, None, None)),
