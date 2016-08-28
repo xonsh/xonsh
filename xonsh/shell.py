@@ -21,7 +21,7 @@ class Shell(object):
     """
 
     def __init__(self, ctx=None, shell_type=None, config=None, rc=None,
-                 **kwargs):
+                 parser_class=None, parser_args=None, **kwargs):
         """
         Parameters
         ----------
@@ -37,12 +37,17 @@ class Shell(object):
             Path to configuration file.
         rc : list of str, optional
             Sequence of paths to run control files.
+        parser_class : BaseParser, optional
+            Parser to use, default is xonsh.parser.Parser
+        parser_args : dict, optional
+            Arguments to pass down to the parser.
         """
         self.login = kwargs.get('login', True)
         self.stype = shell_type
         self._init_environ(ctx, config, rc,
                            kwargs.get('scriptcache', True),
-                           kwargs.get('cacheall', False))
+                           kwargs.get('cacheall', False),
+                           parser_class, parser_args)
         env = builtins.__xonsh_env__
         # pick a valid shell -- if no shell is specified by the user,
         # shell type is pulled from env
@@ -86,11 +91,13 @@ class Shell(object):
         """Delegates calls to appropriate shell instance."""
         return getattr(self.shell, attr)
 
-    def _init_environ(self, ctx, config, rc, scriptcache, cacheall):
+    def _init_environ(self, ctx, config, rc, scriptcache, cacheall,
+                      parser_class=None, parser_args=None):
         self.ctx = {} if ctx is None else ctx
         debug = to_bool_or_int(os.getenv('XONSH_DEBUG', '0'))
         self.execer = Execer(config=config, login=self.login, xonsh_ctx=self.ctx,
-                             debug_level=debug)
+                             debug_level=debug, parser_class=parser_class,
+                             parser_args=parser_args)
         self.execer.scriptcache = scriptcache
         self.execer.cacheall = cacheall
         if self.stype != 'none' or self.login:

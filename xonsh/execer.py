@@ -16,14 +16,16 @@ from xonsh.built_ins import load_builtins, unload_builtins
 class Execer(object):
     """Executes xonsh code in a context."""
 
-    def __init__(self, filename='<xonsh-code>', debug_level=0, parser_args=None,
-                 unload=True, config=None, login=True, xonsh_ctx=None):
+    def __init__(self, filename='<xonsh-code>', debug_level=0, parser_class=None,
+                 parser_args=None, unload=True, config=None, login=True, xonsh_ctx=None):
         """Parameters
         ----------
         filename : str, optional
             File we are to execute.
         debug_level : int, optional
             Debugging level to use in lexing and parsing.
+        parser_class : BaseClass, optional
+            Parser to use, default is xonsh.parser.Parser
         parser_args : dict, optional
             Arguments to pass down to the parser.
         unload : bool, optional
@@ -33,11 +35,13 @@ class Execer(object):
         xonsh_ctx : dict or None, optional
             Xonsh xontext to load as builtins.__xonsh_ctx__
         """
-        parser_args = parser_args or {}
-        self.parser = Parser(**parser_args)
         self.filename = filename
         self.debug_level = debug_level
         self.unload = unload
+
+        parser_args = parser_args or {}
+        parser_class = parser_class or Parser
+        self.parser = parser_class(**parser_args)
         self.ctxtransformer = CtxAwareTransformer(self.parser)
         load_builtins(execer=self, config=config, login=login, ctx=xonsh_ctx)
 
