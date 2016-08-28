@@ -174,7 +174,7 @@ class Execer(object):
                 if (e.loc is None) or (last_error_line == e.loc.lineno and
                                        last_error_col in (e.loc.column + 1,
                                                           e.loc.column)):
-                    raise original_error
+                    raise original_error from None
                 last_error_col = e.loc.column
                 last_error_line = e.loc.lineno
                 idx = last_error_line - 1

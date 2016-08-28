@@ -1864,3 +1864,155 @@ def test_macro_call_one_trailing_space(s):
     args = tree.body.args[1].elts
     assert len(args) == 1
     assert args[0].s == s.strip()
+
+
+# test invalid expressions
+
+def test_syntax_error_del_literal():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('del 7')
+
+def test_syntax_error_del_constant():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('del True')
+
+def test_syntax_error_del_emptytuple():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('del ()')
+
+def test_syntax_error_del_call():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('del foo()')
+
+def test_syntax_error_del_lambda():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('del lambda x: "yay"')
+
+def test_syntax_error_del_ifexp():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('del x if y else z')
+
+
+@pytest.mark.parametrize('exp', ['[i for i in foo]',
+                                 '{i for i in foo}',
+                                 '(i for i in foo)',
+                                 '{k:v for k,v in d.items()}'])
+def test_syntax_error_del_comps(exp):
+    with pytest.raises(SyntaxError):
+        PARSER.parse('del {}'.format(exp))
+
+
+@pytest.mark.parametrize('exp', ['x + y',
+                                 'x and y',
+                                 '-x'])
+def test_syntax_error_del_ops(exp):
+    with pytest.raises(SyntaxError):
+        PARSER.parse('del {}'.format(exp))
+
+
+@pytest.mark.parametrize('exp', ['x > y',
+                                 'x > y == z'])
+def test_syntax_error_del_cmp(exp):
+    with pytest.raises(SyntaxError):
+        PARSER.parse('del {}'.format(exp))
+
+def test_syntax_error_lonely_del():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('del')
+
+def test_syntax_error_assign_literal():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('7 = x')
+
+def test_syntax_error_assign_constant():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('True = 8')
+
+def test_syntax_error_assign_emptytuple():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('() = x')
+
+def test_syntax_error_assign_call():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('foo() = x')
+
+def test_syntax_error_assign_lambda():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('lambda x: "yay" = y')
+
+def test_syntax_error_assign_ifexp():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('x if y else z = 8')
+
+
+@pytest.mark.parametrize('exp', ['[i for i in foo]',
+                                 '{i for i in foo}',
+                                 '(i for i in foo)',
+                                 '{k:v for k,v in d.items()}'])
+def test_syntax_error_assign_comps(exp):
+    with pytest.raises(SyntaxError):
+        PARSER.parse('{} = z'.format(exp))
+
+
+@pytest.mark.parametrize('exp', ['x + y',
+                                 'x and y',
+                                 '-x'])
+def test_syntax_error_assign_ops(exp):
+    with pytest.raises(SyntaxError):
+        PARSER.parse('{} = z'.format(exp))
+
+
+@pytest.mark.parametrize('exp', ['x > y',
+                                 'x > y == z'])
+def test_syntax_error_assign_cmp(exp):
+    with pytest.raises(SyntaxError):
+        PARSER.parse('{} = a'.format(exp))
+
+
+def test_syntax_error_augassign_literal():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('7 += x')
+
+def test_syntax_error_augassign_constant():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('True += 8')
+
+def test_syntax_error_augassign_emptytuple():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('() += x')
+
+def test_syntax_error_augassign_call():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('foo() += x')
+
+def test_syntax_error_augassign_lambda():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('lambda x: "yay" += y')
+
+def test_syntax_error_augassign_ifexp():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('x if y else z += 8')
+
+
+@pytest.mark.parametrize('exp', ['[i for i in foo]',
+                                 '{i for i in foo}',
+                                 '(i for i in foo)',
+                                 '{k:v for k,v in d.items()}'])
+def test_syntax_error_augassign_comps(exp):
+    with pytest.raises(SyntaxError):
+        PARSER.parse('{} += z'.format(exp))
+
+
+@pytest.mark.parametrize('exp', ['x + y',
+                                 'x and y',
+                                 '-x'])
+def test_syntax_error_augassign_ops(exp):
+    with pytest.raises(SyntaxError):
+        PARSER.parse('{} += z'.format(exp))
+
+
+@pytest.mark.parametrize('exp', ['x > y',
+                                 'x > y +=+= z'])
+def test_syntax_error_augassign_cmp(exp):
+    with pytest.raises(SyntaxError):
+        PARSER.parse('{} += a'.format(exp))
