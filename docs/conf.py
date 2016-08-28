@@ -357,7 +357,7 @@ def make_events():
     s += ('Listing\n'
           '-------\n\n')
     sec = ('.. _{low}:\n\n'
-           '{title}\n'
+           '``{title}``\n'
            '{under}\n'
            '{docstr}\n\n'
            '-------\n\n')
@@ -369,7 +369,7 @@ def make_events():
           # Assume the first line is a signature
           title, docstr = docstr.split('\n', 1)
           docstr = docstr.strip()
-        under = '.' * len(title)
+        under = '.' * (len(title) + 4)
         s += sec.format(low=var.lower(), title=title, under=under,
                         docstr=docstr)
     s = s[:-9]
