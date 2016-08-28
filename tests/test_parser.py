@@ -4,11 +4,12 @@ import os
 import sys
 import ast
 import builtins
+import textwrap
 import itertools
 
 import pytest
 
-from xonsh.ast import pdump, AST
+from xonsh.ast import pdump, AST, With, Pass
 from xonsh.parser import Parser
 
 from tools import VER_FULL, skip_if_py34, nodes_equal
@@ -1925,13 +1926,30 @@ def test_arg_single_subprocbang(opener, closer, body):
     'timeit!"!)"',
     ])
 def test_many_subprocbang(opener, closer, body):
-    tree = check_xonsh_ast({}, opener + body + closer, False, return_obs=True,
-                           debug_level=100,
-                           )
+    tree = check_xonsh_ast({}, opener + body + closer, False, return_obs=True)
     assert isinstance(tree, AST)
     cmd = tree.body.args[0].elts
     assert len(cmd) == 2
     assert cmd[1].s == body.partition('!')[-1].strip()
+
+
+@pytest.mark.parametrize('body', [
+    'pass\n',
+    ])
+def test_withbang_single_suite(body):
+    code = 'with! x:\n{}'.format(textwrap.indent(body, '    '))
+    tree = check_xonsh_ast({}, code, False, return_obs=True, mode='exec',
+            #               debug_level=100,
+                           )
+    assert isinstance(tree, AST)
+    wither = tree.body[0]
+    assert isinstance(wither, With)
+    assert len(wither.body) == 1
+    assert isinstance(wither.body[0], Pass)
+    assert len(wither.items) == 1
+    item = wither.items[0]
+    s = item.context_expr.args[1].s
+    assert s == body
 
 # test invalid expressions
 

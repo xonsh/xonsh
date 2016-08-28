@@ -431,7 +431,8 @@ class BaseParser(object):
         eline, ecol = stop
         bline -= 1
         lines = self.lines[bline:eline]
-        lines[-1] = lines[-1][:ecol]
+        if ecol > 0:
+            lines[-1] = lines[-1][:ecol]
         lines[0] = lines[0][bcol:]
         return ''.join(lines)
 
@@ -1319,6 +1320,20 @@ class BaseParser(object):
         p[0] = [ast.With(items=[p[2]] + p[3], body=p[5],
                          lineno=p1.lineno, col_offset=p1.lexpos)]
 
+    def p_with_bang_stmt_single_suite(self, p):
+        """with_stmt : with_tok BANG with_item COLON rawsuite"""
+        p1, p3, p5 = p[1], p[3], p[5]
+        expr = p3.context_expr
+        l, c = expr.lineno, expr.col_offset
+        gblcall = xonsh_call('globals', [], lineno=l, col=c)
+        loccall = xonsh_call('locals', [], lineno=l, col=c)
+        margs = [expr, p5, gblcall, loccall]
+        p3.context_expr = xonsh_call('__xonsh_enter_macro__', margs,
+                                     lineno=l, col=c)
+        body = [ast.Pass(lineno=p5.lineno, col_offset=p5.col_offset)]
+        p[0] = [ast.With(items=[p3], body=body,
+                         lineno=p1.lineno, col_offset=p1.lexpos)]
+
     def p_as_expr(self, p):
         """as_expr : AS expr"""
         p2 = p[2]
@@ -1388,7 +1403,7 @@ class BaseParser(object):
         """
         pass
 
-    def p_any_dedent_tok(self, p):
+    def p_any_dedent_toks(self, p):
         """any_dedent_toks : any_dedent_tok
                            | any_dedent_toks any_dedent_tok
         """
