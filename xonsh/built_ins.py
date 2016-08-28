@@ -842,32 +842,6 @@ def call_macro(f, raw_args, glbs, locs):
     return rtn
 
 
-def enter_macro(obj, raw_block, glbs, locs):
-    """Prepares to enter a context manager macro by attaching the contents
-    of the macro block, globals, and locals to the object. These modifications
-    are made in-place and the original object is returned.
-
-
-    Parameters
-    ----------
-    obj : context manager
-        The object that is about to be entered via a with-statement.
-    raw_block : str
-        The str of the block that is the context body.
-        This string will be parsed, compiled, evaled, or left as
-        a string dependending on the return annotation of obj.__enter__.
-    glbs : Mapping
-        The globals from the context site.
-    locs : Mapping or None
-        The locals from the context site.
-
-    Returns
-    -------
-    obj : context manager
-        The same context manager but with the new macro information applied.
-    """
-    return obj
-
 @lazyobject
 def KWARG_RE():
     return re.compile('([A-Za-z_]\w*=|\*\*)')
@@ -898,6 +872,50 @@ def _eval_regular_args(raw_args, glbs, locs):
         both = '({}, {})'.format(argstr, kwargstr)
         args, kwargs = execer.eval(both, glbs=glbs, locs=locs)
     return args, kwargs
+
+
+def enter_macro(obj, raw_block, glbs, locs):
+    """Prepares to enter a context manager macro by attaching the contents
+    of the macro block, globals, and locals to the object. These modifications
+    are made in-place and the original object is returned.
+
+
+    Parameters
+    ----------
+    obj : context manager
+        The object that is about to be entered via a with-statement.
+    raw_block : str
+        The str of the block that is the context body.
+        This string will be parsed, compiled, evaled, or left as
+        a string dependending on the return annotation of obj.__enter__.
+    glbs : Mapping
+        The globals from the context site.
+    locs : Mapping or None
+        The locals from the context site.
+
+    Returns
+    -------
+    obj : context manager
+        The same context manager but with the new macro information applied.
+    """
+    # find kind from return annotation, default to str
+    enter = getattr(obj, '__enter__', None)
+    if callable(enter):
+        sig = inspect.signature(enter)
+        kind = sig.return_annotation
+        if kind is inspect.Parameter.empty or kind is None:
+            kind = str
+    else:
+        kind = str
+    # convert block as needed
+    macroname = getattr(obj, '__name__', '<context>')
+    block = convert_macro_arg(raw_block, kind, glbs, locs, name='<with!>',
+                              macroname=macroname)
+    # attach attrs
+    obj.macro_globals = glbs
+    obj.macro_locals = locs
+    obj.macro_block = block
+    return obj
 
 
 def load_builtins(execer=None, config=None, login=False, ctx=None):
