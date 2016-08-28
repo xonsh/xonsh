@@ -10,12 +10,14 @@
 import os
 import sys
 import builtins
+import inspect
 
 os.environ['XONSH_DEBUG'] = '1'
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.environ import DEFAULT_DOCS, Env
 from xonsh.xontribs import xontrib_metadata
+from xonsh.events import events
 
 sys.path.insert(0, os.path.dirname(__file__))
 
@@ -340,8 +342,45 @@ def make_xontribs():
         f.write(s)
 
 
+def make_events():
+    names = sorted(vars(events).keys())
+    s = ('.. list-table::\n'
+         '    :header-rows: 0\n\n')
+    table = []
+    ncol = 3
+    row = '    {0} - :ref:`{1} <{2}>`'
+    for i, var in enumerate(names):
+        star = '*' if i%ncol == 0 else ' '
+        table.append(row.format(star, var, var.lower()))
+    table.extend(['      -']*((ncol - len(names)%ncol)%ncol))
+    s += '\n'.join(table) + '\n\n'
+    s += ('Listing\n'
+          '-------\n\n')
+    sec = ('.. _{low}:\n\n'
+           '{title}\n'
+           '{under}\n'
+           '{docstr}\n\n'
+           '-------\n\n')
+    for name in names:
+        event = getattr(events, name)
+        title = name
+        docstr = inspect.getdoc(event)
+        if docstr.startswith(name):
+          # Assume the first line is a signature
+          title, docstr = docstr.split('\n', 1)
+          docstr = docstr.strip()
+        under = '.' * len(title)
+        s += sec.format(low=var.lower(), title=title, under=under,
+                        docstr=docstr)
+    s = s[:-9]
+    fname = os.path.join(os.path.dirname(__file__), 'eventsbody')
+    with open(fname, 'w') as f:
+        f.write(s)
+
+
 make_envvars()
 make_xontribs()
+make_events()
 
 builtins.__xonsh_history__ = None
 builtins.__xonsh_env__ = {}
