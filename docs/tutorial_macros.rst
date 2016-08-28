@@ -409,6 +409,24 @@ but will be easily executable as a macro:
     >>> timeit! "hello mom " + "and dad"
     100000000 loops, best of 3: 8.24 ns per loop
 
+All expressions to the left of the exclamation point are passed in normally and
+are not treated as the special macro argument. This allows the mixing of
+simple and complex command line arguments. For example, sometimes you might
+really want to write some code in another language:
+
+.. code-block:: xonshcon
+
+    # don't worry, it is temporary!
+    >>> bash -c ! export var=42; echo $var
+    42
+
+    # that's better!
+    >>> python -c ! import os; print(os.path.abspath("/"))
+    /
+
+Compared to function macros, subprocess macros are relatively simple.
+However, they can still be very expressive!
+
 Take Away
 =========
 Hopefully, at this point, you see that a few well placed macros can be extremely
