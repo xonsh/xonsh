@@ -1,4 +1,13 @@
-"""API for Vox, the Python virtual environment manager for xonsh."""
+"""
+API for Vox, the Python virtual environment manager for xonsh.
+
+Vox defines several events related to the life cycle of virtual environments:
+
+* ``vox_on_create(env: str) -> None``
+* ``vox_on_activate(env: str) -> None``
+* ``vox_on_deactivate(env: str) -> None``
+* ``vox_on_delete(env: str) -> None``
+"""
 import os
 import venv
 import shutil
@@ -41,11 +50,11 @@ VirtualEnvironment = collections.namedtuple('VirtualEnvironment', ['env', 'bin']
 
 
 class EnvironmentInUse(Exception):
-    pass
+    """The given environment is currently activated, and the operation cannot be performed."""
 
 
 class NoEnvironmentActive(Exception):
-    pass
+    """No environment is currently activated, and the operation cannot be performed."""
 
 
 class Vox(collections.abc.Mapping):
