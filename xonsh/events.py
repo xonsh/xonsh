@@ -1,11 +1,11 @@
 """
 Events for xonsh.
 
-In all likelihood, you want builtins.__xonsh_events__
+In all likelihood, you want builtins.events
 
 The best way to "declare" an event is something like::
 
-    __xonsh_events__.on_spam.doc("Comes with eggs")
+    events.doc('on_spam', "Comes with eggs")
 """
 import abc
 import collections.abc
