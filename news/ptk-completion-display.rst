@@ -2,7 +2,7 @@
 
 **Changed:** 
 
-* `prompt_toolkit` completions now only show the rightmost portion
+* ``prompt_toolkit`` completions now only show the rightmost portion
   of a given completion in the dropdown
 
 **Deprecated:** None
