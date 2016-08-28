@@ -290,7 +290,7 @@ def _curr_session_parser(hist=None, **kwargs):
     """
     if hist is None:
         hist = builtins.__xonsh_history__
-    return hist._get()
+    return iter(hist)
 
 
 def _zsh_hist_parser(location=None, **kwargs):
@@ -486,17 +486,36 @@ def _hist_show(ns, *args, **kwargs):
 class History(object):
     """Xonsh session history.
 
-    History object supports indexing with some rules for extra functionality:
+    Indexing
+    --------
+    History object acts like a sequence that can be indexed in a special way
+    that adds extra functionality. At the moment only history from the
+    current session can be retrieved. Note that the most recent command
+    is the last item in history.
 
-        - index must be one of string, int or tuple of length two
-        - if the index is an int the appropriate command in order is returned
-        - if the index is a string the last command that contains
-          the string is returned
-        - if the index is a tuple:
+    The index acts as a filter with two parts, command and argument,
+    separated by comma.  Based on the type of each part different 
+    filtering can be achieved,
 
-            - the first item follows the previous
-              two rules.
-            - the second item is the slice of the arguments to be returned
+        for the command part:
+
+            - an int returns the command in that position.
+            - a slice returns a list of commands.
+            - a string returns the most recent command containing the string.
+
+        for the argument part:
+
+            - an int returns the argument of the command in that position.
+            - a slice returns a part of the command based on the argument
+              position.
+
+    The argument part of the filter can be omitted but the command part is
+    required.
+
+    Command arguments are separated by white space.
+
+    If the command filter produces a list then the argument filter
+    will be applied to each element of that list.
 
     Attributes
     ----------
@@ -615,7 +634,7 @@ class History(object):
         self.buffer.clear()
         return hf
 
-    def _get(self):
+    def __iter__(self):
         """Get current session history.
 
         Yields
@@ -629,13 +648,15 @@ class History(object):
             yield (c, t, ind)
 
     def __getitem__(self, item):
+        """Retrieve history parts based on filtering rules,
+        look at ``History`` docs for more info."""
         # accept only one of str, int, tuple of length two
         if isinstance(item, tuple):
             pattern, part = item
         else:
             pattern, part = item, None
         # find command
-        hist = [c for c, *_ in self._get()]
+        hist = [c for c, *_ in self]
         command = None
         if isinstance(pattern, str):
             for command in reversed(hist):
@@ -649,9 +670,15 @@ class History(object):
                             'str, int, tuple of length two')
         # get command part
         if command and part:
-            part = ensure_slice(part)
-            command = ' '.join(command.split()[part])
+            s = ensure_slice(part)
+            print('SLICE:', s)
+            command = ' '.join(command.split()[s])
         return command
+
+    def __setitem__(self, *args):
+        raise PermissionError('You cannot change history! '
+                              'you can create new though.')
+
 
 
 def _hist_info(ns, hist):

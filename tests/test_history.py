@@ -189,15 +189,18 @@ def test_parser_show(args, exp):
 
 # CMDS = ['ls', 'cat hello kitty', 'abc', 'def', 'touch me', 'grep from me']
 
-def test_history_getitem(hist, xonsh_builtins):
+
+@pytest.mark.parametrize('index, exp',[
+    (-1, 'grep from me'),
+    ('hello', 'cat hello kitty'),
+    ((-1, -1), 'me'),
+    (('hello', 0), 'cat'),
+    ((-1, 0:2), 'grep from'),
+    (('kitty', 1:), 'hello kitty')
+])
+def test_history_getitem(index, exp, hist, xonsh_builtins):
     xonsh_builtins.__xonsh_env__['HISTCONTROL'] = set()
     for ts,cmd in enumerate(CMDS):  # populate the shell history
         hist.append({'inp': cmd, 'rtn': 0, 'ts':(ts+1, ts+1.5)})
 
-    # indexing
-    assert hist[-1] == 'grep from me'
-    assert hist['hello'] == 'cat hello kitty'
-
-    # word parts
-    assert hist[-1, -1] == 'me'
-    assert hist['hello', 1] == 'hello'
+    assert hist[index] == exp
