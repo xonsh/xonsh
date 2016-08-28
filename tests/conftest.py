@@ -5,6 +5,7 @@ import xonsh.built_ins
 from xonsh.built_ins import ensure_list_of_strs
 from xonsh.execer import Execer
 from xonsh.tools import XonshBlockError
+from xonsh.events import events
 import glob
 
 
@@ -38,6 +39,9 @@ def xonsh_builtins():
     builtins.execx = None
     builtins.compilex = None
     builtins.aliases = {}
+    # Unlike all the other stuff, this has to refer to the "real" one because all modules that would
+    # be firing events on the global instance.
+    builtins.events = events
     yield builtins
     del builtins.__xonsh_env__
     del builtins.__xonsh_ctx__
@@ -56,3 +60,4 @@ def xonsh_builtins():
     del builtins.execx
     del builtins.compilex
     del builtins.aliases
+    del builtins.events
