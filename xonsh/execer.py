@@ -45,13 +45,15 @@ class Execer(object):
         if self.unload:
             unload_builtins()
 
-    def parse(self, input, ctx, mode='exec', transform=True):
+    def parse(self, input, ctx, mode='exec', filename=None, transform=True):
         """Parses xonsh code in a context-aware fashion. For context-free
         parsing, please use the Parser class directly or pass in
         transform=False.
         """
+        if filename is None:
+            filename = self.filename
         if not transform:
-            return self.parser.parse(input, filename=self.filename, mode=mode,
+            return self.parser.parse(input, filename=filename, mode=mode,
                                      debug_level=(self.debug_level > 1))
 
         # Parsing actually happens in a couple of phases. The first is a
@@ -68,7 +70,7 @@ class Execer(object):
         # tokens for all of the Python rules. The lazy way implemented here
         # is to parse a line a second time with a $() wrapper if it fails
         # the first time. This is a context-free phase.
-        tree, input = self._parse_ctx_free(input, mode=mode)
+        tree, input = self._parse_ctx_free(input, mode=mode, filename=filename)
         if tree is None:
             return None
 
@@ -97,7 +99,8 @@ class Execer(object):
             glbs = frame.f_globals if glbs is None else glbs
             locs = frame.f_locals if locs is None else locs
         ctx = set(dir(builtins)) | set(glbs.keys()) | set(locs.keys())
-        tree = self.parse(input, ctx, mode=mode, transform=transform)
+        tree = self.parse(input, ctx, mode=mode, filename=filename,
+                          transform=transform)
         if tree is None:
             return None  # handles comment only input
         if transform:
@@ -110,45 +113,53 @@ class Execer(object):
         return code
 
     def eval(self, input, glbs=None, locs=None, stacklevel=2,
-             transform=True):
+             filename=None, transform=True):
         """Evaluates (and returns) xonsh code."""
         if isinstance(input, types.CodeType):
             code = input
         else:
+            if filename is None:
+                filename = self.filename
             code = self.compile(input=input,
                                 glbs=glbs,
                                 locs=locs,
                                 mode='eval',
                                 stacklevel=stacklevel,
+                                filename=filename,
                                 transform=transform)
         if code is None:
             return None  # handles comment only input
         return eval(code, glbs, locs)
 
     def exec(self, input, mode='exec', glbs=None, locs=None, stacklevel=2,
-             transform=True):
+             filename=None, transform=True):
         """Execute xonsh code."""
         if isinstance(input, types.CodeType):
             code = input
         else:
+            if filename is None:
+                filename = self.filename
             code = self.compile(input=input,
                                 glbs=glbs,
                                 locs=locs,
                                 mode=mode,
                                 stacklevel=stacklevel,
+                                filename=filename,
                                 transform=transform)
         if code is None:
             return None  # handles comment only input
         return exec(code, glbs, locs)
 
-    def _parse_ctx_free(self, input, mode='exec'):
+    def _parse_ctx_free(self, input, mode='exec', filename=None):
         last_error_line = last_error_col = -1
         parsed = False
         original_error = None
+        if filename is None:
+            filename = self.filename
         while not parsed:
             try:
                 tree = self.parser.parse(input,
-                                         filename=self.filename,
+                                         filename=filename,
                                          mode=mode,
                                          debug_level=(self.debug_level > 1))
                 parsed = True

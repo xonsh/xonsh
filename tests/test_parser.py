@@ -4,10 +4,11 @@ import os
 import sys
 import ast
 import builtins
+import itertools
 
 import pytest
 
-from xonsh.ast import pdump
+from xonsh.ast import pdump, AST
 from xonsh.parser import Parser
 
 from tools import VER_FULL, skip_if_py34, nodes_equal
@@ -42,16 +43,17 @@ def check_stmts(inp, run=True, mode='exec'):
         inp += '\n'
     check_ast(inp, run=run, mode=mode)
 
-def check_xonsh_ast(xenv, inp, run=True, mode='eval'):
+def check_xonsh_ast(xenv, inp, run=True, mode='eval', debug_level=0,
+                    return_obs=False):
     __tracebackhide__ = True
     builtins.__xonsh_env__ = xenv
-    obs = PARSER.parse(inp)
+    obs = PARSER.parse(inp, debug_level=debug_level)
     if obs is None:
         return  # comment only
     bytecode = compile(obs, '<test-xonsh-ast>', mode)
     if run:
         exec(bytecode)
-    return True
+    return obs if return_obs else True
 
 def check_xonsh(xenv, inp, run=True, mode='exec'):
     __tracebackhide__ = True
@@ -1795,6 +1797,74 @@ def test_redirect_error_to_output(r, o):
     assert check_xonsh_ast({}, '$[echo "test" {} {}> test.txt]'.format(r, o), False)
     assert check_xonsh_ast({}, '$[< input.txt echo "test" {} {}> test.txt]'.format(r, o), False)
     assert check_xonsh_ast({}, '$[echo "test" {} {}> test.txt < input.txt]'.format(r, o), False)
+
+def test_macro_call_empty():
+    assert check_xonsh_ast({}, 'f!()', False)
+
+
+MACRO_ARGS = [
+    'x', 'True', 'None', 'import os', 'x=10', '"oh no, mom"', '...', ' ... ',
+    'if True:\n  pass', '{x: y}', '{x: y, 42: 5}', '{1, 2, 3,}', '(x,y)',
+    '(x, y)', '((x, y), z)', 'g()', 'range(10)', 'range(1, 10, 2)', '()', '{}',
+    '[]', '[1, 2]', '@(x)', '!(ls -l)', '![ls -l]', '$(ls -l)', '${x + y}',
+    '$[ls -l]', '@$(which xonsh)',
+]
+
+@pytest.mark.parametrize('s', MACRO_ARGS)
+def test_macro_call_one_arg(s):
+    f = 'f!({})'.format(s)
+    tree = check_xonsh_ast({}, f, False, return_obs=True)
+    assert isinstance(tree, AST)
+    args = tree.body.args[1].elts
+    assert len(args) == 1
+    assert args[0].s == s.strip()
+
+
+@pytest.mark.parametrize('s,t', itertools.product(MACRO_ARGS[::2],
+                                                  MACRO_ARGS[1::2]))
+def test_macro_call_two_args(s, t):
+    f = 'f!({}, {})'.format(s, t)
+    tree = check_xonsh_ast({}, f, False, return_obs=True)
+    assert isinstance(tree, AST)
+    args = tree.body.args[1].elts
+    assert len(args) == 2
+    assert args[0].s == s.strip()
+    assert args[1].s == t.strip()
+
+
+@pytest.mark.parametrize('s,t,u', itertools.product(MACRO_ARGS[::3],
+                                                    MACRO_ARGS[1::3],
+                                                    MACRO_ARGS[2::3]))
+def test_macro_call_three_args(s, t, u):
+    f = 'f!({}, {}, {})'.format(s, t, u)
+    tree = check_xonsh_ast({}, f, False, return_obs=True)
+    assert isinstance(tree, AST)
+    args = tree.body.args[1].elts
+    assert len(args) == 3
+    assert args[0].s == s.strip()
+    assert args[1].s == t.strip()
+    assert args[2].s == u.strip()
+
+
+@pytest.mark.parametrize('s', MACRO_ARGS)
+def test_macro_call_one_trailing(s):
+    f = 'f!({0},)'.format(s)
+    tree = check_xonsh_ast({}, f, False, return_obs=True)
+    assert isinstance(tree, AST)
+    args = tree.body.args[1].elts
+    assert len(args) == 1
+    assert args[0].s == s.strip()
+
+
+@pytest.mark.parametrize('s', MACRO_ARGS)
+def test_macro_call_one_trailing_space(s):
+    f = 'f!( {0}, )'.format(s)
+    tree = check_xonsh_ast({}, f, False, return_obs=True)
+    assert isinstance(tree, AST)
+    args = tree.body.args[1].elts
+    assert len(args) == 1
+    assert args[0].s == s.strip()
+
 
 # test invalid expressions
 
