@@ -2020,6 +2020,24 @@ def test_withbang_single_simple(body):
     assert s == body
 
 
+@pytest.mark.parametrize('body', WITH_BANG_RAWSUITES)
+def test_withbang_as_many_suite(body):
+    code = 'with! x as a, y as b, z as c:\n{}'
+    code = code.format(textwrap.indent(body, '    '))
+    tree = check_xonsh_ast({}, code, False, return_obs=True, mode='exec')
+    assert isinstance(tree, AST)
+    wither = tree.body[0]
+    assert isinstance(wither, With)
+    assert len(wither.body) == 1
+    assert isinstance(wither.body[0], Pass)
+    assert len(wither.items) == 3
+    for i, targ in enumerate('abc'):
+        item = wither.items[i]
+        assert item.optional_vars.id == targ
+        s = item.context_expr.args[1].s
+        assert s == body
+
+
 
 # test invalid expressions
 

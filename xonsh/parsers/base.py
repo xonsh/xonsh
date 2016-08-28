@@ -1335,6 +1335,22 @@ class BaseParser(object):
         p[0] = [ast.With(items=[p3], body=body,
                          lineno=p1.lineno, col_offset=p1.lexpos)]
 
+    def p_with_bang_stmt_many_suite(self, p):
+        """with_stmt : with_tok BANG with_item comma_with_item_list rawsuite"""
+        p1, p3, p4, p5 = p[1], p[3], p[4], p[5]
+        items = [p3] + p4
+        for item in items:
+            expr = item.context_expr
+            l, c = expr.lineno, expr.col_offset
+            gblcall = xonsh_call('globals', [], lineno=l, col=c)
+            loccall = xonsh_call('locals', [], lineno=l, col=c)
+            margs = [expr, p5, gblcall, loccall]
+            item.context_expr = xonsh_call('__xonsh_enter_macro__', margs,
+                                           lineno=l, col=c)
+        body = [ast.Pass(lineno=p5.lineno, col_offset=p5.col_offset)]
+        p[0] = [ast.With(items=items, body=body,
+                         lineno=p1.lineno, col_offset=p1.lexpos)]
+
     def p_as_expr(self, p):
         """as_expr : AS expr"""
         p2 = p[2]
