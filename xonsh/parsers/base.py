@@ -3,6 +3,7 @@
 import os
 import re
 import time
+import textwrap
 from threading import Thread
 from collections import Iterable, Sequence, Mapping
 
@@ -224,6 +225,7 @@ class BaseParser(object):
         self.xonsh_code = None
         self._attach_nocomma_tok_rules()
         self._attach_nocloser_base_rules()
+        self._attach_nodedent_base_rules()
 
         opt_rules = [
             'newlines', 'arglist', 'func_call', 'rarrow_test', 'typedargslist',
@@ -267,7 +269,7 @@ class BaseParser(object):
                      'yield', 'from', 'raise', 'with', 'dollar_lparen',
                      'dollar_lbrace', 'dollar_lbracket', 'try',
                      'bang_lparen', 'bang_lbracket', 'comma', 'rparen',
-                     'rbracket']
+                     'rbracket', 'indent', 'dedent']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -1351,6 +1353,46 @@ class BaseParser(object):
                  | NEWLINE INDENT stmt_list DEDENT
         """
         p[0] = p[1] if len(p) == 2 else p[3]
+
+    def p_rawsuite(self, p):
+        """rawsuite : NEWLINE indent_tok nodedent dedent_tok"""
+        p2, p4 = p[2], p[4]
+        beg = (p2.lineno, p2.lexpos)
+        end = (p4.lineno, p4.lexpos)
+        s = self.source_slice(beg, end)
+        s = textwrap.dedent(s)
+        p[0] = ast.Str(s=s, lineno=beg[0], col_offset=beg[1])
+
+    def _attach_nodedent_base_rules(self):
+        toks = set(self.tokens)
+        toks.remove('DEDENT')
+        ts = '\n       | '.join(sorted(toks))
+        doc = 'nodedent : ' + ts + '\n'
+        self.p_nodedent_base.__func__.__doc__ = doc
+
+    def p_nodedent_base(self, p):
+        # see above attachament function
+        pass
+
+    def p_nodedent_any(self, p):
+        """nodedent : INDENT any_dedent_toks DEDENT"""
+        pass
+
+    def p_nodedent_many(self, p):
+        """nodedent : nodedent nodedent"""
+        pass
+
+    def p_any_dedent_tok(self, p):
+        """any_dedent_tok : nodedent
+                          | DEDENT
+        """
+        pass
+
+    def p_any_dedent_tok(self, p):
+        """any_dedent_toks : any_dedent_tok
+                           | any_dedent_toks any_dedent_tok
+        """
+        pass
 
     def p_test_ol(self, p):
         """test : or_test
