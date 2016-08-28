@@ -47,10 +47,10 @@ TEST_DIR = os.path.dirname(__file__)
 def test_module_dunder_file_attribute():
     import sample
     exp = os.path.join(TEST_DIR, 'sample.xsh')
-    assert sample.__file__ == exp
+    assert os.path.abspath(sample.__file__) == exp
 
 
 def test_module_dunder_file_attribute_sub():
     from xpack.sub import sample
     exp = os.path.join(TEST_DIR, 'xpack', 'sub', 'sample.xsh')
-    assert sample.__file__ == exp
+    assert os.path.abspath(sample.__file__) == exp
