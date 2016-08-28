@@ -39,7 +39,8 @@ def xonsh_builtins():
     builtins.execx = None
     builtins.compilex = None
     builtins.aliases = {}
-    # Unlike all the other stuff, this has to refer to the "real" one because all modules that would be firing events on the global instance.
+    # Unlike all the other stuff, this has to refer to the "real" one because all modules that would
+    # be firing events on the global instance.
     builtins.events = events
     yield builtins
     del builtins.__xonsh_env__
