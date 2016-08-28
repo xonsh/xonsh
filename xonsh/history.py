@@ -14,7 +14,7 @@ import functools
 import itertools
 import threading
 import collections
-import collections.abc as abc
+import collections.abc as cabc
 
 from xonsh.lazyasd import lazyobject
 from xonsh.lazyjson import LazyJSON, ljdump, LJNode
@@ -179,7 +179,7 @@ class HistoryFlusher(threading.Thread):
             ljdump(hist, f, sort_keys=True)
 
 
-class CommandField(abc.Sequence):
+class CommandField(cabc.Sequence):
     """A field in the 'cmds' portion of history."""
 
     def __init__(self, field, hist, default=None):

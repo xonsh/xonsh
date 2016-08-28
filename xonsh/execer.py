@@ -5,7 +5,7 @@ import types
 import inspect
 import builtins
 import warnings
-import collections.abc as abc
+import collections.abc as cabc
 
 from xonsh.ast import CtxAwareTransformer
 from xonsh.parser import Parser
@@ -80,7 +80,7 @@ class Execer(object):
         # it also is valid as a subprocess line.
         if ctx is None:
             ctx = set()
-        elif isinstance(ctx, abc.Mapping):
+        elif isinstance(ctx, cabc.Mapping):
             ctx = set(ctx.keys())
         tree = self.ctxtransformer.ctxvisit(tree, input, ctx, mode=mode)
         return tree
@@ -163,7 +163,7 @@ class Execer(object):
                 if (e.loc is None) or (last_error_line == e.loc.lineno and
                                        last_error_col in (e.loc.column + 1,
                                                           e.loc.column)):
-                    raise original_error
+                    raise original_error from None
                 last_error_col = e.loc.column
                 last_error_line = e.loc.lineno
                 idx = last_error_line - 1
