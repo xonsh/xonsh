@@ -776,7 +776,7 @@ def convert_macro_arg(raw_arg, kind, glbs, locs, *, name='<arg>',
 
 
 @contextlib.contextmanager
-def macro_context(f, glbs, locs):
+def in_macro_call(f, glbs, locs):
     """Attaches macro globals and locals temporarily to function as a
     context manager.
 
@@ -837,10 +837,36 @@ def call_macro(f, raw_args, glbs, locs):
         args.append(arg)
     reg_args, kwargs = _eval_regular_args(raw_args[i:], glbs, locs)
     args += reg_args
-    with macro_context(f, glbs, locs):
+    with in_macro_call(f, glbs, locs):
         rtn = f(*args, **kwargs)
     return rtn
 
+
+def enter_macro(obj, raw_block, glbs, locs):
+    """Prepares to enter a context manager macro by attaching the contents
+    of the macro block, globals, and locals to the object. These modifications
+    are made in-place and the original object is returned.
+
+
+    Parameters
+    ----------
+    obj : context manager
+        The object that is about to be entered via a with-statement.
+    raw_block : str
+        The str of the block that is the context body.
+        This string will be parsed, compiled, evaled, or left as
+        a string dependending on the return annotation of obj.__enter__.
+    glbs : Mapping
+        The globals from the context site.
+    locs : Mapping or None
+        The locals from the context site.
+
+    Returns
+    -------
+    obj : context manager
+        The same context manager but with the new macro information applied.
+    """
+    return obj
 
 @lazyobject
 def KWARG_RE():
@@ -910,6 +936,7 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.__xonsh_list_of_strs_or_callables__ = list_of_strs_or_callables
     builtins.__xonsh_completers__ = xonsh.completers.init.default_completers()
     builtins.__xonsh_call_macro__ = call_macro
+    builtins.__xonsh_enter_macro__ = enter_macro
     # public built-ins
     builtins.XonshError = XonshError
     builtins.XonshBlockError = XonshBlockError
@@ -977,6 +1004,7 @@ def unload_builtins():
              '__xonsh_commands_cache__',
              '__xonsh_completers__',
              '__xonsh_call_macro__',
+             '__xonsh_enter_macro__',
              'XonshError',
              'XonshBlockError',
              'XonshCalledProcessError',

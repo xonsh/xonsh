@@ -12,7 +12,7 @@ import pytest
 from xonsh import built_ins
 from xonsh.built_ins import reglob, pathsearch, helper, superhelper, \
     ensure_list_of_strs, list_of_strs_or_callables, regexsearch, \
-    globsearch, convert_macro_arg, macro_context, call_macro
+    globsearch, convert_macro_arg, in_macro_call, call_macro
 from xonsh.environ import Env
 
 from tools import skip_if_on_windows
@@ -189,10 +189,10 @@ def test_convert_macro_arg_eval(kind):
     assert arg is int
 
 
-def test_macro_context():
+def test_in_macro_call():
     def f():
         pass
-    with macro_context(f, True, True):
+    with in_macro_call(f, True, True):
         assert f.macro_globals
         assert f.macro_locals
     assert not hasattr(f, 'macro_globals')
