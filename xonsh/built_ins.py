@@ -898,6 +898,11 @@ def enter_macro(obj, raw_block, glbs, locs):
     obj : context manager
         The same context manager but with the new macro information applied.
     """
+    # recurse down sequences
+    if isinstance(obj, cabc.Sequence):
+        for x in obj:
+            enter_macro(x, raw_block, glbs, locs)
+        return obj
     # find kind from return annotation, default to str
     enter = getattr(obj, '__enter__', None)
     if callable(enter):

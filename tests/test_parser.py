@@ -1933,14 +1933,29 @@ def test_many_subprocbang(opener, closer, body):
     assert cmd[1].s == body.partition('!')[-1].strip()
 
 
-@pytest.mark.parametrize('body', [
+WITH_BANG_RAWSUITES = [
     'pass\n',
-    ])
+    'x = 42\ny = 12\n',
+    'export PATH="yo:momma"\necho $PATH\n',
+    ('with q as t:\n'
+     '    v = 10\n'
+     '\n'),
+    ('with q as t:\n'
+     '    v = 10\n'
+     '\n'
+     'for x in range(6):\n'
+     '    if True:\n'
+     '        pass\n'
+     '    else:\n'
+     '        ls -l\n'
+     '\n'
+     'a = 42\n'),
+    ]
+
+@pytest.mark.parametrize('body', WITH_BANG_RAWSUITES)
 def test_withbang_single_suite(body):
     code = 'with! x:\n{}'.format(textwrap.indent(body, '    '))
-    tree = check_xonsh_ast({}, code, False, return_obs=True, mode='exec',
-            #               debug_level=100,
-                           )
+    tree = check_xonsh_ast({}, code, False, return_obs=True, mode='exec')
     assert isinstance(tree, AST)
     wither = tree.body[0]
     assert isinstance(wither, With)
@@ -1948,6 +1963,21 @@ def test_withbang_single_suite(body):
     assert isinstance(wither.body[0], Pass)
     assert len(wither.items) == 1
     item = wither.items[0]
+    s = item.context_expr.args[1].s
+    assert s == body
+
+@pytest.mark.parametrize('body', WITH_BANG_RAWSUITES)
+def test_withbang_as_single_suite(body):
+    code = 'with! x as y:\n{}'.format(textwrap.indent(body, '    '))
+    tree = check_xonsh_ast({}, code, False, return_obs=True, mode='exec')
+    assert isinstance(tree, AST)
+    wither = tree.body[0]
+    assert isinstance(wither, With)
+    assert len(wither.body) == 1
+    assert isinstance(wither.body[0], Pass)
+    assert len(wither.items) == 1
+    item = wither.items[0]
+    assert item.optional_vars.id == 'y'
     s = item.context_expr.args[1].s
     assert s == body
 
