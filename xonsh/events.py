@@ -1,11 +1,11 @@
 """
 Events for xonsh.
 
-In all likelihood, you want builtins.__xonsh_events__
+In all likelihood, you want builtins.events
 
 The best way to "declare" an event is something like::
 
-    __xonsh_events__.on_spam.doc("Comes with eggs")
+    events.doc('on_spam', "Comes with eggs")
 """
 import abc
 import collections.abc
@@ -231,11 +231,10 @@ class EventManager:
             newevent.add(handler)
 
     def __getattr__(self, name):
-        """
-        Get an event, if it doesn't already exist.
-        """
+        """Get an event, if it doesn't already exist."""
         # This is only called if the attribute doesn't exist, so create the Event...
-        e = type(name, (Event,), {'__doc__': None})()  # (A little bit of magic to enable docstrings to work right)
+        # (A little bit of magic to enable docstrings to work right)
+        e = type(name, (Event,), {'__doc__': None})()
         # ... and save it.
         setattr(self, name, e)
         # Now it exists, and we won't be called again.
