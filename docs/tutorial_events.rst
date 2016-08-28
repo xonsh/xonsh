@@ -11,7 +11,8 @@ Simply, events are a way for various pieces of xonsh to tell each other what's g
 fired when something of note happens, eg the current directory changes or just before a command is
 executed.
 
-While xonsh has its own event system, it is not dissimilar to other event systems.
+While xonsh has its own event system, it is not dissimilar to other event systems. If you do know
+events, this should be easy to understand. If not, then this document is extra for you.
 
 Show me the code!
 =================
