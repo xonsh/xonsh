@@ -22,9 +22,9 @@ or several other commands).
         with open(g`~/.dirhist`[0], 'a') as dh:
             print(newdir, file=dh)
 
-Core Events
-===========
 
-* ``on_precommand``
-* ``on_postcommand``
-* ``on_chdir``
+
+Under the Hood
+==============
+
+`Advanced Events <advanced_events.html>`_
