@@ -198,7 +198,7 @@ class Vox(collections.abc.Mapping):
         env_path = builtins.__xonsh_env__['VIRTUAL_ENV']
         if env_path.startswith(self.venvdir):
             name = env_path[len(self.venvdir):]
-            if name[0] == '/':
+            if name[0] in '/\\':
                 name = name[1:]
             return name
         else:
