@@ -1,13 +1,13 @@
 import sys
 import importlib
-from traceback import format_list, extract_tb, format_exception
+from traceback import format_list, extract_tb
 
 import pytest
-import xonsh.imphooks
+from xonsh import imphooks
 
 
 def pytest_configure(config):
-    xonsh.imphooks.install_hook()
+    imphooks.install_hook()
 
 
 def pytest_collection_modifyitems(items):
@@ -57,7 +57,7 @@ class XshFunction(pytest.Item):
         """ called when self.runtest() raises an exception. """
         formatted_tb = _limited_traceback(excinfo)
         formatted_tb.insert(0, "xonsh execution failed\n")
-        formatted_tb.append(excinfo.type.__name__ +": " + str(excinfo.value))
+        formatted_tb.append('{}: {}'.format(excinfo.type.__name__, excinfo.value))
         return "".join(formatted_tb)
 
     def reportinfo(self):

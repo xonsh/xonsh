@@ -310,7 +310,7 @@ def main():
         skw['entry_points'] = {
             'pygments.lexers': ['xonsh = xonsh.pyghooks:XonshLexer',
                                 'xonshcon = xonsh.pyghooks:XonshConsoleLexer'],
-            'pytest11': ['xonsh = xonsh.pytest_plugin'] 
+            'pytest11': ['xonsh = xonsh.pytest_plugin']
         }
         skw['cmdclass']['develop'] = xdevelop
     setup(**skw)
@@ -318,4 +318,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

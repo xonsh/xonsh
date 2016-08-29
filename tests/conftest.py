@@ -9,7 +9,6 @@ from xonsh.built_ins import ensure_list_of_strs
 from xonsh.execer import Execer
 from xonsh.tools import XonshBlockError
 from xonsh.events import events
-import glob
 
 from tools import DummyShell, sp
 
