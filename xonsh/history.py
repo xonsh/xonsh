@@ -11,15 +11,13 @@ import builtins
 import collections
 import datetime
 import functools
-import itertools
 import threading
-import collections
 import collections.abc as cabc
 
 from xonsh.lazyasd import lazyobject
 from xonsh.lazyjson import LazyJSON, ljdump, LJNode
-from xonsh.tools import (ensure_slice, to_history_tuple,
-                         expanduser_abs_path, ensure_timestamp)
+from xonsh.tools import (ensure_slice, to_history_tuple, is_string,
+                         get_portions, expanduser_abs_path, ensure_timestamp)
 from xonsh.diff_history import _dh_create_parser, _dh_main_action
 
 
@@ -392,20 +390,6 @@ def _hist_create_parser():
     return p
 
 
-def _hist_get_portion(commands, slices):
-    """Yield from portions of history commands."""
-    if len(slices) == 1:
-        s = slices[0]
-        try:
-            yield from itertools.islice(commands, s.start, s.stop, s.step)
-            return
-        except ValueError:  # islice failed
-            pass
-    commands = list(commands)
-    for s in slices:
-        yield from commands[s]
-
-
 def _hist_filter_ts(commands, start_time, end_time):
     """Yield only the commands between start and end time."""
     for cmd in commands:
@@ -437,7 +421,7 @@ def _hist_get(session='session', *, slices=None, datetime_format=None,
     if slices:
         # transform/check all slices
         slices = [ensure_slice(s) for s in slices]
-        cmds = _hist_get_portion(cmds, slices)
+        cmds = get_portions(cmds, slices)
     if start_time or end_time:
         if start_time is None:
             start_time = 0.0
@@ -494,7 +478,7 @@ class History(object):
     is the last item in history.
 
     The index acts as a filter with two parts, command and argument,
-    separated by comma.  Based on the type of each part different 
+    separated by comma.  Based on the type of each part different
     filtering can be achieved,
 
         for the command part:
@@ -514,8 +498,8 @@ class History(object):
 
     Command arguments are separated by white space.
 
-    If the command filter produces a list then the argument filter
-    will be applied to each element of that list.
+    If the filtering produces only one result it is
+    returned as a string else a list of strings is returned.
 
     Attributes
     ----------
@@ -668,12 +652,12 @@ class History(object):
 
     def _cmd_filter(self, cmds, pat):
         if isinstance(pat, (int, slice)):
-            s = [ensure_slice(pat)]
-            yield from _hist_get_portion(cmds, s)
-        elif isinstance(pat, str):
+            s = ensure_slice(pat)
+            yield from get_portions(cmds, s)
+        elif is_string(pat):
             for command in reversed(list(cmds)):
                 if pat in command:
-                   yield command
+                    yield command
         else:
             raise TypeError('Command filter must be '
                             'string, int or slice')
@@ -685,18 +669,13 @@ class History(object):
             for command in cmds:
                 yield ' '.join(command.split()[s])
         else:
-            raise TypeError('Argument filter must be of '
+            raise TypeError('Argument filter must be '
                             'int or slice')
         return args
-
-
-
-
 
     def __setitem__(self, *args):
         raise PermissionError('You cannot change history! '
                               'you can create new though.')
-
 
 
 def _hist_info(ns, hist):
