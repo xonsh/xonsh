@@ -24,7 +24,7 @@ from xonsh.tools import (
     to_dynamic_cwd_tuple, to_logfile_opt, pathsep_to_set, set_to_pathsep,
     is_string_seq, pathsep_to_seq, seq_to_pathsep, is_nonstring_seq_of_strings,
     pathsep_to_upper_seq, seq_to_upper_pathsep, expandvars, is_int_as_str, is_slice_as_str,
-    ensure_timestamp,
+    ensure_timestamp, get_portions
     )
 from xonsh.commands_cache import CommandsCache
 from xonsh.built_ins import expand_path
@@ -816,6 +816,7 @@ def test_bool_or_int_to_str(inp, exp):
 
 @pytest.mark.parametrize('inp, exp', [
         (42, slice(42, 43)),
+        (0, slice(0, 1)),
         (None, slice(None, None, None)),
         (slice(1,2), slice(1,2)),
         ('-1', slice(-1, None, None)),
@@ -833,6 +834,21 @@ def test_bool_or_int_to_str(inp, exp):
 def test_ensure_slice(inp, exp):
     obs = ensure_slice(inp)
     assert exp == obs
+
+
+@pytest.mark.parametrize('inp, exp', [
+    ((range(50), slice(25, 40)),
+     list(i for i in range(25,40))),
+
+    (([1,2,3,4,5,6,7,8,9,10], [slice(1,4), slice(6, None)]),
+     [2, 3, 4, 7, 8, 9, 10]),
+
+    (([1,2,3,4,5], [slice(-2, None), slice(-5, -3)]),
+     [4, 5, 1, 2]),
+])
+def test_get_portions(inp, exp):
+    obs = get_portions(*inp)
+    assert list(obs) == exp
 
 
 @pytest.mark.parametrize('inp', [
