@@ -25,6 +25,7 @@ $_func {cmd} {prefix} {prev}
 for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 """
 
+
 def complete_from_bash(prefix, line, begidx, endidx, ctx):
     """Completes based on results from BASH completion."""
     sources = _collect_completions_sources()
