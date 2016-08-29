@@ -851,7 +851,7 @@ def test_get_portions(inp, exp):
     assert list(obs) == exp
 
 
-pytest.mark.parametrize('inp', [
+@pytest.mark.parametrize('inp', [
     '42.3',
     '3:asd5:1',
     'test' ,

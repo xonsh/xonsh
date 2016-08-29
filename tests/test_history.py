@@ -187,9 +187,6 @@ def test_parser_show(args, exp):
     assert ns.__dict__ == exp_ns
 
 
-# CMDS = ['ls', 'cat hello kitty', 'abc', 'def', 'touch me', 'grep from me']
-
-
 @pytest.mark.parametrize('index, exp', [
     (-1, 'grep from me'),
     ('hello', 'cat hello kitty'),
