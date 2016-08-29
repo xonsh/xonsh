@@ -650,7 +650,8 @@ class History(object):
         else:
             return cmds
 
-    def _cmd_filter(self, cmds, pat):
+    @staticmethod
+    def _cmd_filter(cmds, pat):
         if isinstance(pat, (int, slice)):
             s = ensure_slice(pat)
             yield from get_portions(cmds, s)
@@ -662,7 +663,8 @@ class History(object):
             raise TypeError('Command filter must be '
                             'string, int or slice')
 
-    def _args_filter(self, cmds, pat):
+    @staticmethod
+    def _args_filter(cmds, pat):
         args = None
         if isinstance(pat, (int, slice)):
             s = ensure_slice(pat)
