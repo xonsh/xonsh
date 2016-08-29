@@ -1,6 +1,6 @@
 import sys
 import importlib
-from traceback import format_list, extract_tb
+from traceback import format_list, extract_tb, format_exception
 
 import pytest
 import xonsh.imphooks
@@ -8,6 +8,10 @@ import xonsh.imphooks
 
 def pytest_configure(config):
     xonsh.imphooks.install_hook()
+
+
+def pytest_collection_modifyitems(items):
+    items.sort(key=lambda x: 0 if isinstance(x, XshFunction) else 1)
 
 
 def _limited_traceback(excinfo):
@@ -36,13 +40,15 @@ class XshFile(pytest.File):
         for test_name in tests:
             obj = getattr(mod, test_name)
             if hasattr(obj, '__call__'):
-                yield XshItem(test_name, self, obj)
+                yield XshFunction(name=test_name, parent=self,
+                                  test_func=obj, test_module=mod)
 
 
-class XshItem(pytest.Item):
-    def __init__(self, name, parent, test_func):
+class XshFunction(pytest.Item):
+    def __init__(self, name, parent, test_func, test_module):
         super().__init__(name, parent)
         self._test_func = test_func
+        self._test_module = test_module
 
     def runtest(self):
         self._test_func()
@@ -51,6 +57,7 @@ class XshItem(pytest.Item):
         """ called when self.runtest() raises an exception. """
         formatted_tb = _limited_traceback(excinfo)
         formatted_tb.insert(0, "xonsh execution failed\n")
+        formatted_tb.append(excinfo.type.__name__ +": " + str(excinfo.value))
         return "".join(formatted_tb)
 
     def reportinfo(self):
