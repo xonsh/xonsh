@@ -99,6 +99,7 @@ Contents
 
     tutorial
     tutorial_hist
+    tutorial_macros
     tutorial_xontrib
     tutorial_events
     tutorial_completers

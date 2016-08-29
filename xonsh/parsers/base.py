@@ -220,6 +220,10 @@ class BaseParser(object):
         self.lexer = lexer = Lexer()
         self.tokens = lexer.tokens
 
+        self._lines = None
+        self.xonsh_code = None
+        self._attach_nocomma_tok_rules()
+
         opt_rules = [
             'newlines', 'arglist', 'func_call', 'rarrow_test', 'typedargslist',
             'equals_test', 'colon_test', 'tfpdef', 'comma_tfpdef_list',
@@ -234,7 +238,8 @@ class BaseParser(object):
             'op_factor_list', 'trailer_list', 'testlist_comp',
             'yield_expr_or_testlist_comp', 'dictorsetmaker',
             'comma_subscript_list', 'test', 'sliceop', 'comp_iter',
-            'yield_arg', 'test_comma_list']
+            'yield_arg', 'test_comma_list',
+            'macroarglist', 'any_raw_toks']
         for rule in opt_rules:
             self._opt_rule(rule)
 
@@ -248,7 +253,7 @@ class BaseParser(object):
             'pm_term', 'op_factor', 'trailer', 'comma_subscript',
             'comma_expr_or_star_expr', 'comma_test', 'comma_argument',
             'comma_item', 'attr_period_name', 'test_comma',
-            'equals_yield_expr_or_testlist']
+            'equals_yield_expr_or_testlist', 'comma_nocomma']
         for rule in list_rules:
             self._list_rule(rule)
 
@@ -260,7 +265,7 @@ class BaseParser(object):
                      'for', 'colon', 'import', 'except', 'nonlocal', 'global',
                      'yield', 'from', 'raise', 'with', 'dollar_lparen',
                      'dollar_lbrace', 'dollar_lbracket', 'try',
-                     'bang_lparen', 'bang_lbracket']
+                     'bang_lparen', 'bang_lbracket', 'comma', 'rparen']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -288,6 +293,8 @@ class BaseParser(object):
         """Resets for clean parsing."""
         self.lexer.reset()
         self._last_yielded_token = None
+        self._lines = None
+        self.xonsh_code = None
 
     def parse(self, s, filename='<code>', mode='exec', debug_level=0):
         """Returns an abstract syntax tree of xonsh code.
@@ -324,7 +331,7 @@ class BaseParser(object):
         return tree
 
     def _lexer_errfunc(self, msg, line, column):
-        self._parse_error(msg, self.currloc(line, column), self.xonsh_code)
+        self._parse_error(msg, self.currloc(line, column))
 
     def _yacc_lookahead_token(self):
         """Gets the next-to-last and last token seen by the lexer."""
@@ -406,15 +413,33 @@ class BaseParser(object):
             return self.token_col(t)
         return 0
 
-    def _parse_error(self, msg, loc, line=None):
-        if line is None:
+    @property
+    def lines(self):
+        if self._lines is None and self.xonsh_code is not None:
+            self._lines = self.xonsh_code.splitlines(keepends=True)
+        return self._lines
+
+    def source_slice(self, start, stop):
+        """Gets the original source code from two (line, col) tuples in
+        source-space (i.e. lineno start at 1).
+        """
+        bline, bcol = start
+        eline, ecol = stop
+        bline -= 1
+        lines = self.lines[bline:eline]
+        lines[-1] = lines[-1][:ecol]
+        lines[0] = lines[0][bcol:]
+        return ''.join(lines)
+
+    def _parse_error(self, msg, loc):
+        if self.xonsh_code is None or loc is None:
             err_line_pointer = ''
         else:
             col = loc.column + 1
-            lines = line.splitlines()
+            lines = self.lines
             i = loc.lineno - 1
             if 0 <= i < len(lines):
-                err_line = lines[i]
+                err_line = lines[i].rstrip()
                 err_line_pointer = '\n{}\n{: >{}}'.format(err_line, '^', col)
             else:
                 err_line_pointer = ''
@@ -429,7 +454,8 @@ class BaseParser(object):
                   ('left', 'EQ', 'NE'), ('left', 'GT', 'GE', 'LT', 'LE'),
                   ('left', 'RSHIFT', 'LSHIFT'), ('left', 'PLUS', 'MINUS'),
                   ('left', 'TIMES', 'DIVIDE', 'DOUBLEDIV', 'MOD'),
-                  ('left', 'POW'), )
+                  ('left', 'POW'),
+                  )
 
     #
     # Grammar as defined by BNF
@@ -480,7 +506,8 @@ class BaseParser(object):
     def p_eval_input(self, p):
         """eval_input : testlist newlines_opt
         """
-        p[0] = ast.Expression(body=p[1])
+        p1 = p[1]
+        p[0] = ast.Expression(body=p1, lineno=p1.lineno, col_offset=p1.col_offset)
 
     def p_func_call(self, p):
         """func_call : LPAREN arglist_opt RPAREN"""
@@ -1644,9 +1671,19 @@ class BaseParser(object):
                                    lineno=leader.lineno,
                                    col_offset=leader.col_offset)
             elif isinstance(trailer, Mapping):
+                # call normal functions
                 p0 = ast.Call(func=leader,
                               lineno=leader.lineno,
                               col_offset=leader.col_offset, **trailer)
+            elif isinstance(trailer, (ast.Tuple, tuple)):
+                # call macro functions
+                l, c = leader.lineno, leader.col_offset
+                gblcall = xonsh_call('globals', [], lineno=l, col=c)
+                loccall = xonsh_call('locals', [], lineno=l, col=c)
+                if isinstance(trailer, tuple):
+                    trailer, arglist = trailer
+                margs = [leader, trailer, gblcall, loccall]
+                p0 = xonsh_call('__xonsh_call_macro__', margs, lineno=l, col=c)
             elif isinstance(trailer, str):
                 if trailer == '?':
                     p0 = xonsh_help(leader, lineno=leader.lineno,
@@ -1827,6 +1864,34 @@ class BaseParser(object):
         """trailer : LPAREN arglist_opt RPAREN"""
         p[0] = [p[2] or dict(args=[], keywords=[], starargs=None, kwargs=None)]
 
+    def p_trailer_bang_lparen(self, p):
+        """trailer : bang_lparen_tok macroarglist_opt rparen_tok
+                   | bang_lparen_tok nocomma comma_tok rparen_tok
+                   | bang_lparen_tok nocomma comma_tok WS rparen_tok
+                   | bang_lparen_tok macroarglist comma_tok rparen_tok
+                   | bang_lparen_tok macroarglist comma_tok WS rparen_tok
+        """
+        p1, p2, p3 = p[1], p[2], p[3]
+        begins = [(p1.lineno, p1.lexpos + 2)]
+        ends = [(p3.lineno, p3.lexpos)]
+        if p2:
+            begins.extend([(x[0], x[1] + 1) for x in p2])
+            ends = p2 + ends
+        elts = []
+        for beg, end in zip(begins, ends):
+            s = self.source_slice(beg, end).strip()
+            if not s:
+                if len(begins) == 1:
+                    break
+                else:
+                    msg = 'empty macro arguments not allowed'
+                    self._parse_error(msg, self.currloc(*beg))
+            node = ast.Str(s=s, lineno=beg[0], col_offset=beg[1])
+            elts.append(node)
+        p0 = ast.Tuple(elts=elts, ctx=ast.Load(), lineno=p1.lineno,
+                       col_offset=p1.lexpos)
+        p[0] = [p0]
+
     def p_trailer_p3(self, p):
         """trailer : LBRACKET subscriptlist RBRACKET
                    | PERIOD NAME
@@ -1838,6 +1903,81 @@ class BaseParser(object):
                    | QUESTION
         """
         p[0] = [p[1]]
+
+    def _attach_nocomma_tok_rules(self):
+        toks = set(self.tokens)
+        toks -= {'COMMA', 'LPAREN', 'RPAREN', 'LBRACE', 'RBRACE', 'LBRACKET',
+                 'RBRACKET', 'AT_LPAREN', 'BANG_LPAREN', 'BANG_LBRACKET',
+                 'DOLLAR_LPAREN', 'DOLLAR_LBRACE', 'DOLLAR_LBRACKET',
+                 'ATDOLLAR_LPAREN'}
+        ts = '\n            | '.join(sorted(toks))
+        doc = 'nocomma_tok : ' + ts + '\n'
+        self.p_nocomma_tok.__func__.__doc__ = doc
+
+    # The following grammar rules are no-ops because we don't need to glue the
+    # source code back together piece-by-piece. Instead, we simply look for
+    # top-level commas and record their positions. With these positions and
+    # the bounding parantheses !() positions we can use the source_slice()
+    # method. This does a much better job of capturing exactly the source code
+    # that was provided. The tokenizer & lexer can be a little lossy, especially
+    # with respect to whitespace.
+
+    def p_nocomma_tok(self, p):
+        # see attachement function above for docstring
+        pass
+
+    def p_any_raw_tok(self, p):
+        """any_raw_tok : nocomma
+                       | COMMA
+        """
+        pass
+
+    def p_any_raw_toks_one(self, p):
+        """any_raw_toks : any_raw_tok"""
+        pass
+
+    def p_any_raw_toks_many(self, p):
+        """any_raw_toks : any_raw_toks any_raw_tok"""
+        pass
+
+    def p_nocomma_part_tok(self, p):
+        """nocomma_part : nocomma_tok"""
+        pass
+
+    def p_nocomma_part_any(self, p):
+        """nocomma_part : LPAREN any_raw_toks_opt RPAREN
+                        | LBRACE any_raw_toks_opt RBRACE
+                        | LBRACKET any_raw_toks_opt RBRACKET
+                        | AT_LPAREN any_raw_toks_opt RPAREN
+                        | BANG_LPAREN any_raw_toks_opt RPAREN
+                        | BANG_LBRACKET any_raw_toks_opt RBRACKET
+                        | DOLLAR_LPAREN any_raw_toks_opt RPAREN
+                        | DOLLAR_LBRACE any_raw_toks_opt RBRACE
+                        | DOLLAR_LBRACKET any_raw_toks_opt RBRACKET
+                        | ATDOLLAR_LPAREN any_raw_toks_opt RPAREN
+        """
+        pass
+
+    def p_nocomma_base(self, p):
+        """nocomma : nocomma_part"""
+        pass
+
+    def p_nocomma_append(self, p):
+        """nocomma : nocomma nocomma_part"""
+        pass
+
+    def p_comma_nocomma(self, p):
+        """comma_nocomma : comma_tok nocomma"""
+        p1 = p[1]
+        p[0] = [(p1.lineno, p1.lexpos)]
+
+    def p_macroarglist_single(self, p):
+        """macroarglist : nocomma"""
+        p[0] = []
+
+    def p_macroarglist_many(self, p):
+        """macroarglist : nocomma comma_nocomma_list"""
+        p[0] = p[2]
 
     def p_subscriptlist(self, p):
         """subscriptlist : subscript comma_subscript_list_opt comma_opt"""
@@ -2340,11 +2480,9 @@ class BaseParser(object):
             else:
                 self._parse_error(p.value,
                                   self.currloc(lineno=p.lineno,
-                                               column=p.lexpos),
-                                  self.xonsh_code)
+                                               column=p.lexpos))
         else:
             msg = 'code: {0}'.format(p.value),
             self._parse_error(msg,
                               self.currloc(lineno=p.lineno,
-                                           column=p.lexpos),
-                              self.xonsh_code)
+                                           column=p.lexpos))
