@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+"""Pytest plugin for testing xsh files."""
 import sys
 import importlib
 from traceback import format_list, extract_tb
