@@ -903,16 +903,8 @@ def enter_macro(obj, raw_block, glbs, locs):
         for x in obj:
             enter_macro(x, raw_block, glbs, locs)
         return obj
-    # find kind from return annotation, default to str
-    enter = getattr(obj, '__enter__', None)
-    if callable(enter):
-        sig = inspect.signature(enter)
-        kind = sig.return_annotation
-        if kind is inspect.Parameter.empty or kind is None:
-            kind = str
-    else:
-        kind = str
     # convert block as needed
+    kind = getattr(obj, '__xonsh_block__', str)
     macroname = getattr(obj, '__name__', '<context>')
     block = convert_macro_arg(raw_block, kind, glbs, locs, name='<with!>',
                               macroname=macroname)

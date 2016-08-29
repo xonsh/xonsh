@@ -12,7 +12,7 @@ import pytest
 from xonsh import built_ins
 from xonsh.built_ins import reglob, pathsearch, helper, superhelper, \
     ensure_list_of_strs, list_of_strs_or_callables, regexsearch, \
-    globsearch, convert_macro_arg, in_macro_call, call_macro
+    globsearch, convert_macro_arg, in_macro_call, call_macro, enter_macro
 from xonsh.environ import Env
 
 from tools import skip_if_on_windows
@@ -263,3 +263,13 @@ def test_call_macro_raw_kwargs(arg):
         return x
     rtn = call_macro(f, ['*', '**{"x" :' + arg + '}'], {'x': 42, 'y': 0}, None)
     assert rtn == 42
+
+
+def test_enter_macro():
+    obj = lambda: None
+    rtn = enter_macro(obj, 'wakka', True, True)
+    assert obj is rtn
+    assert obj.macro_block == 'wakka'
+    assert obj.macro_globals
+    assert obj.macro_locals
+
