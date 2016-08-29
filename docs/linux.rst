@@ -31,20 +31,37 @@ the following from the source directory,
     $ python setup.py install
 
 
-Arch Linux users can install xonsh from the Arch User Repository with e.g.
-``yaourt``, ``aura``, ``pacaur``, ``PKGBUILD``, etc...:
+Debian/Ubuntu users can install xonsh from the repository with:
+
+**apt:**
+
+.. code-block:: console
+
+    $ apt install xonsh
+
+
+Fedora users can install xonsh from the repository with:
+
+**dnf:**
+
+.. code-block:: console
+
+    $ dnf install xonsh
+
+
+Arch Linux users can install xonsh from the Arch User Repository with:
 
 **yaourt:**
 
 .. code-block:: console
 
-    $ yaourt -Sa xonsh      # yaourt will call sudo when needed
+    $ yaourt -Sa xonsh
 
 **aura:**
 
 .. code-block:: console
 
-    $ sudo aura -A xonsh
+    $ aura -A xonsh
 
 **pacaur:**
 
@@ -52,6 +69,7 @@ Arch Linux users can install xonsh from the Arch User Repository with e.g.
 
     $ pacaur -S xonsh
 
+Note that some of these may require ``sudo``.
 If you run into any problems, please let us know!
 
 .. include:: add_to_shell.rst
