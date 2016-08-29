@@ -1,3 +1,4 @@
+import os
 import shlex
 import pathlib
 import builtins
@@ -68,12 +69,21 @@ def complete_from_bash(prefix, line, begidx, endidx, ctx):
     complete_stmt = out[0]
     out = set(out[1:])
 
+    # From GNU Bash document: The results of the expansion are prefix-matched
+    # against the word being completed
+    commprefix = os.path.commonprefix(out)
+    strip_len = 0
+    while strip_len < len(prefix):
+        if commprefix.startswith(prefix[strip_len:]):
+            break
+        strip_len += 1
+
     if '-o noquote' not in complete_stmt:
         out = _quote_paths(out, '', '')
     if '-o nospace' in complete_stmt:
         out = set([x.rstrip() for x in out])
 
-    return out
+    return out, len(prefix) - strip_len
 
 
 def _collect_completions_sources():
