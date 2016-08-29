@@ -1,12 +1,12 @@
 **Added:**
 
-* ``History`` methods ``_get`` and ``__getitem__``
+* ``History`` methods ``__iter__`` and ``__getitem__``
 
 * ``tools.get_portions`` that yields parts of an iterable
 
 **Changed:**
 
-* ``_curr_session_parser`` now uses ``History_.get``
+* ``_curr_session_parser`` now iterates over ``History``
 
 **Deprecated:** None
 
