@@ -12,8 +12,6 @@ from xonsh.events import events
 
 from tools import DummyShell, sp
 
-pytest_plugins = ("xonsh.pytest_plugin",)
-
 
 @pytest.fixture
 def xonsh_execer(monkeypatch):
