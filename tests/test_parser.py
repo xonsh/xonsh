@@ -1966,6 +1966,7 @@ def test_withbang_single_suite(body):
     s = item.context_expr.args[1].s
     assert s == body
 
+
 @pytest.mark.parametrize('body', WITH_BANG_RAWSUITES)
 def test_withbang_as_single_suite(body):
     code = 'with! x as y:\n{}'.format(textwrap.indent(body, '    '))
@@ -1981,6 +1982,22 @@ def test_withbang_as_single_suite(body):
     s = item.context_expr.args[1].s
     assert s == body
 
+
+@pytest.mark.parametrize('body', WITH_BANG_RAWSUITES)
+def test_withbang_single_suite_trailing(body):
+    code = 'with! x:\n{}\nprint(x)\n'.format(textwrap.indent(body, '    '))
+    tree = check_xonsh_ast({}, code, False, return_obs=True, mode='exec',
+                           #debug_level=100
+                            )
+    assert isinstance(tree, AST)
+    wither = tree.body[0]
+    assert isinstance(wither, With)
+    assert len(wither.body) == 1
+    assert isinstance(wither.body[0], Pass)
+    assert len(wither.items) == 1
+    item = wither.items[0]
+    s = item.context_expr.args[1].s
+    assert s == body + '\n'
 
 WITH_BANG_RAWSIMPLE = [
     'pass',

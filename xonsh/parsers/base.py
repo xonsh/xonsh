@@ -432,7 +432,11 @@ class BaseParser(object):
         eline, ecol = stop
         bline -= 1
         lines = self.lines[bline:eline]
-        if ecol > 0:
+        if ecol == 0:
+            explen = eline - bline
+            if explen == len(lines) and explen > 1:
+                lines[-1] = ''
+        else:
             lines[-1] = lines[-1][:ecol]
         lines[0] = lines[0][bcol:]
         return ''.join(lines)

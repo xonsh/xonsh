@@ -218,7 +218,7 @@ are two main aspects of macro design to consider: argument annotations and
 call site execution context.
 
 
-Macro Function Argument Annotations
+Macro Annotations
 -----------------------------------
 There are six kinds of annotations that macros are able to interpret:
 
@@ -426,6 +426,58 @@ really want to write some code in another language:
 
 Compared to function macros, subprocess macros are relatively simple.
 However, they can still be very expressive!
+
+Context Manager Macros
+======================
+Now that we have seen what life can be like with macro expressions, it is time
+to introduce the macro statement: ``with!``.  With-bang provides macros
+on top of existing Python context managers. This provides both anonymous
+and onymous blocks in xonsh.
+
+The syntax for context manager macros is the same as the usual with-statement
+in Python, but with an additional exclamation point between the ``with`` word
+and the first context manager expression. As a simple example,
+
+.. code-block:: xonsh
+
+    with! x:
+        y = 10
+        print(y)
+
+In the above, everything to the left of the colon (``x``) will be evaluated
+normally. However, the body will not be executed and ``y`` will not be defined
+or printed. In this case, the body will be attached to x as a string, along with
+globals and locals, prior to the body even being entered. The body is then
+replaced with a ``pass`` statement. You can think of the above as being
+transformed into the following:
+
+.. code-block:: xonsh
+
+    x.macro_block = 'y = 10\nprint(y)\n'
+    x.macro_globals = globals()
+    x.macro_locals = locals()
+    with! x:
+        pass
+
+There are a few important things about this to notice:
+
+1. The ``macro_block`` string is dedented,
+2. The ``macro_*`` attributes are set *before* the context manager is entered so
+   the ``__enter__()`` method may use them, and
+3. The ``macro_*`` attributes are not cleaned up automatically so that the
+   context manager may use them even after the object is exited. The
+   ``__exit__()`` method may clean up these attributes, if desired.
+
+By default, macro blocks are returned as a string. However, like with function
+macro arguments, the kind of ``macro_block`` is determined by a special
+annotation.  This annotation is given via the ``__xonsh_block__`` attribute
+on the context manager itself.  This allows the block to be interpreted as
+an AST, byte compiled, etc.
+
+The conveinent part about this syntax is that the macro block is only
+exited once it sees a dedent back to the level of the ``with!``. All other
+code is indiscriminatly skipped! This allows you to write blocks of code in
+languages other than xonsh without pause!
 
 Take Away
 =========
