@@ -7,7 +7,7 @@ Windows Registry Editor Version 5.00
 ;                   OLD                   MODIFY
 ; NR  cmd.exe       HEX     DWORD         HEX      DWORD
 ; --  -------       ------  ---------     -------  --------
-; 00  Black         000000  00000000      #323232  00323232
+; 00  Black         000000  00000000      #0A0A0A  000A0A0A
 ; 01  Blue          000080  00800000      #4080D6  00D68040
 ; 02  Green         008000  00008000      #00CD00  0000CD00
 ; 03  Aqua          008080  00808000      #00CDCD  00CDCD00
@@ -26,7 +26,7 @@ Windows Registry Editor Version 5.00
 
 
 [HKEY_CURRENT_USER\Console]
-"ColorTable00"=dword:00323232
+"ColorTable00"=dword:000A0A0A
 "ColorTable01"=dword:00D68040
 "ColorTable02"=dword:0000CD00
 "ColorTable03"=dword:00CDCD00
