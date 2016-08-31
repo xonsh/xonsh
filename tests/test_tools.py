@@ -74,6 +74,20 @@ def test_subproc_toks_git_nl():
     assert (exp == obs)
 
 
+def test_bash_macro():
+    s = 'bash -c ! export var=42; echo $var'
+    exp = '![{0}]\n'.format(s)
+    obs = subproc_toks(s + '\n', lexer=LEXER, returnline=True)
+    assert (exp == obs)
+
+
+def test_python_macro():
+    s = 'python -c ! import os; print(os.path.abspath("/"))'
+    exp = '![{0}]\n'.format(s)
+    obs = subproc_toks(s + '\n', lexer=LEXER, returnline=True)
+    assert (exp == obs)
+
+
 def test_subproc_toks_indent_ls():
     s = 'ls -l'
     exp = INDENT + '![{0}]'.format(s)
@@ -328,6 +342,8 @@ def test_subexpr_from_unbalanced_parens(inp, exp):
     ('(ls) && echo a', 1, 4),
     ('not ls && echo a', 0, 8),
     ('not (ls) && echo a', 0, 8),
+    ('bash -c ! export var=42; echo $var', 0, 35),
+    ('python -c ! import os; print(os.path.abspath("/"))', 0, 51),
 ])
 def test_find_next_break(line, mincol, exp):
     obs = find_next_break(line, mincol=mincol, lexer=LEXER)

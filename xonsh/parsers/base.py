@@ -223,6 +223,7 @@ class BaseParser(object):
         self._lines = None
         self.xonsh_code = None
         self._attach_nocomma_tok_rules()
+        self._attach_nocloser_base_rules()
 
         opt_rules = [
             'newlines', 'arglist', 'func_call', 'rarrow_test', 'typedargslist',
@@ -257,7 +258,7 @@ class BaseParser(object):
         for rule in list_rules:
             self._list_rule(rule)
 
-        tok_rules = ['def', 'class', 'return', 'number', 'name',
+        tok_rules = ['def', 'class', 'return', 'number', 'name', 'bang',
                      'none', 'true', 'false', 'ellipsis', 'if', 'del',
                      'assert', 'lparen', 'lbrace', 'lbracket', 'string',
                      'times', 'plus', 'minus', 'divide', 'doublediv', 'mod',
@@ -265,7 +266,8 @@ class BaseParser(object):
                      'for', 'colon', 'import', 'except', 'nonlocal', 'global',
                      'yield', 'from', 'raise', 'with', 'dollar_lparen',
                      'dollar_lbrace', 'dollar_lbracket', 'try',
-                     'bang_lparen', 'bang_lbracket', 'comma', 'rparen']
+                     'bang_lparen', 'bang_lbracket', 'comma', 'rparen',
+                     'rbracket']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -1811,12 +1813,59 @@ class BaseParser(object):
 
     def p_atom_fistful_of_dollars(self, p):
         """atom : dollar_lbrace_tok test RBRACE
-                | dollar_lparen_tok subproc RPAREN
                 | bang_lparen_tok subproc RPAREN
+                | dollar_lparen_tok subproc RPAREN
                 | bang_lbracket_tok subproc RBRACKET
                 | dollar_lbracket_tok subproc RBRACKET
         """
         p[0] = self._dollar_rules(p)
+
+    def p_atom_bang_empty_fistful_of_dollars(self, p):
+        """atom : bang_lparen_tok subproc bang_tok RPAREN
+                | dollar_lparen_tok subproc bang_tok RPAREN
+                | bang_lbracket_tok subproc bang_tok RBRACKET
+                | dollar_lbracket_tok subproc bang_tok RBRACKET
+        """
+        p3 = p[3]
+        node = ast.Str(s='', lineno=p3.lineno, col_offset=p3.lexpos + 1)
+        p[2][-1].elts.append(node)
+        p[0] = self._dollar_rules(p)
+
+    def p_atom_bang_fistful_of_dollars(self, p):
+        """atom : bang_lparen_tok subproc bang_tok nocloser rparen_tok
+                | dollar_lparen_tok subproc bang_tok nocloser rparen_tok
+                | bang_lbracket_tok subproc bang_tok nocloser rbracket_tok
+                | dollar_lbracket_tok subproc bang_tok nocloser rbracket_tok
+        """
+        p3, p5 = p[3], p[5]
+        beg = (p3.lineno, p3.lexpos + 1)
+        end = (p5.lineno, p5.lexpos)
+        s = self.source_slice(beg, end).strip()
+        node = ast.Str(s=s, lineno=beg[0], col_offset=beg[1])
+        p[2][-1].elts.append(node)
+        p[0] = self._dollar_rules(p)
+
+    def _attach_nocloser_base_rules(self):
+        toks = set(self.tokens)
+        toks -= {'LPAREN', 'RPAREN', 'LBRACE', 'RBRACE',
+                 'LBRACKET', 'RBRACKET', 'AT_LPAREN', 'BANG_LPAREN',
+                 'BANG_LBRACKET', 'DOLLAR_LPAREN', 'DOLLAR_LBRACE',
+                 'DOLLAR_LBRACKET', 'ATDOLLAR_LPAREN'}
+        ts = '\n       | '.join(sorted(toks))
+        doc = 'nocloser : ' + ts + '\n'
+        self.p_nocloser_base.__func__.__doc__ = doc
+
+    def p_nocloser_base(self, p):
+        # see above attachament function
+        pass
+
+    def p_nocloser_any(self, p):
+        """nocloser : any_nested_raw"""
+        pass
+
+    def p_nocloser_many(self, p):
+        """nocloser : nocloser nocloser"""
+        pass
 
     def p_string_literal(self, p):
         """string_literal : string_tok"""
@@ -1944,18 +1993,22 @@ class BaseParser(object):
         """nocomma_part : nocomma_tok"""
         pass
 
-    def p_nocomma_part_any(self, p):
-        """nocomma_part : LPAREN any_raw_toks_opt RPAREN
-                        | LBRACE any_raw_toks_opt RBRACE
-                        | LBRACKET any_raw_toks_opt RBRACKET
-                        | AT_LPAREN any_raw_toks_opt RPAREN
-                        | BANG_LPAREN any_raw_toks_opt RPAREN
-                        | BANG_LBRACKET any_raw_toks_opt RBRACKET
-                        | DOLLAR_LPAREN any_raw_toks_opt RPAREN
-                        | DOLLAR_LBRACE any_raw_toks_opt RBRACE
-                        | DOLLAR_LBRACKET any_raw_toks_opt RBRACKET
-                        | ATDOLLAR_LPAREN any_raw_toks_opt RPAREN
+    def p_any_nested_raw(self, p):
+        """any_nested_raw : LPAREN any_raw_toks_opt RPAREN
+                          | LBRACE any_raw_toks_opt RBRACE
+                          | LBRACKET any_raw_toks_opt RBRACKET
+                          | AT_LPAREN any_raw_toks_opt RPAREN
+                          | BANG_LPAREN any_raw_toks_opt RPAREN
+                          | BANG_LBRACKET any_raw_toks_opt RBRACKET
+                          | DOLLAR_LPAREN any_raw_toks_opt RPAREN
+                          | DOLLAR_LBRACE any_raw_toks_opt RBRACE
+                          | DOLLAR_LBRACKET any_raw_toks_opt RBRACKET
+                          | ATDOLLAR_LPAREN any_raw_toks_opt RPAREN
         """
+        pass
+
+    def p_nocomma_part_any(self, p):
+        """nocomma_part : any_nested_raw"""
         pass
 
     def p_nocomma_base(self, p):

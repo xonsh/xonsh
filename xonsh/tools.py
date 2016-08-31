@@ -244,6 +244,9 @@ def find_next_break(line, mincol=0, lexer=None):
         elif tok.type == 'ERRORTOKEN' and ')' in tok.value:
             maxcol = tok.lexpos + mincol + 1
             break
+        elif tok.type == 'BANG':
+            maxcol = mincol + len(line) + 1
+            break
     return maxcol
 
 
@@ -260,11 +263,17 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     lexer.input(line)
     toks = []
     lparens = []
+    saw_macro = False
     end_offset = 0
     for tok in lexer:
         pos = tok.lexpos
         if tok.type not in END_TOK_TYPES and pos >= maxcol:
             break
+        if tok.type == 'BANG':
+            saw_macro = True
+        if saw_macro and tok.type not in ('NEWLINE', 'DEDENT'):
+            toks.append(tok)
+            continue
         if tok.type in LPARENS:
             lparens.append(tok.type)
         if len(toks) == 0 and tok.type in BEG_TOK_SKIPS:
@@ -314,6 +323,8 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
             end_offset = len(el)
     if len(toks) == 0:
         return  # handle comment lines
+    elif saw_macro:
+        end_offset = len(toks[-1].value.rstrip()) + 1
     beg, end = toks[0].lexpos, (toks[-1].lexpos + end_offset)
     end = len(line[:end].rstrip())
     rtn = '![' + line[beg:end] + ']'
