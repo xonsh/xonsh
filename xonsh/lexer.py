@@ -354,6 +354,7 @@ class Lexer(object):
                 'DOLLAR_LBRACE',         # ${
                 'DOLLAR_LBRACKET',       # $[
                 'ATDOLLAR_LPAREN',       # @$(
+                'ERRORTOKEN',            # whoops!
                 ) + tuple(i.upper() for i in kwmod.kwlist)
             self._tokens = t
         return self._tokens
