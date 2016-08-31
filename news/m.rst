@@ -4,6 +4,8 @@
   ``f!(arg)`` syntax.
 * Macro subprocess call now avalaible with the ``echo! x y z``
   syntax.
+* Macro context managers are now available via the ``with!``
+  syntax.
 
 **Changed:** None
 

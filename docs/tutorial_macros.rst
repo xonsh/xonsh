@@ -477,7 +477,65 @@ an AST, byte compiled, etc.
 The conveinent part about this syntax is that the macro block is only
 exited once it sees a dedent back to the level of the ``with!``. All other
 code is indiscriminatly skipped! This allows you to write blocks of code in
-languages other than xonsh without pause!
+languages other than xonsh without pause.
+
+For example, consider a simple
+XML macro context manager. This will return the parsed XML tree from a
+macro block. The context manager itself can be written as:
+
+
+.. code-block:: python
+
+    import xml.etree.ElementTree as ET
+
+    class XmlBlock:
+
+        # make sure the macro_block comes back as a string
+        __xonsh_block__ = str
+
+        def __enter__(self):
+            # parse and return the block on entry
+            root = ET.fromstring(self.macro_block)
+            return root
+
+        def __exit__(self, *exc):
+            # no reason to keep these attributes arround.
+            del self.macro_block, self.macro_globals, self.macro_locals
+
+
+The above class may then be used in a with-bang as follows:
+
+.. code-block:: xonsh
+
+    with! XmlBlock() as tree:
+        <note>
+          <to>You</to>
+          <from>Xonsh</from>
+          <heading>Don't You Want Me, Baby</heading>
+          <body>
+            You know I don't believe you when you say that you don't need me.
+          </body>
+        </note>
+
+And if you run this, you'll see that the ``tree`` object really is a parsed
+XML object.
+
+.. code-block:: xonshcon
+
+    >>> print(tree.tag)
+    note
+
+
+So in roughly eight lines of xonsh code, you can seemlessly interface
+with another, vastly different language.
+
+The possibilies for this are not limited to just markup languages or other
+party tricks. You could be a remote execution interface via SSH, RPC,
+dask / distributed, etc. The real benefit of context manager macros is
+that they allow you to select when, where, and what code is executed as a
+part of the xonsh language itself.
+
+The power is there; use it without reservation!
 
 Take Away
 =========
