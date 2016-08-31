@@ -10,7 +10,7 @@ import builtins
 import subprocess
 import warnings
 import functools
-import collections.abc as abc
+import collections.abc as cabc
 
 from xonsh.lazyasd import lazyobject
 from xonsh.tools import to_bool, ensure_string
@@ -459,7 +459,7 @@ def VALID_SHELL_PARAMS():
 
 def ensure_shell(shell):
     """Ensures that a mapping follows the shell specification."""
-    if not isinstance(shell, abc.MutableMapping):
+    if not isinstance(shell, cabc.MutableMapping):
         shell = dict(shell)
     shell_keys = set(shell.keys())
     if not (shell_keys <= VALID_SHELL_PARAMS):
@@ -480,9 +480,9 @@ def ensure_shell(shell):
         shell['extra_args'] = tuple(map(ensure_string, shell['extra_args']))
     if 'currenv' in shell_keys and not isinstance(shell['currenv'], tuple):
         ce = shell['currenv']
-        if isinstance(ce, abc.Mapping):
+        if isinstance(ce, cabc.Mapping):
             ce = tuple([(ensure_string(k), v) for k, v in ce.items()])
-        elif isinstance(ce, abc.Sequence):
+        elif isinstance(ce, cabc.Sequence):
             ce = tuple([(ensure_string(k), v) for k, v in ce])
         else:
             raise RuntimeError('unrecognized type for currenv')

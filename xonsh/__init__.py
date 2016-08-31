@@ -1,7 +1,7 @@
 __version__ = '0.4.5'
 
 # amalgamate exclude jupyter_kernel parser_table parser_test_table pyghooks
-# amalgamate exclude winutils wizard
+# amalgamate exclude winutils wizard pytest_plugin
 import os as _os
 if _os.getenv('XONSH_DEBUG', ''):
     pass
@@ -43,8 +43,8 @@ else:
         _sys.modules['xonsh.contexts'] = __amalgam__
         diff_history = __amalgam__
         _sys.modules['xonsh.diff_history'] = __amalgam__
-        dirstack = __amalgam__
-        _sys.modules['xonsh.dirstack'] = __amalgam__
+        events = __amalgam__
+        _sys.modules['xonsh.events'] = __amalgam__
         foreign_shells = __amalgam__
         _sys.modules['xonsh.foreign_shells'] = __amalgam__
         lexer = __amalgam__
@@ -55,14 +55,16 @@ else:
         _sys.modules['xonsh.proc'] = __amalgam__
         xontribs = __amalgam__
         _sys.modules['xonsh.xontribs'] = __amalgam__
-        commands_cache = __amalgam__
-        _sys.modules['xonsh.commands_cache'] = __amalgam__
-        environ = __amalgam__
-        _sys.modules['xonsh.environ'] = __amalgam__
+        dirstack = __amalgam__
+        _sys.modules['xonsh.dirstack'] = __amalgam__
         history = __amalgam__
         _sys.modules['xonsh.history'] = __amalgam__
         inspectors = __amalgam__
         _sys.modules['xonsh.inspectors'] = __amalgam__
+        commands_cache = __amalgam__
+        _sys.modules['xonsh.commands_cache'] = __amalgam__
+        environ = __amalgam__
+        _sys.modules['xonsh.environ'] = __amalgam__
         base_shell = __amalgam__
         _sys.modules['xonsh.base_shell'] = __amalgam__
         replay = __amalgam__

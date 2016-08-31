@@ -17,7 +17,7 @@ import itertools
 import contextlib
 import subprocess
 import collections
-import collections.abc as abc
+import collections.abc as cabc
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.jobs import get_next_task
@@ -102,6 +102,7 @@ def DEFAULT_ENSURERS():
     'COLOR_INPUT': (is_bool, to_bool, bool_to_str),
     'COLOR_RESULTS': (is_bool, to_bool, bool_to_str),
     'COMPLETIONS_BRACKETS': (is_bool, to_bool, bool_to_str),
+    'COMPLETIONS_CONFIRM': (is_bool, to_bool, bool_to_str),
     'COMPLETIONS_DISPLAY': (is_completions_display_value,
                             to_completions_display_value, str),
     'COMPLETIONS_MENU_ROWS': (is_int, int, str),
@@ -246,6 +247,7 @@ def DEFAULT_VALUES():
         'COLOR_INPUT': True,
         'COLOR_RESULTS': True,
         'COMPLETIONS_BRACKETS': True,
+        'COMPLETIONS_CONFIRM': False,
         'COMPLETIONS_DISPLAY': 'multi',
         'COMPLETIONS_MENU_ROWS': 5,
         'DIRSTACK_SIZE': 20,
@@ -399,6 +401,10 @@ def DEFAULT_DOCS():
         "writing \"$COMPLETIONS_DISPLAY = None\" and \"$COMPLETIONS_DISPLAY "
         "= 'none'\" are equivalent. Only usable with "
         "$SHELL_TYPE=prompt_toolkit"),
+    'COMPLETIONS_CONFIRM': VarDocs(
+        'While tab-completions menu is displayed, press <Enter> to confirm '
+        'completion instead of running command. This only affects the '
+        'prompt-toolkit shell.'),
     'COMPLETIONS_MENU_ROWS': VarDocs(
         'Number of rows to reserve for tab-completions menu if '
         "$COMPLETIONS_DISPLAY is 'single' or 'multi'. This only affects the "
@@ -660,7 +666,7 @@ def DEFAULT_DOCS():
 # actual environment
 #
 
-class Env(abc.MutableMapping):
+class Env(cabc.MutableMapping):
     """A xonsh environment, whose variables have limited typing
     (unlike BASH). Most variables are, by default, strings (like BASH).
     However, the following rules also apply based on variable-name:
@@ -701,7 +707,7 @@ class Env(abc.MutableMapping):
 
     @staticmethod
     def detypeable(val):
-        return not (callable(val) or isinstance(val, abc.MutableMapping))
+        return not (callable(val) or isinstance(val, cabc.MutableMapping))
 
     def detype(self):
         if self._detyped is not None:
@@ -817,8 +823,8 @@ class Env(abc.MutableMapping):
         else:
             e = "Unknown environment variable: ${}"
             raise KeyError(e.format(key))
-        if isinstance(val, (abc.MutableSet, abc.MutableSequence,
-                            abc.MutableMapping)):
+        if isinstance(val, (cabc.MutableSet, cabc.MutableSequence,
+                            cabc.MutableMapping)):
             self._detyped = None
         return val
 
@@ -1422,7 +1428,7 @@ def load_static_config(ctx, config=None):
         with open(config, 'r', encoding=encoding, errors=errors) as f:
             try:
                 conf = json.load(f)
-                assert isinstance(conf, abc.Mapping)
+                assert isinstance(conf, cabc.Mapping)
                 ctx['LOADED_CONFIG'] = True
             except Exception as e:
                 conf = {}

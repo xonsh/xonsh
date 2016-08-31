@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 import os
 import builtins
-import collections.abc as abc
+import collections.abc as cabc
 
 from xonsh.dirstack import _get_cwd
 from xonsh.platform import ON_WINDOWS
 from xonsh.tools import executables_in
 
 
-class CommandsCache(abc.Mapping):
+class CommandsCache(cabc.Mapping):
     """A lazy cache representing the commands available on the file system.
     The keys are the command names and the values a tuple of (loc, has_alias)
     where loc is either a str pointing to the executable on the file system or

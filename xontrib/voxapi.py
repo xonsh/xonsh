@@ -1,4 +1,13 @@
-"""API for Vox, the Python virtual environment manager for xonsh."""
+"""
+API for Vox, the Python virtual environment manager for xonsh.
+
+Vox defines several events related to the life cycle of virtual environments:
+
+* ``vox_on_create(env: str) -> None``
+* ``vox_on_activate(env: str) -> None``
+* ``vox_on_deactivate(env: str) -> None``
+* ``vox_on_delete(env: str) -> None``
+"""
 import os
 import venv
 import shutil
@@ -7,16 +16,45 @@ import collections.abc
 
 from xonsh.platform import ON_POSIX, ON_WINDOWS, scandir
 
+# This is because builtins aren't globally created during testing.
+# FIXME: Is there a better way?
+from xonsh.events import events
+
+
+events.doc('vox_on_create', """
+vox_on_create(env: str) -> None
+
+Fired after an environment is created.
+""")
+
+events.doc('vox_on_activate', """
+vox_on_activate(env: str) -> None
+
+Fired after an environment is activated.
+""")
+
+events.doc('vox_on_deactivate', """
+vox_on_deactivate(env: str) -> None
+
+Fired after an environment is deactivated.
+""")
+
+events.doc('vox_on_delete', """
+vox_on_delete(env: str) -> None
+
+Fired after an environment is deleted (through vox).
+""")
+
 
 VirtualEnvironment = collections.namedtuple('VirtualEnvironment', ['env', 'bin'])
 
 
 class EnvironmentInUse(Exception):
-    pass
+    """The given environment is currently activated, and the operation cannot be performed."""
 
 
 class NoEnvironmentActive(Exception):
-    pass
+    """No environment is currently activated, and the operation cannot be performed."""
 
 
 class Vox(collections.abc.Mapping):
@@ -60,6 +98,7 @@ class Vox(collections.abc.Mapping):
             env_path,
             system_site_packages=system_site_packages, symlinks=symlinks,
             with_pip=with_pip)
+        events.vox_on_create.fire(name)
 
     def upgrade(self, name, *, symlinks=False, with_pip=True):
         """Create a virtual environment in $VIRTUALENV_HOME with python3's ``venv``.
@@ -159,7 +198,7 @@ class Vox(collections.abc.Mapping):
         env_path = builtins.__xonsh_env__['VIRTUAL_ENV']
         if env_path.startswith(self.venvdir):
             name = env_path[len(self.venvdir):]
-            if name[0] == '/':
+            if name[0] in '/\\':
                 name = name[1:]
             return name
         else:
@@ -185,6 +224,8 @@ class Vox(collections.abc.Mapping):
         if 'PYTHONHOME' in env:
             type(self).oldvars['PYTHONHOME'] = env.pop('PYTHONHOME')
 
+        events.vox_on_activate.fire(name)
+
     def deactivate(self):
         """
         Deactive the active virtual environment. Returns the name of it.
@@ -203,6 +244,7 @@ class Vox(collections.abc.Mapping):
 
         env.pop('VIRTUAL_ENV')
 
+        events.vox_on_deactivate.fire(env_name)
         return env_name
 
     def __delitem__(self, name):
@@ -222,3 +264,5 @@ class Vox(collections.abc.Mapping):
             # No current venv, ... fails
             pass
         shutil.rmtree(env_path)
+
+        events.vox_on_delete.fire(name)
