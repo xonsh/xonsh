@@ -12,7 +12,7 @@ import pytest
 from xonsh import built_ins
 from xonsh.built_ins import reglob, pathsearch, helper, superhelper, \
     ensure_list_of_strs, list_of_strs_or_callables, regexsearch, \
-    globsearch, convert_macro_arg, macro_context, call_macro
+    globsearch, expand_path, convert_macro_arg, macro_context, call_macro
 from xonsh.environ import Env
 
 from tools import skip_if_on_windows
@@ -121,6 +121,21 @@ def test_list_of_strs_or_callables(exp, inp):
     obs = list_of_strs_or_callables(inp)
     assert exp == obs
 
+
+@pytest.mark.parametrize('s', [
+    '~',
+    '~/',
+    'x=~/place',
+    'one:~/place',
+    'one:~/place:~/yo',
+    '~/one:~/place:~/yo',
+    ])
+def test_expand_path(s, home_env):
+    if os.sep != '/':
+        s = s.replace('/', os.sep)
+    if os.pathsep != ':':
+        s = s.replace(':', os.pathsep)
+    assert expand_path(s) == s.replace('~', HOME_PATH)
 
 @pytest.mark.parametrize('kind', [str, 's', 'S', 'str', 'string'])
 def test_convert_macro_arg_str(kind):

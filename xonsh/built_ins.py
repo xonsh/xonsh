@@ -103,7 +103,14 @@ def expand_path(s):
     """Takes a string path and expands ~ to home and environment vars."""
     if builtins.__xonsh_env__.get('EXPAND_ENV_VARS'):
         s = expandvars(s)
-    return os.path.expanduser(s)
+    # expand ~ according to Bash unquoted rules "Each variable assignment is
+    # checked for unquoted tilde-prefixes immediately following a ':' or the
+    # first '='". See the following for more details.
+    # https://www.gnu.org/software/bash/manual/html_node/Tilde-Expansion.html
+    pre, char, post = s.partition('=')
+    s = pre + char + os.path.expanduser(post) if char else s
+    s = os.pathsep.join(map(os.path.expanduser, s.split(os.pathsep)))
+    return s
 
 
 def reglob(path, parts=None, i=None):
