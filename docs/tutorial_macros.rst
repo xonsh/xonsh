@@ -375,7 +375,7 @@ like wrapping with quotes:
     >>> echo "x  y       z"
     x  y       z
 
-    # however, subproces macros will pause and then strip
+    # however, subprocess macros will pause and then strip
     # all input after the exclamation point
     >>> echo! x  y       z
     x  y       z
@@ -385,7 +385,7 @@ expansion, that might be present even with quotes.  For example:
 
 .. code-block:: xonshcon
 
-    # without macros, envrioment variable are expanded
+    # without macros, environment variable are expanded
     >>> echo $USER
     lou
 

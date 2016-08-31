@@ -270,7 +270,8 @@ class BaseParser(object):
                      'yield', 'from', 'raise', 'with', 'dollar_lparen',
                      'dollar_lbrace', 'dollar_lbracket', 'try',
                      'bang_lparen', 'bang_lbracket', 'comma', 'rparen',
-                     'rbracket', 'indent', 'dedent', 'newline']
+                     'rbracket', 'at_lparen', 'atdollar_lparen', 'indent',
+                     'dedent', 'newline']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -1934,9 +1935,7 @@ class BaseParser(object):
                 | bang_lbracket_tok subproc bang_tok RBRACKET
                 | dollar_lbracket_tok subproc bang_tok RBRACKET
         """
-        p3 = p[3]
-        node = ast.Str(s='', lineno=p3.lineno, col_offset=p3.lexpos + 1)
-        p[2][-1].elts.append(node)
+        self._append_subproc_bang_empty(p)
         p[0] = self._dollar_rules(p)
 
     def p_atom_bang_fistful_of_dollars(self, p):
@@ -1945,12 +1944,7 @@ class BaseParser(object):
                 | bang_lbracket_tok subproc bang_tok nocloser rbracket_tok
                 | dollar_lbracket_tok subproc bang_tok nocloser rbracket_tok
         """
-        p3, p5 = p[3], p[5]
-        beg = (p3.lineno, p3.lexpos + 1)
-        end = (p5.lineno, p5.lexpos)
-        s = self.source_slice(beg, end).strip()
-        node = ast.Str(s=s, lineno=beg[0], col_offset=beg[1])
-        p[2][-1].elts.append(node)
+        self._append_subproc_bang(p)
         p[0] = self._dollar_rules(p)
 
     def _attach_nocloser_base_rules(self):
@@ -2502,14 +2496,40 @@ class BaseParser(object):
     #
     # Subproc atom rules
     #
+    def _append_subproc_bang_empty(self, p):
+        """Appends an empty string in subprocess mode to the argument list."""
+        p3 = p[3]
+        node = ast.Str(s='', lineno=p3.lineno, col_offset=p3.lexpos + 1)
+        p[2][-1].elts.append(node)
+
+    def _append_subproc_bang(self, p):
+        """Appends the part between ! and the ) or ] in subprocess mode to the
+        argument list.
+        """
+        p3, p5 = p[3], p[5]
+        beg = (p3.lineno, p3.lexpos + 1)
+        end = (p5.lineno, p5.lexpos)
+        s = self.source_slice(beg, end).strip()
+        node = ast.Str(s=s, lineno=beg[0], col_offset=beg[1])
+        p[2][-1].elts.append(node)
+
     def p_subproc_atom_uncaptured(self, p):
         """subproc_atom : dollar_lbracket_tok subproc RBRACKET"""
-
         p1 = p[1]
         p0 = xonsh_call('__xonsh_subproc_uncaptured__', args=p[2],
                         lineno=p1.lineno, col=p1.lexpos)
         p0._cliarg_action = 'splitlines'
         p[0] = p0
+
+    def p_subproc_atom_uncaptured_bang_empty(self, p):
+        """subproc_atom : dollar_lbracket_tok subproc bang_tok RBRACKET"""
+        self._append_subproc_bang_empty(p)
+        self.p_subproc_atom_uncaptured(p)
+
+    def p_subproc_atom_uncaptured_bang(self, p):
+        """subproc_atom : dollar_lbracket_tok subproc bang_tok nocloser rbracket_tok"""
+        self._append_subproc_bang(p)
+        self.p_subproc_atom_uncaptured(p)
 
     def p_subproc_atom_captured_stdout(self, p):
         """subproc_atom : dollar_lparen_tok subproc RPAREN"""
@@ -2518,6 +2538,16 @@ class BaseParser(object):
                         lineno=p1.lineno, col=p1.lexpos)
         p0._cliarg_action = 'append'
         p[0] = p0
+
+    def p_subproc_atom_captured_stdout_bang_empty(self, p):
+        """subproc_atom : dollar_lparen_tok subproc bang_tok RPAREN"""
+        self._append_subproc_bang_empty(p)
+        self.p_subproc_atom_captured_stdout(p)
+
+    def p_subproc_atom_captured_stdout_bang(self, p):
+        """subproc_atom : dollar_lparen_tok subproc bang_tok nocloser rparen_tok"""
+        self._append_subproc_bang(p)
+        self.p_subproc_atom_uncaptured_stdout(p)
 
     def p_subproc_atom_pyenv_lookup(self, p):
         """subproc_atom : dollar_lbrace_tok test RBRACE"""
@@ -2534,18 +2564,30 @@ class BaseParser(object):
         p[0] = p0
 
     def p_subproc_atom_pyeval(self, p):
-        """subproc_atom : AT_LPAREN test RPAREN"""
+        """subproc_atom : at_lparen_tok test RPAREN"""
+        p1 = p[1]
         p0 = xonsh_call('__xonsh_list_of_strs_or_callables__', [p[2]],
-                        lineno=self.lineno, col=self.col)
+                        lineno=p1.lineno, col=p1.lexpos)
         p0._cliarg_action = 'extend'
         p[0] = p0
 
     def p_subproc_atom_subproc_inject(self, p):
-        """subproc_atom : ATDOLLAR_LPAREN subproc RPAREN"""
+        """subproc_atom : atdollar_lparen_tok subproc RPAREN"""
+        p1 = p[1]
         p0 = xonsh_call('__xonsh_subproc_captured_inject__', p[2],
-                        lineno=self.lineno, col=self.col)
+                        lineno=p1.lineno, col=p1.lexpos)
         p0._cliarg_action = 'extend'
         p[0] = p0
+
+    def p_subproc_atom_subproc_inject_bang_empty(self, p):
+        """subproc_atom : atdollar_lparen_tok subproc bang_tok RPAREN"""
+        self._append_subproc_bang_empty(p)
+        self.p_subproc_atom_subproc_inject(p)
+
+    def p_subproc_atom_subproc_inject_bang(self, p):
+        """subproc_atom : atdollar_lparen_tok subproc bang_tok nocloser rparen_tok"""
+        self._append_subproc_bang(p)
+        self.p_subproc_atom_subproc_inject(p)
 
     def p_subproc_atom_redirect(self, p):
         """subproc_atom : GT
