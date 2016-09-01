@@ -2,7 +2,7 @@
 
 **Changed:**
 
-* $TITLE now changes both icon (tab) and window title
+* New implementation of bash completer with better performance and compatibility.
 
 **Deprecated:** None
 

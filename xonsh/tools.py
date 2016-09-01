@@ -19,12 +19,13 @@ Implementations:
 """
 import builtins
 import collections
-import collections.abc as abc
+import collections.abc as cabc
 import contextlib
 import ctypes
 import datetime
 import functools
 import glob
+import itertools
 import os
 import pathlib
 import re
@@ -243,6 +244,9 @@ def find_next_break(line, mincol=0, lexer=None):
         elif tok.type == 'ERRORTOKEN' and ')' in tok.value:
             maxcol = tok.lexpos + mincol + 1
             break
+        elif tok.type == 'BANG':
+            maxcol = mincol + len(line) + 1
+            break
     return maxcol
 
 
@@ -259,11 +263,17 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
     lexer.input(line)
     toks = []
     lparens = []
+    saw_macro = False
     end_offset = 0
     for tok in lexer:
         pos = tok.lexpos
         if tok.type not in END_TOK_TYPES and pos >= maxcol:
             break
+        if tok.type == 'BANG':
+            saw_macro = True
+        if saw_macro and tok.type not in ('NEWLINE', 'DEDENT'):
+            toks.append(tok)
+            continue
         if tok.type in LPARENS:
             lparens.append(tok.type)
         if len(toks) == 0 and tok.type in BEG_TOK_SKIPS:
@@ -313,6 +323,8 @@ def subproc_toks(line, mincol=-1, maxcol=None, lexer=None, returnline=False):
             end_offset = len(el)
     if len(toks) == 0:
         return  # handle comment lines
+    elif saw_macro:
+        end_offset = len(toks[-1].value.rstrip()) + 1
     beg, end = toks[0].lexpos, (toks[-1].lexpos + end_offset)
     end = len(line[:end].rstrip())
     rtn = '![' + line[beg:end] + ']'
@@ -540,7 +552,7 @@ def command_not_found(cmd):
     c = '/usr/lib/command-not-found {0}; exit 0'
     s = subprocess.check_output(c.format(cmd), universal_newlines=True,
                                 stderr=subprocess.STDOUT, shell=True)
-    s = '\n'.join(s.splitlines()[:-1]).strip()
+    s = '\n'.join(s.rstrip().splitlines()).strip()
     return s
 
 
@@ -928,14 +940,14 @@ def SLICE_REG():
 
 def ensure_slice(x):
     """Try to convert an object into a slice, complain on failure"""
-    if not x:
+    if not x and x != 0:
         return slice(None)
-    elif isinstance(x, slice):
+    elif is_slice(x):
         return x
     try:
         x = int(x)
         if x != -1:
-            s = slice(x, x+1)
+            s = slice(x, x + 1)
         else:
             s = slice(-1, None, None)
     except ValueError:
@@ -952,6 +964,28 @@ def ensure_slice(x):
         except (TypeError, ValueError):
             raise ValueError('cannot convert {!r} to slice'.format(x))
     return s
+
+
+def get_portions(it, slices):
+    """Yield from portions of an iterable.
+
+    Parameters
+    ----------
+    it: iterable
+    slices: a slice or a list of slice objects
+    """
+    if is_slice(slices):
+        slices = [slices]
+    if len(slices) == 1:
+        s = slices[0]
+        try:
+            yield from itertools.islice(it, s.start, s.stop, s.step)
+            return
+        except ValueError:  # islice failed
+            pass
+    it = list(it)
+    for s in slices:
+        yield from it[s]
 
 
 def is_slice_as_str(x):
@@ -980,7 +1014,7 @@ def is_int_as_str(x):
 
 def is_string_set(x):
     """Tests if something is a set of strings"""
-    return (isinstance(x, abc.Set) and
+    return (isinstance(x, cabc.Set) and
             all(isinstance(a, str) for a in x))
 
 
@@ -1016,7 +1050,7 @@ def set_to_pathsep(x, sort=False):
 
 def is_string_seq(x):
     """Tests if something is a sequence of strings"""
-    return (isinstance(x, abc.Sequence) and
+    return (isinstance(x, cabc.Sequence) and
             all(isinstance(a, str) for a in x))
 
 
@@ -1024,7 +1058,7 @@ def is_nonstring_seq_of_strings(x):
     """Tests if something is a sequence of strings, where the top-level
     sequence is not a string itself.
     """
-    return (isinstance(x, abc.Sequence) and not isinstance(x, str) and
+    return (isinstance(x, cabc.Sequence) and not isinstance(x, str) and
             all(isinstance(a, str) for a in x))
 
 
@@ -1058,7 +1092,7 @@ def seq_to_upper_pathsep(x):
 
 def is_bool_seq(x):
     """Tests if an object is a sequence of bools."""
-    return isinstance(x, abc.Sequence) and all(isinstance(y, bool) for y in x)
+    return isinstance(x, cabc.Sequence) and all(isinstance(y, bool) for y in x)
 
 
 def csv_to_bool_seq(x):
@@ -1177,7 +1211,7 @@ HISTORY_UNITS = LazyObject(lambda: {
 
 def is_history_tuple(x):
     """Tests if something is a proper history value, units tuple."""
-    if (isinstance(x, abc.Sequence) and
+    if (isinstance(x, cabc.Sequence) and
             len(x) == 2 and
             isinstance(x[0], (int, float)) and
             x[1].lower() in CANON_HISTORY_UNITS):
@@ -1224,7 +1258,7 @@ RE_HISTORY_TUPLE = LazyObject(
 
 def to_history_tuple(x):
     """Converts to a canonincal history tuple."""
-    if not isinstance(x, (abc.Sequence, float, int)):
+    if not isinstance(x, (cabc.Sequence, float, int)):
         raise ValueError('history size must be given as a sequence or number')
     if isinstance(x, str):
         m = RE_HISTORY_TUPLE.match(x.strip().lower())

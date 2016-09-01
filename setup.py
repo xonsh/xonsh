@@ -70,7 +70,7 @@ def build_tables():
     sys.path.insert(0, os.path.dirname(__file__))
     from xonsh.parser import Parser
     Parser(lexer_table='lexer_table', yacc_table='parser_table',
-           outputdir='xonsh')
+           outputdir='xonsh', yacc_debug=True)
     sys.path.pop(0)
 
 
@@ -310,7 +310,8 @@ def main():
         skw['entry_points'] = {
             'pygments.lexers': ['xonsh = xonsh.pyghooks:XonshLexer',
                                 'xonshcon = xonsh.pyghooks:XonshConsoleLexer'],
-            }
+            'pytest11': ['xonsh = xonsh.pytest_plugin']
+        }
         skw['cmdclass']['develop'] = xdevelop
     setup(**skw)
 

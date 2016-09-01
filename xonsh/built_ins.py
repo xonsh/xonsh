@@ -8,16 +8,19 @@ import os
 import re
 import sys
 import time
+import types
 import shlex
 import signal
 import atexit
 import inspect
 import tempfile
 import builtins
+import itertools
 import subprocess
 import contextlib
-import collections.abc as abc
+import collections.abc as cabc
 
+from xonsh.ast import AST
 from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.history import History
 from xonsh.inspectors import Inspector
@@ -35,6 +38,7 @@ from xonsh.tools import (
     XonshCalledProcessError, XonshBlockError
 )
 from xonsh.commands_cache import CommandsCache
+from xonsh.events import events
 
 import xonsh.completers.init
 
@@ -99,7 +103,14 @@ def expand_path(s):
     """Takes a string path and expands ~ to home and environment vars."""
     if builtins.__xonsh_env__.get('EXPAND_ENV_VARS'):
         s = expandvars(s)
-    return os.path.expanduser(s)
+    # expand ~ according to Bash unquoted rules "Each variable assignment is
+    # checked for unquoted tilde-prefixes immediately following a ':' or the
+    # first '='". See the following for more details.
+    # https://www.gnu.org/software/bash/manual/html_node/Tilde-Expansion.html
+    pre, char, post = s.partition('=')
+    s = pre + char + os.path.expanduser(post) if char else s
+    s = os.pathsep.join(map(os.path.expanduser, s.split(os.pathsep)))
+    return s
 
 
 def reglob(path, parts=None, i=None):
@@ -661,7 +672,7 @@ def ensure_list_of_strs(x):
     """Ensures that x is a list of strings."""
     if isinstance(x, str):
         rtn = [x]
-    elif isinstance(x, abc.Sequence):
+    elif isinstance(x, cabc.Sequence):
         rtn = [i if isinstance(i, str) else str(i) for i in x]
     else:
         rtn = [str(x)]
@@ -672,11 +683,202 @@ def list_of_strs_or_callables(x):
     """Ensures that x is a list of strings or functions"""
     if isinstance(x, str) or callable(x):
         rtn = [x]
-    elif isinstance(x, abc.Sequence):
+    elif isinstance(x, cabc.Sequence):
         rtn = [i if isinstance(i, str) or callable(i) else str(i) for i in x]
     else:
         rtn = [str(x)]
     return rtn
+
+
+@lazyobject
+def MACRO_FLAG_KINDS():
+    return {
+        's': str,
+        'str': str,
+        'string': str,
+        'a': AST,
+        'ast': AST,
+        'c': types.CodeType,
+        'code': types.CodeType,
+        'compile': types.CodeType,
+        'v': eval,
+        'eval': eval,
+        'x': exec,
+        'exec': exec,
+        't': type,
+        'type': type,
+        }
+
+
+def _convert_kind_flag(x):
+    """Puts a kind flag (string) a canonical form."""
+    x = x.lower()
+    kind = MACRO_FLAG_KINDS.get(x, None)
+    if kind is None:
+        raise TypeError('{0!r} not a recognized macro type.'.format(x))
+    return kind
+
+
+def convert_macro_arg(raw_arg, kind, glbs, locs, *, name='<arg>',
+                      macroname='<macro>'):
+    """Converts a string macro argument based on the requested kind.
+
+    Parameters
+    ----------
+    raw_arg : str
+        The str reprensetaion of the macro argument.
+    kind : object
+        A flag or type representing how to convert the argument.
+    glbs : Mapping
+        The globals from the call site.
+    locs : Mapping or None
+        The locals from the call site.
+    name : str, optional
+        The macro argument name.
+    macroname : str, optional
+        The name of the macro itself.
+
+    Returns
+    -------
+    The converted argument.
+    """
+    # munge kind and mode to start
+    mode = None
+    if isinstance(kind, cabc.Sequence) and not isinstance(kind, str):
+        # have (kind, mode) tuple
+        kind, mode = kind
+    if isinstance(kind, str):
+        kind = _convert_kind_flag(kind)
+    if kind is str:
+        return raw_arg  # short circut since there is nothing else to do
+    # select from kind and convert
+    execer = builtins.__xonsh_execer__
+    filename = macroname + '(' + name + ')'
+    if kind is AST:
+        ctx = set(dir(builtins)) | set(glbs.keys())
+        if locs is not None:
+            ctx |= set(locs.keys())
+        mode = mode or 'eval'
+        arg = execer.parse(raw_arg, ctx, mode=mode, filename=filename)
+    elif kind is types.CodeType or kind is compile:
+        mode = mode or 'eval'
+        arg = execer.compile(raw_arg, mode=mode, glbs=glbs, locs=locs,
+                             filename=filename)
+    elif kind is eval or kind is None:
+        arg = execer.eval(raw_arg, glbs=glbs, locs=locs, filename=filename)
+    elif kind is exec:
+        mode = mode or 'exec'
+        if not raw_arg.endswith('\n'):
+            raw_arg += '\n'
+        arg = execer.exec(raw_arg, mode=mode, glbs=glbs, locs=locs,
+                          filename=filename)
+    elif kind is type:
+        arg = type(execer.eval(raw_arg, glbs=glbs, locs=locs,
+                               filename=filename))
+    else:
+        msg = ('kind={0!r} and mode={1!r} was not recongnized for macro '
+               'argument {2!r}')
+        raise TypeError(msg.format(kind, mode, name))
+    return arg
+
+
+@contextlib.contextmanager
+def macro_context(f, glbs, locs):
+    """Attaches macro globals and locals temporarily to function as a
+    context manager.
+
+    Parameters
+    ----------
+    f : callable object
+        The function that is called as f(*args).
+    glbs : Mapping
+        The globals from the call site.
+    locs : Mapping or None
+        The locals from the call site.
+    """
+    prev_glbs = getattr(f, 'macro_globals', None)
+    prev_locs = getattr(f, 'macro_locals', None)
+    f.macro_globals = glbs
+    f.macro_locals = locs
+    yield
+    if prev_glbs is None:
+        del f.macro_globals
+    else:
+        f.macro_globals = prev_glbs
+    if prev_locs is None:
+        del f.macro_locals
+    else:
+        f.macro_locals = prev_locs
+
+
+def call_macro(f, raw_args, glbs, locs):
+    """Calls a function as a macro, returning its result.
+
+    Parameters
+    ----------
+    f : callable object
+        The function that is called as f(*args).
+    raw_args : tuple of str
+        The str reprensetaion of arguments of that were passed into the
+        macro. These strings will be parsed, compiled, evaled, or left as
+        a string dependending on the annotations of f.
+    glbs : Mapping
+        The globals from the call site.
+    locs : Mapping or None
+        The locals from the call site.
+    """
+    sig = inspect.signature(f)
+    empty = inspect.Parameter.empty
+    macroname = f.__name__
+    i = 0
+    args = []
+    for (key, param), raw_arg in zip(sig.parameters.items(), raw_args):
+        i += 1
+        if raw_arg == '*':
+            break
+        kind = param.annotation
+        if kind is empty or kind is None:
+            kind = eval
+        arg = convert_macro_arg(raw_arg, kind, glbs, locs, name=key,
+                                macroname=macroname)
+        args.append(arg)
+    reg_args, kwargs = _eval_regular_args(raw_args[i:], glbs, locs)
+    args += reg_args
+    with macro_context(f, glbs, locs):
+        rtn = f(*args, **kwargs)
+    return rtn
+
+
+@lazyobject
+def KWARG_RE():
+    return re.compile('([A-Za-z_]\w*=|\*\*)')
+
+
+def _starts_as_arg(s):
+    """Tests if a string starts as a non-kwarg string would."""
+    return KWARG_RE.match(s) is None
+
+
+def _eval_regular_args(raw_args, glbs, locs):
+    if not raw_args:
+        return [], {}
+    arglist = list(itertools.takewhile(_starts_as_arg, raw_args))
+    kwarglist = raw_args[len(arglist):]
+    execer = builtins.__xonsh_execer__
+    if not arglist:
+        args = arglist
+        kwargstr = 'dict({})'.format(', '.join(kwarglist))
+        kwargs = execer.eval(kwargstr, glbs=glbs, locs=locs)
+    elif not kwarglist:
+        argstr = '({},)'.format(', '.join(arglist))
+        args = execer.eval(argstr, glbs=glbs, locs=locs)
+        kwargs = {}
+    else:
+        argstr = '({},)'.format(', '.join(arglist))
+        kwargstr = 'dict({})'.format(', '.join(kwarglist))
+        both = '({}, {})'.format(argstr, kwargstr)
+        args, kwargs = execer.eval(both, glbs=glbs, locs=locs)
+    return args, kwargs
 
 
 def load_builtins(execer=None, config=None, login=False, ctx=None):
@@ -714,6 +916,7 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     builtins.__xonsh_list_of_strs_or_callables__ = list_of_strs_or_callables
     builtins.__xonsh_completers__ = xonsh.completers.init.default_completers()
+    builtins.__xonsh_call_macro__ = call_macro
     # public built-ins
     builtins.XonshError = XonshError
     builtins.XonshBlockError = XonshBlockError
@@ -721,6 +924,7 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.evalx = None if execer is None else execer.eval
     builtins.execx = None if execer is None else execer.exec
     builtins.compilex = None if execer is None else execer.compile
+    builtins.events = events
 
     # sneak the path search functions into the aliases
     # Need this inline/lazy import here since we use locate_binary that relies on __xonsh_env__ in default aliases
@@ -779,6 +983,7 @@ def unload_builtins():
              '__xonsh_execer__',
              '__xonsh_commands_cache__',
              '__xonsh_completers__',
+             '__xonsh_call_macro__',
              'XonshError',
              'XonshBlockError',
              'XonshCalledProcessError',

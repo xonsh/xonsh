@@ -4,13 +4,14 @@ import os
 import sys
 import ast
 import builtins
+import itertools
 
 import pytest
 
-from xonsh.ast import pdump
+from xonsh.ast import pdump, AST
 from xonsh.parser import Parser
 
-from tools import VER_FULL, skip_if_py34
+from tools import VER_FULL, skip_if_py34, nodes_equal
 
 # a lot of col_offset data changed from Py v3.5.0 -> v3.5.1
 INC_ATTRS = (3, 5, 1) <= VER_FULL
@@ -22,22 +23,6 @@ def xonsh_builtins_autouse(xonsh_builtins):
 PARSER = Parser(lexer_optimize=False, yacc_optimize=False, yacc_debug=True,
                 lexer_table='lexer_test_table',
                 yacc_table='parser_test_table')
-
-
-def nodes_equal(x, y):
-    __tracebackhide__ = True
-    assert type(x) == type(y)
-    if isinstance(x, (ast.Expr, ast.FunctionDef, ast.ClassDef)):
-        assert x.lineno == y.lineno
-        assert x.col_offset == y.col_offset
-    for (xname, xval), (yname, yval) in zip(ast.iter_fields(x),
-                                            ast.iter_fields(y)):
-        assert xname == yname
-        assert type(xval) == type(yval)
-    for xchild, ychild in zip(ast.iter_child_nodes(x),
-                              ast.iter_child_nodes(y)):
-        assert nodes_equal(xchild, ychild)
-    return True
 
 
 def check_ast(inp, run=True, mode='eval'):
@@ -58,16 +43,17 @@ def check_stmts(inp, run=True, mode='exec'):
         inp += '\n'
     check_ast(inp, run=run, mode=mode)
 
-def check_xonsh_ast(xenv, inp, run=True, mode='eval'):
+def check_xonsh_ast(xenv, inp, run=True, mode='eval', debug_level=0,
+                    return_obs=False):
     __tracebackhide__ = True
     builtins.__xonsh_env__ = xenv
-    obs = PARSER.parse(inp)
+    obs = PARSER.parse(inp, debug_level=debug_level)
     if obs is None:
         return  # comment only
     bytecode = compile(obs, '<test-xonsh-ast>', mode)
     if run:
         exec(bytecode)
-    return True
+    return obs if return_obs else True
 
 def check_xonsh(xenv, inp, run=True, mode='exec'):
     __tracebackhide__ = True
@@ -452,6 +438,16 @@ def test_tuple_three():
 
 def test_tuple_three_comma():
     check_ast('(1, 42, 65,)')
+
+def test_bare_tuple_of_tuples():
+    check_ast('(),')
+    check_ast('((),),(1,)')
+    check_ast('(),(),')
+    check_ast('[],')
+    check_ast('[],[]')
+    check_ast('[],()')
+    check_ast('(),[],')
+    check_ast('((),[()],)')
 
 def test_set_one():
     check_ast('{42}')
@@ -1647,6 +1643,9 @@ def test_uncaptured_sub():
 def test_hiddenobj_sub():
     check_xonsh_ast({}, '![ls]', False)
 
+def test_slash_envarv_echo():
+    check_xonsh_ast({}, '![echo $HOME/place]', False)
+
 def test_bang_two_cmds_one_pipe():
     check_xonsh_ast({}, '!(ls | grep wakka)', False)
 
@@ -1798,3 +1797,289 @@ def test_redirect_error_to_output(r, o):
     assert check_xonsh_ast({}, '$[echo "test" {} {}> test.txt]'.format(r, o), False)
     assert check_xonsh_ast({}, '$[< input.txt echo "test" {} {}> test.txt]'.format(r, o), False)
     assert check_xonsh_ast({}, '$[echo "test" {} {}> test.txt < input.txt]'.format(r, o), False)
+
+def test_macro_call_empty():
+    assert check_xonsh_ast({}, 'f!()', False)
+
+
+MACRO_ARGS = [
+    'x', 'True', 'None', 'import os', 'x=10', '"oh no, mom"', '...', ' ... ',
+    'if True:\n  pass', '{x: y}', '{x: y, 42: 5}', '{1, 2, 3,}', '(x,y)',
+    '(x, y)', '((x, y), z)', 'g()', 'range(10)', 'range(1, 10, 2)', '()', '{}',
+    '[]', '[1, 2]', '@(x)', '!(ls -l)', '![ls -l]', '$(ls -l)', '${x + y}',
+    '$[ls -l]', '@$(which xonsh)',
+]
+
+@pytest.mark.parametrize('s', MACRO_ARGS)
+def test_macro_call_one_arg(s):
+    f = 'f!({})'.format(s)
+    tree = check_xonsh_ast({}, f, False, return_obs=True)
+    assert isinstance(tree, AST)
+    args = tree.body.args[1].elts
+    assert len(args) == 1
+    assert args[0].s == s.strip()
+
+
+@pytest.mark.parametrize('s,t', itertools.product(MACRO_ARGS[::2],
+                                                  MACRO_ARGS[1::2]))
+def test_macro_call_two_args(s, t):
+    f = 'f!({}, {})'.format(s, t)
+    tree = check_xonsh_ast({}, f, False, return_obs=True)
+    assert isinstance(tree, AST)
+    args = tree.body.args[1].elts
+    assert len(args) == 2
+    assert args[0].s == s.strip()
+    assert args[1].s == t.strip()
+
+
+@pytest.mark.parametrize('s,t,u', itertools.product(MACRO_ARGS[::3],
+                                                    MACRO_ARGS[1::3],
+                                                    MACRO_ARGS[2::3]))
+def test_macro_call_three_args(s, t, u):
+    f = 'f!({}, {}, {})'.format(s, t, u)
+    tree = check_xonsh_ast({}, f, False, return_obs=True)
+    assert isinstance(tree, AST)
+    args = tree.body.args[1].elts
+    assert len(args) == 3
+    assert args[0].s == s.strip()
+    assert args[1].s == t.strip()
+    assert args[2].s == u.strip()
+
+
+@pytest.mark.parametrize('s', MACRO_ARGS)
+def test_macro_call_one_trailing(s):
+    f = 'f!({0},)'.format(s)
+    tree = check_xonsh_ast({}, f, False, return_obs=True)
+    assert isinstance(tree, AST)
+    args = tree.body.args[1].elts
+    assert len(args) == 1
+    assert args[0].s == s.strip()
+
+
+@pytest.mark.parametrize('s', MACRO_ARGS)
+def test_macro_call_one_trailing_space(s):
+    f = 'f!( {0}, )'.format(s)
+    tree = check_xonsh_ast({}, f, False, return_obs=True)
+    assert isinstance(tree, AST)
+    args = tree.body.args[1].elts
+    assert len(args) == 1
+    assert args[0].s == s.strip()
+
+
+SUBPROC_MACRO_OC = [
+    ('!(', ')'),
+    ('$(', ')'),
+    ('![', ']'),
+    ('$[', ']'),
+    ]
+
+@pytest.mark.parametrize('opener, closer', SUBPROC_MACRO_OC)
+@pytest.mark.parametrize('body', ['echo!', 'echo !', 'echo ! '])
+def test_empty_subprocbang(opener, closer, body):
+    tree = check_xonsh_ast({}, opener + body + closer, False, return_obs=True)
+    assert isinstance(tree, AST)
+    cmd = tree.body.args[0].elts
+    assert len(cmd) == 2
+    assert cmd[1].s == ''
+
+
+@pytest.mark.parametrize('opener, closer', SUBPROC_MACRO_OC)
+@pytest.mark.parametrize('body', ['echo!x', 'echo !x', 'echo !x', 'echo ! x'])
+def test_single_subprocbang(opener, closer, body):
+    tree = check_xonsh_ast({}, opener + body + closer, False, return_obs=True)
+    assert isinstance(tree, AST)
+    cmd = tree.body.args[0].elts
+    assert len(cmd) == 2
+    assert cmd[1].s == 'x'
+
+
+@pytest.mark.parametrize('opener, closer', SUBPROC_MACRO_OC)
+@pytest.mark.parametrize('body', ['echo -n!x', 'echo -n!x', 'echo -n !x',
+                                  'echo -n ! x'])
+def test_arg_single_subprocbang(opener, closer, body):
+    tree = check_xonsh_ast({}, opener + body + closer, False, return_obs=True)
+    assert isinstance(tree, AST)
+    cmd = tree.body.args[0].elts
+    assert len(cmd) == 3
+    assert cmd[2].s == 'x'
+
+
+@pytest.mark.parametrize('opener, closer', SUBPROC_MACRO_OC)
+@pytest.mark.parametrize('body', [
+    'echo!x + y',
+    'echo !x + y',
+    'echo !x + y',
+    'echo ! x + y',
+    'timeit! bang! and more',
+    'timeit! recurse() and more',
+    'timeit! recurse[] and more',
+    'timeit! recurse!() and more',
+    'timeit! recurse![] and more',
+    'timeit! recurse$() and more',
+    'timeit! recurse$[] and more',
+    'timeit! recurse!() and more',
+    'timeit!!!!',
+    'timeit! (!)',
+    'timeit! [!]',
+    'timeit!!(ls)',
+    'timeit!"!)"',
+    ])
+def test_many_subprocbang(opener, closer, body):
+    tree = check_xonsh_ast({}, opener + body + closer, False, return_obs=True,
+                           debug_level=100,
+                           )
+    assert isinstance(tree, AST)
+    cmd = tree.body.args[0].elts
+    assert len(cmd) == 2
+    assert cmd[1].s == body.partition('!')[-1].strip()
+
+# test invalid expressions
+
+def test_syntax_error_del_literal():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('del 7')
+
+def test_syntax_error_del_constant():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('del True')
+
+def test_syntax_error_del_emptytuple():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('del ()')
+
+def test_syntax_error_del_call():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('del foo()')
+
+def test_syntax_error_del_lambda():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('del lambda x: "yay"')
+
+def test_syntax_error_del_ifexp():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('del x if y else z')
+
+
+@pytest.mark.parametrize('exp', ['[i for i in foo]',
+                                 '{i for i in foo}',
+                                 '(i for i in foo)',
+                                 '{k:v for k,v in d.items()}'])
+def test_syntax_error_del_comps(exp):
+    with pytest.raises(SyntaxError):
+        PARSER.parse('del {}'.format(exp))
+
+
+@pytest.mark.parametrize('exp', ['x + y',
+                                 'x and y',
+                                 '-x'])
+def test_syntax_error_del_ops(exp):
+    with pytest.raises(SyntaxError):
+        PARSER.parse('del {}'.format(exp))
+
+
+@pytest.mark.parametrize('exp', ['x > y',
+                                 'x > y == z'])
+def test_syntax_error_del_cmp(exp):
+    with pytest.raises(SyntaxError):
+        PARSER.parse('del {}'.format(exp))
+
+def test_syntax_error_lonely_del():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('del')
+
+def test_syntax_error_assign_literal():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('7 = x')
+
+def test_syntax_error_assign_constant():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('True = 8')
+
+def test_syntax_error_assign_emptytuple():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('() = x')
+
+def test_syntax_error_assign_call():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('foo() = x')
+
+def test_syntax_error_assign_lambda():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('lambda x: "yay" = y')
+
+def test_syntax_error_assign_ifexp():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('x if y else z = 8')
+
+
+@pytest.mark.parametrize('exp', ['[i for i in foo]',
+                                 '{i for i in foo}',
+                                 '(i for i in foo)',
+                                 '{k:v for k,v in d.items()}'])
+def test_syntax_error_assign_comps(exp):
+    with pytest.raises(SyntaxError):
+        PARSER.parse('{} = z'.format(exp))
+
+
+@pytest.mark.parametrize('exp', ['x + y',
+                                 'x and y',
+                                 '-x'])
+def test_syntax_error_assign_ops(exp):
+    with pytest.raises(SyntaxError):
+        PARSER.parse('{} = z'.format(exp))
+
+
+@pytest.mark.parametrize('exp', ['x > y',
+                                 'x > y == z'])
+def test_syntax_error_assign_cmp(exp):
+    with pytest.raises(SyntaxError):
+        PARSER.parse('{} = a'.format(exp))
+
+
+def test_syntax_error_augassign_literal():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('7 += x')
+
+def test_syntax_error_augassign_constant():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('True += 8')
+
+def test_syntax_error_augassign_emptytuple():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('() += x')
+
+def test_syntax_error_augassign_call():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('foo() += x')
+
+def test_syntax_error_augassign_lambda():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('lambda x: "yay" += y')
+
+def test_syntax_error_augassign_ifexp():
+    with pytest.raises(SyntaxError):
+        PARSER.parse('x if y else z += 8')
+
+
+@pytest.mark.parametrize('exp', ['[i for i in foo]',
+                                 '{i for i in foo}',
+                                 '(i for i in foo)',
+                                 '{k:v for k,v in d.items()}'])
+def test_syntax_error_augassign_comps(exp):
+    with pytest.raises(SyntaxError):
+        PARSER.parse('{} += z'.format(exp))
+
+
+@pytest.mark.parametrize('exp', ['x + y',
+                                 'x and y',
+                                 '-x'])
+def test_syntax_error_augassign_ops(exp):
+    with pytest.raises(SyntaxError):
+        PARSER.parse('{} += z'.format(exp))
+
+
+@pytest.mark.parametrize('exp', ['x > y',
+                                 'x > y +=+= z'])
+def test_syntax_error_augassign_cmp(exp):
+    with pytest.raises(SyntaxError):
+        PARSER.parse('{} += a'.format(exp))

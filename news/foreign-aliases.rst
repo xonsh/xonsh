@@ -2,9 +2,7 @@
 
 **Changed:**
 
-* Moved ``amalgamate_source`` outside ``build_tables``
-
-* Disable amalgamation on setup develop
+* Foreign aliases that match xonsh builtin aliases are now ignored with a warning.
 
 **Deprecated:** None
 

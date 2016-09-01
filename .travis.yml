@@ -4,12 +4,6 @@ matrix:
         - os: linux
           python: "nightly"
           env: RUN_COVERAGE=true
-        - os: linux
-          language: generic
-          env: PYTHON="3.4" MINICONDA_OS="Linux"
-        - os: linux
-          language: generic
-          env: PYTHON="3.5" MINICONDA_OS="Linux"
         - os: osx
           language: generic
           env: PYTHON="3.4" MINICONDA_OS="MacOSX"
@@ -40,7 +34,7 @@ install:
 
 script:
   - if [[ $RUN_COVERAGE = true ]]; then
-      py.test --flake8 --cov=. --cov-report=term --timeout=10;
+      py.test --flake8 --cov=. --timeout=10;
     else
       py.test --timeout=10;
     fi

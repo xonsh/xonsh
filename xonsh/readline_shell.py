@@ -57,9 +57,14 @@ def setup_readline():
             pass
         else:
             break
+
     if readline is None:
-        print("No readline implementation available.  Skipping setup.")
+        print("""Skipping setup. Because no `readline` implementation available.
+            Please install a backend (`readline`, `prompt-toolkit`, etc) to use
+            `xonsh` interactively.
+            See https://github.com/xonsh/xonsh/issues/1170""")
         return
+
     import ctypes
     import ctypes.util
     uses_libedit = readline.__doc__ and 'libedit' in readline.__doc__

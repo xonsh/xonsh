@@ -6,8 +6,8 @@
 
 **Removed:** None
 
-**Fixed:** 
+**Fixed:**
 
-* LazyObject supports set union
+* Fixed a bug that prevented xonsh from running scripts with code caching disabled.
 
 **Security:** None

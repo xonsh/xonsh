@@ -8,7 +8,6 @@
 
 **Fixed:**
 
-* Fixed error with not sourcing files with ``$XONSH_ENCODING`` and
-  ``$XONSH_ENCODING_ERRORS``.
+* fix parsing for tuple of tuples (like `(),()`)
 
 **Security:** None

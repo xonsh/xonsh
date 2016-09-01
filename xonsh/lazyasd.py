@@ -8,7 +8,7 @@ import builtins
 import threading
 import importlib
 import importlib.util
-import collections.abc as abc
+import collections.abc as cabc
 
 __version__ = '0.1.1'
 
@@ -116,13 +116,19 @@ class LazyObject(object):
         obj = self._lazy_obj()
         return obj | other
 
+    def __str__(self):
+        return str(self._lazy_obj())
+
+    def __repr__(self):
+        return repr(self._lazy_obj())
+
 
 def lazyobject(f):
     """Decorator for constructing lazy objects from a function."""
     return LazyObject(f, f.__globals__, f.__name__)
 
 
-class LazyDict(abc.MutableMapping):
+class LazyDict(cabc.MutableMapping):
 
     def __init__(self, loaders, ctx, name):
         """Dictionary like object that lazily loads its values from an initial

@@ -46,6 +46,12 @@ ON_POSIX = LazyBool(lambda: (os.name == 'posix'), globals(), 'ON_POSIX')
 ON_FREEBSD = LazyBool(lambda: (sys.platform.startswith('freebsd')),
                       globals(), 'ON_FREEBSD')
 """``True`` if on a FreeBSD operating system, else ``False``."""
+ON_NETBSD = LazyBool(lambda: (sys.platform.startswith('netbsd')),
+                     globals(), 'ON_NETBSD')
+"""``True`` if on a NetBSD operating system, else ``False``."""
+ON_BSD = LazyBool(lambda: ON_FREEBSD or ON_NETBSD,
+                  globals(), 'ON_BSD')
+"""``True`` if on a BSD operating system, else ``False``."""
 
 
 #
@@ -265,22 +271,15 @@ def BASH_COMPLETIONS_DEFAULT():
     """
     if ON_LINUX or ON_CYGWIN:
         if linux_distro() == 'arch':
-            bcd = (
-                '/usr/share/bash-completion/bash_completion',
-                '/usr/share/bash-completion/completions')
+            bcd = ('/usr/share/bash-completion/bash_completion', )
         else:
-            bcd = ('/usr/share/bash-completion',
-                   '/usr/share/bash-completion/completions')
+            bcd = ('/usr/share/bash-completion', )
     elif ON_DARWIN:
-        bcd = ('/usr/local/etc/bash_completion',
-               '/opt/local/etc/profile.d/bash_completion.sh')
+        bcd = ('/usr/local/share/bash-completion/bash_completion',  # v2.x
+               '/usr/local/etc/bash_completion')  # v1.x
     elif ON_WINDOWS and git_for_windows_path():
         bcd = (os.path.join(git_for_windows_path(),
-                            'usr\\share\\bash-completion'),
-               os.path.join(git_for_windows_path(),
-                            'usr\\share\\bash-completion\\completions'),
-               os.path.join(git_for_windows_path(),
-                            'mingw64\\share\\git\\completion\\git-completion.bash'))
+                            'usr\\share\\bash-completion'), )
     else:
         bcd = ()
     return bcd

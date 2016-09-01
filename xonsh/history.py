@@ -8,17 +8,16 @@ import time
 import uuid
 import argparse
 import builtins
+import collections
 import datetime
 import functools
-import itertools
 import threading
-import collections
-import collections.abc as abc
+import collections.abc as cabc
 
 from xonsh.lazyasd import lazyobject
 from xonsh.lazyjson import LazyJSON, ljdump, LJNode
-from xonsh.tools import (ensure_slice, to_history_tuple,
-                         expanduser_abs_path, ensure_timestamp)
+from xonsh.tools import (ensure_slice, to_history_tuple, is_string,
+                         get_portions, expanduser_abs_path, ensure_timestamp)
 from xonsh.diff_history import _dh_create_parser, _dh_main_action
 
 
@@ -178,7 +177,7 @@ class HistoryFlusher(threading.Thread):
             ljdump(hist, f, sort_keys=True)
 
 
-class CommandField(abc.Sequence):
+class CommandField(cabc.Sequence):
     """A field in the 'cmds' portion of history."""
 
     def __init__(self, field, hist, default=None):
@@ -262,7 +261,7 @@ def _all_xonsh_parser(**kwargs):
     """
     Returns all history as found in XONSH_DATA_DIR.
 
-    return format: (name, start_time, index)
+    return format: (cmd, start_time, index)
     """
     data_dir = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
     data_dir = expanduser_abs_path(data_dir)
@@ -285,14 +284,11 @@ def _all_xonsh_parser(**kwargs):
 def _curr_session_parser(hist=None, **kwargs):
     """
     Take in History object and return command list tuple with
-    format: (name, start_time, index)
+    format: (cmd, start_time, index)
     """
     if hist is None:
         hist = builtins.__xonsh_history__
-    start_times = (start for start, end in hist.tss)
-    names = (name.rstrip() for name in hist.inps)
-    for ind, (c, t) in enumerate(zip(names, start_times)):
-        yield (c, t, ind)
+    return iter(hist)
 
 
 def _zsh_hist_parser(location=None, **kwargs):
@@ -394,20 +390,6 @@ def _hist_create_parser():
     return p
 
 
-def _hist_get_portion(commands, slices):
-    """Yield from portions of history commands."""
-    if len(slices) == 1:
-        s = slices[0]
-        try:
-            yield from itertools.islice(commands, s.start, s.stop, s.step)
-            return
-        except ValueError:  # islice failed
-            pass
-    commands = list(commands)
-    for s in slices:
-        yield from commands[s]
-
-
 def _hist_filter_ts(commands, start_time, end_time):
     """Yield only the commands between start and end time."""
     for cmd in commands:
@@ -439,7 +421,7 @@ def _hist_get(session='session', *, slices=None, datetime_format=None,
     if slices:
         # transform/check all slices
         slices = [ensure_slice(s) for s in slices]
-        cmds = _hist_get_portion(cmds, slices)
+        cmds = get_portions(cmds, slices)
     if start_time or end_time:
         if start_time is None:
             start_time = 0.0
@@ -487,6 +469,37 @@ def _hist_show(ns, *args, **kwargs):
 # Interface to History
 class History(object):
     """Xonsh session history.
+
+    Indexing
+    --------
+    History object acts like a sequence that can be indexed in a special way
+    that adds extra functionality. At the moment only history from the
+    current session can be retrieved. Note that the most recent command
+    is the last item in history.
+
+    The index acts as a filter with two parts, command and argument,
+    separated by comma.  Based on the type of each part different
+    filtering can be achieved,
+
+        for the command part:
+
+            - an int returns the command in that position.
+            - a slice returns a list of commands.
+            - a string returns the most recent command containing the string.
+
+        for the argument part:
+
+            - an int returns the argument of the command in that position.
+            - a slice returns a part of the command based on the argument
+              position.
+
+    The argument part of the filter can be omitted but the command part is
+    required.
+
+    Command arguments are separated by white space.
+
+    If the filtering produces only one result it is
+    returned as a string else a list of strings is returned.
 
     Attributes
     ----------
@@ -605,16 +618,66 @@ class History(object):
         self.buffer.clear()
         return hf
 
-    def show(self, *args, **kwargs):
-        """Return shell history as a list
+    def __iter__(self):
+        """Get current session history.
 
-        Valid options:
-            `session` - returns xonsh history from current session
-            `xonsh`   - returns xonsh history from all sessions
-            `zsh`     - returns all zsh history
-            `bash`    - returns all bash history
+        Yields
+        ------
+        tuple
+            ``tuple`` of the form (cmd, start_time, index).
         """
-        return list(_hist_get(*args, **kwargs))
+        start_times = (start for start, end in self.tss)
+        names = (name.rstrip() for name in self.inps)
+        for ind, (c, t) in enumerate(zip(names, start_times)):
+            yield (c, t, ind)
+
+    def __getitem__(self, item):
+        """Retrieve history parts based on filtering rules,
+        see ``History`` docs for more info. Accepts one of
+        int, string, slice or tuple of length two.
+        """
+        if isinstance(item, tuple):
+            cmd_pat, arg_pat = item
+        else:
+            cmd_pat, arg_pat = item, None
+        cmds = (c for c, *_ in self)
+        cmds = self._cmd_filter(cmds, cmd_pat)
+        if arg_pat is not None:
+            cmds = self._args_filter(cmds, arg_pat)
+        cmds = list(cmds)
+        if len(cmds) == 1:
+            return cmds[0]
+        else:
+            return cmds
+
+    @staticmethod
+    def _cmd_filter(cmds, pat):
+        if isinstance(pat, (int, slice)):
+            s = ensure_slice(pat)
+            yield from get_portions(cmds, s)
+        elif is_string(pat):
+            for command in reversed(list(cmds)):
+                if pat in command:
+                    yield command
+        else:
+            raise TypeError('Command filter must be '
+                            'string, int or slice')
+
+    @staticmethod
+    def _args_filter(cmds, pat):
+        args = None
+        if isinstance(pat, (int, slice)):
+            s = ensure_slice(pat)
+            for command in cmds:
+                yield ' '.join(command.split()[s])
+        else:
+            raise TypeError('Argument filter must be '
+                            'int or slice')
+        return args
+
+    def __setitem__(self, *args):
+        raise PermissionError('You cannot change history! '
+                              'you can create new though.')
 
 
 def _hist_info(ns, hist):

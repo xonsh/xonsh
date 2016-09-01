@@ -8,6 +8,7 @@
 
 **Fixed:** 
 
-* Completions in ``jupyter_kernel.py`` now use updated completion framework
+* Text of instructions to download missing program now does not get off and
+  appears in whole.
 
 **Security:** None

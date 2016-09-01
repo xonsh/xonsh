@@ -1,6 +1,6 @@
 **Added:**
 
-* amalgamate.py now properly handles ``from __future__`` imports.
+* howto install sections for Debian/Ubuntu and Fedora.
 
 **Changed:** None
 

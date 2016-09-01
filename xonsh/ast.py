@@ -226,12 +226,13 @@ class CtxAwareTransformer(NodeTransformer):
 
     def is_in_scope(self, node):
         """Determines whether or not the current node is in scope."""
-        lname = leftmostname(node)
-        if lname is None:
-            return node
+        names = gather_names(node)
+        if not names:
+            return True
         inscope = False
         for ctx in reversed(self.contexts):
-            if lname in ctx:
+            names -= ctx
+            if not names:
                 inscope = True
                 break
         return inscope
@@ -431,6 +432,13 @@ class CtxAwareTransformer(NodeTransformer):
         """Handle visiting a function definition."""
         self.ctxadd(node.name)
         self.contexts.append(set())
+        args = node.args
+        argchain = [args.args, args.kwonlyargs]
+        if args.vararg is not None:
+            argchain.append((args.vararg,))
+        if args.kwarg is not None:
+            argchain.append((args.kwarg,))
+        self.ctxupdate(a.arg for a in itertools.chain.from_iterable(argchain))
         self.generic_visit(node)
         self.contexts.pop()
         return node

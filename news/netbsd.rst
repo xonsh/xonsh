@@ -1,6 +1,6 @@
-**Added:** 
+**Added:**
 
-* ``which -v`` now calls superhelp, which will print highlighted source.
+* NetBSD is now supported.
 
 **Changed:** None
 
