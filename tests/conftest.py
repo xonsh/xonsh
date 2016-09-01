@@ -9,8 +9,10 @@ from xonsh.built_ins import ensure_list_of_strs
 from xonsh.execer import Execer
 from xonsh.tools import XonshBlockError
 from xonsh.events import events
-
+from xonsh.platform import ON_WINDOWS
 from tools import DummyShell, sp
+
+
 
 
 @pytest.fixture
@@ -65,3 +67,17 @@ def xonsh_builtins():
     del builtins.compilex
     del builtins.aliases
     del builtins.events
+
+if ON_WINDOWS:
+    try:
+        import win_unicode_console
+        HAVE_WIN_UNICODE_CONSOLE = True
+    except ImportError:
+        HAVE_WIN_UNICODE_CONSOLE = False
+
+    if HAVE_WIN_UNICODE_CONSOLE:
+        @pytest.fixture(autouse=True)
+        def disable_win_unicode_console(monkeypatch):
+            """ Disable win_unicode_console if it is present since it collides with
+            pytests ouptput capture"""
+            monkeypatch.setattr(win_unicode_console, 'enable', lambda: None)
