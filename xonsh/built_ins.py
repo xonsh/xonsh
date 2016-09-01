@@ -790,7 +790,7 @@ def macro_context(f, glbs, locs):
     Parameters
     ----------
     f : callable object
-        The function that is called as f(*args).
+        The function that is called as ``f(*args)``.
     glbs : Mapping
         The globals from the call site.
     locs : Mapping or None
@@ -817,7 +817,7 @@ def call_macro(f, raw_args, glbs, locs):
     Parameters
     ----------
     f : callable object
-        The function that is called as f(*args).
+        The function that is called as ``f(*args)``.
     raw_args : tuple of str
         The str reprensetaion of arguments of that were passed into the
         macro. These strings will be parsed, compiled, evaled, or left as
