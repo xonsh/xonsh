@@ -13,8 +13,6 @@ from xonsh.platform import ON_WINDOWS
 from tools import DummyShell, sp
 
 
-
-
 @pytest.fixture
 def xonsh_execer(monkeypatch):
     """Initiate the Execer with a mocked nop `load_builtins`"""
@@ -67,6 +65,7 @@ def xonsh_builtins():
     del builtins.compilex
     del builtins.aliases
     del builtins.events
+
 
 if ON_WINDOWS:
     try:
