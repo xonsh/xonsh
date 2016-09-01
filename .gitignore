@@ -21,7 +21,6 @@ docs/envvarsbody
 docs/xontribsbody
 docs/eventsbody
 xonsh/dev.githash
-**/__pycache__/
 
 # temporary files from vim and emacs
 *~

@@ -133,10 +133,7 @@ class CommandsCache(cabc.Mapping):
                 if os.path.isfile(full_name)
             ), None)
             if local_bin:
-                if os.path.splitdrive(cwd)[0] != os.path.splitdrive(local_bin)[0]:  # if cwd not on same drive as bin
-                    return os.path.abspath(local_bin)                               # avoid ValueError in relpath()
-                else:
-                    return os.path.abspath(os.path.relpath(local_bin, cwd))
+                return os.path.abspath(os.path.relpath(local_bin, cwd))
 
         cached = next((cmd for cmd in possibilities if cmd in self._cmds_cache), None)
         if cached:

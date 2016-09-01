@@ -8,11 +8,8 @@ import subprocess
 
 from xonsh.lazyasd import lazyobject
 from xonsh.tools import get_sep
-<<<<<<< HEAD
-from xonsh.platform import ON_WINDOWS
-=======
 from xonsh.events import events
->>>>>>> master
+from xonsh.platform import ON_WINDOWS
 
 DIRSTACK = []
 """A list containing the currently remembered directories."""
@@ -131,11 +128,7 @@ def _change_working_directory(newdir):
     env = builtins.__xonsh_env__
     old = env['PWD']
     new = os.path.join(old, newdir)
-<<<<<<< HEAD
-
-=======
     absnew = os.path.abspath(new)
->>>>>>> master
     try:
         os.chdir(absnew)
     except (OSError, FileNotFoundError):
