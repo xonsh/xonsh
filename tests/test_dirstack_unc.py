@@ -23,6 +23,13 @@ from xonsh.dirstack import _unc_tempDrives
 HERE = os.path.abspath(os.path.dirname(__file__))
 PARENT = os.path.dirname(HERE)
 
+def drive_in_use(letter):
+    return ON_WINDOWS and os.system('vol {}: 2>nul>nul'.format(letter)) == 0
+
+pytestmark = pytest.mark.skipif(any(drive_in_use(l) for l in 'ywzx'),
+                                reason='Drive letters used by tests are '
+                                       'are already used by Windows.')
+
 
 @pytest.yield_fixture(scope="module")
 def shares_setup(tmpdir_factory):
