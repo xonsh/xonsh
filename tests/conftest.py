@@ -71,11 +71,9 @@ def xonsh_builtins():
 if ON_WINDOWS:
     try:
         import win_unicode_console
-        HAVE_WIN_UNICODE_CONSOLE = True
     except ImportError:
-        HAVE_WIN_UNICODE_CONSOLE = False
-
-    if HAVE_WIN_UNICODE_CONSOLE:
+        pass
+    else:
         @pytest.fixture(autouse=True)
         def disable_win_unicode_console(monkeypatch):
             """ Disable win_unicode_console if it is present since it collides with
