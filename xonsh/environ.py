@@ -17,7 +17,7 @@ import itertools
 import contextlib
 import subprocess
 import collections
-import collections.abc as abc
+import collections.abc as cabc
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.jobs import get_next_task
@@ -101,6 +101,8 @@ def DEFAULT_ENSURERS():
     re.compile('\w*DIRS$'): (is_env_path, str_to_env_path, env_path_to_str),
     'COLOR_INPUT': (is_bool, to_bool, bool_to_str),
     'COLOR_RESULTS': (is_bool, to_bool, bool_to_str),
+    'COMPLETIONS_BRACKETS': (is_bool, to_bool, bool_to_str),
+    'COMPLETIONS_CONFIRM': (is_bool, to_bool, bool_to_str),
     'COMPLETIONS_DISPLAY': (is_completions_display_value,
                             to_completions_display_value, str),
     'COMPLETIONS_MENU_ROWS': (is_int, int, str),
@@ -244,6 +246,8 @@ def DEFAULT_VALUES():
         'CDPATH': (),
         'COLOR_INPUT': True,
         'COLOR_RESULTS': True,
+        'COMPLETIONS_BRACKETS': True,
+        'COMPLETIONS_CONFIRM': False,
         'COMPLETIONS_DISPLAY': 'multi',
         'COMPLETIONS_MENU_ROWS': 5,
         'DIRSTACK_SIZE': 20,
@@ -355,19 +359,20 @@ def DEFAULT_DOCS():
         'shell.\n\nPressing the right arrow key inserts the currently '
         'displayed suggestion. Only usable with $SHELL_TYPE=prompt_toolkit.'),
     'BASH_COMPLETIONS': VarDocs(
-        'This is a list (or tuple) of strings that specifies where the BASH '
-        'completion files may be found. The default values are platform '
+        'This is a list (or tuple) of strings that specifies where the '
+        '`bash_completion` script may be found. For better performance, '
+        'base-completion v2.x is recommended since it lazy-loads individual '
+        'completion scripts. Paths or directories of individual completion '
+        'scripts (like `.../completes/ssh`) do not need to be included here. '
+        'The default values are platform '
         'dependent, but sane. To specify an alternate list, do so in the run '
         'control file.', default=(
             "Normally this is:\n\n"
-            "    ('/etc/bash_completion',\n"
-            "     '/usr/share/bash-completion/completions/git')\n\n"
+            "    ('/etc/bash_completion', )\n\n"
             "But, on Mac it is:\n\n"
-            "    ('/usr/local/etc/bash_completion',\n"
-            "     '/opt/local/etc/profile.d/bash_completion.sh')\n\n"
+            "    ('/usr/local/etc/bash_completion', )\n\n"
             "And on Arch Linux it is:\n\n"
-            "    ('/usr/share/bash-completion/bash_completion',\n"
-            "     '/usr/share/bash-completion/completions/git')\n\n"
+            "    ('/usr/share/bash-completion/bash_completion', )\n\n"
             "Other OS-specific defaults may be added in the future.")),
     'CASE_SENSITIVE_COMPLETIONS': VarDocs(
         'Sets whether completions should be case sensitive or case '
@@ -377,6 +382,9 @@ def DEFAULT_DOCS():
         'with Bash, xonsh always prefer an existing relative path.'),
     'COLOR_INPUT': VarDocs('Flag for syntax highlighting interactive input.'),
     'COLOR_RESULTS': VarDocs('Flag for syntax highlighting return values.'),
+    'COMPLETIONS_BRACKETS': VarDocs(
+        'Flag to enable/disable inclusion of square brackets and parentheses '
+        'in Python attribute completions.', default='True'),
     'COMPLETIONS_DISPLAY': VarDocs(
         'Configure if and how Python completions are displayed by the '
         'prompt_toolkit shell.\n\nThis option does not affect Bash '
@@ -393,6 +401,10 @@ def DEFAULT_DOCS():
         "writing \"$COMPLETIONS_DISPLAY = None\" and \"$COMPLETIONS_DISPLAY "
         "= 'none'\" are equivalent. Only usable with "
         "$SHELL_TYPE=prompt_toolkit"),
+    'COMPLETIONS_CONFIRM': VarDocs(
+        'While tab-completions menu is displayed, press <Enter> to confirm '
+        'completion instead of running command. This only affects the '
+        'prompt-toolkit shell.'),
     'COMPLETIONS_MENU_ROWS': VarDocs(
         'Number of rows to reserve for tab-completions menu if '
         "$COMPLETIONS_DISPLAY is 'single' or 'multi'. This only affects the "
@@ -654,7 +666,7 @@ def DEFAULT_DOCS():
 # actual environment
 #
 
-class Env(abc.MutableMapping):
+class Env(cabc.MutableMapping):
     """A xonsh environment, whose variables have limited typing
     (unlike BASH). Most variables are, by default, strings (like BASH).
     However, the following rules also apply based on variable-name:
@@ -695,7 +707,7 @@ class Env(abc.MutableMapping):
 
     @staticmethod
     def detypeable(val):
-        return not (callable(val) or isinstance(val, abc.MutableMapping))
+        return not (callable(val) or isinstance(val, cabc.MutableMapping))
 
     def detype(self):
         if self._detyped is not None:
@@ -811,8 +823,8 @@ class Env(abc.MutableMapping):
         else:
             e = "Unknown environment variable: ${}"
             raise KeyError(e.format(key))
-        if isinstance(val, (abc.MutableSet, abc.MutableSequence,
-                            abc.MutableMapping)):
+        if isinstance(val, (cabc.MutableSet, cabc.MutableSequence,
+                            cabc.MutableMapping)):
             self._detyped = None
         return val
 
@@ -1416,7 +1428,7 @@ def load_static_config(ctx, config=None):
         with open(config, 'r', encoding=encoding, errors=errors) as f:
             try:
                 conf = json.load(f)
-                assert isinstance(conf, abc.Mapping)
+                assert isinstance(conf, cabc.Mapping)
                 ctx['LOADED_CONFIG'] = True
             except Exception as e:
                 conf = {}

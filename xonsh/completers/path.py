@@ -186,12 +186,11 @@ def _splitpath(path):
 
 def _splitpath_helper(path, sofar=()):
     folder, path = os.path.split(path)
-    if path == "":
+    if path:
+        sofar = sofar + (path, )
+    if not folder or folder == xt.get_sep():
         return sofar[::-1]
-    elif folder == "":
-        return (sofar + (path, ))[::-1]
-    else:
-        return _splitpath_helper(folder, sofar + (path, ))
+    return _splitpath_helper(folder, sofar)
 
 
 def subsequence_match(ref, typed, csc):

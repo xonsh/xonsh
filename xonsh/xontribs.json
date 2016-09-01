@@ -27,9 +27,9 @@
   "url": "http://xon.sh",
   "description": ["Python virtual environment manager for xonsh."]
   },
- {"name": "prompt_ret_code",
-  "package": "xontrib-prompt-ret-code",
-  "url": "https://github.com/Siecje/xontrib-prompt-ret-code",
+{"name": "prompt_ret_code",
+  "package": "xonsh",
+  "url": "http://xon.sh",
   "description": ["Adds return code info to the prompt"]
   },
  {"name": "xo",
@@ -49,11 +49,6 @@
   "package": "xonsh-docker-tabcomplete",
   "url": "https://github.com/xsteadfastx/xonsh-docker-tabcomplete",
   "description": ["Adds tabcomplete functionality to docker inside of xonsh."]
- },
- {"name": "pacman_tabcomplete",
-  "package": "xonsh-pacman-tabcomplete",
-  "url": "https://github.com/gforsyth/xonsh-pacman-tabcomplete",
-  "description": ["Adds tabcomplete functionality to pacman inside of xonsh."]
  },
  {"name": "scrapy_tabcomplete",
   "package": "xonsh-scrapy-tabcomplete",
@@ -125,13 +120,6 @@
     "pip": "pip install xonsh-docker-tabcomplete"
    }
   },
-  "xonsh-pacman-tabcomplete": {
-   "license": "MIT",
-   "url": "https://github.com/gforsyth/xonsh-pacman-tabcomplete",
-   "install": {
-    "pip": "pip install xonsh-pacman-tabcomplete"
-   }
-   },
   "xonsh-scrapy-tabcomplete": {
    "license": "GPLv3",
    "url": "https://github.com/Granitas/xonsh-scrapy-tabcomplete",

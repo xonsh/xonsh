@@ -267,11 +267,11 @@ have also been written as ``ls - l`` or ``ls-l``.  So how does xonsh know
 that ``ls -l`` is meant to be run in subprocess-mode?
 
 For any given line that only contains an expression statement (expr-stmt,
-see the Python AST docs for more information), if the left-most name cannot
-be found as a current variable name xonsh will try to parse the line as a
-subprocess command instead.  In the above, if ``ls`` is not a variable,
-then subprocess mode will be attempted. If parsing in subprocess mode fails,
-then the line is left in Python-mode.
+see the Python AST docs for more information), if all the names cannot
+be found as current variables xonsh will try to parse the line as a
+subprocess command instead.  In the above, if ``ls`` and ``l`` are not 
+variables, then subprocess mode will be attempted. If parsing in subprocess
+mode fails, then the line is left in Python-mode.
 
 In the following example, we will list the contents of the directory
 with ``ls -l``. Then we'll make new variable names ``ls`` and ``l`` and then
@@ -284,7 +284,7 @@ the directories again.
     >>> ls -l
     total 0
     -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
-    >>> # set an ls variable to force python-mode
+    >>> # set ls and l variables to force python-mode
     >>> ls = 44
     >>> l = 2
     >>> ls -l
@@ -1132,7 +1132,7 @@ with keyword arguments:
 Removing an alias is as easy as deleting the key from the alias dictionary:
 
 .. code-block:: xonshcon
-    
+
     >>> del aliases['banana']
 
 .. note::

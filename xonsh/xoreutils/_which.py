@@ -29,7 +29,7 @@ import sys
 import stat
 import getopt
 import builtins
-import collections.abc as abc
+import collections.abc as cabc
 
 r"""Find the full path to commands.
 
@@ -199,7 +199,7 @@ def whichgen(command, path=None, verbose=0, exts=None):
                     break
             else:
                 exts = ['.COM', '.EXE', '.BAT', '.CMD']
-        elif not isinstance(exts, abc.Sequence):
+        elif not isinstance(exts, cabc.Sequence):
             raise TypeError("'exts' argument must be a sequence or None")
     else:
         if exts is not None:
