@@ -2,7 +2,7 @@
 """Tools to replay xonsh history files."""
 import time
 import builtins
-import collections.abc as abc
+import collections.abc as cabc
 
 from xonsh.tools import swap
 from xonsh.lazyjson import LazyJSON
@@ -68,7 +68,7 @@ class Replayer(object):
                 new_env.update(re_env)
             elif e == 'native':
                 new_env.update(builtins.__xonsh_env__)
-            elif isinstance(e, abc.Mapping):
+            elif isinstance(e, cabc.Mapping):
                 new_env.update(e)
             else:
                 raise TypeError('Type of env not understood: {0!r}'.format(e))

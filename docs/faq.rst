@@ -74,9 +74,10 @@ Python variables, this could be transformed to the equivalent (Python)
 expressions ``ls - l`` or ``ls-l``.  Neither of which are valid listing
 commands.
 
-What xonsh does to overcome such ambiguity is to check if the left-most
-name (``ls`` above) is in the present Python context. If it is, then it takes
-the line to be valid xonsh as written. If the left-most name cannot be found,
+What xonsh does to overcome such ambiguity is to check if the names in the
+expression (``ls`` and ``l`` above) are in the present Python context. If they are,
+then it takes
+the line to be valid xonsh as written. If one of the names cannot be found,
 then xonsh assumes that the left-most name is an external command. It thus
 attempts to parse the line after wrapping it in an uncaptured subprocess
 call ``![]``.  If wrapped version successfully parses, the ``![]`` version

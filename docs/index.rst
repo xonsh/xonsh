@@ -49,6 +49,7 @@ the xonsh shell
         "The carcolh will catch you!",
         "People xonshtantly mispronounce these things",
         "WHAT...is your favorite shell?",
+        "Conches for the xonsh god!",
         "Exploiting the workers and hanging on to outdated imperialist dogma since 2015."
         ];
     document.write(taglines[Math.floor(Math.random() * taglines.length)]);
@@ -98,7 +99,9 @@ Contents
 
     tutorial
     tutorial_hist
+    tutorial_macros
     tutorial_xontrib
+    tutorial_events
     tutorial_completers
     bash_to_xsh
     python_virtual_environments
@@ -114,6 +117,7 @@ Contents
     envvars
     aliases
     xontribs
+    events
 
 **News & Media:**
 
@@ -132,6 +136,7 @@ Contents
     :maxdepth: 1
 
     api/index
+    advanced_events
     devguide/
     previous/index
     faq

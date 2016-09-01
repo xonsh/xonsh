@@ -19,6 +19,7 @@ xonsh.egg-info/
 docs/_build/
 docs/envvarsbody
 docs/xontribsbody
+docs/eventsbody
 xonsh/dev.githash
 **/__pycache__/
 

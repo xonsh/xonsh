@@ -4,7 +4,7 @@ import sys
 import inspect
 import builtins
 import importlib
-import collections.abc as abc
+import collections.abc as cabc
 
 import xonsh.tools as xt
 import xonsh.lazyasd as xl
@@ -95,10 +95,13 @@ def attr_complete(prefix, ctx, filter_func):
         except:  # pylint:disable=bare-except
             continue
         a = getattr(val, opt)
-        if callable(a):
-            rpl = opt + '('
-        elif isinstance(a, abc.Iterable):
-            rpl = opt + '['
+        if builtins.__xonsh_env__['COMPLETIONS_BRACKETS']:
+            if callable(a):
+                rpl = opt + '('
+            elif isinstance(a, (cabc.Sequence, cabc.Mapping)):
+                rpl = opt + '['
+            else:
+                rpl = opt
         else:
             rpl = opt
         # note that prefix[:prelen-len(attr)] != prefix[:-len(attr)]

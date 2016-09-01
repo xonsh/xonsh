@@ -3,9 +3,10 @@
 
 This module registers the hooks it defines when it is imported.
 """
+import builtins
 import os
 import sys
-import builtins
+import types
 from importlib.machinery import ModuleSpec
 from importlib.abc import MetaPathFinder, SourceLoader
 
@@ -60,6 +61,14 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
     #
     # SourceLoader methods
     #
+    def create_module(self, spec):
+        """Create a xonsh module with the appropriate attributes."""
+        mod = types.ModuleType(spec.name)
+        mod.__file__ = self.get_filename(spec.name)
+        mod.__loader__ = self
+        mod.__package__ = spec.parent or ''
+        return mod
+
     def get_filename(self, fullname):
         """Returns the filename for a module's fullname."""
         return self._filenames[fullname]
@@ -70,7 +79,7 @@ class XonshImportHook(MetaPathFinder, SourceLoader):
 
     def get_code(self, fullname):
         """Gets the code object for a xonsh file."""
-        filename = self._filenames.get(fullname, None)
+        filename = self.get_filename(fullname)
         if filename is None:
             msg = "xonsh file {0!r} could not be found".format(fullname)
             raise ImportError(msg)
@@ -92,6 +101,8 @@ def install_hook():
     Can safely be called many times, will be no-op if a xonsh import hook is
     already present.
     """
-
-    if XonshImportHook not in {type(hook) for hook in sys.meta_path}:
+    for hook in sys.meta_path:
+        if isinstance(hook, XonshImportHook):
+            break
+    else:
         sys.meta_path.append(XonshImportHook())
