@@ -67,6 +67,7 @@ def test_cdpath_expansion(xonsh_builtins):
         tuple(os.rmdir(_) for _ in test_dirs if os.path.exists(_))
         raise e
 
+		
 def test_cdpath_events(xonsh_builtins, tmpdir):
     xonsh_builtins.__xonsh_env__ = Env(CDPATH=PARENT, PWD=os.getcwd())
     target = str(tmpdir)

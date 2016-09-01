@@ -103,7 +103,14 @@ def expand_path(s):
     """Takes a string path and expands ~ to home and environment vars."""
     if builtins.__xonsh_env__.get('EXPAND_ENV_VARS'):
         s = expandvars(s)
-    return os.path.expanduser(s)
+    # expand ~ according to Bash unquoted rules "Each variable assignment is
+    # checked for unquoted tilde-prefixes immediately following a ':' or the
+    # first '='". See the following for more details.
+    # https://www.gnu.org/software/bash/manual/html_node/Tilde-Expansion.html
+    pre, char, post = s.partition('=')
+    s = pre + char + os.path.expanduser(post) if char else s
+    s = os.pathsep.join(map(os.path.expanduser, s.split(os.pathsep)))
+    return s
 
 
 def reglob(path, parts=None, i=None):
@@ -783,7 +790,7 @@ def in_macro_call(f, glbs, locs):
     Parameters
     ----------
     f : callable object
-        The function that is called as f(*args).
+        The function that is called as ``f(*args)``.
     glbs : Mapping
         The globals from the call site.
     locs : Mapping or None
@@ -810,7 +817,7 @@ def call_macro(f, raw_args, glbs, locs):
     Parameters
     ----------
     f : callable object
-        The function that is called as f(*args).
+        The function that is called as ``f(*args)``.
     raw_args : tuple of str
         The str reprensetaion of arguments of that were passed into the
         macro. These strings will be parsed, compiled, evaled, or left as
