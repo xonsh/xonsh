@@ -89,7 +89,7 @@ Also note that the history object itself can be accessed through the xonsh built
 ================
 The ``show`` action for the history command mimics what the ``history`` command does
 in other shells.  Namely, it displays the past inputs along with the index of these
-inputs. This operates on the current session only and is the default action for
+inputs. This operates on the current session by default and is the default action for
 the ``history`` command. For example,
 
 .. code-block:: xonshcon
@@ -115,20 +115,21 @@ only the even indices from above, you could write:
      0  1 + 1
      2  history
 
-The ``xonsh`` action displays the past inputs along with the index from all
+One can also use many slice/integer arguments to get different portions of history
+
+After ``show`` an option that indicates which history to be returned can be used:
+
+``xonsh`` displays the past inputs from all
 valid json files found in ``XONSH_DATA_DIR``. As such, this operates on all
 past and present xonsh sessions.
 
-The ``all`` action is an alias for ``xonsh``.
+``all`` is an alias for ``xonsh``.
 
-The ``xonsh`` action accepts the same arguments as ``show``.
-
-The ``zsh`` action will display all history from the history file specified
+``zsh`` will display all history from the history file specified
 by the ``HISTFILE`` environmental variable in zsh.
 By default this is ``~/.zsh_history``. However, they can also be respectively
 specified in both ``~/.zshrc`` and ``~/.zprofile``. Xonsh will parse these files
 (rc file first) to check if ``HISTFILE`` has been set.
-
 
 The ``bash`` action will display all history from the history file specified
 by the ``HISTFILE`` environmental variable in bash.
@@ -136,14 +137,12 @@ By default this is ``~/.bash_history``. However, they can also be respectively
 specified in both ``~/.bashrc`` and ``~/.bash_profile``. Xonsh will parse these
 files (rc file first) to check if ``HISTFILE`` has been set.
 
-The ``__xonsh_history__.show(action)`` method can be returns history a list
-with each item in the format: (name, start_time, index). The action parameter
-can be a string of the following types: ``session``, ``show``, ``all``,
-``xonsh``,``zsh``, ``bash``, where ``session`` is an alias of ``show`` and
-``all`` is an alias of ``xonsh``.
 
-In the future, ``show`` may also be used to display outputs, return values, and time stamps.
-But the default behavior will remain as shown here.
+``show`` also accepts other options for more control over history output,
+the ``-n`` option is used to enumerate the commands,
+the ``-t`` option is used to show the timestamps,
+and more, try out ``history show --help`` for a list of options.
+
 
 ``id`` action
 ================
@@ -381,6 +380,50 @@ you could run the following command:
 .. code-block:: xonshcon
 
     >>> history gc --size 1 month
+
+
+History Indexing
+=======================
+History object (``__xonsh_history__``) acts like a sequence that can be indexed in a special way
+that adds extra functionality. At the moment only history from the
+current session can be retrieved. Note that the most recent command
+is the last item in history.
+
+The index acts as a filter with two parts, command and argument,
+separated by comma. Based on the type of each part different
+filtering can be achieved,
+
+for the command part:
+
+    - an int returns the command in that position.
+    - a slice returns a list of commands.
+    - a string returns the most recent command containing the string.
+
+for the argument part:
+
+    - an int returns the argument of the command in that position.
+    - a slice returns a part of the command based on the argument
+      position.
+
+The argument part of the filter can be omitted but the command part is
+required.
+
+Command arguments are separated by white space.
+
+If the filtering produces only one result it is
+returned as a string else a list of strings is returned.
+
+.. code-block:: xonshcon
+
+    >>> echo mkdir with/a/huge/name/
+    mkdir with/a/huge/name
+    >>> __xonsh_history__[-1, -1]
+    'with/a/huge/name/'
+    >>> __xonsh_history__['mkdir']
+    'echo mkdir with/a/huge/name'
+    >>> __xonsh_history__[0, 1:]
+    'mkdir with/a/huge/name'
+
 
 Exciting Technical Detail: Lazy JSON
 =====================================

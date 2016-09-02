@@ -49,4 +49,7 @@ will help you put a finger on how to do the equivelent task in xonsh.
       - ``with ${...}.swap(N=V): command``
       - Set temporary environment variable(s) and execute for command.
         Use an indented block to execute many commands in the same context.
+    * - ``!$``
+      - ``__xonsh_history__[-1, -1]``
+      - Get the last argument of the last command
 
