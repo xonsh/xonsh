@@ -46,7 +46,7 @@ class PromptToolkitCompleter(Completer):
                                                 for a in completions])
                 # Find last split symbol, do not trim the last part 
                 while c_prefix:
-                    if c_prefix[-1] in r'/\.:@':
+                    if c_prefix[-1] in r'/\.:@,':
                         break
                     c_prefix = c_prefix[:-1]
 
