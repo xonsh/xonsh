@@ -42,7 +42,7 @@ def _get_tag_or_hash():
 
 def _get_stash(gitdir):
     try:
-        with open(os.path.join(gitdir, '/logs/refs/stash')) as f:
+        with open(os.path.join(gitdir, 'logs/refs/stash')) as f:
             return sum(1 for _ in f)
     except IOError:
         return 0
