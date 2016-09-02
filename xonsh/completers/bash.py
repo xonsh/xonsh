@@ -46,16 +46,17 @@ def complete_from_bash(prefix, line, begidx, endidx, ctx):
             if idx >= begidx:
                 break
         prev = tok
+
     if len(prefix) == 0:
-        prefix = '""'
+        prefix_quoted = '""'
         n += 1
     else:
-        prefix = shlex.quote(prefix)
+        prefix_quoted = shlex.quote(prefix)
 
     script = BASH_COMPLETE_SCRIPT.format(
         sources='\n'.join(sources), line=' '.join(shlex.quote(p) for p in splt),
         comp_line=shlex.quote(line), n=n, cmd=shlex.quote(cmd),
-        end=endidx + 1, prefix=prefix, prev=shlex.quote(prev),
+        end=endidx + 1, prefix=prefix_quoted, prev=shlex.quote(prev),
     )
 
     try:
