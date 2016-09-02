@@ -478,7 +478,7 @@ class History(object):
     is the last item in history.
 
     The index acts as a filter with two parts, command and argument,
-    separated by comma.  Based on the type of each part different
+    separated by comma. Based on the type of each part different
     filtering can be achieved,
 
         for the command part:
@@ -659,6 +659,7 @@ class History(object):
             for command in reversed(list(cmds)):
                 if pat in command:
                     yield command
+                    return
         else:
             raise TypeError('Command filter must be '
                             'string, int or slice')
