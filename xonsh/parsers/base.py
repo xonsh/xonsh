@@ -3,6 +3,7 @@
 import os
 import re
 import time
+import textwrap
 from threading import Thread
 from collections import Iterable, Sequence, Mapping
 
@@ -224,6 +225,8 @@ class BaseParser(object):
         self.xonsh_code = None
         self._attach_nocomma_tok_rules()
         self._attach_nocloser_base_rules()
+        self._attach_nodedent_base_rules()
+        self._attach_nonewline_base_rules()
 
         opt_rules = [
             'newlines', 'arglist', 'func_call', 'rarrow_test', 'typedargslist',
@@ -267,7 +270,8 @@ class BaseParser(object):
                      'yield', 'from', 'raise', 'with', 'dollar_lparen',
                      'dollar_lbrace', 'dollar_lbracket', 'try',
                      'bang_lparen', 'bang_lbracket', 'comma', 'rparen',
-                     'rbracket', 'at_lparen', 'atdollar_lparen']
+                     'rbracket', 'at_lparen', 'atdollar_lparen', 'indent',
+                     'dedent', 'newline']
         for rule in tok_rules:
             self._tok_rule(rule)
 
@@ -429,7 +433,12 @@ class BaseParser(object):
         eline, ecol = stop
         bline -= 1
         lines = self.lines[bline:eline]
-        lines[-1] = lines[-1][:ecol]
+        if ecol == 0:
+            explen = eline - bline
+            if explen == len(lines) and explen > 1:
+                lines[-1] = ''
+        else:
+            lines[-1] = lines[-1][:ecol]
         lines[0] = lines[0][bcol:]
         return ''.join(lines)
 
@@ -1317,6 +1326,36 @@ class BaseParser(object):
         p[0] = [ast.With(items=[p[2]] + p[3], body=p[5],
                          lineno=p1.lineno, col_offset=p1.lexpos)]
 
+    def p_with_bang_stmt_single_suite(self, p):
+        """with_stmt : with_tok BANG with_item rawsuite"""
+        p1, p3, p4 = p[1], p[3], p[4]
+        expr = p3.context_expr
+        l, c = expr.lineno, expr.col_offset
+        gblcall = xonsh_call('globals', [], lineno=l, col=c)
+        loccall = xonsh_call('locals', [], lineno=l, col=c)
+        margs = [expr, p4, gblcall, loccall]
+        p3.context_expr = xonsh_call('__xonsh_enter_macro__', margs,
+                                     lineno=l, col=c)
+        body = [ast.Pass(lineno=p4.lineno, col_offset=p4.col_offset)]
+        p[0] = [ast.With(items=[p3], body=body,
+                         lineno=p1.lineno, col_offset=p1.lexpos)]
+
+    def p_with_bang_stmt_many_suite(self, p):
+        """with_stmt : with_tok BANG with_item comma_with_item_list rawsuite"""
+        p1, p3, p4, p5 = p[1], p[3], p[4], p[5]
+        items = [p3] + p4
+        for item in items:
+            expr = item.context_expr
+            l, c = expr.lineno, expr.col_offset
+            gblcall = xonsh_call('globals', [], lineno=l, col=c)
+            loccall = xonsh_call('locals', [], lineno=l, col=c)
+            margs = [expr, p5, gblcall, loccall]
+            item.context_expr = xonsh_call('__xonsh_enter_macro__', margs,
+                                           lineno=l, col=c)
+        body = [ast.Pass(lineno=p5.lineno, col_offset=p5.col_offset)]
+        p[0] = [ast.With(items=items, body=body,
+                         lineno=p1.lineno, col_offset=p1.lexpos)]
+
     def p_as_expr(self, p):
         """as_expr : AS expr"""
         p2 = p[2]
@@ -1351,6 +1390,76 @@ class BaseParser(object):
                  | NEWLINE INDENT stmt_list DEDENT
         """
         p[0] = p[1] if len(p) == 2 else p[3]
+
+    def p_rawsuite_indent(self, p):
+        """rawsuite : COLON NEWLINE indent_tok nodedent dedent_tok"""
+        p3, p5 = p[3], p[5]
+        beg = (p3.lineno, p3.lexpos)
+        end = (p5.lineno, p5.lexpos)
+        s = self.source_slice(beg, end)
+        s = textwrap.dedent(s)
+        p[0] = ast.Str(s=s, lineno=beg[0], col_offset=beg[1])
+
+    def p_rawsuite_simple_stmt(self, p):
+        """rawsuite : colon_tok nonewline newline_tok"""
+        p1, p3 = p[1], p[3]
+        beg = (p1.lineno, p1.lexpos + 1)
+        end = (p3.lineno, p3.lexpos)
+        s = self.source_slice(beg, end).strip()
+        p[0] = ast.Str(s=s, lineno=beg[0], col_offset=beg[1])
+
+    def _attach_nodedent_base_rules(self):
+        toks = set(self.tokens)
+        toks.remove('DEDENT')
+        ts = '\n       | '.join(sorted(toks))
+        doc = 'nodedent : ' + ts + '\n'
+        self.p_nodedent_base.__func__.__doc__ = doc
+
+    def p_nodedent_base(self, p):
+        # see above attachament function
+        pass
+
+    def p_nodedent_any(self, p):
+        """nodedent : INDENT any_dedent_toks DEDENT"""
+        pass
+
+    def p_nodedent_many(self, p):
+        """nodedent : nodedent nodedent"""
+        pass
+
+    def p_any_dedent_tok(self, p):
+        """any_dedent_tok : nodedent
+                          | DEDENT
+        """
+        pass
+
+    def p_any_dedent_toks(self, p):
+        """any_dedent_toks : any_dedent_tok
+                           | any_dedent_toks any_dedent_tok
+        """
+        pass
+
+    def _attach_nonewline_base_rules(self):
+        toks = set(self.tokens)
+        toks -= {'NEWLINE', 'LPAREN', 'RPAREN', 'LBRACE', 'RBRACE',
+                 'LBRACKET', 'RBRACKET', 'AT_LPAREN', 'BANG_LPAREN',
+                 'BANG_LBRACKET', 'DOLLAR_LPAREN', 'DOLLAR_LBRACE',
+                 'DOLLAR_LBRACKET', 'ATDOLLAR_LPAREN'}
+        ts = '\n        | '.join(sorted(toks))
+        doc = 'nonewline : ' + ts + '\n'
+        self.p_nonewline_base.__func__.__doc__ = doc
+
+    def p_nonewline_base(self, p):
+        # see above attachament function
+        pass
+
+    def p_nonewline_any(self, p):
+        """nonewline : any_nested_raw"""
+        pass
+
+    def p_nonewline_many(self, p):
+        """nonewline : nonewline nonewline"""
+        pass
 
     def p_test_ol(self, p):
         """test : or_test

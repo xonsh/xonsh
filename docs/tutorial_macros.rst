@@ -218,7 +218,7 @@ are two main aspects of macro design to consider: argument annotations and
 call site execution context.
 
 
-Macro Function Argument Annotations
+Macro Annotations
 -----------------------------------
 There are six kinds of annotations that macros are able to interpret:
 
@@ -426,6 +426,116 @@ really want to write some code in another language:
 
 Compared to function macros, subprocess macros are relatively simple.
 However, they can still be very expressive!
+
+Context Manager Macros
+======================
+Now that we have seen what life can be like with macro expressions, it is time
+to introduce the macro statement: ``with!``.  With-bang provides macros
+on top of existing Python context managers. This provides both anonymous
+and onymous blocks in xonsh.
+
+The syntax for context manager macros is the same as the usual with-statement
+in Python, but with an additional exclamation point between the ``with`` word
+and the first context manager expression. As a simple example,
+
+.. code-block:: xonsh
+
+    with! x:
+        y = 10
+        print(y)
+
+In the above, everything to the left of the colon (``x``) will be evaluated
+normally. However, the body will not be executed and ``y`` will not be defined
+or printed. In this case, the body will be attached to x as a string, along with
+globals and locals, prior to the body even being entered. The body is then
+replaced with a ``pass`` statement. You can think of the above as being
+transformed into the following:
+
+.. code-block:: xonsh
+
+    x.macro_block = 'y = 10\nprint(y)\n'
+    x.macro_globals = globals()
+    x.macro_locals = locals()
+    with! x:
+        pass
+
+There are a few important things about this to notice:
+
+1. The ``macro_block`` string is dedented,
+2. The ``macro_*`` attributes are set *before* the context manager is entered so
+   the ``__enter__()`` method may use them, and
+3. The ``macro_*`` attributes are not cleaned up automatically so that the
+   context manager may use them even after the object is exited. The
+   ``__exit__()`` method may clean up these attributes, if desired.
+
+By default, macro blocks are returned as a string. However, like with function
+macro arguments, the kind of ``macro_block`` is determined by a special
+annotation.  This annotation is given via the ``__xonsh_block__`` attribute
+on the context manager itself.  This allows the block to be interpreted as
+an AST, byte compiled, etc.
+
+The convenient part about this syntax is that the macro block is only
+exited once it sees a dedent back to the level of the ``with!``. All other
+code is indiscriminately skipped! This allows you to write blocks of code in
+languages other than xonsh without pause.
+
+For example, consider a simple
+XML macro context manager. This will return the parsed XML tree from a
+macro block. The context manager itself can be written as:
+
+
+.. code-block:: python
+
+    import xml.etree.ElementTree as ET
+
+    class XmlBlock:
+
+        # make sure the macro_block comes back as a string
+        __xonsh_block__ = str
+
+        def __enter__(self):
+            # parse and return the block on entry
+            root = ET.fromstring(self.macro_block)
+            return root
+
+        def __exit__(self, *exc):
+            # no reason to keep these attributes around.
+            del self.macro_block, self.macro_globals, self.macro_locals
+
+
+The above class may then be used in a with-bang as follows:
+
+.. code-block:: xonsh
+
+    with! XmlBlock() as tree:
+        <note>
+          <to>You</to>
+          <from>Xonsh</from>
+          <heading>Don't You Want Me, Baby</heading>
+          <body>
+            You know I don't believe you when you say that you don't need me.
+          </body>
+        </note>
+
+And if you run this, you'll see that the ``tree`` object really is a parsed
+XML object.
+
+.. code-block:: xonshcon
+
+    >>> print(tree.tag)
+    note
+
+
+So in roughly eight lines of xonsh code, you can seamlessly interface
+with another, vastly different language.
+
+The possibilities for this are not limited to just markup languages or other
+party tricks. You could be a remote execution interface via SSH, RPC,
+dask / distributed, etc. The real benefit of context manager macros is
+that they allow you to select when, where, and what code is executed as a
+part of the xonsh language itself.
+
+The power is there; use it without reservation!
 
 Take Away
 =========
