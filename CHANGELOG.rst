@@ -4,9 +4,100 @@ Xonsh Change Log
 
 .. current developments
 
+v0.4.6
+====================
+
+**Added:**
+
+* New option ``COMPLETIONS_CONFIRM``. When set, ``<Enter>`` is used to confirm
+  completion instead of running command while completion menu is displayed.
+* NetBSD is now supported.
+* Macro function calls are now available. These use a Rust-like
+  ``f!(arg)`` syntax.
+* Macro subprocess call now avalaible with the ``echo! x y z``
+  syntax.
+* A new `event subsystem <http://xon.sh/tutorial_events.html>`_ has been added.
+* howto install sections for Debian/Ubuntu and Fedora.
+* ``History`` methods ``__iter__`` and ``__getitem__``
+
+* ``tools.get_portions`` that yields parts of an iterable
+* Added a py.test plugin to collect ``test_*.xsh`` files and run ``test_*()`` functions.
+* ``__repr__`` and ``__str__`` magic method on LazyObject
+
+
 **Changed:**
 
+* ``create_module`` implementation on XonshImportHook
+* Results of the ``bash`` tab completer are now properly escaped (quoted) when necessary.
+* Foreign aliases that match xonsh builtin aliases are now ignored with a warning.
+* ``prompt_toolkit`` completions now only show the rightmost portion
+  of a given completion in the dropdown
+* The value of ``'none'`` is no longer allowed for ``$SHELL_TYPE`` just during the initial
+  load from the environment. ``-D``, later times, and other sources still work.
+* ``yacc_debug=True`` now load the parser on the same thread that the
+  Parser instance is created. ``setup.py`` now uses this synchronous
+  form as it was causing the parser table to be missed by some package
+  managers.
+* Tilde expansion for the home directory now has the same semantics as Bash.
+  Previously it only matched leading tildes.
+* Context sensitive AST transformation now checks that all names in an
+  expression are in scope. If they are, then Python mode is retained. However,
+  if even one is missing, subprocess wrapping is attempted. Previously, only the
+  left-most name was examined for being within scope.
+* ``dirstack.pushd`` and ``dirstack.popd`` now handle UNC paths (of form ``\\<server>\<share>\...``), but only on Windows.
+  They emulate behavior of `CMD.EXE` by creating a temporary mapped drive letter (starting from z: down) to replace
+  the ``\\<server>\<share>`` portion of the path, on the ``pushd`` and unmapping the drive letter when all references
+  to it are popped.
+
+* And ``dirstack`` suppresses this temporary drive mapping funky jive if registry entry
+  ``HKCU\software\microsoft\command processor\DisableUNCCheck`` (or HKLM\...) is a DWORD value 1.  This allows Xonsh
+  to show the actual UNC path in your prompt string and *also* allows subprocess commands invoking `CMD.EXE` to run in
+  the expected working directory. See https://support.microsoft.com/en-us/kb/156276 to satisfy any lingering curiosity.
+* ``lazy_locate_binary`` handles binary on different drive letter than current working directory (on Windows).
+* ``_curr_session_parser`` now iterates over ``History``
+* New implementation of bash completer with better performance and compatibility.
+* ``$COMPLETIONS_BRACKETS`` is now available to determine whether or not to
+  include opening brackets in Python completions
 * ``xonsh.bat`` tries to use `pylauncher <https://www.python.org/dev/peps/pep-0397/>`_ when available.
+
+
+**Removed:**
+
+* ``History`` method ``show``
+* ``_hist_get_portion`` in favor of ``tools.get_portions``
+* Unused imports in proc, flake8.
+
+
+**Fixed:**
+
+* xonsh modules imported now have the __file__ attribute
+* Context senstitive AST transformer was not adding argument names to the
+  local scope. This would then enable extraneous subprocess mode wrapping
+  for expressions whose leftmost name was function argument. This has been
+  fixed by properly adding the argument names to the scope.
+* Foreign shell functions that are mapped to empty filenames no longer
+  receive alaises since they can't be found to source later.
+* Correctly preserve arguments given to xon.sh, in case there are quoted ones.
+* Environment variables in subprocess mode were not being expanded
+  unless they were in a sting. They are now expanded properly.
+* Fixed a bug that prevented xonsh from running scripts with code caching disabled.
+* Text of instructions to download missing program now does not get off and
+  appears in whole.
+* Fix some test problems when win_unicode_console was installed on windows.
+* Fixed bug that prompt string and ``$PWD`` failed to track change in actual working directory if the
+  invoked Python function happened to change it (e.g via ```os.chdir()```.  Fix is to update ``$PWD``
+  after each command in ```BaseShell.default()```.
+* The interactive prompt now correctly handles multiline strings.
+* ``cd \\<server>\<share>`` now works when $AUTO_PUSHD is set, either creating a temporary mapped drive or simply
+  setting UNC working directory based on registry ``DisableUNCCheck``.  However, if $AUTO_PUSHD is not set and UNC
+  checking is enabled (default for Windows), it issues an error message and fails.  This improves on prior behavior,
+  which would fail to change the current working directory, but would set $PWD and prompt string to the UNC path,
+  creating false expectations.
+* fix parsing for tuple of tuples (like `(),()`)
+* ``sys.stdin``, ``sys.stdout``, ``sys.stderr`` no longer complete with
+  opening square brackets
+* xonsh now properly handles syntax error messages arising from using values in inappropriate contexts (e.g., ``del 7``).
+
 
 v0.4.5
 ====================
@@ -29,7 +120,7 @@ v0.4.5
   syntax do not overlap, they perform very different operations. Please see
   the xonsh FAQ for more information on trade-offs and mitigation strategies.
 * ``which -v`` now calls superhelp, which will print highlighted source.
-* Added xontribs: 
+* Added xontribs:
   * `z (Tracks your most used directories, based on 'frecency'.) <https://github.com/astronouth7303/xontrib-z>`_
 * amalgamate.py now supports relative imports.
 * ``history show`` args ``-t``, ``-f``, ``-T`` ``+T`` to filter commands by timestamp
@@ -46,7 +137,7 @@ v0.4.5
 
 * ``_hist_show`` now uses ``_hist_get`` to print out the commands.
 * ``xonsh.completers`` sub-package is now fully lazy.
-* The vox xontrib now takes flags very similar to Python's venv tool. Use 
+* The vox xontrib now takes flags very similar to Python's venv tool. Use
   ``vox --help <command>`` to learn more.
 * Xontribs may now define ``__all__`` as a module top-level to limit what gets exported to the shell context
 * xon.sh uses the interpreter used to install instead of the default python3.
@@ -73,10 +164,10 @@ v0.4.5
 
 **Removed:**
 
-* Anaconda Build is shutting down so we can no longer build conda development packages. 
-  All references to these packages are removed from the documentation. 
-* Removed conda build recipe since the it is no longer used for Anaconda Build. 
-  The recipe used to build xonsh on conda-forge can be found here: 
+* Anaconda Build is shutting down so we can no longer build conda development packages.
+  All references to these packages are removed from the documentation.
+* Removed conda build recipe since the it is no longer used for Anaconda Build.
+  The recipe used to build xonsh on conda-forge can be found here:
   https://github.com/conda-forge/xonsh-feedstock/blob/master/recipe/meta.yaml
 
 
@@ -89,7 +180,7 @@ v0.4.5
 * Fixed parser error line number exception from being raised while trying to
   raise a SyntaxError.
 * Made pip completer more robust to when pip is not installed.
-* Fix a startup problem on windows caused by a refactor of Prompt_toolkit. 
+* Fix a startup problem on windows caused by a refactor of Prompt_toolkit.
   https://github.com/jonathanslenders/python-prompt-toolkit/commit/a9df2a2
 * ``ensure_slice`` bugfix for -1 index/slice
 * Alias tab completion works again
