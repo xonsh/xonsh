@@ -80,6 +80,11 @@
   "package": "xontrib-z",
   "url": "https://github.com/astronouth7303/xontrib-z",
   "description": ["Tracks your most used directories, based on 'frecency'."]
+ },
+ {"name": "gitstatus",
+  "package": "xonsh",
+  "url": "http://xon.sh",
+  "description": ["Adds git status info to the prompt"]
  }
  ],
  "packages": {
