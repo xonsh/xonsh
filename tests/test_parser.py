@@ -21,10 +21,7 @@ INC_ATTRS = (3, 5, 1) <= VER_FULL
 def xonsh_builtins_autouse(xonsh_builtins):
     return xonsh_builtins
 
-PARSER = Parser(lexer_optimize=False, yacc_optimize=False, yacc_debug=True,
-                #lexer_table='lexer_test_table',
-                #yacc_table='parser_test_table'
-                )
+PARSER = Parser(lexer_optimize=False, yacc_optimize=False, yacc_debug=True)
 
 
 def check_ast(inp, run=True, mode='eval'):
