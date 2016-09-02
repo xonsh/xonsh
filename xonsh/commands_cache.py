@@ -123,21 +123,12 @@ class CommandsCache(cabc.Mapping):
     def lazy_locate_binary(self, name):
         """Locates an executable in the cache, without checking its validity."""
         possibilities = self.get_possible_names(name)
-
         if ON_WINDOWS:
             # Windows users expect to be able to execute files in the same
             # directory without `./`
-            cwd = _get_cwd()
-            local_bin = next((
-                full_name for full_name in possibilities
-                if os.path.isfile(full_name)
-            ), None)
+            local_bin = next((fn for fn in possibilities if os.path.isfile(fn)), None)
             if local_bin:
-                if os.path.splitdrive(cwd)[0] != os.path.splitdrive(local_bin)[0]:  # if cwd not on same drive as bin
-                    return os.path.abspath(local_bin)                               # avoid ValueError in relpath()
-                else:
-                    return os.path.abspath(os.path.relpath(local_bin, cwd))
-
+                return os.path.abspath(local_bin)                              
         cached = next((cmd for cmd in possibilities if cmd in self._cmds_cache), None)
         if cached:
             return self._cmds_cache[cached][0]
