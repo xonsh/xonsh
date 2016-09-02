@@ -86,14 +86,14 @@ def _gitstatus():
                             num_behind = int(div[len('behind '):].strip())
         elif line.startswith('??'):
             untracked += 1
+        else:
+            if len(line) > 1 and line[1] == 'M':
+                changed += 1
 
-        if len(line) > 1 and line[1] == 'M':
-            changed += 1
-
-        if len(line) > 0 and line[0] == 'U':
-            conflicts += 1
-        elif len(line) > 0 and line[0] != ' ':
-            staged += 1
+            if len(line) > 0 and line[0] == 'U':
+                conflicts += 1
+            elif len(line) > 0 and line[0] != ' ':
+                staged += 1
 
     gitdir = check_output(['git', 'rev-parse', '--git-dir']).strip()
     stashed = _get_stash(gitdir)
