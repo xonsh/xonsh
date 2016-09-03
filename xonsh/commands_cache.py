@@ -3,7 +3,6 @@ import os
 import builtins
 import collections.abc as cabc
 
-from xonsh.dirstack import _get_cwd
 from xonsh.platform import ON_WINDOWS
 from xonsh.tools import executables_in
 
@@ -126,10 +125,12 @@ class CommandsCache(cabc.Mapping):
         if ON_WINDOWS:
             # Windows users expect to be able to execute files in the same
             # directory without `./`
-            local_bin = next((fn for fn in possibilities if os.path.isfile(fn)), None)
+            local_bin = next((fn for fn in possibilities if os.path.isfile(fn)),
+                             None)
             if local_bin:
-                return os.path.abspath(local_bin)                              
-        cached = next((cmd for cmd in possibilities if cmd in self._cmds_cache), None)
+                return os.path.abspath(local_bin)
+        cached = next((cmd for cmd in possibilities if cmd in self._cmds_cache),
+                      None)
         if cached:
             return self._cmds_cache[cached][0]
         elif os.path.isfile(name) and name != os.path.basename(name):
