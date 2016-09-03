@@ -10,6 +10,8 @@ else:
         _sys.modules['xonsh.prompt.cwd'] = __amalgam__
         env = __amalgam__
         _sys.modules['xonsh.prompt.env'] = __amalgam__
+        gitstatus = __amalgam__
+        _sys.modules['xonsh.prompt.gitstatus'] = __amalgam__
         job = __amalgam__
         _sys.modules['xonsh.prompt.job'] = __amalgam__
         vc_branch = __amalgam__
