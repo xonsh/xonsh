@@ -1,4 +1,4 @@
-'''informative git status for prompt'''
+"""informative git status for prompt"""
 
 import re
 import os
@@ -8,13 +8,14 @@ import subprocess
 
 __all__ = []
 
-_env = builtins.__xonsh_env__
 
-check_output = functools.partial(subprocess.check_output,
-                                 env=_env.detype(),
-                                 stderr=subprocess.DEVNULL,
-                                 timeout=_env['VC_BRANCH_TIMEOUT'],
-                                 universal_newlines=True)
+def check_output(*args, **kwargs):
+    kwargs.update(dict(env=builtins.__xonsh_env__.detype(),
+                       stderr=subprocess.DEVNULL,
+                       timeout=builtins.__xonsh_env__['VC_BRANCH_TIMEOUT'],
+                       universal_newlines=True
+                       ))
+    return subprocess.check_output(*args, **kwargs)
 
 _DEFS = {
     'HASH': ':',
@@ -30,8 +31,10 @@ _DEFS = {
     'BEHIND': '↓·',
 }
 
-_get_def = lambda key: _env.get('XONSH_GITSTATUS_' + key) \
-                       or _DEFS[key]
+
+def _get_def(key):
+    return builtins.__xonsh_env__.get('XONSH_GITSTATUS_' + key) or _DEFS[key]
+
 
 def _get_tag_or_hash():
     tag = check_output(['git', 'describe', '--exact-match']).strip()
@@ -40,12 +43,14 @@ def _get_tag_or_hash():
     hash_ = check_output(['git', 'rev-parse', '--short', 'HEAD']).strip()
     return _get_def('HASH') + hash_
 
+
 def _get_stash(gitdir):
     try:
         with open(os.path.join(gitdir, 'logs/refs/stash')) as f:
             return sum(1 for _ in f)
     except IOError:
         return 0
+
 
 def _gitoperation(gitdir):
     files = (
@@ -137,4 +142,3 @@ def _gitstatus_prompt():
 
 
 $FORMATTER_DICT['gitstatus'] = _gitstatus_prompt
-
