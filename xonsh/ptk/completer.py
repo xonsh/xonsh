@@ -44,7 +44,7 @@ class PromptToolkitCompleter(Completer):
                 # Find common prefix (strip quoting)
                 c_prefix = os.path.commonprefix([a.strip('\'"')
                                                 for a in completions])
-                # Find last split symbol, do not trim the last part 
+                # Find last split symbol, do not trim the last part
                 while c_prefix:
                     if c_prefix[-1] in r'/\.:@,':
                         break
