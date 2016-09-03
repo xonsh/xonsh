@@ -4,7 +4,7 @@ import os
 import builtins
 
 from prompt_toolkit.layout.dimension import LayoutDimension
-from prompt_toolkit.completion import Completer, Completion, _commonprefix
+from prompt_toolkit.completion import Completer, Completion
 
 
 class PromptToolkitCompleter(Completer):
@@ -40,13 +40,20 @@ class PromptToolkitCompleter(Completer):
                     pass
                 elif len(os.path.commonprefix(completions)) <= len(prefix):
                     self.reserve_space()
-                c_prefix = _commonprefix([a.strip('\'/').rsplit('/', 1)[0]
-                                          for a in completions])
+
+                # Find common prefix (strip quoting)
+                c_prefix = os.path.commonprefix([a.strip('\'"')
+                                                for a in completions])
+                # Find last split symbol, do not trim the last part
+                while c_prefix:
+                    if c_prefix[-1] in r'/\.:@,':
+                        break
+                    c_prefix = c_prefix[:-1]
+
                 for comp in completions:
-                    if comp.endswith('/') and not c_prefix.startswith('/'):
-                        c_prefix = ''
-                    display = comp[len(c_prefix):].lstrip('/')
-                    yield Completion(comp, -l, display=display)
+                    # do not display quote
+                    disp = comp.strip('\'"')[len(c_prefix):]
+                    yield Completion(comp, -l, display=disp)
 
     def reserve_space(self):
         cli = builtins.__xonsh_shell__.shell.prompter.cli
