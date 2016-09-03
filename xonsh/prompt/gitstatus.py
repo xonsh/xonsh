@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """informative git status for prompt"""
@@ -6,6 +5,8 @@
 import os
 import builtins
 import subprocess
+
+from xonsh.lazyasd import lazyobject
 
 
 def check_output(*args, **kwargs):
@@ -16,23 +17,27 @@ def check_output(*args, **kwargs):
                        ))
     return subprocess.check_output(*args, **kwargs)
 
-_DEFS = {
-    'HASH': ':',
-    'BRANCH': '{CYAN}',
-    'OPERATION': '{CYAN}',
-    'STAGED': '{RED}●',
-    'CONFLICTS': '{RED}×',
-    'CHANGED': '{BLUE}+',
-    'UNTRACKED': '…',
-    'STASHED': '⚑',
-    'CLEAN': '{BOLD_GREEN}✓',
-    'AHEAD': '↑·',
-    'BEHIND': '↓·',
-}
+
+@lazyobject
+def DEFS():
+    _DEFS = {
+        'HASH': ':',
+        'BRANCH': '{CYAN}',
+        'OPERATION': '{CYAN}',
+        'STAGED': '{RED}●',
+        'CONFLICTS': '{RED}×',
+        'CHANGED': '{BLUE}+',
+        'UNTRACKED': '…',
+        'STASHED': '⚑',
+        'CLEAN': '{BOLD_GREEN}✓',
+        'AHEAD': '↑·',
+        'BEHIND': '↓·',
+    }
+    return _DEFS
 
 
 def _get_def(key):
-    return builtins.__xonsh_env__.get('XONSH_GITSTATUS_' + key) or _DEFS[key]
+    return builtins.__xonsh_env__.get('XONSH_GITSTATUS_' + key) or DEFS[key]
 
 
 def _get_tag_or_hash():
