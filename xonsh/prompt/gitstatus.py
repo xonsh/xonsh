@@ -125,8 +125,9 @@ def gitstatus_prompt():
         return ''
 
     ret = '[' + _get_def('BRANCH') + branch
-    if num_ahead + num_behind > 0:
+    if num_ahead > 0:
         ret += _get_def('AHEAD') + str(num_ahead)
+    if num_behind > 0:
         ret += _get_def('BEHIND') + str(num_behind)
     if operations:
         ret += _get_def('OPERATION') + '|' + '|'.join(operations)
