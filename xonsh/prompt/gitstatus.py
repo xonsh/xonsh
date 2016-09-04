@@ -6,10 +6,10 @@ import os
 import builtins
 import subprocess
 
-from xonsh.lazyasd import lazyobject
+import xonsh.lazyasd as xl
 
 
-def check_output(*args, **kwargs):
+def _check_output(*args, **kwargs):
     kwargs.update(dict(env=builtins.__xonsh_env__.detype(),
                        stderr=subprocess.DEVNULL,
                        timeout=builtins.__xonsh_env__['VC_BRANCH_TIMEOUT'],
@@ -18,7 +18,7 @@ def check_output(*args, **kwargs):
     return subprocess.check_output(*args, **kwargs)
 
 
-@lazyobject
+@xl.lazyobject
 def DEFS():
     _DEFS = {
         'HASH': ':',
@@ -41,10 +41,10 @@ def _get_def(key):
 
 
 def _get_tag_or_hash():
-    tag = check_output(['git', 'describe', '--exact-match']).strip()
+    tag = _check_output(['git', 'describe', '--exact-match']).strip()
     if tag:
         return tag
-    hash_ = check_output(['git', 'rev-parse', '--short', 'HEAD']).strip()
+    hash_ = _check_output(['git', 'rev-parse', '--short', 'HEAD']).strip()
     return _get_def('HASH') + hash_
 
 
@@ -70,7 +70,7 @@ def _gitoperation(gitdir):
 
 
 def _gitstatus():
-    status = check_output(['git', 'status', '--porcelain', '--branch'])
+    status = _check_output(['git', 'status', '--porcelain', '--branch'])
     branch = ''
     num_ahead, num_behind = 0, 0
     untracked, changed, conflicts, staged = 0, 0, 0, 0
@@ -104,7 +104,7 @@ def _gitstatus():
             elif len(line) > 0 and line[0] != ' ':
                 staged += 1
 
-    gitdir = check_output(['git', 'rev-parse', '--git-dir']).strip()
+    gitdir = _check_output(['git', 'rev-parse', '--git-dir']).strip()
     stashed = _get_stash(gitdir)
     operations = _gitoperation(gitdir)
 

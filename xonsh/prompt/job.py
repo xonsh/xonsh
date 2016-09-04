@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from xonsh.jobs import get_next_task
+import xonsh.jobs as xj
 
 
 def _current_job():
-    j = get_next_task()
+    j = xj.get_next_task()
     if j is not None:
         if not j['bg']:
             cmd = j['cmds'][-1]

@@ -3,9 +3,9 @@
 import os
 import socket
 
-from xonsh.lazyasd import LazyObject
-from xonsh.tools import is_superuser
-from xonsh.platform import ON_WINDOWS
+import xonsh.lazyasd as xl
+import xonsh.tools as xt
+import xonsh.platform as xp
 
 
 from xonsh.prompt.cwd import (
@@ -19,15 +19,9 @@ from xonsh.prompt.vc_branch import (
 from xonsh.prompt.gitstatus import _gitstatus_prompt
 
 
-if ON_WINDOWS:
-    USER = 'USERNAME'
-else:
-    USER = 'USER'
-
-
-FORMATTER_DICT = LazyObject(lambda: dict(
-    user=os.environ.get(USER, '<user>'),
-    prompt_end='#' if is_superuser() else '$',
+FORMATTER_DICT = xl.LazyObject(lambda: dict(
+    user=os.environ.get('USERNAME' if xp.ON_WINDOWS else 'USER', '<user>'),
+    prompt_end='#' if xt.is_superuser() else '$',
     hostname=socket.gethostname().split('.', 1)[0],
     cwd=_dynamically_collapsed_pwd,
     cwd_dir=lambda: os.path.dirname(_replace_home_cwd()),

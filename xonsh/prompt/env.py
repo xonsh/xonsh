@@ -3,7 +3,7 @@
 import os
 import builtins
 
-from xonsh.platform import ON_ANACONDA
+import xonsh.platform as xp
 
 
 def env_name(pre_chars='(', post_chars=')'):
@@ -11,7 +11,7 @@ def env_name(pre_chars='(', post_chars=')'):
     $CONDA_DEFAULT_ENV if that is set
     """
     env_path = builtins.__xonsh_env__.get('VIRTUAL_ENV', '')
-    if len(env_path) == 0 and ON_ANACONDA:
+    if len(env_path) == 0 and xp.ON_ANACONDA:
         env_path = builtins.__xonsh_env__.get('CONDA_DEFAULT_ENV', '')
     env_name = os.path.basename(env_path)
     if env_name:

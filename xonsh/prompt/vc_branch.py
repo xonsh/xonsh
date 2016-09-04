@@ -7,7 +7,7 @@ import builtins
 import warnings
 import subprocess
 
-from xonsh.platform import ON_WINDOWS
+import xonsh.platform as xp
 
 
 def get_git_branch():
@@ -20,7 +20,7 @@ def get_git_branch():
     cwd = env['PWD']
     denv = env.detype()
     vcbt = env['VC_BRANCH_TIMEOUT']
-    if not ON_WINDOWS:
+    if not xp.ON_WINDOWS:
         prompt_scripts = ['/usr/lib/git-core/git-sh-prompt',
                           '/usr/local/etc/bash_completion.d/git-prompt.sh']
         for script in prompt_scripts:
@@ -42,7 +42,7 @@ def get_git_branch():
         try:
             s = subprocess.check_output(cmd, cwd=cwd, timeout=vcbt, env=denv,
                                         stderr=subprocess.PIPE, universal_newlines=True)
-            if ON_WINDOWS and len(s) == 0:
+            if xp.ON_WINDOWS and len(s) == 0:
                 # Workaround for a bug in ConEMU/cmder, retry without redirection
                 s = subprocess.check_output(cmd, cwd=cwd, timeout=vcbt,
                                             env=denv, universal_newlines=True)
@@ -153,7 +153,7 @@ def git_dirty_working_directory(cwd=None, include_untracked=False):
         s = subprocess.check_output(cmd, stderr=subprocess.PIPE, cwd=cwd,
                                     timeout=vcbt, universal_newlines=True,
                                     env=denv)
-        if ON_WINDOWS and len(s) == 0:
+        if xp.ON_WINDOWS and len(s) == 0:
             # Workaround for a bug in ConEMU/cmder, retry without redirection
             s = subprocess.check_output(cmd, cwd=cwd, timeout=vcbt,
                                         env=denv, universal_newlines=True)

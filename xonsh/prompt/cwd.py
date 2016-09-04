@@ -4,12 +4,12 @@ import os
 import shutil
 import builtins
 
-from xonsh.tools import get_sep
-from xonsh.platform import ON_WINDOWS
+import xonsh.tools as xt
+import xonsh.platform as xp
 
 
 def _replace_home(x):
-    if ON_WINDOWS:
+    if xp.ON_WINDOWS:
         home = (builtins.__xonsh_env__['HOMEDRIVE'] +
                 builtins.__xonsh_env__['HOMEPATH'][0])
         if x.startswith(home):
@@ -31,7 +31,7 @@ def _replace_home_cwd():
 
 
 def _collapsed_pwd():
-    sep = get_sep()
+    sep = xt.get_sep()
     pwd = _replace_home_cwd().split(sep)
     l = len(pwd)
     leader = sep if l > 0 and len(pwd[0]) == 0 else ''
@@ -51,7 +51,7 @@ def _dynamically_collapsed_pwd():
     if (units == '%'):
         cols, _ = shutil.get_terminal_size()
         target_width = (cols * target_width) // 100
-    sep = get_sep()
+    sep = xt.get_sep()
     pwd = originial_path.split(sep)
     last = pwd.pop()
     remaining_space = target_width - len(last)
