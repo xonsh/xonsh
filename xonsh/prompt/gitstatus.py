@@ -116,7 +116,7 @@ def gitstatus():
 
 
 def gitstatus_prompt():
-    """Return str `[BRANCH|OPERATOR|numbers]`"""
+    """Return str `BRANCH|OPERATOR|numbers`"""
     try:
         (branch, num_ahead, num_behind,
          untracked, changed, conflicts, staged, stashed,
@@ -124,7 +124,7 @@ def gitstatus_prompt():
     except subprocess.SubprocessError:
         return ''
 
-    ret = '[' + _get_def('BRANCH') + branch
+    ret = _get_def('BRANCH') + branch
     if num_ahead > 0:
         ret += _get_def('AHEAD') + str(num_ahead)
     if num_behind > 0:
@@ -144,6 +144,5 @@ def gitstatus_prompt():
         ret += _get_def('STASHED') + str(stashed) + '{NO_COLOR}'
     if staged + conflicts + changed + untracked + stashed == 0:
         ret += _get_def('CLEAN') + '{NO_COLOR}'
-    ret += ']'
 
     return ret
