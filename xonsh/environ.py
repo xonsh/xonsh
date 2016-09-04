@@ -39,8 +39,7 @@ from xonsh.tools import (
     is_nonstring_seq_of_strings, pathsep_to_upper_seq,
     seq_to_upper_pathsep,
 )
-
-from xonsh.prompt.base import FORMATTER_DICT
+import xonsh.prompt.base as prompt
 
 
 @lazyobject
@@ -251,7 +250,7 @@ def DEFAULT_VALUES():
         'DYNAMIC_CWD_WIDTH': (float('inf'), 'c'),
         'EXPAND_ENV_VARS': True,
         'FORCE_POSIX_PATHS': False,
-        'FORMATTER_DICT': dict(FORMATTER_DICT),
+        'FORMATTER_DICT': dict(prompt.FORMATTER_DICT),
         'FUZZY_PATH_COMPLETION': True,
         'GLOB_SORTED': True,
         'HISTCONTROL': set(),
@@ -422,7 +421,7 @@ def DEFAULT_DOCS():
         'Dictionary containing variables to be used when formatting $PROMPT '
         "and $TITLE. See 'Customizing the Prompt' "
         'http://xon.sh/tutorial.html#customizing-the-prompt',
-        configurable=False, default='xonsh.environ.FORMATTER_DICT'),
+        configurable=False, default='xonsh.prompt.FORMATTER_DICT'),
     'FUZZY_PATH_COMPLETION': VarDocs(
         "Toggles 'fuzzy' matching of paths for tab completion, which is only "
         "used as a fallback if no other completions succeed but can be used "
@@ -926,7 +925,8 @@ def is_template_string(template, formatter_dict=None):
         return False
     included_names.discard(None)
     if formatter_dict is None:
-        fmtter = builtins.__xonsh_env__.get('FORMATTER_DICT', FORMATTER_DICT)
+        fmtter = builtins.__xonsh_env__.get('FORMATTER_DICT',
+                                            prompt.FORMATTER_DICT)
     else:
         fmtter = formatter_dict
     known_names = set(fmtter.keys())
@@ -935,7 +935,8 @@ def is_template_string(template, formatter_dict=None):
 
 def _get_fmtter(formatter_dict=None):
     if formatter_dict is None:
-        fmtter = builtins.__xonsh_env__.get('FORMATTER_DICT', FORMATTER_DICT)
+        fmtter = builtins.__xonsh_env__.get('FORMATTER_DICT',
+                                            prompt.FORMATTER_DICT)
     else:
         fmtter = formatter_dict
     return fmtter
