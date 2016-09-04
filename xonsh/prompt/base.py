@@ -16,7 +16,7 @@ from xonsh.prompt.env import (env_name, vte_new_tab_cwd)
 from xonsh.prompt.vc_branch import (
     current_branch, branch_color, branch_bg_color
 )
-from xonsh.prompt.gitstatus import _gitstatus_prompt
+from xonsh.prompt.gitstatus import gitstatus_prompt
 
 
 FORMATTER_DICT = xl.LazyObject(lambda: dict(
@@ -33,5 +33,5 @@ FORMATTER_DICT = xl.LazyObject(lambda: dict(
     current_job=_current_job,
     env_name=env_name,
     vte_new_tab_cwd=vte_new_tab_cwd,
-    gitstatus=_gitstatus_prompt,
+    gitstatus=gitstatus_prompt,
 ), globals(), 'FORMATTER_DICT')

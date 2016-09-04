@@ -12,7 +12,7 @@ from xonsh.lazyasd import LazyObject
 from xonsh.platform import HAS_PYGMENTS
 from xonsh.tools import DefaultNotGiven, print_color, normabspath, to_bool
 from xonsh.inspectors import find_file, getouterframes
-from xonsh.environ import _replace_home
+from xonsh.prompt.cwd import _replace_home
 from xonsh.lazyimps import pygments, pyghooks
 
 

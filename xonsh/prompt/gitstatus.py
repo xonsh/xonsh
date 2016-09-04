@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """informative git status for prompt"""
 
 import os
@@ -19,8 +18,8 @@ def _check_output(*args, **kwargs):
 
 
 @xl.lazyobject
-def DEFS():
-    _DEFS = {
+def _DEFS():
+    DEFS = {
         'HASH': ':',
         'BRANCH': '{CYAN}',
         'OPERATION': '{CYAN}',
@@ -33,11 +32,11 @@ def DEFS():
         'AHEAD': '↑·',
         'BEHIND': '↓·',
     }
-    return _DEFS
+    return DEFS
 
 
 def _get_def(key):
-    return builtins.__xonsh_env__.get('XONSH_GITSTATUS_' + key) or DEFS[key]
+    return builtins.__xonsh_env__.get('XONSH_GITSTATUS_' + key) or _DEFS[key]
 
 
 def _get_tag_or_hash():
@@ -69,7 +68,10 @@ def _gitoperation(gitdir):
             if os.path.exists(os.path.join(gitdir, f[0]))]
 
 
-def _gitstatus():
+def gitstatus():
+    """Return (branch name, number of ahead commit, number of behind commit,
+               untracked number, changed number, conflicts number,
+               staged number, stashed number, operation)"""
     status = _check_output(['git', 'status', '--porcelain', '--branch'])
     branch = ''
     num_ahead, num_behind = 0, 0
@@ -113,11 +115,12 @@ def _gitstatus():
             operations)
 
 
-def _gitstatus_prompt():
+def gitstatus_prompt():
+    """Return str `[BRANCH|OPERATOR|numbers]`"""
     try:
         (branch, num_ahead, num_behind,
          untracked, changed, conflicts, staged, stashed,
-         operations) = _gitstatus()
+         operations) = gitstatus()
     except subprocess.SubprocessError:
         return ''
 
