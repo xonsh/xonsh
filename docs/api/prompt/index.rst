@@ -1,12 +1,16 @@
 .. _api_prompt:
 
-=================
-Prompt API
-=================
-Functions in ``FORMATTER_DICT`` for prompt.
+======================
+Prompt formatter API
+======================
+Modules that provides ``FORMATTER_DICT``.
 
 .. toctree::
     :maxdepth: 1
 
+    base
+    cwd
+    env
     gitstatus
+    jobs
     vc_branch

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Prompt formatter for simple version control branchs"""
 
 import os
 import sys

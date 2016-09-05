@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Base prompt, provides FORMATTER_DICT"""
 
 import os
 import socket

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""informative git status for prompt"""
+"""Informative git status prompt formatter"""
 
 import os
 import builtins

@@ -2,7 +2,9 @@
 
 * New ``FORMATTER_DICT`` entry ``gitstatus`` to provides informative git status
 
-**Changed:** None
+**Changed:**
+
+* All prompt formatter functions moved to ``xonsh.prompt`` subpackage
 
 **Deprecated:** None
 

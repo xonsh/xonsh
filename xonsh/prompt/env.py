@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Prompt formatter for virtualenv and others"""
 
 import os
 import builtins
