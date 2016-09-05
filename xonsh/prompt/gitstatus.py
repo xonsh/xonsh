@@ -122,7 +122,7 @@ def gitstatus_prompt():
          untracked, changed, conflicts, staged, stashed,
          operations) = gitstatus()
     except subprocess.SubprocessError:
-        return ''
+        return None
 
     ret = _get_def('BRANCH') + branch
     if num_ahead > 0:
@@ -144,5 +144,6 @@ def gitstatus_prompt():
         ret += _get_def('STASHED') + str(stashed) + '{NO_COLOR}'
     if staged + conflicts + changed + untracked + stashed == 0:
         ret += _get_def('CLEAN') + '{NO_COLOR}'
+    ret += '{NO_COLOR}'
 
     return ret
