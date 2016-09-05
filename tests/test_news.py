@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """Testing that news entries are well formed."""
 import os
-import pytest
 import re
 
+import pytest
+
 from xonsh.platform import scandir
+
 
 NEWSDIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'news')
 
