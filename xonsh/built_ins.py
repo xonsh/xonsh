@@ -749,7 +749,7 @@ def convert_macro_arg(raw_arg, kind, glbs, locs, *, name='<arg>',
         kind, mode = kind
     if isinstance(kind, str):
         kind = _convert_kind_flag(kind)
-    if kind is str:
+    if kind is str or kind is None:
         return raw_arg  # short circut since there is nothing else to do
     # select from kind and convert
     execer = builtins.__xonsh_execer__
@@ -764,7 +764,7 @@ def convert_macro_arg(raw_arg, kind, glbs, locs, *, name='<arg>',
         mode = mode or 'eval'
         arg = execer.compile(raw_arg, mode=mode, glbs=glbs, locs=locs,
                              filename=filename)
-    elif kind is eval or kind is None:
+    elif kind is eval:
         arg = execer.eval(raw_arg, glbs=glbs, locs=locs, filename=filename)
     elif kind is exec:
         mode = mode or 'exec'
@@ -838,7 +838,7 @@ def call_macro(f, raw_args, glbs, locs):
             break
         kind = param.annotation
         if kind is empty or kind is None:
-            kind = eval
+            kind = str
         arg = convert_macro_arg(raw_arg, kind, glbs, locs, name=key,
                                 macroname=macroname)
         args.append(arg)

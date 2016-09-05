@@ -161,6 +161,13 @@
    "install": {
     "pip": "pip install xontrib-z"
    }
+  },
+  "xontrib-thefuck": {
+   "license": "MIT",
+   "url": "https://github.com/meatballs/xontrib-thefuck",
+   "install": {
+    "pip": "pip install xontrib-thefuck"
+   }
   }
  }
 }

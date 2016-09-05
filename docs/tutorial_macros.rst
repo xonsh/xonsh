@@ -234,7 +234,7 @@ There are six kinds of annotations that macros are able to interpret:
      - ``str``
      - ``'s'``, ``'str'``, or ``'string'``
      -
-     - Source code of argument as string.
+     - Source code of argument as string, *default*.
    * - AST
      - ``ast.AST``
      - ``'a'`` or ``'ast'``
@@ -249,7 +249,7 @@ There are six kinds of annotations that macros are able to interpret:
      - ``eval`` or ``None``
      - ``'v'`` or ``'eval'``
      -
-     - Evaluation of the argument, *default*.
+     - Evaluation of the argument.
    * - Exec
      - ``exec``
      - ``'x'`` or ``'exec'``
@@ -269,9 +269,9 @@ annotation type.
 Each argument may be annotated with its own individual type. Annotations
 may be provided as either objects or as the string flags seen in the above
 table. String flags are case-insensitive.
-If an argument does not have an annotation, ``eval`` is selected.
-This makes the macro call behave like a normal function call for
-arguments whose annotations are unspecified.  For example,
+If an argument does not have an annotation, ``str`` is selected.
+This makes the macro function call behave like the subprocess macros and
+context manager macros below. For example,
 
 .. code-block:: xonsh
 
@@ -280,7 +280,7 @@ arguments whose annotations are unspecified.  For example,
 
 In a macro call of ``func!()``,
 
-* ``a`` will be evaluated with ``eval`` since no annotation was provided,
+* ``a`` will be evaluated with ``str`` since no annotation was provided,
 * ``b`` will be parsed into a syntax tree node, and
 * ``c`` will be compiled into code object since the builtin ``compile()``
   function was used as the annotation.
