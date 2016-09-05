@@ -209,7 +209,7 @@ def cd(args, stdin=None):
         return '', 'cd: {0} is not a directory\n'.format(d), 1
     if not os.access(d, os.X_OK):
         return '', 'cd: permission denied: {0}\n'.format(d), 1
-    if ON_WINDOWS and (d[0] == d[1]) and (d[0] in (os.sep, os.altsep)) \
+    if ON_WINDOWS and len(d) > 1 and (d[0] == d[1]) and (d[0] in (os.sep, os.altsep)) \
             and _unc_check_enabled() and (not env.get('AUTO_PUSHD')):
         return '', "cd: can't cd to UNC path on Windows, unless $AUTO_PUSHD set or reg entry " \
                + r'HKCU\SOFTWARE\MICROSOFT\Command Processor\DisableUNCCheck:DWORD = 1' + '\n', 1

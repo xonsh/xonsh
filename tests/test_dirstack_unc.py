@@ -79,6 +79,14 @@ def test_pushdpopd(xonsh_builtins):
     assert owd.casefold() == os.getcwd().casefold(), "popd returned cwd to expected dir"
 
 
+def test_cd_dot(xonsh_builtins):
+    xonsh_builtins.__xonsh_env__ = Env(PWD=os.getcwd())
+
+    owd = os.getcwd().casefold()
+    dirstack.cd(['.'])
+    assert owd == os.getcwd().casefold()
+
+
 @pytest.mark.skipif( not ON_WINDOWS, reason="Windows-only UNC functionality")
 def test_uncpushd_simple_push_pop(xonsh_builtins, shares_setup):
     xonsh_builtins.__xonsh_env__ = Env(CDPATH=PARENT, PWD=HERE)
