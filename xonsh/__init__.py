@@ -39,6 +39,8 @@ else:
         _sys.modules['xonsh.tools'] = __amalgam__
         ast = __amalgam__
         _sys.modules['xonsh.ast'] = __amalgam__
+        commands_cache = __amalgam__
+        _sys.modules['xonsh.commands_cache'] = __amalgam__
         contexts = __amalgam__
         _sys.modules['xonsh.contexts'] = __amalgam__
         diff_history = __amalgam__
@@ -61,8 +63,6 @@ else:
         _sys.modules['xonsh.history'] = __amalgam__
         inspectors = __amalgam__
         _sys.modules['xonsh.inspectors'] = __amalgam__
-        commands_cache = __amalgam__
-        _sys.modules['xonsh.commands_cache'] = __amalgam__
         environ = __amalgam__
         _sys.modules['xonsh.environ'] = __amalgam__
         base_shell = __amalgam__
