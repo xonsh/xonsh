@@ -353,6 +353,19 @@ def _redirect_io(streams, r, loc=None):
         raise XonshError('Unrecognized redirection command: {}'.format(r))
 
 
+def default_signal_pauser(n, f):
+    """Pauses a signal, as needed."""
+    signal.pause()
+
+
+def no_pg_xonsh_preexec_fn():
+    """Default subprocess preexec function for when there is no existing
+    pipeline group.
+    """
+    os.setpgrp()
+    signal.signal(signal.SIGTSTP, default_signal_pauser)
+
+
 class SubprocCmd:
     """A container for specifiying how a subprocess command should be
     executed.
@@ -391,6 +404,8 @@ class SubprocCmd:
         backgroundable : bool
             Whether or not the subprocess is able to be run in the background.
         """
+        self._stdin = self._stdout = self._stderr = None
+        # args
         self.cmd = list(cmd)
         self.cls = cls
         self.stdin = stdin
@@ -416,17 +431,86 @@ class SubprocCmd:
         s += ', '.join(kws) + ')'
         return s
 
-    def run(self):
+    #
+    # Properties
+    #
+
+    @property
+    def stdin(self):
+        return self._stdin
+
+    @stdin.setter
+    def stdin(self, value):
+        if self._stdin is None:
+            self._stdin = value
+        else:
+            msg = 'Multiple inputs for stdin for {0!r}'
+            msg = msg.format(' '.join(self.args))
+            raise XonshError(msg)
+
+    @property
+    def stdout(self):
+        return self._stdout
+
+    @stdout.setter
+    def stdout(self, value):
+        if self._stdout is None:
+            self._stdout = value
+        else:
+            msg = 'Multiple redirections for stdout for {0!r}'
+            msg = msg.format(' '.join(self.args))
+            raise XonshError(msg)
+
+    @property
+    def stderr(self):
+        return self._stderr
+
+    @stderr.setter
+    def stderr(self, value):
+        if self._stderr is None:
+            self._stderr = value
+        else:
+            msg = 'Multiple redirections for stderr for {0!r}'
+            msg = msg.format(' '.join(self.args))
+            raise XonshError(msg)
+
+    #
+    # Execution methods
+    #
+
+    def run(self, pipeline_group=None):
         """Launches the subprocess and returns the object."""
         kwargs = {n: getattr(self, n) for n in self.kwnames}
+        self.prep_env(kwargs)
+        self.prep_preexec_fn(kwargs, pipeline_group=pipeline_group)
+        p = self.cls(self.cmd, **kwargs)
+        return p
+
+    def prep_env(self, kwargs):
+        """Prepares the environment to use in the subprocess."""
         denv = builtins.__xonsh_env__.detype()
         if ON_WINDOWS:
             # Over write prompt variable as xonsh's $PROMPT does
             # not make much sense for other subprocs
             denv['PROMPT'] = '$P$G'
         kwargs['env'] = denv
-        p = self.cls(self.cmd, **kwargs)
-        return p
+
+    def prep_preexec_fn(self, kwargs, pipeline_group=None):
+        """Prepares the 'preexec_fn' keyword argument"""
+        if not (ON_POSIX and self.cls is subprocess.Popen):
+            return
+        if pipeline_group is None:
+            xonsh_preexec_fn = no_pg_xonsh_preexec_fn
+        else:
+            def xonsh_preexec_fn():
+                """Preexec function bound to a pipeline group."""
+                os.setpgid(0, pipeline_group)
+                signal.signal(signal.SIGTSTP, default_signal_pauser)
+        kwargs['preexec_fn'] = xonsh_preexec_fn
+
+    #
+    # Building methods
+    #
 
     @classmethod
     def build(kls, cmd, *, cls=subprocess.Popen, **kwargs):
@@ -510,6 +594,30 @@ class SubprocCmd:
             raise XonshError(e.format(numargs))
         self.cls = cls
         self.backgroundable = bgable
+
+
+def cmds_to_subprocs(cmds):
+    """Converts a list of cmds to a list of SubprocCmd objects that are
+    ready to be executed.
+    """
+    # first build the subprocs independently and separate from the redirects
+    subprocs = []
+    redirects = []
+    for cmd in cmds:
+        if isinstance(cmd, str):
+            redirects.append(cmd)
+        else:
+            subproc = SubprocCmd.build(cmd)
+            subprocs.append(subproc)
+    # now modify the subprocs based on the redirects.
+    for i, redirect in enumerate(redirects):
+        if redirect == '|':
+            r, w = os.pipe()
+            subprocs[i].stdout = w
+            subprocs[i + 1].stdin = r
+        else:
+            raise XonshError('unrecognized redirect {0!r}'.format(redirect))
+    return subprocs
 
 
 def run_subproc(cmds, captured=False):
@@ -616,14 +724,6 @@ def run_subproc(cmds, captured=False):
                       env.get('XONSH_STORE_STDOUT', False))
             cls = TeePTYProc if usetee else subprocess.Popen
             subproc_kwargs = {}
-            if ON_POSIX and cls is subprocess.Popen:
-                def _subproc_pre():
-                    if _pipeline_group is None:
-                        os.setpgrp()
-                    else:
-                        os.setpgid(0, _pipeline_group)
-                    signal.signal(signal.SIGTSTP, lambda n, f: signal.pause())
-                subproc_kwargs['preexec_fn'] = _subproc_pre
             try:
                 proc = cls(aliased_cmd,
                            universal_newlines=uninew,
