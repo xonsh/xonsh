@@ -467,6 +467,12 @@ class SubprocCmd:
             Whether or not the subprocess is or should be run as a proxy.
         backgroundable : bool
             Whether or not the subprocess is able to be run in the background.
+        captured_stdin : file-like
+            Handle to captured stdin
+        captured_stdout : file-like
+            Handle to captured stdin
+        captured_stderr : file-like
+            Handle to captured stderr
         """
         self._stdin = self._stdout = self._stderr = None
         # args
@@ -481,6 +487,9 @@ class SubprocCmd:
         self.binary_loc = None
         self.is_proxy = False
         self.backgroundable = True
+        self.captured_stdin = None
+        self.captured_stdout = None
+        self.captured_stderr = None
 
     def __str__(self):
         s = self.cls.__name__ + '(' + str(cmd) + ', '
@@ -691,8 +700,12 @@ class SubprocCmd:
         self.cls = cls
         self.backgroundable = bgable
 
+@lazyobject
+def stdout_capture_kinds():
+    return frozenset(['stdout', 'object'])
 
-def cmds_to_subprocs(cmds):
+
+def cmds_to_subprocs(cmds, captured=False):
     """Converts a list of cmds to a list of SubprocCmd objects that are
     ready to be executed.
     """
@@ -713,6 +726,17 @@ def cmds_to_subprocs(cmds):
             subprocs[i + 1].stdin = r
         else:
             raise XonshError('unrecognized redirect {0!r}'.format(redirect))
+    # modify last subproc, based on settings
+    last = subproc[-1]
+    if last.stdout is not None:
+        pass
+    elif captured in stdout_capture_kinds:
+        r, w = os.pipe()
+        last.stdout = w
+        last.captured_stdout = r
+    elif builtins.__xonsh_stdout_uncaptured__ is not None:
+        last.stdout = builtins.__xonsh_stdout_uncaptured__
+        last.captured_stdout = last.stdout
     return subprocs
 
 
@@ -743,45 +767,6 @@ def run_subproc(cmds, captured=False):
     _capture_streams = captured in {'stdout', 'object'}
     for ix, cmd in enumerate(cmds):
         starttime = time.time()
-        stdin = None
-        stderr = None
-        if isinstance(cmd, str):
-            continue
-        streams = {}
-        while True:
-            if len(cmd) >= 3 and _is_redirect(cmd[-2]):
-                _redirect_io(streams, cmd[-2], cmd[-1])
-                cmd = cmd[:-2]
-            elif len(cmd) >= 2 and _is_redirect(cmd[-1]):
-                _redirect_io(streams, cmd[-1])
-                cmd = cmd[:-1]
-            else:
-                break
-        # set standard input
-        if 'stdin' in streams:
-            if prev_proc is not None:
-                raise XonshError('Multiple inputs for stdin')
-            stdin = streams['stdin'][-1]
-            procinfo['stdin_redirect'] = streams['stdin'][:-1]
-        elif prev_proc is not None:
-            stdin = prev_proc.stdout
-        # set standard output
-        _stdout_name = None
-        _stderr_name = None
-        if 'stdout' in streams:
-            if ix != last_cmd:
-                raise XonshError('Multiple redirects for stdout')
-            stdout = streams['stdout'][-1]
-            procinfo['stdout_redirect'] = streams['stdout'][:-1]
-        elif ix != last_cmd:
-            stdout = subprocess.PIPE
-        elif _capture_streams:
-            _nstdout = stdout = tempfile.NamedTemporaryFile(delete=False)
-            _stdout_name = stdout.name
-        elif builtins.__xonsh_stdout_uncaptured__ is not None:
-            stdout = builtins.__xonsh_stdout_uncaptured__
-        else:
-            stdout = None
         # set standard error
         if 'stderr' in streams:
             stderr = streams['stderr'][-1]
