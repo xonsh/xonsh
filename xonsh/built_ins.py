@@ -305,68 +305,6 @@ def safe_close(x):
         pass
 
 
-def _redirect_io(streams, r, loc=None):
-    # special case of redirecting stderr to stdout
-    if r.replace('&', '') in _E2O_MAP:
-        if 'stderr' in streams:
-            raise XonshError('Multiple redirects for stderr')
-        streams['stderr'] = ('<stdout>', 'a', subprocess.STDOUT)
-        return
-    orig, mode, dest = _REDIR_REGEX.match(r).groups()
-    # redirect to fd
-    if dest.startswith('&'):
-        try:
-            dest = int(dest[1:])
-            if loc is None:
-                loc, dest = dest, ''
-            else:
-                e = 'Unrecognized redirection command: {}'.format(r)
-                raise XonshError(e)
-        except (ValueError, XonshError):
-            raise
-        except Exception:
-            pass
-    mode = _MODES.get(mode, None)
-    if mode == 'r':
-        if len(orig) > 0 or len(dest) > 0:
-            raise XonshError('Unrecognized redirection command: {}'.format(r))
-        elif 'stdin' in streams:
-            raise XonshError('Multiple inputs for stdin')
-        else:
-            streams['stdin'] = (loc, 'r', _open(loc, mode))
-    elif mode in _WRITE_MODES:
-        if orig in _REDIR_ALL:
-            if 'stderr' in streams:
-                raise XonshError('Multiple redirects for stderr')
-            elif 'stdout' in streams:
-                raise XonshError('Multiple redirects for stdout')
-            elif len(dest) > 0:
-                e = 'Unrecognized redirection command: {}'.format(r)
-                raise XonshError(e)
-            targets = ['stdout', 'stderr']
-        elif orig in _REDIR_ERR:
-            if 'stderr' in streams:
-                raise XonshError('Multiple redirects for stderr')
-            elif len(dest) > 0:
-                e = 'Unrecognized redirection command: {}'.format(r)
-                raise XonshError(e)
-            targets = ['stderr']
-        elif orig in _REDIR_OUT:
-            if 'stdout' in streams:
-                raise XonshError('Multiple redirects for stdout')
-            elif len(dest) > 0:
-                e = 'Unrecognized redirection command: {}'.format(r)
-                raise XonshError(e)
-            targets = ['stdout']
-        else:
-            raise XonshError('Unrecognized redirection command: {}'.format(r))
-        f = _open(loc, mode)
-        for t in targets:
-            streams[t] = (loc, mode, f)
-    else:
-        raise XonshError('Unrecognized redirection command: {}'.format(r))
-
-
 def _parse_redirects(r):
     """returns origin, mode, destination tuple"""
     orig, mode, dest = _REDIR_REGEX.match(r).groups()
@@ -414,7 +352,6 @@ def _redirect_streams(r, loc=None):
     else:
         raise XonshError('Unrecognized redirection command: {}'.format(r))
     return stdin, stdout, stderr
-
 
 
 def default_signal_pauser(n, f):
@@ -465,6 +402,8 @@ class SubprocCmd:
             Path to binary to execute.
         is_proxy : bool
             Whether or not the subprocess is or should be run as a proxy.
+        background : bool
+            Whether or not the subprocess should be started in the background.
         backgroundable : bool
             Whether or not the subprocess is able to be run in the background.
         captured_stdin : file-like
@@ -486,6 +425,7 @@ class SubprocCmd:
         self.alias = None
         self.binary_loc = None
         self.is_proxy = False
+        self.background = False
         self.backgroundable = True
         self.captured_stdin = None
         self.captured_stdout = None
@@ -565,7 +505,26 @@ class SubprocCmd:
         kwargs = {n: getattr(self, n) for n in self.kwnames}
         self.prep_env(kwargs)
         self.prep_preexec_fn(kwargs, pipeline_group=pipeline_group)
-        p = self.cls(self.cmd, **kwargs)
+        if callable(self.alias):
+            p = self.cls(self.cmd, **kwargs)
+        else:
+            p = self._run_binary(kwargs)
+        return p
+
+    def _run_binary(self, kwargs):
+        try:
+            p = self.cls(self.cmd, **kwargs)
+        except PermissionError:
+            e = 'xonsh: subprocess mode: permission denied: {0}'
+            raise XonshError(e.format(self.cmd[0]))
+        except FileNotFoundError:
+            cmd0 = self.cmd[0]
+            e = 'xonsh: subprocess mode: command not found: {0}'.format(cmd0)
+            env = builtins.__xonsh_env__
+            sug = suggest_commands(cmd0, env, builtins.aliases)
+            if len(sug.strip()) > 0:
+                e += '\n' + suggest_commands(cmd0, env, builtins.aliases)
+            raise XonshError(e)
         return p
 
     def prep_env(self, kwargs):
@@ -705,6 +664,46 @@ def stdout_capture_kinds():
     return frozenset(['stdout', 'object'])
 
 
+def _update_last_subproc(last, captured=False)
+    env = builtins.__xonsh_env__
+    # set standard in
+    if (last.stdin is not None and captured == 'object' and
+            env.get('XONSH_STORE_STDIN')):
+        r, w = os.pipe()
+        last._stdin = r  # bypass original stdin check
+        last.captured_stdin = w
+        raise Exception
+    # set standard out
+    if last.stdout is not None:
+        last.universal_newlines = True
+    elif captured in stdout_capture_kinds:
+        last.universal_newlines = False
+        r, w = os.pipe()
+        last.stdout = w
+        last.captured_stdout = r
+    elif builtins.__xonsh_stdout_uncaptured__ is not None:
+        last.universal_newlines = True
+        last.stdout = builtins.__xonsh_stdout_uncaptured__
+        last.captured_stdout = last.stdout
+    else:
+        last.universal_newlines = True
+    if (last.stdout is None) and (not last.background) and
+            env.get('XONSH_STORE_STDOUT')):
+        r, w = os.pipe()
+        last.stdout = w
+        last.captured_stdout = r
+    # set standard error
+    if last.stderr is not None:
+        pass
+    elif captured == 'object':
+        r, w = os.pipe()
+        last.stderr = w
+        last.captured_stderr = r
+    elif builtins.__xonsh_stderr_uncaptured__ is not None:
+        last.stderr = builtins.__xonsh_stderr_uncaptured__
+        last.captured_stderr = last.stderr
+
+
 def cmds_to_subprocs(cmds, captured=False):
     """Converts a list of cmds to a list of SubprocCmd objects that are
     ready to be executed.
@@ -724,19 +723,12 @@ def cmds_to_subprocs(cmds, captured=False):
             r, w = os.pipe()
             subprocs[i].stdout = w
             subprocs[i + 1].stdin = r
+        elif redirect == '&' and i == len(redirects) - 1:
+            subprocs[-1].background = True
         else:
             raise XonshError('unrecognized redirect {0!r}'.format(redirect))
-    # modify last subproc, based on settings
-    last = subproc[-1]
-    if last.stdout is not None:
-        pass
-    elif captured in stdout_capture_kinds:
-        r, w = os.pipe()
-        last.stdout = w
-        last.captured_stdout = r
-    elif builtins.__xonsh_stdout_uncaptured__ is not None:
-        last.stdout = builtins.__xonsh_stdout_uncaptured__
-        last.captured_stdout = last.stdout
+    # Apply boundry conditions
+    _update_last_subproc(subproc[-1], captured=captured)
     return subprocs
 
 
@@ -767,59 +759,6 @@ def run_subproc(cmds, captured=False):
     _capture_streams = captured in {'stdout', 'object'}
     for ix, cmd in enumerate(cmds):
         starttime = time.time()
-        # set standard error
-        if 'stderr' in streams:
-            stderr = streams['stderr'][-1]
-            procinfo['stderr_redirect'] = streams['stderr'][:-1]
-        elif captured == 'object' and ix == last_cmd:
-            _nstderr = stderr = tempfile.NamedTemporaryFile(delete=False)
-            _stderr_name = stderr.name
-        elif builtins.__xonsh_stderr_uncaptured__ is not None:
-            stderr = builtins.__xonsh_stderr_uncaptured__
-        uninew = (ix == last_cmd) and (not _capture_streams)
-        procinfo['alias'] = alias
-
-        _stdin_file = None
-        if (stdin is not None and
-                env.get('XONSH_STORE_STDIN') and
-                captured == 'object' and
-                __xonsh_commands_cache__.lazy_locate_binary('cat') and
-                __xonsh_commands_cache__.lazy_locate_binary('tee')):
-            _stdin_file = tempfile.NamedTemporaryFile()
-            cproc = subprocess.Popen(['cat'], stdin=stdin,
-                                     stdout=subprocess.PIPE)
-            tproc = subprocess.Popen(['tee', _stdin_file.name],
-                                     stdin=cproc.stdout, stdout=subprocess.PIPE)
-            stdin = tproc.stdout
-        if callable(aliased_cmd):
-            proc = cls(aliased_cmd, cmd[1:],
-                       stdin, stdout, stderr,
-                       universal_newlines=uninew)
-        else:
-            prev_is_proxy = False
-            usetee = ((stdout is None) and
-                      (not background) and
-                      env.get('XONSH_STORE_STDOUT', False))
-            cls = TeePTYProc if usetee else subprocess.Popen
-            subproc_kwargs = {}
-            try:
-                proc = cls(aliased_cmd,
-                           universal_newlines=uninew,
-                           env=denv,
-                           stdin=stdin,
-                           stdout=stdout,
-                           stderr=stderr,
-                           **subproc_kwargs)
-            except PermissionError:
-                e = 'xonsh: subprocess mode: permission denied: {0}'
-                raise XonshError(e.format(aliased_cmd[0]))
-            except FileNotFoundError:
-                cmd = aliased_cmd[0]
-                e = 'xonsh: subprocess mode: command not found: {0}'.format(cmd)
-                sug = suggest_commands(cmd, env, builtins.aliases)
-                if len(sug.strip()) > 0:
-                    e += '\n' + suggest_commands(cmd, env, builtins.aliases)
-                raise XonshError(e)
         procs.append(proc)
         prev_proc = proc
         if ON_POSIX and cls is subprocess.Popen and _pipeline_group is None:
@@ -934,14 +873,9 @@ def _run_subproc(cmds, captured=False):
     Lastly, the captured argument affects only the last real command.
     """
     env = builtins.__xonsh_env__
-    background = False
     procinfo = {}
-    if cmds[-1] == '&':
-        background = True
-        cmds = cmds[:-1]
     _pipeline_group = None
     write_target = None
-    last_cmd = len(cmds) - 1
     procs = []
     prev_proc = None
     _capture_streams = captured in {'stdout', 'object'}
