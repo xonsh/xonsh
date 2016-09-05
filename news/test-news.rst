@@ -1,4 +1,7 @@
-**Added:** None
+**Added:**
+
+* fail if no empty line before a category
+* more info on failures
 
 **Changed:** None
 
@@ -8,6 +11,6 @@
 
 **Fixed:**
 
-* test_news fails when single graves around word
+* fails when single graves around word
 
 **Security:** None
