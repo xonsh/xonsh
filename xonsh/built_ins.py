@@ -4,6 +4,7 @@
 Note that this module is named 'built_ins' so as not to be confused with the
 special Python builtins module.
 """
+import io
 import os
 import re
 import sys
@@ -277,7 +278,8 @@ def _is_redirect(x):
     return isinstance(x, str) and _REDIR_REGEX.match(x)
 
 
-def _open(fname, mode):
+def safe_open(fname, mode):
+    """Safely attempts to open a file in for xonsh subprocs."""
     # file descriptors
     if isinstance(fname, int):
         return fname
@@ -289,6 +291,18 @@ def _open(fname, mode):
         raise XonshError('xonsh: {0}: no such file or directory'.format(fname))
     except Exception:
         raise XonshError('xonsh: {0}: unable to open file'.format(fname))
+
+
+def safe_close(x):
+    """Safely attempts to close an object."""
+    if not isinstance(x, io.IOBase):
+        return
+    if x.closed:
+        return
+    try:
+        x.close()
+    except Exception:
+        pass
 
 
 def _redirect_io(streams, r, loc=None):
@@ -351,6 +365,56 @@ def _redirect_io(streams, r, loc=None):
             streams[t] = (loc, mode, f)
     else:
         raise XonshError('Unrecognized redirection command: {}'.format(r))
+
+
+def _parse_redirects(r):
+    """returns origin, mode, destination tuple"""
+    orig, mode, dest = _REDIR_REGEX.match(r).groups()
+    # redirect to fd
+    if dest.startswith('&'):
+        try:
+            dest = int(dest[1:])
+            if loc is None:
+                loc, dest = dest, ''
+            else:
+                e = 'Unrecognized redirection command: {}'.format(r)
+                raise XonshError(e)
+        except (ValueError, XonshError):
+            raise
+        except Exception:
+            pass
+    mode = _MODES.get(mode, None)
+    if mode == 'r' and (len(orig) > 0 or len(dest) > 0):
+        raise XonshError('Unrecognized redirection command: {}'.format(r))
+    elif mode in _WRITE_MODES and len(dest) > 0:
+        raise XonshError('Unrecognized redirection command: {}'.format(r))
+    return orig, mode, dest
+
+
+def _redirect_streams(r, loc=None):
+    """Returns stdin, stdout, stderr tuple of redirections."""
+    stdin = stdout = stderr = None
+    # special case of redirecting stderr to stdout
+    if r.replace('&', '') in _E2O_MAP:
+        stderr = subprocess.STDOUT
+        return stdin, stdout, stderr
+    # get streams
+    orig, mode, dest = _parse_redirects(r)
+    if mode == 'r':
+        stdin = safe_open(loc, mode)
+    elif mode in _WRITE_MODES:
+        if orig in _REDIR_ALL:
+            stdout = stderr = safe_open(loc, mode)
+        elif orig in _REDIR_OUT:
+            stdout = safe_open(loc, mode)
+        elif orig in _REDIR_ERR:
+            stderr = safe_open(loc, mode)
+        else:
+            raise XonshError('Unrecognized redirection command: {}'.format(r))
+    else:
+        raise XonshError('Unrecognized redirection command: {}'.format(r))
+    return stdin, stdout, stderr
+
 
 
 def default_signal_pauser(n, f):
@@ -443,7 +507,10 @@ class SubprocCmd:
     def stdin(self, value):
         if self._stdin is None:
             self._stdin = value
+        elif value is None:
+            pass
         else:
+            safe_close(value)
             msg = 'Multiple inputs for stdin for {0!r}'
             msg = msg.format(' '.join(self.args))
             raise XonshError(msg)
@@ -456,7 +523,10 @@ class SubprocCmd:
     def stdout(self, value):
         if self._stdout is None:
             self._stdout = value
+        elif value is None:
+            pass
         else:
+            safe_close(value)
             msg = 'Multiple redirections for stdout for {0!r}'
             msg = msg.format(' '.join(self.args))
             raise XonshError(msg)
@@ -469,7 +539,10 @@ class SubprocCmd:
     def stderr(self, value):
         if self._stderr is None:
             self._stderr = value
+        elif value is None:
+            pass
         else:
+            safe_close(value)
             msg = 'Multiple redirections for stderr for {0!r}'
             msg = msg.format(' '.join(self.args))
             raise XonshError(msg)
@@ -521,12 +594,35 @@ class SubprocCmd:
         # modifications that do not alter cmds may come before creating instance
         p = kls(cmd, cls=cls, **kwargs)
         # modifications that alter cmds must come after creating instance
+        self.redirect_leading()
+        self.redirect_trailing()
         self.resolve_alias()
         self.resolve_binary_loc()
         self.resolve_auto_cd()
         self.resolve_executable_commands()
         self.resolve_alias_cls()
         return p
+
+    def redirect_leading(self):
+        """Manage leading redirects such as with '< input.txt COMMAND'. """
+        while len(self.cmd) >= 3 and self.cmd[0] == '<':
+            self.stdin = safe_open(seld.cmd[1], 'r')
+            self.cmd = self.cmd[2:]
+
+    def redirect_trailing(self):
+        """Manages trailing redirects."""
+        while True:
+            cmd = self.cmd
+            if len(cmd) >= 3 and _is_redirect(cmd[-2]):
+                streams = _redirect_streams(cmd[-2], cmd[-1])
+                self.stdin, self.stdout, self.stderr = streams
+                self.cmd = cmd[:-2]
+            elif len(cmd) >= 2 and _is_redirect(cmd[-1]):
+                streams = _redirect_streams(cmd[-1])
+                self.stdin, self.stdout, self.stderr = streams
+                self.cmd = cmd[:-1]
+            else:
+                break
 
     def resolve_alias(self):
         """Sets alias in command, if applicable."""
@@ -659,9 +755,6 @@ def run_subproc(cmds, captured=False):
             elif len(cmd) >= 2 and _is_redirect(cmd[-1]):
                 _redirect_io(streams, cmd[-1])
                 cmd = cmd[:-1]
-            elif len(cmd) >= 3 and cmd[0] == '<':
-                _redirect_io(streams, cmd[0], cmd[1])
-                cmd = cmd[2:]
             else:
                 break
         # set standard input
