@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 """Testing that news entries are well formed."""
 import os
+import pytest
 
 from xonsh.platform import scandir
+
+NEWSDIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'news')
 
 CATEGORIES = frozenset(['Added', 'Changed', 'Deprecated', 'Removed',
                         'Fixed', 'Security'])
@@ -14,7 +17,7 @@ def check_news_file(fname):
     nlines = len(lines)
     for i, line in enumerate(lines):
         if line.startswith('**'):
-            cat, _, _ = line[2:].partition(':')
+            cat, *_ = line[2:].rsplit(':')
             assert cat in CATEGORIES
             if i+1 == nlines:
                 continue
@@ -24,14 +27,17 @@ def check_news_file(fname):
             else:
                 assert lines[i+2].startswith('* ')
         else:
-            assert line.startswith('* ') or line.startswith('  ') or \
-                   (line.strip() == '')
+            starts_with_star_space = line.startswith('* ')
+            assert (starts_with_star_space
+                    or line.startswith('  ')
+                    or (line.strip() == ''))
+            if starts_with_star_space and '`' in line:
+                pass
 
 
-def test_news():
-    newsdir = os.path.join(os.path.dirname(
-                           os.path.dirname(__file__)), 'news')
-    for f in scandir(newsdir):
-        base, ext = os.path.splitext(f.path)
-        assert 'rst' in ext
-        yield check_news_file, f.path
+
+@pytest.mark.parametrize('fname', list(scandir(NEWSDIR)))
+def test_news(fname):
+    base, ext = os.path.splitext(fname.path)
+    assert 'rst' in ext
+    check_news_file(fname.path)
