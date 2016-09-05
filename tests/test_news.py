@@ -2,6 +2,7 @@
 """Testing that news entries are well formed."""
 import os
 import pytest
+import re
 
 from xonsh.platform import scandir
 
@@ -10,6 +11,7 @@ NEWSDIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'news')
 CATEGORIES = frozenset(['Added', 'Changed', 'Deprecated', 'Removed',
                         'Fixed', 'Security'])
 
+single_grave_reg = re.compile(r'[^`]`[^`]+`[^`]')
 
 def check_news_file(fname):
     with open(fname) as f:
@@ -27,12 +29,13 @@ def check_news_file(fname):
             else:
                 assert lines[i+2].startswith('* ')
         else:
-            starts_with_star_space = line.startswith('* ')
-            assert (starts_with_star_space
+            assert (line.startswith('* ')
                     or line.startswith('  ')
                     or (line.strip() == ''))
-            if starts_with_star_space and '`' in line:
-                pass
+            if '`' in line:
+                assert line.count('`') % 4 == 0
+                assert not single_grave_reg.search(line)
+
 
 
 
