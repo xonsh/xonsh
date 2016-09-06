@@ -12,8 +12,8 @@ from xonsh.lazyasd import LazyObject
 from xonsh.platform import HAS_PYGMENTS
 from xonsh.tools import DefaultNotGiven, print_color, normabspath, to_bool
 from xonsh.inspectors import find_file, getouterframes
-from xonsh.environ import _replace_home
 from xonsh.lazyimps import pygments, pyghooks
+import xonsh.prompt.cwd as prompt
 
 
 terminal = LazyObject(lambda: importlib.import_module(
@@ -98,7 +98,8 @@ COLOR_LINE = ('{{PURPLE}}{fname}{{BLUE}}:'
 
 def tracer_format_line(fname, lineno, line, color=True, lexer=None, formatter=None):
     """Formats a trace line suitable for printing."""
-    fname = min(fname, _replace_home(fname), os.path.relpath(fname), key=len)
+    fname = min(fname, prompt._replace_home(fname), os.path.relpath(fname),
+                key=len)
     if not color:
         return COLORLESS_LINE.format(fname=fname, lineno=lineno, line=line)
     cline = COLOR_LINE.format(fname=fname, lineno=lineno)

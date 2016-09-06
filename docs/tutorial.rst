@@ -269,7 +269,7 @@ that ``ls -l`` is meant to be run in subprocess-mode?
 For any given line that only contains an expression statement (expr-stmt,
 see the Python AST docs for more information), if all the names cannot
 be found as current variables xonsh will try to parse the line as a
-subprocess command instead.  In the above, if ``ls`` and ``l`` are not 
+subprocess command instead.  In the above, if ``ls`` and ``l`` are not
 variables, then subprocess mode will be attempted. If parsing in subprocess
 mode fails, then the line is left in Python-mode.
 
@@ -1235,6 +1235,8 @@ By default, the following variables are available for use:
     foreground, if any.
   * ``vte_new_tab_cwd``: Issues VTE escape sequence for opening new tabs in the
     current working directory on some linux terminals. This is not usually needed.
+  * ``gitstatus``: Informative git status, like ``[master|MERGING|+1…2]``, you
+    may use `$XONSH_GITSTATUS_* <envvars.html>`_ to customize the styling.
 
 You can also color your prompt easily by inserting keywords such as ``{GREEN}``
 or ``{BOLD_BLUE}``.  Colors have the form shown below:

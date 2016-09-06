@@ -65,12 +65,12 @@ else:
         _sys.modules['xonsh.inspectors'] = __amalgam__
         environ = __amalgam__
         _sys.modules['xonsh.environ'] = __amalgam__
+        tracer = __amalgam__
+        _sys.modules['xonsh.tracer'] = __amalgam__
         base_shell = __amalgam__
         _sys.modules['xonsh.base_shell'] = __amalgam__
         replay = __amalgam__
         _sys.modules['xonsh.replay'] = __amalgam__
-        tracer = __amalgam__
-        _sys.modules['xonsh.tracer'] = __amalgam__
         xonfig = __amalgam__
         _sys.modules['xonsh.xonfig'] = __amalgam__
         aliases = __amalgam__
