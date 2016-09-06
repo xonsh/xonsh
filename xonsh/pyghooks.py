@@ -4,6 +4,7 @@ import os
 import re
 import string
 import builtins
+import functools
 from warnings import warn
 from collections import ChainMap
 from collections.abc import MutableMapping
@@ -29,13 +30,39 @@ from xonsh.tools import (ON_WINDOWS, intensify_colors_for_cmd_exe,
 from xonsh.tokenize import SearchPath
 
 
+def command_token_callback(_, match, fallback):
+    """Yield Keywork token if `match` contains valid command,
+    otherwise fallback to `fallback` lexer"""
+    yield match.start(1), Whitespace, match.group(1)
+
+    start = match.start(2)
+    cmd = match.group(2)
+    cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
+    if cmd in builtins.__xonsh_commands_cache__ or \
+            (os.path.isfile(cmd_abspath) and os.access(cmd_abspath, os.X_OK)):
+        yield start, Keyword, cmd
+    else:
+        lx = fallback()
+        for i, t, v in lx.get_tokens_unprocessed(cmd):
+            yield i + start, t, v
+
+
+COMMAND_TOKEN_RE = r'^(\s*)([^=\s\[\]{}()$"\'`\\<&|;]+)'
+
+
 class XonshSubprocLexer(BashLexer):
     """Lexer for xonsh subproc mode."""
     name = 'Xonsh subprocess lexer'
-    tokens = {'root': [(SearchPath, String.Backtick), inherit, ]}
+    tokens = {'root': [(COMMAND_TOKEN_RE,
+                        functools.partial(command_token_callback,
+                                          fallback=BashLexer)),
+                       (SearchPath, String.Backtick),
+                       inherit]}
 
 
-ROOT_TOKENS = [(r'\?', Keyword),
+ROOT_TOKENS = [(COMMAND_TOKEN_RE, functools.partial(command_token_callback,
+                                                    fallback=PythonLexer)),
+               (r'\?', Keyword),
                (r'\$\w+', Name.Variable),
                (r'\$\{', Keyword, ('pymode', )),
                (r'[\!\$]\(', Keyword, ('subproc', )),
