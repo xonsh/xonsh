@@ -47,7 +47,7 @@ def test_cdpath_collision(xonsh_builtins):
     if not os.path.exists(sub_tests):
         os.mkdir(sub_tests)
     with chdir(HERE):
-        assert os.getcwd() ==  HERE
+        assert os.getcwd() == HERE
         dirstack.cd(["tests"])
         assert os.getcwd() ==  os.path.join(HERE, "tests")
 
@@ -67,7 +67,7 @@ def test_cdpath_expansion(xonsh_builtins):
         tuple(os.rmdir(_) for _ in test_dirs if os.path.exists(_))
         raise e
 
-		
+
 def test_cdpath_events(xonsh_builtins, tmpdir):
     xonsh_builtins.__xonsh_env__ = Env(CDPATH=PARENT, PWD=os.getcwd())
     target = str(tmpdir)
@@ -89,3 +89,40 @@ def test_cdpath_events(xonsh_builtins, tmpdir):
     finally:
         # Use os.chdir() here so dirstack.cd() doesn't fire events (or fail again)
         os.chdir(old_dir)
+
+
+@contextmanager
+def cd_dir(cd_arg, builtins):
+    old_dir = os.getcwd()
+    old_ds = dirstack.DIRSTACK.copy()
+    old_pwd = builtins.__xonsh_env__['PWD']
+    dirstack.cd(cd_arg)
+    yield
+    dirstack.DIRSTACK = old_ds
+    os.chdir(old_dir)
+    builtins.__xonsh_env__['PWD'] = old_pwd
+
+
+def test_cd_autopush(xonsh_builtins, tmpdir):
+    xonsh_builtins.__xonsh_env__ = Env(CDPATH=PARENT, PWD=os.getcwd(), AUTO_PUSHD=True)
+    target = str(tmpdir)
+
+    old_dir = os.getcwd()
+    old_ds_size = len(dirstack.DIRSTACK)
+
+    assert target != old_dir
+    with cd_dir([target], xonsh_builtins):
+        assert target == os.getcwd()
+        assert old_ds_size + 1 == len(dirstack.DIRSTACK)
+
+    with cd_dir(['.'], xonsh_builtins):
+        assert old_dir == os.getcwd()
+        assert old_ds_size + 1 == len(dirstack.DIRSTACK)
+
+
+
+
+
+
+
+

@@ -217,7 +217,7 @@ def cd(args, stdin=None):
     # now, push the directory onto the dirstack if AUTO_PUSHD is set
     if cwd is not None and env.get('AUTO_PUSHD'):
         pushd(['-n', '-q', cwd])
-        if ON_WINDOWS and (d[0] == d[1]) and (d[0] in (os.sep, os.altsep)):
+        if ON_WINDOWS and len(d) > 1 and (d[0] == d[1]) and (d[0] in (os.sep, os.altsep)):
             d = _unc_map_temp_drive(d)
     _change_working_directory(d)
     return None, None, 0
