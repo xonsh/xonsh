@@ -500,7 +500,7 @@ class SubprocCmd:
     # Execution methods
     #
 
-    def run(self, pipeline_group=None):
+    def run(self, *, pipeline_group=None):
         """Launches the subprocess and returns the object."""
         kwargs = {n: getattr(self, n) for n in self.kwnames}
         self.prep_env(kwargs)
@@ -732,6 +732,14 @@ def cmds_to_subprocs(cmds, captured=False):
     return subprocs
 
 
+def _should_set_title(captured=False):
+    env = builtins.__xonsh_env__
+    return (env.get('XONSH_INTERACTIVE') and
+            not env.get('XONSH_STORE_STDOUT') and
+            captured not in stdout_capture_kinds and
+            hasattr(builtins, '__xonsh_shell__'))
+
+
 def run_subproc(cmds, captured=False):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
     which may be a list of command line arguments or a string, representing
@@ -746,82 +754,77 @@ def run_subproc(cmds, captured=False):
     Lastly, the captured argument affects only the last real command.
     """
     env = builtins.__xonsh_env__
-    procinfo = {}
-    _pipeline_group = None
-    write_target = None
+    subprocs = cmds_to_subprocs(cmds, captured=captured)
     procs = []
-    prev_proc = None
-    for ix, cmd in enumerate(cmds):
+    proc = pipeline_group = None
+    for subproc in subprocs:
         starttime = time.time()
+        proc = subproc.run(pipeline_group=pipeline_group)
         procs.append(proc)
-        prev_proc = proc
-        if ON_POSIX and cls is subprocess.Popen and _pipeline_group is None:
-            _pipeline_group = prev_proc.pid
-    if not prev_is_proxy:
+        if ON_POSIX and pipeline_group is None and \
+                        subproc.cls is subprocess.Popen:
+            pipeline_group = prev_proc.pid
+    if not subproc.is_proxy:
         add_job({
             'cmds': cmds,
             'pids': [i.pid for i in procs],
-            'obj': prev_proc,
-            'bg': background
+            'obj': proc,
+            'bg': subproc.background
         })
-    if (env.get('XONSH_INTERACTIVE') and
-            not env.get('XONSH_STORE_STDOUT') and
-            not _capture_streams and
-            hasattr(builtins, '__xonsh_shell__')):
-        # set title here to get current command running
-        pause_call_resume(prev_proc, builtins.__xonsh_shell__.settitle)
-    if background:
+    procinfo = {}
+    if _should_set_title(captured=captured):
+        # set title here to get currently executing command
+        pause_call_resume(proc, builtins.__xonsh_shell__.settitle)
+    if subproc.background:
         return
-    if prev_is_proxy:
-        prev_proc.wait()
+    if subproc.is_proxy:
+        proc.wait()
     wait_for_active_job()
-    for proc in procs[:-1]:
+    for p in procs[:-1]:
         try:
-            proc.stdout.close()
+            p.stdout.close()
         except OSError:
             pass
     hist = builtins.__xonsh_history__
-    hist.last_cmd_rtn = prev_proc.returncode
+    hist.last_cmd_rtn = proc.returncode
     # get output
     output = b''
-    if write_target is None:
-        if _stdout_name is not None:
-            with open(_stdout_name, 'rb') as stdoutfile:
-                output = stdoutfile.read()
-            try:
-                _nstdout.close()
-            except Exception:
+    if _stdout_name is not None:
+        with open(_stdout_name, 'rb') as stdoutfile:
+            output = stdoutfile.read()
+        try:
+            _nstdout.close()
+        except Exception:
+            pass
+        os.unlink(_stdout_name)
+    elif prev_proc.stdout not in (None, sys.stdout):
+       output = prev_proc.stdout.read()
+    if _capture_streams:
+        # to get proper encoding from Popen, we have to
+        # use a byte stream and then implement universal_newlines here
+        output = output.decode(encoding=env.get('XONSH_ENCODING'),
+                               errors=env.get('XONSH_ENCODING_ERRORS'))
+        output = output.replace('\r\n', '\n')
+    else:
+        hist.last_cmd_out = output
+    if captured == 'object':  # get stderr as well
+        named = _stderr_name is not None
+        unnamed = prev_proc.stderr not in {None, sys.stderr}
+        if named:
+            with open(_stderr_name, 'rb') as stderrfile:
+                errout = stderrfile.read()
+           try:
+                _nstderr.close()
+           except Exception:
                 pass
-            os.unlink(_stdout_name)
-        elif prev_proc.stdout not in (None, sys.stdout):
-            output = prev_proc.stdout.read()
-        if _capture_streams:
-            # to get proper encoding from Popen, we have to
-            # use a byte stream and then implement universal_newlines here
-            output = output.decode(encoding=env.get('XONSH_ENCODING'),
+            os.unlink(_stderr_name)
+        elif unnamed:
+            errout = prev_proc.stderr.read()
+        if named or unnamed:
+            errout = errout.decode(encoding=env.get('XONSH_ENCODING'),
                                    errors=env.get('XONSH_ENCODING_ERRORS'))
-            output = output.replace('\r\n', '\n')
-        else:
-            hist.last_cmd_out = output
-        if captured == 'object':  # get stderr as well
-            named = _stderr_name is not None
-            unnamed = prev_proc.stderr not in {None, sys.stderr}
-            if named:
-                with open(_stderr_name, 'rb') as stderrfile:
-                    errout = stderrfile.read()
-                try:
-                    _nstderr.close()
-                except Exception:
-                    pass
-                os.unlink(_stderr_name)
-            elif unnamed:
-                errout = prev_proc.stderr.read()
-            if named or unnamed:
-                errout = errout.decode(encoding=env.get('XONSH_ENCODING'),
-                                       errors=env.get('XONSH_ENCODING_ERRORS'))
-                errout = errout.replace('\r\n', '\n')
-                procinfo['stderr'] = errout
-
+            errout = errout.replace('\r\n', '\n')
+            procinfo['stderr'] = errout
     if getattr(prev_proc, 'signal', None):
         sig, core = prev_proc.signal
         sig_str = SIGNAL_MESSAGES.get(sig)
