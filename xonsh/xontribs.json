@@ -80,6 +80,11 @@
   "package": "xontrib-z",
   "url": "https://github.com/astronouth7303/xontrib-z",
   "description": ["Tracks your most used directories, based on 'frecency'."]
+ },
+ {"name": "autojump",
+  "package": "xonsh",
+  "url": "http://xon.sh",
+  "description": ["Add autojump support into xonsh"]
  }
  ],
  "packages": {
