@@ -39,7 +39,7 @@ def command_token_callback(_, match, fallback):
     cmd = match.group(2)
     cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
     if cmd in builtins.__xonsh_commands_cache__ or \
-            (os.path.exists(cmd_abspath) and os.access(cmd_abspath, os.X_OK)):
+            (os.path.isfile(cmd_abspath) and os.access(cmd_abspath, os.X_OK)):
         yield start, Keyword, cmd
     else:
         lx = fallback()
