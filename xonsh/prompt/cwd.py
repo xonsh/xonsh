@@ -1,0 +1,79 @@
+# -*- coding: utf-8 -*-
+"""CWD related prompt formatter"""
+
+import os
+import shutil
+import builtins
+
+import xonsh.tools as xt
+import xonsh.platform as xp
+
+
+def _replace_home(x):
+    if xp.ON_WINDOWS:
+        home = (builtins.__xonsh_env__['HOMEDRIVE'] +
+                builtins.__xonsh_env__['HOMEPATH'][0])
+        if x.startswith(home):
+            x = x.replace(home, '~', 1)
+
+        if builtins.__xonsh_env__.get('FORCE_POSIX_PATHS'):
+            x = x.replace(os.sep, os.altsep)
+
+        return x
+    else:
+        home = builtins.__xonsh_env__['HOME']
+        if x.startswith(home):
+            x = x.replace(home, '~', 1)
+        return x
+
+
+def _replace_home_cwd():
+    return _replace_home(builtins.__xonsh_env__['PWD'])
+
+
+def _collapsed_pwd():
+    sep = xt.get_sep()
+    pwd = _replace_home_cwd().split(sep)
+    l = len(pwd)
+    leader = sep if l > 0 and len(pwd[0]) == 0 else ''
+    base = [i[0] if ix != l - 1 else i
+            for ix, i in enumerate(pwd) if len(i) > 0]
+    return leader + sep.join(base)
+
+
+def _dynamically_collapsed_pwd():
+    """Return the compact current working directory.  It respects the
+    environment variable DYNAMIC_CWD_WIDTH.
+    """
+    originial_path = _replace_home_cwd()
+    target_width, units = builtins.__xonsh_env__['DYNAMIC_CWD_WIDTH']
+    if target_width == float('inf'):
+        return originial_path
+    if (units == '%'):
+        cols, _ = shutil.get_terminal_size()
+        target_width = (cols * target_width) // 100
+    sep = xt.get_sep()
+    pwd = originial_path.split(sep)
+    last = pwd.pop()
+    remaining_space = target_width - len(last)
+    # Reserve space for separators
+    remaining_space_for_text = remaining_space - len(pwd)
+    parts = []
+    for i in range(len(pwd)):
+        part = pwd[i]
+        part_len = int(min(len(part),
+                           max(1, remaining_space_for_text // (len(pwd) - i))))
+        remaining_space_for_text -= part_len
+        reduced_part = part[0:part_len]
+        parts.append(reduced_part)
+    parts.append(last)
+    full = sep.join(parts)
+    # If even if displaying one letter per dir we are too long
+    if (len(full) > target_width):
+        # We truncate the left most part
+        full = "..." + full[int(-target_width) + 3:]
+        # if there is not even a single separator we still
+        # want to display at least the beginning of the directory
+        if full.find(sep) == -1:
+            full = ("..." + sep + last)[0:int(target_width)]
+    return full

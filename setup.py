@@ -36,7 +36,9 @@ except ImportError:
 
 
 TABLES = ['xonsh/lexer_table.py', 'xonsh/parser_table.py',
-          'xonsh/__amalgam__.py', 'xonsh/completers/__amalgam__.py']
+          'xonsh/__amalgam__.py',
+          'xonsh/completers/__amalgam__.py',
+          'xonsh/prompt/__amalgam__.py']
 
 
 def clean_tables():
@@ -60,7 +62,7 @@ def amalgamate_source():
         print('Could not import amalgamate, skipping.', file=sys.stderr)
         return
     amalgamate.main(['amalgamate', '--debug=XONSH_DEBUG', 'xonsh',
-                     'xonsh.completers'])
+                     'xonsh.completers', 'xonsh.prompt'])
     sys.path.pop(0)
 
 
@@ -290,7 +292,8 @@ def main():
         platforms='Cross Platform',
         classifiers=['Programming Language :: Python :: 3'],
         packages=['xonsh', 'xonsh.ply', 'xonsh.ptk', 'xonsh.parsers',
-                  'xonsh.xoreutils', 'xontrib', 'xonsh.completers'],
+                  'xonsh.xoreutils', 'xontrib',
+                  'xonsh.completers', 'xonsh.prompt'],
         package_dir={'xonsh': 'xonsh', 'xontrib': 'xontrib'},
         package_data={'xonsh': ['*.json', '*.githash'], 'xontrib': ['*.xsh']},
         cmdclass=cmdclass,
