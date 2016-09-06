@@ -552,31 +552,41 @@ def _wcode_to_popen(code):
         raise ValueError("Invalid os.wait code: {}".format(code))
 
 
-_CCTuple = collections.namedtuple("_CCTuple", ["stdin", "stdout", "stderr",
-                                               "pid", "returncode", "args", "alias", "stdin_redirect",
-                                               "stdout_redirect", "stderr_redirect", "timestamp",
-                                               "executed_cmd"])
+class Command:
+    """Represents a subprocess-mode command."""
 
+    attrnames = ("stdin", "stdout", "stderr", "pid", "returncode", "args",
+                 "alias", "stdin_redirect", "stdout_redirect",
+                 "stderr_redirect", "timestamp", "executed_cmd")
 
-class CompletedCommand(_CCTuple):
-    """Represents a completed subprocess-mode command."""
+    def __init__(self, spec, proc, timestamp):
+        """
+        Parameters
+        ----------
+        spec : SubprocSpec
+            Process sepcification
+        proc : Popen-like
+            Process object.
+        """
+        self.proc = proc
+        self.spec = spec
+        self.timestamp = timestamp
 
     def __bool__(self):
         return self.returncode == 0
 
     def __iter__(self):
-        if not self.stdout:
+        proc = self.proc
+        stdout = proc.stdout
+        if not stdout:
+            if not proc.poll():
+                proc.wait()
+                self.endtime()
             raise StopIteration()
-
-        pre = self.stdout
-        post = None
-
-        while post != '':
-            pre, sep, post = pre.partition('\n')
-            # this line may be optional since we use universal newlines.
-            pre = pre[:-1] if pre and pre[-1] == '\r' else pre
-            yield pre
-            pre = post
+        while not proc.poll():
+            yield from stdout.readlines(1024)
+        self.endtime()
+        yield from stdout.readlines()
 
     def itercheck(self):
         yield from self
@@ -586,31 +596,106 @@ class CompletedCommand(_CCTuple):
             raise XonshCalledProcessError(self.returncode, self.executed_cmd,
                                           self.stdout, self.stderr, self)
 
+    def endtime(self):
+        """Sets the closing timestamp if it hasn't been already."""
+        if self.timestamp[1] is None:
+            self.timestamp[1] = time.time()
+
+    #
+    # Properties
+    #
+
+    @propertybh
+    def stdin(self):
+        """Process stdin."""
+        return self.proc.stdin
+
     @property
     def inp(self):
         """Creates normalized input string from args."""
         return ' '.join(self.args)
 
     @property
-    def out(self):
-        """Alias to stdout."""
-        return self.stdout
+    def stdout(self):
+        """Process stdout."""
+        return self.proc.stdout
+
+    out = stdout
 
     @property
-    def err(self):
-        """Alias to stderr."""
-        return self.stderr
+    def stderr(self):
+        """Process stderr."""
+        return self.proc.stderr
+
+    err = stdout
+
+    @property
+    def pid(self):
+        """Process identifier."""
+        return self.proc.pid
+
+    @property
+    def returncode(self):
+        """Process return code, waits until command is completed."""
+        proc = self.proc
+        if proc.returncode is None:
+            proc.wait()
+            self.endtime()
+        return proc.returncode
+
+    rtn = returncode
 
     @property
     def rtn(self):
         """Alias to return code."""
         return self.returncode
 
+    @property
+    def args(self):
+        """Arguments to the process."""
+        return self.spec.args
 
-CompletedCommand.__new__.__defaults__ = (None,) * len(CompletedCommand._fields)
+    @property
+    def rtn(self):
+        """Alias to return code."""
+        return self.returncode
+
+    @property
+    def alias(self):
+        """Alias the process used."""
+        return self.spec.alias
+
+    @property
+    def stdin_redirect(self):
+        """Redirection used for stdin."""
+        stdin = self.spec.stdin
+        name = getattr(stdin, 'name', '<stdin>')
+        mode = getattr(stdin, 'mode', 'r')
+        return [name, mode]
+
+    @property
+    def sdtout_redirect(self):
+        """Redirection used for stdout."""
+        stdout = self.spec.stdout
+        name = getattr(stdout, 'name', '<stdout>')
+        mode = getattr(stdout, 'mode', 'a')
+        return [name, mode]
+
+    @property
+    def stderr_redirect(self):
+        """Redirection used for stderr."""
+        stderr = self.spec.stderr
+        name = getattr(stderr, 'name', '<stderr>')
+        mode = getattr(stderr, 'mode', 'r')
+        return [name, mode]
+
+    @propery
+    def executed_cmd(self):
+        """The resolve and executed command."""
+        return self.spec.cmd
 
 
-class HiddenCompletedCommand(CompletedCommand):
+class HiddenCommand(Command):
     def __repr__(self):
         return ''
 

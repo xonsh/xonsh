@@ -367,7 +367,7 @@ def no_pg_xonsh_preexec_fn():
     signal.signal(signal.SIGTSTP, default_signal_pauser)
 
 
-class SubprocCmd:
+class SubprocSpec:
     """A container for specifiying how a subprocess command should be
     executed.
     """
@@ -560,16 +560,16 @@ class SubprocCmd:
         was recieved.
         """
         # modifications that do not alter cmds may come before creating instance
-        p = kls(cmd, cls=cls, **kwargs)
+        spec = kls(cmd, cls=cls, **kwargs)
         # modifications that alter cmds must come after creating instance
-        self.redirect_leading()
-        self.redirect_trailing()
-        self.resolve_alias()
-        self.resolve_binary_loc()
-        self.resolve_auto_cd()
-        self.resolve_executable_commands()
-        self.resolve_alias_cls()
-        return p
+        spec.redirect_leading()
+        spec.redirect_trailing()
+        spec.resolve_alias()
+        spec.resolve_binary_loc()
+        sped.resolve_auto_cd()
+        spec.resolve_executable_commands()
+        spec.resolve_alias_cls()
+        return spec
 
     def redirect_leading(self):
         """Manage leading redirects such as with '< input.txt COMMAND'. """
@@ -664,7 +664,7 @@ def stdout_capture_kinds():
     return frozenset(['stdout', 'object'])
 
 
-def _update_last_subproc(last, captured=False)
+def _update_last_spec(last, captured=False)
     env = builtins.__xonsh_env__
     # set standard in
     if (last.stdin is not None and captured == 'object' and
@@ -704,32 +704,32 @@ def _update_last_subproc(last, captured=False)
         last.captured_stderr = last.stderr
 
 
-def cmds_to_subprocs(cmds, captured=False):
-    """Converts a list of cmds to a list of SubprocCmd objects that are
+def cmds_to_specs(cmds, captured=False):
+    """Converts a list of cmds to a list of SubprocSpec objects that are
     ready to be executed.
     """
     # first build the subprocs independently and separate from the redirects
-    subprocs = []
+    specs = []
     redirects = []
     for cmd in cmds:
         if isinstance(cmd, str):
             redirects.append(cmd)
         else:
-            subproc = SubprocCmd.build(cmd)
-            subprocs.append(subproc)
+            spec = SubprocSpec.build(cmd)
+            spes.append(spec)
     # now modify the subprocs based on the redirects.
     for i, redirect in enumerate(redirects):
         if redirect == '|':
             r, w = os.pipe()
-            subprocs[i].stdout = w
-            subprocs[i + 1].stdin = r
+            specs[i].stdout = w
+            specs[i + 1].stdin = r
         elif redirect == '&' and i == len(redirects) - 1:
-            subprocs[-1].background = True
+            specs[-1].background = True
         else:
             raise XonshError('unrecognized redirect {0!r}'.format(redirect))
     # Apply boundry conditions
-    _update_last_subproc(subproc[-1], captured=captured)
-    return subprocs
+    _update_last_spec(spec[-1], captured=captured)
+    return specs
 
 
 def _should_set_title(captured=False):
@@ -754,22 +754,22 @@ def run_subproc(cmds, captured=False):
     Lastly, the captured argument affects only the last real command.
     """
     env = builtins.__xonsh_env__
-    subprocs = cmds_to_subprocs(cmds, captured=captured)
+    specs = cmds_to_specs(cmds, captured=captured)
     procs = []
     proc = pipeline_group = None
-    for subproc in subprocs:
+    for spec in specs:
         starttime = time.time()
-        proc = subproc.run(pipeline_group=pipeline_group)
+        proc = spec.run(pipeline_group=pipeline_group)
         procs.append(proc)
         if ON_POSIX and pipeline_group is None and \
-                        subproc.cls is subprocess.Popen:
-            pipeline_group = prev_proc.pid
+                        spec.cls is subprocess.Popen:
+            pipeline_group = proc.pid
     if not subproc.is_proxy:
         add_job({
             'cmds': cmds,
             'pids': [i.pid for i in procs],
             'obj': proc,
-            'bg': subproc.background
+            'bg': spec.background
         })
     procinfo = {}
     if _should_set_title(captured=captured):
