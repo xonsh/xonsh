@@ -51,6 +51,11 @@ def _unc_check_enabled()->bool:
     return False if wval else True
 
 
+def _is_unc_path( some_path)->bool:
+    """True if path starts with 2 backward (or forward, due to python path hacking) slashes."""
+    return len(some_path) > 1 and some_path[0] == some_path[1] and some_path[0] in (os.sep, os.altsep)
+
+
 def _unc_map_temp_drive(unc_path)->str:
 
     """Map a new temporary drive letter for each distinct share,
@@ -209,15 +214,14 @@ def cd(args, stdin=None):
         return '', 'cd: {0} is not a directory\n'.format(d), 1
     if not os.access(d, os.X_OK):
         return '', 'cd: permission denied: {0}\n'.format(d), 1
-    if ON_WINDOWS and len(d) > 1 and (d[0] == d[1]) and (d[0] in (os.sep, os.altsep)) \
-            and _unc_check_enabled() and (not env.get('AUTO_PUSHD')):
+    if ON_WINDOWS and _is_unc_path(d) and _unc_check_enabled() and (not env.get('AUTO_PUSHD')):
         return '', "cd: can't cd to UNC path on Windows, unless $AUTO_PUSHD set or reg entry " \
                + r'HKCU\SOFTWARE\MICROSOFT\Command Processor\DisableUNCCheck:DWORD = 1' + '\n', 1
 
     # now, push the directory onto the dirstack if AUTO_PUSHD is set
     if cwd is not None and env.get('AUTO_PUSHD'):
         pushd(['-n', '-q', cwd])
-        if ON_WINDOWS and len(d) > 1 and (d[0] == d[1]) and (d[0] in (os.sep, os.altsep)):
+        if ON_WINDOWS and _is_unc_path(d):
             d = _unc_map_temp_drive(d)
     _change_working_directory(d)
     return None, None, 0
@@ -304,7 +308,7 @@ def pushd(args, stdin=None):
             e = 'Invalid argument to pushd: {0}\n'
             return None, e.format(args.dir), 1
     if new_pwd is not None:
-        if ON_WINDOWS and (new_pwd[0] == new_pwd[1]) and (new_pwd[0] in (os.sep, os.altsep)):
+        if ON_WINDOWS and _is_unc_path(new_pwd):
             new_pwd = _unc_map_temp_drive(new_pwd)
         if args.cd:
             DIRSTACK.insert(0, os.path.expanduser(pwd))
