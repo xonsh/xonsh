@@ -746,17 +746,11 @@ def run_subproc(cmds, captured=False):
     Lastly, the captured argument affects only the last real command.
     """
     env = builtins.__xonsh_env__
-    background = False
     procinfo = {}
-    if cmds[-1] == '&':
-        background = True
-        cmds = cmds[:-1]
     _pipeline_group = None
     write_target = None
-    last_cmd = len(cmds) - 1
     procs = []
     prev_proc = None
-    _capture_streams = captured in {'stdout', 'object'}
     for ix, cmd in enumerate(cmds):
         starttime = time.time()
         procs.append(proc)
