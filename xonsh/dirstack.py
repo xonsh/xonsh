@@ -51,7 +51,7 @@ def _unc_check_enabled()->bool:
     return False if wval else True
 
 
-def _is_unc_path( some_path)->bool:
+def _is_unc_path(some_path)->bool:
     """True if path starts with 2 backward (or forward, due to python path hacking) slashes."""
     return len(some_path) > 1 and some_path[0] == some_path[1] and some_path[0] in (os.sep, os.altsep)
 

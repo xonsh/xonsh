@@ -34,8 +34,8 @@ for d in 'zyxwvuts':
     if not drive_in_use(d):
         TEMP_DRIVE.append(d + ':')
 pytestmark = pytest.mark.skipif(len(TEMP_DRIVE) < MAX_TEMP_DRIVES,
-                                    reason='Too many drive letters needed by tests '
-                                   'are already used by Windows.')
+                                reason='Too many drive letters are already used by Windows to run the tests.')
+
 
 @pytest.yield_fixture(scope="module")
 def shares_setup(tmpdir_factory):
@@ -139,7 +139,7 @@ def test_uncpushd_push_to_same_share(xonsh_builtins):
 
 @pytest.mark.skipif( not ON_WINDOWS, reason="Windows-only UNC functionality")
 def test_uncpushd_push_other_push_same(xonsh_builtins):
-    """push to a, then to b. verify is w:, skipping already used y:
+    """push to a, then to b. verify drive letter is TEMP_DRIVE[2], skipping already used TEMP_DRIVE[1]
        Then push to a again. Pop (check b unmapped and a still mapped), pop, pop (check a is unmapped)"""
     xonsh_builtins.__xonsh_env__ = Env(CDPATH=PARENT, PWD=HERE)
 
