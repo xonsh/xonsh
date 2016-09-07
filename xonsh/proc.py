@@ -552,25 +552,62 @@ def _wcode_to_popen(code):
         raise ValueError("Invalid os.wait code: {}".format(code))
 
 
+@lazyobject
+def SIGNAL_MESSAGES():
+    sm = {
+        signal.SIGABRT: 'Aborted',
+        signal.SIGFPE: 'Floating point exception',
+        signal.SIGILL: 'Illegal instructions',
+        signal.SIGTERM: 'Terminated',
+        signal.SIGSEGV: 'Segmentation fault',
+        }
+    if ON_POSIX:
+        sm.update({
+            signal.SIGQUIT: 'Quit',
+            signal.SIGHUP: 'Hangup',
+            signal.SIGKILL: 'Killed',
+            })
+    return sm
+
+
 class Command:
-    """Represents a subprocess-mode command."""
+    """Represents a subprocess-mode command pipeline."""
 
     attrnames = ("stdin", "stdout", "stderr", "pid", "returncode", "args",
                  "alias", "stdin_redirect", "stdout_redirect",
                  "stderr_redirect", "timestamp", "executed_cmd")
 
-    def __init__(self, spec, proc, timestamp):
+    def __init__(self, specs, procs, timestamp=None):
         """
         Parameters
         ----------
+        specs : list of SubprocSpec
+            Process sepcifications
+        procs : list of Popen-like
+            Process objects.
+        timestamp : len-2 list of floats
+            Start and end timestamps.
+
+        Attributes
+        ----------
         spec : SubprocSpec
-            Process sepcification
+            The last specification in specs
         proc : Popen-like
-            Process object.
+            The process in procs
+        ended : bool
+            Boolean for if the command has stopped executing.
+        output : str or bytes
+            A string of the standard output.
+        errors : str or bytes
+            A string of the standard error.
         """
-        self.proc = proc
-        self.spec = spec
-        self.timestamp = timestamp
+        self.procs = procs
+        self.proc = procs[-1]
+        self.specs = specs
+        self.spec = specs[-1]
+        self.timestamp = timestamp or [time.time(), None]
+        self.ended = False
+        self.output = self.errors = None
 
     def __bool__(self):
         return self.returncode == 0
@@ -579,9 +616,7 @@ class Command:
         proc = self.proc
         stdout = proc.stdout
         if not stdout:
-            if not proc.poll():
-                proc.wait()
-                self.endtime()
+            self.end()
             raise StopIteration()
         while not proc.poll():
             yield from stdout.readlines(1024)
@@ -596,10 +631,96 @@ class Command:
             raise XonshCalledProcessError(self.returncode, self.executed_cmd,
                                           self.stdout, self.stderr, self)
 
+    def tee_stdout(self):
+        """Writes the process stdout to sys.stdout, line-by-line, and
+        yields each line.
+        """
+        self.output = b''
+        for line in self:
+            sys.stdout.write(line)
+            self.output += line
+            yield line
+
+    def _decode_uninew(self, b):
+        """Decode bytes into a str and apply universal newlines as needed."""
+        if not b:
+            return ''
+        env = builtins.__xonsh_env__
+        s = b.decode(encoding=env.get('XONSH_ENCODING'),
+                     errors=env.get('XONSH_ENCODING_ERRORS'))
+        if self.spec.universal_newlines:
+            s = s.replace('\r\n', '\n')
+        return s
+
+
+    #
+    # Ending methods
+    #
+
+    def end(self):
+        """Waits for the command to complete and then runs any closing and
+        cleanup procedures that need to be run.
+        """
+        if self.ended:
+            return
+        self.proc.wait()
+        self.endtime()
+        self._close_procs()
+        self._set_output()
+        self._set_errors()
+        self._check_signal()
+        self._apply_to_history()
+        self.ended = True
+
     def endtime(self):
         """Sets the closing timestamp if it hasn't been already."""
         if self.timestamp[1] is None:
             self.timestamp[1] = time.time()
+
+    def _close_procs(self):
+        """Closes all but the last proc's stdout."""
+        for p in self.procs[:-1]:
+            try:
+                p.stdout.close()
+            except OSError:
+                pass
+
+    def _set_output(self):
+        """Sets the output vaiable."""
+        output = b''
+        for line in self.tee_stdout():
+            output += line
+        self.output = self._decode_uninew(output)
+
+    def _set_errors(self):
+        """Sets the errors vaiable."""
+        stderr = self.proc.stderr
+        if stderr is None or stderr is sys.stderr:
+            errors = b''
+        else:
+            errors = stderr.read()
+        self.errors = self._decode_uninew(errors)
+
+    def _check_signal(self):
+        """Checks if a signal was recieved and issues a message."""
+        proc_signal = getattr(self.proc, 'signal', None)
+        if proc_signal is None:
+            return
+        sig, core = proc_signal
+        sig_str = SIGNAL_MESSAGES.get(sig)
+        if sig_str:
+            if core:
+                sig_str += ' (core dumped)'
+            print(sig_str, file=sys.stderr)
+            self.errors += sig_str + '\n'
+
+    def _apply_to_history(self):
+        """Applies the results to the current history object."""
+        env = builtins.__xonsh_env__
+        hist = builtins.__xonsh_history__
+        hist.last_cmd_rtn = proc.returncode
+        if env.get('XONSH_STORE_STDOUT'):
+            hist.last_cmd_out = self.output
 
     #
     # Properties
@@ -611,23 +732,31 @@ class Command:
         return self.proc.stdin
 
     @property
-    def inp(self):
-        """Creates normalized input string from args."""
-        return ' '.join(self.args)
-
-    @property
     def stdout(self):
         """Process stdout."""
         return self.proc.stdout
-
-    out = stdout
 
     @property
     def stderr(self):
         """Process stderr."""
         return self.proc.stderr
 
-    err = stdout
+    @property
+    def inp(self):
+        """Creates normalized input string from args."""
+        return ' '.join(self.args)
+
+    @propety
+    def out(self):
+        """Output value as a str."""
+        self.end()
+        return self.output
+
+    @property
+    def err(self):
+        """Error messages as a string."""
+        self.end()
+        return self.errors
 
     @property
     def pid(self):
@@ -639,8 +768,7 @@ class Command:
         """Process return code, waits until command is completed."""
         proc = self.proc
         if proc.returncode is None:
-            proc.wait()
-            self.endtime()
+            self.end()
         return proc.returncode
 
     rtn = returncode

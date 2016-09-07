@@ -56,24 +56,6 @@ def AT_EXIT_SIGNALS():
     return sigs
 
 
-@lazyobject
-def SIGNAL_MESSAGES():
-    sm = {
-        signal.SIGABRT: 'Aborted',
-        signal.SIGFPE: 'Floating point exception',
-        signal.SIGILL: 'Illegal instructions',
-        signal.SIGTERM: 'Terminated',
-        signal.SIGSEGV: 'Segmentation fault',
-        }
-    if ON_POSIX:
-        sm.update({
-            signal.SIGQUIT: 'Quit',
-            signal.SIGHUP: 'Hangup',
-            signal.SIGKILL: 'Killed',
-            })
-    return sm
-
-
 def resetting_signal_handle(sig, f):
     """Sets a new signal handle that will automatically restore the old value
     once the new handle is finished.
@@ -771,60 +753,11 @@ def run_subproc(cmds, captured=False):
             'obj': proc,
             'bg': spec.background
         })
-    procinfo = {}
     if _should_set_title(captured=captured):
         # set title here to get currently executing command
         pause_call_resume(proc, builtins.__xonsh_shell__.settitle)
     if subproc.background:
         return
-    if subproc.is_proxy:
-        proc.wait()
-    wait_for_active_job()
-    for p in procs[:-1]:
-        try:
-            p.stdout.close()
-        except OSError:
-            pass
-    hist = builtins.__xonsh_history__
-    hist.last_cmd_rtn = proc.returncode
-    # get output
-    output = b''
-    if _stdout_name is not None:
-        with open(_stdout_name, 'rb') as stdoutfile:
-            output = stdoutfile.read()
-        try:
-            _nstdout.close()
-        except Exception:
-            pass
-        os.unlink(_stdout_name)
-    elif prev_proc.stdout not in (None, sys.stdout):
-       output = prev_proc.stdout.read()
-    if _capture_streams:
-        # to get proper encoding from Popen, we have to
-        # use a byte stream and then implement universal_newlines here
-        output = output.decode(encoding=env.get('XONSH_ENCODING'),
-                               errors=env.get('XONSH_ENCODING_ERRORS'))
-        output = output.replace('\r\n', '\n')
-    else:
-        hist.last_cmd_out = output
-    if captured == 'object':  # get stderr as well
-        named = _stderr_name is not None
-        unnamed = prev_proc.stderr not in {None, sys.stderr}
-        if named:
-            with open(_stderr_name, 'rb') as stderrfile:
-                errout = stderrfile.read()
-           try:
-                _nstderr.close()
-           except Exception:
-                pass
-            os.unlink(_stderr_name)
-        elif unnamed:
-            errout = prev_proc.stderr.read()
-        if named or unnamed:
-            errout = errout.decode(encoding=env.get('XONSH_ENCODING'),
-                                   errors=env.get('XONSH_ENCODING_ERRORS'))
-            errout = errout.replace('\r\n', '\n')
-            procinfo['stderr'] = errout
     if getattr(prev_proc, 'signal', None):
         sig, core = prev_proc.signal
         sig_str = SIGNAL_MESSAGES.get(sig)
