@@ -198,8 +198,7 @@ class ProcProxy(threading.Thread):
 
         Returns
         -------
-        `None` if the function is still executing, `True` if the function
-        finished successfully, and `False` if there was an error.
+        `None` if the function is still executing, and the returncode otherwise
         """
         return self.returncode
 
@@ -622,7 +621,7 @@ class Command:
         if not stdout:
             self.end()
             raise StopIteration()
-        while not proc.poll():
+        while proc.poll() is None:
             yield from stdout.readlines(1024)
         self._endtime()
         yield from stdout.readlines()

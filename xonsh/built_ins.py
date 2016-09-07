@@ -402,6 +402,7 @@ class SubprocSpec:
         self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
+        self.universal_newlines = universal_newlines
         # pure attrs
         self.args = list(cmd)
         self.alias = None
@@ -767,7 +768,7 @@ def run_subproc(cmds, captured=False):
     if captured == 'stdout':
         command.end()
         return command.output
-    elif command == 'object' or command == 'hiddenobject':
+    elif captured == 'object' or captured == 'hiddenobject':
         return command
     else:
         return
