@@ -32,8 +32,8 @@ from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.proc import (
     ProcProxy, SimpleProcProxy, ForegroundProcProxy,
-    SimpleForegroundProcProxy, TeePTYProc, pause_call_resume, CompletedCommand,
-    HiddenCompletedCommand)
+    SimpleForegroundProcProxy, TeePTYProc, pause_call_resume, Command,
+    HiddenCommand)
 from xonsh.tools import (
     suggest_commands, expandvars, globpath, XonshError,
     XonshCalledProcessError, XonshBlockError
@@ -756,24 +756,21 @@ def run_subproc(cmds, captured=False):
     if _should_set_title(captured=captured):
         # set title here to get currently executing command
         pause_call_resume(proc, builtins.__xonsh_shell__.settitle)
+    # create command or retunrm if backgrounding.
     if subproc.background:
         return
+    if captured == 'hiddenobject':
+        command = HiddenCommand(specs. procs, starttime=starttime)
+    else:
+        command = Command(specs. procs, starttime=starttime)
+    # now figure out what we should return.
     if captured == 'stdout':
-        return output
-    elif captured is not False:
-        procinfo['executed_cmd'] = aliased_cmd
-        procinfo['pid'] = prev_proc.pid
-        procinfo['returncode'] = prev_proc.returncode
-        procinfo['timestamp'] = (starttime, time.time())
-        if captured == 'object':
-            procinfo['stdout'] = output
-            if _stdin_file is not None:
-                _stdin_file.seek(0)
-                procinfo['stdin'] = _stdin_file.read().decode()
-                _stdin_file.close()
-            return CompletedCommand(**procinfo)
-        else:
-            return HiddenCompletedCommand(**procinfo)
+        command.end()
+        return command.output
+    elif command == 'object' or command == 'hiddenobject':
+        return command
+    else:
+        return
 
 
 def subproc_captured_stdout(*cmds):
@@ -792,15 +789,14 @@ def subproc_captured_inject(*cmds):
 def subproc_captured_object(*cmds):
     """
     Runs a subprocess, capturing the output. Returns an instance of
-    ``CompletedCommand`` representing the completed command.
+    ``Command`` representing the completed command.
     """
     return run_subproc(cmds, captured='object')
 
 
 def subproc_captured_hiddenobject(*cmds):
-    """
-    Runs a subprocess, capturing the output. Returns an instance of
-    ``HiddenCompletedCommand`` representing the completed command.
+    """Runs a subprocess, capturing the output. Returns an instance of
+    ``HiddenCommand`` representing the completed command.
     """
     return run_subproc(cmds, captured='hiddenobject')
 

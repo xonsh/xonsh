@@ -596,9 +596,11 @@ class Command:
             The process in procs
         ended : bool
             Boolean for if the command has stopped executing.
-        output : str or bytes
+        input : str
+            A string of the standard input.
+        output : str
             A string of the standard output.
-        errors : str or bytes
+        errors : str
             A string of the standard error.
         """
         self.procs = procs
@@ -607,7 +609,7 @@ class Command:
         self.spec = specs[-1]
         self.starttime = starttime or time.time()
         self.ended = False
-        self.output = self.errors = self.endtime = None
+        self.input = self.output = self.errors = self.endtime = None
 
     def __bool__(self):
         return self.returncode == 0
@@ -665,6 +667,7 @@ class Command:
         self.proc.wait()
         self._endtime()
         self._close_procs()
+        self._set_input()
         self._set_output()
         self._set_errors()
         self._check_signal()
@@ -684,6 +687,15 @@ class Command:
                 p.stdout.close()
             except OSError:
                 pass
+
+    def _set_input(self):
+        """Sets the input vaiable."""
+        stdin = self.proc.stdin
+        if stdin is None or stdin is sys.stdin:
+            input = b''
+        else:
+            input = input.read()
+        self.input = self._decode_uninew(input)
 
     def _set_output(self):
         """Sets the output vaiable."""
