@@ -548,7 +548,7 @@ class SubprocSpec:
         spec.redirect_trailing()
         spec.resolve_alias()
         spec.resolve_binary_loc()
-        sped.resolve_auto_cd()
+        spec.resolve_auto_cd()
         spec.resolve_executable_commands()
         spec.resolve_alias_cls()
         return spec
@@ -698,7 +698,7 @@ def cmds_to_specs(cmds, captured=False):
             redirects.append(cmd)
         else:
             spec = SubprocSpec.build(cmd)
-            spes.append(spec)
+            specs.append(spec)
     # now modify the subprocs based on the redirects.
     for i, redirect in enumerate(redirects):
         if redirect == '|':
@@ -710,7 +710,7 @@ def cmds_to_specs(cmds, captured=False):
         else:
             raise XonshError('unrecognized redirect {0!r}'.format(redirect))
     # Apply boundry conditions
-    _update_last_spec(spec[-1], captured=captured)
+    _update_last_spec(specs[-1], captured=captured)
     return specs
 
 
@@ -746,7 +746,7 @@ def run_subproc(cmds, captured=False):
         if ON_POSIX and pipeline_group is None and \
                         spec.cls is subprocess.Popen:
             pipeline_group = proc.pid
-    if not subproc.is_proxy:
+    if not spec.is_proxy:
         add_job({
             'cmds': cmds,
             'pids': [i.pid for i in procs],
@@ -756,8 +756,8 @@ def run_subproc(cmds, captured=False):
     if _should_set_title(captured=captured):
         # set title here to get currently executing command
         pause_call_resume(proc, builtins.__xonsh_shell__.settitle)
-    # create command or retunrm if backgrounding.
-    if subproc.background:
+    # create command or retunr if backgrounding.
+    if spec.background:
         return
     if captured == 'hiddenobject':
         command = HiddenCommand(specs. procs, starttime=starttime)
