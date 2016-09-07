@@ -646,7 +646,7 @@ def stdout_capture_kinds():
     return frozenset(['stdout', 'object'])
 
 
-def _update_last_spec(last, captured=False)
+def _update_last_spec(last, captured=False):
     env = builtins.__xonsh_env__
     # set standard in
     if (last.stdin is not None and captured == 'object' and
@@ -669,7 +669,7 @@ def _update_last_spec(last, captured=False)
         last.captured_stdout = last.stdout
     else:
         last.universal_newlines = True
-    if (last.stdout is None) and (not last.background) and
+    if ((last.stdout is None) and (not last.background) and
             env.get('XONSH_STORE_STDOUT')):
         r, w = os.pipe()
         last.stdout = w
