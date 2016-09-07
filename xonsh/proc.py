@@ -750,7 +750,7 @@ class Command:
     # Properties
     #
 
-    @propertybh
+    @property
     def stdin(self):
         """Process stdin."""
         return self.proc.stdin
@@ -770,7 +770,7 @@ class Command:
         """Creates normalized input string from args."""
         return ' '.join(self.args)
 
-    @propety
+    @property
     def out(self):
         """Output value as a str."""
         self.end()
@@ -841,12 +841,12 @@ class Command:
         mode = getattr(stderr, 'mode', 'r')
         return [name, mode]
 
-    @propery
+    @property
     def timestamps(self):
         """The start and end time stamps."""
         return [self.starttime, self.endtime]
 
-    @propery
+    @property
     def executed_cmd(self):
         """The resolve and executed command."""
         return self.spec.cmd

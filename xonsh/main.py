@@ -11,7 +11,7 @@ from xonsh import __version__
 from xonsh.lazyasd import lazyobject
 from xonsh.shell import Shell
 from xonsh.pretty import pretty
-from xonsh.proc import HiddenCompletedCommand
+from xonsh.proc import HiddenCommand
 from xonsh.jobs import ignore_sigtstp
 from xonsh.tools import setup_win_unicode_console, print_color
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
@@ -124,7 +124,7 @@ def _pprint_displayhook(value):
     if value is None:
         return
     builtins._ = None  # Set '_' to None to avoid recursion
-    if isinstance(value, HiddenCompletedCommand):
+    if isinstance(value, HiddenCommand):
         builtins._ = value
         return
     env = builtins.__xonsh_env__
