@@ -575,9 +575,9 @@ class Command:
 
     attrnames = ("stdin", "stdout", "stderr", "pid", "returncode", "args",
                  "alias", "stdin_redirect", "stdout_redirect",
-                 "stderr_redirect", "timestamp", "executed_cmd")
+                 "stderr_redirect", "timestamps", "executed_cmd")
 
-    def __init__(self, specs, procs, timestamp=None):
+    def __init__(self, specs, procs, starttime=None):
         """
         Parameters
         ----------
@@ -585,8 +585,8 @@ class Command:
             Process sepcifications
         procs : list of Popen-like
             Process objects.
-        timestamp : len-2 list of floats
-            Start and end timestamps.
+        starttime : floats or None, optional
+            Start timestamp.
 
         Attributes
         ----------
@@ -605,9 +605,9 @@ class Command:
         self.proc = procs[-1]
         self.specs = specs
         self.spec = specs[-1]
-        self.timestamp = timestamp or [time.time(), None]
+        self.starttime = starttime or time.time()
         self.ended = False
-        self.output = self.errors = None
+        self.output = self.errors = self.endtime = None
 
     def __bool__(self):
         return self.returncode == 0
@@ -620,7 +620,7 @@ class Command:
             raise StopIteration()
         while not proc.poll():
             yield from stdout.readlines(1024)
-        self.endtime()
+        self._endtime()
         yield from stdout.readlines()
 
     def itercheck(self):
@@ -652,7 +652,6 @@ class Command:
             s = s.replace('\r\n', '\n')
         return s
 
-
     #
     # Ending methods
     #
@@ -664,7 +663,7 @@ class Command:
         if self.ended:
             return
         self.proc.wait()
-        self.endtime()
+        self._endtime()
         self._close_procs()
         self._set_output()
         self._set_errors()
@@ -673,10 +672,10 @@ class Command:
         self._raise_subproc_error()
         self.ended = True
 
-    def endtime(self):
+    def _endtime(self):
         """Sets the closing timestamp if it hasn't been already."""
-        if self.timestamp[1] is None:
-            self.timestamp[1] = time.time()
+        if self.endtime is None:
+            self.endtime = time.time()
 
     def _close_procs(self):
         """Closes all but the last proc's stdout."""
@@ -829,6 +828,11 @@ class Command:
         name = getattr(stderr, 'name', '<stderr>')
         mode = getattr(stderr, 'mode', 'r')
         return [name, mode]
+
+    @propery
+    def timestamps(self):
+        """The start and end time stamps."""
+        return [self.starttime, self.endtime]
 
     @propery
     def executed_cmd(self):
