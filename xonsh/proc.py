@@ -670,6 +670,7 @@ class Command:
         self._set_errors()
         self._check_signal()
         self._apply_to_history()
+        self._raise_subproc_error()
         self.ended = True
 
     def endtime(self):
@@ -721,6 +722,18 @@ class Command:
         hist.last_cmd_rtn = proc.returncode
         if env.get('XONSH_STORE_STDOUT'):
             hist.last_cmd_out = self.output
+
+    def _raise_subproc_error(self):
+        """Raises a subprocess error, if we are suppossed to."""
+        spec = self.spec
+        rtn = self.returncode
+        if (not spec.is_proxy and
+                rtn is not None and
+                rtn > 0 and
+                builtins.__xonsh_env__.get('RAISE_SUBPROC_ERROR')):
+            raise subprocess.CalledProcessError(rtn, spec.cmd,
+                                                output=self.output)
+
 
     #
     # Properties

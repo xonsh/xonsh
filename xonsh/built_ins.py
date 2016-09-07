@@ -758,19 +758,6 @@ def run_subproc(cmds, captured=False):
         pause_call_resume(proc, builtins.__xonsh_shell__.settitle)
     if subproc.background:
         return
-    if getattr(prev_proc, 'signal', None):
-        sig, core = prev_proc.signal
-        sig_str = SIGNAL_MESSAGES.get(sig)
-        if sig_str:
-            if core:
-                sig_str += ' (core dumped)'
-            print(sig_str, file=sys.stderr)
-    if (not prev_is_proxy and
-            hist.last_cmd_rtn is not None and
-            hist.last_cmd_rtn > 0 and
-            env.get('RAISE_SUBPROC_ERROR')):
-        raise subprocess.CalledProcessError(hist.last_cmd_rtn, aliased_cmd,
-                                            output=output)
     if captured == 'stdout':
         return output
     elif captured is not False:
