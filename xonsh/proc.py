@@ -72,11 +72,8 @@ class ProcProxy(threading.Thread):
     Class representing a function to be run as a subprocess-mode command.
     """
 
-    def __init__(self, f, args,
-                 stdin=None,
-                 stdout=None,
-                 stderr=None,
-                 universal_newlines=False):
+    def __init__(self, f, args, stdin=None, stdout=None, stderr=None,
+                 universal_newlines=False, env=None):
         """Parameters
         ----------
         f : function
@@ -97,6 +94,10 @@ class ProcProxy(threading.Thread):
             A file-like object representing stderr (error output can be
             written here).  If `stderr` is not provided or if it is explicitly
             set to `None`, then `sys.stderr` is used.
+        universal_newlines : bool, optional
+            Whether or not to use universal newlines.
+        env : Mapping, optional
+            Environment mapping.
         """
         self.f = f
         """
@@ -132,6 +133,7 @@ class ProcProxy(threading.Thread):
         self.stdin = stdin
         self.stdout = None
         self.stderr = None
+        self.env = env or builtins.__xonsh_env__
 
         if ON_WINDOWS:
             if self.p2cwrite != -1:
@@ -384,9 +386,9 @@ class SimpleProcProxy(ProcProxy):
     """
 
     def __init__(self, f, args, stdin=None, stdout=None, stderr=None,
-                 universal_newlines=False):
+                 universal_newlines=False, env=None):
         f = wrap_simple_command(f, args, stdin, stdout, stderr)
-        super().__init__(f, args, stdin, stdout, stderr, universal_newlines)
+        super().__init__(f, args, stdin, stdout, stderr, universal_newlines, env)
 
 
 #

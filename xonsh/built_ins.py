@@ -488,7 +488,7 @@ class SubprocSpec:
         self.prep_env(kwargs)
         self.prep_preexec_fn(kwargs, pipeline_group=pipeline_group)
         if callable(self.alias):
-            p = self.cls(self.cmd, **kwargs)
+            p = self.cls(self.alias, self.cmd, **kwargs)
         else:
             p = self._run_binary(kwargs)
         return p
@@ -760,9 +760,9 @@ def run_subproc(cmds, captured=False):
     if spec.background:
         return
     if captured == 'hiddenobject':
-        command = HiddenCommand(specs. procs, starttime=starttime)
+        command = HiddenCommand(specs, procs, starttime=starttime)
     else:
-        command = Command(specs. procs, starttime=starttime)
+        command = Command(specs, procs, starttime=starttime)
     # now figure out what we should return.
     if captured == 'stdout':
         command.end()
