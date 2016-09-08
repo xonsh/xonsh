@@ -78,7 +78,6 @@ def test_cdpath_events(xonsh_builtins, tmpdir):
         nonlocal ev
         ev = old, new
 
-
     old_dir = os.getcwd()
     try:
         dirstack.cd([target])
@@ -91,18 +90,6 @@ def test_cdpath_events(xonsh_builtins, tmpdir):
         os.chdir(old_dir)
 
 
-@contextmanager
-def cd_dir(cd_arg, builtins):
-    old_dir = os.getcwd()
-    old_ds = dirstack.DIRSTACK.copy()
-    old_pwd = builtins.__xonsh_env__['PWD']
-    dirstack.cd(cd_arg)
-    yield
-    dirstack.DIRSTACK = old_ds
-    os.chdir(old_dir)
-    builtins.__xonsh_env__['PWD'] = old_pwd
-
-
 def test_cd_autopush(xonsh_builtins, tmpdir):
     xonsh_builtins.__xonsh_env__ = Env(CDPATH=PARENT, PWD=os.getcwd(), AUTO_PUSHD=True)
     target = str(tmpdir)
@@ -111,18 +98,16 @@ def test_cd_autopush(xonsh_builtins, tmpdir):
     old_ds_size = len(dirstack.DIRSTACK)
 
     assert target != old_dir
-    with cd_dir([target], xonsh_builtins):
+
+    try:
+        dirstack.cd([target])
         assert target == os.getcwd()
         assert old_ds_size + 1 == len(dirstack.DIRSTACK)
+        dirstack.popd([])
+    except:
+        raise
+    finally:
+        while len(dirstack.DIRSTACK) > old_ds_size:
+            dirstack.popd([])
 
-    with cd_dir(['.'], xonsh_builtins):
-        assert old_dir == os.getcwd()
-        assert old_ds_size + 1 == len(dirstack.DIRSTACK)
-
-
-
-
-
-
-
-
+    assert old_dir == os.getcwd()

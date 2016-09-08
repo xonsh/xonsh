@@ -10,14 +10,11 @@ import subprocess
 
 import builtins
 import pytest
-
 from xonsh import dirstack
 from xonsh.environ import Env
 from xonsh.built_ins import load_builtins
 from xonsh.dirstack import DIRSTACK
-
 from xonsh.platform import ON_WINDOWS
-
 from xonsh.dirstack import _unc_tempDrives
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -275,4 +272,3 @@ def test_uncpushd_unc_check():
     # emminently suited to mocking, but I don't know how
     # need to verify unc_check_enabled correct whether values set in HKCU or HKLM
     pass
-
