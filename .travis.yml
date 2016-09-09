@@ -1,7 +1,6 @@
 language: python
 matrix:
     include:
-        allow_failures:
         - os: linux
           python: "nightly"
           env:
@@ -13,6 +12,8 @@ matrix:
         - os: osx
           language: generic
           env: PYTHON="3.5" MINICONDA_OS="MacOSX"
+    allow_failures:
+        - python: "nightly"
 
 before_install:
   - if [[ ! "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then
