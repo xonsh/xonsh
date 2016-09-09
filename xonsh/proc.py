@@ -617,6 +617,26 @@ class Command:
         return self.returncode == 0
 
     def __iter__(self):
+        """Iterates through stdout and returns the lines, converting to
+        strings and universal newlines if needed.
+        """
+        env = builtins.__xonsh_env__
+        enc = env.get('XONSH_ENCODING')
+        err = env.get('XONSH_ENCODING_ERRORS')
+        uninew = self.spec.universal_newlines
+        use_decode = False
+        for line in self.iterraw():
+            if use_decode or isinstance(line, bytes):
+                line = line.decode(encoding=enc, errors=err)
+                use_decode = True
+            if uninew and line.endswith('\r\n'):
+                line = line[:-2] + '\n'
+            yield line
+
+    def iterraw(self):
+        """Iterates through the last stdout, and returns the lines
+        exactly as found.
+        """
         proc = self.proc
         stdout = proc.stdout
         if ((stdout is None or not stdout.readable()) and
@@ -624,13 +644,15 @@ class Command:
             stdout = self.spec.captured_stdout
         if not stdout or not stdout.readable():
             raise StopIteration()
-        while proc.returncode is None:
+        while proc.poll() is None:
             yield from stdout.readlines(1024)
         self._endtime()
         yield from stdout.readlines()
-        #self.end()
 
     def itercheck(self):
+        """Iterates through the command lines and throws an error if the
+        returncode is non-zero.
+        """
         yield from self
         if self.returncode:
             # I included self, as providing access to stderr and other details
@@ -643,7 +665,7 @@ class Command:
         yields each line.
         """
         self.output = '' if self.spec.universal_newlines else b''
-        for line in self:
+        for line in self.iterraw():
             self.output += line
             yield line
 
@@ -691,7 +713,15 @@ class Command:
         """Closes all but the last proc's stdout."""
         for p in self.procs[:-1]:
             try:
+                p.stdin.close()
+            except OSError:
+                pass
+            try:
                 p.stdout.close()
+            except OSError:
+                pass
+            try:
+                p.stderr.close()
             except OSError:
                 pass
 
