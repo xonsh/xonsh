@@ -1,6 +1,7 @@
 language: python
 matrix:
     include:
+        allow_failures:
         - os: linux
           python: "nightly"
           env:
