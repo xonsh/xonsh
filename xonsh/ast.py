@@ -445,18 +445,8 @@ class CtxAwareTransformer(NodeTransformer):
 
     def visit_For(self, node):
         """Handle visiting a for statement."""
-        pprint_ast(node)
         targ = node.target
         self.ctxupdate(gather_names(targ))
-        self.generic_visit(node)
-        return node
-
-    def visit_GeneratorExpr(self, node):
-        """Handle visiting a generator expression."""
-        raise Exception
-        targ = node.generators
-        self.ctxupdate(gather_names(targ))
-        print(gather_names(targ))
         self.generic_visit(node)
         return node
 
