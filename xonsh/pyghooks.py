@@ -31,8 +31,9 @@ from xonsh.tokenize import SearchPath
 
 
 def command_token_callback(_, match, fallback):
-    """Yield Keywork token if `match` contains valid command,
-    otherwise fallback to `fallback` lexer"""
+    """Yield Keyword token if match contains valid command,
+    otherwise fallback to fallback lexer.
+    """
     yield match.start(1), Whitespace, match.group(1)
 
     start = match.start(2)
