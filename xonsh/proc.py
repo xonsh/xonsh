@@ -131,8 +131,12 @@ class ProcProxy(threading.Thread):
 
         # default values
         self.stdin = stdin
-        self.stdout = None
-        self.stderr = None
+        #self.stdout = None
+        #self.stderr = None
+        self.stdout = stdout
+        self.stderr = stderr
+        #self.stdout = open(stdout, 'w') if isinstance(stdout, int) else stdout
+        #self.stderr = open(stderr, 'w') if isinstance(stderr, int) else stderr
         self.env = env or builtins.__xonsh_env__
 
         if ON_WINDOWS:
@@ -358,6 +362,7 @@ def wrap_simple_command(f, args, stdin, stdout, stderr):
 
             cmd_result = 0
             if isinstance(r, str):
+                print(r, file=sys.stderr)
                 stdout.write(r)
             elif isinstance(r, cabc.Sequence):
                 if r[0] is not None:
@@ -618,13 +623,15 @@ class Command:
     def __iter__(self):
         proc = self.proc
         stdout = proc.stdout
-        if not stdout:
-            self.end()
+        if not stdout.readable() and self.spec.captured_stdout is not None:
+            stdout = self.spec.captured_stdout
+        if not stdout or not stdout.readable():
             raise StopIteration()
         while proc.poll() is None:
             yield from stdout.readlines(1024)
         self._endtime()
         yield from stdout.readlines()
+        #self.end()
 
     def itercheck(self):
         yield from self
@@ -638,7 +645,7 @@ class Command:
         """Writes the process stdout to sys.stdout, line-by-line, and
         yields each line.
         """
-        self.output = b''
+        self.output = '' if self.spec.universal_newlines else b''
         for line in self:
             sys.stdout.write(line)
             self.output += line
@@ -731,7 +738,7 @@ class Command:
         """Applies the results to the current history object."""
         env = builtins.__xonsh_env__
         hist = builtins.__xonsh_history__
-        hist.last_cmd_rtn = proc.returncode
+        hist.last_cmd_rtn = self.proc.returncode
         if env.get('XONSH_STORE_STDOUT'):
             hist.last_cmd_out = self.output
 

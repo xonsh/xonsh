@@ -263,8 +263,6 @@ def _is_redirect(x):
 def safe_open(fname, mode):
     """Safely attempts to open a file in for xonsh subprocs."""
     # file descriptors
-    if isinstance(fname, int):
-        return fname
     try:
         return open(fname, mode)
     except PermissionError:
@@ -642,6 +640,7 @@ class SubprocSpec:
         self.cls = cls
         self.backgroundable = bgable
 
+
 @lazyobject
 def stdout_capture_kinds():
     return frozenset(['stdout', 'object'])
@@ -653,8 +652,8 @@ def _update_last_spec(last, captured=False):
     if (last.stdin is not None and captured == 'object' and
             env.get('XONSH_STORE_STDIN')):
         r, w = os.pipe()
-        last._stdin = r  # bypass original stdin check
-        last.captured_stdin = w
+        last._stdin = safe_open(r, 'r')  # bypass original stdin check
+        last.captured_stdin = safe_open(w, 'w')
         raise Exception
     # set standard out
     if last.stdout is not None:
@@ -662,8 +661,8 @@ def _update_last_spec(last, captured=False):
     elif captured in stdout_capture_kinds:
         last.universal_newlines = False
         r, w = os.pipe()
-        last.stdout = w
-        last.captured_stdout = r
+        last.stdout = safe_open(w, 'wb')
+        last.captured_stdout = safe_open(r, 'rb')
     elif builtins.__xonsh_stdout_uncaptured__ is not None:
         last.universal_newlines = True
         last.stdout = builtins.__xonsh_stdout_uncaptured__
@@ -673,15 +672,15 @@ def _update_last_spec(last, captured=False):
     if ((last.stdout is None) and (not last.background) and
             env.get('XONSH_STORE_STDOUT')):
         r, w = os.pipe()
-        last.stdout = w
-        last.captured_stdout = r
+        last.stdout = safe_open(w, 'w')
+        last.captured_stdout = safe_open(r, 'r')
     # set standard error
     if last.stderr is not None:
         pass
     elif captured == 'object':
         r, w = os.pipe()
-        last.stderr = w
-        last.captured_stderr = r
+        last.stderr = safe_open(w, 'w')
+        last.captured_stderr = safe_open(r, 'r')
     elif builtins.__xonsh_stderr_uncaptured__ is not None:
         last.stderr = builtins.__xonsh_stderr_uncaptured__
         last.captured_stderr = last.stderr
@@ -703,6 +702,8 @@ def cmds_to_specs(cmds, captured=False):
     # now modify the subprocs based on the redirects.
     for i, redirect in enumerate(redirects):
         if redirect == '|':
+            # these should remain integer file descriptors, and not Python
+            # file objects since they connect processes.
             r, w = os.pipe()
             specs[i].stdout = w
             specs[i + 1].stdin = r
@@ -767,6 +768,7 @@ def run_subproc(cmds, captured=False):
     # now figure out what we should return.
     if captured == 'stdout':
         command.end()
+        #raise Exception
         return command.output
     elif captured == 'object' or captured == 'hiddenobject':
         return command
