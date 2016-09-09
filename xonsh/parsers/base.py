@@ -2547,7 +2547,7 @@ class BaseParser(object):
     def p_subproc_atom_captured_stdout_bang(self, p):
         """subproc_atom : dollar_lparen_tok subproc bang_tok nocloser rparen_tok"""
         self._append_subproc_bang(p)
-        self.p_subproc_atom_uncaptured_stdout(p)
+        self.p_subproc_atom_captured_stdout(p)
 
     def p_subproc_atom_pyenv_lookup(self, p):
         """subproc_atom : dollar_lbrace_tok test RBRACE"""
