@@ -2,7 +2,7 @@
 import ast as pyast
 
 from xonsh import ast
-from xonsh.ast import Tuple, Name, Store, min_line, Call, BinOp
+from xonsh.ast import Tuple, Name, Store, min_line, Call, BinOp, pdump
 
 import pytest
 
@@ -26,6 +26,16 @@ def test_gather_names_tuple():
     exp = {'y', 'z'}
     obs = ast.gather_names(node)
     assert exp == obs
+
+
+def test_gather_load_store_names_tuple():
+    node = Tuple(elts=[Name(id='y', ctx=Store()),
+                       Name(id='z', ctx=Store())])
+    lexp = set()
+    sexp = {'y', 'z'}
+    lobs, sobs = ast.gather_load_store_names(node)
+    assert lexp == lobs
+    assert sexp == sobs
 
 
 @pytest.mark.parametrize('line1', [
@@ -83,9 +93,17 @@ def test_multilline_no_transform():
     if not kw and b:
         pass
 """,
+"""import os
+path = '/path/to/wakka'
+paths = []
+for root, dirs, files in os.walk(path):
+    paths.extend(os.path.join(root, d) for d in dirs)
+    paths.extend(os.path.join(root, f) for f in files)
+""",
 ])
-def test_args_in_scope(inp):
+def test_unmodified(inp):
     # Context sensitive parsing should not modify AST
     exp = pyast.parse(inp)
     obs = check_parse(inp)
+
     assert nodes_equal(exp, obs)
