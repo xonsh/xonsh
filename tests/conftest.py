@@ -12,13 +12,14 @@ from xonsh.events import events
 from xonsh.platform import ON_WINDOWS
 from xonsh.commands_cache import CommandsCache
 
-from tools import DummyShell, sp, DummyCommandsCache, DummyEnv
+from tools import DummyShell, sp, DummyCommandsCache, DummyEnv, DummyHistory
 
 
 @pytest.fixture
 def xonsh_execer(monkeypatch):
     """Initiate the Execer with a mocked nop `load_builtins`"""
-    monkeypatch.setattr(xonsh.built_ins, 'load_builtins', lambda *args, **kwargs: None)
+    monkeypatch.setattr(xonsh.built_ins, 'load_builtins',
+                        lambda *args, **kwargs: None)
     execer = Execer(login=False, unload=False)
     builtins.__xonsh_execer__ = execer
     return execer
@@ -43,6 +44,7 @@ def xonsh_builtins():
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     builtins.__xonsh_commands_cache__ = DummyCommandsCache()
     builtins.__xonsh_all_jobs__ = {}
+    builtins.__xonsh_history__ = DummyHistory()
     builtins.XonshBlockError = XonshBlockError
     builtins.__xonsh_subproc_captured_hiddenobject__ = sp
     builtins.evalx = eval
@@ -69,6 +71,7 @@ def xonsh_builtins():
     del builtins.__xonsh_ensure_list_of_strs__
     del builtins.__xonsh_commands_cache__
     del builtins.__xonsh_all_jobs__
+    del builtins.__xonsh_history__
     del builtins.XonshBlockError
     del builtins.evalx
     del builtins.execx
@@ -76,7 +79,6 @@ def xonsh_builtins():
     del builtins.aliases
     del builtins.events
 
-pytest_plugins = ['xonsh', ]
 
 if ON_WINDOWS:
     try:

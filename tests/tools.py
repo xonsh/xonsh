@@ -65,10 +65,15 @@ class DummyShell:
         return self._shell
 
 
-class DummyCommandsCache():
+class DummyCommandsCache:
 
     def locate_binary(self, name):
         return os.path.join(os.path.dirname(__file__), 'bin', name)
+
+
+class DummyHistory:
+    pass
+
 
 class DummyEnv(MutableMapping):
 

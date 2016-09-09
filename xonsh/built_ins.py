@@ -770,9 +770,7 @@ def run_subproc(cmds, captured=False):
         command = Command(specs, procs, starttime=starttime)
     # now figure out what we should return.
     if captured == 'stdout':
-        print(1)
         command.end()
-        print(2)
         return command.output
     elif captured == 'object' or captured == 'hiddenobject':
         return command

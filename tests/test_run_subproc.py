@@ -7,8 +7,8 @@ from xonsh.built_ins import run_subproc
 
 
 
-@pytest.yield_fixture(autouse=True, scope='module')
-def chdir_to_test_dir():
+@pytest.yield_fixture(autouse=True)
+def chdir_to_test_dir(xonsh_builtins):
     old_cwd = os.getcwd()
     new_cwd = os.path.dirname(__file__)
     os.chdir(new_cwd)
@@ -20,6 +20,8 @@ def test_runsubproc_simple(xonsh_builtins, xonsh_execer):
     new_cwd = os.path.dirname(__file__)
     xonsh_builtins.__xonsh_env__['PATH'] = os.path.join(new_cwd, 'bin') + \
         os.pathsep + os.path.dirname(sys.executable)
+    xonsh_builtins.__xonsh_env__['XONSH_ENCODING'] = 'utf8'
+    xonsh_builtins.__xonsh_env__['XONSH_ENCODING_ERRORS'] = 'surrogateescape'
     out = run_subproc([['pwd']], captured='stdout')
     #run_subproc([['pwd']])
     #out, err = capfd.readouterr()
