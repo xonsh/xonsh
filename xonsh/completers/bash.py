@@ -10,19 +10,29 @@ from xonsh.completers.path import _quote_paths
 
 BASH_COMPLETE_SCRIPT = r"""
 {sources}
-if (complete -p {cmd} 2> /dev/null || echo _minimal) | grep --quiet -e "_minimal"
+
+function _get_complete_statement {{
+    complete -p {cmd} 2> /dev/null || echo "-F _minimal"
+}}
+
+_complete_stmt=$(_get_complete_statement)
+if echo "$_complete_stmt" | grep --quiet -e "_minimal"
 then
     declare -f _completion_loader > /dev/null && _completion_loader {cmd}
+    _complete_stmt=$(_get_complete_statement)
 fi
-_complete_stmt=$(complete -p {cmd})
-echo "$_complete_stmt"
+
 _func=$(echo "$_complete_stmt" | grep -o -e '-F \w\+' | cut -d ' ' -f 2)
+declare -f "$_func" > /dev/null || exit 1
+
+echo "$_complete_stmt"
 COMP_WORDS=({line})
 COMP_LINE={comp_line}
 COMP_POINT=${{#COMP_LINE}}
 COMP_COUNT={end}
 COMP_CWORD={n}
 $_func {cmd} {prefix} {prev}
+
 for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 """
 
