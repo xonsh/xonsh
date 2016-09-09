@@ -7,6 +7,7 @@ import builtins
 import platform
 import subprocess
 from collections import defaultdict
+from collections.abc import MutableMapping
 
 import pytest
 
@@ -62,6 +63,34 @@ class DummyShell:
             self._shell = DummyBaseShell()
         return self._shell
 
+
+class DummyCommandsCache():
+
+    def locate_binary(self, *args, **kwargs):
+        pass
+
+class DummyEnv(MutableMapping):
+
+    def __init__(self, *args, **kwargs):
+        self._d = dict(*args, **kwargs)
+
+    def detype(self):
+        return self._d
+
+    def __getitem__(self, k):
+        return self._d[k]
+
+    def __setitem__(self, k, v):
+        self._d[k] = v
+
+    def __delitem__(self, k):
+        del self._d[k]
+
+    def __len__(self):
+        return len(self._d)
+
+    def __iter__(self):
+        yield from self._d
 
 #
 # Execer tools

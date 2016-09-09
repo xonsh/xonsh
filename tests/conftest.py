@@ -10,7 +10,7 @@ from xonsh.execer import Execer
 from xonsh.tools import XonshBlockError
 from xonsh.events import events
 from xonsh.platform import ON_WINDOWS
-from tools import DummyShell, sp
+from tools import DummyShell, sp, DummyCommandsCache, DummyEnv
 
 
 @pytest.fixture
@@ -25,7 +25,7 @@ def xonsh_execer(monkeypatch):
 @pytest.yield_fixture
 def xonsh_builtins():
     """Mock out most of the builtins xonsh attributes."""
-    builtins.__xonsh_env__ = {}
+    builtins.__xonsh_env__ = DummyEnv()
     builtins.__xonsh_ctx__ = {}
     builtins.__xonsh_shell__ = DummyShell()
     builtins.__xonsh_help__ = lambda x: x
@@ -36,7 +36,10 @@ def xonsh_builtins():
     builtins.__xonsh_expand_path__ = lambda x: x
     builtins.__xonsh_subproc_captured__ = sp
     builtins.__xonsh_subproc_uncaptured__ = sp
+    builtins.__xonsh_stdout_uncaptured__ = None
+    builtins.__xonsh_stderr_uncaptured__ = None
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
+    builtins.__xonsh_commands_cache__ = DummyCommandsCache()
     builtins.XonshBlockError = XonshBlockError
     builtins.__xonsh_subproc_captured_hiddenobject__ = sp
     builtins.evalx = eval
@@ -56,9 +59,12 @@ def xonsh_builtins():
     del builtins.__xonsh_superhelp__
     del builtins.__xonsh_regexpath__
     del builtins.__xonsh_expand_path__
+    del builtins.__xonsh_stdout_uncaptured__
+    del builtins.__xonsh_stderr_uncaptured__
     del builtins.__xonsh_subproc_captured__
     del builtins.__xonsh_subproc_uncaptured__
     del builtins.__xonsh_ensure_list_of_strs__
+    del builtins.__xonsh_commands_cache__
     del builtins.XonshBlockError
     del builtins.evalx
     del builtins.execx

@@ -131,12 +131,8 @@ class ProcProxy(threading.Thread):
 
         # default values
         self.stdin = stdin
-        #self.stdout = None
-        #self.stderr = None
         self.stdout = stdout
         self.stderr = stderr
-        #self.stdout = open(stdout, 'w') if isinstance(stdout, int) else stdout
-        #self.stderr = open(stderr, 'w') if isinstance(stderr, int) else stderr
         self.env = env or builtins.__xonsh_env__
 
         if ON_WINDOWS:
