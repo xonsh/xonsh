@@ -1118,7 +1118,7 @@ def test_expand_case_matching(inp, exp):
     assert exp == obs
 
 
-def test_commands_cache_lazy():
+def test_commands_cache_lazy(xonsh_builtins):
     cc = CommandsCache()
     assert not cc.lazyin('xonsh')
     assert 0 == len(list(cc.lazyiter()))
