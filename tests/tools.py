@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tests the xonsh lexer."""
 from __future__ import unicode_literals, print_function
+import os
 import sys
 import ast
 import builtins
@@ -66,8 +67,8 @@ class DummyShell:
 
 class DummyCommandsCache():
 
-    def locate_binary(self, *args, **kwargs):
-        pass
+    def locate_binary(self, name):
+        return os.path.join(os.path.dirname(__file__), 'bin', name)
 
 class DummyEnv(MutableMapping):
 

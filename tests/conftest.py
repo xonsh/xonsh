@@ -10,6 +10,8 @@ from xonsh.execer import Execer
 from xonsh.tools import XonshBlockError
 from xonsh.events import events
 from xonsh.platform import ON_WINDOWS
+from xonsh.commands_cache import CommandsCache
+
 from tools import DummyShell, sp, DummyCommandsCache, DummyEnv
 
 
@@ -40,6 +42,7 @@ def xonsh_builtins():
     builtins.__xonsh_stderr_uncaptured__ = None
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     builtins.__xonsh_commands_cache__ = DummyCommandsCache()
+    builtins.__xonsh_all_jobs__ = {}
     builtins.XonshBlockError = XonshBlockError
     builtins.__xonsh_subproc_captured_hiddenobject__ = sp
     builtins.evalx = eval
@@ -65,6 +68,7 @@ def xonsh_builtins():
     del builtins.__xonsh_subproc_uncaptured__
     del builtins.__xonsh_ensure_list_of_strs__
     del builtins.__xonsh_commands_cache__
+    del builtins.__xonsh_all_jobs__
     del builtins.XonshBlockError
     del builtins.evalx
     del builtins.execx
@@ -72,6 +76,7 @@ def xonsh_builtins():
     del builtins.aliases
     del builtins.events
 
+pytest_plugins = ['xonsh', ]
 
 if ON_WINDOWS:
     try:

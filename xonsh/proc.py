@@ -619,14 +619,24 @@ class Command:
     def __iter__(self):
         proc = self.proc
         stdout = proc.stdout
-        if not stdout.readable() and self.spec.captured_stdout is not None:
+        if ((stdout is None or not stdout.readable()) and
+                self.spec.captured_stdout is not None):
             stdout = self.spec.captured_stdout
+        print(stdout)
         if not stdout or not stdout.readable():
+            print('not readable')
             raise StopIteration()
-        while proc.poll() is None:
+        print('reading lines', proc)
+        #while proc.poll() is None:
+        while proc.returncode is None:
+            print('poll', proc.returncode)
             yield from stdout.readlines(1024)
+            print('poll', proc.returncode)
+        print('ending time')
         self._endtime()
+        print('finish reading lines')
         yield from stdout.readlines()
+        print('read stdout')
         #self.end()
 
     def itercheck(self):
@@ -642,10 +652,15 @@ class Command:
         yields each line.
         """
         self.output = '' if self.spec.universal_newlines else b''
+        print(self.output)
         for line in self:
+            print(line)
             sys.stdout.write(line)
+            print('wrote to stdout')
             self.output += line
+            print('added line to output')
             yield line
+            print('yielded line')
 
     def _decode_uninew(self, b):
         """Decode bytes into a str and apply universal newlines as needed."""
@@ -666,18 +681,30 @@ class Command:
         """Waits for the command to complete and then runs any closing and
         cleanup procedures that need to be run.
         """
+        print(self.ended)
         if self.ended:
             return
+        print(10)
         self.proc.wait()
+        print(20)
         self._endtime()
+        print(30)
         self._close_procs()
+        print(40)
         self._set_input()
+        print(50)
         self._set_output()
+        print(60)
         self._set_errors()
+        print(70)
         self._check_signal()
+        print(80)
         self._apply_to_history()
+        print(90)
         self._raise_subproc_error()
+        print(100)
         self.ended = True
+        print(110)
 
     def _endtime(self):
         """Sets the closing timestamp if it hasn't been already."""
@@ -703,10 +730,14 @@ class Command:
 
     def _set_output(self):
         """Sets the output vaiable."""
-        output = b''
+        #output = b''
+        print('prepping to tee')
         for line in self.tee_stdout():
-            output += line
-        self.output = self._decode_uninew(output)
+            pass
+        print('teed')
+        #    output += line
+        self.output = self._decode_uninew(self.output)
+        print('converted')
 
     def _set_errors(self):
         """Sets the errors vaiable."""

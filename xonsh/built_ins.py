@@ -660,9 +660,12 @@ def _update_last_spec(last, captured=False):
         last.universal_newlines = True
     elif captured in stdout_capture_kinds:
         last.universal_newlines = False
-        r, w = os.pipe()
-        last.stdout = safe_open(w, 'wb')
-        last.captured_stdout = safe_open(r, 'rb')
+        if callable(last.alias):
+            r, w = os.pipe()
+            last.stdout = safe_open(w, 'wb')
+            last.captured_stdout = safe_open(r, 'rb')
+        else:
+            last.stdout = subprocess.PIPE
     elif builtins.__xonsh_stdout_uncaptured__ is not None:
         last.universal_newlines = True
         last.stdout = builtins.__xonsh_stdout_uncaptured__
@@ -767,8 +770,9 @@ def run_subproc(cmds, captured=False):
         command = Command(specs, procs, starttime=starttime)
     # now figure out what we should return.
     if captured == 'stdout':
+        print(1)
         command.end()
-        #raise Exception
+        print(2)
         return command.output
     elif captured == 'object' or captured == 'hiddenobject':
         return command
