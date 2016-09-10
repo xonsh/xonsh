@@ -15,11 +15,12 @@ from xonsh.lazyasd import load_module_in_background
 load_module_in_background('pkg_resources', debug='XONSH_DEBUG',
                           replacements={'pygments.plugin': 'pkg_resources'})
 
-from pygments.lexer import inherit, bygroups, using, this
+from pygments.lexer import inherit, bygroups, using, this, include
 from pygments.lexers.shell import BashLexer
 from pygments.lexers.agile import PythonLexer
 from pygments.token import (Keyword, Name, Comment, String, Error, Number,
-                            Operator, Generic, Whitespace, Token)
+                            Operator, Generic, Whitespace, Token, Punctuation,
+                            Text)
 from pygments.style import Style
 from pygments.styles import get_style_by_name
 import pygments.util
@@ -30,55 +31,30 @@ from xonsh.tools import (ON_WINDOWS, intensify_colors_for_cmd_exe,
 from xonsh.tokenize import SearchPath
 
 
-def command_token_callback(_, match, fallback):
+def _command_is_valid(cmd):
+    cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
+    return cmd in builtins.__xonsh_commands_cache__ or \
+        (os.path.isfile(cmd_abspath) and os.access(cmd_abspath, os.X_OK))
+
+
+def subproc_cmd_callback(_, match):
     """Yield Keyword token if match contains valid command,
     otherwise fallback to fallback lexer.
     """
-    yield match.start(1), Whitespace, match.group(1)
+    cmd = match.group()
+    yield match.start(), Keyword if _command_is_valid(cmd) else Error, cmd
 
-    start = match.start(2)
-    cmd = match.group(2)
-    cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
-    if cmd in builtins.__xonsh_commands_cache__ or \
-            (os.path.isfile(cmd_abspath) and os.access(cmd_abspath, os.X_OK)):
-        yield start, Keyword, cmd
+
+def subproc_arg_callback(_, match):
+    """Check if match contains valid path"""
+    text = match.group()
+    if os.path.exists(os.path.expanduser(text)):
+        yield match.start(), Name.Builtin, text
     else:
-        lx = fallback()
-        for i, t, v in lx.get_tokens_unprocessed(cmd):
-            yield i + start, t, v
+        yield match.start(), Text, text
 
 
-COMMAND_TOKEN_RE = r'^(\s*)([^=\s\[\]{}()$"\'`\\<&|;]+)'
-
-
-class XonshSubprocLexer(BashLexer):
-    """Lexer for xonsh subproc mode."""
-    name = 'Xonsh subprocess lexer'
-    tokens = {'root': [(COMMAND_TOKEN_RE,
-                        functools.partial(command_token_callback,
-                                          fallback=BashLexer)),
-                       (SearchPath, String.Backtick),
-                       inherit]}
-
-
-ROOT_TOKENS = [(COMMAND_TOKEN_RE, functools.partial(command_token_callback,
-                                                    fallback=PythonLexer)),
-               (r'\?', Keyword),
-               (r'\$\w+', Name.Variable),
-               (r'\$\{', Keyword, ('pymode', )),
-               (r'[\!\$]\(', Keyword, ('subproc', )),
-               (r'[\!\$]\[', Keyword, ('subproc', )),
-               (r'@\$\(', Keyword, ('subproc', )),
-               (r'@\(', Keyword, ('pymode', )),
-               inherit, ]
-
-PYMODE_TOKENS = [(r'(.+)(\))', bygroups(using(this), Keyword), '#pop'),
-                 (r'(.+)(\})', bygroups(using(this), Keyword), '#pop'), ]
-
-SUBPROC_TOKENS = [
-    (r'(.+)(\))', bygroups(using(XonshSubprocLexer), Keyword), '#pop'),
-    (r'(.+)(\])', bygroups(using(XonshSubprocLexer), Keyword), '#pop'),
-]
+COMMAND_TOKEN_RE = r'[^=\s\[\]{}()$"\'`\\<&|;]+'
 
 
 class XonshLexer(PythonLexer):
@@ -89,13 +65,83 @@ class XonshLexer(PythonLexer):
     filenames = ['*.xsh', '*xonshrc']
 
     tokens = {
-        'root': list(ROOT_TOKENS),
-        'pymode': PYMODE_TOKENS,
-        'subproc': SUBPROC_TOKENS,
+        'mode_switch_brackets': [
+            (r'(\$)(\{)', bygroups(Keyword, Punctuation), 'py_curly_bracket'),
+            (r'(@)(\()', bygroups(Keyword, Punctuation), 'py_bracket'),
+            (r'([\!\$])(\()', bygroups(Keyword, Punctuation),
+             ('subproc_bracket', 'subproc_start')),
+            (r'(@\$)(\()', bygroups(Keyword, Punctuation),
+             ('subproc_bracket', 'subproc_start')),
+            (r'([\!\$])(\[)', bygroups(Keyword, Punctuation),
+             ('subproc_square_bracket', 'subproc_start')),
+        ],
+        'subproc_bracket': [
+            (r'\)', Punctuation, '#pop'),
+            include('subproc'),
+        ],
+        'subproc_square_bracket': [
+            (r'\]', Punctuation, '#pop'),
+            include('subproc'),
+        ],
+        'py_bracket': [
+            (r'\)', Punctuation, '#pop'),
+            include('root'),
+        ],
+        'py_curly_bracket': [
+            (r'\}', Punctuation, '#pop'),
+            include('root'),
+        ],
+        'root': [
+            (r'\?', Keyword),
+            (r'\$\w+', Name.Variable),
+            (r'\(', Punctuation, 'py_bracket'),
+            (r'\{', Punctuation, 'py_curly_bracket'),
+            include('mode_switch_brackets'),
+            inherit,
+        ],
+        'subproc_start': [
+            (r'\s+', Whitespace),
+            (COMMAND_TOKEN_RE, subproc_cmd_callback, '#pop'),
+            (r'', Whitespace, '#pop'),
+        ],
+        'subproc': [
+            (SearchPath, String.Backtick),
+            include('mode_switch_brackets'),
+            (r'&&|\|\|', Operator, 'subproc_start'),
+            (r'"(\\\\|\\[0-7]+|\\.|[^"\\])*"', String.Double),
+            (r"'(\\\\|\\[0-7]+|\\.|[^'\\])*'", String.Single),
+            (r';', Punctuation, 'subproc_start'),
+            (r'&', Punctuation),
+            (r'\|', Punctuation, 'subproc_start'),
+            (r'\s+', Text),
+            (r'\d+\b', Number),
+            (r'[^=\s\[\]{}()$"\'`\\<&|;]+', subproc_arg_callback),
+            (r'<', Text),
+            (r'\$\w+', Name.Variable),
+        ],
     }
 
+    def get_tokens_unprocessed(self, text):
+        """Check first command, then call super.get_tokens_unprocessed
+        with root or subproc state"""
+        start = 0
+        state = ('root', )
+        m = re.match(r'(\s*)({})'.format(COMMAND_TOKEN_RE), text)
+        if m is not None:
+            yield m.start(1), Whitespace, m.group(1)
+            cmd = m.group(2)
+            cmd_is_valid = _command_is_valid(cmd)
 
-class XonshConsoleLexer(PythonLexer):
+            if cmd_is_valid:
+                yield m.start(2), Keyword, cmd
+                start = m.end(2)
+                state = ('subproc', )
+
+        for i, t, v in super().get_tokens_unprocessed(text[start:], state):
+            yield i + start, t, v
+
+
+class XonshConsoleLexer(XonshLexer):
     """Xonsh console lexer for pygments."""
 
     name = 'Xonsh console lexer'
@@ -106,16 +152,9 @@ class XonshConsoleLexer(PythonLexer):
         'root': [(r'^(>>>|\.\.\.) ', Generic.Prompt),
                  (r'\n(>>>|\.\.\.)', Generic.Prompt),
                  (r'\n(?![>.][>.][>.] )([^\n]*)', Generic.Output),
-                 (r'\n(?![>.][>.][>.] )(.*?)$', Generic.Output)] + ROOT_TOKENS,
-        'pymode': PYMODE_TOKENS,
-        'subproc': SUBPROC_TOKENS,
+                 (r'\n(?![>.][>.][>.] )(.*?)$', Generic.Output),
+                 inherit]
     }
-
-# XonshLexer & XonshSubprocLexer have to reference each other
-XonshSubprocLexer.tokens['root'] = [
-    (r'(\$\{)(.*)(\})', bygroups(Keyword, using(XonshLexer), Keyword)),
-    (r'(@\()(.+)(\))', bygroups(Keyword, using(XonshLexer), Keyword)),
-] + XonshSubprocLexer.tokens['root']
 
 
 #
