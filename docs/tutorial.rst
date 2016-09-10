@@ -1176,6 +1176,8 @@ function with the ``xonsh.proc.foreground`` decorator.
 Aliasing is a powerful way that xonsh allows you to seamlessly interact to
 with Python and subprocess.
 
+.. warning:: Foreign shell aliases that try to override xonsh aliases will be ignored
+
 Up, Down, Tab
 ==============
 The up and down keys search history matching from the start of the line,
