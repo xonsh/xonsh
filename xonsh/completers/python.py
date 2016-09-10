@@ -39,7 +39,7 @@ def complete_python(prefix, line, start, end, ctx):
     """
     rtn = _complete_python(prefix, line, start, end, ctx)
     if not rtn:
-        prefix = re.split(r'\(|=|{|\[', prefix)[-1]
+        prefix = re.split(r'\(|=|{|\[|,', prefix)[-1]
         start = line.find(prefix)
         rtn = _complete_python(prefix, line, start, end, ctx)
         return rtn, len(prefix)
