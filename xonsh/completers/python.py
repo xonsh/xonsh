@@ -35,6 +35,21 @@ def complete_python(prefix, line, start, end, ctx):
     """
     Completes based on the contents of the current Python environment,
     the Python built-ins, and xonsh operators.
+    If there are no matches, split on common delimiters and try again.
+    """
+    rtn = _complete_python(prefix, line, start, end, ctx)
+    if not rtn:
+        prefix = re.split(r'\(|=|{|\[', prefix)[-1]
+        start = line.find(prefix)
+        rtn = _complete_python(prefix, line, start, end, ctx)
+        return rtn, len(prefix)
+    return rtn
+
+
+def _complete_python(prefix, line, start, end, ctx):
+    """
+    Completes based on the contents of the current Python environment,
+    the Python built-ins, and xonsh operators.
     """
     if line != '':
         first = line.split()[0]
@@ -48,11 +63,6 @@ def complete_python(prefix, line, start, end, ctx):
         rtn |= {s for s in ctx if filt(s, prefix)}
     rtn |= {s for s in dir(builtins) if filt(s, prefix)}
     rtn |= {s for s in dir(builtins) if filt(s, prefix)}
-    if not rtn:
-        prefix = re.split(r'\(|=|{|\[', prefix)[-1]
-        start = line.find(prefix)
-        rtn |= complete_python(prefix, line, start, end, ctx)
-        return rtn, len(prefix)
     return rtn
 
 
