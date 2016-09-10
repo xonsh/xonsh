@@ -421,7 +421,11 @@ def DEFAULT_DOCS():
         'completion if set to anything truthy.', configurable=ON_WINDOWS),
     'FOREIGN_ALIASES_OVERRIDE': VarDocs(
         'Whether or not foreign aliases should override xonsh aliases '
-        'with the same name', configurable=True),
+        'with the same name. Note that setting of this must happen in the '
+        'static configuration file '
+        "``$XONSH_CONFIG_DIR/config.json`` in the 'env' section and not in "
+        '``.xonshrc`` as loading of foreign aliases happens before'
+        '``.xonshrc`` is parsed', configurable=True),
     'FORMATTER_DICT': VarDocs(
         'Dictionary containing variables to be used when formatting $PROMPT '
         "and $TITLE. See 'Customizing the Prompt' "
