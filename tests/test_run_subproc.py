@@ -23,18 +23,11 @@ def test_runsubproc_simple(xonsh_builtins, xonsh_execer):
     xonsh_builtins.__xonsh_env__['XONSH_ENCODING'] = 'utf8'
     xonsh_builtins.__xonsh_env__['XONSH_ENCODING_ERRORS'] = 'surrogateescape'
     out = run_subproc([['pwd']], captured='stdout')
-    #run_subproc([['pwd']])
-    #out, err = capfd.readouterr()
     assert out.rstrip() == new_cwd
-
-def test_runsubproc_pipe(capfd, xonsh_builtins, xonsh_execer):
-    run_subproc([['ls'], '|', ['grep', '-i', 'sample']])
-    out, err = capfd.readouterr()
-    assert out.rstrip() == 'sample.xsh'
 
 
 def test_runsubproc_redirect_out_to_file(xonsh_builtins, xonsh_execer):
-    run_subproc([['pwd', 'out>', 'tttt']])
+    run_subproc([['pwd', 'out>', 'tttt']], captured='stdout')
     with open('tttt') as f:
         assert f.read().rstrip() == os.getcwd()
     os.remove('tttt')

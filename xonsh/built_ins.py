@@ -494,7 +494,8 @@ class SubprocSpec:
 
     def _run_binary(self, kwargs):
         try:
-            p = self.cls(self.cmd, **kwargs)
+            bufsize = 1 if self.universal_newlines else -1
+            p = self.cls(self.cmd, bufsize=bufsize, **kwargs)
         except PermissionError:
             e = 'xonsh: subprocess mode: permission denied: {0}'
             raise XonshError(e.format(self.cmd[0]))
@@ -660,12 +661,12 @@ def _update_last_spec(last, captured=False):
         last.universal_newlines = True
     elif captured in stdout_capture_kinds:
         last.universal_newlines = False
-        if callable(last.alias):
-            r, w = os.pipe()
-            last.stdout = safe_open(w, 'wb')
-            last.captured_stdout = safe_open(r, 'rb')
-        else:
-            last.stdout = subprocess.PIPE
+        #if callable(last.alias):
+        r, w = os.pipe()
+        last.stdout = safe_open(w, 'wb')
+        last.captured_stdout = safe_open(r, 'rb')
+        #else:
+        #    last.stdout = subprocess.PIPE
     elif builtins.__xonsh_stdout_uncaptured__ is not None:
         last.universal_newlines = True
         last.stdout = builtins.__xonsh_stdout_uncaptured__
@@ -756,8 +757,8 @@ def run_subproc(cmds, captured=False):
             'cmds': cmds,
             'pids': [i.pid for i in procs],
             'obj': proc,
-            'bg': spec.background
-        })
+            'bg': spec.background,
+            })
     if _should_set_title(captured=captured):
         # set title here to get currently executing command
         pause_call_resume(proc, builtins.__xonsh_shell__.settitle)

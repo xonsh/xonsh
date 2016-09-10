@@ -24,6 +24,7 @@ from xonsh.tools import (redirect_stdout, redirect_stderr, fallback,
                          print_exception, XonshCalledProcessError)
 from xonsh.teepty import TeePTY
 from xonsh.lazyasd import lazyobject
+from xonsh.jobs import wait_for_active_job
 
 
 # force some lazy imports so we don't have errors on non-windows platforms
@@ -404,7 +405,7 @@ class ForegroundProcProxy(object):
     """
 
     def __init__(self, f, args, stdin=None, stdout=None, stderr=None,
-                 universal_newlines=False):
+                 universal_newlines=False, env=None):
         self.f = f
         self.args = args
         self.pid = os.getpid()
@@ -413,6 +414,7 @@ class ForegroundProcProxy(object):
         self.stdout = None
         self.stderr = None
         self.universal_newlines = universal_newlines
+        self.env = env
 
     def poll(self):
         """Check if the function has completed via the returncode or None.
@@ -444,9 +446,10 @@ class SimpleForegroundProcProxy(ForegroundProcProxy):
     """
 
     def __init__(self, f, args, stdin=None, stdout=None, stderr=None,
-                 universal_newlines=False):
+                 universal_newlines=False, env=None):
         f = wrap_simple_command(f, args, stdin, stdout, stderr)
-        super().__init__(f, args, stdin, stdout, stderr, universal_newlines)
+        super().__init__(f, args, stdin, stdout, stderr, universal_newlines,
+                         env)
 
 
 def foreground(f):
@@ -577,7 +580,8 @@ class Command:
 
     attrnames = ("stdin", "stdout", "stderr", "pid", "returncode", "args",
                  "alias", "stdin_redirect", "stdout_redirect",
-                 "stderr_redirect", "timestamps", "executed_cmd")
+                 "stderr_redirect", "timestamps", "executed_cmd", 'input',
+                 'output', 'errors')
 
     def __init__(self, specs, procs, starttime=None):
         """
@@ -613,6 +617,12 @@ class Command:
         self.ended = False
         self.input = self.output = self.errors = self.endtime = None
 
+    def __repr__(self):
+        s = self.__class__.__name__ + '('
+        s += ', '.join(a + '=' + str(getattr(self, a)) for a in self.attrnames)
+        s += ')'
+        return s
+
     def __bool__(self):
         return self.returncode == 0
 
@@ -645,9 +655,23 @@ class Command:
         if not stdout or not stdout.readable():
             raise StopIteration()
         while proc.poll() is None:
-            yield from stdout.readlines(1024)
+            print(1)
+            #yield from stdout.readlines(1024)
+            #for line in iter(stdout.readline, ''):
+            #    print(1.25)
+            #    yield line
+            #    print(1.75)
+            try:
+                so, se = proc.communicate(timeout=1e-4)
+            except subprocess.TimeoutExpired:
+                continue
+            yield from so.splitlines()
+            print(2)
+        print(3)
         self._endtime()
+        print(4)
         yield from stdout.readlines()
+        print(5)
 
     def itercheck(self):
         """Iterates through the command lines and throws an error if the
@@ -694,6 +718,7 @@ class Command:
         if self.ended:
             return
         self.proc.wait()
+        #wait_for_active_job()
         self._endtime()
         self._close_procs()
         self._set_input()
@@ -764,10 +789,9 @@ class Command:
 
     def _apply_to_history(self):
         """Applies the results to the current history object."""
-        env = builtins.__xonsh_env__
         hist = builtins.__xonsh_history__
         hist.last_cmd_rtn = self.proc.returncode
-        if env.get('XONSH_STORE_STDOUT'):
+        if builtins.__xonsh_env__.get('XONSH_STORE_STDOUT'):
             hist.last_cmd_out = self.output
 
     def _raise_subproc_error(self):
@@ -827,7 +851,8 @@ class Command:
     def returncode(self):
         """Process return code, waits until command is completed."""
         proc = self.proc
-        if proc.returncode is None:
+        #if proc.returncode is None:
+        if proc.poll() is None:
             self.end()
         return proc.returncode
 
