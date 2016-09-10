@@ -49,7 +49,7 @@ def complete_python(prefix, line, start, end, ctx):
     rtn |= {s for s in dir(builtins) if filt(s, prefix)}
     rtn |= {s for s in dir(builtins) if filt(s, prefix)}
     if not rtn:
-        prefix = re.split('\(|=', prefix)[-1]
+        prefix = re.split('\(|=|{|[', prefix)[-1]
         start = line.find(prefix)
         rtn |= complete_python(prefix, line, start, end, ctx)
         return rtn, len(prefix)
