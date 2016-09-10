@@ -657,16 +657,23 @@ class Command:
         while proc.poll() is None:
             print(1)
             #yield from stdout.readlines(1024)
+            #line = stdout.readline()
+            #if not line:
+            #    break
+            #yield line
+            #for c in iter(lambda: stdout.read(1), ''):
+            #    yield c
             #for line in iter(stdout.readline, ''):
             #    print(1.25)
             #    yield line
             #    print(1.75)
-            try:
-                so, se = proc.communicate(timeout=1e-4)
-            except subprocess.TimeoutExpired:
-                continue
-            yield from so.splitlines()
+            #try:
+            #    so, se = proc.communicate(timeout=1e-4)
+            #except subprocess.TimeoutExpired:
+            #    continue
+            #yield from so.splitlines()
             print(2)
+        proc.wait()
         print(3)
         self._endtime()
         print(4)

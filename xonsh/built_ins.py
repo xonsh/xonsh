@@ -494,7 +494,8 @@ class SubprocSpec:
 
     def _run_binary(self, kwargs):
         try:
-            bufsize = 1 if self.universal_newlines else -1
+            #bufsize = 1 if self.universal_newlines else -1
+            bufsize = 1
             p = self.cls(self.cmd, bufsize=bufsize, **kwargs)
         except PermissionError:
             e = 'xonsh: subprocess mode: permission denied: {0}'
