@@ -127,9 +127,9 @@ def test_list_of_strs_or_callables(exp, inp):
     '~',
     '~/',
     'x=~/place',
-    'one:~/place',
-    'one:~/place:~/yo',
-    '~/one:~/place:~/yo',
+    'x=one:~/place',
+    'x=one:~/place:~/yo',
+    'x=~/one:~/place:~/yo',
     ])
 def test_expand_path(s, home_env):
     if os.sep != '/':
@@ -137,6 +137,7 @@ def test_expand_path(s, home_env):
     if os.pathsep != ':':
         s = s.replace(':', os.pathsep)
     assert expand_path(s) == s.replace('~', HOME_PATH)
+
 
 @pytest.mark.parametrize('kind', [str, 's', 'S', 'str', 'string'])
 def test_convert_macro_arg_str(kind):
