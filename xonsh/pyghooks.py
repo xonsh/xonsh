@@ -12,11 +12,7 @@ from collections.abc import MutableMapping
 # must come before pygments imports
 from xonsh.lazyasd import load_module_in_background
 
-load_module_in_background('pkg_resources', debug='XONSH_DEBUG',
-                          replacements={'pygments.plugin': 'pkg_resources'})
-
-from pygments.lexer import inherit, bygroups, using, this, include
-from pygments.lexers.shell import BashLexer
+from pygments.lexer import inherit, bygroups, include
 from pygments.lexers.agile import PythonLexer
 from pygments.token import (Keyword, Name, Comment, String, Error, Number,
                             Operator, Generic, Whitespace, Token, Punctuation,
@@ -29,6 +25,10 @@ from xonsh.lazyasd import LazyObject, LazyDict
 from xonsh.tools import (ON_WINDOWS, intensify_colors_for_cmd_exe,
                          expand_gray_colors_for_cmd_exe)
 from xonsh.tokenize import SearchPath
+
+
+load_module_in_background('pkg_resources', debug='XONSH_DEBUG',
+                          replacements={'pygments.plugin': 'pkg_resources'})
 
 
 def _command_is_valid(cmd):

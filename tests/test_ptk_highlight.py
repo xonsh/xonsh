@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 """Test XonshLexer for pygments"""
 
-import pytest
 import os
-from pygments.token import (Keyword, Name, Comment, String, Error, Number,
-                            Operator, Generic, Whitespace, Token, Punctuation,
-                            Text)
-from tools import (skip_if_on_unix, skip_if_on_windows)
+import pytest
+from pygments.token import (Keyword, Name, String, Error, Number,
+                            Operator, Punctuation, Text)
+from tools import skip_if_on_windows
 
 from xonsh.built_ins import load_builtins, unload_builtins
 from xonsh.pyghooks import XonshLexer
@@ -57,6 +56,8 @@ def test_invalid_cmd():
     check_token('![non-existance-cmd -al]',
                 [(Error, 'non-existance-cmd')])  # parse as error
     check_token('for i in range(10):', [(Keyword, 'for')])  # as py keyword
+    check_token('(1, )', [(Punctuation, '('),
+                          (Number.Integer, '1')])
 
 
 def test_multi_cmd():
