@@ -26,6 +26,8 @@ def xonsh_execer(monkeypatch):
 def xonsh_builtins():
     """Mock out most of the builtins xonsh attributes."""
     builtins.__xonsh_env__ = {}
+    if ON_WINDOWS:
+        builtins.__xonsh_env__['PATHEXT'] = ['.EXE', '.BAT', '.CMD']
     builtins.__xonsh_ctx__ = {}
     builtins.__xonsh_shell__ = DummyShell()
     builtins.__xonsh_help__ = lambda x: x
