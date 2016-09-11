@@ -384,3 +384,4 @@ make_events()
 
 builtins.__xonsh_history__ = None
 builtins.__xonsh_env__ = {}
+builtins.__xonsh_commands_cache__ = {}

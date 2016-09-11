@@ -108,8 +108,11 @@ def expand_path(s):
     # first '='". See the following for more details.
     # https://www.gnu.org/software/bash/manual/html_node/Tilde-Expansion.html
     pre, char, post = s.partition('=')
-    s = pre + char + os.path.expanduser(post) if char else s
-    s = os.pathsep.join(map(os.path.expanduser, s.split(os.pathsep)))
+    if char:
+        s = os.path.expanduser(pre) + char
+        s += os.pathsep.join(map(os.path.expanduser, post.split(os.pathsep)))
+    else:
+        s = os.path.expanduser(s)
     return s
 
 

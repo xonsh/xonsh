@@ -8,6 +8,7 @@
 
 **Fixed:**
 
-* cd . and cd <singleCharacter> now work.  Fix indexerror in AUTO_PUSHD case, too.
+* Fixed issue where tilde expansion was occuring more than once before an
+  equals sign.
 
 **Security:** None
