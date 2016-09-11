@@ -37,12 +37,12 @@ def check_token(code, tokens):
 
 @skip_if_on_windows
 def test_ls():
-    check_token('ls -al', [(Keyword, 'ls')])
+    check_token('ls -al', [(Name.Builtin, 'ls')])
 
 
 @skip_if_on_windows
 def test_bin_ls():
-    check_token('/bin/ls -al', [(Keyword, '/bin/ls')])
+    check_token('/bin/ls -al', [(Name.Builtin, '/bin/ls')])
 
 
 def test_py_print():
@@ -60,17 +60,17 @@ def test_invalid_cmd():
 
 
 def test_multi_cmd():
-    check_token('cd && cd', [(Keyword, 'cd'),
+    check_token('cd && cd', [(Name.Builtin, 'cd'),
                              (Operator, '&&'),
-                             (Keyword, 'cd')])
-    check_token('cd || non-existance-cmd', [(Keyword, 'cd'),
+                             (Name.Builtin, 'cd')])
+    check_token('cd || non-existance-cmd', [(Name.Builtin, 'cd'),
                                             (Operator, '||'),
                                             (Error, 'non-existance-cmd')
                                             ])
 
 
 def test_nested():
-    check_token('echo @("hello")', [(Keyword, 'echo'),
+    check_token('echo @("hello")', [(Name.Builtin, 'echo'),
                                     (Keyword, '@'),
                                     (Punctuation, '('),
                                     (String.Double, 'hello'),
@@ -79,13 +79,13 @@ def test_nested():
                                  (Punctuation, '('),
                                  (Keyword, '$'),
                                  (Punctuation, '('),
-                                 (Keyword, 'cd'),
+                                 (Name.Builtin, 'cd'),
                                  (Punctuation, ')'),
                                  (Punctuation, ')')])
     check_token('print(![echo "])"])', [(Keyword, 'print'),
                                         (Keyword, '!'),
                                         (Punctuation, '['),
-                                        (Keyword, 'echo'),
+                                        (Name.Builtin, 'echo'),
                                         (String.Double, '"])"'),
                                         (Punctuation, ']')])
 
@@ -95,9 +95,9 @@ def test_path():
     test_dir = os.path.join(HERE, 'xonsh-test-highlight-path')
     if not os.path.exists(test_dir):
         os.mkdir(test_dir)
-    check_token('cd {}'.format(test_dir), [(Keyword, 'cd'),
-                                           (Name.Builtin, test_dir)])
-    check_token('cd {}-xxx'.format(test_dir), [(Keyword, 'cd'),
+    check_token('cd {}'.format(test_dir), [(Name.Builtin, 'cd'),
+                                           (Name.Constant, test_dir)])
+    check_token('cd {}-xxx'.format(test_dir), [(Name.Builtin, 'cd'),
                                                (Text,
                                                 '{}-xxx'.format(test_dir))
                                                ])

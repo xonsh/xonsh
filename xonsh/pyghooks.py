@@ -38,20 +38,19 @@ def _command_is_valid(cmd):
 
 
 def subproc_cmd_callback(_, match):
-    """Yield Keyword token if match contains valid command,
+    """Yield Builtin token if match contains valid command,
     otherwise fallback to fallback lexer.
     """
     cmd = match.group()
-    yield match.start(), Keyword if _command_is_valid(cmd) else Error, cmd
+    yield match.start(), Name.Builtin if _command_is_valid(cmd) else Error, cmd
 
 
 def subproc_arg_callback(_, match):
     """Check if match contains valid path"""
     text = match.group()
-    if os.path.exists(os.path.expanduser(text)):
-        yield match.start(), Name.Builtin, text
-    else:
-        yield match.start(), Text, text
+    yield (match.start(),
+           Name.Constant if os.path.exists(os.path.expanduser(text)) else Text,
+           text)
 
 
 COMMAND_TOKEN_RE = r'[^=\s\[\]{}()$"\'`\\<&|;]+(?=\s|$|\)|\]|\})'
@@ -145,7 +144,7 @@ class XonshLexer(PythonLexer):
             cmd_is_valid = _command_is_valid(cmd)
 
             if cmd_is_valid:
-                yield m.start(2), Keyword, cmd
+                yield m.start(2), Name.Builtin, cmd
                 start = m.end(2)
                 state = ('subproc', )
 
