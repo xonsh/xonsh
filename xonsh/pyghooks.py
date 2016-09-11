@@ -64,6 +64,10 @@ class XonshLexer(PythonLexer):
     aliases = ['xonsh', 'xsh']
     filenames = ['*.xsh', '*xonshrc']
 
+    def __init__(self, *args, **kwargs):
+        _ = builtins.__xonsh_commands_cache__.all_commands
+        super().__init__(*args, **kwargs)
+
     tokens = {
         'mode_switch_brackets': [
             (r'(\$)(\{)', bygroups(Keyword, Punctuation), 'py_curly_bracket'),
