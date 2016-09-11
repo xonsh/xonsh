@@ -54,7 +54,7 @@ def subproc_arg_callback(_, match):
         yield match.start(), Text, text
 
 
-COMMAND_TOKEN_RE = r'[^=\s\[\]{}()$"\'`\\<&|;]+'
+COMMAND_TOKEN_RE = r'[^=\s\[\]{}()$"\'`\\<&|;]+(?=\s|$|\)|\]|\})'
 
 
 class XonshLexer(PythonLexer):
