@@ -62,7 +62,6 @@ def _complete_python(prefix, line, start, end, ctx):
             rtn |= attr_complete(prefix, ctx, filt)
         rtn |= {s for s in ctx if filt(s, prefix)}
     rtn |= {s for s in dir(builtins) if filt(s, prefix)}
-    rtn |= {s for s in dir(builtins) if filt(s, prefix)}
     return rtn
 
 
