@@ -74,6 +74,8 @@ class XonshLexer(PythonLexer):
              ('subproc_bracket', 'subproc_start')),
             (r'([\!\$])(\[)', bygroups(Keyword, Punctuation),
              ('subproc_square_bracket', 'subproc_start')),
+            (r'(g?)(`)', bygroups(String.Affix, String.Backtick),
+             'backtick_re'),
         ],
         'subproc_bracket': [
             (r'\)', Punctuation, '#pop'),
@@ -91,6 +93,13 @@ class XonshLexer(PythonLexer):
             (r'\}', Punctuation, '#pop'),
             include('root'),
         ],
+        'backtick_re': [
+            (r'[\.\^\$\*\+\?\[\]\|]', String.Regex),
+            (r'({[0-9]+}|{[0-9]+,[0-9]+})\??', String.Regex),
+            (r'\\([0-9]+|[AbBdDsSwWZabfnrtuUvx\\])', String.Escape),
+            (r'`', String.Backtick, '#pop'),
+            (r'[^`]+', String.Backtick),
+        ],
         'root': [
             (r'\?', Keyword),
             (r'\$\w+', Name.Variable),
@@ -105,7 +114,6 @@ class XonshLexer(PythonLexer):
             (r'', Whitespace, '#pop'),
         ],
         'subproc': [
-            (SearchPath, String.Backtick),
             include('mode_switch_brackets'),
             (r'&&|\|\|', Operator, 'subproc_start'),
             (r'"(\\\\|\\[0-7]+|\\.|[^"\\])*"', String.Double),
