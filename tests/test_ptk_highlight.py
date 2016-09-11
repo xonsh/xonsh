@@ -53,20 +53,20 @@ def test_py_print():
 
 
 def test_invalid_cmd():
-    check_token('ls-non-existance-cmd -al', [(Name, 'ls')])  # parse as python
-    check_token('![ls-non-existance-cmd -al]',
-                [(Error, 'ls-non-existance-cmd')])  # parse as error
+    check_token('non-existance-cmd -al', [(Name, 'non')])  # parse as python
+    check_token('![non-existance-cmd -al]',
+                [(Error, 'non-existance-cmd')])  # parse as error
     check_token('for i in range(10):', [(Keyword, 'for')])  # as py keyword
 
 
 def test_multi_cmd():
-    check_token('ls && ls', [(Keyword, 'ls'),
+    check_token('cd && cd', [(Keyword, 'cd'),
                              (Operator, '&&'),
-                             (Keyword, 'ls')])
-    check_token('ls || ls-non-existance-cmd', [(Keyword, 'ls'),
-                                               (Operator, '||'),
-                                               (Error, 'ls-non-existance-cmd')
-                                               ])
+                             (Keyword, 'cd')])
+    check_token('cd || non-existance-cmd', [(Keyword, 'cd'),
+                                            (Operator, '||'),
+                                            (Error, 'non-existance-cmd')
+                                            ])
 
 
 def test_nested():
@@ -75,11 +75,11 @@ def test_nested():
                                     (Punctuation, '('),
                                     (String.Double, 'hello'),
                                     (Punctuation, ')')])
-    check_token('print($(ls))', [(Keyword, 'print'),
+    check_token('print($(cd))', [(Keyword, 'print'),
                                  (Punctuation, '('),
                                  (Keyword, '$'),
                                  (Punctuation, '('),
-                                 (Keyword, 'ls'),
+                                 (Keyword, 'cd'),
                                  (Punctuation, ')'),
                                  (Punctuation, ')')])
     check_token('print(![echo "])"])', [(Keyword, 'print'),
@@ -95,7 +95,18 @@ def test_path():
     test_dir = os.path.join(HERE, 'xonsh-test-highlight-path')
     if not os.path.exists(test_dir):
         os.mkdir(test_dir)
-    check_token('ls {}'.format(test_dir), [(Keyword, 'ls'),
+    check_token('cd {}'.format(test_dir), [(Keyword, 'cd'),
                                            (Name.Builtin, test_dir)])
-    check_token('ls {}-xxx'.format(test_dir), [(Keyword, 'ls'),
-                                               (Text, '{}-xxx'.format(test_dir))])
+    check_token('cd {}-xxx'.format(test_dir), [(Keyword, 'cd'),
+                                               (Text,
+                                                '{}-xxx'.format(test_dir))
+                                               ])
+
+
+def test_backtick():
+    check_token(r'echo g`.*\w+`', [(String.Affix, 'g'),
+                                   (String.Backtick, '`'),
+                                   (String.Regex, '.'),
+                                   (String.Regex, '*'),
+                                   (String.Escape, r'\w'),
+                                   ])
