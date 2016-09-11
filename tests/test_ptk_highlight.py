@@ -20,7 +20,6 @@ def load_command_cache():
 
 def check_token(code, tokens):
     """Make sure that all tokens appears in code in order"""
-    load_builtins()
     lx = XonshLexer()
     tks = list(lx.get_tokens(code))
 
