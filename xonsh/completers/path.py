@@ -188,7 +188,8 @@ def _splitpath_helper(path, sofar=()):
     folder, path = os.path.split(path)
     if path:
         sofar = sofar + (path, )
-    if not folder or folder == xt.get_sep():
+    if (not folder or folder == xt.get_sep() or
+       (xp.ON_WINDOWS and os.path.splitdrive(path)[0])):
         return sofar[::-1]
     return _splitpath_helper(folder, sofar)
 
