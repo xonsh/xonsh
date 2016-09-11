@@ -29,7 +29,7 @@ class CommandsCache(cabc.Mapping):
         for cmd, (path, is_alias) in self.all_commands.items():
             if ON_WINDOWS and not is_alias:
                 # All comand keys are stored in uppercase on Windows.
-                # This ensures the original command name is returned.   
+                # This ensures the original command name is returned.
                 cmd = os.path.basename(path)
             yield cmd
 
@@ -100,12 +100,12 @@ class CommandsCache(cabc.Mapping):
         update the cache. It just says whether the value is known *now*. This
         may not reflect precisely what is on the $PATH.
         """
-        keys = self.get_possible_names(key)
-        cached = next((k for k in keys if k in self._cmds_cache), None)
-        if cached is not None:
-            return True
+        if ON_WINDOWS:
+            keys = self.get_possible_names(key)
+            cached_key = next((k for k in keys if k in self._cmds_cache), None)
+            return cached_key is not None
         else:
-            return False        
+            return key in self._cmds_cache
 
     def lazyiter(self):
         """Returns an iterator over the current cache contents without the
