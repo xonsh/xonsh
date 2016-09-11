@@ -25,4 +25,7 @@ def test_pwd_tracks_cwd(xonsh_builtins, xonsh_execer, tmpdir_factory, monkeypatc
 
     assert os.path.abspath(os.getcwd()) == os.path.abspath(asubdir)
     assert os.path.abspath(os.getcwd()) == os.path.abspath(xonsh_builtins.__xonsh_env__['PWD'])
+    assert 'OLDPWD' in xonsh_builtins.__xonsh_env__
+    assert os.path.abspath(cur_wd) == os.path.abspath(xonsh_builtins.__xonsh_env__['OLDPWD'])
+
 
