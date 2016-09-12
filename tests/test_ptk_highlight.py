@@ -9,6 +9,7 @@ from pygments.token import (Keyword, Name, String, Error, Number,
                             Operator, Punctuation, Text)
 from tools import skip_if_on_windows
 
+from xonsh.platform import ON_WINDOWS
 from xonsh.built_ins import load_builtins, unload_builtins
 from xonsh.pyghooks import XonshLexer
 
@@ -16,8 +17,9 @@ from xonsh.pyghooks import XonshLexer
 @pytest.yield_fixture(autouse=True)
 def load_command_cache():
     load_builtins()
-    if 'cd' not in builtins.aliases:
-        builtins.aliases['cd'] = lambda *args, **kwargs: None
+    if ON_WINDOWS:
+        for key in ('cd', 'bash'):
+            builtins.aliases[key] = lambda *args, **kwargs: None
     yield
     unload_builtins()
 
