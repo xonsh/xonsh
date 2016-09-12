@@ -232,10 +232,10 @@ def foreign_shell_data(shell, interactive=True, login=False, envcmd=None,
     Returns
     -------
     env : dict
-        Dictionary of shell's environment
+        Dictionary of shell's environment. (None if the subproc command fails)
     aliases : dict
         Dictionary of shell's alaiases, this includes foreign function
-        wrappers.
+        wrappers.(None if the subproc command fails)
     """
     cmd = [shell]
     cmd.extend(extra_args)  # needs to come here for GNU long options
@@ -580,11 +580,13 @@ def load_foreign_aliases(shells=None, config=None, issue_warning=True):
     for shell in shells:
         shell = ensure_shell(shell)
         _, shaliases = foreign_shell_data(**shell)
+        shaliases = {} if shaliases is None else shaliases
         for alias in set(shaliases) & set(xonsh_aliases):
-            del shaliases[alias]
-            print('aliases: alias {!r} of shell {!r} '
-                  'tries to override xonsh alias, '
-                  'xonsh wins!'.format(alias, shell['shell']),
-                  file=sys.stderr)
+            if alias in shaliases:
+                del shaliases[alias]
+                print('aliases: alias {!r} of shell {!r} '
+                    'tries to override xonsh alias, '
+                    'xonsh wins!'.format(alias, shell['shell']),
+                    file=sys.stderr)
         aliases.update(shaliases)
     return aliases
