@@ -2,6 +2,8 @@
 """Test XonshLexer for pygments"""
 
 import os
+import builtins
+
 import pytest
 from pygments.token import (Keyword, Name, String, Error, Number,
                             Operator, Punctuation, Text)
@@ -14,6 +16,8 @@ from xonsh.pyghooks import XonshLexer
 @pytest.yield_fixture(autouse=True)
 def load_command_cache():
     load_builtins()
+    if 'cd' not in builtins.aliases:
+        builtins.aliases['cd'] = lambda *args, **kwargs: None
     yield
     unload_builtins()
 
