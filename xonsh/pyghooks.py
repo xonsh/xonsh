@@ -101,7 +101,7 @@ class XonshLexer(PythonLexer):
             (r'({[0-9]+}|{[0-9]+,[0-9]+})\??', String.Regex),
             (r'\\([0-9]+|[AbBdDsSwWZabfnrtuUvx\\])', String.Escape),
             (r'`', String.Backtick, '#pop'),
-            (r'[^`]+', String.Backtick),
+            (r'[^`\.\^\$\*\+\?\[\]\|]+', String.Backtick),
         ],
         'root': [
             (r'\?', Keyword),
