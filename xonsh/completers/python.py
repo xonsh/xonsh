@@ -4,7 +4,7 @@ import sys
 import inspect
 import builtins
 import importlib
-import collections.abc as abc
+import collections.abc as cabc
 
 import xonsh.tools as xt
 import xonsh.lazyasd as xl
@@ -35,6 +35,21 @@ def complete_python(prefix, line, start, end, ctx):
     """
     Completes based on the contents of the current Python environment,
     the Python built-ins, and xonsh operators.
+    If there are no matches, split on common delimiters and try again.
+    """
+    rtn = _complete_python(prefix, line, start, end, ctx)
+    if not rtn:
+        prefix = re.split(r'\(|=|{|\[|,', prefix)[-1]
+        start = line.find(prefix)
+        rtn = _complete_python(prefix, line, start, end, ctx)
+        return rtn, len(prefix)
+    return rtn
+
+
+def _complete_python(prefix, line, start, end, ctx):
+    """
+    Completes based on the contents of the current Python environment,
+    the Python built-ins, and xonsh operators.
     """
     if line != '':
         first = line.split()[0]
@@ -58,6 +73,8 @@ def complete_python_mode(prefix, line, start, end, ctx):
         return set()
     prefix_start = prefix[:2]
     python_matches = complete_python(prefix[2:], line, start+2, end, ctx)
+    if isinstance(python_matches, cabc.Sequence):
+        python_matches = python_matches[0]
     return set(prefix_start + i for i in python_matches)
 
 
@@ -95,10 +112,13 @@ def attr_complete(prefix, ctx, filter_func):
         except:  # pylint:disable=bare-except
             continue
         a = getattr(val, opt)
-        if callable(a):
-            rpl = opt + '('
-        elif isinstance(a, abc.Iterable):
-            rpl = opt + '['
+        if builtins.__xonsh_env__['COMPLETIONS_BRACKETS']:
+            if callable(a):
+                rpl = opt + '('
+            elif isinstance(a, (cabc.Sequence, cabc.Mapping)):
+                rpl = opt + '['
+            else:
+                rpl = opt
         else:
             rpl = opt
         # note that prefix[:prelen-len(attr)] != prefix[:-len(attr)]

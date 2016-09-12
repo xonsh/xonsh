@@ -145,7 +145,9 @@ def handle_error_token(state, token):
     Function for handling error tokens
     """
     state['last'] = token
-    if not state['pymode'][-1][0]:
+    if token.string == '!':
+        typ = 'BANG'
+    elif not state['pymode'][-1][0]:
         typ = 'NAME'
     else:
         typ = 'ERRORTOKEN'
@@ -340,6 +342,7 @@ class Lexer(object):
         if self._tokens is None:
             t = tuple(token_map.values()) + (
                 'NAME',                  # name tokens
+                'BANG',                  # ! tokens
                 'WS',                    # whitespace in subprocess mode
                 'LPAREN', 'RPAREN',      # ( )
                 'LBRACKET', 'RBRACKET',  # [ ]
@@ -351,6 +354,7 @@ class Lexer(object):
                 'DOLLAR_LBRACE',         # ${
                 'DOLLAR_LBRACKET',       # $[
                 'ATDOLLAR_LPAREN',       # @$(
+                'ERRORTOKEN',            # whoops!
                 ) + tuple(i.upper() for i in kwmod.kwlist)
             self._tokens = t
         return self._tokens

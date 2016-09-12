@@ -107,6 +107,15 @@ class EndOfLine(Filter):
         return bool(at_end and not last_line)
 
 
+class ShouldConfirmCompletion(Filter):
+    """
+    Check if completion needs confirmation
+    """
+    def __call__(self, cli):
+        return (builtins.__xonsh_env__.get('COMPLETIONS_CONFIRM')
+                and cli.current_buffer.complete_state)
+
+
 # Copied from prompt-toolkit's key_binding/bindings/basic.py
 @Condition
 def ctrl_d_condition(cli):
@@ -224,6 +233,16 @@ def load_xonsh_bindings(key_bindings_manager):
         """ Wrapper around carriage_return multiline parser """
         b = event.cli.current_buffer
         carriage_return(b, event.cli)
+
+    @handle(Keys.ControlJ, filter=ShouldConfirmCompletion())
+    def enter_confirm_completion(event):
+        """Ignore <enter> (confirm completion)"""
+        event.current_buffer.complete_state = None
+
+    @handle(Keys.Escape, filter=ShouldConfirmCompletion())
+    def esc_cancel_completion(event):
+        """Use <ESC> to cancel completion"""
+        event.cli.current_buffer.cancel_completion()
 
     @handle(Keys.Left, filter=BeginningOfLine())
     def wrap_cursor_back(event):

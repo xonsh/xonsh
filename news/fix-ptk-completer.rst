@@ -8,6 +8,6 @@
 
 **Fixed:**
 
-* The interactive prompt now correctly handles multiline strings.
+* Better completer display for long completions in prompt-toolkit
 
 **Security:** None

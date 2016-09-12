@@ -14,6 +14,7 @@ from xonsh.codecache import (should_use_cache, code_cache_name,
                              update_cache, run_compiled_code)
 from xonsh.completer import Completer
 from xonsh.environ import multiline_prompt, partial_format_prompt
+from xonsh.events import events
 
 
 class _TeeOut(object):
@@ -180,6 +181,13 @@ class BaseShell(object):
             ts1 = ts1 or time.time()
             self._append_history(inp=src, ts=[ts0, ts1], tee_out=tee.getvalue())
             tee.close()
+            cwd = os.getcwd()
+            if cwd != builtins.__xonsh_env__['PWD']:
+                old = builtins.__xonsh_env__['PWD']             # working directory changed without updating $PWD
+                builtins.__xonsh_env__['PWD'] = cwd             # track it now
+                if old is not None:
+                    builtins.__xonsh_env__['OLDPWD'] = old      # and update $OLDPWD like dirstack.
+                events.on_chdir.fire(old, cwd)                  # fire event after cwd actually changed.
         if builtins.__xonsh_exit__:  # pylint: disable=no-member
             return True
 

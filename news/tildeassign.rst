@@ -8,6 +8,7 @@
 
 **Fixed:**
 
-* Fixed a bug that prevented xonsh from running scripts with code caching disabled.
+* Fixed issue where tilde expansion was occuring more than once before an
+  equals sign.
 
 **Security:** None

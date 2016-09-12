@@ -8,6 +8,7 @@
 
 **Fixed:**
 
-* fix parsing for tuple of tuples (like `(),()`)
+* Parser would fail on nested, captured suprocess macros. Now, it works,
+  hooray!?
 
 **Security:** None

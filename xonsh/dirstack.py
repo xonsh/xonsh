@@ -4,12 +4,122 @@ import os
 import glob
 import argparse
 import builtins
+import subprocess
 
 from xonsh.lazyasd import lazyobject
 from xonsh.tools import get_sep
+from xonsh.events import events
+from xonsh.platform import ON_WINDOWS
 
 DIRSTACK = []
 """A list containing the currently remembered directories."""
+_unc_tempDrives = {}
+""" drive: sharePath for temp drive letters we create for UNC mapping"""
+
+
+def _unc_check_enabled()->bool:
+    """Check whether CMD.EXE is enforcing no-UNC-as-working-directory check.
+
+    Check can be disabled by setting {HKCU, HKLM}/SOFTWARE\Microsoft\Command Processor\DisableUNCCheck:REG_DWORD=1
+
+    Returns:
+        True if `CMD.EXE` is enforcing the check (default Windows situation)
+        False if check is explicitly disabled.
+    """
+    if not ON_WINDOWS:
+        return
+
+    import winreg
+
+    wval = None
+
+    try:
+        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'software\microsoft\command processor')
+        wval, wtype = winreg.QueryValueEx(key, 'DisableUNCCheck')
+        winreg.CloseKey(key)
+    except OSError as e:
+        pass
+
+    if wval is None:
+        try:
+            key2 = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'software\microsoft\command processor')
+            wval, wtype = winreg.QueryValueEx(key2, 'DisableUNCCheck')
+            winreg.CloseKey(key2)
+        except OSError as e:
+            pass
+
+    return False if wval else True
+
+
+def _is_unc_path(some_path)->bool:
+    """True if path starts with 2 backward (or forward, due to python path hacking) slashes."""
+    return len(some_path) > 1 and some_path[0] == some_path[1] and some_path[0] in (os.sep, os.altsep)
+
+
+def _unc_map_temp_drive(unc_path)->str:
+
+    """Map a new temporary drive letter for each distinct share,
+    unless `CMD.EXE` is not insisting on non-UNC working directory.
+
+    Emulating behavior of `CMD.EXE` `pushd`, create a new mapped drive (starting from Z: towards A:, skipping existing
+     drive letters) for each new UNC path user selects.
+
+    Args:
+        unc_path: the path specified by user.  Assumed to be a UNC path of form \\<server>\share...
+
+    Returns:
+        a replacement for `unc_path` to be used as the actual new working directory.
+        Note that the drive letter may be a the same as one already mapped if the server and share portion of `unc_path`
+         is the same as one still active on the stack.
+    """
+    global _unc_tempDrives
+    assert unc_path[1] in (os.sep, os.altsep), "unc_path is UNC form of path"
+
+    if not _unc_check_enabled():
+        return unc_path
+    else:
+        unc_share, rem_path = os.path.splitdrive(unc_path)
+        unc_share = unc_share.casefold()
+        for d in _unc_tempDrives:
+            if _unc_tempDrives[d] == unc_share:
+                return os.path.join(d, rem_path)
+
+        for dord in range(ord('z'), ord('a'), -1):
+            d = chr(dord) + ':'
+            if not os.path.isdir(d):  # find unused drive letter starting from z:
+                subprocess.check_output(['NET', 'USE', d, unc_share], universal_newlines=True)
+                _unc_tempDrives[d] = unc_share
+                return os.path.join(d, rem_path)
+
+
+def _unc_unmap_temp_drive(left_drive, cwd):
+    """Unmap a temporary drive letter if it is no longer needed.
+    Called after popping `DIRSTACK` and changing to new working directory, so we need stack *and*
+    new current working directory to be sure drive letter no longer needed.
+
+    Args:
+        left_drive: driveletter (and colon) of working directory we just left
+        cwd: full path of new current working directory
+"""
+
+    global _unc_tempDrives
+
+    if left_drive not in _unc_tempDrives:   # if not one we've mapped, don't unmap it
+        return
+
+    for p in DIRSTACK + [cwd]:              # if still in use , don't aunmap it.
+        if p.casefold().startswith(left_drive):
+            return
+
+    _unc_tempDrives.pop(left_drive)
+    subprocess.check_output(['NET', 'USE', left_drive, '/delete'], universal_newlines=True)
+
+
+events.doc('on_chdir', """
+on_chdir(olddir: str, newdir: str) -> None
+
+Fires when the current directory is changed for any reason.
+""")
 
 
 def _get_cwd():
@@ -23,18 +133,23 @@ def _change_working_directory(newdir):
     env = builtins.__xonsh_env__
     old = env['PWD']
     new = os.path.join(old, newdir)
+    absnew = os.path.abspath(new)
     try:
-        os.chdir(os.path.abspath(new))
+        os.chdir(absnew)
     except (OSError, FileNotFoundError):
         if new.endswith(get_sep()):
             new = new[:-1]
         if os.path.basename(new) == '..':
             env['PWD'] = new
-        return
-    if old is not None:
-        env['OLDPWD'] = old
-    if new is not None:
-        env['PWD'] = os.path.abspath(new)
+    else:
+        if old is not None:
+            env['OLDPWD'] = old
+        if new is not None:
+            env['PWD'] = absnew
+
+    # Fire event if the path actually changed
+    if old != env['PWD']:
+        events.on_chdir.fire(old, env['PWD'])
 
 
 def _try_cdpath(apath):
@@ -99,9 +214,15 @@ def cd(args, stdin=None):
         return '', 'cd: {0} is not a directory\n'.format(d), 1
     if not os.access(d, os.X_OK):
         return '', 'cd: permission denied: {0}\n'.format(d), 1
+    if ON_WINDOWS and _is_unc_path(d) and _unc_check_enabled() and (not env.get('AUTO_PUSHD')):
+        return '', "cd: can't cd to UNC path on Windows, unless $AUTO_PUSHD set or reg entry " \
+               + r'HKCU\SOFTWARE\MICROSOFT\Command Processor\DisableUNCCheck:DWORD = 1' + '\n', 1
+
     # now, push the directory onto the dirstack if AUTO_PUSHD is set
     if cwd is not None and env.get('AUTO_PUSHD'):
         pushd(['-n', '-q', cwd])
+        if ON_WINDOWS and _is_unc_path(d):
+            d = _unc_map_temp_drive(d)
     _change_working_directory(d)
     return None, None, 0
 
@@ -128,6 +249,10 @@ def pushd(args, stdin=None):
 
     Adds a directory to the top of the directory stack, or rotates the stack,
     making the new top of the stack the current working directory.
+
+    On Windows, if the path is a UNC path (begins with `\\<server>\<share>`) and if the `DisableUNCCheck` registry
+    value is not enabled, creates a temporary mapped drive letter and sets the working directory there, emulating
+    behavior of `PUSHD` in `CMD.EXE`
     """
     global DIRSTACK
 
@@ -183,6 +308,8 @@ def pushd(args, stdin=None):
             e = 'Invalid argument to pushd: {0}\n'
             return None, e.format(args.dir), 1
     if new_pwd is not None:
+        if ON_WINDOWS and _is_unc_path(new_pwd):
+            new_pwd = _unc_map_temp_drive(new_pwd)
         if args.cd:
             DIRSTACK.insert(0, os.path.expanduser(pwd))
             _change_working_directory(new_pwd)
@@ -277,7 +404,14 @@ def popd(args, stdin=None):
     if new_pwd is not None:
         e = None
         if args.cd:
+            env = builtins.__xonsh_env__
+            pwd = env['PWD']
+
             _change_working_directory(new_pwd)
+
+            if ON_WINDOWS:
+                drive, rem_path = os.path.splitdrive(pwd)
+                _unc_unmap_temp_drive(drive.casefold(), new_pwd)
 
     if not args.quiet and not env.get('PUSHD_SILENT'):
         return dirs([], None)

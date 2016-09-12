@@ -40,8 +40,20 @@ class PromptToolkitCompleter(Completer):
                     pass
                 elif len(os.path.commonprefix(completions)) <= len(prefix):
                     self.reserve_space()
+
+                # Find common prefix (strip quoting)
+                c_prefix = os.path.commonprefix([a.strip('\'"')
+                                                for a in completions])
+                # Find last split symbol, do not trim the last part
+                while c_prefix:
+                    if c_prefix[-1] in r'/\.:@,':
+                        break
+                    c_prefix = c_prefix[:-1]
+
                 for comp in completions:
-                    yield Completion(comp, -l)
+                    # do not display quote
+                    disp = comp.strip('\'"')[len(c_prefix):]
+                    yield Completion(comp, -l, display=disp)
 
     def reserve_space(self):
         cli = builtins.__xonsh_shell__.shell.prompter.cli

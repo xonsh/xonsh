@@ -3,19 +3,17 @@ matrix:
     include:
         - os: linux
           python: "nightly"
-          env: RUN_COVERAGE=true
-        - os: linux
-          language: generic
-          env: PYTHON="3.4" MINICONDA_OS="Linux"
-        - os: linux
-          language: generic
-          env: PYTHON="3.5" MINICONDA_OS="Linux"
+          env:
+            - RUN_COVERAGE=true
+            - BUILD_DOCS=true
         - os: osx
           language: generic
           env: PYTHON="3.4" MINICONDA_OS="MacOSX"
         - os: osx
           language: generic
           env: PYTHON="3.5" MINICONDA_OS="MacOSX"
+    allow_failures:
+        - python: "nightly"
 
 before_install:
   - if [[ ! "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then
@@ -37,6 +35,11 @@ install:
     else
       pip install -r requirements-tests.txt;
     fi
+  - if [[ $BUILD_DOCS = true ]]; then
+      python setup.py install;
+      pip install -r requirements-docs.txt;
+    fi
+
 
 script:
   - if [[ $RUN_COVERAGE = true ]]; then
@@ -44,6 +47,11 @@ script:
     else
       py.test --timeout=10;
     fi
+  - if [[ $BUILD_DOCS = true ]]; then
+        cd docs;
+        make html;
+    fi
+
 
 after_success:
   - if [[ $RUN_COVERAGE = true ]]; then

@@ -1,6 +1,6 @@
 **Added:**
 
-* NetBSD is now supported.
+* Highlight valid command / executable as Keyword
 
 **Changed:** None
 

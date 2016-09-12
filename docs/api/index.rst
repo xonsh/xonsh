@@ -32,6 +32,7 @@ For those of you who want the gritty details.
     history
     completer
     completers/index
+    prompt/index
     shell
     base_shell
     readline_shell
@@ -49,6 +50,7 @@ For those of you who want the gritty details.
 .. toctree::
     :maxdepth: 1
 
+    events
     tools
     platform
     lazyjson

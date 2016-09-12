@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 import os
 import builtins
-import collections.abc as abc
+import collections.abc as cabc
 
-from xonsh.dirstack import _get_cwd
 from xonsh.platform import ON_WINDOWS
 from xonsh.tools import executables_in
 
 
-class CommandsCache(abc.Mapping):
+class CommandsCache(cabc.Mapping):
     """A lazy cache representing the commands available on the file system.
     The keys are the command names and the values a tuple of (loc, has_alias)
     where loc is either a str pointing to the executable on the file system or
@@ -23,16 +22,23 @@ class CommandsCache(abc.Mapping):
         self._path_mtime = -1
 
     def __contains__(self, key):
-        return key in self.all_commands
+        _ = self.all_commands
+        return self.lazyin(key)
 
     def __iter__(self):
-        return iter(self.all_commands)
+        for cmd, (path, is_alias) in self.all_commands.items():
+            if ON_WINDOWS and not is_alias:
+                # All comand keys are stored in uppercase on Windows.
+                # This ensures the original command name is returned.
+                cmd = os.path.basename(path)
+            yield cmd
 
     def __len__(self):
         return len(self.all_commands)
 
     def __getitem__(self, key):
-        return self.all_commands[key]
+        _ = self.all_commands
+        return self.lazyget(key)
 
     def is_empty(self):
         """Returns whether the cache is populated or not."""
@@ -94,7 +100,12 @@ class CommandsCache(abc.Mapping):
         update the cache. It just says whether the value is known *now*. This
         may not reflect precisely what is on the $PATH.
         """
-        return key in self._cmds_cache
+        if ON_WINDOWS:
+            keys = self.get_possible_names(key)
+            cached_key = next((k for k in keys if k in self._cmds_cache), None)
+            return cached_key is not None
+        else:
+            return key in self._cmds_cache
 
     def lazyiter(self):
         """Returns an iterator over the current cache contents without the
@@ -112,6 +123,10 @@ class CommandsCache(abc.Mapping):
 
     def lazyget(self, key, default=None):
         """A lazy value getter."""
+        if ON_WINDOWS:
+            keys = self.get_possible_names(key)
+            cached_key = next((k for k in keys if k in self._cmds_cache), None)
+            key = cached_key if cached_key is not None else key
         return self._cmds_cache.get(key, default)
 
     def locate_binary(self, name):
@@ -123,19 +138,15 @@ class CommandsCache(abc.Mapping):
     def lazy_locate_binary(self, name):
         """Locates an executable in the cache, without checking its validity."""
         possibilities = self.get_possible_names(name)
-
         if ON_WINDOWS:
             # Windows users expect to be able to execute files in the same
             # directory without `./`
-            cwd = _get_cwd()
-            local_bin = next((
-                full_name for full_name in possibilities
-                if os.path.isfile(full_name)
-            ), None)
+            local_bin = next((fn for fn in possibilities if os.path.isfile(fn)),
+                             None)
             if local_bin:
-                return os.path.abspath(os.path.relpath(local_bin, cwd))
-
-        cached = next((cmd for cmd in possibilities if cmd in self._cmds_cache), None)
+                return os.path.abspath(local_bin)
+        cached = next((cmd for cmd in possibilities if cmd in self._cmds_cache),
+                      None)
         if cached:
             return self._cmds_cache[cached][0]
         elif os.path.isfile(name) and name != os.path.basename(name):

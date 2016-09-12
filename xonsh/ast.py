@@ -108,6 +108,30 @@ def gather_names(node):
     return rtn
 
 
+def get_id_ctx(node):
+    """Gets the id and attribute of a node, or returns a default."""
+    nid = getattr(node, 'id', None)
+    if nid is None:
+        return (None, None)
+    return (nid, node.ctx)
+
+
+def gather_load_store_names(node):
+    """Returns the names present in the node's tree in a set of load nodes and
+    a set of store nodes.
+    """
+    load = set()
+    store = set()
+    for nid, ctx in map(get_id_ctx, walk(node)):
+        if nid is None:
+            continue
+        elif isinstance(ctx, Load):
+            load.add(nid)
+        else:
+            store.add(nid)
+    return (load, store)
+
+
 def has_elts(x):
     """Tests if x is an AST node with elements."""
     return isinstance(x, AST) and hasattr(x, 'elts')
@@ -226,7 +250,8 @@ class CtxAwareTransformer(NodeTransformer):
 
     def is_in_scope(self, node):
         """Determines whether or not the current node is in scope."""
-        names = gather_names(node)
+        names, store = gather_load_store_names(node)
+        names -= store
         if not names:
             return True
         inscope = False
@@ -421,10 +446,7 @@ class CtxAwareTransformer(NodeTransformer):
     def visit_For(self, node):
         """Handle visiting a for statement."""
         targ = node.target
-        if isinstance(targ, (Tuple, List)):
-            self.ctxupdate(leftmostname(elt) for elt in targ.elts)
-        else:
-            self.ctxadd(leftmostname(targ))
+        self.ctxupdate(gather_names(targ))
         self.generic_visit(node)
         return node
 
