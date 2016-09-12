@@ -105,6 +105,7 @@ def DEFAULT_ENSURERS():
     'DYNAMIC_CWD_WIDTH': (is_dynamic_cwd_width, to_dynamic_cwd_tuple,
                           dynamic_cwd_tuple_to_str),
     'FORCE_POSIX_PATHS': (is_bool, to_bool, bool_to_str),
+    'FOREIGN_ALIASES_OVERRIDE': (is_bool, to_bool, bool_to_str),
     'FUZZY_PATH_COMPLETION': (is_bool, to_bool, bool_to_str),
     'GLOB_SORTED': (is_bool, to_bool, bool_to_str),
     'HISTCONTROL': (is_string_set, csv_to_set, set_to_csv),
@@ -250,6 +251,7 @@ def DEFAULT_VALUES():
         'DYNAMIC_CWD_WIDTH': (float('inf'), 'c'),
         'EXPAND_ENV_VARS': True,
         'FORCE_POSIX_PATHS': False,
+        'FOREIGN_ALIASES_OVERRIDE': False,
         'FORMATTER_DICT': dict(prompt.FORMATTER_DICT),
         'FUZZY_PATH_COMPLETION': True,
         'GLOB_SORTED': True,
@@ -417,6 +419,13 @@ def DEFAULT_DOCS():
     'FORCE_POSIX_PATHS': VarDocs(
         "Forces forward slashes ('/') on Windows systems when using auto "
         'completion if set to anything truthy.', configurable=ON_WINDOWS),
+    'FOREIGN_ALIASES_OVERRIDE': VarDocs(
+        'Whether or not foreign aliases should override xonsh aliases '
+        'with the same name. Note that setting of this must happen in the '
+        'static configuration file '
+        "``$XONSH_CONFIG_DIR/config.json`` in the 'env' section and not in "
+        '``.xonshrc`` as loading of foreign aliases happens before'
+        '``.xonshrc`` is parsed', configurable=True),
     'FORMATTER_DICT': VarDocs(
         'Dictionary containing variables to be used when formatting $PROMPT '
         "and $TITLE. See 'Customizing the Prompt' "
