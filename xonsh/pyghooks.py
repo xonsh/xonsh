@@ -53,7 +53,7 @@ def subproc_arg_callback(_, match):
            text)
 
 
-COMMAND_TOKEN_RE = r'[^=\s\[\]{}()$"\'`\\<&|;]+(?=\s|$|\)|\]|\})'
+COMMAND_TOKEN_RE = r'[^=\s\[\]{}()$"\'`\\<&|;!]+(?=\s|$|\)|\]|\}|!)'
 
 
 class XonshLexer(PythonLexer):
@@ -105,6 +105,7 @@ class XonshLexer(PythonLexer):
         ],
         'root': [
             (r'\?', Keyword),
+            (r'(?<=\w)!', Keyword),
             (r'\$\w+', Name.Variable),
             (r'\(', Punctuation, 'py_bracket'),
             (r'\{', Punctuation, 'py_curly_bracket'),
@@ -121,6 +122,8 @@ class XonshLexer(PythonLexer):
             (r'&&|\|\|', Operator, 'subproc_start'),
             (r'"(\\\\|\\[0-7]+|\\.|[^"\\])*"', String.Double),
             (r"'(\\\\|\\[0-7]+|\\.|[^'\\])*'", String.Single),
+            (r'(?<=\w|\s)!', Keyword, 'subproc_macro'),
+            (r'^!', Keyword, 'subproc_macro'),
             (r';', Punctuation, 'subproc_start'),
             (r'&', Punctuation),
             (r'\|', Punctuation, 'subproc_start'),
@@ -129,6 +132,10 @@ class XonshLexer(PythonLexer):
             (r'[^=\s\[\]{}()$"\'`<&|;]+', subproc_arg_callback),
             (r'<', Text),
             (r'\$\w+', Name.Variable),
+        ],
+        'subproc_macro': [
+            (r'(\s*)([^\n]+)', bygroups(Whitespace, String)),
+            (r'', Whitespace, '#pop'),
         ],
     }
 

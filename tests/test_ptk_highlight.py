@@ -114,3 +114,19 @@ def test_backtick():
                                    (String.Regex, '*'),
                                    (String.Escape, r'\w'),
                                    ])
+
+
+def test_macro():
+    check_token(r'g!(42, *, 65)', [(Name, 'g'),
+                                   (Keyword, '!'),
+                                   (Punctuation, '('),
+                                   (Number.Integer, '42')])
+    check_token(r'echo! hello world', [(Name.Builtin, 'echo'),
+                                       (Keyword, '!'),
+                                       (String, "hello world")])
+    check_token(r'bash -c ! export var=42; echo $var',
+                [(Name.Builtin, 'bash'),
+                 (Text, '-c'),
+                 (Keyword, '!'),
+                 (String, 'export var=42; echo $var'),
+                 ])
