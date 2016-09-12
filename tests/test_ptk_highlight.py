@@ -60,13 +60,13 @@ def test_invalid_cmd():
 
 
 def test_multi_cmd():
-    check_token('cd && cd', [(Name.Builtin, 'cd'),
-                             (Operator, '&&'),
-                             (Name.Builtin, 'cd')])
-    check_token('cd || non-existance-cmd', [(Name.Builtin, 'cd'),
-                                            (Operator, '||'),
-                                            (Error, 'non-existance-cmd')
-                                            ])
+    check_token('type && type', [(Name.Builtin, 'type'),
+                                 (Operator, '&&'),
+                                 (Name.Builtin, 'type')])
+    check_token('type || non-existance-cmd', [(Name.Builtin, 'type'),
+                                              (Operator, '||'),
+                                              (Error, 'non-existance-cmd')
+                                              ])
 
 
 def test_nested():
@@ -75,13 +75,13 @@ def test_nested():
                                     (Punctuation, '('),
                                     (String.Double, 'hello'),
                                     (Punctuation, ')')])
-    check_token('print($(cd))', [(Keyword, 'print'),
-                                 (Punctuation, '('),
-                                 (Keyword, '$'),
-                                 (Punctuation, '('),
-                                 (Name.Builtin, 'cd'),
-                                 (Punctuation, ')'),
-                                 (Punctuation, ')')])
+    check_token('print($(type))', [(Keyword, 'print'),
+                                   (Punctuation, '('),
+                                   (Keyword, '$'),
+                                   (Punctuation, '('),
+                                   (Name.Builtin, 'type'),
+                                   (Punctuation, ')'),
+                                   (Punctuation, ')')])
     check_token('print(![echo "])"])', [(Keyword, 'print'),
                                         (Keyword, '!'),
                                         (Punctuation, '['),
@@ -95,12 +95,12 @@ def test_path():
     test_dir = os.path.join(HERE, 'xonsh-test-highlight-path')
     if not os.path.exists(test_dir):
         os.mkdir(test_dir)
-    check_token('cd {}'.format(test_dir), [(Name.Builtin, 'cd'),
-                                           (Name.Constant, test_dir)])
-    check_token('cd {}-xxx'.format(test_dir), [(Name.Builtin, 'cd'),
-                                               (Text,
-                                                '{}-xxx'.format(test_dir))
-                                               ])
+    check_token('type {}'.format(test_dir), [(Name.Builtin, 'type'),
+                                             (Name.Constant, test_dir)])
+    check_token('type {}-xxx'.format(test_dir), [(Name.Builtin, 'type'),
+                                                 (Text,
+                                                  '{}-xxx'.format(test_dir))
+                                                 ])
 
 
 def test_backtick():
