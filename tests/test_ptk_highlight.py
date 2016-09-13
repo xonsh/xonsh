@@ -96,11 +96,8 @@ def test_nested():
                                            (Punctuation, ']')])
 
 
-def test_path():
-    HERE = os.path.abspath(os.path.dirname(__file__))
-    test_dir = os.path.join(HERE, 'xonsh-test-highlight-path')
-    if not os.path.exists(test_dir):
-        os.mkdir(test_dir)
+def test_path(tmpdir):
+    test_dir = str(tmpdir.mkdir('xonsh-test-highlight-path'))
     check_token('cd {}'.format(test_dir), [(Name.Builtin, 'cd'),
                                            (Name.Constant, test_dir)])
     check_token('cd {}-xxx'.format(test_dir), [(Name.Builtin, 'cd'),
