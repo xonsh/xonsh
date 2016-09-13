@@ -2326,7 +2326,7 @@ class BaseParser(object):
             targ = ensure_has_elts(targs)
         store_ctx(targ)
         if sys.version_info > (3,6):
-            comp = ast.comprehension(target=targ, iter=it, ifs=[], is_async=False)
+            comp = ast.comprehension(target=targ, iter=it, ifs=[], is_async=0)
         else:
             comp = ast.comprehension(target=targ, iter=it, ifs=[])
         comps = [comp]
