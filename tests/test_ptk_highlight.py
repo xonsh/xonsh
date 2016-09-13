@@ -109,6 +109,9 @@ def test_path():
                                                ])
     check_token('cd X={}'.format(test_dir), [(Name.Constant, test_dir)])
 
+    with builtins.__xonsh_env__.swap(AUTO_CD=True):
+        check_token(test_dir, [(Name.Constant, test_dir)])
+
 
 def test_subproc_args():
     check_token('cd 192.168.0.1', [(Text, '192.168.0.1')])

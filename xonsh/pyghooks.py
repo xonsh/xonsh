@@ -37,6 +37,13 @@ def _command_is_valid(cmd):
         (os.path.isfile(cmd_abspath) and os.access(cmd_abspath, os.X_OK))
 
 
+def _command_is_autocd(cmd):
+    if not builtins.__xonsh_env__['AUTO_CD']:
+        return False
+    cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
+    return os.path.isdir(cmd_abspath)
+
+
 def subproc_cmd_callback(_, match):
     """Yield Builtin token if match contains valid command,
     otherwise fallback to fallback lexer.
@@ -148,9 +155,12 @@ class XonshLexer(PythonLexer):
             yield m.start(1), Whitespace, m.group(1)
             cmd = m.group(2)
             cmd_is_valid = _command_is_valid(cmd)
+            cmd_is_autocd = _command_is_autocd(cmd)
 
-            if cmd_is_valid:
-                yield m.start(2), Name.Builtin, cmd
+            if cmd_is_valid or cmd_is_autocd:
+                yield (m.start(2),
+                       Name.Builtin if cmd_is_valid else Name.Constant,
+                       cmd)
                 start = m.end(2)
                 state = ('subproc', )
 
