@@ -85,12 +85,17 @@ def current_branch(pad=NotImplemented):
     branch = None
     cmds = builtins.__xonsh_commands_cache__
     if cmds.lazy_locate_binary('git') or cmds.is_empty():
-        branch = xonsh.prompt.gitstatus.gitstatus().branch
-    if (cmds.lazy_locate_binary('hg') or cmds.is_empty()) and not branch:
+        try:
+            status = xonsh.prompt.gitstatus.gitstatus()
+        except subprocess.CalledProcessError:
+            branch = None
+        else:
+            branch = status.branch
+    elif (cmds.lazy_locate_binary('hg') or cmds.is_empty()) and not branch:
         branch = get_hg_branch()
     if isinstance(branch, subprocess.TimeoutExpired):
         branch = '<branch-timeout>'
-        _first_branch_timeout_message()
+        # _first_branch_timeout_message()
     return branch or None
 
 
