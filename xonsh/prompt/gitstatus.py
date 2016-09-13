@@ -1,12 +1,20 @@
 # -*- coding: utf-8 -*-
 """Informative git status prompt formatter"""
 
-import os
 import builtins
+import collections
+import os
 import subprocess
 
 import xonsh.lazyasd as xl
 
+
+@xl.lazyobject
+def GitStatus():
+    return collections.namedtuple('GitStatus',
+                                  ['branch', 'num_ahead', 'num_behind',
+                                   'untracked', 'changed', 'conflicts',
+                                   'staged', 'stashed', 'operations'])
 
 def _check_output(*args, **kwargs):
     kwargs.update(dict(env=builtins.__xonsh_env__.detype(),
@@ -69,9 +77,10 @@ def _gitoperation(gitdir):
 
 
 def gitstatus():
-    """Return (branch name, number of ahead commit, number of behind commit,
-               untracked number, changed number, conflicts number,
-               staged number, stashed number, operation)"""
+    """Return namedtuple with fields:
+    branch name, number of ahead commit, number of behind commit,
+    untracked number, changed number, conflicts number,
+    staged number, stashed number, operation."""
     status = _check_output(['git', 'status', '--porcelain', '--branch'])
     branch = ''
     num_ahead, num_behind = 0, 0
@@ -110,7 +119,7 @@ def gitstatus():
     stashed = _get_stash(gitdir)
     operations = _gitoperation(gitdir)
 
-    return (branch, num_ahead, num_behind,
+    return GitStatus(branch, num_ahead, num_behind,
             untracked, changed, conflicts, staged, stashed,
             operations)
 
@@ -118,11 +127,19 @@ def gitstatus():
 def gitstatus_prompt():
     """Return str `BRANCH|OPERATOR|numbers`"""
     try:
-        (branch, num_ahead, num_behind,
-         untracked, changed, conflicts, staged, stashed,
-         operations) = gitstatus()
+        status = gitstatus()
     except subprocess.SubprocessError:
         return None
+
+    branch = status.branch
+    num_ahead = status.num_ahead
+    num_behind = status.num_behind
+    untracked = status.untracked
+    changed = status.changed
+    conflicts = status.conflicts
+    staged = status.staged
+    stashed = status.stashed
+    operations = status.operations
 
     ret = _get_def('BRANCH') + branch
     if num_ahead > 0:

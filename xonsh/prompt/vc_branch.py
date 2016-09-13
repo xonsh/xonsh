@@ -9,50 +9,7 @@ import warnings
 import subprocess
 
 import xonsh.platform as xp
-
-
-def get_git_branch():
-    """Attempts to find the current git branch.  If no branch is found, then
-    an empty string is returned. If a timeout occured, the timeout exception
-    (subprocess.TimeoutExpired) is returned.
-    """
-    branch = None
-    env = builtins.__xonsh_env__
-    cwd = env['PWD']
-    denv = env.detype()
-    vcbt = env['VC_BRANCH_TIMEOUT']
-    if not xp.ON_WINDOWS:
-        prompt_scripts = ['/usr/lib/git-core/git-sh-prompt',
-                          '/usr/local/etc/bash_completion.d/git-prompt.sh']
-        for script in prompt_scripts:
-            # note that this is about 10x faster than bash -i "__git_ps1"
-            inp = 'source {}; __git_ps1 "${{1:-%s}}"'.format(script)
-            try:
-                branch = subprocess.check_output(['bash'], cwd=cwd, input=inp,
-                                                 stderr=subprocess.PIPE, timeout=vcbt, env=denv,
-                                                 universal_newlines=True)
-                break
-            except subprocess.TimeoutExpired as e:
-                branch = e
-                break
-            except (subprocess.CalledProcessError, FileNotFoundError):
-                continue
-    # fall back to using the git binary if the above failed
-    if branch is None:
-        cmd = ['git', 'rev-parse', '--abbrev-ref', 'HEAD']
-        try:
-            s = subprocess.check_output(cmd, cwd=cwd, timeout=vcbt, env=denv,
-                                        stderr=subprocess.PIPE, universal_newlines=True)
-            if xp.ON_WINDOWS and len(s) == 0:
-                # Workaround for a bug in ConEMU/cmder, retry without redirection
-                s = subprocess.check_output(cmd, cwd=cwd, timeout=vcbt,
-                                            env=denv, universal_newlines=True)
-            branch = s.strip()
-        except subprocess.TimeoutExpired as e:
-            branch = e
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            branch = None
-    return branch
+import xonsh.prompt
 
 
 def _get_parent_dir_for(path, dir_name, timeout):
@@ -128,7 +85,7 @@ def current_branch(pad=NotImplemented):
     branch = None
     cmds = builtins.__xonsh_commands_cache__
     if cmds.lazy_locate_binary('git') or cmds.is_empty():
-        branch = get_git_branch()
+        branch = xonsh.prompt.gitstatus.gitstatus().branch
     if (cmds.lazy_locate_binary('hg') or cmds.is_empty()) and not branch:
         branch = get_hg_branch()
     if isinstance(branch, subprocess.TimeoutExpired):

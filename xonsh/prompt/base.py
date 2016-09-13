@@ -20,7 +20,9 @@ from xonsh.prompt.vc_branch import (
 from xonsh.prompt.gitstatus import gitstatus_prompt
 
 
-FORMATTER_DICT = xl.LazyObject(lambda: dict(
+@xl.lazyobject
+def FORMATTER_DICT():
+    return dict(
     user=os.environ.get('USERNAME' if xp.ON_WINDOWS else 'USER', '<user>'),
     prompt_end='#' if xt.is_superuser() else '$',
     hostname=socket.gethostname().split('.', 1)[0],
@@ -35,4 +37,4 @@ FORMATTER_DICT = xl.LazyObject(lambda: dict(
     env_name=env_name,
     vte_new_tab_cwd=vte_new_tab_cwd,
     gitstatus=gitstatus_prompt,
-), globals(), 'FORMATTER_DICT')
+    )
