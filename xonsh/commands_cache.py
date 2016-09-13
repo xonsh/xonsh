@@ -91,7 +91,8 @@ class CommandsCache(cabc.Mapping):
         only_alias = (None, True)
         for cmd in alss:
             if cmd not in allcmds:
-                allcmds[cmd] = only_alias
+                key = cmd.upper() if ON_WINDOWS else cmd
+                allcmds[key] = only_alias
         self._cmds_cache = allcmds
         return allcmds
 
