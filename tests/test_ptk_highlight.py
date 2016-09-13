@@ -88,12 +88,12 @@ def test_nested():
                                  (Name.Builtin, 'cd'),
                                  (Punctuation, ')'),
                                  (Punctuation, ')')])
-    check_token('print(![echo "])"])', [(Keyword, 'print'),
-                                        (Keyword, '!'),
-                                        (Punctuation, '['),
-                                        (Name.Builtin, 'echo'),
-                                        (String.Double, '"])"'),
-                                        (Punctuation, ']')])
+    check_token(r'print(![echo "])\""])', [(Keyword, 'print'),
+                                           (Keyword, '!'),
+                                           (Punctuation, '['),
+                                           (Name.Builtin, 'echo'),
+                                           (String.Double, r'"])\""'),
+                                           (Punctuation, ']')])
 
 
 def test_path():
@@ -108,6 +108,10 @@ def test_path():
                                                 '{}-xxx'.format(test_dir))
                                                ])
     check_token('cd X={}'.format(test_dir), [(Name.Constant, test_dir)])
+
+
+def test_subproc_args():
+    check_token('cd 192.168.0.1', [(Text, '192.168.0.1')])
 
 
 def test_backtick():

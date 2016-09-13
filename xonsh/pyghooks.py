@@ -128,7 +128,6 @@ class XonshLexer(PythonLexer):
             (r'&|=', Punctuation),
             (r'\|', Punctuation, 'subproc_start'),
             (r'\s+', Text),
-            (r'\d+\b', Number),
             (r'[^=\s\[\]{}()$"\'`<&|;]+', subproc_arg_callback),
             (r'<', Text),
             (r'\$\w+', Name.Variable),
