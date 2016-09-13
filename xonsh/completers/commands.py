@@ -7,7 +7,7 @@ import xonsh.platform as xp
 from xonsh.completers.tools import get_filter_function
 
 SKIP_TOKENS = {'sudo', 'time', 'timeit', 'which', 'showcmd', 'man'}
-GOTO_TOKENS = {'|', '||', '&&', 'and', 'or'}
+END_PROC_TOKENS = {'|', '||', '&&', 'and', 'or'}
 
 
 def complete_command(cmd, line, start, end, ctx):
@@ -37,7 +37,7 @@ def complete_skipper(cmd, line, start, end, ctx):
     parts = line.split(' ')
     skip_part_num = 0
     for i, s in enumerate(parts):
-        if s in GOTO_TOKENS:
+        if s in END_PROC_TOKENS:
             skip_part_num = i + 1
     while len(parts) > skip_part_num:
         if parts[skip_part_num] not in SKIP_TOKENS:
