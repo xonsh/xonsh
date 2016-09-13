@@ -125,7 +125,7 @@ class XonshLexer(PythonLexer):
             (r'(?<=\w|\s)!', Keyword, 'subproc_macro'),
             (r'^!', Keyword, 'subproc_macro'),
             (r';', Punctuation, 'subproc_start'),
-            (r'&', Punctuation),
+            (r'&|=', Punctuation),
             (r'\|', Punctuation, 'subproc_start'),
             (r'\s+', Text),
             (r'\d+\b', Number),

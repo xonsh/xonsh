@@ -107,6 +107,7 @@ def test_path():
                                                (Text,
                                                 '{}-xxx'.format(test_dir))
                                                ])
+    check_token('cd X={}'.format(test_dir), [(Name.Constant, test_dir)])
 
 
 def test_backtick():
