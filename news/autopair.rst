@@ -1,6 +1,6 @@
 **Added:** 
 
-* The prompt-toolkit shell now auto-inserts matching parentheses, brackets, and quotes. Enabled via the `XONSH_AUTOPAIR` environment variable 
+* The prompt-toolkit shell now auto-inserts matching parentheses, brackets, and quotes. Enabled via the ``XONSH_AUTOPAIR`` environment variable
 
 **Changed:** None
 
