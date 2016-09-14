@@ -9,6 +9,7 @@ Vox defines several events related to the life cycle of virtual environments:
 * ``vox_on_delete(env: str) -> None``
 """
 import os
+import sys
 import venv
 import shutil
 import builtins
@@ -47,6 +48,7 @@ Fired after an environment is deleted (through vox).
 
 
 VirtualEnvironment = collections.namedtuple('VirtualEnvironment', ['env', 'bin', 'lib', 'inc'])
+
 
 def _mkvenv(env_dir):
     """
@@ -182,6 +184,15 @@ class Vox(collections.abc.Mapping):
             raise KeyError()
         return ve
 
+    def __contains__(self, name):
+        # For some reason, MutableMapping seems to do this against iter, which is just silly.
+        try:
+            self[name]
+        except KeyError:
+            return False
+        else:
+            return True
+
     def __iter__(self):
         """List available virtual environments found in $VIRTUALENV_HOME.
         """
@@ -226,13 +237,13 @@ class Vox(collections.abc.Mapping):
             Virtual environment name or absolute path.
         """
         env = builtins.__xonsh_env__
-        env_path, bin_path = self[name]
+        ve = self[name]
         if 'VIRTUAL_ENV' in env:
             self.deactivate()
 
         type(self).oldvars = {'PATH': list(env['PATH'])}
-        env['PATH'].insert(0, bin_path)
-        env['VIRTUAL_ENV'] = env_path
+        env['PATH'].insert(0, ve.bin)
+        env['VIRTUAL_ENV'] = ve.env
         if 'PYTHONHOME' in env:
             type(self).oldvars['PYTHONHOME'] = env.pop('PYTHONHOME')
 
@@ -246,7 +257,6 @@ class Vox(collections.abc.Mapping):
         if 'VIRTUAL_ENV' not in env:
             raise NoEnvironmentActive('No environment currently active.')
 
-        env_path, bin_path = self[...]
         env_name = self.active()
 
         if hasattr(type(self), 'oldvars'):

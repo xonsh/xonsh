@@ -32,9 +32,9 @@ def test_crud(xonsh_builtins, tmpdir):
     assert stat.S_ISDIR(tmpdir.join('spam').stat().mode)
     assert last_event == ('create', 'spam')
 
-    env, bin = vox['spam']
-    assert env == str(tmpdir.join('spam'))
-    assert os.path.isdir(bin)
+    ve = vox['spam']
+    assert ve.env == str(tmpdir.join('spam'))
+    assert os.path.isdir(ve.bin)
 
     assert 'spam' in vox
 
