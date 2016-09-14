@@ -51,8 +51,7 @@ def check_news_file(fname):
                 pytest.fail('{}:{}: invalid rst'.format(name, i+1),
                             pytrace=False)
             if '`' in line:
-                if line.count('`') % 4 != 0 \
-                   or single_grave_reg.search(line):
+                if single_grave_reg.search(line):
                     pytest.fail("{}:{}: single grave accents"
                                 " are not valid rst".format(name, i+1),
                                 pytrace=False)

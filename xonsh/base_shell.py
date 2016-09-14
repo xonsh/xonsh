@@ -192,7 +192,7 @@ class BaseShell(object):
     def _append_history(self, tee_out=None, **info):
         """
         Append information about the command to the history.
-        
+
         (Also handles on_postcommand because this is the place where all the information is available)
         """
         hist = builtins.__xonsh_history__  # pylint: disable=no-member
