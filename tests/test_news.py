@@ -13,7 +13,7 @@ NEWSDIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'news')
 CATEGORIES = frozenset(['Added', 'Changed', 'Deprecated', 'Removed',
                         'Fixed', 'Security'])
 
-single_grave_reg = re.compile(r'[^`]`[^`]+`[^`]')
+single_grave_reg = re.compile(r'[^`]`[^`]+`[^`_]')
 
 def check_news_file(fname):
     name = fname.name
