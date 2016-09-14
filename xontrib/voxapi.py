@@ -64,6 +64,7 @@ def _subdir_names():
     else:
         raise OSError('This OS is not supported.')
 
+
 def _mkvenv(env_dir):
     """
     Constructs a VirtualEnvironment based on the given base path.
