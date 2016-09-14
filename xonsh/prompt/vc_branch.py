@@ -100,11 +100,11 @@ def current_branch(pad=NotImplemented):
         branch = get_hg_branch()
     if isinstance(branch, subprocess.TimeoutExpired):
         branch = '<branch-timeout>'
-        # _first_branch_timeout_message()
+        _first_branch_timeout_message()
     return branch or None
 
 
-def git_dirty_working_directory(cwd=None, include_untracked=False):
+def git_dirty_working_directory(cwd=None):
     """Returns whether or not the git directory is dirty. If this could not
     be determined (timeout, file not sound, etc.) then this returns None.
     """
