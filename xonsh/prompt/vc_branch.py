@@ -11,20 +11,37 @@ import subprocess
 import xonsh.platform as xp
 import xonsh.prompt
 
+import threading, queue
 
-def get_git_branch():
-    timeout = builtins.__xonsh_env__.get('VC_BRANCH_TIMEOUT')
+
+def _get_git_branch(q):
     try:
-        status = subprocess.check_output(['git', 'status'], timeout=timeout,
+        status = subprocess.check_output(['git', 'status'],
                                          stderr=subprocess.DEVNULL)
-    except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
-        return None
+    except subprocess.CalledProcessError:
+        q.put(None)
     else:
         status = status.decode().split()
         if status[2] == 'at':
-            return status[3]
+            q.put(status[3])
         else:
-            return status[2]
+            q.put(status[2])
+
+def get_git_branch():
+    # import pdb; pdb.set_trace()
+    branch = None
+    timeout = builtins.__xonsh_env__.get('VC_BRANCH_TIMEOUT')
+    q = queue.Queue()
+
+    t = threading.Thread(target=_get_git_branch, args=(q,))
+    t.start()
+    t.join(timeout=timeout)
+    try:
+        branch = q.get_nowait()
+    except queue.Empty:
+        branch = None
+    return branch
+
 
 def _get_parent_dir_for(path, dir_name, timeout):
     # walk up the directory tree to see if we are inside an hg repo
