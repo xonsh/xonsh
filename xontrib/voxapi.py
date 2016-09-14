@@ -9,12 +9,13 @@ Vox defines several events related to the life cycle of virtual environments:
 * ``vox_on_delete(env: str) -> None``
 """
 import os
+import sys
 import venv
 import shutil
 import builtins
 import collections.abc
 
-from xonsh.platform import ON_POSIX, ON_WINDOWS, scandir
+from xonsh.platform import ON_POSIX, ON_WINDOWS
 
 # This is because builtins aren't globally created during testing.
 # FIXME: Is there a better way?
@@ -46,7 +47,45 @@ Fired after an environment is deleted (through vox).
 """)
 
 
-VirtualEnvironment = collections.namedtuple('VirtualEnvironment', ['env', 'bin'])
+VirtualEnvironment = collections.namedtuple('VirtualEnvironment', ['env', 'bin', 'lib', 'inc'])
+
+
+def _subdir_names():
+    """
+    Gets the names of the special dirs in a venv.
+
+    This is not necessarily exhaustive of all the directories that could be in a venv, and there
+    may additional logic to get to useful places.
+    """
+    if ON_WINDOWS:
+        return 'Scripts', 'Lib', 'Include'
+    elif ON_POSIX:
+        return 'bin', 'lib', 'include'
+    else:
+        raise OSError('This OS is not supported.')
+
+
+def _mkvenv(env_dir):
+    """
+    Constructs a VirtualEnvironment based on the given base path.
+
+    This only cares about the platform. No filesystem calls are made.
+    """
+    env_dir = os.path.normpath(env_dir)
+    if ON_WINDOWS:
+        binname = os.path.join(env_dir, 'Scripts')
+        incpath = os.path.join(env_dir, 'Include')
+        libpath = os.path.join(env_dir, 'Lib', 'site-packages')
+    elif ON_POSIX:
+        binname = os.path.join(env_dir, 'bin')
+        incpath = os.path.join(env_dir, 'include')
+        libpath = os.path.join(env_dir, 'lib',
+                               'python%d.%d' % sys.version_info[:2],
+                               'site-packages')
+    else:
+        raise OSError('This OS is not supported.')
+
+    return VirtualEnvironment(env_dir, binname, libpath, incpath)
 
 
 class EnvironmentInUse(Exception):
@@ -138,15 +177,6 @@ class Vox(collections.abc.Mapping):
         # Ok, do what we came here to do.
         venv.create(env_path, upgrade=True, **flags)
 
-    @staticmethod
-    def _binname():
-        if ON_WINDOWS:
-            return 'Scripts'
-        elif ON_POSIX:
-            return 'bin'
-        else:
-            raise OSError('This OS is not supported.')
-
     def __getitem__(self, name):
         """Get information about a virtual environment.
 
@@ -162,21 +192,39 @@ class Vox(collections.abc.Mapping):
             env_path = name
         else:
             env_path = os.path.join(self.venvdir, name)
-        bin_dir = self._binname()
-        bin_path = os.path.join(env_path, bin_dir)
+
+        ve = _mkvenv(env_path)
+
+        if os.path.basename(ve.env) in _subdir_names():  # FIXME: Check the inner components, too
+            # Don't allow a venv that could be a venv special dir
+            raise KeyError()
+
         # Actually check if this is an actual venv or just a organizational directory
         # eg, if 'spam/eggs' is a venv, reject 'spam'
-        if not os.path.exists(bin_path):
+        if not os.path.exists(ve.bin):
             raise KeyError()
-        return VirtualEnvironment(env_path, bin_path)
+        return ve
+
+    def __contains__(self, name):
+        # For some reason, MutableMapping seems to do this against iter, which is just silly.
+        try:
+            self[name]
+        except KeyError:
+            return False
+        else:
+            return True
 
     def __iter__(self):
         """List available virtual environments found in $VIRTUALENV_HOME.
         """
-        # FIXME: Handle subdirs--this won't discover eg ``spam/eggs``
-        for x in scandir(self.venvdir):
-            if x.is_dir():
-                yield x.name
+        bin_, lib, inc = _subdir_names()
+        for dirpath, dirnames, _ in os.walk(self.venvdir):
+            if bin_ in dirnames and lib in dirnames:
+                yield dirpath[len(self.venvdir)+1:]  # +1 is to remove the separator
+                # Don't recurse in to the special dirs
+                dirnames.remove(bin_)
+                dirnames.remove(lib)  # This one in particular is likely to be quite large.
+                dirnames.remove(inc)
 
     def __len__(self):
         """Counts known virtual environments, using the same rules as iter().
@@ -214,13 +262,13 @@ class Vox(collections.abc.Mapping):
             Virtual environment name or absolute path.
         """
         env = builtins.__xonsh_env__
-        env_path, bin_path = self[name]
+        ve = self[name]
         if 'VIRTUAL_ENV' in env:
             self.deactivate()
 
         type(self).oldvars = {'PATH': list(env['PATH'])}
-        env['PATH'].insert(0, bin_path)
-        env['VIRTUAL_ENV'] = env_path
+        env['PATH'].insert(0, ve.bin)
+        env['VIRTUAL_ENV'] = ve.env
         if 'PYTHONHOME' in env:
             type(self).oldvars['PYTHONHOME'] = env.pop('PYTHONHOME')
 
@@ -234,7 +282,6 @@ class Vox(collections.abc.Mapping):
         if 'VIRTUAL_ENV' not in env:
             raise NoEnvironmentActive('No environment currently active.')
 
-        env_path, bin_path = self[...]
         env_name = self.active()
 
         if hasattr(type(self), 'oldvars'):
