@@ -11,6 +11,20 @@ from xonsh.execer import Execer
 from xonsh.platform import (best_shell_type, has_prompt_toolkit,
                             ptk_version_is_supported)
 from xonsh.tools import XonshError, to_bool_or_int
+from xonsh.events import events
+
+
+events.doc('on_precommand', """
+on_precommand(cmd: str) -> None
+
+Fires just before a command is executed.
+""")
+
+events.doc('on_postcommand', """
+on_postcommand(cmd: str, rtn: int, out: str or None, ts: list) -> None
+
+Fires just after a command is executed.
+""")
 
 
 class Shell(object):
