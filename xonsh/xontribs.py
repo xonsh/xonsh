@@ -32,7 +32,7 @@ def xontrib_context(name):
     if spec is None:
         with warnings.catch_warnings():
             warnings.simplefilter('default', ImportWarning)
-            warnings.warn('could not find xontrib module {0!r}'.format(name),
+            warnings.warn(prompt_xontrib_install(name),
                           ImportWarning)
         return {}
     m = importlib.import_module(spec.name)
@@ -42,6 +42,17 @@ def xontrib_context(name):
     else:
         ctx = {k: getattr(m, k) for k in dir(m) if not k.startswith('_')}
     return ctx
+
+
+def prompt_xontrib_install(name):
+    """Returns a formatted string with name of xontrib package to prompt user"""
+    md = xontrib_metadata()
+    install_str = ('xontrib "{xontrib}" is not installed.  \n'
+                   'To install it run \n'
+                   '    pip install {package}')
+    for xontrib in md['xontribs']:
+        if xontrib['name'] == name:
+            return install_str.format(xontrib=name, package=xontrib['package'])
 
 
 def update_context(name, ctx=None):
