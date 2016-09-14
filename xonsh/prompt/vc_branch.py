@@ -12,6 +12,16 @@ import xonsh.platform as xp
 import xonsh.prompt
 
 
+def get_git_branch():
+    timeout = builtins.__xonsh_env__.get('VC_BRANCH_TIMEOUT')
+    try:
+        status = subprocess.check_output(['git', 'status'], timeout=timeout,
+                                         stderr=subprocess.DEVNULL)
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        return None
+    else:
+        return status.split()[2].decode()
+
 def _get_parent_dir_for(path, dir_name, timeout):
     # walk up the directory tree to see if we are inside an hg repo
     # the timeout makes sure that we don't thrash the file system
@@ -85,12 +95,7 @@ def current_branch(pad=NotImplemented):
     branch = None
     cmds = builtins.__xonsh_commands_cache__
     if cmds.lazy_locate_binary('git') or cmds.is_empty():
-        try:
-            status = xonsh.prompt.gitstatus.gitstatus()
-        except subprocess.CalledProcessError:
-            branch = None
-        else:
-            branch = status.branch
+        branch = get_git_branch()
     elif (cmds.lazy_locate_binary('hg') or cmds.is_empty()) and not branch:
         branch = get_hg_branch()
     if isinstance(branch, subprocess.TimeoutExpired):
