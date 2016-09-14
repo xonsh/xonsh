@@ -117,7 +117,7 @@ def current_branch(pad=NotImplemented):
     cmds = builtins.__xonsh_commands_cache__
     if cmds.lazy_locate_binary('git') or cmds.is_empty():
         branch = get_git_branch()
-    elif (cmds.lazy_locate_binary('hg') or cmds.is_empty()) and not branch:
+    if (cmds.lazy_locate_binary('hg') or cmds.is_empty()) and not branch:
         branch = get_hg_branch()
     if isinstance(branch, subprocess.TimeoutExpired):
         branch = '<branch-timeout>'
@@ -125,20 +125,33 @@ def current_branch(pad=NotImplemented):
     return branch or None
 
 
-def git_dirty_working_directory(cwd=None):
+def _git_dirty_working_directory(q):
     """Returns whether or not the git directory is dirty. If this could not
     be determined (timeout, file not sound, etc.) then this returns None.
     """
-    timeout = builtins.__xonsh_env__.get("VC_BRANCH_TIMEOUT")
+    status = None
     try:
-        status = subprocess.check_output(['git', 'status'], timeout=timeout,
+        status = subprocess.check_output(['git', 'status'],
                                          stderr=subprocess.DEVNULL)
-    except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+    except subprocess.CalledProcessError:
+        q.put(None)
+    if status is not None:
+        if b'nothing to commit' in status:
+            return q.put(False)
+        else:
+            return q.put(True)
+
+
+def git_dirty_working_directory():
+    timeout = builtins.__xonsh_env__.get("VC_BRANCH_TIMEOUT")
+    q = queue.Queue()
+    t = threading.Thread(target=_git_dirty_working_directory, args=(q,))
+    t.start()
+    t.join(timeout=timeout)
+    try:
+        return q.get_nowait()
+    except queue.Empty:
         return None
-    if b'nothing to commit' in status:
-        return False
-    else:
-        return True
 
 
 def hg_dirty_working_directory():
