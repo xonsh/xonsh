@@ -70,6 +70,7 @@ def _mkvenv(env_dir):
 
     This only cares about the platform. No filesystem calls are made.
     """
+    env_dir = os.path.normpath(env_dir)
     if ON_WINDOWS:
         binname = os.path.join(env_dir, 'Scripts')
         incpath = os.path.join(env_dir, 'Include')
@@ -191,11 +192,12 @@ class Vox(collections.abc.Mapping):
         else:
             env_path = os.path.join(self.venvdir, name)
 
-        if os.path.basename(env_path) in _subdir_names():  # FIXME: Check the inner components, too
+        ve = _mkvenv(env_path)
+
+        if os.path.basename(ve.env) in _subdir_names():  # FIXME: Check the inner components, too
             # Don't allow a venv that could be a venv special dir
             raise KeyError()
 
-        ve = _mkvenv(env_path)
         # Actually check if this is an actual venv or just a organizational directory
         # eg, if 'spam/eggs' is a venv, reject 'spam'
         if not os.path.exists(ve.bin):
