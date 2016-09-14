@@ -109,7 +109,7 @@ def test_crud_subdir(xonsh_builtins, tmpdir):
     assert stat.S_ISDIR(tmpdir.join('spam', 'eggs').stat().mode)
 
     ve = vox['spam/eggs']
-    assert ve.env == str(tmpdir.join('spam/eggs'))
+    assert ve.env == str(tmpdir.join('spam', 'eggs'))
     assert os.path.isdir(ve.bin)
 
     assert 'spam/eggs' in vox
