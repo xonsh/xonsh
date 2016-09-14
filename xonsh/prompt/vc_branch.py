@@ -111,7 +111,7 @@ def git_dirty_working_directory(cwd=None):
     timeout = builtins.__xonsh_env__.get("VC_BRANCH_TIMEOUT")
     try:
         status = subprocess.check_output(['git', 'status'], timeout=timeout,
-                                         stderr=subprocess.DEVULL)
+                                         stderr=subprocess.DEVNULL)
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
         return None
     if b'nothing to commit' in status:
