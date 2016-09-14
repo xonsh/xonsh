@@ -46,7 +46,28 @@ Fired after an environment is deleted (through vox).
 """)
 
 
-VirtualEnvironment = collections.namedtuple('VirtualEnvironment', ['env', 'bin'])
+VirtualEnvironment = collections.namedtuple('VirtualEnvironment', ['env', 'bin', 'lib', 'inc'])
+
+def _mkvenv(env_dir):
+    """
+    Constructs a VirtualEnvironment based on the given base path.
+
+    This only cares about the platform. No filesystem calls are made.
+    """
+    if ON_WINDOWS:
+        binname = os.path.join(env_dir, 'Scripts')
+        incpath = os.path.join(env_dir, 'Include')
+        libpath = os.path.join(env_dir, 'Lib', 'site-packages')
+    elif ON_POSIX:
+        binname = os.path.join(env_dir, 'bin')
+        incpath = os.path.join(env_dir, 'include')
+        libpath = os.path.join(env_dir, 'lib',
+                               'python%d.%d' % sys.version_info[:2],
+                               'site-packages')
+    else:
+        raise OSError('This OS is not supported.')
+
+    return VirtualEnvironment(env_dir, binname, libpath, incpath)
 
 
 class EnvironmentInUse(Exception):
@@ -138,15 +159,6 @@ class Vox(collections.abc.Mapping):
         # Ok, do what we came here to do.
         venv.create(env_path, upgrade=True, **flags)
 
-    @staticmethod
-    def _binname():
-        if ON_WINDOWS:
-            return 'Scripts'
-        elif ON_POSIX:
-            return 'bin'
-        else:
-            raise OSError('This OS is not supported.')
-
     def __getitem__(self, name):
         """Get information about a virtual environment.
 
@@ -162,13 +174,13 @@ class Vox(collections.abc.Mapping):
             env_path = name
         else:
             env_path = os.path.join(self.venvdir, name)
-        bin_dir = self._binname()
-        bin_path = os.path.join(env_path, bin_dir)
+
+        ve = _mkvenv(env_path)
         # Actually check if this is an actual venv or just a organizational directory
         # eg, if 'spam/eggs' is a venv, reject 'spam'
-        if not os.path.exists(bin_path):
+        if not os.path.exists(ve.bin):
             raise KeyError()
-        return VirtualEnvironment(env_path, bin_path)
+        return ve
 
     def __iter__(self):
         """List available virtual environments found in $VIRTUALENV_HOME.
