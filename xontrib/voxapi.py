@@ -15,7 +15,7 @@ import shutil
 import builtins
 import collections.abc
 
-from xonsh.platform import ON_POSIX, ON_WINDOWS, scandir
+from xonsh.platform import ON_POSIX, ON_WINDOWS
 
 # This is because builtins aren't globally created during testing.
 # FIXME: Is there a better way?
@@ -49,6 +49,20 @@ Fired after an environment is deleted (through vox).
 
 VirtualEnvironment = collections.namedtuple('VirtualEnvironment', ['env', 'bin', 'lib', 'inc'])
 
+
+def _subdir_names():
+    """
+    Gets the names of the special dirs in a venv.
+
+    This is not necessarily exhaustive of all the directories that could be in a venv, and there
+    may additional logic to get to useful places.
+    """
+    if ON_WINDOWS:
+        return 'Scripts', 'Lib', 'Include'
+    elif ON_POSIX:
+        return 'bin', 'lib', 'include'
+    else:
+        raise OSError('This OS is not supported.')
 
 def _mkvenv(env_dir):
     """
@@ -177,6 +191,10 @@ class Vox(collections.abc.Mapping):
         else:
             env_path = os.path.join(self.venvdir, name)
 
+        if os.path.basename(env_path) in _subdir_names():  # FIXME: Check the inner components, too
+            # Don't allow a venv that could be a venv special dir
+            raise KeyError()
+
         ve = _mkvenv(env_path)
         # Actually check if this is an actual venv or just a organizational directory
         # eg, if 'spam/eggs' is a venv, reject 'spam'
@@ -196,10 +214,14 @@ class Vox(collections.abc.Mapping):
     def __iter__(self):
         """List available virtual environments found in $VIRTUALENV_HOME.
         """
-        # FIXME: Handle subdirs--this won't discover eg ``spam/eggs``
-        for x in scandir(self.venvdir):
-            if x.is_dir():
-                yield x.name
+        bin, lib, inc = _subdir_names()
+        for dirpath, dirnames, _ in os.walk(self.venvdir):
+            if bin in dirnames and lib in dirnames:
+                yield dirpath[len(self.venvdir)+1:]  # +1 is to remove the separator
+                # Don't recurse in to the special dirs
+                dirnames.remove(bin)
+                dirnames.remove(lib)  # This one in particular is likely to be quite large.
+                dirnames.remove(inc)
 
     def __len__(self):
         """Counts known virtual environments, using the same rules as iter().
