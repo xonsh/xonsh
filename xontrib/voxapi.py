@@ -217,12 +217,12 @@ class Vox(collections.abc.Mapping):
     def __iter__(self):
         """List available virtual environments found in $VIRTUALENV_HOME.
         """
-        bin, lib, inc = _subdir_names()
+        bin_, lib, inc = _subdir_names()
         for dirpath, dirnames, _ in os.walk(self.venvdir):
-            if bin in dirnames and lib in dirnames:
+            if bin_ in dirnames and lib in dirnames:
                 yield dirpath[len(self.venvdir)+1:]  # +1 is to remove the separator
                 # Don't recurse in to the special dirs
-                dirnames.remove(bin)
+                dirnames.remove(bin_)
                 dirnames.remove(lib)  # This one in particular is likely to be quite large.
                 dirnames.remove(inc)
 
