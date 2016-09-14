@@ -20,7 +20,11 @@ def get_git_branch():
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
         return None
     else:
-        return status.split()[2].decode()
+        status = status.decode().split()
+        if status[2] == 'at':
+            return status[3]
+        else:
+            return status[2]
 
 def _get_parent_dir_for(path, dir_name, timeout):
     # walk up the directory tree to see if we are inside an hg repo
