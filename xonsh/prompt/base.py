@@ -94,12 +94,12 @@ def _failover_template_format(template):
 
 def partial_format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
     """Formats a xonsh prompt template string."""
-    # try:
-    return _partial_format_prompt_main(template=template,
-                                       formatter_dict=formatter_dict)
-    # except Exception:
-    #     print("EXCEPTING")
-    #     return _failover_template_format(template)
+    try:
+        return _partial_format_prompt_main(template=template,
+                                           formatter_dict=formatter_dict)
+    except Exception:
+        print("EXCEPTING")
+        return _failover_template_format(template)
 
 
 def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
