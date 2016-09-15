@@ -124,8 +124,9 @@ def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
             try:
                 val = v() if callable(v) else v
             except Exception as err:
-                print('prompt: error: field {!r} raised: {!r}'
-                      ''.format(field, err), file=sys.stderr)
+                print('prompt: error: on field {!r}'
+                      ''.format(field), file=sys.stderr)
+                print_exception()
                 toks.append('(ERROR:{})'.format(field))
                 continue
             val = _format_value(val, spec, conv)
