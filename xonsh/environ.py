@@ -4,13 +4,11 @@ import os
 import re
 import sys
 import json
-import string
 import pprint
 import locale
 import builtins
 import warnings
 import traceback
-import itertools
 import contextlib
 import collections
 import collections.abc as cabc
@@ -22,8 +20,9 @@ from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import load_foreign_envs
 from xonsh.platform import (
     BASH_COMPLETIONS_DEFAULT, DEFAULT_ENCODING, PATH_DEFAULT,
-    ON_WINDOWS, ON_LINUX, ON_CYGWIN,
+    ON_WINDOWS, ON_LINUX
 )
+
 from xonsh.tools import (
     always_true, always_false, ensure_string, is_env_path,
     str_to_env_path, env_path_to_str, is_bool, to_bool, bool_to_str,
@@ -33,7 +32,7 @@ from xonsh.tools import (
     is_string_set, csv_to_set, set_to_csv, is_int, is_bool_seq,
     to_bool_or_int, bool_or_int_to_str,
     csv_to_bool_seq, bool_seq_to_csv, DefaultNotGiven, print_exception,
-    setup_win_unicode_console, intensify_colors_on_win_setter, format_color,
+    setup_win_unicode_console, intensify_colors_on_win_setter,
     is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str,
     is_logfile_opt, to_logfile_opt, logfile_opt_to_str, executables_in,
     is_nonstring_seq_of_strings, pathsep_to_upper_seq,
@@ -617,7 +616,7 @@ def DEFAULT_DOCS():
         '* XONSH_GITSTATUS_CLEAN: `{BOLD_GREEN}✓`\n'
         '* XONSH_GITSTATUS_AHEAD: `↑·`\n'
         '* XONSH_GITSTATUS_BEHIND: `↓·`\n'
-        ),
+    ),
     'XONSH_HISTORY_FILE': VarDocs(
         'Location of history file (deprecated).',
         configurable=False, default="'~/.xonsh_history'"),
@@ -901,42 +900,6 @@ def _yield_executables(directory, name):
 def locate_binary(name):
     """Locates an executable on the file system."""
     return builtins.__xonsh_commands_cache__.locate_binary(name)
-
-
-_FORMATTER = LazyObject(string.Formatter, globals(), '_FORMATTER')
-
-
-def is_template_string(template, formatter_dict=None):
-    """Returns whether or not the string is a valid template."""
-    template = template() if callable(template) else template
-    try:
-        included_names = set(i[1] for i in _FORMATTER.parse(template))
-    except ValueError:
-        return False
-    included_names.discard(None)
-    if formatter_dict is None:
-        fmtter = builtins.__xonsh_env__.get('FORMATTER_DICT',
-                                            prompt.FORMATTER_DICT)
-    else:
-        fmtter = formatter_dict
-    known_names = set(fmtter.keys())
-    return included_names <= known_names
-
-
-def _format_value(val, spec, conv):
-    """Formats a value from a template string {val!conv:spec}. The spec is
-    applied as a format string itself, but if the value is None, the result
-    will be empty. The purpose of this is to allow optional parts in a
-    prompt string. For example, if the prompt contains '{current_job:{} | }',
-    and 'current_job' returns 'sleep', the result is 'sleep | ', and if
-    'current_job' returns None, the result is ''.
-    """
-    if val is None:
-        return ''
-    val = _FORMATTER.convert_field(val, conv)
-    if spec:
-        val = _FORMATTER.format(spec, val)
-    return val
 
 
 BASE_ENV = LazyObject(lambda: {

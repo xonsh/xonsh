@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 """Base prompt, provides FORMATTER_DICT and prompt related functions"""
 
+import builtins
+import itertools
 import os
+import re
 import socket
 import string
 
@@ -9,6 +12,8 @@ import xonsh.lazyasd as xl
 import xonsh.tools as xt
 import xonsh.platform as xp
 
+from xonsh.tools import format_color, print_exception
+from xonsh.platform import ON_WINDOWS, ON_CYGWIN
 
 from xonsh.prompt.cwd import (
     _collapsed_pwd, _replace_home_cwd, _dynamically_collapsed_pwd
@@ -19,7 +24,6 @@ from xonsh.prompt.vc_branch import (
     current_branch, branch_color, branch_bg_color
 )
 from xonsh.prompt.gitstatus import gitstatus_prompt
-from xonsh.platform import ON_WINDOWS, ON_CYGWIN
 
 
 FORMATTER_DICT = xl.LazyObject(lambda: dict(
@@ -38,6 +42,11 @@ FORMATTER_DICT = xl.LazyObject(lambda: dict(
     vte_new_tab_cwd=vte_new_tab_cwd,
     gitstatus=gitstatus_prompt,
 ), globals(), 'FORMATTER_DICT')
+
+
+@xl.lazyobject
+def _FORMATTER():
+    return string.Formatter()
 
 
 def default_prompt():
@@ -61,6 +70,7 @@ def default_prompt():
 @xt.lazyobject
 def DEFAULT_PROMPT():
     return default_prompt()
+
 
 def _get_fmtter(formatter_dict=None):
     if formatter_dict is None:
@@ -99,8 +109,7 @@ def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
     colon = ':'
     expl = '!'
     toks = []
-    for literal, field, spec, conv in string.Formatter.parse(template):
-        print("FORMATTING")
+    for literal, field, spec, conv in string.Formatter().parse(template):
         toks.append(literal)
         if field is None:
             continue
@@ -126,9 +135,8 @@ def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
     return ''.join(toks)
 
 
-
 @xt.lazyobject
-def RE_HIDDEN(): \
+def RE_HIDDEN():
     return re.compile('\001.*?\002')
 
 
@@ -170,10 +178,42 @@ def multiline_prompt(curr=''):
         elif newcount <= n:
             toks.append(tok)
         else:
-            toks.append((tok[0], tok[1][:n-count]))
+            toks.append((tok[0], tok[1][:n - count]))
         count = newcount
         if n <= count:
             break
     toks.append((format_color('{NO_COLOR}', hide=True), tail))
     rtn = ''.join(itertools.chain.from_iterable(toks))
     return rtn
+
+
+def is_template_string(template, formatter_dict=None):
+    """Returns whether or not the string is a valid template."""
+    template = template() if callable(template) else template
+    try:
+        included_names = set(i[1] for i in _FORMATTER.parse(template))
+    except ValueError:
+        return False
+    included_names.discard(None)
+    if formatter_dict is None:
+        fmtter = builtins.__xonsh_env__.get('FORMATTER_DICT', FORMATTER_DICT)
+    else:
+        fmtter = formatter_dict
+    known_names = set(fmtter.keys())
+    return included_names <= known_names
+
+
+def _format_value(val, spec, conv):
+    """Formats a value from a template string {val!conv:spec}. The spec is
+    applied as a format string itself, but if the value is None, the result
+    will be empty. The purpose of this is to allow optional parts in a
+    prompt string. For example, if the prompt contains '{current_job:{} | }',
+    and 'current_job' returns 'sleep', the result is 'sleep | ', and if
+    'current_job' returns None, the result is ''.
+    """
+    if val is None:
+        return ''
+    val = _FORMATTER.convert_field(val, conv)
+    if spec:
+        val = _FORMATTER.format(spec, val)
+    return val

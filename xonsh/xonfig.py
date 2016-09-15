@@ -17,7 +17,7 @@ except ImportError:
 
 import xonsh.wizard as wiz
 from xonsh import __version__ as XONSH_VERSION
-from xonsh.environ import is_template_string
+from xonsh.prompt.base import is_template_string
 from xonsh.platform import (is_readline_available, ptk_version,
                             PYTHON_VERSION_INFO, pygments_version, ON_POSIX, ON_LINUX, linux_distro,
                             ON_DARWIN, ON_WINDOWS, ON_CYGWIN, DEFAULT_ENCODING, githash)
