@@ -90,7 +90,7 @@
  "packages": {
   "exofrills": {
    "license": "WTFPL",
-   "url": "http://exofills.org",
+   "url": "http://exofrills.org",
    "install": {
     "conda": "conda install -c conda-forge xo",
     "pip": "pip install exofrills"}
