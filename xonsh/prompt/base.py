@@ -99,7 +99,6 @@ def partial_format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
         return _partial_format_prompt_main(template=template,
                                            formatter_dict=formatter_dict)
     except Exception:
-        print("EXCEPTING")
         return _failover_template_format(template)
 
 

@@ -68,6 +68,7 @@ def test_format_prompt_with_invalid_func(xonsh_builtins):
 
 
 def test_format_prompt_with_func_that_raises(capsys, xonsh_builtins):
+    xonsh_builtins.__xonsh_env__ = Env()
     template = 'tt {zerodiv} tt'
     exp = 'tt (ERROR:zerodiv) tt'
     formatter_dict = {'zerodiv': lambda : 1/0}
