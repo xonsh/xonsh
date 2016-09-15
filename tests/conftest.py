@@ -48,25 +48,27 @@ def xonsh_builtins():
     # Unlike all the other stuff, this has to refer to the "real" one because all modules that would
     # be firing events on the global instance.
     builtins.events = events
-    yield builtins
-    del builtins.__xonsh_env__
-    del builtins.__xonsh_ctx__
-    del builtins.__xonsh_shell__
-    del builtins.__xonsh_help__
-    del builtins.__xonsh_glob__
-    del builtins.__xonsh_exit__
-    del builtins.__xonsh_superhelp__
-    del builtins.__xonsh_regexpath__
-    del builtins.__xonsh_expand_path__
-    del builtins.__xonsh_subproc_captured__
-    del builtins.__xonsh_subproc_uncaptured__
-    del builtins.__xonsh_ensure_list_of_strs__
-    del builtins.XonshBlockError
-    del builtins.evalx
-    del builtins.execx
-    del builtins.compilex
-    del builtins.aliases
-    del builtins.events
+    try:
+        yield builtins
+    finally:
+        del builtins.__xonsh_env__
+        del builtins.__xonsh_ctx__
+        del builtins.__xonsh_shell__
+        del builtins.__xonsh_help__
+        del builtins.__xonsh_glob__
+        del builtins.__xonsh_exit__
+        del builtins.__xonsh_superhelp__
+        del builtins.__xonsh_regexpath__
+        del builtins.__xonsh_expand_path__
+        del builtins.__xonsh_subproc_captured__
+        del builtins.__xonsh_subproc_uncaptured__
+        del builtins.__xonsh_ensure_list_of_strs__
+        del builtins.XonshBlockError
+        del builtins.evalx
+        del builtins.execx
+        del builtins.compilex
+        del builtins.aliases
+        del builtins.events
 
 
 if ON_WINDOWS:
