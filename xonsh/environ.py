@@ -139,6 +139,7 @@ def DEFAULT_ENSURERS():
     'VIRTUAL_ENV': (is_string, ensure_string, ensure_string),
     'WIN_UNICODE_CONSOLE': (always_false, setup_win_unicode_console, bool_to_str),
     'XONSHRC': (is_env_path, str_to_env_path, env_path_to_str),
+    'XONSH_AUTOPAIR': (is_bool, to_bool, bool_to_str),
     'XONSH_CACHE_SCRIPTS': (is_bool, to_bool, bool_to_str),
     'XONSH_CACHE_EVERYTHING': (is_bool, to_bool, bool_to_str),
     'XONSH_COLOR_STYLE': (is_string, ensure_string, ensure_string),
@@ -294,6 +295,7 @@ def DEFAULT_VALUES():
                                                          'share')),
         'XONSHCONFIG': xonshconfig,
         'XONSHRC': default_xonshrc(),
+        'XONSH_AUTOPAIR': False,
         'XONSH_CACHE_SCRIPTS': True,
         'XONSH_CACHE_EVERYTHING': False,
         'XONSH_COLOR_STYLE': 'default',
@@ -593,6 +595,10 @@ def DEFAULT_DOCS():
         'control file if there is a naming collision.', default=(
             "On Linux & Mac OSX: ('/etc/xonshrc', '~/.xonshrc')\n"
             "On Windows: ('%ALLUSERSPROFILE%\\xonsh\\xonshrc', '~/.xonshrc')")),
+    'XONSH_AUTOPAIR': VarDocs(
+        'Whether Xonsh will auto-insert matching parentheses, brackets, and '
+        'quotes. Only available under the prompt-toolkit shell.'
+    ),
     'XONSH_CACHE_SCRIPTS': VarDocs(
         'Controls whether the code for scripts run from xonsh will be cached'
         ' (``True``) or re-compiled each time (``False``).'),
