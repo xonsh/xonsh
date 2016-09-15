@@ -1,5 +1,6 @@
 import pytest
 
+from xonsh.environ import Env
 from xonsh.prompt.base import partial_format_prompt
 
 
@@ -59,6 +60,7 @@ def test_format_prompt_with_broken_template_in_func(xonsh_builtins):
 
 
 def test_format_prompt_with_invalid_func(xonsh_builtins):
+    xonsh_builtins.__xonsh_env__ = Env()
     def p():
         foo = bar  # raises exception
         return '{user}'
