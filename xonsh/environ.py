@@ -169,25 +169,6 @@ def is_callable_default(x):
     return callable(x) and getattr(x, '_xonsh_callable_default', False)
 
 
-def default_prompt():
-    """Creates a new instance of the default prompt."""
-    if ON_CYGWIN:
-        dp = ('{env_name:{} }{BOLD_GREEN}{user}@{hostname}'
-              '{BOLD_BLUE} {cwd} {prompt_end}{NO_COLOR} ')
-    elif ON_WINDOWS:
-        dp = ('{env_name:{} }'
-              '{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} '
-              '{cwd}{branch_color}{curr_branch: {}}{NO_COLOR} '
-              '{BOLD_INTENSE_CYAN}{prompt_end}{NO_COLOR} ')
-    else:
-        dp = ('{env_name:{} }'
-              '{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
-              '{cwd}{branch_color}{curr_branch: {}}{NO_COLOR} '
-              '{BOLD_BLUE}{prompt_end}{NO_COLOR} ')
-    return dp
-
-
-DEFAULT_PROMPT = LazyObject(default_prompt, globals(), 'DEFAULT_PROMPT')
 DEFAULT_TITLE = '{current_job:{} | }{user}@{hostname}: {cwd} | xonsh'
 
 
@@ -272,7 +253,7 @@ def DEFAULT_VALUES():
         'PATH': PATH_DEFAULT,
         'PATHEXT': ['.COM', '.EXE', '.BAT', '.CMD'] if ON_WINDOWS else [],
         'PRETTY_PRINT_RESULTS': True,
-        'PROMPT': default_prompt(),
+        'PROMPT': prompt.default_prompt(),
         'PUSHD_MINUS': False,
         'PUSHD_SILENT': False,
         'RAISE_SUBPROC_ERROR': False,
@@ -942,70 +923,6 @@ def is_template_string(template, formatter_dict=None):
     return included_names <= known_names
 
 
-def _get_fmtter(formatter_dict=None):
-    if formatter_dict is None:
-        fmtter = builtins.__xonsh_env__.get('FORMATTER_DICT',
-                                            prompt.FORMATTER_DICT)
-    else:
-        fmtter = formatter_dict
-    return fmtter
-
-
-def _failover_template_format(template):
-    if callable(template):
-        try:
-            # Exceptions raises from function of producing $PROMPT
-            # in user's xonshrc should not crash xonsh
-            return template()
-        except Exception:
-            print_exception()
-            return '$ '
-    return template
-
-
-def partial_format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
-    """Formats a xonsh prompt template string."""
-    try:
-        return _partial_format_prompt_main(template=template,
-                                           formatter_dict=formatter_dict)
-    except Exception:
-        return _failover_template_format(template)
-
-
-def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
-    template = template() if callable(template) else template
-    fmtter = _get_fmtter(formatter_dict)
-    bopen = '{'
-    bclose = '}'
-    colon = ':'
-    expl = '!'
-    toks = []
-    for literal, field, spec, conv in _FORMATTER.parse(template):
-        toks.append(literal)
-        if field is None:
-            continue
-        elif field.startswith('$'):
-            val = builtins.__xonsh_env__[field[1:]]
-            val = _format_value(val, spec, conv)
-            toks.append(val)
-        elif field in fmtter:
-            v = fmtter[field]
-            val = v() if callable(v) else v
-            val = _format_value(val, spec, conv)
-            toks.append(val)
-        else:
-            toks.append(bopen)
-            toks.append(field)
-            if conv is not None and len(conv) > 0:
-                toks.append(expl)
-                toks.append(conv)
-            if spec is not None and len(spec) > 0:
-                toks.append(colon)
-                toks.append(spec)
-            toks.append(bclose)
-    return ''.join(toks)
-
-
 def _format_value(val, spec, conv):
     """Formats a value from a template string {val!conv:spec}. The spec is
     applied as a format string itself, but if the value is None, the result
@@ -1020,57 +937,6 @@ def _format_value(val, spec, conv):
     if spec:
         val = _FORMATTER.format(spec, val)
     return val
-
-
-RE_HIDDEN = LazyObject(lambda: re.compile('\001.*?\002'), globals(),
-                       'RE_HIDDEN')
-
-
-def multiline_prompt(curr=''):
-    """Returns the filler text for the prompt in multiline scenarios."""
-    line = curr.rsplit('\n', 1)[1] if '\n' in curr else curr
-    line = RE_HIDDEN.sub('', line)  # gets rid of colors
-    # most prompts end in whitespace, head is the part before that.
-    head = line.rstrip()
-    headlen = len(head)
-    # tail is the trailing whitespace
-    tail = line if headlen == 0 else line.rsplit(head[-1], 1)[1]
-    # now to constuct the actual string
-    dots = builtins.__xonsh_env__.get('MULTILINE_PROMPT')
-    dots = dots() if callable(dots) else dots
-    if dots is None or len(dots) == 0:
-        return ''
-    tokstr = format_color(dots, hide=True)
-    baselen = 0
-    basetoks = []
-    for x in tokstr.split('\001'):
-        pre, sep, post = x.partition('\002')
-        if len(sep) == 0:
-            basetoks.append(('', pre))
-            baselen += len(pre)
-        else:
-            basetoks.append(('\001' + pre + '\002', post))
-            baselen += len(post)
-    if baselen == 0:
-        return format_color('{NO_COLOR}' + tail, hide=True)
-    toks = basetoks * (headlen // baselen)
-    n = headlen % baselen
-    count = 0
-    for tok in basetoks:
-        slen = len(tok[1])
-        newcount = slen + count
-        if slen == 0:
-            continue
-        elif newcount <= n:
-            toks.append(tok)
-        else:
-            toks.append((tok[0], tok[1][:n-count]))
-        count = newcount
-        if n <= count:
-            break
-    toks.append((format_color('{NO_COLOR}', hide=True), tail))
-    rtn = ''.join(itertools.chain.from_iterable(toks))
-    return rtn
 
 
 BASE_ENV = LazyObject(lambda: {
