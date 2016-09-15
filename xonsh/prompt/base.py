@@ -94,11 +94,12 @@ def _failover_template_format(template):
 
 def partial_format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
     """Formats a xonsh prompt template string."""
-    try:
-        return _partial_format_prompt_main(template=template,
-                                           formatter_dict=formatter_dict)
-    except Exception:
-        return _failover_template_format(template)
+    # try:
+    return _partial_format_prompt_main(template=template,
+                                       formatter_dict=formatter_dict)
+    # except Exception:
+    #     print("EXCEPTING")
+    #     return _failover_template_format(template)
 
 
 def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
@@ -109,7 +110,7 @@ def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
     colon = ':'
     expl = '!'
     toks = []
-    for literal, field, spec, conv in string.Formatter().parse(template):
+    for literal, field, spec, conv in _FORMATTER.parse(template):
         toks.append(literal)
         if field is None:
             continue
@@ -119,7 +120,13 @@ def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
             toks.append(val)
         elif field in fmtter:
             v = fmtter[field]
-            val = v() if callable(v) else v
+            try:
+                val = v() if callable(v) else v
+            except Exception as err:
+                print('prompt: error: field {!r} raised: {!r}'
+                      ''.format(field, err))
+                toks.append('(ERROR:{})'.format(field))
+                continue
             val = _format_value(val, spec, conv)
             toks.append(val)
         else:
