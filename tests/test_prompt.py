@@ -65,3 +65,13 @@ def test_format_prompt_with_invalid_func(xonsh_builtins):
         foo = bar  # raises exception
         return '{user}'
     assert isinstance(partial_format_prompt(p), str)
+
+
+def test_format_prompt_with_func_that_raises(capsys, xonsh_builtins):
+    template = 'tt {zerodiv} tt'
+    exp = 'tt (ERROR:zerodiv) tt'
+    formatter_dict = {'zerodiv': lambda : 1/0}
+    obs = partial_format_prompt(template, formatter_dict)
+    assert exp == obs
+    out, err = capsys.readouterr()
+    assert 'prompt: error' in err

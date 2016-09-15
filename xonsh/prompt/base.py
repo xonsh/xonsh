@@ -7,6 +7,7 @@ import os
 import re
 import socket
 import string
+import sys
 
 import xonsh.lazyasd as xl
 import xonsh.tools as xt
@@ -124,7 +125,7 @@ def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
                 val = v() if callable(v) else v
             except Exception as err:
                 print('prompt: error: field {!r} raised: {!r}'
-                      ''.format(field, err))
+                      ''.format(field, err), file=sys.stderr)
                 toks.append('(ERROR:{})'.format(field))
                 continue
             val = _format_value(val, spec, conv)
