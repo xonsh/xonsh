@@ -27,8 +27,11 @@ def _get_git_branch(q):
         else:
             q.put(status[2])
 
+
 def get_git_branch():
-    # import pdb; pdb.set_trace()
+    """Attempts to find the current git branch. If this could not
+    be determined (timeout, not in a git repo, etc.) then this returns None.
+    """
     branch = None
     timeout = builtins.__xonsh_env__.get('VC_BRANCH_TIMEOUT')
     q = queue.Queue()
@@ -126,9 +129,6 @@ def current_branch(pad=NotImplemented):
 
 
 def _git_dirty_working_directory(q):
-    """Returns whether or not the git directory is dirty. If this could not
-    be determined (timeout, file not sound, etc.) then this returns None.
-    """
     status = None
     try:
         status = subprocess.check_output(['git', 'status'],
@@ -143,6 +143,9 @@ def _git_dirty_working_directory(q):
 
 
 def git_dirty_working_directory():
+    """Returns whether or not the git directory is dirty. If this could not
+    be determined (timeout, file not sound, etc.) then this returns None.
+    """
     timeout = builtins.__xonsh_env__.get("VC_BRANCH_TIMEOUT")
     q = queue.Queue()
     t = threading.Thread(target=_git_dirty_working_directory, args=(q,))

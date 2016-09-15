@@ -9,12 +9,10 @@ import subprocess
 import xonsh.lazyasd as xl
 
 
-@xl.lazyobject
-def GitStatus():
-    return collections.namedtuple('GitStatus',
-                                  ['branch', 'num_ahead', 'num_behind',
-                                   'untracked', 'changed', 'conflicts',
-                                   'staged', 'stashed', 'operations'])
+GitStatus = collections.namedtuple('GitStatus',
+                                   ['branch', 'num_ahead', 'num_behind',
+                                    'untracked', 'changed', 'conflicts',
+                                    'staged', 'stashed', 'operations'])
 
 def _check_output(*args, **kwargs):
     kwargs.update(dict(env=builtins.__xonsh_env__.detype(),
@@ -127,39 +125,29 @@ def gitstatus():
 def gitstatus_prompt():
     """Return str `BRANCH|OPERATOR|numbers`"""
     try:
-        status = gitstatus()
+        s = gitstatus()
     except subprocess.SubprocessError:
         return None
 
-    branch = status.branch
-    num_ahead = status.num_ahead
-    num_behind = status.num_behind
-    untracked = status.untracked
-    changed = status.changed
-    conflicts = status.conflicts
-    staged = status.staged
-    stashed = status.stashed
-    operations = status.operations
-
-    ret = _get_def('BRANCH') + branch
-    if num_ahead > 0:
-        ret += _get_def('AHEAD') + str(num_ahead)
-    if num_behind > 0:
-        ret += _get_def('BEHIND') + str(num_behind)
-    if operations:
-        ret += _get_def('OPERATION') + '|' + '|'.join(operations)
+    ret = _get_def('BRANCH') + s.branch
+    if s.num_ahead > 0:
+        ret += _get_def('AHEAD') + str(s.num_ahead)
+    if s.num_behind > 0:
+        ret += _get_def('BEHIND') + str(s.num_behind)
+    if s.operations:
+        ret += _get_def('OPERATION') + '|' + '|'.join(s.operations)
     ret += '|'
-    if staged > 0:
-        ret += _get_def('STAGED') + str(staged) + '{NO_COLOR}'
-    if conflicts > 0:
-        ret += _get_def('CONFLICTS') + str(conflicts) + '{NO_COLOR}'
-    if changed > 0:
-        ret += _get_def('CHANGED') + str(changed) + '{NO_COLOR}'
-    if untracked > 0:
-        ret += _get_def('UNTRACKED') + str(untracked) + '{NO_COLOR}'
-    if stashed > 0:
-        ret += _get_def('STASHED') + str(stashed) + '{NO_COLOR}'
-    if staged + conflicts + changed + untracked + stashed == 0:
+    if s.staged > 0:
+        ret += _get_def('STAGED') + str(s.staged) + '{NO_COLOR}'
+    if s.conflicts > 0:
+        ret += _get_def('CONFLICTS') + str(s.conflicts) + '{NO_COLOR}'
+    if s.changed > 0:
+        ret += _get_def('CHANGED') + str(s.changed) + '{NO_COLOR}'
+    if s.untracked > 0:
+        ret += _get_def('UNTRACKED') + str(s.untracked) + '{NO_COLOR}'
+    if s.stashed > 0:
+        ret += _get_def('STASHED') + str(s.stashed) + '{NO_COLOR}'
+    if s.staged + s.conflicts + s.changed + s.untracked + s.stashed == 0:
         ret += _get_def('CLEAN') + '{NO_COLOR}'
     ret += '{NO_COLOR}'
 
