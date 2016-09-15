@@ -80,6 +80,11 @@
   "package": "xontrib-z",
   "url": "https://github.com/astronouth7303/xontrib-z",
   "description": ["Tracks your most used directories, based on 'frecency'."]
+ },
+ {"name": "powerline",
+  "package": "xontrib-powerline",
+  "url": "https://github.com/santagada/xontrib-powerline",
+  "description": ["Powerline for Xonsh shell"]
  }
  ],
  "packages": {
@@ -160,6 +165,13 @@
    "url": "https://github.com/astronouth7303/xontrib-z",
    "install": {
     "pip": "pip install xontrib-z"
+   }
+  },
+  "xontrib-powerline": {
+   "license": "MIT",
+   "url": "https://github.com/santagada/xontrib-powerline",
+   "install": {
+    "pip": "pip install xontrib-powerline"
    }
   },
   "xontrib-thefuck": {
