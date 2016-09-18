@@ -13,9 +13,6 @@ import xonsh.lazyasd as xl
 import xonsh.tools as xt
 import xonsh.platform as xp
 
-from xonsh.tools import format_color, print_exception
-from xonsh.platform import ON_WINDOWS, ON_CYGWIN
-
 from xonsh.prompt.cwd import (
     _collapsed_pwd, _replace_home_cwd, _dynamically_collapsed_pwd
 )
@@ -52,10 +49,10 @@ def _FORMATTER():
 
 def default_prompt():
     """Creates a new instance of the default prompt."""
-    if ON_CYGWIN:
+    if xp.ON_CYGWIN:
         dp = ('{env_name:{} }{BOLD_GREEN}{user}@{hostname}'
               '{BOLD_BLUE} {cwd} {prompt_end}{NO_COLOR} ')
-    elif ON_WINDOWS:
+    elif xp.ON_WINDOWS:
         dp = ('{env_name:{} }'
               '{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} '
               '{cwd}{branch_color}{curr_branch: {}}{NO_COLOR} '
@@ -88,7 +85,7 @@ def _failover_template_format(template):
             # in user's xonshrc should not crash xonsh
             return template()
         except Exception:
-            print_exception()
+            xt.print_exception()
             return '$ '
     return template
 
@@ -125,7 +122,7 @@ def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
             except Exception as err:
                 print('prompt: error: on field {!r}'
                       ''.format(field), file=sys.stderr)
-                print_exception()
+                xt.print_exception()
                 toks.append('(ERROR:{})'.format(field))
                 continue
             val = _format_value(val, spec, conv)
@@ -162,7 +159,7 @@ def multiline_prompt(curr=''):
     dots = dots() if callable(dots) else dots
     if dots is None or len(dots) == 0:
         return ''
-    tokstr = format_color(dots, hide=True)
+    tokstr = xt.format_color(dots, hide=True)
     baselen = 0
     basetoks = []
     for x in tokstr.split('\001'):
@@ -174,7 +171,7 @@ def multiline_prompt(curr=''):
             basetoks.append(('\001' + pre + '\002', post))
             baselen += len(post)
     if baselen == 0:
-        return format_color('{NO_COLOR}' + tail, hide=True)
+        return xt.format_color('{NO_COLOR}' + tail, hide=True)
     toks = basetoks * (headlen // baselen)
     n = headlen % baselen
     count = 0
@@ -190,7 +187,7 @@ def multiline_prompt(curr=''):
         count = newcount
         if n <= count:
             break
-    toks.append((format_color('{NO_COLOR}', hide=True), tail))
+    toks.append((xt.format_color('{NO_COLOR}', hide=True), tail))
     rtn = ''.join(itertools.chain.from_iterable(toks))
     return rtn
 
