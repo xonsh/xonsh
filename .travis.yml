@@ -2,10 +2,13 @@ language: python
 matrix:
     include:
         - os: linux
+          python: 3.5
+          env:
+            - BUILD_DOCS=true
+        - os: linux
           python: "nightly"
           env:
             - RUN_COVERAGE=true
-            - BUILD_DOCS=true
         - os: osx
           language: generic
           env: PYTHON="3.4" MINICONDA_OS="MacOSX"
@@ -16,7 +19,7 @@ matrix:
         - python: "nightly"
 
 before_install:
-  - if [[ ! "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then
+  - if [[ ! "$TRAVIS_PYTHON_VERSION" == "nightly" && ! $BUILD_DOCS ]]; then
       URL="https://repo.continuum.io/miniconda/Miniconda3-latest-${MINICONDA_OS}-x86_64.sh";
       wget "${URL}" -O miniconda.sh;
       bash miniconda.sh -b -p $HOME/miniconda;
@@ -28,28 +31,27 @@ before_install:
     fi
 
 install:
-  - if [[ ! "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then
+  - if [[ $BUILD_DOCS = true ]]; then
+      python setup.py install;
+      pip install -r requirements-docs.txt;
+      pip install pygments prompt_toolkit ply psutil ipykernel matplotlib;
+    elif [[ ! "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then
       conda create -q -n test_env python=${PYTHON} pygments prompt_toolkit ply pytest pytest-timeout psutil;
       source activate test_env;
       python setup.py install;
     else
       pip install -r requirements-tests.txt;
     fi
-  - if [[ $BUILD_DOCS = true ]]; then
-      python setup.py install;
-      pip install -r requirements-docs.txt;
-    fi
 
 
 script:
-  - if [[ $RUN_COVERAGE = true ]]; then
+  - if [[ $BUILD_DOCS = true ]]; then
+      cd docs;
+      make html;
+    elif [[ $RUN_COVERAGE = true ]]; then
       py.test --flake8 --cov=. --timeout=10;
     else
       py.test --timeout=10;
-    fi
-  - if [[ $BUILD_DOCS = true ]]; then
-        cd docs;
-        make html;
     fi
 
 

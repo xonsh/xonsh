@@ -38,7 +38,7 @@ def _command_is_valid(cmd):
 
 
 def _command_is_autocd(cmd):
-    if not builtins.__xonsh_env__['AUTO_CD']:
+    if not builtins.__xonsh_env__.get('AUTO_CD'):
         return False
     cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
     return os.path.isdir(cmd_abspath)
