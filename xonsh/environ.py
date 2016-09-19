@@ -4,13 +4,11 @@ import os
 import re
 import sys
 import json
-import string
 import pprint
 import locale
 import builtins
 import warnings
 import traceback
-import itertools
 import contextlib
 import collections
 import collections.abc as cabc
@@ -22,8 +20,9 @@ from xonsh.dirstack import _get_cwd
 from xonsh.foreign_shells import load_foreign_envs
 from xonsh.platform import (
     BASH_COMPLETIONS_DEFAULT, DEFAULT_ENCODING, PATH_DEFAULT,
-    ON_WINDOWS, ON_LINUX, ON_CYGWIN,
+    ON_WINDOWS, ON_LINUX
 )
+
 from xonsh.tools import (
     always_true, always_false, ensure_string, is_env_path,
     str_to_env_path, env_path_to_str, is_bool, to_bool, bool_to_str,
@@ -33,7 +32,7 @@ from xonsh.tools import (
     is_string_set, csv_to_set, set_to_csv, is_int, is_bool_seq,
     to_bool_or_int, bool_or_int_to_str,
     csv_to_bool_seq, bool_seq_to_csv, DefaultNotGiven, print_exception,
-    setup_win_unicode_console, intensify_colors_on_win_setter, format_color,
+    setup_win_unicode_console, intensify_colors_on_win_setter,
     is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str,
     is_logfile_opt, to_logfile_opt, logfile_opt_to_str, executables_in,
     is_nonstring_seq_of_strings, pathsep_to_upper_seq,
@@ -170,25 +169,6 @@ def is_callable_default(x):
     return callable(x) and getattr(x, '_xonsh_callable_default', False)
 
 
-def default_prompt():
-    """Creates a new instance of the default prompt."""
-    if ON_CYGWIN:
-        dp = ('{env_name:{} }{BOLD_GREEN}{user}@{hostname}'
-              '{BOLD_BLUE} {cwd} {prompt_end}{NO_COLOR} ')
-    elif ON_WINDOWS:
-        dp = ('{env_name:{} }'
-              '{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} '
-              '{cwd}{branch_color}{curr_branch: {}}{NO_COLOR} '
-              '{BOLD_INTENSE_CYAN}{prompt_end}{NO_COLOR} ')
-    else:
-        dp = ('{env_name:{} }'
-              '{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} '
-              '{cwd}{branch_color}{curr_branch: {}}{NO_COLOR} '
-              '{BOLD_BLUE}{prompt_end}{NO_COLOR} ')
-    return dp
-
-
-DEFAULT_PROMPT = LazyObject(default_prompt, globals(), 'DEFAULT_PROMPT')
 DEFAULT_TITLE = '{current_job:{} | }{user}@{hostname}: {cwd} | xonsh'
 
 
@@ -273,7 +253,7 @@ def DEFAULT_VALUES():
         'PATH': PATH_DEFAULT,
         'PATHEXT': ['.COM', '.EXE', '.BAT', '.CMD'] if ON_WINDOWS else [],
         'PRETTY_PRINT_RESULTS': True,
-        'PROMPT': default_prompt(),
+        'PROMPT': prompt.default_prompt(),
         'PUSHD_MINUS': False,
         'PUSHD_SILENT': False,
         'RAISE_SUBPROC_ERROR': False,
@@ -642,7 +622,7 @@ def DEFAULT_DOCS():
         '* XONSH_GITSTATUS_CLEAN: `{BOLD_GREEN}✓`\n'
         '* XONSH_GITSTATUS_AHEAD: `↑·`\n'
         '* XONSH_GITSTATUS_BEHIND: `↓·`\n'
-        ),
+    ),
     'XONSH_HISTORY_FILE': VarDocs(
         'Location of history file (deprecated).',
         configurable=False, default="'~/.xonsh_history'"),
@@ -926,157 +906,6 @@ def _yield_executables(directory, name):
 def locate_binary(name):
     """Locates an executable on the file system."""
     return builtins.__xonsh_commands_cache__.locate_binary(name)
-
-
-_FORMATTER = LazyObject(string.Formatter, globals(), '_FORMATTER')
-
-
-def is_template_string(template, formatter_dict=None):
-    """Returns whether or not the string is a valid template."""
-    template = template() if callable(template) else template
-    try:
-        included_names = set(i[1] for i in _FORMATTER.parse(template))
-    except ValueError:
-        return False
-    included_names.discard(None)
-    if formatter_dict is None:
-        fmtter = builtins.__xonsh_env__.get('FORMATTER_DICT',
-                                            prompt.FORMATTER_DICT)
-    else:
-        fmtter = formatter_dict
-    known_names = set(fmtter.keys())
-    return included_names <= known_names
-
-
-def _get_fmtter(formatter_dict=None):
-    if formatter_dict is None:
-        fmtter = builtins.__xonsh_env__.get('FORMATTER_DICT',
-                                            prompt.FORMATTER_DICT)
-    else:
-        fmtter = formatter_dict
-    return fmtter
-
-
-def _failover_template_format(template):
-    if callable(template):
-        try:
-            # Exceptions raises from function of producing $PROMPT
-            # in user's xonshrc should not crash xonsh
-            return template()
-        except Exception:
-            print_exception()
-            return '$ '
-    return template
-
-
-def partial_format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
-    """Formats a xonsh prompt template string."""
-    try:
-        return _partial_format_prompt_main(template=template,
-                                           formatter_dict=formatter_dict)
-    except Exception:
-        return _failover_template_format(template)
-
-
-def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
-    template = template() if callable(template) else template
-    fmtter = _get_fmtter(formatter_dict)
-    bopen = '{'
-    bclose = '}'
-    colon = ':'
-    expl = '!'
-    toks = []
-    for literal, field, spec, conv in _FORMATTER.parse(template):
-        toks.append(literal)
-        if field is None:
-            continue
-        elif field.startswith('$'):
-            val = builtins.__xonsh_env__[field[1:]]
-            val = _format_value(val, spec, conv)
-            toks.append(val)
-        elif field in fmtter:
-            v = fmtter[field]
-            val = v() if callable(v) else v
-            val = _format_value(val, spec, conv)
-            toks.append(val)
-        else:
-            toks.append(bopen)
-            toks.append(field)
-            if conv is not None and len(conv) > 0:
-                toks.append(expl)
-                toks.append(conv)
-            if spec is not None and len(spec) > 0:
-                toks.append(colon)
-                toks.append(spec)
-            toks.append(bclose)
-    return ''.join(toks)
-
-
-def _format_value(val, spec, conv):
-    """Formats a value from a template string {val!conv:spec}. The spec is
-    applied as a format string itself, but if the value is None, the result
-    will be empty. The purpose of this is to allow optional parts in a
-    prompt string. For example, if the prompt contains '{current_job:{} | }',
-    and 'current_job' returns 'sleep', the result is 'sleep | ', and if
-    'current_job' returns None, the result is ''.
-    """
-    if val is None:
-        return ''
-    val = _FORMATTER.convert_field(val, conv)
-    if spec:
-        val = _FORMATTER.format(spec, val)
-    return val
-
-
-RE_HIDDEN = LazyObject(lambda: re.compile('\001.*?\002'), globals(),
-                       'RE_HIDDEN')
-
-
-def multiline_prompt(curr=''):
-    """Returns the filler text for the prompt in multiline scenarios."""
-    line = curr.rsplit('\n', 1)[1] if '\n' in curr else curr
-    line = RE_HIDDEN.sub('', line)  # gets rid of colors
-    # most prompts end in whitespace, head is the part before that.
-    head = line.rstrip()
-    headlen = len(head)
-    # tail is the trailing whitespace
-    tail = line if headlen == 0 else line.rsplit(head[-1], 1)[1]
-    # now to constuct the actual string
-    dots = builtins.__xonsh_env__.get('MULTILINE_PROMPT')
-    dots = dots() if callable(dots) else dots
-    if dots is None or len(dots) == 0:
-        return ''
-    tokstr = format_color(dots, hide=True)
-    baselen = 0
-    basetoks = []
-    for x in tokstr.split('\001'):
-        pre, sep, post = x.partition('\002')
-        if len(sep) == 0:
-            basetoks.append(('', pre))
-            baselen += len(pre)
-        else:
-            basetoks.append(('\001' + pre + '\002', post))
-            baselen += len(post)
-    if baselen == 0:
-        return format_color('{NO_COLOR}' + tail, hide=True)
-    toks = basetoks * (headlen // baselen)
-    n = headlen % baselen
-    count = 0
-    for tok in basetoks:
-        slen = len(tok[1])
-        newcount = slen + count
-        if slen == 0:
-            continue
-        elif newcount <= n:
-            toks.append(tok)
-        else:
-            toks.append((tok[0], tok[1][:n-count]))
-        count = newcount
-        if n <= count:
-            break
-    toks.append((format_color('{NO_COLOR}', hide=True), tail))
-    rtn = ''.join(itertools.chain.from_iterable(toks))
-    return rtn
 
 
 BASE_ENV = LazyObject(lambda: {

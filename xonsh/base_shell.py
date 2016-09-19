@@ -13,7 +13,7 @@ from xonsh.codecache import (should_use_cache, code_cache_name,
                              code_cache_check, get_cache_filename,
                              update_cache, run_compiled_code)
 from xonsh.completer import Completer
-from xonsh.environ import multiline_prompt, partial_format_prompt
+from xonsh.prompt.base import multiline_prompt, partial_format_prompt
 from xonsh.events import events
 
 
