@@ -221,8 +221,8 @@ class BaseShell(object):
     def _fix_cwd(self):
         """Check if the cwd changed out from under us"""
         cwd = os.getcwd()
-        if cwd != builtins.__xonsh_env__['PWD']:
-            old = builtins.__xonsh_env__['PWD']             # working directory changed without updating $PWD
+        if cwd != builtins.__xonsh_env__.get('PWD'):
+            old = builtins.__xonsh_env__.get('PWD')             # working directory changed without updating $PWD
             builtins.__xonsh_env__['PWD'] = cwd             # track it now
             if old is not None:
                 builtins.__xonsh_env__['OLDPWD'] = old      # and update $OLDPWD like dirstack.
