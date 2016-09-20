@@ -773,6 +773,13 @@ class Env(cabc.MutableMapping):
             self._docs[key] = vd
         return vd
 
+    def help(self, key):
+        docs = self.get_docs(key)
+        print(key, ':\n', sep='')
+        print(docs.docstr, '\n')
+        print('default:', docs.default)
+        print('configurable:', docs.configurable)
+
     def is_manually_set(self, varname):
         """
         Checks if an environment variable has been manually set.
