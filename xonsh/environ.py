@@ -784,7 +784,7 @@ class Env(cabc.MutableMapping):
     def help(self, key):
         """Get information about a specific enviroment variable."""
         vardocs = self.get_docs(key)
-        width = width=min(79, os.get_terminal_size()[0])
+        width = min(79, os.get_terminal_size()[0])
         docstr = '\n'.join(textwrap.wrap(vardocs.docstr, width=width))
         template = HELP_TEMPLATE.format(envvar=key,
                                         docstr=docstr,
