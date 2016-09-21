@@ -1,4 +1,5 @@
 import os
+import re
 import ast
 import builtins
 
@@ -17,6 +18,7 @@ def CHARACTERS_NEED_QUOTES():
         cnq.append('%')
     return cnq
 
+RE_WIN_DRIVE = xl.LazyObject(lambda: re.compile('\w:'), globals(), 'RE_WIN_DRIVE')
 
 def _path_from_partial_string(inp, pos=None):
     if pos is None:
@@ -264,6 +266,9 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
         if len(p) != 0:
             if p[0] == '':
                 basedir = ('', )
+                p = p[1:]
+            elif re.match(RE_WIN_DRIVE, p[0]):
+                basedir = (re.match(RE_WIN_DRIVE, p[0]).group(), )
                 p = p[1:]
             else:
                 basedir = None
