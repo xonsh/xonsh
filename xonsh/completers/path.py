@@ -11,9 +11,10 @@ from xonsh.completers.tools import get_filter_function
 
 @xl.lazyobject
 def CHARACTERS_NEED_QUOTES():
-    cnq = ' `\t\r\n${}*()"\',?&'
+    cnq = [' ', '`', '\t', '\r', '\n', '$', '{', '}', ','
+           '*', '(', ')', '"', "'", '?', '&', 'and', 'or']
     if xp.ON_WINDOWS:
-        cnq += '%'
+        cnq.append('%')
     return cnq
 
 
