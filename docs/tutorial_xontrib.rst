@@ -59,6 +59,11 @@ Here is a sample file system layout and what the xontrib names would be::
           |- done.py     # "mypkg.subpkg.done", full module name
 
 
+You can also use `cookiecutter <https://github.com/audreyr/cookiecutter>`_ with
+the `xontrib template <https://github.com/laerus/cookiecutter-xontrib>`_ to easily
+create the layout for your xontrib package.
+
+
 Loading Xontribs
 ================
 Xontribs may be loaded in a few different ways: from the config file,

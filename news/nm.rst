@@ -8,6 +8,7 @@
 
 **Fixed:**
 
-* cd . and cd <singleCharacter> now work.  Fix indexerror in AUTO_PUSHD case, too.
+* Parser would fail on nested, captured suprocess macros. Now, it works,
+  hooray!?
 
 **Security:** None

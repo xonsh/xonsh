@@ -13,7 +13,7 @@ from pygments.token import Token
 
 from xonsh.base_shell import BaseShell
 from xonsh.tools import print_exception
-from xonsh.environ import partial_format_prompt
+from xonsh.prompt.base import partial_format_prompt
 from xonsh.pyghooks import (XonshLexer, partial_color_tokenize,
                             xonsh_style_proxy)
 from xonsh.ptk.completer import PromptToolkitCompleter

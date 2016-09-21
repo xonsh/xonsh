@@ -6,8 +6,8 @@
 
 **Removed:** None
 
-**Fixed:**
+**Fixed:** 
 
-* cd . and cd <singleCharacter> now work.  Fix indexerror in AUTO_PUSHD case, too.
+* Fix hard crash when foreign shell functions fails to run. #1715
 
 **Security:** None

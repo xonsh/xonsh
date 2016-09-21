@@ -47,7 +47,7 @@ def test_cdpath_collision(xonsh_builtins):
     if not os.path.exists(sub_tests):
         os.mkdir(sub_tests)
     with chdir(HERE):
-        assert os.getcwd() ==  HERE
+        assert os.getcwd() == HERE
         dirstack.cd(["tests"])
         assert os.getcwd() ==  os.path.join(HERE, "tests")
 
@@ -59,15 +59,16 @@ def test_cdpath_expansion(xonsh_builtins):
         os.path.expanduser("~/xonsh-test-cdpath-home")
     )
     try:
-        for _ in test_dirs:
-            if not os.path.exists(_):
-                os.mkdir(_)
-            assert os.path.exists(dirstack._try_cdpath(_)), "dirstack._try_cdpath: could not resolve {0}".format(_)
-    except Exception as e:
-        tuple(os.rmdir(_) for _ in test_dirs if os.path.exists(_))
-        raise e
+        for d in test_dirs:
+            if not os.path.exists(d):
+                os.mkdir(d)
+            assert os.path.exists(dirstack._try_cdpath(d)), "dirstack._try_cdpath: could not resolve {0}".format(d)
+    finally:
+        for d in test_dirs:
+            if os.path.exists(d):
+                os.rmdir(d)
 
-		
+
 def test_cdpath_events(xonsh_builtins, tmpdir):
     xonsh_builtins.__xonsh_env__ = Env(CDPATH=PARENT, PWD=os.getcwd())
     target = str(tmpdir)
@@ -77,7 +78,6 @@ def test_cdpath_events(xonsh_builtins, tmpdir):
     def handler(old, new):
         nonlocal ev
         ev = old, new
-
 
     old_dir = os.getcwd()
     try:
@@ -89,3 +89,26 @@ def test_cdpath_events(xonsh_builtins, tmpdir):
     finally:
         # Use os.chdir() here so dirstack.cd() doesn't fire events (or fail again)
         os.chdir(old_dir)
+
+
+def test_cd_autopush(xonsh_builtins, tmpdir):
+    xonsh_builtins.__xonsh_env__ = Env(CDPATH=PARENT, PWD=os.getcwd(), AUTO_PUSHD=True)
+    target = str(tmpdir)
+
+    old_dir = os.getcwd()
+    old_ds_size = len(dirstack.DIRSTACK)
+
+    assert target != old_dir
+
+    try:
+        dirstack.cd([target])
+        assert target == os.getcwd()
+        assert old_ds_size + 1 == len(dirstack.DIRSTACK)
+        dirstack.popd([])
+    except:
+        raise
+    finally:
+        while len(dirstack.DIRSTACK) > old_ds_size:
+            dirstack.popd([])
+
+    assert old_dir == os.getcwd()

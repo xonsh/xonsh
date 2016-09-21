@@ -8,6 +8,6 @@
 
 **Fixed:**
 
-* cd . and cd <singleCharacter> now work.  Fix indexerror in AUTO_PUSHD case, too.
+* Slashes in virtual environment names work in vox
 
 **Security:** None

@@ -8,6 +8,6 @@
 
 **Fixed:**
 
-* cd . and cd <singleCharacter> now work.  Fix indexerror in AUTO_PUSHD case, too.
+* test_dirstack test_cdpath_expansion leaving stray testing dirs
 
 **Security:** None

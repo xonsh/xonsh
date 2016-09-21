@@ -13,7 +13,7 @@ NEWSDIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'news')
 CATEGORIES = frozenset(['Added', 'Changed', 'Deprecated', 'Removed',
                         'Fixed', 'Security'])
 
-single_grave_reg = re.compile(r'[^`]`[^`]+`[^`]')
+single_grave_reg = re.compile(r'[^`]`[^`]+`[^`_]')
 
 def check_news_file(fname):
     name = fname.name
@@ -51,8 +51,7 @@ def check_news_file(fname):
                 pytest.fail('{}:{}: invalid rst'.format(name, i+1),
                             pytrace=False)
             if '`' in line:
-                if line.count('`') % 4 != 0 \
-                   or single_grave_reg.search(line):
+                if single_grave_reg.search(line):
                     pytest.fail("{}:{}: single grave accents"
                                 " are not valid rst".format(name, i+1),
                                 pytrace=False)

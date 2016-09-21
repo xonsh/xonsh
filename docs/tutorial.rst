@@ -144,10 +144,18 @@ You can access this mapping directly, but in most situations, you shouldn’t ne
 
 If you want for example to check if an environment variable is present in your current
 session (say, in your awesome new ``xonsh`` script) you can use the membership operator:
+
 .. code-block:: xonshcon
 
    >>> 'HOME' in ${...}
    True
+
+To get information about a specific enviroment variable you can use the
+:func:`~xonsh.environ.Env.help` method.
+
+.. code-block:: xonshcon
+
+   >>> ${...}.help('XONSH_DEBUG')
 
 One helpful method on the ``${...}`` is :func:`~xonsh.environ.Env.swap`.
 It can be used to temporarily set an environment variable:
@@ -1175,6 +1183,12 @@ function with the ``xonsh.proc.foreground`` decorator.
 
 Aliasing is a powerful way that xonsh allows you to seamlessly interact to
 with Python and subprocess.
+
+.. warning:: If ``FOREIGN_ALIASES_OVERRIDE`` enviroment variable is False (the default)
+             then foreign shell aliases that try to override xonsh aliases will be ignored.
+             Setting of this enviroment variable must happen in the static configuration
+             file ``$XONSH_CONFIG_DIR/config.json`` in the 'env' section.
+
 
 Up, Down, Tab
 ==============

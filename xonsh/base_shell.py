@@ -13,7 +13,8 @@ from xonsh.codecache import (should_use_cache, code_cache_name,
                              code_cache_check, get_cache_filename,
                              update_cache, run_compiled_code)
 from xonsh.completer import Completer
-from xonsh.environ import multiline_prompt, partial_format_prompt
+from xonsh.prompt.base import multiline_prompt, partial_format_prompt
+from xonsh.events import events
 
 
 class _TeeOut(object):
@@ -158,6 +159,9 @@ class BaseShell(object):
         src, code = self.push(line)
         if code is None:
             return
+
+        events.on_precommand.fire(src)
+
         hist = builtins.__xonsh_history__  # pylint: disable=no-member
         ts1 = None
         store_stdout = builtins.__xonsh_env__.get('XONSH_STORE_STDOUT')  # pylint: disable=no-member
@@ -180,9 +184,49 @@ class BaseShell(object):
             ts1 = ts1 or time.time()
             self._append_history(inp=src, ts=[ts0, ts1], tee_out=tee.getvalue())
             tee.close()
-            builtins.__xonsh_env__['PWD'] = os.getcwd()        # track any change in working directory
+
+            self._fix_cwd()
         if builtins.__xonsh_exit__:  # pylint: disable=no-member
             return True
+
+    def _append_history(self, tee_out=None, **info):
+        """
+        Append information about the command to the history.
+
+        (Also handles on_postcommand because this is the place where all the information is available)
+        """
+        hist = builtins.__xonsh_history__  # pylint: disable=no-member
+        info['rtn'] = hist.last_cmd_rtn
+        tee_out = tee_out or None
+        last_out = hist.last_cmd_out or None
+        if last_out is None and tee_out is None:
+            pass
+        elif last_out is None and tee_out is not None:
+            info['out'] = tee_out
+        elif last_out is not None and tee_out is None:
+            info['out'] = last_out
+        else:
+            info['out'] = tee_out + '\n' + last_out
+
+        events.on_postcommand.fire(
+            info['inp'],
+            info['rtn'],
+            info.get('out', None),
+            info['ts']
+        )
+
+        hist.append(info)
+        hist.last_cmd_rtn = hist.last_cmd_out = None
+
+    def _fix_cwd(self):
+        """Check if the cwd changed out from under us"""
+        cwd = os.getcwd()
+        if cwd != builtins.__xonsh_env__.get('PWD'):
+            old = builtins.__xonsh_env__.get('PWD')             # working directory changed without updating $PWD
+            builtins.__xonsh_env__['PWD'] = cwd             # track it now
+            if old is not None:
+                builtins.__xonsh_env__['OLDPWD'] = old      # and update $OLDPWD like dirstack.
+            events.on_chdir.fire(old, cwd)                  # fire event after cwd actually changed.
 
     def push(self, line):
         """Pushes a line onto the buffer and compiles the code in a way that
@@ -272,23 +316,6 @@ class BaseShell(object):
             print_exception()
         self.settitle()
         return p
-
-    def _append_history(self, tee_out=None, **info):
-        """Append information about the command to the history."""
-        hist = builtins.__xonsh_history__  # pylint: disable=no-member
-        info['rtn'] = hist.last_cmd_rtn
-        tee_out = tee_out or None
-        last_out = hist.last_cmd_out or None
-        if last_out is None and tee_out is None:
-            pass
-        elif last_out is None and tee_out is not None:
-            info['out'] = tee_out
-        elif last_out is not None and tee_out is None:
-            info['out'] = last_out
-        else:
-            info['out'] = tee_out + '\n' + last_out
-        hist.append(info)
-        hist.last_cmd_rtn = hist.last_cmd_out = None
 
     def format_color(self, string, **kwargs):
         """Formats the colors in a string. This base implmentation does not

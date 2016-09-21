@@ -11,9 +11,10 @@ from xonsh.completers.tools import get_filter_function
 
 @xl.lazyobject
 def CHARACTERS_NEED_QUOTES():
-    cnq = ' `\t\r\n${}*()"\',?&'
+    cnq = [' ', '`', '\t', '\r', '\n', '$', '{', '}', ','
+           '*', '(', ')', '"', "'", '?', '&', 'and', 'or']
     if xp.ON_WINDOWS:
-        cnq += '%'
+        cnq.append('%')
     return cnq
 
 
@@ -188,7 +189,8 @@ def _splitpath_helper(path, sofar=()):
     folder, path = os.path.split(path)
     if path:
         sofar = sofar + (path, )
-    if not folder or folder == xt.get_sep():
+    if (not folder or folder == xt.get_sep() or
+       (xp.ON_WINDOWS and os.path.splitdrive(path)[0])):
         return sofar[::-1]
     return _splitpath_helper(folder, sofar)
 

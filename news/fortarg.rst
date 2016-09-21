@@ -8,6 +8,6 @@
 
 **Fixed:**
 
-* cd . and cd <singleCharacter> now work.  Fix indexerror in AUTO_PUSHD case, too.
+* Fixed issue with accidentally wrapping generators inside of function calls.
 
 **Security:** None

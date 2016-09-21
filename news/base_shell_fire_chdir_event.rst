@@ -8,6 +8,6 @@
 
 **Fixed:**
 
-* cd . and cd <singleCharacter> now work.  Fix indexerror in AUTO_PUSHD case, too.
+* now fires chdir event if OS change in working directory is detected.
 
 **Security:** None

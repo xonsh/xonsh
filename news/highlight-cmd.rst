@@ -1,6 +1,6 @@
 **Added:**
 
-* Highlight valid command / executable as Keyword
+* Better syntax highlights in prompt-toolkit, including valid command / path highlighting, macro syntax highlighting, and more
 
 **Changed:** None
 
