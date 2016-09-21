@@ -59,13 +59,14 @@ def test_cdpath_expansion(xonsh_builtins):
         os.path.expanduser("~/xonsh-test-cdpath-home")
     )
     try:
-        for _ in test_dirs:
-            if not os.path.exists(_):
-                os.mkdir(_)
-            assert os.path.exists(dirstack._try_cdpath(_)), "dirstack._try_cdpath: could not resolve {0}".format(_)
-    except Exception as e:
-        tuple(os.rmdir(_) for _ in test_dirs if os.path.exists(_))
-        raise e
+        for d in test_dirs:
+            if not os.path.exists(d):
+                os.mkdir(d)
+            assert os.path.exists(dirstack._try_cdpath(d)), "dirstack._try_cdpath: could not resolve {0}".format(d)
+    finally:
+        for d in test_dirs:
+            if os.path.exists(d):
+                os.rmdir(d)
 
 
 def test_cdpath_events(xonsh_builtins, tmpdir):
