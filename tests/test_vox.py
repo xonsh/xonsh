@@ -32,11 +32,12 @@ def test_crud(xonsh_builtins, tmpdir):
     assert stat.S_ISDIR(tmpdir.join('spam').stat().mode)
     assert last_event == ('create', 'spam')
 
-    env, bin = vox['spam']
-    assert env == str(tmpdir.join('spam'))
-    assert os.path.isdir(bin)
+    ve = vox['spam']
+    assert ve.env == str(tmpdir.join('spam'))
+    assert os.path.isdir(ve.bin)
 
     assert 'spam' in vox
+    assert 'spam' in list(vox)
 
     del vox['spam']
 
@@ -95,3 +96,28 @@ def test_path(xonsh_builtins, tmpdir):
     vox.deactivate()
     
     assert oldpath == xonsh_builtins.__xonsh_env__['PATH']
+
+@skip_if_on_conda
+def test_crud_subdir(xonsh_builtins, tmpdir):
+    """
+    Creates a virtual environment, gets it, enumerates it, and then deletes it.
+    """
+    xonsh_builtins.__xonsh_env__['VIRTUALENV_HOME'] = str(tmpdir)
+
+    vox = Vox()
+    vox.create('spam/eggs')
+    assert stat.S_ISDIR(tmpdir.join('spam', 'eggs').stat().mode)
+
+    ve = vox['spam/eggs']
+    assert ve.env == str(tmpdir.join('spam', 'eggs'))
+    assert os.path.isdir(ve.bin)
+
+    assert 'spam/eggs' in vox
+    assert 'spam' not in vox
+
+    #assert 'spam/eggs' in list(vox)  # This is NOT true on Windows
+    assert 'spam' not in list(vox)
+
+    del vox['spam/eggs']
+
+    assert not tmpdir.join('spam', 'eggs').check()

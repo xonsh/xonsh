@@ -279,7 +279,10 @@ def BASH_COMPLETIONS_DEFAULT():
                '/usr/local/etc/bash_completion')  # v1.x
     elif ON_WINDOWS and git_for_windows_path():
         bcd = (os.path.join(git_for_windows_path(),
-                            'usr\\share\\bash-completion'), )
+                            'usr\\share\\bash-completion'),
+               os.path.join(git_for_windows_path(),
+                            'mingw64\\share\\git\\completion\\'
+                            'git-completion.bash'))
     else:
         bcd = ()
     return bcd
