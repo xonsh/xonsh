@@ -18,7 +18,7 @@ def _get_git_branch(q):
     try:
         status = subprocess.check_output(['git', 'status'],
                                          stderr=subprocess.DEVNULL)
-    except subprocess.CalledProcessError, OSError:
+    except (subprocess.CalledProcessError, OSError):
         q.put(None)
     else:
         status = status.decode().split()
@@ -133,7 +133,7 @@ def _git_dirty_working_directory(q):
     try:
         status = subprocess.check_output(['git', 'status'],
                                          stderr=subprocess.DEVNULL)
-    except subprocess.CalledProcessError, OSError:
+    except (subprocess.CalledProcessError, OSError):
         q.put(None)
     if status is not None:
         if b'nothing to commit' in status:
