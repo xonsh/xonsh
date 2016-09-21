@@ -5,6 +5,7 @@ import re
 import sys
 import json
 import pprint
+import textwrap
 import locale
 import builtins
 import warnings
@@ -36,10 +37,17 @@ from xonsh.tools import (
     is_dynamic_cwd_width, to_dynamic_cwd_tuple, dynamic_cwd_tuple_to_str,
     is_logfile_opt, to_logfile_opt, logfile_opt_to_str, executables_in,
     is_nonstring_seq_of_strings, pathsep_to_upper_seq,
-    seq_to_upper_pathsep,
+    seq_to_upper_pathsep, print_color
 )
 import xonsh.prompt.base as prompt
 
+
+@lazyobject
+def HELP_TEMPLATE():
+    return ('{{INTENSE_RED}}{key}{{NO_COLOR}}:\n\n'
+            '{{INTENSE_YELLOW}}{docstr}{{NO_COLOR}}\n\n'
+            'default: {{CYAN}}{default}{{NO_COLOR}}\n'
+            'configurable: {{CYAN}}{configurable}{{NO_COLOR}}')
 
 @lazyobject
 def LOCALE_CATS():
@@ -775,10 +783,13 @@ class Env(cabc.MutableMapping):
 
     def help(self, key):
         docs = self.get_docs(key)
-        print(key, ':\n', sep='')
-        print(docs.docstr, '\n')
-        print('default:', docs.default)
-        print('configurable:', docs.configurable)
+        width = width=min(79, os.get_terminal_size()[0])
+        docstr = '\n'.join(textwrap.wrap(docs.docstr, width=width))
+        template = HELP_TEMPLATE.format(key=key,
+                                        docstr=docstr,
+                                        default=docs.default,
+                                        configurable=docs.configurable)
+        print_color(template)
 
     def is_manually_set(self, varname):
         """
