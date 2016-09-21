@@ -236,38 +236,38 @@ def test_block_func_trailing_triple_string():
 # Functor tests
 #
 
-X2_WITH = ('x = 1\n'
+X2_WITH = ('{var} = 1\n'
            'with Functor() as f:\n'
            '{body}'
-           'x += 1\n'
+           '{var} += 1\n'
            '{calls}\n'
            )
 
 def test_functor_oneline_onecall_class():
-    body = ('    global x\n'
-            '    x += 42\n')
+    body = ('    global y\n'
+            '    y += 42\n')
     calls = 'f()'
-    s = X2_WITH.format(body=body, calls=calls)
+    s = X2_WITH.format(body=body, calls=calls, var='y')
     glbs = {'Functor': Functor}
     check_exec(s, glbs=glbs, locs=None)
-    block_checks_glb('f', glbs, body, {'x': 44})
+    block_checks_glb('f', glbs, body, {'y': 44})
 
 
 def test_functor_oneline_onecall_func():
-    body = ('    global x\n'
-            '    x += 42\n')
+    body = ('    global z\n'
+            '    z += 42\n')
     calls = 'f.func()'
-    s = X2_WITH.format(body=body, calls=calls)
+    s = X2_WITH.format(body=body, calls=calls, var='z')
     glbs = {'Functor': Functor}
     check_exec(s, glbs=glbs, locs=None)
-    block_checks_glb('f', glbs, body, {'x': 44})
+    block_checks_glb('f', glbs, body, {'z': 44})
 
 
 def test_functor_oneline_onecall_both():
     body = ('    global x\n'
             '    x += 42\n')
     calls = 'f()\nf.func()'
-    s = X2_WITH.format(body=body, calls=calls)
+    s = X2_WITH.format(body=body, calls=calls, var='x')
     glbs = {'Functor': Functor}
     check_exec(s, glbs=glbs, locs=None)
     block_checks_glb('f', glbs, body, {'x': 86})
