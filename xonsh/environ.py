@@ -44,7 +44,7 @@ import xonsh.prompt.base as prompt
 
 @lazyobject
 def HELP_TEMPLATE():
-    return ('{{INTENSE_RED}}{key}{{NO_COLOR}}:\n\n'
+    return ('{{INTENSE_RED}}{envvar}{{NO_COLOR}}:\n\n'
             '{{INTENSE_YELLOW}}{docstr}{{NO_COLOR}}\n\n'
             'default: {{CYAN}}{default}{{NO_COLOR}}\n'
             'configurable: {{CYAN}}{configurable}{{NO_COLOR}}')
@@ -782,13 +782,14 @@ class Env(cabc.MutableMapping):
         return vd
 
     def help(self, key):
-        docs = self.get_docs(key)
+        """Get information about a specific enviroment variable."""
+        vardocs = self.get_docs(key)
         width = width=min(79, os.get_terminal_size()[0])
-        docstr = '\n'.join(textwrap.wrap(docs.docstr, width=width))
-        template = HELP_TEMPLATE.format(key=key,
+        docstr = '\n'.join(textwrap.wrap(vardocs.docstr, width=width))
+        template = HELP_TEMPLATE.format(envvar=key,
                                         docstr=docstr,
-                                        default=docs.default,
-                                        configurable=docs.configurable)
+                                        default=vardocs.default,
+                                        configurable=vardocs.configurable)
         print_color(template)
 
     def is_manually_set(self, varname):

@@ -144,10 +144,18 @@ You can access this mapping directly, but in most situations, you shouldn’t ne
 
 If you want for example to check if an environment variable is present in your current
 session (say, in your awesome new ``xonsh`` script) you can use the membership operator:
+
 .. code-block:: xonshcon
 
    >>> 'HOME' in ${...}
    True
+
+To get information about a specific enviroment variable you can use the
+:func:`~xonsh.environ.Env.help` method.
+
+.. code-block:: xonshcon
+
+   >>> ${...}.help('XONSH_DEBUG')
 
 One helpful method on the ``${...}`` is :func:`~xonsh.environ.Env.swap`.
 It can be used to temporarily set an environment variable:
