@@ -267,7 +267,7 @@ def complete_path(prefix, line, start, end, ctx, cdpath=True, filtfunc=None):
             if p[0] == '':
                 basedir = ('', )
                 p = p[1:]
-            elif re.match(RE_WIN_DRIVE, p[0]):
+            elif xp.ON_WINDOWS and re.match(RE_WIN_DRIVE, p[0]):
                 basedir = (re.match(RE_WIN_DRIVE, p[0]).group(), )
                 p = p[1:]
             else:
