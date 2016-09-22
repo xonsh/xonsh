@@ -31,7 +31,7 @@ from xonsh.foreign_shells import load_foreign_aliases
 from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.proc import (
-    ProcProxy, SimpleProcProxy, ForegroundProcProxy,
+    PopenThread, ProcProxy, SimpleProcProxy, ForegroundProcProxy,
     SimpleForegroundProcProxy, TeePTYProc, pause_call_resume, Command,
     HiddenCommand)
 from xonsh.tools import (
@@ -653,6 +653,8 @@ def stdout_capture_kinds():
 
 def _update_last_spec(last, captured=False):
     env = builtins.__xonsh_env__
+    if not callable(last.alias):
+        last.cls = PopenThread
     # set standard in
     if (last.stdin is not None and captured == 'object' and
             env.get('XONSH_STORE_STDIN')):

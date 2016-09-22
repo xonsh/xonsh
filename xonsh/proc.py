@@ -48,12 +48,21 @@ def msvcrt():
 
 class PopenThread(threading.Thread):
 
-    def __init__(self, stdout=None, stderr=None, *args, **kwargs):
+    def __init__(self, *args, stdout=None, stderr=None, **kwargs):
         super().__init__()
-        self.stdout = stdout
-        self.stderr = stderr
-        self.proc = subprocess.Popen(stdout=subprocss.PIPE,
-                                     stderr=subprocess.PIPE, *args, **kwargs)
+        self.proc = proc = subprocess.Popen(stdout=subprocess.PIPE,
+                                            stderr=subprocess.PIPE,
+                                            *args, **kwargs)
+        self.pid = proc.pid
+        self.universal_newlines = uninew = proc.universal_newlines
+        if stdout is None:
+            self.stdout = io.StringIO() if uninew else io.BytesIO()
+        else:
+            self.stdout = stdout
+        if stderr is None:
+            self.stderr = io.StringIO() if uninew else io.BytesIO()
+        else:
+            self.stderr = stderr
         self.start()
 
     def run(self):
@@ -62,12 +71,29 @@ class PopenThread(threading.Thread):
         procerr = proc.stdout
         stdout = self.stdout
         stderr = self.stderr
-        while proc.is_alive():
-            for line in iter(procout.readline, ''):
-                stdout.write(line)
-            for line in iter(procerr.readline, ''):
-                stderr.write(line)
+        self._read_write(procout, stdout)
+        self._read_write(procerr, stderr)
+        while proc.poll() is None:
+            self._read_write(procout, stdout)
+            self._read_write(procerr, stderr)
             time.sleep(1e-4)
+        self._read_write(procout, stdout)
+        self._read_write(procerr, stderr)
+
+    @staticmethod
+    def _read_write(reader, writer):
+        for line in iter(reader.readline, ''):
+            writer.write(line)
+
+    #
+    # Dispatch methods
+    #
+
+    def poll(self):
+        return self.proc.poll()
+
+    def wait(self, timeout=None):
+        return self.proc.wait(timeout=timeout)
 
 
 class Handle(int):
