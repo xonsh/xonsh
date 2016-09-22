@@ -21,9 +21,9 @@ import collections.abc as cabc
 
 from xonsh.platform import ON_WINDOWS, ON_LINUX, ON_POSIX
 from xonsh.tools import (redirect_stdout, redirect_stderr, fallback,
-                         print_exception, XonshCalledProcessError)
+                         print_exception, XonshCalledProcessError, findfirst)
 from xonsh.teepty import TeePTY
-from xonsh.lazyasd import lazyobject
+from xonsh.lazyasd import lazyobject, LazyObject
 from xonsh.jobs import wait_for_active_job
 
 
@@ -51,6 +51,20 @@ def STDOUT_CAPTURE_KINDS():
     return frozenset(['stdout', 'object'])
 
 
+# The following escape codes are xterm codes.
+# See http://rtfm.etla.org/xterm/ctlseq.html for more.
+MODE_NUMS = ('1049', '47', '1047')
+START_ALTERNATE_MODE = LazyObject(
+    lambda: frozenset('\x1b[?{0}h'.format(i).encode() for i in MODE_NUMS),
+    globals(), 'START_ALTERNATE_MODE')
+END_ALTERNATE_MODE = LazyObject(
+    lambda: frozenset('\x1b[?{0}l'.format(i).encode() for i in MODE_NUMS),
+    globals(), 'END_ALTERNATE_MODE')
+ALTERNATE_MODE_FLAGS = LazyObject(
+    lambda: tuple(START_ALTERNATE_MODE) + tuple(END_ALTERNATE_MODE),
+    globals(), 'ALTERNATE_MODE_FLAGS')
+
+
 class PopenThread(threading.Thread):
 
     def __init__(self, *args, stdin=None, stdout=None, stderr=None, **kwargs):
@@ -63,6 +77,7 @@ class PopenThread(threading.Thread):
                                             stdout=stdout,
                                             stderr=subprocess.PIPE,
                                             **kwargs)
+        self._in_alt_mode = False
         self.pid = proc.pid
         self.stdin = proc.stdin
         self.universal_newlines = uninew = proc.universal_newlines
@@ -86,25 +101,57 @@ class PopenThread(threading.Thread):
         procerr = proc.stderr
         stdout = self.stdout
         stderr = self.stderr
-        self._read_write(procout, stdout)
-        self._read_write(procerr, stderr)
+        self._read_write(procout, stdout, sys.stdout)
+        self._read_write(procerr, stderr, sys.stderr)
         while proc.poll() is None:
-            self._read_write(procout, stdout)
-            self._read_write(procerr, stderr)
+            self._read_write(procout, stdout, sys.stdout)
+            self._read_write(procerr, stderr, sys.stderr)
             time.sleep(1e-4)
-        self._read_write(procout, stdout)
-        self._read_write(procerr, stderr)
+        self._read_write(procout, stdout, sys.stdout)
+        self._read_write(procerr, stderr, sys.stderr)
 
-    def _read_write(self, reader, writer):
+    def _read_write(self, reader, writer, stdbuf):
         try:
             for line in iter(reader.readline, ''):
-                with self.lock:
-                    p = writer.tell()
-                    writer.seek(0, io.SEEK_END)
-                    writer.write(line)
-                    writer.seek(p)
+                self._alt_mode_switch(line, writer, stdbuf)
+            stdbuf.flush()
         except OSError:
             pass
+
+    def _alt_mode_switch(self, line, membuf, stdbuf):
+        i, flag = findfirst(line, ALTERNATE_MODE_FLAGS)
+        if flag is None:
+            self._alt_mode_writer(line, membuf, stdbuf)
+        elif flag in START_ALTERNATE_MODE:
+            # This code is executed when the child process switches the
+            # terminal into alternate mode. The line below assumes that
+            # the user has opened vim, less, or similar, and writes writes
+            #to stdin.
+            self._alt_mode_writer(line[:i], membuf, stdbuf)
+            self._in_alt_mode = True
+            self._alt_mode_switch(line[i+len(flag):], membuf, stdbuf)
+        elif flag in END_ALTERNATE_MODE:
+            # This code is executed when the child process switches the
+            # terminal back out of alternate mode. The line below assumes
+            # that the user has returned to the command prompt.
+            self._alt_mode_writer(line[:i], membuf, stdbuf)
+            self._in_alt_mode = False
+            self._alt_mode_switch(line[i+len(flag):], membuf, stdbuf)
+        else:
+            self._alt_mode_writer(line, membuf, stdbuf)
+
+    def _alt_mode_writer(self, line, membuf, stdbuf):
+        if not line:
+            pass  # don't write empty strings
+        elif self._in_alt_mode:
+            stdbuf.write(line)
+        else:
+            with self.lock:
+                p = writer.tell()
+                writer.seek(0, io.SEEK_END)
+                writer.write(line)
+                writer.seek(p)
+
 
     #
     # Dispatch methods
@@ -736,13 +783,14 @@ class Command:
         while proc.poll() is None:
             print(1)
             #yield from stdout.readlines(1024)
+            yield stdout.readline()
             #yield from iter(stdout.readline, '')
             #line = stdout.readline()
             #if not line:
             #    break
             #yield line
-            for c in iter(lambda: stdout.read(1), ''):
-                yield c
+            #for c in iter(lambda: stdout.read(1), ''):
+            #    yield c
             #for line in iter(stdout.readline, ''):
             #    print(1.25)
             #    yield line
@@ -781,6 +829,7 @@ class Command:
         """
         self.output = '' if self.spec.universal_newlines else b''
         for line in self.iterraw():
+            #os.write(pty.STDOUT_FILENO, line.encode())
             self.output += line
             yield line
 

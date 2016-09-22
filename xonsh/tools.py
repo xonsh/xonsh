@@ -121,6 +121,20 @@ def decode_bytes(path):
                        errors=env.get('XONSH_ENCODING_ERRORS') or 'strict')
 
 
+def findfirst(s, substrs):
+    """Finds whichever of the given substrings occurs first in the given string
+    and returns that substring, or returns None if no such strings occur.
+    """
+    i = len(s)
+    result = None
+    for substr in substrs:
+        pos = s.find(substr)
+        if -1 < pos < i:
+            i = pos
+            result = substr
+    return i, result
+
+
 class EnvPath(collections.MutableSequence):
     """A class that implements an environment path, which is a list of
     strings. Provides a custom method that expands all paths if the
