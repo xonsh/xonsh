@@ -55,14 +55,16 @@ def STDOUT_CAPTURE_KINDS():
 # See http://rtfm.etla.org/xterm/ctlseq.html for more.
 MODE_NUMS = ('1049', '47', '1047')
 START_ALTERNATE_MODE = LazyObject(
-    lambda: frozenset('\x1b[?{0}h'.format(i).encode() for i in MODE_NUMS),
+    lambda: frozenset('\x1b[?{0}h'.format(i) for i in MODE_NUMS),
     globals(), 'START_ALTERNATE_MODE')
 END_ALTERNATE_MODE = LazyObject(
-    lambda: frozenset('\x1b[?{0}l'.format(i).encode() for i in MODE_NUMS),
+    lambda: frozenset('\x1b[?{0}l'.format(i) for i in MODE_NUMS),
     globals(), 'END_ALTERNATE_MODE')
 ALTERNATE_MODE_FLAGS = LazyObject(
     lambda: tuple(START_ALTERNATE_MODE) + tuple(END_ALTERNATE_MODE),
     globals(), 'ALTERNATE_MODE_FLAGS')
+
+
 
 
 class PopenThread(threading.Thread):
@@ -70,7 +72,6 @@ class PopenThread(threading.Thread):
     def __init__(self, *args, stdin=None, stdout=None, stderr=None, **kwargs):
         super().__init__()
         self.lock = threading.RLock()
-        #print(stdin)
         self.proc = proc = subprocess.Popen(*args,
                                             stdin=stdin,
                                             #stdout=subprocess.PIPE,
@@ -114,7 +115,7 @@ class PopenThread(threading.Thread):
         try:
             for line in iter(reader.readline, ''):
                 self._alt_mode_switch(line, writer, stdbuf)
-            stdbuf.flush()
+            #stdbuf.flush()
         except OSError:
             pass
 
@@ -147,10 +148,10 @@ class PopenThread(threading.Thread):
             stdbuf.write(line)
         else:
             with self.lock:
-                p = writer.tell()
-                writer.seek(0, io.SEEK_END)
-                writer.write(line)
-                writer.seek(p)
+                p = membuf.tell()
+                membuf.seek(0, io.SEEK_END)
+                membuf.write(line)
+                membuf.seek(p)
 
 
     #
@@ -781,10 +782,10 @@ class Command:
         if not stdout or not stdout.readable():
             raise StopIteration()
         while proc.poll() is None:
-            print(1)
+            #print(1)
             #yield from stdout.readlines(1024)
-            yield stdout.readline()
-            #yield from iter(stdout.readline, '')
+            #yield stdout.readline()
+            yield from iter(stdout.readline, '')
             #line = stdout.readline()
             #if not line:
             #    break
@@ -800,17 +801,17 @@ class Command:
             #except subprocess.TimeoutExpired:
             #    continue
             #yield from so.splitlines()
-            print(2)
+            #print(2)
         proc.wait()
-        print(3)
+        #print(3)
         self._endtime()
-        print(4)
+        #print(4)
         try:
             #yield from stdout.readlines()
             yield from iter(stdout.readline, '')  # iterable version of readlines
         except OSError:
             pass
-        print(5)
+        #print(5)
 
     def itercheck(self):
         """Iterates through the command lines and throws an error if the
