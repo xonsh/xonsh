@@ -16,3 +16,27 @@ def pty():
         return
     else:
         return importlib.import_module('pty')
+
+
+@lazyobject
+def termios():
+    if ON_WINDOWS:
+        return
+    else:
+        return importlib.import_module('termios')
+
+
+@lazyobject
+def fcntl():
+    if ON_WINDOWS:
+        return
+    else:
+        return importlib.import_module('fcntl')
+
+
+@lazyobject
+def tty():
+    if ON_WINDOWS:
+        return
+    else:
+        return importlib.import_module('tty')

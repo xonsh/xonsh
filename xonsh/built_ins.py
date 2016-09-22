@@ -670,8 +670,6 @@ def _update_last_spec(last, captured=False):
         r, w = os.pipe()
         last.stdout = safe_open(w, 'wb')
         last.captured_stdout = safe_open(r, 'rb')
-        #else:
-        #    last.stdout = subprocess.PIPE
     elif builtins.__xonsh_stdout_uncaptured__ is not None:
         last.universal_newlines = True
         last.stdout = builtins.__xonsh_stdout_uncaptured__
@@ -681,11 +679,11 @@ def _update_last_spec(last, captured=False):
         r, w = pty.openpty() if ON_POSIX else os.pipe()
         last.stdout = safe_open(w, 'w')
         last.captured_stdout = safe_open(r, 'r')
-    if ((last.stdout is None) and (not last.background) and
-            env.get('XONSH_STORE_STDOUT')):
-        r, w = os.pipe()
-        last.stdout = safe_open(w, 'w')
-        last.captured_stdout = safe_open(r, 'r')
+    #if ((last.stdout is None) and (not last.background) and
+    #        env.get('XONSH_STORE_STDOUT')):
+    #    r, w = os.pipe()
+    #    last.stdout = safe_open(w, 'w')
+    #    last.captured_stdout = safe_open(r, 'r')
     # set standard error
     if last.stderr is not None:
         pass
@@ -696,6 +694,10 @@ def _update_last_spec(last, captured=False):
     elif builtins.__xonsh_stderr_uncaptured__ is not None:
         last.stderr = builtins.__xonsh_stderr_uncaptured__
         last.captured_stderr = last.stderr
+    else:
+        r, w = pty.openpty() if ON_POSIX else os.pipe()
+        last.stderr = safe_open(w, 'w')
+        last.captured_stderr = safe_open(r, 'r')
 
 
 def cmds_to_specs(cmds, captured=False):

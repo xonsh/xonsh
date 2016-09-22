@@ -20,34 +20,18 @@ import threading
 
 from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.platform import ON_WINDOWS
-from xonsh.lazyimps import pty
+from xonsh.lazyimps import pty, fcntl, termios, tty
 
 
 #
 # Explicit lazy imports for windows
 #
-@lazyobject
-def tty():
-    if ON_WINDOWS:
-        return
-    else:
-        return importlib.import_module('tty')
-
-
-@lazyobject
-def termios():
-    if ON_WINDOWS:
-        return
-    else:
-        return importlib.import_module('termios')
-
-
-@lazyobject
-def fcntl():
-    if ON_WINDOWS:
-        return
-    else:
-        return importlib.import_module('fcntl')
+#@lazyobject
+#def tty():
+#    if ON_WINDOWS:
+#        return
+#    else:
+#        return importlib.import_module('tty')
 
 
 # The following escape codes are xterm codes.

@@ -11,6 +11,7 @@ import io
 import os
 import sys
 import time
+import queue
 import signal
 import builtins
 import functools
@@ -21,10 +22,12 @@ import collections.abc as cabc
 
 from xonsh.platform import ON_WINDOWS, ON_LINUX, ON_POSIX
 from xonsh.tools import (redirect_stdout, redirect_stderr, fallback,
-                         print_exception, XonshCalledProcessError, findfirst)
+                         print_exception, XonshCalledProcessError, findfirst,
+                         on_main_thread)
 from xonsh.teepty import TeePTY
 from xonsh.lazyasd import lazyobject, LazyObject
 from xonsh.jobs import wait_for_active_job
+from xonsh.lazyimps import fcntl, termios, tty
 
 
 # force some lazy imports so we don't have errors on non-windows platforms
@@ -65,6 +68,53 @@ ALTERNATE_MODE_FLAGS = LazyObject(
     globals(), 'ALTERNATE_MODE_FLAGS')
 
 
+class UnexpectedEndOfStream(Exception):
+    pass
+
+
+class NonBlockingFDReader:
+
+    def __init__(self, fd):
+        self.fd = fd
+        self.queue = queue.Queue()
+
+        def populate_queue(fd, queue):
+            while True:
+                try:
+                    c = os.read(fd, 1)
+                except OSError:
+                    break
+                if c:
+                    queue.put(c)
+                else:
+                    raise UnexpectedEndOfStream
+
+        # start reading from stream
+        self.thread = threading.Thread(target=populate_queue,
+                                       args=(self.fd, self.queue))
+        self.thread.daemon = True
+        self.thread.start()
+
+    def read(self, size=-1, timeout=None):
+        try:
+            return self.queue.get(block=timeout is not None,
+                                  timeout=timeout)
+        except queue.Empty:
+            return b''
+
+
+def read_char(reader):
+    """Reads a single character in a safe way."""
+    #fd = reader.fileno()
+    #nbreader = NonBlockingFDReader(fd)
+    def f():
+        try:
+            #c = os.read(fd, 1)
+            c = reader.read(size=1, timeout=1e-4)
+        except (OSError, UnexpectedEndOfStream):
+            c = b''
+        return c
+    return f
 
 
 class PopenThread(threading.Thread):
@@ -72,11 +122,18 @@ class PopenThread(threading.Thread):
     def __init__(self, *args, stdin=None, stdout=None, stderr=None, **kwargs):
         super().__init__()
         self.lock = threading.RLock()
+        self.stdout_fd = stdout.fileno()
+        self._set_pty_size()
+        self.old_winch_handler = None
+        if on_main_thread():
+            self.old_winch_handler = signal.signal(signal.SIGWINCH,
+                                                   self._signal_winch)
+        # start up process
         self.proc = proc = subprocess.Popen(*args,
                                             stdin=stdin,
                                             #stdout=subprocess.PIPE,
                                             stdout=stdout,
-                                            stderr=subprocess.PIPE,
+                                            stderr=stderr,
                                             **kwargs)
         self._in_alt_mode = False
         self.pid = proc.pid
@@ -87,10 +144,11 @@ class PopenThread(threading.Thread):
         #    self.stdout = io.StringIO() if uninew else io.BytesIO()
         #else:
         #    self.stdout = stdout
-        if stderr is None:
-            self.stderr = io.StringIO() if uninew else io.BytesIO()
-        else:
-            self.stderr = stderr
+        self.stderr = io.StringIO() if uninew else io.BytesIO()
+        #if stderr is None:
+        #    self.stderr = io.StringIO() if uninew else io.BytesIO()
+        #else:
+        #    self.stderr = stderr
         self.start()
 
     def run(self):
@@ -98,28 +156,45 @@ class PopenThread(threading.Thread):
         while not hasattr(self, 'captured_stdout'):
             pass
         procout = self.captured_stdout
+        procout = NonBlockingFDReader(procout.fileno())
         #procout = proc.stdout
-        procerr = proc.stderr
+        while not hasattr(self, 'captured_stderr'):
+            pass
+        procerr = self.captured_stderr
+        procerr = NonBlockingFDReader(procerr.fileno())
+        #procerr = proc.stderr
         stdout = self.stdout
         stderr = self.stderr
+        print('run stdout init')
         self._read_write(procout, stdout, sys.stdout)
+        print('run stderr init')
         self._read_write(procerr, stderr, sys.stderr)
         while proc.poll() is None:
+            print('run stdout poll')
             self._read_write(procout, stdout, sys.stdout)
+            print('run stderr poll')
             self._read_write(procerr, stderr, sys.stderr)
+            print('sleeping')
             time.sleep(1e-4)
+        print('run stdout clean')
         self._read_write(procout, stdout, sys.stdout)
+        print('run stderr clean')
         self._read_write(procerr, stderr, sys.stderr)
 
     def _read_write(self, reader, writer, stdbuf):
-        try:
-            for line in iter(reader.readline, ''):
-                self._alt_mode_switch(line, writer, stdbuf)
-            #stdbuf.flush()
-        except OSError:
-            pass
+        buf = b''
+        for c in iter(read_char(reader), b''):
+            print(c, buf)
+            buf += c
+            if c == b'\n':
+                self._alt_mode_switch(buf.decode(), writer, stdbuf)
+                buf = b''
+        print('LEFT LOOP', buf)
+        self._alt_mode_switch(buf.decode(), writer, stdbuf)
 
     def _alt_mode_switch(self, line, membuf, stdbuf):
+        if self.universal_newlines:
+            line = line.replace('\r\n', '\n')
         i, flag = findfirst(line, ALTERNATE_MODE_FLAGS)
         if flag is None:
             self._alt_mode_writer(line, membuf, stdbuf)
@@ -146,13 +221,34 @@ class PopenThread(threading.Thread):
             pass  # don't write empty strings
         elif self._in_alt_mode:
             stdbuf.write(line)
+            stdbuf.flush()
         else:
             with self.lock:
                 p = membuf.tell()
                 membuf.seek(0, io.SEEK_END)
                 membuf.write(line)
+                membuf.flush()
                 membuf.seek(p)
 
+    #
+    # Window resize handlers
+    #
+
+    def _signal_winch(self, signum, frame):
+        """Signal handler for SIGWINCH - window size has changed."""
+        self._set_pty_size()
+
+    def _set_pty_size(self):
+        """Sets the window size of the child pty based on the window size of
+        our own controlling terminal.
+        """
+        if not os.isatty(self.stdout_fd):
+            return
+        # Get the terminal size of the real terminal, set it on the
+        #       pseudoterminal.
+        buf = array.array('h', [0, 0, 0, 0])
+        fcntl.ioctl(pty.STDOUT_FILENO, termios.TIOCGWINSZ, buf, True)
+        fcntl.ioctl(self.stdout_fd, termios.TIOCSWINSZ, buf)
 
     #
     # Dispatch methods
@@ -162,7 +258,13 @@ class PopenThread(threading.Thread):
         return self.proc.poll()
 
     def wait(self, timeout=None):
-        return self.proc.wait(timeout=timeout)
+        rtn = self.proc.wait(timeout=timeout)
+        self.join(timeout=timeout)
+        # need to replace the old sigwinch handler somewhere...
+        if self.old_winch_handler is not None and on_main_thread():
+            signal.signal(signal.SIGWINCH, self.old_winch_handler)
+            self.old_winch_handler = None
+        return rtn
 
     @property
     def returncode(self):
@@ -781,11 +883,18 @@ class Command:
             stdout = self.spec.captured_stdout
         if not stdout or not stdout.readable():
             raise StopIteration()
+        stderr = proc.stderr
+        if ((stderr is None or not stderr.readable()) and
+                self.spec.captured_stderr is not None):
+            stderr = self.spec.captured_stderr
+        if not stderr or not stderr.readable():
+            raise StopIteration()
         while proc.poll() is None:
-            #print(1)
-            #yield from stdout.readlines(1024)
+            print(1)
+            yield from stdout.readlines(1024)
             #yield stdout.readline()
-            yield from iter(stdout.readline, '')
+            #yield from iter(stdout.readline, '')
+            #yield from iter(stderr.readline, '')
             #line = stdout.readline()
             #if not line:
             #    break
@@ -801,17 +910,19 @@ class Command:
             #except subprocess.TimeoutExpired:
             #    continue
             #yield from so.splitlines()
-            #print(2)
+            print(2)
         proc.wait()
-        #print(3)
+        print(2.5)
+        print(3)
         self._endtime()
-        #print(4)
+        print(4)
         try:
-            #yield from stdout.readlines()
-            yield from iter(stdout.readline, '')  # iterable version of readlines
+            yield from stdout.readlines()
+            #yield from iter(stdout.readline, '')  # iterable version of readlines
+            #yield from iter(stderr.readline, '')  # iterable version of readlines
         except OSError:
             pass
-        #print(5)
+        print(5)
 
     def itercheck(self):
         """Iterates through the command lines and throws an error if the
@@ -910,6 +1021,7 @@ class Command:
             # must be streaming
             for line in self.tee_stdout():
                 sys.stdout.write(line)
+                sys.stdout.flush()
         self.output = self._decode_uninew(self.output)
 
     def _set_errors(self):
@@ -918,7 +1030,7 @@ class Command:
         if stderr is None or stderr is sys.stderr:
             errors = b''
         else:
-            errors = stderr.read()
+            errors = '' #stderr.read()
         self.errors = self._decode_uninew(errors)
 
     def _check_signal(self):
