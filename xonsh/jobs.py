@@ -214,7 +214,6 @@ def get_task(tid):
 
 
 def _clear_dead_jobs():
-    print('clearing ded jobs')
     to_remove = set()
     for tid in tasks:
         obj = get_task(tid)['obj']

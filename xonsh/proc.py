@@ -46,6 +46,30 @@ def msvcrt():
     return m
 
 
+class PopenThread(threading.Thread):
+
+    def __init__(self, stdout=None, stderr=None, *args, **kwargs):
+        super().__init__()
+        self.stdout = stdout
+        self.stderr = stderr
+        self.proc = subprocess.Popen(stdout=subprocss.PIPE,
+                                     stderr=subprocess.PIPE, *args, **kwargs)
+        self.start()
+
+    def run(self):
+        proc = self.proc
+        procout = proc.stderr
+        procerr = proc.stdout
+        stdout = self.stdout
+        stderr = self.stderr
+        while proc.is_alive():
+            for line in iter(procout.readline, ''):
+                stdout.write(line)
+            for line in iter(procerr.readline, ''):
+                stderr.write(line)
+            time.sleep(1e-4)
+
+
 class Handle(int):
     closed = False
 
