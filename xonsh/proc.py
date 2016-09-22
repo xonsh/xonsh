@@ -12,6 +12,7 @@ import os
 import sys
 import time
 import queue
+import array
 import signal
 import builtins
 import functools
@@ -27,7 +28,7 @@ from xonsh.tools import (redirect_stdout, redirect_stderr, fallback,
 from xonsh.teepty import TeePTY
 from xonsh.lazyasd import lazyobject, LazyObject
 from xonsh.jobs import wait_for_active_job
-from xonsh.lazyimps import fcntl, termios, tty
+from xonsh.lazyimps import fcntl, termios, tty, pty
 
 
 # force some lazy imports so we don't have errors on non-windows platforms
@@ -105,11 +106,8 @@ class NonBlockingFDReader:
 
 def read_char(reader):
     """Reads a single character in a safe way."""
-    #fd = reader.fileno()
-    #nbreader = NonBlockingFDReader(fd)
     def f():
         try:
-            #c = os.read(fd, 1)
             c = reader.read(size=1, timeout=1e-4)
         except (OSError, UnexpectedEndOfStream):
             c = b''
@@ -165,31 +163,31 @@ class PopenThread(threading.Thread):
         #procerr = proc.stderr
         stdout = self.stdout
         stderr = self.stderr
-        print('run stdout init')
+        #print('run stdout init')
         self._read_write(procout, stdout, sys.stdout)
-        print('run stderr init')
+        #print('run stderr init')
         self._read_write(procerr, stderr, sys.stderr)
         while proc.poll() is None:
-            print('run stdout poll')
+            #print('run stdout poll')
             self._read_write(procout, stdout, sys.stdout)
-            print('run stderr poll')
+            #print('run stderr poll')
             self._read_write(procerr, stderr, sys.stderr)
-            print('sleeping')
+            #print('sleeping')
             time.sleep(1e-4)
-        print('run stdout clean')
+        #print('run stdout clean')
         self._read_write(procout, stdout, sys.stdout)
-        print('run stderr clean')
+        #print('run stderr clean')
         self._read_write(procerr, stderr, sys.stderr)
 
     def _read_write(self, reader, writer, stdbuf):
         buf = b''
         for c in iter(read_char(reader), b''):
-            print(c, buf)
+            #print(c, buf)
             buf += c
             if c == b'\n':
                 self._alt_mode_switch(buf.decode(), writer, stdbuf)
                 buf = b''
-        print('LEFT LOOP', buf)
+        #print('LEFT LOOP', buf)
         self._alt_mode_switch(buf.decode(), writer, stdbuf)
 
     def _alt_mode_switch(self, line, membuf, stdbuf):
@@ -890,7 +888,7 @@ class Command:
         if not stderr or not stderr.readable():
             raise StopIteration()
         while proc.poll() is None:
-            print(1)
+            #print(1)
             yield from stdout.readlines(1024)
             #yield stdout.readline()
             #yield from iter(stdout.readline, '')
@@ -910,19 +908,18 @@ class Command:
             #except subprocess.TimeoutExpired:
             #    continue
             #yield from so.splitlines()
-            print(2)
+            #print(2)
         proc.wait()
-        print(2.5)
-        print(3)
+        #print(3)
         self._endtime()
-        print(4)
+        #print(4)
         try:
             yield from stdout.readlines()
             #yield from iter(stdout.readline, '')  # iterable version of readlines
             #yield from iter(stderr.readline, '')  # iterable version of readlines
         except OSError:
             pass
-        print(5)
+        #print(5)
 
     def itercheck(self):
         """Iterates through the command lines and throws an error if the
