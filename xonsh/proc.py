@@ -46,6 +46,11 @@ def msvcrt():
     return m
 
 
+@lazyobject
+def STDOUT_CAPTURE_KINDS():
+    return frozenset(['stdout', 'object'])
+
+
 class PopenThread(threading.Thread):
 
     def __init__(self, *args, stdin=None, stdout=None, stderr=None, **kwargs):
@@ -654,7 +659,7 @@ class Command:
                  "stderr_redirect", "timestamps", "executed_cmd", 'input',
                  'output', 'errors')
 
-    def __init__(self, specs, procs, starttime=None):
+    def __init__(self, specs, procs, starttime=None, captured=False):
         """
         Parameters
         ----------
@@ -664,6 +669,8 @@ class Command:
             Process objects.
         starttime : floats or None, optional
             Start timestamp.
+        captured : bool or str, optional
+            Flag for whether or not the command should be captured.
 
         Attributes
         ----------
@@ -685,6 +692,7 @@ class Command:
         self.specs = specs
         self.spec = specs[-1]
         self.starttime = starttime or time.time()
+        self.captured = captured
         self.ended = False
         self.input = self.output = self.errors = self.endtime = None
 
@@ -726,14 +734,15 @@ class Command:
         if not stdout or not stdout.readable():
             raise StopIteration()
         while proc.poll() is None:
-            #print(1)
-            yield from stdout.readlines(1024)
+            print(1)
+            #yield from stdout.readlines(1024)
+            #yield from iter(stdout.readline, '')
             #line = stdout.readline()
             #if not line:
             #    break
             #yield line
-            #for c in iter(lambda: stdout.read(1), ''):
-            #    yield c
+            for c in iter(lambda: stdout.read(1), ''):
+                yield c
             #for line in iter(stdout.readline, ''):
             #    print(1.25)
             #    yield line
@@ -743,13 +752,17 @@ class Command:
             #except subprocess.TimeoutExpired:
             #    continue
             #yield from so.splitlines()
-            #print(2)
+            print(2)
         proc.wait()
-        #print(3)
+        print(3)
         self._endtime()
-        #print(4)
-        yield from stdout.readlines()
-        #print(5)
+        print(4)
+        try:
+            #yield from stdout.readlines()
+            yield from iter(stdout.readline, '')  # iterable version of readlines
+        except OSError:
+            pass
+        print(5)
 
     def itercheck(self):
         """Iterates through the command lines and throws an error if the
@@ -839,14 +852,14 @@ class Command:
 
     def _set_output(self):
         """Sets the output vaiable."""
-        if self.spec.captured_stdout is None:
-            # must be streaming
-            for line in self.tee_stdout():
-                sys.stdout.write(line)
-        else:
+        if self.captured in STDOUT_CAPTURE_KINDS:
             # just set the output attr
             for line in self.tee_stdout():
                 pass
+        else:
+            # must be streaming
+            for line in self.tee_stdout():
+                sys.stdout.write(line)
         self.output = self._decode_uninew(self.output)
 
     def _set_errors(self):

@@ -33,7 +33,7 @@ from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.proc import (
     PopenThread, ProcProxy, SimpleProcProxy, ForegroundProcProxy,
     SimpleForegroundProcProxy, TeePTYProc, pause_call_resume, Command,
-    HiddenCommand)
+    HiddenCommand, STDOUT_CAPTURE_KINDS)
 from xonsh.tools import (
     suggest_commands, expandvars, globpath, XonshError,
     XonshCalledProcessError, XonshBlockError
@@ -650,11 +650,6 @@ class SubprocSpec:
         self.backgroundable = bgable
 
 
-@lazyobject
-def stdout_capture_kinds():
-    return frozenset(['stdout', 'object'])
-
-
 def _update_last_spec(last, captured=False):
     env = builtins.__xonsh_env__
     if not callable(last.alias) and captured == 'hiddenobject':
@@ -669,7 +664,7 @@ def _update_last_spec(last, captured=False):
     # set standard out
     if last.stdout is not None:
         last.universal_newlines = True
-    elif captured in stdout_capture_kinds:
+    elif captured in STDOUT_CAPTURE_KINDS:
         last.universal_newlines = False
         #if callable(last.alias):
         r, w = os.pipe()
@@ -737,7 +732,7 @@ def _should_set_title(captured=False):
     env = builtins.__xonsh_env__
     return (env.get('XONSH_INTERACTIVE') and
             not env.get('XONSH_STORE_STDOUT') and
-            captured not in stdout_capture_kinds and
+            captured not in STDOUT_CAPTURE_KINDS and
             hasattr(builtins, '__xonsh_shell__'))
 
 
@@ -779,9 +774,10 @@ def run_subproc(cmds, captured=False):
     if spec.background:
         return
     if captured == 'hiddenobject':
-        command = HiddenCommand(specs, procs, starttime=starttime)
+        command = HiddenCommand(specs, procs, starttime=starttime,
+                                captured=captured)
     else:
-        command = Command(specs, procs, starttime=starttime)
+        command = Command(specs, procs, starttime=starttime, captured=captured)
     # now figure out what we should return.
     if captured == 'stdout':
         command.end()
