@@ -20,6 +20,7 @@ import threading
 
 from xonsh.lazyasd import LazyObject, lazyobject
 from xonsh.platform import ON_WINDOWS
+from xonsh.lazyimps import pty
 
 
 #
@@ -31,14 +32,6 @@ def tty():
         return
     else:
         return importlib.import_module('tty')
-
-
-@lazyobject
-def pty():
-    if ON_WINDOWS:
-        return
-    else:
-        return importlib.import_module('pty')
 
 
 @lazyobject

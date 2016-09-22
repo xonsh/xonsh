@@ -48,17 +48,24 @@ def msvcrt():
 
 class PopenThread(threading.Thread):
 
-    def __init__(self, *args, stdout=None, stderr=None, **kwargs):
+    def __init__(self, *args, stdin=None, stdout=None, stderr=None, **kwargs):
         super().__init__()
-        self.proc = proc = subprocess.Popen(stdout=subprocess.PIPE,
+        self.lock = threading.RLock()
+        #print(stdin)
+        self.proc = proc = subprocess.Popen(*args,
+                                            stdin=stdin,
+                                            #stdout=subprocess.PIPE,
+                                            stdout=stdout,
                                             stderr=subprocess.PIPE,
-                                            *args, **kwargs)
+                                            **kwargs)
         self.pid = proc.pid
+        self.stdin = proc.stdin
         self.universal_newlines = uninew = proc.universal_newlines
-        if stdout is None:
-            self.stdout = io.StringIO() if uninew else io.BytesIO()
-        else:
-            self.stdout = stdout
+        self.stdout = io.StringIO() if uninew else io.BytesIO()
+        #if stdout is None:
+        #    self.stdout = io.StringIO() if uninew else io.BytesIO()
+        #else:
+        #    self.stdout = stdout
         if stderr is None:
             self.stderr = io.StringIO() if uninew else io.BytesIO()
         else:
@@ -67,8 +74,11 @@ class PopenThread(threading.Thread):
 
     def run(self):
         proc = self.proc
-        procout = proc.stderr
-        procerr = proc.stdout
+        while not hasattr(self, 'captured_stdout'):
+            pass
+        procout = self.captured_stdout
+        #procout = proc.stdout
+        procerr = proc.stderr
         stdout = self.stdout
         stderr = self.stderr
         self._read_write(procout, stdout)
@@ -80,10 +90,16 @@ class PopenThread(threading.Thread):
         self._read_write(procout, stdout)
         self._read_write(procerr, stderr)
 
-    @staticmethod
-    def _read_write(reader, writer):
-        for line in iter(reader.readline, ''):
-            writer.write(line)
+    def _read_write(self, reader, writer):
+        try:
+            for line in iter(reader.readline, ''):
+                with self.lock:
+                    p = writer.tell()
+                    writer.seek(0, io.SEEK_END)
+                    writer.write(line)
+                    writer.seek(p)
+        except OSError:
+            pass
 
     #
     # Dispatch methods
@@ -94,6 +110,11 @@ class PopenThread(threading.Thread):
 
     def wait(self, timeout=None):
         return self.proc.wait(timeout=timeout)
+
+    @property
+    def returncode(self):
+        """Process return code."""
+        return self.proc.returncode
 
 
 class Handle(int):
@@ -705,8 +726,8 @@ class Command:
         if not stdout or not stdout.readable():
             raise StopIteration()
         while proc.poll() is None:
-            print(1)
-            #yield from stdout.readlines(1024)
+            #print(1)
+            yield from stdout.readlines(1024)
             #line = stdout.readline()
             #if not line:
             #    break
@@ -722,13 +743,13 @@ class Command:
             #except subprocess.TimeoutExpired:
             #    continue
             #yield from so.splitlines()
-            print(2)
+            #print(2)
         proc.wait()
-        print(3)
+        #print(3)
         self._endtime()
-        print(4)
+        #print(4)
         yield from stdout.readlines()
-        print(5)
+        #print(5)
 
     def itercheck(self):
         """Iterates through the command lines and throws an error if the
@@ -818,8 +839,14 @@ class Command:
 
     def _set_output(self):
         """Sets the output vaiable."""
-        for line in self.tee_stdout():
-            pass
+        if self.spec.captured_stdout is None:
+            # must be streaming
+            for line in self.tee_stdout():
+                sys.stdout.write(line)
+        else:
+            # just set the output attr
+            for line in self.tee_stdout():
+                pass
         self.output = self._decode_uninew(self.output)
 
     def _set_errors(self):

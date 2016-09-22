@@ -38,6 +38,7 @@ from xonsh.tools import (
     suggest_commands, expandvars, globpath, XonshError,
     XonshCalledProcessError, XonshBlockError
 )
+from xonsh.lazyimps import pty
 from xonsh.commands_cache import CommandsCache
 from xonsh.events import events
 
@@ -493,6 +494,9 @@ class SubprocSpec:
             p = self.cls(self.alias, self.cmd, **kwargs)
         else:
             p = self._run_binary(kwargs)
+        p.captured_stdin = self.captured_stdin
+        p.captured_stdout = self.captured_stdout
+        p.captured_stderr = self.captured_stderr
         return p
 
     def _run_binary(self, kwargs):
@@ -653,7 +657,7 @@ def stdout_capture_kinds():
 
 def _update_last_spec(last, captured=False):
     env = builtins.__xonsh_env__
-    if not callable(last.alias):
+    if not callable(last.alias) and captured == 'hiddenobject':
         last.cls = PopenThread
     # set standard in
     if (last.stdin is not None and captured == 'object' and
@@ -679,6 +683,9 @@ def _update_last_spec(last, captured=False):
         last.captured_stdout = last.stdout
     else:
         last.universal_newlines = True
+        r, w = pty.openpty() if ON_POSIX else os.pipe()
+        last.stdout = safe_open(w, 'w')
+        last.captured_stdout = safe_open(r, 'r')
     if ((last.stdout is None) and (not last.background) and
             env.get('XONSH_STORE_STDOUT')):
         r, w = os.pipe()
@@ -779,7 +786,10 @@ def run_subproc(cmds, captured=False):
     if captured == 'stdout':
         command.end()
         return command.output
-    elif captured == 'object' or captured == 'hiddenobject':
+    elif captured == 'object':
+        return command
+    elif captured == 'hiddenobject':
+        command.end()
         return command
     else:
         return
