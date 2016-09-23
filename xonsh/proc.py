@@ -166,12 +166,11 @@ class PopenThread(threading.Thread):
         self.stdin = proc.stdin
         self.universal_newlines = uninew = proc.universal_newlines
         if uninew:
-            self.encoding = env.get('XONSH_ENCODING')
-            self.encoding_errors = env.get('XONSH_ENCODING_ERRORS')
+            env = builtins.__xonsh_env__
+            self.encoding = enc = env.get('XONSH_ENCODING')
+            self.encoding_errors = err = env.get('XONSH_ENCODING_ERRORS')
             self.stdout = io.StringIO()
             self.stderr = io.StringIO()
-            self.stdout.encoding = self.stderr.encoding = self.encoding
-            self.stdout.errors = self.stderr.errors = self.encoding_errors
         else:
             self.encoding = self.encoding_errors = None
             self.stdout = io.BytesIO()
@@ -229,9 +228,10 @@ class PopenThread(threading.Thread):
         elif self._in_alt_mode:
             stdbuf.buffer.write(line)
             stdbuf.flush()
-        elif isinstance(membuf, io.StringIO):
-            membuf.buffer.write(line)
         else:
+            if isinstance(membuf, io.StringIO):
+                line = line.decode(encoding=self.encoding,
+                                   errors=self.encoding_errors)
             with self.lock:
                 p = membuf.tell()
                 membuf.seek(0, io.SEEK_END)
