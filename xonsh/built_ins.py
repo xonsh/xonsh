@@ -412,6 +412,7 @@ class SubprocSpec:
         self.is_proxy = False
         self.background = False
         self.backgroundable = True
+        self.piped_stdin = None
         self.captured_stdin = None
         self.captured_stdout = None
         self.captured_stderr = None
@@ -494,6 +495,7 @@ class SubprocSpec:
             p = self.cls(self.alias, self.cmd, **kwargs)
         else:
             p = self._run_binary(kwargs)
+        p.piped_stdin = self.piped_stdin
         p.captured_stdin = self.captured_stdin
         p.captured_stdout = self.captured_stdout
         p.captured_stderr = self.captured_stderr
@@ -655,18 +657,19 @@ def _update_last_spec(last, captured=False):
     if not callable(last.alias) and captured == 'hiddenobject':
         last.cls = PopenThread
     # set standard in
-    if (last.stdin is not None and captured == 'object' and
-            env.get('XONSH_STORE_STDIN')):
-        r, w = os.pipe()
-        last._stdin = safe_open(r, 'r')  # bypass original stdin check
-        last.captured_stdin = safe_open(w, 'w')
-        raise Exception
+    #if last.stdin is not None:
+    #    if ON_POSIX and captured == 'hiddenobject':
+    #        r, w = pty.openpty()
+    #    else:
+    #        r, w = os.pipe()
+    #    last.piped_stdin = last.stdin
+    #    last._stdin = safe_open(r, 'rb')  # bypass original stdin check
+    #    last.captured_stdin = safe_open(w, 'wb')
     # set standard out
     if last.stdout is not None:
         last.universal_newlines = True
     elif captured in STDOUT_CAPTURE_KINDS:
         last.universal_newlines = False
-        #if callable(last.alias):
         r, w = os.pipe()
         last.stdout = safe_open(w, 'wb')
         last.captured_stdout = safe_open(r, 'rb')
@@ -679,11 +682,6 @@ def _update_last_spec(last, captured=False):
         r, w = pty.openpty() if ON_POSIX else os.pipe()
         last.stdout = safe_open(w, 'w')
         last.captured_stdout = safe_open(r, 'r')
-    #if ((last.stdout is None) and (not last.background) and
-    #        env.get('XONSH_STORE_STDOUT')):
-    #    r, w = os.pipe()
-    #    last.stdout = safe_open(w, 'w')
-    #    last.captured_stdout = safe_open(r, 'r')
     # set standard error
     if last.stderr is not None:
         pass

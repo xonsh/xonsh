@@ -79,12 +79,14 @@ class NonBlockingFDReader:
         self.fd = fd
         self.queue = queue.Queue()
         self.timeout = timeout
+        self.closed = False
 
-        def populate_queue(fd, queue):
+        def populate_queue(nb, fd, queue):
             while True:
                 try:
                     c = os.read(fd, 1)
                 except OSError:
+                    nb.closed = True
                     break
                 if c:
                     queue.put(c)
@@ -93,7 +95,7 @@ class NonBlockingFDReader:
 
         # start reading from stream
         self.thread = threading.Thread(target=populate_queue,
-                                       args=(self.fd, self.queue))
+                                       args=(self, self.fd, self.queue))
         self.thread.daemon = True
         self.thread.start()
 
@@ -155,14 +157,16 @@ class PopenThread(threading.Thread):
             self.old_winch_handler = signal.signal(signal.SIGWINCH,
                                                    self._signal_winch)
         # start up process
+        #print(stdin)
+        self.orig_stdin = stdin
         self.proc = proc = subprocess.Popen(*args,
                                             stdin=stdin,
-                                            #stdout=subprocess.PIPE,
                                             stdout=stdout,
                                             stderr=stderr,
                                             **kwargs)
         self._in_alt_mode = False
         self.pid = proc.pid
+        #print(self.stdin)
         self.stdin = proc.stdin
         self.universal_newlines = uninew = proc.universal_newlines
         if uninew:
@@ -175,26 +179,74 @@ class PopenThread(threading.Thread):
             self.encoding = self.encoding_errors = None
             self.stdout = io.BytesIO()
             self.stderr = io.BytesIO()
+        self.timeout = 1e-4
+        self.prev_is_closed = False
         self.start()
 
     def run(self):
         proc = self.proc
-        while not hasattr(self, 'captured_stdout'):
-            pass
-        procout = NonBlockingFDReader(self.captured_stdout.fileno())
-        while not hasattr(self, 'captured_stderr'):
-            pass
-        procerr = NonBlockingFDReader(self.captured_stderr.fileno())
+        self._wait_for_attr('piped_stdin')
+        self._wait_for_attr('captured_stdin')
+        self._wait_for_attr('captured_stdout')
+        self._wait_for_attr('captured_stderr')
+        if self.piped_stdin is None:
+            sysin = pipein = None
+        else:
+            sysin = NonBlockingFDReader(0, timeout=self.timeout)
+            pipein = NonBlockingFDReader(self.piped_stdin,
+                                         timeout=self.timeout
+                                         )
+        procout = NonBlockingFDReader(self.captured_stdout.fileno(),
+                                      timeout=self.timeout
+                                      )
+        procerr = NonBlockingFDReader(self.captured_stderr.fileno(),
+                                      timeout=self.timeout
+                                      )
         stdout = self.stdout
         stderr = self.stderr
+        print('a')
+        #print(self.piped_stdin)
+        self._read_write_in(pipein, sysin, self.captured_stdin)
         self._read_write(procout, stdout, sys.stdout)
         self._read_write(procerr, stderr, sys.stderr)
+        print('b')
         while proc.poll() is None:
+            #print('c')
+            self._read_write_in(pipein, sysin, self.captured_stdin)
             self._read_write(procout, stdout, sys.stdout)
             self._read_write(procerr, stderr, sys.stderr)
-            time.sleep(1e-4)
+            #if pipein is not None and pipein.closed:
+            #    break
+            if self.prev_is_closed:
+                break
+            time.sleep(self.timeout)
+            #print('d')
+        print('e')
+        self._read_write_in(pipein, sysin, self.captured_stdin)
         self._read_write(procout, stdout, sys.stdout)
         self._read_write(procerr, stderr, sys.stderr)
+        print('f')
+
+    def _wait_for_attr(self, name):
+        while not hasattr(self, name):
+            pass
+
+    def _read_write_in(self, pipein, stdbuf, writer):
+        if pipein is None or pipein.closed:
+            return
+        for line in iter(pipein.readline, b''):
+            writer.write(line)
+            writer.flush()
+            #print(line)
+        #for line in iter(stdbuf.readline, b''):
+        #    print(line)
+        #    writer.buffer.write(line)
+        #    writer.flush()
+        if self.prev_is_closed:
+            pipein.closed = True
+            writer.close()
+            self.orig_stdin.close()
+        #print('closed')
 
     def _read_write(self, reader, writer, stdbuf):
         for line in iter(reader.readline, b''):
@@ -864,6 +916,9 @@ class Command:
     def __bool__(self):
         return self.returncode == 0
 
+    def __len__(self):
+        return len(self.procs)
+
     def __iter__(self):
         """Iterates through stdout and returns the lines, converting to
         strings and universal newlines if needed.
@@ -886,6 +941,7 @@ class Command:
         exactly as found.
         """
         proc = self.proc
+        prev = self.procs[-2] if len(self.procs) > 1 else None
         stdout = proc.stdout
         if ((stdout is None or not stdout.readable()) and
                 self.spec.captured_stdout is not None):
@@ -899,7 +955,15 @@ class Command:
         if not stderr or not stderr.readable():
             raise StopIteration()
         while proc.poll() is None:
-            #print(1)
+            print(0)
+            if prev is not None and prev.poll() is not None:
+                proc.prev_is_closed = True
+                self._close_prev_procs()
+                break
+                #self._safe_close(proc.stdin)
+                #self._safe_close(proc.piped_stdin)
+                #self._safe_close(proc.captured_stdin)
+            print(1)
             yield from stdout.readlines(1024)
             #yield stdout.readline()
             #yield from iter(stdout.readline, '')
@@ -919,18 +983,18 @@ class Command:
             #except subprocess.TimeoutExpired:
             #    continue
             #yield from so.splitlines()
-            #print(2)
+            print(2)
         proc.wait()
-        #print(3)
+        print(3)
         self._endtime()
-        #print(4)
+        print(4)
         try:
             yield from stdout.readlines()
             #yield from iter(stdout.readline, '')  # iterable version of readlines
             #yield from iter(stderr.readline, '')  # iterable version of readlines
         except OSError:
             pass
-        #print(5)
+        print(5)
 
     def itercheck(self):
         """Iterates through the command lines and throws an error if the
@@ -949,7 +1013,6 @@ class Command:
         """
         self.output = '' if self.spec.universal_newlines else b''
         for line in self.iterraw():
-            #os.write(pty.STDOUT_FILENO, line.encode())
             self.output += line
             yield line
 
@@ -977,13 +1040,14 @@ class Command:
         """
         if self.ended:
             return
-        self.proc.wait()
+        #self.proc.wait()
         #wait_for_active_job()
         self._endtime()
-        self._close_procs()
-        self._set_input()
+        #self._set_input()
         self._set_output()
         self._set_errors()
+        self._close_prev_procs()
+        self._close_proc()
         self._check_signal()
         self._apply_to_history()
         self._raise_subproc_error()
@@ -994,21 +1058,28 @@ class Command:
         if self.endtime is None:
             self.endtime = time.time()
 
-    def _close_procs(self):
+    @staticmethod
+    def _safe_close(handle):
+        if handle is None:
+            return
+        try:
+            handle.close()
+        except OSError:
+            pass
+
+    def _close_prev_procs(self):
         """Closes all but the last proc's stdout."""
         for p in self.procs[:-1]:
-            try:
-                p.stdin.close()
-            except OSError:
-                pass
-            try:
-                p.stdout.close()
-            except OSError:
-                pass
-            try:
-                p.stderr.close()
-            except OSError:
-                pass
+            self._safe_close(p.stdin)
+            self._safe_close(p.stdout)
+            self._safe_close(p.stderr)
+
+    def _close_proc(self):
+        """Closes last proc's stdout."""
+        p = self.proc
+        self._safe_close(p.stdin)
+        self._safe_close(p.stdout)
+        self._safe_close(p.stderr)
 
     def _set_input(self):
         """Sets the input vaiable."""
