@@ -59,10 +59,10 @@ def STDOUT_CAPTURE_KINDS():
 # See http://rtfm.etla.org/xterm/ctlseq.html for more.
 MODE_NUMS = ('1049', '47', '1047')
 START_ALTERNATE_MODE = LazyObject(
-    lambda: frozenset('\x1b[?{0}h'.format(i) for i in MODE_NUMS),
+    lambda: frozenset('\x1b[?{0}h'.format(i).encode() for i in MODE_NUMS),
     globals(), 'START_ALTERNATE_MODE')
 END_ALTERNATE_MODE = LazyObject(
-    lambda: frozenset('\x1b[?{0}l'.format(i) for i in MODE_NUMS),
+    lambda: frozenset('\x1b[?{0}l'.format(i).encode() for i in MODE_NUMS),
     globals(), 'END_ALTERNATE_MODE')
 ALTERNATE_MODE_FLAGS = LazyObject(
     lambda: tuple(START_ALTERNATE_MODE) + tuple(END_ALTERNATE_MODE),
@@ -75,9 +75,10 @@ class UnexpectedEndOfStream(Exception):
 
 class NonBlockingFDReader:
 
-    def __init__(self, fd):
+    def __init__(self, fd, timeout=None):
         self.fd = fd
         self.queue = queue.Queue()
+        self.timeout = timeout
 
         def populate_queue(fd, queue):
             while True:
@@ -96,23 +97,50 @@ class NonBlockingFDReader:
         self.thread.daemon = True
         self.thread.start()
 
-    def read(self, size=-1, timeout=None):
+    def read_char(self, timeout=None):
+        timeout = timeout or self.timeout
         try:
             return self.queue.get(block=timeout is not None,
                                   timeout=timeout)
         except queue.Empty:
             return b''
 
+    def read(self, size=-1):
+        i = 0
+        buf = b''
+        while i != size:
+            c = self.read_char()
+            if c:
+                buf += c
+            else:
+                break
+            i += 1
+        return buf
 
-def read_char(reader):
-    """Reads a single character in a safe way."""
-    def f():
-        try:
-            c = reader.read(size=1, timeout=1e-4)
-        except (OSError, UnexpectedEndOfStream):
-            c = b''
-        return c
-    return f
+    def readline(self, size=-1):
+        i = 0
+        nl = b'\n'
+        buf = b''
+        while i != size:
+            c = self.read_char()
+            if c:
+                buf += c
+                if c == nl:
+                    break
+            else:
+                break
+            i += 1
+        return buf
+
+    def readlines(self, hint=-1):
+        lines = []
+        while len(lines) != hint:
+            line = self.readline(szie=-1, timeout=timeout)
+            if not line:
+                break
+            lines.append(line)
+        return lines
+
 
 
 class PopenThread(threading.Thread):
@@ -137,62 +165,43 @@ class PopenThread(threading.Thread):
         self.pid = proc.pid
         self.stdin = proc.stdin
         self.universal_newlines = uninew = proc.universal_newlines
-        self.stdout = io.StringIO() if uninew else io.BytesIO()
-        #if stdout is None:
-        #    self.stdout = io.StringIO() if uninew else io.BytesIO()
-        #else:
-        #    self.stdout = stdout
-        self.stderr = io.StringIO() if uninew else io.BytesIO()
-        #if stderr is None:
-        #    self.stderr = io.StringIO() if uninew else io.BytesIO()
-        #else:
-        #    self.stderr = stderr
+        if uninew:
+            self.encoding = env.get('XONSH_ENCODING')
+            self.encoding_errors = env.get('XONSH_ENCODING_ERRORS')
+            self.stdout = io.StringIO()
+            self.stderr = io.StringIO()
+            self.stdout.encoding = self.stderr.encoding = self.encoding
+            self.stdout.errors = self.stderr.errors = self.encoding_errors
+        else:
+            self.encoding = self.encoding_errors = None
+            self.stdout = io.BytesIO()
+            self.stderr = io.BytesIO()
         self.start()
 
     def run(self):
         proc = self.proc
         while not hasattr(self, 'captured_stdout'):
             pass
-        procout = self.captured_stdout
-        procout = NonBlockingFDReader(procout.fileno())
-        #procout = proc.stdout
+        procout = NonBlockingFDReader(self.captured_stdout.fileno())
         while not hasattr(self, 'captured_stderr'):
             pass
-        procerr = self.captured_stderr
-        procerr = NonBlockingFDReader(procerr.fileno())
-        #procerr = proc.stderr
+        procerr = NonBlockingFDReader(self.captured_stderr.fileno())
         stdout = self.stdout
         stderr = self.stderr
-        #print('run stdout init')
         self._read_write(procout, stdout, sys.stdout)
-        #print('run stderr init')
         self._read_write(procerr, stderr, sys.stderr)
         while proc.poll() is None:
-            #print('run stdout poll')
             self._read_write(procout, stdout, sys.stdout)
-            #print('run stderr poll')
             self._read_write(procerr, stderr, sys.stderr)
-            #print('sleeping')
             time.sleep(1e-4)
-        #print('run stdout clean')
         self._read_write(procout, stdout, sys.stdout)
-        #print('run stderr clean')
         self._read_write(procerr, stderr, sys.stderr)
 
     def _read_write(self, reader, writer, stdbuf):
-        buf = b''
-        for c in iter(read_char(reader), b''):
-            #print(c, buf)
-            buf += c
-            if c == b'\n':
-                self._alt_mode_switch(buf.decode(), writer, stdbuf)
-                buf = b''
-        #print('LEFT LOOP', buf)
-        self._alt_mode_switch(buf.decode(), writer, stdbuf)
+        for line in iter(reader.readline, b''):
+            self._alt_mode_switch(line, writer, stdbuf)
 
     def _alt_mode_switch(self, line, membuf, stdbuf):
-        if self.universal_newlines:
-            line = line.replace('\r\n', '\n')
         i, flag = findfirst(line, ALTERNATE_MODE_FLAGS)
         if flag is None:
             self._alt_mode_writer(line, membuf, stdbuf)
@@ -216,10 +225,12 @@ class PopenThread(threading.Thread):
 
     def _alt_mode_writer(self, line, membuf, stdbuf):
         if not line:
-            pass  # don't write empty strings
+            pass  # don't write empty values
         elif self._in_alt_mode:
-            stdbuf.write(line)
+            stdbuf.buffer.write(line)
             stdbuf.flush()
+        elif isinstance(membuf, io.StringIO):
+            membuf.buffer.write(line)
         else:
             with self.lock:
                 p = membuf.tell()
