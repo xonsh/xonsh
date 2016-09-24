@@ -228,6 +228,7 @@ class BaseParser(object):
         self._attach_nocloser_base_rules()
         self._attach_nodedent_base_rules()
         self._attach_nonewline_base_rules()
+        self._attach_subproc_arg_part_rules()
 
         opt_rules = [
             'newlines', 'arglist', 'func_call', 'rarrow_test', 'typedargslist',
@@ -2640,34 +2641,21 @@ class BaseParser(object):
         # This glues the string together after parsing
         p[0] = p[1] + p[2]
 
+    def _attach_subproc_arg_part_rules(self):
+        toks = set(self.tokens)
+        toks -= {'AND', 'OR', 'NOT', 'BANG', 'PIPE', 'WS', 'GT', 'LT',
+                 'LSHIFT', 'RSHIFT', 'IOREDIRECT', 'SEARCHPATH', 'INDENT',
+                 'DEDENT', 'LPAREN', 'RPAREN', 'LBRACE', 'RBRACE',
+                 'LBRACKET', 'RBRACKET', 'AT_LPAREN', 'BANG_LPAREN',
+                 'BANG_LBRACKET', 'DOLLAR_LPAREN', 'DOLLAR_LBRACE',
+                 'DOLLAR_LBRACKET', 'ATDOLLAR_LPAREN'}
+        ts = '\n                 | '.join(sorted(toks))
+        doc = 'subproc_arg_part : ' + ts + '\n'
+        self.p_subproc_arg_part.__func__.__doc__ = doc
+
     def p_subproc_arg_part(self, p):
-        """subproc_arg_part : NAME
-                            | TILDE
-                            | PERIOD
-                            | DIVIDE
-                            | MINUS
-                            | PLUS
-                            | COLON
-                            | AT
-                            | ATDOLLAR
-                            | EQUALS
-                            | TIMES
-                            | POW
-                            | MOD
-                            | XOR
-                            | DOUBLEDIV
-                            | ELLIPSIS
-                            | NONE
-                            | TRUE
-                            | FALSE
-                            | NUMBER
-                            | STRING
-                            | COMMA
-                            | QUESTION
-                            | DOLLAR_NAME
-        """
-        # Many tokens cannot be part of this list, such as $, ', ", ()
-        # Use a string atom instead.
+        # Many tokens cannot be part of this rule, such as $, ', ", ()
+        # Use a string atom instead. See above attachment functions
         p[0] = p[1]
 
     #

@@ -1645,6 +1645,9 @@ def test_hiddenobj_sub():
 def test_slash_envarv_echo():
     check_xonsh_ast({}, '![echo $HOME/place]', False)
 
+def test_echo_double_eq():
+    check_xonsh_ast({}, '![echo yo==yo]', False)
+
 def test_bang_two_cmds_one_pipe():
     check_xonsh_ast({}, '!(ls | grep wakka)', False)
 
