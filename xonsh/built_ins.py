@@ -32,8 +32,8 @@ from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.proc import (
     PopenThread, ProcProxy, SimpleProcProxy, ForegroundProcProxy,
-    SimpleForegroundProcProxy, TeePTYProc, pause_call_resume, Command,
-    HiddenCommand, STDOUT_CAPTURE_KINDS)
+    SimpleForegroundProcProxy, TeePTYProc, pause_call_resume, CommandPipeline,
+    HiddenCommandPipeline, STDOUT_CAPTURE_KINDS)
 from xonsh.tools import (
     suggest_commands, expandvars, globpath, XonshError,
     XonshCalledProcessError, XonshBlockError
@@ -777,10 +777,11 @@ def run_subproc(cmds, captured=False):
     #if not captured:
     #    pass
     if captured == 'hiddenobject':
-        command = HiddenCommand(specs, procs, starttime=starttime,
-                                captured=captured)
+        command = HiddenCommandPipeline(specs, procs, starttime=starttime,
+                                        captured=captured)
     else:
-        command = Command(specs, procs, starttime=starttime, captured=captured)
+        command = CommandPipeline(specs, procs, starttime=starttime,
+                                  captured=captured)
     # now figure out what we should return.
     if captured == 'stdout':
         command.end()
@@ -811,14 +812,14 @@ def subproc_captured_inject(*cmds):
 def subproc_captured_object(*cmds):
     """
     Runs a subprocess, capturing the output. Returns an instance of
-    ``Command`` representing the completed command.
+    CommandPipeline representing the completed command.
     """
     return run_subproc(cmds, captured='object')
 
 
 def subproc_captured_hiddenobject(*cmds):
     """Runs a subprocess, capturing the output. Returns an instance of
-    ``HiddenCommand`` representing the completed command.
+    HiddenCommandPipeline representing the completed command.
     """
     return run_subproc(cmds, captured='hiddenobject')
 

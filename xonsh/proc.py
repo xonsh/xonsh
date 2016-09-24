@@ -862,7 +862,7 @@ def SIGNAL_MESSAGES():
     return sm
 
 
-class Command:
+class CommandPipeline:
     """Represents a subprocess-mode command pipeline."""
 
     attrnames = ("stdin", "stdout", "stderr", "pid", "returncode", "args",
@@ -1289,7 +1289,7 @@ class Command:
         return self.spec.cmd
 
 
-class HiddenCommand(Command):
+class HiddenCommandPipeline(CommandPipeline):
     def __repr__(self):
         return ''
 
