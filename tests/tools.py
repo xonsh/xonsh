@@ -72,7 +72,12 @@ class DummyCommandsCache:
 
 
 class DummyHistory:
-    pass
+
+    last_cmd_rtn = 0
+    last_cmd_out = ''
+
+    def append(self, x):
+        pass
 
 
 class DummyEnv(MutableMapping):

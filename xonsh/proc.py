@@ -280,14 +280,18 @@ class PopenThread(threading.Thread):
             origin = None
         # get non-blocking stdout
         stdout = self.stdout.buffer if self.universal_newlines else self.stdout
-        self._wait_for_attr('captured_stdout')
-        procout = NonBlockingFDReader(self.captured_stdout.fileno(),
-                                      timeout=self.timeout)
+        capout = self._wait_and_getattr('captured_stdout')
+        if capout is None:
+            procout = None
+        else:
+            procout = NonBlockingFDReader(capout.fileno(), timeout=self.timeout)
         # get non-blocking stderr
         stderr = self.stderr.buffer if self.universal_newlines else self.stderr
-        self._wait_for_attr('captured_stderr')
-        procerr = NonBlockingFDReader(self.captured_stderr.fileno(),
-                                      timeout=self.timeout)
+        caperr = self._wait_and_getattr('captured_stderr')
+        if caperr is None:
+            procerr = None
+        else:
+            procerr = NonBlockingFDReader(caperr.fileno(), timeout=self.timeout)
         # initial read from buffer
         self._read_write(procout, stdout, sys.stdout)
         self._read_write(procerr, stderr, sys.stderr)
@@ -305,15 +309,18 @@ class PopenThread(threading.Thread):
         if proc.poll() is None:
             proc.terminate()
 
-    def _wait_for_attr(self, name):
-        """make sure the instance has a certain attr"""
+    def _wait_and_getattr(self, name):
+        """make sure the instance has a certain attr, and return it."""
         while not hasattr(self, name):
             time.sleep(1e-7)
+        return getattr(self, name)
 
     def _read_write(self, reader, writer, stdbuf):
         """Read from a buffer and write into memory or back down to
         the standard buffer, line-by-line, as approriate.
         """
+        if reader is None:
+            return
         for line in iter(reader.readline, b''):
             self._alt_mode_switch(line, writer, stdbuf)
 
