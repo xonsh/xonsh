@@ -36,7 +36,8 @@ def _DEFS():
 
 
 def _get_def(key):
-    return builtins.__xonsh_env__.get('XONSH_GITSTATUS_' + key) or _DEFS[key]
+    def_ = builtins.__xonsh_env__.get('XONSH_GITSTATUS_' + key)
+    return def_ if def_ is not None else _DEFS[key]
 
 
 def _get_tag_or_hash():
