@@ -76,6 +76,9 @@ def RE_VT100_ESCAPE():
 
 
 def populate_char_queue(reader, fd, queue):
+    """Reads single characters from a file descriptor into a queue.
+    If this ends or fails, it flags the calling reader object as closed.
+    """
     while True:
         try:
             c = os.read(fd, 1)
@@ -90,8 +93,20 @@ def populate_char_queue(reader, fd, queue):
 
 
 class NonBlockingFDReader:
+    """A class for reading characters from a file descriptor on a background
+    thread. This has the advantages that the calling thread can close the
+    file and that the reading does not block the calling thread.
+    """
 
     def __init__(self, fd, timeout=None):
+        """
+        Parameters
+        ----------
+        fd : int
+            A file descriptor
+        timeout : float or None, optional
+            The queue reading timeout.
+        """
         self.fd = fd
         self.queue = queue.Queue()
         self.timeout = timeout
@@ -103,6 +118,7 @@ class NonBlockingFDReader:
         self.thread.start()
 
     def read_char(self, timeout=None):
+        """Reads a single character from the queue."""
         timeout = timeout or self.timeout
         try:
             return self.queue.get(block=timeout is not None,
@@ -111,6 +127,7 @@ class NonBlockingFDReader:
             return b''
 
     def read(self, size=-1):
+        """Reads bytes from the file."""
         i = 0
         buf = b''
         while i != size:
@@ -123,6 +140,7 @@ class NonBlockingFDReader:
         return buf
 
     def readline(self, size=-1):
+        """Reads a line, or a partial line from the file descriptor."""
         i = 0
         nl = b'\n'
         buf = b''
@@ -138,6 +156,7 @@ class NonBlockingFDReader:
         return buf
 
     def readlines(self, hint=-1):
+        """Reads lines from the file descriptor."""
         lines = []
         while len(lines) != hint:
             line = self.readline(szie=-1, timeout=timeout)
@@ -147,10 +166,16 @@ class NonBlockingFDReader:
         return lines
 
     def fileno(self):
+        """Returns the file descriptor number."""
         return self.fd
 
 
 def populate_buffer(reader, fd, buffer, chunksize):
+    """Reads bytes from the file descriptor and copies them into a buffer.
+    The reads happend in parallel, using pread(), and is thus only
+    availabe on posix. If the read fails for any reason, the reader is
+    flagged as closed.
+    """
     offset = 0
     while True:
         try:
@@ -167,8 +192,20 @@ def populate_buffer(reader, fd, buffer, chunksize):
 
 
 class BufferedFDParallelReader:
+    """Buffered, parallel background thread reader."""
 
     def __init__(self, fd, buffer=None, chunksize=1024):
+        """
+        Parameters
+        ----------
+        fd : int
+            File descriptor from which to read.
+        buffer : binary file-like or None, optional
+            A buffer to write bytes into. If None, a new BytesIO object
+            is created.
+        chunksize : int, optional
+            The max size of the parallel reads, default 1 kb.
+        """
         self.fd = fd
         self.buffer = io.BytesIO() if buffer is None else buffer
         self.chunksize = chunksize
