@@ -66,6 +66,10 @@ END_ALTERNATE_MODE = LazyObject(
 ALTERNATE_MODE_FLAGS = LazyObject(
     lambda: tuple(START_ALTERNATE_MODE) + tuple(END_ALTERNATE_MODE),
     globals(), 'ALTERNATE_MODE_FLAGS')
+RE_HIDDEN_BYTES = LazyObject(lambda: re.compile(b'(\001.*?\002)'),
+                             globals(), 'RE_HIDDEN')
+RE_COLOR = LazyObject(lambda: re.compile(b'\033\[\d+;?\d*m'),
+                      globals(), 'RE_COLOR')
 
 
 def populate_char_queue(reader, fd, queue):
@@ -200,8 +204,10 @@ class PopenThread(threading.Thread):
             self.encoding = enc = env.get('XONSH_ENCODING')
             self.encoding_errors = err = env.get('XONSH_ENCODING_ERRORS')
             self.stdin = io.BytesIO()  # stdin is always bytes!
-            self.stdout = io.StringIO()
-            self.stderr = io.StringIO()
+            self.stdout = io.TextIOWrapper(io.BytesIO(), encoding=enc, errors=err)
+            self.stderr = io.TextIOWrapper(io.BytesIO(), encoding=enc, errors=err)
+            #self.stdout = io.StringIO()
+            #self.stderr = io.StringIO()
         else:
             self.encoding = self.encoding_errors = None
             self.stdin = io.BytesIO()
@@ -224,12 +230,13 @@ class PopenThread(threading.Thread):
         else:
             origin = None
         # get non-blocking stdout
-        stdout = self.stdout
+        stdout = self.stdout.buffer if self.universal_newlines else self.stdout
         self._wait_for_attr('captured_stdout')
         procout = NonBlockingFDReader(self.captured_stdout.fileno(),
                                       timeout=self.timeout)
         # get non-blocking stderr
-        stderr = self.stderr
+        #stderr = self.stderr
+        stderr = self.stderr.buffer if self.universal_newlines else self.stderr
         self._wait_for_attr('captured_stderr')
         procerr = NonBlockingFDReader(self.captured_stderr.fileno(),
                                       timeout=self.timeout)
@@ -287,9 +294,9 @@ class PopenThread(threading.Thread):
             stdbuf.buffer.write(line)
             stdbuf.flush()
         else:
-            if isinstance(membuf, io.StringIO):
-                line = line.decode(encoding=self.encoding,
-                                   errors=self.encoding_errors)
+            #if isinstance(membuf, io.StringIO):
+            #    line = line.decode(encoding=self.encoding,
+            #                       errors=self.encoding_errors)
             with self.lock:
                 p = membuf.tell()
                 membuf.seek(0, io.SEEK_END)
@@ -852,18 +859,7 @@ class CommandPipeline:
         """Iterates through stdout and returns the lines, converting to
         strings and universal newlines if needed.
         """
-        env = builtins.__xonsh_env__
-        enc = env.get('XONSH_ENCODING')
-        err = env.get('XONSH_ENCODING_ERRORS')
-        uninew = self.spec.universal_newlines
-        use_decode = False
-        for line in self.iterraw():
-            if use_decode or isinstance(line, bytes):
-                line = line.decode(encoding=enc, errors=err)
-                use_decode = True
-            if uninew and line.endswith('\r\n'):
-                line = line[:-2] + '\n'
-            yield line
+        yield from self.tee_stdout()
 
     def iterraw(self):
         """Iterates through the last stdout, and returns the lines
@@ -871,16 +867,21 @@ class CommandPipeline:
         """
         # get approriate handles
         proc = self.proc
+        uninew = self.spec.universal_newlines
         stdout = proc.stdout
         if ((stdout is None or not stdout.readable()) and
                 self.spec.captured_stdout is not None):
             stdout = self.spec.captured_stdout
+        if uninew and hasattr(stdout, 'buffer'):
+            stdout = stdout.buffer
         if not stdout or not stdout.readable():
             raise StopIteration()
         stderr = proc.stderr
         if ((stderr is None or not stderr.readable()) and
                 self.spec.captured_stderr is not None):
             stderr = self.spec.captured_stderr
+        if uninew and hasattr(stderr, 'buffer'):
+            stderr = stderr.buffer
         if not stderr or not stderr.readable():
             raise StopIteration()
         # read from process while it is running
@@ -897,7 +898,7 @@ class CommandPipeline:
         self._endtime()
         yield from safe_readlines(stdout)
         if self.captured == 'object':
-            self.end(set_output=False)
+            self.end(tee_output=False)
 
     def itercheck(self):
         """Iterates through the command lines and throws an error if the
@@ -914,8 +915,27 @@ class CommandPipeline:
         """Writes the process stdout to the output variable, line-by-line, and
         yields each line.
         """
-        self.output = '' if self.spec.universal_newlines else b''
+        env = builtins.__xonsh_env__
+        enc = env.get('XONSH_ENCODING')
+        err = env.get('XONSH_ENCODING_ERRORS')
+        uninew = self.spec.universal_newlines
+        self.output = '' if uninew else b''
+        stream = self.captured not in STDOUT_CAPTURE_KINDS
         for line in self.iterraw():
+            # write to stdout line ASAP, if needed
+            if stream:
+                sys.stdout.buffer.write(line)
+                sys.stdout.flush()
+            # do some munging of the line before we return it
+            line = RE_COLOR.sub(b'', line)
+            line = RE_HIDDEN_BYTES.sub(b'', line)
+            if uninew:
+                line = line.decode(encoding=enc, errors=err)
+                if line.endswith('\r\n'):
+                    line = line[:-2] + '\n'
+                elif line.endswith('\r'):
+                    line = line[:-1] + '\n'
+            # tee it up!
             self.output += line
             yield line
 
@@ -930,22 +950,23 @@ class CommandPipeline:
         else:
             s = b
         if self.spec.universal_newlines:
-            s = s.replace('\r\n', '\n')
+            s = s.replace('\r\n', '\n').replace('\r', '\n')
         return s
 
     #
     # Ending methods
     #
 
-    def end(self, set_output=True):
+    def end(self, tee_output=True):
         """Waits for the command to complete and then runs any closing and
         cleanup procedures that need to be run.
         """
         if self.ended:
             return
         self._endtime()
-        if set_output:
-            self._set_output()
+        if tee_output:
+            for _ in self.tee_stdout():
+                pass
         # since we are driven by getting output, input may not be available
         # until the command has completed.
         self._set_input()
@@ -1025,19 +1046,6 @@ class CommandPipeline:
             stdin.seek(0)
             input = stdin.read()
         self.input = self._decode_uninew(input)
-
-    def _set_output(self):
-        """Sets the output vaiable."""
-        if self.captured in STDOUT_CAPTURE_KINDS:
-            # just set the output attr
-            for line in self.tee_stdout():
-                pass
-        else:
-            # must be streaming
-            for line in self.tee_stdout():
-                sys.stdout.write(line)
-                sys.stdout.flush()
-        self.output = self._decode_uninew(self.output)
 
     def _set_errors(self):
         """Sets the errors vaiable."""
