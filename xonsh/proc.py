@@ -69,10 +69,6 @@ ALTERNATE_MODE_FLAGS = LazyObject(
     globals(), 'ALTERNATE_MODE_FLAGS')
 
 
-class UnexpectedEndOfStream(Exception):
-    pass
-
-
 class NonBlockingFDReader:
 
     def __init__(self, fd, timeout=None):
@@ -323,11 +319,8 @@ class PopenThread(threading.Thread):
         return self.proc.poll()
 
     def wait(self, timeout=None):
-        #print('wait 1')
         rtn = self.proc.wait(timeout=timeout)
-        #print('wait 2')
         self.join(timeout=timeout)
-        #print('wait 3')
         # need to replace the old sigwinch handler somewhere...
         if self.old_winch_handler is not None and on_main_thread():
             signal.signal(signal.SIGWINCH, self.old_winch_handler)
