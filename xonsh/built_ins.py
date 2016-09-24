@@ -650,6 +650,32 @@ class SubprocSpec:
         self.cls = cls
         self.backgroundable = bgable
 
+#class TeeIn:
+
+#    def __init__(self, f):
+#        print('making teein')
+#        self.fd = f if isinstance(f, int) else f.fileno()
+#        self.inp = open(self.fd, 'rb', buffering=0)
+#        self.buf = io.BytesIO()
+
+    #def fileno(self):
+    #    return self.fd
+
+    #def close(self):
+    #    self.inp.close()
+
+    #def read(self, size=-1):
+    #    print('yo!')
+    #    b = self.inp.read(size)
+    #    self.buf.write(b)
+    #    return b
+#
+#    def readline(self, hint=-1):
+#        print('wakk!')
+#        b = self.inp.readline(hint)
+#        self.buf.write(b)
+#        return b
+
 
 def _update_last_spec(last, captured=False):
     env = builtins.__xonsh_env__
@@ -659,13 +685,14 @@ def _update_last_spec(last, captured=False):
         last.cls = PopenThread
     # set standard in
     #if last.stdin is not None:
-    #    if ON_POSIX and captured == 'hiddenobject':
+    #    last._stdin = TeeIn(last.stdin)
+    #    if ON_POSIX: #and captured == 'hiddenobject':
     #        r, w = pty.openpty()
     #    else:
     #        r, w = os.pipe()
     #    last.piped_stdin = last.stdin
-    #    last._stdin = safe_open(r, 'rb')  # bypass original stdin check
-    #    last.captured_stdin = safe_open(w, 'wb')
+    #    last._stdin = r  # bypass original stdin check
+    #    last.captured_stdin = open(w, 'wb', buffering=0)
     # set standard out
     if last.stdout is not None:
         last.universal_newlines = True

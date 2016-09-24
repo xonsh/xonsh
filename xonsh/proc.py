@@ -138,6 +138,8 @@ class NonBlockingFDReader:
             lines.append(line)
         return lines
 
+    def fileno(self):
+        return self.fd
 
 
 class PopenThread(threading.Thread):
@@ -153,8 +155,8 @@ class PopenThread(threading.Thread):
                                                    self._signal_winch)
         # start up process
         self.orig_stdin = stdin
-        if stdin is not None and not isinstance(stdin, int):
-            stdin = stdin.fileno()
+        if stdin is not None:
+            stdin = subprocess.PIPE
         self.proc = proc = subprocess.Popen(*args,
                                             stdin=stdin,
                                             stdout=stdout,
@@ -162,16 +164,19 @@ class PopenThread(threading.Thread):
                                             **kwargs)
         self._in_alt_mode = False
         self.pid = proc.pid
-        self.stdin = proc.stdin
         self.universal_newlines = uninew = proc.universal_newlines
+        #self.stdin = proc.stdin if self.orig_stdin is None else stdin.buffer
+        #self.stdin = getattr(stdin, 'buf', proc.stdin)
         if uninew:
             env = builtins.__xonsh_env__
             self.encoding = enc = env.get('XONSH_ENCODING')
             self.encoding_errors = err = env.get('XONSH_ENCODING_ERRORS')
+            self.stdin = io.BytesIO()
             self.stdout = io.StringIO()
             self.stderr = io.StringIO()
         else:
             self.encoding = self.encoding_errors = None
+            self.stdin = io.BytesIO()
             self.stdout = io.BytesIO()
             self.stderr = io.BytesIO()
         self.timeout = 1e-4
@@ -184,41 +189,51 @@ class PopenThread(threading.Thread):
         self._wait_for_attr('captured_stdin')
         self._wait_for_attr('captured_stdout')
         self._wait_for_attr('captured_stderr')
-        if self.piped_stdin is None:
-            sysin = pipein = None
+        #if self.piped_stdin is None:
+        #    pipein = None
+        #else:
+        #    pipein = self.piped_stdin
+        #    pipefd = pipein if isinstance(pipein, int) else pipein.fileno()
+        #    pipein = NonBlockingFDReader(pipefd, timeout=self.timeout)
+        #    sysin = NonBlockingFDReader(0, timeout=self.timeout)
+        #capin = self.captured_stdin
+        if self.orig_stdin is None:
+            origin = None
         else:
-            sysin = NonBlockingFDReader(0, timeout=self.timeout)
-            pipein = NonBlockingFDReader(self.piped_stdin,
-                                         timeout=self.timeout
-                                         )
+            origin = self.orig_stdin
+            origfd = origin if isinstance(origin, int) else origin.fileno()
+            origin = NonBlockingFDReader(origfd, timeout=self.timeout)
         procout = NonBlockingFDReader(self.captured_stdout.fileno(),
-                                      timeout=self.timeout
-                                      )
+                                      timeout=self.timeout)
         procerr = NonBlockingFDReader(self.captured_stderr.fileno(),
-                                      timeout=self.timeout
-                                      )
+                                      timeout=self.timeout)
+        stdin = self.stdin
         stdout = self.stdout
         stderr = self.stderr
         #print('a')
         #print(self.piped_stdin)
-        self._read_write_in(pipein, sysin, self.captured_stdin)
+        #self._read_write_in(pipein, sysin, stdin, capin)
+        self._communicate_in(origin, stdin)
         self._read_write(procout, stdout, sys.stdout)
         self._read_write(procerr, stderr, sys.stderr)
         #print('b')
         while proc.poll() is None:
             #print('c')
-            self._read_write_in(pipein, sysin, self.captured_stdin)
+            #self._read_write_in(pipein, sysin, stdin, capin)
+            self._communicate_in(origin, stdin)
             self._read_write(procout, stdout, sys.stdout)
             self._read_write(procerr, stderr, sys.stderr)
             #if pipein is not None and pipein.closed:
             #    break
             if self.prevs_are_closed:
-                #sysin.closed = pipein.closed
+                #pipein.closed = True
                 break
             time.sleep(self.timeout)
+            #break
             #print('d')
         #print('e')
-        self._read_write_in(pipein, sysin, self.captured_stdin)
+        #self._read_write_in(pipein, sysin, stdin, capin)
+        self._communicate_in(origin, stdin)
         self._read_write(procout, stdout, sys.stdout)
         self._read_write(procerr, stderr, sys.stderr)
         #print('f')
@@ -228,23 +243,43 @@ class PopenThread(threading.Thread):
 
     def _wait_for_attr(self, name):
         while not hasattr(self, name):
-            pass
+            time.sleep(1e-7)
 
-    def _read_write_in(self, pipein, stdbuf, writer):
-        if pipein is None or pipein.closed:
+    def _communicate_in(self, origin, stdbuf):
+        if origin is None:
+            return
+        proc = self.proc
+        uninew = self.universal_newlines
+        timeout = self.timeout
+        if uninew:
+            enc = self.encoding
+            err = self.encoding_errors
+        for line in iter(origin.readline, b''):
+            stdbuf.write(line)
+            #if uninew:
+            #    line = line.decode(encoding=enc, errors=err)
+            if uninew:
+                proc.stdin.buffer.write(line)
+            else:
+                proc.stdin.write(line)
+
+    def _read_write_in(self, pipein, sysin, stdbuf, writer):
+        if pipein is None or pipein.closed: #or self._in_alt_mode:
             return
         for line in iter(pipein.readline, b''):
+            print(line)
             writer.write(line)
             writer.flush()
+            stdbuf.write(line)
+            stdbuf.flush()
+        for line in iter(sysin.readline, b''):
             #print(line)
-        #for line in iter(stdbuf.readline, b''):
-        #    print(line)
-        #    writer.buffer.write(line)
-        #    writer.flush()
-        if self.prev_are_closed:
-            pipein.closed = True
-            writer.close()
-            self.orig_stdin.close()
+            writer.write(line)
+            writer.flush()
+        #if self.prev_are_closed:
+        #    pipein.closed = True
+        #    writer.close()
+        #    self.orig_stdin.close()
         #print('closed')
 
     def _read_write(self, reader, writer, stdbuf):
@@ -926,12 +961,12 @@ class CommandPipeline:
         """
         if self.ended:
             return
-        #self.proc.wait()
-        #wait_for_active_job()
         self._endtime()
-        #self._set_input()
         if set_output:
             self._set_output()
+        # since we are driven by getting output, input may not be available
+        # until the command has completed.
+        self._set_input()
         self._set_errors()
         self._close_prev_procs()
         self._close_proc()
@@ -1002,10 +1037,11 @@ class CommandPipeline:
     def _set_input(self):
         """Sets the input vaiable."""
         stdin = self.proc.stdin
-        if stdin is None or stdin is sys.stdin:
+        if stdin is None or isinstance(stdin, int) or not stdin.seekable():
             input = b''
         else:
-            input = input.read()
+            stdin.seek(0)
+            input = stdin.read()
         self.input = self._decode_uninew(input)
 
     def _set_output(self):
