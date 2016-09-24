@@ -143,7 +143,7 @@ class NonBlockingFDReader:
         return self.fd
 
 
-def populate_char_queue(reader, fd, buffer, chunksize):
+def populate_buffer(reader, fd, buffer, chunksize):
     offset = 0
     while True:
         try:
@@ -151,7 +151,7 @@ def populate_char_queue(reader, fd, buffer, chunksize):
         except OSError:
             reader.closed = True
             break
-        if c:
+        if buf:
             buffer.write(buf)
             offset += len(buf)
         else:
@@ -167,6 +167,7 @@ class BufferedFDParallelReader:
         self.chunksize = chunksize
         self.closed = False
         # start reading from stream
+        print('starting buffered read')
         self.thread = threading.Thread(target=populate_buffer,
                                        args=(self, fd, self.buffer, chunksize))
         self.thread.daemon = True
@@ -233,11 +234,12 @@ class PopenThread(threading.Thread):
         #capin = self.captured_stdin
         if self.orig_stdin is None:
             origin = None
-        else:
+        elif ON_POSIX:
             origin = self.orig_stdin
             origfd = origin if isinstance(origin, int) else origin.fileno()
-            origin = BufferedFDParallelReader(origfd, buffer=stdin,
-                                              timeout=self.timeout)
+            origin = BufferedFDParallelReader(origfd, buffer=stdin)
+        else:
+            origin = None
         procout = NonBlockingFDReader(self.captured_stdout.fileno(),
                                       timeout=self.timeout)
         procerr = NonBlockingFDReader(self.captured_stderr.fileno(),
