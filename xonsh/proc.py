@@ -9,6 +9,7 @@ licensed to the Python Software foundation under a Contributor Agreement.
 """
 import io
 import os
+import re
 import sys
 import time
 import queue
@@ -68,8 +69,10 @@ ALTERNATE_MODE_FLAGS = LazyObject(
     globals(), 'ALTERNATE_MODE_FLAGS')
 RE_HIDDEN_BYTES = LazyObject(lambda: re.compile(b'(\001.*?\002)'),
                              globals(), 'RE_HIDDEN')
-RE_COLOR = LazyObject(lambda: re.compile(b'\033\[\d+;?\d*m'),
-                      globals(), 'RE_COLOR')
+
+@lazyobject
+def RE_VT100_ESCAPE():
+    return re.compile(b'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]')
 
 
 def populate_char_queue(reader, fd, queue):
@@ -235,7 +238,6 @@ class PopenThread(threading.Thread):
         procout = NonBlockingFDReader(self.captured_stdout.fileno(),
                                       timeout=self.timeout)
         # get non-blocking stderr
-        #stderr = self.stderr
         stderr = self.stderr.buffer if self.universal_newlines else self.stderr
         self._wait_for_attr('captured_stderr')
         procerr = NonBlockingFDReader(self.captured_stderr.fileno(),
@@ -832,6 +834,8 @@ class CommandPipeline:
             A string of the standard output.
         errors : str
             A string of the standard error.
+        lines : list of str
+            The output lines
         """
         self.procs = procs
         self.proc = procs[-1]
@@ -840,8 +844,9 @@ class CommandPipeline:
         self.starttime = starttime or time.time()
         self.captured = captured
         self.ended = False
-        self.input = self.output = self.errors = self.endtime = None
+        self.input = self._output = self.errors = self.endtime = None
         self._closed_handle_cache = {}
+        self.lines = []
 
     def __repr__(self):
         s = self.__class__.__name__ + '('
@@ -859,7 +864,10 @@ class CommandPipeline:
         """Iterates through stdout and returns the lines, converting to
         strings and universal newlines if needed.
         """
-        yield from self.tee_stdout()
+        if self.ended:
+            yield from iter(self.lines)
+        else:
+            yield from self.tee_stdout()
 
     def iterraw(self):
         """Iterates through the last stdout, and returns the lines
@@ -918,8 +926,7 @@ class CommandPipeline:
         env = builtins.__xonsh_env__
         enc = env.get('XONSH_ENCODING')
         err = env.get('XONSH_ENCODING_ERRORS')
-        uninew = self.spec.universal_newlines
-        self.output = '' if uninew else b''
+        lines = self.lines
         stream = self.captured not in STDOUT_CAPTURE_KINDS
         for line in self.iterraw():
             # write to stdout line ASAP, if needed
@@ -927,16 +934,15 @@ class CommandPipeline:
                 sys.stdout.buffer.write(line)
                 sys.stdout.flush()
             # do some munging of the line before we return it
-            line = RE_COLOR.sub(b'', line)
             line = RE_HIDDEN_BYTES.sub(b'', line)
-            if uninew:
-                line = line.decode(encoding=enc, errors=err)
-                if line.endswith('\r\n'):
-                    line = line[:-2] + '\n'
-                elif line.endswith('\r'):
-                    line = line[:-1] + '\n'
+            line = RE_VT100_ESCAPE.sub(b'', line)
+            line = line.decode(encoding=enc, errors=err)
+            if line.endswith('\r\n'):
+                line = line[:-2] + '\n'
+            elif line.endswith('\r'):
+                line = line[:-1] + '\n'
             # tee it up!
-            self.output += line
+            lines.append(line)
             yield line
 
     def _decode_uninew(self, b):
@@ -1111,6 +1117,12 @@ class CommandPipeline:
     def inp(self):
         """Creates normalized input string from args."""
         return ' '.join(self.args)
+
+    @property
+    def output(self):
+        if self._output is None:
+            self._output = ''.join(self.lines)
+        return self._output
 
     @property
     def out(self):
