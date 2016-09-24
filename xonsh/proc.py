@@ -950,6 +950,7 @@ class CommandPipeline:
         """Iterates through the last stdout, and returns the lines
         exactly as found.
         """
+        # get approriate handles
         proc = self.proc
         stdout = proc.stdout
         if ((stdout is None or not stdout.readable()) and
@@ -963,34 +964,15 @@ class CommandPipeline:
             stderr = self.spec.captured_stderr
         if not stderr or not stderr.readable():
             raise StopIteration()
+        # read from process while it is running
         while proc.poll() is None:
-            #print(0)
             if self._prev_procs_done():
                 self._close_prev_procs()
                 proc.prevs_are_closed = True
                 break
-            #print(1)
             yield from safe_readlines(stdout, 1024)
-            #yield stdout.readline()
-            #yield from iter(stdout.readline, '')
-            #yield from iter(stderr.readline, '')
-            #line = stdout.readline()
-            #if not line:
-            #    break
-            #yield line
-            #for c in iter(lambda: stdout.read(1), ''):
-            #    yield c
-            #for line in iter(stdout.readline, ''):
-            #    print(1.25)
-            #    yield line
-            #    print(1.75)
-            #try:
-            #    so, se = proc.communicate(timeout=1e-4)
-            #except subprocess.TimeoutExpired:
-            #    continue
-            #yield from so.splitlines()
-            #print(2)
             time.sleep(1e-4)
+        # read from process now that it is over
         yield from safe_readlines(stdout)
         proc.wait()
         self._endtime()
