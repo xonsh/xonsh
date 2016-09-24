@@ -1,0 +1,4 @@
+#!/usr/bin/env python
+import os
+x = os.getcwd()
+print(x)
