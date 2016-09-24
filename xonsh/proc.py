@@ -754,7 +754,7 @@ def wrap_simple_command(f, args, stdin, stdout, stderr):
 
 
 class SimpleProcProxy(ProcProxy):
-    """Variant of `ProcProxy` for simpler functions.
+    """Variant of ProcProxy for simpler functions.
 
     The function passed into the initializer for `SimpleProcProxy` should have
     the form described in the xonsh tutorial.  This function is then wrapped to
