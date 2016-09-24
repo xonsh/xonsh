@@ -182,7 +182,7 @@ class PopenThread(threading.Thread):
             self.stdout = io.BytesIO()
             self.stderr = io.BytesIO()
         self.timeout = 1e-4
-        self.prev_is_closed = False
+        self.prevs_are_closed = False
         self.start()
 
     def run(self):
@@ -219,7 +219,7 @@ class PopenThread(threading.Thread):
             self._read_write(procerr, stderr, sys.stderr)
             #if pipein is not None and pipein.closed:
             #    break
-            if self.prev_is_closed:
+            if self.prevs_are_closed:
                 break
             time.sleep(self.timeout)
             #print('d')
@@ -247,7 +247,7 @@ class PopenThread(threading.Thread):
         #    print(line)
         #    writer.buffer.write(line)
         #    writer.flush()
-        if self.prev_is_closed:
+        if self.prev_are_closed:
             pipein.closed = True
             writer.close()
             self.orig_stdin.close()
@@ -326,10 +326,6 @@ class PopenThread(threading.Thread):
     def wait(self, timeout=None):
         #print('wait 1')
         rtn = self.proc.wait(timeout=timeout)
-        #rtn = self.proc.poll()
-        #while rtn is None:
-        #    time.sleep(timeout or 1e-4)
-        #    rtn = self.proc.poll()
         #print('wait 2')
         self.join(timeout=timeout)
         #print('wait 3')
@@ -953,7 +949,7 @@ class Command:
         exactly as found.
         """
         proc = self.proc
-        prev = self.procs[-2] if len(self.procs) > 1 else None
+        #prev = self.procs[-2] if len(self.procs) > 1 else None
         stdout = proc.stdout
         if ((stdout is None or not stdout.readable()) and
                 self.spec.captured_stdout is not None):
@@ -968,9 +964,9 @@ class Command:
             raise StopIteration()
         while proc.poll() is None:
             #print(0)
-            if prev is not None and prev.poll() is not None:
-                proc.prev_is_closed = True
+            if self._prev_procs_done():
                 self._close_prev_procs()
+                proc.prevs_are_closed = True
                 break
                 #self._safe_close(proc.stdin)
                 #self._safe_close(proc.piped_stdin)
@@ -1076,14 +1072,41 @@ class Command:
         if self.endtime is None:
             self.endtime = time.time()
 
+    def _prev_procs_done(self):
+        """Boolean for if all previous processes have completed. If there
+        is only a single process in the pipeline, this returns False.
+        """
+        for s, p in zip(self.specs[:-1], self.procs[:-1]):
+            #print(p.args)
+            #print(p.stdin, s.stdin)
+            self._safe_close(p.stdin)
+            self._safe_close(s.stdin)
+            if p.poll() is None:
+                #print('prev still running')
+                return False
+            #print('closing prev')
+            #p.terminate()
+            self._safe_close(p.stdout)
+            self._safe_close(s.stdout)
+            self._safe_close(p.stderr)
+            self._safe_close(s.stderr)
+            #print('closed prev')
+        return len(self) > 1
+
     @staticmethod
     def _safe_close(handle):
         if handle is None:
             return
-        try:
-            handle.close()
-        except OSError:
-            pass
+        elif isinstance(handle, int):
+            try:
+                os.close(handle)
+            except OSError:
+                pass
+        else:
+            try:
+                handle.close()
+            except OSError:
+                pass
 
     def _close_prev_procs(self):
         """Closes all but the last proc's stdout."""
