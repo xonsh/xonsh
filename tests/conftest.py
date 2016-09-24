@@ -49,7 +49,7 @@ def xonsh_builtins():
     builtins.__xonsh_stderr_uncaptured__ = None
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     builtins.__xonsh_commands_cache__ = DummyCommandsCache()
-    builtins.__xonsh_all_jobs__ = ALL_JOBS
+    builtins.__xonsh_all_jobs__ = getattr(builtins, '__xonsh_all_jobs__', {})
     builtins.__xonsh_history__ = DummyHistory()
     builtins.XonshBlockError = XonshBlockError
     builtins.__xonsh_subproc_captured_hiddenobject__ = sp
@@ -76,7 +76,7 @@ def xonsh_builtins():
     del builtins.__xonsh_subproc_uncaptured__
     del builtins.__xonsh_ensure_list_of_strs__
     del builtins.__xonsh_commands_cache__
-    del builtins.__xonsh_all_jobs__
+    #del builtins.__xonsh_all_jobs__
     del builtins.__xonsh_history__
     del builtins.XonshBlockError
     del builtins.evalx
