@@ -503,7 +503,6 @@ class SubprocSpec:
 
     def _run_binary(self, kwargs):
         try:
-            #bufsize = 1 if self.universal_newlines else -1
             bufsize = 1
             p = self.cls(self.cmd, bufsize=bufsize, **kwargs)
         except PermissionError:
@@ -654,7 +653,9 @@ class SubprocSpec:
 
 def _update_last_spec(last, captured=False):
     env = builtins.__xonsh_env__
-    if not callable(last.alias):# and captured == 'hiddenobject':
+    if not captured:
+        return
+    if captured and not callable(last.alias):
         last.cls = PopenThread
     # set standard in
     #if last.stdin is not None:
@@ -770,9 +771,11 @@ def run_subproc(cmds, captured=False):
     if _should_set_title(captured=captured):
         # set title here to get currently executing command
         pause_call_resume(proc, builtins.__xonsh_shell__.settitle)
-    # create command or retunr if backgrounding.
+    # create command or return if backgrounding.
     if spec.background:
         return
+    #if not captured:
+    #    pass
     if captured == 'hiddenobject':
         command = HiddenCommand(specs, procs, starttime=starttime,
                                 captured=captured)
@@ -788,6 +791,7 @@ def run_subproc(cmds, captured=False):
         command.end()
         return command
     else:
+        command.end()
         return
 
 
