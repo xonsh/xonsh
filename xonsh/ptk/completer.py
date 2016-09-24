@@ -27,14 +27,18 @@ class PromptToolkitCompleter(Completer):
                 yield from []
             else:
                 line = document.current_line.lstrip()
+                line_ex = builtins.aliases.expand_alias(line)
+
                 endidx = document.cursor_position_col
-                begidx = line[:endidx].rfind(' ') + 1 if line[:endidx].rfind(' ') >= 0 else 0
+                begidx = (line[:endidx].rfind(' ') + 1
+                          if line[:endidx].rfind(' ') >= 0 else 0)
                 prefix = line[begidx:endidx]
-                line = builtins.aliases.expand_alias(line)
+                expand_offset = len(line_ex) - len(line)
+
                 completions, l = self.completer.complete(prefix,
-                                                         line,
-                                                         begidx,
-                                                         endidx,
+                                                         line_ex,
+                                                         begidx + expand_offset,
+                                                         endidx + expand_offset,
                                                          self.ctx)
                 if len(completions) <= 1:
                     pass
