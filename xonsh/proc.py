@@ -213,13 +213,8 @@ class PopenThread(threading.Thread):
 
     def run(self):
         proc = self.proc
-        self._wait_for_attr('piped_stdin')
-        self._wait_for_attr('captured_stdin')
-        self._wait_for_attr('captured_stdout')
-        self._wait_for_attr('captured_stderr')
+        # get stdin and apply parallel reader if needed.
         stdin = self.stdin
-        stdout = self.stdout
-        stderr = self.stderr
         if self.orig_stdin is None:
             origin = None
         elif ON_POSIX and self.store_stdin:
@@ -228,20 +223,30 @@ class PopenThread(threading.Thread):
             origin = BufferedFDParallelReader(origfd, buffer=stdin)
         else:
             origin = None
+        # get non-blocking stdout
+        stdout = self.stdout
+        self._wait_for_attr('captured_stdout')
         procout = NonBlockingFDReader(self.captured_stdout.fileno(),
                                       timeout=self.timeout)
+        # get non-blocking stderr
+        stderr = self.stderr
+        self._wait_for_attr('captured_stderr')
         procerr = NonBlockingFDReader(self.captured_stderr.fileno(),
                                       timeout=self.timeout)
+        # initial read from buffer
         self._read_write(procout, stdout, sys.stdout)
         self._read_write(procerr, stderr, sys.stderr)
+        # loop over reads while process is running.
         while proc.poll() is None:
             self._read_write(procout, stdout, sys.stdout)
             self._read_write(procerr, stderr, sys.stderr)
             if self.prevs_are_closed:
                 break
             time.sleep(self.timeout)
+        # final closing read.
         self._read_write(procout, stdout, sys.stdout)
         self._read_write(procerr, stderr, sys.stderr)
+        # kill the process if it is still alive. Happens when piping.
         if proc.poll() is None:
             proc.terminate()
 

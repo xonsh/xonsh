@@ -390,8 +390,6 @@ class SubprocSpec:
             Whether or not the subprocess should be started in the background.
         backgroundable : bool
             Whether or not the subprocess is able to be run in the background.
-        captured_stdin : file-like
-            Handle to captured stdin
         captured_stdout : file-like
             Handle to captured stdin
         captured_stderr : file-like
@@ -412,8 +410,6 @@ class SubprocSpec:
         self.is_proxy = False
         self.background = False
         self.backgroundable = True
-        self.piped_stdin = None
-        self.captured_stdin = None
         self.captured_stdout = None
         self.captured_stderr = None
 
@@ -495,8 +491,6 @@ class SubprocSpec:
             p = self.cls(self.alias, self.cmd, **kwargs)
         else:
             p = self._run_binary(kwargs)
-        p.piped_stdin = self.piped_stdin
-        p.captured_stdin = self.captured_stdin
         p.captured_stdout = self.captured_stdout
         p.captured_stderr = self.captured_stderr
         return p
@@ -650,32 +644,6 @@ class SubprocSpec:
         self.cls = cls
         self.backgroundable = bgable
 
-#class TeeIn:
-
-#    def __init__(self, f):
-#        print('making teein')
-#        self.fd = f if isinstance(f, int) else f.fileno()
-#        self.inp = open(self.fd, 'rb', buffering=0)
-#        self.buf = io.BytesIO()
-
-    #def fileno(self):
-    #    return self.fd
-
-    #def close(self):
-    #    self.inp.close()
-
-    #def read(self, size=-1):
-    #    print('yo!')
-    #    b = self.inp.read(size)
-    #    self.buf.write(b)
-    #    return b
-#
-#    def readline(self, hint=-1):
-#        print('wakk!')
-#        b = self.inp.readline(hint)
-#        self.buf.write(b)
-#        return b
-
 
 def _update_last_spec(last, captured=False):
     env = builtins.__xonsh_env__
@@ -683,16 +651,7 @@ def _update_last_spec(last, captured=False):
         return
     if captured and not callable(last.alias):
         last.cls = PopenThread
-    # set standard in
-    #if last.stdin is not None:
-    #    last._stdin = TeeIn(last.stdin)
-    #    if ON_POSIX: #and captured == 'hiddenobject':
-    #        r, w = pty.openpty()
-    #    else:
-    #        r, w = os.pipe()
-    #    last.piped_stdin = last.stdin
-    #    last._stdin = r  # bypass original stdin check
-    #    last.captured_stdin = open(w, 'wb', buffering=0)
+    # Do not set standard in! Popen is not a fan of redirections here
     # set standard out
     if last.stdout is not None:
         last.universal_newlines = True
