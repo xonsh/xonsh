@@ -8,6 +8,7 @@ import xonsh.built_ins
 from xonsh.built_ins import ensure_list_of_strs
 from xonsh.execer import Execer
 from xonsh.tools import XonshBlockError
+from xonsh.jobs import tasks
 from xonsh.events import events
 from xonsh.platform import ON_WINDOWS
 from xonsh.commands_cache import CommandsCache
@@ -26,7 +27,7 @@ def xonsh_execer(monkeypatch):
 
 
 # This is a singleton
-ALL_JOBS = {}
+#ALL_JOBS = {}
 
 
 @pytest.yield_fixture
@@ -49,7 +50,8 @@ def xonsh_builtins():
     builtins.__xonsh_stderr_uncaptured__ = None
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     builtins.__xonsh_commands_cache__ = DummyCommandsCache()
-    builtins.__xonsh_all_jobs__ = getattr(builtins, '__xonsh_all_jobs__', {})
+    #builtins.__xonsh_all_jobs__ = getattr(builtins, '__xonsh_all_jobs__', {})
+    builtins.__xonsh_all_jobs__ = {}
     builtins.__xonsh_history__ = DummyHistory()
     builtins.XonshBlockError = XonshBlockError
     builtins.__xonsh_subproc_captured_hiddenobject__ = sp
@@ -76,7 +78,7 @@ def xonsh_builtins():
     del builtins.__xonsh_subproc_uncaptured__
     del builtins.__xonsh_ensure_list_of_strs__
     del builtins.__xonsh_commands_cache__
-    #del builtins.__xonsh_all_jobs__
+    del builtins.__xonsh_all_jobs__
     del builtins.__xonsh_history__
     del builtins.XonshBlockError
     del builtins.evalx
@@ -84,6 +86,7 @@ def xonsh_builtins():
     del builtins.compilex
     del builtins.aliases
     del builtins.events
+    tasks.clear()
 
 
 if ON_WINDOWS:
