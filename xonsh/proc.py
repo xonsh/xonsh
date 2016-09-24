@@ -68,17 +68,17 @@ ALTERNATE_MODE_FLAGS = LazyObject(
     globals(), 'ALTERNATE_MODE_FLAGS')
 
 
-def populate_char_queue(nb, fd, queue):
+def populate_char_queue(reader, fd, queue):
     while True:
         try:
             c = os.read(fd, 1)
         except OSError:
-            nb.closed = True
+            reader.closed = True
             break
         if c:
             queue.put(c)
         else:
-            nb.closed = True
+            reader.closed = True
             break
 
 
