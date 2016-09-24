@@ -624,7 +624,7 @@ class SubprocSpec:
             self.cmd = get_script_subproc_command(self.binary_loc, self.cmd[1:])
         except PermissionError:
             e = 'xonsh: subprocess mode: permission denied: {0}'
-            raise XonshError(e.format(cmd[0]))
+            raise XonshError(e.format(self.cmd[0]))
 
     def resolve_alias_cls(self):
         """Determine which proxy class to run an alias with."""
