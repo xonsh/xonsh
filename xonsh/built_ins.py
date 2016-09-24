@@ -654,7 +654,7 @@ class SubprocSpec:
 
 def _update_last_spec(last, captured=False):
     env = builtins.__xonsh_env__
-    if not callable(last.alias) and captured == 'hiddenobject':
+    if not callable(last.alias):# and captured == 'hiddenobject':
         last.cls = PopenThread
     # set standard in
     #if last.stdin is not None:

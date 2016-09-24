@@ -168,7 +168,6 @@ class PopenThread(threading.Thread):
                                             **kwargs)
         self._in_alt_mode = False
         self.pid = proc.pid
-        #print(self.stdin)
         self.stdin = proc.stdin
         self.universal_newlines = uninew = proc.universal_newlines
         if uninew:
@@ -914,6 +913,7 @@ class Command:
         self.captured = captured
         self.ended = False
         self.input = self.output = self.errors = self.endtime = None
+        self._closed_handle_cache = {}
 
     def __repr__(self):
         s = self.__class__.__name__ + '('
@@ -949,7 +949,6 @@ class Command:
         exactly as found.
         """
         proc = self.proc
-        #prev = self.procs[-2] if len(self.procs) > 1 else None
         stdout = proc.stdout
         if ((stdout is None or not stdout.readable()) and
                 self.spec.captured_stdout is not None):
@@ -968,9 +967,6 @@ class Command:
                 self._close_prev_procs()
                 proc.prevs_are_closed = True
                 break
-                #self._safe_close(proc.stdin)
-                #self._safe_close(proc.piped_stdin)
-                #self._safe_close(proc.captured_stdin)
             #print(1)
             yield from stdout.readlines(1024)
             #yield stdout.readline()
@@ -992,6 +988,7 @@ class Command:
             #    continue
             #yield from so.splitlines()
             #print(2)
+            time.sleep(1e-4)
         try:
             yield from stdout.readlines()
             #yield from iter(stdout.readline, '')  # iterable version of readlines
@@ -1008,6 +1005,8 @@ class Command:
             #yield from iter(stderr.readline, '')  # iterable version of readlines
         except OSError:
             pass
+        if self.captured == 'object':
+            self.end(set_output=False)
         #print(5)
 
     def itercheck(self):
@@ -1048,7 +1047,7 @@ class Command:
     # Ending methods
     #
 
-    def end(self):
+    def end(self, set_output=True):
         """Waits for the command to complete and then runs any closing and
         cleanup procedures that need to be run.
         """
@@ -1058,7 +1057,8 @@ class Command:
         #wait_for_active_job()
         self._endtime()
         #self._set_input()
-        self._set_output()
+        if set_output:
+            self._set_output()
         self._set_errors()
         self._close_prev_procs()
         self._close_proc()
@@ -1072,54 +1072,58 @@ class Command:
         if self.endtime is None:
             self.endtime = time.time()
 
+    def _safe_close(self, handle):
+        if self._closed_handle_cache.get(handle, False):
+            return
+        status = True
+        if handle is None:
+            pass
+        elif isinstance(handle, int):
+            try:
+                os.close(handle)
+            except OSError:
+                status = False
+        else:
+            try:
+                handle.close()
+            except OSError:
+                status = False
+        self._closed_handle_cache[handle] = status
+
     def _prev_procs_done(self):
         """Boolean for if all previous processes have completed. If there
         is only a single process in the pipeline, this returns False.
         """
         for s, p in zip(self.specs[:-1], self.procs[:-1]):
-            #print(p.args)
-            #print(p.stdin, s.stdin)
             self._safe_close(p.stdin)
             self._safe_close(s.stdin)
             if p.poll() is None:
-                #print('prev still running')
                 return False
-            #print('closing prev')
-            #p.terminate()
             self._safe_close(p.stdout)
             self._safe_close(s.stdout)
             self._safe_close(p.stderr)
             self._safe_close(s.stderr)
-            #print('closed prev')
         return len(self) > 1
-
-    @staticmethod
-    def _safe_close(handle):
-        if handle is None:
-            return
-        elif isinstance(handle, int):
-            try:
-                os.close(handle)
-            except OSError:
-                pass
-        else:
-            try:
-                handle.close()
-            except OSError:
-                pass
 
     def _close_prev_procs(self):
         """Closes all but the last proc's stdout."""
-        for p in self.procs[:-1]:
+        for s, p in zip(self.specs[:-1], self.procs[:-1]):
+            self._safe_close(s.stdin)
             self._safe_close(p.stdin)
+            self._safe_close(s.stdout)
             self._safe_close(p.stdout)
+            self._safe_close(s.stderr)
             self._safe_close(p.stderr)
 
     def _close_proc(self):
         """Closes last proc's stdout."""
+        s = self.spec
         p = self.proc
+        self._safe_close(s.stdin)
         self._safe_close(p.stdin)
+        self._safe_close(s.stdout)
         self._safe_close(p.stdout)
+        self._safe_close(s.stderr)
         self._safe_close(p.stderr)
 
     def _set_input(self):
