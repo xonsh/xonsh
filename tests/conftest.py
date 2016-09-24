@@ -26,10 +26,6 @@ def xonsh_execer(monkeypatch):
     return execer
 
 
-# This is a singleton
-#ALL_JOBS = {}
-
-
 @pytest.yield_fixture
 def xonsh_builtins():
     """Mock out most of the builtins xonsh attributes."""
@@ -86,7 +82,7 @@ def xonsh_builtins():
     del builtins.compilex
     del builtins.aliases
     del builtins.events
-    tasks.clear()
+    tasks.clear()  # must to this to enable resetting all_jobs
 
 
 if ON_WINDOWS:
