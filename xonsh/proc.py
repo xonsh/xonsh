@@ -91,7 +91,7 @@ class NonBlockingFDReader:
                 if c:
                     queue.put(c)
                 else:
-                    raise UnexpectedEndOfStream
+                    break
 
         # start reading from stream
         self.thread = threading.Thread(target=populate_queue,
@@ -157,7 +157,6 @@ class PopenThread(threading.Thread):
             self.old_winch_handler = signal.signal(signal.SIGWINCH,
                                                    self._signal_winch)
         # start up process
-        #print(stdin)
         self.orig_stdin = stdin
         if stdin is not None and not isinstance(stdin, int):
             stdin = stdin.fileno()
@@ -219,6 +218,7 @@ class PopenThread(threading.Thread):
             #if pipein is not None and pipein.closed:
             #    break
             if self.prevs_are_closed:
+                #sysin.closed = pipein.closed
                 break
             time.sleep(self.timeout)
             #print('d')
