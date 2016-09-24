@@ -167,13 +167,10 @@ class BufferedFDParallelReader:
         self.chunksize = chunksize
         self.closed = False
         # start reading from stream
-        print('starting buffered read')
         self.thread = threading.Thread(target=populate_buffer,
                                        args=(self, fd, self.buffer, chunksize))
         self.thread.daemon = True
         self.thread.start()
-
-
 
 
 class PopenThread(threading.Thread):
@@ -187,8 +184,10 @@ class PopenThread(threading.Thread):
         if on_main_thread():
             self.old_winch_handler = signal.signal(signal.SIGWINCH,
                                                    self._signal_winch)
-        # start up process
+        env = builtins.__xonsh_env__
         self.orig_stdin = stdin
+        self.store_stdin = env.get('XONSH_STORE_STDIN')
+        # start up process
         self.proc = proc = subprocess.Popen(*args,
                                             stdin=stdin,
                                             stdout=stdout,
@@ -197,13 +196,10 @@ class PopenThread(threading.Thread):
         self._in_alt_mode = False
         self.pid = proc.pid
         self.universal_newlines = uninew = proc.universal_newlines
-        #self.stdin = proc.stdin if self.orig_stdin is None else stdin.buffer
-        #self.stdin = getattr(stdin, 'buf', proc.stdin)
         if uninew:
-            env = builtins.__xonsh_env__
             self.encoding = enc = env.get('XONSH_ENCODING')
             self.encoding_errors = err = env.get('XONSH_ENCODING_ERRORS')
-            self.stdin = io.BytesIO()
+            self.stdin = io.BytesIO()  # stdin is always bytes!
             self.stdout = io.StringIO()
             self.stderr = io.StringIO()
         else:
@@ -224,17 +220,9 @@ class PopenThread(threading.Thread):
         stdin = self.stdin
         stdout = self.stdout
         stderr = self.stderr
-        #if self.piped_stdin is None:
-        #    pipein = None
-        #else:
-        #    pipein = self.piped_stdin
-        #    pipefd = pipein if isinstance(pipein, int) else pipein.fileno()
-        #    pipein = NonBlockingFDReader(pipefd, timeout=self.timeout)
-        #    sysin = NonBlockingFDReader(0, timeout=self.timeout)
-        #capin = self.captured_stdin
         if self.orig_stdin is None:
             origin = None
-        elif ON_POSIX:
+        elif ON_POSIX and self.store_stdin:
             origin = self.orig_stdin
             origfd = origin if isinstance(origin, int) else origin.fileno()
             origin = BufferedFDParallelReader(origfd, buffer=stdin)
@@ -244,77 +232,22 @@ class PopenThread(threading.Thread):
                                       timeout=self.timeout)
         procerr = NonBlockingFDReader(self.captured_stderr.fileno(),
                                       timeout=self.timeout)
-        #print('a')
-        #print(self.piped_stdin)
-        #self._read_write_in(pipein, sysin, stdin, capin)
-        #self._communicate_in(origin, stdin)
         self._read_write(procout, stdout, sys.stdout)
         self._read_write(procerr, stderr, sys.stderr)
-        #print('b')
         while proc.poll() is None:
-            #print('c')
-            #self._read_write_in(pipein, sysin, stdin, capin)
-            #self._communicate_in(origin, stdin)
             self._read_write(procout, stdout, sys.stdout)
             self._read_write(procerr, stderr, sys.stderr)
-            #if pipein is not None and pipein.closed:
-            #    break
             if self.prevs_are_closed:
-                #pipein.closed = True
                 break
             time.sleep(self.timeout)
-            #break
-            #print('d')
-        #print('e')
-        #self._read_write_in(pipein, sysin, stdin, capin)
-        #self._communicate_in(origin, stdin)
         self._read_write(procout, stdout, sys.stdout)
         self._read_write(procerr, stderr, sys.stderr)
-        #print('f')
         if proc.poll() is None:
             proc.terminate()
-        #print('g')
 
     def _wait_for_attr(self, name):
         while not hasattr(self, name):
             time.sleep(1e-7)
-
-    def _communicate_in(self, origin, stdbuf):
-        if origin is None:
-            return
-        proc = self.proc
-        uninew = self.universal_newlines
-        timeout = self.timeout
-        if uninew:
-            enc = self.encoding
-            err = self.encoding_errors
-        for line in iter(origin.readline, b''):
-            stdbuf.write(line)
-            #if uninew:
-            #    line = line.decode(encoding=enc, errors=err)
-            if uninew:
-                proc.stdin.buffer.write(line)
-            else:
-                proc.stdin.write(line)
-
-    def _read_write_in(self, pipein, sysin, stdbuf, writer):
-        if pipein is None or pipein.closed: #or self._in_alt_mode:
-            return
-        for line in iter(pipein.readline, b''):
-            print(line)
-            writer.write(line)
-            writer.flush()
-            stdbuf.write(line)
-            stdbuf.flush()
-        for line in iter(sysin.readline, b''):
-            #print(line)
-            writer.write(line)
-            writer.flush()
-        #if self.prev_are_closed:
-        #    pipein.closed = True
-        #    writer.close()
-        #    self.orig_stdin.close()
-        #print('closed')
 
     def _read_write(self, reader, writer, stdbuf):
         for line in iter(reader.readline, b''):
