@@ -862,6 +862,15 @@ def SIGNAL_MESSAGES():
     return sm
 
 
+def safe_readlines(handle, hint=-1):
+    """Attempts to read lines without throwing an error."""
+    try:
+        lines = handle.readlines(hint)
+    except OSError:
+        lines = []
+    return lines
+
+
 class CommandPipeline:
     """Represents a subprocess-mode command pipeline."""
 
@@ -961,7 +970,7 @@ class CommandPipeline:
                 proc.prevs_are_closed = True
                 break
             #print(1)
-            yield from stdout.readlines(1024)
+            yield from safe_readlines(stdout, 1024)
             #yield stdout.readline()
             #yield from iter(stdout.readline, '')
             #yield from iter(stderr.readline, '')
@@ -982,25 +991,12 @@ class CommandPipeline:
             #yield from so.splitlines()
             #print(2)
             time.sleep(1e-4)
-        try:
-            yield from stdout.readlines()
-            #yield from iter(stdout.readline, '')  # iterable version of readlines
-            #yield from iter(stderr.readline, '')  # iterable version of readlines
-        except OSError:
-            pass
+        yield from safe_readlines(stdout)
         proc.wait()
-        #print(3)
         self._endtime()
-        #print(4)
-        try:
-            yield from stdout.readlines()
-            #yield from iter(stdout.readline, '')  # iterable version of readlines
-            #yield from iter(stderr.readline, '')  # iterable version of readlines
-        except OSError:
-            pass
+        yield from safe_readlines(stdout)
         if self.captured == 'object':
             self.end(set_output=False)
-        #print(5)
 
     def itercheck(self):
         """Iterates through the command lines and throws an error if the
