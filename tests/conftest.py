@@ -25,6 +25,10 @@ def xonsh_execer(monkeypatch):
     return execer
 
 
+# This is a singleton
+ALL_JOBS = {}
+
+
 @pytest.yield_fixture
 def xonsh_builtins():
     """Mock out most of the builtins xonsh attributes."""
@@ -45,7 +49,7 @@ def xonsh_builtins():
     builtins.__xonsh_stderr_uncaptured__ = None
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     builtins.__xonsh_commands_cache__ = DummyCommandsCache()
-    builtins.__xonsh_all_jobs__ = {}
+    builtins.__xonsh_all_jobs__ = ALL_JOBS
     builtins.__xonsh_history__ = DummyHistory()
     builtins.XonshBlockError = XonshBlockError
     builtins.__xonsh_subproc_captured_hiddenobject__ = sp
