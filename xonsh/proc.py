@@ -27,7 +27,7 @@ from xonsh.tools import (redirect_stdout, redirect_stderr, fallback,
                          on_main_thread)
 from xonsh.lazyasd import lazyobject, LazyObject
 from xonsh.jobs import wait_for_active_job
-from xonsh.lazyimps import fcntl, termios, tty, pty
+from xonsh.lazyimps import fcntl, termios
 
 
 # force some lazy imports so we don't have errors on non-windows platforms
@@ -314,7 +314,8 @@ class PopenThread(threading.Thread):
         # Get the terminal size of the real terminal, set it on the
         #       pseudoterminal.
         buf = array.array('h', [0, 0, 0, 0])
-        fcntl.ioctl(pty.STDOUT_FILENO, termios.TIOCGWINSZ, buf, True)
+        # 1 = stdout here
+        fcntl.ioctl(1, termios.TIOCGWINSZ, buf, True)
         fcntl.ioctl(self.stdout_fd, termios.TIOCSWINSZ, buf)
 
     #
