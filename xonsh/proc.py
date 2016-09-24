@@ -338,6 +338,15 @@ class PopenThread(threading.Thread):
         """Process return code."""
         return self.proc.returncode
 
+    def send_signal(self, signal):
+        return self.proc.send_signal(signal)
+
+    def terminate(self):
+        return self.proc.terminate()
+
+    def kill(self):
+        return self.proc.kill()
+
 
 class Handle(int):
     closed = False
