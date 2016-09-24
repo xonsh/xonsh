@@ -1,4 +1,5 @@
 import os
+import re
 import ast
 import builtins
 
@@ -10,12 +11,12 @@ from xonsh.completers.tools import get_filter_function
 
 
 @xl.lazyobject
-def CHARACTERS_NEED_QUOTES():
-    cnq = [' ', '`', '\t', '\r', '\n', '$', '{', '}', ','
-           '*', '(', ')', '"', "'", '?', '&', 'and', 'or']
+def PATTERN_NEED_QUOTES():
+    pattern = r'\s`\$\{\}\,\*\(\)"\'\?&'
     if xp.ON_WINDOWS:
-        cnq.append('%')
-    return cnq
+        pattern.append('%')
+    pattern = '[' + pattern + ']' + r'|\band\b|\bor\b'
+    return re.compile(pattern)
 
 
 def _path_from_partial_string(inp, pos=None):
@@ -137,7 +138,7 @@ def _quote_paths(paths, start, end):
         start = orig_start
         end = orig_end
         if (start == '' and
-                (any(i in s for i in CHARACTERS_NEED_QUOTES) or
+                (re.search(PATTERN_NEED_QUOTES, s) is not None or
                  (backslash in s and slash != backslash))):
             start = end = _quote_to_use(s)
         if os.path.isdir(expand_path(s)):
