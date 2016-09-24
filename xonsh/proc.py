@@ -159,6 +159,8 @@ class PopenThread(threading.Thread):
         # start up process
         #print(stdin)
         self.orig_stdin = stdin
+        if stdin is not None and not isinstance(stdin, int):
+            stdin = stdin.fileno()
         self.proc = proc = subprocess.Popen(*args,
                                             stdin=stdin,
                                             stdout=stdout,
@@ -204,12 +206,12 @@ class PopenThread(threading.Thread):
                                       )
         stdout = self.stdout
         stderr = self.stderr
-        print('a')
+        #print('a')
         #print(self.piped_stdin)
         self._read_write_in(pipein, sysin, self.captured_stdin)
         self._read_write(procout, stdout, sys.stdout)
         self._read_write(procerr, stderr, sys.stderr)
-        print('b')
+        #print('b')
         while proc.poll() is None:
             #print('c')
             self._read_write_in(pipein, sysin, self.captured_stdin)
@@ -221,11 +223,14 @@ class PopenThread(threading.Thread):
                 break
             time.sleep(self.timeout)
             #print('d')
-        print('e')
+        #print('e')
         self._read_write_in(pipein, sysin, self.captured_stdin)
         self._read_write(procout, stdout, sys.stdout)
         self._read_write(procerr, stderr, sys.stderr)
-        print('f')
+        #print('f')
+        if proc.poll() is None:
+            proc.terminate()
+        #print('g')
 
     def _wait_for_attr(self, name):
         while not hasattr(self, name):
@@ -319,8 +324,15 @@ class PopenThread(threading.Thread):
         return self.proc.poll()
 
     def wait(self, timeout=None):
+        #print('wait 1')
         rtn = self.proc.wait(timeout=timeout)
+        #rtn = self.proc.poll()
+        #while rtn is None:
+        #    time.sleep(timeout or 1e-4)
+        #    rtn = self.proc.poll()
+        #print('wait 2')
         self.join(timeout=timeout)
+        #print('wait 3')
         # need to replace the old sigwinch handler somewhere...
         if self.old_winch_handler is not None and on_main_thread():
             signal.signal(signal.SIGWINCH, self.old_winch_handler)
@@ -955,7 +967,7 @@ class Command:
         if not stderr or not stderr.readable():
             raise StopIteration()
         while proc.poll() is None:
-            print(0)
+            #print(0)
             if prev is not None and prev.poll() is not None:
                 proc.prev_is_closed = True
                 self._close_prev_procs()
@@ -963,7 +975,7 @@ class Command:
                 #self._safe_close(proc.stdin)
                 #self._safe_close(proc.piped_stdin)
                 #self._safe_close(proc.captured_stdin)
-            print(1)
+            #print(1)
             yield from stdout.readlines(1024)
             #yield stdout.readline()
             #yield from iter(stdout.readline, '')
@@ -983,18 +995,24 @@ class Command:
             #except subprocess.TimeoutExpired:
             #    continue
             #yield from so.splitlines()
-            print(2)
-        proc.wait()
-        print(3)
-        self._endtime()
-        print(4)
+            #print(2)
         try:
             yield from stdout.readlines()
             #yield from iter(stdout.readline, '')  # iterable version of readlines
             #yield from iter(stderr.readline, '')  # iterable version of readlines
         except OSError:
             pass
-        print(5)
+        proc.wait()
+        #print(3)
+        self._endtime()
+        #print(4)
+        try:
+            yield from stdout.readlines()
+            #yield from iter(stdout.readline, '')  # iterable version of readlines
+            #yield from iter(stderr.readline, '')  # iterable version of readlines
+        except OSError:
+            pass
+        #print(5)
 
     def itercheck(self):
         """Iterates through the command lines and throws an error if the
