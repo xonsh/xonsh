@@ -218,6 +218,13 @@ class BufferedFDParallelReader:
 
 
 class PopenThread(threading.Thread):
+    """A thread for running and managing subprocess. This allows reading
+    from the stdin, stdout, and stderr streams in a non-blocking fashion.
+
+    This takes the same arguments and keyword arguments as regular Popen.
+    This requires that the captured_stdout and captured_stderr attributes
+    to be set following instantiation.
+    """
 
     def __init__(self, *args, stdin=None, stdout=None, stderr=None, **kwargs):
         super().__init__()
@@ -246,8 +253,6 @@ class PopenThread(threading.Thread):
             self.stdin = io.BytesIO()  # stdin is always bytes!
             self.stdout = io.TextIOWrapper(io.BytesIO(), encoding=enc, errors=err)
             self.stderr = io.TextIOWrapper(io.BytesIO(), encoding=enc, errors=err)
-            #self.stdout = io.StringIO()
-            #self.stderr = io.StringIO()
         else:
             self.encoding = self.encoding_errors = None
             self.stdin = io.BytesIO()
@@ -258,6 +263,10 @@ class PopenThread(threading.Thread):
         self.start()
 
     def run(self):
+        """Runs the subprocess by performing a parallel read on stdin if allowed,
+        and copying bytes from captured_stdout to stdout and bytes from
+        captured_stderr to stderr.
+        """
         proc = self.proc
         # get stdin and apply parallel reader if needed.
         stdin = self.stdin
@@ -297,14 +306,23 @@ class PopenThread(threading.Thread):
             proc.terminate()
 
     def _wait_for_attr(self, name):
+        """make sure the instance has a certain attr"""
         while not hasattr(self, name):
             time.sleep(1e-7)
 
     def _read_write(self, reader, writer, stdbuf):
+        """Read from a buffer and write into memory or back down to
+        the standard buffer, line-by-line, as approriate.
+        """
         for line in iter(reader.readline, b''):
             self._alt_mode_switch(line, writer, stdbuf)
 
     def _alt_mode_switch(self, line, membuf, stdbuf):
+        """Enables recursively switching between normal capturing mode
+        and 'alt' mode, which passes through values to the standard
+        buffer. Pagers, text editors, curses applications, etc. use
+        alternate mode.
+        """
         i, flag = findfirst(line, ALTERNATE_MODE_FLAGS)
         if flag is None:
             self._alt_mode_writer(line, membuf, stdbuf)
@@ -327,15 +345,15 @@ class PopenThread(threading.Thread):
             self._alt_mode_writer(line, membuf, stdbuf)
 
     def _alt_mode_writer(self, line, membuf, stdbuf):
+        """Write bytes to the standard buffer if in alt mode or otherwise
+        to the in-memory buffer.
+        """
         if not line:
             pass  # don't write empty values
         elif self._in_alt_mode:
             stdbuf.buffer.write(line)
             stdbuf.flush()
         else:
-            #if isinstance(membuf, io.StringIO):
-            #    line = line.decode(encoding=self.encoding,
-            #                       errors=self.encoding_errors)
             with self.lock:
                 p = membuf.tell()
                 membuf.seek(0, io.SEEK_END)
@@ -369,9 +387,14 @@ class PopenThread(threading.Thread):
     #
 
     def poll(self):
+        """Dispatches to Popen.poll()."""
         return self.proc.poll()
 
     def wait(self, timeout=None):
+        """Dispatches to Popen.wait(), but also does process cleanup such as
+        joining this thread and replacing the original window size signal
+        handler.
+        """
         rtn = self.proc.wait(timeout=timeout)
         self.join(timeout=timeout)
         # need to replace the old sigwinch handler somewhere...
@@ -386,12 +409,15 @@ class PopenThread(threading.Thread):
         return self.proc.returncode
 
     def send_signal(self, signal):
+        """Dispatches to Popen.send_signal()."""
         return self.proc.send_signal(signal)
 
     def terminate(self):
+        """Dispatches to Popen.terminate()."""
         return self.proc.terminate()
 
     def kill(self):
+        """Dispatches to Popen.kill()."""
         return self.proc.kill()
 
 
