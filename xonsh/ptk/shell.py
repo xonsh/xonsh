@@ -62,12 +62,15 @@ class PromptToolkitShell(BaseShell):
         get_prompt_tokens = lambda cli: prompt_tokens
         rprompt_tokens = self.rprompt_tokens(None)
         get_rprompt_tokens = lambda cli: rprompt_tokens
+        bottom_toolbar_tokens = self.bottom_toolbar_tokens(None)
+        get_bottom_toolbar_tokens = lambda cli: bottom_toolbar_tokens
         with self.prompter:
             prompt_args = {
                     'mouse_support': mouse_support,
                     'auto_suggest': auto_suggest,
                     'get_prompt_tokens': get_prompt_tokens,
                     'get_rprompt_tokens': get_rprompt_tokens,
+                    'get_bottom_toolbar_tokens': get_bottom_toolbar_tokens,
                     'style': PygmentsStyle(xonsh_style_proxy(self.styler)),
                     'completer': completer,
                     'multiline': multiline,
@@ -144,6 +147,23 @@ class PromptToolkitShell(BaseShell):
         # partial_format_prompt does handle empty strings properly,
         # but this avoids descending into it in the common case of
         # $RIGHT_PROMPT == ''.
+        if isinstance(p, str) and len(p) == 0:
+            return []
+        try:
+            p = partial_format_prompt(p)
+        except Exception:  # pylint: disable=broad-except
+            print_exception()
+        toks = partial_color_tokenize(p)
+        return toks
+
+    def bottom_toolbar_tokens(self, cli):
+        """Returns a list of (token, str) tuples for the current bottom
+        toolbar.
+        """
+        p = builtins.__xonsh_env__.get('BOTTOM_TOOLBAR')
+        # partial_format_prompt does handle empty strings properly,
+        # but this avoids descending into it in the common case of
+        # $TOOLBAR == ''.
         if isinstance(p, str) and len(p) == 0:
             return []
         try:
