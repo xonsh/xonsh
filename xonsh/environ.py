@@ -139,7 +139,6 @@ def DEFAULT_ENSURERS():
     'RIGHT_PROMPT': (is_string_or_callable, ensure_string, ensure_string),
     'SUBSEQUENCE_PATH_COMPLETION': (is_bool, to_bool, bool_to_str),
     'SUPPRESS_BRANCH_TIMEOUT_MESSAGE': (is_bool, to_bool, bool_to_str),
-    'TEEPTY_PIPE_DELAY': (is_float, float, str),
     'UPDATE_OS_ENVIRON': (is_bool, to_bool, bool_to_str),
     'VC_BRANCH_TIMEOUT': (is_float, float, str),
     'VI_MODE': (is_bool, to_bool, bool_to_str),
@@ -272,7 +271,6 @@ def DEFAULT_VALUES():
         'SUGGEST_COMMANDS': True,
         'SUGGEST_MAX_NUM': 5,
         'SUGGEST_THRESHOLD': 3,
-        'TEEPTY_PIPE_DELAY': 0.01,
         'TITLE': DEFAULT_TITLE,
         'UPDATE_OS_ENVIRON': False,
         'VC_BRANCH_TIMEOUT': 0.2 if ON_WINDOWS else 0.1,
@@ -522,15 +520,6 @@ def DEFAULT_DOCS():
         'tab completion of paths.'),
     'SUPPRESS_BRANCH_TIMEOUT_MESSAGE': VarDocs(
         'Whether or not to supress branch timeout warning messages.'),
-    'TEEPTY_PIPE_DELAY': VarDocs(
-        'The number of [seconds] to delay a spawned process if it has '
-        'information being piped in via stdin. This value must be a float. '
-        'If a value less than or equal to zero is passed in, no delay is '
-        'used. This can be used to fix situations where a spawned process, '
-        'such as piping into \'grep\', exits too quickly for the piping '
-        'operation itself. TeePTY (and thus this variable) are currently '
-        'only used when $XONSH_STORE_STDOUT is True.',
-        configurable=ON_LINUX),
     'TERM': VarDocs(
         'TERM is sometimes set by the terminal emulator. This is used (when '
         "valid) to determine whether or not to set the title. Users shouldn't "

@@ -51,8 +51,8 @@ else:
         _sys.modules['xonsh.lexer'] = __amalgam__
         openpy = __amalgam__
         _sys.modules['xonsh.openpy'] = __amalgam__
-        teepty = __amalgam__
-        _sys.modules['xonsh.teepty'] = __amalgam__
+        proc = __amalgam__
+        _sys.modules['xonsh.proc'] = __amalgam__
         xontribs = __amalgam__
         _sys.modules['xonsh.xontribs'] = __amalgam__
         base_shell = __amalgam__
@@ -63,8 +63,6 @@ else:
         _sys.modules['xonsh.history'] = __amalgam__
         inspectors = __amalgam__
         _sys.modules['xonsh.inspectors'] = __amalgam__
-        proc = __amalgam__
-        _sys.modules['xonsh.proc'] = __amalgam__
         xonfig = __amalgam__
         _sys.modules['xonsh.xonfig'] = __amalgam__
         environ = __amalgam__

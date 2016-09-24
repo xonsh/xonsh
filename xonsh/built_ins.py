@@ -32,7 +32,7 @@ from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.proc import (
     PopenThread, ProcProxy, SimpleProcProxy, ForegroundProcProxy,
-    SimpleForegroundProcProxy, TeePTYProc, pause_call_resume, CommandPipeline,
+    SimpleForegroundProcProxy, pause_call_resume, CommandPipeline,
     HiddenCommandPipeline, STDOUT_CAPTURE_KINDS)
 from xonsh.tools import (
     suggest_commands, expandvars, globpath, XonshError,
