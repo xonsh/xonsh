@@ -58,10 +58,14 @@ class PromptToolkitShell(BaseShell):
         multicolumn = (completions_display == 'multi')
         self.styler.style_name = env.get('XONSH_COLOR_STYLE')
         completer = None if completions_display == 'none' else self.pt_completer
-        prompt_tokens = self.prompt_tokens(None)
-        get_prompt_tokens = lambda cli: prompt_tokens
-        rprompt_tokens = self.rprompt_tokens(None)
-        get_rprompt_tokens = lambda cli: rprompt_tokens
+        if not env.get('UPDATE_PROMPT_ON_KEYPRESS'):
+            prompt_tokens_cached = self.prompt_tokens(None)
+            get_prompt_tokens = lambda cli: prompt_tokens_cached
+            rprompt_tokens_cached = self.rprompt_tokens(None)
+            get_rprompt_tokens = lambda cli: rprompt_tokens_cached
+        else:
+            get_prompt_tokens = self.prompt_tokens
+            get_rprompt_tokens = self.rprompt_tokens
         with self.prompter:
             prompt_args = {
                     'mouse_support': mouse_support,
