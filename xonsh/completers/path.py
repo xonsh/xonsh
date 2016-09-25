@@ -14,7 +14,7 @@ from xonsh.completers.tools import get_filter_function
 def PATTERN_NEED_QUOTES():
     pattern = r'\s`\$\{\}\,\*\(\)"\'\?&'
     if xp.ON_WINDOWS:
-        pattern.append('%')
+        pattern += '%'
     pattern = '[' + pattern + ']' + r'|\band\b|\bor\b'
     return re.compile(pattern)
 
