@@ -46,7 +46,6 @@ def xonsh_builtins():
     builtins.__xonsh_stderr_uncaptured__ = None
     builtins.__xonsh_ensure_list_of_strs__ = ensure_list_of_strs
     builtins.__xonsh_commands_cache__ = DummyCommandsCache()
-    #builtins.__xonsh_all_jobs__ = getattr(builtins, '__xonsh_all_jobs__', {})
     builtins.__xonsh_all_jobs__ = {}
     builtins.__xonsh_history__ = DummyHistory()
     builtins.XonshBlockError = XonshBlockError
