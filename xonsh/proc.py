@@ -215,6 +215,34 @@ class BufferedFDParallelReader:
                                        args=(self, fd, self.buffer, chunksize))
         self.thread.daemon = True
         self.thread.start()
+    
+    
+def safe_fdclose(handle, cache=None):
+    """Closes a file handle in the safest way possible, and potentially 
+    storing the result.
+    """
+    if cache is not None and cache.get(handle, False):
+        return
+    status = True
+    if handle is None:
+        pass
+    elif isinstance(handle, int):
+        if handle >= 3:
+            # don't close stdin, stdout, stderr, -1
+            try:
+                os.close(handle)
+            except OSError:
+                status = False
+    elif handle is sys.stdin or handle is sys.stdout or handle is sys.stderr:
+        # don't close stdin, stdout, or stderr
+        pass
+    else:
+        try:
+            handle.close()
+        except OSError:
+            status = False
+    if cache is not None:        
+        cache[handle] = status
 
 
 class PopenThread(threading.Thread):
@@ -506,6 +534,7 @@ class ProcProxy(threading.Thread):
         self.pid = None
         self.returncode = None
         self.wait = self.join
+        self._closed_handle_cache = {}
 
         handles = self._get_handles(stdin, stdout, stderr)
         (self.p2cread, self.p2cwrite,
@@ -572,9 +601,16 @@ class ProcProxy(threading.Thread):
             sp_stderr = io.TextIOWrapper(io.open(self.errwrite, 'wb', -1))
         else:
             sp_stderr = sys.stderr
-
+        # run the function itself
         r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr)
         self.returncode = 0 if r is None else r
+        # clean up
+        handles = [sp_stdin, sp_stdout, sp_stderr, self.p2cread, self.p2cwrite, 
+                   self.c2pread, self.c2pwrite, self.errread, self.errwrite]
+        if ON_WINDOWS:
+            handles += [self.stdin, self.stdout, self.stderr]
+        for handle in handles:
+            safe_fdclose(handle, cache=self._closed_handle_cache)
 
     def poll(self):
         """Check if the function has completed.
@@ -584,7 +620,7 @@ class ProcProxy(threading.Thread):
         `None` if the function is still executing, and the returncode otherwise
         """
         return self.returncode
-
+        
     # The code below (_get_devnull, _get_handles, and _make_inheritable) comes
     # from subprocess.py in the Python 3.4.2 Standard Library
     def _get_devnull(self):
@@ -1060,22 +1096,7 @@ class CommandPipeline:
             self.endtime = time.time()
 
     def _safe_close(self, handle):
-        if self._closed_handle_cache.get(handle, False):
-            return
-        status = True
-        if handle is None:
-            pass
-        elif isinstance(handle, int):
-            try:
-                os.close(handle)
-            except OSError:
-                status = False
-        else:
-            try:
-                handle.close()
-            except OSError:
-                status = False
-        self._closed_handle_cache[handle] = status
+        safe_fdclose(handle, cache=self._closed_handle_cache)
 
     def _prev_procs_done(self):
         """Boolean for if all previous processes have completed. If there
