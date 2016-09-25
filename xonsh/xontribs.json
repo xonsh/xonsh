@@ -85,6 +85,11 @@
   "package": "xontrib-powerline",
   "url": "https://github.com/santagada/xontrib-powerline",
   "description": ["Powerline for Xonsh shell"]
+ },
+ {"name": "prompt_vi_mode",
+  "package": "xontrib-prompt-vi-mode",
+  "url": "https://github.com/t184256/xontrib-prompt-vi-mode",
+  "description": ["vi-mode status formatter for xonsh prompt"]
  }
  ],
  "packages": {
@@ -179,6 +184,13 @@
    "url": "https://github.com/meatballs/xontrib-thefuck",
    "install": {
     "pip": "pip install xontrib-thefuck"
+   }
+  },
+  "xontrib-prompt-vi-mode": {
+   "license": "MIT",
+   "url": "https://github.com/t184256/xontrib-prompt-vi-mode",
+   "install": {
+    "pip": "pip install xontrib-prompt-vi-mode"
    }
   }
  }
