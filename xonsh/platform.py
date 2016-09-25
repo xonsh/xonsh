@@ -4,6 +4,7 @@ on a platform.
 """
 import os
 import sys
+import signal
 import pathlib
 import platform
 import functools
@@ -64,7 +65,11 @@ ON_ANACONDA = LazyBool(
     lambda: any(s in sys.version for s in {'Anaconda', 'Continuum'}),
     globals(), 'ON_ANACONDA')
 """ ``True`` if executed in an Anaconda instance, else ``False``. """
-
+CAN_RESIZE_WINDOW = LazyBool(lambda: hasattr(signal, 'SIGWINCH'), 
+                             globals(), 'CAN_RESIZE_WINDOW')
+"""``True`` if we can resize terminal window, as provided by the presense of 
+signal.SIGWINCH, else ``False``. 
+"""
 
 @lazybool
 def HAS_PYGMENTS():

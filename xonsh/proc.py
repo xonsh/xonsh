@@ -22,7 +22,7 @@ import subprocess
 import collections
 import collections.abc as cabc
 
-from xonsh.platform import ON_WINDOWS, ON_LINUX, ON_POSIX
+from xonsh.platform import ON_WINDOWS, ON_LINUX, ON_POSIX, CAN_RESIZE_WINDOW
 from xonsh.tools import (redirect_stdout, redirect_stderr, fallback,
                          print_exception, XonshCalledProcessError, findfirst,
                          on_main_thread)
@@ -232,7 +232,7 @@ class PopenThread(threading.Thread):
         self.stdout_fd = stdout.fileno()
         self._set_pty_size()
         self.old_winch_handler = None
-        if on_main_thread():
+        if CAN_RESIZE_WINDOW and on_main_thread():
             self.old_winch_handler = signal.signal(signal.SIGWINCH,
                                                    self._signal_winch)
         env = builtins.__xonsh_env__
