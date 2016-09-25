@@ -159,6 +159,7 @@ def DEFAULT_ENSURERS():
     'XONSH_STORE_STDIN': (is_bool, to_bool, bool_to_str),
     'XONSH_TRACEBACK_LOGFILE': (is_logfile_opt, to_logfile_opt, logfile_opt_to_str),
     'XONSH_DATETIME_FORMAT': (is_string, ensure_string, ensure_string),
+    'UPDATE_PROMPT_ON_KEYPRESS': (is_bool, to_bool, bool_to_str),
     }
 
 
@@ -298,6 +299,7 @@ def DEFAULT_VALUES():
         'XONSH_STORE_STDOUT': False,
         'XONSH_TRACEBACK_LOGFILE': None,
         'XONSH_DATETIME_FORMAT': '%Y-%m-%d %H:%M',
+        'UPDATE_PROMPT_ON_KEYPRESS': False,
     }
     if hasattr(locale, 'LC_MESSAGES'):
         dv['LC_MESSAGES'] = locale.setlocale(locale.LC_MESSAGES)
@@ -661,6 +663,10 @@ def DEFAULT_DOCS():
     'XONSH_DATETIME_FORMAT': VarDocs(
         'The format that is used for ``datetime.strptime()`` in various places'
         'i.e the history timestamp option'),
+    'UPDATE_PROMPT_ON_KEYPRESS': VarDocs(
+        'Disables caching the prompt between commands, '
+        'so that it would be reevaluated on each keypress. '
+        'Disabled by default because of the incurred performance penalty.'),
     }
 
 
