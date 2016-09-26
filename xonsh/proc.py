@@ -1272,7 +1272,7 @@ class CommandPipeline:
         return [name, mode]
 
     @property
-    def sdtout_redirect(self):
+    def stdout_redirect(self):
         """Redirection used for stdout."""
         stdout = self.spec.stdout
         name = getattr(stdout, 'name', '<stdout>')
