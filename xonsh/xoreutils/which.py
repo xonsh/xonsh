@@ -14,9 +14,10 @@ def _which_create_parser():
     parser.add_argument('args', type=str, nargs='+',
                         help='The executables or aliases to search for')
     parser.add_argument('-a', '--all', action='store_true', dest='all',
-                        help='Show all matches in $PATH and xonsh.aliases')
+                        help='Show all matches in globals, xonsh.aliases, $PATH')
     parser.add_argument('-s', '--skip-alias', action='store_true',
-                        help='Do not search in xonsh.aliases', dest='skip')
+                        help='Do not search inxonsh.aliases',
+                        dest='skip')
     parser.add_argument('-V', '--version', action='version',
                         version='{}'.format(_which.__version__),
                         help='Display the version of the python which module '
@@ -43,11 +44,15 @@ def _which_create_parser():
     return parser
 
 
-def print_modules(arg, verbose=False):
-    """Print the module."""
+def print_global_object(arg, stdout):
+    """Print the object."""
+    obj = builtins.__xonsh_ctx__.get(arg)
+    print('global object of {}'.format(type(obj)),
+          file=stdout)
 
 
-def print_path(abs_name, from_where, verbose=False):
+def print_path(abs_name, from_where, stdout, verbose=False):
+    """Print the name and path of the command."""
     if ON_WINDOWS:
         # Use list dir to get correct case for the filename
         # i.e. windows is case insensitive but case preserving
@@ -56,14 +61,14 @@ def print_path(abs_name, from_where, verbose=False):
         abs_name = os.path.join(p, f)
         if builtins.__xonsh_env__.get('FORCE_POSIX_PATHS', False):
             abs_name.replace(os.sep, os.altsep)
-    if not pargs.verbose:
+    if not verbose:
         print(abs_name, file=stdout)
     else:
         print('{} ({})'.format(abs_name, from_where), file=stdout)
 
 
-def print_alias(arg, verbose=False):
-    """Print the alias"""
+def print_alias(arg, stdout, verbose=False):
+    """Print the alias."""
     if not verbose:
         if not callable(builtins.aliases[arg]):
             print(' '.join(builtins.aliases[arg]), file=stdout)
@@ -100,9 +105,12 @@ def which(args, stdin=None, stdout=None, stderr=None):
         exts = None
     failures = []
     for arg in pargs.args:
-        # skip alias check if user asks to skip
-        if (arg in builtins.aliases and not pargs.skip):
-            print_alias(arg)
+        nmatches = 0
+        if pargs.all and arg in builtins.__xonsh_ctx__:
+            print_global_object(arg, stdout)
+            nmatches += 1
+        if arg in builtins.aliases and not pargs.skip:
+            print_alias(arg, stdout, verbose)
             nmatches += 1
             if not pargs.all:
                 continue
@@ -111,9 +119,9 @@ def which(args, stdin=None, stdout=None, stderr=None):
         # __xosnh_env__['PATH']
         original_os_path = os.environ['PATH']
         os.environ['PATH'] = builtins.__xonsh_env__.detype()['PATH']
-        matches = _which.whichgen(arg, exts=exts, verbose=pargs.verbose)
+        matches = _which.whichgen(arg, exts=exts, verbose=verbose)
         for abs_name, from_where in matches:
-            print_path(abs_name, from_where)
+            print_path(abs_name, from_where, stdout, verbose)
             nmatches += 1
             if not pargs.all:
                 break
@@ -123,9 +131,14 @@ def which(args, stdin=None, stdout=None, stderr=None):
     if len(failures) == 0:
         return 0
     else:
-        print('{} not in $PATH'.format(', '.join(failures)), file=stderr, end='')
+        print('{} not in '.format(', '.join(failures)),
+              file=stderr, end='')
+        if pargs.all:
+            print('globals or ')
+        print('$PATH', file=stderr, end='')
         if not pargs.skip:
-            print(' or xonsh.builtins.aliases', file=stderr, end='')
+            print(' or xonsh.builtins.aliases',
+                  file=stderr, end='')
         print('', end='\n')
         return len(failures)
 
