@@ -2,7 +2,6 @@
 """Implements the base xonsh parser."""
 import os
 import re
-import sys
 import time
 import textwrap
 from threading import Thread
@@ -2326,10 +2325,7 @@ class BaseParser(object):
         else:
             targ = ensure_has_elts(targs)
         store_ctx(targ)
-        if sys.version_info > (3,6):
-            comp = ast.comprehension(target=targ, iter=it, ifs=[], is_async=0)
-        else:
-            comp = ast.comprehension(target=targ, iter=it, ifs=[])
+        comp = ast.comprehension(target=targ, iter=it, ifs=[])
         comps = [comp]
         p0 = {'comps': comps}
         if p5 is not None:
