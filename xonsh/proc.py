@@ -560,6 +560,9 @@ class ProcProxy(threading.Thread):
             if universal_newlines:
                 self.stdin = io.TextIOWrapper(self.stdin, write_through=True,
                                               line_buffering=False)
+        elif isinstance(stdin, int) and stdin != 0:
+            self.stdin = io.open(stdin, 'wb', -1)
+            
         if self.c2pread != -1:
             self.stdout = io.open(self.c2pread, 'rb', -1)
             if universal_newlines:
@@ -608,7 +611,9 @@ class ProcProxy(threading.Thread):
         handles = [sp_stdin, sp_stdout, sp_stderr, self.p2cread, self.p2cwrite, 
                    self.c2pread, self.c2pwrite, self.errread, self.errwrite]
         if ON_WINDOWS:
-            handles += [self.stdin, self.stdout, self.stderr]
+            # scopz: not sure why this is needed, but stdin cannot go here
+            # and stdout & stderr must.
+            handles += [self.stdout, self.stderr]
         for handle in handles:
             safe_fdclose(handle, cache=self._closed_handle_cache)
 
