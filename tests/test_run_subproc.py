@@ -38,7 +38,7 @@ def test_runsubproc_simple(xonsh_builtins, xonsh_execer):
     
 @skip_if_on_windows
 def test_runsubproc_redirect_out_to_file(xonsh_builtins, xonsh_execer):
-    run_subproc([[pwd, 'out>', 'tttt']], captured='stdout')
+    run_subproc([['pwd', 'out>', 'tttt']], captured='stdout')
     with open('tttt') as f:
         assert f.read().rstrip() == os.getcwd()
     os.remove('tttt')
