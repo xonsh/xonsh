@@ -260,7 +260,10 @@ def source_alias(args, stdin=None):
         if not os.path.isfile(fname):
             fname = locate_binary(fname)
         with open(fname, 'r', encoding=encoding, errors=errors) as fp:
-            builtins.execx(fp.read(), 'exec', builtins.__xonsh_ctx__)
+            src = fp.read()
+        if not src.endswith('\n'):
+            src += '\n'
+        builtins.execx(src, 'exec', builtins.__xonsh_ctx__)
 
 
 def source_cmd(args, stdin=None):
