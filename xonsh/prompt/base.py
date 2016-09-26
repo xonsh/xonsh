@@ -120,7 +120,7 @@ def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
         elif field in fmtter:
             v = fmtter[field]
             try:
-                val = str(v() if callable(v) else v)
+                val = v() if callable(v) else v
             except Exception as err:
                 print('prompt: error: on field {!r}'
                       ''.format(field), file=sys.stderr)
@@ -223,4 +223,6 @@ def _format_value(val, spec, conv):
     val = _FORMATTER.convert_field(val, conv)
     if spec:
         val = _FORMATTER.format(spec, val)
+    if not isinstance(val, str):
+        val = str(val)
     return val
