@@ -1,9 +1,10 @@
-@echo off
+@echo on
 call :s_which py.exe
+rem note that %~dp0 is dir of this batch script
 if not "%_path%" == "" (
-  py -3 pwd %*
+  py -3 %~dp0pwd %*
 ) else (
-  python pwd %*
+  python %~dp0pwd %*
 )
 
 goto :eof
