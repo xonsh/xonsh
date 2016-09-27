@@ -633,14 +633,7 @@ class SubprocSpec:
             return
         self.is_proxy = True
         bgable = getattr(alias, '__xonsh_backgroundable__', True)
-        numargs = len(inspect.signature(alias).parameters)
-        if numargs == 2:
-            cls = SimpleProcProxy if bgable else SimpleForegroundProcProxy
-        elif numargs == 4:
-            cls = ProcProxy if bgable else ForegroundProcProxy
-        else:
-            e = 'Expected callable with 2 or 4 arguments, not {}'
-            raise XonshError(e.format(numargs))
+        cls = ProcProxy if bgable else ForegroundProcProxy
         self.cls = cls
         self.backgroundable = bgable
 

@@ -15,6 +15,7 @@ import time
 import queue
 import array
 import signal
+import inspect
 import builtins
 import functools
 import threading
@@ -25,7 +26,7 @@ import collections.abc as cabc
 from xonsh.platform import ON_WINDOWS, ON_LINUX, ON_POSIX, CAN_RESIZE_WINDOW
 from xonsh.tools import (redirect_stdout, redirect_stderr, fallback,
                          print_exception, XonshCalledProcessError, findfirst,
-                         on_main_thread)
+                         on_main_thread, XonshError)
 from xonsh.lazyasd import lazyobject, LazyObject
 from xonsh.jobs import wait_for_active_job
 from xonsh.lazyimps import fcntl, termios
@@ -518,6 +519,42 @@ def parse_proxy_return(r, stdout, stderr):
     return cmd_result
 
 
+def proxy_zero(f, args, stdin, stdout, stderr):
+    """Calls a proxy function which takes no parameters."""
+    return f()
+
+
+def proxy_one(f, args, stdin, stdout, stderr):
+    """Calls a proxy function which takes one parameter: args"""
+    return f(args)
+
+
+def proxy_two(f, args, stdin, stdout, stderr):
+    """Calls a proxy function which takes two parameter: args and stdin."""
+    return f(args, stdin)
+
+
+def proxy_three(f, args, stdin, stdout, stderr):
+    """Calls a proxy function which takes three parameter: args, stdin, stdout.
+    """
+    return f(args, stdin, stdout)
+
+
+PROXIES = (proxy_zero, proxy_one, proxy_two, proxy_three)
+
+def partial_proxy(f):
+    """Dispatches the approriate proxy function based on the number of args."""
+    numargs = len(inspect.signature(f).parameters)
+    if numargs < 4:
+        return funtools.partial(PROXIES[numargs], f)
+    elif numargs == 4:
+        # don't need to partial.
+        return f
+    else:
+        e = 'Expected proxy with 4 or fewer arguments, not {}'
+        raise XonshError(e.format(numargs))
+
+
 class ProcProxy(threading.Thread):
     """
     Class representing a function to be run as a subprocess-mode command.
@@ -549,13 +586,9 @@ class ProcProxy(threading.Thread):
             Whether or not to use universal newlines.
         env : Mapping, optional
             Environment mapping.
-
-        Attributes
-        ----------
-        backgroundable : bool
-            Whether the function can be run in the background or not.
         """
-        self.f = f
+        self.orig_f = f
+        self.f = partial_proxy(f)
         """
         The function to be executed.  It should be a function of four
         arguments, described below.
@@ -832,52 +865,6 @@ class ProcProxy(threading.Thread):
                     errread, errwrite)
 
 
-def wrap_simple_command(f, args, stdin, stdout, stderr):
-    """Decorator for creating 'simple' callable aliases."""
-    @functools.wraps(f)
-    def wrapped_simple_command(args, stdin, stdout, stderr):
-        try:
-            if bgable:
-                with redirect_stdout(stdout), redirect_stderr(stderr):
-                    r = f(args, stdin)
-            else:
-                r = f(args, stdin)
-
-            cmd_result = 0
-            if isinstance(r, str):
-                print(r, file=sys.stderr)
-                stdout.write(r)
-            elif isinstance(r, cabc.Sequence):
-                if r[0] is not None:
-                    stdout.write(r[0])
-                if r[1] is not None:
-                    stderr.write(r[1])
-                if len(r) > 2 and r[2] is not None:
-                    cmd_result = r[2]
-            elif r is not None:
-                stdout.write(str(r))
-            return cmd_result
-        except Exception:
-            print_exception()
-            return 1  # returncode for failure
-
-    return wrapped_simple_command
-
-
-class SimpleProcProxy(ProcProxy):
-    """Variant of ProcProxy for simpler functions.
-
-    The function passed into the initializer for `SimpleProcProxy` should have
-    the form described in the xonsh tutorial.  This function is then wrapped to
-    make a new function of the form expected by `ProcProxy`.
-    """
-
-    def __init__(self, f, args, stdin=None, stdout=None, stderr=None,
-                 universal_newlines=False, env=None):
-        f = wrap_simple_command(f, args, stdin, stdout, stderr)
-        super().__init__(f, args, stdin, stdout, stderr, universal_newlines, env)
-
-
 #
 # Foreground Process Proxies
 #
@@ -892,13 +879,14 @@ class ForegroundProcProxy(object):
 
     def __init__(self, f, args, stdin=None, stdout=None, stderr=None,
                  universal_newlines=False, env=None):
-        self.f = f
+        self.orig_f = f
+        self.f = partial_proxy(f)
         self.args = args
         self.pid = os.getpid()
         self.returncode = None
         self.stdin = stdin
-        self.stdout = None
-        self.stderr = None
+        self.stdout = stdout
+        self.stderr = stderr
         self.universal_newlines = universal_newlines
         self.env = env
 
@@ -912,30 +900,45 @@ class ForegroundProcProxy(object):
         present for API compatability.
         """
         if self.f is None:
-            return
+            return 0
+        env = builtins.__xonsh_env__
+        enc = env.get('XONSH_ENCODING')
+        err = env.get('XONSH_ENCODING_ERRORS')
+        # set file handles
         if self.stdin is None:
-            stdin = io.StringIO("")
+            stdin = None
         else:
-            stdin = io.TextIOWrapper(self.stdin)
-        r = self.f(self.args, stdin, self.stdout, self.stderr)
-        self.returncode = 0 if r is None else r
+            stdin = io.TextIOWrapper(self.stdin, encoding=enc, errors=err)
+        stdout = self._pick_buf(self.stdout, sys.stdout, enc, err)
+        stderr = self._pick_buf(self.stderr, sys.stderr, enc, err)
+        # run the actual function
+        try:
+            r = self.f(self.args, stdin, stdout, stderr)
+        except Exception:
+            print_exception()
+            r = 1
+        self.returncode = parse_proxy_return(r, stdout, stderr)
+        stdout.flush()
+        stderr.flush()
         return self.returncode
 
-
-class SimpleForegroundProcProxy(ForegroundProcProxy):
-    """Variant of `ForegroundProcProxy` for simpler functions.
-
-    The function passed into the initializer for `SimpleForegroundProcProxy`
-    should have the form described in the xonsh tutorial. This function is
-    then wrapped to make a new function of the form expected by
-    `ForegroundProcProxy`.
-    """
-
-    def __init__(self, f, args, stdin=None, stdout=None, stderr=None,
-                 universal_newlines=False, env=None):
-        f = wrap_simple_command(f, args, stdin, stdout, stderr)
-        super().__init__(f, args, stdin, stdout, stderr, universal_newlines,
-                         env)
+    @staticmethod
+    def _pick_buf(handle, sysbuf, enc, err):
+        if handle is None or handle is sysbuf:
+            buf = sysbuf
+        elif isinstance(handle, int):
+            if handle < 3:
+                buf = sysbuf
+            else:
+                buf = io.TextIOWrapper(io.open(handle, 'wb', -1),
+                                       encoding=enc, errors=err)
+        elif hasattr(handle, 'encoding'):
+            # must be a text stream, no need to wrap.
+            buf = handle
+        else:
+            # must be a binary stream, should wrap it.
+            buf = io.TextIOWrapper(handle, encoding=enc, errors=err)
+        return buf
 
 
 def foreground(f):
