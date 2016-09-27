@@ -268,6 +268,7 @@ class PopenThread(threading.Thread):
         env = builtins.__xonsh_env__
         self.orig_stdin = stdin
         self.store_stdin = env.get('XONSH_STORE_STDIN')
+        self.stdin_restore = False
         # start up process
         self.proc = proc = subprocess.Popen(*args,
                                             stdin=stdin,
@@ -370,6 +371,7 @@ class PopenThread(threading.Thread):
             #to stdin.
             self._alt_mode_writer(line[:i], membuf, stdbuf)
             self._in_alt_mode = True
+            #self._enable_raw_stdin()
             self._alt_mode_switch(line[i+len(flag):], membuf, stdbuf)
         elif flag in END_ALTERNATE_MODE:
             # This code is executed when the child process switches the
@@ -377,6 +379,7 @@ class PopenThread(threading.Thread):
             # that the user has returned to the command prompt.
             self._alt_mode_writer(line[:i], membuf, stdbuf)
             self._in_alt_mode = False
+            #self._restore_raw_stdin()
             self._alt_mode_switch(line[i+len(flag):], membuf, stdbuf)
         else:
             self._alt_mode_writer(line, membuf, stdbuf)
@@ -427,6 +430,22 @@ class PopenThread(threading.Thread):
         """Signal handler for SIGINT - Cntrl+C may have been pressed."""
         self.send_signal(signum)
 
+    def _enable_raw_stdin(self):
+        if not ON_POSIX:
+            return
+        try:
+            self.stdin_tty_mode = termios.tcgetattr(0)
+            new = termios.tcgetattr(0)
+            new[3] = new[3] & ~termios.ECHO
+            termios.tcsetattr(0, termios.TCSANOW, new)
+            self.stdin_restore = True
+        except tty.error:    # This is the same as termios.error
+            self.stdin_restore = False
+
+    def _restore_raw_stdin(self):
+        if self.stdin_restore:
+            termios.tcsetattr(0, termios.TCSANOW, self.stdin_tty_mode)
+
     #
     # Dispatch methods
     #
@@ -448,6 +467,7 @@ class PopenThread(threading.Thread):
             self.old_winch_handler = None
         signal.signal(signal.SIGINT, self.old_int_handler)
         self.old_int_handler = None
+        #self._restore_raw_stdin()
         return rtn
 
     @property
