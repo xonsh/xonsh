@@ -431,17 +431,25 @@ def _tok_colors(cmap, cols):
     return toks
 
 
-def _colors(ns):
-    cols, _ = shutil.get_terminal_size()
-    if ON_WINDOWS:
-        cols -= 1
-    cmap = color_style()
-    akey = next(iter(cmap))
+def _colors(args):
+    columns, _ = shutil.get_terminal_size()
+    columns -= int(ON_WINDOWS)
+    style_stash = builtins.__xonsh_env__['XONSH_COLOR_STYLE']
+
+    if args.style is not None:
+        if args.style not in color_style_names():
+            print('Invalid style: {}'.format(args.style))
+            return
+        builtins.__xonsh_env__['XONSH_COLOR_STYLE'] = args.style
+
+    color_map = color_style()
+    akey = next(iter(color_map))
     if isinstance(akey, str):
-        s = _str_colors(cmap, cols)
+        s = _str_colors(color_map, columns)
     else:
-        s = _tok_colors(cmap, cols)
+        s = _tok_colors(color_map, columns)
     print_color(s)
+    builtins.__xonsh_env__['XONSH_COLOR_STYLE'] = style_stash
 
 
 @functools.lru_cache(1)
@@ -453,8 +461,8 @@ def _xonfig_create_parser():
                                          'default action'))
     info.add_argument('--json', action='store_true', default=False,
                       help='reports results as json')
-    wiz = subp.add_parser('wizard', help=('displays configuration information, '
-                                          'default action'))
+    wiz = subp.add_parser('wizard', help='displays configuration information, '
+                                         'default action')
     wiz.add_argument('--file', default=None,
                      help='config file location, default=$XONSHCONFIG')
     wiz.add_argument('--confirm', action='store_true', default=False,
@@ -462,8 +470,9 @@ def _xonfig_create_parser():
     sty = subp.add_parser('styles', help='prints available xonsh color styles')
     sty.add_argument('--json', action='store_true', default=False,
                      help='reports results as json')
-    subp.add_parser('colors', help=('displays the color palette for '
-                                    'the current xonsh color style'))
+    colors = subp.add_parser('colors', help='preview color style')
+    colors.add_argument('style', nargs='?', default=None,
+                        help='style to preview, default: <current>')
     return p
 
 
