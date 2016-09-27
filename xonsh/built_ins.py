@@ -31,8 +31,8 @@ from xonsh.foreign_shells import load_foreign_aliases
 from xonsh.jobs import add_job, wait_for_active_job
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.proc import (
-    PopenThread, ProcProxy, SimpleProcProxy, ForegroundProcProxy,
-    SimpleForegroundProcProxy, pause_call_resume, CommandPipeline,
+    PopenThread, ProcProxy, ForegroundProcProxy,
+    pause_call_resume, CommandPipeline,
     HiddenCommandPipeline, STDOUT_CAPTURE_KINDS)
 from xonsh.tools import (
     suggest_commands, expandvars, globpath, XonshError,

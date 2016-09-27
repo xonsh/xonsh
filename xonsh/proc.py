@@ -546,7 +546,7 @@ def partial_proxy(f):
     """Dispatches the approriate proxy function based on the number of args."""
     numargs = len(inspect.signature(f).parameters)
     if numargs < 4:
-        return funtools.partial(PROXIES[numargs], f)
+        return functools.partial(PROXIES[numargs], f)
     elif numargs == 4:
         # don't need to partial.
         return f
@@ -702,7 +702,7 @@ class ProcProxy(threading.Thread):
         # clean up
         handles = [sp_stdin, sp_stdout, sp_stderr, self.p2cread, self.p2cwrite,
                    self.c2pread, self.c2pwrite, self.errread, self.errwrite]
-        #handles = []
+        handles = []
         if ON_WINDOWS:
             # scopz: not sure why this is needed, but stdin cannot go here
             # and stdout & stderr must.
@@ -1233,7 +1233,8 @@ class CommandPipeline:
     def _set_input(self):
         """Sets the input vaiable."""
         stdin = self.proc.stdin
-        if stdin is None or isinstance(stdin, int) or not stdin.seekable():
+        if stdin is None or isinstance(stdin, int) or stdin.closed or \
+                            not stdin.seekable():
             input = b''
         else:
             stdin.seek(0)
