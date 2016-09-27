@@ -215,10 +215,10 @@ class BufferedFDParallelReader:
                                        args=(self, fd, self.buffer, chunksize))
         self.thread.daemon = True
         self.thread.start()
-    
-    
+
+
 def safe_fdclose(handle, cache=None):
-    """Closes a file handle in the safest way possible, and potentially 
+    """Closes a file handle in the safest way possible, and potentially
     storing the result.
     """
     if cache is not None and cache.get(handle, False):
@@ -241,7 +241,7 @@ def safe_fdclose(handle, cache=None):
             handle.close()
         except OSError:
             status = False
-    if cache is not None:        
+    if cache is not None:
         cache[handle] = status
 
 
@@ -562,7 +562,7 @@ class ProcProxy(threading.Thread):
                                               line_buffering=False)
         elif isinstance(stdin, int) and stdin != 0:
             self.stdin = io.open(stdin, 'wb', -1)
-            
+
         if self.c2pread != -1:
             self.stdout = io.open(self.c2pread, 'rb', -1)
             if universal_newlines:
@@ -608,7 +608,7 @@ class ProcProxy(threading.Thread):
         r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr)
         self.returncode = 0 if r is None else r
         # clean up
-        handles = [sp_stdin, sp_stdout, sp_stderr, self.p2cread, self.p2cwrite, 
+        handles = [sp_stdin, sp_stdout, sp_stderr, self.p2cread, self.p2cwrite,
                    self.c2pread, self.c2pwrite, self.errread, self.errwrite]
         if ON_WINDOWS:
             # scopz: not sure why this is needed, but stdin cannot go here
@@ -625,7 +625,7 @@ class ProcProxy(threading.Thread):
         `None` if the function is still executing, and the returncode otherwise
         """
         return self.returncode
-        
+
     # The code below (_get_devnull, _get_handles, and _make_inheritable) comes
     # from subprocess.py in the Python 3.4.2 Standard Library
     def _get_devnull(self):
@@ -1010,12 +1010,15 @@ class CommandPipeline:
                 proc.prevs_are_closed = True
                 break
             yield from safe_readlines(stdout, 1024)
+            self.stream_stderr(safe_readlines(stderr, 1024))
             time.sleep(1e-4)
         # read from process now that it is over
         yield from safe_readlines(stdout)
+        self.stream_stderr(safe_readlines(stderr))
         proc.wait()
         self._endtime()
         yield from safe_readlines(stdout)
+        self.stream_stderr(safe_readlines(stderr))
         if self.captured == 'object':
             self.end(tee_output=False)
 
@@ -1056,6 +1059,27 @@ class CommandPipeline:
             lines.append(line)
             yield line
 
+    def stream_stderr(self, lines):
+        """Streams lines to sys.stderr and the errors attribute."""
+        if not lines:
+            return
+        b = b''.join(lines)
+        # write bytes to std stream
+        sys.stderr.buffer.write(b)
+        sys.stderr.flush()
+        # do some munging of the line before we save it to the attr
+        b = RE_HIDDEN_BYTES.sub(b'', b)
+        b = RE_VT100_ESCAPE.sub(b'', b)
+        env = builtins.__xonsh_env__
+        s = b.decode(encoding=env.get('XONSH_ENCODING'),
+                     errors=env.get('XONSH_ENCODING_ERRORS'))
+        s = s.replace('\r\n', '\n').replace('\r', '\n')
+        # set the errors
+        if self.errors is None:
+            self.errors = s
+        else:
+            self.errors += s
+
     def _decode_uninew(self, b):
         """Decode bytes into a str and apply universal newlines as needed."""
         if not b:
@@ -1087,13 +1111,12 @@ class CommandPipeline:
         # since we are driven by getting output, input may not be available
         # until the command has completed.
         self._set_input()
-        self._set_errors()
         self._close_prev_procs()
         self._close_proc()
         self._check_signal()
         self._apply_to_history()
-        self._raise_subproc_error()
         self.ended = True
+        self._raise_subproc_error()
 
     def _endtime(self):
         """Sets the closing timestamp if it hasn't been already."""
@@ -1148,15 +1171,6 @@ class CommandPipeline:
             stdin.seek(0)
             input = stdin.read()
         self.input = self._decode_uninew(input)
-
-    def _set_errors(self):
-        """Sets the errors vaiable."""
-        stderr = self.proc.stderr
-        if stderr is None or stderr is sys.stderr:
-            errors = b''
-        else:
-            errors = '' #stderr.read()
-        self.errors = self._decode_uninew(errors)
 
     def _check_signal(self):
         """Checks if a signal was recieved and issues a message."""
