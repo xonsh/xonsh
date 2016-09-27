@@ -264,11 +264,11 @@ def _is_redirect(x):
     return isinstance(x, str) and _REDIR_REGEX.match(x)
 
 
-def safe_open(fname, mode):
+def safe_open(fname, mode, buffering=-1):
     """Safely attempts to open a file in for xonsh subprocs."""
     # file descriptors
     try:
-        return open(fname, mode)
+        return io.open(fname, mode, buffering=buffering)
     except PermissionError:
         raise XonshError('xonsh: {0}: permission denied'.format(fname))
     except FileNotFoundError:
@@ -649,8 +649,12 @@ def _update_last_spec(last, captured=False):
     env = builtins.__xonsh_env__
     if not captured:
         return
-    if captured and not callable(last.alias):
+    callable_alias = callable(last.alias)
+    if captured and not callable_alias:
         last.cls = PopenThread
+    # cannot used PTY pipes for aliases, for some dark reason,
+    # and must use normal pipes instead.
+    use_tty = ON_POSIX and not callable_alias
     # Do not set standard in! Popen is not a fan of redirections here
     # set standard out
     if last.stdout is not None:
@@ -666,7 +670,7 @@ def _update_last_spec(last, captured=False):
         last.captured_stdout = last.stdout
     else:
         last.universal_newlines = True
-        r, w = pty.openpty() if ON_POSIX else os.pipe()
+        r, w = pty.openpty() if use_tty else os.pipe()
         last.stdout = safe_open(w, 'w')
         last.captured_stdout = safe_open(r, 'r')
     # set standard error
@@ -680,7 +684,7 @@ def _update_last_spec(last, captured=False):
         last.stderr = builtins.__xonsh_stderr_uncaptured__
         last.captured_stderr = last.stderr
     else:
-        r, w = pty.openpty() if ON_POSIX else os.pipe()
+        r, w = pty.openpty() if use_tty else os.pipe()
         last.stderr = safe_open(w, 'w')
         last.captured_stderr = safe_open(r, 'r')
 

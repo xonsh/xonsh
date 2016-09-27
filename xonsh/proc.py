@@ -478,6 +478,46 @@ class Handle(int):
     __str__ = __repr__
 
 
+def parse_proxy_return(r, stdout, stderr):
+    """Proxies may return a variety of outputs. This hanles them generally.
+
+    Parameters
+    ----------
+    r : tuple, str, int, or None
+        Return from proxy function
+    stdout : file-like
+        Current stdout stream
+    stdout : file-like
+        Current stderr stream
+
+    Returns
+    -------
+    cmd_result : int
+        The return code of the proxy
+    """
+    cmd_result = 0
+    if isinstance(r, str):
+        stdout.write(r)
+        stdout.flush()
+    elif isinstance(r, int):
+        cmd_result = r
+    elif isinstance(r, cabc.Sequence):
+        rlen = len(r)
+        if rlen > 0 and r[0] is not None:
+            stdout.write(r[0])
+            stdout.flush()
+        if rlen > 1 and r[1] is not None:
+            stderr.write(r[1])
+            stderr.flush()
+        if rlen > 2 and r[2] is not None:
+            cmd_result = r[2]
+    elif r is not None:
+        # for the random object...
+        stdout.write(str(r))
+        stdout.flush()
+    return cmd_result
+
+
 class ProcProxy(threading.Thread):
     """
     Class representing a function to be run as a subprocess-mode command.
@@ -509,6 +549,11 @@ class ProcProxy(threading.Thread):
             Whether or not to use universal newlines.
         env : Mapping, optional
             Environment mapping.
+
+        Attributes
+        ----------
+        backgroundable : bool
+            Whether the function can be run in the background or not.
         """
         self.f = f
         """
@@ -543,7 +588,7 @@ class ProcProxy(threading.Thread):
 
         # default values
         self.stdin = stdin
-        self.stdout = stdout
+        self.stdout = self.orig_stdout = stdout
         self.stderr = stderr
         self.env = env or builtins.__xonsh_env__
 
@@ -583,10 +628,13 @@ class ProcProxy(threading.Thread):
         """
         if self.f is None:
             return
-        if self.stdin is not None:
-            sp_stdin = io.TextIOWrapper(self.stdin)
+        env = builtins.__xonsh_env__
+        enc = env.get('XONSH_ENCODING')
+        err = env.get('XONSH_ENCODING_ERRORS')
+        if self.stdin is None:
+            sp_stdin = None
         else:
-            sp_stdin = io.StringIO("")
+            sp_stdin = io.TextIOWrapper(self.stdin, encoding=enc, errors=err)
 
         if ON_WINDOWS:
             if self.c2pwrite != -1:
@@ -594,28 +642,46 @@ class ProcProxy(threading.Thread):
             if self.errwrite != -1:
                 self.errwrite = msvcrt.open_osfhandle(self.errwrite.Detach(), 0)
 
+        capout = self._wait_and_getattr('captured_stdout')
         if self.c2pwrite != -1:
-            sp_stdout = io.TextIOWrapper(io.open(self.c2pwrite, 'wb', -1))
+            sp_stdout = io.TextIOWrapper(io.open(self.c2pwrite, 'wb', -1),
+                                         encoding=enc, errors=err)
         else:
             sp_stdout = sys.stdout
+        caperr = self._wait_and_getattr('captured_stderr')
         if self.errwrite == self.c2pwrite:
             sp_stderr = sp_stdout
         elif self.errwrite != -1:
-            sp_stderr = io.TextIOWrapper(io.open(self.errwrite, 'wb', -1))
+            sp_stderr = io.TextIOWrapper(io.open(self.errwrite, 'wb', -1),
+                                         encoding=enc, errors=err)
         else:
             sp_stderr = sys.stderr
         # run the function itself
-        r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr)
-        self.returncode = 0 if r is None else r
+        with redirect_stdout(self.orig_stdout), redirect_stderr(sp_stderr):
+            try:
+                r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr)
+            except Exception:
+                print_exception()
+                r = 1
+        self.returncode = parse_proxy_return(r, sp_stdout, sp_stderr)
+        sp_stdout.flush()
+        sp_stderr.flush()
         # clean up
         handles = [sp_stdin, sp_stdout, sp_stderr, self.p2cread, self.p2cwrite,
                    self.c2pread, self.c2pwrite, self.errread, self.errwrite]
+        #handles = []
         if ON_WINDOWS:
             # scopz: not sure why this is needed, but stdin cannot go here
             # and stdout & stderr must.
             handles += [self.stdout, self.stderr]
         for handle in handles:
             safe_fdclose(handle, cache=self._closed_handle_cache)
+
+    def _wait_and_getattr(self, name):
+        """make sure the instance has a certain attr, and return it."""
+        while not hasattr(self, name):
+            time.sleep(1e-7)
+        return getattr(self, name)
 
     def poll(self):
         """Check if the function has completed.
@@ -768,17 +834,14 @@ class ProcProxy(threading.Thread):
 
 def wrap_simple_command(f, args, stdin, stdout, stderr):
     """Decorator for creating 'simple' callable aliases."""
-    bgable = getattr(f, '__xonsh_backgroundable__', True)
-
     @functools.wraps(f)
     def wrapped_simple_command(args, stdin, stdout, stderr):
         try:
-            i = stdin.read()
             if bgable:
                 with redirect_stdout(stdout), redirect_stderr(stderr):
-                    r = f(args, i)
+                    r = f(args, stdin)
             else:
-                r = f(args, i)
+                r = f(args, stdin)
 
             cmd_result = 0
             if isinstance(r, str):
@@ -987,6 +1050,7 @@ class CommandPipeline:
         # get approriate handles
         proc = self.proc
         uninew = self.spec.universal_newlines
+        # get the correct stdout
         stdout = proc.stdout
         if ((stdout is None or not stdout.readable()) and
                 self.spec.captured_stdout is not None):
@@ -995,6 +1059,7 @@ class CommandPipeline:
             stdout = stdout.buffer
         if not stdout or not stdout.readable():
             raise StopIteration()
+        # get the correct stderr
         stderr = proc.stderr
         if ((stderr is None or not stderr.readable()) and
                 self.spec.captured_stderr is not None):
