@@ -640,6 +640,7 @@ class ProcProxy(threading.Thread):
                                               line_buffering=False)
         elif isinstance(stdin, int) and stdin != 0:
             self.stdin = io.open(stdin, 'wb', -1)
+        print('YO STDIN' stdin)
 
         if self.c2pread != -1:
             self.stdout = io.open(self.c2pread, 'rb', -1)
