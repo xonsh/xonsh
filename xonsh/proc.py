@@ -632,7 +632,7 @@ class ProcProxy(threading.Thread):
 
         # default values
         self.stdin = stdin
-        self.stdout = self.orig_stdout = stdout
+        self.stdout = stdout
         self.stderr = stderr
         self.env = env or builtins.__xonsh_env__
 
@@ -706,7 +706,7 @@ class ProcProxy(threading.Thread):
         # run the function itself
         try:
             if last_in_pipeline:
-                with redirect_stdout(self.orig_stdout), redirect_stderr(sp_stderr):
+                with redirect_stdout(sp_stdout), redirect_stderr(sp_stderr):
                     r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr)
             else:
                 r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr)
