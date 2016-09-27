@@ -264,6 +264,7 @@ class PopenThread(threading.Thread):
         if CAN_RESIZE_WINDOW and on_main_thread():
             self.old_winch_handler = signal.signal(signal.SIGWINCH,
                                                    self._signal_winch)
+        self.old_int_handler = signal.signal(signal.SIGINT, self._signal_int)
         env = builtins.__xonsh_env__
         self.orig_stdin = stdin
         self.store_stdin = env.get('XONSH_STORE_STDIN')
@@ -419,6 +420,14 @@ class PopenThread(threading.Thread):
         fcntl.ioctl(self.stdout_fd, termios.TIOCSWINSZ, buf)
 
     #
+    # SIGINT handler
+    #
+
+    def _signal_int(self, signum, frame):
+        """Signal handler for SIGINT - Cntrl+C may have been pressed."""
+        self.send_signal(signum)
+
+    #
     # Dispatch methods
     #
 
@@ -433,10 +442,12 @@ class PopenThread(threading.Thread):
         """
         rtn = self.proc.wait(timeout=timeout)
         self.join(timeout=timeout)
-        # need to replace the old sigwinch handler somewhere...
+        # need to replace the old signal handlers somewhere...
         if self.old_winch_handler is not None and on_main_thread():
             signal.signal(signal.SIGWINCH, self.old_winch_handler)
             self.old_winch_handler = None
+        signal.signal(signal.SIGINT, self.old_int_handler)
+        self.old_int_handler = None
         return rtn
 
     @property
@@ -640,7 +651,6 @@ class ProcProxy(threading.Thread):
                                               line_buffering=False)
         elif isinstance(stdin, int) and stdin != 0:
             self.stdin = io.open(stdin, 'wb', -1)
-        print('YO STDIN' stdin)
 
         if self.c2pread != -1:
             self.stdout = io.open(self.c2pread, 'rb', -1)
@@ -662,27 +672,30 @@ class ProcProxy(threading.Thread):
         """
         if self.f is None:
             return
+        last_in_pipeline = self._wait_and_getattr('last_in_pipeline')
+        if last_in_pipeline:
+            capout = self._wait_and_getattr('captured_stdout')
+            caperr = self._wait_and_getattr('captured_stderr')
         env = builtins.__xonsh_env__
         enc = env.get('XONSH_ENCODING')
         err = env.get('XONSH_ENCODING_ERRORS')
+        # get stdin
         if self.stdin is None:
             sp_stdin = None
         else:
             sp_stdin = io.TextIOWrapper(self.stdin, encoding=enc, errors=err)
-
         if ON_WINDOWS:
             if self.c2pwrite != -1:
                 self.c2pwrite = msvcrt.open_osfhandle(self.c2pwrite.Detach(), 0)
             if self.errwrite != -1:
                 self.errwrite = msvcrt.open_osfhandle(self.errwrite.Detach(), 0)
-
-        capout = self._wait_and_getattr('captured_stdout')
+        # stdout
         if self.c2pwrite != -1:
             sp_stdout = io.TextIOWrapper(io.open(self.c2pwrite, 'wb', -1),
                                          encoding=enc, errors=err)
         else:
             sp_stdout = sys.stdout
-        caperr = self._wait_and_getattr('captured_stderr')
+        # stderr
         if self.errwrite == self.c2pwrite:
             sp_stderr = sp_stdout
         elif self.errwrite != -1:
@@ -691,18 +704,22 @@ class ProcProxy(threading.Thread):
         else:
             sp_stderr = sys.stderr
         # run the function itself
-        with redirect_stdout(self.orig_stdout), redirect_stderr(sp_stderr):
-            try:
+        try:
+            if last_in_pipeline:
+                with redirect_stdout(self.orig_stdout), redirect_stderr(sp_stderr):
+                    r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr)
+            else:
                 r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr)
-            except Exception:
-                print_exception()
-                r = 1
+        except Exception:
+            print_exception()
+            r = 1
         self.returncode = parse_proxy_return(r, sp_stdout, sp_stderr)
-        sp_stdout.flush()
-        sp_stderr.flush()
+        if last_in_pipeline:
+            sp_stdout.flush()
+            sp_stderr.flush()
         # clean up
-        handles = [sp_stdin, sp_stdout, sp_stderr, self.p2cread, self.p2cwrite,
-                   self.c2pread, self.c2pwrite, self.errread, self.errwrite]
+        #handles = [sp_stdin, sp_stdout, sp_stderr, self.p2cread, self.p2cwrite,
+        #           self.c2pread, self.c2pwrite, self.errread, self.errwrite]
         handles = []
         if ON_WINDOWS:
             # scopz: not sure why this is needed, but stdin cannot go here

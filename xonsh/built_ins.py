@@ -390,6 +390,8 @@ class SubprocSpec:
             Whether or not the subprocess should be started in the background.
         backgroundable : bool
             Whether or not the subprocess is able to be run in the background.
+        last_in_pipeline : bool
+            Whether the subprocess is the last in the execution pipeline.
         captured_stdout : file-like
             Handle to captured stdin
         captured_stderr : file-like
@@ -410,6 +412,7 @@ class SubprocSpec:
         self.is_proxy = False
         self.background = False
         self.backgroundable = True
+        self.last_in_pipeline = False
         self.captured_stdout = None
         self.captured_stderr = None
 
@@ -491,6 +494,7 @@ class SubprocSpec:
             p = self.cls(self.alias, self.cmd, **kwargs)
         else:
             p = self._run_binary(kwargs)
+        p.last_in_pipeline = self.last_in_pipeline
         p.captured_stdout = self.captured_stdout
         p.captured_stderr = self.captured_stderr
         return p
@@ -639,6 +643,7 @@ class SubprocSpec:
 
 
 def _update_last_spec(last, captured=False):
+    last.last_in_pipeline = True
     env = builtins.__xonsh_env__
     if not captured:
         return
