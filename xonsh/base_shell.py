@@ -16,6 +16,11 @@ from xonsh.completer import Completer
 from xonsh.prompt.base import multiline_prompt, partial_format_prompt
 from xonsh.events import events
 
+if ON_WINDOWS:
+    import ctypes
+    kernel32 = ctypes.windll.kernel32
+    kernel32.SetConsoleTitleW.argtypes = [ctypes.c_wchar_p]
+
 
 class _TeeOut(object):
     """Tees stdout into the original sys.stdout and another buffer."""
@@ -288,8 +293,7 @@ class BaseShell(object):
             return
         t = partial_format_prompt(t)
         if ON_WINDOWS and 'ANSICON' not in env:
-            t = escape_windows_cmd_string(t)
-            os.system('title {}'.format(t))
+            kernel32.SetConsoleTitleW(t)
         else:
             with open(1, 'wb', closefd=False) as f:
                 # prevent xonsh from answering interative questions
