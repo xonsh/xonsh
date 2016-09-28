@@ -22,9 +22,9 @@ from xonsh.timings import timeit_alias
 from xonsh.tools import (XonshError, argvquote, escape_windows_cmd_string,
                          to_bool)
 from xonsh.xontribs import xontribs_main
-from xonsh.xoreutils.which import which_main
 
 import xonsh.completers._aliases as xca
+import xonsh.xoreutils.which as xxw
 
 
 class Aliases(cabc.MutableMapping):
@@ -428,7 +428,7 @@ def make_default_aliases():
         'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
         'showcmd': showcmd,
         'ipynb': ['jupyter', 'notebook', '--no-browser'],
-        'which': which_main,
+        'which': xxw.which_main,
         'xontrib': xontribs_main,
         'completer': xca.completer_alias
     }

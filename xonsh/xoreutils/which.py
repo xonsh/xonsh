@@ -1,10 +1,14 @@
+# pytlint: disable=E1101,E2021
+"""Implements the which xoreutil."""
+
+
 import argparse
 import builtins
 import functools
 import os
 
 from xonsh.xoreutils import _which
-from xonsh.platform import ON_WINDOWS, scandir
+import xonsh.platform as xp
 
 
 @functools.lru_cache()
@@ -31,7 +35,7 @@ def _which_create_parser():
                              'default behavior, but the option can be used to '
                              'override the --verbose option')
     parser.add_argument('--very-small-rocks', action=AWitchAWitch)
-    if ON_WINDOWS:
+    if xp.ON_WINDOWS:
         parser.add_argument('-e', '--exts', nargs='*', type=str,
                             help='Specify a list of extensions to use instead '
                             'of the standard list for this system. This can '
@@ -53,11 +57,11 @@ def print_global_object(arg, stdout):
 
 def print_path(abs_name, from_where, stdout, verbose=False):
     """Print the name and path of the command."""
-    if ON_WINDOWS:
+    if xp.ON_WINDOWS:
         # Use list dir to get correct case for the filename
         # i.e. windows is case insensitive but case preserving
         p, f = os.path.split(abs_name)
-        f = next(s.name for s in scandir(p) if s.name.lower() == f.lower())
+        f = next(s.name for s in xp.scandir(p) if s.name.lower() == f.lower())
         abs_name = os.path.join(p, f)
         if builtins.__xonsh_env__.get('FORCE_POSIX_PATHS', False):
             abs_name.replace(os.sep, os.altsep)
@@ -96,7 +100,7 @@ def which(args, stdin=None, stdout=None, stderr=None):
     verbose = pargs.verbose or pargs.all
     if pargs.plain:
         verbose = False
-    if ON_WINDOWS:
+    if xp.ON_WINDOWS:
         if pargs.exts:
             exts = pargs.exts
         else:
@@ -144,6 +148,7 @@ def which(args, stdin=None, stdout=None, stderr=None):
 
 
 class AWitchAWitch(argparse.Action):
+    """The Ducstring, the mother of all ducs."""
     SUPPRESS = '==SUPPRESS=='
 
     def __init__(self, option_strings, version=None, dest=SUPPRESS,
