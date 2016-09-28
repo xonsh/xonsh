@@ -429,6 +429,17 @@ class PopenThread(threading.Thread):
     def _signal_int(self, signum, frame):
         """Signal handler for SIGINT - Cntrl+C may have been pressed."""
         self.send_signal(signum)
+        time.sleep(self.timeout)
+        if self.poll() is not None:
+            self._restore_sigint(frame=frame)
+
+    def _restore_sigint(self, frame=None):
+        old = self.old_int_handler
+        if old is not None:
+            signal.signal(signal.SIGINT, self.old_int_handler)
+            self.old_int_handler = None
+            if frame is not None:
+                old(signal.SIGINT, frame)
 
     def _enable_raw_stdin(self):
         if not ON_POSIX:
@@ -465,8 +476,7 @@ class PopenThread(threading.Thread):
         if self.old_winch_handler is not None and on_main_thread():
             signal.signal(signal.SIGWINCH, self.old_winch_handler)
             self.old_winch_handler = None
-        signal.signal(signal.SIGINT, self.old_int_handler)
-        self.old_int_handler = None
+        self._restore_sigint()
         #self._restore_raw_stdin()
         return rtn
 
