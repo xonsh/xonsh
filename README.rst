@@ -11,14 +11,16 @@ xonsh
 .. image:: https://ci.appveyor.com/api/projects/status/github/xonsh/xonsh?svg=true
     :target: https://ci.appveyor.com/project/xonsh/xonsh
 
+.. image:: https://circleci.com/gh/xonsh/xonsh.svg?style=shield
+    :target: https://circleci.com/gh/xonsh/xonsh
+
 .. image:: https://landscape.io/github/xonsh/xonsh/master/landscape.svg?style=flat
     :target: https://landscape.io/github/xonsh/xonsh/master
     :alt: Code Health
 
 xonsh is a Python-ish, BASHwards-looking shell language and command prompt.
 The language is a superset of Python 3.4+ with additional shell primitives.
-xonsh (pronounced *conch*) is meant for the daily use of experts and novices 
-alike.
+xonsh (pronounced *conch*) is meant for the daily use of experts and novices alike.
 
 Please visit http://xon.sh for more information.
 
