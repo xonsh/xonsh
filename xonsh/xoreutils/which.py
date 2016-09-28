@@ -1,6 +1,4 @@
-# pytlint: disable=E1101,E2021
 """Implements the which xoreutil."""
-
 
 import argparse
 import builtins
