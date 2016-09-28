@@ -454,12 +454,9 @@ class PopenThread(threading.Thread):
             return
         self.stdin_mode = termios.tcgetattr(0)[:]
         new = self.stdin_mode[:]
-        new[IFLAG] &= ~(termios.BRKINT | termios.ICRNL | termios.INPCK |
-                        termios.ISTRIP | termios.IXON)
-        new[OFLAG] &= ~(termios.OPOST)
-        new[CFLAG] &= ~(termios.CSIZE | termios.PARENB)
-        new[CFLAG] |= termios.CS8
-        new[LFLAG] &= ~(termios.ECHO | termios.ICANON | termios.IEXTEN)
+        new[LFLAG] &= ~(termios.ECHO | termios.ICANON)
+        new[CC][termios.VMIN] = 1
+        new[CC][termios.VTIME] = 0
         try:
             termios.tcsetattr(0, termios.TCSAFLUSH, new)
         except termios.error:
@@ -469,12 +466,9 @@ class PopenThread(threading.Thread):
         if not ON_POSIX:
             return
         new = self.stdin_mode[:]
-        new[IFLAG] |= (termios.BRKINT | termios.ICRNL | termios.INPCK |
-                       termios.ISTRIP | termios.IXON)
-        new[OFLAG] |= termios.OPOST
-        new[CFLAG] |= termios.CSIZE | termios.PARENB
-        new[CFLAG] &= ~termios.CS8
         new[LFLAG] |= termios.ECHO | termios.ICANON
+        new[CC][termios.VMIN] = 1
+        new[CC][termios.VTIME] = 0
         termios.tcsetattr(0, termios.TCSAFLUSH, new)
 
     #
