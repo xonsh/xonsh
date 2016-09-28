@@ -29,8 +29,17 @@ from xonsh.tools import (redirect_stdout, redirect_stderr, fallback,
                          on_main_thread, XonshError)
 from xonsh.lazyasd import lazyobject, LazyObject
 from xonsh.jobs import wait_for_active_job
-from xonsh.lazyimps import fcntl, termios
+from xonsh.lazyimps import fcntl, termios, tty
 
+
+# termios tc(get|set)attr indexes.
+IFLAG = 0
+OFLAG = 1
+CFLAG = 2
+LFLAG = 3
+ISPEED = 4
+OSPEED = 5
+CC = 6
 
 # force some lazy imports so we don't have errors on non-windows platforms
 @lazyobject
@@ -268,12 +277,13 @@ class PopenThread(threading.Thread):
         env = builtins.__xonsh_env__
         self.orig_stdin = stdin
         self.store_stdin = env.get('XONSH_STORE_STDIN')
-        self.stdin_restore = False
         # start up process
+        self._enable_raw_stdin()
         self.proc = proc = subprocess.Popen(*args,
                                             stdin=stdin,
                                             stdout=stdout,
                                             stderr=stderr,
+                                            #preexec_fn=self._enable_raw_stdin,
                                             **kwargs)
         self._in_alt_mode = False
         self.pid = proc.pid
@@ -369,18 +379,21 @@ class PopenThread(threading.Thread):
             # terminal into alternate mode. The line below assumes that
             # the user has opened vim, less, or similar, and writes writes
             #to stdin.
+            j = i + len(flag)
             self._alt_mode_writer(line[:i], membuf, stdbuf)
             self._in_alt_mode = True
-            #self._enable_raw_stdin()
-            self._alt_mode_switch(line[i+len(flag):], membuf, stdbuf)
+            self._alt_mode_writer(flag, membuf, stdbuf)
+            self._alt_mode_switch(line[j:], membuf, stdbuf)
         elif flag in END_ALTERNATE_MODE:
             # This code is executed when the child process switches the
             # terminal back out of alternate mode. The line below assumes
             # that the user has returned to the command prompt.
+            #self._alt_mode_writer(line[:i], membuf, stdbuf)
+            j = i + len(flag)
             self._alt_mode_writer(line[:i], membuf, stdbuf)
             self._in_alt_mode = False
-            #self._restore_raw_stdin()
-            self._alt_mode_switch(line[i+len(flag):], membuf, stdbuf)
+            self._alt_mode_writer(flag, membuf, stdbuf)
+            self._alt_mode_switch(line[j:], membuf, stdbuf)
         else:
             self._alt_mode_writer(line, membuf, stdbuf)
 
@@ -439,23 +452,36 @@ class PopenThread(threading.Thread):
             signal.signal(signal.SIGINT, self.old_int_handler)
             self.old_int_handler = None
             if frame is not None:
+                self._restore_raw_stdin()
                 old(signal.SIGINT, frame)
 
     def _enable_raw_stdin(self):
         if not ON_POSIX:
             return
+        self.stdin_mode = termios.tcgetattr(0)[:]
+        new = self.stdin_mode[:]
+        new[IFLAG] &= ~(termios.BRKINT | termios.ICRNL | termios.INPCK |
+                        termios.ISTRIP | termios.IXON)
+        new[OFLAG] &= ~(termios.OPOST)
+        new[CFLAG] &= ~(termios.CSIZE | termios.PARENB)
+        new[CFLAG] |= termios.CS8
+        new[LFLAG] &= ~(termios.ECHO | termios.ICANON | termios.IEXTEN)
         try:
-            self.stdin_tty_mode = termios.tcgetattr(0)
-            new = termios.tcgetattr(0)
-            new[3] = new[3] & ~termios.ECHO
-            termios.tcsetattr(0, termios.TCSANOW, new)
-            self.stdin_restore = True
-        except tty.error:    # This is the same as termios.error
-            self.stdin_restore = False
+            termios.tcsetattr(0, termios.TCSAFLUSH, new)
+        except termios.error:
+            self._restore_raw_stdin()
 
     def _restore_raw_stdin(self):
-        if self.stdin_restore:
-            termios.tcsetattr(0, termios.TCSANOW, self.stdin_tty_mode)
+        if not ON_POSIX:
+            return
+        new = self.stdin_mode[:]
+        new[IFLAG] |= (termios.BRKINT | termios.ICRNL | termios.INPCK |
+                       termios.ISTRIP | termios.IXON)
+        new[OFLAG] |= termios.OPOST
+        new[CFLAG] |= termios.CSIZE | termios.PARENB
+        new[CFLAG] &= ~termios.CS8
+        new[LFLAG] |= termios.ECHO | termios.ICANON
+        termios.tcsetattr(0, termios.TCSAFLUSH, new)
 
     #
     # Dispatch methods
@@ -471,13 +497,13 @@ class PopenThread(threading.Thread):
         handler.
         """
         rtn = self.proc.wait(timeout=timeout)
+        self._restore_raw_stdin()
         self.join(timeout=timeout)
         # need to replace the old signal handlers somewhere...
         if self.old_winch_handler is not None and on_main_thread():
             signal.signal(signal.SIGWINCH, self.old_winch_handler)
             self.old_winch_handler = None
         self._restore_sigint()
-        #self._restore_raw_stdin()
         return rtn
 
     @property
