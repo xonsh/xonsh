@@ -374,28 +374,22 @@ class PopenThread(threading.Thread):
         i, flag = findfirst(line, ALTERNATE_MODE_FLAGS)
         if flag is None:
             self._alt_mode_writer(line, membuf, stdbuf)
-        elif flag in START_ALTERNATE_MODE:
-            # This code is executed when the child process switches the
-            # terminal into alternate mode. The line below assumes that
-            # the user has opened vim, less, or similar, and writes writes
-            #to stdin.
-            j = i + len(flag)
-            self._alt_mode_writer(line[:i], membuf, stdbuf)
-            self._in_alt_mode = True
-            self._alt_mode_writer(flag, membuf, stdbuf)
-            self._alt_mode_switch(line[j:], membuf, stdbuf)
-        elif flag in END_ALTERNATE_MODE:
-            # This code is executed when the child process switches the
-            # terminal back out of alternate mode. The line below assumes
-            # that the user has returned to the command prompt.
-            #self._alt_mode_writer(line[:i], membuf, stdbuf)
-            j = i + len(flag)
-            self._alt_mode_writer(line[:i], membuf, stdbuf)
-            self._in_alt_mode = False
-            self._alt_mode_writer(flag, membuf, stdbuf)
-            self._alt_mode_switch(line[j:], membuf, stdbuf)
         else:
-            self._alt_mode_writer(line, membuf, stdbuf)
+            # This code is executed when the child process switches the
+            # terminal into or out of alternate mode. The line below assumes
+            # that the user has opened vim, less, or similar, and writes writes
+            # to stdin.
+            j = i + len(flag)
+            # write the first part of the line in the cirrent mode.
+            self._alt_mode_writer(line[:i], membuf, stdbuf)
+            # switch modes
+            self._in_alt_mode = (flag in START_ALTERNATE_MODE)
+            # write the flag itself directly in the current mode.
+            # this is needed for terminal emulators to find the correct
+            # positions before and after alt mode.
+            self._alt_mode_writer(flag, membuf, stdbuf)
+            # recurse this function, but without the current flag.
+            self._alt_mode_switch(line[j:], membuf, stdbuf)
 
     def _alt_mode_writer(self, line, membuf, stdbuf):
         """Write bytes to the standard buffer if in alt mode or otherwise
