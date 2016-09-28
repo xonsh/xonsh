@@ -1,10 +1,20 @@
 # -*- coding: utf-8 -*-
+"""Module for caching command & alias names as well as for predicting whether
+a command will be able to be run in the background.
+
+A background predictor is a function that accepect a single argument list
+and returns whethere or not the process can be run in the background (returns
+True) or must be run the foreground (returns False).
+"""
 import os
 import builtins
+import argparse
+import collections
 import collections.abc as cabc
 
 from xonsh.platform import ON_WINDOWS
 from xonsh.tools import executables_in
+from xonsh.lazyasd import lazyobject
 
 
 class CommandsCache(cabc.Mapping):
@@ -20,6 +30,7 @@ class CommandsCache(cabc.Mapping):
         self._path_checksum = None
         self._alias_checksum = None
         self._path_mtime = -1
+        self.backgroundable_predictors = default_backgroundable_predictors()
 
     def __contains__(self, key):
         _ = self.all_commands
@@ -152,3 +163,64 @@ class CommandsCache(cabc.Mapping):
             return self._cmds_cache[cached][0]
         elif os.path.isfile(name) and name != os.path.basename(name):
             return name
+
+#
+# Background Predictors
+#
+
+def predict_true(args):
+    """Always say the process is backgroundable."""
+    return True
+
+
+def predict_false(args):
+    """Never say the process is backgroundable."""
+    return False
+
+
+class StartsWithDashSet:
+    """A fake container that, when asked about containment,
+    will return True if a string starts with a '-' and False otherwise.
+    """
+
+    @staticmethod
+    def __contains__(value):
+        return value.startwith('-')
+
+
+@lazyobject
+def SHELL_PREDICTOR_PARSER():
+    p = argparse.ArgumentParser('shell')
+    p.add_argument('-c', default=None)
+    p.add_argument('filename', nargs='?', default=None,
+                   choices=StartsWithDashSet())
+    return p
+
+
+def predict_shell(args):
+    """Precict the backgroundability of the normal shell interface, which
+    comes down to whether it is being run in subproc mode.
+    """
+    ns, _ = SHELL_PREDICTOR_PARSER.parse_known_args(args)
+    if ns.c is None and ns.filename is None:
+        pred = False
+    else:
+        pred = True
+    return pred
+
+
+def default_backgroundable_predictors():
+    """Generates a new defaultdict for known backgroundable predictors.
+    The default is to predict true.
+    """
+    return collections.defaultdict(lambda: predict_true,
+        sh=predict_shell,
+        zsh=predict_shell,
+        ksh=predict_shell,
+        csh=predict_shell,
+        tcsh=predict_shell,
+        bash=predict_shell,
+        fish=predict_shell,
+        xonsh=predict_shell,
+        ssh=predict_false,
+        )
