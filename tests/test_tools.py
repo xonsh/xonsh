@@ -26,7 +26,6 @@ from xonsh.tools import (
     pathsep_to_upper_seq, seq_to_upper_pathsep, expandvars, is_int_as_str, is_slice_as_str,
     ensure_timestamp, get_portions
     )
-from xonsh.commands_cache import CommandsCache
 from xonsh.built_ins import expand_path
 from xonsh.environ import Env
 
@@ -1116,13 +1115,6 @@ def test_executables_in(xonsh_builtins):
 def test_expand_case_matching(inp, exp):
     obs = expand_case_matching(inp)
     assert exp == obs
-
-
-def test_commands_cache_lazy(xonsh_builtins):
-    cc = CommandsCache()
-    assert not cc.lazyin('xonsh')
-    assert 0 == len(list(cc.lazyiter()))
-    assert 0 == cc.lazylen()
 
 
 @pytest.mark.parametrize('inp, exp', [

@@ -178,22 +178,11 @@ def predict_false(args):
     return False
 
 
-class StartsWithDashSet:
-    """A fake container that, when asked about containment,
-    will return True if a string starts with a '-' and False otherwise.
-    """
-
-    @staticmethod
-    def __contains__(value):
-        return value.startwith('-')
-
-
 @lazyobject
 def SHELL_PREDICTOR_PARSER():
     p = argparse.ArgumentParser('shell')
-    p.add_argument('-c', default=None)
-    p.add_argument('filename', nargs='?', default=None,
-                   choices=StartsWithDashSet())
+    p.add_argument('-c', nargs='?', default=None)
+    p.add_argument('filename', nargs='?', default=None)
     return p
 
 
