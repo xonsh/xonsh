@@ -269,11 +269,14 @@ class PopenThread(threading.Thread):
         self.lock = threading.RLock()
         self.stdout_fd = stdout.fileno()
         self._set_pty_size()
-        self.old_winch_handler = None
-        if CAN_RESIZE_WINDOW and on_main_thread():
-            self.old_winch_handler = signal.signal(signal.SIGWINCH,
-                                                   self._signal_winch)
-        self.old_int_handler = signal.signal(signal.SIGINT, self._signal_int)
+        # Set some signal handles, if we can.
+        self.old_int_handler = self.old_winch_handler = None
+        if on_main_thread():
+            self.old_int_handler = signal.signal(signal.SIGINT,
+                                                 self._signal_int)
+            if CAN_RESIZE_WINDOW and on_main_thread():
+                self.old_winch_handler = signal.signal(signal.SIGWINCH,
+                                                       self._signal_winch)
         env = builtins.__xonsh_env__
         self.orig_stdin = stdin
         self.store_stdin = env.get('XONSH_STORE_STDIN')
@@ -449,10 +452,12 @@ class PopenThread(threading.Thread):
     def _restore_sigint(self, frame=None):
         old = self.old_int_handler
         if old is not None:
-            signal.signal(signal.SIGINT, self.old_int_handler)
+            if on_main_thread():
+                signal.signal(signal.SIGINT, old)
             self.old_int_handler = None
-            if frame is not None:
-                self._disable_cbreak_stdin()
+        if frame is not None:
+            self._disable_cbreak_stdin()
+            if old is not None:
                 old(signal.SIGINT, frame)
 
     #
