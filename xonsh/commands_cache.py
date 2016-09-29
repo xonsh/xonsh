@@ -107,17 +107,20 @@ class CommandsCache(cabc.Mapping):
         self._cmds_cache = allcmds
         return allcmds
 
+    def cached_name(self, name):
+        """Returns the name that would appear in the cache, if it was exists."""
+        cached = os.path.basename(name)
+        if ON_WINDOWS:
+            keys = self.get_possible_names(cached)
+            cached = next((k for k in keys if k in self._cmds_cache), None)
+        return cached
+
     def lazyin(self, key):
         """Checks if the value is in the current cache without the potential to
         update the cache. It just says whether the value is known *now*. This
         may not reflect precisely what is on the $PATH.
         """
-        if ON_WINDOWS:
-            keys = self.get_possible_names(key)
-            cached_key = next((k for k in keys if k in self._cmds_cache), None)
-            return cached_key is not None
-        else:
-            return key in self._cmds_cache
+        return self.cached_name(key) in self._cmds_cache
 
     def lazyiter(self):
         """Returns an iterator over the current cache contents without the
@@ -135,11 +138,7 @@ class CommandsCache(cabc.Mapping):
 
     def lazyget(self, key, default=None):
         """A lazy value getter."""
-        if ON_WINDOWS:
-            keys = self.get_possible_names(key)
-            cached_key = next((k for k in keys if k in self._cmds_cache), None)
-            key = cached_key if cached_key is not None else key
-        return self._cmds_cache.get(key, default)
+        return self._cmds_cache.get(self.cached_name(key), default)
 
     def locate_binary(self, name):
         """Locates an executable on the file system using the cache."""
@@ -163,6 +162,15 @@ class CommandsCache(cabc.Mapping):
             return self._cmds_cache[cached][0]
         elif os.path.isfile(name) and name != os.path.basename(name):
             return name
+
+    def predict_backgroundable(self, cmd):
+        """Predics whether a command list is backgroundable."""
+        name = self.cached_name(cmd[0])
+        path, is_alias = self.lazyget(name, (None, None))
+        if path is None or is_alias:
+            return True
+        predictor = self.backgroundable_predictors[name]
+        return predictor(cmd[1:])
 
 #
 # Background Predictors

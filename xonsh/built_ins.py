@@ -648,8 +648,14 @@ def _update_last_spec(last, captured=False):
     if not captured:
         return
     callable_alias = callable(last.alias)
-    if captured and not callable_alias:
+    bgable = (last.stdin is not None) or \
+        builtins.__xonsh_commands_cache__.predict_backgroundable(last.args)
+    if captured and not callable_alias and bgable:
         last.cls = PopenThread
+    elif not bgable:
+        # foreground processes should use Popen and not pipe stdout, stderr
+        last.backgroundable = False
+        return
     # cannot used PTY pipes for aliases, for some dark reason,
     # and must use normal pipes instead.
     use_tty = ON_POSIX and not callable_alias
