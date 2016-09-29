@@ -12,7 +12,7 @@ import argparse
 import collections
 import collections.abc as cabc
 
-from xonsh.platform import ON_WINDOWS
+from xonsh.platform import ON_WINDOWS, pathbasename
 from xonsh.tools import executables_in
 from xonsh.lazyasd import lazyobject
 
@@ -109,7 +109,7 @@ class CommandsCache(cabc.Mapping):
 
     def cached_name(self, name):
         """Returns the name that would appear in the cache, if it was exists."""
-        _, cached = os.path.split(name)  # basename() fails on windows
+        cached = pathbasename(name)
         if ON_WINDOWS:
             keys = self.get_possible_names(cached)
             cached = next((k for k in keys if k in self._cmds_cache), None)

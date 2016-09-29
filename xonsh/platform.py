@@ -65,10 +65,10 @@ ON_ANACONDA = LazyBool(
     lambda: any(s in sys.version for s in {'Anaconda', 'Continuum'}),
     globals(), 'ON_ANACONDA')
 """ ``True`` if executed in an Anaconda instance, else ``False``. """
-CAN_RESIZE_WINDOW = LazyBool(lambda: hasattr(signal, 'SIGWINCH'), 
+CAN_RESIZE_WINDOW = LazyBool(lambda: hasattr(signal, 'SIGWINCH'),
                              globals(), 'CAN_RESIZE_WINDOW')
-"""``True`` if we can resize terminal window, as provided by the presense of 
-signal.SIGWINCH, else ``False``. 
+"""``True`` if we can resize terminal window, as provided by the presense of
+signal.SIGWINCH, else ``False``.
 """
 
 @lazybool
@@ -134,6 +134,35 @@ def is_readline_available():
     """Checks if readline is available to import."""
     spec = importlib.util.find_spec('readline')
     return (spec is not None)
+
+
+@lazyobject
+def seps():
+    """String of all path separators."""
+    s = os.path.sep
+    if os.path.altsep is not None:
+        s += os.path.altsep
+    return s
+
+
+def pathsplit(p):
+    """This is a safe version of os.path.split(), which does not work on input
+    without a drive.
+    """
+    n = len(p)
+    while n and p[n-1] not in seps:
+        n -= 1
+    pre = p[:n]
+    pre = pre.rstrip(seps) or pre
+    post = p[n:]
+    return pre, post
+
+
+def pathbasename(p):
+    """This is a safe version of os.path.basename(), which does not work on
+    input without a drive.
+    """
+    return pathsplit(p)[-1]
 
 
 #
