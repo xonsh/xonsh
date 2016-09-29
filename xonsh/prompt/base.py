@@ -223,4 +223,6 @@ def _format_value(val, spec, conv):
     val = _FORMATTER.convert_field(val, conv)
     if spec:
         val = _FORMATTER.format(spec, val)
+    if not isinstance(val, str):
+        val = str(val)
     return val
