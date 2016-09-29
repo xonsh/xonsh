@@ -1123,7 +1123,9 @@ class CommandPipeline:
         if uninew and hasattr(stdout, 'buffer'):
             stdout = stdout.buffer
         if not stdout or not stdout.readable():
-            proc.wait()
+            # we get here if the process is not bacgroundable or the
+            # class is the real Popen
+            wait_for_active_job()
             self._endtime()
             if self.captured == 'object':
                 self.end(tee_output=False)
@@ -1135,8 +1137,6 @@ class CommandPipeline:
             stderr = self.spec.captured_stderr
         if uninew and hasattr(stderr, 'buffer'):
             stderr = stderr.buffer
-        #if not stderr or not stderr.readable():
-        #    raise StopIteration()
         # read from process while it is running
         while proc.poll() is None:
             if self._prev_procs_done():
