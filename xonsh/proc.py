@@ -277,15 +277,14 @@ class PopenThread(threading.Thread):
         env = builtins.__xonsh_env__
         self.orig_stdin = stdin
         self.store_stdin = env.get('XONSH_STORE_STDIN')
+        self._in_alt_mode = False
         # start up process
-        self._enable_raw_stdin()
+        self._enable_cbreak_stdin()
         self.proc = proc = subprocess.Popen(*args,
                                             stdin=stdin,
                                             stdout=stdout,
                                             stderr=stderr,
-                                            #preexec_fn=self._enable_raw_stdin,
                                             **kwargs)
-        self._in_alt_mode = False
         self.pid = proc.pid
         self.universal_newlines = uninew = proc.universal_newlines
         if uninew:
@@ -380,14 +379,20 @@ class PopenThread(threading.Thread):
             # that the user has opened vim, less, or similar, and writes writes
             # to stdin.
             j = i + len(flag)
-            # write the first part of the line in the cirrent mode.
+            # write the first part of the line in the current mode.
             self._alt_mode_writer(line[:i], membuf, stdbuf)
             # switch modes
-            self._in_alt_mode = (flag in START_ALTERNATE_MODE)
-            # write the flag itself directly in the current mode.
+            # write the flag itself the current mode where alt mode is on
+            # so that it is streamed to the termial ASAP.
             # this is needed for terminal emulators to find the correct
             # positions before and after alt mode.
-            self._alt_mode_writer(flag, membuf, stdbuf)
+            alt_mode = (flag in START_ALTERNATE_MODE)
+            if alt_mode:
+                self._in_alt_mode = alt_mode
+                self._alt_mode_writer(flag, membuf, stdbuf)
+            else:
+                self._alt_mode_writer(flag, membuf, stdbuf)
+                self._in_alt_mode = alt_mode
             # recurse this function, but without the current flag.
             self._alt_mode_switch(line[j:], membuf, stdbuf)
 
@@ -414,6 +419,7 @@ class PopenThread(threading.Thread):
 
     def _signal_winch(self, signum, frame):
         """Signal handler for SIGWINCH - window size has changed."""
+        self.proc.send_signal(signal.SIGWINCH)
         self._set_pty_size()
 
     def _set_pty_size(self):
@@ -446,10 +452,10 @@ class PopenThread(threading.Thread):
             signal.signal(signal.SIGINT, self.old_int_handler)
             self.old_int_handler = None
             if frame is not None:
-                self._restore_raw_stdin()
+                self._disable_cbreak_stdin()
                 old(signal.SIGINT, frame)
 
-    def _enable_raw_stdin(self):
+    def _enable_cbreak_stdin(self):
         if not ON_POSIX:
             return
         self.stdin_mode = termios.tcgetattr(0)[:]
@@ -458,18 +464,19 @@ class PopenThread(threading.Thread):
         new[CC][termios.VMIN] = 1
         new[CC][termios.VTIME] = 0
         try:
-            termios.tcsetattr(0, termios.TCSAFLUSH, new)
+            # termios.TCSAFLUSH may be less reliable than termios.TCSANOW
+            termios.tcsetattr(0, termios.TCSANOW, new)
         except termios.error:
-            self._restore_raw_stdin()
+            self._disable_cbreak_stdin()
 
-    def _restore_raw_stdin(self):
+    def _disable_cbreak_stdin(self):
         if not ON_POSIX:
             return
         new = self.stdin_mode[:]
         new[LFLAG] |= termios.ECHO | termios.ICANON
         new[CC][termios.VMIN] = 1
         new[CC][termios.VTIME] = 0
-        termios.tcsetattr(0, termios.TCSAFLUSH, new)
+        termios.tcsetattr(0, termios.TCSANOW, new)
 
     #
     # Dispatch methods
@@ -485,7 +492,7 @@ class PopenThread(threading.Thread):
         handler.
         """
         rtn = self.proc.wait(timeout=timeout)
-        self._restore_raw_stdin()
+        self._disable_cbreak_stdin()
         self.join(timeout=timeout)
         # need to replace the old signal handlers somewhere...
         if self.old_winch_handler is not None and on_main_thread():
