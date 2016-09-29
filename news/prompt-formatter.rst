@@ -11,6 +11,7 @@
 
 **Fixed:**
 
+* non string type value in $FORMATTER_DICT turning prompt ugly
 * whole prompt turning useless when one formatting function raises an exception
 
 **Security:** None
