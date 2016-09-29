@@ -1123,7 +1123,11 @@ class CommandPipeline:
         if uninew and hasattr(stdout, 'buffer'):
             stdout = stdout.buffer
         if not stdout or not stdout.readable():
-            raise StopIteration()
+            proc.wait()
+            self._endtime()
+            if self.captured == 'object':
+                self.end(tee_output=False)
+            raise StopIteration
         # get the correct stderr
         stderr = proc.stderr
         if ((stderr is None or not stderr.readable()) and
@@ -1131,8 +1135,8 @@ class CommandPipeline:
             stderr = self.spec.captured_stderr
         if uninew and hasattr(stderr, 'buffer'):
             stderr = stderr.buffer
-        if not stderr or not stderr.readable():
-            raise StopIteration()
+        #if not stderr or not stderr.readable():
+        #    raise StopIteration()
         # read from process while it is running
         while proc.poll() is None:
             if self._prev_procs_done():
