@@ -131,20 +131,17 @@ def current_branch(pad=NotImplemented):
 def _git_dirty_working_directory(q):
     status = None
     try:
-        status = subprocess.check_output(['git', 'status'],
+        status = subprocess.check_output(['git', 'status', '--porcelain'],
                                          stderr=subprocess.DEVNULL)
     except (subprocess.CalledProcessError, OSError):
         q.put(None)
     if status is not None:
-        if b'nothing to commit' in status:
-            return q.put(False)
-        else:
-            return q.put(True)
+        return q.put(bool(status))
 
 
 def git_dirty_working_directory():
     """Returns whether or not the git directory is dirty. If this could not
-    be determined (timeout, file not sound, etc.) then this returns None.
+    be determined (timeout, file not found, etc.) then this returns None.
     """
     timeout = builtins.__xonsh_env__.get("VC_BRANCH_TIMEOUT")
     q = queue.Queue()
