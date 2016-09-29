@@ -109,7 +109,7 @@ class CommandsCache(cabc.Mapping):
 
     def cached_name(self, name):
         """Returns the name that would appear in the cache, if it was exists."""
-        cached = os.path.basename(name)
+        _, cached = os.path.split(name)  # basename() fails on windows
         if ON_WINDOWS:
             keys = self.get_possible_names(cached)
             cached = next((k for k in keys if k in self._cmds_cache), None)
