@@ -322,34 +322,6 @@ def xexec(args, stdin=None):
                           '\n'.format(e.args[1], args[0]), 1)
 
 
-@lazyobject
-def _BANG_N_PARSER():
-    parser = argparse.ArgumentParser(
-        '!n', usage='!n <n>',
-        description="Re-runs the nth command as specified in the argument.")
-    parser.add_argument('n', type=int, help='the command to rerun, may be '
-                                            'negative')
-    return parser
-
-
-def bang_n(args, stdin=None):
-    """Re-runs the nth command as specified in the argument."""
-    ns = _BANG_N_PARSER.parse_args(args)
-    hist = builtins.__xonsh_history__
-    nhist = len(hist)
-    n = nhist + ns.n if ns.n < 0 else ns.n
-    if n < 0 or n >= nhist:
-        raise IndexError('n out of range, {0} for history len {1}'.format(ns.n, nhist))
-    cmd = hist.inps[n]
-    if cmd.startswith('!'):
-        raise XonshError('xonsh: error: recursive call to !n')
-    builtins.execx(cmd)
-
-
-def bang_bang(args, stdin=None):
-    """Re-runs the last command. Just a wrapper around bang_n."""
-    return bang_n(['-1'])
-
 
 class AWitchAWitch(argparse.Action):
     SUPPRESS = '==SUPPRESS=='
@@ -529,8 +501,6 @@ def make_default_aliases():
         'source-foreign': source_foreign,
         'history': history_main,
         'replay': replay_main,
-        '!!': bang_bang,
-        '!n': bang_n,
         'trace': trace,
         'timeit': timeit_alias,
         'xonfig': xonfig,
