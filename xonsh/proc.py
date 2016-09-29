@@ -29,7 +29,7 @@ from xonsh.tools import (redirect_stdout, redirect_stderr, fallback,
                          on_main_thread, XonshError)
 from xonsh.lazyasd import lazyobject, LazyObject
 from xonsh.jobs import wait_for_active_job
-from xonsh.lazyimps import fcntl, termios, tty
+from xonsh.lazyimps import fcntl, termios
 
 
 # termios tc(get|set)attr indexes.
@@ -455,10 +455,20 @@ class PopenThread(threading.Thread):
                 self._disable_cbreak_stdin()
                 old(signal.SIGINT, frame)
 
+    #
+    # cbreak mode handlers
+    #
+
     def _enable_cbreak_stdin(self):
         if not ON_POSIX:
             return
-        self.stdin_mode = termios.tcgetattr(0)[:]
+        try:
+            self.stdin_mode = termios.tcgetattr(0)[:]
+        except termios.error:
+            # this can happen for cases where another process is controlling
+            # xonsh's tty device, such as in testing.
+            self.stdin_mode = None
+            return
         new = self.stdin_mode[:]
         new[LFLAG] &= ~(termios.ECHO | termios.ICANON)
         new[CC][termios.VMIN] = 1
@@ -470,7 +480,7 @@ class PopenThread(threading.Thread):
             self._disable_cbreak_stdin()
 
     def _disable_cbreak_stdin(self):
-        if not ON_POSIX:
+        if not ON_POSIX or self.stdin_mode is None:
             return
         new = self.stdin_mode[:]
         new[LFLAG] |= termios.ECHO | termios.ICANON

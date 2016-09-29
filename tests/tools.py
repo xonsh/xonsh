@@ -70,6 +70,9 @@ class DummyCommandsCache:
     def locate_binary(self, name):
         return os.path.join(os.path.dirname(__file__), 'bin', name)
 
+    def predict_backgroundable(self, cmd):
+        return True
+
 
 class DummyHistory:
 
