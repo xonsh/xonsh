@@ -16,16 +16,13 @@ import threading, queue
 
 def _get_git_branch(q):
     try:
-        status = subprocess.check_output(['git', 'status'],
+        status = subprocess.check_output(['git', 'status', '--porcelain', '--branch'],
                                          stderr=subprocess.DEVNULL)
     except (subprocess.CalledProcessError, OSError):
         q.put(None)
     else:
-        status = status.decode().split()
-        if status[2] == 'at':
-            q.put(status[3])
-        else:
-            q.put(status[2])
+        status = status.decode().splitlines()[0].split()[1]
+        q.put(status)
 
 
 def get_git_branch():
