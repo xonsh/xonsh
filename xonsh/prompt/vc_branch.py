@@ -13,7 +13,6 @@ import xonsh.platform as xp
 import xonsh.tools as xt
 
 
-
 def _get_git_branch(q):
     try:
         status = subprocess.check_output(['git', 'branch'],
@@ -21,7 +20,7 @@ def _get_git_branch(q):
     except (subprocess.CalledProcessError, OSError):
         q.put(None)
     else:
-        info = status.decode()
+        info = xt.decode_bytes(info)
         for line in info.splitlines():
             if line.startswith('*'):
                 break

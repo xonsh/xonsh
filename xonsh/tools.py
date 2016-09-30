@@ -111,14 +111,14 @@ def expandpath(path):
     return path
 
 
-def decode_bytes(path):
-    """Tries to decode a path in bytes using XONSH_ENCODING if available,
+def decode_bytes(b):
+    """Tries to decode the bytes using XONSH_ENCODING if available,
     otherwise using sys.getdefaultencoding().
     """
     env = getattr(builtins, '__xonsh_env__', os.environ)
-    enc = env.get('XONSH_ENCODING', DEFAULT_ENCODING)
-    return path.decode(encoding=enc,
-                       errors=env.get('XONSH_ENCODING_ERRORS') or 'strict')
+    enc = env.get('XONSH_ENCODING') or DEFAULT_ENCODING
+    err = env.get('XONSH_ENCODING_ERRORS') or 'strict'
+    return b.decode(encoding=enc, errors=err)
 
 
 class EnvPath(collections.MutableSequence):
