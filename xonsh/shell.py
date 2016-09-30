@@ -112,7 +112,7 @@ class Shell(object):
             names = builtins.__xonsh_config__.get('xontribs', ())
             for name in names:
                 update_context(name, ctx=self.ctx)
-            if update_context.bad_imports:
+            if hasattr(update_context, 'bad_imports'):
                 prompt_xontrib_install(update_context.bad_imports)
                 del update_context.bad_imports
             # load run control files
