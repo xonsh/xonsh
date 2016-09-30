@@ -30,7 +30,7 @@ def xontrib_context(name):
     """Return a context dictionary for a xontrib of a given name."""
     spec = find_xontrib(name)
     if spec is None:
-        return {}
+        return None
     m = importlib.import_module(spec.name)
     pubnames = getattr(m, '__all__', None)
     if pubnames is not None:
@@ -49,20 +49,12 @@ def prompt_xontrib_install(names):
             if xontrib['name'] == name:
                 packages.append(xontrib['package'])
 
-    warn_str = ('The following xontribs are enabled but not installed: \n'
-                '   {xontribs}\n'
-                'To install them run \n'
-                '    pip install {packages}').format(xontribs=' '.join(names),
-                                                     packages=' '.join(packages))
+    print('The following xontribs are enabled but not installed: \n'
+          '   {xontribs}\n'
+          'To install them run \n'
+          '    pip install {packages}'.format(xontribs=' '.join(names),
+                                               packages=' '.join(packages)))
 
-    with warnings.catch_warnings():
-        warnings.simplefilter('default', ImportWarning)
-        warnings.warn(warn_str, ImportWarning)
-#            return install_str.format(xontrib=name, package=xontrib['package'])
-
-#    install_str = ('xontrib "{xontrib}" is not installed.  \n'
-#                   'To install it run \n'
-#                   '    pip install {package}')
 
 def update_context(name, ctx=None):
     """Updates a context in place from a xontrib. If ctx is not provided,
@@ -70,11 +62,13 @@ def update_context(name, ctx=None):
     """
     if ctx is None:
         ctx = builtins.__xonsh_ctx__
+    if not hasattr(update_context, 'bad_imports'):
+        update_context.bad_imports = []
     modctx = xontrib_context(name)
-    if modctx == {}:
-        return False
-    ctx.update(modctx)
-    return True
+    if modctx is None:
+        update_context.bad_imports.append(name)
+        return ctx
+    return ctx.update(modctx)
 
 
 @functools.lru_cache()
@@ -88,16 +82,13 @@ def xontrib_metadata():
 def _load(ns):
     """load xontribs"""
     ctx = builtins.__xonsh_ctx__
-    missing_specs = []
     for name in ns.names:
         if ns.verbose:
             print('loading xontrib {0!r}'.format(name))
-        res = update_context(name, ctx=ctx)
-        if not res:
-            missing_specs.append(name)
-    print(missing_specs)
-    if missing_specs:
-        prompt_xontrib_install(missing_specs)
+        update_context(name, ctx=ctx)
+    if update_context.bad_imports:
+        prompt_xontrib_install(update_context.bad_imports)
+        del update_context.bad_imports
 
 
 def _list(ns):

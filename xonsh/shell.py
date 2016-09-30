@@ -5,7 +5,7 @@ import random
 import builtins
 import warnings
 
-from xonsh.xontribs import update_context
+from xonsh.xontribs import update_context, prompt_xontrib_install
 from xonsh.environ import xonshrc_context
 from xonsh.execer import Execer
 from xonsh.platform import (best_shell_type, has_prompt_toolkit,
@@ -112,6 +112,9 @@ class Shell(object):
             names = builtins.__xonsh_config__.get('xontribs', ())
             for name in names:
                 update_context(name, ctx=self.ctx)
+            if update_context.bad_imports:
+                prompt_xontrib_install(update_context.bad_imports)
+                del update_context.bad_imports
             # load run control files
             env = builtins.__xonsh_env__
             rc = env.get('XONSHRC') if rc is None else rc
