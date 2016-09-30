@@ -20,7 +20,7 @@ def _get_git_branch(q):
     except (subprocess.CalledProcessError, OSError):
         q.put(None)
     else:
-        info = xt.decode_bytes(info)
+        info = xt.decode_bytes(status)
         for line in info.splitlines():
             if line.startswith('*'):
                 break
