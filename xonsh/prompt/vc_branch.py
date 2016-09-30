@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 """Prompt formatter for simple version control branchs"""
 
-import os
-import sys
-import time
 import builtins
-import warnings
+import os
 import subprocess
+import sys
+import threading, queue
+import time
+import warnings
 
 import xonsh.platform as xp
-import xonsh.prompt
-
-import threading, queue
+import xonsh.tools as xt
 
 
 def _get_git_branch(q):
@@ -21,12 +20,9 @@ def _get_git_branch(q):
     except (subprocess.CalledProcessError, OSError):
         q.put(None)
     else:
-        status = status.decode().split()
-        if status[2] == 'at':
-            q.put(status[3])
-        else:
-            q.put(status[2])
-
+        info = xt.decode_bytes(status)
+        branch = info.splitlines()[0].split()[-1]
+        q.put(branch)
 
 def get_git_branch():
     """Attempts to find the current git branch. If this could not
