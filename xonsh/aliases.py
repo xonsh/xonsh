@@ -518,6 +518,7 @@ def make_default_aliases():
             'copy',
             'del',
             'dir',
+            'echo',
             'erase',
             'md',
             'mkdir',
