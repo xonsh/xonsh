@@ -64,7 +64,7 @@ def prompt_xontrib_install(names):
 #                   'To install it run \n'
 #                   '    pip install {package}')
 
-def update_context(name, ctx=None, missing_specs=[]):
+def update_context(name, ctx=None):
     """Updates a context in place from a xontrib. If ctx is not provided,
     then __xonsh_ctx__ is updated.
     """
@@ -72,8 +72,9 @@ def update_context(name, ctx=None, missing_specs=[]):
         ctx = builtins.__xonsh_ctx__
     modctx = xontrib_context(name)
     if modctx == {}:
-        missing_specs.append(name)
-    return ctx.update(modctx)
+        return False
+    ctx.update(modctx)
+    return True
 
 
 @functools.lru_cache()
@@ -91,7 +92,9 @@ def _load(ns):
     for name in ns.names:
         if ns.verbose:
             print('loading xontrib {0!r}'.format(name))
-        update_context(name, ctx=ctx, missing_specs=missing_specs)
+        res = update_context(name, ctx=ctx)
+        if not res:
+            missing_specs.append(name)
     print(missing_specs)
     if missing_specs:
         prompt_xontrib_install(missing_specs)
