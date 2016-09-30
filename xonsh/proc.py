@@ -255,6 +255,16 @@ def safe_fdclose(handle, cache=None):
         cache[handle] = status
 
 
+def safe_flush(handle):
+    """Attempts to safely flush a file handle, returns success bool."""
+    status = True
+    try:
+        handle.close()
+    except OSError:
+        status = False
+    return status
+
+
 class PopenThread(threading.Thread):
     """A thread for running and managing subprocess. This allows reading
     from the stdin, stdout, and stderr streams in a non-blocking fashion.
@@ -281,8 +291,9 @@ class PopenThread(threading.Thread):
         self.orig_stdin = stdin
         self.store_stdin = env.get('XONSH_STORE_STDIN')
         self._in_alt_mode = False
+        self.stdin_mode = None
         # start up process
-        self._enable_cbreak_stdin()
+        #self._enable_cbreak_stdin()
         self.proc = proc = subprocess.Popen(*args,
                                             stdin=stdin,
                                             stdout=stdout,
@@ -393,9 +404,11 @@ class PopenThread(threading.Thread):
             if alt_mode:
                 self._in_alt_mode = alt_mode
                 self._alt_mode_writer(flag, membuf, stdbuf)
+                self._enable_cbreak_stdin()
             else:
                 self._alt_mode_writer(flag, membuf, stdbuf)
                 self._in_alt_mode = alt_mode
+                self._disable_cbreak_stdin()
             # recurse this function, but without the current flag.
             self._alt_mode_switch(line[j:], membuf, stdbuf)
 
@@ -506,9 +519,11 @@ class PopenThread(threading.Thread):
         joining this thread and replacing the original window size signal
         handler.
         """
-        rtn = self.proc.wait(timeout=timeout)
         self._disable_cbreak_stdin()
-        self.join(timeout=timeout)
+        rtn = self.proc.wait(timeout=timeout)
+        while self.is_alive():
+            self.join(timeout=1e-7)
+            time.sleep(1e-7)
         # need to replace the old signal handlers somewhere...
         if self.old_winch_handler is not None and on_main_thread():
             signal.signal(signal.SIGWINCH, self.old_winch_handler)
@@ -688,7 +703,6 @@ class ProcProxy(threading.Thread):
         self.args = args
         self.pid = None
         self.returncode = None
-        self.wait = self.join
         self._closed_handle_cache = {}
 
         handles = self._get_handles(stdin, stdout, stderr)
@@ -781,16 +795,12 @@ class ProcProxy(threading.Thread):
             r = 1
         self.returncode = parse_proxy_return(r, sp_stdout, sp_stderr)
         if last_in_pipeline:
-            sp_stdout.flush()
-            sp_stderr.flush()
+            safe_flush(sp_stdout)
+            safe_flush(sp_stderr)
         # clean up
-        #handles = [sp_stdin, sp_stdout, sp_stderr, self.p2cread, self.p2cwrite,
-        #           self.c2pread, self.c2pwrite, self.errread, self.errwrite]
-        handles = []
-        if ON_WINDOWS:
-            # scopz: not sure why this is needed, but stdin cannot go here
-            # and stdout & stderr must.
-            handles += [self.stdout, self.stderr]
+        # scopz: not sure why this is needed, but stdin cannot go here
+        # and stdout & stderr must.
+        handles = [self.stdout, self.stderr]
         for handle in handles:
             safe_fdclose(handle, cache=self._closed_handle_cache)
 
@@ -805,9 +815,17 @@ class ProcProxy(threading.Thread):
 
         Returns
         -------
-        `None` if the function is still executing, and the returncode otherwise
+        None if the function is still executing, and the returncode otherwise
         """
         return self.returncode
+
+    def wait(self, timeout=None):
+        """Waits for the process to finish and returns the return code."""
+        while self.is_alive():
+            self.join(timeout=1e-7)
+            time.sleep(1e-7)
+        return self.returncode
+
 
     # The code below (_get_devnull, _get_handles, and _make_inheritable) comes
     # from subprocess.py in the Python 3.4.2 Standard Library
@@ -1002,8 +1020,8 @@ class ForegroundProcProxy(object):
             print_exception()
             r = 1
         self.returncode = parse_proxy_return(r, stdout, stderr)
-        stdout.flush()
-        stderr.flush()
+        safe_flush(stdout)
+        safe_flush(stderr)
         return self.returncode
 
     @staticmethod
@@ -1260,10 +1278,10 @@ class CommandPipeline:
         """
         if self.ended:
             return
-        self._endtime()
         if tee_output:
             for _ in self.tee_stdout():
                 pass
+        self._endtime()
         # since we are driven by getting output, input may not be available
         # until the command has completed.
         self._set_input()
