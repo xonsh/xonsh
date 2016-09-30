@@ -15,4 +15,4 @@ def test_xonsh_party():
   x = 'xonsh'
   y = 'party'
   out = $(echo @(x + ' ' + y))
-  assert out == 'xonsh party\n'
+  assert out == 'xonsh party\n', 'Out really was <' + out + '>, sorry.'
