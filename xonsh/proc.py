@@ -259,7 +259,7 @@ def safe_flush(handle):
     """Attempts to safely flush a file handle, returns success bool."""
     status = True
     try:
-        handle.close()
+        handle.flush()
     except OSError:
         status = False
     return status
