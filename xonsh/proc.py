@@ -285,10 +285,11 @@ class PopenThread(threading.Thread):
         if on_main_thread():
             self.old_int_handler = signal.signal(signal.SIGINT,
                                                  self._signal_int)
-            self.old_tstp_handler = signal.signal(signal.SIGTSTP,
-                                                  self._signal_tstp)
-            self.old_quit_handler = signal.signal(signal.SIGQUIT,
-                                                  self._signal_quit)
+            if ON_POSIX:
+                self.old_tstp_handler = signal.signal(signal.SIGTSTP,
+                                                      self._signal_tstp)
+                self.old_quit_handler = signal.signal(signal.SIGQUIT,
+                                                      self._signal_quit)
             if CAN_RESIZE_WINDOW:
                 self.old_winch_handler = signal.signal(signal.SIGWINCH,
                                                        self._signal_winch)
