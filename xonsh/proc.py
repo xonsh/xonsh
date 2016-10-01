@@ -290,15 +290,11 @@ class PopenThread(threading.Thread):
         self.store_stdin = env.get('XONSH_STORE_STDIN')
         self._in_alt_mode = False
         self.stdin_mode = None
+        # Set some signal handles, if we can. Must come before process
+        # is started to prevent deadlock on windows
+        self.proc = None  # has to be here for closure for handles
         self.old_int_handler = self.old_winch_handler = None
         self.old_tspt_handler = self.old_quit_handler = None
-        # start up process
-        self.proc = proc = subprocess.Popen(*args,
-                                            stdin=stdin,
-                                            stdout=stdout,
-                                            stderr=stderr,
-                                            **kwargs)
-        # Set some signal handles, if we can. Should come after proc is set
         if on_main_thread():
             self.old_int_handler = signal.signal(signal.SIGINT,
                                                  self._signal_int)
@@ -310,6 +306,12 @@ class PopenThread(threading.Thread):
             if CAN_RESIZE_WINDOW:
                 self.old_winch_handler = signal.signal(signal.SIGWINCH,
                                                        self._signal_winch)
+        # start up process
+        self.proc = proc = subprocess.Popen(*args,
+                                            stdin=stdin,
+                                            stdout=stdout,
+                                            stderr=stderr,
+                                            **kwargs)
         self.pid = proc.pid
         self.universal_newlines = uninew = proc.universal_newlines
         if uninew:
