@@ -290,6 +290,8 @@ class PopenThread(threading.Thread):
         self.store_stdin = env.get('XONSH_STORE_STDIN')
         self._in_alt_mode = False
         self.stdin_mode = None
+        self.old_int_handler = self.old_winch_handler = None
+        self.old_tspt_handler = self.old_quit_handler = None
         # start up process
         self.proc = proc = subprocess.Popen(*args,
                                             stdin=stdin,
@@ -297,8 +299,6 @@ class PopenThread(threading.Thread):
                                             stderr=stderr,
                                             **kwargs)
         # Set some signal handles, if we can. Should come after proc is set
-        self.old_int_handler = self.old_winch_handler = None
-        self.old_tspt_handler = self.old_quit_handler = None
         if on_main_thread():
             self.old_int_handler = signal.signal(signal.SIGINT,
                                                  self._signal_int)
