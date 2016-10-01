@@ -571,6 +571,166 @@ class Handle(int):
     __str__ = __repr__
 
 
+class FileThreadDispatcher:
+    """Dispatches to different file handles depending on the
+    current thread. Useful if you want file operation to go to differnt
+    places for different threads.
+    """
+
+    def __init__(self, default=None):
+        """
+        Parameters
+        ----------
+        default : file-like or None, optional
+            The file handle to write to if a thread cannot be found in
+            the registery. If None, a new in-memory instance.
+
+        Attributes
+        ----------
+        registry : dict
+            Maps thread idents to file handles.
+        """
+        if default is None:
+            default = io.TextIOWrapper(io.BytesIO())
+        self.default = default
+        self.registry = {}
+
+    def register(self, handle):
+        """Registers a file handle for the current thread. Returns self so
+        that this method can be used in a with-statement.
+        """
+        self.registry[threading.get_ident()] = handle
+        return self
+
+    def deregister(self):
+        """Removes the current thread from the registry."""
+        del self.registry[threading.get_ident()]
+
+    @property
+    def available(self):
+        """True if the thread is available in the registry."""
+        return threading.get_ident() in self.registry
+
+    @property
+    def handle(self):
+        """Gets the current handle for the thread."""
+        return self.registry(threading.get_ident(), self.default)
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, ex_type, ex_value, ex_traceback):
+        self.deregister()
+
+    #
+    # io.TextIOBase interface
+    #
+
+    @property
+    def encoding(self):
+        """Gets the encoding for this thread's handle."""
+        return self.handle.encoding
+
+    @property
+    def errors(self):
+        """Gets the errors for this thread's handle."""
+        return self.handle.errors
+
+    @property
+    def newlines(self):
+        """Gets the newlines for this thread's handle."""
+        return self.handle.newlines
+
+    @property
+    def buffer(self):
+        """Gets the buffer for this thread's handle."""
+        return self.handle.buffer
+
+    def detach(self):
+        """Detaches the buffer for the current thread."""
+        return self.handle.detach()
+
+    def read(self, size=None):
+        """Reads from the handle for the current thread."""
+        return self.handle.read(size)
+
+    def readline(self, size=-1):
+        """Reads a line from the handle for the current thread."""
+        return self.handle.readline(size)
+
+    def readlines(self, hint=-1):
+        """Reads lines from the handle for the current thread."""
+        return self.handle.readlines(hint)
+
+    def seek(self, offset, whence=io.SEEKSET):
+        """Seeks the current file."""
+        return self.handle.seek(offset, whence)
+
+    def tell(self):
+        """Reports the current position in the handle for the current thread."""
+        return self.handle.tell()
+
+    def write(self, s):
+        """Writes to this thread's handle."""
+        return self.handle.write(s)
+
+    @property
+    def line_buffering(self):
+        """Gets if line buffering for this thread's handle enabled."""
+        return self.handle.line_buffering
+
+    #
+    # io.IOBase interface
+    #
+
+    def close(self):
+        """Closes the current thread's handle."""
+        return self.handle.close()
+
+    @property
+    def closed(self):
+        """Is the thread's handle closed."""
+        return self.handle.closed
+
+    def fileno(self):
+        """Returns the file descriptor for the current thread."""
+        return self.handle.fileno()
+
+    def flush(self):
+        """Flushes the file descriptor for the current thread."""
+        return self.handle.flush()
+
+    def isatty(self):
+        """Returns if the file descriptor for the current thread is a tty."""
+        return self.handle.isatty()
+
+    def readable(self):
+        """Returns if file descriptor for the current thread is readable."""
+        return self.handle.readable()
+
+    def seekable(self):
+        """Returns if file descriptor for the current thread is seekable."""
+        return self.handle.seekable()
+
+    def truncate(self, size=None):
+        """Truncates the file for for the current thread."""
+        return self.handle.truncate()
+
+    def writable(self, size=None):
+        """Returns if file descriptor for the current thread is writable."""
+        return self.handle.writable(size)
+
+    def writelines(self):
+        """Writes lines for the file descriptor for the current thread."""
+        return self.handle.writelines()
+
+
+# These should NOT be lazy since they *need* to get the true stdout from the
+# main thread. Also their creation time should be neglibible.
+STDOUT_DISPATCHER = FileThreadDispatcher(default=sys.stdout)
+STDERR_DISPATCHER = FileThreadDispatcher(default=sys.stderr)
+
+
 def parse_proxy_return(r, stdout, stderr):
     """Proxies may return a variety of outputs. This hanles them generally.
 
@@ -676,8 +836,7 @@ class ProcProxy(threading.Thread):
             set to `None`, then `sys.stderr` is used.
         universal_newlines : bool, optional
             Whether or not to use universal newlines.
-        env : Mapping, optional
-            Environment mapping.
+        env : Mapping, optiona            Environment mapping.
         """
         self.orig_f = f
         self.f = partial_proxy(f)
@@ -785,10 +944,10 @@ class ProcProxy(threading.Thread):
             sp_stderr = sys.stderr
         # run the function itself
         try:
-            if last_in_pipeline:
-                with redirect_stdout(sp_stdout), redirect_stderr(sp_stderr):
-                    r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr)
-            else:
+            with STDOUT_DISPATCHER.register(sp_stdout), \
+                 STDERR_DISPATCHER.register(sp_stderr), \
+                 redirect_stdout(sp_stdout), \
+                 redirect_stderr(sp_stderr):
                 r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr)
         except Exception:
             print_exception()
