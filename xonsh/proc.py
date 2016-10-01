@@ -596,7 +596,12 @@ class PopenThread(threading.Thread):
 
     def send_signal(self, signal):
         """Dispatches to Popen.send_signal()."""
-        return self.proc.send_signal(signal)
+        try:
+            rtn = self.proc.send_signal(signal)
+        except ProcessLookupError:
+            # This can happen in the case of !(cmd) when the command has ended
+            rtn = None
+        return rtn
 
     def terminate(self):
         """Dispatches to Popen.terminate()."""
