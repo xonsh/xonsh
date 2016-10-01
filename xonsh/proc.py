@@ -662,7 +662,7 @@ class FileThreadDispatcher:
         """Reads lines from the handle for the current thread."""
         return self.handle.readlines(hint)
 
-    def seek(self, offset, whence=io.SEEKSET):
+    def seek(self, offset, whence=io.SEEK_SET):
         """Seeks the current file."""
         return self.handle.seek(offset, whence)
 
