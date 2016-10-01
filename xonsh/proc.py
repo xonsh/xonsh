@@ -614,7 +614,7 @@ class FileThreadDispatcher:
     @property
     def handle(self):
         """Gets the current handle for the thread."""
-        return self.registry(threading.get_ident(), self.default)
+        return self.registry.get(threading.get_ident(), self.default)
 
     def __enter__(self):
         pass
@@ -671,8 +671,13 @@ class FileThreadDispatcher:
         return self.handle.tell()
 
     def write(self, s):
-        """Writes to this thread's handle."""
-        return self.handle.write(s)
+        """Writes to this thread's handle. This also flushes, just to be
+        extra sure the string was written.
+        """
+        h = self.handle
+        r = h.write(s)
+        h.flush()
+        return r
 
     @property
     def line_buffering(self):
@@ -946,16 +951,17 @@ class ProcProxy(threading.Thread):
         try:
             with STDOUT_DISPATCHER.register(sp_stdout), \
                  STDERR_DISPATCHER.register(sp_stderr), \
-                 redirect_stdout(sp_stdout), \
-                 redirect_stderr(sp_stderr):
+                 redirect_stdout(STDOUT_DISPATCHER), \
+                 redirect_stderr(STDERR_DISPATCHER):
                 r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr)
         except Exception:
             print_exception()
             r = 1
+        safe_flush(sp_stdout)
+        safe_flush(sp_stderr)
         self.returncode = parse_proxy_return(r, sp_stdout, sp_stderr)
-        if last_in_pipeline:
-            safe_flush(sp_stdout)
-            safe_flush(sp_stderr)
+        if not last_in_pipeline:
+            return
         # clean up
         # scopz: not sure why this is needed, but stdin cannot go here
         # and stdout & stderr must.
