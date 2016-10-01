@@ -289,11 +289,16 @@ class PopenThread(threading.Thread):
                                                        self._signal_winch)
         env = builtins.__xonsh_env__
         self.orig_stdin = stdin
+        if stdin is None:
+            self.stdin_fd = 0
+        elif isinstance(stdin, int):
+            self.stdin_fd = stdin
+        else:
+            self.stdin_fd = stdin.fileno()
         self.store_stdin = env.get('XONSH_STORE_STDIN')
         self._in_alt_mode = False
         self.stdin_mode = None
         # start up process
-        #self._enable_cbreak_stdin()
         self.proc = proc = subprocess.Popen(*args,
                                             stdin=stdin,
                                             stdout=stdout,
@@ -347,18 +352,18 @@ class PopenThread(threading.Thread):
         else:
             procerr = NonBlockingFDReader(caperr.fileno(), timeout=self.timeout)
         # initial read from buffer
-        self._read_write(procout, stdout, sys.stdout)
-        self._read_write(procerr, stderr, sys.stderr)
+        self._read_write(procout, stdout, sys.__stdout__)
+        self._read_write(procerr, stderr, sys.__stderr__)
         # loop over reads while process is running.
         while proc.poll() is None:
-            self._read_write(procout, stdout, sys.stdout)
-            self._read_write(procerr, stderr, sys.stderr)
-            if self.prevs_are_closed:
+            self._read_write(procout, stdout, sys.__stdout__)
+            self._read_write(procerr, stderr, sys.__stderr__)
+            if self.prevs_are_closed and not self._in_alt_mode:
                 break
             time.sleep(self.timeout)
         # final closing read.
-        self._read_write(procout, stdout, sys.stdout)
-        self._read_write(procerr, stderr, sys.stderr)
+        self._read_write(procout, stdout, sys.__stdout__)
+        self._read_write(procerr, stderr, sys.__stderr__)
         # kill the process if it is still alive. Happens when piping.
         if proc.poll() is None:
             proc.terminate()
@@ -481,7 +486,7 @@ class PopenThread(threading.Thread):
         if not ON_POSIX:
             return
         try:
-            self.stdin_mode = termios.tcgetattr(0)[:]
+            self.stdin_mode = termios.tcgetattr(self.stdin_fd)[:]
         except termios.error:
             # this can happen for cases where another process is controlling
             # xonsh's tty device, such as in testing.
@@ -493,7 +498,7 @@ class PopenThread(threading.Thread):
         new[CC][termios.VTIME] = 0
         try:
             # termios.TCSAFLUSH may be less reliable than termios.TCSANOW
-            termios.tcsetattr(0, termios.TCSANOW, new)
+            termios.tcsetattr(self.stdin_fd, termios.TCSANOW, new)
         except termios.error:
             self._disable_cbreak_stdin()
 
@@ -504,7 +509,7 @@ class PopenThread(threading.Thread):
         new[LFLAG] |= termios.ECHO | termios.ICANON
         new[CC][termios.VMIN] = 1
         new[CC][termios.VTIME] = 0
-        termios.tcsetattr(0, termios.TCSANOW, new)
+        termios.tcsetattr(self.stdin_fd, termios.TCSANOW, new)
 
     #
     # Dispatch methods
