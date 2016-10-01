@@ -294,7 +294,7 @@ class PopenThread(threading.Thread):
         # is started to prevent deadlock on windows
         self.proc = None  # has to be here for closure for handles
         self.old_int_handler = self.old_winch_handler = None
-        self.old_tspt_handler = self.old_quit_handler = None
+        self.old_tstp_handler = self.old_quit_handler = None
         if on_main_thread():
             self.old_int_handler = signal.signal(signal.SIGINT,
                                                  self._signal_int)
