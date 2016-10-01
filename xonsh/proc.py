@@ -281,10 +281,15 @@ class PopenThread(threading.Thread):
         self._set_pty_size()
         # Set some signal handles, if we can.
         self.old_int_handler = self.old_winch_handler = None
+        self.old_tspt_handler = self.old_quit_handler = None
         if on_main_thread():
             self.old_int_handler = signal.signal(signal.SIGINT,
                                                  self._signal_int)
-            if CAN_RESIZE_WINDOW and on_main_thread():
+            self.old_tstp_handler = signal.signal(signal.SIGTSTP,
+                                                  self._signal_tstp)
+            self.old_quit_handler = signal.signal(signal.SIGQUIT,
+                                                  self._signal_quit)
+            if CAN_RESIZE_WINDOW:
                 self.old_winch_handler = signal.signal(signal.SIGWINCH,
                                                        self._signal_winch)
         env = builtins.__xonsh_env__
@@ -318,6 +323,7 @@ class PopenThread(threading.Thread):
             self.stdout = io.BytesIO()
             self.stderr = io.BytesIO()
         self.timeout = 1e-4
+        self.suspended = False
         self.prevs_are_closed = False
         self.start()
 
@@ -360,12 +366,14 @@ class PopenThread(threading.Thread):
             self._read_write(procerr, stderr, sys.__stderr__)
             if self.prevs_are_closed and not self._in_alt_mode:
                 break
+            elif self.suspended:
+                break
             time.sleep(self.timeout)
         # final closing read.
         self._read_write(procout, stdout, sys.__stdout__)
         self._read_write(procerr, stderr, sys.__stderr__)
         # kill the process if it is still alive. Happens when piping.
-        if proc.poll() is None:
+        if proc.poll() is None and not self.suspended:
             proc.terminate()
 
     def _wait_and_getattr(self, name):
@@ -461,7 +469,7 @@ class PopenThread(threading.Thread):
     #
 
     def _signal_int(self, signum, frame):
-        """Signal handler for SIGINT - Cntrl+C may have been pressed."""
+        """Signal handler for SIGINT - Ctrl+C may have been pressed."""
         self.send_signal(signum)
         time.sleep(self.timeout)
         if self.poll() is not None:
@@ -477,6 +485,46 @@ class PopenThread(threading.Thread):
             self._disable_cbreak_stdin()
             if old is not None:
                 old(signal.SIGINT, frame)
+
+    #
+    # SIGTSTP handler
+    #
+
+    def _signal_tstp(self, signum, frame):
+        """Signal handler for suspending SIGTSTP - Ctrl+Z may have been pressed.
+        """
+        self.suspended = True
+        self.send_signal(signum)
+        self._restore_sigtstp(frame=frame)
+
+    def _restore_sigtstp(self, frame=None):
+        old = self.old_tstp_handler
+        if old is not None:
+            if on_main_thread():
+                signal.signal(signal.SIGTSTP, old)
+            self.old_tstp_handler = None
+        if frame is not None:
+            self._disable_cbreak_stdin()
+
+    #
+    # SIGQUIT handler
+    #
+
+    def _signal_quit(self, signum, frame):
+        """Signal handler for quiting SIGQUIT - Ctrl+\ may have been pressed.
+        """
+        self.send_signal(signum)
+        self._restore_sigquit(frame=frame)
+
+    def _restore_sigquit(self, frame=None):
+        old = self.old_quit_handler
+        if old is not None:
+            if on_main_thread():
+                signal.signal(signal.SIGQUIT, old)
+            self.old_quit_handler = None
+        if frame is not None:
+            self._disable_cbreak_stdin()
+
 
     #
     # cbreak mode handlers
@@ -534,6 +582,8 @@ class PopenThread(threading.Thread):
             signal.signal(signal.SIGWINCH, self.old_winch_handler)
             self.old_winch_handler = None
         self._restore_sigint()
+        self._restore_sigtstp()
+        self._restore_sigquit()
         return rtn
 
     @property
@@ -1353,6 +1403,8 @@ class CommandPipeline:
                 self._close_prev_procs()
                 proc.prevs_are_closed = True
                 break
+            elif getattr(proc, 'suspended', False):
+                return
             yield from safe_readlines(stdout, 1024)
             self.stream_stderr(safe_readlines(stderr, 1024))
             time.sleep(1e-4)
