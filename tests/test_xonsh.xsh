@@ -12,5 +12,5 @@ def test_envionment():
 def test_xonsh_party():
   x = 'xonsh'
   y = 'party'
-  out = $(echo @(x + ' ' + y))
-  assert out == 'xonsh party\n', 'Out really was <' + out + '>, sorry.'
+  out = $(echo @(x + '-' + y)).strip()
+  assert out == 'xonsh-party', 'Out really was <' + out + '>, sorry.'
