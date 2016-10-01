@@ -704,6 +704,9 @@ def cmds_to_specs(cmds, captured=False):
         if isinstance(cmd, str):
             redirects.append(cmd)
         else:
+            if cmd[-1] == '&':
+                cmd = cmd[:-1]
+                redirects.append('&')
             spec = SubprocSpec.build(cmd)
             specs.append(spec)
     # now modify the subprocs based on the redirects.
