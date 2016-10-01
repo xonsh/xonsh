@@ -316,6 +316,13 @@ def main():
             'pytest11': ['xonsh = xonsh.pytest_plugin']
         }
         skw['cmdclass']['develop'] = xdevelop
+        skw['extras_require'] = {
+            'ptk':  ['prompt-toolkit', 'pygments'],
+            'win': ['win_unicode_console'],
+            'mac': ['gnureadline'],
+            'linux': ['distro'],
+            'proctitle': ['setproctitle'],
+        }
     setup(**skw)
 
 

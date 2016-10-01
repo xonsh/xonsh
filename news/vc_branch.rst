@@ -5,7 +5,7 @@
 * ``xonsh.prompt.gitstatus.gitstatus`` now returns a namedtuple
 
 * implementation of ``xonsh.prompt.vc_branch.get_git_branch`` and
-  ``xonsh.prompt.vc_branch.git_dirty_working_directory`` to be faster
+  ``xonsh.prompt.vc_branch.git_dirty_working_directory`` to use 'git status --procelain'
 
 **Deprecated:** None
 
