@@ -161,6 +161,7 @@ def DEFAULT_ENSURERS():
     'XONSH_STORE_STDIN': (is_bool, to_bool, bool_to_str),
     'XONSH_TRACEBACK_LOGFILE': (is_logfile_opt, to_logfile_opt, logfile_opt_to_str),
     'XONSH_DATETIME_FORMAT': (is_string, ensure_string, ensure_string),
+    'UPDATE_PROMPT_ON_KEYPRESS': (is_bool, to_bool, bool_to_str),
     }
 
 
@@ -184,7 +185,7 @@ DEFAULT_TITLE = '{current_job:{} | }{user}@{hostname}: {cwd} | xonsh'
 @default_value
 def xonsh_data_dir(env):
     """Ensures and returns the $XONSH_DATA_DIR"""
-    xdd = os.path.join(env.get('XDG_DATA_HOME'), 'xonsh')
+    xdd = os.path.expanduser(os.path.join(env.get('XDG_DATA_HOME'), 'xonsh'))
     os.makedirs(xdd, exist_ok=True)
     return xdd
 
@@ -192,7 +193,7 @@ def xonsh_data_dir(env):
 @default_value
 def xonsh_config_dir(env):
     """Ensures and returns the $XONSH_CONFIG_DIR"""
-    xcd = os.path.join(env.get('XDG_CONFIG_HOME'), 'xonsh')
+    xcd = os.path.expanduser(os.path.join(env.get('XDG_CONFIG_HOME'), 'xonsh'))
     os.makedirs(xcd, exist_ok=True)
     return xcd
 
@@ -302,6 +303,7 @@ def DEFAULT_VALUES():
         'XONSH_STORE_STDOUT': False,
         'XONSH_TRACEBACK_LOGFILE': None,
         'XONSH_DATETIME_FORMAT': '%Y-%m-%d %H:%M',
+        'UPDATE_PROMPT_ON_KEYPRESS': False,
     }
     if hasattr(locale, 'LC_MESSAGES'):
         dv['LC_MESSAGES'] = locale.setlocale(locale.LC_MESSAGES)
@@ -347,22 +349,22 @@ def DEFAULT_DOCS():
     'AUTO_SUGGEST': VarDocs(
         'Enable automatic command suggestions based on history, like in the fish '
         'shell.\n\nPressing the right arrow key inserts the currently '
-        'displayed suggestion. Only usable with $SHELL_TYPE=prompt_toolkit.'),
+        'displayed suggestion. Only usable with ``$SHELL_TYPE=prompt_toolkit.``'),
     'BASH_COMPLETIONS': VarDocs(
         'This is a list (or tuple) of strings that specifies where the '
-        '`bash_completion` script may be found. For better performance, '
-        'base-completion v2.x is recommended since it lazy-loads individual '
+        '``bash_completion`` script may be found. For better performance, '
+        'bash-completion v2.x is recommended since it lazy-loads individual '
         'completion scripts. Paths or directories of individual completion '
-        'scripts (like `.../completes/ssh`) do not need to be included here. '
+        'scripts (like ``.../completes/ssh``) do not need to be included here. '
         'The default values are platform '
         'dependent, but sane. To specify an alternate list, do so in the run '
         'control file.', default=(
             "Normally this is:\n\n"
-            "    ('/etc/bash_completion', )\n\n"
+            "    ``('/etc/bash_completion', )``\n\n"
             "But, on Mac it is:\n\n"
-            "    ('/usr/local/etc/bash_completion', )\n\n"
+            "    ``('/usr/local/etc/bash_completion', )``\n\n"
             "And on Arch Linux it is:\n\n"
-            "    ('/usr/share/bash-completion/bash_completion', )\n\n"
+            "    ``('/usr/share/bash-completion/bash_completion', )``\n\n"
             "Other OS-specific defaults may be added in the future.")),
     'CASE_SENSITIVE_COMPLETIONS': VarDocs(
         'Sets whether completions should be case sensitive or case '
@@ -377,39 +379,39 @@ def DEFAULT_DOCS():
         'in Python attribute completions.', default='True'),
     'COMPLETIONS_DISPLAY': VarDocs(
         'Configure if and how Python completions are displayed by the '
-        'prompt_toolkit shell.\n\nThis option does not affect Bash '
+        '``prompt_toolkit`` shell.\n\nThis option does not affect Bash '
         'completions, auto-suggestions, etc.\n\nChanging it at runtime will '
         'take immediate effect, so you can quickly disable and enable '
         'completions during shell sessions.\n\n'
-        "- If $COMPLETIONS_DISPLAY is 'none' or 'false', do not display\n"
+        "- If ``$COMPLETIONS_DISPLAY`` is ``none`` or ``false``, do not display\n"
         "  those completions.\n"
-        "- If $COMPLETIONS_DISPLAY is 'single', display completions in a\n"
+        "- If ``$COMPLETIONS_DISPLAY`` is ``single``, display completions in a\n"
         '  single column while typing.\n'
-        "- If $COMPLETIONS_DISPLAY is 'multi' or 'true', display completions\n"
+        "- If ``$COMPLETIONS_DISPLAY`` is ``multi`` or ``true``, display completions\n"
         "  in multiple columns while typing.\n\n"
         'These option values are not case- or type-sensitive, so e.g.'
-        "writing \"$COMPLETIONS_DISPLAY = None\" and \"$COMPLETIONS_DISPLAY "
-        "= 'none'\" are equivalent. Only usable with "
-        "$SHELL_TYPE=prompt_toolkit"),
+        "writing ``$COMPLETIONS_DISPLAY = None``"
+        "and ``$COMPLETIONS_DISPLAY = 'none'`` are equivalent. Only usable with "
+        "``$SHELL_TYPE=prompt_toolkit``"),
     'COMPLETIONS_CONFIRM': VarDocs(
         'While tab-completions menu is displayed, press <Enter> to confirm '
         'completion instead of running command. This only affects the '
         'prompt-toolkit shell.'),
     'COMPLETIONS_MENU_ROWS': VarDocs(
         'Number of rows to reserve for tab-completions menu if '
-        "$COMPLETIONS_DISPLAY is 'single' or 'multi'. This only affects the "
+        "``$COMPLETIONS_DISPLAY`` is ``single`` or ``multi``. This only affects the "
         'prompt-toolkit shell.'),
     'DIRSTACK_SIZE': VarDocs('Maximum size of the directory stack.'),
     'DYNAMIC_CWD_WIDTH': VarDocs(
         'Maximum length in number of characters '
-        'or as a percentage for the `cwd` prompt variable. For example, '
+        'or as a percentage for the ``cwd`` prompt variable. For example, '
         '"20" is a twenty character width and "10%" is ten percent of the '
         'number of columns available.'),
     'EXPAND_ENV_VARS': VarDocs(
         'Toggles whether environment variables are expanded inside of strings '
         'in subprocess mode.'),
     'FORCE_POSIX_PATHS': VarDocs(
-        "Forces forward slashes ('/') on Windows systems when using auto "
+        "Forces forward slashes (``/``) on Windows systems when using auto "
         'completion if set to anything truthy.', configurable=ON_WINDOWS),
     'FOREIGN_ALIASES_OVERRIDE': VarDocs(
         'Whether or not foreign aliases should override xonsh aliases '
@@ -422,7 +424,7 @@ def DEFAULT_DOCS():
         'Dictionary containing variables to be used when formatting $PROMPT '
         "and $TITLE. See 'Customizing the Prompt' "
         'http://xon.sh/tutorial.html#customizing-the-prompt',
-        configurable=False, default='xonsh.prompt.FORMATTER_DICT'),
+        configurable=False, default='``xonsh.prompt.FORMATTER_DICT``'),
     'FUZZY_PATH_COMPLETION': VarDocs(
         "Toggles 'fuzzy' matching of paths for tab completion, which is only "
         "used as a fallback if no other completions succeed but can be used "
@@ -434,7 +436,7 @@ def DEFAULT_DOCS():
     'HISTCONTROL': VarDocs(
         'A set of strings (comma-separated list in string form) of options '
         'that determine what commands are saved to the history list. By '
-        "default all commands are saved. The option 'ignoredups' will not "
+        "default all commands are saved. The option ``ignoredups`` will not "
         "save the command if it matches the previous command. The option "
         "'ignoreerr' will cause any commands that fail (i.e. return non-zero "
         "exit status) to not be added to the history list.",
@@ -443,7 +445,7 @@ def DEFAULT_DOCS():
     'INDENT': VarDocs('Indentation string for multiline input'),
     'INTENSIFY_COLORS_ON_WIN': VarDocs(
         'Enhance style colors for readability '
-        'when using the default terminal (cmd.exe) on Windows. Blue colors, '
+        'when using the default terminal (``cmd.exe``) on Windows. Blue colors, '
         'which are hard to read, are replaced with cyan. Other colors are '
         'generally replaced by their bright counter parts.',
         configurable=ON_WINDOWS),
@@ -454,14 +456,15 @@ def DEFAULT_DOCS():
     'LOADED_RC_FILES': VarDocs(
         'Whether or not any of the xonsh run control files were loaded at '
         'startup. This is a sequence of bools in Python that is converted '
-        "to a CSV list in string form, ie [True, False] becomes 'True,False'.",
+        "to a CSV list in string form, ie ``[True, False]`` becomes "
+        "``'True,False'``.",
         configurable=False),
     'MOUSE_SUPPORT': VarDocs(
-        'Enable mouse support in the prompt_toolkit shell. This allows '
+        'Enable mouse support in the ``prompt_toolkit`` shell. This allows '
         'clicking for positioning the cursor or selecting a completion. In '
         'some terminals however, this disables the ability to scroll back '
         'through the history of the terminal. Only usable with '
-        '$SHELL_TYPE=prompt_toolkit'),
+        '``$SHELL_TYPE=prompt_toolkit``'),
     'MULTILINE_PROMPT': VarDocs(
         'Prompt text for 2nd+ lines of input, may be str or function which '
         'returns a str.'),
@@ -469,7 +472,7 @@ def DEFAULT_DOCS():
                       configurable=False),
     'PATH': VarDocs(
         'List of strings representing where to look for executables.'),
-    'PATHEXT': VarDocs('Sequence of extention strings (eg, ".EXE") for '
+    'PATHEXT': VarDocs('Sequence of extention strings (eg, ``.EXE``) for '
                        'filtering valid executables by. Each element must be '
                        'uppercase.'),
     'PRETTY_PRINT_RESULTS': VarDocs(
@@ -479,7 +482,7 @@ def DEFAULT_DOCS():
         "auto-formatted, see 'Customizing the Prompt' at "
         'http://xon.sh/tutorial.html#customizing-the-prompt. '
         'This value is never inherited from parent processes.',
-        default='xonsh.environ.DEFAULT_PROMPT'),
+        default='``xonsh.environ.DEFAULT_PROMPT``'),
     'PUSHD_MINUS': VarDocs(
         'Flag for directory pushing functionality. False is the normal '
         'behavior.'),
@@ -490,23 +493,23 @@ def DEFAULT_DOCS():
         'uncaptured) returns a non-zero exit status, which indicates failure. '
         'This is most useful in xonsh scripts or modules where failures '
         'should cause an end to execution. This is less useful at a terminal. '
-        'The error that is raised is a subprocess.CalledProcessError.'),
+        'The error that is raised is a ``subprocess.CalledProcessError``.'),
     'RIGHT_PROMPT': VarDocs(
         'Template string for right-aligned text '
         'at the prompt. This may be parameterized in the same way as '
-        'the $PROMPT variable. Currently, this is only available in the '
+        'the ``$PROMPT`` variable. Currently, this is only available in the '
         'prompt-toolkit shell.'),
     'SHELL_TYPE': VarDocs(
         'Which shell is used. Currently two base shell types are supported:\n\n'
-        "    - 'readline' that is backed by Python's readline module\n"
-        "    - 'prompt_toolkit' that uses external library of the same name\n"
-        "    - 'random' selects a random shell from the above on startup\n"
-        "    - 'best' selects the most feature-rich shell available on the\n"
+        "    - ``readline`` that is backed by Python's readline module\n"
+        "    - ``prompt_toolkit`` that uses external library of the same name\n"
+        "    - ``random`` selects a random shell from the above on startup\n"
+        "    - ``best`` selects the most feature-rich shell available on the\n"
         "       user's system\n\n"
-        'To use the prompt_toolkit shell you need to have the prompt_toolkit '
-        '(https://github.com/jonathanslenders/python-prompt-toolkit) '
-        'library installed. To specify which shell should be used, do so in '
-        'the run control file.'),
+        'To use the ``prompt_toolkit`` shell you need to have the '
+        '`prompt_toolkit <https://github.com/jonathanslenders/python-prompt-toolkit>`_'
+        ' library installed. To specify which shell should be used, do so in '
+        'the run control file.', default='``best``'),
     'SUBSEQUENCE_PATH_COMPLETION': VarDocs(
         "Toggles subsequence matching of paths for tab completion. "
         "If ``True``, then, e.g., ``~/u/ro`` can match ``~/lou/carcolh``."),
@@ -529,9 +532,9 @@ def DEFAULT_DOCS():
         'information being piped in via stdin. This value must be a float. '
         'If a value less than or equal to zero is passed in, no delay is '
         'used. This can be used to fix situations where a spawned process, '
-        'such as piping into \'grep\', exits too quickly for the piping '
+        'such as piping into ``grep``, exits too quickly for the piping '
         'operation itself. TeePTY (and thus this variable) are currently '
-        'only used when $XONSH_STORE_STDOUT is True.',
+        'only used when ``$XONSH_STORE_STDOUT`` is True.',
         configurable=ON_LINUX),
     'TERM': VarDocs(
         'TERM is sometimes set by the terminal emulator. This is used (when '
@@ -541,50 +544,51 @@ def DEFAULT_DOCS():
         "options:\n\n"
         "* Set this from the program that launches xonsh. On POSIX systems, \n"
         "  this can be performed by using env, e.g. \n"
-        "  '/usr/bin/env TERM=xterm-color xonsh' or similar.\n"
-        "* From the xonsh command line, namely 'xonsh -DTERM=xterm-color'.\n"
-        "* In the config file with '{\"env\": {\"TERM\": \"xterm-color\"}}'.\n"
-        "* Lastly, in xonshrc with '$TERM'\n\n"
+        "  ``/usr/bin/env TERM=xterm-color xonsh`` or similar.\n"
+        "* From the xonsh command line, namely ``xonsh -DTERM=xterm-color``.\n"
+        "* In the config file with ``{\"env\": {\"TERM\": \"xterm-color\"}}``.\n"
+        "* Lastly, in xonshrc with ``$TERM``\n\n"
         "Ideally, your terminal emulator will set this correctly but that does "
         "not always happen.", configurable=False),
     'TITLE': VarDocs(
         'The title text for the window in which xonsh is running. Formatted '
-        "in the same manner as $PROMPT, see 'Customizing the Prompt' "
+        "in the same manner as ``$PROMPT``, see 'Customizing the Prompt' "
         'http://xon.sh/tutorial.html#customizing-the-prompt.',
-        default='xonsh.environ.DEFAULT_TITLE'),
+        default='``xonsh.environ.DEFAULT_TITLE``'),
     'UPDATE_OS_ENVIRON': VarDocs(
-        "If True os.environ will always be updated "
+        "If True ``os.environ`` will always be updated "
         "when the xonsh environment changes. The environment can be reset to "
-        "the default value by calling '__xonsh_env__.undo_replace_env()'"),
+        "the default value by calling ``__xonsh_env__.undo_replace_env()``"),
     'VC_BRANCH_TIMEOUT': VarDocs(
         'The timeout (in seconds) for version control '
         'branch computations. This is a timeout per subprocess call, so the '
         'total time to compute will be larger than this in many cases.'),
     'VI_MODE': VarDocs(
-        "Flag to enable 'vi_mode' in the 'prompt_toolkit' shell."),
+        "Flag to enable ``vi_mode`` in the ``prompt_toolkit`` shell."),
     'VIRTUAL_ENV': VarDocs(
         'Path to the currently active Python environment.', configurable=False),
     'WIN_UNICODE_CONSOLE': VarDocs(
         "Enables unicode support in windows terminals. Requires the external "
-        "library 'win_unicode_console'.",
+        "library ``win_unicode_console``.",
         configurable=ON_WINDOWS),
     'XDG_CONFIG_HOME': VarDocs(
         'Open desktop standard configuration home dir. This is the same '
         'default as used in the standard.', configurable=False,
-        default="'~/.config'"),
+        default="``~/.config``"),
     'XDG_DATA_HOME': VarDocs(
         'Open desktop standard data home dir. This is the same default as '
-        'used in the standard.', default="'~/.local/share'"),
+        'used in the standard.', default="``~/.local/share``"),
     'XONSHCONFIG': VarDocs(
         'The location of the static xonsh configuration file, if it exists. '
         'This is in JSON format.', configurable=False,
-        default="'$XONSH_CONFIG_DIR/config.json'"),
+        default="``$XONSH_CONFIG_DIR/config.json``"),
     'XONSHRC': VarDocs(
-        'A tuple of the locations of run control files, if they exist.  User '
+        'A list of the locations of run control files, if they exist.  User '
         'defined run control file will supersede values set in system-wide '
         'control file if there is a naming collision.', default=(
-            "On Linux & Mac OSX: ('/etc/xonshrc', '~/.xonshrc')\n"
-            "On Windows: ('%ALLUSERSPROFILE%\\xonsh\\xonshrc', '~/.xonshrc')")),
+            "On Linux & Mac OSX: ``['/etc/xonshrc', '~/.xonshrc']``\n"
+            "\nOn Windows: "
+            "``['%ALLUSERSPROFILE%\\\\xonsh\\\\xonshrc', '~/.xonshrc']``")),
     'XONSH_AUTOPAIR': VarDocs(
         'Whether Xonsh will auto-insert matching parentheses, brackets, and '
         'quotes. Only available under the prompt-toolkit shell.'
@@ -600,7 +604,7 @@ def DEFAULT_DOCS():
         'a color map. Run ``xonfig styles`` to see the available styles.'),
     'XONSH_CONFIG_DIR': VarDocs(
         'This is the location where xonsh configuration information is stored.',
-        configurable=False, default="'$XDG_CONFIG_HOME/xonsh'"),
+        configurable=False, default="``$XDG_CONFIG_HOME/xonsh``"),
     'XONSH_DEBUG': VarDocs(
         'Sets the xonsh debugging level. This may be an integer or a boolean, '
         'with higher values cooresponding to higher debuging levels and more '
@@ -608,52 +612,52 @@ def DEFAULT_DOCS():
         'will supress amalgamated imports.', configurable=False),
     'XONSH_DATA_DIR': VarDocs(
         'This is the location where xonsh data files are stored, such as '
-        'history.', default="'$XDG_DATA_HOME/xonsh'"),
+        'history.', default="``$XDG_DATA_HOME/xonsh``"),
     'XONSH_ENCODING': VarDocs(
         'This is the encoding that xonsh should use for subprocess operations.',
-        default='sys.getdefaultencoding()'),
+        default='``sys.getdefaultencoding()``'),
     'XONSH_ENCODING_ERRORS': VarDocs(
         'The flag for how to handle encoding errors should they happen. '
         'Any string flag that has been previously registered with Python '
         "is allowed. See the 'Python codecs documentation' "
         "(https://docs.python.org/3/library/codecs.html#error-handlers) "
         'for more information and available options.',
-        default="'surrogateescape'"),
+        default="``surrogateescape``"),
     'XONSH_GITSTATUS_*': VarDocs(
         'Symbols for gitstatus prompt. Default values are: \n\n'
-        '* XONSH_GITSTATUS_HASH: `:`\n'
-        '* XONSH_GITSTATUS_BRANCH: `{CYAN}`\n'
-        '* XONSH_GITSTATUS_OPERATION: `{CYAN}`\n'
-        '* XONSH_GITSTATUS_STAGED: `{RED}●`\n'
-        '* XONSH_GITSTATUS_CONFLICTS: `{RED}×`\n'
-        '* XONSH_GITSTATUS_CHANGED: `{BLUE}+`\n'
-        '* XONSH_GITSTATUS_UNTRACKED: `…`\n'
-        '* XONSH_GITSTATUS_STASHED: `⚑`\n'
-        '* XONSH_GITSTATUS_CLEAN: `{BOLD_GREEN}✓`\n'
-        '* XONSH_GITSTATUS_AHEAD: `↑·`\n'
-        '* XONSH_GITSTATUS_BEHIND: `↓·`\n'
+        '* ``XONSH_GITSTATUS_HASH``: ``:``\n'
+        '* ``XONSH_GITSTATUS_BRANCH``: ``{CYAN}``\n'
+        '* ``XONSH_GITSTATUS_OPERATION``: ``{CYAN}``\n'
+        '* ``XONSH_GITSTATUS_STAGED``: ``{RED}●``\n'
+        '* ``XONSH_GITSTATUS_CONFLICTS``: ``{RED}×``\n'
+        '* ``XONSH_GITSTATUS_CHANGED``: ``{BLUE}+``\n'
+        '* ``XONSH_GITSTATUS_UNTRACKED``: ``…``\n'
+        '* ``XONSH_GITSTATUS_STASHED``: ``⚑``\n'
+        '* ``XONSH_GITSTATUS_CLEAN``: ``{BOLD_GREEN}✓``\n'
+        '* ``XONSH_GITSTATUS_AHEAD``: ``↑·``\n'
+        '* ``XONSH_GITSTATUS_BEHIND``: ``↓·``\n'
     ),
     'XONSH_HISTORY_FILE': VarDocs(
         'Location of history file (deprecated).',
-        configurable=False, default="'~/.xonsh_history'"),
+        configurable=False, default="``~/.xonsh_history``"),
     'XONSH_HISTORY_SIZE': VarDocs(
         'Value and units tuple that sets the size of history after garbage '
         'collection. Canonical units are:\n\n'
-        "- 'commands' for the number of past commands executed,\n"
-        "- 'files' for the number of history files to keep,\n"
-        "- 's' for the number of seconds in the past that are allowed, and\n"
-        "- 'b' for the number of bytes that history may consume.\n\n"
+        "- ``commands`` for the number of past commands executed,\n"
+        "- ``files`` for the number of history files to keep,\n"
+        "- ``s`` for the number of seconds in the past that are allowed, and\n"
+        "- ``b`` for the number of bytes that history may consume.\n\n"
         "Common abbreviations, such as '6 months' or '1 GB' are also allowed.",
-        default="(8128, 'commands') or '8128 commands'"),
+        default="``(8128, 'commands')`` or ``'8128 commands'``"),
     'XONSH_INTERACTIVE': VarDocs(
-        'True if xonsh is running interactively, and False otherwise.',
+        '``True`` if xonsh is running interactively, and ``False`` otherwise.',
         configurable=False),
     'XONSH_LOGIN': VarDocs(
-        'True if xonsh is running as a login shell, and False otherwise.',
+        '``True`` if xonsh is running as a login shell, and ``False`` otherwise.',
         configurable=False),
     'XONSH_SHOW_TRACEBACK': VarDocs(
         'Controls if a traceback is shown if exceptions occur in the shell. '
-        'Set to True to always show traceback or False to always hide. '
+        'Set to ``True`` to always show traceback or ``False`` to always hide. '
         'If undefined then the traceback is hidden but a notice is shown on how '
         'to enable the full traceback.'),
     'XONSH_SOURCE': VarDocs(
@@ -661,19 +665,23 @@ def DEFAULT_DOCS():
         "to the currently executing script's file.",
         configurable=False),
     'XONSH_STORE_STDIN': VarDocs(
-        'Whether or not to store the stdin that is supplied to the !() and ![] '
-        'operators.'),
+        'Whether or not to store the stdin that is supplied to the '
+        '``!()`` and ``![]`` operators.'),
     'XONSH_STORE_STDOUT': VarDocs(
-        'Whether or not to store the stdout and stderr streams in the '
+        'Whether or not to store the ``stdout`` and ``stderr`` streams in the '
         'history files.'),
     'XONSH_TRACEBACK_LOGFILE': VarDocs(
         'Specifies a file to store the traceback log to, regardless of whether '
-        'XONSH_SHOW_TRACEBACK has been set. Its value must be a writable file '
+        '``XONSH_SHOW_TRACEBACK`` has been set. Its value must be a writable file '
         'or None / the empty string if traceback logging is not desired. '
         'Logging to a file is not enabled by default.'),
     'XONSH_DATETIME_FORMAT': VarDocs(
         'The format that is used for ``datetime.strptime()`` in various places'
         'i.e the history timestamp option'),
+    'UPDATE_PROMPT_ON_KEYPRESS': VarDocs(
+        'Disables caching the prompt between commands, '
+        'so that it would be reevaluated on each keypress. '
+        'Disabled by default because of the incurred performance penalty.'),
     }
 
 

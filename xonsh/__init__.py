@@ -1,4 +1,4 @@
-__version__ = '0.4.6'
+__version__ = '0.4.7'
 
 # amalgamate exclude jupyter_kernel parser_table parser_test_table pyghooks
 # amalgamate exclude winutils wizard pytest_plugin
@@ -57,26 +57,26 @@ else:
         _sys.modules['xonsh.proc'] = __amalgam__
         xontribs = __amalgam__
         _sys.modules['xonsh.xontribs'] = __amalgam__
+        base_shell = __amalgam__
+        _sys.modules['xonsh.base_shell'] = __amalgam__
         dirstack = __amalgam__
         _sys.modules['xonsh.dirstack'] = __amalgam__
         history = __amalgam__
         _sys.modules['xonsh.history'] = __amalgam__
         inspectors = __amalgam__
         _sys.modules['xonsh.inspectors'] = __amalgam__
-        environ = __amalgam__
-        _sys.modules['xonsh.environ'] = __amalgam__
-        tracer = __amalgam__
-        _sys.modules['xonsh.tracer'] = __amalgam__
-        base_shell = __amalgam__
-        _sys.modules['xonsh.base_shell'] = __amalgam__
-        replay = __amalgam__
-        _sys.modules['xonsh.replay'] = __amalgam__
         xonfig = __amalgam__
         _sys.modules['xonsh.xonfig'] = __amalgam__
-        aliases = __amalgam__
-        _sys.modules['xonsh.aliases'] = __amalgam__
+        environ = __amalgam__
+        _sys.modules['xonsh.environ'] = __amalgam__
         readline_shell = __amalgam__
         _sys.modules['xonsh.readline_shell'] = __amalgam__
+        tracer = __amalgam__
+        _sys.modules['xonsh.tracer'] = __amalgam__
+        replay = __amalgam__
+        _sys.modules['xonsh.replay'] = __amalgam__
+        aliases = __amalgam__
+        _sys.modules['xonsh.aliases'] = __amalgam__
         built_ins = __amalgam__
         _sys.modules['xonsh.built_ins'] = __amalgam__
         execer = __amalgam__

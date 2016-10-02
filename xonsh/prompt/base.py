@@ -24,22 +24,24 @@ from xonsh.prompt.vc_branch import (
 from xonsh.prompt.gitstatus import gitstatus_prompt
 
 
-FORMATTER_DICT = xl.LazyObject(lambda: dict(
-    user=os.environ.get('USERNAME' if xp.ON_WINDOWS else 'USER', '<user>'),
-    prompt_end='#' if xt.is_superuser() else '$',
-    hostname=socket.gethostname().split('.', 1)[0],
-    cwd=_dynamically_collapsed_pwd,
-    cwd_dir=lambda: os.path.dirname(_replace_home_cwd()),
-    cwd_base=lambda: os.path.basename(_replace_home_cwd()),
-    short_cwd=_collapsed_pwd,
-    curr_branch=current_branch,
-    branch_color=branch_color,
-    branch_bg_color=branch_bg_color,
-    current_job=_current_job,
-    env_name=env_name,
-    vte_new_tab_cwd=vte_new_tab_cwd,
-    gitstatus=gitstatus_prompt,
-), globals(), 'FORMATTER_DICT')
+@xl.lazyobject
+def FORMATTER_DICT():
+    return dict(
+        user=os.environ.get('USERNAME' if xp.ON_WINDOWS else 'USER', '<user>'),
+        prompt_end='#' if xt.is_superuser() else '$',
+        hostname=socket.gethostname().split('.', 1)[0],
+        cwd=_dynamically_collapsed_pwd,
+        cwd_dir=lambda: os.path.dirname(_replace_home_cwd()),
+        cwd_base=lambda: os.path.basename(_replace_home_cwd()),
+        short_cwd=_collapsed_pwd,
+        curr_branch=current_branch,
+        branch_color=branch_color,
+        branch_bg_color=branch_bg_color,
+        current_job=_current_job,
+        env_name=env_name,
+        vte_new_tab_cwd=vte_new_tab_cwd,
+        gitstatus=gitstatus_prompt,
+    )
 
 
 @xl.lazyobject
@@ -221,4 +223,6 @@ def _format_value(val, spec, conv):
     val = _FORMATTER.convert_field(val, conv)
     if spec:
         val = _FORMATTER.format(spec, val)
+    if not isinstance(val, str):
+        val = str(val)
     return val

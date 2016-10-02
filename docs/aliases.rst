@@ -100,18 +100,6 @@ Replays a xonsh history file.  See `the replay section of the history tutorial
 .. command-help:: xonsh.replay.replay_main
 
 
-``!n``
-====================
-Re-runs the nth command as specified in the argument.
-
-.. command-help:: xonsh.aliases.bang_n
-
-
-``!!``
-==============
-Re-runs the last command. Just a wrapper around ``!n``.
-
-
 ``timeit``
 ===============
 Runs timing study on arguments. Similar to IPython's ``%timeit`` magic.

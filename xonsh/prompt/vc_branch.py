@@ -1,57 +1,44 @@
 # -*- coding: utf-8 -*-
 """Prompt formatter for simple version control branchs"""
 
-import os
-import sys
-import time
 import builtins
-import warnings
+import os
 import subprocess
+import sys
+import threading, queue
+import time
+import warnings
 
 import xonsh.platform as xp
+import xonsh.tools as xt
 
+
+def _get_git_branch(q):
+    try:
+        status = subprocess.check_output(['git', 'status'],
+                                         stderr=subprocess.DEVNULL)
+    except (subprocess.CalledProcessError, OSError):
+        q.put(None)
+    else:
+        info = xt.decode_bytes(status)
+        branch = info.splitlines()[0].split()[-1]
+        q.put(branch)
 
 def get_git_branch():
-    """Attempts to find the current git branch.  If no branch is found, then
-    an empty string is returned. If a timeout occured, the timeout exception
-    (subprocess.TimeoutExpired) is returned.
+    """Attempts to find the current git branch. If this could not
+    be determined (timeout, not in a git repo, etc.) then this returns None.
     """
     branch = None
-    env = builtins.__xonsh_env__
-    cwd = env['PWD']
-    denv = env.detype()
-    vcbt = env['VC_BRANCH_TIMEOUT']
-    if not xp.ON_WINDOWS:
-        prompt_scripts = ['/usr/lib/git-core/git-sh-prompt',
-                          '/usr/local/etc/bash_completion.d/git-prompt.sh']
-        for script in prompt_scripts:
-            # note that this is about 10x faster than bash -i "__git_ps1"
-            inp = 'source {}; __git_ps1 "${{1:-%s}}"'.format(script)
-            try:
-                branch = subprocess.check_output(['bash'], cwd=cwd, input=inp,
-                                                 stderr=subprocess.PIPE, timeout=vcbt, env=denv,
-                                                 universal_newlines=True)
-                break
-            except subprocess.TimeoutExpired as e:
-                branch = e
-                break
-            except (subprocess.CalledProcessError, FileNotFoundError):
-                continue
-    # fall back to using the git binary if the above failed
-    if branch is None:
-        cmd = ['git', 'rev-parse', '--abbrev-ref', 'HEAD']
-        try:
-            s = subprocess.check_output(cmd, cwd=cwd, timeout=vcbt, env=denv,
-                                        stderr=subprocess.PIPE, universal_newlines=True)
-            if xp.ON_WINDOWS and len(s) == 0:
-                # Workaround for a bug in ConEMU/cmder, retry without redirection
-                s = subprocess.check_output(cmd, cwd=cwd, timeout=vcbt,
-                                            env=denv, universal_newlines=True)
-            branch = s.strip()
-        except subprocess.TimeoutExpired as e:
-            branch = e
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            branch = None
+    timeout = builtins.__xonsh_env__.get('VC_BRANCH_TIMEOUT')
+    q = queue.Queue()
+
+    t = threading.Thread(target=_get_git_branch, args=(q,))
+    t.start()
+    t.join(timeout=timeout)
+    try:
+        branch = q.get_nowait()
+    except queue.Empty:
+        branch = None
     return branch
 
 
@@ -137,30 +124,34 @@ def current_branch(pad=NotImplemented):
     return branch or None
 
 
-def git_dirty_working_directory(cwd=None, include_untracked=False):
-    """Returns whether or not the git directory is dirty. If this could not
-    be determined (timeout, file not sound, etc.) then this returns None.
-    """
-    cmd = ['git', 'status', '--porcelain']
-    if include_untracked:
-        cmd.append('--untracked-files=normal')
-    else:
-        cmd.append('--untracked-files=no')
-    env = builtins.__xonsh_env__
-    cwd = env['PWD']
-    denv = env.detype()
-    vcbt = env['VC_BRANCH_TIMEOUT']
+def _git_dirty_working_directory(q, include_untracked):
+    status = None
     try:
-        s = subprocess.check_output(cmd, stderr=subprocess.PIPE, cwd=cwd,
-                                    timeout=vcbt, universal_newlines=True,
-                                    env=denv)
-        if xp.ON_WINDOWS and len(s) == 0:
-            # Workaround for a bug in ConEMU/cmder, retry without redirection
-            s = subprocess.check_output(cmd, cwd=cwd, timeout=vcbt,
-                                        env=denv, universal_newlines=True)
-        return bool(s)
-    except (subprocess.CalledProcessError, subprocess.TimeoutExpired,
-            FileNotFoundError):
+        cmd = ['git', 'status', '--porcelain']
+        if include_untracked:
+            cmd.append('--untracked-files=normal')
+        else:
+            cmd.append('--untracked-files=no')
+        status = subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
+    except (subprocess.CalledProcessError, OSError):
+        q.put(None)
+    if status is not None:
+        return q.put(bool(status))
+
+
+def git_dirty_working_directory(include_untracked=False):
+    """Returns whether or not the git directory is dirty. If this could not
+    be determined (timeout, file not found, etc.) then this returns None.
+    """
+    timeout = builtins.__xonsh_env__.get("VC_BRANCH_TIMEOUT")
+    q = queue.Queue()
+    t = threading.Thread(target=_git_dirty_working_directory,
+                         args=(q, include_untracked))
+    t.start()
+    t.join(timeout=timeout)
+    try:
+        return q.get_nowait()
+    except queue.Empty:
         return None
 
 
