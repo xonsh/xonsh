@@ -645,7 +645,8 @@ def DEFAULT_DOCS():
         '``True`` if xonsh is running as a login shell, and ``False`` otherwise.',
         configurable=False),
     'XONSH_PROC_FREQUENCY': VarDocs('The process frquency is the time that '
-        'xonsh process threads sleep for while running command pipelines.'),
+        'xonsh process threads sleep for while running command pipelines. '
+        'The value has units of seconds [s].'),
     'XONSH_SHOW_TRACEBACK': VarDocs(
         'Controls if a traceback is shown if exceptions occur in the shell. '
         'Set to ``True`` to always show traceback or ``False`` to always hide. '
