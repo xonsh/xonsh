@@ -4,6 +4,7 @@ import shutil
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+import pickle
 
 from xonsh.tools import print_color, ON_WINDOWS
 
@@ -56,7 +57,7 @@ def buf_to_color_str(buf):
 
 
 def show():
-    fig = plt.gcf()
+    fig = pickle.loads(pickle.dumps(plt.gcf()))
     w, h = shutil.get_terminal_size()
     if ON_WINDOWS:
         w -= 1  # @melund reports that win terminals are too thin
@@ -64,3 +65,4 @@ def show():
     buf = figure_to_rgb_array(fig, w, h)
     s = buf_to_color_str(buf)
     print_color(s)
+    plt.close(fig)
