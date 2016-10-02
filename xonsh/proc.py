@@ -464,8 +464,11 @@ class PopenThread(threading.Thread):
         #       pseudoterminal.
         buf = array.array('h', [0, 0, 0, 0])
         # 1 = stdout here
-        fcntl.ioctl(1, termios.TIOCGWINSZ, buf, True)
-        fcntl.ioctl(self.stdout_fd, termios.TIOCSWINSZ, buf)
+        try:
+            fcntl.ioctl(1, termios.TIOCGWINSZ, buf, True)
+            fcntl.ioctl(self.stdout_fd, termios.TIOCSWINSZ, buf)
+        except OSError:
+            pass
 
     #
     # SIGINT handler
