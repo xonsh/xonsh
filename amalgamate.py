@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """A package-based, source code amalgamater."""
 import os
 import sys
