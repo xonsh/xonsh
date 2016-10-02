@@ -222,4 +222,5 @@ def default_backgroundable_predictors():
         fish=predict_shell,
         xonsh=predict_shell,
         ssh=predict_false,
+        startx=predict_false,
         )
