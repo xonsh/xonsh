@@ -12,5 +12,5 @@ Modules that provides ``FORMATTER_DICT``.
     cwd
     env
     gitstatus
-    jobs
+    job
     vc_branch
