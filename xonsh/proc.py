@@ -325,7 +325,7 @@ class PopenThread(threading.Thread):
             self.stdin = io.BytesIO()
             self.stdout = io.BytesIO()
             self.stderr = io.BytesIO()
-        self.timeout = 1e-4
+        self.timeout = env.get('XONSH_PROC_FREQUENCY')
         self.suspended = False
         self.prevs_are_closed = False
         self.start()
@@ -601,6 +601,8 @@ class PopenThread(threading.Thread):
 
     def send_signal(self, signal):
         """Dispatches to Popen.send_signal()."""
+        if self.proc is None:
+            return
         try:
             rtn = self.proc.send_signal(signal)
         except ProcessLookupError:
@@ -1411,6 +1413,7 @@ class CommandPipeline:
         if uninew and hasattr(stderr, 'buffer'):
             stderr = stderr.buffer
         # read from process while it is running
+        timeout = builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
         while proc.poll() is None:
             if self._prev_procs_done():
                 self._close_prev_procs()
@@ -1420,7 +1423,7 @@ class CommandPipeline:
                 return
             yield from safe_readlines(stdout, 1024)
             self.stream_stderr(safe_readlines(stderr, 1024))
-            time.sleep(1e-4)
+            time.sleep(timeout)
         # read from process now that it is over
         yield from safe_readlines(stdout)
         self.stream_stderr(safe_readlines(stderr))

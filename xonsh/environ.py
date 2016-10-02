@@ -154,6 +154,7 @@ def DEFAULT_ENSURERS():
     'XONSH_ENCODING_ERRORS': (is_string, ensure_string, ensure_string),
     'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
     'XONSH_LOGIN': (is_bool, to_bool, bool_to_str),
+    'XONSH_PROC_FREQUENCY': (is_float, float, str),
     'XONSH_SHOW_TRACEBACK': (is_bool, to_bool, bool_to_str),
     'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
     'XONSH_STORE_STDIN': (is_bool, to_bool, bool_to_str),
@@ -294,6 +295,7 @@ def DEFAULT_VALUES():
         'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
         'XONSH_HISTORY_SIZE': (8128, 'commands'),
         'XONSH_LOGIN': False,
+        'XONSH_PROC_FREQUENCY': 1e-4,
         'XONSH_SHOW_TRACEBACK': False,
         'XONSH_STORE_STDIN': False,
         'XONSH_STORE_STDOUT': False,
@@ -642,6 +644,8 @@ def DEFAULT_DOCS():
     'XONSH_LOGIN': VarDocs(
         '``True`` if xonsh is running as a login shell, and ``False`` otherwise.',
         configurable=False),
+    'XONSH_PROC_FREQUENCY': VarDocs('The process frquency is the time that '
+        'xonsh process threads sleep for while running command pipelines.'),
     'XONSH_SHOW_TRACEBACK': VarDocs(
         'Controls if a traceback is shown if exceptions occur in the shell. '
         'Set to ``True`` to always show traceback or ``False`` to always hide. '
