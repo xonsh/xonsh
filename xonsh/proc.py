@@ -373,8 +373,13 @@ class PopenThread(threading.Thread):
                 break
             time.sleep(self.timeout)
         # final closing read.
-        self._read_write(procout, stdout, sys.__stdout__)
-        self._read_write(procerr, stderr, sys.__stderr__)
+        cntout = cnterr = 0
+        while cntout < 10 and cnterr < 10:
+            i = self._read_write(procout, stdout, sys.__stdout__)
+            j = self._read_write(procerr, stderr, sys.__stderr__)
+            cntout = 0 if i > 0 else cntout + 1
+            cnterr = 0 if j > 0 else cnterr + 1
+            time.sleep(self.timeout)
         # kill the process if it is still alive. Happens when piping.
         time.sleep(self.timeout)
         if proc.poll() is None and not self.suspended:
@@ -389,12 +394,15 @@ class PopenThread(threading.Thread):
 
     def _read_write(self, reader, writer, stdbuf):
         """Read from a buffer and write into memory or back down to
-        the standard buffer, line-by-line, as approriate.
+        the standard buffer, line-by-line, as approriate. Returns the number of
+        lines read.
         """
         if reader is None:
-            return
-        for line in iter(reader.readline, b''):
+            return 0
+        i = -1
+        for i, line in enumerate(iter(reader.readline, b'')):
             self._alt_mode_switch(line, writer, stdbuf)
+        return i + 1
 
     def _alt_mode_switch(self, line, membuf, stdbuf):
         """Enables recursively switching between normal capturing mode
