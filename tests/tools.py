@@ -89,7 +89,7 @@ class DummyEnv(MutableMapping):
         self._d = dict(*args, **kwargs)
 
     def detype(self):
-        return self._d
+        return {k: str(v) for k, v in self._d.items()}
 
     def __getitem__(self, k):
         return self._d[k]

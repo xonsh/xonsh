@@ -26,6 +26,7 @@ def test_runsubproc_simple(xonsh_builtins, xonsh_execer):
         os.pathsep + os.path.dirname(sys.executable)
     xonsh_builtins.__xonsh_env__['XONSH_ENCODING'] = 'utf8'
     xonsh_builtins.__xonsh_env__['XONSH_ENCODING_ERRORS'] = 'surrogateescape'
+    xonsh_builtins.__xonsh_env__['XONSH_PROC_FREQUENCY'] = 1e-4
     if ON_WINDOWS:
         pathext = xonsh_builtins.__xonsh_env__['PATHEXT']
         xonsh_builtins.__xonsh_env__['PATHEXT'] = ';'.join(pathext)
@@ -35,9 +36,10 @@ def test_runsubproc_simple(xonsh_builtins, xonsh_execer):
     out = run_subproc([[pwd]], captured='stdout')
     assert out.rstrip() == new_cwd
 
-    
+
 @skip_if_on_windows
 def test_runsubproc_redirect_out_to_file(xonsh_builtins, xonsh_execer):
+    xonsh_builtins.__xonsh_env__['XONSH_PROC_FREQUENCY'] = 1e-4
     run_subproc([['pwd', 'out>', 'tttt']], captured='stdout')
     with open('tttt') as f:
         assert f.read().rstrip() == os.getcwd()
