@@ -27,7 +27,11 @@ def figure_to_rgb_array(fig, width, height):
         ax.set_xlabel('')
         ax.set_ylabel('')
         ax.set_title('')
-    fig_copy.set_tight_layout(True)
+    # remove all space between subplots
+    fig_copy.subplots_adjust(wspace=0, hspace=0)
+    # move all subplots to take the entirety of space in the figure
+    # leave only one line for top and bottom
+    fig_copy.subplots_adjust(bottom=1/height, top=1-1/height, left=0, right=1)
     fig_copy.set_frameon(False)
     fig_copy.set_facecolor('w')
     font_size = matplotlib.rcParams['font.size']
