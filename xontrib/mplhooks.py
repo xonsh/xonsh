@@ -14,26 +14,33 @@ def figure_to_rgb_array(fig, width, height):
 
     Forked from http://www.icare.univ-lille1.fr/wiki/index.php/How_to_convert_a_matplotlib_figure_to_a_numpy_array_or_a_PIL_image
     """
-    w, h = fig.canvas.get_width_height()
-    dpi = fig.get_dpi()
-    fig.set_size_inches(width/dpi, height/dpi, forward=True)
-    width, height = fig.canvas.get_width_height()
-    ax = fig.gca()
+    # perform a deep copy using pickel because
+    # Figure is currently not compatible with 'deepcopy'
+    fig_copy = pickle.loads(pickle.dumps(fig))
+    w, h = fig_copy.canvas.get_width_height()
+    dpi = fig_copy.get_dpi()
+    fig_copy.set_size_inches(width/dpi, height/dpi, forward=True)
+    width, height = fig_copy.canvas.get_width_height()
+    ax = fig_copy.gca()
     ax.set_xticklabels([])
     ax.set_yticklabels([])
-    fig.set_tight_layout(True)
-    fig.set_frameon(False)
-    fig.set_facecolor('w')
+    fig_copy.set_tight_layout(True)
+    fig_copy.set_frameon(False)
+    fig_copy.set_facecolor('w')
     font_size = matplotlib.rcParams['font.size']
     matplotlib.rcParams.update({'font.size': 1})
 
     # Draw the renderer and get the RGB buffer from the figure
-    fig.canvas.draw()
-    buf = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8)
+    fig_copy.canvas.draw()
+    buf = np.fromstring(fig_copy.canvas.tostring_rgb(), dtype=np.uint8)
     buf.shape = (height, width, 3)
 
     # clean up and return
     matplotlib.rcParams.update({'font.size': font_size})
+
+    # close the figure that was created
+    plt.close(fig_copy)
+
     return buf
 
 
@@ -57,9 +64,7 @@ def buf_to_color_str(buf):
 
 
 def show():
-    # perform a deep copy using pickel because
-    # Figure is currently not compatible with 'deepcopy'
-    fig = pickle.loads(pickle.dumps(plt.gcf()))
+    fig = plt.gcf()
     w, h = shutil.get_terminal_size()
     if ON_WINDOWS:
         w -= 1  # @melund reports that win terminals are too thin
@@ -67,4 +72,3 @@ def show():
     buf = figure_to_rgb_array(fig, w, h)
     s = buf_to_color_str(buf)
     print_color(s)
-    plt.close(fig)  # close the figure that was created
