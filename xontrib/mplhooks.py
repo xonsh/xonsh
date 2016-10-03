@@ -57,6 +57,8 @@ def buf_to_color_str(buf):
 
 
 def show():
+    # perform a deep copy using pickel because
+    # Figure is currently not compatible with 'deepcopy'
     fig = pickle.loads(pickle.dumps(plt.gcf()))
     w, h = shutil.get_terminal_size()
     if ON_WINDOWS:
@@ -65,4 +67,4 @@ def show():
     buf = figure_to_rgb_array(fig, w, h)
     s = buf_to_color_str(buf)
     print_color(s)
-    plt.close(fig)
+    plt.close(fig)  # close the figure that was created
