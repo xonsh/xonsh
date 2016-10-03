@@ -1,7 +1,11 @@
+import pytest
+
+# make sure to skip these tests entirely if numpy/matplotlib is not present
+np = pytest.importorskip("numpy")
+matplotlib = pytest.importorskip("matplotlib")
+plt = pytest.importorskip("matplotlib.pyplot")
+
 from xontrib import mplhooks
-import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
 
 
 # some default settings that are temporarily changed by mpl
