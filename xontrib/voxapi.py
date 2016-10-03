@@ -133,6 +133,8 @@ class Vox(collections.abc.Mapping):
         # NOTE: clear=True is the same as delete then create.
         # NOTE: upgrade=True is its own method
         env_path = os.path.join(self.venvdir, name)
+        if not self._check_reserved(env_path):
+            raise ValueError("venv can't contain reserved names ({})".format(', '.join(_subdir_names())))
         venv.create(
             env_path,
             system_site_packages=system_site_packages, symlinks=symlinks,
@@ -177,6 +179,10 @@ class Vox(collections.abc.Mapping):
         # Ok, do what we came here to do.
         venv.create(env_path, upgrade=True, **flags)
 
+    @staticmethod
+    def _check_reserved(name):
+        return os.path.basename(name) not in _subdir_names()  # FIXME: Check the middle components, too
+
     def __getitem__(self, name):
         """Get information about a virtual environment.
 
@@ -187,23 +193,27 @@ class Vox(collections.abc.Mapping):
             the current one (throws a KeyError if there isn't one).
         """
         if name is ...:
-            env_path = builtins.__xonsh_env__['VIRTUAL_ENV']
-        elif os.path.isabs(name):
-            env_path = name
+            env_paths = [builtins.__xonsh_env__['VIRTUAL_ENV']]
         else:
-            env_path = os.path.join(self.venvdir, name)
+            if not self._check_reserved(name):
+                # Don't allow a venv that could be a venv special dir
+                raise KeyError()
 
-        ve = _mkvenv(env_path)
+            env_paths = []
+            if os.path.isdir(name):
+                env_paths += [name]
+            env_paths += [os.path.join(self.venvdir, name)]
 
-        if os.path.basename(ve.env) in _subdir_names():  # FIXME: Check the inner components, too
-            # Don't allow a venv that could be a venv special dir
+        for ep in env_paths:
+            ve = _mkvenv(ep)
+
+            # Actually check if this is an actual venv or just a organizational directory
+            # eg, if 'spam/eggs' is a venv, reject 'spam'
+            if not os.path.exists(ve.bin):
+                continue
+            return ve
+        else:
             raise KeyError()
-
-        # Actually check if this is an actual venv or just a organizational directory
-        # eg, if 'spam/eggs' is a venv, reject 'spam'
-        if not os.path.exists(ve.bin):
-            raise KeyError()
-        return ve
 
     def __contains__(self, name):
         # For some reason, MutableMapping seems to do this against iter, which is just silly.
