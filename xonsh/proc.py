@@ -379,7 +379,7 @@ class PopenThread(threading.Thread):
             j = self._read_write(procerr, stderr, sys.__stderr__)
             cntout = 0 if i > 0 else cntout + 1
             cnterr = 0 if j > 0 else cnterr + 1
-            time.sleep(self.timeout)
+            time.sleep(self.timeout * (10 - cntout))
         # kill the process if it is still alive. Happens when piping.
         time.sleep(self.timeout)
         if proc.poll() is None and not self.suspended:
