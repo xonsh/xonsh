@@ -1,6 +1,6 @@
 import pytest
 
-# make sure to skip these tests entirely if numpy/matplotlib is not present
+# make sure to skip these tests entirely if numpy/matplotlib are not present
 np = pytest.importorskip("numpy")
 matplotlib = pytest.importorskip("matplotlib")
 plt = pytest.importorskip("matplotlib.pyplot")
