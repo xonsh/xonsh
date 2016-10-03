@@ -2,7 +2,7 @@
 
 **Changed:**
 
-* `vox activate` now accepts relative directories.
+* ``vox activate`` now accepts relative directories.
 
 **Deprecated:** None
 
