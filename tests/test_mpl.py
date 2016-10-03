@@ -11,7 +11,6 @@ from xontrib import mplhooks
 # some default settings that are temporarily changed by mpl
 FONT_SIZE    = 22
 FACE_COLOR   = (0.0, 1.0, 0.0, 1.0)
-TIGHT_LAYOUT = False
 
 
 def create_figure():
@@ -19,7 +18,6 @@ def create_figure():
     f, ax = plt.subplots()
     ax.plot(np.arange(20), np.arange(20))
     # set the figure parameters such that mpl will require changes
-    f.set_tight_layout(TIGHT_LAYOUT)
     f.set_facecolor(FACE_COLOR)
     matplotlib.rcParams.update({'font.size': FONT_SIZE})
     return f
@@ -32,17 +30,6 @@ def test_mpl_preserve_font_size():
     s = mplhooks.figure_to_rgb_array(f, 0.5*width, 0.5*height)
     exp = FONT_SIZE
     obs = matplotlib.rcParams['font.size']
-    plt.close(f)
-    assert exp == obs
-
-
-def test_mpl_preserve_tight_layout():
-    """Make sure that the figure preserves tight layout settings"""
-    f = create_figure()
-    width, height = f.canvas.get_width_height()
-    s = mplhooks.figure_to_rgb_array(f, 0.5*width, 0.5*height)
-    exp = TIGHT_LAYOUT
-    obs = f.get_tight_layout()
     plt.close(f)
     assert exp == obs
 
