@@ -3,9 +3,11 @@
 import builtins
 import stat
 import os
+import pytest
 from xontrib.voxapi import Vox
 
 from tools import skip_if_on_conda
+from xonsh.platform import ON_WINDOWS
 
 
 @skip_if_on_conda
@@ -97,6 +99,7 @@ def test_path(xonsh_builtins, tmpdir):
     
     assert oldpath == xonsh_builtins.__xonsh_env__['PATH']
 
+
 @skip_if_on_conda
 def test_crud_subdir(xonsh_builtins, tmpdir):
     """
@@ -121,3 +124,24 @@ def test_crud_subdir(xonsh_builtins, tmpdir):
     del vox['spam/eggs']
 
     assert not tmpdir.join('spam', 'eggs').check()
+
+
+@skip_if_on_conda
+def test_crud_subdir(xonsh_builtins, tmpdir):
+    """
+    Creates a virtual environment, gets it, enumerates it, and then deletes it.
+    """
+    xonsh_builtins.__xonsh_env__['VIRTUALENV_HOME'] = str(tmpdir)
+
+    vox = Vox()
+    with pytest.raises(ValueError):
+        if ON_WINDOWS:
+            vox.create('Scripts')
+        else:
+            vox.create('bin')
+
+    with pytest.raises(ValueError):
+        if ON_WINDOWS:
+            vox.create('spameggs/Scripts')
+        else:
+            vox.create('spameggs/bin')
