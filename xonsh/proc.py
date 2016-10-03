@@ -1610,8 +1610,6 @@ class CommandPipeline:
         """Applies the results to the current history object."""
         hist = builtins.__xonsh_history__
         hist.last_cmd_rtn = self.proc.returncode
-        if builtins.__xonsh_env__.get('XONSH_STORE_STDOUT'):
-            hist.last_cmd_out = self.output
 
     def _raise_subproc_error(self):
         """Raises a subprocess error, if we are suppossed to."""
