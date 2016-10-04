@@ -223,4 +223,5 @@ def default_backgroundable_predictors():
         xonsh=predict_shell,
         ssh=predict_false,
         startx=predict_false,
+        vi=predict_false,
         )
