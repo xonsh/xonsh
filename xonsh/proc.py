@@ -1324,6 +1324,15 @@ def safe_readlines(handle, hint=-1):
     return lines
 
 
+def safe_readable(handle):
+    """Attempts to find if the handle is readable without throwing an error."""
+    try:
+        status = handle.readable()
+    except OSError:
+        status = False
+    return status
+
+
 class CommandPipeline:
     """Represents a subprocess-mode command pipeline."""
 
@@ -1403,12 +1412,12 @@ class CommandPipeline:
         uninew = self.spec.universal_newlines
         # get the correct stdout
         stdout = proc.stdout
-        if ((stdout is None or not stdout.readable()) and
+        if ((stdout is None or not safe_readable(stdout)) and
                 self.spec.captured_stdout is not None):
             stdout = self.spec.captured_stdout
         if uninew and hasattr(stdout, 'buffer'):
             stdout = stdout.buffer
-        if not stdout or not stdout.readable():
+        if not stdout or not safe_readable(stdout):
             # we get here if the process is not bacgroundable or the
             # class is the real Popen
             wait_for_active_job()
@@ -1418,7 +1427,7 @@ class CommandPipeline:
             raise StopIteration
         # get the correct stderr
         stderr = proc.stderr
-        if ((stderr is None or not stderr.readable()) and
+        if ((stderr is None or not safe_readble(stderr)) and
                 self.spec.captured_stderr is not None):
             stderr = self.spec.captured_stderr
         if uninew and hasattr(stderr, 'buffer'):
