@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: ascii -*-
 """The xonsh installer."""
 # Note: Do not embed any non-ASCII characters in this file until pip has been

@@ -4,6 +4,97 @@ Xonsh Change Log
 
 .. current developments
 
+v0.4.7
+====================
+
+**Added:**
+
+* Define alias for 'echo' on startup for Windows only.
+* New coredev `astronouth7303 <https://github.com/astronouth7303>`_ added
+* ``which -a`` now searches in ``__xonsh_ctx__`` too
+* Info about the xontrib cookiecutter template on xontrib tutorial
+* xonsh's optional dependencies may now be installed with the pip extras ``ptk``, ``proctitle``, ``linux``, ``mac``, and ``win``.
+* Env ``help`` method to format and print the vardocs for an envvar
+* test_news fails if no empty line before a category
+* more info on test_news failures
+* Added ``on_precommand`` and ``on_postcommand`` `events </events.html>`_
+* New ``FORMATTER_DICT`` entry ``gitstatus`` to provides informative git status
+* FOREIGN_ALIASES_OVERRIDE envvar to control whether foreign aliases should
+  override xonsh aliases with the same name.
+
+* Warning on tutorial about foreign aliases being ignored if a xonsh alias
+  exist with the same name if not FOREIGN_ALIASES_OVERRIDE.
+* The prompt-toolkit shell now auto-inserts matching parentheses, brackets, and quotes. Enabled via the ``XONSH_AUTOPAIR`` environment variable
+* Better syntax highlights in prompt-toolkit, including valid command / path highlighting, macro syntax highlighting, and more
+* More info on tutorial about history interaction
+* Entry on bash_to_xsh
+* Macro context managers are now available via the ``with!``
+  syntax.
+
+
+**Changed:**
+
+* Devguide reflects the current process of releasing through ``release.xsh``
+* moved ``which`` from ``xonsh.aliases`` into ``xoreutils.which``
+* ``xonsh.prompt.gitstatus.gitstatus`` now returns a namedtuple
+
+* implementation of ``xonsh.prompt.vc_branch.get_git_branch`` and
+  ``xonsh.prompt.vc_branch.git_dirty_working_directory`` to use 'git status --procelain'
+* moved prompt formatting specific functions from ``xonsh.environ``
+  to ``xonsh.prompt.base``
+* All prompt formatter functions moved to ``xonsh.prompt`` subpackage
+* Printing the message about foreign aliases being ingored happens only
+  if XONSH_DEBUG is set.
+* Use ``SetConsoleTitleW()`` on Windows instead of a process call.
+* Tutorial to reflect the current history command argument functionality
+* Macro function arguments now default to ``str``, rather than ``eval``,
+  for consistentcy with other parts of the macro system.
+
+
+**Removed:**
+
+* aliases that use '!' in their name cause they clash with the macro syntax
+
+
+**Fixed:**
+
+* Fix regression where bash git completions where not loaded 
+  automatically when GitForWindows is installed.
+* More tokens are now supported in subproc args, such as ``==``.
+* Python completions now work without space delimiters, e.g. ``a=matpl<TAB>``
+  will complete to ``a=matplotlib``
+* Parser would fail on nested, captured suprocess macros. Now, it works,
+  hooray!?
+* now fires chdir event if OS change in working directory is detected.
+* ``xonsh.prompt.vc_branch.git_dirty_working_directory``
+   uses ``porcelain`` option instead of using the bytestring
+   ``nothing to commit`` to find out if a git directory is dirty
+* Fix bug where know commands where not highlighed on windows.
+* Fixed completer showing executable in upper case on windows.
+* Fixed issue where tilde expansion was occuring more than once before an
+  equals sign.
+* test_dirstack test_cdpath_expansion leaving stray testing dirs
+* Better completer display for long completions in prompt-toolkit
+* Automatucally append newine to target of ``source`` alias, so that it may
+  be exec'd.
+* test_news fails when single graves around word
+* Slashes in virtual environment names work in vox
+* non string type value in $FORMATTER_DICT turning prompt ugly
+* whole prompt turning useless when one formatting function raises an exception
+* Fix completion after alias expansion
+* Fix hard crash when foreign shell functions fails to run. #1715
+* Bug where non-default locations for ``XDG_DATA_HOME`` and ``XONSH_DATA_DIR``
+  would not expand ``~`` into the home directory
+* Auto quote path completions if path contains 'and' or 'or'
+
+* Completion now works on subcommands after pipe, ``&&``, ``||`` and so on.
+* cd . and cd <singleCharacter> now work.  Fix indexerror in AUTO_PUSHD case, too.
+* Fixed issue with accidentally wrapping generators inside of function calls.
+* History indexing with string returns most recent command.
+
+
+
+
 v0.4.6
 ====================
 

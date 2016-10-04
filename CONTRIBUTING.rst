@@ -386,74 +386,35 @@ The release candidate procedure here only applies to major and minor releases.
 Micro releases may be pushed and released directly without having a release
 candidate.
 
-------------------
-Checklist
-------------------
-When releasing xonsh, make sure to do the following items in order:
-
-1. Review **ALL** issues in the issue tracker, reassigning or closing them as
-   needed.
-2. Ensure that all issues in this release's milestone have been closed. Moving issues
-   to the next release's milestone is a perfectly valid strategy for
-   completing this milestone.
-3. Perform maintenance tasks for this project, see below.
-4. Write and commit the release notes.
-5. Review the current state of documentation and make appropriate updates.
-6. Bump the version (in code, documentation, etc.) and commit the change.
-7. If this is a release candidate, tag the release branch with a name that
-   matches that of the release:
-
-   * If this is the first release candidate, create a release branch called
-     'vX.X.X-release' off of develop.  Tag this branch with the name
-     'X.X.X-rc1'.
-   * If this is the second or later release candidate, tag the release branch
-     with the name 'X.X.X-rcX'.
-
-8. If this is the full and final release (and not a release candidate),
-   merge the release branch into the master branch.  Next, tag the master
-   branch with the name 'X.X.X'. Finally, delete the release branch.
-9. Push the tags upstream
-10. Update release information on the website.
-
 --------------------
 Maintenance Tasks
 --------------------
 You can cleanup your local repository of transient files such as \*.pyc files
 created by unit testing by running::
 
-    $ rm -f xonsh/lexer_table.py xonsh/parser_table.py
-    $ rm -f xonsh/lexer_test_table.py xonsh/parser_test_table.py
+    $ rm -f xonsh/parser_table.py
     $ rm -f xonsh/*.pyc tests/*.pyc
-    $ rm -f xonsh/*.rej tests/*.rej
     $ rm -fr build
 
 -----------------------
 Performing the Release
 -----------------------
-To perform the release, run these commands for the following tasks:
+This is done through the ``release.xsh`` script. To get a list of the
+valid options use::
 
-**pip upload:**
+    $ xonsh release.xsh --help
 
-.. code-block:: console
+You can perform a full release::
 
-    $ ./setup.py sdist upload
+    $ xonsh release.xsh
 
+Or only a specific one::
 
-**conda upload:**
+    $ xonsh release.xsh --only-pip
 
-.. code-block:: console
+You can also exclude a release::
 
-    $ rm -f /path/to/conda/conda-bld/src_cache/xonsh.tar.gz
-    $ conda build --no-test recipe
-    $ conda convert -p all -o /path/to/conda/conda-bld /path/to/conda/conda-bld/linux-64/xonsh-X.X.X-0.tar.bz2
-    $ binstar upload /path/to/conda/conda-bld/*/xonsh-X.X.X*.tar.bz2
-
-**website:**
-
-.. code-block:: console
-
-    $ cd docs
-    $ make clean html push-root
+    $ xonsh release.xsh --no-conda
 
 
 Document History

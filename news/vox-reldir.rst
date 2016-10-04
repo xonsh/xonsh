@@ -2,7 +2,7 @@
 
 **Changed:**
 
-* Use ``SetConsoleTitleW()`` on Windows instead of a process call.
+* ``vox activate`` now accepts relative directories.
 
 **Deprecated:** None
 
