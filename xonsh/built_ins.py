@@ -563,7 +563,7 @@ class SubprocSpec:
     def redirect_leading(self):
         """Manage leading redirects such as with '< input.txt COMMAND'. """
         while len(self.cmd) >= 3 and self.cmd[0] == '<':
-            self.stdin = safe_open(seld.cmd[1], 'r')
+            self.stdin = safe_open(self.cmd[1], 'r')
             self.cmd = self.cmd[2:]
 
     def redirect_trailing(self):
