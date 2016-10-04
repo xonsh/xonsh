@@ -26,12 +26,6 @@ from xonsh.lazyasd import LazyObject, LazyDict
 from xonsh.tools import (ON_WINDOWS, intensify_colors_for_cmd_exe,
                          expand_gray_colors_for_cmd_exe)
                          
-# If the lexor is loaded as a pygment plugin, we have to mock  
-# __xonsh_env__ and __xonsh_commands_cache__ 
-if not hasattr(builtins, '__xonsh_commands_cache__'):
-    if not hasattr(builtins, '__xonsh_env__'):
-        setattr(builtins, '__xonsh_env__', {})
-    setattr(builtins, '__xonsh_commands_cache__', CommandsCache())
 
 load_module_in_background('pkg_resources', debug='XONSH_DEBUG',
                           replacements={'pygments.plugin': 'pkg_resources'})
@@ -77,6 +71,15 @@ class XonshLexer(PythonLexer):
     filenames = ['*.xsh', '*xonshrc']
 
     def __init__(self, *args, **kwargs):
+        # If the lexor is loaded as a pygment plugin, we have to mock  
+        # __xonsh_env__ and __xonsh_commands_cache__ 
+        if not hasattr(builtins, '__xonsh_env__'):
+            setattr(builtins, '__xonsh_env__', {})
+            if ON_WINDOWS:
+                pathext = os.environ.get('PATHEXT', ['.EXE', '.BAT', '.CMD'])
+                builtins.__xonsh_env__['PATHEXT'] = pathext.split(os.pathsep)
+        if not hasattr(builtins, '__xonsh_commands_cache__'):
+            setattr(builtins, '__xonsh_commands_cache__', CommandsCache())
         _ = builtins.__xonsh_commands_cache__.all_commands
         super().__init__(*args, **kwargs)
 
