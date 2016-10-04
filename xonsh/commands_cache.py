@@ -224,4 +224,5 @@ def default_backgroundable_predictors():
         ssh=predict_false,
         startx=predict_false,
         vi=predict_false,
+        vim=predict_false,
         )
