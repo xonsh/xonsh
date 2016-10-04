@@ -33,7 +33,8 @@ def complete_pip(prefix, line, begidx, endidx, ctx):
         except FileNotFoundError:
             return set()
         items = items.decode('utf-8').splitlines()
-        return set(i.split()[0] for i in items)
+        return set(i.split()[0] for i in items
+                   if i.split()[0].startswith(prefix))
 
     if (line_len > 1 and line.endswith(' ')) or line_len > 2:
         # "pip show " -> no complete (note space)
