@@ -1004,8 +1004,11 @@ class ProcProxy(threading.Thread):
         # get stdin
         if self.stdin is None:
             sp_stdin = None
+        elif self.p2cread != -1:
+            sp_stdin = io.TextIOWrapper(io.open(self.p2cread, 'rb', -1),
+                                        encoding=enc, errors=err)
         else:
-            sp_stdin = io.TextIOWrapper(self.stdin, encoding=enc, errors=err)
+            sp_stdin = sys.stdin
         if ON_WINDOWS:
             if self.c2pwrite != -1:
                 self.c2pwrite = msvcrt.open_osfhandle(self.c2pwrite.Detach(), 0)
