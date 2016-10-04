@@ -1427,7 +1427,7 @@ class CommandPipeline:
             raise StopIteration
         # get the correct stderr
         stderr = proc.stderr
-        if ((stderr is None or not safe_readble(stderr)) and
+        if ((stderr is None or not safe_readable(stderr)) and
                 self.spec.captured_stderr is not None):
             stderr = self.spec.captured_stderr
         if uninew and hasattr(stderr, 'buffer'):
@@ -1593,6 +1593,8 @@ class CommandPipeline:
         self._safe_close(p.stdout)
         self._safe_close(s.stderr)
         self._safe_close(p.stderr)
+        self._safe_close(s.captured_stdout)
+        self._safe_close(s.captured_stderr)
 
     def _set_input(self):
         """Sets the input vaiable."""
