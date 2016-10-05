@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """Testing xonsh import hooks"""
 import os
+import builtins
+
 import pytest
 
 from xonsh import imphooks
 from xonsh.environ import Env
 from xonsh.built_ins import load_builtins, unload_builtins
-import builtins
 
 imphooks.install_hook()
 

@@ -9,9 +9,13 @@ licensed to the Python Software foundation under a Contributor Agreement.
 """
 import io
 import os
+import re
 import sys
 import time
+import queue
+import array
 import signal
+import inspect
 import builtins
 import functools
 import threading
@@ -19,12 +23,23 @@ import subprocess
 import collections
 import collections.abc as cabc
 
-from xonsh.platform import ON_WINDOWS, ON_LINUX, ON_POSIX
+from xonsh.platform import ON_WINDOWS, ON_LINUX, ON_POSIX, CAN_RESIZE_WINDOW
 from xonsh.tools import (redirect_stdout, redirect_stderr, fallback,
-                         print_exception, XonshCalledProcessError)
-from xonsh.teepty import TeePTY
-from xonsh.lazyasd import lazyobject
+                         print_exception, XonshCalledProcessError, findfirst,
+                         on_main_thread, XonshError)
+from xonsh.lazyasd import lazyobject, LazyObject
+from xonsh.jobs import wait_for_active_job
+from xonsh.lazyimps import fcntl, termios
 
+
+# termios tc(get|set)attr indexes.
+IFLAG = 0
+OFLAG = 1
+CFLAG = 2
+LFLAG = 3
+ISPEED = 4
+OSPEED = 5
+CC = 6
 
 # force some lazy imports so we don't have errors on non-windows platforms
 @lazyobject
@@ -43,6 +58,573 @@ def msvcrt():
     else:
         m = None
     return m
+
+
+@lazyobject
+def STDOUT_CAPTURE_KINDS():
+    return frozenset(['stdout', 'object'])
+
+
+# The following escape codes are xterm codes.
+# See http://rtfm.etla.org/xterm/ctlseq.html for more.
+MODE_NUMS = ('1049', '47', '1047')
+START_ALTERNATE_MODE = LazyObject(
+    lambda: frozenset('\x1b[?{0}h'.format(i).encode() for i in MODE_NUMS),
+    globals(), 'START_ALTERNATE_MODE')
+END_ALTERNATE_MODE = LazyObject(
+    lambda: frozenset('\x1b[?{0}l'.format(i).encode() for i in MODE_NUMS),
+    globals(), 'END_ALTERNATE_MODE')
+ALTERNATE_MODE_FLAGS = LazyObject(
+    lambda: tuple(START_ALTERNATE_MODE) + tuple(END_ALTERNATE_MODE),
+    globals(), 'ALTERNATE_MODE_FLAGS')
+RE_HIDDEN_BYTES = LazyObject(lambda: re.compile(b'(\001.*?\002)'),
+                             globals(), 'RE_HIDDEN')
+
+@lazyobject
+def RE_VT100_ESCAPE():
+    return re.compile(b'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]')
+
+
+def populate_char_queue(reader, fd, queue):
+    """Reads single characters from a file descriptor into a queue.
+    If this ends or fails, it flags the calling reader object as closed.
+    """
+    while True:
+        try:
+            c = os.read(fd, 1)
+        except OSError:
+            reader.closed = True
+            break
+        if c:
+            queue.put(c)
+        else:
+            reader.closed = True
+            break
+
+
+class NonBlockingFDReader:
+    """A class for reading characters from a file descriptor on a background
+    thread. This has the advantages that the calling thread can close the
+    file and that the reading does not block the calling thread.
+    """
+
+    def __init__(self, fd, timeout=None):
+        """
+        Parameters
+        ----------
+        fd : int
+            A file descriptor
+        timeout : float or None, optional
+            The queue reading timeout.
+        """
+        self.fd = fd
+        self.queue = queue.Queue()
+        self.timeout = timeout
+        self.closed = False
+        # start reading from stream
+        self.thread = threading.Thread(target=populate_char_queue,
+                                       args=(self, self.fd, self.queue))
+        self.thread.daemon = True
+        self.thread.start()
+
+    def read_char(self, timeout=None):
+        """Reads a single character from the queue."""
+        timeout = timeout or self.timeout
+        try:
+            return self.queue.get(block=timeout is not None,
+                                  timeout=timeout)
+        except queue.Empty:
+            return b''
+
+    def read(self, size=-1):
+        """Reads bytes from the file."""
+        i = 0
+        buf = b''
+        while i != size:
+            c = self.read_char()
+            if c:
+                buf += c
+            else:
+                break
+            i += 1
+        return buf
+
+    def readline(self, size=-1):
+        """Reads a line, or a partial line from the file descriptor."""
+        i = 0
+        nl = b'\n'
+        buf = b''
+        while i != size:
+            c = self.read_char()
+            if c:
+                buf += c
+                if c == nl:
+                    break
+            else:
+                break
+            i += 1
+        return buf
+
+    def readlines(self, hint=-1):
+        """Reads lines from the file descriptor."""
+        lines = []
+        while len(lines) != hint:
+            line = self.readline(szie=-1, timeout=timeout)
+            if not line:
+                break
+            lines.append(line)
+        return lines
+
+    def fileno(self):
+        """Returns the file descriptor number."""
+        return self.fd
+
+
+def populate_buffer(reader, fd, buffer, chunksize):
+    """Reads bytes from the file descriptor and copies them into a buffer.
+    The reads happend in parallel, using pread(), and is thus only
+    availabe on posix. If the read fails for any reason, the reader is
+    flagged as closed.
+    """
+    offset = 0
+    while True:
+        try:
+            buf = os.pread(fd, chunksize, offset)
+        except OSError:
+            reader.closed = True
+            break
+        if buf:
+            buffer.write(buf)
+            offset += len(buf)
+        else:
+            reader.closed = True
+            break
+
+
+class BufferedFDParallelReader:
+    """Buffered, parallel background thread reader."""
+
+    def __init__(self, fd, buffer=None, chunksize=1024):
+        """
+        Parameters
+        ----------
+        fd : int
+            File descriptor from which to read.
+        buffer : binary file-like or None, optional
+            A buffer to write bytes into. If None, a new BytesIO object
+            is created.
+        chunksize : int, optional
+            The max size of the parallel reads, default 1 kb.
+        """
+        self.fd = fd
+        self.buffer = io.BytesIO() if buffer is None else buffer
+        self.chunksize = chunksize
+        self.closed = False
+        # start reading from stream
+        self.thread = threading.Thread(target=populate_buffer,
+                                       args=(self, fd, self.buffer, chunksize))
+        self.thread.daemon = True
+        self.thread.start()
+
+
+def safe_fdclose(handle, cache=None):
+    """Closes a file handle in the safest way possible, and potentially
+    storing the result.
+    """
+    if cache is not None and cache.get(handle, False):
+        return
+    status = True
+    if handle is None:
+        pass
+    elif isinstance(handle, int):
+        if handle >= 3:
+            # don't close stdin, stdout, stderr, -1
+            try:
+                os.close(handle)
+            except OSError:
+                status = False
+    elif handle is sys.stdin or handle is sys.stdout or handle is sys.stderr:
+        # don't close stdin, stdout, or stderr
+        pass
+    else:
+        try:
+            handle.close()
+        except OSError:
+            status = False
+    if cache is not None:
+        cache[handle] = status
+
+
+def safe_flush(handle):
+    """Attempts to safely flush a file handle, returns success bool."""
+    status = True
+    try:
+        handle.flush()
+    except OSError:
+        status = False
+    return status
+
+
+class PopenThread(threading.Thread):
+    """A thread for running and managing subprocess. This allows reading
+    from the stdin, stdout, and stderr streams in a non-blocking fashion.
+
+    This takes the same arguments and keyword arguments as regular Popen.
+    This requires that the captured_stdout and captured_stderr attributes
+    to be set following instantiation.
+    """
+
+    def __init__(self, *args, stdin=None, stdout=None, stderr=None, **kwargs):
+        super().__init__()
+        self.lock = threading.RLock()
+        self.stdout_fd = stdout.fileno()
+        self._set_pty_size()
+        env = builtins.__xonsh_env__
+        self.orig_stdin = stdin
+        if stdin is None:
+            self.stdin_fd = 0
+        elif isinstance(stdin, int):
+            self.stdin_fd = stdin
+        else:
+            self.stdin_fd = stdin.fileno()
+        self.store_stdin = env.get('XONSH_STORE_STDIN')
+        self._in_alt_mode = False
+        self.stdin_mode = None
+        # Set some signal handles, if we can. Must come before process
+        # is started to prevent deadlock on windows
+        self.proc = None  # has to be here for closure for handles
+        self.old_int_handler = self.old_winch_handler = None
+        self.old_tstp_handler = self.old_quit_handler = None
+        if on_main_thread():
+            self.old_int_handler = signal.signal(signal.SIGINT,
+                                                 self._signal_int)
+            if ON_POSIX:
+                self.old_tstp_handler = signal.signal(signal.SIGTSTP,
+                                                      self._signal_tstp)
+                self.old_quit_handler = signal.signal(signal.SIGQUIT,
+                                                      self._signal_quit)
+            if CAN_RESIZE_WINDOW:
+                self.old_winch_handler = signal.signal(signal.SIGWINCH,
+                                                       self._signal_winch)
+        # start up process
+        self.proc = proc = subprocess.Popen(*args,
+                                            stdin=stdin,
+                                            stdout=stdout,
+                                            stderr=stderr,
+                                            **kwargs)
+        self.pid = proc.pid
+        self.universal_newlines = uninew = proc.universal_newlines
+        if uninew:
+            self.encoding = enc = env.get('XONSH_ENCODING')
+            self.encoding_errors = err = env.get('XONSH_ENCODING_ERRORS')
+            self.stdin = io.BytesIO()  # stdin is always bytes!
+            self.stdout = io.TextIOWrapper(io.BytesIO(), encoding=enc, errors=err)
+            self.stderr = io.TextIOWrapper(io.BytesIO(), encoding=enc, errors=err)
+        else:
+            self.encoding = self.encoding_errors = None
+            self.stdin = io.BytesIO()
+            self.stdout = io.BytesIO()
+            self.stderr = io.BytesIO()
+        self.timeout = env.get('XONSH_PROC_FREQUENCY')
+        self.suspended = False
+        self.prevs_are_closed = False
+        self.start()
+
+    def run(self):
+        """Runs the subprocess by performing a parallel read on stdin if allowed,
+        and copying bytes from captured_stdout to stdout and bytes from
+        captured_stderr to stderr.
+        """
+        proc = self.proc
+        # get stdin and apply parallel reader if needed.
+        stdin = self.stdin
+        if self.orig_stdin is None:
+            origin = None
+        elif ON_POSIX and self.store_stdin:
+            origin = self.orig_stdin
+            origfd = origin if isinstance(origin, int) else origin.fileno()
+            origin = BufferedFDParallelReader(origfd, buffer=stdin)
+        else:
+            origin = None
+        # get non-blocking stdout
+        stdout = self.stdout.buffer if self.universal_newlines else self.stdout
+        capout = self._wait_and_getattr('captured_stdout')
+        if capout is None:
+            procout = None
+        else:
+            procout = NonBlockingFDReader(capout.fileno(), timeout=self.timeout)
+        # get non-blocking stderr
+        stderr = self.stderr.buffer if self.universal_newlines else self.stderr
+        caperr = self._wait_and_getattr('captured_stderr')
+        if caperr is None:
+            procerr = None
+        else:
+            procerr = NonBlockingFDReader(caperr.fileno(), timeout=self.timeout)
+        # initial read from buffer
+        self._read_write(procout, stdout, sys.__stdout__)
+        self._read_write(procerr, stderr, sys.__stderr__)
+        # loop over reads while process is running.
+        while proc.poll() is None:
+            self._read_write(procout, stdout, sys.__stdout__)
+            self._read_write(procerr, stderr, sys.__stderr__)
+            if self.prevs_are_closed and not self._in_alt_mode:
+                break
+            elif self.suspended:
+                break
+            time.sleep(self.timeout)
+        # final closing read.
+        cntout = cnterr = 0
+        while cntout < 10 and cnterr < 10:
+            i = self._read_write(procout, stdout, sys.__stdout__)
+            j = self._read_write(procerr, stderr, sys.__stderr__)
+            cntout = 0 if i > 0 else cntout + 1
+            cnterr = 0 if j > 0 else cnterr + 1
+            time.sleep(self.timeout * (10 - cntout))
+        # kill the process if it is still alive. Happens when piping.
+        time.sleep(self.timeout)
+        if proc.poll() is None and not self.suspended:
+            time.sleep(self.timeout)
+            proc.terminate()
+
+    def _wait_and_getattr(self, name):
+        """make sure the instance has a certain attr, and return it."""
+        while not hasattr(self, name):
+            time.sleep(1e-7)
+        return getattr(self, name)
+
+    def _read_write(self, reader, writer, stdbuf):
+        """Read from a buffer and write into memory or back down to
+        the standard buffer, line-by-line, as approriate. Returns the number of
+        lines read.
+        """
+        if reader is None:
+            return 0
+        i = -1
+        for i, line in enumerate(iter(reader.readline, b'')):
+            self._alt_mode_switch(line, writer, stdbuf)
+        return i + 1
+
+    def _alt_mode_switch(self, line, membuf, stdbuf):
+        """Enables recursively switching between normal capturing mode
+        and 'alt' mode, which passes through values to the standard
+        buffer. Pagers, text editors, curses applications, etc. use
+        alternate mode.
+        """
+        i, flag = findfirst(line, ALTERNATE_MODE_FLAGS)
+        if flag is None:
+            self._alt_mode_writer(line, membuf, stdbuf)
+        else:
+            # This code is executed when the child process switches the
+            # terminal into or out of alternate mode. The line below assumes
+            # that the user has opened vim, less, or similar, and writes writes
+            # to stdin.
+            j = i + len(flag)
+            # write the first part of the line in the current mode.
+            self._alt_mode_writer(line[:i], membuf, stdbuf)
+            # switch modes
+            # write the flag itself the current mode where alt mode is on
+            # so that it is streamed to the termial ASAP.
+            # this is needed for terminal emulators to find the correct
+            # positions before and after alt mode.
+            alt_mode = (flag in START_ALTERNATE_MODE)
+            if alt_mode:
+                self._in_alt_mode = alt_mode
+                self._alt_mode_writer(flag, membuf, stdbuf)
+                self._enable_cbreak_stdin()
+            else:
+                self._alt_mode_writer(flag, membuf, stdbuf)
+                self._in_alt_mode = alt_mode
+                self._disable_cbreak_stdin()
+            # recurse this function, but without the current flag.
+            self._alt_mode_switch(line[j:], membuf, stdbuf)
+
+    def _alt_mode_writer(self, line, membuf, stdbuf):
+        """Write bytes to the standard buffer if in alt mode or otherwise
+        to the in-memory buffer.
+        """
+        if not line:
+            pass  # don't write empty values
+        elif self._in_alt_mode:
+            stdbuf.buffer.write(line)
+            stdbuf.flush()
+        else:
+            with self.lock:
+                p = membuf.tell()
+                membuf.seek(0, io.SEEK_END)
+                membuf.write(line)
+                membuf.flush()
+                membuf.seek(p)
+
+    #
+    # Window resize handlers
+    #
+
+    def _signal_winch(self, signum, frame):
+        """Signal handler for SIGWINCH - window size has changed."""
+        self.proc.send_signal(signal.SIGWINCH)
+        self._set_pty_size()
+
+    def _set_pty_size(self):
+        """Sets the window size of the child pty based on the window size of
+        our own controlling terminal.
+        """
+        if not os.isatty(self.stdout_fd):
+            return
+        # Get the terminal size of the real terminal, set it on the
+        #       pseudoterminal.
+        buf = array.array('h', [0, 0, 0, 0])
+        # 1 = stdout here
+        try:
+            fcntl.ioctl(1, termios.TIOCGWINSZ, buf, True)
+            fcntl.ioctl(self.stdout_fd, termios.TIOCSWINSZ, buf)
+        except OSError:
+            pass
+
+    #
+    # SIGINT handler
+    #
+
+    def _signal_int(self, signum, frame):
+        """Signal handler for SIGINT - Ctrl+C may have been pressed."""
+        self.send_signal(signum)
+        time.sleep(self.timeout)
+        if self.poll() is not None:
+            self._restore_sigint(frame=frame)
+
+    def _restore_sigint(self, frame=None):
+        old = self.old_int_handler
+        if old is not None:
+            if on_main_thread():
+                signal.signal(signal.SIGINT, old)
+            self.old_int_handler = None
+        if frame is not None:
+            self._disable_cbreak_stdin()
+            if old is not None:
+                old(signal.SIGINT, frame)
+
+    #
+    # SIGTSTP handler
+    #
+
+    def _signal_tstp(self, signum, frame):
+        """Signal handler for suspending SIGTSTP - Ctrl+Z may have been pressed.
+        """
+        self.suspended = True
+        self.send_signal(signum)
+        self._restore_sigtstp(frame=frame)
+
+    def _restore_sigtstp(self, frame=None):
+        old = self.old_tstp_handler
+        if old is not None:
+            if on_main_thread():
+                signal.signal(signal.SIGTSTP, old)
+            self.old_tstp_handler = None
+        if frame is not None:
+            self._disable_cbreak_stdin()
+
+    #
+    # SIGQUIT handler
+    #
+
+    def _signal_quit(self, signum, frame):
+        """Signal handler for quiting SIGQUIT - Ctrl+\ may have been pressed.
+        """
+        self.send_signal(signum)
+        self._restore_sigquit(frame=frame)
+
+    def _restore_sigquit(self, frame=None):
+        old = self.old_quit_handler
+        if old is not None:
+            if on_main_thread():
+                signal.signal(signal.SIGQUIT, old)
+            self.old_quit_handler = None
+        if frame is not None:
+            self._disable_cbreak_stdin()
+
+
+    #
+    # cbreak mode handlers
+    #
+
+    def _enable_cbreak_stdin(self):
+        if not ON_POSIX:
+            return
+        try:
+            self.stdin_mode = termios.tcgetattr(self.stdin_fd)[:]
+        except termios.error:
+            # this can happen for cases where another process is controlling
+            # xonsh's tty device, such as in testing.
+            self.stdin_mode = None
+            return
+        new = self.stdin_mode[:]
+        new[LFLAG] &= ~(termios.ECHO | termios.ICANON)
+        new[CC][termios.VMIN] = 1
+        new[CC][termios.VTIME] = 0
+        try:
+            # termios.TCSAFLUSH may be less reliable than termios.TCSANOW
+            termios.tcsetattr(self.stdin_fd, termios.TCSANOW, new)
+        except termios.error:
+            self._disable_cbreak_stdin()
+
+    def _disable_cbreak_stdin(self):
+        if not ON_POSIX or self.stdin_mode is None:
+            return
+        new = self.stdin_mode[:]
+        new[LFLAG] |= termios.ECHO | termios.ICANON
+        new[CC][termios.VMIN] = 1
+        new[CC][termios.VTIME] = 0
+        termios.tcsetattr(self.stdin_fd, termios.TCSANOW, new)
+
+    #
+    # Dispatch methods
+    #
+
+    def poll(self):
+        """Dispatches to Popen.poll()."""
+        return self.proc.poll()
+
+    def wait(self, timeout=None):
+        """Dispatches to Popen.wait(), but also does process cleanup such as
+        joining this thread and replacing the original window size signal
+        handler.
+        """
+        self._disable_cbreak_stdin()
+        rtn = self.proc.wait(timeout=timeout)
+        while self.is_alive():
+            self.join(timeout=1e-7)
+            time.sleep(1e-7)
+        # need to replace the old signal handlers somewhere...
+        if self.old_winch_handler is not None and on_main_thread():
+            signal.signal(signal.SIGWINCH, self.old_winch_handler)
+            self.old_winch_handler = None
+        self._restore_sigint()
+        self._restore_sigtstp()
+        self._restore_sigquit()
+        return rtn
+
+    @property
+    def returncode(self):
+        """Process return code."""
+        return self.proc.returncode
+
+    def send_signal(self, signal):
+        """Dispatches to Popen.send_signal()."""
+        if self.proc is None:
+            return
+        try:
+            rtn = self.proc.send_signal(signal)
+        except ProcessLookupError:
+            # This can happen in the case of !(cmd) when the command has ended
+            rtn = None
+        return rtn
+
+    def terminate(self):
+        """Dispatches to Popen.terminate()."""
+        return self.proc.terminate()
+
+    def kill(self):
+        """Dispatches to Popen.kill()."""
+        return self.proc.kill()
 
 
 class Handle(int):
@@ -67,16 +649,254 @@ class Handle(int):
     __str__ = __repr__
 
 
+class FileThreadDispatcher:
+    """Dispatches to different file handles depending on the
+    current thread. Useful if you want file operation to go to differnt
+    places for different threads.
+    """
+
+    def __init__(self, default=None):
+        """
+        Parameters
+        ----------
+        default : file-like or None, optional
+            The file handle to write to if a thread cannot be found in
+            the registery. If None, a new in-memory instance.
+
+        Attributes
+        ----------
+        registry : dict
+            Maps thread idents to file handles.
+        """
+        if default is None:
+            default = io.TextIOWrapper(io.BytesIO())
+        self.default = default
+        self.registry = {}
+
+    def register(self, handle):
+        """Registers a file handle for the current thread. Returns self so
+        that this method can be used in a with-statement.
+        """
+        self.registry[threading.get_ident()] = handle
+        return self
+
+    def deregister(self):
+        """Removes the current thread from the registry."""
+        del self.registry[threading.get_ident()]
+
+    @property
+    def available(self):
+        """True if the thread is available in the registry."""
+        return threading.get_ident() in self.registry
+
+    @property
+    def handle(self):
+        """Gets the current handle for the thread."""
+        return self.registry.get(threading.get_ident(), self.default)
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, ex_type, ex_value, ex_traceback):
+        self.deregister()
+
+    #
+    # io.TextIOBase interface
+    #
+
+    @property
+    def encoding(self):
+        """Gets the encoding for this thread's handle."""
+        return self.handle.encoding
+
+    @property
+    def errors(self):
+        """Gets the errors for this thread's handle."""
+        return self.handle.errors
+
+    @property
+    def newlines(self):
+        """Gets the newlines for this thread's handle."""
+        return self.handle.newlines
+
+    @property
+    def buffer(self):
+        """Gets the buffer for this thread's handle."""
+        return self.handle.buffer
+
+    def detach(self):
+        """Detaches the buffer for the current thread."""
+        return self.handle.detach()
+
+    def read(self, size=None):
+        """Reads from the handle for the current thread."""
+        return self.handle.read(size)
+
+    def readline(self, size=-1):
+        """Reads a line from the handle for the current thread."""
+        return self.handle.readline(size)
+
+    def readlines(self, hint=-1):
+        """Reads lines from the handle for the current thread."""
+        return self.handle.readlines(hint)
+
+    def seek(self, offset, whence=io.SEEK_SET):
+        """Seeks the current file."""
+        return self.handle.seek(offset, whence)
+
+    def tell(self):
+        """Reports the current position in the handle for the current thread."""
+        return self.handle.tell()
+
+    def write(self, s):
+        """Writes to this thread's handle. This also flushes, just to be
+        extra sure the string was written.
+        """
+        h = self.handle
+        r = h.write(s)
+        h.flush()
+        return r
+
+    @property
+    def line_buffering(self):
+        """Gets if line buffering for this thread's handle enabled."""
+        return self.handle.line_buffering
+
+    #
+    # io.IOBase interface
+    #
+
+    def close(self):
+        """Closes the current thread's handle."""
+        return self.handle.close()
+
+    @property
+    def closed(self):
+        """Is the thread's handle closed."""
+        return self.handle.closed
+
+    def fileno(self):
+        """Returns the file descriptor for the current thread."""
+        return self.handle.fileno()
+
+    def flush(self):
+        """Flushes the file descriptor for the current thread."""
+        return self.handle.flush()
+
+    def isatty(self):
+        """Returns if the file descriptor for the current thread is a tty."""
+        return self.handle.isatty()
+
+    def readable(self):
+        """Returns if file descriptor for the current thread is readable."""
+        return self.handle.readable()
+
+    def seekable(self):
+        """Returns if file descriptor for the current thread is seekable."""
+        return self.handle.seekable()
+
+    def truncate(self, size=None):
+        """Truncates the file for for the current thread."""
+        return self.handle.truncate()
+
+    def writable(self, size=None):
+        """Returns if file descriptor for the current thread is writable."""
+        return self.handle.writable(size)
+
+    def writelines(self):
+        """Writes lines for the file descriptor for the current thread."""
+        return self.handle.writelines()
+
+
+# These should NOT be lazy since they *need* to get the true stdout from the
+# main thread. Also their creation time should be neglibible.
+STDOUT_DISPATCHER = FileThreadDispatcher(default=sys.stdout)
+STDERR_DISPATCHER = FileThreadDispatcher(default=sys.stderr)
+
+
+def parse_proxy_return(r, stdout, stderr):
+    """Proxies may return a variety of outputs. This hanles them generally.
+
+    Parameters
+    ----------
+    r : tuple, str, int, or None
+        Return from proxy function
+    stdout : file-like
+        Current stdout stream
+    stdout : file-like
+        Current stderr stream
+
+    Returns
+    -------
+    cmd_result : int
+        The return code of the proxy
+    """
+    cmd_result = 0
+    if isinstance(r, str):
+        stdout.write(r)
+        stdout.flush()
+    elif isinstance(r, int):
+        cmd_result = r
+    elif isinstance(r, cabc.Sequence):
+        rlen = len(r)
+        if rlen > 0 and r[0] is not None:
+            stdout.write(r[0])
+            stdout.flush()
+        if rlen > 1 and r[1] is not None:
+            stderr.write(r[1])
+            stderr.flush()
+        if rlen > 2 and r[2] is not None:
+            cmd_result = r[2]
+    elif r is not None:
+        # for the random object...
+        stdout.write(str(r))
+        stdout.flush()
+    return cmd_result
+
+
+def proxy_zero(f, args, stdin, stdout, stderr):
+    """Calls a proxy function which takes no parameters."""
+    return f()
+
+
+def proxy_one(f, args, stdin, stdout, stderr):
+    """Calls a proxy function which takes one parameter: args"""
+    return f(args)
+
+
+def proxy_two(f, args, stdin, stdout, stderr):
+    """Calls a proxy function which takes two parameter: args and stdin."""
+    return f(args, stdin)
+
+
+def proxy_three(f, args, stdin, stdout, stderr):
+    """Calls a proxy function which takes three parameter: args, stdin, stdout.
+    """
+    return f(args, stdin, stdout)
+
+
+PROXIES = (proxy_zero, proxy_one, proxy_two, proxy_three)
+
+def partial_proxy(f):
+    """Dispatches the approriate proxy function based on the number of args."""
+    numargs = len(inspect.signature(f).parameters)
+    if numargs < 4:
+        return functools.partial(PROXIES[numargs], f)
+    elif numargs == 4:
+        # don't need to partial.
+        return f
+    else:
+        e = 'Expected proxy with 4 or fewer arguments, not {}'
+        raise XonshError(e.format(numargs))
+
+
 class ProcProxy(threading.Thread):
     """
     Class representing a function to be run as a subprocess-mode command.
     """
 
-    def __init__(self, f, args,
-                 stdin=None,
-                 stdout=None,
-                 stderr=None,
-                 universal_newlines=False):
+    def __init__(self, f, args, stdin=None, stdout=None, stderr=None,
+                 universal_newlines=False, env=None):
         """Parameters
         ----------
         f : function
@@ -97,8 +917,12 @@ class ProcProxy(threading.Thread):
             A file-like object representing stderr (error output can be
             written here).  If `stderr` is not provided or if it is explicitly
             set to `None`, then `sys.stderr` is used.
+        universal_newlines : bool, optional
+            Whether or not to use universal newlines.
+        env : Mapping, optiona            Environment mapping.
         """
-        self.f = f
+        self.orig_f = f
+        self.f = partial_proxy(f)
         """
         The function to be executed.  It should be a function of four
         arguments, described below.
@@ -121,7 +945,7 @@ class ProcProxy(threading.Thread):
         self.args = args
         self.pid = None
         self.returncode = None
-        self.wait = self.join
+        self._closed_handle_cache = {}
 
         handles = self._get_handles(stdin, stdout, stderr)
         (self.p2cread, self.p2cwrite,
@@ -130,8 +954,9 @@ class ProcProxy(threading.Thread):
 
         # default values
         self.stdin = stdin
-        self.stdout = None
-        self.stderr = None
+        self.stdout = stdout
+        self.stderr = stderr
+        self.env = env or builtins.__xonsh_env__
 
         if ON_WINDOWS:
             if self.p2cwrite != -1:
@@ -146,6 +971,9 @@ class ProcProxy(threading.Thread):
             if universal_newlines:
                 self.stdin = io.TextIOWrapper(self.stdin, write_through=True,
                                               line_buffering=False)
+        elif isinstance(stdin, int) and stdin != 0:
+            self.stdin = io.open(stdin, 'wb', -1)
+
         if self.c2pread != -1:
             self.stdout = io.open(self.c2pread, 'rb', -1)
             if universal_newlines:
@@ -166,40 +994,84 @@ class ProcProxy(threading.Thread):
         """
         if self.f is None:
             return
-        if self.stdin is not None:
-            sp_stdin = io.TextIOWrapper(self.stdin)
+        last_in_pipeline = self._wait_and_getattr('last_in_pipeline')
+        if last_in_pipeline:
+            capout = self._wait_and_getattr('captured_stdout')
+            caperr = self._wait_and_getattr('captured_stderr')
+        env = builtins.__xonsh_env__
+        enc = env.get('XONSH_ENCODING')
+        err = env.get('XONSH_ENCODING_ERRORS')
+        # get stdin
+        if self.stdin is None:
+            sp_stdin = None
+        elif self.p2cread != -1:
+            sp_stdin = io.TextIOWrapper(io.open(self.p2cread, 'rb', -1),
+                                        encoding=enc, errors=err)
         else:
-            sp_stdin = io.StringIO("")
-
+            sp_stdin = sys.stdin
         if ON_WINDOWS:
             if self.c2pwrite != -1:
                 self.c2pwrite = msvcrt.open_osfhandle(self.c2pwrite.Detach(), 0)
             if self.errwrite != -1:
                 self.errwrite = msvcrt.open_osfhandle(self.errwrite.Detach(), 0)
-
+        # stdout
         if self.c2pwrite != -1:
-            sp_stdout = io.TextIOWrapper(io.open(self.c2pwrite, 'wb', -1))
+            sp_stdout = io.TextIOWrapper(io.open(self.c2pwrite, 'wb', -1),
+                                         encoding=enc, errors=err)
         else:
             sp_stdout = sys.stdout
+        # stderr
         if self.errwrite == self.c2pwrite:
             sp_stderr = sp_stdout
         elif self.errwrite != -1:
-            sp_stderr = io.TextIOWrapper(io.open(self.errwrite, 'wb', -1))
+            sp_stderr = io.TextIOWrapper(io.open(self.errwrite, 'wb', -1),
+                                         encoding=enc, errors=err)
         else:
             sp_stderr = sys.stderr
+        # run the function itself
+        try:
+            with STDOUT_DISPATCHER.register(sp_stdout), \
+                 STDERR_DISPATCHER.register(sp_stderr), \
+                 redirect_stdout(STDOUT_DISPATCHER), \
+                 redirect_stderr(STDERR_DISPATCHER):
+                r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr)
+        except Exception:
+            print_exception()
+            r = 1
+        safe_flush(sp_stdout)
+        safe_flush(sp_stderr)
+        self.returncode = parse_proxy_return(r, sp_stdout, sp_stderr)
+        if not last_in_pipeline:
+            return
+        # clean up
+        # scopz: not sure why this is needed, but stdin cannot go here
+        # and stdout & stderr must.
+        handles = [self.stdout, self.stderr]
+        for handle in handles:
+            safe_fdclose(handle, cache=self._closed_handle_cache)
 
-        r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr)
-        self.returncode = 0 if r is None else r
+    def _wait_and_getattr(self, name):
+        """make sure the instance has a certain attr, and return it."""
+        while not hasattr(self, name):
+            time.sleep(1e-7)
+        return getattr(self, name)
 
     def poll(self):
         """Check if the function has completed.
 
         Returns
         -------
-        `None` if the function is still executing, `True` if the function
-        finished successfully, and `False` if there was an error.
+        None if the function is still executing, and the returncode otherwise
         """
         return self.returncode
+
+    def wait(self, timeout=None):
+        """Waits for the process to finish and returns the return code."""
+        while self.is_alive():
+            self.join(timeout=1e-7)
+            time.sleep(1e-7)
+        return self.returncode
+
 
     # The code below (_get_devnull, _get_handles, and _make_inheritable) comes
     # from subprocess.py in the Python 3.4.2 Standard Library
@@ -341,54 +1213,6 @@ class ProcProxy(threading.Thread):
                     errread, errwrite)
 
 
-def wrap_simple_command(f, args, stdin, stdout, stderr):
-    """Decorator for creating 'simple' callable aliases."""
-    bgable = getattr(f, '__xonsh_backgroundable__', True)
-
-    @functools.wraps(f)
-    def wrapped_simple_command(args, stdin, stdout, stderr):
-        try:
-            i = stdin.read()
-            if bgable:
-                with redirect_stdout(stdout), redirect_stderr(stderr):
-                    r = f(args, i)
-            else:
-                r = f(args, i)
-
-            cmd_result = 0
-            if isinstance(r, str):
-                stdout.write(r)
-            elif isinstance(r, cabc.Sequence):
-                if r[0] is not None:
-                    stdout.write(r[0])
-                if r[1] is not None:
-                    stderr.write(r[1])
-                if len(r) > 2 and r[2] is not None:
-                    cmd_result = r[2]
-            elif r is not None:
-                stdout.write(str(r))
-            return cmd_result
-        except Exception:
-            print_exception()
-            return 1  # returncode for failure
-
-    return wrapped_simple_command
-
-
-class SimpleProcProxy(ProcProxy):
-    """Variant of `ProcProxy` for simpler functions.
-
-    The function passed into the initializer for `SimpleProcProxy` should have
-    the form described in the xonsh tutorial.  This function is then wrapped to
-    make a new function of the form expected by `ProcProxy`.
-    """
-
-    def __init__(self, f, args, stdin=None, stdout=None, stderr=None,
-                 universal_newlines=False):
-        f = wrap_simple_command(f, args, stdin, stdout, stderr)
-        super().__init__(f, args, stdin, stdout, stderr, universal_newlines)
-
-
 #
 # Foreground Process Proxies
 #
@@ -402,15 +1226,17 @@ class ForegroundProcProxy(object):
     """
 
     def __init__(self, f, args, stdin=None, stdout=None, stderr=None,
-                 universal_newlines=False):
-        self.f = f
+                 universal_newlines=False, env=None):
+        self.orig_f = f
+        self.f = partial_proxy(f)
         self.args = args
         self.pid = os.getpid()
         self.returncode = None
         self.stdin = stdin
-        self.stdout = None
-        self.stderr = None
+        self.stdout = stdout
+        self.stderr = stderr
         self.universal_newlines = universal_newlines
+        self.env = env
 
     def poll(self):
         """Check if the function has completed via the returncode or None.
@@ -422,29 +1248,45 @@ class ForegroundProcProxy(object):
         present for API compatability.
         """
         if self.f is None:
-            return
+            return 0
+        env = builtins.__xonsh_env__
+        enc = env.get('XONSH_ENCODING')
+        err = env.get('XONSH_ENCODING_ERRORS')
+        # set file handles
         if self.stdin is None:
-            stdin = io.StringIO("")
+            stdin = None
         else:
-            stdin = io.TextIOWrapper(self.stdin)
-        r = self.f(self.args, stdin, self.stdout, self.stderr)
-        self.returncode = 0 if r is None else r
+            stdin = io.TextIOWrapper(self.stdin, encoding=enc, errors=err)
+        stdout = self._pick_buf(self.stdout, sys.stdout, enc, err)
+        stderr = self._pick_buf(self.stderr, sys.stderr, enc, err)
+        # run the actual function
+        try:
+            r = self.f(self.args, stdin, stdout, stderr)
+        except Exception:
+            print_exception()
+            r = 1
+        self.returncode = parse_proxy_return(r, stdout, stderr)
+        safe_flush(stdout)
+        safe_flush(stderr)
         return self.returncode
 
-
-class SimpleForegroundProcProxy(ForegroundProcProxy):
-    """Variant of `ForegroundProcProxy` for simpler functions.
-
-    The function passed into the initializer for `SimpleForegroundProcProxy`
-    should have the form described in the xonsh tutorial. This function is
-    then wrapped to make a new function of the form expected by
-    `ForegroundProcProxy`.
-    """
-
-    def __init__(self, f, args, stdin=None, stdout=None, stderr=None,
-                 universal_newlines=False):
-        f = wrap_simple_command(f, args, stdin, stdout, stderr)
-        super().__init__(f, args, stdin, stdout, stderr, universal_newlines)
+    @staticmethod
+    def _pick_buf(handle, sysbuf, enc, err):
+        if handle is None or handle is sysbuf:
+            buf = sysbuf
+        elif isinstance(handle, int):
+            if handle < 3:
+                buf = sysbuf
+            else:
+                buf = io.TextIOWrapper(io.open(handle, 'wb', -1),
+                                       encoding=enc, errors=err)
+        elif hasattr(handle, 'encoding'):
+            # must be a text stream, no need to wrap.
+            buf = handle
+        else:
+            # must be a binary stream, should wrap it.
+            buf = io.TextIOWrapper(handle, encoding=enc, errors=err)
+        return buf
 
 
 def foreground(f):
@@ -455,130 +1297,167 @@ def foreground(f):
     return f
 
 
-#
-# Pseudo-terminal Proxies
-#
+@lazyobject
+def SIGNAL_MESSAGES():
+    sm = {
+        signal.SIGABRT: 'Aborted',
+        signal.SIGFPE: 'Floating point exception',
+        signal.SIGILL: 'Illegal instructions',
+        signal.SIGTERM: 'Terminated',
+        signal.SIGSEGV: 'Segmentation fault',
+        }
+    if ON_POSIX:
+        sm.update({
+            signal.SIGQUIT: 'Quit',
+            signal.SIGHUP: 'Hangup',
+            signal.SIGKILL: 'Killed',
+            })
+    return sm
 
 
-@fallback(ON_LINUX, subprocess.Popen)
-class TeePTYProc(object):
-    def __init__(self, args, stdin=None, stdout=None, stderr=None, preexec_fn=None,
-                 env=None, universal_newlines=False):
-        """Popen replacement for running commands in teed psuedo-terminal. This
-        allows the capturing AND streaming of stdout and stderr.  Availability
-        is Linux-only.
+def safe_readlines(handle, hint=-1):
+    """Attempts to read lines without throwing an error."""
+    try:
+        lines = handle.readlines(hint)
+    except OSError:
+        lines = []
+    return lines
+
+
+def safe_readable(handle):
+    """Attempts to find if the handle is readable without throwing an error."""
+    try:
+        status = handle.readable()
+    except OSError:
+        status = False
+    return status
+
+
+class CommandPipeline:
+    """Represents a subprocess-mode command pipeline."""
+
+    attrnames = ("stdin", "stdout", "stderr", "pid", "returncode", "args",
+                 "alias", "stdin_redirect", "stdout_redirect",
+                 "stderr_redirect", "timestamps", "executed_cmd", 'input',
+                 'output', 'errors')
+
+    def __init__(self, specs, procs, starttime=None, captured=False):
         """
-        self.stdin = stdin
-        self._stdout = stdout
-        self._stderr = stderr
-        self.args = args
-        self.universal_newlines = universal_newlines
-        xenv = builtins.__xonsh_env__ if hasattr(builtins, '__xonsh_env__') \
-            else {'XONSH_ENCODING': 'utf-8',
-                  'XONSH_ENCODING_ERRORS': 'strict'}
+        Parameters
+        ----------
+        specs : list of SubprocSpec
+            Process sepcifications
+        procs : list of Popen-like
+            Process objects.
+        starttime : floats or None, optional
+            Start timestamp.
+        captured : bool or str, optional
+            Flag for whether or not the command should be captured.
 
-        if not os.access(args[0], os.F_OK):
-            raise FileNotFoundError('command {0!r} not found'.format(args[0]))
-        elif not os.access(args[0], os.X_OK) or os.path.isdir(args[0]):
-            raise PermissionError('permission denied: {0!r}'.format(args[0]))
-        self._tpty = tpty = TeePTY(encoding=xenv.get('XONSH_ENCODING'),
-                                   errors=xenv.get('XONSH_ENCODING_ERRORS'))
-        if preexec_fn is not None:
-            preexec_fn()
-        delay = xenv.get('TEEPTY_PIPE_DELAY')
-        tpty.spawn(args, env=env, stdin=stdin, delay=delay)
-
-    @property
-    def pid(self):
-        """The pid of the spawned process."""
-        return self._tpty.pid
-
-    @property
-    def returncode(self):
-        """The return value of the spawned process or None if the process
-        exited due to a signal."""
-        if os.WIFEXITED(self._tpty.wcode):
-            return os.WEXITSTATUS(self._tpty.wcode)
-        else:
-            return None
-
-    @property
-    def signal(self):
-        """If the process was terminated by a signal a 2-tuple is returned
-        containing the signal number and a boolean indicating whether a core
-        file was produced. Otherwise None is returned."""
-        if os.WIFSIGNALED(self._tpty.wcode):
-            return (os.WTERMSIG(self._tpty.wcode),
-                    os.WCOREDUMP(self._tpty.wcode))
-        else:
-            return None
-
-    def poll(self):
-        """Polls the spawned process and returns the os.wait code."""
-        return _wcode_to_popen(self._tpty.wcode)
-
-    def wait(self, timeout=None):
-        """Waits for the spawned process to finish, up to a timeout.
-        Returns the return os.wait code."""
-        tpty = self._tpty
-        t0 = time.time()
-        while tpty.wcode is None:
-            if timeout is not None and timeout < (time.time() - t0):
-                raise subprocess.TimeoutExpired
-        return _wcode_to_popen(tpty.wcode)
-
-    @property
-    def stdout(self):
-        """The stdout (and stderr) that was tee'd into a buffer by the psuedo-terminal.
+        Attributes
+        ----------
+        spec : SubprocSpec
+            The last specification in specs
+        proc : Popen-like
+            The process in procs
+        ended : bool
+            Boolean for if the command has stopped executing.
+        input : str
+            A string of the standard input.
+        output : str
+            A string of the standard output.
+        errors : str
+            A string of the standard error.
+        lines : list of str
+            The output lines
         """
-        if self._stdout is not None:
-            pass
-        elif self.universal_newlines:
-            self._stdout = io.StringIO(str(self._tpty))
-            self._stdout.seek(0)
-        else:
-            self._stdout = self._tpty.buffer
-        return self._stdout
+        self.procs = procs
+        self.proc = procs[-1]
+        self.specs = specs
+        self.spec = specs[-1]
+        self.starttime = starttime or time.time()
+        self.captured = captured
+        self.ended = False
+        self.input = self._output = self.errors = self.endtime = None
+        self._closed_handle_cache = {}
+        self.lines = []
 
-
-def _wcode_to_popen(code):
-    """Converts os.wait return code into Popen format."""
-    if os.WIFEXITED(code):
-        return os.WEXITSTATUS(code)
-    elif os.WIFSIGNALED(code):
-        return -1 * os.WTERMSIG(code)
-    else:
-        # Can this happen? Let's find out. Returning None is not an option.
-        raise ValueError("Invalid os.wait code: {}".format(code))
-
-
-_CCTuple = collections.namedtuple("_CCTuple", ["stdin", "stdout", "stderr",
-                                               "pid", "returncode", "args", "alias", "stdin_redirect",
-                                               "stdout_redirect", "stderr_redirect", "timestamp",
-                                               "executed_cmd"])
-
-
-class CompletedCommand(_CCTuple):
-    """Represents a completed subprocess-mode command."""
+    def __repr__(self):
+        s = self.__class__.__name__ + '('
+        s += ', '.join(a + '=' + str(getattr(self, a)) for a in self.attrnames)
+        s += ')'
+        return s
 
     def __bool__(self):
         return self.returncode == 0
 
+    def __len__(self):
+        return len(self.procs)
+
     def __iter__(self):
-        if not self.stdout:
-            raise StopIteration()
+        """Iterates through stdout and returns the lines, converting to
+        strings and universal newlines if needed.
+        """
+        if self.ended:
+            yield from iter(self.lines)
+        else:
+            yield from self.tee_stdout()
 
-        pre = self.stdout
-        post = None
-
-        while post != '':
-            pre, sep, post = pre.partition('\n')
-            # this line may be optional since we use universal newlines.
-            pre = pre[:-1] if pre and pre[-1] == '\r' else pre
-            yield pre
-            pre = post
+    def iterraw(self):
+        """Iterates through the last stdout, and returns the lines
+        exactly as found.
+        """
+        # get approriate handles
+        proc = self.proc
+        uninew = self.spec.universal_newlines
+        # get the correct stdout
+        stdout = proc.stdout
+        if ((stdout is None or not safe_readable(stdout)) and
+                self.spec.captured_stdout is not None):
+            stdout = self.spec.captured_stdout
+        if uninew and hasattr(stdout, 'buffer'):
+            stdout = stdout.buffer
+        if not stdout or not safe_readable(stdout):
+            # we get here if the process is not bacgroundable or the
+            # class is the real Popen
+            wait_for_active_job()
+            self._endtime()
+            if self.captured == 'object':
+                self.end(tee_output=False)
+            raise StopIteration
+        # get the correct stderr
+        stderr = proc.stderr
+        if ((stderr is None or not safe_readable(stderr)) and
+                self.spec.captured_stderr is not None):
+            stderr = self.spec.captured_stderr
+        if uninew and hasattr(stderr, 'buffer'):
+            stderr = stderr.buffer
+        # read from process while it is running
+        timeout = builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
+        while proc.poll() is None:
+            if self._prev_procs_done():
+                self._close_prev_procs()
+                proc.prevs_are_closed = True
+                break
+            elif getattr(proc, 'suspended', False):
+                return
+            yield from safe_readlines(stdout, 1024)
+            self.stream_stderr(safe_readlines(stderr, 1024))
+            time.sleep(timeout)
+        # read from process now that it is over
+        yield from safe_readlines(stdout)
+        self.stream_stderr(safe_readlines(stderr))
+        proc.wait()
+        self._endtime()
+        yield from safe_readlines(stdout)
+        self.stream_stderr(safe_readlines(stderr))
+        if self.captured == 'object':
+            self.end(tee_output=False)
 
     def itercheck(self):
+        """Iterates through the command lines and throws an error if the
+        returncode is non-zero.
+        """
         yield from self
         if self.returncode:
             # I included self, as providing access to stderr and other details
@@ -586,31 +1465,292 @@ class CompletedCommand(_CCTuple):
             raise XonshCalledProcessError(self.returncode, self.executed_cmd,
                                           self.stdout, self.stderr, self)
 
+    def tee_stdout(self):
+        """Writes the process stdout to the output variable, line-by-line, and
+        yields each line.
+        """
+        env = builtins.__xonsh_env__
+        enc = env.get('XONSH_ENCODING')
+        err = env.get('XONSH_ENCODING_ERRORS')
+        lines = self.lines
+        stream = self.captured not in STDOUT_CAPTURE_KINDS
+        for line in self.iterraw():
+            # write to stdout line ASAP, if needed
+            if stream:
+                sys.stdout.buffer.write(line)
+                sys.stdout.flush()
+            # do some munging of the line before we return it
+            line = RE_HIDDEN_BYTES.sub(b'', line)
+            line = RE_VT100_ESCAPE.sub(b'', line)
+            line = line.decode(encoding=enc, errors=err)
+            if line.endswith('\r\n'):
+                line = line[:-2] + '\n'
+            elif line.endswith('\r'):
+                line = line[:-1] + '\n'
+            # tee it up!
+            lines.append(line)
+            yield line
+
+    def stream_stderr(self, lines):
+        """Streams lines to sys.stderr and the errors attribute."""
+        if not lines:
+            return
+        b = b''.join(lines)
+        # write bytes to std stream
+        sys.stderr.buffer.write(b)
+        sys.stderr.flush()
+        # do some munging of the line before we save it to the attr
+        b = RE_HIDDEN_BYTES.sub(b'', b)
+        b = RE_VT100_ESCAPE.sub(b'', b)
+        env = builtins.__xonsh_env__
+        s = b.decode(encoding=env.get('XONSH_ENCODING'),
+                     errors=env.get('XONSH_ENCODING_ERRORS'))
+        s = s.replace('\r\n', '\n').replace('\r', '\n')
+        # set the errors
+        if self.errors is None:
+            self.errors = s
+        else:
+            self.errors += s
+
+    def _decode_uninew(self, b):
+        """Decode bytes into a str and apply universal newlines as needed."""
+        if not b:
+            return ''
+        if isinstance(b, bytes):
+            env = builtins.__xonsh_env__
+            s = b.decode(encoding=env.get('XONSH_ENCODING'),
+                         errors=env.get('XONSH_ENCODING_ERRORS'))
+        else:
+            s = b
+        if self.spec.universal_newlines:
+            s = s.replace('\r\n', '\n').replace('\r', '\n')
+        return s
+
+    #
+    # Ending methods
+    #
+
+    def end(self, tee_output=True):
+        """Waits for the command to complete and then runs any closing and
+        cleanup procedures that need to be run.
+        """
+        if self.ended:
+            return
+        if tee_output:
+            for _ in self.tee_stdout():
+                pass
+        self._endtime()
+        # since we are driven by getting output, input may not be available
+        # until the command has completed.
+        self._set_input()
+        self._close_prev_procs()
+        self._close_proc()
+        self._check_signal()
+        self._apply_to_history()
+        self.ended = True
+        self._raise_subproc_error()
+
+    def _endtime(self):
+        """Sets the closing timestamp if it hasn't been already."""
+        if self.endtime is None:
+            self.endtime = time.time()
+
+    def _safe_close(self, handle):
+        safe_fdclose(handle, cache=self._closed_handle_cache)
+
+    def _prev_procs_done(self):
+        """Boolean for if all previous processes have completed. If there
+        is only a single process in the pipeline, this returns False.
+        """
+        for s, p in zip(self.specs[:-1], self.procs[:-1]):
+            self._safe_close(p.stdin)
+            self._safe_close(s.stdin)
+            if p.poll() is None:
+                return False
+            self._safe_close(p.stdout)
+            self._safe_close(s.stdout)
+            self._safe_close(p.stderr)
+            self._safe_close(s.stderr)
+        return len(self) > 1
+
+    def _close_prev_procs(self):
+        """Closes all but the last proc's stdout."""
+        for s, p in zip(self.specs[:-1], self.procs[:-1]):
+            self._safe_close(s.stdin)
+            self._safe_close(p.stdin)
+            self._safe_close(s.stdout)
+            self._safe_close(p.stdout)
+            self._safe_close(s.stderr)
+            self._safe_close(p.stderr)
+
+    def _close_proc(self):
+        """Closes last proc's stdout."""
+        s = self.spec
+        p = self.proc
+        self._safe_close(s.stdin)
+        self._safe_close(p.stdin)
+        self._safe_close(s.stdout)
+        self._safe_close(p.stdout)
+        self._safe_close(s.stderr)
+        self._safe_close(p.stderr)
+        self._safe_close(s.captured_stdout)
+        self._safe_close(s.captured_stderr)
+
+    def _set_input(self):
+        """Sets the input vaiable."""
+        stdin = self.proc.stdin
+        if stdin is None or isinstance(stdin, int) or stdin.closed or \
+                            not stdin.seekable():
+            input = b''
+        else:
+            stdin.seek(0)
+            input = stdin.read()
+        self.input = self._decode_uninew(input)
+
+    def _check_signal(self):
+        """Checks if a signal was recieved and issues a message."""
+        proc_signal = getattr(self.proc, 'signal', None)
+        if proc_signal is None:
+            return
+        sig, core = proc_signal
+        sig_str = SIGNAL_MESSAGES.get(sig)
+        if sig_str:
+            if core:
+                sig_str += ' (core dumped)'
+            print(sig_str, file=sys.stderr)
+            self.errors += sig_str + '\n'
+
+    def _apply_to_history(self):
+        """Applies the results to the current history object."""
+        hist = builtins.__xonsh_history__
+        hist.last_cmd_rtn = self.proc.returncode
+
+    def _raise_subproc_error(self):
+        """Raises a subprocess error, if we are suppossed to."""
+        spec = self.spec
+        rtn = self.returncode
+        if (not spec.is_proxy and
+                rtn is not None and
+                rtn > 0 and
+                builtins.__xonsh_env__.get('RAISE_SUBPROC_ERROR')):
+            raise subprocess.CalledProcessError(rtn, spec.cmd,
+                                                output=self.output)
+
+
+    #
+    # Properties
+    #
+
+    @property
+    def stdin(self):
+        """Process stdin."""
+        return self.proc.stdin
+
+    @property
+    def stdout(self):
+        """Process stdout."""
+        return self.proc.stdout
+
+    @property
+    def stderr(self):
+        """Process stderr."""
+        return self.proc.stderr
+
     @property
     def inp(self):
         """Creates normalized input string from args."""
         return ' '.join(self.args)
 
     @property
+    def output(self):
+        if self._output is None:
+            self._output = ''.join(self.lines)
+        return self._output
+
+    @property
     def out(self):
-        """Alias to stdout."""
-        return self.stdout
+        """Output value as a str."""
+        self.end()
+        return self.output
 
     @property
     def err(self):
-        """Alias to stderr."""
-        return self.stderr
+        """Error messages as a string."""
+        self.end()
+        return self.errors
+
+    @property
+    def pid(self):
+        """Process identifier."""
+        return self.proc.pid
+
+    @property
+    def returncode(self):
+        """Process return code, waits until command is completed."""
+        proc = self.proc
+        #if proc.returncode is None:
+        if proc.poll() is None:
+            self.end()
+        return proc.returncode
+
+    rtn = returncode
 
     @property
     def rtn(self):
         """Alias to return code."""
         return self.returncode
 
+    @property
+    def args(self):
+        """Arguments to the process."""
+        return self.spec.args
 
-CompletedCommand.__new__.__defaults__ = (None,) * len(CompletedCommand._fields)
+    @property
+    def rtn(self):
+        """Alias to return code."""
+        return self.returncode
+
+    @property
+    def alias(self):
+        """Alias the process used."""
+        return self.spec.alias
+
+    @property
+    def stdin_redirect(self):
+        """Redirection used for stdin."""
+        stdin = self.spec.stdin
+        name = getattr(stdin, 'name', '<stdin>')
+        mode = getattr(stdin, 'mode', 'r')
+        return [name, mode]
+
+    @property
+    def stdout_redirect(self):
+        """Redirection used for stdout."""
+        stdout = self.spec.stdout
+        name = getattr(stdout, 'name', '<stdout>')
+        mode = getattr(stdout, 'mode', 'a')
+        return [name, mode]
+
+    @property
+    def stderr_redirect(self):
+        """Redirection used for stderr."""
+        stderr = self.spec.stderr
+        name = getattr(stderr, 'name', '<stderr>')
+        mode = getattr(stderr, 'mode', 'r')
+        return [name, mode]
+
+    @property
+    def timestamps(self):
+        """The start and end time stamps."""
+        return [self.starttime, self.endtime]
+
+    @property
+    def executed_cmd(self):
+        """The resolve and executed command."""
+        return self.spec.cmd
 
 
-class HiddenCompletedCommand(CompletedCommand):
+class HiddenCommandPipeline(CommandPipeline):
     def __repr__(self):
         return ''
 

@@ -19,8 +19,6 @@ else:
         _sys.modules['xonsh.ansi_colors'] = __amalgam__
         codecache = __amalgam__
         _sys.modules['xonsh.codecache'] = __amalgam__
-        lazyimps = __amalgam__
-        _sys.modules['xonsh.lazyimps'] = __amalgam__
         platform = __amalgam__
         _sys.modules['xonsh.platform'] = __amalgam__
         pretty = __amalgam__
@@ -29,10 +27,10 @@ else:
         _sys.modules['xonsh.timings'] = __amalgam__
         jobs = __amalgam__
         _sys.modules['xonsh.jobs'] = __amalgam__
+        lazyimps = __amalgam__
+        _sys.modules['xonsh.lazyimps'] = __amalgam__
         parser = __amalgam__
         _sys.modules['xonsh.parser'] = __amalgam__
-        teepty = __amalgam__
-        _sys.modules['xonsh.teepty'] = __amalgam__
         tokenize = __amalgam__
         _sys.modules['xonsh.tokenize'] = __amalgam__
         tools = __amalgam__

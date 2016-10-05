@@ -251,9 +251,7 @@ def get_next_job_number():
 
 
 def add_job(info):
-    """
-    Add a new job to the jobs dictionary.
-    """
+    """Add a new job to the jobs dictionary."""
     num = get_next_job_number()
     info['started'] = time.time()
     info['status'] = "running"
@@ -377,16 +375,15 @@ def fg(args, stdin=None):
 
 
 def bg(args, stdin=None):
-    """
-    xonsh command: bg
+    """xonsh command: bg
 
     Resume execution of the currently active job in the background, or, if a
     single number is given as an argument, resume that job in the background.
     """
     res = fg(args, stdin)
     if res is None:
-        curTask = get_task(tasks[0])
-        curTask['bg'] = True
-        _continue(curTask)
+        curtask = get_task(tasks[0])
+        curtask['bg'] = True
+        _continue(curtask)
     else:
         return res

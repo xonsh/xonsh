@@ -1053,14 +1053,28 @@ Callable Aliases
 ----------------
 Lastly, if an alias value is a function (or other callable), then this
 function is called *instead* of going to a subprocess command. Such functions
-must have one of the following two signatures
+may have one of the following signatures:
 
 .. code-block:: python
 
-    def _mycmd(args, stdin=None):
-        """args will be a list of strings representing the arguments to this
-        command. stdin will be a string, if present. This is used to pipe
-        the output of the previous command into this one.
+    def mycmd0():
+        """This form takes no arguments but may return output or a return code.
+        """
+        return "some output."
+
+    def mycmd1(args):
+        """This form takes a single argument, args. This is a list of strings
+        representing the arguments to this command. Feel free to parse them
+        however you wish!
+        """
+        # perform some action.
+        return 0
+
+    def mycmd2(args, stdin=None):
+        """This form takes two arguments. The args list like above, as a well
+        as standard input. stdin will be a file like object that the command
+        can read from, if the user piped input to this command. If no input
+        was provided this will be None.
         """
         # do whatever you want! Anything you print to stdout or stderr
         # will be captured for you automatically. This allows callable
@@ -1092,13 +1106,21 @@ must have one of the following two signatures
         # examples the return code would be 0/success.
         return (None, "I failed", 2)
 
+    def mycmd3(args, stdin=None, stdout=None):
+        """This form has three parameters.  The first two are the same as above.
+        The last argument represents the standard output.  This is a file-like
+        object that the command may write too.
+        """
+        # you can either use stdout
+        stdout.write("Hello, ")
+        # or print()!
+        print("Mom!")
+        return
 
-.. code-block:: python
-
-    def _mycmd2(args, stdin, stdout, stderr):
-        """args will be a list of strings representing the arguments to this
-        command.  stdin is a read-only file-like object, and stdout and stderr
-        are write-only file-like objects
+    def mycmd4(args, stdin=None, stdout=None, stderr=None):
+        """Lastly, the full form of subprocess callables takes all of the
+        arguments shown above as well as the standard error stream.
+        As with stdout, this is a write-only file-like object.
         """
         # This form allows "streaming" data to stdout and stderr
         import time
@@ -1132,7 +1154,7 @@ with keyword arguments:
 
 .. code-block:: xonshcon
 
-    >>> aliases['banana'] = lambda args,stdin=None: "Banana for scale.\n"
+    >>> aliases['banana'] = lambda: "Banana for scale.\n"
     >>> banana
     Banana for scale.
 

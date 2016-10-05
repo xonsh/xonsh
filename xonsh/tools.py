@@ -121,6 +121,20 @@ def decode_bytes(b):
     return b.decode(encoding=enc, errors=err)
 
 
+def findfirst(s, substrs):
+    """Finds whichever of the given substrings occurs first in the given string
+    and returns that substring, or returns None if no such strings occur.
+    """
+    i = len(s)
+    result = None
+    for substr in substrs:
+        pos = s.find(substr)
+        if -1 < pos < i:
+            i = pos
+            result = substr
+    return i, result
+
+
 class EnvPath(collections.MutableSequence):
     """A class that implements an environment path, which is a list of
     strings. Provides a custom method that expands all paths if the
@@ -559,7 +573,7 @@ def command_not_found(cmd):
 def suggest_commands(cmd, env, aliases):
     """Suggests alternative commands given an environment and aliases."""
     if not env.get('SUGGEST_COMMANDS'):
-        return
+        return ''
     thresh = env.get('SUGGEST_THRESHOLD')
     max_sugg = env.get('SUGGEST_MAX_NUM')
     if max_sugg < 0:

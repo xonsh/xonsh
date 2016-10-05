@@ -9,6 +9,7 @@ from xonsh.tools import ON_WINDOWS
 
 import pytest
 
+from xonsh.commands_cache import CommandsCache
 from xonsh.environ import Env, load_static_config, locate_binary
 
 from tools import skip_if_on_unix
@@ -133,8 +134,9 @@ def test_locate_binary_on_windows(xonsh_builtins):
             'PATH': [tmpdir],
             'PATHEXT': ['.COM', '.EXE', '.BAT'],
         })
-        assert locate_binary('file1') == os.path.join(tmpdir,'file1.exe')
-        assert locate_binary('file1.exe') == os.path.join(tmpdir,'file1.exe')
-        assert locate_binary('file2') == os.path.join(tmpdir,'FILE2.BAT')
-        assert locate_binary('file2.bat') == os.path.join(tmpdir,'FILE2.BAT')
+        xonsh_builtins.__xonsh_commands_cache__ = CommandsCache()
+        assert locate_binary('file1') == os.path.join(tmpdir, 'file1.exe')
+        assert locate_binary('file1.exe') == os.path.join(tmpdir, 'file1.exe')
+        assert locate_binary('file2') == os.path.join(tmpdir, 'FILE2.BAT')
+        assert locate_binary('file2.bat') == os.path.join(tmpdir, 'FILE2.BAT')
         assert locate_binary('file3') is None

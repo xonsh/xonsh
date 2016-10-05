@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """Tests the xonsh lexer."""
 from __future__ import unicode_literals, print_function
+import os
 import sys
 import ast
 import builtins
 import platform
 import subprocess
 from collections import defaultdict
+from collections.abc import MutableMapping
 
 import pytest
 
@@ -62,6 +64,47 @@ class DummyShell:
             self._shell = DummyBaseShell()
         return self._shell
 
+
+class DummyCommandsCache:
+
+    def locate_binary(self, name):
+        return os.path.join(os.path.dirname(__file__), 'bin', name)
+
+    def predict_backgroundable(self, cmd):
+        return True
+
+
+class DummyHistory:
+
+    last_cmd_rtn = 0
+    last_cmd_out = ''
+
+    def append(self, x):
+        pass
+
+
+class DummyEnv(MutableMapping):
+
+    def __init__(self, *args, **kwargs):
+        self._d = dict(*args, **kwargs)
+
+    def detype(self):
+        return {k: str(v) for k, v in self._d.items()}
+
+    def __getitem__(self, k):
+        return self._d[k]
+
+    def __setitem__(self, k, v):
+        self._d[k] = v
+
+    def __delitem__(self, k):
+        del self._d[k]
+
+    def __len__(self):
+        return len(self._d)
+
+    def __iter__(self):
+        yield from self._d
 
 #
 # Execer tools

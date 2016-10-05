@@ -1,10 +1,20 @@
 # -*- coding: utf-8 -*-
+"""Module for caching command & alias names as well as for predicting whether
+a command will be able to be run in the background.
+
+A background predictor is a function that accepect a single argument list
+and returns whethere or not the process can be run in the background (returns
+True) or must be run the foreground (returns False).
+"""
 import os
 import builtins
+import argparse
+import collections
 import collections.abc as cabc
 
-from xonsh.platform import ON_WINDOWS
+from xonsh.platform import ON_WINDOWS, pathbasename
 from xonsh.tools import executables_in
+from xonsh.lazyasd import lazyobject
 
 
 class CommandsCache(cabc.Mapping):
@@ -20,6 +30,7 @@ class CommandsCache(cabc.Mapping):
         self._path_checksum = None
         self._alias_checksum = None
         self._path_mtime = -1
+        self.backgroundable_predictors = default_backgroundable_predictors()
 
     def __contains__(self, key):
         _ = self.all_commands
@@ -97,17 +108,22 @@ class CommandsCache(cabc.Mapping):
         self._cmds_cache = allcmds
         return allcmds
 
+    def cached_name(self, name):
+        """Returns the name that would appear in the cache, if it was exists."""
+        if name is None:
+            return None
+        cached = pathbasename(name)
+        if ON_WINDOWS:
+            keys = self.get_possible_names(cached)
+            cached = next((k for k in keys if k in self._cmds_cache), None)
+        return cached
+
     def lazyin(self, key):
         """Checks if the value is in the current cache without the potential to
         update the cache. It just says whether the value is known *now*. This
         may not reflect precisely what is on the $PATH.
         """
-        if ON_WINDOWS:
-            keys = self.get_possible_names(key)
-            cached_key = next((k for k in keys if k in self._cmds_cache), None)
-            return cached_key is not None
-        else:
-            return key in self._cmds_cache
+        return self.cached_name(key) in self._cmds_cache
 
     def lazyiter(self):
         """Returns an iterator over the current cache contents without the
@@ -125,11 +141,7 @@ class CommandsCache(cabc.Mapping):
 
     def lazyget(self, key, default=None):
         """A lazy value getter."""
-        if ON_WINDOWS:
-            keys = self.get_possible_names(key)
-            cached_key = next((k for k in keys if k in self._cmds_cache), None)
-            key = cached_key if cached_key is not None else key
-        return self._cmds_cache.get(key, default)
+        return self._cmds_cache.get(self.cached_name(key), default)
 
     def locate_binary(self, name):
         """Locates an executable on the file system using the cache."""
@@ -153,3 +165,65 @@ class CommandsCache(cabc.Mapping):
             return self._cmds_cache[cached][0]
         elif os.path.isfile(name) and name != os.path.basename(name):
             return name
+
+    def predict_backgroundable(self, cmd):
+        """Predics whether a command list is backgroundable."""
+        name = self.cached_name(cmd[0])
+        path, is_alias = self.lazyget(name, (None, None))
+        if path is None or is_alias:
+            return True
+        predictor = self.backgroundable_predictors[name]
+        return predictor(cmd[1:])
+
+#
+# Background Predictors
+#
+
+def predict_true(args):
+    """Always say the process is backgroundable."""
+    return True
+
+
+def predict_false(args):
+    """Never say the process is backgroundable."""
+    return False
+
+
+@lazyobject
+def SHELL_PREDICTOR_PARSER():
+    p = argparse.ArgumentParser('shell')
+    p.add_argument('-c', nargs='?', default=None)
+    p.add_argument('filename', nargs='?', default=None)
+    return p
+
+
+def predict_shell(args):
+    """Precict the backgroundability of the normal shell interface, which
+    comes down to whether it is being run in subproc mode.
+    """
+    ns, _ = SHELL_PREDICTOR_PARSER.parse_known_args(args)
+    if ns.c is None and ns.filename is None:
+        pred = False
+    else:
+        pred = True
+    return pred
+
+
+def default_backgroundable_predictors():
+    """Generates a new defaultdict for known backgroundable predictors.
+    The default is to predict true.
+    """
+    return collections.defaultdict(lambda: predict_true,
+        sh=predict_shell,
+        zsh=predict_shell,
+        ksh=predict_shell,
+        csh=predict_shell,
+        tcsh=predict_shell,
+        bash=predict_shell,
+        fish=predict_shell,
+        xonsh=predict_shell,
+        ssh=predict_false,
+        startx=predict_false,
+        vi=predict_false,
+        vim=predict_false,
+        )

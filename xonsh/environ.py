@@ -140,7 +140,6 @@ def DEFAULT_ENSURERS():
     'BOTTOM_TOOLBAR': (is_string_or_callable, ensure_string, ensure_string),
     'SUBSEQUENCE_PATH_COMPLETION': (is_bool, to_bool, bool_to_str),
     'SUPPRESS_BRANCH_TIMEOUT_MESSAGE': (is_bool, to_bool, bool_to_str),
-    'TEEPTY_PIPE_DELAY': (is_float, float, str),
     'UPDATE_OS_ENVIRON': (is_bool, to_bool, bool_to_str),
     'VC_BRANCH_TIMEOUT': (is_float, float, str),
     'VI_MODE': (is_bool, to_bool, bool_to_str),
@@ -156,6 +155,7 @@ def DEFAULT_ENSURERS():
     'XONSH_ENCODING_ERRORS': (is_string, ensure_string, ensure_string),
     'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
     'XONSH_LOGIN': (is_bool, to_bool, bool_to_str),
+    'XONSH_PROC_FREQUENCY': (is_float, float, str),
     'XONSH_SHOW_TRACEBACK': (is_bool, to_bool, bool_to_str),
     'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
     'XONSH_STORE_STDIN': (is_bool, to_bool, bool_to_str),
@@ -275,7 +275,6 @@ def DEFAULT_VALUES():
         'SUGGEST_COMMANDS': True,
         'SUGGEST_MAX_NUM': 5,
         'SUGGEST_THRESHOLD': 3,
-        'TEEPTY_PIPE_DELAY': 0.01,
         'TITLE': DEFAULT_TITLE,
         'UPDATE_OS_ENVIRON': False,
         'VC_BRANCH_TIMEOUT': 0.2 if ON_WINDOWS else 0.1,
@@ -298,6 +297,7 @@ def DEFAULT_VALUES():
         'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
         'XONSH_HISTORY_SIZE': (8128, 'commands'),
         'XONSH_LOGIN': False,
+        'XONSH_PROC_FREQUENCY': 1e-4,
         'XONSH_SHOW_TRACEBACK': False,
         'XONSH_STORE_STDIN': False,
         'XONSH_STORE_STDOUT': False,
@@ -532,15 +532,6 @@ def DEFAULT_DOCS():
         'tab completion of paths.'),
     'SUPPRESS_BRANCH_TIMEOUT_MESSAGE': VarDocs(
         'Whether or not to supress branch timeout warning messages.'),
-    'TEEPTY_PIPE_DELAY': VarDocs(
-        'The number of [seconds] to delay a spawned process if it has '
-        'information being piped in via stdin. This value must be a float. '
-        'If a value less than or equal to zero is passed in, no delay is '
-        'used. This can be used to fix situations where a spawned process, '
-        'such as piping into ``grep``, exits too quickly for the piping '
-        'operation itself. TeePTY (and thus this variable) are currently '
-        'only used when ``$XONSH_STORE_STDOUT`` is True.',
-        configurable=ON_LINUX),
     'TERM': VarDocs(
         'TERM is sometimes set by the terminal emulator. This is used (when '
         "valid) to determine whether or not to set the title. Users shouldn't "
@@ -660,6 +651,9 @@ def DEFAULT_DOCS():
     'XONSH_LOGIN': VarDocs(
         '``True`` if xonsh is running as a login shell, and ``False`` otherwise.',
         configurable=False),
+    'XONSH_PROC_FREQUENCY': VarDocs('The process frquency is the time that '
+        'xonsh process threads sleep for while running command pipelines. '
+        'The value has units of seconds [s].'),
     'XONSH_SHOW_TRACEBACK': VarDocs(
         'Controls if a traceback is shown if exceptions occur in the shell. '
         'Set to ``True`` to always show traceback or ``False`` to always hide. '

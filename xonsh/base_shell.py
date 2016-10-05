@@ -22,94 +22,191 @@ if ON_WINDOWS:
     kernel32.SetConsoleTitleW.argtypes = [ctypes.c_wchar_p]
 
 
-class _TeeOut(object):
-    """Tees stdout into the original sys.stdout and another buffer."""
+class _TeeStdBuf(io.RawIOBase):
+    """A dispatcher for bytes to two buffers, as std stream buffer and an
+    in memory buffer.
+    """
 
-    def __init__(self, buf):
-        self.buffer = buf
-        self.stdout = sys.stdout
-        self.encoding = self.stdout.encoding
-        self.errors = self.stdout.errors
-        sys.stdout = self
+    def __init__(self, stdbuf, membuf):
+        """
+        Parameters
+        ----------
+        stdbuf : BytesIO-like
+            The std stream buffer.
+        membuf : BytesIO-like
+            The in memory stream buffer.
+        """
+        self.stdbuf = stdbuf
+        self.membuf = membuf
+
+    def fileno(self):
+        """Returns the file descriptor of the std buffer."""
+        return self.stdbuf.fileno()
+
+    def seek(self, offset, whence=io.SEEK_SET):
+        """Sets the location in both the stdbuf and the membuf."""
+        self.stdbuf.seek(offset, whence)
+        self.membuf.seek(offset, whence)
+
+    def truncate(self, size=None):
+        """Truncate both buffers."""
+        self.stdbuf.truncate(size)
+        self.membuf.truncate(size)
+
+    def readinto(self, b):
+        """Read bytes into buffer from both streams."""
+        self.stdbuf.readinto(b)
+        return self.membuf.readinto(b)
+
+    def write(self, b):
+        """Write bytes into both buffers."""
+        self.stdbuf.write(b)
+        return self.membuf.write(b)
+
+
+class _TeeStd(io.TextIOBase):
+    """Tees a std stream into an in-memory container and the original stream."""
+
+    def __init__(self, name, mem):
+        """
+        Parameters
+        ----------
+        name : str
+            The name of the buffer in the sys module, e.g. 'stdout'.
+        mem : io.TextIOBase-like
+            The in-memory text-based representation/
+        """
+        self._name = name
+        self.std = std = getattr(sys, name)
+        self.mem = mem
+        self.buffer = _TeeStdBuf(std.buffer, mem.buffer)
+        setattr(sys, name, self)
+
+    @property
+    def encoding(self):
+        """The encoding of the in-memory buffer."""
+        return self.mem.encoding
+
+    @property
+    def errors(self):
+        """The errors of the in-memory buffer."""
+        return self.mem.errors
+
+    @property
+    def newlines(self):
+        """The newlines of the in-memory buffer."""
+        return self.mem.newlines
+
+    def _replace_std(self):
+        std = self.std
+        if std is None:
+            return
+        setattr(sys, self._name, std)
+        self.std = self._name = None
 
     def __del__(self):
-        sys.stdout = self.stdout
+        self._replace_std()
 
     def close(self):
-        """Restores the original stdout."""
-        sys.stdout = self.stdout
+        """Restores the original std stream."""
+        self._replace_std()
 
-    def write(self, data):
-        """Writes data to the original stdout and the buffer."""
-        # data = data.replace('\001', '').replace('\002', '')
-        self.stdout.write(data)
-        self.buffer.write(data)
+    def write(self, s):
+        """Writes data to the original std stream and the in-memory object."""
+        self.std.write(s)
+        self.mem.write(s)
 
     def flush(self):
         """Flushes both the original stdout and the buffer."""
-        self.stdout.flush()
-        self.buffer.flush()
+        self.std.flush()
+        self.mem.flush()
 
     def fileno(self):
-        """Tunnel fileno() calls."""
-        return self.stdout.fileno()
+        """Tunnel fileno() calls to the std stream."""
+        return self.std.fileno()
+
+    def seek(self, offset, whence=io.SEEK_SET):
+        """Seek to a location in both streams."""
+        self.std.seek(offset, whence)
+        self.mem.seek(offset, whence)
+
+    def truncate(self, size=None):
+        """Seek to a location in both streams."""
+        self.std.truncate(size)
+        self.mem.truncate(size)
+
+    def detach(self):
+        """This operation is not supported."""
+        raise io.UnsupportedOperation
+
+    def read(self, size=None):
+        """Read from the in-memory stream and seek to a new location in the
+        std stream.
+        """
+        s = self.mem.read(size)
+        loc = self.std.tell()
+        self.std.seek(loc + len(s))
+        return s
+
+    def readline(self, size=-1):
+        """Read a line from the in-memory stream and seek to a new location
+        in the std stream.
+        """
+        s = self.mem.readline(size)
+        loc = self.std.tell()
+        self.std.seek(loc + len(s))
+        return s
+
+    def write(self, s):
+        """Write a string to both streams and return the length written to the
+        in-memory stream.
+        """
+        self.std.write(s)
+        return self.mem.write(s)
 
 
-class _TeeErr(object):
-    """Tees stderr into the original sys.stdout and another buffer."""
-
-    def __init__(self, buf):
-        self.buffer = buf
-        self.stderr = sys.stderr
-        self.encoding = self.stderr.encoding
-        self.errors = self.stderr.errors
-        sys.stderr = self
-
-    def __del__(self):
-        sys.stderr = self.stderr
-
-    def close(self):
-        """Restores the original stderr."""
-        sys.stderr = self.stderr
-
-    def write(self, data):
-        """Writes data to the original stderr and the buffer."""
-        # data = data.replace('\001', '').replace('\002', '')
-        self.stderr.write(data)
-        self.buffer.write(data)
-
-    def flush(self):
-        """Flushes both the original stderr and the buffer."""
-        self.stderr.flush()
-        self.buffer.flush()
-
-    def fileno(self):
-        """Tunnel fileno() calls."""
-        return self.stderr.fileno()
-
-
-class Tee(io.StringIO):
-    """Class that merges tee'd stdout and stderr into a single buffer.
+class Tee:
+    """Class that merges tee'd stdout and stderr into a single strea,.
 
     This represents what a user would actually see on the command line.
+    This class as the same interface as io.TextIOWrapper, except that
+    the buffer is optional.
     """
     # pylint is a stupid about counting public methods when using inheritance.
     # pylint: disable=too-few-public-methods
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.stdout = _TeeOut(self)
-        self.stderr = _TeeErr(self)
+    def __init__(self, buffer=None, encoding=None, errors=None,
+                 newline=None, line_buffering=False, write_through=False):
+        self.buffer = io.BytesIO() if buffer is None else buffer
+        self.memory = io.TextIOWrapper(self.buffer, encoding=encoding,
+                                       errors=errors, newline=newline,
+                                       line_buffering=line_buffering,
+                                       write_through=write_through)
+        self.stdout = _TeeStd('stdout', self.memory)
+        self.stderr = _TeeStd('stderr', self.memory)
+
+    @property
+    def line_buffering(self):
+        return self.memory.line_buffering
 
     def __del__(self):
         del self.stdout, self.stderr
-        super().__del__()
+        self.stdout = self.stderr = None
 
     def close(self):
         """Closes the buffer as well as the stdout and stderr tees."""
         self.stdout.close()
         self.stderr.close()
-        super().close()
+        self.memory.close()
+
+    def getvalue(self):
+        """Gets the current contents of the in-memory buffer."""
+        m = self.memory
+        loc = m.tell()
+        m.seek(0)
+        s = m.read()
+        m.seek(loc)
+        return s
 
 
 class BaseShell(object):
@@ -164,13 +261,14 @@ class BaseShell(object):
         src, code = self.push(line)
         if code is None:
             return
-
         events.on_precommand.fire(src)
-
+        env = builtins.__xonsh_env__
         hist = builtins.__xonsh_history__  # pylint: disable=no-member
         ts1 = None
-        store_stdout = builtins.__xonsh_env__.get('XONSH_STORE_STDOUT')  # pylint: disable=no-member
-        tee = Tee() if store_stdout else io.StringIO()
+        store_stdout = env.get('XONSH_STORE_STDOUT')  # pylint: disable=no-member
+        enc = env.get('XONSH_ENCODING')
+        err = env.get('XONSH_ENCODING_ERRORS')
+        tee = Tee(encoding=enc, errors=err) if store_stdout else io.StringIO()
         try:
             ts0 = time.time()
             run_compiled_code(code, self.ctx, None, 'single')
@@ -189,7 +287,6 @@ class BaseShell(object):
             ts1 = ts1 or time.time()
             self._append_history(inp=src, ts=[ts0, ts1], tee_out=tee.getvalue())
             tee.close()
-
             self._fix_cwd()
         if builtins.__xonsh_exit__:  # pylint: disable=no-member
             return True
