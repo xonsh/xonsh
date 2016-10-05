@@ -89,6 +89,7 @@ def RE_VT100_ESCAPE():
     return re.compile(b'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]')
 
 
+@profile
 def populate_char_queue(reader, fd, queue):
     """Reads single characters from a file descriptor into a queue.
     If this ends or fails, it flags the calling reader object as closed.
@@ -104,29 +105,6 @@ def populate_char_queue(reader, fd, queue):
         else:
             reader.closed = True
             break
-
-
-def populate_bytes_queue(reader, fd, queue):
-    """Reads single characters from a file descriptor into a queue.
-    If this ends or fails, it flags the calling reader object as closed.
-    """
-    os.set_blocking(fd, False)
-    f = io.open(fd, 'rb', buffering=0)
-    b = bytearray(1024)
-    while True:
-        try:
-            #b = os.read(fd, 4096)
-            n = f.readinto(b)
-        except OSError:
-            reader.closed = True
-            break
-        if n:
-            queue.put(b[:n])
-        #if b:
-            #queue.put(b)
-        #else:
-        #    reader.closed = True
-        #    break
 
 
 class NonBlockingFDReader:
@@ -163,7 +141,7 @@ class NonBlockingFDReader:
             return self.queue.get(block=timeout is not None,
                                   timeout=timeout)
         except queue.Empty:
-            time.sleep(timeout)
+            time.sleep(timeout * 100)
             return b''
 
     def read(self, size=-1):
@@ -195,29 +173,6 @@ class NonBlockingFDReader:
                 break
             i += 1
         return buf
-
-    def new_readline(self, size=-1):
-        """Reads a line, or a partial line from the file descriptor."""
-        i = 0
-        nl = b'\n'
-        buf = self._block
-        pre, sep, post = buf.partition(nl)
-        if sep:
-            line = pre + sep
-            if size == -1 or len(line) <= size:
-                self._block = post
-            else:
-                line, self._block = line[:size], line[size:] + post
-        else:
-            time.sleep(0.01)
-            c = self.read_char()
-            if c:
-                self._block += c
-                line = self.readline(size)
-            else:
-                self._block = b''
-                line = pre
-        return line
 
     def readlines(self, hint=-1):
         """Reads lines from the file descriptor."""
@@ -328,9 +283,8 @@ class PopenThread(threading.Thread):
     to be set following instantiation.
     """
 
-    def __init__(self, *args, stdin=None, stdout=None, stderr=None, bufsize=-1, **kwargs):
+    def __init__(self, *args, stdin=None, stdout=None, stderr=None, **kwargs):
         super().__init__()
-        sys.setswitchinterval(1e-2)
         self.lock = threading.RLock()
         self.stdout_fd = stdout.fileno()
         self._set_pty_size()
@@ -366,7 +320,6 @@ class PopenThread(threading.Thread):
                                             stdin=stdin,
                                             stdout=stdout,
                                             stderr=stderr,
-                                            bufsize=1024,
                                             **kwargs)
         self.pid = proc.pid
         self.universal_newlines = uninew = proc.universal_newlines
@@ -459,7 +412,7 @@ class PopenThread(threading.Thread):
         i = -1
         for i, line in enumerate(iter(reader.readline, b'')):
             self._alt_mode_switch(line, writer, stdbuf)
-        time.sleep(1e-2)
+        time.sleep(self.timeout)
         return i + 1
 
     def _alt_mode_switch(self, line, membuf, stdbuf):
@@ -638,8 +591,8 @@ class PopenThread(threading.Thread):
     #
 
     def poll(self):
-        """Dispatches to Popen.poll()."""
-        return self.proc.poll()
+        """Dispatches to Popen.returncode."""
+        return self.proc.returncode
 
     def wait(self, timeout=None):
         """Dispatches to Popen.wait(), but also does process cleanup such as
@@ -1461,6 +1414,7 @@ class CommandPipeline:
         else:
             yield from self.tee_stdout()
 
+    @profile
     def iterraw(self):
         """Iterates through the last stdout, and returns the lines
         exactly as found.
