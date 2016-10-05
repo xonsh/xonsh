@@ -137,6 +137,7 @@ def DEFAULT_ENSURERS():
     'PROMPT': (is_string_or_callable, ensure_string, ensure_string),
     'RAISE_SUBPROC_ERROR': (is_bool, to_bool, bool_to_str),
     'RIGHT_PROMPT': (is_string_or_callable, ensure_string, ensure_string),
+    'BOTTOM_TOOLBAR': (is_string_or_callable, ensure_string, ensure_string),
     'SUBSEQUENCE_PATH_COMPLETION': (is_bool, to_bool, bool_to_str),
     'SUPPRESS_BRANCH_TIMEOUT_MESSAGE': (is_bool, to_bool, bool_to_str),
     'TEEPTY_PIPE_DELAY': (is_float, float, str),
@@ -267,6 +268,7 @@ def DEFAULT_VALUES():
         'PUSHD_SILENT': False,
         'RAISE_SUBPROC_ERROR': False,
         'RIGHT_PROMPT': '',
+        'BOTTOM_TOOLBAR': '',
         'SHELL_TYPE': 'best',
         'SUBSEQUENCE_PATH_COMPLETION': True,
         'SUPPRESS_BRANCH_TIMEOUT_MESSAGE': False,
@@ -495,6 +497,11 @@ def DEFAULT_DOCS():
     'RIGHT_PROMPT': VarDocs(
         'Template string for right-aligned text '
         'at the prompt. This may be parameterized in the same way as '
+        'the ``$PROMPT`` variable. Currently, this is only available in the '
+        'prompt-toolkit shell.'),
+    'BOTTOM_TOOLBAR': VarDocs(
+        'Template string for the bottom toolbar. '
+        'This may be parameterized in the same way as '
         'the ``$PROMPT`` variable. Currently, this is only available in the '
         'prompt-toolkit shell.'),
     'SHELL_TYPE': VarDocs(
