@@ -1,6 +1,6 @@
 **Added:**
 
-* New subprocess specification class ``SubprocSpec`` is sued for specifiying
+* New subprocess specification class ``SubprocSpec`` is used for specifiying
   and manipulating subprocess classes prior to execution.
 * New ``PopenThread`` class runs subprocesses on a a separate thread.
 * New ``CommandPipeline`` and ``HiddenCommandPipeline`` classes manage the
@@ -29,8 +29,12 @@
 
 **Removed:**
 
-* ``CompletedCommand`` and ``HiddenCompletedCommand`` classes have been removed.
-* ``SimpleProcProxy`` and ``SimpleForegroundProcProxy`` have been removed.
+* ``CompletedCommand`` and ``HiddenCompletedCommand`` classes have been removed
+  in favor of ``CommandPipeline`` and ``HiddenCommandPipeline``.
+* ``SimpleProcProxy`` and ``SimpleForegroundProcProxy`` have been removed
+  in favor of a more general mechanism for dispatching callable aliases
+  implemented in the ``ProcProxy`` class.
+
 
 **Fixed:**
 
