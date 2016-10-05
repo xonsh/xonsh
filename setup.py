@@ -322,7 +322,7 @@ def main():
             'proctitle': ['setproctitle'],
         }
     if sys.version_info[:2] < (3, 4):
-        skq['install_requires'] = [
+        skw['install_requires'] = [
             'pathlib',
         ]
     setup(**skw)
