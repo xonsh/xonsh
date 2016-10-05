@@ -2,6 +2,10 @@ language: python
 matrix:
     include:
         - os: linux
+          python: 3.3
+          env:
+            - BUILD_DOCS=no
+        - os: linux
           python: 3.5
           env:
             - BUILD_DOCS=true
@@ -15,10 +19,6 @@ matrix:
         - os: osx
           language: generic
           env: PYTHON="3.5" MINICONDA_OS="MacOSX"
-        - os: linux
-          python: 3.3
-          env:
-            - BUILD_DOCS=no
     allow_failures:
         - python: "nightly"
 
