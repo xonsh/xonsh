@@ -499,6 +499,11 @@ def DEFAULT_DOCS():
         'at the prompt. This may be parameterized in the same way as '
         'the ``$PROMPT`` variable. Currently, this is only available in the '
         'prompt-toolkit shell.'),
+    'BOTTOM_TOOLBAR': VarDocs(
+        'Template string for the bottom toolbar. '
+        'This may be parameterized in the same way as '
+        'the ``$PROMPT`` variable. Currently, this is only available in the '
+        'prompt-toolkit shell.'),
     'SHELL_TYPE': VarDocs(
         'Which shell is used. Currently two base shell types are supported:\n\n'
         "    - ``readline`` that is backed by Python's readline module\n"
