@@ -17,6 +17,10 @@
   ``f(args, stdin=None, stdout=None, stderr=None)``.
 * Uncaptured subprocesses now recieve a PTY file handle for stdout and
   stderr.
+* New ``$XONSH_PROC_FREQUENCY`` environment variable that specifies how long
+  loops in the subprocess framwork should sleep. This may be adjusted from
+  its default value to improved perfromance and mitigate "leaky" pipes on
+  slower machines.
 
 **Changed:**
 
