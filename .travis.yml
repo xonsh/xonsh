@@ -17,10 +17,10 @@ matrix:
           env: PYTHON="3.5" MINICONDA_OS="MacOSX"
         - os: linux
           python: 3.3
-    allow_failures:
-        - python: "nightly"
           env:
             - BUILD_DOCS=true
+    allow_failures:
+        - python: "nightly"
 
 before_install:
   - if [[ ! "$TRAVIS_PYTHON_VERSION" == "nightly" && ! $BUILD_DOCS ]]; then
