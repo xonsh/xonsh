@@ -321,6 +321,10 @@ def main():
             'linux': ['distro'],
             'proctitle': ['setproctitle'],
         }
+    if sys.version_info[:2] < (3, 4):
+        skq['install_requires'] = [
+            'pathlib',
+        ]
     setup(**skw)
 
 
