@@ -102,6 +102,29 @@ def populate_char_queue(reader, fd, queue):
             break
 
 
+def populate_bytes_queue(reader, fd, queue):
+    """Reads single characters from a file descriptor into a queue.
+    If this ends or fails, it flags the calling reader object as closed.
+    """
+    os.set_blocking(fd, False)
+    f = io.open(fd, 'rb', buffering=0)
+    b = bytearray(1024)
+    while True:
+        try:
+            #b = os.read(fd, 4096)
+            n = f.readinto(b)
+        except OSError:
+            reader.closed = True
+            break
+        if n:
+            queue.put(b[:n])
+        #if b:
+            #queue.put(b)
+        #else:
+        #    reader.closed = True
+        #    break
+
+
 class NonBlockingFDReader:
     """A class for reading characters from a file descriptor on a background
     thread. This has the advantages that the calling thread can close the
@@ -121,6 +144,7 @@ class NonBlockingFDReader:
         self.queue = queue.Queue()
         self.timeout = timeout
         self.closed = False
+        self._block = b''
         # start reading from stream
         self.thread = threading.Thread(target=populate_char_queue,
                                        args=(self, self.fd, self.queue))
@@ -149,6 +173,7 @@ class NonBlockingFDReader:
             i += 1
         return buf
 
+    @profile
     def readline(self, size=-1):
         """Reads a line, or a partial line from the file descriptor."""
         i = 0
@@ -164,6 +189,29 @@ class NonBlockingFDReader:
                 break
             i += 1
         return buf
+
+    def new_readline(self, size=-1):
+        """Reads a line, or a partial line from the file descriptor."""
+        i = 0
+        nl = b'\n'
+        buf = self._block
+        pre, sep, post = buf.partition(nl)
+        if sep:
+            line = pre + sep
+            if size == -1 or len(line) <= size:
+                self._block = post
+            else:
+                line, self._block = line[:size], line[size:] + post
+        else:
+            time.sleep(0.01)
+            c = self.read_char()
+            if c:
+                self._block += c
+                line = self.readline(size)
+            else:
+                self._block = b''
+                line = pre
+        return line
 
     def readlines(self, hint=-1):
         """Reads lines from the file descriptor."""
