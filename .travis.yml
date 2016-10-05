@@ -18,7 +18,7 @@ matrix:
         - os: linux
           python: 3.3
           env:
-            - BUILD_DOCS=true
+            - BUILD_DOCS=no
     allow_failures:
         - python: "nightly"
 
