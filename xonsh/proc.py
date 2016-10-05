@@ -65,6 +65,10 @@ def STDOUT_CAPTURE_KINDS():
     return frozenset(['stdout', 'object'])
 
 
+if 'profile' not in globals():
+    profile = lambda f: f
+
+
 # The following escape codes are xterm codes.
 # See http://rtfm.etla.org/xterm/ctlseq.html for more.
 MODE_NUMS = ('1049', '47', '1047')
@@ -151,6 +155,7 @@ class NonBlockingFDReader:
         self.thread.daemon = True
         self.thread.start()
 
+    @profile
     def read_char(self, timeout=None):
         """Reads a single character from the queue."""
         timeout = timeout or self.timeout
@@ -158,6 +163,7 @@ class NonBlockingFDReader:
             return self.queue.get(block=timeout is not None,
                                   timeout=timeout)
         except queue.Empty:
+            time.sleep(timeout)
             return b''
 
     def read(self, size=-1):
@@ -322,8 +328,9 @@ class PopenThread(threading.Thread):
     to be set following instantiation.
     """
 
-    def __init__(self, *args, stdin=None, stdout=None, stderr=None, **kwargs):
+    def __init__(self, *args, stdin=None, stdout=None, stderr=None, bufsize=-1, **kwargs):
         super().__init__()
+        sys.setswitchinterval(1e-2)
         self.lock = threading.RLock()
         self.stdout_fd = stdout.fileno()
         self._set_pty_size()
@@ -359,6 +366,7 @@ class PopenThread(threading.Thread):
                                             stdin=stdin,
                                             stdout=stdout,
                                             stderr=stderr,
+                                            bufsize=1024,
                                             **kwargs)
         self.pid = proc.pid
         self.universal_newlines = uninew = proc.universal_newlines
@@ -440,6 +448,7 @@ class PopenThread(threading.Thread):
             time.sleep(1e-7)
         return getattr(self, name)
 
+    @profile
     def _read_write(self, reader, writer, stdbuf):
         """Read from a buffer and write into memory or back down to
         the standard buffer, line-by-line, as approriate. Returns the number of
@@ -450,6 +459,7 @@ class PopenThread(threading.Thread):
         i = -1
         for i, line in enumerate(iter(reader.readline, b'')):
             self._alt_mode_switch(line, writer, stdbuf)
+        time.sleep(1e-2)
         return i + 1
 
     def _alt_mode_switch(self, line, membuf, stdbuf):
