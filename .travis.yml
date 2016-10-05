@@ -19,6 +19,8 @@ matrix:
           python: 3.3
     allow_failures:
         - python: "nightly"
+          env:
+            - BUILD_DOCS=true
 
 before_install:
   - if [[ ! "$TRAVIS_PYTHON_VERSION" == "nightly" && ! $BUILD_DOCS ]]; then
