@@ -122,7 +122,6 @@ class NonBlockingFDReader:
         self.timeout = timeout
         self.sleepscale = 0
         self.closed = False
-        self._block = b''
         # start reading from stream
         self.thread = threading.Thread(target=populate_char_queue,
                                        args=(self, self.fd, self.queue))
