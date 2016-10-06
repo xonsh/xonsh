@@ -65,10 +65,6 @@ def STDOUT_CAPTURE_KINDS():
     return frozenset(['stdout', 'object'])
 
 
-if 'profile' not in globals():
-    profile = lambda f: f
-
-
 # The following escape codes are xterm codes.
 # See http://rtfm.etla.org/xterm/ctlseq.html for more.
 MODE_NUMS = ('1049', '47', '1047')
@@ -89,7 +85,6 @@ def RE_VT100_ESCAPE():
     return re.compile(b'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]')
 
 
-@profile
 def populate_char_queue(reader, fd, queue):
     """Reads single characters from a file descriptor into a queue.
     If this ends or fails, it flags the calling reader object as closed.
@@ -134,7 +129,6 @@ class NonBlockingFDReader:
         self.thread.daemon = True
         self.thread.start()
 
-    @profile
     def read_char(self, timeout=None):
         """Reads a single character from the queue."""
         timeout = timeout or self.timeout
@@ -160,7 +154,6 @@ class NonBlockingFDReader:
             i += 1
         return buf
 
-    @profile
     def readline(self, size=-1):
         """Reads a line, or a partial line from the file descriptor."""
         i = 0
@@ -412,7 +405,6 @@ class PopenThread(threading.Thread):
             time.sleep(1e-7)
         return getattr(self, name)
 
-    @profile
     def _read_write(self, reader, writer, stdbuf):
         """Read from a buffer and write into memory or back down to
         the standard buffer, line-by-line, as approriate. Returns the number of
@@ -1425,7 +1417,6 @@ class CommandPipeline:
         else:
             yield from self.tee_stdout()
 
-    @profile
     def iterraw(self):
         """Iterates through the last stdout, and returns the lines
         exactly as found.
