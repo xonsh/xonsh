@@ -125,6 +125,7 @@ class NonBlockingFDReader:
         self.fd = fd
         self.queue = queue.Queue()
         self.timeout = timeout
+        self.sleepscale = 0
         self.closed = False
         self._block = b''
         # start reading from stream
@@ -138,10 +139,12 @@ class NonBlockingFDReader:
         """Reads a single character from the queue."""
         timeout = timeout or self.timeout
         try:
+            self.sleepscale = 0
             return self.queue.get(block=timeout is not None,
                                   timeout=timeout)
         except queue.Empty:
-            time.sleep(timeout * 100)
+            self.sleepscale = min(self.sleepscale + 1, 3)
+            time.sleep(timeout * 10**self.sleepscale)
             return b''
 
     def read(self, size=-1):
@@ -297,7 +300,7 @@ class PopenThread(threading.Thread):
         else:
             self.stdin_fd = stdin.fileno()
         self.store_stdin = env.get('XONSH_STORE_STDIN')
-        self._in_alt_mode = False
+        self.in_alt_mode = False
         self.stdin_mode = None
         # Set some signal handles, if we can. Must come before process
         # is started to prevent deadlock on windows
@@ -373,14 +376,22 @@ class PopenThread(threading.Thread):
         self._read_write(procout, stdout, sys.__stdout__)
         self._read_write(procerr, stderr, sys.__stderr__)
         # loop over reads while process is running.
+        cnt = 1
         while proc.poll() is None:
-            self._read_write(procout, stdout, sys.__stdout__)
-            self._read_write(procerr, stderr, sys.__stderr__)
-            if self.prevs_are_closed and not self._in_alt_mode:
+            i = self._read_write(procout, stdout, sys.__stdout__)
+            j = self._read_write(procerr, stderr, sys.__stderr__)
+            if self.suspended:
                 break
-            elif self.suspended:
+            elif self.in_alt_mode:
+                if i + j == 0:
+                    cnt = min(cnt + 1, 1000)
+                else:
+                    cnt = 1
+                time.sleep(self.timeout * cnt)
+            elif self.prevs_are_closed:
                 break
-            time.sleep(self.timeout)
+            else:
+                time.sleep(self.timeout)
         # final closing read.
         cntout = cnterr = 0
         while cntout < 10 and cnterr < 10:
@@ -412,7 +423,9 @@ class PopenThread(threading.Thread):
         i = -1
         for i, line in enumerate(iter(reader.readline, b'')):
             self._alt_mode_switch(line, writer, stdbuf)
-        time.sleep(self.timeout)
+        if i >= 0:
+            writer.flush()
+            stdbuf.flush()
         return i + 1
 
     def _alt_mode_switch(self, line, membuf, stdbuf):
@@ -439,12 +452,12 @@ class PopenThread(threading.Thread):
             # positions before and after alt mode.
             alt_mode = (flag in START_ALTERNATE_MODE)
             if alt_mode:
-                self._in_alt_mode = alt_mode
+                self.in_alt_mode = alt_mode
                 self._alt_mode_writer(flag, membuf, stdbuf)
                 self._enable_cbreak_stdin()
             else:
                 self._alt_mode_writer(flag, membuf, stdbuf)
-                self._in_alt_mode = alt_mode
+                self.in_alt_mode = alt_mode
                 self._disable_cbreak_stdin()
             # recurse this function, but without the current flag.
             self._alt_mode_switch(line[j:], membuf, stdbuf)
@@ -455,15 +468,13 @@ class PopenThread(threading.Thread):
         """
         if not line:
             pass  # don't write empty values
-        elif self._in_alt_mode:
+        elif self.in_alt_mode:
             stdbuf.buffer.write(line)
-            stdbuf.flush()
         else:
             with self.lock:
                 p = membuf.tell()
                 membuf.seek(0, io.SEEK_END)
                 membuf.write(line)
-                membuf.flush()
                 membuf.seek(p)
 
     #
@@ -1447,12 +1458,15 @@ class CommandPipeline:
         # read from process while it is running
         timeout = builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
         while proc.poll() is None:
-            if self._prev_procs_done():
+            if getattr(proc, 'suspended', False):
+                return
+            elif getattr(proc, 'in_alt_mode', False):
+                time.sleep(0.1)  # probably not leaving any time soon
+                continue
+            elif self._prev_procs_done():
                 self._close_prev_procs()
                 proc.prevs_are_closed = True
                 break
-            elif getattr(proc, 'suspended', False):
-                return
             yield from safe_readlines(stdout, 1024)
             self.stream_stderr(safe_readlines(stderr, 1024))
             time.sleep(timeout)
