@@ -401,7 +401,7 @@ def make_default_aliases():
         'scp-resume': ['rsync', '--partial', '-h', '--progress', '--rsh=ssh'],
         'showcmd': showcmd,
         'ipynb': ['jupyter', 'notebook', '--no-browser'],
-        'which': xxw.which_main,
+        'which': xxw.which,
         'xontrib': xontribs_main,
         'completer': xca.completer_alias
     }

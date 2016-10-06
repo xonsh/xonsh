@@ -1,12 +1,12 @@
 """Implements the which xoreutil."""
-
+import os
 import argparse
 import builtins
 import functools
-import os
 
 from xonsh.xoreutils import _which
 import xonsh.platform as xp
+import xonsh.proc as xproc
 
 
 @functools.lru_cache()
@@ -53,7 +53,7 @@ def print_global_object(arg, stdout):
           file=stdout)
 
 
-def print_path(abs_name, from_where, stdout, verbose=False):
+def print_path(abs_name, from_where, stdout, verbose=False, captured=False):
     """Print the name and path of the command."""
     if xp.ON_WINDOWS:
         # Use list dir to get correct case for the filename
@@ -63,10 +63,11 @@ def print_path(abs_name, from_where, stdout, verbose=False):
         abs_name = os.path.join(p, f)
         if builtins.__xonsh_env__.get('FORCE_POSIX_PATHS', False):
             abs_name.replace(os.sep, os.altsep)
-    if not verbose:
-        print(abs_name, file=stdout)
-    else:
+    if verbose:
         print('{} ({})'.format(abs_name, from_where), file=stdout)
+    else:
+        end = '' if captured else '\n'
+        print(abs_name, end=end, file=stdout)
 
 
 def print_alias(arg, stdout, verbose=False):
@@ -82,7 +83,7 @@ def print_alias(arg, stdout, verbose=False):
             builtins.__xonsh_superhelp__(builtins.aliases[arg])
 
 
-def which(args, stdin=None, stdout=None, stderr=None):
+def which(args, stdin=None, stdout=None, stderr=None, spec=None):
     """
     Checks if each arguments is a xonsh aliases, then if it's an executable,
     then finally return an error code equal to the number of misses.
@@ -96,6 +97,7 @@ def which(args, stdin=None, stdout=None, stderr=None):
 
     pargs = parser.parse_args(args)
     verbose = pargs.verbose or pargs.all
+    captured = spec.captured in xproc.STDOUT_CAPTURE_KINDS
     if pargs.plain:
         verbose = False
     if xp.ON_WINDOWS:
@@ -123,7 +125,7 @@ def which(args, stdin=None, stdout=None, stderr=None):
         os.environ['PATH'] = builtins.__xonsh_env__.detype()['PATH']
         matches = _which.whichgen(arg, exts=exts, verbose=verbose)
         for abs_name, from_where in matches:
-            print_path(abs_name, from_where, stdout, verbose)
+            print_path(abs_name, from_where, stdout, verbose, captured)
             nmatches += 1
             if not pargs.all:
                 break
@@ -159,7 +161,3 @@ class AWitchAWitch(argparse.Action):
         webbrowser.open('https://github.com/xonsh/xonsh/commit/f49b400')
         parser.exit()
 
-
-def which_main(args=None, stdin=None):
-    """This is the which command entry point."""
-    which(args, stdin=stdin)

@@ -336,6 +336,7 @@ class PopenThread(threading.Thread):
         captured_stderr to stderr.
         """
         proc = self.proc
+        spec = self._wait_and_getattr('spec')
         # get stdin and apply parallel reader if needed.
         stdin = self.stdin
         if self.orig_stdin is None:
@@ -348,14 +349,14 @@ class PopenThread(threading.Thread):
             origin = None
         # get non-blocking stdout
         stdout = self.stdout.buffer if self.universal_newlines else self.stdout
-        capout = self._wait_and_getattr('captured_stdout')
+        capout = spec.captured_stdout
         if capout is None:
             procout = None
         else:
             procout = NonBlockingFDReader(capout.fileno(), timeout=self.timeout)
         # get non-blocking stderr
         stderr = self.stderr.buffer if self.universal_newlines else self.stderr
-        caperr = self._wait_and_getattr('captured_stderr')
+        caperr = spec.captured_stderr
         if caperr is None:
             procerr = None
         else:
@@ -854,39 +855,46 @@ def parse_proxy_return(r, stdout, stderr):
     return cmd_result
 
 
-def proxy_zero(f, args, stdin, stdout, stderr):
+def proxy_zero(f, args, stdin, stdout, stderr, spec):
     """Calls a proxy function which takes no parameters."""
     return f()
 
 
-def proxy_one(f, args, stdin, stdout, stderr):
+def proxy_one(f, args, stdin, stdout, stderr, spec):
     """Calls a proxy function which takes one parameter: args"""
     return f(args)
 
 
-def proxy_two(f, args, stdin, stdout, stderr):
+def proxy_two(f, args, stdin, stdout, stderr, spec):
     """Calls a proxy function which takes two parameter: args and stdin."""
     return f(args, stdin)
 
 
-def proxy_three(f, args, stdin, stdout, stderr):
+def proxy_three(f, args, stdin, stdout, stderr, spec):
     """Calls a proxy function which takes three parameter: args, stdin, stdout.
     """
     return f(args, stdin, stdout)
 
 
-PROXIES = (proxy_zero, proxy_one, proxy_two, proxy_three)
+def proxy_four(f, args, stdin, stdout, stderr, spec):
+    """Calls a proxy function which takes four parameter: args, stdin, stdout,
+    and stderr.
+    """
+    return f(args, stdin, stdout)
+
+
+PROXIES = (proxy_zero, proxy_one, proxy_two, proxy_three, proxy_four)
 
 def partial_proxy(f):
     """Dispatches the approriate proxy function based on the number of args."""
     numargs = len(inspect.signature(f).parameters)
-    if numargs < 4:
+    if numargs < 5:
         return functools.partial(PROXIES[numargs], f)
-    elif numargs == 4:
+    elif numargs == 5:
         # don't need to partial.
         return f
     else:
-        e = 'Expected proxy with 4 or fewer arguments, not {}'
+        e = 'Expected proxy with 5 or fewer arguments, not {}'
         raise XonshError(e.format(numargs))
 
 
@@ -994,10 +1002,11 @@ class ProcProxy(threading.Thread):
         """
         if self.f is None:
             return
-        last_in_pipeline = self._wait_and_getattr('last_in_pipeline')
+        spec = self._wait_and_getattr('spec')
+        last_in_pipeline = spec.last_in_pipeline
         if last_in_pipeline:
-            capout = self._wait_and_getattr('captured_stdout')
-            caperr = self._wait_and_getattr('captured_stderr')
+            capout = spec.captured_stdout
+            caperr = spec.captured_stderr
         env = builtins.__xonsh_env__
         enc = env.get('XONSH_ENCODING')
         err = env.get('XONSH_ENCODING_ERRORS')
@@ -1034,7 +1043,7 @@ class ProcProxy(threading.Thread):
                  STDERR_DISPATCHER.register(sp_stderr), \
                  redirect_stdout(STDOUT_DISPATCHER), \
                  redirect_stderr(STDERR_DISPATCHER):
-                r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr)
+                r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr, spec)
         except Exception:
             print_exception()
             r = 1
@@ -1252,6 +1261,7 @@ class ForegroundProcProxy(object):
         env = builtins.__xonsh_env__
         enc = env.get('XONSH_ENCODING')
         err = env.get('XONSH_ENCODING_ERRORS')
+        spec = self._wait_and_getattr('spec')
         # set file handles
         if self.stdin is None:
             stdin = None
@@ -1261,7 +1271,7 @@ class ForegroundProcProxy(object):
         stderr = self._pick_buf(self.stderr, sys.stderr, enc, err)
         # run the actual function
         try:
-            r = self.f(self.args, stdin, stdout, stderr)
+            r = self.f(self.args, stdin, stdout, stderr, spec)
         except Exception:
             print_exception()
             r = 1
@@ -1287,6 +1297,12 @@ class ForegroundProcProxy(object):
             # must be a binary stream, should wrap it.
             buf = io.TextIOWrapper(handle, encoding=enc, errors=err)
         return buf
+
+    def _wait_and_getattr(self, name):
+        """make sure the instance has a certain attr, and return it."""
+        while not hasattr(self, name):
+            time.sleep(1e-7)
+        return getattr(self, name)
 
 
 def foreground(f):

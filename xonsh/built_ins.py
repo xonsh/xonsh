@@ -359,7 +359,7 @@ class SubprocSpec:
     kwnames = ('stdin', 'stdout', 'stderr', 'universal_newlines')
 
     def __init__(self, cmd, *, cls=subprocess.Popen, stdin=None, stdout=None,
-                 stderr=None, universal_newlines=False):
+                 stderr=None, universal_newlines=False, captured=False):
         """
         Parameters
         ----------
@@ -375,6 +375,10 @@ class SubprocSpec:
             Popen file descriptor or flag for stderr.
         universal_newlines : bool
             Whether or not to use universal newlines.
+        captured : bool or str, optional
+            The flag for if the subprocess is captured, may be one of:
+            False for $[], 'stdout' for $(), 'hiddenobject' for ![], or
+            'object' for !().
 
         Attributes
         ----------
@@ -405,6 +409,7 @@ class SubprocSpec:
         self.stdout = stdout
         self.stderr = stderr
         self.universal_newlines = universal_newlines
+        self.captured = captured
         # pure attrs
         self.args = list(cmd)
         self.alias = None
@@ -494,6 +499,7 @@ class SubprocSpec:
             p = self.cls(self.alias, self.cmd, **kwargs)
         else:
             p = self._run_binary(kwargs)
+        p.spec = self
         p.last_in_pipeline = self.last_in_pipeline
         p.captured_stdout = self.captured_stdout
         p.captured_stderr = self.captured_stderr
@@ -710,7 +716,7 @@ def cmds_to_specs(cmds, captured=False):
             if cmd[-1] == '&':
                 cmd = cmd[:-1]
                 redirects.append('&')
-            spec = SubprocSpec.build(cmd)
+            spec = SubprocSpec.build(cmd, captured=captured)
             specs.append(spec)
     # now modify the subprocs based on the redirects.
     for i, redirect in enumerate(redirects):
@@ -774,8 +780,6 @@ def run_subproc(cmds, captured=False):
     # create command or return if backgrounding.
     if spec.background:
         return
-    #if not captured:
-    #    pass
     if captured == 'hiddenobject':
         command = HiddenCommandPipeline(specs, procs, starttime=starttime,
                                         captured=captured)
