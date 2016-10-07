@@ -7,16 +7,12 @@ matrix:
             - BUILD_DOCS=true
         - os: linux
           python: "nightly"
-          env:
-            - RUN_COVERAGE=true
         - os: osx
           language: generic
           env: PYTHON="3.4" MINICONDA_OS="MacOSX"
         - os: osx
           language: generic
           env: PYTHON="3.5" MINICONDA_OS="MacOSX"
-    allow_failures:
-        - python: "nightly"
 
 before_install:
   - if [[ ! "$TRAVIS_PYTHON_VERSION" == "nightly" && ! $BUILD_DOCS ]]; then
@@ -48,14 +44,6 @@ script:
   - if [[ $BUILD_DOCS = true ]]; then
       cd docs;
       make html;
-    elif [[ $RUN_COVERAGE = true ]]; then
-      py.test --flake8 --cov=. --timeout=10;
     else
       py.test --timeout=10;
-    fi
-
-
-after_success:
-  - if [[ $RUN_COVERAGE = true ]]; then
-      codecov;
     fi
