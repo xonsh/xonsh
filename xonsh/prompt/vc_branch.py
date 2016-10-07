@@ -168,8 +168,9 @@ def hg_dirty_working_directory():
     denv['HGRCPATH'] = ''
     try:
         s = subprocess.check_output(['hg', 'identify', '--id'],
-                                    stderr=subprocess.PIPE, cwd=cwd, timeout=vcbt,
-                                    universal_newlines=True, env=denv)
+                                    stderr=subprocess.PIPE, cwd=cwd,
+                                    timeout=vcbt, universal_newlines=True,
+                                    env=denv)
         return s.strip(os.linesep).endswith('+')
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired,
             FileNotFoundError):
