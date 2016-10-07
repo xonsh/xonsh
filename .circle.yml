@@ -19,5 +19,5 @@ dependencies:
 
 test:
     override:
-        - case $CIRCLE_NODE_INDEX in 0) py.test --timeout=10 ;; 1) py.test --timeout=10 ;; esac:
+        - case $CIRCLE_NODE_INDEX in 0) py.test --flake8 --timeout=10 ;; 1) py.test --timeout=10 ;; esac:
             parallel: true
