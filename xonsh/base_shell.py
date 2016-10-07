@@ -6,8 +6,8 @@ import sys
 import time
 import builtins
 
-from xonsh.tools import (XonshError, escape_windows_cmd_string, print_exception,
-                         DefaultNotGiven, check_for_partial_string)
+from xonsh.tools import (XonshError, print_exception, DefaultNotGiven,
+                         check_for_partial_string)
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.codecache import (should_use_cache, code_cache_name,
                              code_cache_check, get_cache_filename,
@@ -156,13 +156,6 @@ class _TeeStd(io.TextIOBase):
         loc = self.std.tell()
         self.std.seek(loc + len(s))
         return s
-
-    def write(self, s):
-        """Write a string to both streams and return the length written to the
-        in-memory stream.
-        """
-        self.std.write(s)
-        return self.mem.write(s)
 
 
 class Tee:
