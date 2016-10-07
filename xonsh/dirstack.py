@@ -45,7 +45,7 @@ def _unc_check_enabled()->bool:
             key2 = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'software\microsoft\command processor')
             wval, wtype = winreg.QueryValueEx(key2, 'DisableUNCCheck')
             winreg.CloseKey(key2)
-        except OSError as e:
+        except OSError as e:  # NOQA
             pass
 
     return False if wval else True

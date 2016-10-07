@@ -71,6 +71,7 @@ CAN_RESIZE_WINDOW = LazyBool(lambda: hasattr(signal, 'SIGWINCH'),
 signal.SIGWINCH, else ``False``.
 """
 
+
 @lazybool
 def HAS_PYGMENTS():
     """``True`` if `pygments` is available, else ``False``."""
