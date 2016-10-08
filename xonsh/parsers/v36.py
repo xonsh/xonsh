@@ -24,4 +24,3 @@ class Parser(ThreeFiveParser):
             comps += p5.get('comps', [])
             comp.ifs += p5.get('if', [])
         p[0] = p0
-

@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 """Prompt formatter for simple version control branchs"""
 
-import builtins
 import os
-import subprocess
 import sys
-import threading, queue
 import time
+import queue
+import builtins
 import warnings
+import threading
+import subprocess
 
-import xonsh.platform as xp
 import xonsh.tools as xt
 
 
@@ -23,6 +23,7 @@ def _get_git_branch(q):
         info = xt.decode_bytes(status)
         branch = info.splitlines()[0].split()[-1]
         q.put(branch)
+
 
 def get_git_branch():
     """Attempts to find the current git branch. If this could not
@@ -167,8 +168,9 @@ def hg_dirty_working_directory():
     denv['HGRCPATH'] = ''
     try:
         s = subprocess.check_output(['hg', 'identify', '--id'],
-                                    stderr=subprocess.PIPE, cwd=cwd, timeout=vcbt,
-                                    universal_newlines=True, env=denv)
+                                    stderr=subprocess.PIPE, cwd=cwd,
+                                    timeout=vcbt, universal_newlines=True,
+                                    env=denv)
         return s.strip(os.linesep).endswith('+')
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired,
             FileNotFoundError):

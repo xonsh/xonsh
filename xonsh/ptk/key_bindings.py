@@ -53,8 +53,8 @@ def carriage_return(b, cli, *, autoindent=True):
             not current_line_blank):
         b.newline(copy_margin=autoindent)
     elif (doc.char_before_cursor == '\\' and
-            not (not builtins.__xonsh_env__.get('FORCE_POSIX_PATHS')
-                 and ON_WINDOWS)):
+            not (not builtins.__xonsh_env__.get('FORCE_POSIX_PATHS') and
+                 ON_WINDOWS)):
         b.newline(copy_margin=autoindent)
     elif (doc.find_next_word_beginning() is not None and
             (any(not _is_blank(i)
@@ -90,8 +90,8 @@ class BeginningOfLine(Filter):
     def __call__(self, cli):
         before_cursor = cli.current_buffer.document.current_line_before_cursor
 
-        return bool(len(before_cursor) == 0
-                    and not cli.current_buffer.document.on_first_line)
+        return bool(len(before_cursor) == 0 and
+                    not cli.current_buffer.document.on_first_line)
 
 
 class EndOfLine(Filter):
@@ -112,8 +112,8 @@ class ShouldConfirmCompletion(Filter):
     Check if completion needs confirmation
     """
     def __call__(self, cli):
-        return (builtins.__xonsh_env__.get('COMPLETIONS_CONFIRM')
-                and cli.current_buffer.complete_state)
+        return (builtins.__xonsh_env__.get('COMPLETIONS_CONFIRM') and
+                cli.current_buffer.complete_state)
 
 
 # Copied from prompt-toolkit's key_binding/bindings/basic.py
@@ -246,7 +246,9 @@ def load_xonsh_bindings(key_bindings_manager):
 
     @handle(Keys.Left, filter=BeginningOfLine())
     def wrap_cursor_back(event):
-        """Move cursor to end of previous line unless at beginning of document"""
+        """Move cursor to end of previous line unless at beginning of
+        document
+        """
         b = event.cli.current_buffer
         b.cursor_up(count=1)
         relative_end_index = b.document.get_end_of_line_position()

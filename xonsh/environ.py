@@ -49,6 +49,7 @@ def HELP_TEMPLATE():
             'default: {{CYAN}}{default}{{NO_COLOR}}\n'
             'configurable: {{CYAN}}{configurable}{{NO_COLOR}}')
 
+
 @lazyobject
 def LOCALE_CATS():
     lc = {'LC_CTYPE': locale.LC_CTYPE,
@@ -651,7 +652,8 @@ def DEFAULT_DOCS():
     'XONSH_LOGIN': VarDocs(
         '``True`` if xonsh is running as a login shell, and ``False`` otherwise.',
         configurable=False),
-    'XONSH_PROC_FREQUENCY': VarDocs('The process frquency is the time that '
+    'XONSH_PROC_FREQUENCY': VarDocs(
+        'The process frquency is the time that '
         'xonsh process threads sleep for while running command pipelines. '
         'The value has units of seconds [s].'),
     'XONSH_SHOW_TRACEBACK': VarDocs(

@@ -736,9 +736,9 @@ def _tokenize(readline, encoding):
                         stashed = tok
                         continue
 
-                    if token == 'def' and (stashed
-                                           and stashed.type == NAME
-                                           and stashed.string == 'async'):
+                    if token == 'def' and (stashed and
+                                           stashed.type == NAME and
+                                           stashed.string == 'async'):
                         async_def = True
                         async_def_indent = indents[-1]
 
