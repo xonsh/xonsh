@@ -4,51 +4,93 @@ import shutil
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-import pickle
 
 from xonsh.tools import print_color, ON_WINDOWS
 
 
-def figure_to_rgb_array(fig, width, height):
-    """Converts figure to a numpy array of rgb values
+XONTRIB_MPL_MINIMAL_DEFAULT = True
+
+
+def figure_to_rgb_array(fig, shape=None):
+    """Converts figure to a numpy array
+
+    Parameters
+    ----------
+    fig : matplotlib.figure.Figure
+        the figure to be plotted
+    shape : iterable
+        with the shape of the output array. by default this attempts to use the
+        pixel height and width of the figure
 
     Forked from http://www.icare.univ-lille1.fr/wiki/index.php/How_to_convert_a_matplotlib_figure_to_a_numpy_array_or_a_PIL_image
     """
-    # perform a deep copy using pickel because
-    # Figure is currently not compatible with 'deepcopy'
-    fig_copy = pickle.loads(pickle.dumps(fig))
-    w, h = fig_copy.canvas.get_width_height()
-    dpi = fig_copy.get_dpi()
-    fig_copy.set_size_inches(width/dpi, height/dpi, forward=True)
-    width, height = fig_copy.canvas.get_width_height()
-    for ax in fig_copy.get_axes():
-        ax.set_xticklabels([])
-        ax.set_yticklabels([])
-        ax.set_xlabel('')
-        ax.set_ylabel('')
-        ax.set_title('')
-    # remove all space between subplots
-    fig_copy.subplots_adjust(wspace=0, hspace=0)
-    # move all subplots to take the entirety of space in the figure
-    # leave only one line for top and bottom
-    fig_copy.subplots_adjust(bottom=1/height, top=1-1/height, left=0, right=1)
-    fig_copy.set_frameon(False)
-    fig_copy.set_facecolor('w')
-    font_size = matplotlib.rcParams['font.size']
-    matplotlib.rcParams.update({'font.size': 1})
+    fig.canvas.draw()
+    array = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8)
+    if shape is None:
+        w, h = fig.canvas.get_width_height()
+        shape = (h, w, 3)
+    return array.reshape(*shape)
+
+
+def figure_to_tight_array(fig, width, height, minimal=True):
+    """Converts figure to a numpy array of rgb values of tight value
+
+    Parameters
+    ----------
+    fig : matplotlib.figure.Figure
+        the figure to be plotted
+    width : int
+        pixel width of the final array
+    height : int
+        pixel height of the final array
+    minimal : bool
+        whether or not to reduce the output array to minimized margins/whitespace
+        text is also eliminated
+    """
+    # store the properties of the figure in order to restore it
+    w, h = fig.canvas.get_width_height()
+    dpi_fig = fig.dpi
+    if minimal:
+        # perform reversible operations to produce an optimally tight layout
+        dpi = dpi_fig
+        subplotpars = {
+                k: getattr(fig.subplotpars, k)
+                for k in ['wspace', 'hspace', 'bottom', 'top', 'left', 'right']
+                }
+
+        # set the figure dimensions to the terminal size
+        fig.set_size_inches(width/dpi, height/dpi, forward=True)
+        width, height = fig.canvas.get_width_height()
+
+        # remove all space between subplots
+        fig.subplots_adjust(wspace=0, hspace=0)
+        # move all subplots to take the entirety of space in the figure
+        # leave only one line for top and bottom
+        fig.subplots_adjust(bottom=1/height, top=1-1/height, left=0, right=1)
+
+        # redeuce font size in order to reduce text impact on the image
+        font_size = matplotlib.rcParams['font.size']
+        matplotlib.rcParams.update({'font.size': 0})
+    else:
+        dpi = min([width * fig.dpi // w, height * fig.dpi // h])
+        fig.dpi = dpi
+        width, height = fig.canvas.get_width_height()
 
     # Draw the renderer and get the RGB buffer from the figure
-    fig_copy.canvas.draw()
-    buf = np.fromstring(fig_copy.canvas.tostring_rgb(), dtype=np.uint8)
-    buf.shape = (height, width, 3)
+    array = figure_to_rgb_array(fig, shape=(height, width, 3))
 
-    # clean up and return
-    matplotlib.rcParams.update({'font.size': font_size})
+    if minimal:
+        # cleanup after tight layout
+        # clean up rcParams
+        matplotlib.rcParams.update({'font.size': font_size})
 
-    # close the figure that was created
-    plt.close(fig_copy)
+        # reset the axis positions and figure dimensions
+        fig.set_size_inches(w/dpi, h/dpi, forward=True)
+        fig.subplots_adjust(**subplotpars)
+    else:
+        fig.dpi = dpi_fig
 
-    return buf
+    return array
 
 
 def buf_to_color_str(buf):
@@ -71,11 +113,15 @@ def buf_to_color_str(buf):
 
 
 def show():
+    try:
+        minimal = __xonsh_env__['XONTRIB_MPL_MINIMAL']
+    except KeyError:
+        minimal = XONTRIB_MPL_MINIMAL_DEFAULT
     fig = plt.gcf()
     w, h = shutil.get_terminal_size()
     if ON_WINDOWS:
         w -= 1  # @melund reports that win terminals are too thin
     h -= 1  # leave space for next prompt
-    buf = figure_to_rgb_array(fig, w, h)
+    buf = figure_to_tight_array(fig, w, h, minimal)
     s = buf_to_color_str(buf)
     print_color(s)
