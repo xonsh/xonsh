@@ -66,20 +66,26 @@ def get_hg_branch(cwd=None, root=None):
             return None
         else:
             return subprocess.TimeoutExpired(['hg'], env['VC_BRANCH_TIMEOUT'])
-    # get branch name
-    branch_path = os.path.sep.join([root, '.hg', 'branch'])
-    if os.path.exists(branch_path):
-        with open(branch_path, 'r') as branch_file:
-            branch = branch_file.read()
+    if env.get('VC_HG_SHOW_BRANCH') is True:
+        # get branch name
+        branch_path = os.path.sep.join([root, '.hg', 'branch'])
+        if os.path.exists(branch_path):
+            with open(branch_path, 'r') as branch_file:
+                branch = branch_file.read()
+        else:
+            branch = 'default'
     else:
-        branch = 'default'
+        branch = ''
     # add bookmark, if we can
     bookmark_path = os.path.sep.join([root, '.hg', 'bookmarks.current'])
     if os.path.exists(bookmark_path):
         with open(bookmark_path, 'r') as bookmark_file:
             active_bookmark = bookmark_file.read()
-        branch = "{0}, {1}".format(*(b.strip(os.linesep) for b in
-                                     (branch, active_bookmark)))
+        if env.get('VC_HG_SHOW_BRANCH') is True:
+            branch = "{0}, {1}".format(*(b.strip(os.linesep) for b in
+                                        (branch, active_bookmark)))
+        else:
+            branch = active_bookmark.strip(os.linesep)
     else:
         branch = branch.strip(os.linesep)
     return branch

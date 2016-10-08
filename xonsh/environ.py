@@ -143,6 +143,7 @@ def DEFAULT_ENSURERS():
     'SUPPRESS_BRANCH_TIMEOUT_MESSAGE': (is_bool, to_bool, bool_to_str),
     'UPDATE_OS_ENVIRON': (is_bool, to_bool, bool_to_str),
     'VC_BRANCH_TIMEOUT': (is_float, float, str),
+    'VC_HG_SHOW_BRANCH': (is_bool, to_bool, bool_to_str),
     'VI_MODE': (is_bool, to_bool, bool_to_str),
     'VIRTUAL_ENV': (is_string, ensure_string, ensure_string),
     'WIN_UNICODE_CONSOLE': (always_false, setup_win_unicode_console, bool_to_str),
@@ -279,6 +280,7 @@ def DEFAULT_VALUES():
         'TITLE': DEFAULT_TITLE,
         'UPDATE_OS_ENVIRON': False,
         'VC_BRANCH_TIMEOUT': 0.2 if ON_WINDOWS else 0.1,
+        'VC_HG_SHOW_BRANCH': True,
         'VI_MODE': False,
         'WIN_UNICODE_CONSOLE': True,
         'XDG_CONFIG_HOME': os.path.expanduser(os.path.join('~', '.config')),
@@ -560,6 +562,8 @@ def DEFAULT_DOCS():
         'The timeout (in seconds) for version control '
         'branch computations. This is a timeout per subprocess call, so the '
         'total time to compute will be larger than this in many cases.'),
+    'VC_HG_SHOW_BRANCH': VarDocs(
+        'Whether or not to show the Mercurial branch in the prompt.'),
     'VI_MODE': VarDocs(
         "Flag to enable ``vi_mode`` in the ``prompt_toolkit`` shell."),
     'VIRTUAL_ENV': VarDocs(
