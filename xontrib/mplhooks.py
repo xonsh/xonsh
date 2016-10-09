@@ -30,7 +30,13 @@ def figure_to_rgb_array(fig, shape=None):
         with the shape of the output array. by default this attempts to use the
         pixel height and width of the figure
 
-    Forked from http://www.icare.univ-lille1.fr/wiki/index.php/How_to_convert_a_matplotlib_figure_to_a_numpy_array_or_a_PIL_image
+
+    Returns
+    -------
+    array : np.ndarray
+        An RGBA array of the image represented by the figure.
+
+    Note: the method will throw an exception if the given shape is wrong.
     """
     array = np.frombuffer(_get_buffer(fig, dpi=fig.dpi, format='raw').read(), dtype='uint8')
     if shape is None:
@@ -53,6 +59,11 @@ def figure_to_tight_array(fig, width, height, minimal=True):
     minimal : bool
         whether or not to reduce the output array to minimized margins/whitespace
         text is also eliminated
+
+    Returns
+    -------
+    array : np.ndarray
+        An RGBA array of the image represented by the figure.
     """
     # store the properties of the figure in order to restore it
     w, h = fig.canvas.get_width_height()
