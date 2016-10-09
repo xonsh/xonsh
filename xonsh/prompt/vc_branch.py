@@ -15,12 +15,14 @@ import xonsh.tools as xt
 
 def _get_git_branch(q):
     try:
-        status = subprocess.check_output(['git', 'status'],
-                                         stderr=subprocess.DEVNULL)
+        branch = subprocess.check_output(
+            ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
+            stderr=subprocess.DEVNULL
+        )
     except (subprocess.CalledProcessError, OSError):
         q.put(None)
     else:
-        info = xt.decode_bytes(status)
+        info = xt.decode_bytes(branch)
         branch = info.splitlines()[0].split()[-1]
         q.put(branch)
 
