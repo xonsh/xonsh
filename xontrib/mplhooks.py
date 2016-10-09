@@ -1,4 +1,5 @@
 """Matplotlib hooks, for what its worth."""
+from io import BytesIO
 import shutil
 
 import numpy as np
@@ -9,6 +10,13 @@ from xonsh.tools import print_color, ON_WINDOWS
 
 
 XONTRIB_MPL_MINIMAL_DEFAULT = True
+
+
+def _get_buffer(fig, **kwargs):
+    b = BytesIO()
+    fig.savefig(b, **kwargs)
+    b.seek(0)
+    return b
 
 
 def figure_to_rgb_array(fig, shape=None):
@@ -24,11 +32,10 @@ def figure_to_rgb_array(fig, shape=None):
 
     Forked from http://www.icare.univ-lille1.fr/wiki/index.php/How_to_convert_a_matplotlib_figure_to_a_numpy_array_or_a_PIL_image
     """
-    fig.canvas.draw()
-    array = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8)
+    array = np.frombuffer(_get_buffer(fig, dpi=fig.dpi, format='raw').read(), dtype='uint8')
     if shape is None:
         w, h = fig.canvas.get_width_height()
-        shape = (h, w, 3)
+        shape = (h, w, 4)
     return array.reshape(*shape)
 
 
@@ -77,7 +84,7 @@ def figure_to_tight_array(fig, width, height, minimal=True):
         width, height = fig.canvas.get_width_height()
 
     # Draw the renderer and get the RGB buffer from the figure
-    array = figure_to_rgb_array(fig, shape=(height, width, 3))
+    array = figure_to_rgb_array(fig, shape=(height, width, 4))
 
     if minimal:
         # cleanup after tight layout
