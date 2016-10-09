@@ -131,6 +131,7 @@ def buf_to_color_str(buf):
 
 
 def show():
+    '''Run the mpl display sequence by printing the most recent figure to console'''
     try:
         minimal = __xonsh_env__['XONTRIB_MPL_MINIMAL']
     except KeyError:
