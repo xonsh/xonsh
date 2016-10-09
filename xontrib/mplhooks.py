@@ -8,6 +8,13 @@ import matplotlib.pyplot as plt
 
 from xonsh.tools import print_color, ON_WINDOWS
 
+try:
+    # Use iterm2_tools as an indicator for the iterm2 terminal emulator
+    from iterm2_tools.images import display_image_bytes
+except ImportError:
+    _use_iterm = False
+else:
+    _use_iterm = True
 
 XONTRIB_MPL_MINIMAL_DEFAULT = True
 
@@ -130,6 +137,17 @@ def buf_to_color_str(buf):
     return ''.join(pixels)
 
 
+def display_figure_with_iterm2(fig):
+    """Displays a matplotlib figure using iterm2 inline-image escape sequence.
+
+    Parameters
+    ----------
+    fig : matplotlib.figure.Figure
+        the figure to be plotted
+    """
+    print(display_image_bytes(_get_buffer(fig, format='png', dpi=fig.dpi).read()))
+
+
 def show():
     '''Run the mpl display sequence by printing the most recent figure to console'''
     try:
@@ -137,10 +155,14 @@ def show():
     except KeyError:
         minimal = XONTRIB_MPL_MINIMAL_DEFAULT
     fig = plt.gcf()
-    w, h = shutil.get_terminal_size()
-    if ON_WINDOWS:
-        w -= 1  # @melund reports that win terminals are too thin
-    h -= 1  # leave space for next prompt
-    buf = figure_to_tight_array(fig, w, h, minimal)
-    s = buf_to_color_str(buf)
-    print_color(s)
+    if _use_iterm:
+        display_figure_with_iterm2(fig)
+    else:
+        # Display the image using terminal characters to fit into the console
+        w, h = shutil.get_terminal_size()
+        if ON_WINDOWS:
+            w -= 1  # @melund reports that win terminals are too thin
+        h -= 1  # leave space for next prompt
+        buf = figure_to_tight_array(fig, w, h, minimal)
+        s = buf_to_color_str(buf)
+        print_color(s)
