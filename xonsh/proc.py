@@ -20,13 +20,12 @@ import builtins
 import functools
 import threading
 import subprocess
-import collections
 import collections.abc as cabc
 
-from xonsh.platform import ON_WINDOWS, ON_LINUX, ON_POSIX, CAN_RESIZE_WINDOW
-from xonsh.tools import (redirect_stdout, redirect_stderr, fallback,
-                         print_exception, XonshCalledProcessError, findfirst,
-                         on_main_thread, XonshError)
+from xonsh.platform import ON_WINDOWS, ON_POSIX, CAN_RESIZE_WINDOW
+from xonsh.tools import (redirect_stdout, redirect_stderr, print_exception,
+                         XonshCalledProcessError, findfirst, on_main_thread,
+                         XonshError)
 from xonsh.lazyasd import lazyobject, LazyObject
 from xonsh.jobs import wait_for_active_job
 from xonsh.lazyimps import fcntl, termios
@@ -40,6 +39,7 @@ LFLAG = 3
 ISPEED = 4
 OSPEED = 5
 CC = 6
+
 
 # force some lazy imports so we don't have errors on non-windows platforms
 @lazyobject
@@ -79,6 +79,7 @@ ALTERNATE_MODE_FLAGS = LazyObject(
     globals(), 'ALTERNATE_MODE_FLAGS')
 RE_HIDDEN_BYTES = LazyObject(lambda: re.compile(b'(\001.*?\002)'),
                              globals(), 'RE_HIDDEN')
+
 
 @lazyobject
 def RE_VT100_ESCAPE():
@@ -120,6 +121,7 @@ class NonBlockingFDReader:
         self.fd = fd
         self.queue = queue.Queue()
         self.timeout = timeout
+        self.sleepscale = 0
         self.closed = False
         # start reading from stream
         self.thread = threading.Thread(target=populate_char_queue,
@@ -131,9 +133,12 @@ class NonBlockingFDReader:
         """Reads a single character from the queue."""
         timeout = timeout or self.timeout
         try:
+            self.sleepscale = 0
             return self.queue.get(block=timeout is not None,
                                   timeout=timeout)
         except queue.Empty:
+            self.sleepscale = min(self.sleepscale + 1, 3)
+            time.sleep(timeout * 10**self.sleepscale)
             return b''
 
     def read(self, size=-1):
@@ -169,7 +174,7 @@ class NonBlockingFDReader:
         """Reads lines from the file descriptor."""
         lines = []
         while len(lines) != hint:
-            line = self.readline(szie=-1, timeout=timeout)
+            line = self.readline(size=-1)
             if not line:
                 break
             lines.append(line)
@@ -288,7 +293,7 @@ class PopenThread(threading.Thread):
         else:
             self.stdin_fd = stdin.fileno()
         self.store_stdin = env.get('XONSH_STORE_STDIN')
-        self._in_alt_mode = False
+        self.in_alt_mode = False
         self.stdin_mode = None
         # Set some signal handles, if we can. Must come before process
         # is started to prevent deadlock on windows
@@ -365,14 +370,22 @@ class PopenThread(threading.Thread):
         self._read_write(procout, stdout, sys.__stdout__)
         self._read_write(procerr, stderr, sys.__stderr__)
         # loop over reads while process is running.
+        cnt = 1
         while proc.poll() is None:
-            self._read_write(procout, stdout, sys.__stdout__)
-            self._read_write(procerr, stderr, sys.__stderr__)
-            if self.prevs_are_closed and not self._in_alt_mode:
+            i = self._read_write(procout, stdout, sys.__stdout__)
+            j = self._read_write(procerr, stderr, sys.__stderr__)
+            if self.suspended:
                 break
-            elif self.suspended:
+            elif self.in_alt_mode:
+                if i + j == 0:
+                    cnt = min(cnt + 1, 1000)
+                else:
+                    cnt = 1
+                time.sleep(self.timeout * cnt)
+            elif self.prevs_are_closed:
                 break
-            time.sleep(self.timeout)
+            else:
+                time.sleep(self.timeout)
         # final closing read.
         cntout = cnterr = 0
         while cntout < 10 and cnterr < 10:
@@ -403,6 +416,9 @@ class PopenThread(threading.Thread):
         i = -1
         for i, line in enumerate(iter(reader.readline, b'')):
             self._alt_mode_switch(line, writer, stdbuf)
+        if i >= 0:
+            writer.flush()
+            stdbuf.flush()
         return i + 1
 
     def _alt_mode_switch(self, line, membuf, stdbuf):
@@ -429,12 +445,12 @@ class PopenThread(threading.Thread):
             # positions before and after alt mode.
             alt_mode = (flag in START_ALTERNATE_MODE)
             if alt_mode:
-                self._in_alt_mode = alt_mode
+                self.in_alt_mode = alt_mode
                 self._alt_mode_writer(flag, membuf, stdbuf)
                 self._enable_cbreak_stdin()
             else:
                 self._alt_mode_writer(flag, membuf, stdbuf)
-                self._in_alt_mode = alt_mode
+                self.in_alt_mode = alt_mode
                 self._disable_cbreak_stdin()
             # recurse this function, but without the current flag.
             self._alt_mode_switch(line[j:], membuf, stdbuf)
@@ -445,15 +461,13 @@ class PopenThread(threading.Thread):
         """
         if not line:
             pass  # don't write empty values
-        elif self._in_alt_mode:
+        elif self.in_alt_mode:
             stdbuf.buffer.write(line)
-            stdbuf.flush()
         else:
             with self.lock:
                 p = membuf.tell()
                 membuf.seek(0, io.SEEK_END)
                 membuf.write(line)
-                membuf.flush()
                 membuf.seek(p)
 
     #
@@ -489,7 +503,7 @@ class PopenThread(threading.Thread):
         """Signal handler for SIGINT - Ctrl+C may have been pressed."""
         self.send_signal(signum)
         time.sleep(self.timeout)
-        if self.poll() is not None:
+        if self.proc.poll() is not None:
             self._restore_sigint(frame=frame)
 
     def _restore_sigint(self, frame=None):
@@ -542,7 +556,6 @@ class PopenThread(threading.Thread):
         if frame is not None:
             self._disable_cbreak_stdin()
 
-
     #
     # cbreak mode handlers
     #
@@ -581,8 +594,8 @@ class PopenThread(threading.Thread):
     #
 
     def poll(self):
-        """Dispatches to Popen.poll()."""
-        return self.proc.poll()
+        """Dispatches to Popen.returncode."""
+        return self.proc.returncode
 
     def wait(self, timeout=None):
         """Dispatches to Popen.wait(), but also does process cleanup such as
@@ -885,6 +898,7 @@ def proxy_four(f, args, stdin, stdout, stderr, spec):
 
 PROXIES = (proxy_zero, proxy_one, proxy_two, proxy_three, proxy_four)
 
+
 def partial_proxy(f):
     """Dispatches the approriate proxy function based on the number of args."""
     numargs = len(inspect.signature(f).parameters)
@@ -1080,7 +1094,6 @@ class ProcProxy(threading.Thread):
             self.join(timeout=1e-7)
             time.sleep(1e-7)
         return self.returncode
-
 
     # The code below (_get_devnull, _get_handles, and _make_inheritable) comes
     # from subprocess.py in the Python 3.4.2 Standard Library
@@ -1451,12 +1464,15 @@ class CommandPipeline:
         # read from process while it is running
         timeout = builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
         while proc.poll() is None:
-            if self._prev_procs_done():
+            if getattr(proc, 'suspended', False):
+                return
+            elif getattr(proc, 'in_alt_mode', False):
+                time.sleep(0.1)  # probably not leaving any time soon
+                continue
+            elif self._prev_procs_done():
                 self._close_prev_procs()
                 proc.prevs_are_closed = True
                 break
-            elif getattr(proc, 'suspended', False):
-                return
             yield from safe_readlines(stdout, 1024)
             self.stream_stderr(safe_readlines(stderr, 1024))
             time.sleep(timeout)
@@ -1616,7 +1632,7 @@ class CommandPipeline:
         """Sets the input vaiable."""
         stdin = self.proc.stdin
         if stdin is None or isinstance(stdin, int) or stdin.closed or \
-                            not stdin.seekable():
+           not stdin.seekable():
             input = b''
         else:
             stdin.seek(0)
@@ -1651,7 +1667,6 @@ class CommandPipeline:
                 builtins.__xonsh_env__.get('RAISE_SUBPROC_ERROR')):
             raise subprocess.CalledProcessError(rtn, spec.cmd,
                                                 output=self.output)
-
 
     #
     # Properties
@@ -1704,17 +1719,11 @@ class CommandPipeline:
     def returncode(self):
         """Process return code, waits until command is completed."""
         proc = self.proc
-        #if proc.returncode is None:
         if proc.poll() is None:
             self.end()
         return proc.returncode
 
     rtn = returncode
-
-    @property
-    def rtn(self):
-        """Alias to return code."""
-        return self.returncode
 
     @property
     def args(self):

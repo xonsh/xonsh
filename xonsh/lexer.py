@@ -9,7 +9,7 @@ import keyword as kwmod
 try:
     from ply.lex import LexToken
 except ImportError:
-    from xonsh.ply.lex import LexToken
+    from xonsh.ply.ply.lex import LexToken
 
 from xonsh.lazyasd import lazyobject
 from xonsh.platform import PYTHON_VERSION_INFO

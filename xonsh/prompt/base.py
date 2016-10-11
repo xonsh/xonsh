@@ -121,7 +121,7 @@ def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
             v = fmtter[field]
             try:
                 val = v() if callable(v) else v
-            except Exception as err:
+            except Exception:
                 print('prompt: error: on field {!r}'
                       ''.format(field), file=sys.stderr)
                 xt.print_exception()

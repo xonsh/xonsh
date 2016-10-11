@@ -179,6 +179,7 @@ class CommandsCache(cabc.Mapping):
 # Background Predictors
 #
 
+
 def predict_true(args):
     """Always say the process is backgroundable."""
     return True
@@ -214,16 +215,16 @@ def default_backgroundable_predictors():
     The default is to predict true.
     """
     return collections.defaultdict(lambda: predict_true,
-        sh=predict_shell,
-        zsh=predict_shell,
-        ksh=predict_shell,
-        csh=predict_shell,
-        tcsh=predict_shell,
-        bash=predict_shell,
-        fish=predict_shell,
-        xonsh=predict_shell,
-        ssh=predict_false,
-        startx=predict_false,
-        vi=predict_false,
-        vim=predict_false,
-        )
+                                   sh=predict_shell,
+                                   zsh=predict_shell,
+                                   ksh=predict_shell,
+                                   csh=predict_shell,
+                                   tcsh=predict_shell,
+                                   bash=predict_shell,
+                                   fish=predict_shell,
+                                   xonsh=predict_shell,
+                                   ssh=predict_false,
+                                   startx=predict_false,
+                                   vi=predict_false,
+                                   vim=predict_false,
+                                   )
