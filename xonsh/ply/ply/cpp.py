@@ -9,6 +9,15 @@
 # -----------------------------------------------------------------------------
 from __future__ import generators
 
+import sys
+
+# Some Python 3 compatibility shims
+if sys.version_info.major < 3:
+    STRING_TYPES = (str, unicode)
+else:
+    STRING_TYPES = str
+    xrange = range
+
 # -----------------------------------------------------------------------------
 # Default preprocessor lexer definitions.   These tokens are enough to get
 # a basic preprocessor working.   Other modules may import these if they want
@@ -590,7 +599,7 @@ class Preprocessor(object):
         expr = expr.replace("!"," not ")
         try:
             result = eval(expr)
-        except StandardError:
+        except Exception:
             self.error(self.source,tokens[0].lineno,"Couldn't evaluate expression")
             result = 0
         return result
@@ -781,7 +790,7 @@ class Preprocessor(object):
     # ----------------------------------------------------------------------
 
     def define(self,tokens):
-        if isinstance(tokens,(str,unicode)):
+        if isinstance(tokens,STRING_TYPES):
             tokens = self.tokenize(tokens)
 
         linetok = tokens

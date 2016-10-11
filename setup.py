@@ -291,7 +291,7 @@ def main():
         url='https://github.com/xonsh/xonsh',
         platforms='Cross Platform',
         classifiers=['Programming Language :: Python :: 3'],
-        packages=['xonsh', 'xonsh.ply', 'xonsh.ptk', 'xonsh.parsers',
+        packages=['xonsh', 'xonsh.ply.ply', 'xonsh.ptk', 'xonsh.parsers',
                   'xonsh.xoreutils', 'xontrib',
                   'xonsh.completers', 'xonsh.prompt'],
         package_dir={'xonsh': 'xonsh', 'xontrib': 'xontrib'},

@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # ply: lex.py
 #
-# Copyright (C) 2001-2015,
+# Copyright (C) 2001-2016
 # David M. Beazley (Dabeaz LLC)
 # All rights reserved.
 #
@@ -31,8 +31,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
 
-__version__    = '3.8'
-__tabversion__ = '3.8'
+__version__    = '3.10'
+__tabversion__ = '3.10'
 
 import re
 import sys
@@ -179,7 +179,7 @@ class Lexer:
         with open(filename, 'w') as tf:
             tf.write('# %s.py. This file automatically created by PLY (version %s). Don\'t edit!\n' % (basetabmodule, __version__))
             tf.write('_tabversion   = %s\n' % repr(__tabversion__))
-            tf.write('_lextokens    = %s\n' % repr(self.lextokens))
+            tf.write('_lextokens    = set(%s)\n' % repr(tuple(self.lextokens)))
             tf.write('_lexreflags   = %s\n' % repr(self.lexreflags))
             tf.write('_lexliterals  = %s\n' % repr(self.lexliterals))
             tf.write('_lexstateinfo = %s\n' % repr(self.lexstateinfo))
@@ -830,7 +830,10 @@ class LexerReflect(object):
     # -----------------------------------------------------------------------------
 
     def validate_module(self, module):
-        lines, linen = inspect.getsourcelines(module)
+        try:
+            lines, linen = inspect.getsourcelines(module)
+        except IOError:
+            return
 
         fre = re.compile(r'\s*def\s+(t_[a-zA-Z_0-9]*)\(')
         sre = re.compile(r'\s*(t_[a-zA-Z_0-9]*)\s*=')
