@@ -15,15 +15,25 @@ import xonsh.tools as xt
 
 def _get_git_branch(q):
     try:
-        status = subprocess.check_output(['git', 'status'],
-                                         stderr=subprocess.DEVNULL)
+        branches = xt.decode_bytes(subprocess.check_output(
+            ['git', 'branch'],
+            stderr=subprocess.DEVNULL
+        )).splitlines()
     except (subprocess.CalledProcessError, OSError):
         q.put(None)
     else:
-        info = xt.decode_bytes(status)
-        branch = info.splitlines()[0].split()[-1]
-        q.put(branch)
+        for branch in branches:
+            if not branch.startswith('* '):
+                continue
+            elif branch.endswith(')'):
+                branch = branch.split()[-1][:-1]
+            else:
+                branch = branch.split()[-1]
 
+            q.put(branch)
+            break
+        else:
+            q.put(None)
 
 def get_git_branch():
     """Attempts to find the current git branch. If this could not
