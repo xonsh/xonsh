@@ -10,7 +10,7 @@ from collections import Iterable, Sequence, Mapping
 try:
     from ply import yacc
 except ImportError:
-    from xonsh.ply import yacc
+    from xonsh.ply.ply import yacc
 
 from xonsh import ast
 from xonsh.ast import has_elts, xonsh_call

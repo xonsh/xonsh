@@ -14,6 +14,7 @@ GitStatus = collections.namedtuple('GitStatus',
                                     'untracked', 'changed', 'conflicts',
                                     'staged', 'stashed', 'operations'])
 
+
 def _check_output(*args, **kwargs):
     kwargs.update(dict(env=builtins.__xonsh_env__.detype(),
                        stderr=subprocess.DEVNULL,
@@ -119,8 +120,8 @@ def gitstatus():
     operations = _gitoperation(gitdir)
 
     return GitStatus(branch, num_ahead, num_behind,
-            untracked, changed, conflicts, staged, stashed,
-            operations)
+                     untracked, changed, conflicts, staged, stashed,
+                     operations)
 
 
 def gitstatus_prompt():

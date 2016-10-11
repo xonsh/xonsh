@@ -1,28 +1,39 @@
 # -*- coding: utf-8 -*-
 """Prompt formatter for simple version control branchs"""
 
-import builtins
 import os
-import subprocess
 import sys
-import threading, queue
 import time
+import queue
+import builtins
 import warnings
+import threading
+import subprocess
 
-import xonsh.platform as xp
 import xonsh.tools as xt
 
 
 def _get_git_branch(q):
     try:
-        status = subprocess.check_output(['git', 'status'],
-                                         stderr=subprocess.DEVNULL)
+        branches = xt.decode_bytes(subprocess.check_output(
+            ['git', 'branch'],
+            stderr=subprocess.DEVNULL
+        )).splitlines()
     except (subprocess.CalledProcessError, OSError):
         q.put(None)
     else:
-        info = xt.decode_bytes(status)
-        branch = info.splitlines()[0].split()[-1]
-        q.put(branch)
+        for branch in branches:
+            if not branch.startswith('* '):
+                continue
+            elif branch.endswith(')'):
+                branch = branch.split()[-1][:-1]
+            else:
+                branch = branch.split()[-1]
+
+            q.put(branch)
+            break
+        else:
+            q.put(None)
 
 def get_git_branch():
     """Attempts to find the current git branch. If this could not
@@ -65,20 +76,26 @@ def get_hg_branch(cwd=None, root=None):
             return None
         else:
             return subprocess.TimeoutExpired(['hg'], env['VC_BRANCH_TIMEOUT'])
-    # get branch name
-    branch_path = os.path.sep.join([root, '.hg', 'branch'])
-    if os.path.exists(branch_path):
-        with open(branch_path, 'r') as branch_file:
-            branch = branch_file.read()
+    if env.get('VC_HG_SHOW_BRANCH') is True:
+        # get branch name
+        branch_path = os.path.sep.join([root, '.hg', 'branch'])
+        if os.path.exists(branch_path):
+            with open(branch_path, 'r') as branch_file:
+                branch = branch_file.read()
+        else:
+            branch = 'default'
     else:
-        branch = 'default'
+        branch = ''
     # add bookmark, if we can
     bookmark_path = os.path.sep.join([root, '.hg', 'bookmarks.current'])
     if os.path.exists(bookmark_path):
         with open(bookmark_path, 'r') as bookmark_file:
             active_bookmark = bookmark_file.read()
-        branch = "{0}, {1}".format(*(b.strip(os.linesep) for b in
-                                     (branch, active_bookmark)))
+        if env.get('VC_HG_SHOW_BRANCH') is True:
+            branch = "{0}, {1}".format(*(b.strip(os.linesep) for b in
+                                        (branch, active_bookmark)))
+        else:
+            branch = active_bookmark.strip(os.linesep)
     else:
         branch = branch.strip(os.linesep)
     return branch
@@ -167,8 +184,9 @@ def hg_dirty_working_directory():
     denv['HGRCPATH'] = ''
     try:
         s = subprocess.check_output(['hg', 'identify', '--id'],
-                                    stderr=subprocess.PIPE, cwd=cwd, timeout=vcbt,
-                                    universal_newlines=True, env=denv)
+                                    stderr=subprocess.PIPE, cwd=cwd,
+                                    timeout=vcbt, universal_newlines=True,
+                                    env=denv)
         return s.strip(os.linesep).endswith('+')
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired,
             FileNotFoundError):

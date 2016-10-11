@@ -13,7 +13,7 @@ import contextlib
 try:
     import ply
 except ImportError:
-    from xonsh import ply
+    from xonsh.ply import ply
 
 import xonsh.wizard as wiz
 from xonsh import __version__ as XONSH_VERSION

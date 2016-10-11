@@ -20,13 +20,12 @@ import builtins
 import functools
 import threading
 import subprocess
-import collections
 import collections.abc as cabc
 
-from xonsh.platform import ON_WINDOWS, ON_LINUX, ON_POSIX, CAN_RESIZE_WINDOW
-from xonsh.tools import (redirect_stdout, redirect_stderr, fallback,
-                         print_exception, XonshCalledProcessError, findfirst,
-                         on_main_thread, XonshError)
+from xonsh.platform import ON_WINDOWS, ON_POSIX, CAN_RESIZE_WINDOW
+from xonsh.tools import (redirect_stdout, redirect_stderr, print_exception,
+                         XonshCalledProcessError, findfirst, on_main_thread,
+                         XonshError)
 from xonsh.lazyasd import lazyobject, LazyObject
 from xonsh.jobs import wait_for_active_job
 from xonsh.lazyimps import fcntl, termios
@@ -40,6 +39,7 @@ LFLAG = 3
 ISPEED = 4
 OSPEED = 5
 CC = 6
+
 
 # force some lazy imports so we don't have errors on non-windows platforms
 @lazyobject
@@ -79,6 +79,7 @@ ALTERNATE_MODE_FLAGS = LazyObject(
     globals(), 'ALTERNATE_MODE_FLAGS')
 RE_HIDDEN_BYTES = LazyObject(lambda: re.compile(b'(\001.*?\002)'),
                              globals(), 'RE_HIDDEN')
+
 
 @lazyobject
 def RE_VT100_ESCAPE():
@@ -173,7 +174,7 @@ class NonBlockingFDReader:
         """Reads lines from the file descriptor."""
         lines = []
         while len(lines) != hint:
-            line = self.readline(szie=-1, timeout=timeout)
+            line = self.readline(size=-1)
             if not line:
                 break
             lines.append(line)
@@ -554,7 +555,6 @@ class PopenThread(threading.Thread):
         if frame is not None:
             self._disable_cbreak_stdin()
 
-
     #
     # cbreak mode handlers
     #
@@ -890,6 +890,7 @@ def proxy_three(f, args, stdin, stdout, stderr):
 
 PROXIES = (proxy_zero, proxy_one, proxy_two, proxy_three)
 
+
 def partial_proxy(f):
     """Dispatches the approriate proxy function based on the number of args."""
     numargs = len(inspect.signature(f).parameters)
@@ -1008,9 +1009,6 @@ class ProcProxy(threading.Thread):
         if self.f is None:
             return
         last_in_pipeline = self._wait_and_getattr('last_in_pipeline')
-        if last_in_pipeline:
-            capout = self._wait_and_getattr('captured_stdout')
-            caperr = self._wait_and_getattr('captured_stderr')
         env = builtins.__xonsh_env__
         enc = env.get('XONSH_ENCODING')
         err = env.get('XONSH_ENCODING_ERRORS')
@@ -1084,7 +1082,6 @@ class ProcProxy(threading.Thread):
             self.join(timeout=1e-7)
             time.sleep(1e-7)
         return self.returncode
-
 
     # The code below (_get_devnull, _get_handles, and _make_inheritable) comes
     # from subprocess.py in the Python 3.4.2 Standard Library
@@ -1616,7 +1613,7 @@ class CommandPipeline:
         """Sets the input vaiable."""
         stdin = self.proc.stdin
         if stdin is None or isinstance(stdin, int) or stdin.closed or \
-                            not stdin.seekable():
+           not stdin.seekable():
             input = b''
         else:
             stdin.seek(0)
@@ -1651,7 +1648,6 @@ class CommandPipeline:
                 builtins.__xonsh_env__.get('RAISE_SUBPROC_ERROR')):
             raise subprocess.CalledProcessError(rtn, spec.cmd,
                                                 output=self.output)
-
 
     #
     # Properties
@@ -1704,17 +1700,11 @@ class CommandPipeline:
     def returncode(self):
         """Process return code, waits until command is completed."""
         proc = self.proc
-        #if proc.returncode is None:
         if proc.poll() is None:
             self.end()
         return proc.returncode
 
     rtn = returncode
-
-    @property
-    def rtn(self):
-        """Alias to return code."""
-        return self.returncode
 
     @property
     def args(self):

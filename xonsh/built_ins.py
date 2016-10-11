@@ -14,7 +14,6 @@ import shlex
 import signal
 import atexit
 import inspect
-import tempfile
 import builtins
 import itertools
 import subprocess
@@ -28,7 +27,7 @@ from xonsh.inspectors import Inspector
 from xonsh.aliases import Aliases, make_default_aliases
 from xonsh.environ import Env, default_env, locate_binary
 from xonsh.foreign_shells import load_foreign_aliases
-from xonsh.jobs import add_job, wait_for_active_job
+from xonsh.jobs import add_job
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.proc import (
     PopenThread, ProcProxy, ForegroundProcProxy,
@@ -297,7 +296,7 @@ def _parse_redirects(r):
         try:
             dest = int(dest[1:])
             if loc is None:
-                loc, dest = dest, ''
+                loc, dest = dest, ''  # NOQA
             else:
                 e = 'Unrecognized redirection command: {}'.format(r)
                 raise XonshError(e)
@@ -644,7 +643,6 @@ class SubprocSpec:
 
 def _update_last_spec(last, captured=False):
     last.last_in_pipeline = True
-    env = builtins.__xonsh_env__
     if not captured:
         return
     callable_alias = callable(last.alias)
@@ -750,7 +748,6 @@ def run_subproc(cmds, captured=False):
 
     Lastly, the captured argument affects only the last real command.
     """
-    env = builtins.__xonsh_env__
     specs = cmds_to_specs(cmds, captured=captured)
     procs = []
     proc = pipeline_group = None
@@ -759,7 +756,7 @@ def run_subproc(cmds, captured=False):
         proc = spec.run(pipeline_group=pipeline_group)
         procs.append(proc)
         if ON_POSIX and pipeline_group is None and \
-                        spec.cls is subprocess.Popen:
+           spec.cls is subprocess.Popen:
             pipeline_group = proc.pid
     if not spec.is_proxy:
         add_job({
@@ -767,14 +764,14 @@ def run_subproc(cmds, captured=False):
             'pids': [i.pid for i in procs],
             'obj': proc,
             'bg': spec.background,
-            })
+        })
     if _should_set_title(captured=captured):
         # set title here to get currently executing command
         pause_call_resume(proc, builtins.__xonsh_shell__.settitle)
     # create command or return if backgrounding.
     if spec.background:
         return
-    #if not captured:
+    # if not captured:
     #    pass
     if captured == 'hiddenobject':
         command = HiddenCommandPipeline(specs, procs, starttime=starttime,

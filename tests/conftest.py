@@ -11,7 +11,6 @@ from xonsh.tools import XonshBlockError
 from xonsh.jobs import tasks
 from xonsh.events import events
 from xonsh.platform import ON_WINDOWS
-from xonsh.commands_cache import CommandsCache
 
 from tools import DummyShell, sp, DummyCommandsCache, DummyEnv, DummyHistory
 

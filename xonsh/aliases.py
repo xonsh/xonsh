@@ -15,12 +15,11 @@ from xonsh.foreign_shells import foreign_shell_data
 from xonsh.jobs import jobs, fg, bg, clean_jobs
 from xonsh.history import history_main
 from xonsh.platform import (ON_ANACONDA, ON_DARWIN, ON_WINDOWS, ON_FREEBSD,
-                            ON_NETBSD, scandir)
+                            ON_NETBSD)
 from xonsh.proc import foreground
 from xonsh.replay import replay_main
 from xonsh.timings import timeit_alias
-from xonsh.tools import (XonshError, argvquote, escape_windows_cmd_string,
-                         to_bool)
+from xonsh.tools import argvquote, escape_windows_cmd_string, to_bool
 from xonsh.xontribs import xontribs_main
 
 import xonsh.completers._aliases as xca
@@ -320,7 +319,6 @@ def xexec(args, stdin=None):
         except FileNotFoundError as e:
             return (None, 'xonsh: exec: file not found: {}: {}'
                           '\n'.format(e.args[1], args[0]), 1)
-
 
 
 class AWitchAWitch(argparse.Action):
