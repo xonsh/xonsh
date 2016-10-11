@@ -141,7 +141,7 @@ def which(args, stdin=None, stdout=None, stderr=None):
         if not pargs.skip:
             print(' or xonsh.builtins.aliases',
                   file=stderr, end='')
-        print('', end='\n')
+        print('', file=stderr, end='\n')
         return len(failures)
 
 
