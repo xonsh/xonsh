@@ -35,6 +35,7 @@ def _get_git_branch(q):
         else:
             q.put(None)
 
+
 def get_git_branch():
     """Attempts to find the current git branch. If this could not
     be determined (timeout, not in a git repo, etc.) then this returns None.
@@ -93,7 +94,7 @@ def get_hg_branch(cwd=None, root=None):
             active_bookmark = bookmark_file.read()
         if env.get('VC_HG_SHOW_BRANCH') is True:
             branch = "{0}, {1}".format(*(b.strip(os.linesep) for b in
-                                        (branch, active_bookmark)))
+                                         (branch, active_bookmark)))
         else:
             branch = active_bookmark.strip(os.linesep)
     else:
