@@ -19,7 +19,7 @@ matrix:
         - python: "nightly"
 
 before_install:
-  - if [[ ! "$TRAVIS_PYTHON_VERSION" == "nightly" && ! $BUILD_DOCS ]]; then
+  - if [[ ! ("$TRAVIS_PYTHON_VERSION" == "nightly" || "$TRAVIS_PYTHON_VERSION" == "3.6-dev") && ! $BUILD_DOCS ]]; then
       URL="https://repo.continuum.io/miniconda/Miniconda3-latest-${MINICONDA_OS}-x86_64.sh";
       wget "${URL}" -O miniconda.sh;
       bash miniconda.sh -b -p $HOME/miniconda;
