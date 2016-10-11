@@ -141,7 +141,7 @@ def which(args, stdin=None, stdout=None, stderr=None):
         if not pargs.skip:
             print(' or xonsh.builtins.aliases',
                   file=stderr, end='')
-        print('', end='\n')
+        print('', file=stderr, end='\n')
         return len(failures)
 
 
@@ -160,6 +160,6 @@ class AWitchAWitch(argparse.Action):
         parser.exit()
 
 
-def which_main(args=None, stdin=None):
+def which_main(args, stdin, stdout, stderr):
     """This is the which command entry point."""
-    which(args, stdin=stdin)
+    return which(args, stdin, stdout, stderr)
