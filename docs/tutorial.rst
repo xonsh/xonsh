@@ -1118,7 +1118,7 @@ may have one of the following signatures:
         return
 
     def mycmd4(args, stdin=None, stdout=None, stderr=None):
-        """Lastly, the full form of subprocess callables takes all of the
+        """The next form of subprocess callables takes all of the
         arguments shown above as well as the standard error stream.
         As with stdout, this is a write-only file-like object.
         """
@@ -1131,6 +1131,23 @@ may have one of the following signatures:
         # In this form, the return value should be a single integer
         # representing the "return code" of the alias (zero if successful,
         # non-zero otherwise)
+        return 0
+
+    def mycmd5(args, stdin=None, stdout=None, stderr=None, spec=None):
+        """Lastly, the final form of subprocess callables takes all of the
+        arguments shown above as well as a subpcrocess specification
+        SubprocSpec object. This holds many attributes that dictate how
+        the command is being run.  For instance this can be useful for
+        knowing if the process is captured by $() or !().
+        """
+        import xonsh.proc
+        if spec.captured in xonsh.proc.STDOUT_CAPTURE_KINDS:
+            end = ''
+        else:
+            end = '\n'
+        # Now we'll get a newline if the user is at the terminal, and no
+        # newline if we are captured
+        print('Hi Mom!', end=end)
         return 0
 
 
