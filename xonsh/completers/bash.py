@@ -11,6 +11,25 @@ from xonsh.completers.path import _quote_paths
 BASH_COMPLETE_SCRIPT = r"""
 {sources}
 
+# Override some functions in bash-completion, do not quote for readline
+quote_readline()
+{{
+    echo "$1"
+}}
+
+_quote_readline_by_ref()
+{{
+    if [[ $1 == \'* ]]; then
+        # Leave out first character
+        printf -v $2 %s "${{1:1}}"
+    else
+        printf -v $2 %s "$1"
+    fi
+
+    [[ ${{!2}} == \$* ]] && eval $2=${{!2}}
+}}
+
+
 function _get_complete_statement {{
     complete -p {cmd} 2> /dev/null || echo "-F _minimal"
 }}
