@@ -1450,6 +1450,7 @@ class CommandPipeline:
             # we get here if the process is not bacgroundable or the
             # class is the real Popen
             wait_for_active_job()
+            proc.wait()
             self._endtime()
             if self.captured == 'object':
                 self.end(tee_output=False)
