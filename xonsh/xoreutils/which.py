@@ -97,7 +97,10 @@ def which(args, stdin=None, stdout=None, stderr=None, spec=None):
 
     pargs = parser.parse_args(args)
     verbose = pargs.verbose or pargs.all
-    captured = spec.captured in xproc.STDOUT_CAPTURE_KINDS
+    if spec is not None:
+        captured = spec.captured in xproc.STDOUT_CAPTURE_KINDS
+    else:
+        captured = False
     if pargs.plain:
         verbose = False
     if xp.ON_WINDOWS:
@@ -138,12 +141,12 @@ def which(args, stdin=None, stdout=None, stderr=None, spec=None):
         print('{} not in '.format(', '.join(failures)),
               file=stderr, end='')
         if pargs.all:
-            print('globals or ')
+            print('globals or ', file=stderr, end='')
         print('$PATH', file=stderr, end='')
         if not pargs.skip:
             print(' or xonsh.builtins.aliases',
                   file=stderr, end='')
-        print('', end='\n')
+        print('', file=stderr, end='\n')
         return len(failures)
 
 
