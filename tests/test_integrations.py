@@ -3,6 +3,8 @@ import subprocess
 
 import pytest
 
+from xonsh.platform import ON_WINDOWS
+
 #
 # The following list contains a (stdin, stdout, returncode) tuples
 #
@@ -37,7 +39,8 @@ def test_script(case):
     env = dict(os.environ)
     env['XONSH_DEBUG'] = '1'
     env['XONSH_SHOW_TRACEBACK'] = '1'
-    p = subprocess.Popen(['xonsh', '--no-rc'],
+    xonsh = 'xonsh.bat' if ON_WINDOWS else 'xonsh'
+    p = subprocess.Popen([xonsh, '--no-rc'],
                          env=env,
                          stdin=subprocess.PIPE,
                          stdout=subprocess.PIPE,
