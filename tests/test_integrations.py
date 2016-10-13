@@ -1,8 +1,27 @@
 import os
-import shutil
+import sys
 import subprocess
 
 import pytest
+
+import xonsh
+from xonsh.platform import ON_WINDOWS
+
+XONSH_PREFIX = xonsh.__file__
+if 'site-packages' in XONSH_PREFIX:
+    # must be installed version of xonsh
+    num_up = 5
+else:
+    # must be in source dir
+    num_up = 2
+for i in range(num_up):
+    XONSH_PREFIX = os.path.dirname(XONSH_PREFIX)
+PATH = os.path.join(os.path.dirname(__file__), 'bin') + os.pathsep + \
+       os.path.join(XONSH_PREFIX, 'bin') + os.pathsep + \
+       os.path.join(XONSH_PREFIX, 'Scripts') + os.pathsep + \
+       os.path.join(XONSH_PREFIX, 'scripts') + os.pathsep + \
+       os.path.dirname(sys.executable) + os.pathsep + \
+       os.environ['PATH']
 
 #
 # The following list contains a (stdin, stdout, returncode) tuples
@@ -36,9 +55,11 @@ print('REDIRECTED OUTPUT: ' + s)
 def test_script(case):
     script, exp_out, exp_rtn = case
     env = dict(os.environ)
+    env['PATH'] = PATH
     env['XONSH_DEBUG'] = '1'
     env['XONSH_SHOW_TRACEBACK'] = '1'
-    xonsh = shutil.which('xonsh')
+    xonsh = 'xonsh.bat' if ON_WINDOWS else 'xon.sh'
+    print(PATH)
     p = subprocess.Popen([xonsh, '--no-rc'],
                          env=env,
                          stdin=subprocess.PIPE,
@@ -51,7 +72,7 @@ def test_script(case):
     except subprocess.TimeoutExpired:
         p.kill()
         raise
-    assert exp_rtn == p.returncode
     assert exp_out == out
+    assert exp_rtn == p.returncode
 
 
