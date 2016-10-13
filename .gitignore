@@ -46,4 +46,4 @@ include/
 .coverage
 feedstock/
 *.cred
-tests/tttt
+tttt
