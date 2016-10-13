@@ -69,7 +69,7 @@ def test_script(case):
                          universal_newlines=True,
                          )
     try:
-        out, err = p.communicate(input=script, timeout=1)
+        out, err = p.communicate(input=script, timeout=10)
     except subprocess.TimeoutExpired:
         p.kill()
         raise
