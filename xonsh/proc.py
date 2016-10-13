@@ -1058,6 +1058,8 @@ class ProcProxy(threading.Thread):
                  redirect_stdout(STDOUT_DISPATCHER), \
                  redirect_stderr(STDERR_DISPATCHER):
                 r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr, spec)
+        except SystemExit as e:
+            r = e.code if isinstance(e.code, int) else int(bool(e.code))
         except Exception:
             print_exception()
             r = 1
