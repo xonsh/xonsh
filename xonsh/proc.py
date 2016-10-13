@@ -991,7 +991,7 @@ class ProcProxy(threading.Thread):
         if self.p2cwrite != -1:
             self.stdin = io.open(self.p2cwrite, 'wb', -1)
             if universal_newlines:
-                self.stdin = io.TextIOWrapper(self.stdin, write_through=True,
+                 self.stdin = io.TextIOWrapper(self.stdin, write_through=True,
                                               line_buffering=False)
         elif isinstance(stdin, int) and stdin != 0:
             self.stdin = io.open(stdin, 'wb', -1)
@@ -1058,6 +1058,8 @@ class ProcProxy(threading.Thread):
                  redirect_stdout(STDOUT_DISPATCHER), \
                  redirect_stderr(STDERR_DISPATCHER):
                 r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr, spec)
+        except SystemExit as e:
+            r = e.code if isinstance(e.code, int) else int(bool(e.code))
         except Exception:
             print_exception()
             r = 1

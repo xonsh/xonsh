@@ -49,6 +49,15 @@ with open('tttt') as tttt:
     s = tttt.read().strip()
 print('REDIRECTED OUTPUT: ' + s)
 """, "REDIRECTED OUTPUT: Wow Mom!\n", 0),
+# test system exit in function alias
+("""
+import sys
+def _f():
+    sys.exit(42)
+
+aliases['f'] = _f
+print(![f].returncode)
+""", "42\n", 0),
 ]
 
 
@@ -59,6 +68,7 @@ def test_script(case):
     env['PATH'] = PATH
     env['XONSH_DEBUG'] = '1'
     env['XONSH_SHOW_TRACEBACK'] = '1'
+    env['RAISE_SUBPROC_ERROR'] = '1'
     xonsh = 'xonsh.bat' if ON_WINDOWS else 'xon.sh'
     xonsh = shutil.which(xonsh, path=PATH)
     p = subprocess.Popen([xonsh, '--no-rc'],
