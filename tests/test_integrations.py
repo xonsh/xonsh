@@ -1,5 +1,6 @@
 import os
 import sys
+import shutil
 import subprocess
 
 import pytest
@@ -59,7 +60,7 @@ def test_script(case):
     env['XONSH_DEBUG'] = '1'
     env['XONSH_SHOW_TRACEBACK'] = '1'
     xonsh = 'xonsh.bat' if ON_WINDOWS else 'xon.sh'
-    print(PATH)
+    xonsh = shutil.which(xonsh, path=PATH)
     p = subprocess.Popen([xonsh, '--no-rc'],
                          env=env,
                          stdin=subprocess.PIPE,
