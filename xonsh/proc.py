@@ -1039,10 +1039,7 @@ class ProcProxy(threading.Thread):
                 self.errwrite = msvcrt.open_osfhandle(self.errwrite.Detach(), 0)
         # stdout
         if self.c2pwrite != -1:
-            #sp_stdout = io.TextIOWrapper(io.open(self.c2pwrite, 'wb', -1),
-            #                             encoding=enc, errors=err)
-            sp_stdouth = io.open(self.c2pwrite, 'wb', -1)
-            sp_stdout = io.TextIOWrapper(sp_stdouth,
+            sp_stdout = io.TextIOWrapper(io.open(self.c2pwrite, 'wb', -1),
                                          encoding=enc, errors=err)
         else:
             sp_stdout = sys.stdout
