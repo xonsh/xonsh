@@ -991,7 +991,7 @@ class ProcProxy(threading.Thread):
         if self.p2cwrite != -1:
             self.stdin = io.open(self.p2cwrite, 'wb', -1)
             if universal_newlines:
-                 self.stdin = io.TextIOWrapper(self.stdin, write_through=True,
+                self.stdin = io.TextIOWrapper(self.stdin, write_through=True,
                                               line_buffering=False)
         elif isinstance(stdin, int) and stdin != 0:
             self.stdin = io.open(stdin, 'wb', -1)
