@@ -2,7 +2,7 @@ machine:
     environment:
         PATH: /home/ubuntu/miniconda/envs/test_env/bin:/home/ubuntu/miniconda/bin:$PATH
     post:
-        - pyenv global 3.4.4 3.5.1
+        - pyenv global 3.4.4 3.5.1 3.3.5 
 
 dependencies:
     pre:
@@ -14,10 +14,10 @@ dependencies:
         - rm -rf ~/.pyenv
         - rm -rf ~/virtualenvs
     post:
-        - case $CIRCLE_NODE_INDEX in 0) python setup.py install ;; 1) python setup.py install ;; esac:
+        - case $CIRCLE_NODE_INDEX in 0) python setup.py install ;; 1) python setup.py install ;; 2) python setup.py install ;; esac:
             parallel: true
 
 test:
     override:
-        - case $CIRCLE_NODE_INDEX in 0) py.test --timeout=10 ;; 1) py.test --timeout=10 ;; esac:
+        - case $CIRCLE_NODE_INDEX in 0) py.test --timeout=10 ;; 1) py.test --timeout=10 ;; 2) py.test --timeout=10 ;; esac:
             parallel: true
