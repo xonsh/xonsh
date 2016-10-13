@@ -27,17 +27,26 @@ class _TeeStdBuf(io.RawIOBase):
     in memory buffer.
     """
 
-    def __init__(self, stdbuf, membuf):
+    def __init__(self, stdbuf, membuf, encoding=None, errors=None):
         """
         Parameters
         ----------
-        stdbuf : BytesIO-like
+        stdbuf : BytesIO-like or StringIO-like
             The std stream buffer.
         membuf : BytesIO-like
             The in memory stream buffer.
+        encoding : str or None, optional
+            The encoding of the stream. Only used if stdbuf is a text stream,
+            rather than a binary one.
+        errors : str or None, optional
+            The error form for the encoding of the stream. Only used if stdbuf
+            is a text stream, rather than a binary one.
         """
         self.stdbuf = stdbuf
         self.membuf = membuf
+        self.encoding = encoding
+        self.errors = errors
+        self._std_is_binary = not hasattr(stdbuf, 'encoding')
 
     def fileno(self):
         """Returns the file descriptor of the std buffer."""
@@ -55,12 +64,17 @@ class _TeeStdBuf(io.RawIOBase):
 
     def readinto(self, b):
         """Read bytes into buffer from both streams."""
-        self.stdbuf.readinto(b)
+        if self._std_is_binary:
+            self.stdbuf.readinto(b)
         return self.membuf.readinto(b)
 
     def write(self, b):
         """Write bytes into both buffers."""
-        self.stdbuf.write(b)
+        if self._std_is_binary:
+            self.stdbuf.write(b)
+        else:
+            self.stdbuf.write(b.decode(encoding=self.encoding,
+                                       errors=self.errors))
         return self.membuf.write(b)
 
 
@@ -74,12 +88,19 @@ class _TeeStd(io.TextIOBase):
         name : str
             The name of the buffer in the sys module, e.g. 'stdout'.
         mem : io.TextIOBase-like
-            The in-memory text-based representation/
+            The in-memory text-based representation.
         """
         self._name = name
         self.std = std = getattr(sys, name)
         self.mem = mem
-        self.buffer = _TeeStdBuf(std.buffer, mem.buffer)
+        if hasattr(std, 'buffer'):
+            buffer = _TeeStdBuf(std.buffer, mem.buffer)
+        else:
+            # TextIO does not have buffer as part of the API, so std streams
+            # may not either.
+            buffer = _TeeStdBuf(std, mem.buffer, encoding=mem.encoding,
+                                errors=mem.errors)
+        self.buffer = buffer
         setattr(sys, name, self)
 
     @property
