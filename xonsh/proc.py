@@ -795,7 +795,7 @@ class FileThreadDispatcher:
 
     def flush(self):
         """Flushes the file descriptor for the current thread."""
-        return self.handle.flush()
+        return safe_flush(self.handle)
 
     def isatty(self):
         """Returns if the file descriptor for the current thread is a tty."""

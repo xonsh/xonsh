@@ -12,5 +12,6 @@
   the function ProcProxies were not being waited upon.
 * Fixed issue with callablable aliases that happen to call sys.exit() or
   raise SystemExit taking out the whole xonsh process.
+* Safely flushes file handles on threaded buffers.
 
 **Security:** None
