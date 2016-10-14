@@ -58,6 +58,28 @@ def _f():
 aliases['f'] = _f
 print(![f].returncode)
 """, "42\n", 0),
+# test uncaptured streaming alias
+("""
+def _test_stream(args, stdin, stdout, stderr):
+    print('hallo on err', file=stderr)
+    print('hallo on out', file=stdout)
+    return 1
+
+aliases['test-stream'] = _test_stream
+x = ![test-stream]
+print(x.returncode)
+""", "hallo on out\nhallo on err\n1\n", 0),
+# test captured streaming alias
+("""
+def _test_stream(args, stdin, stdout, stderr):
+    print('hallo on err', file=stderr)
+    print('hallo on out', file=stdout)
+    return 1
+
+aliases['test-stream'] = _test_stream
+x = !(test-stream)
+print(x.returncode)
+""", "hallo on err\n1\n", 0),
 ]
 
 
@@ -85,5 +107,4 @@ def test_script(case):
         raise
     assert exp_out == out
     assert exp_rtn == p.returncode
-
 
