@@ -192,7 +192,7 @@ def predict_false(args):
 
 @lazyobject
 def SHELL_PREDICTOR_PARSER():
-    p = argparse.ArgumentParser('shell')
+    p = argparse.ArgumentParser('shell', add_help=False)
     p.add_argument('-c', nargs='?', default=None)
     p.add_argument('filename', nargs='?', default=None)
     return p
@@ -210,6 +210,29 @@ def predict_shell(args):
     return pred
 
 
+@lazyobject
+def HELP_VER_PREDICTOR_PARSER():
+    p = argparse.ArgumentParser('cmd', add_help=False)
+    p.add_argument('-h', '--help', dest='help',
+                   action='store_true', default=None)
+    p.add_argument('-v', '-V', '--version', dest='version',
+                   action='store_true', default=None)
+    return p
+
+
+def predict_help_ver(args):
+    """Precict the backgroundability of commands that have help & version
+    switches: -h, --help, -v, -V, --version. If either of these options is
+    present, the command is assumed to print to stdout normally and is therefore
+    backgroundable. Otherwise, the command is assumed to not be backgroundable.
+    This is useful for commands, like top, that normally enter alternate mode
+    but may not in certain circumstances.
+    """
+    ns, _ = HELP_VER_PREDICTOR_PARSER.parse_known_args(args)
+    pred = ns.help is not None or ns.version is not None
+    return pred
+
+
 def default_backgroundable_predictors():
     """Generates a new defaultdict for known backgroundable predictors.
     The default is to predict true.
@@ -221,13 +244,21 @@ def default_backgroundable_predictors():
                                    clear=predict_false,
                                    cls=predict_false,
                                    fish=predict_shell,
+                                   htop=predict_help_ver,
                                    ksh=predict_shell,
+                                   less=predict_help_ver,
+                                   man=predict_help_ver,
+                                   more=predict_help_ver,
                                    sh=predict_shell,
                                    ssh=predict_false,
                                    startx=predict_false,
+                                   sudo=predict_help_ver,
                                    tcsh=predict_shell,
+                                   top=predict_help_ver,
                                    vi=predict_false,
                                    vim=predict_false,
+                                   vimpager=predict_help_ver,
+                                   xo=predict_help_ver,
                                    xonsh=predict_shell,
                                    zsh=predict_shell,
                                    )

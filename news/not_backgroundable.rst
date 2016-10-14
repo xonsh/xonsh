@@ -11,12 +11,19 @@
     * cls
     * fish
     * ksh
+    * less
+    * man
+    * more
     * sh
     * ssh
     * startx
+    * sudo
     * tcsh
+    * top
     * vi
     * vim
+    * vimpager
+    * xo
     * xonsh
     * zsh
 
