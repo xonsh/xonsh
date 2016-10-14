@@ -38,10 +38,10 @@ class CommandsCache(cabc.Mapping):
 
     def __iter__(self):
         for cmd, (path, is_alias) in self.all_commands.items():
-            if ON_WINDOWS and not is_alias:
+            if ON_WINDOWS:
                 # All comand keys are stored in uppercase on Windows.
                 # This ensures the original command name is returned.
-                cmd = os.path.basename(path)
+                cmd = pathbasename(path)
             yield cmd
 
     def __len__(self):
@@ -100,11 +100,10 @@ class CommandsCache(cabc.Mapping):
             for cmd in executables_in(path):
                 key = cmd.upper() if ON_WINDOWS else cmd
                 allcmds[key] = (os.path.join(path, cmd), cmd in alss)
-        only_alias = (None, True)
         for cmd in alss:
             if cmd not in allcmds:
                 key = cmd.upper() if ON_WINDOWS else cmd
-                allcmds[key] = only_alias
+                allcmds[key] = (cmd, True)
         self._cmds_cache = allcmds
         return allcmds
 
@@ -163,15 +162,17 @@ class CommandsCache(cabc.Mapping):
                       None)
         if cached:
             return self._cmds_cache[cached][0]
-        elif os.path.isfile(name) and name != os.path.basename(name):
+        elif os.path.isfile(name) and name != pathbasename(name):
             return name
 
     def predict_backgroundable(self, cmd):
         """Predics whether a command list is backgroundable."""
         name = self.cached_name(cmd[0])
         path, is_alias = self.lazyget(name, (None, None))
-        if path is None or is_alias:
-            return True
+        #if path is None or is_alias:
+        #    return True
+        if ON_WINDOWS:
+            name = name.lower()
         predictor = self.backgroundable_predictors[name]
         return predictor(cmd[1:])
 
@@ -261,4 +262,5 @@ def default_backgroundable_predictors():
                                    xo=predict_help_ver,
                                    xonsh=predict_shell,
                                    zsh=predict_shell,
+                                   cmd=predict_shell,
                                    )
