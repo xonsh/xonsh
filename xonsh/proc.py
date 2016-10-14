@@ -893,7 +893,7 @@ def proxy_four(f, args, stdin, stdout, stderr, spec):
     """Calls a proxy function which takes four parameter: args, stdin, stdout,
     and stderr.
     """
-    return f(args, stdin, stdout)
+    return f(args, stdin, stdout, stderr)
 
 
 PROXIES = (proxy_zero, proxy_one, proxy_two, proxy_three, proxy_four)
@@ -1440,13 +1440,12 @@ class CommandPipeline:
         """
         # get approriate handles
         proc = self.proc
-        uninew = self.spec.universal_newlines
         # get the correct stdout
         stdout = proc.stdout
         if ((stdout is None or not safe_readable(stdout)) and
                 self.spec.captured_stdout is not None):
             stdout = self.spec.captured_stdout
-        if uninew and hasattr(stdout, 'buffer'):
+        if hasattr(stdout, 'buffer'):
             stdout = stdout.buffer
         if not stdout or not safe_readable(stdout):
             # we get here if the process is not bacgroundable or the
@@ -1462,7 +1461,7 @@ class CommandPipeline:
         if ((stderr is None or not safe_readable(stderr)) and
                 self.spec.captured_stderr is not None):
             stderr = self.spec.captured_stderr
-        if uninew and hasattr(stderr, 'buffer'):
+        if hasattr(stderr, 'buffer'):
             stderr = stderr.buffer
         # read from process while it is running
         timeout = builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
