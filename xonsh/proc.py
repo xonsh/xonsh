@@ -1509,11 +1509,11 @@ class CommandPipeline:
         err = env.get('XONSH_ENCODING_ERRORS')
         lines = self.lines
         stream = self.captured not in STDOUT_CAPTURE_KINDS
-        sydout_has_buffer = hasattr(sys.stdout, 'buffer')
+        stdout_has_buffer = hasattr(sys.stdout, 'buffer')
         for line in self.iterraw():
             # write to stdout line ASAP, if needed
             if stream:
-                if sydout_has_buffer:
+                if stdout_has_buffer:
                     sys.stdout.buffer.write(line)
                 else:
                     sys.stdout.write(line.decode(encoding=enc, errors=err))
