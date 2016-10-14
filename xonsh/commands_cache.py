@@ -214,17 +214,20 @@ def default_backgroundable_predictors():
     """Generates a new defaultdict for known backgroundable predictors.
     The default is to predict true.
     """
+    # alphabetical, for what it is worth.
     return collections.defaultdict(lambda: predict_true,
-                                   sh=predict_shell,
-                                   zsh=predict_shell,
-                                   ksh=predict_shell,
-                                   csh=predict_shell,
-                                   tcsh=predict_shell,
                                    bash=predict_shell,
+                                   csh=predict_shell,
+                                   clear=predict_false,
+                                   cls=predict_false,
                                    fish=predict_shell,
-                                   xonsh=predict_shell,
+                                   ksh=predict_shell,
+                                   sh=predict_shell,
                                    ssh=predict_false,
                                    startx=predict_false,
+                                   tcsh=predict_shell,
                                    vi=predict_false,
                                    vim=predict_false,
+                                   xonsh=predict_shell,
+                                   zsh=predict_shell,
                                    )
