@@ -14,10 +14,12 @@ dependencies:
         - rm -rf ~/.pyenv
         - rm -rf ~/virtualenvs
     post:
+        - case $CIRCLE_NODE_INDEX in 0) pip install -r requirements-tests.txt ;; esac:
+            parallel: false
         - case $CIRCLE_NODE_INDEX in 0) python setup.py install ;; 1) python setup.py install ;; esac:
             parallel: true
 
 test:
     override:
-        - case $CIRCLE_NODE_INDEX in 0) py.test --timeout=10 ;; 1) py.test --timeout=10 ;; esac:
+        - case $CIRCLE_NODE_INDEX in 0) py.test --flake8 --timeout=10 ;; 1) py.test --timeout=10 ;; esac:
             parallel: true
