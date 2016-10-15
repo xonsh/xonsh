@@ -912,7 +912,7 @@ def partial_proxy(f):
         raise XonshError(e.format(numargs))
 
 
-class ProcProxy(threading.Thread):
+class ProcProxyThread(threading.Thread):
     """
     Class representing a function to be run as a subprocess-mode command.
     """
@@ -1238,15 +1238,15 @@ class ProcProxy(threading.Thread):
 
 
 #
-# Foreground Process Proxies
+# Foreground Thread Process Proxies
 #
 
-class ForegroundProcProxy(object):
+class ProcProxy(object):
     """This is process proxy class that runs its alias functions on the
     same thread that it was called from, which is typically the main thread.
-    This prevents backgrounding the process, but enables debugger and
-    profiler tools (functions) be run on the same thread that they are
-    attempting to debug.
+    This prevents the process from runing on a background thread, but enables
+    debugger and profiler tools (functions) be run on the same thread that they
+    are attempting to debug.
     """
 
     def __init__(self, f, args, stdin=None, stdout=None, stderr=None,
@@ -1320,13 +1320,15 @@ class ForegroundProcProxy(object):
         return getattr(self, name)
 
 
-def foreground(f):
+def unthreadable(f):
     """Decorator that specifies that a callable alias should be run only
-    as a foreground process. This is often needed for debuggers and profilers.
+    on the main thread process. This is often needed for debuggers and profilers.
     """
-    f.__xonsh_backgroundable__ = False
+    f.__xonsh_threadable__ = False
     return f
 
+
+foreground = unthreadable
 
 @lazyobject
 def SIGNAL_MESSAGES():

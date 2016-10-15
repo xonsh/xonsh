@@ -2,13 +2,15 @@
 
 **Changed:**
 
-* The following commands are, by deafult, predicted to be not backgroundable
+* The following commands are, by deafult, predicted to be not threadable
   in some circumastances:
 
     * bash
     * csh
     * clear
+    * clear.exe
     * cls
+    * cmd
     * fish
     * ksh
     * less

@@ -30,7 +30,7 @@ class CommandsCache(cabc.Mapping):
         self._path_checksum = None
         self._alias_checksum = None
         self._path_mtime = -1
-        self.backgroundable_predictors = default_backgroundable_predictors()
+        self.threadable_predictors = default_threadable_predictors()
 
     def __contains__(self, key):
         _ = self.all_commands
@@ -165,16 +165,20 @@ class CommandsCache(cabc.Mapping):
         elif os.path.isfile(name) and name != pathbasename(name):
             return name
 
-    def predict_backgroundable(self, cmd):
-        """Predics whether a command list is backgroundable."""
+    def predict_threadable(self, cmd):
+        """Predicts whether a command list is able to be run on a background
+        thread, rather than the main thread.
+        """
         name = self.cached_name(cmd[0])
         if ON_WINDOWS:
             # On all names (keys) are stored in upper case so instead
             # we get the original cmd or alias name
             path, _ = self.lazyget(name, (None, None))
-            if path is not None:
+            if path is None:
+                return True
+            else:
                 name = pathbasename(path)
-        predictor = self.backgroundable_predictors[name]
+        predictor = self.threadable_predictors[name]
         return predictor(cmd[1:])
 
 #
@@ -183,12 +187,12 @@ class CommandsCache(cabc.Mapping):
 
 
 def predict_true(args):
-    """Always say the process is backgroundable."""
+    """Always say the process is threadable."""
     return True
 
 
 def predict_false(args):
-    """Never say the process is backgroundable."""
+    """Never say the process is threadable."""
     return False
 
 
@@ -226,7 +230,7 @@ def predict_help_ver(args):
     """Precict the backgroundability of commands that have help & version
     switches: -h, --help, -v, -V, --version. If either of these options is
     present, the command is assumed to print to stdout normally and is therefore
-    backgroundable. Otherwise, the command is assumed to not be backgroundable.
+    threadable. Otherwise, the command is assumed to not be threadable.
     This is useful for commands, like top, that normally enter alternate mode
     but may not in certain circumstances.
     """
@@ -235,8 +239,8 @@ def predict_help_ver(args):
     return pred
 
 
-def default_backgroundable_predictors():
-    """Generates a new defaultdict for known backgroundable predictors.
+def default_threadable_predictors():
+    """Generates a new defaultdict for known threadable predictors.
     The default is to predict true.
     """
     # alphabetical, for what it is worth.
@@ -244,7 +248,9 @@ def default_backgroundable_predictors():
         'bash': predict_shell,
         'csh': predict_shell,
         'clear': predict_false,
+        'clear.exe': predict_false,
         'cls': predict_false,
+        'cmd': predict_shell,
         'fish': predict_shell,
         'htop': predict_help_ver,
         'ksh': predict_shell,
@@ -263,7 +269,5 @@ def default_backgroundable_predictors():
         'xo': predict_help_ver,
         'xonsh': predict_shell,
         'zsh': predict_shell,
-        'cmd': predict_shell,
-        'clear.exe': predict_false,
     }
     return collections.defaultdict(lambda: predict_true, predictors)

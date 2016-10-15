@@ -28,6 +28,8 @@
 * Piping between processes now uses OS pipes.
 * ``$XONSH_STORE_STDIN`` now uses ``os.pread()`` rather than ``tee`` and a new
   file.
+* The implementation of the ``foreground()`` decorator has been moved to
+  ``unthreadable()``.
 
 **Deprecated:** None
 
@@ -37,7 +39,7 @@
   in favor of ``CommandPipeline`` and ``HiddenCommandPipeline``.
 * ``SimpleProcProxy`` and ``SimpleForegroundProcProxy`` have been removed
   in favor of a more general mechanism for dispatching callable aliases
-  implemented in the ``ProcProxy`` class.
+  implemented in the ``ProcProxyThread``  and ``ProcProxy`` classes.
 
 
 **Fixed:**
