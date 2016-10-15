@@ -1465,12 +1465,15 @@ class CommandPipeline:
             stderr = stderr.buffer
         # read from process while it is running
         timeout = builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
+        check_prev_done = len(self.procs) == 1
         while proc.poll() is None:
             if getattr(proc, 'suspended', False):
                 return
             elif getattr(proc, 'in_alt_mode', False):
                 time.sleep(0.1)  # probably not leaving any time soon
                 continue
+            elif not check_prev_done:
+                if ()
             elif self._prev_procs_done():
                 self._close_prev_procs()
                 proc.prevs_are_closed = True
