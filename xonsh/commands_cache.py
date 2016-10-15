@@ -168,11 +168,11 @@ class CommandsCache(cabc.Mapping):
     def predict_backgroundable(self, cmd):
         """Predics whether a command list is backgroundable."""
         name = self.cached_name(cmd[0])
-        path, is_alias = self.lazyget(name, (None, None))
-        #if path is None or is_alias:
-        #    return True
-        if ON_WINDOWS:
-            name = name.lower()
+        if ON_WINDOWS: 
+            # On all names (keys) are stored in upper case so instead
+            # we get the original cmd or alias name 
+            path, _ = self.lazyget(name, (None, None))
+            name = pathbasename(path)
         predictor = self.backgroundable_predictors[name]
         return predictor(cmd[1:])
 
