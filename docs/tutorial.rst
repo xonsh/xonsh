@@ -314,6 +314,28 @@ force xonsh to do so with the syntax that we will see in the following
 sections.
 
 
+Quoting
+=======
+
+Single or double quotes can be used to remove the special meaning
+of certain characters or words to xonsh. If a subprocess command
+contains characters that collide with xonsh syntax then quotes
+must be used to force xonsh to not interpret them.
+
+.. code-block:: xonshcon
+
+    >>> echo ${
+    ...
+    SyntaxError: <xonsh-code>:1:5: ('code: {',)
+    echo {
+         ^
+    >>> echo '${'
+    ${
+
+.. warning:: There is no notion of an escaping character in xonsh like the
+             backslash (\) in bash.
+
+
 Captured Subprocess with ``$()`` and ``!()``
 ============================================
 The ``$(<expr>)`` operator in xonsh executes a subprocess command and
