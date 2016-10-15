@@ -163,4 +163,3 @@ class AWitchAWitch(argparse.Action):
         import webbrowser
         webbrowser.open('https://github.com/xonsh/xonsh/commit/f49b400')
         parser.exit()
-

@@ -1019,8 +1019,8 @@ class ProcProxy(threading.Thread):
         spec = self._wait_and_getattr('spec')
         last_in_pipeline = spec.last_in_pipeline
         if last_in_pipeline:
-            capout = spec.captured_stdout
-            caperr = spec.captured_stderr
+            capout = spec.captured_stdout  # NOQA
+            caperr = spec.captured_stderr  # NOQA
         env = builtins.__xonsh_env__
         enc = env.get('XONSH_ENCODING')
         err = env.get('XONSH_ENCODING_ERRORS')
