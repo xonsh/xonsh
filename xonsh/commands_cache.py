@@ -38,10 +38,10 @@ class CommandsCache(cabc.Mapping):
 
     def __iter__(self):
         for cmd, (path, is_alias) in self.all_commands.items():
-            if ON_WINDOWS and not is_alias:
+            if ON_WINDOWS and path is not None:
                 # All comand keys are stored in uppercase on Windows.
                 # This ensures the original command name is returned.
-                cmd = os.path.basename(path)
+                cmd = pathbasename(path)
             yield cmd
 
     def __len__(self):
@@ -100,11 +100,10 @@ class CommandsCache(cabc.Mapping):
             for cmd in executables_in(path):
                 key = cmd.upper() if ON_WINDOWS else cmd
                 allcmds[key] = (os.path.join(path, cmd), cmd in alss)
-        only_alias = (None, True)
         for cmd in alss:
             if cmd not in allcmds:
                 key = cmd.upper() if ON_WINDOWS else cmd
-                allcmds[key] = only_alias
+                allcmds[key] = (cmd, True)
         self._cmds_cache = allcmds
         return allcmds
 
@@ -163,15 +162,18 @@ class CommandsCache(cabc.Mapping):
                       None)
         if cached:
             return self._cmds_cache[cached][0]
-        elif os.path.isfile(name) and name != os.path.basename(name):
+        elif os.path.isfile(name) and name != pathbasename(name):
             return name
 
     def predict_backgroundable(self, cmd):
         """Predics whether a command list is backgroundable."""
         name = self.cached_name(cmd[0])
-        path, is_alias = self.lazyget(name, (None, None))
-        if path is None or is_alias:
-            return True
+        if ON_WINDOWS:
+            # On all names (keys) are stored in upper case so instead
+            # we get the original cmd or alias name
+            path, _ = self.lazyget(name, (None, None))
+            if path is not None:
+                name = pathbasename(path)
         predictor = self.backgroundable_predictors[name]
         return predictor(cmd[1:])
 
@@ -238,27 +240,30 @@ def default_backgroundable_predictors():
     The default is to predict true.
     """
     # alphabetical, for what it is worth.
-    return collections.defaultdict(lambda: predict_true,
-                                   bash=predict_shell,
-                                   csh=predict_shell,
-                                   clear=predict_false,
-                                   cls=predict_false,
-                                   fish=predict_shell,
-                                   htop=predict_help_ver,
-                                   ksh=predict_shell,
-                                   less=predict_help_ver,
-                                   man=predict_help_ver,
-                                   more=predict_help_ver,
-                                   sh=predict_shell,
-                                   ssh=predict_false,
-                                   startx=predict_false,
-                                   sudo=predict_help_ver,
-                                   tcsh=predict_shell,
-                                   top=predict_help_ver,
-                                   vi=predict_false,
-                                   vim=predict_false,
-                                   vimpager=predict_help_ver,
-                                   xo=predict_help_ver,
-                                   xonsh=predict_shell,
-                                   zsh=predict_shell,
-                                   )
+    predictors = {
+        'bash': predict_shell,
+        'csh': predict_shell,
+        'clear': predict_false,
+        'cls': predict_false,
+        'fish': predict_shell,
+        'htop': predict_help_ver,
+        'ksh': predict_shell,
+        'less': predict_help_ver,
+        'man': predict_help_ver,
+        'more': predict_help_ver,
+        'sh': predict_shell,
+        'ssh': predict_false,
+        'startx': predict_false,
+        'sudo': predict_help_ver,
+        'tcsh': predict_shell,
+        'top': predict_help_ver,
+        'vi': predict_false,
+        'vim': predict_false,
+        'vimpager': predict_help_ver,
+        'xo': predict_help_ver,
+        'xonsh': predict_shell,
+        'zsh': predict_shell,
+        'cmd': predict_shell,
+        'clear.exe': predict_false,
+    }
+    return collections.defaultdict(lambda: predict_true, predictors)
