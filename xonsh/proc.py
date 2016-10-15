@@ -1359,7 +1359,7 @@ def safe_readable(handle):
     """Attempts to find if the handle is readable without throwing an error."""
     try:
         status = handle.readable()
-    except OSError:
+    except (OSError, ValueError):
         status = False
     return status
 
