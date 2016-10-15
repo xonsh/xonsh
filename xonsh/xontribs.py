@@ -2,7 +2,6 @@
 import os
 import sys
 import json
-import warnings
 import builtins
 import argparse
 import functools
@@ -53,7 +52,7 @@ def prompt_xontrib_install(names):
           '   {xontribs}\n'
           'To install them run \n'
           '    pip install {packages}'.format(xontribs=' '.join(names),
-                                               packages=' '.join(packages)))
+                                              packages=' '.join(packages)))
 
 
 def update_context(name, ctx=None):
