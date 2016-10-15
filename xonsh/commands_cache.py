@@ -38,7 +38,7 @@ class CommandsCache(cabc.Mapping):
 
     def __iter__(self):
         for cmd, (path, is_alias) in self.all_commands.items():
-            if ON_WINDOWS:
+            if ON_WINDOWS and path is not None:
                 # All comand keys are stored in uppercase on Windows.
                 # This ensures the original command name is returned.
                 cmd = pathbasename(path)
@@ -172,7 +172,8 @@ class CommandsCache(cabc.Mapping):
             # On all names (keys) are stored in upper case so instead
             # we get the original cmd or alias name 
             path, _ = self.lazyget(name, (None, None))
-            name = pathbasename(path)
+            if path is not None:
+                name = pathbasename(path)
         predictor = self.backgroundable_predictors[name]
         return predictor(cmd[1:])
 
