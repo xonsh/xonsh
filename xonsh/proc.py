@@ -1019,8 +1019,8 @@ class ProcProxyThread(threading.Thread):
         spec = self._wait_and_getattr('spec')
         last_in_pipeline = spec.last_in_pipeline
         if last_in_pipeline:
-            capout = spec.captured_stdout
-            caperr = spec.captured_stderr
+            capout = spec.captured_stdout  # NOQA
+            caperr = spec.captured_stderr  # NOQA
         env = builtins.__xonsh_env__
         enc = env.get('XONSH_ENCODING')
         err = env.get('XONSH_ENCODING_ERRORS')
@@ -1244,7 +1244,7 @@ class ProcProxyThread(threading.Thread):
 class ProcProxy(object):
     """This is process proxy class that runs its alias functions on the
     same thread that it was called from, which is typically the main thread.
-    This prevents the process from runing on a background thread, but enables
+    This prevents the process from running on a background thread, but enables
     debugger and profiler tools (functions) be run on the same thread that they
     are attempting to debug.
     """
@@ -1329,6 +1329,7 @@ def unthreadable(f):
 
 
 foreground = unthreadable
+
 
 @lazyobject
 def SIGNAL_MESSAGES():

@@ -2,8 +2,8 @@
 
 **Changed:**
 
-* The following commands are, by deafult, predicted to be not threadable
-  in some circumastances:
+* The following commands are, by default, predicted to be not threadable
+  in some circumstances:
 
     * bash
     * csh
