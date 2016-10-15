@@ -327,7 +327,7 @@ must be used to force xonsh to not interpret them.
     >>> echo ${
     ...
     SyntaxError: <xonsh-code>:1:5: ('code: {',)
-    echo {
+    echo ${
          ^
     >>> echo '${'
     ${
