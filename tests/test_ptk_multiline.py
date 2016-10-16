@@ -17,7 +17,7 @@ from tools import DummyEnv
 Context = namedtuple('Context', ['indent', 'buffer', 'accept', 'cli', 'cr'])
 
 
-@pytest.fixture(scope='module')
+@pytest.yield_fixture(scope='module')
 def ctx():
     """Context in which the ptk multiline functionality will be tested."""
     builtins.__xonsh_env__ = DummyEnv()
