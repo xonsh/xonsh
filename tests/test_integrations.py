@@ -80,6 +80,21 @@ aliases['test-stream'] = _test_stream
 x = !(test-stream)
 print(x.returncode)
 """, "hallo on err\n1\n", 0),
+# test piping aliases
+("""
+def dummy(args, inn, out, err):
+    out.write('hey!')
+    return 0
+
+def dummy2(args, inn, out, err):
+    s = inn.read()
+    out.write(s.upper())
+    return 0
+
+aliases['d'] = dummy
+aliases['d2'] = dummy2
+d | d2
+""", "HEY!", 0),
 ]
 
 
