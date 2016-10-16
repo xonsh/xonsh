@@ -2,7 +2,6 @@
 import os
 import sys
 import json
-import warnings
 import builtins
 import argparse
 import functools
@@ -30,11 +29,7 @@ def xontrib_context(name):
     """Return a context dictionary for a xontrib of a given name."""
     spec = find_xontrib(name)
     if spec is None:
-        with warnings.catch_warnings():
-            warnings.simplefilter('default', ImportWarning)
-            warnings.warn('could not find xontrib module {0!r}'.format(name),
-                          ImportWarning)
-        return {}
+        return None
     m = importlib.import_module(spec.name)
     pubnames = getattr(m, '__all__', None)
     if pubnames is not None:
@@ -44,13 +39,34 @@ def xontrib_context(name):
     return ctx
 
 
+def prompt_xontrib_install(names):
+    """Returns a formatted string with name of xontrib package to prompt user"""
+    md = xontrib_metadata()
+    packages = []
+    for name in names:
+        for xontrib in md['xontribs']:
+            if xontrib['name'] == name:
+                packages.append(xontrib['package'])
+
+    print('The following xontribs are enabled but not installed: \n'
+          '   {xontribs}\n'
+          'To install them run \n'
+          '    pip install {packages}'.format(xontribs=' '.join(names),
+                                              packages=' '.join(packages)))
+
+
 def update_context(name, ctx=None):
     """Updates a context in place from a xontrib. If ctx is not provided,
     then __xonsh_ctx__ is updated.
     """
     if ctx is None:
         ctx = builtins.__xonsh_ctx__
+    if not hasattr(update_context, 'bad_imports'):
+        update_context.bad_imports = []
     modctx = xontrib_context(name)
+    if modctx is None:
+        update_context.bad_imports.append(name)
+        return ctx
     return ctx.update(modctx)
 
 
@@ -69,6 +85,9 @@ def _load(ns):
         if ns.verbose:
             print('loading xontrib {0!r}'.format(name))
         update_context(name, ctx=ctx)
+    if update_context.bad_imports:
+        prompt_xontrib_install(update_context.bad_imports)
+        del update_context.bad_imports
 
 
 def _list(ns):
