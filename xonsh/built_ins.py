@@ -30,7 +30,7 @@ from xonsh.foreign_shells import load_foreign_aliases
 from xonsh.jobs import add_job
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.proc import (
-    PopenThread, ProcProxy, ForegroundProcProxy,
+    PopenThread, ProcProxyThread, ProcProxy,
     pause_call_resume, CommandPipeline,
     HiddenCommandPipeline, STDOUT_CAPTURE_KINDS)
 from xonsh.tools import (
@@ -391,8 +391,9 @@ class SubprocSpec:
             Whether or not the subprocess is or should be run as a proxy.
         background : bool
             Whether or not the subprocess should be started in the background.
-        backgroundable : bool
-            Whether or not the subprocess is able to be run in the background.
+        threadable : bool
+            Whether or not the subprocess is able to be run in a background
+            thread, rather than the main thread.
         last_in_pipeline : bool
             Whether the subprocess is the last in the execution pipeline.
         captured_stdout : file-like
@@ -415,7 +416,7 @@ class SubprocSpec:
         self.binary_loc = None
         self.is_proxy = False
         self.background = False
-        self.backgroundable = True
+        self.threadable = True
         self.last_in_pipeline = False
         self.captured_stdout = None
         self.captured_stderr = None
@@ -641,10 +642,10 @@ class SubprocSpec:
         if not callable(alias):
             return
         self.is_proxy = True
-        bgable = getattr(alias, '__xonsh_backgroundable__', True)
-        cls = ProcProxy if bgable else ForegroundProcProxy
+        thable = getattr(alias, '__xonsh_threadable__', True)
+        cls = ProcProxyThread if thable else ProcProxy
         self.cls = cls
-        self.backgroundable = bgable
+        self.threadable = thable
 
 
 def _update_last_spec(last, captured=False):
@@ -655,13 +656,13 @@ def _update_last_spec(last, captured=False):
     if callable_alias:
         pass
     else:
-        bgable = (last.stdin is not None) or \
-            builtins.__xonsh_commands_cache__.predict_backgroundable(last.args)
-        if captured and bgable:
+        thable = (last.stdin is not None) or \
+            builtins.__xonsh_commands_cache__.predict_threadable(last.args)
+        if captured and thable:
             last.cls = PopenThread
-        elif not bgable:
+        elif not thable:
             # foreground processes should use Popen and not pipe stdout, stderr
-            last.backgroundable = False
+            last.threadable = False
             return
     # cannot used PTY pipes for aliases, for some dark reason,
     # and must use normal pipes instead.
