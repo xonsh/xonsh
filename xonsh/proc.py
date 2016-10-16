@@ -1477,16 +1477,20 @@ class CommandPipeline:
                 continue
             elif not check_prev_done:
                 # In the case of pipelines with more than one command
-                # we should the commands a little breathing room time
+                # we should give the commands a little time
                 # to start up fully. This is particularly true for
                 # GNU Parallel, which has a long startup time.
-                check_prev_done = (time.time() - self.starttime) > 0.1
+                pass
             elif self._prev_procs_done():
                 self._close_prev_procs()
                 proc.prevs_are_closed = True
                 break
-            yield from safe_readlines(stdout, 1024)
-            self.stream_stderr(safe_readlines(stderr, 1024))
+            stdout_lines = safe_readlines(stdout, 1024)
+            yield from stdout_lines
+            stderr_lines = safe_readlines(stderr, 1024)
+            self.stream_stderr(stderr_lines)
+            if not check_prev_done and (stdout_lines or stderr_lines):
+                check_prev_done = True
             time.sleep(timeout)
         # read from process now that it is over
         yield from safe_readlines(stdout)
