@@ -23,14 +23,15 @@ def ctx():
     builtins.__xonsh_env__ = DummyEnv()
     builtins.__xonsh_env__['INDENT'] = '    '
     from xonsh.ptk.key_bindings import carriage_return
-    buffer = Buffer()
-    buffer.accept_action = MagicMock(name='accept', spec=AcceptAction)
+    ptk_buffer = Buffer()
+    ptk_buffer.accept_action = MagicMock(name='accept', spec=AcceptAction)
     cli = MagicMock(name='cli', spec=CommandLineInterface)
-    return Context(indent='    ',
-                   buffer=buffer,
-                   accept=buffer.accept_action,
-                   cli=cli,
-                   cr=carriage_return)
+    yield Context(indent='    ',
+                  buffer=ptk_buffer,
+                  accept=ptk_buffer.accept_action,
+                  cli=cli,
+                  cr=carriage_return)
+    del builtins.__xonsh_env__
 
 
 def test_colon_indent(ctx):
