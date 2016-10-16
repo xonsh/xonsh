@@ -1476,7 +1476,11 @@ class CommandPipeline:
                 time.sleep(0.1)  # probably not leaving any time soon
                 continue
             elif not check_prev_done:
-                if ()
+                # In the case of pipelines with more than one command
+                # we should the commands a little breathing room time
+                # to start up fully. This is particularly true for
+                # GNU Parallel, which has a long startup time.
+                check_prev_done = (time.time() - self.starttime) > 0.1
             elif self._prev_procs_done():
                 self._close_prev_procs()
                 proc.prevs_are_closed = True
