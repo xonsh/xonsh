@@ -1,6 +1,5 @@
 import os
 import sys
-import builtins
 
 import pytest
 
@@ -11,7 +10,7 @@ from tools import skip_if_on_windows
 
 
 @pytest.yield_fixture(autouse=True)
-def chdir_to_test_dir(xonsh_builtins):
+def chdir_to_test_dir():
     old_cwd = os.getcwd()
     new_cwd = os.path.dirname(__file__)
     os.chdir(new_cwd)
