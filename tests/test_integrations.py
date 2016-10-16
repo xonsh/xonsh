@@ -1,7 +1,7 @@
 import os
 import sys
 import shutil
-import subprocess
+import subprocess as sp
 
 import pytest
 
@@ -28,7 +28,7 @@ PATH = os.path.join(os.path.dirname(__file__), 'bin') + os.pathsep + \
        os.environ['PATH']
 
 
-def run_xonsh(cmd):
+def run_xonsh(cmd, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.STDOUT):
     env = dict(os.environ)
     env['PATH'] = PATH
     env['XONSH_DEBUG'] = '1'
@@ -37,16 +37,16 @@ def run_xonsh(cmd):
     env['PROMPT'] = ''
     xonsh = 'xonsh.bat' if ON_WINDOWS else 'xon.sh'
     xonsh = shutil.which(xonsh, path=PATH)
-    proc = subprocess.Popen([xonsh, '--no-rc'],
-                            env=env,
-                            stdin=subprocess.PIPE,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT,
-                            universal_newlines=True,
-                            )
+    proc = sp.Popen([xonsh, '--no-rc'],
+                    env=env,
+                    stdin=stdin,
+                    stdout=stdout,
+                    stderr=stderr,
+                    universal_newlines=True,
+                    )
     try:
         out, err = proc.communicate(input=cmd, timeout=10)
-    except subprocess.TimeoutExpired:
+    except sp.TimeoutExpired:
         proc.kill()
         raise
     return out, err, proc.returncode
@@ -128,7 +128,7 @@ def test_single_command(cmd, fmt, exp):
     """The ``fmt`` parameter is a function
     that formats the output of cmd, can be None.
     """
-    out, err, rtn = run_xonsh(cmd)
+    out, err, rtn = run_xonsh(cmd, stderr=sp.DEVNULL)
     if callable(fmt):
         out = fmt(out)
     assert out == exp
