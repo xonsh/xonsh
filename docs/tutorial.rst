@@ -953,6 +953,34 @@ The following example shows the form of these functions:
     ['aa', 'aaa', 'aab', 'aabb']
 
 
+Path Objects
+============
+
+Shells spend a lot of their time manipulating paths, so you may find it useful
+to handle paths as objects instead of string. A shorthand is provided to
+instantiate ``pathlib.Path`` objects:
+
+.. code-block:: xonshcon
+
+    >>> p'/foo/bar'
+    Path('/foo/bar')
+    >>> p'/foo/bar'.stem
+    'bar'
+
+This also applies to using backticks for path searching. The ``p`` modifier to
+a search causes it to return a list of path objects instead of strings (but only
+in python mode). This can be combined with other modifiers.
+
+.. code-block:: xonshcon
+
+    >>> p`.*`
+    [Path('foo.py'), Path('bar.py')]
+    >>> pg`*.py`
+    [Path('foo.py'), Path('bar.py')]
+    >>> for f in pg`**`:
+    ...     print(f.absolute())
+
+
 Help & Superhelp with ``?`` & ``??``
 =====================================================
 From IPython, xonsh allows you to inspect objects with question marks.
