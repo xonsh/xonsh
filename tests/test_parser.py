@@ -89,9 +89,6 @@ def test_str_literal():
 def test_bytes_literal():
     check_ast('b"hello"')
 
-def test_path_literal():
-    check_ast('p"/foo"')
-
 def test_unary_plus():
     check_ast('+1')
 
@@ -1493,6 +1490,10 @@ def test_async_await():
 #
 # Xonsh specific syntax
 #
+
+
+def test_path_literal():
+    check_xonsh_ast({}, 'p"/foo"', False)
 
 def test_dollar_name():
     check_xonsh_ast({'WAKKA': 42}, '$WAKKA')
