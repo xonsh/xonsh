@@ -154,16 +154,19 @@ def globsearch(s):
                     sort_result=glob_sorted)
 
 
-def pathsearch(func, s, pymode=False):
+def pathsearch(func, s, pymode=False, pathobj=False):
     """
     Takes a string and returns a list of file paths that match (regex, glob,
-    or arbitrary search function).
+    or arbitrary search function). If pathobj=True, the return is a list of
+    pathlib.Path objects instead of strings.
     """
     if (not callable(func) or
             len(inspect.signature(func).parameters) != 1):
         error = "%r is not a known path search function"
         raise XonshError(error % func)
     o = func(s)
+    if pathobj and pymode: #this doesn't make sense in subprocess mode
+        o = list(map(path_literal, o))
     no_match = [] if pymode else [s]
     return o if len(o) != 0 else no_match
 

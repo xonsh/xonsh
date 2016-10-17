@@ -221,7 +221,7 @@ String = group(StringPrefix + r"'[^\n'\\]*(?:\\.[^\n'\\]*)*'",
                StringPrefix + r'"[^\n"\\]*(?:\\.[^\n"\\]*)*"')
 
 # Xonsh-specific Syntax
-SearchPath = r"((?:[rg]|@\w*)?)`([^\n`\\]*(?:\\.[^\n`\\]*)*)`"
+SearchPath = r"((?:[rgp]+|@\w*)?)`([^\n`\\]*(?:\\.[^\n`\\]*)*)`"
 
 # Because of leftmost-then-longest match semantics, be sure to put the
 # longest operators first (e.g., if = came before ==, == would get
@@ -275,8 +275,9 @@ endpats = {"'": Single, '"': Double,
            "RB'''": Single3, 'RB"""': Double3,
            "u'''": Single3, 'u"""': Double3,
            "U'''": Single3, 'U"""': Double3,
+           "p'''": Single3, 'p"""': Double3,
            'r': None, 'R': None, 'b': None, 'B': None,
-           'u': None, 'U': None}
+           'u': None, 'U': None, 'p': None}
 
 triple_quoted = {}
 for t in ("'''", '"""',
@@ -287,6 +288,7 @@ for t in ("'''", '"""',
           "rb'''", 'rb"""', "rB'''", 'rB"""',
           "Rb'''", 'Rb"""', "RB'''", 'RB"""',
           "u'''", 'u"""', "U'''", 'U"""',
+          "p'''", 'p""""',
           ):
     triple_quoted[t] = t
 single_quoted = {}
@@ -298,6 +300,7 @@ for t in ("'", '"',
           "rb'", 'rb"', "rB'", 'rB"',
           "Rb'", 'Rb"', "RB'", 'RB"',
           "u'", 'u"', "U'", 'U"',
+          "p'", 'p"',
           ):
     single_quoted[t] = t
 
