@@ -140,6 +140,7 @@ def xonsh_pathsearch(pattern, pymode=False, lineno=None, col=None):
         pathobj = 'p' in searchfunc
     func = ast.Name(id=func, ctx=ast.Load(), lineno=lineno,
                     col_offset=col)
+    pathobj = ast.NameConstant(value=pathobj, lineno=lineno, col_offset=col)
     return xonsh_call('__xonsh_pathsearch__', args=[func, pattern, pymode, pathobj],
                       lineno=lineno, col=col)
 
@@ -1977,7 +1978,8 @@ class BaseParser(object):
         """string_literal : string_tok"""
         p1 = p[1]
         if p1.value.startswith('p'):
-            s = ast.literal_eval(p1.value[1:])
+            s = ast.Str(s=ast.literal_eval(p1.value[1:]), lineno=p1.lineno,
+                        col_offset=p1.lexpos)
             p[0] = xonsh_call('__xonsh_path_literal__', [s],
                               lineno=p1.lineno, col=p1.lexpos)
         else:
