@@ -89,6 +89,9 @@ def test_str_literal():
 def test_bytes_literal():
     check_ast('b"hello"')
 
+def test_path_literal():
+    check_ast('p"/foo"')
+
 def test_unary_plus():
     check_ast('+1')
 
@@ -1614,6 +1617,15 @@ def test_ls_glob():
 
 def test_gbacktick():
     check_xonsh_ast({}, 'print(g`.*`)', False)
+
+def test_pbacktick():
+    check_xonsh_ast({}, 'print(p`.*`)', False)
+
+def test_pgbacktick():
+    check_xonsh_ast({}, 'print(pg`.*`)', False)
+
+def test_prbacktick():
+    check_xonsh_ast({}, 'print(rp`.*`)', False)
 
 def test_ls_glob_octothorpe():
     check_xonsh_ast({}, '$(ls g`#[Ff]+i*LE` -l)', False)
