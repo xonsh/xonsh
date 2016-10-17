@@ -953,6 +953,20 @@ The following example shows the form of these functions:
     ['aa', 'aaa', 'aab', 'aabb']
 
 
+Path Output
+-----------
+
+Using the ``p`` modifier with either regex or glob backticks changes the
+return type from a list of strings to a list of :class:`pathlib.Path` objects:
+
+.. code-block:: xonshcon
+
+    >>> p`.*`
+    [Path('foo'), Path('bar')]
+    >>> [x for x in pg`**` if x.is_symlink()]
+    [Path('a_link')]
+
+
 Help & Superhelp with ``?`` & ``??``
 =====================================================
 From IPython, xonsh allows you to inspect objects with question marks.

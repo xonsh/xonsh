@@ -129,15 +129,19 @@ def xonsh_pathsearch(pattern, pymode=False, lineno=None, col=None):
     searchfunc, pattern = RE_SEARCHPATH.match(pattern).groups()
     pattern = ast.Str(s=pattern, lineno=lineno,
                       col_offset=col)
-    if searchfunc in {'r', ''}:
-        func = '__xonsh_regexsearch__'
-    elif searchfunc == 'g':
+    pathobj = False
+    if searchfunc.startswith('@'):
+        func = searchfunc[1:]
+    elif 'g' in searchfunc:
         func = '__xonsh_globsearch__'
+        pathobj = 'p' in searchfunc
     else:
-        func = searchfunc[1:]  # remove the '@' character
+        func = '__xonsh_regexsearch__'
+        pathobj = 'p' in searchfunc
     func = ast.Name(id=func, ctx=ast.Load(), lineno=lineno,
                     col_offset=col)
-    return xonsh_call('__xonsh_pathsearch__', args=[func, pattern, pymode],
+    pathobj = ast.NameConstant(value=pathobj, lineno=lineno, col_offset=col)
+    return xonsh_call('__xonsh_pathsearch__', args=[func, pattern, pymode, pathobj],
                       lineno=lineno, col=col)
 
 
