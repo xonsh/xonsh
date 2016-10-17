@@ -980,6 +980,14 @@ in python mode). This can be combined with other modifiers.
     >>> for f in pg`**`:
     ...     print(f.absolute())
 
+Path objects can be used without further conversion in subprocess mode:
+
+.. code-block:: xonshcon
+
+    >>> x = p"some/path"
+    >>> echo @(x)
+    some/path
+
 
 Help & Superhelp with ``?`` & ``??``
 =====================================================
