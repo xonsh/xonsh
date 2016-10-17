@@ -205,7 +205,7 @@ Floatnumber = group(Pointfloat, Expfloat)
 Imagnumber = group(r'[0-9]+[jJ]', Floatnumber + r'[jJ]')
 Number = group(Imagnumber, Floatnumber, Intnumber)
 
-StringPrefix = r'(?:[bB][rR]?|[rR][bB]?|[uU])?'
+StringPrefix = r'(?:[bB][rR]?|[rR][bB]?|[uU]|[p])?'
 
 # Tail end of ' string.
 Single = r"[^'\\]*(?:\\.[^'\\]*)*'"

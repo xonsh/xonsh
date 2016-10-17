@@ -1973,9 +1973,14 @@ class BaseParser(object):
     def p_string_literal(self, p):
         """string_literal : string_tok"""
         p1 = p[1]
-        s = ast.literal_eval(p1.value)
-        cls = ast.Bytes if p1.value.startswith('b') else ast.Str
-        p[0] = cls(s=s, lineno=p1.lineno, col_offset=p1.lexpos)
+        if p1.value.startswith('p'):
+            s = ast.literal_eval(p1.value[1:])
+            p[0] = xonsh_call('__xonsh_path_literal__', [s],
+                              lineno=p1.lineno, col=p1.lexpos)
+        else:
+            s = ast.literal_eval(p1.value)
+            cls = ast.Bytes if p1.value.startswith('b') else ast.Str
+            p[0] = cls(s=s, lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_string_literal_list(self, p):
         """string_literal_list : string_literal
