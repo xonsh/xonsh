@@ -336,15 +336,16 @@ def _bash_hist_parser(location=None, **kwargs):
 def _hist_create_parser():
     """Create a parser for the "history" command."""
     p = argparse.ArgumentParser(prog='history',
-                                description='Tools for dealing with history')
-    subp = p.add_subparsers(title='action', dest='action')
+                                description="try 'history <command> --help' "
+                                            'for more info')
+    subp = p.add_subparsers(title='commands', dest='action')
     # session action
     show = subp.add_parser('show', prefix_chars='-+',
-                           help='displays session history, default action')
+                           help='display history of a session, default command')
     show.add_argument('-r', dest='reverse', default=False,
                       action='store_true', help='reverses the direction')
-    show.add_argument('-n', dest='numerate', default=False, action='store_true',
-                      help='numerate each command')
+    show.add_argument('-n', dest='numerate', default=False,
+                      action='store_true', help='numerate each command')
     show.add_argument('-t', dest='timestamp', default=False,
                       action='store_true', help='show command timestamps')
     show.add_argument('-T', dest='end_time', default=None,
@@ -352,26 +353,30 @@ def _hist_create_parser():
     show.add_argument('+T', dest='start_time', default=None,
                       help='show only commands after timestamp')
     show.add_argument('-f', dest='datetime_format', default=None,
-                      help='the datetime format to be used for filtering and printing')
-    show.add_argument('session', nargs='?', choices=_HIST_SESSIONS.keys(), default='session',
-                      help='Choose a history session, defaults to current session')
-    show.add_argument('slices', nargs='*', default=None,
-                      help='display history entries or range of entries')
+                      help='the datetime format to be used for'
+                           'filtering and printing')
+    show.add_argument('session', nargs='?', choices=_HIST_SESSIONS.keys(),
+                      default='session',
+                      metavar='session',
+                      help='{} (default: current session, all is an alias for xonsh)'
+                           ''.format(', '.join(map(repr, _HIST_SESSIONS.keys()))))
+    show.add_argument('slices', nargs='*', default=None, metavar='slice',
+                      help='integer or slice notation')
     # 'id' subcommand
-    subp.add_parser('id', help='displays the current session id')
+    subp.add_parser('id', help='display the current session id')
     # 'file' subcommand
-    subp.add_parser('file', help='displays the current history filename')
+    subp.add_parser('file', help='display the current history filename')
     # 'info' subcommand
-    info = subp.add_parser('info', help=('displays information about the '
+    info = subp.add_parser('info', help=('display information about the '
                                          'current history'))
     info.add_argument('--json', dest='json', default=False,
                       action='store_true', help='print in JSON format')
     # diff
-    diff = subp.add_parser('diff', help='diffs two xonsh history files')
+    diff = subp.add_parser('diff', help='diff two xonsh history files')
     _dh_create_parser(p=diff)
     # replay, dynamically
     from xonsh import replay
-    rp = subp.add_parser('replay', help='replays a xonsh history file')
+    rp = subp.add_parser('replay', help='replay a xonsh history file')
     replay._rp_create_parser(p=rp)
     _HIST_MAIN_ACTIONS['replay'] = replay._rp_main_action
     # gc
