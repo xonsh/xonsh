@@ -1,14 +1,17 @@
 doc-warnings: yes
 test-warnings: yes
 strictness: veryhigh
-max-line-length: 100
+max-line-length: 90
 autodetect: yes
 ignore-paths:
     - docs/conf.py
+    - xonsh/ply
 
+python-targets:
+    - 3
+         
 pylint:
   disable:
-    - syntax-error  # have to do this since landscape doesn't support py3k
     - super-on-old-class
     - old-style-class
     - global-variable-not-assigned
@@ -28,5 +31,5 @@ pylint:
 
 mccabe:
   disable:
-    - MC0000  # again, not Py3k compatabile
+    - MC0000  # not Py3k compatabile
     - MC0001  # silly cyclomatic complexity
