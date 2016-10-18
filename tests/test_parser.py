@@ -1615,6 +1615,15 @@ def test_ls_glob():
 def test_gbacktick():
     check_xonsh_ast({}, 'print(g`.*`)', False)
 
+def test_pbacktrick():
+    check_xonsh_ast({}, 'print(p`.*`)', False)
+
+def test_pgbacktick():
+    check_xonsh_ast({}, 'print(pg`.*`)', False)
+
+def test_prbacktick():
+    check_xonsh_ast({}, 'print(pr`.*`)', False)
+
 def test_ls_glob_octothorpe():
     check_xonsh_ast({}, '$(ls g`#[Ff]+i*LE` -l)', False)
 
