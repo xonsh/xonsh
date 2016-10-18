@@ -70,11 +70,11 @@ class TestWhich:
             assert len(matches) == 0
 
         def test_whichgen_ext_success(self):
-                testdir = self.testdirs[0].name
-                arg = 'whichtestapp2'
-                matches = list(_which.whichgen(arg, path=[testdir], exts=['.wta']))
-                assert len(matches) == 1
-                assert self._file_match(matches[0][0], os.path.join(testdir, arg))
+            testdir = self.testdirs[0].name
+            arg = 'whichtestapp2'
+            matches = list(_which.whichgen(arg, path=[testdir], exts=['.wta']))
+            assert len(matches) == 1
+            assert self._file_match(matches[0][0], os.path.join(testdir, arg))
 
     def _file_match(self, path1, path2):
         if ON_WINDOWS:
