@@ -1,13 +1,8 @@
 # -*- coding: utf-8 -*-
 """(A down payment on) Testing for ``xonsh.base_shell.BaseShell`` and associated classes"""
 import os
-import builtins
 
-import pytest
-
-from xonsh import dirstack
 from xonsh.environ import Env
-from xonsh.built_ins import load_builtins
 from xonsh.base_shell import BaseShell
 
 
