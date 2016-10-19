@@ -1,6 +1,6 @@
 **Added:**
 
-* Use `doctr` to deploy dev docs to github pages
+* Use ``doctr`` to deploy dev docs to github pages
 
 **Changed:** None
 
