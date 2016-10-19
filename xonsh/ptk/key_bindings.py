@@ -14,10 +14,8 @@ DEDENT_TOKENS = frozenset(['raise', 'return', 'pass', 'break', 'continue'])
 
 
 def carriage_return(b, cli, *, autoindent=True):
-    """
-    Preliminary parser to determine if 'Enter' key should send command to
-    the xonsh parser for execution or should insert a newline for continued
-    input.
+    """Preliminary parser to determine if 'Enter' key should send command to the
+    xonsh parser for execution or should insert a newline for continued input.
 
     Current 'triggers' for inserting a newline are:
     - Not on first line of buffer and line is non-empty
@@ -26,6 +24,7 @@ def carriage_return(b, cli, *, autoindent=True):
     - Line ends with backslash
     - Any text exists below cursor position (relevant when editing previous
     multiline blocks)
+
     """
     doc = b.document
     at_end_of_line = _is_blank(doc.current_line_after_cursor)
@@ -48,17 +47,14 @@ def carriage_return(b, cli, *, autoindent=True):
             doc.line_count > 1):
         b.newline(copy_margin=autoindent)
         b.delete_before_cursor(count=len(indent))
-    elif (not doc.on_first_line and
-            not current_line_blank):
+    elif (not doc.on_first_line and not current_line_blank):
         b.newline(copy_margin=autoindent)
     elif (doc.char_before_cursor == '\\' and
             not (not builtins.__xonsh_env__.get('FORCE_POSIX_PATHS') and
                  ON_WINDOWS)):
         b.newline(copy_margin=autoindent)
     elif (doc.find_next_word_beginning() is not None and
-            (any(not _is_blank(i)
-                 for i
-                 in doc.lines_from_current[1:]))):
+            (any(not _is_blank(i) for i in doc.lines_from_current[1:]))):
         b.newline(copy_margin=autoindent)
     elif not current_line_blank and not can_compile(doc.text):
         b.newline(copy_margin=autoindent)
@@ -66,6 +62,10 @@ def carriage_return(b, cli, *, autoindent=True):
         b.newline(copy_margin=autoindent)
     else:
         b.accept_action.validate_and_handle(cli, b)
+
+
+def _is_blank(l):
+    return len(l.strip()) == 0
 
 
 def can_compile(src):
@@ -290,7 +290,3 @@ def load_xonsh_bindings(key_bindings_manager):
         else:
             event.cli.start_completion(insert_common_part=True,
                                        select_first=False)
-
-
-def _is_blank(l):
-    return len(l.strip()) == 0
