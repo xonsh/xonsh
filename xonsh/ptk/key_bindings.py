@@ -3,9 +3,8 @@
 import builtins
 
 from prompt_toolkit.enums import DEFAULT_BUFFER
-from prompt_toolkit.filters import (Condition, Filter, IsMultiline,
-                                    HasSelection, EmacsInsertMode,
-                                    ViInsertMode)
+from prompt_toolkit.filters import (Condition, IsMultiline, HasSelection,
+                                    EmacsInsertMode, ViInsertMode)
 from prompt_toolkit.keys import Keys
 from xonsh.aliases import xonsh_exit
 from xonsh.tools import ON_WINDOWS, check_for_partial_string
