@@ -13,6 +13,7 @@ import types
 import shlex
 import signal
 import atexit
+import pathlib
 import inspect
 import pathlib
 import builtins
@@ -165,7 +166,7 @@ def pathsearch(func, s, pymode=False, pathobj=False):
         error = "%r is not a known path search function"
         raise XonshError(error % func)
     o = func(s)
-    if pathobj and pymode: #this doesn't make sense in subprocess mode
+    if pathobj and pymode:
         o = list(map(path_literal, o))
     no_match = [] if pymode else [s]
     return o if len(o) != 0 else no_match

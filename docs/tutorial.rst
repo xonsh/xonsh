@@ -953,40 +953,36 @@ The following example shows the form of these functions:
     ['aa', 'aaa', 'aab', 'aabb']
 
 
-Path Objects
-============
+Path Output
+-----------
 
-Shells spend a lot of their time manipulating paths, so you may find it useful
-to handle paths as objects instead of string. A shorthand is provided to
-instantiate ``pathlib.Path`` objects:
-
-.. code-block:: xonshcon
-
-    >>> p'/foo/bar'
-    Path('/foo/bar')
-    >>> p'/foo/bar'.stem
-    'bar'
-
-This also applies to using backticks for path searching. The ``p`` modifier to
-a search causes it to return a list of path objects instead of strings (but only
-in python mode). This can be combined with other modifiers.
+Using the ``p`` modifier with either regex or glob backticks changes the
+return type from a list of strings to a list of :class:`pathlib.Path` objects:
 
 .. code-block:: xonshcon
 
     >>> p`.*`
-    [Path('foo.py'), Path('bar.py')]
-    >>> pg`*.py`
-    [Path('foo.py'), Path('bar.py')]
-    >>> for f in pg`**`:
-    ...     print(f.absolute())
+    [Path('foo'), Path('bar')]
+    >>> [x for x in pg`**` if x.is_symlink()]
+    [Path('a_link')]
 
-Path objects can be used without further conversion in subprocess mode:
+
+Path Literals
+-------------
+
+Path objects can be instantiated directly using *p-string* syntax. Path objects
+can be converted back to plain strings with `str()`, and this conversion is
+handled implicitly in subprocess mode.
 
 .. code-block:: xonshcon
 
-    >>> x = p"some/path"
-    >>> echo @(x)
-    some/path
+    >>> mypath = p'/foo/bar'
+    >>> mypath
+    Path('/foo/bar')
+    >>> mypath.stem
+    'bar'
+    >>> echo @(mypath)
+    /foo/bar
 
 
 Help & Superhelp with ``?`` & ``??``
