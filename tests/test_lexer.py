@@ -191,7 +191,7 @@ def test_single_bytes_literal():
 
 def test_path_string_literal():
     assert check_token("p'/foo'", ['STRING', "p'/foo'", 0])
-    assert check_token("p'/foo'", ['STRING', "p'/foo'", 0])
+    assert check_token('p"/foo"', ['STRING', 'p"/foo"', 0])
 
 def test_regex_globs():
     for i in ('.*', r'\d*', '.*#{1,2}'):
