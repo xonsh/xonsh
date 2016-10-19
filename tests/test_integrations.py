@@ -122,6 +122,15 @@ aliases['d'] = dummy
 aliases['d2'] = dummy2
 d | d2
 """, "HEY!", 0),
+# test output larger than most pipe buffers
+("""
+def _g(args, stdin=None):
+    for i in range(1000):
+        print('x' * 100)
+
+aliases['g'] = _g
+g
+""", (("x"*100) + '\n') * 1000, 0),
 ]
 
 

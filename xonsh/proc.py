@@ -184,6 +184,11 @@ class NonBlockingFDReader:
         """Returns the file descriptor number."""
         return self.fd
 
+    @staticmethod
+    def readable():
+        """Returns true, because this object is always readable."""
+        return True
+
 
 def populate_buffer(reader, fd, buffer, chunksize):
     """Reads bytes from the file descriptor and copies them into a buffer.
@@ -1443,6 +1448,7 @@ class CommandPipeline:
         """
         # get approriate handles
         proc = self.proc
+        timeout = builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
         # get the correct stdout
         stdout = proc.stdout
         if ((stdout is None or not safe_readable(stdout)) and
@@ -1450,6 +1456,8 @@ class CommandPipeline:
             stdout = self.spec.captured_stdout
         if hasattr(stdout, 'buffer'):
             stdout = stdout.buffer
+        if not isinstance(stdout, (io.BytesIO, NonBlockingFDReader)):
+            stdout = NonBlockingFDReader(stdout.fileno(), timeout=timeout)
         if not stdout or not safe_readable(stdout):
             # we get here if the process is not bacgroundable or the
             # class is the real Popen
@@ -1466,8 +1474,9 @@ class CommandPipeline:
             stderr = self.spec.captured_stderr
         if hasattr(stderr, 'buffer'):
             stderr = stderr.buffer
+        if not isinstance(stderr, (io.BytesIO, NonBlockingFDReader)):
+            stderr = NonBlockingFDReader(stderr.fileno(), timeout=timeout)
         # read from process while it is running
-        timeout = builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
         while proc.poll() is None:
             if getattr(proc, 'suspended', False):
                 return
