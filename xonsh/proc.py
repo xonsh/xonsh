@@ -1456,7 +1456,8 @@ class CommandPipeline:
             stdout = self.spec.captured_stdout
         if hasattr(stdout, 'buffer'):
             stdout = stdout.buffer
-        if not isinstance(stdout, (io.BytesIO, NonBlockingFDReader)):
+        if stdout is not None and \
+                     not isinstance(stdout, (io.BytesIO, NonBlockingFDReader)):
             stdout = NonBlockingFDReader(stdout.fileno(), timeout=timeout)
         if not stdout or not safe_readable(stdout):
             # we get here if the process is not bacgroundable or the
@@ -1474,7 +1475,8 @@ class CommandPipeline:
             stderr = self.spec.captured_stderr
         if hasattr(stderr, 'buffer'):
             stderr = stderr.buffer
-        if not isinstance(stderr, (io.BytesIO, NonBlockingFDReader)):
+        if stderr is not None and \
+                     not isinstance(stderr, (io.BytesIO, NonBlockingFDReader)):
             stderr = NonBlockingFDReader(stderr.fileno(), timeout=timeout)
         # read from process while it is running
         check_prev_done = len(self.procs) == 1
