@@ -244,6 +244,12 @@ def load_xonsh_bindings(key_bindings_manager):
         """Use <ESC> to cancel completion"""
         event.cli.current_buffer.cancel_completion()
 
+    @handle(Keys.Escape, Keys.ControlJ)
+    def execute_block_now(event):
+        """Execute a block of text irrespective of cursor position"""
+        b = event.cli.current_buffer
+        b.accept_action.validate_and_handle(event.cli, b)
+
     @handle(Keys.Left, filter=BeginningOfLine())
     def wrap_cursor_back(event):
         """Move cursor to end of previous line unless at beginning of
