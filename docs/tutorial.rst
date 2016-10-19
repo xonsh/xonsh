@@ -314,6 +314,28 @@ force xonsh to do so with the syntax that we will see in the following
 sections.
 
 
+Quoting
+=======
+
+Single or double quotes can be used to remove the special meaning
+of certain characters or words to xonsh. If a subprocess command
+contains characters that collide with xonsh syntax then quotes
+must be used to force xonsh to not interpret them.
+
+.. code-block:: xonshcon
+
+    >>> echo ${
+    ...
+    SyntaxError: <xonsh-code>:1:5: ('code: {',)
+    echo ${
+         ^
+    >>> echo '${'
+    ${
+
+.. warning:: There is no notion of an escaping character in xonsh like the
+             backslash (\) in bash.
+
+
 Captured Subprocess with ``$()`` and ``!()``
 ============================================
 The ``$(<expr>)`` operator in xonsh executes a subprocess command and
@@ -929,6 +951,20 @@ The following example shows the form of these functions:
     ...     return [i for i in os.listdir('.') if i.startswith(s)]
     >>> @foo`aa`
     ['aa', 'aaa', 'aab', 'aabb']
+
+
+Path Output
+-----------
+
+Using the ``p`` modifier with either regex or glob backticks changes the
+return type from a list of strings to a list of :class:`pathlib.Path` objects:
+
+.. code-block:: xonshcon
+
+    >>> p`.*`
+    [Path('foo'), Path('bar')]
+    >>> [x for x in pg`**` if x.is_symlink()]
+    [Path('a_link')]
 
 
 Help & Superhelp with ``?`` & ``??``

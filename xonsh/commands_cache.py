@@ -161,7 +161,8 @@ class CommandsCache(cabc.Mapping):
         cached = next((cmd for cmd in possibilities if cmd in self._cmds_cache),
                       None)
         if cached:
-            return self._cmds_cache[cached][0]
+            (path, is_alias) = self._cmds_cache[cached]
+            return path if not is_alias else None
         elif os.path.isfile(name) and name != pathbasename(name):
             return name
 
