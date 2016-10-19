@@ -143,6 +143,7 @@ def path_literal(s):
     s = expand_path(s)
     return pathlib.Path(s)
 
+
 def regexsearch(s):
     s = expand_path(s)
     return reglob(s)
