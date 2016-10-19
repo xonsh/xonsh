@@ -24,7 +24,6 @@ def carriage_return(b, cli, *, autoindent=True):
     - Line ends with backslash
     - Any text exists below cursor position (relevant when editing previous
     multiline blocks)
-
     """
     doc = b.document
     at_end_of_line = _is_blank(doc.current_line_after_cursor)
