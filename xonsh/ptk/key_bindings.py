@@ -69,70 +69,6 @@ def carriage_return(b, cli, *, autoindent=True):
         b.accept_action.validate_and_handle(cli, b)
 
 
-class TabShouldInsertIndentFilter(Filter):
-    """
-    Filter that is intended to check if <Tab> should insert indent instead of
-    starting autocompletion.
-    It basically just checks if there are only whitespaces before the cursor -
-    if so indent should be inserted, otherwise autocompletion.
-    """
-    def __call__(self, cli):
-        before_cursor = cli.current_buffer.document.current_line_before_cursor
-
-        return bool(before_cursor.isspace())
-
-
-class BeginningOfLine(Filter):
-    """
-    Check if cursor is at beginning of a line other than the first line
-    in a multiline document
-    """
-    def __call__(self, cli):
-        before_cursor = cli.current_buffer.document.current_line_before_cursor
-
-        return bool(len(before_cursor) == 0 and
-                    not cli.current_buffer.document.on_first_line)
-
-
-class EndOfLine(Filter):
-    """
-    Check if cursor is at the end of a line other than the last line
-    in a multiline document
-    """
-    def __call__(self, cli):
-        d = cli.current_buffer.document
-        at_end = d.is_cursor_at_the_end_of_line
-        last_line = d.is_cursor_at_the_end
-
-        return bool(at_end and not last_line)
-
-
-class ShouldConfirmCompletion(Filter):
-    """
-    Check if completion needs confirmation
-    """
-    def __call__(self, cli):
-        return (builtins.__xonsh_env__.get('COMPLETIONS_CONFIRM') and
-                cli.current_buffer.complete_state)
-
-
-# Copied from prompt-toolkit's key_binding/bindings/basic.py
-@Condition
-def ctrl_d_condition(cli):
-    """ Ctrl-D binding is only active when the default buffer is selected
-    and empty. """
-    if builtins.__xonsh_env__.get("IGNOREEOF"):
-        raise EOFError
-    else:
-        return (cli.current_buffer_name == DEFAULT_BUFFER and
-                not cli.current_buffer.text)
-
-
-@Condition
-def autopair_condition(cli):
-    return builtins.__xonsh_env__.get("XONSH_AUTOPAIR", False)
-
-
 def can_compile(src):
     """Returns whether the code can be compiled, i.e. it is valid xonsh."""
     src = src if src.endswith('\n') else src + '\n'
@@ -148,6 +84,67 @@ def can_compile(src):
     return rtn
 
 
+@Condition
+def tab_insert_indent(cli):
+    """Check if <Tab> should insert indent instead of starting autocompletion.
+    Checks if there are only whitespaces before the cursor - if so indent
+    should be inserted, otherwise autocompletion.
+
+    """
+    before_cursor = cli.current_buffer.document.current_line_before_cursor
+
+    return bool(before_cursor.isspace())
+
+
+@Condition
+def beginning_of_line(cli):
+    """Check if cursor is at beginning of a line other than the first line in a
+    multiline document
+    """
+    before_cursor = cli.current_buffer.document.current_line_before_cursor
+
+    return bool(len(before_cursor) == 0 and
+                not cli.current_buffer.document.on_first_line)
+
+
+@Condition
+def end_of_line(cli):
+    """Check if cursor is at the end of a line other than the last line in a
+    multiline document
+    """
+    d = cli.current_buffer.document
+    at_end = d.is_cursor_at_the_end_of_line
+    last_line = d.is_cursor_at_the_end
+
+    return bool(at_end and not last_line)
+
+
+@Condition
+def should_confirm_completion(cli):
+    """Check if completion needs confirmation"""
+    return (builtins.__xonsh_env__.get('COMPLETIONS_CONFIRM') and
+            cli.current_buffer.complete_state)
+
+
+# Copied from prompt-toolkit's key_binding/bindings/basic.py
+@Condition
+def ctrl_d_condition(cli):
+    """Ctrl-D binding is only active when the default buffer is selected and
+    empty.
+    """
+    if builtins.__xonsh_env__.get("IGNOREEOF"):
+        raise EOFError
+    else:
+        return (cli.current_buffer_name == DEFAULT_BUFFER and
+                not cli.current_buffer.text)
+
+
+@Condition
+def autopair_condition(cli):
+    """Check if XONSH_AUTOPAIR is set"""
+    return builtins.__xonsh_env__.get("XONSH_AUTOPAIR", False)
+
+
 def load_xonsh_bindings(key_bindings_manager):
     """
     Load custom key bindings.
@@ -156,8 +153,8 @@ def load_xonsh_bindings(key_bindings_manager):
     has_selection = HasSelection()
     insert_mode = ViInsertMode() | EmacsInsertMode()
 
-    @handle(Keys.Tab, filter=TabShouldInsertIndentFilter())
-    def _(event):
+    @handle(Keys.Tab, filter=tab_insert_indent)
+    def insert_indent(event):
         """
         If there are only whitespaces before current cursor position insert
         indent instead of autocompleting.
@@ -228,18 +225,18 @@ def load_xonsh_bindings(key_bindings_manager):
         b.accept_action.validate_and_handle(event.cli, b)
         xonsh_exit([])
 
-    @handle(Keys.ControlJ, filter=IsMultiline())
+    @handle(Keys.ControlJ, filter=IsMultiline)
     def multiline_carriage_return(event):
         """ Wrapper around carriage_return multiline parser """
         b = event.cli.current_buffer
         carriage_return(b, event.cli)
 
-    @handle(Keys.ControlJ, filter=ShouldConfirmCompletion())
+    @handle(Keys.ControlJ, filter=should_confirm_completion)
     def enter_confirm_completion(event):
         """Ignore <enter> (confirm completion)"""
         event.current_buffer.complete_state = None
 
-    @handle(Keys.Escape, filter=ShouldConfirmCompletion())
+    @handle(Keys.Escape, filter=should_confirm_completion)
     def esc_cancel_completion(event):
         """Use <ESC> to cancel completion"""
         event.cli.current_buffer.cancel_completion()
@@ -250,7 +247,7 @@ def load_xonsh_bindings(key_bindings_manager):
         b = event.cli.current_buffer
         b.accept_action.validate_and_handle(event.cli, b)
 
-    @handle(Keys.Left, filter=BeginningOfLine())
+    @handle(Keys.Left, filter=beginning_of_line)
     def wrap_cursor_back(event):
         """Move cursor to end of previous line unless at beginning of
         document
@@ -260,7 +257,7 @@ def load_xonsh_bindings(key_bindings_manager):
         relative_end_index = b.document.get_end_of_line_position()
         b.cursor_right(count=relative_end_index)
 
-    @handle(Keys.Right, filter=EndOfLine())
+    @handle(Keys.Right, filter=end_of_line)
     def wrap_cursor_forward(event):
         """Move cursor to beginning of next line unless at end of document"""
         b = event.cli.current_buffer
