@@ -49,7 +49,7 @@ script:
       cd docs;
       make html;
       cd ..;
-      doctr deploy --deploy-repo xonsh/xonsh.github.io --gh-pages-docs dev
+      doctr deploy --deploy-repo xonsh/xonsh.github.io --gh-pages-docs dev;
     else
       py.test --timeout=10;
     fi
