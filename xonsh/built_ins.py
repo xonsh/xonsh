@@ -15,7 +15,6 @@ import signal
 import atexit
 import pathlib
 import inspect
-import pathlib
 import builtins
 import itertools
 import subprocess
@@ -141,6 +140,7 @@ def reglob(path, parts=None, i=None):
 
 
 def path_literal(s):
+    s = expand_path(s)
     return pathlib.Path(s)
 
 def regexsearch(s):
@@ -167,7 +167,7 @@ def pathsearch(func, s, pymode=False, pathobj=False):
         raise XonshError(error % func)
     o = func(s)
     if pathobj and pymode:
-        o = list(map(path_literal, o))
+        o = list(map(pathlib.Path, o))
     no_match = [] if pymode else [s]
     return o if len(o) != 0 else no_match
 
