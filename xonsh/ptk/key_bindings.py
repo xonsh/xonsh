@@ -223,7 +223,7 @@ def load_xonsh_bindings(key_bindings_manager):
         b.accept_action.validate_and_handle(event.cli, b)
         xonsh_exit([])
 
-    @handle(Keys.ControlJ, filter=IsMultiline)
+    @handle(Keys.ControlJ, filter=IsMultiline())
     def multiline_carriage_return(event):
         """ Wrapper around carriage_return multiline parser """
         b = event.cli.current_buffer
