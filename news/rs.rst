@@ -42,12 +42,15 @@
   in favor of a more general mechanism for dispatching callable aliases
   implemented in the ``ProcProxyThread``  and ``ProcProxy`` classes.
 
-
 **Fixed:**
 
 * May now Crtl-C out of an infinite loop with a subprocess, such as
   ```while True: sleep 1``.
 * Fix for stdin redirects.
 * Backgrounding works with ``$XONSH_STORE_STDOUT``
+* Added a minimum time buffer time for command pipelines to check for
+  if previous commands have executed successfully.  This is helpful
+  for pipelines where the last command takes a long time to start up,
+  such as GNU Parallel.
 
 **Security:** None
