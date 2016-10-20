@@ -43,7 +43,11 @@ Windows Registry Editor Version 5.00
 "ColorTable14"=dword:0000FFFF
 "ColorTable15"=dword:00FFFFFF
 "ScreenColors"=dword:00000007
-"PopupColors"=dword: 000000f8 
+"PopupColors" =dword:000000f8 
+"FontFamily"  =dword:00000036
+"FontSize"    =dword:00100000
+"FontWeight"  =dword:000002BC
+"FaceName"    ="Consolas"
 
 [HKEY_CURRENT_USER\Console\%SystemRoot%_cmd.exe]
 "ColorTable00"=dword:000A0A0A
@@ -63,4 +67,8 @@ Windows Registry Editor Version 5.00
 "ColorTable14"=dword:0000FFFF
 "ColorTable15"=dword:00FFFFFF
 "ScreenColors"=dword:00000007
-"PopupColors"=dword: 000000f8 
+"PopupColors"=dword: 000000f8
+"FontFamily"  =dword:00000036
+"FontSize"    =dword:00100000
+"FontWeight"  =dword:000002BC
+"FaceName"    ="Consolas"
