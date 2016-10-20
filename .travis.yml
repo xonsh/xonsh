@@ -49,7 +49,12 @@ script:
       cd docs;
       make html;
       cd ..;
-      doctr deploy --deploy-repo xonsh/xonsh.github.io --gh-pages-docs dev;
+      doctr deploy --deploy-repo xonsh/xonsh-docs --gh-pages-docs dev;
+      git checkout $(git describe --tags `git rev-list --tags --max-count=1`);
+      cd docs;
+      make html;
+      cd ..;
+      doctr deploy --deploy-repo xonsh/xonsh-docs --gh-pages-docs .;
     else
       py.test --timeout=10;
     fi
