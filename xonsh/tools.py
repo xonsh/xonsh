@@ -747,16 +747,23 @@ def argvquote(arg, force=False):
         n_backslashes = 0
         cmdline = '"'
         for c in arg:
+            if c == "\\":
+                # first count the number of current backslashes
+                n_backslashes += 1
+                continue
             if c == '"':
+                # Escape all backslashes and the following double quotation mark
                 cmdline += (n_backslashes * 2 + 1) * '\\'
             else:
+                # backslashes are not special here
                 cmdline += n_backslashes * '\\'
-            if c != '\\':
-                cmdline += c
-                n_backslashes = 0
-            else:
-                n_backslashes += 1
-        return cmdline + n_backslashes * 2 * '\\' + '"'
+            n_backslashes = 0
+            cmdline += c
+        # Escape all backslashes, but let the terminating
+        # double quotation mark we add below be interpreted
+        # as a metacharacter
+        cmdline += + n_backslashes * 2 * '\\' + '"'
+        return cmdline
 
 
 def on_main_thread():
