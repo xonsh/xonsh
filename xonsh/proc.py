@@ -1547,9 +1547,16 @@ class CommandPipeline:
         """Streams lines to sys.stderr and the errors attribute."""
         if not lines:
             return
+        env = builtins.__xonsh_env__
+        enc = env.get('XONSH_ENCODING')
+        err = env.get('XONSH_ENCODING_ERRORS')
         b = b''.join(lines)
+        stderr_has_buffer = hasattr(sys.stderr, 'buffer')
         # write bytes to std stream
-        sys.stderr.buffer.write(b)
+        if stderr_has_buffer:
+            sys.stderr.buffer.write(b)
+        else:
+            sys.stderr.write(b.decode(encoding=enc, errors=err))
         sys.stderr.flush()
         # do some munging of the line before we save it to the attr
         b = RE_HIDDEN_BYTES.sub(b'', b)
