@@ -915,19 +915,25 @@ def test_escape_windows_cmd_string(st, esc):
     assert esc == obs
 
 
-@pytest.mark.parametrize('st, esc', [
-    ('', '""'),
-    ('foo', 'foo'),
+@pytest.mark.parametrize('st, esc, forced', [
+    ('', '""', None),
+    ('foo', 'foo', '"foo"'),
     (r'arg1 "hallo, "world""  "\some\path with\spaces")',
-     r'"arg1 \"hallo, \"world\"\"  \"\some\path with\spaces\")"'),
+     r'"arg1 \"hallo, \"world\"\"  \"\some\path with\spaces\")"', None),
     (r'"argument"2" argument3 argument4',
-     r'"\"argument\"2\" argument3 argument4"'),
-    (r'"\foo\bar bar\foo\" arg',
-     r'"\"\foo\bar bar\foo\\\" arg"')
+     r'"\"argument\"2\" argument3 argument4"', None),
+    (r'"\foo\bar bar\foo\" arg', r'"\"\foo\bar bar\foo\\\" arg"', None),
+    (r'\\machine\dir\file.bat', r'\\machine\dir\file.bat', r'"\\machine\dir\file.bat"'),
+    (r'"\\machine\dir space\file.bat"', r'"\"\\machine\dir space\file.bat\""', None)
 ])
-def test_argvquote(st, esc):
+def test_argvquote(st, esc, forced):
     obs = argvquote(st)
     assert esc == obs
+    
+    if forced is None:
+        forced = esc
+    obs = argvquote(st, force=True)
+    assert forced == obs
 
 
 @pytest.mark.parametrize('inp', ['no string here', ''])

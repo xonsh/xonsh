@@ -1,4 +1,7 @@
 language: python
+env:
+   global:
+       - secure: "pvQHCsdcIRjwNvsBrZxP8cZWEwug0+PLg1T8841ZLkMdCaO3YheqmxF1xGjAqty6hLppz6vX1LFEKmPjKurLL0/i+be6MhT8/ZikFpSan7TdNUqISxeFx31ls+QpuFKzCV7ZEx7C1ms8LPWEGmzMMN6bCtOBVtGznD9KKWZmLlA="
 matrix:
     include:
         - os: linux
@@ -35,7 +38,7 @@ install:
   - if [[ $BUILD_DOCS = true ]]; then
       python setup.py install;
       pip install -r requirements-docs.txt;
-      pip install pygments prompt_toolkit ply psutil ipykernel matplotlib;
+      pip install pygments prompt_toolkit ply psutil ipykernel matplotlib doctr;
     else
       pip install -r requirements-tests.txt;
     fi
@@ -45,6 +48,13 @@ script:
   - if [[ $BUILD_DOCS = true ]]; then
       cd docs;
       make html;
+      cd ..;
+      doctr deploy --deploy-repo xonsh/xonsh-docs --gh-pages-docs dev;
+      git checkout $(git describe --tags `git rev-list --tags --max-count=1`);
+      cd docs;
+      make html;
+      cd ..;
+      doctr deploy --deploy-repo xonsh/xonsh-docs --gh-pages-docs .;
     else
       py.test --timeout=10;
     fi
