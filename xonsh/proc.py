@@ -1073,6 +1073,10 @@ class ProcProxyThread(threading.Thread):
         safe_flush(sp_stdout)
         safe_flush(sp_stderr)
         self.returncode = parse_proxy_return(r, sp_stdout, sp_stderr)
+        if not last_in_pipeline and not ON_WINDOWS:
+            # mac requires us *not to* close the handles here while
+            # windows requires us *to* close the handles here
+            return
         # clean up
         # scopz: not sure why this is needed, but stdin cannot go here
         # and stdout & stderr must.
