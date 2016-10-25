@@ -85,17 +85,18 @@ def _f():
 aliases['f'] = _f
 print(![f].returncode)
 """, "42\n", 0),
-# test uncaptured streaming alias
+# test uncaptured streaming alias,
+# order actually printed in is non-deterministic
 ("""
 def _test_stream(args, stdin, stdout, stderr):
-    print('hallo on err', file=stderr)
-    print('hallo on out', file=stdout)
+    print('hallo on stream', file=stderr)
+    print('hallo on stream', file=stdout)
     return 1
 
 aliases['test-stream'] = _test_stream
 x = ![test-stream]
 print(x.returncode)
-""", "hallo on out\nhallo on err\n1\n", 0),
+""", "hallo on stream\nhallo on stream\n1\n", 0),
 # test captured streaming alias
 ("""
 def _test_stream(args, stdin, stdout, stderr):
