@@ -305,16 +305,13 @@ def BASH_COMPLETIONS_DEFAULT():
     the current platform.
     """
     if ON_LINUX or ON_CYGWIN:
-        if linux_distro() == 'arch':
-            bcd = ('/usr/share/bash-completion/bash_completion', )
-        else:
-            bcd = ('/usr/share/bash-completion', )
+        bcd = ('/usr/share/bash-completion/bash_completion', )
     elif ON_DARWIN:
         bcd = ('/usr/local/share/bash-completion/bash_completion',  # v2.x
                '/usr/local/etc/bash_completion')  # v1.x
     elif ON_WINDOWS and git_for_windows_path():
         bcd = (os.path.join(git_for_windows_path(),
-                            'usr\\share\\bash-completion'),
+                            'usr\\share\\bash-completion\\bash_completion'),
                os.path.join(git_for_windows_path(),
                             'mingw64\\share\\git\\completion\\'
                             'git-completion.bash'))
