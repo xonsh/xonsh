@@ -85,7 +85,7 @@ enter (or return) is pressed when the cursor is in the first column.
     ... else:
     ...     print(2)
     ...
-        1
+    1
 
 Flow control, of course, includes loops.
 
