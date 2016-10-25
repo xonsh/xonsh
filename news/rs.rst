@@ -6,7 +6,8 @@
 * New ``CommandPipeline`` and ``HiddenCommandPipeline`` classes manage the
   execution of a pipeline of commands via the execution of the last command
   in the pipeline. Instances may be iterated and stream lines from the
-  stdout buffer.
+  stdout buffer. These pipelines read from the stdout & stderr streams in a
+  non-blocking manner.
 * ``$XONSH_STORE_STDOUT`` is now available on all platforms!
 * The ``CommandsCache`` now has the ability to predict whether or not a
   command must be run in the foreground using ``Popen`` or may use a
