@@ -41,7 +41,7 @@ available in ``sys.path``. If you want to be able to import a module that
 resides in the current directory, ensure that there is an empty string as the
 first element of your ``sys.path``
 
-.. code-block:: python
+.. code-block:: xonshcon
 
    $ import sys
    $ sys.path.insert(0, '')
