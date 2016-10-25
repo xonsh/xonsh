@@ -2,6 +2,9 @@
 Customizing ``xonsh``
 =====================
 
+.. contents::
+   :local:
+
 How do I...
 ===========
 

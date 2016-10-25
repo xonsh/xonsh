@@ -79,7 +79,7 @@ Contents
     linux
     osx
     windows
-    add_to_shell
+    customization
 
 **Guides:**
 
