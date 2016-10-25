@@ -1496,7 +1496,6 @@ class CommandPipeline:
                 self._close_prev_procs()
                 proc.prevs_are_closed = True
                 break
-            #print(stdout)
             stdout_lines = safe_readlines(stdout, 1024)
             yield from stdout_lines
             stderr_lines = safe_readlines(stderr, 1024)
