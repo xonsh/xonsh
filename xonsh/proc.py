@@ -1029,6 +1029,13 @@ class ProcProxyThread(threading.Thread):
         env = builtins.__xonsh_env__
         enc = env.get('XONSH_ENCODING')
         err = env.get('XONSH_ENCODING_ERRORS')
+        if ON_WINDOWS:
+            if self.p2cread != -1:
+                self.p2cread = msvcrt.open_osfhandle(self.p2cread.Detach(), 0)
+            if self.c2pwrite != -1:
+                self.c2pwrite = msvcrt.open_osfhandle(self.c2pwrite.Detach(), 0)
+            if self.errwrite != -1:
+                self.errwrite = msvcrt.open_osfhandle(self.errwrite.Detach(), 0)
         # get stdin
         if self.stdin is None:
             sp_stdin = None
@@ -1037,11 +1044,6 @@ class ProcProxyThread(threading.Thread):
                                         encoding=enc, errors=err)
         else:
             sp_stdin = sys.stdin
-        if ON_WINDOWS:
-            if self.c2pwrite != -1:
-                self.c2pwrite = msvcrt.open_osfhandle(self.c2pwrite.Detach(), 0)
-            if self.errwrite != -1:
-                self.errwrite = msvcrt.open_osfhandle(self.errwrite.Detach(), 0)
         # stdout
         if self.c2pwrite != -1:
             sp_stdout = io.TextIOWrapper(io.open(self.c2pwrite, 'wb', -1),
@@ -1071,8 +1073,6 @@ class ProcProxyThread(threading.Thread):
         safe_flush(sp_stdout)
         safe_flush(sp_stderr)
         self.returncode = parse_proxy_return(r, sp_stdout, sp_stderr)
-        if not last_in_pipeline:
-            return
         # clean up
         # scopz: not sure why this is needed, but stdin cannot go here
         # and stdout & stderr must.
@@ -1496,6 +1496,7 @@ class CommandPipeline:
                 self._close_prev_procs()
                 proc.prevs_are_closed = True
                 break
+            #print(stdout)
             stdout_lines = safe_readlines(stdout, 1024)
             yield from stdout_lines
             stderr_lines = safe_readlines(stderr, 1024)
@@ -1663,7 +1664,7 @@ class CommandPipeline:
         """Sets the input vaiable."""
         stdin = self.proc.stdin
         if stdin is None or isinstance(stdin, int) or stdin.closed or \
-           not stdin.seekable():
+           not stdin.seekable() or not safe_readable(stdin):
             input = b''
         else:
             stdin.seek(0)
