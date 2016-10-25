@@ -22,6 +22,11 @@ from xonsh.commands_cache import CommandsCache
 
 sys.path.insert(0, os.path.dirname(__file__))
 
+def setup(sphinx):
+    from xonsh.pyghooks import XonshConsoleLexer
+    sphinx.add_lexer("xonshcon", XonshConsoleLexer())
+
+
 # -- General configuration -----------------------------------------------------
 
 # Documentation is being built on readthedocs, this will be true.

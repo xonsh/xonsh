@@ -78,15 +78,15 @@ Color style
 The dark red and blue colors are completely unreadable in Windows' default
 terminal. To give new users, the best experience Xonsh automatically replaces 
 some of the dark colors with more readable alternatives (e.g. blue becomes cyan).
- The behavior is controlled with the ``$INTENSIFY_COLORS_ON_WIN``
+The behavior is controlled with the ``$INTENSIFY_COLORS_ON_WIN``
 environment variable.
 
-.. image:: _static/intensify-colors-win-false.png
+.. image:: _static/intensify-colors-on-win-false.png
    :width: 100 %
    :alt: intensify-colors-win-false
    :align: center
 
-.. image:: _static/intensify-colors-win-true.png
+.. image:: _static/intensify-colors-on-win-true.png
    :width: 100 %
    :alt: intensify-colors-win-true
    :align: center

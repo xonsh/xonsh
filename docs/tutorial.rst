@@ -521,7 +521,7 @@ be used to generate any of the tokens in the subprocess command list.
 Thus, ``@()`` allows us to create complex commands in Python-mode and then
 feed them to a subprocess as needed.  For example:
 
-.. code-block:: xonsh
+.. code-block:: xonshcon
 
     for i in range(20):
         $[touch @('file%02d' % i)]
@@ -1432,7 +1432,7 @@ Longer scripts can be run either by specifying a filename containing the script,
 or by feeding them to xonsh via stdin.  For example, consider the following
 script, stored in ``test.xsh``:
 
-.. code-block:: xonsh
+.. code-block:: xonshcon
 
     #!/usr/bin/env xonsh
 
@@ -1484,7 +1484,7 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
 ``$ARGS`` and ``$ARG1`` are used):
 
 
-.. code-block:: xonsh
+.. code-block:: xonshcon
 
     #!/usr/bin/env xonsh
 
@@ -1535,7 +1535,7 @@ the normal Python syntax.  Say you had a file called ``mine.xsh``, you could,
 therefore, perform a Bash-like source into your current shell with the
 following:
 
-.. code-block:: xonsh
+.. code-block:: xonshcon
 
     from mine import *
 
