@@ -55,7 +55,6 @@ For those of you who want the gritty details.
     platform
     lazyjson
     lazyasd
-    teepty
     openpy
     foreign_shells
     commands_cache
