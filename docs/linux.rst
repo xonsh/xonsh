@@ -72,10 +72,12 @@ Arch Linux users can install xonsh from the Arch User Repository with:
 Note that some of these may require ``sudo``.
 If you run into any problems, please let us know!
 
-.. include:: add_to_shell.rst
-
 .. include:: dependencies.rst
 
+Customization
+=============
+
+See the `xonsh customization guide <customization.html>`_ for more details on setting up ``xonsh``!
 
 
 Possible conflicts with Bash
