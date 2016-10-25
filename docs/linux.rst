@@ -117,7 +117,7 @@ any necessary arguments.
 The default user `~/.bashrc` file in Ubuntu 15.10 has the following snippet at
 the top, which causes the script to exit immediately if not run interactively.
 
-.. code-block:: console
+.. code-block:: bash
 
     # If not running interactively, don't do anything
     case $- in
