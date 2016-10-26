@@ -51,6 +51,6 @@
 * Added a minimum time buffer time for command pipelines to check for
   if previous commands have executed successfully.  This is helpful
   for pipelines where the last command takes a long time to start up,
-  such as GNU Parallel.
+  such as GNU Parallel. This also checks to make sure that output has occured.
 
 **Security:** None

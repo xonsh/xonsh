@@ -137,8 +137,8 @@ g
 with open('tttt', 'w') as fp:
     fp.write("Wow mom!\\n")
 
-cat tttt | wc
-""", " 1  2 9 <stdin>", 0),
+![cat tttt | wc]
+""", " 1  2 9 <stdin>\n", 0),
 ]
 
 
@@ -152,7 +152,7 @@ def test_script(case):
 
 @skip_if_on_windows
 @pytest.mark.parametrize('cmd, fmt, exp', [
-    ('pwd', None, os.getcwd() + '\n'),
+    ('pwd', None, lambda: os.getcwd() + '\n'),
     ('echo WORKING', None, 'WORKING\n'),
     ('ls -f', lambda out: out.splitlines().sort(), os.listdir().sort()),
     ])
@@ -163,17 +163,21 @@ def test_single_command(cmd, fmt, exp):
     out, err, rtn = run_xonsh(cmd, stderr=sp.DEVNULL)
     if callable(fmt):
         out = fmt(out)
+    if callable(exp):
+        exp = exp()
     assert out == exp
     assert rtn == 0
 
 
 @skip_if_on_windows
 @pytest.mark.parametrize('cmd, exp', [
-    ('pwd', os.getcwd() + '\n'),
+    ('pwd', lambda: os.getcwd() + '\n'),
     ])
 def test_redirect_out_to_file(cmd, exp, tmpdir):
     outfile = tmpdir.mkdir('xonsh_test_dir').join('xonsh_test_file')
     command = '{} > {}'.format(cmd, outfile)
     out, _, _ = run_xonsh(command)
     content = outfile.read()
+    if callable(exp):
+        exp = exp()
     assert content == exp
