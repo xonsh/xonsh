@@ -74,6 +74,23 @@ To change shells, run
 
 You will have to log out and log back in before the changes take effect.
 
+.. _select_completion_result:
+
+...select a tab completion result without executing the current line?
+---------------------------------------------------------------------
+
+In the ``prompt_toolkit`` shell, you can cycle through possible tab-completion
+results using the TAB key and use ENTER to select the completion you want. By
+default, ENTER will also execute the current line. If you would prefer to not
+automatically execute the line (say, if you're constructing a long pathname),
+you can set
+
+.. code-block:: xonshcon
+
+   $COMPLETIONS_CONFIRM=True
+
+in your ``xonshrc``
+
 .. _terminal_tabs:
 
 ...make terminal tabs start in the correct directory?
