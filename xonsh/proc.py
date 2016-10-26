@@ -1484,6 +1484,7 @@ class CommandPipeline:
             stderr = NonBlockingFDReader(stderr.fileno(), timeout=timeout)
         # read from process while it is running
         check_prev_done = len(self.procs) == 1
+        prev_end_time = None
         while proc.poll() is None:
             if getattr(proc, 'suspended', False):
                 return
@@ -1504,8 +1505,22 @@ class CommandPipeline:
             yield from stdout_lines
             stderr_lines = safe_readlines(stderr, 1024)
             self.stream_stderr(stderr_lines)
-            if not check_prev_done and (stdout_lines or stderr_lines):
-                check_prev_done = True
+            if not check_prev_done:
+                # if we are piping...
+                if (stdout_lines or stderr_lines):
+                    # see if we have some output.
+                    check_prev_done = True
+                elif prev_end_time is None:
+                    # or see if we already know that the next-to-last
+                    # proc in teh pipeline has ended.
+                    if self.procs[-2].poll() is not None:
+                        # if it has, record the time
+                        prev_end_time = time.time()
+                elif time.time() - prev_end_time >= 0.1:
+                    # if we still don't have any output, even though the
+                    # next-to-last proc has finished, wait a bit to make
+                    # sure we have fully started up, etc.
+                    check_prev_done = True
             time.sleep(timeout)
         # read from process now that it is over
         yield from safe_readlines(stdout)
