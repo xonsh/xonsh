@@ -455,7 +455,9 @@ class XonshStyle(Style):
             self.styles[Token.AutoSuggestion] = '#444444'
             self._smap.update(expand_gray_colors_for_cmd_exe(self._smap))
             if env.get('INTENSIFY_COLORS_ON_WIN', False):
-                self._smap.update(intensify_colors_for_cmd_exe(self._smap))
+                has_ansi = hasattr(pygments.style, 'ansicolors')
+                newcolors = intensify_colors_for_cmd_exe(self._smap, ansi=has_ansi) 
+                self._smap.update(newcolors)
 
 
 def xonsh_style_proxy(styler):
@@ -474,8 +476,8 @@ def xonsh_style_proxy(styler):
 
 if hasattr(pygments.style, 'ansicolors'):
     PTK_STYLE = {
-        Token.Menu.Completions.Completion.Current: 'bg:#ansiturquoise #ansiblack',
-        Token.Menu.Completions.Completion: 'bg:#ansiteal #ansiwhite',
+        Token.Menu.Completions.Completion.Current: 'bg:#ansiteal #ansiblack',
+        Token.Menu.Completions.Completion: 'bg:#ansiturquoise #ansiwhite',
         Token.Menu.Completions.ProgressButton: 'bg:#ansidarkgray',
         Token.Menu.Completions.ProgressBar: 'bg:#ansiteal',
         Token.AutoSuggestion: '#ansidarkgray',
@@ -486,7 +488,7 @@ else:
         Token.Menu.Completions.Completion.Current: 'bg:#00aaaa #000000',
         Token.Menu.Completions.Completion: 'bg:#008888 #ffffff',
         Token.Menu.Completions.ProgressButton: 'bg:#003333',
-        Token.Menu.Completions.ProgressBar: 'bg:#ansiturquoise',
+        Token.Menu.Completions.ProgressBar: 'bg:#00aaaa',
         Token.AutoSuggestion: '#666666',
         Token.Aborted: '#888888',
     }
@@ -494,7 +496,7 @@ else:
 if hasattr(pygments.style, 'ansicolors'):
     XONSH_BASE_STYLE = LazyObject(lambda: {
         Whitespace: '#ansilightgray',
-        Comment: 'underline #ansiturquoise',
+        Comment: 'underline #ansiteal',
         Comment.Preproc: 'underline #ansibrown',
         Keyword: 'bold #ansidarkgreen',
         Keyword.Pseudo: 'nobold',
@@ -705,23 +707,23 @@ def _bw_style():
 def _default_style():
     if hasattr(pygments.style, 'ansicolors'):
         style = {
-            Color.BLACK: '#ansidarkgray',
-            Color.BLUE: '#ansiblue',
-            Color.CYAN: '#ansiturquoise',
-            Color.GREEN: '#ansigreen',
-            Color.INTENSE_BLACK: '#ansiblack',
-            Color.INTENSE_BLUE: '#ansidarkblue',
-            Color.INTENSE_CYAN: '#ansiteal',
-            Color.INTENSE_GREEN: '#ansidarkgreen',
-            Color.INTENSE_PURPLE: '#ansipurple',
-            Color.INTENSE_RED: '#ansidarkred',
+            Color.BLACK: '#ansiblack',
+            Color.BLUE: '#ansidarkblue',
+            Color.CYAN: '#ansiteal',
+            Color.GREEN: '#ansidarkgreen',
+            Color.INTENSE_BLACK: '#ansidarkgray',
+            Color.INTENSE_BLUE: '#ansiblue',
+            Color.INTENSE_CYAN: '#ansiturquoise',
+            Color.INTENSE_GREEN: '#ansigreen',
+            Color.INTENSE_PURPLE: '#ansifuchsia',
+            Color.INTENSE_RED: '#ansired',
             Color.INTENSE_WHITE: '#ansilightgray',
-            Color.INTENSE_YELLOW: '#ansibrown',
+            Color.INTENSE_YELLOW: '#ansiyellow',
             Color.NO_COLOR: 'noinherit',
-            Color.PURPLE: '#ansifuchsia',
-            Color.RED: '#ansired',
+            Color.PURPLE: '#ansipurple',
+            Color.RED: '#ansdarkired',
             Color.WHITE: '#ansiwhite',
-            Color.YELLOW: '#ansiyellow',
+            Color.YELLOW: '#ansibrown',
             }
     elif ON_WINDOWS and 'CONEMUANSI' not in os.environ:
         # These colors must match the color specification

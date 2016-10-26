@@ -1343,7 +1343,7 @@ def _get_color_indexes(style_map):
             yield token, index, rgb
 
 
-def intensify_colors_for_cmd_exe(style_map, replace_colors=None):
+def intensify_colors_for_cmd_exe(style_map, replace_colors=None, ansi=False):
     """Returns a modified style to where colors that maps to dark
        colors are replaced with brighter versions. Also expands the
        range used by the gray colors
@@ -1355,14 +1355,26 @@ def intensify_colors_for_cmd_exe(style_map, replace_colors=None):
             (stype == 'best' and not has_prompt_toolkit())):
         return modified_style
     if replace_colors is None:
-        replace_colors = {1: '#44ffff',  # subst blue with bright cyan
-                          2: '#44ff44',  # subst green with bright green
-                          4: '#ff4444',  # subst red with bright red
-                          5: '#ff44ff',  # subst magenta with bright magenta
-                          6: '#ffff44',  # subst yellow with bright yellow
-                          9: '#00aaaa',  # subst intense blue (hard to read)
-                                         # with dark cyan (which is readable)
-                          }
+        if ansi:
+            replace_colors = {
+                1: '#ansiturquoise', # subst blue with bright cyan
+                2: '#ansigreen',     # subst green with bright green
+                4: '#ansired',       # subst red with bright red
+                5: '#ansifuchsia',   # subst magenta with bright magenta
+                6: '#ansiyellow',    # subst yellow with bright yellow
+                9: '#ansiteal',      # subst intense blue (hard to read)
+                                     # with dark cyan (which is readable)
+            }
+        else:
+            replace_colors = {
+                1: '#44ffff',  # subst blue with bright cyan
+                2: '#44ff44',  # subst green with bright green
+                4: '#ff4444',  # subst red with bright red
+                5: '#ff44ff',  # subst magenta with bright magenta
+                6: '#ffff44',  # subst yellow with bright yellow
+                9: '#00aaaa',  # subst intense blue (hard to read)
+                               # with dark cyan (which is readable)
+            }
     for token, idx, _ in _get_color_indexes(style_map):
         if idx in replace_colors:
             modified_style[token] = replace_colors[idx]
