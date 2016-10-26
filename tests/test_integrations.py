@@ -132,6 +132,13 @@ def _g(args, stdin=None):
 aliases['g'] = _g
 g
 """, (("x"*100) + '\n') * 1000, 0),
+# test piping 'real' command
+("""
+with open('tttt', 'w') as fp:
+    fp.write("Wow mom!\\n")
+
+cat tttt | wc
+""", " 1  2 9 <stdin>", 0),
 ]
 
 
