@@ -91,6 +91,25 @@ you can set
 
 in your ``xonshrc``
 
+.. _add_args_builtin_alias:
+
+...add a default argument to a builtin ``xonsh`` alias?
+-------------------------------------------------------
+
+If you want to add a default argument to a builtin alias like ``dirs`` the
+standard alias definition method will fail. In order to handle this case you can
+use the following solution in your ``xonshrc``:
+
+.. code-block:: python
+
+   from xonsh.dirstack import dirs
+
+   def _verbose_dirs(args, stdin=None):
+       return dirs(['-v'] + args, stdin=stdin)
+
+   aliases['dirs'] = _verbose_dirs
+    
+
 .. _terminal_tabs:
 
 ...make terminal tabs start in the correct directory?
