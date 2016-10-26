@@ -261,7 +261,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         _rebind_case_sensitive_completions()
 
         line = builtins.aliases.expand_alias(line)
-        mline = line.partition(' ')[2]
+        mline = line.rpartition(' ')[2]
         offs = len(mline) - len(text)
         if self.completer is None:
             x = []
