@@ -25,7 +25,7 @@ from xonsh.lazyasd import LazyObject
 from xonsh.base_shell import BaseShell
 from xonsh.ansi_colors import ansi_partial_color_format, ansi_color_style_names, ansi_color_style
 from xonsh.prompt.base import partial_format_prompt, multiline_prompt
-from xonsh.tools import print_exception
+from xonsh.tools import print_exception, check_for_partial_string
 from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_DARWIN
 from xonsh.lazyimps import pygments, pyghooks
 
@@ -258,18 +258,25 @@ class ReadlineShell(BaseShell, cmd.Cmd):
     def completedefault(self, text, line, begidx, endidx):
         """Implements tab-completion for text."""
         rl_completion_suppress_append()  # this needs to be called each time
-        _rebind_case_sensitive_completions()
-
-        line = builtins.aliases.expand_alias(line)
-        mline = line.rpartition(' ')[2]
-        offs = len(mline) - len(text)
+        offset = 0
+        _s, _e, _q = check_for_partial_string(line)
+        if _s is not None and _e is None:
+            # we are in a partial string; we should complete based
+            # on this part now
+            offset = begidx - _s
+            begidx = _s
+        elif _e == endidx:
+            offset = begidx - _s
+            begidx = _s
+            endidx -= 1
         if self.completer is None:
             x = []
         else:
-            x = [(i[offs:] if " " in i[:-1] else i)
-                 for i in self.completer.complete(text, line,
-                                                  begidx, endidx,
-                                                  ctx=self.ctx)[0]]
+            comps = self.completer.complete(text, line,
+                                            begidx, endidx,
+                                            ctx=self.ctx)
+            x = [(i[offset:] if " " in i[:-1] else i)
+                 for i in comps[0]]
         return x
 
     # tab complete on first index too
