@@ -161,7 +161,7 @@ def pathsplit(p):
 
 def pathbasename(p):
     """This is a safe version of os.path.basename(), which does not work on
-    input without a drive.
+    input without a drive.  This version does.
     """
     return pathsplit(p)[-1]
 
