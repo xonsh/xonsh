@@ -135,8 +135,10 @@ def _quote_paths(paths, start, end):
     orig_start = start
     orig_end = end
     # quote on all or none, to make readline completes to max prefix
-    need_quotes = (any([re.search(PATTERN_NEED_QUOTES, x) for x in paths]) or
-        any([backslash in x and slash != backslash for x in paths]))
+    need_quotes = any(
+        re.search(PATTERN_NEED_QUOTES, x) or
+        (backslash in x and slash != backslash)
+        for x in paths)
 
     for s in paths:
         start = orig_start
