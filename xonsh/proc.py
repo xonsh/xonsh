@@ -1463,8 +1463,6 @@ class CommandPipeline:
         if stdout is not None and \
                 not isinstance(stdout, (io.BytesIO, NonBlockingFDReader)):
             stdout = NonBlockingFDReader(stdout.fileno(), timeout=timeout)
-        #print("stdout", stdout, safe_readable(stdout))
-        #import pdb; pdb.set_trace()
         if not stdout or not safe_readable(stdout):
             # we get here if the process is not threadable or the
             # class is the real Popen
