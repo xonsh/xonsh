@@ -1357,13 +1357,13 @@ def intensify_colors_for_cmd_exe(style_map, replace_colors=None, ansi=False):
     if replace_colors is None:
         if ansi:
             replace_colors = {
-                1: '#ansiturquoise', # subst blue with bright cyan
-                2: '#ansigreen',     # subst green with bright green
-                4: '#ansired',       # subst red with bright red
-                5: '#ansifuchsia',   # subst magenta with bright magenta
-                6: '#ansiyellow',    # subst yellow with bright yellow
-                9: '#ansiteal',      # subst intense blue (hard to read)
-                                     # with dark cyan (which is readable)
+                1: '#ansiturquoise',  # subst blue with bright cyan
+                2: '#ansigreen',      # subst green with bright green
+                4: '#ansired',        # subst red with bright red
+                5: '#ansifuchsia',    # subst magenta with bright magenta
+                6: '#ansiyellow',     # subst yellow with bright yellow
+                9: '#ansiteal',       # subst intense blue (hard to read)
+                                      # with dark cyan (which is readable)
             }
         else:
             replace_colors = {

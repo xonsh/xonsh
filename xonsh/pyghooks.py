@@ -456,7 +456,7 @@ class XonshStyle(Style):
             self._smap.update(expand_gray_colors_for_cmd_exe(self._smap))
             if env.get('INTENSIFY_COLORS_ON_WIN', False):
                 has_ansi = hasattr(pygments.style, 'ansicolors')
-                newcolors = intensify_colors_for_cmd_exe(self._smap, ansi=has_ansi) 
+                newcolors = intensify_colors_for_cmd_exe(self._smap, ansi=has_ansi)
                 self._smap.update(newcolors)
 
 
@@ -576,8 +576,6 @@ else:
         Generic.Traceback: "#04D",
         Error: "border:#FF0000"
     }, globals(), 'XONSH_BASE_STYLE')
-
-
 
 
 KNOWN_COLORS = LazyObject(lambda: frozenset([
@@ -724,7 +722,7 @@ def _default_style():
             Color.RED: '#ansdarkired',
             Color.WHITE: '#ansiwhite',
             Color.YELLOW: '#ansibrown',
-            }
+        }
     elif ON_WINDOWS and 'CONEMUANSI' not in os.environ:
         # These colors must match the color specification
         # in prompt_toolkit, so the colors are converted
@@ -747,7 +745,7 @@ def _default_style():
             Color.RED: '#AA0000',
             Color.WHITE: '#FFFFFF',
             Color.YELLOW: '#AAAA00',
-            }
+        }
     else:
         style = {
             Color.BLACK: '#000000',
@@ -767,7 +765,7 @@ def _default_style():
             Color.RED: '#AA0000',
             Color.WHITE: '#ffffff',
             Color.YELLOW: '#ffff00',
-            }
+        }
     _expand_style(style)
     return style
 
