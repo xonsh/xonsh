@@ -108,7 +108,7 @@ class CommandsCache(cabc.Mapping):
         return allcmds
 
     def cached_name(self, name):
-        """Returns the name that would appear in the cache, if it was exists."""
+        """Returns the name that would appear in the cache, if it exists."""
         if name is None:
             return None
         cached = pathbasename(name)
@@ -171,6 +171,7 @@ class CommandsCache(cabc.Mapping):
         thread, rather than the main thread.
         """
         name = self.cached_name(cmd[0])
+        predictors = self.threadable_predictors
         if ON_WINDOWS:
             # On all names (keys) are stored in upper case so instead
             # we get the original cmd or alias name
@@ -179,7 +180,11 @@ class CommandsCache(cabc.Mapping):
                 return True
             else:
                 name = pathbasename(path)
-        predictor = self.threadable_predictors[name]
+            if name not in predictors:
+                pre, ext = os.path.splitext(name)
+                if pre in predictors:
+                    predictors[name] = predictors[pre]
+        predictor = predictors[name]
         return predictor(cmd[1:])
 
 #
@@ -249,7 +254,6 @@ def default_threadable_predictors():
         'bash': predict_shell,
         'csh': predict_shell,
         'clear': predict_false,
-        'clear.exe': predict_false,
         'cls': predict_false,
         'cmd': predict_shell,
         'fish': predict_shell,

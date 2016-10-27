@@ -1464,7 +1464,7 @@ class CommandPipeline:
                 not isinstance(stdout, (io.BytesIO, NonBlockingFDReader)):
             stdout = NonBlockingFDReader(stdout.fileno(), timeout=timeout)
         if not stdout or not safe_readable(stdout):
-            # we get here if the process is not bacgroundable or the
+            # we get here if the process is not threadable or the
             # class is the real Popen
             wait_for_active_job()
             proc.wait()
