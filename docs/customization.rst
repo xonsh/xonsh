@@ -74,6 +74,42 @@ To change shells, run
 
 You will have to log out and log back in before the changes take effect.
 
+.. _select_completion_result:
+
+...select a tab completion result without executing the current line?
+---------------------------------------------------------------------
+
+In the ``prompt_toolkit`` shell, you can cycle through possible tab-completion
+results using the TAB key and use ENTER to select the completion you want. By
+default, ENTER will also execute the current line. If you would prefer to not
+automatically execute the line (say, if you're constructing a long pathname),
+you can set
+
+.. code-block:: xonshcon
+
+   $COMPLETIONS_CONFIRM=True
+
+in your ``xonshrc``
+
+.. _add_args_builtin_alias:
+
+...add a default argument to a builtin ``xonsh`` alias?
+-------------------------------------------------------
+
+If you want to add a default argument to a builtin alias like ``dirs`` the
+standard alias definition method will fail. In order to handle this case you can
+use the following solution in your ``xonshrc``:
+
+.. code-block:: python
+
+   from xonsh.dirstack import dirs
+
+   def _verbose_dirs(args, stdin=None):
+       return dirs(['-v'] + args, stdin=stdin)
+
+   aliases['dirs'] = _verbose_dirs
+
+
 .. _terminal_tabs:
 
 ...make terminal tabs start in the correct directory?
@@ -84,7 +120,6 @@ in the CWD of the original TAB, this is because of a custom VTE interface. To
 fix this, please add ``{vte_new_tab_cwd}`` somewhere to you prompt:
 
 .. code-block:: xonsh
-
     $PROMPT = '{vte_new_tab_cwd}' + $PROMPT
 
 This will issue the proper escape sequence to the terminal without otherwise
@@ -115,11 +150,11 @@ If you are unable to use utf-8 (ie. non-ascii) characters in xonsh. For example 
 .. code-block:: xonsh
 
     echo "ßðđ"
-    
+
     xonsh: For full traceback set: $XONSH_SHOW_TRACEBACK = True
     UnicodeEncodeError: 'ascii' codec can't encode characters in position 0-2: ordinal not in range(128)
-    
-The problem might be: 
+
+The problem might be:
 
 - Your locale is not set to utf-8, to check this you can set the content of the
   environment variable ``LC_TYPE``
@@ -128,3 +163,23 @@ The problem might be:
   your default/login shell. To fix this you should see the documentation of your
   operating system to know how to correctly setup environment variables before
   the shell start (``~/.pam_environment`` for example)
+
+.. _fix_libgcc_core_dump:
+
+...fix a ``libgcc_s.so.1`` error?
+---------------------------------
+
+On certain flavors of Linux you may periodically encounter this error message
+when starting ``xonsh``:
+
+.. code-block:: xonshcon
+
+   libgcc_s.so.1 must be installed for pthread_cancel to work
+   Aborted (core dumped)
+
+This is due to an upstream Python problem and can be fixed by setting
+``LD_PRELOAD``:
+
+.. code-block:: bash
+
+   $ env LD_PRELOAD=libgcc_s.so.1 xonsh
