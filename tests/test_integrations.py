@@ -145,7 +145,7 @@ with open('tttt', 'w') as fp:
     fp.write("Wow mom!\\n")
 
 ![cat tttt | wc | wc]
-""", '      1       4      24\n' if ON_WINDOWS else " 1  4 16 <stdin>\n", 0),
+""", '      1       3      24\n' if ON_WINDOWS else " 1  4 16 <stdin>\n", 0),
 ]
 
 
