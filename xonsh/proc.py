@@ -950,25 +950,6 @@ class ProcProxyThread(threading.Thread):
         """
         self.orig_f = f
         self.f = partial_proxy(f)
-        """
-        The function to be executed.  It should be a function of four
-        arguments, described below.
-
-        Parameters
-        ----------
-        args : list
-            A (possibly empty) list containing the arguments that were given on
-            the command line
-        stdin : file-like
-            A file-like object representing stdin (input can be read from
-            here).
-        stdout : file-like
-            A file-like object representing stdout (normal output can be
-            written here).
-        stderr : file-like
-            A file-like object representing stderr (error output can be
-            written here).
-        """
         self.args = args
         self.pid = None
         self.returncode = None
