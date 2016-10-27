@@ -269,6 +269,12 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             offset = begidx - _s
             begidx = _s
             endidx -= 1
+        elif (_s is not None and
+                _e is not None and
+                not any(i == ' ' for i in line[_e:begidx])):
+            line = line[:_e] + line[_e+1:]
+            offset = begidx - _s
+            begidx = _s
         if self.completer is None:
             x = []
         else:
