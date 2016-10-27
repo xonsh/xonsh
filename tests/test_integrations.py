@@ -139,6 +139,13 @@ with open('tttt', 'w') as fp:
 
 ![cat tttt | wc]
 """, '      1       2      10\n' if ON_WINDOWS else " 1  2 9 <stdin>\n", 0),
+# test double  piping 'real' command
+("""
+with open('tttt', 'w') as fp:
+    fp.write("Wow mom!\\n")
+
+![cat tttt | wc | wc]
+""", '      1       4      24\n' if ON_WINDOWS else " 1  4 16 <stdin>\n", 0),
 ]
 
 

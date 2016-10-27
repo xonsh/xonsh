@@ -1513,7 +1513,7 @@ class CommandPipeline:
                 elif prev_end_time is None:
                     # or see if we already know that the next-to-last
                     # proc in teh pipeline has ended.
-                    if self.procs[-2].poll() is not None:
+                    if self._prev_procs_done():
                         # if it has, record the time
                         prev_end_time = time.time()
                 elif time.time() - prev_end_time >= 0.1:
