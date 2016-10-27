@@ -426,13 +426,13 @@ class SubprocSpec:
         self.captured_stderr = None
 
     def __str__(self):
-        s = self.cls.__name__ + '(' + str(cmd) + ', '
+        s = self.cls.__name__ + '(' + str(self.cmd) + ', '
         kws = [n + '=' + str(getattr(self, n)) for n in self.kwnames]
         s += ', '.join(kws) + ')'
         return s
 
     def __repr__(self):
-        s = self.__class__.__name__ + '(' + repr(cmd) + ', '
+        s = self.__class__.__name__ + '(' + repr(self.cmd) + ', '
         s += self.cls.__name__ + ', '
         kws = [n + '=' + repr(getattr(self, n)) for n in self.kwnames]
         s += ', '.join(kws) + ')'
