@@ -16,6 +16,7 @@
     * less
     * man
     * more
+    * mutt
     * sh
     * ssh
     * startx
