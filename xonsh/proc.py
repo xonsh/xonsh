@@ -28,7 +28,7 @@ from xonsh.tools import (redirect_stdout, redirect_stderr, print_exception,
                          XonshError)
 from xonsh.lazyasd import lazyobject, LazyObject
 from xonsh.jobs import wait_for_active_job
-from xonsh.lazyimps import fcntl, termios
+from xonsh.lazyimps import fcntl, termios, _winapi, msvcrt, winutils
 
 
 # termios tc(get|set)attr indexes.
@@ -39,26 +39,6 @@ LFLAG = 3
 ISPEED = 4
 OSPEED = 5
 CC = 6
-
-
-# force some lazy imports so we don't have errors on non-windows platforms
-@lazyobject
-def _winapi():
-    if ON_WINDOWS:
-        import _winapi as m
-    else:
-        m = None
-    return m
-
-
-@lazyobject
-def msvcrt():
-    if ON_WINDOWS:
-        import msvcrt as m
-    else:
-        m = None
-    return m
-
 
 @lazyobject
 def STDOUT_CAPTURE_KINDS():
@@ -317,6 +297,8 @@ class PopenThread(threading.Thread):
                 self.old_winch_handler = signal.signal(signal.SIGWINCH,
                                                        self._signal_winch)
         # start up process
+        os.set_handle_inheritable(stdout.fileno(), False)
+        #os.dup2(stdout.fileno(), 1)
         self.proc = proc = subprocess.Popen(*args,
                                             stdin=stdin,
                                             stdout=stdout,
@@ -377,11 +359,13 @@ class PopenThread(threading.Thread):
         # loop over reads while process is running.
         cnt = 1
         while proc.poll() is None:
+            
             i = self._read_write(procout, stdout, sys.__stdout__)
             j = self._read_write(procerr, stderr, sys.__stderr__)
             if self.suspended:
                 break
             elif self.in_alt_mode:
+                #print("IN ALT MODE!!")
                 if i + j == 0:
                     cnt = min(cnt + 1, 1000)
                 else:
@@ -418,6 +402,13 @@ class PopenThread(threading.Thread):
         """
         if reader is None:
             return 0
+        #if ON_WINDOWS and stdbuf is sys.__stdout__:
+        #    mode = winutils.get_console_mode(output=False)
+            #print("ALT MODE FLAGS", mode)
+        #    if mode & winutils.ENABLE_PROCESSED_OUTPUT == winutils.ENABLE_PROCESSED_OUTPUT:
+        #        self.in_alt_mode = True
+        #    else:
+        #        self.in_alt_mode = False
         i = -1
         for i, line in enumerate(iter(reader.readline, b'')):
             self._alt_mode_switch(line, writer, stdbuf)
@@ -1139,8 +1130,8 @@ class ProcProxyThread(threading.Thread):
                     p2cread, _ = _winapi.CreatePipe(None, 0)
                     p2cread = Handle(p2cread)
                     _winapi.CloseHandle(_)
-            elif stdin == subprocess.PIPE:
                 p2cread, p2cwrite = _winapi.CreatePipe(None, 0)
+            elif stdin == subprocess.PIPE:
                 p2cread, p2cwrite = Handle(p2cread), Handle(p2cwrite)
             elif stdin == subprocess.DEVNULL:
                 p2cread = msvcrt.get_osfhandle(self._get_devnull())

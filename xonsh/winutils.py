@@ -22,12 +22,16 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 import sys
 import subprocess
+import msvcrt
 import ctypes
 from ctypes import c_ulong, c_char_p, c_int, c_void_p
-from ctypes.wintypes import HANDLE, BOOL, DWORD, HWND, HINSTANCE, HKEY
+from ctypes.wintypes import HANDLE, BOOL, DWORD, HWND, HINSTANCE, HKEY, LPDWORD
 
 from xonsh.lazyasd import lazyobject
+from xonsh import lazyimps  # we aren't amagamated in this module.
 
+
+__all__ = ('sudo', )
 
 @lazyobject
 def CloseHandle():
@@ -140,5 +144,70 @@ def sudo(executable, args=None):
 
     wait_and_close_handle(execute_info.hProcess)
 
+#
+# The following has been refactored from 
+# http://stackoverflow.com/a/37505496/2312428
+#
 
-__all__ = ('sudo', )
+# input flags
+ENABLE_PROCESSED_INPUT = 0x0001
+ENABLE_LINE_INPUT = 0x0002
+ENABLE_ECHO_INPUT = 0x0004
+ENABLE_WINDOW_INPUT = 0x0008
+ENABLE_MOUSE_INPUT = 0x0010
+ENABLE_INSERT_MODE = 0x0020
+ENABLE_QUICK_EDIT_MODE = 0x0040
+
+# output flags
+ENABLE_PROCESSED_OUTPUT = 0x0001
+ENABLE_WRAP_AT_EOL_OUTPUT = 0x0002
+ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004 # VT100 (Win 10)
+
+def check_zero(result, func, args):    
+    if not result:
+        err = ctypes.get_last_error()
+        if err:
+            raise ctypes.WinError(err)
+    return args
+
+    
+@lazyobject
+def GetConsoleMode():
+    gcm = ctypes.windll.kernel32.GetConsoleMode
+    gcm.errcheck = check_zero
+    gcm.argtypes = (HANDLE,   # _In_  hConsoleHandle
+                    LPDWORD)  # _Out_ lpMode
+    return gcm
+
+    
+@lazyobject
+def SetConsoleMode():
+    scm = ctypes.windll.kernel32.SetConsoleMode
+    scm.errcheck = check_zero
+    scm.argtypes = (HANDLE,  # _In_  hConsoleHandle
+                    DWORD)   # _Out_ lpMode
+    return scm
+    
+    
+def get_console_mode(output=False):
+    """Get the mode of the active console input or output
+    buffer. Note that if the process isn't attached to a
+    console, this function raises an EBADF IOError.
+    """
+    device = r'\\.\CONOUT$' if output else r'\\.\CONIN$'
+    with open(device, 'r+') as con:
+        mode = DWORD()
+        hCon = lazyimps.msvcrt.get_osfhandle(con.fileno())
+        GetConsoleMode(hCon, ctypes.byref(mode))
+        return mode.value
+
+        
+def set_console_mode(mode, output=False):
+    """Set the mode of the active console input or output
+    buffer. Note that if the process isn't attached to a
+    console, this function raises an EBADF IOError.
+    """
+    device = r'\\.\CONOUT$' if output else r'\\.\CONIN$'
+    with open(device, 'r+') as con:
+        hCon = lazyimps.msvcrt.get_osfhandle(con.fileno())
+        SetConsoleMode(hCon, mode)
