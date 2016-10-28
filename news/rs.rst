@@ -52,5 +52,6 @@
   if previous commands have executed successfully.  This is helpful
   for pipelines where the last command takes a long time to start up,
   such as GNU Parallel. This also checks to make sure that output has occured.
+  This includes piping 2+ commands together.
 
 **Security:** None
