@@ -24,9 +24,9 @@ import sys
 import subprocess
 import msvcrt
 import ctypes
-from ctypes import c_ulong, c_char_p, c_int, c_void_p
+from ctypes import c_ulong, c_char_p, c_int, c_void_p, POINTER, byref
 from ctypes.wintypes import (HANDLE, BOOL, DWORD, HWND, HINSTANCE, HKEY, 
-    LPDWORD, LPSTR, SHORT, LPWSTR, LPCWSTR)
+    LPDWORD, LPSTR, SHORT, LPWSTR, LPCWSTR, WORD, SMALL_RECT)
 
 from xonsh.lazyasd import lazyobject
 from xonsh import lazyimps  # we aren't amagamated in this module.
@@ -144,7 +144,7 @@ def sudo(executable, args=None):
         # TODO: Some streams were redirected, we need to manually work them
         raise NotImplementedError("Redirection is not supported")
 
-    if not ShellExecuteEx(ctypes.byref(execute_info)):
+    if not ShellExecuteEx(byref(execute_info)):
         raise ctypes.WinError()
 
     wait_and_close_handle(execute_info.hProcess)
@@ -219,7 +219,7 @@ def get_console_mode(fd=1):
     """
     mode = DWORD()
     hcon = STDHANDLES[fd]
-    GetConsoleMode(hcon, ctypes.byref(mode))
+    GetConsoleMode(hcon, byref(mode))
     return mode.value
 
             
@@ -250,6 +250,15 @@ def set_console_mode(mode, fd=1):
 
 
 class COORD(ctypes.Structure):
+    """Struct from the winapi, representing coordinates in the console.
+    
+    Attributes
+    ----------
+    X : int
+        Column position
+    Y : int
+        Row position
+    """
     _fields_ = [("X", SHORT),
                 ("Y", SHORT)]        
  
@@ -293,7 +302,7 @@ def read_console_output_character(x=0, y=0, fd=1, buf=None, bufsize=1024):
         buf = ctypes.c_wchar_p(" " * bufsize)
     coord = COORD(x, y)
     n = DWORD()
-    ReadConsoleOutputCharacter(hcon, buf, bufsize, coord, ctypes.byref(n))
+    ReadConsoleOutputCharacter(hcon, buf, bufsize, coord, byref(n))
     return buf.value[:n.value]
  
  
@@ -306,3 +315,82 @@ def pread_console(fd, buffersize, offset, buf=None):
     y = offset // cols
     return read_console_output_character(x=x, y=y, fd=fd, buf=buf, 
                                          bufsize=buffersize)
+                                         
+#
+# The following piece has been forked from colorama.win32
+# Copyright Jonathan Hartley 2013. BSD 3-Clause license, see LICENSE file.
+#
+
+class CONSOLE_SCREEN_BUFFER_INFO(ctypes.Structure):
+    """Struct from in wincon.h. See Windows API docs
+    for more details.
+    
+    Attributes
+    ----------
+    dwSize : COORD
+        Size of 
+    dwCursorPosition : COORD
+        Current cursor location.
+    wAttributes : WORD
+        Flags for screen buffer.
+    srWindow : SMALL_RECT
+        Actual size of screen
+    dwMaximumWindowSize : COORD
+        Maximum window scrollback size.
+    """
+    _fields_ = [
+        ("dwSize", COORD),
+        ("dwCursorPosition", COORD),
+        ("wAttributes", WORD),
+        ("srWindow", SMALL_RECT),
+        ("dwMaximumWindowSize", COORD),
+        ]
+
+        
+@lazyobject
+def GetConsoleScreenBufferInfo():
+    """Returns the windows version of the get screen buffer."""
+    gcsbi = ctypes.windll.kernel32.GetConsoleScreenBufferInfo
+    gcsbi.errcheck = check_zero
+    gcsbi.argtypes = (
+        HANDLE,
+        POINTER(CONSOLE_SCREEN_BUFFER_INFO),
+        )
+    gcsbi.restype = BOOL
+    return gcsbi
+
+    
+def get_console_screen_buffer_info(fd=1):
+    """Returns an screen buffer info object for the relevant stdbuf.
+    
+    Parameters
+    ----------
+    fd : int, optional
+        Standard buffer file descriptor, 0 for stdin, 1 for stdout (default),
+        and 2 for stderr.
+        
+    Returns
+    -------
+    csbi : CONSOLE_SCREEN_BUFFER_INFO
+        Information about the console screen buffer.
+    """
+    hcon = STDHANDLES[fd]
+    csbi = CONSOLE_SCREEN_BUFFER_INFO()
+    GetConsoleScreenBufferInfo(hcon, byref(csbi))
+    return csbi
+    
+    
+def get_cursor_position(fd=1):
+    """Gets the current cursor position as an (x, y) tuple."""
+    csbi = get_console_screen_buffer_info(fd=fd)
+    coord = csbi.dwCursorPosition
+    return (coord.X, coord.Y)
+
+    
+def get_cursor_offset(fd=1):
+    """Gets the current cursor position as a total offset value."""
+    csbi = get_console_screen_buffer_info(fd=fd)
+    pos = csbi.dwCursorPosition
+    size = csbi.dwSize
+    return (pos.Y * size.X) + pos.X
+    

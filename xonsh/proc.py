@@ -402,11 +402,11 @@ class PopenThread(threading.Thread):
         """
         if reader is None:
             return 0
-        flags = winutils.ENABLE_ECHO_INPUT | winutils.ENABLE_LINE_INPUT | winutils.ENABLE_PROCESSED_INPUT
+        #flags = winutils.ENABLE_ECHO_INPUT | winutils.ENABLE_LINE_INPUT | winutils.ENABLE_PROCESSED_INPUT
         #flags = winutils.ENABLE_WINDOW_INPUT
-        if ON_WINDOWS and stdbuf is sys.__stdout__:
-            mode = winutils.get_console_mode(output=True)
-            print("ALT MODE FLAGS", mode, flags, mode & flags)
+        #if ON_WINDOWS and stdbuf is sys.__stdout__:
+        #    mode = winutils.get_console_mode(output=True)
+        #    print("ALT MODE FLAGS", mode, flags, mode & flags)
         #    if mode & winutils.ENABLE_PROCESSED_OUTPUT == winutils.ENABLE_PROCESSED_OUTPUT:
         #        self.in_alt_mode = True
         #    else:
