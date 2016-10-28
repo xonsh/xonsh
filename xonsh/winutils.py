@@ -25,7 +25,8 @@ import subprocess
 import msvcrt
 import ctypes
 from ctypes import c_ulong, c_char_p, c_int, c_void_p
-from ctypes.wintypes import HANDLE, BOOL, DWORD, HWND, HINSTANCE, HKEY, LPDWORD, LPSTR, SHORT, LPWSTR, LPCWSTR
+from ctypes.wintypes import (HANDLE, BOOL, DWORD, HWND, HINSTANCE, HKEY, 
+    LPDWORD, LPSTR, SHORT, LPWSTR, LPCWSTR)
 
 from xonsh.lazyasd import lazyobject
 from xonsh import lazyimps  # we aren't amagamated in this module.
@@ -106,8 +107,10 @@ def wait_and_close_handle(process_handle):
     """
     Waits till spawned process finishes and closes the handle for it
 
-    :param process_handle: The Windows handle for the process
-    :type process_handle: HANDLE
+    Parameters
+    ----------
+    process_handle : HANDLE 
+        The Windows handle for the process
     """
     WaitForSingleObject(process_handle, INFINITE)
     CloseHandle(process_handle)
@@ -117,10 +120,12 @@ def sudo(executable, args=None):
     """
     This will re-run current Python script requesting to elevate administrative rights.
 
-    :param executable: The path/name of the executable
-    :type executable: str
-    :param args: The arguments to be passed to the executable
-    :type args: list
+    Parameters
+    ----------
+    param executable : str 
+        The path/name of the executable
+    args : list of str 
+        The arguments to be passed to the executable
     """
     if not args:
         args = []
@@ -144,6 +149,8 @@ def sudo(executable, args=None):
 
     wait_and_close_handle(execute_info.hProcess)
 
+    
+    
 #
 # The following has been refactored from 
 # http://stackoverflow.com/a/37505496/2312428
@@ -163,12 +170,31 @@ ENABLE_PROCESSED_OUTPUT = 0x0001
 ENABLE_WRAP_AT_EOL_OUTPUT = 0x0002
 ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004 # VT100 (Win 10)
 
+
 def check_zero(result, func, args):    
     if not result:
         err = ctypes.get_last_error()
         if err:
             raise ctypes.WinError(err)
     return args
+
+    
+@lazyobject
+def GetStdHandle():
+    return lazyimps._winapi.GetStdHandle
+
+    
+@lazyobject
+def STDHANDLES():
+    """Tuple of the Windows handles for (stdin, stdout, stderr)."""
+    hs = [lazyimps._winapi.STD_INPUT_HANDLE, 
+          lazyimps._winapi.STD_OUTPUT_HANDLE, 
+          lazyimps._winapi.STD_ERROR_HANDLE]
+    hcons = []
+    for h in hs:
+        hcon = GetStdHandle(int(h))
+        hcons.append(hcon)
+    return tuple(hcons)
 
     
 @lazyobject
@@ -180,6 +206,23 @@ def GetConsoleMode():
     return gcm
 
     
+def get_console_mode(fd=1):
+    """Get the mode of the active console input, output, or error
+    buffer. Note that if the process isn't attached to a
+    console, this function raises an EBADF IOError.
+    
+    Parameters
+    ----------
+    fd : int
+        Standard buffer file descriptor, 0 for stdin, 1 for stdout (default),
+        and 2 for stderr
+    """
+    mode = DWORD()
+    hcon = STDHANDLES[fd]
+    GetConsoleMode(hcon, ctypes.byref(mode))
+    return mode.value
+
+            
 @lazyobject
 def SetConsoleMode():
     scm = ctypes.windll.kernel32.SetConsoleMode
@@ -188,29 +231,22 @@ def SetConsoleMode():
                     DWORD)   # _Out_ lpMode
     return scm
     
-    
-def get_console_mode(output=False):
-    """Get the mode of the active console input or output
-    buffer. Note that if the process isn't attached to a
-    console, this function raises an EBADF IOError.
-    """
-    device = r'\\.\CONOUT$' if output else r'\\.\CONIN$'
-    with open(device, 'r+') as con:
-        mode = DWORD()
-        hCon = lazyimps.msvcrt.get_osfhandle(con.fileno())
-        GetConsoleMode(hCon, ctypes.byref(mode))
-        return mode.value
-
         
-def set_console_mode(mode, output=False):
-    """Set the mode of the active console input or output
-    buffer. Note that if the process isn't attached to a
+def set_console_mode(mode, fd=1):
+    """Set the mode of the active console input, output, or 
+    error buffer. Note that if the process isn't attached to a
     console, this function raises an EBADF IOError.
+    
+    Parameters
+    ----------
+    mode : int
+        Mode flags to set on the handle.
+    fd : int, optional
+        Standard buffer file descriptor, 0 for stdin, 1 for stdout (default),
+        and 2 for stderr
     """
-    device = r'\\.\CONOUT$' if output else r'\\.\CONIN$'
-    with open(device, 'r+') as con:
-        hCon = lazyimps.msvcrt.get_osfhandle(con.fileno())
-        SetConsoleMode(hCon, mode)
+    hcon = STDHANDLES[fd]
+    SetConsoleMode(hcon, mode)
 
 
 class COORD(ctypes.Structure):
@@ -230,13 +266,43 @@ def ReadConsoleOutputCharacter():
     return rcoc
 
     
-def read_console_output_character(x=0, y=0):
-    """Reads chracters from the console."""
-    device = r'\\.\CONOUT$'
-    arr = ctypes.c_wchar_p(" "*1024)
+def read_console_output_character(x=0, y=0, fd=1, buf=None, bufsize=1024):
+    """Reads chracters from the console buffer.
+    
+    Parameters
+    ----------
+    x : int, optional
+        Starting column.
+    y : int, optional
+        Starting row.
+    fd : int, optional
+        Standard buffer file descriptor, 0 for stdin, 1 for stdout (default),
+        and 2 for stderr.
+    buf : ctypes.c_wchar_p, optional
+        An existing buffer to (re-)use.
+    bufsize : int, optional
+        The maximum read size.
+        
+    Returns
+    -------
+    value : str
+        Result of what was read, may be shorter than bufsize.
+    """
+    hcon = STDHANDLES[fd]
+    if buf is None:
+        buf = ctypes.c_wchar_p(" " * bufsize)
     coord = COORD(x, y)
     n = DWORD()
-    with open(device, 'r+') as con:
-        hCon = lazyimps.msvcrt.get_osfhandle(con.fileno())
-        ReadConsoleOutputCharacter(hCon, arr, 1024, coord, ctypes.byref(n))
-    return arr.value[:n.value]
+    ReadConsoleOutputCharacter(hcon, buf, bufsize, coord, ctypes.byref(n))
+    return buf.value[:n.value]
+ 
+ 
+def pread_console(fd, buffersize, offset, buf=None):
+    """This is a console-based implementation of os.pread() for windows.
+    that uses read_console_output_character().
+    """
+    cols, rows = os.get_terminal_size(fd=fd)
+    x = offset % col
+    y = offset // cols
+    return read_console_output_character(x=x, y=y, fd=fd, buf=buf, 
+                                         bufsize=buffersize)
