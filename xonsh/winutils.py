@@ -25,7 +25,7 @@ import subprocess
 import msvcrt
 import ctypes
 from ctypes import c_ulong, c_char_p, c_int, c_void_p
-from ctypes.wintypes import HANDLE, BOOL, DWORD, HWND, HINSTANCE, HKEY, LPDWORD
+from ctypes.wintypes import HANDLE, BOOL, DWORD, HWND, HINSTANCE, HKEY, LPDWORD, LPSTR, SHORT, LPWSTR, LPCWSTR
 
 from xonsh.lazyasd import lazyobject
 from xonsh import lazyimps  # we aren't amagamated in this module.
@@ -211,3 +211,32 @@ def set_console_mode(mode, output=False):
     with open(device, 'r+') as con:
         hCon = lazyimps.msvcrt.get_osfhandle(con.fileno())
         SetConsoleMode(hCon, mode)
+
+
+class COORD(ctypes.Structure):
+    _fields_ = [("X", SHORT),
+                ("Y", SHORT)]        
+ 
+@lazyobject
+def ReadConsoleOutputCharacter():
+    rcoc = ctypes.windll.kernel32.ReadConsoleOutputCharacterW
+    rcoc.errcheck = check_zero
+    rcoc.argtypes = (HANDLE,   # _In_  hConsoleOutput
+                     LPCWSTR,  # _Out_ LPTSTR lpMode
+                     DWORD,    # _In_  nLength
+                     COORD,    # _In_  dwReadCoord,
+                     LPDWORD)  # _Out_ lpNumberOfCharsRead
+    rcoc.restype = BOOL
+    return rcoc
+
+    
+def read_console_output_character(x=0, y=0):
+    """Reads chracters from the console."""
+    device = r'\\.\CONOUT$'
+    arr = ctypes.c_wchar_p(" "*1024)
+    coord = COORD(x, y)
+    n = DWORD()
+    with open(device, 'r+') as con:
+        hCon = lazyimps.msvcrt.get_osfhandle(con.fileno())
+        ReadConsoleOutputCharacter(hCon, arr, 1024, coord, ctypes.byref(n))
+    return arr.value[:n.value]
