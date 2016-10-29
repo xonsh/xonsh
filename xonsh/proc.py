@@ -1353,7 +1353,6 @@ class ProcProxyThread(threading.Thread):
                     p2cread, _ = _winapi.CreatePipe(None, 0)
                     p2cread = Handle(p2cread)
                     _winapi.CloseHandle(_)
-                p2cread, p2cwrite = _winapi.CreatePipe(None, 0)
             elif stdin == subprocess.PIPE:
                 p2cread, p2cwrite = Handle(p2cread), Handle(p2cwrite)
             elif stdin == subprocess.DEVNULL:

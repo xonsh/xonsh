@@ -684,7 +684,7 @@ def _update_last_spec(last, captured=False):
         last.universal_newlines = True
         last.stdout = builtins.__xonsh_stdout_uncaptured__
         last.captured_stdout = last.stdout
-    elif ON_WINDOWS:
+    elif ON_WINDOWS and not callable_alias:
         last.universal_newlines = True
         last.stdout = None  # must truly stream on windows
         last.captured_stdout = ConsoleParallelReader(1)
@@ -703,10 +703,9 @@ def _update_last_spec(last, captured=False):
     elif builtins.__xonsh_stderr_uncaptured__ is not None:
         last.stderr = builtins.__xonsh_stderr_uncaptured__
         last.captured_stderr = last.stderr
-    elif ON_WINDOWS:
+    elif ON_WINDOWS and not callable_alias:
         last.universal_newlines = True
         last.stderr = None  # must truly stream on windows
-        #last.captured_stderr = ConsoleParallelReader(2)
     else:
         r, w = pty.openpty() if use_tty else os.pipe()
         last.stderr = safe_open(w, 'w')
