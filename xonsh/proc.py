@@ -246,6 +246,8 @@ def populate_console(reader, fd, buffer, chunksize, queue):
     x, y, cols, lins = posize = winutils.get_position_size(fd)
     pre_x = pre_y = -1
     orig_posize = posize
+    with open('buf.txt', 'w'):
+        pass
     while True:
         posize = winutils.get_position_size(fd)
         if ((posize[1], posize[0]) <= (y, x) and posize[2:] == (cols, lins)) or \
@@ -288,26 +290,33 @@ def populate_console(reader, fd, buffer, chunksize, queue):
         if end_offset > cur_offset:
             buf = buf[:cur_offset-end_offset]
         # convert to lines and add to queue
-        firstline = buf[:(cols-x)].strip()
-        lines = [firstline] if firstline else [] 
+        lines = [buf[:(cols-x)]]
         lines += [buf[l*cols+(cols-x):(l+1)*cols+(cols-x)]                 
                   for l in range((nread//cols) + (1 if nread%cols > 0 else 0))]
+        lines = [line for line in lines if line]
+        if not lines:
+            time.sleep(reader.timeout * 10**reader.sleepscale)
+            continue
         nl = b'\n'
         for line in lines[:-1]:
             queue.put(line.rstrip() + nl)
-        last = lines[-1].rstrip()
-        if len(lines[-1]) == cols:
-            queue.put(last + nl)
-        #elif len(last) > 0:
-        #    queue.put(last) 
+        if len(lines[-1]) == (cols - x):
+            queue.put(lines[-1].rstrip() + nl)
         else:
             queue.put(lines[-1])
-        new_offset = beg_offset + len(buf.rstrip())
+        with open('buf.txt', 'a+') as f:
+            f.write("{} {} {}\n----------\n".format(x, y, cols))
+            for line in lines:
+                f.write(repr(line) + '\n')
+        if (beg_offset + len(buf))%cols == 0:
+            new_offset = beg_offset + len(buf)
+        else:
+            new_offset = beg_offset + len(buf.rstrip())
         pre_x = x
         pre_y = y
         x = new_offset % cols
         y = new_offset // cols
-        #time.sleep(reader.timeout)
+        time.sleep(reader.timeout)
         
         
 class ConsoleParallelReader:
