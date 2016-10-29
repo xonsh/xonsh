@@ -286,8 +286,6 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
     #                                        cols, max_offset, expandsize, 
     #                                        orig_posize, fd)
     #    winutils.set_console_cursor_position(x, y, fd=fd)
-    with open('buf.txt', 'w'):
-        pass
     while True:
         posize = winutils.get_position_size(fd)
         offset = (cols*y) + x
@@ -351,10 +349,6 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
             queue.put(lines[-1].rstrip() + nl)
         else:
             queue.put(lines[-1])
-        with open('buf.txt', 'a+') as f:
-            f.write("{} {} {} {}\n----------\n".format(x, y, cols, rows))
-            for line in lines:
-                f.write(repr(line) + '\n')
         # update x and y locations
         if (beg_offset + len(buf))%cols == 0:
             new_offset = beg_offset + len(buf)
@@ -547,7 +541,7 @@ class PopenThread(threading.Thread):
                 self.old_winch_handler = signal.signal(signal.SIGWINCH,
                                                        self._signal_winch)
         # start up process
-        if stdout is not None:
+        if ON_WINDOWS and stdout is not None:
             os.set_handle_inheritable(stdout.fileno(), False)
         self.proc = proc = subprocess.Popen(*args,
                                             stdin=stdin,

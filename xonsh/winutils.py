@@ -365,6 +365,7 @@ def CONSOLE_SCREEN_BUFFER_INFO():
         return prompt_toolkit.win32_types.CONSOLE_SCREEN_BUFFER_INFO
         
     # Otherwise we should wrap it ourselves
+    COORD()  # force COORD to load
     class _CONSOLE_SCREEN_BUFFER_INFO(ctypes.Structure):
         """Struct from in wincon.h. See Windows API docs
         for more details.
