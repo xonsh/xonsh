@@ -41,6 +41,7 @@ ISPEED = 4
 OSPEED = 5
 CC = 6
 
+
 @lazyobject
 def STDOUT_CAPTURE_KINDS():
     return frozenset(['stdout', 'object'])
@@ -215,13 +216,13 @@ class BufferedFDParallelReader:
         self.thread = threading.Thread(target=populate_buffer,
                                        args=(self, fd, self.buffer, chunksize))
         self.thread.daemon = True
-        self.thread.start()
 
+        self.thread.start()
 
 def _expand_console_buffer(cols, max_offset, expandsize, orig_posize, fd):
     # if we are getting close to the end of the console buffer,
     # expand it so that we can read from it successfully.
-    rows = ((max_offset + expandsize)//cols)# + 1
+    rows = ((max_offset + expandsize)//cols) + 1
     winutils.set_console_screen_buffer_size(cols, rows, fd=fd)
     orig_posize = orig_posize[:3] + (rows,)
     max_offset = (rows - 1) * cols
@@ -298,9 +299,9 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
                 time.sleep(reader.timeout * 10**reader.sleepscale)
                 continue
         elif max_offset <= offset + expandsize:
-            rows, max_offset, orig_posize = _expand_console_buffer(cols,
-                                                max_offset, expandsize,
-                                                orig_posize, fd)
+            ecb = _expand_console_buffer(cols, max_offset, expandsize,
+                                         orig_posize, fd)
+            rows, max_offset, orig_posize = ecb
             continue
         elif posize[2:] == (cols, rows):
             # cursor updated but screen size is the same.
@@ -316,7 +317,9 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
             continue
         try:
             buf = winutils.read_console_output_character(x=x, y=y, fd=fd,
-                            buf=buffer, bufsize=chunksize, raw=True)
+                                                         buf=buffer, 
+                                                         bufsize=chunksize, 
+                                                         raw=True)
         except (OSError, IOError):
             reader.closed = True
             break
@@ -334,8 +337,9 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
         if end_offset > cur_offset and cur_offset != max_offset:
             buf = buf[:cur_offset-end_offset]
         # convert to lines
-        lines = [buf[:(cols-x)]]
-        lines += [buf[l*cols+(cols-x):(l+1)*cols+(cols-x)]
+        xshift = cols - x
+        lines = [buf[:xshift]]
+        lines += [buf[l*cols+xshift:(l+1)*cols+xshift]
                   for l in range((nread//cols) + (1 if nread%cols > 0 else 0))]
         lines = [line for line in lines if line]
         if not lines:
@@ -345,7 +349,7 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
         nl = b'\n'
         for line in lines[:-1]:
             queue.put(line.rstrip() + nl)
-        if len(lines[-1]) == (cols - x):
+        if len(lines[-1]) == xshift:
             queue.put(lines[-1].rstrip() + nl)
         else:
             queue.put(lines[-1])
@@ -1664,7 +1668,7 @@ class CommandPipeline:
         # get the correct stdout
         stdout = proc.stdout
         if ((stdout is None or spec.stdout is None or not safe_readable(stdout))
-             and spec.captured_stdout is not None):
+            and spec.captured_stdout is not None):
             stdout = spec.captured_stdout
         if hasattr(stdout, 'buffer'):
             stdout = stdout.buffer
@@ -1683,7 +1687,7 @@ class CommandPipeline:
         # get the correct stderr
         stderr = proc.stderr
         if ((stderr is None or spec.stderr is None or not safe_readable(stderr))
-             and spec.captured_stderr is not None):
+            and spec.captured_stderr is not None):
             stderr = spec.captured_stderr
         if hasattr(stderr, 'buffer'):
             stderr = stderr.buffer

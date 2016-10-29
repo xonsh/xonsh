@@ -41,7 +41,7 @@ def tty():
     else:
         return importlib.import_module('tty')
 
-   
+
 @lazyobject
 def _winapi():
     if ON_WINDOWS:

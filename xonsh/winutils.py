@@ -20,13 +20,13 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+import os
 import sys
-import subprocess
-import msvcrt
 import ctypes
+import subprocess
 from ctypes import c_ulong, c_char_p, c_int, c_void_p, POINTER, byref
 from ctypes.wintypes import (HANDLE, BOOL, DWORD, HWND, HINSTANCE, HKEY,
-    LPDWORD, LPSTR, SHORT, LPWSTR, LPCWSTR, WORD, SMALL_RECT, LPCSTR)
+                             LPDWORD, SHORT, LPCWSTR, WORD, SMALL_RECT, LPCSTR)
 
 from xonsh.lazyasd import lazyobject
 from xonsh import lazyimps  # we aren't amagamated in this module.
@@ -34,6 +34,7 @@ from xonsh import platform
 
 
 __all__ = ('sudo', )
+
 
 @lazyobject
 def CloseHandle():
@@ -150,8 +151,6 @@ def sudo(executable, args=None):
 
     wait_and_close_handle(execute_info.hProcess)
 
-
-
 #
 # The following has been refactored from
 # http://stackoverflow.com/a/37505496/2312428
@@ -258,6 +257,7 @@ def COORD():
         import prompt_toolkit.win32_types
         return prompt_toolkit.win32_types.COORD
 
+        
     class _COORD(ctypes.Structure):
         """Struct from the winapi, representing coordinates in the console.
 
@@ -271,6 +271,7 @@ def COORD():
         _fields_ = [("X", SHORT),
                     ("Y", SHORT)]
 
+                    
     return _COORD
 
 @lazyobject
@@ -345,7 +346,7 @@ def pread_console(fd, buffersize, offset, buf=None):
     that uses read_console_output_character().
     """
     cols, rows = os.get_terminal_size(fd=fd)
-    x = offset % col
+    x = offset % cols
     y = offset // cols
     return read_console_output_character(x=x, y=y, fd=fd, buf=buf,
                                          bufsize=buffersize, raw=True)
@@ -366,6 +367,8 @@ def CONSOLE_SCREEN_BUFFER_INFO():
 
     # Otherwise we should wrap it ourselves
     COORD()  # force COORD to load
+    
+    
     class _CONSOLE_SCREEN_BUFFER_INFO(ctypes.Structure):
         """Struct from in wincon.h. See Windows API docs
         for more details.
@@ -391,6 +394,7 @@ def CONSOLE_SCREEN_BUFFER_INFO():
             ("dwMaximumWindowSize", COORD),
             ]
 
+            
     return _CONSOLE_SCREEN_BUFFER_INFO
 
 
