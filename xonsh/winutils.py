@@ -258,7 +258,6 @@ def COORD():
         import prompt_toolkit.win32_types
         return prompt_toolkit.win32_types.COORD
 
-
     class _COORD(ctypes.Structure):
         """Struct from the winapi, representing coordinates in the console.
 
@@ -272,10 +271,9 @@ def COORD():
         _fields_ = [("X", SHORT),
                     ("Y", SHORT)]
 
-
     return _COORD
 
-    
+
 @lazyobject
 def ReadConsoleOutputCharacterA():
     rcoc = ctypes.windll.kernel32.ReadConsoleOutputCharacterA

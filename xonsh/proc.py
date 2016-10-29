@@ -339,9 +339,10 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
             buf = buf[:cur_offset-end_offset]
         # convert to lines
         xshift = cols - x
+        yshift = (nread // cols) + (1 if nread % cols > 0 else 0)
         lines = [buf[:xshift]]
         lines += [buf[l * cols + xshift:(l + 1) * cols + xshift]
-                  for l in range((nread//cols) + (1 if nread%cols > 0 else 0))]
+                  for l in range(yshift)]
         lines = [line for line in lines if line]
         if not lines:
             time.sleep(reader.timeout * 10**reader.sleepscale)
