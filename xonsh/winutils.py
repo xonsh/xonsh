@@ -26,10 +26,11 @@ import msvcrt
 import ctypes
 from ctypes import c_ulong, c_char_p, c_int, c_void_p, POINTER, byref
 from ctypes.wintypes import (HANDLE, BOOL, DWORD, HWND, HINSTANCE, HKEY, 
-    LPDWORD, LPSTR, SHORT, LPWSTR, LPCWSTR, WORD, SMALL_RECT)
+    LPDWORD, LPSTR, SHORT, LPWSTR, LPCWSTR, WORD, SMALL_RECT, LPCSTR)
 
 from xonsh.lazyasd import lazyobject
 from xonsh import lazyimps  # we aren't amagamated in this module.
+from xonsh import platform
 
 
 __all__ = ('sudo', )
@@ -263,7 +264,20 @@ class COORD(ctypes.Structure):
                 ("Y", SHORT)]        
  
 @lazyobject
-def ReadConsoleOutputCharacter():
+def ReadConsoleOutputCharacterA():
+    rcoc = ctypes.windll.kernel32.ReadConsoleOutputCharacterA
+    rcoc.errcheck = check_zero
+    rcoc.argtypes = (HANDLE,   # _In_  hConsoleOutput
+                     LPCSTR,   # _Out_ LPTSTR lpMode
+                     DWORD,    # _In_  nLength
+                     COORD,    # _In_  dwReadCoord,
+                     LPDWORD)  # _Out_ lpNumberOfCharsRead
+    rcoc.restype = BOOL
+    return rcoc
+
+    
+@lazyobject
+def ReadConsoleOutputCharacterW():
     rcoc = ctypes.windll.kernel32.ReadConsoleOutputCharacterW
     rcoc.errcheck = check_zero
     rcoc.argtypes = (HANDLE,   # _In_  hConsoleOutput
@@ -273,9 +287,10 @@ def ReadConsoleOutputCharacter():
                      LPDWORD)  # _Out_ lpNumberOfCharsRead
     rcoc.restype = BOOL
     return rcoc
-
     
-def read_console_output_character(x=0, y=0, fd=1, buf=None, bufsize=1024):
+    
+def read_console_output_character(x=0, y=0, fd=1, buf=None, bufsize=1024, 
+                                  raw=False):
     """Reads chracters from the console buffer.
     
     Parameters
@@ -287,10 +302,13 @@ def read_console_output_character(x=0, y=0, fd=1, buf=None, bufsize=1024):
     fd : int, optional
         Standard buffer file descriptor, 0 for stdin, 1 for stdout (default),
         and 2 for stderr.
-    buf : ctypes.c_wchar_p, optional
+    buf : ctypes.c_wchar_p if raw else ctypes.c_wchar_p, optional
         An existing buffer to (re-)use.
     bufsize : int, optional
         The maximum read size.
+    raw : bool, opional
+        Whether to read in and return as bytes (True) or as a 
+        unicode string (False, default).
         
     Returns
     -------
@@ -299,10 +317,16 @@ def read_console_output_character(x=0, y=0, fd=1, buf=None, bufsize=1024):
     """
     hcon = STDHANDLES[fd]
     if buf is None:
-        buf = ctypes.c_wchar_p(" " * bufsize)
+        if raw:
+            buf = ctypes.c_char_p(b" " * bufsize)
+        else:
+            buf = ctypes.c_wchar_p(" " * bufsize)
     coord = COORD(x, y)
     n = DWORD()
-    ReadConsoleOutputCharacter(hcon, buf, bufsize, coord, byref(n))
+    if raw:
+        ReadConsoleOutputCharacterA(hcon, buf, bufsize, coord, byref(n))
+    else:
+        ReadConsoleOutputCharacterW(hcon, buf, bufsize, coord, byref(n))
     return buf.value[:n.value]
  
  
@@ -314,37 +338,49 @@ def pread_console(fd, buffersize, offset, buf=None):
     x = offset % col
     y = offset // cols
     return read_console_output_character(x=x, y=y, fd=fd, buf=buf, 
-                                         bufsize=buffersize)
+                                         bufsize=buffersize, raw=True)
                                          
 #
 # The following piece has been forked from colorama.win32
 # Copyright Jonathan Hartley 2013. BSD 3-Clause license, see LICENSE file.
 #
 
-class CONSOLE_SCREEN_BUFFER_INFO(ctypes.Structure):
-    """Struct from in wincon.h. See Windows API docs
-    for more details.
+@lazyobject
+def CONSOLE_SCREEN_BUFFER_INFO():
+    if platform.has_prompt_toolkit():
+        # turns out that PTK has a separate ctype wrapper
+        # for this struct and also wraps kernel32.GetConsoleScreenBufferInfo
+        # we need to use the same struct to prevent clashes.
+        import prompt_toolkit.win32_types
+        return prompt_toolkit.win32_types.CONSOLE_SCREEN_BUFFER_INFO
+        
+    # Otherwise we should wrap it ourselves
+    class _CONSOLE_SCREEN_BUFFER_INFO(ctypes.Structure):
+        """Struct from in wincon.h. See Windows API docs
+        for more details.
     
-    Attributes
-    ----------
-    dwSize : COORD
-        Size of 
-    dwCursorPosition : COORD
-        Current cursor location.
-    wAttributes : WORD
-        Flags for screen buffer.
-    srWindow : SMALL_RECT
-        Actual size of screen
-    dwMaximumWindowSize : COORD
-        Maximum window scrollback size.
-    """
-    _fields_ = [
-        ("dwSize", COORD),
-        ("dwCursorPosition", COORD),
-        ("wAttributes", WORD),
-        ("srWindow", SMALL_RECT),
-        ("dwMaximumWindowSize", COORD),
-        ]
+        Attributes
+        ----------
+        dwSize : COORD
+            Size of 
+        dwCursorPosition : COORD
+            Current cursor location.
+        wAttributes : WORD
+            Flags for screen buffer.
+        srWindow : SMALL_RECT
+            Actual size of screen
+        dwMaximumWindowSize : COORD
+            Maximum window scrollback size.
+        """
+        _fields_ = [
+            ("dwSize", COORD),
+            ("dwCursorPosition", COORD),
+            ("wAttributes", WORD),
+            ("srWindow", SMALL_RECT),
+            ("dwMaximumWindowSize", COORD),
+            ]
+            
+    return _CONSOLE_SCREEN_BUFFER_INFO
 
         
 @lazyobject
@@ -394,3 +430,11 @@ def get_cursor_offset(fd=1):
     size = csbi.dwSize
     return (pos.Y * size.X) + pos.X
     
+    
+def get_position_size(fd=1):
+    """Gets the current cursor position and screen size tuple:
+    (x, y, columns, lines).
+    """
+    info = get_console_screen_buffer_info(fd)
+    return (info.dwCursorPosition.X, info.dwCursorPosition.Y,
+            info.dwSize.X, info.dwSize.Y)
