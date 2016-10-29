@@ -168,7 +168,7 @@ ENABLE_QUICK_EDIT_MODE = 0x0040
 # output flags
 ENABLE_PROCESSED_OUTPUT = 0x0001
 ENABLE_WRAP_AT_EOL_OUTPUT = 0x0002
-ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004 # VT100 (Win 10)
+ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004  # VT100 (Win 10)
 
 
 def check_zero(result, func, args):
@@ -248,6 +248,7 @@ def set_console_mode(mode, fd=1):
     hcon = STDHANDLES[fd]
     SetConsoleMode(hcon, mode)
 
+
 @lazyobject
 def COORD():
     if platform.has_prompt_toolkit():
@@ -257,7 +258,7 @@ def COORD():
         import prompt_toolkit.win32_types
         return prompt_toolkit.win32_types.COORD
 
-        
+
     class _COORD(ctypes.Structure):
         """Struct from the winapi, representing coordinates in the console.
 
@@ -271,9 +272,10 @@ def COORD():
         _fields_ = [("X", SHORT),
                     ("Y", SHORT)]
 
-                    
+
     return _COORD
 
+    
 @lazyobject
 def ReadConsoleOutputCharacterA():
     rcoc = ctypes.windll.kernel32.ReadConsoleOutputCharacterA
@@ -351,6 +353,7 @@ def pread_console(fd, buffersize, offset, buf=None):
     return read_console_output_character(x=x, y=y, fd=fd, buf=buf,
                                          bufsize=buffersize, raw=True)
 
+
 #
 # The following piece has been forked from colorama.win32
 # Copyright Jonathan Hartley 2013. BSD 3-Clause license, see LICENSE file.
@@ -367,8 +370,7 @@ def CONSOLE_SCREEN_BUFFER_INFO():
 
     # Otherwise we should wrap it ourselves
     COORD()  # force COORD to load
-    
-    
+
     class _CONSOLE_SCREEN_BUFFER_INFO(ctypes.Structure):
         """Struct from in wincon.h. See Windows API docs
         for more details.
@@ -394,7 +396,6 @@ def CONSOLE_SCREEN_BUFFER_INFO():
             ("dwMaximumWindowSize", COORD),
             ]
 
-            
     return _CONSOLE_SCREEN_BUFFER_INFO
 
 
@@ -433,6 +434,7 @@ def get_console_screen_buffer_info(fd=1):
 #
 # end colorama forked section
 #
+
 
 def get_cursor_position(fd=1):
     """Gets the current cursor position as an (x, y) tuple."""

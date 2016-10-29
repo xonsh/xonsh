@@ -219,6 +219,7 @@ class BufferedFDParallelReader:
 
         self.thread.start()
 
+
 def _expand_console_buffer(cols, max_offset, expandsize, orig_posize, fd):
     # if we are getting close to the end of the console buffer,
     # expand it so that we can read from it successfully.
@@ -317,8 +318,8 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
             continue
         try:
             buf = winutils.read_console_output_character(x=x, y=y, fd=fd,
-                                                         buf=buffer, 
-                                                         bufsize=chunksize, 
+                                                         buf=buffer,
+                                                         bufsize=chunksize,
                                                          raw=True)
         except (OSError, IOError):
             reader.closed = True
@@ -339,7 +340,7 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
         # convert to lines
         xshift = cols - x
         lines = [buf[:xshift]]
-        lines += [buf[l*cols+xshift:(l+1)*cols+xshift]
+        lines += [buf[l * cols + xshift:(l + 1) * cols + xshift]
                   for l in range((nread//cols) + (1 if nread%cols > 0 else 0))]
         lines = [line for line in lines if line]
         if not lines:
@@ -354,7 +355,7 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
         else:
             queue.put(lines[-1])
         # update x and y locations
-        if (beg_offset + len(buf))%cols == 0:
+        if (beg_offset + len(buf)) % cols == 0:
             new_offset = beg_offset + len(buf)
         else:
             new_offset = beg_offset + len(buf.rstrip())
@@ -1668,7 +1669,7 @@ class CommandPipeline:
         # get the correct stdout
         stdout = proc.stdout
         if ((stdout is None or spec.stdout is None or not safe_readable(stdout))
-            and spec.captured_stdout is not None):
+                and spec.captured_stdout is not None):
             stdout = spec.captured_stdout
         if hasattr(stdout, 'buffer'):
             stdout = stdout.buffer
@@ -1687,7 +1688,7 @@ class CommandPipeline:
         # get the correct stderr
         stderr = proc.stderr
         if ((stderr is None or spec.stderr is None or not safe_readable(stderr))
-            and spec.captured_stderr is not None):
+                and spec.captured_stderr is not None):
             stderr = spec.captured_stderr
         if hasattr(stderr, 'buffer'):
             stderr = stderr.buffer
