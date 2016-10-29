@@ -315,9 +315,9 @@ class ConsoleParallelReader:
             The queue reading timeout.
         """
         self.fd = fd
-        self.buffer = buffer
+        self._buffer = buffer  # this cannot be public
         if buffer is None:
-            self.buffer = ctypes.c_char_p(b" " * chunksize)
+            self._buffer = ctypes.c_char_p(b" " * chunksize)
         self.chunksize = chunksize
         self.queue = queue.Queue()
         self.timeout = timeout or builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
@@ -325,7 +325,7 @@ class ConsoleParallelReader:
         self.closed = False
         # start reading from stream
         self.thread = threading.Thread(target=populate_console,
-                                       args=(self, fd, self.buffer, 
+                                       args=(self, fd, self._buffer, 
                                              chunksize, self.queue))
         self.thread.daemon = True
         self.thread.start()
@@ -350,7 +350,7 @@ class ConsoleParallelReader:
         """Reads bytes from the file."""
         i = 0
         buf = b''
-        while 0 <= i < size:
+        while size < 0 or i != size:
             line = self.read_queue()
             if line:
                 buf += line
@@ -364,7 +364,7 @@ class ConsoleParallelReader:
         i = 0
         nl = b'\n'
         buf = b''
-        while 0 <= i < size:
+        while size < 0 or i != size:
             line = self.read_queue()
             if line:
                 buf += line
@@ -477,7 +477,6 @@ class PopenThread(threading.Thread):
         # start up process
         if stdout is not None:
             os.set_handle_inheritable(stdout.fileno(), False)
-        #os.dup2(stdout.fileno(), 1)
         self.proc = proc = subprocess.Popen(*args,
                                             stdin=stdin,
                                             stdout=stdout,
@@ -1604,13 +1603,14 @@ class CommandPipeline:
         exactly as found.
         """
         # get approriate handles
+        spec = self.spec
         proc = self.proc
         timeout = builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
         # get the correct stdout
         stdout = proc.stdout
-        if ((stdout is None or not safe_readable(stdout)) and
-                self.spec.captured_stdout is not None):
-            stdout = self.spec.captured_stdout
+        if ((stdout is None or spec.stdout is None or not safe_readable(stdout)) 
+             and spec.captured_stdout is not None):
+            stdout = spec.captured_stdout
         if hasattr(stdout, 'buffer'):
             stdout = stdout.buffer
         if stdout is not None and \
@@ -1627,9 +1627,9 @@ class CommandPipeline:
             raise StopIteration
         # get the correct stderr
         stderr = proc.stderr
-        if ((stderr is None or not safe_readable(stderr)) and
-                self.spec.captured_stderr is not None):
-            stderr = self.spec.captured_stderr
+        if ((stderr is None or spec.stderr is None or not safe_readable(stderr))
+             and spec.captured_stderr is not None):
+            stderr = spec.captured_stderr
         if hasattr(stderr, 'buffer'):
             stderr = stderr.buffer
         if stderr is not None and \
@@ -1665,7 +1665,7 @@ class CommandPipeline:
                     check_prev_done = True
                 elif prev_end_time is None:
                     # or see if we already know that the next-to-last
-                    # proc in teh pipeline has ended.
+                    # proc in the pipeline has ended.
                     if self._prev_procs_done():
                         # if it has, record the time
                         prev_end_time = time.time()
