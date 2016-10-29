@@ -218,7 +218,17 @@ class BufferedFDParallelReader:
         self.thread.start()
 
         
-def populate_console(reader, fd, buffer, chunksize, queue):
+def _expand_console_buffer(cols, max_offset, expandsize, orig_posize, fd):
+    # if we are getting close to the end of the console buffer, 
+    # expand it so that we can read from it successfully.
+    rows = ((max_offset + expandsize)//cols)# + 1
+    winutils.set_console_screen_buffer_size(cols, rows, fd=fd)
+    orig_posize = orig_posize[:3] + (rows,)
+    max_offset = (rows - 1) * cols
+    return rows, max_offset, orig_posize
+
+        
+def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
     """Reads bytes from the file descriptor and puts lines into the queue.
     The reads happend in parallel, using xonsh.winutils.read_console_output_character(), 
     and is thus only available on windows. If the read fails for any reason, the reader is
@@ -242,33 +252,69 @@ def populate_console(reader, fd, buffer, chunksize, queue):
     #      care about without a noticible performance hit.
     #   b. Even with this huge size, it is still possible to write more lines than
     #      this, so we should scroll along with the console.
-    winutils.get_console_screen_buffer_info(1)
-    x, y, cols, lins = posize = winutils.get_position_size(fd)
+    # Unfortnately, because we do not have control over the terminal emulator, 
+    # It is not possible to compute how far back we should set the begining 
+    # read position because we don't know how many characters have been popped
+    # off the top of the buffer. If we did somehow know this number we could do 
+    # something like the following:
+    #
+    #    new_offset = (y*cols) + x 
+    #    if new_offset == max_offset:
+    #        new_offset -= scolled_offset
+    #        x = new_offset%cols
+    #        y = new_offset//cols
+    #        continue
+    #
+    # So this method is imperfect and only works as long as the sceen has
+    # room to expand to.  Thus the trick here is to expand the screen size
+    # when we get close enough to the end of the screen. There remain some 
+    # async issues related to not being able to set the cursor position.
+    # but they just affect the alignment / capture of the output of the 
+    # first command run after a screen resize.
+    if expandsize is None:
+        expandsize = 100 * chunksize
+    x, y, cols, rows = posize = winutils.get_position_size(fd)
     pre_x = pre_y = -1
     orig_posize = posize
+    offset = (cols*y) + x
+    max_offset = (rows - 1) * cols
+    # I believe that there is a bug in PTK that if we reset the 
+    # cursor position, the cursor on the next prompt is accidentally on 
+    # the next line.  If this is fixed, uncomment the following line.
+    #if max_offset < offset + expandsize:
+    #    rows, max_offset, orig_posize = _expand_console_buffer(
+    #                                        cols, max_offset, expandsize, 
+    #                                        orig_posize, fd)
+    #    winutils.set_console_cursor_position(x, y, fd=fd)
     with open('buf.txt', 'w'):
         pass
     while True:
         posize = winutils.get_position_size(fd)
-        if ((posize[1], posize[0]) <= (y, x) and posize[2:] == (cols, lins)) or \
+        offset = (cols*y) + x
+        if ((posize[1], posize[0]) <= (y, x) and posize[2:] == (cols, rows)) or \
                 (pre_x == x and pre_y == y):
-            # already at the current cursor position.
+            # already at or ahead of the current cursor position.
             if reader.closed:
                 break
             else:
                 time.sleep(reader.timeout * 10**reader.sleepscale)
                 continue
-        elif posize[2:] == (cols, lins):
+        elif max_offset <= offset + expandsize:
+            rows, max_offset, orig_posize = _expand_console_buffer(cols, 
+                                                max_offset, expandsize,
+                                                orig_posize, fd)
+            continue
+        elif posize[2:] == (cols, rows):
             # cursor updated but screen size is the same.
             pass
         else:
             # screen size changed, which is offset preserving
-            offset = (cols*y) + x
             orig_posize = posize
-            cols, lins = posize[2:]
+            cols, rows = posize[2:]
             x = offset % cols
             y = offset // cols
             pre_x = pre_y = -1
+            max_offset = (rows - 1) * cols
             continue
         try:
             buf = winutils.read_console_output_character(x=x, y=y, fd=fd, 
@@ -287,9 +333,9 @@ def populate_console(reader, fd, buffer, chunksize, queue):
         cur_offset = (cols*cur_y) + cur_x
         beg_offset = (cols*y) + x
         end_offset = beg_offset + nread
-        if end_offset > cur_offset:
+        if end_offset > cur_offset and cur_offset != max_offset:
             buf = buf[:cur_offset-end_offset]
-        # convert to lines and add to queue
+        # convert to lines 
         lines = [buf[:(cols-x)]]
         lines += [buf[l*cols+(cols-x):(l+1)*cols+(cols-x)]                 
                   for l in range((nread//cols) + (1 if nread%cols > 0 else 0))]
@@ -297,6 +343,7 @@ def populate_console(reader, fd, buffer, chunksize, queue):
         if not lines:
             time.sleep(reader.timeout * 10**reader.sleepscale)
             continue
+        # put lines in the queue
         nl = b'\n'
         for line in lines[:-1]:
             queue.put(line.rstrip() + nl)
@@ -305,9 +352,10 @@ def populate_console(reader, fd, buffer, chunksize, queue):
         else:
             queue.put(lines[-1])
         with open('buf.txt', 'a+') as f:
-            f.write("{} {} {}\n----------\n".format(x, y, cols))
+            f.write("{} {} {} {}\n----------\n".format(x, y, cols, rows))
             for line in lines:
                 f.write(repr(line) + '\n')
+        # update x and y locations
         if (beg_offset + len(buf))%cols == 0:
             new_offset = beg_offset + len(buf)
         else:
@@ -346,7 +394,7 @@ class ConsoleParallelReader:
         self.queue = queue.Queue()
         self.timeout = timeout or builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
         self.sleepscale = 0
-        self.closed = False
+        self.closed = False            
         # start reading from stream
         self.thread = threading.Thread(target=populate_console,
                                        args=(self, fd, self._buffer, 

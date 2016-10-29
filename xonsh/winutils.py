@@ -249,19 +249,29 @@ def set_console_mode(mode, fd=1):
     hcon = STDHANDLES[fd]
     SetConsoleMode(hcon, mode)
 
-
-class COORD(ctypes.Structure):
-    """Struct from the winapi, representing coordinates in the console.
+@lazyobject
+def COORD():
+    if platform.has_prompt_toolkit():
+        # turns out that PTK has a separate ctype wrapper
+        # for this struct and also wraps similar function calls
+        # we need to use the same struct to prevent clashes.
+        import prompt_toolkit.win32_types
+        return prompt_toolkit.win32_types.COORD
     
-    Attributes
-    ----------
-    X : int
-        Column position
-    Y : int
-        Row position
-    """
-    _fields_ = [("X", SHORT),
-                ("Y", SHORT)]        
+    class _COORD(ctypes.Structure):
+        """Struct from the winapi, representing coordinates in the console.
+
+        Attributes
+        ----------
+        X : int
+            Column position
+        Y : int
+            Row position
+        """
+        _fields_ = [("X", SHORT),
+                    ("Y", SHORT)]        
+                    
+    return _COORD
  
 @lazyobject
 def ReadConsoleOutputCharacterA():
@@ -414,7 +424,10 @@ def get_console_screen_buffer_info(fd=1):
     csbi = CONSOLE_SCREEN_BUFFER_INFO()
     GetConsoleScreenBufferInfo(hcon, byref(csbi))
     return csbi
-    
+ 
+#
+# end colorama forked section
+#
     
 def get_cursor_position(fd=1):
     """Gets the current cursor position as an (x, y) tuple."""
@@ -438,3 +451,71 @@ def get_position_size(fd=1):
     info = get_console_screen_buffer_info(fd)
     return (info.dwCursorPosition.X, info.dwCursorPosition.Y,
             info.dwSize.X, info.dwSize.Y)
+
+            
+@lazyobject
+def SetConsoleScreenBufferSize():
+    """Set screen buffer dimensions."""
+    scsbs = ctypes.windll.kernel32.SetConsoleScreenBufferSize
+    scsbs.errcheck = check_zero
+    scsbs.argtypes = (
+        HANDLE,  # _In_ HANDLE hConsoleOutput
+        COORD,   # _In_ COORD  dwSize
+        )
+    scsbs.restype = BOOL
+    return scsbs
+
+    
+def set_console_screen_buffer_size(x, y, fd=1):
+    """Sets the console size for a standard buffer.
+    
+    Parameters
+    ----------
+    x : int
+        Number of columns.
+    y : int
+        Number of rows.
+    fd : int, optional
+        Standard buffer file descriptor, 0 for stdin, 1 for stdout (default),
+        and 2 for stderr.
+    """
+    coord = COORD()
+    coord.X = x
+    coord.Y = y
+    hcon = STDHANDLES[fd]
+    rtn = SetConsoleScreenBufferSize(hcon, coord)
+    return rtn
+    
+    
+@lazyobject
+def SetConsoleCursorPosition():
+    """Set cursor position in console."""
+    sccp = ctypes.windll.kernel32.SetConsoleCursorPosition
+    sccp.errcheck = check_zero
+    sccp.argtypes = (
+        HANDLE,  # _In_ HANDLE hConsoleOutput
+        COORD,   # _In_ COORD  dwCursorPosition
+        )
+    sccp.restype = BOOL
+    return sccp
+
+    
+def set_console_cursor_position(x, y, fd=1):
+    """Sets the console cursor position for a standard buffer.
+    
+    Parameters
+    ----------
+    x : int
+        Number of columns.
+    y : int
+        Number of rows.
+    fd : int, optional
+        Standard buffer file descriptor, 0 for stdin, 1 for stdout (default),
+        and 2 for stderr.
+    """
+    coord = COORD()
+    coord.X = x
+    coord.Y = y
+    hcon = STDHANDLES[fd]
+    rtn = SetConsoleCursorPosition(hcon, coord)
+    return rtn
