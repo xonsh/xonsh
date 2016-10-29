@@ -32,7 +32,7 @@ from xonsh.jobs import add_job
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.proc import (
     PopenThread, ProcProxyThread, ProcProxy, ConsoleParallelReader,
-    pause_call_resume, CommandPipeline, HiddenCommandPipeline, 
+    pause_call_resume, CommandPipeline, HiddenCommandPipeline,
     STDOUT_CAPTURE_KINDS)
 from xonsh.tools import (
     suggest_commands, expandvars, globpath, XonshError,

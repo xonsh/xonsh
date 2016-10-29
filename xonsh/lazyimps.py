@@ -10,7 +10,6 @@ pyghooks = LazyObject(lambda: importlib.import_module('xonsh.pyghooks'),
                       globals(), 'pyghooks')
 
 
-
 @lazyobject
 def pty():
     if ON_WINDOWS:
@@ -42,7 +41,7 @@ def tty():
     else:
         return importlib.import_module('tty')
 
-        
+   
 @lazyobject
 def _winapi():
     if ON_WINDOWS:
@@ -60,7 +59,7 @@ def msvcrt():
         m = None
     return m
 
-    
+
 @lazyobject
 def winutils():
     if ON_WINDOWS:

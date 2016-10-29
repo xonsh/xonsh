@@ -190,7 +190,7 @@ def populate_buffer(reader, fd, buffer, chunksize):
         else:
             reader.closed = True
             break
-            
+
 
 class BufferedFDParallelReader:
     """Buffered, parallel background thread reader."""
@@ -217,9 +217,9 @@ class BufferedFDParallelReader:
         self.thread.daemon = True
         self.thread.start()
 
-        
+
 def _expand_console_buffer(cols, max_offset, expandsize, orig_posize, fd):
-    # if we are getting close to the end of the console buffer, 
+    # if we are getting close to the end of the console buffer,
     # expand it so that we can read from it successfully.
     rows = ((max_offset + expandsize)//cols)# + 1
     winutils.set_console_screen_buffer_size(cols, rows, fd=fd)
@@ -227,38 +227,38 @@ def _expand_console_buffer(cols, max_offset, expandsize, orig_posize, fd):
     max_offset = (rows - 1) * cols
     return rows, max_offset, orig_posize
 
-        
+
 def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
     """Reads bytes from the file descriptor and puts lines into the queue.
-    The reads happend in parallel, using xonsh.winutils.read_console_output_character(), 
+    The reads happend in parallel, using xonsh.winutils.read_console_output_character(),
     and is thus only available on windows. If the read fails for any reason, the reader is
     flagged as closed.
     """
-    # OK, so this function is super annoying because Windows stores its 
+    # OK, so this function is super annoying because Windows stores its
     # buffers as a 2D regular, dense array -- without trailing newlines.
     # Meanwhile, we want to add *lines* to the queue. Also, as is typical
     # with parallel reads, the entire buffer that you ask for may not be
-    # filled. Thus we have to deal with the full generality.  
+    # filled. Thus we have to deal with the full generality.
     #   1. reads may end in the middle of a line
     #   2. excess whitespace at the end of a line may not be real, unless
     #   3. you haven't read to the end of the line yet!
     # So there are alignment issues everywhere.  Also, Windows will automatically
-    # read past the current cursor position, even though there is presumably 
+    # read past the current cursor position, even though there is presumably
     # nothing to see there.
     #
-    # These chunked reads basically need to happen like this because, 
+    # These chunked reads basically need to happen like this because,
     #   a. The default buffer size is HUGE for the console (90k lines x 120 cols)
-    #      as so we can't just read in everything at the end and see what we 
+    #      as so we can't just read in everything at the end and see what we
     #      care about without a noticible performance hit.
     #   b. Even with this huge size, it is still possible to write more lines than
     #      this, so we should scroll along with the console.
-    # Unfortnately, because we do not have control over the terminal emulator, 
-    # It is not possible to compute how far back we should set the begining 
+    # Unfortnately, because we do not have control over the terminal emulator,
+    # It is not possible to compute how far back we should set the begining
     # read position because we don't know how many characters have been popped
-    # off the top of the buffer. If we did somehow know this number we could do 
+    # off the top of the buffer. If we did somehow know this number we could do
     # something like the following:
     #
-    #    new_offset = (y*cols) + x 
+    #    new_offset = (y*cols) + x
     #    if new_offset == max_offset:
     #        new_offset -= scolled_offset
     #        x = new_offset%cols
@@ -267,9 +267,9 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
     #
     # So this method is imperfect and only works as long as the sceen has
     # room to expand to.  Thus the trick here is to expand the screen size
-    # when we get close enough to the end of the screen. There remain some 
+    # when we get close enough to the end of the screen. There remain some
     # async issues related to not being able to set the cursor position.
-    # but they just affect the alignment / capture of the output of the 
+    # but they just affect the alignment / capture of the output of the
     # first command run after a screen resize.
     if expandsize is None:
         expandsize = 100 * chunksize
@@ -278,12 +278,12 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
     orig_posize = posize
     offset = (cols*y) + x
     max_offset = (rows - 1) * cols
-    # I believe that there is a bug in PTK that if we reset the 
-    # cursor position, the cursor on the next prompt is accidentally on 
+    # I believe that there is a bug in PTK that if we reset the
+    # cursor position, the cursor on the next prompt is accidentally on
     # the next line.  If this is fixed, uncomment the following line.
     #if max_offset < offset + expandsize:
     #    rows, max_offset, orig_posize = _expand_console_buffer(
-    #                                        cols, max_offset, expandsize, 
+    #                                        cols, max_offset, expandsize,
     #                                        orig_posize, fd)
     #    winutils.set_console_cursor_position(x, y, fd=fd)
     while True:
@@ -298,7 +298,7 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
                 time.sleep(reader.timeout * 10**reader.sleepscale)
                 continue
         elif max_offset <= offset + expandsize:
-            rows, max_offset, orig_posize = _expand_console_buffer(cols, 
+            rows, max_offset, orig_posize = _expand_console_buffer(cols,
                                                 max_offset, expandsize,
                                                 orig_posize, fd)
             continue
@@ -315,7 +315,7 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
             max_offset = (rows - 1) * cols
             continue
         try:
-            buf = winutils.read_console_output_character(x=x, y=y, fd=fd, 
+            buf = winutils.read_console_output_character(x=x, y=y, fd=fd,
                             buf=buffer, bufsize=chunksize, raw=True)
         except (OSError, IOError):
             reader.closed = True
@@ -333,9 +333,9 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
         end_offset = beg_offset + nread
         if end_offset > cur_offset and cur_offset != max_offset:
             buf = buf[:cur_offset-end_offset]
-        # convert to lines 
+        # convert to lines
         lines = [buf[:(cols-x)]]
-        lines += [buf[l*cols+(cols-x):(l+1)*cols+(cols-x)]                 
+        lines += [buf[l*cols+(cols-x):(l+1)*cols+(cols-x)]
                   for l in range((nread//cols) + (1 if nread%cols > 0 else 0))]
         lines = [line for line in lines if line]
         if not lines:
@@ -359,8 +359,8 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
         x = new_offset % cols
         y = new_offset // cols
         time.sleep(reader.timeout)
-        
-        
+
+
 class ConsoleParallelReader:
     """Parallel reader for consoles that runs in a background thread.
     This is only needed, available, and useful on Windows.
@@ -388,18 +388,18 @@ class ConsoleParallelReader:
         self.queue = queue.Queue()
         self.timeout = timeout or builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
         self.sleepscale = 0
-        self.closed = False            
+        self.closed = False
         # start reading from stream
         self.thread = threading.Thread(target=populate_console,
-                                       args=(self, fd, self._buffer, 
+                                       args=(self, fd, self._buffer,
                                              chunksize, self.queue))
         self.thread.daemon = True
         self.thread.start()
-        
+
     def close(self):
         """close the reader"""
         self.closed = True
-        
+
     def read_queue(self, timeout=None):
         """Reads a single 'line' from the queue."""
         timeout = timeout or self.timeout
@@ -459,7 +459,7 @@ class ConsoleParallelReader:
     def readable():
         """Returns true, because this object is always readable."""
         return True
-        
+
 
 def safe_fdclose(handle, cache=None):
     """Closes a file handle in the safest way possible, and potentially
@@ -603,7 +603,7 @@ class PopenThread(threading.Thread):
         # loop over reads while process is running.
         cnt = 1
         while proc.poll() is None:
-            
+
             i = self._read_write(procout, stdout, sys.__stdout__)
             j = self._read_write(procerr, stderr, sys.__stderr__)
             if self.suspended:
@@ -1663,7 +1663,7 @@ class CommandPipeline:
         timeout = builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
         # get the correct stdout
         stdout = proc.stdout
-        if ((stdout is None or spec.stdout is None or not safe_readable(stdout)) 
+        if ((stdout is None or spec.stdout is None or not safe_readable(stdout))
              and spec.captured_stdout is not None):
             stdout = spec.captured_stdout
         if hasattr(stdout, 'buffer'):

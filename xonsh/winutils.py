@@ -25,7 +25,7 @@ import subprocess
 import msvcrt
 import ctypes
 from ctypes import c_ulong, c_char_p, c_int, c_void_p, POINTER, byref
-from ctypes.wintypes import (HANDLE, BOOL, DWORD, HWND, HINSTANCE, HKEY, 
+from ctypes.wintypes import (HANDLE, BOOL, DWORD, HWND, HINSTANCE, HKEY,
     LPDWORD, LPSTR, SHORT, LPWSTR, LPCWSTR, WORD, SMALL_RECT, LPCSTR)
 
 from xonsh.lazyasd import lazyobject
@@ -110,7 +110,7 @@ def wait_and_close_handle(process_handle):
 
     Parameters
     ----------
-    process_handle : HANDLE 
+    process_handle : HANDLE
         The Windows handle for the process
     """
     WaitForSingleObject(process_handle, INFINITE)
@@ -123,9 +123,9 @@ def sudo(executable, args=None):
 
     Parameters
     ----------
-    param executable : str 
+    param executable : str
         The path/name of the executable
-    args : list of str 
+    args : list of str
         The arguments to be passed to the executable
     """
     if not args:
@@ -150,10 +150,10 @@ def sudo(executable, args=None):
 
     wait_and_close_handle(execute_info.hProcess)
 
-    
-    
+
+
 #
-# The following has been refactored from 
+# The following has been refactored from
 # http://stackoverflow.com/a/37505496/2312428
 #
 
@@ -172,24 +172,24 @@ ENABLE_WRAP_AT_EOL_OUTPUT = 0x0002
 ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004 # VT100 (Win 10)
 
 
-def check_zero(result, func, args):    
+def check_zero(result, func, args):
     if not result:
         err = ctypes.get_last_error()
         if err:
             raise ctypes.WinError(err)
     return args
 
-    
+
 @lazyobject
 def GetStdHandle():
     return lazyimps._winapi.GetStdHandle
 
-    
+
 @lazyobject
 def STDHANDLES():
     """Tuple of the Windows handles for (stdin, stdout, stderr)."""
-    hs = [lazyimps._winapi.STD_INPUT_HANDLE, 
-          lazyimps._winapi.STD_OUTPUT_HANDLE, 
+    hs = [lazyimps._winapi.STD_INPUT_HANDLE,
+          lazyimps._winapi.STD_OUTPUT_HANDLE,
           lazyimps._winapi.STD_ERROR_HANDLE]
     hcons = []
     for h in hs:
@@ -197,7 +197,7 @@ def STDHANDLES():
         hcons.append(hcon)
     return tuple(hcons)
 
-    
+
 @lazyobject
 def GetConsoleMode():
     gcm = ctypes.windll.kernel32.GetConsoleMode
@@ -206,12 +206,12 @@ def GetConsoleMode():
                     LPDWORD)  # _Out_ lpMode
     return gcm
 
-    
+
 def get_console_mode(fd=1):
     """Get the mode of the active console input, output, or error
     buffer. Note that if the process isn't attached to a
     console, this function raises an EBADF IOError.
-    
+
     Parameters
     ----------
     fd : int
@@ -223,7 +223,7 @@ def get_console_mode(fd=1):
     GetConsoleMode(hcon, byref(mode))
     return mode.value
 
-            
+
 @lazyobject
 def SetConsoleMode():
     scm = ctypes.windll.kernel32.SetConsoleMode
@@ -231,13 +231,13 @@ def SetConsoleMode():
     scm.argtypes = (HANDLE,  # _In_  hConsoleHandle
                     DWORD)   # _Out_ lpMode
     return scm
-    
-        
+
+
 def set_console_mode(mode, fd=1):
-    """Set the mode of the active console input, output, or 
+    """Set the mode of the active console input, output, or
     error buffer. Note that if the process isn't attached to a
     console, this function raises an EBADF IOError.
-    
+
     Parameters
     ----------
     mode : int
@@ -257,7 +257,7 @@ def COORD():
         # we need to use the same struct to prevent clashes.
         import prompt_toolkit.win32_types
         return prompt_toolkit.win32_types.COORD
-    
+
     class _COORD(ctypes.Structure):
         """Struct from the winapi, representing coordinates in the console.
 
@@ -269,10 +269,10 @@ def COORD():
             Row position
         """
         _fields_ = [("X", SHORT),
-                    ("Y", SHORT)]        
-                    
+                    ("Y", SHORT)]
+
     return _COORD
- 
+
 @lazyobject
 def ReadConsoleOutputCharacterA():
     rcoc = ctypes.windll.kernel32.ReadConsoleOutputCharacterA
@@ -285,7 +285,7 @@ def ReadConsoleOutputCharacterA():
     rcoc.restype = BOOL
     return rcoc
 
-    
+
 @lazyobject
 def ReadConsoleOutputCharacterW():
     rcoc = ctypes.windll.kernel32.ReadConsoleOutputCharacterW
@@ -297,12 +297,12 @@ def ReadConsoleOutputCharacterW():
                      LPDWORD)  # _Out_ lpNumberOfCharsRead
     rcoc.restype = BOOL
     return rcoc
-    
-    
-def read_console_output_character(x=0, y=0, fd=1, buf=None, bufsize=1024, 
+
+
+def read_console_output_character(x=0, y=0, fd=1, buf=None, bufsize=1024,
                                   raw=False):
     """Reads chracters from the console buffer.
-    
+
     Parameters
     ----------
     x : int, optional
@@ -317,9 +317,9 @@ def read_console_output_character(x=0, y=0, fd=1, buf=None, bufsize=1024,
     bufsize : int, optional
         The maximum read size.
     raw : bool, opional
-        Whether to read in and return as bytes (True) or as a 
+        Whether to read in and return as bytes (True) or as a
         unicode string (False, default).
-        
+
     Returns
     -------
     value : str
@@ -338,8 +338,8 @@ def read_console_output_character(x=0, y=0, fd=1, buf=None, bufsize=1024,
     else:
         ReadConsoleOutputCharacterW(hcon, buf, bufsize, coord, byref(n))
     return buf.value[:n.value]
- 
- 
+
+
 def pread_console(fd, buffersize, offset, buf=None):
     """This is a console-based implementation of os.pread() for windows.
     that uses read_console_output_character().
@@ -347,9 +347,9 @@ def pread_console(fd, buffersize, offset, buf=None):
     cols, rows = os.get_terminal_size(fd=fd)
     x = offset % col
     y = offset // cols
-    return read_console_output_character(x=x, y=y, fd=fd, buf=buf, 
+    return read_console_output_character(x=x, y=y, fd=fd, buf=buf,
                                          bufsize=buffersize, raw=True)
-                                         
+
 #
 # The following piece has been forked from colorama.win32
 # Copyright Jonathan Hartley 2013. BSD 3-Clause license, see LICENSE file.
@@ -363,17 +363,17 @@ def CONSOLE_SCREEN_BUFFER_INFO():
         # we need to use the same struct to prevent clashes.
         import prompt_toolkit.win32_types
         return prompt_toolkit.win32_types.CONSOLE_SCREEN_BUFFER_INFO
-        
+
     # Otherwise we should wrap it ourselves
     COORD()  # force COORD to load
     class _CONSOLE_SCREEN_BUFFER_INFO(ctypes.Structure):
         """Struct from in wincon.h. See Windows API docs
         for more details.
-    
+
         Attributes
         ----------
         dwSize : COORD
-            Size of 
+            Size of
         dwCursorPosition : COORD
             Current cursor location.
         wAttributes : WORD
@@ -390,10 +390,10 @@ def CONSOLE_SCREEN_BUFFER_INFO():
             ("srWindow", SMALL_RECT),
             ("dwMaximumWindowSize", COORD),
             ]
-            
+
     return _CONSOLE_SCREEN_BUFFER_INFO
 
-        
+
 @lazyobject
 def GetConsoleScreenBufferInfo():
     """Returns the windows version of the get screen buffer."""
@@ -406,16 +406,16 @@ def GetConsoleScreenBufferInfo():
     gcsbi.restype = BOOL
     return gcsbi
 
-    
+
 def get_console_screen_buffer_info(fd=1):
     """Returns an screen buffer info object for the relevant stdbuf.
-    
+
     Parameters
     ----------
     fd : int, optional
         Standard buffer file descriptor, 0 for stdin, 1 for stdout (default),
         and 2 for stderr.
-        
+
     Returns
     -------
     csbi : CONSOLE_SCREEN_BUFFER_INFO
@@ -425,26 +425,26 @@ def get_console_screen_buffer_info(fd=1):
     csbi = CONSOLE_SCREEN_BUFFER_INFO()
     GetConsoleScreenBufferInfo(hcon, byref(csbi))
     return csbi
- 
+
 #
 # end colorama forked section
 #
-    
+
 def get_cursor_position(fd=1):
     """Gets the current cursor position as an (x, y) tuple."""
     csbi = get_console_screen_buffer_info(fd=fd)
     coord = csbi.dwCursorPosition
     return (coord.X, coord.Y)
 
-    
+
 def get_cursor_offset(fd=1):
     """Gets the current cursor position as a total offset value."""
     csbi = get_console_screen_buffer_info(fd=fd)
     pos = csbi.dwCursorPosition
     size = csbi.dwSize
     return (pos.Y * size.X) + pos.X
-    
-    
+
+
 def get_position_size(fd=1):
     """Gets the current cursor position and screen size tuple:
     (x, y, columns, lines).
@@ -453,7 +453,7 @@ def get_position_size(fd=1):
     return (info.dwCursorPosition.X, info.dwCursorPosition.Y,
             info.dwSize.X, info.dwSize.Y)
 
-            
+
 @lazyobject
 def SetConsoleScreenBufferSize():
     """Set screen buffer dimensions."""
@@ -466,10 +466,10 @@ def SetConsoleScreenBufferSize():
     scsbs.restype = BOOL
     return scsbs
 
-    
+
 def set_console_screen_buffer_size(x, y, fd=1):
     """Sets the console size for a standard buffer.
-    
+
     Parameters
     ----------
     x : int
@@ -486,8 +486,8 @@ def set_console_screen_buffer_size(x, y, fd=1):
     hcon = STDHANDLES[fd]
     rtn = SetConsoleScreenBufferSize(hcon, coord)
     return rtn
-    
-    
+
+
 @lazyobject
 def SetConsoleCursorPosition():
     """Set cursor position in console."""
@@ -500,10 +500,10 @@ def SetConsoleCursorPosition():
     sccp.restype = BOOL
     return sccp
 
-    
+
 def set_console_cursor_position(x, y, fd=1):
     """Sets the console cursor position for a standard buffer.
-    
+
     Parameters
     ----------
     x : int
