@@ -224,12 +224,28 @@ def populate_console(reader, fd, buffer, chunksize, queue):
     and is thus only available on windows. If the read fails for any reason, the reader is
     flagged as closed.
     """
+    # OK, so this function is super annoying because Windows stores its 
+    # buffers as a 2D regular, dense array -- without trailing newlines.
+    # Meanwhile, we want to add *lines* to the queue. Also, as is typical
+    # with parallel reads, the entire buffer that you ask for may not be
+    # filled. Thus we have to deal with the full generality.  
+    #   1. reads may end in the middle of a line
+    #   2. excess whitespace at the end of a line may not be real, unless
+    #   3. you haven't read to the end of the line yet!
+    # So there are alignment issues everywhere.  Also, Windows will automatically
+    # read past the current cursor position, even though there is presumably 
+    # nothing to see there.
+    #
+    # These chunked reads basically need to happen like this because, 
+    #   a. The default buffer size is HUGE for the console (90k lines x 120 cols)
+    #      as so we can't just read in everything at the end and see what we 
+    #      care about without a noticible performance hit.
+    #   b. Even with this huge size, it is still possible to write more lines than
+    #      this, so we should scroll along with the console.
     winutils.get_console_screen_buffer_info(1)
     x, y, cols, lins = posize = winutils.get_position_size(fd)
     pre_x = pre_y = -1
     orig_posize = posize
-    with open('buf.txt', 'w'):
-        pass
     while True:
         posize = winutils.get_position_size(fd)
         if ((posize[1], posize[0]) <= (y, x) and posize[2:] == (cols, lins)) or \
@@ -282,17 +298,16 @@ def populate_console(reader, fd, buffer, chunksize, queue):
         last = lines[-1].rstrip()
         if len(lines[-1]) == cols:
             queue.put(last + nl)
-        elif len(last) > 0:
-            queue.put(last) 
-        with open('buf.txt', 'a+b') as f:
-            f.write("{} {} {}\n-----\n".format(x, y, cols).encode())
-            for line in lines:
-                f.write(line.rstrip() + nl)
+        #elif len(last) > 0:
+        #    queue.put(last) 
+        else:
+            queue.put(lines[-1])
         new_offset = beg_offset + len(buf.rstrip())
         pre_x = x
         pre_y = y
         x = new_offset % cols
         y = new_offset // cols
+        #time.sleep(reader.timeout)
         
         
 class ConsoleParallelReader:
@@ -543,7 +558,6 @@ class PopenThread(threading.Thread):
             if self.suspended:
                 break
             elif self.in_alt_mode:
-                #print("IN ALT MODE!!")
                 if i + j == 0:
                     cnt = min(cnt + 1, 1000)
                 else:
@@ -580,15 +594,6 @@ class PopenThread(threading.Thread):
         """
         if reader is None:
             return 0
-        #flags = winutils.ENABLE_ECHO_INPUT | winutils.ENABLE_LINE_INPUT | winutils.ENABLE_PROCESSED_INPUT
-        #flags = winutils.ENABLE_WINDOW_INPUT
-        #if ON_WINDOWS and stdbuf is sys.__stdout__:
-        #    mode = winutils.get_console_mode(output=True)
-        #    print("ALT MODE FLAGS", mode, flags, mode & flags)
-        #    if mode & winutils.ENABLE_PROCESSED_OUTPUT == winutils.ENABLE_PROCESSED_OUTPUT:
-        #        self.in_alt_mode = True
-        #    else:
-        #        self.in_alt_mode = False
         i = -1
         for i, line in enumerate(iter(reader.readline, b'')):
             self._alt_mode_switch(line, writer, stdbuf)
