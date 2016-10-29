@@ -1,12 +1,20 @@
+"""Completers for pip."""
+# pylint: disable=invalid-name, missing-docstring, unsupported-membership-test
+# pylint: disable=unused-argument, not-an-iterable
 import re
 import subprocess
 
 import xonsh.lazyasd as xl
 
-PIP_RE = xl.LazyObject(lambda: re.compile("pip(?:\d|\.)*"),
-                       globals(), 'PIP_RE')
-PIP_LIST_RE = xl.LazyObject(lambda: re.compile("pip(?:\d|\.)* (?:uninstall|show)"),
-                            globals(), 'PIP_LIST_RE')
+
+@xl.lazyobject
+def PIP_RE():
+    return re.compile(r"pip(?:\d|\.)*")
+
+
+@xl.lazyobject
+def PIP_LIST_RE():
+    return re.compile(r"pip(?:\d|\.)* (?:uninstall|show)")
 
 
 @xl.lazyobject
@@ -16,7 +24,7 @@ def ALL_COMMANDS():
                                                 stderr=subprocess.DEVNULL))
     except FileNotFoundError:
         return []
-    commands = re.findall("  (\w+)  ", help_text)
+    commands = re.findall(r"  (\w+)  ", help_text)
     return [c for c in commands if c not in ['completion', 'help']]
 
 
