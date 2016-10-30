@@ -1238,31 +1238,57 @@ as aliases, by wrapping them in ``@()``.  For example:
     hello world
 
 
-Foreground-only Aliases
+Unthreadable Aliases
 -----------------------
-Usually, callable alias commands will be run in a separate thread so that users
+Usually, callable alias commands will be run in a separate thread so that
 they may be run in the background.  However, some aliases may need to be
 executed on the thread that they were called from. This is mostly useful for
 debuggers and profilers. To make an alias run in the foreground, decorate its
-function with the ``xonsh.proc.foreground`` decorator.
+function with the ``xonsh.proc.unthreadable`` decorator.
 
 .. code-block:: python
 
-    from xonsh.proc import foreground
+    from xonsh.proc import unthreadable
 
-    @foreground
+    @unthreadable
     def _mycmd(args, stdin=None):
         return 'In your face!'
 
     aliases['mycmd'] = _mycmd
 
+Uncapturable Aliases
+-----------------------
+Also, callable aliases by default will be executed such that their output is
+captured (like most commands in xonsh that don't enter alternate mode).
+However, some aliases may want to run alternate-mode commands themselves.
+Thus the callable alias can't be captured without dire consequences (tm).
+To prevent this, you can declare a callable alias uncapturable. This is mostly
+useful for aliases that then open up text editors, pagers, or the like.
+To make an alias uncapturable, decorate its
+function with the ``xonsh.proc.uncapturable`` decorator. This is probably
+best used in conjunction with the ``unthreadable`` decorator.  For example:
+
+.. code-block:: python
+
+    from xonsh.proc import unthreadable, uncapturable
+
+    @uncapturable
+    @unthreadable
+    def _myvi():
+        vi my.txt
+
+    aliases['myvi'] = _myvi
+
+-------------
+
 Aliasing is a powerful way that xonsh allows you to seamlessly interact to
 with Python and subprocess.
 
-.. warning:: If ``FOREIGN_ALIASES_OVERRIDE`` enviroment variable is False (the default)
-             then foreign shell aliases that try to override xonsh aliases will be ignored.
-             Setting of this enviroment variable must happen in the static configuration
-             file ``$XONSH_CONFIG_DIR/config.json`` in the 'env' section.
+.. warning:: If ``FOREIGN_ALIASES_OVERRIDE`` enviroment variable is False
+             (the default) then foreign shell aliases that try to override
+             xonsh aliases will be ignored. Setting of this enviroment variable
+             must happen in the static configuration file
+             ``$XONSH_CONFIG_DIR/config.json`` in the 'env' section.
 
 
 Up, Down, Tab
