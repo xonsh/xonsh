@@ -1240,7 +1240,7 @@ as aliases, by wrapping them in ``@()``.  For example:
 
 Unthreadable Aliases
 -----------------------
-Usually, callable alias commands will be run in a separate thread so that users
+Usually, callable alias commands will be run in a separate thread so that
 they may be run in the background.  However, some aliases may need to be
 executed on the thread that they were called from. This is mostly useful for
 debuggers and profilers. To make an alias run in the foreground, decorate its
@@ -1258,13 +1258,13 @@ function with the ``xonsh.proc.unthreadable`` decorator.
 
 Uncapturable Aliases
 -----------------------
-Also, callable alias by default will be executed such that their output is
+Also, callable aliases by default will be executed such that their output is
 captured (like most commands in xonsh that don't enter alternate mode).
 However, some aliases may want to run alternate-mode commands themselves.
-Thus the callabale alias can't be captured without dire consequences (tm).
+Thus the callable alias can't be captured without dire consequences (tm).
 To prevent this, you can declare a callable alias uncapturable. This is mostly
 useful for aliases that then open up text editors, pagers, or the like.
-To make an alias run in the foreground, decorate its
+To make an alias uncapturable, decorate its
 function with the ``xonsh.proc.uncapturable`` decorator. This is probably
 best used in conjunction with the ``unthreadable`` decorator.  For example:
 
