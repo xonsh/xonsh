@@ -650,9 +650,13 @@ class SubprocSpec:
         cls = ProcProxyThread if thable else ProcProxy
         self.cls = cls
         self.threadable = thable
+        # also check capturablity, while we are here
+        cpable = getattr(alias, '__xonsh_capturable__', self.captured)
+        self.captured = cpable
 
 
-def _update_last_spec(last, captured=False):
+def _update_last_spec(last):
+    captured = last.captured
     last.last_in_pipeline = True
     if not captured:
         return
@@ -734,7 +738,7 @@ def cmds_to_specs(cmds, captured=False):
         else:
             raise XonshError('unrecognized redirect {0!r}'.format(redirect))
     # Apply boundry conditions
-    _update_last_spec(specs[-1], captured=captured)
+    _update_last_spec(specs[-1])
     return specs
 
 
@@ -760,6 +764,7 @@ def run_subproc(cmds, captured=False):
     Lastly, the captured argument affects only the last real command.
     """
     specs = cmds_to_specs(cmds, captured=captured)
+    captured = specs[-1].captured
     procs = []
     proc = pipeline_group = None
     for spec in specs:
