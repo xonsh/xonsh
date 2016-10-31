@@ -719,7 +719,7 @@ def _default_style():
             Color.INTENSE_YELLOW: '#ansiyellow',
             Color.NO_COLOR: 'noinherit',
             Color.PURPLE: '#ansipurple',
-            Color.RED: '#ansdarkired',
+            Color.RED: '#ansidarkred',
             Color.WHITE: '#ansiwhite',
             Color.YELLOW: '#ansibrown',
         }
