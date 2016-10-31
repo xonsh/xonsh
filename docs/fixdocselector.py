@@ -1,5 +1,6 @@
 import os
 import jinja2
+import glob
 
 from collections import namedtuple, defaultdict
 
@@ -101,3 +102,22 @@ def patchfile(path, links, version_names=None):
     with open(path,'w') as f:
         f.write('\n'.join(new_lines))
 
+if __name__ == '__main__':
+    import sys
+    if len(sys.argv) <= 2:
+        print("""
+        from the import root of the documentation directory, run:
+
+            $ python ..fixdocselector.py **.html
+
+        To update the version selector in all the html files.
+        """)
+    gathered = gather([x.replace('_build/','') for x in sys.argv[1:]])
+    versions = get_versions(gathered)
+    map_links = make_links(gathered, versions)
+
+    for v in versions:
+        for file, links in map_links.items():
+            fname = os.path.join(v, file)
+            if os.path.exists(fname):
+                patchfile(fname, links, {'html':'Stable'})
