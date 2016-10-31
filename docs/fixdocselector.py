@@ -45,7 +45,6 @@ def gather(paths):
     for p in paths:
         current = get_info(p)
         results[current.path].append(current.version)
-        
     return results
 
 
@@ -74,8 +73,7 @@ def make_links(existings, versions):
                 links[k][v]= '/'.join((v,'index.html'))
                 print('page', k , 'does not exist in version', v, 'and will link to the index')
     return links
-    
-    
+
 
 def _patch(lines, versions=None, baseurl='http://xon.sh', version_names=None):
     version_names = version_names or {}
@@ -87,18 +85,17 @@ def _patch(lines, versions=None, baseurl='http://xon.sh', version_names=None):
             yield from tpl.render(versions=versions, baseurl=baseurl, version_names=version_names).splitlines()
         else:
             yield l
-            
 
 def patchfile(path, links, version_names=None):
     with open(path) as f:
         data= f.read()
     if '<!--versionselector-->' not in data:
         return
-    
+
     lines = data.splitlines()
-    
+
     new_lines = list(_patch(iter(lines), versions=links, version_names=version_names))
-    
+
     with open(path,'w') as f:
         f.write('\n'.join(new_lines))
 
