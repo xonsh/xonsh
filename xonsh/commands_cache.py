@@ -266,6 +266,7 @@ def default_threadable_predictors():
         'mutt': predict_help_ver,
         'nano': predict_help_ver,
         'pacman': predict_help_ver,
+        'ranger': predict_help_ver,
         'scp': predict_false,
         'sh': predict_shell,
         'ssh': predict_false,
