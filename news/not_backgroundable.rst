@@ -12,11 +12,16 @@
     * cls
     * cmd
     * fish
+    * htop
     * ksh
     * less
     * man
     * more
     * mutt
+    * nano
+    * pacman
+    * ranger
+    * scp
     * sh
     * ssh
     * startx
