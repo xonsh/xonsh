@@ -7,7 +7,7 @@ from collections import namedtuple, defaultdict
 
 env = jinja2.Environment()
 fsl = jinja2.DictLoader({"customsidebar.html":
-"""
+                         """
 {# need this comment line to be sure versionsselector is on its own line #}
 <!--versionselector-->
 {% if versions|length > 1 %}
@@ -27,14 +27,15 @@ tpl = fsl.load(env, 'customsidebar.html')
 
 Info = namedtuple('Info', ('version', 'path'))
 
+
 def get_info(path):
     """
     For a give path, extract the version, and the relative-url for the documentation.
     """
     _path, file = os.path.split(path)
     dirs = _path.split(os.sep)
-    version,*rest = dirs
-    return Info(version, '/'.join((*rest,file)))
+    version, *rest = dirs
+    return Info(version, '/'.join((*rest, file)))
 
 
 def gather(paths):
@@ -53,7 +54,7 @@ def get_versions(existings):
     Given gathered path, get all existing versions.
     """
     versions = set()
-    for k,v in existings.items():
+    for k, v in existings.items():
         versions = versions.union(v)
     return versions
 
@@ -64,14 +65,15 @@ def make_links(existings, versions):
     file-url<-> Other-Url if exist, other url is replaced by index.html
     if said page does not exits.
     """
-    links = defaultdict(lambda:{})
-    for k,ve in existings.items():
+    links = defaultdict(lambda: {})
+    for k, ve in existings.items():
         for v in versions:
             if v in ve:
-                links[k][v]= '/'.join((v,k))
+                links[k][v] = '/'.join((v, k))
             else:
-                links[k][v]= '/'.join((v,'index.html'))
-                print('page', k , 'does not exist in version', v, 'and will link to the index')
+                links[k][v] = '/'.join((v, 'index.html'))
+                print('page', k, 'does not exist in version',
+                      v, 'and will link to the index')
     return links
 
 
@@ -86,17 +88,19 @@ def _patch(lines, versions=None, baseurl='http://xon.sh', version_names=None):
         else:
             yield l
 
+
 def patchfile(path, links, version_names=None):
     with open(path) as f:
-        data= f.read()
+        data = f.read()
     if '<!--versionselector-->' not in data:
         return
 
     lines = data.splitlines()
 
-    new_lines = list(_patch(iter(lines), versions=links, version_names=version_names))
+    new_lines = list(_patch(iter(lines), versions=links,
+                            version_names=version_names))
 
-    with open(path,'w') as f:
+    with open(path, 'w') as f:
         f.write('\n'.join(new_lines))
 
 if __name__ == '__main__':
@@ -109,7 +113,7 @@ if __name__ == '__main__':
 
         To update the version selector in all the html files.
         """)
-    gathered = gather([x.replace('_build/','') for x in sys.argv[1:]])
+    gathered = gather([x.replace('_build/', '') for x in sys.argv[1:]])
     versions = get_versions(gathered)
     map_links = make_links(gathered, versions)
 
@@ -117,4 +121,4 @@ if __name__ == '__main__':
         for file, links in map_links.items():
             fname = os.path.join(v, file)
             if os.path.exists(fname):
-                patchfile(fname, links, {'html':'Stable'})
+                patchfile(fname, links, {'html': 'Stable'})
