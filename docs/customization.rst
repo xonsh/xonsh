@@ -120,6 +120,7 @@ in the CWD of the original TAB, this is because of a custom VTE interface. To
 fix this, please add ``{vte_new_tab_cwd}`` somewhere to you prompt:
 
 .. code-block:: xonsh
+
     $PROMPT = '{vte_new_tab_cwd}' + $PROMPT
 
 This will issue the proper escape sequence to the terminal without otherwise
