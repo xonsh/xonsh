@@ -31,9 +31,9 @@ from xonsh.foreign_shells import load_foreign_aliases
 from xonsh.jobs import add_job
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.proc import (
-    PopenThread, ProcProxyThread, ProcProxy,
-    pause_call_resume, CommandPipeline,
-    HiddenCommandPipeline, STDOUT_CAPTURE_KINDS)
+    PopenThread, ProcProxyThread, ProcProxy, ConsoleParallelReader,
+    pause_call_resume, CommandPipeline, HiddenCommandPipeline,
+    STDOUT_CAPTURE_KINDS)
 from xonsh.tools import (
     suggest_commands, expandvars, globpath, XonshError,
     XonshCalledProcessError, XonshBlockError
@@ -688,6 +688,10 @@ def _update_last_spec(last):
         last.universal_newlines = True
         last.stdout = builtins.__xonsh_stdout_uncaptured__
         last.captured_stdout = last.stdout
+    elif ON_WINDOWS and not callable_alias:
+        last.universal_newlines = True
+        last.stdout = None  # must truly stream on windows
+        last.captured_stdout = ConsoleParallelReader(1)
     else:
         last.universal_newlines = True
         r, w = pty.openpty() if use_tty else os.pipe()
@@ -703,6 +707,9 @@ def _update_last_spec(last):
     elif builtins.__xonsh_stderr_uncaptured__ is not None:
         last.stderr = builtins.__xonsh_stderr_uncaptured__
         last.captured_stderr = last.stderr
+    elif ON_WINDOWS and not callable_alias:
+        last.universal_newlines = True
+        last.stderr = None  # must truly stream on windows
     else:
         r, w = pty.openpty() if use_tty else os.pipe()
         last.stderr = safe_open(w, 'w')
