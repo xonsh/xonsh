@@ -49,7 +49,7 @@ script:
       cd docs;
       make html;
       cd ..;
-      doctr deploy --deploy-repo xonsh/xonsh-docs --gh-pages-docs dev;
+      doctr deploy --deploy-repo xonsh/xonsh-docs --gh-pages-docs dev --command='python docs/fixdocselector.py docs'; 
     else
       py.test --timeout=10;
     fi

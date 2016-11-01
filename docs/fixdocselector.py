@@ -105,7 +105,7 @@ def patchfile(path, links, version_names=None):
 
 if __name__ == '__main__':
     import sys
-    if len(sys.argv) <= 2:
+    if len(sys.argv) <= 1:
         print("""
         from the import root of the documentation directory, run:
 
@@ -113,7 +113,9 @@ if __name__ == '__main__':
 
         To update the version selector in all the html files.
         """)
-    gathered = gather([x.replace('_build/', '') for x in sys.argv[1:]])
+    os.chdir(sys.argv[1])
+    files = glob.glob('*/**.html', recursive=True)
+    gathered = gather(files)
     versions = get_versions(gathered)
     map_links = make_links(gathered, versions)
 
@@ -121,4 +123,5 @@ if __name__ == '__main__':
         for file, links in map_links.items():
             fname = os.path.join(v, file)
             if os.path.exists(fname):
+                print('fixing', fname)
                 patchfile(fname, links, {'html': 'Stable'})
