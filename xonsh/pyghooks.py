@@ -476,10 +476,10 @@ def xonsh_style_proxy(styler):
 
 if hasattr(pygments.style, 'ansicolors'):
     PTK_STYLE = {
-        Token.Menu.Completions.Completion.Current: 'bg:#ansiteal #ansiblack',
-        Token.Menu.Completions.Completion: 'bg:#ansiturquoise #ansiwhite',
+        Token.Menu.Completions.Completion.Current: 'bg:#ansiturquoise  #ansiblack',
+        Token.Menu.Completions.Completion: 'bg:#ansiteal #ansiwhite',
         Token.Menu.Completions.ProgressButton: 'bg:#ansidarkgray',
-        Token.Menu.Completions.ProgressBar: 'bg:#ansiteal',
+        Token.Menu.Completions.ProgressBar: 'bg:#ansiturquoise',
         Token.AutoSuggestion: '#ansidarkgray',
         Token.Aborted: '#ansilightgray',
     }
