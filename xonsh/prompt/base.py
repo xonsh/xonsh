@@ -24,6 +24,22 @@ from xonsh.prompt.vc_branch import (
 from xonsh.prompt.gitstatus import gitstatus_prompt
 
 
+@xt.lazyobject
+def DEFAULT_PROMPT():
+    return default_prompt()
+
+
+class PromptFormatter:
+    """Class used by base_shell"""
+    def format_prompt(self, template=DEFAULT_PROMPT, formatter_dict=None):
+        """Formats a xonsh prompt template string."""
+        try:
+            return _partial_format_prompt_main(template=template,
+                                               formatter_dict=formatter_dict)
+        except Exception:
+            return _failover_template_format(template)
+
+
 @xl.lazyobject
 def FORMATTER_DICT():
     return dict(
@@ -67,11 +83,6 @@ def default_prompt():
     return dp
 
 
-@xt.lazyobject
-def DEFAULT_PROMPT():
-    return default_prompt()
-
-
 def _get_fmtter(formatter_dict=None):
     if formatter_dict is None:
         fmtter = builtins.__xonsh_env__.get('FORMATTER_DICT', FORMATTER_DICT)
@@ -92,24 +103,15 @@ def _failover_template_format(template):
     return template
 
 
-def partial_format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
-    """Formats a xonsh prompt template string."""
-    try:
-        return _partial_format_prompt_main(template=template,
-                                           formatter_dict=formatter_dict)
-    except Exception:
-        return _failover_template_format(template)
-
-
 def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
     template = template() if callable(template) else template
-    fmtter = _get_fmtter(formatter_dict)
-    bopen = '{'
-    bclose = '}'
-    colon = ':'
-    expl = '!'
     toks = []
     for literal, field, spec, conv in _FORMATTER.parse(template):
+        fmtter = _get_fmtter(formatter_dict)
+        bopen = '{'
+        bclose = '}'
+        colon = ':'
+        expl = '!'
         toks.append(literal)
         if field is None:
             continue
