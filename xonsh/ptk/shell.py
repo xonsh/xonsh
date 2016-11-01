@@ -137,7 +137,7 @@ class PromptToolkitShell(BaseShell):
         """Returns a list of (token, str) tuples for the current prompt."""
         p = builtins.__xonsh_env__.get('PROMPT')
         try:
-            p = self.prompt_formatter.format_prompt(p)
+            p = self.prompt_formatter(p)
         except Exception:  # pylint: disable=broad-except
             print_exception()
         toks = partial_color_tokenize(p)
@@ -149,13 +149,13 @@ class PromptToolkitShell(BaseShell):
         prompt.
         """
         p = builtins.__xonsh_env__.get('RIGHT_PROMPT')
-        # self.prompt_formatter.format_prompt does handle empty strings properly,
+        # self.prompt_formatter does handle empty strings properly,
         # but this avoids descending into it in the common case of
         # $RIGHT_PROMPT == ''.
         if isinstance(p, str) and len(p) == 0:
             return []
         try:
-            p = self.prompt_formatter.format_prompt(p)
+            p = self.prompt_formatter(p)
         except Exception:  # pylint: disable=broad-except
             print_exception()
         toks = partial_color_tokenize(p)
@@ -166,13 +166,13 @@ class PromptToolkitShell(BaseShell):
         toolbar.
         """
         p = builtins.__xonsh_env__.get('BOTTOM_TOOLBAR')
-        # self.prompt_formatter.format_prompt does handle empty strings properly,
+        # self.prompt_formatter does handle empty strings properly,
         # but this avoids descending into it in the common case of
         # $TOOLBAR == ''.
         if isinstance(p, str) and len(p) == 0:
             return []
         try:
-            p = self.prompt_formatter.format_prompt(p)
+            p = self.prompt_formatter(p)
         except Exception:  # pylint: disable=broad-except
             print_exception()
         toks = partial_color_tokenize(p)

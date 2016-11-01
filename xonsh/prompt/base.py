@@ -32,7 +32,7 @@ def DEFAULT_PROMPT():
 class PromptFormatter:
     """Class used by base_shell"""
 
-    def format_prompt(self, template=DEFAULT_PROMPT, formatter_dict=None):
+    def __call__(self, template=DEFAULT_PROMPT, formatter_dict=None):
         """Formats a xonsh prompt template string."""
         try:
             return _partial_format_prompt_main(template=template,

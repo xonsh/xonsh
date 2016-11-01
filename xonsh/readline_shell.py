@@ -420,7 +420,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         env = builtins.__xonsh_env__  # pylint: disable=no-member
         p = env.get('PROMPT')
         try:
-            p = self.prompt_formatter.format_prompt(p)
+            p = self.prompt_formatter(p)
         except Exception:  # pylint: disable=broad-except
             print_exception()
         hide = True if self._force_hide is None else self._force_hide

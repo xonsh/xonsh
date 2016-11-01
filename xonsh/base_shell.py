@@ -403,7 +403,7 @@ class BaseShell(object):
         t = env.get('TITLE')
         if t is None:
             return
-        t = self.prompt_formatter.format_prompt(t)
+        t = self.prompt_formatter(t)
         if ON_WINDOWS and 'ANSICON' not in env:
             kernel32.SetConsoleTitleW(t)
         else:
@@ -427,7 +427,7 @@ class BaseShell(object):
         env = builtins.__xonsh_env__  # pylint: disable=no-member
         p = env.get('PROMPT')
         try:
-            p = self.prompt_formatter.format_prompt(p)
+            p = self.prompt_formatter(p)
         except Exception:  # pylint: disable=broad-except
             print_exception()
         self.settitle()
