@@ -83,14 +83,6 @@ def default_prompt():
     return dp
 
 
-def _get_fmtter(formatter_dict=None):
-    if formatter_dict is None:
-        fmtter = builtins.__xonsh_env__.get('FORMATTER_DICT', FORMATTER_DICT)
-    else:
-        fmtter = formatter_dict
-    return fmtter
-
-
 def _failover_template_format(template):
     if callable(template):
         try:
@@ -106,42 +98,35 @@ def _failover_template_format(template):
 def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
     template = template() if callable(template) else template
     toks = []
+    if formatter_dict is None:
+        fmtter = builtins.__xonsh_env__.get('FORMATTER_DICT', FORMATTER_DICT)
+    else:
+        fmtter = formatter_dict
     for literal, field, spec, conv in _FORMATTER.parse(template):
-        fmtter = _get_fmtter(formatter_dict)
-        bopen = '{'
-        bclose = '}'
-        colon = ':'
-        expl = '!'
-        toks.append(literal)
-        if field is None:
-            continue
-        elif field.startswith('$'):
-            val = builtins.__xonsh_env__[field[1:]]
-            val = _format_value(val, spec, conv)
-            toks.append(val)
-        elif field in fmtter:
-            v = fmtter[field]
-            try:
-                val = v() if callable(v) else v
-            except Exception:
-                print('prompt: error: on field {!r}'
-                      ''.format(field), file=sys.stderr)
-                xt.print_exception()
-                toks.append('(ERROR:{})'.format(field))
-                continue
-            val = _format_value(val, spec, conv)
-            toks.append(val)
-        else:
-            toks.append(bopen)
-            toks.append(field)
-            if conv is not None and len(conv) > 0:
-                toks.append(expl)
-                toks.append(conv)
-            if spec is not None and len(spec) > 0:
-                toks.append(colon)
-                toks.append(spec)
-            toks.append(bclose)
+        get_field(toks, literal, field, spec, conv, fmtter)
     return ''.join(toks)
+
+
+def get_field(toks, literal, field, spec, conv, fmtter):
+    toks.append(literal)
+    if field is None:
+        return
+    elif field.startswith('$'):
+        val = builtins.__xonsh_env__[field[1:]]
+        val = _format_value(val, spec, conv)
+        toks.append(val)
+    elif field in fmtter:
+        v = fmtter[field]
+        try:
+            val = v() if callable(v) else v
+        except Exception:
+            print('prompt: error: on field {!r}'
+                  ''.format(field), file=sys.stderr)
+            xt.print_exception()
+            toks.append('(ERROR:{})'.format(field))
+            return
+        val = _format_value(val, spec, conv)
+        toks.append(val)
 
 
 @xt.lazyobject

@@ -39,7 +39,7 @@ def test_format_prompt(inp, exp, formatter_dict, formatter, xonsh_builtins):
     ('{{{a_string:{{{}}}}}}', '{{cats}}'),
     ('{{{none:{{{}}}}}}', '{}'),
 ])
-def test_format_prompt_with_format_spec(inp, exp, formatter_dict, 
+def test_format_prompt_with_format_spec(inp, exp, formatter_dict,
                                         formatter, xonsh_builtins):
     obs = formatter.format_prompt(template=inp, formatter_dict=formatter_dict)
     assert exp == obs
@@ -54,22 +54,22 @@ def test_format_prompt_with_broken_template(formatter, xonsh_builtins):
         assert 'user' in formatter.format_prompt(p)
 
 
-def test_format_prompt_with_broken_template_in_func(formatter, xonsh_builtins):
-    for p in (
-        lambda: '{user',
-        lambda: '{{user',
-        lambda: '{{user}',
-        lambda: '{user}{hostname',
-    ):
-        # '{{user' will be parsed to '{user'
-        assert 'user' in formatter.format_prompt(p)
+@pytest.mark.parametrize('inp', [
+    '{user',
+    '{{user',
+    '{{user}',
+    '{user}{hostname',
+    ])
+def test_format_prompt_with_broken_template_in_func(inp, formatter, xonsh_builtins):
+    # '{{user' will be parsed to '{user'
+    assert '{user' in formatter.format_prompt(lambda: inp)
 
 
 def test_format_prompt_with_invalid_func(formatter, xonsh_builtins):
     xonsh_builtins.__xonsh_env__ = Env()
 
     def p():
-        foo = bar  # raises exception
+        foo = bar  # raises exception # noqa
         return '{user}'
 
     assert isinstance(formatter.format_prompt(p), str)
@@ -84,3 +84,7 @@ def test_format_prompt_with_func_that_raises(formatter, capsys, xonsh_builtins):
     assert exp == obs
     out, err = capsys.readouterr()
     assert 'prompt: error' in err
+
+
+def test_promptformatter():
+    pf = PromptFormatter()
