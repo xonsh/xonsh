@@ -31,6 +31,7 @@ def DEFAULT_PROMPT():
 
 class PromptFormatter:
     """Class used by base_shell"""
+
     def format_prompt(self, template=DEFAULT_PROMPT, formatter_dict=None):
         """Formats a xonsh prompt template string."""
         try:
@@ -103,18 +104,19 @@ def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
     else:
         fmtter = formatter_dict
     for literal, field, spec, conv in _FORMATTER.parse(template):
-        get_field(toks, literal, field, spec, conv, fmtter)
+        toks.append(literal)
+        field = format_field(field, spec, conv, fmtter)
+        if field is not None:
+            toks.append(field)
     return ''.join(toks)
 
 
-def get_field(toks, literal, field, spec, conv, fmtter):
-    toks.append(literal)
+def format_field(field, spec, conv, fmtter):
     if field is None:
         return
     elif field.startswith('$'):
         val = builtins.__xonsh_env__[field[1:]]
-        val = _format_value(val, spec, conv)
-        toks.append(val)
+        return _format_value(val, spec, conv)
     elif field in fmtter:
         v = fmtter[field]
         try:
@@ -123,10 +125,11 @@ def get_field(toks, literal, field, spec, conv, fmtter):
             print('prompt: error: on field {!r}'
                   ''.format(field), file=sys.stderr)
             xt.print_exception()
-            toks.append('(ERROR:{})'.format(field))
-            return
-        val = _format_value(val, spec, conv)
-        toks.append(val)
+            return '(ERROR:{})'.format(field)
+        return _format_value(val, spec, conv)
+    else:
+        # color or unkown field, return as is
+        return '{{{}}}'.format(field)
 
 
 @xt.lazyobject

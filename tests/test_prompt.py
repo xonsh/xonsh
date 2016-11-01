@@ -5,7 +5,7 @@ from xonsh.prompt.base import PromptFormatter
 
 
 @pytest.fixture
-def formatter():
+def formatter(xonsh_builtins):
     return PromptFormatter()
 
 
@@ -84,7 +84,3 @@ def test_format_prompt_with_func_that_raises(formatter, capsys, xonsh_builtins):
     assert exp == obs
     out, err = capsys.readouterr()
     assert 'prompt: error' in err
-
-
-def test_promptformatter():
-    pf = PromptFormatter()
