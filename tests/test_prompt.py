@@ -11,7 +11,7 @@ def formatter(xonsh_builtins):
     return PromptFormatter()
 
 
-@pytest.mark.parametrize('formatter_dict', [{
+@pytest.mark.parametrize('fields', [{
     'a_string': 'cat',
     'none': (lambda: None),
     'f': (lambda: 'wakka'),
@@ -21,12 +21,12 @@ def formatter(xonsh_builtins):
     ('my {none}{a_string}', 'my cat'),
     ('{f} jawaka', 'wakka jawaka'),
 ])
-def test_format_prompt(inp, exp, formatter_dict, formatter, xonsh_builtins):
-    obs = formatter(template=inp, formatter_dict=formatter_dict)
+def test_format_prompt(inp, exp, fields, formatter, xonsh_builtins):
+    obs = formatter(template=inp, fields=fields)
     assert exp == obs
 
 
-@pytest.mark.parametrize('formatter_dict', [{
+@pytest.mark.parametrize('fields', [{
     'a_string': 'cats',
     'a_number': 7,
     'empty': '',
@@ -41,9 +41,9 @@ def test_format_prompt(inp, exp, formatter_dict, formatter, xonsh_builtins):
     ('{{{a_string:{{{}}}}}}', '{{cats}}'),
     ('{{{none:{{{}}}}}}', '{}'),
 ])
-def test_format_prompt_with_format_spec(inp, exp, formatter_dict,
+def test_format_prompt_with_format_spec(inp, exp, fields,
                                         formatter, xonsh_builtins):
-    obs = formatter(template=inp, formatter_dict=formatter_dict)
+    obs = formatter(template=inp, fields=fields)
     assert exp == obs
 
 
@@ -81,8 +81,8 @@ def test_format_prompt_with_func_that_raises(formatter, capsys, xonsh_builtins):
     xonsh_builtins.__xonsh_env__ = Env()
     template = 'tt {zerodiv} tt'
     exp = 'tt (ERROR:zerodiv) tt'
-    formatter_dict = {'zerodiv': lambda: 1/0}
-    obs = formatter(template, formatter_dict)
+    fields = {'zerodiv': lambda: 1/0}
+    obs = formatter(template, fields)
     assert exp == obs
     out, err = capsys.readouterr()
     assert 'prompt: error' in err
@@ -90,22 +90,20 @@ def test_format_prompt_with_func_that_raises(formatter, capsys, xonsh_builtins):
 
 def test_promptformatter_cache(formatter):
     spam = Mock()
-    spam.return_value = 'eggs'
     template = '{spam} and {spam}'
-    formatter_dict = {'spam': spam}
+    fields = {'spam': spam}
 
-    formatter(template, formatter_dict)
+    formatter(template, fields)
 
     assert spam.call_count == 1
 
 
 def test_promptformmater_clears_cache(formatter):
     spam = Mock()
-    spam.return_value = 'eggs'
     template = '{spam} and {spam}'
-    formatter_dict = {'spam': spam}
+    fields = {'spam': spam}
 
-    formatter(template, formatter_dict)
-    formatter(template, formatter_dict)
+    formatter(template, fields)
+    formatter(template, fields)
 
     assert spam.call_count == 2

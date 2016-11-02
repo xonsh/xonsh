@@ -34,45 +34,45 @@ class PromptFormatter:
     def __init__(self):
         self.cache = {}
 
-    def __call__(self, template=DEFAULT_PROMPT, formatter_dict=None):
+    def __call__(self, template=DEFAULT_PROMPT, fields=None):
         """Formats a xonsh prompt template string."""
+        if fields is None:
+            self.fields = builtins.__xonsh_env__.get('FORMATTER_DICT', FORMATTER_DICT)
+        else:
+            self.fields = fields
         try:
-            prompt = self._format_prompt(template=template,
-                                         formatter_dict=formatter_dict)
+            prompt = self._format_prompt(template=template)
+            # keep cache only during building prompt
             self.cache.clear()
             return prompt
         except Exception:
             return _failover_template_format(template)
 
-    def _format_prompt(self, template=DEFAULT_PROMPT, formatter_dict=None):
+    def _format_prompt(self, template=DEFAULT_PROMPT):
         template = template() if callable(template) else template
         toks = []
-        if formatter_dict is None:
-            fmtter = builtins.__xonsh_env__.get('FORMATTER_DICT', FORMATTER_DICT)
-        else:
-            fmtter = formatter_dict
         for literal, field, spec, conv in _FORMATTER.parse(template):
             toks.append(literal)
-            field = self._format_field(field, spec, conv, fmtter)
-            if field is not None:
-                toks.append(field)
+            entry = self._format_field(field, spec, conv)
+            if entry is not None:
+                toks.append(entry)
         return ''.join(toks)
 
-    def _format_field(self, field, spec, conv, fmtter):
+    def _format_field(self, field, spec, conv):
         if field is None:
             return
         elif field.startswith('$'):
             val = builtins.__xonsh_env__[field[1:]]
             return _format_value(val, spec, conv)
-        elif field in fmtter:
-            val = self._get_field_value(field, fmtter)
+        elif field in self.fields:
+            val = self._get_field_value(field)
             return _format_value(val, spec, conv)
         else:
             # color or unkown field, return as is
             return '{{{}}}'.format(field)
 
-    def _get_field_value(self, field, fmtter):
-        field_value = fmtter[field]
+    def _get_field_value(self, field):
+        field_value = self.fields[field]
         if field_value in self.cache:
             return self.cache[field_value]
         try:
