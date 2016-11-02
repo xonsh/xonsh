@@ -35,10 +35,48 @@ class PromptFormatter:
     def __call__(self, template=DEFAULT_PROMPT, formatter_dict=None):
         """Formats a xonsh prompt template string."""
         try:
-            return _partial_format_prompt_main(template=template,
-                                               formatter_dict=formatter_dict)
+            return self._format_prompt(template=template,
+                                       formatter_dict=formatter_dict)
         except Exception:
             return _failover_template_format(template)
+
+    def _format_prompt(self, template=DEFAULT_PROMPT, formatter_dict=None):
+        template = template() if callable(template) else template
+        toks = []
+        if formatter_dict is None:
+            fmtter = builtins.__xonsh_env__.get('FORMATTER_DICT', FORMATTER_DICT)
+        else:
+            fmtter = formatter_dict
+        for literal, field, spec, conv in _FORMATTER.parse(template):
+            toks.append(literal)
+            field = self._format_field(field, spec, conv, fmtter)
+            if field is not None:
+                toks.append(field)
+        return ''.join(toks)
+
+    def _format_field(self, field, spec, conv, fmtter):
+        if field is None:
+            return
+        elif field.startswith('$'):
+            val = builtins.__xonsh_env__[field[1:]]
+            return _format_value(val, spec, conv)
+        elif field in fmtter:
+            val = self._get_field_value(field, fmtter)
+            return _format_value(val, spec, conv)
+        else:
+            # color or unkown field, return as is
+            return '{{{}}}'.format(field)
+
+    def _get_field_value(self, field, fmtter):
+        field_value = fmtter[field]
+        try:
+            value = field_value() if callable(field_value) else field_value
+        except Exception:
+            print('prompt: error: on field {!r}'
+                  ''.format(field), file=sys.stderr)
+            xt.print_exception()
+            value = '(ERROR:{})'.format(field)
+        return value
 
 
 @xl.lazyobject
@@ -94,42 +132,6 @@ def _failover_template_format(template):
             xt.print_exception()
             return '$ '
     return template
-
-
-def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
-    template = template() if callable(template) else template
-    toks = []
-    if formatter_dict is None:
-        fmtter = builtins.__xonsh_env__.get('FORMATTER_DICT', FORMATTER_DICT)
-    else:
-        fmtter = formatter_dict
-    for literal, field, spec, conv in _FORMATTER.parse(template):
-        toks.append(literal)
-        field = format_field(field, spec, conv, fmtter)
-        if field is not None:
-            toks.append(field)
-    return ''.join(toks)
-
-
-def format_field(field, spec, conv, fmtter):
-    if field is None:
-        return
-    elif field.startswith('$'):
-        val = builtins.__xonsh_env__[field[1:]]
-        return _format_value(val, spec, conv)
-    elif field in fmtter:
-        v = fmtter[field]
-        try:
-            val = v() if callable(v) else v
-        except Exception:
-            print('prompt: error: on field {!r}'
-                  ''.format(field), file=sys.stderr)
-            xt.print_exception()
-            return '(ERROR:{})'.format(field)
-        return _format_value(val, spec, conv)
-    else:
-        # color or unkown field, return as is
-        return '{{{}}}'.format(field)
 
 
 @xt.lazyobject
