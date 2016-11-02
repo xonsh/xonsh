@@ -245,7 +245,7 @@ def DEFAULT_VALUES():
         'EXPAND_ENV_VARS': True,
         'FORCE_POSIX_PATHS': False,
         'FOREIGN_ALIASES_OVERRIDE': False,
-        'FORMATTER_DICT': dict(prompt.FORMATTER_DICT),
+        'PROMPT_FIELDS': dict(prompt.PROMPT_FIELDS),
         'FUZZY_PATH_COMPLETION': True,
         'GLOB_SORTED': True,
         'HISTCONTROL': set(),
@@ -424,11 +424,11 @@ def DEFAULT_DOCS():
         "``$XONSH_CONFIG_DIR/config.json`` in the 'env' section and not in "
         '``.xonshrc`` as loading of foreign aliases happens before'
         '``.xonshrc`` is parsed', configurable=True),
-    'FORMATTER_DICT': VarDocs(
+    'PROMPT_FIELDS': VarDocs(
         'Dictionary containing variables to be used when formatting $PROMPT '
         "and $TITLE. See 'Customizing the Prompt' "
         'http://xon.sh/tutorial.html#customizing-the-prompt',
-        configurable=False, default='``xonsh.prompt.FORMATTER_DICT``'),
+        configurable=False, default='``xonsh.prompt.PROMPT_FIELDS``'),
     'FUZZY_PATH_COMPLETION': VarDocs(
         "Toggles 'fuzzy' matching of paths for tab completion, which is only "
         "used as a fallback if no other completions succeed but can be used "
@@ -945,7 +945,7 @@ def locate_binary(name):
 
 BASE_ENV = LazyObject(lambda: {
     'BASH_COMPLETIONS': list(DEFAULT_VALUES['BASH_COMPLETIONS']),
-    'FORMATTER_DICT': dict(DEFAULT_VALUES['FORMATTER_DICT']),
+    'PROMPT_FIELDS': dict(DEFAULT_VALUES['PROMPT_FIELDS']),
     'XONSH_VERSION': XONSH_VERSION,
 }, globals(), 'BASE_ENV')
 

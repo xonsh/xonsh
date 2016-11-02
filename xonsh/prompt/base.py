@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Base prompt, provides FORMATTER_DICT and prompt related functions"""
+"""Base prompt, provides PROMPT_FIELDS and prompt related functions"""
 
 import builtins
 import itertools
@@ -37,7 +37,7 @@ class PromptFormatter:
     def __call__(self, template=DEFAULT_PROMPT, fields=None):
         """Formats a xonsh prompt template string."""
         if fields is None:
-            self.fields = builtins.__xonsh_env__.get('FORMATTER_DICT', FORMATTER_DICT)
+            self.fields = builtins.__xonsh_env__.get('PROMPT_FIELDS', PROMPT_FIELDS)
         else:
             self.fields = fields
         try:
@@ -87,7 +87,7 @@ class PromptFormatter:
 
 
 @xl.lazyobject
-def FORMATTER_DICT():
+def PROMPT_FIELDS():
     return dict(
         user=os.environ.get('USERNAME' if xp.ON_WINDOWS else 'USER', '<user>'),
         prompt_end='#' if xt.is_superuser() else '$',
@@ -193,7 +193,7 @@ def multiline_prompt(curr=''):
     return rtn
 
 
-def is_template_string(template, formatter_dict=None):
+def is_template_string(template, PROMPT_FIELDS=None):
     """Returns whether or not the string is a valid template."""
     template = template() if callable(template) else template
     try:
@@ -201,10 +201,10 @@ def is_template_string(template, formatter_dict=None):
     except ValueError:
         return False
     included_names.discard(None)
-    if formatter_dict is None:
-        fmtter = builtins.__xonsh_env__.get('FORMATTER_DICT', FORMATTER_DICT)
+    if PROMPT_FIELDS is None:
+        fmtter = builtins.__xonsh_env__.get('PROMPT_FIELDS', PROMPT_FIELDS)
     else:
-        fmtter = formatter_dict
+        fmtter = PROMPT_FIELDS
     known_names = set(fmtter.keys())
     return included_names <= known_names
 
