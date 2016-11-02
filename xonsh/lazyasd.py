@@ -1,4 +1,4 @@
-"""Lazy and self destrctive containers for speeding up module import."""
+"""Lazy and self destructive containers for speeding up module import."""
 # Copyright 2015-2016, the xonsh developers. All rights reserved.
 import os
 import sys
