@@ -172,6 +172,7 @@ def pathbasename(p):
 
 @functools.lru_cache(1)
 def githash():
+    """Returns a tuple contains two strings: the hash and the date."""
     install_base = os.path.dirname(__file__)
     sha = None
     date_ = None
