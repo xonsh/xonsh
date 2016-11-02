@@ -21,7 +21,7 @@ def formatter(xonsh_builtins):
     ('my {none}{a_string}', 'my cat'),
     ('{f} jawaka', 'wakka jawaka'),
 ])
-def test_format_prompt(inp, exp, fields, formatter, xonsh_builtins):
+def test_format_prompt(inp, exp, fields, formatter):
     obs = formatter(template=inp, fields=fields)
     assert exp == obs
 
@@ -41,13 +41,12 @@ def test_format_prompt(inp, exp, fields, formatter, xonsh_builtins):
     ('{{{a_string:{{{}}}}}}', '{{cats}}'),
     ('{{{none:{{{}}}}}}', '{}'),
 ])
-def test_format_prompt_with_format_spec(inp, exp, fields,
-                                        formatter, xonsh_builtins):
+def test_format_prompt_with_format_spec(inp, exp, fields, formatter):
     obs = formatter(template=inp, fields=fields)
     assert exp == obs
 
 
-def test_format_prompt_with_broken_template(formatter, xonsh_builtins):
+def test_format_prompt_with_broken_template(formatter):
     for p in ('{user', '{user}{hostname'):
         assert formatter(p) == p
 
@@ -62,7 +61,7 @@ def test_format_prompt_with_broken_template(formatter, xonsh_builtins):
     '{{user}',
     '{user}{hostname',
     ])
-def test_format_prompt_with_broken_template_in_func(inp, formatter, xonsh_builtins):
+def test_format_prompt_with_broken_template_in_func(inp, formatter):
     # '{{user' will be parsed to '{user'
     assert '{user' in formatter(lambda: inp)
 
@@ -98,7 +97,7 @@ def test_promptformatter_cache(formatter):
     assert spam.call_count == 1
 
 
-def test_promptformmater_clears_cache(formatter):
+def test_promptformatter_clears_cache(formatter):
     spam = Mock()
     template = '{spam} and {spam}'
     fields = {'spam': spam}
