@@ -31,12 +31,16 @@ def DEFAULT_PROMPT():
 
 class PromptFormatter:
     """Class used by base_shell"""
+    def __init__(self):
+        self.cache = {}
 
     def __call__(self, template=DEFAULT_PROMPT, formatter_dict=None):
         """Formats a xonsh prompt template string."""
         try:
-            return self._format_prompt(template=template,
-                                       formatter_dict=formatter_dict)
+            prompt = self._format_prompt(template=template,
+                                         formatter_dict=formatter_dict)
+            self.cache.clear()
+            return prompt
         except Exception:
             return _failover_template_format(template)
 
@@ -69,8 +73,11 @@ class PromptFormatter:
 
     def _get_field_value(self, field, fmtter):
         field_value = fmtter[field]
+        if field_value in self.cache:
+            return self.cache[field_value]
         try:
             value = field_value() if callable(field_value) else field_value
+            self.cache[field_value] = value
         except Exception:
             print('prompt: error: on field {!r}'
                   ''.format(field), file=sys.stderr)

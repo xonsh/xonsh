@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 import pytest
 
 from xonsh.environ import Env
@@ -84,3 +86,26 @@ def test_format_prompt_with_func_that_raises(formatter, capsys, xonsh_builtins):
     assert exp == obs
     out, err = capsys.readouterr()
     assert 'prompt: error' in err
+
+
+def test_promptformatter_cache(formatter):
+    spam = Mock()
+    spam.return_value = 'eggs'
+    template = '{spam} and {spam}'
+    formatter_dict = {'spam': spam}
+
+    formatter(template, formatter_dict)
+
+    assert spam.call_count == 1
+
+
+def test_promptformmater_clears_cache(formatter):
+    spam = Mock()
+    spam.return_value = 'eggs'
+    template = '{spam} and {spam}'
+    formatter_dict = {'spam': spam}
+
+    formatter(template, formatter_dict)
+    formatter(template, formatter_dict)
+
+    assert spam.call_count == 2
