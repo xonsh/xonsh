@@ -129,7 +129,7 @@ def dirty_version():
         return False
     sha = sha.strip('g')
     replace_version(N)
-    _cmd = ['git', 'show', '--format=%cd', '--date=local', sha]
+    _cmd = ['git', 'show', '-s', '--format=%cd', '--date=local', sha]
     try:
         _date = subprocess.check_output(_cmd)
         _date = _date.decode('ascii')
