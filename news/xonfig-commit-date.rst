@@ -1,4 +1,4 @@
-**Added:** None
+**Added:**
 
 * xonfig now contains the latest git commit date if xonsh installed
   from source.
