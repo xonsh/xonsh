@@ -104,6 +104,10 @@ def install_jupyter_hook(prefix=None, root=None):
         print('  root: {0!r}'.format(root))
         print('  prefix: {0!r}'.format(prefix))
         print('  as user: {0}'.format(user))
+        if root and prefix:
+            # os.path.join isn't used since prefix is probably absolute
+            prefix = root + prefix
+            print('  combined prefix {0!r}'.format(prefix))
         KernelSpecManager().install_kernel_spec(
             d, 'xonsh', user=user, replace=True, prefix=prefix)
 
