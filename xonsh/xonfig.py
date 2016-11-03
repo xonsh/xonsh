@@ -345,7 +345,12 @@ def _info(ns):
         ply.__version__ = '3.8'
     data = [
         ('xonsh', XONSH_VERSION),
-        ('Git SHA', githash()),
+    ]
+    hash_, date_ = githash()
+    if hash_:
+        data.append(('Git SHA', hash_))
+        data.append(('Commit Date', date_))
+    data.extend([
         ('Python', '{}.{}.{}'.format(*PYTHON_VERSION_INFO)),
         ('PLY', ply.__version__),
         ('have readline', is_readline_available()),
@@ -353,7 +358,8 @@ def _info(ns):
         ('shell type', env.get('SHELL_TYPE')),
         ('pygments', pygments_version()),
         ('on posix', bool(ON_POSIX)),
-        ('on linux', ON_LINUX)]
+        ('on linux', ON_LINUX),
+    ])
     if ON_LINUX:
         data.append(('distro', linux_distro()))
     data.extend([

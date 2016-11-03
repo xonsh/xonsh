@@ -129,8 +129,17 @@ def dirty_version():
         return False
     sha = sha.strip('g')
     replace_version(N)
+    _cmd = ['git', 'show', '-s', '--format=%cd', '--date=local', sha]
+    try:
+        _date = subprocess.check_output(_cmd)
+        _date = _date.decode('ascii')
+        # remove weekday name for a shorter string
+        _date = ' '.join(_date.split()[1:])
+    except:
+        _date = ''
+        print('failed to get commit date', file=sys.stderr)
     with open('xonsh/dev.githash', 'w') as f:
-        f.write(sha)
+        f.write('{}|{}'.format(sha, _date))
     print('wrote git version: ' + sha, file=sys.stderr)
     return True
 
