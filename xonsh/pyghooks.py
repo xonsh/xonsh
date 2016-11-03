@@ -476,21 +476,25 @@ def xonsh_style_proxy(styler):
 
 if hasattr(pygments.style, 'ansicolors'):
     PTK_STYLE = {
-        Token.Menu.Completions.Completion.Current: 'bg:#ansiturquoise  #ansiblack',
-        Token.Menu.Completions.Completion: 'bg:#ansiteal #ansiwhite',
-        Token.Menu.Completions.ProgressButton: 'bg:#ansidarkgray',
-        Token.Menu.Completions.ProgressBar: 'bg:#ansiturquoise',
+        Token.Menu.Completions: 'bg:#ansilightgray #ansiblack',
+        Token.Menu.Completions.Completion: '',
+        Token.Menu.Completions.Completion.Current: 'bg:#ansidarkgray #ansiwhite',
+        Token.Scrollbar: 'bg:#ansidarkgray',
+        Token.Scrollbar.Button: 'bg:#ansiblack',
+        Token.Scrollbar.Arrow: 'bg:#ansiblack #ansiwhite bold',
         Token.AutoSuggestion: '#ansidarkgray',
-        Token.Aborted: '#ansilightgray',
+        Token.Aborted: '#ansidarkgray',
     }
 else:
     PTK_STYLE = {
-        Token.Menu.Completions.Completion.Current: 'bg:#00aaaa #000000',
-        Token.Menu.Completions.Completion: 'bg:#008888 #ffffff',
-        Token.Menu.Completions.ProgressButton: 'bg:#003333',
-        Token.Menu.Completions.ProgressBar: 'bg:#00aaaa',
+        Token.Menu.Completions: 'bg:#888888 #000000',
+        Token.Menu.Completions.Completion: '',
+        Token.Menu.Completions.Completion.Current: 'bg:#555555 #ffffff',
+        Token.Scrollbar: 'bg:#555555',
+        Token.Scrollbar.Button: 'bg:#000000',
+        Token.Scrollbar.Arrow: 'bg:#000000 #ffffff bold',
         Token.AutoSuggestion: '#666666',
-        Token.Aborted: '#888888',
+        Token.Aborted: '#666666',
     }
 
 if hasattr(pygments.style, 'ansicolors'):
