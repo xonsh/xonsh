@@ -844,6 +844,12 @@ class Env(cabc.MutableMapping):
     #
 
     def __getitem__(self, key):
+        # remove this block on next release
+        if key == 'FORMATTER_DICT':
+            print('PendingDeprecationWarning: FORMATTER_DICT is an alias of '
+                  'PROMPT_FIELDS and will be removed in the next release',
+                  file=sys.stderr)
+            return self['PROMPT_FIELDS']
         if key is Ellipsis:
             return self
         m = self.arg_regex.match(key)
