@@ -24,7 +24,7 @@ from xonsh.lazyjson import LazyJSON
 from xonsh.lazyasd import LazyObject
 from xonsh.base_shell import BaseShell
 from xonsh.ansi_colors import ansi_partial_color_format, ansi_color_style_names, ansi_color_style
-from xonsh.prompt.base import partial_format_prompt, multiline_prompt
+from xonsh.prompt.base import multiline_prompt
 from xonsh.tools import print_exception
 from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_DARWIN
 from xonsh.lazyimps import pygments, pyghooks
@@ -420,7 +420,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         env = builtins.__xonsh_env__  # pylint: disable=no-member
         p = env.get('PROMPT')
         try:
-            p = partial_format_prompt(p)
+            p = self.prompt_formatter(p)
         except Exception:  # pylint: disable=broad-except
             print_exception()
         hide = True if self._force_hide is None else self._force_hide

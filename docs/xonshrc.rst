@@ -32,7 +32,7 @@ The following snippet reimplements the formatter also to include untracked files
 .. code-block:: xonshcon
 
     >>> from xonsh.prompt.vc_branch import git_dirty_working_directory
-    >>> $FORMATTER_DICT['branch_color'] = lambda: ('{BOLD_INTENSE_RED}'
+    >>> $PROMPT_FIELDS['branch_color'] = lambda: ('{BOLD_INTENSE_RED}'
                                                    if git_dirty_working_directory(include_untracked=True)
                                                    else '{BOLD_INTENSE_GREEN}')
 

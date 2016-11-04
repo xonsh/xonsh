@@ -13,7 +13,7 @@ from xonsh.codecache import (should_use_cache, code_cache_name,
                              code_cache_check, get_cache_filename,
                              update_cache, run_compiled_code)
 from xonsh.completer import Completer
-from xonsh.prompt.base import multiline_prompt, partial_format_prompt
+from xonsh.prompt.base import multiline_prompt, PromptFormatter
 from xonsh.events import events
 
 if ON_WINDOWS:
@@ -235,6 +235,7 @@ class BaseShell(object):
         self.need_more_lines = False
         self.mlprompt = None
         self._styler = DefaultNotGiven
+        self.prompt_formatter = PromptFormatter()
 
     @property
     def styler(self):
@@ -402,7 +403,7 @@ class BaseShell(object):
         t = env.get('TITLE')
         if t is None:
             return
-        t = partial_format_prompt(t)
+        t = self.prompt_formatter(t)
         if ON_WINDOWS and 'ANSICON' not in env:
             kernel32.SetConsoleTitleW(t)
         else:
@@ -426,7 +427,7 @@ class BaseShell(object):
         env = builtins.__xonsh_env__  # pylint: disable=no-member
         p = env.get('PROMPT')
         try:
-            p = partial_format_prompt(p)
+            p = self.prompt_formatter(p)
         except Exception:  # pylint: disable=broad-except
             print_exception()
         self.settitle()
