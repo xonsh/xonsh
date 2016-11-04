@@ -30,7 +30,10 @@ def DEFAULT_PROMPT():
 
 
 class PromptFormatter:
-    """Class used by base_shell"""
+    """Class that holds all the related prompt formatting methods,
+    uses the ``PROMPT_FIELDS`` envvar (no color formatting).
+    """
+
     def __init__(self):
         self.cache = {}
 
@@ -42,11 +45,11 @@ class PromptFormatter:
             self.fields = fields
         try:
             prompt = self._format_prompt(template=template)
-            # keep cache only during building prompt
-            self.cache.clear()
-            return prompt
         except Exception:
             return _failover_template_format(template)
+        # keep cache only during building prompt
+        self.cache.clear()
+        return prompt
 
     def _format_prompt(self, template=DEFAULT_PROMPT):
         template = template() if callable(template) else template
@@ -69,7 +72,7 @@ class PromptFormatter:
             return _format_value(val, spec, conv)
         else:
             # color or unkown field, return as is
-            return '{{{}}}'.format(field)
+            return '{' + field + '}'
 
     def _get_field_value(self, field):
         field_value = self.fields[field]
