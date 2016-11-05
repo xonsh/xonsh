@@ -180,7 +180,6 @@ class NonBlockingFDReader(QueueReader):
         self.thread.start()
 
 
-
 def populate_buffer(reader, fd, buffer, chunksize):
     """Reads bytes from the file descriptor and copies them into a buffer.
     The reads happend in parallel, using pread(), and is thus only
