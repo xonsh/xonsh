@@ -450,10 +450,11 @@ class XonshStyle(Style):
         env = builtins.__xonsh_env__
         # Ensure we are not using ConEmu
         if 'CONEMUANSI' not in env:
-            # Auto suggest needs to be a darker shade to be distinguishable
-            # from the default color
             if not hasattr(pygments.style, 'ansicolors'):
+                # Auto suggest needs to be a darker shade to be distinguishable
+                # from the default color
                 self.styles[Token.AutoSuggestion] = '#444444'
+                self._smap.update(expand_gray_colors_for_cmd_exe(self._smap))
             if env.get('INTENSIFY_COLORS_ON_WIN', False):
                 has_ansi = hasattr(pygments.style, 'ansicolors')
                 newcolors = intensify_colors_for_cmd_exe(self._smap, ansi=has_ansi)
