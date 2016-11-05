@@ -590,38 +590,37 @@ class PopenThread(threading.Thread):
         return getattr(self, name)
 
     def _read_write(self, reader, writer, stdbuf):
-        """Read from a buffer and write into memory or back down to
-        the standard buffer, line-by-line, as approriate. Returns the number of
-        lines read.
+        """Reads a chunk of bytes from a buffer and write into memory or back
+        down to the standard buffer, as approriate. Returns the number of
+        successful reads.
         """
         if reader is None:
             return 0
         i = -1
-        #for i, line in enumerate(iter(reader.readline, b'')):
-        for i, line in enumerate(iter(reader.read_queue, b'')):
-            self._alt_mode_switch(line, writer, stdbuf)
+        for i, chunk in enumerate(iter(reader.read_queue, b'')):
+            self._alt_mode_switch(chunk, writer, stdbuf)
         if i >= 0:
             writer.flush()
             stdbuf.flush()
         return i + 1
 
-    def _alt_mode_switch(self, line, membuf, stdbuf):
+    def _alt_mode_switch(self, chunk, membuf, stdbuf):
         """Enables recursively switching between normal capturing mode
         and 'alt' mode, which passes through values to the standard
         buffer. Pagers, text editors, curses applications, etc. use
         alternate mode.
         """
-        i, flag = findfirst(line, ALTERNATE_MODE_FLAGS)
+        i, flag = findfirst(chunk, ALTERNATE_MODE_FLAGS)
         if flag is None:
-            self._alt_mode_writer(line, membuf, stdbuf)
+            self._alt_mode_writer(chunk, membuf, stdbuf)
         else:
             # This code is executed when the child process switches the
             # terminal into or out of alternate mode. The line below assumes
             # that the user has opened vim, less, or similar, and writes writes
             # to stdin.
             j = i + len(flag)
-            # write the first part of the line in the current mode.
-            self._alt_mode_writer(line[:i], membuf, stdbuf)
+            # write the first part of the chunk in the current mode.
+            self._alt_mode_writer(chunk[:i], membuf, stdbuf)
             # switch modes
             # write the flag itself the current mode where alt mode is on
             # so that it is streamed to the termial ASAP.
@@ -637,21 +636,21 @@ class PopenThread(threading.Thread):
                 self.in_alt_mode = alt_mode
                 self._disable_cbreak_stdin()
             # recurse this function, but without the current flag.
-            self._alt_mode_switch(line[j:], membuf, stdbuf)
+            self._alt_mode_switch(chunk[j:], membuf, stdbuf)
 
-    def _alt_mode_writer(self, line, membuf, stdbuf):
+    def _alt_mode_writer(self, chunk, membuf, stdbuf):
         """Write bytes to the standard buffer if in alt mode or otherwise
         to the in-memory buffer.
         """
-        if not line:
+        if not chunk:
             pass  # don't write empty values
         elif self.in_alt_mode:
-            stdbuf.buffer.write(line)
+            stdbuf.buffer.write(chunk)
         else:
             with self.lock:
                 p = membuf.tell()
                 membuf.seek(0, io.SEEK_END)
-                membuf.write(line)
+                membuf.write(chunk)
                 membuf.seek(p)
 
     #
