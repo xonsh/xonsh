@@ -91,7 +91,7 @@ class QueueReader:
         self.closed = True
 
     def read_queue(self, timeout=None):
-        """Reads a single chunck from the queue. This is non-blocking"""
+        """Reads a single chunk from the queue. This is non-blocking."""
         try:
             return self.queue.get(block=False)
         except queue.Empty:
@@ -147,7 +147,7 @@ class QueueReader:
 
 
 def populate_fd_queue(reader, fd, queue):
-    """Reads single characters from a file descriptor into a queue.
+    """Reads 1 kb of data from a file descriptor into a queue.
     If this ends or fails, it flags the calling reader object as closed.
     """
     while True:
