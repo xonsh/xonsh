@@ -71,20 +71,30 @@ def RE_VT100_ESCAPE():
 class QueueReader:
     """Provides a file-like interface to reading from a queue."""
 
+    def __init__(self, fd, timeout=None):
+        """
+        Parameters
+        ----------
+        fd : int
+            A file descriptor
+        timeout : float or None, optional
+            The queue reading timeout.
+        """
+        self.fd = fd
+        self.timeout = timeout
+        self.sleepscale = 0
+        self.closed = False
+        self.queue = queue.Queue()
+
     def close(self):
         """close the reader"""
         self.closed = True
 
     def read_queue(self, timeout=None):
-        """Reads a single 'line' from the queue."""
-        timeout = timeout or self.timeout
+        """Reads a single chunck from the queue. This is non-blocking"""
         try:
-            self.sleepscale = 0
-            return self.queue.get(block=timeout is not None,
-                                  timeout=timeout)
+            return self.queue.get(block=False)
         except queue.Empty:
-            self.sleepscale = min(self.sleepscale + 1, 3)
-            time.sleep(timeout * 10**self.sleepscale)
             return b''
 
     def read(self, size=-1):
@@ -168,11 +178,7 @@ class NonBlockingFDReader(QueueReader):
         timeout : float or None, optional
             The queue reading timeout.
         """
-        self.fd = fd
-        self.queue = queue.Queue()
-        self.timeout = timeout
-        self.sleepscale = 0
-        self.closed = False
+        super().__init__(fd, timeout=timeout)
         # start reading from stream
         self.thread = threading.Thread(target=populate_fd_queue,
                                        args=(self, self.fd, self.queue))
@@ -240,9 +246,10 @@ def _expand_console_buffer(cols, max_offset, expandsize, orig_posize, fd):
 
 def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
     """Reads bytes from the file descriptor and puts lines into the queue.
-    The reads happend in parallel, using xonsh.winutils.read_console_output_character(),
-    and is thus only available on windows. If the read fails for any reason, the reader is
-    flagged as closed.
+    The reads happend in parallel,
+    using xonsh.winutils.read_console_output_character(),
+    and is thus only available on windows. If the read fails for any reason,
+    the reader is flagged as closed.
     """
     # OK, so this function is super annoying because Windows stores its
     # buffers as a 2D regular, dense array -- without trailing newlines.
@@ -394,15 +401,12 @@ class ConsoleParallelReader(QueueReader):
         timeout : float, optional
             The queue reading timeout.
         """
-        self.fd = fd
+        timeout = timeout or builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
+        super().__init__(fd, timeout=timeout)
         self._buffer = buffer  # this cannot be public
         if buffer is None:
             self._buffer = ctypes.c_char_p(b" " * chunksize)
         self.chunksize = chunksize
-        self.queue = queue.Queue()
-        self.timeout = timeout or builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
-        self.sleepscale = 0
-        self.closed = False
         # start reading from stream
         self.thread = threading.Thread(target=populate_console,
                                        args=(self, fd, self._buffer,
