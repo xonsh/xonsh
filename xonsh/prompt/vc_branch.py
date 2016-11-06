@@ -69,15 +69,19 @@ def _get_parent_dir_for(path, dir_name, timeout):
 
 def get_hg_branch(cwd=None, root=None):
     env = builtins.__xonsh_env__
-    cwd = env['PWD']
-    root = _get_parent_dir_for(cwd, '.hg', env['VC_BRANCH_TIMEOUT'])
-    if not isinstance(root, str):
-        # Bail if we are not in a repo or we timed out
-        if root:
+    timeout = env['VC_BRANCH_TIMEOUT']
+    # Bail if we are not in a repo or we timed out
+    try:
+        status = subprocess.call(['hg', 'status'], timeout=timeout,
+                                 stdout=subprocess.DEVNULL,
+                                 stderr=subprocess.DEVNULL)
+    except subprocess.TimeoutExpired:
+        return subprocess.TimeoutExpired(['hg'], env['VC_BRANCH_TIMEOUT'])
+    else:
+        if status == 255:
             return None
-        else:
-            return subprocess.TimeoutExpired(['hg'], env['VC_BRANCH_TIMEOUT'])
-    if env.get('VC_HG_SHOW_BRANCH') is True:
+    root = _get_parent_dir_for(cwd or env['PWD'], '.hg', timeout)
+    if env.get('VC_HG_SHOW_BRANCH'):
         # get branch name
         branch_path = os.path.sep.join([root, '.hg', 'branch'])
         if os.path.exists(branch_path):
