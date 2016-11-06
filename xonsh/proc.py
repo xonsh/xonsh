@@ -68,28 +68,8 @@ def RE_VT100_ESCAPE():
     return re.compile(b'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]')
 
 
-def populate_char_queue(reader, fd, queue):
-    """Reads single characters from a file descriptor into a queue.
-    If this ends or fails, it flags the calling reader object as closed.
-    """
-    while True:
-        try:
-            c = os.read(fd, 1)
-        except OSError:
-            reader.closed = True
-            break
-        if c:
-            queue.put(c)
-        else:
-            reader.closed = True
-            break
-
-
-class NonBlockingFDReader:
-    """A class for reading characters from a file descriptor on a background
-    thread. This has the advantages that the calling thread can close the
-    file and that the reading does not block the calling thread.
-    """
+class QueueReader:
+    """Provides a file-like interface to reading from a queue."""
 
     def __init__(self, fd, timeout=None):
         """
@@ -101,18 +81,17 @@ class NonBlockingFDReader:
             The queue reading timeout.
         """
         self.fd = fd
-        self.queue = queue.Queue()
         self.timeout = timeout
         self.sleepscale = 0
         self.closed = False
-        # start reading from stream
-        self.thread = threading.Thread(target=populate_char_queue,
-                                       args=(self, self.fd, self.queue))
-        self.thread.daemon = True
-        self.thread.start()
+        self.queue = queue.Queue()
 
-    def read_char(self, timeout=None):
-        """Reads a single character from the queue."""
+    def close(self):
+        """close the reader"""
+        self.closed = True
+
+    def read_queue(self, timeout=None):
+        """Reads a single chunk from the queue. This is non-blocking."""
         timeout = timeout or self.timeout
         try:
             self.sleepscale = 0
@@ -127,13 +106,13 @@ class NonBlockingFDReader:
         """Reads bytes from the file."""
         i = 0
         buf = b''
-        while i != size:
-            c = self.read_char()
-            if c:
-                buf += c
+        while size < 0 or i != size:
+            line = self.read_queue()
+            if line:
+                buf += line
             else:
                 break
-            i += 1
+            i += len(line)
         return buf
 
     def readline(self, size=-1):
@@ -141,15 +120,15 @@ class NonBlockingFDReader:
         i = 0
         nl = b'\n'
         buf = b''
-        while i != size:
-            c = self.read_char()
-            if c:
-                buf += c
-                if c == nl:
+        while size < 0 or i != size:
+            line = self.read_queue()
+            if line:
+                buf += line
+                if line.endswith(nl):
                     break
             else:
                 break
-            i += 1
+            i += len(line)
         return buf
 
     def readlines(self, hint=-1):
@@ -170,6 +149,46 @@ class NonBlockingFDReader:
     def readable():
         """Returns true, because this object is always readable."""
         return True
+
+
+def populate_fd_queue(reader, fd, queue):
+    """Reads 1 kb of data from a file descriptor into a queue.
+    If this ends or fails, it flags the calling reader object as closed.
+    """
+    while True:
+        try:
+            c = os.read(fd, 1024)
+        except OSError:
+            reader.closed = True
+            break
+        if c:
+            queue.put(c)
+        else:
+            reader.closed = True
+            break
+
+
+class NonBlockingFDReader(QueueReader):
+    """A class for reading characters from a file descriptor on a background
+    thread. This has the advantages that the calling thread can close the
+    file and that the reading does not block the calling thread.
+    """
+
+    def __init__(self, fd, timeout=None):
+        """
+        Parameters
+        ----------
+        fd : int
+            A file descriptor
+        timeout : float or None, optional
+            The queue reading timeout.
+        """
+        super().__init__(fd, timeout=timeout)
+        # start reading from stream
+        self.thread = threading.Thread(target=populate_fd_queue,
+                                       args=(self, self.fd, self.queue))
+        self.thread.daemon = True
+        self.thread.start()
 
 
 def populate_buffer(reader, fd, buffer, chunksize):
@@ -367,7 +386,7 @@ def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
         time.sleep(reader.timeout)
 
 
-class ConsoleParallelReader:
+class ConsoleParallelReader(QueueReader):
     """Parallel reader for consoles that runs in a background thread.
     This is only needed, available, and useful on Windows.
     """
@@ -386,85 +405,18 @@ class ConsoleParallelReader:
         timeout : float, optional
             The queue reading timeout.
         """
-        self.fd = fd
+        timeout = timeout or builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
+        super().__init__(fd, timeout=timeout)
         self._buffer = buffer  # this cannot be public
         if buffer is None:
             self._buffer = ctypes.c_char_p(b" " * chunksize)
         self.chunksize = chunksize
-        self.queue = queue.Queue()
-        self.timeout = timeout or builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
-        self.sleepscale = 0
-        self.closed = False
         # start reading from stream
         self.thread = threading.Thread(target=populate_console,
                                        args=(self, fd, self._buffer,
                                              chunksize, self.queue))
         self.thread.daemon = True
         self.thread.start()
-
-    def close(self):
-        """close the reader"""
-        self.closed = True
-
-    def read_queue(self, timeout=None):
-        """Reads a single 'line' from the queue."""
-        timeout = timeout or self.timeout
-        try:
-            self.sleepscale = 0
-            return self.queue.get(block=timeout is not None,
-                                  timeout=timeout)
-        except queue.Empty:
-            self.sleepscale = min(self.sleepscale + 1, 3)
-            time.sleep(timeout * 10**self.sleepscale)
-            return b''
-
-    def read(self, size=-1):
-        """Reads bytes from the file."""
-        i = 0
-        buf = b''
-        while size < 0 or i != size:
-            line = self.read_queue()
-            if line:
-                buf += line
-            else:
-                break
-            i += len(line)
-        return buf
-
-    def readline(self, size=-1):
-        """Reads a line, or a partial line from the file descriptor."""
-        i = 0
-        nl = b'\n'
-        buf = b''
-        while size < 0 or i != size:
-            line = self.read_queue()
-            if line:
-                buf += line
-                if line.endswith(nl):
-                    break
-            else:
-                break
-            i += len(line)
-        return buf
-
-    def readlines(self, hint=-1):
-        """Reads lines from the file descriptor."""
-        lines = []
-        while len(lines) != hint:
-            line = self.readline(size=-1)
-            if not line:
-                break
-            lines.append(line)
-        return lines
-
-    def fileno(self):
-        """Returns the file descriptor number."""
-        return self.fd
-
-    @staticmethod
-    def readable():
-        """Returns true, because this object is always readable."""
-        return True
 
 
 def safe_fdclose(handle, cache=None):
@@ -645,37 +597,37 @@ class PopenThread(threading.Thread):
         return getattr(self, name)
 
     def _read_write(self, reader, writer, stdbuf):
-        """Read from a buffer and write into memory or back down to
-        the standard buffer, line-by-line, as approriate. Returns the number of
-        lines read.
+        """Reads a chunk of bytes from a buffer and write into memory or back
+        down to the standard buffer, as approriate. Returns the number of
+        successful reads.
         """
         if reader is None:
             return 0
         i = -1
-        for i, line in enumerate(iter(reader.readline, b'')):
-            self._alt_mode_switch(line, writer, stdbuf)
+        for i, chunk in enumerate(iter(reader.read_queue, b'')):
+            self._alt_mode_switch(chunk, writer, stdbuf)
         if i >= 0:
             writer.flush()
             stdbuf.flush()
         return i + 1
 
-    def _alt_mode_switch(self, line, membuf, stdbuf):
+    def _alt_mode_switch(self, chunk, membuf, stdbuf):
         """Enables recursively switching between normal capturing mode
         and 'alt' mode, which passes through values to the standard
         buffer. Pagers, text editors, curses applications, etc. use
         alternate mode.
         """
-        i, flag = findfirst(line, ALTERNATE_MODE_FLAGS)
+        i, flag = findfirst(chunk, ALTERNATE_MODE_FLAGS)
         if flag is None:
-            self._alt_mode_writer(line, membuf, stdbuf)
+            self._alt_mode_writer(chunk, membuf, stdbuf)
         else:
             # This code is executed when the child process switches the
             # terminal into or out of alternate mode. The line below assumes
             # that the user has opened vim, less, or similar, and writes writes
             # to stdin.
             j = i + len(flag)
-            # write the first part of the line in the current mode.
-            self._alt_mode_writer(line[:i], membuf, stdbuf)
+            # write the first part of the chunk in the current mode.
+            self._alt_mode_writer(chunk[:i], membuf, stdbuf)
             # switch modes
             # write the flag itself the current mode where alt mode is on
             # so that it is streamed to the termial ASAP.
@@ -691,21 +643,21 @@ class PopenThread(threading.Thread):
                 self.in_alt_mode = alt_mode
                 self._disable_cbreak_stdin()
             # recurse this function, but without the current flag.
-            self._alt_mode_switch(line[j:], membuf, stdbuf)
+            self._alt_mode_switch(chunk[j:], membuf, stdbuf)
 
-    def _alt_mode_writer(self, line, membuf, stdbuf):
+    def _alt_mode_writer(self, chunk, membuf, stdbuf):
         """Write bytes to the standard buffer if in alt mode or otherwise
         to the in-memory buffer.
         """
-        if not line:
+        if not chunk:
             pass  # don't write empty values
         elif self.in_alt_mode:
-            stdbuf.buffer.write(line)
+            stdbuf.buffer.write(chunk)
         else:
             with self.lock:
                 p = membuf.tell()
                 membuf.seek(0, io.SEEK_END)
-                membuf.write(line)
+                membuf.write(chunk)
                 membuf.seek(p)
 
     #
