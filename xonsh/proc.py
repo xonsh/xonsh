@@ -85,6 +85,7 @@ class QueueReader:
         self.sleepscale = 0
         self.closed = False
         self.queue = queue.Queue()
+        self.thread = None
 
     def close(self):
         """close the reader"""
@@ -126,14 +127,26 @@ class QueueReader:
             i += len(line)
         return buf
 
+    def _read_all_lines(self):
+        """This reads all remaining lines in a blocking fashion."""
+        lines = []
+        while self.thread.is_alive() or not self.queue.empty():
+            chunk = self.read_queue()
+            lines.extend(chunk.splitlines(keepends=True))
+        return lines
+
     def readlines(self, hint=-1):
-        """Reads lines from the file descriptor."""
+        """Reads lines from the file descriptor. This is blocking for negative
+        hints (i.e. read all the remaining lines) and non-blocking otherwise.
+        """
+        if hint == -1:
+            return self._read_all_lines()
         lines = []
         while len(lines) != hint:
-            line = self.readline(size=-1)
-            if not line:
+            chunk = self.read_queue()
+            if not chunk:
                 break
-            lines.append(line)
+            lines.extend(chunk.splitlines(keepends=True))
         return lines
 
     def fileno(self):
@@ -1554,6 +1567,8 @@ class CommandPipeline:
                  "stderr_redirect", "timestamps", "executed_cmd", 'input',
                  'output', 'errors')
 
+    nonblocking = (io.BytesIO, NonBlockingFDReader, ConsoleParallelReader)
+
     def __init__(self, specs, procs, starttime=None, captured=False):
         """
         Parameters
@@ -1631,8 +1646,7 @@ class CommandPipeline:
             stdout = spec.captured_stdout
         if hasattr(stdout, 'buffer'):
             stdout = stdout.buffer
-        if stdout is not None and \
-                not isinstance(stdout, (io.BytesIO, NonBlockingFDReader, ConsoleParallelReader)):
+        if stdout is not None and not isinstance(stdout, self.nonblocking):
             stdout = NonBlockingFDReader(stdout.fileno(), timeout=timeout)
         if not stdout or not safe_readable(stdout):
             # we get here if the process is not threadable or the
@@ -1650,8 +1664,7 @@ class CommandPipeline:
             stderr = spec.captured_stderr
         if hasattr(stderr, 'buffer'):
             stderr = stderr.buffer
-        if stderr is not None and \
-                not isinstance(stderr, (io.BytesIO, NonBlockingFDReader, ConsoleParallelReader)):
+        if stderr is not None and not isinstance(stderr, self.nonblocking):
             stderr = NonBlockingFDReader(stderr.fileno(), timeout=timeout)
         # read from process while it is running
         check_prev_done = len(self.procs) == 1
