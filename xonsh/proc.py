@@ -94,14 +94,9 @@ class QueueReader:
         """Returns whether or not the queue is fully read and the reader is
         closed.
         """
-        #x = self.closed and (self.thread is None or
-        x = (self.thread is None or
+        return self.closed and (self.thread is None or
                                 not self.thread.is_alive()) \
                            and self.queue.empty()
-        print("not self.thread.is_alive()", not self.thread.is_alive())
-        print("self.queue.empty()", self.queue.empty())
-        print("-"*30)
-        return x
 
     def read_queue(self, timeout=None):
         """Reads a single chunk from the queue. This is non-blocking."""
@@ -188,11 +183,13 @@ def populate_fd_queue(reader, fd, queue):
             c = os.read(fd, 1024)
         except OSError:
             reader.closed = True
+            #print("EOF")
             break
         if c:
             queue.put(c)
         else:
             reader.closed = True
+            #print("empty line")
             break
 
 
@@ -498,7 +495,10 @@ class PopenThread(threading.Thread):
     def __init__(self, *args, stdin=None, stdout=None, stderr=None, **kwargs):
         super().__init__()
         self.lock = threading.RLock()
+        self.orig_stdout = stdout
         self.stdout_fd = 1 if stdout is None else stdout.fileno()
+        self.orig_stderr = stderr
+        self.stderr_fd = 2 if stderr is None else stderr.fileno()
         self._set_pty_size()
         env = builtins.__xonsh_env__
         self.orig_stdin = stdin
@@ -614,12 +614,23 @@ class PopenThread(threading.Thread):
         #    time.sleep(self.timeout * (4 - cntout))
         if self.suspended:
             return
-        print("yot")
+        #print("yot")
+        #if self.stdout_fd != 1:
+        #    os.close(self.stdout_fd)
+        #if self.stderr_fd != 2:
+        #    os.close(self.stderr_fd)
+        #os.close(procout.fileno())
+        #os.close(procerr.fileno())
+        self.orig_stdout.close()
+        self.orig_stderr.close()
         while not procout.is_fully_read() or not procerr.is_fully_read():
+        #while not procout.queue.empty() or not procerr.queue.empty():
             i = self._read_write(procout, stdout, sys.__stdout__)
             j = self._read_write(procerr, stderr, sys.__stderr__)
+            #capout.close()
+            #caperr.close()
             #time.sleep(self.timeout)
-        print("toy")
+        #print("toy")
         # kill the process if it is still alive. Happens when piping.
         #time.sleep(self.timeout)
         if proc.poll() is None: #and not self.suspended:
@@ -829,9 +840,9 @@ class PopenThread(threading.Thread):
         handler.
         """
         self._disable_cbreak_stdin()
-        print("waiiting")
+        #print("waiiting")
         rtn = self.proc.wait(timeout=timeout)
-        print("unwaiiting")
+        #print("unwaiiting")
         self.join()
         #while self.is_alive():
         #    self.join(timeout=1e-7)
