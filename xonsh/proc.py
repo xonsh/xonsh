@@ -98,10 +98,11 @@ class QueueReader:
                                 not self.thread.is_alive()) \
                            and self.queue.empty()
 
-    def read_queue(self, timeout=None):
-        """Reads a single chunk from the queue. This is non-blocking."""
+    def read_queue(self):
+        """Reads a single chunk from the queue. This is blocking if
+        the timeout is None and non-blocking otherwise.
+        """
         try:
-            #return self.queue.get(block=False)
             return self.queue.get(block=True, timeout=self.timeout)
         except queue.Empty:
             return b''
@@ -601,9 +602,7 @@ class PopenThread(threading.Thread):
                     cnt = min(cnt + 1, 1000)
                 else:
                     cnt = 1
-                time.sleep(self.timeout * cnt)
-            #else:
-            #    time.sleep(self.timeout)
+                procout.timeout = procerr.timeout = self.timeout * cnt
         if self.suspended:
             return
         # close files to send EOF to non-blocking reader.
@@ -611,8 +610,8 @@ class PopenThread(threading.Thread):
         self.orig_stderr.close()
         # read in the remaining data in a blocking fashion.
         while not procout.is_fully_read() or not procerr.is_fully_read():
-            i = self._read_write(procout, stdout, sys.__stdout__)
-            j = self._read_write(procerr, stderr, sys.__stderr__)
+            self._read_write(procout, stdout, sys.__stdout__)
+            self._read_write(procerr, stderr, sys.__stderr__)
         # kill the process if it is still alive. Happens when piping.
         if proc.poll() is None:
             proc.terminate()
