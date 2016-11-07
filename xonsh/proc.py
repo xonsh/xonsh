@@ -606,8 +606,8 @@ class PopenThread(threading.Thread):
         if self.suspended:
             return
         # close files to send EOF to non-blocking reader.
-        self.orig_stdout.close()
-        self.orig_stderr.close()
+        safe_fdclose(self.orig_stdout)
+        safe_fdclose(self.orig_stderr)
         # read in the remaining data in a blocking fashion.
         while not procout.is_fully_read() or not procerr.is_fully_read():
             self._read_write(procout, stdout, sys.__stdout__)
