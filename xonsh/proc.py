@@ -101,7 +101,8 @@ class QueueReader:
     def read_queue(self, timeout=None):
         """Reads a single chunk from the queue. This is non-blocking."""
         try:
-            return self.queue.get(block=False)
+            #return self.queue.get(block=False)
+            return self.queue.get(block=True, timeout=self.timeout)
         except queue.Empty:
             return b''
 
@@ -493,12 +494,8 @@ class PopenThread(threading.Thread):
     def __init__(self, *args, stdin=None, stdout=None, stderr=None, **kwargs):
         super().__init__()
         self.lock = threading.RLock()
-        self.orig_stdout = stdout
-        self.stdout_fd = 1 if stdout is None else stdout.fileno()
-        self.orig_stderr = stderr
-        self.stderr_fd = 2 if stderr is None else stderr.fileno()
-        self._set_pty_size()
         env = builtins.__xonsh_env__
+        # stdin setup
         self.orig_stdin = stdin
         if stdin is None:
             self.stdin_fd = 0
@@ -509,6 +506,12 @@ class PopenThread(threading.Thread):
         self.store_stdin = env.get('XONSH_STORE_STDIN')
         self.in_alt_mode = False
         self.stdin_mode = None
+        # stdout setup
+        self.orig_stdout = stdout
+        self.stdout_fd = 1 if stdout is None else stdout.fileno()
+        self._set_pty_size()
+        # stderr setup
+        self.orig_stderr = stderr
         # Set some signal handles, if we can. Must come before process
         # is started to prevent deadlock on windows
         self.proc = None  # has to be here for closure for handles
@@ -593,46 +596,25 @@ class PopenThread(threading.Thread):
             if self.suspended:
                 break
             elif self.in_alt_mode:
+                # this is here for CPU performance reasons.
                 if i + j == 0:
                     cnt = min(cnt + 1, 1000)
                 else:
                     cnt = 1
                 time.sleep(self.timeout * cnt)
-            #elif self.prevs_are_closed:
-            #    break
             #else:
             #    time.sleep(self.timeout)
-        # final closing read.
-        #cntout = cnterr = 0
-        #while cntout < 4 and cnterr < 4:
-        #    i = self._read_write(procout, stdout, sys.__stdout__)
-        #    j = self._read_write(procerr, stderr, sys.__stderr__)
-        #    cntout = 0 if i > 0 else cntout + 1
-        #    cnterr = 0 if j > 0 else cnterr + 1
-        #    time.sleep(self.timeout * (4 - cntout))
         if self.suspended:
             return
-        #print("yot")
-        #if self.stdout_fd != 1:
-        #    os.close(self.stdout_fd)
-        #if self.stderr_fd != 2:
-        #    os.close(self.stderr_fd)
-        #os.close(procout.fileno())
-        #os.close(procerr.fileno())
+        # close files to send EOF to non-blocking reader.
         self.orig_stdout.close()
         self.orig_stderr.close()
+        # read in the remaining data in a blocking fashion.
         while not procout.is_fully_read() or not procerr.is_fully_read():
-        #while not procout.queue.empty() or not procerr.queue.empty():
             i = self._read_write(procout, stdout, sys.__stdout__)
             j = self._read_write(procerr, stderr, sys.__stderr__)
-            #capout.close()
-            #caperr.close()
-            #time.sleep(self.timeout)
-        #print("toy")
         # kill the process if it is still alive. Happens when piping.
-        #time.sleep(self.timeout)
-        if proc.poll() is None: #and not self.suspended:
-            #time.sleep(self.timeout)
+        if proc.poll() is None:
             proc.terminate()
 
     def _wait_and_getattr(self, name):
@@ -737,7 +719,6 @@ class PopenThread(threading.Thread):
     def _signal_int(self, signum, frame):
         """Signal handler for SIGINT - Ctrl+C may have been pressed."""
         self.send_signal(signum)
-        #time.sleep(self.timeout)
         if self.proc.poll() is not None:
             self._restore_sigint(frame=frame)
 
@@ -838,13 +819,8 @@ class PopenThread(threading.Thread):
         handler.
         """
         self._disable_cbreak_stdin()
-        #print("waiiting")
         rtn = self.proc.wait(timeout=timeout)
-        #print("unwaiiting")
         self.join()
-        #while self.is_alive():
-        #    self.join(timeout=1e-7)
-        #    time.sleep(1e-7)
         # need to replace the old signal handlers somewhere...
         if self.old_winch_handler is not None and on_main_thread():
             signal.signal(signal.SIGWINCH, self.old_winch_handler)
@@ -1316,9 +1292,6 @@ class ProcProxyThread(threading.Thread):
     def wait(self, timeout=None):
         """Waits for the process to finish and returns the return code."""
         self.join()
-        #while self.is_alive():
-        #    self.join(timeout=1e-7)
-        #    time.sleep(1e-7)
         return self.returncode
 
     # The code below (_get_devnull, _get_handles, and _make_inheritable) comes
