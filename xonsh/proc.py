@@ -183,13 +183,11 @@ def populate_fd_queue(reader, fd, queue):
             c = os.read(fd, 1024)
         except OSError:
             reader.closed = True
-            #print("EOF")
             break
         if c:
             queue.put(c)
         else:
             reader.closed = True
-            #print("empty line")
             break
 
 
@@ -594,12 +592,12 @@ class PopenThread(threading.Thread):
             j = self._read_write(procerr, stderr, sys.__stderr__)
             if self.suspended:
                 break
-            #elif self.in_alt_mode:
-            #    if i + j == 0:
-            #        cnt = min(cnt + 1, 1000)
-            #    else:
-            #        cnt = 1
-            #    time.sleep(self.timeout * cnt)
+            elif self.in_alt_mode:
+                if i + j == 0:
+                    cnt = min(cnt + 1, 1000)
+                else:
+                    cnt = 1
+                time.sleep(self.timeout * cnt)
             #elif self.prevs_are_closed:
             #    break
             #else:
