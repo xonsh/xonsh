@@ -94,9 +94,9 @@ class QueueReader:
         """Returns whether or not the queue is fully read and the reader is
         closed.
         """
-        return self.closed and (self.thread is None or
-                                not self.thread.is_alive()) \
-               and self.queue.empty()
+        return (self.closed
+                and (self.thread is None or not self.thread.is_alive())
+                and self.queue.empty())
 
     def read_queue(self):
         """Reads a single chunk from the queue. This is blocking if
