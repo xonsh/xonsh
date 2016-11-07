@@ -48,6 +48,8 @@
   ```while True: sleep 1``.
 * Fix for stdin redirects.
 * Backgrounding works with ``$XONSH_STORE_STDOUT``
+* ``PopenThread`` blocks its thread from finishing until command has completed
+  or process is suspended.
 * Added a minimum time buffer time for command pipelines to check for
   if previous commands have executed successfully.  This is helpful
   for pipelines where the last command takes a long time to start up,
