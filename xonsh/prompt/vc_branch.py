@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Prompt formatter for simple version control branchs"""
+# pylint:disable=no-member, invalid-name
 
 import os
 import sys
@@ -64,20 +65,27 @@ def _get_parent_dir_for(path, dir_name, timeout):
             return path
         previous_path = path
         path, _ = os.path.split(path)
-    return (path == previous_path)
+    return path == previous_path
 
 
-def get_hg_branch(cwd=None, root=None):
+def get_hg_branch(root=None):
+    """Try to get the mercurial branch of the current directory,
+    return None if not in a repo or subprocess.TimeoutExpired if timed out.
+    """
     env = builtins.__xonsh_env__
-    cwd = env['PWD']
-    root = _get_parent_dir_for(cwd, '.hg', env['VC_BRANCH_TIMEOUT'])
-    if not isinstance(root, str):
-        # Bail if we are not in a repo or we timed out
-        if root:
+    timeout = env['VC_BRANCH_TIMEOUT']
+    # Bail if we are not in a repo or we timed out
+    try:
+        status = subprocess.call(['hg', 'status'], timeout=timeout,
+                                 stdout=subprocess.DEVNULL,
+                                 stderr=subprocess.DEVNULL)
+    except subprocess.TimeoutExpired:
+        return subprocess.TimeoutExpired(['hg'], timeout)
+    else:
+        if status == 255:
             return None
-        else:
-            return subprocess.TimeoutExpired(['hg'], env['VC_BRANCH_TIMEOUT'])
-    if env.get('VC_HG_SHOW_BRANCH') is True:
+    root = _get_parent_dir_for(env['PWD'], '.hg', timeout)
+    if env.get('VC_HG_SHOW_BRANCH'):
         # get branch name
         branch_path = os.path.sep.join([root, '.hg', 'branch'])
         if os.path.exists(branch_path):
@@ -194,7 +202,7 @@ def hg_dirty_working_directory():
         return None
 
 
-def dirty_working_directory(cwd=None):
+def dirty_working_directory():
     """Returns a boolean as to whether there are uncommitted files in version
     control repository we are inside. If this cannot be determined, returns
     None. Currently supports git and hg.
