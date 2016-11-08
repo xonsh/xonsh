@@ -608,8 +608,8 @@ class PopenThread(threading.Thread):
         if self.suspended:
             return
         # close files to send EOF to non-blocking reader.
-        # capout & caperr seem to be needed only by Windows, while 
-        # orig_stdout & orig_stderr are need by posix and Windows. 
+        # capout & caperr seem to be needed only by Windows, while
+        # orig_stdout & orig_stderr are need by posix and Windows.
         # Probably best to close them all. Also, order seems to matter here,
         # with orig_* needed to be closed before cap*
         safe_fdclose(self.orig_stdout)
