@@ -134,12 +134,16 @@ def _quote_paths(paths, start, end):
     slash = xt.get_sep()
     orig_start = start
     orig_end = end
+    # quote on all or none, to make readline completes to max prefix
+    need_quotes = any(
+        re.search(PATTERN_NEED_QUOTES, x) or
+        (backslash in x and slash != backslash)
+        for x in paths)
+
     for s in paths:
         start = orig_start
         end = orig_end
-        if (start == '' and
-                (re.search(PATTERN_NEED_QUOTES, s) is not None or
-                 (backslash in s and slash != backslash))):
+        if start == '' and need_quotes:
             start = end = _quote_to_use(s)
         if os.path.isdir(expand_path(s)):
             _tail = slash
