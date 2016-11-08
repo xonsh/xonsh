@@ -610,12 +610,13 @@ class PopenThread(threading.Thread):
         # close files to send EOF to non-blocking reader.
         # capout & caperr seem to be needed only by Windows, while
         # orig_stdout & orig_stderr are need by posix and Windows.
-        # Probably best to close them all. Also, order seems to matter here,
+        # Also, order seems to matter here,
         # with orig_* needed to be closed before cap*
         safe_fdclose(self.orig_stdout)
         safe_fdclose(self.orig_stderr)
-        safe_fdclose(capout)
-        safe_fdclose(caperr)
+        if ON_WINDOWS:
+            safe_fdclose(capout)
+            safe_fdclose(caperr)
         # read in the remaining data in a blocking fashion.
         while (procout is not None and not procout.is_fully_read()) or \
               (procerr is not None and not procerr.is_fully_read()):
