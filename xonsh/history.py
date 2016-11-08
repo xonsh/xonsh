@@ -115,7 +115,10 @@ class HistoryGC(threading.Thread):
         file) tuples.
         """
         # pylint: disable=no-member
-        xdd = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
+        env = getattr(builtins, '__xonsh_env__', None)
+        if env is None:
+            return []
+        xdd = env.get('XONSH_DATA_DIR')
         xdd = expanduser_abs_path(xdd)
 
         fs = [f for f in glob.iglob(os.path.join(xdd, 'xonsh-*.json'))]

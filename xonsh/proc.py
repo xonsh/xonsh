@@ -267,6 +267,8 @@ class BufferedFDParallelReader:
 def _expand_console_buffer(cols, max_offset, expandsize, orig_posize, fd):
     # if we are getting close to the end of the console buffer,
     # expand it so that we can read from it successfully.
+    if cols == 0:
+        return orig_posize[-1], max_offset, orig_posize
     rows = ((max_offset + expandsize)//cols) + 1
     winutils.set_console_screen_buffer_size(cols, rows, fd=fd)
     orig_posize = orig_posize[:3] + (rows,)
@@ -606,10 +608,17 @@ class PopenThread(threading.Thread):
         if self.suspended:
             return
         # close files to send EOF to non-blocking reader.
+        # capout & caperr seem to be needed only by Windows, while 
+        # orig_stdout & orig_stderr are need by posix and Windows. 
+        # Probably best to close them all. Also, order seems to matter here,
+        # with orig_* needed to be closed before cap*
         safe_fdclose(self.orig_stdout)
         safe_fdclose(self.orig_stderr)
+        safe_fdclose(capout)
+        safe_fdclose(caperr)
         # read in the remaining data in a blocking fashion.
-        while not procout.is_fully_read() or not procerr.is_fully_read():
+        while (procout is not None and not procout.is_fully_read()) or \
+              (procerr is not None and not procerr.is_fully_read()):
             self._read_write(procout, stdout, sys.__stdout__)
             self._read_write(procerr, stderr, sys.__stderr__)
         # kill the process if it is still alive. Happens when piping.
