@@ -65,11 +65,14 @@ def get_hg_branch(root=None):
                                        stderr=subprocess.DEVNULL)
     except subprocess.TimeoutExpired:
         return subprocess.TimeoutExpired(['hg'], timeout)
+    except FileNotFoundError:
+        # hg is not found
+        return None
     except subprocess.CalledProcessError:
         # not in repo
         return None
     else:
-        root = xt.decode_bytes(root)
+        root = xt.decode_bytes(root).strip()
     if env.get('VC_HG_SHOW_BRANCH'):
         # get branch name
         branch_path = os.path.sep.join([root, '.hg', 'branch'])
@@ -81,7 +84,7 @@ def get_hg_branch(root=None):
     else:
         branch = ''
     # add bookmark, if we can
-    bookmark_path = os.path.sep.join([root, '.hg', 'bookmarks.current'])
+    bookmark_path = os.path.join(root, '.hg', 'bookmarks.current')
     if os.path.exists(bookmark_path):
         with open(bookmark_path, 'r') as bookmark_file:
             active_bookmark = bookmark_file.read()
@@ -124,10 +127,8 @@ def current_branch(pad=NotImplemented):
         warnings.warn("The pad argument of current_branch has no effect now "
                       "and will be removed in the future")
     branch = None
-    cmds = builtins.__xonsh_commands_cache__
-    if cmds.lazy_locate_binary('git'):
-        branch = get_git_branch()
-    if cmds.lazy_locate_binary('hg') and not branch:
+    branch = get_git_branch()
+    if branch is None:
         branch = get_hg_branch()
     if isinstance(branch, subprocess.TimeoutExpired):
         branch = '<branch-timeout>'
@@ -181,10 +182,11 @@ def hg_dirty_working_directory():
                                     stderr=subprocess.PIPE, cwd=cwd,
                                     timeout=vcbt, universal_newlines=True,
                                     env=denv)
-        return s.strip(os.linesep).endswith('+')
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired,
             FileNotFoundError):
         return None
+    else:
+        return s.strip(os.linesep).endswith('+')
 
 
 def dirty_working_directory():
@@ -192,11 +194,8 @@ def dirty_working_directory():
     control repository we are inside. If this cannot be determined, returns
     None. Currently supports git and hg.
     """
-    dwd = None
-    cmds = builtins.__xonsh_commands_cache__
-    if cmds.lazy_locate_binary('git'):
-        dwd = git_dirty_working_directory()
-    if cmds.lazy_locate_binary('hg') and dwd is None:
+    dwd = git_dirty_working_directory()
+    if dwd is None:
         dwd = hg_dirty_working_directory()
     return dwd
 
