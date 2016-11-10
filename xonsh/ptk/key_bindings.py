@@ -164,10 +164,14 @@ def load_xonsh_bindings(key_bindings_manager):
         """ Open current buffer in editor """
         event.current_buffer.open_in_editor(event.cli)
 
-    @handle(Keys.BackTab)
+    @handle(Keys.BackTab, filter=insert_mode)
     def insert_literal_tab(event):
         """ Insert literal tab on Shift+Tab instead of autocompleting """
-        event.cli.current_buffer.insert_text(env.get('INDENT'))
+        b = event.current_buffer
+        if b.complete_state:
+            b.complete_previous()
+        else:
+            event.cli.current_buffer.insert_text(env.get('INDENT'))
 
     @handle('(', filter=autopair_condition)
     def insert_right_parens(event):
