@@ -720,12 +720,12 @@ def _default_style():
             Color.INTENSE_GREEN: '#ansigreen',
             Color.INTENSE_PURPLE: '#ansifuchsia',
             Color.INTENSE_RED: '#ansired',
-            Color.INTENSE_WHITE: '#ansilightgray',
+            Color.INTENSE_WHITE: '#ansiwhite',
             Color.INTENSE_YELLOW: '#ansiyellow',
             Color.NO_COLOR: 'noinherit',
             Color.PURPLE: '#ansipurple',
             Color.RED: '#ansidarkred',
-            Color.WHITE: '#ansiwhite',
+            Color.WHITE: '#ansilightgray',
             Color.YELLOW: '#ansibrown',
         }
     elif ON_WINDOWS and 'CONEMUANSI' not in os.environ:
@@ -743,12 +743,12 @@ def _default_style():
             Color.INTENSE_GREEN: '#44FF44',
             Color.INTENSE_PURPLE: '#FF44FF',
             Color.INTENSE_RED: '#FF4444',
-            Color.INTENSE_WHITE: '#888888',
+            Color.INTENSE_WHITE: '#FFFFFF',
             Color.INTENSE_YELLOW: '#FFFF44',
             Color.NO_COLOR: 'noinherit',
             Color.PURPLE: '#AA00AA',
             Color.RED: '#AA0000',
-            Color.WHITE: '#FFFFFF',
+            Color.WHITE: '#888888',
             Color.YELLOW: '#AAAA00',
         }
     else:
@@ -763,12 +763,12 @@ def _default_style():
             Color.INTENSE_GREEN: '#00FF00',
             Color.INTENSE_PURPLE: '#FF00FF',
             Color.INTENSE_RED: '#FF0000',
-            Color.INTENSE_WHITE: '#aaaaaa',
+            Color.INTENSE_WHITE: '#ffffff',
             Color.INTENSE_YELLOW: '#FFFF55',
             Color.NO_COLOR: 'noinherit',
             Color.PURPLE: '#AA00AA',
             Color.RED: '#AA0000',
-            Color.WHITE: '#ffffff',
+            Color.WHITE: '#aaaaaa',
             Color.YELLOW: '#ffff00',
         }
     _expand_style(style)
