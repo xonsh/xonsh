@@ -62,10 +62,15 @@ ALTERNATE_MODE_FLAGS = LazyObject(
 RE_HIDDEN_BYTES = LazyObject(lambda: re.compile(b'(\001.*?\002)'),
                              globals(), 'RE_HIDDEN')
 
-
 @lazyobject
 def RE_VT100_ESCAPE():
     return re.compile(b'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]')
+
+
+@lazyobject
+def RE_HIDE_ESCAPE():
+    return re.compile(b'(' + RE_HIDDEN_BYTES.pattern +
+                      b'|' + RE_VT100_ESCAPE.pattern + b')')
 
 
 class QueueReader:
@@ -1761,6 +1766,9 @@ class CommandPipeline:
         if stream and not self.spec.stdout:
             stream = False
         stdout_has_buffer = hasattr(sys.stdout, 'buffer')
+        nl = b'\n'
+        cr = b'\r'
+        crnl = b'\r\n'
         for line in self.iterraw():
             # write to stdout line ASAP, if needed
             if stream:
@@ -1770,13 +1778,12 @@ class CommandPipeline:
                     sys.stdout.write(line.decode(encoding=enc, errors=err))
                 sys.stdout.flush()
             # do some munging of the line before we return it
-            line = RE_HIDDEN_BYTES.sub(b'', line)
-            line = RE_VT100_ESCAPE.sub(b'', line)
+            if line.endswith(crnl):
+                line = line[:-2] + nl
+            elif line.endswith(cr):
+                line = line[:-1] + nl
+            line = RE_HIDE_ESCAPE.sub(b'', line)
             line = line.decode(encoding=enc, errors=err)
-            if line.endswith('\r\n'):
-                line = line[:-2] + '\n'
-            elif line.endswith('\r'):
-                line = line[:-1] + '\n'
             # tee it up!
             lines.append(line)
             yield line
@@ -1797,12 +1804,11 @@ class CommandPipeline:
             sys.stderr.write(b.decode(encoding=enc, errors=err))
         sys.stderr.flush()
         # do some munging of the line before we save it to the attr
-        b = RE_HIDDEN_BYTES.sub(b'', b)
-        b = RE_VT100_ESCAPE.sub(b'', b)
+        b = b.replace(b'\r\n', b'\n').replace(b'\r', b'\n')
+        b = RE_HIDE_ESCAPE.sub(b'', b)
         env = builtins.__xonsh_env__
         s = b.decode(encoding=env.get('XONSH_ENCODING'),
                      errors=env.get('XONSH_ENCODING_ERRORS'))
-        s = s.replace('\r\n', '\n').replace('\r', '\n')
         # set the errors
         if self.errors is None:
             self.errors = s
