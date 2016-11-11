@@ -62,6 +62,7 @@ ALTERNATE_MODE_FLAGS = LazyObject(
 RE_HIDDEN_BYTES = LazyObject(lambda: re.compile(b'(\001.*?\002)'),
                              globals(), 'RE_HIDDEN')
 
+
 @lazyobject
 def RE_VT100_ESCAPE():
     return re.compile(b'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]')
