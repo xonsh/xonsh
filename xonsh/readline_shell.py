@@ -25,7 +25,7 @@ from xonsh.lazyasd import LazyObject
 from xonsh.base_shell import BaseShell
 from xonsh.ansi_colors import ansi_partial_color_format, ansi_color_style_names, ansi_color_style
 from xonsh.prompt.base import multiline_prompt
-from xonsh.tools import print_exception
+from xonsh.tools import print_exception, check_for_partial_string
 from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_DARWIN
 from xonsh.lazyimps import pygments, pyghooks
 
@@ -255,19 +255,21 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         """Overridden to no-op."""
         return '', line, line
 
-    def completedefault(self, text, line, begidx, endidx):
+    def completedefault(self, prefix, line, begidx, endidx):
         """Implements tab-completion for text."""
         rl_completion_suppress_append()  # this needs to be called each time
         _rebind_case_sensitive_completions()
-
-        line = builtins.aliases.expand_alias(line)
-        mline = line.rpartition(' ')[2]
-        offs = len(mline) - len(text)
+        _s, _e, _q = check_for_partial_string(line)
+        if _s is not None:
+            mline = line[_s:]
+        else:
+            mline = line.rpartition(' ')[2]
+        offs = len(mline) - len(prefix)
         if self.completer is None:
             x = []
         else:
             x = [(i[offs:] if " " in i[:-1] else i)
-                 for i in self.completer.complete(text, line,
+                 for i in self.completer.complete(prefix, line,
                                                   begidx, endidx,
                                                   ctx=self.ctx)[0]]
         return x
