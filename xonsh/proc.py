@@ -598,8 +598,14 @@ class PopenThread(threading.Thread):
         self._read_write(procout, stdout, sys.__stdout__)
         self._read_write(procerr, stderr, sys.__stderr__)
         # loop over reads while process is running.
-        cnt = 1
+        i = j = cnt = 1
         while proc.poll() is None:
+            if not self.in_alt_mode:
+                if i + j == 0:
+                    cnt = min(cnt + 1, 1000)
+                    time.sleep(self.timeout * cnt)
+                else:
+                    cnt = 1
             i = self._read_write(procout, stdout, sys.__stdout__)
             j = self._read_write(procerr, stderr, sys.__stderr__)
             if self.suspended:
@@ -1733,7 +1739,7 @@ class CommandPipeline:
                     # next-to-last proc has finished, wait a bit to make
                     # sure we have fully started up, etc.
                     check_prev_done = True
-            time.sleep(timeout)
+            time.sleep(timeout * 100)
         # read from process now that it is over
         yield from safe_readlines(stdout)
         self.stream_stderr(safe_readlines(stderr))
