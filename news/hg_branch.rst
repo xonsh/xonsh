@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* ``get_hg_branch`` runs ``hg status`` first to check if we are in a repo
+* ``get_hg_branch`` runs ``hg root`` to find root dir and check if we're in repo
 
 **Deprecated:** None
 

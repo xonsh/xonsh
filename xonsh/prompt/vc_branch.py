@@ -4,7 +4,6 @@
 
 import os
 import sys
-import time
 import queue
 import builtins
 import warnings
@@ -55,36 +54,22 @@ def get_git_branch():
     return branch
 
 
-def _get_parent_dir_for(path, dir_name, timeout):
-    # walk up the directory tree to see if we are inside an hg repo
-    # the timeout makes sure that we don't thrash the file system
-    previous_path = ''
-    t0 = time.time()
-    while path != previous_path and ((time.time() - t0) < timeout):
-        if os.path.isdir(os.path.join(path, dir_name)):
-            return path
-        previous_path = path
-        path, _ = os.path.split(path)
-    return path == previous_path
-
-
 def get_hg_branch(root=None):
     """Try to get the mercurial branch of the current directory,
     return None if not in a repo or subprocess.TimeoutExpired if timed out.
     """
     env = builtins.__xonsh_env__
     timeout = env['VC_BRANCH_TIMEOUT']
-    # Bail if we are not in a repo or we timed out
     try:
-        status = subprocess.call(['hg', 'status'], timeout=timeout,
-                                 stdout=subprocess.DEVNULL,
-                                 stderr=subprocess.DEVNULL)
+        root = subprocess.check_output(['hg', 'root'], timeout=timeout,
+                                       stderr=subprocess.DEVNULL)
     except subprocess.TimeoutExpired:
         return subprocess.TimeoutExpired(['hg'], timeout)
+    except subprocess.CalledProcessError:
+        # not in repo
+        return None
     else:
-        if status == 255:
-            return None
-    root = _get_parent_dir_for(env['PWD'], '.hg', timeout)
+        root = xt.decode_bytes(root)
     if env.get('VC_HG_SHOW_BRANCH'):
         # get branch name
         branch_path = os.path.sep.join([root, '.hg', 'branch'])
