@@ -8,6 +8,6 @@
 
 **Fixed:**
 
-* Fixed readline completer issue when cmd alias contains space (e.g. ``ls``).
+* Fixed readline completer issues on paths with spaces
 
 **Security:** None
