@@ -25,7 +25,7 @@ from xonsh.lazyasd import LazyObject
 from xonsh.base_shell import BaseShell
 from xonsh.ansi_colors import ansi_partial_color_format, ansi_color_style_names, ansi_color_style
 from xonsh.prompt.base import multiline_prompt
-from xonsh.tools import print_exception
+from xonsh.tools import print_exception, check_for_partial_string
 from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_DARWIN
 from xonsh.lazyimps import pygments, pyghooks
 
@@ -255,22 +255,24 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         """Overridden to no-op."""
         return '', line, line
 
-    def completedefault(self, text, line, begidx, endidx):
+    def completedefault(self, prefix, line, begidx, endidx):
         """Implements tab-completion for text."""
+        if self.completer is None:
+            return []
         rl_completion_suppress_append()  # this needs to be called each time
         _rebind_case_sensitive_completions()
-
-        line = builtins.aliases.expand_alias(line)
-        mline = line.rpartition(' ')[2]
-        offs = len(mline) - len(text)
-        if self.completer is None:
-            x = []
+        _s, _e, _q = check_for_partial_string(line)
+        if _s is not None:
+            if _e is not None and ' ' in line[_e:]:
+                mline = line.rpartition(' ')[2]
+            else:
+                mline = line[_s:]
         else:
-            x = [(i[offs:] if " " in i[:-1] else i)
-                 for i in self.completer.complete(text, line,
-                                                  begidx, endidx,
-                                                  ctx=self.ctx)[0]]
-        return x
+            mline = line.rpartition(' ')[2]
+        offs = len(mline) - len(prefix)
+        return [i[offs:] for i in self.completer.complete(prefix, line,
+                                                          begidx, endidx,
+                                                          ctx=self.ctx)[0]]
 
     # tab complete on first index too
     completenames = completedefault
