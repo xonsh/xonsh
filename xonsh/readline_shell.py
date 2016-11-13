@@ -257,22 +257,21 @@ class ReadlineShell(BaseShell, cmd.Cmd):
 
     def completedefault(self, prefix, line, begidx, endidx):
         """Implements tab-completion for text."""
+        if self.completer is None:
+            return []
         rl_completion_suppress_append()  # this needs to be called each time
         _rebind_case_sensitive_completions()
         _s, _e, _q = check_for_partial_string(line)
-        if _s is not None:
+        if _s is not None and _e is not None and line.endswith(_q):
+            return []
+        if _s is not None and _e is None:
             mline = line[_s:]
         else:
             mline = line.rpartition(' ')[2]
         offs = len(mline) - len(prefix)
-        if self.completer is None:
-            x = []
-        else:
-            x = [(i[offs:] if " " in i[:-1] else i)
-                 for i in self.completer.complete(prefix, line,
-                                                  begidx, endidx,
-                                                  ctx=self.ctx)[0]]
-        return x
+        return [i[offs:] for i in self.completer.complete(prefix, line,
+                                                          begidx, endidx,
+                                                          ctx=self.ctx)[0]]
 
     # tab complete on first index too
     completenames = completedefault
