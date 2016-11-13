@@ -262,10 +262,11 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         rl_completion_suppress_append()  # this needs to be called each time
         _rebind_case_sensitive_completions()
         _s, _e, _q = check_for_partial_string(line)
-        if _s is not None and _e is not None and line.endswith(_q):
-            return []
-        if _s is not None and _e is None:
-            mline = line[_s:]
+        if _s is not None:
+            if _e is not None and ' ' in line[_e:]:
+                mline = line.rpartition(' ')[2]
+            else:
+                mline = line[_s:]
         else:
             mline = line.rpartition(' ')[2]
         offs = len(mline) - len(prefix)
