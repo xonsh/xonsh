@@ -1,9 +1,11 @@
+import subprocess as sp
 from unittest.mock import Mock
 
 import pytest
 
 from xonsh.environ import Env
 from xonsh.prompt.base import PromptFormatter
+from xonsh.prompt.vc import get_git_branch
 
 
 @pytest.fixture
@@ -76,7 +78,9 @@ def test_format_prompt_with_invalid_func(formatter, xonsh_builtins):
     assert isinstance(formatter(p), str)
 
 
-def test_format_prompt_with_func_that_raises(formatter, capsys, xonsh_builtins):
+def test_format_prompt_with_func_that_raises(formatter,
+                                             capsys,
+                                             xonsh_builtins):
     xonsh_builtins.__xonsh_env__ = Env()
     template = 'tt {zerodiv} tt'
     exp = 'tt (ERROR:zerodiv) tt'
@@ -106,3 +110,10 @@ def test_promptformatter_clears_cache(formatter):
     formatter(template, fields)
 
     assert spam.call_count == 2
+
+
+def test_vc_get_git_branch(xonsh_builtins):
+    out = sp.run(['git', 'status'], stdout=sp.PIPE).stdout.decode()
+    exp = out.splitlines()[0].split()[-1]
+    obs = get_git_branch()
+    assert obs == exp
