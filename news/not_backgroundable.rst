@@ -19,7 +19,6 @@
     * more
     * mutt
     * nano
-    * pacman
     * ranger
     * scp
     * sh
