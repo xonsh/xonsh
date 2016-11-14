@@ -7,6 +7,8 @@ from xonsh.environ import Env
 from xonsh.prompt.base import PromptFormatter
 from xonsh.prompt.vc import get_git_branch
 
+from tools import skip_if_py34
+
 
 @pytest.fixture
 def formatter(xonsh_builtins):
@@ -112,8 +114,13 @@ def test_promptformatter_clears_cache(formatter):
     assert spam.call_count == 2
 
 
-def test_vc_get_git_branch(xonsh_builtins):
-    out = sp.run(['git', 'status'], stdout=sp.PIPE).stdout.decode()
-    exp = out.splitlines()[0].split()[-1]
+@skip_if_py34
+@pytest.mark.parametrize('cmd', ['git'])
+def test_vc_get_branch(cmd, xonsh_builtins):
+    try:
+        out = sp.run([cmd, 'status'], stdout=sp.PIPE, check=True).stdout
+    except FileNotFoundError:
+        pytest.skip('cannot find {} executable'.format(cmd))
+    exp = out.decode().splitlines()[0].split()[-1]
     obs = get_git_branch()
     assert obs == exp
