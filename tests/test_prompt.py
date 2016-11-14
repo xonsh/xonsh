@@ -1,3 +1,4 @@
+import os
 import subprocess as sp
 from unittest.mock import Mock
 
@@ -5,9 +6,9 @@ import pytest
 
 from xonsh.environ import Env
 from xonsh.prompt.base import PromptFormatter
-from xonsh.prompt.vc import get_git_branch
+from xonsh.prompt import vc
 
-from tools import skip_if_py34
+from tools import skip_if_py34, DummyEnv
 
 
 @pytest.fixture
@@ -114,13 +115,26 @@ def test_promptformatter_clears_cache(formatter):
     assert spam.call_count == 2
 
 
+@pytest.mark.parametrize('repo', ['hg', 'git'])
+def test_test_repos(source_path, repo):
+    test_repo = os.path.join(source_path, 'tests', '{}-test-repo'.format(repo))
+    assert os.path.isdir(test_repo)
+    assert os.path.isdir(os.path.join(test_repo, '.{}'.format(repo)))
+
+
 @skip_if_py34
-@pytest.mark.parametrize('cmd', ['git'])
-def test_vc_get_branch(cmd, xonsh_builtins):
-    try:
-        out = sp.run([cmd, 'status'], stdout=sp.PIPE, check=True).stdout
-    except FileNotFoundError:
-        pytest.skip('cannot find {} executable'.format(cmd))
-    exp = out.decode().splitlines()[0].split()[-1]
-    obs = get_git_branch()
+@pytest.mark.parametrize('cmd, exp', [
+    ('git', 'master'),
+    ('hg', 'default'),
+    ])
+def test_vc_get_branch(cmd, exp, source_path, xonsh_builtins):
+    test_repo = '{}-test-repo'.format(cmd)
+    test_repo_path = os.path.join(source_path, 'tests', test_repo)
+    os.chdir(test_repo_path)
+    xonsh_builtins.__xonsh_env__ = Env(VC_BRANCH_TIMEOUT=1)
+    # get corresponding function from vc module
+    if cmd == 'hg':
+        obs = vc.get_hg_branch()
+    else:
+        obs = vc.get_git_branch()
     assert obs == exp
