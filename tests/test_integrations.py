@@ -182,7 +182,7 @@ def test_single_command(cmd, fmt, exp):
     ])
 def test_redirect_out_to_file(cmd, exp, tmpdir):
     outfile = tmpdir.mkdir('xonsh_test_dir').join('xonsh_test_file')
-    command = '{} > {}'.format(cmd, outfile)
+    command = '{} > {}\n'.format(cmd, outfile)
     out, _, _ = run_xonsh(command)
     content = outfile.read()
     if callable(exp):

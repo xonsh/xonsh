@@ -603,12 +603,19 @@ class PopenThread(threading.Thread):
             # this is here for CPU performance reasons.
             if i + j == 0:
                 cnt = min(cnt + 1, 1000)
-                procout.timeout = procerr.timeout = self.timeout * cnt
+                tout = self.timeout * cnt
+                if procout is not None:
+                    procout.timeout = tout
+                if procerr is not None:
+                    procerr.timeout = tout
             elif cnt == 1:
                 pass
             else:
                 cnt = 1
-                procout.timeout = procerr.timeout = self.timeout
+                if procout is not None:
+                    procout.timeout = self.timeout
+                if procerr is not None:
+                    procerr.timeout = self.timeout
             # redirect some output!
             i = self._read_write(procout, stdout, sys.__stdout__)
             j = self._read_write(procerr, stderr, sys.__stderr__)
