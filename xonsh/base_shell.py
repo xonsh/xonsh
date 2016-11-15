@@ -276,7 +276,6 @@ class BaseShell(object):
         src, code = self.push(line)
         if code is None:
             return
-        events.on_precommand.fire(src)
         env = builtins.__xonsh_env__
         hist = builtins.__xonsh_history__  # pylint: disable=no-member
         ts1 = None
@@ -353,7 +352,23 @@ class BaseShell(object):
         self.buffer.append(line)
         if self.need_more_lines:
             return None, code
+        i = 0
+        lst = ''
         src = ''.join(self.buffer)
+        while src != lst:
+            lst = src
+            srcs = events.on_precommand.fire(src)
+            for s in srcs:
+                if s != lst:
+                    src = s
+                    break
+            i += 1
+            if i == 1000:
+                print_exception('Modifcations to source input took more than '
+                                '1000 iterations to converge.')
+        return self._compile(src)
+
+    def _compile(self, src):
         _cache = should_use_cache(self.execer, 'single')
         if _cache:
             codefname = code_cache_name(src)
@@ -374,7 +389,7 @@ class BaseShell(object):
             partial_string_info = check_for_partial_string(src)
             in_partial_string = (partial_string_info[0] is not None and
                                  partial_string_info[1] is None)
-            if ((line == '\n' and not in_partial_string)):
+            if line == '\n' and not in_partial_string:
                 self.reset_buffer()
                 print_exception()
                 return src, None

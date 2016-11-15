@@ -15,7 +15,7 @@ from xonsh.events import events
 
 
 events.doc('on_precommand', """
-on_precommand(cmd: str) -> None
+on_precommand(cmd: str) -> str
 
 Fires just before a command is executed.
 """)
