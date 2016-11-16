@@ -18,7 +18,7 @@ from xonsh.prompt.cwd import (
 )
 from xonsh.prompt.job import _current_job
 from xonsh.prompt.env import (env_name, vte_new_tab_cwd)
-from xonsh.prompt.vc_branch import (
+from xonsh.prompt.vc import (
     current_branch, branch_color, branch_bg_color
 )
 from xonsh.prompt.gitstatus import gitstatus_prompt
