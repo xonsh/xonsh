@@ -129,10 +129,10 @@ def test_test_repos(source_path, repo):
     ('hg', 'default'),
     ])
 def test_vc_get_branch(cmd, exp, source_path, xonsh_builtins):
+    xonsh_builtins.__xonsh_env__ = Env(VC_BRANCH_TIMEOUT=1)
     test_repo = '{}-test-repo'.format(cmd)
     test_repo_path = os.path.join(source_path, 'tests', test_repo)
     os.chdir(test_repo_path)
-    xonsh_builtins.__xonsh_env__ = Env(VC_BRANCH_TIMEOUT=1)
     # get corresponding function from vc module
     if cmd == 'hg':
         obs = vc.get_hg_branch()

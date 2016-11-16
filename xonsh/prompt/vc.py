@@ -118,7 +118,7 @@ def _first_branch_timeout_message():
           file=sys.stderr)
 
 
-def current_branch(pad=NotImplemented):
+def current_branch():
     """Gets the branch for a current working directory. Returns an empty string
     if the cwd is not a repository.  This currently only works for git and hg
     and should be extended in the future.  If a timeout occurred, the string
@@ -126,9 +126,6 @@ def current_branch(pad=NotImplemented):
     """
     global HAS_GIT
     global HAS_HG
-    if pad is not NotImplemented:
-        warnings.warn("The pad argument of current_branch has no effect now "
-                      "and will be removed in the future")
     branch = None
     cmds = builtins.__xonsh_commands_cache__
     # check for binary only once
@@ -137,7 +134,7 @@ def current_branch(pad=NotImplemented):
         HAS_GIT = True if git else False
     if HAS_HG is None:
         hg = cmds.lazy_locate_binary('hg') or cmds.locate_binary('hg')
-        HAS_HG = True if hg else Fals
+        HAS_HG = True if hg else False
     if HAS_GIT:
         branch = get_git_branch()
     if not branch and HAS_HG:
