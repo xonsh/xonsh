@@ -125,9 +125,9 @@ def current_branch(pad=NotImplemented):
                       "and will be removed in the future")
     branch = None
     cmds = builtins.__xonsh_commands_cache__
-    if cmds.lazy_locate_binary('git'):
+    if cmds.lazy_locate_binary('git') or cmds.locate_binary('git'):
         branch = get_git_branch()
-    if cmds.lazy_locate_binary('hg') and not branch:
+    if cmds.lazy_locate_binary('hg') or cmds.locate_binary('hg') and not branch:
         branch = get_hg_branch()
     if isinstance(branch, subprocess.TimeoutExpired):
         branch = '<branch-timeout>'
