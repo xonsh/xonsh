@@ -69,7 +69,7 @@ def get_hg_branch(root=None):
         # not in repo
         return None
     else:
-        root = xt.decode_bytes(root)
+        root = xt.decode_bytes(root).strip()
     if env.get('VC_HG_SHOW_BRANCH'):
         # get branch name
         branch_path = os.path.sep.join([root, '.hg', 'branch'])
