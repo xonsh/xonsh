@@ -115,6 +115,7 @@ def test_promptformatter_clears_cache(formatter):
     assert spam.call_count == 2
 
 
+# vc
 @pytest.mark.parametrize('repo', ['hg', 'git'])
 def test_test_repos(source_path, repo):
     test_repo = os.path.join(source_path, 'tests', '{}-test-repo'.format(repo))
@@ -138,3 +139,17 @@ def test_vc_get_branch(cmd, exp, source_path, xonsh_builtins):
     else:
         obs = vc.get_git_branch()
     assert obs == exp
+
+
+def test_vc_current_branch_calls_commands_cache_locate_binary_once(xonsh_builtins):
+    xonsh_builtins.__xonsh_env__ = DummyEnv(VC_BRANCH_TIMEOUT=1)
+    cache_mock = Mock()
+    xonsh_builtins.__xonsh_commands_cache__ = cache_mock
+    # case where lazy locate returns nothing
+    llb_mock = Mock(return_value='')
+    cache_mock.lazy_locate_binary = llb_mock
+
+    vc.current_branch() # calls locate_binary twice (hg, git)
+    vc.current_branch() # should not call locate_binary
+
+    assert cache_mock.locate_binary.call_count == 2

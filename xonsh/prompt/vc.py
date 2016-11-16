@@ -13,6 +13,10 @@ import subprocess
 import xonsh.tools as xt
 
 
+HAS_GIT = None
+HAS_HG = None
+
+
 def _get_git_branch(q):
     try:
         branches = xt.decode_bytes(subprocess.check_output(
@@ -120,14 +124,23 @@ def current_branch(pad=NotImplemented):
     and should be extended in the future.  If a timeout occurred, the string
     '<branch-timeout>' is returned.
     """
+    global HAS_GIT
+    global HAS_HG
     if pad is not NotImplemented:
         warnings.warn("The pad argument of current_branch has no effect now "
                       "and will be removed in the future")
     branch = None
     cmds = builtins.__xonsh_commands_cache__
-    if cmds.lazy_locate_binary('git') or cmds.locate_binary('git'):
+    # check for binary only once
+    if HAS_GIT is None:
+        git = cmds.lazy_locate_binary('git') or cmds.locate_binary('git')
+        HAS_GIT = True if git else False
+    if HAS_HG is None:
+        hg = cmds.lazy_locate_binary('hg') or cmds.locate_binary('hg')
+        HAS_HG = True if hg else Fals
+    if HAS_GIT:
         branch = get_git_branch()
-    if cmds.lazy_locate_binary('hg') or cmds.locate_binary('hg') and not branch:
+    if not branch and HAS_HG:
         branch = get_hg_branch()
     if isinstance(branch, subprocess.TimeoutExpired):
         branch = '<branch-timeout>'
