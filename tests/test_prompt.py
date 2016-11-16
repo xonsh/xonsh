@@ -123,7 +123,6 @@ def test_test_repos(source_path, repo):
     assert os.path.isdir(os.path.join(test_repo, '.{}'.format(repo)))
 
 
-@skip_if_py34
 @pytest.mark.parametrize('cmd, exp', [
     ('git', 'master'),
     ('hg', 'default'),
@@ -142,6 +141,8 @@ def test_vc_get_branch(cmd, exp, source_path, xonsh_builtins):
 
 
 def test_vc_current_branch_calls_commands_cache_locate_binary_once(xonsh_builtins):
+    # it's actually two times, once for hg and once for git
+    # maybe the function needs to be split
     xonsh_builtins.__xonsh_env__ = DummyEnv(VC_BRANCH_TIMEOUT=1)
     cache_mock = Mock()
     xonsh_builtins.__xonsh_commands_cache__ = cache_mock
