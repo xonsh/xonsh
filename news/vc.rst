@@ -1,4 +1,6 @@
-**Added:** None
+**Added:**
+
+* Tests that create testing repos (git, hg)
 
 **Changed:** None
 
@@ -8,6 +10,6 @@
 
 **Fixed:**
 
-* git/hg won't run unless we locate the binary
+* current_branch will try and locate the vc binary once
 
 **Security:** None
