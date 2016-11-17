@@ -1,5 +1,6 @@
 import os
 import subprocess as sp
+import tempfile
 from unittest.mock import Mock
 
 import pytest
@@ -115,29 +116,37 @@ def test_promptformatter_clears_cache(formatter):
     assert spam.call_count == 2
 
 
-# vc
-@pytest.mark.parametrize('repo', ['hg', 'git'])
-def test_test_repos(source_path, repo):
-    test_repo = os.path.join(source_path, 'tests', '{}-test-repo'.format(repo))
-    assert os.path.isdir(test_repo)
-    assert os.path.isdir(os.path.join(test_repo, '.{}'.format(repo)))
+# Xonsh interaction with version control systems.
+VC_BRANCH = {'git': 'master',
+             'hg': 'default'}
 
 
-@pytest.mark.parametrize('cmd, exp', [
-    ('git', 'master'),
-    ('hg', 'default'),
-    ])
-def test_vc_get_branch(cmd, exp, source_path, xonsh_builtins):
+@pytest.yield_fixture(scope='module', params=VC_BRANCH.keys())
+def test_repo(request):
+    """Return the vc and a temporary dir that is a repository for testing."""
+    vc = request.param
+    with tempfile.TemporaryDirectory() as temp_dir:
+        os.chdir(temp_dir)
+        sp.call([vc, 'init'])
+        # git needs at least one commit
+        if vc == 'git':
+            sp.call(['touch', 'empty'])
+            sp.call(['git', 'add', 'empty'])
+            sp.call(['git', 'commit', '-m', '"test commit"'])
+        yield vc, temp_dir
+
+
+def test_testing_repos(test_repo):
+    assert os.path.isdir(os.path.join(test_repo[1], '.{}'.format(test_repo[0])))
+
+
+def test_vc_get_branch(test_repo, xonsh_builtins):
     xonsh_builtins.__xonsh_env__ = Env(VC_BRANCH_TIMEOUT=1)
-    test_repo = '{}-test-repo'.format(cmd)
-    test_repo_path = os.path.join(source_path, 'tests', test_repo)
-    os.chdir(test_repo_path)
+    os.chdir(test_repo[1])
     # get corresponding function from vc module
-    if cmd == 'hg':
-        obs = vc.get_hg_branch()
-    else:
-        obs = vc.get_git_branch()
-    assert obs == exp
+    fun = 'get_{}_branch'.format(test_repo[0])
+    obs = getattr(vc, fun)()
+    assert obs == VC_BRANCH[test_repo[0]]
 
 
 def test_vc_current_branch_calls_commands_cache_locate_binary_once(xonsh_builtins):
@@ -150,7 +159,7 @@ def test_vc_current_branch_calls_commands_cache_locate_binary_once(xonsh_builtin
     llb_mock = Mock(return_value='')
     cache_mock.lazy_locate_binary = llb_mock
 
-    vc.current_branch() # calls locate_binary twice (hg, git)
-    vc.current_branch() # should not call locate_binary
+    vc.current_branch()  # calls locate_binary twice (hg, git)
+    vc.current_branch()  # should not call locate_binary
 
     assert cache_mock.locate_binary.call_count == 2
