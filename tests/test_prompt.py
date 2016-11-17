@@ -125,41 +125,56 @@ VC_BRANCH = {'git': 'master',
 def test_repo(request):
     """Return the vc and a temporary dir that is a repository for testing."""
     vc = request.param
-    with tempfile.TemporaryDirectory() as temp_dir:
-        os.chdir(temp_dir)
+    temp_dir =  tempfile.mkdtemp()
+    os.chdir(temp_dir)
+    try:
         sp.call([vc, 'init'])
-        # git needs at least one commit
-        if vc == 'git':
-            sp.call(['touch', 'empty'])
-            sp.call(['git', 'add', 'empty'])
-            sp.call(['git', 'commit', '-m', '"test commit"'])
-        yield vc, temp_dir
+    except FileNotFoundError:
+        pytest.skip('cannot find {} executable'.format(vc))
+    # git needs at least one commit
+    if vc == 'git':
+        with open('test-file', 'w'):
+            pass
+        sp.call(['git', 'add', 'test-file'])
+        sp.call(['git', 'commit', '-m', 'test commit'])
+    yield {'name': vc, 'dir': temp_dir}
 
 
-def test_testing_repos(test_repo):
-    assert os.path.isdir(os.path.join(test_repo[1], '.{}'.format(test_repo[0])))
+def test_test_repo(test_repo):
+    dotfile = os.path.isdir(os.path.join(test_repo['dir'],
+                                         '.{}'.format(test_repo['name'])))
+    assert dotfile
+
+    if test_repo['name'] == 'git':
+        assert os.path.isfile(os.path.join(test_repo['dir'], 'test-file'))
 
 
 def test_vc_get_branch(test_repo, xonsh_builtins):
-    xonsh_builtins.__xonsh_env__ = Env(VC_BRANCH_TIMEOUT=1)
-    os.chdir(test_repo[1])
+    xonsh_builtins.__xonsh_env__ = Env(VC_BRANCH_TIMEOUT=2)
     # get corresponding function from vc module
-    fun = 'get_{}_branch'.format(test_repo[0])
+    fun = 'get_{}_branch'.format(test_repo['name'])
     obs = getattr(vc, fun)()
-    assert obs == VC_BRANCH[test_repo[0]]
+    assert obs == VC_BRANCH[test_repo['name']]
 
 
-def test_vc_current_branch_calls_commands_cache_locate_binary_once(xonsh_builtins):
-    # it's actually two times, once for hg and once for git
-    # maybe the function needs to be split
+def test_current_branch_calls_locate_binary_for_empty_cmds_cache(xonsh_builtins):
+    cache = xonsh_builtins.__xonsh_commands_cache__
     xonsh_builtins.__xonsh_env__ = DummyEnv(VC_BRANCH_TIMEOUT=1)
-    cache_mock = Mock()
-    xonsh_builtins.__xonsh_commands_cache__ = cache_mock
-    # case where lazy locate returns nothing
-    llb_mock = Mock(return_value='')
-    cache_mock.lazy_locate_binary = llb_mock
+    cache.is_empty = Mock(return_value=True)
+    cache.locate_binary = Mock(return_value='')
 
-    vc.current_branch()  # calls locate_binary twice (hg, git)
-    vc.current_branch()  # should not call locate_binary
+    vc.current_branch()
 
-    assert cache_mock.locate_binary.call_count == 2
+    assert cache.locate_binary.called
+
+def test_current_branch_does_not_call_locate_binary_for_non_empty_cmds_cache(xonsh_builtins):
+    cache = xonsh_builtins.__xonsh_commands_cache__
+    xonsh_builtins.__xonsh_env__ = DummyEnv(VC_BRANCH_TIMEOUT=1)
+    cache.is_empty = Mock(return_value=False)
+    cache.locate_binary = Mock(return_value='')
+    # make lazy locate return nothing to avoid running vc binaries
+    cache.lazy_locate_binary = Mock(return_value='')
+
+    vc.current_branch()
+
+    assert not cache.locate_binary.called
