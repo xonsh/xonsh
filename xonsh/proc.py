@@ -862,6 +862,10 @@ class PopenThread(threading.Thread):
 
     def send_signal(self, signal):
         """Dispatches to Popen.send_signal()."""
+        dt = 0.0
+        while self.proc is None and dt < self.timeout:
+            time.sleep(1e-7)
+            dt += 1e-7
         if self.proc is None:
             return
         try:
