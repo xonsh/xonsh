@@ -121,11 +121,13 @@ VC_BRANCH = {'git': 'master',
              'hg': 'default'}
 
 
-@pytest.yield_fixture(scope='module', params=VC_BRANCH.keys())
+@pytest.fixture(scope='module', params=VC_BRANCH.keys())
 def test_repo(request):
-    """Return the vc and a temporary dir that is a repository for testing."""
+    """Return a dict with vc and a temporary dir
+    that is a repository for testing.
+    """
     vc = request.param
-    temp_dir =  tempfile.mkdtemp()
+    temp_dir = tempfile.mkdtemp()
     os.chdir(temp_dir)
     try:
         sp.call([vc, 'init'])
@@ -137,13 +139,13 @@ def test_repo(request):
             pass
         sp.call(['git', 'add', 'test-file'])
         sp.call(['git', 'commit', '-m', 'test commit'])
-    yield {'name': vc, 'dir': temp_dir}
+    return {'name': vc, 'dir': temp_dir}
 
 
 def test_test_repo(test_repo):
-    dotfile = os.path.isdir(os.path.join(test_repo['dir'],
-                                         '.{}'.format(test_repo['name'])))
-    assert dotfile
+    dotdir = os.path.isdir(os.path.join(test_repo['dir'],
+                                        '.{}'.format(test_repo['name'])))
+    assert dotdir
 
     if test_repo['name'] == 'git':
         assert os.path.isfile(os.path.join(test_repo['dir'], 'test-file'))
@@ -166,6 +168,7 @@ def test_current_branch_calls_locate_binary_for_empty_cmds_cache(xonsh_builtins)
     vc.current_branch()
 
     assert cache.locate_binary.called
+
 
 def test_current_branch_does_not_call_locate_binary_for_non_empty_cmds_cache(xonsh_builtins):
     cache = xonsh_builtins.__xonsh_commands_cache__
