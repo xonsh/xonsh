@@ -4,6 +4,7 @@ import io
 import os
 import sys
 import time
+import difflib
 import builtins
 
 from xonsh.tools import (XonshError, print_exception, DefaultNotGiven,
@@ -348,13 +349,20 @@ class BaseShell(object):
         """Pushes a line onto the buffer and compiles the code in a way that
         enables multiline input.
         """
-        code = None
         self.buffer.append(line)
         if self.need_more_lines:
-            return None, code
+            return None, None
+        src = self.obtain_source()
+        return self.compile(src)
+
+    def obtain_source(self):
+        """Gets the source code from the current buffer and any precommand
+        event handlers that may be active.
+        """
         i = 0
+        limit = sys.getrecursionlimit()
         lst = ''
-        src = ''.join(self.buffer)
+        src = raw = ''.join(self.buffer)
         while src != lst:
             lst = src
             srcs = events.on_precommand.fire(src)
@@ -363,12 +371,23 @@ class BaseShell(object):
                     src = s
                     break
             i += 1
-            if i == 1000:
+            if i == limit:
                 print_exception('Modifcations to source input took more than '
-                                '1000 iterations to converge.')
-        return self._compile(src)
+                                'the recurssion limit number of interations to '
+                                'converge.')
+        if builtins.__xonsh_env__.get('XONSH_DEBUG') and src != raw:
+            sys.stderr.writelines(difflib.unified_diff(
+                raw.splitlines(keepends=True),
+                src.splitlines(keepends=True),
+                fromfile='before precommand event',
+                tofile='after precommand event',
+            ))
+        return src
 
-    def _compile(self, src):
+    def compile(self, src):
+        """Compiles source code and returns the (possibly modified) source and
+        a valid code object.
+        """
         _cache = should_use_cache(self.execer, 'single')
         if _cache:
             codefname = code_cache_name(src)
