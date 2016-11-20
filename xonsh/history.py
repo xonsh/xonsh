@@ -70,6 +70,15 @@ def _gc_bytes_to_rmfiles(hsize, files):
     return rmfiles
 
 
+def _get_history_files(reverse=False):
+    data_dir = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
+    data_dir = expanduser_abs_path(data_dir)
+    files = [os.path.join(data_dir, f) for f in os.listdir(data_dir)
+             if f.startswith('xonsh-') and f.endswith('.json')]
+    files.sort(key=lambda x: os.path.getmtime(x), reverse=reverse)
+    return files
+
+
 class HistoryGC(threading.Thread):
     """Shell history garbage collection."""
 
@@ -266,18 +275,13 @@ def _all_xonsh_parser(**kwargs):
 
     return format: (cmd, start_time, index)
     """
-    data_dir = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
-    data_dir = expanduser_abs_path(data_dir)
-
-    files = [os.path.join(data_dir, f) for f in os.listdir(data_dir)
-             if f.startswith('xonsh-') and f.endswith('.json')]
     ind = 0
-    for f in files:
+    for f in _get_history_files():
         try:
             json_file = LazyJSON(f, reopen=False)
         except ValueError:
             # Invalid json file
-            pass
+            continue
         commands = json_file.load()['cmds']
         for c in commands:
             yield (c['inp'].rstrip(), c['ts'][0], ind)
