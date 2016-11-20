@@ -59,8 +59,6 @@ else:
         _sys.modules['xonsh.base_shell'] = __amalgam__
         dirstack = __amalgam__
         _sys.modules['xonsh.dirstack'] = __amalgam__
-        history = __amalgam__
-        _sys.modules['xonsh.history'] = __amalgam__
         inspectors = __amalgam__
         _sys.modules['xonsh.inspectors'] = __amalgam__
         xonfig = __amalgam__
