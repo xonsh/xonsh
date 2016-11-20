@@ -16,6 +16,7 @@ from xonsh.codecache import (should_use_cache, code_cache_name,
 from xonsh.completer import Completer
 from xonsh.prompt.base import multiline_prompt, PromptFormatter
 from xonsh.events import events
+from xonsh.shell import fire_precommand
 
 if ON_WINDOWS:
     import ctypes
@@ -324,14 +325,12 @@ class BaseShell(object):
             info['out'] = last_out
         else:
             info['out'] = tee_out + '\n' + last_out
-
         events.on_postcommand.fire(
             info['inp'],
             info['rtn'],
             info.get('out', None),
             info['ts']
-        )
-
+            )
         hist.append(info)
         hist.last_cmd_rtn = hist.last_cmd_out = None
 
@@ -352,37 +351,9 @@ class BaseShell(object):
         self.buffer.append(line)
         if self.need_more_lines:
             return None, None
-        src = self.obtain_source()
+        src = ''.join(self.buffer)
+        src = fire_precommand(src)
         return self.compile(src)
-
-    def obtain_source(self):
-        """Gets the source code from the current buffer and any precommand
-        event handlers that may be active.
-        """
-        i = 0
-        limit = sys.getrecursionlimit()
-        lst = ''
-        src = raw = ''.join(self.buffer)
-        while src != lst:
-            lst = src
-            srcs = events.on_precommand.fire(src)
-            for s in srcs:
-                if s != lst:
-                    src = s
-                    break
-            i += 1
-            if i == limit:
-                print_exception('Modifcations to source input took more than '
-                                'the recurssion limit number of interations to '
-                                'converge.')
-        if builtins.__xonsh_env__.get('XONSH_DEBUG') and src != raw:
-            sys.stderr.writelines(difflib.unified_diff(
-                raw.splitlines(keepends=True),
-                src.splitlines(keepends=True),
-                fromfile='before precommand event',
-                tofile='after precommand event',
-            ))
-        return src
 
     def compile(self, src):
         """Compiles source code and returns the (possibly modified) source and

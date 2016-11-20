@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """The xonsh shell"""
 import os
+import sys
 import random
+import difflib
 import builtins
 import warnings
 
@@ -25,6 +27,34 @@ on_postcommand(cmd: str, rtn: int, out: str or None, ts: list) -> None
 
 Fires just after a command is executed.
 """)
+
+
+def fire_precommand(src, show_diff=True):
+    """Returns the results of firing the precommand handles."""
+    i = 0
+    limit = sys.getrecursionlimit()
+    lst = ''
+    raw = src
+    while src != lst:
+        lst = src
+        srcs = events.on_precommand.fire(src)
+        for s in srcs:
+            if s != lst:
+                src = s
+                break
+        i += 1
+        if i == limit:
+            print_exception('Modifcations to source input took more than '
+                            'the recurssion limit number of interations to '
+                            'converge.')
+    if show_diff and builtins.__xonsh_env__.get('XONSH_DEBUG') and src != raw:
+        sys.stderr.writelines(difflib.unified_diff(
+            raw.splitlines(keepends=True),
+            src.splitlines(keepends=True),
+            fromfile='before precommand event',
+            tofile='after precommand event',
+        ))
+    return src
 
 
 class Shell(object):
