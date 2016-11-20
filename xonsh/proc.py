@@ -598,19 +598,29 @@ class PopenThread(threading.Thread):
         self._read_write(procout, stdout, sys.__stdout__)
         self._read_write(procerr, stderr, sys.__stderr__)
         # loop over reads while process is running.
-        cnt = 1
+        i = j = cnt = 1
         while proc.poll() is None:
+            # this is here for CPU performance reasons.
+            if i + j == 0:
+                cnt = min(cnt + 1, 1000)
+                tout = self.timeout * cnt
+                if procout is not None:
+                    procout.timeout = tout
+                if procerr is not None:
+                    procerr.timeout = tout
+            elif cnt == 1:
+                pass
+            else:
+                cnt = 1
+                if procout is not None:
+                    procout.timeout = self.timeout
+                if procerr is not None:
+                    procerr.timeout = self.timeout
+            # redirect some output!
             i = self._read_write(procout, stdout, sys.__stdout__)
             j = self._read_write(procerr, stderr, sys.__stderr__)
             if self.suspended:
                 break
-            elif self.in_alt_mode:
-                # this is here for CPU performance reasons.
-                if i + j == 0:
-                    cnt = min(cnt + 1, 1000)
-                else:
-                    cnt = 1
-                procout.timeout = procerr.timeout = self.timeout * cnt
         if self.suspended:
             return
         # close files to send EOF to non-blocking reader.
@@ -852,6 +862,10 @@ class PopenThread(threading.Thread):
 
     def send_signal(self, signal):
         """Dispatches to Popen.send_signal()."""
+        dt = 0.0
+        while self.proc is None and dt < self.timeout:
+            time.sleep(1e-7)
+            dt += 1e-7
         if self.proc is None:
             return
         try:
@@ -1697,6 +1711,7 @@ class CommandPipeline:
         # read from process while it is running
         check_prev_done = len(self.procs) == 1
         prev_end_time = None
+        i = j = cnt = 1
         while proc.poll() is None:
             if getattr(proc, 'suspended', False):
                 return
@@ -1714,9 +1729,13 @@ class CommandPipeline:
                 proc.prevs_are_closed = True
                 break
             stdout_lines = safe_readlines(stdout, 1024)
-            yield from stdout_lines
+            i = len(stdout_lines)
+            if i != 0:
+                yield from stdout_lines
             stderr_lines = safe_readlines(stderr, 1024)
-            self.stream_stderr(stderr_lines)
+            j = len(stderr_lines)
+            if j != 0:
+                self.stream_stderr(stderr_lines)
             if not check_prev_done:
                 # if we are piping...
                 if (stdout_lines or stderr_lines):
@@ -1733,7 +1752,12 @@ class CommandPipeline:
                     # next-to-last proc has finished, wait a bit to make
                     # sure we have fully started up, etc.
                     check_prev_done = True
-            time.sleep(timeout)
+            # this is for CPU usage
+            if i + j == 0:
+                cnt = min(cnt + 1, 1000)
+            else:
+                cnt = 1
+            time.sleep(timeout * cnt)
         # read from process now that it is over
         yield from safe_readlines(stdout)
         self.stream_stderr(safe_readlines(stderr))
