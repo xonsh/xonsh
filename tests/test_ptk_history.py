@@ -1,9 +1,9 @@
 import pytest
 
 try:
-    import prompt_toolkit
+    import prompt_toolkit  # NOQA
 except ImportError:
-    pytest.skip(msg='prompt_toolkit is not available')
+    pytest.mark.skip(msg='prompt_toolkit is not available')
 
 from xonsh.ptk.history import PromptToolkitHistory
 
