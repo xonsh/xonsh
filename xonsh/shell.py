@@ -12,7 +12,7 @@ from xonsh.environ import xonshrc_context
 from xonsh.execer import Execer
 from xonsh.platform import (best_shell_type, has_prompt_toolkit,
                             ptk_version_is_supported)
-from xonsh.tools import XonshError, to_bool_or_int
+from xonsh.tools import XonshError, to_bool_or_int, print_exception
 from xonsh.events import events
 
 

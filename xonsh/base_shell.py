@@ -4,7 +4,6 @@ import io
 import os
 import sys
 import time
-import difflib
 import builtins
 
 from xonsh.tools import (XonshError, print_exception, DefaultNotGiven,
@@ -379,7 +378,7 @@ class BaseShell(object):
             partial_string_info = check_for_partial_string(src)
             in_partial_string = (partial_string_info[0] is not None and
                                  partial_string_info[1] is None)
-            if line == '\n' and not in_partial_string:
+            if (src == '\n' or src.endswith('\n\n')) and not in_partial_string:
                 self.reset_buffer()
                 print_exception()
                 return src, None
