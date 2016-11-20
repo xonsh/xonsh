@@ -1011,7 +1011,7 @@ class FileThreadDispatcher:
         """
         h = self.handle
         r = h.write(s)
-        h.flush()
+        safe_flush(h)
         return r
 
     @property
