@@ -639,21 +639,13 @@ class History(object):
         while self.gc.is_alive():
             time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer
         files = self.gc.files()
+        result = []
         for _, _, f in files:
-            try:
-                lj = LazyJSON(f, reopen=False)
-                for command in lj['cmds']:
-                    inp = command['inp'].splitlines()
-                    for line in inp:
-                        if line == 'EOF':
-                            continue
-                        readline.add_history(line)
-                        if RL_LIB is not None:
-                            RL_LIB.history_set_pos(i)
-                        i += 1
-                lj.close()
-            except (IOError, OSError, ValueError):
-                continue
+            with open(self.filename, 'r', newline='\n') as f:
+                hist = LazyJSON(f).load()
+                for command in hist['cmds']:
+                    result.append(dict(command))
+        return result
 
     def __iter__(self):
         """Get current session history.
