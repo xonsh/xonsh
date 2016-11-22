@@ -3,11 +3,13 @@
 import builtins
 import time
 
+from xonsh.history.dummy import History as DummyHistory
 from xonsh.history.json import History as JsonHistory
 from xonsh.history.json import history_main
 from xonsh.history.sqlite import History as SqliteHistory
 
 _BACKENDS = {
+    'dummy': DummyHistory,
     'json': JsonHistory,
     'sqlite': SqliteHistory,
 }
@@ -15,8 +17,7 @@ _BACKENDS = {
 
 def get_history_backend(env, ts, locked, gc=True, filename=None):
     env = builtins.__xonsh_env__
-    backend = env.get('XONSH_HISTORY_BACKEND', 'sqlite')
-    print('backend str: {}'.format(backend))
+    backend = env.get('XONSH_HISTORY_BACKEND', 'json')
     try:
         kls_history = _BACKENDS[backend]
     except KeyError:
