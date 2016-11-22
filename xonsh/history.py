@@ -2,7 +2,6 @@
 """Implements the xonsh history object."""
 import os
 import sys
-import glob
 import json
 import time
 import uuid
@@ -70,6 +69,19 @@ def _gc_bytes_to_rmfiles(hsize, files):
     return rmfiles
 
 
+def _get_history_files(sort=True, reverse=False):
+    """Find and return the history files. Optionally sort files by
+        modify time.
+    """
+    data_dir = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
+    data_dir = expanduser_abs_path(data_dir)
+    files = [os.path.join(data_dir, f) for f in os.listdir(data_dir)
+             if f.startswith('xonsh-') and f.endswith('.json')]
+    if sort:
+        files.sort(key=lambda x: os.path.getmtime(x), reverse=reverse)
+    return files
+
+
 class HistoryGC(threading.Thread):
     """Shell history garbage collection."""
 
@@ -111,20 +123,22 @@ class HistoryGC(threading.Thread):
         """Find and return the history files. Optionally locked files may be
         excluded.
 
-        This is sorted by the last closed time. Returns a list of (timestamp,
-        file) tuples.
+        This is sorted by the last closed time. Returns a list of
+        (timestamp, number of cmds, file name) tuples.
         """
         # pylint: disable=no-member
         env = getattr(builtins, '__xonsh_env__', None)
         if env is None:
             return []
-        xdd = env.get('XONSH_DATA_DIR')
-        xdd = expanduser_abs_path(xdd)
 
-        fs = [f for f in glob.iglob(os.path.join(xdd, 'xonsh-*.json'))]
+        fs = _get_history_files(sort=False)
         files = []
         for f in fs:
             try:
+                if os.path.getsize(f) == 0:
+                    # collect empty files (for gc)
+                    files.append((time.time(), 0, f))
+                    continue
                 lj = LazyJSON(f, reopen=False)
                 if only_unlocked and lj['locked']:
                     continue
@@ -266,18 +280,13 @@ def _all_xonsh_parser(**kwargs):
 
     return format: (cmd, start_time, index)
     """
-    data_dir = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
-    data_dir = expanduser_abs_path(data_dir)
-
-    files = [os.path.join(data_dir, f) for f in os.listdir(data_dir)
-             if f.startswith('xonsh-') and f.endswith('.json')]
     ind = 0
-    for f in files:
+    for f in _get_history_files():
         try:
             json_file = LazyJSON(f, reopen=False)
         except ValueError:
             # Invalid json file
-            pass
+            continue
         commands = json_file.load()['cmds']
         for c in commands:
             yield (c['inp'].rstrip(), c['ts'][0], ind)
