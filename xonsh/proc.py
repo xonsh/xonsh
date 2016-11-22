@@ -525,6 +525,7 @@ class PopenThread(threading.Thread):
         else:
             self.stdin_fd = stdin.fileno()
         self.store_stdin = env.get('XONSH_STORE_STDIN')
+        self.timeout = env.get('XONSH_PROC_FREQUENCY')
         self.in_alt_mode = False
         self.stdin_mode = None
         # stdout setup
@@ -570,7 +571,6 @@ class PopenThread(threading.Thread):
             self.stdin = io.BytesIO()
             self.stdout = io.BytesIO()
             self.stderr = io.BytesIO()
-        self.timeout = env.get('XONSH_PROC_FREQUENCY')
         self.suspended = False
         self.prevs_are_closed = False
         self.start()
