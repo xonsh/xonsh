@@ -2,6 +2,8 @@
 """Implements the xonsh history backend."""
 import threading
 
+__all__ = ['History']
+
 
 class HistoryGC(threading.Thread):
     pass
@@ -22,7 +24,7 @@ class History:
         print('DummyHistory append cmd: {}'.format(cmd))
 
     def flush(self, at_exit=False):
-        print('DummyHistory flush() called')
+        print('DummyHistory flush ...')
 
     def get_history_items(self):
         return [{'inp': 'dummy in action\n'}]
