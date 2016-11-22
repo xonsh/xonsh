@@ -301,13 +301,13 @@ def _dh_create_parser(p=None):
     return p
 
 
-def _dh_main_action(ns, hist=None):
+def _dh_main_action(ns, hist=None, stdout=None, stderr=None):
     hd = HistoryDiffer(ns.a, ns.b, reopen=ns.reopen, verbose=ns.verbose)
-    print_color(hd.format())
+    print_color(hd.format(), file=stdout)
 
 
-def diff_history_main(args=None, stdin=None):
+def diff_history_main(args=None, stdin=None, stdout=None, stderr=None):
     """Main entry point for history diff'ing"""
     parser = _dh_create_parser()
     ns = parser.parse_args(args)
-    _dh_main_action(ns)
+    _dh_main_action(ns, stdout=stdout)
