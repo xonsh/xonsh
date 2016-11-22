@@ -730,7 +730,7 @@ class PopenThread(threading.Thread):
 
     def _signal_winch(self, signum, frame):
         """Signal handler for SIGWINCH - window size has changed."""
-        self.proc.send_signal(signal.SIGWINCH)
+        self.send_signal(signal.SIGWINCH)
         self._set_pty_size()
 
     def _set_pty_size(self):
