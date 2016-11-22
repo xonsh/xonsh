@@ -18,7 +18,10 @@
     "example, the ``!!`` syntax for running the previous command is now usable.",
     "Note that these features are implemented as precommand events and these ",
     "additions do not affect the xonsh language when run as script. That said, ",
-    "you might find them useful if you have strong musucle memory."]
+    "you might find them useful if you have strong muscle memory.\n\n",
+    "**Warning:** This xontrib may modify user command line input to implement ",
+    "its behavior. To see the modifications as they are applied (in unified diff",
+    "format), please set ``$XONSH_DEBUG = True``."]
  },
  {"name": "distributed",
   "package": "xonsh",
