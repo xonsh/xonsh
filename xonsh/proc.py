@@ -491,6 +491,18 @@ def safe_flush(handle):
     return status
 
 
+def still_writable(fd):
+    """Determines whether a file descriptior is still writable by trying to
+    write an empty string and seeing if it fails.
+    """
+    try:
+        os.write(fd, b'')
+        status = True
+    except OSError:
+        status = False
+    return status
+
+
 class PopenThread(threading.Thread):
     """A thread for running and managing subprocess. This allows reading
     from the stdin, stdout, and stderr streams in a non-blocking fashion.
@@ -1010,8 +1022,11 @@ class FileThreadDispatcher:
         extra sure the string was written.
         """
         h = self.handle
-        r = h.write(s)
-        h.flush()
+        try:
+            r = h.write(s)
+            h.flush()
+        except OSError:
+            r = None
         return r
 
     @property
@@ -1286,6 +1301,21 @@ class ProcProxyThread(threading.Thread):
                 r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr, spec)
         except SystemExit as e:
             r = e.code if isinstance(e.code, int) else int(bool(e.code))
+        except OSError as e:
+            status = still_writable(self.c2pwrite) and \
+                     still_writable(self.errwrite)
+            if status:
+                # stdout and stderr are still writable, so error must
+                # come from function itself.
+                print_exception()
+                r = 1
+            else:
+                # stdout and stderr are no longer writable, so error must
+                # come from the fact that the next process in the pipeline
+                # has closed the other side of the pipe. The function then
+                # attempted to write to this side of the pipe anyway. This
+                # is not truly an error and we should exit gracefully.
+                r = 0
         except Exception:
             print_exception()
             r = 1

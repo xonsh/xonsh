@@ -2,7 +2,6 @@
 """Implements the xonsh history object."""
 import os
 import sys
-import glob
 import json
 import time
 import uuid
@@ -70,6 +69,19 @@ def _gc_bytes_to_rmfiles(hsize, files):
     return rmfiles
 
 
+def _get_history_files(sort=True, reverse=False):
+    """Find and return the history files. Optionally sort files by
+        modify time.
+    """
+    data_dir = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
+    data_dir = expanduser_abs_path(data_dir)
+    files = [os.path.join(data_dir, f) for f in os.listdir(data_dir)
+             if f.startswith('xonsh-') and f.endswith('.json')]
+    if sort:
+        files.sort(key=lambda x: os.path.getmtime(x), reverse=reverse)
+    return files
+
+
 class HistoryGC(threading.Thread):
     """Shell history garbage collection."""
 
@@ -111,20 +123,22 @@ class HistoryGC(threading.Thread):
         """Find and return the history files. Optionally locked files may be
         excluded.
 
-        This is sorted by the last closed time. Returns a list of (timestamp,
-        file) tuples.
+        This is sorted by the last closed time. Returns a list of
+        (timestamp, number of cmds, file name) tuples.
         """
         # pylint: disable=no-member
         env = getattr(builtins, '__xonsh_env__', None)
         if env is None:
             return []
-        xdd = env.get('XONSH_DATA_DIR')
-        xdd = expanduser_abs_path(xdd)
 
-        fs = [f for f in glob.iglob(os.path.join(xdd, 'xonsh-*.json'))]
+        fs = _get_history_files(sort=False)
         files = []
         for f in fs:
             try:
+                if os.path.getsize(f) == 0:
+                    # collect empty files (for gc)
+                    files.append((time.time(), 0, f))
+                    continue
                 lj = LazyJSON(f, reopen=False)
                 if only_unlocked and lj['locked']:
                     continue
@@ -266,18 +280,13 @@ def _all_xonsh_parser(**kwargs):
 
     return format: (cmd, start_time, index)
     """
-    data_dir = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
-    data_dir = expanduser_abs_path(data_dir)
-
-    files = [os.path.join(data_dir, f) for f in os.listdir(data_dir)
-             if f.startswith('xonsh-') and f.endswith('.json')]
     ind = 0
-    for f in files:
+    for f in _get_history_files():
         try:
             json_file = LazyJSON(f, reopen=False)
         except ValueError:
             # Invalid json file
-            pass
+            continue
         commands = json_file.load()['cmds']
         for c in commands:
             yield (c['inp'].rstrip(), c['ts'][0], ind)
@@ -443,7 +452,7 @@ def _hist_get(session='session', *, slices=None, datetime_format=None,
     return cmds
 
 
-def _hist_show(ns, *args, **kwargs):
+def _hist_show(ns, hist=None, stdout=None, stderr=None):
     """Show the requested portion of shell history.
     Accepts same parameters with `_hist_get`.
     """
@@ -454,24 +463,24 @@ def _hist_show(ns, *args, **kwargs):
                              end_time=ns.end_time,
                              datetime_format=ns.datetime_format)
     except ValueError as err:
-        print("history: error: {}".format(err), file=sys.stderr)
+        print("history: error: {}".format(err), file=stderr)
         return
     if ns.reverse:
         commands = reversed(list(commands))
     if not ns.numerate and not ns.timestamp:
         for c, _, _ in commands:
-            print(c)
+            print(c, file=stdout)
     elif not ns.timestamp:
         for c, _, i in commands:
-            print('{}: {}'.format(i, c))
+            print('{}: {}'.format(i, c), file=stdout)
     elif not ns.numerate:
         for c, ts, _ in commands:
             dt = datetime.datetime.fromtimestamp(ts).ctime()
-            print('({}) {}'.format(dt, c))
+            print('({}) {}'.format(dt, c), file=stdout)
     else:
         for c, ts, i in commands:
             dt = datetime.datetime.fromtimestamp(ts).ctime()
-            print('{}:({}) {}'.format(i, dt, c))
+            print('{}:({}) {}'.format(i, dt, c), file=stdout)
 
 
 # Interface to History
@@ -689,7 +698,7 @@ class History(object):
                               'you can create new though.')
 
 
-def _hist_info(ns, hist):
+def _hist_info(ns, hist, stdout, stderr):
     """Display information about the shell history."""
     data = collections.OrderedDict()
     data['sessionid'] = str(hist.sessionid)
@@ -699,10 +708,10 @@ def _hist_info(ns, hist):
     data['bufferlength'] = len(hist.buffer)
     if ns.json:
         s = json.dumps(data)
-        print(s)
+        print(s, file=stdout)
     else:
         lines = ['{0}: {1}'.format(k, v) for k, v in data.items()]
-        print('\n'.join(lines))
+        print('\n'.join(lines), file=stdout)
 
 
 def _hist_gc(ns, hist):
@@ -726,12 +735,12 @@ def _HIST_SESSIONS():
 def _HIST_MAIN_ACTIONS():
     return {
         'show': _hist_show,
-        'id': lambda ns, hist: print(hist.sessionid),
-        'file': lambda ns, hist: print(hist.filename),
+        'id': lambda ns, hist, stdout, stderr: print(hist.sessionid, file=stdout),
+        'file': lambda ns, hist, stdout, stderr: print(hist.filename, file=stdout),
         'info': _hist_info,
         'diff': _dh_main_action,
         'gc': _hist_gc,
-    }
+        }
 
 
 def _hist_parse_args(args):
@@ -759,9 +768,9 @@ def _hist_parse_args(args):
     return ns
 
 
-def history_main(args=None, stdin=None):
+def history_main(args=None, stdin=None, stdout=None, stderr=None):
     """This is the history command entry point."""
     hist = builtins.__xonsh_history__
     ns = _hist_parse_args(args)
     if ns:
-        _HIST_MAIN_ACTIONS[ns.action](ns, hist)
+        _HIST_MAIN_ACTIONS[ns.action](ns, hist, stdout, stderr)
