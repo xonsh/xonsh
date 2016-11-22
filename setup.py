@@ -306,7 +306,7 @@ def main():
         classifiers=['Programming Language :: Python :: 3'],
         packages=['xonsh', 'xonsh.ply.ply', 'xonsh.ptk', 'xonsh.parsers',
                   'xonsh.xoreutils', 'xontrib',
-                  'xonsh.completers', 'xonsh.prompt'],
+                  'xonsh.completers', 'xonsh.history', 'xonsh.prompt'],
         package_dir={'xonsh': 'xonsh', 'xontrib': 'xontrib'},
         package_data={'xonsh': ['*.json', '*.githash'], 'xontrib': ['*.xsh']},
         cmdclass=cmdclass,
