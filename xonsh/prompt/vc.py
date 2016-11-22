@@ -6,7 +6,6 @@ import os
 import sys
 import queue
 import builtins
-import warnings
 import threading
 import subprocess
 
@@ -69,7 +68,7 @@ def get_hg_branch(root=None):
         # not in repo
         return None
     else:
-        root = xt.decode_bytes(root)
+        root = xt.decode_bytes(root).strip()
     if env.get('VC_HG_SHOW_BRANCH'):
         # get branch name
         branch_path = os.path.sep.join([root, '.hg', 'branch'])
@@ -114,20 +113,24 @@ def _first_branch_timeout_message():
           file=sys.stderr)
 
 
-def current_branch(pad=NotImplemented):
+def current_branch():
     """Gets the branch for a current working directory. Returns an empty string
     if the cwd is not a repository.  This currently only works for git and hg
     and should be extended in the future.  If a timeout occurred, the string
     '<branch-timeout>' is returned.
     """
-    if pad is not NotImplemented:
-        warnings.warn("The pad argument of current_branch has no effect now "
-                      "and will be removed in the future")
     branch = None
     cmds = builtins.__xonsh_commands_cache__
-    if cmds.lazy_locate_binary('git'):
+    # check for binary only once
+    if cmds.is_empty():
+        has_git = bool(cmds.locate_binary('git'))
+        has_hg = bool(cmds.locate_binary('hg'))
+    else:
+        has_git = bool(cmds.lazy_locate_binary('git'))
+        has_hg = bool(cmds.lazy_locate_binary('hg'))
+    if has_git:
         branch = get_git_branch()
-    if cmds.lazy_locate_binary('hg') and not branch:
+    if not branch and has_hg:
         branch = get_hg_branch()
     if isinstance(branch, subprocess.TimeoutExpired):
         branch = '<branch-timeout>'
