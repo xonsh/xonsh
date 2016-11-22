@@ -23,11 +23,10 @@ def get_history_backend(env, ts, locked, gc=True, filename=None):
     except KeyError:
         print('Unknown history backend: {}. Use Json version'.format(backend))
         kls_history = JsonHistory
-    print('History backend: {}'.format(kls_history))
     return kls_history(
         env=env.detype(),
-        ts=[time.time(), None],
-        locked=True,
+        ts=ts,
+        locked=locked,
         gc=gc,
         filename=filename,
     )
