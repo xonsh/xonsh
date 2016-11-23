@@ -111,7 +111,7 @@ def _rp_main_action(ns, h=None):
     print('----------------------------------------------------------------')
     print('Just replayed history, new history has the following information')
     print('----------------------------------------------------------------')
-    xhm._hist_info(ns, hist)
+    hist.show_info(ns)
 
 
 def replay_main(args, stdin=None):

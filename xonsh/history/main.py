@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Implements the xonsh history object."""
 import builtins
+import collections
 
 from xonsh.history.dummy import DummyHistory
 from xonsh.history.json import History
@@ -31,5 +32,9 @@ def construct_history(env, ts, locked, gc=True, filename=None):
     )
 
 
-def _hist_info(ns, hist, stdout, stderr):
-    raise NotImplementedError()
+def history_main(args=None, stdin=None, stdout=None, stderr=None):
+    """This is the history command entry point."""
+    hist = builtins.__xonsh_history__
+    ns = _hist_parse_args(args)
+    if ns:
+        _HIST_MAIN_ACTIONS[ns.action](ns, hist, stdout, stderr)

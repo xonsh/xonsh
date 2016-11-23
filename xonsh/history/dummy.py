@@ -2,27 +2,16 @@
 """Implements the xonsh history backend."""
 import threading
 
-
-class HistoryGC(threading.Thread):
-    pass
+from xonsh.history.base import HistoryBase
 
 
-class DummyHistory:
-    def __init__(self, gc=True, **kwargs):
-        self.gc = HistoryGC() if gc else None
-        self.rtns = None
-        self.last_cmd_rtn = None
-        self.last_cmd_out = None
-
-    def __iter__(self):
-        for cmd, ts, index in []:
-            yield (cmd, ts, index)
-
+class DummyHistory(HistoryBase):
     def append(self, cmd):
-        print('DummyHistory append cmd: {}'.format(cmd))
+        print('DummyHistory append: {}'.format(cmd))
 
     def flush(self, at_exit=False):
         print('DummyHistory flush ...')
 
     def items(self):
-        return [{'inp': 'dummy in action\n'}]
+        for item in [{'inp': 'dummy in action\n'}]:
+            yield item

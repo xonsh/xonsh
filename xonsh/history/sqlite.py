@@ -3,9 +3,9 @@
 import builtins
 import os
 import sqlite3
-import threading
 import time
 
+from xonsh.history.base import HistoryBase
 import xonsh.tools as xt
 
 
@@ -53,21 +53,10 @@ def xh_sqlite_items():
         return _xh_sqlite_get_records(c)
 
 
-class HistoryGC(threading.Thread):
-    pass
-
-
-class SqliteHistory:
+class SqliteHistory(HistoryBase):
     def __init__(self, gc=True, **kwargs):
-        self.gc = HistoryGC() if gc else None
-        self.rtns = None
-        self.last_cmd_rtn = None
-        self.last_cmd_out = None
+        super().__init__(gc=gc, **kwargs)
         self.last_cmd_inp = None
-
-    def __iter__(self):
-        for cmd, ts, index in []:
-            yield (cmd, ts, index)
 
     def append(self, cmd):
         opts = builtins.__xonsh_env__.get('HISTCONTROL')

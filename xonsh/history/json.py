@@ -18,6 +18,7 @@ from xonsh.lazyjson import LazyJSON, ljdump, LJNode
 from xonsh.tools import (ensure_slice, to_history_tuple, is_string,
                          get_portions, expanduser_abs_path, ensure_timestamp)
 from xonsh.diff_history import _dh_create_parser, _dh_main_action
+from xonsh.history.base import HistoryGC
 
 
 def _gc_commands_to_rmfiles(hsize, files):
@@ -82,7 +83,7 @@ def _get_history_files(sort=True, reverse=False):
     return files
 
 
-class HistoryGC(threading.Thread):
+class JsonHistoryGC(HistoryGC):
     """Shell history garbage collection."""
 
     def __init__(self, wait_for_shell=True, size=None, *args, **kwargs):
@@ -647,6 +648,21 @@ class History(object):
                     result.append(dict(command))
         return result
 
+    def show_info(self, ns, stdout=None, stderr=None):
+        """Display information about the shell history."""
+        data = collections.OrderedDict()
+        data['sessionid'] = str(self.sessionid)
+        data['filename'] = self.filename
+        data['length'] = len(self)
+        data['buffersize'] = self.buffersize
+        data['bufferlength'] = len(self.buffer)
+        if ns.json:
+            s = json.dumps(data)
+            print(s, file=stdout)
+        else:
+            lines = ['{0}: {1}'.format(k, v) for k, v in data.items()]
+            print('\n'.join(lines), file=stdout)
+
     def __iter__(self):
         """Get current session history.
 
@@ -710,7 +726,7 @@ class History(object):
                               'you can create new though.')
 
 
-def _hist_info(ns, hist, stdout, stderr):
+def _hist_info(ns, hist, stdout=None, stderr=None):
     """Display information about the shell history."""
     data = collections.OrderedDict()
     data['sessionid'] = str(hist.sessionid)

@@ -6,6 +6,8 @@ else:
     import sys as _sys
     try:
         from xonsh.history import __amalgam__
+        base = __amalgam__
+        _sys.modules['xonsh.history.base'] = __amalgam__
         dummy = __amalgam__
         _sys.modules['xonsh.history.dummy'] = __amalgam__
         json = __amalgam__
