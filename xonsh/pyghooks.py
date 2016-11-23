@@ -21,9 +21,10 @@ from pygments.styles import get_style_by_name
 import pygments.util
 
 from xonsh.commands_cache import CommandsCache
-from xonsh.lazyasd import LazyObject, LazyDict
+from xonsh.lazyasd import LazyObject, LazyDict, lazyobject
 from xonsh.tools import (ON_WINDOWS, intensify_colors_for_cmd_exe,
                          expand_gray_colors_for_cmd_exe)
+from xonsh.lazyimps import terminal256
 
 load_module_in_background('pkg_resources', debug='XONSH_DEBUG',
                           replacements={'pygments.plugin': 'pkg_resources'})
@@ -1389,3 +1390,27 @@ del (_algol_style, _algol_nu_style, _autumn_style, _borland_style, _bw_style,
      _murphy_style, _native_style, _paraiso_dark_style, _paraiso_light_style,
      _pastie_style, _perldoc_style, _rrt_style, _tango_style, _trac_style,
      _vim_style, _vs_style, _xcode_style)
+
+
+#
+# Formatter
+#
+
+@lazyobject
+def XonshTerminal256Formatter():
+    class XonshTerminal256FormatterProxy(terminal256.Terminal256Formatter):
+        """Proxy class for xonsh terminal256 formatting that understands.
+        xonsh color tokens.
+        """
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            # just keep the opening token for colors.
+            color_names = set(map(str, Color.subtypes))
+            for name, (opener, closer) in self.style_string.items():
+                if name in color_names:
+                    self.style_string[name] = (opener, '')
+            # special case NO_COLOR, because it is special.
+            self.style_string['Token.Color.NO_COLOR'] = ('\x1b[39m', '')
+
+    return XonshTerminal256FormatterProxy

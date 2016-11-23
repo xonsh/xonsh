@@ -26,7 +26,7 @@ import collections.abc as cabc
 from xonsh.platform import ON_WINDOWS, ON_POSIX, CAN_RESIZE_WINDOW
 from xonsh.tools import (redirect_stdout, redirect_stderr, print_exception,
                          XonshCalledProcessError, findfirst, on_main_thread,
-                         XonshError)
+                         XonshError, format_std_prepost)
 from xonsh.lazyasd import lazyobject, LazyObject
 from xonsh.jobs import wait_for_active_job
 from xonsh.lazyimps import fcntl, termios, _winapi, msvcrt, winutils
@@ -1681,6 +1681,7 @@ class CommandPipeline:
         self.input = self._output = self.errors = self.endtime = None
         self._closed_handle_cache = {}
         self.lines = []
+        self._stderr_prefix = self._stderr_postfix = None
 
     def __repr__(self):
         s = self.__class__.__name__ + '('
@@ -1851,6 +1852,10 @@ class CommandPipeline:
         enc = env.get('XONSH_ENCODING')
         err = env.get('XONSH_ENCODING_ERRORS')
         b = b''.join(lines)
+        if self.stderr_prefix:
+            b = self.stderr_prefix + b
+        if self.stderr_postfix:
+            b += self.stderr_postfix
         stderr_has_buffer = hasattr(sys.stderr, 'buffer')
         # write bytes to std stream
         if stderr_has_buffer:
@@ -2099,6 +2104,32 @@ class CommandPipeline:
     def executed_cmd(self):
         """The resolve and executed command."""
         return self.spec.cmd
+
+    @property
+    def stderr_prefix(self):
+        """Prefix to print in front of stderr, as bytes."""
+        p = self._stderr_prefix
+        if p is None:
+            env = builtins.__xonsh_env__
+            t = env.get('XONSH_STDERR_PREFIX')
+            s = format_std_prepost(t, env=env)
+            b = s.encode(encoding=env.get('XONSH_ENCODING'),
+                         errors=env.get('XONSH_ENCODING_ERRORS'))
+            self._stderr_prefix = p
+        return p
+
+    @property
+    def stderr_postfix(self):
+        """Postfix to print after stderr, as bytes."""
+        p = self._stderr_postfix
+        if p is None:
+            env = builtins.__xonsh_env__
+            t = env.get('XONSH_STDERR_POSTFIX')
+            s = format_std_prepost(t, env=env)
+            b = s.encode(encoding=env.get('XONSH_ENCODING'),
+                         errors=env.get('XONSH_ENCODING_ERRORS'))
+            self._stderr_postfix = p
+        return p
 
 
 class HiddenCommandPipeline(CommandPipeline):
