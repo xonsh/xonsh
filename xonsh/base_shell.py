@@ -15,6 +15,7 @@ from xonsh.codecache import (should_use_cache, code_cache_name,
 from xonsh.completer import Completer
 from xonsh.prompt.base import multiline_prompt, PromptFormatter
 from xonsh.events import events
+from xonsh.shell import fire_precommand
 
 if ON_WINDOWS:
     import ctypes
@@ -307,7 +308,6 @@ class BaseShell(object):
         src, code = self.push(line)
         if code is None:
             return
-        events.on_precommand.fire(src)
         env = builtins.__xonsh_env__
         hist = builtins.__xonsh_history__  # pylint: disable=no-member
         ts1 = None
@@ -355,14 +355,12 @@ class BaseShell(object):
             info['out'] = last_out
         else:
             info['out'] = tee_out + '\n' + last_out
-
         events.on_postcommand.fire(
             info['inp'],
             info['rtn'],
             info.get('out', None),
             info['ts']
-        )
-
+            )
         hist.append(info)
         hist.last_cmd_rtn = hist.last_cmd_out = None
 
@@ -380,11 +378,17 @@ class BaseShell(object):
         """Pushes a line onto the buffer and compiles the code in a way that
         enables multiline input.
         """
-        code = None
         self.buffer.append(line)
         if self.need_more_lines:
-            return None, code
+            return None, None
         src = ''.join(self.buffer)
+        src = fire_precommand(src)
+        return self.compile(src)
+
+    def compile(self, src):
+        """Compiles source code and returns the (possibly modified) source and
+        a valid code object.
+        """
         _cache = should_use_cache(self.execer, 'single')
         if _cache:
             codefname = code_cache_name(src)
@@ -405,7 +409,7 @@ class BaseShell(object):
             partial_string_info = check_for_partial_string(src)
             in_partial_string = (partial_string_info[0] is not None and
                                  partial_string_info[1] is None)
-            if ((line == '\n' and not in_partial_string)):
+            if (src == '\n' or src.endswith('\n\n')) and not in_partial_string:
                 self.reset_buffer()
                 print_exception()
                 return src, None
