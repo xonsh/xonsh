@@ -1,24 +1,17 @@
 # -*- coding: utf-8 -*-
 """Implements the xonsh history object."""
 import os
-import sys
 import json
 import time
 import uuid
-import argparse
 import builtins
 import collections
-import datetime
-import functools
 import threading
 import collections.abc as cabc
 
-from xonsh.lazyasd import lazyobject
-from xonsh.lazyjson import LazyJSON, ljdump, LJNode
-from xonsh.tools import (ensure_slice, to_history_tuple, is_string,
-                         get_portions, expanduser_abs_path, ensure_timestamp)
-from xonsh.diff_history import _dh_create_parser, _dh_main_action
 from xonsh.history.base import HistoryGC
+import xonsh.tools as xt
+import xonsh.lazyjson as xlj
 
 
 def _gc_commands_to_rmfiles(hsize, files):
@@ -75,7 +68,7 @@ def _get_history_files(sort=True, reverse=False):
         modify time.
     """
     data_dir = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
-    data_dir = expanduser_abs_path(data_dir)
+    data_dir = xt.expanduser_abs_path(data_dir)
     files = [os.path.join(data_dir, f) for f in os.listdir(data_dir)
              if f.startswith('xonsh-') and f.endswith('.json')]
     if sort:
@@ -108,7 +101,7 @@ class JsonHistoryGC(HistoryGC):
         if self.size is None:
             hsize, units = env.get('XONSH_HISTORY_SIZE')
         else:
-            hsize, units = to_history_tuple(self.size)
+            hsize, units = xt.to_history_tuple(self.size)
         files = self.files(only_unlocked=True)
         rmfiles_fn = self.gc_units_to_rmfiles.get(units)
         if rmfiles_fn is None:
@@ -140,7 +133,7 @@ class JsonHistoryGC(HistoryGC):
                     # collect empty files (for gc)
                     files.append((time.time(), 0, f))
                     continue
-                lj = LazyJSON(f, reopen=False)
+                lj = xlj.LazyJSON(f, reopen=False)
                 if only_unlocked and lj['locked']:
                     continue
                 # info: closing timestamp, number of commands, filename
@@ -186,13 +179,13 @@ class HistoryFlusher(threading.Thread):
     def dump(self):
         """Write the cached history to external storage."""
         with open(self.filename, 'r', newline='\n') as f:
-            hist = LazyJSON(f).load()
+            hist = xlj.LazyJSON(f).load()
         hist['cmds'].extend(self.buffer)
         if self.at_exit:
             hist['ts'][1] = time.time()  # apply end time
             hist['locked'] = False
         with open(self.filename, 'w', newline='\n') as f:
-            ljdump(hist, f, sort_keys=True)
+            xlj.ljdump(hist, f, sort_keys=True)
 
 
 class CommandField(cabc.Sequence):
@@ -241,9 +234,9 @@ class CommandField(cabc.Sequence):
         with self.hist._cond:
             self.hist._cond.wait_for(self.i_am_at_the_front)
             with open(self.hist.filename, 'r', newline='\n') as f:
-                lj = LazyJSON(f, reopen=False)
+                lj = xlj.LazyJSON(f, reopen=False)
                 rtn = lj['cmds'][key].get(self.field, self.default)
-                if isinstance(rtn, LJNode):
+                if isinstance(rtn, xlj.LJNode):
                     rtn = rtn.load()
             queue.popleft()
         return rtn
@@ -251,237 +244,6 @@ class CommandField(cabc.Sequence):
     def i_am_at_the_front(self):
         """Tests if the command field is at the front of the queue."""
         return self is self.hist._queue[0]
-
-
-def _find_histfile_var(file_list, default=None):
-    """Return the path of the history file
-    from the value of the envvar HISTFILE.
-    """
-    for f in file_list:
-        f = expanduser_abs_path(f)
-        if not os.path.isfile(f):
-            continue
-        with open(f, 'r') as rc_file:
-            for line in rc_file:
-                if line.startswith('HISTFILE='):
-                    hist_file = line.split('=', 1)[1].strip('\'"\n')
-                    hist_file = expanduser_abs_path(hist_file)
-                    if os.path.isfile(hist_file):
-                        return hist_file
-    else:
-        if default:
-            default = expanduser_abs_path(default)
-            if os.path.isfile(default):
-                return default
-
-
-def _all_xonsh_parser(**kwargs):
-    """
-    Returns all history as found in XONSH_DATA_DIR.
-
-    return format: (cmd, start_time, index)
-    """
-    ind = 0
-    for f in _get_history_files():
-        try:
-            json_file = LazyJSON(f, reopen=False)
-        except ValueError:
-            # Invalid json file
-            continue
-        commands = json_file.load()['cmds']
-        for c in commands:
-            yield (c['inp'].rstrip(), c['ts'][0], ind)
-            ind += 1
-
-
-def _curr_session_parser(hist=None, **kwargs):
-    """
-    Take in History object and return command list tuple with
-    format: (cmd, start_time, index)
-    """
-    if hist is None:
-        hist = builtins.__xonsh_history__
-    return iter(hist)
-
-
-def _zsh_hist_parser(location=None, **kwargs):
-    """Yield commands from zsh history file"""
-    if location is None:
-        location = _find_histfile_var([os.path.join('~', '.zshrc'),
-                                       os.path.join('~', '.zprofile')],
-                                      os.path.join('~', '.zsh_history'))
-    if location:
-        with open(location, 'r', errors='backslashreplace') as zsh_hist:
-            for ind, line in enumerate(zsh_hist):
-                if line.startswith(':'):
-                    try:
-                        start_time, command = line.split(';', 1)
-                    except ValueError:
-                        # Invalid history entry
-                        continue
-                    try:
-                        start_time = float(start_time.split(':')[1])
-                    except ValueError:
-                        start_time = 0.0
-                    yield (command.rstrip(), start_time, ind)
-                else:
-                    yield (line.rstrip(), 0.0, ind)
-
-    else:
-        print("No zsh history file found", file=sys.stderr)
-
-
-def _bash_hist_parser(location=None, **kwargs):
-    """Yield commands from bash history file"""
-    if location is None:
-        location = _find_histfile_var([os.path.join('~', '.bashrc'),
-                                       os.path.join('~', '.bash_profile')],
-                                      os.path.join('~', '.bash_history'))
-    if location:
-        with open(location, 'r', errors='backslashreplace') as bash_hist:
-            for ind, line in enumerate(bash_hist):
-                yield (line.rstrip(), 0.0, ind)
-    else:
-        print("No bash history file", file=sys.stderr)
-
-
-@functools.lru_cache()
-def _hist_create_parser():
-    """Create a parser for the "history" command."""
-    p = argparse.ArgumentParser(prog='history',
-                                description="try 'history <command> --help' "
-                                            'for more info')
-    subp = p.add_subparsers(title='commands', dest='action')
-    # session action
-    show = subp.add_parser('show', prefix_chars='-+',
-                           help='display history of a session, default command')
-    show.add_argument('-r', dest='reverse', default=False,
-                      action='store_true', help='reverses the direction')
-    show.add_argument('-n', dest='numerate', default=False,
-                      action='store_true', help='numerate each command')
-    show.add_argument('-t', dest='timestamp', default=False,
-                      action='store_true', help='show command timestamps')
-    show.add_argument('-T', dest='end_time', default=None,
-                      help='show only commands before timestamp')
-    show.add_argument('+T', dest='start_time', default=None,
-                      help='show only commands after timestamp')
-    show.add_argument('-f', dest='datetime_format', default=None,
-                      help='the datetime format to be used for'
-                           'filtering and printing')
-    show.add_argument('session', nargs='?', choices=_HIST_SESSIONS.keys(),
-                      default='session',
-                      metavar='session',
-                      help='{} (default: current session, all is an alias for xonsh)'
-                           ''.format(', '.join(map(repr, _HIST_SESSIONS.keys()))))
-    show.add_argument('slices', nargs='*', default=None, metavar='slice',
-                      help='integer or slice notation')
-    # 'id' subcommand
-    subp.add_parser('id', help='display the current session id')
-    # 'file' subcommand
-    subp.add_parser('file', help='display the current history filename')
-    # 'info' subcommand
-    info = subp.add_parser('info', help=('display information about the '
-                                         'current history'))
-    info.add_argument('--json', dest='json', default=False,
-                      action='store_true', help='print in JSON format')
-    # diff
-    diff = subp.add_parser('diff', help='diff two xonsh history files')
-    _dh_create_parser(p=diff)
-    # replay, dynamically
-    from xonsh import replay
-    rp = subp.add_parser('replay', help='replay a xonsh history file')
-    replay._rp_create_parser(p=rp)
-    _HIST_MAIN_ACTIONS['replay'] = replay._rp_main_action
-    # gc
-    gcp = subp.add_parser(
-        'gc', help='launches a new history garbage collector')
-    gcp.add_argument('--size', nargs=2, dest='size', default=None,
-                     help=('next two arguments represent the history size and '
-                           'units; e.g. "--size 8128 commands"'))
-    bgcp = gcp.add_mutually_exclusive_group()
-    bgcp.add_argument('--blocking', dest='blocking', default=True,
-                      action='store_true',
-                      help=('ensures that the gc blocks the main thread, '
-                            'default True'))
-    bgcp.add_argument('--non-blocking', dest='blocking', action='store_false',
-                      help='makes the gc non-blocking, and thus return sooner')
-    return p
-
-
-def _hist_filter_ts(commands, start_time, end_time):
-    """Yield only the commands between start and end time."""
-    for cmd in commands:
-        if start_time <= cmd[1] < end_time:
-            yield cmd
-
-
-def _hist_get(session='session', *, slices=None, datetime_format=None,
-              start_time=None, end_time=None, location=None):
-    """Get the requested portion of shell history.
-
-    Parameters
-    ----------
-    session: {'session', 'all', 'xonsh', 'bash', 'zsh'}
-        The history session to get.
-    slices : list of slice-like objects, optional
-        Get only portions of history.
-    start_time, end_time: float, optional
-        Filter commands by timestamp.
-    location: string, optional
-        The history file location (bash or zsh)
-
-    Returns
-    -------
-    generator
-       A filtered list of commands
-    """
-    cmds = _HIST_SESSIONS[session](location=location)
-    if slices:
-        # transform/check all slices
-        slices = [ensure_slice(s) for s in slices]
-        cmds = get_portions(cmds, slices)
-    if start_time or end_time:
-        if start_time is None:
-            start_time = 0.0
-        else:
-            start_time = ensure_timestamp(start_time, datetime_format)
-        if end_time is None:
-            end_time = float('inf')
-        else:
-            end_time = ensure_timestamp(end_time, datetime_format)
-        cmds = _hist_filter_ts(cmds, start_time, end_time)
-    return cmds
-
-
-def _hist_show(ns, hist=None, stdout=None, stderr=None):
-    """Show the requested portion of shell history.
-    Accepts same parameters with `_hist_get`.
-    """
-    try:
-        commands = _hist_get(ns.session,
-                             slices=ns.slices,
-                             start_time=ns.start_time,
-                             end_time=ns.end_time,
-                             datetime_format=ns.datetime_format)
-    except ValueError as err:
-        print("history: error: {}".format(err), file=stderr)
-        return
-    if ns.reverse:
-        commands = reversed(list(commands))
-    if not ns.numerate and not ns.timestamp:
-        for c, _, _ in commands:
-            print(c, file=stdout)
-    elif not ns.timestamp:
-        for c, _, i in commands:
-            print('{}: {}'.format(i, c), file=stdout)
-    elif not ns.numerate:
-        for c, ts, _ in commands:
-            dt = datetime.datetime.fromtimestamp(ts).ctime()
-            print('({}) {}'.format(dt, c), file=stdout)
-    else:
-        for c, ts, i in commands:
-            dt = datetime.datetime.fromtimestamp(ts).ctime()
-            print('{}:({}) {}'.format(i, dt, c), file=stdout)
 
 
 # Interface to History
@@ -574,8 +336,8 @@ class History(object):
         meta['cmds'] = []
         meta['sessionid'] = str(sid)
         with open(self.filename, 'w', newline='\n') as f:
-            ljdump(meta, f, sort_keys=True)
-        self.gc = HistoryGC() if gc else None
+            xlj.ljdump(meta, f, sort_keys=True)
+        self.gc = JsonHistoryGC() if gc else None
         # command fields that are known
         self.tss = CommandField('ts', self)
         self.inps = CommandField('inp', self)
@@ -636,17 +398,42 @@ class History(object):
         self.buffer.clear()
         return hf
 
+    def do_gc(self, wait_for_shell, size):
+        self.gc = JsonHistoryGC(wait_for_shell=False, size=size)
+        return self.gc
+
+    def session_items(self, **kwargs):
+        return iter(self)
+
+    # TODO: merge methods all_items() and items() to one
+    def all_items(self, **kwargs):
+        """
+        Returns all history as found in XONSH_DATA_DIR.
+
+        return format: (cmd, start_time, index)
+        """
+        ind = 0
+        for f in _get_history_files():
+            try:
+                json_file = xlj.LazyJSON(f, reopen=False)
+            except ValueError:
+                # Invalid json file
+                continue
+            commands = json_file.load()['cmds']
+            for c in commands:
+                yield (c['inp'].rstrip(), c['ts'][0], ind)
+                ind += 1
+
+    # TODO: merge methods all_items() and items() to one
     def items(self):
         while self.gc.is_alive():
             time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer
         files = self.gc.files()
-        result = []
         for _, _, f in files:
             with open(self.filename, 'r', newline='\n') as f:
-                hist = LazyJSON(f).load()
+                hist = xlj.LazyJSON(f).load()
                 for command in hist['cmds']:
-                    result.append(dict(command))
-        return result
+                    yield dict(command)
 
     def show_info(self, ns, stdout=None, stderr=None):
         """Display information about the shell history."""
@@ -698,9 +485,9 @@ class History(object):
     @staticmethod
     def _cmd_filter(cmds, pat):
         if isinstance(pat, (int, slice)):
-            s = ensure_slice(pat)
-            yield from get_portions(cmds, s)
-        elif is_string(pat):
+            s = xt.ensure_slice(pat)
+            yield from xt.get_portions(cmds, s)
+        elif xt.is_string(pat):
             for command in reversed(list(cmds)):
                 if pat in command:
                     yield command
@@ -713,7 +500,7 @@ class History(object):
     def _args_filter(cmds, pat):
         args = None
         if isinstance(pat, (int, slice)):
-            s = ensure_slice(pat)
+            s = xt.ensure_slice(pat)
             for command in cmds:
                 yield ' '.join(command.split()[s])
         else:
@@ -724,81 +511,3 @@ class History(object):
     def __setitem__(self, *args):
         raise PermissionError('You cannot change history! '
                               'you can create new though.')
-
-
-def _hist_info(ns, hist, stdout=None, stderr=None):
-    """Display information about the shell history."""
-    data = collections.OrderedDict()
-    data['sessionid'] = str(hist.sessionid)
-    data['filename'] = hist.filename
-    data['length'] = len(hist)
-    data['buffersize'] = hist.buffersize
-    data['bufferlength'] = len(hist.buffer)
-    if ns.json:
-        s = json.dumps(data)
-        print(s, file=stdout)
-    else:
-        lines = ['{0}: {1}'.format(k, v) for k, v in data.items()]
-        print('\n'.join(lines), file=stdout)
-
-
-def _hist_gc(ns, hist):
-    """Start and monitor garbage collection of the shell history."""
-    hist.gc = gc = HistoryGC(wait_for_shell=False, size=ns.size)
-    if ns.blocking:
-        while gc.is_alive():
-            continue
-
-
-@lazyobject
-def _HIST_SESSIONS():
-    return {'session': _curr_session_parser,
-            'xonsh': _all_xonsh_parser,
-            'all': _all_xonsh_parser,
-            'zsh': _zsh_hist_parser,
-            'bash': _bash_hist_parser}
-
-
-@lazyobject
-def _HIST_MAIN_ACTIONS():
-    return {
-        'show': _hist_show,
-        'id': lambda ns, hist, stdout, stderr: print(hist.sessionid, file=stdout),
-        'file': lambda ns, hist, stdout, stderr: print(hist.filename, file=stdout),
-        'info': _hist_info,
-        'diff': _dh_main_action,
-        'gc': _hist_gc,
-        }
-
-
-def _hist_parse_args(args):
-    """Prepare and parse arguments for the history command.
-
-    Add default action for ``history`` and
-    default session for ``history show``.
-    """
-    parser = _hist_create_parser()
-    if not args:
-        args = ['show', 'session']
-    elif args[0] not in _HIST_MAIN_ACTIONS and args[0] not in ('-h', '--help'):
-        args = ['show', 'session'] + args
-    if args[0] == 'show':
-        if not any(a in _HIST_SESSIONS for a in args):
-            args.insert(1, 'session')
-        ns, slices = parser.parse_known_args(args)
-        if slices:
-            if not ns.slices:
-                ns.slices = slices
-            else:
-                ns.slices.extend(slices)
-    else:
-        ns = parser.parse_args(args)
-    return ns
-
-
-def history_main(args=None, stdin=None, stdout=None, stderr=None):
-    """This is the history command entry point."""
-    hist = builtins.__xonsh_history__
-    ns = _hist_parse_args(args)
-    if ns:
-        _HIST_MAIN_ACTIONS[ns.action](ns, hist, stdout, stderr)
