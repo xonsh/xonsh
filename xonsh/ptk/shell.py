@@ -29,13 +29,11 @@ class PromptToolkitShell(BaseShell):
         self.prompter = Prompter()
         self.history = PromptToolkitHistory()
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx)
-
         key_bindings_manager_args = {
-                'enable_auto_suggest_bindings': True,
-                'enable_search': True,
-                'enable_abort_and_exit_bindings': True,
-                }
-
+            'enable_auto_suggest_bindings': True,
+            'enable_search': True,
+            'enable_abort_and_exit_bindings': True,
+            }
         self.key_bindings_manager = KeyBindingManager(**key_bindings_manager_args)
         load_xonsh_bindings(self.key_bindings_manager)
 
@@ -91,7 +89,7 @@ class PromptToolkitShell(BaseShell):
             line = self.prompter.prompt(**prompt_args)
         return line
 
-    def push(self, line):
+    def _push(self, line):
         """Pushes a line onto the buffer and compiles the code in a way that
         enables multiline input.
         """

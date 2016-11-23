@@ -55,8 +55,6 @@ else:
         _sys.modules['xonsh.proc'] = __amalgam__
         xontribs = __amalgam__
         _sys.modules['xonsh.xontribs'] = __amalgam__
-        base_shell = __amalgam__
-        _sys.modules['xonsh.base_shell'] = __amalgam__
         dirstack = __amalgam__
         _sys.modules['xonsh.dirstack'] = __amalgam__
         inspectors = __amalgam__
@@ -65,8 +63,6 @@ else:
         _sys.modules['xonsh.xonfig'] = __amalgam__
         environ = __amalgam__
         _sys.modules['xonsh.environ'] = __amalgam__
-        readline_shell = __amalgam__
-        _sys.modules['xonsh.readline_shell'] = __amalgam__
         tracer = __amalgam__
         _sys.modules['xonsh.tracer'] = __amalgam__
         replay = __amalgam__
@@ -81,8 +77,12 @@ else:
         _sys.modules['xonsh.imphooks'] = __amalgam__
         shell = __amalgam__
         _sys.modules['xonsh.shell'] = __amalgam__
+        base_shell = __amalgam__
+        _sys.modules['xonsh.base_shell'] = __amalgam__
         main = __amalgam__
         _sys.modules['xonsh.main'] = __amalgam__
+        readline_shell = __amalgam__
+        _sys.modules['xonsh.readline_shell'] = __amalgam__
         del __amalgam__
     except ImportError:
         pass
