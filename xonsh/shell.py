@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """The xonsh shell"""
 import os
+import sys
 import random
+import difflib
 import builtins
 import warnings
 
@@ -10,12 +12,12 @@ from xonsh.environ import xonshrc_context
 from xonsh.execer import Execer
 from xonsh.platform import (best_shell_type, has_prompt_toolkit,
                             ptk_version_is_supported)
-from xonsh.tools import XonshError, to_bool_or_int
+from xonsh.tools import XonshError, to_bool_or_int, print_exception
 from xonsh.events import events
 
 
 events.doc('on_precommand', """
-on_precommand(cmd: str) -> None
+on_precommand(cmd: str) -> str
 
 Fires just before a command is executed.
 """)
@@ -25,6 +27,34 @@ on_postcommand(cmd: str, rtn: int, out: str or None, ts: list) -> None
 
 Fires just after a command is executed.
 """)
+
+
+def fire_precommand(src, show_diff=True):
+    """Returns the results of firing the precommand handles."""
+    i = 0
+    limit = sys.getrecursionlimit()
+    lst = ''
+    raw = src
+    while src != lst:
+        lst = src
+        srcs = events.on_precommand.fire(src)
+        for s in srcs:
+            if s != lst:
+                src = s
+                break
+        i += 1
+        if i == limit:
+            print_exception('Modifcations to source input took more than '
+                            'the recursion limit number of interations to '
+                            'converge.')
+    if show_diff and builtins.__xonsh_env__.get('XONSH_DEBUG') and src != raw:
+        sys.stderr.writelines(difflib.unified_diff(
+            raw.splitlines(keepends=True),
+            src.splitlines(keepends=True),
+            fromfile='before precommand event',
+            tofile='after precommand event',
+        ))
+    return src
 
 
 class Shell(object):
