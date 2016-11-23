@@ -23,7 +23,6 @@ import collections.abc as cabc
 
 from xonsh.ast import AST
 from xonsh.lazyasd import LazyObject, lazyobject
-from xonsh.history import get_history_backend
 from xonsh.inspectors import Inspector
 from xonsh.aliases import Aliases, make_default_aliases
 from xonsh.environ import Env, default_env, locate_binary
@@ -43,6 +42,7 @@ from xonsh.commands_cache import CommandsCache
 from xonsh.events import events
 
 import xonsh.completers.init
+import xonsh.history.main as xhm
 
 BUILTINS_LOADED = False
 INSPECTOR = LazyObject(Inspector, globals(), 'INSPECTOR')
@@ -1158,7 +1158,7 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
         builtins.aliases.update(load_foreign_aliases(issue_warning=False))
     # history needs to be started after env and aliases
     # would be nice to actually include non-detyped versions.
-    builtins.__xonsh_history__ = get_history_backend(
+    builtins.__xonsh_history__ = xhm.construct_history(
         env=env.detype(), ts=[time.time(), None], locked=True)
     atexit.register(_lastflush)
     for sig in AT_EXIT_SIGNALS:

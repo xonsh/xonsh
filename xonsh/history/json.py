@@ -635,7 +635,7 @@ class History(object):
         self.buffer.clear()
         return hf
 
-    def get_history_items(self):
+    def items(self):
         while self.gc.is_alive():
             time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer
         files = self.gc.files()

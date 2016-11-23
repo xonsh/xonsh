@@ -2,14 +2,12 @@
 """Implements the xonsh history backend."""
 import threading
 
-__all__ = ['History']
-
 
 class HistoryGC(threading.Thread):
     pass
 
 
-class History:
+class DummyHistory:
     def __init__(self, gc=True, **kwargs):
         self.gc = HistoryGC() if gc else None
         self.rtns = None
@@ -26,5 +24,5 @@ class History:
     def flush(self, at_exit=False):
         print('DummyHistory flush ...')
 
-    def get_history_items(self):
+    def items(self):
         return [{'inp': 'dummy in action\n'}]

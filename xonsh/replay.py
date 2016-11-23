@@ -7,8 +7,7 @@ import collections.abc as cabc
 from xonsh.tools import swap
 from xonsh.lazyjson import LazyJSON
 from xonsh.environ import Env
-from xonsh.history import get_history_backend
-from xonsh.history import _hist_info
+import xonsh.history.main as xhm
 
 
 DEFAULT_MERGE_ENVS = ('replay', 'native')
@@ -50,7 +49,7 @@ class Replayer(object):
         shell = builtins.__xonsh_shell__
         re_env = self._lj['env'].load()
         new_env = self._merge_envs(merge_envs, re_env)
-        new_hist = get_history_backend(
+        new_hist = xhm.construct_history(
             env=new_env.detype(), locked=True, ts=[time.time(), None],
             gc=False, filename=target)
         with swap(builtins, '__xonsh_env__', new_env), swap(builtins, '__xonsh_history__', new_hist):
@@ -112,7 +111,7 @@ def _rp_main_action(ns, h=None):
     print('----------------------------------------------------------------')
     print('Just replayed history, new history has the following information')
     print('----------------------------------------------------------------')
-    _hist_info(ns, hist)
+    xhm._hist_info(ns, hist)
 
 
 def replay_main(args, stdin=None):

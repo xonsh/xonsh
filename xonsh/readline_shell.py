@@ -479,7 +479,7 @@ class ReadlineHistoryAdder(threading.Thread):
             return
         hist = builtins.__xonsh_history__
         i = 1
-        for h in hist.get_history_items():
+        for h in hist.items():
             inp = h['inp'].splitlines()
             for line in inp:
                 if line == 'EOF':

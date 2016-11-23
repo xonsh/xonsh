@@ -38,6 +38,7 @@ except ImportError:
 TABLES = ['xonsh/lexer_table.py', 'xonsh/parser_table.py',
           'xonsh/__amalgam__.py',
           'xonsh/completers/__amalgam__.py',
+          'xonsh/history/__amalgam__.py',
           'xonsh/prompt/__amalgam__.py']
 
 
@@ -62,7 +63,7 @@ def amalgamate_source():
         print('Could not import amalgamate, skipping.', file=sys.stderr)
         return
     amalgamate.main(['amalgamate', '--debug=XONSH_DEBUG', 'xonsh',
-                     'xonsh.completers', 'xonsh.prompt'])
+                     'xonsh.completers', 'xonsh.history', 'xonsh.prompt'])
     sys.path.pop(0)
 
 

@@ -1,24 +1,22 @@
 # -*- coding: utf-8 -*-
 """Implements the xonsh history backend via sqlite3."""
 import builtins
-import os.path
+import os
 import sqlite3
 import threading
 import time
 
-from xonsh.tools import expanduser_abs_path
-
-__all__ = ['History']
+import xonsh.tools as xt
 
 
-def _get_conn():
+def _xh_sqlite_get_conn():
     data_dir = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
-    data_dir = expanduser_abs_path(data_dir)
-    db_file = os.path.join(data_dir, 'xonsh-history.db')
+    data_dir = xt.expanduser_abs_path(data_dir)
+    db_file = os.path.join(data_dir, 'xonsh-history.sqlite')
     return sqlite3.connect(db_file)
 
 
-def _create_history_table(cursor):
+def _xh_sqlite_create_history_table(cursor):
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS xonsh_history
              (inp TEXT,
@@ -29,37 +27,37 @@ def _create_history_table(cursor):
     """)
 
 
-def _insert_command(cursor, cmd):
+def _xh_sqlite_insert_command(cursor, cmd):
     cursor.execute("""
         INSERT INTO xonsh_history VALUES(?, ?, ?, ?)
     """, (cmd['inp'].rstrip(), cmd['rtn'], cmd['ts'][0], cmd['ts'][1]))
 
 
-def _get_records(cursor):
-    cursor.execute("""SELECT inp FROM xonsh_history ORDER BY tsb""")
+def _xh_sqlite_get_records(cursor):
+    cursor.execute('SELECT inp FROM xonsh_history ORDER BY tsb')
     return cursor.fetchall()
 
 
-def append_history(cmd):
-    with _get_conn() as conn:
+def xh_sqlite_append_history(cmd):
+    with _xh_sqlite_get_conn() as conn:
         c = conn.cursor()
-        _create_history_table(c)
-        _insert_command(c, cmd)
+        _xh_sqlite_create_history_table(c)
+        _xh_sqlite_insert_command(c, cmd)
         conn.commit()
 
 
-def get_history_items():
-    with _get_conn() as conn:
+def xh_sqlite_items():
+    with _xh_sqlite_get_conn() as conn:
         c = conn.cursor()
-        _create_history_table(c)
-        return _get_records(c)
+        _xh_sqlite_create_history_table(c)
+        return _xh_sqlite_get_records(c)
 
 
 class HistoryGC(threading.Thread):
     pass
 
 
-class History:
+class SqliteHistory:
     def __init__(self, gc=True, **kwargs):
         self.gc = HistoryGC() if gc else None
         self.rtns = None
@@ -81,12 +79,12 @@ class History:
             return
         self.last_cmd_inp = cmd['inp'].rstrip()
         t = time.time()
-        append_history(cmd)
+        xh_sqlite_append_history(cmd)
         print('history cmd: {} took {:.4f}s'.format(cmd, time.time() - t))
 
     def flush(self, at_exit=False):
         print('SqliteHistory flush() called')
 
-    def get_history_items(self):
-        records = get_history_items()
+    def items(self):
+        records = xh_sqlite_items()
         return [{'inp': x[0]} for x in records]
