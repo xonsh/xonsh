@@ -1,4 +1,28 @@
 {"xontribs": [
+ {"name": "apt_tabcomplete",
+  "package": "xonsh-apt-tabcomplete",
+  "url": "https://github.com/DangerOnTheRanger/xonsh-apt-tabcomplete",
+  "description": ["Adds tabcomplete functionality to apt-get/apt-cache inside of xonsh."]
+ },
+ {"name": "autoxsh",
+  "package": "xonsh-autoxsh",
+  "url": "https://github.com/Granitas/xonsh-autoxsh",
+  "description": ["Adds automatic execution of xonsh script files called",
+              "``.autoxsh`` when enterting a directory with ``cd`` function"]
+ },
+ {"name": "bashisms",
+  "package": "xonsh",
+  "url": "http://xon.sh",
+  "description": [
+    "Enables additional Bash-like syntax while at the command prompt. For ",
+    "example, the ``!!`` syntax for running the previous command is now usable.",
+    "Note that these features are implemented as precommand events and these ",
+    "additions do not affect the xonsh language when run as script. That said, ",
+    "you might find them useful if you have strong muscle memory.\n\n",
+    "**Warning:** This xontrib may modify user command line input to implement ",
+    "its behavior. To see the modifications as they are applied (in unified diff",
+    "format), please set ``$XONSH_DEBUG = True``."]
+ },
  {"name": "distributed",
   "package": "xonsh",
   "url": "http://xon.sh",
@@ -16,22 +40,37 @@
     "    print(res)\n\n",
     "This is useful for long running or non-blocking jobs."]
   },
+ {"name": "docker_tabcomplete",
+  "package": "xonsh-docker-tabcomplete",
+  "url": "https://github.com/xsteadfastx/xonsh-docker-tabcomplete",
+  "description": ["Adds tabcomplete functionality to docker inside of xonsh."]
+ },
  {"name": "mpl",
   "package": "xonsh",
   "url": "http://xon.sh",
   "description": ["Matplotlib hooks for xonsh, including the new 'mpl' alias ",
                   "that displays the current figure on the screen."]
   },
+ {"name": "prompt_ret_code",
+  "package": "xonsh",
+  "url": "http://xon.sh",
+  "description": ["Adds return code info to the prompt"]
+  },
+ {"name": "scrapy_tabcomplete",
+  "package": "xonsh-scrapy-tabcomplete",
+  "url": "https://github.com/Granitas/xonsh-scrapy-tabcomplete",
+  "description": ["Adds tabcomplete functionality to scrapy inside of xonsh."]
+ },
  {"name": "vox",
   "package": "xonsh",
   "url": "http://xon.sh",
   "description": ["Python virtual environment manager for xonsh."]
   },
-{"name": "prompt_ret_code",
-  "package": "xonsh",
-  "url": "http://xon.sh",
-  "description": ["Adds return code info to the prompt"]
-  },
+ {"name": "vox_tabcomplete",
+  "package": "xonsh-vox-tabcomplete",
+  "url": "https://github.com/Granitas/xonsh-vox-tabcomplete",
+  "description": ["Adds tabcomplete functionality to vox inside of xonsh."]
+ },
  {"name": "xo",
   "package": "exofrills",
   "url": "https://github.com/scopatz/xo",
@@ -40,32 +79,6 @@
                   "bit of the startup time when running your favorite, minimal ",
                   "text editor."]
   },
- {"name": "apt_tabcomplete",
-  "package": "xonsh-apt-tabcomplete",
-  "url": "https://github.com/DangerOnTheRanger/xonsh-apt-tabcomplete",
-  "description": ["Adds tabcomplete functionality to apt-get/apt-cache inside of xonsh."]
- },
- {"name": "docker_tabcomplete",
-  "package": "xonsh-docker-tabcomplete",
-  "url": "https://github.com/xsteadfastx/xonsh-docker-tabcomplete",
-  "description": ["Adds tabcomplete functionality to docker inside of xonsh."]
- },
- {"name": "scrapy_tabcomplete",
-  "package": "xonsh-scrapy-tabcomplete",
-  "url": "https://github.com/Granitas/xonsh-scrapy-tabcomplete",
-  "description": ["Adds tabcomplete functionality to scrapy inside of xonsh."]
- },
- {"name": "vox_tabcomplete",
-  "package": "xonsh-vox-tabcomplete",
-  "url": "https://github.com/Granitas/xonsh-vox-tabcomplete",
-  "description": ["Adds tabcomplete functionality to vox inside of xonsh."]
- },
- {"name": "autoxsh",
-  "package": "xonsh-autoxsh",
-  "url": "https://github.com/Granitas/xonsh-autoxsh",
-  "description": ["Adds automatic execution of xonsh script files called",
-	          "`.autoxsh` when enterting a directory with `cd` function"]
- },
  {"name": "xonda",
   "package": "xonda",
   "url": "https://github.com/gforsyth/xonda",
