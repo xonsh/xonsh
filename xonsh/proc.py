@@ -2113,7 +2113,7 @@ class CommandPipeline:
             env = builtins.__xonsh_env__
             t = env.get('XONSH_STDERR_PREFIX')
             s = format_std_prepost(t, env=env)
-            b = s.encode(encoding=env.get('XONSH_ENCODING'),
+            p = s.encode(encoding=env.get('XONSH_ENCODING'),
                          errors=env.get('XONSH_ENCODING_ERRORS'))
             self._stderr_prefix = p
         return p
@@ -2126,7 +2126,7 @@ class CommandPipeline:
             env = builtins.__xonsh_env__
             t = env.get('XONSH_STDERR_POSTFIX')
             s = format_std_prepost(t, env=env)
-            b = s.encode(encoding=env.get('XONSH_ENCODING'),
+            p = s.encode(encoding=env.get('XONSH_ENCODING'),
                          errors=env.get('XONSH_ENCODING_ERRORS'))
             self._stderr_postfix = p
         return p

@@ -311,7 +311,6 @@ class BaseShell(object):
         env = builtins.__xonsh_env__
         hist = builtins.__xonsh_history__  # pylint: disable=no-member
         ts1 = None
-        store_stdout = env.get('XONSH_STORE_STDOUT')  # pylint: disable=no-member
         enc = env.get('XONSH_ENCODING')
         err = env.get('XONSH_ENCODING_ERRORS')
         tee = Tee(encoding=enc, errors=err)
