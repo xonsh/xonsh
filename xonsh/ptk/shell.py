@@ -8,13 +8,14 @@ from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.layout.lexers import PygmentsLexer
 from prompt_toolkit.shortcuts import print_tokens
 from prompt_toolkit.styles import PygmentsStyle
+import pygments
 from pygments.styles import get_all_styles
 from pygments.token import Token
 
 from xonsh.base_shell import BaseShell
 from xonsh.tools import print_exception
 from xonsh.pyghooks import (XonshLexer, partial_color_tokenize,
-                            xonsh_style_proxy)
+                            xonsh_style_proxy, XonshTerminal256Formatter)
 from xonsh.ptk.completer import PromptToolkitCompleter
 from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings
@@ -205,11 +206,21 @@ class PromptToolkitShell(BaseShell):
         toks.append((Token, ' '))  # final space
         return toks
 
-    def format_color(self, string, **kwargs):
+    def format_color(self, string, hide=False, force_string=False, **kwargs):
         """Formats a color string using Pygments. This, therefore, returns
-        a list of (Token, str) tuples.
+        a list of (Token, str) tuples. If force_string is set to true, though,
+        this will return a color fomtatted string.
         """
-        return partial_color_tokenize(string)
+        tokens = partial_color_tokenize(string)
+        if force_string:
+            env = builtins.__xonsh_env__
+            self.styler.style_name = env.get('XONSH_COLOR_STYLE')
+            proxy_style = xonsh_style_proxy(self.styler)
+            formatter = XonshTerminal256Formatter(style=proxy_style)
+            s = pygments.format(tokens, formatter)
+            return s
+        else:
+            return tokens
 
     def print_color(self, string, end='\n', **kwargs):
         """Prints a color string using prompt-toolkit color management."""
