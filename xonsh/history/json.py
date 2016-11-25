@@ -402,16 +402,21 @@ class JsonHistory(HistoryBase):
         self.gc = JsonHistoryGC(wait_for_shell=False, size=size)
         return self.gc
 
-    def session_items(self, **kwargs):
-        return iter(self)
+    def session_items(self):
+        """Display history items of current session."""
+        ind = 0
+        for item, tss in zip(self.inps, self.tss):
+            yield {'inp': item.rstrip(), 'ind': ind, 'ts': tss[0]}
+            ind += 1
 
-    # TODO: merge methods all_items() and items() to one
-    def all_items(self, **kwargs):
+    def items(self, **kwargs):
         """
         Returns all history as found in XONSH_DATA_DIR.
 
         return format: (cmd, start_time, index)
         """
+        while self.gc.is_alive():
+            time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer
         ind = 0
         for f in _get_history_files():
             try:
@@ -421,23 +426,13 @@ class JsonHistory(HistoryBase):
                 continue
             commands = json_file.load()['cmds']
             for c in commands:
-                yield (c['inp'].rstrip(), c['ts'][0], ind)
+                yield {'inp': c['inp'].rstrip(), 'ts': c['ts'][0], 'ind': ind}
                 ind += 1
-
-    # TODO: merge methods all_items() and items() to one
-    def items(self):
-        while self.gc.is_alive():
-            time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer
-        files = self.gc.files()
-        for _, _, f in files:
-            with open(self.filename, 'r', newline='\n') as f:
-                hist = xlj.LazyJSON(f).load()
-                for command in hist['cmds']:
-                    yield dict(command)
 
     def show_info(self, ns, stdout=None, stderr=None):
         """Display information about the shell history."""
         data = collections.OrderedDict()
+        data['backend'] = 'json'
         data['sessionid'] = str(self.sessionid)
         data['filename'] = self.filename
         data['length'] = len(self)
@@ -449,19 +444,6 @@ class JsonHistory(HistoryBase):
         else:
             lines = ['{0}: {1}'.format(k, v) for k, v in data.items()]
             print('\n'.join(lines), file=stdout)
-
-    def __iter__(self):
-        """Get current session history.
-
-        Yields
-        ------
-        tuple
-            ``tuple`` of the form (cmd, start_time, index).
-        """
-        start_times = (start for start, end in self.tss)
-        names = (name.rstrip() for name in self.inps)
-        for ind, (c, t) in enumerate(zip(names, start_times)):
-            yield (c, t, ind)
 
     def __getitem__(self, item):
         """Retrieve history parts based on filtering rules,

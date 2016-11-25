@@ -52,7 +52,7 @@ def _xh_all_parser(hist=None, **kwargs):
     """Returns all history items."""
     if hist is None:
         hist = builtins.__xonsh_history__
-    return hist.all_items()
+    return hist.items()
 
 
 def _xh_find_histfile_var(file_list, default=None):
@@ -187,24 +187,24 @@ def _hist_show(ns, hist=None, stdout=None, stderr=None):
     if ns.reverse:
         commands = reversed(list(commands))
     if not ns.numerate and not ns.timestamp:
-        for c, _, _ in commands:
-            print(c, file=stdout)
+        for c in commands:
+            print(c['inp'], file=stdout)
     elif not ns.timestamp:
-        for c, _, i in commands:
-            print('{}: {}'.format(i, c), file=stdout)
+        for c in commands:
+            print('{}: {}'.format(c['ind'], c['inp']), file=stdout)
     elif not ns.numerate:
-        for c, ts, _ in commands:
-            dt = datetime.datetime.fromtimestamp(ts).ctime()
-            print('({}) {}'.format(dt, c), file=stdout)
+        for c in commands:
+            dt = datetime.datetime.fromtimestamp(c['ts']).ctime()
+            print('({}) {}'.format(dt, c['inp']), file=stdout)
     else:
-        for c, ts, i in commands:
-            dt = datetime.datetime.fromtimestamp(ts).ctime()
-            print('{}:({}) {}'.format(i, dt, c), file=stdout)
+        for c in commands:
+            dt = datetime.datetime.fromtimestamp(c['ts']).ctime()
+            print('{}:({}) {}'.format(c['ind'], dt, c['inp']), file=stdout)
 
 
-def _hist_info(ns, hist, stdout=None, stderr=None):
+def _xh_hist_info(ns, hist, stdout=None, stderr=None):
     """Display information about the shell history."""
-    hist.show_info(ns)
+    hist.show_info(ns, stdout=stdout, stderr=stderr)
 
 
 @xla.lazyobject
@@ -222,7 +222,7 @@ def _HIST_MAIN_ACTIONS():
         'show': _hist_show,
         'id': lambda ns, hist, stdout, stderr: print(hist.sessionid, file=stdout),
         'file': lambda ns, hist, stdout, stderr: print(hist.filename, file=stdout),
-        'info': _hist_info,
+        'info': _xh_hist_info,
         'diff': xdh._dh_main_action,
         'gc': _hist_gc,
     }

@@ -105,7 +105,7 @@ def _rp_create_parser(p=None):
     return p
 
 
-def _rp_main_action(ns, h=None):
+def _rp_main_action(ns, h=None, stdout=None, stderr=None):
     replayer = Replayer(ns.path)
     hist = replayer.replay(merge_envs=ns.merge_envs, target=ns.target)
     print('----------------------------------------------------------------')
