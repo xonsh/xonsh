@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 """Implements the xonsh history backend."""
-import threading
-
+import sys
 from xonsh.history.base import HistoryBase
 
 
 class DummyHistory(HistoryBase):
     def append(self, cmd):
-        print('DummyHistory append: {}'.format(cmd))
+        print('DummyHistory append: {}'.format(cmd), file=sys.stderr)
 
     def flush(self, at_exit=False):
-        print('DummyHistory flush ...')
+        print('DummyHistory flush ...', file=sys.stderr)
 
     def items(self):
-        for item in [{'inp': 'dummy in action\n'}]:
-            yield item
+        yield {'inp': 'dummy in action\n'}

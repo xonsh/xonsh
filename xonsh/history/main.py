@@ -8,7 +8,7 @@ import os
 import sys
 
 from xonsh.history.dummy import DummyHistory
-from xonsh.history.json import History
+from xonsh.history.json import JsonHistory
 from xonsh.history.sqlite import SqliteHistory
 import xonsh.diff_history as xdh
 import xonsh.lazyasd as xla
@@ -16,7 +16,7 @@ import xonsh.tools as xt
 
 HISTORY_BACKENDS = {
     'dummy': DummyHistory,
-    'json': History,
+    'json': JsonHistory,
     'sqlite': SqliteHistory,
 }
 
@@ -25,8 +25,9 @@ def construct_history(env, ts, locked, gc=True, filename=None):
     env = builtins.__xonsh_env__
     backend = env.get('XONSH_HISTORY_BACKEND', 'json')
     if backend not in HISTORY_BACKENDS:
-        print('Unknown history backend: {}. Use Json version'.format(backend))
-        kls_history = History
+        print('Unknown history backend: {}. Using JSON version'.format(
+            backend), file=sys.stderr)
+        kls_history = JsonHistory
     else:
         kls_history = HISTORY_BACKENDS[backend]
     return kls_history(

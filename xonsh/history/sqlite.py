@@ -72,8 +72,8 @@ class SqliteHistory(HistoryBase):
         print('history cmd: {} took {:.4f}s'.format(cmd, time.time() - t))
 
     def flush(self, at_exit=False):
-        print('SqliteHistory flush() called')
+        print('TODO: SqliteHistory flush() called')
 
     def items(self):
-        records = xh_sqlite_items()
-        return [{'inp': x[0]} for x in records]
+        for item in xh_sqlite_items():
+            yield {'inp': item[0]}

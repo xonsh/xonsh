@@ -9,7 +9,7 @@ import collections
 import threading
 import collections.abc as cabc
 
-from xonsh.history.base import HistoryGC
+from xonsh.history.base import HistoryBase, HistoryGC
 import xonsh.tools as xt
 import xonsh.lazyjson as xlj
 
@@ -247,7 +247,7 @@ class CommandField(cabc.Sequence):
 
 
 # Interface to History
-class History(object):
+class JsonHistory(HistoryBase):
     """Xonsh session history.
 
     Indexing
