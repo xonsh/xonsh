@@ -171,7 +171,7 @@ def git_dirty_working_directory(include_untracked=False):
 
 def hg_dirty_working_directory():
     """Computes whether or not the mercurial working directory is dirty or not.
-    If this cannot be deterimined, None is returned.
+    If this cannot be determined, None is returned.
     """
     env = builtins.__xonsh_env__
     cwd = env['PWD']
