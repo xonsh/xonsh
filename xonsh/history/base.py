@@ -18,7 +18,7 @@ class HistoryBase:
     def append(self, cmd):
         pass
 
-    def flush(self, at_exit=False):
+    def flush(self, **kwargs):
         pass
 
     def items(self):
@@ -28,9 +28,6 @@ class HistoryBase:
     def session_items(self):
         """Display history items of current session."""
         raise NotImplementedError
-
-    def on_show(self, ns, stdout=None, stderr=None):
-        return self.session_items()
 
     def on_info(self, ns, stdout=None, stderr=None):
         """Display information about the shell history."""

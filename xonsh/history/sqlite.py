@@ -25,40 +25,72 @@ def _xh_sqlite_get_conn():
 
 
 def _xh_sqlite_create_history_table(cursor):
+    """Create Table for history items.
+
+    Columns:
+        info - JSON formated, reserved for now.
+    """
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS xonsh_history
              (inp TEXT,
               rtn INTEGER,
               tsb REAL,
-              tse REAL
+              tse REAL,
+              sessionid TEXT,
+              out TEXT,
+              info TEXT
              )
     """)
 
 
-def _xh_sqlite_insert_command(cursor, cmd):
-    cursor.execute("""
-        INSERT INTO xonsh_history VALUES(?, ?, ?, ?)
-    """, (cmd['inp'].rstrip(), cmd['rtn'], cmd['ts'][0], cmd['ts'][1]))
+def _xh_sqlite_insert_command(cursor, cmd, sessionid, store_stdout):
+    sql = 'INSERT INTO xonsh_history (inp, rtn, tsb, tse, sessionid'
+    params = [
+        cmd['inp'].rstrip(),
+        cmd['rtn'],
+        cmd['ts'][0],
+        cmd['ts'][1],
+        sessionid,
+    ]
+    if store_stdout and 'out' in cmd:
+        sql += ', out'
+        params.append(cmd['out'])
+    if 'info' in cmd:
+        sql += ', info'
+        info = json.dumps(cmd['info'])
+        params.append(info)
+    sql += ') VALUES (' + ('?, ' * len(params)).rstrip(', ') + ')'
+    cursor.execute(sql, tuple(params))
 
 
-def _xh_sqlite_get_records(cursor):
-    cursor.execute('SELECT inp, tsb FROM xonsh_history ORDER BY tsb')
+def _xh_sqlite_get_records(cursor, sessionid=None, limit=None, reverse=False):
+    sql = 'SELECT inp, tsb FROM xonsh_history '
+    params = []
+    if sessionid is not None:
+        sql += 'WHERE sessionid = ? '
+        params.append(sessionid)
+    sql += 'ORDER BY tsb '
+    if reverse:
+        sql += 'DESC '
+    if limit is not None:
+        sql += 'LIMIT %d ' % limit
+    cursor.execute(sql, tuple(params))
     return cursor.fetchall()
 
 
-def xh_sqlite_append_history(cmd):
+def xh_sqlite_append_history(cmd, sessionid, store_stdout):
     with _xh_sqlite_get_conn() as conn:
         c = conn.cursor()
         _xh_sqlite_create_history_table(c)
-        _xh_sqlite_insert_command(c, cmd)
+        _xh_sqlite_insert_command(c, cmd, sessionid, store_stdout)
         conn.commit()
 
 
-def xh_sqlite_items():
+def xh_sqlite_items(sessionid=None):
     with _xh_sqlite_get_conn() as conn:
         c = conn.cursor()
         _xh_sqlite_create_history_table(c)
-        return _xh_sqlite_get_records(c)
+        return _xh_sqlite_get_records(c, sessionid=sessionid)
 
 
 class SqliteHistory(HistoryBase):
@@ -70,18 +102,17 @@ class SqliteHistory(HistoryBase):
         self.last_cmd_inp = None
 
     def append(self, cmd):
-        opts = builtins.__xonsh_env__.get('HISTCONTROL')
+        envs = builtins.__xonsh_env__
+        opts = envs.get('HISTCONTROL')
         if 'ignoredups' in opts and cmd['inp'].rstrip() == self.last_cmd_inp:
             # Skipping dup cmd
             return
         if 'ignoreerr' in opts and cmd['rtn'] != 0:
             # Skipping failed cmd
             return
+        store_stdout = envs.get('XONSH_STORE_STDOUT', False)
         self.last_cmd_inp = cmd['inp'].rstrip()
-        xh_sqlite_append_history(cmd)
-
-    def flush(self, at_exit=False):
-        print('TODO: SqliteHistory flush() called')
+        xh_sqlite_append_history(cmd, str(self.sessionid), store_stdout)
 
     def items(self):
         """Display all history items."""
@@ -92,7 +123,10 @@ class SqliteHistory(HistoryBase):
 
     def session_items(self):
         """Display history items of current session."""
-        return self.items()
+        i = 0
+        for item in xh_sqlite_items(sessionid=str(self.sessionid)):
+            yield {'inp': item[0], 'ts': item[1], 'ind': i}
+            i += 1
 
     def on_info(self, ns, stdout=None, stderr=None):
         """Display information about the shell history."""

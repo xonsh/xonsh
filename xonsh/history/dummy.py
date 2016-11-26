@@ -10,9 +10,6 @@ class DummyHistory(HistoryBase):
     def append(self, cmd):
         pass
 
-    def flush(self, at_exit=False):
-        pass
-
     def items(self):
         """Display all history items."""
         yield {'inp': 'dummy in action', 'ts': 1464652800, 'ind': 0}

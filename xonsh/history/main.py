@@ -35,7 +35,7 @@ def construct_history(**kwargs):
 
 def _xh_session_parser(hist=None, **kwargs):
     """Returns history items of current session.
-        format: (cmd, start_time, index)
+        format: {'inp': cmd, 'ts': start_time, 'ind': index}
     """
     if hist is None:
         hist = builtins.__xonsh_history__
@@ -115,7 +115,7 @@ def _xh_zsh_hist_parser(location=None, **kwargs):
 def _xh_filter_ts(commands, start_time, end_time):
     """Yield only the commands between start and end time."""
     for cmd in commands:
-        if start_time <= cmd[1] < end_time:
+        if start_time <= cmd['ts'] < end_time:
             yield cmd
 
 
