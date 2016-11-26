@@ -112,14 +112,6 @@ def _xh_zsh_hist_parser(location=None, **kwargs):
         print("No zsh history file found", file=sys.stderr)
 
 
-def _hist_gc(ns, hist, stdout=None, stderr=None):
-    """Start and monitor garbage collection of the shell history."""
-    gc = hist.do_gc(wait_for_shell=False, size=ns.size)
-    if ns.blocking:
-        while gc.is_alive():
-            continue
-
-
 def _xh_filter_ts(commands, start_time, end_time):
     """Yield only the commands between start and end time."""
     for cmd in commands:

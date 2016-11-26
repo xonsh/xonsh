@@ -399,10 +399,6 @@ class JsonHistory(HistoryBase):
         self.buffer.clear()
         return hf
 
-    def do_gc(self, wait_for_shell, size):
-        self.gc = JsonHistoryGC(wait_for_shell=False, size=size)
-        return self.gc
-
     def session_items(self):
         """Display history items of current session."""
         ind = 0
@@ -453,6 +449,12 @@ class JsonHistory(HistoryBase):
         """Replay a xonsh history file."""
         import xonsh.replay as xrp
         xrp.replay_main_action(self, ns, stdout=stdout, stderr=stderr)
+
+    def on_gc(self, ns, stdout=None, stderr=None):
+        self.gc = JsonHistoryGC(wait_for_shell=False, size=ns.size)
+        if ns.blocking:
+            while self.gc.is_alive():
+                continue
 
     def __getitem__(self, item):
         """Retrieve history parts based on filtering rules,
