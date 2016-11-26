@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 """History object for use with prompt_toolkit."""
-import time
 import builtins
 from threading import Thread
 
 import prompt_toolkit.history
-from xonsh import lazyjson
 
 
 class PromptToolkitHistory(prompt_toolkit.history.History):
@@ -51,26 +49,15 @@ class PromptToolkitHistoryAdder(Thread):
         hist = builtins.__xonsh_history__
         buf = None
         ptkhist = self.ptkhist
-        while self.wait_for_gc and hist.gc.is_alive():
-            time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer
-        files = hist.gc.files()
-        for _, _, f in files:
-            try:
-                lj = lazyjson.LazyJSON(f, reopen=False)
-                for cmd in lj['cmds']:
-                    line = cmd['inp'].rstrip()
-                    if line == 'EOF':
+        for cmd in hist.items():
+            line = cmd['inp'].rstrip()
+            if len(ptkhist) == 0 or line != ptkhist[-1]:
+                ptkhist.append(line)
+                if buf is None:
+                    buf = self._buf()
+                    if buf is None:
                         continue
-                    if len(ptkhist) == 0 or line != ptkhist[-1]:
-                        ptkhist.append(line)
-                        if buf is None:
-                            buf = self._buf()
-                            if buf is None:
-                                continue
-                        buf.reset(initial_document=buf.document)
-                lj.close()
-            except (IOError, OSError, ValueError):
-                continue
+                buf.reset(initial_document=buf.document)
 
     def _buf(self):
         # Thread-safe version of
