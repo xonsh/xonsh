@@ -15,7 +15,7 @@ import xonsh.lazyjson as xlj
 import xonsh.diff_history as xdh
 
 
-def _gc_commands_to_rmfiles(hsize, files):
+def _xhj_gc_commands_to_rmfiles(hsize, files):
     """Return the history files to remove to get under the command limit."""
     rmfiles = []
     n = 0
@@ -32,13 +32,13 @@ def _gc_commands_to_rmfiles(hsize, files):
     return rmfiles
 
 
-def _gc_files_to_rmfiles(hsize, files):
+def _xhj_gc_files_to_rmfiles(hsize, files):
     """Return the history files to remove to get under the file limit."""
     rmfiles = files[:-hsize] if len(files) > hsize else []
     return rmfiles
 
 
-def _gc_seconds_to_rmfiles(hsize, files):
+def _xhj_gc_seconds_to_rmfiles(hsize, files):
     """Return the history files to remove to get under the age limit."""
     rmfiles = []
     now = time.time()
@@ -49,7 +49,7 @@ def _gc_seconds_to_rmfiles(hsize, files):
     return rmfiles
 
 
-def _gc_bytes_to_rmfiles(hsize, files):
+def _xhj_gc_bytes_to_rmfiles(hsize, files):
     """Return the history files to remove to get under the byte limit."""
     rmfiles = []
     n = 0
@@ -64,7 +64,7 @@ def _gc_bytes_to_rmfiles(hsize, files):
     return rmfiles
 
 
-def _get_history_files(sort=True, reverse=False):
+def _xhj_get_history_files(sort=True, reverse=False):
     """Find and return the history files. Optionally sort files by
         modify time.
     """
@@ -90,10 +90,10 @@ class JsonHistoryGC(HistoryGC):
         self.size = size
         self.wait_for_shell = wait_for_shell
         self.start()
-        self.gc_units_to_rmfiles = {'commands': _gc_commands_to_rmfiles,
-                                    'files': _gc_files_to_rmfiles,
-                                    's': _gc_seconds_to_rmfiles,
-                                    'b': _gc_bytes_to_rmfiles}
+        self.gc_units_to_rmfiles = {'commands': _xhj_gc_commands_to_rmfiles,
+                                    'files': _xhj_gc_files_to_rmfiles,
+                                    's': _xhj_gc_seconds_to_rmfiles,
+                                    'b': _xhj_gc_bytes_to_rmfiles}
 
     def run(self):
         while self.wait_for_shell:
@@ -126,7 +126,7 @@ class JsonHistoryGC(HistoryGC):
         if env is None:
             return []
 
-        fs = _get_history_files(sort=False)
+        fs = _xhj_get_history_files(sort=False)
         files = []
         for f in fs:
             try:
@@ -148,13 +148,13 @@ class JsonHistoryGC(HistoryGC):
         return files
 
 
-class HistoryFlusher(threading.Thread):
+class JsonHistoryFlusher(threading.Thread):
     """Flush shell history to disk periodically."""
 
     def __init__(self, filename, buffer, queue, cond, at_exit=False, *args,
                  **kwargs):
         """Thread for flushing history."""
-        super(HistoryFlusher, self).__init__(*args, **kwargs)
+        super(JsonHistoryFlusher, self).__init__(*args, **kwargs)
         self.filename = filename
         self.buffer = buffer
         self.queue = queue
@@ -189,7 +189,7 @@ class HistoryFlusher(threading.Thread):
             xlj.ljdump(hist, f, sort_keys=True)
 
 
-class CommandField(cabc.Sequence):
+class JsonCommandField(cabc.Sequence):
     """A field in the 'cmds' portion of history."""
 
     def __init__(self, field, hist, default=None):
@@ -220,9 +220,9 @@ class CommandField(cabc.Sequence):
             return [self[i] for i in range(*key.indices(size))]
         elif not isinstance(key, int):
             raise IndexError(
-                'CommandField may only be indexed by int or slice.')
+                'JsonCommandField may only be indexed by int or slice.')
         elif size == 0:
-            raise IndexError('CommandField is empty.')
+            raise IndexError('JsonCommandField is empty.')
         # now we know we have an int
         key = size + key if key < 0 else key  # ensure key is non-negative
         bufsize = len(self.hist.buffer)
@@ -340,10 +340,10 @@ class JsonHistory(HistoryBase):
             xlj.ljdump(meta, f, sort_keys=True)
         self.gc = JsonHistoryGC() if gc else None
         # command fields that are known
-        self.tss = CommandField('ts', self)
-        self.inps = CommandField('inp', self)
-        self.outs = CommandField('out', self)
-        self.rtns = CommandField('rtn', self)
+        self.tss = JsonCommandField('ts', self)
+        self.inps = JsonCommandField('inp', self)
+        self.outs = JsonCommandField('out', self)
+        self.rtns = JsonCommandField('rtn', self)
 
     def __len__(self):
         return self._len
@@ -358,7 +358,7 @@ class JsonHistory(HistoryBase):
 
         Returns
         -------
-        hf : HistoryFlusher or None
+        hf : JsonHistoryFlusher or None
             The thread that was spawned to flush history
         """
         opts = builtins.__xonsh_env__.get('HISTCONTROL')
@@ -384,17 +384,17 @@ class JsonHistory(HistoryBase):
         Parameters
         ----------
         at_exit : bool, optional
-            Whether the HistoryFlusher should act as a thread in the
+            Whether the JsonHistoryFlusher should act as a thread in the
             background, or execute immeadiately and block.
 
         Returns
         -------
-        hf : HistoryFlusher or None
+        hf : JsonHistoryFlusher or None
             The thread that was spawned to flush history
         """
         if len(self.buffer) == 0:
             return
-        hf = HistoryFlusher(self.filename, tuple(self.buffer), self._queue,
+        hf = JsonHistoryFlusher(self.filename, tuple(self.buffer), self._queue,
                             self._cond, at_exit=at_exit)
         self.buffer.clear()
         return hf
@@ -419,7 +419,7 @@ class JsonHistory(HistoryBase):
         while self.gc.is_alive():
             time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer
         ind = 0
-        for f in _get_history_files():
+        for f in _xhj_get_history_files():
             try:
                 json_file = xlj.LazyJSON(f, reopen=False)
             except ValueError:
