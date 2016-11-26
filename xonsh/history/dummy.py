@@ -21,7 +21,7 @@ class DummyHistory(HistoryBase):
         """Display history items of current session."""
         return self.items()
 
-    def show_info(self, ns, stdout=None, stderr=None):
+    def on_info(self, ns, stdout=None, stderr=None):
         """Display information about the shell history."""
         data = collections.OrderedDict()
         data['backend'] = 'dummy'

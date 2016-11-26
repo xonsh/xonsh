@@ -86,7 +86,7 @@ def _xh_bash_hist_parser(location=None, **kwargs):
     if location:
         with open(location, 'r', errors='backslashreplace') as bash_hist:
             for ind, line in enumerate(bash_hist):
-                yield (line.rstrip(), 0.0, ind)
+                yield {'inp': line.rstrip(), 'ts': 0.0, 'ind': ind}
     else:
         print("No bash history file", file=sys.stderr)
 
@@ -110,9 +110,9 @@ def _xh_zsh_hist_parser(location=None, **kwargs):
                         start_time = float(start_time.split(':')[1])
                     except ValueError:
                         start_time = 0.0
-                    yield (command.rstrip(), start_time, ind)
+                    yield {'inp': command.rstrip(), 'ts': start_time, 'ind': ind}
                 else:
-                    yield (line.rstrip(), 0.0, ind)
+                    yield {'inp': line.rstrip(), 'ts': 0.0, 'ind': ind}
 
     else:
         print("No zsh history file found", file=sys.stderr)
@@ -126,15 +126,15 @@ def _hist_gc(ns, hist, stdout=None, stderr=None):
             continue
 
 
-def _hist_filter_ts(commands, start_time, end_time):
+def _xh_filter_ts(commands, start_time, end_time):
     """Yield only the commands between start and end time."""
     for cmd in commands:
         if start_time <= cmd[1] < end_time:
             yield cmd
 
 
-def _hist_get(session='session', *, slices=None, datetime_format=None,
-              start_time=None, end_time=None, location=None):
+def _xh_get_history(session='session', *, slices=None, datetime_format=None,
+                    start_time=None, end_time=None, location=None):
     """Get the requested portion of shell history.
 
     Parameters
@@ -153,7 +153,7 @@ def _hist_get(session='session', *, slices=None, datetime_format=None,
     generator
        A filtered list of commands
     """
-    cmds = _HIST_SESSIONS[session](location=location)
+    cmds = _XH_HISTORY_SESSIONS[session](location=location)
     if slices:
         # transform/check all slices
         slices = [xt.ensure_slice(s) for s in slices]
@@ -167,20 +167,20 @@ def _hist_get(session='session', *, slices=None, datetime_format=None,
             end_time = float('inf')
         else:
             end_time = xt.ensure_timestamp(end_time, datetime_format)
-        cmds = _hist_filter_ts(cmds, start_time, end_time)
+        cmds = _xh_filter_ts(cmds, start_time, end_time)
     return cmds
 
 
-def _hist_show(ns, hist=None, stdout=None, stderr=None):
+def _xh_show_history(hist, ns, stdout=None, stderr=None):
     """Show the requested portion of shell history.
-    Accepts same parameters with `_hist_get`.
+    Accepts same parameters with `_xh_get_history`.
     """
     try:
-        commands = _hist_get(ns.session,
-                             slices=ns.slices,
-                             start_time=ns.start_time,
-                             end_time=ns.end_time,
-                             datetime_format=ns.datetime_format)
+        commands = _xh_get_history(ns.session,
+                                   slices=ns.slices,
+                                   start_time=ns.start_time,
+                                   end_time=ns.end_time,
+                                   datetime_format=ns.datetime_format)
     except ValueError as err:
         print("history: error: {}".format(err), file=stderr)
         return
@@ -202,30 +202,13 @@ def _hist_show(ns, hist=None, stdout=None, stderr=None):
             print('{}:({}) {}'.format(c['ind'], dt, c['inp']), file=stdout)
 
 
-def _xh_hist_info(ns, hist, stdout=None, stderr=None):
-    """Display information about the shell history."""
-    hist.show_info(ns, stdout=stdout, stderr=stderr)
-
-
 @xla.lazyobject
-def _HIST_SESSIONS():
+def _XH_HISTORY_SESSIONS():
     return {'session': _xh_session_parser,
             'xonsh': _xh_all_parser,
             'all': _xh_all_parser,
             'zsh': _xh_zsh_hist_parser,
             'bash': _xh_bash_hist_parser}
-
-
-@xla.lazyobject
-def _HIST_MAIN_ACTIONS():
-    return {
-        'show': _hist_show,
-        'id': lambda ns, hist, stdout, stderr: print(hist.sessionid, file=stdout),
-        'file': lambda ns, hist, stdout, stderr: print(hist.filename, file=stdout),
-        'info': _xh_hist_info,
-        'diff': xdh._dh_main_action,
-        'gc': _hist_gc,
-    }
 
 
 @functools.lru_cache()
@@ -251,11 +234,11 @@ def _xh_create_parser():
     show.add_argument('-f', dest='datetime_format', default=None,
                       help='the datetime format to be used for'
                            'filtering and printing')
-    show.add_argument('session', nargs='?', choices=_HIST_SESSIONS.keys(),
+    show.add_argument('session', nargs='?', choices=_XH_HISTORY_SESSIONS.keys(),
                       default='session',
                       metavar='session',
                       help='{} (default: current session, all is an alias for xonsh)'
-                           ''.format(', '.join(map(repr, _HIST_SESSIONS.keys()))))
+                           ''.format(', '.join(map(repr, _XH_HISTORY_SESSIONS.keys()))))
     show.add_argument('slices', nargs='*', default=None, metavar='slice',
                       help='integer or slice notation')
     # 'id' subcommand
@@ -269,12 +252,13 @@ def _xh_create_parser():
                       action='store_true', help='print in JSON format')
     # diff
     diff = subp.add_parser('diff', help='diff two xonsh history files')
-    xdh._dh_create_parser(p=diff)
+    xdh.dh_create_parser(p=diff)
     # replay, dynamically
     from xonsh import replay
     rp = subp.add_parser('replay', help='replay a xonsh history file')
     replay._rp_create_parser(p=rp)
-    _HIST_MAIN_ACTIONS['replay'] = replay._rp_main_action
+    # _XH_MAIN_ACTIONS['replay'] = replay._rp_main_action
+    _XH_MAIN_ACTIONS.add('replay')
     # gc
     gcp = subp.add_parser(
         'gc', help='launches a new history garbage collector')
@@ -291,6 +275,9 @@ def _xh_create_parser():
     return p
 
 
+_XH_MAIN_ACTIONS = {'show', 'id', 'file', 'info', 'diff', 'gc'}
+
+
 def _xh_parse_args(args):
     """Prepare and parse arguments for the history command.
 
@@ -300,10 +287,10 @@ def _xh_parse_args(args):
     parser = _xh_create_parser()
     if not args:
         args = ['show', 'session']
-    elif args[0] not in _HIST_MAIN_ACTIONS and args[0] not in ('-h', '--help'):
+    elif args[0] not in _XH_MAIN_ACTIONS and args[0] not in ('-h', '--help'):
         args = ['show', 'session'] + args
     if args[0] == 'show':
-        if not any(a in _HIST_SESSIONS for a in args):
+        if not any(a in _XH_HISTORY_SESSIONS for a in args):
             args.insert(1, 'session')
         ns, slices = parser.parse_known_args(args)
         if slices:
@@ -320,5 +307,12 @@ def history_main(args=None, stdin=None, stdout=None, stderr=None):
     """This is the history command entry point."""
     hist = builtins.__xonsh_history__
     ns = _xh_parse_args(args)
-    if ns:
-        _HIST_MAIN_ACTIONS[ns.action](ns, hist, stdout, stderr)
+    if not ns or not ns.action:
+        return
+    if ns.action == 'show':
+        _xh_show_history(hist, ns, stdout=stdout, stderr=stderr)
+        return
+    method_name = 'on_{}'.format(ns.action)
+    method = getattr(hist, method_name, None)
+    if method:
+        method(ns, stdout=stdout, stderr=stderr)

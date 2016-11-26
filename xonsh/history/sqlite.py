@@ -84,6 +84,7 @@ class SqliteHistory(HistoryBase):
         print('TODO: SqliteHistory flush() called')
 
     def items(self):
+        """Display all history items."""
         i = 0
         for item in xh_sqlite_items():
             yield {'inp': item[0], 'ts': item[1], 'ind': i}
@@ -93,7 +94,7 @@ class SqliteHistory(HistoryBase):
         """Display history items of current session."""
         return self.items()
 
-    def show_info(self, ns, stdout=None, stderr=None):
+    def on_info(self, ns, stdout=None, stderr=None):
         """Display information about the shell history."""
         data = collections.OrderedDict()
         data['backend'] = 'sqlite'

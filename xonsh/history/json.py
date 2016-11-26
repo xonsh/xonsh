@@ -12,6 +12,7 @@ import collections.abc as cabc
 from xonsh.history.base import HistoryBase, HistoryGC
 import xonsh.tools as xt
 import xonsh.lazyjson as xlj
+import xonsh.diff_history as xdh
 
 
 def _gc_commands_to_rmfiles(hsize, files):
@@ -429,7 +430,7 @@ class JsonHistory(HistoryBase):
                 yield {'inp': c['inp'].rstrip(), 'ts': c['ts'][0], 'ind': ind}
                 ind += 1
 
-    def show_info(self, ns, stdout=None, stderr=None):
+    def on_info(self, ns, stdout=None, stderr=None):
         """Display information about the shell history."""
         data = collections.OrderedDict()
         data['backend'] = 'json'
@@ -444,6 +445,9 @@ class JsonHistory(HistoryBase):
         else:
             lines = ['{0}: {1}'.format(k, v) for k, v in data.items()]
             print('\n'.join(lines), file=stdout)
+
+    def on_diff(self, ns, stdout=None, stderr=None):
+        xdh.dh_main_action(ns)
 
     def __getitem__(self, item):
         """Retrieve history parts based on filtering rules,
