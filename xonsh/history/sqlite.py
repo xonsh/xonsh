@@ -5,8 +5,10 @@ import collections
 import json
 import os
 import sqlite3
+import sys
+import time
 
-from xonsh.history.base import HistoryBase
+from xonsh.history.base import HistoryBase, HistoryGC
 import xonsh.tools as xt
 
 
@@ -28,7 +30,7 @@ def _xh_sqlite_create_history_table(cursor):
     """Create Table for history items.
 
     Columns:
-        info - JSON formated, reserved for now.
+        info - JSON formated, reserved for future extension.
     """
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS xonsh_history
@@ -78,6 +80,20 @@ def _xh_sqlite_get_records(cursor, sessionid=None, limit=None, reverse=False):
     return cursor.fetchall()
 
 
+def _xh_sqlite_delete_records(cursor, size_to_keep):
+    sql = 'SELECT min(tsb) FROM ('
+    sql += 'SELECT tsb FROM xonsh_history ORDER BY tsb DESC '
+    sql += 'LIMIT %d)' % size_to_keep
+    cursor.execute(sql)
+    result = cursor.fetchone()
+    if not result:
+        return
+    max_tsb = result[0]
+    sql = 'DELETE FROM xonsh_history WHERE tsb < ?'
+    result = cursor.execute(sql, (max_tsb,))
+    return result.rowcount
+
+
 def xh_sqlite_append_history(cmd, sessionid, store_stdout):
     with _xh_sqlite_get_conn() as conn:
         c = conn.cursor()
@@ -93,13 +109,52 @@ def xh_sqlite_items(sessionid=None):
         return _xh_sqlite_get_records(c, sessionid=sessionid)
 
 
+def xh_sqlite_delete_items(size_to_keep):
+    with _xh_sqlite_get_conn() as conn:
+        c = conn.cursor()
+        _xh_sqlite_create_history_table(c)
+        return _xh_sqlite_delete_records(c, size_to_keep)
+
+
+class SqliteHistoryGC(HistoryGC):
+    """Shell history garbage collection."""
+
+    def __init__(self, wait_for_shell=True, size=None, *args, **kwargs):
+        """Thread responsible for garbage collecting old history.
+
+        May wait for shell (and for xonshrc to have been loaded) to start work.
+        """
+        super().__init__(*args, **kwargs)
+        self.daemon = True
+        self.size = size
+        self.wait_for_shell = wait_for_shell
+        self.start()
+
+    def run(self):
+        while self.wait_for_shell:
+            time.sleep(0.01)
+        if self.size is not None:
+            hsize, units = xt.to_history_tuple(self.size)
+        else:
+            envs = builtins.__xonsh_env__
+            hsize, units = envs.get('XONSH_HISTORY_SIZE')
+        if units != 'commands':
+            print('sqlite backed history gc currently only supports '
+                  '"commands" as units', file=sys.stderr)
+            return
+        if hsize < 0:
+            return
+        xh_sqlite_delete_items(hsize)
+
+
 class SqliteHistory(HistoryBase):
-    def __init__(self, filename=None, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, gc=True, filename=None, **kwargs):
+        super().__init__(gc=False, **kwargs)
         if filename is None:
             filename = _xh_sqlite_get_file_name()
         self.filename = filename
         self.last_cmd_inp = None
+        self.gc = SqliteHistoryGC() if gc else None
 
     def append(self, cmd):
         envs = builtins.__xonsh_env__
@@ -140,3 +195,9 @@ class SqliteHistory(HistoryBase):
         else:
             for k, v in data.items():
                 print('{}: {}'.format(k, v))
+
+    def on_gc(self, ns, stdout=None, stderr=None):
+        self.gc = SqliteHistoryGC(wait_for_shell=False, size=ns.size)
+        if ns.blocking:
+            while self.gc.is_alive():
+                continue
