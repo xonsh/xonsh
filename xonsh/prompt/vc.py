@@ -105,7 +105,7 @@ def _first_branch_timeout_message():
     _FIRST_BRANCH_TIMEOUT = False
     print('xonsh: branch timeout: computing the branch name, color, or both '
           'timed out while formatting the prompt. You may avoid this by '
-          'increaing the value of $VC_BRANCH_TIMEOUT or by removing branch '
+          'increasing the value of $VC_BRANCH_TIMEOUT or by removing branch '
           'fields, like {curr_branch}, from your $PROMPT. See the FAQ '
           'for more details. This message will be suppressed for the remainder '
           'of this session. To suppress this message permanently, set '
