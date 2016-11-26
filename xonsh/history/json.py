@@ -395,7 +395,7 @@ class JsonHistory(HistoryBase):
         if len(self.buffer) == 0:
             return
         hf = JsonHistoryFlusher(self.filename, tuple(self.buffer), self._queue,
-                            self._cond, at_exit=at_exit)
+                                self._cond, at_exit=at_exit)
         self.buffer.clear()
         return hf
 
@@ -448,6 +448,11 @@ class JsonHistory(HistoryBase):
 
     def on_diff(self, ns, stdout=None, stderr=None):
         xdh.dh_main_action(ns)
+
+    def on_replay(self, ns, stdout=None, stderr=None):
+        """Replay a xonsh history file."""
+        import xonsh.replay as xrp
+        xrp.replay_main_action(self, ns, stdout=stdout, stderr=stderr)
 
     def __getitem__(self, item):
         """Retrieve history parts based on filtering rules,

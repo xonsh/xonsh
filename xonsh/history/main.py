@@ -21,7 +21,7 @@ HISTORY_BACKENDS = {
 }
 
 
-def construct_history(env, ts, locked, gc=True, filename=None):
+def construct_history(**kwargs):
     env = builtins.__xonsh_env__
     backend = env.get('XONSH_HISTORY_BACKEND', 'json')
     if backend not in HISTORY_BACKENDS:
@@ -30,13 +30,7 @@ def construct_history(env, ts, locked, gc=True, filename=None):
         kls_history = JsonHistory
     else:
         kls_history = HISTORY_BACKENDS[backend]
-    return kls_history(
-        env=env.detype(),
-        ts=ts,
-        locked=locked,
-        gc=gc,
-        filename=filename,
-    )
+    return kls_history(**kwargs)
 
 
 def _xh_session_parser(hist=None, **kwargs):
@@ -211,6 +205,9 @@ def _XH_HISTORY_SESSIONS():
             'bash': _xh_bash_hist_parser}
 
 
+_XH_MAIN_ACTIONS = {'show', 'id', 'file', 'info', 'diff', 'gc'}
+
+
 @functools.lru_cache()
 def _xh_create_parser():
     """Create a parser for the "history" command."""
@@ -250,15 +247,7 @@ def _xh_create_parser():
                                          'current history'))
     info.add_argument('--json', dest='json', default=False,
                       action='store_true', help='print in JSON format')
-    # diff
-    diff = subp.add_parser('diff', help='diff two xonsh history files')
-    xdh.dh_create_parser(p=diff)
-    # replay, dynamically
-    from xonsh import replay
-    rp = subp.add_parser('replay', help='replay a xonsh history file')
-    replay._rp_create_parser(p=rp)
-    # _XH_MAIN_ACTIONS['replay'] = replay._rp_main_action
-    _XH_MAIN_ACTIONS.add('replay')
+
     # gc
     gcp = subp.add_parser(
         'gc', help='launches a new history garbage collector')
@@ -272,10 +261,18 @@ def _xh_create_parser():
                             'default True'))
     bgcp.add_argument('--non-blocking', dest='blocking', action='store_false',
                       help='makes the gc non-blocking, and thus return sooner')
+
+    hist = builtins.__xonsh_history__
+    if hasattr(hist, 'on_diff'):
+        diff = subp.add_parser('diff', help='diff two xonsh history files')
+        xdh.dh_create_parser(p=diff)
+
+    if hasattr(hist, 'on_replay'):
+        import xonsh.replay as xrp
+        replay = subp.add_parser('replay', help='replay a xonsh history file')
+        xrp.replay_create_parser(p=replay)
+        _XH_MAIN_ACTIONS.add('replay')
     return p
-
-
-_XH_MAIN_ACTIONS = {'show', 'id', 'file', 'info', 'diff', 'gc'}
 
 
 def _xh_parse_args(args):
@@ -314,5 +311,7 @@ def history_main(args=None, stdin=None, stdout=None, stderr=None):
         return
     method_name = 'on_{}'.format(ns.action)
     method = getattr(hist, method_name, None)
-    if method:
-        method(ns, stdout=stdout, stderr=stderr)
+    if not method:
+        print('Unknown history action {}'.format(method_name), file=sys.stderr)
+        return
+    method(ns, stdout=stdout, stderr=stderr)

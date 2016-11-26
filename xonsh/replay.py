@@ -79,7 +79,7 @@ class Replayer(object):
 _REPLAY_PARSER = None
 
 
-def _rp_create_parser(p=None):
+def replay_create_parser(p=None):
     global _REPLAY_PARSER
     p_was_none = (p is None)
     if _REPLAY_PARSER is not None and p_was_none:
@@ -105,17 +105,17 @@ def _rp_create_parser(p=None):
     return p
 
 
-def _rp_main_action(ns, h=None, stdout=None, stderr=None):
+def replay_main_action(h, ns, stdout=None, stderr=None):
     replayer = Replayer(ns.path)
     hist = replayer.replay(merge_envs=ns.merge_envs, target=ns.target)
     print('----------------------------------------------------------------')
     print('Just replayed history, new history has the following information')
     print('----------------------------------------------------------------')
-    hist.show_info(ns)
+    hist.on_info(ns, stdout=stdout, stderr=stderr)
 
 
 def replay_main(args, stdin=None):
     """Acts as main function for replaying a xonsh history file."""
-    parser = _rp_create_parser()
+    parser = replay_create_parser()
     ns = parser.parse_args(args)
-    _rp_main_action(ns)
+    replay_main_action(ns)
