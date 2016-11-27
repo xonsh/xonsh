@@ -756,7 +756,7 @@ class PopenThread(threading.Thread):
     def _signal_int(self, signum, frame):
         """Signal handler for SIGINT - Ctrl+C may have been pressed."""
         self.send_signal(signum)
-        if self.proc.poll() is not None:
+        if self.proc is not None and self.proc.poll() is not None:
             self._restore_sigint(frame=frame)
 
     def _restore_sigint(self, frame=None):
