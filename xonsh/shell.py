@@ -3,6 +3,7 @@
 import os
 import sys
 import random
+import time
 import difflib
 import builtins
 import warnings
@@ -14,6 +15,7 @@ from xonsh.platform import (best_shell_type, has_prompt_toolkit,
                             ptk_version_is_supported)
 from xonsh.tools import XonshError, to_bool_or_int, print_exception
 from xonsh.events import events
+import xonsh.history.main as xhm
 
 
 events.doc('on_precommand', """
@@ -87,7 +89,12 @@ class Shell(object):
         self._init_environ(ctx, config, rc,
                            kwargs.get('scriptcache', True),
                            kwargs.get('cacheall', False))
+
         env = builtins.__xonsh_env__
+        # build history backend before creating shell
+        builtins.__xonsh_history__ = xhm.construct_history(
+            env=env.detype(), ts=[time.time(), None], locked=True)
+
         # pick a valid shell -- if no shell is specified by the user,
         # shell type is pulled from env
         if shell_type is None:
