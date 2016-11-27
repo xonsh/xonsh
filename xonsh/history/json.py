@@ -435,6 +435,8 @@ class JsonHistory(HistoryBase):
         data['length'] = len(self)
         data['buffersize'] = self.buffersize
         data['bufferlength'] = len(self.buffer)
+        envs = builtins.__xonsh_env__
+        data['gc options'] = envs.get('XONSH_HISTORY_SIZE')
         if ns.json:
             s = json.dumps(data)
             print(s, file=stdout)

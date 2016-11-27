@@ -65,6 +65,16 @@ def _xh_sqlite_insert_command(cursor, cmd, sessionid, store_stdout):
     cursor.execute(sql, tuple(params))
 
 
+def _xh_sqlite_get_count(cursor, sessionid=None):
+    sql = 'SELECT count(*) FROM xonsh_history '
+    params = []
+    if sessionid is not None:
+        sql += 'WHERE sessionid = ? '
+        params.append(str(sessionid))
+    cursor.execute(sql, tuple(params))
+    return cursor.fetchone()[0]
+
+
 def _xh_sqlite_get_records(cursor, sessionid=None, limit=None, reverse=False):
     sql = 'SELECT inp, tsb FROM xonsh_history '
     params = []
@@ -100,6 +110,12 @@ def xh_sqlite_append_history(cmd, sessionid, store_stdout):
         _xh_sqlite_create_history_table(c)
         _xh_sqlite_insert_command(c, cmd, sessionid, store_stdout)
         conn.commit()
+
+
+def xh_sqlite_get_count(sessionid=None):
+    with _xh_sqlite_get_conn() as conn:
+        c = conn.cursor()
+        return _xh_sqlite_get_count(c, sessionid=sessionid)
 
 
 def xh_sqlite_items(sessionid=None):
@@ -189,6 +205,10 @@ class SqliteHistory(HistoryBase):
         data['backend'] = 'sqlite'
         data['sessionid'] = str(self.sessionid)
         data['filename'] = self.filename
+        data['session items'] = xh_sqlite_get_count(self.sessionid)
+        data['all items'] = xh_sqlite_get_count()
+        envs = builtins.__xonsh_env__
+        data['gc options'] = envs.get('XONSH_HISTORY_SIZE')
         if ns.json:
             s = json.dumps(data)
             print(s, file=stdout)
