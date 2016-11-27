@@ -265,6 +265,7 @@ def default_threadable_predictors():
         'mvim': predict_help_ver,
         'mutt': predict_help_ver,
         'nano': predict_help_ver,
+        'psql': predict_false,
         'ranger': predict_help_ver,
         'scp': predict_false,
         'sh': predict_shell,
