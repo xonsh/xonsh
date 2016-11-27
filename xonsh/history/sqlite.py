@@ -21,9 +21,10 @@ def _xh_sqlite_get_file_name():
     return xt.expanduser_abs_path(file_name)
 
 
-def _xh_sqlite_get_conn():
-    db_file = _xh_sqlite_get_file_name()
-    return sqlite3.connect(db_file)
+def _xh_sqlite_get_conn(filename=None):
+    if filename is None:
+        filename = _xh_sqlite_get_file_name()
+    return sqlite3.connect(filename)
 
 
 def _xh_sqlite_create_history_table(cursor):
@@ -47,11 +48,12 @@ def _xh_sqlite_create_history_table(cursor):
 
 def _xh_sqlite_insert_command(cursor, cmd, sessionid, store_stdout):
     sql = 'INSERT INTO xonsh_history (inp, rtn, tsb, tse, sessionid'
+    tss = cmd.get('ts', [None, None])
     params = [
         cmd['inp'].rstrip(),
         cmd['rtn'],
-        cmd['ts'][0],
-        cmd['ts'][1],
+        tss[0],
+        tss[1],
         sessionid,
     ]
     if store_stdout and 'out' in cmd:
@@ -76,7 +78,7 @@ def _xh_sqlite_get_count(cursor, sessionid=None):
 
 
 def _xh_sqlite_get_records(cursor, sessionid=None, limit=None, reverse=False):
-    sql = 'SELECT inp, tsb FROM xonsh_history '
+    sql = 'SELECT inp, tsb, rtn FROM xonsh_history '
     params = []
     if sessionid is not None:
         sql += 'WHERE sessionid = ? '
@@ -104,29 +106,29 @@ def _xh_sqlite_delete_records(cursor, size_to_keep):
     return result.rowcount
 
 
-def xh_sqlite_append_history(cmd, sessionid, store_stdout):
-    with _xh_sqlite_get_conn() as conn:
+def xh_sqlite_append_history(cmd, sessionid, store_stdout, filename=None):
+    with _xh_sqlite_get_conn(filename=filename) as conn:
         c = conn.cursor()
         _xh_sqlite_create_history_table(c)
         _xh_sqlite_insert_command(c, cmd, sessionid, store_stdout)
         conn.commit()
 
 
-def xh_sqlite_get_count(sessionid=None):
-    with _xh_sqlite_get_conn() as conn:
+def xh_sqlite_get_count(sessionid=None, filename=None):
+    with _xh_sqlite_get_conn(filename=filename) as conn:
         c = conn.cursor()
         return _xh_sqlite_get_count(c, sessionid=sessionid)
 
 
-def xh_sqlite_items(sessionid=None):
-    with _xh_sqlite_get_conn() as conn:
+def xh_sqlite_items(sessionid=None, filename=None):
+    with _xh_sqlite_get_conn(filename=filename) as conn:
         c = conn.cursor()
         _xh_sqlite_create_history_table(c)
         return _xh_sqlite_get_records(c, sessionid=sessionid)
 
 
-def xh_sqlite_delete_items(size_to_keep):
-    with _xh_sqlite_get_conn() as conn:
+def xh_sqlite_delete_items(size_to_keep, filename=None):
+    with _xh_sqlite_get_conn(filename=filename) as conn:
         c = conn.cursor()
         _xh_sqlite_create_history_table(c)
         return _xh_sqlite_delete_records(c, size_to_keep)
@@ -160,7 +162,7 @@ class SqliteHistoryGC(HistoryGC):
             return
         if hsize < 0:
             return
-        xh_sqlite_delete_items(hsize)
+        xh_sqlite_delete_items(hsize, filename=self.filename)
 
 
 class SqliteHistory(HistoryBase):
@@ -183,20 +185,23 @@ class SqliteHistory(HistoryBase):
             return
         store_stdout = envs.get('XONSH_STORE_STDOUT', False)
         self.last_cmd_inp = cmd['inp'].rstrip()
-        xh_sqlite_append_history(cmd, str(self.sessionid), store_stdout)
+        xh_sqlite_append_history(
+            cmd, str(self.sessionid), store_stdout,
+            filename=self.filename)
 
     def items(self):
         """Display all history items."""
         i = 0
-        for item in xh_sqlite_items():
-            yield {'inp': item[0], 'ts': item[1], 'ind': i}
+        for item in xh_sqlite_items(filename=self.filename):
+            yield {'inp': item[0], 'ts': item[1], 'rtn': item[2], 'ind': i}
             i += 1
 
     def session_items(self):
         """Display history items of current session."""
         i = 0
-        for item in xh_sqlite_items(sessionid=str(self.sessionid)):
-            yield {'inp': item[0], 'ts': item[1], 'ind': i}
+        for item in xh_sqlite_items(
+                sessionid=str(self.sessionid), filename=self.filename):
+            yield {'inp': item[0], 'ts': item[1], 'rtn': item[2], 'ind': i}
             i += 1
 
     def on_info(self, ns, stdout=None, stderr=None):
@@ -205,8 +210,9 @@ class SqliteHistory(HistoryBase):
         data['backend'] = 'sqlite'
         data['sessionid'] = str(self.sessionid)
         data['filename'] = self.filename
-        data['session items'] = xh_sqlite_get_count(self.sessionid)
-        data['all items'] = xh_sqlite_get_count()
+        data['session items'] = xh_sqlite_get_count(
+            sessionid=self.sessionid, filename=self.filename)
+        data['all items'] = xh_sqlite_get_count(filename=self.filename)
         envs = builtins.__xonsh_env__
         data['gc options'] = envs.get('XONSH_HISTORY_SIZE')
         if ns.json:
