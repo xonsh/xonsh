@@ -18,7 +18,7 @@ def _get_git_branch(q):
             ['git', 'branch'],
             stderr=subprocess.DEVNULL
         )).splitlines()
-    except (subprocess.CalledProcessError, OSError):
+    except (subprocess.CalledProcessError, OSError, FileNotFoundError):
         q.put(None)
     else:
         for branch in branches:
@@ -64,8 +64,8 @@ def get_hg_branch(root=None):
                                        stderr=subprocess.DEVNULL)
     except subprocess.TimeoutExpired:
         return subprocess.TimeoutExpired(['hg'], timeout)
-    except subprocess.CalledProcessError:
-        # not in repo
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        # not in repo or command not in PATH
         return None
     else:
         root = xt.decode_bytes(root).strip()
@@ -147,7 +147,7 @@ def _git_dirty_working_directory(q, include_untracked):
         else:
             cmd.append('--untracked-files=no')
         status = subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
-    except (subprocess.CalledProcessError, OSError):
+    except (subprocess.CalledProcessError, OSError, FileNotFoundError):
         q.put(None)
     if status is not None:
         return q.put(bool(status))
