@@ -288,15 +288,15 @@ class BaseShell(object):
             ts0 = time.time()
             run_compiled_code(code, self.ctx, None, 'single')
             ts1 = time.time()
-            if hist.last_cmd_rtn is None:
+            if hist and hist.last_cmd_rtn is None:
                 hist.last_cmd_rtn = 0  # returncode for success
         except XonshError as e:
             print(e.args[0], file=sys.stderr)
-            if hist.last_cmd_rtn is None:
+            if hist and hist.last_cmd_rtn is None:
                 hist.last_cmd_rtn = 1  # return code for failure
         except Exception:  # pylint: disable=broad-except
             print_exception()
-            if hist.last_cmd_rtn is None:
+            if hist and hist.last_cmd_rtn is None:
                 hist.last_cmd_rtn = 1  # return code for failure
         finally:
             ts1 = ts1 or time.time()
@@ -313,6 +313,8 @@ class BaseShell(object):
         (Also handles on_postcommand because this is the place where all the information is available)
         """
         hist = builtins.__xonsh_history__  # pylint: disable=no-member
+        if hist is None:
+            return
         info['rtn'] = hist.last_cmd_rtn
         tee_out = tee_out or None
         last_out = hist.last_cmd_out or None

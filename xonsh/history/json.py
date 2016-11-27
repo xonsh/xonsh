@@ -465,7 +465,7 @@ class JsonHistory(HistoryBase):
             cmd_pat, arg_pat = item
         else:
             cmd_pat, arg_pat = item, None
-        cmds = (c for c, *_ in self)
+        cmds = [c['inp'] for c in self.session_items()]
         cmds = self._cmd_filter(cmds, cmd_pat)
         if arg_pat is not None:
             cmds = self._args_filter(cmds, arg_pat)
