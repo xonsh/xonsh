@@ -29,10 +29,6 @@ from xonsh.tools import print_exception, check_for_partial_string
 from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_DARWIN
 from xonsh.lazyimps import pygments, pyghooks
 
-terminal256 = LazyObject(
-    lambda: importlib.import_module('pygments.formatters.terminal256'),
-    globals(), 'terminal')
-
 readline = None
 RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = RL_STATE = None
 RL_CAN_RESIZE = False
@@ -432,13 +428,13 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         self.settitle()
         return p
 
-    def format_color(self, string, hide=False, **kwargs):
-        """Readline implementation of color formatting. This usesg ANSI color
+    def format_color(self, string, hide=False, force_string=False, **kwargs):
+        """Readline implementation of color formatting. This usess ANSI color
         codes.
         """
         hide = hide if self._force_hide is None else self._force_hide
-        return ansi_partial_color_format(string, hide=hide,
-                                         style=builtins.__xonsh_env__.get('XONSH_COLOR_STYLE'))
+        style = builtins.__xonsh_env__.get('XONSH_COLOR_STYLE')
+        return ansi_partial_color_format(string, hide=hide, style=style)
 
     def print_color(self, string, hide=False, **kwargs):
         if isinstance(string, str):
@@ -448,7 +444,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             env = builtins.__xonsh_env__
             self.styler.style_name = env.get('XONSH_COLOR_STYLE')
             style_proxy = pyghooks.xonsh_style_proxy(self.styler)
-            formatter = terminal256.Terminal256Formatter(style=style_proxy)
+            formatter = pyghooks.XonshTerminal256Formatter(style=style_proxy)
             s = pygments.format(string, formatter).rstrip()
         print(s, **kwargs)
 

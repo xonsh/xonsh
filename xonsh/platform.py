@@ -62,7 +62,7 @@ ON_BSD = LazyBool(lambda: ON_FREEBSD or ON_NETBSD,
 PYTHON_VERSION_INFO = sys.version_info[:3]
 """ Version of Python interpreter as three-value tuple. """
 ON_ANACONDA = LazyBool(
-    lambda: any(s in sys.version for s in {'Anaconda', 'Continuum'}),
+    lambda: any(s in sys.version for s in {'Anaconda', 'Continuum', 'conda-forge'}),
     globals(), 'ON_ANACONDA')
 """ ``True`` if executed in an Anaconda instance, else ``False``. """
 CAN_RESIZE_WINDOW = LazyBool(lambda: hasattr(signal, 'SIGWINCH'),

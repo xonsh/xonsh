@@ -67,3 +67,8 @@ def winutils():
     else:
         m = None
     return m
+
+
+@lazyobject
+def terminal256():
+    return importlib.import_module('pygments.formatters.terminal256')

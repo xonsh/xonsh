@@ -159,6 +159,8 @@ def DEFAULT_ENSURERS():
     'XONSH_LOGIN': (is_bool, to_bool, bool_to_str),
     'XONSH_PROC_FREQUENCY': (is_float, float, str),
     'XONSH_SHOW_TRACEBACK': (is_bool, to_bool, bool_to_str),
+    'XONSH_STDERR_PREFIX': (is_string, ensure_string, ensure_string),
+    'XONSH_STDERR_POSTFIX': (is_string, ensure_string, ensure_string),
     'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
     'XONSH_STORE_STDIN': (is_bool, to_bool, bool_to_str),
     'XONSH_TRACEBACK_LOGFILE': (is_logfile_opt, to_logfile_opt, logfile_opt_to_str),
@@ -302,6 +304,8 @@ def DEFAULT_VALUES():
         'XONSH_LOGIN': False,
         'XONSH_PROC_FREQUENCY': 1e-4,
         'XONSH_SHOW_TRACEBACK': False,
+        'XONSH_STDERR_PREFIX': '',
+        'XONSH_STDERR_POSTFIX': '',
         'XONSH_STORE_STDIN': False,
         'XONSH_STORE_STDOUT': False,
         'XONSH_TRACEBACK_LOGFILE': None,
@@ -670,6 +674,18 @@ def DEFAULT_DOCS():
         "When running a xonsh script, this variable contains the absolute path "
         "to the currently executing script's file.",
         configurable=False),
+    'XONSH_STDERR_PREFIX': VarDocs(
+        'A format string, using the same keys and colors as ``$PROMPT``, that '
+        'is prepended whenever stderr is displayed. This may be used in '
+        'conjunction with ``$XONSH_STDERR_POSTFIX`` to close out the block.'
+        'For example, to have stderr appear on a red background, the '
+        'prefix & postfix pair would be "{BACKGROUND_RED}" & "{NO_COLOR}".'),
+    'XONSH_STDERR_POSTFIX': VarDocs(
+        'A format string, using the same keys and colors as ``$PROMPT``, that '
+        'is appended whenever stderr is displayed. This may be used in '
+        'conjunction with ``$XONSH_STDERR_PREFIX`` to start the block.'
+        'For example, to have stderr appear on a red background, the '
+        'prefix & postfix pair would be "{BACKGROUND_RED}" & "{NO_COLOR}".'),
     'XONSH_STORE_STDIN': VarDocs(
         'Whether or not to store the stdin that is supplied to the '
         '``!()`` and ``![]`` operators.'),

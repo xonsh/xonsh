@@ -7,7 +7,7 @@ import time
 import builtins
 
 from xonsh.tools import (XonshError, print_exception, DefaultNotGiven,
-                         check_for_partial_string)
+                         check_for_partial_string, format_std_prepost)
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.codecache import (should_use_cache, code_cache_name,
                              code_cache_check, get_cache_filename,
@@ -28,7 +28,8 @@ class _TeeStdBuf(io.RawIOBase):
     in memory buffer.
     """
 
-    def __init__(self, stdbuf, membuf, encoding=None, errors=None):
+    def __init__(self, stdbuf, membuf, encoding=None, errors=None, prestd=b'',
+                 poststd=b''):
         """
         Parameters
         ----------
@@ -42,11 +43,17 @@ class _TeeStdBuf(io.RawIOBase):
         errors : str or None, optional
             The error form for the encoding of the stream. Only used if stdbuf
             is a text stream, rather than a binary one.
+        prestd : bytes, optional
+            The prefix to prepend to the standard buffer.
+        poststd : bytes, optional
+            The postfix to append to the standard buffer.
         """
         self.stdbuf = stdbuf
         self.membuf = membuf
         self.encoding = encoding
         self.errors = errors
+        self.prestd = prestd
+        self.poststd = poststd
         self._std_is_binary = not hasattr(stdbuf, 'encoding')
 
     def fileno(self):
@@ -71,18 +78,24 @@ class _TeeStdBuf(io.RawIOBase):
 
     def write(self, b):
         """Write bytes into both buffers."""
+        std_b = b
+        if self.prestd:
+            std_b = self.prestd + b
+        if self.poststd:
+            std_b += self.poststd
+        # write to stdbuf
         if self._std_is_binary:
-            self.stdbuf.write(b)
+            self.stdbuf.write(std_b)
         else:
-            self.stdbuf.write(b.decode(encoding=self.encoding,
-                                       errors=self.errors))
+            self.stdbuf.write(std_b.decode(encoding=self.encoding,
+                                           errors=self.errors))
         return self.membuf.write(b)
 
 
 class _TeeStd(io.TextIOBase):
     """Tees a std stream into an in-memory container and the original stream."""
 
-    def __init__(self, name, mem):
+    def __init__(self, name, mem, prestd='', poststd=''):
         """
         Parameters
         ----------
@@ -90,17 +103,26 @@ class _TeeStd(io.TextIOBase):
             The name of the buffer in the sys module, e.g. 'stdout'.
         mem : io.TextIOBase-like
             The in-memory text-based representation.
+        prestd : str, optional
+            The prefix to prepend to the standard stream.
+        poststd : str, optional
+            The postfix to append to the standard stream.
         """
         self._name = name
         self.std = std = getattr(sys, name)
         self.mem = mem
+        self.prestd = prestd
+        self.poststd = poststd
+        preb = prestd.encode(encoding=mem.encoding, errors=mem.errors)
+        postb = poststd.encode(encoding=mem.encoding, errors=mem.errors)
         if hasattr(std, 'buffer'):
-            buffer = _TeeStdBuf(std.buffer, mem.buffer)
+            buffer = _TeeStdBuf(std.buffer, mem.buffer,
+                                prestd=preb, poststd=postb)
         else:
             # TextIO does not have buffer as part of the API, so std streams
             # may not either.
             buffer = _TeeStdBuf(std, mem.buffer, encoding=mem.encoding,
-                                errors=mem.errors)
+                                errors=mem.errors, prestd=preb, poststd=postb)
         self.buffer = buffer
         setattr(sys, name, self)
 
@@ -135,7 +157,12 @@ class _TeeStd(io.TextIOBase):
 
     def write(self, s):
         """Writes data to the original std stream and the in-memory object."""
-        self.std.write(s)
+        std_s = s
+        if self.prestd:
+            std_s = self.prestd + std_s
+        if self.poststd:
+            std_s += self.poststd
+        self.std.write(std_s)
         self.mem.write(s)
 
     def flush(self):
@@ -198,7 +225,11 @@ class Tee:
                                        line_buffering=line_buffering,
                                        write_through=write_through)
         self.stdout = _TeeStd('stdout', self.memory)
-        self.stderr = _TeeStd('stderr', self.memory)
+        env = builtins.__xonsh_env__
+        prestderr = format_std_prepost(env.get('XONSH_STDERR_PREFIX'))
+        poststderr = format_std_prepost(env.get('XONSH_STDERR_POSTFIX'))
+        self.stderr = _TeeStd('stderr', self.memory, prestd=prestderr,
+                              poststd=poststderr)
 
     @property
     def line_buffering(self):
@@ -280,10 +311,9 @@ class BaseShell(object):
         env = builtins.__xonsh_env__
         hist = builtins.__xonsh_history__  # pylint: disable=no-member
         ts1 = None
-        store_stdout = env.get('XONSH_STORE_STDOUT')  # pylint: disable=no-member
         enc = env.get('XONSH_ENCODING')
         err = env.get('XONSH_ENCODING_ERRORS')
-        tee = Tee(encoding=enc, errors=err) if store_stdout else io.StringIO()
+        tee = Tee(encoding=enc, errors=err)
         try:
             ts0 = time.time()
             run_compiled_code(code, self.ctx, None, 'single')
@@ -307,10 +337,10 @@ class BaseShell(object):
             return True
 
     def _append_history(self, tee_out=None, **info):
-        """
-        Append information about the command to the history.
+        """Append information about the command to the history.
 
-        (Also handles on_postcommand because this is the place where all the information is available)
+        This also handles on_postcommand because this is the place where all the
+        information is available.
         """
         hist = builtins.__xonsh_history__  # pylint: disable=no-member
         if hist is None:
@@ -339,11 +369,11 @@ class BaseShell(object):
         """Check if the cwd changed out from under us"""
         cwd = os.getcwd()
         if cwd != builtins.__xonsh_env__.get('PWD'):
-            old = builtins.__xonsh_env__.get('PWD')             # working directory changed without updating $PWD
-            builtins.__xonsh_env__['PWD'] = cwd             # track it now
+            old = builtins.__xonsh_env__.get('PWD')  # working directory changed without updating $PWD
+            builtins.__xonsh_env__['PWD'] = cwd      # track it now
             if old is not None:
-                builtins.__xonsh_env__['OLDPWD'] = old      # and update $OLDPWD like dirstack.
-            events.on_chdir.fire(old, cwd)                  # fire event after cwd actually changed.
+                builtins.__xonsh_env__['OLDPWD'] = old  # and update $OLDPWD like dirstack.
+            events.on_chdir.fire(old, cwd)              # fire event after cwd actually changed.
 
     def push(self, line):
         """Pushes a line onto the buffer and compiles the code in a way that
