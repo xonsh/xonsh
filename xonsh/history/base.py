@@ -52,21 +52,27 @@ class HistoryBase:
         """Display history items of current session."""
         raise NotImplementedError
 
-    def on_info(self, ns, stdout=None, stderr=None):
-        """Display information about the shell history."""
+    def info(self, ns, stdout=None, stderr=None):
+        """A collection of information about the shell history.
+
+        Returns
+        -------
+        dict or collections.OrderedDict
+            Contains history information as str key pairs.
+        """
+        raise NotImplementedError
+
+    def run_gc(self, size=None, blocking=True):
+        """Run a garbage collect action.
+
+        Parameters
+        ----------
+        size: None or tuple of a int and a string
+            Detemines the size and units of what would be allowed to remain.
+        blocking: bool
+            If set blocking, then wait until gc action finished.
+        """
         pass
-
-    def on_id(self, ns, stdout=None, stderr=None):
-        """Display history sessionid."""
-        if not self.sessionid:
-            return
-        print(str(self.sessionid), file=stdout)
-
-    def on_file(self, ns, stdout=None, stderr=None):
-        """Display history file name if it exists."""
-        if not self.filename:
-            return
-        print(str(self.filename), file=stdout)
 
     @staticmethod
     def _cmd_filter(cmds, pat):

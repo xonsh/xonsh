@@ -207,8 +207,7 @@ class SqliteHistory(HistoryBase):
             yield {'inp': item[0], 'ts': item[1], 'rtn': item[2], 'ind': i}
             i += 1
 
-    def on_info(self, ns, stdout=None, stderr=None):
-        """Display information about the shell history."""
+    def info(self):
         data = collections.OrderedDict()
         data['backend'] = 'sqlite'
         data['sessionid'] = str(self.sessionid)
@@ -218,15 +217,10 @@ class SqliteHistory(HistoryBase):
         data['all items'] = xh_sqlite_get_count(filename=self.filename)
         envs = builtins.__xonsh_env__
         data['gc options'] = envs.get('XONSH_HISTORY_SIZE')
-        if ns.json:
-            s = json.dumps(data)
-            print(s, file=stdout)
-        else:
-            for k, v in data.items():
-                print('{}: {}'.format(k, v))
+        return data
 
-    def on_gc(self, ns, stdout=None, stderr=None):
-        self.gc = SqliteHistoryGC(wait_for_shell=False, size=ns.size)
-        if ns.blocking:
+    def run_gc(self, size=None, blocking=True):
+        self.gc = SqliteHistoryGC(wait_for_shell=False, size=size)
+        if blocking:
             while self.gc.is_alive():
                 continue

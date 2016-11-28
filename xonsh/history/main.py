@@ -4,6 +4,7 @@ import argparse
 import builtins
 import datetime
 import functools
+import json
 import os
 import sys
 
@@ -255,15 +256,16 @@ def _xh_create_parser():
                       help='makes the gc non-blocking, and thus return sooner')
 
     hist = builtins.__xonsh_history__
-    if hasattr(hist, 'on_diff'):
+    if isinstance(hist, JsonHistory):
+        # add actions belong only to JsonHistory
         diff = subp.add_parser('diff', help='diff two xonsh history files')
         xdh.dh_create_parser(p=diff)
 
-    if hasattr(hist, 'on_replay'):
         import xonsh.replay as xrp
         replay = subp.add_parser('replay', help='replay a xonsh history file')
         xrp.replay_create_parser(p=replay)
         _XH_MAIN_ACTIONS.add('replay')
+
     return p
 
 
@@ -300,10 +302,30 @@ def history_main(args=None, stdin=None, stdout=None, stderr=None):
         return
     if ns.action == 'show':
         _xh_show_history(hist, ns, stdout=stdout, stderr=stderr)
-        return
-    method_name = 'on_{}'.format(ns.action)
-    method = getattr(hist, method_name, None)
-    if not method:
-        print('Unknown history action {}'.format(method_name), file=sys.stderr)
-        return
-    method(ns, stdout=stdout, stderr=stderr)
+    elif ns.action == 'info':
+        data = hist.info()
+        if ns.json:
+            s = json.dumps(data)
+            print(s, file=stdout)
+        else:
+            lines = ['{0}: {1}'.format(k, v) for k, v in data.items()]
+            print('\n'.join(lines), file=stdout)
+    elif ns.action == 'id':
+        if not hist.sessionid:
+            return
+        print(str(hist.sessionid), file=stdout)
+    elif ns.action == 'file':
+        if not hist.filename:
+            return
+        print(str(hist.filename), file=stdout)
+    elif ns.action == 'gc':
+        hist.run_gc(size=ns.size, blocking=ns.blocking)
+    elif ns.action == 'diff':
+        if isinstance(hist, JsonHistory):
+            xdh.dh_main_action(ns)
+    elif ns.action == 'replay':
+        if isinstance(hist, JsonHistory):
+            import xonsh.replay as xrp
+            xrp.replay_main_action(hist, ns, stdout=stdout, stderr=stderr)
+    else:
+        print('Unknown history action {}'.format(ns.action), file=sys.stderr)

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Implements the xonsh history object."""
 import os
-import json
 import time
 import uuid
 import builtins
@@ -12,7 +11,6 @@ import collections.abc as cabc
 from xonsh.history.base import HistoryBase
 import xonsh.tools as xt
 import xonsh.lazyjson as xlj
-import xonsh.diff_history as xdh
 
 
 def _xhj_gc_commands_to_rmfiles(hsize, files):
@@ -426,8 +424,7 @@ class JsonHistory(HistoryBase):
                 yield {'inp': c['inp'].rstrip(), 'ts': c['ts'][0], 'ind': ind}
                 ind += 1
 
-    def on_info(self, ns, stdout=None, stderr=None):
-        """Display information about the shell history."""
+    def info(self):
         data = collections.OrderedDict()
         data['backend'] = 'json'
         data['sessionid'] = str(self.sessionid)
@@ -437,23 +434,10 @@ class JsonHistory(HistoryBase):
         data['bufferlength'] = len(self.buffer)
         envs = builtins.__xonsh_env__
         data['gc options'] = envs.get('XONSH_HISTORY_SIZE')
-        if ns.json:
-            s = json.dumps(data)
-            print(s, file=stdout)
-        else:
-            lines = ['{0}: {1}'.format(k, v) for k, v in data.items()]
-            print('\n'.join(lines), file=stdout)
+        return data
 
-    def on_diff(self, ns, stdout=None, stderr=None):
-        xdh.dh_main_action(ns)
-
-    def on_replay(self, ns, stdout=None, stderr=None):
-        """Replay a xonsh history file."""
-        import xonsh.replay as xrp
-        xrp.replay_main_action(self, ns, stdout=stdout, stderr=stderr)
-
-    def on_gc(self, ns, stdout=None, stderr=None):
-        self.gc = JsonHistoryGC(wait_for_shell=False, size=ns.size)
-        if ns.blocking:
+    def run_gc(self, size=None, blocking=True):
+        self.gc = JsonHistoryGC(wait_for_shell=False, size=size)
+        if blocking:
             while self.gc.is_alive():
                 continue
