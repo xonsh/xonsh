@@ -92,7 +92,8 @@ def complete_from_bash(prefix, line, begidx, endidx, ctx):
         out = subprocess.check_output(
             [xp.bash_command(), '-c', script], universal_newlines=True,
             stderr=subprocess.PIPE, env=builtins.__xonsh_env__.detype())
-    except (subprocess.CalledProcessError, FileNotFoundError):
+    except (subprocess.CalledProcessError, FileNotFoundError,
+            UnicodeDecodeError):
         return set()
 
     out = out.splitlines()
