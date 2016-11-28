@@ -56,15 +56,44 @@ that you are used to from Bash and IPython. It works on all major systems includ
 Linux, Mac OSX, and Windows. Xonsh is meant for the daily use of experts and novices
 alike.
 
-**At a glance**
+**Try it out!**
 
 .. raw:: html
 
-    <p style="text-align:center;"><script type="text/javascript"
-      src="https://asciinema.org/a/9kp21a67ahhng25wtzoep3pyx.js"
-      id="asciicast-9kp21a67ahhng25wtzoep3pyx" async
-      data-size="medium" data-speed="2"></script>
+    <style>
+    .tryitbutton {
+        background-color: #84A6C7;
+        border: none;
+        color: white;
+        padding: 15px 32px;
+        text-align: center;
+        text-decoration: none;
+        font-size: 22px;
+        margin: 4px 2px;
+        cursor: pointer;
+        border-radius: 8px;
+        position:relative;
+        float: right;
+        right: 35%;
+        bottom: 240px;
+    }
+    </style>
+    <div id="trydiv"><p style="text-align:center;">
+    <iframe id="tryframe" data-src="http://hermit.astro73.com/"
+            src="_static/xonsh-live.png" width="80%" height="480px"
+            style="overflow:hidden;" scrolling="no">
+    </iframe>
+    <button class="tryitbutton" id="trybutton">Click to Try Xonsh!</button>
+    <script>
+        $("#trybutton").click(function(){
+            var tryframe = $("#tryframe");
+            var trybutton = $("#trybutton");
+            tryframe.attr("src", tryframe.data("src"));
+            trybutton.remove();
+        });
+    </script>
     </p>
+    </div>
 
 =========
 Contents
