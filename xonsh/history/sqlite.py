@@ -6,9 +6,10 @@ import json
 import os
 import sqlite3
 import sys
+import threading
 import time
 
-from xonsh.history.base import HistoryBase, HistoryGC
+from xonsh.history.base import HistoryBase
 import xonsh.tools as xt
 
 
@@ -134,16 +135,18 @@ def xh_sqlite_delete_items(size_to_keep, filename=None):
         return _xh_sqlite_delete_records(c, size_to_keep)
 
 
-class SqliteHistoryGC(HistoryGC):
+class SqliteHistoryGC(threading.Thread):
     """Shell history garbage collection."""
 
-    def __init__(self, wait_for_shell=True, size=None, *args, **kwargs):
+    def __init__(self, wait_for_shell=True, size=None, filename=None,
+                 *args, **kwargs):
         """Thread responsible for garbage collecting old history.
 
         May wait for shell (and for xonshrc to have been loaded) to start work.
         """
         super().__init__(*args, **kwargs)
         self.daemon = True
+        self.filename = filename
         self.size = size
         self.wait_for_shell = wait_for_shell
         self.start()

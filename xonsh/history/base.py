@@ -1,17 +1,11 @@
-import threading
 import uuid
-
 import xonsh.tools as xt
 
 
-class HistoryGC(threading.Thread):
-    pass
-
-
 class HistoryBase:
-    def __init__(self, sessionid=None, gc=True, **kwargs):
+    def __init__(self, sessionid=None, **kwargs):
         self.sessionid = uuid.uuid4() if sessionid is None else sessionid
-        self.gc = HistoryGC() if gc else None
+        self.gc = None
         self.buffer = None
         self.filename = None
         self.rtns = None

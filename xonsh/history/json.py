@@ -9,7 +9,7 @@ import collections
 import threading
 import collections.abc as cabc
 
-from xonsh.history.base import HistoryBase, HistoryGC
+from xonsh.history.base import HistoryBase
 import xonsh.tools as xt
 import xonsh.lazyjson as xlj
 import xonsh.diff_history as xdh
@@ -77,7 +77,7 @@ def _xhj_get_history_files(sort=True, reverse=False):
     return files
 
 
-class JsonHistoryGC(HistoryGC):
+class JsonHistoryGC(threading.Thread):
     """Shell history garbage collection."""
 
     def __init__(self, wait_for_shell=True, size=None, *args, **kwargs):
