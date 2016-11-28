@@ -19,6 +19,7 @@
     * more
     * mutt
     * nano
+    * psql
     * ranger
     * scp
     * sh
