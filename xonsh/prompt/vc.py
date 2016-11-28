@@ -18,7 +18,7 @@ def _get_git_branch(q):
             ['git', 'branch'],
             stderr=subprocess.DEVNULL
         )).splitlines()
-    except (subprocess.CalledProcessError, OSError):
+    except (subprocess.CalledProcessError, OSError, FileNotFoundError):
         q.put(None)
     else:
         for branch in branches:
@@ -64,8 +64,8 @@ def get_hg_branch(root=None):
                                        stderr=subprocess.DEVNULL)
     except subprocess.TimeoutExpired:
         return subprocess.TimeoutExpired(['hg'], timeout)
-    except subprocess.CalledProcessError:
-        # not in repo
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        # not in repo or command not in PATH
         return None
     else:
         root = xt.decode_bytes(root).strip()
@@ -105,7 +105,7 @@ def _first_branch_timeout_message():
     _FIRST_BRANCH_TIMEOUT = False
     print('xonsh: branch timeout: computing the branch name, color, or both '
           'timed out while formatting the prompt. You may avoid this by '
-          'increaing the value of $VC_BRANCH_TIMEOUT or by removing branch '
+          'increasing the value of $VC_BRANCH_TIMEOUT or by removing branch '
           'fields, like {curr_branch}, from your $PROMPT. See the FAQ '
           'for more details. This message will be suppressed for the remainder '
           'of this session. To suppress this message permanently, set '
@@ -147,7 +147,7 @@ def _git_dirty_working_directory(q, include_untracked):
         else:
             cmd.append('--untracked-files=no')
         status = subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
-    except (subprocess.CalledProcessError, OSError):
+    except (subprocess.CalledProcessError, OSError, FileNotFoundError):
         q.put(None)
     if status is not None:
         return q.put(bool(status))
@@ -171,7 +171,7 @@ def git_dirty_working_directory(include_untracked=False):
 
 def hg_dirty_working_directory():
     """Computes whether or not the mercurial working directory is dirty or not.
-    If this cannot be deterimined, None is returned.
+    If this cannot be determined, None is returned.
     """
     env = builtins.__xonsh_env__
     cwd = env['PWD']

@@ -415,10 +415,11 @@ class BaseShell(object):
                 print_exception()
                 return src, None
             self.need_more_lines = True
+            code = None
         except Exception:  # pylint: disable=broad-except
             self.reset_buffer()
             print_exception()
-            return src, None
+            code = None
         return src, code
 
     def reset_buffer(self):
