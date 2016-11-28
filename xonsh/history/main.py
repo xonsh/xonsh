@@ -24,7 +24,7 @@ HISTORY_BACKENDS = {
 
 def construct_history(**kwargs):
     env = builtins.__xonsh_env__
-    backend = env.get('XONSH_HISTORY_BACKEND', 'json')
+    backend = env.get('XONSH_HISTORY_BACKEND')
     if backend not in HISTORY_BACKENDS:
         print('Unknown history backend: {}. Using JSON version'.format(
             backend), file=sys.stderr)

@@ -299,6 +299,7 @@ def DEFAULT_VALUES():
         'XONSH_DEBUG': False,
         'XONSH_ENCODING': DEFAULT_ENCODING,
         'XONSH_ENCODING_ERRORS': 'surrogateescape',
+        'XONSH_HISTORY_BACKEND': 'json',
         'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
         'XONSH_HISTORY_SIZE': (8128, 'commands'),
         'XONSH_LOGIN': False,
@@ -643,6 +644,9 @@ def DEFAULT_DOCS():
         '* ``XONSH_GITSTATUS_AHEAD``: ``↑·``\n'
         '* ``XONSH_GITSTATUS_BEHIND``: ``↓·``\n'
     ),
+    'XONSH_HISTORY_BACKEND': VarDocs(
+        'Set which history backend to use. Options are: ``json``, '
+        '``sqlite``, and ``dummy``. default is ``json``.'),
     'XONSH_HISTORY_FILE': VarDocs(
         'Location of history file (deprecated).',
         configurable=False, default="``~/.xonsh_history``"),

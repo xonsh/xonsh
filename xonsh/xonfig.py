@@ -353,7 +353,6 @@ def _info(ns):
     data.extend([
         ('Python', '{}.{}.{}'.format(*PYTHON_VERSION_INFO)),
         ('PLY', ply.__version__),
-        ('history backend', env.get('XONSH_HISTORY_BACKEND', 'json')),
         ('have readline', is_readline_available()),
         ('prompt toolkit', ptk_version() or None),
         ('shell type', env.get('SHELL_TYPE')),
