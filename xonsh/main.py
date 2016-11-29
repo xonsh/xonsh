@@ -252,6 +252,7 @@ def main(argv=None):
             print('Could not find xonsh configuration or run control files.',
                   file=sys.stderr)
             xonfig_main(['wizard', '--confirm'])
+        events.on_pre_cmdloop.fire()
         shell.shell.cmdloop()
     elif args.mode == XonshMode.single_command:
         # run a single command and exit
