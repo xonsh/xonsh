@@ -19,6 +19,39 @@ from xonsh.codecache import run_script_with_cache, run_code_with_cache
 from xonsh.xonfig import xonfig_main
 from xonsh.lazyimps import pygments, pyghooks
 from xonsh.imphooks import install_hook
+from xonsh.events import events
+
+
+events.transmogrify('on_post_init', 'LoadEvent')
+events.doc('on_post_init', """
+on_post_init() -> None
+
+Fired after all initialization is finished and we're ready to do work.
+
+NOTE: This is fired before the wizard is automatically started.
+""")
+
+events.transmogrify('on_pre_cmdloop', 'LoadEvent')
+events.doc('on_pre_cmdloop', """
+on_pre_cmdloop() -> None
+
+Fired just before  the command loop is started, if it is.
+""")
+
+
+events.transmogrify('on_pre_rc', 'LoadEvent')
+events.doc('on_pre_rc', """
+on_pre_rc() -> None
+
+Fired just before xonshrc is loaded, if it is.
+""")
+
+events.transmogrify('on_post_rc', 'LoadEvent')
+events.doc('on_post_rc', """
+on_post_rc() -> None
+
+Fired just before xonshrc is loaded, if it is.
+""")
 
 
 def get_setproctitle():
@@ -206,6 +239,7 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
     args = premain(argv)
+    events.on_post_init.fire()
     env = builtins.__xonsh_env__
     shell = builtins.__xonsh_shell__
     if args.mode == XonshMode.interactive:
