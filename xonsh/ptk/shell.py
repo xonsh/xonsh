@@ -20,6 +20,15 @@ from xonsh.ptk.completer import PromptToolkitCompleter
 from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings
 from xonsh.ptk.shortcuts import Prompter
+from xonsh.events import events
+
+
+events.transmogrify('on_ptk_create', 'LoadEvent')
+events.doc('on_ptk_create', """
+on_ptk_create(prompter: Prompter, history: PromptToolkitHistory, completer: PromptToolkitCompleter, bindings: KeyBindingManager) ->
+
+Fired after prompt toolkit has been initialized
+""")
 
 
 class PromptToolkitShell(BaseShell):
@@ -37,6 +46,8 @@ class PromptToolkitShell(BaseShell):
             }
         self.key_bindings_manager = KeyBindingManager(**key_bindings_manager_args)
         load_xonsh_bindings(self.key_bindings_manager)
+        # This assumes that PromptToolkitShell is a singleton
+        events.on_ptk_create.fire(self.prompter, self.history, self.pt_completer, self.key_bindings_manager)
 
     def singleline(self, store_in_history=True, auto_suggest=None,
                    enable_history_search=True, multiline=True, **kwargs):

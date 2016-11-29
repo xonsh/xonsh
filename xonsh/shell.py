@@ -148,5 +148,7 @@ class Shell(object):
             # load run control files
             env = builtins.__xonsh_env__
             rc = env.get('XONSHRC') if rc is None else rc
+            events.on_pre_rc.fire()
             self.ctx.update(xonshrc_context(rcfiles=rc, execer=self.execer, initial=self.ctx))
+            events.on_post_rc.fire()
         self.ctx['__name__'] = '__main__'

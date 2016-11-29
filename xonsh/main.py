@@ -19,6 +19,57 @@ from xonsh.codecache import run_script_with_cache, run_code_with_cache
 from xonsh.xonfig import xonfig_main
 from xonsh.lazyimps import pygments, pyghooks
 from xonsh.imphooks import install_hook
+from xonsh.events import events
+
+
+events.transmogrify('on_post_init', 'LoadEvent')
+events.doc('on_post_init', """
+on_post_init() -> None
+
+Fired after all initialization is finished and we're ready to do work.
+
+NOTE: This is fired before the wizard is automatically started.
+""")
+
+events.transmogrify('on_exit', 'LoadEvent')
+events.doc('on_exit', """
+on_exit() -> None
+
+Fired after all commands have been executed, before tear-down occurs.
+
+NOTE: All the caveats of the atexit module also apply to this event.
+""")
+
+
+events.transmogrify('on_pre_cmdloop', 'LoadEvent')
+events.doc('on_pre_cmdloop', """
+on_pre_cmdloop() -> None
+
+Fired just before the command loop is started, if it is.
+""")
+
+events.transmogrify('on_post_cmdloop', 'LoadEvent')
+events.doc('on_post_cmdloop', """
+on_post_cmdloop() -> None
+
+Fired just after the command loop finishes, if it is.
+
+NOTE: All the caveats of the atexit module also apply to this event.
+""")
+
+events.transmogrify('on_pre_rc', 'LoadEvent')
+events.doc('on_pre_rc', """
+on_pre_rc() -> None
+
+Fired just before rc files are loaded, if they are.
+""")
+
+events.transmogrify('on_post_rc', 'LoadEvent')
+events.doc('on_post_rc', """
+on_post_rc() -> None
+
+Fired just before rc files are loaded, if they are.
+""")
 
 
 def get_setproctitle():
@@ -206,38 +257,46 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
     args = premain(argv)
+    events.on_post_init.fire()
     env = builtins.__xonsh_env__
     shell = builtins.__xonsh_shell__
-    if args.mode == XonshMode.interactive:
-        # enter the shell
-        env['XONSH_INTERACTIVE'] = True
-        ignore_sigtstp()
-        if (env['XONSH_INTERACTIVE'] and
-                not env['LOADED_CONFIG'] and
-                not any(os.path.isfile(i) for i in env['XONSHRC'])):
-            print('Could not find xonsh configuration or run control files.',
-                  file=sys.stderr)
-            xonfig_main(['wizard', '--confirm'])
-        shell.shell.cmdloop()
-    elif args.mode == XonshMode.single_command:
-        # run a single command and exit
-        run_code_with_cache(args.command.lstrip(), shell.execer, mode='single')
-    elif args.mode == XonshMode.script_from_file:
-        # run a script contained in a file
-        path = os.path.abspath(os.path.expanduser(args.file))
-        if os.path.isfile(path):
-            sys.argv = [args.file] + args.args
-            env['ARGS'] = sys.argv[:]  # $ARGS is not sys.argv
-            env['XONSH_SOURCE'] = path
-            run_script_with_cache(args.file, shell.execer, glb=shell.ctx,
-                                  loc=None, mode='exec')
-        else:
-            print('xonsh: {0}: No such file or directory.'.format(args.file))
-    elif args.mode == XonshMode.script_from_stdin:
-        # run a script given on stdin
-        code = sys.stdin.read()
-        run_code_with_cache(code, shell.execer, glb=shell.ctx, loc=None,
-                            mode='exec')
+    try:
+        if args.mode == XonshMode.interactive:
+            # enter the shell
+            env['XONSH_INTERACTIVE'] = True
+            ignore_sigtstp()
+            if (env['XONSH_INTERACTIVE'] and
+                    not env['LOADED_CONFIG'] and
+                    not any(os.path.isfile(i) for i in env['XONSHRC'])):
+                print('Could not find xonsh configuration or run control files.',
+                      file=sys.stderr)
+                xonfig_main(['wizard', '--confirm'])
+            events.on_pre_cmdloop.fire()
+            try:
+                shell.shell.cmdloop()
+            finally:
+                events.on_post_cmdloop.fire()
+        elif args.mode == XonshMode.single_command:
+            # run a single command and exit
+            run_code_with_cache(args.command.lstrip(), shell.execer, mode='single')
+        elif args.mode == XonshMode.script_from_file:
+            # run a script contained in a file
+            path = os.path.abspath(os.path.expanduser(args.file))
+            if os.path.isfile(path):
+                sys.argv = [args.file] + args.args
+                env['ARGS'] = sys.argv[:]  # $ARGS is not sys.argv
+                env['XONSH_SOURCE'] = path
+                run_script_with_cache(args.file, shell.execer, glb=shell.ctx,
+                                      loc=None, mode='exec')
+            else:
+                print('xonsh: {0}: No such file or directory.'.format(args.file))
+        elif args.mode == XonshMode.script_from_stdin:
+            # run a script given on stdin
+            code = sys.stdin.read()
+            run_code_with_cache(code, shell.execer, glb=shell.ctx, loc=None,
+                                mode='exec')
+    finally:
+        events.on_exit.fire()
     postmain(args)
 
 
