@@ -144,13 +144,14 @@ class Event(AbstractEvent):
 class LoadEvent(AbstractEvent):
     """
     An event species where each handler is called exactly once, shortly after either the event is
-    fired or the handler is registered (whichever is later).
+    fired or the handler is registered (whichever is later). Additional firings are ignored.
 
     Note: Does not support scatter/gather, due to never knowing when we have all the handlers.
 
     Note: Maintains a strong reference to pargs/kwargs in case of the addition of future handlers.
+
+    Note: This is currently NOT thread safe.
     """
-    # NOTE: This is currently NOT THREAD SAFE.
     def __init__(self):
         self._fired = set()
         self._unfired = set()

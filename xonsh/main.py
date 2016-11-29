@@ -43,14 +43,14 @@ events.transmogrify('on_pre_rc', 'LoadEvent')
 events.doc('on_pre_rc', """
 on_pre_rc() -> None
 
-Fired just before xonshrc is loaded, if it is.
+Fired just before rc files are loaded, if they are.
 """)
 
 events.transmogrify('on_post_rc', 'LoadEvent')
 events.doc('on_post_rc', """
 on_post_rc() -> None
 
-Fired just before xonshrc is loaded, if it is.
+Fired just before rc files are loaded, if they are.
 """)
 
 
