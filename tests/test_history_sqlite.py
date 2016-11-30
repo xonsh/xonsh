@@ -28,6 +28,36 @@ def test_hist_append(hist, xonsh_builtins):
     assert 1 == items[0]['rtn']
 
 
+def test_hist_attrs(hist, xonsh_builtins):
+    xonsh_builtins.__xonsh_env__['HISTCONTROL'] = set()
+    hf = hist.append({'inp': 'ls foo', 'rtn': 1})
+    assert hf is None
+    assert 'ls foo' == hist.inps[0]
+    assert 'ls foo' == hist.inps[-1]
+    assert 1 == hist.rtns[0]
+    assert 1 == hist.rtns[-1]
+    assert None is hist.outs[-1]
+    assert [1] == hist.rtns[:]
+    hist.append({'inp': 'ls bar', 'rtn': 0})
+    assert 'ls bar' == hist.inps[1]
+    assert 'ls bar' == hist.inps[-1]
+    assert 0 == hist.rtns[1]
+    assert 0 == hist.rtns[-1]
+    assert None is hist.outs[-1]
+    assert [1, 0] == hist.rtns[:]
+    assert len(hist.tss) == 2
+    assert len(hist.tss[0]) == 2
+
+
+def test_histcontrol_options(hist, xonsh_builtins):
+    # HISTCONTROL options tests
+    xonsh_builtins.__xonsh_env__['HISTCONTROL'] = 'ignoredups,ignoreerr'
+    hist.append({'inp': 'ls foo', 'rtn': 0})
+    hist.append({'inp': 'ls foo', 'rtn': 0})
+    hist.append({'inp': 'ls bar', 'rtn': 1})
+    assert ['ls foo'] == hist.inps[:]
+
+
 CMDS = ['ls', 'cat hello kitty', 'abc', 'def', 'touch me', 'grep from me']
 
 
