@@ -170,7 +170,7 @@ class SqliteHistoryGC(threading.Thread):
 
 class SqliteHistory(HistoryBase):
     def __init__(self, gc=True, filename=None, **kwargs):
-        super().__init__(gc=False, **kwargs)
+        super().__init__(**kwargs)
         if filename is None:
             filename = _xh_sqlite_get_file_name()
         self.filename = filename

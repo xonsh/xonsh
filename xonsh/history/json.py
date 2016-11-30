@@ -2,7 +2,6 @@
 """Implements the xonsh history object."""
 import os
 import time
-import uuid
 import builtins
 import collections
 import threading
@@ -245,54 +244,10 @@ class JsonCommandField(cabc.Sequence):
         return self is self.hist._queue[0]
 
 
-# Interface to History
 class JsonHistory(HistoryBase):
-    """Xonsh session history.
+    """Xonsh history backend implemented with JSON files.
 
-    Indexing
-    --------
-    History object acts like a sequence that can be indexed in a special way
-    that adds extra functionality. At the moment only history from the
-    current session can be retrieved. Note that the most recent command
-    is the last item in history.
-
-    The index acts as a filter with two parts, command and argument,
-    separated by comma. Based on the type of each part different
-    filtering can be achieved,
-
-        for the command part:
-
-            - an int returns the command in that position.
-            - a slice returns a list of commands.
-            - a string returns the most recent command containing the string.
-
-        for the argument part:
-
-            - an int returns the argument of the command in that position.
-            - a slice returns a part of the command based on the argument
-              position.
-
-    The argument part of the filter can be omitted but the command part is
-    required.
-
-    Command arguments are separated by white space.
-
-    If the filtering produces only one result it is
-    returned as a string else a list of strings is returned.
-
-    Attributes
-    ----------
-    rtns : sequence of ints
-        The return of the command (ie, 0 on success)
-    inps : sequence of strings
-        The command as typed by the user, including newlines
-    tss : sequence of two-tuples of floats
-        The timestamps of when the command started and finished, including
-        fractions
-    outs : sequence of strings
-        The output of the command, if xonsh is configured to save it
-
-    In all of these sequences, index 0 is the oldest and -1 (the last item) is the newest.
+    JsonHistory implements two extra actions: ``diff``, and ``replay``.
     """
 
     def __init__(self, filename=None, sessionid=None, buffersize=100, gc=True,
@@ -316,13 +271,13 @@ class JsonHistory(HistoryBase):
         gc : bool, optional
             Run garbage collector flag.
         """
-        self.sessionid = sid = uuid.uuid4() if sessionid is None else sessionid
+        super().__init__(sessionid=sessionid, **meta)
         if filename is None:
             # pylint: disable=no-member
             data_dir = builtins.__xonsh_env__.get('XONSH_DATA_DIR')
             data_dir = os.path.expanduser(data_dir)
             self.filename = os.path.join(
-                data_dir, 'xonsh-{0}.json'.format(sid))
+                data_dir, 'xonsh-{0}.json'.format(self.sessionid))
         else:
             self.filename = filename
         self.buffer = []
@@ -333,7 +288,7 @@ class JsonHistory(HistoryBase):
         self.last_cmd_out = None
         self.last_cmd_rtn = None
         meta['cmds'] = []
-        meta['sessionid'] = str(sid)
+        meta['sessionid'] = str(self.sessionid)
         with open(self.filename, 'w', newline='\n') as f:
             xlj.ljdump(meta, f, sort_keys=True)
         self.gc = JsonHistoryGC() if gc else None

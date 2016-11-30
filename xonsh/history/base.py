@@ -3,12 +3,72 @@ import xonsh.tools as xt
 
 
 class HistoryBase:
+    """Xonsh history backend base class.
+
+    History objects should be created via a subclass of HistoryBase.
+
+    Indexing
+    --------
+    History object acts like a sequence that can be indexed in a special
+    way that adds extra functionality. Note that the most recent command
+    is the last item in history.
+
+    The index acts as a filter with two parts, command and argument,
+    separated by comma. Based on the type of each part different
+    filtering can be achieved,
+
+        for the command part:
+
+            - an int returns the command in that position.
+            - a slice returns a list of commands.
+            - a string returns the most recent command containing the string.
+
+        for the argument part:
+
+            - an int returns the argument of the command in that position.
+            - a slice returns a part of the command based on the argument
+              position.
+
+    The argument part of the filter can be omitted but the command part is
+    required. Command arguments are separated by white space.
+
+    If the filtering produces only one result it is returned as a string
+    else a list of strings is returned.
+
+    Attributes
+    ----------
+    rtns : sequence of ints
+        The return of the command (ie, 0 on success)
+    inps : sequence of strings
+        The command as typed by the user, including newlines
+    tss : sequence of two-tuples of floats
+        The timestamps of when the command started and finished, including
+        fractions
+    outs : sequence of strings
+        The output of the command, if xonsh is configured to save it
+    gc : A garbage collector or None
+        The garbage collector
+
+    In all of these sequences, index 0 is the oldest and -1 (the last item)
+    is the newest.
+    """
     def __init__(self, sessionid=None, **kwargs):
+        """Represents a xonsh session's history.
+
+        Parameters
+        ----------
+        sessionid : int, uuid, str, optional
+            Current session identifier, will generate a new sessionid if not
+            set.
+        """
         self.sessionid = uuid.uuid4() if sessionid is None else sessionid
         self.gc = None
         self.buffer = None
         self.filename = None
+        self.inps = None
         self.rtns = None
+        self.tss = None
+        self.outs = None
         self.last_cmd_rtn = None
         self.last_cmd_out = None
 
