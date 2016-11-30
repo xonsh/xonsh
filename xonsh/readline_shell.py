@@ -13,14 +13,12 @@ are included from the IPython project.  The IPython project is:
 import os
 import sys
 import cmd
-import time
 import select
 import builtins
 import importlib
 import threading
 import collections
 
-from xonsh.lazyjson import LazyJSON
 from xonsh.lazyasd import LazyObject
 from xonsh.base_shell import BaseShell
 from xonsh.ansi_colors import ansi_partial_color_format, ansi_color_style_names, ansi_color_style
@@ -460,8 +458,9 @@ class ReadlineShell(BaseShell, cmd.Cmd):
 
 class ReadlineHistoryAdder(threading.Thread):
     def __init__(self, wait_for_gc=True, *args, **kwargs):
-        """Thread responsible for adding inputs from history to the current readline
-        instance. May wait for the history garbage collector to finish.
+        """Thread responsible for adding inputs from history to the
+        current readline instance. May wait for the history garbage
+        collector to finish.
         """
         super(ReadlineHistoryAdder, self).__init__(*args, **kwargs)
         self.daemon = True
@@ -478,11 +477,10 @@ class ReadlineHistoryAdder(threading.Thread):
             return
         i = 1
         for h in hist.items():
-            inp = h['inp'].splitlines()
-            for line in inp:
-                if line == 'EOF':
-                    continue
-                readline.add_history(line)
-                if RL_LIB is not None:
-                    RL_LIB.history_set_pos(i)
-                i += 1
+            line = h['inp'].rstrip()
+            if line == readline.get_history_item(i - 1):
+                continue
+            readline.add_history(line)
+            if RL_LIB is not None:
+                RL_LIB.history_set_pos(i)
+            i += 1
