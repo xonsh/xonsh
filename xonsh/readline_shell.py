@@ -474,6 +474,8 @@ class ReadlineHistoryAdder(threading.Thread):
         except ImportError:
             return
         hist = builtins.__xonsh_history__
+        if hist is None:
+            return
         i = 1
         for h in hist.items():
             inp = h['inp'].splitlines()

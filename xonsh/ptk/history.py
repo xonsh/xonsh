@@ -47,6 +47,8 @@ class PromptToolkitHistoryAdder(Thread):
 
     def run(self):
         hist = builtins.__xonsh_history__
+        if hist is None:
+            return
         buf = None
         ptkhist = self.ptkhist
         for cmd in hist.items():

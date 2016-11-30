@@ -92,7 +92,7 @@ class Shell(object):
 
         env = builtins.__xonsh_env__
         # build history backend before creating shell
-        builtins.__xonsh_history__ = xhm.construct_history(
+        builtins.__xonsh_history__ = hist = xhm.construct_history(
             env=env.detype(), ts=[time.time(), None], locked=True)
 
         # pick a valid shell -- if no shell is specified by the user,
@@ -131,7 +131,8 @@ class Shell(object):
         self.shell = shell_class(execer=self.execer,
                                  ctx=self.ctx, **kwargs)
         # allows history garbace colector to start running
-        builtins.__xonsh_history__.gc.wait_for_shell = False
+        if hist.gc is not None:
+            hist.gc.wait_for_shell = False
 
     def __getattr__(self, attr):
         """Delegates calls to appropriate shell instance."""
