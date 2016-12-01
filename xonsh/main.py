@@ -37,7 +37,7 @@ on_exit() -> None
 
 Fired after all commands have been executed, before tear-down occurs.
 
-NOTE: All the caveats of the atexit module also apply to this event.
+NOTE: All the caveats of the ``atexit`` module also apply to this event.
 """)
 
 
@@ -54,7 +54,7 @@ on_post_cmdloop() -> None
 
 Fired just after the command loop finishes, if it is.
 
-NOTE: All the caveats of the atexit module also apply to this event.
+NOTE: All the caveats of the ``atexit`` module also apply to this event.
 """)
 
 events.transmogrify('on_pre_rc', 'LoadEvent')
@@ -68,7 +68,7 @@ events.transmogrify('on_post_rc', 'LoadEvent')
 events.doc('on_post_rc', """
 on_post_rc() -> None
 
-Fired just before rc files are loaded, if they are.
+Fired just after rc files are loaded, if they are.
 """)
 
 
