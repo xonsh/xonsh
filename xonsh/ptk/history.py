@@ -51,7 +51,7 @@ class PromptToolkitHistoryAdder(Thread):
             return
         buf = None
         ptkhist = self.ptkhist
-        for cmd in hist.items():
+        for cmd in hist.all_items():
             line = cmd['inp'].rstrip()
             if len(ptkhist) == 0 or line != ptkhist[-1]:
                 ptkhist.append(line)

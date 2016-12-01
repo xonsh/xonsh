@@ -40,14 +40,14 @@ def _xh_session_parser(hist=None, **kwargs):
     """
     if hist is None:
         hist = builtins.__xonsh_history__
-    return hist.session_items()
+    return hist.items()
 
 
 def _xh_all_parser(hist=None, **kwargs):
     """Returns all history items."""
     if hist is None:
         hist = builtins.__xonsh_history__
-    return hist.items()
+    return hist.all_items()
 
 
 def _xh_find_histfile_var(file_list, default=None):

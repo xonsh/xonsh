@@ -1,11 +1,13 @@
+# -*- coding: utf-8 -*-
+"""Base class of Xonsh History backends."""
 import uuid
 import xonsh.tools as xt
 
 
-class HistoryBase:
+class History:
     """Xonsh history backend base class.
 
-    History objects should be created via a subclass of HistoryBase.
+    History objects should be created via a subclass of History.
 
     Indexing
     --------
@@ -73,7 +75,8 @@ class HistoryBase:
         self.last_cmd_out = None
 
     def __len__(self):
-        return len(list(self.session_items()))
+        """Return the number of items in current session."""
+        return len(list(self.items()))
 
     def __getitem__(self, item):
         """Retrieve history parts based on filtering rules,
@@ -84,7 +87,7 @@ class HistoryBase:
             cmd_pat, arg_pat = item
         else:
             cmd_pat, arg_pat = item, None
-        cmds = [c['inp'] for c in self.session_items()]
+        cmds = [c['inp'] for c in self.items()]
         cmds = self._cmd_filter(cmds, cmd_pat)
         if arg_pat is not None:
             cmds = self._args_filter(cmds, arg_pat)
@@ -99,17 +102,26 @@ class HistoryBase:
                               'you can create new though.')
 
     def append(self, cmd):
+        """Append a command item into history.
+
+        Parameters
+        ----------
+        cmd: dict
+            A dict contains informations of a command. It should contains
+            the following keys like ``inp``, ``rtn``, ``ts`` etc.
+        """
         pass
 
     def flush(self, **kwargs):
+        """Flush the history items to disk from a buffer."""
         pass
 
     def items(self):
-        """Display all history items."""
+        """Get history items of current session."""
         raise NotImplementedError
 
-    def session_items(self):
-        """Display history items of current session."""
+    def all_items(self):
+        """Get all history items."""
         raise NotImplementedError
 
     def info(self, ns, stdout=None, stderr=None):
@@ -123,7 +135,7 @@ class HistoryBase:
         raise NotImplementedError
 
     def run_gc(self, size=None, blocking=True):
-        """Run a garbage collect action.
+        """Run the garbage collector.
 
         Parameters
         ----------

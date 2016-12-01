@@ -9,7 +9,7 @@ import sys
 import threading
 import time
 
-from xonsh.history.base import HistoryBase
+from xonsh.history.base import History
 import xonsh.tools as xt
 
 
@@ -168,7 +168,7 @@ class SqliteHistoryGC(threading.Thread):
         xh_sqlite_delete_items(hsize, filename=self.filename)
 
 
-class SqliteHistory(HistoryBase):
+class SqliteHistory(History):
     def __init__(self, gc=True, filename=None, **kwargs):
         super().__init__(**kwargs)
         if filename is None:
@@ -204,14 +204,14 @@ class SqliteHistory(HistoryBase):
             cmd, str(self.sessionid), store_stdout,
             filename=self.filename)
 
-    def items(self):
+    def all_items(self):
         """Display all history items."""
         i = 0
         for item in xh_sqlite_items(filename=self.filename):
             yield {'inp': item[0], 'ts': item[1], 'rtn': item[2], 'ind': i}
             i += 1
 
-    def session_items(self):
+    def items(self):
         """Display history items of current session."""
         i = 0
         for item in xh_sqlite_items(

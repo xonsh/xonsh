@@ -23,9 +23,16 @@ def test_hist_append(hist, xonsh_builtins):
     xonsh_builtins.__xonsh_env__['HISTCONTROL'] = set()
     hf = hist.append({'inp': 'still alive', 'rtn': 1})
     assert hf is None
-    items = list(hist.session_items())
+    items = list(hist.items())
+    assert len(items) == 1
     assert 'still alive' == items[0]['inp']
     assert 1 == items[0]['rtn']
+    hist.append({'inp': 'still alive', 'rtn': 0})
+    items = list(hist.items())
+    assert len(items) == 2
+    assert 'still alive' == items[1]['inp']
+    assert 0 == items[1]['rtn']
+    assert list(hist.all_items()) == items
 
 
 def test_hist_attrs(hist, xonsh_builtins):
@@ -94,35 +101,35 @@ def test_histcontrol(hist, xonsh_builtins):
     xonsh_builtins.__xonsh_env__['HISTCONTROL'] = 'ignoredups,ignoreerr'
     assert len(hist) == 0
 
-    # An error, session_items() remains empty
+    # An error, items() remains empty
     hist.append({'inp': 'ls foo', 'rtn': 2})
     assert len(hist) == 0
 
     # Success
     hist.append({'inp': 'ls foobazz', 'rtn': 0})
     assert len(hist) == 1
-    items = list(hist.session_items())
+    items = list(hist.items())
     assert 'ls foobazz' == items[-1]['inp']
     assert 0 == items[-1]['rtn']
 
     # Error
     hist.append({'inp': 'ls foo', 'rtn': 2})
     assert len(hist) == 1
-    items = list(hist.session_items())
+    items = list(hist.items())
     assert 'ls foobazz' == items[-1]['inp']
     assert 0 == items[-1]['rtn']
 
     # File now exists, success
     hist.append({'inp': 'ls foo', 'rtn': 0})
     assert len(hist) == 2
-    items = list(hist.session_items())
+    items = list(hist.items())
     assert 'ls foo' == items[-1]['inp']
     assert 0 == items[-1]['rtn']
 
     # Success
     hist.append({'inp': 'ls', 'rtn': 0})
     assert len(hist) == 3
-    items = list(hist.session_items())
+    items = list(hist.items())
     assert 'ls' == items[-1]['inp']
     assert 0 == items[-1]['rtn']
 
@@ -133,21 +140,21 @@ def test_histcontrol(hist, xonsh_builtins):
     # Success
     hist.append({'inp': '/bin/ls', 'rtn': 0})
     assert len(hist) == 4
-    items = list(hist.session_items())
+    items = list(hist.items())
     assert '/bin/ls' == items[-1]['inp']
     assert 0 == items[-1]['rtn']
 
     # Error
     hist.append({'inp': 'ls bazz', 'rtn': 1})
     assert len(hist) == 4
-    items = list(hist.session_items())
+    items = list(hist.items())
     assert '/bin/ls' == items[-1]['inp']
     assert 0 == items[-1]['rtn']
 
     # Error
     hist.append({'inp': 'ls bazz', 'rtn': -1})
     assert len(hist) == 4
-    items = list(hist.session_items())
+    items = list(hist.items())
     assert '/bin/ls' == items[-1]['inp']
     assert 0 == items[-1]['rtn']
 

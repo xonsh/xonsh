@@ -476,7 +476,7 @@ class ReadlineHistoryAdder(threading.Thread):
         if hist is None:
             return
         i = 1
-        for h in hist.items():
+        for h in hist.all_items():
             line = h['inp'].rstrip()
             if line == readline.get_history_item(i - 1):
                 continue

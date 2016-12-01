@@ -7,7 +7,7 @@ import collections
 import threading
 import collections.abc as cabc
 
-from xonsh.history.base import HistoryBase
+from xonsh.history.base import History
 import xonsh.tools as xt
 import xonsh.lazyjson as xlj
 
@@ -244,7 +244,7 @@ class JsonCommandField(cabc.Sequence):
         return self is self.hist._queue[0]
 
 
-class JsonHistory(HistoryBase):
+class JsonHistory(History):
     """Xonsh history backend implemented with JSON files.
 
     JsonHistory implements two extra actions: ``diff``, and ``replay``.
@@ -352,20 +352,20 @@ class JsonHistory(HistoryBase):
         self.buffer.clear()
         return hf
 
-    def session_items(self):
+    def items(self):
         """Display history items of current session."""
         ind = 0
         for item, tss in zip(self.inps, self.tss):
             yield {'inp': item.rstrip(), 'ind': ind, 'ts': tss[0]}
             ind += 1
 
-    def items(self, **kwargs):
+    def all_items(self, **kwargs):
         """
         Returns all history as found in XONSH_DATA_DIR.
 
         return format: (cmd, start_time, index)
         """
-        while self.gc.is_alive():
+        while self.gc and self.gc.is_alive():
             time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer
         ind = 0
         for f in _xhj_get_history_files():

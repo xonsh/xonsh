@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """Implements the xonsh history backend."""
 import collections
-from xonsh.history.base import HistoryBase
+from xonsh.history.base import History
 
 
-class DummyHistory(HistoryBase):
+class DummyHistory(History):
     """A dummy implement of history backend."""
     def append(self, cmd):
         pass
@@ -12,7 +12,7 @@ class DummyHistory(HistoryBase):
     def items(self):
         yield {'inp': 'dummy in action', 'ts': 1464652800, 'ind': 0}
 
-    def session_items(self):
+    def all_items(self):
         return self.items()
 
     def info(self):
