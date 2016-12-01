@@ -18,6 +18,7 @@ from xonsh import __version__ as XONSH_VERSION
 from xonsh.environ import DEFAULT_DOCS, Env
 from xonsh.xontribs import xontrib_metadata
 from xonsh.events import events
+from xonsh import main
 from xonsh.commands_cache import CommandsCache
 
 sys.path.insert(0, os.path.dirname(__file__))
