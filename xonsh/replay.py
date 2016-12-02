@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Tools to replay xonsh history files."""
+import json
 import time
 import builtins
 import collections.abc as cabc
@@ -111,7 +112,13 @@ def replay_main_action(h, ns, stdout=None, stderr=None):
     print('----------------------------------------------------------------')
     print('Just replayed history, new history has the following information')
     print('----------------------------------------------------------------')
-    hist.on_info(ns, stdout=stdout, stderr=stderr)
+    data = hist.info()
+    if ns.json:
+        s = json.dumps(data)
+        print(s, file=stdout)
+    else:
+        lines = ['{0}: {1}'.format(k, v) for k, v in data.items()]
+        print('\n'.join(lines), file=stdout)
 
 
 def replay_main(args, stdin=None):

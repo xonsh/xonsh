@@ -124,7 +124,7 @@ class History:
         """Get all history items."""
         raise NotImplementedError
 
-    def info(self, ns, stdout=None, stderr=None):
+    def info(self):
         """A collection of information about the shell history.
 
         Returns
