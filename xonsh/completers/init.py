@@ -11,7 +11,7 @@ from xonsh.completers.python import (complete_python, complete_import,
                                      complete_python_mode)
 from xonsh.completers.commands import complete_skipper
 from xonsh.completers.completer import complete_completer
-from xonsh.completers.xompletions import complete_xonfig
+from xonsh.completers.xompletions import complete_xonfig, complete_xontrib
 
 
 def default_completers():
@@ -25,6 +25,7 @@ def default_completers():
         ('cd', complete_cd),
         ('rmdir', complete_rmdir),
         ('xonfig', complete_xonfig),
+        ('xontrib', complete_xontrib),
         ('bash', complete_from_bash),
         ('man', complete_from_man),
         ('import', complete_import),
