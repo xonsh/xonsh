@@ -12,7 +12,7 @@ import pytest
 
 @pytest.yield_fixture
 def hist():
-    h = SqliteHistory(filename='xonsh-HISTORY-TEST.sqlite', here='yup',
+    h = SqliteHistory(filename='xonsh-HISTORY-TEST.sqlite',
                       sessionid='SESSIONID', gc=False)
     yield h
     os.remove(h.filename)
@@ -56,16 +56,6 @@ def test_hist_attrs(hist, xonsh_builtins):
     assert len(hist.tss[0]) == 2
 
 
-def test_histcontrol_options(hist, xonsh_builtins):
-    # HISTCONTROL options tests
-    xonsh_builtins.__xonsh_env__['HISTCONTROL'] = 'ignoredups,ignoreerr'
-    hist.append({'inp': 'ls foo', 'rtn': 0})
-    hist.append({'inp': 'ls foo', 'rtn': 0})
-    hist.append({'inp': 'ls bar', 'rtn': 1})
-    assert ['ls foo'] == [x['inp'] for x in hist.items()]
-    assert ['ls foo', 'ls foo', 'ls bar'] == hist.inps[:]
-
-
 CMDS = ['ls', 'cat hello kitty', 'abc', 'def', 'touch me', 'grep from me']
 
 
@@ -105,11 +95,15 @@ def test_histcontrol(hist, xonsh_builtins):
     # An error, items() remains empty
     hist.append({'inp': 'ls foo', 'rtn': 2})
     assert len(hist) == 0
+    assert len(hist.inps) == 1
+    assert len(hist.rtns) == 1
     assert 2 == hist.rtns[-1]
 
     # Success
     hist.append({'inp': 'ls foobazz', 'rtn': 0})
     assert len(hist) == 1
+    assert len(hist.inps) == 2
+    assert len(hist.rtns) == 2
     items = list(hist.items())
     assert 'ls foobazz' == items[-1]['inp']
     assert 0 == items[-1]['rtn']
