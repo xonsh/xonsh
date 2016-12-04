@@ -62,7 +62,8 @@ def test_histcontrol_options(hist, xonsh_builtins):
     hist.append({'inp': 'ls foo', 'rtn': 0})
     hist.append({'inp': 'ls foo', 'rtn': 0})
     hist.append({'inp': 'ls bar', 'rtn': 1})
-    assert ['ls foo'] == hist.inps[:]
+    assert ['ls foo'] == [x['inp'] for x in hist.items()]
+    assert ['ls foo', 'ls foo', 'ls bar'] == hist.inps[:]
 
 
 CMDS = ['ls', 'cat hello kitty', 'abc', 'def', 'touch me', 'grep from me']
@@ -104,6 +105,7 @@ def test_histcontrol(hist, xonsh_builtins):
     # An error, items() remains empty
     hist.append({'inp': 'ls foo', 'rtn': 2})
     assert len(hist) == 0
+    assert 2 == hist.rtns[-1]
 
     # Success
     hist.append({'inp': 'ls foobazz', 'rtn': 0})
@@ -111,6 +113,7 @@ def test_histcontrol(hist, xonsh_builtins):
     items = list(hist.items())
     assert 'ls foobazz' == items[-1]['inp']
     assert 0 == items[-1]['rtn']
+    assert 0 == hist.rtns[-1]
 
     # Error
     hist.append({'inp': 'ls foo', 'rtn': 2})
@@ -118,6 +121,7 @@ def test_histcontrol(hist, xonsh_builtins):
     items = list(hist.items())
     assert 'ls foobazz' == items[-1]['inp']
     assert 0 == items[-1]['rtn']
+    assert 2 == hist.rtns[-1]
 
     # File now exists, success
     hist.append({'inp': 'ls foo', 'rtn': 0})
@@ -125,6 +129,7 @@ def test_histcontrol(hist, xonsh_builtins):
     items = list(hist.items())
     assert 'ls foo' == items[-1]['inp']
     assert 0 == items[-1]['rtn']
+    assert 0 == hist.rtns[-1]
 
     # Success
     hist.append({'inp': 'ls', 'rtn': 0})
@@ -132,6 +137,7 @@ def test_histcontrol(hist, xonsh_builtins):
     items = list(hist.items())
     assert 'ls' == items[-1]['inp']
     assert 0 == items[-1]['rtn']
+    assert 0 == hist.rtns[-1]
 
     # Dup
     hist.append({'inp': 'ls', 'rtn': 0})
@@ -143,6 +149,7 @@ def test_histcontrol(hist, xonsh_builtins):
     items = list(hist.items())
     assert '/bin/ls' == items[-1]['inp']
     assert 0 == items[-1]['rtn']
+    assert 0 == hist.rtns[-1]
 
     # Error
     hist.append({'inp': 'ls bazz', 'rtn': 1})
@@ -150,6 +157,8 @@ def test_histcontrol(hist, xonsh_builtins):
     items = list(hist.items())
     assert '/bin/ls' == items[-1]['inp']
     assert 0 == items[-1]['rtn']
+    assert 'ls bazz' == hist.inps[-1]
+    assert 1 == hist.rtns[-1]
 
     # Error
     hist.append({'inp': 'ls bazz', 'rtn': -1})
@@ -157,6 +166,7 @@ def test_histcontrol(hist, xonsh_builtins):
     items = list(hist.items())
     assert '/bin/ls' == items[-1]['inp']
     assert 0 == items[-1]['rtn']
+    assert -1 == hist.rtns[-1]
 
 
 @pytest.mark.parametrize('index, exp', [

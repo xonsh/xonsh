@@ -174,8 +174,8 @@ class SqliteHistory(History):
         if filename is None:
             filename = _xh_sqlite_get_file_name()
         self.filename = filename
-        self.last_cmd_inp = None
         self.gc = SqliteHistoryGC() if gc else None
+        self._last_hist_inp = None
         self.inps = []
         self.rtns = []
         self.outs = []
@@ -185,21 +185,23 @@ class SqliteHistory(History):
         envs = builtins.__xonsh_env__
         opts = envs.get('HISTCONTROL')
         inp = cmd['inp'].rstrip()
-        if 'ignoredups' in opts and inp == self.last_cmd_inp:
-            # Skipping dup cmd
-            return
-        if 'ignoreerr' in opts and cmd['rtn'] != 0:
-            # Skipping failed cmd
-            return
         self.inps.append(inp)
         store_stdout = envs.get('XONSH_STORE_STDOUT', False)
         if store_stdout:
             self.outs.append(cmd.get('out'))
         else:
             self.outs.append(None)
-        self.last_cmd_inp = inp
         self.rtns.append(cmd['rtn'])
         self.tss.append(cmd.get('ts', (None, None)))
+
+        opts = envs.get('HISTCONTROL')
+        if 'ignoredups' in opts and inp == self._last_hist_inp:
+            # Skipping dup cmd
+            return
+        if 'ignoreerr' in opts and cmd['rtn'] != 0:
+            # Skipping failed cmd
+            return
+        self._last_hist_inp = inp
         xh_sqlite_append_history(
             cmd, str(self.sessionid), store_stdout,
             filename=self.filename)
