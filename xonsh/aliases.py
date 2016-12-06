@@ -12,7 +12,7 @@ from xonsh.lazyasd import lazyobject
 from xonsh.dirstack import cd, pushd, popd, dirs, _get_cwd
 from xonsh.environ import locate_binary
 from xonsh.foreign_shells import foreign_shell_data
-from xonsh.jobs import jobs, fg, bg, clean_jobs
+from xonsh.jobs import jobs, fg, bg, clean_jobs, kill
 from xonsh.history import history_main
 from xonsh.platform import (ON_ANACONDA, ON_DARWIN, ON_WINDOWS, ON_FREEBSD,
                             ON_NETBSD)
@@ -401,7 +401,7 @@ def make_default_aliases():
         'ipynb': ['jupyter', 'notebook', '--no-browser'],
         'which': xxw.which,
         'xontrib': xontribs_main,
-        'completer': xca.completer_alias
+        'completer': xca.completer_alias,
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.
@@ -454,18 +454,22 @@ def make_default_aliases():
             default_aliases['sudo'] = sudo
     elif ON_DARWIN:
         default_aliases['ls'] = ['ls', '-G']
+        default_aliases['kill'] = kill
     elif ON_FREEBSD:
         default_aliases['grep'] = ['grep', '--color=auto']
         default_aliases['egrep'] = ['egrep', '--color=auto']
         default_aliases['fgrep'] = ['fgrep', '--color=auto']
         default_aliases['ls'] = ['ls', '-G']
+        default_aliases['kill'] = kill
     elif ON_NETBSD:
         default_aliases['grep'] = ['grep', '--color=auto']
         default_aliases['egrep'] = ['egrep', '--color=auto']
         default_aliases['fgrep'] = ['fgrep', '--color=auto']
+        default_aliases['kill'] = kill
     else:
         default_aliases['grep'] = ['grep', '--color=auto']
         default_aliases['egrep'] = ['egrep', '--color=auto']
         default_aliases['fgrep'] = ['fgrep', '--color=auto']
         default_aliases['ls'] = ['ls', '--color=auto', '-v']
+        default_aliases['kill'] = kill
     return default_aliases
