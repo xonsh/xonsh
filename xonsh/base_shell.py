@@ -318,15 +318,15 @@ class BaseShell(object):
             ts0 = time.time()
             run_compiled_code(code, self.ctx, None, 'single')
             ts1 = time.time()
-            if hist.last_cmd_rtn is None:
+            if hist is not None and hist.last_cmd_rtn is None:
                 hist.last_cmd_rtn = 0  # returncode for success
         except XonshError as e:
             print(e.args[0], file=sys.stderr)
-            if hist.last_cmd_rtn is None:
+            if hist is not None and hist.last_cmd_rtn is None:
                 hist.last_cmd_rtn = 1  # return code for failure
         except Exception:  # pylint: disable=broad-except
             print_exception()
-            if hist.last_cmd_rtn is None:
+            if hist is not None and hist.last_cmd_rtn is None:
                 hist.last_cmd_rtn = 1  # return code for failure
         finally:
             ts1 = ts1 or time.time()
@@ -343,9 +343,9 @@ class BaseShell(object):
         information is available.
         """
         hist = builtins.__xonsh_history__  # pylint: disable=no-member
-        info['rtn'] = hist.last_cmd_rtn
+        info['rtn'] = hist.last_cmd_rtn if hist is not None else None
         tee_out = tee_out or None
-        last_out = hist.last_cmd_out or None
+        last_out = hist.last_cmd_out if hist is not None else None
         if last_out is None and tee_out is None:
             pass
         elif last_out is None and tee_out is not None:
@@ -360,8 +360,9 @@ class BaseShell(object):
             info.get('out', None),
             info['ts']
             )
-        hist.append(info)
-        hist.last_cmd_rtn = hist.last_cmd_out = None
+        if hist is not None:
+            hist.append(info)
+            hist.last_cmd_rtn = hist.last_cmd_out = None
 
     def _fix_cwd(self):
         """Check if the cwd changed out from under us"""

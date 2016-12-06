@@ -23,7 +23,6 @@ import collections.abc as cabc
 
 from xonsh.ast import AST
 from xonsh.lazyasd import LazyObject, lazyobject
-from xonsh.history import History
 from xonsh.inspectors import Inspector
 from xonsh.aliases import Aliases, make_default_aliases
 from xonsh.environ import Env, default_env, locate_binary
@@ -1111,7 +1110,7 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     global BUILTINS_LOADED
     # private built-ins
     builtins.__xonsh_config__ = {}
-    builtins.__xonsh_env__ = env = Env(default_env(config=config, login=login))
+    builtins.__xonsh_env__ = Env(default_env(config=config, login=login))
     builtins.__xonsh_help__ = helper
     builtins.__xonsh_superhelp__ = superhelper
     builtins.__xonsh_pathsearch__ = pathsearch
@@ -1151,14 +1150,12 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.events = events
 
     # sneak the path search functions into the aliases
-    # Need this inline/lazy import here since we use locate_binary that relies on __xonsh_env__ in default aliases
+    # Need this inline/lazy import here since we use locate_binary that
+    # relies on __xonsh_env__ in default aliases
     builtins.default_aliases = builtins.aliases = Aliases(make_default_aliases())
     if login:
         builtins.aliases.update(load_foreign_aliases(issue_warning=False))
-    # history needs to be started after env and aliases
-    # would be nice to actually include non-detyped versions.
-    builtins.__xonsh_history__ = History(env=env.detype(),
-                                         ts=[time.time(), None], locked=True)
+    builtins.__xonsh_history__ = None
     atexit.register(_lastflush)
     for sig in AT_EXIT_SIGNALS:
         resetting_signal_handle(sig, _lastflush)
@@ -1167,7 +1164,8 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
 
 def _lastflush(s=None, f=None):
     if hasattr(builtins, '__xonsh_history__'):
-        builtins.__xonsh_history__.flush(at_exit=True)
+        if builtins.__xonsh_history__ is not None:
+            builtins.__xonsh_history__.flush(at_exit=True)
 
 
 def unload_builtins():

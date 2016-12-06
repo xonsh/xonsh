@@ -155,6 +155,8 @@ def DEFAULT_ENSURERS():
     'XONSH_DEBUG': (always_false, to_debug, bool_or_int_to_str),
     'XONSH_ENCODING': (is_string, ensure_string, ensure_string),
     'XONSH_ENCODING_ERRORS': (is_string, ensure_string, ensure_string),
+    'XONSH_HISTORY_BACKEND': (is_string, ensure_string, ensure_string),
+    'XONSH_HISTORY_FILE': (is_string, ensure_string, ensure_string),
     'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
     'XONSH_LOGIN': (is_bool, to_bool, bool_to_str),
     'XONSH_PROC_FREQUENCY': (is_float, float, str),
@@ -299,6 +301,7 @@ def DEFAULT_VALUES():
         'XONSH_DEBUG': False,
         'XONSH_ENCODING': DEFAULT_ENCODING,
         'XONSH_ENCODING_ERRORS': 'surrogateescape',
+        'XONSH_HISTORY_BACKEND': 'json',
         'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
         'XONSH_HISTORY_SIZE': (8128, 'commands'),
         'XONSH_LOGIN': False,
@@ -643,6 +646,9 @@ def DEFAULT_DOCS():
         '* ``XONSH_GITSTATUS_AHEAD``: ``↑·``\n'
         '* ``XONSH_GITSTATUS_BEHIND``: ``↓·``\n'
     ),
+    'XONSH_HISTORY_BACKEND': VarDocs(
+        'Set which history backend to use. Options are: ``json``, '
+        '``sqlite``, and ``dummy``. default is ``json``.'),
     'XONSH_HISTORY_FILE': VarDocs(
         'Location of history file (deprecated).',
         configurable=False, default="``~/.xonsh_history``"),
