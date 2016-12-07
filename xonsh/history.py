@@ -191,6 +191,8 @@ class HistoryFlusher(threading.Thread):
             hist['ts'][1] = time.time()  # apply end time
             hist['locked'] = False
         with open(self.filename, 'w', newline='\n') as f:
+            if not builtins.__xonsh_env__.get('XONSH_STORE_STDOUT'):
+                [out.pop('out') for out in hist['cmds']]
             ljdump(hist, f, sort_keys=True)
 
 

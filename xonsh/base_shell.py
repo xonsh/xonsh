@@ -343,13 +343,10 @@ class BaseShell(object):
         information is available.
         """
         hist = builtins.__xonsh_history__  # pylint: disable=no-member
-        env = builtins.__xonsh_env__
         info['rtn'] = hist.last_cmd_rtn
         tee_out = tee_out or None
         last_out = hist.last_cmd_out or None
         if last_out is None and tee_out is None:
-            pass
-        elif not env.get('XONSH_STORE_STDOUT'):
             pass
         elif last_out is None and tee_out is not None:
             info['out'] = tee_out
