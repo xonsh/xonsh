@@ -192,7 +192,7 @@ class HistoryFlusher(threading.Thread):
             hist['locked'] = False
         with open(self.filename, 'w', newline='\n') as f:
             if not builtins.__xonsh_env__.get('XONSH_STORE_STDOUT'):
-                [out.pop('out') for out in hist['cmds']]
+                [out.pop('out') for out in hist['cmds'] if 'out' in out]
             ljdump(hist, f, sort_keys=True)
 
 
