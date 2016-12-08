@@ -1988,7 +1988,8 @@ class BaseParser(object):
                               lineno=p1.lineno, col=p1.lexpos)
         else:
             s = ast.literal_eval(p1.value)
-            cls = ast.Bytes if 'b' in prefix else ast.Str
+            is_bytes = 'b' in prefix or 'B' in prefix
+            cls = ast.Bytes if is_bytes else ast.Str
             p[0] = cls(s=s, lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_string_literal_list(self, p):

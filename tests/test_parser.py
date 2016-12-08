@@ -86,6 +86,17 @@ def test_str_literal():
 
 def test_bytes_literal():
     check_ast('b"hello"')
+    check_ast('B"hello"')
+
+def test_raw_literal():
+    check_ast('r"hell\o"')
+    check_ast('R"hell\o"')
+
+def test_raw_bytes_literal():
+    check_ast('br"hell\o"')
+    check_ast('RB"hell\o"')
+    check_ast('Br"hell\o"')
+    check_ast('rB"hell\o"')
 
 def test_unary_plus():
     check_ast('+1')
