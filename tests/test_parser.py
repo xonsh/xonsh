@@ -1492,6 +1492,10 @@ def test_async_await():
 
 def test_path_literal():
     check_xonsh_ast({}, 'p"/foo"', False)
+    check_xonsh_ast({}, 'pr"/foo"', False)
+    check_xonsh_ast({}, 'rp"/foo"', False)
+    check_xonsh_ast({}, 'pR"/foo"', False)
+    check_xonsh_ast({}, 'Rp"/foo"', False)
 
 def test_dollar_name():
     check_xonsh_ast({'WAKKA': 42}, '$WAKKA')

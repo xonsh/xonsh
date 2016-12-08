@@ -16,12 +16,14 @@ from xonsh import ast
 from xonsh.ast import has_elts, xonsh_call
 from xonsh.lexer import Lexer, LexToken
 from xonsh.platform import PYTHON_VERSION_INFO
-from xonsh.tokenize import SearchPath
+from xonsh.tokenize import SearchPath, StringPrefix
 from xonsh.lazyasd import LazyObject
 from xonsh.parsers.context_check import check_contexts
 
 RE_SEARCHPATH = LazyObject(lambda: re.compile(SearchPath), globals(),
                            'RE_SEARCHPATH')
+RE_STRINGPREFIX = LazyObject(lambda: re.compile(StringPrefix), globals(),
+                             'RE_STRINGPREFIX')
 
 
 class Location(object):
@@ -1977,14 +1979,16 @@ class BaseParser(object):
     def p_string_literal(self, p):
         """string_literal : string_tok"""
         p1 = p[1]
-        if p1.value.startswith('p'):
-            s = ast.Str(s=ast.literal_eval(p1.value[1:]), lineno=p1.lineno,
+        prefix = RE_STRINGPREFIX.match(p1.value).group()
+        if 'p' in prefix:
+            value_without_p = prefix.replace('p', '') + p1.value[len(prefix):]
+            s = ast.Str(s=ast.literal_eval(value_without_p), lineno=p1.lineno,
                         col_offset=p1.lexpos)
             p[0] = xonsh_call('__xonsh_path_literal__', [s],
                               lineno=p1.lineno, col=p1.lexpos)
         else:
             s = ast.literal_eval(p1.value)
-            cls = ast.Bytes if p1.value.startswith('b') else ast.Str
+            cls = ast.Bytes if 'b' in prefix else ast.Str
             p[0] = cls(s=s, lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_string_literal_list(self, p):
