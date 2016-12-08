@@ -4,7 +4,7 @@
 Advanced Events
 ********************
 
-If you havent, go read the `events tutorial <tutorial_events.rst>`_ first. This documents the messy
+If you havent, go read the `events tutorial <tutorial_events.html>`_ first. This documents the messy
 details of the event system.
 
 You may also find the `events API reference <api/events.html>`_ useful.

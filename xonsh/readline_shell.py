@@ -13,25 +13,19 @@ are included from the IPython project.  The IPython project is:
 import os
 import sys
 import cmd
-import time
 import select
 import builtins
 import importlib
 import threading
 import collections
 
-from xonsh.lazyjson import LazyJSON
 from xonsh.lazyasd import LazyObject
 from xonsh.base_shell import BaseShell
 from xonsh.ansi_colors import ansi_partial_color_format, ansi_color_style_names, ansi_color_style
-from xonsh.prompt.base import partial_format_prompt, multiline_prompt
-from xonsh.tools import print_exception
+from xonsh.prompt.base import multiline_prompt
+from xonsh.tools import print_exception, check_for_partial_string
 from xonsh.platform import ON_WINDOWS, ON_CYGWIN, ON_DARWIN
 from xonsh.lazyimps import pygments, pyghooks
-
-terminal256 = LazyObject(
-    lambda: importlib.import_module('pygments.formatters.terminal256'),
-    globals(), 'terminal')
 
 readline = None
 RL_COMPLETION_SUPPRESS_APPEND = RL_LIB = RL_STATE = None
@@ -255,22 +249,24 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         """Overridden to no-op."""
         return '', line, line
 
-    def completedefault(self, text, line, begidx, endidx):
+    def completedefault(self, prefix, line, begidx, endidx):
         """Implements tab-completion for text."""
+        if self.completer is None:
+            return []
         rl_completion_suppress_append()  # this needs to be called each time
         _rebind_case_sensitive_completions()
-
-        line = builtins.aliases.expand_alias(line)
-        mline = line.partition(' ')[2]
-        offs = len(mline) - len(text)
-        if self.completer is None:
-            x = []
+        _s, _e, _q = check_for_partial_string(line)
+        if _s is not None:
+            if _e is not None and ' ' in line[_e:]:
+                mline = line.rpartition(' ')[2]
+            else:
+                mline = line[_s:]
         else:
-            x = [(i[offs:] if " " in i[:-1] else i)
-                 for i in self.completer.complete(text, line,
-                                                  begidx, endidx,
-                                                  ctx=self.ctx)[0]]
-        return x
+            mline = line.rpartition(' ')[2]
+        offs = len(mline) - len(prefix)
+        return [i[offs:] for i in self.completer.complete(prefix, line,
+                                                          begidx, endidx,
+                                                          ctx=self.ctx)[0]]
 
     # tab complete on first index too
     completenames = completedefault
@@ -420,7 +416,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         env = builtins.__xonsh_env__  # pylint: disable=no-member
         p = env.get('PROMPT')
         try:
-            p = partial_format_prompt(p)
+            p = self.prompt_formatter(p)
         except Exception:  # pylint: disable=broad-except
             print_exception()
         hide = True if self._force_hide is None else self._force_hide
@@ -430,13 +426,13 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         self.settitle()
         return p
 
-    def format_color(self, string, hide=False, **kwargs):
-        """Readline implementation of color formatting. This usesg ANSI color
+    def format_color(self, string, hide=False, force_string=False, **kwargs):
+        """Readline implementation of color formatting. This usess ANSI color
         codes.
         """
         hide = hide if self._force_hide is None else self._force_hide
-        return ansi_partial_color_format(string, hide=hide,
-                                         style=builtins.__xonsh_env__.get('XONSH_COLOR_STYLE'))
+        style = builtins.__xonsh_env__.get('XONSH_COLOR_STYLE')
+        return ansi_partial_color_format(string, hide=hide, style=style)
 
     def print_color(self, string, hide=False, **kwargs):
         if isinstance(string, str):
@@ -446,7 +442,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             env = builtins.__xonsh_env__
             self.styler.style_name = env.get('XONSH_COLOR_STYLE')
             style_proxy = pyghooks.xonsh_style_proxy(self.styler)
-            formatter = terminal256.Terminal256Formatter(style=style_proxy)
+            formatter = pyghooks.XonshTerminal256Formatter(style=style_proxy)
             s = pygments.format(string, formatter).rstrip()
         print(s, **kwargs)
 
@@ -462,8 +458,9 @@ class ReadlineShell(BaseShell, cmd.Cmd):
 
 class ReadlineHistoryAdder(threading.Thread):
     def __init__(self, wait_for_gc=True, *args, **kwargs):
-        """Thread responsible for adding inputs from history to the current readline
-        instance. May wait for the history garbage collector to finish.
+        """Thread responsible for adding inputs from history to the
+        current readline instance. May wait for the history garbage
+        collector to finish.
         """
         super(ReadlineHistoryAdder, self).__init__(*args, **kwargs)
         self.daemon = True
@@ -476,22 +473,14 @@ class ReadlineHistoryAdder(threading.Thread):
         except ImportError:
             return
         hist = builtins.__xonsh_history__
-        while self.wait_for_gc and hist.gc.is_alive():
-            time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer
-        files = hist.gc.files()
+        if hist is None:
+            return
         i = 1
-        for _, _, f in files:
-            try:
-                lj = LazyJSON(f, reopen=False)
-                for command in lj['cmds']:
-                    inp = command['inp'].splitlines()
-                    for line in inp:
-                        if line == 'EOF':
-                            continue
-                        readline.add_history(line)
-                        if RL_LIB is not None:
-                            RL_LIB.history_set_pos(i)
-                        i += 1
-                lj.close()
-            except (IOError, OSError, ValueError):
+        for h in hist.all_items():
+            line = h['inp'].rstrip()
+            if line == readline.get_history_item(i - 1):
                 continue
+            readline.add_history(line)
+            if RL_LIB is not None:
+                RL_LIB.history_set_pos(i)
+            i += 1

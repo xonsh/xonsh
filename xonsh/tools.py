@@ -747,16 +747,23 @@ def argvquote(arg, force=False):
         n_backslashes = 0
         cmdline = '"'
         for c in arg:
+            if c == "\\":
+                # first count the number of current backslashes
+                n_backslashes += 1
+                continue
             if c == '"':
+                # Escape all backslashes and the following double quotation mark
                 cmdline += (n_backslashes * 2 + 1) * '\\'
             else:
+                # backslashes are not special here
                 cmdline += n_backslashes * '\\'
-            if c != '\\':
-                cmdline += c
-                n_backslashes = 0
-            else:
-                n_backslashes += 1
-        return cmdline + n_backslashes * 2 * '\\' + '"'
+            n_backslashes = 0
+            cmdline += c
+        # Escape all backslashes, but let the terminating
+        # double quotation mark we add below be interpreted
+        # as a metacharacter
+        cmdline += + n_backslashes * 2 * '\\' + '"'
+        return cmdline
 
 
 def on_main_thread():
@@ -1336,7 +1343,7 @@ def _get_color_indexes(style_map):
             yield token, index, rgb
 
 
-def intensify_colors_for_cmd_exe(style_map, replace_colors=None):
+def intensify_colors_for_cmd_exe(style_map, replace_colors=None, ansi=False):
     """Returns a modified style to where colors that maps to dark
        colors are replaced with brighter versions. Also expands the
        range used by the gray colors
@@ -1348,14 +1355,26 @@ def intensify_colors_for_cmd_exe(style_map, replace_colors=None):
             (stype == 'best' and not has_prompt_toolkit())):
         return modified_style
     if replace_colors is None:
-        replace_colors = {1: '#44ffff',  # subst blue with bright cyan
-                          2: '#44ff44',  # subst green with bright green
-                          4: '#ff4444',  # subst red with bright red
-                          5: '#ff44ff',  # subst magenta with bright magenta
-                          6: '#ffff44',  # subst yellow with bright yellow
-                          9: '#00aaaa',  # subst intense blue (hard to read)
-                                         # with dark cyan (which is readable)
-                          }
+        if ansi:
+            replace_colors = {
+                1: '#ansiturquoise',  # subst blue with bright cyan
+                2: '#ansigreen',      # subst green with bright green
+                4: '#ansired',        # subst red with bright red
+                5: '#ansifuchsia',    # subst magenta with bright magenta
+                6: '#ansiyellow',     # subst yellow with bright yellow
+                9: '#ansiteal',       # subst intense blue (hard to read)
+                                      # with dark cyan (which is readable)
+            }
+        else:
+            replace_colors = {
+                1: '#44ffff',  # subst blue with bright cyan
+                2: '#44ff44',  # subst green with bright green
+                4: '#ff4444',  # subst red with bright red
+                5: '#ff44ff',  # subst magenta with bright magenta
+                6: '#ffff44',  # subst yellow with bright yellow
+                9: '#00aaaa',  # subst intense blue (hard to read)
+                               # with dark cyan (which is readable)
+            }
     for token, idx, _ in _get_color_indexes(style_map):
         if idx in replace_colors:
             modified_style[token] = replace_colors[idx]
@@ -1394,6 +1413,27 @@ def intensify_colors_on_win_setter(enable):
     return enable
 
 
+def format_std_prepost(template, env=None):
+    """Formats a template prefix/postfix string for a standard buffer.
+    Returns a string suitable for prepending or appending.
+    """
+    if not template:
+        return ''
+    env = builtins.__xonsh_env__ if env is None else env
+    shell = builtins.__xonsh_shell__.shell
+    try:
+        s = shell.prompt_formatter(template)
+    except Exception:
+        print_exception()
+    # \001\002 is there to fool pygments into not returning an empty string
+    # for potentially empty input. This happend when the template is just a
+    # color code with no visible text.
+    invis = '\001\002'
+    s = shell.format_color(invis + s + invis, force_string=True)
+    s = s.replace(invis, '')
+    return s
+
+
 _RE_STRING_START = "[bBrRuU]*"
 _RE_STRING_TRIPLE_DOUBLE = '"""'
 _RE_STRING_TRIPLE_SINGLE = "'''"
@@ -1427,8 +1467,7 @@ terminating quotes)"""
 
 
 def check_for_partial_string(x):
-    """
-    Returns the starting index (inclusive), ending index (exclusive), and
+    """Returns the starting index (inclusive), ending index (exclusive), and
     starting quote string of the most recent Python string found in the input.
 
     check_for_partial_string(x) -> (startix, endix, quote)

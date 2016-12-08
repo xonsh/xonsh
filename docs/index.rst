@@ -56,15 +56,44 @@ that you are used to from Bash and IPython. It works on all major systems includ
 Linux, Mac OSX, and Windows. Xonsh is meant for the daily use of experts and novices
 alike.
 
-**At a glance**
+**Try it out!**
 
 .. raw:: html
 
-    <p style="text-align:center;"><script type="text/javascript"
-      src="https://asciinema.org/a/9kp21a67ahhng25wtzoep3pyx.js"
-      id="asciicast-9kp21a67ahhng25wtzoep3pyx" async
-      data-size="medium" data-speed="2"></script>
+    <style>
+    .tryitbutton {
+        background-color: #84A6C7;
+        border: none;
+        color: white;
+        padding: 15px 32px;
+        text-align: center;
+        text-decoration: none;
+        font-size: 22px;
+        margin: 4px 2px;
+        cursor: pointer;
+        border-radius: 8px;
+        position:relative;
+        float: right;
+        right: 35%;
+        bottom: 240px;
+    }
+    </style>
+    <div id="trydiv"><p style="text-align:center;">
+    <iframe id="tryframe" data-src="http://hermit.astro73.com/"
+            src="_static/xonsh-live.png" width="80%" height="480px"
+            style="overflow:hidden;" scrolling="no">
+    </iframe>
+    <button class="tryitbutton" id="trybutton">Click to Try Xonsh!</button>
+    <script>
+        $("#trybutton").click(function(){
+            var tryframe = $("#tryframe");
+            var trybutton = $("#trybutton");
+            tryframe.attr("src", tryframe.data("src"));
+            trybutton.remove();
+        });
+    </script>
     </p>
+    </div>
 
 =========
 Contents
@@ -79,7 +108,7 @@ Contents
     linux
     osx
     windows
-    add_to_shell
+    customization
 
 **Guides:**
 
@@ -266,4 +295,63 @@ Helpful Links
 
 .. raw:: html
 
-    <a href="https://github.com/xonsh/xonsh"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/52760788cde945287fbb584134c4cbc2bc36f904/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f77686974655f6666666666662e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_white_ffffff.png"></a>
+    <a href="https://github.com/xonsh/xonsh" class='github-fork-ribbon' title='Fork me on GitHub'>Fork me on GitHub</a>
+
+    <style>
+    /*!
+     * Adapted from
+     * "Fork me on GitHub" CSS ribbon v0.2.0 | MIT License
+     * https://github.com/simonwhitaker/github-fork-ribbon-css
+     */
+
+    .github-fork-ribbon, .github-fork-ribbon:hover, .github-fork-ribbon:hover:active {
+      background:none;
+      left: inherit;
+      width: 12.1em;
+      height: 12.1em;
+      position: absolute;
+      overflow: hidden;
+      top: 0;
+      right: 0;
+      z-index: 9999;
+      pointer-events: none;
+      text-decoration: none;
+      text-indent: -999999px;
+    }
+
+    .github-fork-ribbon:before, .github-fork-ribbon:after {
+      /* The right and left classes determine the side we attach our banner to */
+      position: absolute;
+      display: block;
+      width: 15.38em;
+      height: 1.54em;
+      top: 3.23em;
+      right: -3.23em;
+      box-sizing: content-box;
+      transform: rotate(45deg);
+    }
+
+    .github-fork-ribbon:before {
+      content: "";
+      padding: .38em 0;
+      background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1));
+      box-shadow: 0 0.07em 0.4em 0 rgba(0, 0, 0, 0.3);
+      pointer-events: auto;
+    }
+
+    .github-fork-ribbon:after {
+      content: attr(title);
+      color: #000;
+      font: 700 1em "Helvetica Neue", Helvetica, Arial, sans-serif;
+      line-height: 1.54em;
+      text-decoration: none;
+      text-align: center;
+      text-indent: 0;
+      padding: .15em 0;
+      margin: .15em 0;
+      border-width: .08em 0;
+      border-style: dotted;
+      border-color: #777;
+    }
+
+    </style>

@@ -276,7 +276,8 @@ def clean_jobs():
 
         if builtins.__xonsh_all_jobs__:
             global _last_exit_time
-            if builtins.__xonsh_history__.buffer:
+            hist = builtins.__xonsh_history__
+            if hist is not None and hist.buffer:
                 last_cmd_start = builtins.__xonsh_history__.buffer[-1]['ts'][0]
             else:
                 last_cmd_start = None

@@ -23,7 +23,6 @@ import collections.abc as cabc
 
 from xonsh.ast import AST
 from xonsh.lazyasd import LazyObject, lazyobject
-from xonsh.history import History
 from xonsh.inspectors import Inspector
 from xonsh.aliases import Aliases, make_default_aliases
 from xonsh.environ import Env, default_env, locate_binary
@@ -31,9 +30,9 @@ from xonsh.foreign_shells import load_foreign_aliases
 from xonsh.jobs import add_job
 from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.proc import (
-    PopenThread, ProcProxyThread, ProcProxy,
-    pause_call_resume, CommandPipeline,
-    HiddenCommandPipeline, STDOUT_CAPTURE_KINDS)
+    PopenThread, ProcProxyThread, ProcProxy, ConsoleParallelReader,
+    pause_call_resume, CommandPipeline, HiddenCommandPipeline,
+    STDOUT_CAPTURE_KINDS)
 from xonsh.tools import (
     suggest_commands, expandvars, globpath, XonshError,
     XonshCalledProcessError, XonshBlockError
@@ -431,13 +430,14 @@ class SubprocSpec:
         self.captured_stderr = None
 
     def __str__(self):
-        s = self.cls.__name__ + '(' + str(cmd) + ', '
+        s = self.__class__.__name__ + '(' + str(self.cmd) + ', '
+        s += self.cls.__name__ + ', '
         kws = [n + '=' + str(getattr(self, n)) for n in self.kwnames]
         s += ', '.join(kws) + ')'
         return s
 
     def __repr__(self):
-        s = self.__class__.__name__ + '(' + repr(cmd) + ', '
+        s = self.__class__.__name__ + '(' + repr(self.cmd) + ', '
         s += self.cls.__name__ + ', '
         kws = [n + '=' + repr(getattr(self, n)) for n in self.kwnames]
         s += ', '.join(kws) + ')'
@@ -655,9 +655,13 @@ class SubprocSpec:
         cls = ProcProxyThread if thable else ProcProxy
         self.cls = cls
         self.threadable = thable
+        # also check capturablity, while we are here
+        cpable = getattr(alias, '__xonsh_capturable__', self.captured)
+        self.captured = cpable
 
 
-def _update_last_spec(last, captured=False):
+def _update_last_spec(last):
+    captured = last.captured
     last.last_in_pipeline = True
     if not captured:
         return
@@ -689,6 +693,10 @@ def _update_last_spec(last, captured=False):
         last.universal_newlines = True
         last.stdout = builtins.__xonsh_stdout_uncaptured__
         last.captured_stdout = last.stdout
+    elif ON_WINDOWS and not callable_alias:
+        last.universal_newlines = True
+        last.stdout = None  # must truly stream on windows
+        last.captured_stdout = ConsoleParallelReader(1)
     else:
         last.universal_newlines = True
         r, w = pty.openpty() if use_tty else os.pipe()
@@ -704,6 +712,9 @@ def _update_last_spec(last, captured=False):
     elif builtins.__xonsh_stderr_uncaptured__ is not None:
         last.stderr = builtins.__xonsh_stderr_uncaptured__
         last.captured_stderr = last.stderr
+    elif ON_WINDOWS and not callable_alias:
+        last.universal_newlines = True
+        last.stderr = None  # must truly stream on windows
     else:
         r, w = pty.openpty() if use_tty else os.pipe()
         last.stderr = safe_open(w, 'w')
@@ -739,7 +750,7 @@ def cmds_to_specs(cmds, captured=False):
         else:
             raise XonshError('unrecognized redirect {0!r}'.format(redirect))
     # Apply boundry conditions
-    _update_last_spec(specs[-1], captured=captured)
+    _update_last_spec(specs[-1])
     return specs
 
 
@@ -765,6 +776,7 @@ def run_subproc(cmds, captured=False):
     Lastly, the captured argument affects only the last real command.
     """
     specs = cmds_to_specs(cmds, captured=captured)
+    captured = specs[-1].captured
     procs = []
     proc = pipeline_group = None
     for spec in specs:
@@ -1103,7 +1115,7 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     global BUILTINS_LOADED
     # private built-ins
     builtins.__xonsh_config__ = {}
-    builtins.__xonsh_env__ = env = Env(default_env(config=config, login=login))
+    builtins.__xonsh_env__ = Env(default_env(config=config, login=login))
     builtins.__xonsh_help__ = helper
     builtins.__xonsh_superhelp__ = superhelper
     builtins.__xonsh_pathsearch__ = pathsearch
@@ -1144,14 +1156,12 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.events = events
 
     # sneak the path search functions into the aliases
-    # Need this inline/lazy import here since we use locate_binary that relies on __xonsh_env__ in default aliases
+    # Need this inline/lazy import here since we use locate_binary that
+    # relies on __xonsh_env__ in default aliases
     builtins.default_aliases = builtins.aliases = Aliases(make_default_aliases())
     if login:
         builtins.aliases.update(load_foreign_aliases(issue_warning=False))
-    # history needs to be started after env and aliases
-    # would be nice to actually include non-detyped versions.
-    builtins.__xonsh_history__ = History(env=env.detype(),
-                                         ts=[time.time(), None], locked=True)
+    builtins.__xonsh_history__ = None
     atexit.register(_lastflush)
     for sig in AT_EXIT_SIGNALS:
         resetting_signal_handle(sig, _lastflush)
@@ -1160,7 +1170,8 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
 
 def _lastflush(s=None, f=None):
     if hasattr(builtins, '__xonsh_history__'):
-        builtins.__xonsh_history__.flush(at_exit=True)
+        if builtins.__xonsh_history__ is not None:
+            builtins.__xonsh_history__.flush(at_exit=True)
 
 
 def unload_builtins():

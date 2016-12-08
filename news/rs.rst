@@ -6,7 +6,8 @@
 * New ``CommandPipeline`` and ``HiddenCommandPipeline`` classes manage the
   execution of a pipeline of commands via the execution of the last command
   in the pipeline. Instances may be iterated and stream lines from the
-  stdout buffer.
+  stdout buffer. These pipelines read from the stdout & stderr streams in a
+  non-blocking manner.
 * ``$XONSH_STORE_STDOUT`` is now available on all platforms!
 * The ``CommandsCache`` now has the ability to predict whether or not a
   command must be run in the foreground using ``Popen`` or may use a
@@ -41,12 +42,18 @@
   in favor of a more general mechanism for dispatching callable aliases
   implemented in the ``ProcProxyThread``  and ``ProcProxy`` classes.
 
-
 **Fixed:**
 
 * May now Crtl-C out of an infinite loop with a subprocess, such as
   ```while True: sleep 1``.
 * Fix for stdin redirects.
 * Backgrounding works with ``$XONSH_STORE_STDOUT``
+* ``PopenThread`` blocks its thread from finishing until command has completed
+  or process is suspended.
+* Added a minimum time buffer time for command pipelines to check for
+  if previous commands have executed successfully.  This is helpful
+  for pipelines where the last command takes a long time to start up,
+  such as GNU Parallel. This also checks to make sure that output has occured.
+  This includes piping 2+ commands together.
 
 **Security:** None

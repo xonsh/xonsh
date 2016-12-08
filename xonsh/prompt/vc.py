@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 """Prompt formatter for simple version control branchs"""
+# pylint:disable=no-member, invalid-name
 
 import os
 import sys
-import time
 import queue
 import builtins
-import warnings
 import threading
 import subprocess
 
@@ -19,7 +18,7 @@ def _get_git_branch(q):
             ['git', 'branch'],
             stderr=subprocess.DEVNULL
         )).splitlines()
-    except (subprocess.CalledProcessError, OSError):
+    except (subprocess.CalledProcessError, OSError, FileNotFoundError):
         q.put(None)
     else:
         for branch in branches:
@@ -54,30 +53,23 @@ def get_git_branch():
     return branch
 
 
-def _get_parent_dir_for(path, dir_name, timeout):
-    # walk up the directory tree to see if we are inside an hg repo
-    # the timeout makes sure that we don't thrash the file system
-    previous_path = ''
-    t0 = time.time()
-    while path != previous_path and ((time.time() - t0) < timeout):
-        if os.path.isdir(os.path.join(path, dir_name)):
-            return path
-        previous_path = path
-        path, _ = os.path.split(path)
-    return (path == previous_path)
-
-
-def get_hg_branch(cwd=None, root=None):
+def get_hg_branch(root=None):
+    """Try to get the mercurial branch of the current directory,
+    return None if not in a repo or subprocess.TimeoutExpired if timed out.
+    """
     env = builtins.__xonsh_env__
-    cwd = env['PWD']
-    root = _get_parent_dir_for(cwd, '.hg', env['VC_BRANCH_TIMEOUT'])
-    if not isinstance(root, str):
-        # Bail if we are not in a repo or we timed out
-        if root:
-            return None
-        else:
-            return subprocess.TimeoutExpired(['hg'], env['VC_BRANCH_TIMEOUT'])
-    if env.get('VC_HG_SHOW_BRANCH') is True:
+    timeout = env['VC_BRANCH_TIMEOUT']
+    try:
+        root = subprocess.check_output(['hg', 'root'], timeout=timeout,
+                                       stderr=subprocess.DEVNULL)
+    except subprocess.TimeoutExpired:
+        return subprocess.TimeoutExpired(['hg'], timeout)
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        # not in repo or command not in PATH
+        return None
+    else:
+        root = xt.decode_bytes(root).strip()
+    if env.get('VC_HG_SHOW_BRANCH'):
         # get branch name
         branch_path = os.path.sep.join([root, '.hg', 'branch'])
         if os.path.exists(branch_path):
@@ -113,7 +105,7 @@ def _first_branch_timeout_message():
     _FIRST_BRANCH_TIMEOUT = False
     print('xonsh: branch timeout: computing the branch name, color, or both '
           'timed out while formatting the prompt. You may avoid this by '
-          'increaing the value of $VC_BRANCH_TIMEOUT or by removing branch '
+          'increasing the value of $VC_BRANCH_TIMEOUT or by removing branch '
           'fields, like {curr_branch}, from your $PROMPT. See the FAQ '
           'for more details. This message will be suppressed for the remainder '
           'of this session. To suppress this message permanently, set '
@@ -121,20 +113,24 @@ def _first_branch_timeout_message():
           file=sys.stderr)
 
 
-def current_branch(pad=NotImplemented):
+def current_branch():
     """Gets the branch for a current working directory. Returns an empty string
     if the cwd is not a repository.  This currently only works for git and hg
     and should be extended in the future.  If a timeout occurred, the string
     '<branch-timeout>' is returned.
     """
-    if pad is not NotImplemented:
-        warnings.warn("The pad argument of current_branch has no effect now "
-                      "and will be removed in the future")
     branch = None
     cmds = builtins.__xonsh_commands_cache__
-    if cmds.lazy_locate_binary('git') or cmds.is_empty():
+    # check for binary only once
+    if cmds.is_empty():
+        has_git = bool(cmds.locate_binary('git'))
+        has_hg = bool(cmds.locate_binary('hg'))
+    else:
+        has_git = bool(cmds.lazy_locate_binary('git'))
+        has_hg = bool(cmds.lazy_locate_binary('hg'))
+    if has_git:
         branch = get_git_branch()
-    if (cmds.lazy_locate_binary('hg') or cmds.is_empty()) and not branch:
+    if not branch and has_hg:
         branch = get_hg_branch()
     if isinstance(branch, subprocess.TimeoutExpired):
         branch = '<branch-timeout>'
@@ -151,7 +147,7 @@ def _git_dirty_working_directory(q, include_untracked):
         else:
             cmd.append('--untracked-files=no')
         status = subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
-    except (subprocess.CalledProcessError, OSError):
+    except (subprocess.CalledProcessError, OSError, FileNotFoundError):
         q.put(None)
     if status is not None:
         return q.put(bool(status))
@@ -175,7 +171,7 @@ def git_dirty_working_directory(include_untracked=False):
 
 def hg_dirty_working_directory():
     """Computes whether or not the mercurial working directory is dirty or not.
-    If this cannot be deterimined, None is returned.
+    If this cannot be determined, None is returned.
     """
     env = builtins.__xonsh_env__
     cwd = env['PWD']
@@ -194,16 +190,16 @@ def hg_dirty_working_directory():
         return None
 
 
-def dirty_working_directory(cwd=None):
+def dirty_working_directory():
     """Returns a boolean as to whether there are uncommitted files in version
     control repository we are inside. If this cannot be determined, returns
     None. Currently supports git and hg.
     """
     dwd = None
     cmds = builtins.__xonsh_commands_cache__
-    if cmds.lazy_locate_binary('git') or cmds.is_empty():
+    if cmds.lazy_locate_binary('git'):
         dwd = git_dirty_working_directory()
-    if (cmds.lazy_locate_binary('hg') or cmds.is_empty()) and (dwd is None):
+    if cmds.lazy_locate_binary('hg') and dwd is None:
         dwd = hg_dirty_working_directory()
     return dwd
 

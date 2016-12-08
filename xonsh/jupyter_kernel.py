@@ -68,7 +68,7 @@ class XonshKernel(Kernel):
                 # rely on sys.displayhook functionality
                 self._respond_in_chunks('stdout', pformat(builtins._))
                 builtins._ = None
-            if len(hist) > 0 and out.tell() == 0 and err.tell() == 0:
+            if hist is not None and len(hist) > 0 and out.tell() == 0 and err.tell() == 0:
                 self._respond_in_chunks('stdout', hist.outs[-1])
 
         out.close()
@@ -77,7 +77,7 @@ class XonshKernel(Kernel):
         if interrupted:
             return {'status': 'abort', 'execution_count': self.execution_count}
 
-        rtn = 0 if len(hist) == 0 else hist.rtns[-1]
+        rtn = 0 if (hist is None or len(hist) == 0) else hist.rtns[-1]
         if 0 < rtn:
             message = {'status': 'error', 'execution_count': self.execution_count,
                        'ename': '', 'evalue': str(rtn), 'traceback': []}

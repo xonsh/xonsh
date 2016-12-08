@@ -85,17 +85,18 @@ def _f():
 aliases['f'] = _f
 print(![f].returncode)
 """, "42\n", 0),
-# test uncaptured streaming alias
+# test uncaptured streaming alias,
+# order actually printed in is non-deterministic
 ("""
 def _test_stream(args, stdin, stdout, stderr):
-    print('hallo on err', file=stderr)
-    print('hallo on out', file=stdout)
+    print('hallo on stream', file=stderr)
+    print('hallo on stream', file=stdout)
     return 1
 
 aliases['test-stream'] = _test_stream
 x = ![test-stream]
 print(x.returncode)
-""", "hallo on out\nhallo on err\n1\n", 0),
+""", "hallo on stream\nhallo on stream\n1\n", 0),
 # test captured streaming alias
 ("""
 def _test_stream(args, stdin, stdout, stderr):
@@ -107,6 +108,44 @@ aliases['test-stream'] = _test_stream
 x = !(test-stream)
 print(x.returncode)
 """, "hallo on err\n1\n", 0),
+# test piping aliases
+("""
+def dummy(args, inn, out, err):
+    out.write('hey!')
+    return 0
+
+def dummy2(args, inn, out, err):
+    s = inn.read()
+    out.write(s.upper())
+    return 0
+
+aliases['d'] = dummy
+aliases['d2'] = dummy2
+d | d2
+""", "HEY!", 0),
+# test output larger than most pipe buffers
+("""
+def _g(args, stdin=None):
+    for i in range(1000):
+        print('x' * 100)
+
+aliases['g'] = _g
+g
+""", (("x"*100) + '\n') * 1000, 0),
+# test piping 'real' command
+("""
+with open('tttt', 'w') as fp:
+    fp.write("Wow mom!\\n")
+
+![cat tttt | wc]
+""", '      1       2      10\n' if ON_WINDOWS else " 1  2 9 <stdin>\n", 0),
+# test double  piping 'real' command
+("""
+with open('tttt', 'w') as fp:
+    fp.write("Wow mom!\\n")
+
+![cat tttt | wc | wc]
+""", '      1       3      24\n' if ON_WINDOWS else " 1  4 16 <stdin>\n", 0),
 ]
 
 
@@ -120,7 +159,7 @@ def test_script(case):
 
 @skip_if_on_windows
 @pytest.mark.parametrize('cmd, fmt, exp', [
-    ('pwd', None, os.getcwd() + '\n'),
+    ('pwd', None, lambda: os.getcwd() + '\n'),
     ('echo WORKING', None, 'WORKING\n'),
     ('ls -f', lambda out: out.splitlines().sort(), os.listdir().sort()),
     ])
@@ -131,17 +170,21 @@ def test_single_command(cmd, fmt, exp):
     out, err, rtn = run_xonsh(cmd, stderr=sp.DEVNULL)
     if callable(fmt):
         out = fmt(out)
+    if callable(exp):
+        exp = exp()
     assert out == exp
     assert rtn == 0
 
 
 @skip_if_on_windows
 @pytest.mark.parametrize('cmd, exp', [
-    ('pwd', os.getcwd() + '\n'),
+    ('pwd', lambda: os.getcwd() + '\n'),
     ])
 def test_redirect_out_to_file(cmd, exp, tmpdir):
     outfile = tmpdir.mkdir('xonsh_test_dir').join('xonsh_test_file')
-    command = '{} > {}'.format(cmd, outfile)
+    command = '{} > {}\n'.format(cmd, outfile)
     out, _, _ = run_xonsh(command)
     content = outfile.read()
+    if callable(exp):
+        exp = exp()
     assert content == exp

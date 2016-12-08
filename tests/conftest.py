@@ -1,5 +1,6 @@
-import glob
 import builtins
+import glob
+import os
 
 import pytest
 
@@ -13,6 +14,13 @@ from xonsh.events import events
 from xonsh.platform import ON_WINDOWS
 
 from tools import DummyShell, sp, DummyCommandsCache, DummyEnv, DummyHistory
+
+
+@pytest.fixture
+def source_path():
+    """Get the xonsh source path."""
+    pwd = os.path.dirname(__file__)
+    return os.path.dirname(pwd)
 
 
 @pytest.fixture

@@ -1,4 +1,4 @@
-"""Lazy and self destrctive containers for speeding up module import."""
+"""Lazy and self destructive containers for speeding up module import."""
 # Copyright 2015-2016, the xonsh developers. All rights reserved.
 import os
 import sys
@@ -10,7 +10,7 @@ import importlib
 import importlib.util
 import collections.abc as cabc
 
-__version__ = '0.1.1'
+__version__ = '0.1.3'
 
 
 class LazyObject(object):
@@ -274,6 +274,11 @@ class BackgroundModuleProxy(types.ModuleType):
                 time.sleep(0.001)
             mod = sys.modules[modname]
             dct['loaded'] = True
+        # some modules may do construction after import, give them a second
+        stall = 0
+        while not hasattr(mod, name) and stall < 1000:
+            stall += 1
+            time.sleep(0.001)
         return getattr(mod, name)
 
 

@@ -75,28 +75,48 @@ Usage
 
 Color style
 --------------------------------
-The dark red and blue colors are complete unreadable in Windows' default
-terminal. To give new users the best experience Xonsh automatically 
-replaces some of the dark colors with more readable alternatives (e.g. blue 
-becomes cyan). The behaviour is controlled with the ``$INTENSIFY_COLORS_ON_WIN``
+The dark red and blue colors are completely unreadable in Windows' default
+terminal. To give new users, the best experience Xonsh automatically replaces 
+some of the dark colors with more readable alternatives (e.g. blue becomes cyan).
+The behavior is controlled with the ``$INTENSIFY_COLORS_ON_WIN``
 environment variable.
 
-It is possible to configure the Windows console with readable default colors. 
-This following `console_colors.reg`_ registry file will configure the colors to
-more reable defaults. 
+.. image:: _static/intensify-colors-on-win-false.png
+   :width: 100 %
+   :alt: intensify-colors-win-false
+   :align: center
 
-With better colors configured, ``$INTENSIFY_COLORS_ON_WIN`` can be disabled and
-the prompt can be changed to match how it looks on posix and mac.  Add the 
-follwing to the xonsh run control file ``.xonshrc``: 
+.. image:: _static/intensify-colors-on-win-true.png
+   :width: 100 %
+   :alt: intensify-colors-win-true
+   :align: center
+   
+It is possible to configure the Windows console with readable default colors,
+but it is tedious to do manually. It can also be set through the windows registry,
+so to get good defaults you can download and run the registry file. 
+
+ * `console_colors.reg`_
+ 
+With better colors configured, ``$INTENSIFY_COLORS_ON_WIN`` should be set to 
+``False``, and the default prompt can be changed to match how it looks on POSIX and Mac.
+You can do this by adding the following to the xonsh run control file ``.xonshrc``: 
+
 
 .. code-block:: xonshcon
 
-    >>> $INTENSIFY_COLORS_ON_WIN = False
-    >>> $PROMPT = $PROMPT.replace('INTENSE_','').replace('CYAN','BLUE')
+    $INTENSIFY_COLORS_ON_WIN = False
+    $PROMPT = $PROMPT.replace('INTENSE_','').replace('CYAN','BLUE')
+
+With everything setup the console will look like this:
+
+.. image:: _static/better_colors_windows.png
+   :width: 100 %
+   :alt: better_colors_windows
+   :align: center
 
 
 
-.. _console_colors.reg: http://xon.sh/_static/xterm_colors.reg
+.. _console_colors.reg: http://xon.sh/_static/console_colors.reg
 
 
 Name space conflicts

@@ -62,7 +62,7 @@ ON_BSD = LazyBool(lambda: ON_FREEBSD or ON_NETBSD,
 PYTHON_VERSION_INFO = sys.version_info[:3]
 """ Version of Python interpreter as three-value tuple. """
 ON_ANACONDA = LazyBool(
-    lambda: any(s in sys.version for s in {'Anaconda', 'Continuum'}),
+    lambda: any(s in sys.version for s in {'Anaconda', 'Continuum', 'conda-forge'}),
     globals(), 'ON_ANACONDA')
 """ ``True`` if executed in an Anaconda instance, else ``False``. """
 CAN_RESIZE_WINDOW = LazyBool(lambda: hasattr(signal, 'SIGWINCH'),
@@ -161,7 +161,7 @@ def pathsplit(p):
 
 def pathbasename(p):
     """This is a safe version of os.path.basename(), which does not work on
-    input without a drive.
+    input without a drive.  This version does.
     """
     return pathsplit(p)[-1]
 
@@ -172,15 +172,16 @@ def pathbasename(p):
 
 @functools.lru_cache(1)
 def githash():
+    """Returns a tuple contains two strings: the hash and the date."""
     install_base = os.path.dirname(__file__)
+    sha = None
+    date_ = None
     try:
         with open('{}/dev.githash'.format(install_base), 'r') as f:
-            sha = f.read().strip()
-        if not sha:
-            sha = None
+            sha, date_ = f.read().strip().split('|')
     except FileNotFoundError:
-        sha = None
-    return sha
+        pass
+    return sha, date_
 
 
 #
@@ -305,16 +306,13 @@ def BASH_COMPLETIONS_DEFAULT():
     the current platform.
     """
     if ON_LINUX or ON_CYGWIN:
-        if linux_distro() == 'arch':
-            bcd = ('/usr/share/bash-completion/bash_completion', )
-        else:
-            bcd = ('/usr/share/bash-completion', )
+        bcd = ('/usr/share/bash-completion/bash_completion', )
     elif ON_DARWIN:
         bcd = ('/usr/local/share/bash-completion/bash_completion',  # v2.x
                '/usr/local/etc/bash_completion')  # v1.x
     elif ON_WINDOWS and git_for_windows_path():
         bcd = (os.path.join(git_for_windows_path(),
-                            'usr\\share\\bash-completion'),
+                            'usr\\share\\bash-completion\\bash_completion'),
                os.path.join(git_for_windows_path(),
                             'mingw64\\share\\git\\completion\\'
                             'git-completion.bash'))

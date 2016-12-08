@@ -7,15 +7,16 @@ import sys
 import shlex
 
 from xonsh.lazyjson import LazyJSON
-from xonsh.history import History, _hist_create_parser, _hist_parse_args
-from xonsh import history
+from xonsh.history.json import JsonHistory
+from xonsh.history.main import history_main, _xh_parse_args
 
 import pytest
 
 
 @pytest.yield_fixture
 def hist():
-    h = History(filename='xonsh-HISTORY-TEST.json', here='yup', sessionid='SESSIONID', gc=False)
+    h = JsonHistory(filename='xonsh-HISTORY-TEST.json', here='yup',
+                    sessionid='SESSIONID', gc=False)
     yield h
     os.remove(h.filename)
 
@@ -92,7 +93,7 @@ def test_show_cmd_numerate(inp, commands, offset, hist, xonsh_builtins, capsys):
            for idx, cmd in enumerate(list(commands)))
     exp = '\n'.join(exp)
 
-    history.history_main(['show', '-n'] + shlex.split(inp))
+    history_main(['show', '-n'] + shlex.split(inp))
     out, err = capsys.readouterr()
     assert out.rstrip() == exp
 
@@ -157,7 +158,7 @@ def test_histcontrol(hist, xonsh_builtins):
 @pytest.mark.parametrize('args', [ '-h', '--help', 'show -h', 'show --help'])
 def test_parse_args_help(args, capsys):
     with pytest.raises(SystemExit):
-        args = _hist_parse_args(shlex.split(args))
+        args = _xh_parse_args(shlex.split(args))
     assert 'show this help message and exit' in capsys.readouterr()[0]
 
 
@@ -183,7 +184,7 @@ def test_parser_show(args, exp):
               'end_time': None,
               'datetime_format': None,
               'timestamp': False}
-    ns = _hist_parse_args(shlex.split(args))
+    ns = _xh_parse_args(shlex.split(args))
     assert ns.__dict__ == exp_ns
 
 

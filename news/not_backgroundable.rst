@@ -12,10 +12,16 @@
     * cls
     * cmd
     * fish
+    * htop
     * ksh
     * less
     * man
     * more
+    * mutt
+    * nano
+    * psql
+    * ranger
+    * scp
     * sh
     * ssh
     * startx

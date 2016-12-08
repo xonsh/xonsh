@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """Tests the xonsh parser."""
-import os
-import sys
 import ast
 import builtins
 import textwrap
@@ -9,7 +7,7 @@ import itertools
 
 import pytest
 
-from xonsh.ast import pdump, AST, With, Pass
+from xonsh.ast import AST, With, Pass
 from xonsh.parser import Parser
 
 from tools import VER_FULL, skip_if_py34, nodes_equal
@@ -2053,7 +2051,7 @@ def test_withbang_single_simple(body):
 
 
 @pytest.mark.parametrize('body', WITH_BANG_RAWSIMPLE)
-def test_withbang_single_simple(body):
+def test_withbang_single_simple_opt(body):
     code = 'with! x as y: {}\n'.format(body)
     tree = check_xonsh_ast({}, code, False, return_obs=True, mode='exec')
     assert isinstance(tree, AST)

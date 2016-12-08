@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Base prompt, provides FORMATTER_DICT and prompt related functions"""
+"""Base prompt, provides PROMPT_FIELDS and prompt related functions"""
 
 import builtins
 import itertools
@@ -18,14 +18,79 @@ from xonsh.prompt.cwd import (
 )
 from xonsh.prompt.job import _current_job
 from xonsh.prompt.env import (env_name, vte_new_tab_cwd)
-from xonsh.prompt.vc_branch import (
+from xonsh.prompt.vc import (
     current_branch, branch_color, branch_bg_color
 )
 from xonsh.prompt.gitstatus import gitstatus_prompt
 
 
+@xt.lazyobject
+def DEFAULT_PROMPT():
+    return default_prompt()
+
+
+class PromptFormatter:
+    """Class that holds all the related prompt formatting methods,
+    uses the ``PROMPT_FIELDS`` envvar (no color formatting).
+    """
+
+    def __init__(self):
+        self.cache = {}
+
+    def __call__(self, template=DEFAULT_PROMPT, fields=None):
+        """Formats a xonsh prompt template string."""
+        if fields is None:
+            self.fields = builtins.__xonsh_env__.get('PROMPT_FIELDS', PROMPT_FIELDS)
+        else:
+            self.fields = fields
+        try:
+            prompt = self._format_prompt(template=template)
+        except Exception:
+            return _failover_template_format(template)
+        # keep cache only during building prompt
+        self.cache.clear()
+        return prompt
+
+    def _format_prompt(self, template=DEFAULT_PROMPT):
+        template = template() if callable(template) else template
+        toks = []
+        for literal, field, spec, conv in _FORMATTER.parse(template):
+            toks.append(literal)
+            entry = self._format_field(field, spec, conv)
+            if entry is not None:
+                toks.append(entry)
+        return ''.join(toks)
+
+    def _format_field(self, field, spec, conv):
+        if field is None:
+            return
+        elif field.startswith('$'):
+            val = builtins.__xonsh_env__[field[1:]]
+            return _format_value(val, spec, conv)
+        elif field in self.fields:
+            val = self._get_field_value(field)
+            return _format_value(val, spec, conv)
+        else:
+            # color or unkown field, return as is
+            return '{' + field + '}'
+
+    def _get_field_value(self, field):
+        field_value = self.fields[field]
+        if field_value in self.cache:
+            return self.cache[field_value]
+        try:
+            value = field_value() if callable(field_value) else field_value
+            self.cache[field_value] = value
+        except Exception:
+            print('prompt: error: on field {!r}'
+                  ''.format(field), file=sys.stderr)
+            xt.print_exception()
+            value = '(ERROR:{})'.format(field)
+        return value
+
+
 @xl.lazyobject
-def FORMATTER_DICT():
+def PROMPT_FIELDS():
     return dict(
         user=os.environ.get('USERNAME' if xp.ON_WINDOWS else 'USER', '<user>'),
         prompt_end='#' if xt.is_superuser() else '$',
@@ -67,19 +132,6 @@ def default_prompt():
     return dp
 
 
-@xt.lazyobject
-def DEFAULT_PROMPT():
-    return default_prompt()
-
-
-def _get_fmtter(formatter_dict=None):
-    if formatter_dict is None:
-        fmtter = builtins.__xonsh_env__.get('FORMATTER_DICT', FORMATTER_DICT)
-    else:
-        fmtter = formatter_dict
-    return fmtter
-
-
 def _failover_template_format(template):
     if callable(template):
         try:
@@ -90,56 +142,6 @@ def _failover_template_format(template):
             xt.print_exception()
             return '$ '
     return template
-
-
-def partial_format_prompt(template=DEFAULT_PROMPT, formatter_dict=None):
-    """Formats a xonsh prompt template string."""
-    try:
-        return _partial_format_prompt_main(template=template,
-                                           formatter_dict=formatter_dict)
-    except Exception:
-        return _failover_template_format(template)
-
-
-def _partial_format_prompt_main(template=DEFAULT_PROMPT, formatter_dict=None):
-    template = template() if callable(template) else template
-    fmtter = _get_fmtter(formatter_dict)
-    bopen = '{'
-    bclose = '}'
-    colon = ':'
-    expl = '!'
-    toks = []
-    for literal, field, spec, conv in _FORMATTER.parse(template):
-        toks.append(literal)
-        if field is None:
-            continue
-        elif field.startswith('$'):
-            val = builtins.__xonsh_env__[field[1:]]
-            val = _format_value(val, spec, conv)
-            toks.append(val)
-        elif field in fmtter:
-            v = fmtter[field]
-            try:
-                val = v() if callable(v) else v
-            except Exception:
-                print('prompt: error: on field {!r}'
-                      ''.format(field), file=sys.stderr)
-                xt.print_exception()
-                toks.append('(ERROR:{})'.format(field))
-                continue
-            val = _format_value(val, spec, conv)
-            toks.append(val)
-        else:
-            toks.append(bopen)
-            toks.append(field)
-            if conv is not None and len(conv) > 0:
-                toks.append(expl)
-                toks.append(conv)
-            if spec is not None and len(spec) > 0:
-                toks.append(colon)
-                toks.append(spec)
-            toks.append(bclose)
-    return ''.join(toks)
 
 
 @xt.lazyobject
@@ -194,7 +196,7 @@ def multiline_prompt(curr=''):
     return rtn
 
 
-def is_template_string(template, formatter_dict=None):
+def is_template_string(template, PROMPT_FIELDS=None):
     """Returns whether or not the string is a valid template."""
     template = template() if callable(template) else template
     try:
@@ -202,10 +204,10 @@ def is_template_string(template, formatter_dict=None):
     except ValueError:
         return False
     included_names.discard(None)
-    if formatter_dict is None:
-        fmtter = builtins.__xonsh_env__.get('FORMATTER_DICT', FORMATTER_DICT)
+    if PROMPT_FIELDS is None:
+        fmtter = builtins.__xonsh_env__.get('PROMPT_FIELDS', PROMPT_FIELDS)
     else:
-        fmtter = formatter_dict
+        fmtter = PROMPT_FIELDS
     known_names = set(fmtter.keys())
     return included_names <= known_names
 

@@ -144,7 +144,13 @@ class Event(AbstractEvent):
 class LoadEvent(AbstractEvent):
     """
     An event species where each handler is called exactly once, shortly after either the event is
-    fired or the handler is registered (whichever is later).
+    fired or the handler is registered (whichever is later). Additional firings are ignored.
+
+    Note: Does not support scatter/gather, due to never knowing when we have all the handlers.
+
+    Note: Maintains a strong reference to pargs/kwargs in case of the addition of future handlers.
+
+    Note: This is currently NOT thread safe.
     """
     def __init__(self):
         self._fired = set()
@@ -167,7 +173,11 @@ class LoadEvent(AbstractEvent):
 
         This has no effect if the element is already present.
         """
-        self._fired.add(item)
+        if self._hasfired:
+            self._call(item)
+            self._fired.add(item)
+        else:
+            self._unfired.add(item)
 
     def discard(self, item):
         """
@@ -178,8 +188,22 @@ class LoadEvent(AbstractEvent):
         self._fired.discard(item)
         self._unfired.discard(item)
 
+    def _call(self, handler):
+        try:
+            handler(*self._pargs, **self._kwargs)
+        except Exception:
+            print_exception("Exception raised in event handler; ignored.")
+
     def fire(self, *pargs, **kwargs):
-        raise NotImplementedError("See #1550")
+        if self._hasfired:
+            return
+        self._pargs = pargs
+        self._kwargs = kwargs
+        while self._unfired:
+            handler = self._unfired.pop()
+            self._call(handler)
+        self._hasfired = True
+        return ()  # Entirely for API compatibility
 
 
 class EventManager:

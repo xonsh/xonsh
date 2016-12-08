@@ -14,6 +14,7 @@ import sys
 import time
 import queue
 import array
+import ctypes
 import signal
 import inspect
 import builtins
@@ -25,10 +26,10 @@ import collections.abc as cabc
 from xonsh.platform import ON_WINDOWS, ON_POSIX, CAN_RESIZE_WINDOW
 from xonsh.tools import (redirect_stdout, redirect_stderr, print_exception,
                          XonshCalledProcessError, findfirst, on_main_thread,
-                         XonshError)
+                         XonshError, format_std_prepost)
 from xonsh.lazyasd import lazyobject, LazyObject
 from xonsh.jobs import wait_for_active_job
-from xonsh.lazyimps import fcntl, termios
+from xonsh.lazyimps import fcntl, termios, _winapi, msvcrt, winutils
 
 
 # termios tc(get|set)attr indexes.
@@ -39,25 +40,6 @@ LFLAG = 3
 ISPEED = 4
 OSPEED = 5
 CC = 6
-
-
-# force some lazy imports so we don't have errors on non-windows platforms
-@lazyobject
-def _winapi():
-    if ON_WINDOWS:
-        import _winapi as m
-    else:
-        m = None
-    return m
-
-
-@lazyobject
-def msvcrt():
-    if ON_WINDOWS:
-        import msvcrt as m
-    else:
-        m = None
-    return m
 
 
 @lazyobject
@@ -86,13 +68,127 @@ def RE_VT100_ESCAPE():
     return re.compile(b'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]')
 
 
-def populate_char_queue(reader, fd, queue):
-    """Reads single characters from a file descriptor into a queue.
+@lazyobject
+def RE_HIDE_ESCAPE():
+    return re.compile(b'(' + RE_HIDDEN_BYTES.pattern +
+                      b'|' + RE_VT100_ESCAPE.pattern + b')')
+
+
+class QueueReader:
+    """Provides a file-like interface to reading from a queue."""
+
+    def __init__(self, fd, timeout=None):
+        """
+        Parameters
+        ----------
+        fd : int
+            A file descriptor
+        timeout : float or None, optional
+            The queue reading timeout.
+        """
+        self.fd = fd
+        self.timeout = timeout
+        self.closed = False
+        self.queue = queue.Queue()
+        self.thread = None
+
+    def close(self):
+        """close the reader"""
+        self.closed = True
+
+    def is_fully_read(self):
+        """Returns whether or not the queue is fully read and the reader is
+        closed.
+        """
+        return (self.closed
+                and (self.thread is None or not self.thread.is_alive())
+                and self.queue.empty())
+
+    def read_queue(self):
+        """Reads a single chunk from the queue. This is blocking if
+        the timeout is None and non-blocking otherwise.
+        """
+        try:
+            return self.queue.get(block=True, timeout=self.timeout)
+        except queue.Empty:
+            return b''
+
+    def read(self, size=-1):
+        """Reads bytes from the file."""
+        i = 0
+        buf = b''
+        while size < 0 or i != size:
+            line = self.read_queue()
+            if line:
+                buf += line
+            else:
+                break
+            i += len(line)
+        return buf
+
+    def readline(self, size=-1):
+        """Reads a line, or a partial line from the file descriptor."""
+        i = 0
+        nl = b'\n'
+        buf = b''
+        while size < 0 or i != size:
+            line = self.read_queue()
+            if line:
+                buf += line
+                if line.endswith(nl):
+                    break
+            else:
+                break
+            i += len(line)
+        return buf
+
+    def _read_all_lines(self):
+        """This reads all remaining lines in a blocking fashion."""
+        lines = []
+        while not self.is_fully_read():
+            chunk = self.read_queue()
+            lines.extend(chunk.splitlines(keepends=True))
+        return lines
+
+    def readlines(self, hint=-1):
+        """Reads lines from the file descriptor. This is blocking for negative
+        hints (i.e. read all the remaining lines) and non-blocking otherwise.
+        """
+        if hint == -1:
+            return self._read_all_lines()
+        lines = []
+        while len(lines) != hint:
+            chunk = self.read_queue()
+            if not chunk:
+                break
+            lines.extend(chunk.splitlines(keepends=True))
+        return lines
+
+    def fileno(self):
+        """Returns the file descriptor number."""
+        return self.fd
+
+    @staticmethod
+    def readable():
+        """Returns true, because this object is always readable."""
+        return True
+
+    def iterqueue(self):
+        """Iterates through all remaining chunks in a blocking fashion."""
+        while not self.is_fully_read():
+            chunk = self.read_queue()
+            if not chunk:
+                continue
+            yield chunk
+
+
+def populate_fd_queue(reader, fd, queue):
+    """Reads 1 kb of data from a file descriptor into a queue.
     If this ends or fails, it flags the calling reader object as closed.
     """
     while True:
         try:
-            c = os.read(fd, 1)
+            c = os.read(fd, 1024)
         except OSError:
             reader.closed = True
             break
@@ -103,7 +199,7 @@ def populate_char_queue(reader, fd, queue):
             break
 
 
-class NonBlockingFDReader:
+class NonBlockingFDReader(QueueReader):
     """A class for reading characters from a file descriptor on a background
     thread. This has the advantages that the calling thread can close the
     file and that the reading does not block the calling thread.
@@ -118,71 +214,12 @@ class NonBlockingFDReader:
         timeout : float or None, optional
             The queue reading timeout.
         """
-        self.fd = fd
-        self.queue = queue.Queue()
-        self.timeout = timeout
-        self.sleepscale = 0
-        self.closed = False
+        super().__init__(fd, timeout=timeout)
         # start reading from stream
-        self.thread = threading.Thread(target=populate_char_queue,
+        self.thread = threading.Thread(target=populate_fd_queue,
                                        args=(self, self.fd, self.queue))
         self.thread.daemon = True
         self.thread.start()
-
-    def read_char(self, timeout=None):
-        """Reads a single character from the queue."""
-        timeout = timeout or self.timeout
-        try:
-            self.sleepscale = 0
-            return self.queue.get(block=timeout is not None,
-                                  timeout=timeout)
-        except queue.Empty:
-            self.sleepscale = min(self.sleepscale + 1, 3)
-            time.sleep(timeout * 10**self.sleepscale)
-            return b''
-
-    def read(self, size=-1):
-        """Reads bytes from the file."""
-        i = 0
-        buf = b''
-        while i != size:
-            c = self.read_char()
-            if c:
-                buf += c
-            else:
-                break
-            i += 1
-        return buf
-
-    def readline(self, size=-1):
-        """Reads a line, or a partial line from the file descriptor."""
-        i = 0
-        nl = b'\n'
-        buf = b''
-        while i != size:
-            c = self.read_char()
-            if c:
-                buf += c
-                if c == nl:
-                    break
-            else:
-                break
-            i += 1
-        return buf
-
-    def readlines(self, hint=-1):
-        """Reads lines from the file descriptor."""
-        lines = []
-        while len(lines) != hint:
-            line = self.readline(size=-1)
-            if not line:
-                break
-            lines.append(line)
-        return lines
-
-    def fileno(self):
-        """Returns the file descriptor number."""
-        return self.fd
 
 
 def populate_buffer(reader, fd, buffer, chunksize):
@@ -229,6 +266,190 @@ class BufferedFDParallelReader:
         self.thread = threading.Thread(target=populate_buffer,
                                        args=(self, fd, self.buffer, chunksize))
         self.thread.daemon = True
+
+        self.thread.start()
+
+
+def _expand_console_buffer(cols, max_offset, expandsize, orig_posize, fd):
+    # if we are getting close to the end of the console buffer,
+    # expand it so that we can read from it successfully.
+    if cols == 0:
+        return orig_posize[-1], max_offset, orig_posize
+    rows = ((max_offset + expandsize)//cols) + 1
+    winutils.set_console_screen_buffer_size(cols, rows, fd=fd)
+    orig_posize = orig_posize[:3] + (rows,)
+    max_offset = (rows - 1) * cols
+    return rows, max_offset, orig_posize
+
+
+def populate_console(reader, fd, buffer, chunksize, queue, expandsize=None):
+    """Reads bytes from the file descriptor and puts lines into the queue.
+    The reads happend in parallel,
+    using xonsh.winutils.read_console_output_character(),
+    and is thus only available on windows. If the read fails for any reason,
+    the reader is flagged as closed.
+    """
+    # OK, so this function is super annoying because Windows stores its
+    # buffers as a 2D regular, dense array -- without trailing newlines.
+    # Meanwhile, we want to add *lines* to the queue. Also, as is typical
+    # with parallel reads, the entire buffer that you ask for may not be
+    # filled. Thus we have to deal with the full generality.
+    #   1. reads may end in the middle of a line
+    #   2. excess whitespace at the end of a line may not be real, unless
+    #   3. you haven't read to the end of the line yet!
+    # So there are alignment issues everywhere.  Also, Windows will automatically
+    # read past the current cursor position, even though there is presumably
+    # nothing to see there.
+    #
+    # These chunked reads basically need to happen like this because,
+    #   a. The default buffer size is HUGE for the console (90k lines x 120 cols)
+    #      as so we can't just read in everything at the end and see what we
+    #      care about without a noticible performance hit.
+    #   b. Even with this huge size, it is still possible to write more lines than
+    #      this, so we should scroll along with the console.
+    # Unfortnately, because we do not have control over the terminal emulator,
+    # It is not possible to compute how far back we should set the begining
+    # read position because we don't know how many characters have been popped
+    # off the top of the buffer. If we did somehow know this number we could do
+    # something like the following:
+    #
+    #    new_offset = (y*cols) + x
+    #    if new_offset == max_offset:
+    #        new_offset -= scolled_offset
+    #        x = new_offset%cols
+    #        y = new_offset//cols
+    #        continue
+    #
+    # So this method is imperfect and only works as long as the sceen has
+    # room to expand to.  Thus the trick here is to expand the screen size
+    # when we get close enough to the end of the screen. There remain some
+    # async issues related to not being able to set the cursor position.
+    # but they just affect the alignment / capture of the output of the
+    # first command run after a screen resize.
+    if expandsize is None:
+        expandsize = 100 * chunksize
+    x, y, cols, rows = posize = winutils.get_position_size(fd)
+    pre_x = pre_y = -1
+    orig_posize = posize
+    offset = (cols*y) + x
+    max_offset = (rows - 1) * cols
+    # I believe that there is a bug in PTK that if we reset the
+    # cursor position, the cursor on the next prompt is accidentally on
+    # the next line.  If this is fixed, uncomment the following line.
+    #if max_offset < offset + expandsize:
+    #    rows, max_offset, orig_posize = _expand_console_buffer(
+    #                                        cols, max_offset, expandsize,
+    #                                        orig_posize, fd)
+    #    winutils.set_console_cursor_position(x, y, fd=fd)
+    while True:
+        posize = winutils.get_position_size(fd)
+        offset = (cols*y) + x
+        if ((posize[1], posize[0]) <= (y, x) and posize[2:] == (cols, rows)) or \
+                (pre_x == x and pre_y == y):
+            # already at or ahead of the current cursor position.
+            if reader.closed:
+                break
+            else:
+                time.sleep(reader.timeout)
+                continue
+        elif max_offset <= offset + expandsize:
+            ecb = _expand_console_buffer(cols, max_offset, expandsize,
+                                         orig_posize, fd)
+            rows, max_offset, orig_posize = ecb
+            continue
+        elif posize[2:] == (cols, rows):
+            # cursor updated but screen size is the same.
+            pass
+        else:
+            # screen size changed, which is offset preserving
+            orig_posize = posize
+            cols, rows = posize[2:]
+            x = offset % cols
+            y = offset // cols
+            pre_x = pre_y = -1
+            max_offset = (rows - 1) * cols
+            continue
+        try:
+            buf = winutils.read_console_output_character(x=x, y=y, fd=fd,
+                                                         buf=buffer,
+                                                         bufsize=chunksize,
+                                                         raw=True)
+        except (OSError, IOError):
+            reader.closed = True
+            break
+        # cursor position and offset
+        if not reader.closed:
+            buf = buf.rstrip()
+        nread = len(buf)
+        if nread == 0:
+            time.sleep(reader.timeout)
+            continue
+        cur_x, cur_y = posize[0], posize[1]
+        cur_offset = (cols*cur_y) + cur_x
+        beg_offset = (cols*y) + x
+        end_offset = beg_offset + nread
+        if end_offset > cur_offset and cur_offset != max_offset:
+            buf = buf[:cur_offset-end_offset]
+        # convert to lines
+        xshift = cols - x
+        yshift = (nread // cols) + (1 if nread % cols > 0 else 0)
+        lines = [buf[:xshift]]
+        lines += [buf[l * cols + xshift:(l + 1) * cols + xshift]
+                  for l in range(yshift)]
+        lines = [line for line in lines if line]
+        if not lines:
+            time.sleep(reader.timeout)
+            continue
+        # put lines in the queue
+        nl = b'\n'
+        for line in lines[:-1]:
+            queue.put(line.rstrip() + nl)
+        if len(lines[-1]) == xshift:
+            queue.put(lines[-1].rstrip() + nl)
+        else:
+            queue.put(lines[-1])
+        # update x and y locations
+        if (beg_offset + len(buf)) % cols == 0:
+            new_offset = beg_offset + len(buf)
+        else:
+            new_offset = beg_offset + len(buf.rstrip())
+        pre_x = x
+        pre_y = y
+        x = new_offset % cols
+        y = new_offset // cols
+        time.sleep(reader.timeout)
+
+
+class ConsoleParallelReader(QueueReader):
+    """Parallel reader for consoles that runs in a background thread.
+    This is only needed, available, and useful on Windows.
+    """
+
+    def __init__(self, fd, buffer=None, chunksize=1024, timeout=None):
+        """
+        Parameters
+        ----------
+        fd : int
+            Standard buffer file descriptor, 0 for stdin, 1 for stdout (default),
+            and 2 for stderr.
+        buffer : ctypes.c_wchar_p, optional
+            An existing buffer to (re-)use.
+        chunksize : int, optional
+            The max size of the parallel reads, default 1 kb.
+        timeout : float, optional
+            The queue reading timeout.
+        """
+        timeout = timeout or builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
+        super().__init__(fd, timeout=timeout)
+        self._buffer = buffer  # this cannot be public
+        if buffer is None:
+            self._buffer = ctypes.c_char_p(b" " * chunksize)
+        self.chunksize = chunksize
+        # start reading from stream
+        self.thread = threading.Thread(target=populate_console,
+                                       args=(self, fd, self._buffer,
+                                             chunksize, self.queue))
+        self.thread.daemon = True
         self.thread.start()
 
 
@@ -270,6 +491,18 @@ def safe_flush(handle):
     return status
 
 
+def still_writable(fd):
+    """Determines whether a file descriptior is still writable by trying to
+    write an empty string and seeing if it fails.
+    """
+    try:
+        os.write(fd, b'')
+        status = True
+    except OSError:
+        status = False
+    return status
+
+
 class PopenThread(threading.Thread):
     """A thread for running and managing subprocess. This allows reading
     from the stdin, stdout, and stderr streams in a non-blocking fashion.
@@ -282,9 +515,8 @@ class PopenThread(threading.Thread):
     def __init__(self, *args, stdin=None, stdout=None, stderr=None, **kwargs):
         super().__init__()
         self.lock = threading.RLock()
-        self.stdout_fd = stdout.fileno()
-        self._set_pty_size()
         env = builtins.__xonsh_env__
+        # stdin setup
         self.orig_stdin = stdin
         if stdin is None:
             self.stdin_fd = 0
@@ -293,8 +525,15 @@ class PopenThread(threading.Thread):
         else:
             self.stdin_fd = stdin.fileno()
         self.store_stdin = env.get('XONSH_STORE_STDIN')
+        self.timeout = env.get('XONSH_PROC_FREQUENCY')
         self.in_alt_mode = False
         self.stdin_mode = None
+        # stdout setup
+        self.orig_stdout = stdout
+        self.stdout_fd = 1 if stdout is None else stdout.fileno()
+        self._set_pty_size()
+        # stderr setup
+        self.orig_stderr = stderr
         # Set some signal handles, if we can. Must come before process
         # is started to prevent deadlock on windows
         self.proc = None  # has to be here for closure for handles
@@ -312,6 +551,8 @@ class PopenThread(threading.Thread):
                 self.old_winch_handler = signal.signal(signal.SIGWINCH,
                                                        self._signal_winch)
         # start up process
+        if ON_WINDOWS and stdout is not None:
+            os.set_handle_inheritable(stdout.fileno(), False)
         self.proc = proc = subprocess.Popen(*args,
                                             stdin=stdin,
                                             stdout=stdout,
@@ -330,7 +571,6 @@ class PopenThread(threading.Thread):
             self.stdin = io.BytesIO()
             self.stdout = io.BytesIO()
             self.stderr = io.BytesIO()
-        self.timeout = env.get('XONSH_PROC_FREQUENCY')
         self.suspended = False
         self.prevs_are_closed = False
         self.start()
@@ -370,34 +610,48 @@ class PopenThread(threading.Thread):
         self._read_write(procout, stdout, sys.__stdout__)
         self._read_write(procerr, stderr, sys.__stderr__)
         # loop over reads while process is running.
-        cnt = 1
+        i = j = cnt = 1
         while proc.poll() is None:
+            # this is here for CPU performance reasons.
+            if i + j == 0:
+                cnt = min(cnt + 1, 1000)
+                tout = self.timeout * cnt
+                if procout is not None:
+                    procout.timeout = tout
+                if procerr is not None:
+                    procerr.timeout = tout
+            elif cnt == 1:
+                pass
+            else:
+                cnt = 1
+                if procout is not None:
+                    procout.timeout = self.timeout
+                if procerr is not None:
+                    procerr.timeout = self.timeout
+            # redirect some output!
             i = self._read_write(procout, stdout, sys.__stdout__)
             j = self._read_write(procerr, stderr, sys.__stderr__)
             if self.suspended:
                 break
-            elif self.in_alt_mode:
-                if i + j == 0:
-                    cnt = min(cnt + 1, 1000)
-                else:
-                    cnt = 1
-                time.sleep(self.timeout * cnt)
-            elif self.prevs_are_closed:
-                break
-            else:
-                time.sleep(self.timeout)
-        # final closing read.
-        cntout = cnterr = 0
-        while cntout < 10 and cnterr < 10:
-            i = self._read_write(procout, stdout, sys.__stdout__)
-            j = self._read_write(procerr, stderr, sys.__stderr__)
-            cntout = 0 if i > 0 else cntout + 1
-            cnterr = 0 if j > 0 else cnterr + 1
-            time.sleep(self.timeout * (10 - cntout))
+        if self.suspended:
+            return
+        # close files to send EOF to non-blocking reader.
+        # capout & caperr seem to be needed only by Windows, while
+        # orig_stdout & orig_stderr are need by posix and Windows.
+        # Also, order seems to matter here,
+        # with orig_* needed to be closed before cap*
+        safe_fdclose(self.orig_stdout)
+        safe_fdclose(self.orig_stderr)
+        if ON_WINDOWS:
+            safe_fdclose(capout)
+            safe_fdclose(caperr)
+        # read in the remaining data in a blocking fashion.
+        while (procout is not None and not procout.is_fully_read()) or \
+              (procerr is not None and not procerr.is_fully_read()):
+            self._read_write(procout, stdout, sys.__stdout__)
+            self._read_write(procerr, stderr, sys.__stderr__)
         # kill the process if it is still alive. Happens when piping.
-        time.sleep(self.timeout)
-        if proc.poll() is None and not self.suspended:
-            time.sleep(self.timeout)
+        if proc.poll() is None:
             proc.terminate()
 
     def _wait_and_getattr(self, name):
@@ -407,37 +661,37 @@ class PopenThread(threading.Thread):
         return getattr(self, name)
 
     def _read_write(self, reader, writer, stdbuf):
-        """Read from a buffer and write into memory or back down to
-        the standard buffer, line-by-line, as approriate. Returns the number of
-        lines read.
+        """Reads a chunk of bytes from a buffer and write into memory or back
+        down to the standard buffer, as approriate. Returns the number of
+        successful reads.
         """
         if reader is None:
             return 0
         i = -1
-        for i, line in enumerate(iter(reader.readline, b'')):
-            self._alt_mode_switch(line, writer, stdbuf)
+        for i, chunk in enumerate(iter(reader.read_queue, b'')):
+            self._alt_mode_switch(chunk, writer, stdbuf)
         if i >= 0:
             writer.flush()
             stdbuf.flush()
         return i + 1
 
-    def _alt_mode_switch(self, line, membuf, stdbuf):
+    def _alt_mode_switch(self, chunk, membuf, stdbuf):
         """Enables recursively switching between normal capturing mode
         and 'alt' mode, which passes through values to the standard
         buffer. Pagers, text editors, curses applications, etc. use
         alternate mode.
         """
-        i, flag = findfirst(line, ALTERNATE_MODE_FLAGS)
+        i, flag = findfirst(chunk, ALTERNATE_MODE_FLAGS)
         if flag is None:
-            self._alt_mode_writer(line, membuf, stdbuf)
+            self._alt_mode_writer(chunk, membuf, stdbuf)
         else:
             # This code is executed when the child process switches the
             # terminal into or out of alternate mode. The line below assumes
             # that the user has opened vim, less, or similar, and writes writes
             # to stdin.
             j = i + len(flag)
-            # write the first part of the line in the current mode.
-            self._alt_mode_writer(line[:i], membuf, stdbuf)
+            # write the first part of the chunk in the current mode.
+            self._alt_mode_writer(chunk[:i], membuf, stdbuf)
             # switch modes
             # write the flag itself the current mode where alt mode is on
             # so that it is streamed to the termial ASAP.
@@ -453,21 +707,21 @@ class PopenThread(threading.Thread):
                 self.in_alt_mode = alt_mode
                 self._disable_cbreak_stdin()
             # recurse this function, but without the current flag.
-            self._alt_mode_switch(line[j:], membuf, stdbuf)
+            self._alt_mode_switch(chunk[j:], membuf, stdbuf)
 
-    def _alt_mode_writer(self, line, membuf, stdbuf):
+    def _alt_mode_writer(self, chunk, membuf, stdbuf):
         """Write bytes to the standard buffer if in alt mode or otherwise
         to the in-memory buffer.
         """
-        if not line:
+        if not chunk:
             pass  # don't write empty values
         elif self.in_alt_mode:
-            stdbuf.buffer.write(line)
+            stdbuf.buffer.write(chunk)
         else:
             with self.lock:
                 p = membuf.tell()
                 membuf.seek(0, io.SEEK_END)
-                membuf.write(line)
+                membuf.write(chunk)
                 membuf.seek(p)
 
     #
@@ -476,14 +730,14 @@ class PopenThread(threading.Thread):
 
     def _signal_winch(self, signum, frame):
         """Signal handler for SIGWINCH - window size has changed."""
-        self.proc.send_signal(signal.SIGWINCH)
+        self.send_signal(signal.SIGWINCH)
         self._set_pty_size()
 
     def _set_pty_size(self):
         """Sets the window size of the child pty based on the window size of
         our own controlling terminal.
         """
-        if not os.isatty(self.stdout_fd):
+        if ON_WINDOWS or not os.isatty(self.stdout_fd):
             return
         # Get the terminal size of the real terminal, set it on the
         #       pseudoterminal.
@@ -502,8 +756,7 @@ class PopenThread(threading.Thread):
     def _signal_int(self, signum, frame):
         """Signal handler for SIGINT - Ctrl+C may have been pressed."""
         self.send_signal(signum)
-        time.sleep(self.timeout)
-        if self.proc.poll() is not None:
+        if self.proc is not None and self.proc.poll() is not None:
             self._restore_sigint(frame=frame)
 
     def _restore_sigint(self, frame=None):
@@ -604,9 +857,7 @@ class PopenThread(threading.Thread):
         """
         self._disable_cbreak_stdin()
         rtn = self.proc.wait(timeout=timeout)
-        while self.is_alive():
-            self.join(timeout=1e-7)
-            time.sleep(1e-7)
+        self.join()
         # need to replace the old signal handlers somewhere...
         if self.old_winch_handler is not None and on_main_thread():
             signal.signal(signal.SIGWINCH, self.old_winch_handler)
@@ -623,6 +874,10 @@ class PopenThread(threading.Thread):
 
     def send_signal(self, signal):
         """Dispatches to Popen.send_signal()."""
+        dt = 0.0
+        while self.proc is None and dt < self.timeout:
+            time.sleep(1e-7)
+            dt += 1e-7
         if self.proc is None:
             return
         try:
@@ -767,8 +1022,11 @@ class FileThreadDispatcher:
         extra sure the string was written.
         """
         h = self.handle
-        r = h.write(s)
-        h.flush()
+        try:
+            r = h.write(s)
+            h.flush()
+        except OSError:
+            r = None
         return r
 
     @property
@@ -945,25 +1203,6 @@ class ProcProxyThread(threading.Thread):
         """
         self.orig_f = f
         self.f = partial_proxy(f)
-        """
-        The function to be executed.  It should be a function of four
-        arguments, described below.
-
-        Parameters
-        ----------
-        args : list
-            A (possibly empty) list containing the arguments that were given on
-            the command line
-        stdin : file-like
-            A file-like object representing stdin (input can be read from
-            here).
-        stdout : file-like
-            A file-like object representing stdout (normal output can be
-            written here).
-        stderr : file-like
-            A file-like object representing stderr (error output can be
-            written here).
-        """
         self.args = args
         self.pid = None
         self.returncode = None
@@ -1024,6 +1263,13 @@ class ProcProxyThread(threading.Thread):
         env = builtins.__xonsh_env__
         enc = env.get('XONSH_ENCODING')
         err = env.get('XONSH_ENCODING_ERRORS')
+        if ON_WINDOWS:
+            if self.p2cread != -1:
+                self.p2cread = msvcrt.open_osfhandle(self.p2cread.Detach(), 0)
+            if self.c2pwrite != -1:
+                self.c2pwrite = msvcrt.open_osfhandle(self.c2pwrite.Detach(), 0)
+            if self.errwrite != -1:
+                self.errwrite = msvcrt.open_osfhandle(self.errwrite.Detach(), 0)
         # get stdin
         if self.stdin is None:
             sp_stdin = None
@@ -1032,11 +1278,6 @@ class ProcProxyThread(threading.Thread):
                                         encoding=enc, errors=err)
         else:
             sp_stdin = sys.stdin
-        if ON_WINDOWS:
-            if self.c2pwrite != -1:
-                self.c2pwrite = msvcrt.open_osfhandle(self.c2pwrite.Detach(), 0)
-            if self.errwrite != -1:
-                self.errwrite = msvcrt.open_osfhandle(self.errwrite.Detach(), 0)
         # stdout
         if self.c2pwrite != -1:
             sp_stdout = io.TextIOWrapper(io.open(self.c2pwrite, 'wb', -1),
@@ -1060,13 +1301,30 @@ class ProcProxyThread(threading.Thread):
                 r = self.f(self.args, sp_stdin, sp_stdout, sp_stderr, spec)
         except SystemExit as e:
             r = e.code if isinstance(e.code, int) else int(bool(e.code))
+        except OSError as e:
+            status = still_writable(self.c2pwrite) and \
+                     still_writable(self.errwrite)
+            if status:
+                # stdout and stderr are still writable, so error must
+                # come from function itself.
+                print_exception()
+                r = 1
+            else:
+                # stdout and stderr are no longer writable, so error must
+                # come from the fact that the next process in the pipeline
+                # has closed the other side of the pipe. The function then
+                # attempted to write to this side of the pipe anyway. This
+                # is not truly an error and we should exit gracefully.
+                r = 0
         except Exception:
             print_exception()
             r = 1
         safe_flush(sp_stdout)
         safe_flush(sp_stderr)
         self.returncode = parse_proxy_return(r, sp_stdout, sp_stderr)
-        if not last_in_pipeline:
+        if not last_in_pipeline and not ON_WINDOWS:
+            # mac requires us *not to* close the handles here while
+            # windows requires us *to* close the handles here
             return
         # clean up
         # scopz: not sure why this is needed, but stdin cannot go here
@@ -1092,9 +1350,7 @@ class ProcProxyThread(threading.Thread):
 
     def wait(self, timeout=None):
         """Waits for the process to finish and returns the return code."""
-        while self.is_alive():
-            self.join(timeout=1e-7)
-            time.sleep(1e-7)
+        self.join()
         return self.returncode
 
     # The code below (_get_devnull, _get_handles, and _make_inheritable) comes
@@ -1131,7 +1387,6 @@ class ProcProxyThread(threading.Thread):
                     p2cread = Handle(p2cread)
                     _winapi.CloseHandle(_)
             elif stdin == subprocess.PIPE:
-                p2cread, p2cwrite = _winapi.CreatePipe(None, 0)
                 p2cread, p2cwrite = Handle(p2cread), Handle(p2cwrite)
             elif stdin == subprocess.DEVNULL:
                 p2cread = msvcrt.get_osfhandle(self._get_devnull())
@@ -1331,6 +1586,15 @@ def unthreadable(f):
 foreground = unthreadable
 
 
+def uncapturable(f):
+    """Decorator that specifies that a callable alias should not be run with
+    any capturing. This is often needed if the alias call interactive subprocess,
+    like pagers and text editors.
+    """
+    f.__xonsh_capturable__ = False
+    return f
+
+
 @lazyobject
 def SIGNAL_MESSAGES():
     sm = {
@@ -1375,6 +1639,8 @@ class CommandPipeline:
                  "stderr_redirect", "timestamps", "executed_cmd", 'input',
                  'output', 'errors')
 
+    nonblocking = (io.BytesIO, NonBlockingFDReader, ConsoleParallelReader)
+
     def __init__(self, specs, procs, starttime=None, captured=False):
         """
         Parameters
@@ -1415,6 +1681,7 @@ class CommandPipeline:
         self.input = self._output = self.errors = self.endtime = None
         self._closed_handle_cache = {}
         self.lines = []
+        self._stderr_prefix = self._stderr_postfix = None
 
     def __repr__(self):
         s = self.__class__.__name__ + '('
@@ -1442,16 +1709,20 @@ class CommandPipeline:
         exactly as found.
         """
         # get approriate handles
+        spec = self.spec
         proc = self.proc
+        timeout = builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
         # get the correct stdout
         stdout = proc.stdout
-        if ((stdout is None or not safe_readable(stdout)) and
-                self.spec.captured_stdout is not None):
-            stdout = self.spec.captured_stdout
+        if ((stdout is None or spec.stdout is None or not safe_readable(stdout))
+                and spec.captured_stdout is not None):
+            stdout = spec.captured_stdout
         if hasattr(stdout, 'buffer'):
             stdout = stdout.buffer
+        if stdout is not None and not isinstance(stdout, self.nonblocking):
+            stdout = NonBlockingFDReader(stdout.fileno(), timeout=timeout)
         if not stdout or not safe_readable(stdout):
-            # we get here if the process is not bacgroundable or the
+            # we get here if the process is not threadable or the
             # class is the real Popen
             wait_for_active_job()
             proc.wait()
@@ -1461,26 +1732,63 @@ class CommandPipeline:
             raise StopIteration
         # get the correct stderr
         stderr = proc.stderr
-        if ((stderr is None or not safe_readable(stderr)) and
-                self.spec.captured_stderr is not None):
-            stderr = self.spec.captured_stderr
+        if ((stderr is None or spec.stderr is None or not safe_readable(stderr))
+                and spec.captured_stderr is not None):
+            stderr = spec.captured_stderr
         if hasattr(stderr, 'buffer'):
             stderr = stderr.buffer
+        if stderr is not None and not isinstance(stderr, self.nonblocking):
+            stderr = NonBlockingFDReader(stderr.fileno(), timeout=timeout)
         # read from process while it is running
-        timeout = builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
+        check_prev_done = len(self.procs) == 1
+        prev_end_time = None
+        i = j = cnt = 1
         while proc.poll() is None:
             if getattr(proc, 'suspended', False):
                 return
             elif getattr(proc, 'in_alt_mode', False):
                 time.sleep(0.1)  # probably not leaving any time soon
                 continue
+            elif not check_prev_done:
+                # In the case of pipelines with more than one command
+                # we should give the commands a little time
+                # to start up fully. This is particularly true for
+                # GNU Parallel, which has a long startup time.
+                pass
             elif self._prev_procs_done():
                 self._close_prev_procs()
                 proc.prevs_are_closed = True
                 break
-            yield from safe_readlines(stdout, 1024)
-            self.stream_stderr(safe_readlines(stderr, 1024))
-            time.sleep(timeout)
+            stdout_lines = safe_readlines(stdout, 1024)
+            i = len(stdout_lines)
+            if i != 0:
+                yield from stdout_lines
+            stderr_lines = safe_readlines(stderr, 1024)
+            j = len(stderr_lines)
+            if j != 0:
+                self.stream_stderr(stderr_lines)
+            if not check_prev_done:
+                # if we are piping...
+                if (stdout_lines or stderr_lines):
+                    # see if we have some output.
+                    check_prev_done = True
+                elif prev_end_time is None:
+                    # or see if we already know that the next-to-last
+                    # proc in the pipeline has ended.
+                    if self._prev_procs_done():
+                        # if it has, record the time
+                        prev_end_time = time.time()
+                elif time.time() - prev_end_time >= 0.1:
+                    # if we still don't have any output, even though the
+                    # next-to-last proc has finished, wait a bit to make
+                    # sure we have fully started up, etc.
+                    check_prev_done = True
+            # this is for CPU usage
+            if i + j == 0:
+                cnt = min(cnt + 1, 1000)
+            else:
+                cnt = 1
+            time.sleep(timeout * cnt)
         # read from process now that it is over
         yield from safe_readlines(stdout)
         self.stream_stderr(safe_readlines(stderr))
@@ -1511,7 +1819,12 @@ class CommandPipeline:
         err = env.get('XONSH_ENCODING_ERRORS')
         lines = self.lines
         stream = self.captured not in STDOUT_CAPTURE_KINDS
+        if stream and not self.spec.stdout:
+            stream = False
         stdout_has_buffer = hasattr(sys.stdout, 'buffer')
+        nl = b'\n'
+        cr = b'\r'
+        crnl = b'\r\n'
         for line in self.iterraw():
             # write to stdout line ASAP, if needed
             if stream:
@@ -1521,13 +1834,12 @@ class CommandPipeline:
                     sys.stdout.write(line.decode(encoding=enc, errors=err))
                 sys.stdout.flush()
             # do some munging of the line before we return it
-            line = RE_HIDDEN_BYTES.sub(b'', line)
-            line = RE_VT100_ESCAPE.sub(b'', line)
+            if line.endswith(crnl):
+                line = line[:-2] + nl
+            elif line.endswith(cr):
+                line = line[:-1] + nl
+            line = RE_HIDE_ESCAPE.sub(b'', line)
             line = line.decode(encoding=enc, errors=err)
-            if line.endswith('\r\n'):
-                line = line[:-2] + '\n'
-            elif line.endswith('\r'):
-                line = line[:-1] + '\n'
             # tee it up!
             lines.append(line)
             yield line
@@ -1536,17 +1848,27 @@ class CommandPipeline:
         """Streams lines to sys.stderr and the errors attribute."""
         if not lines:
             return
+        env = builtins.__xonsh_env__
+        enc = env.get('XONSH_ENCODING')
+        err = env.get('XONSH_ENCODING_ERRORS')
         b = b''.join(lines)
+        if self.stderr_prefix:
+            b = self.stderr_prefix + b
+        if self.stderr_postfix:
+            b += self.stderr_postfix
+        stderr_has_buffer = hasattr(sys.stderr, 'buffer')
         # write bytes to std stream
-        sys.stderr.buffer.write(b)
+        if stderr_has_buffer:
+            sys.stderr.buffer.write(b)
+        else:
+            sys.stderr.write(b.decode(encoding=enc, errors=err))
         sys.stderr.flush()
         # do some munging of the line before we save it to the attr
-        b = RE_HIDDEN_BYTES.sub(b'', b)
-        b = RE_VT100_ESCAPE.sub(b'', b)
+        b = b.replace(b'\r\n', b'\n').replace(b'\r', b'\n')
+        b = RE_HIDE_ESCAPE.sub(b'', b)
         env = builtins.__xonsh_env__
         s = b.decode(encoding=env.get('XONSH_ENCODING'),
                      errors=env.get('XONSH_ENCODING_ERRORS'))
-        s = s.replace('\r\n', '\n').replace('\r', '\n')
         # set the errors
         if self.errors is None:
             self.errors = s
@@ -1641,7 +1963,7 @@ class CommandPipeline:
         """Sets the input vaiable."""
         stdin = self.proc.stdin
         if stdin is None or isinstance(stdin, int) or stdin.closed or \
-           not stdin.seekable():
+           not stdin.seekable() or not safe_readable(stdin):
             input = b''
         else:
             stdin.seek(0)
@@ -1664,7 +1986,8 @@ class CommandPipeline:
     def _apply_to_history(self):
         """Applies the results to the current history object."""
         hist = builtins.__xonsh_history__
-        hist.last_cmd_rtn = self.proc.returncode
+        if hist is not None:
+            hist.last_cmd_rtn = self.proc.returncode
 
     def _raise_subproc_error(self):
         """Raises a subprocess error, if we are suppossed to."""
@@ -1782,6 +2105,32 @@ class CommandPipeline:
     def executed_cmd(self):
         """The resolve and executed command."""
         return self.spec.cmd
+
+    @property
+    def stderr_prefix(self):
+        """Prefix to print in front of stderr, as bytes."""
+        p = self._stderr_prefix
+        if p is None:
+            env = builtins.__xonsh_env__
+            t = env.get('XONSH_STDERR_PREFIX')
+            s = format_std_prepost(t, env=env)
+            p = s.encode(encoding=env.get('XONSH_ENCODING'),
+                         errors=env.get('XONSH_ENCODING_ERRORS'))
+            self._stderr_prefix = p
+        return p
+
+    @property
+    def stderr_postfix(self):
+        """Postfix to print after stderr, as bytes."""
+        p = self._stderr_postfix
+        if p is None:
+            env = builtins.__xonsh_env__
+            t = env.get('XONSH_STDERR_POSTFIX')
+            s = format_std_prepost(t, env=env)
+            p = s.encode(encoding=env.get('XONSH_ENCODING'),
+                         errors=env.get('XONSH_ENCODING_ERRORS'))
+            self._stderr_postfix = p
+        return p
 
 
 class HiddenCommandPipeline(CommandPipeline):

@@ -9,7 +9,7 @@ import xonsh.platform as xp
 from xonsh.completers.path import _quote_paths
 
 BASH_COMPLETE_SCRIPT = r"""
-{sources}
+{source}
 
 # Override some functions in bash-completion, do not quote for readline
 quote_readline()
@@ -58,8 +58,8 @@ for ((i=0;i<${{#COMPREPLY[*]}};i++)) do echo ${{COMPREPLY[i]}}; done
 
 def complete_from_bash(prefix, line, begidx, endidx, ctx):
     """Completes based on results from BASH completion."""
-    sources = _collect_completions_sources()
-    if not sources:
+    source = _get_completions_source()
+    if not source:
         return set()
 
     if prefix.startswith('$'):  # do not complete env variables
@@ -83,7 +83,7 @@ def complete_from_bash(prefix, line, begidx, endidx, ctx):
         prefix_quoted = shlex.quote(prefix)
 
     script = BASH_COMPLETE_SCRIPT.format(
-        sources='\n'.join(sources), line=' '.join(shlex.quote(p) for p in splt),
+        source=source, line=' '.join(shlex.quote(p) for p in splt),
         comp_line=shlex.quote(line), n=n, cmd=shlex.quote(cmd),
         end=endidx + 1, prefix=prefix_quoted, prev=shlex.quote(prev),
     )
@@ -92,7 +92,8 @@ def complete_from_bash(prefix, line, begidx, endidx, ctx):
         out = subprocess.check_output(
             [xp.bash_command(), '-c', script], universal_newlines=True,
             stderr=subprocess.PIPE, env=builtins.__xonsh_env__.detype())
-    except (subprocess.CalledProcessError, FileNotFoundError):
+    except (subprocess.CalledProcessError, FileNotFoundError,
+            UnicodeDecodeError):
         return set()
 
     out = out.splitlines()
@@ -116,14 +117,9 @@ def complete_from_bash(prefix, line, begidx, endidx, ctx):
     return out, len(prefix) - strip_len
 
 
-def _collect_completions_sources():
-    sources = []
+def _get_completions_source():
     completers = builtins.__xonsh_env__.get('BASH_COMPLETIONS', ())
-    paths = (pathlib.Path(x) for x in completers)
-    for path in paths:
+    for path in map(pathlib.Path, completers):
         if path.is_file():
-            sources.append('source "{}"'.format(path.as_posix()))
-        elif path.is_dir():
-            for _file in (x for x in path.glob('*') if x.is_file()):
-                sources.append('source "{}"'.format(_file.as_posix()))
-    return sources
+            return 'source "{}"'.format(path.as_posix())
+    return None

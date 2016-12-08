@@ -521,7 +521,7 @@ be used to generate any of the tokens in the subprocess command list.
 Thus, ``@()`` allows us to create complex commands in Python-mode and then
 feed them to a subprocess as needed.  For example:
 
-.. code-block:: xonsh
+.. code-block:: xonshcon
 
     for i in range(20):
         $[touch @('file%02d' % i)]
@@ -1256,31 +1256,57 @@ as aliases, by wrapping them in ``@()``.  For example:
     hello world
 
 
-Foreground-only Aliases
+Unthreadable Aliases
 -----------------------
-Usually, callable alias commands will be run in a separate thread so that users
+Usually, callable alias commands will be run in a separate thread so that
 they may be run in the background.  However, some aliases may need to be
 executed on the thread that they were called from. This is mostly useful for
 debuggers and profilers. To make an alias run in the foreground, decorate its
-function with the ``xonsh.proc.foreground`` decorator.
+function with the ``xonsh.proc.unthreadable`` decorator.
 
 .. code-block:: python
 
-    from xonsh.proc import foreground
+    from xonsh.proc import unthreadable
 
-    @foreground
+    @unthreadable
     def _mycmd(args, stdin=None):
         return 'In your face!'
 
     aliases['mycmd'] = _mycmd
 
+Uncapturable Aliases
+-----------------------
+Also, callable aliases by default will be executed such that their output is
+captured (like most commands in xonsh that don't enter alternate mode).
+However, some aliases may want to run alternate-mode commands themselves.
+Thus the callable alias can't be captured without dire consequences (tm).
+To prevent this, you can declare a callable alias uncapturable. This is mostly
+useful for aliases that then open up text editors, pagers, or the like.
+To make an alias uncapturable, decorate its
+function with the ``xonsh.proc.uncapturable`` decorator. This is probably
+best used in conjunction with the ``unthreadable`` decorator.  For example:
+
+.. code-block:: python
+
+    from xonsh.proc import unthreadable, uncapturable
+
+    @uncapturable
+    @unthreadable
+    def _myvi():
+        vi my.txt
+
+    aliases['myvi'] = _myvi
+
+-------------
+
 Aliasing is a powerful way that xonsh allows you to seamlessly interact to
 with Python and subprocess.
 
-.. warning:: If ``FOREIGN_ALIASES_OVERRIDE`` enviroment variable is False (the default)
-             then foreign shell aliases that try to override xonsh aliases will be ignored.
-             Setting of this enviroment variable must happen in the static configuration
-             file ``$XONSH_CONFIG_DIR/config.json`` in the 'env' section.
+.. warning:: If ``FOREIGN_ALIASES_OVERRIDE`` enviroment variable is False
+             (the default) then foreign shell aliases that try to override
+             xonsh aliases will be ignored. Setting of this enviroment variable
+             must happen in the static configuration file
+             ``$XONSH_CONFIG_DIR/config.json`` in the 'env' section.
 
 
 Up, Down, Tab
@@ -1379,7 +1405,7 @@ or ``{BOLD_BLUE}``.  Colors have the form shown below:
   can use!
 
 You can make use of additional variables beyond these by adding them to the
-``FORMATTER_DICT`` environment variable.  The values in this dictionary
+``PROMPT_FIELDS`` environment variable.  The values in this dictionary
 should be strings (which will be inserted into the prompt verbatim), or
 functions of no arguments (which will be called each time the prompt is
 generated, and the results of those calls will be inserted into the prompt).
@@ -1387,11 +1413,11 @@ For example:
 
 .. code-block:: console
 
-    snail@home ~ $ $FORMATTER_DICT['test'] = "hey"
+    snail@home ~ $ $PROMPT_FIELDS['test'] = "hey"
     snail@home ~ $ $PROMPT = "{test} {cwd} $ "
     hey ~ $
     hey ~ $ import random
-    hey ~ $ $FORMATTER_DICT['test'] = lambda: random.randint(1,9)
+    hey ~ $ $PROMPT_FIELDS['test'] = lambda: random.randint(1,9)
     3 ~ $
     5 ~ $
     2 ~ $
@@ -1405,7 +1431,7 @@ prefix.  For example:
     snail@home ~ $ $PROMPT = "{$LANG} >"
     en_US.utf8 >
 
-Note that some entries of the ``$FORMATTER_DICT`` are not always applicable, for
+Note that some entries of the ``$PROMPT_FIELDS`` are not always applicable, for
 example, ``curr_branch`` returns ``None`` if the current directory is not in a
 repository. The ``None`` will be interpreted as an empty string.
 
@@ -1450,7 +1476,7 @@ Longer scripts can be run either by specifying a filename containing the script,
 or by feeding them to xonsh via stdin.  For example, consider the following
 script, stored in ``test.xsh``:
 
-.. code-block:: xonsh
+.. code-block:: xonshcon
 
     #!/usr/bin/env xonsh
 
@@ -1502,7 +1528,7 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
 ``$ARGS`` and ``$ARG1`` are used):
 
 
-.. code-block:: xonsh
+.. code-block:: xonshcon
 
     #!/usr/bin/env xonsh
 
@@ -1553,7 +1579,7 @@ the normal Python syntax.  Say you had a file called ``mine.xsh``, you could,
 therefore, perform a Bash-like source into your current shell with the
 following:
 
-.. code-block:: xonsh
+.. code-block:: xonshcon
 
     from mine import *
 

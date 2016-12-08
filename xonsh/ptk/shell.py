@@ -8,18 +8,27 @@ from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.layout.lexers import PygmentsLexer
 from prompt_toolkit.shortcuts import print_tokens
 from prompt_toolkit.styles import PygmentsStyle
+import pygments
 from pygments.styles import get_all_styles
 from pygments.token import Token
 
 from xonsh.base_shell import BaseShell
 from xonsh.tools import print_exception
-from xonsh.prompt.base import partial_format_prompt
 from xonsh.pyghooks import (XonshLexer, partial_color_tokenize,
-                            xonsh_style_proxy)
+                            xonsh_style_proxy, XonshTerminal256Formatter)
 from xonsh.ptk.completer import PromptToolkitCompleter
 from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings
 from xonsh.ptk.shortcuts import Prompter
+from xonsh.events import events
+
+
+events.transmogrify('on_ptk_create', 'LoadEvent')
+events.doc('on_ptk_create', """
+on_ptk_create(prompter: Prompter, history: PromptToolkitHistory, completer: PromptToolkitCompleter, bindings: KeyBindingManager) ->
+
+Fired after prompt toolkit has been initialized
+""")
 
 
 class PromptToolkitShell(BaseShell):
@@ -30,15 +39,15 @@ class PromptToolkitShell(BaseShell):
         self.prompter = Prompter()
         self.history = PromptToolkitHistory()
         self.pt_completer = PromptToolkitCompleter(self.completer, self.ctx)
-
         key_bindings_manager_args = {
-                'enable_auto_suggest_bindings': True,
-                'enable_search': True,
-                'enable_abort_and_exit_bindings': True,
-                }
-
+            'enable_auto_suggest_bindings': True,
+            'enable_search': True,
+            'enable_abort_and_exit_bindings': True,
+            }
         self.key_bindings_manager = KeyBindingManager(**key_bindings_manager_args)
         load_xonsh_bindings(self.key_bindings_manager)
+        # This assumes that PromptToolkitShell is a singleton
+        events.on_ptk_create.fire(self.prompter, self.history, self.pt_completer, self.key_bindings_manager)
 
     def singleline(self, store_in_history=True, auto_suggest=None,
                    enable_history_search=True, multiline=True, **kwargs):
@@ -92,7 +101,7 @@ class PromptToolkitShell(BaseShell):
             line = self.prompter.prompt(**prompt_args)
         return line
 
-    def push(self, line):
+    def _push(self, line):
         """Pushes a line onto the buffer and compiles the code in a way that
         enables multiline input.
         """
@@ -138,7 +147,7 @@ class PromptToolkitShell(BaseShell):
         """Returns a list of (token, str) tuples for the current prompt."""
         p = builtins.__xonsh_env__.get('PROMPT')
         try:
-            p = partial_format_prompt(p)
+            p = self.prompt_formatter(p)
         except Exception:  # pylint: disable=broad-except
             print_exception()
         toks = partial_color_tokenize(p)
@@ -150,13 +159,13 @@ class PromptToolkitShell(BaseShell):
         prompt.
         """
         p = builtins.__xonsh_env__.get('RIGHT_PROMPT')
-        # partial_format_prompt does handle empty strings properly,
+        # self.prompt_formatter does handle empty strings properly,
         # but this avoids descending into it in the common case of
         # $RIGHT_PROMPT == ''.
         if isinstance(p, str) and len(p) == 0:
             return []
         try:
-            p = partial_format_prompt(p)
+            p = self.prompt_formatter(p)
         except Exception:  # pylint: disable=broad-except
             print_exception()
         toks = partial_color_tokenize(p)
@@ -167,13 +176,13 @@ class PromptToolkitShell(BaseShell):
         toolbar.
         """
         p = builtins.__xonsh_env__.get('BOTTOM_TOOLBAR')
-        # partial_format_prompt does handle empty strings properly,
+        # self.prompt_formatter does handle empty strings properly,
         # but this avoids descending into it in the common case of
         # $TOOLBAR == ''.
         if isinstance(p, str) and len(p) == 0:
             return []
         try:
-            p = partial_format_prompt(p)
+            p = self.prompt_formatter(p)
         except Exception:  # pylint: disable=broad-except
             print_exception()
         toks = partial_color_tokenize(p)
@@ -208,11 +217,21 @@ class PromptToolkitShell(BaseShell):
         toks.append((Token, ' '))  # final space
         return toks
 
-    def format_color(self, string, **kwargs):
+    def format_color(self, string, hide=False, force_string=False, **kwargs):
         """Formats a color string using Pygments. This, therefore, returns
-        a list of (Token, str) tuples.
+        a list of (Token, str) tuples. If force_string is set to true, though,
+        this will return a color fomtatted string.
         """
-        return partial_color_tokenize(string)
+        tokens = partial_color_tokenize(string)
+        if force_string:
+            env = builtins.__xonsh_env__
+            self.styler.style_name = env.get('XONSH_COLOR_STYLE')
+            proxy_style = xonsh_style_proxy(self.styler)
+            formatter = XonshTerminal256Formatter(style=proxy_style)
+            s = pygments.format(tokens, formatter)
+            return s
+        else:
+            return tokens
 
     def print_color(self, string, end='\n', **kwargs):
         """Prints a color string using prompt-toolkit color management."""

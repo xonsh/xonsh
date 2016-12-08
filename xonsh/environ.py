@@ -155,10 +155,14 @@ def DEFAULT_ENSURERS():
     'XONSH_DEBUG': (always_false, to_debug, bool_or_int_to_str),
     'XONSH_ENCODING': (is_string, ensure_string, ensure_string),
     'XONSH_ENCODING_ERRORS': (is_string, ensure_string, ensure_string),
+    'XONSH_HISTORY_BACKEND': (is_string, ensure_string, ensure_string),
+    'XONSH_HISTORY_FILE': (is_string, ensure_string, ensure_string),
     'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
     'XONSH_LOGIN': (is_bool, to_bool, bool_to_str),
     'XONSH_PROC_FREQUENCY': (is_float, float, str),
     'XONSH_SHOW_TRACEBACK': (is_bool, to_bool, bool_to_str),
+    'XONSH_STDERR_PREFIX': (is_string, ensure_string, ensure_string),
+    'XONSH_STDERR_POSTFIX': (is_string, ensure_string, ensure_string),
     'XONSH_STORE_STDOUT': (is_bool, to_bool, bool_to_str),
     'XONSH_STORE_STDIN': (is_bool, to_bool, bool_to_str),
     'XONSH_TRACEBACK_LOGFILE': (is_logfile_opt, to_logfile_opt, logfile_opt_to_str),
@@ -245,7 +249,7 @@ def DEFAULT_VALUES():
         'EXPAND_ENV_VARS': True,
         'FORCE_POSIX_PATHS': False,
         'FOREIGN_ALIASES_OVERRIDE': False,
-        'FORMATTER_DICT': dict(prompt.FORMATTER_DICT),
+        'PROMPT_FIELDS': dict(prompt.PROMPT_FIELDS),
         'FUZZY_PATH_COMPLETION': True,
         'GLOB_SORTED': True,
         'HISTCONTROL': set(),
@@ -297,11 +301,14 @@ def DEFAULT_VALUES():
         'XONSH_DEBUG': False,
         'XONSH_ENCODING': DEFAULT_ENCODING,
         'XONSH_ENCODING_ERRORS': 'surrogateescape',
+        'XONSH_HISTORY_BACKEND': 'json',
         'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
         'XONSH_HISTORY_SIZE': (8128, 'commands'),
         'XONSH_LOGIN': False,
         'XONSH_PROC_FREQUENCY': 1e-4,
         'XONSH_SHOW_TRACEBACK': False,
+        'XONSH_STDERR_PREFIX': '',
+        'XONSH_STDERR_POSTFIX': '',
         'XONSH_STORE_STDIN': False,
         'XONSH_STORE_STDOUT': False,
         'XONSH_TRACEBACK_LOGFILE': None,
@@ -355,19 +362,20 @@ def DEFAULT_DOCS():
         'displayed suggestion. Only usable with ``$SHELL_TYPE=prompt_toolkit.``'),
     'BASH_COMPLETIONS': VarDocs(
         'This is a list (or tuple) of strings that specifies where the '
-        '``bash_completion`` script may be found. For better performance, '
+        '``bash_completion`` script may be found. '
+        'The first valid path will be used. For better performance, '
         'bash-completion v2.x is recommended since it lazy-loads individual '
-        'completion scripts. Paths or directories of individual completion '
+        'completion scripts. '
+        'For both bash-completion v1.x and v2.x, paths of individual completion '
         'scripts (like ``.../completes/ssh``) do not need to be included here. '
         'The default values are platform '
         'dependent, but sane. To specify an alternate list, do so in the run '
         'control file.', default=(
             "Normally this is:\n\n"
-            "    ``('/etc/bash_completion', )``\n\n"
-            "But, on Mac it is:\n\n"
-            "    ``('/usr/local/etc/bash_completion', )``\n\n"
-            "And on Arch Linux it is:\n\n"
             "    ``('/usr/share/bash-completion/bash_completion', )``\n\n"
+            "But, on Mac it is:\n\n"
+            "    ``('/usr/local/share/bash-completion/bash_completion', "
+            "'/usr/local/etc/bash_completion')``\n\n"
             "Other OS-specific defaults may be added in the future.")),
     'CASE_SENSITIVE_COMPLETIONS': VarDocs(
         'Sets whether completions should be case sensitive or case '
@@ -423,11 +431,11 @@ def DEFAULT_DOCS():
         "``$XONSH_CONFIG_DIR/config.json`` in the 'env' section and not in "
         '``.xonshrc`` as loading of foreign aliases happens before'
         '``.xonshrc`` is parsed', configurable=True),
-    'FORMATTER_DICT': VarDocs(
+    'PROMPT_FIELDS': VarDocs(
         'Dictionary containing variables to be used when formatting $PROMPT '
         "and $TITLE. See 'Customizing the Prompt' "
         'http://xon.sh/tutorial.html#customizing-the-prompt',
-        configurable=False, default='``xonsh.prompt.FORMATTER_DICT``'),
+        configurable=False, default='``xonsh.prompt.PROMPT_FIELDS``'),
     'FUZZY_PATH_COMPLETION': VarDocs(
         "Toggles 'fuzzy' matching of paths for tab completion, which is only "
         "used as a fallback if no other completions succeed but can be used "
@@ -638,6 +646,9 @@ def DEFAULT_DOCS():
         '* ``XONSH_GITSTATUS_AHEAD``: ``↑·``\n'
         '* ``XONSH_GITSTATUS_BEHIND``: ``↓·``\n'
     ),
+    'XONSH_HISTORY_BACKEND': VarDocs(
+        'Set which history backend to use. Options are: ``json``, '
+        '``sqlite``, and ``dummy``. default is ``json``.'),
     'XONSH_HISTORY_FILE': VarDocs(
         'Location of history file (deprecated).',
         configurable=False, default="``~/.xonsh_history``"),
@@ -669,6 +680,18 @@ def DEFAULT_DOCS():
         "When running a xonsh script, this variable contains the absolute path "
         "to the currently executing script's file.",
         configurable=False),
+    'XONSH_STDERR_PREFIX': VarDocs(
+        'A format string, using the same keys and colors as ``$PROMPT``, that '
+        'is prepended whenever stderr is displayed. This may be used in '
+        'conjunction with ``$XONSH_STDERR_POSTFIX`` to close out the block.'
+        'For example, to have stderr appear on a red background, the '
+        'prefix & postfix pair would be "{BACKGROUND_RED}" & "{NO_COLOR}".'),
+    'XONSH_STDERR_POSTFIX': VarDocs(
+        'A format string, using the same keys and colors as ``$PROMPT``, that '
+        'is appended whenever stderr is displayed. This may be used in '
+        'conjunction with ``$XONSH_STDERR_PREFIX`` to start the block.'
+        'For example, to have stderr appear on a red background, the '
+        'prefix & postfix pair would be "{BACKGROUND_RED}" & "{NO_COLOR}".'),
     'XONSH_STORE_STDIN': VarDocs(
         'Whether or not to store the stdin that is supplied to the '
         '``!()`` and ``![]`` operators.'),
@@ -843,6 +866,12 @@ class Env(cabc.MutableMapping):
     #
 
     def __getitem__(self, key):
+        # remove this block on next release
+        if key == 'FORMATTER_DICT':
+            print('PendingDeprecationWarning: FORMATTER_DICT is an alias of '
+                  'PROMPT_FIELDS and will be removed in the next release',
+                  file=sys.stderr)
+            return self['PROMPT_FIELDS']
         if key is Ellipsis:
             return self
         m = self.arg_regex.match(key)
@@ -944,7 +973,7 @@ def locate_binary(name):
 
 BASE_ENV = LazyObject(lambda: {
     'BASH_COMPLETIONS': list(DEFAULT_VALUES['BASH_COMPLETIONS']),
-    'FORMATTER_DICT': dict(DEFAULT_VALUES['FORMATTER_DICT']),
+    'PROMPT_FIELDS': dict(DEFAULT_VALUES['PROMPT_FIELDS']),
     'XONSH_VERSION': XONSH_VERSION,
 }, globals(), 'BASE_ENV')
 

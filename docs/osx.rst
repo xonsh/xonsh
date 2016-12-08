@@ -53,8 +53,9 @@ Xonsh has support for using bash completion files on the shell, to use it you ne
 
     $ brew install bash-completion
 
-
-
-.. include:: add_to_shell.rst
-
 .. include:: dependencies.rst
+
+Customization
+=============
+
+See the `xonsh customization guide <customization.html>`_ for more details on setting up ``xonsh``!

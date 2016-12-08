@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Tools to replay xonsh history files."""
+import json
 import time
 import builtins
 import collections.abc as cabc
@@ -7,8 +8,7 @@ import collections.abc as cabc
 from xonsh.tools import swap
 from xonsh.lazyjson import LazyJSON
 from xonsh.environ import Env
-from xonsh.history import History
-from xonsh.history import _hist_info
+import xonsh.history.main as xhm
 
 
 DEFAULT_MERGE_ENVS = ('replay', 'native')
@@ -50,8 +50,9 @@ class Replayer(object):
         shell = builtins.__xonsh_shell__
         re_env = self._lj['env'].load()
         new_env = self._merge_envs(merge_envs, re_env)
-        new_hist = History(env=new_env.detype(), locked=True, ts=[time.time(), None],
-                           gc=False, filename=target)
+        new_hist = xhm.construct_history(
+            env=new_env.detype(), locked=True, ts=[time.time(), None],
+            gc=False, filename=target)
         with swap(builtins, '__xonsh_env__', new_env), swap(builtins, '__xonsh_history__', new_hist):
             for cmd in self._lj['cmds']:
                 inp = cmd['inp']
@@ -79,7 +80,7 @@ class Replayer(object):
 _REPLAY_PARSER = None
 
 
-def _rp_create_parser(p=None):
+def replay_create_parser(p=None):
     global _REPLAY_PARSER
     p_was_none = (p is None)
     if _REPLAY_PARSER is not None and p_was_none:
@@ -105,17 +106,23 @@ def _rp_create_parser(p=None):
     return p
 
 
-def _rp_main_action(ns, h=None):
+def replay_main_action(h, ns, stdout=None, stderr=None):
     replayer = Replayer(ns.path)
     hist = replayer.replay(merge_envs=ns.merge_envs, target=ns.target)
     print('----------------------------------------------------------------')
     print('Just replayed history, new history has the following information')
     print('----------------------------------------------------------------')
-    _hist_info(ns, hist)
+    data = hist.info()
+    if ns.json:
+        s = json.dumps(data)
+        print(s, file=stdout)
+    else:
+        lines = ['{0}: {1}'.format(k, v) for k, v in data.items()]
+        print('\n'.join(lines), file=stdout)
 
 
 def replay_main(args, stdin=None):
     """Acts as main function for replaying a xonsh history file."""
-    parser = _rp_create_parser()
+    parser = replay_create_parser()
     ns = parser.parse_args(args)
-    _rp_main_action(ns)
+    replay_main_action(ns)

@@ -18,9 +18,15 @@ from xonsh import __version__ as XONSH_VERSION
 from xonsh.environ import DEFAULT_DOCS, Env
 from xonsh.xontribs import xontrib_metadata
 from xonsh.events import events
+from xonsh import main
 from xonsh.commands_cache import CommandsCache
 
 sys.path.insert(0, os.path.dirname(__file__))
+
+def setup(sphinx):
+    from xonsh.pyghooks import XonshConsoleLexer
+    sphinx.add_lexer("xonshcon", XonshConsoleLexer())
+
 
 # -- General configuration -----------------------------------------------------
 
@@ -139,6 +145,7 @@ if not on_rtd:
 
     # Add any paths that contain custom themes here, relative to this directory.
     html_theme_path = ["_theme", csp.get_theme_dir()]
+    templates_path = ["_templates_overwrite"]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".

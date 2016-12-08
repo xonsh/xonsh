@@ -38,6 +38,7 @@ except ImportError:
 TABLES = ['xonsh/lexer_table.py', 'xonsh/parser_table.py',
           'xonsh/__amalgam__.py',
           'xonsh/completers/__amalgam__.py',
+          'xonsh/history/__amalgam__.py',
           'xonsh/prompt/__amalgam__.py']
 
 
@@ -62,7 +63,7 @@ def amalgamate_source():
         print('Could not import amalgamate, skipping.', file=sys.stderr)
         return
     amalgamate.main(['amalgamate', '--debug=XONSH_DEBUG', 'xonsh',
-                     'xonsh.completers', 'xonsh.prompt'])
+                     'xonsh.completers', 'xonsh.history', 'xonsh.prompt'])
     sys.path.pop(0)
 
 
@@ -104,6 +105,10 @@ def install_jupyter_hook(prefix=None, root=None):
         print('  root: {0!r}'.format(root))
         print('  prefix: {0!r}'.format(prefix))
         print('  as user: {0}'.format(user))
+        if root and prefix:
+            # os.path.join isn't used since prefix is probably absolute
+            prefix = root + prefix
+            print('  combined prefix {0!r}'.format(prefix))
         KernelSpecManager().install_kernel_spec(
             d, 'xonsh', user=user, replace=True, prefix=prefix)
 
@@ -129,8 +134,17 @@ def dirty_version():
         return False
     sha = sha.strip('g')
     replace_version(N)
+    _cmd = ['git', 'show', '-s', '--format=%cd', '--date=local', sha]
+    try:
+        _date = subprocess.check_output(_cmd)
+        _date = _date.decode('ascii')
+        # remove weekday name for a shorter string
+        _date = ' '.join(_date.split()[1:])
+    except:
+        _date = ''
+        print('failed to get commit date', file=sys.stderr)
     with open('xonsh/dev.githash', 'w') as f:
-        f.write(sha)
+        f.write('{}|{}'.format(sha, _date))
     print('wrote git version: ' + sha, file=sys.stderr)
     return True
 
@@ -293,7 +307,7 @@ def main():
         classifiers=['Programming Language :: Python :: 3'],
         packages=['xonsh', 'xonsh.ply.ply', 'xonsh.ptk', 'xonsh.parsers',
                   'xonsh.xoreutils', 'xontrib',
-                  'xonsh.completers', 'xonsh.prompt'],
+                  'xonsh.completers', 'xonsh.history', 'xonsh.prompt'],
         package_dir={'xonsh': 'xonsh', 'xontrib': 'xontrib'},
         package_data={'xonsh': ['*.json', '*.githash'], 'xontrib': ['*.xsh']},
         cmdclass=cmdclass,

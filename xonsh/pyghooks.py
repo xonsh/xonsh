@@ -21,9 +21,10 @@ from pygments.styles import get_style_by_name
 import pygments.util
 
 from xonsh.commands_cache import CommandsCache
-from xonsh.lazyasd import LazyObject, LazyDict
+from xonsh.lazyasd import LazyObject, LazyDict, lazyobject
 from xonsh.tools import (ON_WINDOWS, intensify_colors_for_cmd_exe,
                          expand_gray_colors_for_cmd_exe)
+from xonsh.lazyimps import terminal256
 
 load_module_in_background('pkg_resources', debug='XONSH_DEBUG',
                           replacements={'pygments.plugin': 'pkg_resources'})
@@ -425,10 +426,13 @@ class XonshStyle(Style):
             value = 'default'
             builtins.__xonsh_env__['XONSH_COLOR_STYLE'] = value
         cmap = STYLES[value]
-        try:
-            self._smap = get_style_by_name(value)().styles.copy()
-        except (ImportError, pygments.util.ClassNotFound):
+        if value == 'default':
             self._smap = XONSH_BASE_STYLE.copy()
+        else:
+            try:
+                self._smap = get_style_by_name(value)().styles.copy()
+            except (ImportError, pygments.util.ClassNotFound):
+                self._smap = XONSH_BASE_STYLE.copy()
         compound = CompoundColorMap(ChainMap(self.trap, cmap, PTK_STYLE, self._smap))
         self.styles = ChainMap(self.trap, cmap, PTK_STYLE, self._smap, compound)
         self._style_name = value
@@ -447,12 +451,15 @@ class XonshStyle(Style):
         env = builtins.__xonsh_env__
         # Ensure we are not using ConEmu
         if 'CONEMUANSI' not in env:
-            # Auto suggest needs to be a darker shade to be distinguishable
-            # from the default color
-            self.styles[Token.AutoSuggestion] = '#444444'
-            self._smap.update(expand_gray_colors_for_cmd_exe(self._smap))
+            if not hasattr(pygments.style, 'ansicolors'):
+                # Auto suggest needs to be a darker shade to be distinguishable
+                # from the default color
+                self.styles[Token.AutoSuggestion] = '#444444'
+                self._smap.update(expand_gray_colors_for_cmd_exe(self._smap))
             if env.get('INTENSIFY_COLORS_ON_WIN', False):
-                self._smap.update(intensify_colors_for_cmd_exe(self._smap))
+                has_ansi = hasattr(pygments.style, 'ansicolors')
+                newcolors = intensify_colors_for_cmd_exe(self._smap, ansi=has_ansi)
+                self._smap.update(newcolors)
 
 
 def xonsh_style_proxy(styler):
@@ -469,55 +476,113 @@ def xonsh_style_proxy(styler):
     return XonshStyleProxy
 
 
-PTK_STYLE = {
-    Token.Menu.Completions.Completion.Current: 'bg:#00aaaa #000000',
-    Token.Menu.Completions.Completion: 'bg:#008888 #ffffff',
-    Token.Menu.Completions.ProgressButton: 'bg:#003333',
-    Token.Menu.Completions.ProgressBar: 'bg:#00aaaa',
-    Token.AutoSuggestion: '#666666',
-    Token.Aborted: '#888888',
-}
+if hasattr(pygments.style, 'ansicolors'):
+    PTK_STYLE = {
+        Token.Menu.Completions: 'bg:#ansilightgray #ansiblack',
+        Token.Menu.Completions.Completion: '',
+        Token.Menu.Completions.Completion.Current: 'bg:#ansidarkgray #ansiwhite',
+        Token.Scrollbar: 'bg:#ansidarkgray',
+        Token.Scrollbar.Button: 'bg:#ansiblack',
+        Token.Scrollbar.Arrow: 'bg:#ansiblack #ansiwhite bold',
+        Token.AutoSuggestion: '#ansidarkgray',
+        Token.Aborted: '#ansidarkgray',
+    }
+else:
+    PTK_STYLE = {
+        Token.Menu.Completions: 'bg:#888888 #000000',
+        Token.Menu.Completions.Completion: '',
+        Token.Menu.Completions.Completion.Current: 'bg:#555555 #ffffff',
+        Token.Scrollbar: 'bg:#555555',
+        Token.Scrollbar.Button: 'bg:#000000',
+        Token.Scrollbar.Arrow: 'bg:#000000 #ffffff bold',
+        Token.AutoSuggestion: '#666666',
+        Token.Aborted: '#666666',
+    }
 
-XONSH_BASE_STYLE = LazyObject(lambda: {
-    Whitespace: '#008080',
-    Comment: 'underline',
-    Comment.Preproc: 'underline',
-    Keyword: 'bold',
-    Keyword.Pseudo: '#008000',
-    Keyword.Type: '',
-    Operator: '#008080',
-    Operator.Word: 'bold',
-    Name.Builtin: '',
-    Name.Function: '#000080',
-    Name.Class: 'bold',
-    Name.Namespace: 'bold',
-    Name.Exception: 'bold',
-    Name.Variable: '#008080',
-    Name.Constant: '#800000',
-    Name.Label: '#808000',
-    Name.Entity: 'bold',
-    Name.Attribute: '#008080',
-    Name.Tag: 'bold',
-    Name.Decorator: '#008080',
-    String: '',
-    String.Doc: 'underline',
-    String.Interpol: 'bold',
-    String.Escape: 'bold',
-    String.Regex: '',
-    String.Symbol: '',
-    String.Other: '#008000',
-    Number: '#800000',
-    Generic.Heading: 'bold',
-    Generic.Subheading: 'bold',
-    Generic.Deleted: '#800000',
-    Generic.Inserted: '#008000',
-    Generic.Error: 'bold',
-    Generic.Emph: 'underline',
-    Generic.Prompt: 'bold',
-    Generic.Output: '#008080',
-    Generic.Traceback: '#800000',
-    Error: '#800000',
+if hasattr(pygments.style, 'ansicolors'):
+    XONSH_BASE_STYLE = LazyObject(lambda: {
+        Whitespace: '#ansilightgray',
+        Comment: 'underline #ansiteal',
+        Comment.Preproc: 'underline #ansibrown',
+        Keyword: 'bold #ansidarkgreen',
+        Keyword.Pseudo: 'nobold',
+        Keyword.Type: 'nobold #ansidarkred',
+        Operator: '#ansidarkgray',
+        Operator.Word: 'bold #ansipurple',
+        Name.Builtin: '#ansidarkgreen',
+        Name.Function: '#ansiblue',
+        Name.Class: 'bold #ansiblue',
+        Name.Namespace: 'bold #ansiblue',
+        Name.Exception: 'bold #ansired',
+        Name.Variable: '#ansidarkblue',
+        Name.Constant: '#ansidarkred',
+        Name.Label: '#ansiyellow',
+        Name.Entity: 'bold #ansilightgray',
+        Name.Attribute: '#ansiyellow',
+        Name.Tag: 'bold #ansidarkgreen',
+        Name.Decorator: '#ansifuchsia',
+        String: '#ansired',
+        String.Doc: 'underline',
+        String.Interpol: 'bold #ansipurple',
+        String.Escape: 'bold #ansibrown',
+        String.Regex: '#ansipurple',
+        String.Symbol: '#ansibrown',
+        String.Other: '#ansidarkgreen',
+        Number: '#ansidarkgray',
+        Generic.Heading: 'bold #ansidarkblue',
+        Generic.Subheading: 'bold #ansipurple',
+        Generic.Deleted: '#ansidarkred',
+        Generic.Inserted: '#ansigreen',
+        Generic.Error: 'bold #ansired',
+        Generic.Emph: 'underline',
+        Generic.Prompt: 'bold #ansidarkblue',
+        Generic.Output: '#ansidarkblue',
+        Generic.Traceback: '#ansidarkblue',
+        Error: '#ansired',
+        }, globals(), 'XONSH_BASE_STYLE')
+else:
+    XONSH_BASE_STYLE = LazyObject(lambda: {
+        Whitespace: "#bbbbbb",
+        Comment: "italic #408080",
+        Comment.Preproc: "noitalic #BC7A00",
+        Keyword: "bold #008000",
+        Keyword.Pseudo: "nobold",
+        Keyword.Type:   "nobold #B00040",
+        Operator:   "#666666",
+        Operator.Word:  "bold #AA22FF",
+        Name.Builtin: "#008000",
+        Name.Function: "#0000FF",
+        Name.Class: "bold #0000FF",
+        Name.Namespace: "bold #0000FF",
+        Name.Exception: "bold #D2413A",
+        Name.Variable: "#19177C",
+        Name.Constant: "#880000",
+        Name.Label: "#A0A000",
+        Name.Entity: "bold #999999",
+        Name.Attribute: "#7D9029",
+        Name.Tag: "bold #008000",
+        Name.Decorator: "#AA22FF",
+        String: "#BA2121",
+        String.Doc: "italic",
+        String.Interpol: "bold #BB6688",
+        String.Escape: "bold #BB6622",
+        String.Regex: "#BB6688",
+        String.Symbol: "#19177C",
+        String.Other: "#008000",
+        Number: "#666666",
+        Generic.Heading: "bold #000080",
+        Generic.Subheading: "bold #800080",
+        Generic.Deleted: "#A00000",
+        Generic.Inserted: "#00A000",
+        Generic.Error: "#FF0000",
+        Generic.Emph: "italic",
+        Generic.Strong: "bold",
+        Generic.Prompt: "bold #000080",
+        Generic.Output: "#888",
+        Generic.Traceback: "#04D",
+        Error: "border:#FF0000"
     }, globals(), 'XONSH_BASE_STYLE')
+
 
 KNOWN_COLORS = LazyObject(lambda: frozenset([
     'BACKGROUND_BLACK',
@@ -646,24 +711,24 @@ def _bw_style():
 def _default_style():
     if hasattr(pygments.style, 'ansicolors'):
         style = {
-            Color.BLACK: '#ansidarkgray',
-            Color.BLUE: '#ansiblue',
-            Color.CYAN: '#ansiturquoise',
-            Color.GREEN: '#ansigreen',
-            Color.INTENSE_BLACK: '#ansiblack',
-            Color.INTENSE_BLUE: '#ansidarkblue',
-            Color.INTENSE_CYAN: '#ansiteal',
-            Color.INTENSE_GREEN: '#ansidarkgreen',
-            Color.INTENSE_PURPLE: '#ansipurple',
-            Color.INTENSE_RED: '#ansidarkred',
-            Color.INTENSE_WHITE: '#ansilightgray',
-            Color.INTENSE_YELLOW: '#ansibrown',
+            Color.BLACK: '#ansiblack',
+            Color.BLUE: '#ansidarkblue',
+            Color.CYAN: '#ansiteal',
+            Color.GREEN: '#ansidarkgreen',
+            Color.INTENSE_BLACK: '#ansidarkgray',
+            Color.INTENSE_BLUE: '#ansiblue',
+            Color.INTENSE_CYAN: '#ansiturquoise',
+            Color.INTENSE_GREEN: '#ansigreen',
+            Color.INTENSE_PURPLE: '#ansifuchsia',
+            Color.INTENSE_RED: '#ansired',
+            Color.INTENSE_WHITE: '#ansiwhite',
+            Color.INTENSE_YELLOW: '#ansiyellow',
             Color.NO_COLOR: 'noinherit',
-            Color.PURPLE: '#ansifuchsia',
-            Color.RED: '#ansired',
-            Color.WHITE: '#ansiwhite',
-            Color.YELLOW: '#ansiyellow',
-            }
+            Color.PURPLE: '#ansipurple',
+            Color.RED: '#ansidarkred',
+            Color.WHITE: '#ansilightgray',
+            Color.YELLOW: '#ansibrown',
+        }
     elif ON_WINDOWS and 'CONEMUANSI' not in os.environ:
         # These colors must match the color specification
         # in prompt_toolkit, so the colors are converted
@@ -679,14 +744,14 @@ def _default_style():
             Color.INTENSE_GREEN: '#44FF44',
             Color.INTENSE_PURPLE: '#FF44FF',
             Color.INTENSE_RED: '#FF4444',
-            Color.INTENSE_WHITE: '#888888',
+            Color.INTENSE_WHITE: '#FFFFFF',
             Color.INTENSE_YELLOW: '#FFFF44',
             Color.NO_COLOR: 'noinherit',
             Color.PURPLE: '#AA00AA',
             Color.RED: '#AA0000',
-            Color.WHITE: '#FFFFFF',
+            Color.WHITE: '#888888',
             Color.YELLOW: '#AAAA00',
-            }
+        }
     else:
         style = {
             Color.BLACK: '#000000',
@@ -699,14 +764,14 @@ def _default_style():
             Color.INTENSE_GREEN: '#00FF00',
             Color.INTENSE_PURPLE: '#FF00FF',
             Color.INTENSE_RED: '#FF0000',
-            Color.INTENSE_WHITE: '#aaaaaa',
+            Color.INTENSE_WHITE: '#ffffff',
             Color.INTENSE_YELLOW: '#FFFF55',
             Color.NO_COLOR: 'noinherit',
             Color.PURPLE: '#AA00AA',
             Color.RED: '#AA0000',
-            Color.WHITE: '#ffffff',
+            Color.WHITE: '#aaaaaa',
             Color.YELLOW: '#ffff00',
-            }
+        }
     _expand_style(style)
     return style
 
@@ -1325,3 +1390,27 @@ del (_algol_style, _algol_nu_style, _autumn_style, _borland_style, _bw_style,
      _murphy_style, _native_style, _paraiso_dark_style, _paraiso_light_style,
      _pastie_style, _perldoc_style, _rrt_style, _tango_style, _trac_style,
      _vim_style, _vs_style, _xcode_style)
+
+
+#
+# Formatter
+#
+
+@lazyobject
+def XonshTerminal256Formatter():
+    class XonshTerminal256FormatterProxy(terminal256.Terminal256Formatter):
+        """Proxy class for xonsh terminal256 formatting that understands.
+        xonsh color tokens.
+        """
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            # just keep the opening token for colors.
+            color_names = set(map(str, Color.subtypes))
+            for name, (opener, closer) in self.style_string.items():
+                if name in color_names:
+                    self.style_string[name] = (opener, '')
+            # special case NO_COLOR, because it is special.
+            self.style_string['Token.Color.NO_COLOR'] = ('\x1b[39m', '')
+
+    return XonshTerminal256FormatterProxy

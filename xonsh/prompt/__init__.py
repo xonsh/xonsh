@@ -14,8 +14,8 @@ else:
         _sys.modules['xonsh.prompt.gitstatus'] = __amalgam__
         job = __amalgam__
         _sys.modules['xonsh.prompt.job'] = __amalgam__
-        vc_branch = __amalgam__
-        _sys.modules['xonsh.prompt.vc_branch'] = __amalgam__
+        vc = __amalgam__
+        _sys.modules['xonsh.prompt.vc'] = __amalgam__
         base = __amalgam__
         _sys.modules['xonsh.prompt.base'] = __amalgam__
         del __amalgam__

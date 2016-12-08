@@ -30,6 +30,5 @@ $PROMPT = $PROMPT.replace('{prompt_end}{NO_COLOR}',
                           '{ret_code_color}{ret_code}{prompt_end}{NO_COLOR}')
 
 
-$FORMATTER_DICT['ret_code_color'] = _ret_code_color
-$FORMATTER_DICT['ret_code'] = _ret_code
-
+$PROMPT_FIELDS['ret_code_color'] = _ret_code_color
+$PROMPT_FIELDS['ret_code'] = _ret_code

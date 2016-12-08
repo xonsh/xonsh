@@ -1,6 +1,5 @@
   # -*- coding: utf-8 -*-
 """Tests xonsh tools."""
-import builtins
 import datetime as dt
 import os
 import pathlib
@@ -17,7 +16,7 @@ from xonsh.tools import (
     bool_or_int_to_str, bool_to_str, check_for_partial_string,
     dynamic_cwd_tuple_to_str, ensure_slice, ensure_string,
     env_path_to_str, escape_windows_cmd_string, executables_in,
-    expand_case_matching, find_next_break, iglobpath, is_bool, is_bool_or_int,
+    expand_case_matching, find_next_break, is_bool, is_bool_or_int,
     is_callable, is_dynamic_cwd_width, is_env_path, is_float, is_int, is_logfile_opt,
     is_string_or_callable, logfile_opt_to_str, str_to_env_path, is_string,
     subexpr_from_unbalanced, subproc_toks, to_bool, to_bool_or_int,
@@ -26,7 +25,6 @@ from xonsh.tools import (
     pathsep_to_upper_seq, seq_to_upper_pathsep, expandvars, is_int_as_str, is_slice_as_str,
     ensure_timestamp, get_portions
     )
-from xonsh.built_ins import expand_path
 from xonsh.environ import Env
 
 from tools import skip_if_on_windows, skip_if_on_unix
@@ -43,48 +41,48 @@ PATHEXT_ENV = {'PATHEXT': ['.COM', '.EXE', '.BAT']}
 def test_subproc_toks_x():
     exp = '![x]'
     obs = subproc_toks('x', lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_ls_l():
     exp = '![ls -l]'
     obs = subproc_toks('ls -l', lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_git():
     s = 'git commit -am "hello doc"'
     exp = '![{0}]'.format(s)
     obs = subproc_toks(s, lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_git_semi():
     s = 'git commit -am "hello doc"'
     exp = '![{0}];'.format(s)
     obs = subproc_toks(s + ';', lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_git_nl():
     s = 'git commit -am "hello doc"'
     exp = '![{0}]\n'.format(s)
     obs = subproc_toks(s + '\n', lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_bash_macro():
     s = 'bash -c ! export var=42; echo $var'
     exp = '![{0}]\n'.format(s)
     obs = subproc_toks(s + '\n', lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_python_macro():
     s = 'python -c ! import os; print(os.path.abspath("/"))'
     exp = '![{0}]\n'.format(s)
     obs = subproc_toks(s + '\n', lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_indent_ls():
@@ -92,7 +90,7 @@ def test_subproc_toks_indent_ls():
     exp = INDENT + '![{0}]'.format(s)
     obs = subproc_toks(INDENT + s, mincol=len(INDENT), lexer=LEXER,
                        returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_indent_ls_nl():
@@ -100,35 +98,35 @@ def test_subproc_toks_indent_ls_nl():
     exp = INDENT + '![{0}]\n'.format(s)
     obs = subproc_toks(INDENT + s + '\n', mincol=len(INDENT), lexer=LEXER,
                        returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_indent_ls_no_min():
     s = 'ls -l'
     exp = INDENT + '![{0}]'.format(s)
     obs = subproc_toks(INDENT + s, lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_indent_ls_no_min_nl():
     s = 'ls -l'
     exp = INDENT + '![{0}]\n'.format(s)
     obs = subproc_toks(INDENT + s + '\n', lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_indent_ls_no_min_semi():
     s = 'ls'
     exp = INDENT + '![{0}];'.format(s)
     obs = subproc_toks(INDENT + s + ';', lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_indent_ls_no_min_semi_nl():
     s = 'ls'
     exp = INDENT + '![{0}];\n'.format(s)
     obs = subproc_toks(INDENT + s + ';\n', lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_ls_comment():
@@ -136,7 +134,7 @@ def test_subproc_toks_ls_comment():
     com = '  # lets list'
     exp = '![{0}]{1}'.format(s, com)
     obs = subproc_toks(s + com, lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_ls_42_comment():
@@ -144,7 +142,7 @@ def test_subproc_toks_ls_42_comment():
     com = '  # lets list'
     exp = '![{0}]{1}'.format(s, com)
     obs = subproc_toks(s + com, lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_ls_str_comment():
@@ -152,7 +150,7 @@ def test_subproc_toks_ls_str_comment():
     com = '  # lets list'
     exp = '![{0}]{1}'.format(s, com)
     obs = subproc_toks(s + com, lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_indent_ls_comment():
@@ -161,7 +159,7 @@ def test_subproc_toks_indent_ls_comment():
     com = '  # lets list'
     exp = '{0}![{1}]{2}'.format(ind, s, com)
     obs = subproc_toks(ind + s + com, lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_indent_ls_str():
@@ -170,7 +168,7 @@ def test_subproc_toks_indent_ls_str():
     com = '  # lets list'
     exp = '{0}![{1}]{2}'.format(ind, s, com)
     obs = subproc_toks(ind + s + com, lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_ls_l_semi_ls_first():
@@ -179,7 +177,7 @@ def test_subproc_toks_ls_l_semi_ls_first():
     s = '{0}; {1}'.format(lsdl, ls)
     exp = '![{0}]; {1}'.format(lsdl, ls)
     obs = subproc_toks(s, lexer=LEXER, maxcol=6, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_ls_l_semi_ls_second():
@@ -188,7 +186,7 @@ def test_subproc_toks_ls_l_semi_ls_second():
     s = '{0}; {1}'.format(lsdl, ls)
     exp = '{0}; ![{1}]'.format(lsdl, ls)
     obs = subproc_toks(s, lexer=LEXER, mincol=7, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_hello_mom_first():
@@ -197,7 +195,7 @@ def test_subproc_toks_hello_mom_first():
     s = '{0}; {1}'.format(fst, sec)
     exp = '![{0}]; {1}'.format(fst, sec)
     obs = subproc_toks(s, lexer=LEXER, maxcol=len(fst)+1, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_hello_mom_second():
@@ -206,69 +204,69 @@ def test_subproc_toks_hello_mom_second():
     s = '{0}; {1}'.format(fst, sec)
     exp = '{0}; ![{1}]'.format(fst, sec)
     obs = subproc_toks(s, lexer=LEXER, mincol=len(fst), returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_comment():
     exp = None
     obs = subproc_toks('# I am a comment', lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_not():
     exp = 'not ![echo mom]'
     obs = subproc_toks('not echo mom', lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_paren():
     exp = '(![echo mom])'
     obs = subproc_toks('(echo mom)', lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_paren_ws():
     exp = '(![echo mom])  '
     obs = subproc_toks('(echo mom)  ', lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_not_paren():
     exp = 'not (![echo mom])'
     obs = subproc_toks('not (echo mom)', lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_and_paren():
     exp = 'True and (![echo mom])'
     obs = subproc_toks('True and (echo mom)', lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_paren_and_paren():
     exp = '(![echo a]) and (echo b)'
     obs = subproc_toks('(echo a) and (echo b)', maxcol=9, lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_semicolon_only():
     exp = None
     obs = subproc_toks(';', lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_pyeval():
     s = 'echo @(1+1)'
     exp = '![{0}]'.format(s)
     obs = subproc_toks(s, lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_twopyeval():
     s = 'echo @(1+1) @(40 + 2)'
     exp = '![{0}]'.format(s)
     obs = subproc_toks(s, lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_pyeval_parens():
@@ -276,7 +274,7 @@ def test_subproc_toks_pyeval_parens():
     inp = '({0})'.format(s)
     exp = '(![{0}])'.format(s)
     obs = subproc_toks(inp, lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_twopyeval_parens():
@@ -284,14 +282,14 @@ def test_subproc_toks_twopyeval_parens():
     inp = '({0})'.format(s)
     exp = '(![{0}])'.format(s)
     obs = subproc_toks(inp, lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_pyeval_nested():
     s = 'echo @(min(1, 42))'
     exp = '![{0}]'.format(s)
     obs = subproc_toks(s, lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_pyeval_nested_parens():
@@ -299,21 +297,21 @@ def test_subproc_toks_pyeval_nested_parens():
     inp = '({0})'.format(s)
     exp = '(![{0}])'.format(s)
     obs = subproc_toks(inp, lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_capstdout():
     s = 'echo $(echo bat)'
     exp = '![{0}]'.format(s)
     obs = subproc_toks(s, lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_capproc():
     s = 'echo !(echo bat)'
     exp = '![{0}]'.format(s)
     obs = subproc_toks(s, lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 def test_subproc_toks_pyeval_redirect():
@@ -321,7 +319,7 @@ def test_subproc_toks_pyeval_redirect():
     inp = '{0}'.format(s)
     exp = '![{0}]'.format(s)
     obs = subproc_toks(inp, lexer=LEXER, returnline=True)
-    assert (exp == obs)
+    assert exp == obs
 
 
 @pytest.mark.parametrize('inp, exp', [
@@ -457,7 +455,7 @@ def test_is_nonstring_seq_of_strings_true():
     assert is_nonstring_seq_of_strings(['42.0'])
 
 
-def test_is_nonstring_seq_of_strings_true():
+def test_is_nonstring_seq_of_strings_false():
     assert not is_nonstring_seq_of_strings([42.0])
 
 
@@ -467,7 +465,7 @@ def test_is_nonstring_seq_of_strings_true():
     (os.pathsep.join(['a', 'b']), ['a', 'b']),
     (os.pathsep.join(['a', 'b', 'c']), ['a', 'b', 'c']),
 ])
-def test_pathsep_to_seq():
+def test_pathsep_to_seq(inp, exp):
     obs = pathsep_to_seq(inp)
     assert exp == obs
 
@@ -477,7 +475,7 @@ def test_pathsep_to_seq():
     (['a', 'b'], os.pathsep.join(['a', 'b'])),
     (['a', 'b', 'c'], os.pathsep.join(['a', 'b', 'c'])),
 ])
-def test_seq_to_pathsep():
+def test_seq_to_pathsep(inp, exp):
     obs = seq_to_pathsep(inp)
     assert exp == obs
 
@@ -488,7 +486,7 @@ def test_seq_to_pathsep():
     (os.pathsep.join(['a', 'B']), ['A', 'B']),
     (os.pathsep.join(['A', 'b', 'c']), ['A', 'B', 'C']),
 ])
-def test_pathsep_to_upper_seq():
+def test_pathsep_to_upper_seq(inp, exp):
     obs = pathsep_to_upper_seq(inp)
     assert exp == obs
 
@@ -499,7 +497,7 @@ def test_pathsep_to_upper_seq():
         (['a', 'b'], os.pathsep.join(['A', 'B'])),
         (['a', 'B', 'c'], os.pathsep.join(['A', 'B', 'C'])),
         ])
-def test_seq_to_upper_pathsep():
+def test_seq_to_upper_pathsep(inp, exp):
     obs = seq_to_upper_pathsep(inp)
     assert exp == obs
 
@@ -511,7 +509,7 @@ def test_seq_to_upper_pathsep():
     (EnvPath(['jawaka']), True),
     (EnvPath(b'jawaka:wakka'), True),
 ])
-def test_is_env_path():
+def test_is_env_path(inp, exp):
     obs = is_env_path(inp)
     assert exp == obs
 
@@ -577,11 +575,11 @@ def test_env_path_multipath(inp, exp, xonsh_builtins, env):
 
 
 @pytest.mark.parametrize('inp, exp', [
-    (pathlib.Path('/home/wakka'), ['/home/wakka'.replace('/',os.sep)]),
+    (pathlib.Path('/home/wakka'), ['/home/wakka'.replace('/', os.sep)]),
     (pathlib.Path('~/'), ['~']),
     (pathlib.Path('.'), ['.']),
     (['/home/wakka', pathlib.Path('/home/jakka'), '~/'],
-     ['/home/wakka', '/home/jakka'.replace('/',os.sep), '~/']),
+     ['/home/wakka', '/home/jakka'.replace('/', os.sep), '~/']),
     (['/home/wakka', pathlib.Path('../'), '../'],
      ['/home/wakka', '..', '../']),
     (['/home/wakka', pathlib.Path('~/'), '~/'],
@@ -593,104 +591,9 @@ def test_env_path_with_pathlib_path_objects(inp, exp, xonsh_builtins):
     obs = [i for i in EnvPath(inp)]
     assert [expand(i) for i in exp] == obs
 
-@pytest.mark.parametrize('inp', ['42.0', [42.0]] )
+@pytest.mark.parametrize('inp', ['42.0', [42.0]])
 def test_is_nonstring_seq_of_strings_false(inp):
     assert not is_nonstring_seq_of_strings(inp)
-
-
-@pytest.mark.parametrize('inp, exp', [
-    ('', []),
-    ('a', ['a']),
-    (os.pathsep.join(['a', 'b']), ['a', 'b']),
-    (os.pathsep.join(['a', 'b', 'c']), ['a', 'b', 'c']),
-])
-def test_pathsep_to_seq(inp, exp):
-    obs = pathsep_to_seq(inp)
-    assert exp == obs
-
-
-@pytest.mark.parametrize('inp, exp', [
-    ([], ''),
-    (['a'], 'a'),
-    (['a', 'b'], os.pathsep.join(['a', 'b'])),
-    (['a', 'b', 'c'], os.pathsep.join(['a', 'b', 'c'])),
-])
-def test_seq_to_pathsep(inp, exp):
-    obs = seq_to_pathsep(inp)
-    assert exp == obs
-
-
-@pytest.mark.parametrize('inp, exp', [
-    ('', []),
-    ('a', ['A']),
-    (os.pathsep.join(['a', 'B']), ['A', 'B']),
-    (os.pathsep.join(['A', 'b', 'c']), ['A', 'B', 'C']),
-])
-def test_pathsep_to_upper_seq(inp, exp):
-    obs = pathsep_to_upper_seq(inp)
-    assert exp == obs
-
-
-@pytest.mark.parametrize('inp, exp', [
-    ([], ''),
-    (['a'], 'A'),
-    (['a', 'b'], os.pathsep.join(['A', 'B'])),
-    (['a', 'B', 'c'], os.pathsep.join(['A', 'B', 'C'])),
-])
-def test_seq_to_upper_pathsep(inp, exp):
-    obs = seq_to_upper_pathsep(inp)
-    assert exp == obs
-
-
-@pytest.mark.parametrize('inp, exp', [
-    ('/home/wakka', False),
-    (['/home/jawaka'], False),
-    (EnvPath(['/home/jawaka']), True),
-    (EnvPath(['jawaka']), True),
-    (EnvPath(b'jawaka:wakka'), True),
-])
-def test_is_env_path(inp, exp):
-    obs = is_env_path(inp)
-    assert exp == obs
-
-
-@pytest.mark.parametrize('inp, exp', [
-    ('/home/wakka', ['/home/wakka']),
-    ('/home/wakka' + os.pathsep + '/home/jawaka',
-     ['/home/wakka', '/home/jawaka']),
-    (b'/home/wakka', ['/home/wakka']),
-])
-def test_str_to_env_path(inp, exp):
-    obs = str_to_env_path(inp)
-    assert exp == obs.paths
-
-
-@pytest.mark.parametrize('inp, exp', [
-    (['/home/wakka'], '/home/wakka'),
-    (['/home/wakka', '/home/jawaka'],
-     '/home/wakka' + os.pathsep + '/home/jawaka'),
-])
-def test_env_path_to_str(inp, exp):
-    obs = env_path_to_str(inp)
-    assert exp == obs
-
-
-@pytest.mark.parametrize('inp, exp', [
-    (pathlib.Path('/home/wakka'), ['/home/wakka'.replace('/',os.sep)]),
-    (pathlib.Path('~/'), ['~']),
-    (pathlib.Path('.'), ['.']),
-    (['/home/wakka', pathlib.Path('/home/jakka'), '~/'],
-     ['/home/wakka', '/home/jakka'.replace('/',os.sep), '~/']),
-    (['/home/wakka', pathlib.Path('../'), '../'],
-     ['/home/wakka', '..', '../']),
-    (['/home/wakka', pathlib.Path('~/'), '~/'],
-     ['/home/wakka', '~', '~/']),
-])
-def test_env_path_with_pathlib_path_objects(inp, exp, xonsh_builtins):
-    xonsh_builtins.__xonsh_env__ = TOOLS_ENV
-    # iterate over EnvPath to acquire all expanded paths
-    obs = [i for i in EnvPath(inp)]
-    assert [expand(i) for i in exp] == obs
 
 
 # helper
@@ -833,7 +736,7 @@ def test_bool_or_int_to_str(inp, exp):
         (42, slice(42, 43)),
         (0, slice(0, 1)),
         (None, slice(None, None, None)),
-        (slice(1,2), slice(1,2)),
+        (slice(1, 2), slice(1, 2)),
         ('-1', slice(-1, None, None)),
         ('42', slice(42, 43)),
         ('-42', slice(-42, -41)),
@@ -844,7 +747,7 @@ def test_bool_or_int_to_str(inp, exp):
         ('[1:2:3]', slice(1, 2, 3)),
         ('(1:2:3)', slice(1, 2, 3)),
         ((4, 8, 10), slice(4, 8, 10)),
-        ([10,20], slice(10,20))
+        ([10, 20], slice(10, 20))
         ])
 def test_ensure_slice(inp, exp):
     obs = ensure_slice(inp)
@@ -853,7 +756,7 @@ def test_ensure_slice(inp, exp):
 
 @pytest.mark.parametrize('inp, exp', [
     ((range(50), slice(25, 40)),
-     list(i for i in range(25,40))),
+     list(i for i in range(25, 40))),
 
     (([1,2,3,4,5,6,7,8,9,10], [slice(1,4), slice(6, None)]),
      [2, 3, 4, 7, 8, 9, 10]),
@@ -1012,19 +915,25 @@ def test_escape_windows_cmd_string(st, esc):
     assert esc == obs
 
 
-@pytest.mark.parametrize('st, esc', [
-    ('', '""'),
-    ('foo', 'foo'),
+@pytest.mark.parametrize('st, esc, forced', [
+    ('', '""', None),
+    ('foo', 'foo', '"foo"'),
     (r'arg1 "hallo, "world""  "\some\path with\spaces")',
-     r'"arg1 \"hallo, \"world\"\"  \"\some\path with\spaces\")"'),
+     r'"arg1 \"hallo, \"world\"\"  \"\some\path with\spaces\")"', None),
     (r'"argument"2" argument3 argument4',
-     r'"\"argument\"2\" argument3 argument4"'),
-    (r'"\foo\bar bar\foo\" arg',
-     r'"\"\foo\bar bar\foo\\\" arg"')
+     r'"\"argument\"2\" argument3 argument4"', None),
+    (r'"\foo\bar bar\foo\" arg', r'"\"\foo\bar bar\foo\\\" arg"', None),
+    (r'\\machine\dir\file.bat', r'\\machine\dir\file.bat', r'"\\machine\dir\file.bat"'),
+    (r'"\\machine\dir space\file.bat"', r'"\"\\machine\dir space\file.bat\""', None)
 ])
-def test_argvquote(st, esc):
+def test_argvquote(st, esc, forced):
     obs = argvquote(st)
     assert esc == obs
+    
+    if forced is None:
+        forced = esc
+    obs = argvquote(st, force=True)
+    assert forced == obs
 
 
 @pytest.mark.parametrize('inp', ['no string here', ''])
@@ -1102,7 +1011,7 @@ def test_executables_in(xonsh_builtins):
                 result = set(executables_in(test_path))
             else:
                 result = set(executables_in(test_path))
-    assert (expected == result)
+    assert expected == result
 
 
 @pytest.mark.parametrize('inp, exp', [
