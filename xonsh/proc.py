@@ -1986,7 +1986,8 @@ class CommandPipeline:
     def _apply_to_history(self):
         """Applies the results to the current history object."""
         hist = builtins.__xonsh_history__
-        hist.last_cmd_rtn = self.proc.returncode
+        if hist is not None:
+            hist.last_cmd_rtn = self.proc.returncode
 
     def _raise_subproc_error(self):
         """Raises a subprocess error, if we are suppossed to."""

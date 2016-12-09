@@ -189,6 +189,15 @@ def test_double_unicode_literal():
 def test_single_bytes_literal():
     assert check_token("b'yo'", ['STRING', "b'yo'", 0])
 
+def test_path_string_literal():
+    assert check_token("p'/foo'", ['STRING', "p'/foo'", 0])
+    assert check_token('p"/foo"', ['STRING', 'p"/foo"', 0])
+    assert check_token("pr'/foo'", ['STRING', "pr'/foo'", 0])
+    assert check_token('pr"/foo"', ['STRING', 'pr"/foo"', 0])
+    assert check_token("rp'/foo'", ['STRING', "rp'/foo'", 0])
+    assert check_token('rp"/foo"', ['STRING', 'rp"/foo"', 0])
+
+
 def test_regex_globs():
     for i in ('.*', r'\d*', '.*#{1,2}'):
         for p in ('', 'r', 'g', '@somethingelse', 'p', 'pg'):

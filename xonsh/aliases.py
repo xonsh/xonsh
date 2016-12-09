@@ -13,7 +13,6 @@ from xonsh.dirstack import cd, pushd, popd, dirs, _get_cwd
 from xonsh.environ import locate_binary
 from xonsh.foreign_shells import foreign_shell_data
 from xonsh.jobs import jobs, fg, bg, clean_jobs
-from xonsh.history import history_main
 from xonsh.platform import (ON_ANACONDA, ON_DARWIN, ON_WINDOWS, ON_FREEBSD,
                             ON_NETBSD)
 from xonsh.proc import foreground
@@ -23,6 +22,7 @@ from xonsh.tools import argvquote, escape_windows_cmd_string, to_bool
 from xonsh.xontribs import xontribs_main
 
 import xonsh.completers._aliases as xca
+import xonsh.history.main as xhm
 import xonsh.xoreutils.which as xxw
 
 
@@ -391,7 +391,7 @@ def make_default_aliases():
         'source-bash':  ['source-foreign', 'bash', '--sourcer=source'],
         'source-cmd': source_cmd,
         'source-foreign': source_foreign,
-        'history': history_main,
+        'history': xhm.history_main,
         'replay': replay_main,
         'trace': trace,
         'timeit': timeit_alias,

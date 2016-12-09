@@ -967,6 +967,24 @@ return type from a list of strings to a list of :class:`pathlib.Path` objects:
     [Path('a_link')]
 
 
+Path Literals
+-------------
+
+Path objects can be instantiated directly using *p-string* syntax. Path objects
+can be converted back to plain strings with `str()`, and this conversion is
+handled implicitly in subprocess mode.
+
+.. code-block:: xonshcon
+
+    >>> mypath = p'/foo/bar'
+    >>> mypath
+    Path('/foo/bar')
+    >>> mypath.stem
+    'bar'
+    >>> echo @(mypath)
+    /foo/bar
+
+
 Help & Superhelp with ``?`` & ``??``
 =====================================================
 From IPython, xonsh allows you to inspect objects with question marks.
