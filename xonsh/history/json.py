@@ -178,12 +178,14 @@ class JsonHistoryFlusher(threading.Thread):
         """Write the cached history to external storage."""
         with open(self.filename, 'r', newline='\n') as f:
             hist = xlj.LazyJSON(f).load()
+        load_hist_len = len(hist['cmds'])
         hist['cmds'].extend(self.buffer)
         if self.at_exit:
             hist['ts'][1] = time.time()  # apply end time
             hist['locked'] = False
         if not builtins.__xonsh_env__.get('XONSH_STORE_STDOUT', False):
-            [cmd.pop('out') for cmd in hist['cmds'] if 'out' in cmd]
+            [cmd.pop('out') for cmd in hist['cmds'][load_hist_len:] 
+                    if 'out' in cmd]
         with open(self.filename, 'w', newline='\n') as f:
             xlj.ljdump(hist, f, sort_keys=True)
 
