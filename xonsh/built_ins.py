@@ -138,6 +138,11 @@ def reglob(path, parts=None, i=None):
     return paths
 
 
+def path_literal(s):
+    s = expand_path(s)
+    return pathlib.Path(s)
+
+
 def regexsearch(s):
     s = expand_path(s)
     return reglob(s)
@@ -1140,6 +1145,7 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.__xonsh_completers__ = xonsh.completers.init.default_completers()
     builtins.__xonsh_call_macro__ = call_macro
     builtins.__xonsh_enter_macro__ = enter_macro
+    builtins.__xonsh_path_literal__ = path_literal
     # public built-ins
     builtins.XonshError = XonshError
     builtins.XonshBlockError = XonshBlockError
@@ -1207,6 +1213,7 @@ def unload_builtins():
              '__xonsh_completers__',
              '__xonsh_call_macro__',
              '__xonsh_enter_macro__',
+             '__xonsh_path_literal__',
              'XonshError',
              'XonshBlockError',
              'XonshCalledProcessError',
