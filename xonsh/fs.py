@@ -5,6 +5,7 @@ Backported functions to implement the PEP 519 (Adding a file system path protoco
 import abc
 import sys
 import io
+import pathlib
 
 try:
     from os import PathLike, fspath, fsencode, fsdecode
@@ -17,6 +18,8 @@ except ImportError:
             """Return the file system path representation of the object."""
             raise NotImplementedError
 
+    PathLike.register(pathlib.Path)
+
 
     def fspath(path):
         """Return the string representation of the path.
@@ -28,6 +31,9 @@ except ImportError:
         """
         if isinstance(path, (str, bytes)):
             return path
+
+        if isinstance(path, pathlib.Path):
+            return str(path)
 
         # Work from the object's type to match method resolution of other magic
         # methods.
@@ -50,7 +56,10 @@ except ImportError:
 
     def _fscodec():
         encoding = sys.getfilesystemencoding()
-        errors = sys.getfilesystemencodeerrors()
+        if encoding == 'mbcs':
+            errors = 'strict'
+        else:
+            errors = 'surrogateescape'
 
         def fsencode(filename):
             """Encode filename (an os.PathLike, bytes, or str) to the filesystem
