@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Tests the xonsh history."""
+"""Tests the json history backend."""
 # pylint: disable=protected-access
 import io
 import os
@@ -31,9 +31,19 @@ def test_hist_init(hist):
 def test_hist_append(hist, xonsh_builtins):
     """Verify appending to the history works."""
     xonsh_builtins.__xonsh_env__['HISTCONTROL'] = set()
-    hf = hist.append({'joco': 'still alive'})
+    hf = hist.append({'inp': 'still alive', 'rtn': 0})
     assert hf is None
-    assert 'still alive' == hist.buffer[0]['joco']
+    assert 'still alive' == hist.buffer[0]['inp']
+    assert 0 == hist.buffer[0]['rtn']
+    assert 0 == hist.rtns[-1]
+    hf = hist.append({'inp': 'dead now', 'rtn': 1})
+    assert 'dead now' == hist.buffer[1]['inp']
+    assert 1 == hist.buffer[1]['rtn']
+    assert 1 == hist.rtns[-1]
+    hf = hist.append({'inp': 'reborn', 'rtn': 0})
+    assert 'reborn' == hist.buffer[2]['inp']
+    assert 0 == hist.buffer[2]['rtn']
+    assert 0 == hist.rtns[-1]
 
 
 def test_hist_flush(hist, xonsh_builtins):
@@ -107,52 +117,61 @@ def test_histcontrol(hist, xonsh_builtins):
     # An error, buffer remains empty
     hist.append({'inp': 'ls foo', 'rtn': 2})
     assert len(hist.buffer) == 0
+    assert hist.rtns[-1] == 2
 
     # Success
     hist.append({'inp': 'ls foobazz', 'rtn': 0})
     assert len(hist.buffer) == 1
     assert 'ls foobazz' == hist.buffer[-1]['inp']
     assert 0 == hist.buffer[-1]['rtn']
+    assert hist.rtns[-1] == 0
 
     # Error
     hist.append({'inp': 'ls foo', 'rtn': 2})
     assert len(hist.buffer) == 1
     assert 'ls foobazz' == hist.buffer[-1]['inp']
     assert 0 == hist.buffer[-1]['rtn']
+    assert hist.rtns[-1] == 2
 
     # File now exists, success
     hist.append({'inp': 'ls foo', 'rtn': 0})
     assert len(hist.buffer) == 2
     assert 'ls foo' == hist.buffer[-1]['inp']
     assert 0 == hist.buffer[-1]['rtn']
+    assert hist.rtns[-1] == 0
 
     # Success
     hist.append({'inp': 'ls', 'rtn': 0})
     assert len(hist.buffer) == 3
     assert 'ls' == hist.buffer[-1]['inp']
     assert 0 == hist.buffer[-1]['rtn']
+    assert hist.rtns[-1] == 0
 
     # Dup
     hist.append({'inp': 'ls', 'rtn': 0})
     assert len(hist.buffer) == 3
+    assert hist.rtns[-1] == 0
 
     # Success
     hist.append({'inp': '/bin/ls', 'rtn': 0})
     assert len(hist.buffer) == 4
     assert '/bin/ls' == hist.buffer[-1]['inp']
     assert 0 == hist.buffer[-1]['rtn']
+    assert hist.rtns[-1] == 0
 
     # Error
     hist.append({'inp': 'ls bazz', 'rtn': 1})
     assert len(hist.buffer) == 4
     assert '/bin/ls' == hist.buffer[-1]['inp']
     assert 0 == hist.buffer[-1]['rtn']
+    assert hist.rtns[-1] == 1
 
     # Error
     hist.append({'inp': 'ls bazz', 'rtn': -1})
     assert len(hist.buffer) == 4
     assert '/bin/ls' == hist.buffer[-1]['inp']
     assert 0 == hist.buffer[-1]['rtn']
+    assert hist.rtns[-1] == -1
 
 
 @pytest.mark.parametrize('args', [ '-h', '--help', 'show -h', 'show --help'])

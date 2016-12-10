@@ -296,7 +296,7 @@ class JsonHistory(History):
         self.tss = JsonCommandField('ts', self)
         self.inps = JsonCommandField('inp', self)
         self.outs = JsonCommandField('out', self)
-        self.rtns = JsonCommandField('rtn', self)
+        self.rtns = []
 
     def __len__(self):
         return self._len
@@ -314,6 +314,7 @@ class JsonHistory(History):
         hf : JsonHistoryFlusher or None
             The thread that was spawned to flush history
         """
+        self.rtns.append(cmd.get('rtn', 0))
         opts = builtins.__xonsh_env__.get('HISTCONTROL')
         if ('ignoredups' in opts and len(self) > 0 and
                 cmd['inp'] == self.inps[-1]):
