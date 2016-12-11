@@ -9,6 +9,7 @@ from prompt_toolkit.shortcuts import (create_prompt_application,
                                       create_eventloop, create_asyncio_eventloop, create_output)
 
 from xonsh.platform import ptk_version_info
+import xonsh.tools as xt
 
 
 class Prompter(object):
@@ -106,9 +107,13 @@ class Prompter(object):
             try:
                 with patch_context:
                     document = cli.run(reset_current_buffer=False)
-
                     if document:
                         return document.text
+            except Exception:
+                xt.print_exception()
+                # return something to prevent xonsh crash when any
+                # exceptions raise
+                return ''
             finally:
                 eventloop.close()
 
