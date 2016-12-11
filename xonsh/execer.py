@@ -221,7 +221,7 @@ class Execer(object):
                     # anything
                     raise original_error
                 else:
-                    if self.debug_level:
+                    if self.debug_level > 1:
                         msg = ('{0}:{1}:{2}{3} - {4}\n'
                                '{0}:{1}:{2}{3} + {5}')
                         mstr = '' if maxcol is None else ':' + str(maxcol)
