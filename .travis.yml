@@ -45,6 +45,7 @@ install:
 
 
 script:
+  - set -e
   - if [[ $BUILD_DOCS = true ]]; then
       cd docs;
       make html;
