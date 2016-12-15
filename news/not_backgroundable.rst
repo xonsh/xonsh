@@ -11,6 +11,7 @@
     * clear.exe
     * cls
     * cmd
+    * ex
     * fish
     * htop
     * ksh
@@ -21,6 +22,8 @@
     * nano
     * psql
     * ranger
+    * rview
+    * rvim
     * scp
     * sh
     * ssh
