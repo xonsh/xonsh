@@ -54,7 +54,7 @@ class Execer(object):
             filename = self.filename
         if not transform:
             return self.parser.parse(input, filename=filename, mode=mode,
-                                     debug_level=(self.debug_level > 1))
+                                     debug_level=(self.debug_level > 2))
 
         # Parsing actually happens in a couple of phases. The first is a
         # shortcut for a context-free parser. Normally, all subprocess
@@ -161,7 +161,7 @@ class Execer(object):
                 tree = self.parser.parse(input,
                                          filename=filename,
                                          mode=mode,
-                                         debug_level=(self.debug_level > 1))
+                                         debug_level=(self.debug_level > 2))
                 parsed = True
             except IndentationError as e:
                 if original_error is None:
