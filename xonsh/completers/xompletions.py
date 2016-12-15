@@ -1,4 +1,5 @@
 import xonsh.xontribs as xx
+from xonsh.tools import color_style_names
 
 
 def complete_xonfig(prefix, line, start, end, ctx):
@@ -9,6 +10,10 @@ def complete_xonfig(prefix, line, start, end, ctx):
     curix = args.index(prefix)
     if curix == 1:
         possible = {'info', 'wizard', 'styles', 'colors', '-h'}
+    elif curix == 2 and args[1] == 'colors':
+        possible = set(color_style_names())
+    else:
+        raise StopIteration
     return {i for i in possible if i.startswith(prefix)}
 
 
@@ -32,8 +37,10 @@ def complete_xontrib(prefix, line, start, end, ctx):
     curix = args.index(prefix)
     if curix == 1:
         possible = {'list', 'load'}
-    if curix == 2:
+    elif curix == 2:
         if args[1] == 'load':
             possible = _list_installed_xontribs()
+    else:
+        raise StopIteration
 
     return {i for i in possible if i.startswith(prefix)}
