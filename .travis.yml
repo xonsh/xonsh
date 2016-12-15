@@ -43,6 +43,8 @@ install:
       pip install -r requirements-tests.txt;
     fi
 
+before_script:
+  - rvm get head || true
 
 script:
   - set -e
