@@ -1724,6 +1724,7 @@ class CommandPipeline:
         if not stdout or not safe_readable(stdout):
             # we get here if the process is not threadable or the
             # class is the real Popen
+            PrevProcCloser(pipeline=self)
             wait_for_active_job()
             proc.wait()
             self._endtime()
@@ -2158,3 +2159,59 @@ def pause_call_resume(p, f, *args, **kwargs):
         pass
     if can_send_signal:
         p.send_signal(signal.SIGCONT)
+
+
+class PrevProcCloser(threading.Thread):
+    """Previous process closer thread for pipelines whose last command
+    is itself unthreadable. This makes sure that the pipeline is
+    driven foreward and does not deadlock.
+    """
+
+    def __init__(self, pipeline):
+        """
+        Parameters
+        ----------
+        pipeline : CommandPipeline
+            The pipeline whose prev procs we should close.
+        """
+        self.pipeline = pipeline
+        super().__init__()
+        self.daemon = True
+        self.start()
+
+    def run(self):
+        """Runs the closing algorithim."""
+        pipeline = self.pipeline
+        check_prev_done = len(pipeline.procs) == 1
+        if check_prev_done:
+            return
+        proc = pipeline.proc
+        prev_end_time = None
+        timeout = builtins.__xonsh_env__.get('XONSH_PROC_FREQUENCY')
+        sleeptime = min(timeout * 1000, 0.1)
+        while proc.poll() is None:
+            if not check_prev_done:
+                # In the case of pipelines with more than one command
+                # we should give the commands a little time
+                # to start up fully. This is particularly true for
+                # GNU Parallel, which has a long startup time.
+                pass
+            elif pipeline._prev_procs_done():
+                pipeline._close_prev_procs()
+                proc.prevs_are_closed = True
+                break
+            if not check_prev_done:
+                # if we are piping...
+                if prev_end_time is None:
+                    # or see if we already know that the next-to-last
+                    # proc in the pipeline has ended.
+                    if pipeline._prev_procs_done():
+                        # if it has, record the time
+                        prev_end_time = time.time()
+                elif time.time() - prev_end_time >= 0.1:
+                    # if we still don't have any output, even though the
+                    # next-to-last proc has finished, wait a bit to make
+                    # sure we have fully started up, etc.
+                    check_prev_done = True
+            # this is for CPU usage
+            time.sleep(sleeptime)
