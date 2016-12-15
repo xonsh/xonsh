@@ -618,9 +618,9 @@ def DEFAULT_DOCS():
         'Sets the xonsh debugging level. This may be an integer or a boolean. '
         'Setting this variable prior to stating xonsh to ``1`` or ``True`` '
         'will supress amalgamated imports. Setting it to ``2`` will get some '
-        'basic information like code transformation, command replacement. '
+        'basic information like input transformation, command replacement. '
         'With ``3`` or a higher number will make more debugging information '
-        'presented, like PLY debug messages.',
+        'presented, like PLY parsing messages.',
         configurable=False),
     'XONSH_DATA_DIR': VarDocs(
         'This is the location where xonsh data files are stored, such as '
