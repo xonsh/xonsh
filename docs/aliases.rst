@@ -89,7 +89,7 @@ It will pick up the environment and any aliases.
 Tools for dealing with xonsh history. See `the history tutorial <tutorial_hist.html>`_
 for more information all the history command and all of its sub-commands.
 
-.. command-help:: xonsh.history.history_main
+.. command-help:: xonsh.history.main.history_main
 
 
 ``replay``
