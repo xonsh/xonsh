@@ -11,6 +11,8 @@ else:
         from xonsh import __amalgam__
         completer = __amalgam__
         _sys.modules['xonsh.completer'] = __amalgam__
+        fs = __amalgam__
+        _sys.modules['xonsh.fs'] = __amalgam__
         lazyasd = __amalgam__
         _sys.modules['xonsh.lazyasd'] = __amalgam__
         lazyjson = __amalgam__
