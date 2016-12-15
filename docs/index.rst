@@ -40,6 +40,7 @@ the xonsh shell
         "People xonshtantly mispronounce these things",
         "WHAT...is your favorite shell?",
         "Conches for the xonsh god!",
+        "Python-powered, cross-platform, Unix-gazing shell",
         "Exploiting the workers and hanging on to outdated imperialist dogma since 2015."
         ];
     document.write(taglines[Math.floor(Math.random() * taglines.length)]);
