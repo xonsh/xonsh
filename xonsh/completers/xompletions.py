@@ -1,5 +1,6 @@
 import xonsh.xontribs as xx
 
+
 def complete_xonfig(prefix, line, start, end, ctx):
     """Completion for ``xonfig``"""
     args = line.split(' ')
@@ -9,6 +10,7 @@ def complete_xonfig(prefix, line, start, end, ctx):
     if curix == 1:
         possible = {'info', 'wizard', 'styles', 'colors', '-h'}
     return {i for i in possible if i.startswith(prefix)}
+
 
 def _list_installed_xontribs():
     meta = xx.xontrib_metadata()
@@ -21,6 +23,7 @@ def _list_installed_xontribs():
 
     return installed
 
+
 def complete_xontrib(prefix, line, start, end, ctx):
     """Completion for ``xontrib``"""
     args = line.split(' ')
@@ -32,6 +35,5 @@ def complete_xontrib(prefix, line, start, end, ctx):
     if curix == 2:
         if args[1] == 'load':
             possible = _list_installed_xontribs()
-        else:
-            raise StopIteration
+
     return {i for i in possible if i.startswith(prefix)}
