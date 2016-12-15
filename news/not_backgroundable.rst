@@ -29,6 +29,7 @@
     * tcsh
     * top
     * vi
+    * view
     * vim
     * vimpager
     * xo

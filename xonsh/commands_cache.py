@@ -275,6 +275,7 @@ def default_threadable_predictors():
         'tcsh': predict_shell,
         'top': predict_help_ver,
         'vi': predict_false,
+        'view': predict_false,
         'vim': predict_false,
         'vimpager': predict_help_ver,
         'xo': predict_help_ver,
