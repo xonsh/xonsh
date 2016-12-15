@@ -295,7 +295,7 @@ def main():
         scripts.append('scripts/xonsh')
     skw = dict(
         name='xonsh',
-        description='A general purpose, Python-ish shell',
+        description='Python-powered, cross-platform, Unix-gazing shell',
         long_description=readme,
         license='BSD',
         version=XONSH_VERSION,
