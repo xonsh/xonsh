@@ -475,8 +475,8 @@ work better.
 To use sqlite history backend, set ``$XONSH_HISTORY_BACKEND = 'sqlite'`` in
 your ``~/.xonshrc`` file.
 
-.. tip:: If you have [sqlite-web](https://pypi.python.org/pypi/sqlite-web)
-    installed, you can read your history easily with command:
+.. tip:: If you have `sqlite-web <https://pypi.python.org/pypi/sqlite-web>`_
+    installed, you can read the history easily with command:
     ``sqlite_web @$(history file)``.
 
 
