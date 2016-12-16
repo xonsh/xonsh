@@ -155,6 +155,8 @@ def DEFAULT_ENSURERS():
     'XONSH_DEBUG': (always_false, to_debug, bool_or_int_to_str),
     'XONSH_ENCODING': (is_string, ensure_string, ensure_string),
     'XONSH_ENCODING_ERRORS': (is_string, ensure_string, ensure_string),
+    'XONSH_HISTORY_BACKEND': (is_string, ensure_string, ensure_string),
+    'XONSH_HISTORY_FILE': (is_string, ensure_string, ensure_string),
     'XONSH_HISTORY_SIZE': (is_history_tuple, to_history_tuple, history_tuple_to_str),
     'XONSH_LOGIN': (is_bool, to_bool, bool_to_str),
     'XONSH_PROC_FREQUENCY': (is_float, float, str),
@@ -296,9 +298,10 @@ def DEFAULT_VALUES():
         'XONSH_COLOR_STYLE': 'default',
         'XONSH_CONFIG_DIR': xonsh_config_dir,
         'XONSH_DATA_DIR': xonsh_data_dir,
-        'XONSH_DEBUG': False,
+        'XONSH_DEBUG': 0,
         'XONSH_ENCODING': DEFAULT_ENCODING,
         'XONSH_ENCODING_ERRORS': 'surrogateescape',
+        'XONSH_HISTORY_BACKEND': 'json',
         'XONSH_HISTORY_FILE': os.path.expanduser('~/.xonsh_history.json'),
         'XONSH_HISTORY_SIZE': (8128, 'commands'),
         'XONSH_LOGIN': False,
@@ -612,10 +615,13 @@ def DEFAULT_DOCS():
         'This is the location where xonsh configuration information is stored.',
         configurable=False, default="``$XDG_CONFIG_HOME/xonsh``"),
     'XONSH_DEBUG': VarDocs(
-        'Sets the xonsh debugging level. This may be an integer or a boolean, '
-        'with higher values cooresponding to higher debuging levels and more '
-        'information presented. Setting this variable prior to stating xonsh '
-        'will supress amalgamated imports.', configurable=False),
+        'Sets the xonsh debugging level. This may be an integer or a boolean. '
+        'Setting this variable prior to stating xonsh to ``1`` or ``True`` '
+        'will supress amalgamated imports. Setting it to ``2`` will get some '
+        'basic information like input transformation, command replacement. '
+        'With ``3`` or a higher number will make more debugging information '
+        'presented, like PLY parsing messages.',
+        configurable=False),
     'XONSH_DATA_DIR': VarDocs(
         'This is the location where xonsh data files are stored, such as '
         'history.', default="``$XDG_DATA_HOME/xonsh``"),
@@ -643,6 +649,9 @@ def DEFAULT_DOCS():
         '* ``XONSH_GITSTATUS_AHEAD``: ``↑·``\n'
         '* ``XONSH_GITSTATUS_BEHIND``: ``↓·``\n'
     ),
+    'XONSH_HISTORY_BACKEND': VarDocs(
+        'Set which history backend to use. Options are: ``json``, '
+        '``sqlite``, and ``dummy``. default is ``json``.'),
     'XONSH_HISTORY_FILE': VarDocs(
         'Location of history file (deprecated).',
         configurable=False, default="``~/.xonsh_history``"),

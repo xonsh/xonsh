@@ -23,7 +23,6 @@ import collections.abc as cabc
 
 from xonsh.ast import AST
 from xonsh.lazyasd import LazyObject, lazyobject
-from xonsh.history import History
 from xonsh.inspectors import Inspector
 from xonsh.aliases import Aliases, make_default_aliases
 from xonsh.environ import Env, default_env, locate_binary
@@ -137,6 +136,11 @@ def reglob(path, parts=None, i=None):
                 continue
             paths += reglob(p, parts=parts, i=i1)
     return paths
+
+
+def path_literal(s):
+    s = expand_path(s)
+    return pathlib.Path(s)
 
 
 def regexsearch(s):
@@ -665,8 +669,7 @@ def _update_last_spec(last):
     if callable_alias:
         pass
     else:
-        thable = (last.stdin is not None) or \
-            builtins.__xonsh_commands_cache__.predict_threadable(last.args)
+        thable = builtins.__xonsh_commands_cache__.predict_threadable(last.args)
         if captured and thable:
             last.cls = PopenThread
         elif not thable:
@@ -1111,7 +1114,7 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     global BUILTINS_LOADED
     # private built-ins
     builtins.__xonsh_config__ = {}
-    builtins.__xonsh_env__ = env = Env(default_env(config=config, login=login))
+    builtins.__xonsh_env__ = Env(default_env(config=config, login=login))
     builtins.__xonsh_help__ = helper
     builtins.__xonsh_superhelp__ = superhelper
     builtins.__xonsh_pathsearch__ = pathsearch
@@ -1141,6 +1144,7 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.__xonsh_completers__ = xonsh.completers.init.default_completers()
     builtins.__xonsh_call_macro__ = call_macro
     builtins.__xonsh_enter_macro__ = enter_macro
+    builtins.__xonsh_path_literal__ = path_literal
     # public built-ins
     builtins.XonshError = XonshError
     builtins.XonshBlockError = XonshBlockError
@@ -1151,14 +1155,12 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
     builtins.events = events
 
     # sneak the path search functions into the aliases
-    # Need this inline/lazy import here since we use locate_binary that relies on __xonsh_env__ in default aliases
+    # Need this inline/lazy import here since we use locate_binary that
+    # relies on __xonsh_env__ in default aliases
     builtins.default_aliases = builtins.aliases = Aliases(make_default_aliases())
     if login:
         builtins.aliases.update(load_foreign_aliases(issue_warning=False))
-    # history needs to be started after env and aliases
-    # would be nice to actually include non-detyped versions.
-    builtins.__xonsh_history__ = History(env=env.detype(),
-                                         ts=[time.time(), None], locked=True)
+    builtins.__xonsh_history__ = None
     atexit.register(_lastflush)
     for sig in AT_EXIT_SIGNALS:
         resetting_signal_handle(sig, _lastflush)
@@ -1167,7 +1169,8 @@ def load_builtins(execer=None, config=None, login=False, ctx=None):
 
 def _lastflush(s=None, f=None):
     if hasattr(builtins, '__xonsh_history__'):
-        builtins.__xonsh_history__.flush(at_exit=True)
+        if builtins.__xonsh_history__ is not None:
+            builtins.__xonsh_history__.flush(at_exit=True)
 
 
 def unload_builtins():
@@ -1209,6 +1212,7 @@ def unload_builtins():
              '__xonsh_completers__',
              '__xonsh_call_macro__',
              '__xonsh_enter_macro__',
+             '__xonsh_path_literal__',
              'XonshError',
              'XonshBlockError',
              'XonshCalledProcessError',

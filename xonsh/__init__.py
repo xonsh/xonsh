@@ -1,7 +1,7 @@
 __version__ = '0.4.7'
 
 # amalgamate exclude jupyter_kernel parser_table parser_test_table pyghooks
-# amalgamate exclude winutils wizard pytest_plugin
+# amalgamate exclude winutils wizard pytest_plugin fs
 import os as _os
 if _os.getenv('XONSH_DEBUG', ''):
     pass
@@ -57,8 +57,6 @@ else:
         _sys.modules['xonsh.xontribs'] = __amalgam__
         dirstack = __amalgam__
         _sys.modules['xonsh.dirstack'] = __amalgam__
-        history = __amalgam__
-        _sys.modules['xonsh.history'] = __amalgam__
         inspectors = __amalgam__
         _sys.modules['xonsh.inspectors'] = __amalgam__
         xonfig = __amalgam__

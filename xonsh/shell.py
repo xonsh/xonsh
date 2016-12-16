@@ -3,6 +3,7 @@
 import os
 import sys
 import random
+import time
 import difflib
 import builtins
 import warnings
@@ -14,6 +15,7 @@ from xonsh.platform import (best_shell_type, has_prompt_toolkit,
                             ptk_version_is_supported)
 from xonsh.tools import XonshError, to_bool_or_int, print_exception
 from xonsh.events import events
+import xonsh.history.main as xhm
 
 
 events.doc('on_precommand', """
@@ -47,7 +49,8 @@ def fire_precommand(src, show_diff=True):
             print_exception('Modifcations to source input took more than '
                             'the recursion limit number of interations to '
                             'converge.')
-    if show_diff and builtins.__xonsh_env__.get('XONSH_DEBUG') and src != raw:
+    debug_level = builtins.__xonsh_env__.get('XONSH_DEBUG')
+    if show_diff and debug_level > 1 and src != raw:
         sys.stderr.writelines(difflib.unified_diff(
             raw.splitlines(keepends=True),
             src.splitlines(keepends=True),
@@ -87,7 +90,12 @@ class Shell(object):
         self._init_environ(ctx, config, rc,
                            kwargs.get('scriptcache', True),
                            kwargs.get('cacheall', False))
+
         env = builtins.__xonsh_env__
+        # build history backend before creating shell
+        builtins.__xonsh_history__ = hist = xhm.construct_history(
+            env=env.detype(), ts=[time.time(), None], locked=True)
+
         # pick a valid shell -- if no shell is specified by the user,
         # shell type is pulled from env
         if shell_type is None:
@@ -123,8 +131,9 @@ class Shell(object):
                              shell_type))
         self.shell = shell_class(execer=self.execer,
                                  ctx=self.ctx, **kwargs)
-        # allows history garbace colector to start running
-        builtins.__xonsh_history__.gc.wait_for_shell = False
+        # allows history garbage colector to start running
+        if hist.gc is not None:
+            hist.gc.wait_for_shell = False
 
     def __getattr__(self, attr):
         """Delegates calls to appropriate shell instance."""

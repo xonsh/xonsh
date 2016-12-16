@@ -125,6 +125,30 @@ def test_crud_subdir(xonsh_builtins, tmpdir):
 
     assert not tmpdir.join('spam', 'eggs').check()
 
+try:
+    import pathlib
+except ImportError:
+    pass
+else:
+    @skip_if_on_conda
+    def test_crud_path(xonsh_builtins, tmpdir):
+        """
+        Creates a virtual environment, gets it, enumerates it, and then deletes it.
+        """
+        tmp = pathlib.Path(str(tmpdir))
+
+        vox = Vox()
+        vox.create(tmp)
+        assert stat.S_ISDIR(tmpdir.join('lib').stat().mode)
+
+        ve = vox[tmp]
+        assert ve.env == str(tmp)
+        assert os.path.isdir(ve.bin)
+
+        del vox[tmp]
+
+        assert not tmpdir.check()
+
 
 @skip_if_on_conda
 def test_crud_subdir(xonsh_builtins, tmpdir):
