@@ -16,6 +16,7 @@ import builtins
 import collections.abc
 
 from xonsh.platform import ON_POSIX, ON_WINDOWS
+from xonsh.fs import PathLike, fspath
 
 # This is because builtins aren't globally created during testing.
 # FIXME: Is there a better way?
@@ -132,7 +133,10 @@ class Vox(collections.abc.Mapping):
         """
         # NOTE: clear=True is the same as delete then create.
         # NOTE: upgrade=True is its own method
-        env_path = os.path.join(self.venvdir, name)
+        if isinstance(name, PathLike):
+            env_path = fspath(name)
+        else:
+            env_path = os.path.join(self.venvdir, name)
         if not self._check_reserved(env_path):
             raise ValueError("venv can't contain reserved names ({})".format(', '.join(_subdir_names())))
         venv.create(
@@ -194,6 +198,8 @@ class Vox(collections.abc.Mapping):
         """
         if name is ...:
             env_paths = [builtins.__xonsh_env__['VIRTUAL_ENV']]
+        elif isinstance(name, PathLike):
+            env_paths = [fspath(name)]
         else:
             if not self._check_reserved(name):
                 # Don't allow a venv that could be a venv special dir
