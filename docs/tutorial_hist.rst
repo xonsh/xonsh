@@ -458,6 +458,28 @@ can find this class in the ``xonsh.teepty`` module. Like with lazy JSON, this is
 from other parts of xonsh and can be used on its own.  If you find this useful in other areas,
 please let us know!
 
+
+Sqlite backed History
+=====================
+
+Xonsh has a second built-in history backend powered by sqlite (other than
+the JSON version mentioned all above in this tutorial). It shares the same
+functionalities as the JSON version in the most ways, except it currently
+doesn't support ``history diff`` and ``history replay`` actions.
+
+When there are a lot of history JSON files, before it hitting the
+``history gc`` thresholds, it would take some time to load histories into
+xonsh when xonsh get launched. In this case, sqlite history backend should
+work better.
+
+To use sqlite history backend, set ``$XONSH_HISTORY_BACKEND = 'sqlite'`` in
+your ``~/.xonshrc`` file.
+
+.. tip:: If you have [sqlite-web](https://pypi.python.org/pypi/sqlite-web)
+    installed, you can read your history easily with command:
+    ``sqlite_web @$(history file)``.
+
+
 Fun ideas for history data
 ==========================
 Now that we have all of this history data, it seems like what we have here is just the tip
