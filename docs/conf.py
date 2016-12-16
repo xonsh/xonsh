@@ -378,7 +378,7 @@ def make_events():
           title, docstr = docstr.split('\n', 1)
           docstr = docstr.strip()
         under = '.' * (len(title) + 4)
-        s += sec.format(low=var.lower(), title=title, under=under,
+        s += sec.format(low=name.lower(), title=title, under=under,
                         docstr=docstr)
     s = s[:-9]
     fname = os.path.join(os.path.dirname(__file__), 'eventsbody')
