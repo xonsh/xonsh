@@ -18,3 +18,4 @@ All of the ways that xonsh completes you.
     path
     python
     tools
+    xompletions
