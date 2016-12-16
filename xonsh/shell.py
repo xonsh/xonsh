@@ -49,7 +49,7 @@ def fire_precommand(src, show_diff=True):
             print_exception('Modifcations to source input took more than '
                             'the recursion limit number of interations to '
                             'converge.')
-    debug_level = builtins.__xonsh_env__.get('XONSH_DEBUG', 0)
+    debug_level = builtins.__xonsh_env__.get('XONSH_DEBUG')
     if show_diff and debug_level > 1 and src != raw:
         sys.stderr.writelines(difflib.unified_diff(
             raw.splitlines(keepends=True),

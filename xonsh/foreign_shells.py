@@ -584,7 +584,7 @@ def load_foreign_aliases(shells=None, config=None, issue_warning=True):
             shaliases = {} if shaliases is None else shaliases
             for alias in set(shaliases) & set(xonsh_aliases):
                 del shaliases[alias]
-                if builtins.__xonsh_env__.get('XONSH_DEBUG', False) > 1:
+                if builtins.__xonsh_env__.get('XONSH_DEBUG') > 1:
                     print('aliases: ignoring alias {!r} of shell {!r} '
                           'which tries to override xonsh alias.'
                           ''.format(alias, shell['shell']),
