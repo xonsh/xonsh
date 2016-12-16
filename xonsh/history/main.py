@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Implements the xonsh history object."""
+"""Main entry points of the xonsh history."""
 import argparse
 import builtins
 import datetime
@@ -23,6 +23,7 @@ HISTORY_BACKENDS = {
 
 
 def construct_history(**kwargs):
+    """Construct the history backend object."""
     env = builtins.__xonsh_env__
     backend = env.get('XONSH_HISTORY_BACKEND')
     if backend not in HISTORY_BACKENDS:
@@ -181,12 +182,16 @@ def _xh_show_history(hist, ns, stdout=None, stderr=None):
             print('{}: {}'.format(c['ind'], c['inp']), file=stdout)
     elif not ns.numerate:
         for c in commands:
-            dt = datetime.datetime.fromtimestamp(c['ts']).ctime()
-            print('({}) {}'.format(dt, c['inp']), file=stdout)
+            dt = datetime.datetime.fromtimestamp(c['ts'])
+            print('({}) {}'.format(xt.format_datetime(dt), c['inp']),
+                  file=stdout)
     else:
         for c in commands:
-            dt = datetime.datetime.fromtimestamp(c['ts']).ctime()
-            print('{}:({}) {}'.format(c['ind'], dt, c['inp']), file=stdout)
+            dt = datetime.datetime.fromtimestamp(c['ts'])
+            print('{}:({}) {}'.format(c['ind'],
+                                      xt.format_datetime(dt),
+                                      c['inp']),
+                  file=stdout)
 
 
 @xla.lazyobject

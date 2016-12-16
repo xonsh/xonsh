@@ -1695,3 +1695,9 @@ def ensure_timestamp(t, datetime_format=None):
     else:
         t = datetime.datetime.strptime(t, datetime_format).timestamp()
     return t
+
+
+def format_datetime(dt):
+    """Format datetime object to string base on $XONSH_DATETIME_FORMAT Env."""
+    format_ = builtins.__xonsh_env__['XONSH_DATETIME_FORMAT']
+    return dt.strftime(format_)
