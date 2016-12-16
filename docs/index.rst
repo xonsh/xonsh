@@ -40,6 +40,7 @@ the xonsh shell
         "People xonshtantly mispronounce these things",
         "WHAT...is your favorite shell?",
         "Conches for the xonsh god!",
+        "Python-powered, cross-platform, Unix-gazing shell",
         "Exploiting the workers and hanging on to outdated imperialist dogma since 2015."
         ];
     document.write(taglines[Math.floor(Math.random() * taglines.length)]);
@@ -50,11 +51,11 @@ the xonsh shell
     </span>
     </p>
 
-Xonsh is a Python-ish, BASHwards-looking shell language and command prompt.
-The language is a superset of Python 3.4+ with additional shell primitives
-that you are used to from Bash and IPython. It works on all major systems including
-Linux, Mac OSX, and Windows. Xonsh is meant for the daily use of experts and novices
-alike.
+Xonsh is a Python-powered, cross-platform, Unix-gazing shell language and
+command prompt. The language is a superset of Python 3.4+ with additional
+shell primitives that you are used to from Bash and IPython. It works on
+all major systems including Linux, Mac OSX, and Windows. Xonsh is meant
+for the daily use of experts and novices alike.
 
 **Try it out!**
 
