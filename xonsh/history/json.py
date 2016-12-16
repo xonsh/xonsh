@@ -176,10 +176,22 @@ class JsonHistoryFlusher(threading.Thread):
 
     def dump(self):
         """Write the cached history to external storage."""
+        opts = builtins.__xonsh_env__.get('HISTCONTROL')
+        last_inp = None
+        cmds = []
+        for cmd in self.buffer:
+            if 'ignoredups' in opts and cmd['inp'] == last_inp:
+                # Skipping dup cmd
+                continue
+            if 'ignoreerr' in opts and cmd['rtn'] != 0:
+                # Skipping failed cmd
+                continue
+            cmds.append(cmd)
+            last_inp = cmd['inp']
         with open(self.filename, 'r', newline='\n') as f:
             hist = xlj.LazyJSON(f).load()
         load_hist_len = len(hist['cmds'])
-        hist['cmds'].extend(self.buffer)
+        hist['cmds'].extend(cmds)
         if self.at_exit:
             hist['ts'][1] = time.time()  # apply end time
             hist['locked'] = False
@@ -318,15 +330,6 @@ class JsonHistory(History):
         hf : JsonHistoryFlusher or None
             The thread that was spawned to flush history
         """
-        opts = builtins.__xonsh_env__.get('HISTCONTROL')
-        if ('ignoredups' in opts and len(self) > 0 and
-                cmd['inp'] == self.inps[-1]):
-            # Skipping dup cmd
-            return None
-        elif 'ignoreerr' in opts and cmd['rtn'] != 0:
-            # Skipping failed cmd
-            return None
-
         self.buffer.append(cmd)
         self._len += 1  # must come before flushing
         if len(self.buffer) >= self.buffersize:
@@ -367,7 +370,7 @@ class JsonHistory(History):
         """
         Returns all history as found in XONSH_DATA_DIR.
 
-        return format: (cmd, start_time, index)
+        yeild format: {'inp': cmd, 'rtn': 0, ...}
         """
         while self.gc and self.gc.is_alive():
             time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer
