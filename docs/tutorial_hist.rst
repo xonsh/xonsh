@@ -467,10 +467,11 @@ the JSON version mentioned all above in this tutorial). It shares the same
 functionality as the JSON version in most ways, except it currently doesn't
 support ``history diff`` and ``history replay`` actions.
 
-When there are a lot of history JSON files, before it hitting the
-``history gc`` thresholds, it would take some time to load histories into
-xonsh when xonsh get launched. In this case, sqlite history backend should
-work better.
+The Sqlite history backend can provide a speed advantage in loading history
+into a just-started xonsh session. The JSON history backend may need to read
+potentially thousands of json files and the sqlite backend only reads one.
+Note that this does not affect startup time, but the amount of time before
+all history is available for searching.
 
 To use sqlite history backend, set ``$XONSH_HISTORY_BACKEND = 'sqlite'`` in
 your ``~/.xonshrc`` file. To switch back to JSON version, remove this line,
