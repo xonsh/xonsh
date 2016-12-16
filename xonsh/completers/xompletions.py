@@ -1,5 +1,7 @@
+"""Provides completions for xonsh internal utilities"""
+
 import xonsh.xontribs as xx
-from xonsh.tools import color_style_names
+import xonsh.tools as xt
 
 
 def complete_xonfig(prefix, line, start, end, ctx):
@@ -11,7 +13,7 @@ def complete_xonfig(prefix, line, start, end, ctx):
     if curix == 1:
         possible = {'info', 'wizard', 'styles', 'colors', '-h'}
     elif curix == 2 and args[1] == 'colors':
-        possible = set(color_style_names())
+        possible = set(xt.color_style_names())
     else:
         raise StopIteration
     return {i for i in possible if i.startswith(prefix)}
