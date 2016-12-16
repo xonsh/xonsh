@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Implements the xonsh history object."""
+"""Main entry points of the xonsh history."""
 import argparse
 import builtins
 import datetime
@@ -23,6 +23,7 @@ HISTORY_BACKENDS = {
 
 
 def construct_history(**kwargs):
+    """Construct the history backend object."""
     env = builtins.__xonsh_env__
     backend = env.get('XONSH_HISTORY_BACKEND')
     if backend not in HISTORY_BACKENDS:

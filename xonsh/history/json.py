@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Implements the xonsh history object."""
+"""Implements JSON version of xonsh history backend."""
 import os
 import time
 import builtins

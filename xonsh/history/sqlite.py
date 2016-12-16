@@ -169,6 +169,8 @@ class SqliteHistoryGC(threading.Thread):
 
 
 class SqliteHistory(History):
+    """Xonsh history backend implemented with sqlite3."""
+
     def __init__(self, gc=True, filename=None, **kwargs):
         super().__init__(**kwargs)
         if filename is None:

@@ -473,7 +473,8 @@ xonsh when xonsh get launched. In this case, sqlite history backend should
 work better.
 
 To use sqlite history backend, set ``$XONSH_HISTORY_BACKEND = 'sqlite'`` in
-your ``~/.xonshrc`` file.
+your ``~/.xonshrc`` file. To switch back to JSON version, remove this line,
+or set it to `'json'`.
 
 .. tip:: If you have `sqlite-web <https://pypi.python.org/pypi/sqlite-web>`_
     installed, you can read the history easily with command:
