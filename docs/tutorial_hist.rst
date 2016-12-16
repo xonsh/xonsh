@@ -459,13 +459,13 @@ from other parts of xonsh and can be used on its own.  If you find this useful i
 please let us know!
 
 
-Sqlite backed History
-=====================
+Sqlite History Backend
+======================
 
 Xonsh has a second built-in history backend powered by sqlite (other than
 the JSON version mentioned all above in this tutorial). It shares the same
-functionalities as the JSON version in the most ways, except it currently
-doesn't support ``history diff`` and ``history replay`` actions.
+functionality as the JSON version in most ways, except it currently doesn't
+support ``history diff`` and ``history replay`` actions.
 
 When there are a lot of history JSON files, before it hitting the
 ``history gc`` thresholds, it would take some time to load histories into
@@ -474,7 +474,7 @@ work better.
 
 To use sqlite history backend, set ``$XONSH_HISTORY_BACKEND = 'sqlite'`` in
 your ``~/.xonshrc`` file. To switch back to JSON version, remove this line,
-or set it to `'json'`.
+or set it to ``'json'``.
 
 .. tip:: If you have `sqlite-web <https://pypi.python.org/pypi/sqlite-web>`_
     installed, you can read the history easily with command:
