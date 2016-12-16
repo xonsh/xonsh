@@ -298,7 +298,7 @@ def DEFAULT_VALUES():
         'XONSH_COLOR_STYLE': 'default',
         'XONSH_CONFIG_DIR': xonsh_config_dir,
         'XONSH_DATA_DIR': xonsh_data_dir,
-        'XONSH_DEBUG': False,
+        'XONSH_DEBUG': 0,
         'XONSH_ENCODING': DEFAULT_ENCODING,
         'XONSH_ENCODING_ERRORS': 'surrogateescape',
         'XONSH_HISTORY_BACKEND': 'json',
@@ -615,10 +615,13 @@ def DEFAULT_DOCS():
         'This is the location where xonsh configuration information is stored.',
         configurable=False, default="``$XDG_CONFIG_HOME/xonsh``"),
     'XONSH_DEBUG': VarDocs(
-        'Sets the xonsh debugging level. This may be an integer or a boolean, '
-        'with higher values cooresponding to higher debuging levels and more '
-        'information presented. Setting this variable prior to stating xonsh '
-        'will supress amalgamated imports.', configurable=False),
+        'Sets the xonsh debugging level. This may be an integer or a boolean. '
+        'Setting this variable prior to stating xonsh to ``1`` or ``True`` '
+        'will supress amalgamated imports. Setting it to ``2`` will get some '
+        'basic information like input transformation, command replacement. '
+        'With ``3`` or a higher number will make more debugging information '
+        'presented, like PLY parsing messages.',
+        configurable=False),
     'XONSH_DATA_DIR': VarDocs(
         'This is the location where xonsh data files are stored, such as '
         'history.', default="``$XDG_DATA_HOME/xonsh``"),
