@@ -263,11 +263,15 @@ def main(argv=None):
         shells_file = '/etc/shells'
         if not os.path.exists(shells_file):
             return
+        excluded_list = ['xonsh', 'screen']
         with open(shells_file) as f:
             for line in f:
                 if not line.strip() or line.strip().startswith('#'):
                     continue
-                if line.strip().endswith('xonsh'):
+                if '/' not in line:
+                    continue
+                _, shell = line.strip().rsplit('/', 1)
+                if shell in excluded_list:
                     continue
                 foreign_shell = line.strip()
                 break

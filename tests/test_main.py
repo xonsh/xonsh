@@ -83,7 +83,7 @@ def test_main_failback(shell, monkeypatch):
 
     @contextmanager
     def mocked_open(*args):
-        yield ['/usr/local/bin/xonsh', '/bin/xshell']
+        yield ['/usr/bin/xonsh', '/usr/bin/screen', 'bash', '/bin/xshell']
     monkeypatch.setattr(builtins, 'open', mocked_open)
 
     xonsh.main.main()
