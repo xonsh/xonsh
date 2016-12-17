@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """Tests the xonsh main function."""
 from __future__ import unicode_literals, print_function
+from contextlib import contextmanager
 
 import builtins
+import os.path
 import sys
-from unittest.mock import patch
 
 import xonsh.main
-
 import pytest
 
 
@@ -48,8 +48,8 @@ def test_premain_D(shell):
     assert (builtins.__xonsh_env__.get('TEST2') == 'LOL')
 
 
-@pytest.mark.parametrize('arg',
-    ['', '-i', '-vERSION', '-hAALP','TTTT', '-TT', '--TTT'] )
+@pytest.mark.parametrize(
+    'arg', ['', '-i', '-vERSION', '-hAALP', 'TTTT', '-TT', '--TTT'])
 def test_premain_with_file_argument(arg, shell):
     xonsh.main.premain(['tests/sample.xsh', arg])
     assert not (builtins.__xonsh_env__.get('XONSH_INTERACTIVE'))
@@ -65,3 +65,26 @@ def test_premain_invalid_arguments(case, shell, capsys):
     with pytest.raises(SystemExit):
         xonsh.main.premain([case])
     assert 'unrecognized argument' in capsys.readouterr()[1]
+
+
+def test_main_failback(shell, monkeypatch):
+    failback_checker = []
+    monkeypatch.setattr(sys, 'stderr', open(os.devnull, 'w'))
+
+    def mocked_main(*args):
+        raise Exception('A fake failure')
+    monkeypatch.setattr(xonsh.main, 'main_xonsh', mocked_main)
+
+    def mocked_execlp(f, *args):
+        failback_checker.append(f)
+        failback_checker.append(args[0])
+    monkeypatch.setattr(os, 'execlp', mocked_execlp)
+    monkeypatch.setattr(os.path, 'exists', lambda x: True)
+
+    @contextmanager
+    def mocked_open(*args):
+        yield ['/bin/xshell']
+    monkeypatch.setattr(builtins, 'open', mocked_open)
+
+    xonsh.main.main()
+    assert failback_checker == ['/bin/xshell', '/bin/xshell']

@@ -6,6 +6,7 @@ import enum
 import argparse
 import builtins
 import contextlib
+import traceback
 
 from xonsh import __version__
 from xonsh.lazyasd import lazyobject
@@ -253,6 +254,27 @@ def premain(argv=None):
 
 
 def main(argv=None):
+    try:
+        return main_xonsh(argv)
+    except Exception:
+        traceback.print_exc()
+        print('Xonsh encountered an issue during launch', file=sys.stderr)
+        foreign_shell = None
+        shells_file = '/etc/shells'
+        if not os.path.exists(shells_file):
+            return
+        with open(shells_file) as f:
+            for line in f:
+                if not line.strip() or line.strip().startswith('#'):
+                    continue
+                foreign_shell = line.strip()
+                break
+        if foreign_shell:
+            print('Failback to {}'.format(foreign_shell), file=sys.stderr)
+            os.execlp(foreign_shell, foreign_shell)
+
+
+def main_xonsh(argv=None):
     """Main entry point for xonsh cli."""
     if argv is None:
         argv = sys.argv[1:]
