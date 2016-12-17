@@ -267,6 +267,8 @@ def main(argv=None):
             for line in f:
                 if not line.strip() or line.strip().startswith('#'):
                     continue
+                if line.strip().endswith('xonsh'):
+                    continue
                 foreign_shell = line.strip()
                 break
         if foreign_shell:
