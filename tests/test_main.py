@@ -67,7 +67,7 @@ def test_premain_invalid_arguments(case, shell, capsys):
     assert 'unrecognized argument' in capsys.readouterr()[1]
 
 
-def test_main_failback(shell, monkeypatch):
+def test_xonsh_failback(shell, monkeypatch):
     failback_checker = []
     monkeypatch.setattr(sys, 'stderr', open(os.devnull, 'w'))
 
@@ -88,3 +88,20 @@ def test_main_failback(shell, monkeypatch):
 
     xonsh.main.main()
     assert failback_checker == ['/bin/xshell', '/bin/xshell']
+
+
+def test_xonsh_failback_non_interactive(shell, monkeypatch):
+    failback_checker = {}
+    monkeypatch.setattr(sys, 'stderr', open(os.devnull, 'w'))
+
+    def mocked_main(*args):
+        raise Exception('A fake failure')
+    monkeypatch.setattr(xonsh.main, 'main_xonsh', mocked_main)
+
+    def mocked_exit(code):
+        failback_checker['exit_code'] = code
+    monkeypatch.setattr(sys, 'exit', mocked_exit)
+    monkeypatch.setattr(sys, 'argv', ['xonsh', '-c', 'echo', 'foo'])
+
+    xonsh.main.main()
+    assert failback_checker['exit_code'] == 1

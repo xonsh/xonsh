@@ -253,37 +253,47 @@ def premain(argv=None):
     return args
 
 
+def _failback_to_other_shells():
+    foreign_shell = None
+    shells_file = '/etc/shells'
+    if not os.path.exists(shells_file):
+        return
+    excluded_list = ['xonsh', 'screen']
+    with open(shells_file) as f:
+        for line in f:
+            if not line.strip() or line.strip().startswith('#'):
+                continue
+            if '/' not in line:
+                continue
+            _, shell = line.strip().rsplit('/', 1)
+            if shell in excluded_list:
+                continue
+            foreign_shell = line.strip()
+            break
+    if foreign_shell:
+        print('Failback to {}'.format(foreign_shell), file=sys.stderr)
+        os.execlp(foreign_shell, foreign_shell)
+
+
 def main(argv=None):
     try:
         return main_xonsh(argv)
     except Exception:
         traceback.print_exc()
-        print('Xonsh encountered an issue during launch', file=sys.stderr)
-        foreign_shell = None
-        shells_file = '/etc/shells'
-        if not os.path.exists(shells_file):
-            return
-        excluded_list = ['xonsh', 'screen']
-        with open(shells_file) as f:
-            for line in f:
-                if not line.strip() or line.strip().startswith('#'):
-                    continue
-                if '/' not in line:
-                    continue
-                _, shell = line.strip().rsplit('/', 1)
-                if shell in excluded_list:
-                    continue
-                foreign_shell = line.strip()
-                break
-        if foreign_shell:
-            print('Failback to {}'.format(foreign_shell), file=sys.stderr)
-            os.execlp(foreign_shell, foreign_shell)
+        args = None
+        try:
+            args = premain(argv)
+        except Exception:
+            pass
+        if hasattr(args, 'mode') and args.mode != XonshMode.interactive:
+            sys.exit(1)
+        else:
+            print('Xonsh encountered an issue during launch', file=sys.stderr)
+            _failback_to_other_shells()
 
 
 def main_xonsh(argv=None):
     """Main entry point for xonsh cli."""
-    if argv is None:
-        argv = sys.argv[1:]
     args = premain(argv)
     events.on_post_init.fire()
     env = builtins.__xonsh_env__
