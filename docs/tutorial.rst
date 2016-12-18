@@ -665,6 +665,9 @@ The basic operations are "write to" (``>``), "append to" (``>>``), and "read
 from" (``<``).  The details of these are perhaps best explained through
 examples.
 
+.. note:: The target of the redirection should be separated by a space,
+          otherwise xonsh will raise a SyntaxError.
+
 Redirecting ``stdout``
 ----------------------
 
