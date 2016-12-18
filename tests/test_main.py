@@ -80,7 +80,7 @@ def test_xonsh_failback(shell, monkeypatch):
         failback_checker.append(args[0])
     monkeypatch.setattr(os, 'execlp', mocked_execlp)
     monkeypatch.setattr(os.path, 'exists', lambda x: True)
-    monkeypatch.setattr(sys, 'argv', ['xonsh'])
+    monkeypatch.setattr(sys, 'argv', ['xonsh', '-i'])
 
     @contextmanager
     def mocked_open(*args):
