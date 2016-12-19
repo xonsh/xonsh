@@ -210,18 +210,14 @@ class SqliteHistory(History):
 
     def all_items(self):
         """Display all history items."""
-        i = 0
         for item in xh_sqlite_items(filename=self.filename):
-            yield {'inp': item[0], 'ts': item[1], 'rtn': item[2], 'ind': i}
-            i += 1
+            yield {'inp': item[0], 'ts': item[1], 'rtn': item[2]}
 
     def items(self):
         """Display history items of current session."""
-        i = 0
         for item in xh_sqlite_items(
                 sessionid=str(self.sessionid), filename=self.filename):
-            yield {'inp': item[0], 'ts': item[1], 'rtn': item[2], 'ind': i}
-            i += 1
+            yield {'inp': item[0], 'ts': item[1], 'rtn': item[2]}
 
     def info(self):
         data = collections.OrderedDict()

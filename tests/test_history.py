@@ -137,8 +137,8 @@ def test_show_cmd_numerate(inp, commands, offset, hist, xonsh_builtins, capsys):
     base_idx, step = offset
     xonsh_builtins.__xonsh_history__ = hist
     xonsh_builtins.__xonsh_env__['HISTCONTROL'] = set()
-    for ts,cmd in enumerate(CMDS):  # populate the shell history
-        hist.append({'inp': cmd, 'rtn': 0, 'ts':(ts+1, ts+1.5)})
+    for ts, cmd in enumerate(CMDS):  # populate the shell history
+        hist.append({'inp': cmd, 'rtn': 0, 'ts':(ts + 1, ts + 1.5)})
 
     exp = ('{}: {}'.format(base_idx + idx * step, cmd)
            for idx, cmd in enumerate(list(commands)))
