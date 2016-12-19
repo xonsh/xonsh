@@ -140,11 +140,9 @@ def _xh_get_history(session='session', *, slices=None, datetime_format=None,
        A filtered list of commands
     """
     cmds = []
-    i = 0
-    for item in _XH_HISTORY_SESSIONS[session](location=location):
+    for i, item in enumerate(_XH_HISTORY_SESSIONS[session](location=location)):
         item['ind'] = i
         cmds.append(item)
-        i += 1
     if slices:
         # transform/check all slices
         slices = [xt.ensure_slice(s) for s in slices]
