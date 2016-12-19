@@ -36,9 +36,7 @@ def construct_history(**kwargs):
 
 
 def _xh_session_parser(hist=None, **kwargs):
-    """Returns history items of current session.
-        format: {'inp': cmd, 'ts': start_time, 'ind': index}
-    """
+    """Returns history items of current session."""
     if hist is None:
         hist = builtins.__xonsh_history__
     return hist.items()
@@ -141,7 +139,10 @@ def _xh_get_history(session='session', *, slices=None, datetime_format=None,
     generator
        A filtered list of commands
     """
-    cmds = _XH_HISTORY_SESSIONS[session](location=location)
+    cmds = []
+    for i, item in enumerate(_XH_HISTORY_SESSIONS[session](location=location)):
+        item['ind'] = i
+        cmds.append(item)
     if slices:
         # transform/check all slices
         slices = [xt.ensure_slice(s) for s in slices]
@@ -174,24 +175,22 @@ def _xh_show_history(hist, ns, stdout=None, stderr=None):
         return
     if ns.reverse:
         commands = reversed(list(commands))
-    if not ns.numerate and not ns.timestamp:
+    if ns.numerate and ns.timestamp:
         for c in commands:
-            print(c['inp'], file=stdout)
-    elif not ns.timestamp:
+            dt = datetime.datetime.fromtimestamp(c['ts'])
+            print('{}:({}) {}'.format(c['ind'], xt.format_datetime(dt), c['inp']),
+                  file=stdout)
+    elif ns.numerate:
         for c in commands:
             print('{}: {}'.format(c['ind'], c['inp']), file=stdout)
-    elif not ns.numerate:
+    elif ns.timestamp:
         for c in commands:
             dt = datetime.datetime.fromtimestamp(c['ts'])
             print('({}) {}'.format(xt.format_datetime(dt), c['inp']),
                   file=stdout)
     else:
         for c in commands:
-            dt = datetime.datetime.fromtimestamp(c['ts'])
-            print('{}:({}) {}'.format(c['ind'],
-                                      xt.format_datetime(dt),
-                                      c['inp']),
-                  file=stdout)
+            print(c['inp'], file=stdout)
 
 
 @xla.lazyobject

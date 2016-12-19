@@ -361,10 +361,8 @@ class JsonHistory(History):
 
     def items(self):
         """Display history items of current session."""
-        ind = 0
         for item, tss in zip(self.inps, self.tss):
-            yield {'inp': item.rstrip(), 'ind': ind, 'ts': tss[0]}
-            ind += 1
+            yield {'inp': item.rstrip(), 'ts': tss[0]}
 
     def all_items(self, **kwargs):
         """
@@ -374,7 +372,6 @@ class JsonHistory(History):
         """
         while self.gc and self.gc.is_alive():
             time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer
-        ind = 0
         for f in _xhj_get_history_files():
             try:
                 json_file = xlj.LazyJSON(f, reopen=False)
@@ -383,8 +380,9 @@ class JsonHistory(History):
                 continue
             commands = json_file.load()['cmds']
             for c in commands:
-                yield {'inp': c['inp'].rstrip(), 'ts': c['ts'][0], 'ind': ind}
-                ind += 1
+                yield {'inp': c['inp'].rstrip(), 'ts': c['ts'][0]}
+        # all items should also include session items
+        yield from self.items()
 
     def info(self):
         data = collections.OrderedDict()
