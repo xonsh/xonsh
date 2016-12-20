@@ -4,6 +4,233 @@ Xonsh Change Log
 
 .. current developments
 
+v0.5.0
+====================
+
+**Added:**
+
+* $XONTRIB_MPL_MINIMAL environment variable can be set to change if plots are minimalist or as-seen
+* xontrib-mpl now supports iTerm2 inline image display if iterm2_tools python package is installed
+* Xonsh now will fallback to other shells if encountered errors when
+  starting up.
+* Added entry to customization faq re: ``dirs`` alias (#1452)
+* Added entry to customization faq re: tab completion selection (#1725)
+* Added entry to customization faq re: libgcc core dump (#1160)
+* Section about quoting in the tutorial.
+* The ``$VC_HG_SHOW_BRANCH`` environement variable to control whether to hide the hg branch in the prompt.
+* xonfig now contains the latest git commit date if xonsh installed
+  from source.
+* Alt+Enter will execute a multiline code block irrespective of cursor position
+* Windows now has the ability to read output asyncronously from
+  the console.
+* Use `doctr <https://drdoctr.github.io/doctr/>`_ to deploy dev docs to github pages
+* New ``xonsh.proc.uncapturable()`` decorator for declaring that function
+  aliases should not be run in a captured subprocess.
+* New history backend sqlite.
+* Prompt user to install xontrib package if they try to load an uninstalled 
+  xontrib
+* Callable aliases may now take a final ``spec`` arguemnt, which is the
+  cooresponding ``SubprocSpec`` instance.
+* New ``bashisms`` xontrib provides additional Bash-like syntax, such as ``!!``.
+  This xontrib only affects the command line, and not xonsh scripts.
+* Tests that create testing repos (git, hg)
+* New subprocess specification class ``SubprocSpec`` is used for specifiying
+  and manipulating subprocess classes prior to execution.
+* New ``PopenThread`` class runs subprocesses on a a separate thread.
+* New ``CommandPipeline`` and ``HiddenCommandPipeline`` classes manage the
+  execution of a pipeline of commands via the execution of the last command
+  in the pipeline. Instances may be iterated and stream lines from the
+  stdout buffer. These pipelines read from the stdout & stderr streams in a
+  non-blocking manner.
+* ``$XONSH_STORE_STDOUT`` is now available on all platforms!
+* The ``CommandsCache`` now has the ability to predict whether or not a
+  command must be run in the foreground using ``Popen`` or may use a
+  background thread and can use ``PopenThread``.
+* Callable aliases may now use the full gamut of functions signatures:
+  ``f()``, ``f(args)``,  ``f(args, stdin=None)``,
+  ``f(args, stdin=None, stdout=None)``, and `
+  ``f(args, stdin=None, stdout=None, stderr=None)``.
+* Uncaptured subprocesses now recieve a PTY file handle for stdout and
+  stderr.
+* New ``$XONSH_PROC_FREQUENCY`` environment variable that specifies how long
+  loops in the subprocess framwork should sleep. This may be adjusted from
+  its default value to improved perfromance and mitigate "leaky" pipes on
+  slower machines.
+* ``Shift+Tab`` moves backwards in completion dropdown in prompt_toolkit
+* PromptFormatter class that holds all the related prompt methods
+* PromptFormatter caching when building the prompt
+* p-strings: ``p'/foo/bar'`` is short for ``pathlib.Path('/foo/bar')``
+* byte strings: prefixes other than ``b'foo'`` (eg, ``RB'foo'``) now work
+* Backticks for regex or glob searches now support an additional modifier
+  ``p``, which causes them to return Path objects instead of strings.
+* New ``BOTTOM_TOOLBAR`` environment variable to control a bottom toolbar as specified in prompt-toolkit
+* New ``$XONSH_STDERR_PREFIX`` and ``$XONSH_STDERR_POSTFIX`` environment
+  variables allow the user to print a prompt-like string before and after
+  all stderr that is seen. For example, say that you would like stderr
+  to appear on a red background, you might set
+  ``$XONSH_STDERR_PREFIX = "{BACKGROUND_RED}"`` and
+  ``$XONSH_STDERR_PREFIX = "{NO_COLOR}"``.
+* New ``xonsh.pyghooks.XonshTerminal256Formatter`` class patches
+  the pygments formatter to understand xonsh color token semantics.
+* Load events are now available
+* New events added: ``on_post_init``, ``on_pre_cmdloop``, ``on_pre_rc``, ``on_post_rc``, ``on_ptk_create``
+* Completion for ``xonsh`` builtin functions ``xontrib`` and ``xonfig``
+* Added a general customization FAQ page to the docs to collect various
+  tips/tricks/fixes for common issues/requests
+* ``test_single_command`` and ``test_redirect_out_to_file`` tests in ``test_integrations``
+* Add note that the target of redirection should be separated by a space.
+
+
+**Changed:**
+
+* CircleCI now handles flake8 checks
+* Travis doesn't allow failures on nightly
+* ``get_hg_branch`` runs ``hg root`` to find root dir and check if we're in repo
+* The default style will now use the color keywords (#ansired, #ansidarkred) 
+  to set colors that follow the terminal color schemes. Currently, this requires
+  prompt_toolkit master (>1.0.8) and pygments master (2.2) to work correctly.
+* ``vox activate`` now accepts relative directories.
+* Updated the effectivity of ``$XONSH_DEBUG`` on debug messages.
+* Better documentation on how to get nice colors in Windows' default console
+* All custom prompt_toolkit key binding filters now declared with the 
+  ``@Condition`` decorator
+* The style for the prompt toolkit completion menu is now lightgray/darkgray instead of turquoise/teal
+* landscape.io linting now ignores ply directory
+* ``history`` help messages to reflect subcommand usage
+* Quote all paths when completion if any of the paths needs be quoted,
+  so that bash can automatically complete to the max prefix of the paths.
+* Tee'd reads now occur in 1kb chunks, rather than character-by-character.
+* The ``which`` alias no longer has a trailing newline if it is captured.
+  This means that ``$(which cmd)`` will simply be the path to the command.
+* The following commands are, by default, predicted to be not threadable
+  in some circumstances:
+
+    * bash
+    * csh
+    * clear
+    * clear.exe
+    * cls
+    * cmd
+    * ex
+    * fish
+    * htop
+    * ksh
+    * less
+    * man
+    * more
+    * mutt
+    * nano
+    * psql
+    * ranger
+    * rview
+    * rvim
+    * scp
+    * sh
+    * ssh
+    * startx
+    * sudo
+    * tcsh
+    * top
+    * vi
+    * view
+    * vim
+    * vimpager
+    * xo
+    * xonsh
+    * zsh
+* The ``run_subproc()`` function has been replaced with a new implementation.
+* Piping between processes now uses OS pipes.
+* ``$XONSH_STORE_STDIN`` now uses ``os.pread()`` rather than ``tee`` and a new
+  file.
+* The implementation of the ``foreground()`` decorator has been moved to
+  ``unthreadable()``.
+* ``voxapi.Vox`` now supports ``pathlib.Path`` and ``PathLike`` objects as virtual environment identifiers
+* Renamed FORMATTER_DICT to PROMPT_FIELDS
+* BaseShell instantiates PromptFormatter
+* readline/ptk shells use PromptFormatter
+* Updated the bundled version of ``ply`` to current master available
+* vended ``ply`` is now a git subtree to help with any future updates
+* ``WHITE``  color keyword now means lightgray and ``INTENSE_WHITE`` commpletely white
+* Removed ``add_to_shell`` doc section from *nix install pages and instead
+  relocated it to the general customization page
+* Moved a few *nix customization tips from the linux install page to the general
+  customization page
+
+
+**Removed:**
+
+* coverage checks
+* ``CompletedCommand`` and ``HiddenCompletedCommand`` classes have been removed
+  in favor of ``CommandPipeline`` and ``HiddenCommandPipeline``.
+* ``SimpleProcProxy`` and ``SimpleForegroundProcProxy`` have been removed
+  in favor of a more general mechanism for dispatching callable aliases
+  implemented in the ``ProcProxyThread``  and ``ProcProxy`` classes.
+* ``test_run_subproc.py`` in favor of ``test_integrations.py``
+* Unused imports in many tests
+* Many duplicated tests (copypasta)
+
+
+**Fixed:**
+
+* xontrib-mpl now preserves the figure and does not permanently alter it for viewing
+* Fix up small pep8 violations
+* Fixed a bug where some files are not showing using bash completer
+* Fixed some issues with subprocess capturing aliases that it probably
+  shouldn't.
+* ``safe_readable()`` now checks for ``ValueError`` as well.
+* The scroll bars in the PTK completions menus are back.
+* Jupyter kernel installation now respects the setuptools ``root`` parameter.
+* Fix ``__repr__`` and ``__str__`` methods of ``SubprocSpec`` so they report 
+  correctly
+* Fixed the meassage printed when which is unable to find the command.
+* Fixed a handful of sphinx errors and warnings in the docs
+* Fixed many PEP8 violations that had gone unnoticed
+* Fix failure to detect an Anaconda python distribution if the python was install from the conda-forge channel.
+* current_branch will try and locate the vc binary once
+* May now Crtl-C out of an infinite loop with a subprocess, such as
+  ```while True: sleep 1``.
+* Fix for stdin redirects.
+* Backgrounding works with ``$XONSH_STORE_STDOUT``
+* ``PopenThread`` blocks its thread from finishing until command has completed
+  or process is suspended.
+* Added a minimum time buffer time for command pipelines to check for
+  if previous commands have executed successfully.  This is helpful
+  for pipelines where the last command takes a long time to start up,
+  such as GNU Parallel. This also checks to make sure that output has occured.
+  This includes piping 2+ commands together and pipelines that end in
+  unthreadable commands.
+* ``curr_branch`` reports correctly when ``git config status.short true`` is used
+* ``pip`` completion now filters results by prefix
+* Fixed streaming ``!(alias)`` repr evaluation where bytes where not
+  streamed.
+* Aliases that begin with a comma now complete correctly (no spurious comma)
+* Use ``python3`` in shebang lines for compatibility with distros that still use Python 2 as the default Python
+* STDOUT is only stored when ``$XONSH_STORE_STDOUT=True``
+* Fixed issue with alais redirections to files throwing an OSError because
+  the function ProcProxies were not being waited upon.
+* Fixed issue with callablable aliases that happen to call sys.exit() or
+  raise SystemExit taking out the whole xonsh process.
+* Safely flushes file handles on threaded buffers.
+* Proper default value and documentation for ``$BASH_COMPLETIONS``
+* Fixed readline completer issues on paths with spaces
+* Fix bug in ``argvquote()`` functions used when sourcing batch files on Windows. The bug meant an extra backslash was added to UNC paths.
+  Thanks to @bytesemantics for spotting it, and @janschulz for fixing the issue.
+* pep8, lint and refator in pytest style of ``test_ptk_multiline.py``, ``test_replay.py``
+* Tab completion of aliases returned a upper cased alias on Windows.
+* History show all action now also include current session items.
+* ``proc.stream_stderr`` now handles stderr that doesn't have buffer attribute
+* Made ``history show`` result sorted.
+* Fixed issue that ``history gc`` does not delete empty history files.
+* Standard stream tees have been fixed to accept the possibility that
+  they may not be backed by a binary buffer. This inludes the pipeline
+  stdout tee as well as the shell tees.
+* Fixed a bug when the pygments plugin was used by third party editors etc.
+* CPU usage of ``PopenThread`` and ``CommandPipeline`` has been brought
+  down significantly.
+
+
+
+
 v0.4.7
 ====================
 

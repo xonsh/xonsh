@@ -294,7 +294,7 @@ def main(args=None):
     ns = parser.parse_args(args or $ARGS[1:])
     # enable debugging
     $RAISE_SUBPROC_ERROR = True
-    trace on
+    #trace on
     # run commands
     if ns.do_version_bump:
         version_update(ns.ver)
@@ -307,7 +307,7 @@ def main(args=None):
     if ns.do_docs:
         docser()
     # disable debugging
-    trace off
+    #trace off
 
 
 if __name__ == '__main__':
