@@ -27,7 +27,7 @@ v0.5.0
 * New ``xonsh.proc.uncapturable()`` decorator for declaring that function
   aliases should not be run in a captured subprocess.
 * New history backend sqlite.
-* Prompt user to install xontrib package if they try to load an uninstalled 
+* Prompt user to install xontrib package if they try to load an uninstalled
   xontrib
 * Callable aliases may now take a final ``spec`` arguemnt, which is the
   cooresponding ``SubprocSpec`` instance.
@@ -86,13 +86,13 @@ v0.5.0
 * CircleCI now handles flake8 checks
 * Travis doesn't allow failures on nightly
 * ``get_hg_branch`` runs ``hg root`` to find root dir and check if we're in repo
-* The default style will now use the color keywords (#ansired, #ansidarkred) 
+* The default style will now use the color keywords (#ansired, #ansidarkred)
   to set colors that follow the terminal color schemes. Currently, this requires
   prompt_toolkit master (>1.0.8) and pygments master (2.2) to work correctly.
 * ``vox activate`` now accepts relative directories.
 * Updated the effectivity of ``$XONSH_DEBUG`` on debug messages.
 * Better documentation on how to get nice colors in Windows' default console
-* All custom prompt_toolkit key binding filters now declared with the 
+* All custom prompt_toolkit key binding filters now declared with the
   ``@Condition`` decorator
 * The style for the prompt toolkit completion menu is now lightgray/darkgray instead of turquoise/teal
 * landscape.io linting now ignores ply directory
@@ -151,9 +151,9 @@ v0.5.0
 * Updated the bundled version of ``ply`` to current master available
 * vended ``ply`` is now a git subtree to help with any future updates
 * ``WHITE``  color keyword now means lightgray and ``INTENSE_WHITE`` commpletely white
-* Removed ``add_to_shell`` doc section from *nix install pages and instead
+* Removed ``add_to_shell`` doc section from ``*nix`` install pages and instead
   relocated it to the general customization page
-* Moved a few *nix customization tips from the linux install page to the general
+* Moved a few ``*nix`` customization tips from the linux install page to the general
   customization page
 
 
@@ -180,7 +180,7 @@ v0.5.0
 * ``safe_readable()`` now checks for ``ValueError`` as well.
 * The scroll bars in the PTK completions menus are back.
 * Jupyter kernel installation now respects the setuptools ``root`` parameter.
-* Fix ``__repr__`` and ``__str__`` methods of ``SubprocSpec`` so they report 
+* Fix ``__repr__`` and ``__str__`` methods of ``SubprocSpec`` so they report
   correctly
 * Fixed the meassage printed when which is unable to find the command.
 * Fixed a handful of sphinx errors and warnings in the docs
@@ -285,7 +285,7 @@ v0.4.7
 
 **Fixed:**
 
-* Fix regression where bash git completions where not loaded 
+* Fix regression where bash git completions where not loaded
   automatically when GitForWindows is installed.
 * More tokens are now supported in subproc args, such as ``==``.
 * Python completions now work without space delimiters, e.g. ``a=matpl<TAB>``
