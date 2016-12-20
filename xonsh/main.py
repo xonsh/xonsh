@@ -6,6 +6,7 @@ import enum
 import argparse
 import builtins
 import contextlib
+import traceback
 
 from xonsh import __version__
 from xonsh.lazyasd import lazyobject
@@ -252,10 +253,55 @@ def premain(argv=None):
     return args
 
 
+def _failback_to_other_shells(argv, err):
+    args = None
+    try:
+        args = premain(argv)
+    except Exception:
+        pass
+    # only failback for interactive shell; if we cannot tell, treat it
+    # as an interactive one for safe.
+    if hasattr(args, 'mode') and args.mode != XonshMode.interactive:
+        raise err
+
+    foreign_shell = None
+    shells_file = '/etc/shells'
+    if not os.path.exists(shells_file):
+        # right now, it will always break here on Windows
+        raise err
+    excluded_list = ['xonsh', 'screen']
+    with open(shells_file) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+            if '/' not in line:
+                continue
+            _, shell = line.rsplit('/', 1)
+            if shell in excluded_list:
+                continue
+            if not os.path.exists(line):
+                continue
+            foreign_shell = line
+            break
+    if foreign_shell:
+        traceback.print_tb(err.__traceback__)
+        print('Xonsh encountered an issue during launch', file=sys.stderr)
+        print('Failback to {}'.format(foreign_shell), file=sys.stderr)
+        os.execlp(foreign_shell, foreign_shell)
+    else:
+        raise err
+
+
 def main(argv=None):
+    try:
+        return main_xonsh(argv)
+    except Exception as err:
+        _failback_to_other_shells(argv, err)
+
+
+def main_xonsh(argv=None):
     """Main entry point for xonsh cli."""
-    if argv is None:
-        argv = sys.argv[1:]
     args = premain(argv)
     events.on_post_init.fire()
     env = builtins.__xonsh_env__
