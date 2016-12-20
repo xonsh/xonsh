@@ -3,7 +3,7 @@ Xonsh 0.1 Release Notes
 =============================
 xonsh is a Python-ish, BASHwards-compatible shell language and command prompt.
 The language is a superset of Python 3.4 with additional shell primitives
-that you are used to from BASH and IPython. xonsh is 
+that you are used to from BASH and IPython. xonsh is
 meant for the daily use of experts and novices alike.
 
 Features include:
@@ -39,7 +39,7 @@ pip::
     $ pip install xonsh
 
 source: Download the source from github (https://github.com/scopatz/xonsh)
-or the zip file (https://github.com/scopatz/xonsh/archive/master.zip), then 
+or the zip file (https://github.com/scopatz/xonsh/archive/master.zip), then
 run the following from the source directory::
 
     $ python setup.py install
@@ -57,28 +57,28 @@ Polyphemus currently has the following external dependencies,
 
 Contributing
 ============
-We highly encourage contributions to xonsh!  If you would like to contribute, 
-it is as easy as forking the repository on GitHub, making your changes, and 
-issuing a pull request.  If you have any questions about this process don't 
-hesitate to ask the mailing list (xonsh@googlegroups.com). 
+We highly encourage contributions to xonsh!  If you would like to contribute,
+it is as easy as forking the repository on GitHub, making your changes, and
+issuing a pull request.  If you have any questions about this process don't
+hesitate to ask the mailing list (xonsh@googlegroups.com).
 
 Contact Us
 ==========
 If you have questions or comments, please send them to the mailing list
 xonsh@googlegroups.com, contact the author directly, or open an issue on
-GitHub. 
+GitHub.
 
 Join the mailing list here: https://groups.google.com/forum/#!forum/xonsh
 
 Helpful Links
 =============
-* Documentation - http://xonsh.org
+* Documentation - http://xon.sh
 * Mailing list - https://groups.google.com/forum/#!forum/xonsh
 * GitHub Repository - https://github.com/scopatz/xonsh
 
 Authors
 =======
-This release contains code written by the following people (in alphabetical 
+This release contains code written by the following people (in alphabetical
 order):
 
 * Anthony Scopatz
