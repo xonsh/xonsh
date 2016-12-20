@@ -29,7 +29,7 @@ For those of you who want the gritty details.
     jobs
     proc
     inspectors
-    history
+    history/index
     completer
     completers/index
     prompt/index

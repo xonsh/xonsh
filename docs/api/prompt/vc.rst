@@ -1,10 +1,10 @@
-.. _xonsh_prompt_vc_branch:
+.. _xonsh_prompt_vc:
 
 ***************************************************************************
-Version control branch info prompt formatter (``xonsh.prompt.vc_branch``)
+Version control branch info prompt formatter (``xonsh.prompt.vc``)
 ***************************************************************************
 
-.. automodule:: xonsh.prompt.vc_branch
+.. automodule:: xonsh.prompt.vc
     :members:
     :undoc-members:
     :inherited-members:

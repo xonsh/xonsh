@@ -13,4 +13,4 @@ Modules that provides ``FORMATTER_DICT``.
     env
     gitstatus
     job
-    vc_branch
+    vc
