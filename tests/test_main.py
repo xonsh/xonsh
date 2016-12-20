@@ -92,17 +92,14 @@ def test_xonsh_failback(shell, monkeypatch):
 
 
 def test_xonsh_failback_non_interactive(shell, monkeypatch):
-    failback_checker = {}
-    monkeypatch.setattr(sys, 'stderr', open(os.devnull, 'w'))
+    class FakeFailureError(Exception):
+        pass
 
     def mocked_main(*args):
-        raise Exception('A fake failure')
+        raise FakeFailureError()
     monkeypatch.setattr(xonsh.main, 'main_xonsh', mocked_main)
-
-    def mocked_exit(code):
-        failback_checker['exit_code'] = code
-    monkeypatch.setattr(sys, 'exit', mocked_exit)
     monkeypatch.setattr(sys, 'argv', ['xonsh', '-c', 'echo', 'foo'])
+    monkeypatch.setattr(sys, 'stderr', open(os.devnull, 'w'))
 
-    xonsh.main.main()
-    assert failback_checker['exit_code'] == 1
+    with pytest.raises(FakeFailureError):
+        xonsh.main.main()

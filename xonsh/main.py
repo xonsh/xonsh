@@ -253,7 +253,7 @@ def premain(argv=None):
     return args
 
 
-def _failback_to_other_shells(argv):
+def _failback_to_other_shells(argv, err):
     args = None
     try:
         args = premain(argv)
@@ -262,17 +262,13 @@ def _failback_to_other_shells(argv):
     # only failback for interactive shell; if we cannot tell, treat it
     # as an interactive one for safe.
     if hasattr(args, 'mode') and args.mode != XonshMode.interactive:
-        sys.exit(1)
-        # put a harmless verbose `return` here so that unit test is able to
-        # break here when mock up `sys.exit()`
-        return
+        raise err
 
-    print('Xonsh encountered an issue during launch', file=sys.stderr)
     foreign_shell = None
     shells_file = '/etc/shells'
     if not os.path.exists(shells_file):
-        # right now, it will always return here on Windows
-        return
+        # right now, it will always break here on Windows
+        raise err
     excluded_list = ['xonsh', 'screen']
     with open(shells_file) as f:
         for line in f:
@@ -289,18 +285,19 @@ def _failback_to_other_shells(argv):
             foreign_shell = line
             break
     if foreign_shell:
+        traceback.print_tb(err.__traceback__)
+        print('Xonsh encountered an issue during launch', file=sys.stderr)
         print('Failback to {}'.format(foreign_shell), file=sys.stderr)
         os.execlp(foreign_shell, foreign_shell)
+    else:
+        raise err
 
 
 def main(argv=None):
     try:
         return main_xonsh(argv)
-    except Exception:
-        # use traceback module here instead of xonsh.tools.print_exception()
-        # to gain a bit more stability.
-        traceback.print_exc()
-        _failback_to_other_shells(argv)
+    except Exception as err:
+        _failback_to_other_shells(argv, err)
 
 
 def main_xonsh(argv=None):
