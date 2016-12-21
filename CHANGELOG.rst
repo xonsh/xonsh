@@ -4,6 +4,16 @@ Xonsh Change Log
 
 .. current developments
 
+v0.5.1
+====================
+
+**Fixed:**
+
+* Fixed xonfig raising error when xonsh is not installed from source.
+
+
+
+
 v0.5.0
 ====================
 
