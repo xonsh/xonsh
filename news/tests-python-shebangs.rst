@@ -6,7 +6,7 @@
 
 **Removed:** None
 
-**Fixed:** None
+**Fixed:**
 
 * ``tests/bin/{cat,pwd,wc}`` shebang changed to python3
 
