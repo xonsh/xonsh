@@ -55,6 +55,7 @@ script:
       doctr deploy --deploy-repo xonsh/xonsh-docs --gh-pages-docs dev;
       git checkout $(git describe --tags `git rev-list --tags --max-count=1`);
       cd docs;
+      make clean;
       make html;
       cd ..;
       doctr deploy --deploy-repo xonsh/xonsh-docs --gh-pages-docs .;
