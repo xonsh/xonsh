@@ -53,13 +53,12 @@ script:
       make html;
       cd ..;
       doctr deploy --deploy-repo xonsh/xonsh-docs --gh-pages-docs dev;
+      git checkout $(git describe --tags `git rev-list --tags --max-count=1`);
+      cd docs;
+      make html;
+      cd ..;
+      doctr deploy --deploy-repo xonsh/xonsh-docs --gh-pages-docs .;
     else
       py.test --timeout=10;
     fi
 
-# This block should be inserted after line 52 for the next release.
-#      git checkout $(git describe --tags `git rev-list --tags --max-count=1`);
-#      cd docs;
-#      make html;
-#      cd ..;
-#      doctr deploy --deploy-repo xonsh/xonsh-docs --gh-pages-docs .;
