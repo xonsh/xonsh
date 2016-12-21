@@ -129,7 +129,6 @@ def dirty_version():
     try:
         _, N, sha = _version.strip().split('-')
     except ValueError:  # tag name may contain "-"
-        open('xonsh/dev.githash', 'w').close()
         print('failed to parse git version', file=sys.stderr)
         return False
     sha = sha.strip('g')
