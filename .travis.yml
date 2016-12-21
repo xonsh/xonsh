@@ -49,11 +49,16 @@ before_script:
 script:
   - set -e
   - if [[ $BUILD_DOCS = true ]]; then
+      echo "buildign docs"
       cd docs;
       make html;
+      echo "make html done"
       cd ..;
-      doctr deploy --deploy-repo xonsh/xonsh-docs --gh-pages-docs dev;
+      echo "calling doctr"
+      doctr deploy --deploy-repo xonsh/xonsh-docs --gh-pages-docs dev --command='python docs/fixdocselector.py docs' --no-push --no-require-master; 
+      echo "doctr done"
     else
+      echo "pytest timeout"
       py.test --timeout=10;
     fi
 
