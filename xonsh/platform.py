@@ -174,12 +174,15 @@ def pathbasename(p):
 def githash():
     """Returns a tuple contains two strings: the hash and the date."""
     install_base = os.path.dirname(__file__)
+    githash_file = '{}/dev.githash'.format(install_base)
+    if not os.path.exists(githash_file):
+        return None, None
     sha = None
     date_ = None
     try:
-        with open('{}/dev.githash'.format(install_base), 'r') as f:
+        with open(githash_file) as f:
             sha, date_ = f.read().strip().split('|')
-    except FileNotFoundError:
+    except ValueError:
         pass
     return sha, date_
 
