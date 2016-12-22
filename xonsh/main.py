@@ -285,8 +285,7 @@ def _failback_to_other_shells(argv, err):
             foreign_shell = line
             break
     if foreign_shell:
-        traceback.print_tb(err.__traceback__)
-        print('{}: {}'.format(err.__class__.__name__, err), file=sys.stderr)
+        traceback.print_exc()
         print('Xonsh encountered an issue during launch', file=sys.stderr)
         print('Failback to {}'.format(foreign_shell), file=sys.stderr)
         os.execlp(foreign_shell, foreign_shell)
