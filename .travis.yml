@@ -55,9 +55,9 @@ script:
       doctr deploy --deploy-repo xonsh/xonsh-docs --gh-pages-docs dev;
       git checkout $(git describe --tags `git rev-list --tags --max-count=1`);
       cd docs;
-      make clean;
-      make html;
+      make clean html;
       cd ..;
+      git checkout HEAD;
       doctr deploy --deploy-repo xonsh/xonsh-docs --gh-pages-docs .;
     else
       py.test --timeout=10;
