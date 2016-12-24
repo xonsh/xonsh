@@ -19,6 +19,7 @@ from xonsh.proc import foreground
 from xonsh.replay import replay_main
 from xonsh.timings import timeit_alias
 from xonsh.tools import argvquote, escape_windows_cmd_string, to_bool
+from xonsh.tools import expanduser_abs_path
 from xonsh.xontribs import xontribs_main
 
 import xonsh.completers._aliases as xca
@@ -252,13 +253,22 @@ def source_alias(args, stdin=None):
     If sourced file isn't found in cwd, search for file along $PATH to source
     instead.
     """
+    ctx = builtins.__xonsh_ctx__
     env = builtins.__xonsh_env__
     encoding = env.get('XONSH_ENCODING')
     errors = env.get('XONSH_ENCODING_ERRORS')
     for fname in args:
-        if not os.path.isfile(fname):
-            fname = locate_binary(fname)
-        with open(fname, 'r', encoding=encoding, errors=errors) as fp:
+        fpath = fname
+        if fname in ctx:
+            file_ctx = expanduser_abs_path(ctx[fname])
+            if os.path.isfile(file_ctx):
+                fpath = file_ctx
+        if not os.path.isfile(fpath):
+            fpath = locate_binary(fname)
+            if fpath is None:
+                print('source: {}: No such file'.format(fname), file=sys.stderr)
+                continue
+        with open(fpath, 'r', encoding=encoding, errors=errors) as fp:
             src = fp.read()
         if not src.endswith('\n'):
             src += '\n'
