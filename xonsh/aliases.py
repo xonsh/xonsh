@@ -272,7 +272,7 @@ def source_alias(args, stdin=None):
             src = fp.read()
         if not src.endswith('\n'):
             src += '\n'
-        builtins.execx(src, 'exec', builtins.__xonsh_ctx__)
+        builtins.execx(src, 'exec', ctx)
 
 
 def source_cmd(args, stdin=None):
