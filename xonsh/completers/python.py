@@ -135,13 +135,14 @@ def complete_import(prefix, line, start, end, ctx):
     ..."
     """
     ltoks = line.split()
-    if len(ltoks) == 2 and ltoks[0] == 'from':
+    ntoks = len(ltoks)
+    if ntoks == 2 and ltoks[0] == 'from':
         # completing module to import
         return {'{} '.format(i) for i in complete_module(prefix)}
-    if ltoks[0] == 'import' and start == len('import '):
+    if ntoks > 1 and ltoks[0] == 'import' and start == len('import '):
         # completing module to import
         return complete_module(prefix)
-    if len(ltoks) > 2 and ltoks[0] == 'from' and ltoks[2] == 'import':
+    if ntoks > 2 and ltoks[0] == 'from' and ltoks[2] == 'import':
         # complete thing inside a module
         try:
             mod = importlib.import_module(ltoks[1])
