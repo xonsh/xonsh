@@ -14,22 +14,6 @@ def mockopen(xonsh_builtins, monkeypatch):
     monkeypatch.setattr(builtins, 'open', mocked_open)
 
 
-def test_source_context(mockopen, monkeypatch):
-    checker = []
-
-    def mocked_execx(src, *args, **kwargs):
-        checker.append(src.strip())
-    monkeypatch.setattr(builtins, 'execx', mocked_execx)
-    monkeypatch.setattr(os.path, 'isfile', lambda x: True)
-    ctx = builtins.__xonsh_ctx__
-    ctx['foo'] = 'ctx_foo'
-    ctx['bar'] = 'ctx_bar'
-
-    source_alias(['foo', 'bar'])
-    assert checker[0].endswith('ctx_foo')
-    assert checker[1].endswith('ctx_bar')
-
-
 def test_source_current_dir(mockopen, monkeypatch):
     checker = []
 
