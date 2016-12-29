@@ -98,7 +98,7 @@ def complete_from_bash(prefix, line, begidx, endidx, ctx):
 
     out = out.splitlines()
     complete_stmt = out[0]
-    out = set(out[1:])
+    out = list(set(out[1:]))
 
     # From GNU Bash document: The results of the expansion are prefix-matched
     # against the word being completed
