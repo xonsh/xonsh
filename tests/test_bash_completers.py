@@ -23,3 +23,11 @@ def test_multiple_completion_files(xonsh_builtins):
     xonsh_builtins.__xonsh_env__ = Env(BASH_COMPLETIONS=[COMPLETION_FILE1, COMPLETION_FILE2])
     completions = complete_from_bash('foo --', 'foo --', 5, 5, None)
     assert completions == ({'--bar ', '--baz ', '--qux '}, 2)
+
+def test_completion_dir(xonsh_builtins):
+    """Tests if a whole directory gets parsed as well"""
+    xonsh_builtins.__xonsh_env__ = Env(BASH_COMPLETIONS=[COMPLETION_DIR])
+    foo_completions = complete_from_bash('foo --', 'foo --', 5, 5, None)
+    assert foo_completions == ({'--bar ', '--baz ', '--qux '}, 2)
+    spam_completions = complete_from_bash('spam --', 'spam --', 5, 5, None)
+    assert spam_completions == ({'--bacon ', '--sausage ', '--egg ', '--spam '}, 2)
