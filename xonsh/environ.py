@@ -363,7 +363,7 @@ def DEFAULT_DOCS():
     'BASH_COMPLETIONS': VarDocs(
         'This is a list (or tuple) of strings that specifies where the '
         '``bash_completion`` script may be found. '
-        'The first valid path will be used. For better performance, '
+        'All valid paths will be used. For better performance, '
         'bash-completion v2.x is recommended since it lazy-loads individual '
         'completion scripts. '
         'For both bash-completion v1.x and v2.x, paths of individual completion '

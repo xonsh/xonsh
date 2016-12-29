@@ -1,4 +1,6 @@
-**Added:** None
+**Added:**
+
+* The ``$BASH_COMPLETIONS`` environment variable now supports multiple valid paths.
 
 **Changed:** None
 

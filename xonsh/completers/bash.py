@@ -119,7 +119,8 @@ def complete_from_bash(prefix, line, begidx, endidx, ctx):
 
 def _get_completions_source():
     completers = builtins.__xonsh_env__.get('BASH_COMPLETIONS', ())
+    sources = []
     for path in map(pathlib.Path, completers):
         if path.is_file():
-            return 'source "{}"'.format(path.as_posix())
-    return None
+            sources.append(path)
+    return '\n'.join('source "{}"'.format(source.as_posix()) for source in sources)
