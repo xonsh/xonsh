@@ -879,7 +879,7 @@ class PopenThread(threading.Thread):
         if s is None:
             rtn = self.returncode
             if rtn is not None and rtn != 0:
-                s = (-1*rtn, os.WCOREDUMP(rtn))
+                s = (-1*rtn, rtn < 0 if ON_WINDOWS else os.WCOREDUMP(rtn))
         return s
 
     def send_signal(self, signal):
