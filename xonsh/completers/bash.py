@@ -102,7 +102,7 @@ def complete_from_bash(prefix, line, begidx, endidx, ctx):
 
     # From GNU Bash document: The results of the expansion are prefix-matched
     # against the word being completed
-    commprefix = os.path.commonprefix(out)
+    commprefix = os.path.commonprefix(list(out))
     strip_len = 0
     while strip_len < len(prefix):
         if commprefix.startswith(prefix[strip_len:]):
