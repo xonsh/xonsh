@@ -256,9 +256,13 @@ def source_alias(args, stdin=None):
     encoding = env.get('XONSH_ENCODING')
     errors = env.get('XONSH_ENCODING_ERRORS')
     for fname in args:
-        if not os.path.isfile(fname):
-            fname = locate_binary(fname)
-        with open(fname, 'r', encoding=encoding, errors=errors) as fp:
+        fpath = fname
+        if not os.path.isfile(fpath):
+            fpath = locate_binary(fname)
+            if fpath is None:
+                print('source: {}: No such file'.format(fname), file=sys.stderr)
+                continue
+        with open(fpath, 'r', encoding=encoding, errors=errors) as fp:
             src = fp.read()
         if not src.endswith('\n'):
             src += '\n'

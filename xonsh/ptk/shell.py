@@ -21,6 +21,7 @@ from xonsh.ptk.history import PromptToolkitHistory
 from xonsh.ptk.key_bindings import load_xonsh_bindings
 from xonsh.ptk.shortcuts import Prompter
 from xonsh.events import events
+from xonsh.shell import fire_precommand
 
 
 events.transmogrify('on_ptk_create', 'LoadEvent')
@@ -110,6 +111,7 @@ class PromptToolkitShell(BaseShell):
         if self.need_more_lines:
             return None, code
         src = ''.join(self.buffer)
+        src = fire_precommand(src)
         try:
             code = self.execer.compile(src,
                                        mode='single',
@@ -127,6 +129,7 @@ class PromptToolkitShell(BaseShell):
         if intro:
             print(intro)
         auto_suggest = AutoSuggestFromHistory()
+        self.push = self._push
         while not builtins.__xonsh_exit__:
             try:
                 line = self.singleline(auto_suggest=auto_suggest)

@@ -80,7 +80,7 @@ for the daily use of experts and novices alike.
     }
     </style>
     <div id="trydiv"><p style="text-align:center;">
-    <iframe id="tryframe" data-src="http://hermit.astro73.com/"
+    <iframe id="tryframe" data-src="_static/xonsh-live.png"
             src="_static/xonsh-live.png" width="80%" height="480px"
             style="overflow:hidden;" scrolling="no">
     </iframe>
@@ -95,6 +95,12 @@ for the daily use of experts and novices alike.
     </script>
     </p>
     </div>
+
+
+..  <iframe id="tryframe" data-src="http://hermit.astro73.com/"
+            src="_static/xonsh-live.png" width="80%" height="480px"
+            style="overflow:hidden;" scrolling="no">
+    </iframe>
 
 =========
 Contents
