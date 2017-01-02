@@ -18,7 +18,7 @@ from xonsh.events import events
 import xonsh.history.main as xhm
 
 
-events.doc('on_command_transform', """
+events.doc('on_transform_command', """
 on_command_transform(cmd: str) -> str
 
 Fired to request xontribs to transform a command line. Return the transformed
