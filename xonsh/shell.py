@@ -18,8 +18,18 @@ from xonsh.events import events
 import xonsh.history.main as xhm
 
 
+events.doc('on_command_transform', """
+on_command_transform(cmd: str) -> str
+
+Fired to request xontribs to transform a command line. Return the transformed
+command, or the same command if no transformaiton occurs.
+
+This may be fired multiple times per command, so design any handlers for this
+carefully.
+""")
+
 events.doc('on_precommand', """
-on_precommand(cmd: str) -> str
+on_precommand(cmd: str) -> None
 
 Fires just before a command is executed.
 """)
@@ -31,7 +41,7 @@ Fires just after a command is executed.
 """)
 
 
-def fire_precommand(src, show_diff=True):
+def transform_command(src, show_diff=True):
     """Returns the results of firing the precommand handles."""
     i = 0
     limit = sys.getrecursionlimit()
@@ -39,7 +49,7 @@ def fire_precommand(src, show_diff=True):
     raw = src
     while src != lst:
         lst = src
-        srcs = events.on_precommand.fire(src)
+        srcs = events.on_transform_command.fire(src)
         for s in srcs:
             if s != lst:
                 src = s
