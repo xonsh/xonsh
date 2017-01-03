@@ -333,7 +333,7 @@ must be used to force xonsh to not interpret them.
     ${
 
 .. warning:: There is no notion of an escaping character in xonsh like the
-             backslash (\) in bash.
+             backslash (\\) in bash.
 
 
 Captured Subprocess with ``$()`` and ``!()``
