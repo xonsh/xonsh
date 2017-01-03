@@ -1026,19 +1026,18 @@ regex globbing:
 
 .. code-block:: xonshcon
 
-    >>> __xonsh_regexpath__??
-    Type:        function
-    String form: <function regexpath at 0x7fef91612950>
-    File:        /home/scopatz/.local/lib/python3.4/site-packages/xonsh-0.1-py3.4.egg/xonsh/built_ins.py
-    Definition:  (s)
+    >>> __xonsh_regexsearch__??
+    Type:         function
+    String form:  <function regexsearch at 0x7efc8b367d90>
+    File:         /usr/local/lib/python3.5/dist-packages/xonsh/built_ins.py
+    Definition:   (s)
     Source:
-    def regexpath(s):
-        """Takes a regular expression string and returns a list of file
-        paths that match the regex.
-        """
+    def regexsearch(s):
         s = expand_path(s)
         return reglob(s)
-    <function regexpath at 0x7fef91612950>
+    
+    
+    <function xonsh.built_ins.regexsearch>
 
 Note that both help and superhelp return the object that they are inspecting.
 This allows you to chain together help inside of other operations and
